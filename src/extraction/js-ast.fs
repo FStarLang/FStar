@@ -111,13 +111,15 @@ and propmem_t =
 
 and typ = 
     | JST_Any
+    | JST_Mixed
+    | JST_Empty 
     | JST_Void
     | JST_Null
     | JST_Number
     | JST_String
     | JST_Boolean
     | JST_Nullable of typ
-    | JST_Function of list<(identifier_t * typ)> * typ * option<(identifier_t * typ)> * option<param_decl_t>
+    | JST_Function of list<(identifier_t * typ)> * typ * option<param_decl_t> (*!!!*)
     | JST_Object of list<(object_prop_key_t * typ)> * list<(identifier_t * typ * typ)> * list<function_t>
     | JST_Array of typ
     | JST_Generic of generic_t * option<(list<typ>)>
@@ -132,7 +134,7 @@ and typ =
 
 and generic_t = 
     | Unqualified of identifier_t
-    | Qualified of typ * identifier_t
+    | Qualified of generic_t * identifier_t
 
 and identifier_t = string * option<typ>
 
@@ -151,7 +153,7 @@ and value_t =
     | JSV_Number of float
     | JSV_RegExp of string * string
 
-and param_decl_t = list<(string * option<typ>)> (*??*)
+and param_decl_t = list<string> (*?? Use only for generic types?*)
 
 and predicate_t = | JSP_Declared of expression_t | JSP_Inferred
 

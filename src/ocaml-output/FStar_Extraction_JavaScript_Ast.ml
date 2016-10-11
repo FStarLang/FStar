@@ -108,13 +108,15 @@ type source_t =
 | JSPM_Expression of expression_t 
  and typ =
 | JST_Any
+| JST_Mixed
+| JST_Empty
 | JST_Void
 | JST_Null
 | JST_Number
 | JST_String
 | JST_Boolean
 | JST_Nullable of typ
-| JST_Function of ((identifier_t * typ) Prims.list * typ * (identifier_t * typ) Prims.option * param_decl_t Prims.option)
+| JST_Function of ((identifier_t * typ) Prims.list * typ * param_decl_t Prims.option)
 | JST_Object of ((object_prop_key_t * typ) Prims.list * (identifier_t * typ * typ) Prims.list * function_t Prims.list)
 | JST_Array of typ
 | JST_Generic of (generic_t * typ Prims.list Prims.option)
@@ -128,7 +130,7 @@ type source_t =
 | JST_Exists 
  and generic_t =
 | Unqualified of identifier_t
-| Qualified of (typ * identifier_t) 
+| Qualified of (generic_t * identifier_t) 
  and body_t =
 | JS_BodyBlock of statement_t Prims.list
 | JS_BodyExpression of expression_t 
@@ -163,7 +165,7 @@ source_t Prims.list
  and literal_t =
 (value_t * Prims.string) 
  and param_decl_t =
-(Prims.string * typ Prims.option) Prims.list
+Prims.string Prims.list
 
 
 let is_JS_Statement = (fun _discr_ -> (match (_discr_) with
@@ -1005,6 +1007,24 @@ end))
 
 let is_JST_Any = (fun _discr_ -> (match (_discr_) with
 | JST_Any (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_JST_Mixed = (fun _discr_ -> (match (_discr_) with
+| JST_Mixed (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_JST_Empty = (fun _discr_ -> (match (_discr_) with
+| JST_Empty (_) -> begin
 true
 end
 | _ -> begin
