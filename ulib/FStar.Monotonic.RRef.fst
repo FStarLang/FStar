@@ -4,7 +4,6 @@ open FStar
 open FStar.HyperHeap
 
 open FStar.HyperStack
-open FStar.HST
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -68,7 +67,7 @@ val m_alloc: #a:Type
             -> ST (m_rref r a b)
 		(requires (fun _ -> monotonic a b))
 		(ensures (fun h0 (m:m_rref r a b) h1 -> ralloc_post r init h0 (as_hsref m) h1))
-let m_alloc #a #b r init = HST.ralloc r init
+let m_alloc #a #b r init = ST.ralloc r init
 
 val m_read:#r:rid 
        -> #a:Type

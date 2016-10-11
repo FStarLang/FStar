@@ -103,7 +103,15 @@ let mmref (a:Type) = s:reference a{is_eternal_region s.id && s.mm}
 let live_region (m:mem) (i:rid) =
   (is_eternal_region i \/ i `is_above` m.tip)
   /\ Map.contains m.h i
-  
+
+(*
+ * AR: TODO.
+ *)
+
+(* let live_region' (m:mem) (i:rid) = *)
+(*   live_region m i *)
+(*   /\ Map.contains m.h i *)
+
 let contains (#a:Type) (m:mem) (s:reference a) =
   live_region m s.id
   /\ HH.contains_ref s.ref m.h

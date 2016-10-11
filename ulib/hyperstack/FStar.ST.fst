@@ -1,4 +1,4 @@
-module FStar.HST
+module FStar.ST
 open FStar.HyperStack
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -206,6 +206,8 @@ inline let deref_post (#a:Type) (r:reference a) m0 x m1 =
 assume val op_Bang: #a:Type -> r:reference a -> Stack a
   (requires (fun m -> m `contains` r))
   (ensures (deref_post r))
+
+let modifies_none (h0:mem) (h1:mem) = modifies Set.empty h0 h1
 
 module G = FStar.Ghost
 
