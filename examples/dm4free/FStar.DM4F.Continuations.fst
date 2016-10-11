@@ -15,10 +15,6 @@ let bind a b m f = fun k ->
     (* let fx (\* : cont b *\) = f x in *)
     (* fx k) *)
 
-(* val left_unit : a:Type -> b:Type -> x:a -> f:(a -> Tot (kont b)) -> *)
-(*                 Lemma (bind a b (return a x) f == f x) *)
-(* let left_unit a b x f = admit() *)
-
 reifiable new_effect_for_free {
   CONT: Type -> Effect
   with repr = kont

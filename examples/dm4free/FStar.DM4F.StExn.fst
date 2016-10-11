@@ -56,26 +56,20 @@ effect StExn (a:Type) (req:STEXN.pre) (ens:int -> option a -> int -> GTot Type0)
 (* Total variant *)
 effect S (a:Type) = STEXN a (fun h0 p -> forall x. p x)
 
-(* TODO: Remove *)
-(* val raise_impl : (a:Type) -> STEXN.repr a (fun h0 p -> p (None, h0)) *)
-(* let raise_impl a = fun h0 -> None, h0 *)
-(* reifiable val raise : (a:Type) -> STEXN a (fun h0 p -> p (None, h0)) *)
-(* reifiable let raise a = STEXN.reflect (raise_impl a) *)
+val div_intrinsic : i:nat -> j:int -> StExn int
+  (requires (fun h -> True))
+  (ensures (fun h0 x h1 -> match x with
+                        | None -> h0 = h1 /\ j = 0
+                        | Some z -> h0 = h1 /\ j <> 0 /\ z = i / j))
+let div_intrinsic i j =
+  if j = 0 then STEXN.raise int
+  else i / j
 
-(* val div_intrinsic : i:nat -> j:int -> StExn int *)
-(*   (requires (fun h -> True)) *)
-(*   (ensures (fun h0 x h1 -> match x with *)
-(*                         | None -> h0 = h1 /\ j = 0 *)
-(*                         | Some z -> h0 = h1 /\ j <> 0 /\ z = i / j)) *)
-(* let div_intrinsic i j = *)
-(*   if j = 0 then raise int *)
-(*   else i / j *)
+reifiable let div_extrinsic (i:nat) (j:int) : S int =
+  if j = 0 then STEXN.raise int
+  else i / j
 
-(* reifiable let div_extrinsic (i:nat) (j:int) : S int = *)
-(*   if j = 0 then raise int *)
-(*   else i / j *)
-
-(* let lemma_div_extrinsic (i:nat) (j:int) (h0:int) : *)
-(*   Lemma (match reify (div_extrinsic i j) h0 with *)
-(*          | None, h1 -> h0 = h1 /\ j = 0 *)
-(*          | Some z, h1 -> h0 = h1 /\ j <> 0 /\ z = i / j) = () *)
+let lemma_div_extrinsic (i:nat) (j:int) (h0:int) :
+  Lemma (match reify (div_extrinsic i j) h0 with
+         | None, h1 -> h0 = h1 /\ j = 0
+         | Some z, h1 -> h0 = h1 /\ j <> 0 /\ z = i / j) = ()

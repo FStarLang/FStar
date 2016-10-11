@@ -24,12 +24,16 @@ let bind_ex a b f g = fun _ ->
   | None -> None
   | Some x -> g x ()
 
+let raise (a:Type) : ex a = fun _ -> None
+
 (* Define the new effect using DM4F *)
 reifiable reflectable new_effect_for_free {
   EXN : (a:Type) -> Effect
   with repr     = ex
      ; bind     = bind_ex
      ; return   = return_ex
+  and effect_actions
+       raise   = raise
 }
 
 (* A lift from `Pure´ into the new effect *)
@@ -47,18 +51,6 @@ effect Exn (a:Type) (pre:Type0) (post:EXN.post a) =
  * programs. i.e. Any program of type `Ex a´ will throw or finish
  * correctly, but never loop. *)
 effect Ex (a:Type) = EXN a (fun _ p -> forall x. p x)
-
-(*
- * We can also build a new action "on the fly" using reflect!
- * Here we define raise_ as a pure function working with the
- * representation of Ex.
- *)
-val raise_ : a:Type -> Tot (EXN.repr a (fun (_:unit) (p:EXN.post a) -> p None))
-let raise_ a (_:unit) = None
-
-(* We reflect it back to Exn *)
-reifiable let raise (a:Type) : Exn a True (fun r -> r == None)
-  = EXN.reflect (raise_ a)
 
 (*
  * We now show `div´ to be correct in two ways. The property we show is
@@ -89,14 +81,26 @@ val div_intrinsic : i:nat -> j:int -> Exn int
   (requires True)
   (ensures (function None -> j=0 | Some z -> j<>0 /\ z = i / j))
 let div_intrinsic i j =
-  if j=0 then raise int
+  if j=0 then EXN.raise int
   else i / j
 
 reifiable let div_extrinsic (i:nat) (j:int) : Ex int =
-  if j=0 then raise int
+  if j=0 then EXN.raise int
   else i / j
 
 let lemma_div_extrinsic (i:nat) (j:int) :
   Lemma (match reify (div_extrinsic i j) () with
          | None -> j = 0
          | Some z -> j <> 0 /\ z = i / j) = ()
+
+(*
+ * We can also build a new action "on the fly" using reflect!
+ * Here we define raise_ as a pure function working with the
+ * representation of Ex.
+ *)
+val raise_ : a:Type -> Tot (EXN.repr a (fun (_:unit) (p:EXN.post a) -> p None))
+let raise_ a (_:unit) = None
+
+(* We reflect it back to Exn *)
+reifiable let raise__ (a:Type) : Exn a True (fun r -> r == None)
+  = EXN.reflect (raise_ a)
