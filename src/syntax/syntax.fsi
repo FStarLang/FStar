@@ -205,8 +205,8 @@ type qualifier =
   | Assumption                             //no definition provided, just a declaration 
   | New                                    //a fresh type constant, distinct from all prior type constructors
   | Private                                //name is invisible outside the module
-  | Inline                                 //a definition that *should* always be unfolded by the normalizer
-  | Unfoldable                             //a definition that may be unfolded by the normalizer, but only if necessary (default)
+  | Unfold_for_unification_and_vcgen       //a definition that *should* always be unfolded by the normalizer
+  | Visible_default                        //a definition that may be unfolded by the normalizer, but only if necessary (default)
   | Irreducible                            //a definition that can never be unfolded by the normalizer
   | Abstract                               //a symbol whose definition is only visible within the defining module
   | Noeq                                   //for this type, don't generate HasEq

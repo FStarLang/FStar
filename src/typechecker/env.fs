@@ -112,9 +112,9 @@ let should_verify env =
 
 let visible_at d q = match d, q with 
   | NoDelta,    _         
-  | OnlyInline, Inline 
-  | Unfold _,   Inline 
-  | Unfold _,   Unfoldable -> true
+  | OnlyInline, Unfold_for_unification_and_vcgen 
+  | Unfold _,   Unfold_for_unification_and_vcgen 
+  | Unfold _,   Visible_default -> true
   | _ -> false 
 
 let glb_delta d1 d2 = match d1, d2 with 

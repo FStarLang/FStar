@@ -1732,7 +1732,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       [], env
 
     | Sig_let(_, _, lids, quals) when (lids |> Util.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
-                                    && quals |> Util.for_some (function Inline -> true | _ -> false)) ->
+                                    && quals |> Util.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       [], env
 

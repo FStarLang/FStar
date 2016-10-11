@@ -1440,11 +1440,11 @@ and tc_decl env se: list<sigelt> * _ =
              gen, lb::lbs, quals_opt) (true, [], (if quals=[] then None else Some quals)) in
 
       let quals = match quals_opt with
-        | None -> [Unfoldable]
+        | None -> [Visible_default]
         | Some q ->
-          if q |> Util.for_some (function Irreducible | Unfoldable | Inline -> true | _ -> false)
+          if q |> Util.for_some (function Irreducible | Visible_default | Unfold_for_unification_and_vcgen -> true | _ -> false)
           then q
-          else Unfoldable::q in //the default visibility for a let binding is Unfoldable
+          else Visible_default::q in //the default visibility for a let binding is Unfoldable
 
       let lbs' = List.rev lbs' in
 

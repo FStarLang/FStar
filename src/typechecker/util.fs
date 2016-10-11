@@ -1221,7 +1221,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
      lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
   }] in
   // [Inline] triggers a "Impossible: locally nameless" error
-  let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], [ Inline ]) in
+  let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], [ Unfold_for_unification_and_vcgen ]) in
   sig_ctx, mk (Tm_fvar fv) None Range.dummyRange
 
 
@@ -1230,7 +1230,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
 /////////////////////////////////////////////////////////////////////////////
 let check_sigelt_quals se =
     let visibility = function Private -> true | _ -> false in
-    let reducibility = function Abstract | Irreducible | Inline | Unfoldable -> true | _ -> false in
+    let reducibility = function Abstract | Irreducible | Unfold_for_unification_and_vcgen | Visible_default -> true | _ -> false in
     let assumption = function Assumption | New -> true | _ -> false in
     let reification = function Reifiable | Reflectable -> true | _ -> false in
     let inferred = function
@@ -1253,8 +1253,8 @@ let check_sigelt_quals se =
           quals 
           |> List.for_all (fun x -> x=q || inferred x || visibility x || assumption x)
 
-        | Inline
-        | Unfoldable
+        | Unfold_for_unification_and_vcgen
+        | Visible_default
         | Irreducible
         | Abstract
         | Noeq 
@@ -1297,7 +1297,7 @@ let check_sigelt_quals se =
     then err "ill-formed combination";
     match se with
     | Sig_let((is_rec, _), _, _, _) -> //let rec
-      if is_rec && quals |> List.contains Inline
+      if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
       then err "recursive definitions cannot be marked inline";
       if quals |> Util.for_some (fun x -> assumption x || has_eq x)
       then err "definitions cannot be assumed or marked with equality qualifiers"

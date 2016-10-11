@@ -41,15 +41,15 @@ let trans_aqual = function
 let trans_qual r = function
   | AST.Private ->       S.Private
   | AST.Assumption ->    S.Assumption
-  | AST.Inline ->        S.Inline
-  | AST.Unfoldable ->    S.Unfoldable
+  | AST.Inline ->        S.Unfold_for_unification_and_vcgen
+  | AST.Visible ->       S.Visible_default
   | AST.Irreducible ->   S.Irreducible
   | AST.Logic ->         S.Logic
   | AST.TotalEffect ->   S.TotalEffect
   | AST.Effect ->        S.Effect
   | AST.New  ->          S.New
   | AST.Abstract ->      S.Abstract
-  | AST.Opaque ->        FStar.TypeChecker.Errors.warn r "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."; S.Unfoldable
+  | AST.Opaque ->        FStar.TypeChecker.Errors.warn r "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."; S.Visible_default
   | AST.Reflectable ->   S.Reflectable
   | AST.Reifiable ->     S.Reifiable
   | AST.Noeq ->          S.Noeq
