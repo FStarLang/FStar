@@ -119,5 +119,9 @@ let path = (path_of_lid l)
 in (lid_of_path (FStar_List.append path ((s)::[])) (range_of_lid l))))
 
 
+let string_of_lid : lident  ->  Prims.string = (fun lid -> (let _119_75 = (path_of_lid lid)
+in (text_of_path _119_75)))
+
+
 
 

@@ -45,16 +45,14 @@ generated terms are well-formed in F*); the effect definition is lifted from DM
 to F*; missing WPs are generated, and everything is sent off to the "regular"
 effect checking code.
 
-Items left:
+Going forward:
 - change the elaboration of the match to push the return _inside_ the branches
   instead of wrapping the whole branch on the outside (better for Z3)
+- make the continuations example work
 - fill out various TODOs in `dmff.fs` to faithfully check everything (right now,
   most checks are fairly lax);
-- try out more things in the definition language; try out with a parameterized
-  `STATE (h: heap)` effect; etc
-- * and elaboration of lifts
+- try out more examples
 - inserting "return" on the fly when reflecting Tot computations
-- more examples!
 - extraction!
 
 - it would be good to have a generic way of noticing that a WP

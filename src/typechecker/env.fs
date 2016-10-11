@@ -713,10 +713,17 @@ let build_lattice env se = match se with
         let _, lift_t = inst_tscheme lift_t in
         mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos in
 
+    let sub_lift_wp = match sub.lift_wp with
+      | Some sub_lift_wp ->
+          sub_lift_wp
+      | None ->
+          failwith "sub effect should've been elaborated at this stage"
+    in
+
     let edge =
       {msource=sub.source;
        mtarget=sub.target;
-       mlift=mk_lift sub.lift_wp} in
+       mlift=mk_lift sub_lift_wp} in
     let id_edge l = {
        msource=sub.source;
        mtarget=sub.target;
