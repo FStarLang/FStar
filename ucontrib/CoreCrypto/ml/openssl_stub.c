@@ -27,6 +27,8 @@
 #include <openssl/objects.h>
 #include <openssl/obj_mac.h>
 
+#define DEBUG
+
 /* -------------------------------------------------------------------- */
 static value Val_some(value mlvalue) {
     CAMLparam1(mlvalue);
@@ -2044,30 +2046,24 @@ CAMLprim value ocaml_ecdsa_verify(value mlkey, value data, value sig) {
 
 static int cb(int ok, X509_STORE_CTX *ctx)
 {
-#if 0
+#ifdef DEBUG
     char buf[256];
     static int      cb_index = 0;
 
-  //#ifdef DEBUG
     printf("Starting cb #%d (ok = %d)\n", ++cb_index, ok);
-    printf("ctx: error = %d. error_depth = %d. current_method = %d. "
-           "valid = %d. last_untrusted = %d. "
-           "error string = '%s'\n", ctx->error,
-           ctx->error_depth, ctx->current_method,
-           ctx->valid, ctx->last_untrusted,
-           X509_verify_cert_error_string(ctx->error));
-
-    X509_NAME_oneline(X509_get_subject_name(ctx->current_cert),buf,256);
-    printf("current_cert subject:   %s\n",buf);
-    X509_NAME_oneline(X509_get_issuer_name(ctx->current_cert),buf,256);
-    printf("current_cert issuer:    %s\n",buf);
-
-    if (ctx->current_issuer) {
-      X509_NAME_oneline(X509_get_subject_name(ctx->current_issuer),buf,256);
-      printf("current_issuer subject: %s\n",buf);
-      X509_NAME_oneline(X509_get_issuer_name(ctx->current_issuer),buf,256);
-      printf("current_issuer issuer:  %s\n",buf);
+    if(X509_STORE_CTX_get_error(ctx) == X509_V_OK)
+    {
+      printf("Callback reports no error.\n");
+    }else {	    
+      printf("Error string = '%s'\n",
+        X509_verify_cert_error_string(X509_STORE_CTX_get_error(ctx)));
     }
+
+    X509 *cur = X509_STORE_CTX_get0_cert(ctx);
+    X509_NAME_oneline(X509_get_subject_name(cur),buf,256);
+    printf("current_cert subject:   %s\n",buf);
+    X509_NAME_oneline(X509_get_issuer_name(cur),buf,256);
+    printf("current_cert issuer:    %s\n",buf);
 #endif
 
     return(ok);
