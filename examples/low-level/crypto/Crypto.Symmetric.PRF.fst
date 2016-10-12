@@ -10,8 +10,6 @@ module Crypto.Symmetric.PRF
    to generate the one-time MAC key, to generate a one-time-pad for
    encryption, and to generate a one-time-pad for decryption. *)
 
-// TODO erase bookkeeping when ideal
-// TODO add conditional idealization
 // TODO improve agility (more i:id) and also support AES
 // TODO add pre- to statically prevent counter overflows
 
@@ -38,7 +36,7 @@ let id = Flag.id
 // step 1. Flag.prf i relies on PRF just to get fresh MAC keys. 
 // step 2. Flag.safeId i relies on authenticated encryption to get semantic encryption
 
-let sanity_check i = assert(safeId i ==> prf i)
+private let sanity_check i = assert(safeId i ==> prf i)
 
 
 // LIBRARY STUFF
@@ -246,7 +244,7 @@ private let lemma_modifies_ref (#t:Type) (r:HS.ref t) (rgn:HH.rid{rgn <> HS (r.i
       cut (HH.modifies_rref (HS (r.id)) !{} (HS (h0.h)) (HS (h1.h)))
 *)
 
-let extends #rgn #i s0 s1 x =
+private let extends #rgn #i s0 s1 x =
   let open FStar.Seq in 
   let open FStar.SeqProperties in 
   ( match find s0 x with 
@@ -387,18 +385,19 @@ let prf_dexor i t x l plain cipher =
 #set-options "--initial_fuel 1 --max_fuel 1"
 
 //TODO (NS): this one takes about 15s to prove automatically; investigate a bit
-let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) (v:range rgn i x) : Lemma
+private let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) (v:range rgn i x) : Lemma
   (requires (find s x == None))
   (ensures (find (SeqProperties.snoc s (Entry x v)) x == Some v))
   = ()
 
-#reset-options "--z3timeout 10000"
+#reset-options "--z3timeout 100"
 
 // generates a fresh block for x and XORs it with plaintext
 val prf_enxor: 
   i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> l:u32 {l <=^ blocklen} -> 
   cipher:lbuffer (v l) -> plain:plainBuffer i (v l) 
   {  Buffer.disjoint (as_buffer plain) cipher /\ 
+     Buffer.frameOf (as_buffer plain) <> t.rgn /\ 
      Buffer.frameOf cipher <> t.rgn } -> ST unit
   (requires (fun h0 ->
      Plain.live h0 plain /\ Buffer.live h0 cipher /\
@@ -406,7 +405,7 @@ val prf_enxor:
   (ensures (fun h0 _ h1 ->
      Plain.live h1 plain /\ Buffer.live h1 cipher /\
      modifies_x_buffer_1 t x cipher h0 h1 /\
-     (safeId i ==>
+     (safeId i ==> 
        ( match find_otp #t.rgn #i (HS.sel h1 t.table) x with
          | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain /\ c == sel_bytes h1 l cipher
          | None   -> False
@@ -424,15 +423,18 @@ let prf_enxor i t x l cipher plain =
     assert(find_otp #t.rgn #i contents' x == Some newblock);
 
     let h0 = HST.get() in
+    assert(p == sel_plain h0 l plain);
     store_bytes l cipher c;
     let h1 = HST.get() in
     Buffer.lemma_reveal_modifies_1 cipher h0 h1;
+    assume(Plain.live h1 plain);
+    assert(p == sel_plain h1 l plain);
     r := contents';
     let h2 = HST.get() in
-    assert(modifies_x_buffer_1 t x cipher h0 h2);
     assume(Plain.live h2 plain);
+    assert(p == sel_plain h2 l plain); //16-10-12  how to anti-alias a buffer? 
+    assert(modifies_x_buffer_1 t x cipher h0 h2);
     ()
-
   else
     let h0 = HST.get() in 
     let plainrepr = bufferRepr #i #(v l) plain in
@@ -447,4 +449,3 @@ let prf_enxor i t x l cipher plain =
     Buffer.lemma_reveal_modifies_1 cipher h1 h2;
     assert(prf i ==> HS.sel h1 (itable i t) == HS.sel h2 (itable i t));
     assert(modifies_x_buffer_1 t x cipher h0 h2)
-
