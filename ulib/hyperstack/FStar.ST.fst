@@ -49,6 +49,8 @@ effect ST (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
              (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_stack_domains h h1) ==> p a h1)) (* WP *)
 
+effect St (a:Type) = ST a (fun _ -> True) (fun _ _ _ -> True)
+
 let inline_stack_inv h h' : GTot Type0 =
   (* The frame invariant is enforced *)
   h.tip = h'.tip

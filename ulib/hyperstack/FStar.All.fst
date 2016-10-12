@@ -21,10 +21,10 @@ let all_post (a:Type) = all_post_h HyperStack.mem a
 let all_wp (a:Type) = all_wp_h HyperStack.mem a
 new_effect ALL = ALL_h HyperStack.mem
 
-inline let lift_state_all (a:Type) (wp:st_wp a) (p:all_post a) =  wp (fun a -> p (V a))
+unfold let lift_state_all (a:Type) (wp:st_wp a) (p:all_post a) =  wp (fun a -> p (V a))
 sub_effect STATE ~> ALL = lift_state_all
 
-inline let lift_exn_all (a:Type) (wp:ex_wp a)   (p:all_post a) (h:HyperStack.mem) = wp (fun ra -> p ra h)
+unfold let lift_exn_all (a:Type) (wp:ex_wp a)   (p:all_post a) (h:HyperStack.mem) = wp (fun ra -> p ra h)
 sub_effect EXN   ~> ALL = lift_exn_all
 
 effect All (a:Type) (pre:all_pre) (post: (HyperStack.mem -> Tot (all_post a))) =

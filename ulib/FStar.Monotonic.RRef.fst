@@ -22,6 +22,7 @@ type rid = r:HH.rid{is_eternal_region r}
 
 (*
  * AR: HS.ref, means it is not mm.
+ * This along with rid above is essential to justify recall.
  *)
 abstract type m_rref (r:rid) (a:Type) (b:reln a) = x:HS.ref a{x.id = r}
 
