@@ -65,7 +65,7 @@ new_effect TSSTATE = STATE_h (timestamped_state state)
 
 (* Sub-effecting, works only because we have fixed the state and a preorder on it. *)
 
-inline let lift_div_tsstate (state:Type) (rel:relation state{preorder rel}) 
+unfold let lift_div_tsstate (state:Type) (rel:relation state{preorder rel}) 
                             (a:Type) (wp:pure_wp a) (p:tsst_post state a) (s:timestamped_state state) = wp (fun x -> p x s)
 sub_effect DIV ~> TSSTATE = lift_div_tsstate state state_rel
 

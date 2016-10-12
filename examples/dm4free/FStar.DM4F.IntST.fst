@@ -38,7 +38,7 @@ let wp = STINT.wp
 // We define a lift between PURE and STINT
 //    -- this is analogous to the return for the monad
 //    -- but automatically wiring the return here is not done yet
-inline let lift_pure_stint (a:Type) (wp:pure_wp a) (n:int) (p:post a) =
+unfold let lift_pure_stint (a:Type) (wp:pure_wp a) (n:int) (p:post a) =
   wp (fun a -> p (a, n))
 sub_effect PURE ~> STINT = lift_pure_stint
 

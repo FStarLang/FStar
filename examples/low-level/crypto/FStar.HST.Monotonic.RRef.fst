@@ -50,7 +50,7 @@ val m_write: #r:rid -> #a:Type -> #b:reln a -> mr:m_rref r a b -> v:a -> STL uni
   (ensures (assign_post (as_ref mr) v))
 let m_write #r #a #b mr v = mr := v
 
-inline type stable_on_mem (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:mem -> GTot Type0) =
+unfold type stable_on_mem (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:mem -> GTot Type0) =
   forall m0 m1. p m0 /\ b (m_sel m0 r) (m_sel m1 r) ==> p m1
 
 abstract type witnessed (p:mem -> GTot Type0) = True
