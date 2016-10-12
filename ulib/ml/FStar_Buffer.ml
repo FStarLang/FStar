@@ -51,3 +51,5 @@ let only a = BatSet.empty
 
 let op_Array_Access b n = index b n
 let op_Array_Assignment b n v = upd b n v
+
+let recall = fun b -> ()

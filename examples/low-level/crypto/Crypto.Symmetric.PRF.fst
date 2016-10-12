@@ -113,7 +113,7 @@ let find_blk #rgn #i s (x:domain{x.ctr<>0ul /\ ~(safeId i)}) =
 // The table exists only for idealization
 // TODO it should be a monotonic map: what's in the table stays there. 
 let table_t rgn i = 
-  if prf i then (r: HS.ref (Seq.seq (entry rgn i)) {HS.frameOf r = rgn})
+  if prf i then r:HS.ref (Seq.seq (entry rgn i)) {HS.frameOf r = rgn}
   else unit
 
 // the PRF instance, including its key and memoization table
@@ -121,19 +121,24 @@ let table_t rgn i =
 noeq type state (i:id) =
   | State: #rgn: region -> 
            // key is immutable once generated, we should make it private
-           key: lbuffer (v (Block.keylen prfa)) {Buffer.frameOf key = rgn} ->
+           key: lbuffer (v (Block.keylen prfa)) 
+             {Buffer.frameOf key = rgn /\ ~(HS.MkRef.mm (Buffer.content key))} ->
            table: table_t rgn i ->
            state i
 
 // boring...
-val itable: i:id {prf i} -> s:state i  -> Tot (r: HS.ref (Seq.seq (entry s.rgn i)) {HS.frameOf r = s.rgn})
+val itable: i:id {prf i} -> s:state i 
+  -> Tot (r:HS.ref (Seq.seq (entry s.rgn i)) {HS.frameOf r = s.rgn})
 let itable i s = s.table
-val mktable: i:id {prf i} -> rgn:region -> r: HS.ref (Seq.seq (entry rgn i)) {HS.frameOf r = rgn} -> Tot (table_t rgn i)
+
+val mktable: i:id {prf i} -> rgn:region 
+  -> r:HS.ref (Seq.seq (entry rgn i)) {HS.frameOf r = rgn} -> Tot (table_t rgn i)
 let mktable i rgn r = r 
+
 val no_table: i:id {~(prf i)} -> rgn:region -> Tot (table_t rgn i)
 let no_table i rgn = ()
 
- 
+
 val gen: rgn:region -> i:id -> ST (state i)
   (requires (fun h -> True))
   (ensures  (fun h0 s h1 ->
@@ -142,7 +147,10 @@ val gen: rgn:region -> i:id -> ST (state i)
 let gen rgn i =
   let key = Buffer.rcreate rgn 0uy (Block.keylen prfa) in
   store_bytes (Block.keylen prfa) key (random (Block.keylen prfa));
-  let table = if prf i then mktable i rgn (ralloc rgn (Seq.createEmpty #(entry rgn i))) else () in
+  let table: table_t rgn i = 
+    if prf i then mktable i rgn (ralloc rgn (Seq.createEmpty #(entry rgn i))) 
+    else () 
+  in
   State #i #rgn key table
 // no need to demand prf i so far.
 
@@ -164,13 +172,10 @@ private val getBlock:
   output:lbuffer (v len) { Buffer.disjoint t.key output } -> ST unit
   (requires (fun h0 -> Buffer.live h0 output))
   (ensures (fun h0 r h1 -> Buffer.live h1 output /\ Buffer.modifies_1 output h0 h1 ))
-//TODO: we need some way to recall that t.key is in an eternal region and can be recalled
 let getBlock #i t x len output =
-  // buffer_recall t.key;
-  let h = HST.get() in 
-  assume(Buffer.live h t.key);
-  //16-10-08 TODO should easily follow from the key's region being eternal.
+  Buffer.recall t.key;
   Block.compute Block.CHACHA20 output t.key x.iv x.ctr len
+
 
 // We encapsulate our 3 usages of the PRF in specific functions.
 // But we still use a single, ctr-dependent range in the table.
@@ -180,7 +185,6 @@ let getBlock #i t x len output =
 // whereas the real PRF output is their xor.
 
 // the first block (ctr=0) is used to generate a single-use MAC
-
 
 val prf_mac: 
   i:id -> t:state i -> x:domain{x.ctr = 0ul} -> ST (MAC.state (i,x.iv))
@@ -199,33 +203,33 @@ val prf_mac:
       HS.modifies (Set.singleton t.rgn) h0 h1 /\
       HS.modifies_ref t.rgn TSet.empty h0 h1 
   )))
-#reset-options "--z3timeout 10000"
 
+#reset-options "--z3timeout 1000"
 
 let prf_mac i t x =
   let macId = (i,x.iv) in
-  if prf i then (
+  if prf i then 
+    begin
     let r = itable i t in 
     let contents = recall r; !r in 
     match find_mac contents x with
-    | Some mac -> 
-        mac
+    | Some mac -> mac
     | None ->
-        let mac = MAC.gen macId t.rgn in
-        recall r; 
-        r := SeqProperties.snoc contents (Entry x mac);
-        mac )
-  else (
-    let h0 = HST.get() in
-    assume(Buffer.live h0 t.key);
+      let mac = MAC.gen macId t.rgn in
+      recall r; 
+      r := SeqProperties.snoc contents (Entry x mac);
+      mac
+    end    
+  else
+    begin
+    Buffer.recall t.key;
     let keyBuffer = Buffer.rcreate t.rgn 0uy keylen in
     let h1 = HST.get() in 
     getBlock t x keylen keyBuffer;
     let h2 = HST.get() in 
     Buffer.lemma_reveal_modifies_1 keyBuffer h1 h2;
-    MAC.coerce macId t.rgn keyBuffer )
-
-
+    MAC.coerce macId t.rgn keyBuffer
+    end
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
@@ -355,7 +359,7 @@ val prf_dexor:
        else modifies_x_buffer_1 t x pb h0 h1
      else Buffer.modifies_1 pb h0 h1 )))
 
-#reset-options "--z3timeout 10000"
+#reset-options "--z3timeout 30"
 
 let prf_dexor i t x l plain cipher =
   if safeId i then
@@ -374,7 +378,6 @@ let prf_dexor i t x l plain cipher =
     prf_raw i t x l plainrepr; 
     let h1 = HST.get() in
     assert(modifies_x_buffer_1 t x plainrepr h0 h1);
-    assume(Buffer.live h1 cipher);
     (if prf i then recall (itable i t));
     Buffer.Utils.xor_bytes_inplace plainrepr cipher l;
     let h2 = HST.get() in
@@ -427,11 +430,9 @@ let prf_enxor i t x l cipher plain =
     store_bytes l cipher c;
     let h1 = HST.get() in
     Buffer.lemma_reveal_modifies_1 cipher h0 h1;
-    assume(Plain.live h1 plain);
     assert(p == sel_plain h1 l plain);
     r := contents';
     let h2 = HST.get() in
-    assume(Plain.live h2 plain);
     assert(p == sel_plain h2 l plain); //16-10-12  how to anti-alias a buffer? 
     assert(modifies_x_buffer_1 t x cipher h0 h2);
     ()
@@ -442,7 +443,6 @@ let prf_enxor i t x l cipher plain =
     prf_raw i t x l cipher;
     let h1 = HST.get() in
     assert(modifies_x_buffer_1 t x cipher h0 h1);
-    assume(Buffer.live h1 plainrepr);
     (if prf i then recall (itable i t));
     Buffer.Utils.xor_bytes_inplace cipher plainrepr l;
     let h2 = HST.get() in
