@@ -100,21 +100,41 @@ let ref (a:Type) = s:reference a{is_eternal_region s.id && not s.mm}
 let mmstackref (a:Type) = s:reference a {is_stack_region s.id && s.mm }
 let mmref (a:Type) = s:reference a{is_eternal_region s.id && s.mm}
 
+(*
+ * The Map.contains conjunct is necessary to prove that upd
+ * returns a valid mem. In particular, without Map.contains,
+ * we cannot prove the eternal regions invariant that all
+ * included regions of a region are also in the map.
+ *)
 let live_region (m:mem) (i:rid) =
   (is_eternal_region i \/ i `is_above` m.tip)
   /\ Map.contains m.h i
 
 (*
- * AR: TODO.
+ * AR: adding a weaker version of live_region that could be
+ * used in the precondition of read.
  *)
-
-(* let live_region' (m:mem) (i:rid) = *)
-(*   live_region m i *)
-(*   /\ Map.contains m.h i *)
+let weak_live_region (m:mem) (i:rid) =
+  is_eternal_region i \/ i `is_above` m.tip
 
 let contains (#a:Type) (m:mem) (s:reference a) =
   live_region m s.id
   /\ HH.contains_ref s.ref m.h
+
+private val weak_live_region_implies_eternal_or_in_map: r:rid -> m:mem -> Lemma
+  (requires (weak_live_region m r))
+  (ensures (is_eternal_region r \/ Map.contains m.h r))
+let weak_live_region_implies_eternal_or_in_map r m = ()
+
+(*
+ * AR: corresponding to weak_live_region above.
+ * Replacing HH.contains_ref with weak_contains_ref under mm flag.
+ * If the reference is manually managed, we must prove Heap.contains
+ * before reading the ref.
+ *)
+let weak_contains (#a:Type) (m:mem) (s:reference a) =
+  weak_live_region m s.id /\
+  (if s.mm then HH.weak_contains_ref s.ref m.h else True)
 
 let upd (#a:Type) (m:mem) (s:reference a{live_region m s.id}) (v:a)
   : GTot mem
@@ -210,3 +230,13 @@ let above_tip_is_live (#a:Type) (m:mem) (x:reference a) : Lemma
   (requires (x.id `is_above` m.tip))
   (ensures (x.id `is_in` m.h))
   = ()
+
+(*
+ * AR: relating contains and weak_contains.
+ *)
+let contains_implies_weak_contains (#a:Type) (h:mem) (x:reference a) :Lemma
+  (requires (True))
+  (ensures (contains h x ==> weak_contains h x))
+  [SMTPatOr [[SMTPat (contains h x)]; [SMTPat (weak_contains h x)]] ]
+  = ()
+      

@@ -3,6 +3,7 @@ module FStar.Monotonic.RRef
 open FStar
 open FStar.HyperHeap
 
+open FStar.ST
 open FStar.HyperStack
 
 module HH = FStar.HyperHeap
@@ -19,6 +20,9 @@ let monotonic (a:Type) (b:reln a) =
  *)
 type rid = r:HH.rid{is_eternal_region r}
 
+(*
+ * AR: HS.ref, means it is not mm.
+ *)
 abstract type m_rref (r:rid) (a:Type) (b:reln a) = x:HS.ref a{x.id = r}
 
 let haseq_m_rref (r:rid) (a:Type) (b:reln a) 
@@ -74,7 +78,7 @@ val m_read:#r:rid
        -> #b:reln a
        -> x:m_rref r a b
        -> ST a
-            (requires (fun h -> h `contains` (as_hsref x)))
+            (requires (fun h -> True))
             (ensures (deref_post (as_hsref x)))
 let m_read #r #a #b x = !x
 
