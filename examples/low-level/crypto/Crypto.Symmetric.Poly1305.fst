@@ -23,6 +23,7 @@ open Crypto.Symmetric.Poly1305.Spec
 open Crypto.Symmetric.Poly1305.Parameters
 open Crypto.Symmetric.Poly1305.Bigint
 open Crypto.Symmetric.Poly1305.Bignum
+open Flag
 
 module U8  = FStar.UInt8
 module U32 = FStar.UInt32
@@ -653,11 +654,9 @@ let seq_head_snoc #a xs x =
 
 #reset-options
 
-assume val ideal: bool
+let log_t: Type0 = if mac_log then text else unit
 
-let log_t: Type0 = if ideal then text else unit
-
-val ilog: l:log_t{ideal} -> Tot text
+val ilog: l:log_t{mac_log} -> Tot text
 let ilog l = l
 
 val poly1305_update:
@@ -666,11 +665,11 @@ val poly1305_update:
   acc:elemB{disjoint msg acc} ->
   r:elemB{disjoint msg r /\ disjoint acc r} -> Stack log_t
     (requires (fun h -> live h msg /\ norm h acc /\ norm h r
-      /\ (ideal ==> sel_elem h acc == poly (ilog current_log) (sel_elem h r)) ))
+      /\ (mac_log ==> sel_elem h acc == poly (ilog current_log) (sel_elem h r)) ))
     (ensures (fun h0 updated_log h1 -> live h1 msg /\ norm h1 acc /\ norm h1 r
       /\ norm h0 r
       /\ modifies_1 acc h0 h1
-      /\ (ideal ==>
+      /\ (mac_log ==>
          ilog updated_log == SeqProperties.snoc (ilog current_log) (encode (sel_word h1 msg))
          /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
 
@@ -691,7 +690,7 @@ let poly1305_update log msgB acc r =
   eval_eq_lemma h1 h2 block block Parameters.norm_length;
   assert (modifies_1 acc h1 h2);
   let updated_log:log_t =
-    if ideal then
+    if mac_log then
       begin
       let msg = read_word msgB in
       assert (encode msg == sel_elem h1 block);
@@ -725,11 +724,11 @@ val poly1305_loop: current_log:log_t -> msg:bytes -> acc:elemB{disjoint msg acc}
   r:elemB{disjoint msg r /\ disjoint acc r} -> ctr:u32{length msg >= 16 * w ctr} ->
   ST log_t
   (requires (fun h -> live h msg /\ norm h acc /\ norm h r /\
-      (ideal ==>
+      (mac_log ==>
         sel_elem h acc == poly (ilog current_log) (sel_elem h r)) ))
   (ensures (fun h0 updated_log h1 -> live h0 msg /\ norm h1 acc /\ norm h0 r /\
       modifies_1 acc h0 h1 /\
-      (ideal ==>
+      (mac_log ==>
         (ilog updated_log ==
         encode_pad (ilog current_log) (as_seq h0 (Buffer.sub msg 0ul (UInt32.mul 16ul ctr))) /\
         sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r))) ))
@@ -739,7 +738,7 @@ let rec poly1305_loop log msg acc r ctr =
   let h0 = HST.get () in
   if U32.lte ctr 0ul then
     begin
-      if ideal then encode_pad_empty (ilog log) (as_seq h0 (Buffer.sub msg 0ul 0ul));
+      if mac_log then encode_pad_empty (ilog log) (as_seq h0 (Buffer.sub msg 0ul 0ul));
       log
     end
   else
@@ -750,14 +749,14 @@ let rec poly1305_loop log msg acc r ctr =
       let msg1 = Buffer.offset msg 16ul in
       eval_eq_lemma h0 h1 r r norm_length;
       assert (live h1 msg1 /\ norm h1 acc /\ norm h1 r);
-      assert (ideal ==> sel_elem h1 acc == poly (ilog log1) (sel_elem h0 r));
-      assert (ideal ==>
+      assert (mac_log ==> sel_elem h1 acc == poly (ilog log1) (sel_elem h0 r));
+      assert (mac_log ==>
         ilog log1 == SeqProperties.snoc (ilog log) (encode (sel_word h1 msg0)));
       let log2 = poly1305_loop log1 msg1 acc r (U32 (ctr -^ 1ul)) in
       let h2 = HST.get () in
       assert (norm h2 acc /\ modifies_1 acc h0 h2);
       lemma_modifies_1_trans acc h0 h1 h2;
-      if ideal then
+      if mac_log then
         begin
           //assert (ilog log2 ==
           //  encode_pad (ilog log1)
@@ -790,11 +789,11 @@ val poly1305_last:
   len:u32{w len < length msg} ->
   Stack log_t
     (requires (fun h -> live h msg /\ norm h acc /\ norm h r /\
-      (ideal ==> sel_elem h acc == poly (ilog current_log) (sel_elem h r)) ))
+      (mac_log ==> sel_elem h acc == poly (ilog current_log) (sel_elem h r)) ))
     (ensures (fun h0 updated_log h1 -> live h0 msg /\ norm h1 acc /\ norm h1 r
       /\ norm h0 r
       /\ modifies_1 acc h0 h1
-      /\ (ideal ==>
+      /\ (mac_log ==>
          //ilog updated_log == encode_pad (ilog current_log) (as_seq h1 (Buffer.sub msg 0ul len)) /\
         sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
 let poly1305_last log msg acc r len =
@@ -816,7 +815,7 @@ let poly1305_last log msg acc r len =
     eval_eq_lemma h1 h2 block block Parameters.norm_length;
     assert (modifies_1 acc h1 h2);
     let updated_log:log_t =
-      if ideal then
+      if mac_log then
         begin
         let msg = read_word msg in
         assert (encode msg == sel_elem h1 block);
@@ -939,7 +938,7 @@ let poly1305_mac tag msg len key =
   let ctr = U32.div len 16ul in
   let rest = U32.rem len 16ul in
   (* Run the poly1305_update function ctr times *)
-  let l:log_t = if ideal then Seq.createEmpty #text else () in
+  let l:log_t = if mac_log then Seq.createEmpty #text else () in
   let l = poly1305_loop l msg acc r ctr in
   (* Run the poly1305_update function one more time on the incomplete block *)
   let last_block = sub msg (FStar.UInt32 (ctr *^ 16ul)) rest in

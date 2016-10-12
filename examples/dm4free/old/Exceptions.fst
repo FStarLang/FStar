@@ -4,39 +4,39 @@ let ex_pre = Type0
 let ex_post (a:Type) = option a -> Type0
 let ex_wp (a:Type) = unit -> ex_post a -> Type0
 
-inline let ex_return_wp (a:Type) (x:a) (_:unit) (post:ex_post a) = 
+unfold let ex_return_wp (a:Type) (x:a) (_:unit) (post:ex_post a) = 
   post (Some x)
 
 //working around #517 by adding an explicit 'val'
-inline val ex_bind_wp : r:range -> (a:Type) -> (b:Type) -> (f:ex_wp a) -> (g:(a -> Tot (ex_wp b))) -> Tot (ex_wp b)
+unfold val ex_bind_wp : r:range -> (a:Type) -> (b:Type) -> (f:ex_wp a) -> (g:(a -> Tot (ex_wp b))) -> Tot (ex_wp b)
 let ex_bind_wp r a b wp1 wp2 =
   fun (_:unit) (p:ex_post b) -> 
    wp1 () (fun aopt -> match aopt with 
 		    | None -> p None
 		    | Some x -> wp2 x () p)
 		    
-inline let ex_ite_wp (a:Type) (wp:ex_wp a) (_:unit) (post:ex_post a) =
+unfold let ex_ite_wp (a:Type) (wp:ex_wp a) (_:unit) (post:ex_post a) =
   wp () post
   
-inline let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a) (_:unit) (post:ex_post a) =
+unfold let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a) (_:unit) (post:ex_post a) =
    l_ITE p
        (wp_then () post)
        (wp_else () post)
        
-inline let ex_stronger (a:Type) (wp1:ex_wp a) (wp2:ex_wp a) =
+unfold let ex_stronger (a:Type) (wp1:ex_wp a) (wp2:ex_wp a) =
         (forall (p:ex_post a). wp1 () p ==> wp2 () p)
 
-inline let ex_close_wp (a:Type) (b:Type) (wp:(b -> GTot (ex_wp a))) (_:unit) (p:ex_post a) = (forall (b:b). wp b () p)
-inline let ex_assert_p (a:Type) (q:Type) (wp:ex_wp a) (_:unit) (p:ex_post a) = (q /\ wp () p)
-inline let ex_assume_p (a:Type) (q:Type) (wp:ex_wp a) (_:unit) (p:ex_post a) = (q ==> wp () p)
-inline let ex_null_wp (a:Type) (_:unit) (p:ex_post a) = (forall (r:option a). p r)
-inline let ex_trivial (a:Type) (wp:ex_wp a) = wp () (fun r -> True)
+unfold let ex_close_wp (a:Type) (b:Type) (wp:(b -> GTot (ex_wp a))) (_:unit) (p:ex_post a) = (forall (b:b). wp b () p)
+unfold let ex_assert_p (a:Type) (q:Type) (wp:ex_wp a) (_:unit) (p:ex_post a) = (q /\ wp () p)
+unfold let ex_assume_p (a:Type) (q:Type) (wp:ex_wp a) (_:unit) (p:ex_post a) = (q ==> wp () p)
+unfold let ex_null_wp (a:Type) (_:unit) (p:ex_post a) = (forall (r:option a). p r)
+unfold let ex_trivial (a:Type) (wp:ex_wp a) = wp () (fun r -> True)
 
 //new
 let ex_repr (a:Type) (wp:ex_wp a) =
     unit -> PURE (option a) (wp ())
 
-inline val ex_bind: (a:Type) -> (b:Type) -> (wp0:ex_wp a) 
+unfold val ex_bind: (a:Type) -> (b:Type) -> (wp0:ex_wp a) 
 		 -> (f:ex_repr a wp0)
 		 -> (wp1:(a -> Tot (ex_wp b))) 
 		 -> (g:(x:a -> Tot (ex_repr b (wp1 x)))) 
@@ -70,7 +70,7 @@ reifiable reflectable new_effect {
   (*   raise        = raise *)
 }
 
-inline let lift_pure_ex (a:Type) (wp:pure_wp a) (_:unit) (p:ex_post a) = wp (fun a -> p (Some a))
+unfold let lift_pure_ex (a:Type) (wp:pure_wp a) (_:unit) (p:ex_post a) = wp (fun a -> p (Some a))
 sub_effect PURE ~> EXN = lift_pure_ex
 
 effect Exn (a:Type) (pre:ex_pre) (post:ex_post a) =

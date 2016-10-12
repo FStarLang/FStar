@@ -41,20 +41,22 @@ let trans_aqual = function
 let trans_qual r = function
   | AST.Private ->       S.Private
   | AST.Assumption ->    S.Assumption
-  | AST.Inline ->        S.Inline
-  | AST.Unfoldable ->    S.Unfoldable
+  | AST.Unfold_for_unification_and_vcgen -> S.Unfold_for_unification_and_vcgen
+  | AST.Inline_for_extraction -> S.Inline_for_extraction
   | AST.Irreducible ->   S.Irreducible
   | AST.Logic ->         S.Logic
   | AST.TotalEffect ->   S.TotalEffect
   | AST.Effect ->        S.Effect
   | AST.New  ->          S.New
   | AST.Abstract ->      S.Abstract
-  | AST.Opaque ->        FStar.TypeChecker.Errors.warn r "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."; S.Unfoldable
+  | AST.Opaque ->        FStar.TypeChecker.Errors.warn r "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."; S.Visible_default
   | AST.Reflectable ->   S.Reflectable
   | AST.Reifiable ->     S.Reifiable
   | AST.Noeq ->          S.Noeq
   | AST.Unopteq ->       S.Unopteq
   | AST.DefaultEffect -> raise (Error("The 'default' qualifier on effects is no longer supported", r))
+  | AST.Inline
+  | AST.Visible -> raise (Error("Unsupported qualifier", r))
   
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
@@ -152,13 +154,13 @@ let op_as_term env arity rng s : option<S.term> =
         | "|>" ->   r C.pipe_right_lid Delta_equational
         | "<|" ->   r C.pipe_left_lid Delta_equational
         | "<>" ->   r C.op_notEq Delta_equational
-        | "~"   ->  r C.not_lid (Delta_unfoldable 2)
+        | "~"   ->  r C.not_lid (Delta_defined_at_level 2)
         | "=="  ->  r C.eq2_lid Delta_constant
         | "<<" ->   r C.precedes_lid Delta_constant
-        | "/\\" ->  r C.and_lid (Delta_unfoldable 1)
-        | "\\/" ->  r C.or_lid (Delta_unfoldable 1)
-        | "==>" ->  r C.imp_lid (Delta_unfoldable 1)
-        | "<==>" -> r C.iff_lid (Delta_unfoldable 2)
+        | "/\\" ->  r C.and_lid (Delta_defined_at_level 1)
+        | "\\/" ->  r C.or_lid (Delta_defined_at_level 1)
+        | "==>" ->  r C.imp_lid (Delta_defined_at_level 1)
+        | "<==>" -> r C.iff_lid (Delta_defined_at_level 2)
         | _ -> None in
    begin match Env.try_lookup_lid env (compile_op_lid arity s rng) with
         | Some t -> Some (fst t)
@@ -574,7 +576,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       when is_special_effect_combinator txt && Env.is_effect_name env (lid_of_ids (eff :: rest)) ->
         begin match try_lookup_effect_defn env (lid_of_ids (eff :: rest)) with
         | Some ed ->
-            S.fvar (lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ txt)) Range.dummyRange) (Delta_unfoldable 1) None
+            S.fvar (lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ txt)) Range.dummyRange) (Delta_defined_at_level 1) None
         | None ->
             failwith "immpossible special_effect_combinator"
         end
@@ -1063,7 +1065,7 @@ and desugar_formula env (f:term) : S.term =
           | [] -> body
           | _ -> mk (Tm_meta (body, Meta_pattern pats)) in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
-        mk <| Tm_app (S.fvar (set_lid_range q b.brange) (Delta_unfoldable 1) None, [as_arg body])
+        mk <| Tm_app (S.fvar (set_lid_range q b.brange) (Delta_defined_at_level 1) None, [as_arg body])
 
       | _ -> failwith "impossible" in
 

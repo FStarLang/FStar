@@ -277,7 +277,7 @@ let head_normal env t =
     | Tm_abs _ 
     | Tm_constant _ -> true
     | Tm_fvar fv 
-    | Tm_app({n=Tm_fvar fv}, _) -> Env.lookup_definition Env.OnlyInline env.tcenv fv.fv_name.v |> Option.isNone
+    | Tm_app({n=Tm_fvar fv}, _) -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isNone
     | _ -> false
 
 let head_redex env t = 
@@ -290,14 +290,14 @@ let head_redex env t =
       Util.is_tot_or_gtot_lcomp lc
 
     | Tm_fvar fv -> 
-      Env.lookup_definition Env.OnlyInline env.tcenv fv.fv_name.v |> Option.isSome
+      Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isSome
 
     | _ -> false
 
 let whnf env t = 
     if head_normal env t then t
-    else N.normalize [N.Beta; N.WHNF; N.Inline; N.EraseUniverses] env.tcenv t
-let norm env t = N.normalize [N.Beta; N.Inline; N.EraseUniverses] env.tcenv t
+    else N.normalize [N.Beta; N.WHNF; N.Eager_unfolding; N.EraseUniverses] env.tcenv t
+let norm env t = N.normalize [N.Beta; N.Eager_unfolding; N.EraseUniverses] env.tcenv t
 
 let trivial_post t : Syntax.term = 
     Util.abs [null_binder t]
@@ -1732,7 +1732,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       [], env
 
     | Sig_let(_, _, lids, quals) when (lids |> Util.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
-                                    && quals |> Util.for_some (function Inline -> true | _ -> false)) ->
+                                    && quals |> Util.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       [], env
 
@@ -1754,7 +1754,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | Tm_abs(bs, body, _) -> 
           let body = Util.mk_reify body in
           let tm = S.mk (Tm_abs(bs, body, None)) None lb.lbdef.pos in
-          let tm' = N.normalize [N.Beta; N.Reify; N.Inline; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in
+          let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in
           let lb_typ = 
             let formals, comp = Util.arrow_formals_comp lb.lbtyp in
             let reified_typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) (Util.lcomp_of_comp comp) U_unknown in
@@ -2002,7 +2002,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
           i+1, [], env
         
         | Env.Binding_var x -> 
-            let t1 = N.normalize [N.Beta; N.Inline; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
+            let t1 = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
             if Env.debug env.tcenv <| Options.Other "SMTEncoding"
             then (Util.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
             let t, decls' = encode_term t1 env in
@@ -2134,7 +2134,7 @@ let encode_query use_env_msg tcenv q
         let rec aux bindings = match bindings with 
             | Env.Binding_var x::rest -> 
                 let out, rest = aux rest in 
-                let t = N.normalize [N.Inline; N.Beta; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
+                let t = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
                 Syntax.mk_binder ({x with sort=t})::out, rest 
             | _ -> [], bindings in
         let closing, bindings = aux bindings in 
