@@ -281,16 +281,20 @@ private let accumulate i ak (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
 // INVARIANT (WIP)
 
 let maxplain (i:id) = pow2 14 // for instance
+
 private let safelen (i:id) (l:nat) (c:UInt32.t{0ul <^ c /\ c <=^ PRF.maxCtr }) = 
-  l = 0 \/ (
+  l = 0 || (
     let bl = v (Cipher( blocklen (alg i))) in
     FStar.Mul(
-      l + (v (c -^ 1ul)) * bl <= maxplain i /\ 
+      l + (v (c -^ 1ul)) * bl <= maxplain i && 
       l  <= v (PRF.maxCtr -^ c) * bl ))
     
 // Computes PRF table contents for countermode encryption of 'plain' to 'cipher' starting from 'x'.
 val counterblocks: 
-  i:id {safeId i} -> rgn:region -> 
+  i:id {safeId i} -> 
+  rgn:region ->  //the rgn is really superfluous, 
+		//since it is only potentially relevant in the case of the mac, 
+		//but that's always Seq.createEmpty here
   x:PRF.domain {ctr x >^ 0ul} -> 
   l:nat {safelen i l (ctr x)} -> 
   plain:Plain.plain i l -> 
@@ -300,8 +304,8 @@ val counterblocks:
 
 let rec counterblocks i rgn x l plain cipher = 
   let blockl = v (Cipher(blocklen (alg i))) in 
-  if l = 0 
-  then Seq.createEmpty
+  if l = 0 then
+    Seq.createEmpty
   else 
     let l0 = minNat l blockl in 
     let l_32 = UInt32.uint_to_t l0 in 
@@ -321,31 +325,55 @@ val refines:
   blocks: Seq.seq (PRF.entry rgn i) -> GTot Type0
   (decreases (Seq.length entries))
 
-//#reset-options "--print_universes"
+let num_blocks (#i:id) (e:entry i) = 
+  let Entry nonce ad l plain cipher_tagged = e in
+  let bl = v (Cipher( blocklen (alg i))) in
+  (l + bl - 1) / bl
+
+let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (blocks:Seq.seq (PRF.entry rgn i)) = 
+  let Entry nonce ad l plain cipher_tagged = e in
+  let b = num_blocks e in 
+  b + 1 = Seq.length blocks /\
+  (let PRF.Entry x e = Seq.index blocks 0 in
+   PRF (x.iv = nonce) /\
+   PRF (x.ctr = 0ul)  /\ (
+   let xors = Seq.slice blocks 1 (b+1) in 
+   let cipher, tag = SeqProperties.split cipher_tagged l in
+   safelen i l 1ul /\
+   xors == counterblocks i rgn (PRF.incr x) l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts
+   (let m = PRF.macRange rgn i x e in
+    match m_sel h (MAC.ilog (MAC.State.log m)) with
+    | None           -> False
+    | Some (msg,tag') -> msg = field_encode i ad plain /\
+			tag = tag'))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
+
 let rec refines h i rgn entries blocks = 
   if Seq.length entries = 0 then 
-    Seq.length blocks == 0
-  else
-  (match Seq.index entries 0 with
-  | Entry nonce ad l plain cipher_tagged -> 
-    begin
-      let bl = v (Cipher( blocklen (alg i))) in
-      let b = (l + bl -1) / bl in // number of blocks XOR-ed for this encryption
-      (b < Seq.length blocks /\
-      (match Seq.index blocks 0 with
-      | PRF.Entry x e -> (
-          x == PRF({iv=nonce; ctr=0ul}) /\ (
-          let m = PRF.macRange rgn i x e in
-          let xors    = Seq.slice blocks 1 (b+1)  in 
-          let blocks  = Seq.slice blocks (b+1) (Seq.length blocks) in 
-          let entries = Seq.slice entries 1 (Seq.length entries) in 
-          let cipher, tag = SeqProperties.split cipher_tagged l in
-          safelen i l 1ul /\
-          Seq.equal #(PRF.entry rgn i) xors (counterblocks i rgn (PRF.incr x) l plain cipher) /\
-          (match m_sel h (MAC.ilog (MAC.State.log m)) with
-          | None           -> False
-          | Some (msg,tag) -> msg == field_encode i ad plain /\ refines h i rgn entries blocks)))))
-    end)
+    Seq.length blocks == 0 //NS:using == to get it to match with the Type returned by the other branch
+  else let e = Seq.index entries 0 in
+       let b = num_blocks e in 
+       b < Seq.length blocks /\
+       (let blocks_for_e = Seq.slice blocks 0 (b + 1) in 
+       	let entries_tl = Seq.slice entries 1 (Seq.length entries) in 
+        let remaining_blocks = Seq.slice blocks (b+1) (Seq.length blocks) in 
+        refines_one_entry h e blocks_for_e /\
+	refines h i rgn entries_tl remaining_blocks)
+
+let refines_empty (h:mem) (i:id{safeId i}) (rgn:region) 
+  : Lemma (refines h i rgn Seq.createEmpty Seq.createEmpty)
+  = ()
+
+let refines_extends (h:mem) (i:id{safeId i}) (rgn:region) 
+		    (entries:Seq.seq (entry i))
+		    (blocks:Seq.seq (PRF.entry rgn i))
+		    (h':mem)
+		    (e:entry i)
+		    (blocks_for_e:Seq.seq (PRF.entry rgn i))
+  : Lemma (requires refines h i rgn entries blocks /\
+		    refines_one_entry h' e blocks_for_e // /\ something about the mac log not changing in h' at any existing location in h
+		    )
+	  (ensures (refines h' i rgn (SeqProperties.snoc entries e) (Seq.append blocks blocks_for_e)))
+  = admit()
 
 
 (* notes 16-10-04 
