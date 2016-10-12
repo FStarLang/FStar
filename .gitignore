@@ -71,3 +71,4 @@ tags
 /nuobj/
 nubuild.log
 nubuild.progress
+examples/algorithms/IntStable.fst
