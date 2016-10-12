@@ -686,9 +686,7 @@ let load_key keyfile =
 
 (* -------------------------------------------------------------------------- *)
 
-external ocaml_err_load_crypto_strings: unit -> unit = "ocaml_err_load_crypto_strings"
-external ocaml_rand_poll: unit -> unit = "ocaml_rand_poll"
+external ocaml_openssl_init: unit -> unit = "ocaml_openssl_init"
 
 let _ =
-  ocaml_rand_poll ();
-  ocaml_err_load_crypto_strings ()
+  ocaml_openssl_init ()

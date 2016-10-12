@@ -87,15 +87,10 @@ static uint8_t* buffer_of_platform_bytes(value mlbytes, size_t* out_length) {
 
 /* -------------------------------------------------------------------- */
 
-CAMLprim value ocaml_rand_poll(value unit) {
+CAMLprim value ocaml_openssl_init(value unit) {
   CAMLparam1(unit);
+  OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS | OPENSSL_INIT_ADD_ALL_CIPHERS | OPENSSL_INIT_ADD_ALL_DIGESTS, NULL);
   RAND_poll();
-  CAMLreturn(Val_unit);
-}
-
-CAMLprim value ocaml_err_load_crypto_strings(value unit) {
-  CAMLparam1(unit);
-  ERR_load_crypto_strings();
   CAMLreturn(Val_unit);
 }
 
@@ -150,7 +145,7 @@ static void ocaml_evp_md_ctx_finalize(value mlctx) {
     EVP_MD_CTX *ctx = MD_CTX_val(mlctx);
 
     if (ctx != NULL)
-        EVP_MD_CTX_destroy(ctx);
+        EVP_MD_CTX_free(ctx);
 }
 
 static struct custom_operations evp_md_ctx_ops = {
@@ -163,7 +158,7 @@ static struct custom_operations evp_md_ctx_ops = {
 };
 
 /* -------------------------------------------------------------------- */
-CAMLprim value ocaml_EVP_MD_CTX_create(value md) {
+CAMLprim value ocaml_EVP_MD_CTX_new(value md) {
     EVP_MD_CTX *ctx = NULL;
 
     CAMLparam1(md);
@@ -171,11 +166,11 @@ CAMLprim value ocaml_EVP_MD_CTX_create(value md) {
 
     mlctx = caml_alloc_custom(&evp_md_ctx_ops, sizeof(EVP_MD_CTX*), 0, 1);
 
-    if ((ctx = EVP_MD_CTX_create()) == NULL)
+    if ((ctx = EVP_MD_CTX_new()) == NULL)
         caml_failwith("cannot alloc EVP_MD_CTX structure");
 
     if (EVP_DigestInit_ex(ctx, MD_val(md), NULL) == 0) {
-        EVP_MD_CTX_destroy(ctx);
+        EVP_MD_CTX_free(ctx);
         caml_failwith("cannot initialize EVP_MD_CTX structure");
     }
 
@@ -190,7 +185,7 @@ CAMLprim value ocaml_EVP_MD_CTX_fini(value mlctx) {
     CAMLparam1(mlctx);
 
     if ((ctx = MD_CTX_val(mlctx)) != NULL) {
-        EVP_MD_CTX_destroy(ctx);
+        EVP_MD_CTX_free(ctx);
         MD_CTX_val(mlctx) = NULL;
     }
 
@@ -223,7 +218,7 @@ CAMLprim value ocaml_EVP_MD_CTX_final(value mlctx) {
 
     aout = caml_alloc_string(EVP_MD_CTX_size(ctx));
     (void) EVP_DigestFinal_ex(ctx, (uint8_t*) String_val(aout), NULL);
-    EVP_MD_CTX_destroy(ctx);
+    EVP_MD_CTX_free(ctx);
     MD_CTX_val(mlctx) = NULL;
 
     CAMLreturn(aout);
@@ -271,7 +266,7 @@ static void ocaml_evp_cipher_finalize(value mlctx) {
     EVP_CIPHER_CTX *ctx = CIPHER_CTX_val(mlctx);
 
     if (ctx != NULL) {
-        EVP_CIPHER_CTX_cleanup(ctx);
+        EVP_CIPHER_CTX_reset(ctx);
         EVP_CIPHER_CTX_free(ctx);
     }
 }
@@ -297,13 +292,13 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_create(value cipher, value forenc) {
     if ((ctx = EVP_CIPHER_CTX_new()) == NULL)
         caml_failwith("cannot alloc EVP_CIPHER_CTX structure");
 
-    EVP_CIPHER_CTX_init(ctx);
+    EVP_CIPHER_CTX_reset(ctx);
 
     // Set all parameters to NULL except the cipher type in this initial call
     // Give remaining parameters in subsequent calls (e.g. EVP_CIPHER_set_key),
     // all of which have cipher type set to NULL
     if (EVP_CipherInit_ex(ctx, CIPHER_val(cipher), NULL, NULL, NULL, Bool_val(forenc)) == 0) {
-        EVP_CIPHER_CTX_cleanup(ctx);
+        EVP_CIPHER_CTX_reset(ctx);
         EVP_CIPHER_CTX_free(ctx);
         caml_failwith("cannot initialize cipher context");
     }
@@ -323,7 +318,7 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_fini(value mlctx) {
     CAMLparam1(mlctx);
 
     if ((ctx = CIPHER_CTX_val(mlctx)) != NULL) {
-        EVP_CIPHER_CTX_cleanup(ctx);
+        EVP_CIPHER_CTX_reset(ctx);
         EVP_CIPHER_CTX_free(ctx);
         CIPHER_CTX_val(mlctx) = NULL;
     }
@@ -2080,12 +2075,6 @@ static int cb(int ok, X509_STORE_CTX *ctx)
 
 CAMLprim value ocaml_validate_chain(value chain, value for_signing, value hostname, value cafile) {
     CAMLparam4(chain, for_signing, hostname, cafile);
-
-    static int first = 0;
-    if(!first++){
-      OpenSSL_add_all_algorithms ();
-      ERR_load_crypto_strings(); 
-    }
 
     time_t current_time;
     STACK_OF(X509) *sk;
