@@ -218,7 +218,6 @@ private let field_encode i aad cipher : Tot (Seq.seq (field i)) =
   //TODO
   Seq.createEmpty
 
-//16-09-18 how to get <- syntax?
 open FStar.HyperStack
 
 private val add_bytes:
@@ -238,6 +237,8 @@ private val add_bytes:
 
 let rec add_bytes #i st log a len txt =
   assume false; //TODO
+  push_frame();
+  let r = 
   if len = 0ul then log 
   else if len <^ 16ul then 
     begin
@@ -252,7 +253,9 @@ let rec add_bytes #i st log a len txt =
       let log = MAC.add st log a w in
       add_bytes st log a (len -^ 16ul) (Buffer.offset txt 16ul)
     end
-
+  in
+  pop_frame(); r
+  
 // will require StackInline for the accumulator
 private let accumulate i ak (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
   (plainlen:UInt32.t) (cipher:lbuffer (v plainlen)) = 

@@ -376,7 +376,6 @@ let prf_dexor i t x l plain cipher =
     prf_raw i t x l plainrepr; 
     let h1 = HST.get() in
     assert(modifies_x_buffer_1 t x plainrepr h0 h1);
-    //16-10-08 TODO  we miss a post that reflects potential updates to the table with x.ctr > 0ul 
     assume(Buffer.live h1 cipher);
     (if prf i then recall (itable i t));
     Buffer.Utils.xor_bytes_inplace plainrepr cipher l;
@@ -406,7 +405,7 @@ val prf_enxor:
      (safeId i ==> find_otp #t.rgn #i (HS.sel h0 t.table) x == None)))
   (ensures (fun h0 _ h1 ->
      Plain.live h1 plain /\ Buffer.live h1 cipher /\
-     // Buffer.modifies_1 cipher h0 h1 /\ //16-09-22 missing hybrid modifies also covering the table with x.ctr > 0ul.
+     modifies_x_buffer_1 t x cipher h0 h1 /\
      (safeId i ==>
        ( match find_otp #t.rgn #i (HS.sel h1 t.table) x with
          | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain /\ c == sel_bytes h1 l cipher
@@ -415,21 +414,37 @@ val prf_enxor:
 let prf_enxor i t x l cipher plain =
   if safeId i then
     let r = itable i t in 
-    recall r; 
+    let contents = recall r; !r in 
     let p = Plain.load #i l plain in
     let c = random l in // sample a fresh ciphertext block
-    store_bytes l cipher c;  //NS: this write to cipher may disturb the contents of t.table; need an anti-aliasing assumption there
-    let contents = recall r; !r in //NS: Or, we can move this read up; but the anti-aliasing seems like the right thing to do
     let newblock = OTP #i l p c in
-    assume(find_otp #t.rgn #i contents x == None); 
-    //TODO how to avoid explicit annotations on find_otp ? NS: find_otp is fine here; without the store_bytes this assertion succeeds
-    //16-10-08 still broken?
-    
+    let contents' = SeqProperties.snoc contents (Entry x newblock) in
     lemma_snoc_found contents x newblock;
-    r := SeqProperties.snoc contents (Entry x newblock); //NS: t.table is mutated;  so the modifies_1 cipher h0 h1 cannot be true. CF: I know, but can't write the hybrid clause.
-    assume false //16-10-08 missing hybrid post
+    assert(find_otp #t.rgn #i contents x == None); 
+    assert(find_otp #t.rgn #i contents' x == Some newblock);
+
+    let h0 = HST.get() in
+    store_bytes l cipher c;
+    let h1 = HST.get() in
+    Buffer.lemma_reveal_modifies_1 cipher h0 h1;
+    r := contents';
+    let h2 = HST.get() in
+    assert(modifies_x_buffer_1 t x cipher h0 h2);
+    assume(Plain.live h2 plain);
+    ()
+
   else
+    let h0 = HST.get() in 
     let plainrepr = bufferRepr #i #(v l) plain in
+    assert(Buffer.disjoint plainrepr cipher);
     prf_raw i t x l cipher;
-    assume false;//16-10-08 missing hybrid post
-    Buffer.Utils.xor_bytes_inplace cipher plainrepr l
+    let h1 = HST.get() in
+    assert(modifies_x_buffer_1 t x cipher h0 h1);
+    assume(Buffer.live h1 plainrepr);
+    (if prf i then recall (itable i t));
+    Buffer.Utils.xor_bytes_inplace cipher plainrepr l;
+    let h2 = HST.get() in
+    Buffer.lemma_reveal_modifies_1 cipher h1 h2;
+    assert(prf i ==> HS.sel h1 (itable i t) == HS.sel h2 (itable i t));
+    assert(modifies_x_buffer_1 t x cipher h0 h2)
+
