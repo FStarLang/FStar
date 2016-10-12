@@ -377,13 +377,13 @@ and translate_decl env d: option<decl> =
   | MLM_Loc _ ->
       None
 
-  | MLM_Ty [ (assumed, name, params, Some (MLTD_Abbrev t)) ] ->
+  | MLM_Ty [ (assumed, name, args, Some (MLTD_Abbrev t)) ] ->
       let name = env.module_name, name in
-      let env = List.fold_left (fun env (name, _) -> extend_t env name) env params in
+      let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
       if assumed then
         None
       else
-        Some (DTypeAlias (name, List.length params, translate_type env t))
+        Some (DTypeAlias (name, List.length args, translate_type env t))
 
   | MLM_Ty [ (_, name, [], Some (MLTD_Record fields)) ] ->
       let name = env.module_name, name in
