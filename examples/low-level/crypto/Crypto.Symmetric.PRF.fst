@@ -270,35 +270,6 @@ let modifies_x_buffer_1 #i (t:state i) x b h0 h1 =
   else
     Buffer.modifies_1 b h0 h1)
 
-private let lemma_modifies_prf_raw (#a:Type) (#t:Type) (r:HS.ref a) (b:Buffer.buffer t)
-  h0 h1 h2 : Lemma
-  (requires (
-    let rr = HS.MkRef.id r in
-    let rb = Buffer.frameOf b in 
-      rr <> rb 
-    /\ HS.modifies (Set.singleton rr) h0 h1
-    /\ HS (rr `is_in` h0.h)
-    /\ HS.modifies_ref rr !{HS.as_ref r} h0 h1
-    /\ Buffer.live h0 b
-    /\ HS (h1.tip == h0.tip)
-    /\ Buffer.modifies_1 b h1 h2))
-  (ensures (
-    let rr = HS.MkRef.id r in
-    let rb = Buffer.frameOf b in 
-      HS.modifies (Set.union (Set.singleton rr) (Set.singleton rb)) h0 h2
-    /\ Buffer.modifies_buf_1 rb b h0 h2
-    /\ HS.modifies_ref rr (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h2)) 
-  =
-    Buffer.lemma_reveal_modifies_1 b h1 h2
-    // let rr = HS.MkRef.id r in
-    // let rb = Buffer.frameOf b in 
-    //let rgns = Set.union (Set.singleton rr) (Set.singleton #HH.rid rb) in 
-    //cut (HS.modifies rgns h0 h2);
-    //cut (HS.modifies_ref rr (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1);
-    //cut (HS.modifies_ref rr (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h1 h2);
-    //lemma_modifies_buf_1 b rr h0 h1;
-    //lemma_modifies_ref r rb h1 h2
-    // ()
 
 // real case + real use of memoized PRF output.
 private val prf_raw: 
@@ -308,28 +279,29 @@ private val prf_raw:
   (ensures (fun h0 _ h1 -> modifies_x_buffer_1 t x output h0 h1)) 
 
 let prf_raw i t x l output = 
-  if prf i then (
+  if prf i then
+    begin
     let r = itable i t in 
     let contents = recall r; !r in
     let h0 = HST.get() in
     let block = 
       match find_blk contents x with 
-      | Some block -> (
-          //cut (HS.modifies (Set.singleton (HS.MkRef.id r)) h0 h0);
-          block)
+      | Some block -> block
       | None ->
           let block = random blocklen in 
           r := SeqProperties.snoc contents (Entry x block);
           // assert(extends (HS.sel h0 r) (HS.sel h' r) x);
-          block in
+          block 
+    in
     let h1 = HST.get() in
     assert(extends (HS.sel h0 r) (HS.sel h1 r) x);
     store_bytes l output (Seq.slice block 0 (v l));
     let h2 = HST.get() in
-    Buffer.lemma_reveal_modifies_1 output h1 h2;
+    Buffer.lemma_reveal_modifies_1 output h1 h2
     //assert(HS.sel h1 r == HS.sel h2 r);
     //assert(extends (HS.sel h0 r) (HS.sel h2 r) x);
-    lemma_modifies_prf_raw r output h0 h1 h2)
+    //lemma_modifies_prf_raw r output h0 h1 h2)
+    end
   else
     getBlock t x l output
 
