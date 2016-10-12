@@ -180,7 +180,7 @@ let test() =
     "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it." in
 
   let i:id = { cipher = CHACHA20_POLY1305; uniq = 42ul } in
-  assume(not(safeId i));
+  assume(not(prf i));
   let plain = Plain.create i 0uy plainlen in 
   let plainval = load_bytes plainlen plainrepr in
   let plainbytes = Plain.make #i (v plainlen) plainval in 
