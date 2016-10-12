@@ -28,8 +28,8 @@ else
     EXTRA_PATH = LD_LIBRARY_PATH=.
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
-        EXTRA_OPTS = -ccopt -L. -I /usr/local/opt/openssl/include -I /opt/local/include/openssl
-        EXTRA_LIBS = -L /usr/local/opt/openssl/lib -L /opt/local/lib
+        EXTRA_OPTS = -ccopt -L. -I openssl/include
+        EXTRA_LIBS = -L openssl/lib -L /opt/local/lib
         ARCH = osx
         OPENSSL_CONF = ./config
     else
