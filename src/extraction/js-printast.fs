@@ -30,6 +30,15 @@ let escape_or fallback = function
 
 let jstr_escape s = String.collect (escape_or string_of_char) s
 
+let escape_char fallback = function 
+  | c when (c = '\'')            -> ""
+  | c when (is_letter_or_digit c)-> string_of_char c
+  | c when (is_punctuation c)    -> string_of_char c
+  | c when (is_symbol c)         -> string_of_char c
+  | c                            -> fallback c
+
+let remove_chars_t s = String.collect (escape_char string_of_char) s
+
 let print_op_un:op_un -> doc = function
     | JSU_Minus -> text "-"
     | JSU_Plus -> text "+"
@@ -69,7 +78,8 @@ let print_op_log = function
     | JSL_And -> text "&&"
 
 let rec pretty_print (program:Ast.t) : doc = 
-    reduce ([text "/* @flow */"; hardline] @ 
+    reduce ([text "/* @flow */"; hardline] @
+            [text "import * as Prims from \"./Prims.js\""; semi; hardline] @
             List.map (function | JS_Statement(s) -> pretty_print_statement s) program)
 
 and pretty_print_statement (p:statement_t) : doc =
@@ -88,7 +98,7 @@ and pretty_print_statement (p:statement_t) : doc =
          | Some s -> reduce [ws; text "else"; text "{"; optws s; text "}"])]
     | JSS_Labeled((l, t), s) -> reduce [ws; text (jstr_escape l); colon; hardline; optws s]
     | JSS_Break(i) -> reduce [ws; text "break";
-        (match i with | None -> empty | Some (v, t) -> cat ws (text v)); semi]
+        (match i with | None -> empty | Some (v, t) -> reduce [ws; text (jstr_escape v)]); semi]
     | JSS_Continue(i) -> reduce [ws; text "continue";
         (match i with | None -> empty | Some (v, t) -> reduce [ws; text (jstr_escape v)]); semi]
     | JSS_With(e,s) -> reduce [ws; text "with"; parens (pretty_print_exp e); hardline; optws s]
@@ -96,13 +106,13 @@ and pretty_print_statement (p:statement_t) : doc =
     | JSS_Switch(e,lcase) ->
         reduce [ws; text "switch"; parens (pretty_print_exp e); hardline;
                 ws; text "{"; hardline;
-                combine hardline 
-                (List.map (fun (e,l)->reduce [ws; text "case "; 
-                    (match e with | Some v -> pretty_print_exp v | None -> text "default"); colon; hardline; nest 1 (pretty_print_statements l)]) lcase);
-                text "}"]
+                (List.map (fun (e,l) ->
+                    reduce [ws; text "case "; (match e with | Some v -> pretty_print_exp v | None -> text "default"); colon; hardline;
+                           nest 1 (pretty_print_statements l)]) lcase) |> combine hardline;
+                    text "}"]
     | JSS_Return(e) -> reduce [ws; text "return"; (match e with | None -> empty | Some v -> reduce [ws; pretty_print_exp v]); semi]
     | JSS_Throw(e) -> reduce [ws; text "throw "; pretty_print_exp e; semi]
-    | JSS_Try _  -> semi (*!!!*)
+    | JSS_Try(b,h)  ->  reduce [text "try"; text "{"; pretty_print_statements b; text "}"; text "TODO:catch"]
     | JSS_While(e, s) -> reduce [ws; text "while"; parens (pretty_print_exp e); hardline; optws s]
     | JSS_DoWhile(s, e) -> reduce [ws; text "do"; hardline; optws s; pretty_print_statement s;
                                    ws; text "while"; parens (pretty_print_exp e); semi]
@@ -113,11 +123,11 @@ and pretty_print_statement (p:statement_t) : doc =
     | JSS_Debugger -> reduce [ws; text "debugger;"]
     | JSS_FunctionDeclaration(f) -> pretty_print_fun f
     | JSS_VariableDeclaration(l, k) ->
-        reduce [ws; print_kind_var k; ws; combine comma (List.map
-        (fun (p,e) -> reduce [print_pattern p;
-            (match e with 
-            | None -> empty
-            | Some v -> reduce [ws; text "="; ws; pretty_print_exp v])]) l); semi]
+        reduce [ws; print_kind_var k; ws;  
+               (List.map (fun (p,e) -> 
+                    reduce [print_pattern p; 
+                           (match e with | None -> empty | Some v -> reduce [ws; text "="; ws; pretty_print_exp v])]) l) |> combine comma;
+               semi]
     | JSS_DeclareVariable _ -> semi (*!!!*)
     | JSS_DeclareFunction _ -> semi (*!!!*)
 
@@ -127,12 +137,12 @@ and pretty_print_statements l = reduce (List.map pretty_print_statement l)
 
 and print_decl_t lt = 
     match lt with 
-    | Some l -> reduce [text "<"; List.map (fun s -> text (jstr_escape s)) l |> combine comma; text ">"]
+    | Some l -> reduce [text "<"; List.map (fun s -> text (remove_chars_t s)) l |> combine comma; text ">"]
     | None -> empty
 
 and pretty_print_exp = function
     | JSE_This -> text "this"
-    | JSE_Array(l) -> 
+    | JSE_Array(l) ->
         (match l with 
         | Some v ->  reduce [text "["; List.map pretty_print_exp v |> combine comma ; text "]"]
         | None -> reduce [text "["; text "]"])
@@ -153,7 +163,7 @@ and pretty_print_exp = function
     | JSE_Comprehension(l,e) -> semi (*!!!*)
     | JSE_Generator(l,e) -> semi (*!!!*)
     | JSE_Let(l,e) -> semi (*!!!*)
-    | JSE_Identifier(id,t) ->  reduce [text (jstr_escape id); (match t with | Some v -> reduce [text ":"; print_typ v] | None -> text "")] 
+    | JSE_Identifier(id,t) -> text (jstr_escape id)// reduce [text (jstr_escape id); (match t with | Some v -> reduce [text ":"; print_typ v] | None -> text "")] 
     | JSE_Literal(l) -> print_literal (fst l)
     | JSE_TypeCast(e,t) -> semi (*!!!*)
    
@@ -181,11 +191,12 @@ and print_typ = function
     | JST_Null -> text "null"
     | JST_Number -> text "number"
     | JST_String -> text "string"
-    | JST_Boolean -> text "bool"
+    | JST_Boolean -> text "boolean"
     | JST_Nullable _ -> text "!!!"
     | JST_Function (args, ret_t, decl_vars) -> reduce [print_decl_t decl_vars; parens (print_args args); text "=>"; print_typ ret_t]
     | JST_Object (lp, _, _) -> reduce [text "{" ; 
-                                       List.map (fun (k, t) -> reduce [pretty_print_prop_key k; text ":"; print_typ t]) lp |> combine comma ; 
+                                       List.map (fun (k, t) -> 
+                                            reduce [pretty_print_prop_key k; text ":"; print_typ t]) lp |> combine comma;
                                        text "}" ]
     | JST_Array t -> reduce [text "Array"; text "<"; print_typ t; text ">"]
     | JST_Union l ->  reduce [List.map print_typ l |> combine (text "|")]
@@ -196,13 +207,18 @@ and print_typ = function
     | JST_NumberLiteral (n, _)-> text (string_of_float n)
     | JST_BooleanLiteral (b, _) -> text (string_of_bool b)
     | JST_Exists -> text "!!!"
-    | JST_Generic(n, _) -> print_gen_t n 
+    | JST_Generic(n, lt) ->
+        let print_lt = match lt with 
+                      | None -> empty 
+                      | Some v -> reduce [text "<"; List.map print_typ v |> combine comma; text ">"] 
+        in reduce [print_gen_t n; print_lt]
 
-and print_args args = reduce [List.map (fun ((id,_), t) -> reduce[text (jstr_escape id); text ":"; print_typ t]) args |> combine comma]
+and print_args args = reduce [List.map (fun ((id,_), t) -> 
+                                    reduce[text (jstr_escape id); colon; print_typ t]) args |> combine comma]
 
 and print_gen_t = function 
-    | Unqualified (id, _) -> text (jstr_escape id)
-    | Qualified (g, (id, _)) -> reduce [print_gen_t g; text ","; text (jstr_escape id)]
+    | Unqualified (id, _) -> text (remove_chars_t id)
+    | Qualified (g, (id, _)) -> reduce [print_gen_t g; comma; text (remove_chars_t id)]
 
 and print_literal = function
     | JSV_String s -> text ("\"" ^ (jstr_escape s) ^ "\"")
@@ -221,10 +237,10 @@ and print_pattern = function
     | JGP_Array _ -> text "!!"
     | JGP_Assignment _ -> text "!!"
     | JGP_Expression _ -> text "!!"
-    | JGP_Identifier(id, t) ->     
-        let r = match t with 
+    | JGP_Identifier(id, t) ->
+        let r = match t with
                 | Some v -> reduce [colon; print_typ v]
-                | None -> text "" 
+                | None -> empty
         in reduce [text (jstr_escape id); r]
 
 and print_body = function 
@@ -234,4 +250,5 @@ and print_body = function
 and pretty_print_fun (n, pars, body, t, typePars) =
     let name = match n with | Some v -> text (fst v) | None -> empty in
     let returnT = match t with | Some v -> reduce [text ":"; ws; print_typ v] | None -> empty in
-    reduce [text "function"; ws; name; print_decl_t typePars; parens (List.map print_pattern pars |> combine comma); returnT; text "{";  hardline; print_body body; text "}"]
+    reduce [text "function"; ws; name; print_decl_t typePars; parens (List.map print_pattern pars |> combine comma); returnT;
+            text "{";  hardline; print_body body; text "}"]

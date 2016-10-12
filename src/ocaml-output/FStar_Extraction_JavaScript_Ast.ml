@@ -16,7 +16,7 @@ type source_t =
 | JSS_Switch of (expression_t * (expression_t Prims.option * statement_t Prims.list) Prims.list)
 | JSS_Return of expression_t Prims.option
 | JSS_Throw of expression_t
-| JSS_Try of (statement_t Prims.list * (pattern_t * expression_t Prims.option * statement_t) Prims.option * (pattern_t * expression_t Prims.option * statement_t) Prims.list * statement_t Prims.list Prims.option)
+| JSS_Try of (statement_t Prims.list * (pattern_t * statement_t Prims.list) Prims.option)
 | JSS_While of (expression_t * statement_t)
 | JSS_DoWhile of (statement_t * expression_t)
 | JSS_For of (forinit_t Prims.option * expression_t Prims.option * expression_t Prims.option * statement_t)

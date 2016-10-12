@@ -58,7 +58,28 @@ end))
 let jstr_escape : Prims.string  ->  Prims.string = (fun s -> (FStar_String.collect (escape_or FStar_Util.string_of_char) s))
 
 
-let print_op_un : FStar_Extraction_JavaScript_Ast.op_un  ->  FStar_Format.doc = (fun _83_2 -> (match (_83_2) with
+let escape_char : (FStar_Char.char  ->  Prims.string)  ->  FStar_Char.char  ->  Prims.string = (fun fallback _83_2 -> (match (_83_2) with
+| c when (c = '\'') -> begin
+""
+end
+| c when (FStar_Util.is_letter_or_digit c) -> begin
+(FStar_Util.string_of_char c)
+end
+| c when (FStar_Util.is_punctuation c) -> begin
+(FStar_Util.string_of_char c)
+end
+| c when (FStar_Util.is_symbol c) -> begin
+(FStar_Util.string_of_char c)
+end
+| c -> begin
+(fallback c)
+end))
+
+
+let remove_chars_t : Prims.string  ->  Prims.string = (fun s -> (FStar_String.collect (escape_char FStar_Util.string_of_char) s))
+
+
+let print_op_un : FStar_Extraction_JavaScript_Ast.op_un  ->  FStar_Format.doc = (fun _83_3 -> (match (_83_3) with
 | FStar_Extraction_JavaScript_Ast.JSU_Minus -> begin
 (FStar_Format.text "-")
 end
@@ -85,7 +106,7 @@ end
 end))
 
 
-let print_op_bin : FStar_Extraction_JavaScript_Ast.op_bin  ->  FStar_Format.doc = (fun _83_3 -> (match (_83_3) with
+let print_op_bin : FStar_Extraction_JavaScript_Ast.op_bin  ->  FStar_Format.doc = (fun _83_4 -> (match (_83_4) with
 | FStar_Extraction_JavaScript_Ast.JSB_Equal -> begin
 (FStar_Format.text "==")
 end
@@ -154,7 +175,7 @@ end
 end))
 
 
-let print_op_log : FStar_Extraction_JavaScript_Ast.op_log  ->  FStar_Format.doc = (fun _83_4 -> (match (_83_4) with
+let print_op_log : FStar_Extraction_JavaScript_Ast.op_log  ->  FStar_Format.doc = (fun _83_5 -> (match (_83_5) with
 | FStar_Extraction_JavaScript_Ast.JSL_Or -> begin
 (FStar_Format.text "||")
 end
@@ -163,28 +184,29 @@ end
 end))
 
 
-let rec pretty_print : FStar_Extraction_JavaScript_Ast.t  ->  FStar_Format.doc = (fun program -> (let _180_37 = (let _180_36 = (FStar_List.map (fun _83_5 -> (match (_83_5) with
+let rec pretty_print : FStar_Extraction_JavaScript_Ast.t  ->  FStar_Format.doc = (fun program -> (let _180_49 = (let _180_48 = (let _180_47 = (FStar_List.map (fun _83_6 -> (match (_83_6) with
 | FStar_Extraction_JavaScript_Ast.JS_Statement (s) -> begin
 (pretty_print_statement s)
 end)) program)
-in (FStar_List.append (((FStar_Format.text "/* @flow */"))::(FStar_Format.hardline)::[]) _180_36))
-in (FStar_Format.reduce _180_37)))
+in (FStar_List.append (((FStar_Format.text "import * as Prims from \"./Prims.js\""))::(semi)::(FStar_Format.hardline)::[]) _180_47))
+in (FStar_List.append (((FStar_Format.text "/* @flow */"))::(FStar_Format.hardline)::[]) _180_48))
+in (FStar_Format.reduce _180_49)))
 and pretty_print_statement : FStar_Extraction_JavaScript_Ast.statement_t  ->  FStar_Format.doc = (fun p -> (
 
 let optws = (fun s -> (match (s) with
-| FStar_Extraction_JavaScript_Ast.JSS_Block (_83_72) -> begin
+| FStar_Extraction_JavaScript_Ast.JSS_Block (_83_81) -> begin
 (pretty_print_statement s)
 end
-| _83_75 -> begin
-(let _180_44 = (let _180_43 = (let _180_42 = (let _180_41 = (pretty_print_statement s)
-in (FStar_Format.nest (Prims.parse_int "1") _180_41))
-in (_180_42)::[])
-in (ws)::_180_43)
-in (FStar_Format.reduce _180_44))
+| _83_84 -> begin
+(let _180_56 = (let _180_55 = (let _180_54 = (let _180_53 = (pretty_print_statement s)
+in (FStar_Format.nest (Prims.parse_int "1") _180_53))
+in (_180_54)::[])
+in (ws)::_180_55)
+in (FStar_Format.reduce _180_56))
 end))
 in (
 
-let f = (fun _83_6 -> (match (_83_6) with
+let f = (fun _83_7 -> (match (_83_7) with
 | FStar_Extraction_JavaScript_Ast.JSS_Empty -> begin
 semi
 end
@@ -192,181 +214,193 @@ end
 (pretty_print_statements l)
 end
 | FStar_Extraction_JavaScript_Ast.JSS_Expression (e) -> begin
-(let _180_49 = (let _180_48 = (let _180_47 = (pretty_print_exp e)
-in (_180_47)::(semi)::[])
-in (ws)::_180_48)
-in (FStar_Format.reduce _180_49))
+(let _180_61 = (let _180_60 = (let _180_59 = (pretty_print_exp e)
+in (_180_59)::(semi)::[])
+in (ws)::_180_60)
+in (FStar_Format.reduce _180_61))
 end
 | FStar_Extraction_JavaScript_Ast.JSS_If (c, t, f) -> begin
-(let _180_66 = (let _180_65 = (let _180_64 = (let _180_63 = (let _180_50 = (pretty_print_exp c)
-in (FStar_Format.parens _180_50))
-in (let _180_62 = (let _180_61 = (let _180_60 = (let _180_59 = (optws t)
-in (let _180_58 = (let _180_57 = (let _180_56 = (match (f) with
+(let _180_78 = (let _180_77 = (let _180_76 = (let _180_75 = (let _180_62 = (pretty_print_exp c)
+in (FStar_Format.parens _180_62))
+in (let _180_74 = (let _180_73 = (let _180_72 = (let _180_71 = (optws t)
+in (let _180_70 = (let _180_69 = (let _180_68 = (match (f) with
 | None -> begin
 FStar_Format.empty
 end
 | Some (s) -> begin
-(let _180_55 = (let _180_54 = (let _180_53 = (let _180_52 = (let _180_51 = (optws s)
-in (_180_51)::((FStar_Format.text "}"))::[])
-in ((FStar_Format.text "{"))::_180_52)
-in ((FStar_Format.text "else"))::_180_53)
-in (ws)::_180_54)
-in (FStar_Format.reduce _180_55))
+(let _180_67 = (let _180_66 = (let _180_65 = (let _180_64 = (let _180_63 = (optws s)
+in (_180_63)::((FStar_Format.text "}"))::[])
+in ((FStar_Format.text "{"))::_180_64)
+in ((FStar_Format.text "else"))::_180_65)
+in (ws)::_180_66)
+in (FStar_Format.reduce _180_67))
 end)
-in (_180_56)::[])
-in ((FStar_Format.text "}"))::_180_57)
-in (_180_59)::_180_58))
-in (FStar_Format.hardline)::_180_60)
-in ((FStar_Format.text "{"))::_180_61)
-in (_180_63)::_180_62))
-in ((FStar_Format.text "if"))::_180_64)
-in (ws)::_180_65)
-in (FStar_Format.reduce _180_66))
-end
-| FStar_Extraction_JavaScript_Ast.JSS_Labeled ((l, t), s) -> begin
-(let _180_74 = (let _180_73 = (let _180_72 = (let _180_67 = (jstr_escape l)
-in (FStar_Format.text _180_67))
-in (let _180_71 = (let _180_70 = (let _180_69 = (let _180_68 = (optws s)
 in (_180_68)::[])
-in (FStar_Format.hardline)::_180_69)
-in (colon)::_180_70)
-in (_180_72)::_180_71))
-in (ws)::_180_73)
-in (FStar_Format.reduce _180_74))
-end
-| FStar_Extraction_JavaScript_Ast.JSS_Break (i) -> begin
-(FStar_Format.reduce ((ws)::((FStar_Format.text "break"))::((match (i) with
-| None -> begin
-FStar_Format.empty
-end
-| Some (v, t) -> begin
-(FStar_Format.cat ws (FStar_Format.text v))
-end))::(semi)::[]))
-end
-| FStar_Extraction_JavaScript_Ast.JSS_Continue (i) -> begin
-(let _180_82 = (let _180_81 = (let _180_80 = (let _180_79 = (match (i) with
-| None -> begin
-FStar_Format.empty
-end
-| Some (v, t) -> begin
-(let _180_78 = (let _180_77 = (let _180_76 = (let _180_75 = (jstr_escape v)
-in (FStar_Format.text _180_75))
-in (_180_76)::[])
+in ((FStar_Format.text "}"))::_180_69)
+in (_180_71)::_180_70))
+in (FStar_Format.hardline)::_180_72)
+in ((FStar_Format.text "{"))::_180_73)
+in (_180_75)::_180_74))
+in ((FStar_Format.text "if"))::_180_76)
 in (ws)::_180_77)
 in (FStar_Format.reduce _180_78))
-end)
-in (_180_79)::(semi)::[])
-in ((FStar_Format.text "continue"))::_180_80)
-in (ws)::_180_81)
-in (FStar_Format.reduce _180_82))
 end
-| FStar_Extraction_JavaScript_Ast.JSS_With (e, s) -> begin
-(let _180_90 = (let _180_89 = (let _180_88 = (let _180_87 = (let _180_83 = (pretty_print_exp e)
-in (FStar_Format.parens _180_83))
-in (let _180_86 = (let _180_85 = (let _180_84 = (optws s)
-in (_180_84)::[])
-in (FStar_Format.hardline)::_180_85)
-in (_180_87)::_180_86))
-in ((FStar_Format.text "with"))::_180_88)
+| FStar_Extraction_JavaScript_Ast.JSS_Labeled ((l, t), s) -> begin
+(let _180_86 = (let _180_85 = (let _180_84 = (let _180_79 = (jstr_escape l)
+in (FStar_Format.text _180_79))
+in (let _180_83 = (let _180_82 = (let _180_81 = (let _180_80 = (optws s)
+in (_180_80)::[])
+in (FStar_Format.hardline)::_180_81)
+in (colon)::_180_82)
+in (_180_84)::_180_83))
+in (ws)::_180_85)
+in (FStar_Format.reduce _180_86))
+end
+| FStar_Extraction_JavaScript_Ast.JSS_Break (i) -> begin
+(let _180_94 = (let _180_93 = (let _180_92 = (let _180_91 = (match (i) with
+| None -> begin
+FStar_Format.empty
+end
+| Some (v, t) -> begin
+(let _180_90 = (let _180_89 = (let _180_88 = (let _180_87 = (jstr_escape v)
+in (FStar_Format.text _180_87))
+in (_180_88)::[])
 in (ws)::_180_89)
 in (FStar_Format.reduce _180_90))
+end)
+in (_180_91)::(semi)::[])
+in ((FStar_Format.text "break"))::_180_92)
+in (ws)::_180_93)
+in (FStar_Format.reduce _180_94))
 end
-| FStar_Extraction_JavaScript_Ast.JSS_TypeAlias ((id, _83_116), lt, t) -> begin
-(let _180_99 = (let _180_98 = (let _180_97 = (let _180_91 = (jstr_escape id)
-in (FStar_Format.text _180_91))
-in (let _180_96 = (let _180_95 = (print_decl_t lt)
-in (let _180_94 = (let _180_93 = (let _180_92 = (print_typ t)
-in (_180_92)::(semi)::[])
-in ((FStar_Format.text "="))::_180_93)
-in (_180_95)::_180_94))
-in (_180_97)::_180_96))
-in ((FStar_Format.text "type "))::_180_98)
-in (FStar_Format.reduce _180_99))
+| FStar_Extraction_JavaScript_Ast.JSS_Continue (i) -> begin
+(let _180_102 = (let _180_101 = (let _180_100 = (let _180_99 = (match (i) with
+| None -> begin
+FStar_Format.empty
+end
+| Some (v, t) -> begin
+(let _180_98 = (let _180_97 = (let _180_96 = (let _180_95 = (jstr_escape v)
+in (FStar_Format.text _180_95))
+in (_180_96)::[])
+in (ws)::_180_97)
+in (FStar_Format.reduce _180_98))
+end)
+in (_180_99)::(semi)::[])
+in ((FStar_Format.text "continue"))::_180_100)
+in (ws)::_180_101)
+in (FStar_Format.reduce _180_102))
+end
+| FStar_Extraction_JavaScript_Ast.JSS_With (e, s) -> begin
+(let _180_110 = (let _180_109 = (let _180_108 = (let _180_107 = (let _180_103 = (pretty_print_exp e)
+in (FStar_Format.parens _180_103))
+in (let _180_106 = (let _180_105 = (let _180_104 = (optws s)
+in (_180_104)::[])
+in (FStar_Format.hardline)::_180_105)
+in (_180_107)::_180_106))
+in ((FStar_Format.text "with"))::_180_108)
+in (ws)::_180_109)
+in (FStar_Format.reduce _180_110))
+end
+| FStar_Extraction_JavaScript_Ast.JSS_TypeAlias ((id, _83_125), lt, t) -> begin
+(let _180_119 = (let _180_118 = (let _180_117 = (let _180_111 = (jstr_escape id)
+in (FStar_Format.text _180_111))
+in (let _180_116 = (let _180_115 = (print_decl_t lt)
+in (let _180_114 = (let _180_113 = (let _180_112 = (print_typ t)
+in (_180_112)::(semi)::[])
+in ((FStar_Format.text "="))::_180_113)
+in (_180_115)::_180_114))
+in (_180_117)::_180_116))
+in ((FStar_Format.text "type "))::_180_118)
+in (FStar_Format.reduce _180_119))
 end
 | FStar_Extraction_JavaScript_Ast.JSS_Switch (e, lcase) -> begin
-(let _180_121 = (let _180_120 = (let _180_119 = (let _180_118 = (let _180_100 = (pretty_print_exp e)
-in (FStar_Format.parens _180_100))
-in (let _180_117 = (let _180_116 = (let _180_115 = (let _180_114 = (let _180_113 = (let _180_112 = (let _180_111 = (FStar_List.map (fun _83_128 -> (match (_83_128) with
+(let _180_141 = (let _180_140 = (let _180_139 = (let _180_138 = (let _180_120 = (pretty_print_exp e)
+in (FStar_Format.parens _180_120))
+in (let _180_137 = (let _180_136 = (let _180_135 = (let _180_134 = (let _180_133 = (let _180_132 = (let _180_131 = (FStar_List.map (fun _83_137 -> (match (_83_137) with
 | (e, l) -> begin
-(let _180_110 = (let _180_109 = (let _180_108 = (let _180_107 = (match (e) with
+(let _180_130 = (let _180_129 = (let _180_128 = (let _180_127 = (match (e) with
 | Some (v) -> begin
 (pretty_print_exp v)
 end
 | None -> begin
 (FStar_Format.text "default")
 end)
-in (let _180_106 = (let _180_105 = (let _180_104 = (let _180_103 = (let _180_102 = (pretty_print_statements l)
-in (FStar_Format.nest (Prims.parse_int "1") _180_102))
-in (_180_103)::[])
-in (FStar_Format.hardline)::_180_104)
-in (colon)::_180_105)
-in (_180_107)::_180_106))
-in ((FStar_Format.text "case "))::_180_108)
-in (ws)::_180_109)
-in (FStar_Format.reduce _180_110))
+in (let _180_126 = (let _180_125 = (let _180_124 = (let _180_123 = (let _180_122 = (pretty_print_statements l)
+in (FStar_Format.nest (Prims.parse_int "1") _180_122))
+in (_180_123)::[])
+in (FStar_Format.hardline)::_180_124)
+in (colon)::_180_125)
+in (_180_127)::_180_126))
+in ((FStar_Format.text "case "))::_180_128)
+in (ws)::_180_129)
+in (FStar_Format.reduce _180_130))
 end)) lcase)
-in (FStar_Format.combine FStar_Format.hardline _180_111))
-in (_180_112)::((FStar_Format.text "}"))::[])
-in (FStar_Format.hardline)::_180_113)
-in ((FStar_Format.text "{"))::_180_114)
-in (ws)::_180_115)
-in (FStar_Format.hardline)::_180_116)
-in (_180_118)::_180_117))
-in ((FStar_Format.text "switch"))::_180_119)
-in (ws)::_180_120)
-in (FStar_Format.reduce _180_121))
+in (FStar_All.pipe_right _180_131 (FStar_Format.combine FStar_Format.hardline)))
+in (_180_132)::((FStar_Format.text "}"))::[])
+in (FStar_Format.hardline)::_180_133)
+in ((FStar_Format.text "{"))::_180_134)
+in (ws)::_180_135)
+in (FStar_Format.hardline)::_180_136)
+in (_180_138)::_180_137))
+in ((FStar_Format.text "switch"))::_180_139)
+in (ws)::_180_140)
+in (FStar_Format.reduce _180_141))
 end
 | FStar_Extraction_JavaScript_Ast.JSS_Return (e) -> begin
-(let _180_128 = (let _180_127 = (let _180_126 = (let _180_125 = (match (e) with
+(let _180_148 = (let _180_147 = (let _180_146 = (let _180_145 = (match (e) with
 | None -> begin
 FStar_Format.empty
 end
 | Some (v) -> begin
-(let _180_124 = (let _180_123 = (let _180_122 = (pretty_print_exp v)
-in (_180_122)::[])
-in (ws)::_180_123)
-in (FStar_Format.reduce _180_124))
+(let _180_144 = (let _180_143 = (let _180_142 = (pretty_print_exp v)
+in (_180_142)::[])
+in (ws)::_180_143)
+in (FStar_Format.reduce _180_144))
 end)
-in (_180_125)::(semi)::[])
-in ((FStar_Format.text "return"))::_180_126)
-in (ws)::_180_127)
-in (FStar_Format.reduce _180_128))
+in (_180_145)::(semi)::[])
+in ((FStar_Format.text "return"))::_180_146)
+in (ws)::_180_147)
+in (FStar_Format.reduce _180_148))
 end
 | FStar_Extraction_JavaScript_Ast.JSS_Throw (e) -> begin
-(let _180_132 = (let _180_131 = (let _180_130 = (let _180_129 = (pretty_print_exp e)
-in (_180_129)::(semi)::[])
-in ((FStar_Format.text "throw "))::_180_130)
-in (ws)::_180_131)
-in (FStar_Format.reduce _180_132))
-end
-| FStar_Extraction_JavaScript_Ast.JSS_Try (_83_140) -> begin
-semi
-end
-| FStar_Extraction_JavaScript_Ast.JSS_While (e, s) -> begin
-(let _180_140 = (let _180_139 = (let _180_138 = (let _180_137 = (let _180_133 = (pretty_print_exp e)
-in (FStar_Format.parens _180_133))
-in (let _180_136 = (let _180_135 = (let _180_134 = (optws s)
-in (_180_134)::[])
-in (FStar_Format.hardline)::_180_135)
-in (_180_137)::_180_136))
-in ((FStar_Format.text "while"))::_180_138)
-in (ws)::_180_139)
-in (FStar_Format.reduce _180_140))
-end
-| FStar_Extraction_JavaScript_Ast.JSS_DoWhile (s, e) -> begin
-(let _180_152 = (let _180_151 = (let _180_150 = (let _180_149 = (let _180_148 = (optws s)
-in (let _180_147 = (let _180_146 = (pretty_print_statement s)
-in (let _180_145 = (let _180_144 = (let _180_143 = (let _180_142 = (let _180_141 = (pretty_print_exp e)
-in (FStar_Format.parens _180_141))
-in (_180_142)::(semi)::[])
-in ((FStar_Format.text "while"))::_180_143)
-in (ws)::_180_144)
-in (_180_146)::_180_145))
-in (_180_148)::_180_147))
-in (FStar_Format.hardline)::_180_149)
-in ((FStar_Format.text "do"))::_180_150)
+(let _180_152 = (let _180_151 = (let _180_150 = (let _180_149 = (pretty_print_exp e)
+in (_180_149)::(semi)::[])
+in ((FStar_Format.text "throw "))::_180_150)
 in (ws)::_180_151)
 in (FStar_Format.reduce _180_152))
+end
+| FStar_Extraction_JavaScript_Ast.JSS_Try (b, h) -> begin
+(let _180_156 = (let _180_155 = (let _180_154 = (let _180_153 = (pretty_print_statements b)
+in (_180_153)::((FStar_Format.text "}"))::((FStar_Format.text "TODO:catch"))::[])
+in ((FStar_Format.text "{"))::_180_154)
+in ((FStar_Format.text "try"))::_180_155)
+in (FStar_Format.reduce _180_156))
+end
+| FStar_Extraction_JavaScript_Ast.JSS_While (e, s) -> begin
+(let _180_164 = (let _180_163 = (let _180_162 = (let _180_161 = (let _180_157 = (pretty_print_exp e)
+in (FStar_Format.parens _180_157))
+in (let _180_160 = (let _180_159 = (let _180_158 = (optws s)
+in (_180_158)::[])
+in (FStar_Format.hardline)::_180_159)
+in (_180_161)::_180_160))
+in ((FStar_Format.text "while"))::_180_162)
+in (ws)::_180_163)
+in (FStar_Format.reduce _180_164))
+end
+| FStar_Extraction_JavaScript_Ast.JSS_DoWhile (s, e) -> begin
+(let _180_176 = (let _180_175 = (let _180_174 = (let _180_173 = (let _180_172 = (optws s)
+in (let _180_171 = (let _180_170 = (pretty_print_statement s)
+in (let _180_169 = (let _180_168 = (let _180_167 = (let _180_166 = (let _180_165 = (pretty_print_exp e)
+in (FStar_Format.parens _180_165))
+in (_180_166)::(semi)::[])
+in ((FStar_Format.text "while"))::_180_167)
+in (ws)::_180_168)
+in (_180_170)::_180_169))
+in (_180_172)::_180_171))
+in (FStar_Format.hardline)::_180_173)
+in ((FStar_Format.text "do"))::_180_174)
+in (ws)::_180_175)
+in (FStar_Format.reduce _180_176))
 end
 | FStar_Extraction_JavaScript_Ast.JSS_For (i, c, l, s) -> begin
 semi
@@ -387,79 +421,79 @@ end
 (pretty_print_fun f)
 end
 | FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (l, k) -> begin
-(let _180_169 = (let _180_168 = (let _180_167 = (print_kind_var k)
-in (let _180_166 = (let _180_165 = (let _180_164 = (let _180_163 = (FStar_List.map (fun _83_179 -> (match (_83_179) with
+(let _180_193 = (let _180_192 = (let _180_191 = (print_kind_var k)
+in (let _180_190 = (let _180_189 = (let _180_188 = (let _180_187 = (FStar_List.map (fun _83_189 -> (match (_83_189) with
 | (p, e) -> begin
-(let _180_162 = (let _180_161 = (print_pattern p)
-in (let _180_160 = (let _180_159 = (match (e) with
+(let _180_186 = (let _180_185 = (print_pattern p)
+in (let _180_184 = (let _180_183 = (match (e) with
 | None -> begin
 FStar_Format.empty
 end
 | Some (v) -> begin
-(let _180_158 = (let _180_157 = (let _180_156 = (let _180_155 = (let _180_154 = (pretty_print_exp v)
-in (_180_154)::[])
-in (ws)::_180_155)
-in ((FStar_Format.text "="))::_180_156)
-in (ws)::_180_157)
-in (FStar_Format.reduce _180_158))
+(let _180_182 = (let _180_181 = (let _180_180 = (let _180_179 = (let _180_178 = (pretty_print_exp v)
+in (_180_178)::[])
+in (ws)::_180_179)
+in ((FStar_Format.text "="))::_180_180)
+in (ws)::_180_181)
+in (FStar_Format.reduce _180_182))
 end)
-in (_180_159)::[])
-in (_180_161)::_180_160))
-in (FStar_Format.reduce _180_162))
+in (_180_183)::[])
+in (_180_185)::_180_184))
+in (FStar_Format.reduce _180_186))
 end)) l)
-in (FStar_Format.combine comma _180_163))
-in (_180_164)::(semi)::[])
-in (ws)::_180_165)
-in (_180_167)::_180_166))
-in (ws)::_180_168)
-in (FStar_Format.reduce _180_169))
+in (FStar_All.pipe_right _180_187 (FStar_Format.combine comma)))
+in (_180_188)::(semi)::[])
+in (ws)::_180_189)
+in (_180_191)::_180_190))
+in (ws)::_180_192)
+in (FStar_Format.reduce _180_193))
 end
-| FStar_Extraction_JavaScript_Ast.JSS_DeclareVariable (_83_184) -> begin
+| FStar_Extraction_JavaScript_Ast.JSS_DeclareVariable (_83_194) -> begin
 semi
 end
-| FStar_Extraction_JavaScript_Ast.JSS_DeclareFunction (_83_187) -> begin
+| FStar_Extraction_JavaScript_Ast.JSS_DeclareFunction (_83_197) -> begin
 semi
 end))
-in (let _180_171 = (let _180_170 = (f p)
-in (_180_170)::(FStar_Format.hardline)::[])
-in (FStar_Format.reduce _180_171)))))
-and pretty_print_statements : FStar_Extraction_JavaScript_Ast.statement_t Prims.list  ->  FStar_Format.doc = (fun l -> (let _180_173 = (FStar_List.map pretty_print_statement l)
-in (FStar_Format.reduce _180_173)))
+in (let _180_195 = (let _180_194 = (f p)
+in (_180_194)::(FStar_Format.hardline)::[])
+in (FStar_Format.reduce _180_195)))))
+and pretty_print_statements : FStar_Extraction_JavaScript_Ast.statement_t Prims.list  ->  FStar_Format.doc = (fun l -> (let _180_197 = (FStar_List.map pretty_print_statement l)
+in (FStar_Format.reduce _180_197)))
 and print_decl_t : FStar_Extraction_JavaScript_Ast.param_decl_t Prims.option  ->  FStar_Format.doc = (fun lt -> (match (lt) with
 | Some (l) -> begin
-(let _180_180 = (let _180_179 = (let _180_178 = (let _180_177 = (FStar_List.map (fun s -> (let _180_176 = (jstr_escape s)
-in (FStar_Format.text _180_176))) l)
-in (FStar_All.pipe_right _180_177 (FStar_Format.combine comma)))
-in (_180_178)::((FStar_Format.text ">"))::[])
-in ((FStar_Format.text "<"))::_180_179)
-in (FStar_Format.reduce _180_180))
+(let _180_204 = (let _180_203 = (let _180_202 = (let _180_201 = (FStar_List.map (fun s -> (let _180_200 = (remove_chars_t s)
+in (FStar_Format.text _180_200))) l)
+in (FStar_All.pipe_right _180_201 (FStar_Format.combine comma)))
+in (_180_202)::((FStar_Format.text ">"))::[])
+in ((FStar_Format.text "<"))::_180_203)
+in (FStar_Format.reduce _180_204))
 end
 | None -> begin
 FStar_Format.empty
 end))
-and pretty_print_exp : FStar_Extraction_JavaScript_Ast.expression_t  ->  FStar_Format.doc = (fun _83_7 -> (match (_83_7) with
+and pretty_print_exp : FStar_Extraction_JavaScript_Ast.expression_t  ->  FStar_Format.doc = (fun _83_8 -> (match (_83_8) with
 | FStar_Extraction_JavaScript_Ast.JSE_This -> begin
 (FStar_Format.text "this")
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Array (l) -> begin
 (match (l) with
 | Some (v) -> begin
-(let _180_185 = (let _180_184 = (let _180_183 = (let _180_182 = (FStar_List.map pretty_print_exp v)
-in (FStar_All.pipe_right _180_182 (FStar_Format.combine comma)))
-in (_180_183)::((FStar_Format.text "]"))::[])
-in ((FStar_Format.text "["))::_180_184)
-in (FStar_Format.reduce _180_185))
+(let _180_209 = (let _180_208 = (let _180_207 = (let _180_206 = (FStar_List.map pretty_print_exp v)
+in (FStar_All.pipe_right _180_206 (FStar_Format.combine comma)))
+in (_180_207)::((FStar_Format.text "]"))::[])
+in ((FStar_Format.text "["))::_180_208)
+in (FStar_Format.reduce _180_209))
 end
 | None -> begin
 (FStar_Format.reduce (((FStar_Format.text "["))::((FStar_Format.text "]"))::[]))
 end)
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Object (l) -> begin
-(let _180_189 = (let _180_188 = (let _180_187 = (let _180_186 = (FStar_List.map pretty_print_obj l)
-in (FStar_All.pipe_right _180_186 (FStar_Format.combine comma)))
-in (_180_187)::((FStar_Format.text "}"))::[])
-in ((FStar_Format.text "{"))::_180_188)
-in (FStar_Format.reduce _180_189))
+(let _180_213 = (let _180_212 = (let _180_211 = (let _180_210 = (FStar_List.map pretty_print_obj l)
+in (FStar_All.pipe_right _180_210 (FStar_Format.combine comma)))
+in (_180_211)::((FStar_Format.text "}"))::[])
+in ((FStar_Format.text "{"))::_180_212)
+in (FStar_Format.reduce _180_213))
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Function (f) -> begin
 (pretty_print_fun f)
@@ -468,44 +502,44 @@ end
 semi
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Sequence (e) -> begin
-(let _180_192 = (let _180_191 = (let _180_190 = (FStar_List.map pretty_print_exp e)
-in (FStar_All.pipe_right _180_190 (FStar_Format.combine semi)))
-in (_180_191)::[])
-in (FStar_Format.reduce _180_192))
+(let _180_216 = (let _180_215 = (let _180_214 = (FStar_List.map pretty_print_exp e)
+in (FStar_All.pipe_right _180_214 (FStar_Format.combine semi)))
+in (_180_215)::[])
+in (FStar_Format.reduce _180_216))
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Unary (o, e) -> begin
-(let _180_196 = (let _180_195 = (print_op_un o)
-in (let _180_194 = (let _180_193 = (pretty_print_exp e)
-in (_180_193)::[])
-in (_180_195)::_180_194))
-in (FStar_Format.reduce _180_196))
+(let _180_220 = (let _180_219 = (print_op_un o)
+in (let _180_218 = (let _180_217 = (pretty_print_exp e)
+in (_180_217)::[])
+in (_180_219)::_180_218))
+in (FStar_Format.reduce _180_220))
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Binary (o, e1, e2) -> begin
-(let _180_201 = (let _180_200 = (pretty_print_exp e1)
-in (let _180_199 = (let _180_198 = (let _180_197 = (pretty_print_exp e2)
-in (_180_197)::[])
-in ((print_op_bin o))::_180_198)
-in (_180_200)::_180_199))
-in (FStar_Format.reduce _180_201))
+(let _180_225 = (let _180_224 = (pretty_print_exp e1)
+in (let _180_223 = (let _180_222 = (let _180_221 = (pretty_print_exp e2)
+in (_180_221)::[])
+in ((print_op_bin o))::_180_222)
+in (_180_224)::_180_223))
+in (FStar_Format.reduce _180_225))
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Assignment (p, e) -> begin
-(let _180_206 = (let _180_205 = (print_pattern p)
-in (let _180_204 = (let _180_203 = (let _180_202 = (pretty_print_exp e)
-in (_180_202)::[])
-in ((FStar_Format.text "="))::_180_203)
-in (_180_205)::_180_204))
-in (FStar_Format.reduce _180_206))
+(let _180_230 = (let _180_229 = (print_pattern p)
+in (let _180_228 = (let _180_227 = (let _180_226 = (pretty_print_exp e)
+in (_180_226)::[])
+in ((FStar_Format.text "="))::_180_227)
+in (_180_229)::_180_228))
+in (FStar_Format.reduce _180_230))
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Update (o, e, b) -> begin
 semi
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Logical (o, e1, e2) -> begin
-(let _180_211 = (let _180_210 = (pretty_print_exp e1)
-in (let _180_209 = (let _180_208 = (let _180_207 = (pretty_print_exp e2)
-in (_180_207)::[])
-in ((print_op_log o))::_180_208)
-in (_180_210)::_180_209))
-in (FStar_Format.reduce _180_211))
+(let _180_235 = (let _180_234 = (pretty_print_exp e1)
+in (let _180_233 = (let _180_232 = (let _180_231 = (pretty_print_exp e2)
+in (_180_231)::[])
+in ((print_op_log o))::_180_232)
+in (_180_234)::_180_233))
+in (FStar_Format.reduce _180_235))
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Conditional (c, e, f) -> begin
 semi
@@ -514,20 +548,20 @@ end
 semi
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Call (e, l) -> begin
-(let _180_217 = (let _180_216 = (pretty_print_exp e)
-in (let _180_215 = (let _180_214 = (let _180_213 = (let _180_212 = (FStar_List.map pretty_print_exp l)
-in (FStar_All.pipe_right _180_212 (FStar_Format.combine comma)))
-in (FStar_Format.parens _180_213))
-in (_180_214)::[])
-in (_180_216)::_180_215))
-in (FStar_Format.reduce _180_217))
+(let _180_241 = (let _180_240 = (pretty_print_exp e)
+in (let _180_239 = (let _180_238 = (let _180_237 = (let _180_236 = (FStar_List.map pretty_print_exp l)
+in (FStar_All.pipe_right _180_236 (FStar_Format.combine comma)))
+in (FStar_Format.parens _180_237))
+in (_180_238)::[])
+in (_180_240)::_180_239))
+in (FStar_Format.reduce _180_241))
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Member (o, p) -> begin
-(let _180_221 = (let _180_220 = (pretty_print_exp o)
-in (let _180_219 = (let _180_218 = (pretty_print_propmem p)
-in (_180_218)::[])
-in (_180_220)::_180_219))
-in (FStar_Format.reduce _180_221))
+(let _180_245 = (let _180_244 = (pretty_print_exp o)
+in (let _180_243 = (let _180_242 = (pretty_print_propmem p)
+in (_180_242)::[])
+in (_180_244)::_180_243))
+in (FStar_Format.reduce _180_245))
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Yield (e, b) -> begin
 semi
@@ -542,21 +576,8 @@ end
 semi
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Identifier (id, t) -> begin
-(let _180_229 = (let _180_228 = (let _180_222 = (jstr_escape id)
-in (FStar_Format.text _180_222))
-in (let _180_227 = (let _180_226 = (match (t) with
-| Some (v) -> begin
-(let _180_225 = (let _180_224 = (let _180_223 = (print_typ v)
-in (_180_223)::[])
-in ((FStar_Format.text ":"))::_180_224)
-in (FStar_Format.reduce _180_225))
-end
-| None -> begin
-(FStar_Format.text "")
-end)
-in (_180_226)::[])
-in (_180_228)::_180_227))
-in (FStar_Format.reduce _180_229))
+(let _180_246 = (jstr_escape id)
+in (FStar_Format.text _180_246))
 end
 | FStar_Extraction_JavaScript_Ast.JSE_Literal (l) -> begin
 (print_literal (Prims.fst l))
@@ -565,13 +586,13 @@ end
 semi
 end))
 and pretty_print_obj : FStar_Extraction_JavaScript_Ast.property_obj_t  ->  FStar_Format.doc = (fun el -> (match (el) with
-| FStar_Extraction_JavaScript_Ast.JSPO_Property (k, e, _83_284) -> begin
-(let _180_235 = (let _180_234 = (pretty_print_prop_key k)
-in (let _180_233 = (let _180_232 = (let _180_231 = (pretty_print_exp e)
-in (_180_231)::[])
-in ((FStar_Format.text ":"))::_180_232)
-in (_180_234)::_180_233))
-in (FStar_Format.reduce _180_235))
+| FStar_Extraction_JavaScript_Ast.JSPO_Property (k, e, _83_291) -> begin
+(let _180_252 = (let _180_251 = (pretty_print_prop_key k)
+in (let _180_250 = (let _180_249 = (let _180_248 = (pretty_print_exp e)
+in (_180_248)::[])
+in ((FStar_Format.text ":"))::_180_249)
+in (_180_251)::_180_250))
+in (FStar_Format.reduce _180_252))
 end
 | FStar_Extraction_JavaScript_Ast.JSPO_SpreadProperty (e) -> begin
 (pretty_print_exp e)
@@ -581,27 +602,27 @@ and pretty_print_prop_key : FStar_Extraction_JavaScript_Ast.object_prop_key_t  -
 (print_literal (Prims.fst l))
 end
 | FStar_Extraction_JavaScript_Ast.JSO_Identifier (id, t) -> begin
-(let _180_237 = (jstr_escape id)
-in (FStar_Format.text _180_237))
+(let _180_254 = (jstr_escape id)
+in (FStar_Format.text _180_254))
 end
 | FStar_Extraction_JavaScript_Ast.JSO_Computed (e) -> begin
 (pretty_print_exp e)
 end))
 and pretty_print_propmem : FStar_Extraction_JavaScript_Ast.propmem_t  ->  FStar_Format.doc = (fun p -> (match (p) with
 | FStar_Extraction_JavaScript_Ast.JSPM_Identifier (i, t) -> begin
-(let _180_242 = (let _180_241 = (let _180_240 = (let _180_239 = (jstr_escape i)
-in (FStar_Format.text _180_239))
-in (_180_240)::[])
-in ((FStar_Format.text "."))::_180_241)
-in (FStar_Format.reduce _180_242))
+(let _180_259 = (let _180_258 = (let _180_257 = (let _180_256 = (jstr_escape i)
+in (FStar_Format.text _180_256))
+in (_180_257)::[])
+in ((FStar_Format.text "."))::_180_258)
+in (FStar_Format.reduce _180_259))
 end
 | FStar_Extraction_JavaScript_Ast.JSPM_Expression (e) -> begin
-(let _180_245 = (let _180_244 = (let _180_243 = (pretty_print_exp e)
-in (_180_243)::((FStar_Format.text "]"))::[])
-in ((FStar_Format.text "["))::_180_244)
-in (FStar_Format.reduce _180_245))
+(let _180_262 = (let _180_261 = (let _180_260 = (pretty_print_exp e)
+in (_180_260)::((FStar_Format.text "]"))::[])
+in ((FStar_Format.text "["))::_180_261)
+in (FStar_Format.reduce _180_262))
 end))
-and print_typ : FStar_Extraction_JavaScript_Ast.typ  ->  FStar_Format.doc = (fun _83_8 -> (match (_83_8) with
+and print_typ : FStar_Extraction_JavaScript_Ast.typ  ->  FStar_Format.doc = (fun _83_9 -> (match (_83_9) with
 | FStar_Extraction_JavaScript_Ast.JST_Any -> begin
 (FStar_Format.text "any")
 end
@@ -624,125 +645,140 @@ end
 (FStar_Format.text "string")
 end
 | FStar_Extraction_JavaScript_Ast.JST_Boolean -> begin
-(FStar_Format.text "bool")
+(FStar_Format.text "boolean")
 end
-| FStar_Extraction_JavaScript_Ast.JST_Nullable (_83_315) -> begin
+| FStar_Extraction_JavaScript_Ast.JST_Nullable (_83_322) -> begin
 (FStar_Format.text "!!!")
 end
 | FStar_Extraction_JavaScript_Ast.JST_Function (args, ret_t, decl_vars) -> begin
-(let _180_254 = (let _180_253 = (print_decl_t decl_vars)
-in (let _180_252 = (let _180_251 = (let _180_247 = (print_args args)
-in (FStar_Format.parens _180_247))
-in (let _180_250 = (let _180_249 = (let _180_248 = (print_typ ret_t)
-in (_180_248)::[])
-in ((FStar_Format.text "=>"))::_180_249)
-in (_180_251)::_180_250))
-in (_180_253)::_180_252))
-in (FStar_Format.reduce _180_254))
-end
-| FStar_Extraction_JavaScript_Ast.JST_Object (lp, _83_324, _83_326) -> begin
-(let _180_264 = (let _180_263 = (let _180_262 = (let _180_261 = (FStar_List.map (fun _83_331 -> (match (_83_331) with
-| (k, t) -> begin
-(let _180_260 = (let _180_259 = (pretty_print_prop_key k)
-in (let _180_258 = (let _180_257 = (let _180_256 = (print_typ t)
-in (_180_256)::[])
-in ((FStar_Format.text ":"))::_180_257)
-in (_180_259)::_180_258))
-in (FStar_Format.reduce _180_260))
-end)) lp)
-in (FStar_All.pipe_right _180_261 (FStar_Format.combine comma)))
-in (_180_262)::((FStar_Format.text "}"))::[])
-in ((FStar_Format.text "{"))::_180_263)
-in (FStar_Format.reduce _180_264))
-end
-| FStar_Extraction_JavaScript_Ast.JST_Array (t) -> begin
-(let _180_268 = (let _180_267 = (let _180_266 = (let _180_265 = (print_typ t)
-in (_180_265)::((FStar_Format.text ">"))::[])
-in ((FStar_Format.text "<"))::_180_266)
-in ((FStar_Format.text "Array"))::_180_267)
-in (FStar_Format.reduce _180_268))
-end
-| FStar_Extraction_JavaScript_Ast.JST_Union (l) -> begin
-(let _180_271 = (let _180_270 = (let _180_269 = (FStar_List.map print_typ l)
-in (FStar_All.pipe_right _180_269 (FStar_Format.combine (FStar_Format.text "|"))))
-in (_180_270)::[])
+(let _180_271 = (let _180_270 = (print_decl_t decl_vars)
+in (let _180_269 = (let _180_268 = (let _180_264 = (print_args args)
+in (FStar_Format.parens _180_264))
+in (let _180_267 = (let _180_266 = (let _180_265 = (print_typ ret_t)
+in (_180_265)::[])
+in ((FStar_Format.text "=>"))::_180_266)
+in (_180_268)::_180_267))
+in (_180_270)::_180_269))
 in (FStar_Format.reduce _180_271))
 end
-| FStar_Extraction_JavaScript_Ast.JST_Intersection (l) -> begin
-(let _180_274 = (let _180_273 = (let _180_272 = (FStar_List.map print_typ l)
-in (FStar_All.pipe_right _180_272 (FStar_Format.combine (FStar_Format.text "&"))))
+| FStar_Extraction_JavaScript_Ast.JST_Object (lp, _83_331, _83_333) -> begin
+(let _180_281 = (let _180_280 = (let _180_279 = (let _180_278 = (FStar_List.map (fun _83_338 -> (match (_83_338) with
+| (k, t) -> begin
+(let _180_277 = (let _180_276 = (pretty_print_prop_key k)
+in (let _180_275 = (let _180_274 = (let _180_273 = (print_typ t)
 in (_180_273)::[])
-in (FStar_Format.reduce _180_274))
-end
-| FStar_Extraction_JavaScript_Ast.JST_Typeof (t) -> begin
-(let _180_277 = (let _180_276 = (let _180_275 = (print_typ t)
-in (_180_275)::[])
-in ((FStar_Format.text "typeof"))::_180_276)
+in ((FStar_Format.text ":"))::_180_274)
+in (_180_276)::_180_275))
 in (FStar_Format.reduce _180_277))
-end
-| FStar_Extraction_JavaScript_Ast.JST_Tuple (lt) -> begin
-(let _180_281 = (let _180_280 = (let _180_279 = (let _180_278 = (FStar_List.map print_typ lt)
+end)) lp)
 in (FStar_All.pipe_right _180_278 (FStar_Format.combine comma)))
-in (_180_279)::((FStar_Format.text "]"))::[])
-in ((FStar_Format.text "["))::_180_280)
+in (_180_279)::((FStar_Format.text "}"))::[])
+in ((FStar_Format.text "{"))::_180_280)
 in (FStar_Format.reduce _180_281))
 end
-| FStar_Extraction_JavaScript_Ast.JST_StringLiteral (s, _83_344) -> begin
-(let _180_284 = (let _180_283 = (let _180_282 = (jstr_escape s)
-in (Prims.strcat _180_282 "\""))
-in (Prims.strcat "\"" _180_283))
-in (FStar_Format.text _180_284))
+| FStar_Extraction_JavaScript_Ast.JST_Array (t) -> begin
+(let _180_285 = (let _180_284 = (let _180_283 = (let _180_282 = (print_typ t)
+in (_180_282)::((FStar_Format.text ">"))::[])
+in ((FStar_Format.text "<"))::_180_283)
+in ((FStar_Format.text "Array"))::_180_284)
+in (FStar_Format.reduce _180_285))
 end
-| FStar_Extraction_JavaScript_Ast.JST_NumberLiteral (n, _83_349) -> begin
+| FStar_Extraction_JavaScript_Ast.JST_Union (l) -> begin
+(let _180_288 = (let _180_287 = (let _180_286 = (FStar_List.map print_typ l)
+in (FStar_All.pipe_right _180_286 (FStar_Format.combine (FStar_Format.text "|"))))
+in (_180_287)::[])
+in (FStar_Format.reduce _180_288))
+end
+| FStar_Extraction_JavaScript_Ast.JST_Intersection (l) -> begin
+(let _180_291 = (let _180_290 = (let _180_289 = (FStar_List.map print_typ l)
+in (FStar_All.pipe_right _180_289 (FStar_Format.combine (FStar_Format.text "&"))))
+in (_180_290)::[])
+in (FStar_Format.reduce _180_291))
+end
+| FStar_Extraction_JavaScript_Ast.JST_Typeof (t) -> begin
+(let _180_294 = (let _180_293 = (let _180_292 = (print_typ t)
+in (_180_292)::[])
+in ((FStar_Format.text "typeof"))::_180_293)
+in (FStar_Format.reduce _180_294))
+end
+| FStar_Extraction_JavaScript_Ast.JST_Tuple (lt) -> begin
+(let _180_298 = (let _180_297 = (let _180_296 = (let _180_295 = (FStar_List.map print_typ lt)
+in (FStar_All.pipe_right _180_295 (FStar_Format.combine comma)))
+in (_180_296)::((FStar_Format.text "]"))::[])
+in ((FStar_Format.text "["))::_180_297)
+in (FStar_Format.reduce _180_298))
+end
+| FStar_Extraction_JavaScript_Ast.JST_StringLiteral (s, _83_351) -> begin
+(let _180_301 = (let _180_300 = (let _180_299 = (jstr_escape s)
+in (Prims.strcat _180_299 "\""))
+in (Prims.strcat "\"" _180_300))
+in (FStar_Format.text _180_301))
+end
+| FStar_Extraction_JavaScript_Ast.JST_NumberLiteral (n, _83_356) -> begin
 (FStar_Format.text (FStar_Util.string_of_float n))
 end
-| FStar_Extraction_JavaScript_Ast.JST_BooleanLiteral (b, _83_354) -> begin
-(let _180_285 = (FStar_Util.string_of_bool b)
-in (FStar_Format.text _180_285))
+| FStar_Extraction_JavaScript_Ast.JST_BooleanLiteral (b, _83_361) -> begin
+(let _180_302 = (FStar_Util.string_of_bool b)
+in (FStar_Format.text _180_302))
 end
 | FStar_Extraction_JavaScript_Ast.JST_Exists -> begin
 (FStar_Format.text "!!!")
 end
-| FStar_Extraction_JavaScript_Ast.JST_Generic (n, _83_360) -> begin
-(print_gen_t n)
-end))
-and print_args : (FStar_Extraction_JavaScript_Ast.identifier_t * FStar_Extraction_JavaScript_Ast.typ) Prims.list  ->  FStar_Format.doc = (fun args -> (let _180_296 = (let _180_295 = (let _180_294 = (FStar_List.map (fun _83_369 -> (match (_83_369) with
-| ((id, _83_366), t) -> begin
-(let _180_293 = (let _180_292 = (let _180_288 = (jstr_escape id)
-in (FStar_Format.text _180_288))
-in (let _180_291 = (let _180_290 = (let _180_289 = (print_typ t)
-in (_180_289)::[])
-in ((FStar_Format.text ":"))::_180_290)
-in (_180_292)::_180_291))
-in (FStar_Format.reduce _180_293))
-end)) args)
-in (FStar_All.pipe_right _180_294 (FStar_Format.combine comma)))
-in (_180_295)::[])
-in (FStar_Format.reduce _180_296)))
-and print_gen_t : FStar_Extraction_JavaScript_Ast.generic_t  ->  FStar_Format.doc = (fun _83_9 -> (match (_83_9) with
-| FStar_Extraction_JavaScript_Ast.Unqualified (id, _83_373) -> begin
-(let _180_298 = (jstr_escape id)
-in (FStar_Format.text _180_298))
+| FStar_Extraction_JavaScript_Ast.JST_Generic (n, lt) -> begin
+(
+
+let print_lt = (match (lt) with
+| None -> begin
+FStar_Format.empty
 end
-| FStar_Extraction_JavaScript_Ast.Qualified (g, (id, _83_379)) -> begin
-(let _180_304 = (let _180_303 = (print_gen_t g)
-in (let _180_302 = (let _180_301 = (let _180_300 = (let _180_299 = (jstr_escape id)
-in (FStar_Format.text _180_299))
-in (_180_300)::[])
-in ((FStar_Format.text ","))::_180_301)
-in (_180_303)::_180_302))
-in (FStar_Format.reduce _180_304))
+| Some (v) -> begin
+(let _180_306 = (let _180_305 = (let _180_304 = (let _180_303 = (FStar_List.map print_typ v)
+in (FStar_All.pipe_right _180_303 (FStar_Format.combine comma)))
+in (_180_304)::((FStar_Format.text ">"))::[])
+in ((FStar_Format.text "<"))::_180_305)
+in (FStar_Format.reduce _180_306))
+end)
+in (let _180_308 = (let _180_307 = (print_gen_t n)
+in (_180_307)::(print_lt)::[])
+in (FStar_Format.reduce _180_308)))
 end))
-and print_literal : FStar_Extraction_JavaScript_Ast.value_t  ->  FStar_Format.doc = (fun _83_10 -> (match (_83_10) with
+and print_args : (FStar_Extraction_JavaScript_Ast.identifier_t * FStar_Extraction_JavaScript_Ast.typ) Prims.list  ->  FStar_Format.doc = (fun args -> (let _180_319 = (let _180_318 = (let _180_317 = (FStar_List.map (fun _83_379 -> (match (_83_379) with
+| ((id, _83_376), t) -> begin
+(let _180_316 = (let _180_315 = (let _180_311 = (jstr_escape id)
+in (FStar_Format.text _180_311))
+in (let _180_314 = (let _180_313 = (let _180_312 = (print_typ t)
+in (_180_312)::[])
+in (colon)::_180_313)
+in (_180_315)::_180_314))
+in (FStar_Format.reduce _180_316))
+end)) args)
+in (FStar_All.pipe_right _180_317 (FStar_Format.combine comma)))
+in (_180_318)::[])
+in (FStar_Format.reduce _180_319)))
+and print_gen_t : FStar_Extraction_JavaScript_Ast.generic_t  ->  FStar_Format.doc = (fun _83_10 -> (match (_83_10) with
+| FStar_Extraction_JavaScript_Ast.Unqualified (id, _83_383) -> begin
+(let _180_321 = (remove_chars_t id)
+in (FStar_Format.text _180_321))
+end
+| FStar_Extraction_JavaScript_Ast.Qualified (g, (id, _83_389)) -> begin
+(let _180_327 = (let _180_326 = (print_gen_t g)
+in (let _180_325 = (let _180_324 = (let _180_323 = (let _180_322 = (remove_chars_t id)
+in (FStar_Format.text _180_322))
+in (_180_323)::[])
+in (comma)::_180_324)
+in (_180_326)::_180_325))
+in (FStar_Format.reduce _180_327))
+end))
+and print_literal : FStar_Extraction_JavaScript_Ast.value_t  ->  FStar_Format.doc = (fun _83_11 -> (match (_83_11) with
 | FStar_Extraction_JavaScript_Ast.JSV_String (s) -> begin
-(let _180_308 = (let _180_307 = (let _180_306 = (jstr_escape s)
-in (Prims.strcat _180_306 "\""))
-in (Prims.strcat "\"" _180_307))
-in (FStar_Format.text _180_308))
+(let _180_331 = (let _180_330 = (let _180_329 = (jstr_escape s)
+in (Prims.strcat _180_329 "\""))
+in (Prims.strcat "\"" _180_330))
+in (FStar_Format.text _180_331))
 end
 | FStar_Extraction_JavaScript_Ast.JSV_Boolean (b) -> begin
-(let _180_309 = (FStar_Util.string_of_bool b)
-in (FStar_Format.text _180_309))
+(let _180_332 = (FStar_Util.string_of_bool b)
+in (FStar_Format.text _180_332))
 end
 | FStar_Extraction_JavaScript_Ast.JSV_Null -> begin
 (FStar_Format.text "null")
@@ -750,10 +786,10 @@ end
 | FStar_Extraction_JavaScript_Ast.JSV_Number (f) -> begin
 (FStar_Format.text (FStar_Util.string_of_float f))
 end
-| FStar_Extraction_JavaScript_Ast.JSV_RegExp (_83_392) -> begin
+| FStar_Extraction_JavaScript_Ast.JSV_RegExp (_83_402) -> begin
 (FStar_Format.text "!!")
 end))
-and print_kind_var : FStar_Extraction_JavaScript_Ast.kind_var_t  ->  FStar_Format.doc = (fun _83_11 -> (match (_83_11) with
+and print_kind_var : FStar_Extraction_JavaScript_Ast.kind_var_t  ->  FStar_Format.doc = (fun _83_12 -> (match (_83_12) with
 | FStar_Extraction_JavaScript_Ast.JSV_Var -> begin
 (FStar_Format.text "var")
 end
@@ -763,17 +799,17 @@ end
 | FStar_Extraction_JavaScript_Ast.JSV_Const -> begin
 (FStar_Format.text "const")
 end))
-and print_pattern : FStar_Extraction_JavaScript_Ast.pattern_t  ->  FStar_Format.doc = (fun _83_12 -> (match (_83_12) with
-| FStar_Extraction_JavaScript_Ast.JGP_Object (_83_400) -> begin
+and print_pattern : FStar_Extraction_JavaScript_Ast.pattern_t  ->  FStar_Format.doc = (fun _83_13 -> (match (_83_13) with
+| FStar_Extraction_JavaScript_Ast.JGP_Object (_83_410) -> begin
 (FStar_Format.text "!!")
 end
-| FStar_Extraction_JavaScript_Ast.JGP_Array (_83_403) -> begin
+| FStar_Extraction_JavaScript_Ast.JGP_Array (_83_413) -> begin
 (FStar_Format.text "!!")
 end
-| FStar_Extraction_JavaScript_Ast.JGP_Assignment (_83_406) -> begin
+| FStar_Extraction_JavaScript_Ast.JGP_Assignment (_83_416) -> begin
 (FStar_Format.text "!!")
 end
-| FStar_Extraction_JavaScript_Ast.JGP_Expression (_83_409) -> begin
+| FStar_Extraction_JavaScript_Ast.JGP_Expression (_83_419) -> begin
 (FStar_Format.text "!!")
 end
 | FStar_Extraction_JavaScript_Ast.JGP_Identifier (id, t) -> begin
@@ -781,27 +817,27 @@ end
 
 let r = (match (t) with
 | Some (v) -> begin
-(let _180_314 = (let _180_313 = (let _180_312 = (print_typ v)
-in (_180_312)::[])
-in (colon)::_180_313)
-in (FStar_Format.reduce _180_314))
+(let _180_337 = (let _180_336 = (let _180_335 = (print_typ v)
+in (_180_335)::[])
+in (colon)::_180_336)
+in (FStar_Format.reduce _180_337))
 end
 | None -> begin
-(FStar_Format.text "")
+FStar_Format.empty
 end)
-in (let _180_317 = (let _180_316 = (let _180_315 = (jstr_escape id)
-in (FStar_Format.text _180_315))
-in (_180_316)::(r)::[])
-in (FStar_Format.reduce _180_317)))
+in (let _180_340 = (let _180_339 = (let _180_338 = (jstr_escape id)
+in (FStar_Format.text _180_338))
+in (_180_339)::(r)::[])
+in (FStar_Format.reduce _180_340)))
 end))
-and print_body : FStar_Extraction_JavaScript_Ast.body_t  ->  FStar_Format.doc = (fun _83_13 -> (match (_83_13) with
+and print_body : FStar_Extraction_JavaScript_Ast.body_t  ->  FStar_Format.doc = (fun _83_14 -> (match (_83_14) with
 | FStar_Extraction_JavaScript_Ast.JS_BodyBlock (l) -> begin
 (pretty_print_statements l)
 end
 | FStar_Extraction_JavaScript_Ast.JS_BodyExpression (e) -> begin
 (pretty_print_exp e)
 end))
-and pretty_print_fun : FStar_Extraction_JavaScript_Ast.function_t  ->  FStar_Format.doc = (fun _83_429 -> (match (_83_429) with
+and pretty_print_fun : FStar_Extraction_JavaScript_Ast.function_t  ->  FStar_Format.doc = (fun _83_439 -> (match (_83_439) with
 | (n, pars, body, t, typePars) -> begin
 (
 
@@ -816,30 +852,30 @@ in (
 
 let returnT = (match (t) with
 | Some (v) -> begin
-(let _180_323 = (let _180_322 = (let _180_321 = (let _180_320 = (print_typ v)
-in (_180_320)::[])
-in (ws)::_180_321)
-in ((FStar_Format.text ":"))::_180_322)
-in (FStar_Format.reduce _180_323))
+(let _180_346 = (let _180_345 = (let _180_344 = (let _180_343 = (print_typ v)
+in (_180_343)::[])
+in (ws)::_180_344)
+in ((FStar_Format.text ":"))::_180_345)
+in (FStar_Format.reduce _180_346))
 end
 | None -> begin
 FStar_Format.empty
 end)
-in (let _180_337 = (let _180_336 = (let _180_335 = (let _180_334 = (let _180_333 = (print_decl_t typePars)
-in (let _180_332 = (let _180_331 = (let _180_325 = (let _180_324 = (FStar_List.map print_pattern pars)
-in (FStar_All.pipe_right _180_324 (FStar_Format.combine comma)))
-in (FStar_Format.parens _180_325))
-in (let _180_330 = (let _180_329 = (let _180_328 = (let _180_327 = (let _180_326 = (print_body body)
-in (_180_326)::((FStar_Format.text "}"))::[])
-in (FStar_Format.hardline)::_180_327)
-in ((FStar_Format.text "{"))::_180_328)
-in (returnT)::_180_329)
-in (_180_331)::_180_330))
-in (_180_333)::_180_332))
-in (name)::_180_334)
-in (ws)::_180_335)
-in ((FStar_Format.text "function"))::_180_336)
-in (FStar_Format.reduce _180_337))))
+in (let _180_360 = (let _180_359 = (let _180_358 = (let _180_357 = (let _180_356 = (print_decl_t typePars)
+in (let _180_355 = (let _180_354 = (let _180_348 = (let _180_347 = (FStar_List.map print_pattern pars)
+in (FStar_All.pipe_right _180_347 (FStar_Format.combine comma)))
+in (FStar_Format.parens _180_348))
+in (let _180_353 = (let _180_352 = (let _180_351 = (let _180_350 = (let _180_349 = (print_body body)
+in (_180_349)::((FStar_Format.text "}"))::[])
+in (FStar_Format.hardline)::_180_350)
+in ((FStar_Format.text "{"))::_180_351)
+in (returnT)::_180_352)
+in (_180_354)::_180_353))
+in (_180_356)::_180_355))
+in (name)::_180_357)
+in (ws)::_180_358)
+in ((FStar_Format.text "function"))::_180_359)
+in (FStar_Format.reduce _180_360))))
 end))
 
 

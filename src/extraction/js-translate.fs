@@ -145,20 +145,28 @@ and translate_decl env d: option<source_t> =
   | MLM_Loc _ -> None (*only for OCaml backend*)
 
   | MLM_Ty [(_, name, tparams, body)] ->
-      let tparams = None in
+      let tparams = 
+        match tparams with
+        | [] -> None
+        | _ -> List.map (fun (id, _) -> id) tparams |> Some
+        in
       let forbody body =
         match body with
-        | MLTD_Abbrev t -> JSS_TypeAlias((name, None), None, translate_type t)
+        | MLTD_Abbrev t -> JSS_TypeAlias((name, None), tparams, translate_type t)
         | MLTD_Record fields ->
             let tag = [(JSO_Identifier("_tag", None), JST_StringLiteral("Record", ""))] in
             let fields_t = List.map (fun (n, t) -> (JSO_Identifier("_" ^ n, None), translate_type t)) fields in
-            JSS_TypeAlias((name, None), None, JST_Object(tag @ fields_t, [], []))
+            JSS_TypeAlias((name, None), tparams, JST_Object(tag @ fields_t, [], []))
         | MLTD_DType lfields ->
             let tag n = [(JSO_Identifier("_tag", None), JST_StringLiteral(n, ""))] in
             let fields_t fields = List.map (fun t -> (JSO_Identifier("_value", None), JST_Tuple [translate_type t])) fields in
-            let lfields_t = List.map (fun (n, l) -> JSS_TypeAlias((n, None), None, JST_Object((tag n) @ fields_t l, [], []))) lfields in
-            let lnames = List.map (fun (n,l) -> JST_Generic(Unqualified((n, None)), None)) lfields in
-            let union_t = JSS_TypeAlias((name, None), None, JST_Union(lnames)) in
+            let lfields_t = List.map (fun (n, l) -> JSS_TypeAlias((n, None), tparams, JST_Object((tag n) @ fields_t l, [], []))) lfields in
+            let tparams_gen = 
+                match tparams with 
+                | Some t -> List.map (fun x -> JST_Generic(Unqualified(x, None), None)) t |> Some
+                | None -> None in
+            let lnames = List.map (fun (n,l) -> JST_Generic(Unqualified(n, None), tparams_gen)) lfields in
+            let union_t = JSS_TypeAlias((name, None), tparams, JST_Union(lnames)) in
             JSS_Block(lfields_t @ [union_t]) in
       let body_t =
         match body with
@@ -185,7 +193,7 @@ and translate_decl env d: option<source_t> =
       let c = JSS_Expression(JSE_Assignment(JGP_Identifier(var), JSE_Identifier(name, None))) in
       (match stmt with | Some v -> JSS_Block([c; v]) | None -> c)
 
-  | MLE_Name(path, n) -> (*full name for variable?*)     
+  | MLE_Name(path, n) ->      
       let c = JSS_Expression(JSE_Assignment(JGP_Identifier(var), JSE_Identifier(n, None))) in
       (match stmt with | Some v -> JSS_Block([c; v]) | None -> c)
 
@@ -219,7 +227,7 @@ and translate_decl env d: option<source_t> =
               JSS_Expression(JSE_Assignment(JGP_Identifier(var), JSE_Logical((must (mk_op_bool op)), List.nth args_t 0, List.nth args_t 1)))
          | MLE_Name (["Prims"], op) when is_op_un op ->
               JSS_Expression(JSE_Assignment(JGP_Identifier(var), JSE_Unary((must (mk_op_un op)), List.nth args_t 0)))
-         | MLE_Name (_, "failwith") -> 
+         | MLE_Name (_, "failwith") ->
               JSS_Throw(JSE_Literal(JSV_String("Not yet implemented in ML extraction!"), ""))
          | MLE_Name (path, function_name) ->
               JSS_Expression(JSE_Assignment(JGP_Identifier(var), JSE_Call(JSE_Identifier(function_name, None), args_t)))          
@@ -292,8 +300,12 @@ and translate_expr_app e: expression_t =
       (match e.expr with
        | MLE_Name(["Prims"], op) when is_op_bin op ->
             JSE_Binary((must (mk_op_bin op)), List.nth args_t 0, List.nth args_t 1)
+       | MLE_Name(["Prims"], op) when is_op_bool op ->
+            JSE_Logical((must (mk_op_bool op)), List.nth args_t 0, List.nth args_t 1)
+       | MLE_Name(["Prims"], op) when is_op_un op ->
+            JSE_Unary((must (mk_op_un op)), List.nth args_t 0)
        | MLE_Name (path, function_name) ->
-            JSE_Call (JSE_Identifier(function_name, None), args_t) (*Full name for function?*)          
+            JSE_Call (JSE_Identifier(function_name, None), args_t)          
        | MLE_Var (name, _) ->
             JSE_Call (JSE_Identifier(name, None), args_t)
        | _ -> failwith "todo: translate_expr [MLE_App]")
@@ -306,13 +318,13 @@ and translate_expr_app e: expression_t =
       let create_fields = List.map (fun (id, x) -> JSPO_Property(JSO_Identifier("_" ^ id, None), translate_expr_app x, JSO_Init)) fields in
           JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Record", ""), JSO_Init)] @
                       create_fields)
-  | MLE_CTor ((p, c), lexpr) -> (*of full name for constructor?*)
+  | MLE_CTor ((p, c), lexpr) ->      
       JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String c, ""), JSO_Init);
                   JSPO_Property(JSO_Identifier("_value", None), JSE_Array(Some (List.map (translate_expr_app) lexpr)), JSO_Init)])
   | MLE_Seq ls ->
       JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Seq", ""), JSO_Init);
                   JSPO_Property(JSO_Identifier("_value", None), JSE_Array(Some (List.map (translate_expr_app) ls)), JSO_Init)])
-  | _ -> failwith "todo: translation of expressions"
+  | _ -> JSE_Literal(JSV_String "TODO!!!", "")//failwith "todo: translation of expressions"
 
 and translate_match lb fv_x d var : statement_t =
     if d = 0 then JSS_Throw (JSE_Literal(JSV_String("This value doesn't match!"), ""))
@@ -335,7 +347,7 @@ and translate_pat p fv_x s1 s2: statement_t =
       s1
   | MLP_Const c ->
       JSS_If(JSE_Binary(JSB_Equal, fv_x, translate_constant c), s1, Some s2)
-  | MLP_CTor((p, c), lp) -> (*or full name?*)
+  | MLP_CTor((p, c), lp) ->      
       let if_true =
         match (List.length lp) with
         | 0 -> s1
@@ -394,20 +406,29 @@ and translate_type t: typ =
   | MLTY_Top ->
       JST_Any
   | MLTY_Var (id, _) ->
-      JST_StringLiteral (id, "")
+      JST_Generic (Unqualified(id, None), None)
   | MLTY_Tuple lt ->
       JST_Tuple (List.map translate_type lt)
   | MLTY_Fun (t1, _, t2) ->
       let t1_t = translate_type t1 in
       let t2_t = translate_type t2 in      
-      JST_Function([(("_1", None), t1_t)], t2_t, None)  (*!!!*)
+      //JST_Function([(("_1", None), t1_t)], t2_t, None)  (*!!!*)
       //JST_Function([(("_1", None), JST_Any)], JST_Any, None) 
-  | MLTY_Named (args, (path, name)) ->
-      let args = List.mapi (fun i x -> (JSO_Identifier("_" ^ string_of_int i, None), translate_type x)) args in     
-      let tag = [(JSO_Identifier("_tag", None), JST_StringLiteral("Tuple", ""))] in
-      let arity = [(JSO_Identifier("_arity", None), JST_NumberLiteral(float_of_int (List.length args), ""))] in
-     (if is_standart_type name
+      JST_Any
+  | MLTY_Named (args, (path, name)) ->      
+      if is_standart_type name
       then must (mk_standart_type name)
       else (if Option.isSome (Util.is_xtuple_ty (path, name))
-           then JST_Object(tag @ arity @ args, [], [])
-           else JST_Generic (Unqualified((name, None)), None)))
+           then 
+                let args = List.mapi (fun i x -> (JSO_Identifier("_" ^ string_of_int i, None), translate_type x)) args in     
+                let tag = [(JSO_Identifier("_tag", None), JST_StringLiteral("Tuple", ""))] in
+                let arity = [(JSO_Identifier("_arity", None), JST_NumberLiteral(float_of_int (List.length args), ""))] in
+                JST_Object(tag @ arity @ args, [], [])
+           else 
+                let args = match args with 
+                           | [] -> None 
+                           | _ -> List.map translate_type args |> Some in 
+                let name = match name with 
+                           | "list" | "option" -> Syntax.string_of_mlpath (path, name)
+                           | _ -> name 
+                in JST_Generic (Unqualified(name, None), args))

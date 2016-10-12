@@ -28,9 +28,8 @@ and statement_t =
     | JSS_TypeAlias of identifier_t * option<param_decl_t> * typ
     | JSS_Switch of expression_t * list<(option<expression_t> * list<statement_t>)>
     | JSS_Return of option<expression_t>
-    | JSS_Throw of expression_t  
-    | JSS_Try of list<statement_t> * option<(pattern_t * option<expression_t> * statement_t)>
-                 * list<(pattern_t * option<expression_t> * statement_t)> * option<(list<statement_t>)> (*!!!*)
+    | JSS_Throw of expression_t
+    | JSS_Try of list<statement_t> * option<(pattern_t * list<statement_t>)>
     | JSS_While of expression_t * statement_t
     | JSS_DoWhile of statement_t * expression_t
     | JSS_For of option<forinit_t> * option<expression_t> * option<expression_t> * statement_t
