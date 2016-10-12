@@ -43,7 +43,7 @@ assume val new_colored_region: r0:rid -> c:int -> STH rid
 			/\ color r1 = c
                         /\ m1==Map.upd m0 r1 Heap.emp))
 
-inline let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
+unfold let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
      (let region_i = Map.sel m0 i in
        not (Heap.contains region_i (as_ref x))
            /\ m1==HyperHeap.upd m0 x init)
@@ -52,7 +52,7 @@ assume val ralloc: #a:Type -> i:rid -> init:a -> STH (rref i a)
     (requires (fun m -> True))
     (ensures (ralloc_post i init))
 
-inline let alloc_post (#a:Type) (init:a) m0 (x:ref a) m1 = 
+unfold let alloc_post (#a:Type) (init:a) m0 (x:ref a) m1 = 
   (let region_i = Map.sel m0 root in
     not (Heap.contains region_i (as_ref x))
    /\ m1==HyperHeap.upd m0 x init)
@@ -61,14 +61,14 @@ assume val alloc: #a:Type -> init:a -> STH (ref a)
     (requires (fun m -> True))
     (ensures (alloc_post init))
 
-inline let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 (_u:unit) m1 : Type = 
+unfold let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 (_u:unit) m1 : Type = 
   m1==HyperHeap.upd m0 r v
 
 assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> STH unit
   (requires (fun m -> True))
   (ensures (assign_post r v))
 
-inline let deref_post (#a:Type) (#i:rid) (r:rref i a) m0 x m1 =
+unfold let deref_post (#a:Type) (#i:rid) (r:rref i a) m0 x m1 =
   m1==m0 /\ x==HyperHeap.sel m0 r
 
 assume val op_Bang: #a:Type -> #i:rid -> r:rref i a -> STH a

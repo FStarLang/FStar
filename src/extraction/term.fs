@@ -137,7 +137,7 @@ let rec level env t =
     | Tm_constant _ ->
         Term_level
 
-    | Tm_fvar ({fv_delta=Delta_unfoldable _}) ->
+    | Tm_fvar ({fv_delta=Delta_defined_at_level _}) ->
       let t' = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses; N.Exclude N.Zeta; N.Exclude N.Iota] env.tcenv t in
       debug env (fun () -> Util.print2 "Normalized %s to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
       level env t'
@@ -363,11 +363,11 @@ let rec term_as_mlty (g:env) (t0:term) : mlty =
           end
         | _ -> false
     in
-    let t = N.normalize [N.Beta; N.Inline; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
+    let t = N.normalize [N.Beta; N.Eager_unfolding; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
     let mlt = term_as_mlty' g t in
     if is_top_ty mlt
     then //Try normalizing t fully, this time with Delta steps, and translate again, to see if we can get a better translation for it
-         let t = N.normalize [N.Beta; N.Inline; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
+         let t = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
          term_as_mlty' g t
     else mlt
 
@@ -976,7 +976,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let lbs =
             if top_level
             then lbs |> List.map (fun lb ->
-                    let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.Inline; N.Exclude N.Zeta; N.PureSubtermsWithinComputations; N.Primops] 
+                    let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; 
+                                             N.Inlining; N.Eager_unfolding;
+                                             N.Exclude N.Zeta; N.PureSubtermsWithinComputations; N.Primops] 
                                 g.tcenv lb.lbdef in
                     {lb with lbdef=lbdef})
             else lbs in

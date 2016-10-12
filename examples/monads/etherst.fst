@@ -47,14 +47,14 @@ let est_post_h (h:Type) (a:Type)  = option (a * h)   //an exceptional result and
 let est_wp_h   (h:Type) (a:Type)  = est_post_h h a 
 				  -> Tot (est_pre_h h)
 
-inline let est_ite_wp (heap:Type) (a:Type)
+unfold let est_ite_wp (heap:Type) (a:Type)
                       (wp:est_wp_h heap a)
                       (post:est_post_h heap a) (h0:heap) (b:bool) =
     forall (k:est_post_h heap a).
        (forall (x:option (a * heap)) (b:bool).{:pattern (guard_free (k x b))} k x b <==> post x b)
        ==> wp k h0 b
-inline let est_return  (heap:Type) (a:Type) (x:a) (p:est_post_h heap a) (h0:heap) (b:bool)= p (Some (x, h0)) b
-inline let est_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
+unfold let est_return  (heap:Type) (a:Type) (x:a) (p:est_post_h heap a) (h0:heap) (b:bool)= p (Some (x, h0)) b
+unfold let est_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
                        (wp1:est_wp_h heap a)
                        (wp2:(a -> GTot (est_wp_h heap b)))
                        (p:est_post_h heap b) (h0:heap) (b0:bool) : GTot Type0 =
@@ -65,30 +65,30 @@ inline let est_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
 	    | None -> p None b1 //if the 1st computation throws, then we don't run the 2nd one
 	    | Some (x, h1) -> wp2 x p h1 b1))
      h0 b0
-inline let est_if_then_else (heap:Type) (a:Type) (p:Type)
+unfold let est_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:est_wp_h heap a) (wp_else:est_wp_h heap a)
                              (post:est_post_h heap a) (h0:heap) (b:bool) =
    l_ITE p
        (wp_then post h0 b)
        (wp_else post h0 b)
-inline let est_stronger (heap:Type) (a:Type) (wp1:est_wp_h heap a)
+unfold let est_stronger (heap:Type) (a:Type) (wp1:est_wp_h heap a)
                         (wp2:est_wp_h heap a) =
     (forall (p:est_post_h heap a) (h:heap) (b:bool). wp1 p h b ==> wp2 p h b)
 
-inline let est_close_wp (heap:Type) (a:Type) (b:Type)
+unfold let est_close_wp (heap:Type) (a:Type) (b:Type)
                         (wp:(b -> GTot (est_wp_h heap a)))
                         (p:est_post_h heap a) (h:heap) (f:bool) =
     (forall (b:b). wp b p h f)
-inline let est_assert_p (heap:Type) (a:Type) (p:Type)
+unfold let est_assert_p (heap:Type) (a:Type) (p:Type)
                         (wp:est_wp_h heap a) (q:est_post_h heap a) (h:heap) (b:bool) =
     p /\ wp q h b
-inline let est_assume_p (heap:Type) (a:Type) (p:Type)
+unfold let est_assume_p (heap:Type) (a:Type) (p:Type)
                          (wp:est_wp_h heap a) (q:est_post_h heap a) (h:heap) (b:bool) =
     p ==> wp q h b
-inline let est_null_wp (heap:Type) (a:Type)
+unfold let est_null_wp (heap:Type) (a:Type)
                        (p:est_post_h heap a) (h0:heap) (b:bool) =
     (forall (a:option (a * heap)) (b1:bool). p a b1)
-inline let est_trivial (heap:Type) (a:Type) (wp:est_wp_h heap a) =
+unfold let est_trivial (heap:Type) (a:Type) (wp:est_wp_h heap a) =
     (forall (h0:heap) (b:bool). wp (fun r b -> True) h0 b)
 
 new_effect {
@@ -189,7 +189,7 @@ effect GoodEth (a:Type)
 				       | None -> True                       //if a send failed, then we must throw
 				       | Some (_, h1) -> no_mods h0 h1)) //or we didn't modify the heap
 
-inline let lift_pure_est (a:Type) (wp:pure_wp a) (p:est_post_h heap a) (h:heap) (b:bool) = wp (fun a -> p (Some (a, h)) b)
+unfold let lift_pure_est (a:Type) (wp:pure_wp a) (p:est_post_h heap a) (h:heap) (b:bool) = wp (fun a -> p (Some (a, h)) b)
 sub_effect PURE ~> EST = lift_pure_est
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -48,7 +48,7 @@ let mk_lex_list vs =
 let is_eq = function
     | Some Equality -> true
     | _ -> false
-let steps env = [N.Beta; N.Inline]
+let steps env = [N.Beta; N.Eager_unfolding]
 let unfold_whnf env t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
@@ -1810,7 +1810,7 @@ let universe_of env e =
 	    match !e.tk with 
 	    | None
         | Some Tm_unknown -> 
-          let e = N.normalize [N.Beta; N.NoInline] env e in
+          let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
           let _, ({res_typ=t}), g = tc_term env e in
           Rel.solve_deferred_constraints env g |> ignore;
           t

@@ -1,5 +1,5 @@
 [
-  "j+<æÝ™)ô\u000feÊ€÷oÎÊ",
+  "p§y,m¶\u0005Ê\u0002ê\u0005¿±Ú•\\",
   [
     [ "Effects.Def.eq_m", 1, 2, 1, [ "@query" ], 0 ],
     [ "Effects.Def.monad_laws_via_eq", 1, 2, 1, [ "@query" ], 0 ],
@@ -87,7 +87,6 @@
       ],
       0
     ],
-    [ "Effects.Def.raise_", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.handle",
       1,
