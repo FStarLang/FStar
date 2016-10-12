@@ -19,3 +19,6 @@ FST_FILES=(*.fst *.fsti)
 ../bin/fstar-any.sh --odir "../$FSDOC_ODIR" --doc ${FST_FILES[*]} 
 popd
 
+PD=`which pandoc`
+echo "Machine has pandoc $PD installed." 
+
