@@ -389,6 +389,7 @@ type pattern = {
   projections: term -> list<(either_var * term)>        (* bound variables of the pattern, and the corresponding projected components of the scrutinee *)
  }
 exception Let_rec_unencodeable
+exception Bad_form
 
 let constructor_string_of_int_qualifier = function
   | Unsigned, Int8 -> "FStar.UInt8.UInt8"
@@ -1183,7 +1184,8 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
             then
                 let pat = match tl with
                   | [] -> None
-                  | [(Inr pat, _)] -> Some pat in
+                  | [(Inr pat, _)] -> Some pat 
+                  | _ -> raise Bad_form in
                 let f, decls = encode_function_type_as_formula None pat phi env in
                 (f, [], decls)
             else (Term.mkTrue, [], [])
@@ -2215,6 +2217,7 @@ let solve tcenv q : unit =
 
             if (Options.admit_smt_queries()) then () else process_query qry;
             pop ()
+        | _ -> raise Bad_form
     end
 
 let is_trivial (tcenv:Tc.Env.env) (q:typ) : bool =
