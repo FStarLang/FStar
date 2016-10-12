@@ -1,15 +1,21 @@
+(**
+  @summary: This module defines properties of sortedness on a generic list.
+  @author: A Manning
+**)
 module GenericSort
-(* Author: A Manning *)
 open FStar.List.Tot
 
-(*
-  This module defines properties of sortedness on a generic list.
-*)
+(**
+  key is a function that will appear a lot here,
+  as will 'a, a, #a, which are generic types.
+  key is a function on 'a that returns an integer.
+  #a and a appears where a is required to support equality.
+**)
 
-(*
-  Check that a list is sorted.
-  key is an arbitrary function that assigns an integer to a generic 'a.
-*)
+
+(**
+  Checks that a list is sorted.
+**)
 val sorted: list 'a -> key:('a -> Tot int) -> Tot bool
 let rec sorted l key = match l with
     | [] | [_] -> true
@@ -22,10 +28,9 @@ let test_sorted x l key = ()
 val test_sorted2: unit -> key:('a -> Tot int) -> Tot (m:list 'a{sorted m key})
 let test_sorted2 () key = Nil
 
-(*
+(**
   Lemma about sorted.
-  #a is a generic type, that supports equality.
-*)
+**)
 val sorted_smaller: #a:Type{hasEq a}
                 ->  x:a
                 ->  y:a
