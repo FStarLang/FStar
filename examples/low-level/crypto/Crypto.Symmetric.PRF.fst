@@ -432,7 +432,7 @@ let prf_enxor i t x l cipher plain =
     r := contents';
     let h2 = HST.get() in
     assume(Plain.live h2 plain);
-    assert(p == sel_plain h2 l plain); //16-10-12  how to anti-alias a buffer? 
+    assert(p == sel_plain h2 l plain);
     assert(modifies_x_buffer_1 t x cipher h0 h2);
     ()
   else

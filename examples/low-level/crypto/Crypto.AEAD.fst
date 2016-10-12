@@ -30,7 +30,14 @@ let ctr x = PRF(x.ctr)
 
 let alg (i:id) = cipher_of_id i 
 
-(* Definitions adapted from TLS/StreamAE.fst, to be integrated later *)
+//16-10-12 TEMPORARY, while PRF remains somewhat CHACHA-specific
+let id = i:id {cipher_of_id i = Cipher.CHACHA20}
+
+
+// ********* StreamAE **********
+//
+// (Definitions adapted from TLS/StreamAE.fst, to be integrated later)
+//
 // The per-record nonce for the AEAD construction is formed as follows:
 //
 // 1. The 64-bit record sequence number is padded to the left with zeroes to iv_length.
@@ -68,6 +75,7 @@ let lemma_xor_bounded n x y =
 
 //16-10-05 by induction on n, given a bitwise definition of logxor.
 
+//16-10-12 computes nonce from static IV and sequence number
 let aeIV i (seqn:UInt64.t) (staticIV:Cipher.iv (alg i)) : Tot (Cipher.iv (alg i)) =
   let x = FStar.Int.Cast.uint64_to_uint128 seqn in
   let r = UInt128.logxor x staticIV in
@@ -85,6 +93,8 @@ assume val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:
   (* recheck endianness *)
 
 // a bit more concrete than the spec: xor only 64 bits, copy the rest. 
+
+
 
 
 // PLAN: 
@@ -157,15 +167,14 @@ type rw = | Reader | Writer
 
 noeq type state (i:id) (rw:rw) =
   | State:
-      #region: rgn (* no need for readers? *) ->
-      #log_region: rgn {if rw = Writer then region = log_region else HyperHeap.disjoint region log_region} ->
+      #log_region: rgn -> // this is the *writer* region; the reader allocates nothing
       log: HS.ref (Seq.seq (entry i)) {HS.frameOf log == log_region} ->
       // Was PRF(prf.rgn) == region. Do readers use its own PRF state?
       prf: PRF.state i {PRF(prf.rgn) == log_region} (* including its key *) ->
       state i rw
 
 
-//16-09-18 where is it in the libraries?
+//16-09-18 where is it in the libraries??
 private let min (a:u32) (b:u32) = if a <=^ b then a else b
 private let minNat (a:nat) (b:nat) : nat = if a <= b then a else b
 
@@ -175,7 +184,7 @@ val gen: i:id -> rgn:region -> ST (state i Writer)
 let gen i rgn = 
   let log = ralloc rgn (Seq.createEmpty #(entry i)) in
   let prf = PRF.gen rgn i in 
-  State #i #Writer #rgn #rgn log prf
+  State #i #Writer #rgn log prf
 
 
 val coerce: i:id{~(prf i)} -> rgn:region -> key:lbuffer (v PRF.keylen)
@@ -185,15 +194,14 @@ val coerce: i:id{~(prf i)} -> rgn:region -> key:lbuffer (v PRF.keylen)
 let coerce i rgn key = 
   let log = ralloc rgn (Seq.createEmpty #(entry i)) in // Shouldn't exist
   let prf = PRF.coerce rgn i key in
-  State #i #Writer #rgn #rgn log prf
+  State #i #Writer #rgn log prf
 
 
-val genReader: #i:id -> #rgn:region
-  -> st:state i Writer{HyperHeap.disjoint rgn st.region} -> ST (state i Reader)
+val genReader: #i:id -> st:state i Writer -> ST (state i Reader)
   (requires (fun _ -> True))
   (ensures  (fun _ _ _ -> True))
-let genReader #i #rgn st =
-  State #i #Reader #rgn #st.region st.log st.prf
+let genReader #i st =
+  State #i #Reader #st.log_region st.log st.prf
 
 
 // If the length is not a multiple of 16, pad to 16
@@ -308,7 +316,7 @@ let rec counterblocks i rgn x l plain cipher =
 // (not a projection from one another because of allocated MACs and aad)
 val refines: 
   h:mem -> 
-  i:id {safeId i } -> rgn:region ->
+  i:id {safeId i} -> rgn:region ->
   entries: Seq.seq (entry i) -> 
   blocks: Seq.seq (PRF.entry rgn i) -> GTot Type0
   (decreases (Seq.length entries))
@@ -457,7 +465,7 @@ let live_2 #a0 #a1 h b0 b1 = Buffer.live #a0 h b0 /\ Buffer.live #a1 h b1
 val inv: h:mem -> #i:id -> #rw:rw -> e:state i rw -> Tot Type0
 let inv h #i #rw e =
   match e with
-  | State #i_ #rw_ #region #log_region log prf ->
+  | State #i_ #rw_ #log_region log prf ->
     safeId i ==>
     ( let blocks = HS.sel h (PRF.State.table prf) in
       let entries = HS.sel h log in

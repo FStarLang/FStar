@@ -141,7 +141,7 @@ let from_bytestring s =
   buf 
 *)
 
-let verbose = true
+let verbose = false
 
 val diff: string -> l:UInt32.t -> expected:lbuffer (v l) -> computed:lbuffer (v l) -> ST bool
   (requires (fun h -> Buffer.live h expected /\ Buffer.live h computed))
@@ -205,8 +205,7 @@ let test() =
   let ok_0 = diff "cipher" cipherlen expected_cipher cipher in
 
   let decrypted = Plain.create i 0uy plainlen in
-  let reader_rgn = new_region HH.root in
-  let st = AE.genReader #_ #reader_rgn st in
+  let st = AE.genReader st in
   let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
   let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in
 
