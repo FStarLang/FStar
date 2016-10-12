@@ -79,10 +79,10 @@ let reset2 o p m = fun c -> c (m () (fun x -> x))
 
 let cont3 (a:Type) = (a -> Tot result) -> Tot result
 
-inline let return_k3 (#a:Type) (x:a) : cont3 a =
+unfold let return_k3 (#a:Type) (x:a) : cont3 a =
         fun k -> k x
 
-inline let bind_k3 (#a:Type) (#b:Type)
+unfold let bind_k3 (#a:Type) (#b:Type)
                 (m:cont3 a) (f:a -> Tot (cont3 b)) : cont3 b =
         fun k -> m (fun x -> f x k)
 
