@@ -1,5 +1,5 @@
 [
-  "iÖ#\u0007åÆºÂæ}\u007fÒ&b\u0015í",
+  "X>k$\u001f\u0007\u0014\u001bÕâ{M\r0{ª",
   [
     [
       "FStar.UInt16.t'",
@@ -26,6 +26,18 @@
     [
       "FStar.UInt16.t'",
       3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt16.n",
+        "haseqTm_refine_03d0bed5c0733099844f268aecd0836d"
+      ],
+      0
+    ],
+    [
+      "FStar.UInt16.t'",
+      4,
       2,
       1,
       [

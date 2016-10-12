@@ -48,7 +48,7 @@ let mk_lex_list vs =
 let is_eq = function
     | Some Equality -> true
     | _ -> false
-let steps env = [N.Beta; N.Inline]
+let steps env = [N.Beta; N.Eager_unfolding]
 let unfold_whnf env t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
@@ -428,6 +428,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     then Util.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
     let c = if Env.should_verify env
             && not (Util.is_lcomp_partial_return c)
+            //&& not (Util.is_unit c.res_typ)
             && Util.is_pure_or_ghost_lcomp c //ADD_EQ_REFINEMENT for pure applications
             then TcUtil.maybe_assume_result_eq_pure_term env e c
             else c in
@@ -962,6 +963,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 let refine_with_equality =
                     //if the function is pure, but its arguments are not, then add an equality refinement here
                     //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
+                    //not (Util.is_unit cres.res_typ)
+                    //&&
                     Util.is_pure_or_ghost_lcomp cres
                     && arg_comps_rev |> Util.for_some (function 
                         | (_, _, None) -> false 
@@ -1807,7 +1810,7 @@ let universe_of env e =
 	    match !e.tk with 
 	    | None
         | Some Tm_unknown -> 
-          let e = N.normalize [N.Beta; N.NoInline] env e in
+          let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
           let _, ({res_typ=t}), g = tc_term env e in
           Rel.solve_deferred_constraints env g |> ignore;
           t

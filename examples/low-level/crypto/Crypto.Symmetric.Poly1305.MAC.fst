@@ -14,28 +14,42 @@ open FStar.HST.Monotonic.RRef
 
 open Crypto.Symmetric.Poly1305.Spec
 open Crypto.Symmetric.Poly1305 // avoid?
+open Flag 
 
 module HH = FStar.HyperHeap
 
-type bytes = buffer UInt8.t
-type lbytes (n:nat) = b:bytes{length b = n}
+// library stuff
+
+type alg = Flag.mac_alg
+let alg_of_id = Flag.cipher_of_id
+
+type buffer = Buffer.buffer UInt8.t
+type bytes  = Seq.seq UInt8.t
+type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
+type lbytes  (l:nat) = b:bytes {Seq.length b = l}
 
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm
+
+type id = Flag.id * UInt128.t
 
 // also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
 // this flag enables conditional idealization by keeping additional data,
 // - this should not affect the code behavior
 // - this may cause the code not to compile to Kremlin/C.
-assume val ideal: bool
-//let ideal = true
+(* inline_for_extraction *) unfold let authId (i: id) =
+  let i = fst i in
+  safeHS i && mac1 i
 
 // we will need authId i ==> ideal?
 
-// the index is the base index (controlling agility and idealization) plus the unique IV for this MAC.
-type id = Plain.id * lbytes 12
+// the index is the base index (controlling agility and idealization)
+// plus the value of the unique IV for this MAC
+// TODO make it a dependent pair to support agile IV types
 
-assume val someId: Plain.id // dummy value for unit testing
-let authId (i:id) = Plain.authId (fst i)
+assume val someId: Flag.id // dummy value for unit testing
+let someId_coerce = assume(~ (safeHS someId))
+
+
 (*
 type id = nat
 let authId i = false
@@ -60,13 +74,13 @@ type log_2 = // only when ideal
 *)
 
 // TODO: right now we use a dummy, should be external
-// relocated in some library somewhere, 
+// relocated in some library somewhere,
 // and with careful, crypto-grade external implementation
-// both with ocaml and kremlin, 
-val random: r:rid -> len:UInt32.t -> ST bytes
+// both with ocaml and kremlin,
+val random: r:rid -> len:UInt32.t -> ST buffer
      (requires (fun h -> is_eternal_region r))
      (ensures (fun (h0:mem) b h1 ->
-	 ~(contains h0 b)
+         ~(contains h0 b)
        /\ live h1 b /\ idx b = 0 /\ length b = UInt32.v len
        /\ Map.domain h1.h == Map.domain h0.h
        /\ h1.tip = h0.tip
@@ -76,7 +90,7 @@ let random r len = FStar.Buffer.rcreate r 0uy len
 
 // the sequence of hashed elements is conditional, but not ghost
 // this will require changing e.g. the type of poly1305_add
-let itext : Type0 = if ideal then text else unit
+let itext: Type0 = if Flag.mac_log then text else unit
 
 type log = option (itext * tag) // option (Seq.seq elem * word16)
 
@@ -102,11 +116,11 @@ let log_cmp_monotonic _ = ()
 
 let ideal_log (r:rid) = m_rref r log log_cmp
 
-let log_ref (r:rid) = if ideal then ideal_log r else unit
+let log_ref (r:rid) = if mac_log then ideal_log r else unit
 
-let ilog (#r:rid) (l:log_ref r{ideal}) : Tot (ideal_log r) = l
+let ilog (#r:rid) (l:log_ref r{mac_log}) : Tot (ideal_log r) = l
 
-let text_0: itext = if ideal then Seq.createEmpty #elem else ()
+let text_0: itext = if mac_log then Seq.createEmpty #elem else ()
 
 noeq type state (i:id) =
   | State:
@@ -119,7 +133,7 @@ noeq type state (i:id) =
 
 val alloc: i:id
   -> region:rid{is_eternal_region region}
-  -> key:bytes{length key >= 32}
+  -> key:buffer{length key >= 32}
   -> ST (state i)
   (requires (fun m0 -> live m0 key))
   (ensures  (fun m0 st m1 ->
@@ -127,28 +141,29 @@ val alloc: i:id
     ~(contains m0 st.s) /\
     //modifies (Set.singleton region) m0 m1 /\ // Can't prove this
     st.region == region /\
-    (ideal ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)
+    (mac_log ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)
   ))
 
+#reset-options "--z3timeout 1000"
 let alloc i region key =
   let r = FStar.Buffer.rcreate region 0UL 5ul in
   let s = FStar.Buffer.rcreate region 0uy 16ul in
   cut (disjoint r key /\ disjoint s key);
   poly1305_init r s key;
-  if ideal then
+  if mac_log then
     let log = m_alloc #log #log_cmp region None in
     State #i #region r s log
   else
     State #i #region r s ()
 
- 
-let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 = 
+
+let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
     ~(contains m0 st.r) /\
     ~(contains m0 st.s) /\
     //modifies (Set.singleton r) m0 m1
     st.region == region /\
-    (ideal ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)
- 
+    (mac_log ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)
+
 val gen: i:id
   -> region:rid{is_eternal_region region}
   -> ST (state i)
@@ -158,12 +173,12 @@ val gen: i:id
 let gen i region =
   let key = random region 32ul in
   alloc i region key
- 
-val coerce: i:id{~(authId i)} -> r:rid -> key:lbytes 32 -> ST (state i)
+
+val coerce: i:id{~(authId i)} -> r:rid -> key:lbuffer 32 -> ST (state i)
   (requires (fun m0 -> live m0 key))
   (ensures  (fun m0 st m1 ->
     //modifies (Set.singleton r) m0 m1 /\
-    (ideal ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)))
+    (mac_log ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)))
 
 let coerce i region key =
   alloc i region key
@@ -184,7 +199,7 @@ let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
   norm h st.r /\ norm h a /\
   (let r = sel_elem h st.r in
    let a = sel_elem h a in
-   ideal ==> a == poly l r)
+   mac_log ==> a == poly l r)
 
 // not framed, as we allocate private state on the caller stack
 val start: #i:id -> st:state i -> StackInline (accB i)
@@ -226,7 +241,7 @@ let seq_head_snoc #a xs x =
   Seq.lemma_len_append xs (Seq.create 1 x);
   Seq.lemma_eq_intro (seq_head (SeqProperties.snoc xs x)) xs
 
-#set-options "--print_fuels --initial_fuel 1 --initial_ifuel 1"
+#set-options "--z3timeout 100 --print_fuels --initial_fuel 1 --initial_ifuel 1"
 
 let update #i st l a v =
   let h0 = HST.get () in
@@ -242,7 +257,7 @@ let update #i st l a v =
   //assert (norm h1 st.r /\ norm h1 a);
   //assert (sel_elem h0 st.r == sel_elem h1 st.r);
   //assert (sel_elem h0 v == sel_elem h1 v);
-  if ideal then
+  if mac_log then
     let v = sel_elemT v in
     let vs = SeqProperties.snoc l v in
     Seq.lemma_index_app2 l (Seq.create 1 v) (Seq.length vs - 1);
@@ -257,9 +272,9 @@ let update #i st l a v =
 
 (*
 type invoked (#i:id) (st:state i) (m:mem) : Type =
-  ideal /\ is_Some (sel m (State.log st))
+  mac_log /\ is_Some (sel m (State.log st))
 
-val mac: #i:id -> st:state i -> m:msg -> buf:bytes{lbytes 16} -> ST tag
+val mac: #i:id -> st:state i -> m:msg -> buf:buffer{lbytes 16} -> ST tag
   (requires (fun m0 -> is_None (m_sel m0 st.log)))
   (ensures  (fun m0 tag m1 ->
     modifies (Set.singleton (State.rid st)) m0 m1
@@ -285,19 +300,21 @@ let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
   norm h st.r /\ norm h a /\
   (let r = sel_elem h st.r in
    let a = sel_elem h a in
-   ideal ==> a == poly l r)
+   mac_log ==> a == poly l r)
 *)
+
+#set-options "--z3timeout 100 --print_fuels --initial_fuel 1 --initial_ifuel 1"
 
 val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit
   (requires (fun h0 ->
     live h0 tag /\ live h0 st.s /\
     disjoint acc st.s /\ disjoint tag acc /\ disjoint tag st.r /\ disjoint tag st.s /\
     acc_inv st l acc h0 /\
-    (ideal ==> m_sel h0 (ilog st.log) == None)))
+    (mac_log ==> m_sel h0 (ilog st.log) == None)))
   (ensures (fun h0 _ h1 ->
     live h0 st.s /\ live h0 st.r /\ live h1 tag /\
     // modifies h0 h1 "the tag buffer and st.log" /\
-    (ideal ==>
+    (mac_log ==>
       (let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in
       mac == little_endian (sel_word h1 tag) /\
       m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag)))))
@@ -306,10 +323,10 @@ let mac #i st l acc tag =
   let h0 = HST.get () in
   poly1305_finish tag acc st.s;
   let h1 = HST.get () in
-  if ideal then
+  if mac_log then
     begin
     //assume (mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) ==
-    //	    little_endian (sel_word h1 tag));
+    //      little_endian (sel_word h1 tag));
     let t = read_word tag in
     m_recall #st.region #log #log_cmp (ilog st.log);
     assume (m_sel h1 (ilog st.log) == m_sel h0 (ilog st.log));
@@ -317,11 +334,11 @@ let mac #i st l acc tag =
     end
   else
     admit ()
-
+//16-09-24 why?
 
 val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag:tagB ->
   Stack bool
-  (requires (fun h0 -> ideal ==>
+  (requires (fun h0 -> mac_log ==>
     sel_elem h0 computed == poly (reveal l) (sel_elem h0 st.r)))
   (ensures (fun h0 b h1 ->
     h0 == h1 /\
@@ -334,7 +351,7 @@ let verify #i st l acc received =
   let tag = Buffer.create 0uy 16ul in
   poly1305_finish tag acc st.s;
   let verified = Buffer.eqb tag received 16ul in
-  if ideal && authId i then
+  if mac_log && authId i then
     let st = !st.log in
     let correct = (st = Some(l,read_word tag)) in
     verified && correct
@@ -371,10 +388,10 @@ val add:
   a: accB i ->
   w:wordB_16 -> STL itext
   (requires (fun h -> live h w /\ live h a /\ norm h a /\ norm h st.r
-    /\ (ideal ==> sel_elem h a = poly (reveal l0) (sel_elem h st.r))))
+    /\ (mac_log ==> sel_elem h a = poly (reveal l0) (sel_elem h st.r))))
   (ensures (fun h0 l1 h1 ->
     modifies_1 a h0 h1 /\ norm h1 a /\
-    (ideal ==> reveal l1 = SeqProperties.snoc (reveal l0) (encode (sel_word h0 w)) /\
+    (mac_log ==> reveal l1 = SeqProperties.snoc (reveal l0) (encode (sel_word h0 w)) /\
              sel_elem h1 a = poly (reveal l1) (sel_elem h0 st.r))))
 
 let add #i st l0 a w =

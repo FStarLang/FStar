@@ -14,9 +14,8 @@ open FStar.UInt64
 open FStar.Int.Cast
 
 (** Mathematical definitions *)
-open Math.Axioms
-open Math.Lib
-open Math.Lemmas
+open FStar.Math.Lib
+open FStar.Math.Lemmas
 
 module U8  = FStar.UInt8
 module U32 = FStar.UInt32
@@ -49,7 +48,7 @@ let field_add a b = (a + b) % p_1305
 val field_mul: elem -> elem -> Tot elem
 let field_mul a b = (a * b) % p_1305
 
-(* Infix operators for readability *)
+(* Infix field operators for readability *)
 let op_Plus_At = field_add
 let op_Star_At = field_mul
 

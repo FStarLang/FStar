@@ -49,10 +49,7 @@
       2,
       2,
       1,
-      [
-        "@query", "equality_tok_Prims.T@tok", "equation_FStar.MRef.token",
-        "equation_Prims.l_True", "typing_tok_Prims.T@tok", "unit_typing"
-      ],
+      [ "@query", "equation_FStar.MRef.token", "true_interp", "unit_typing" ],
       0
     ],
     [ "FStar.MRef.recall_token", 1, 2, 1, [ "@query" ], 0 ],
@@ -64,9 +61,8 @@
       2,
       1,
       [
-        "@query", "equality_tok_Prims.T@tok",
-        "equation_FStar.MRef.witnessed", "equation_Prims.l_True",
-        "typing_tok_Prims.T@tok", "unit_typing"
+        "@query", "equation_FStar.MRef.witnessed", "true_interp",
+        "unit_typing"
       ],
       0
     ]

@@ -60,7 +60,7 @@ let inline_stack_inv h h' : GTot Type0 =
 
 (**
    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
-   In other terms, the backend has to inline the body into the caller's body.
+   In other terms, the backend has to unfold the body into the caller's body.
    This effect maintains the stack AND the heap invariant: it can be inlined in the Stack effect
    function body as well as in a Heap effect function body
    *)
@@ -77,7 +77,7 @@ let inline_inv h h' : GTot Type0 =
 
 (**
    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
-   In other terms, the backend has to inline the body into the caller's body.
+   In other terms, the backend has to unfold the body into the caller's body.
    This effect only maintains the stack invariant: the tip is left unchanged and no allocation
    may occurs in the stack lower than the tip.
    Region allocation is not constrained.
@@ -174,7 +174,7 @@ assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
 			/\ m1.tip = m0.tip
 			))
 
-inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
+unfold let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
     let region_i = Map.sel m0.h i in
     not (Heap.contains region_i (HH.as_ref x.ref))
   /\ i `is_in` m0.h
@@ -193,7 +193,7 @@ assume val rfree: #a:Type -> r:mmref a -> ST unit
     (requires (fun m0 -> m0 `contains` r))
     (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
 
-inline let assign_post (#a:Type) (r:reference a) (v:a) m0 (_u:unit) m1 =
+unfold let assign_post (#a:Type) (r:reference a) (v:a) m0 (_u:unit) m1 =
   m0 `contains` r /\ m1 == HyperStack.upd m0 r v
 
 (**
@@ -204,7 +204,7 @@ assume val op_Colon_Equals: #a:Type -> r:reference a -> v:a -> STL unit
   (requires (fun m -> m `contains` r))
   (ensures (assign_post r v))
 
-inline let deref_post (#a:Type) (r:reference a) m0 x m1 =
+unfold let deref_post (#a:Type) (r:reference a) m0 x m1 =
   m1==m0 /\ x==HyperStack.sel m0 r
 
 (**
@@ -370,7 +370,7 @@ let test_to_be_stack_inlined () =
 val test_stack_function_with_inline: unit -> Stack int
   (requires (fun h -> True))
   (ensures  (fun h0 _ h1 -> True))
-let test_stack_function_with_inline () =
+let test_stack_function_with_unfold () =
   push_frame();
   let x = test_to_be_stack_inlined () in
   let y = !x + !x in
@@ -380,7 +380,7 @@ let test_stack_function_with_inline () =
 val test_st_function_with_inline: unit -> ST unit
   (requires (fun h -> True))
   (ensures  (fun h0 _ h1 -> True))
-let test_st_function_with_inline () =
+let test_st_function_with_unfold () =
   push_frame();
   let x = test_to_be_stack_inlined () in
   let y = !x + !x in

@@ -53,6 +53,9 @@ let head #a s = index s 0
 val tail: #a:Type -> s:seq a{length s > 0} -> Tot (seq a)
 let tail #a s = slice s 1 (length s)
 
+val last: #a:Type -> s:seq a{length s > 0} -> Tot a
+let last #a s = index s (length s - 1)
+
 val cons: #a:Type -> a -> seq a -> Tot (seq a)
 let cons #a x s = append (create 1 x) s
 

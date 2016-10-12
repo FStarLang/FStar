@@ -277,7 +277,7 @@ let head_normal env t =
     | Tm_abs _ 
     | Tm_constant _ -> true
     | Tm_fvar fv 
-    | Tm_app({n=Tm_fvar fv}, _) -> Env.lookup_definition Env.OnlyInline env.tcenv fv.fv_name.v |> Option.isNone
+    | Tm_app({n=Tm_fvar fv}, _) -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isNone
     | _ -> false
 
 let head_redex env t = 
@@ -290,14 +290,14 @@ let head_redex env t =
       Util.is_tot_or_gtot_lcomp lc
 
     | Tm_fvar fv -> 
-      Env.lookup_definition Env.OnlyInline env.tcenv fv.fv_name.v |> Option.isSome
+      Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isSome
 
     | _ -> false
 
 let whnf env t = 
     if head_normal env t then t
-    else N.normalize [N.Beta; N.WHNF; N.Inline; N.EraseUniverses] env.tcenv t
-let norm env t = N.normalize [N.Beta; N.Inline; N.EraseUniverses] env.tcenv t
+    else N.normalize [N.Beta; N.WHNF; N.Eager_unfolding; N.EraseUniverses] env.tcenv t
+let norm env t = N.normalize [N.Beta; N.Eager_unfolding; N.EraseUniverses] env.tcenv t
 
 let trivial_post t : Syntax.term = 
     Util.abs [null_binder t]
@@ -493,12 +493,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
              let cvars = Term.free_variables t_interp |> List.filter (fun (x, _) -> x <> fst fsym) in
              let tkey = Term.mkForall([], fsym::cvars, t_interp) in
-             begin match Util.smap_try_find env.cache tkey.hash with
+             let tkey_hash = hash_of_term tkey in 
+             begin match Util.smap_try_find env.cache tkey_hash with
                 | Some (t', sorts, _) ->
                   Term.mkApp(t', cvars |> List.map mkFreeV), []
 
                 | None ->
-                  let tsym = varops.mk_unique ("Tm_arrow_" ^ (Util.digest_of_string tkey.hash)) in
+                  let tsym = varops.mk_unique ("Tm_arrow_" ^ (Util.digest_of_string tkey_hash)) in
                   let cvar_sorts = List.map snd cvars in
                   let caption =
                     if Options.log_queries()
@@ -524,7 +525,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     Term.Assume(mkForall([[f_has_t_z]], fsym::cvars, mkIff(f_has_t_z, t_interp)), a_name, a_name) in
 
                   let t_decls = tdecl::decls@decls'@guard_decls@[k_assumption; pre_typing; t_interp] in
-                  Util.smap_add env.cache tkey.hash  (tsym, cvar_sorts, t_decls);
+                  Util.smap_add env.cache tkey_hash  (tsym, cvar_sorts, t_decls);
                   t, t_decls
              end
 
@@ -565,13 +566,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let xfv = (x, Term_sort) in
         let ffv = (fsym, Fuel_sort) in
         let tkey = Term.mkForall([], ffv::xfv::cvars, encoding) in
-
-        begin match Util.smap_try_find env.cache tkey.hash with
+        let tkey_hash = Term.hash_of_term tkey in
+        begin match Util.smap_try_find env.cache tkey_hash with
             | Some (t, _, _) ->
               Term.mkApp(t, cvars |> List.map mkFreeV), []
 
             | None ->
-              let tsym = varops.mk_unique ("Tm_refine_" ^ (Util.digest_of_string tkey.hash)) in
+              let tsym = varops.mk_unique ("Tm_refine_" ^ (Util.digest_of_string tkey_hash)) in
               let cvar_sorts = List.map snd cvars in
               let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, None) in
               let t = Term.mkApp(tsym, List.map mkFreeV cvars) in
@@ -598,7 +599,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             @[tdecl;
                               t_kinding;
                               t_interp;t_haseq] in
-              Util.smap_add env.cache tkey.hash (tsym, cvar_sorts, t_decls);
+              Util.smap_add env.cache tkey_hash (tsym, cvar_sorts, t_decls);
               t, t_decls
         end
 
@@ -650,7 +651,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         let cvars = Term.free_variables has_type in
                         let e_typing = Term.Assume(Term.mkForall([[has_type]], cvars, has_type), 
                                                    Some "Partial app typing", 
-                                                   Some (varops.mk_unique ("partial_app_typing_" ^ (Util.digest_of_string app_tm.hash)))) in
+                                                   Some (varops.mk_unique ("partial_app_typing_" ^ 
+                                                        (Util.digest_of_string (Term.hash_of_term app_tm))))) in
                         app_tm, decls@decls'@decls''@[e_typing]
                 end in
 
@@ -724,14 +726,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                    let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
                    let cvars = Term.free_variables key_body in
                    let tkey = mkForall([], cvars, key_body) in
-                   match Util.smap_try_find env.cache tkey.hash with
+                   let tkey_hash = Term.hash_of_term tkey in
+                   match Util.smap_try_find env.cache tkey_hash with
                    | Some (t, _, _) -> Term.mkApp(t, List.map mkFreeV cvars), []
                    | None ->
                      match is_eta env vars body with
                      | Some t -> t, []
                      | None ->
                         let cvar_sorts = List.map snd cvars in
-                        let fsym = varops.mk_unique ("Tm_abs_" ^ (Util.digest_of_string tkey.hash)) in
+                        let fsym = varops.mk_unique ("Tm_abs_" ^ (Util.digest_of_string tkey_hash)) in
                         let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
                         let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
                         let app = mk_Apply f vars in
@@ -747,7 +750,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             let a_name = Some ("interpretation_" ^fsym) in
                             Term.Assume(Term.mkForall([[app]], vars@cvars, mkEq(app, body)), a_name, a_name) in
                         let f_decls = decls@decls'@(fdecl::typing_f)@[interp_f] in
-                        Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
+                        Util.smap_add env.cache tkey_hash (fsym, cvar_sorts, f_decls);
                         f, f_decls
           end
 
@@ -1149,8 +1152,9 @@ let pretype_axiom tapp vars =
     let xxsym, xx = fresh_fvar "x" Term_sort in
     let ffsym, ff = fresh_fvar "f" Fuel_sort in
     let xx_has_type = mk_HasTypeFuel ff xx tapp in
+    let tapp_hash = Term.hash_of_term tapp in
     Term.Assume(mkForall([[xx_has_type]], (xxsym, Term_sort)::(ffsym, Fuel_sort)::vars,
-                         mkImp(xx_has_type, mkEq(tapp, mkApp("PreType", [xx])))), Some "pretyping", Some (varops.mk_unique ("pretyping_" ^ (Util.digest_of_string tapp.hash))))
+                         mkImp(xx_has_type, mkEq(tapp, mkApp("PreType", [xx])))), Some "pretyping", Some (varops.mk_unique ("pretyping_" ^ (Util.digest_of_string tapp_hash))))
 
 let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
     let xx = ("x", Term_sort) in
@@ -1728,7 +1732,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       [], env
 
     | Sig_let(_, _, lids, quals) when (lids |> Util.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
-                                    && quals |> Util.for_some (function Inline -> true | _ -> false)) ->
+                                    && quals |> Util.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       [], env
 
@@ -1750,7 +1754,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | Tm_abs(bs, body, _) -> 
           let body = Util.mk_reify body in
           let tm = S.mk (Tm_abs(bs, body, None)) None lb.lbdef.pos in
-          let tm' = N.normalize [N.Beta; N.Reify; N.Inline; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in
+          let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in
           let lb_typ = 
             let formals, comp = Util.arrow_formals_comp lb.lbtyp in
             let reified_typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) (Util.lcomp_of_comp comp) U_unknown in
@@ -1998,13 +2002,14 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
           i+1, [], env
         
         | Env.Binding_var x -> 
-            let t1 = N.normalize [N.Beta; N.Inline; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
+            let t1 = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
             if Env.debug env.tcenv <| Options.Other "SMTEncoding"
             then (Util.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
             let t, decls' = encode_term t1 env in
+            let t_hash = Term.hash_of_term t in
             let xxsym, xx, env' = 
                 new_term_constant_from_string env x 
-                    ("x_" ^ Util.digest_of_string t.hash ^ "_" ^ (string_of_int i)) in
+                    ("x_" ^ Util.digest_of_string t_hash ^ "_" ^ (string_of_int i)) in
             let t = mk_HasTypeWithFuel None xx t in
             let caption =
                 if Options.log_queries()
@@ -2129,7 +2134,7 @@ let encode_query use_env_msg tcenv q
         let rec aux bindings = match bindings with 
             | Env.Binding_var x::rest -> 
                 let out, rest = aux rest in 
-                let t = N.normalize [N.Inline; N.Beta; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
+                let t = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
                 Syntax.mk_binder ({x with sort=t})::out, rest 
             | _ -> [], bindings in
         let closing, bindings = aux bindings in 

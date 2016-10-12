@@ -59,6 +59,7 @@
     Hashtbl.add keywords "kind"          KIND        ;
     Hashtbl.add keywords "in"            IN          ;
     Hashtbl.add keywords "inline"        INLINE      ;
+    Hashtbl.add keywords "inline_for_extraction"        INLINE_FOR_EXTRACTION      ;
     Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;
     Hashtbl.add keywords "let"           (LET false) ;
     Hashtbl.add keywords "logic"         LOGIC       ;
@@ -84,6 +85,7 @@
     Hashtbl.add keywords "True"          L_TRUE      ;
     Hashtbl.add keywords "try"           TRY         ;
     Hashtbl.add keywords "type"          TYPE        ;
+    Hashtbl.add keywords "unfold"        UNFOLD      ;
     Hashtbl.add keywords "unfoldable"    UNFOLDABLE  ;
     Hashtbl.add keywords "val"           VAL         ;
     Hashtbl.add keywords "when"          WHEN        ;

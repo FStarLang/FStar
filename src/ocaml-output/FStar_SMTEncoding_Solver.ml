@@ -595,25 +595,25 @@ in (FStar_Util.format1 "Ending query at %s" _182_222))
 in (FStar_SMTEncoding_Encode.pop _182_223))
 end))
 in (match (qry) with
-| FStar_SMTEncoding_Term.Assume ({FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.False, _88_272); FStar_SMTEncoding_Term.hash = _88_269; FStar_SMTEncoding_Term.freevars = _88_267}, _88_277, _88_279) -> begin
+| FStar_SMTEncoding_Term.Assume ({FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.False, _88_270); FStar_SMTEncoding_Term.freevars = _88_267}, _88_275, _88_277) -> begin
 (
 
-let _88_282 = (pop ())
+let _88_280 = (pop ())
 in ())
 end
-| _88_285 when tcenv.FStar_TypeChecker_Env.admit -> begin
+| _88_283 when tcenv.FStar_TypeChecker_Env.admit -> begin
 (
 
-let _88_286 = (pop ())
+let _88_284 = (pop ())
 in ())
 end
-| FStar_SMTEncoding_Term.Assume (q, _88_290, _88_292) -> begin
+| FStar_SMTEncoding_Term.Assume (q, _88_288, _88_290) -> begin
 (
 
-let _88_295 = (ask_and_report_errors tcenv labels prefix qry suffix)
+let _88_293 = (ask_and_report_errors tcenv labels prefix qry suffix)
 in (pop ()))
 end
-| _88_298 -> begin
+| _88_296 -> begin
 (FStar_All.failwith "Impossible")
 end))
 end)))))
@@ -622,7 +622,7 @@ end)))))
 let solver : FStar_TypeChecker_Env.solver_t = {FStar_TypeChecker_Env.init = FStar_SMTEncoding_Encode.init; FStar_TypeChecker_Env.push = FStar_SMTEncoding_Encode.push; FStar_TypeChecker_Env.pop = FStar_SMTEncoding_Encode.pop; FStar_TypeChecker_Env.mark = FStar_SMTEncoding_Encode.mark; FStar_TypeChecker_Env.reset_mark = FStar_SMTEncoding_Encode.reset_mark; FStar_TypeChecker_Env.commit_mark = FStar_SMTEncoding_Encode.commit_mark; FStar_TypeChecker_Env.encode_modul = FStar_SMTEncoding_Encode.encode_modul; FStar_TypeChecker_Env.encode_sig = FStar_SMTEncoding_Encode.encode_sig; FStar_TypeChecker_Env.solve = solve; FStar_TypeChecker_Env.is_trivial = FStar_SMTEncoding_Encode.is_trivial; FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish; FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh}
 
 
-let dummy : FStar_TypeChecker_Env.solver_t = {FStar_TypeChecker_Env.init = (fun _88_299 -> ()); FStar_TypeChecker_Env.push = (fun _88_301 -> ()); FStar_TypeChecker_Env.pop = (fun _88_303 -> ()); FStar_TypeChecker_Env.mark = (fun _88_305 -> ()); FStar_TypeChecker_Env.reset_mark = (fun _88_307 -> ()); FStar_TypeChecker_Env.commit_mark = (fun _88_309 -> ()); FStar_TypeChecker_Env.encode_modul = (fun _88_311 _88_313 -> ()); FStar_TypeChecker_Env.encode_sig = (fun _88_315 _88_317 -> ()); FStar_TypeChecker_Env.solve = (fun _88_319 _88_321 _88_323 -> ()); FStar_TypeChecker_Env.is_trivial = (fun _88_325 _88_327 -> false); FStar_TypeChecker_Env.finish = (fun _88_329 -> ()); FStar_TypeChecker_Env.refresh = (fun _88_330 -> ())}
+let dummy : FStar_TypeChecker_Env.solver_t = {FStar_TypeChecker_Env.init = (fun _88_297 -> ()); FStar_TypeChecker_Env.push = (fun _88_299 -> ()); FStar_TypeChecker_Env.pop = (fun _88_301 -> ()); FStar_TypeChecker_Env.mark = (fun _88_303 -> ()); FStar_TypeChecker_Env.reset_mark = (fun _88_305 -> ()); FStar_TypeChecker_Env.commit_mark = (fun _88_307 -> ()); FStar_TypeChecker_Env.encode_modul = (fun _88_309 _88_311 -> ()); FStar_TypeChecker_Env.encode_sig = (fun _88_313 _88_315 -> ()); FStar_TypeChecker_Env.solve = (fun _88_317 _88_319 _88_321 -> ()); FStar_TypeChecker_Env.is_trivial = (fun _88_323 _88_325 -> false); FStar_TypeChecker_Env.finish = (fun _88_327 -> ()); FStar_TypeChecker_Env.refresh = (fun _88_328 -> ())}
 
 
 

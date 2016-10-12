@@ -95,8 +95,9 @@ let m_write #r #a #b x v = x := v
 (*
  * AR: adding live_region to HS.m_sel breaks this, there needs to be live_region here too.
  *)
-inline type stable_on_t (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:(mem -> GTot Type0)) =
+unfold type stable_on_t (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:(mem -> GTot Type0)) =
   forall h0 h1. p h0 /\ b (m_sel h0 r) (m_sel h1 r) ==> p h1
+
 abstract type witnessed (p:(mem -> GTot Type0)) = True
 
 val witness: #r:rid

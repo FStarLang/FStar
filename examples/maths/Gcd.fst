@@ -22,7 +22,7 @@ val a_divides_a' : a:pos -> Tot (divides a a)
 let a_divides_a' a = ExIntro 1 (intuitionistic_of_smt (times_one a))
 
 val a_divides_a : a:pos -> Lemma (divides a a)
-let a_divides_a a = smt_of_intuitionistic (a_divides_a' a) //don't see why it doesn't work to inline the definition of a_divides_a'
+let a_divides_a a = smt_of_intuitionistic (a_divides_a' a) //don't see why it doesn't work to unfold the definition of a_divides_a'
 
 val gcd_triv : a:pos -> Lemma (is_gcd a a a)
 let gcd_triv a = a_divides_a a

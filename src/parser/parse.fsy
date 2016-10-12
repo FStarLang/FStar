@@ -103,7 +103,9 @@ let as_frag d ds =
 %token <fsdoc> FSDOC
 %token <fsdoc> FSDOC_STANDALONE
 
-%token FORALL EXISTS ASSUME NEW LOGIC IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
+%token FORALL EXISTS ASSUME NEW LOGIC 
+%token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
+%token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
 %token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
 %token AND ASSERT BEGIN ELSE END
 %token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
@@ -282,6 +284,19 @@ sub_effect:
       }
   | qname SQUIGGLY_RARROW qname
     LBRACE
+       ident EQUALS simpleTerm
+    RBRACE {
+    	let id, lift = $5.idText, $7 in
+        if id <> "lift" then
+          raise (Error("Unexpected identifier; expected {'lift', and possibly 'lift_wp'}", lhs parseState));
+        {
+          msource=$1;
+          mdest=$3;
+          lift_op=LiftForFree(lift)
+        }
+    }
+  | qname SQUIGGLY_RARROW qname
+    LBRACE
        ident EQUALS simpleTerm SEMICOLON 
        ident EQUALS simpleTerm
     RBRACE {
@@ -300,8 +315,19 @@ sub_effect:
   
 qualifier:
   | ASSUME        { Assumption }
-  | INLINE        { Inline }
-  | UNFOLDABLE    { Unfoldable }
+  | INLINE        { 
+    raise (Error("The 'inline' qualifier has been renamed to 'unfold'", lhs parseState));
+	Inline 
+   }
+  | UNFOLDABLE    { 
+	raise (Error("The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it", lhs parseState))
+   }
+  | INLINE_FOR_EXTRACTION {
+     Inline_for_extraction
+  }
+  | UNFOLD {
+     Unfold_for_unification_and_vcgen
+  }
   | IRREDUCIBLE   { Irreducible }
   | DEFAULT       { DefaultEffect }
   | TOTAL         { TotalEffect }

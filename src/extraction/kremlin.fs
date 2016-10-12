@@ -72,8 +72,8 @@ and expr =
   | EBufCreateL of list<expr>
 
 and op =
-  | Add | AddW | Sub | SubW | Div | Mult | Mod
-  | BOr | BAnd | BXor | BShiftL | BShiftR
+  | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
+  | BOr | BAnd | BXor | BShiftL | BShiftR | BNot
   | Eq | Neq | Lt | Lte | Gt | Gte
   | And | Or | Xor | Not
 
@@ -126,7 +126,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 14
+let current_version: version = 15
 
 type file = string * program
 type binary_format = version * list<file>
@@ -177,8 +177,12 @@ let mk_op = function
       Some SubW
   | "mul" | "op_Star_Hat" ->
       Some Mult
+  | "mul_mod" | "op_Star_Percent_Hat" ->
+      Some MultW
   | "div" | "op_Slash_Hat" ->
       Some Div
+  | "div_mod" | "op_Slash_Percent_Hat" ->
+      Some DivW
   | "rem" | "op_Percent_Hat" ->
       Some Mod
   | "logor" | "op_Bar_Hat" ->
@@ -187,6 +191,8 @@ let mk_op = function
       Some BXor
   | "logand" | "op_Amp_Hat" ->
       Some BAnd
+  | "lognot" ->
+      Some BNot
   | "shift_right" | "op_Greater_Greater_Hat" ->
       Some BShiftR
   | "shift_left" | "op_Less_Less_Hat" ->
@@ -334,20 +340,20 @@ and translate_decl env d: option<decl> =
       mllb_tysc = Some ([], t);
       mllb_def = expr
     } ]) ->
+      let flags =
+        if Util.for_some (function Syntax.Private -> true | _ -> false) flags then
+          [ Private ]
+        else
+          []
+      in
+      let t = translate_type env t in
+      let name = env.module_name, name in
       begin try
-        let flags =
-          if Util.for_some (function Syntax.Private -> true | _ -> false) flags then
-            [ Private ]
-          else
-            []
-        in
-        let t = translate_type env t in
         let expr = translate_expr env expr in
-        let name = env.module_name, name in
         Some (DGlobal (flags, name, t, expr))
       with e ->
-        Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
-        None
+        Util.print2 "Warning: not translating definition for %s (%s)\n" (snd name) (Util.print_exn e);
+        Some (DGlobal (flags, name, t, EAny))
       end
 
   | MLM_Let (_, _, { mllb_name = name, _; mllb_tysc = ts } :: _) ->
@@ -556,24 +562,30 @@ and translate_expr env e: expr =
       EConstant (must (mk_width m), c)
 
   | MLE_App ({ expr = MLE_Name ([ "FStar"; "Int"; "Cast" ], c) }, [ arg ]) ->
-      if ends_with c "uint64" then
+      let is_known_type =
+        starts_with c "uint8" || starts_with c "uint16" ||
+        starts_with c "uint32" || starts_with c "uint64" ||
+        starts_with c "int8" || starts_with c "int16" ||
+        starts_with c "int32" || starts_with c "int64"
+      in
+      if ends_with c "uint64" && is_known_type then
         ECast (translate_expr env arg, TInt UInt64)
-      else if ends_with c "uint32" then
+      else if ends_with c "uint32" && is_known_type then
         ECast (translate_expr env arg, TInt UInt32)
-      else if ends_with c "uint16" then
+      else if ends_with c "uint16" && is_known_type then
         ECast (translate_expr env arg, TInt UInt16)
-      else if ends_with c "uint8" then
+      else if ends_with c "uint8" && is_known_type then
         ECast (translate_expr env arg, TInt UInt8)
-      else if ends_with c "int64" then
+      else if ends_with c "int64" && is_known_type then
         ECast (translate_expr env arg, TInt Int64)
-      else if ends_with c "int32" then
+      else if ends_with c "int32" && is_known_type then
         ECast (translate_expr env arg, TInt Int32)
-      else if ends_with c "int16" then
+      else if ends_with c "int16" && is_known_type then
         ECast (translate_expr env arg, TInt Int16)
-      else if ends_with c "int8" then
+      else if ends_with c "int8" && is_known_type then
         ECast (translate_expr env arg, TInt Int8)
       else
-        failwith (Util.format1 "Unrecognized function from Cast module: %s\n" c)
+        EApp (EQualified ([ "FStar"; "Int"; "Cast" ], c), [ translate_expr env arg ])
 
   | MLE_App ({ expr = MLE_Name (path, function_name) }, args) ->
       EApp (EQualified (path, function_name), List.map (translate_expr env) args)

@@ -61,7 +61,7 @@ let ok (s:signed) (n:nat) (x:int) =
   | Signed, 0 -> True
   | Signed, _ -> FStar.Int.size x n
 
-inline let op_Plus (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n (v x + v y)})
+unfold let op_Plus (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n (v x + v y)})
   : Tot (z:int_t s n{v z = v x + v y})
   = match s, n with
     | _, 0 -> x + y
@@ -80,7 +80,7 @@ inline let op_Plus (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n (v x +
     | Signed, 64 -> FStar.Int64(x +^ y)
     | Signed, 128 -> FStar.Int128(x +^ y)
 
-inline let op_Plus_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
+unfold let op_Plus_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
   : Tot (z:int_t s n{ok s n (v x + v y) ==> v z = v x + v y})
   = match s, n with
     | _, 0 -> x + y
@@ -105,7 +105,7 @@ let modulo (s:signed) (x:int) (y:pos{s=Signed ==> y%2=0}) =
   | _ -> FStar.Int (x @% y)
 
 #set-options "--z3timeout 20 --initial_fuel 1 --max_fuel 1"
-inline let op_Plus_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
+unfold let op_Plus_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
   : Tot (z:int_t s n{v z = modulo s (v x + v y) (pow2 n)})
   = match s, n with
     | Unsigned, 8 -> FStar.UInt8(x +%^ y)
@@ -123,7 +123,7 @@ inline let op_Plus_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
     | Signed, 64 -> FStar.Int64(x +%^ y)
     | Signed, 128 -> FStar.Int128(x +%^ y)
 
-inline let op_Subtraction (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n (v x - v y)})
+unfold let op_Subtraction (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n (v x - v y)})
   : Tot (z:int_t s n{v z = v x - v y})
   = match s, n with
     | _, 0 -> x - y
@@ -142,7 +142,7 @@ inline let op_Subtraction (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n
     | Signed, 64 -> FStar.Int64(x -^ y)
     | Signed, 128 -> FStar.Int128(x -^ y)
 
-inline let op_Subtraction_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
+unfold let op_Subtraction_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
   : Tot (z:int_t s n{ok s n (v x - v y) ==> v z = v x - v y})
   = match s, n with
     | Unsigned, 0 -> if v x - v y >= 0 then x - y else 0
@@ -162,7 +162,7 @@ inline let op_Subtraction_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s
     | Signed, 64 -> FStar.Int64(x -?^ y)
     | Signed, 128 -> FStar.Int128(x -?^ y)
 
-inline let op_Subtraction_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
+unfold let op_Subtraction_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
   : Tot (z:int_t s n{v z = modulo s (v x - v y) (pow2 n)})
   = match s, n with
     | Unsigned, 8 -> FStar.UInt8(x -%^ y)
@@ -182,7 +182,7 @@ inline let op_Subtraction_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s 
 
 open FStar.Mul
 
-inline let op_Star (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n (v x * v y)})
+unfold let op_Star (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n (v x * v y)})
   : Tot (z:int_t s n{v z = v x * v y})
   = match s, n with
     | _, 0 -> x * y
@@ -201,7 +201,7 @@ inline let op_Star (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n (v x *
     | Signed, 64 -> FStar.Int64(x *^ y)
     | Signed, 128 -> FStar.Int128(x *^ y)
 
-inline let op_Star_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
+unfold let op_Star_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
   : Tot (z:int_t s n{ok s n (v x * v y) ==> v z = v x * v y})
   = match s, n with
     | _, 0 -> x * y
@@ -220,7 +220,7 @@ inline let op_Star_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
     | Signed, 64 -> FStar.Int64(x *?^ y)
     | Signed, 128 -> FStar.Int128(x *?^ y)
 
-inline let op_Star_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
+unfold let op_Star_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
   : Tot (z:int_t s n{v z = modulo s (v x * v y) (pow2 n)})
   = match s, n with
     | Unsigned, 8 -> FStar.UInt8(x *%^ y)
@@ -239,23 +239,23 @@ inline let op_Star_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
     | Signed, 128 -> FStar.Int128(x *%^ y)
 
 
-inline let nat      = int_t Unsigned 0
-inline let uint_8   = int_t Unsigned 8
-inline let uint_16  = int_t Unsigned 16
-inline let uint_31  = int_t Unsigned 31
-inline let uint_32  = int_t Unsigned 32
-inline let uint_63  = int_t Unsigned 63
-inline let uint_64  = int_t Unsigned 64
-inline let uint_128 = int_t Unsigned 128
+unfold let nat      = int_t Unsigned 0
+unfold let uint_8   = int_t Unsigned 8
+unfold let uint_16  = int_t Unsigned 16
+unfold let uint_31  = int_t Unsigned 31
+unfold let uint_32  = int_t Unsigned 32
+unfold let uint_63  = int_t Unsigned 63
+unfold let uint_64  = int_t Unsigned 64
+unfold let uint_128 = int_t Unsigned 128
 
-inline let int      = int_t Signed 0
-inline let int_8   = int_t Signed 8
-inline let int_16  = int_t Signed 16
-inline let int_31  = int_t Signed 31
-inline let int_32  = int_t Signed 32
-inline let int_63  = int_t Signed 63
-inline let int_64  = int_t Signed 64
-inline let int_128 = int_t Signed 128
+unfold let int      = int_t Signed 0
+unfold let int_8   = int_t Signed 8
+unfold let int_16  = int_t Signed 16
+unfold let int_31  = int_t Signed 31
+unfold let int_32  = int_t Signed 32
+unfold let int_63  = int_t Signed 63
+unfold let int_64  = int_t Signed 64
+unfold let int_128 = int_t Signed 128
 let ok_for (#s:signed) (#n:nat) ($x:int_t s n) (i:int) = ok s n i
 ////////////////////////////////////////////////////////////////////////////////
 //Test

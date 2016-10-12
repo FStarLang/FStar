@@ -1,0 +1,38 @@
+[
+  "©ÿË+#ï¢à·¼\u0016YÛH1,",
+  [
+    [
+      "Ex06e.sorted",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.int", "proj_equation_Prims.Cons_tl",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_5f5fd1baf8ea34bf72e4012bafe805ec",
+        "subterm_ordering_Prims.Cons", "typing_Prims.Cons.tl"
+      ],
+      0
+    ],
+    [
+      "Ex06e.mem",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
+        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_1",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
+        "int_inversion", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [ "Ex06e.mem", 2, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
+    [ "Ex06e.sort", 1, 2, 1, [ "@query" ], 0 ]
+  ]
+]
