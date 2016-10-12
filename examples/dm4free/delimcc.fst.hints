@@ -1,5 +1,5 @@
 [
-  "fþZ“\u0006“UoåT:\u0016V¥¿è",
+  "æð\u0007±d‡n\u0000¬‰ŠÐ0\u007fÐY",
   [
     [ "DelimCC.kont", 1, 2, 1, [ "@query" ], 0 ],
     [ "DelimCC.right_unit", 1, 2, 1, [ "@query" ], 0 ],
@@ -121,6 +121,14 @@
         "typing_Tm_abs_6a986f7c29c14bc439ca07edfe514e74", "unit_typing"
       ],
       0
-    ]
+    ],
+    [ "DelimCC.ext", 1, 2, 1, [ "@query" ], 0 ],
+    [ "DelimCC.ext", 2, 2, 1, [ "@query", "unit_typing" ], 0 ],
+    [ "DelimCC.left_unit3", 1, 2, 1, [ "@query" ], 0 ],
+    [ "DelimCC.left_unit3", 2, 2, 1, [ "@query" ], 0 ],
+    [ "DelimCC.right_unit3", 1, 2, 1, [ "@query" ], 0 ],
+    [ "DelimCC.right_unit3", 2, 2, 1, [ "@query", "unit_typing" ], 0 ],
+    [ "DelimCC.associativity3", 1, 2, 1, [ "@query" ], 0 ],
+    [ "DelimCC.associativity3", 2, 2, 1, [ "@query", "unit_typing" ], 0 ]
   ]
 ]
