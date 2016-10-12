@@ -9,7 +9,7 @@ OCAMLOPT = ocamlfind opt $(INCLUDE) -g -annot
 OCAMLMKLIB = ocamlfind mklib $(INCLUDE)
 OCAMLDEP = ocamlfind dep
 
-CCOPTS = $(addprefix -ccopt ,-Wall -std=c11 -D__USE_MINGW_ANSI_STDIO)
+CCOPTS = $(addprefix -ccopt ,-Wall -std=c11 -D__USE_MINGW_ANSI_STDIO -Lopenssl -Iopenssl/include)
 
 ifeq ($(OS),Windows_NT)
     # On cygwin + cygwinports, DLLs are searched in the PATH, which is not
@@ -18,7 +18,7 @@ ifeq ($(OS),Windows_NT)
     # always uses to search for DLLs.
     EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
     ARCH = win32
-    EXTRA_OPTS = -I openssl/include -ccopt -Iopenssl/include
+    EXTRA_OPTS =
     EXTRA_LIBS =
     OPENSSL_CONF = ./Configure mingw64
 else
@@ -28,12 +28,12 @@ else
     EXTRA_PATH = LD_LIBRARY_PATH=.
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
-        EXTRA_OPTS = -ccopt -L. -I openssl/include
-        EXTRA_LIBS = -L openssl/lib -L /opt/local/lib
+        EXTRA_OPTS =
+        EXTRA_LIBS = -L /opt/local/lib
         ARCH = osx
         OPENSSL_CONF = ./config
     else
-        EXTRA_OPTS = -ccopt -fPIC -ccopt -L.
+        EXTRA_OPTS = -ccopt -fPIC
         ARCH = x86_64
         OPENSSL_CONF = ./config
     endif
