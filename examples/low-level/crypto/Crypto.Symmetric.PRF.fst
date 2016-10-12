@@ -30,7 +30,9 @@ module MAC   = Crypto.Symmetric.Poly1305.MAC
 module Block = Crypto.Symmetric.Cipher
 
 let prfa = Block.CHACHA20
+
 let id = Flag.id 
+
 
 // IDEALIZATION
 // step 1. Flag.prf i relies on PRF just to get fresh MAC keys. 
@@ -68,6 +70,10 @@ type ctrT = x:u32 {x <=^ maxCtr}
 
 type domain = { iv:Block.iv prfa; ctr:ctrT } // could move to concrete CHACHA20
 let incr (x:domain {x.ctr <^ maxCtr})  = { iv = x.iv; ctr = x.ctr +^ 1ul }
+
+
+val above: domain -> domain -> Tot bool
+let above x z = x.iv = z.iv && x.ctr >=^ z.ctr
 
 let blocklen = Block.blocklen prfa
 let block = b:bytes {Seq.length b = v blocklen}
