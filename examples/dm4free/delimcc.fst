@@ -73,3 +73,52 @@ let shift2 o p a h = fun c -> h (fun v c' -> c' (c v)) (fun x -> x)
 
 val reset2: o:Type -> p:Type -> (unit -> Tot (cont2 p p)) -> Tot (cont2 o p)
 let reset2 o p m = fun c -> c (m () (fun x -> x))
+
+
+(* Version without any refinements *)
+
+let cont3 (a:Type) = (a -> Tot result) -> Tot result
+
+unfold let return_k3 (#a:Type) (x:a) : cont3 a =
+        fun k -> k x
+
+unfold let bind_k3 (#a:Type) (#b:Type)
+                (m:cont3 a) (f:a -> Tot (cont3 b)) : cont3 b =
+        fun k -> m (fun x -> f x k)
+
+(* Don't know why this is not automatic in lu. *)
+val ext : #a:Type -> #b:Type ->
+         p:(a -> Tot b) ->
+         Lemma ( (fun x -> p x) == p )
+let ext #a #b (p : a -> Tot b) = ()
+
+val left_unit3 : #a:Type -> #b:Type ->
+                 x:a -> f:(a -> Tot (cont3 b)) ->
+                 Lemma (bind_k3 (return_k3 x) f == f x)
+let left_unit3 #a #b x f = ext (f x)
+
+val right_unit3 : #a:Type ->
+                  m:(cont3 a) ->
+                  Lemma (bind_k3 m return_k3 == m)
+let right_unit3 #a m = ()
+
+val associativity3 : #a:Type -> #b:Type -> #c:Type ->
+                     m:(cont3 a) ->
+                     f:(a -> Tot (cont3 b)) ->
+                     g:(b -> Tot (cont3 c)) ->
+                     Lemma (bind_k3 (bind_k3 m f) g ==
+                            bind_k3 m (fun x -> bind_k3 (f x) g))
+let associativity3 #a #b #c m f g = ()
+
+val callcc3 : #a:Type -> #b:Type ->
+              ((a -> Tot (cont3 b)) -> Tot (cont3 a)) ->
+              Tot (cont3 a)
+let callcc3 #a #b f = fun k -> f (fun x _ -> k x) k
+
+val shift3 : #a:Type ->
+             ((a -> Tot (cont3 result)) -> Tot (cont3 result)) ->
+             Tot (cont a)
+let shift3 #a h = fun c -> h (fun v c' -> c' (c v)) (fun x -> x)
+
+val reset3 : (unit -> Tot (cont result)) -> Tot (cont result)
+let reset3 m = fun c -> c (m () (fun x -> x))

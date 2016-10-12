@@ -754,7 +754,7 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
           begin match (SS.compress lc.res_typ).n with 
             | Tm_fvar fv when S.fv_eq_lid fv Const.bool_lid -> 
               let _ = Env.lookup_lid env Const.b2t_lid in  //check that we have Prims.b2t in the context
-              let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_unfoldable 1) None in
+              let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_defined_at_level 1) None in
               let lc = bind e.pos env (Some e) lc (None, Util.lcomp_of_comp <| S.mk_Total (Util.ktype0)) in
               let e = mk_Tm_app b2t [S.as_arg e] (Some Util.ktype0.n) e.pos in
               e, lc
@@ -781,7 +781,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
           let g = {g with guard_f=Trivial} in
           let strengthen () = 
                 //try to normalize one more time, since more unification variables may be resolved now
-                let f = N.normalize [N.Beta; N.Inline; N.Simplify] env f in
+                let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
                 match (SS.compress f).n with 
                     | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv Const.true_lid -> 
                       //it's trivial
@@ -826,7 +826,7 @@ let pure_or_ghost_pre_and_post env comp =
     let mk_post_type res_t ens =
         let x = S.new_bv None res_t in 
         U.refine x (S.mk_Tm_app ens [S.as_arg (S.bv_to_name x)] None res_t.pos) in
-    let norm t = Normalize.normalize [N.Beta;N.Inline;N.EraseUniverses] env t in
+    let norm t = Normalize.normalize [N.Beta;N.Eager_unfolding;N.EraseUniverses] env t in
     if Util.is_tot_or_gtot_comp comp
     then None, Util.comp_result comp
     else begin match comp.n with
@@ -946,7 +946,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
         if debug env Options.Medium 
         then Util.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
          let c = if Env.should_verify env
-                 then Normalize.normalize_comp [N.Beta; N.Inline] env c
+                 then Normalize.normalize_comp [N.Beta; N.Eager_unfolding] env c
                  else Normalize.normalize_comp [N.Beta] env c in
          if debug env Options.Medium then 
             Util.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
@@ -986,15 +986,15 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
               e, c
 
             | [], _ -> //only universes generalized, still need to compress out invariant-broken uvars
-              let c = N.normalize_comp [N.Beta; N.NoInline] env c in
-              let e = N.normalize [N.Beta; N.NoInline] env e in
+              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps] env c in
+              let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
               e, c
 
             | _ -> 
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
               let e0, c0 = e, c in 
-              let c = N.normalize_comp [N.Beta; N.NoInline; N.CompressUvars] env c in
-              let e = N.normalize [N.Beta; N.NoInline; N.CompressUvars; N.Exclude N.Zeta; N.Exclude N.Iota] env e in
+              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.CompressUvars] env c in
+              let e = N.normalize [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.Exclude N.Zeta; N.Exclude N.Iota] env e in
               //now, with the uvars gone, we can close over the newly introduced type names
               let t = match (SS.compress (U.comp_result c)).n with 
                     | Tm_arrow(bs, cod) -> 
@@ -1221,7 +1221,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
      lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
   }] in
   // [Inline] triggers a "Impossible: locally nameless" error
-  let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], [ Inline ]) in
+  let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], [ Unfold_for_unification_and_vcgen ]) in
   sig_ctx, mk (Tm_fvar fv) None Range.dummyRange
 
 
@@ -1230,7 +1230,11 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
 /////////////////////////////////////////////////////////////////////////////
 let check_sigelt_quals se =
     let visibility = function Private -> true | _ -> false in
-    let reducibility = function Abstract | Irreducible | Inline | Unfoldable -> true | _ -> false in
+    let reducibility = function 
+        | Abstract | Irreducible 
+        | Unfold_for_unification_and_vcgen | Visible_default
+        | Inline_for_extraction -> true 
+        | _ -> false in
     let assumption = function Assumption | New -> true | _ -> false in
     let reification = function Reifiable | Reflectable -> true | _ -> false in
     let inferred = function
@@ -1253,14 +1257,18 @@ let check_sigelt_quals se =
           quals 
           |> List.for_all (fun x -> x=q || inferred x || visibility x || assumption x)
 
-        | Inline
-        | Unfoldable
+        | Inline_for_extraction ->
+          quals |> List.for_all (fun x -> x=q || x=Logic || visibility x || reducibility x 
+                                              || reification x || inferred x)
+
+        | Unfold_for_unification_and_vcgen
+        | Visible_default
         | Irreducible
         | Abstract
         | Noeq 
         | Unopteq ->
           quals 
-          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || has_eq x || inferred x || visibility x)
+          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || x=Inline_for_extraction || has_eq x || inferred x || visibility x)
 
         | TotalEffect -> 
           quals 
@@ -1297,7 +1305,7 @@ let check_sigelt_quals se =
     then err "ill-formed combination";
     match se with
     | Sig_let((is_rec, _), _, _, _) -> //let rec
-      if is_rec && quals |> List.contains Inline
+      if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
       then err "recursive definitions cannot be marked inline";
       if quals |> Util.for_some (fun x -> assumption x || has_eq x)
       then err "definitions cannot be assumed or marked with equality qualifiers"

@@ -61,7 +61,7 @@ val m_write:#r:rid
               (ensures (assign_post (as_rref x) v))
 let m_write #r #a #b x v = x := v
 
-inline type stable_on_t (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:(t -> GTot Type0)) =
+unfold type stable_on_t (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:(t -> GTot Type0)) =
   forall h0 h1. p h0 /\ b (m_sel h0 r) (m_sel h1 r) ==> p h1
 abstract type witnessed (p:(t -> GTot Type0)) = True
 

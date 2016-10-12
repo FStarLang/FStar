@@ -66,7 +66,7 @@ type obj_inv gc_state (i:mem_addr) =
   valid (gc_state.to_abs i)
   ==> (forall f. ptr_lifts_to gc_state (gc_state.fields (i, f)) (gc_state.abs_fields (gc_state.to_abs i, f)))
 
-inline type inv gc_state (color_invariant:mem_addr -> Type) =
+unfold type inv gc_state (color_invariant:mem_addr -> Type) =
     to_abs_inj gc_state.to_abs
     /\ (forall (i:mem_addr).{:pattern (trigger i)}
 	trigger i ==>
