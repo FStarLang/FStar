@@ -261,6 +261,7 @@ EVP_CIPHER_GEN(aes_256_ecb);
 EVP_CIPHER_GEN(aes_256_cbc);
 EVP_CIPHER_GEN(aes_128_gcm);
 EVP_CIPHER_GEN(aes_256_gcm);
+EVP_CIPHER_GEN(chacha20_poly1305);
 EVP_CIPHER_GEN(rc4);
 
 /* -------------------------------------------------------------------- */
@@ -625,7 +626,7 @@ CAMLprim value ocaml_rsa_new(value unit) {
     if ((rsa = RSA_new()) == NULL)
       caml_failwith("cannot allocate RSA structure");
 
-    (void) RSA_set_method(rsa, RSA_PKCS1_SSLeay());
+    (void) RSA_set_method(rsa, RSA_PKCS1_OpenSSL());
 
     RSA_val(mlrsa) = rsa;
     CAMLreturn(mlrsa);
@@ -666,13 +667,16 @@ CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
     }
 
     CAMLlocal3(e, n, d);
-    n = caml_alloc_string(BN_num_bytes(rsa->n));
-    e = caml_alloc_string(BN_num_bytes(rsa->e));
-    d = caml_alloc_string(BN_num_bytes(rsa->d));
+    BIGNUM *b_n, *b_e, *b_d;
+    RSA_get0_key(rsa, &b_n, &b_e, &b_d);
 
-    (void) BN_bn2bin(rsa->n, (uint8_t*) String_val(n));
-    (void) BN_bn2bin(rsa->e, (uint8_t*) String_val(e));
-    (void) BN_bn2bin(rsa->d, (uint8_t*) String_val(d));
+    n = caml_alloc_string(BN_num_bytes(b_n));
+    e = caml_alloc_string(BN_num_bytes(b_e));
+    d = caml_alloc_string(BN_num_bytes(b_d));
+
+    (void) BN_bn2bin(b_n, (uint8_t*) String_val(n));
+    (void) BN_bn2bin(b_e, (uint8_t*) String_val(e));
+    (void) BN_bn2bin(b_d, (uint8_t*) String_val(d));
 
     BN_free(bn_mlexp);
     RSA_free(rsa);
@@ -705,9 +709,6 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
     if ((rsa = RSA_val(mlrsa)) == NULL)
       caml_failwith("RSA has been disposed");
 
-    if (rsa->e != NULL) BN_clear_free(rsa->e);
-    if (rsa->n != NULL) BN_clear_free(rsa->n);
-    if (rsa->d != NULL) BN_clear_free(rsa->d);
 
     mlmod = RSAKey_mod(mlkey);
     mlpub = RSAKey_pub_exp(mlkey);
@@ -749,10 +750,7 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
       goto bailout;
     }
 
-    rsa->n = mod;
-    rsa->e = pub;
-    rsa->d = prv;
-
+    RSA_set0_key(rsa, mod, pub, prv);
     free(modbuf);
     free(pubbuf);
     if (prvbuf != NULL)
@@ -780,11 +778,14 @@ CAMLprim value ocaml_rsa_get_key(value mlrsa) {
     caml_failwith("RSA has been disposed");
 
   CAMLlocal3(n, e, d);
-  n = caml_alloc_string(BN_num_bytes(rsa->n));
-  e = caml_alloc_string(BN_num_bytes(rsa->e));
+  BIGNUM *b_n, *b_e, *b_d;
+  RSA_get0_key(rsa, &b_n, &b_e, &b_d);
 
-  (void) BN_bn2bin(rsa->n, (uint8_t*) String_val(n));
-  (void) BN_bn2bin(rsa->e, (uint8_t*) String_val(e));
+  n = caml_alloc_string(BN_num_bytes(b_n));
+  e = caml_alloc_string(BN_num_bytes(b_e));
+
+  (void) BN_bn2bin(b_n, (uint8_t*) String_val(n));
+  (void) BN_bn2bin(b_e, (uint8_t*) String_val(e));
 
   CAMLlocal1(ret);
   ret = caml_alloc_tuple(3);
@@ -792,11 +793,11 @@ CAMLprim value ocaml_rsa_get_key(value mlrsa) {
   Field(ret, 0) = n;
   Field(ret, 1) = e;
 
-  if (rsa->d == NULL)
+  if (b_d == NULL)
     Field(ret, 2) = Val_none;
   else {
-    d = caml_alloc_string(BN_num_bytes(rsa->d));
-    (void) BN_bn2bin(rsa->d, (uint8_t*) String_val(d));
+    d = caml_alloc_string(BN_num_bytes(b_d));
+    (void) BN_bn2bin(b_d, (uint8_t*) String_val(d));
     Field(ret, 2) = Val_some(d);
   }
   
@@ -821,7 +822,9 @@ CAMLprim value ocaml_rsa_encrypt(value mlrsa, value mlprv, value mlpadding, valu
     if ((rsa = RSA_val(mlrsa)) == NULL)
         caml_failwith("RSA has been disposed");
 
-    if (rsa->e == NULL || (Bool_val(mlprv) && rsa->d == NULL))
+    BIGNUM *b_n, *b_e, *b_d;
+    RSA_get0_key(rsa, &b_n, &b_e, &b_d);
+    if (b_e == NULL || (Bool_val(mlprv) && b_d == NULL))
         caml_failwith("RSA:encrypt: missing key");
 
     padding = RSAPadding_val(mlpadding);
@@ -874,7 +877,10 @@ CAMLprim value ocaml_rsa_decrypt(value mlrsa, value mlprv, value mlpadding, valu
     if ((rsa = RSA_val(mlrsa)) == NULL)
         caml_failwith("RSA has been disposed");
 
-    if (rsa->e == NULL || (Bool_val(mlprv) && rsa->d == NULL))
+    BIGNUM *b_n, *b_e, *b_d;
+    RSA_get0_key(rsa, &b_n, &b_e, &b_d);
+
+    if (b_e == NULL || (Bool_val(mlprv) && b_d == NULL))
         caml_failwith("RSA:decrypt: missing key");
 
     padding = RSAPadding_val(mlpadding);
@@ -915,7 +921,10 @@ CAMLprim value ocaml_rsa_sign(value mlrsa, value mldigest, value data) {
     if ((rsa = RSA_val(mlrsa)) == NULL)
         caml_failwith("RSA has been disposed");
 
-    if (rsa->e == NULL || rsa->d == NULL)
+    BIGNUM *b_n, *b_e, *b_d;
+    RSA_get0_key(rsa, &b_n, &b_e, &b_d);
+
+    if (b_e == NULL || b_d == NULL)
         caml_failwith("RSA:sign: missing key");
 
     int dig = 0;
@@ -965,7 +974,10 @@ CAMLprim value ocaml_rsa_verify(value mlrsa, value mldigest, value data, value s
     if ((rsa = RSA_val(mlrsa)) == NULL)
         caml_failwith("RSA has been disposed");
 
-    if (rsa->e == NULL)
+    BIGNUM *b_n, *b_e, *b_d;
+    RSA_get0_key(rsa, &b_n, &b_e, &b_d);
+
+    if (b_e == NULL)
         caml_failwith("RSA:sign: missing key");
 
     int dig = 0;
@@ -1074,13 +1086,15 @@ CAMLprim value ocaml_dsa_gen_params(value size) {
     if (DSA_generate_parameters_ex(dsa, Int_val(size), NULL, 0, NULL, NULL, NULL) != 1)
         caml_failwith("DSA:genparams failed");
 
-    p = caml_alloc_string(BN_num_bytes(dsa->p));
-    q = caml_alloc_string(BN_num_bytes(dsa->q));
-    g = caml_alloc_string(BN_num_bytes(dsa->g));
+    BIGNUM *b_p, *b_q, *b_g;
+    DSA_get0_pqg(dsa, &b_p, &b_q, &b_g);
+    p = caml_alloc_string(BN_num_bytes(b_p));
+    q = caml_alloc_string(BN_num_bytes(b_q));
+    g = caml_alloc_string(BN_num_bytes(b_g));
 
-    (void) BN_bn2bin(dsa->p, (uint8_t*) String_val(p));
-    (void) BN_bn2bin(dsa->q, (uint8_t*) String_val(q));
-    (void) BN_bn2bin(dsa->g, (uint8_t*) String_val(g));
+    (void) BN_bn2bin(b_p, (uint8_t*) String_val(p));
+    (void) BN_bn2bin(b_q, (uint8_t*) String_val(q));
+    (void) BN_bn2bin(b_g, (uint8_t*) String_val(g));
 
     CAMLlocal1(ret);
     ret = caml_alloc_tuple(3);
@@ -1119,25 +1133,23 @@ CAMLprim value ocaml_dsa_gen_key(value mlparams) {
       goto bailout;
     }
 
-    dsa->p = BN_bin2bn(mlp_buf, mlp_len, NULL);
-    dsa->q = BN_bin2bn(mlq_buf, mlq_len, NULL);
-    dsa->g = BN_bin2bn(mlg_buf, mlg_len, NULL);
-
-    if (dsa->p == NULL || dsa->q == NULL || dsa->g == NULL) {
-      failure = "DSA:genkey: failed dup DSA parameters";
-      goto bailout;
-    }
+    BIGNUM *b_p = BN_bin2bn(mlp_buf, mlp_len, NULL);
+    BIGNUM *b_q = BN_bin2bn(mlq_buf, mlq_len, NULL);
+    BIGNUM *b_g = BN_bin2bn(mlg_buf, mlg_len, NULL);
+    DSA_set0_pqg(dsa, b_p, b_q, b_g);
 
     if (DSA_generate_key(dsa) == 0) {
       failure = "DSA:genkey: DSA_generate_key failed";
       goto bailout;
     }
 
-    mlpub = caml_alloc_string(BN_num_bytes(dsa->pub_key));
-    mlprv = caml_alloc_string(BN_num_bytes(dsa->priv_key));
+    BIGNUM *b_pub, *b_priv;
+    DSA_get0_key(dsa, &b_pub, &b_priv);
+    mlpub = caml_alloc_string(BN_num_bytes(b_pub));
+    mlprv = caml_alloc_string(BN_num_bytes(b_priv));
 
-    (void) BN_bn2bin(dsa->pub_key , (uint8_t*) String_val(mlpub));
-    (void) BN_bn2bin(dsa->priv_key, (uint8_t*) String_val(mlprv));
+    (void) BN_bn2bin(b_pub , (uint8_t*) String_val(mlpub));
+    (void) BN_bn2bin(b_priv, (uint8_t*) String_val(mlprv));
 
     CAMLlocal1(ret);
     ret = caml_alloc_tuple(2);
@@ -1170,15 +1182,21 @@ CAMLprim value ocaml_dsa_get_key(value mldsa) {
     caml_failwith("DSA has been disposed");
 
   CAMLlocal5(p, g, q, pk, sk);
-  p = caml_alloc_string(BN_num_bytes(dsa->p));
-  q = caml_alloc_string(BN_num_bytes(dsa->q));
-  g = caml_alloc_string(BN_num_bytes(dsa->g));
-  pk = caml_alloc_string(BN_num_bytes(dsa->pub_key));
+  BIGNUM *b_p, *b_q, *b_g;
+  DSA_get0_pqg(dsa, &b_p, &b_q, &b_g);
 
-  (void) BN_bn2bin(dsa->p, (uint8_t*) String_val(p));
-  (void) BN_bn2bin(dsa->q, (uint8_t*) String_val(q));
-  (void) BN_bn2bin(dsa->g, (uint8_t*) String_val(g));
-  (void) BN_bn2bin(dsa->pub_key, (uint8_t*) String_val(pk));
+  p = caml_alloc_string(BN_num_bytes(b_p));
+  q = caml_alloc_string(BN_num_bytes(b_q));
+  g = caml_alloc_string(BN_num_bytes(b_g));
+
+  BIGNUM *b_pub, *b_priv;
+  DSA_get0_key(dsa, &b_pub, &b_priv);
+  pk = caml_alloc_string(BN_num_bytes(b_pub));
+
+  (void) BN_bn2bin(b_p, (uint8_t*) String_val(p));
+  (void) BN_bn2bin(b_q, (uint8_t*) String_val(q));
+  (void) BN_bn2bin(b_g, (uint8_t*) String_val(g));
+  (void) BN_bn2bin(b_pub, (uint8_t*) String_val(pk));
 
   CAMLlocal1(ret);
   ret = caml_alloc_tuple(5);
@@ -1188,11 +1206,11 @@ CAMLprim value ocaml_dsa_get_key(value mldsa) {
   Field(ret, 2) = g;
   Field(ret, 3) = pk;
 
-  if (dsa->priv_key == NULL)
+  if (b_priv == NULL)
     Field(ret, 4) = Val_none;
   else {
-    sk = caml_alloc_string(BN_num_bytes(dsa->priv_key));
-    (void) BN_bn2bin(dsa->priv_key, (uint8_t*) String_val(sk));
+    sk = caml_alloc_string(BN_num_bytes(b_priv));
+    (void) BN_bn2bin(b_priv, (uint8_t*) String_val(sk));
     Field(ret, 4) = Val_some(sk);
   }
   
@@ -1216,11 +1234,9 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
     if ((dsa = DSA_val(mldsa)) == NULL)
         caml_failwith("DSA has been disposed");
 
-    if (dsa->p        != NULL) BN_clear_free(dsa->p);
-    if (dsa->q        != NULL) BN_clear_free(dsa->q);
-    if (dsa->g        != NULL) BN_clear_free(dsa->g);
-    if (dsa->pub_key  != NULL) BN_clear_free(dsa->pub_key);
-    if (dsa->priv_key != NULL) BN_clear_free(dsa->priv_key);
+    BIGNUM *b_p, *b_q, *b_g, *b_pub, *b_priv;
+    DSA_get0_pqg(dsa, &b_p, &b_q, &b_g);
+    DSA_get0_key(dsa, &b_pub, &b_priv);
 
     mlp = DSAParams_p(DSAKey_params(mlkey));
     mlq = DSAParams_q(DSAKey_params(mlkey));
@@ -1269,11 +1285,8 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
         goto bailout;
     }
 
-    dsa->p = p;
-    dsa->q = q;
-    dsa->g = g;
-    dsa->pub_key = pub;
-    dsa->priv_key = prv;
+    DSA_set0_pqg(dsa, p, q, g);
+    DSA_set0_key(dsa, pub, prv);
 
     free(mlp_buf);
     free(mlq_buf);
@@ -1311,7 +1324,11 @@ CAMLprim value ocaml_dsa_sign(value mldsa, value data) {
     if ((dsa = DSA_val(mldsa)) == NULL)
         caml_failwith("DSA has been disposed");
 
-    if (dsa->pub_key == NULL || dsa->priv_key == NULL)
+    BIGNUM *b_p, *b_q, *b_g, *b_pub, *b_priv;
+    DSA_get0_pqg(dsa, &b_p, &b_q, &b_g);
+    DSA_get0_key(dsa, &b_pub, &b_priv);	
+
+    if (b_pub == NULL || b_priv == NULL)
         caml_failwith("DSA keys not set");
 
     output = caml_alloc_string(DSA_size(dsa));
@@ -1350,7 +1367,11 @@ CAMLprim value ocaml_dsa_verify(value mldsa, value data, value sig) {
     if ((dsa = DSA_val(mldsa)) == NULL)
         caml_failwith("DSA has been disposed");
 
-    if (dsa->pub_key == NULL)
+    BIGNUM *b_p, *b_q, *b_g, *b_pub, *b_priv;
+    DSA_get0_pqg(dsa, &b_p, &b_q, &b_g);
+    DSA_get0_key(dsa, &b_pub, &b_priv);
+
+    if (b_pub == NULL)
         caml_failwith("DSA:verify: DSA (public) keys not set");
 
     ERR_clear_error();
@@ -1451,11 +1472,14 @@ CAMLprim value ocaml_dh_gen_params(value size, value gen) {
     if (DH_generate_parameters_ex(dh, Int_val(size), Int_val(gen), NULL) != 1)
         caml_failwith("DH:genparams failed");
 
-    p = caml_alloc_string(BN_num_bytes(dh->p));
-    g = caml_alloc_string(BN_num_bytes(dh->g));
+    BIGNUM *b_p, *b_q, *b_g;
+    DH_get0_pqg(dh, &b_p, &b_q, &b_g);
 
-    (void) BN_bn2bin(dh->p, (uint8_t*) String_val(p));
-    (void) BN_bn2bin(dh->g, (uint8_t*) String_val(g));
+    p = caml_alloc_string(BN_num_bytes(b_p));
+    g = caml_alloc_string(BN_num_bytes(b_g));
+
+    (void) BN_bn2bin(b_p, (uint8_t*) String_val(p));
+    (void) BN_bn2bin(b_g, (uint8_t*) String_val(g));
 
     CAMLlocal1(ret);
     ret = caml_alloc_tuple(2);
@@ -1481,11 +1505,14 @@ CAMLprim value ocaml_dh_params_of_string(value pem) {
     if ((dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL)) == NULL)
         caml_failwith("DH:params_of_string");
 
-    mlp = caml_alloc_string(BN_num_bytes(dh->p));
-    mlg = caml_alloc_string(BN_num_bytes(dh->g));
+    BIGNUM *b_p, *b_q, *b_g;
+    DH_get0_pqg(dh, &b_p, &b_q, &b_g);
 
-    (void) BN_bn2bin(dh->p, (uint8_t*) String_val(mlp));
-    (void) BN_bn2bin(dh->g, (uint8_t*) String_val(mlg));
+    mlp = caml_alloc_string(BN_num_bytes(b_p));
+    mlg = caml_alloc_string(BN_num_bytes(b_g));
+
+    (void) BN_bn2bin(b_p, (uint8_t*) String_val(mlp));
+    (void) BN_bn2bin(b_g, (uint8_t*) String_val(mlg));
 
     DH_free(dh);
     BIO_free(bio);
@@ -1519,10 +1546,11 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
       caml_failwith("ocaml_dh_gen_key: invalid bytes");
     }
 
-    dh->p = BN_bin2bn(mlp_buf, mlp_len, NULL);
-    dh->g = BN_bin2bn(mlg_buf, mlg_len, NULL);
+    BIGNUM *p = BN_bin2bn(mlp_buf, mlp_len, NULL);
+    BIGNUM *g = BN_bin2bn(mlg_buf, mlg_len, NULL);
+    DH_set0_pqg(dh, p, NULL, g);
 
-    if (dh->p == NULL || dh->g == NULL) {
+    if (p == NULL || g == NULL) {
         DH_free(dh);
         caml_failwith("DH:genkey: failed dup DH parameters");
     }
@@ -1532,11 +1560,14 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
         caml_failwith("DH:genkey: DH_generate_key failed");
     }
 
-    mlpub = caml_alloc_string(BN_num_bytes(dh->pub_key));
-    mlprv = caml_alloc_string(BN_num_bytes(dh->priv_key));
+    BIGNUM *b_pub, *b_prv;
+    DH_get0_key(dh, &b_pub, &b_prv);
 
-    (void) BN_bn2bin(dh->pub_key , (uint8_t*) String_val(mlpub));
-    (void) BN_bn2bin(dh->priv_key, (uint8_t*) String_val(mlprv));
+    mlpub = caml_alloc_string(BN_num_bytes(b_pub));
+    mlprv = caml_alloc_string(BN_num_bytes(b_prv));
+
+    (void) BN_bn2bin(b_pub, (uint8_t*) String_val(mlpub));
+    (void) BN_bn2bin(b_prv, (uint8_t*) String_val(mlprv));
 
     DH_free(dh);
     free(mlp_buf);
@@ -1563,11 +1594,6 @@ CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
 
     if ((dh = DH_val(mldh)) == NULL)
         caml_failwith("DH has been disposed");
-
-    if (dh->p        != NULL) BN_clear_free(dh->p);
-    if (dh->g        != NULL) BN_clear_free(dh->g);
-    if (dh->pub_key  != NULL) BN_clear_free(dh->pub_key);
-    if (dh->priv_key != NULL) BN_clear_free(dh->priv_key);
 
     mlp = DHParams_p(DHKey_params(mlkey));
     mlg = DHParams_g(DHKey_params(mlkey));
@@ -1610,10 +1636,8 @@ CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
       goto bailout;
     }
 
-    dh->p = p;
-    dh->g = g;
-    dh->pub_key = pub;
-    dh->priv_key = prv;
+    DH_set0_pqg(dh, p, NULL, g);
+    DH_set0_key(dh, pub, prv);
 
     free(mlp_buf);
     free(mlg_buf);
@@ -1647,7 +1671,10 @@ CAMLprim value ocaml_dh_compute(value mldh, value mlopub) {
     if ((dh = DH_val(mldh)) == NULL)
         caml_failwith("DH has been disposed");
 
-    if (dh->priv_key == NULL)
+    BIGNUM *b_pub, *b_prv;
+    DH_get0_key(dh, &b_pub, &b_prv);
+
+    if (b_prv == NULL)
         caml_failwith("DH:compute_key: missing keys");
 
     opub = BN_bin2bn((uint8_t*) String_val(mlopub), caml_string_length(mlopub), NULL);
@@ -2136,13 +2163,13 @@ CAMLprim value ocaml_get_key_from_cert(value c) {
 
   CAMLlocal4(mlkey, mlrsa, mldsa, mlec);
 
-  switch(EVP_PKEY_type(pk->type))
+  switch(EVP_PKEY_base_id(pk))
   {
     case EVP_PKEY_RSA:
       mlrsa = caml_alloc_custom(&evp_rsa_ops, sizeof(RSA*), 0, 1);
       RSA* rsa = EVP_PKEY_get1_RSA(pk);
       if(!rsa) CAMLreturn(Val_none);
-      (void) RSA_set_method(rsa, RSA_PKCS1_SSLeay());
+      (void) RSA_set_method(rsa, RSA_PKCS1_OpenSSL());
       RSA_val(mlrsa) = rsa;
       mlkey = caml_alloc(1, 0); // CertRSA
       Store_field(mlkey, 0, mlrsa);
@@ -2236,7 +2263,7 @@ CAMLprim value ocaml_load_key(value pem) {
   if(!sk) CAMLreturn(Val_none);
   CAMLlocal4(mlkey, mlrsa, mldsa, mlec);
 
-  switch(EVP_PKEY_type(sk->type))
+  switch(EVP_PKEY_base_id(sk))
   {
     case EVP_PKEY_RSA:
       mlrsa = caml_alloc_custom(&evp_rsa_ops, sizeof(RSA*), 0, 1);

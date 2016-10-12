@@ -155,6 +155,8 @@ external ocaml_EVP_CIPHER_aes_256_cbc  : unit -> cipher = "ocaml_EVP_CIPHER_aes_
 external ocaml_EVP_CIPHER_aes_128_gcm  : unit -> cipher = "ocaml_EVP_CIPHER_aes_128_gcm"
 external ocaml_EVP_CIPHER_aes_256_gcm  : unit -> cipher = "ocaml_EVP_CIPHER_aes_256_gcm"
 
+external ocaml_EVP_CIPHER_chacha20_poly1305 : unit -> cipher = "ocaml_EVP_CIPHER_chacha20_poly1305"
+
 external ocaml_EVP_CIPHER_rc4 : unit -> cipher = "ocaml_EVP_CIPHER_rc4"
 
 external ocaml_EVP_CIPHER_CTX_create : cipher -> bool -> cipher_ctx = "ocaml_EVP_CIPHER_CTX_create"
@@ -184,6 +186,7 @@ let cipher_of_stream_cipher (c:stream_cipher) = match c with
 let cipher_of_aead_cipher (c:aead_cipher) = match c with
   | AES_128_GCM -> ocaml_EVP_CIPHER_aes_128_gcm()
   | AES_256_GCM -> ocaml_EVP_CIPHER_aes_256_gcm()
+  | CHACHA20_POLY1305 -> ocaml_EVP_CIPHER_chacha20_poly1305()
   | _ -> failwith "not linked to openSSL yet" 
 
 let block_encrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
