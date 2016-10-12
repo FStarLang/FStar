@@ -19,7 +19,7 @@ ifeq ($(OS),Windows_NT)
     EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
     ARCH = win32
     EXTRA_OPTS =
-    EXTRA_LIBS =
+    EXTRA_LIBS = -L.
     OPENSSL_CONF = ./Configure mingw64
 else
     # On Unix-like systems, the library search path is LD_LIBRARY_PATH, which is
@@ -29,11 +29,12 @@ else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         EXTRA_OPTS =
-        EXTRA_LIBS = -L /opt/local/lib
+        EXTRA_LIBS = -L.
         ARCH = osx
         OPENSSL_CONF = ./config
     else
-        EXTRA_OPTS = -ccopt -fPIC
+        EXTRA_OPTS = -thread -ccopt -fPIC
+        EXTRA_LIBS = -L.
         ARCH = x86_64
         OPENSSL_CONF = ./config
     endif
