@@ -14,7 +14,7 @@ if [[ "$BRANCH" == "master" ]]; then
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
     -H "Travis-API-Version: 3" \
-    -H "Authorization: token $TRAVIS_TOKEN" \
+    -H "Authorization: token $(TRAVIS_TOKEN)" \
     -d "$body" \
     https://api.travis-ci.org/repo/FStarLang%2Fkremlin/requests;
 
