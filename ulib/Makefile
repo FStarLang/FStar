@@ -4,13 +4,11 @@ include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
 FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
 
-HYPERHEAP=FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
+HYPERSTACK=FStar.Buffer.fst FStar.Buffer.Quantifiers.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
 
-HYPERSTACK=FStar.Buffer.fst
+ALL=$(filter-out $(FLAKY) $(HYPERSTACK) $(MATH),$(wildcard FStar.*.fst FStar.*.fsti))
 
-ALL=$(filter-out $(FLAKY) $(HYPERHEAP) $(HYPERSTACK) $(MATH),$(wildcard FStar.*.fst FStar.*.fsti))
-
-all: $(addsuffix -ver, $(ALL)) st m_rref buffer
+all: $(addsuffix -ver, $(ALL)) st m_rref buffer bufferq
 
 %-ver: %
 	$(FSTAR) $^
@@ -42,10 +40,13 @@ mref:
 	$(FSTAR) FStar.MRef.fst
 
 m_rref:
-	$(FSTAR) FStar.Map.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst hyperheap/FStar.All.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
+	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
 
 buffer:
 	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Buffer.fst
+
+bufferq:
+	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Buffer.fst FStar.Buffer.Quantifiers.fst
 
 twolevelheap:
 	$(FSTAR) FStar.TwoLevelHeap.fst
