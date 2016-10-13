@@ -4,6 +4,6 @@ include ../Makefile.include
 
 all: uall sall
 
-uall:
+uall: SimplePrintf.uver
 
 sall: .all.ver
