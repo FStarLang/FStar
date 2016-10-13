@@ -28,9 +28,16 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let ctr x = PRF(x.ctr)
 
-let alg (i:id) = Cipher.CHACHA20 //TODO: 16-10-02 This is temporary
+let alg (i:id) = cipher_of_id i 
 
-(* Definitions adapted from TLS/StreamAE.fst, to be integrated later *)
+//16-10-12 TEMPORARY, while PRF remains somewhat CHACHA-specific
+let id = i:id {cipher_of_id i = Cipher.CHACHA20}
+
+
+// ********* StreamAE **********
+//
+// (Definitions adapted from TLS/StreamAE.fst, to be integrated later)
+//
 // The per-record nonce for the AEAD construction is formed as follows:
 //
 // 1. The 64-bit record sequence number is padded to the left with zeroes to iv_length.
@@ -68,6 +75,7 @@ let lemma_xor_bounded n x y =
 
 //16-10-05 by induction on n, given a bitwise definition of logxor.
 
+//16-10-12 computes nonce from static IV and sequence number
 let aeIV i (seqn:UInt64.t) (staticIV:Cipher.iv (alg i)) : Tot (Cipher.iv (alg i)) =
   let x = FStar.Int.Cast.uint64_to_uint128 seqn in
   let r = UInt128.logxor x staticIV in
@@ -85,6 +93,8 @@ assume val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:
   (* recheck endianness *)
 
 // a bit more concrete than the spec: xor only 64 bits, copy the rest. 
+
+
 
 
 // PLAN: 
@@ -157,15 +167,14 @@ type rw = | Reader | Writer
 
 noeq type state (i:id) (rw:rw) =
   | State:
-      #region: rgn (* no need for readers? *) ->
-      #log_region: rgn {if rw = Writer then region = log_region else HyperHeap.disjoint region log_region} ->
+      #log_region: rgn -> // this is the *writer* region; the reader allocates nothing
       log: HS.ref (Seq.seq (entry i)) {HS.frameOf log == log_region} ->
       // Was PRF(prf.rgn) == region. Do readers use its own PRF state?
       prf: PRF.state i {PRF(prf.rgn) == log_region} (* including its key *) ->
       state i rw
 
 
-//16-09-18 where is it in the libraries?
+//16-09-18 where is it in the libraries??
 private let min (a:u32) (b:u32) = if a <=^ b then a else b
 private let minNat (a:nat) (b:nat) : nat = if a <= b then a else b
 
@@ -175,7 +184,7 @@ val gen: i:id -> rgn:region -> ST (state i Writer)
 let gen i rgn = 
   let log = ralloc rgn (Seq.createEmpty #(entry i)) in
   let prf = PRF.gen rgn i in 
-  State #i #Writer #rgn #rgn log prf
+  State #i #Writer #rgn log prf
 
 
 val coerce: i:id{~(prf i)} -> rgn:region -> key:lbuffer (v PRF.keylen)
@@ -185,15 +194,14 @@ val coerce: i:id{~(prf i)} -> rgn:region -> key:lbuffer (v PRF.keylen)
 let coerce i rgn key = 
   let log = ralloc rgn (Seq.createEmpty #(entry i)) in // Shouldn't exist
   let prf = PRF.coerce rgn i key in
-  State #i #Writer #rgn #rgn log prf
+  State #i #Writer #rgn log prf
 
 
-val genReader: #i:id -> #rgn:region
-  -> st:state i Writer{HyperHeap.disjoint rgn st.region} -> ST (state i Reader)
+val genReader: #i:id -> st:state i Writer -> ST (state i Reader)
   (requires (fun _ -> True))
   (ensures  (fun _ _ _ -> True))
-let genReader #i #rgn st =
-  State #i #Reader #rgn #st.region st.log st.prf
+let genReader #i st =
+  State #i #Reader #st.log_region st.log st.prf
 
 
 // If the length is not a multiple of 16, pad to 16
@@ -218,7 +226,6 @@ private let field_encode i aad cipher : Tot (Seq.seq (field i)) =
   //TODO
   Seq.createEmpty
 
-//16-09-18 how to get <- syntax?
 open FStar.HyperStack
 
 private val add_bytes:
@@ -238,6 +245,8 @@ private val add_bytes:
 
 let rec add_bytes #i st log a len txt =
   assume false; //TODO
+  push_frame();
+  let r = 
   if len = 0ul then log 
   else if len <^ 16ul then 
     begin
@@ -252,7 +261,9 @@ let rec add_bytes #i st log a len txt =
       let log = MAC.add st log a w in
       add_bytes st log a (len -^ 16ul) (Buffer.offset txt 16ul)
     end
-
+  in
+  pop_frame(); r
+  
 // will require StackInline for the accumulator
 private let accumulate i ak (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
   (plainlen:UInt32.t) (cipher:lbuffer (v plainlen)) = 
@@ -305,7 +316,7 @@ let rec counterblocks i rgn x l plain cipher =
 // (not a projection from one another because of allocated MACs and aad)
 val refines: 
   h:mem -> 
-  i:id {safeId i } -> rgn:region ->
+  i:id {safeId i} -> rgn:region ->
   entries: Seq.seq (entry i) -> 
   blocks: Seq.seq (PRF.entry rgn i) -> GTot Type0
   (decreases (Seq.length entries))
@@ -336,6 +347,7 @@ let rec refines h i rgn entries blocks =
           | Some (msg,tag) -> msg == field_encode i ad plain /\ refines h i rgn entries blocks)))))
     end)
 
+
 (* notes 16-10-04 
 
 Not sure what's the best style to push as an invariant.
@@ -358,53 +370,118 @@ let lookupIV (i:id) (s:Seq.seq (entry i)) = Seq.seq_find (fun e:entry i -> e.iv 
 
 // COUNTER_MODE LOOP from Chacha20 
 
+(*
 let ctr_inv ctr len = 
   len =^ 0ul \/
   ( 0ul <^ ctr /\
     v ctr + v(len /^ PRF.blocklen) < v PRF.maxCtr)  //we use v... to avoid ^+ overflow
+*)
 
 // XOR-based encryption and decryption (just swap ciphertext and plaintext)
-val counter_enxor: 
-  i:id -> t:PRF.state i -> x:PRF.domain -> len:u32{ctr_inv (PRF x.ctr) len} ->
-  plaintext:plainBuffer i (v len) -> 
-  ciphertext:lbuffer (v len) {
-    Buffer.disjoint (PRF t.key) ciphertext /\
-    Buffer.disjoint (as_buffer plaintext) (PRF t.key) /\
-    Buffer.disjoint (as_buffer plaintext) ciphertext /\ 
-    Buffer.frameOf (as_buffer plaintext) <> (PRF t.rgn)
-    } -> 
-  STL unit
-    (requires (fun h -> 
-      Buffer.live h ciphertext /\ 
-      Buffer.live h (PRF t.key) /\ 
-      Plain.live h plaintext ))
-    (ensures (fun h0 _ h1 -> 
-      // Buffer.live h1 ciphertext /\ 
-      // Buffer.modifies_1 ciphertext h0 h1 /\ //16-09-22  We miss a hybrid modifies including PRF(t.table) 
-      True
-    ))
-// this only touches buffers.
-val counter_dexor: 
-  i:id -> t:PRF.state i -> x:PRF.domain -> len:u32{ctr_inv (PRF x.ctr) len} ->
-  plaintext:plainBuffer i (v len) -> 
-  ciphertext:lbuffer (v len) {
-    Buffer.disjoint (as_buffer plaintext) ciphertext /\ 
-    Buffer.frameOf (as_buffer plaintext) <> PRF t.rgn } -> 
-  STL unit
-    (requires (fun h -> Buffer.live h ciphertext /\ Buffer.live h (PRF t.key) /\ Plain.live h plaintext))
-    (ensures (fun h0 _ h1 -> let b = as_buffer plaintext in Buffer.live h1 b /\ Buffer.modifies_1 b h0 h1))
+// prf i    ==> writing at most at indexes x and above (same iv, higher ctr) at the end of the PRF table.
+// safeId i ==> appending *exactly* "counterblocks i x l plain cipher" at the end of the PRF table
+//              the proof seems easier without tail recursion.
 
+open Crypto.Symmetric.PRF
+
+val all_above: #rgn:region -> #i:PRF.id -> s:Seq.seq (PRF.entry rgn i) -> domain -> Tot bool (decreases (Seq.length s))
+let rec all_above #rgn #i s (x:domain) = 
+  Seq.length s = 0 || ((SeqProperties.head s).x `above` x && all_above (SeqProperties.tail s) x )
+
+// modifies a table (with entries above x) and a buffer.
+let modifies_X_buffer_1 (#i:PRF.id) (t:PRF.state i) x b h0 h1 = 
+  Buffer.live h1 b /\ 
+  (if prf i then 
+    let r = itable i t in 
+    let rb = Buffer.frameOf b in 
+    let rgns = Set.union (Set.singleton #HH.rid t.rgn) (Set.singleton #HH.rid rb) in 
+    let contents0 = HS.sel h0 r in
+    let contents1 = HS.sel h1 r in
+    HS.modifies rgns h0 h1 /\ 
+    HS.modifies_ref t.rgn (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1 /\
+    Seq.length contents0 <= Seq.length contents1 /\
+    Seq.slice contents1 0 (Seq.length contents0) == contents0 /\
+    all_above (Seq.slice contents1 (Seq.length contents0) (Seq.length contents1)) x
+  else
+    Buffer.modifies_1 b h0 h1)
+
+val counter_enxor: 
+  i:id -> t:PRF.state i -> x:PRF.domain {x.ctr <> 0ul} -> len:u32{safelen i (v len) x.ctr} ->
+  plain:plainBuffer i (v len) -> 
+  cipher:lbuffer (v len) 
+  { let bp = as_buffer plain in 
+    Buffer.disjoint bp cipher /\
+    Buffer.frameOf bp <> (PRF t.rgn) /\
+    Buffer.frameOf cipher <> (PRF t.rgn) 
+  } -> STL unit
+  (requires (fun h -> 
+    Plain.live h plain /\ 
+    Buffer.live h cipher /\ 
+    // if ciphertexts are authenticated, then fresh blocks are available
+    (safeId i ==> (forall z. z `above` x ==> find_otp #t.rgn #i (HS.sel h t.table) z == None))
+    ))
+  (ensures (fun h0 _ h1 -> 
+    Plain.live h1 plain /\ 
+    Buffer.live h1 cipher /\ 
+    // in all cases, we extend the table only at x and its successors.
+    modifies_X_buffer_1 t x cipher h0 h1 /\
+    // if ciphertexts are authenticated, then we precisely know the table extension
+    (safeId i ==> HS.sel h1 t.table == Seq.append (HS.sel h0 t.table) (counterblocks i t.rgn x (v len) (Plain.sel_plain h1 len plain) (Buffer.as_seq h1 cipher)))
+    // NB the post of prf_enxor should be strengthened a bit (using PRF.extends?)
+    ))
+    
+let rec counter_enxor i t x len plain cipher =
+  assume false;//16-10-12 
+  if len <> 0ul then
+    begin // at least one more block
+      let l = min len PRF.blocklen in 
+      let cipher = Buffer.sub cipher 0ul l in 
+      let plain = Plain.sub plain 0ul l in 
+      (*
+      recall (PRF t.table);
+      let s = (PRF !t.table) in 
+      assume(is_None(PRF.find s x));
+      *)
+      PRF.prf_enxor i t x l cipher plain;
+      let len = len -^ l in 
+      let cipher = Buffer.sub cipher l len in
+      let plain = Plain.sub plain l len in
+      counter_enxor i t (PRF.incr x) len plain cipher
+    end
+
+val counter_dexor: 
+  i:id -> t:PRF.state i -> x:PRF.domain {x.ctr <> 0ul} -> len:u32{safelen i (v len) x.ctr} ->
+  plain:plainBuffer i (v len) -> 
+  cipher:lbuffer (v len) 
+  { let bp = as_buffer plain in 
+    Buffer.disjoint bp cipher /\
+    Buffer.frameOf bp <> (PRF t.rgn) /\
+    Buffer.frameOf cipher <> (PRF t.rgn) 
+  } -> STL unit
+  (requires (fun h -> 
+    Plain.live h plain /\ 
+    Buffer.live h cipher /\ 
+    // if ciphertexts are authenticated, then the table already includes all we need
+    (safeId i ==> (let expected = counterblocks i t.rgn x (v len) (Plain.sel_plain h len plain) (Buffer.as_seq h cipher) in
+                True //TODO say that expected is found in the table
+    ))))
+  (ensures (fun h0 _ h1 -> 
+    Plain.live h1 plain /\ 
+    Buffer.live h1 cipher /\ 
+    // in all cases, we extend the table only at x and its successors.
+    modifies_X_buffer_1 t x (as_buffer plain) h0 h1 /\
+    (safeId i ==> Seq.equal #(PRF.entry (PRF(t.rgn))i) (HS.sel h1 t.table) (HS.sel h0 t.table))))
+  
 let rec counter_dexor i t x len plaintext ciphertext =
+  assume false;//16-10-12 
   if len <> 0ul 
   then
     begin // at least one more block
-
-      assume false;//16-10-02
-      
       let l = min len PRF.blocklen in 
       let cipher = Buffer.sub ciphertext 0ul l  in 
       let plain = Plain.sub plaintext 0ul l in 
 
+      (*
       recall (PRF t.table); //16-09-22 could this be done by ! ??
       let s = PRF !t.table in
       let h = HST.get() in
@@ -413,7 +490,7 @@ let rec counter_dexor i t x len plaintext ciphertext =
       assume(match PRF.find_otp #(PRF.State.rgn t) #i s x with
         | Some (PRF.OTP l' p c) -> l == l' /\ c = sel_bytes h l cipher
         | None -> False);
-
+      *)
       PRF.prf_dexor i t x l plain cipher;
 
       let len = len -^ l in 
@@ -422,28 +499,6 @@ let rec counter_dexor i t x len plaintext ciphertext =
       counter_dexor i t (PRF.incr x) len plaintext ciphertext
     end
 
-let rec counter_enxor i t x len plaintext ciphertext =
-  if len <> 0ul 
-  then
-    begin // at least one more block
-
-      assume false;//16-10-02 
-
-      let l = min len PRF.blocklen in 
-      let cipher = Buffer.sub ciphertext 0ul l in 
-      let plain = Plain.sub plaintext 0ul l in 
-
-      recall (PRF t.table); //16-09-22 could this be done by ! ??
-      let s = (PRF !t.table) in 
-      assume(is_None(PRF.find s x));
-
-      PRF.prf_enxor i t x l cipher plain;
-
-      let len = len -^ l in 
-      let ciphertext = Buffer.sub ciphertext l len in
-      let plaintext = Plain.sub plaintext l len in
-      counter_enxor i t (PRF.incr x) len plaintext ciphertext
-    end
 
 // ENCRYPT AND DECRYPT
 // some code duplication, but in different typing contexts
@@ -454,7 +509,7 @@ let live_2 #a0 #a1 h b0 b1 = Buffer.live #a0 h b0 /\ Buffer.live #a1 h b1
 val inv: h:mem -> #i:id -> #rw:rw -> e:state i rw -> Tot Type0
 let inv h #i #rw e =
   match e with
-  | State #i_ #rw_ #region #log_region log prf ->
+  | State #i_ #rw_ #log_region log prf ->
     safeId i ==>
     ( let blocks = HS.sel h (PRF.State.table prf) in
       let entries = HS.sel h log in

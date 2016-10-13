@@ -874,8 +874,7 @@
       1,
       1,
       [
-        "@query", "b2t_def", "bool_inversion", "bool_typing", "eq2-interp",
-        "equation_FStar.List.Tot.test_sort",
+        "@query", "b2t_def", "equation_FStar.List.Tot.test_sort",
         "equation_FStar.Monotonic.RRef.m_sel",
         "equation_FStar.Monotonic.RRef.reln",
         "equation_FStar.Monotonic.Seq.grows",
