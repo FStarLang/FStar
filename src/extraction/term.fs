@@ -990,10 +990,12 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let lbs =
             if top_level
             then lbs |> List.map (fun lb ->
+                    let tcenv = TcEnv.set_current_module g.tcenv
+                                (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
                     let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; 
                                              N.Inlining; N.Eager_unfolding;
                                              N.Exclude N.Zeta; N.PureSubtermsWithinComputations; N.Primops] 
-                                g.tcenv lb.lbdef in
+                                tcenv lb.lbdef in
                     {lb with lbdef=lbdef})
             else lbs in
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
