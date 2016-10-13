@@ -151,11 +151,11 @@ let rec tinstrDenote (#ts:tstack) (#ts':tstack) (i : tinstr ts ts') (s:vstack ts
 
       (* Take 3 *)
       let s' = typeDenote targ1 * (typeDenote targ2 * vstack tss) in
-      let (arg1, (arg2, s')) = s' in
-        (((tbinopDenote b) arg1 arg2, s') <: (typeDenote tres * vstack tss))
+      let (arg1, (arg2, s'')) = s' in
+        (((tbinopDenote b) arg1 arg2, s'') <: (typeDenote tres * vstack tss))
         (* Expected type "Type"; *)
         (* got type "(Prims.tuple2 (?63432 ts ts' i s targ1 targ2 tres ss b s' uu___) *)
-        (*           (?63269 ts ts' i s targ1 targ2 tres ss b s' uu___))" *)
+        (*                         (?63269 ts ts' i s targ1 targ2 tres ss b s' uu___))" *)
 
 (* let rec tprogDenote #ts #ts' (p : tprog ts ts') (s:vstack ts) : Tot (vstack ts') = *)
 (*   match p with *)
