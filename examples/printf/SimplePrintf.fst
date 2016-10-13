@@ -25,11 +25,15 @@ let rec dir_type (ds:list dir) : Tot Type0 =
   | Lit c :: ds' -> dir_type ds'
   | Arg a :: ds' -> arg_type a -> Tot (dir_type ds')
 
+let dir_type' ds = dir_type ds
+
 let rec string_of_dirs ds (k:string -> Tot string) : Tot (dir_type ds) =
   match ds with
   | [] -> k ""
-  | Lit c :: ds' -> magic() (* string_of_dirs ds' (fun res -> k (string_of_char c ^ res))
-                               -- TODO: fails, but unclear what annotation one could add *)
+  | Lit c :: ds' -> 
+    (string_of_dirs ds' (fun res -> k (string_of_char c ^ res))
+     <: dir_type' ds' //this is an ugly workaround for #606
+    )
   | Arg a :: ds' -> fun (x : arg_type a) ->
       string_of_dirs ds' (fun res -> k (match a with
                                         | Bool -> string_of_bool x
