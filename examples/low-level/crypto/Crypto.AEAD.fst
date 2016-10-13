@@ -282,7 +282,7 @@ private let accumulate i ak (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
 
 let maxplain (i:id) = pow2 14 // for instance
 
-private let safelen (i:id) (l:nat) (c:UInt32.t{0ul <^ c /\ c <=^ PRF.maxCtr }) = 
+let safelen (i:id) (l:nat) (c:UInt32.t{0ul <^ c /\ c <=^ PRF.maxCtr }) = 
   l = 0 || (
     let bl = v (Cipher( blocklen (alg i))) in
     FStar.Mul(
@@ -295,6 +295,7 @@ val counterblocks:
   rgn:region ->  //the rgn is really superfluous, 
 		//since it is only potentially relevant in the case of the mac, 
 		//but that's always Seq.createEmpty here
+                //16-10-13 but still needed in the result type, right?
   x:PRF.domain {ctr x >^ 0ul} -> 
   l:nat {safelen i l (ctr x)} -> 
   plain:Plain.plain i l -> 
@@ -340,7 +341,8 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
    let xors = Seq.slice blocks 1 (b+1) in 
    let cipher, tag = SeqProperties.split cipher_tagged l in
    safelen i l 1ul /\
-   xors == counterblocks i rgn (PRF.incr x) l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts
+   xors == counterblocks i rgn (PRF.incr x) l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
+                                         
    (let m = PRF.macRange rgn i x e in
     match m_sel h (MAC.ilog (MAC.State.log m)) with
     | None           -> False

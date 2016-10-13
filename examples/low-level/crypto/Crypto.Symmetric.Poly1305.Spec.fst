@@ -38,7 +38,7 @@ type word_16 = b:seq byte {Seq.length b = 16}
 
 type text = seq elem // not word_16
 type tag = word_16
-let taglen 'id = 116ul
+let taglen 'id = 16ul
 
 (* * *********************************************)
 (* *            Field operations                 *)
