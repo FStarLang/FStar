@@ -35,8 +35,15 @@ and decl =
   | DGlobal of list<flag> * lident * typ * expr
   | DFunction of list<flag> * typ * lident * list<binder> * expr
   | DTypeAlias of lident * int * typ
-  | DTypeFlat of lident * list<(ident * (typ * bool))>
+  | DTypeFlat of lident * fields_t
   | DExternal of lident * typ
+  | DTypeVariant of (lident * branches_t)
+
+and fields_t =
+  list<(ident * (typ * bool))>
+
+and branches_t =
+  list<(ident * fields_t)>
 
 and flag =
   | Private
@@ -396,6 +403,15 @@ and translate_decl env d: option<decl> =
       Some (DTypeFlat (name, List.map (fun (f, t) ->
         f, (translate_type env t, false)) fields))
 
+  | MLM_Ty [ (_, name, [], Some (MLTD_DType branches)) ] ->
+      let name = env.module_name, name in
+      Some (DTypeVariant (name, List.map (fun (cons, ts) ->
+        cons, List.mapi (fun i t ->
+          // TODO: carry the right names
+          Util.format1 "x%s" (string_of_int i), (translate_type env t, false)
+        ) ts
+      ) branches))
+
   | MLM_Ty ((_, name, _, _) :: _) ->
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
       None
@@ -619,10 +635,11 @@ and translate_expr env e: expr =
   | MLE_Tuple es ->
       ETuple (List.map (translate_expr env) es)
 
+  | MLE_CTor ((_, cons), es) ->
+      ECons (assert_lid e.mlty, cons, List.map (translate_expr env) es)
+
   | MLE_Fun _ ->
       failwith "todo: translate_expr [MLE_Fun]"
-  | MLE_CTor _ ->
-      failwith "todo: translate_expr [MLE_CTor]"
   | MLE_If _ ->
       failwith "todo: translate_expr [MLE_If]"
   | MLE_Raise _ ->
