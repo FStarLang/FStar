@@ -32,9 +32,9 @@ type lbytes l = b:bytes {length b = l}
 let v (x:UInt32.t) : nat  = UInt32.v x
 
 (* Parameters for AES-256 *)
-let nk =  8ul
-let nb =  4ul
-let nr = 14ul
+inline_for_extraction let nk =  8ul
+inline_for_extraction let nb =  4ul
+inline_for_extraction let nr = 14ul
 
 let blocklen = U32(4ul *^ nb)
 let keylen   = U32(4ul *^ nk)
