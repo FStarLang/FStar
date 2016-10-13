@@ -354,3 +354,10 @@ let rec argTypes  (t: mlty) : list<mlty> =
     match t with
       | MLTY_Fun (a,_,b) -> a::(argTypes b)
       | _ -> []
+
+let rec uncurry_mlty_fun t =
+    match t with
+    | MLTY_Fun (a,_,b) -> 
+        let args, res = uncurry_mlty_fun b in
+        a::args, res
+    | _ -> [], t

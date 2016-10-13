@@ -2,7 +2,6 @@ module Crypto.Symmetric.Bytes
 
 open FStar.HyperHeap
 open FStar.HyperStack
-open FStar.HST
 open FStar.UInt32
 open FStar.Ghost
 open FStar.Buffer
@@ -79,7 +78,7 @@ let rec store_bytes_aux len buf i b =
   if i <^ len then
     begin
     Buffer.upd buf i (Seq.index b (v i));
-    let h = HST.get () in
+    let h = ST.get () in
     assert (Seq.equal
       (sel_bytes h (i +^ 1ul) (Buffer.sub buf 0ul (i +^ 1ul)))
       (SeqProperties.snoc (sel_bytes h i (Buffer.sub buf 0ul i)) (Seq.index b (v i))));
@@ -288,7 +287,7 @@ let rec load_uint128 len buf =
   else
     let n = load_uint128 (len -^ 1ul) (sub buf 1ul (len -^ 1ul)) in
     let b = buf.(0ul) in 
-    let h = HST.get () in
+    let h = ST.get () in
     lemma_little_endian_is_bounded 
       (sel_bytes h (len -^ 1ul) (sub buf 1ul (len -^ 1ul)));
     assert (UInt128.v n <= pow2 (8 * v len - 8) - 1);

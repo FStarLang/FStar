@@ -942,7 +942,9 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 M, wp is built using
                          bind chead (bind c0 (bind c1 ... (bind cn (Tot (bs -> cres))))
     *)
-    let monadic_application (head, chead, ghead, cres) subst arg_comps_rev arg_rets guard fvs bs
+    let monadic_application (head, chead, ghead, cres)
+                            subst
+                            (arg_comps_rev:list<(arg * option<bv> * either<lident,lcomp>)>) arg_rets guard fvs bs
         : term   //application of head to args
         * lcomp  //its computation type
         * guard_t //and whatever guard remains 
@@ -967,8 +969,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                     //&&
                     Util.is_pure_or_ghost_lcomp cres
                     && arg_comps_rev |> Util.for_some (function 
-                        | (_, _, None) -> false 
-                        | (_, _, Some c) -> not (Util.is_pure_or_ghost_lcomp c)) in
+                        | (_, _, Inl _) -> false
+                        | (_, _, Inr c) -> not (Util.is_pure_or_ghost_lcomp c)) in
                     (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
 
                 let cres = //NS: Choosing when to add an equality refinement is VERY important for performance.
@@ -993,8 +995,10 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         //We build bind chead (bind c1 (bind c2 (bind c3 cres)))
         let args, comp, monadic = List.fold_left (fun (args, out_c, monadic) ((e, q), x, c) -> 
                     match c with
-                    | None -> (e, q)::args, out_c, monadic
-                    | Some c -> 
+                    | Inl eff_name ->
+                      (TcUtil.maybe_lift env e eff_name out_c.eff_name, q)::args, out_c, monadic
+
+                    | Inr c ->
                         let monadic = monadic || not (Util.is_pure_or_ghost_lcomp c) in
                         let out_c = 
                             TcUtil.bind e.pos env None  //proving (Some e) here instead of None causes significant Z3 overhead
@@ -1024,7 +1028,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" head.pos env t in //new_uvar env t in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
-            tc_args head_info (subst, (arg, None, None)::outargs, arg::arg_rets, Rel.conj_guard implicits g, fvs) rest args
+            tc_args head_info (subst, (arg, None, Inl Const.effect_Tot_lid)::outargs, arg::arg_rets, Rel.conj_guard implicits g, fvs) rest args
 
         | (x, aqual)::rest, (e, aq)::rest' -> (* a concrete argument *)
             let _ = 
@@ -1046,18 +1050,18 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let arg = e, aq in
             if Util.is_tot_or_gtot_lcomp c //e is Tot or GTot; we can just substitute it
             then let subst = maybe_extend_subst subst (List.hd bs) e in
-                    tc_args head_info (subst, (arg, None, None)::outargs, arg::arg_rets, g, fvs) rest rest'
+                    tc_args head_info (subst, (arg, None, Inl c.eff_name)::outargs, arg::arg_rets, g, fvs) rest rest'
             else if TcUtil.is_pure_or_ghost_effect env c.eff_name //its conditionally pure; can substitute, but must check its WP
             then let subst = maybe_extend_subst subst (List.hd bs) e in
-                    tc_args head_info (subst, (arg, Some x, Some c)::outargs, arg::arg_rets, g, fvs) rest rest'
+                    tc_args head_info (subst, (arg, Some x, Inr c)::outargs, arg::arg_rets, g, fvs) rest rest'
             else if is_null_binder (List.hd bs) //it's not pure, but the function isn't dependent; just check its WP
             then let newx = S.new_bv (Some e.pos) c.res_typ in
                     let arg' = S.as_arg <| S.bv_to_name newx in
-                    tc_args head_info (subst, (arg, Some newx, Some c)::outargs, arg'::arg_rets, g, fvs) rest rest'
+                    tc_args head_info (subst, (arg, Some newx, Inr c)::outargs, arg'::arg_rets, g, fvs) rest rest'
             else //e is impure and the function may be dependent...
                  //need to check that the variable does not occur free in the rest of the function type
                  //by adding x to fvs
-                 tc_args head_info (subst, (arg, Some x, Some c)::outargs, S.as_arg (S.bv_to_name x)::arg_rets, g, x::fvs) rest rest'
+                 tc_args head_info (subst, (arg, Some x, Inr c)::outargs, S.as_arg (S.bv_to_name x)::arg_rets, g, x::fvs) rest rest'
 
         | _, [] -> (* no more args; full or partial application *)
             monadic_application head_info subst outargs arg_rets g fvs bs

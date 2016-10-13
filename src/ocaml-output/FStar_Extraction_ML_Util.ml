@@ -689,5 +689,20 @@ end
 end))
 
 
+let rec uncurry_mlty_fun : FStar_Extraction_ML_Syntax.mlty  ->  (FStar_Extraction_ML_Syntax.mlty Prims.list * FStar_Extraction_ML_Syntax.mlty) = (fun t -> (match (t) with
+| FStar_Extraction_ML_Syntax.MLTY_Fun (a, _74_463, b) -> begin
+(
+
+let _74_469 = (uncurry_mlty_fun b)
+in (match (_74_469) with
+| (args, res) -> begin
+(((a)::args), (res))
+end))
+end
+| _74_471 -> begin
+(([]), (t))
+end))
+
+
 
 

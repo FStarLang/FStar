@@ -6,7 +6,6 @@ open FStar.Ghost
 open FStar.UInt64
 (** Effects and memory layout *)
 open FStar.HyperStack
-open FStar.HST
 (** Buffers *)
 open FStar.Buffer
 (** Mathematical definitions *)
@@ -42,7 +41,7 @@ private val fsum_: a:bigint -> b:bigint{disjoint a b} -> Stack unit
   (requires (fun h -> norm h a /\ norm h b))
   (ensures (fun h0 u h1 -> norm h0 a /\ norm h0 b /\ live h1 a /\ modifies_1 a h0 h1 /\ isSum h0 h1 a b))
 let fsum_ a b =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   let a0 = a.(0ul) in
   let a1 = a.(1ul) in
   let a2 = a.(2ul) in
@@ -76,9 +75,9 @@ val fsum': a:bigint -> b:bigint{disjoint a b} -> Stack unit
       /\ eval h1 a norm_length = eval h0 a norm_length + eval h0 b norm_length
     ))
 let fsum' a b =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   fsum_ a b;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   lemma_fsum h0 h1 a b
 
 private val update_9: c:bigint{length c >= 2*norm_length-1} ->
@@ -169,7 +168,7 @@ private val multiplication_:
        /\ isMultiplication h0 h1 a b c
      ))
 let multiplication_ c a b =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   let a0 = a.(0ul) in let a1 = a.(1ul) in let a2 = a.(2ul) in let a3 = a.(3ul) in let a4 = a.(4ul) in
   let b0 = b.(0ul) in let b1 = b.(1ul) in let b2 = b.(2ul) in let b3 = b.(3ul) in let b4 = b.(4ul) in
   multiplication_0 c a0 a1 a2 a3 a4 b0 b1 b2 b3 b4
@@ -185,9 +184,9 @@ val multiplication:
        /\ maxValue h1 c (2*norm_length-1) <= norm_length * pow2 53
      ))
 let multiplication c a b =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   multiplication_ c a b;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   lemma_multiplication h0 h1 c a b
 
 
@@ -203,7 +202,7 @@ val freduce_degree_: b:bigint -> Stack unit
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ modifies_1 b h0 h1
     /\ isDegreeReduced h0 h1 b))
 let freduce_degree_ b =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   let b0 = b.(0ul) in
   let b1 = b.(1ul) in
   let b2 = b.(2ul) in
@@ -231,9 +230,9 @@ val freduce_degree: b:bigint -> Stack unit
     /\ eval h1 b norm_length % reveal prime = eval h0 b (2*norm_length-1) % reveal prime
   ))
 let freduce_degree b =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   freduce_degree_ b;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   lemma_freduce_degree h0 h1 b
 
 private val mod2_26: x:U64.t -> Tot (y:U64.t{v y = v x % pow2 26 /\ v y < pow2 26})
@@ -332,9 +331,9 @@ val carry_1:
       /\ eval h1 b (norm_length+1) = eval h0 b norm_length /\ carried_1 h1 b
     ))
 let carry_1 b =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   carry_1_ b;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   lemma_carry_1 h0 h1 b
 
 val carry_2_: b:bigint -> Stack unit
@@ -352,9 +351,9 @@ val carry_2: b:bigint -> Stack unit
 	  /\ eval h1 b (norm_length+1) = eval h0 b norm_length
 	  /\ carried_3 h1 b))
 let carry_2 b =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   carry_2_ b;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   lemma_carry_2 h0 h1 b
 
 
@@ -374,11 +373,11 @@ val carry_top_1: b:bigint -> Stack unit
   (ensures  (fun h0 _ h1 -> carried_1 h0 b /\ carried_2 h1 b /\ modifies_1 b h0 h1
     /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime))
 let carry_top_1 b =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   pow2_double_sum 38; pow2_double_sum 39;  pow2_double_sum 40;
   pow2_lt_compat 63 26;  pow2_lt_compat 63 41;
   carry_top_ b;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   lemma_carry_top_1 h0 h1 b
 
 
@@ -387,11 +386,11 @@ val carry_top_2: b:bigint -> Stack unit
   (ensures  (fun h0 _ h1 -> carried_3 h0 b /\ carried_4 h1 b /\ modifies_1 b h0 h1
     /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime))
 let carry_top_2 b =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   pow2_double_sum 0; pow2_double_sum 1;  pow2_double_sum 2;
   pow2_lt_compat 63 26;  pow2_lt_compat 63 3;
   carry_top_ b;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   lemma_carry_top_2 h0 h1 b
 
 
@@ -414,9 +413,9 @@ val carry_0_to_1: b:bigint -> Stack unit
   (ensures  (fun h0 _ h1 -> carried_4 h0 b /\ modifies_1 b h0 h1 /\ norm h1 b
     /\ eval h1 b norm_length = eval h0 b norm_length))
 let carry_0_to_1 b =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   carry_0_to_1_ b;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   lemma_carry_0_to_1 h0 h1 b
 
 

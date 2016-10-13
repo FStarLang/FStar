@@ -3,7 +3,6 @@ module Buffer.Utils
 open FStar.Mul
 open FStar.Ghost
 open FStar.HyperStack
-open FStar.HST
 open FStar.Int.Cast
 open FStar.UInt8
 open FStar.UInt32
@@ -184,11 +183,11 @@ let rec memset b z len =
   if len = 0ul then assume false
   else
   begin
-    let h0 = HST.get() in
+    let h0 = ST.get() in
     let i = len -^ 1ul in
     memset (offset b 1ul) z i; // we should swap these two lines for tail recursion
     b.(0ul) <- z; 
-    let h1 = HST.get() in 
+    let h1 = ST.get() in 
     let s = as_seq h1 b in
     assert(Seq.index s 0 = z); // ...but this fails in the absence of framing
     assert(Seq.equal s (SeqProperties.cons z (Seq.slice s 1 (v len))))
