@@ -8,7 +8,7 @@ HYPERHEAP=FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
 
 HYPERSTACK=FStar.Buffer.fst
 
-ALL=$(filter-out $(FLAKY) $(HYPERHEAP) $(MATH),$(wildcard FStar.*.fst FStar.*.fsti))
+ALL=$(filter-out $(FLAKY) $(HYPERHEAP) $(HYPERSTACK) $(MATH),$(wildcard FStar.*.fst FStar.*.fsti))
 
 all: $(addsuffix -ver, $(ALL)) st m_rref buffer
 
