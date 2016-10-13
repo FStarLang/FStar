@@ -34,3 +34,23 @@ and extract_nat_s x = match x with
   | S n -> n
   | SofT t -> extract_nat_t t
 
+//Another example
+open FStar.List.Tot
+val pointwise_eq : #a:Type -> list a -> list a -> Type0
+let rec pointwise_eq #a l1 l2 = 
+  match l1, l2 with 
+  | [], [] -> True
+  | [], _
+  | _, [] -> False
+  | hd_1::tl_1, hd_2::tl_2 -> hd_1 == hd_2 /\ pointwise_eq tl_1 tl_2
+
+let rec pointwise_eq_length (#a:Type) (l_1:list a) (l_2:list a) 
+  : Lemma (requires (pointwise_eq l_1 l_2))
+	  (ensures (length l_1 = length l_2))
+  = match l_1, l_2 with 
+    | [], [] -> ()
+    | [], _
+    | _, [] -> ()
+    | _::tl_1, _::tl_2 -> pointwise_eq_length tl_1 tl_2
+    
+
