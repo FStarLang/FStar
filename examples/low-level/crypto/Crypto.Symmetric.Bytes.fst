@@ -23,6 +23,8 @@ type buffer = Buffer.buffer UInt8.t
 type lbytes  (l:nat) = b:bytes  {Seq.length b = l}
 type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
 
+let uint128_to_uint8 (a:UInt128.t) : Tot (b:UInt8.t{UInt8.v b = UInt128.v a % pow2 8})
+  = uint64_to_uint8 (uint128_to_uint64 a)
 
 private let hex1 (x:UInt8.t {FStar.UInt8(x <^ 16uy)}) = 
   FStar.UInt8(
@@ -329,7 +331,7 @@ val store_uint128:
 let rec store_uint128 len buf n = 
   if len <> 0ul then
     let len = len -^ 1ul in 
-    let b = uint64_to_uint8 (uint128_to_uint64 n) in
+    let b = uint128_to_uint8 n in
     let n' = FStar.UInt128(n >>^ 8ul) in 
     assert(UInt128.v n = UInt8.v b + 256 * UInt128.v n');
     let buf' = Buffer.sub buf 1ul len in

@@ -1,5 +1,5 @@
 [
-  "½Ε~σω@Jό\u0002¥°9Ε\u0016",
+  "χƒo\bt–\u001dΧΎΙn\u0019+έ\u0000",
   [
     [
       "ImmutableST.contains_lemma",
@@ -23,7 +23,7 @@
     ],
     [ "ImmutableST.lift_div_istate", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "ImmutableST.9428",
+      "ImmutableST.9245",
       1,
       2,
       1,
@@ -144,7 +144,14 @@
       [ "@query", "equation_ImmutableST.contains" ],
       0
     ],
-    [ "ImmutableST.write", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "ImmutableST.write",
+      2,
+      2,
+      1,
+      [ "@query", "equation_ImmutableST.heap_rel" ],
+      0
+    ],
     [
       "ImmutableST.write_nop",
       1,

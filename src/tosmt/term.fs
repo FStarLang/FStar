@@ -391,10 +391,10 @@ let termToSmt t =
 let caption_to_string = function
     | None -> ""
     | Some c ->
-        let hd::tl = Util.splitlines c in
-        let suffix = match tl with
-            | [] -> ""
-            | _ -> "..." in
+        let hd,suffix = match Util.splitlines c with
+            | [] -> failwith "Empty caption"
+            | h :: [] -> (h, "")
+            | h :: _ -> (h,"...") in
         format2 ";;;;;;;;;;;;;;;;%s%s\n" hd suffix
 
 let rec declToSmt z3options decl = match decl with
