@@ -4,6 +4,7 @@ open FStar.Seq
 open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
+open FStar.HyperStack
 open FStar.Monotonic.RRef
 
 module MAC = EtM.MAC
@@ -12,6 +13,8 @@ open Platform.Bytes
 open CoreCrypto
 
 abstract type cipher = (CPA.cipher * MAC.tag)
+
+type rid = FStar.Monotonic.Seq.rid
 
 type log_t (r:rid) = m_rref r (seq (CPA.msg * cipher)) grows
 
@@ -22,22 +25,22 @@ noeq type key =
                  (disjoint( CPA.Key.region ke) (MAC.Key.region km)) } ->
                log:log_t region -> key
 
-let get_log (h:t) (k:key) =
+let get_log (h:mem) (k:key) =
   m_sel h k.log
 
-let get_mac_log (h:t) (k:key) =
+let get_mac_log (h:mem) (k:key) =
   m_sel h (MAC.Key.log k.km)
 
-let get_cpa_log (h:t) (k:key) =
+let get_cpa_log (h:mem) (k:key) =
   m_sel h (CPA.Key.log k.ke)
 
-let invariant (h:t) (k:key) =
+let invariant (h:mem) (k:key) =
   let log = get_log h k in
   let mac_log = get_mac_log h k in
   let cpa_log = get_cpa_log h k in
-  Map.contains h k.region /\
-  Map.contains h (MAC.Key.region k.km) /\
-  Map.contains h (CPA.Key.region k.ke) /\
+  Map.contains h.h k.region /\
+  Map.contains h.h (MAC.Key.region k.km) /\
+  Map.contains h.h (CPA.Key.region k.ke) /\
   Seq.length log = Seq.length mac_log /\
   Seq.length mac_log = Seq.length cpa_log /\
   (forall (i:int). indexable log i ==>
@@ -51,8 +54,8 @@ let invariant (h:t) (k:key) =
 let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
   /\ extends k.region parent
-  /\ fresh_region k.region h0 h1
-  /\ Map.contains h1 k.region
+  /\ fresh_region k.region h0.h h1.h
+  /\ Map.contains h1.h k.region
   /\ m_contains k.log h1
   /\ m_sel h1 k.log == createEmpty
   /\ invariant h1 k
@@ -80,6 +83,7 @@ val encrypt: k:key -> m:Plain.plain -> ST cipher
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3timeout 100"
 let encrypt k plain =
+  admit ();
   let c = CPA.encrypt k.ke plain in
   let t = MAC.mac k.km c in
   write_at_end k.log (plain, (c, t));
