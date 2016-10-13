@@ -9,7 +9,6 @@ module Crypto.Symmetric.AES
 open FStar.Mul
 open FStar.Ghost
 open FStar.HyperStack
-open FStar.HST
 open FStar.UInt8
 open FStar.Int.Cast
 open FStar.Buffer
@@ -408,7 +407,7 @@ val keyExpansion_aux_0:w:wkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < 
   (ensures  (fun h0 _ h1 -> live h1 temp /\ modifies_1 temp h0 h1))
 let keyExpansion_aux_0 w temp sbox j =
   let open FStar.UInt32 in
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   let i = 4ul *^ j in
   lemma_aux_000 i;
   blit w (i-^4ul) temp 0ul 4ul;
@@ -423,7 +422,7 @@ let keyExpansion_aux_0 w temp sbox j =
   else if ((i/^4ul) %^ nk) =^ 4ul then (
     subWord temp sbox
   );
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   assert(live h1 temp);
   assert(modifies_1 temp h0 h1)
 
@@ -455,7 +454,7 @@ val keyExpansion_aux: w:wkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i <= 
   (ensures  (fun h0 _ h1 -> live h1 temp /\ live h1 w /\ modifies_2 temp w h0 h1))
 let rec keyExpansion_aux w temp sbox j =
   let open FStar.UInt32 in
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   if j >=^ 60ul then ()
   else begin
     let i = 4ul *^ j in

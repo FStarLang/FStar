@@ -1,6 +1,5 @@
 module Test 
 
-open FStar.HST
 open FStar.UInt32
 open FStar.Ghost
 
@@ -232,7 +231,7 @@ let main =
 
 (* missing a library:
 
-val main: Int32.t -> FStar.Buffer.buffer (FStar.Buffer.buffer C.char) -> HST.Stack Int32.t (fun _ -> true) (fun _ _ _ -> true)
+val main: Int32.t -> FStar.Buffer.buffer (FStar.Buffer.buffer C.char) -> ST.Stack Int32.t (fun _ -> true) (fun _ _ _ -> true)
 let main argc argv =
   test();
   C.exit_success
