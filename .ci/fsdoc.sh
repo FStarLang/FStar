@@ -19,6 +19,25 @@ FST_FILES=(*.fst *.fsti)
 ../bin/fstar-any.sh --odir "../$FSDOC_ODIR" --doc ${FST_FILES[*]} 
 popd
 
+# pandoc : md -> html
+# SI: no pandoc on machine yet.
 PD=`which pandoc`
 echo "Machine has pandoc $PD installed." 
+# for 
+#     pandoc $f -f markdown -t html -o $f.html
+# exit
+
+# push fstarlang.github.io with latest html
+git clone https://fstarlang.github.io 
+pushd fstarlang.github.io
+pushd docs
+cp "../../$FSDOC_ODIR"/*.html .
+git commit -am "Automated doc refresh"
+git push 
+popd
+popd
+rm -rf fstarlang
+
+
+
 
