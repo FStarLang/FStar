@@ -325,7 +325,7 @@ val refines:
   blocks: Seq.seq (PRF.entry rgn i) -> GTot Type0
   (decreases (Seq.length entries))
 
-let num_blocks (#i:id) (e:entry i) = 
+let num_blocks (#i:id) (e:entry i) : Tot nat = 
   let Entry nonce ad l plain cipher_tagged = e in
   let bl = v (Cipher( blocklen (alg i))) in
   (l + bl - 1) / bl
@@ -350,12 +350,12 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
 let rec refines h i rgn entries blocks = 
   if Seq.length entries = 0 then 
     Seq.length blocks == 0 //NS:using == to get it to match with the Type returned by the other branch
-  else let e = Seq.index entries 0 in
+  else let e = SeqProperties.head entries in
        let b = num_blocks e in 
        b < Seq.length blocks /\
-       (let blocks_for_e = Seq.slice blocks 0 (b + 1) in 
-       	let entries_tl = Seq.slice entries 1 (Seq.length entries) in 
-        let remaining_blocks = Seq.slice blocks (b+1) (Seq.length blocks) in 
+       (let blocks_for_e = Seq.slice blocks 0 (b + 1) in
+       	let entries_tl = SeqProperties.tail entries in
+        let remaining_blocks = Seq.slice blocks (b+1) (Seq.length blocks) in
         refines_one_entry h e blocks_for_e /\
 	refines h i rgn entries_tl remaining_blocks)
 
@@ -363,18 +363,99 @@ let refines_empty (h:mem) (i:id{safeId i}) (rgn:region)
   : Lemma (refines h i rgn Seq.createEmpty Seq.createEmpty)
   = ()
 
-let refines_extends (h:mem) (i:id{safeId i}) (rgn:region) 
+let rec block_lengths (#i:id{safeId i}) (entries:Seq.seq (entry i)) 
+  : Tot nat (decreases (Seq.length entries))
+  = if Seq.length entries = 0 then
+      0
+    else let e = SeqProperties.head entries in
+	 num_blocks e + 1 + block_lengths (SeqProperties.tail entries)
+
+#set-options "--z3timeout 20 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let rec refines_length (#rgn:region) (#i:id{safeId i}) (h:mem) 
+		       (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry rgn i))
+   : Lemma (requires (refines h i rgn entries blocks))
+	   (ensures (block_lengths entries = Seq.length blocks))
+  	   (decreases (Seq.length entries))
+   = if Seq.length entries = 0 then 
+       ()
+     else let hd = SeqProperties.head entries in
+	  let entries_tl = SeqProperties.tail entries in
+	  let b = num_blocks hd in
+	  let blocks_tail = Seq.slice blocks (b + 1) (Seq.length blocks) in
+	  refines_length h entries_tl blocks_tail
+
+//Experimenting with proving some lemmas just relating the entries to the PRF
+//disregarding the mac log temporarily
+let refines_one_entry_no_mac (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (blocks:Seq.seq (PRF.entry rgn i)) = 
+  let Entry nonce ad l plain cipher_tagged = e in
+  let b = num_blocks e in 
+  b + 1 = Seq.length blocks /\
+  (let PRF.Entry x e = Seq.index blocks 0 in
+   PRF (x.iv = nonce) /\
+   PRF (x.ctr = 0ul)  /\ (
+   let xors = Seq.slice blocks 1 (b+1) in 
+   let cipher, tag = SeqProperties.split cipher_tagged l in
+   safelen i l 1ul /\
+   xors == counterblocks i rgn (PRF.incr x) l plain cipher))
+
+
+val refines_no_mac: 
+  h:mem -> 
+  i:id {safeId i} -> rgn:region ->
+  entries: Seq.seq (entry i) -> 
+  blocks: Seq.seq (PRF.entry rgn i) -> GTot Type0
+  (decreases (Seq.length entries))
+  
+let rec refines_no_mac h i rgn entries blocks = 
+  if Seq.length entries = 0 then 
+    Seq.length blocks == 0 //NS:using == to get it to match with the Type returned by the other branch
+  else let e = SeqProperties.head entries in
+       let b = num_blocks e in 
+       b < Seq.length blocks /\
+       (let blocks_for_e = Seq.slice blocks 0 (b + 1) in
+       	let entries_tl = SeqProperties.tail entries in
+        let remaining_blocks = Seq.slice blocks (b+1) (Seq.length blocks) in
+        refines_one_entry_no_mac h e blocks_for_e /\
+	refines_no_mac h i rgn entries_tl remaining_blocks)
+
+#set-options "--z3timeout 100 --initial_fuel 2 --max_fuel 2 --initial_ifuel 0 --max_ifuel 0"
+let refines_singleton (h:mem) (i:id{safeId i}) (rgn:region) (e:entry i) (blocks_for_e:Seq.seq (PRF.entry rgn i))
+  : Lemma (requires (refines_one_entry_no_mac h e blocks_for_e))
+	  (ensures (refines_no_mac h i rgn (Seq.create 1 e) blocks_for_e))
+  = let b = num_blocks e in 
+    cut (Seq.equal (Seq.slice blocks_for_e 0 (b + 1)) blocks_for_e)
+
+#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let rec extend_refines_no_mac (h:mem) (i:id{safeId i}) (rgn:region) 
 		    (entries:Seq.seq (entry i))
 		    (blocks:Seq.seq (PRF.entry rgn i))
-		    (h':mem)
 		    (e:entry i)
 		    (blocks_for_e:Seq.seq (PRF.entry rgn i))
-  : Lemma (requires refines h i rgn entries blocks /\
-		    refines_one_entry h' e blocks_for_e // /\ something about the mac log not changing in h' at any existing location in h
-		    )
-	  (ensures (refines h' i rgn (SeqProperties.snoc entries e) (Seq.append blocks blocks_for_e)))
-  = admit()
-
+  : Lemma (requires refines_no_mac h i rgn entries blocks /\
+		    refines_one_entry_no_mac h e blocks_for_e)
+	  (ensures (refines_no_mac h i rgn (SeqProperties.snoc entries e) (Seq.append blocks blocks_for_e)))
+	  (decreases (Seq.length entries))
+  = if Seq.length entries = 0 then
+      (refines_singleton h i rgn e blocks_for_e;
+       cut (Seq.equal (SeqProperties.snoc entries e) (Seq.create 1 e));
+       cut (Seq.equal (Seq.append blocks blocks_for_e) blocks_for_e))
+    else let hd = SeqProperties.head entries in
+	 let entries_tl = SeqProperties.tail entries in
+	 let b = num_blocks hd in
+	 let blocks_tl = Seq.slice blocks (b + 1) (Seq.length blocks) in
+	 assert (refines_no_mac h i rgn entries_tl blocks_tl);
+	 extend_refines_no_mac h i rgn entries_tl blocks_tl e blocks_for_e;
+	 assert (refines_no_mac h i rgn (SeqProperties.snoc entries_tl e) (Seq.append blocks_tl blocks_for_e));
+	 cut (Seq.equal (SeqProperties.snoc entries e) (SeqProperties.cons hd (SeqProperties.snoc entries_tl e)));
+	 cut (SeqProperties.head (SeqProperties.snoc entries e) == hd);
+	 cut (Seq.equal (SeqProperties.tail (SeqProperties.snoc entries e)) (SeqProperties.snoc entries_tl e));
+	 let blocks_hd = Seq.slice blocks 0 (b + 1) in
+	 let ext_blocks = Seq.append blocks blocks_for_e in
+	 cut (Seq.equal ext_blocks
+    			(Seq.append blocks_hd (Seq.append blocks_tl blocks_for_e)));
+	 cut (Seq.equal (Seq.slice ext_blocks 0 (b + 1)) blocks_hd);
+	 cut (Seq.equal (Seq.slice ext_blocks (b + 1) (Seq.length ext_blocks)) 
+			(Seq.append blocks_tl blocks_for_e))
 
 (* notes 16-10-04 
 
