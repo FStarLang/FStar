@@ -1567,7 +1567,7 @@ end
 | FStar_Extraction_ML_Syntax.MLM_Loc (_81_472) -> begin
 None
 end
-| FStar_Extraction_ML_Syntax.MLM_Ty (((assumed, name, params, Some (FStar_Extraction_ML_Syntax.MLTD_Abbrev (t))))::[]) -> begin
+| FStar_Extraction_ML_Syntax.MLM_Ty (((assumed, name, args, Some (FStar_Extraction_ML_Syntax.MLTD_Abbrev (t))))::[]) -> begin
 (
 
 let name = ((env.module_name), (name))
@@ -1576,12 +1576,12 @@ in (
 let env = (FStar_List.fold_left (fun env _81_488 -> (match (_81_488) with
 | (name, _81_487) -> begin
 (extend_t env name)
-end)) env params)
+end)) env args)
 in if assumed then begin
 None
 end else begin
 (let _175_761 = (let _175_760 = (let _175_759 = (translate_type env t)
-in ((name), ((FStar_List.length params)), (_175_759)))
+in ((name), ((FStar_List.length args)), (_175_759)))
 in DTypeAlias (_175_760))
 in Some (_175_761))
 end))
