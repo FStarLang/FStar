@@ -14,30 +14,31 @@ mkdir -p "$FSDOC_ODIR"
 
 # fsdoc ulib/*.fst* 
 pushd ulib
-# Get fst, fsti files. Sorted by default. 
+# Get fst, fsti files (files are sorted by default). 
 FST_FILES=(*.fst *.fsti)
 ../bin/fstar-any.sh --odir "../$FSDOC_ODIR" --doc ${FST_FILES[*]} 
 popd
 
 # pandoc : md -> html
-# SI: no pandoc on machine yet.
-PD=`which pandoc`
-echo "Machine has pandoc $PD installed." 
-# for 
-#     pandoc $f -f markdown -t html -o $f.html
-# exit
+pushd $FSDOC_ODIR 
+for f in "${FST_FILES[@]}"
+do
+    newf=`basename -s ".md" $f`
+    pandoc $f -f markdown -t html -o $newf.html
+done
+popd
 
 # push fstarlang.github.io with latest html
-git clone https://fstarlang.github.io 
+git clone https://github.com/FStarLang/fstarlang.github.io
 pushd fstarlang.github.io
 pushd docs
-cp "../../$FSDOC_ODIR"/*.html .
+mv "../../$FSDOC_ODIR"/*.html .
 git commit -am "Automated doc refresh"
 git push 
 popd
 popd
 rm -rf fstarlang
 
-
+# SI: could cleanup FSDOC_ODIR too.
 
 
