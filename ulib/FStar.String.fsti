@@ -41,3 +41,5 @@ val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot char
 val substring: string -> int -> int -> string
 val get: string -> int -> char
 val collect: (char -> string) -> string -> string
+
+let string_of_char (c:char) : Tot string = make 1 c
