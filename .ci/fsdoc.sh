@@ -23,8 +23,8 @@ popd
 pushd $FSDOC_ODIR 
 for f in "${FST_FILES[@]}"
 do
-    fe=`basename $f`
-    f="${fe%.*}"
+    fe=`basename $f` # SI: should just be able to strip -s md if fsdoc outputs X.fst.md. 
+    f="${fe%.*}"     #
     md="${f}.md"
     html="${f}.html"
     pandoc $md -f markdown -t html -o $html
