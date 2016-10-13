@@ -35,8 +35,15 @@ and decl =
   | DGlobal of list<flag> * lident * typ * expr
   | DFunction of list<flag> * typ * lident * list<binder> * expr
   | DTypeAlias of lident * int * typ
-  | DTypeFlat of lident * list<(ident * (typ * bool))>
+  | DTypeFlat of lident * fields_t
   | DExternal of lident * typ
+  | DTypeVariant of (lident * branches_t)
+
+and fields_t =
+  list<(ident * (typ * bool))>
+
+and branches_t =
+  list<(ident * fields_t)>
 
 and flag =
   | Private
@@ -70,6 +77,8 @@ and expr =
   | EField of lident * expr * ident
   | EWhile of expr * expr
   | EBufCreateL of list<expr>
+  | ETuple of list<expr>
+  | ECons of (lident * ident * list<expr>)
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -87,6 +96,9 @@ and pattern =
   | PUnit
   | PBool of bool
   | PVar of binder
+  | PCons of (ident * list<pattern>)
+  | PTuple of list<pattern>
+  | PRecord of list<(ident * pattern)>
 
 and width =
   | UInt8 | UInt16 | UInt32 | UInt64
@@ -122,11 +134,12 @@ and typ =
   | TZ
   | TBound of int
   | TApp of lident * list<typ>
+  | TTuple of list<typ>
 
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 15
+let current_version: version = 16
 
 type file = string * program
 type binary_format = version * list<file>
@@ -390,6 +403,15 @@ and translate_decl env d: option<decl> =
       Some (DTypeFlat (name, List.map (fun (f, t) ->
         f, (translate_type env t, false)) fields))
 
+  | MLM_Ty [ (_, name, [], Some (MLTD_DType branches)) ] ->
+      let name = env.module_name, name in
+      Some (DTypeVariant (name, List.map (fun (cons, ts) ->
+        cons, List.mapi (fun i t ->
+          // TODO: carry the right names
+          Util.format1 "x%s" (string_of_int i), (translate_type env t, false)
+        ) ts
+      ) branches))
+
   | MLM_Ty ((_, name, _, _) :: _) ->
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
       None
@@ -440,10 +462,12 @@ and translate_type env t: typ =
   | MLTY_Named ([], (path, type_name)) ->
       // Generate an unbound reference... to be filled in later by glue code.
       TQualified (path, type_name)
+  | MLTY_Named (args, ([ "Prims" ], t)) when Util.starts_with t "tuple" ->
+      TTuple (List.map (translate_type env) args)
   | MLTY_Named (args, (path, type_name)) ->
       TApp ((path, type_name), List.map (translate_type env) args)
-  | MLTY_Tuple _ ->
-      failwith "todo: translate_type [MLTY_Tuple]"
+  | MLTY_Tuple ts ->
+      TTuple (List.map (translate_type env) ts)
 
 and translate_binders env args =
   List.map (translate_binder env) args
@@ -500,8 +524,7 @@ and translate_expr env e: expr =
       ELet (binder, body, continuation)
 
   | MLE_Match (expr, branches) ->
-      let t_scrut = expr.mlty in
-      EMatch (translate_expr env expr, translate_branches env t_scrut branches)
+      EMatch (translate_expr env expr, translate_branches env branches)
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Kremlin constructs
@@ -607,15 +630,16 @@ and translate_expr env e: expr =
   | MLE_App (head, _) ->
       failwith (Util.format1 "todo: translate_expr [MLE_App] (head is: %s)"
         (ML.Code.string_of_mlexpr ([], "") head))
-  | MLE_Fun _ ->
-      failwith "todo: translate_expr [MLE_Fun]"
-  | MLE_CTor _ ->
-      failwith "todo: translate_expr [MLE_CTor]"
   | MLE_Seq seqs ->
       ESequence (List.map (translate_expr env) seqs)
-  | MLE_Tuple _ ->
-      failwith "todo: translate_expr [MLE_Tuple]"
+  | MLE_Tuple es ->
+      ETuple (List.map (translate_expr env) es)
 
+  | MLE_CTor ((_, cons), es) ->
+      ECons (assert_lid e.mlty, cons, List.map (translate_expr env) es)
+
+  | MLE_Fun _ ->
+      failwith "todo: translate_expr [MLE_Fun]"
   | MLE_If _ ->
       failwith "todo: translate_expr [MLE_If]"
   | MLE_Raise _ ->
@@ -630,17 +654,17 @@ and assert_lid t =
   | MLTY_Named ([], lid) -> lid
   | _ -> failwith "invalid argument: assert_lid"
 
-and translate_branches env t_scrut branches =
-  List.map (translate_branch env t_scrut) branches
+and translate_branches env branches =
+  List.map (translate_branch env) branches
 
-and translate_branch env t_scrut (pat, guard, expr) =
+and translate_branch env (pat, guard, expr) =
   if guard = None then
-    let env, pat = translate_pat env t_scrut pat in
+    let env, pat = translate_pat env pat in
     pat, translate_expr env expr
   else
     failwith "todo: translate_branch"
 
-and translate_pat env t p =
+and translate_pat env p =
   match p with
   | MLP_Const MLC_Unit ->
       env, PUnit
@@ -648,19 +672,34 @@ and translate_pat env t p =
       env, PBool b
   | MLP_Var (name, _) ->
       let env = extend env name false in
-      env, PVar ({ name = name; typ = translate_type env t; mut = false })
+      env, PVar ({ name = name; typ = TAny; mut = false })
   | MLP_Wild ->
-      failwith "todo: translate_pat [MLP_Wild]"
+      let env = extend env "_" false in
+      env, PVar ({ name = "_"; typ = TAny; mut = false })
+  | MLP_CTor ((_, cons), ps) ->
+      let env, ps = List.fold_left (fun (env, acc) p ->
+        let env, p = translate_pat env p in
+        env, p :: acc
+      ) (env, []) ps in
+      env, PCons (cons, List.rev ps)
+  | MLP_Record (_, ps) ->
+      let env, ps = List.fold_left (fun (env, acc) (field, p) ->
+        let env, p = translate_pat env p in
+        env, (field, p) :: acc
+      ) (env, []) ps in
+      env, PRecord (List.rev ps)
+
+  | MLP_Tuple ps ->
+      let env, ps = List.fold_left (fun (env, acc) p ->
+        let env, p = translate_pat env p in
+        env, p :: acc
+      ) (env, []) ps in
+      env, PTuple (List.rev ps)
+
   | MLP_Const _ ->
       failwith "todo: translate_pat [MLP_Const]"
-  | MLP_CTor _ ->
-      failwith "todo: translate_pat [MLP_CTor]"
   | MLP_Branch _ ->
       failwith "todo: translate_pat [MLP_Branch]"
-  | MLP_Record _ ->
-      failwith "todo: translate_pat [MLP_Record]"
-  | MLP_Tuple _ ->
-      failwith "todo: translate_pat [MLP_Tuple]"
 
 and translate_constant c: expr =
   match c with
