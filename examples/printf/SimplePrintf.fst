@@ -92,8 +92,8 @@ let sprintf (s:(list char){is_Some (parse_format_pure s)})
   : Tot (dir_type (Some.v (parse_format_pure s))) =
   string_of_dirs (Some.v (parse_format_pure s)) (fun s -> s)
 
-(* TODO: still need to make this work *)
-(* let example2 : string = sprintf ['%'; 'd'; '='; '%' ; 's'] 42 " answer" *)
+let example2 : string = (sprintf ['%'; 'd'; '='; '%' ; 's'] <: int -> string -> Tot string) 42 " answer"
+(* This requires a pesky annotation, otherwise it doesn't work *)
 (* ./SimplePrintf.fst(95,59-95,61) : Error Too many arguments to function of type *)
 (* (s:(s#16858:(Prims.list FStar.String.char){(Prims.b2t (Prims.is_Some (SimplePrintf.parse_format_pure s@0)))}) -> Tot (SimplePrintf.dir_type (Prims.Some.v (SimplePrintf.parse_format_pure s@0)))); got 3 arguments *)
 
