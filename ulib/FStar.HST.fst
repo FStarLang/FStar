@@ -357,7 +357,7 @@ let test_to_be_stack_inlined () =
 val test_stack_function_with_inline: unit -> Stack int
   (requires (fun h -> True))
   (ensures  (fun h0 _ h1 -> True))
-let test_stack_function_with_unfold () =
+let test_stack_function_with_inline () =
   push_frame();
   let x = test_to_be_stack_inlined () in
   let y = !x + !x in
@@ -367,7 +367,7 @@ let test_stack_function_with_unfold () =
 val test_st_function_with_inline: unit -> ST unit
   (requires (fun h -> True))
   (ensures  (fun h0 _ h1 -> True))
-let test_st_function_with_unfold () =
+let test_st_function_with_inline () =
   push_frame();
   let x = test_to_be_stack_inlined () in
   let y = !x + !x in
