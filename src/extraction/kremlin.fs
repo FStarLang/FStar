@@ -674,17 +674,32 @@ and translate_pat env p =
       let env = extend env name false in
       env, PVar ({ name = name; typ = TAny; mut = false })
   | MLP_Wild ->
-      failwith "todo: translate_pat [MLP_Wild]"
+      let env = extend env "_" false in
+      env, PVar ({ name = "_"; typ = TAny; mut = false })
+  | MLP_CTor ((_, cons), ps) ->
+      let env, ps = List.fold_left (fun (env, acc) p ->
+        let env, p = translate_pat env p in
+        env, p :: acc
+      ) (env, []) ps in
+      env, PCons (cons, List.rev ps)
+  | MLP_Record (_, ps) ->
+      let env, ps = List.fold_left (fun (env, acc) (field, p) ->
+        let env, p = translate_pat env p in
+        env, (field, p) :: acc
+      ) (env, []) ps in
+      env, PRecord (List.rev ps)
+
+  | MLP_Tuple ps ->
+      let env, ps = List.fold_left (fun (env, acc) p ->
+        let env, p = translate_pat env p in
+        env, p :: acc
+      ) (env, []) ps in
+      env, PTuple (List.rev ps)
+
   | MLP_Const _ ->
       failwith "todo: translate_pat [MLP_Const]"
-  | MLP_CTor _ ->
-      failwith "todo: translate_pat [MLP_CTor]"
   | MLP_Branch _ ->
       failwith "todo: translate_pat [MLP_Branch]"
-  | MLP_Record _ ->
-      failwith "todo: translate_pat [MLP_Record]"
-  | MLP_Tuple _ ->
-      failwith "todo: translate_pat [MLP_Tuple]"
 
 and translate_constant c: expr =
   match c with
