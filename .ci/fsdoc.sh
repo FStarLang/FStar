@@ -23,8 +23,11 @@ popd
 pushd $FSDOC_ODIR 
 for f in "${FST_FILES[@]}"
 do
-    newf=`basename -s ".md" $f`
-    pandoc $f -f markdown -t html -o $newf.html
+    fe=`basename $f`
+    f="${fe%.*}"
+    md="${f}.md"
+    html="${f}.html"
+    pandoc $md -f markdown -t html -o $html
 done
 popd
 
