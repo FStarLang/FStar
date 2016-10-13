@@ -378,11 +378,8 @@ in (
 let gamma = (Fv (((x), (FStar_Util.Inr (((mly), (t_x), (is_rec)))))))::g.gamma
 in (
 
-let tcenv = (FStar_TypeChecker_Env.push_let_binding g.tcenv (FStar_Util.Inr (x)) (([]), (x.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.ty)))
-in (
-
-let _73_217 = g
-in {tcenv = tcenv; gamma = gamma; tydefs = _73_217.tydefs; currentModule = _73_217.currentModule}))))))
+let _73_216 = g
+in {tcenv = _73_216.tcenv; gamma = gamma; tydefs = _73_216.tydefs; currentModule = _73_216.currentModule})))))
 end else begin
 (FStar_All.failwith "freevars found")
 end)
@@ -403,8 +400,8 @@ end
 | FStar_Util.Inr (f) -> begin
 (
 
-let _73_237 = (FStar_Extraction_ML_Syntax.mlpath_of_lident f.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
-in (match (_73_237) with
+let _73_236 = (FStar_Extraction_ML_Syntax.mlpath_of_lident f.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
+in (match (_73_236) with
 | (p, y) -> begin
 (let _167_184 = (extend_fv' g f ((p), (y)) t_x add_unit is_rec)
 in ((_167_184), (((y), ((Prims.parse_int "0"))))))
@@ -417,8 +414,8 @@ let extend_tydef : env  ->  FStar_Extraction_ML_Syntax.mltydecl  ->  env = (fun 
 let m = (FStar_List.append (Prims.fst g.currentModule) (((Prims.snd g.currentModule))::[]))
 in (
 
-let _73_241 = g
-in {tcenv = _73_241.tcenv; gamma = _73_241.gamma; tydefs = (((m), (td)))::g.tydefs; currentModule = _73_241.currentModule})))
+let _73_240 = g
+in {tcenv = _73_240.tcenv; gamma = _73_240.gamma; tydefs = (((m), (td)))::g.tydefs; currentModule = _73_240.currentModule})))
 
 
 let emptyMlPath : (Prims.string Prims.list * Prims.string) = (([]), (""))
@@ -441,8 +438,8 @@ in (FStar_All.pipe_right _167_193 Prims.fst))))))
 
 let monad_op_name : FStar_Syntax_Syntax.eff_decl  ->  Prims.string  ->  ((Prims.string Prims.list * Prims.string) * FStar_Ident.lident) = (fun ed nm -> (
 
-let _73_251 = ((ed.FStar_Syntax_Syntax.mname.FStar_Ident.ns), (ed.FStar_Syntax_Syntax.mname.FStar_Ident.ident))
-in (match (_73_251) with
+let _73_250 = ((ed.FStar_Syntax_Syntax.mname.FStar_Ident.ns), (ed.FStar_Syntax_Syntax.mname.FStar_Ident.ident))
+in (match (_73_250) with
 | (module_name, eff_name) -> begin
 (
 
