@@ -66,7 +66,10 @@ let rec compile_correct' e p s :
     Lemma (progDenote (compile e @ p) s = progDenote p (expDenote e :: s)) =
   match e with
     | Const _ -> ()
-    | Binop _ e1 e2 -> compile_correct' e1 p s; compile_correct' e2 p s; admit() (* TODO *)
+    | Binop b e1 e2 -> compile_correct' e1 ([IBinop b] @ p) (expDenote e2 ::s);
+                       compile_correct' e2 (compile e1 @ [IBinop b] @ p) s
+       (* Finding the right arguments to pass to the recursive calls
+          without an interactive mode seems tricky; I just copied them from Adam *)
 
 let rec app_nil_end (#a : Type) (l : list a) :
     Lemma (requires True) (ensures (l == l @ [])) (decreases l) [SMTPat (l @ [])] =
@@ -90,7 +93,7 @@ type tbinop : typ -> typ -> typ -> Type0 =
 type texp : typ -> Type0 =
 | TNConst : nat -> texp Nat
 | TBConst : bool -> texp Bool
-| TBinop : t1:typ -> t2:typ -> t:typ-> tbinop t1 t2 t -> texp t1 -> texp t2 -> texp t
+| TBinop : #t1:typ -> #t2:typ -> #t:typ-> tbinop t1 t2 t -> texp t1 -> texp t2 -> texp t
 
 let typeDenote (t : typ) : Type0 =
   match t with
@@ -110,19 +113,19 @@ let rec texpDenote #t (e : texp t) : Tot (typeDenote t) (decreases e) =
   match e with
     | TNConst n -> n
     | TBConst b -> b
-    | TBinop _ _ _ b e1 e2 -> (tbinopDenote b) (texpDenote e1) (texpDenote e2)
+    | TBinop b e1 e2 -> (tbinopDenote b) (texpDenote e1) (texpDenote e2)
 
 let tstack = list typ
 
 type tinstr : tstack -> tstack -> Type0 =
 | TiNConst : s:tstack -> nat -> tinstr s (Nat :: s)
 | TiBConst : s:tstack -> bool -> tinstr s (Bool :: s)
-| TiBinop : arg1:typ -> arg2:typ -> res:typ -> s:tstack ->
+| TiBinop : #arg1:typ -> #arg2:typ -> #res:typ -> #s:tstack ->
             tbinop arg1 arg2 res -> tinstr (arg1 :: arg2 :: s) (res :: s)
 
 type tprog : tstack -> tstack -> Type0 =
-| TNil : s:tstack -> tprog s s
-| TCons : s1:tstack -> s2:tstack -> s3:tstack ->
+| TNil : #s:tstack -> tprog s s
+| TCons : #s1:tstack -> #s2:tstack -> #s3:tstack ->
           tinstr s1 s2 -> tprog s2 s3 -> tprog s1 s3
 
 let rec vstack (ts : tstack) : Type0 =
@@ -130,11 +133,12 @@ let rec vstack (ts : tstack) : Type0 =
     | [] -> unit
     | t :: ts' -> typeDenote t * vstack ts'
 
-let rec tinstrDenote (#ts:tstack) (#ts':tstack) (i : tinstr ts ts') (s:vstack ts) : Tot (vstack ts') =
+let rec tinstrDenote (#ts:tstack) (#ts':tstack)
+                     (i : tinstr ts ts') (s:vstack ts) : Tot (vstack ts') =
   match i with
     | TiNConst _ n -> (n, s)
     | TiBConst _ b -> (b, s)
-    | TiBinop targ1 targ2 tres tss b ->
+    | TiBinop #targ1 #targ2 #tres #tss b ->
       (* Take 1 *)
       (* let (arg1, (arg2, s')) = s in *)
       (*   ((tbinopDenote b) arg1 arg2, s')  *)
@@ -154,7 +158,52 @@ let rec tinstrDenote (#ts:tstack) (#ts':tstack) (i : tinstr ts ts') (s:vstack ts
       let (arg1, (arg2, s'')) = s' in
         (((tbinopDenote b) arg1 arg2, s'') <: (typeDenote tres * vstack tss))
 
-(* let rec tprogDenote #ts #ts' (p : tprog ts ts') (s:vstack ts) : Tot (vstack ts') = *)
-(*   match p with *)
-(*     | TNil _ -> fun s -> s *)
-(*     | TCons _ _ _ i p' -> fun s -> tprogDenote p' (tinstrDenote i s) *)
+let rec tprogDenote #ts #ts' (p : tprog ts ts') (s:vstack ts) :
+    Tot (vstack ts') (decreases p) =
+  match p with
+    | TNil -> s
+    | TCons i p' -> tprogDenote p' (tinstrDenote i s)
+
+let rec tconcat #ts #ts' #ts'' (p : tprog ts ts') (p' : tprog ts' ts'') :
+    Tot (tprog ts ts'') (decreases p) =
+  match p with
+    | TNil -> p'
+    | TCons i p1 -> TCons i (tconcat p1 p')
+
+let rec tcompile #t (e : texp t) (ts : tstack) : Tot (tprog ts (t :: ts)) (decreases e) =
+  match e with
+    | TNConst n -> TCons (TiNConst _ n) TNil
+    | TBConst b -> TCons (TiBConst _ b) TNil
+    | TBinop #t1 #t2 #t b e1 e2 ->
+      tconcat (tcompile e2 ts)
+        (tconcat (tcompile e1 (t1 :: ts)) (TCons (TiBinop b) TNil))
+        (* Coq can even infer the ts and (t1::ts) arguments if they
+           are replaced with _, but F* is not that magic at the moment.
+           In fact it fails with a quite silly error message.
+./StackMachine.fst(175,27-175,28): Failed to verify implicit argument: Subtyping check failed; expected type (ts#82697:StackMachine.tstack{(Prims.precedes (Prims.LexCons e2 Prims.LexTop) (Prims.LexCons e Prims.LexTop))}); got type StackMachine.tstack
+./StackMachine.fst(176,30-176,31): Failed to verify implicit argument: Subtyping check failed; expected type (ts#82697:StackMachine.tstack{(Prims.precedes (Prims.LexCons e1 Prims.LexTop) (Prims.LexCons e Prims.LexTop))}); got type (Prims.list StackMachine.typ)  *)
+
+let rec tconcat_correct #ts #ts' #ts''
+                       (p : tprog ts ts') (p' : tprog ts' ts'') (s : vstack ts) :
+    Lemma (requires True)
+          (ensures (tprogDenote (tconcat p p') s == tprogDenote p' (tprogDenote p s)))
+          (decreases p) [SMTPat (tprogDenote (tconcat p p') s)] =
+  match p with
+  | TNil -> ()
+  | TCons t pp -> tconcat_correct pp p' (tinstrDenote t s)
+                  (* again just taking Adam's instantiations *)
+
+let rec tcompile_correct' #t (e : texp t) ts (s : vstack ts) :
+    Lemma (requires True)
+          (ensures (tprogDenote (tcompile e ts) s == (texpDenote e, s)))
+          (decreases e) =
+  match e with
+    | TNConst _ -> ()
+    | TBConst _ -> ()
+    | TBinop #t1 #t2 b e1 e2 -> tcompile_correct' e1 (t2 :: ts) (texpDenote e2, s);
+                                tcompile_correct' e2 ts s
+                                (* again just taking Adam's instantiations *)
+
+let tcompile_correct #t (e : texp t) :
+    Lemma (tprogDenote (tcompile e []) () == (texpDenote e, ())) =
+  tcompile_correct' e [] ()
