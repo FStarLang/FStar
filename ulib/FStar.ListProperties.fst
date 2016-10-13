@@ -51,7 +51,6 @@ val rev_mem : #a:eqtype -> l:list a -> x:a ->
         (ensures (mem x (rev l) <==> mem x l))
 let rev_mem #a l x = rev_acc_mem l [] x
 
-
 (** Properties about append **)
 
 val append_nil_l: #a:eqtype -> l:list a ->
@@ -164,6 +163,18 @@ let rec append_inv_tail #a l l1 l2 = match l1, l2 with
        (* Idem *)
        )
 
+(** Properties about flatten **)
+
+val flatten_cons_append: #a:eqtype
+  -> (xs: list a)
+  -> (ys: list a)
+  -> (zzs: list (list a))
+  -> Lemma(ensures
+    (flatten (Cons (append xs ys) zzs) = append xs (append ys (flatten zzs))))
+let flatten_cons_append #a xs ys zzs =
+  append_l_nil xs;
+  append_l_nil ys;
+  append_assoc xs ys (flatten zzs)
 
 (** Properties mixing rev and append **)
 
@@ -209,6 +220,21 @@ val rev_involutive : #a:eqtype -> l:list a ->
         (ensures (rev (rev l) = l))
 let rev_involutive #a l = rev_rev' l; rev_rev' (rev' l); rev'_involutive l
 
+val rev_acc_append:  #t:eqtype -> a:list t -> b:list t -> c:list t ->
+  Lemma(ensures append (rev_acc a b) c = rev_acc a (append b c))
+let rev_acc_append #t a b c =
+  rev_acc_rev' a b;
+  rev_acc_rev' a (append b c);
+  append_assoc (rev' a) b c
+
+val rev_cons: #a:eqtype -> (xs: list a) -> (r: list a) -> (x:a) ->
+  Lemma(requires (xs = rev_acc r []))
+    (ensures (append xs (Cons x []) = rev_acc (Cons x r) []))
+let rev_cons #a xs r x =
+  rev_acc_rev' ([x]@r) [];
+  rev_append [x] r;
+  rev_acc_rev' r [];
+  append_l_nil ((rev' r)@[])
 
 (** Reverse induction principle **)
 
@@ -259,7 +285,7 @@ let rec partition_mem_forall #a f l = match l with
 val partition_mem_p_forall: #a:eqtype -> p:(a -> Tot bool)
                   -> l:list a
                   -> Lemma (requires True)
-                          (ensures (let l1, l2 = partition p l in 
+                          (ensures (let l1, l2 = partition p l in
                                     (forall x. mem x l1 ==> p x) /\ (forall x. mem x l2 ==> not (p x))))
 let rec partition_mem_p_forall #a p l = match l with
   | [] -> ()
