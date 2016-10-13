@@ -2,7 +2,6 @@ module Plain
 
 open FStar.HyperHeap
 open FStar.HyperStack
-open FStar.HST
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils

@@ -5,11 +5,10 @@ module Crypto.AEAD
 
 // This file intends to match the spec of AEAD0.fst in mitls-fstar. 
 
-open FStar.HST
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
-open FStar.HST.Monotonic.RRef
+open FStar.Monotonic.RRef
 
 open Crypto.Symmetric.Bytes
 open Plain
@@ -595,7 +594,7 @@ let rec counter_dexor i t x len plaintext ciphertext =
       (*
       recall (PRF t.table); //16-09-22 could this be done by ! ??
       let s = PRF !t.table in
-      let h = HST.get() in
+      let h = ST.get() in
       // WARNING: moving the PRF.find_otp outside the assume will segfault
       // at runtime, because t.table doesn't exist in real code
       assume(match PRF.find_otp #(PRF.State.rgn t) #i s x with

@@ -3,7 +3,6 @@
 module PromoteAndDemote
 open FStar.HyperStack
 open FStar.Ghost
-open FStar.HST
 
 val swap : int*int -> Tot (int*int)
 let swap (x, y) = (y, x)
