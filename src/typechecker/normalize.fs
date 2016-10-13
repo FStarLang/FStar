@@ -835,7 +835,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   | Meta_monadic (m, t) ->
                     let t = norm cfg env [] t in
                     let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                    let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps; delta_level=[NoDelta]} in
+                    let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
+                                        delta_level=[NoDelta]} in
                     norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
                  | Meta_monadic_lift (m, m') ->
@@ -848,7 +849,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                                        AllowUnboundUniverses; 
                                                        EraseUniverses; 
                                                        Exclude Zeta]; 
-                                                delta_level=[Env.Eager_unfolding_only]} in
+                                                delta_level=[Env.Inlining; Env.Eager_unfolding_only]} in
                             norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
                     else norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
             

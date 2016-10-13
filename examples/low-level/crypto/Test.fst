@@ -173,7 +173,7 @@ val test: unit -> ST bool //16-10-04 workaround against very large inferred type
   (ensures (fun _ _ _ -> True))
 #set-options "--z3timeout 100000"  
 let test() = 
-  assume false; //NS: this is not yet really in a provable state
+  //assume false; //NS: this is not yet really in a provable state
   push_frame(); 
   let plainlen = 114ul in 
   let plainrepr = from_string plainlen 
@@ -194,13 +194,16 @@ let test() =
   dump "IV" 12ul ivBuffer;
   dump "Additional Data" 12ul aad;
 
-  let iv = load_uint128 12ul ivBuffer in
+  let iv : Crypto.Symmetric.Cipher.iv (Crypto.AEAD.alg i) = 
+    lemma_little_endian_is_bounded (load_bytes 12ul ivBuffer);
+    load_uint128 12ul ivBuffer in
   let expected_cipher = mk_expected_cipher () in
   let cipherlen = plainlen +^ 16ul in
   assert(Buffer.length expected_cipher = v cipherlen);
   let cipher = Buffer.create 0uy cipherlen in
   let st = AE.coerce i HH.root key in
 
+  assume(AE.safelen i (v plainlen) 1ul);//16-10-13 
   AE.encrypt i st iv aadlen aad plainlen plain cipher;
   let ok_0 = diff "cipher" cipherlen expected_cipher cipher in
 
@@ -228,6 +231,7 @@ let main =
   let ok = test () in
   IO.debug_print_string ("AEAD (CHACHA20_POLY1305) test vector" ^ (if ok then ": Ok.\n" else ":\nERROR.\n"))
   
+// enabling plaintext access for real test vector
 
 (* missing a library:
 
