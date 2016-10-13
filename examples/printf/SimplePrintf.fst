@@ -29,7 +29,7 @@ let rec string_of_dirs ds (k:string -> Tot string) : Tot (dir_type ds) =
   match ds with
   | [] -> k ""
   | Lit c :: ds' -> magic() (* string_of_dirs ds' (fun res -> k (string_of_char c ^ res))
-                               -- fails, but unclear what annotation one could add *)
+                               -- TODO: fails, but unclear what annotation one could add *)
   | Arg a :: ds' -> fun (x : arg_type a) ->
       string_of_dirs ds' (fun res -> k (match a with
                                         | Bool -> string_of_bool x
@@ -37,6 +37,29 @@ let rec string_of_dirs ds (k:string -> Tot string) : Tot (dir_type ds) =
                                         | Char -> string_of_char x
                                         | String -> x) ^ res)
 
-let sprintf (ds:list dir) : Tot (dir_type ds) = string_of_dirs ds (fun s -> s)
+let example1 : string = string_of_dirs [Arg Int; Arg String] (fun s -> s) 42 " answer"
 
-let example1 : string = sprintf [Arg Int; Arg String] 42 " answer"
+exception InvalidFormatString
+
+let rec parse_format (s:list char) : Ex (list dir) =
+  match s with
+  | [] -> []
+  | '%' :: c :: s' ->
+    let d = match c with
+            | '%' -> Lit '%'
+            | 'b' -> Arg Bool
+            | 'd' -> Arg Int
+            | 'c' -> Arg Char
+            | 's' -> Arg String
+            | _   -> raise InvalidFormatString
+    in d :: parse_format s'
+  | '%' :: [] -> raise InvalidFormatString
+  | c :: s' -> Lit c :: parse_format s'
+
+(* TODO: find a way to convert strings to list of chars *)
+
+(* TODO: Need some serious effect hiding to be able to call parse_format in a type!
+   Alternatively, can change parse_format to return option, but that's quite painful too.
+let sprintf (s:list char) : Tot (dir_type (parse_format s)) =
+  string_of_dirs (parse_format s) (fun s -> s)
+*)
