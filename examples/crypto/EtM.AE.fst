@@ -76,14 +76,13 @@ val encrypt: k:key -> m:Plain.plain -> ST cipher
   (ensures  (fun h0 c h1 ->
     (let log0 = get_log h0 k in
      let log1 = get_log h1 k in
-     modifies (Set.singleton k.region)  h0 h1
+     HyperHeap.modifies (Set.singleton k.region)  h0.h h1.h
      /\ log1 == snoc log0 (m, c)
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log)
      /\ invariant h1 k)))
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3timeout 100"
 let encrypt k plain =
-  admit ();
   let c = CPA.encrypt k.ke plain in
   let t = MAC.mac k.km c in
   write_at_end k.log (plain, (c, t));
