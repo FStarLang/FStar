@@ -192,11 +192,15 @@ val prf_mac:
       | Some mac' -> mac == mac' /\ h0 == h1 // when decrypting
       | None ->  // when encrypting, we get the stateful post of MAC.create             
         match find_mac (HS.sel h1 r) x with 
-        | Some mac' -> mac == mac' // /\ MAC.genPost0 (i,x.iv) t.mac_rgn h0 mac h1
-                      //16-10-11 we miss a more precise clause capturing the table update   
+        | Some mac' -> 
+	  mac == mac' /\ 
+	  MAC.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
+          HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
+	  HS.modifies_ref t.mac_rgn TSet.empty h0 h1
+          //16-10-11 we miss a more precise clause capturing the table update   
         | None -> False )
     else (
-      HS.modifies (Set.singleton t.rgn) h0 h1 /\
+      HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
       HS.modifies_ref t.rgn TSet.empty h0 h1  /\
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1
   )))
@@ -204,26 +208,28 @@ val prf_mac:
 #reset-options "--z3timeout 1000"
 
 let prf_mac i t x =
+  let h0 = get () in
+  Buffer.recall t.key;
+  recall_region t.mac_rgn;
   let macId = (i,x.iv) in
-  if prf i then 
+  if prf i then
     begin
-    let r = itable i t in 
-    let contents = recall r; !r in 
+    let r = itable i t in
+    recall r;
+    let contents = !r in
     match find_mac contents x with
     | Some mac -> mac
     | None ->
       let mac = MAC.gen macId t.mac_rgn in
-      recall r; 
       r := SeqProperties.snoc contents (Entry x mac);
       mac
-    end    
+    end
   else
     begin
-    Buffer.recall t.key;
     let keyBuffer = Buffer.rcreate t.mac_rgn 0uy keylen in
-    let h1 = ST.get() in 
+    let h1 = ST.get() in
     getBlock t x keylen keyBuffer;
-    let h2 = ST.get() in 
+    let h2 = ST.get() in
     Buffer.lemma_reveal_modifies_1 keyBuffer h1 h2;
     MAC.coerce macId t.mac_rgn keyBuffer
     end
@@ -355,7 +361,6 @@ let prf_dexor i t x l plain cipher =
 
 #set-options "--initial_fuel 1 --max_fuel 1"
 
-//TODO (NS): this one takes about 15s to prove automatically; investigate a bit
 private let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) (v:range rgn i x) : Lemma
   (requires (find s x == None))
   (ensures (find (SeqProperties.snoc s (Entry x v)) x == Some v))
@@ -372,12 +377,12 @@ val prf_enxor:
      Buffer.frameOf cipher <> t.rgn } -> ST unit
   (requires (fun h0 ->
      Plain.live h0 plain /\ Buffer.live h0 cipher /\
-     (safeId i ==> find_otp #t.rgn #i (HS.sel h0 t.table) x == None)))
+     (safeId i ==> find_otp #t.mac_rgn #i (HS.sel h0 t.table) x == None)))
   (ensures (fun h0 _ h1 ->
      Plain.live h1 plain /\ Buffer.live h1 cipher /\
      modifies_x_buffer_1 t x cipher h0 h1 /\
      (safeId i ==> 
-       ( match find_otp #t.rgn #i (HS.sel h1 t.table) x with
+       ( match find_otp #t.mac_rgn #i (HS.sel h1 t.table) x with
          | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain /\ c == sel_bytes h1 l cipher
          | None   -> False
      ))))
@@ -390,8 +395,8 @@ let prf_enxor i t x l cipher plain =
     let newblock = OTP #i l p c in
     let contents' = SeqProperties.snoc contents (Entry x newblock) in
     lemma_snoc_found contents x newblock;
-    assert(find_otp #t.rgn #i contents x == None); 
-    assert(find_otp #t.rgn #i contents' x == Some newblock);
+    assert(find_otp #t.mac_rgn #i contents x == None); 
+    assert(find_otp #t.mac_rgn #i contents' x == Some newblock);
 
     let h0 = ST.get() in
     assert(p == sel_plain h0 l plain);
