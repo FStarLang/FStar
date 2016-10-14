@@ -111,8 +111,14 @@ let example2_lemma () :
 
 (* It might seem nicer to just call normalize in the lemma statement,
    but that doesn't allow using the lemma later on; so we're stuck with the duplication *)
-let example2_lemma_looks_nicer_but_not_usable () :
+private let example2_lemma_looks_nicer_but_not_usable () :
   Lemma (normalize (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])) = ()
+(* This also needs the private qualifier, otherwise getting this:
+Interface of SimplePrintf violates its abstraction (add a 'private'
+qualifier to
+'SimplePrintf.example2_lemma_looks_nicer_but_not_usable'?): Expected
+expression of type "(Prims.list (?50858 uu___))"; got expression "%"
+of type "FStar.Char.char" *)
 
 let example3_lemma () :
   Lemma (parse_format_pure ['%'; 'd'; '='; '%'; 's']
