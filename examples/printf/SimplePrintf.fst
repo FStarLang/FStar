@@ -44,6 +44,12 @@ let rec string_of_dirs ds (k:string -> Tot string) : Tot (dir_type ds) =
 let example1 : string =
   string_of_dirs [Arg Int; Arg String] (fun s -> s) 42 " answer"
 
+(* TODO: This fails to extract:
+./SimplePrintf.fst(45,2-45,64): Ill-typed application: application is (SimplePrintf.string_of_dirs (Prims.Cons (SimplePrintf.Arg SimplePrintf.Int) (Prims.Cons (SimplePrintf.Arg SimplePrintf.String) (Prims.Nil ))) (fun s -> s@0) 42 " answer") 
+ remaining args are 42 " answer"
+ml type of head is Prims.unit dir_type
+*)
+
 exception InvalidFormatString
 
 let rec parse_format (s:list char) : Ex (list dir) =
@@ -95,7 +101,23 @@ let sprintf (s:string{is_Some (parse_format_string s)})
   : Tot (dir_type (Some.v (parse_format_string s))) =
   string_of_dirs (Some.v (parse_format_string s)) (fun s -> s)
 
-let example2 : string = (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer"
+let example2 () =
+  assert_norm (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])
+
+(* TODO: it seems that only the assert_norm about trigger reduce_primops,
+         without reduce_primops fail example 4 and 5 will fail *)
+
+(* TODO: in example 3, could it be that F* is not unfolding fixpoints, or what? *)
+
+(* let example3 () = *)
+(*   assert_norm (parse_format_pure ['%'; 'd'; '='; '%'; 's'] *)
+(*     == Some [Arg Int; Arg String]) *)
+
+(* let example4 () = *)
+(*   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Arg String]) *)
+
+
+(* let example5 : string = (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer" *)
 
 (* This requires a pesky annotation, otherwise it doesn't work *)
 (* ./SimplePrintf.fst(95,59-95,61) : Error Too many arguments to function of type *)

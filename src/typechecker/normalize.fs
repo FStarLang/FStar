@@ -440,22 +440,19 @@ let un_ops =
     let mk x = mk x Range.dummyRange in
     let name x = mk (Tm_fvar (lid_as_fv (Const.p2l x) Delta_constant None)) in
     [Const.p2l ["FStar"; "String"; "list_of_string"],
-     (fun s -> FStar.List.fold_left (fun a c ->
-                 mk (Tm_app (name ["Prims"; "Cons"], [(mk (Tm_constant (Const_char c)), None); (a, None)]))
-               ) (name ["Prims"; "Nil"]) (list_of_string s))]
+     (fun s -> FStar.List.fold_right (fun c a ->
+                 mk (Tm_app (name ["Prims"; "Cons"], [(name ["FStar"; "Char"; "char"], None); (mk (Tm_constant (Const_char c)), None); (a, None)]))
+               ) (list_of_string s) (mk (Tm_app (name ["Prims"; "Nil"], [name ["FStar"; "Char"; "char"], None]))))]
 
 let reduce_primops steps tm = 
-    let arith_op fv = match fv.n with 
-        | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) arith_ops
-        | _ -> None in
-    let un_op fv = match fv.n with
-        | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) un_ops
+    let find fv (ops: list<(Ident.lident*'a)>) = match fv.n with
+        | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) ops
         | _ -> None in
     if not <| List.contains Primops steps
     then tm
     else match tm.n with
          | Tm_app(fv, [(a1, _); (a2, _)]) ->
-            begin match arith_op fv with 
+            begin match find fv arith_ops with
             | None -> tm
             | Some (_, op) -> 
               let norm i j =
@@ -483,19 +480,10 @@ let reduce_primops steps tm =
               end
             end
          | Tm_app(fv, [(a1, _)]) ->
-            begin match un_op fv with
+            begin match find fv un_ops with
             | None -> tm
             | Some (_, op) ->
               begin match (SS.compress a1).n with
-                | Tm_app (head1, [ arg1, _ ]) ->
-                    begin match (SS.compress head1).n, (SS.compress arg1).n with
-                    | Tm_fvar fv1,
-                      Tm_constant (Const.Const_string (b, _))
-                      when Util.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
-                        mk_app (mk (Tm_fvar fv1) tm.pos) [ op (Bytes.utf8_bytes_as_string b), None ]
-                    | _ ->
-                        tm
-                    end
                 | Tm_constant (Const.Const_string(b, _)) ->
                     op (Bytes.utf8_bytes_as_string b)
                 | _ -> tm
