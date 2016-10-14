@@ -4,7 +4,6 @@ open FStar.SeqProperties
 open FStar.Mul
 open FStar.UInt32
 open FStar.HyperStack
-open FStar.HST
 open FStar.Buffer
 open Low.Bytes
 
@@ -178,21 +177,21 @@ val xor_bytes_inplace: output:bytes -> in1:bytes{disjoint in1 output} ->
 	Seq.slice (to_seq8 h0 output) (UInt32.v len) (length output) ))
 let rec xor_bytes_inplace output in1 len =
   if UInt32.eq len 0ul then
-    let h = HST.get() in
+    let h = ST.get() in
     Seq.lemma_eq_intro (Seq.slice (to_seq8 h output) 0 0) (Seq.createEmpty #UInt8.t)
   else
     begin
-      let h0 = HST.get() in
+      let h0 = ST.get() in
       let i    = len -^ 1ul in
       let in1i = read_8 in1 i in
       let oi   = read_8 output i in
       let oi   = UInt8.logxor oi in1i in
       write_8 output i oi;
-      let h1 = HST.get() in      
+      let h1 = ST.get() in      
       cut(to_seq8 h1 output == Seq.upd (to_seq8 h0 output) (UInt32.v i) (oi));
       cut(to_seq8 h1 in1 == to_seq8 h0 in1);
       xor_bytes_inplace output in1 i;
-      let h2 = HST.get() in
+      let h2 = ST.get() in
       cut(Seq.slice (to_seq8 h2 output) 0 (UInt32.v i) == f_seq UInt8.logxor (to_seq8 h1 output) (to_seq8 h1 in1) (UInt32.v i));
       cut(Seq.slice (to_seq8 h2 output) (UInt32.v i) (length output) == Seq.slice (to_seq8 h1 output) (UInt32.v i) (length output));      
       f_seq_inplace_lemma' h0 h1 h2 output in1 (UInt32.v i) oi (fun h b -> live h b) to_seq8 UInt8.logxor
@@ -210,21 +209,21 @@ val xor_u16s_inplace: output:u16s -> in1:u16s{disjoint in1 output} ->
 	Seq.slice (to_seq16 h0 output) (UInt32.v len) (length output) ))
 let rec xor_u16s_inplace output in1 len =
   if UInt32.eq len 0ul then
-    let h = HST.get() in
+    let h = ST.get() in
     Seq.lemma_eq_intro (Seq.slice (to_seq16 h output) 0 0) (Seq.createEmpty #UInt16.t)
   else
     begin
-      let h0 = HST.get() in
+      let h0 = ST.get() in
       let i    = len -^ 1ul in
       let in1i = read_16 in1 i in
       let oi   = read_16 output i in
       let oi   = UInt16.logxor oi in1i in
       write_16 output i oi;
-      let h1 = HST.get() in
+      let h1 = ST.get() in
       cut(to_seq16 h1 output == Seq.upd (to_seq16 h0 output) (UInt32.v i) (oi));
       cut(to_seq16 h1 in1 == to_seq16 h0 in1);
       xor_u16s_inplace output in1 i;
-      let h2 = HST.get() in
+      let h2 = ST.get() in
       cut(Seq.slice (to_seq16 h2 output) 0 (UInt32.v i) == f_seq UInt16.logxor (to_seq16 h1 output) (to_seq16 h1 in1) (UInt32.v i));
       cut(Seq.slice (to_seq16 h2 output) (UInt32.v i) (length output) == Seq.slice (to_seq16 h1 output) (UInt32.v i) (length output));
       f_seq_inplace_lemma' h0 h1 h2 output in1 (UInt32.v i) oi (fun h b -> live h b) to_seq16 UInt16.logxor

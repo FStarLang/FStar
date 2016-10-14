@@ -11,7 +11,6 @@ open FStar.UInt32
 open FStar.Int.Cast
 (*  Effects and memory layout *)
 open FStar.HyperStack
-open FStar.HST
 (*  Buffers *)
 open FStar.Buffer
 open Buffer.Utils

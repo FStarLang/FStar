@@ -3,7 +3,6 @@ module AEAD
 // implementing TLS AEAD interface using low-level crypto;
 // aka a mini CoreCrypto (with the same function signatures)
 
-open FStar.HST
 open FStar.Buffer
 open FStar.UInt32
 open FStar.Ghost

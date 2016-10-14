@@ -1,6 +1,5 @@
 module Crypto.AEAD.Chacha20Poly1305
 
-open FStar.HST
 open FStar.Buffer
 open FStar.UInt32
 open FStar.Ghost

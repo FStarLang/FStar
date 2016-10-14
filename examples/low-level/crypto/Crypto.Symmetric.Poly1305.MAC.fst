@@ -6,11 +6,10 @@ module Crypto.Symmetric.Poly1305.MAC
 
 open FStar.HyperHeap
 open FStar.HyperStack
-open FStar.HST
 open FStar.Ghost
 open FStar.UInt64
 open FStar.Buffer
-open FStar.HST.Monotonic.RRef
+open FStar.Monotonic.RRef
 
 open Crypto.Symmetric.Poly1305.Spec
 open Crypto.Symmetric.Poly1305 // avoid?
@@ -134,9 +133,9 @@ let alloc i region key =
   let r = FStar.Buffer.rcreate region 0UL 5ul in
   let s = FStar.Buffer.rcreate region 0uy 16ul in
   cut (disjoint r key /\ disjoint s key);
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   poly1305_init r s key;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   lemma_reveal_modifies_2 r s h0 h1;
   if mac_log then
     let log = m_alloc #log #log_cmp region None in
@@ -187,13 +186,13 @@ val start: #i:id -> st:state i -> StackInline (accB i)
   (requires (fun h -> live h st.r /\ norm h st.r))
   (ensures  (fun h0 a h1 -> acc_inv st text_0 a h1))
 let start #i st =
-  let h0 = HST.get () in
+  let h0 = ST.get () in
   let a = Buffer.create 0UL 5ul in
-  let h1 = HST.get () in
+  let h1 = ST.get () in
   //lemma_reveal_modifies_0 h0 h1;
   assert (equal h0 st.r h1 st.r);
   poly1305_start a;
-  let h2 = HST.get () in
+  let h2 = ST.get () in
   //lemma_reveal_modifies_1 a h1 h2;
   assert (equal h1 st.r h2 st.r);
   Bigint.norm_eq_lemma h0 h2 st.r st.r;
@@ -225,9 +224,9 @@ let seq_head_snoc #a xs x =
 #set-options "--z3timeout 100 --print_fuels --initial_fuel 1 --initial_ifuel 1"
 
 let update #i st l a v =
-  let h0 = HST.get () in
+  let h0 = ST.get () in
   add_and_multiply a v st.r;
-  let h1 = HST.get () in
+  let h1 = ST.get () in
   //lemma_reveal_modifies_1 a h0 h1;
   Bigint.eval_eq_lemma h0 h1 st.r st.r Parameters.norm_length;
   Bigint.eval_eq_lemma h0 h1 v v Parameters.norm_length;
@@ -301,9 +300,9 @@ val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit
       m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag)))))
 
 let mac #i st l acc tag =
-  let h0 = HST.get () in
+  let h0 = ST.get () in
   poly1305_finish tag acc st.s;
-  let h1 = HST.get () in
+  let h1 = ST.get () in
   if mac_log then
     begin
     //assume (mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) ==
@@ -381,7 +380,7 @@ let add #i st l0 a w =
   let e = Buffer.create 0UL Crypto.Symmetric.Poly1305.Parameters.nlength in
   toField_plus_2_128 e w;
   let l1 = update st l0 a e in
-  let h = HST.get() in
+  let h = ST.get() in
   let msg = esel_word h w in
 //  let l1 = Ghost.elift2 (fun log msg -> SeqProperties.snoc log (encode_16 msg)) l0 msg in
   pop_frame();
