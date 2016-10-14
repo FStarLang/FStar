@@ -39,4 +39,6 @@ val substring: string -> int -> int -> string
 val get: string -> int -> char
 val collect: (char -> string) -> string -> string
 
+val list_of_string : string -> Tot (list char)
+
 let string_of_char (c:char) : Tot string = make 1 c

@@ -19,6 +19,8 @@
 module FStar.TypeChecker.Normalize
 open FStar
 open FStar.Util
+open FStar.String
+open FStar.Const
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
@@ -434,10 +436,20 @@ let arith_ops =
        Const.p2l ["FStar"; m; "mul"], (fun x y -> int_as_const (x * y))
      ]) [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128" ])
 
-    
+let un_ops =
+    let mk x = mk x Range.dummyRange in
+    let name x = mk (Tm_fvar (lid_as_fv (Const.p2l x) Delta_constant None)) in
+    [Const.p2l ["FStar"; "String"; "list_of_string"],
+     (fun s -> FStar.List.fold_left (fun a c ->
+                 mk (Tm_app (name ["Prims"; "Cons"], [(mk (Tm_constant (Const_char c)), None); (a, None)]))
+               ) (name ["Prims"; "Nil"]) (list_of_string s))]
+
 let reduce_primops steps tm = 
     let arith_op fv = match fv.n with 
         | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) arith_ops
+        | _ -> None in
+    let un_op fv = match fv.n with
+        | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) un_ops
         | _ -> None in
     if not <| List.contains Primops steps
     then tm
@@ -467,6 +479,25 @@ let reduce_primops steps tm =
                     end
                 | Tm_constant (Const.Const_int(i, None)), Tm_constant (Const.Const_int(j, None)) -> 
                     norm i j
+                | _ -> tm
+              end
+            end
+         | Tm_app(fv, [(a1, _)]) ->
+            begin match un_op fv with
+            | None -> tm
+            | Some (_, op) ->
+              begin match (SS.compress a1).n with
+                | Tm_app (head1, [ arg1, _ ]) ->
+                    begin match (SS.compress head1).n, (SS.compress arg1).n with
+                    | Tm_fvar fv1,
+                      Tm_constant (Const.Const_string (b, _))
+                      when Util.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
+                        mk_app (mk (Tm_fvar fv1) tm.pos) [ op (Bytes.utf8_bytes_as_string b), None ]
+                    | _ ->
+                        tm
+                    end
+                | Tm_constant (Const.Const_string(b, _)) ->
+                    op (Bytes.utf8_bytes_as_string b)
                 | _ -> tm
               end
             end
