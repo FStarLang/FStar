@@ -1,5 +1,5 @@
 [
-  "Ïç2œuôC\u0003\táy\"<e¬\\",
+  "öÙR‡ºÀ\u0004N±QËÌð\u001co",
   [
     [
       "FStar.SeqProperties.lemma_append_inj_l",
@@ -215,6 +215,18 @@
         "refinement_interpretation_Tm_refine_8718b6ce0adb9c7ae5e1846f05f5d92a",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.length"
+      ],
+      0
+    ],
+    [
+      "FStar.SeqProperties.last",
+      1,
+      0,
+      0,
+      [
+        "@query", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_8718b6ce0adb9c7ae5e1846f05f5d92a"
       ],
       0
     ],

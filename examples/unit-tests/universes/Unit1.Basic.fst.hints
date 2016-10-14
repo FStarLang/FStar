@@ -1,9 +1,8 @@
 [
-  "}jK\u0018®žu~ÙÑ*„Nrg\u0001",
+  "µ–\büg\u0015W©ŒþÁ[K‡êQ",
   [
     [ "Unit1.Basic.comp", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.Basic.foo", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Basic.unit_pattern", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.Basic.assert_0_eq_0", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.assert_0_eq_0",
@@ -278,7 +277,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.HasEq_option", "function_token_typing_Prims.int"
+        "assumption_Prims.option_haseq", "function_token_typing_Prims.int"
       ],
       0
     ],
@@ -457,12 +456,10 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.HasEq_tuple2", "equation_FStar.UInt32.n",
-        "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
+        "assumption_Prims.tuple2_haseq", "equation_Prims.nat",
         "function_token_typing_Prims.nat",
         "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "kinding_Unit1.Basic.mlist@tok",
-        "pretyping_ae567c2fb75be05905677af440075565"
+        "kinding_Unit1.Basic.mlist@tok"
       ],
       0
     ],
@@ -735,7 +732,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.HasEq_list", "function_token_typing_Prims.int"
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.int"
       ],
       0
     ],
@@ -883,7 +880,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.HasEq_list", "function_token_typing_Prims.int"
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.int"
       ],
       0
     ],
@@ -914,7 +911,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.HasEq_list", "function_token_typing_Prims.int"
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.int"
       ],
       0
     ],

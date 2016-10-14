@@ -32,10 +32,8 @@ all: uall sall
 
 uall:
 	make clean
-	make chacha-test poly-test aead-test aes-test aesgcm-test chacha-aead-test
-	make -C crypto all-lax
-	#Disabled in master because it takes too long
-	#+make -C crypto all-ver
+	+make chacha-test poly-test aead-test aes-test aesgcm-test chacha-aead-test
+	+make -C crypto all
 
 sall:
 

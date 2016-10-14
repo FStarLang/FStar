@@ -49,6 +49,8 @@ LAX= \
 
 #16-10-09  Not sure how to verify Flag.fsti and Flag.fst
 
+all: all-ver $(addsuffix .fst-lax, $(LAX))
+
 all-ver: $(addsuffix .fst-ver, $(VERIFY))
 
 all-lax: $(addsuffix .fst-lax, $(LAX)) $(addsuffix .fst-lax, $(VERIFY))
@@ -61,7 +63,7 @@ all-lax: $(addsuffix .fst-lax, $(LAX)) $(addsuffix .fst-lax, $(VERIFY))
 
 # Verifying one file at a time
 %.fst-ver:
-	-$(FSTAR) $(OPTIONS) \
+	$(FSTAR) $(OPTIONS) \
 	$(FSTAR_INCLUDE_PATHS) \
 	--verify_module $(basename $(notdir $@)) \
 	$(basename $@).fst

@@ -2,7 +2,7 @@ FSTAR_HOME=../..
 include ../Makefile.include
 all: uall sall
 
-uall: ParSubst.uver StlcCbvDbPntSubstNoLists.uver StlcStrongDbParSubst.uver StlcCbvDbParSubst.uver LambdaOmega
+uall: ParSubst.uver StlcCbvDbPntSubstNoLists.uver StlcStrongDbParSubst.uver StlcCbvDbParSubst.uver LambdaOmega StackMachine.uver
 sall: StlcCbvNamed.sver DbSubst.sver HereditarySubst.sver FOmega.sver MicroFStar.sver HoareWeakestPrecondition
 
 LambdaOmega:
