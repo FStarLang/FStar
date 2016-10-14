@@ -1,4 +1,4 @@
-module FStar.HST
+module FStar.ST
 open FStar.HyperStack
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -48,6 +48,8 @@ effect Heap (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
 effect ST (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
              (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_stack_domains h h1) ==> p a h1)) (* WP *)
+
+effect St (a:Type) = ST a (fun _ -> True) (fun _ _ _ -> True)
 
 let inline_stack_inv h h' : GTot Type0 =
   (* The frame invariant is enforced *)
@@ -144,6 +146,14 @@ let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
   not (r `is_in` m0.h)
   /\ r `is_in` m1.h
 
+(*
+ * AR: using this in mitls code, so that it corresponds to the
+ * fresh_region definition in hyperheap.
+ *)
+let stronger_fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
+   (forall j. HH.includes r j ==> not (j `is_in` m0.h))
+   /\ r `is_in` m1.h
+
 assume val new_region: r0:HH.rid -> ST HH.rid
       (requires (fun m -> is_eternal_region r0))
       (ensures (fun (m0:mem) (r1:HH.rid) (m1:mem) ->
@@ -203,9 +213,14 @@ unfold let deref_post (#a:Type) (r:reference a) m0 x m1 =
    Dereferences, provided that the reference exists.
    Guaranties the strongest low-level effect: Stack
    *)
+(*
+ * AR: making the precondition as weak_contains.
+ *)
 assume val op_Bang: #a:Type -> r:reference a -> Stack a
-  (requires (fun m -> m `contains` r))
+  (requires (fun m -> m `weak_contains` r))
   (ensures (deref_post r))
+
+let modifies_none (h0:mem) (h1:mem) = modifies Set.empty h0 h1
 
 module G = FStar.Ghost
 
@@ -354,20 +369,20 @@ let test_to_be_stack_inlined () =
   r := 2;
   r
 
-val test_stack_function_with_inline: unit -> Stack int
+val test_stack_function_with_unfold: unit -> Stack int
   (requires (fun h -> True))
   (ensures  (fun h0 _ h1 -> True))
-let test_stack_function_with_unfold () =
+let test_stack_function_with_inline () =
   push_frame();
   let x = test_to_be_stack_inlined () in
   let y = !x + !x in
   pop_frame();
   y
 
-val test_st_function_with_inline: unit -> ST unit
+val test_st_function_with_unfold: unit -> ST unit
   (requires (fun h -> True))
   (ensures  (fun h0 _ h1 -> True))
-let test_st_function_with_unfold () =
+let test_st_function_with_inline () =
   push_frame();
   let x = test_to_be_stack_inlined () in
   let y = !x + !x in

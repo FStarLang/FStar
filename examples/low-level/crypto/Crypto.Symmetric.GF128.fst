@@ -3,7 +3,6 @@ module Crypto.Symmetric.GF128
 open FStar.Mul
 open FStar.Ghost
 open FStar.HyperStack
-open FStar.HST
 open FStar.UInt8
 open FStar.Int.Cast
 open FStar.Buffer
@@ -227,10 +226,10 @@ val ghash:
 
 let ghash k ad adlen ciphertext len tag =
   push_frame();
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   let len_info = create (0uy) 16ul in
   mk_len_info len_info adlen len;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   assert(modifies_0 h0 h1);
   fill tag 0uy 16ul;
   ghash_loop tag k ad adlen 0ul;
@@ -238,6 +237,6 @@ let ghash k ad adlen ciphertext len tag =
   add_and_multiply tag len_info k;
   //gf128_add tag len_info;
   //gf128_mul tag k;
-  let h2 = HST.get() in
+  let h2 = ST.get() in
   assert(modifies_1 tag h1 h2);
   pop_frame()

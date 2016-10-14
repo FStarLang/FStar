@@ -3,7 +3,6 @@ module Crypto.Symmetric.GCM
 open FStar.Mul
 open FStar.Ghost
 open FStar.HyperStack
-open FStar.HST
 open FStar.UInt8
 open FStar.Int.Cast
 open FStar.Buffer
@@ -70,7 +69,7 @@ private val auth_body: #k:pos -> alg:cipher_alg k ->
 #set-options "--z3timeout 20"	
 //NS: Hints are not replayable for this function, and for a few others below	
 let auth_body #k alg ciphertext tag key nonce cnt ad adlen len tmp =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   fill tag 0uy 16ul;
   let auth_key = sub tmp 0ul 16ul in
   alg key tag auth_key;
@@ -81,7 +80,7 @@ let auth_body #k alg ciphertext tag key nonce cnt ad adlen len tmp =
   let c0 = sub tmp 32ul 16ul in
   alg key counter c0;
   gf128_add tag c0;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   assert(live h1 ciphertext /\ live h1 tag /\ live h1 key /\ live h1 nonce /\ live h1 ad /\ live h1 tmp /\ modifies_2 tag tmp h0 h1)
 
 #set-options "--z3timeout 10"	
@@ -121,7 +120,7 @@ private val encrypt_loop: #k:pos -> alg:cipher_alg k ->
 let rec encrypt_loop #k alg ciphertext key cnt plaintext len tmp dep =
   (* Appending zeros if the last block is not a complete one. *)
   if U32 (16ul >=^ (len -^ dep)) then begin
-    let h0 = HST.get() in
+    let h0 = ST.get() in
     let counter = sub tmp 0ul 16ul in
     update_counter counter cnt;
     let last = sub tmp 16ul 16ul in
@@ -130,10 +129,10 @@ let rec encrypt_loop #k alg ciphertext key cnt plaintext len tmp dep =
     alg key counter ci;
     gf128_add ci last;
     blit ci 0ul ciphertext dep (U32 (len -^ dep));
-    let h1 = HST.get() in
+    let h1 = ST.get() in
     assert(live h1 ciphertext /\ live h1 key /\ live h1 plaintext /\ live h1 tmp /\ modifies_2 ciphertext tmp h0 h1)
   end else begin
-    let h0 = HST.get() in
+    let h0 = ST.get() in
     let pi = sub plaintext dep 16ul in
     let counter = sub tmp 0ul 16ul in
     update_counter counter cnt;
@@ -141,7 +140,7 @@ let rec encrypt_loop #k alg ciphertext key cnt plaintext len tmp dep =
     alg key counter ci;
     gf128_add ci pi;
     encrypt_loop #k alg ciphertext key (U32 (cnt +%^ 1ul)) plaintext len tmp (U32 (dep +^ 16ul));
-    let h1 = HST.get() in
+    let h1 = ST.get() in
     assert(live h1 ciphertext /\ live h1 key /\ live h1 plaintext /\ live h1 tmp /\ modifies_2 ciphertext tmp h0 h1)
   end
 
@@ -248,17 +247,17 @@ val decrypt: #k:pos -> alg:cipher_alg k ->
     (ensures (fun h0 r h1 -> live h1 plaintext /\ live h1 tag /\ live h1 key /\ live h1 iv /\ live h1 ad /\ live h1 ciphertext
         /\ ((r /\ modifies_1 plaintext h0 h1) \/ ((not r) /\ modifies_0 h0 h1))))
 let decrypt #k alg plaintext tag key iv ad adlen ciphertext len =
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   let check = check_tag #k alg ciphertext tag key iv 1ul ad adlen len in
   if not check then begin
-    let h1 = HST.get() in
+    let h1 = ST.get() in
     assert(modifies_0 h0 h1);
     false
   end else begin
-    let h0' = HST.get() in
+    let h0' = ST.get() in
     assert(modifies_0 h0 h0');
     decrypt_body #k alg plaintext key iv 1ul ciphertext len;
-    let h1 = HST.get() in
+    let h1 = ST.get() in
     assert(modifies_1 plaintext h0 h1);admit();
     true
   end

@@ -7,14 +7,12 @@ type 'a ref = {
 let read x =
   x.contents
 
-let op_Bang i x =
-  x.contents
+let op_Bang x = read x
 
 let write x y =
   x.contents <- y
 
-let op_Colon_Equals i x y =
-  x.contents <- y
+let op_Colon_Equals x y = write x y
 
 let uid = ref 0
 
@@ -30,6 +28,12 @@ let new_colored_region = (fun r0 c -> ())
 let ralloc i contents =
   alloc contents
 
-let recall = (fun i r -> ())
+let recall = (fun r -> ())
 let recall_region = (fun r -> ())
 let get () = ()
+
+(* AR: adding these for HST *)
+let push_frame () = ()
+let pop_frame () = ()
+
+let salloc contents = alloc contents
