@@ -104,14 +104,24 @@ let sprintf (s:string{is_Some (parse_format_string s)})
 let example2 () =
   assert_norm (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])
 
-(* TODO: it seems that only the assert_norm about trigger reduce_primops,
-         without reduce_primops fail example 4 and 5 will fail *)
+(* assert_norm above works, but this if I make it a lemma it doesn't
+   (could not prove post-condition)*)
+(* let example2_lemma () : *)
+(*   Lemma (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's']) = () *)
+
+
+(* TODO: it seems that only the assert_norm above trigger reduce_primops,
+         without reduce_primops example 4 and 5 will fail *)
 
 (* TODO: in example 3, could it be that F* is not unfolding fixpoints, or what? *)
 
 (* let example3 () = *)
 (*   assert_norm (parse_format_pure ['%'; 'd'; '='; '%'; 's'] *)
 (*     == Some [Arg Int; Arg String]) *)
+
+(* let example3_lemma () : *)
+(*   Lemma (parse_format_pure ['%'; 'd'; '='; '%'; 's'] *)
+(*          == Some [Arg Int; Arg String]) = () *)
 
 (* let example4 () = *)
 (*   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Arg String]) *)
