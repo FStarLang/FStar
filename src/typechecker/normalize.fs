@@ -88,6 +88,7 @@ type stack_elt =
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
  | Steps    of steps * list<Env.delta_level>
+ | Debug    of term
 
 type stack = list<stack_elt>
 
@@ -551,7 +552,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
             let s = [Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
             let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
-            let stack' = Steps (cfg.steps, cfg.delta_level)::stack in
+            let stack' = Debug t :: Steps (cfg.steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
 
           | Tm_app({n=Tm_constant Const.Const_reify}, a1::a2::rest) ->
@@ -727,6 +728,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   log cfg  (fun () -> Util.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
+                | Debug _::_
                 | Meta _::_
                 | Let _ :: _
                 | App _ :: _ 
@@ -955,6 +957,11 @@ and rebuild : cfg -> env -> stack -> term -> term =
                       In either case, it has no free de Bruijn indices *)
         match stack with 
             | [] -> t
+
+            | Debug tm :: stack -> 
+              if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
+              then Util.print2 "Normalized %s to %s\n" (Print.term_to_string tm) (Print.term_to_string t);
+              rebuild cfg env stack t
 
             | Steps (s, dl) :: stack -> 
               rebuild ({cfg with steps=s; delta_level=dl}) env stack t
