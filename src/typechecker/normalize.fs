@@ -19,6 +19,8 @@
 module FStar.TypeChecker.Normalize
 open FStar
 open FStar.Util
+open FStar.String
+open FStar.Const
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
@@ -435,16 +437,23 @@ let arith_ops =
        Const.p2l ["FStar"; m; "mul"], (fun x y -> int_as_const (x * y))
      ]) [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128" ])
 
-    
+let un_ops =
+    let mk x = mk x Range.dummyRange in
+    let name x = mk (Tm_fvar (lid_as_fv (Const.p2l x) Delta_constant None)) in
+    [Const.p2l ["FStar"; "String"; "list_of_string"],
+     (fun s -> FStar.List.fold_right (fun c a ->
+                 mk (Tm_app (name ["Prims"; "Cons"], [(name ["FStar"; "Char"; "char"], None); (mk (Tm_constant (Const_char c)), None); (a, None)]))
+               ) (list_of_string s) (mk (Tm_app (name ["Prims"; "Nil"], [name ["FStar"; "Char"; "char"], None]))))]
+
 let reduce_primops steps tm = 
-    let arith_op fv = match fv.n with 
-        | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) arith_ops
+    let find fv (ops: list<(Ident.lident*'a)>) = match fv.n with
+        | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) ops
         | _ -> None in
     if not <| List.contains Primops steps
     then tm
     else match tm.n with
          | Tm_app(fv, [(a1, _); (a2, _)]) ->
-            begin match arith_op fv with 
+            begin match find fv arith_ops with
             | None -> tm
             | Some (_, op) -> 
               let norm i j =
@@ -468,6 +477,16 @@ let reduce_primops steps tm =
                     end
                 | Tm_constant (Const.Const_int(i, None)), Tm_constant (Const.Const_int(j, None)) -> 
                     norm i j
+                | _ -> tm
+              end
+            end
+         | Tm_app(fv, [(a1, _)]) ->
+            begin match find fv un_ops with
+            | None -> tm
+            | Some (_, op) ->
+              begin match (SS.compress a1).n with
+                | Tm_constant (Const.Const_string(b, _)) ->
+                    op (Bytes.utf8_bytes_as_string b)
                 | _ -> tm
               end
             end
