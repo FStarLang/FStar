@@ -528,7 +528,7 @@ val counter_enxor:
     Plain.live h plain /\ 
     Buffer.live h cipher /\ 
     // if ciphertexts are authenticated, then fresh blocks are available
-    (safeId i ==> (forall z. z `above` x ==> find_otp #t.rgn #i (HS.sel h t.table) z == None))
+    (safeId i ==> (forall z. z `above` x ==> find_otp #t.mac_rgn #i (HS.sel h t.table) z == None))
     ))
   (ensures (fun h0 _ h1 -> 
     Plain.live h1 plain /\ 
@@ -536,7 +536,9 @@ val counter_enxor:
     // in all cases, we extend the table only at x and its successors.
     modifies_X_buffer_1 t x cipher h0 h1 /\
     // if ciphertexts are authenticated, then we precisely know the table extension
-    (safeId i ==> HS.sel h1 t.table == Seq.append (HS.sel h0 t.table) (counterblocks i t.rgn x (v len) (Plain.sel_plain h1 len plain) (Buffer.as_seq h1 cipher)))
+    (safeId i ==> HS.sel h1 t.table ==
+		  Seq.append (HS.sel h0 t.table) 
+			     (counterblocks i t.mac_rgn x (v len) (Plain.sel_plain h1 len plain) (Buffer.as_seq h1 cipher)))
     // NB the post of prf_enxor should be strengthened a bit (using PRF.extends?)
     ))
     
@@ -572,7 +574,7 @@ val counter_dexor:
     Plain.live h plain /\ 
     Buffer.live h cipher /\ 
     // if ciphertexts are authenticated, then the table already includes all we need
-    (safeId i ==> (let expected = counterblocks i t.rgn x (v len) (Plain.sel_plain h len plain) (Buffer.as_seq h cipher) in
+    (safeId i ==> (let expected = counterblocks i t.mac_rgn x (v len) (Plain.sel_plain h len plain) (Buffer.as_seq h cipher) in
                 True //TODO say that expected is found in the table
     ))))
   (ensures (fun h0 _ h1 -> 
@@ -580,7 +582,7 @@ val counter_dexor:
     Buffer.live h1 cipher /\ 
     // in all cases, we extend the table only at x and its successors.
     modifies_X_buffer_1 t x (as_buffer plain) h0 h1 /\
-    (safeId i ==> Seq.equal #(PRF.entry (PRF(t.rgn))i) (HS.sel h1 t.table) (HS.sel h0 t.table))))
+    (safeId i ==> Seq.equal #(PRF.entry (PRF t.mac_rgn) i) (HS.sel h1 t.table) (HS.sel h0 t.table))))
   
 let rec counter_dexor i t x len plaintext ciphertext =
   assume false;//16-10-12 
@@ -623,7 +625,7 @@ let inv h #i #rw e =
     safeId i ==>
     ( let blocks = HS.sel h (PRF.State.table prf) in
       let entries = HS.sel h log in
-      refines h i log_region entries blocks )
+      refines h i (PRF prf.mac_rgn) entries blocks )
 
 (*
       // no need to be so specific here --- details follow from the invariant
