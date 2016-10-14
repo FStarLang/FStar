@@ -104,31 +104,28 @@ let sprintf (s:string{is_Some (parse_format_string s)})
 let example2 () =
   assert_norm (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])
 
-(* assert_norm above works, but this if I make it a lemma it doesn't
-   (could not prove post-condition)*)
-(* let example2_lemma () : *)
-(*   Lemma (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's']) = () *)
+(* Can use assert_norm above to prove a lemma that F* cannot prove on its own *)
+let example2_lemma () :
+  Lemma (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's']) =
+    assert_norm (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])
 
+(* It might seem nicer to just call normalize in the lemma statement,
+   but that doesn't allow using the lemma later on; so we're stuck with the duplication *)
+let example2_lemma_looks_nicer_but_not_usable () :
+  Lemma (normalize (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])) = ()
 
-(* TODO: it seems that only the assert_norm above trigger reduce_primops,
-         without reduce_primops example 4 and 5 will fail *)
+let example3_lemma () :
+  Lemma (parse_format_pure ['%'; 'd'; '='; '%'; 's']
+         == Some [Arg Int; Lit '='; Arg String]) =
+  assert_norm (parse_format_pure ['%'; 'd'; '='; '%'; 's']
+               == Some [Arg Int; Lit '='; Arg String])
 
-(* TODO: in example 3, could it be that F* is not unfolding fixpoints, or what? *)
+let example4_lemma () :
+  Lemma (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]) =
+  assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String])
 
-(* let example3 () = *)
-(*   assert_norm (parse_format_pure ['%'; 'd'; '='; '%'; 's'] *)
-(*     == Some [Arg Int; Arg String]) *)
-
-(* let example3_lemma () : *)
-(*   Lemma (parse_format_pure ['%'; 'd'; '='; '%'; 's'] *)
-(*          == Some [Arg Int; Arg String]) = () *)
-
-(* let example4 () = *)
-(*   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Arg String]) *)
-
-
-(* let example5 : string = (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer" *)
-
-(* This requires a pesky annotation, otherwise it doesn't work *)
-(* ./SimplePrintf.fst(95,59-95,61) : Error Too many arguments to function of type *)
-(* (s:(s#16858:(Prims.list FStar.String.char){(Prims.b2t (Prims.is_Some (SimplePrintf.parse_format_pure s@0)))}) -> Tot (SimplePrintf.dir_type (Prims.Some.v (SimplePrintf.parse_format_pure s@0)))); got 3 arguments *)
+let example5 : string =
+  (* Requiring such an assert_norm on each usage seems quite bad for usability *)
+  assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]);
+  (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer"
+  (* We also requires a pesky type annotation, but that seems more acceptable *)
