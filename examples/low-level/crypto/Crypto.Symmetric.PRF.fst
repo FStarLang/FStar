@@ -105,55 +105,58 @@ let find_blk #rgn #i s (x:domain{x.ctr<>0ul /\ ~(safeId i)}) =
 
 // The table exists only for idealization
 // TODO it should be a monotonic map: what's in the table stays there. 
-let table_t rgn i = 
-  if prf i then r:HS.ref (Seq.seq (entry rgn i)) {HS.frameOf r = rgn}
+let table_t rgn mac_rgn i = 
+  if prf i then r:HS.ref (Seq.seq (entry mac_rgn i)) {HS.frameOf r = rgn}
   else unit
 
 // the PRF instance, including its key and memoization table
 // TODO separate on rw, with multiple readers?
 noeq type state (i:id) =
-  | State: #rgn: region -> 
+  | State: #rgn: region ->
+	   #mac_rgn: region{mac_rgn `HH.extends` rgn} ->
            // key is immutable once generated, we should make it private
            key: lbuffer (v (Block.keylen prfa)) 
              {Buffer.frameOf key = rgn /\ ~(HS.MkRef.mm (Buffer.content key))} ->
-           table: table_t rgn i ->
+           table: table_t rgn mac_rgn i ->
            state i
 
 // boring...
 val itable: i:id {prf i} -> s:state i 
-  -> Tot (r:HS.ref (Seq.seq (entry s.rgn i)) {HS.frameOf r = s.rgn})
+  -> Tot (r:HS.ref (Seq.seq (entry s.mac_rgn i)) {HS.frameOf r = s.rgn})
 let itable i s = s.table
 
-val mktable: i:id {prf i} -> rgn:region 
-  -> r:HS.ref (Seq.seq (entry rgn i)) {HS.frameOf r = rgn} -> Tot (table_t rgn i)
-let mktable i rgn r = r 
+val mktable: i:id {prf i} -> rgn:region -> mac_rgn:region{mac_rgn `HH.extends` rgn}
+  -> r:HS.ref (Seq.seq (entry mac_rgn i)) {HS.frameOf r = rgn} -> Tot (table_t rgn mac_rgn i)
+let mktable i rgn mac_rgn r = r 
 
-val no_table: i:id {~(prf i)} -> rgn:region -> Tot (table_t rgn i)
-let no_table i rgn = ()
-
+val no_table: i:id {~(prf i)} -> rgn:region -> mac_rgn:region{mac_rgn `HH.extends` rgn} -> Tot (table_t rgn mac_rgn i)
+let no_table i rgn mac_rgn = ()
 
 val gen: rgn:region -> i:id -> ST (state i)
   (requires (fun h -> True))
   (ensures  (fun h0 s h1 ->
     s.rgn == rgn /\ 
-    (prf i ==> HS.sel h1 (itable i s) == Seq.createEmpty #(entry rgn i))))
+    (prf i ==> HS.sel h1 (itable i s) == Seq.createEmpty #(entry s.mac_rgn i))))
 let gen rgn i =
+  let mac_rgn : (r:region{r `HH.extends` rgn}) = new_region rgn in
   let key = Buffer.rcreate rgn 0uy (Block.keylen prfa) in
   Bytes.random (v (Block.keylen prfa)) key;
-  let table: table_t rgn i =
-    if prf i then mktable i rgn (ralloc rgn (Seq.createEmpty #(entry rgn i))) 
-    else () 
+  let table: table_t rgn mac_rgn i =
+    if prf i then 
+      mktable i rgn mac_rgn (ralloc rgn (Seq.createEmpty #(entry mac_rgn i)))
+    else ()
   in
-  State #i #rgn key table
+  State #i #rgn #mac_rgn key table
 // no need to demand prf i so far.
 
 val coerce: rgn:region -> i:id{~(prf i)} -> key:lbuffer (v keylen) -> ST (state i)
   (requires (fun h -> Buffer.live h key))
   (ensures  (fun h0 s h1 -> s.rgn == rgn))
 let coerce rgn i key =
+  let mac_rgn : (r:region{r `HH.extends` rgn}) = new_region rgn in
   let key_p = Buffer.rcreate rgn 0uy (Block.keylen prfa) in
   Buffer.blit key 0ul key_p 0ul (Block.keylen prfa);
-  State #i #rgn key_p (no_table i rgn)
+  State #i #rgn #mac_rgn key_p (no_table i rgn mac_rgn)
 
 // TODO leak, and eventually dynamic compromise.
 
@@ -189,39 +192,46 @@ val prf_mac:
       | Some mac' -> mac == mac' /\ h0 == h1 // when decrypting
       | None ->  // when encrypting, we get the stateful post of MAC.create             
         match find_mac (HS.sel h1 r) x with 
-        | Some mac' -> mac == mac' /\ MAC.genPost0 (i,x.iv) t.rgn h0 mac h1
-                      //16-10-11 we miss a more precise clause capturing the table update   
+        | Some mac' -> 
+	  mac == mac' /\ 
+	  MAC.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
+          HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
+	  HS.modifies_ref t.mac_rgn TSet.empty h0 h1
+          //16-10-11 we miss a more precise clause capturing the table update   
         | None -> False )
     else (
-      HS.modifies (Set.singleton t.rgn) h0 h1 /\
-      HS.modifies_ref t.rgn TSet.empty h0 h1 
+      HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
+      HS.modifies_ref t.rgn TSet.empty h0 h1  /\
+      HS.modifies_ref t.mac_rgn TSet.empty h0 h1
   )))
 
 #reset-options "--z3timeout 1000"
 
 let prf_mac i t x =
+  let h0 = get () in
+  Buffer.recall t.key;
+  recall_region t.mac_rgn;
   let macId = (i,x.iv) in
-  if prf i then 
+  if prf i then
     begin
-    let r = itable i t in 
-    let contents = recall r; !r in 
+    let r = itable i t in
+    recall r;
+    let contents = !r in
     match find_mac contents x with
     | Some mac -> mac
     | None ->
-      let mac = MAC.gen macId t.rgn in
-      recall r; 
+      let mac = MAC.gen macId t.mac_rgn in
       r := SeqProperties.snoc contents (Entry x mac);
       mac
-    end    
+    end
   else
     begin
-    Buffer.recall t.key;
-    let keyBuffer = Buffer.rcreate t.rgn 0uy keylen in
-    let h1 = ST.get() in 
+    let keyBuffer = Buffer.rcreate t.mac_rgn 0uy keylen in
+    let h1 = ST.get() in
     getBlock t x keylen keyBuffer;
-    let h2 = ST.get() in 
+    let h2 = ST.get() in
     Buffer.lemma_reveal_modifies_1 keyBuffer h1 h2;
-    MAC.coerce macId t.rgn keyBuffer
+    MAC.coerce macId t.mac_rgn keyBuffer
     end
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
@@ -351,7 +361,6 @@ let prf_dexor i t x l plain cipher =
 
 #set-options "--initial_fuel 1 --max_fuel 1"
 
-//TODO (NS): this one takes about 15s to prove automatically; investigate a bit
 private let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) (v:range rgn i x) : Lemma
   (requires (find s x == None))
   (ensures (find (SeqProperties.snoc s (Entry x v)) x == Some v))
@@ -368,12 +377,12 @@ val prf_enxor:
      Buffer.frameOf cipher <> t.rgn } -> ST unit
   (requires (fun h0 ->
      Plain.live h0 plain /\ Buffer.live h0 cipher /\
-     (safeId i ==> find_otp #t.rgn #i (HS.sel h0 t.table) x == None)))
+     (safeId i ==> find_otp #t.mac_rgn #i (HS.sel h0 t.table) x == None)))
   (ensures (fun h0 _ h1 ->
      Plain.live h1 plain /\ Buffer.live h1 cipher /\
      modifies_x_buffer_1 t x cipher h0 h1 /\
      (safeId i ==> 
-       ( match find_otp #t.rgn #i (HS.sel h1 t.table) x with
+       ( match find_otp #t.mac_rgn #i (HS.sel h1 t.table) x with
          | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain /\ c == sel_bytes h1 l cipher
          | None   -> False
      ))))
@@ -386,8 +395,8 @@ let prf_enxor i t x l cipher plain =
     let newblock = OTP #i l p c in
     let contents' = SeqProperties.snoc contents (Entry x newblock) in
     lemma_snoc_found contents x newblock;
-    assert(find_otp #t.rgn #i contents x == None); 
-    assert(find_otp #t.rgn #i contents' x == Some newblock);
+    assert(find_otp #t.mac_rgn #i contents x == None); 
+    assert(find_otp #t.mac_rgn #i contents' x == Some newblock);
 
     let h0 = ST.get() in
     assert(p == sel_plain h0 l plain);

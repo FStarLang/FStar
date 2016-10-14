@@ -369,7 +369,7 @@ let test_to_be_stack_inlined () =
   r := 2;
   r
 
-val test_stack_function_with_unfold: unit -> Stack int
+val test_stack_function_with_inline: unit -> Stack int
   (requires (fun h -> True))
   (ensures  (fun h0 _ h1 -> True))
 let test_stack_function_with_inline () =
@@ -379,7 +379,7 @@ let test_stack_function_with_inline () =
   pop_frame();
   y
 
-val test_st_function_with_unfold: unit -> ST unit
+val test_st_function_with_inline: unit -> ST unit
   (requires (fun h -> True))
   (ensures  (fun h0 _ h1 -> True))
 let test_st_function_with_inline () =

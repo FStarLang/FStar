@@ -16,8 +16,8 @@ let rel (a:t) (b:t) =
   | Some true,  Some true -> True
   | _, _ -> False
 
-val root_has_color_zero': unit ->
-  Lemma (requires True) (ensures (color root = 0)) [SMTPat (color root)]
+val root_has_color_zero': u:unit ->
+  Lemma (requires True) (ensures (color root = 0)) [SMTPat (has_type u unit)]
 let root_has_color_zero' _ = root_has_color_zero ()
 
 val rel_transitive: a:t -> b:t -> c:t -> Lemma
