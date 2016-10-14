@@ -47,17 +47,6 @@ let u8  = UInt8.t
 let u32 = UInt32.t
 let u64 = UInt64.t
 
-// to be implemented from MAC.random
-assume val random: l:u32 -> ST (lbytes (v l))
-  (requires (fun m -> True))
-  (ensures  (fun m0 _ m1 -> HS.modifies Set.empty m0 m1))
-(*
-let random len =
-  let buf = Buffer.create 0ul len in
-  MAC.random buf len;
-  load_bytes len buf
-*)
-
 type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 // PRF TABLE
@@ -152,8 +141,8 @@ val gen: rgn:region -> i:id -> ST (state i)
     (prf i ==> HS.sel h1 (itable i s) == Seq.createEmpty #(entry rgn i))))
 let gen rgn i =
   let key = Buffer.rcreate rgn 0uy (Block.keylen prfa) in
-  store_bytes (Block.keylen prfa) key (random (Block.keylen prfa));
-  let table: table_t rgn i = 
+  Bytes.random (v (Block.keylen prfa)) key;
+  let table: table_t rgn i =
     if prf i then mktable i rgn (ralloc rgn (Seq.createEmpty #(entry rgn i))) 
     else () 
   in
@@ -266,16 +255,15 @@ let modifies_x_buffer_1 #i (t:state i) x b h0 h1 =
   Buffer.live h1 b /\ 
   (if prf i then 
     let r = itable i t in 
-    let rb = Buffer.frameOf b in 
+    let rb = Buffer.frameOf b in
     // can't use !{ t.rgn, rb}, why?
-    let rgns = Set.union (Set.singleton #HH.rid t.rgn) (Set.singleton #HH.rid rb) in 
-    HS.modifies rgns h0 h1 /\ 
-    HS.modifies_ref t.rgn (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1 /\
+    let rgns = Set.union (Set.singleton #HH.rid t.rgn) (Set.singleton #HH.rid rb) in
+    HS.modifies rgns h0 h1 /\
+    HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
     extends (HS.sel h0 r) (HS.sel h1 r) x /\
     Buffer.modifies_buf_1 rb b h0 h1 
   else
     Buffer.modifies_1 b h0 h1)
-
 
 // real case + real use of memoized PRF output.
 private val prf_raw: 
@@ -284,7 +272,7 @@ private val prf_raw:
   (requires (fun h0 -> Buffer.live h0 output))
   (ensures (fun h0 _ h1 -> modifies_x_buffer_1 t x output h0 h1)) 
 
-let prf_raw i t x l output = 
+let prf_raw i t x l output =
   if prf i then
     begin
     let r = itable i t in 
@@ -294,10 +282,10 @@ let prf_raw i t x l output =
       match find_blk contents x with 
       | Some block -> block
       | None ->
-          let block = random blocklen in 
+          let block = random_bytes blocklen in
           r := SeqProperties.snoc contents (Entry x block);
           // assert(extends (HS.sel h0 r) (HS.sel h' r) x);
-          block 
+          block
     in
     let h1 = HST.get() in
     assert(extends (HS.sel h0 r) (HS.sel h1 r) x);
@@ -396,7 +384,7 @@ let prf_enxor i t x l cipher plain =
     let r = itable i t in 
     let contents = recall r; !r in 
     let p = Plain.load #i l plain in
-    let c = random l in // sample a fresh ciphertext block
+    let c = random_bytes l in // sample a fresh ciphertext block
     let newblock = OTP #i l p c in
     let contents' = SeqProperties.snoc contents (Entry x newblock) in
     lemma_snoc_found contents x newblock;

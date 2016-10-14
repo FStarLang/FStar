@@ -92,6 +92,30 @@ val store_bytes: l:UInt32.t -> buf:lbuffer (v l) -> b:lbytes (v l) -> ST unit
     Seq.equal b (sel_bytes h1 l buf)))
 let store_bytes l buf b = store_bytes_aux l buf 0ul b
 
+// TODO: Dummy.
+// Should be external and relocated in some library with a crypto-grade
+// implementation in both OCaml and KreMLin,
+val random: len:nat -> b:lbuffer len -> Stack unit
+  (requires (fun h -> live h b))
+  (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
+let random len b = ()
+
+val random_bytes: len:u32 -> Stack (lbytes (v len))
+  (requires (fun m -> True))
+  (ensures  (fun m0 _ m1 -> modifies Set.empty m0 m1))
+let random_bytes len =
+  push_frame ();
+  let m0 = HST.get () in
+  let buf = Buffer.create 0uy len in
+  let m1 = HST.get () in
+  lemma_reveal_modifies_0 m0 m1;
+  Bytes.random (v len) buf;
+  let m2 = HST.get () in
+  lemma_reveal_modifies_1 buf m1 m2;
+  let b = load_bytes len buf in
+  pop_frame ();
+  b
+
 
 open FStar.SeqProperties
 

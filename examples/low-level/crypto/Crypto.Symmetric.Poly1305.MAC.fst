@@ -14,6 +14,7 @@ open FStar.HST.Monotonic.RRef
 
 open Crypto.Symmetric.Poly1305.Spec
 open Crypto.Symmetric.Poly1305 // avoid?
+open Crypto.Symmetric.Bytes
 open Flag 
 
 module HH = FStar.HyperHeap
@@ -22,11 +23,6 @@ module HH = FStar.HyperHeap
 
 type alg = Flag.mac_alg
 let alg_of_id = Flag.cipher_of_id
-
-type buffer = Buffer.buffer UInt8.t
-type bytes  = Seq.seq UInt8.t
-type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
-type lbytes  (l:nat) = b:bytes {Seq.length b = l}
 
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 
@@ -72,21 +68,6 @@ type log_2 = // only when ideal
   | MACed: text -> Spec.log -> log
   | Corrupt
 *)
-
-// TODO: right now we use a dummy, should be external
-// relocated in some library somewhere,
-// and with careful, crypto-grade external implementation
-// both with ocaml and kremlin,
-val random: r:rid -> len:UInt32.t -> ST buffer
-     (requires (fun h -> is_eternal_region r))
-     (ensures (fun (h0:mem) b h1 ->
-         ~(contains h0 b)
-       /\ live h1 b /\ idx b = 0 /\ length b = UInt32.v len
-       /\ Map.domain h1.h == Map.domain h0.h
-       /\ h1.tip = h0.tip
-       /\ modifies (Set.singleton r) h0 h1
-       /\ modifies_ref r TSet.empty h0 h1))
-let random r len = FStar.Buffer.rcreate r 0uy len
 
 // the sequence of hashed elements is conditional, but not ghost
 // this will require changing e.g. the type of poly1305_add
@@ -168,8 +149,13 @@ val gen: i:id -> region:rid{is_eternal_region region} -> ST (state i)
   (ensures (genPost i region))
 
 let gen i region =
-  let key = random region 32ul in
+  let key = FStar.Buffer.rcreate region 0uy 32ul in
+  let h0 = HST.get() in
+  random 32 key;
+  let h1 = HST.get () in
+  lemma_reveal_modifies_1 key h0 h1;
   alloc i region key
+
 
 val coerce: i:id{~(authId i)} -> r:rid -> key:lbuffer 32 -> ST (state i)
   (requires (fun m0 -> live m0 key))
