@@ -41,9 +41,7 @@ type id = Flag.id * UInt128.t
 // plus the value of the unique IV for this MAC
 // TODO make it a dependent pair to support agile IV types
 
-assume val someId: Flag.id // dummy value for unit testing
-let someId_coerce = assume(~ (safeHS someId))
-
+assume val someId: i:Flag.id{~(safeHS i)} // dummy value for unit testing
 
 (*
 type id = nat
