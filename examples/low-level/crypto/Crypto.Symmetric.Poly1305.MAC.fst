@@ -149,9 +149,9 @@ val gen: i:id -> region:rid{is_eternal_region region} -> ST (state i)
 
 let gen i region =
   let key = FStar.Buffer.rcreate region 0uy 32ul in
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   random 32 key;
-  let h1 = HST.get () in
+  let h1 = ST.get () in
   lemma_reveal_modifies_1 key h0 h1;
   alloc i region key
 

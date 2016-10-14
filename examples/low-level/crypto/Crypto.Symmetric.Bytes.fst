@@ -104,12 +104,12 @@ val random_bytes: len:u32 -> Stack (lbytes (v len))
   (ensures  (fun m0 _ m1 -> modifies Set.empty m0 m1))
 let random_bytes len =
   push_frame ();
-  let m0 = HST.get () in
+  let m0 = ST.get () in
   let buf = Buffer.create 0uy len in
-  let m1 = HST.get () in
+  let m1 = ST.get () in
   lemma_reveal_modifies_0 m0 m1;
   Bytes.random (v len) buf;
-  let m2 = HST.get () in
+  let m2 = ST.get () in
   lemma_reveal_modifies_1 buf m1 m2;
   let b = load_bytes len buf in
   pop_frame ();
