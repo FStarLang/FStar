@@ -2,41 +2,11 @@ module FStar.Monotonic.Seq
 
 open FStar.Seq
 open FStar.SeqProperties
+open FStar.Classical
 module HH   = FStar.HyperHeap
 module HS   = FStar.HyperStack
 module MR   = FStar.Monotonic.RRef
 module SeqP = FStar.SeqProperties
-
-let forall_intro (#a:Type) (#p:(x:a -> GTot Type0)) ($f:(x:a -> Lemma (p x)))
-  : Lemma (forall (x:a). p x)
-  = FStar.Classical.forall_intro f
-
-(* Some basic stuff, should be moved to FStar.Squash, probably *)
-let forall_intro_2 (#a:Type) (#b:(a -> Type)) (#p:(x:a -> b x -> GTot Type0))
-                  ($f: (x:a -> y:b x -> Lemma (p x y)))
-  : Lemma (forall (x:a) (y:b x). p x y)
-  = let g : x:a -> Lemma (forall (y:b x). p x y) = fun x -> forall_intro (f x) in
-    forall_intro g
-
-let forall_intro_3 (#a:Type) (#b:(a -> Type)) (#c:(x:a -> y:b x -> Type)) (#p:(x:a -> y:b x -> z:c x y -> Type0))
-		  ($f: (x:a -> y:b x -> z:c x y -> Lemma (p x y z)))
-  : Lemma (forall (x:a) (y:b x) (z:c x y). p x y z)
-  = let g : x:a -> Lemma (forall (y:b x) (z:c x y). p x y z) = fun x -> forall_intro_2 (f x) in
-    forall_intro g
-
-let exists_intro (#a:Type) (p:(a -> Type)) (witness:a)
-  : Lemma (requires (p witness))
-	  (ensures (exists (x:a). p x))
-  = ()
-
-let exists_elim (#a:Type) (#p:(a -> Type)) (#r:Type) ($f:(x:a -> Lemma (p x ==> r)))
-  : Lemma ((exists (x:a). p x) ==> r)
-  = forall_intro f
-
-let exists_elim_2 (#a:Type) (#p:(a -> Type)) (#b:Type) (#q:(b -> Type)) (#r:Type) 
-		 ($f:(x:a -> y:b -> Lemma ((p x /\ q y) ==> r)))
-  : Lemma (((exists (x:a). p x) /\ (exists (y:b). q y)) ==> r)
-  = forall_intro_2 f
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +33,7 @@ let seq_extends_to_transitive_aux (s1:seq 'a) (s2:seq 'a) (s3:seq 'a) (s1':seq '
 let grows_transitive (s1:seq 'a) (s2:seq 'a) (s3:seq 'a)
   : Lemma ((grows s1 s2 /\ grows s2 s3)
            ==> grows s1 s3) 
-  = exists_elim_2 (seq_extends_to_transitive_aux s1 s2 s3)
+  = forall_to_exists_2 (seq_extends_to_transitive_aux s1 s2 s3)
 
 open FStar.Monotonic.RRef
 open FStar.HyperHeap
@@ -305,7 +275,7 @@ let map_prefix_stable (#a:Type) (#b:Type) (#i:rid) (r:m_rref i (seq a) grows) (f
       fun h0 h1 ->
 	  let s1 = MR.m_sel h0 r in
 	  let s3 = MR.m_sel h1 r in
-	  exists_elim (map_grows f s1 s3);
+	  forall_to_exists (map_grows f s1 s3);
 	  grows_transitive bs (map f s1) (map f s3) in
     forall_intro_2 aux
 
@@ -370,7 +340,7 @@ let collect_grows_aux (f:'a -> Tot (seq 'b))
 let collect_grows (f:'a -> Tot (seq 'b))
 		  (s1:seq 'a) (s2:seq 'a)
   : Lemma (grows s1 s2 ==> grows (collect f s1) (collect f s2))
-  = exists_elim (collect_grows_aux f s1 s2)
+  = forall_to_exists (collect_grows_aux f s1 s2)
   
 let collect_prefix (#a:Type) (#b:Type) (#i:rid)
 		   (r:m_rref i (seq a) grows)
@@ -415,7 +385,7 @@ let collect_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 	  let aux2 : s2:seq a -> Lemma ((s1@s2 == s3 /\ collect_has_at_index r f n v h0)
 				       ==> collect_has_at_index r f n v h1)
 	      = fun s2 -> collect_append f s1 s2 in
-	  exists_elim aux2 in
+	  forall_to_exists aux2 in
     forall_intro_2 aux
 
 

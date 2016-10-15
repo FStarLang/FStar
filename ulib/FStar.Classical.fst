@@ -23,6 +23,34 @@ let forall_intro_squash_gtot #a #p $f =
 val forall_intro  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 let forall_intro #a #p $f = forall_intro_squash_gtot (lemma_to_squash_gtot #a #p f)
 
+(* Some basic stuff, should be moved to FStar.Squash, probably *)
+let forall_intro_2 (#a:Type) (#b:(a -> Type)) (#p:(x:a -> b x -> GTot Type0))
+                  ($f: (x:a -> y:b x -> Lemma (p x y)))
+  : Lemma (forall (x:a) (y:b x). p x y)
+  = let g : x:a -> Lemma (forall (y:b x). p x y) = fun x -> forall_intro (f x) in
+    forall_intro g
+
+let forall_intro_3 (#a:Type) (#b:(a -> Type)) (#c:(x:a -> y:b x -> Type)) (#p:(x:a -> y:b x -> z:c x y -> Type0))
+		  ($f: (x:a -> y:b x -> z:c x y -> Lemma (p x y z)))
+  : Lemma (forall (x:a) (y:b x) (z:c x y). p x y z)
+  = let g : x:a -> Lemma (forall (y:b x) (z:c x y). p x y z) = fun x -> forall_intro_2 (f x) in
+    forall_intro g
+
+let exists_intro (#a:Type) (p:(a -> Type)) (witness:a)
+  : Lemma (requires (p witness))
+	  (ensures (exists (x:a). p x))
+  = ()
+
+let forall_to_exists (#a:Type) (#p:(a -> Type)) (#r:Type) ($f:(x:a -> Lemma (p x ==> r)))
+  : Lemma ((exists (x:a). p x) ==> r)
+  = forall_intro f
+
+let forall_to_exists_2 (#a:Type) (#p:(a -> Type)) (#b:Type) (#q:(b -> Type)) (#r:Type) 
+		 ($f:(x:a -> y:b -> Lemma ((p x /\ q y) ==> r)))
+  : Lemma (((exists (x:a). p x) /\ (exists (y:b). q y)) ==> r)
+  = forall_intro_2 f
+
+
 val give_proof: #a:Type -> a -> Lemma (ensures a)
 let give_proof #a x = return_squash x
 
