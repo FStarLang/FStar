@@ -393,7 +393,7 @@ let name_binders sorts =
     List.rev names, binders
 
 let termToSmt t =
-    let rec aux n (names:list<fv>) t = match t.tm with
+    let rec aux' n (names:list<fv>) t = match t.tm with
       | Integer i     -> i
       | BoundV i ->
         List.nth names i |> fst
@@ -412,7 +412,13 @@ let termToSmt t =
             | [[]], None
             | [], None ->  Util.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders (aux n names body)
             | _ -> Util.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders (aux n names body) (weightToSmt wopt) pats_str
-        end in
+        end
+    and aux n names t = 
+        let s = aux' n names t in 
+        if t.rng <> norng
+        then Util.format3 "\n;; def=%s; use=%s\n%s\n" (Range.string_of_range t.rng) (Range.string_of_use_range t.rng) s
+        else s
+    in
     aux 0 [] t
 
 

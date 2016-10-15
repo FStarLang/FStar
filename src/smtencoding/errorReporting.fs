@@ -30,22 +30,19 @@ let remove_dups (l:labels) = Util.remove_dups (fun (_, m1, r1) (_, m2, r2) -> r1
 type msg = string * Range.range
 type ranges = list<(option<string> * Range.range)>
 
-let fresh_label : ranges -> term -> labels -> term * labels =
+//decorate a term with an error label
+let fresh_label : option<string> -> Range.range -> term -> label * term =
     let ctr = ref 0 in 
-    fun rs t labs -> 
+    fun msg range t -> 
         let l = incr ctr; format1 "label_%s" (string_of_int !ctr) in
         let lvar = l, Bool_sort in
-        let message, range = match rs with 
-            | [] -> 
-              if Options.debug_any()
-              then hash_of_term t, Range.dummyRange
-              else "Z3 provided a counterexample, but, unfortunately, F* could not translate it back to something meaningful", Range.dummyRange
-            | (Some reason, r)::_ -> reason, r
-            | (None, r)::_ -> "failed to prove a pre-condition", r in
+        let message = match msg with 
+            | Some m -> m
+            | None -> "assertion failed" in
         let label = (lvar, message, range) in
         let lterm = mkFreeV lvar in
         let lt = mkOr(lterm, t) in
-        lt, label::labs
+        label, lt
 
 (*
    label_goals query : term * labels
@@ -56,70 +53,81 @@ let fresh_label : ranges -> term -> labels -> term * labels =
 *)
 let label_goals use_env_msg  //when present, provides an alternate error message, usually "could not check implicit argument", or something like that
                 r            //the source range in which this query was asked
-                q : term     //the query, decorated with labels
-                  * labels   //the labels themselves
-                  * ranges   //not-relevant at the top-level; recursively this range represents the stack of source locations being visited
-                  = 
+                q            //the query
+               : labels      //the labels themselves
+               * term        //the query, decorated with labels
+               = 
     let flag, msg_prefix = match use_env_msg with 
         | None -> false, ""
         | Some f -> true, f() in
-    let fresh_label rs t labs = 
-        let rs' = if not flag
-                 then rs
-                 else match rs with 
-                        | (Some reason, _)::_ -> [Some ("Failed to verify implicit argument: " ^reason), r]
-                        | _ -> [Some "Failed to verify implicit argument", r] in
-        let lt, labs = fresh_label rs' t labs in
-        lt, labs, rs in
-    let rec aux rs q labs = match q.tm with
+    let fresh_label msg rng t = 
+        let msg = if flag 
+                  then match msg with 
+                       | None -> Some "Failed to verify implicit argument"
+                       | Some msg -> Some ("Failed to verify implicit argument: " ^ msg)
+                   else msg in 
+        fresh_label msg rng t 
+    in
+    let rec aux labels q = match q.tm with
         | BoundV _ 
-        | Integer _ -> 
-          q, labs, rs
+        | Integer _ ->
+          labels, q
 
-        | Labeled(_, "push", r) -> 
-          mkTrue, labs, (None, r)::rs
+        | Labeled(arg, "could not prove post-condition", _) -> 
+          aux labels arg
 
-        | Labeled(_, "pop", r) ->
-          mkTrue, labs, List.tl rs
-
-        | Labeled(arg, reason, r) -> 
-          let tm, labs, rs = aux ((Some reason, r)::rs) arg labs in
-          tm, labs, List.tl rs
+        | Labeled(arg, reason, r) ->
+          let lab, arg = fresh_label (Some reason) r arg in
+          lab::labels, arg
 
         | App(Imp, [lhs;rhs]) -> 
-          let rhs, labs, rs = aux rs rhs labs in
-          let lhs, labs, rs = match lhs.tm with 
-            | App(And, conjuncts) -> 
-              let (labs, rs), conjuncts = Util.fold_map (fun (labs, rs) tm -> 
+          let conjuncts t = match t.tm with 
+            | App(And, cs) -> cs
+            | _ -> [t]
+          in
+          let named_continuation_opt, other_lhs_conjuncts = 
+              conjuncts lhs |> List.partition (fun tm -> 
                 match tm.tm with 
                 | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])}) ->
-                  let r, labs, rs = aux rs r labs in
-                  let q = norng mk <| Quant(Forall, [[p]], Some 0, sorts, norng mk (App(Iff, [l;r]))) in
-                  (labs, rs), q
-                | _ -> (labs, rs), tm) (labs, rs) conjuncts in
-              let tm = List.fold_right (fun conjunct out -> mkAnd(out, conjunct)) conjuncts mkTrue in
-              tm, labs, rs
-           | _ -> lhs, labs, rs in
-          mkImp(lhs, rhs), labs, rs
+                    true
+                | _ -> false) 
+          in
+          begin match named_continuation_opt with 
+                | _::_::_ -> failwith "More than one named continuation; impossible"
+
+                | [] -> //the easy case, no continuation sharing
+                  let labels, rhs = aux labels rhs in
+                  labels, mkImp(lhs, rhs)
+
+                | [q] -> 
+                  match q.tm with 
+                  | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])}) ->
+                    let labels, r = aux labels r in
+                    let q = mk (Quant(Forall, [[p]], Some 0, sorts, norng mk (App(Iff, [l;r])))) q.rng in
+                    let lhs = Term.mk_and_l (q::other_lhs_conjuncts) lhs.rng in
+                    let rhs_p, rhs_rest = 
+                        let hash_of_p = Term.hash_of_term p in
+                        conjuncts rhs |> List.partition (fun t -> Term.hash_of_term t = hash_of_p) in
+                    let labels, rhs_rest = aux labels (Term.mk_and_l rhs_rest rhs.rng) in
+                    let rhs = Term.mk_and_l (rhs_rest::rhs_p) rhs.rng in
+                    labels, mkImp(lhs, rhs) 
+                  | _ -> failwith "Impossible"
+          end
 
         | App(And, conjuncts) ->
-          let rs, conjuncts, labs = List.fold_left (fun (rs, cs, labs) c -> 
-            let c, labs, rs = aux rs c labs in
-            rs, c::cs, labs) 
-            (rs, [], labs)
-            conjuncts in
-          let tm = List.fold_left (fun out conjunct -> mkAnd(out, conjunct)) mkTrue conjuncts in
-          tm, labs, rs
-       
+          let labels, conjuncts = Util.fold_map aux labels conjuncts in
+          labels, Term.mk_and_l conjuncts q.rng
+
         | App(ITE, [hd; q1; q2]) -> 
-          let q1, labs, _ = aux rs q1 labs in
-          let q2, labs, _ = aux rs q2 labs in
-          norng mk (App(ITE, [hd; q1; q2])), labs, rs
+          let labels, q1 = aux labels q1 in
+          let labels, q2 = aux labels q2 in
+          labels, Term.mkITE (hd, q1, q2) q.rng
 
         | Quant(Exists, _, _, _, _)
         | App(Iff, _)
         | App(Or, _) -> //non-atomic, but can't case split 
-          fresh_label rs q labs
+          let lab, t = fresh_label None q.rng q in
+          lab::labels, q
 
         | FreeV _ 
         | App(True, _)
@@ -131,7 +139,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | App(GT, _)
         | App(GTE, _)
         | App(Var _, _) -> //atomic goals
-          fresh_label rs q labs
+          let lab, q = fresh_label None q.rng q in
+          lab::labels, q
 
         | App(Add, _)
         | App(Sub, _)
@@ -146,9 +155,10 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           failwith "Impossible: arity mismatch"
        
         | Quant(Forall, pats, iopt, sorts, body) -> 
-          let body, labs, rs = aux rs body labs in 
-          norng mk (Quant(Forall, pats, iopt, sorts, body)), labs, rs in
-    aux [] q []
+          let labels, body = aux labels body in
+          labels, Term.mk (Quant(Forall, pats, iopt, sorts, body)) q.rng
+    in
+    aux [] q
 
 
 (* 

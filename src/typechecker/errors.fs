@@ -60,6 +60,7 @@ let message_prefix =
     {set_prefix=set_prefix;
      clear_prefix=clear_prefix;
      append_prefix=append_prefix}
+open Range
 let add_errors env errs =
     let errs = errs |> List.map (fun (msg, r) -> 
         let r = if r=dummyRange then Env.get_range env else r in 
@@ -71,7 +72,10 @@ let add_errors env errs =
 let report_all () =
     let all_errs = atomically (fun () -> let x = !verification_errs in verification_errs := []; x) in
     let all_errs = List.sortWith (fun (r1, _) (r2, _) -> Range.compare r1 r2) all_errs in
-    all_errs |> List.iter (fun (r, msg) -> Util.print2 "%s: %s\n" (Range.string_of_range r) msg);
+    all_errs |> List.iter (fun (r, msg) -> 
+        if r.use_range <> r.def_range
+        then Util.print3 "%s: %s (proof obligation defined at %s)\n" (Range.string_of_use_range r) msg (Range.string_of_range r)
+        else Util.print2 "%s: %s\n" (Range.string_of_range r) msg);
     List.length all_errs
 
 
