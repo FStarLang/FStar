@@ -198,10 +198,8 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
         let mly = MLE_Name y in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
         let gamma = Fv(x, Inr(mly, t_x, is_rec))::g.gamma in
-        let tcenv = TypeChecker.Env.push_let_binding g.tcenv (Inr x) ([], x.fv_name.ty) in
-        {g with gamma=gamma; tcenv=tcenv}
-    else //let _ = printfn  "(* type scheme of \n %A \n is not closed or misses an unit argument: \n %A *) \n"  x.v.ident t_x in
-         failwith "freevars found"
+        {g with gamma=gamma}
+    else failwith "freevars found"
 
 let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env =
     let mlp = mlpath_of_lident x.fv_name.v in

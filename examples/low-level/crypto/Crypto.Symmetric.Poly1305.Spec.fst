@@ -88,6 +88,8 @@ let little_endian_singleton n =
     U8.v (Seq.index (Seq.create 1 n) 0) + pow2 8 *
     little_endian (Seq.slice (Seq.create 1 n) 1 1))
 
+#set-options "--z3timeout 20"
+
 val little_endian_append: w1:word -> w2:word{length w1 + length w2 <= 16} -> Lemma
   (requires True)
   (ensures 

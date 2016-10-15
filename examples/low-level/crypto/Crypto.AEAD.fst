@@ -5,11 +5,10 @@ module Crypto.AEAD
 
 // This file intends to match the spec of AEAD0.fst in mitls-fstar. 
 
-open FStar.HST
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
-open FStar.HST.Monotonic.RRef
+open FStar.Monotonic.RRef
 
 open Crypto.Symmetric.Bytes
 open Plain
@@ -344,10 +343,12 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
    xors == counterblocks i rgn (PRF.incr x) l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
                                          
    (let m = PRF.macRange rgn i x e in
+    let mac_log = MAC.ilog (MAC.State.log m) in
+    m_contains mac_log h /\ (
     match m_sel h (MAC.ilog (MAC.State.log m)) with
     | None           -> False
     | Some (msg,tag') -> msg = field_encode i ad plain /\
-			tag = tag'))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
+			tag = tag')))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
 
 let rec refines h i rgn entries blocks = 
   if Seq.length entries = 0 then 
@@ -386,68 +387,52 @@ let rec refines_length (#rgn:region) (#i:id{safeId i}) (h:mem)
 	  let blocks_tail = Seq.slice blocks (b + 1) (Seq.length blocks) in
 	  refines_length h entries_tl blocks_tail
 
-//Experimenting with proving some lemmas just relating the entries to the PRF
-//disregarding the mac log temporarily
-let refines_one_entry_no_mac (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (blocks:Seq.seq (PRF.entry rgn i)) = 
-  let Entry nonce ad l plain cipher_tagged = e in
-  let b = num_blocks e in 
-  b + 1 = Seq.length blocks /\
-  (let PRF.Entry x e = Seq.index blocks 0 in
-   PRF (x.iv = nonce) /\
-   PRF (x.ctr = 0ul)  /\ (
-   let xors = Seq.slice blocks 1 (b+1) in 
-   let cipher, tag = SeqProperties.split cipher_tagged l in
-   safelen i l 1ul /\
-   xors == counterblocks i rgn (PRF.incr x) l plain cipher))
-
-
-val refines_no_mac: 
-  h:mem -> 
-  i:id {safeId i} -> rgn:region ->
-  entries: Seq.seq (entry i) -> 
-  blocks: Seq.seq (PRF.entry rgn i) -> GTot Type0
-  (decreases (Seq.length entries))
-  
-let rec refines_no_mac h i rgn entries blocks = 
-  if Seq.length entries = 0 then 
-    Seq.length blocks == 0 //NS:using == to get it to match with the Type returned by the other branch
-  else let e = SeqProperties.head entries in
-       let b = num_blocks e in 
-       b < Seq.length blocks /\
-       (let blocks_for_e = Seq.slice blocks 0 (b + 1) in
-       	let entries_tl = SeqProperties.tail entries in
-        let remaining_blocks = Seq.slice blocks (b+1) (Seq.length blocks) in
-        refines_one_entry_no_mac h e blocks_for_e /\
-	refines_no_mac h i rgn entries_tl remaining_blocks)
-
 #set-options "--z3timeout 100 --initial_fuel 2 --max_fuel 2 --initial_ifuel 0 --max_ifuel 0"
-let refines_singleton (h:mem) (i:id{safeId i}) (rgn:region) (e:entry i) (blocks_for_e:Seq.seq (PRF.entry rgn i))
-  : Lemma (requires (refines_one_entry_no_mac h e blocks_for_e))
-	  (ensures (refines_no_mac h i rgn (Seq.create 1 e) blocks_for_e))
+let refines__singleton (h:mem) (i:id{safeId i}) (rgn:region) (e:entry i) (blocks_for_e:Seq.seq (PRF.entry rgn i))
+  : Lemma (requires (refines_one_entry h e blocks_for_e))
+	  (ensures (refines h i rgn (Seq.create 1 e) blocks_for_e))
   = let b = num_blocks e in 
     cut (Seq.equal (Seq.slice blocks_for_e 0 (b + 1)) blocks_for_e)
 
+let frame_refines_one_entry (h:mem) (i:id{safeId i}) (mac_rgn:region) 
+			    (e:entry i) (blocks:Seq.seq (PRF.entry mac_rgn i))
+			    (h':mem)
+   : Lemma (requires refines_one_entry h e blocks /\			    
+		     modifies_ref mac_rgn TSet.empty h h' /\
+		     HS.live_region h' mac_rgn)
+	   (ensures  refines_one_entry h' e blocks)
+   = let PRF.Entry x rng = Seq.index blocks 0 in
+     let m = PRF.macRange mac_rgn i x rng in
+     let mac_log = MAC.ilog (MAC.State.log m) in
+     assert (m_sel h mac_log = m_sel h' mac_log);
+     assert (m_contains mac_log h') //this include HS.live_region, which is not derivable from modifies_ref along
+     
 #set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-let rec extend_refines_no_mac (h:mem) (i:id{safeId i}) (rgn:region) 
+let rec extend_refines (h:mem) (i:id{safeId i}) (mac_rgn:region) 
 		    (entries:Seq.seq (entry i))
-		    (blocks:Seq.seq (PRF.entry rgn i))
+		    (blocks:Seq.seq (PRF.entry mac_rgn i))
 		    (e:entry i)
-		    (blocks_for_e:Seq.seq (PRF.entry rgn i))
-  : Lemma (requires refines_no_mac h i rgn entries blocks /\
-		    refines_one_entry_no_mac h e blocks_for_e)
-	  (ensures (refines_no_mac h i rgn (SeqProperties.snoc entries e) (Seq.append blocks blocks_for_e)))
+		    (blocks_for_e:Seq.seq (PRF.entry mac_rgn i))
+   		    (h':mem)
+  : Lemma (requires refines h i mac_rgn entries blocks /\
+		    refines_one_entry h' e blocks_for_e /\
+		    modifies_ref mac_rgn TSet.empty h h' /\
+		    HS.live_region h' mac_rgn)
+	  (ensures (refines h' i mac_rgn (SeqProperties.snoc entries e) (Seq.append blocks blocks_for_e)))
 	  (decreases (Seq.length entries))
   = if Seq.length entries = 0 then
-      (refines_singleton h i rgn e blocks_for_e;
+      (refines__singleton h' i mac_rgn e blocks_for_e;
        cut (Seq.equal (SeqProperties.snoc entries e) (Seq.create 1 e));
        cut (Seq.equal (Seq.append blocks blocks_for_e) blocks_for_e))
     else let hd = SeqProperties.head entries in
 	 let entries_tl = SeqProperties.tail entries in
 	 let b = num_blocks hd in
+	 let blocks_hd = Seq.slice blocks 0 (b + 1) in
 	 let blocks_tl = Seq.slice blocks (b + 1) (Seq.length blocks) in
-	 assert (refines_no_mac h i rgn entries_tl blocks_tl);
-	 extend_refines_no_mac h i rgn entries_tl blocks_tl e blocks_for_e;
-	 assert (refines_no_mac h i rgn (SeqProperties.snoc entries_tl e) (Seq.append blocks_tl blocks_for_e));
+	 assert (refines h i mac_rgn entries_tl blocks_tl);
+	 frame_refines_one_entry h i mac_rgn hd blocks_hd h';
+	 extend_refines h i mac_rgn entries_tl blocks_tl e blocks_for_e h';
+	 assert (refines h' i mac_rgn (SeqProperties.snoc entries_tl e) (Seq.append blocks_tl blocks_for_e));
 	 cut (Seq.equal (SeqProperties.snoc entries e) (SeqProperties.cons hd (SeqProperties.snoc entries_tl e)));
 	 cut (SeqProperties.head (SeqProperties.snoc entries e) == hd);
 	 cut (Seq.equal (SeqProperties.tail (SeqProperties.snoc entries e)) (SeqProperties.snoc entries_tl e));
@@ -458,6 +443,8 @@ let rec extend_refines_no_mac (h:mem) (i:id{safeId i}) (rgn:region)
 	 cut (Seq.equal (Seq.slice ext_blocks 0 (b + 1)) blocks_hd);
 	 cut (Seq.equal (Seq.slice ext_blocks (b + 1) (Seq.length ext_blocks)) 
 			(Seq.append blocks_tl blocks_for_e))
+
+
 
 (* notes 16-10-04 
 
@@ -529,7 +516,7 @@ val counter_enxor:
     Plain.live h plain /\ 
     Buffer.live h cipher /\ 
     // if ciphertexts are authenticated, then fresh blocks are available
-    (safeId i ==> (forall z. z `above` x ==> find_otp #t.rgn #i (HS.sel h t.table) z == None))
+    (safeId i ==> (forall z. z `above` x ==> find_otp #t.mac_rgn #i (HS.sel h t.table) z == None))
     ))
   (ensures (fun h0 _ h1 -> 
     Plain.live h1 plain /\ 
@@ -537,7 +524,9 @@ val counter_enxor:
     // in all cases, we extend the table only at x and its successors.
     modifies_X_buffer_1 t x cipher h0 h1 /\
     // if ciphertexts are authenticated, then we precisely know the table extension
-    (safeId i ==> HS.sel h1 t.table == Seq.append (HS.sel h0 t.table) (counterblocks i t.rgn x (v len) (Plain.sel_plain h1 len plain) (Buffer.as_seq h1 cipher)))
+    (safeId i ==> HS.sel h1 t.table ==
+		  Seq.append (HS.sel h0 t.table) 
+			     (counterblocks i t.mac_rgn x (v len) (Plain.sel_plain h1 len plain) (Buffer.as_seq h1 cipher)))
     // NB the post of prf_enxor should be strengthened a bit (using PRF.extends?)
     ))
     
@@ -573,7 +562,7 @@ val counter_dexor:
     Plain.live h plain /\ 
     Buffer.live h cipher /\ 
     // if ciphertexts are authenticated, then the table already includes all we need
-    (safeId i ==> (let expected = counterblocks i t.rgn x (v len) (Plain.sel_plain h len plain) (Buffer.as_seq h cipher) in
+    (safeId i ==> (let expected = counterblocks i t.mac_rgn x (v len) (Plain.sel_plain h len plain) (Buffer.as_seq h cipher) in
                 True //TODO say that expected is found in the table
     ))))
   (ensures (fun h0 _ h1 -> 
@@ -581,7 +570,7 @@ val counter_dexor:
     Buffer.live h1 cipher /\ 
     // in all cases, we extend the table only at x and its successors.
     modifies_X_buffer_1 t x (as_buffer plain) h0 h1 /\
-    (safeId i ==> Seq.equal #(PRF.entry (PRF(t.rgn))i) (HS.sel h1 t.table) (HS.sel h0 t.table))))
+    (safeId i ==> Seq.equal #(PRF.entry (PRF t.mac_rgn) i) (HS.sel h1 t.table) (HS.sel h0 t.table))))
   
 let rec counter_dexor i t x len plaintext ciphertext =
   assume false;//16-10-12 
@@ -595,7 +584,7 @@ let rec counter_dexor i t x len plaintext ciphertext =
       (*
       recall (PRF t.table); //16-09-22 could this be done by ! ??
       let s = PRF !t.table in
-      let h = HST.get() in
+      let h = ST.get() in
       // WARNING: moving the PRF.find_otp outside the assume will segfault
       // at runtime, because t.table doesn't exist in real code
       assume(match PRF.find_otp #(PRF.State.rgn t) #i s x with
@@ -624,7 +613,7 @@ let inv h #i #rw e =
     safeId i ==>
     ( let blocks = HS.sel h (PRF.State.table prf) in
       let entries = HS.sel h log in
-      refines h i log_region entries blocks )
+      refines h i (PRF prf.mac_rgn) entries blocks )
 
 (*
       // no need to be so specific here --- details follow from the invariant

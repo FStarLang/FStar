@@ -6,14 +6,14 @@ module Crypto.Symmetric.Poly1305.MAC
 
 open FStar.HyperHeap
 open FStar.HyperStack
-open FStar.HST
 open FStar.Ghost
 open FStar.UInt64
 open FStar.Buffer
-open FStar.HST.Monotonic.RRef
+open FStar.Monotonic.RRef
 
 open Crypto.Symmetric.Poly1305.Spec
 open Crypto.Symmetric.Poly1305 // avoid?
+open Crypto.Symmetric.Bytes
 open Flag 
 
 module HH = FStar.HyperHeap
@@ -22,11 +22,6 @@ module HH = FStar.HyperHeap
 
 type alg = Flag.mac_alg
 let alg_of_id = Flag.cipher_of_id
-
-type buffer = Buffer.buffer UInt8.t
-type bytes  = Seq.seq UInt8.t
-type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
-type lbytes  (l:nat) = b:bytes {Seq.length b = l}
 
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 
@@ -73,21 +68,6 @@ type log_2 = // only when ideal
   | Corrupt
 *)
 
-// TODO: right now we use a dummy, should be external
-// relocated in some library somewhere,
-// and with careful, crypto-grade external implementation
-// both with ocaml and kremlin,
-val random: r:rid -> len:UInt32.t -> ST buffer
-     (requires (fun h -> is_eternal_region r))
-     (ensures (fun (h0:mem) b h1 ->
-         ~(contains h0 b)
-       /\ live h1 b /\ idx b = 0 /\ length b = UInt32.v len
-       /\ Map.domain h1.h == Map.domain h0.h
-       /\ h1.tip = h0.tip
-       /\ modifies (Set.singleton r) h0 h1
-       /\ modifies_ref r TSet.empty h0 h1))
-let random r len = FStar.Buffer.rcreate r 0uy len
-
 // the sequence of hashed elements is conditional, but not ghost
 // this will require changing e.g. the type of poly1305_add
 let itext: Type0 = if Flag.mac_log then text else unit
@@ -133,12 +113,15 @@ noeq type state (i:id) =
 let genPost0 (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
     ~(contains m0 st.r) /\
     ~(contains m0 st.s) /\
-    modifies (Set.singleton region) m0 m1 /\ 
     st.region == region /\
-    (mac_log ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)
+    (mac_log ==> 
+        ~ (m_contains (ilog st.log) m0) /\ 
+	   m_contains (ilog st.log) m1 /\ 
+	   m_sel m1 (ilog st.log) == None)
 
 let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
     genPost0 i region m0 st m1 /\
+    modifies (Set.singleton region) m0 m1 /\ 
     modifies_rref region TSet.empty m0.h m1.h 
 
 val alloc: i:id
@@ -153,9 +136,9 @@ let alloc i region key =
   let r = FStar.Buffer.rcreate region 0UL 5ul in
   let s = FStar.Buffer.rcreate region 0uy 16ul in
   cut (disjoint r key /\ disjoint s key);
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   poly1305_init r s key;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   lemma_reveal_modifies_2 r s h0 h1;
   if mac_log then
     let log = m_alloc #log #log_cmp region None in
@@ -168,8 +151,13 @@ val gen: i:id -> region:rid{is_eternal_region region} -> ST (state i)
   (ensures (genPost i region))
 
 let gen i region =
-  let key = random region 32ul in
+  let key = FStar.Buffer.rcreate region 0uy 32ul in
+  let h0 = ST.get() in
+  random 32 key;
+  let h1 = ST.get () in
+  lemma_reveal_modifies_1 key h0 h1;
   alloc i region key
+
 
 val coerce: i:id{~(authId i)} -> r:rid -> key:lbuffer 32 -> ST (state i)
   (requires (fun m0 -> live m0 key))
@@ -201,13 +189,13 @@ val start: #i:id -> st:state i -> StackInline (accB i)
   (requires (fun h -> live h st.r /\ norm h st.r))
   (ensures  (fun h0 a h1 -> acc_inv st text_0 a h1))
 let start #i st =
-  let h0 = HST.get () in
+  let h0 = ST.get () in
   let a = Buffer.create 0UL 5ul in
-  let h1 = HST.get () in
+  let h1 = ST.get () in
   //lemma_reveal_modifies_0 h0 h1;
   assert (equal h0 st.r h1 st.r);
   poly1305_start a;
-  let h2 = HST.get () in
+  let h2 = ST.get () in
   //lemma_reveal_modifies_1 a h1 h2;
   assert (equal h1 st.r h2 st.r);
   Bigint.norm_eq_lemma h0 h2 st.r st.r;
@@ -239,9 +227,9 @@ let seq_head_snoc #a xs x =
 #set-options "--z3timeout 100 --print_fuels --initial_fuel 1 --initial_ifuel 1"
 
 let update #i st l a v =
-  let h0 = HST.get () in
+  let h0 = ST.get () in
   add_and_multiply a v st.r;
-  let h1 = HST.get () in
+  let h1 = ST.get () in
   //lemma_reveal_modifies_1 a h0 h1;
   Bigint.eval_eq_lemma h0 h1 st.r st.r Parameters.norm_length;
   Bigint.eval_eq_lemma h0 h1 v v Parameters.norm_length;
@@ -315,9 +303,9 @@ val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit
       m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag)))))
 
 let mac #i st l acc tag =
-  let h0 = HST.get () in
+  let h0 = ST.get () in
   poly1305_finish tag acc st.s;
-  let h1 = HST.get () in
+  let h1 = ST.get () in
   if mac_log then
     begin
     //assume (mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) ==
@@ -395,7 +383,7 @@ let add #i st l0 a w =
   let e = Buffer.create 0UL Crypto.Symmetric.Poly1305.Parameters.nlength in
   toField_plus_2_128 e w;
   let l1 = update st l0 a e in
-  let h = HST.get() in
+  let h = ST.get() in
   let msg = esel_word h w in
 //  let l1 = Ghost.elift2 (fun log msg -> SeqProperties.snoc log (encode_16 msg)) l0 msg in
   pop_frame();

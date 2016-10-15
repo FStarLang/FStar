@@ -17,3 +17,4 @@ let lowercase = String.lowercase
 let index = get  
 let substring s i j= String.sub s (Z.to_int i) (Z.to_int j)
 let sub = substring
+let list_of_string = BatString.explode
