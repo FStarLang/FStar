@@ -258,7 +258,7 @@ let gen_wps_for_free
   let wp_if_then_else =
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
-      let l_ite = fvar Const.ite_lid (S.Delta_unfoldable 2) None in
+      let l_ite = fvar Const.ite_lid (S.Delta_defined_at_level 2) None in
       U.ascribe (
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
@@ -275,7 +275,7 @@ let gen_wps_for_free
   let wp_assert =
     let q = S.gen_bv "q" None U.ktype in
     let wp = S.gen_bv "wp" None wp_a in
-    let l_and = fvar Const.and_lid (S.Delta_unfoldable 1) None in
+    let l_and = fvar Const.and_lid (S.Delta_defined_at_level 1) None in
     let body =
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_pure (List.map S.as_arg [
@@ -293,7 +293,7 @@ let gen_wps_for_free
   let wp_assume =
     let q = S.gen_bv "q" None U.ktype in
     let wp = S.gen_bv "wp" None wp_a in
-    let l_imp = fvar Const.imp_lid (S.Delta_unfoldable 1) None in
+    let l_imp = fvar Const.imp_lid (S.Delta_defined_at_level 1) None in
     let body =
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_pure (List.map S.as_arg [
@@ -343,7 +343,7 @@ let gen_wps_for_free
   in
   let rec mk_rel rel t x y =
     let mk_rel = mk_rel rel in
-    let t = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env t in
+    let t = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.Delta_constant ] env t in
     match (SS.compress t).n with
     | Tm_type _ ->
         (* Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
@@ -787,7 +787,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 and infer (env: env) (e: term): nm * term * term =
   // Util.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
-  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant; N.EraseUniverses ] env.env in
+  let normalize = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.Delta_constant; N.EraseUniverses ] env.env in
   match (SS.compress e).n with
   | Tm_bvar bv ->
       failwith "I failed to open a binder... boo"
@@ -831,12 +831,6 @@ and infer (env: env) (e: term): nm * term * term =
       // From [comp], the inferred computation type for the (original), return
       // the inferred type for the original term.
       let t = U.arrow binders comp in
-//        let binders = List.map (fun (bv, _) ->
-//          S.mk_binder (S.null_bv bv.sort)
-//        ) binders in
-//        let binders = close_binders binders in
-//        mk (Tm_arrow (binders, comp)) 
-//      in
 
       let s_body = close s_binders s_body in
       let s_binders = close_binders s_binders in
@@ -1106,9 +1100,6 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       let app = mk (Tm_app (wp, List.map (fun bv -> S.bv_to_name bv, S.as_implicit false) bvs)) in
       let comp = trans_G env (type_of_comp comp) (is_monadic_comp comp) app in
       U.arrow binders comp
-//      let comp = close_comp binders comp in
-//      let binders = close_binders binders in
-//      mk (Tm_arrow (binders, comp))
   | _ ->
       failwith "impossible trans_F_"
 
@@ -1127,7 +1118,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 
 // A helper --------------------------------------------------------------------
 
-let n = N.normalize [ N.Beta; N.UnfoldUntil Delta_constant; N.NoInline; N.Inline; N.EraseUniverses ]
+let n = N.normalize [ N.Beta; N.UnfoldUntil Delta_constant; N.NoDeltaSteps; N.Eager_unfolding; N.EraseUniverses ]
 
 // Exported definitions -------------------------------------------------------
 

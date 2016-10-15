@@ -137,7 +137,7 @@ let rec level env t =
     | Tm_constant _ ->
         Term_level
 
-    | Tm_fvar ({fv_delta=Delta_unfoldable _}) ->
+    | Tm_fvar ({fv_delta=Delta_defined_at_level _}) ->
       let t' = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses; N.Exclude N.Zeta; N.Exclude N.Iota] env.tcenv t in
       debug env (fun () -> Util.print2 "Normalized %s to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
       level env t'
@@ -363,11 +363,11 @@ let rec term_as_mlty (g:env) (t0:term) : mlty =
           end
         | _ -> false
     in
-    let t = N.normalize [N.Beta; N.Inline; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
+    let t = N.normalize [N.Beta; N.Eager_unfolding; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
     let mlt = term_as_mlty' g t in
     if is_top_ty mlt
     then //Try normalizing t fully, this time with Delta steps, and translate again, to see if we can get a better translation for it
-         let t = N.normalize [N.Beta; N.Inline; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
+         let t = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
          term_as_mlty' g t
     else mlt
 
@@ -532,7 +532,13 @@ let extract_pat (g:env) p (expected_t:mlty) : (env * list<(mlpattern * option<ml
         let ok t = 
             match expected_topt with 
             | None -> true
-            | Some t' -> type_leq g t t' in
+            | Some t' -> 
+              let ok = type_leq g t t' in
+              if not ok then debug g (fun _ -> Util.print2 "Expected pattern type %s; got pattern type %s\n"
+                                                    (Code.string_of_mlty g.currentModule t')
+                                                    (Code.string_of_mlty g.currentModule t));
+              ok 
+        in
         match p.v with
           | Pat_disj _ -> failwith "Impossible: Nested disjunctive pattern"
 
@@ -574,25 +580,33 @@ let extract_pat (g:env) p (expected_t:mlty) : (env * list<(mlpattern * option<ml
                 | _ -> failwith "Expected a constructor" in
             let nTyVars = List.length (fst tys) in
             let tysVarPats, restPats =  Util.first_N nTyVars pats in
-            let pat_ty_compat = 
-                match expected_topt with 
-                | None -> true
-                | Some expected_t -> 
+            let f_ty_opt =
                     try 
                         let mlty_args = tysVarPats |> List.map (fun (p, _) -> 
                             match p.v with 
                             | Pat_dot_term (_, t) -> term_as_mlty g t
-                            | _ -> raise Un_extractable) in
-                        let pat_ty = subst tys mlty_args in
-                        type_leq g pat_ty expected_t 
-                    with Un_extractable -> false in
+                            | _ -> 
+                              debug g (fun _ -> Util.print1 "Pattern %s is not extractable" (Print.pat_to_string p));
+                              raise Un_extractable) in
+                        let f_ty = subst tys mlty_args in
+                        Some (Util.uncurry_mlty_fun f_ty) 
+                    with Un_extractable -> None in
+
             let g, tyMLPats = Util.fold_map (fun g (p, imp) -> 
                 let g, p, _ = extract_one_pat disjunctive_pat true g p None in
                 g, p) g tysVarPats in (*not all of these were type vars in ML*)
-            let g, restMLPats = Util.fold_map (fun g (p, imp) -> 
-                let g, p, _ = extract_one_pat disjunctive_pat false g p None in
-                g, p) g restPats in
+
+            let (g, f_ty_opt), restMLPats = Util.fold_map (fun (g, f_ty_opt) (p, imp) -> 
+                let f_ty_opt, expected_ty = match f_ty_opt with 
+                    | Some (hd::rest, res) -> Some (rest, res), Some hd
+                    | _ -> None, None in
+                let g, p, _ = extract_one_pat disjunctive_pat false g p expected_ty in
+                (g, f_ty_opt), p) (g, f_ty_opt) restPats in
+
             let mlPats, when_clauses = List.append tyMLPats restMLPats |> List.collect (function (Some x) -> [x] | _ -> []) |> List.split in
+            let pat_ty_compat = match f_ty_opt with 
+                | Some ([], t) -> ok t
+                | _ -> false in
             g, Some (resugar_pat f.fv_qual (MLP_CTor (d, mlPats)), when_clauses |> List.flatten), pat_ty_compat in
 
 
@@ -976,8 +990,12 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let lbs =
             if top_level
             then lbs |> List.map (fun lb ->
-                    let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.Inline; N.Exclude N.Zeta; N.PureSubtermsWithinComputations; N.Primops] 
-                                g.tcenv lb.lbdef in
+                    let tcenv = TcEnv.set_current_module g.tcenv
+                                (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
+                    let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; 
+                                             N.Inlining; N.Eager_unfolding;
+                                             N.Exclude N.Zeta; N.PureSubtermsWithinComputations; N.Primops] 
+                                tcenv lb.lbdef in
                     {lb with lbdef=lbdef})
             else lbs in
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
@@ -1150,7 +1168,12 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
              let mlbranches = List.flatten mlbranches in
              //if the type of the pattern isn't compatible with the type of the scrutinee
              //    insert a magic around the scrutinee
-             let e = if pat_t_compat then e else with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top) in
+             let e = if pat_t_compat 
+                     then e 
+                     else (debug g (fun _ -> Util.print2 "Coercing scrutinee %s from type %s because pattern type is incompatible\n" 
+                                                (Code.string_of_mlexpr g.currentModule e)
+                                                (Code.string_of_mlty g.currentModule t_e));
+                           with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in
              begin match mlbranches with
                 | [] ->
                     let fw, _, _ = Util.right <| UEnv.lookup_fv g (S.lid_as_fv FStar.Syntax.Const.failwith_lid Delta_constant None) in

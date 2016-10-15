@@ -1,20 +1,20 @@
 module Bug711
 
 type label = bool
-inline let low = true
-inline let high = false
+unfold let low = true
+unfold let high = false
 
 (* working around the whitelist *)
-inline let eq l1 l2 =
+unfold let eq l1 l2 =
   match l1, l2 with
   | true, true
   | false, false -> true
   | _, _ -> false
 
-inline let join l1 l2 =
+unfold let join l1 l2 =
   if l1 `eq` high || l2 `eq` high then high else low
 
-inline let flows l1 l2 = not(l1 `eq` high && l2 `eq` low)
+unfold let flows l1 l2 = not(l1 `eq` high && l2 `eq` low)
 
 let ifc (a:Type) = label -> M (option (a * label))
 

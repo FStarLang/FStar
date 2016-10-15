@@ -82,7 +82,7 @@ let ist_wp   (state:Type) (a:Type) = ist_post state a -> Tot (ist_pre state)
 
 (* Pure is a sub-effect/sub-monad of the allocated references instance of the preorder-indexed monad. *)
 
-inline let lift_pure_istate (state:Type) (rel:relation state{preorder rel}) 
+unfold let lift_pure_istate (state:Type) (rel:relation state{preorder rel}) 
                            (a:Type) (wp:pure_wp a) (s:state) (p:ist_post state a) = wp (fun x -> p (x, s))
 sub_effect PURE ~> ISTATE = lift_pure_istate heap heap_rel
 

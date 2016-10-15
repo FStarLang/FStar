@@ -21,7 +21,7 @@ irreducible type bijection (f:int -> Tot int) = injection f /\ surjection f
 
 type bij = f:(int -> Tot int){bijection f}
 
-inline type inverses (f:int -> Tot int) (g:int -> Tot int) =
+unfold type inverses (f:int -> Tot int) (g:int -> Tot int) =
    (forall (y:int). f (g y) = y) /\
    (forall (x:int). g (f x) = x)
 

@@ -9,45 +9,45 @@ let pre = int -> Type0
 let post (a:Type) = (a * int) -> Type0
 let wp (a:Type) = int -> post a -> Type0
 assume val r0: range
-inline let return_wp (a:Type) (x:a) (n0:int) (post:post a) =
+unfold let return_wp (a:Type) (x:a) (n0:int) (post:post a) =
   forall y. y == (x, n0) ==> post y
 
 //working around #517 by adding an explicit 'val'
-inline val bind_wp : r:range -> (a:Type) -> (b:Type) -> (f:wp a) -> (g:(a -> Tot (wp b))) -> Tot (wp b)
+unfold val bind_wp : r:range -> (a:Type) -> (b:Type) -> (f:wp a) -> (g:(a -> Tot (wp b))) -> Tot (wp b)
 let bind_wp r a b f g =
     fun n0 post -> f n0 (fun x_n1 -> g (fst x_n1) (snd x_n1) post)
 
-inline let if_then_else  (a:Type) (p:Type)
+unfold let if_then_else  (a:Type) (p:Type)
                             (wp_then:wp a) (wp_else:wp a)
                             (h0:int) (post:post a) =
      l_ITE p
         (wp_then h0 post)
         (wp_else h0 post)
-inline let ite_wp        (a:Type)
+unfold let ite_wp        (a:Type)
                             (wp:wp a)
                             (h0:int) (q:post a) =
      forall (k:post a).
          (forall (x:a) (h:int).{:pattern (guard_free (k (x, h)))} k (x, h) <==> q (x, h))
          ==> wp h0 k
-inline let stronger  (a:Type) (wp1:wp a) (wp2:wp a) =
+unfold let stronger  (a:Type) (wp1:wp a) (wp2:wp a) =
      (forall (p:post a) (h:int). wp1 h p ==> wp2 h p)
 
-inline let close_wp      (a:Type) (b:Type)
+unfold let close_wp      (a:Type) (b:Type)
                             (wp:(b -> GTot (wp a)))
                             (h:int) (p:post a) =
      (forall (b:b). wp b h p)
-inline let assert_p      (a:Type) (p:Type)
+unfold let assert_p      (a:Type) (p:Type)
                             (wp:wp a)
                             (h:int) (q:post a) =
      p /\ wp h q
-inline let assume_p      (a:Type) (p:Type)
+unfold let assume_p      (a:Type) (p:Type)
                             (wp:wp a)
                             (h:int) (q:post a) =
      p ==> wp h q
-inline let null_wp       (a:Type)
+unfold let null_wp       (a:Type)
                             (h:int) (p:post a) =
      (forall (x:a) (h:int). p (x,h))
-inline let trivial       (a:Type)
+unfold let trivial       (a:Type)
                             (wp:wp a) =
      (forall h0. wp h0 (fun r -> True))
 
@@ -55,7 +55,7 @@ inline let trivial       (a:Type)
 let repr (a:Type) (wp:wp a) =
     n0:int -> PURE (a * int) (wp n0)
 
-inline val bind: (a:Type) -> (b:Type) -> (wp0:wp a)
+unfold val bind: (a:Type) -> (b:Type) -> (wp0:wp a)
                  -> (f:repr a wp0)
 		 -> (wp1:(a -> Tot (wp b)))
                  -> (g:(x:a -> Tot (repr b (wp1 x))))
@@ -119,7 +119,7 @@ reifiable reflectable new_effect {
       get  = (fun _ x -> x, x), get_cps_type
     ; put  = (fun x _ -> (), x), put_cps_type
 }
-inline let lift_pure_state (a:Type) (wp:pure_wp a) (n:int) (p:post a) = wp (fun a -> p (a, n))
+unfold let lift_pure_state (a:Type) (wp:pure_wp a) (n:int) (p:post a) = wp (fun a -> p (a, n))
 sub_effect PURE ~> STATE = lift_pure_state
 
 effect ST (a:Type) (pre:pre) (post: (int -> a -> int -> GTot Type0)) =

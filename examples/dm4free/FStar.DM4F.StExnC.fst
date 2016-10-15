@@ -32,8 +32,6 @@ let bind a b f g =
 
 let raise (a:Type) : stexnc a = fun s0 -> (None, (s0, 1))
 
-(* TODO: we need a catch to be able to the counter anywhere larger than 1 *)
-
 (*
  * Define the new effect using DM4F. We don't mark it as reflectable
  * so we know the invariant of exception-counting is enforced
@@ -48,7 +46,7 @@ reifiable new_effect_for_free {
 }
 
 (* A lift from Pure *)
-inline let lift_pure_stexnc (a:Type) (wp:pure_wp a) (h0:int) (p:STEXNC.post a) =
+unfold let lift_pure_stexnc (a:Type) (wp:pure_wp a) (h0:int) (p:STEXNC.post a) =
         wp (fun a -> p (Some a, (h0, 0)))
 sub_effect PURE ~> STEXNC = lift_pure_stexnc
 

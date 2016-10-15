@@ -56,3 +56,13 @@ extraction-error2: ExtractionBug.ver
 	cp ../../lib/ml/native_int/prims.ml .
 	cp ../../lib/ml/hyperheap/*ml .
 	ocamlc prims.ml FStar_HyperHeap.ml FStar_ST.ml ExtractionBug.ml
+
+FSTAR_HOME=../..
+include $(FSTAR_HOME)/ulib/ml/Makefile.include
+
+extraction-bug734: bug734.fst
+	mkdir -p out
+	$(MAKE) -C $(ULIB_ML)
+	$(FSTAR) --explicit_deps $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml bug734.fst
+	$(OCAMLOPT) out/Bug734.ml -o bug734.exe
+	./bug734.exe

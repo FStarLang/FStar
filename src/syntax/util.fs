@@ -753,7 +753,7 @@ let mk_has_type t x t' =
 let lex_t    = fvar_const Const.lex_t_lid 
 let lex_top  = fvar Const.lextop_lid Delta_constant (Some Data_ctor) 
 let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor) 
-let tforall  = fvar Const.forall_lid (Delta_unfoldable 1) None
+let tforall  = fvar Const.forall_lid (Delta_defined_at_level 1) None
 let t_haseq   = fvar Const.haseq_lid Delta_constant None
 
 let lcomp_of_comp c0 =
@@ -905,8 +905,8 @@ let incr_delta_qualifier t =
     let d = delta_qualifier t in
     let rec aux d = match d with
         | Delta_equational -> d
-        | Delta_constant -> Delta_unfoldable 1
-        | Delta_unfoldable i -> Delta_unfoldable (i + 1)
+        | Delta_constant -> Delta_defined_at_level 1
+        | Delta_defined_at_level i -> Delta_defined_at_level (i + 1)
         | Delta_abstract d -> aux d in
     aux d
 

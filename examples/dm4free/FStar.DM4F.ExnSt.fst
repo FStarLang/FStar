@@ -38,17 +38,9 @@ reifiable reflectable new_effect_for_free {
 }
 
 (* A lift from Pure *)
-inline let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:EXNST.post a) =
+unfold let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:EXNST.post a) =
         wp (fun a -> p (Some (a, h0)))
 sub_effect PURE ~> EXNST = lift_pure_exnst
-
-(* A lift "for free" from STINT to EXNST *)
-let lift (a: Type) (f: IntST.st a): exnst a =
-  fun h -> let ret = f h in Some ret
-
-sub_effect IntST.STINT ~> EXNST {
-  lift = lift
-}
 
 (* A lift from a previously defined state effect *)
 val lift_state_exnst_wp : (a:Type) -> IntST.wp a -> EXNST.wp a
@@ -59,7 +51,6 @@ val lift_state_exnst : (a:Type) ->
                        (wp:IntST.wp a) -> (f:IntST.repr a wp) ->
                        EXNST.repr a (lift_state_exnst_wp a wp)
 let lift_state_exnst a wp f =
-        (* TODO: This fails without admit, but all seems correct *)
         fun h0 -> admit(); Some (f h0)
 
 sub_effect IntST.STINT ~> EXNST {

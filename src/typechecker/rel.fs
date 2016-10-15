@@ -677,8 +677,8 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
         let head, _ = Util.head_and_args t in 
         match (Util.un_uinst head).n with 
         | Tm_fvar fv -> 
-          if Env.lookup_definition Env.OnlyInline env fv.fv_name.v |> Option.isSome
-          then N.normalize [N.Beta; N.Inline] env t |> Some
+          if Env.lookup_definition [Env.Eager_unfolding_only] env fv.fv_name.v |> Option.isSome
+          then N.normalize [N.Beta; N.Eager_unfolding] env t |> Some
           else None
         | _ -> None
     in
@@ -1199,9 +1199,9 @@ and solve_rigid_flex_meet env tp wl =
                 | _ ->
                   let head1, _ = Util.head_and_args t1 in
                   begin match (Util.un_uinst head1).n with
-                    | Tm_fvar {fv_delta=Delta_unfoldable i} ->
+                    | Tm_fvar {fv_delta=Delta_defined_at_level i} ->
                       let prev = if i > 1
-                                 then Delta_unfoldable (i - 1)
+                                 then Delta_defined_at_level (i - 1)
                                  else Delta_constant in
                       let t1 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t1 in
                       let t2 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t2 in
@@ -2225,7 +2225,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                            | None -> 
                              if Util.is_ghost_effect c1.effect_name
                              && Util.is_pure_effect c2.effect_name
-                             && Util.non_informative (N.normalize [N.Inline;N.UnfoldUntil Delta_constant] env c2.result_typ)
+                             && Util.non_informative (N.normalize [N.Eager_unfolding; N.UnfoldUntil Delta_constant] env c2.result_typ)
                              then let edge = {msource=c1.effect_name; mtarget=c2.effect_name; mlift=fun r t -> t} in
                                   solve_sub c1 edge c2
                              else giveup env (Util.format2 "incompatible monad ordering: %s </: %s" 
@@ -2348,7 +2348,7 @@ let simplify_guard env g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f ->
       if Env.debug env <| Options.Other "Simplification" then Util.print1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = N.normalize [N.Beta; N.Inline; N.Simplify] env f in
+      let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
       if Env.debug env <| Options.Other "Simplification" then Util.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (Util.unmeta f).n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
@@ -2515,7 +2515,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) : guard_t =
         if Env.debug env <| Options.Other "Norm" 
         then Errors.diag (Env.get_range env) 
                             (Util.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
-        let vc = N.normalize [N.Inline; N.Beta; N.Simplify] env vc in
+        let vc = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify] env vc in
         begin match check_trivial vc with
             | Trivial -> ()
             | NonTrivial vc ->

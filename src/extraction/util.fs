@@ -123,7 +123,7 @@ type unfold_t = mlty -> option<mlty>
    In the case where f is a function literal, \x. e, subsuming it to (t -> Ghost t') means that we can simply 
    erase e to unit right away. 
 *)
-let rec type_leq_c (unfold:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bool * option<mlexpr>) = 
+let rec type_leq_c (unfold_ty:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bool * option<mlexpr>) = 
     match t, t' with
         | MLTY_Var x, MLTY_Var y ->
           if fst x = fst y
@@ -140,17 +140,17 @@ let rec type_leq_c (unfold:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bo
               with_ty (mk_ty_fun xs body.mlty) e in
           begin match e with 
             | Some ({expr=MLE_Fun(x::xs, body)}) ->
-              if type_leq unfold t1' t1
+              if type_leq unfold_ty t1' t1
               && eff_leq f f'
               then if f=E_PURE 
                    && f'=E_GHOST 
-                   then if type_leq unfold t2 t2'
-                        then let body = if type_leq unfold t2 ml_unit_ty 
+                   then if type_leq unfold_ty t2 t2'
+                        then let body = if type_leq unfold_ty t2 ml_unit_ty 
                                         then ml_unit
                                         else with_ty t2' <| MLE_Coerce(ml_unit, ml_unit_ty, t2') in
                              true, Some (with_ty (mk_ty_fun [x] body.mlty) <| MLE_Fun([x], body))
                         else false, None
-                   else let ok, body = type_leq_c unfold (Some <| mk_fun xs body) t2 t2' in
+                   else let ok, body = type_leq_c unfold_ty (Some <| mk_fun xs body) t2 t2' in
                         let res = match body with
                             | Some body -> Some (mk_fun [x] body) 
                             | _ ->  None in 
@@ -158,41 +158,41 @@ let rec type_leq_c (unfold:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bo
               else false, None 
 
             | _ -> 
-              if type_leq unfold t1' t1
+              if type_leq unfold_ty t1' t1
               && eff_leq f f'
-              && type_leq unfold t2 t2'
+              && type_leq unfold_ty t2 t2'
               then true, e
               else false, None
           end
    
         | MLTY_Named(args, path), MLTY_Named(args', path') ->
           if path=path'
-          then if List.forall2 (type_leq unfold) args args'
+          then if List.forall2 (type_leq unfold_ty) args args'
                then true, e
                else false, None
-          else begin match unfold t with
-                        | Some t -> type_leq_c unfold e t t'
-                        | None -> (match unfold t' with
+          else begin match unfold_ty t with
+                        | Some t -> type_leq_c unfold_ty e t t'
+                        | None -> (match unfold_ty t' with
                                      | None -> false, None
-                                     | Some t' -> type_leq_c unfold e t t')
+                                     | Some t' -> type_leq_c unfold_ty e t t')
                end
 
         | MLTY_Tuple ts, MLTY_Tuple ts' ->
-          if List.forall2 (type_leq unfold) ts ts'
+          if List.forall2 (type_leq unfold_ty) ts ts'
           then true, e
           else false, None
 
         | MLTY_Top, MLTY_Top -> true, e
 
         | MLTY_Named _, _ ->
-          begin match unfold t with
-            | Some t -> type_leq_c unfold e t t'
+          begin match unfold_ty t with
+            | Some t -> type_leq_c unfold_ty e t t'
             | _ ->  false, None
           end
 
         | _, MLTY_Named _ ->
-          begin match unfold t' with
-            | Some t' -> type_leq_c unfold e t t'
+          begin match unfold_ty t' with
+            | Some t' -> type_leq_c unfold_ty e t t'
             | _ -> false, None
           end
 
@@ -321,19 +321,19 @@ let flatten_mlpath (ns, n) =
     else String.concat "_" (ns@[n])
 let mlpath_of_lid (l:lident) = (l.ns |> List.map (fun i -> i.idText),  l.ident.idText)
 
-let rec erasableType (unfold:unfold_t) (t:mlty) :bool =
+let rec erasableType (unfold_ty:unfold_t) (t:mlty) :bool =
     //printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
    if Env.erasableTypeNoDelta t
    then true
-   else match unfold t with
-     | Some t -> (erasableType unfold t)
+   else match unfold_ty t with
+     | Some t -> (erasableType unfold_ty t)
      | None  -> false
    
-let rec eraseTypeDeep unfold (t:mlty) : mlty =
+let rec eraseTypeDeep unfold_ty (t:mlty) : mlty =
     match t with
-    | MLTY_Fun (tyd, etag, tycd) -> if etag=E_PURE then MLTY_Fun (eraseTypeDeep unfold tyd, etag, eraseTypeDeep unfold tycd) else t
-    | MLTY_Named (lty, mlp) -> if erasableType unfold t then Env.erasedContent else MLTY_Named (List.map (eraseTypeDeep unfold) lty, mlp)  // only some named constants are erased to unit.
-    | MLTY_Tuple lty ->  MLTY_Tuple (List.map (eraseTypeDeep unfold) lty)
+    | MLTY_Fun (tyd, etag, tycd) -> if etag=E_PURE then MLTY_Fun (eraseTypeDeep unfold_ty tyd, etag, eraseTypeDeep unfold_ty tycd) else t
+    | MLTY_Named (lty, mlp) -> if erasableType unfold_ty t then Env.erasedContent else MLTY_Named (List.map (eraseTypeDeep unfold_ty) lty, mlp)  // only some named constants are erased to unit.
+    | MLTY_Tuple lty ->  MLTY_Tuple (List.map (eraseTypeDeep unfold_ty) lty)
     | _ ->  t
 
 let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equality")
@@ -354,3 +354,10 @@ let rec argTypes  (t: mlty) : list<mlty> =
     match t with
       | MLTY_Fun (a,_,b) -> a::(argTypes b)
       | _ -> []
+
+let rec uncurry_mlty_fun t =
+    match t with
+    | MLTY_Fun (a,_,b) -> 
+        let args, res = uncurry_mlty_fun b in
+        a::args, res
+    | _ -> [], t

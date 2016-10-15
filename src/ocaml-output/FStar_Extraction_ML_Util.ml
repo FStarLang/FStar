@@ -183,7 +183,7 @@ end))
 let join_l : FStar_Range.range  ->  FStar_Extraction_ML_Syntax.e_tag Prims.list  ->  FStar_Extraction_ML_Syntax.e_tag = (fun r fs -> (FStar_List.fold_left (join r) FStar_Extraction_ML_Syntax.E_PURE fs))
 
 
-let mk_ty_fun = (fun _0_5 -> (FStar_List.fold_right (fun _74_153 t -> (match (_74_153) with
+let mk_ty_fun = (fun _94_95 -> (FStar_List.fold_right (fun _74_153 t -> (match (_74_153) with
 | (_74_151, t0) -> begin
 FStar_Extraction_ML_Syntax.MLTY_Fun (((t0), (FStar_Extraction_ML_Syntax.E_PURE), (t)))
 end))))
@@ -193,7 +193,7 @@ type unfold_t =
 FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty Prims.option
 
 
-let rec type_leq_c : unfold_t  ->  FStar_Extraction_ML_Syntax.mlexpr Prims.option  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty  ->  (Prims.bool * FStar_Extraction_ML_Syntax.mlexpr Prims.option) = (fun unfold e t t' -> (match (((t), (t'))) with
+let rec type_leq_c : unfold_t  ->  FStar_Extraction_ML_Syntax.mlexpr Prims.option  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty  ->  (Prims.bool * FStar_Extraction_ML_Syntax.mlexpr Prims.option) = (fun unfold_ty e t t' -> (match (((t), (t'))) with
 | (FStar_Extraction_ML_Syntax.MLTY_Var (x), FStar_Extraction_ML_Syntax.MLTY_Var (y)) -> begin
 if ((Prims.fst x) = (Prims.fst y)) then begin
 ((true), (e))
@@ -223,12 +223,12 @@ in (FStar_Extraction_ML_Syntax.with_ty _168_80 e)))
 end))
 in (match (e) with
 | Some ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Fun ((x)::xs, body); FStar_Extraction_ML_Syntax.mlty = _74_191; FStar_Extraction_ML_Syntax.loc = _74_189}) -> begin
-if ((type_leq unfold t1' t1) && (eff_leq f f')) then begin
+if ((type_leq unfold_ty t1' t1) && (eff_leq f f')) then begin
 if ((f = FStar_Extraction_ML_Syntax.E_PURE) && (f' = FStar_Extraction_ML_Syntax.E_GHOST)) then begin
-if (type_leq unfold t2 t2') then begin
+if (type_leq unfold_ty t2 t2') then begin
 (
 
-let body = if (type_leq unfold t2 FStar_Extraction_ML_Syntax.ml_unit_ty) then begin
+let body = if (type_leq unfold_ty t2 FStar_Extraction_ML_Syntax.ml_unit_ty) then begin
 FStar_Extraction_ML_Syntax.ml_unit
 end else begin
 (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty t2') (FStar_Extraction_ML_Syntax.MLE_Coerce (((FStar_Extraction_ML_Syntax.ml_unit), (FStar_Extraction_ML_Syntax.ml_unit_ty), (t2')))))
@@ -246,7 +246,7 @@ end else begin
 
 let _74_203 = (let _168_87 = (let _168_86 = (mk_fun xs body)
 in (FStar_All.pipe_left (fun _168_85 -> Some (_168_85)) _168_86))
-in (type_leq_c unfold _168_87 t2 t2'))
+in (type_leq_c unfold_ty _168_87 t2 t2'))
 in (match (_74_203) with
 | (ok, body) -> begin
 (
@@ -267,7 +267,7 @@ end else begin
 end
 end
 | _74_210 -> begin
-if (((type_leq unfold t1' t1) && (eff_leq f f')) && (type_leq unfold t2 t2')) then begin
+if (((type_leq unfold_ty t1' t1) && (eff_leq f f')) && (type_leq unfold_ty t2 t2')) then begin
 ((true), (e))
 end else begin
 ((false), (None))
@@ -276,29 +276,29 @@ end))
 end
 | (FStar_Extraction_ML_Syntax.MLTY_Named (args, path), FStar_Extraction_ML_Syntax.MLTY_Named (args', path')) -> begin
 if (path = path') then begin
-if (FStar_List.forall2 (type_leq unfold) args args') then begin
+if (FStar_List.forall2 (type_leq unfold_ty) args args') then begin
 ((true), (e))
 end else begin
 ((false), (None))
 end
 end else begin
-(match ((unfold t)) with
+(match ((unfold_ty t)) with
 | Some (t) -> begin
-(type_leq_c unfold e t t')
+(type_leq_c unfold_ty e t t')
 end
 | None -> begin
-(match ((unfold t')) with
+(match ((unfold_ty t')) with
 | None -> begin
 ((false), (None))
 end
 | Some (t') -> begin
-(type_leq_c unfold e t t')
+(type_leq_c unfold_ty e t t')
 end)
 end)
 end
 end
 | (FStar_Extraction_ML_Syntax.MLTY_Tuple (ts), FStar_Extraction_ML_Syntax.MLTY_Tuple (ts')) -> begin
-if (FStar_List.forall2 (type_leq unfold) ts ts') then begin
+if (FStar_List.forall2 (type_leq unfold_ty) ts ts') then begin
 ((true), (e))
 end else begin
 ((false), (None))
@@ -308,18 +308,18 @@ end
 ((true), (e))
 end
 | (FStar_Extraction_ML_Syntax.MLTY_Named (_74_235), _74_238) -> begin
-(match ((unfold t)) with
+(match ((unfold_ty t)) with
 | Some (t) -> begin
-(type_leq_c unfold e t t')
+(type_leq_c unfold_ty e t t')
 end
 | _74_243 -> begin
 ((false), (None))
 end)
 end
 | (_74_245, FStar_Extraction_ML_Syntax.MLTY_Named (_74_247)) -> begin
-(match ((unfold t')) with
+(match ((unfold_ty t')) with
 | Some (t') -> begin
-(type_leq_c unfold e t t')
+(type_leq_c unfold_ty e t t')
 end
 | _74_253 -> begin
 ((false), (None))
@@ -603,12 +603,12 @@ let mlpath_of_lid : FStar_Ident.lident  ->  (Prims.string Prims.list * Prims.str
 in ((_168_140), (l.FStar_Ident.ident.FStar_Ident.idText))))
 
 
-let rec erasableType : unfold_t  ->  FStar_Extraction_ML_Syntax.mlty  ->  Prims.bool = (fun unfold t -> if (FStar_Extraction_ML_Env.erasableTypeNoDelta t) then begin
+let rec erasableType : unfold_t  ->  FStar_Extraction_ML_Syntax.mlty  ->  Prims.bool = (fun unfold_ty t -> if (FStar_Extraction_ML_Env.erasableTypeNoDelta t) then begin
 true
 end else begin
-(match ((unfold t)) with
+(match ((unfold_ty t)) with
 | Some (t) -> begin
-(erasableType unfold t)
+(erasableType unfold_ty t)
 end
 | None -> begin
 false
@@ -616,11 +616,11 @@ end)
 end)
 
 
-let rec eraseTypeDeep : unfold_t  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty = (fun unfold t -> (match (t) with
+let rec eraseTypeDeep : unfold_t  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty = (fun unfold_ty t -> (match (t) with
 | FStar_Extraction_ML_Syntax.MLTY_Fun (tyd, etag, tycd) -> begin
 if (etag = FStar_Extraction_ML_Syntax.E_PURE) then begin
-(let _168_151 = (let _168_150 = (eraseTypeDeep unfold tyd)
-in (let _168_149 = (eraseTypeDeep unfold tycd)
+(let _168_151 = (let _168_150 = (eraseTypeDeep unfold_ty tyd)
+in (let _168_149 = (eraseTypeDeep unfold_ty tycd)
 in ((_168_150), (etag), (_168_149))))
 in FStar_Extraction_ML_Syntax.MLTY_Fun (_168_151))
 end else begin
@@ -628,16 +628,16 @@ t
 end
 end
 | FStar_Extraction_ML_Syntax.MLTY_Named (lty, mlp) -> begin
-if (erasableType unfold t) then begin
+if (erasableType unfold_ty t) then begin
 FStar_Extraction_ML_Env.erasedContent
 end else begin
-(let _168_153 = (let _168_152 = (FStar_List.map (eraseTypeDeep unfold) lty)
+(let _168_153 = (let _168_152 = (FStar_List.map (eraseTypeDeep unfold_ty) lty)
 in ((_168_152), (mlp)))
 in FStar_Extraction_ML_Syntax.MLTY_Named (_168_153))
 end
 end
 | FStar_Extraction_ML_Syntax.MLTY_Tuple (lty) -> begin
-(let _168_154 = (FStar_List.map (eraseTypeDeep unfold) lty)
+(let _168_154 = (FStar_List.map (eraseTypeDeep unfold_ty) lty)
 in FStar_Extraction_ML_Syntax.MLTY_Tuple (_168_154))
 end
 | _74_428 -> begin
@@ -686,6 +686,21 @@ in (a)::_168_171)
 end
 | _74_459 -> begin
 []
+end))
+
+
+let rec uncurry_mlty_fun : FStar_Extraction_ML_Syntax.mlty  ->  (FStar_Extraction_ML_Syntax.mlty Prims.list * FStar_Extraction_ML_Syntax.mlty) = (fun t -> (match (t) with
+| FStar_Extraction_ML_Syntax.MLTY_Fun (a, _74_463, b) -> begin
+(
+
+let _74_469 = (uncurry_mlty_fun b)
+in (match (_74_469) with
+| (args, res) -> begin
+(((a)::args), (res))
+end))
+end
+| _74_471 -> begin
+(([]), (t))
 end))
 
 

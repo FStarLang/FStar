@@ -1,5 +1,5 @@
 [
-  "&‰j \u001fı}ú¥Ì∏\\ùØ]Á",
+  "=÷√¢—rÏ∂˛Ü‚\tC,r√",
   [
     [ "LambdaOmega.knd", 1, 1, 1, [ "@query" ], 0 ],
     [
@@ -2250,8 +2250,7 @@
       1,
       [
         "@query", "binder_x_18f4961c1d91234a8baf199895e17f88_1",
-        "binder_x_4d0be1804b0de1691689852d12154f9a_2",
-        "binder_x_55bba4f59f37aaa191a23708f598432e_0", "bool_inversion",
+        "binder_x_66baa181dd1f16ff8b0da344a3ce1042_2", "bool_inversion",
         "constructor_distinct_LambdaOmega.ELam",
         "constructor_distinct_Prims.None", "data_elim_LambdaOmega.TyApp",
         "data_elim_LambdaOmega.TyEqu", "data_elim_LambdaOmega.TyVar",
@@ -2267,7 +2266,7 @@
         "projection_inverse_LambdaOmega.ELam__0",
         "projection_inverse_LambdaOmega.ELam__1",
         "projection_inverse_LambdaOmega.MkEnv_x",
-        "refinement_interpretation_Tm_refine_609ee621d3e96ce1d70fba5979f495d8",
+        "projection_inverse_LambdaOmega.TyApp_ht1",
         "refinement_interpretation_Tm_refine_b91c6833c454140ad19a248280b17c2e",
         "subterm_ordering_LambdaOmega.TyApp",
         "subterm_ordering_LambdaOmega.TyEqu",
@@ -2317,7 +2316,7 @@
       1,
       [
         "@query", "assumption_LambdaOmega.knd_haseq",
-        "assumption_Prims.HasEq_option", "kinding_LambdaOmega.knd@tok"
+        "assumption_Prims.option_haseq", "kinding_LambdaOmega.knd@tok"
       ],
       0
     ],
@@ -5072,11 +5071,9 @@
         "constructor_distinct_LambdaOmega.EApp",
         "constructor_distinct_LambdaOmega.ELam",
         "constructor_distinct_LambdaOmega.EVar",
-        "constructor_distinct_LambdaOmega.TyEqu",
         "data_elim_FStar.Constructive.ExIntro",
-        "data_elim_LambdaOmega.TyEqu", "data_elim_LambdaOmega.TyLam",
-        "disc_equation_LambdaOmega.TyEqu", "disc_equation_LambdaOmega.TyLam",
-        "equality_tok_Prims.LexTop@tok",
+        "data_elim_LambdaOmega.TyEqu", "disc_equation_LambdaOmega.TyEqu",
+        "disc_equation_LambdaOmega.TyLam", "equality_tok_Prims.LexTop@tok",
         "fuel_guarded_inversion_LambdaOmega.typing",
         "interpretation_Tm_abs_098f637501799c315f31f5ecb7c777d6",
         "interpretation_Tm_abs_5b5c8f75298f4b2a9a16f413baf86601",
@@ -5087,11 +5084,14 @@
         "projection_inverse_LambdaOmega.ELam__1",
         "projection_inverse_LambdaOmega.TArr__0",
         "projection_inverse_LambdaOmega.TArr__1",
-        "projection_inverse_LambdaOmega.TyEqu_ht",
+        "projection_inverse_LambdaOmega.TyLam_e1",
+        "projection_inverse_LambdaOmega.TyLam_g",
+        "projection_inverse_LambdaOmega.TyLam_t",
+        "projection_inverse_LambdaOmega.TyLam_t_",
         "refinement_interpretation_Tm_refine_15e392800371bb1855efe2e2549fb2a3",
         "refinement_interpretation_Tm_refine_6f5b74c7ab5b48f722e3d46e70a0b082",
         "subterm_ordering_LambdaOmega.TyEqu",
-        "typing_LambdaOmega.tred_tarr_preserved__5480"
+        "typing_LambdaOmega.tred_tarr_preserved__6012"
       ],
       0
     ],

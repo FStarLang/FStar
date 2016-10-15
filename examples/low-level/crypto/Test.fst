@@ -1,20 +1,20 @@
 module Test 
 
-open FStar.HST
 open FStar.UInt32
 open FStar.Ghost
 
 open Crypto.Symmetric.Bytes
 open Plain 
 open Buffer
+open Flag
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
 module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
-module PRF = Crypto.Symmetric.Chacha20.PRF
-module AE = Crypto.AEAD.Chacha20Poly1305.Ideal
+module PRF = Crypto.Symmetric.PRF
+module AE = Crypto.AEAD
 
 module L = FStar.List.Tot
 
@@ -140,7 +140,7 @@ let from_bytestring s =
   buf 
 *)
 
-let verbose = true
+let verbose = false
 
 val diff: string -> l:UInt32.t -> expected:lbuffer (v l) -> computed:lbuffer (v l) -> ST bool
   (requires (fun h -> Buffer.live h expected /\ Buffer.live h computed))
@@ -153,7 +153,7 @@ let diff name len expected computed =
     let _ = print_buffer expected 0ul len in 
     let _ = IO.debug_print_string ("Computed "^name^":\n") in
     let _ = print_buffer computed 0ul len in
-    let _ = r || IO.debug_print_string "ERROR: unexpected result." in
+    let _ = r || IO.debug_print_string "ERROR: unexpected result.\n" in
     r
   else r 
 
@@ -171,17 +171,19 @@ let tweak pos b = Buffer.upd b pos (UInt8.logxor (Buffer.index b pos) 42uy)
 val test: unit -> ST bool //16-10-04 workaround against very large inferred type. 
   (requires (fun _ -> True))
   (ensures (fun _ _ _ -> True))
+#set-options "--z3timeout 100000"  
 let test() = 
-  assume false; //NS: this is not yet really in a provable state
+  //assume false; //NS: this is not yet really in a provable state
   push_frame(); 
   let plainlen = 114ul in 
   let plainrepr = from_string plainlen 
     "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it." in
 
-  let i:id = 42ul in
-  assume(not(Plain.authId i));
+  let i:id = { cipher = CHACHA20_POLY1305; uniq = 42ul } in
+  assume(not(prf i));
   let plain = Plain.create i 0uy plainlen in 
-  let plainbytes = make (v plainlen) (load_bytes plainlen plainrepr) in 
+  let plainval = load_bytes plainlen plainrepr in
+  let plainbytes = Plain.make #i (v plainlen) plainval in 
   Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
   let aad = mk_aad () in
   let aadlen = 12ul in
@@ -192,31 +194,33 @@ let test() =
   dump "IV" 12ul ivBuffer;
   dump "Additional Data" 12ul aad;
 
-  let iv = load_uint128 12ul ivBuffer in
+  let iv : Crypto.Symmetric.Cipher.iv (Crypto.AEAD.alg i) = 
+    lemma_little_endian_is_bounded (load_bytes 12ul ivBuffer);
+    load_uint128 12ul ivBuffer in
   let expected_cipher = mk_expected_cipher () in
   let cipherlen = plainlen +^ 16ul in
   assert(Buffer.length expected_cipher = v cipherlen);
   let cipher = Buffer.create 0uy cipherlen in
   let st = AE.coerce i HH.root key in
 
+  assume(AE.safelen i (v plainlen) 1ul);//16-10-13 
   AE.encrypt i st iv aadlen aad plainlen plain cipher;
   let ok_0 = diff "cipher" cipherlen expected_cipher cipher in
 
   let decrypted = Plain.create i 0uy plainlen in
-  let reader_rgn = new_region HH.root in
-  let st = AE.genReader #_ #reader_rgn st in
-  let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  let st = AE.genReader st in
+  let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
   let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in
 
   // testing that decryption fails when truncating aad or tweaking the ciphertext.
-  let fail_0 = AE.decrypt i st iv (aadlen -^ 1ul) (Buffer.sub aad 0ul (aadlen -^ 1ul)) plainlen decrypted cipher = 0ul in
+  let fail_0 = AE.decrypt i st iv (aadlen -^ 1ul) (Buffer.sub aad 0ul (aadlen -^ 1ul)) plainlen decrypted cipher in
 
   tweak 3ul cipher;
-  let fail_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  let fail_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
   tweak 3ul cipher;
 
   tweak plainlen cipher;
-  let fail_2 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  let fail_2 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
   tweak plainlen cipher;
   
   pop_frame ();
@@ -227,10 +231,11 @@ let main =
   let ok = test () in
   IO.debug_print_string ("AEAD (CHACHA20_POLY1305) test vector" ^ (if ok then ": Ok.\n" else ":\nERROR.\n"))
   
+// enabling plaintext access for real test vector
 
 (* missing a library:
 
-val main: Int32.t -> FStar.Buffer.buffer (FStar.Buffer.buffer C.char) -> HST.Stack Int32.t (fun _ -> true) (fun _ _ _ -> true)
+val main: Int32.t -> FStar.Buffer.buffer (FStar.Buffer.buffer C.char) -> ST.Stack Int32.t (fun _ -> true) (fun _ _ _ -> true)
 let main argc argv =
   test();
   C.exit_success

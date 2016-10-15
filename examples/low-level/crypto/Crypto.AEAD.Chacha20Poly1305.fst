@@ -1,13 +1,12 @@
 module Crypto.AEAD.Chacha20Poly1305
 
-open FStar.HST
 open FStar.Buffer
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
 open Crypto.Symmetric.Chacha20
 
-//16-10-02 This file is used only by aead-test; use Chacha20Poly1305.Ideal instead.
+//16-10-02 THIS FILE IS USED ONLY BY AEAD-TEST; use Crypto.AEAD instead.
 
 // now hiding the 1-time MAC state & implementation
 module Spec = Crypto.Symmetric.Poly1305.Spec
@@ -99,7 +98,7 @@ let rec add_bytes #i st log a len txt =
    - the Poly1305 tag on the ciphertext and the additional data
    *)
 
-open Crypto.Symmetric.BlockCipher 
+open Crypto.Symmetric.Cipher 
 
 val chacha20_aead_encrypt: 
   key:Bytes.lbuffer 32 -> n:iv CHACHA20 ->

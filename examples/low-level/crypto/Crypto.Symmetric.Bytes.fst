@@ -2,7 +2,6 @@ module Crypto.Symmetric.Bytes
 
 open FStar.HyperHeap
 open FStar.HyperStack
-open FStar.HST
 open FStar.UInt32
 open FStar.Ghost
 open FStar.Buffer
@@ -23,6 +22,8 @@ type buffer = Buffer.buffer UInt8.t
 type lbytes  (l:nat) = b:bytes  {Seq.length b = l}
 type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
 
+let uint128_to_uint8 (a:UInt128.t) : Tot (b:UInt8.t{UInt8.v b = UInt128.v a % pow2 8})
+  = uint64_to_uint8 (uint128_to_uint64 a)
 
 private let hex1 (x:UInt8.t {FStar.UInt8(x <^ 16uy)}) = 
   FStar.UInt8(
@@ -77,7 +78,7 @@ let rec store_bytes_aux len buf i b =
   if i <^ len then
     begin
     Buffer.upd buf i (Seq.index b (v i));
-    let h = HST.get () in
+    let h = ST.get () in
     assert (Seq.equal
       (sel_bytes h (i +^ 1ul) (Buffer.sub buf 0ul (i +^ 1ul)))
       (SeqProperties.snoc (sel_bytes h i (Buffer.sub buf 0ul i)) (Seq.index b (v i))));
@@ -90,13 +91,45 @@ val store_bytes: l:UInt32.t -> buf:lbuffer (v l) -> b:lbytes (v l) -> ST unit
     Seq.equal b (sel_bytes h1 l buf)))
 let store_bytes l buf b = store_bytes_aux l buf 0ul b
 
+// TODO: Dummy.
+// Should be external and relocated in some library with a crypto-grade
+// implementation in both OCaml and KreMLin,
+val random: len:nat -> b:lbuffer len -> Stack unit
+  (requires (fun h -> live h b))
+  (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
+let random len b = ()
+
+val random_bytes: len:u32 -> Stack (lbytes (v len))
+  (requires (fun m -> True))
+  (ensures  (fun m0 _ m1 -> modifies Set.empty m0 m1))
+let random_bytes len =
+  push_frame ();
+  let m0 = ST.get () in
+  let buf = Buffer.create 0uy len in
+  let m1 = ST.get () in
+  lemma_reveal_modifies_0 m0 m1;
+  Bytes.random (v len) buf;
+  let m2 = ST.get () in
+  lemma_reveal_modifies_1 buf m1 m2;
+  let b = load_bytes len buf in
+  pop_frame ();
+  b
+
+
+open FStar.SeqProperties
+
 (* Little endian integer value of a sequence of bytes *)
-let rec little_endian (b:bytes) : Tot (n:nat) (decreases (Seq.length b))
-  = if Seq.length b = 0 then 0
-    else
-      let open FStar.SeqProperties in
-      UInt8.v (head b) + pow2 8 * little_endian (tail b)
-      
+let rec little_endian (b:bytes) : Tot (n:nat) (decreases (Seq.length b)) =
+  if Seq.length b = 0 then 0
+  else
+    UInt8.v (head b) + pow2 8 * little_endian (tail b)
+
+(* Big endian integer value of a sequence of bytes *)
+let rec big_endian (b:bytes) : Tot (n:nat) (decreases (Seq.length b)) = 
+  if Seq.length b = 0 then 0 
+  else
+    UInt8.v (last b) + pow2 8 * big_endian (Seq.slice b 0 (Seq.length b - 1))
+
 #reset-options "--initial_fuel 1 --max_fuel 1"
 
 val little_endian_null: len:nat{len < 16} -> Lemma
@@ -180,6 +213,28 @@ let rec lemma_little_endian_is_bounded b =
     lemma_factorise 8 (Seq.length b - 1)
     end
 
+val lemma_big_endian_is_bounded: b:bytes -> Lemma
+  (requires True)
+  (ensures  (big_endian b < pow2 (8 * Seq.length b)))
+  (decreases (Seq.length b))
+  [SMTPat (big_endian b)]
+let rec lemma_big_endian_is_bounded b =
+  if Seq.length b = 0 then ()
+  else
+    begin
+    let s = Seq.slice b 0 (Seq.length b - 1) in
+    assert(Seq.length s = Seq.length b - 1);
+    lemma_big_endian_is_bounded s;
+    assert(UInt8.v (SeqProperties.last b) < pow2 8);
+    assert(big_endian s < pow2 (8 * Seq.length s));
+    assert(big_endian b < pow2 8 + pow2 8 * pow2 (8 * (Seq.length b - 1)));
+    lemma_euclidean_division (UInt8.v (SeqProperties.last b)) (big_endian s) (pow2 8);
+    assert(big_endian b <= pow2 8 * (big_endian s + 1));
+    assert(big_endian b <= pow2 8 * pow2 (8 * (Seq.length b - 1)));
+    Math.Lemmas.pow2_plus 8 (8 * (Seq.length b - 1));
+    lemma_factorise 8 (Seq.length b - 1)
+    end
+
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_little_endian_lt_2_128: b:bytes {Seq.length b <= 16} -> Lemma
@@ -211,6 +266,37 @@ let rec load_uint32 len buf =
     assert_norm (pow2 8 == 256);
     FStar.UInt32(uint8_to_uint32 b +^ 256ul *^ n)
 
+val load_big32: len:UInt32.t { v len <= 4 } -> buf:lbuffer (v len) -> ST UInt32.t
+  (requires (fun h0 -> live h0 buf))
+  (ensures (fun h0 n h1 -> 
+    h0 == h1 /\ live h0 buf /\ 
+    UInt32.v n == big_endian (sel_bytes h1 len buf)))
+let rec load_big32 len buf = 
+  if len = 0ul then 0ul
+  else
+    let len = len -^ 1ul in
+    let n = load_big32 len (sub buf 0ul len) in
+    let b = buf.(len) in
+    assert_norm (pow2 8 == 256);
+    FStar.UInt32(uint8_to_uint32 b +^ 256ul *^ n)
+
+(** Used e.g. for converting TLS sequence numbers into AEAD nonces *)
+#reset-options "--z3timeout 100"
+val load_big64: len:UInt32.t { v len <= 8 } -> buf:lbuffer (v len) -> ST UInt64.t
+  (requires (fun h0 -> live h0 buf))
+  (ensures (fun h0 n h1 -> 
+    h0 == h1 /\ live h0 buf /\ 
+    UInt64.v n == big_endian (sel_bytes h1 len buf)))
+let rec load_big64 len buf = 
+  if len = 0ul then 0UL
+  else
+    let len = len -^ 1ul in
+    let n = load_big64 len (sub buf 0ul len) in
+    let b = buf.(len) in
+    assert_norm (pow2 8 == 256);
+    FStar.UInt64(uint8_to_uint64 b +^ 256UL *^ n)
+
+
 (* TODO: Add to FStar.Int.Cast and Kremlin and OCaml implementations *)
 val uint8_to_uint128: a:UInt8.t -> Tot (b:UInt128.t{UInt128.v b = UInt8.v a})
 let uint8_to_uint128 a = uint64_to_uint128 (uint8_to_uint64 a)
@@ -225,7 +311,7 @@ let rec load_uint128 len buf =
   else
     let n = load_uint128 (len -^ 1ul) (sub buf 1ul (len -^ 1ul)) in
     let b = buf.(0ul) in 
-    let h = HST.get () in
+    let h = ST.get () in
     lemma_little_endian_is_bounded 
       (sel_bytes h (len -^ 1ul) (sub buf 1ul (len -^ 1ul)));
     assert (UInt128.v n <= pow2 (8 * v len - 8) - 1);
@@ -268,7 +354,7 @@ val store_uint128:
 let rec store_uint128 len buf n = 
   if len <> 0ul then
     let len = len -^ 1ul in 
-    let b = uint64_to_uint8 (uint128_to_uint64 n) in
+    let b = uint128_to_uint8 n in
     let n' = FStar.UInt128(n >>^ 8ul) in 
     assert(UInt128.v n = UInt8.v b + 256 * UInt128.v n');
     let buf' = Buffer.sub buf 1ul len in

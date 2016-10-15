@@ -24,7 +24,6 @@ let bind a b f g =
     | None, s1_fail -> None, s1_fail
     | Some r, s1_proceed -> g r s1_proceed
 
-(* TODO: using val/let style here does not work. Why? *)
 let get (_:unit) : stexn int = fun s0 -> (Some s0, s0)
 
 let put (s:int) : stexn unit = fun _ -> (Some (), s)
@@ -44,7 +43,7 @@ reifiable reflectable new_effect_for_free {
 }
 
 (* A lift from Pure *)
-inline let lift_pure_stexn (a:Type) (wp:pure_wp a) (h0:int) (p:STEXN.post a) =
+unfold let lift_pure_stexn (a:Type) (wp:pure_wp a) (h0:int) (p:STEXN.post a) =
         wp (fun a -> p (Some a, h0))
 sub_effect PURE ~> STEXN = lift_pure_stexn
 

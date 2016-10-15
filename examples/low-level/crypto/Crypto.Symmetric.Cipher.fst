@@ -1,10 +1,9 @@
-module Crypto.Symmetric.BlockCipher
+module Crypto.Symmetric.Cipher
 
 // Multiplexing and hiding concrete implementations: AES128, AES256, and CHACHA20. 
 // Consider also enforcing key abstraction (but quite verbose to code; see Plain.fst).
 
 open FStar.HyperStack
-open FStar.HST
 open FStar.Buffer
 open Buffer.Utils
 module HH = FStar.HyperHeap
@@ -13,9 +12,9 @@ module HS = FStar.HyperStack
 open FStar.UInt32
 open Crypto.Symmetric.Bytes
 
-type alg = 
-//| AES128 
-  | AES256 
+type alg =
+//| AES128
+  | AES256
   | CHACHA20 // RFC 7539 for the AEAD algorithm; RFC 7905 for the TLS ciphersuites
 
 let keylen = function

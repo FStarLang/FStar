@@ -19,10 +19,7 @@ open FStar.All
 
 type char = FStar.Char.char
 
-(* The name of this file is misleading: most string functions are to be found in
-   util.fsi *)
-
-(* Not much in there; we should extend and refine this interface *)
+(* Not much in here; we should extend and refine this interface *)
 
 val length:  string -> Tot nat
 val make: l:nat -> char -> Tot (s:string {length s = l}) 
@@ -41,3 +38,7 @@ val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot char
 val substring: string -> int -> int -> string
 val get: string -> int -> char
 val collect: (char -> string) -> string -> string
+
+val list_of_string : string -> Tot (list char)
+
+let string_of_char (c:char) : Tot string = make 1 c

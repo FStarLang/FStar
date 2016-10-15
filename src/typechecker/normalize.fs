@@ -19,6 +19,8 @@
 module FStar.TypeChecker.Normalize
 open FStar
 open FStar.Util
+open FStar.String
+open FStar.Const
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
@@ -46,8 +48,9 @@ type step =
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | WHNF            //Only produce a weak head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
-  | Inline
-  | NoInline
+  | Eager_unfolding
+  | Inlining
+  | NoDeltaSteps
   | UnfoldUntil of S.delta_depth
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -70,7 +73,7 @@ let closure_to_string = function
 type cfg = {
     steps: steps;
     tcenv: Env.env;
-    delta_level: Env.delta_level  // Controls how much unfolding of definitions should be performed
+    delta_level: list<Env.delta_level>  // Controls how much unfolding of definitions should be performed
 }
 
 type branches = list<(pat * option<term> * term)> 
@@ -86,7 +89,8 @@ type stack_elt =
  | App      of term * aqual * Range.range
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
- | Steps    of steps * Env.delta_level
+ | Steps    of steps * list<Env.delta_level>
+ | Debug    of term
 
 type stack = list<stack_elt>
 
@@ -433,16 +437,23 @@ let arith_ops =
        Const.p2l ["FStar"; m; "mul"], (fun x y -> int_as_const (x * y))
      ]) [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128" ])
 
-    
+let un_ops =
+    let mk x = mk x Range.dummyRange in
+    let name x = mk (Tm_fvar (lid_as_fv (Const.p2l x) Delta_constant None)) in
+    [Const.p2l ["FStar"; "String"; "list_of_string"],
+     (fun s -> FStar.List.fold_right (fun c a ->
+                 mk (Tm_app (name ["Prims"; "Cons"], [(name ["FStar"; "Char"; "char"], None); (mk (Tm_constant (Const_char c)), None); (a, None)]))
+               ) (list_of_string s) (mk (Tm_app (name ["Prims"; "Nil"], [name ["FStar"; "Char"; "char"], None]))))]
+
 let reduce_primops steps tm = 
-    let arith_op fv = match fv.n with 
-        | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) arith_ops
+    let find fv (ops: list<(Ident.lident*'a)>) = match fv.n with
+        | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) ops
         | _ -> None in
     if not <| List.contains Primops steps
     then tm
     else match tm.n with
          | Tm_app(fv, [(a1, _); (a2, _)]) ->
-            begin match arith_op fv with 
+            begin match find fv arith_ops with
             | None -> tm
             | Some (_, op) -> 
               let norm i j =
@@ -466,6 +477,16 @@ let reduce_primops steps tm =
                     end
                 | Tm_constant (Const.Const_int(i, None)), Tm_constant (Const.Const_int(j, None)) -> 
                     norm i j
+                | _ -> tm
+              end
+            end
+         | Tm_app(fv, [(a1, _)]) ->
+            begin match find fv un_ops with
+            | None -> tm
+            | Some (_, op) ->
+              begin match (SS.compress a1).n with
+                | Tm_constant (Const.Const_string(b, _)) ->
+                    op (Bytes.utf8_bytes_as_string b)
                 | _ -> tm
               end
             end
@@ -549,8 +570,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             when S.fv_eq_lid fv Syntax.Const.normalize
               && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
             let s = [Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
-            let cfg' = {cfg with steps=s; delta_level=Unfold Delta_constant} in
-            let stack' = Steps (cfg.steps, cfg.delta_level)::stack in
+            let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
+            let stack' = Debug t :: Steps (cfg.steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
 
           | Tm_app({n=Tm_constant Const.Const_reify}, a1::a2::rest) ->
@@ -621,10 +642,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
      
           | Tm_fvar f -> 
             let t0 = t in
-            let should_delta = match cfg.delta_level with 
-                | NoDelta -> false
-                | OnlyInline -> true
-                | Unfold l -> Common.delta_depth_greater_than f.fv_delta l in
+            let should_delta = 
+                cfg.delta_level |> FStar.Util.for_some (function
+                    | NoDelta -> false
+                    | Env.Inlining
+                    | Eager_unfolding_only -> true
+                    | Unfold l -> Common.delta_depth_greater_than f.fv_delta l) in
                            
             if not should_delta
             then rebuild cfg env stack t
@@ -725,6 +748,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   log cfg  (fun () -> Util.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
+                | Debug _::_
                 | Meta _::_
                 | Let _ :: _
                 | App _ :: _ 
@@ -791,7 +815,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_let((false, [lb]), body) ->
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
-            if not (cfg.steps |> List.contains NoInline)
+            if not (cfg.steps |> List.contains NoDeltaSteps)
             && (Util.is_pure_effect n
             || Util.is_ghost_effect n)
             then let env = Clos(env, lb.lbdef, Util.mk_ref None, false)::env in 
@@ -833,7 +857,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   | Meta_monadic (m, t) ->
                     let t = norm cfg env [] t in
                     let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                    let cfg = {cfg with steps=[NoInline; Exclude Zeta]@cfg.steps; delta_level=NoDelta} in
+                    let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
+                                        delta_level=[NoDelta]} in
                     norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
                  | Meta_monadic_lift (m, m') ->
@@ -841,7 +866,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     || Util.is_ghost_effect m)
                     && cfg.steps |> List.contains PureSubtermsWithinComputations
                     then let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                            let cfg = {cfg with steps=[PureSubtermsWithinComputations; Primops; AllowUnboundUniverses; EraseUniverses; Exclude Zeta]; delta_level=OnlyInline} in
+                            let cfg = {cfg with steps=[PureSubtermsWithinComputations; 
+                                                       Primops; 
+                                                       AllowUnboundUniverses; 
+                                                       EraseUniverses; 
+                                                       Exclude Zeta]; 
+                                                delta_level=[Env.Inlining; Env.Eager_unfolding_only]} in
                             norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
                     else norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
             
@@ -896,7 +926,7 @@ and norm_comp : cfg -> env -> comp -> comp =
 *)
 and ghost_to_pure_aux cfg env c =
     let norm t = 
-        norm ({cfg with steps=[Inline; UnfoldUntil Delta_constant; AllowUnboundUniverses]}) env [] t in
+        norm ({cfg with steps=[Eager_unfolding; UnfoldUntil Delta_constant; AllowUnboundUniverses]}) env [] t in
     let non_info t = non_informative (norm t) in
     match c.n with
     | Total _ -> c
@@ -947,6 +977,11 @@ and rebuild : cfg -> env -> stack -> term -> term =
                       In either case, it has no free de Bruijn indices *)
         match stack with 
             | [] -> t
+
+            | Debug tm :: stack -> 
+              if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
+              then Util.print2 "Normalized %s to %s\n" (Print.term_to_string tm) (Print.term_to_string t);
+              rebuild cfg env stack t
 
             | Steps (s, dl) :: stack -> 
               rebuild ({cfg with steps=s; delta_level=dl}) env stack t
@@ -1012,7 +1047,12 @@ and rebuild : cfg -> env -> stack -> term -> term =
               let scrutinee = t in
               let norm_and_rebuild_match () =
                 let whnf = List.contains WHNF cfg.steps in
-                let cfg = {cfg with delta_level=glb_delta cfg.delta_level OnlyInline;
+                let cfg = 
+                    let new_delta = cfg.delta_level |> List.filter (function
+                            | Env.Inlining
+                            | Env.Eager_unfolding_only -> true
+                            | _ -> false) in
+                    {cfg with delta_level=new_delta;
                                     steps=Exclude Iota::Exclude Zeta::cfg.steps} in
                 let norm_or_whnf env t =
                     if whnf
@@ -1135,11 +1175,14 @@ and rebuild : cfg -> env -> stack -> term -> term =
               else matches scrutinee branches
 
 let config s e = 
-    let d = match Util.find_map s (function UnfoldUntil k -> Some k | _ -> None) with
-                | Some k -> Env.Unfold k
-                | None -> if List.contains Inline s
-                          then Env.OnlyInline
-                          else Env.NoDelta in
+    let d = s |> List.collect (function
+        | UnfoldUntil k -> [Env.Unfold k]
+        | Eager_unfolding -> [Env.Eager_unfolding_only]
+        | Inlining -> [Env.Inlining]
+        | _ -> []) in
+    let d = match d with 
+        | [] -> [Env.NoDelta]
+        | _ -> d in
     {tcenv=e; steps=s; delta_level=d}
 
 let normalize s e t = norm (config s e) [] [] t
@@ -1148,7 +1191,7 @@ let normalize_universe env u = norm_universe (config [] env) [] u
 let ghost_to_pure env c = ghost_to_pure_aux (config [] env) [] c
 
 let ghost_to_pure_lcomp env (lc:lcomp) = 
-    let cfg = config [Inline; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses] env in
+    let cfg = config [Eager_unfolding; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses] env in
     let non_info t = non_informative (norm cfg [] [] t) in
     if Util.is_ghost_effect lc.eff_name
     && non_info lc.res_typ

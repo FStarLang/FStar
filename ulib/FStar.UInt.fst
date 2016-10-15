@@ -435,6 +435,31 @@ val logxor_lemma_2: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logxor #n a (ones n) = lognot #n a))
 let logxor_lemma_2 #n a = nth_lemma #n (logxor #n a (ones n)) (lognot #n a)
 
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
+private let xor (b:bool) (b':bool) : Tot bool = b <> b'
+private let xor_lemma (a:bool) (b:bool) : Lemma
+  (requires (True))
+  (ensures  (xor (xor a b) b = a))
+  [SMTPat (xor (xor a b) b)]
+  = ()
+
+val logxor_inv: #n:pos -> a:uint_t n -> b:uint_t n -> Lemma
+  (a = logxor #n (logxor #n a b) b)
+let logxor_inv #n a b =
+  let open FStar.BitVector in
+  let open FStar.Seq in
+  let va = to_vec a in
+  let vb = to_vec b in
+  cut(forall (i:nat). i < n ==> index (logxor_vec #n va vb) i = (index va i <> index vb i));
+  cut (forall (i:nat). {:pattern (index (logxor_vec (logxor_vec va vb) vb) i)}
+    i < n ==> index (logxor_vec (logxor_vec va vb) vb) i = (xor (xor (index va i)
+                                                                    (index vb i))
+                                                               (index vb i)));
+  cut (forall (i:nat). i < n ==> index (logxor_vec (logxor_vec va vb) vb) i = index va i);
+  Seq.lemma_eq_intro (logxor_vec (logxor_vec va vb) vb) va;
+  inverse_num_lemma a; inverse_num_lemma b
+
 (* Bitwise OR operators *)
 val logor_commutative: #n:pos -> a:uint_t n -> b:uint_t n ->
   Lemma (requires True) (ensures (logor #n a b = logor #n b a))
@@ -537,7 +562,7 @@ val shift_left_value_aux_2: #n:pos -> a:uint_t n ->
   Lemma (requires True)
         (ensures shift_left #n a 0 = (a * pow2 0) % pow2 n)
 let shift_left_value_aux_2 #n a = 
-  assert(a * pow2 0 = a);
+  assert_norm(a * pow2 0 = a);
   small_modulo_lemma_1 a (pow2 n)
 
 val shift_left_value_aux_3: #n:pos -> a:uint_t n -> s:pos{s < n} ->
@@ -567,7 +592,7 @@ let shift_right_value_aux_1 #n a s =
 val shift_right_value_aux_2: #n:pos -> a:uint_t n ->
   Lemma (requires True)
         (ensures shift_right #n a 0 = a / pow2 0)
-let shift_right_value_aux_2 #n a = ()
+let shift_right_value_aux_2 #n a = assert_norm (pow2 0 == 1)
 
 val shift_right_value_aux_3: #n:pos -> a:uint_t n -> s:pos{s < n} ->
   Lemma (requires True)

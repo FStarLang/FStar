@@ -6,12 +6,11 @@ HINTS_ENABLED?=--use_hints
 
 OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3timeout 20  $(HINTS_ENABLED) $(OTHERFLAGS)
 
-FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperheap --include $(FSTAR_HOME)/ucontrib/Platform/fst
+FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperstack --include $(FSTAR_HOME)/ucontrib/Platform/fst
 
 # Files that should fully typecheck
 # Files commented out are broken, uncomment once fixed
 VERIFY= \
-  FStar.HST.Monotonic.RRef \
   Buffer.Utils \
   Crypto.Symmetric.Chacha20 \
   Crypto.Symmetric.Poly1305.Bigint \
@@ -28,14 +27,14 @@ VERIFY= \
   Crypto.Symmetric.GF128 \
   Crypto.Symmetric.GCM \
   Crypto.Symmetric.AES \
-  Crypto.Symmetric.BlockCipher \
+  Crypto.Symmetric.Cipher \
   Crypto.AEAD.AES256GCM \
-  Crypto.Symmetric.Chacha20.PRF \
+  Crypto.Symmetric.PRF \
   Crypto.AEAD.Chacha20Poly1305 \
-  Crypto.AEAD.Chacha20Poly1305.Ideal \
+  Crypto.AEAD \
   Plain \
   Test \
-  TestMonotonic \
+  TestMonotonic
 
 # Files that should fully typecheck, but not part of regression
 # because verification is too slow
@@ -46,11 +45,14 @@ SLOW= \
 # Files commented out are broken, uncomment once fixed
 LAX= \
   Crypto.Symmetric.Poly1305.MAC
-  # AEAD
+
+#16-10-09  Not sure how to verify Flag.fsti and Flag.fst
+
+all: all-ver $(addsuffix .fst-lax, $(LAX))
 
 all-ver: $(addsuffix .fst-ver, $(VERIFY))
 
-all-lax: $(addsuffix .fst-lax, $(LAX))
+all-lax: $(addsuffix .fst-lax, $(LAX)) $(addsuffix .fst-lax, $(VERIFY))
 
 # Parameter for interactive mode
 %.fst-in: 
@@ -60,7 +62,7 @@ all-lax: $(addsuffix .fst-lax, $(LAX))
 
 # Verifying one file at a time
 %.fst-ver:
-	-$(FSTAR) $(OPTIONS) \
+	$(FSTAR) $(OPTIONS) \
 	$(FSTAR_INCLUDE_PATHS) \
 	--verify_module $(basename $(notdir $@)) \
 	$(basename $@).fst

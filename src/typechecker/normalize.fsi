@@ -28,8 +28,9 @@ type step =
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | WHNF            //Only produce a weak head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
-  | Inline
-  | NoInline
+  | Eager_unfolding
+  | Inlining
+  | NoDeltaSteps
   | UnfoldUntil of delta_depth
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!

@@ -1497,7 +1497,9 @@ let trans_qual r = function
   | AST.Irreducible
   | AST.Noeq
   | AST.Unopteq
-  | AST.Unfoldable -> raise (Error("This qualifier is supported only with the --universes option", r))
+  | AST.Visible
+  | AST.Unfold_for_unification_and_vcgen
+  | AST.Inline_for_extraction -> raise (Error("This qualifier is supported only with the --universes option", r))
 
 let trans_pragma = function
   | AST.SetOptions s -> SetOptions s

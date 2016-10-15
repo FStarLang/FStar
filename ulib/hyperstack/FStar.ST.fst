@@ -1,4 +1,4 @@
-module FStar.HST
+module FStar.ST
 open FStar.HyperStack
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -49,6 +49,8 @@ effect ST (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
              (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_stack_domains h h1) ==> p a h1)) (* WP *)
 
+effect St (a:Type) = ST a (fun _ -> True) (fun _ _ _ -> True)
+
 let inline_stack_inv h h' : GTot Type0 =
   (* The frame invariant is enforced *)
   h.tip = h'.tip
@@ -60,7 +62,7 @@ let inline_stack_inv h h' : GTot Type0 =
 
 (**
    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
-   In other terms, the backend has to inline the body into the caller's body.
+   In other terms, the backend has to unfold the body into the caller's body.
    This effect maintains the stack AND the heap invariant: it can be inlined in the Stack effect
    function body as well as in a Heap effect function body
    *)
@@ -77,7 +79,7 @@ let inline_inv h h' : GTot Type0 =
 
 (**
    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
-   In other terms, the backend has to inline the body into the caller's body.
+   In other terms, the backend has to unfold the body into the caller's body.
    This effect only maintains the stack invariant: the tip is left unchanged and no allocation
    may occurs in the stack lower than the tip.
    Region allocation is not constrained.
@@ -144,6 +146,14 @@ let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
   not (r `is_in` m0.h)
   /\ r `is_in` m1.h
 
+(*
+ * AR: using this in mitls code, so that it corresponds to the
+ * fresh_region definition in hyperheap.
+ *)
+let stronger_fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
+   (forall j. HH.includes r j ==> not (j `is_in` m0.h))
+   /\ r `is_in` m1.h
+
 assume val new_region: r0:HH.rid -> ST HH.rid
       (requires (fun m -> is_eternal_region r0))
       (ensures (fun (m0:mem) (r1:HH.rid) (m1:mem) ->
@@ -166,7 +176,7 @@ assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
 			/\ m1.tip = m0.tip
 			))
 
-inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
+unfold let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
     let region_i = Map.sel m0.h i in
     not (Heap.contains region_i (HH.as_ref x.ref))
   /\ i `is_in` m0.h
@@ -185,7 +195,7 @@ assume val rfree: #a:Type -> r:mmref a -> ST unit
     (requires (fun m0 -> m0 `contains` r))
     (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
 
-inline let assign_post (#a:Type) (r:reference a) (v:a) m0 (_u:unit) m1 =
+unfold let assign_post (#a:Type) (r:reference a) (v:a) m0 (_u:unit) m1 =
   m0 `contains` r /\ m1 == HyperStack.upd m0 r v
 
 (**
@@ -196,16 +206,21 @@ assume val op_Colon_Equals: #a:Type -> r:reference a -> v:a -> STL unit
   (requires (fun m -> m `contains` r))
   (ensures (assign_post r v))
 
-inline let deref_post (#a:Type) (r:reference a) m0 x m1 =
+unfold let deref_post (#a:Type) (r:reference a) m0 x m1 =
   m1==m0 /\ x==HyperStack.sel m0 r
 
 (**
    Dereferences, provided that the reference exists.
    Guaranties the strongest low-level effect: Stack
    *)
+(*
+ * AR: making the precondition as weak_contains.
+ *)
 assume val op_Bang: #a:Type -> r:reference a -> Stack a
-  (requires (fun m -> m `contains` r))
+  (requires (fun m -> m `weak_contains` r))
   (ensures (deref_post r))
+
+let modifies_none (h0:mem) (h1:mem) = modifies Set.empty h0 h1
 
 module G = FStar.Ghost
 

@@ -46,7 +46,7 @@ reifiable reflectable total new_effect_for_free {
      ; put      = put
 }
 
-inline let lift_pure_state (a:Type) (wp:pure_wp a) (h:heap) (p:STATE.post a) = wp (fun a -> p (a, h))
+unfold let lift_pure_state (a:Type) (wp:pure_wp a) (h:heap) (p:STATE.post a) = wp (fun a -> p (a, h))
 sub_effect PURE ~> STATE = lift_pure_state
 
 //ST is an abbreviation for STATE with pre- and post-conditions
