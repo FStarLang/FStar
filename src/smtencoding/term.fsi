@@ -16,7 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Term
-
+open Prims
 open System.Diagnostics
 open FStar
 open FStar.Syntax.Syntax
@@ -95,41 +95,41 @@ type decls_t = list<decl>
 type error_label = (fv * string * Range.range)
 type error_labels = list<error_label>
 
-val mk: term' -> (Range.range -> term)
+val mk: term' -> Range.range -> term
 val hash_of_term: term -> string
 val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
 val free_variables: term -> fvs
 val mkTrue :  (Range.range -> term)
 val mkFalse : (Range.range -> term)
-val mkInteger : string -> (Range.range -> term)
-val mkInteger': int -> (Range.range -> term)
-val mkBoundV : int -> (Range.range -> term)
-val mkFreeV  : (string * sort) -> (Range.range -> term)
-val mkApp' : (op * list<term>) -> (Range.range -> term)
-val mkApp  : (string * list<term>) -> (Range.range -> term)
-val mkNot  : term -> (Range.range -> term)
-val mkMinus: term -> (Range.range -> term)
-val mkAnd  : ((term * term) -> (Range.range -> term))
-val mkOr  :  ((term * term) -> (Range.range -> term))
-val mkImp :  ((term * term) -> (Range.range -> term))
-val mkIff :  ((term * term) -> (Range.range -> term))
-val mkEq :   ((term * term) -> (Range.range -> term))
-val mkLT :   ((term * term) -> (Range.range -> term))
-val mkLTE :  ((term * term) -> (Range.range -> term))
-val mkGT:    ((term * term) -> (Range.range -> term))
-val mkGTE:   ((term * term) -> (Range.range -> term))
-val mkAdd:   ((term * term) -> (Range.range -> term))
-val mkSub:   ((term * term) -> (Range.range -> term))
-val mkDiv:   ((term * term) -> (Range.range -> term))
-val mkMul:   ((term * term) -> (Range.range -> term))
-val mkMod:   ((term * term) -> (Range.range -> term))
-val mkITE: (term * term * term) -> (Range.range -> term)
-val mkCases : list<term> -> (Range.range -> term)
-val mkForall: (list<list<pat>> * fvs * term) -> (Range.range -> term)
-val mkForall': (list<list<pat>> * option<int> * fvs * term) -> (Range.range -> term)
-val mkForall'': (list<list<pat>> * option<int> * list<sort> * term) -> (Range.range -> term)
-val mkExists: (list<list<pat>> * fvs * term) -> (Range.range -> term)
+val mkInteger : string -> Range.range -> term
+val mkInteger': int -> Range.range -> term
+val mkBoundV : int -> Range.range -> term
+val mkFreeV  : (string * sort) -> Range.range -> term
+val mkApp' : (op * list<term>) -> Range.range -> term
+val mkApp  : (string * list<term>) -> Range.range -> term
+val mkNot  : term -> Range.range -> term
+val mkMinus: term -> Range.range -> term
+val mkAnd  : ((term * term) -> Range.range -> term)
+val mkOr  :  ((term * term) -> Range.range -> term)
+val mkImp :  ((term * term) -> Range.range -> term)
+val mkIff :  ((term * term) -> Range.range -> term)
+val mkEq :   ((term * term) -> Range.range -> term)
+val mkLT :   ((term * term) -> Range.range -> term)
+val mkLTE :  ((term * term) -> Range.range -> term)
+val mkGT:    ((term * term) -> Range.range -> term)
+val mkGTE:   ((term * term) -> Range.range -> term)
+val mkAdd:   ((term * term) -> Range.range -> term)
+val mkSub:   ((term * term) -> Range.range -> term)
+val mkDiv:   ((term * term) -> Range.range -> term)
+val mkMul:   ((term * term) -> Range.range -> term)
+val mkMod:   ((term * term) -> Range.range -> term)
+val mkITE: (term * term * term) -> Range.range -> term
+val mkCases : list<term> -> Range.range -> term
+val mkForall: (list<list<pat>> * fvs * term) -> Range.range -> term
+val mkForall': (list<list<pat>> * option<int> * fvs * term) -> Range.range -> term
+val mkForall'': (list<list<pat>> * option<int> * list<sort> * term) -> Range.range -> term
+val mkExists: (list<list<pat>> * fvs * term) -> Range.range -> term
 
 val fresh_token: (string * sort) -> int -> decl
 val injective_constructor : (string * list<(string * sort)> * sort) -> decls_t
@@ -139,10 +139,10 @@ val constructor_to_decl: constructor_t -> decls_t
 val termToSmt: term -> string
 val declToSmt: string -> decl -> string
 
-val mk_Term_app : term -> term -> (Range.range -> term)
-val mk_Term_uvar: int -> (Range.range -> term)
-val mk_and_l: list<term> -> (Range.range -> term)
-val mk_or_l: list<term> -> (Range.range -> term)
+val mk_Term_app : term -> term -> Range.range -> term
+val mk_Term_uvar: int -> Range.range -> term
+val mk_and_l: list<term> -> Range.range -> term
+val mk_or_l: list<term> -> Range.range -> term
 
 val boxInt:      term -> term
 val unboxInt:    term -> term
@@ -166,10 +166,10 @@ val mk_HasTypeWithFuel: option<term> -> term -> term -> term
 val mk_tester:       string -> term -> term
 val mk_Term_type:    term
 val mk_ApplyTF:      term -> term -> term
-val mk_ApplyTT:      term -> term -> (Range.range -> term)
-val mk_String_const: int -> (Range.range -> term)
-val mk_Precedes:     term -> term -> (Range.range -> term)
-val mk_LexCons:      term -> term -> (Range.range -> term)
+val mk_ApplyTT:      term -> term -> Range.range -> term
+val mk_String_const: int -> Range.range -> term
+val mk_Precedes:     term -> term -> Range.range -> term
+val mk_LexCons:      term -> term -> Range.range -> term
 val fuel_2: term
 val fuel_100:term
 val n_fuel: int -> term

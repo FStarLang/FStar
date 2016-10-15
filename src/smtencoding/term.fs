@@ -198,19 +198,19 @@ let rec hash_of_term' t = match t with
               ^ "))"
 and hash_of_term tm = hash_of_term' tm.tm
 
-let mk t r          = {tm=t; freevars=Util.mk_ref None; rng=r}
-let mkTrue          = mk (App(True, []))
-let mkFalse         = mk (App(False, []))
-let mkInteger i     = mk (Integer (ensure_decimal i))
-let mkInteger' i    = mkInteger (string_of_int i)
-let mkBoundV i      = mk (BoundV i)
-let mkFreeV x       = mk (FreeV x)
-let mkApp' f        = mk (App f)
-let mkApp (s, args) = mk (App (Var s, args))
-let mkNot t      = match t.tm with
-    | App(True, _)  -> mkFalse
-    | App(False, _) -> mkTrue
-    | _ -> mkApp'(Not, [t])
+let mk t r = {tm=t; freevars=Util.mk_ref None; rng=r}
+let mkTrue  r       = mk (App(True, [])) r
+let mkFalse r       = mk (App(False, [])) r
+let mkInteger i  r  = mk (Integer (ensure_decimal i)) r
+let mkInteger' i r  = mkInteger (string_of_int i) r
+let mkBoundV i r    = mk (BoundV i) r
+let mkFreeV x r     = mk (FreeV x) r
+let mkApp' f r      = mk (App f) r
+let mkApp (s, args) r = mk (App (Var s, args)) r
+let mkNot t r       = match t.tm with
+    | App(True, _)  -> mkFalse r
+    | App(False, _) -> mkTrue r
+    | _ -> mkApp'(Not, [t]) r
 let mkAnd (t1, t2) r = match t1.tm, t2.tm with
     | App(True, _), _ -> t2
     | _, App(True, _) -> t1
@@ -236,8 +236,8 @@ let mkImp (t1, t2) r = match t1.tm, t2.tm with
     | _, App(Imp, [t1'; t2']) -> mkApp'(Imp, [mkAnd(t1, t1') r; t2']) r
     | _ -> mkApp'(Imp, [t1; t2]) r
 
-let mk_bin_op op (t1,t2) = mkApp'(op, [t1;t2])
-let mkMinus t = mkApp'(Minus, [t])
+let mk_bin_op op (t1,t2) r = mkApp'(op, [t1;t2]) r
+let mkMinus t r = mkApp'(Minus, [t]) r
 let mkIff = mk_bin_op Iff
 let mkEq  = mk_bin_op Eq
 let mkLT  = mk_bin_op LT
@@ -311,12 +311,12 @@ let inst tms t =
    aux 0 t
 
 let mkQuant' (qop, pats, wopt, vars, body) = mkQuant (qop, pats |> List.map (List.map (abstr vars)), wopt, List.map fv_sort vars, abstr vars body)
-let mkForall'' (pats, wopt, sorts, body) = mkQuant (Forall, pats, wopt, sorts, body)
-let mkForall' (pats, wopt, vars, body) = mkQuant' (Forall, pats, wopt, vars, body)
+let mkForall'' (pats, wopt, sorts, body) r = mkQuant (Forall, pats, wopt, sorts, body) r
+let mkForall' (pats, wopt, vars, body) r = mkQuant' (Forall, pats, wopt, vars, body) r
 
 //these are the external facing functions for building quantifiers
-let mkForall (pats, vars, body) = mkQuant' (Forall, pats, None, vars, body)
-let mkExists (pats, vars, body) = mkQuant' (Exists, pats, None, vars, body)
+let mkForall (pats, vars, body) r = mkQuant' (Forall, pats, None, vars, body) r
+let mkExists (pats, vars, body) r = mkQuant' (Exists, pats, None, vars, body) r
 
 let norng = Range.dummyRange
 let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, abstr vars tm, c)
@@ -522,8 +522,8 @@ and mkPrelude z3options =
 
 let mk_Range_const      = mkApp("Range_const", []) norng
 let mk_Term_type        = mkApp("Tm_type", []) norng
-let mk_Term_app t1 t2   = mkApp("Tm_app", [t1;t2])
-let mk_Term_uvar i      = mkApp("Tm_uvar", [mkInteger' i norng])
+let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
+let mk_Term_uvar i    r = mkApp("Tm_uvar", [mkInteger' i norng]) r
 let mk_Term_unit        = mkApp("Tm_unit", []) norng
 let boxInt t            = mkApp("BoxInt", [t]) t.rng
 let unboxInt t          = mkApp("BoxInt_proj_0", [t]) t.rng
@@ -573,10 +573,10 @@ let mk_Destruct v     = mkApp("Destruct", [v])
 let mk_Rank x         = mkApp("Rank", [x])
 let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
-let mk_ApplyTT t t'   = mkApp("ApplyTT", [t;t'])
-let mk_String_const i = mkApp("FString_const", [ mkInteger' i norng])
+let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
+let mk_String_const i r = mkApp("FString_const", [ mkInteger' i norng]) r
 let mk_Precedes x1 x2 r = mkApp("Precedes", [x1;x2])  r|> mk_Valid
-let mk_LexCons x1 x2  = mkApp("LexCons", [x1;x2]) 
+let mk_LexCons x1 x2 r  = mkApp("LexCons", [x1;x2]) r
 let rec n_fuel n =
     if n = 0 then mkApp("ZFuel", []) norng
     else mkApp("SFuel", [n_fuel (n - 1)]) norng
