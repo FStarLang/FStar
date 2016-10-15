@@ -1,8 +1,9 @@
 module Crypto.Symmetric.PRF
 
-(* This file models our idealization of CHACHA20 (and soon any other
-   cipher used only in forward mode, such as AES for GCM or CCM)
-   as a PRF to build authenticated encryption.
+(* This file models our idealization of symmetric ciphers used only in
+   forward mode, including CHACHA20 and several variants of AES for
+   for GCM or CCM, modellied as a PRF to build authenticated
+   encryption.
 
    It models (an ad hoc variant of) the PRF security assumption:
 
@@ -10,27 +11,38 @@ module Crypto.Symmetric.PRF
    to generate the one-time MAC key, to generate a one-time-pad for
    encryption, and to generate a one-time-pad for decryption. *)
 
-// TODO improve agility (more i:id) and also support AES
-// TODO add pre- to statically prevent counter overflows
+// 16-10-15 currently specialized to CHACHA20 and POLY1305 
+// TODO improve agility (more i:id) and also support AES256 and AES128
+// TODO add a shared MAC key (here or in AEAD)
 
 open FStar.Ghost
 open FStar.UInt8
 open FStar.UInt32
 
-open Crypto.Symmetric.Bytes // including library stuff
+open Crypto.Symmetric.Bytes
 open Flag
 open Plain
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
   
-module MAC   = Crypto.Symmetric.Poly1305.MAC
+module MAC   = Crypto.Symmetric.Poly1305.MAC 
 module Block = Crypto.Symmetric.Cipher
 
-let prfa = Block.CHACHA20
+// PRF TABLE
 
-let id = Flag.id 
+let blocklen i = Block.blocklen (cipher_of_id i)
+type block i = b:lbytes (v (blocklen i))
+let keylen i = Block.keylen (cipher_of_id i)
 
+(*
+private let lemma_lengths (i:id) : Lemma(keylen i <^ blocklen i) = 
+  match i.cipher with 
+  | AES_256_GCM -> ()
+  | CHACHA20_POLY1305 -> ()
+*)
+
+let id = i:Flag.id {i.cipher = CHACHA20_POLY1305} //16-10-15 temporary
 
 // IDEALIZATION
 // step 1. Flag.prf i relies on PRF just to get fresh MAC keys. 
@@ -38,84 +50,81 @@ let id = Flag.id
 
 private let sanity_check i = assert(safeId i ==> prf i)
 
-
 // LIBRARY STUFF
-
-let u8  = UInt8.t
-let u32 = UInt32.t
-let u64 = UInt64.t
 
 type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
-// PRF TABLE
 
-let maxCtr = 2000ul // to be adjusted, controlling concrete bound.
-type ctrT = x:u32 {x <=^ maxCtr}
-
-
-// used only ideally; noeq is painful here.
-
-type domain = { iv:Block.iv prfa; ctr:ctrT } // could move to concrete CHACHA20
-let incr (x:domain {x.ctr <^ maxCtr})  = { iv = x.iv; ctr = x.ctr +^ 1ul }
+// to be adjusted, controlling concrete bound.
+//16-10-15 how to ensure it is reduced at compile-time?
+let maxCtr i = 16384ul /^ blocklen i
+type ctrT i = x:u32 {x <=^ maxCtr i}
 
 
-val above: domain -> domain -> Tot bool
-let above x z = x.iv = z.iv && x.ctr >=^ z.ctr
+// The PRF domain: an IV and a counter.
 
-let blocklen = Block.blocklen prfa
-let block = b:bytes {Seq.length b = v blocklen}
+type domain (i:id) = { iv:Block.iv (cipher_of_id i); ctr:ctrT i} 
+let incr (i:id) (x:domain i {x.ctr <^ maxCtr i}) = { iv = x.iv; ctr = x.ctr +^ 1ul }
 
-let keylen = Block.keylen prfa
+val above: #i:id -> domain i -> domain i -> Tot bool
+let above #i x z = x.iv = z.iv && x.ctr >=^ z.ctr
 
 // the range of our PRF, after idealization and "reverse inlining."
 // for one-time-pads, we keep both the plain and cipher blocks, instead of their XOR.
 
-type smac (rgn:region) i x = mac: MAC.state (i,x.iv) { MAC.State.region mac = rgn }
-noeq type otp i = | OTP: l:u32 {l <=^ blocklen} -> plain i (v l) -> cipher:lbytes (v l) -> otp i
+type smac (rgn:region) (i:id) x = mac: MAC.state (i,x.iv) { MAC.State.region mac = rgn }
+noeq type otp (i:id) = | OTP: l:u32 {l <=^ blocklen i} -> plain i (v l) -> cipher:lbytes (v l) -> otp i
 
-let range (rgn:region) (i:id) (x:domain): Type0 =
-  if x.ctr = 0ul then smac rgn i x
+let range (mac_rgn:region) (i:id) (x:domain i): Type0 =
+  if x.ctr = 0ul then smac mac_rgn i x
   else if safeId i then otp i
-  else lbytes (v blocklen)
+  else lbytes (v (blocklen i))
+
+let domain_mac (i:id) = x:domain i{x.ctr = 0ul} 
+let domain_otp (i:id) = x:domain i{x.ctr <> 0ul /\ safeId i}
+let domain_blk (i:id) = x:domain i{x.ctr <> 0ul /\ ~ (safeId i)}
 
 // explicit coercions
-let macRange rgn i (x:domain{x.ctr = 0ul}) (z:range rgn i x) : smac rgn i x = z
-let otpRange rgn i (x:domain{x.ctr <> 0ul /\ safeId i}) (z:range rgn i x) : otp i = z 
-let blkRange rgn i (x:domain{x.ctr <> 0ul /\ ~ (safeId i)}) (z:range rgn i x) : lbytes (v blocklen) = z
+let macRange rgn (i:id) (x:domain_mac i) (z:range rgn i x) : smac rgn i x = z
+let otpRange rgn (i:id) (x:domain_otp i) (z:range rgn i x) : otp i = z 
+let blkRange rgn (i:id) (x:domain_blk i) (z:range rgn i x) : block i = z
 
 noeq type entry (rgn:region) (i:id) =
-  | Entry: x:domain -> range:range rgn i x -> entry rgn i
+  | Entry: x:domain i -> range:range rgn i x -> entry rgn i
 
-let find (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) : option (range rgn i x) =
+let find (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain i) : option (range rgn i x) =
   match SeqProperties.seq_find (fun (e:entry rgn i) -> e.x = x) s with
   | Some e -> Some e.range
   | None   -> None
-let find_mac #rgn #i s (x:domain{x.ctr=0ul}) =
+let find_mac #rgn (#i:id) s (x:domain_mac i) =
   match find s x with
   | Some v -> Some(macRange rgn i x v)
   | None   -> None
-let find_otp #rgn #i s (x:domain{x.ctr<>0ul /\ safeId i}) =
+let find_otp #rgn (#i:id) s (x:domain_otp i) =
   match find s x with
   | Some v -> Some(otpRange rgn i x v)
   | None   -> None
-let find_blk #rgn #i s (x:domain{x.ctr<>0ul /\ ~(safeId i)}) =
+let find_blk #rgn (#i:id) s (x:domain_blk i) =
   match find s x with
   | Some v -> Some (blkRange rgn i x v)
   | None   -> None
 
 // The table exists only for idealization
-// TODO it should be a monotonic map: what's in the table stays there. 
-let table_t rgn mac_rgn i = 
+// What's in the table stays there. And the table does not have two entries with the same x.
+// TODO consider using a monotonic map to enforce those
+let table_t rgn mac_rgn (i:id) = 
   if prf i then r:HS.ref (Seq.seq (entry mac_rgn i)) {HS.frameOf r = rgn}
   else unit
 
-// the PRF instance, including its key and memoization table
-// TODO separate on rw, with multiple readers?
+// the PRF instance, 
+// including its key and memoization table (in rgn) 
+// and its mac instances (below in mac_rgn)
+// NOTE both regions are meant to be allocated at the writer. A bit dubious for the real key state.
 noeq type state (i:id) =
   | State: #rgn: region ->
 	   #mac_rgn: region{mac_rgn `HH.extends` rgn} ->
            // key is immutable once generated, we should make it private
-           key: lbuffer (v (Block.keylen prfa)) 
+           key: lbuffer (v (keylen i)) 
              {Buffer.frameOf key = rgn /\ ~(HS.MkRef.mm (Buffer.content key))} ->
            table: table_t rgn mac_rgn i ->
            state i
@@ -139,8 +148,8 @@ val gen: rgn:region -> i:id -> ST (state i)
     (prf i ==> HS.sel h1 (itable i s) == Seq.createEmpty #(entry s.mac_rgn i))))
 let gen rgn i =
   let mac_rgn : (r:region{r `HH.extends` rgn}) = new_region rgn in
-  let key = Buffer.rcreate rgn 0uy (Block.keylen prfa) in
-  Bytes.random (v (Block.keylen prfa)) key;
+  let key = Buffer.rcreate rgn 0uy (keylen i) in
+  Bytes.random (v (keylen i)) key;
   let table: table_t rgn mac_rgn i =
     if prf i then 
       mktable i rgn mac_rgn (ralloc rgn (Seq.createEmpty #(entry mac_rgn i)))
@@ -149,13 +158,13 @@ let gen rgn i =
   State #i #rgn #mac_rgn key table
 // no need to demand prf i so far.
 
-val coerce: rgn:region -> i:id{~(prf i)} -> key:lbuffer (v keylen) -> ST (state i)
+val coerce: rgn:region -> i:id{~(prf i)} -> key:lbuffer (v (keylen i)) -> ST (state i)
   (requires (fun h -> Buffer.live h key))
   (ensures  (fun h0 s h1 -> s.rgn == rgn))
 let coerce rgn i key =
   let mac_rgn : (r:region{r `HH.extends` rgn}) = new_region rgn in
-  let key_p = Buffer.rcreate rgn 0uy (Block.keylen prfa) in
-  Buffer.blit key 0ul key_p 0ul (Block.keylen prfa);
+  let key_p = Buffer.rcreate rgn 0uy (keylen i) in
+  Buffer.blit key 0ul key_p 0ul (keylen i);
   State #i #rgn #mac_rgn key_p (no_table i rgn mac_rgn)
 
 // TODO leak, and eventually dynamic compromise.
@@ -164,13 +173,13 @@ let coerce rgn i key =
 (** computes a PRF block and copies its len first bytes to output *)
 
 private val getBlock: 
-  #i:id -> t:state i -> domain -> len:u32 {len <=^ blocklen} -> 
+  #i:id -> t:state i -> domain i -> len:u32 {len <=^ blocklen i} -> 
   output:lbuffer (v len) { Buffer.disjoint t.key output } -> ST unit
   (requires (fun h0 -> Buffer.live h0 output))
   (ensures (fun h0 r h1 -> Buffer.live h1 output /\ Buffer.modifies_1 output h0 h1 ))
 let getBlock #i t x len output =
   Buffer.recall t.key;
-  Block.compute Block.CHACHA20 output t.key x.iv x.ctr len
+  Block.compute (cipher_of_id i) output t.key x.iv x.ctr len
 
 
 // We encapsulate our 3 usages of the PRF in specific functions.
@@ -183,7 +192,7 @@ let getBlock #i t x len output =
 // the first block (ctr=0) is used to generate a single-use MAC
 
 val prf_mac: 
-  i:id -> t:state i -> x:domain{x.ctr = 0ul} -> ST (MAC.state (i,x.iv))
+  i:id -> t:state i -> x:domain_mac i -> ST (MAC.state (i,x.iv))
   (requires (fun h0 -> True))
   (ensures (fun h0 mac h1 ->
     if prf i then
@@ -202,8 +211,7 @@ val prf_mac:
     else (
       HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
       HS.modifies_ref t.rgn TSet.empty h0 h1  /\
-      HS.modifies_ref t.mac_rgn TSet.empty h0 h1
-  )))
+      HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
 
 #reset-options "--z3timeout 1000"
 
@@ -226,30 +234,15 @@ let prf_mac i t x =
     end
   else
     begin
-    let keyBuffer = Buffer.rcreate t.mac_rgn 0uy keylen in
+    let keyBuffer = Buffer.rcreate t.mac_rgn 0uy (MAC.keylen i) in
     let h1 = ST.get() in
-    getBlock t x keylen keyBuffer;
+    getBlock t x (MAC.keylen i) keyBuffer;
     let h2 = ST.get() in
     Buffer.lemma_reveal_modifies_1 keyBuffer h1 h2;
     MAC.coerce macId t.mac_rgn keyBuffer
     end
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
-
-(*
-private let lemma_modifies_buf_1 (#t:Type) (b:Buffer.buffer t) (r:HH.rid{r <> Buffer.frameOf b}) h0 h1 :
-  Lemma
-    (requires (Buffer.live h0 b /\ HS.modifies (Set.singleton r) h0 h1))
-    (ensures  (Buffer.modifies_buf_1 (Buffer.frameOf b) b h0 h1))
-    = ()
-
-private let lemma_modifies_ref (#t:Type) (r:HS.ref t) (rgn:HH.rid{rgn <> HS (r.id)}) h0 h1 :
-  Lemma
-    (requires (HS.modifies (Set.singleton (rgn)) h0 h1 /\ HS (rgn `is_in` h0.h /\ r.id `is_in` h0.h)))
-    (ensures  (HS.modifies_ref (HS (r.id)) (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1))
-    = cut (HS.modifies (Set.union (Set.singleton rgn) (Set.singleton (HS (r.id)))) h0 h1);
-      cut (HH.modifies_rref (HS (r.id)) !{} (HS (h0.h)) (HS (h1.h)))
-*)
 
 private let extends #rgn #i s0 s1 x =
   let open FStar.Seq in 
@@ -274,13 +267,15 @@ let modifies_x_buffer_1 #i (t:state i) x b h0 h1 =
     Buffer.modifies_1 b h0 h1)
 
 // real case + real use of memoized PRF output.
-private val prf_raw: 
-  i:id -> t:state i -> x:domain{x.ctr <> 0ul /\ ~(safeId i)} -> l:u32 {l <=^ blocklen} -> 
-  output:lbuffer (v l) {Buffer.frameOf output <> t.rgn} -> ST unit
+private val prf_blk: 
+  i:id -> t:state i -> x:domain_blk i -> len:u32 {len <=^ blocklen i} -> 
+  output:lbuffer (v len) {Buffer.frameOf output <> t.rgn} -> ST unit
   (requires (fun h0 -> Buffer.live h0 output))
   (ensures (fun h0 _ h1 -> modifies_x_buffer_1 t x output h0 h1)) 
 
-let prf_raw i t x l output =
+#reset-options "--z3timeout 100"
+
+let prf_blk i t x len output =
   if prf i then
     begin
     let r = itable i t in 
@@ -290,27 +285,24 @@ let prf_raw i t x l output =
       match find_blk contents x with 
       | Some block -> block
       | None ->
-          let block = random_bytes blocklen in
+          let block = random_bytes (blocklen i) in
           r := SeqProperties.snoc contents (Entry x block);
           // assert(extends (HS.sel h0 r) (HS.sel h' r) x);
           block
     in
     let h1 = ST.get() in
     assert(extends (HS.sel h0 r) (HS.sel h1 r) x);
-    store_bytes l output (Seq.slice block 0 (v l));
+    store_bytes len output (Seq.slice block 0 (v len));
     let h2 = ST.get() in
     Buffer.lemma_reveal_modifies_1 output h1 h2
-    //assert(HS.sel h1 r == HS.sel h2 r);
-    //assert(extends (HS.sel h0 r) (HS.sel h2 r) x);
-    //lemma_modifies_prf_raw r output h0 h1 h2)
     end
   else
-    getBlock t x l output
+    getBlock t x len output
 
 
 // reuse the same block for x and XORs it with ciphertext
 val prf_dexor: 
-  i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> l:u32 {l <=^ blocklen} -> 
+  i:id -> t:state i -> x:domain i{x.ctr <> 0ul} -> l:u32 {l <=^ blocklen i} -> 
   plain:plainBuffer i (v l) -> cipher:lbuffer (v l) 
   { Buffer.disjoint (as_buffer plain) cipher /\
     Buffer.frameOf (as_buffer plain) <> t.rgn } -> ST unit
@@ -319,8 +311,7 @@ val prf_dexor:
      (safeId i ==>
      ( match find_otp (HS.sel h0 (itable i t)) x with
        | Some (OTP l' p c) -> l == l' /\ c == sel_bytes h0 l cipher
-       | None -> False
-     ))))
+       | None -> False ))))
   (ensures (fun h0 _ h1 ->
      let pb = as_buffer plain in 
      Plain.live h1 plain /\ Buffer.live h1 cipher /\
@@ -332,8 +323,6 @@ val prf_dexor:
          | None -> False )
        else modifies_x_buffer_1 t x pb h0 h1
      else Buffer.modifies_1 pb h0 h1 )))
-
-#reset-options "--z3timeout 30"
 
 let prf_dexor i t x l plain cipher =
   if safeId i then
@@ -349,7 +338,7 @@ let prf_dexor i t x l plain cipher =
     let h0 = ST.get() in
     let plainrepr = bufferRepr #i #(v l) plain in
     assert(Buffer.disjoint plainrepr cipher);
-    prf_raw i t x l plainrepr; 
+    prf_blk i t x l plainrepr; 
     let h1 = ST.get() in
     assert(modifies_x_buffer_1 t x plainrepr h0 h1);
     (if prf i then recall (itable i t));
@@ -361,7 +350,7 @@ let prf_dexor i t x l plain cipher =
 
 #set-options "--initial_fuel 1 --max_fuel 1"
 
-private let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) (v:range rgn i x) : Lemma
+private let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain i) (v:range rgn i x) : Lemma
   (requires (find s x == None))
   (ensures (find (SeqProperties.snoc s (Entry x v)) x == Some v))
   = ()
@@ -370,7 +359,7 @@ private let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:
 
 // generates a fresh block for x and XORs it with plaintext
 val prf_enxor: 
-  i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> l:u32 {l <=^ blocklen} -> 
+  i:id -> t:state i -> x:domain i{x.ctr <> 0ul} -> l:u32 {l <=^ blocklen i} -> 
   cipher:lbuffer (v l) -> plain:plainBuffer i (v l) 
   {  Buffer.disjoint (as_buffer plain) cipher /\ 
      Buffer.frameOf (as_buffer plain) <> t.rgn /\ 
@@ -384,8 +373,8 @@ val prf_enxor:
      (safeId i ==> 
        ( match find_otp #t.mac_rgn #i (HS.sel h1 t.table) x with
          | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain /\ c == sel_bytes h1 l cipher
-         | None   -> False
-     ))))
+         | None   -> False ))))
+         
 let prf_enxor i t x l cipher plain =
   if safeId i then
     let r = itable i t in 
@@ -407,13 +396,12 @@ let prf_enxor i t x l cipher plain =
     r := contents';
     let h2 = ST.get() in
     assert(p == sel_plain h2 l plain); //16-10-12  how to anti-alias a buffer?
-    assert(modifies_x_buffer_1 t x cipher h0 h2);
-    ()
+    assert(modifies_x_buffer_1 t x cipher h0 h2)
   else
     let h0 = ST.get() in 
     let plainrepr = bufferRepr #i #(v l) plain in
     assert(Buffer.disjoint plainrepr cipher);
-    prf_raw i t x l cipher;
+    prf_blk i t x l cipher;
     let h1 = ST.get() in
     assert(modifies_x_buffer_1 t x cipher h0 h1);
     (if prf i then recall (itable i t));

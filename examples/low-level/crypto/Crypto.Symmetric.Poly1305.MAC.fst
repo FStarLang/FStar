@@ -25,6 +25,16 @@ let alg_of_id = Flag.cipher_of_id
 
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 
+ 
+// towards agility 
+
+// length of the single-use part of the key
+let keylen (i:id) = 
+  match i.cipher with 
+  | AES_256_GCM       -> 16ul
+  | CHACHA20_POLY1305 -> 32ul
+  
+
 type id = Flag.id * UInt128.t
 
 // also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
@@ -126,7 +136,7 @@ let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
 
 val alloc: i:id
   -> region:rid{is_eternal_region region}
-  -> key:buffer{length key >= 32}
+  -> key:lbuffer 32
   -> ST (state i)
   (requires (fun m0 -> live m0 key))
   (ensures  (genPost i region))
@@ -176,6 +186,19 @@ let coerce i region key =
 
 // should be abstract, but then we need to duplicate more elemB code
 type accB (i:id) = elemB
+
+// 16-10-15 TODO mac_log ==> keep stateful itext (to avoid state-passing)
+// 16-10-15 still missing region
+let irtext = if Flag.mac_log then FStar.HyperStack.ref (Seq.seq elem) else unit 
+noeq type accBuffer (i:id) = | Acc:  l:irtext -> a:elemB -> accBuffer i
+let alog (#i:id) (acc:accBuffer i {mac_log}): FStar.HyperStack.ref (Seq.seq elem) = acc.l
+let acc_inv'(#i:id) (st:state i) (acc:accBuffer i) h =
+  live h st.r /\ live h acc.a /\ disjoint st.r acc.a /\
+  norm h st.r /\ norm h acc.a /\
+  (mac_log ==> (
+    let log = FStar.HyperStack.sel h (alog acc) in
+    sel_elem h acc.a == poly log (sel_elem h st.r)))
+
 
 let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
   live h st.r /\ live h a /\ disjoint st.r a /\
@@ -359,8 +382,8 @@ let verify #i st m t =
     bytes_cmp tag t 16ul
 *)
 
-
-// The code below is not involved in the idealization;
+ 
+// The code below is not internal to the idealization;
 // it could go elsewhere, e.g. in AEAD.
 
 // adapted from Poly1305.poly1305_update
@@ -370,12 +393,11 @@ val add:
   l0: itext ->
   a: accB i ->
   w:wordB_16 -> STL itext
-  (requires (fun h -> live h w /\ live h a /\ norm h a /\ norm h st.r
-    /\ (mac_log ==> sel_elem h a = poly (reveal l0) (sel_elem h st.r))))
+  (requires (fun h -> acc_inv st l0 a h))
   (ensures (fun h0 l1 h1 ->
-    modifies_1 a h0 h1 /\ norm h1 a /\
-    (mac_log ==> reveal l1 = SeqProperties.snoc (reveal l0) (encode (sel_word h0 w)) /\
-             sel_elem h1 a = poly (reveal l1) (sel_elem h0 st.r))))
+    modifies_1 a h0 h1 /\ 
+    acc_inv st l1 a h1 /\
+    (mac_log ==> reveal l1 = SeqProperties.snoc (reveal l0) (encode (sel_word h0 w)))))
 
 let add #i st l0 a w =
   push_frame();
