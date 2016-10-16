@@ -170,6 +170,7 @@ noeq type state (i:id) (rw:rw) =
       log: HS.ref (Seq.seq (entry i)) {HS.frameOf log == log_region} ->
       // Was PRF(prf.rgn) == region. Do readers use its own PRF state?
       prf: PRF.state i {PRF(prf.rgn) == log_region} (* including its key *) ->
+      //16-10-16 ak: MAC.akey log_region i (* static, optional authentication key *) -> 
       state i rw
 
 
@@ -183,7 +184,8 @@ val gen: i:id -> rgn:region -> ST (state i Writer)
 let gen i rgn = 
   let log = ralloc rgn (Seq.createEmpty #(entry i)) in
   let prf = PRF.gen rgn i in 
-  State #i #Writer #rgn log prf
+  //16-10-16 let ak = MAC.akey_gen rgn i in
+  State #i #Writer #rgn log prf 
 
 
 val coerce: i:id{~(prf i)} -> rgn:region -> key:lbuffer (v (PRF.keylen i)) -> ST (state i Writer)
@@ -192,6 +194,7 @@ val coerce: i:id{~(prf i)} -> rgn:region -> key:lbuffer (v (PRF.keylen i)) -> ST
 let coerce i rgn key = 
   let log = ralloc rgn (Seq.createEmpty #(entry i)) in // Shouldn't exist
   let prf = PRF.coerce rgn i key in
+  //16-10-16 let ak = MAC.akey_gen rgn i // should actually split key into two.
   State #i #Writer #rgn log prf
 
 
@@ -239,7 +242,7 @@ private val add_bytes:
   (ensures (fun h0 l1 h1 -> 
     Buffer.modifies_1 a h0 h1 /\ 
     Buffer.live h1 txt /\ MAC.acc_inv st l1 a h1 /\
-    (mac_log ==> l1 = Spec.encode_bytes (Buffer.as_seq h1 txt))
+    (mac_log ==> l1 == Seq.append (Spec.encode_bytes (Buffer.as_seq h1 txt)) l0)
     ))
 
 let rec add_bytes #i st log a len txt =
@@ -263,46 +266,38 @@ let rec add_bytes #i st log a len txt =
   in
   pop_frame(); r
 
-(*
-private val accumulate: 
-  #i: MAC.id -> ak: MAC.state i -> 
-  aadlen:UInt32.t -> aad:lbuffer (v aadlen) ->
-  plainlen:UInt32.t -> cipher:lbuffer (v plainlen) -> StackInline (MAC.itext * MAC.accB i)
-  (requires (fun h0 -> 
-    Buffer.live aad h0 /\ Buffer.live cipher h0))
-  (ensures (fun h0 (l,a) h1 -> 
-    Buffer.modifies_0 h0 h1 /\ // modified only freshly allocated buffers on the current stack
-    MAC.acc_inv ak l a h1 /\
-    (mac_log ==> reveal l = 
-      Seq.snoc 
-      (Seq.append (encode_bytes (Buffer.as_seq aad)) 
-                  (encode_bytes (Buffer.as_seq cipher)))
-      (encode_length aadlen plainlen))))
-  // StackInline required for stack-allocated accumulator
-*)
- 
+//16-10-16 TODO in SeqProperties
+assume val lemma_append_slices: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> Lemma
+  (ensures 
+    ( s1 == Seq.slice (Seq.append s1 s2) 0 (Seq.length s1)
+    /\ s2 == Seq.slice (Seq.append s1 s2) (Seq.length s1) (Seq.length s1 + Seq.length s2))
+    /\ (forall (i:nat) (j:nat).
+       i <= j /\ j <= Seq.length s2 ==>
+       Seq.slice s2 i j == Seq.slice (Seq.append s1 s2) (Seq.length s1 + i) (Seq.length s1 + j)))
+
 private let encode_lengths (aadlen:UInt32.t) (plainlen:UInt32.t) : b:lbytes 16
   { v aadlen = little_endian (Seq.slice b 0 4) /\
     v plainlen = little_endian (Seq.slice b 8 12) } = 
+  let b0 = Seq.create 4 0uy in 
   let ba = uint32_bytes 4ul aadlen in
   let bp = uint32_bytes 4ul plainlen in 
   let open FStar.Seq in 
-  let b = ba @| (Seq.create 4 0uy @| bp @| Seq.create 4 0uy) in
-  //16-10-15 TODO SeqProperties?
-  assume(ba = slice b 0 4);
-  assume(bp = slice b 8 12);
+  let b = ba @| b0 @| bp @| b0 in
+  lemma_append_slices ba (b0 @| bp @| b0);
+  lemma_append_slices b0 (bp @| b0);
+  lemma_append_slices bp b0;
   b
 
-private let encode_both aadlen plainlen (aad:lbytes (v aadlen)) (plain:lbytes (v plainlen)) :
+private let encode_both aadlen (aad:lbytes (v aadlen)) plainlen (plain:lbytes (v plainlen)) :
   e:Seq.seq Spec.elem {Seq.length e > 0 /\ SeqProperties.head e = Spec.encode(encode_lengths aadlen plainlen)} = 
   SeqProperties.cons (Spec.encode(encode_lengths aadlen plainlen))
     (Seq.append 
       (Spec.encode_bytes plain) 
       (Spec.encode_bytes aad))
 
-private let lemma_encode_both al0 pl0 al1 pl1 
+private let lemma_encode_both_inj al0 pl0 al1 pl1 
   (a0:lbytes(v al0)) (p0:lbytes(v pl0)) (a1:lbytes(v al1)) (p1:lbytes (v pl1)) : Lemma
-  (requires encode_both al0 pl0 a0 p0 = encode_both al1 pl1 a1 p1)
+  (requires encode_both al0 a0 pl0 p0 = encode_both al1 a1 pl1 p1)
   (ensures al0 = al1 /\ pl0 = pl1 /\ a0 = a1 /\ p0 = p1) = 
 
   let open FStar.Seq in 
@@ -329,28 +324,56 @@ private let lemma_encode_both al0 pl0 al1 pl1
   lemma_encode_bytes_injective p0 p1;
   lemma_encode_bytes_injective a0 a1
 
-(*
-let rec map #a #b (f:a -> Tot b) (s:Seq.seq a) : Tot (Seq.seq b) (decreases (Seq.length s))= 
-  if Seq.length s = 0 then Seq.createEmpty else
-  SeqProperties.cons (f (SeqProperties.head s)) (map f (SeqProperties.tail s))
+private val accumulate: 
+  #i: MAC.id -> st: MAC.state i -> 
+  aadlen:UInt32.t -> aad:lbuffer (v aadlen) ->
+  plainlen:UInt32.t -> cipher:lbuffer (v plainlen) -> StackInline (MAC.itext * MAC.accB i)
+  (requires (fun h0 -> 
+    MAC(Buffer.live h0 st.r /\ norm h0 st.r) /\
+    Buffer.live h0 aad /\ Buffer.live h0 cipher))
+  (ensures (fun h0 (l,a) h1 -> 
+    Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
+    Buffer.live h1 aad /\ Buffer.live h1 cipher /\
+    MAC.acc_inv st l a h1 /\
+    (mac_log ==> l == encode_both aadlen (Buffer.as_seq h1 aad) plainlen (Buffer.as_seq h1 cipher))))
+  // StackInline required for stack-allocated accumulator
 
-let lemma_map_injective_encoding s0 s1 : Lemma (map Spec.encode s0 = map Spec.encode s1 ==> s0 = s1) = ()
-*)
 
-private let accumulate i ak (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
+assume val lemma_append_nil: #a:_ -> s:Seq.seq a -> 
+  Lemma (s == Seq.append s Seq.createEmpty)
+  
+let accumulate #i st (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
   (plainlen:UInt32.t) (cipher:lbuffer (v plainlen)) = 
-  let acc = MAC.start ak in
+
+  let h = ST.get() in 
+  let acc = MAC.start st in
+  let h0 = ST.get() in
+  Buffer.lemma_reveal_modifies_0 h h0;
+  //16-10-16 :(
+  assume (Buffer.disjoint aad acc /\ Buffer.disjoint cipher acc);
+
   let l = MAC.text_0 in 
-  let l = add_bytes ak l acc aadlen aad in
-  let l = add_bytes ak l acc plainlen cipher in 
+  let l = add_bytes st l acc aadlen aad in
+  let h1 = ST.get() in 
+  Buffer.lemma_reveal_modifies_1 acc h0 h1;
+  assert(mac_log ==> l = Seq.append(Spec.encode_bytes (Buffer.as_seq h1 aad)) MAC.text_0);
+
+  assume false;//16-10-16 WIP
+  // if mac_log then lemma_append_nil #Spec.elem l;
+  // assert(mac_log ==> l = Spec.encode_bytes (Buffer.as_seq h1 aad));
+  let l = add_bytes st l acc plainlen cipher in 
+  let h = ST.get() in 
+  assert(mac_log ==> l = Seq.append (Spec.encode_bytes (Buffer.as_seq h cipher)) (Spec.encode_bytes (Buffer.as_seq h aad)));
+
   let l = 
     let final_word = Buffer.create 0uy 16ul in 
     store_uint32 4ul (Buffer.sub final_word 0ul 4ul) aadlen;
     store_uint32 4ul (Buffer.sub final_word 8ul 4ul) plainlen;
     let h = ST.get() in 
     assert(encode_lengths aadlen plainlen = Buffer.as_seq h final_word);
-    MAC.add ak l acc final_word in
+    MAC.add st l acc final_word in
   l, acc
+
 
 // INVARIANT (WIP)
 
@@ -710,8 +733,10 @@ val encrypt:
   aadtext: lbuffer (v aadlen) -> 
   plainlen: UInt32.t {safelen i (v plainlen) 1ul} -> 
   plaintext: plainBuffer i (v plainlen) -> 
-  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) ->
-  STL unit
+  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) 
+  { Buffer.disjoint aadtext ciphertext /\
+    Buffer.disjoint_2 (Plain.as_buffer plaintext) aadtext ciphertext }
+  ->  STL unit
   (requires (fun h -> 
     inv h #i #Writer e /\
     live_2 h aadtext ciphertext /\ Plain.live h plaintext /\
@@ -736,12 +761,13 @@ val decrypt:
   aadtext:lbuffer (v aadlen) -> 
   plainlen:UInt32.t {safelen i (v plainlen) 1ul} -> 
   plaintext:plainBuffer i (v plainlen) -> 
-  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) -> STL bool
+  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) 
+  { Buffer.disjoint aadtext ciphertext /\
+    Buffer.disjoint_2 (Plain.as_buffer plaintext) aadtext ciphertext }
+  -> STL bool
   (requires (fun h -> 
     inv h #i #Reader e /\
-    live_2 h aadtext ciphertext /\ Plain.live h plaintext /\ 
-    Buffer.disjoint aadtext ciphertext //TODO add disjointness for plaintext
-    ))
+    live_2 h aadtext ciphertext /\ Plain.live h plaintext ))
   (ensures (fun h0 verified h1 -> 
     inv h1 #i #Reader e /\
     live_2 h1 aadtext ciphertext /\ Plain.live h1 plaintext /\
@@ -767,10 +793,11 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   counter_enxor i st.prf (PRF.incr i x) plainlen plain cipher;
   
   // Compute MAC over additional data and ciphertext
-  let l, acc = accumulate i ak aadlen aad plainlen cipher in 
+  let l, acc = accumulate ak aadlen aad plainlen cipher in 
   MAC.mac ak l acc tag;
   pop_frame()
 
+#reset-options "--z3timeout 100"
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   push_frame();
   let x = PRF({iv = iv; ctr = 0ul}) in // PRF index to the first block
@@ -778,11 +805,33 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
   let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
 
+  // First recompute and check the MAC
+  let h0 = ST.get() in
+  assume(
+    MAC(Buffer.live h0 ak.r /\ norm h0 ak.r) /\
+    Buffer.live h0 aad /\ Buffer.live h0 cipher);
+
+  let l, acc = accumulate ak aadlen aad plainlen cipher in
+
+  let h = ST.get() in 
+  assert(mac_log ==> l = encode_both aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher));
+
+  let verified = MAC.verify ak l acc tag in
+
+  let h1 = ST.get() in
+  assert(MAC.authId (i,iv) ==> (verified = (HS.sel h1 (MAC(ilog ak)) = Some (l,tag))));  
+  // then, safeID i /\ stateful invariant ==>
+  //    not verified ==> no entry in the AEAD table
+  //    verified ==> exists Entry(iv ad l p c) in AEAD.log 
+  //                 and correct entries above x in the PRF table
+  //                 with matching aad, cipher, and plain
+  //
+  // not sure what we need to prove for 1st level of PRF idealization
+  // possibly that the PRF table with ctr=0 matches the Entry table. 
+  // (PRF[iv,ctr=0].MAC.log =  Some(l,t) iff Entry(iv,___)) 
+
   assume false; //16-10-04
 
-  // First recompute and check the MAC
-  let l, acc = accumulate i ak aadlen aad plainlen cipher in
-  let verified = MAC.verify ak l acc tag in
   if verified then counter_dexor i st.prf (PRF.incr i x) plainlen plain cipher;
   pop_frame();
   verified

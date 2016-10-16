@@ -17,7 +17,7 @@ open Crypto.Symmetric.Bytes
 open Flag 
 
 module HH = FStar.HyperHeap
-
+module HS = FStar.HyperStack
 // library stuff
 
 type alg = Flag.mac_alg
@@ -26,14 +26,44 @@ let alg_of_id = Flag.cipher_of_id
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 
  
-// towards agility 
+// TOWARDS AGILITY 
 
 // length of the single-use part of the key
 let keylen (i:id) = 
   match i.cipher with 
   | AES_256_GCM       -> 16ul
   | CHACHA20_POLY1305 -> 32ul
-  
+
+// OPTIONAL STATIC AUTHENTICATION KEY (when using AES)
+
+let skeyed (i:id) = 
+  match i.cipher with 
+  | AES_256_GCM       -> true
+  | CHACHA20_POLY1305 -> false
+
+let skeylen (i:id {skeyed i}) = 
+  match i.cipher with 
+  | AES_256_GCM       -> 16ul
+
+type skey (rgn:rid) (i:id{skeyed i}) = b:lbuffer (UInt32.v (skeylen i)){ Buffer.frameOf b = rgn}
+
+// conditionally-allocated, abstract key (accessed only in this module)
+//16-10-16 can't make it abstract?
+let akey (rgn:rid) (i:id) = if skeyed i then skey rgn i else unit
+
+private val get_skey: #r:rid -> #i:id{skeyed i} -> akey r i -> Tot(skey r i)
+let get_skey #rgn #i k = k
+
+private val mk_akey: #r:rid -> #i:id{skeyed i} -> skey r i -> Tot(akey r i)
+let mk_akey #rgn #i k = k
+
+//16-10-16 without the #r #i below, getting
+//16-10-16 Error: Unexpected error... Failure("Bound term variable not found (after unmangling): uu___#215762")
+let akey_gen (r:rid) (i:id) = 
+  if skeyed i then mk_akey #r #i (Buffer.rcreate r 0uy (skeylen i))
+  else ()
+
+
 
 type id = Flag.id * UInt128.t
 
@@ -112,11 +142,12 @@ let ilog (#r:rid) (l:log_ref r{mac_log}) : Tot (ideal_log r) = l
 
 let text_0: itext = if mac_log then Seq.createEmpty #elem else ()
 
+// we have "norm h r" only as a state invariant
 noeq type state (i:id) =
   | State:
       #region: rid ->
-      r: elemB ->
-      s: wordB_16 ->
+      r: elemB {frameOf r = region} -> 
+      s: wordB_16 {frameOf s = region} ->
       log: log_ref region ->
       state i
 
@@ -124,6 +155,7 @@ let genPost0 (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
     ~(contains m0 st.r) /\
     ~(contains m0 st.s) /\
     st.region == region /\
+    norm m1 st.r /\
     (mac_log ==> 
         ~ (m_contains (ilog st.log) m0) /\ 
 	   m_contains (ilog st.log) m1 /\ 
@@ -152,6 +184,9 @@ let alloc i region key =
   lemma_reveal_modifies_2 r s h0 h1;
   if mac_log then
     let log = m_alloc #log #log_cmp region None in
+    //16-10-16 missing frame
+    let h2 = ST.get() in
+    assume (norm h1 r ==> norm h2 r);
     State #i #region r s log
   else
     State #i #region r s ()
@@ -210,7 +245,7 @@ let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
 // not framed, as we allocate private state on the caller stack
 val start: #i:id -> st:state i -> StackInline (accB i)
   (requires (fun h -> live h st.r /\ norm h st.r))
-  (ensures  (fun h0 a h1 -> acc_inv st text_0 a h1))
+  (ensures  (fun h0 a h1 -> acc_inv st text_0 a h1 /\ modifies_0 h0 h1))
 let start #i st =
   let h0 = ST.get () in
   let a = Buffer.create 0UL 5ul in

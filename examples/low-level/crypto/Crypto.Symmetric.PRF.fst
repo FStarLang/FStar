@@ -213,7 +213,7 @@ val prf_mac:
       HS.modifies_ref t.rgn TSet.empty h0 h1  /\
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
 
-#reset-options "--z3timeout 1000"
+#reset-options "--z3timeout 100"
 
 let prf_mac i t x =
   let h0 = get () in
@@ -230,6 +230,9 @@ let prf_mac i t x =
     | None ->
       let mac = MAC.gen macId t.mac_rgn in
       r := SeqProperties.snoc contents (Entry x mac);
+      assume false; 
+      //16-10-16 framing after chang eto genPost0?
+      //let h = ST.get() in assume(MAC(norm h mac.r));
       mac
     end
   else
