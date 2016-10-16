@@ -812,15 +812,14 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
 
   let l, acc = accumulate ak aadlen aad plainlen cipher in
 
-  assume false; //16-10-16 
-
   let h = ST.get() in 
   assert(mac_log ==> l = encode_both aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher));
 
   let verified = MAC.verify ak l acc tag in
 
-  let h1 = ST.get() in
-  assert(MAC.authId (i,iv) ==> (verified = (HS.sel h1 (MAC(ilog ak)) = Some (l,tag))));  
+  // let h1 = ST.get() in
+  // assert(mac_log /\ MAC.authId (i,iv) ==> (verified == (HS.sel h1 (MAC(ilog ak)) = Some (l,tag))));  
+
   // then, safeID i /\ stateful invariant ==>
   //    not verified ==> no entry in the AEAD table
   //    verified ==> exists Entry(iv ad l p c) in AEAD.log 
@@ -831,8 +830,7 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   // possibly that the PRF table with ctr=0 matches the Entry table. 
   // (PRF[iv,ctr=0].MAC.log =  Some(l,t) iff Entry(iv,___)) 
 
-
+  assume false; //16-10-16 
   if verified then counter_dexor i st.prf (PRF.incr i x) plainlen plain cipher;
   pop_frame();
   verified
-
