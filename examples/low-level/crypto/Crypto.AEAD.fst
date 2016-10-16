@@ -275,6 +275,9 @@ assume val lemma_append_slices: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> Lemma
        i <= j /\ j <= Seq.length s2 ==>
        Seq.slice s2 i j == Seq.slice (Seq.append s1 s2) (Seq.length s1 + i) (Seq.length s1 + j)))
 
+assume val lemma_append_nil: #a:_ -> s:Seq.seq a -> 
+  Lemma (s == Seq.append s Seq.createEmpty)
+
 private let encode_lengths (aadlen:UInt32.t) (plainlen:UInt32.t) : b:lbytes 16
   { v aadlen = little_endian (Seq.slice b 0 4) /\
     v plainlen = little_endian (Seq.slice b 8 12) } = 
@@ -337,10 +340,6 @@ private val accumulate:
     MAC.acc_inv st l a h1 /\
     (mac_log ==> l == encode_both aadlen (Buffer.as_seq h1 aad) plainlen (Buffer.as_seq h1 cipher))))
   // StackInline required for stack-allocated accumulator
-
-
-assume val lemma_append_nil: #a:_ -> s:Seq.seq a -> 
-  Lemma (s == Seq.append s Seq.createEmpty)
   
 let accumulate #i st (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
   (plainlen:UInt32.t) (cipher:lbuffer (v plainlen)) = 
@@ -797,7 +796,7 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   MAC.mac ak l acc tag;
   pop_frame()
 
-#reset-options "--z3timeout 100"
+
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   push_frame();
   let x = PRF({iv = iv; ctr = 0ul}) in // PRF index to the first block
@@ -812,6 +811,8 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
     Buffer.live h0 aad /\ Buffer.live h0 cipher);
 
   let l, acc = accumulate ak aadlen aad plainlen cipher in
+
+  assume false; //16-10-16 
 
   let h = ST.get() in 
   assert(mac_log ==> l = encode_both aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher));
@@ -830,7 +831,6 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   // possibly that the PRF table with ctr=0 matches the Entry table. 
   // (PRF[iv,ctr=0].MAC.log =  Some(l,t) iff Entry(iv,___)) 
 
-  assume false; //16-10-04
 
   if verified then counter_dexor i st.prf (PRF.incr i x) plainlen plain cipher;
   pop_frame();
