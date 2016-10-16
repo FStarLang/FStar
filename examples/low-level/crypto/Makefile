@@ -1,6 +1,6 @@
 FSTAR_HOME=../../..
 
-FSTAR=time $(FSTAR_HOME)/bin/fstar.exe
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
 HINTS_ENABLED?=--use_hints --record_hints
 
