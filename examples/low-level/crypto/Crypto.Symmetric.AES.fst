@@ -22,9 +22,6 @@ module U32 = FStar.UInt32
 module H8  = FStar.UInt8
 module H32  = FStar.UInt32
 
-(* This HAS to go in some more appropriate place *)
-assume MaxUInt8: pow2 8 = 256
-assume MaxUInt32: pow2 32 = 4294967296
 
 type bytes = FStar.Buffer.buffer byte
 type lbytes l = b:bytes {length b = l} 

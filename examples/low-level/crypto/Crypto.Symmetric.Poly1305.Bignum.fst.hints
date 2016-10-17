@@ -751,7 +751,8 @@
       0,
       1,
       [
-        "@query", "b2t_def", "data_elim_FStar.UInt32.Mk",
+        "@query", "b2t_def", "bool_inversion", "bool_typing",
+        "data_elim_FStar.UInt32.Mk",
         "equation_Crypto.Symmetric.Poly1305.Parameters.nlength",
         "equation_FStar.Int64.n", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
@@ -1355,9 +1356,9 @@
         "equation_FStar.UInt64.t", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Buffer._buffer",
         "function_token_typing_FStar.Int63.n",
-        "function_token_typing_FStar.Int64.n", "int_typing",
-        "lemma_FStar.Int.pow2_values", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "function_token_typing_FStar.Int64.n", "lemma_FStar.Int.pow2_values",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_033585b16f9282fb8c7c71161354496f",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
