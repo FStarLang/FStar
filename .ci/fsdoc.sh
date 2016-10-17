@@ -43,6 +43,7 @@ pushd docs
 mv "../../$FSDOC_ODIR"/*.html .
 git add *.html 
 git commit -m "Automated doc refresh"
+git remote add origin https://github.com/FStarLang/fstarlang.github.io
 git push origin master
 popd
 popd
