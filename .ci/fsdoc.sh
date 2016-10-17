@@ -21,6 +21,7 @@ FST_FILES=(*.fst *.fsti)
 popd
 
 # pandoc : md -> html
+## FST_FILES
 pushd $FSDOC_ODIR 
 for f in "${FST_FILES[@]}"
 do
@@ -30,6 +31,8 @@ do
     html="${f}.html"
     pandoc $md -f markdown -t html -o $html
 done
+## index.md 
+pandoc index.md -f markdown -t html -o index.html
 popd
 
 # push fstarlang.github.io with latest html
