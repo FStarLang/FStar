@@ -174,7 +174,7 @@ and translate_decl d: option<source_t> =
             let tag = [(JSO_Identifier("_tag", None), JST_StringLiteral("Record", ""))] in
             let fields_t = List.map (fun (n, t) -> (JSO_Identifier("_" ^ n, None), translate_type t)) fields in
             JSS_TypeAlias((name, None), tparams, JST_Object(tag @ fields_t, [], []))
-        | MLTD_DType lfields ->
+        | MLTD_DType lfields -> (*consider type ty->ty->ty*)
             let tag n = [(JSO_Identifier("_tag", None), JST_StringLiteral(n, ""))] in
             let fields_t fields = List.map (fun t -> (JSO_Identifier("_value", None), JST_Tuple [translate_type t])) fields in
             let lfields_t = List.map (fun (n, l) -> JSS_TypeAlias((n, None), tparams, JST_Object((tag n) @ fields_t l, [], []))) lfields in
@@ -273,7 +273,7 @@ and translate_decl d: option<source_t> =
         [decl_v; translate_expr e_in ("_match_e", None) (Some (translate_match lb (JSE_Identifier("_match_e", None)) var))] in
       (match stmt with | Some v -> JSS_Block(c @ [v]) | None -> JSS_Block(c))
 
-  | _ -> failwith "todo: translation for impure expressions!"
+  | _ -> JSS_Block([JSE_Identifier("TODO!!", None) |> JSS_Expression])//failwith "todo: translation for impure expressions!"
 
 and translate_expr_pure e: expression_t = 
   match e.expr with
@@ -286,7 +286,7 @@ and translate_expr_pure e: expression_t =
   | MLE_Name(path, n) ->
       JSE_Identifier(n, None)
 
-  | MLE_App (e, args) -> (*Some functions are not pure..*)
+  | MLE_App (e, args) ->
       let args_t = List.map translate_expr_pure args in
       (match e.expr with
        | MLE_Name(["Prims"], op) when is_op_bin op ->
@@ -299,7 +299,7 @@ and translate_expr_pure e: expression_t =
             JSE_Call (JSE_Identifier(function_name, None), args_t)          
        | MLE_Var (name, _) ->
             JSE_Call (JSE_Identifier(name, None), args_t)       
-       | _ -> failwith "[MLE_App] is not a pure expression!")
+       | _ -> failwith "todo: translation [MLE_App]")
 
   | MLE_Tuple lexp ->
       let create_fields = List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ Util.string_of_int i, None), translate_expr_pure x, JSO_Init)) lexp in
@@ -329,12 +329,12 @@ and translate_expr_pure e: expression_t =
 and translate_match lb fv_x var : statement_t =
     match lb with 
     | [] -> JSS_Throw (JSE_Literal(JSV_String("This value doesn't match!"), ""))
-    | (p, guard, expr_r) :: tl -> translate_pat_guard (p, guard) fv_x (translate_expr expr_r var None) (translate_match lb fv_x var)
+    | (p, guard, expr_r) :: tl -> translate_pat_guard (p, guard) fv_x (translate_expr expr_r var None) (translate_match tl fv_x var)
 
 and translate_pat_guard (p, guard) fv_x s1 s2: statement_t =
   match guard with   
   | None -> translate_pat p fv_x s1 s2
-  | Some v_guard ->
+  | Some v_guard -> (*maybe add translation for case when v_guard isn't pure*)
       let cond_stmt = JSS_If(translate_expr_pure v_guard, s1, Some s2) in
           translate_pat p fv_x cond_stmt s2
 
@@ -356,8 +356,8 @@ and translate_pat p fv_x s1 s2: statement_t =
       JSS_If(JSE_Binary(JSB_StrictEqual,
                         JSE_Member(fv_x, JSPM_Identifier("_tag", Some JST_String)),
                         JSE_Literal(JSV_String c, "")), if_true, Some s2)
-  | MLP_Branch _ ->
-      failwith "todo: translate_pat [MLP_Branch]"
+  | MLP_Branch (lp) -> (*p1||p2||..||pn *)
+      failwith "todo: translate_pat [MLP_Branch]"      
   | MLP_Record (_, lp) ->
       translate_p_record lp fv_x s1 s2
   | MLP_Tuple lp ->
@@ -373,7 +373,7 @@ and translate_p_ctor lp fv_x s1 s2 : statement_t =
 and translate_p_tuple lp d fv_x s1 s2 : statement_t =
     match lp with
     | [x] -> translate_pat x (JSE_Member(fv_x, JSPM_Identifier("_" ^ string_of_int d, None))) s1 s2
-    | hd :: tl -> translate_pat hd (JSE_Member(fv_x, JSPM_Identifier("_" ^ string_of_int d, None))) (translate_p_tuple lp (d+1) fv_x s1 s2) s2
+    | hd :: tl -> translate_pat hd (JSE_Member(fv_x, JSPM_Identifier("_" ^ string_of_int d, None))) (translate_p_tuple tl (d+1) fv_x s1 s2) s2
     | [] -> failwith "Empty list in translate_p_tuple"
   
 and translate_p_record lp fv_x s1 s2 : statement_t =
@@ -384,7 +384,7 @@ and translate_p_record lp fv_x s1 s2 : statement_t =
 
 and translate_constant c: expression_t =
   match c with
-  | MLC_Unit ->
+  | MLC_Unit -> (*null or void?*)
       JSE_Literal(JSV_Null, "")
   | MLC_Bool b ->
       JSE_Literal(JSV_Boolean b, "")
@@ -424,8 +424,5 @@ and translate_type t: typ =
            else 
                 let args = match args with 
                            | [] -> None 
-                           | _ -> List.map translate_type args |> Some in 
-                let name = match name with 
-                           | "list" | "option" -> Syntax.string_of_mlpath (path, name)
-                           | _ -> name 
+                           | _ -> List.map translate_type args |> Some 
                 in JST_Generic (Unqualified(name, None), args))

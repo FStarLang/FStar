@@ -38,6 +38,7 @@ let escape_char fallback = function
   | c                            -> fallback c
 
 let remove_chars_t s = String.collect (escape_char string_of_char) s
+//let remove_chars_t s =  String.filter ((<>) '\'') s |> jstr_escape
 
 let print_op_un:op_un -> doc = function
     | JSU_Minus -> text "-"
@@ -78,8 +79,7 @@ let print_op_log = function
     | JSL_And -> text "&&"
 
 let rec pretty_print (program:Ast.t) : doc = 
-    reduce ([text "/* @flow */"; hardline] @
-           (* [text "import * as Prims from \"Prims\""; semi; hardline] @ *)
+    reduce ([text "/* @flow */"; hardline] @           
             List.map (function | JS_Statement(s) -> 
                                     match s with 
                                     | JSS_Block l ->  pretty_print_statements l
@@ -88,14 +88,14 @@ let rec pretty_print (program:Ast.t) : doc =
 and pretty_print_statement (p:statement_t) : doc =
   let optws (s:statement_t) = 
     match s with 
-    | JSS_Block(_) -> pretty_print_statement s
+    | JSS_Block(b) -> pretty_print_statements b
     | _ -> reduce [ws; nest 1 (pretty_print_statement s)] in
   let f = function
     | JSS_Empty -> semi
-    | JSS_Block(l) -> (*pretty_print_statements l //*)reduce [ text "{"; pretty_print_statements l; text "}" ]
-    | JSS_Expression(e) -> reduce [ws; (pretty_print_exp e); semi]
+    | JSS_Block(l) -> reduce [ text "{"; pretty_print_statements l; text "}" ]
+    | JSS_Expression(e) -> reduce [ws; pretty_print_exp e; semi]
     | JSS_If(c,t,f) ->
-        reduce [ws; text "if"; (parens (pretty_print_exp c)); text "{"; hardline; optws t; text "}";
+        reduce [ws; text "if"; parens (pretty_print_exp c); text "{"; hardline; optws t; text "}";
         (match f with
          | None -> empty
          | Some s -> reduce [ws; text "else"; text "{"; optws s; text "}"])]
