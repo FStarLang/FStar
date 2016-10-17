@@ -349,7 +349,7 @@ let rec store_uint32 len buf n =
 
 val uint32_bytes: 
   len:UInt32.t {v len <= 4} -> n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> 
-  Tot (b:lbytes (v len) { UInt32.v n = little_endian b}) (decreases len)
+  Tot (b:lbytes (v len) { UInt32.v n = little_endian b}) (decreases (v len))
 let rec uint32_bytes len n = 
   if len = 0ul then 
     let e = Seq.createEmpty #UInt8.t in
@@ -363,8 +363,7 @@ let rec uint32_bytes len n =
     Math.Lemmas.pow2_plus 8 (8 * v len);
     assert_norm (pow2 8 == 256);
     assert(v n' < pow2 (8 * v len ));
-    let b' = uint32_bytes len 
-      (assume false; n') //16-10-15 decreases bug?
+    let b' = uint32_bytes len n'
     in 
     SeqProperties.cons byte b'
 
