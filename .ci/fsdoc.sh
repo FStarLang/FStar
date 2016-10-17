@@ -33,8 +33,12 @@ done
 popd
 
 # push fstarlang.github.io with latest html
-git clone https://$PAT@github.com/FStarLang/fstarlang.github.io
+mkdir fstarlang.github.io
 pushd fstarlang.github.io
+git init
+git config user.name "fsdocbuild"
+git config user.email "fsdocbuild@somemachine.com"
+git pull https://$PAT@github.com/FStarLang/fstarlang.github.io
 pushd docs
 mv "../../$FSDOC_ODIR"/*.html .
 git commit -am "Automated doc refresh"
