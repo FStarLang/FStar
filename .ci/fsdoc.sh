@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Script to run fsdoc on certain dirs in the FStar repo.
-# Currently, gets called by the VSTF "FStar, Docs, Linux, CI" build. 
-set -x
-
+# Currently, gets called by the VSTF "FStar, Docs, Linux, CI" Build Defn. 
+# The $PAT value is stored in that Build Defn.  
+set -x # debug on
 
 echo Running fsdoc in `pwd`
 
-# SI: we assume F* has been built and is in the path.
+# SI: we assume F* has been built and we are in it. 
 
 # make the output dir
 FSDOC_ODIR=fsdoc_odir
@@ -37,13 +37,13 @@ mkdir fstarlang.github.io
 pushd fstarlang.github.io
 git init
 git config user.name "fsdocbuild"
-git config user.email "fsdocbuild@somemachine.com"
+git config user.email "fsdocbuild@somewhereontheinternet.com"
 git pull https://$PAT@github.com/FStarLang/fstarlang.github.io
 pushd docs
 mv "../../$FSDOC_ODIR"/*.html .
 git add *.html 
 git commit -m "Automated doc refresh"
-git push #origin master
+git push origin master
 popd
 popd
 rm -rf fstarlang.github.io
