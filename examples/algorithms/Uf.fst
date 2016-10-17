@@ -93,9 +93,7 @@ let retrieve_reprfun (a:eqtype) (h:heap) : Pure (reprfun a h) (requires (uf_inva
       match reach a h u with | None -> u | Some v -> recall_step h u v ; give_proof w ; uf_invariant_termination a h u v ; f v
     else u
   in
-  //assert (forall u. sel h (f u).parent = None /\ (sel h u.parent = None ==> f u = u)) ;
-  let f : uf a -> GTot (uf a) = f in
-  let rec reprfun_prop (u:ufh a h) (v:ufh a h) : Lemma (requires (reach a h u = Some v)) (ensures (f u == f v)) = admit ()
+  let reprfun_prop (u:ufh a h) (v:ufh a h) : Lemma (requires (reach a h u = Some v)) (ensures (f u == f v)) = admit () (* replace when bug#739 is fixed*)
     (*match reach a h v with
     | None -> ()
     | Some w -> recall_step h v w ; reprfun_prop v w *)
@@ -112,7 +110,9 @@ let same_reprfun (a:eqtype) (h0:heap) (h1:heap) : Pure Type0 (requires (uf_invar
 let merge_reprfun (a:eqtype) (h0:heap) (h1:heap) (x:uf a) (y:uf a) (z:uf a) : Pure Type0 (requires (uf_invariant a h0 /\ uf_invariant a h1)) (ensures (fun _ -> True)) =
   let f0 = retrieve_reprfun a h0 in
   let f1 = retrieve_reprfun a h1 in
-  f1 == (fun w -> if f0 w = f0 x || f0 w = f0 y then z else f0 w)
+  let rx = f0 x in let ry = f0 y in
+  if rx.parent = ry.parent then same_reprfun a h0 h1
+  else f1 == (fun w -> if f0 w = rx || f0 w = ry then z else f0 w)
 
 
 (* Without invariants :
@@ -189,7 +189,7 @@ let rec root (#a:eqtype) (u:uf a) : ST (uf a) (requires (uf_invariant a)) (ensur
 
 
 
-let rec uf_equiv (#a:eqtype) (u1:uf a) (u2:uf a) : ST bool (requires (uf_invariant a)) (ensures (fun h0 _ h1 -> uf_invariant a h1)) =
+let rec uf_equiv (#a:eqtype) (u1:uf a) (u2:uf a) : ST bool (requires (uf_invariant a)) (ensures (fun h0 b h1 -> uf_invariant a h0 /\ uf_invariant a h1 /\ same_reprfun a h0 h1 /\ (let f = retrieve_reprfun a h0 in b = (f u1 = f u2)))) =
   let h0 = get () in
   let r1 = root u1 in
   let h1 = get () in
@@ -208,15 +208,18 @@ let rec uf_equiv (#a:eqtype) (u1:uf a) (u2:uf a) : ST bool (requires (uf_invaria
  *)
 
 
- let rec uf_merge (#a:eqtype) (u1:uf a) (u2:uf a) : ST unit (requires (uf_invariant a)) (ensures (fun h0 _ h1 -> uf_invariant a h1)) =
+
+ let rec uf_merge (#a:eqtype) (u1:uf a) (u2:uf a) : ST (uf a) (requires (uf_invariant a)) (ensures (fun h0 r h1 -> uf_invariant a h0 /\ uf_invariant a h1 /\ merge_reprfun a h0 h1 u1 u2 r)) =
   let r1 = root u1 in
   let r2 = root u2 in
-  if r1.parent = r2.parent then ()
+  if r1.parent = r2.parent then r1
   else
     let h0 = get () in
     recall r1.parent ;
+    recall r2.parent ; // needed to prove that sel h1 r2.parent = None
     r1.parent := Some r2 ;
     let h1 = get () in
+
     let uf_inv1 (uf_inv0:uf_invariant_fun h0) (u:ufh a h1) : GTot (funcaccessible (reach a h1) u) =
       let rec pushforward (u:ufh a h1) (acc0 : funcaccessible (reach a h0) u) : GTot (funcaccessible (reach a h1) u) (decreases acc0) =
         if u.parent = r1.parent
@@ -225,4 +228,7 @@ let rec uf_equiv (#a:eqtype) (u1:uf a) (u2:uf a) : ST bool (requires (uf_invaria
           end(* TODO : Something's wrong here FAcc (FAcc ()) should be enough  *)
         else match reach a h1 u with | None -> FAcc () | Some v -> recall_step h1 u v ; FAcc (pushforward v acc0.next)
       in let u : uf a = u in pushforward u (uf_inv0 u)
-    in maintain_uf_invariant uf_inv1
+    in maintain_uf_invariant uf_inv1 ;
+    r2
+
+
