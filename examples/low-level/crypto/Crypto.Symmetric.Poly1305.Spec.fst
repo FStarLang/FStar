@@ -204,7 +204,6 @@ let rec encode_bytes txt =
     SeqProperties.cons (encode w) (encode_bytes txt)
 
 
-#reset-options "--z3timeout 1000"
 let rec lemma_encode_length txt: Lemma
   (ensures (Seq.length(encode_bytes txt) = (Seq.length txt + 15) / 16))
   (decreases (Seq.length txt))
@@ -422,7 +421,6 @@ let rec eq_poly p0 p1 =
   else if Seq.length p1 = 0 then eq_poly0 p0
   else SeqProperties.head p0 = SeqProperties.head p1 && eq_poly (SeqProperties.tail p0) (SeqProperties.tail p1)
 
-#reset-options "--z3timeout 1000"
 private let rec lemma_sane_eq_poly0 (p:seq elem) (r:elem) : Lemma
   (requires eq_poly0 p)
   (ensures (poly' p r = 0)) (decreases (Seq.length p)) = 
@@ -435,10 +433,8 @@ private let rec lemma_sane_eq_poly (p0:seq elem) (p1:seq elem) (r:elem) : Lemma
   else if Seq.length p1 = 0 then lemma_sane_eq_poly0 p0 r
   else lemma_sane_eq_poly (SeqProperties.tail p0) (SeqProperties.tail p1) r
 
+
 //16-10-15 to stay close to the paper, we may apply "encode" in the poly specification.
-
-
-
 
 
 private let fix (r:word_16) (i:nat {i < 16}) m : Tot word_16 =
