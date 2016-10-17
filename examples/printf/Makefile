@@ -1,18 +1,14 @@
-VERFILES=printf.fst
+VERFILES=
 FSTAR_HOME=../..
 include ../Makefile.include
-
-FSTAR_HOME=../..
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
-
-all: uall sall
 
 uall: SimplePrintf.uver
 
-sall: .all.ver
-
+# This doesn't work because of bug #...
 ocaml: SimplePrintf.fst
+	mkdir -p out
 	$(MAKE) -C $(ULIB_ML)
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml SimplePrintf.fst
+	$(FSTAR) --explicit_deps $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml SimplePrintf.fst
 	$(OCAMLOPT) out/SimplePrintf.ml -o SimplePrintf.exe
 	./SimplePrintf.exe
