@@ -41,11 +41,12 @@ git config user.email "fsdocbuild@somemachine.com"
 git pull https://$PAT@github.com/FStarLang/fstarlang.github.io
 pushd docs
 mv "../../$FSDOC_ODIR"/*.html .
-git commit -am "Automated doc refresh"
-git push origin master
+git add *.html 
+git commit -m "Automated doc refresh"
+git push #origin master
 popd
 popd
-rm -rf fstarlang
+rm -rf fstarlang.github.io
 
 # SI: could cleanup FSDOC_ODIR too.
 
