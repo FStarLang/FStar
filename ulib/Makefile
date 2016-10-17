@@ -8,7 +8,7 @@ HYPERSTACK=FStar.Buffer.fst FStar.Buffer.Quantifiers.fst FStar.Monotonic.RRef.fs
 
 ALL=$(filter-out $(FLAKY) $(HYPERSTACK) $(MATH),$(wildcard FStar.*.fst FStar.*.fsti))
 
-all: $(addsuffix -ver, $(ALL)) st m_rref buffer bufferq
+all: $(addsuffix -ver, $(ALL)) st m_rref bufferq
 
 %-ver: %
 	$(FSTAR) $^
@@ -46,7 +46,7 @@ buffer:
 	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Buffer.fst
 
 bufferq:
-	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Buffer.fst FStar.Buffer.Quantifiers.fst
+	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst FStar.Buffer.fst FStar.Buffer.Quantifiers.fst
 
 twolevelheap:
 	$(FSTAR) FStar.TwoLevelHeap.fst

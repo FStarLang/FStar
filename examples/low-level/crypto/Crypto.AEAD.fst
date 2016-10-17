@@ -269,6 +269,8 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
     | Some (msg,tag') -> msg = field_encode i ad plain /\
 			tag = tag')))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
 
+#set-options "--hint_info"
+
 let rec refines h i rgn entries blocks = 
   if Seq.length entries = 0 then 
     Seq.length blocks == 0 //NS:using == to get it to match with the Type returned by the other branch
