@@ -16,6 +16,10 @@ let u8  = UInt8.t
 let u32 = UInt32.t
 let u64 = UInt64.t
 
+module U8  = FStar.UInt8
+module U32 = FStar.UInt32
+module U64 = FStar.UInt64
+
 // TODO: rename and move to FStar.Buffer
 // bytes  -> uint8_s; lbytes  -> uint8_sl
 // buffer -> uint8_p; lbuffer -> uint8_sl
@@ -251,7 +255,8 @@ let lemma_little_endian_lt_2_128 b =
   else Math.Lemmas.pow2_lt_compat 128 (8 * Seq.length b)
 
 
-#reset-options "--z3timeout 20 --max_fuel 1 --initial_fuel 1" 
+#reset-options "--z3timeout 100 --max_fuel 1 --initial_fuel 1" 
+//16-10-17 moved back from 20 to 100, needed on small machines
 
 (* REMARK: The trigger in lemma_little_endian_lt_2_128 is used to prove absence of
    overflow *)
@@ -388,3 +393,77 @@ let rec store_uint128 len buf n =
     assert_norm (pow2 8 == 256);
     store_uint128 len buf' n';
     buf.(0ul) <- b // updating after the recursive call helps verification
+
+
+
+
+(* from Spec; used e.g. in AEAD.Encoding *)
+
+#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+
+type word = b:Seq.seq UInt8.t {Seq.length b <= 16}
+open FStar.Math.Lib
+open FStar.Math.Lemmas
+
+val lemma_little_endian_is_injective_0: b:word{Seq.length b > 0} -> Lemma
+  (little_endian b =
+   U8.v (Seq.index b 0) + pow2 8 * little_endian (Seq.slice b 1 (Seq.length b)))
+let lemma_little_endian_is_injective_0 b = ()
+
+val lemma_little_endian_is_injective_1: b:pos -> q:nat -> r:nat -> q':nat -> r':nat -> Lemma
+  (requires (r < b /\ r' < b /\ r + b * q = r' + b * q'))
+  (ensures  (r = r' /\ q = q'))
+let lemma_little_endian_is_injective_1 b q r q' r' =
+  lemma_mod_plus r q b;
+  lemma_mod_plus r' q' b;
+  lemma_mod_injective b r r'
+
+val lemma_little_endian_is_injective_2: b:word -> len:pos{len <= Seq.length b} -> Lemma
+  (let s = Seq.slice b (Seq.length b - len) (Seq.length b) in
+   let s' = Seq.slice s 1 (Seq.length s) in
+   let s'' = Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) in
+   s'' == s')
+let lemma_little_endian_is_injective_2 b len =
+  let s = Seq.slice b (Seq.length b - len) (Seq.length b) in
+  let s' = Seq.slice s 1 (Seq.length s) in
+  let s'' = Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) in
+  Seq.lemma_eq_intro s' s''
+
+val lemma_little_endian_is_injective_3: b:word -> b':word -> len:pos{len <= Seq.length b /\ len <= Seq.length b'} -> Lemma
+  (requires (Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) ==
+             Seq.slice b' (Seq.length b' - (len-1)) (Seq.length b')
+           /\ Seq.index b (Seq.length b - len) = Seq.index b' (Seq.length b' - len)))
+  (ensures  (Seq.slice b (Seq.length b - len) (Seq.length b) ==
+             Seq.slice b' (Seq.length b' - len) (Seq.length b')))
+let lemma_little_endian_is_injective_3 b b' len =
+  Seq.lemma_eq_intro (Seq.slice b' (Seq.length b' - len) (Seq.length b'))
+		     (Seq.append (Seq.create 1 (Seq.index b' (Seq.length b' - len))) (Seq.slice b' (Seq.length b' - (len-1)) (Seq.length b')));
+  Seq.lemma_eq_intro (Seq.slice b (Seq.length b - len) (Seq.length b))
+		     (Seq.append (Seq.create 1 (Seq.index b (Seq.length b - len))) (Seq.slice b (Seq.length b - (len-1)) (Seq.length b)))
+
+val lemma_little_endian_is_injective: b:word -> b':word ->
+  len:nat{Seq.length b >= len /\ Seq.length b' >= len} -> Lemma
+  (requires (little_endian (Seq.slice b (Seq.length b - len) (Seq.length b)) =
+             little_endian (Seq.slice b' (Seq.length b' - len) (Seq.length b')) ))
+  (ensures  (Seq.slice b (Seq.length b - len) (Seq.length b) ==
+             Seq.slice b' (Seq.length b' - len) (Seq.length b')))
+let rec lemma_little_endian_is_injective b b' len =
+  if len = 0 then
+    Seq.lemma_eq_intro (Seq.slice b (Seq.length b - len) (Seq.length b))
+		       (Seq.slice b' (Seq.length b' - len) (Seq.length b'))
+  else
+    begin
+    let s = Seq.slice b (Seq.length b - len) (Seq.length b) in
+    let s' = Seq.slice b' (Seq.length b' - len) (Seq.length b') in
+    assert(Seq.length s = len /\ Seq.length s' = len);
+    lemma_little_endian_is_injective_0 s; lemma_little_endian_is_injective_0 s';
+    lemma_little_endian_is_injective_1 (pow2 8)
+				      (little_endian (Seq.slice s 1 (Seq.length s)))
+				      (U8.v (Seq.index s 0))
+				      (little_endian (Seq.slice s' 1 (Seq.length s')))
+				      (U8.v (Seq.index s' 0));
+    lemma_little_endian_is_injective_2 b len;
+    lemma_little_endian_is_injective_2 b' len;
+    lemma_little_endian_is_injective b b' (len - 1);
+    lemma_little_endian_is_injective_3 b b' len
+    end

@@ -194,7 +194,7 @@ let test() =
   dump "IV" 12ul ivBuffer;
   dump "Additional Data" 12ul aad;
 
-  let iv : Crypto.Symmetric.Cipher.iv (Crypto.AEAD.alg i) = 
+  let iv : Crypto.Symmetric.Cipher.iv (cipher_of_id i) = 
     lemma_little_endian_is_bounded (load_bytes 12ul ivBuffer);
     load_uint128 12ul ivBuffer in
   let expected_cipher = mk_expected_cipher () in

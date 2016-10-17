@@ -16,6 +16,8 @@ open FStar.Buffer
 open FStar.Math.Lemmas
 (** Helper functions for buffers *)
 open Buffer.Utils
+open Crypto.Symmetric.Bytes 
+
 open FStar.Buffer.Quantifiers
 
 open Crypto.Symmetric.Poly1305.Spec
