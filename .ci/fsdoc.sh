@@ -4,6 +4,7 @@
 # Currently, gets called by the VSTF "FStar, Docs, Linux, CI" build. 
 set -x
 
+
 echo Running fsdoc in `pwd`
 
 # SI: we assume F* has been built and is in the path.
@@ -32,12 +33,12 @@ done
 popd
 
 # push fstarlang.github.io with latest html
-git clone https://github.com/FStarLang/fstarlang.github.io
+git clone https://$PAT@github.com/FStarLang/fstarlang.github.io
 pushd fstarlang.github.io
 pushd docs
 mv "../../$FSDOC_ODIR"/*.html .
 git commit -am "Automated doc refresh"
-git push 
+git push origin master
 popd
 popd
 rm -rf fstarlang
