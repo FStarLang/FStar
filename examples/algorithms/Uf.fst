@@ -28,7 +28,7 @@ assume val recall_step : #a:eqtype -> h:heap -> z:uf a -> y:uf a -> Lemma (requi
 
 let reprfun (a:eqtype) (h:heap) = f:(uf a -> GTot (uf a)){
   (forall u. if Heap.contains h u.parent then Heap.contains h (f u).parent else u = f u) /\
-  (forall (u:ufh a h). sel h (f u).parent = None /\(sel h u.parent = None ==> f u = u)) /\
+  (forall (u:ufh a h). sel h (f u).parent = None /\ (sel h u.parent = None ==> f u = u)) /\
   (forall (u:ufh a h) (v:ufh a h). sel h u.parent = Some v ==> f u = f v)
 }
 
@@ -148,7 +148,7 @@ let distinct_cell_lemma (#a:eqtype) (h:heap) (r1:ref a) (r2: ref a) : Lemma (sel
       r
 *)
 
-(** TODO : why do I need to ask for uf_invariant a h0 in the post-condition ??? *)
+(** TODO : why do I need to ask for uf_invariant a h0 in the post-condition ??? #57 *)
 let rec root (#a:eqtype) (u:uf a) : ST (uf a) (requires (uf_invariant a)) (ensures (fun h0 r h1 -> uf_invariant a h0 /\ uf_invariant a h1 /\ same_reprfun a h0 h1 /\ (*sel h0 r.parent = None /\ sel h1 r.parent = None*) retrieve_reprfun a h1 u = r) ) (decreases u) (* WARNING : check the decrease clause by hand for now *) =
   match !u.parent with
   | None -> u
@@ -171,9 +171,7 @@ let rec root (#a:eqtype) (u:uf a) : ST (uf a) (requires (uf_invariant a)) (ensur
     let uf_inv2 (uf_inv1: uf_invariant_fun h1) (u1:ufh a h2) : GTot (funcaccessible (reach a h2) u1) =
       let rec pushforward (u0:ufh a h1) (w : funcaccessible (reach a h1) u0) : GTot (funcaccessible (reach a h2) u0) (decreases w) =
         if u0.parent = u.parent
-        then begin match reach a h2 u0 with
-          | Some r0 -> let wr0 : funcaccessible (reach a h2) r0 = match reach a h2 r0 with | None -> FAcc () in FAcc wr0
-          end(* TODO : Something's wrong here FAcc (FAcc ()) should be enough  *)
+        then FAcc (FAcc () <: (funcaccessible (reach a h2) r))
         else match reach a h2 u0 with | None -> FAcc () | Some v -> recall_step h1 u0 v ; FAcc (pushforward v w.next)
       in let u1 : uf a = u1 in pushforward u1 (uf_inv1 u1)
     in maintain_uf_invariant uf_inv2 ;
@@ -189,13 +187,10 @@ let rec root (#a:eqtype) (u:uf a) : ST (uf a) (requires (uf_invariant a)) (ensur
 
 
 
-let rec uf_equiv (#a:eqtype) (u1:uf a) (u2:uf a) : ST bool (requires (uf_invariant a)) (ensures (fun h0 b h1 -> uf_invariant a h0 /\ uf_invariant a h1 /\ same_reprfun a h0 h1 /\ (let f = retrieve_reprfun a h0 in b = (f u1 = f u2)))) =
-  let h0 = get () in
-  let r1 = root u1 in
-  let h1 = get () in
-  let r2 = root u2 in
-  let h2 = get () in
-  r1 = r2
+let rec uf_equiv (#a:eqtype) (u1:uf a) (u2:uf a) : ST bool (requires (uf_invariant a))
+  (ensures (fun h0 b h1 -> uf_invariant a h0 /\ uf_invariant a h1 /\ same_reprfun a h0 h1
+        /\ (let f = retrieve_reprfun a h0 in b = (f u1 = f u2))))
+  = root u1 = root u2
 
 
  (* Without invariants :
@@ -223,9 +218,7 @@ let rec uf_equiv (#a:eqtype) (u1:uf a) (u2:uf a) : ST bool (requires (uf_invaria
     let uf_inv1 (uf_inv0:uf_invariant_fun h0) (u:ufh a h1) : GTot (funcaccessible (reach a h1) u) =
       let rec pushforward (u:ufh a h1) (acc0 : funcaccessible (reach a h0) u) : GTot (funcaccessible (reach a h1) u) (decreases acc0) =
         if u.parent = r1.parent
-        then begin match reach a h1 u with
-                | Some r0 -> let wr0 : funcaccessible (reach a h1) r0 = match reach a h1 r0 with | None -> FAcc () in FAcc wr0
-          end(* TODO : Something's wrong here FAcc (FAcc ()) should be enough  *)
+        then FAcc ((FAcc ()) <: (funcaccessible (reach a h1) r2))
         else match reach a h1 u with | None -> FAcc () | Some v -> recall_step h1 u v ; FAcc (pushforward v acc0.next)
       in let u : uf a = u in pushforward u (uf_inv0 u)
     in maintain_uf_invariant uf_inv1 ;
