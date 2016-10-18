@@ -405,8 +405,7 @@ val all_above: #rgn:region -> #i:PRF.id -> s:Seq.seq (PRF.entry rgn i) -> domain
 let rec all_above #rgn #i s x = 
   Seq.length s = 0 || ((SeqProperties.head s).x `above` x && all_above (SeqProperties.tail s) x )
 
-// modifies a table (with entries above x) and a buffer.
-let modifies_X_buffer_1 (#i:PRF.id) (t:PRF.state i) x b h0 h1 = 
+let modifies_table_above_x_and_buffer (#i:PRF.id) (t:PRF.state i) x b h0 h1 = 
   Buffer.live h1 b /\ 
   (if prf i then 
     let r = itable i t in 
@@ -417,10 +416,26 @@ let modifies_X_buffer_1 (#i:PRF.id) (t:PRF.state i) x b h0 h1 =
     HS.modifies rgns h0 h1 /\ 
     HS.modifies_ref t.rgn (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1 /\
     Seq.length contents0 <= Seq.length contents1 /\
-    Seq.slice contents1 0 (Seq.length contents0) == contents0 /\
+    Seq.equal (Seq.slice contents1 0 (Seq.length contents0)) contents0 /\
     all_above (Seq.slice contents1 (Seq.length contents0) (Seq.length contents1)) x
   else
     Buffer.modifies_1 b h0 h1)
+
+let refl_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i) 
+			     (x:PRF.domain i{x.ctr <> 0ul}) 
+			     (c:lbuffer l)
+			     (h:mem)
+    : Lemma (requires (Buffer.live h c))
+	    (ensures (modifies_table_above_x_and_buffer t x c h h))
+    = ()
+
+let trans_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i) 
+			     (x_0:PRF.domain i{x_0.ctr <> 0ul}) (x_1:PRF.domain i{x_0.ctr <=^  x_1.ctr})
+			     (c:lbuffer l)
+			     (h_0:mem) (h_1:mem) (h_2:mem)
+    : Lemma (requires (modifies_table_above_x_and_buffer t x_0 c h_0 h_1 /\ modifies_table_above_x_and_buffer t x_1 c h_1 h_2))
+	    (ensures (modifies_table_above_x_and_buffer t x_0 c h_0 h_2))
+    = admit()
 
 val counter_enxor: 
   i:id -> t:PRF.state i -> x:PRF.domain i{x.ctr <> 0ul} -> len:u32{safelen i (v len) x.ctr} ->
@@ -443,7 +458,7 @@ val counter_enxor:
     Plain.live h1 plain /\
     Buffer.live h1 cipher /\
     // in all cases, we extend the table only at x and its successors.
-    modifies_X_buffer_1 t x cipher h0 h1 /\
+    modifies_table_above_x_and_buffer t x cipher h0 h1 /\
     // if ciphertexts are authenticated, then we precisely know the table extension
     (safeId i ==> HS.sel h1 t.table ==
     		  Seq.append (HS.sel h0 t.table)
@@ -454,7 +469,7 @@ val counter_enxor:
 
 let rec counter_enxor i t x len plain cipher =
   let h0 = get () in
-  push_frame();
+  (* push_frame(); *)
   if len <> 0ul then
     begin // at least one more block
       let l = min len (PRF.blocklen i) in 
@@ -469,15 +484,20 @@ let rec counter_enxor i t x len plain cipher =
       let len = len -^ l in 
       let cipher_tl = Buffer.sub cipher l len in
       let plain_tl = Plain.sub plain l len in
-      let x = PRF.incr i x in
+      let h1 = get () in 
+      assume (modifies_table_above_x_and_buffer t x cipher h0 h1);
+      let y = PRF.incr i x in
       let _ =
       	let h = get () in
-      	assume (safeId i ==> (forall z. z `above` x ==> find_otp #t.mac_rgn #i (HS.sel h t.table) z == None)) in
-      counter_enxor i t x len plain_tl cipher_tl
-    end;
- pop_frame();
+      	assume (safeId i ==> (forall z. z `above` y ==> find_otp #t.mac_rgn #i (HS.sel h t.table) z == None)) in
+      counter_enxor i t y len plain_tl cipher_tl;
+      let h2 = get () in 
+      trans_modifies_table_above_x_and_buffer t x y cipher h0 h1 h2
+    end
+  else refl_modifies_table_above_x_and_buffer t x cipher h0;
+ (* pop_frame(); *)
  let h1 = get () in
- assume (modifies_X_buffer_1 t x cipher h0 h1);
+ (* assume (modifies_X_buffer_1 t x cipher h0 h1); *)
  assume (safeId i ==> HS.sel h1 t.table == 
     		  Seq.append (HS.sel h0 t.table)
     			     (counterblocks i t.mac_rgn x (v len) (Plain.sel_plain h1 len plain) (Buffer.as_seq h1 cipher)))
