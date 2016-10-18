@@ -103,20 +103,20 @@ in (match (opt) with
 let newDocs = (FStar_List.collect FStar_Extraction_ML_Code.doc_of_mllib mllibs)
 in (FStar_List.iter (fun _93_42 -> (match (_93_42) with
 | (n, d) -> begin
-(let _187_22 = (FStar_Options.prepend_output_dir (Prims.strcat n ext))
-in (let _187_21 = (FStar_Format.pretty (Prims.parse_int "120") d)
-in (FStar_Util.write_file _187_22 _187_21)))
+(let _187_21 = (FStar_Options.prepend_output_dir (Prims.strcat n ext))
+in (FStar_Util.write_file _187_21 (FStar_Format.pretty (Prims.parse_int "120") d)))
 end)) newDocs))
 end
 | Some ("Kremlin") -> begin
 (
 
-let programs = (let _187_23 = (FStar_List.map FStar_Extraction_Kremlin.translate mllibs)
-in (FStar_List.flatten _187_23))
+let programs = (let _187_22 = (FStar_List.map FStar_Extraction_Kremlin.translate mllibs)
+in (FStar_List.flatten _187_22))
 in (
 
 let bin = ((FStar_Extraction_Kremlin.current_version), (programs))
-in (FStar_Util.save_value_to_file "out.krml" bin)))
+in (let _187_23 = (FStar_Options.prepend_output_dir "out.krml")
+in (FStar_Util.save_value_to_file _187_23 bin))))
 end
 | _93_48 -> begin
 (FStar_All.failwith "Unrecognized option")
