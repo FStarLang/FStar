@@ -466,10 +466,27 @@ val counter_enxor:
     // NB the post of prf_enxor should be strengthened a bit (using PRF.extends?)
     ))
 
+let fresh_frame_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
+			     (x:PRF.domain i{x.ctr <> 0ul})
+			     (c:lbuffer l)
+			     (h_0:mem) (h_1:mem) (h_2:mem)
+    : Lemma (requires (HS.fresh_frame h_0 h_1 /\ modifies_table_above_x_and_buffer t x c h_1 h_2))
+	    (ensures (modifies_table_above_x_and_buffer t x c h_0 h_2))
+    = admit()
 
+let pop_frame_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
+			     (x:PRF.domain i{x.ctr <> 0ul})
+			     (c:lbuffer l)
+			     (h_0:mem) (h_1:mem) (h_2:mem)
+    : Lemma (requires (modifies_table_above_x_and_buffer t x c h_0 h_1 /\ HS.poppable h_1 /\  h_2==HS.pop h_1))
+	    (ensures (modifies_table_above_x_and_buffer t x c h_0 h_2))
+    = admit()
+
+#set-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let rec counter_enxor i t x len plain cipher =
+  let h_initial = get () in
+  push_frame();
   let h0 = get () in
-  (* push_frame(); *)
   if len <> 0ul then
     begin // at least one more block
       let l = min len (PRF.blocklen i) in 
@@ -495,12 +512,15 @@ let rec counter_enxor i t x len plain cipher =
       trans_modifies_table_above_x_and_buffer t x y cipher h0 h1 h2
     end
   else refl_modifies_table_above_x_and_buffer t x cipher h0;
- (* pop_frame(); *)
  let h1 = get () in
- (* assume (modifies_X_buffer_1 t x cipher h0 h1); *)
- assume (safeId i ==> HS.sel h1 t.table == 
-    		  Seq.append (HS.sel h0 t.table)
-    			     (counterblocks i t.mac_rgn x (v len) (Plain.sel_plain h1 len plain) (Buffer.as_seq h1 cipher)))
+ fresh_frame_modifies_table_above_x_and_buffer t x cipher h_initial h0 h1;
+ pop_frame();
+ let h_final = get () in 
+ pop_frame_modifies_table_above_x_and_buffer t x cipher h_initial h1 h_final;
+ (* assume (modifies_table_above_x_and_buffer t x cipher h0 h1); *)
+ assume (safeId i ==> HS.sel h_final t.table == 
+    		      Seq.append (HS.sel h_initial t.table)
+    			     (counterblocks i t.mac_rgn x (v len) (Plain.sel_plain h_final len plain) (Buffer.as_seq h_final cipher)))
 
 
 
@@ -524,7 +544,7 @@ val counter_dexor:
     Plain.live h1 plain /\ 
     Buffer.live h1 cipher /\ 
     // in all cases, we extend the table only at x and its successors.
-    modifies_X_buffer_1 t x (as_buffer plain) h0 h1 /\
+    modifies_table_above_x_and_buffer t x (as_buffer plain) h0 h1 /\
     (safeId i ==> Seq.equal #(PRF.entry (PRF t.mac_rgn) i) (HS.sel h1 t.table) (HS.sel h0 t.table))))
   
 let rec counter_dexor i t x len plaintext ciphertext =
