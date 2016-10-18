@@ -165,14 +165,6 @@ let rec bytes_of_uint32 output x =
   output.(3ul) <- b3
  
 (* A form of memset, could go into some "Utils" functions module *)
-
-(*
-// should follow from Seq
-assume private val lemma_create_cons:
-  #a:Type -> n:nat -> v:a -> Lemma
-  (Seq.equal (SeqProperties.cons v (Seq.create n v)) (Seq.create (n + 1) v))
-*)
-
 //16-10-03 added functional step; made pre-condition tighter (sufficient for use in AEAD)
 val memset: b:bytes -> z:u8 -> len:u32 -> STL unit
   (requires (fun h -> live h b /\ v len = length b))
@@ -180,7 +172,7 @@ val memset: b:bytes -> z:u8 -> len:u32 -> STL unit
     live h1 b /\ modifies_1 b h0 h1 /\ 
     Seq.equal (as_seq h1 b) (Seq.create (v len) z)))
 let rec memset b z len =
-  if len = 0ul then assume false
+  if len = 0ul then ()
   else
   begin
     let h0 = ST.get() in
@@ -192,4 +184,3 @@ let rec memset b z len =
     assert(Seq.index s 0 = z); // ...but this fails in the absence of framing
     assert(Seq.equal s (SeqProperties.cons z (Seq.slice s 1 (v len))))
   end
-

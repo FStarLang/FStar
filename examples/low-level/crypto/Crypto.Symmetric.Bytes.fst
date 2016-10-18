@@ -12,6 +12,10 @@ open Buffer.Utils
  
 type mem = FStar.HyperStack.mem
 
+let u8  = UInt8.t
+let u32 = UInt32.t
+let u64 = UInt64.t
+
 // TODO: rename and move to FStar.Buffer
 // bytes  -> uint8_s; lbytes  -> uint8_sl
 // buffer -> uint8_p; lbuffer -> uint8_sl
@@ -342,6 +346,27 @@ let rec store_uint32 len buf n =
     assert_norm (pow2 8 == 256);
     store_uint32 len buf' n';
     buf.(0ul) <- b // updating after the recursive call helps verification
+
+val uint32_bytes: 
+  len:UInt32.t {v len <= 4} -> n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> 
+  Tot (b:lbytes (v len) { UInt32.v n = little_endian b}) (decreases (v len))
+let rec uint32_bytes len n = 
+  if len = 0ul then 
+    let e = Seq.createEmpty #UInt8.t in
+    assert_norm(0 = little_endian e);
+    e
+  else
+    let len = len -^ 1ul in 
+    let byte = uint32_to_uint8 n in
+    let n' = FStar.UInt32(n >>^ 8ul) in 
+    assert(v n = UInt8.v byte + 256 * v n');
+    Math.Lemmas.pow2_plus 8 (8 * v len);
+    assert_norm (pow2 8 == 256);
+    assert(v n' < pow2 (8 * v len ));
+    let b' = uint32_bytes len n'
+    in 
+    SeqProperties.cons byte b'
+
 
 // check efficient compilation for all back-ends
 val store_uint128: 

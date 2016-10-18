@@ -816,7 +816,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
             if not (cfg.steps |> List.contains NoDeltaSteps)
             && (Util.is_pure_effect n
-            || Util.is_ghost_effect n)
+            || (Util.is_ghost_effect n && not (cfg.steps |> List.contains PureSubtermsWithinComputations)))
             then let env = Clos(env, lb.lbdef, Util.mk_ref None, false)::env in 
                  norm cfg env stack body
             else let bs, body = Subst.open_term [lb.lbname |> Util.left |> S.mk_binder] body in
