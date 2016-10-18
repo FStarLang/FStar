@@ -1,5 +1,5 @@
 [
-  "^{ü\u0005õ×\u001a£M”àÁdžã ",
+  "¹p@#\u0011¿ÍB\u001c‡r¸|\u00193¶",
   [
     [
       "FStar.HyperHeap.color",
@@ -1192,6 +1192,15 @@
     [
       "FStar.HyperHeap.contains_ref",
       3,
+      2,
+      1,
+      [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [ "FStar.HyperHeap.weak_contains_ref", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.HyperHeap.weak_contains_ref",
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
