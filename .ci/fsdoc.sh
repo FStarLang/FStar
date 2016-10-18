@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Script to run fsdoc on certain dirs in the FStar repo.
-# Currently, gets called by the VSTF "FStar, Docs, Linux, CI" Build Defn. 
-# The $PAT value is stored in that Build Defn.  
+# Currently, this script gets called by the VSTF "FStar, Docs, Linux, CI"
+# Build Defn. The $PAT env var is stored in that Build Defn.  
 set -x # debug on
 
 echo Running fsdoc in `pwd`
@@ -13,9 +13,9 @@ echo Running fsdoc in `pwd`
 FSDOC_ODIR=fsdoc_odir
 mkdir -p "$FSDOC_ODIR"
 
-# fsdoc ulib/*.fst* 
+# fsdoc the output dir.  
 pushd ulib
-# Get fst, fsti files (files are sorted by default). 
+# Get fst, fsti files (files are name-sorted by default). 
 FST_FILES=(*.fst *.fsti)
 ../bin/fstar-any.sh --odir "../$FSDOC_ODIR" --doc ${FST_FILES[*]} 
 popd
@@ -35,7 +35,9 @@ done
 pandoc index.md -f markdown -t html -o index.html
 popd
 
-# push fstarlang.github.io with latest html
+# push fstarlang.github.io with latest html.
+# The flow is described at https://github.com/blog/1270-easier-builds-and-deployments-using-git-over-https-and-oauth;
+# $PAT is stored in the Build Defn. 
 mkdir fstarlang.github.io
 pushd fstarlang.github.io
 git init
