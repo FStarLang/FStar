@@ -31,6 +31,9 @@ VERIFY= \
   Crypto.AEAD.AES256GCM \
   Crypto.Symmetric.PRF \
   Crypto.AEAD.Chacha20Poly1305 \
+  Crypto.AEAD.Encoding \
+  Crypto.AEAD.Invariant \
+  Crypto.AEAD.Lemmas \
   Crypto.AEAD \
   Plain \
   Test \
