@@ -269,8 +269,6 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
     | Some (msg,tag') -> msg = field_encode i ad plain /\
 			tag = tag')))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
 
-#set-options "--hint_info"
-
 let rec refines h i rgn entries blocks = 
   if Seq.length entries = 0 then 
     Seq.length blocks == 0 //NS:using == to get it to match with the Type returned by the other branch
@@ -432,7 +430,9 @@ val counter_enxor:
     Buffer.disjoint bp cipher /\
     Buffer.frameOf bp <> (PRF t.rgn) /\
     Buffer.frameOf cipher <> (PRF t.rgn) 
-  } -> STL unit
+  } -> 
+//  STL unit -- NS: should be in STL, but the rest of the library isn't really in STL yet
+  ST unit
   (requires (fun h -> 
     Plain.live h plain /\ 
     Buffer.live h cipher /\ 
@@ -440,35 +440,49 @@ val counter_enxor:
     (safeId i ==> (forall z. z `above` x ==> find_otp #t.mac_rgn #i (HS.sel h t.table) z == None))
     ))
   (ensures (fun h0 _ h1 -> 
-    Plain.live h1 plain /\ 
-    Buffer.live h1 cipher /\ 
+    Plain.live h1 plain /\
+    Buffer.live h1 cipher /\
     // in all cases, we extend the table only at x and its successors.
     modifies_X_buffer_1 t x cipher h0 h1 /\
     // if ciphertexts are authenticated, then we precisely know the table extension
     (safeId i ==> HS.sel h1 t.table ==
-		  Seq.append (HS.sel h0 t.table) 
-			     (counterblocks i t.mac_rgn x (v len) (Plain.sel_plain h1 len plain) (Buffer.as_seq h1 cipher)))
+    		  Seq.append (HS.sel h0 t.table)
+    			     (counterblocks i t.mac_rgn x (v len) (Plain.sel_plain h1 len plain) (Buffer.as_seq h1 cipher)))
     // NB the post of prf_enxor should be strengthened a bit (using PRF.extends?)
     ))
-    
+
+
 let rec counter_enxor i t x len plain cipher =
-  assume false;//16-10-12 
+  let h0 = get () in
+  push_frame();
   if len <> 0ul then
     begin // at least one more block
       let l = min len (PRF.blocklen i) in 
-      let cipher = Buffer.sub cipher 0ul l in 
-      let plain = Plain.sub plain 0ul l in 
+      let cipher_hd = Buffer.sub cipher 0ul l in 
+      let plain_hd = Plain.sub plain 0ul l in 
       (*
       recall (PRF t.table);
       let s = (PRF !t.table) in 
       assume(is_None(PRF.find s x));
       *)
-      PRF.prf_enxor i t x l cipher plain;
+      PRF.prf_enxor i t x l cipher_hd plain_hd;
       let len = len -^ l in 
-      let cipher = Buffer.sub cipher l len in
-      let plain = Plain.sub plain l len in
-      counter_enxor i t (PRF.incr i x) len plain cipher
-    end
+      let cipher_tl = Buffer.sub cipher l len in
+      let plain_tl = Plain.sub plain l len in
+      let x = PRF.incr i x in
+      let _ =
+      	let h = get () in
+      	assume (safeId i ==> (forall z. z `above` x ==> find_otp #t.mac_rgn #i (HS.sel h t.table) z == None)) in
+      counter_enxor i t x len plain_tl cipher_tl
+    end;
+ pop_frame();
+ let h1 = get () in
+ assume (modifies_X_buffer_1 t x cipher h0 h1);
+ assume (safeId i ==> HS.sel h1 t.table == 
+    		  Seq.append (HS.sel h0 t.table)
+    			     (counterblocks i t.mac_rgn x (v len) (Plain.sel_plain h1 len plain) (Buffer.as_seq h1 cipher)))
+
+
 
 val counter_dexor: 
   i:id -> t:PRF.state i -> x:PRF.domain i{x.ctr <> 0ul} -> len:u32{safelen i (v len) x.ctr} ->

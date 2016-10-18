@@ -174,7 +174,7 @@ let coerce rgn i key =
 
 private val getBlock: 
   #i:id -> t:state i -> domain i -> len:u32 {len <=^ blocklen i} -> 
-  output:lbuffer (v len) { Buffer.disjoint t.key output } -> ST unit
+  output:lbuffer (v len) { Buffer.disjoint t.key output } -> STL unit
   (requires (fun h0 -> Buffer.live h0 output))
   (ensures (fun h0 r h1 -> Buffer.live h1 output /\ Buffer.modifies_1 output h0 h1 ))
 let getBlock #i t x len output =
