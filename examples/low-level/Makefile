@@ -15,7 +15,7 @@ POLY_ODIR=poly
 AEAD_ODIR=aead
 
 # OCaml variables
-OCAMLOPT := $(OCAMLOPT) -w -8-20-26
+OCAMLOPT := $(OCAMLOPT) -w -8-20-26-28-10
 
 FSTAR_EXTRACT=$(FSTAR) $(CODEGEN_ARGS) --include $(FSTAR_HOME)/ulib/hyperstack --include crypto --include crypto/real
 
