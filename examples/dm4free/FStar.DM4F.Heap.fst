@@ -91,7 +91,8 @@ let alloc_lemma (#a:Type) (h0:heap) (x:a)
 	              ~ (h0 `contains` r) 
 		      /\ h1 `contains_a_well_typed` r
 		      /\ sel h1 r == x
-		      /\ modifies Set.empty h0 h1))
+		      /\ modifies Set.empty h0 h1
+          /\ (forall b (r0 : ref b). (h1 `contains_a_well_typed` r0 /\ addr r0 <> addr r) ==> h0 `contains_a_well_typed` r0)))
 	    [SMTPat (alloc h0 x)]
     = ()
 

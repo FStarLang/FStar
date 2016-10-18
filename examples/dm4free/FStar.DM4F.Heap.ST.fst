@@ -70,7 +70,8 @@ let alloc (#a:Type) (init:a)
 	 	    ~ (h0 `contains` r)          //the ref r is fresh
 		  /\ h1 `contains_a_well_typed` r //and is well-typed in h1
 		  /\ sel h1 r == init             //initialized to init
-		  /\ modifies Set.empty h0 h1))   //and no existing ref is modified
+		  /\ modifies Set.empty h0 h1     //and no existing ref is modified
+      /\ (forall b (r0 : ref b). (h1 `contains_a_well_typed` r0 /\ addr r0 <> addr r) ==> h0 `contains_a_well_typed` r0) ))
     = let h0 = STATE.get () in
       let r, h1 = alloc h0 init in
       STATE.put h1;

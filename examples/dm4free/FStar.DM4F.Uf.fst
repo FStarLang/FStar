@@ -1,12 +1,12 @@
-module Uf
+module FStar.DM4F.Uf
 
-open FStar.Heap
+open FStar.DM4F.Heap
 open FStar.List.Tot
 open FStar.Squash
 open FStar.Classical
 open FStar.Ghost
-open FStar.ST
-open FStar.TSet
+open FStar.DM4F.Heap.ST
+open FStar.Set
 open FStar.FunctionalExtensionality
 
 
@@ -19,25 +19,19 @@ noeq type funcaccessible (#a:Type0) (f: a -> GTot (option a)) (u : a) : Type0 =
 | FAcc : next:(match f u with | Some v -> funcaccessible f v | None -> unit) -> funcaccessible f u
 
 
-let ufh a h = x:(uf a){Heap.contains h x.parent}
+let ufh a h = x:(uf a){h `contains_a_well_typed` x.parent}
 
-let reach (a:eqtype) h (u : uf a) : GTot (option (uf a)) = sel h u.parent
+assume val recall_step : #a:eqtype -> h:heap -> z:ufh a h -> y:uf a -> Lemma (requires (sel h z.parent = Some y)) (ensures (h `contains_a_well_typed` y.parent))
 
+let reach (a:eqtype) h (u : ufh a h) : GTot (option (ufh a h)) =
+  match sel h u.parent with
+  | None -> None
+  | Some v -> recall_step h u v ; Some v
 
-assume val recall_reachable : #a:Type -> #a2:Type -> #b:Type -> h:heap -> r:ref a -> f:(a2 -> Tot (ref b)) ->
-Lemma (requires (has_type (sel h r) a2 /\ f (sel h r) << sel h r)) (ensures (has_type (sel h r) a2 /\ Heap.contains h (f (sel h r))))
-
-
-let recall_step (#a:eqtype) (h:heap) (z:uf a) (y:uf a)
-  : Lemma (requires (reach a h z = Some y)) (ensures (Heap.contains h y.parent)) =
-  recall_reachable h z.parent (fun (r : (option (uf a)){is_Some r}) -> match r with | Some y -> y.parent)
-
-
-assume val recall_step : #a:eqtype -> h:heap -> z:uf a -> y:uf a -> Lemma (requires (reach a h z = Some y)) (ensures (Heap.contains h y.parent))
 
 
 let reprfun (a:eqtype) (h:heap) = f:(uf a -> GTot (uf a)){
-  (forall u. if Heap.contains h u.parent then Heap.contains h (f u).parent else u = f u) /\
+  (forall u. (h `contains_a_well_typed` u.parent ==> h `contains_a_well_typed` (f u).parent) /\ (~(h `contains_a_well_typed` u.parent) ==> u = f u)) /\
   (forall (u:ufh a h). sel h (f u).parent = None /\(sel h u.parent = None ==> f u = u)) /\
   (forall (u:ufh a h) (v:ufh a h). sel h u.parent = Some v ==> f u = f v)
 }
@@ -75,12 +69,23 @@ let reprfun_prop (#a:eqtype) (h:heap) (f1:reprfun a h) (f2:reprfun a h) : Lemma 
 
 let retrieve_reprfun (a:eqtype) (h:heap) : Pure (reprfun a h) (requires (uf_invariant a h)) (ensures (fun _ -> True)) =
   let w = get_proof (uf_invariant a h) in
-  let rec f (u:uf a) : Ghost (uf a) (requires True) (ensures (fun r -> if Heap.contains h u.parent then Heap.contains h r.parent /\ sel h r.parent = None /\ (sel h u.parent = None ==> u = r) else u = r)) =
-    if Heap.contains h u.parent then
-      match reach a h u with | None -> u | Some v -> recall_step h u v ; give_proof w ; uf_invariant_termination a h u v ; f v
+  let rec f (u:uf a) : Ghost (uf a) (requires True)
+                       (ensures (fun r ->
+                       (h `contains_a_well_typed` u.parent ==> h `contains_a_well_typed` r.parent /\
+                                                               sel h r.parent = None /\
+                                                               (sel h u.parent = None ==> u = r))
+                       /\ (~(h `contains_a_well_typed` u.parent) ==> u = r))) =
+    if excluded_middle (h `contains_a_well_typed` u.parent) then
+      match reach a h u with
+      | None -> u
+      | Some v ->
+        recall_step h u v ;
+        give_proof w ;
+        uf_invariant_termination a h u v ;
+        f v
     else u
   in
-  let reprfun_prop (u:ufh a h) (v:ufh a h) : Lemma (requires (reach a h u = Some v)) (ensures (f u == f v)) = admit () (* replace when bug#739 is fixed*)
+  let reprfun_prop (u:ufh a h) (v:ufh a h) : Lemma (requires (reach a h u = Some v)) (ensures (f u = f v)) = admit () (* replace when bug#739 is fixed*)
     (*match reach a h v with
     | None -> ()
     | Some w -> recall_step h v w ; reprfun_prop v w *)
@@ -88,6 +93,12 @@ let retrieve_reprfun (a:eqtype) (h:heap) : Pure (reprfun a h) (requires (uf_inva
   let reprfun_prop' (u:ufh a h) : Lemma (forall (v:ufh a h). sel h u.parent = Some v ==> f u = f v) = forall_intro (move_requires (reprfun_prop u)) in
   forall_intro reprfun_prop' ;
   //assert (forall (u:ufh a h) (v:ufh a h). sel h u.parent = Some v ==> f u = f v) ;
+
+  assert (forall u. (h `contains_a_well_typed` u.parent ==> h `contains_a_well_typed` (f u).parent));
+  assert (forall u. (~(h `contains_a_well_typed` u.parent) ==> u = f u)) ;
+  assert (forall (u:ufh a h). sel h (f u).parent = None /\(sel h u.parent = None ==> f u = u)) ;
+  assert (forall (u:ufh a h) (v:ufh a h). sel h u.parent = Some v ==> f u = f v) ;
+
   f
 
 
@@ -108,21 +119,30 @@ let merge_reprfun (a:eqtype) (h0:heap) (h1:heap) (x:uf a) (y:uf a) (z:uf a) : Pu
 *)
 
 
-let make_uf (#a:eqtype) (x:a) : ST (uf a) (requires (uf_invariant a)) (ensures (fun h0 x h1 -> modifies_none h0 h1 /\ uf_invariant a h1 /\ uf_invariant a h0 /\ same_reprfun a h0 h1)) =
-  let h0 = get () in
+let make_uf (#a:eqtype) (x:a) : ST (uf a) (requires (uf_invariant a)) (ensures (fun h0 x h1 -> uf_invariant a h1 /\ uf_invariant a h0 /\ same_reprfun a h0 h1)) =
+  let h0 : heap = STATE.get () in
   let res : uf a = { content = x ; parent = alloc None } in
-  let h1 = get () in
+  let h1 = STATE.get () in
   let uf_inv1 (uf_inv0:uf_invariant_fun h0) (u: ufh a h1) : GTot (funcaccessible (reach a h1) u) =
-    let rec pushforward_accessible (u:ufh a h1) (acc0 : funcaccessible (reach a h0) u) : GTot (funcaccessible (reach a h1) u) (decreases acc0) =
+    let rec pushforward_accessible (u:(uf a){h0 `contains_a_well_typed` u.parent /\ h1 `contains_a_well_typed` u.parent}) (acc0 : funcaccessible (reach a h0) u) : GTot (funcaccessible (reach a h1) u) (decreases acc0) =
       match reach a h1 u with | None -> FAcc () | Some v -> recall_step h1 u v ; FAcc (pushforward_accessible v acc0.next)
-    in if u.parent = res.parent then FAcc () else let u : uf a = u in pushforward_accessible u (uf_inv0 u)
+    in if u.parent = res.parent then FAcc () else let u : uf a = u in assert (h0 `contains_a_well_typed` u.parent) ; pushforward_accessible u (uf_inv0 u)
   in maintain_uf_invariant uf_inv1 ;
   res
 
 
 
-let distinct_cell_lemma (#a:eqtype) (h:heap) (r1:ref a) (r2: ref a) : Lemma (sel h r1 <> sel h r2 ==> r1 <> r2) = ()
+let distinct_cell_lemma (#a:eqtype) (h:heap) (r1:(ref a){h `contains_a_well_typed` r1}) (r2: (ref a){h `contains_a_well_typed` r2}) : Lemma (sel h r1 <> sel h r2 ==> r1 <> r2) = ()
 
+
+let reachable_step (a:eqtype) (h:heap) (u:ufh a h) (p:ufh a h) : GTot bool =
+  sel h u.parent = Some p
+
+let reachable (a:eqtype) (h:heap) = reflexive_transitive_closure (reachable_step a h)
+
+let rec collect_above (#a:eqtype) (h:heap) (u:ufh a h) : Ghost (set nat)
+                      (requires True)
+                      (ensures (fun s -> forall x. Set.mem x s <==> reachable a h u x))
 
 (* Without invariants :
 
@@ -136,13 +156,19 @@ let distinct_cell_lemma (#a:eqtype) (h:heap) (r1:ref a) (r2: ref a) : Lemma (sel
 *)
 
 (** TODO : why do I need to ask for uf_invariant a h0 in the post-condition ??? *)
-let rec root (#a:eqtype) (u:uf a) : ST (uf a) (requires (uf_invariant a)) (ensures (fun h0 r h1 -> uf_invariant a h0 /\ uf_invariant a h1 /\ same_reprfun a h0 h1 /\ (*sel h0 r.parent = None /\ sel h1 r.parent = None*) retrieve_reprfun a h1 u = r) ) (decreases u) (* WARNING : check the decrease clause by hand for now *) =
+let rec root (#a:eqtype) (u:uf a) : ST (uf a)
+             (requires (fun h0 -> uf_invariant a h0 /\
+                               h0 `contains_a_well_typed` u.parent))
+             (ensures (fun h0 r h1 -> uf_invariant a h0 /\
+                                   uf_invariant a h1 /\
+                                   modifies (collect_above h0 u) h0 h1 /\
+                                   same_reprfun a h0 h1 /\
+                                   retrieve_reprfun a h1 u = r) ) (decreases u) (* WARNING : check the decrease clause by hand for now *) =
   match !u.parent with
   | None -> u
   | Some p ->
     let h0 = get () in
-    recall u.parent ;
-    recall p.parent ;
+    recall_step h0 u p ;
     uf_invariant_termination a h0 u p ;
     assert ( p << u ) ;
     let r = root p in
