@@ -251,7 +251,7 @@ private let extends #rgn #i s0 s1 x =
   let open FStar.Seq in 
   let open FStar.SeqProperties in 
   ( match find s0 x with 
-    | Some _ -> s1 == s1 
+    | Some _ -> s0 == s1
     | None   -> exists (e:entry rgn i). e.x = x /\ s1 == snoc s0 e  )
 
 // modifies a table (at most at x) and a buffer.
