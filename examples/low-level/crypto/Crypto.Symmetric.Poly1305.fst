@@ -677,7 +677,7 @@ val poly1305_update:
 let poly1305_update log msgB acc r =
   let h0 = ST.get () in
   push_frame();
-  let block = create 0UL (U32 (nlength +^ 0ul)) in // TODO: pass buffer, don't create one
+  let block = create 0UL nlength in // TODO: pass buffer, don't create one
   toField_plus_2_128 block msgB;
   let h1 = ST.get () in
   norm_eq_lemma h0 h1 acc acc;

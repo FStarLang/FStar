@@ -88,6 +88,8 @@ let little_endian_singleton n =
     U8.v (Seq.index (Seq.create 1 n) 0) + pow2 8 *
     little_endian (Seq.slice (Seq.create 1 n) 1 1))
 
+#set-options "--z3timeout 20"
+
 val little_endian_append: w1:word -> w2:word{length w1 + length w2 <= 16} -> Lemma
   (requires True)
   (ensures 
@@ -185,6 +187,36 @@ let rec encode_pad prefix txt =
     encode_pad prefix txt
     end
 
+
+//16-09-18 where is it in the libraries??
+private let min (a:nat) (b:nat) : nat = if a <= b then a else b
+
+//16-10-15 simpler variant? rediscuss injectivity.
+val encode_bytes: txt:Seq.seq UInt8.t -> Tot (Seq.seq elem) (decreases (Seq.length txt))
+let rec encode_bytes txt =
+  let l = Seq.length txt in
+  if l = 0 then 
+    Seq.createEmpty
+  else 
+    let l0 = min l 16 in
+    let txt0, txt = SeqProperties.split txt l0 in
+    let w = pad_0 txt0 (16 - l0) in 
+    SeqProperties.cons (encode w) (encode_bytes txt)
+
+
+#reset-options "--z3timeout 1000"
+let rec lemma_encode_length txt: Lemma
+  (ensures (Seq.length(encode_bytes txt) = (Seq.length txt + 15) / 16))
+  (decreases (Seq.length txt))
+=
+  let l = Seq.length txt in 
+  if l = 0 then ()
+  else if l < 16 then assert(Seq.length(encode_bytes txt) = 1)
+  else (
+    let txt0, txt' = SeqProperties.split txt 16 in
+    lemma_encode_length txt'; 
+    assert(Seq.length(encode_bytes txt) = 1 + Seq.length(encode_bytes txt')))
+
 let trunc_1305 (e:elem) : Tot elem = e % pow2 128
 
 
@@ -281,6 +313,34 @@ let lemma_encode_injective w0 w1 =
 
 #reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 
+assume val lemma_encode_bytes_injective: t0:Seq.seq UInt8.t -> t1:Seq.seq UInt8.t -> Lemma
+  (requires length t0 == length t1 /\ encode_bytes t0 == encode_bytes t1)
+  (ensures t0 == t1)
+  (decreases (Seq.length t0))
+(*
+let rec lemma_encode_bytes_injective t0 t1 =
+  let l = Seq.length t0 in
+  if l = 0 then Seq.lemma_eq_intro t0 t1
+  else if l < 16 then
+    begin
+    lemma_index_create 1 (encode t0) 0;
+    lemma_index_create 1 (encode t1) 0;
+    lemma_encode_injective t0 t1
+    end
+  else
+    begin
+    let w0, t0' = SeqProperties.split_eq t0 16 in
+    let w1, t1' = SeqProperties.split_eq t1 16 in
+    let p0' = Seq.create 1 (encode w0) in
+    let p1' = Seq.create 1 (encode w1) in
+    assert (encode_pad p0' t0' == encode_pad p1' t1');
+    lemma_encode_bytes_injective t0' t1';
+    lemma_index_create 1 (encode w0) 0;
+    lemma_index_create 1 (encode w1) 0;
+    lemma_encode_injective w0 w1
+    end
+*)
+
 val lemma_encode_pad_injective: p0:Seq.seq elem -> t0:Seq.seq UInt8.t -> p1:Seq.seq elem -> t1:Seq.seq UInt8.t -> Lemma
   (requires length t0 == length t1 /\ encode_pad p0 t0 == encode_pad p1 t1)
   (ensures  p0 == p1 /\ t0 == t1)
@@ -339,6 +399,48 @@ val poly: vs:seq elem -> r:elem -> Tot (a:elem) (decreases (Seq.length vs))
 let rec poly vs r =
   if Seq.length vs = 0 then 0
   else (poly (seq_head vs) r +@ Seq.index vs (length vs - 1)) *@ r
+
+(* the definition above captures what POLY1305 does, 
+   not the usual polynomial computation; 
+   it may be more natural to flip the sequence, 
+   so that the coefficients are aligned. 
+   (i.e. a_0::a_1::a_2 stands for a_0 + a_1 X + a_2 X^2 , is implicitly extended with 0s.) *)
+
+val poly': vs:seq elem -> r:elem -> Tot (a:elem) (decreases (Seq.length vs))
+let rec poly' vs r =
+  if Seq.length vs = 0 then 0
+  else (SeqProperties.head vs +@ poly' (SeqProperties.tail vs) r ) *@ r
+
+val eq_poly0: p:seq elem -> Tot bool (decreases (length p)) 
+let rec eq_poly0 p = 
+  Seq.length p = 0 || 
+  (SeqProperties.head p = 0 && eq_poly0 (SeqProperties.tail p))
+  
+val eq_poly: p0:seq elem -> p1:seq elem -> Tot bool (decreases (length p0))
+let rec eq_poly p0 p1 = 
+  if Seq.length p0 = 0 then eq_poly0 p1 
+  else if Seq.length p1 = 0 then eq_poly0 p0
+  else SeqProperties.head p0 = SeqProperties.head p1 && eq_poly (SeqProperties.tail p0) (SeqProperties.tail p1)
+
+#set-options "--lax"
+private let rec lemma_sane_eq_poly0 (p:seq elem) (r:elem) : Lemma
+  (requires eq_poly0 p)
+  (ensures (poly' p r = 0)) (decreases (Seq.length p)) = 
+  if Seq.length p = 0 then () 
+  else if SeqProperties.head p = 0 then lemma_sane_eq_poly0 (SeqProperties.tail p) r
+#reset-options "--z3timeout 1000"
+private let rec lemma_sane_eq_poly (p0:seq elem) (p1:seq elem) (r:elem) : Lemma
+  (requires eq_poly p0 p1)
+  (ensures (poly' p0 r = poly' p1 r)) (decreases (Seq.length p0)) = 
+  if Seq.length p0 = 0 then lemma_sane_eq_poly0 p1 r 
+  else if Seq.length p1 = 0 then lemma_sane_eq_poly0 p0 r
+  else lemma_sane_eq_poly (SeqProperties.tail p0) (SeqProperties.tail p1) r
+
+//16-10-15 to stay close to the paper, we may apply "encode" in the poly specification.
+
+
+
+
 
 private let fix (r:word_16) (i:nat {i < 16}) m : Tot word_16 =
   Seq.upd r i (U8 (Seq.index r i &^ m))

@@ -28,5 +28,4 @@ let lowercase s = String.lowercase s
 let substring s i j = String.sub s i j
 let get s i = String.get s i
 
-
-
+let rec list_of_string (s:string) = [for c in s -> c]

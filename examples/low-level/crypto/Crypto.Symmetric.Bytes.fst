@@ -12,6 +12,10 @@ open Buffer.Utils
  
 type mem = FStar.HyperStack.mem
 
+let u8  = UInt8.t
+let u32 = UInt32.t
+let u64 = UInt64.t
+
 // TODO: rename and move to FStar.Buffer
 // bytes  -> uint8_s; lbytes  -> uint8_sl
 // buffer -> uint8_p; lbuffer -> uint8_sl
@@ -90,6 +94,30 @@ val store_bytes: l:UInt32.t -> buf:lbuffer (v l) -> b:lbytes (v l) -> ST unit
   (ensures  (fun h0 r h1 -> Buffer.live h1 buf /\ Buffer.modifies_1 buf h0 h1 /\
     Seq.equal b (sel_bytes h1 l buf)))
 let store_bytes l buf b = store_bytes_aux l buf 0ul b
+
+// TODO: Dummy.
+// Should be external and relocated in some library with a crypto-grade
+// implementation in both OCaml and KreMLin,
+val random: len:nat -> b:lbuffer len -> Stack unit
+  (requires (fun h -> live h b))
+  (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
+let random len b = ()
+
+val random_bytes: len:u32 -> Stack (lbytes (v len))
+  (requires (fun m -> True))
+  (ensures  (fun m0 _ m1 -> modifies Set.empty m0 m1))
+let random_bytes len =
+  push_frame ();
+  let m0 = ST.get () in
+  let buf = Buffer.create 0uy len in
+  let m1 = ST.get () in
+  lemma_reveal_modifies_0 m0 m1;
+  Bytes.random (v len) buf;
+  let m2 = ST.get () in
+  lemma_reveal_modifies_1 buf m1 m2;
+  let b = load_bytes len buf in
+  pop_frame ();
+  b
 
 
 open FStar.SeqProperties
@@ -318,6 +346,27 @@ let rec store_uint32 len buf n =
     assert_norm (pow2 8 == 256);
     store_uint32 len buf' n';
     buf.(0ul) <- b // updating after the recursive call helps verification
+
+val uint32_bytes: 
+  len:UInt32.t {v len <= 4} -> n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> 
+  Tot (b:lbytes (v len) { UInt32.v n = little_endian b}) (decreases (v len))
+let rec uint32_bytes len n = 
+  if len = 0ul then 
+    let e = Seq.createEmpty #UInt8.t in
+    assert_norm(0 = little_endian e);
+    e
+  else
+    let len = len -^ 1ul in 
+    let byte = uint32_to_uint8 n in
+    let n' = FStar.UInt32(n >>^ 8ul) in 
+    assert(v n = UInt8.v byte + 256 * v n');
+    Math.Lemmas.pow2_plus 8 (8 * v len);
+    assert_norm (pow2 8 == 256);
+    assert(v n' < pow2 (8 * v len ));
+    let b' = uint32_bytes len n'
+    in 
+    SeqProperties.cons byte b'
+
 
 // check efficient compilation for all back-ends
 val store_uint128: 

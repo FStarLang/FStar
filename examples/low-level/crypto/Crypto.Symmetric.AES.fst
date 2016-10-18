@@ -22,18 +22,15 @@ module U32 = FStar.UInt32
 module H8  = FStar.UInt8
 module H32  = FStar.UInt32
 
-(* This HAS to go in some more appropriate place *)
-assume MaxUInt8: pow2 8 = 256
-assume MaxUInt32: pow2 32 = 4294967296
 
 type bytes = FStar.Buffer.buffer byte
 type lbytes l = b:bytes {length b = l} 
 let v (x:UInt32.t) : nat  = UInt32.v x
 
 (* Parameters for AES-256 *)
-let nk =  8ul
-let nb =  4ul
-let nr = 14ul
+inline_for_extraction let nk =  8ul
+inline_for_extraction let nb =  4ul
+inline_for_extraction let nr = 14ul
 
 let blocklen = U32(4ul *^ nb)
 let keylen   = U32(4ul *^ nk)

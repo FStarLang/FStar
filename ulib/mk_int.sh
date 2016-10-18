@@ -34,7 +34,7 @@ let n = $i
 EOF
   cat FStar.UIntN.fstp >> $f
   if [ $i -eq 8 ]; then
-    echo "type byte = t" >> $f
+    echo "unfold inline_for_extraction type byte = t" >> $f
   fi
   if [ $i -eq 128 ]; then
       cat >> $f <<EOF

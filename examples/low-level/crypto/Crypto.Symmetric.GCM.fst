@@ -10,13 +10,6 @@ open FStar.Buffer
 module U32 = FStar.UInt32
 type u32 = FStar.UInt32.t
 
-(*
-assume MaxUInt8 : pow2 8 = 256
-assume MaxUInt32: pow2 32 = 4294967296
-assume MaxUInt64: pow2 64 > 0xfffffffffffffff
-assume MaxUInt128: pow2 128 > pow2 64
-*)
-
 #set-options "--z3timeout 10 --max_fuel 0 --initial_fuel 0"
 
 type bytes = buffer byte
