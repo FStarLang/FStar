@@ -5,6 +5,8 @@ include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
 uall: SimplePrintf.uver
 
+sall:
+
 # This doesn't work because of bug #...
 ocaml: SimplePrintf.fst
 	mkdir -p out

@@ -64,7 +64,7 @@ let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
 (***********************************************************************)
 (* Checking Prims.fst                                                  *)
 (***********************************************************************)
-let tc_prims () : Syntax.modul
+let tc_prims () : (Syntax.modul * int)
                   * DsEnv.env
                   * TcEnv.env =
   let solver = if Options.lax() then SMT.dummy else SMT.solver in
@@ -72,8 +72,9 @@ let tc_prims () : Syntax.modul
   env.solver.init env;
   let prims_filename = Options.prims () in
   let dsenv, prims_mod = parse (DsEnv.empty_env ()) None prims_filename in
-  let prims_mod, env = Tc.check_module env (List.hd prims_mod) in
-  prims_mod, dsenv, env
+  let (prims_mod, env), elapsed_time = 
+    record_time (fun () -> Tc.check_module env (List.hd prims_mod)) in
+  (prims_mod, elapsed_time), dsenv, env
 
 (***********************************************************************)
 (* Interactive mode: checking a fragment of a code                     *)
@@ -179,15 +180,16 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
-let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
-                               * DsEnv.env
-                               * TcEnv.env  =
+let tc_one_file dsenv env pre_fn fn : list<(Syntax.modul * int)> //each module and its elapsed checking time
+                                    * DsEnv.env
+                                    * TcEnv.env  =
   let dsenv, fmods = parse dsenv pre_fn fn in
   let check_mods () = 
       let env, all_mods =
           fmods |> List.fold_left (fun (env, all_mods) m ->
-                                let m, env = Tc.check_module env m in
-                                env, m::all_mods) (env, []) in
+                    let (m, env), elapsed_ms = 
+                        FStar.Util.record_time (fun () -> Tc.check_module env m) in
+                    env, (m, elapsed_ms)::all_mods) (env, []) in
       List.rev all_mods, dsenv, env 
   in
   match fmods with 

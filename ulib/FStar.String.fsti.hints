@@ -1,5 +1,5 @@
 [
-  "›§,À§líÐ\u001e°á™úVã\u0010",
+  "\u000bSZì÷í‹'\u0018äüÐËN]¤",
   [
     [
       "FStar.String.make",
@@ -21,6 +21,14 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.String.strcat", 2, 2, 1, [ "@query" ], 0 ]
+    [ "FStar.String.strcat", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.String.string_of_char",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0
+    ]
   ]
 ]

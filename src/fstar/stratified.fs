@@ -92,7 +92,8 @@ let batch_mode_tc verify_mode filenames =
   let prims_mod, dsenv, env = tc_prims () in
   let filenames = find_deps_if_needed verify_mode filenames in
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
-  prims_mod @ all_mods, dsenv, env
+  let all_mods = prims_mod @ all_mods |> List.map (fun x -> (x, -1)) in
+  all_mods, dsenv, env
 
 (***********************************************************************)
 (* Interactive mode: checking a fragment of a code                     *)
