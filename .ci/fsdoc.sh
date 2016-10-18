@@ -32,6 +32,9 @@ do
     pandoc $md -f markdown -t html -o $html
 done
 ## index.md 
+### Add html to the module names. 
+sed -i '/[A-Za-z0-9]/s/\(.*\)/\1.html/' index.md
+### convert index.md to index.html.  
 pandoc index.md -f markdown -t html -o index.html
 popd
 
