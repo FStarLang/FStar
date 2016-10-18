@@ -114,6 +114,7 @@ let rec extend_refines (h:mem) (i:id{safeId i}) (mac_rgn:region)
 	 cut (Seq.equal (Seq.slice ext_blocks (b + 1) (Seq.length ext_blocks)) 
 			(Seq.append blocks_tl blocks_for_e))
 
+(*** Lemmas about modifying tables and buffers ***)
 
 let trans_all_above (#rgn:region) (#i:PRF.id) (s:Seq.seq (PRF.entry rgn i)) 
 		    (x:PRF.domain i) (y:PRF.domain i{y `above` x})
@@ -159,17 +160,13 @@ let x_buffer_1_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.sta
 			     (h_0:mem) (h_1:mem)
     : Lemma (requires (modifies_x_buffer_1 t x c h_0 h_1))
 	    (ensures  (modifies_table_above_x_and_buffer t x c h_0 h_1))
-    = admit ()(* if prf i then *)
-      (*   let r = itable i t in  *)
-      (*   let c0 = HS.sel h_0 r in *)
-      (* 	let c1 = HS.sel h_1 r in *)
-      (* 	assert (extends c0 c1 x); *)
-      (* 	match PRF.find c0 x with  *)
-      (* 	| Some _ -> assert (c0 == c1);admit() *)
-      (* 	| None -> assert (exists e. c1 = SeqProperties.snoc c0 e); admit() *)
-      (* 	(\* let diff_01 = Seq.slice c1 (Seq.length c0) (Seq.length c1) in *\) *)
-      (* 	(\* assert (Seq.length diff_01 <= 1); *\) *)
-      (* else () *)
+    = if prf i then
+        let r = itable i t in
+        let c0 = HS.sel h_0 r in
+      	let c1 = HS.sel h_1 r in
+	let diff = Seq.slice c1 (Seq.length c0) (Seq.length c1) in
+	FStar.Classical.forall_intro (SeqProperties.contains_elim diff)
+      else ()
 
 
 let fresh_frame_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
