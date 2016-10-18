@@ -2,7 +2,7 @@
 
 FSTAR_HOME=../..
 
-OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28" -annot
+OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28-26-11-21" -annot
 
 #MENHIR=menhir --explain #--infer -la 1 --table
 MENHIR=ocamlyacc
