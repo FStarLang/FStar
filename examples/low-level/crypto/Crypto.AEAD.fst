@@ -401,9 +401,14 @@ let ctr_inv ctr len =
 
 open Crypto.Symmetric.PRF
 
-val all_above: #rgn:region -> #i:PRF.id -> s:Seq.seq (PRF.entry rgn i) -> domain i -> Tot bool (decreases (Seq.length s))
-let rec all_above #rgn #i s x = 
-  Seq.length s = 0 || ((SeqProperties.head s).x `above` x && all_above (SeqProperties.tail s) x )
+let all_above (#rgn:region) (#i:PRF.id) (s:Seq.seq (PRF.entry rgn i)) (x:domain i) = 
+  (forall (e:PRF.entry rgn i).{:pattern (s `SeqProperties.contains` e)} 
+     s `SeqProperties.contains` e ==> e.x `above` x)
+
+let trans_all_above (#rgn:region) (#i:PRF.id) (s:Seq.seq (PRF.entry rgn i)) 
+		    (x:domain i) (y:domain i{y `above` x})
+    : Lemma (all_above s y ==> all_above s x)
+    = ()
 
 let modifies_table_above_x_and_buffer (#i:PRF.id) (t:PRF.state i) x b h0 h1 = 
   Buffer.live h1 b /\ 
@@ -427,15 +432,31 @@ let refl_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
 			     (h:mem)
     : Lemma (requires (Buffer.live h c))
 	    (ensures (modifies_table_above_x_and_buffer t x c h h))
-    = ()
-
+    = if prf i then 
+	let r = itable i t in
+	let c0 = HS.sel h r in
+	let emp = Seq.slice c0 (Seq.length c0) (Seq.length c0) in
+	cut (Seq.equal Seq.createEmpty emp);
+	FStar.Classical.forall_intro (SeqProperties.contains_elim emp)
+      else ()
+	
 let trans_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i) 
-			     (x_0:PRF.domain i{x_0.ctr <> 0ul}) (x_1:PRF.domain i{x_0.ctr <=^  x_1.ctr})
+			     (x_0:PRF.domain i{x_0.ctr <> 0ul}) (x_1:PRF.domain i{x_1 `above` x_0})
 			     (c:lbuffer l)
 			     (h_0:mem) (h_1:mem) (h_2:mem)
     : Lemma (requires (modifies_table_above_x_and_buffer t x_0 c h_0 h_1 /\ modifies_table_above_x_and_buffer t x_1 c h_1 h_2))
 	    (ensures (modifies_table_above_x_and_buffer t x_0 c h_0 h_2))
-    = admit()
+    = if prf i then
+        let r = itable i t in 
+        let c0 = HS.sel h_0 r in
+	let c1 = HS.sel h_1 r in
+	let c2 = HS.sel h_2 r in
+	let diff_01 = Seq.slice c1 (Seq.length c0) (Seq.length c1) in
+	let diff_12 = Seq.slice c2 (Seq.length c1) (Seq.length c2) in
+	let diff_02 = Seq.slice c2 (Seq.length c0) (Seq.length c2) in
+	assert (Seq.equal diff_02 (Seq.append diff_01 diff_12));
+	FStar.Classical.forall_intro (SeqProperties.append_contains_equiv diff_01 diff_12)
+      else ()
 
 val counter_enxor: 
   i:id -> t:PRF.state i -> x:PRF.domain i{x.ctr <> 0ul} -> len:u32{safelen i (v len) x.ctr} ->
@@ -498,11 +519,11 @@ let rec counter_enxor i t x len plain cipher =
       assume(is_None(PRF.find s x));
       *)
       PRF.prf_enxor i t x l cipher_hd plain_hd;
+      let h1 = get () in 
+      assume (modifies_table_above_x_and_buffer t x cipher h0 h1);
       let len = len -^ l in 
       let cipher_tl = Buffer.sub cipher l len in
       let plain_tl = Plain.sub plain l len in
-      let h1 = get () in 
-      assume (modifies_table_above_x_and_buffer t x cipher h0 h1);
       let y = PRF.incr i x in
       let _ =
       	let h = get () in
