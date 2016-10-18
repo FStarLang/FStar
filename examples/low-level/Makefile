@@ -37,9 +37,9 @@ uall:
 
 sall:
 
-ulib: $(FSTAR_HOME)/ulib/ml/fstarlib.cmxa
+ulib: $(FSTAR_HOME)/ulib/ml/fstarhstlib.cmxa
 
-$(FSTAR_HOME)/ulib/ml/fstarlib.cmxa:
+$(FSTAR_HOME)/ulib/ml/fstarhstlib.cmxa:
 	make -j 1 -C $(FSTAR_HOME)/ulib/ml clean all
 
 # Verification target for the low-level libraries of F* in universes
