@@ -444,7 +444,8 @@ let trans_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
 			     (x_0:PRF.domain i{x_0.ctr <> 0ul}) (x_1:PRF.domain i{x_1 `above` x_0})
 			     (c:lbuffer l)
 			     (h_0:mem) (h_1:mem) (h_2:mem)
-    : Lemma (requires (modifies_table_above_x_and_buffer t x_0 c h_0 h_1 /\ modifies_table_above_x_and_buffer t x_1 c h_1 h_2))
+    : Lemma (requires (modifies_table_above_x_and_buffer t x_0 c h_0 h_1 /\ 
+		       modifies_table_above_x_and_buffer t x_1 c h_1 h_2))
 	    (ensures (modifies_table_above_x_and_buffer t x_0 c h_0 h_2))
     = if prf i then
         let r = itable i t in 
@@ -457,6 +458,14 @@ let trans_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
 	assert (Seq.equal diff_02 (Seq.append diff_01 diff_12));
 	FStar.Classical.forall_intro (SeqProperties.append_contains_equiv diff_01 diff_12)
       else ()
+
+let x_buffer_1_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i) 
+			     (x:PRF.domain i{x.ctr <> 0ul})
+			     (c:lbuffer l)
+			     (h_0:mem) (h_1:mem)
+    : Lemma (requires (modifies_x_buffer_1 t x c h_0 h_1))
+	    (ensures  (modifies_table_above_x_and_buffer t x c h_0 h_1))
+    = admit()
 
 val counter_enxor: 
   i:id -> t:PRF.state i -> x:PRF.domain i{x.ctr <> 0ul} -> len:u32{safelen i (v len) x.ctr} ->
@@ -520,7 +529,8 @@ let rec counter_enxor i t x len plain cipher =
       *)
       PRF.prf_enxor i t x l cipher_hd plain_hd;
       let h1 = get () in 
-      assume (modifies_table_above_x_and_buffer t x cipher h0 h1);
+      x_buffer_1_modifies_table_above_x_and_buffer t x cipher h0 h1;
+      (* assume (modifies_table_above_x_and_buffer t x cipher h0 h1); *)
       let len = len -^ l in 
       let cipher_tl = Buffer.sub cipher l len in
       let plain_tl = Plain.sub plain l len in
