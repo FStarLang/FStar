@@ -35,7 +35,7 @@ done
 ### Add html to the module names. 
 sed -i '/[A-Za-z0-9]/s/\(.*\)/[\1](\1.html)/' index.md
 ### convert index.md to index.html.  
-pandoc index.md -f markdown -t html -o index.html
+pandoc index.md -f markdown -t html -s -o index.html
 popd
 
 # push fstarlang.github.io with latest html.
