@@ -25,7 +25,7 @@ CMX=$(FILES:.ml=.cmx)
 .mgen:
 	make -C .. mgen
 
-all: .mgen $(OBJS)
+all: .mgen
 	ocamlopt -a $(CMX) -o fstarlib.cmxa
 
 # Common rules
@@ -35,7 +35,7 @@ all: .mgen $(OBJS)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c -I $(PRIMS_DIR) $(ULIB_GEN_DIR) -linkpkg $<
 
 depend:
-	$(OCAMLDEP) $(COMMON_FILES) $(ST) $(HST) > .depend
+	$(OCAMLDEP) $(FILES) > .depend
 
 CLEAN=*.cmi *.cmo *.cmx *.exe *.o *.a *.cmxa *~
 
