@@ -121,21 +121,20 @@ in (match (opt) with
 let newDocs = (FStar_List.collect FStar_Extraction_ML_Code.doc_of_mllib mllibs)
 in (FStar_List.iter (fun _93_46 -> (match (_93_46) with
 | (n, d) -> begin
-(let _187_28 = (FStar_Options.prepend_output_dir (Prims.strcat n ext))
-in (let _187_27 = (FStar_Format.pretty (Prims.parse_int "120") d)
-in (FStar_Util.write_file _187_28 _187_27)))
+(let _187_27 = (FStar_Options.prepend_output_dir (Prims.strcat n ext))
+in (FStar_Util.write_file _187_27 (FStar_Format.pretty (Prims.parse_int "120") d)))
 end)) newDocs))
 end
 | Some ("Kremlin") -> begin
 (
 
-let programs = (let _187_29 = (FStar_List.map FStar_Extraction_Kremlin.translate mllibs)
-in (FStar_List.flatten _187_29))
+let programs = (let _187_28 = (FStar_List.map FStar_Extraction_Kremlin.translate mllibs)
+in (FStar_List.flatten _187_28))
 in (
 
 let bin = ((FStar_Extraction_Kremlin.current_version), (programs))
-in (let _187_30 = (FStar_Options.prepend_output_dir "out.krml")
-in (FStar_Util.save_value_to_file _187_30 bin))))
+in (let _187_29 = (FStar_Options.prepend_output_dir "out.krml")
+in (FStar_Util.save_value_to_file _187_29 bin))))
 end
 | _93_52 -> begin
 (FStar_All.failwith "Unrecognized option")
@@ -162,8 +161,8 @@ end
 end
 | FStar_Getopt.Success -> begin
 if ((FStar_Options.dep ()) <> None) then begin
-(let _187_32 = (FStar_Parser_Dep.collect FStar_Parser_Dep.VerifyAll filenames)
-in (FStar_Parser_Dep.print _187_32))
+(let _187_31 = (FStar_Parser_Dep.collect FStar_Parser_Dep.VerifyAll filenames)
+in (FStar_Parser_Dep.print _187_31))
 end else begin
 if (FStar_Options.interactive ()) then begin
 (
@@ -256,10 +255,10 @@ in (
 let _93_95 = (report_errors module_names_and_times)
 in (
 
-let _93_97 = (let _187_36 = (let _187_35 = (let _187_34 = (FStar_All.pipe_right fmods (FStar_List.map Prims.fst))
-in ((_187_34), (env)))
-in FStar_Util.Inr (_187_35))
-in (codegen _187_36))
+let _93_97 = (let _187_35 = (let _187_34 = (let _187_33 = (FStar_All.pipe_right fmods (FStar_List.map Prims.fst))
+in ((_187_33), (env)))
+in FStar_Util.Inr (_187_34))
+in (codegen _187_35))
 in (finished_message module_names_and_times (Prims.parse_int "0")))))
 end))
 end else begin
@@ -279,10 +278,10 @@ in (
 let _93_107 = (report_errors module_names_and_times)
 in (
 
-let _93_109 = (let _187_40 = (let _187_39 = (let _187_38 = (FStar_All.pipe_right fmods (FStar_List.map Prims.fst))
-in ((_187_38), (env)))
-in FStar_Util.Inl (_187_39))
-in (codegen _187_40))
+let _93_109 = (let _187_39 = (let _187_38 = (let _187_37 = (FStar_All.pipe_right fmods (FStar_List.map Prims.fst))
+in ((_187_37), (env)))
+in FStar_Util.Inl (_187_38))
+in (codegen _187_39))
 in (finished_message module_names_and_times (Prims.parse_int "0")))))
 end))
 end)
@@ -328,13 +327,13 @@ end else begin
 ()
 end
 in if (FStar_Options.trace_error ()) then begin
-(let _187_45 = (FStar_Util.message_of_exn e)
-in (let _187_44 = (FStar_Util.trace_of_exn e)
-in (FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _187_45 _187_44)))
+(let _187_44 = (FStar_Util.message_of_exn e)
+in (let _187_43 = (FStar_Util.trace_of_exn e)
+in (FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _187_44 _187_43)))
 end else begin
 if (not (((FStar_Absyn_Util.handleable e) || (FStar_TypeChecker_Errors.handleable e)))) then begin
-(let _187_46 = (FStar_Util.message_of_exn e)
-in (FStar_Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _187_46))
+(let _187_45 = (FStar_Util.message_of_exn e)
+in (FStar_Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _187_45))
 end else begin
 ()
 end
@@ -344,8 +343,8 @@ in (
 let _93_122 = (cleanup ())
 in (
 
-let _93_124 = (let _187_47 = (FStar_TypeChecker_Errors.report_all ())
-in (FStar_All.pipe_right _187_47 Prims.ignore))
+let _93_124 = (let _187_46 = (FStar_TypeChecker_Errors.report_all ())
+in (FStar_All.pipe_right _187_46 Prims.ignore))
 in (
 
 let _93_126 = (report_errors [])
