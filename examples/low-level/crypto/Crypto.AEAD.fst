@@ -264,6 +264,7 @@ val counter_enxor:
 let rec counter_enxor i t x len remaining_len plain cipher h_init =
   (* let h_initial = get () in *)
   (* push_frame(); *)
+  let completed_len = len -^ remaining_len in
   let h0 = get () in
   if remaining_len <> 0ul then
     begin // at least one more block
@@ -280,21 +281,20 @@ let rec counter_enxor i t x len remaining_len plain cipher h_init =
       let h1 = get () in 
       x_buffer_1_modifies_table_above_x_and_buffer t x cipher h0 h1;
       prf_enxor_leaves_none_strictly_above_x t x len remaining_len cipher h0 h1;
-      let remaining_len = remaining_len -^ l in 
+      extending_counter_blocks t x len completed_len plain cipher h0 h1 h_init;
       (* let cipher_tl = Buffer.sub cipher l len in *)
       (* let plain_tl = Plain.sub plain l len in *)
       let y = PRF.incr i x in
-      let _ = 
-	let completed_len = len -^ remaining_len in
-	let initial_domain = {x with ctr=1ul} in
-	assume (safeId i
-		       ==> HS.sel h1 t.table ==
-    				Seq.append (HS.sel h_init t.table)
-    				    (counterblocks i t.mac_rgn initial_domain
-    						   (v len) 0 (v completed_len)
-    						   (Plain.sel_plain h1 len plain)
-    						   (Buffer.as_seq h1 cipher))) in
-      counter_enxor i t y len remaining_len plain cipher h_init;
+      (* let _ =  *)
+      (* 	let initial_domain = {x with ctr=1ul} in *)
+      (* 	assume (safeId i *)
+      (* 		       ==> HS.sel h1 t.table == *)
+      (* 				Seq.append (HS.sel h_init t.table) *)
+      (* 				    (counterblocks i t.mac_rgn initial_domain *)
+      (* 						   (v len) 0 (v completed_len) *)
+      (* 						   (Plain.sel_plain h1 len plain) *)
+      (* 						   (Buffer.as_seq h1 cipher))) in *)
+      counter_enxor i t y len (remaining_len -^ l) plain cipher h_init;
       let h2 = get () in 
       trans_modifies_table_above_x_and_buffer t x y cipher h0 h1 h2
     end
