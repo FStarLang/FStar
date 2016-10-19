@@ -38,10 +38,10 @@ all: .mgen
 depend:
 	$(OCAMLDEP) $(FILES) > .depend
 
-CLEAN=*.cmi *.cmo *.cmx *.exe *.o *.a *.cmxa *~
+CLEAN=*.cmi *.cmo *.cmx *.exe *.o *.a *.cmxa *~ $(subst .ml,.cmx,$(ST)) $(subst .ml,.cmi,$(ST)) $(subst .ml,.o,$(ST))
 
 clean:
-	rm -f $(ULIB_GEN_DIR)/*
 	rm -f $(CLEAN)
+	rm -f $(ULIB_GEN_DIR)/*
 
 -include .depend
