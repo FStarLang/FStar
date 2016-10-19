@@ -18,6 +18,7 @@ open Crypto.Symmetric.PRF
 open Crypto.AEAD.Encoding 
 open Crypto.AEAD.Invariant
 open Crypto.AEAD.Lemmas
+open Crypto.AEAD.Lemmas.Part2
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -224,7 +225,7 @@ val counter_enxor:
     Plain.live h plain /\ 
     Buffer.live h cipher /\ 
     // if ciphertexts are authenticated, then fresh blocks are available
-    (safeId i ==> (forall z. z `above` x ==> find_otp #t.mac_rgn #i (HS.sel h t.table) z == None))
+    none_above x t h
     ))
   (ensures (fun h0 _ h1 -> 
     Plain.live h1 plain /\
@@ -256,14 +257,11 @@ let rec counter_enxor i t x len plain cipher =
       PRF.prf_enxor i t x l cipher_hd plain_hd;
       let h1 = get () in 
       x_buffer_1_modifies_table_above_x_and_buffer t x cipher h0 h1;
-      (* assume (modifies_table_above_x_and_buffer t x cipher h0 h1); *)
+      prf_enxor_leaves_none_strictly_above_x t x len cipher h0 h1;
       let len = len -^ l in 
       let cipher_tl = Buffer.sub cipher l len in
       let plain_tl = Plain.sub plain l len in
       let y = PRF.incr i x in
-      let _ =
-      	let h = get () in
-      	assume (safeId i ==> (forall z. z `above` y ==> find_otp #t.mac_rgn #i (HS.sel h t.table) z == None)) in
       counter_enxor i t y len plain_tl cipher_tl;
       let h2 = get () in 
       trans_modifies_table_above_x_and_buffer t x y cipher h0 h1 h2
@@ -274,7 +272,6 @@ let rec counter_enxor i t x len plain cipher =
  pop_frame();
  let h_final = get () in 
  pop_frame_modifies_table_above_x_and_buffer t x cipher h_initial h1 h_final;
- (* assume (modifies_table_above_x_and_buffer t x cipher h0 h1); *)
  assume (safeId i ==> HS.sel h_final t.table == 
     		      Seq.append (HS.sel h_initial t.table)
     			     (counterblocks i t.mac_rgn x (v len) (Plain.sel_plain h_final len plain) (Buffer.as_seq h_final cipher)))

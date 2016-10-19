@@ -151,7 +151,7 @@ let modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
 				      (h0:HS.mem) (h1:HS.mem) = 
   Buffer.live h1 b /\ 
   (if prf i then 
-    let r = PRF.itable i t in 
+    let r = PRF.itable i t in
     let rb = Buffer.frameOf b in 
     let rgns = Set.union (Set.singleton #HH.rid t.rgn) (Set.singleton #HH.rid rb) in 
     let contents0 = HS.sel h0 r in
@@ -163,3 +163,6 @@ let modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
     all_above (Seq.slice contents1 (Seq.length contents0) (Seq.length contents1)) x
   else
     Buffer.modifies_1 b h0 h1)
+
+let none_above (#i:PRF.id) (x:domain i) (t:PRF.state i) (h:mem) =
+    safeId i ==> (forall (y:domain i{y `above` x}). find #t.mac_rgn #i (HS.sel h t.table) y == None)
