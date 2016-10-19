@@ -247,12 +247,15 @@ let prf_mac i t x =
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
-private let extends #rgn #i s0 s1 x =
+let extends (#rgn:region) (#i:id) (s0:Seq.seq (entry rgn i)) 
+	    (s1:Seq.seq (entry rgn i)) (x:domain i{x.ctr <> 0ul}) =
   let open FStar.Seq in 
   let open FStar.SeqProperties in 
-  ( match find s0 x with 
-    | Some _ -> s1 == s1 
-    | None   -> exists (e:entry rgn i). e.x = x /\ s1 == snoc s0 e  )
+  match find s0 x with 
+  | Some _ -> s0 == s1
+  | None   -> Seq.length s1 = Seq.length s0 + 1 /\ 
+	     (Seq.index s1 (Seq.length s0)).x = x /\
+	     Seq.equal (Seq.slice s1 0 (Seq.length s0)) s0
 
 // modifies a table (at most at x) and a buffer.
 let modifies_x_buffer_1 #i (t:state i) x b h0 h1 = 

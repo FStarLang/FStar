@@ -1,5 +1,5 @@
 [
-  "&Ù-πëVé¿±«¸èÅänc",
+  "\u0001è\u0012ÑæLûN⁄28ÁeäÕ\\",
   [
     [ "HyE.CCA2.Entry.c", 1, 2, 1, [ "@query" ], 0 ],
     [ "HyE.CCA2.Entry.p", 1, 2, 1, [ "@query" ], 0 ],
@@ -18,7 +18,22 @@
     ],
     [ "HyE.CCA2.SKey.raw", 1, 2, 1, [ "@query" ], 0 ],
     [ "HyE.CCA2.SKey.pk", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.CCA2.keygen", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "HyE.CCA2.keygen",
+      1,
+      2,
+      1,
+      [
+        "@query", "bool_inversion", "disc_equation_Prims.V",
+        "equation_FStar.HyperStack.is_eternal_region",
+        "equation_FStar.Monotonic.RRef.rid",
+        "equation_FStar.Monotonic.Seq.rid",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4",
+        "typing_FStar.HyperStack.is_eternal_region"
+      ],
+      0
+    ],
     [
       "HyE.CCA2.decrypt",
       1,
