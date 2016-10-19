@@ -1,5 +1,6 @@
 #!/bin/bash 
 BRANCH=$BUILD_SOURCEBRANCHNAME 
+TRAVIS_TOKEN=$1 
 
 echo "Triggering Kremlin if build is for master branch"
 echo "Branch : $BRANCH"
