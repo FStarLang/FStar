@@ -63,7 +63,7 @@ CoreCrypto.cmxa: #explicitly sequentialize
 	make openssl_stub.o
 	make $(DB)/DB.cmx
 	make DHDB.cmx
-	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $^
+	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $(DLL_OBJ)
 
 DLL_BYTE = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o DHDB.cmo $(DB)/DB.cmo
 CoreCrypto.cma: $(DLL_BYTE)
