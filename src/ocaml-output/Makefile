@@ -57,6 +57,7 @@ endif
 # changed or not
 # NOTE: once we move to ulib, the -j 1 can disappear.
 all:
+	./check_ocaml_version
 	make -j 1 -C $(FSTAR_HOME)/lib/ml
 	$(MAKE) prep
 	$(MAKE) depend
