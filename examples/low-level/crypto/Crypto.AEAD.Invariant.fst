@@ -77,24 +77,24 @@ val counterblocks:
                 //16-10-13 but still needed in the result type, right?
   x:PRF.domain i{ctr x >^ 0ul} -> 
   l:nat -> 
-  from:nat -> 
-  to:nat{from <= to /\ to <= l /\ safelen i (to - from) (ctr x)} -> 
+  from_pos:nat -> 
+  to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) (ctr x)} -> 
   plain:Plain.plain i l -> 
   cipher:lbytes l -> 
   Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
-  (decreases (to - from))
-let rec counterblocks i rgn x l from to plain cipher = 
+  (decreases (to_pos - from_pos))
+let rec counterblocks i rgn x l from_pos to_pos plain cipher = 
   let blockl = v (Cipher(blocklen (cipher_of_id i))) in 
-  let remaining = to - from in 
+  let remaining = to_pos - from_pos in 
   if remaining = 0 then
     Seq.createEmpty
   else 
     let l0 = minNat remaining blockl in 
     let l_32 = UInt32.uint_to_t l0 in 
-    let plain_hd = Plain.slice plain from (from + l0) in
-    let cipher_hd = Seq.slice cipher from (from + l0) in
+    let plain_hd = Plain.slice plain from_pos (from_pos + l0) in
+    let cipher_hd = Seq.slice cipher from_pos (from_pos + l0) in
     let block = PRF.Entry x (PRF.OTP l_32 plain_hd cipher_hd) in
-    let blocks = counterblocks i rgn (PRF.incr i x) l (from + l0) to plain cipher in
+    let blocks = counterblocks i rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in
     SeqProperties.cons block blocks
 
 let num_blocks (#i:id) (e:entry i) : Tot nat = 
