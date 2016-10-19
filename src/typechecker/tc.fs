@@ -859,6 +859,9 @@ and tc_inductive env ses quals lids =
                                 (Print.term_to_string t);
         let uvs, t = SS.open_univ_vars uvs t in
         let args, _ = Util.arrow_formals t in
+        if List.length binders <> List.length args then
+          (* restriction imposed by our logical encoding (inversion_axioms) *)
+          raise (Error("Datatype constructor not fully instantiated", Range.dummyRange));
         let tc_types, data_types = Util.first_N (List.length binders) args in
         let tcs = List.map2 (fun (x, _) se -> match se with
             | Sig_inductive_typ(tc, _, tps, _, mutuals, datas, quals, r) ->
