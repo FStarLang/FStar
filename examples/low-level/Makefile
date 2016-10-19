@@ -1,5 +1,8 @@
 FSTAR_HOME=../..
 
+# using the hyperstack memory model, ulib/ml/Makefile.include used this variable to use appropriate ST files
+MEM=HST
+
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
@@ -15,7 +18,7 @@ POLY_ODIR=poly
 AEAD_ODIR=aead
 
 # OCaml variables
-OCAMLOPT := $(OCAMLOPT) -w -8-20-26
+OCAMLOPT := $(OCAMLOPT) -w -8-20-26-28-10
 
 FSTAR_EXTRACT=$(FSTAR) $(CODEGEN_ARGS) --include $(FSTAR_HOME)/ulib/hyperstack --include crypto --include crypto/real
 
@@ -40,7 +43,7 @@ sall:
 ulib: $(FSTAR_HOME)/ulib/ml/fstarlib.cmxa
 
 $(FSTAR_HOME)/ulib/ml/fstarlib.cmxa:
-	make -j 1 -C $(FSTAR_HOME)/ulib/ml clean all
+	make -j 1 -C $(FSTAR_HOME)/ulib/ml MEM=HST clean all
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
