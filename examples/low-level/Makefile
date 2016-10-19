@@ -1,5 +1,8 @@
 FSTAR_HOME=../..
 
+# using the hyperstack memory model, ulib/ml/Makefile.include used this variable to use appropriate ST files
+MEM=HST
+
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
@@ -37,10 +40,10 @@ uall:
 
 sall:
 
-ulib: $(FSTAR_HOME)/ulib/ml/fstarhstlib.cmxa
+ulib: $(FSTAR_HOME)/ulib/ml/fstarlib.cmxa
 
-$(FSTAR_HOME)/ulib/ml/fstarhstlib.cmxa:
-	make -j 1 -C $(FSTAR_HOME)/ulib/ml clean all
+$(FSTAR_HOME)/ulib/ml/fstarlib.cmxa:
+	make -j 1 -C $(FSTAR_HOME)/ulib/ml MEM=HST clean all
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:

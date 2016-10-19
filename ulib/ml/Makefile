@@ -1,36 +1,32 @@
 ULIB_GEN_DIR=./extracted
 
-ST=FStar_ST.ml FStar_All.ml
-HST=$(ULIB_GEN_DIR)/FStar_Map.ml $(ULIB_GEN_DIR)/FStar_HyperHeap.ml $(ULIB_GEN_DIR)/FStar_HyperStack.ml hyperstack/FStar_ST.ml hyperstack/FStar_All.ml
+ifeq ($(MEM),HST)
+	ST=$(ULIB_GEN_DIR)/FStar_Map.ml $(ULIB_GEN_DIR)/FStar_HyperHeap.ml $(ULIB_GEN_DIR)/FStar_HyperStack.ml hyperstack/FStar_ST.ml hyperstack/FStar_All.ml
+else
+	ST=FStar_ST.ml FStar_All.ml
+endif
 
-COMMON_FILES=prims.ml FStar_Mul.ml FStar_Float.ml FStar_Char.ml \
-	     FStar_Int8.ml FStar_UInt8.ml FStar_Int16.ml FStar_UInt16.ml \
-	     FStar_Int32.ml FStar_UInt32.ml FStar_Int64.ml FStar_UInt64.ml FStar_UInt128.ml \
-	     FStar_Int_Cast.ml \
-	     FStar_BaseTypes.ml \
-	     FStar_IO.ml FStar_Heap.ml FStar_List.ml \
-	     FStar_Option.ml FStar_String.ml FStar_Set.ml \
-	     FStar_Buffer.ml FStar_CommonST.ml
-
-ST_FILES=$(COMMON_FILES) $(ST)
-HST_FILES=$(COMMON_FILES) $(HST)
+FILES=prims.ml FStar_Mul.ml FStar_Float.ml FStar_Char.ml \
+      FStar_Int8.ml FStar_UInt8.ml FStar_Int16.ml FStar_UInt16.ml \
+      FStar_Int32.ml FStar_UInt32.ml FStar_Int64.ml FStar_UInt64.ml FStar_UInt128.ml \
+      FStar_Int_Cast.ml \
+      FStar_BaseTypes.ml \
+      FStar_IO.ml FStar_Heap.ml FStar_List.ml \
+      FStar_Option.ml FStar_String.ml FStar_Set.ml \
+      FStar_Buffer.ml FStar_CommonST.ml $(ST)
 
 OCAMLOPT=ocamlfind opt -thread -package batteries,zarith,stdint -linkpkg -g $(INCLUDES)
 OCAMLDEP=ocamlfind dep
 OCAMLMKLIB=ocamlfind mklib
 
-ST_OBJS=$(ST_FILES:.ml=.o)
-HST_OBJS=$(HST_FILES:.ml=.o)
-
-ST_CMX=$(ST_FILES:.ml=.cmx)
-HST_CMX=$(HST_FILES:.ml=.cmx)
+OBJS=$(FILES:.ml=.o)
+CMX=$(FILES:.ml=.cmx)
 
 .mgen:
 	make -C .. mgen
 
-all: .mgen $(ST_OBJS) $(HST_OBJS)
-	ocamlopt -a $(ST_CMX) -o fstarlib.cmxa
-	ocamlopt -a $(HST_CMX) -o fstarhstlib.cmxa
+all: .mgen $(OBJS)
+	ocamlopt -a $(CMX) -o fstarlib.cmxa
 
 # Common rules
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
