@@ -57,7 +57,12 @@ $(DB)/DB.cmx: $(DB)/DB.ml
 	$(MAKE) -C $(DB)
 
 DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o $(DB)/DB.cmx DHDB.cmx
-CoreCrypto.cmxa: $(DLL_OBJ)
+CoreCrypto.cmxa: #explicitly sequentialize
+	make $(PLATFORM)/platform.cmx
+	make CoreCrypto.cmx
+	make openssl_stub.o
+	make $(DB)/DB.cmx
+	make DHDB.cmx
 	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $^
 
 DLL_BYTE = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o DHDB.cmo $(DB)/DB.cmo
