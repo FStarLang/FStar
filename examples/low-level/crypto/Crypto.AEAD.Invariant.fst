@@ -88,11 +88,13 @@ let rec counterblocks i rgn x l plain cipher =
   else 
     let l0 = minNat l blockl in 
     let l_32 = UInt32.uint_to_t l0 in 
-    let block = PRF.Entry x (PRF.OTP l_32 (Plain.slice plain 0 l0) (Seq.slice cipher 0 l0)) in
-    let cipher: lbytes(l - l0) = Seq.slice cipher l0 l in
-    let plain = Plain.slice plain l0 l in
+    let plain_hd = Plain.slice plain 0 l0 in
+    let cipher_hd = Seq.slice cipher 0 l0 in
+    let block = PRF.Entry x (PRF.OTP l_32 plain_hd cipher_hd) in
+    let cipher_tl: lbytes(l - l0) = Seq.slice cipher l0 l in
+    let plain_tl = Plain.slice plain l0 l in
     // assert(safelen i (l - l0) (PRF(x.ctr +^ 1ul)));
-    let blocks = counterblocks i rgn (PRF.incr i x) (l - l0) plain cipher in
+    let blocks = counterblocks i rgn (PRF.incr i x) (l - l0) plain_tl cipher_tl in
     SeqProperties.cons block blocks
 
 let num_blocks (#i:id) (e:entry i) : Tot nat = 
