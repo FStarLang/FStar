@@ -2,7 +2,7 @@
 
 FSTAR_HOME=../..
 
-OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28" -annot
+OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28-26-11-21" -annot
 
 #MENHIR=menhir --explain #--infer -la 1 --table
 MENHIR=ocamlyacc
@@ -66,7 +66,7 @@ prep: parser copy_lib_files version
 
 parser:
 	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
-	$(MENHIR) parse.mly
+	$(MENHIR) parse.mly 2>&1
 	rm -f FStar_Parser_Parse.ml
 	echo "open Prims" > FStar_Parser_Parse.ml
 	echo "open FStar_List" >> FStar_Parser_Parse.ml

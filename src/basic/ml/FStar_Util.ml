@@ -39,6 +39,11 @@ let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
   n, 
   Z.of_float (n *. 1000.0)
+let record_time f = 
+    let start = now () in
+    let res = f () in 
+    let _, elapsed = time_diff start (now()) in
+    res, elapsed
 
 exception Impos
 exception NYI of string
@@ -308,12 +313,12 @@ let colorize_cyan s =
   | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
   | _ -> s
 
-let print_error s = fpr stderr "%s" (colorize_red ("Error: " ^ s)); flush stdout; flush stderr
+let print_error s = fpr stderr "%s" (colorize_red s); flush stdout; flush stderr
 let print1_error a b = print_error (format1 a b)
 let print2_error a b c = print_error (format2 a b c)
 let print3_error a b c d = print_error (format3 a b c d)
 
-let print_warning s = fpr stderr "%s" (colorize_cyan ("Warning: " ^ s)); flush stdout; flush stderr
+let print_warning s = fpr stderr "%s" (colorize_cyan s); flush stdout; flush stderr
 let print1_warning a b = print_warning (format1 a b)
 let print2_warning a b c = print_warning (format2 a b c)
 let print3_warning a b c d = print_warning (format3 a b c d)
