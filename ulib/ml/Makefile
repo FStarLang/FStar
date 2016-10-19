@@ -26,6 +26,7 @@ CMX=$(FILES:.ml=.cmx)
 	make -C .. mgen
 
 all: .mgen
+	make $(OBJS)
 	ocamlopt -a $(CMX) -o fstarlib.cmxa
 
 # Common rules
