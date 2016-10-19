@@ -76,25 +76,25 @@ val counterblocks:
 		//but that's always Seq.createEmpty here
                 //16-10-13 but still needed in the result type, right?
   x:PRF.domain i{ctr x >^ 0ul} -> 
-  l:nat {safelen i l (ctr x)} -> 
+  l:nat -> 
+  from:nat -> 
+  to:nat{from <= to /\ to <= l /\ safelen i (to - from) (ctr x)} -> 
   plain:Plain.plain i l -> 
   cipher:lbytes l -> 
   Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
-  (decreases l)
-let rec counterblocks i rgn x l plain cipher = 
+  (decreases (to - from))
+let rec counterblocks i rgn x l from to plain cipher = 
   let blockl = v (Cipher(blocklen (cipher_of_id i))) in 
-  if l = 0 then
+  let remaining = to - from in 
+  if remaining = 0 then
     Seq.createEmpty
   else 
-    let l0 = minNat l blockl in 
+    let l0 = minNat remaining blockl in 
     let l_32 = UInt32.uint_to_t l0 in 
-    let plain_hd = Plain.slice plain 0 l0 in
-    let cipher_hd = Seq.slice cipher 0 l0 in
+    let plain_hd = Plain.slice plain from (from + l0) in
+    let cipher_hd = Seq.slice cipher from (from + l0) in
     let block = PRF.Entry x (PRF.OTP l_32 plain_hd cipher_hd) in
-    let cipher_tl: lbytes(l - l0) = Seq.slice cipher l0 l in
-    let plain_tl = Plain.slice plain l0 l in
-    // assert(safelen i (l - l0) (PRF(x.ctr +^ 1ul)));
-    let blocks = counterblocks i rgn (PRF.incr i x) (l - l0) plain_tl cipher_tl in
+    let blocks = counterblocks i rgn (PRF.incr i x) l (from + l0) to plain cipher in
     SeqProperties.cons block blocks
 
 let num_blocks (#i:id) (e:entry i) : Tot nat = 
@@ -112,7 +112,7 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
    let xors = Seq.slice blocks 1 (b+1) in 
    let cipher, tag = SeqProperties.split cipher_tagged l in
    safelen i l 1ul /\
-   xors == counterblocks i rgn (PRF.incr i x) l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
+   xors == counterblocks i rgn (PRF.incr i x) l 0 l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
                                          
    (let m = PRF.macRange rgn i x e in
     let mac_log = MAC.ilog (MAC.State.log m) in
