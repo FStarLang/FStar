@@ -207,7 +207,7 @@ val frame_counterblocks_snoc: i:id{safeId i} -> (t:PRF.state i) -> (x:domain i{x
 		    Buffer.disjoint (as_buffer plain) cipher /\
 		    Buffer.frameOf (as_buffer plain) <> t.rgn /\
 		    Buffer.frameOf cipher <> t.rgn /\
-		    safelen i completed_len x.ctr))
+		    safelen i completed_len 1ul))
           (ensures (let p0 = Plain.sel_plain h0 (u len) plain in
 		    let c0 = Buffer.as_seq h0 cipher in
 	    	    let p = Plain.sel_plain h1 (u len) plain in
@@ -264,7 +264,7 @@ val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{x.ctr <> 0
 		    Buffer.disjoint (as_buffer plain) cipher /\
 		    Buffer.frameOf (as_buffer plain) <> t.rgn /\
 		    Buffer.frameOf cipher <> t.rgn /\
-		    safelen i completed_len x.ctr /\
+		    safelen i completed_len 1ul /\
 		    none_above x t h0 /\
 		    (safeId i ==> 
 		       (let r = itable i t in
@@ -288,6 +288,27 @@ val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{x.ctr <> 0
 						 len 0 completed_len'
 						 (Plain.sel_plain h1 (u len) plain)
 						 (Buffer.as_seq h1 cipher)))))
+
+(* Here's the general proof strategy:
+
+1. exists suffix.
+       HS.sel h1 t.table = Seq.snoc (HS.sel h0.table) suffix /\
+       suffix.domain = x
+   
+   //from modifies_x_buffer_1, none_above
+       
+2. suffix = last_entry  
+     where last_entry = Entry x (OTP len plain_last cipher_last)
+
+  //from find_otp ... 
+  
+3. let  init = HS.sel h_init t.table
+   
+   snoc (Seq.append init (counterblocks ...)) last_entry
+   = Seq.append init (snoc (counterblocks ..) last_entry)  //by a standard snoc/append lemma
+   = Seq.append init final_blocks                          //by frame_counterblocks_snoc
+*)
+
 let extending_counter_blocks #i t x len completed_len plain cipher h0 h1 h_init
   = if safeId i
     then begin

@@ -97,9 +97,6 @@ assume val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:
   (* recheck endianness *)
 
 // a bit more concrete than the spec: xor only 64 bits, copy the rest. 
-
-
-
  
 // PLAN: 
 //
@@ -123,7 +120,6 @@ assume val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:
 //
 // For convenience, 'refines' relies on both the log and the table being ordered chronologically.
 
-
 // TODO `Functional' correctness? (actually a witnessed, stable property)
 // c = encryptT h i st nonce ad (real_or_zero i p) 
 //
@@ -134,11 +130,9 @@ assume val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:
 //
 // Needed: prf_read returning a ghost of the actual underlying block. 
 
-
 // TODO: switch to conditional idealization
 
 //let sub s start len = Seq.slice start (start+len) s // more convenient? 
-
 
 // REPRESENTATIONS 
 
@@ -148,7 +142,6 @@ assume val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:
 let find (#i:id) (s:Seq.seq (entry i)) (n:Cipher.iv (alg i)) : option (entry i) =
   SeqProperties.seq_find (fun (e:entry i) -> e.nonce = n) s 
 
-
 val gen: i:id -> rgn:region -> ST (state i Writer)
   (requires (fun _ -> True))
   (ensures  (fun h0 st h1 -> True))
@@ -157,7 +150,6 @@ let gen i rgn =
   let prf = PRF.gen rgn i in 
   //16-10-16 let ak = MAC.akey_gen rgn i in
   State #i #Writer #rgn log prf 
-
 
 val coerce: i:id{~(prf i)} -> rgn:region -> key:lbuffer (v (PRF.keylen i)) -> ST (state i Writer)
   (requires (fun h -> Buffer.live h key))
@@ -192,7 +184,6 @@ For the enxor loop, we need a finer, transient invariant for the last chunk of t
 (*
 let lookupIV (i:id) (s:Seq.seq (entry i)) = Seq.seq_find (fun e:entry i -> e.iv = iv) s // <- requires iv:UInt128.t
 *)
- 
 
 // COUNTER_MODE LOOP from Chacha20 
 
@@ -207,8 +198,6 @@ let ctr_inv ctr len =
 // prf i    ==> writing at most at indexes x and above (same iv, higher ctr) at the end of the PRF table.
 // safeId i ==> appending *exactly* "counterblocks i x l plain cipher" at the end of the PRF table
 //              the proof seems easier without tail recursion.
-
-
 
 val counter_enxor: 
   i:id -> t:PRF.state i -> x:PRF.domain i{x.ctr <> 0ul} ->
@@ -229,15 +218,18 @@ val counter_enxor:
     let completed_len = len -^ remaining_len in 
     Plain.live h plain /\ 
     Buffer.live h cipher /\ 
+    (remaining_len <> 0ul ==> FStar.Mul ((v x.ctr - 1) * v (PRF.blocklen i) = v completed_len)) /\
     // if ciphertexts are authenticated, then fresh blocks are available
     none_above x t h /\
     (safeId i
-      ==> HS.sel h t.table ==
-    	  Seq.append (HS.sel h_init t.table)
-    		     (counterblocks i t.mac_rgn initial_domain
+      ==> (let r = itable i t in 
+	   h `HS.contains` r /\
+	   HS.sel h t.table ==
+    	   Seq.append (HS.sel h_init t.table)
+    		      (counterblocks i t.mac_rgn initial_domain
     				      (v len) 0 (v completed_len)
     				      (Plain.sel_plain h len plain)
-    				      (Buffer.as_seq h cipher)))
+    				      (Buffer.as_seq h cipher))))
     ))
   (ensures (fun h0 _ h1 -> 
     let initial_domain = {x with ctr=1ul} in
@@ -253,11 +245,11 @@ val counter_enxor:
     				      (Plain.sel_plain h1 len plain)
     				      (Buffer.as_seq h1 cipher)))
     ))
-
 #set-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let rec counter_enxor i t x len remaining_len plain cipher h_init =
   let completed_len = len -^ remaining_len in
   let h0 = get () in
+  if safeId i then ST.recall (itable i t);
   if remaining_len <> 0ul then
     begin // at least one more block
       let starting_pos = len -^ remaining_len in
@@ -268,15 +260,13 @@ let rec counter_enxor i t x len remaining_len plain cipher h_init =
       let h1 = get () in 
       x_buffer_1_modifies_table_above_x_and_buffer t x cipher h0 h1;
       prf_enxor_leaves_none_strictly_above_x t x len remaining_len cipher h0 h1;
-      extending_counter_blocks t x len completed_len plain cipher h0 h1 h_init;
+      extending_counter_blocks t x (v len) (v completed_len) plain cipher h0 h1 h_init;
       let y = PRF.incr i x in
       counter_enxor i t y len (remaining_len -^ l) plain cipher h_init;
-      let h2 = get () in 
+      let h2 = get () in
       trans_modifies_table_above_x_and_buffer t x y cipher h0 h1 h2
     end
   else refl_modifies_table_above_x_and_buffer t x cipher h0
-
-
 
 val counter_dexor: 
   i:id -> t:PRF.state i -> x:PRF.domain i{x.ctr <> 0ul} -> len:u32{safelen i (v len) x.ctr} ->
