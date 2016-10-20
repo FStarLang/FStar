@@ -109,7 +109,8 @@ let find_snoc (#a:Type) (s:Seq.seq a) (x:a) (f:a -> Tot bool)
 val prf_enxor_leaves_none_strictly_above_x: #i:PRF.id -> 
 					   t:PRF.state i ->
 					   x:domain i{x.ctr <> 0ul} ->
-					   len:u32{safelen i (v len) x.ctr /\ len <> 0ul} ->
+					   len:u32 ->
+  					   remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <> 0ul /\ remaining_len <=^ len} ->
 					   c:lbuffer (v len) ->
 					   h_0:mem ->
 					   h_1:mem ->
@@ -119,7 +120,7 @@ val prf_enxor_leaves_none_strictly_above_x: #i:PRF.id ->
            (ensures none_above (PRF.incr i x) t h_1)
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 100"
-let prf_enxor_leaves_none_strictly_above_x #i t x len c h_0 h_1
+let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
     = if safeId i then
 	let r = itable i t in
 	let t_0 = HS.sel h_0 r in 
