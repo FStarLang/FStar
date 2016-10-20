@@ -173,69 +173,143 @@ let rec counterblocks_snoc (#i:id{safeId i}) (rgn:region) (x:domain i{x.ctr <> 0
           lemma_cons_snoc head middle last_entry
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{x.ctr <> 0ul}) -> 
-			     (len:u32{len <> 0ul /\ safelen i (v len) 1ul}) -> 
-			     (completed_len:u32{completed_len <^ len}) ->
-			     (plain:plainBuffer i (v len)) -> (cipher:lbuffer (v len)) ->
+let u (n:FStar.UInt.uint_t 32) = uint_to_t n
+
+#set-options "--z3timeout 100"
+let rec counterblocks_slice (#i:id{safeId i}) (rgn:region) (x:domain i{x.ctr <> 0ul})
+			 (len:nat{len <> 0})// /\ safelen i len 1ul}) 
+			 (completed_len:nat{completed_len <= len /\ safelen i completed_len x.ctr})
+			 (plain:Plain.plain i len)
+			 (cipher:lbytes len)
+   : Lemma (requires True)
+	   (ensures
+	     (Seq.equal (counterblocks i rgn x len 0 completed_len plain cipher)
+	 	        (counterblocks i rgn x completed_len 0 completed_len 
+					     (Plain.slice plain 0 completed_len) 
+ 					     (Seq.slice cipher 0 completed_len))))
+   = admit()
+
+val frame_counterblocks_snoc: i:id{safeId i} -> (t:PRF.state i) -> (x:domain i{x.ctr <> 0ul}) -> k:nat{v x.ctr <= k} ->
+			     len:nat{len <> 0 /\ safelen i len 1ul} -> 
+			     (completed_len:nat{completed_len < len /\
+				              FStar.Mul ((k - 1) * v (PRF.blocklen i) = completed_len)}) ->
+			     (plain:plainBuffer i len) -> 
+			     (cipher:lbuffer len) ->
+			     (h0:mem{Plain.live h0 plain /\ 
+				     Buffer.live h0 cipher}) ->
+			     (h1:mem{Plain.live h1 plain /\ 
+				     Buffer.live h1 cipher}) ->
+   Lemma (requires (let remaining_len = len - completed_len in
+		    let l = minNat remaining_len (v (PRF.blocklen i)) in
+		    let plain_hd = Plain.sub plain (u completed_len) (u l) in
+		    let cipher_hd = Buffer.sub cipher (u completed_len) (u l) in
+	            modifies_x_buffer_1 t x cipher_hd h0 h1 /\
+		    Buffer.disjoint (as_buffer plain) cipher /\
+		    Buffer.frameOf (as_buffer plain) <> t.rgn /\
+		    Buffer.frameOf cipher <> t.rgn /\
+		    safelen i completed_len x.ctr))
+          (ensures (let p0 = Plain.sel_plain h0 (u len) plain in
+		    let c0 = Buffer.as_seq h0 cipher in
+	    	    let p = Plain.sel_plain h1 (u len) plain in
+		    let c = Buffer.as_seq h1 cipher in
+		    let remaining_len = len - completed_len in
+		    let next = minNat remaining_len (v (PRF.blocklen i)) in
+		    let initial_x = {x with ctr=1ul} in
+		    let initial_blocks = counterblocks i t.mac_rgn initial_x len 0 completed_len p0 c0 in
+		    let final_blocks = counterblocks i t.mac_rgn initial_x len 0 (completed_len + next) p c in
+	     	    let plain_last = Plain.slice p completed_len (completed_len + next) in
+		    let cipher_last = Seq.slice c completed_len (completed_len + next) in
+		    let last_entry = PRF.Entry ({x with ctr=UInt32.uint_to_t k})
+	 				       (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last) in
+		    final_blocks == SeqProperties.snoc initial_blocks last_entry))
+let frame_counterblocks_snoc i t x k len completed_len plain cipher h0 h1 = 
+  let remaining_len = len - completed_len in
+  let next = minNat remaining_len (v (PRF.blocklen i)) in
+  let p0 = Plain.sel_plain h0 (u len) plain in
+  let p = Plain.sel_plain h1 (u len) plain in
+  let c0 = Buffer.as_seq h0 cipher in
+  let c = Buffer.as_seq h1 cipher in
+  let cipher_hd = Buffer.sub cipher (u completed_len) (u next) in
+  let cipher_pre = Buffer.sub cipher (u 0) (u completed_len) in
+  assert (Buffer.disjoint cipher_hd cipher_pre);
+  let c0_prefix = Seq.slice c0 0 completed_len in
+  let c_prefix = Seq.slice c 0 completed_len in
+  assert (Seq.equal c0_prefix c_prefix);
+  assert (Seq.equal (as_bytes p) (as_bytes p0));
+  assert (p == p0); 
+  let initial_x = {x with ctr=1ul} in
+  let initial_blocks = counterblocks i t.mac_rgn initial_x len 0 completed_len p0 c0 in
+  let final_blocks = counterblocks i t.mac_rgn initial_x len 0 (completed_len + next) p c in
+  counterblocks_snoc  #i t.mac_rgn initial_x k len next completed_len p c;
+  counterblocks_slice #i t.mac_rgn initial_x len completed_len p c;
+  counterblocks_slice #i t.mac_rgn initial_x len completed_len p0 c0
+
+
+val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{x.ctr <> 0ul}) ->
+			     len:nat{len <> 0 /\ safelen i len 1ul} -> 
+			     (completed_len:nat{completed_len < len /\
+				              FStar.Mul ((v x.ctr - 1) * v (PRF.blocklen i) = completed_len)}) ->
+			     (plain:plainBuffer i len) -> 
+			     (cipher:lbuffer len) ->
 			     (h0:mem{Plain.live h0 plain /\ 
 				     Buffer.live h0 cipher}) ->
 			     (h1:mem{Plain.live h1 plain /\ 
 				     Buffer.live h1 cipher}) ->
 			     (h_init:mem) ->
-   Lemma (requires (let remaining_len = len -^ completed_len in
-		     let l = min remaining_len (PRF.blocklen i) in
-		     let plain_hd = Plain.sub plain completed_len l in
-		     let cipher_hd = Buffer.sub cipher completed_len l in
-	             modifies_x_buffer_1 t x cipher h0 h1 /\
+   Lemma (requires (let remaining_len = len - completed_len in
+		    let l = minNat remaining_len (v (PRF.blocklen i)) in
+		    let plain_hd = Plain.sub plain (u completed_len) (u l) in
+		    let cipher_hd = Buffer.sub cipher (u completed_len) (u l) in
+	            modifies_x_buffer_1 t x cipher_hd h0 h1 /\
+		    Buffer.disjoint (as_buffer plain) cipher /\
+		    Buffer.frameOf (as_buffer plain) <> t.rgn /\
+		    Buffer.frameOf cipher <> t.rgn /\
+		    safelen i completed_len x.ctr /\
+		    none_above x t h0 /\
 		    (safeId i ==> 
-			(HS.sel h0 t.table == 
+		       (let r = itable i t in
+		        h0 `HS.contains` r /\
+			HS.sel h0 t.table == 
 			  Seq.append (HS.sel h_init t.table)
 				     (counterblocks i t.mac_rgn ({x with ctr=1ul}) 
-						 (v len) 0 (v completed_len)
-						 (Plain.sel_plain h0 len plain)
-						 (Buffer.as_seq h0 cipher))) /\
+						 len 0 completed_len
+						 (Plain.sel_plain h0 (u len) plain)
+						 (Buffer.as_seq h0 cipher)) /\
 	                ( match find_otp #t.mac_rgn #i (HS.sel h1 t.table) x with
-			  | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain_hd /\ c == sel_bytes h1 l cipher_hd
-			  | None   -> False ))))
-          (ensures (let remaining_len = len -^ completed_len in
-		    let l = min remaining_len (PRF.blocklen i) in
-		    let completed_len' = completed_len +^ l in
+			  | Some (OTP l' p c) -> u l = l' /\ p == sel_plain h1 (u l) plain_hd /\ c == sel_bytes h1 (u l) cipher_hd
+			  | None   -> False )))))
+          (ensures (let remaining_len = len - completed_len in
+		    let l = minNat remaining_len (v (PRF.blocklen i)) in
+		    let completed_len' = completed_len + l in
 		    safeId i ==>
-		      HS.sel h1 t.table ==
-		      Seq.append (HS.sel h_init t.table) 
-				 (counterblocks i t.mac_rgn ({x with ctr=1ul}) 
-						 (v len) 0 (v completed_len')
-						 (Plain.sel_plain h1 len plain)
-						 (Buffer.as_seq h1 cipher))))
-
+		      Seq.equal (HS.sel h1 t.table)
+				(Seq.append (HS.sel h_init t.table) 
+					    (counterblocks i t.mac_rgn ({x with ctr=1ul}) 
+						 len 0 completed_len'
+						 (Plain.sel_plain h1 (u len) plain)
+						 (Buffer.as_seq h1 cipher)))))
 let extending_counter_blocks #i t x len completed_len plain cipher h0 h1 h_init
   = if safeId i
-    then admit()
-    else ()
+    then begin
+	 let r = itable i t in 
+	 let r0 = HS.sel h0 r in
+	 let r1 = HS.sel h1 r in 
+ 	 let suffix = SeqProperties.last r1 in
+	 assert (Seq.equal r1 (SeqProperties.snoc r0 suffix));
+	 let p = Plain.sel_plain h1 (u len) plain in
+	 let c = Buffer.as_seq h1 cipher in
+	 let remaining_len = len - completed_len in
+	 let next = minNat remaining_len (v (PRF.blocklen i)) in
+	 let plain_last = Plain.slice p completed_len (completed_len + next) in
+	 let cipher_last = Seq.slice c completed_len (completed_len + next) in
+	 let last_entry = PRF.Entry #t.mac_rgn #i x (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last) in
+	 let plain_last' = 
+	     Plain.sel_plain h1 (u next) (Plain.sub plain (u completed_len) (u next)) in
+         let cipher_last' = 
+	     sel_bytes h1 (u next) (Buffer.sub cipher (u completed_len) (u next)) in
+	 assert (Seq.equal (Plain.as_bytes #i #next plain_last) (Plain.as_bytes #i #next plain_last'));
+	 assert (Seq.equal cipher_last cipher_last');
+	 assert (suffix == last_entry);
+	 frame_counterblocks_snoc i t x (v x.ctr) len completed_len plain cipher h0 h1
+    end
 
- (*  : Lemma (requires (let remaining_len = len -^ completed_len in *)
- (* 		     let l = min remaining_len (PRF.blocklen i) in *)
- (* 		     let plain_hd = Plain.sub plain completed_len l in *)
- (* 		     let cipher_hd = Buffer.sub cipher completed_len l in *)
- (* 	             modifies_x_buffer_1 t x cipher h0 h1 /\ *)
- (* 		    (safeId i ==>  *)
- (* 			(HS.sel h0 t.table ==  *)
- (* 			  Seq.append (HS.sel h_init t.table) *)
- (* 				     (counterblocks i t.mac_rgn ({x with ctr=1ul})  *)
- (* 						 (v len) 0 (v completed_len) *)
- (* 						 (Plain.sel_plain h0 len plain) *)
- (* 						 (Buffer.as_seq h0 cipher))) /\ *)
- (* 	                ( match find_otp #t.mac_rgn #i (HS.sel h1 t.table) x with *)
- (* 			  | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain_hd /\ c == sel_bytes h1 l cipher_hd *)
- (* 			  | None   -> False )))) *)
- (*          (ensures (let remaining_len = len -^ completed_len in *)
- (* 		    let l = min remaining_len (PRF.blocklen i) in *)
- (* 		    let completed_len' = completed_len +^ l in *)
- (* 		    safeId i ==> *)
- (* 		      HS.sel h1 t.table == *)
- (* 		      Seq.append (HS.sel h_init t.table)  *)
- (* 				 (counterblocks i t.mac_rgn ({x with ctr=1ul})  *)
- (* 						 (v len) 0 (v completed_len') *)
- (* 						 (Plain.sel_plain h1 len plain) *)
- (* 						 (Buffer.as_seq h1 cipher)))) *)
- (* = admit() *)
