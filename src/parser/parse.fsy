@@ -214,7 +214,7 @@ decl2:
       { NewEffect ($1, $3) }
   | qualifiers SUB_EFFECT sub_effect
       { SubEffect $3 }
-  | qualifiers NEW_EFFECT_FOR_FREE effect_definition
+  | qualifiers NEW_EFFECT_FOR_FREE new_effect
       { NewEffectForFree ($1, $3) }
   | pragma
       { Pragma $1 }

@@ -36,3 +36,10 @@ reifiable reflectable new_effect_for_free {
        get      = get s
      ; put      = put s
 }
+
+
+let repr = STATE.repr int
+
+new_effect_for_free IntST = STATE int
+
+
