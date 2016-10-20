@@ -366,7 +366,7 @@ let mac #i st l acc tag =
     begin
     //assume (mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) ==
     //      little_endian (sel_word h1 tag));
-    let t = read_word tag in
+    let t = read_word 16ul tag in
     m_recall #st.region #log #log_cmp (ilog st.log);
     assume (m_sel h1 (ilog st.log) == m_sel h0 (ilog st.log));
     m_write #st.region #log #log_cmp (ilog st.log) (Some (l, t))
@@ -392,7 +392,7 @@ let verify #i st l acc received =
   let verified = Buffer.eqb tag received 16ul in
   if mac_log && authId i then
     let st = !st.log in
-    let correct = (st = Some(l,read_word tag)) in
+    let correct = (st = Some(l,read_word 16ul tag)) in
     verified && correct
   else
     verified
@@ -439,7 +439,7 @@ let add #i st l0 a w =
   toField_plus_2_128 e w;
   let l1 = update st l0 a e in
   let h = ST.get() in
-  let msg = esel_word h w in
+//  let msg = esel_word h w in
 //  let l1 = Ghost.elift2 (fun log msg -> SeqProperties.snoc log (encode_16 msg)) l0 msg in
   pop_frame();
   l1
