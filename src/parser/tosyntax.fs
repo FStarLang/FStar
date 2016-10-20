@@ -1716,6 +1716,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
             return_repr =sub ed.return_repr;
             actions     = List.map (fun action ->
                 {action with 
+                    action_name = Env.qualify env action.action_name.ident;
                     action_defn =snd (sub ([], action.action_defn)) ;
                     action_typ =snd (sub ([], action.action_typ))
                 })
