@@ -987,18 +987,33 @@ and mk_match env e0 branches f =
     | M _, false ->
         failwith "impossible"
   ) nms branches) in
-  let s_branches = List.map close_branch s_branches in
-  let u_branches = List.map close_branch u_branches in
-  let t1_star =
-    if has_m then
-      U.arrow [S.mk_binder <| S.new_bv None (mk_star_to_type mk env t1)] (S.mk_Total U.ktype0)
-    else
-      t1
-  in
-  (if has_m then M t1 else N t1), 
-  mk (Tm_ascribed (mk (Tm_match (s_e0, s_branches)), Inl t1_star, None)),
-  mk (Tm_match (u_e0, u_branches))
 
+  if has_m then begin
+    // if the return type is monadic we add a
+    // (fun p -> match ... with ... -> branch p)
+    // in order to help the SMT
+    // p: A* -> Type
+    let p_type = mk_star_to_type mk env t1 in
+    let p = S.gen_bv "p''" None p_type in
+    let s_branches = List.map (fun (pat, guard, s_body) ->
+      let s_body = mk (Tm_app (s_body, [ S.bv_to_name p, S.as_implicit false ])) in
+        (pat, guard, s_body)
+      ) s_branches in
+    let s_branches = List.map close_branch s_branches in
+    let u_branches = List.map close_branch u_branches in
+    let t1_star =  U.arrow [S.mk_binder <| S.new_bv None (mk_star_to_type mk env t1)] (S.mk_Total U.ktype0) in
+    let s_e = U.abs [ S.mk_binder p ] (mk (Tm_match (s_e0, s_branches))) None in 
+    M t1,
+    mk (Tm_ascribed (s_e, Inl t1_star, None)) ,
+    mk (Tm_match (u_e0, u_branches))
+  end else begin
+    let s_branches = List.map close_branch s_branches in
+    let u_branches = List.map close_branch u_branches in
+    let t1_star = t1 in
+    N t1,
+    mk (Tm_ascribed (mk (Tm_match (s_e0, s_branches)), Inl t1_star, None)),
+    mk (Tm_match (u_e0, u_branches))
+  end
 
 and mk_let (env: env_) (binding: letbinding) (e2: term)
     (proceed: env_ -> term -> nm * term * term)
