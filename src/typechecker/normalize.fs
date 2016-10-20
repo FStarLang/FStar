@@ -486,7 +486,7 @@ let reduce_primops steps tm =
             | Some (_, op) ->
               begin match (SS.compress a1).n with
                 | Tm_constant (Const.Const_string(b, _)) ->
-                    op (Bytes.utf8_bytes_as_string b)
+                    op (Bytes.unicode_bytes_as_string b)
                 | _ -> tm
               end
             end
