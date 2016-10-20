@@ -113,3 +113,39 @@ let rec extend_refines (h:mem) (i:id{safeId i}) (mac_rgn:region)
 	 cut (Seq.equal (Seq.slice ext_blocks 0 (b + 1)) blocks_hd);
 	 cut (Seq.equal (Seq.slice ext_blocks (b + 1) (Seq.length ext_blocks)) 
 			(Seq.append blocks_tl blocks_for_e))
+
+let extending_counter_blocks (#i:id) (t:PRF.state i) (x:domain i{x.ctr <> 0ul}) 
+			     (len:u32{len <> 0ul /\ safelen i (v len) 1ul}) 
+			     (completed_len:u32{completed_len <^ len})
+			     (plain:plainBuffer i (v len)) (cipher:lbuffer (v len))
+			     (h0:mem{Plain.live h0 plain /\ 
+				     Buffer.live h0 cipher})
+			     (h1:mem{Plain.live h1 plain /\ 
+				     Buffer.live h1 cipher})
+			     (h_init:mem)
+  : Lemma (requires (let remaining_len = len -^ completed_len in
+		     let l = min remaining_len (PRF.blocklen i) in
+		     let plain_hd = Plain.sub plain completed_len l in
+		     let cipher_hd = Buffer.sub cipher completed_len l in
+	             modifies_x_buffer_1 t x cipher h0 h1 /\
+		    (safeId i ==> 
+			(HS.sel h0 t.table == 
+			  Seq.append (HS.sel h_init t.table)
+				     (counterblocks i t.mac_rgn ({x with ctr=1ul}) 
+						 (v len) 0 (v completed_len)
+						 (Plain.sel_plain h0 len plain)
+						 (Buffer.as_seq h0 cipher))) /\
+	                ( match find_otp #t.mac_rgn #i (HS.sel h1 t.table) x with
+			  | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain_hd /\ c == sel_bytes h1 l cipher_hd
+			  | None   -> False ))))
+          (ensures (let remaining_len = len -^ completed_len in
+		    let l = min remaining_len (PRF.blocklen i) in
+		    let completed_len' = completed_len +^ l in
+		    safeId i ==>
+		      HS.sel h1 t.table ==
+		      Seq.append (HS.sel h_init t.table) 
+				 (counterblocks i t.mac_rgn ({x with ctr=1ul}) 
+						 (v len) 0 (v completed_len')
+						 (Plain.sel_plain h1 len plain)
+						 (Buffer.as_seq h1 cipher))))
+ = admit()
