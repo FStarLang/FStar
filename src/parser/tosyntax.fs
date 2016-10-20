@@ -1678,8 +1678,53 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let env = push_sigelt env0 se in
     env, [se]
 
-  | NewEffectForFree (_, RedefineEffect _) ->
-    failwith "impossible"
+  | NewEffectForFree (quals, RedefineEffect(eff_name, eff_binders, defn)) ->
+    let env0 = env in
+    let env, binders = desugar_binders env eff_binders in
+    let ed, args = 
+        let head, args = head_and_args defn in 
+        let ed = match head.tm with 
+          | Name l -> fail_or env (Env.try_lookup_effect_defn env) l
+          | _ -> raise (Error("Effect " ^AST.term_to_string head^ " not found", d.drange)) in
+        ed, desugar_args env args in
+    let binders = Subst.close_binders binders in
+    let sub (_, x) =
+        let edb, x = Subst.open_term ed.binders x in
+        if List.length args <> List.length edb
+        then raise (Error("Unexpected number of arguments to effect constructor", defn.range));
+        let s = Util.subst_of_list edb args in
+        [], Subst.close binders (Subst.subst s x) in
+    let ed = {
+            mname=qualify env0 eff_name;
+            qualifiers  =List.map trans_qual quals;
+            univs       =[];
+            binders     =binders;
+            signature   =snd (sub ([], ed.signature));
+            ret_wp      =sub ed.ret_wp;
+            bind_wp     =sub ed.bind_wp;
+            if_then_else=sub ed.if_then_else;
+            ite_wp      =sub ed.ite_wp;
+            stronger    =sub ed.stronger;
+            close_wp    =sub ed.close_wp;
+            assert_p    =sub ed.assert_p;
+            assume_p    =sub ed.assume_p;
+            null_wp     =sub ed.null_wp;
+            trivial     =sub ed.trivial;
+
+            repr        =snd (sub ([], ed.repr));
+            bind_repr   =sub ed.bind_repr;
+            return_repr =sub ed.return_repr;
+            actions     = List.map (fun action ->
+                {action with 
+                    action_name = Env.qualify env action.action_name.ident;
+                    action_defn =snd (sub ([], action.action_defn)) ;
+                    action_typ =snd (sub ([], action.action_typ))
+                })
+                ed.actions;
+    } in
+    let se = Sig_new_effect_for_free(ed, d.drange) in
+    let env = push_sigelt env0 se in
+    env, [se]
 
   | NewEffectForFree (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
     desugar_effect env d quals eff_name eff_binders eff_kind eff_decls actions true
