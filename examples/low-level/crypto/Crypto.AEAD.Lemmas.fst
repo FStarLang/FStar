@@ -114,7 +114,19 @@ let rec extend_refines (h:mem) (i:id{safeId i}) (mac_rgn:region)
 	 cut (Seq.equal (Seq.slice ext_blocks (b + 1) (Seq.length ext_blocks)) 
 			(Seq.append blocks_tl blocks_for_e))
 
-#set-options "--z3timeout 200 --initial_fuel 2 --max_fuel 2 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let counterblocks_emp   (i:id {safeId i})
+			(rgn:region)
+			(x:PRF.domain i{ctr x >^ 0ul})
+			(l:nat)
+			(to_pos:nat{to_pos <= l /\ safelen i 0 (ctr x)})
+			(plain:Plain.plain i l)
+			(cipher:lbytes l)
+   : Lemma (counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
+   = ()
+
+#set-options "--z3timeout 100"
+
 let rec counterblocks_snoc (#i:id{safeId i}) (rgn:region) (x:domain i{x.ctr <> 0ul}) (k:nat{v x.ctr <= k})
 			 (len:nat{len <> 0 /\ safelen i len 1ul}) 
 			 (next:nat{0 < next /\ next <= v (PRF.blocklen i)})
@@ -130,15 +142,14 @@ let rec counterblocks_snoc (#i:id{safeId i}) (rgn:region) (x:domain i{x.ctr <> 0
 	      let from = (v x.ctr - 1) * v (PRF.blocklen i) in
 	      Seq.equal (counterblocks i rgn x len from (completed_len + next) plain cipher)
 			(SeqProperties.snoc (counterblocks i rgn x len from completed_len plain cipher)
-					    (PRF.Entry ({x with ctr=UInt32.uint_to_t k}) (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last)))))
+							   (PRF.Entry ({x with ctr=UInt32.uint_to_t k}) (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last)))))
 	   (decreases (completed_len - v x.ctr))
-   = admit() //disabling proof before optimizing it
-   (* let open FStar.Mul in  *)
-   (*   let from = (v x.ctr - 1) * v (PRF.blocklen i) in *)
-   (*   if completed_len - from = 0 *)
-   (*   then () *)
-   (*   else let y = PRF.incr i x in *)
-   (*        counterblocks_snoc rgn y k len next completed_len plain cipher *)
+   = let open FStar.Mul in
+     let from = (v x.ctr - 1) * v (PRF.blocklen i) in
+     if completed_len - from = 0
+     then counterblocks_emp i rgn (PRF.incr i x) len (completed_len + next) plain cipher
+     else let y = PRF.incr i x in
+	  counterblocks_snoc rgn y k len next completed_len plain cipher
 
 val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{x.ctr <> 0ul}) -> 
 			     (len:u32{len <> 0ul /\ safelen i (v len) 1ul}) -> 
