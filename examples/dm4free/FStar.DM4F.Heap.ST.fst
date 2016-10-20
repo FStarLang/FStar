@@ -1,5 +1,5 @@
-(* A state monad with local state built using FStar.DM4F.Heap. 
-   
+(* A state monad with local state built using FStar.DM4F.Heap.
+
    The very end of the file illustrates how recursion through the heap
    is forbidden because of the universe constraints.
 
@@ -9,42 +9,14 @@
 *)
 module FStar.DM4F.Heap.ST
 open FStar.DM4F.Heap
+open FStar.DM4F.ST
+
 
 ////////////////////////////////////////////////////////////////////////////////
-// In the DM sub-language
-////////////////////////////////////////////////////////////////////////////////
-(* Define a state monad with the `heap` type as the state *)
-let st (a: Type) =
-  heap -> M (a * heap)
-
-val return_st: a:Type -> x:a -> st a
-let return_st a x = fun s -> x, s
-
-val bind_st: a:Type -> b:Type -> f:st a -> g:(a -> st b) -> st b
-let bind_st a b f g = fun s0 ->
-  let tmp = f s0 in
-  let x, s1 = tmp in
-  g x s1
-
-let get (_:unit): st heap =
-  fun x -> x, x
-
-let put (x: heap): st unit =
-  fun _ -> (), x
-
-////////////////////////////////////////////////////////////////////////////////
-// Instruct F* to CPS and elaborate the terms above to build a new STATE effect
+// Instruct F* to build a new STATE effect from the elaborated effect STATE_h
 ////////////////////////////////////////////////////////////////////////////////
 
-reifiable reflectable total new_effect_for_free {
-  STATE : a:Type -> Effect
-  with repr     = st
-     ; bind     = bind_st
-     ; return   = return_st
-  and effect_actions
-       get      = get
-     ; put      = put
-}
+reifiable reflectable total new_effect_for_free STATE = STATE_h heap
 
 unfold let lift_pure_state (a:Type) (wp:pure_wp a) (h:heap) (p:STATE.post a) = wp (fun a -> p (a, h))
 sub_effect PURE ~> STATE = lift_pure_state
@@ -58,7 +30,7 @@ effect ST (a:Type) (pre: STATE.pre) (post: heap -> a -> heap -> Type0) =
 effect STNull (a:Type) = ST a (fun h -> True) (fun _ _ _ -> True)
 
 ////////////////////////////////////////////////////////////////////////////////
-//Next, given the primive global state actions STATE.get and STATE.put, 
+//Next, given the primive global state actions STATE.get and STATE.put,
 //we implement local state operations for allocating, reading and writing refs
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -82,7 +54,7 @@ let read (#a:Type) (r:ref a)
   	 (requires (fun h -> h `contains_a_well_typed` r))
 	 (ensures (fun h0 v h1 ->
 		     h0 == h1                         //heap does not change
-           	  /\  h1 `contains_a_well_typed` r       
+           	  /\  h1 `contains_a_well_typed` r
 		  /\  sel h1 r == v))                  //returns the contents of r
    = let h0 = STATE.get () in
      sel h0 r
@@ -103,19 +75,19 @@ let op_Colon_Equals = write
 ////////////////////////////////////////////////////////////////////////////////
 //A simple example using the local state operations
 ////////////////////////////////////////////////////////////////////////////////
-let incr (r:ref int) 
+let incr (r:ref int)
     :  ST unit
 	  (requires (fun h -> h `contains_a_well_typed` r))
-	  (ensures (fun h0 s h1 -> 
+	  (ensures (fun h0 s h1 ->
 			     h0 `contains_a_well_typed` r
 			   /\ modifies (Set.singleton r) h0 h1
 			   /\ sel h1 r = sel h0 r + 1))
     = r := !r + 1
 
-let copy_and_incr (r:ref int) 
+let copy_and_incr (r:ref int)
     :  ST (ref int)
 	  (requires (fun h -> h `contains_a_well_typed` r))
-	  (ensures (fun h0 s h1 -> 
+	  (ensures (fun h0 s h1 ->
 			     h0 `contains_a_well_typed` r
 			   /\ ~ (h0 `contains` s)
 			   /\ h1 `contains_a_well_typed` s
@@ -123,9 +95,9 @@ let copy_and_incr (r:ref int)
 			   /\ sel h1 r = sel h0 r + 1
 			   /\ sel h1 s = sel h0 r))
     = let s = alloc !r in
-      incr r; 
+      incr r;
       s
-      
+
 ////////////////////////////////////////////////////////////////////////////////
 //A safe higher-order example
 //     Storing non-heap reading functions in the heap is fine
@@ -133,7 +105,7 @@ let copy_and_incr (r:ref int)
 let alloc_addition_and_incr (r:ref int)
     : ST (ref (int -> Tot int))
          (requires (fun h -> h `contains_a_well_typed` r))
-	 (ensures (fun h0 s h1 -> 
+	 (ensures (fun h0 s h1 ->
 			     h0 `contains_a_well_typed` r
 			   /\ ~ (h0 `contains` s)
 			   /\ h1 `contains_a_well_typed` s
@@ -146,16 +118,16 @@ let alloc_addition_and_incr (r:ref int)
 ////////////////////////////////////////////////////////////////////////////////
 //Recursive, stateful functions are proven terminating using well-founded orders
 ////////////////////////////////////////////////////////////////////////////////
-val zero: x:ref nat -> ghost_heap:heap{ghost_heap `contains_a_well_typed` x} -> ST unit 
+val zero: x:ref nat -> ghost_heap:heap{ghost_heap `contains_a_well_typed` x} -> ST unit
   (requires (fun h -> h==ghost_heap))
   (ensures (fun h0 _ h1 -> h0 `contains_a_well_typed` x
  		       /\ modifies (Set.singleton x) h0 h1
 		       /\ sel h1 x = 0))
   (decreases (sel ghost_heap x))
-let rec zero x ghost_heap = 
-  if !x = 0 
+let rec zero x ghost_heap =
+  if !x = 0
   then ()
-  else (x := !x - 1; 
+  else (x := !x - 1;
         zero x (STATE.get()))
 
 ////////////////////////////////////////////////////////////////////////////////
