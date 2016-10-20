@@ -127,6 +127,12 @@ let counterblocks_emp   (i:id {safeId i})
 
 #set-options "--z3timeout 100"
 
+let lemma_cons_snoc (#a:Type) (hd:a) (s:Seq.seq a) (tl:a)
+  : Lemma (requires True)
+	  (ensures (Seq.equal (SeqProperties.cons hd (SeqProperties.snoc s tl))
+		 	      (SeqProperties.snoc (SeqProperties.cons hd s) tl)))
+  = ()	  
+  
 let rec counterblocks_snoc (#i:id{safeId i}) (rgn:region) (x:domain i{x.ctr <> 0ul}) (k:nat{v x.ctr <= k})
 			 (len:nat{len <> 0 /\ safelen i len 1ul}) 
 			 (next:nat{0 < next /\ next <= v (PRF.blocklen i)})
@@ -145,12 +151,28 @@ let rec counterblocks_snoc (#i:id{safeId i}) (rgn:region) (x:domain i{x.ctr <> 0
 							   (PRF.Entry ({x with ctr=UInt32.uint_to_t k}) (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last)))))
 	   (decreases (completed_len - v x.ctr))
    = let open FStar.Mul in
-     let from = (v x.ctr - 1) * v (PRF.blocklen i) in
-     if completed_len - from = 0
-     then counterblocks_emp i rgn (PRF.incr i x) len (completed_len + next) plain cipher
+     let from_pos = (v x.ctr - 1) * v (PRF.blocklen i) in
+     let to_pos = completed_len + next in
+     if completed_len - from_pos = 0
+     then counterblocks_emp i rgn (PRF.incr i x) len to_pos plain cipher
      else let y = PRF.incr i x in
-	  counterblocks_snoc rgn y k len next completed_len plain cipher
+	  let remaining = to_pos - from_pos in 
+	  let l0 = minNat remaining (v (PRF.blocklen i)) in
+	  let plain_hd = Plain.slice plain from_pos (from_pos + l0) in
+	  let cipher_hd = Seq.slice cipher from_pos (from_pos + l0) in
+	  let plain_last = Plain.slice plain completed_len (completed_len + next) in
+	  let cipher_last = Seq.slice cipher completed_len (completed_len + next) in
+	  let head = PRF.Entry x (PRF.OTP (UInt32.uint_to_t l0) plain_hd cipher_hd) in
+	  let recursive_call = counterblocks i rgn y len (from_pos + l0) to_pos plain cipher in
+	  let middle = counterblocks i rgn y len (from_pos + l0) completed_len plain cipher in
+	  let last_entry = PRF.Entry ({x with ctr=UInt32.uint_to_t k}) (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last) in
+	  assert (counterblocks i rgn x len from_pos to_pos plain cipher ==
+		  SeqProperties.cons head recursive_call);
+	  counterblocks_snoc rgn y k len next completed_len plain cipher;
+	  assert (recursive_call == SeqProperties.snoc middle last_entry);
+          lemma_cons_snoc head middle last_entry
 
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{x.ctr <> 0ul}) -> 
 			     (len:u32{len <> 0ul /\ safelen i (v len) 1ul}) -> 
 			     (completed_len:u32{completed_len <^ len}) ->
