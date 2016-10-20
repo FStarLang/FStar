@@ -15,7 +15,7 @@ let st (s:Type) (a:Type) = s -> M (a * s)
 let return_st (s:Type) (a:Type) (x:a) : st s a = fun s0 -> x, s0
 
 let bind_st (s:Type) (a:Type) (b:Type) (f:st s a) (g:a -> st s b) : st s b
-  = fun s0 -> let tmp = f s0 in g (fst tmp) (snd tmp)
+  = fun s0 -> let (x,s) = f s0 in g x s
   (* = fun s0 -> let x, s1 = f s0 in g x s1 *)
 
 (* Actions *)
@@ -37,10 +37,20 @@ reifiable reflectable new_effect_for_free {
      ; put      = put s
 }
 
+// Works fine
+let repr0 = STATE.repr int
 
-new_effect_for_free STINT = STATE int
+// I would expect STATE.get to have type (s:Type) -> unit -> STATE s int
+// but the following gives
+// let get0 = STATE.get int
+// gives (Error) Expected expression of type "Prims.unit"; got expression "Prims.int" of type "Type"
+// whereas
+// let get0 = STATE.get
+// crashes with Failure("Universe variable not found")
 
-let repr = STINT.repr int
+reifiable reflectable new_effect_for_free STINT = STATE int
+
+let repr = STINT.repr
 let post = STINT.post
 let pre = STINT.pre
 let wp = STINT.wp
@@ -62,13 +72,6 @@ effect StNull (a:Type) =
   STINT a (fun (n0:int) (p:(a * int) -> Type0) -> forall (x:(a * int)). p x)
 
 
-let repr0 = STATE.repr int
-
-
-let get0 : unit -> StNull int = STINT.get
-
-
-(*
 // We define an increment function that we verify intrinsically
 
 val incr_intrinsic : unit -> StInt unit (requires (fun n -> True))
@@ -117,6 +120,8 @@ let action_get () i = (i, i)
 val action_put: x:int -> repr unit (fun n post -> post ((), x))
 let action_put x i = ((), x)
 
+
+
 reifiable val get' : unit -> STINT int (fun z post -> post (z, z))
 let get' () = STINT.reflect (action_get ())
 
@@ -147,4 +152,3 @@ let reflect_on_the_fly u =
   let n1 = STINT.get () in
   assert (n0 + 2 = n1);
   n1
-*)

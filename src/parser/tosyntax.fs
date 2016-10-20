@@ -1680,7 +1680,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
 
   | NewEffectForFree (quals, RedefineEffect(eff_name, eff_binders, defn)) ->
     let env0 = env in
-    let env, binders = desugar_binders env eff_binders in
+    let monad_env = Env.enter_monad_scope env eff_name in
+    let env, binders = desugar_binders monad_env eff_binders in
     let ed, args = 
         let head, args = head_and_args defn in 
         let ed = match head.tm with 
@@ -1715,8 +1716,9 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
             bind_repr   =sub ed.bind_repr;
             return_repr =sub ed.return_repr;
             actions     = List.map (fun action ->
-                {action with 
+                {
                     action_name = Env.qualify env action.action_name.ident;
+                    action_univs = action.action_univs ;
                     action_defn =snd (sub ([], action.action_defn)) ;
                     action_typ =snd (sub ([], action.action_typ))
                 })
@@ -1724,6 +1726,15 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     } in
     let se = Sig_new_effect_for_free(ed, d.drange) in
     let env = push_sigelt env0 se in
+    let env = ed.actions |> List.fold_left (fun env a ->
+        push_sigelt env (Util.action_as_lb a)
+    ) env in
+    let env = 
+        if quals |> List.contains Reflectable
+        then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
+             let refl_decl = S.Sig_declare_typ(reflect_lid, [], S.tun, [S.Assumption; S.Reflectable], d.drange) in
+             push_sigelt env refl_decl
+        else env in
     env, [se]
 
   | NewEffectForFree (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
