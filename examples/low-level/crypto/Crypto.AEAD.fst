@@ -224,12 +224,12 @@ val counter_enxor:
     (safeId i
       ==> (let r = itable i t in 
 	   h `HS.contains` r /\
-	   HS.sel h t.table ==
-    	   Seq.append (HS.sel h_init t.table)
-    		      (counterblocks i t.mac_rgn initial_domain
+	   Seq.equal (HS.sel h t.table)
+    		     (Seq.append (HS.sel h_init t.table)
+    				 (counterblocks i t.mac_rgn initial_domain
     				      (v len) 0 (v completed_len)
     				      (Plain.sel_plain h len plain)
-    				      (Buffer.as_seq h cipher))))
+    				      (Buffer.as_seq h cipher)))))
     ))
   (ensures (fun h0 _ h1 -> 
     let initial_domain = {x with ctr=1ul} in
@@ -267,6 +267,81 @@ let rec counter_enxor i t x len remaining_len plain cipher h_init =
       trans_modifies_table_above_x_and_buffer t x y cipher h0 h1 h2
     end
   else refl_modifies_table_above_x_and_buffer t x cipher h0
+
+//TODO: Move this to AEAD.Invariant
+val inv: h:mem -> #i:id -> #rw:rw -> e:state i rw -> Tot Type0
+let inv h #i #rw e =
+  match e with
+  | State #i_ #rw_ #log_region log prf ->
+    safeId i ==>
+    ( let r = itable i_ prf in 
+      let blocks = HS.sel h r in
+      let entries = HS.sel h log in
+      h `HS.contains` r /\
+      refines h i (PRF prf.mac_rgn) entries blocks )
+
+let prf_state (#i:id) (#rw:rw) (e:state i rw) : PRF.state i = State.prf e
+
+val encrypt: 
+  i: id -> e:state i Writer -> 
+  n: Cipher.iv (alg i) ->
+  aadlen: UInt32.t {aadlen <=^ aadmax} -> 
+  aadtext: lbuffer (v aadlen) -> 
+  plainlen: UInt32.t {safelen i (v plainlen) 1ul} -> 
+  plaintext: plainBuffer i (v plainlen) -> 
+  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) 
+  { 
+    Buffer.disjoint aadtext ciphertext /\
+    Buffer.disjoint (Plain.as_buffer plaintext) aadtext /\
+    Buffer.disjoint (Plain.as_buffer plaintext) ciphertext 
+  }
+  ->  
+  //STL -- should be STL eventually, but this requires propagation throughout the library
+  ST unit
+  (requires (fun h -> 
+    let prf_rgn = (State.prf e).rgn in
+    inv h #i #Writer e /\
+    Buffer.live h aadtext /\
+    Buffer.live h ciphertext /\ 
+    Plain.live h plaintext /\
+    Buffer.frameOf (Plain.as_buffer plaintext) <> prf_rgn /\
+    Buffer.frameOf ciphertext <> prf_rgn /\
+    (prf i ==> none_above ({iv=n; ctr=0ul}) e.prf h) // The nonce must be fresh!
+   ))
+  (ensures (fun h0 _ h1 -> 
+    //TODO some "heterogeneous" modifies that also records updates to logs and tables
+    Buffer.modifies_1 ciphertext h0 h1 /\ 
+    Buffer.live h1 aadtext /\
+    Buffer.live h1 ciphertext /\ 
+    Plain.live h1 plaintext /\
+    inv h1 #i #Writer e /\ 
+    (safeId i ==> (
+      let aad = Buffer.as_seq h1 aadtext in
+      let p = Plain.sel_plain h1 plainlen plaintext in
+      let c = Buffer.as_seq h1 ciphertext in
+      HS.sel h1 e.log == SeqProperties.snoc (HS.sel h0 e.log) (Entry n aad (v plainlen) p c)))
+   ))
+#set-options "--initial_fuel 1 --max_fuel 1"
+let encrypt i st n aadlen aad plainlen plain cipher_tagged =
+  (* push_frame(); *)
+  let h0 = get() in
+  let x = PRF({iv = n; ctr = 0ul}) in // PRF index to the first block
+  let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC; NS:post-condition seems too weak to prove even simple liveness properties
+  let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
+  let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
+  let h1 = get () in
+  let y = PRF.incr i x in
+  assume (none_above y st.prf h1);
+  assume (plainlen <> 0ul);
+  assume (Plain.live h1 plain);
+  assume (Buffer.live h1 cipher);
+  assume (safeId i ==> h1 `HS.contains` (itable i st.prf));
+  counter_enxor i st.prf y plainlen plainlen plain cipher h1;
+  assume false;
+  // Compute MAC over additional data and ciphertext
+  let l, acc = accumulate ak aadlen aad plainlen cipher in 
+  MAC.mac ak l acc tag
+  (* pop_frame() *)
 
 val counter_dexor: 
   i:id -> t:PRF.state i -> x:PRF.domain i{x.ctr <> 0ul} -> len:u32{safelen i (v len) x.ctr} ->
@@ -323,16 +398,8 @@ let rec counter_dexor i t x len plaintext ciphertext =
 // some code duplication, but in different typing contexts
 //16-09-18 not yet using ideal state.
 
-let live_2 #a0 #a1 h b0 b1 = Buffer.live #a0 h b0 /\ Buffer.live #a1 h b1 
 
-val inv: h:mem -> #i:id -> #rw:rw -> e:state i rw -> Tot Type0
-let inv h #i #rw e =
-  match e with
-  | State #i_ #rw_ #log_region log prf ->
-    safeId i ==>
-    ( let blocks = HS.sel h (PRF.State.table prf) in
-      let entries = HS.sel h log in
-      refines h i (PRF prf.mac_rgn) entries blocks )
+
 
 (*
       // no need to be so specific here --- details follow from the invariant
@@ -347,34 +414,6 @@ let inv h #i #rw e =
       | None -> False))
 *)      
 
-val encrypt: 
-  i: id -> e:state i Writer -> 
-  n: Cipher.iv (alg i) ->
-  aadlen: UInt32.t {aadlen <=^ aadmax} -> 
-  aadtext: lbuffer (v aadlen) -> 
-  plainlen: UInt32.t {safelen i (v plainlen) 1ul} -> 
-  plaintext: plainBuffer i (v plainlen) -> 
-  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) 
-  { Buffer.disjoint aadtext ciphertext /\
-    Buffer.disjoint_2 (Plain.as_buffer plaintext) aadtext ciphertext }
-  ->  STL unit
-  (requires (fun h -> 
-    inv h #i #Writer e /\
-    live_2 h aadtext ciphertext /\ Plain.live h plaintext /\
-    Buffer.disjoint aadtext ciphertext /\ //TODO add disjointness for plaintext
-    (prf i ==> find (HS.sel h e.log) n == None) // The nonce must be fresh!
-      ))
-  (ensures (fun h0 _ h1 -> 
-    //TODO some "heterogeneous" modifies that also records updates to logs and tables
-    Buffer.modifies_1 ciphertext h0 h1 /\ 
-    live_2 h1 aadtext ciphertext /\ Plain.live h1 plaintext /\
-    inv h1 #i #Writer e /\ 
-    (safeId i ==> (
-      let aad = Buffer.as_seq h1 aadtext in
-      let p = Plain.sel_plain h1 plainlen plaintext in
-      let c = Buffer.as_seq h1 ciphertext in
-      HS.sel h1 e.log == SeqProperties.snoc (HS.sel h0 e.log) (Entry n aad (v plainlen) p c)))))
-
 val decrypt: 
   i:id -> e:state i Reader -> 
   n:Cipher.iv (alg i) -> 
@@ -388,10 +427,14 @@ val decrypt:
   -> STL bool
   (requires (fun h -> 
     inv h #i #Reader e /\
-    live_2 h aadtext ciphertext /\ Plain.live h plaintext ))
+    Buffer.live h aadtext /\
+    Buffer.live h ciphertext /\ 
+    Plain.live h plaintext ))
   (ensures (fun h0 verified h1 -> 
     inv h1 #i #Reader e /\
-    live_2 h1 aadtext ciphertext /\ Plain.live h1 plaintext /\
+    Buffer.live h1 aadtext /\
+    Buffer.live h1 ciphertext /\ 
+    Plain.live h1 plaintext /\
     Buffer.modifies_1 (Plain.as_buffer plaintext) h0 h1 /\
     (safeId i ==> (
         let found = find (HS.sel h1 e.log) n in
@@ -402,21 +445,6 @@ val decrypt:
           found == Some (Entry n a (v plainlen) p c)
         else
           found == None /\ h0 == h1 ))))
-
-let encrypt i st n aadlen aad plainlen plain cipher_tagged =
-  push_frame();
-  let x = PRF({iv = n; ctr = 0ul}) in // PRF index to the first block
-  let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC
-  let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
-  let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
-
-  assume false; //16-10-04 
-  counter_enxor i st.prf (PRF.incr i x) plainlen plainlen plain cipher (ST.get());
-  
-  // Compute MAC over additional data and ciphertext
-  let l, acc = accumulate ak aadlen aad plainlen cipher in 
-  MAC.mac ak l acc tag;
-  pop_frame()
 
 
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
