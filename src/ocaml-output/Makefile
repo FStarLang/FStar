@@ -57,6 +57,7 @@ endif
 # changed or not
 # NOTE: once we move to ulib, the -j 1 can disappear.
 all:
+	@echo 'if Sys.ocaml_version >= "4.02.2" then exit 0 else (print_string "ERROR: Installed OCaml too old (need version larger than 4.02.2)\n"; exit 1)' | ocaml -noinit -noprompt -stdin
 	make -j 1 -C $(FSTAR_HOME)/lib/ml
 	$(MAKE) prep
 	$(MAKE) depend
