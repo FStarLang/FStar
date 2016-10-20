@@ -234,4 +234,6 @@ let clamp r =
   let r = fix r 12 252uy in
   little_endian r
 
-let mac_1305 (vs:seq elem) r s = (trunc_1305 (poly vs r) + little_endian s) % pow2 128
+(** REMARK: this is equivalent to (poly vs r + little_endian s) % pow2 128 *)
+val mac_1305: vs:seq elem -> r:elem -> s:seq byte -> GTot int
+let mac_1305 vs r s = (trunc_1305 (poly vs r) + little_endian s) % pow2 128
