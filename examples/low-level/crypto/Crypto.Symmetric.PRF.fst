@@ -80,6 +80,11 @@ let range (mac_rgn:region) (i:id) (x:domain i): Type0 =
   else if safeId i then otp i
   else lbytes (v (blocklen i))
 
+(*
+let ctr_0 i = if GCM then 1 else 0
+let domain_sk0 (i:id) = x.domain i{x.nonce = 0 /\ x.ctr < ctr_0 i }
+let domain_otp (i:id) = x:domain i{x.ctr > ctr_0 i /\ safeId i}
+*)
 let domain_mac (i:id) = x:domain i{x.ctr = 0ul} 
 let domain_otp (i:id) = x:domain i{x.ctr <> 0ul /\ safeId i}
 let domain_blk (i:id) = x:domain i{x.ctr <> 0ul /\ ~ (safeId i)}

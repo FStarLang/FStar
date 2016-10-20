@@ -86,7 +86,7 @@
       "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.isCarried_",
       1,
       0,
-      1,
+      2,
       [
         "@query", "b2t_def", "data_elim_FStar.UInt64.Mk",
         "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",

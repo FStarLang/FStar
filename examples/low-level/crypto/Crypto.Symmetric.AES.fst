@@ -4,7 +4,8 @@ module Crypto.Symmetric.AES
 // TODO factor it out in terms of https://en.wikipedia.org/wiki/AES_instruction_set
 // see also https://software.intel.com/sites/default/files/article/165683/aes-wp-2012-09-22-v01.pdf
 
-// TODO this is AES256; we also need AES128 (nr=10) and maybe AES192 (nr=12).
+// TODO this is AES256; 
+// we also need AES128 (nk=4ul, nr=10) and maybe AES192 (nk=6ul,nr=12).
 
 open FStar.Mul
 open FStar.Ghost
@@ -28,8 +29,8 @@ type lbytes l = b:bytes {length b = l}
 let v (x:UInt32.t) : nat  = UInt32.v x
 
 (* Parameters for AES-256 *)
-inline_for_extraction let nk =  8ul
 inline_for_extraction let nb =  4ul
+inline_for_extraction let nk =  8ul
 inline_for_extraction let nr = 14ul
 
 let blocklen = U32(4ul *^ nb)
