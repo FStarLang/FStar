@@ -6,7 +6,7 @@ open FStar.Relational.Relational
 
 type heap2 = double heap
 
-new_effect STATE2 = STATE_h heap2
+new_effect_for_free STATE2 = STATE_h heap2
 let st2_Pre = st_pre_h heap2
 let st2_Post (a:Type) = st_post_h heap2 a
 let st2_WP (a:Type) = st_wp_h heap2 a

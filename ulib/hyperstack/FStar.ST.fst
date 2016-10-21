@@ -6,7 +6,7 @@ let st_pre = st_pre_h mem
 let st_post (a:Type) = st_post_h mem a
 let st_wp (a:Type) = st_wp_h mem a
 
-private new_effect STATE = STATE_h mem
+private new_effect_for_free STATE = STATE_h mem
 
 (* effect State (a:Type) (wp:st_wp a) = *)
 (*        STATE a wp *)

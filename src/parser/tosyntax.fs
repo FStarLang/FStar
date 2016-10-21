@@ -1679,6 +1679,9 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     env, [se]
 
   | NewEffectForFree (quals, RedefineEffect(eff_name, eff_binders, defn)) ->
+    (* TODO : make sure that the environment are correctly used *)
+    (* TODO : Are every symbols correctly qualified and added to the environment ? *)
+    (* TODO : qualifiers of the newly defined monad should be coherent with those of the previous monad *)
     let env0 = env in
     let monad_env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders monad_env eff_binders in

@@ -21,7 +21,7 @@ let ref (t:Type) = rref root t
 let st_pre = st_pre_h t
 let st_post (a:Type) = st_post_h t a
 let st_wp (a:Type) = st_wp_h t a
-new_effect STATE = STATE_h t
+new_effect_for_free STATE = STATE_h t
 effect State (a:Type) (wp:st_wp a) =
        STATE a wp
 effect ST (a:Type) (pre:st_pre) (post: (t -> Tot (st_post a))) =
