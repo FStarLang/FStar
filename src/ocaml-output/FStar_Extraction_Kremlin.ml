@@ -3,7 +3,7 @@ open Prims
 
 type decl =
 | DGlobal of (flag Prims.list * lident * typ * expr)
-| DFunction of (flag Prims.list * typ * lident * binder Prims.list * expr)
+| DFunction of (cc Prims.option * flag Prims.list * typ * lident * binder Prims.list * expr)
 | DTypeAlias of (lident * Prims.int * typ)
 | DTypeFlat of (lident * fields_t)
 | DExternal of (cc Prims.option * lident * typ)
@@ -1545,7 +1545,7 @@ try
 (
 
 let body = (translate_expr env body)
-in Some (DFunction (((flags), (t), (name), (binders), (body)))))
+in Some (DFunction (((None), (flags), (t), (name), (binders), (body)))))
 end)
 with
 | e -> begin
@@ -1553,7 +1553,7 @@ with
 
 let _81_401 = (let _175_766 = (FStar_Util.print_exn e)
 in (FStar_Util.print2 "Warning: writing a stub for %s (%s)\n" (Prims.snd name) _175_766))
-in Some (DFunction (((flags), (t), (name), (binders), (EAbort)))))
+in Some (DFunction (((None), (flags), (t), (name), (binders), (EAbort)))))
 end
 end))))))))
 end
