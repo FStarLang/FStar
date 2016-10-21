@@ -350,7 +350,7 @@ in (
 let fd = (FStar_Util.open_file_for_writing on)
 in (
 
-let _82_322 = (FStar_List.iter (fun m -> (let _176_115 = (FStar_Util.format "%s" ((m.FStar_Ident.str)::[]))
+let _82_322 = (FStar_List.iter (fun m -> (let _176_115 = (FStar_Util.format "%s\n" ((m.FStar_Ident.str)::[]))
 in (FStar_Util.append_to_file fd _176_115))) mod_names)
 in (FStar_Util.close_file fd)))))))
 

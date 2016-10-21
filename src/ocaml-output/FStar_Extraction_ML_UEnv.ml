@@ -365,7 +365,13 @@ FStar_Extraction_ML_Syntax.MLTY_Top
 end)
 in (
 
-let mly = FStar_Extraction_ML_Syntax.MLE_Name (y)
+let mly = FStar_Extraction_ML_Syntax.MLE_Name ((
+
+let _73_215 = y
+in (match (_73_215) with
+| (ns, i) -> begin
+((ns), ((FStar_Extraction_ML_Syntax.avoid_keyword i)))
+end)))
 in (
 
 let mly = if add_unit then begin
@@ -378,8 +384,8 @@ in (
 let gamma = (Fv (((x), (FStar_Util.Inr (((mly), (t_x), (is_rec)))))))::g.gamma
 in (
 
-let _73_216 = g
-in {tcenv = _73_216.tcenv; gamma = gamma; tydefs = _73_216.tydefs; currentModule = _73_216.currentModule})))))
+let _73_219 = g
+in {tcenv = _73_219.tcenv; gamma = gamma; tydefs = _73_219.tydefs; currentModule = _73_219.currentModule})))))
 end else begin
 (FStar_All.failwith "freevars found")
 end)
@@ -400,11 +406,11 @@ end
 | FStar_Util.Inr (f) -> begin
 (
 
-let _73_236 = (FStar_Extraction_ML_Syntax.mlpath_of_lident f.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
-in (match (_73_236) with
+let _73_239 = (FStar_Extraction_ML_Syntax.mlpath_of_lident f.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
+in (match (_73_239) with
 | (p, y) -> begin
 (let _167_184 = (extend_fv' g f ((p), (y)) t_x add_unit is_rec)
-in ((_167_184), (((y), ((Prims.parse_int "0"))))))
+in ((_167_184), ((((FStar_Extraction_ML_Syntax.avoid_keyword y)), ((Prims.parse_int "0"))))))
 end))
 end))
 
@@ -414,8 +420,8 @@ let extend_tydef : env  ->  FStar_Extraction_ML_Syntax.mltydecl  ->  env = (fun 
 let m = (FStar_List.append (Prims.fst g.currentModule) (((Prims.snd g.currentModule))::[]))
 in (
 
-let _73_240 = g
-in {tcenv = _73_240.tcenv; gamma = _73_240.gamma; tydefs = (((m), (td)))::g.tydefs; currentModule = _73_240.currentModule})))
+let _73_243 = g
+in {tcenv = _73_243.tcenv; gamma = _73_243.gamma; tydefs = (((m), (td)))::g.tydefs; currentModule = _73_243.currentModule})))
 
 
 let emptyMlPath : (Prims.string Prims.list * Prims.string) = (([]), (""))
@@ -438,8 +444,8 @@ in (FStar_All.pipe_right _167_193 Prims.fst))))))
 
 let monad_op_name : FStar_Syntax_Syntax.eff_decl  ->  Prims.string  ->  ((Prims.string Prims.list * Prims.string) * FStar_Ident.lident) = (fun ed nm -> (
 
-let _73_250 = ((ed.FStar_Syntax_Syntax.mname.FStar_Ident.ns), (ed.FStar_Syntax_Syntax.mname.FStar_Ident.ident))
-in (match (_73_250) with
+let _73_253 = ((ed.FStar_Syntax_Syntax.mname.FStar_Ident.ns), (ed.FStar_Syntax_Syntax.mname.FStar_Ident.ident))
+in (match (_73_253) with
 | (module_name, eff_name) -> begin
 (
 

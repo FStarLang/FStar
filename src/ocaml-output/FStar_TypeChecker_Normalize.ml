@@ -1223,7 +1223,7 @@ end
 (match ((let _147_691 = (FStar_Syntax_Subst.compress a1)
 in _147_691.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string (b, _53_672)) -> begin
-(let _147_692 = (FStar_Bytes.utf8_bytes_as_string b)
+(let _147_692 = (FStar_Bytes.unicode_bytes_as_string b)
 in (op _147_692))
 end
 | _53_677 -> begin
