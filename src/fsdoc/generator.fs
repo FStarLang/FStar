@@ -71,7 +71,8 @@ let string_of_fsdoco d = string_of_optiont (fun x -> "(*" ^ string_of_fsdoc x ^ 
 let string_of_termo t = string_of_optiont term_to_string "" t
 
 // wrap-up s in MD code block.
-let code_wrap s = "```\n" ^ s ^ "\n```\n"
+// SI: we pretend to be F# so that pandoc can produce prettier html. 
+let code_wrap s = "```fsharp\n" ^ s ^ "\n```\n"
 
 ///////////////////////////////////////////////////////////////////////////////
 // tycon
@@ -110,16 +111,14 @@ let string_of_decl' d =
   | ModuleAbbrev (i, l) -> "module " ^ i.idText ^ " = " ^ l.str
   | KindAbbrev(i, _, _) -> "kind " ^ i.idText
   | ToplevelLet(_, _, pats) -> 
-        code_wrap 
-            ("let " ^ 
-                (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", "))
+            "let " ^ 
+                (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
   | Main _ -> "main ..."
   | Assume(_, i, _) -> "assume " ^ i.idText
   | Tycon(_, tys) -> 
-        code_wrap
-            ("type " ^ 
+            "type " ^ 
              (tys |> List.map (fun (t,d)-> (string_of_tycon t) ^ " " ^ (string_of_fsdoco d)) 
-                 |> String.concat " and ")) (* SI: sep will be "," for Record but "and" for Variant *)
+                 |> String.concat " and ") (* SI: sep will be "," for Record but "and" for Variant *)
       | Val(_, i, _) -> "val " ^ i.idText
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(_, DefineEffect(i, _, _, _, _))
@@ -163,7 +162,7 @@ let document_decl (w:string->unit) (d:decl) =
     // This expr is OK F# code, but we need a few {begin, '('}s to make it OCaml as well. 
         // print the decl 
         let {d = decl; drange = _; doc = fsdoc} = d in
-        w (string_of_decl' d.d); 
+        w (code_wrap (string_of_decl' d.d)); 
         // print the doc, if there's one 
         begin match fsdoc with 
         | Some(doc,_kw) -> w ("\n" ^ doc) // SI: do something with kw 
@@ -214,7 +213,7 @@ let document_module (m:modul) =
           // SI: keep TopLevelModule special? 
           let com = document_toplevel name top_decl in 
           w (format "# module %s" [name.str]);
-          w "```fstar"; w (format "%s" [com]); w "```";
+          w (format "%s" [code_wrap com]);
           // SI: this will print doc twice if there's no summary: kw. 
           (match top_decl.doc with | Some(doc, _) -> w doc | _ -> ());
           // non-TopLevelModule decls. 
