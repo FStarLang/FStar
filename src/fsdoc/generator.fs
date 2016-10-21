@@ -166,6 +166,7 @@ let decl_documented (d:decl) =
         // no other way to document a decl right now 
         | _ -> false
         end 
+
 let document_decl (w:string->unit) (d:decl) = 
   if decl_documented d then 
     // This expr is OK F# code, but we need a few {begin, '('}s to make it OCaml as well. 
@@ -185,7 +186,7 @@ let document_toplevel name topdecl =
   let no_doc_provided = "(* fsdoc: no doc for module " ^ name.str ^ " *)" in 
   match topdecl.d with
   | TopLevelModule _ ->
-        // summary, or doc, or nodoc.
+    // summary, or doc, or nodoc.
     begin match topdecl.doc with
     | Some (doc, kw) -> 
         (match List.tryFind (fun (k,v)->k = "summary") kw with
