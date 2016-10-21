@@ -115,14 +115,14 @@ let rec extend_refines (h:mem) (i:id{safeId i}) (mac_rgn:region)
 			(Seq.append blocks_tl blocks_for_e))
 
 #reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-let counterblocks_emp   (i:id {safeId i})
+let counterblocks_emp   (i:id)
 			(rgn:region)
 			(x:PRF.domain i{ctr x >^ 0ul})
 			(l:nat)
 			(to_pos:nat{to_pos <= l /\ safelen i 0 (ctr x)})
 			(plain:Plain.plain i l)
 			(cipher:lbytes l)
-   : Lemma (counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
+   : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
    = ()
 
 #set-options "--z3timeout 100"
