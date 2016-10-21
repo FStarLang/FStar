@@ -36,8 +36,13 @@ and decl =
   | DFunction of list<flag> * typ * lident * list<binder> * expr
   | DTypeAlias of lident * int * typ
   | DTypeFlat of lident * fields_t
-  | DExternal of lident * typ
+  | DExternal of option<cc> * lident * typ
   | DTypeVariant of (lident * branches_t)
+
+and cc =
+  | StdCall
+  | CDecl
+  | FastCall
 
 and fields_t =
   list<(ident * (typ * bool))>
@@ -139,7 +144,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 16
+let current_version: version = 17
 
 type file = string * program
 type binary_format = version * list<file>
@@ -338,7 +343,7 @@ and translate_decl env d: option<decl> =
       let env = add_binders env args in
       let name = env.module_name, name in
       if assumed then
-        Some (DExternal (name, translate_type env t0))
+        Some (DExternal (None, name, translate_type env t0))
       else begin
         try
           let body = translate_expr env body in
