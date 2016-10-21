@@ -1030,20 +1030,21 @@ let obj_repr = (with_ty (MLTY_Fun (((t), (E_PURE), (MLTY_Top)))) (MLE_Name (((("
 in (with_ty_loc MLTY_Top (MLE_App (((obj_repr), ((x)::[])))) x.loc)))
 
 
-let bv_as_mlident : FStar_Syntax_Syntax.bv  ->  mlident = (fun x -> (
+let avoid_keyword : Prims.string  ->  Prims.string = (fun s -> if (is_reserved s) then begin
+(Prims.strcat s "_")
+end else begin
+s
+end)
 
-let first_try = if ((FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText FStar_Ident.reserved_prefix) || (FStar_Syntax_Syntax.is_null_bv x)) then begin
-(let _165_726 = (let _165_725 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
-in (Prims.strcat "_" _165_725))
-in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _165_726))
+
+let bv_as_mlident : FStar_Syntax_Syntax.bv  ->  mlident = (fun x -> if (((FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText FStar_Ident.reserved_prefix) || (FStar_Syntax_Syntax.is_null_bv x)) || (is_reserved x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText)) then begin
+(let _165_729 = (let _165_728 = (let _165_727 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
+in (Prims.strcat "_" _165_727))
+in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _165_728))
+in ((_165_729), ((Prims.parse_int "0"))))
 end else begin
-x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText
-end
-in if (is_reserved first_try) then begin
-(((Prims.strcat first_try "_")), ((Prims.parse_int "0")))
-end else begin
-((first_try), ((Prims.parse_int "0")))
-end))
+((x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText), ((Prims.parse_int "0")))
+end)
 
 
 
