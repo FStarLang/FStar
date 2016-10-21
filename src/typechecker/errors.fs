@@ -97,7 +97,7 @@ let handleable = function
 let report r msg =
   incr num_errs;
   let msg = message_prefix.append_prefix msg in
-  Util.print2_error "(Error) %s: %s\n" (Range.string_of_range r) msg
+  Util.print2_error "%s: (Error) %s\n" (Range.string_of_range r) msg
 
 let get_err_count () = !num_errs
 

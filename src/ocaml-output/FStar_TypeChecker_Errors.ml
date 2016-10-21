@@ -170,7 +170,7 @@ in (
 
 let msg = (message_prefix.append_prefix msg)
 in (let _148_84 = (FStar_Range.string_of_range r)
-in (FStar_Util.print2_error "(Error) %s: %s\n" _148_84 msg)))))
+in (FStar_Util.print2_error "%s: (Error) %s\n" _148_84 msg)))))
 
 
 let get_err_count : Prims.unit  ->  Prims.int = (fun _54_87 -> (match (()) with
