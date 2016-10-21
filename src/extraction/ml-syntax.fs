@@ -229,15 +229,17 @@ let apply_obj_repr x t =
  *     let land = () in
  *     print_int land_
  *)
+let avoid_keyword s =
+  if is_reserved s then
+    s ^ "_"
+  else
+    s
+
 open FStar.Syntax.Syntax
 let bv_as_mlident (x:bv): mlident = 
-  let first_try =
+  avoid_keyword (
     if Util.starts_with x.ppname.idText Ident.reserved_prefix
     || is_null_bv x
     then x.ppname.idText ^ "_" ^ (string_of_int x.index)
     else x.ppname.idText
-  in
-  if is_reserved first_try then
-    first_try ^ "_", 0
-  else
-    first_try, 0
+  ), 0
