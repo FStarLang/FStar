@@ -175,19 +175,53 @@ let rec counterblocks_snoc (#i:id{safeId i}) (rgn:region) (x:domain i{x.ctr <> 0
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let u (n:FStar.UInt.uint_t 32) = uint_to_t n
 
-#set-options "--z3timeout 100"
-let rec counterblocks_slice (#i:id{safeId i}) (rgn:region) (x:domain i{x.ctr <> 0ul})
-			 (len:nat{len <> 0})// /\ safelen i len 1ul}) 
-			 (completed_len:nat{completed_len <= len /\ safelen i completed_len x.ctr})
-			 (plain:Plain.plain i len)
-			 (cipher:lbytes len)
-   : Lemma (requires True)
+#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1"
+val counterblocks_slice: #i:id{safeId i} -> 
+			     (rgn:region) -> 
+			     (x:domain i{x.ctr <> 0ul}) ->
+			     (len:nat{len <> 0}) ->
+			     (from_pos:nat) ->
+			     (to_pos:nat{from_pos <= to_pos /\ to_pos <= len /\ safelen i (to_pos - from_pos) x.ctr}) ->
+			     (plain:Plain.plain i len) ->
+			     (cipher:lbytes len) ->
+    Lemma (requires True)
 	   (ensures
-	     (Seq.equal (counterblocks i rgn x len 0 completed_len plain cipher)
-	 	        (counterblocks i rgn x completed_len 0 completed_len 
-					     (Plain.slice plain 0 completed_len) 
- 					     (Seq.slice cipher 0 completed_len))))
-   = admit()
+	     (Seq.equal (counterblocks i rgn x len from_pos to_pos plain cipher)
+	 	        (counterblocks i rgn x (to_pos - from_pos) 0 (to_pos - from_pos)
+					       (Plain.slice plain from_pos to_pos) 
+ 					       (Seq.slice cipher from_pos to_pos))))
+           (decreases (to_pos - from_pos))						 
+
+(* The general proof idea *)
+(*
+  let from' = from + l
+  cb from to p
+  = slice p from from'          @ cb from' to p                           //unfolding
+  =      ''      ''             @ cb 0 (to - from') (slice p from' to)    //IH1
+  =      ''      ''             @ cb 0 (to - from') (slice (slice p from to) l (to - from)) //slice-slice-1
+  =      ''      ''             @ cb l (to - from) (slice p from to)      //IH2 (backwards)
+  = slice (slice p from to) 0 l @     ''                ''                //slice-slice-2
+  = cb 0 (to - from) (slice p from to)                                    //folding
+*)
+let rec counterblocks_slice #i rgn x len from_pos to_pos plain cipher 
+   = let remaining = to_pos - from_pos in 
+     if remaining = 0
+     then ()
+     else let l = minNat remaining (v (PRF.blocklen i)) in
+	  let y = PRF.incr i x in
+	  let from_pos' = from_pos + l in
+	  let ih1 = counterblocks_slice rgn y len from_pos' to_pos plain cipher in
+  	  let ih2 = counterblocks_slice rgn y (to_pos - from_pos) l (to_pos - from_pos) (Plain.slice plain from_pos to_pos) (Seq.slice cipher from_pos to_pos) in
+	  //slice-slice-1
+	  assert (Seq.equal (as_bytes #i #(to_pos - from_pos') (Plain.slice plain from_pos' to_pos))
+			    (as_bytes #i #(to_pos - from_pos') (Plain.slice (Plain.slice plain from_pos to_pos) l (to_pos - from_pos))));
+	  assert (Seq.equal (Seq.slice cipher from_pos' to_pos)
+			    (Seq.slice (Seq.slice cipher from_pos to_pos) l (to_pos - from_pos)));
+	  //slice-slice-2
+          assert (Seq.equal (as_bytes #i #l (Plain.slice (Plain.slice plain from_pos to_pos) 0 l))
+			    (as_bytes #i #l (Plain.slice plain from_pos from_pos')));
+          assert (Seq.equal (Seq.slice (Seq.slice cipher from_pos to_pos) 0 l)
+			    (Seq.slice cipher from_pos from_pos'))
 
 val frame_counterblocks_snoc: i:id{safeId i} -> (t:PRF.state i) -> (x:domain i{x.ctr <> 0ul}) -> k:nat{v x.ctr <= k} ->
 			     len:nat{len <> 0 /\ safelen i len 1ul} -> 
@@ -241,8 +275,8 @@ let frame_counterblocks_snoc i t x k len completed_len plain cipher h0 h1 =
   let initial_blocks = counterblocks i t.mac_rgn initial_x len 0 completed_len p0 c0 in
   let final_blocks = counterblocks i t.mac_rgn initial_x len 0 (completed_len + next) p c in
   counterblocks_snoc  #i t.mac_rgn initial_x k len next completed_len p c;
-  counterblocks_slice #i t.mac_rgn initial_x len completed_len p c;
-  counterblocks_slice #i t.mac_rgn initial_x len completed_len p0 c0
+  counterblocks_slice #i t.mac_rgn initial_x len 0 completed_len p c;
+  counterblocks_slice #i t.mac_rgn initial_x len 0 completed_len p0 c0
 
 
 val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{x.ctr <> 0ul}) ->
