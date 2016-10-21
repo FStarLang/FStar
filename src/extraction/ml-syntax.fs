@@ -237,9 +237,7 @@ let avoid_keyword s =
 
 open FStar.Syntax.Syntax
 let bv_as_mlident (x:bv): mlident = 
-  avoid_keyword (
-    if Util.starts_with x.ppname.idText Ident.reserved_prefix
-    || is_null_bv x
-    then x.ppname.idText ^ "_" ^ (string_of_int x.index)
-    else x.ppname.idText
-  ), 0
+  if Util.starts_with x.ppname.idText Ident.reserved_prefix
+  || is_null_bv x || is_reserved x.ppname.idText
+  then x.ppname.idText ^ "_" ^ (string_of_int x.index), 0
+  else x.ppname.idText, 0
