@@ -225,9 +225,18 @@ let apply_obj_repr x t =
  * - however, since this function is not parameterized over the environment, now
  *   that I avoid generating names that are OCaml keywords, it is no longer
  *   injective, because of the following F* example:
- *     let land_ = 0 in
+ *     let land_15 = 0 in
  *     let land = () in
- *     print_int land_
+ *     print_int land_15
+ * It's slightly tricky to get into this case, but... not impossible. There's a
+ * similar problem for top-level bindings. For instance, this will be a problem:
+ *   let land_ = 0
+ *   let land = ()
+ * One solution is to carry the environment; for a pair of names (original,
+ * destination), compute the set of original names shadowed by the original
+ * name; make sure that the destination name does not shadow more than the
+ * destination names of these original names; otherwise, keep generating fresh
+ * destination names.
  *)
 let avoid_keyword s =
   if is_reserved s then
