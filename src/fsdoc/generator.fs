@@ -51,7 +51,16 @@ Notes:
 ///////////////////////////////////////////////////////////////////////////////
 // lib
 ///////////////////////////////////////////////////////////////////////////////
- 
+
+// Test for a single TopLevelModule \in decls.  
+let one_toplevel (decls:list<decl>) = 
+let top,nontops = List.partition 
+                    (fun d -> match d.d with | TopLevelModule _ -> true | _ -> false) 
+                    decls in
+match top with
+| t :: [] -> Some (t,nontops)
+| _ -> None
+
 // We store a forest-like representation of the module namespaces for index generation.
 // SI: not used yet.
 type mforest =
@@ -127,7 +136,7 @@ let string_of_decl' d =
   | NewEffectForFree(_, RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
-  | Fsdoc (com,_) -> com
+  | Fsdoc (comm,_) -> comm
 
 // A decl is documented if either:
 // - it's got a fsdoc attached to it (either at top-level or in it's subtree); or
@@ -171,6 +180,7 @@ let document_decl (w:string->unit) (d:decl) =
         w "" // EOL 
   else ()
 
+// return "summary:", or comment, or (if there's no comment) nothing. 
 let document_toplevel name topdecl = 
   let no_doc_provided = "(* fsdoc: no doc for module " ^ name.str ^ " *)" in 
   match topdecl.d with
@@ -185,13 +195,6 @@ let document_toplevel name topdecl =
     end
   | _ -> raise(FStar.Syntax.Syntax.Err("Not a TopLevelModule"))
 
-let one_toplevel (decls:list<decl>) = 
-    let top,nontops = List.partition 
-                        (fun d -> match d.d with | TopLevelModule _ -> true | _ -> false) 
-                        decls in
-    match top with
-    | t :: [] -> Some (t,nontops)
-    | _ -> None
 
 ///////////////////////////////////////////////////////////////////////////////
 // modul
@@ -202,7 +205,7 @@ let document_module (m:modul) =
   let name, decls, _mt = match m with // SI: don't forget mt!
     | Module(n,d) -> n, d, "module"
     | Interface(n,d,_) -> n, d, "interface" in
-  // Run document_decl against it the toplevel, 
+  // Run document_toplevel against the toplevel, 
   // then run document_decl against all the other decls. 
   match one_toplevel decls with 
   | Some (top_decl,other_decls) -> 
@@ -211,10 +214,10 @@ let document_module (m:modul) =
           let fd = open_file_for_writing on in
           let w = append_to_file fd in
           // SI: keep TopLevelModule special? 
-          let com = document_toplevel name top_decl in 
+          let comm = document_toplevel name top_decl in 
           w (format "# module %s" [name.str]);
-          w (format "%s" [code_wrap com]);
-          // SI: this will print doc twice if there's no summary: kw. 
+          w (format "%s\n" [comm]);
+          // SI: this will print doc twice if there's no "summary:" kw. 
           (match top_decl.doc with | Some(doc, _) -> w doc | _ -> ());
           // non-TopLevelModule decls. 
           List.iter (document_decl w) other_decls;
