@@ -507,7 +507,7 @@ and translate_expr env e: expr =
       let typ, body =
         if is_mut then
           (match typ with
-          | MLTY_Named ([ t ], p) when string_of_mlpath p = "FStar.HyperStack.stackref" -> t
+          | MLTY_Named ([ t ], p) when string_of_mlpath p = "FStar.ST.stackref" -> t
           | _ -> failwith (Util.format1
             "unexpected: bad desugaring of Mutable (typ is %s)"
             (ML.Code.string_of_mlty ([], "") typ))),
