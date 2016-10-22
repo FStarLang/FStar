@@ -4,18 +4,12 @@
 **)
 module GenericSort
 open FStar.List.Tot
-
-(**
-  key is a function that will appear a lot here,
-  as will 'a, a, #a, which are generic types.
-  key is a function on 'a that returns an integer.
-  #a and a appears where a is required to support equality.
-**)
-
+open FStar.ListProperties
 
 (**
   Checks that a list is sorted.
 **)
+
 val sorted: list 'a -> key:('a -> Tot int) -> Tot bool
 let rec sorted l key = match l with
     | [] | [_] -> true
@@ -29,9 +23,9 @@ val test_sorted2: unit -> key:('a -> Tot int) -> Tot (m:list 'a{sorted m key})
 let test_sorted2 () key = Nil
 
 (**
-  Lemma about sorted.
+  Lemmata about sorted.
 **)
-val sorted_smaller: #a:Type{hasEq a}
+val sorted_smaller: #a:eqtype
                 ->  x:a
                 ->  y:a
                 ->  l:list a
@@ -43,6 +37,18 @@ let rec sorted_smaller #a x y l key = match l with
     | [] -> ()
     | z::zs -> if key z = key y then () else sorted_smaller x y zs key
 
+val sorted_tl: #a:eqtype -> l:list a{is_Cons l} -> k:(a -> Tot int) ->
+  Lemma(requires (sorted l k))
+  (ensures(sorted (Cons.tl l) k))
+let rec sorted_tl #a l k =
+  match l with
+  | [_] -> ()
+  | a::b::xs -> sorted_tl (b::xs) k
+
+val sorted_lt:  #a:eqtype -> x: int -> l:list a{is_Cons l} -> k:(a -> Tot int) ->
+  Lemma(requires (sorted l k /\ (x < k (hd l)) ))
+  (ensures (forall y. ( k y = x ==> mem y l = false)) /\ (~(existsb (fun z -> k z = x) l)))
+let sorted_lt #a x l k = ()
 
 type permutation (#a:Type{hasEq a}) (l1:list a) (l2:list a) =
     length l1 = length l2 /\ (forall n. mem n l1 = mem n l2)
