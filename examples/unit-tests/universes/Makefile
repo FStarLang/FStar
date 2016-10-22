@@ -22,14 +22,18 @@ uall: all-pos all-neg
 
 sall:
 
-all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.Parser.uver Unit1.RefinementInference.uver Unit1.WPsAndTriples_ST.uver Unit1.Projectors1.uver Unit1.UnificationTests.uver Unit1.RecursiveTypeFunctions.uver Unit2.uver TestSet.uver TestHeap.uver ShortCircuit.uver FirstProofs.uver TestMRef.uver TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver #TestHasEq.uver #temporarily removed from mac_universes branch 
+all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.Parser.uver \
+	 Unit1.RefinementInference.uver Unit1.WPsAndTriples_ST.uver Unit1.Projectors1.uver \
+	 Unit1.UnificationTests.uver Unit1.RecursiveTypeFunctions.uver \
+	 Unit2.uver TestSet.uver TestHeap.uver ShortCircuit.uver FirstProofs.uver TestMRef.uver \
+	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver #TestHasEq.uver #temporarily removed from mac_universes branch 
 
 basictests: $(VERFILES)
 	$(FSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^
 
 all-neg: $(NEGFILES)
 	-$(FSTAR) $^ 2>&1 | tee fstar_log
-	@FAILC=`egrep "^Error: [0-9]* errors" -o fstar_log | egrep -o "[0-9]+"`; if [ "$$FAILC" != "$(NEGTESTS)" ]; then echo "Wrong failure count: $$FAILC (expected $(NEGTESTS))" && false; else echo "Success: $$FAILC failures were expected"; fi
+	@FAILC=`egrep "^[0-9]* errors were reported" -o fstar_log | egrep -o "[0-9]+"`; if [ "$$FAILC" != "$(NEGTESTS)" ]; then echo "Wrong failure count: $$FAILC (expected $(NEGTESTS))" && false; else echo "Success: $$FAILC failures were expected"; fi
 
 mac2: mac2.fst
 	$(FSTAR) --explicit_deps $(STDLIB) FStar.Seq.fst mac2.fst

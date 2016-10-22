@@ -4,6 +4,7 @@ open HyE.Plain
 open HyE.PlainPKE
 open Platform.Bytes
 open FStar.HyperHeap
+open FStar.HyperStack
 
 module B = Platform.Bytes
 module P = HyE.Plain
@@ -12,6 +13,8 @@ module A = HyE.AE
 
 
 (* we idealize first CCA2, then AE *)
+
+type rid = FStar.Monotonic.Seq.rid
 
 noeq abstract type pkey = 
   | PKey: #region:rid -> rawpk:RSA.pkey -> cca_pk:CCA2.pkey  -> pkey
@@ -24,13 +27,12 @@ noeq abstract type skey =
 
 type c = C.cipher * A.cipher //lbytes(CCA2.ciphersize + AE.ciphersize)
 
-
 val keygen: rid -> pkey * skey
 val encrypt: pkey -> p -> c 
 val decrypt: skey -> c -> option p 
 
 
-let keygen parent =
+let keygen (parent:rid) =
   let cca_pk, cca_sk = C.keygen parent in
   let region = new_region parent in
   let pkey = PKey #region (CCA2.access_pk_raw cca_pk) cca_pk in

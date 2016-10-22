@@ -1,5 +1,5 @@
 [
-  "ª\u0018‚\u0016\u0005çÝ*¢\u0003\u0018n7’êÍ",
+  "ì\u0014Î…P\u0018·\u0010æÆéd¢Ï³™",
   [
     [ "FStar.Classical.forall_intro_gtot", 1, 0, 0, [ "@query" ], 0 ],
     [
@@ -29,6 +29,18 @@
       ],
       0
     ],
+    [ "FStar.Classical.forall_intro_2", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.Classical.forall_intro_3", 1, 0, 0, [ "@query" ], 0 ],
+    [
+      "FStar.Classical.exists_intro",
+      1,
+      0,
+      0,
+      [ "@query", "unit_typing" ],
+      0
+    ],
+    [ "FStar.Classical.forall_to_exists", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.Classical.forall_to_exists_2", 1, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Classical.give_proof",
       1,

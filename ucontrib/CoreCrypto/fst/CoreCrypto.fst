@@ -12,6 +12,9 @@ type block_cipher = | AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
 type stream_cipher = | RC4_128
 type rsa_padding = | Pad_none | Pad_PKCS1
 
+(* NB these constant functions must *exactly* match those in the
+      trusted CoreCrypto.ml. We should compile them instead! *)
+
 let blockSize = function
   | TDES_EDE_CBC -> 8
   | AES_128_CBC  -> 16
@@ -45,10 +48,10 @@ type aead_cipher =
 let aeadKeySize = function
   | AES_128_CCM       -> 16 
   | AES_128_CCM_8     -> 16 
-  | AES_128_GCM       -> 16 + 16
+  | AES_128_GCM       -> 16
   | AES_256_CCM       -> 32 
   | AES_256_CCM_8     -> 32 
-  | AES_256_GCM       -> 32 + 16
+  | AES_256_GCM       -> 32
   | CHACHA20_POLY1305 -> 32
 
 let aeadRealIVSize (a:aead_cipher) = 12
@@ -64,7 +67,7 @@ let aeadTagSize = function
   | CHACHA20_POLY1305 -> 16
 
 //16-09-12 added precise concrete spec, matching what we implement in low-level/crypto
-//16-09-12 for robustness, we should at least test t when using external crypto.
+//16-09-12 for robustness, we should at least test it when using external crypto.
 assume val aead_encryptT: 
   a: aead_cipher -> 
   k: lbytes (aeadKeySize a) -> 

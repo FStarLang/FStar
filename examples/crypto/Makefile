@@ -33,7 +33,7 @@ FSTAR_HOME=../..
 include ../Makefile.include
 
 %.fst-in: 
-	@echo --include $(FSTAR_HOME)/ulib/hyperheap \
+	@echo --include $(FSTAR_HOME)/ulib/hyperstack \
 	      --include $(FSTAR_HOME)/ucontrib/Platform/fst \
 	      --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 	      --z3timeout 20
@@ -45,7 +45,7 @@ verify-%: __force__
 		 --z3timeout 20 $*
 
 verify_hh-%: __force__
-	$(FSTAR) --include $(FSTAR_HOME)/ulib/hyperheap \
+	$(FSTAR) --include $(FSTAR_HOME)/ulib/hyperstack \
 		 --include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		 --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 		 --z3timeout 20 $*

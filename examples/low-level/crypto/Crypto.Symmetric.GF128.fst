@@ -3,23 +3,18 @@ module Crypto.Symmetric.GF128
 open FStar.Mul
 open FStar.Ghost
 open FStar.HyperStack
-open FStar.HST
 open FStar.UInt8
 open FStar.Int.Cast
 open FStar.Buffer
 
+open Crypto.Symmetric.Bytes
+
 module U32 = FStar.UInt32
-type u32 = FStar.UInt32.t
-
-assume MaxUInt8 : pow2 8 = 256
-assume MaxUInt32: pow2 32 = 4294967296
-assume MaxUInt64: pow2 64 > 0xfffffffffffffff
-assume MaxUInt128: pow2 128 > pow2 64
-
-type bytes = buffer byte
 
 let len = 16ul // length of GF128 in bytes
-type elem = b:bytes {length b = UInt32.v len } 
+
+type elem = lbytes 16
+type elemB = b:lbuffer 16
 
 (* * Every block of message is regarded as an element in Galois field GF(2^128), **)
 (* * it is represented as 16 bytes. The following several functions are basic    **)
@@ -33,7 +28,7 @@ type elem = b:bytes {length b = UInt32.v len }
 (* Every function "func_name_loop" is a helper for function "func_name". *)
 
 private val gf128_add_loop: 
-  a:elem -> b:elem {disjoint a b} -> 
+  a:elemB -> b:elemB {disjoint a b} ->
   dep:u32{U32(dep <=^ len)} -> Stack unit
   (requires (fun h -> live h a /\ live h b))
   (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
@@ -45,12 +40,12 @@ let rec gf128_add_loop a b dep =
   end
 
 (* In place addition. Calculate "a + b" and store the result in a. *)
-val gf128_add: a:elem -> b:elem {disjoint a b} -> Stack unit
+val gf128_add: a:elemB -> b:elemB {disjoint a b} -> Stack unit
   (requires (fun h -> live h a /\ live h b))
   (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
 let gf128_add a b = gf128_add_loop a b len
 
-private val gf128_shift_right_loop: a:elem -> dep:u32{U32(dep <^ len)} -> Stack unit
+private val gf128_shift_right_loop: a:elemB -> dep:u32{U32(dep <^ len)} -> Stack unit
   (requires (fun h -> live h a))
   (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
 let rec gf128_shift_right_loop a dep =
@@ -63,7 +58,7 @@ let rec gf128_shift_right_loop a dep =
   end
 
 (* In place shift. Calculate "a >> 1" and store the result in a. *)
-private val gf128_shift_right: a:elem -> Stack unit
+private val gf128_shift_right: a:elemB -> Stack unit
   (requires (fun h -> live h a))
   (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
 let gf128_shift_right a = gf128_shift_right_loop a 15ul
@@ -75,7 +70,7 @@ let ith_bit_mask num i =
   let res = logand num proj in
   eq_mask res proj
 
-private val apply_mask_loop: a:elem -> m:elem {disjoint a m} -> msk:byte -> dep:u32{U32.v dep <= 16} -> Stack unit
+private val apply_mask_loop: a:elemB -> m:elemB {disjoint a m} -> msk:byte -> dep:u32{U32.v dep <= 16} -> Stack unit
   (requires (fun h -> live h a /\ live h m))
   (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1))
 let rec apply_mask_loop a m msk dep =
@@ -88,7 +83,7 @@ let rec apply_mask_loop a m msk dep =
 
 (* This will apply a mask to each byte of bytes. *)
 (* Mask a with msk, and store the result in m. *)
-private val apply_mask: a:elem -> m:elem {disjoint a m} -> msk:byte -> Stack unit
+private val apply_mask: a:elemB -> m:elemB {disjoint a m} -> msk:byte -> Stack unit
   (requires (fun h -> live h a /\ live h m))
   (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1))
 let apply_mask a m msk = apply_mask_loop a m msk len
@@ -96,7 +91,7 @@ let apply_mask a m msk = apply_mask_loop a m msk len
 private let r_mul = 225uy
 
 private val gf128_mul_loop: 
-  a:elem -> b:elem {disjoint a b} -> tmp:bytes {length tmp = 32 /\ disjoint a tmp /\ disjoint b tmp} -> 
+  a:elemB -> b:elemB {disjoint a b} -> tmp:buffer {length tmp = 32 /\ disjoint a tmp /\ disjoint b tmp} ->
   dep:u32{U32.v dep <= 128} -> Stack unit
   (requires (fun h -> live h a /\ live h b /\ live h tmp))
   (ensures (fun h0 _ h1 -> live h1 a /\ live h1 tmp /\ modifies_2 a tmp h0 h1))
@@ -118,8 +113,8 @@ let rec gf128_mul_loop a b tmp dep =
   end
 
 (* In place multiplication. Calculate "a * b" and store the result in a.    *)
-(* WARNING: can only pass lax check and may have issues with constant time. *)
-val gf128_mul: a:elem -> b:elem {disjoint a b} -> Stack unit
+(* WARNING: may have issues with constant time. *)
+val gf128_mul: a:elemB -> b:elemB {disjoint a b} -> Stack unit
   (requires (fun h -> live h a /\ live h b))
   (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
 let gf128_mul a b =
@@ -141,9 +136,9 @@ let add_and_multiply a e k =
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 private val ghash_loop_: 
-  tag:elem ->
-  auth_key:elem {disjoint tag auth_key} ->
-  str:bytes{disjoint tag str /\ disjoint auth_key tag} ->
+  tag:elemB ->
+  auth_key:elemB {disjoint tag auth_key} ->
+  str:buffer{disjoint tag str /\ disjoint auth_key tag} ->
   len:u32{length str = U32.v len} ->
   dep:u32{U32.v dep <= U32.v len} -> Stack unit
   (requires (fun h -> U32.v len - U32.v dep <= 16 /\ live h tag /\ live h auth_key /\ live h str))
@@ -155,11 +150,11 @@ let ghash_loop_ tag auth_key str len dep =
   add_and_multiply tag last auth_key;
   pop_frame()
 
-(* WARNING: can only pass lax check and may have issues with constant time. *)
+(* WARNING: may have issues with constant time. *)
 private val ghash_loop: 
-  tag:elem ->
-  auth_key:elem {disjoint tag auth_key} ->
-  str:bytes{disjoint tag str /\ disjoint auth_key tag} ->
+  tag:elemB ->
+  auth_key:elemB {disjoint tag auth_key} ->
+  str:buffer{disjoint tag str /\ disjoint auth_key tag} ->
   len:u32{length str = U32.v len} ->
   dep:u32{U32.v dep <= U32.v len} -> Stack unit
   (requires (fun h -> live h tag /\ live h auth_key /\ live h str))
@@ -181,7 +176,7 @@ let rec ghash_loop tag auth_key str len dep =
 (* This function will generate an element in GF128 by:                    *)
 (* 1. express len of additional data and len of ciphertext as 64-bit int; *)
 (* 2. concatenate the two integers to get a 128-bit block.                *)
-private val mk_len_info: len_info:bytes{length len_info = 16} ->
+private val mk_len_info: len_info:buffer{length len_info = 16} ->
     len_1:u32 -> len_2:u32 -> Stack unit
     (requires (fun h -> live h len_info))
     (ensures (fun h0 _ h1 -> live h1 len_info /\ modifies_1 len_info h0 h1))
@@ -213,24 +208,23 @@ let mk_len_info len_info len_1 len_2 =
 
 (* A hash function used in authentication. It will authenticate additional data first, *)
 (* then ciphertext and at last length information. The result is stored in tag.        *)
-(* WARNING: can only pass lax check. *)
-val ghash: 
-  k:elem ->
-  ad:bytes{disjoint k ad} ->
+val ghash:
+  k:elemB ->
+  ad:buffer{disjoint k ad} ->
   adlen:u32{U32.v adlen = length ad} ->
-  ciphertext:bytes{disjoint k ciphertext /\ disjoint ad ciphertext} ->
+  ciphertext:buffer{disjoint k ciphertext /\ disjoint ad ciphertext} ->
   len:u32{U32.v len = length ciphertext} ->
-  tag:elem{disjoint k tag /\ disjoint ad tag /\ disjoint ciphertext tag} ->
+  tag:elemB{disjoint k tag /\ disjoint ad tag /\ disjoint ciphertext tag} ->
   Stack unit
   (requires (fun h -> live h k /\ live h ad /\ live h ciphertext /\ live h tag))
   (ensures (fun h0 _ h1 -> live h1 tag /\ modifies_1 tag h0 h1))
 
 let ghash k ad adlen ciphertext len tag =
   push_frame();
-  let h0 = HST.get() in
+  let h0 = ST.get() in
   let len_info = create (0uy) 16ul in
   mk_len_info len_info adlen len;
-  let h1 = HST.get() in
+  let h1 = ST.get() in
   assert(modifies_0 h0 h1);
   fill tag 0uy 16ul;
   ghash_loop tag k ad adlen 0ul;
@@ -238,6 +232,6 @@ let ghash k ad adlen ciphertext len tag =
   add_and_multiply tag len_info k;
   //gf128_add tag len_info;
   //gf128_mul tag k;
-  let h2 = HST.get() in
+  let h2 = ST.get() in
   assert(modifies_1 tag h1 h2);
   pop_frame()

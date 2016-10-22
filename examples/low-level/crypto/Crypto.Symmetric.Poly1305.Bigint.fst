@@ -5,7 +5,6 @@ open FStar.UInt8
 open FStar.UInt64
 
 open FStar.Ghost
-open FStar.HST
 open FStar.Buffer
 
 open FStar.Math.Lib

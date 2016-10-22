@@ -2,7 +2,6 @@ module Plain
 
 open FStar.HyperHeap
 open FStar.HyperStack
-open FStar.HST
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
@@ -21,10 +20,6 @@ open Crypto.Symmetric.Bytes
 // Type abstraction protects against aliasing inasmuch
 // as it is enforced from allocation.
 
-// LIBRARY STUFF
-
-
-// SECRETS, HIGH AND LOW
 
 open Flag 
 

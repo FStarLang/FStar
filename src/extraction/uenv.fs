@@ -195,13 +195,14 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
         let ml_ty = match t_x with 
             | ([], t) -> t
             | _ -> MLTY_Top in
-        let mly = MLE_Name y in
+        let mly = MLE_Name (
+          let ns, i = y in
+          ns, avoid_keyword i
+        ) in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
         let gamma = Fv(x, Inr(mly, t_x, is_rec))::g.gamma in
-        let tcenv = TypeChecker.Env.push_let_binding g.tcenv (Inr x) ([], x.fv_name.ty) in
-        {g with gamma=gamma; tcenv=tcenv}
-    else //let _ = printfn  "(* type scheme of \n %A \n is not closed or misses an unit argument: \n %A *) \n"  x.v.ident t_x in
-         failwith "freevars found"
+        {g with gamma=gamma}
+    else failwith "freevars found"
 
 let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env =
     let mlp = mlpath_of_lident x.fv_name.v in
@@ -217,7 +218,7 @@ let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_re
           extend_bv g x t_x add_unit is_rec false, bv_as_ml_termvar x // FIXME missing in lib; NS: what does ths mean??
         | Inr f ->
           let p, y = mlpath_of_lident f.fv_name.v in
-          extend_fv' g f (p, y) t_x add_unit is_rec, (y,0)
+          extend_fv' g f (p, y) t_x add_unit is_rec, (avoid_keyword y,0)
 
 let extend_tydef (g:env) (td:mltydecl) : env =
     let m = fst (g.currentModule) @ [snd g.currentModule] in

@@ -27,6 +27,13 @@ documentation on F\*.
 
 [F\* wiki]: https://github.com/FStarLang/FStar/wiki
 
+### Blog
+
+The [F\* for the masses] blog is also expected to become an important
+source of information and news on the F\* project.
+
+[F\* for the masses]: https://fstarlang.github.io/
+
 ### Editing F* code
 
 You can edit F\* code using your favourite text editor, but Emacs,
@@ -39,7 +46,7 @@ details on [editor support] on the [F\* wiki].
 ### Executing F* code
 
 By default F* only verifies the input code, it does not compile or execute it.
-To execute F* code one needs to translate it to either OCaml or F\#, using 
+To execute F* code one needs to translate it to either OCaml or F\#, using
 F\*'s code extraction facility---this is invoked using the command line
 argument `--codegen OCaml` or `--codegen FSharp`. More details on
 [executing F\* code] on the [F\* wiki].

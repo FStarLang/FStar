@@ -31,6 +31,11 @@ let now () = System.DateTime.Now
 let time_diff (t1:time) (t2:time) : float * int =
     let ts = t2 - t1 in 
     ts.TotalSeconds, int32 ts.TotalMilliseconds
+let record_time f = 
+    let start = now () in
+    let res = f () in 
+    let _, elapsed = time_diff start (now()) in
+    res, elapsed
 
 exception Impos
 exception NYI of string
@@ -317,12 +322,12 @@ let colorize_red (s:string) = s
 let colorize_cyan (s:string) = s
 // END
 
-let print_error s = fpr stderr "%s" (colorize_red ("Error: " ^ s))
+let print_error s = fpr stderr "%s" (colorize_red s)
 let print1_error a b = print_error <| format1 a b
 let print2_error a b c = print_error <| format2 a b c
 let print3_error a b c d = print_error <| format3 a b c d
 
-let print_warning s = fpr stderr "%s" (colorize_cyan ("Warning: " ^ s))
+let print_warning s = fpr stderr "%s" (colorize_cyan s)
 let print1_warning a b = print_warning <| format1 a b
 let print2_warning a b c = print_warning <| format2 a b c
 let print3_warning a b c d = print_warning <| format3 a b c d

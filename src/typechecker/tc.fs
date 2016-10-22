@@ -821,7 +821,12 @@ and tc_inductive env ses quals lids =
 
 
          let arguments, env', us = tc_tparams env arguments in
-         let result, _ = tc_trivial_guard env' result in
+         let result, res_lcomp = tc_trivial_guard env' result in
+         (match (SS.compress res_lcomp.res_typ).n with
+         | Tm_type _ -> ()
+         | ty -> raise (Error(Util.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
+                                        (Print.term_to_string result)
+                                        (Print.term_to_string (res_lcomp.res_typ)), r)));
          let head, _ = Util.head_and_args result in
          let _ = match (SS.compress head).n with
             | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> ()

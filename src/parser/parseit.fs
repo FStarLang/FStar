@@ -49,8 +49,8 @@ let check_extension fn =
           
 let parse fn =
   Parser.Util.warningHandler := (function
-    | e -> Printf.printf "Warning: %A\n" e);
-
+    | e -> let msg = Printf.sprintf "Warning: %A\n" e in
+           Util.print_warning msg);
   Parser.Util.errorHandler := (function
     | e -> raise e);
 

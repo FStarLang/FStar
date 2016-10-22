@@ -31,3 +31,5 @@ val lowercase: string -> Tot<string>
 val substring: string -> int -> int -> string
 val get: string -> int -> char
 val collect: (char -> string) -> string -> string
+
+val list_of_string : string -> list<char>

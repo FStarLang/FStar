@@ -4,7 +4,6 @@ open FStar.Seq
 open FStar.UInt32
 open FStar.HyperStack
 open FStar.Ghost
-open FStar.HST
 open FStar.Buffer
 open FStar.Classical
 
