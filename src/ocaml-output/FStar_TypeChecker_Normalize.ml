@@ -1223,7 +1223,7 @@ end
 (match ((let _147_691 = (FStar_Syntax_Subst.compress a1)
 in _147_691.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string (b, _53_672)) -> begin
-(let _147_692 = (FStar_Bytes.utf8_bytes_as_string b)
+(let _147_692 = (FStar_Bytes.unicode_bytes_as_string b)
 in (op _147_692))
 end
 | _53_677 -> begin
@@ -1875,7 +1875,7 @@ end
 (
 
 let n = (FStar_TypeChecker_Env.norm_eff_name cfg.tcenv lb.FStar_Syntax_Syntax.lbeff)
-in if ((not ((FStar_All.pipe_right cfg.steps (FStar_List.contains NoDeltaSteps)))) && ((FStar_Syntax_Util.is_pure_effect n) || (FStar_Syntax_Util.is_ghost_effect n))) then begin
+in if ((not ((FStar_All.pipe_right cfg.steps (FStar_List.contains NoDeltaSteps)))) && ((FStar_Syntax_Util.is_pure_effect n) || ((FStar_Syntax_Util.is_ghost_effect n) && (not ((FStar_All.pipe_right cfg.steps (FStar_List.contains PureSubtermsWithinComputations))))))) then begin
 (
 
 let env = (let _147_823 = (let _147_822 = (let _147_821 = (FStar_Util.mk_ref None)

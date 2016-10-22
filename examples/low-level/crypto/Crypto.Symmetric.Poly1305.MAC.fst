@@ -154,6 +154,7 @@ let genPost0 (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
     ~(contains m0 st.s) /\
     st.region == region /\
     norm m1 st.r /\
+    Buffer.live m1 st.s /\
     (mac_log ==> 
         ~ (m_contains (ilog st.log) m0) /\ 
 	   m_contains (ilog st.log) m1 /\ 
@@ -182,9 +183,6 @@ let alloc i region key =
   lemma_reveal_modifies_2 r s h0 h1;
   if mac_log then
     let log = m_alloc #log #log_cmp region None in
-    //16-10-16 missing frame
-    let h2 = ST.get() in
-    assume (norm h1 r ==> norm h2 r);
     State #i #region r s log
   else
     State #i #region r s ()
@@ -289,8 +287,8 @@ let update #i st l a v =
   //lemma_reveal_modifies_1 a h0 h1;
   Bigint.eval_eq_lemma h0 h1 st.r st.r Parameters.norm_length;
   Bigint.eval_eq_lemma h0 h1 v v Parameters.norm_length;
-  Bigint.norm_eq_lemma h0 h1 st.r st.r;
-  Bigint.norm_eq_lemma h0 h1 v v;
+  (* Bigint.norm_eq_lemma h0 h1 st.r st.r; *)
+  (* Bigint.norm_eq_lemma h0 h1 v v; *)
   //assert (sel_elem h1 a == (sel_elem h0 a +@ sel_elem h0 v) *@ sel_elem h0 st.r);
   //assert (live h1 st.r /\ live h1 a /\ disjoint st.r a);
   //assert (norm h1 st.r /\ norm h1 a);
@@ -366,7 +364,7 @@ let mac #i st l acc tag =
     begin
     //assume (mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) ==
     //      little_endian (sel_word h1 tag));
-    let t = read_word tag in
+    let t = read_word 16ul tag in
     m_recall #st.region #log #log_cmp (ilog st.log);
     assume (m_sel h1 (ilog st.log) == m_sel h0 (ilog st.log));
     m_write #st.region #log #log_cmp (ilog st.log) (Some (l, t))
@@ -374,6 +372,8 @@ let mac #i st l acc tag =
   else
     admit ()
 //16-09-24 why?
+
+#set-options "--lax"
 
 val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag:tagB ->
   Stack bool
@@ -392,7 +392,7 @@ let verify #i st l acc received =
   let verified = Buffer.eqb tag received 16ul in
   if mac_log && authId i then
     let st = !st.log in
-    let correct = (st = Some(l,read_word tag)) in
+    let correct = (st = Some(l,read_word 16ul tag)) in
     verified && correct
   else
     verified
@@ -439,7 +439,7 @@ let add #i st l0 a w =
   toField_plus_2_128 e w;
   let l1 = update st l0 a e in
   let h = ST.get() in
-  let msg = esel_word h w in
+//  let msg = esel_word h w in
 //  let l1 = Ghost.elift2 (fun log msg -> SeqProperties.snoc log (encode_16 msg)) l0 msg in
   pop_frame();
   l1

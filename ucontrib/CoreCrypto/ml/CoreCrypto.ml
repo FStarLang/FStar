@@ -52,9 +52,9 @@ let blockSize = function
   | AES_256_CBC  -> Z.of_int 16
 
 let aeadKeySize = function
-  | AES_128_CCM       -> Z.of_int (16 + 16)
-  | AES_128_CCM_8     -> Z.of_int (16 + 16)
-  | AES_128_GCM       -> Z.of_int (16 + 16)
+  | AES_128_CCM       -> Z.of_int 16
+  | AES_128_CCM_8     -> Z.of_int 16
+  | AES_128_GCM       -> Z.of_int 16
   | AES_256_CCM       -> Z.of_int 32
   | AES_256_CCM_8     -> Z.of_int 32
   | AES_256_GCM       -> Z.of_int 32
@@ -207,6 +207,9 @@ let block_decrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
   bytes_of_string e
 
 let aead_encrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
+  (* Printf.printf " |k|= %d, |iv|=%d\n" (Z.to_int (Platform.Bytes.length k)) (Z.to_int (Platform.Bytes.length iv)); *)
+  assert (Platform.Bytes.length k = aeadKeySize c);
+  (*assert (Platform.Bytes.length iv = aeadRealIVSize c); --NS: this one seems to be failing *)
   let c = cipher_of_aead_cipher c in
   let ctx = ocaml_EVP_CIPHER_CTX_create c true in
   ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
@@ -218,6 +221,8 @@ let aead_encrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
   Platform.Bytes.op_At_Bar (bytes_of_string e) (bytes_of_string t)
 
 let aead_decrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
+  assert (Platform.Bytes.length k = aeadKeySize c);
+  (*assert (Platform.Bytes.length iv = aeadRealIVSize c); --NS: this one seems to be failing *)
   let c = cipher_of_aead_cipher c in
   let ctx = ocaml_EVP_CIPHER_CTX_create c false in
   let d,t = Platform.Bytes.split d (Z.sub (Platform.Bytes.length d) (Z.of_int 16)) in

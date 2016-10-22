@@ -200,11 +200,13 @@ let rec eq_poly p0 p1 =
   else if Seq.length p1 = 0 then eq_poly0 p0
   else SeqProperties.head p0 = SeqProperties.head p1 && eq_poly (SeqProperties.tail p0) (SeqProperties.tail p1)
 
+#set-options "--lax"
 private let rec lemma_sane_eq_poly0 (p:seq elem) (r:elem) : Lemma
   (requires eq_poly0 p)
   (ensures (poly' p r = 0)) (decreases (Seq.length p)) = 
   if Seq.length p = 0 then () 
   else if SeqProperties.head p = 0 then lemma_sane_eq_poly0 (SeqProperties.tail p) r
+#reset-options "--z3timeout 1000"
 private let rec lemma_sane_eq_poly (p0:seq elem) (p1:seq elem) (r:elem) : Lemma
   (requires eq_poly p0 p1)
   (ensures (poly' p0 r = poly' p1 r)) (decreases (Seq.length p0)) = 
@@ -232,4 +234,6 @@ let clamp r =
   let r = fix r 12 252uy in
   little_endian r
 
-let mac_1305 (vs:seq elem) r s = (trunc_1305 (poly vs r) + little_endian s) % pow2 128
+(** REMARK: this is equivalent to (poly vs r + little_endian s) % pow2 128 *)
+val mac_1305: vs:seq elem -> r:elem -> s:seq byte -> GTot int
+let mac_1305 vs r s = (trunc_1305 (poly vs r) + little_endian s) % pow2 128

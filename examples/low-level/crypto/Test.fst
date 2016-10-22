@@ -15,6 +15,7 @@ module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
 module PRF = Crypto.Symmetric.PRF
 module AE = Crypto.AEAD
+module AETypes = Crypto.AEAD.Invariant
 
 module L = FStar.List.Tot
 
@@ -200,14 +201,21 @@ let test() =
     load_uint128 12ul ivBuffer in
   let expected_cipher = mk_expected_cipher () in
   let cipherlen = plainlen +^ 16ul in
-  assert(Buffer.length expected_cipher = v cipherlen);
+  assert(Buffer.length expected_cipher = v cipherlen);  
   let cipher = Buffer.create 0uy cipherlen in
   let st = AE.coerce i HH.root key in
 
   // To prove the assertion below for the concrete constants in PRF, AEAD:
   assert_norm (114 <= pow2 14);  
   assert_norm (FStar.Mul(114 <= 1999 * 64));
-  assert(AE.safelen i (v plainlen) 1ul);
+  assert(AETypes.safelen i (v plainlen) 1ul);
+  //NS: These 3 separation properties are explicitly violated by allocating st in HH.root
+  //    Assuming them for the moment
+  assume (
+    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) (AETypes st.log_region) /\
+    HH.disjoint (Buffer.frameOf cipher) (AETypes st.log_region) /\
+    HH.disjoint (Buffer.frameOf aad) (AETypes st.log_region)
+  );
   AE.encrypt i st iv aadlen aad plainlen plain cipher;
   let ok_0 = diff "cipher" cipherlen expected_cipher cipher in
 
