@@ -1,4 +1,4 @@
-module SimplePrintf
+module SimplePrintfReify
 
 open FStar.Char
 open FStar.String
@@ -36,9 +36,15 @@ reifiable reflectable new_effect_for_free {
 }
 
 (* A lift from `Pure´ into the new effect *)
-unfold let lift_pure_ex (a:Type) (wp:pure_wp a) (_:unit) (p:XEXN.post a) =
+unfold let lift_pure_ex_wp (a:Type) (wp:pure_wp a) (_:unit) (p:XEXN.post a) =
   wp (fun a -> p (Some a))
-sub_effect PURE ~> XEXN = lift_pure_ex
+sub_effect PURE ~> XEXN = lift_pure_ex_wp
+
+(* TODO: this should work but Pure is not reifiable *)
+(* sub_effect PURE ~> XEXN { *)
+(*   lift_wp = lift_pure_ex_wp; *)
+(*   lift = return_ex *)
+(* } *)
 
 (* An effect to alias easily write pre- and postconditions *)
 (* Note: we use Type0 instead of XEXN.pre to avoid having to thunk everything. *)
@@ -100,7 +106,10 @@ ml type of head is Prims.unit dir_type
 
 exception InvalidFormatString
 
-let rec parse_format (s:list char) : Xex (list dir) =
+(* reifiable let my_return (#a:Type) (x:a) : Xex a = *)
+(*   XEXN.reflect (return_ex a x) *)
+
+reifiable let rec parse_format (s:list char) : Xex (list dir) =
   match s with
   | [] -> []
   | '%' :: c :: s' ->
@@ -118,45 +127,55 @@ let rec parse_format (s:list char) : Xex (list dir) =
 let parse_format_pure (s:list char) : option (list dir) =
   reify (parse_format s) ()
 
-let rec parse_format_string (s:string) : Tot (option (list dir)) =
-  parse_format_pure (list_of_string s)
+(* let rec parse_format_string (s:string) : Tot (option (list dir)) = *)
+(*   parse_format_pure (list_of_string s) *)
 
-let sprintf (s:string{is_Some (parse_format_string s)})
-  : Tot (dir_type (Some.v (parse_format_string s))) =
-  string_of_dirs (Some.v (parse_format_string s)) (fun s -> s)
+(* let sprintf (s:string{is_Some (parse_format_string s)}) *)
+(*   : Tot (dir_type (Some.v (parse_format_string s))) = *)
+(*   string_of_dirs (Some.v (parse_format_string s)) (fun s -> s) *)
 
-let example2 () =
-  assert_norm (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])
+(* let example2 () = *)
+(*   assert_norm (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's']) *)
 
-(* Can use assert_norm above to prove a lemma that F* cannot prove on its own *)
-let example2_lemma () :
-  Lemma (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's']) =
-    assert_norm (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])
+(* (\* Can use assert_norm above to prove a lemma that F* cannot prove on its own *\) *)
+(* let example2_lemma () : *)
+(*   Lemma (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's']) = *)
+(*     assert_norm (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's']) *)
 
-(* It might seem nicer to just call normalize in the lemma statement,
-   but that doesn't allow using the lemma later on;
-   so we're stuck with the duplication *)
-private let example2_lemma_looks_nicer_but_not_usable () :
-  Lemma (normalize (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])) = ()
-(* This also needs the private qualifier, otherwise getting this:
-Interface of SimplePrintf violates its abstraction (add a 'private'
-qualifier to
-'SimplePrintf.example2_lemma_looks_nicer_but_not_usable'?): Expected
-expression of type "(Prims.list (?50858 uu___))"; got expression "%"
-of type "FStar.Char.char" *)
+(* (\* It might seem nicer to just call normalize in the lemma statement, *)
+(*    but that doesn't allow using the lemma later on; *)
+(*    so we're stuck with the duplication *\) *)
+(* private let example2_lemma_looks_nicer_but_not_usable () : *)
+(*   Lemma (normalize (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])) = () *)
+(* (\* This also needs the private qualifier, otherwise getting this: *)
+(* Interface of SimplePrintf violates its abstraction (add a 'private' *)
+(* qualifier to *)
+(* 'SimplePrintf.example2_lemma_looks_nicer_but_not_usable'?): Expected *)
+(* expression of type "(Prims.list (?50858 uu___))"; got expression "%" *)
+(* of type "FStar.Char.char" *\) *)
 
+(* Doesn't work; why does reify-action not trigger?
+   plus same problem with lift PURE->EXN as below *)
+let example_error_lemma () :
+  Lemma (parse_format_pure ['%'] == None) =
+  assert_norm (parse_format_pure ['%'] == None)
+
+(* Doesn't work; seems it's because missing lift PURE->EXN at
+   expression level; tried to write that lift above but didn't manage
+   because pure is not marked as reifiable -- dm4f compiler should
+   automatically produce this lift *)
 let example3_lemma () :
   Lemma (parse_format_pure ['%'; 'd'; '='; '%'; 's']
          == Some [Arg Int; Lit '='; Arg String]) =
   assert_norm (parse_format_pure ['%'; 'd'; '='; '%'; 's']
                == Some [Arg Int; Lit '='; Arg String])
 
-let example4_lemma () :
-  Lemma (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]) =
-  assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String])
+(* let example4_lemma () : *)
+(*   Lemma (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]) = *)
+(*   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]) *)
 
-let example5 : string =
-  (* Requiring such an assert_norm on each usage seems quite bad for usability *)
-  assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]);
-  (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer"
-  (* We also requires a pesky type annotation, but that seems more acceptable *)
+(* let example5 : string = *)
+(*   (\* Requiring such an assert_norm on each usage seems quite bad for usability *\) *)
+(*   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]); *)
+(*   (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer" *)
+(*   (\* We also requires a pesky type annotation, but that seems more acceptable *\) *)
