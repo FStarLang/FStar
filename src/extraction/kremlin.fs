@@ -33,11 +33,16 @@ type program =
 
 and decl =
   | DGlobal of list<flag> * lident * typ * expr
-  | DFunction of list<flag> * typ * lident * list<binder> * expr
+  | DFunction of option<cc> * list<flag> * typ * lident * list<binder> * expr
   | DTypeAlias of lident * int * typ
   | DTypeFlat of lident * fields_t
-  | DExternal of lident * typ
+  | DExternal of option<cc> * lident * typ
   | DTypeVariant of (lident * branches_t)
+
+and cc =
+  | StdCall
+  | CDecl
+  | FastCall
 
 and fields_t =
   list<(ident * (typ * bool))>
@@ -139,7 +144,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 16
+let current_version: version = 17
 
 type file = string * program
 type binary_format = version * list<file>
@@ -338,14 +343,14 @@ and translate_decl env d: option<decl> =
       let env = add_binders env args in
       let name = env.module_name, name in
       if assumed then
-        Some (DExternal (name, translate_type env t0))
+        Some (DExternal (None, name, translate_type env t0))
       else begin
         try
           let body = translate_expr env body in
-          Some (DFunction (flags, t, name, binders, body))
+          Some (DFunction (None, flags, t, name, binders, body))
         with e ->
           Util.print2 "Warning: writing a stub for %s (%s)\n" (snd name) (Util.print_exn e);
-          Some (DFunction (flags, t, name, binders, EAbort))
+          Some (DFunction (None, flags, t, name, binders, EAbort))
       end
 
   | MLM_Let (flavor, flags, [ {
