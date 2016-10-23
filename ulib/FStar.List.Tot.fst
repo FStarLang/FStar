@@ -109,6 +109,13 @@ let rec fold_right f l x = match l with
   | [] -> x
   | hd::tl -> f hd (fold_right f tl x)
 
+val fold_left2 : f:('a -> 'b -> 'c -> Tot 'a) -> accu:'a -> l1:(list 'b) -> l2:(list 'c) ->
+  Pure 'a (requires (length l1 == length l2)) (ensures (fun _ -> True)) (decreases l1)
+let rec fold_left2 f accu l1 l2 =
+  match (l1, l2) with
+  | ([], []) -> accu
+  | (a1::l1, a2::l2) -> fold_left2 f (f accu a1 a2) l1 l2
+
 (** List searching **)
 
 val mem: #a:eqtype -> a -> list a -> Tot bool
