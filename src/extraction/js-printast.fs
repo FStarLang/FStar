@@ -31,7 +31,7 @@ let escape_or fallback = function
 let jstr_escape s = String.collect (escape_or string_of_char) s
 
 let escape_char fallback = function 
-  | c when (c = '\'')            -> ""
+  | c when (c = '\'')            -> "_"
   | c when (is_letter_or_digit c)-> string_of_char c
   | c when (is_punctuation c)    -> string_of_char c
   | c when (is_symbol c)         -> string_of_char c
@@ -151,7 +151,7 @@ and pretty_print_exp = function
         | None -> reduce [text "["; text "]"])
     | JSE_Object(l) ->  reduce [text "{"; List.map pretty_print_obj l |> combine comma; text "}"]
     | JSE_Function(f) ->  pretty_print_fun f    
-    | JSE_ArrowFunction(_, args, body, ret_t, decl_vars) -> print_arrow_fun args (print_body body)
+    | JSE_ArrowFunction(_, args, body, ret_t, decl_vars) -> reduce [print_decl_t decl_vars; print_arrow_fun args (print_body body)]
     | JSE_Sequence(e) -> reduce [ List.map pretty_print_exp e |> combine semi]
     | JSE_Unary(o,e) -> reduce [print_op_un o; pretty_print_exp e]
     | JSE_Binary(o,e1,e2) -> reduce [text "("; pretty_print_exp e1; print_op_bin o; pretty_print_exp e2; text ")"]
@@ -167,7 +167,7 @@ and pretty_print_exp = function
     | JSE_Comprehension(l,e) -> semi (*!!!*)
     | JSE_Generator(l,e) -> semi (*!!!*)
     | JSE_Let(l,e) -> semi (*!!!*)
-    | JSE_Identifier(id,t) -> text (jstr_escape id)// reduce [text (jstr_escape id); (match t with | Some v -> reduce [text ":"; print_typ v] | None -> text "")] 
+    | JSE_Identifier(id,t) -> text (remove_chars_t id)// reduce [text (jstr_escape id); (match t with | Some v -> reduce [text ":"; print_typ v] | None -> text "")] 
     | JSE_Literal(l) -> print_literal (fst l)
     | JSE_TypeCast(e,t) -> semi (*!!!*)
 
@@ -255,7 +255,7 @@ and print_pattern = function
         let r = match t with
                 | Some v -> reduce [colon; print_typ v]
                 | None -> empty
-        in reduce [text (jstr_escape id); r]
+        in reduce [text (remove_chars_t id); r]
 
 and print_body = function 
     | JS_BodyBlock l -> reduce [text "{"; pretty_print_statements l; text "}"]

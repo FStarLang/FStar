@@ -101,7 +101,7 @@ let is_standart_type t =
 
 let float_of_int i = Util.float_of_int32 (Util.int32_of_int i)
 
-let export_modules = ref []//ref (Set.empty)
+let export_modules = ref []
 
 let current_module_name = ref ""
 
@@ -111,9 +111,8 @@ let getName (path, n) =
     then 
         JSE_Identifier(n, None)
     else
-        (//export_modules := Set.add path !export_modules;
-        if not (List.existsb (fun x -> x = path) !export_modules) then
-            export_modules := List.append [path] !export_modules;
+        ((if not (List.existsb (fun x -> x = path) !export_modules) 
+          then export_modules := List.append [path] !export_modules);
         JSE_Identifier(path ^ "." ^ n, None))
 
 let rec is_pure_expr e = 
@@ -171,7 +170,7 @@ and translate_decl d: option<source_t> =
                   else match tys with 
                        | None -> None
                        | Some ([], ty) -> translate_type ty |> Some
-                       | Some (_ ::_, ty) -> None in
+                       | Some (_, ty) -> None  in
           if is_pure_expr expr
           then
             [JSS_VariableDeclaration([(JGP_Identifier(name, t), Some (translate_expr_pure expr))], JSV_Var)]
@@ -252,7 +251,7 @@ and translate_decl d: option<source_t> =
       failwith "todo: translate_expr [MLE_Let]"
 
   | MLE_Fun (args, body) ->
-      let args = List.map (fun ((n,_), t) -> JGP_Identifier(n, None)) args in
+      let args = List.map (fun ((n,_), _) -> JGP_Identifier(n, None)) args in
       let decl_v = JSS_VariableDeclaration([(JGP_Identifier("_res", None), None)], JSV_Let) in
       let body_t = translate_expr body ("_res", None) (Some(JSS_Return(Some(JSE_Identifier("_res", None))))) in
       let c = JSS_Expression(JSE_Assignment(JGP_Identifier(var), JSE_ArrowFunction(None, args, JS_BodyBlock([decl_v; body_t]), None, None))) in
@@ -279,7 +278,7 @@ and translate_decl d: option<source_t> =
       failwith "todo: translate_expr [MLE_Try]"
 
   | MLE_Coerce(in_e, t_from, t_to) ->
-      let var = (fst var, Some (translate_type t_to)) in
+      //let var = (fst var, Some (translate_type in_e.mlty)) in
       translate_expr in_e var stmt
 
   | MLE_Match(e_in, lb) ->
@@ -294,13 +293,36 @@ and translate_decl d: option<source_t> =
       (match stmt with | Some v -> JSS_Block(c @ [v]) | None -> JSS_Block(c))
 
   | MLE_Seq ls -> (*last element in Seq is result*)
-      let lastIn = List.length ls in
-      List.mapi (fun i x -> 
-            if (i = lastIn - 1) 
-            then translate_expr x var None
-            else translate_expr_pure x |> JSS_Expression) ls |> JSS_Block
+      List.map (fun x -> translate_expr x var None) ls |> JSS_Block
 
-  | _ -> JSS_Block([JSE_Identifier("TODO!!", None) |> JSS_Expression])//failwith "todo: translation for impure expressions!"
+  | MLE_App (e, args) ->
+      let new_fv = ref [] in
+      let is_If e = match e.expr with | MLE_If _ | MLE_Match _ -> true | _ -> false in
+      let args = List.map (fun x -> if is_If x 
+                                    then 
+                                        let fv_x = Absyn.Util.gensym() in
+                                        new_fv := List.append !new_fv 
+                                                    [JSS_VariableDeclaration([(JGP_Identifier(fv_x, None), None)], JSV_Let); 
+                                                     translate_expr x (fv_x, None) None];
+                                        JSE_Identifier(fv_x, None)
+                                     else
+                                        translate_expr_pure x) args in
+      let expr = 
+      (match e.expr with
+       | MLE_Name(["Prims"], op) when is_op_bin op ->
+            JSE_Binary((must (mk_op_bin op)), List.nth args 0, List.nth args 1)
+       | MLE_Name(["Prims"], op) when is_op_bool op ->
+            JSE_Logical((must (mk_op_bool op)), List.nth args 0, List.nth args 1)
+       | MLE_Name(["Prims"], op) when is_op_un op ->
+            JSE_Unary((must (mk_op_un op)), List.nth args 0)
+       | MLE_Name (path, function_name) ->      
+            JSE_Call (getName(path, function_name), args)          
+       | MLE_Var (name, _) ->
+            JSE_Call (JSE_Identifier(name, None), args)       
+       | _ -> failwith "todo: translation [MLE_App]") |> JSS_Expression in
+       JSS_Block(!new_fv @ [expr])
+
+  | _ -> failwith "todo: translation ml-expr"
 
 and translate_expr_pure e: expression_t = 
   match e.expr with
@@ -341,13 +363,13 @@ and translate_expr_pure e: expression_t =
 
   | MLE_CTor ((path, c), lexpr) ->
       JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String c, ""), JSO_Init);
-                  JSPO_Property(JSO_Identifier("_value", None), JSE_Array(Some (List.map (translate_expr_pure) lexpr)), JSO_Init)])
+                  JSPO_Property(JSO_Identifier("_0", None), JSE_Array(Some (List.map (translate_expr_pure) lexpr)), JSO_Init)])
 
   | MLE_Fun (args, body) ->
-      let args = List.map (fun ((n,_), t) -> JGP_Identifier(n, None)) args in               
+      let args = List.map (fun ((n,_), _) -> JGP_Identifier(n, None)) args in
       JSE_ArrowFunction(None, args, JS_BodyExpression(translate_expr_pure body), None, None)
 
-  | _ -> failwith "It's not a pure expression!"
+  | _ -> failwith "todo: translation ml-expr-pure"
 
 and translate_match lb fv_x var : statement_t =
     match lb with 
@@ -373,9 +395,9 @@ and translate_pat p fv_x s1 s2: statement_t =
       let if_true =
         match lp with
         | [] -> s1
-        | [x] -> translate_pat x (JSE_Member(JSE_Member(fv_x, JSPM_Identifier("_value", None)), 
+        | [x] -> translate_pat x (JSE_Member(JSE_Member(fv_x, JSPM_Identifier("_0", None)), 
                                                          JSPM_Expression(JSE_Literal(JSV_Number(float_of_int 0), "")))) s1 s2
-        | _ -> translate_p_ctor lp (JSE_Member(fv_x, JSPM_Identifier("_value", None))) s1 s2 in
+        | _ -> translate_p_ctor lp (JSE_Member(fv_x, JSPM_Identifier("_0", None))) s1 s2 in
       JSS_If(JSE_Binary(JSB_StrictEqual,
                         JSE_Member(fv_x, JSPM_Identifier("_tag", Some JST_String)),
                         JSE_Literal(JSV_String c, "")), if_true, Some s2)
