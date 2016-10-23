@@ -72,7 +72,7 @@ let codegen uf_mods_env =
           Util.write_file (Options.prepend_output_dir (n^ext)) (FStar.Format.pretty 120 d)
         ) newDocs
     | Some "JavaScript" ->
-        //printf "%A" mllibs;
+        //printf "%A" (List.nth mllibs (List.length mllibs - 1));
         let newDocs = List.collect Extraction.JavaScript.Translate.translate mllibs in        
         List.iter (fun (n,d) ->
            let res = Extraction.JavaScript.PrintAst.pretty_print d  in

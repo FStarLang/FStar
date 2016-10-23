@@ -52,6 +52,8 @@ let mk_op_bin = function
       Some JSB_GreaterThan
   | "op_Modulus" ->
       Some JSB_Mod
+  | "op_Colon_Equals" -> 
+      failwith "todo: translation [:=] for mutable variables"
   | _ ->
       None
 
@@ -63,6 +65,8 @@ let mk_op_un = function
       Some JSU_Not
   | "op_Minus" ->
       Some JSU_Minus
+  | "op_Bang" ->
+      failwith "todo: translation [!] for mutable variables"
   | _ ->
       None
 
@@ -82,7 +86,7 @@ let is_op_bool op =
 
 let mk_standart_type = function 
   | "unit" ->
-      Some JST_Void
+      Some JST_Null
   | "bool" ->
       Some JST_Boolean
   | "int" | "nat" ->
@@ -97,6 +101,21 @@ let is_standart_type t =
 
 let float_of_int i = Util.float_of_int32 (Util.int32_of_int i)
 
+let export_modules = ref []//ref (Set.empty)
+
+let current_module_name = ref ""
+
+let getName (path, n) =
+    let path = String.concat "_" path in
+    if (path = !current_module_name || path = "")
+    then 
+        JSE_Identifier(n, None)
+    else
+        (//export_modules := Set.add path !export_modules;
+        if not (List.existsb (fun x -> x = path) !export_modules) then
+            export_modules := List.append [path] !export_modules;
+        JSE_Identifier(path ^ "." ^ n, None))
+
 let rec is_pure_expr e = 
     match e.expr with
     | MLE_Const _ | MLE_Var _ | MLE_Name _ -> true
@@ -107,10 +126,7 @@ let rec is_pure_expr e =
     | MLE_Record (_, lne) ->
         not (List.contains false (List.map ( fun (n, e) -> is_pure_expr e) lne))
     | MLE_App (e, le) ->
-        not (List.contains false (List.map is_pure_expr le)) (*&&
-        (match e.expr with 
-        | MLE_Name (["Prims"], op) when is_op_bin op || is_op_un op || is_op_bool op -> true
-        | _ -> false) *)
+        not (List.contains false (List.map is_pure_expr le))
     | MLE_Fun (largs, e) -> is_pure_expr e
     | _ -> false
 
@@ -133,12 +149,18 @@ let rec translate (MLLib modules): list<file> =
 
 and translate_module (module_name, modul, _): file =
   let module_name = fst module_name @ [ snd module_name ] in
-  let program = match modul with
+  let program = match modul with   
     | Some (_signature, decls) ->
-        List.filter_map translate_decl decls
+        current_module_name := String.concat "_" module_name;
+        let res = List.filter_map translate_decl decls in
+        let create_module_exports =
+            let require_f m = JSE_Call (JSE_Identifier("require", None), [JSE_Literal(JSV_String( "./" ^ m), "")]) in
+            List.map (fun m -> JSS_VariableDeclaration([(JGP_Identifier(m, None), Some (require_f m))], JSV_Var)) (!export_modules)
+            |> JSS_Block |> JS_Statement
+        in [create_module_exports] @ res
     | _ ->
         failwith "Unexpected standalone interface or nested modules"
-  in
+  in 
   (String.concat "_" module_name), program
 
 and translate_decl d: option<source_t> =
@@ -174,9 +196,9 @@ and translate_decl d: option<source_t> =
             let tag = [(JSO_Identifier("_tag", None), JST_StringLiteral("Record", ""))] in
             let fields_t = List.map (fun (n, t) -> (JSO_Identifier("_" ^ n, None), translate_type t)) fields in
             JSS_TypeAlias((name, None), tparams, JST_Object(tag @ fields_t, [], []))
-        | MLTD_DType lfields -> (*consider type ty->ty->ty*)
+        | MLTD_DType lfields ->
             let tag n = [(JSO_Identifier("_tag", None), JST_StringLiteral(n, ""))] in
-            let fields_t fields = List.map (fun t -> (JSO_Identifier("_value", None), JST_Tuple [translate_type t])) fields in
+            let fields_t fields = List.mapi (fun i t -> (JSO_Identifier("_" ^ string_of_int i, None), JST_Tuple [translate_type t])) fields in
             let lfields_t = List.map (fun (n, l) -> JSS_TypeAlias((n, None), tparams, JST_Object((tag n) @ fields_t l, [], []))) lfields in
             let tparams_gen = 
                 match tparams with 
@@ -197,6 +219,9 @@ and translate_decl d: option<source_t> =
   | MLM_Top _ ->
       failwith "todo: translate_decl [MLM_Top]"
 
+  | MLM_Exn (x, []) -> (*exception Name => in JS?*)
+      JSS_Block([]) |> JS_Statement |> Some
+
   | MLM_Exn _ ->
       failwith "todo: translate_decl [MLM_Exn]"
 
@@ -213,19 +238,13 @@ and translate_decl d: option<source_t> =
       mllb_def = body;
       print_typ = pt
       }]), continuation) ->
-      let t = if (not pt) then None
-              else match tys with
-                   | None -> None
-                   | Some ([], ty) -> translate_type ty |> Some
-                   | Some (_ ::_, ty) -> None
-              in
       let c = 
         if is_pure_expr body 
         then 
-           [JSS_VariableDeclaration([(JGP_Identifier(name, t), Some (translate_expr_pure body))], JSV_Let);
+           [JSS_VariableDeclaration([(JGP_Identifier(name, None), Some (translate_expr_pure body))], JSV_Let);
             translate_expr continuation var stmt]
         else 
-           [JSS_VariableDeclaration([(JGP_Identifier(name, t), None)], JSV_Let);
+           [JSS_VariableDeclaration([(JGP_Identifier(name, None), None)], JSV_Let);
             translate_expr body (name, None)  (Some (translate_expr continuation var stmt))] in
       JSS_Block(c)
 
@@ -242,7 +261,7 @@ and translate_decl d: option<source_t> =
   | MLE_Proj (_, path) ->
       failwith "todo: translate_expr [MLE_Proj]"
     
-  | MLE_If(cond, s1, s2) ->      
+  | MLE_If(cond, s1, s2) ->
       let s2 = (match s2 with | Some v -> Some (translate_expr v var None) | None -> None) in
       let c =
         if is_pure_expr cond
@@ -259,7 +278,8 @@ and translate_decl d: option<source_t> =
   | MLE_Try _ ->
       failwith "todo: translate_expr [MLE_Try]"
 
-  | MLE_Coerce(in_e, t_from, t_to) -> 
+  | MLE_Coerce(in_e, t_from, t_to) ->
+      let var = (fst var, Some (translate_type t_to)) in
       translate_expr in_e var stmt
 
   | MLE_Match(e_in, lb) ->
@@ -273,6 +293,13 @@ and translate_decl d: option<source_t> =
         [decl_v; translate_expr e_in ("_match_e", None) (Some (translate_match lb (JSE_Identifier("_match_e", None)) var))] in
       (match stmt with | Some v -> JSS_Block(c @ [v]) | None -> JSS_Block(c))
 
+  | MLE_Seq ls -> (*last element in Seq is result*)
+      let lastIn = List.length ls in
+      List.mapi (fun i x -> 
+            if (i = lastIn - 1) 
+            then translate_expr x var None
+            else translate_expr_pure x |> JSS_Expression) ls |> JSS_Block
+
   | _ -> JSS_Block([JSE_Identifier("TODO!!", None) |> JSS_Expression])//failwith "todo: translation for impure expressions!"
 
 and translate_expr_pure e: expression_t = 
@@ -284,7 +311,7 @@ and translate_expr_pure e: expression_t =
       JSE_Identifier(name, None)
 
   | MLE_Name(path, n) ->
-      JSE_Identifier(n, None)
+      getName(path, n)
 
   | MLE_App (e, args) ->
       let args_t = List.map translate_expr_pure args in
@@ -295,8 +322,8 @@ and translate_expr_pure e: expression_t =
             JSE_Logical((must (mk_op_bool op)), List.nth args_t 0, List.nth args_t 1)
        | MLE_Name(["Prims"], op) when is_op_un op ->
             JSE_Unary((must (mk_op_un op)), List.nth args_t 0)
-       | MLE_Name (path, function_name) ->
-            JSE_Call (JSE_Identifier(function_name, None), args_t)          
+       | MLE_Name (path, function_name) ->      
+            JSE_Call (getName(path, function_name), args_t)          
        | MLE_Var (name, _) ->
             JSE_Call (JSE_Identifier(name, None), args_t)       
        | _ -> failwith "todo: translation [MLE_App]")
@@ -312,13 +339,9 @@ and translate_expr_pure e: expression_t =
           JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Record", ""), JSO_Init)] @
                       create_fields)
 
-  | MLE_CTor ((p, c), lexpr) ->
+  | MLE_CTor ((path, c), lexpr) ->
       JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String c, ""), JSO_Init);
                   JSPO_Property(JSO_Identifier("_value", None), JSE_Array(Some (List.map (translate_expr_pure) lexpr)), JSO_Init)])
-
-  | MLE_Seq ls -> (*or translate to Array*)
-      JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Seq", ""), JSO_Init);
-                  JSPO_Property(JSO_Identifier("_value", None), JSE_Array(Some (List.map (translate_expr_pure) ls)), JSO_Init)])
 
   | MLE_Fun (args, body) ->
       let args = List.map (fun ((n,_), t) -> JGP_Identifier(n, None)) args in               
@@ -346,7 +369,7 @@ and translate_pat p fv_x s1 s2: statement_t =
       s1
   | MLP_Const c ->
       JSS_If(JSE_Binary(JSB_Equal, fv_x, translate_constant c), s1, Some s2)
-  | MLP_CTor((p, c), lp) ->
+  | MLP_CTor((path, c), lp) ->
       let if_true =
         match lp with
         | [] -> s1
@@ -356,9 +379,9 @@ and translate_pat p fv_x s1 s2: statement_t =
       JSS_If(JSE_Binary(JSB_StrictEqual,
                         JSE_Member(fv_x, JSPM_Identifier("_tag", Some JST_String)),
                         JSE_Literal(JSV_String c, "")), if_true, Some s2)
-  | MLP_Branch (lp) -> (*p1||p2||..||pn *)
-      failwith "todo: translate_pat [MLP_Branch]"      
-  | MLP_Record (_, lp) ->
+  | MLP_Branch (lp) ->
+      translate_p_branch lp fv_x s1 s2
+  | MLP_Record (path, lp) ->
       translate_p_record lp fv_x s1 s2
   | MLP_Tuple lp ->
       translate_p_tuple lp 0 fv_x s1 s2
@@ -382,9 +405,15 @@ and translate_p_record lp fv_x s1 s2 : statement_t =
     | hd :: tl -> translate_pat (snd hd) (JSE_Member(fv_x, JSPM_Identifier("_" ^ (fst hd), None))) (translate_p_record tl fv_x s1 s2) s2
     | [] -> failwith "Empty list in translate_p_record"
 
+and translate_p_branch lp fv_x s1 s2 : statement_t =
+    match lp with
+    | [x] -> translate_pat x fv_x s1 s2
+    | hd :: tl -> translate_pat hd fv_x s1 (translate_p_branch tl fv_x s1 s2)
+    | [] -> failwith "Empty list in translate_p_branch"
+
 and translate_constant c: expression_t =
   match c with
-  | MLC_Unit -> (*null or void?*)
+  | MLC_Unit ->
       JSE_Literal(JSV_Null, "")
   | MLC_Bool b ->
       JSE_Literal(JSV_Boolean b, "")
@@ -411,7 +440,7 @@ and translate_type t: typ =
   | MLTY_Fun (t1, _, t2) ->
       let t1_t = translate_type t1 in
       let t2_t = translate_type t2 in      
-      JST_Function([(("_1", None), t1_t)], t2_t, None)  (*!!!*)
+      JST_Function([(("_1", None), t1_t)], t2_t, None)  (*we want to save the source names of function parameters*)
   | MLTY_Named (args, (path, name)) ->      
       if is_standart_type name
       then must (mk_standart_type name)
