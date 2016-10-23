@@ -17,7 +17,7 @@ private new_effect_for_free STATE = STATE_h mem
     *)
 effect Unsafe (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
+             (fun (h:mem) (p:st_post a) -> pre h /\ (forall a h1. pre h /\ post h (a, h1) ==> p (a, h1))) (* WP *)
 
 (**
    Effect of stacked based code: the 'equal_domains' clause enforces that
@@ -27,7 +27,7 @@ effect Unsafe (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
  *)
 effect Stack (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_domains h h1) ==> p a h1)) (* WP *)
+             (fun (h:mem) (p:st_post a) -> pre h /\ (forall a h1. (pre h /\ post h (a, h1) /\ equal_domains h h1) ==> p (a, h1))) (* WP *)
 
 (**
    Effect of heap-based code.
@@ -38,7 +38,7 @@ effect Stack (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
 *)
 effect Heap (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ h.tip = HH.root /\ h1.tip = HH.root ) ==> p a h1)) (* WP *)
+             (fun (h:mem) (p:st_post a) -> pre h /\ (forall a h1. (pre h /\ post h (a, h1) /\ h.tip = HH.root /\ h1.tip = HH.root ) ==> p (a, h1))) (* WP *)
 
 (**
   Effect of low-level code:
@@ -47,9 +47,9 @@ effect Heap (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
 *)
 effect ST (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_stack_domains h h1) ==> p a h1)) (* WP *)
+             (fun (h:mem) (p:st_post a) -> pre h /\ (forall a h1. (pre h /\ post h (a, h1) /\ equal_stack_domains h h1) ==> p (a, h1))) (* WP *)
 
-effect St (a:Type) = ST a (fun _ -> True) (fun _ _ _ -> True)
+effect St (a:Type) = ST a (fun _ -> True) (fun _ _ -> True)
 
 let inline_stack_inv h h' : GTot Type0 =
   (* The frame invariant is enforced *)
@@ -68,7 +68,7 @@ let inline_stack_inv h h' : GTot Type0 =
    *)
 effect StackInline (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ is_stack_region h.tip /\ (forall a h1. (pre h /\ post h a h1 /\ inline_stack_inv h h1) ==> p a h1)) (* WP *)
+             (fun (h:mem) (p:st_post a) -> pre h /\ is_stack_region h.tip /\ (forall a h1. (pre h /\ post h (a, h1) /\ inline_stack_inv h h1) ==> p (a, h1))) (* WP *)
 
 let inline_inv h h' : GTot Type0 =
   (* The stack invariant is enforced *)
@@ -87,7 +87,7 @@ let inline_inv h h' : GTot Type0 =
    *)
 effect Inline (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ inline_inv h h1) ==> p a h1)) (* WP *)
+             (fun (h:mem) (p:st_post a) -> pre h /\ (forall a h1. (pre h /\ post h (a, h1) /\ inline_inv h h1) ==> p (a, h1))) (* WP *)
 
 (**
     TODO:
@@ -96,23 +96,23 @@ effect Inline (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
 effect STL (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) = Stack a pre post
 
 sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:mem) -> wp (fun a -> p a h)
+  DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (h:mem) (p:st_post a) -> wp (fun a -> p (a, h))
 
 (**
    Pushes a new empty frame on the stack
    *)
 assume val push_frame: unit -> Unsafe unit
   (requires (fun m -> True))
-  (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
+  (ensures (fun (m0:mem) ((_, m1):unit * mem) -> fresh_frame m0 m1))
 
 (**
    Removes old frame from the stack
    *)
 assume val pop_frame: unit -> Unsafe unit
   (requires (fun m -> poppable m))
-  (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1==pop m0 /\ popped m0 m1))
+  (ensures (fun (m0:mem) ((_, m1):unit * mem) -> poppable m0 /\ m1==pop m0 /\ popped m0 m1))
 
-let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region s.id}) (m1:mem) =
+let salloc_post (#a:Type) (init:a) (m0:mem) ((s, m1):(s:reference a{is_stack_region s.id}) * mem) =
       is_stack_region m0.tip
     /\ Map.domain m0.h == Map.domain m1.h
     /\ m0.tip = m1.tip
@@ -120,6 +120,7 @@ let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region s.id}
     /\ HH.fresh_rref s.ref m0.h m1.h         //it's a fresh reference in the top frame
     /\ m1==HyperStack.upd m0 s init          //and it's been initialized
 
+(* TODO : subtyping does not go through pairs... *)
 (**
      Allocates on the top-most stack frame
      *)
@@ -127,9 +128,11 @@ assume val salloc: #a:Type -> init:a -> StackInline (stackref a)
   (requires (fun m -> is_stack_region m.tip))
   (ensures salloc_post init)
 
+
 assume val salloc_mm: #a:Type -> init:a -> StackInline (mmstackref a)
   (requires (fun m -> is_stack_region m.tip))
   (ensures salloc_post init)
+  
 
 let remove_reference (#a:Type) (r:reference a{r.mm}) (m:mem{r.id `is_in` m.h}) :GTot mem =
   let h = Map.sel m.h r.id in

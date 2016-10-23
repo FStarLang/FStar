@@ -465,9 +465,9 @@ new_effect_for_free {
       ; put      = put s
 }
 
-let st_pre_h  = STATE_h.pre
-let st_post_h = STATE_h.post
-let st_wp_h   = STATE_h.wp
+let st_pre_h s = STATE_h.pre s
+let st_post_h s = STATE_h.post s
+let st_wp_h s = STATE_h.wp s
 
 (*
 unfold let st_return        (heap:Type) (a:Type)

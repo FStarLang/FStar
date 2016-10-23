@@ -26,11 +26,11 @@ effect State (a:Type) (wp:st_wp a) =
        STATE a wp
 effect ST (a:Type) (pre:st_pre) (post: (t -> Tot (st_post a))) =
        STATE a
-             (fun (p:st_post a) (h:t) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
+             (fun (h:t) (p:st_post a) -> pre h /\ (forall a h1. pre h /\ post h (a, h1) ==> p (a, h1))) (* WP *)
 effect St (a:Type) =
-       ST a (fun h -> True) (fun h0 r h1 -> True)
+       ST a (fun h -> True) (fun h0 (r, h1) -> True)
 sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:t) -> wp (fun a -> p a h)
+  DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (h:t) (p:st_post a) -> wp (fun a -> p a h)
 
 
 assume val new_region: r0:rid -> ST rid

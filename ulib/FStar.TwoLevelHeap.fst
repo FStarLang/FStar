@@ -25,6 +25,9 @@ let st_pre = st_pre_h t
 let st_post (a:Type) = st_post_h t a
 
 
+//let f : int -> Pure int = fun x -> x + 3
+
+
 let st_wp (a:Type) = st_wp_h t a
 
 

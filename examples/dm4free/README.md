@@ -50,8 +50,9 @@ Going forward:
   * order of arguments
   * extra thunking
   * error labeling
+  * subtyping problems when uncurrying (see below)
 
-- change the elaboration of the match to push the return _inside_ the branches
+- (done) change the elaboration of the match to push the return _inside_ the branches
   instead of wrapping the whole branch on the outside (better for Z3)
 - make this work with parametrized effects (i.e. ST) #706
 
@@ -79,3 +80,10 @@ Going forward:
 
 - dreaming: can we also generate abbreviations for the "triples" form
   of an effect?
+
+
+Current shortcommings in order to switch ulib to DM4F :
+- order of arguments for STATE_h wp ; needs to modify all sub_effect containing state
+- STATE_h post condition is uncurried ; need to modify all ensures clauses for the effects deriving from state (s/ensures *(fun +\(\S+\) +\(\S+\) +\(\S+\)/ensures (fun \1 (\2, \3)/gc)
+- no subtyping for pairs (i.e. int -> unit -> Tot unit <: nat -> unit -> Tot unit but it is NOT the case that int * unit -> unit <: nat * unit -> unit)
+- 

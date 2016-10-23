@@ -12,24 +12,23 @@ let st2_Post (a:Type) = st_post_h heap2 a
 let st2_WP (a:Type) = st_wp_h heap2 a
 effect ST2 (a:Type) (pre:st2_Pre) (post: (heap2 -> Tot (st2_Post a))) =
     STATE2 a
-      (fun (p:st2_Post a) (h:heap2) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
-effect St2 (a:Type) = ST2 a (fun h -> True) (fun h0 r h1 -> True)
+      (fun (h:heap2) (p:st2_Post a) -> pre h /\ (forall a h1. pre h /\ post h (a, h1) ==> p (a, h1))) (* WP *)
+effect St2 (a:Type) = ST2 a (fun h -> True) (fun h0 (r, h1) -> True)
+
 sub_effect
-  DIV    ~> STATE2 = (fun (a:Type) (wp:pure_wp a) (p:st2_Post a) -> (fun h2 -> wp (fun a0 -> p a0 h2)))
+  DIV    ~> STATE2 = (fun (a:Type) (wp:pure_wp a) (h2:heap2) (p:st2_Post a) -> wp (fun a0 -> p (a0, h2)))
 
 (* construct a st2_WP from 2 st_wps *)
-val comp : (a:Type) -> (b:Type) -> (wp0:st_wp a) -> (wp1:st_wp b) -> Tot (st2_WP (rel a b)) 
-let comp a b wp0 wp1 p h2 =
-    wp0 (fun y0 h0 ->
-      wp1 (fun y1 h1 -> p (R y0 y1) (R h0 h1))
-      (R.r h2))
-    (R.l h2)
+val comp : (a:Type) -> (b:Type) -> (wp0:st_wp a) -> (wp1:st_wp b) -> Tot (st2_WP (rel a b))
+let comp a b wp0 wp1 h2 p =
+    wp0 (R.l h2) (fun (y0, h0) ->
+      wp1 (R.r h2) (fun (y1, h1) -> p ((R y0 y1), (R h0 h1)))
+      )
 
 //TODO: this should be conditional on the monotonicity of the wps
-assume Monotone_comp: forall a b wp1 wp2 p1 p2. (forall x h. p1 x h ==> p2 x h)
-			==> (forall h. comp a b wp1 wp2 p1 h
-			    ==> comp a b wp1 wp2 p2 h)
-
+assume Monotone_comp: forall a b wp1 wp2 p1 p2. (forall x h. p1 (x, h) ==> p2 (x, h))
+			==> (forall h. comp a b wp1 wp2 h p1
+			    ==> comp a b wp1 wp2 h p2)
 
 assume val compose2: #a0:Type -> #b0:Type -> #wp0:(a0 -> Tot (st_wp b0))
                   -> #a1:Type -> #b1:Type -> #wp1:(a1 -> Tot (st_wp b1))
@@ -39,6 +38,7 @@ assume val compose2: #a0:Type -> #b0:Type -> #wp0:(a0 -> Tot (st_wp b0))
                   -> STATE2 (rel b0 b1)
                             (comp b0 b1 (wp0 (R.l x)) (wp1 (R.r x)))
 
+(* TODO : Investigate why it does not work anymore *)
 val compose2_self : #a:Type -> #b:Type -> #wp:(a -> Tot (st_wp b))
                 -> $c:(x:a -> STATE b (wp x))
                 -> x: double a
@@ -56,14 +56,14 @@ assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
                 -> #q':(heap2 -> rel c d -> heap2 -> Type)
                 -> $c1:(double unit -> ST2 (rel a b)
                                            (requires (fun h -> p h))
-                                           (ensures (fun h1 r h2 -> q h1 r h2)))
+                                           (ensures (fun h1 (r, h2) -> q h1 r h2)))
                 -> $c2:(double unit -> ST2 (rel c d)
                                            (requires (fun h -> p' h))
-                                           (ensures (fun h1 r h2 -> q' h1 r h2)))
+                                           (ensures (fun h1 (r, h2) -> q' h1 r h2)))
                 -> ST2 (rel a d) (requires (fun h -> (exists (hl:heap) (hr:heap).
                                                              p (R (R.l h) hr)
                                                           /\ p' (R hl (R.r h)))))
-                                 (ensures (fun h1 r h2 -> (exists (h2l:heap) (h2r:heap) (rl:c) (rr:b).
+                                 (ensures (fun h1 (r, h2) -> (exists (h2l:heap) (h2r:heap) (rl:c) (rr:b).
                                                                   q h1 (R (R.l r) rr) (R (R.l h2) (h2r))
                                                                /\ q' h1 (R rl (R.r r)) (R h2l (R.r h2)))))
 
@@ -72,18 +72,18 @@ assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
 val decomp_l : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (al:a0) -> (wp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1))))
 	     -> Tot (st_wp_h heap b0)
 let decomp_l a0 a1 b0 b1 al wp =
-  fun p hl ->
+  fun hl p ->
     (exists (ar:a1) (hr:heap).
-      wp (R al ar) (fun y2 h2 -> p (R.l y2) (R.l h2))
-         (R hl hr))
+      wp (R al ar) (R hl hr) (fun (y2, h2) -> p (R.l y2, R.l h2))
+    )
 
 val decomp_r : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (ar:a1) -> (wp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1))))
 	     -> Tot (st_wp_h heap b1)
 let decomp_r a0 a1 b0 b1 ar wp =
-  fun p hr ->
+  fun hr p ->
     (exists (al:a0) (hl:heap).
-      wp (R al ar) (fun y2 h2 -> p (R.r y2) (R.r h2))
-         (R hl hr))
+      wp (R al ar) (R hl hr) (fun (y2, h2) -> p (R.r y2, R.r h2))
+    )
 
 assume val project_l : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type
                     -> #wp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1)))
