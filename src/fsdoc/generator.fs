@@ -217,9 +217,11 @@ let document_module (m:modul) =
           let no_summary = "fsdoc: no-summary-found" in
           let no_comment = "fsdoc: no-comment-found" in
           let summary, comment = document_toplevel name top_decl in
+          let summary = (match summary with | Some(s) -> s | None -> no_summary) in
+          let comment = (match comment with | Some(s) -> s | None -> no_comment) in
           w (format "# module %s" [name.str]);
-          w (format "%s\n" [(match summary with Some(s) -> s | _ -> no_summary)]);
-          w (format "%s\n" [(match comment with Some(s) -> s | _ -> no_comment)]);
+          w (format "%s\n" [summary]);
+          w (format "%s\n" [comment]);
           // non-TopLevelModule decls. 
           List.iter (document_decl w) other_decls;
           close_file fd;
