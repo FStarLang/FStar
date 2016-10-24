@@ -506,6 +506,9 @@ let is_monadic_comp c =
   | M _ -> true
   | N _ -> false
 
+
+exception Not_found
+
 // ... the _ and * transformations from the definition language to F* ---------
 
 let rec mk_star_to_type mk env a =
