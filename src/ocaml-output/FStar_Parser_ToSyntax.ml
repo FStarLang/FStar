@@ -1638,10 +1638,13 @@ end))
 in (aux env [] None binders))))
 end)))
 end
-| FStar_Parser_AST.App ({FStar_Parser_AST.tm = FStar_Parser_AST.Var (a); FStar_Parser_AST.range = _65_1235; FStar_Parser_AST.level = _65_1233}, phi, _65_1241) when ((FStar_Ident.lid_equals a FStar_Syntax_Const.assert_lid) || (FStar_Ident.lid_equals a FStar_Syntax_Const.assume_lid)) -> begin
+| FStar_Parser_AST.App ({FStar_Parser_AST.tm = FStar_Parser_AST.Var (a); FStar_Parser_AST.range = rng; FStar_Parser_AST.level = _65_1233}, phi, _65_1240) when ((FStar_Ident.lid_equals a FStar_Syntax_Const.assert_lid) || (FStar_Ident.lid_equals a FStar_Syntax_Const.assume_lid)) -> begin
 (
 
 let phi = (desugar_formula env phi)
+in (
+
+let a = (FStar_Ident.set_lid_range a rng)
 in (let _160_460 = (let _160_459 = (let _160_458 = (FStar_Syntax_Syntax.fvar a FStar_Syntax_Syntax.Delta_equational None)
 in (let _160_457 = (let _160_456 = (FStar_Syntax_Syntax.as_arg phi)
 in (let _160_455 = (let _160_454 = (let _160_453 = (mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_unit)))
@@ -1650,7 +1653,7 @@ in (_160_454)::[])
 in (_160_456)::_160_455))
 in ((_160_458), (_160_457))))
 in FStar_Syntax_Syntax.Tm_app (_160_459))
-in (mk _160_460)))
+in (mk _160_460))))
 end
 | FStar_Parser_AST.App (_65_1246) -> begin
 (

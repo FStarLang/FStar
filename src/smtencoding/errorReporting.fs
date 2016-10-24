@@ -92,14 +92,14 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
                   let labels, lhs = match lhs.tm with 
                     | App(And, clauses_lhs) ->
-                      let requires, ensures = Util.prefix clauses_lhs in
-                      begin match ensures.tm with 
+                      let req, ens = Util.prefix clauses_lhs in
+                      begin match ens.tm with 
                         | Quant(Forall, pats_ens, iopt_ens, sorts_ens, {tm=App(Imp, [ensures_conjuncts; post]); rng=rng_ens}) 
                                 when is_a_post_condition post -> 
                           let labels, ensures_conjuncts = aux "could not prove post-condition" labels ensures_conjuncts in 
-                          let ensures = Term.mk (Quant(Forall, pats_ens, iopt_ens, sorts_ens, 
-                                                       Term.mk (App(Imp, [ensures_conjuncts; post])) rng_ens)) ensures.rng in
-                          let lhs = Term.mk (App(And, requires@[ensures])) lhs.rng in
+                          let ens = Term.mk (Quant(Forall, pats_ens, iopt_ens, sorts_ens, 
+                                                       Term.mk (App(Imp, [ensures_conjuncts; post])) rng_ens)) ens.rng in
+                          let lhs = Term.mk (App(And, req@[ens])) lhs.rng in
                           labels, Term.abstr names lhs
                         | _ -> raise Not_a_wp_implication
                       end
