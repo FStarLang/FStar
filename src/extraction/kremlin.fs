@@ -410,10 +410,10 @@ and translate_decl env d: option<decl> =
 
   | MLM_Ty [ (_, name, [], Some (MLTD_DType branches)) ] ->
       let name = env.module_name, name in
-      Some (DTypeVariant (name, List.map (fun (cons, ts) ->
-        cons, List.mapi (fun i t ->
+      Some (DTypeVariant (name, List.mapi (fun i (cons, ts) ->
+        cons, List.mapi (fun j t ->
           // TODO: carry the right names
-          Util.format1 "x%s" (string_of_int i), (translate_type env t, false)
+          Util.format2 "x%s%s" (string_of_int i) (string_of_int j), (translate_type env t, false)
         ) ts
       ) branches))
 
