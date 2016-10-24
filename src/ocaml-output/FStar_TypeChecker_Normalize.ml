@@ -1223,7 +1223,7 @@ end
 (match ((let _147_691 = (FStar_Syntax_Subst.compress a1)
 in _147_691.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string (b, _53_672)) -> begin
-(let _147_692 = (FStar_Bytes.utf8_bytes_as_string b)
+(let _147_692 = (FStar_Bytes.unicode_bytes_as_string b)
 in (op _147_692))
 end
 | _53_677 -> begin
@@ -1370,7 +1370,7 @@ end
 | FStar_Syntax_Syntax.Tm_app ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar (fv); FStar_Syntax_Syntax.tk = _53_947; FStar_Syntax_Syntax.pos = _53_945; FStar_Syntax_Syntax.vars = _53_943}, ((tm, _53_953))::[]) when ((FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.normalize) && (not ((FStar_Ident.lid_equals cfg.tcenv.FStar_TypeChecker_Env.curmodule FStar_Syntax_Const.prims_lid)))) -> begin
 (
 
-let s = (Beta)::(UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::(Zeta)::(Iota)::(Primops)::[]
+let s = (Reify)::(Beta)::(UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::(Zeta)::(Iota)::(Primops)::[]
 in (
 
 let cfg' = (

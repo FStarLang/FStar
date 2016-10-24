@@ -15,6 +15,7 @@ module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
 module PRF = Crypto.Symmetric.PRF
 module AE = Crypto.AEAD
+module AETypes = Crypto.AEAD.Invariant
 
 module L = FStar.List.Tot
 
@@ -195,7 +196,7 @@ let test() =
   dump "IV" 12ul ivBuffer;
   dump "Additional Data" 12ul aad;
 
-  let iv : Crypto.Symmetric.Cipher.iv (Crypto.AEAD.alg i) = 
+  let iv : Crypto.Symmetric.Cipher.iv (cipher_of_id i) = 
     lemma_little_endian_is_bounded (load_bytes 12ul ivBuffer);
     load_uint128 12ul ivBuffer in
   let expected_cipher = mk_expected_cipher () in
@@ -207,7 +208,7 @@ let test() =
   // To prove the assertion below for the concrete constants in PRF, AEAD:
   assert_norm (114 <= pow2 14);  
   assert_norm (FStar.Mul(114 <= 1999 * 64));
-  assert(AE.safelen i (v plainlen) 1ul);
+  assert(AETypes.safelen i (v plainlen) 1ul);
   AE.encrypt i st iv aadlen aad plainlen plain cipher;
   let ok_0 = diff "cipher" cipherlen expected_cipher cipher in
 

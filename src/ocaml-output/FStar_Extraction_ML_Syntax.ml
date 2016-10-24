@@ -13,13 +13,19 @@ type mlpath =
 (mlsymbol Prims.list * mlsymbol)
 
 
-let idsym : mlident  ->  mlsymbol = (fun _71_4 -> (match (_71_4) with
-| (s, _71_3) -> begin
+let ocamlkeywords : Prims.string Prims.list = ("and")::("as")::("assert")::("asr")::("begin")::("class")::("constraint")::("do")::("done")::("downto")::("else")::("end")::("exception")::("external")::("false")::("for")::("fun")::("function")::("functor")::("if")::("in")::("include")::("inherit")::("initializer")::("land")::("lazy")::("let")::("lor")::("lsl")::("lsr")::("lxor")::("match")::("method")::("mod")::("module")::("mutable")::("new")::("object")::("of")::("open")::("or")::("private")::("rec")::("sig")::("struct")::("then")::("to")::("true")::("try")::("type")::("val")::("virtual")::("when")::("while")::("with")::("nonrec")::[]
+
+
+let is_reserved : Prims.string  ->  Prims.bool = (fun k -> (FStar_List.existsb (fun k' -> (k' = k)) ocamlkeywords))
+
+
+let idsym : mlident  ->  mlsymbol = (fun _71_6 -> (match (_71_6) with
+| (s, _71_5) -> begin
 s
 end))
 
 
-let string_of_mlpath : mlpath  ->  mlsymbol = (fun _71_7 -> (match (_71_7) with
+let string_of_mlpath : mlpath  ->  mlsymbol = (fun _71_9 -> (match (_71_9) with
 | (p, s) -> begin
 (FStar_String.concat "." (FStar_List.append p ((s)::[])))
 end))
@@ -38,53 +44,53 @@ let ctr = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (
 
 let n_resets = (FStar_Util.mk_ref (Prims.parse_int "0"))
-in {gensym = (fun _71_13 -> (match (()) with
+in {gensym = (fun _71_15 -> (match (()) with
 | () -> begin
-(let _165_31 = (let _165_30 = (let _165_29 = (let _165_25 = (FStar_ST.read n_resets)
-in (FStar_Util.string_of_int _165_25))
-in (let _165_28 = (let _165_27 = (let _165_26 = (
+(let _165_34 = (let _165_33 = (let _165_32 = (let _165_28 = (FStar_ST.read n_resets)
+in (FStar_Util.string_of_int _165_28))
+in (let _165_31 = (let _165_30 = (let _165_29 = (
 
-let _71_14 = (FStar_Util.incr ctr)
+let _71_16 = (FStar_Util.incr ctr)
 in (FStar_ST.read ctr))
-in (FStar_Util.string_of_int _165_26))
-in (Prims.strcat "_" _165_27))
-in (Prims.strcat _165_29 _165_28)))
+in (FStar_Util.string_of_int _165_29))
 in (Prims.strcat "_" _165_30))
-in ((_165_31), ((Prims.parse_int "0"))))
-end)); reset = (fun _71_16 -> (match (()) with
+in (Prims.strcat _165_32 _165_31)))
+in (Prims.strcat "_" _165_33))
+in ((_165_34), ((Prims.parse_int "0"))))
+end)); reset = (fun _71_18 -> (match (()) with
 | () -> begin
 (
 
-let _71_17 = (FStar_ST.op_Colon_Equals ctr (Prims.parse_int "0"))
+let _71_19 = (FStar_ST.op_Colon_Equals ctr (Prims.parse_int "0"))
 in (FStar_Util.incr n_resets))
 end))}))
 
 
-let gensym : Prims.unit  ->  mlident = (fun _71_19 -> (match (()) with
+let gensym : Prims.unit  ->  mlident = (fun _71_21 -> (match (()) with
 | () -> begin
 (gs.gensym ())
 end))
 
 
-let reset_gensym : Prims.unit  ->  Prims.unit = (fun _71_20 -> (match (()) with
+let reset_gensym : Prims.unit  ->  Prims.unit = (fun _71_22 -> (match (()) with
 | () -> begin
 (gs.reset ())
 end))
 
 
 let rec gensyms : Prims.int  ->  mlident Prims.list = (fun x -> (match (x) with
-| _165_39 when (_165_39 = (Prims.parse_int "0")) -> begin
+| _165_42 when (_165_42 = (Prims.parse_int "0")) -> begin
 []
 end
 | n -> begin
-(let _165_41 = (gensym ())
-in (let _165_40 = (gensyms (n - (Prims.parse_int "1")))
-in (_165_41)::_165_40))
+(let _165_44 = (gensym ())
+in (let _165_43 = (gensyms (n - (Prims.parse_int "1")))
+in (_165_44)::_165_43))
 end))
 
 
-let mlpath_of_lident : FStar_Ident.lident  ->  (Prims.string Prims.list * Prims.string) = (fun x -> (let _165_45 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
-in ((_165_45), (x.FStar_Ident.ident.FStar_Ident.idText))))
+let mlpath_of_lident : FStar_Ident.lident  ->  (Prims.string Prims.list * Prims.string) = (fun x -> (let _165_48 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
+in ((_165_48), (x.FStar_Ident.ident.FStar_Ident.idText))))
 
 
 let as_mlident = (fun x -> ((x.FStar_Absyn_Syntax.ppname.FStar_Ident.idText), ((Prims.parse_int "0"))))
@@ -192,26 +198,26 @@ end))
 
 
 let ___MLTY_Var____0 = (fun projectee -> (match (projectee) with
-| MLTY_Var (_71_30) -> begin
-_71_30
+| MLTY_Var (_71_32) -> begin
+_71_32
 end))
 
 
 let ___MLTY_Fun____0 = (fun projectee -> (match (projectee) with
-| MLTY_Fun (_71_33) -> begin
-_71_33
+| MLTY_Fun (_71_35) -> begin
+_71_35
 end))
 
 
 let ___MLTY_Named____0 = (fun projectee -> (match (projectee) with
-| MLTY_Named (_71_36) -> begin
-_71_36
+| MLTY_Named (_71_38) -> begin
+_71_38
 end))
 
 
 let ___MLTY_Tuple____0 = (fun projectee -> (match (projectee) with
-| MLTY_Tuple (_71_39) -> begin
-_71_39
+| MLTY_Tuple (_71_41) -> begin
+_71_41
 end))
 
 
@@ -293,38 +299,38 @@ end))
 
 
 let ___MLC_Bool____0 = (fun projectee -> (match (projectee) with
-| MLC_Bool (_71_42) -> begin
-_71_42
+| MLC_Bool (_71_44) -> begin
+_71_44
 end))
 
 
 let ___MLC_Int____0 = (fun projectee -> (match (projectee) with
-| MLC_Int (_71_45) -> begin
-_71_45
+| MLC_Int (_71_47) -> begin
+_71_47
 end))
 
 
 let ___MLC_Float____0 = (fun projectee -> (match (projectee) with
-| MLC_Float (_71_48) -> begin
-_71_48
+| MLC_Float (_71_50) -> begin
+_71_50
 end))
 
 
 let ___MLC_Char____0 = (fun projectee -> (match (projectee) with
-| MLC_Char (_71_51) -> begin
-_71_51
+| MLC_Char (_71_53) -> begin
+_71_53
 end))
 
 
 let ___MLC_String____0 = (fun projectee -> (match (projectee) with
-| MLC_String (_71_54) -> begin
-_71_54
+| MLC_String (_71_56) -> begin
+_71_56
 end))
 
 
 let ___MLC_Bytes____0 = (fun projectee -> (match (projectee) with
-| MLC_Bytes (_71_57) -> begin
-_71_57
+| MLC_Bytes (_71_59) -> begin
+_71_59
 end))
 
 
@@ -402,38 +408,38 @@ end))
 
 
 let ___MLP_Const____0 = (fun projectee -> (match (projectee) with
-| MLP_Const (_71_60) -> begin
-_71_60
+| MLP_Const (_71_62) -> begin
+_71_62
 end))
 
 
 let ___MLP_Var____0 = (fun projectee -> (match (projectee) with
-| MLP_Var (_71_63) -> begin
-_71_63
+| MLP_Var (_71_65) -> begin
+_71_65
 end))
 
 
 let ___MLP_CTor____0 = (fun projectee -> (match (projectee) with
-| MLP_CTor (_71_66) -> begin
-_71_66
+| MLP_CTor (_71_68) -> begin
+_71_68
 end))
 
 
 let ___MLP_Branch____0 = (fun projectee -> (match (projectee) with
-| MLP_Branch (_71_69) -> begin
-_71_69
+| MLP_Branch (_71_71) -> begin
+_71_71
 end))
 
 
 let ___MLP_Record____0 = (fun projectee -> (match (projectee) with
-| MLP_Record (_71_72) -> begin
-_71_72
+| MLP_Record (_71_74) -> begin
+_71_74
 end))
 
 
 let ___MLP_Tuple____0 = (fun projectee -> (match (projectee) with
-| MLP_Tuple (_71_75) -> begin
-_71_75
+| MLP_Tuple (_71_77) -> begin
+_71_77
 end))
 
 
@@ -669,98 +675,98 @@ end))
 
 
 let ___MLE_Const____0 = (fun projectee -> (match (projectee) with
-| MLE_Const (_71_86) -> begin
-_71_86
+| MLE_Const (_71_88) -> begin
+_71_88
 end))
 
 
 let ___MLE_Var____0 = (fun projectee -> (match (projectee) with
-| MLE_Var (_71_89) -> begin
-_71_89
+| MLE_Var (_71_91) -> begin
+_71_91
 end))
 
 
 let ___MLE_Name____0 = (fun projectee -> (match (projectee) with
-| MLE_Name (_71_92) -> begin
-_71_92
+| MLE_Name (_71_94) -> begin
+_71_94
 end))
 
 
 let ___MLE_Let____0 = (fun projectee -> (match (projectee) with
-| MLE_Let (_71_95) -> begin
-_71_95
+| MLE_Let (_71_97) -> begin
+_71_97
 end))
 
 
 let ___MLE_App____0 = (fun projectee -> (match (projectee) with
-| MLE_App (_71_98) -> begin
-_71_98
+| MLE_App (_71_100) -> begin
+_71_100
 end))
 
 
 let ___MLE_Fun____0 = (fun projectee -> (match (projectee) with
-| MLE_Fun (_71_101) -> begin
-_71_101
+| MLE_Fun (_71_103) -> begin
+_71_103
 end))
 
 
 let ___MLE_Match____0 = (fun projectee -> (match (projectee) with
-| MLE_Match (_71_104) -> begin
-_71_104
+| MLE_Match (_71_106) -> begin
+_71_106
 end))
 
 
 let ___MLE_Coerce____0 = (fun projectee -> (match (projectee) with
-| MLE_Coerce (_71_107) -> begin
-_71_107
+| MLE_Coerce (_71_109) -> begin
+_71_109
 end))
 
 
 let ___MLE_CTor____0 = (fun projectee -> (match (projectee) with
-| MLE_CTor (_71_110) -> begin
-_71_110
+| MLE_CTor (_71_112) -> begin
+_71_112
 end))
 
 
 let ___MLE_Seq____0 = (fun projectee -> (match (projectee) with
-| MLE_Seq (_71_113) -> begin
-_71_113
+| MLE_Seq (_71_115) -> begin
+_71_115
 end))
 
 
 let ___MLE_Tuple____0 = (fun projectee -> (match (projectee) with
-| MLE_Tuple (_71_116) -> begin
-_71_116
+| MLE_Tuple (_71_118) -> begin
+_71_118
 end))
 
 
 let ___MLE_Record____0 = (fun projectee -> (match (projectee) with
-| MLE_Record (_71_119) -> begin
-_71_119
+| MLE_Record (_71_121) -> begin
+_71_121
 end))
 
 
 let ___MLE_Proj____0 = (fun projectee -> (match (projectee) with
-| MLE_Proj (_71_122) -> begin
-_71_122
+| MLE_Proj (_71_124) -> begin
+_71_124
 end))
 
 
 let ___MLE_If____0 = (fun projectee -> (match (projectee) with
-| MLE_If (_71_125) -> begin
-_71_125
+| MLE_If (_71_127) -> begin
+_71_127
 end))
 
 
 let ___MLE_Raise____0 = (fun projectee -> (match (projectee) with
-| MLE_Raise (_71_128) -> begin
-_71_128
+| MLE_Raise (_71_130) -> begin
+_71_130
 end))
 
 
 let ___MLE_Try____0 = (fun projectee -> (match (projectee) with
-| MLE_Try (_71_131) -> begin
-_71_131
+| MLE_Try (_71_133) -> begin
+_71_133
 end))
 
 
@@ -798,20 +804,20 @@ end))
 
 
 let ___MLTD_Abbrev____0 = (fun projectee -> (match (projectee) with
-| MLTD_Abbrev (_71_136) -> begin
-_71_136
+| MLTD_Abbrev (_71_138) -> begin
+_71_138
 end))
 
 
 let ___MLTD_Record____0 = (fun projectee -> (match (projectee) with
-| MLTD_Record (_71_139) -> begin
-_71_139
+| MLTD_Record (_71_141) -> begin
+_71_141
 end))
 
 
 let ___MLTD_DType____0 = (fun projectee -> (match (projectee) with
-| MLTD_DType (_71_142) -> begin
-_71_142
+| MLTD_DType (_71_144) -> begin
+_71_144
 end))
 
 
@@ -873,32 +879,32 @@ end))
 
 
 let ___MLM_Ty____0 = (fun projectee -> (match (projectee) with
-| MLM_Ty (_71_145) -> begin
-_71_145
+| MLM_Ty (_71_147) -> begin
+_71_147
 end))
 
 
 let ___MLM_Let____0 = (fun projectee -> (match (projectee) with
-| MLM_Let (_71_148) -> begin
-_71_148
+| MLM_Let (_71_150) -> begin
+_71_150
 end))
 
 
 let ___MLM_Exn____0 = (fun projectee -> (match (projectee) with
-| MLM_Exn (_71_151) -> begin
-_71_151
+| MLM_Exn (_71_153) -> begin
+_71_153
 end))
 
 
 let ___MLM_Top____0 = (fun projectee -> (match (projectee) with
-| MLM_Top (_71_154) -> begin
-_71_154
+| MLM_Top (_71_156) -> begin
+_71_156
 end))
 
 
 let ___MLM_Loc____0 = (fun projectee -> (match (projectee) with
-| MLM_Loc (_71_157) -> begin
-_71_157
+| MLM_Loc (_71_159) -> begin
+_71_159
 end))
 
 
@@ -952,26 +958,26 @@ end))
 
 
 let ___MLS_Mod____0 = (fun projectee -> (match (projectee) with
-| MLS_Mod (_71_160) -> begin
-_71_160
+| MLS_Mod (_71_162) -> begin
+_71_162
 end))
 
 
 let ___MLS_Ty____0 = (fun projectee -> (match (projectee) with
-| MLS_Ty (_71_163) -> begin
-_71_163
+| MLS_Ty (_71_165) -> begin
+_71_165
 end))
 
 
 let ___MLS_Val____0 = (fun projectee -> (match (projectee) with
-| MLS_Val (_71_166) -> begin
-_71_166
+| MLS_Val (_71_168) -> begin
+_71_168
 end))
 
 
 let ___MLS_Exn____0 = (fun projectee -> (match (projectee) with
-| MLS_Exn (_71_169) -> begin
-_71_169
+| MLS_Exn (_71_171) -> begin
+_71_171
 end))
 
 
@@ -995,8 +1001,8 @@ end))
 
 
 let ___MLLib____0 = (fun projectee -> (match (projectee) with
-| MLLib (_71_176) -> begin
-_71_176
+| MLLib (_71_178) -> begin
+_71_178
 end))
 
 
@@ -1024,11 +1030,18 @@ let obj_repr = (with_ty (MLTY_Fun (((t), (E_PURE), (MLTY_Top)))) (MLE_Name (((("
 in (with_ty_loc MLTY_Top (MLE_App (((obj_repr), ((x)::[])))) x.loc)))
 
 
-let bv_as_mlident : FStar_Syntax_Syntax.bv  ->  (Prims.string * Prims.int) = (fun x -> if ((FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText FStar_Ident.reserved_prefix) || (FStar_Syntax_Syntax.is_null_bv x)) then begin
-(let _165_724 = (let _165_723 = (let _165_722 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
-in (Prims.strcat "_" _165_722))
-in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _165_723))
-in ((_165_724), ((Prims.parse_int "0"))))
+let avoid_keyword : Prims.string  ->  Prims.string = (fun s -> if (is_reserved s) then begin
+(Prims.strcat s "_")
+end else begin
+s
+end)
+
+
+let bv_as_mlident : FStar_Syntax_Syntax.bv  ->  mlident = (fun x -> if (((FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText FStar_Ident.reserved_prefix) || (FStar_Syntax_Syntax.is_null_bv x)) || (is_reserved x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText)) then begin
+(let _165_729 = (let _165_728 = (let _165_727 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
+in (Prims.strcat "_" _165_727))
+in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _165_728))
+in ((_165_729), ((Prims.parse_int "0"))))
 end else begin
 ((x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText), ((Prims.parse_int "0")))
 end)
