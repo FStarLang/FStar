@@ -182,19 +182,17 @@ let document_decl (w:string->unit) (d:decl) =
         w "" // EOL 
   else ()
 
-// return Some(summary), or comment, or (if there's no comment) nothing. 
+// return (opt_summary, opt_doc) pair
 let document_toplevel name topdecl = 
-  let no_doc_provided = "(* fsdoc: no doc for module " ^ name.str ^ " *)" in 
   match topdecl.d with
   | TopLevelModule _ ->
     // summary, or doc, or nodoc.
-    begin match topdecl.doc with
+    (match topdecl.doc with
     | Some (doc, kw) -> 
         (match List.tryFind (fun (k,v)->k = "summary") kw with
-        | None -> doc 
-        | Some (_, summary) -> ("summary:"^summary))
-    | None -> no_doc_provided 
-    end
+        | None -> None, Some(doc)
+        | Some (_, summary) -> Some(summary), Some(doc))
+    | None -> None, None)
   | _ -> raise(FStar.Syntax.Syntax.Err("Not a TopLevelModule"))
 
 
@@ -216,29 +214,30 @@ let document_module (m:modul) =
           let fd = open_file_for_writing on in
           let w = append_to_file fd in
           // SI: keep TopLevelModule special? 
-          let comm = document_toplevel name top_decl in 
+          let no_summary = "fsdoc: no-summary-found" in
+          let no_comment = "fsdoc: no-comment-found" in
+          let summary, comment = document_toplevel name top_decl in
           w (format "# module %s" [name.str]);
-          w (format "%s\n" [comm]);
-          // SI: this will print doc twice if there's no "summary:" kw. 
-          (match top_decl.doc with | Some(doc, _) -> w doc | _ -> ());
+          w (format "%s\n" [(match summary with Some(s) -> s | _ -> no_summary)]);
+          w (format "%s\n" [(match comment with Some(s) -> s | _ -> no_comment)]);
           // non-TopLevelModule decls. 
           List.iter (document_decl w) other_decls;
           close_file fd;
           name
         end
     | None -> raise(FStar.Syntax.Syntax.Err(Util.format1 "No singleton toplevel in module %s" name.str))
-
+        
 ///////////////////////////////////////////////////////////////////////////////
 // entry point 
 ///////////////////////////////////////////////////////////////////////////////
 let generate (files:list<string>) =
   // fsdoc each module into it's own module.md. 
   let modules = List.collect (fun fn -> P.parse_file fn) files in
-  let mod_names = List.map document_module modules in
+  let mods = List.map document_module modules in
   // write mod_names into index.md 
   let on = O.prepend_output_dir "index.md" in 
   let fd = open_file_for_writing on in 
-  List.iter (fun m -> append_to_file fd (format "%s\n" [m.str])) mod_names;
+  List.iter (fun m -> append_to_file fd (format "%s\n" [m.str])) mods;
   close_file fd
 
 
