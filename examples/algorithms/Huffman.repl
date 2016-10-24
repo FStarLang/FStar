@@ -1,0 +1,13 @@
+
+#require "zarith";;
+#require "batteries";;
+
+open Huffman;;
+let t = huffman (List.map (fun (c,n) -> (c, Big_int_Z.big_int_of_int n))
+  [('A',2); ('E',5); ('F',1); ('H',1); ('I',1); ('L',1);
+   ('N',1); ('R',1); ('S',2); ('T',3); ('U',1); (' ',2)]);;
+Big_int_Z.int_of_big_int (Huffman.___Node___w t);;
+let ss = BatString.explode "THE ESSENTIAL FEATURE";;
+let Some e = encode t ss;;
+let Some d = decode t e;;
+print_string (BatString.implode d ^ "\n");;

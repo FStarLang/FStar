@@ -31,6 +31,12 @@ let rec insert_in_sorted (x:trie) (xs:list trie) : Pure (list trie)
   | x'::xs' -> if weight x < weight x' then (admit(); x :: xs)
                else (admit(); x' :: (insert_in_sorted x xs'))
 
+let rec insertion_sort (ts : list trie) : Pure (list trie)
+    (requires (True)) (ensures (fun ts -> sorted ts)) =
+  match ts with
+  | [] -> []
+  | t::ts' -> insert_in_sorted t (insertion_sort ts')
+
 let rec huffman_trie (ts:list trie) : Pure trie
     (requires (sorted ts /\ List.Tot.length ts > 0))
     (ensures (fun cs -> True)) (decreases (List.Tot.length ts)) =
@@ -39,6 +45,11 @@ let rec huffman_trie (ts:list trie) : Pure trie
       let w = weight t1 + weight t2 in
       huffman_trie (Node w t1 t2 `insert_in_sorted` ts')
   | [t1] -> t1
+
+let huffman (sws:list (symbol*pos)) : Pure trie
+    (requires (b2t (List.Tot.length sws > 0)))
+    (ensures (fun _ -> True)) =
+  huffman_trie (insertion_sort (List.Tot.map (fun (s,w) -> Leaf w s) sws))
 
 let rec encode_one (t:trie) (s:symbol) : Tot (option (list bool)) =
   match t with
@@ -64,30 +75,32 @@ let rec decode_one (t:trie) (bs:list bool) : Pure (option (symbol * list bool))
                    (List.Tot.length (snd (Some.v r)) <= List.Tot.length bs /\
      (is_Node t ==> List.Tot.length (snd (Some.v r)) < List.Tot.length bs)))) =
   match t, bs with
-  | Node _ t1 t2, b::bs' -> decode_one (if b then t1 else t2) bs'
+  | Node _ t1 t2, b::bs' -> decode_one (if b then t2 else t1) bs'
   | Leaf _ s, _ -> Some (s, bs)
-  | Node _ _ _, [] -> None
+  | Node _ _ _, [] -> None (* out of symbols *)
 
-let rec decode (t:trie) (bs:list bool) : Pure (option (list symbol))
-    (requires (b2t (is_Node t))) (ensures (fun _ -> True))
+let rec decode (t:trie) (bs:list bool) : Tot (option (list symbol))
     (decreases (List.Tot.length bs)) =
-  match bs with
-  | [] -> Some []
-  | _::_ -> match decode_one t bs with
-            | Some (s, bs') -> (match decode t bs' with
-                                | Some ss -> Some (s :: ss)
-                                | None    -> None)
-            | _ -> None
+  match t, bs with
+  | Leaf _ s, [] -> Some [s] (* degenerate case *)
+  | Leaf _ _, _  -> None (* too many symbols *)
+  | Node _ _ _, [] -> Some []
+  | Node _ _ _, _::_ -> match decode_one t bs with
+                        | Some (s, bs') -> (match decode t bs' with
+                                            | Some ss -> Some (s :: ss)
+                                            | None    -> None)
+                        | _ -> None
 
 // proving this should require prefix freedom
-let cancelation (t:trie) (ss:list symbol) : Lemma
-  (requires (b2t (is_Node t)))
-  (ensures (is_Node t ==>
+let cancelation (sws:list (symbol*pos)) (ss:list symbol) : Lemma
+  (requires (b2t (List.Tot.length sws > 0)))
+  (ensures (List.Tot.length sws > 0 ==>
+            (let t = huffman sws in
             (match encode t ss with
             | Some e -> (match decode t e with
                         | Some d -> d = ss
                         | None -> True)
-            | None -> True))) = admit()
+            | None -> True)))) = admit()
 
 
 
