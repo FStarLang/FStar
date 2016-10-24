@@ -1,7 +1,6 @@
 [
   "ÝtïBN}á<\u0004\u0004\u007fß\u0012³?è",
   [
-    [ "Crypto.Symmetric.Poly1305.Bigint.bigint", 1, 0, 1, [ "@query" ], 0 ],
     [ "Crypto.Symmetric.Poly1305.Bigint.norm", 1, 0, 1, [ "@query" ], 0 ],
     [ "Crypto.Symmetric.Poly1305.Bigint.null", 1, 0, 1, [ "@query" ], 0 ],
     [
@@ -86,10 +85,9 @@
       ],
       0
     ],
-    [ "Crypto.Symmetric.Poly1305.Bigint.eval", 1, 0, 1, [ "@query" ], 0 ],
     [
       "Crypto.Symmetric.Poly1305.Bigint.eval",
-      2,
+      1,
       0,
       1,
       [
@@ -102,11 +100,13 @@
         "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
         "equation_FStar.Buffer.buffer", "equation_FStar.Mul.op_Star",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt64.n", "equation_FStar.UInt64.t",
-        "equation_Prims.nat", "equation_Prims.pos",
-        "fuel_guarded_inversion_FStar.Buffer.buffer_",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt64.n",
+        "equation_FStar.UInt64.t", "equation_Prims.nat",
+        "equation_Prims.pos",
+        "fuel_correspondence_Prims.pow2.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Buffer._buffer",
         "fuel_guarded_inversion_FStar.HyperStack.mem", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
@@ -202,14 +202,6 @@
       1,
       0,
       1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bigint.eval_bytes",
-      2,
-      0,
-      1,
       [
         "@query", "b2t_def", "binder_x_0a68c1a6192dc79eb5863f40b5bca7c2_2",
         "binder_x_2f9fe4ba7e518e92e1246cd19e97bdaa_1",
@@ -224,7 +216,7 @@
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt8.n",
         "equation_FStar.UInt8.t", "equation_Prims.nat", "equation_Prims.pos",
         "fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Buffer.buffer_",
+        "fuel_guarded_inversion_FStar.Buffer._buffer",
         "fuel_guarded_inversion_FStar.HyperStack.mem", "int_inversion",
         "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
@@ -235,15 +227,16 @@
         "refinement_interpretation_Tm_refine_06b8b036d892ce64b891888bc5399981",
         "refinement_interpretation_Tm_refine_652c6713c771075085c556101f5aa439",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_da6fd9c5f7bf46f15d55c219e0dc0677",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "refinement_interpretation_Tm_refine_f9d0183e88a20142f8fbc6f18b9eb947",
         "well-founded-ordering-on-nat"
       ],
       0
     ],
-    [ "Crypto.Symmetric.Poly1305.Bigint.maxValue", 1, 0, 1, [ "@query" ], 0 ],
     [
       "Crypto.Symmetric.Poly1305.Bigint.maxValue",
-      2,
+      1,
       0,
       1,
       [
@@ -259,7 +252,7 @@
         "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt64.n",
         "equation_FStar.UInt64.t", "equation_Prims.pos",
-        "fuel_guarded_inversion_FStar.Buffer.buffer_",
+        "fuel_guarded_inversion_FStar.Buffer._buffer",
         "fuel_guarded_inversion_FStar.HyperStack.mem", "int_inversion",
         "int_typing", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_LessThanOrEqual",
@@ -485,14 +478,6 @@
       1,
       0,
       1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bigint.maxValueNorm",
-      2,
-      0,
-      1,
       [
         "@query", "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",
         "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
@@ -507,14 +492,6 @@
       1,
       0,
       1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bigint.maxValueIdx",
-      2,
-      0,
-      1,
       [
         "@query", "binder_x_6d36f607a7b3cb43bf125269894e1f8a_1",
         "binder_x_cade9e2ecbd087d2a73cfbcef90133c2_0",
@@ -526,7 +503,7 @@
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
         "equation_FStar.Buffer.buffer", "equation_FStar.UInt64.t",
         "equation_Prims.nat", "equation_Prims.pos",
-        "fuel_guarded_inversion_FStar.Buffer.buffer_",
+        "fuel_guarded_inversion_FStar.Buffer._buffer",
         "fuel_guarded_inversion_FStar.HyperStack.mem", "int_inversion",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_033585b16f9282fb8c7c71161354496f",
@@ -541,7 +518,7 @@
     ],
     [
       "Crypto.Symmetric.Poly1305.Bigint.maxValueIdx",
-      3,
+      2,
       0,
       1,
       [

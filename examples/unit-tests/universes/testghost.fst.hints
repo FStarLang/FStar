@@ -3,12 +3,10 @@
   [
     [ "TestGhost.g", 1, 2, 1, [ "@query" ], 0 ],
     [ "TestGhost.h", 1, 2, 1, [ "@query" ], 0 ],
-    [ "TestGhost.h", 2, 2, 1, [ "@query" ], 0 ],
     [ "TestGhost.i", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "TestGhost.i", 2, 2, 1, [ "@query" ], 0 ],
     [
       "TestGhost.i",
-      3,
+      2,
       2,
       1,
       [
@@ -17,7 +15,6 @@
       ],
       0
     ],
-    [ "TestGhost.j", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "TestGhost.j", 2, 2, 1, [ "@query" ], 0 ]
+    [ "TestGhost.j", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ]
   ]
 ]

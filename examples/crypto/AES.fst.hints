@@ -1,7 +1,6 @@
 [
   "|ÿIßAÿ]ş0?3JĞq\n",
   [
-    [ "AES.nbytes", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AES.plain",
       1,
@@ -47,7 +46,6 @@
         "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
       ],
       0
-    ],
-    [ "AES.enc", 2, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

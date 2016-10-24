@@ -13,7 +13,18 @@
       ],
       0
     ],
-    [ "Ex10b.point", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex10b.point",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Heap.ref_haseq",
+        "assumption_Prims.HasEq_int", "equation_FStar.ST.ref",
+        "function_token_typing_Prims.int"
+      ],
+      0
+    ],
     [
       "Ex10b.point",
       3,
@@ -39,19 +50,6 @@
       ],
       0
     ],
-    [
-      "Ex10b.point",
-      5,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Heap.ref_haseq",
-        "assumption_Prims.HasEq_int", "equation_FStar.ST.ref",
-        "function_token_typing_Prims.int",
-        "haseqTm_refine_f2a77ae22406f0f6f8f3003c6e41b99e", "ref_inversion"
-      ],
-      0
-    ],
     [ "Ex10b.Point.x", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex10b.Point.y",
@@ -65,10 +63,9 @@
       ],
       0
     ],
-    [ "Ex10b.Point.y", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex10b.Point.y",
-      3,
+      2,
       2,
       1,
       [
@@ -94,10 +91,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Ex10b.new_point", 3, 2, 1, [ "@query" ], 0 ],
     [
       "Ex10b.new_point",
-      4,
+      3,
       2,
       1,
       [
@@ -207,10 +203,9 @@
       ],
       0
     ],
-    [ "Ex10b.shift_x_p1", 5, 2, 1, [ "@query" ], 0 ],
     [
       "Ex10b.shift_x_p1",
-      6,
+      5,
       2,
       1,
       [
@@ -242,7 +237,7 @@
     ],
     [
       "Ex10b.shift_x_p1",
-      7,
+      6,
       2,
       1,
       [
@@ -344,10 +339,9 @@
       ],
       0
     ],
-    [ "Ex10b.shift_p1", 5, 2, 1, [ "@query" ], 0 ],
     [
       "Ex10b.shift_p1",
-      6,
+      5,
       2,
       1,
       [
@@ -382,7 +376,7 @@
     ],
     [
       "Ex10b.shift_p1",
-      7,
+      6,
       2,
       1,
       [

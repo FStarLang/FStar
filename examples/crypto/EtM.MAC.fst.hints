@@ -32,8 +32,7 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "EtM.MAC.sha1", 2, 2, 1, [ "@query" ], 0 ],
-    [ "EtM.MAC.sha1", 3, 2, 1, [ "@query", "equation_EtM.MAC.macsize" ], 0 ],
+    [ "EtM.MAC.sha1", 2, 2, 1, [ "@query", "equation_EtM.MAC.macsize" ], 0 ],
     [
       "EtM.MAC.hmac_sha1",
       1,
@@ -69,10 +68,9 @@
       ],
       0
     ],
-    [ "EtM.MAC.genPost", 1, 2, 1, [ "@query" ], 0 ],
     [
       "EtM.MAC.genPost",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
@@ -178,27 +176,6 @@
       2,
       1,
       [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "assumption_Prims.HasEq_tuple2",
-        "equality_tok_CoreCrypto.AES_128_CBC@tok",
-        "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.blockSize",
-        "equation_CoreCrypto.hashSize", "equation_EtM.CPA.cipher",
-        "equation_EtM.CPA.ivsize", "equation_EtM.MAC.macsize",
-        "equation_EtM.MAC.msg", "equation_EtM.MAC.tag",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "function_token_typing_EtM.CPA.cipher",
-        "function_token_typing_EtM.MAC.tag",
-        "haseqTm_refine_12eb3fd7a033166e40e43205a6b107c8",
-        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
-      ],
-      0
-    ],
-    [
-      "EtM.MAC.mac",
-      2,
-      2,
-      1,
-      [
         "@query", "equation_EtM.CPA.cipher", "equation_EtM.MAC.log_t",
         "equation_EtM.MAC.msg", "equation_EtM.MAC.tag",
         "equation_FStar.Monotonic.RRef.m_sel",
@@ -242,15 +219,15 @@
       ],
       0
     ],
-    [ "EtM.MAC.verify", 2, 2, 1, [ "@query" ], 0 ],
     [
       "EtM.MAC.verify",
-      3,
+      2,
       2,
       1,
       [
         "@query", "assumption_FStar.HyperHeap.HasEq_rid", "bool_inversion",
-        "equation_EtM.CPA.cipher", "equation_EtM.MAC.log_t",
+        "disc_equation_Prims.Some", "equation_EtM.CPA.cipher",
+        "equation_EtM.CPA.mem", "equation_EtM.MAC.log_t",
         "equation_EtM.MAC.msg", "equation_EtM.MAC.tag",
         "equation_FStar.HyperHeap.modifies_just",
         "equation_FStar.HyperHeap.t", "equation_FStar.HyperStack.hh",
@@ -277,6 +254,7 @@
         "lemma_FStar.Map.lemma_SelConcat2",
         "lemma_FStar.Map.lemma_SelRestrict",
         "lemma_FStar.Map.lemma_equal_intro",
+        "lemma_FStar.Set.mem_complement", "lemma_FStar.Set.mem_empty",
         "pretyping_6c86c071b92797cdf01eb016249a9465",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Negation", "proj_equation_EtM.MAC.Key_region",
@@ -300,7 +278,7 @@
     ],
     [
       "EtM.MAC.verify",
-      4,
+      3,
       2,
       1,
       [
@@ -314,7 +292,7 @@
     ],
     [
       "EtM.MAC.verify",
-      5,
+      4,
       2,
       1,
       [

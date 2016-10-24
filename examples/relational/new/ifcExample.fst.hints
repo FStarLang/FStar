@@ -1,10 +1,6 @@
 [
   "8””≠KÜ\fã≥æ©qD®ì¿",
   [
-    [ "IfcExample.x", 1, 2, 1, [ "@query" ], 0 ],
-    [ "IfcExample.y", 1, 2, 1, [ "@query" ], 0 ],
-    [ "IfcExample.z", 1, 2, 1, [ "@query" ], 0 ],
-    [ "IfcExample.c", 1, 2, 1, [ "@query" ], 0 ],
     [
       "IfcExample.env",
       1,
@@ -61,7 +57,6 @@
       ],
       0
     ],
-    [ "IfcExample.c1_0", 1, 2, 1, [ "@query" ], 0 ],
     [
       "IfcExample.c1_1_ni",
       1,
@@ -360,11 +355,9 @@
         "function_token_typing_IfcExample.x",
         "function_token_typing_IfcExample.y",
         "function_token_typing_IfcExample.z",
-        "function_token_typing_Prims.int",
-        "function_token_typing_WhileLanguage.interpret_binop", "int_typing",
+        "function_token_typing_Prims.int", "int_typing",
         "interpretation_Tm_arrow_51479de25e05fe52df14db5c5450f2a6",
         "interpretation_Tm_arrow_55223501af62c06c39f33e69ec766f3c",
-        "interpretation_Tm_arrow_bfe5f00508ea54c05f3dfed1abbbdb8b",
         "kinding_Prims.option@tok", "lemma_Ifc.seq_com_",
         "pretyping_6c86c071b92797cdf01eb016249a9465",
         "pretyping_6d70af9fe60f837445479bcc32d93752",
@@ -390,7 +383,7 @@
         "projection_inverse_WhileLanguage.Seq_second", "ref_inversion",
         "refinement_interpretation_Tm_refine_48e391da252c1cc430cdd0759de928fc",
         "token_correspondence_IfcExample.env",
-        "token_correspondence_WhileLanguage.interpret_binop",
+        "token_correspondence_WhileLanguage.interpret_com.fuel_instrumented",
         "token_correspondence_WhileLanguage.interpret_exp.fuel_instrumented",
         "typing_FStar.Heap.sel", "typing_FStar.Heap.upd",
         "typing_Ifc.op_Less", "typing_Prims.Some.v", "typing_Rel.R.l",
