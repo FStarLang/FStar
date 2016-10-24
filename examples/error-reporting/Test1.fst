@@ -25,20 +25,4 @@ let test4 (x:int) =
   y + 1
 
 val test5: x:int -> Pure int (requires (b2t (x <> 0))) (ensures (fun x -> 0 >= 0 /\ x >= 0))
-let test5 x = x + 1
-
-
-(* let (x:int) = False *)
-(* val main: int -> Tot int *)
-
-(* assume val test1: x:int -> Pure int (requires (good x)) *)
-(* 			       (ensures (fun x -> True)) *)
-
-(* val main: int -> Tot int *)
-(* let main x = *)
-(*   let f = test0 in *)
-(*   let w = test0 x in *)
-(*   let y = f w in *)
-(*   let zz = test1 x in *)
-(*   let z = test0 (op_Multiply y y) in *)
-(*   z *)
+let test5 x = x + 1 //reports failing 2nd conjunct of post-condition
