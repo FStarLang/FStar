@@ -51,7 +51,16 @@ Notes:
 ///////////////////////////////////////////////////////////////////////////////
 // lib
 ///////////////////////////////////////////////////////////////////////////////
- 
+
+// Test for a single TopLevelModule \in decls.  
+let one_toplevel (decls:list<decl>) = 
+let top,nontops = List.partition 
+                    (fun d -> match d.d with | TopLevelModule _ -> true | _ -> false) 
+                    decls in
+match top with
+| t :: [] -> Some (t,nontops)
+| _ -> None
+
 // We store a forest-like representation of the module namespaces for index generation.
 // SI: not used yet.
 type mforest =
@@ -71,7 +80,8 @@ let string_of_fsdoco d = string_of_optiont (fun x -> "(*" ^ string_of_fsdoc x ^ 
 let string_of_termo t = string_of_optiont term_to_string "" t
 
 // wrap-up s in MD code block.
-let code_wrap s = "```\n" ^ s ^ "\n```\n"
+// SI: we pretend to be F# so that pandoc can produce prettier html. 
+let code_wrap s = "```fsharp\n" ^ s ^ "\n```\n"
 
 ///////////////////////////////////////////////////////////////////////////////
 // tycon
@@ -110,17 +120,16 @@ let string_of_decl' d =
   | ModuleAbbrev (i, l) -> "module " ^ i.idText ^ " = " ^ l.str
   | KindAbbrev(i, _, _) -> "kind " ^ i.idText
   | ToplevelLet(_, _, pats) -> 
-        code_wrap 
-            ("let " ^ 
-                (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", "))
+        let termty = List.map (fun (p,t) -> (pat_to_string p, term_to_string t)) pats in 
+        let termty' = List.map (fun (p,t) -> p ^ ":" ^ t) termty in
+        "let " ^ (String.concat ", " termty')
   | Main _ -> "main ..."
-  | Assume(_, i, _) -> "assume " ^ i.idText
+  | Assume(_, i, t) -> "assume " ^ i.idText ^ ":" ^ (term_to_string t)
   | Tycon(_, tys) -> 
-        code_wrap
-            ("type " ^ 
+            "type " ^ 
              (tys |> List.map (fun (t,d)-> (string_of_tycon t) ^ " " ^ (string_of_fsdoco d)) 
-                 |> String.concat " and ")) (* SI: sep will be "," for Record but "and" for Variant *)
-      | Val(_, i, _) -> "val " ^ i.idText
+                 |> String.concat " and ") (* SI: sep will be "," for Record but "and" for Variant *)
+  | Val(_, i, t) -> "val " ^ i.idText ^ ":" ^ (term_to_string t)
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(_, DefineEffect(i, _, _, _, _))
   | NewEffect(_, RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
@@ -128,7 +137,7 @@ let string_of_decl' d =
   | NewEffectForFree(_, RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
-  | Fsdoc (com,_) -> com
+  | Fsdoc (comm,_) -> comm
 
 // A decl is documented if either:
 // - it's got a fsdoc attached to it (either at top-level or in it's subtree); or
@@ -158,12 +167,13 @@ let decl_documented (d:decl) =
         // no other way to document a decl right now 
         | _ -> false
         end 
+
 let document_decl (w:string->unit) (d:decl) = 
   if decl_documented d then 
     // This expr is OK F# code, but we need a few {begin, '('}s to make it OCaml as well. 
         // print the decl 
         let {d = decl; drange = _; doc = fsdoc} = d in
-        w (string_of_decl' d.d); 
+        w (code_wrap (string_of_decl' d.d)); 
         // print the doc, if there's one 
         begin match fsdoc with 
         | Some(doc,_kw) -> w ("\n" ^ doc) // SI: do something with kw 
@@ -172,27 +182,19 @@ let document_decl (w:string->unit) (d:decl) =
         w "" // EOL 
   else ()
 
+// return (opt_summary, opt_doc) pair
 let document_toplevel name topdecl = 
-  let no_doc_provided = "(* fsdoc: no doc for module " ^ name.str ^ " *)" in 
   match topdecl.d with
   | TopLevelModule _ ->
-        // summary, or doc, or nodoc.
-    begin match topdecl.doc with
+    // summary, or doc, or nodoc.
+    (match topdecl.doc with
     | Some (doc, kw) -> 
         (match List.tryFind (fun (k,v)->k = "summary") kw with
-        | None -> doc 
-        | Some (_, summary) -> ("summary:"^summary))
-    | None -> no_doc_provided 
-    end
+        | None -> None, Some(doc)
+        | Some (_, summary) -> Some(summary), Some(doc))
+    | None -> None, None)
   | _ -> raise(FStar.Syntax.Syntax.Err("Not a TopLevelModule"))
 
-let one_toplevel (decls:list<decl>) = 
-    let top,nontops = List.partition 
-                        (fun d -> match d.d with | TopLevelModule _ -> true | _ -> false) 
-                        decls in
-    match top with
-    | t :: [] -> Some (t,nontops)
-    | _ -> None
 
 ///////////////////////////////////////////////////////////////////////////////
 // modul
@@ -203,7 +205,7 @@ let document_module (m:modul) =
   let name, decls, _mt = match m with // SI: don't forget mt!
     | Module(n,d) -> n, d, "module"
     | Interface(n,d,_) -> n, d, "interface" in
-  // Run document_decl against it the toplevel, 
+  // Run document_toplevel against the toplevel, 
   // then run document_decl against all the other decls. 
   match one_toplevel decls with 
   | Some (top_decl,other_decls) -> 
@@ -212,29 +214,32 @@ let document_module (m:modul) =
           let fd = open_file_for_writing on in
           let w = append_to_file fd in
           // SI: keep TopLevelModule special? 
-          let com = document_toplevel name top_decl in 
+          let no_summary = "fsdoc: no-summary-found" in
+          let no_comment = "fsdoc: no-comment-found" in
+          let summary, comment = document_toplevel name top_decl in
+          let summary = (match summary with | Some(s) -> s | None -> no_summary) in
+          let comment = (match comment with | Some(s) -> s | None -> no_comment) in
           w (format "# module %s" [name.str]);
-          w "```fstar"; w (format "%s" [com]); w "```";
-          // SI: this will print doc twice if there's no summary: kw. 
-          (match top_decl.doc with | Some(doc, _) -> w doc | _ -> ());
+          w (format "%s\n" [summary]);
+          w (format "%s\n" [comment]);
           // non-TopLevelModule decls. 
           List.iter (document_decl w) other_decls;
           close_file fd;
           name
         end
     | None -> raise(FStar.Syntax.Syntax.Err(Util.format1 "No singleton toplevel in module %s" name.str))
-
+        
 ///////////////////////////////////////////////////////////////////////////////
 // entry point 
 ///////////////////////////////////////////////////////////////////////////////
 let generate (files:list<string>) =
   // fsdoc each module into it's own module.md. 
   let modules = List.collect (fun fn -> P.parse_file fn) files in
-  let mod_names = List.map document_module modules in
+  let mods = List.map document_module modules in
   // write mod_names into index.md 
   let on = O.prepend_output_dir "index.md" in 
   let fd = open_file_for_writing on in 
-  List.iter (fun m -> append_to_file fd (format "%s\n" [m.str])) mod_names;
+  List.iter (fun m -> append_to_file fd (format "%s\n" [m.str])) mods;
   close_file fd
 
 
