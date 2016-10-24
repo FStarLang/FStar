@@ -146,10 +146,7 @@ unfold let pure_return (a:Type) (x:a) (p:pure_post a) =
 unfold let pure_bind_wp (r1:range) (a:Type) (b:Type)
                    (wp1:pure_wp a) (wp2: (a -> GTot (pure_wp b)))
                    (p : pure_post b) =
-     labeled r1 "push" unit
-     /\ wp1 (fun (x:a) -> 
-             labeled r1 "pop" unit
-	     /\ wp2 x p)
+	wp1 (fun (x:a) -> wp2 x p)
 unfold let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
      l_ITE p (wp_then post) (wp_else post)
 
@@ -169,7 +166,7 @@ unfold let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (x:a) -> True)
 
 total new_effect { (* The definition of the PURE effect is fixed; no user should ever change this *)
   PURE : a:Type -> wp:pure_wp a -> Effect
-  with return_wp       = pure_return
+  with return_wp    = pure_return
      ; bind_wp      = pure_bind_wp
      ; if_then_else = pure_if_then_else
      ; ite_wp       = pure_ite_wp
@@ -286,10 +283,7 @@ unfold let st_bind_wp       (heap:Type)
                             (wp1:st_wp_h heap a)
                             (wp2:(a -> GTot (st_wp_h heap b)))
                             (p:st_post_h heap b) (h0:heap) =
-     labeled r1 "push" unit
-     /\ wp1 (fun a h1 ->
-       labeled r1 "pop" unit
-       /\ wp2 a p h1) h0
+  wp1 (fun a h1 -> wp2 a p h1) h0
 unfold let st_if_then_else  (heap:Type) (a:Type) (p:Type)
                              (wp_then:st_wp_h heap a) (wp_else:st_wp_h heap a)
                              (post:st_post_h heap a) (h0:heap) =
@@ -350,9 +344,7 @@ unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
          : GTot Type0 =
   forall (k:ex_post b).
      (forall (rb:result b).{:pattern (guard_free (k rb))} k rb <==> p rb)
-     ==> (labeled r1 "push" unit
-         /\ wp1 (fun ra1 -> labeled r1 "pop" unit
-			/\ (is_V ra1 ==> wp2 (V.v ra1) k)
+     ==> (wp1 (fun ra1 -> (is_V ra1 ==> wp2 (V.v ra1) k)
 			/\ (is_E ra1 ==> k (E (E.e ra1)))))
 
 unfold let ex_ite_wp (a:Type) (wp:ex_wp a) (post:ex_post a) =
@@ -410,10 +402,7 @@ unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
                        (wp1:all_wp_h heap a)
                        (wp2:(a -> GTot (all_wp_h heap b)))
                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
-   labeled r1 "push" unit
-   /\ wp1 (fun ra h1 -> 
-       labeled r1 "pop" unit
-       /\ (is_V ra ==> wp2 (V.v ra) p h1)) h0
+  wp1 (fun ra h1 -> (is_V ra ==> wp2 (V.v ra) p h1)) h0
 
 unfold let all_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)

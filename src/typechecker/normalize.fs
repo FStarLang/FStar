@@ -651,7 +651,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                            
             if not should_delta
             then rebuild cfg env stack t
-            else begin match Env.lookup_definition cfg.delta_level cfg.tcenv f.fv_name.v with 
+            else let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in //preserve the range info on the returned def
+                 begin match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with 
                     | None -> rebuild cfg env stack t
                     | Some (us, t) ->
                       log cfg (fun () -> Util.print2 ">>> Unfolded %s to %s\n" 

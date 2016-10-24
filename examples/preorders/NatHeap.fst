@@ -15,7 +15,7 @@ abstract type heap = h:(nat * (nat -> Tot (option (dtuple2 Type0 (fun a -> a))))
 
 (* Consistency of heaps. aka, no strong updates *)
 
-let consistent (h0:heap) (h1:heap) =
+let consistent (h0:heap) (h1:heap) : GTot Type0 =
   forall n x y . (snd h0 n == Some x /\ snd h1 n == Some y)  ==> dfst x == dfst y
 
 
@@ -26,10 +26,9 @@ abstract type ref (a:Type) = nat
 //type aref =
 //  | Ref : a:Type -> r:ref a -> aref
 
-
 (* Containment predicate on heaps. *)
 
-abstract let contains (#a:Type) (h:heap) (r:ref a) =
+abstract let contains (#a:Type) (h:heap) (r:ref a) : GTot Type0 =
   exists x . snd h r == Some (| a , x |)
 //NB: is_Some (snd h r), would avoid the existential, but would not capture the type equality
 

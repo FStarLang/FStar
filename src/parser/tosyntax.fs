@@ -710,9 +710,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
        in
        aux env [] None binders
 
-    | App({tm=Var a}, phi, _) when (lid_equals a C.assert_lid
+    | App({tm=Var a; range=rng}, phi, _) when (lid_equals a C.assert_lid
                                    || lid_equals a C.assume_lid) ->
       let phi = desugar_formula env phi in
+      let a = Ident.set_lid_range a rng in
       mk (Tm_app(fvar a Delta_equational None,
                  [as_arg phi;
                   as_arg <| mk (Tm_constant(Const_unit))]))

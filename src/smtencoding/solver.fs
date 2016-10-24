@@ -25,6 +25,7 @@ open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.SMTEncoding.ErrorReporting
 open FStar.SMTEncoding.Encode
+open FStar.SMTEncoding.Util
 
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
