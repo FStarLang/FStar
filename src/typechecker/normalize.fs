@@ -569,7 +569,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_app({n=Tm_fvar fv}, [(tm, _)])   //User-requested full normalization on tm
             when S.fv_eq_lid fv Syntax.Const.normalize
               && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
-            let s = [Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
+            let s = [Reify; Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
             let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
             let stack' = Debug t :: Steps (cfg.steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
