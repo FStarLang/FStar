@@ -525,6 +525,22 @@ and cps_and_elaborate env ed =
   let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
   let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env ed.return_repr in
 
+  let lift_from_pure_wp =
+      match (SS.compress return_wp).n with
+      | Tm_abs (b1 :: b2 :: bs, body, what) ->
+          let b1::b2::bs, body = SS.open_term (b1::b2::bs) body in
+          let bs', body = U.abs_formals body in
+          let t2 = (fst b2).sort in
+          let pure_wp_type =
+              U.arrow [S.mk_binder <| S.null_bv (U.arrow [S.mk_binder <| S.null_bv t2] (S.mk_Total U.ktype0))] (S.mk_Total U.ktype0) in
+          let wp = S.gen_bv "wp" None pure_wp_type in
+          // fun b1 wp -> (fun bs -> wp (fun b2 -> body))
+          let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what, None] None Range.dummyRange in
+          U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs@bs') body what) (Some (Inr Const.effect_GTot_lid))
+      | _ ->
+          failwith "unexpected shape for return"
+  in
+
   let return_wp =
     // TODO: fix [tc_eff_decl] to deal with currying
     match (SS.compress return_wp).n with
@@ -554,6 +570,7 @@ and cps_and_elaborate env ed =
     sigelts := sigelt :: !sigelts;
     fv
   in
+  let lift_from_pure_wp = register "lift_from_pure" lift_from_pure_wp in
   let return_wp = register "return_wp" return_wp in
   let return_elab = register "return_elab" return_elab in
 
@@ -619,12 +636,26 @@ and cps_and_elaborate env ed =
     binders = close_binders effect_binders
   } in
 
+
   // Generate the missing combinators.
   let sigelts', ed = DMFF.gen_wps_for_free env effect_binders a wp_a ed in
   if Env.debug env (Options.Other "ED") then
     Util.print_string (Print.eff_decl_to_string true ed);
 
-  List.rev !sigelts @ sigelts', ed
+  let lift_from_pure_opt =
+    if List.length effect_binders = 0 then begin
+      // Won't work with parameterized effect
+      let lift_from_pure = {
+          source = Const.effect_PURE_lid;
+          target = ed.mname ;
+          lift_wp = Some ([], apply_close lift_from_pure_wp) ;
+          lift = None //Some ([], apply_close return_elab)
+      } in
+      Some (Sig_sub_effect (lift_from_pure, Range.dummyRange))
+    end else None
+  in
+
+  List.rev !sigelts @ sigelts', ed, lift_from_pure_opt
 
 
 and tc_lex_t env ses quals lids =
@@ -1588,8 +1619,11 @@ let tc_decls env ses =
           // Let the power of Dijkstra generate everything "for free", then defer
           // the rest of the job to [tc_decl].
           let _, _, env, _ = acc in
-          let ses, ne = cps_and_elaborate env ne in
-          let ses = ses @ [ Sig_new_effect (ne, r) ] in
+          let ses, ne, lift_from_pure_opt = cps_and_elaborate env ne in
+          let ses = match lift_from_pure_opt with
+                    | Some lift -> ses @ [ Sig_new_effect (ne, r) ; lift ]
+                    | None -> ses @ [ Sig_new_effect (ne, r) ]
+          in
           List.fold_left process_one_decl acc ses
       | _ ->
           process_one_decl acc se
