@@ -1,0 +1,70 @@
+[hritcu@detained dm4free]$ fstar.exe --debug SimplePrintfReify --debug_level print_normalized_terms SimplePrintfReify.fst &> SimplePrintfReify.log
+
+[...]
+
+Normalized (Prims.normalize (Prims.eq2 (SimplePrintfReify.parse_format_pure (Prims.Cons '%' (Prims.Cons 'd' (Prims.Cons '=' (Prims.Cons '%' (Prims.Cons 's' (Prims.Nil ))))))) (Prims.Some (Prims.Cons (SimplePrintfReify.Arg SimplePrintfReify.Int) (Prims.Cons (SimplePrintfReify.Lit '=') (Prims.Cons (SimplePrintfReify.Arg SimplePrintfReify.String) (Prims.Nil ))))))) to
+(Prims.eq2 (reify ((fun s -> (((match (MonadicLift-Tm_bvar: s@0{s@0} PURE -> XEXN) with
+	| (Prims.Nil #.uu___#284653)  -> (MonadicLift-Tm_app{(Prims.Nil )} PURE -> XEXN)
+	|(Prims.Cons #.uu___#284830 '%' (Prims.Cons #.uu___#284826 c#284821 s'#284822))  -> (Monadic-Tm_let{XEXN (Prims.list SimplePrintfReify.dir)} let  d#285648  : ((fun s c s' -> SimplePrintfReify.dir) s@2 c@1 s'@0) = ((match (MonadicLift-Tm_bvar: c@1{c@1} PURE -> XEXN) with
+	| '%'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Lit '%')} PURE -> XEXN)
+	|'b'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Arg SimplePrintfReify.Bool)} PURE -> XEXN)
+	|'d'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Arg SimplePrintfReify.Int)} PURE -> XEXN)
+	|'c'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Arg SimplePrintfReify.Char)} PURE -> XEXN)
+	|'s'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Arg SimplePrintfReify.String)} PURE -> XEXN)
+	|_  -> (SimplePrintfReify.XEXN.raise (MonadicLift-Tm_fvar: SimplePrintfReify.dir{SimplePrintfReify.dir} PURE -> XEXN) (MonadicLift-Tm_fvar: SimplePrintfReify.InvalidFormatString{SimplePrintfReify.InvalidFormatString} PURE -> XEXN))) : ((fun s c s' -> SimplePrintfReify.dir) s@2 c@1 s'@0))
+in
+(Monadic-Tm_app{XEXN (Prims.list ((fun s c s' d -> SimplePrintfReify.dir) s@3 c@2 s'@1 d@0))} (Prims.Cons (MonadicLift-Tm_bvar: d@0{d@0} PURE -> XEXN) (Monadic-Tm_app{XEXN (Prims.list ((fun s c s' d -> SimplePrintfReify.dir) s@3 c@2 s'@1 d@0))} (SimplePrintfReify.parse_format (MonadicLift-Tm_bvar: s'@1{s'@1} PURE -> XEXN)) )) ) )
+	|(Prims.Cons #.uu___#286382 '%' (Prims.Nil #.uu___#286378))  -> (SimplePrintfReify.XEXN.raise (MonadicLift-Tm_app{(Prims.list SimplePrintfReify.dir)} PURE -> XEXN) (MonadicLift-Tm_fvar: SimplePrintfReify.InvalidFormatString{SimplePrintfReify.InvalidFormatString} PURE -> XEXN))
+	|(Prims.Cons #.uu___#287160 c#287155 s'#287156)  -> (Monadic-Tm_app{XEXN (Prims.list ((fun s c s' -> SimplePrintfReify.dir) s@2 c@1 s'@0))} (Prims.Cons (MonadicLift-Tm_meta{(SimplePrintfReify.Lit c@1)} PURE -> XEXN) (Monadic-Tm_app{XEXN (Prims.list ((fun s c s' -> SimplePrintfReify.dir) s@2 c@1 s'@0))} (SimplePrintfReify.parse_format (MonadicLift-Tm_bvar: s'@0{s'@0} PURE -> XEXN)) )) )) : (Prims.list SimplePrintfReify.dir)) : (Prims.list SimplePrintfReify.dir))) (MonadicLift-Tm_meta{(Prims.Cons '%' (Prims.Cons 'd' (Prims.Cons '=' (Prims.Cons '%' (Prims.Cons 's' (Prims.Nil ))))))} PURE -> XEXN)) ())
+  (Prims.Some (Prims.Cons (SimplePrintfReify.Arg SimplePrintfReify.Int) (Prims.Cons (SimplePrintfReify.Lit '=') (Prims.Cons (SimplePrintfReify.Arg SimplePrintfReify.String) (Prims.Nil ))))))
+Z3 says: unknown
+Z3 says: unknown
+Z3 says: unknown
+Z3 says: unknown
+
+
+Normalized (Prims.normalize (Prims.eq2 (SimplePrintfReify.parse_format_string "%d=%s") (Prims.Some (Prims.Cons (SimplePrintfReify.Arg SimplePrintfReify.Int) (Prims.Cons (SimplePrintfReify.Lit '=') (Prims.Cons (SimplePrintfReify.Arg SimplePrintfReify.String) (Prims.Nil ))))))) to (Prims.eq2 (reify ((fun s -> (((match (MonadicLift-Tm_bvar: s@0{s@0} PURE -> XEXN) with
+	| (Prims.Nil #.uu___#284653)  -> (MonadicLift-Tm_app{(Prims.Nil )} PURE -> XEXN)
+	|(Prims.Cons #.uu___#284830 '%' (Prims.Cons #.uu___#284826 c#284821 s'#284822))  -> (Monadic-Tm_let{XEXN (Prims.list SimplePrintfReify.dir)} let  d#285648  : ((fun s c s' -> SimplePrintfReify.dir) s@2 c@1 s'@0) = ((match (MonadicLift-Tm_bvar: c@1{c@1} PURE -> XEXN) with
+	| '%'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Lit '%')} PURE -> XEXN)
+	|'b'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Arg SimplePrintfReify.Bool)} PURE -> XEXN)
+	|'d'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Arg SimplePrintfReify.Int)} PURE -> XEXN)
+	|'c'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Arg SimplePrintfReify.Char)} PURE -> XEXN)
+	|'s'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Arg SimplePrintfReify.String)} PURE -> XEXN)
+	|_  -> (SimplePrintfReify.XEXN.raise (MonadicLift-Tm_fvar: SimplePrintfReify.dir{SimplePrintfReify.dir} PURE -> XEXN) (MonadicLift-Tm_fvar: SimplePrintfReify.InvalidFormatString{SimplePrintfReify.InvalidFormatString} PURE -> XEXN))) : ((fun s c s' -> SimplePrintfReify.dir) s@2 c@1 s'@0))
+in
+(Monadic-Tm_app{XEXN (Prims.list ((fun s c s' d -> SimplePrintfReify.dir) s@3 c@2 s'@1 d@0))} (Prims.Cons (MonadicLift-Tm_bvar: d@0{d@0} PURE -> XEXN) (Monadic-Tm_app{XEXN (Prims.list ((fun s c s' d -> SimplePrintfReify.dir) s@3 c@2 s'@1 d@0))} (SimplePrintfReify.parse_format (MonadicLift-Tm_bvar: s'@1{s'@1} PURE -> XEXN)) )) ) )
+	|(Prims.Cons #.uu___#286382 '%' (Prims.Nil #.uu___#286378))  -> (SimplePrintfReify.XEXN.raise (MonadicLift-Tm_app{(Prims.list SimplePrintfReify.dir)} PURE -> XEXN) (MonadicLift-Tm_fvar: SimplePrintfReify.InvalidFormatString{SimplePrintfReify.InvalidFormatString} PURE -> XEXN))
+	|(Prims.Cons #.uu___#287160 c#287155 s'#287156)  -> (Monadic-Tm_app{XEXN (Prims.list ((fun s c s' -> SimplePrintfReify.dir) s@2 c@1 s'@0))} (Prims.Cons (MonadicLift-Tm_meta{(SimplePrintfReify.Lit c@1)} PURE -> XEXN) (Monadic-Tm_app{XEXN (Prims.list ((fun s c s' -> SimplePrintfReify.dir) s@2 c@1 s'@0))} (SimplePrintfReify.parse_format (MonadicLift-Tm_bvar: s'@0{s'@0} PURE -> XEXN)) )) )) : (Prims.list SimplePrintfReify.dir)) : (Prims.list SimplePrintfReify.dir))) (MonadicLift-Tm_app{(FStar.String.list_of_string "%d=%s")} PURE -> XEXN)) ()) (Prims.Some (Prims.Cons (SimplePrintfReify.Arg SimplePrintfReify.Int) (Prims.Cons (SimplePrintfReify.Lit '=') (Prims.Cons (SimplePrintfReify.Arg SimplePrintfReify.String) (Prims.Nil ))))))
+Z3 says: unknown
+Z3 says: unknown
+Z3 says: unknown
+Z3 says: unknown
+
+
+
+Normalized (Prims.normalize (Prims.eq2 (SimplePrintfReify.parse_format_string "%d=%s") (Prims.Some (Prims.Cons (SimplePrintfReify.Arg SimplePrintfReify.Int) (Prims.Cons (SimplePrintfReify.Lit '=') (Prims.Cons (SimplePrintfReify.Arg SimplePrintfReify.String) (Prims.Nil ))))))) to (Prims.eq2 (reify ((fun s -> (((match (MonadicLift-Tm_bvar: s@0{s@0} PURE -> XEXN) with
+	| (Prims.Nil #.uu___#284653)  -> (MonadicLift-Tm_app{(Prims.Nil )} PURE -> XEXN)
+	|(Prims.Cons #.uu___#284830 '%' (Prims.Cons #.uu___#284826 c#284821 s'#284822))  -> (Monadic-Tm_let{XEXN (Prims.list SimplePrintfReify.dir)} let  d#285648  : ((fun s c s' -> SimplePrintfReify.dir) s@2 c@1 s'@0) = ((match (MonadicLift-Tm_bvar: c@1{c@1} PURE -> XEXN) with
+	| '%'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Lit '%')} PURE -> XEXN)
+	|'b'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Arg SimplePrintfReify.Bool)} PURE -> XEXN)
+	|'d'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Arg SimplePrintfReify.Int)} PURE -> XEXN)
+	|'c'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Arg SimplePrintfReify.Char)} PURE -> XEXN)
+	|'s'  -> (MonadicLift-Tm_meta{(SimplePrintfReify.Arg SimplePrintfReify.String)} PURE -> XEXN)
+	|_  -> (SimplePrintfReify.XEXN.raise (MonadicLift-Tm_fvar: SimplePrintfReify.dir{SimplePrintfReify.dir} PURE -> XEXN) (MonadicLift-Tm_fvar: SimplePrintfReify.InvalidFormatString{SimplePrintfReify.InvalidFormatString} PURE -> XEXN))) : ((fun s c s' -> SimplePrintfReify.dir) s@2 c@1 s'@0))
+in
+(Monadic-Tm_app{XEXN (Prims.list ((fun s c s' d -> SimplePrintfReify.dir) s@3 c@2 s'@1 d@0))} (Prims.Cons (MonadicLift-Tm_bvar: d@0{d@0} PURE -> XEXN) (Monadic-Tm_app{XEXN (Prims.list ((fun s c s' d -> SimplePrintfReify.dir) s@3 c@2 s'@1 d@0))} (SimplePrintfReify.parse_format (MonadicLift-Tm_bvar: s'@1{s'@1} PURE -> XEXN)) )) ) )
+	|(Prims.Cons #.uu___#286382 '%' (Prims.Nil #.uu___#286378))  -> (SimplePrintfReify.XEXN.raise (MonadicLift-Tm_app{(Prims.list SimplePrintfReify.dir)} PURE -> XEXN) (MonadicLift-Tm_fvar: SimplePrintfReify.InvalidFormatString{SimplePrintfReify.InvalidFormatString} PURE -> XEXN))
+	|(Prims.Cons #.uu___#287160 c#287155 s'#287156)  -> (Monadic-Tm_app{XEXN (Prims.list ((fun s c s' -> SimplePrintfReify.dir) s@2 c@1 s'@0))} (Prims.Cons (MonadicLift-Tm_meta{(SimplePrintfReify.Lit c@1)} PURE -> XEXN) (Monadic-Tm_app{XEXN (Prims.list ((fun s c s' -> SimplePrintfReify.dir) s@2 c@1 s'@0))} (SimplePrintfReify.parse_format (MonadicLift-Tm_bvar: s'@0{s'@0} PURE -> XEXN)) )) )) : (Prims.list SimplePrintfReify.dir)) : (Prims.list SimplePrintfReify.dir))) (MonadicLift-Tm_app{(FStar.String.list_of_string "%d=%s")} PURE -> XEXN)) ()) (Prims.Some (Prims.Cons (SimplePrintfReify.Arg SimplePrintfReify.Int) (Prims.Cons (SimplePrintfReify.Lit '=') (Prims.Cons (SimplePrintfReify.Arg SimplePrintfReify.String) (Prims.Nil ))))))
+Z3 says: unknown
+Z3 says: unknown
+Z3 says: unknown
+Z3 says: unknown
+
+[...]
+
+./SimplePrintfReify.fst(151,2-152,54): (Error) failed to prove a pre-condition
+./SimplePrintfReify.fst(156,2-156,82): (Error) failed to prove a pre-condition
+./SimplePrintfReify.fst(160,2-160,82): (Error) failed to prove a pre-condition
+Verified module: SimplePrintfReify (3815 milliseconds)
+3 errors were reported (see above)
