@@ -120,15 +120,16 @@ let string_of_decl' d =
   | ModuleAbbrev (i, l) -> "module " ^ i.idText ^ " = " ^ l.str
   | KindAbbrev(i, _, _) -> "kind " ^ i.idText
   | ToplevelLet(_, _, pats) -> 
-            "let " ^ 
-                (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
+        let termty = List.map (fun (p,t) -> (pat_to_string p, term_to_string t)) pats in 
+        let termty' = List.map (fun (p,t) -> p ^ ":" ^ t) termty in
+        "let " ^ (String.concat ", " termty')
   | Main _ -> "main ..."
-  | Assume(_, i, _) -> "assume " ^ i.idText
+  | Assume(_, i, t) -> "assume " ^ i.idText ^ ":" ^ (term_to_string t)
   | Tycon(_, tys) -> 
             "type " ^ 
              (tys |> List.map (fun (t,d)-> (string_of_tycon t) ^ " " ^ (string_of_fsdoco d)) 
                  |> String.concat " and ") (* SI: sep will be "," for Record but "and" for Variant *)
-      | Val(_, i, _) -> "val " ^ i.idText
+  | Val(_, i, t) -> "val " ^ i.idText ^ ":" ^ (term_to_string t)
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(_, DefineEffect(i, _, _, _, _))
   | NewEffect(_, RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
@@ -181,7 +182,7 @@ let document_decl (w:string->unit) (d:decl) =
         w "" // EOL 
   else ()
 
-// return "summary:", or comment, or (if there's no comment) nothing. 
+// return Some(summary), or comment, or (if there's no comment) nothing. 
 let document_toplevel name topdecl = 
   let no_doc_provided = "(* fsdoc: no doc for module " ^ name.str ^ " *)" in 
   match topdecl.d with
