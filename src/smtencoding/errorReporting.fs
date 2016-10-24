@@ -23,6 +23,7 @@ open FStar.SMTEncoding.Term
 open FStar.SMTEncoding.Util
 open FStar.SMTEncoding
 
+exception Not_a_wp_implication
 type label = error_label
 type labels = error_labels
 let sort_labels (l:labels) = List.sortWith (fun (_, _, r1) (_, _, r2) -> Range.compare r1 r2) l
@@ -31,14 +32,11 @@ type msg = string * Range.range
 type ranges = list<(option<string> * Range.range)>
 
 //decorate a term with an error label
-let fresh_label : option<string> -> Range.range -> term -> label * term =
+let fresh_label : string -> Range.range -> term -> label * term =
     let ctr = ref 0 in 
-    fun msg range t -> 
+    fun message range t -> 
         let l = incr ctr; format1 "label_%s" (string_of_int !ctr) in
         let lvar = l, Bool_sort in
-        let message = match msg with 
-            | Some m -> m
-            | None -> "assertion failed" in
         let label = (lvar, message, range) in
         let lterm = mkFreeV lvar in
         let lt = mkOr(lterm, t) in
@@ -51,33 +49,78 @@ let fresh_label : option<string> -> Range.range -> term -> label * term =
 
       Returns the labeled query and the label terms that were added
 *)
-let label_goals use_env_msg  //when present, provides an alternate error message, usually "could not check implicit argument", or something like that
+let label_goals use_env_msg  //when present, provides an alternate error message, 
+                                  //usually "could not check implicit argument", 
+                                  //        "could not prove post-condition"
+                                  //or something like that
                 r            //the source range in which this query was asked
                 q            //the query
                : labels      //the labels themselves
                * term        //the query, decorated with labels
                = 
+    let is_a_post_condition tm = 
+        match tm.tm with
+        | App (Var "Valid", 
+               [{tm=App(Var "ApplyTT", {tm=FreeV ("^^post_condition", _)}::_)}]) ->
+          true
+        | _ -> 
+          false
+    in 
     let flag, msg_prefix = match use_env_msg with 
         | None -> false, ""
         | Some f -> true, f() in
     let fresh_label msg rng t = 
         let msg = if flag 
-                  then match msg with 
-                       | None -> Some "Failed to verify implicit argument"
-                       | Some msg -> Some ("Failed to verify implicit argument: " ^ msg)
-                   else msg in 
+                  then "Failed to verify implicit argument: " ^ msg
+                  else msg in 
         fresh_label msg rng t 
     in
-    let rec aux labels q = match q.tm with
+    let rec aux default_msg labels q = match q.tm with
         | BoundV _ 
         | Integer _ ->
           labels, q
 
-        | Labeled(arg, "could not prove post-condition", _) -> 
-          aux labels arg
+        | Labeled(arg, "could not prove post-condition", _) ->
+          let fallback () = aux default_msg labels arg in 
+          begin try 
+              begin match arg.tm with 
+                | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}) -> 
+                  let names = ("^^post_condition", post)
+                              ::List.mapi (fun i s -> ("^^" ^ string_of_int i, s)) sorts in
+                  let instantiation = List.map mkFreeV names in
+                  let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
+
+                  let labels, lhs = match lhs.tm with 
+                    | App(And, clauses_lhs) ->
+                      let requires, ensures = Util.prefix clauses_lhs in
+                      begin match ensures.tm with 
+                        | Quant(Forall, pats_ens, iopt_ens, sorts_ens, {tm=App(Imp, [ensures_conjuncts; post]); rng=rng_ens}) 
+                                when is_a_post_condition post -> 
+                          let labels, ensures_conjuncts = aux "could not prove post-condition" labels ensures_conjuncts in 
+                          let ensures = Term.mk (Quant(Forall, pats_ens, iopt_ens, sorts_ens, 
+                                                       Term.mk (App(Imp, [ensures_conjuncts; post])) rng_ens)) ensures.rng in
+                          let lhs = Term.mk (App(And, requires@[ensures])) lhs.rng in
+                          labels, Term.abstr names lhs
+                        | _ -> raise Not_a_wp_implication
+                      end
+                    | _ -> raise Not_a_wp_implication in
+              
+                  let labels, rhs = 
+                    let labels, rhs = aux default_msg labels rhs in
+                    labels, Term.abstr names rhs in
+
+                  let body = Term.mkImp(lhs, rhs) rng in
+                  labels, Term.mk (Quant(Forall, pats, iopt, post::sorts, body)) q.rng
+        
+
+                | _ -> //not in the form produced by an application of M_stronger
+                  fallback ()
+              end
+          with Not_a_wp_implication -> fallback()
+          end
 
         | Labeled(arg, reason, r) ->
-          let lab, arg = fresh_label (Some reason) r arg in
+          let lab, arg = fresh_label reason r arg in
           lab::labels, arg
 
         | App(Imp, [lhs;rhs]) -> 
@@ -96,38 +139,43 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                 | _::_::_ -> failwith "More than one named continuation; impossible"
 
                 | [] -> //the easy case, no continuation sharing
-                  let labels, rhs = aux labels rhs in
+                  let labels, rhs = aux default_msg labels rhs in
                   labels, mkImp(lhs, rhs)
 
                 | [q] -> 
                   match q.tm with 
                   | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])}) ->
-                    let labels, r = aux labels r in
+                    let labels, r = aux default_msg labels r in
                     let q = mk (Quant(Forall, [[p]], Some 0, sorts, norng mk (App(Iff, [l;r])))) q.rng in
                     let lhs = Term.mk_and_l (q::other_lhs_conjuncts) lhs.rng in
                     let rhs_p, rhs_rest = 
                         let hash_of_p = Term.hash_of_term p in
                         conjuncts rhs |> List.partition (fun t -> Term.hash_of_term t = hash_of_p) in
-                    let labels, rhs_rest = aux labels (Term.mk_and_l rhs_rest rhs.rng) in
+                    let labels, rhs_rest = aux default_msg labels (Term.mk_and_l rhs_rest rhs.rng) in
                     let rhs = Term.mk_and_l (rhs_rest::rhs_p) rhs.rng in
                     labels, mkImp(lhs, rhs) 
                   | _ -> failwith "Impossible"
           end
 
         | App(And, conjuncts) ->
-          let labels, conjuncts = Util.fold_map aux labels conjuncts in
+          let labels, conjuncts = Util.fold_map (aux default_msg) labels conjuncts in
           labels, Term.mk_and_l conjuncts q.rng
 
         | App(ITE, [hd; q1; q2]) -> 
-          let labels, q1 = aux labels q1 in
-          let labels, q2 = aux labels q2 in
+          let labels, q1 = aux default_msg labels q1 in
+          let labels, q2 = aux default_msg labels q2 in
           labels, Term.mkITE (hd, q1, q2) q.rng
 
         | Quant(Exists, _, _, _, _)
         | App(Iff, _)
         | App(Or, _) -> //non-atomic, but can't case split 
-          let lab, t = fresh_label None q.rng q in
+          let lab, t = fresh_label default_msg q.rng q in
           lab::labels, q
+
+        | App (Var _, _) when is_a_post_condition q ->
+          //applications of the post-condition variable are never labeled
+          //only specific conjuncts of an ensures clause are labeled
+          labels, q 
 
         | FreeV _ 
         | App(True, _)
@@ -139,7 +187,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | App(GT, _)
         | App(GTE, _)
         | App(Var _, _) -> //atomic goals
-          let lab, q = fresh_label None q.rng q in
+          let lab, q = fresh_label default_msg q.rng q in
           lab::labels, q
 
         | App(Add, _)
@@ -155,10 +203,10 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           failwith "Impossible: arity mismatch"
        
         | Quant(Forall, pats, iopt, sorts, body) -> 
-          let labels, body = aux labels body in
+          let labels, body = aux default_msg labels body in
           labels, Term.mk (Quant(Forall, pats, iopt, sorts, body)) q.rng
     in
-    aux [] q
+    aux "assertion failed" [] q
 
 
 (* 

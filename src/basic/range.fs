@@ -254,3 +254,7 @@ let compare r1 r2 =
          then col_of_pos start1 - col_of_pos start2
          else lcomp
     else fcomp
+
+let compare_use_range r1 r2 = 
+    compare ({r1 with def_range=r1.use_range})
+            ({r2 with def_range=r2.use_range})

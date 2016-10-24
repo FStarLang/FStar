@@ -43,5 +43,6 @@ val start_of_range: range -> pos
 val line_of_pos: pos -> int
 val end_range: range -> range
 val compare: range -> range -> int
+val compare_use_range: range -> range -> int
 val set_file_of_range: range -> string -> unit
 
