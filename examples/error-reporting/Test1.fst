@@ -26,3 +26,14 @@ let test4 (x:int) =
 
 val test5: x:int -> Pure int (requires (b2t (x <> 0))) (ensures (fun x -> 0 >= 0 /\ x >= 0))
 let test5 x = x + 1 //reports failing 2nd conjunct of post-condition
+
+
+val test6: unit -> Lemma (0==1)
+let test6 () = () //reporting a failing post-condition
+
+//!!!!!!!!!!!!!!!!!!!!!!!!
+// reports a terrible location in prims, because of an optimization 
+// that blows away most of the VC because of the False post-condition
+//!!!!!!!!!!!!!!!!!!!!!!!!
+val test7: unit -> Lemma False
+let test7 () = ()

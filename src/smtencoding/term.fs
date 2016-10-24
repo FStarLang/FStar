@@ -392,7 +392,16 @@ let name_binders sorts =
     let names, binders, n = name_binders_inner [] 0 sorts in
     List.rev names, binders
 
+
 let termToSmt t =
+    let remove_guard_free pats = 
+        pats |> List.map (fun ps ->
+        ps |> List.map (fun tm -> 
+                match tm.tm with
+                | App(Var "Prims.guard_free", [{tm=BoundV _}]) -> tm
+                | App(Var "Prims.guard_free", [p]) -> p
+                | _ -> tm)) 
+    in
     let rec aux' n (names:list<fv>) t = match t.tm with
       | Integer i     -> i
       | BoundV i ->
@@ -404,7 +413,9 @@ let termToSmt t =
       | Quant(qop, pats, wopt, sorts, body) ->
         let names, binders, n = name_binders_inner names n sorts in
         let binders = binders |> String.concat " " in
-        let pats_str = match pats with
+        let pats = remove_guard_free pats in
+        let pats_str =
+            match pats with
             | [[]]
             | [] -> ""
             | _ -> pats |> List.map (fun pats -> format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p -> format1 "%s" (aux n names p)) pats))) |> String.concat "\n" in

@@ -166,7 +166,7 @@ unfold let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (x:a) -> True)
 
 total new_effect { (* The definition of the PURE effect is fixed; no user should ever change this *)
   PURE : a:Type -> wp:pure_wp a -> Effect
-  with return_wp       = pure_return
+  with return_wp    = pure_return
      ; bind_wp      = pure_bind_wp
      ; if_then_else = pure_if_then_else
      ; ite_wp       = pure_ite_wp
