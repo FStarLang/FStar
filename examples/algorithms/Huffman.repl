@@ -1,6 +1,9 @@
 
 #require "zarith";;
 #require "batteries";;
+#load "../../ulib/ml/prims.cmo";;
+#load "out/FStar_List_Tot.cmo";;
+#load "out/Huffman.cmo";;
 
 open Huffman;;
 let t = huffman (List.map (fun (c,n) -> (c, Big_int_Z.big_int_of_int n))

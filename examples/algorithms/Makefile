@@ -19,14 +19,12 @@ huffman-ocaml: out Huffman.fst
 	$(OCAMLOPT) -I out out/FStar_List_Tot.ml out/Huffman.ml -o Huffman.exe
 	./Huffman.exe
 
-# Very bad target
-OCAML_DEFAULT_FLAGS=-I $(ULIB_ML)
+OCAML_DEFAULT_FLAGS=
 huffman-ocaml-repl: out Huffman.fst
 	$(MAKE) -C $(ULIB_ML)
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Huffman.fst
-	-$(OCAMLC) -I out out/FStar_List_Tot.ml out/Huffman.ml -o Huffman.exe
-	cd ../../ulib/ml && ocamlfind ocamlc -package batteries,stdint,zarith -linkpkg -g prims.ml
-	utop -I out -I ../../ulib/ml `ocamlfind query zarith`/zarith.cma ../../ulib/ml/prims.cmo out/FStar_List_Tot.cmo out/Huffman.cmo Huffman.repl
+	$(OCAMLC) -I out $(ULIB_ML)/prims.ml out/FStar_List_Tot.ml out/Huffman.ml -o Huffman.exe
+	utop -I out -I $(ULIB_ML) Huffman.repl
 
 out:
 	mkdir -p out
