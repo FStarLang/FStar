@@ -551,6 +551,51 @@ and star_type' env t =
   | Tm_app (head, args) ->
       // Sums and products. TODO: re-use the cache in [env] to not recompute
       // (st a)* every time.
+      let debug t s =
+        let string_of_set f s =
+            let elts = Util.set_elements s in
+            match elts with
+            | [] -> "{}"
+            | x::xs ->
+                let strb = Util.new_string_builder () in
+                Util.string_builder_append strb "{" ;
+                Util.string_builder_append strb (f x) ;
+                List.iter (fun x ->
+                    Util.string_builder_append strb ", " ;
+                    Util.string_builder_append strb (f x)
+                ) xs ;
+                Util.string_builder_append strb "}" ;
+                Util.string_of_string_builder strb
+        in
+        Util.print2_warning "Dependency found in term %s : %s" (Print.term_to_string t) (string_of_set Print.bv_to_string s)
+      in
+      let rec is_non_dependent_arrow ty n =
+        match (SS.compress ty).n with
+        | Tm_arrow (binders, c) -> begin
+                if not (U.is_tot_or_gtot_comp c)
+                then false
+                else
+                    try
+                        let binders, c = SS.open_comp binders c in
+                        let s = List.fold_left (fun s (bv, _) ->
+                            let sinter = set_intersect (Free.names bv.sort) s in
+                            if  set_is_empty sinter
+                            then set_add bv s
+                            else (debug bv.sort sinter ; raise Not_found)
+                        ) S.no_names binders in
+                        let ct = U.comp_result c in
+                        let sinter = set_intersect (Free.names ct) s in
+                        if  set_is_empty sinter
+                        then
+                            let k = n - List.length binders in
+                            if k > 0 then is_non_dependent_arrow ct k else true
+                        else (debug ct sinter ; raise Not_found)
+                    with Not_found -> false
+            end
+        | _ ->
+            Util.print1_warning "Not a dependent arrow : %s" (Print.term_to_string ty) ;
+            false
+      in
       let rec is_valid_application head =
         match (SS.compress head).n with
         | Tm_fvar fv when (
@@ -558,7 +603,8 @@ and star_type' env t =
           fv_eq_lid fv Const.option_lid ||
           fv_eq_lid fv Const.either_lid ||
           fv_eq_lid fv Const.eq2_lid ||
-          is_tuple_constructor (SS.compress head)
+          is_tuple_constructor (SS.compress head) ||
+          is_non_dependent_arrow fv.fv_name.ty (List.length args)
         ) ->
             true
         | Tm_bvar _
