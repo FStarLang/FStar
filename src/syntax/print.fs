@@ -29,13 +29,12 @@ open FStar.Const
 // VALS_HACK_HERE
 
 let sli (l:lident) : string =
-   let s = 
-       if (Options.print_real_names())
-       then l.str
-       else l.ident.idText in
-    Util.format3 "%s@{def=%s;use=%s}" s 
-        (Range.string_of_range (Ident.range_of_lid l))
-        (Range.string_of_use_range (Ident.range_of_lid l))
+    if Options.print_real_names()
+    then l.str
+    else l.ident.idText
+//    Util.format3 "%s@{def=%s;use=%s}" s 
+//        (Range.string_of_range (Ident.range_of_lid l))
+//        (Range.string_of_use_range (Ident.range_of_lid l))
 
 let lid_to_string (l:lid) = sli l
 
@@ -224,7 +223,7 @@ let quals_to_string' quals =
    function in normalize.fs instead, since elaboration
    (higher-order unification) produces types containing lots of
    redexes that should first be reduced. *)
-let rec term_to_string' x =
+let rec term_to_string x =
   let x = Subst.compress x in
   match x.n with
   | Tm_delayed _ ->   failwith "impossible"
@@ -242,7 +241,7 @@ let rec term_to_string' x =
   | Tm_bvar x ->        db_to_string x
   | Tm_name x ->        nm_to_string x
   | Tm_fvar f ->        fv_to_string f
-  | Tm_uvar (u, _) ->   uvar_to_string u ^ (Range.string_of_use_range x.pos)
+  | Tm_uvar (u, _) ->   uvar_to_string u
   | Tm_constant c ->    const_to_string c
   | Tm_type u ->        if (Options.print_universes()) then Util.format1 "Type(%s)" (univ_to_string u) else "Type"
   | Tm_arrow(bs, c) ->  Util.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
@@ -275,9 +274,6 @@ let rec term_to_string' x =
     then Util.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
     else term_to_string t
   | _ -> tag_of_term x
-
-and term_to_string t = term_to_string' t
-//  Util.format2 "%s {%s}" (term_to_string' t) (Range.string_of_use_range t.pos)
 
 and  pat_to_string x = match x.v with
     | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (fv_to_string l) (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
