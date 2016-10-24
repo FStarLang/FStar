@@ -195,7 +195,7 @@ end
 x
 end
 | FStar_Const.Const_char (c) -> begin
-(FStar_Util.string_of_char c)
+(Prims.strcat "\'" (Prims.strcat (FStar_Util.string_of_char c) "\'"))
 end
 | FStar_Const.Const_range (r) -> begin
 (FStar_Range.string_of_range r)

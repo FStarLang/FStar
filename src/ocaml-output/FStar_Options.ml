@@ -737,7 +737,7 @@ end))
 
 let display_usage_aux = (fun specs -> (
 
-let _24_161 = (FStar_Util.print_string "fstar [option] file...\n")
+let _24_161 = (FStar_Util.print_string "fstar.exe [options] file[s]\n")
 in (FStar_List.iter (fun _24_168 -> (match (_24_168) with
 | (_24_164, flag, p, doc) -> begin
 (match (p) with

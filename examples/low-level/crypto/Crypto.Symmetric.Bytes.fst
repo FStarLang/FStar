@@ -8,9 +8,15 @@ open FStar.Buffer
 open FStar.Mul
 open FStar.Int.Cast
 
+module U8 = FStar.UInt8
+
 open Buffer.Utils
- 
+
 type mem = FStar.HyperStack.mem
+
+let u8  = UInt8.t
+let u32 = UInt32.t
+let u64 = UInt64.t
 
 // TODO: rename and move to FStar.Buffer
 // bytes  -> uint8_s; lbytes  -> uint8_sl
@@ -19,10 +25,10 @@ type mem = FStar.HyperStack.mem
 type bytes = Seq.seq UInt8.t // Currently, Buffer.Utils redefines this as buffer
 type buffer = Buffer.buffer UInt8.t
 
-type lbytes  (l:nat) = b:bytes  {Seq.length b = l}
-type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
+type lbytes  (l:nat) = b:bytes  {Seq.length b == l}
+type lbuffer (l:nat) = b:buffer {Buffer.length b == l}
 
-let uint128_to_uint8 (a:UInt128.t) : Tot (b:UInt8.t{UInt8.v b = UInt128.v a % pow2 8})
+let uint128_to_uint8 (a:UInt128.t) : Tot (b:UInt8.t{UInt8.v b == UInt128.v a % pow2 8})
   = uint64_to_uint8 (uint128_to_uint64 a)
 
 private let hex1 (x:UInt8.t {FStar.UInt8(x <^ 16uy)}) = 
@@ -189,7 +195,7 @@ let rec little_endian_append w1 w2 =
     assert (UInt8.v (index w1 0) + pow2 8 * little_endian w1' == little_endian w1)
     end
 
-private val lemma_factorise: a:nat -> b:nat -> Lemma (a + a * b = a * (b + 1))
+private val lemma_factorise: a:nat -> b:nat -> Lemma (a + a * b == a * (b + 1))
 let lemma_factorise a b = ()
 
 val lemma_little_endian_is_bounded: b:bytes -> Lemma
@@ -247,7 +253,7 @@ let lemma_little_endian_lt_2_128 b =
   else Math.Lemmas.pow2_lt_compat 128 (8 * Seq.length b)
 
 
-#reset-options "--z3timeout 20 --max_fuel 1 --initial_fuel 1" 
+#reset-options "--z3timeout 100 --max_fuel 1 --initial_fuel 1"
 
 (* REMARK: The trigger in lemma_little_endian_lt_2_128 is used to prove absence of
    overflow *)
@@ -298,7 +304,7 @@ let rec load_big64 len buf =
 
 
 (* TODO: Add to FStar.Int.Cast and Kremlin and OCaml implementations *)
-val uint8_to_uint128: a:UInt8.t -> Tot (b:UInt128.t{UInt128.v b = UInt8.v a})
+val uint8_to_uint128: a:UInt8.t -> Tot (b:UInt128.t{UInt128.v b == UInt8.v a})
 let uint8_to_uint128 a = uint64_to_uint128 (uint8_to_uint64 a)
 
 val load_uint128: len:UInt32.t { v len <= 16 } -> buf:lbuffer (v len) -> ST UInt128.t
@@ -343,6 +349,27 @@ let rec store_uint32 len buf n =
     store_uint32 len buf' n';
     buf.(0ul) <- b // updating after the recursive call helps verification
 
+val uint32_bytes: 
+  len:UInt32.t {v len <= 4} -> n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> 
+  Tot (b:lbytes (v len) { UInt32.v n == little_endian b}) (decreases (v len))
+let rec uint32_bytes len n = 
+  if len = 0ul then 
+    let e = Seq.createEmpty #UInt8.t in
+    assert_norm(0 = little_endian e);
+    e
+  else
+    let len = len -^ 1ul in 
+    let byte = uint32_to_uint8 n in
+    let n' = FStar.UInt32(n >>^ 8ul) in 
+    assert(v n = UInt8.v byte + 256 * v n');
+    Math.Lemmas.pow2_plus 8 (8 * v len);
+    assert_norm (pow2 8 == 256);
+    assert(v n' < pow2 (8 * v len ));
+    let b' = uint32_bytes len n'
+    in 
+    SeqProperties.cons byte b'
+
+
 // check efficient compilation for all back-ends
 val store_uint128: 
   len:UInt32.t {v len <= 16} -> buf:lbuffer (v len) -> 
@@ -350,7 +377,7 @@ val store_uint128:
   (requires (fun h0 -> Buffer.live h0 buf))
   (ensures (fun h0 r h1 -> 
     Buffer.live h1 buf /\ Buffer.modifies_1 buf h0 h1 /\
-    UInt128.v n = little_endian (sel_bytes h1 len buf))) 
+    UInt128.v n == little_endian (sel_bytes h1 len buf)))
 let rec store_uint128 len buf n = 
   if len <> 0ul then
     let len = len -^ 1ul in 
@@ -362,3 +389,74 @@ let rec store_uint128 len buf n =
     assert_norm (pow2 8 == 256);
     store_uint128 len buf' n';
     buf.(0ul) <- b // updating after the recursive call helps verification
+
+(* from Spec; used e.g. in AEAD.Encoding *)
+
+#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+
+type word = b:Seq.seq UInt8.t {Seq.length b <= 16}
+open FStar.Math.Lib
+open FStar.Math.Lemmas
+
+val lemma_little_endian_is_injective_0: b:word{Seq.length b > 0} -> Lemma
+  (little_endian b =
+   U8.v (Seq.index b 0) + pow2 8 * little_endian (Seq.slice b 1 (Seq.length b)))
+let lemma_little_endian_is_injective_0 b = ()
+
+val lemma_little_endian_is_injective_1: b:pos -> q:nat -> r:nat -> q':nat -> r':nat -> Lemma
+  (requires (r < b /\ r' < b /\ r + b * q = r' + b * q'))
+  (ensures  (r = r' /\ q = q'))
+let lemma_little_endian_is_injective_1 b q r q' r' =
+  lemma_mod_plus r q b;
+  lemma_mod_plus r' q' b;
+  lemma_mod_injective b r r'
+
+val lemma_little_endian_is_injective_2: b:word -> len:pos{len <= Seq.length b} -> Lemma
+  (let s = Seq.slice b (Seq.length b - len) (Seq.length b) in
+   let s' = Seq.slice s 1 (Seq.length s) in
+   let s'' = Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) in
+   s'' == s')
+let lemma_little_endian_is_injective_2 b len =
+  let s = Seq.slice b (Seq.length b - len) (Seq.length b) in
+  let s' = Seq.slice s 1 (Seq.length s) in
+  let s'' = Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) in
+  Seq.lemma_eq_intro s' s''
+
+val lemma_little_endian_is_injective_3: b:word -> b':word -> len:pos{len <= Seq.length b /\ len <= Seq.length b'} -> Lemma
+  (requires (Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) ==
+             Seq.slice b' (Seq.length b' - (len-1)) (Seq.length b')
+           /\ Seq.index b (Seq.length b - len) = Seq.index b' (Seq.length b' - len)))
+  (ensures  (Seq.slice b (Seq.length b - len) (Seq.length b) ==
+             Seq.slice b' (Seq.length b' - len) (Seq.length b')))
+let lemma_little_endian_is_injective_3 b b' len =
+  Seq.lemma_eq_intro (Seq.slice b' (Seq.length b' - len) (Seq.length b'))
+                     (Seq.append (Seq.create 1 (Seq.index b' (Seq.length b' - len))) (Seq.slice b' (Seq.length b' - (len-1)) (Seq.length b')));
+  Seq.lemma_eq_intro (Seq.slice b (Seq.length b - len) (Seq.length b))
+                     (Seq.append (Seq.create 1 (Seq.index b (Seq.length b - len))) (Seq.slice b (Seq.length b - (len-1)) (Seq.length b)))
+
+val lemma_little_endian_is_injective: b:word -> b':word ->
+  len:nat{Seq.length b >= len /\ Seq.length b' >= len} -> Lemma
+  (requires (little_endian (Seq.slice b (Seq.length b - len) (Seq.length b)) =
+             little_endian (Seq.slice b' (Seq.length b' - len) (Seq.length b')) ))
+  (ensures  (Seq.slice b (Seq.length b - len) (Seq.length b) ==
+             Seq.slice b' (Seq.length b' - len) (Seq.length b')))
+let rec lemma_little_endian_is_injective b b' len =
+  if len = 0 then
+    Seq.lemma_eq_intro (Seq.slice b (Seq.length b - len) (Seq.length b))
+                       (Seq.slice b' (Seq.length b' - len) (Seq.length b'))
+  else
+    begin
+    let s = Seq.slice b (Seq.length b - len) (Seq.length b) in
+    let s' = Seq.slice b' (Seq.length b' - len) (Seq.length b') in
+    assert(Seq.length s = len /\ Seq.length s' = len);
+    lemma_little_endian_is_injective_0 s; lemma_little_endian_is_injective_0 s';
+    lemma_little_endian_is_injective_1 (pow2 8)
+                                      (little_endian (Seq.slice s 1 (Seq.length s)))
+                                      (U8.v (Seq.index s 0))
+                                      (little_endian (Seq.slice s' 1 (Seq.length s')))
+                                      (U8.v (Seq.index s' 0));
+    lemma_little_endian_is_injective_2 b len;
+    lemma_little_endian_is_injective_2 b' len;
+    lemma_little_endian_is_injective b b' (len - 1);
+    lemma_little_endian_is_injective_3 b b' len
+    end

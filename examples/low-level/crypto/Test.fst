@@ -15,6 +15,7 @@ module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
 module PRF = Crypto.Symmetric.PRF
 module AE = Crypto.AEAD
+module AETypes = Crypto.AEAD.Invariant
 
 module L = FStar.List.Tot
 
@@ -31,24 +32,25 @@ let mk_buf_t (len:nat) =
        /\ modifies_0 h0 h1
        ))
 
+
 let mk_aad : mk_buf_t 12
   = fun () ->
-    let l = [0x50uy; 0x51uy; 0x52uy; 0x53uy; 0xc0uy; 0xc1uy; 0xc2uy; 0xc3uy; 0xc4uy; 0xc5uy; 0xc6uy; 0xc7uy ] in
-    assume (L.length l = 12);
-    Buffer.createL [
-      0x50uy; 0x51uy; 0x52uy; 0x53uy; 0xc0uy; 0xc1uy; 0xc2uy; 0xc3uy; 0xc4uy; 0xc5uy; 0xc6uy; 0xc7uy ]
+    let l = [ 0x50uy; 0x51uy; 0x52uy; 0x53uy; 0xc0uy; 0xc1uy; 0xc2uy; 0xc3uy; 0xc4uy; 0xc5uy; 0xc6uy; 0xc7uy ] in
+    //assert_norm (L.length l == 12); // Doesn't work, the normalizer doesn't normalize a match
+    assume (L.length l == 12);
+    Buffer.createL l
 
 let mk_key : mk_buf_t 32
   = fun () -> 
     let l = [0x80uy; 0x81uy; 0x82uy; 0x83uy; 0x84uy; 0x85uy; 0x86uy; 0x87uy; 0x88uy; 0x89uy; 0x8auy; 0x8buy; 0x8cuy; 0x8duy; 0x8euy; 0x8fuy; 
 	     0x90uy; 0x91uy; 0x92uy; 0x93uy; 0x94uy; 0x95uy; 0x96uy; 0x97uy; 0x98uy; 0x99uy; 0x9auy; 0x9buy; 0x9cuy; 0x9duy; 0x9euy; 0x9fuy ] in
-    assume (L.length l = 32);	     
+    assume (L.length l == 32);	     
     Buffer.createL l
 
 let mk_ivBuffer : mk_buf_t 12 
   = fun () -> 
     let l = [0x07uy; 0x00uy; 0x00uy; 0x00uy; 0x40uy; 0x41uy; 0x42uy; 0x43uy; 0x44uy; 0x45uy; 0x46uy; 0x47uy ] in
-    assume (L.length l = 12);
+    assume (L.length l == 12);
     Buffer.createL l
 
 #set-options "--lax"
@@ -63,8 +65,9 @@ let mk_expected_cipher : mk_buf_t 130
 	     0x3fuy; 0xf4uy; 0xdeuy; 0xf0uy; 0x8euy; 0x4buy; 0x7auy; 0x9duy; 0xe5uy; 0x76uy; 0xd2uy; 0x65uy; 0x86uy; 0xceuy; 0xc6uy; 0x4buy; 
 	     0x61uy; 0x16uy; 0x1auy; 0xe1uy; 0x0buy; 0x59uy; 0x4fuy; 0x09uy; 0xe2uy; 0x6auy; 0x7euy; 0x90uy; 0x2euy; 0xcbuy; 0xd0uy; 0x60uy; 
 	     0x06uy; 0x91uy ] in 
-    assume (L.length l = 130);	     
+    assume (L.length l == 130);	     
     Buffer.createL l
+    
 #reset-options
 
 // TESTING 
@@ -173,14 +176,13 @@ val test: unit -> ST bool //16-10-04 workaround against very large inferred type
   (ensures (fun _ _ _ -> True))
 #set-options "--z3timeout 100000"  
 let test() = 
-  //assume false; //NS: this is not yet really in a provable state
   push_frame(); 
   let plainlen = 114ul in 
   let plainrepr = from_string plainlen 
     "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it." in
 
   let i:id = { cipher = CHACHA20_POLY1305; uniq = 42ul } in
-  assume(not(prf i));
+  assume(not(prf i)); // Implementation used to extract satisfies this
   let plain = Plain.create i 0uy plainlen in 
   let plainval = load_bytes plainlen plainrepr in
   let plainbytes = Plain.make #i (v plainlen) plainval in 
@@ -194,7 +196,7 @@ let test() =
   dump "IV" 12ul ivBuffer;
   dump "Additional Data" 12ul aad;
 
-  let iv : Crypto.Symmetric.Cipher.iv (Crypto.AEAD.alg i) = 
+  let iv : Crypto.Symmetric.Cipher.iv (cipher_of_id i) = 
     lemma_little_endian_is_bounded (load_bytes 12ul ivBuffer);
     load_uint128 12ul ivBuffer in
   let expected_cipher = mk_expected_cipher () in
@@ -203,7 +205,10 @@ let test() =
   let cipher = Buffer.create 0uy cipherlen in
   let st = AE.coerce i HH.root key in
 
-  assume(AE.safelen i (v plainlen) 1ul);//16-10-13 
+  // To prove the assertion below for the concrete constants in PRF, AEAD:
+  assert_norm (114 <= pow2 14);  
+  assert_norm (FStar.Mul(114 <= 1999 * 64));
+  assert(AETypes.safelen i (v plainlen) 1ul);
   AE.encrypt i st iv aadlen aad plainlen plain cipher;
   let ok_0 = diff "cipher" cipherlen expected_cipher cipher in
 
@@ -268,5 +273,3 @@ let rec print_buffer s i len =
     print "\n"
 
 *)
-
-

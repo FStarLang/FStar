@@ -20,10 +20,6 @@ open Crypto.Symmetric.Bytes
 // Type abstraction protects against aliasing inasmuch
 // as it is enforced from allocation.
 
-// LIBRARY STUFF
-
-
-// SECRETS, HIGH AND LOW
 
 open Flag 
 

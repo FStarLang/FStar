@@ -1,7 +1,7 @@
 (*
    Copyright 2008-2016 Abhishek Anand, Nikhil Swamy,
-   	     	           Antoine Delignat-Lavaud, Pierre-Yves Strub
-		               and Microsoft Research
+                           Antoine Delignat-Lavaud, Pierre-Yves Strub
+                               and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -31,6 +31,22 @@ type mlident  = mlsymbol * int //what is the second component? Why do we need it
 type mlpath   = list<mlsymbol> * mlsymbol
 
 (* -------------------------------------------------------------------- *)
+let ocamlkeywords = [
+  "and"; "as"; "assert"; "asr"; "begin"; "class";
+  "constraint"; "do"; "done"; "downto"; "else"; "end";
+  "exception"; "external"; "false"; "for"; "fun"; "function";
+  "functor"; "if"; "in"; "include"; "inherit"; "initializer";
+  "land"; "lazy"; "let"; "lor"; "lsl"; "lsr";
+  "lxor"; "match"; "method"; "mod"; "module"; "mutable";
+  "new"; "object"; "of"; "open"; "or"; "private";
+  "rec"; "sig"; "struct"; "then"; "to"; "true";
+  "try"; "type"; "val"; "virtual"; "when"; "while";
+  "with"; "nonrec"
+]
+
+let is_reserved k =
+  List.existsb (fun k' -> k' = k) ocamlkeywords
+
 let idsym ((s, _) : mlident) : mlsymbol =
     s
 
@@ -199,9 +215,38 @@ let apply_obj_repr x t =
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name(["Obj"], "repr")) in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
 
+(* 20161021, JP: trying to make sense of this code...
+ * - the second field of the [mlident] was meant, I assume, to disambiguate
+ *   variables; however, many places provide a placeholder value (0)
+ * - my assumption is thus that the code extraction never generates code that
+ *   needs to refer to a shadowed variable; since the scoping rules
+ *   of both F* and OCaml are lexical, then this probably works out somehow
+ *   (sic);
+ * - however, since this function is not parameterized over the environment, now
+ *   that I avoid generating names that are OCaml keywords, it is no longer
+ *   injective, because of the following F* example:
+ *     let land_15 = 0 in
+ *     let land = () in
+ *     print_int land_15
+ * It's slightly tricky to get into this case, but... not impossible. There's a
+ * similar problem for top-level bindings. For instance, this will be a problem:
+ *   let land_ = 0
+ *   let land = ()
+ * One solution is to carry the environment; for a pair of names (original,
+ * destination), compute the set of original names shadowed by the original
+ * name; make sure that the destination name does not shadow more than the
+ * destination names of these original names; otherwise, keep generating fresh
+ * destination names.
+ *)
+let avoid_keyword s =
+  if is_reserved s then
+    s ^ "_"
+  else
+    s
+
 open FStar.Syntax.Syntax
-let bv_as_mlident (x:bv) = 
-    if Util.starts_with x.ppname.idText Ident.reserved_prefix
-    || is_null_bv x
-    then x.ppname.idText ^ "_" ^ (string_of_int x.index), 0
-    else x.ppname.idText, 0
+let bv_as_mlident (x:bv): mlident = 
+  if Util.starts_with x.ppname.idText Ident.reserved_prefix
+  || is_null_bv x || is_reserved x.ppname.idText
+  then x.ppname.idText ^ "_" ^ (string_of_int x.index), 0
+  else x.ppname.idText, 0

@@ -97,13 +97,13 @@ let int64_lid : FStar_Ident.lident = (p2l (("FStar")::("Int64")::("t")::[]))
 let uint64_lid : FStar_Ident.lident = (p2l (("FStar")::("UInt64")::("t")::[]))
 
 
-let salloc_lid : FStar_Ident.lident = (p2l (("FStar")::("HST")::("salloc")::[]))
+let salloc_lid : FStar_Ident.lident = (p2l (("FStar")::("ST")::("salloc")::[]))
 
 
-let swrite_lid : FStar_Ident.lident = (p2l (("FStar")::("HST")::("op_Colon_Equals")::[]))
+let swrite_lid : FStar_Ident.lident = (p2l (("FStar")::("ST")::("op_Colon_Equals")::[]))
 
 
-let sread_lid : FStar_Ident.lident = (p2l (("FStar")::("HST")::("op_Bang")::[]))
+let sread_lid : FStar_Ident.lident = (p2l (("FStar")::("ST")::("op_Bang")::[]))
 
 
 let float_lid : FStar_Ident.lident = (p2l (("FStar")::("Float")::("float")::[]))

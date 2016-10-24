@@ -53,7 +53,7 @@ Notes:
 ///////////////////////////////////////////////////////////////////////////////
  
 // We store a forest-like representation of the module namespaces for index generation.
-// SI: not used yet 
+// SI: not used yet.
 type mforest =
 | Leaf of string * string
 | Branch of smap<mforest>
@@ -234,7 +234,7 @@ let generate (files:list<string>) =
   // write mod_names into index.md 
   let on = O.prepend_output_dir "index.md" in 
   let fd = open_file_for_writing on in 
-  List.iter (fun m -> append_to_file fd (format "%s" [m.str])) mod_names;
+  List.iter (fun m -> append_to_file fd (format "%s\n" [m.str])) mod_names;
   close_file fd
 
 
