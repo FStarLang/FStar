@@ -1,11 +1,9 @@
 [
   "æð\u0007±d‡n\u0000¬‰ŠÐ0\u007fÐY",
   [
-    [ "DelimCC.kont", 1, 2, 1, [ "@query" ], 0 ],
-    [ "DelimCC.right_unit", 1, 2, 1, [ "@query" ], 0 ],
     [
       "DelimCC.right_unit",
-      2,
+      1,
       2,
       1,
       [
@@ -22,10 +20,9 @@
       ],
       0
     ],
-    [ "DelimCC.left_unit", 1, 2, 1, [ "@query" ], 0 ],
     [
       "DelimCC.left_unit",
-      2,
+      1,
       2,
       1,
       [
@@ -38,10 +35,9 @@
       ],
       0
     ],
-    [ "DelimCC.associativity", 1, 2, 1, [ "@query" ], 0 ],
     [
       "DelimCC.associativity",
-      2,
+      1,
       2,
       1,
       [
@@ -62,11 +58,9 @@
       0
     ],
     [ "DelimCC.cont2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "DelimCC.kont2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "DelimCC.right_unit2", 1, 2, 1, [ "@query" ], 0 ],
     [
       "DelimCC.right_unit2",
-      2,
+      1,
       2,
       1,
       [
@@ -83,10 +77,9 @@
       ],
       0
     ],
-    [ "DelimCC.left_unit2", 1, 2, 1, [ "@query" ], 0 ],
     [
       "DelimCC.left_unit2",
-      2,
+      1,
       2,
       1,
       [
@@ -99,10 +92,9 @@
       ],
       0
     ],
-    [ "DelimCC.associativity2", 1, 2, 1, [ "@query" ], 0 ],
     [
       "DelimCC.associativity2",
-      2,
+      1,
       2,
       1,
       [
@@ -123,12 +115,8 @@
       0
     ],
     [ "DelimCC.ext", 1, 2, 1, [ "@query" ], 0 ],
-    [ "DelimCC.ext", 2, 2, 1, [ "@query", "unit_typing" ], 0 ],
     [ "DelimCC.left_unit3", 1, 2, 1, [ "@query" ], 0 ],
-    [ "DelimCC.left_unit3", 2, 2, 1, [ "@query" ], 0 ],
     [ "DelimCC.right_unit3", 1, 2, 1, [ "@query" ], 0 ],
-    [ "DelimCC.right_unit3", 2, 2, 1, [ "@query", "unit_typing" ], 0 ],
-    [ "DelimCC.associativity3", 1, 2, 1, [ "@query" ], 0 ],
-    [ "DelimCC.associativity3", 2, 2, 1, [ "@query", "unit_typing" ], 0 ]
+    [ "DelimCC.associativity3", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

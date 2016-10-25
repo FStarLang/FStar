@@ -188,10 +188,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.Int.add_underspec", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Int.add_underspec",
-      3,
+      2,
       2,
       1,
       [
@@ -245,10 +244,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.Int.sub_underspec", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Int.sub_underspec",
-      3,
+      2,
       2,
       1,
       [
@@ -299,10 +297,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.Int.mul_underspec", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Int.mul_underspec",
-      3,
+      2,
       2,
       1,
       [
@@ -421,10 +418,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.Int.mod", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Int.mod",
-      3,
+      2,
       2,
       1,
       [
@@ -437,7 +433,8 @@
         "equation_with_fuel_Prims.pow2.fuel_instrumented",
         "fuel_correspondence_Prims.pow2.fuel_instrumented",
         "fuel_irrelevance_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "pretyping_ae567c2fb75be05905677af440075565",
+        "int_typing", "lemma_FStar.Int.pow2_values",
+        "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Division",
         "primitive_Prims.op_GreaterThanOrEqual",
@@ -450,7 +447,6 @@
         "refinement_interpretation_Tm_refine_ae791d5fae3bac5aab1116259a4112c6",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "token_correspondence_Prims.pow2.fuel_instrumented",
         "typing_FStar.Int.fits"
       ],
       0
@@ -467,10 +463,6 @@
       ],
       0
     ],
-    [ "FStar.Int.gt", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Int.gte", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Int.lt", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Int.lte", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Int.to_int_t",
       1,

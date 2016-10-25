@@ -169,10 +169,9 @@
       ],
       0
     ],
-    [ "StlcCbvDbPntSubstNoLists.TyVar.g", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.TyVar.g",
-      2,
+      1,
       2,
       1,
       [
@@ -205,10 +204,9 @@
       ],
       0
     ],
-    [ "StlcCbvDbPntSubstNoLists.TyAbs.g", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.TyAbs.g",
-      2,
+      1,
       2,
       1,
       [
@@ -219,10 +217,9 @@
       ],
       0
     ],
-    [ "StlcCbvDbPntSubstNoLists.TyAbs.t", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.TyAbs.t",
-      2,
+      1,
       2,
       1,
       [
@@ -233,10 +230,9 @@
       ],
       0
     ],
-    [ "StlcCbvDbPntSubstNoLists.TyAbs.e1", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.TyAbs.e1",
-      2,
+      1,
       2,
       1,
       [
@@ -247,10 +243,9 @@
       ],
       0
     ],
-    [ "StlcCbvDbPntSubstNoLists.TyAbs.t'", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.TyAbs.t'",
-      2,
+      1,
       2,
       1,
       [
@@ -283,10 +278,9 @@
       ],
       0
     ],
-    [ "StlcCbvDbPntSubstNoLists.TyApp.g", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.TyApp.g",
-      2,
+      1,
       2,
       1,
       [
@@ -297,10 +291,9 @@
       ],
       0
     ],
-    [ "StlcCbvDbPntSubstNoLists.TyApp.e1", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.TyApp.e1",
-      2,
+      1,
       2,
       1,
       [
@@ -311,10 +304,9 @@
       ],
       0
     ],
-    [ "StlcCbvDbPntSubstNoLists.TyApp.e2", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.TyApp.e2",
-      2,
+      1,
       2,
       1,
       [
@@ -325,10 +317,9 @@
       ],
       0
     ],
-    [ "StlcCbvDbPntSubstNoLists.TyApp.t11", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.TyApp.t11",
-      2,
+      1,
       2,
       1,
       [
@@ -339,10 +330,9 @@
       ],
       0
     ],
-    [ "StlcCbvDbPntSubstNoLists.TyApp.t12", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.TyApp.t12",
-      2,
+      1,
       2,
       1,
       [
@@ -554,17 +544,8 @@
       0
     ],
     [
-      "StlcCbvDbPntSubstNoLists.typable_empty_closed'",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0
-    ],
-    [ "StlcCbvDbPntSubstNoLists.equal", 1, 2, 1, [ "@query" ], 0 ],
-    [
       "StlcCbvDbPntSubstNoLists.equal",
-      2,
+      1,
       2,
       1,
       [
@@ -574,10 +555,9 @@
       ],
       0
     ],
-    [ "StlcCbvDbPntSubstNoLists.equalE", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.equalE",
-      2,
+      1,
       2,
       1,
       [

@@ -1,10 +1,9 @@
 [
   "¶\u0019ªÔÅ»(nFÝ\u0010GàŸc9",
   [
-    [ "FStar.BitVector.bv_t", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.BitVector.bv_t",
-      2,
+      1,
       2,
       1,
       [

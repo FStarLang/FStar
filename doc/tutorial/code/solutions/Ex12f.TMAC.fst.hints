@@ -1,7 +1,6 @@
 [
   "…¹oÞE¥\u001eúÊÄPb\\¡yX",
   [
-    [ "Ex12f.TMAC.pkey", 1, 2, 1, [ "@query" ], 0 ],
     [ "Ex12f.TMAC.keygen", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex12f.TMAC.mac",

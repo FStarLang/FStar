@@ -4,7 +4,6 @@
     [ "Rel.rel", 1, 2, 1, [ "@query" ], 0 ],
     [ "Rel.R.l", 1, 2, 1, [ "@query" ], 0 ],
     [ "Rel.R.r", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Rel.eq", 1, 2, 1, [ "@query" ], 0 ],
     [ "Rel.lift", 1, 2, 1, [ "@query" ], 0 ],
     [ "Rel.lift2", 1, 2, 1, [ "@query" ], 0 ],
     [ "Rel.lift3", 1, 2, 1, [ "@query" ], 0 ],

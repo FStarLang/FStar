@@ -23,7 +23,6 @@
       0
     ],
     [ "NegativeTests.Bug260.VSucc.n", 1, 2, 1, [ "@query" ], 0 ],
-    [ "NegativeTests.Bug260.VSucc.n", 2, 2, 1, [ "@query" ], 0 ],
     null
   ]
 ]

@@ -178,14 +178,6 @@
       2,
       2,
       1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "Unit1.RecursiveTypeFunctions.pointwise_eq_length",
-      3,
-      2,
-      1,
       [
         "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
         "binder_x_64bbe2e649c5e2dff004f077d943400a_2",
@@ -204,6 +196,8 @@
         "function_token_typing_FStar.List.Tot.test_sort", "l_and-interp",
         "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
@@ -214,7 +208,7 @@
     ],
     [
       "Unit1.RecursiveTypeFunctions.pointwise_eq_length",
-      4,
+      3,
       2,
       1,
       [

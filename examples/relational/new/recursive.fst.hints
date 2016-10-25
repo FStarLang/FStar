@@ -29,7 +29,7 @@
       "Recursive.fac_mon",
       1,
       1,
-      2,
+      1,
       [
         "@query", "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_1", "equation_Prims.nat",
