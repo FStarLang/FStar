@@ -69,19 +69,23 @@ let label_goals use_env_msg  //when present, provides an alternate error message
     let flag, msg_prefix = match use_env_msg with 
         | None -> false, ""
         | Some f -> true, f() in
-    let fresh_label msg rng t = 
+    let fresh_label msg ropt rng t = 
         let msg = if flag 
                   then "Failed to verify implicit argument: " ^ msg
                   else msg in 
+        let rng = match ropt with
+                  | None -> rng
+                  | Some r -> r in
         fresh_label msg rng t 
     in
-    let rec aux default_msg labels q = match q.tm with
+    let rec aux default_msg ropt labels q = 
+        match q.tm with
         | BoundV _ 
         | Integer _ ->
           labels, q
 
         | Labeled(arg, "could not prove post-condition", _) ->
-          let fallback () = aux default_msg labels arg in 
+          let fallback () = aux default_msg ropt labels arg in 
           begin try 
               begin match arg.tm with 
                 | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}) -> 
@@ -96,7 +100,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                       begin match ens.tm with 
                         | Quant(Forall, pats_ens, iopt_ens, sorts_ens, {tm=App(Imp, [ensures_conjuncts; post]); rng=rng_ens}) 
                                 when is_a_post_condition post -> 
-                          let labels, ensures_conjuncts = aux "could not prove post-condition" labels ensures_conjuncts in 
+                          let labels, ensures_conjuncts = aux "could not prove post-condition" None labels ensures_conjuncts in 
                           let ens = Term.mk (Quant(Forall, pats_ens, iopt_ens, sorts_ens, 
                                                        Term.mk (App(Imp, [ensures_conjuncts; post])) rng_ens)) ens.rng in
                           let lhs = Term.mk (App(And, req@[ens])) lhs.rng in
@@ -106,7 +110,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                     | _ -> raise Not_a_wp_implication in
               
                   let labels, rhs = 
-                    let labels, rhs = aux default_msg labels rhs in
+                    let labels, rhs = aux default_msg None labels rhs in
                     labels, Term.abstr names rhs in
 
                   let body = Term.mkImp(lhs, rhs) rng in
@@ -120,8 +124,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           end
 
         | Labeled(arg, reason, r) ->
-          let lab, arg = fresh_label reason r arg in
-          lab::labels, arg
+          aux reason (Some r) labels arg
+//          lab::labels, arg
 
         | App(Imp, [lhs;rhs]) -> 
           let conjuncts t = match t.tm with 
@@ -139,37 +143,37 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                 | _::_::_ -> failwith "More than one named continuation; impossible"
 
                 | [] -> //the easy case, no continuation sharing
-                  let labels, rhs = aux default_msg labels rhs in
+                  let labels, rhs = aux default_msg ropt labels rhs in
                   labels, mkImp(lhs, rhs)
 
                 | [q] -> 
                   match q.tm with 
                   | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])}) ->
-                    let labels, r = aux default_msg labels r in
+                    let labels, r = aux default_msg None labels r in
                     let q = mk (Quant(Forall, [[p]], Some 0, sorts, norng mk (App(Iff, [l;r])))) q.rng in
                     let lhs = Term.mk_and_l (q::other_lhs_conjuncts) lhs.rng in
                     let rhs_p, rhs_rest = 
                         let hash_of_p = Term.hash_of_term p in
                         conjuncts rhs |> List.partition (fun t -> Term.hash_of_term t = hash_of_p) in
-                    let labels, rhs_rest = aux default_msg labels (Term.mk_and_l rhs_rest rhs.rng) in
+                    let labels, rhs_rest = aux default_msg None labels (Term.mk_and_l rhs_rest rhs.rng) in
                     let rhs = Term.mk_and_l (rhs_rest::rhs_p) rhs.rng in
                     labels, mkImp(lhs, rhs) 
                   | _ -> failwith "Impossible"
           end
 
         | App(And, conjuncts) ->
-          let labels, conjuncts = Util.fold_map (aux default_msg) labels conjuncts in
+          let labels, conjuncts = Util.fold_map (aux default_msg ropt) labels conjuncts in
           labels, Term.mk_and_l conjuncts q.rng
 
         | App(ITE, [hd; q1; q2]) -> 
-          let labels, q1 = aux default_msg labels q1 in
-          let labels, q2 = aux default_msg labels q2 in
+          let labels, q1 = aux default_msg ropt labels q1 in
+          let labels, q2 = aux default_msg ropt labels q2 in
           labels, Term.mkITE (hd, q1, q2) q.rng
 
         | Quant(Exists, _, _, _, _)
         | App(Iff, _)
         | App(Or, _) -> //non-atomic, but can't case split 
-          let lab, t = fresh_label default_msg q.rng q in
+          let lab, t = fresh_label default_msg ropt q.rng q in
           lab::labels, q
 
         | App (Var _, _) when is_a_post_condition q ->
@@ -187,7 +191,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | App(GT, _)
         | App(GTE, _)
         | App(Var _, _) -> //atomic goals
-          let lab, q = fresh_label default_msg q.rng q in
+          let lab, q = fresh_label default_msg ropt q.rng q in
           lab::labels, q
 
         | App(Add, _)
@@ -203,10 +207,10 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           failwith "Impossible: arity mismatch"
        
         | Quant(Forall, pats, iopt, sorts, body) -> 
-          let labels, body = aux default_msg labels body in
+          let labels, body = aux default_msg ropt labels body in
           labels, Term.mk (Quant(Forall, pats, iopt, sorts, body)) q.rng
     in
-    aux "assertion failed" [] q
+    aux "assertion failed" None [] q
 
 
 (* 

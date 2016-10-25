@@ -1,6 +1,5 @@
 module Test1
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-
 //reports failing call to assert, and the failing formula
 let test0 = assert (0==1)
 
@@ -32,8 +31,12 @@ val test6: unit -> Lemma (0==1)
 let test6 () = () //reporting a failing post-condition
 
 //!!!!!!!!!!!!!!!!!!!!!!!!
-// reports a terrible location in prims, because of an optimization 
+// reports a terrible location in prims, because of an optimization
 // that blows away most of the VC because of the False post-condition
 //!!!!!!!!!!!!!!!!!!!!!!!!
 val test7: unit -> Lemma False
 let test7 () = ()
+
+assume val test8_aux: x:nat -> Tot nat
+let test8 (x:int{test8_aux x = 0}) = () //reports expected nat; got int
+

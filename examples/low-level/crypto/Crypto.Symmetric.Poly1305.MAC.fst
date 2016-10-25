@@ -23,7 +23,7 @@ module HS = FStar.HyperStack
 type alg = Flag.mac_alg
 let alg_of_id = Flag.cipher_of_id
 
-let norm = Crypto.Symmetric.Poly1305.Bigint.norm
+let norm h b = Crypto.Symmetric.Poly1305.Bigint.norm h b
 
  
 // TOWARDS AGILITY 
@@ -154,6 +154,7 @@ let genPost0 (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
     ~(contains m0 st.s) /\
     st.region == region /\
     norm m1 st.r /\
+    Buffer.live m1 st.s /\
     (mac_log ==> 
         ~ (m_contains (ilog st.log) m0) /\ 
 	   m_contains (ilog st.log) m1 /\ 
@@ -182,9 +183,6 @@ let alloc i region key =
   lemma_reveal_modifies_2 r s h0 h1;
   if mac_log then
     let log = m_alloc #log #log_cmp region None in
-    //16-10-16 missing frame
-    let h2 = ST.get() in
-    assume (norm h1 r ==> norm h2 r);
     State #i #region r s log
   else
     State #i #region r s ()
@@ -200,7 +198,6 @@ let gen i region =
   let h1 = ST.get () in
   lemma_reveal_modifies_1 key h0 h1;
   alloc i region key
-
 
 val coerce: i:id{~(authId i)} -> r:rid -> key:lbuffer 32 -> ST (state i)
   (requires (fun m0 -> live m0 key))
@@ -243,7 +240,10 @@ let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
 // not framed, as we allocate private state on the caller stack
 val start: #i:id -> st:state i -> StackInline (accB i)
   (requires (fun h -> live h st.r /\ norm h st.r))
-  (ensures  (fun h0 a h1 -> acc_inv st text_0 a h1 /\ modifies_0 h0 h1))
+  (ensures  (fun h0 a h1 -> 
+	       ~ (h0 `Buffer.contains` a) /\
+	       acc_inv st text_0 a h1 /\ 
+	       modifies_0 h0 h1))
 let start #i st =
   let h0 = ST.get () in
   let a = Buffer.create 0UL 5ul in
@@ -289,8 +289,8 @@ let update #i st l a v =
   //lemma_reveal_modifies_1 a h0 h1;
   Bigint.eval_eq_lemma h0 h1 st.r st.r Parameters.norm_length;
   Bigint.eval_eq_lemma h0 h1 v v Parameters.norm_length;
-  Bigint.norm_eq_lemma h0 h1 st.r st.r;
-  Bigint.norm_eq_lemma h0 h1 v v;
+  (* Bigint.norm_eq_lemma h0 h1 st.r st.r; *)
+  (* Bigint.norm_eq_lemma h0 h1 v v; *)
   //assert (sel_elem h1 a == (sel_elem h0 a +@ sel_elem h0 v) *@ sel_elem h0 st.r);
   //assert (live h1 st.r /\ live h1 a /\ disjoint st.r a);
   //assert (norm h1 st.r /\ norm h1 a);
@@ -349,7 +349,7 @@ val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit
     live h0 tag /\ live h0 st.s /\
     disjoint acc st.s /\ disjoint tag acc /\ disjoint tag st.r /\ disjoint tag st.s /\
     acc_inv st l acc h0 /\
-    (mac_log ==> m_sel h0 (ilog st.log) == None)))
+    (mac_log /\ safeId (fst i) ==> m_sel h0 (ilog st.log) == None)))
   (ensures (fun h0 _ h1 ->
     live h0 st.s /\ live h0 st.r /\ live h1 tag /\
     // modifies h0 h1 "the tag buffer and st.log" /\
@@ -374,6 +374,8 @@ let mac #i st l acc tag =
   else
     admit ()
 //16-09-24 why?
+
+#set-options "--lax"
 
 val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag:tagB ->
   Stack bool

@@ -1,5 +1,5 @@
 [
-  "j\u0012Wq3¶”JLÇº`Ró\\U",
+  "\u0010Aü›\u0013¢ñ™³/#][wË¤",
   [
     [
       "Test.mk_buf_t",
@@ -852,6 +852,21 @@
       0,
       1,
       [
+        "@query", "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
+        "lemma_FStar.Buffer.lemma_size", "proj_equation_FStar.UInt32.Mk_v",
+        "projection_inverse_FStar.UInt32.Mk_v",
+        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
+        "typing_FStar.UInt32.v"
+      ],
+      0
+    ],
+    [
+      "Test.test",
+      4,
+      0,
+      1,
+      [
         "@query", "data_elim_Crypto.AEAD.Invariant.State",
         "equality_tok_Crypto.AEAD.Invariant.Writer@tok",
         "equation_Crypto.AEAD.Encoding.id",
@@ -863,7 +878,52 @@
     ],
     [
       "Test.test",
-      4,
+      5,
+      0,
+      1,
+      [
+        "@query", "data_elim_Crypto.AEAD.Invariant.State",
+        "equality_tok_Crypto.AEAD.Invariant.Writer@tok",
+        "equation_Crypto.AEAD.Encoding.id",
+        "equation_Crypto.AEAD.Invariant.id",
+        "fuel_guarded_inversion_Crypto.AEAD.Invariant.state",
+        "refinement_interpretation_Tm_refine_8206ae4d19246bfc0bed5cf762cb72ac"
+      ],
+      0
+    ],
+    [
+      "Test.test",
+      6,
+      0,
+      1,
+      [
+        "@query", "data_elim_Crypto.AEAD.Invariant.State",
+        "equality_tok_Crypto.AEAD.Invariant.Writer@tok",
+        "equation_Crypto.AEAD.Encoding.id",
+        "equation_Crypto.AEAD.Invariant.id",
+        "fuel_guarded_inversion_Crypto.AEAD.Invariant.state",
+        "refinement_interpretation_Tm_refine_8206ae4d19246bfc0bed5cf762cb72ac"
+      ],
+      0
+    ],
+    [
+      "Test.test",
+      7,
+      0,
+      1,
+      [
+        "@query", "data_elim_Crypto.AEAD.Invariant.State",
+        "equality_tok_Crypto.AEAD.Invariant.Writer@tok",
+        "equation_Crypto.AEAD.Encoding.id",
+        "equation_Crypto.AEAD.Invariant.id",
+        "fuel_guarded_inversion_Crypto.AEAD.Invariant.state",
+        "refinement_interpretation_Tm_refine_8206ae4d19246bfc0bed5cf762cb72ac"
+      ],
+      0
+    ],
+    [
+      "Test.test",
+      8,
       0,
       1,
       [
@@ -878,7 +938,7 @@
     ],
     [
       "Test.test",
-      5,
+      9,
       0,
       1,
       [
