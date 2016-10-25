@@ -128,7 +128,7 @@ and pretty_print_statement (p:statement_t) : doc =
     | JSS_VariableDeclaration(l, k) ->
         reduce [ws; print_kind_var k; ws;  
                (List.map (fun (p,e) -> 
-                    reduce [print_pattern p; 
+                    reduce [print_pattern1 p true; 
                            (match e with | None -> empty | Some v -> reduce [ws; text "="; ws; pretty_print_exp v])]) l) |> combine comma;
                semi]
     | JSS_DeclareVariable _ -> semi (*!!!*)
@@ -151,11 +151,11 @@ and pretty_print_exp = function
         | None -> reduce [text "["; text "]"])
     | JSE_Object(l) ->  reduce [text "{"; List.map pretty_print_obj l |> combine comma; text "}"]
     | JSE_Function(f) ->  pretty_print_fun f    
-    | JSE_ArrowFunction(_, args, body, ret_t, decl_vars) -> reduce [print_decl_t decl_vars; print_arrow_fun args (print_body body)]
+    | JSE_ArrowFunction(_, args, body, ret_t, decl_vars) -> reduce [print_decl_t decl_vars; print_arrow_fun args (print_body body) ret_t]
     | JSE_Sequence(e) -> reduce [ List.map pretty_print_exp e |> combine semi]
     | JSE_Unary(o,e) -> reduce [print_op_un o; pretty_print_exp e]
     | JSE_Binary(o,e1,e2) -> reduce [text "("; pretty_print_exp e1; print_op_bin o; pretty_print_exp e2; text ")"]
-    | JSE_Assignment(p,e) -> reduce [print_pattern p; text "="; pretty_print_exp e]
+    | JSE_Assignment(p,e) -> reduce [print_pattern p false; text "="; pretty_print_exp e]
     | JSE_Update(o,e,b) -> semi (*!!!*)
     | JSE_Logical(o,e1,e2) ->  reduce [pretty_print_exp e1; print_op_log o; pretty_print_exp e2]
     | JSE_Conditional(c,e,f) -> semi (*!!!*)
@@ -169,13 +169,18 @@ and pretty_print_exp = function
     | JSE_Let(l,e) -> semi (*!!!*)
     | JSE_Identifier(id,t) -> text (remove_chars_t id)// reduce [text (jstr_escape id); (match t with | Some v -> reduce [text ":"; print_typ v] | None -> text "")] 
     | JSE_Literal(l) -> print_literal (fst l)
-    | JSE_TypeCast(e,t) -> semi (*!!!*)
+    | JSE_TypeCast(e,t) -> reduce [ text "("; pretty_print_exp e; colon; print_typ t; text ")"]
 
-and print_arrow_fun args body = 
+and print_arrow_fun args body ret_t = 
+    let ret_t = (match ret_t with | None -> empty | Some v -> reduce [colon; parens (print_typ_f v)]) in
+    print_arrow_fun_p args body ret_t true
+
+and print_arrow_fun_p args body ret_t print_ret_t =
+    let ret_t = (if print_ret_t then ret_t else empty) in
     match args with
     | [] -> reduce [text "()"; text "=>"; body]
-    | [x] -> reduce [parens (print_pattern x); text "=>";  body]
-    | hd :: tl -> reduce [parens (print_pattern hd); text "=>"; parens (print_arrow_fun tl body)]
+    | [x] -> reduce [parens (print_pattern x true); ret_t; text "=>";  body]
+    | hd :: tl -> reduce [parens (print_pattern hd true); ret_t; text "=>"; parens (print_arrow_fun_p tl body ret_t false)]
        
 and pretty_print_obj el = 
     match el with
@@ -203,7 +208,7 @@ and print_typ = function
     | JST_String -> text "string"
     | JST_Boolean -> text "boolean"
     | JST_Nullable _ -> text "!!!"
-    | JST_Function (args, ret_t, decl_vars) -> reduce [print_decl_t decl_vars; print_fun_typ args ret_t]        
+    | JST_Function (args, ret_t, decl_vars) -> print_fun_typ args ret_t decl_vars
     | JST_Object (lp, _, _) -> reduce [text "{" ; 
                                        List.map (fun (k, t) -> 
                                             reduce [pretty_print_prop_key k; text ":"; print_typ t]) lp |> combine comma;
@@ -223,12 +228,19 @@ and print_typ = function
                       | Some v -> reduce [text "<"; List.map print_typ v |> combine comma; text ">"] 
         in reduce [print_gen_t n; print_lt]
 
-and print_fun_typ args ret_t = 
-    let print_arg ((id,_), t) = reduce[text (jstr_escape id); colon; print_typ t] in
-    match args with
-    | [] -> reduce [text "()"; text "=>"; print_typ ret_t]
-    | [x] -> reduce [parens (print_arg x); text "=>"; parens (print_typ ret_t)]
-    | hd :: tl -> reduce [parens (print_arg hd); text "=>"; parens (print_fun_typ tl ret_t)]
+and print_fun_typ args ret_t decl_vars =    
+    let print_arg ((id,_), t) = reduce[text (jstr_escape id); colon; print_typ_f t] in
+    let args_t =
+    (match args with
+    | [] -> reduce [text "()"; text "=>"; print_typ_f ret_t]
+    | [x] -> reduce [parens (print_arg x); text "=>"; parens (print_typ_f ret_t)]
+    | hd :: tl -> reduce [parens (print_arg hd); text "=>"; parens (print_fun_typ tl ret_t None)])
+    in reduce [print_decl_t decl_vars; args_t]
+
+and print_typ_f t = 
+    match t with 
+    | JST_Function (args, ret_t, decl_vars) -> print_fun_typ args ret_t None
+    | _ -> print_typ t
 
 and print_gen_t = function 
     | Unqualified (id, _) -> text (remove_chars_t id)
@@ -246,23 +258,33 @@ and print_kind_var = function
     | JSV_Let -> text "let"
     | JSV_Const -> text "const"
 
-and print_pattern = function
+and print_pattern p print_t =
+    match p with 
     | JGP_Object _ -> text "!!"
     | JGP_Array _ -> text "!!"
     | JGP_Assignment _ -> text "!!"
     | JGP_Expression _ -> text "!!"
     | JGP_Identifier(id, t) ->
         let r = match t with
+                | Some v -> reduce [colon; print_typ_f v]
+                | None -> empty
+        in reduce [text (remove_chars_t id); (if print_t then r else empty)]
+
+and print_pattern1 p print_t = 
+    match p with 
+    | JGP_Identifier(id, t) ->
+        let r = match t with
                 | Some v -> reduce [colon; print_typ v]
                 | None -> empty
-        in reduce [text (remove_chars_t id); r]
+        in reduce [text (remove_chars_t id); (if print_t then r else empty)]
+    | _ -> text "!!!"
 
 and print_body = function 
     | JS_BodyBlock l -> reduce [text "{"; pretty_print_statements l; text "}"]
-    | JS_BodyExpression e -> pretty_print_exp e
+    | JS_BodyExpression e -> parens(pretty_print_exp e)
 
 and pretty_print_fun (n, pars, body, t, typePars) =
     let name = match n with | Some v -> text (fst v) | None -> empty in
     let returnT = match t with | Some v -> reduce [text ":"; ws; print_typ v] | None -> empty in
-    reduce [text "function"; ws; name; print_decl_t typePars; parens (List.map print_pattern pars |> combine comma); returnT;
+    reduce [text "function"; ws; name; print_decl_t typePars; parens (List.map (fun p -> print_pattern p true) pars |> combine comma); returnT;
             text "{";  hardline; print_body body; text "}"]
