@@ -183,7 +183,7 @@ and translate_module (module_name, modul, _): file =
 
 and translate_decl d: option<source_t> =
   match d with
-  | MLM_Let (_, lfunc) ->
+  | MLM_Let (_, _,  lfunc) ->
       let for1 { mllb_name = name, _; mllb_tysc = tys; mllb_def = expr; print_typ=pt; mllb_add_unit = unit_b} =       
           let t = 
             begin 
@@ -261,7 +261,7 @@ and translate_decl d: option<source_t> =
        let c = JSS_Expression(JSE_Assignment(JGP_Identifier(var), translate_expr_pure e)) in
       (match stmt with | Some v -> JSS_Block([c; v]) | None -> c)
           
-  | MLE_Let ((_, [{
+  | MLE_Let ((_, _,  [{
       mllb_name = name, _;
       mllb_tysc = tys;
       mllb_add_unit = add_unit;

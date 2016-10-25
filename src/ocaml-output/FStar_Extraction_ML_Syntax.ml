@@ -46,17 +46,17 @@ in (
 let n_resets = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in {gensym = (fun _71_15 -> (match (()) with
 | () -> begin
-(let _165_34 = (let _165_33 = (let _165_32 = (let _165_28 = (FStar_ST.read n_resets)
-in (FStar_Util.string_of_int _165_28))
-in (let _165_31 = (let _165_30 = (let _165_29 = (
+(let _168_34 = (let _168_33 = (let _168_32 = (let _168_28 = (FStar_ST.read n_resets)
+in (FStar_Util.string_of_int _168_28))
+in (let _168_31 = (let _168_30 = (let _168_29 = (
 
 let _71_16 = (FStar_Util.incr ctr)
 in (FStar_ST.read ctr))
-in (FStar_Util.string_of_int _165_29))
-in (Prims.strcat "_" _165_30))
-in (Prims.strcat _165_32 _165_31)))
-in (Prims.strcat "_" _165_33))
-in ((_165_34), ((Prims.parse_int "0"))))
+in (FStar_Util.string_of_int _168_29))
+in (Prims.strcat "_" _168_30))
+in (Prims.strcat _168_32 _168_31)))
+in (Prims.strcat "_" _168_33))
+in ((_168_34), ((Prims.parse_int "0"))))
 end)); reset = (fun _71_18 -> (match (()) with
 | () -> begin
 (
@@ -79,18 +79,18 @@ end))
 
 
 let rec gensyms : Prims.int  ->  mlident Prims.list = (fun x -> (match (x) with
-| _165_42 when (_165_42 = (Prims.parse_int "0")) -> begin
+| _168_42 when (_168_42 = (Prims.parse_int "0")) -> begin
 []
 end
 | n -> begin
-(let _165_44 = (gensym ())
-in (let _165_43 = (gensyms (n - (Prims.parse_int "1")))
-in (_165_44)::_165_43))
+(let _168_44 = (gensym ())
+in (let _168_43 = (gensyms (n - (Prims.parse_int "1")))
+in (_168_44)::_168_43))
 end))
 
 
-let mlpath_of_lident : FStar_Ident.lident  ->  (Prims.string Prims.list * Prims.string) = (fun x -> (let _165_48 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
-in ((_165_48), (x.FStar_Ident.ident.FStar_Ident.idText))))
+let mlpath_of_lident : FStar_Ident.lident  ->  (Prims.string Prims.list * Prims.string) = (fun x -> (let _168_48 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
+in ((_168_48), (x.FStar_Ident.ident.FStar_Ident.idText))))
 
 
 let as_mlident = (fun x -> ((x.FStar_Absyn_Syntax.ppname.FStar_Ident.idText), ((Prims.parse_int "0"))))
@@ -1038,10 +1038,10 @@ end)
 
 
 let bv_as_mlident : FStar_Syntax_Syntax.bv  ->  mlident = (fun x -> if (((FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText FStar_Ident.reserved_prefix) || (FStar_Syntax_Syntax.is_null_bv x)) || (is_reserved x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText)) then begin
-(let _165_729 = (let _165_728 = (let _165_727 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
-in (Prims.strcat "_" _165_727))
-in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _165_728))
-in ((_165_729), ((Prims.parse_int "0"))))
+(let _168_729 = (let _168_728 = (let _168_727 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
+in (Prims.strcat "_" _168_727))
+in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _168_728))
+in ((_168_729), ((Prims.parse_int "0"))))
 end else begin
 ((x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText), ((Prims.parse_int "0")))
 end)
