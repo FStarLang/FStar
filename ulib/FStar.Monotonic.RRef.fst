@@ -71,10 +71,11 @@ val m_alloc: #a:Type
             -> init:a
             -> ST (m_rref r a b)
 		(requires (fun _ -> monotonic a b))
-		(ensures (fun h0 (m:m_rref r a b) h1 -> ralloc_post r init h0 (as_hsref m) h1))
+		(ensures (fun h0 ((m,h1):(m_rref r a b) * mem) -> ralloc_post r init h0 ((as_hsref m), h1)))
 let m_alloc #a #b r init = ST.ralloc r init
 
-val m_read:#r:rid 
+
+val m_read:#r:rid
        -> #a:Type
        -> #b:reln a
        -> x:m_rref r a b
@@ -83,7 +84,7 @@ val m_read:#r:rid
             (ensures (deref_post (as_hsref x)))
 let m_read #r #a #b x = !x
 
-val m_write:#r:rid 
+val m_write:#r:rid
         -> #a:Type
         -> #b:reln a
         -> x:m_rref r a b
@@ -105,33 +106,33 @@ val witness: #r:rid
           -> p:(mem -> GTot Type0)
           -> ST unit
                 (requires (fun h0 -> p h0 /\ stable_on_t m p))
-                (ensures (fun h0 _ h1 -> h0==h1 /\ witnessed p))
+                (ensures (fun h0 (_, h1) -> h0==h1 /\ witnessed p))
 let witness #r #a #b m p = ()
 
-assume val weaken_witness : p:(mem -> GTot Type0) 
-			  -> q:(mem -> GTot Type0) 
+assume val weaken_witness : p:(mem -> GTot Type0)
+			  -> q:(mem -> GTot Type0)
 			  -> Lemma
   ((forall h. p h ==> q h) /\ witnessed p ==> witnessed q)
 
 val testify: p:(mem -> GTot Type0)
           -> ST unit
                (requires (fun _ ->  witnessed p))
-               (ensures (fun h0 _ h1 -> h0==h1 /\ p h1))
+               (ensures (fun h0 (_, h1) -> h0==h1 /\ p h1))
 let testify p = admit() //intentionally admitted
 
 
-val testify_forall: #a:Type -> #p:(a -> mem -> Type0) 
-       -> $s:squash (forall (x:a). witnessed (p x)) 
+val testify_forall: #a:Type -> #p:(a -> mem -> Type0)
+       -> $s:squash (forall (x:a). witnessed (p x))
        -> ST unit
   (requires (fun h -> True))
-  (ensures (fun h0 _ h1 -> h0==h1 /\ (forall (x:a). p x h1)))
+  (ensures (fun h0 (_, h1) -> h0==h1 /\ (forall (x:a). p x h1)))
 let testify_forall #a #p $s = admit() //intentionally admitted
 
-val m_recall: #r:rid -> #a:Type -> #b:reln a 
+val m_recall: #r:rid -> #a:Type -> #b:reln a
             -> m:m_rref r a b
-	    -> ST unit 
+	    -> ST unit
 	      (requires (fun h -> True))
-	      (ensures (fun h0 _ h1 -> h0==h1 /\ m_contains m h1))
+	      (ensures (fun h0 (_, h1) -> h0==h1 /\ m_contains m h1))
 let m_recall #r #a #b m = recall m
 
 let rid_exists (r:rid) (h:mem) = b2t(Map.contains h.h r)
@@ -140,4 +141,4 @@ type ex_rid = r:rid{witnessed (rid_exists r)}
 
 assume val ex_rid_of_rid: r:rid -> ST ex_rid
   (fun h -> True)
-  (fun h0 r' h1 -> r=r' /\ h0==h1)
+  (fun h0 (r', h1) -> r=r' /\ h0==h1)

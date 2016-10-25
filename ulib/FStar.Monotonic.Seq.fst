@@ -59,10 +59,10 @@ let lemma_snoc_extends (s:seq 'a) (x:'a)
 let alloc_mref_seq (#a:Type) (r:rid) (init:seq a)
   : ST (m_rref r (seq a) grows)
        (requires (fun _ -> True))
-       (ensures (fun h0 m h1 ->
+       (ensures (fun h0 (m, h1) ->
 	 m_contains m h1 /\
 	 m_sel h1 m == init /\
-	 FStar.ST.ralloc_post r init h0 (as_hsref m) h1))
+	 FStar.ST.ralloc_post r init h0 (as_hsref m, h1)))
   = lemma_grows_monotone #a;
     FStar.Monotonic.RRef.m_alloc r init
 
@@ -80,7 +80,7 @@ let at_least_is_stable (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grow
 let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
   : ST unit
        (requires (fun h -> True))
-       (ensures (fun h0 _ h1 ->
+       (ensures (fun h0 (_, h1) ->
                        let r_ashsref = MR.as_hsref r in
 	               m_contains r h1
 		     /\ modifies_one i h0 h1
@@ -105,7 +105,7 @@ let i_seq (r:rid) (a:Type) (p:seq a -> Type) = m_rref r (s:seq a{p s}) grows
 let alloc_mref_iseq (#a:Type) (p:seq a -> Type) (r:rid) (init:seq a{p init})
   : ST (i_seq r a p)
        (requires (fun _ -> True))
-       (ensures (fun h0 m h1 -> FStar.ST.ralloc_post r init h0 (MR.as_hsref m) h1))
+       (ensures (fun h0 (m, h1) -> FStar.ST.ralloc_post r init h0 (MR.as_hsref m, h1)))
   = lemma_grows_monotone #a;
     FStar.Monotonic.RRef.m_alloc r init
 
@@ -131,7 +131,7 @@ let i_sel (#r:rid) (#a:Type) (#p:seq a -> Type) (h:mem) (m:i_seq r a p)
 let i_read (#r:rid) (#a:Type) (#p:Seq.seq a -> Type) (m:i_seq r a p)
   : ST (s:seq a{p s})
        (requires (fun h -> True))
-       (ensures (fun h0 x h1 -> h0==h1 /\ x == i_sel h0 m))
+       (ensures (fun h0 (x, h1) -> h0==h1 /\ x == i_sel h0 m))
   = MR.m_read m
 
 let i_contains (#r:rid) (#a:Type) (#p:seq a -> Type) (m:i_seq r a p) (h:mem)
@@ -141,7 +141,7 @@ let i_contains (#r:rid) (#a:Type) (#p:seq a -> Type) (m:i_seq r a p) (h:mem)
 let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:a)
   : ST unit
        (requires (fun h -> p (SeqP.snoc (i_sel h r) x)))
-       (ensures (fun h0 _ h1 ->
+       (ensures (fun h0 (_, h1) ->
                        let r_ashsref = MR.as_hsref r in
 	               i_contains r h1
 		     /\ modifies_one rgn h0 h1
@@ -160,33 +160,33 @@ let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:
 ////////////////////////////////////////////////////////////////////////////////
 //Testing invariant sequences
 ////////////////////////////////////////////////////////////////////////////////
-let invariant (s:seq nat) = 
-  forall (i:nat) (j:nat). i < Seq.length s /\ j < Seq.length s /\ i<>j 
+let invariant (s:seq nat) =
+  forall (i:nat) (j:nat). i < Seq.length s /\ j < Seq.length s /\ i<>j
 		 ==> Seq.index s i <> Seq.index s j
-  
+
 val test0: r:rid -> a:m_rref r (seq nat) grows -> k:nat -> ST unit
   (requires (fun h -> k < Seq.length (m_sel h a)))
-  (ensures (fun h0 result h1 -> True))
+  (ensures (fun h0 (result, h1) -> True))
 let test0 r a k =
   let h0 = ST.get() in
-  let _ = 
-    let s = m_sel h0 a in 
+  let _ =
+    let s = m_sel h0 a in
     at_least_is_stable k (Seq.index (m_sel h0 a) k) a;
     SeqP.contains_intro s k (Seq.index s k) in
   MR.witness a (at_least k (Seq.index (m_sel h0 a) k) a)
-  
+
 val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
   (requires (fun h -> k < Seq.length (i_sel h a)))
-  (ensures (fun h0 result h1 -> True))
+  (ensures (fun h0 (result, h1) -> True))
 let itest r a k =
   let h0 = ST.get() in
   i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
   MR.witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
 
 let test_alloc (#a:Type0) (p:seq a -> Type) (r:rid) (init:seq a{p init})
-               : ST unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True)) =
+               : ST unit (requires (fun _ -> True)) (ensures (fun _ (_, _) -> True)) =
   let is = alloc_mref_iseq p r init in
-  let h = get () in
+  let h = ST.get () in
   assert (i_sel h is == init)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -426,7 +426,7 @@ let new_seqn (#l:rid) (#a:Type) (#max:nat)
        (requires (fun h ->
 	   init <= max /\
 	   init <= Seq.length (m_sel h log)))
-       (ensures (fun h0 c h1 ->
+       (ensures (fun h0 (c, h1) ->
 		   modifies_one i h0 h1 /\
 		   modifies_rref i TSet.empty h0.h h1.h /\
 		   m_fresh c h0 h1 /\
@@ -445,7 +445,7 @@ let increment_seqn (#l:rid) (#a:Type) (#max:nat)
 	  let n = m_sel h c in
 	  n < Seq.length log  /\
 	  n + 1 <= max))
-       (ensures (fun h0 _ h1 ->
+       (ensures (fun h0 (_, h1) ->
           let c_ashsref = MR.as_hsref c in
 	  modifies_one i h0 h1 /\
 	  modifies_rref i !{HH.as_ref c_ashsref.ref} h0.h h1.h /\
@@ -458,7 +458,7 @@ let increment_seqn (#l:rid) (#a:Type) (#max:nat)
 let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:seqn i log max)
   : ST unit
        (requires (fun h -> True))
-       (ensures (fun h0 _ h1 ->
+       (ensures (fun h0 (_, h1) ->
 	   h0==h1 /\
 	   at_most_log_len (m_sel h1 ctr) log h1))
   = let n = m_read ctr in

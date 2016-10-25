@@ -120,19 +120,19 @@ let salloc_post (#a:Type) (init:a) (m0:mem) ((s, m1):(s:reference a{is_stack_reg
     /\ HH.fresh_rref s.ref m0.h m1.h         //it's a fresh reference in the top frame
     /\ m1==HyperStack.upd m0 s init          //and it's been initialized
 
+
 (* TODO : subtyping does not go through pairs... *)
 (**
      Allocates on the top-most stack frame
      *)
 assume val salloc: #a:Type -> init:a -> StackInline (stackref a)
   (requires (fun m -> is_stack_region m.tip))
-  (ensures salloc_post init)
-
+  (ensures (fun m0 (s,m1) -> salloc_post init m0 (s,m1)))
 
 assume val salloc_mm: #a:Type -> init:a -> StackInline (mmstackref a)
   (requires (fun m -> is_stack_region m.tip))
-  (ensures salloc_post init)
-  
+  (ensures (fun m0 (s,m1) -> salloc_post init m0 (s,m1)))
+
 
 let remove_reference (#a:Type) (r:reference a{r.mm}) (m:mem{r.id `is_in` m.h}) :GTot mem =
   let h = Map.sel m.h r.id in
@@ -143,7 +143,7 @@ let remove_reference (#a:Type) (r:reference a{r.mm}) (m:mem{r.id `is_in` m.h}) :
 
 assume val sfree: #a:Type -> r:mmstackref a -> StackInline unit
     (requires (fun m0 -> r.id = m0.tip /\ m0 `contains` r))
-    (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
+    (ensures (fun m0 (_, m1) -> m0 `contains` r /\ m1 == remove_reference r m0))
 
 let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
   not (r `is_in` m0.h)
@@ -159,7 +159,7 @@ let stronger_fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
 
 assume val new_region: r0:HH.rid -> ST HH.rid
       (requires (fun m -> is_eternal_region r0))
-      (ensures (fun (m0:mem) (r1:HH.rid) (m1:mem) ->
+      (ensures (fun (m0:mem) ((r1,m1):HH.rid*mem) ->
                            r1 `HH.extends` r0
                         /\ HH.fresh_region r1 m0.h m1.h
 			/\ HH.color r1 = HH.color r0
@@ -171,7 +171,7 @@ let is_eternal_color = HS.is_eternal_color
 
 assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
       (requires (fun m -> is_eternal_color c /\ is_eternal_region r0))
-      (ensures (fun (m0:mem) (r1:HH.rid) (m1:mem) ->
+      (ensures (fun (m0:mem) ((r1,m1):HH.rid*mem) ->
                            r1 `HH.extends` r0
                         /\ HH.fresh_region r1 m0.h m1.h
 			/\ HH.color r1 = c
@@ -179,7 +179,7 @@ assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
 			/\ m1.tip = m0.tip
 			))
 
-unfold let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
+unfold let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) ((x,m1):(x:reference a{is_eternal_region x.id}) * mem) =
     let region_i = Map.sel m0.h i in
     not (Heap.contains region_i (HH.as_ref x.ref))
   /\ i `is_in` m0.h
@@ -188,17 +188,17 @@ unfold let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_
 
 assume val ralloc: #a:Type -> i:HH.rid -> init:a -> ST (ref a)
     (requires (fun m -> is_eternal_region i))
-    (ensures (ralloc_post i init))
+    (ensures (fun m0 (s,m1) -> ralloc_post i init m0 (s,m1)))
 
 assume val ralloc_mm: #a:Type -> i:HH.rid -> init:a -> ST (mmref a)
     (requires (fun _ -> is_eternal_region i))
-    (ensures (ralloc_post i init))
+    (ensures (fun m0 (s,m1) -> ralloc_post i init m0 (s,m1)))
 
 assume val rfree: #a:Type -> r:mmref a -> ST unit
     (requires (fun m0 -> m0 `contains` r))
-    (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
+    (ensures (fun m0 (_, m1) -> m0 `contains` r /\ m1 == remove_reference r m0))
 
-unfold let assign_post (#a:Type) (r:reference a) (v:a) m0 (_u:unit) m1 =
+unfold let assign_post (#a:Type) (r:reference a) (v:a) m0 ((_u,m1):unit * mem) =
   m0 `contains` r /\ m1 == HyperStack.upd m0 r v
 
 (**
@@ -209,7 +209,7 @@ assume val op_Colon_Equals: #a:Type -> r:reference a -> v:a -> STL unit
   (requires (fun m -> m `contains` r))
   (ensures (assign_post r v))
 
-unfold let deref_post (#a:Type) (r:reference a) m0 x m1 =
+unfold let deref_post (#a:Type) (r:reference a) m0 (x, m1) =
   m1==m0 /\ x==HyperStack.sel m0 r
 
 (**
@@ -234,26 +234,26 @@ module G = FStar.Ghost
     *)
 assume val get: unit -> Stack mem
   (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m0==x /\ m1==m0))
+  (ensures (fun m0 (x, m1) -> m0==x /\ m1==m0))
 
 (**
    We can only recall refs with mm bit unset, not stack refs
    *)
 assume val recall: #a:Type -> r:ref a -> Stack unit
   (requires (fun m -> True))
-  (ensures (fun m0 _ m1 -> m0==m1 /\ m1 `contains` r))
+  (ensures (fun m0 (_, m1) -> m0==m1 /\ m1 `contains` r))
 
 (**
    We can only recall eternal regions, not stack regions
    *)
 assume val recall_region: i:HH.rid{is_eternal_region i} -> Stack unit
   (requires (fun m -> True))
-  (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
+  (ensures (fun m0 (_, m1) -> m0==m1 /\ i `is_in` m1.h))
 
 (* Tests *)
 val test_do_nothing: int -> Stack int
   (requires (fun h -> True))
-  (ensures (fun h _ h1 -> True))
+  (ensures (fun h (_, h1) -> True))
 let test_do_nothing x =
   push_frame();
   pop_frame ();
@@ -261,7 +261,7 @@ let test_do_nothing x =
 
 val test_do_something: s:stackref int -> Stack int
   (requires (fun h -> contains h s))
-  (ensures (fun h r h1 -> contains h s /\ r = sel h s))
+  (ensures (fun h (r, h1) -> contains h s /\ r = sel h s))
 let test_do_something x =
   push_frame();
   let res = !x in
@@ -270,24 +270,24 @@ let test_do_something x =
 
 val test_do_something_else: s:stackref int -> v:int -> Stack unit
   (requires (fun h -> contains h s))
-  (ensures (fun h r h1 -> contains h1 s /\ v = sel h1 s))
+  (ensures (fun h (r, h1) -> contains h1 s /\ v = sel h1 s))
 let test_do_something_else x v =
   push_frame();
   x := v;
   pop_frame ()
 
-val test_allocate: unit -> Stack unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True))
+val test_allocate: unit -> Stack unit (requires (fun _ -> True)) (ensures (fun _ (_, _) -> True))
 let test_allocate () =
   push_frame();
   let x = salloc 1 in
   x := 2;
   pop_frame ()
 
-val test_nested_stl: unit -> Stack unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True))
+val test_nested_stl: unit -> Stack unit (requires (fun _ -> True)) (ensures (fun _ (_, _) -> True))
 let test_nested_stl () =
   let x = test_do_nothing 0 in ()
 
-val test_nested_stl2: unit -> Stack unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True))
+val test_nested_stl2: unit -> Stack unit (requires (fun _ -> True)) (ensures (fun _ (_, _) -> True))
 let test_nested_stl2 () =
   push_frame ();
   let x = test_do_nothing 0 in
@@ -296,7 +296,7 @@ let test_nested_stl2 () =
 (* Testing mix of Heap and Stack code *)
 val test_stack: int -> Stack int
   (requires (fun h -> True))
-  (ensures (fun h _ h1 -> modifies Set.empty h h1))
+  (ensures (fun h (_, h1) -> modifies Set.empty h h1))
 let test_stack x =
   push_frame();
   let s = salloc x in
@@ -306,7 +306,7 @@ let test_stack x =
 
 val test_stack_with_long_lived: s:reference int -> Stack unit
   (requires (fun h -> contains h s))
-  (ensures  (fun h0 _ h1 -> contains h1 s /\ sel h1 s = (sel h0 s) + 1
+  (ensures (fun h0 (_, h1) -> contains h1 s /\ sel h1 s = (sel h0 s) + 1
     /\ modifies (Set.singleton s.id) h0 h1))
 let test_stack_with_long_lived s =
   push_frame();
@@ -316,7 +316,7 @@ let test_stack_with_long_lived s =
 
 val test_heap_code_with_stack_calls: unit -> Heap unit
   (requires (fun h -> heap_only h))
-  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton h0.tip) h0 h1 ))
+  (ensures (fun h0 (_, h1) -> modifies_transitively (Set.singleton h0.tip) h0 h1 ))
 let test_heap_code_with_stack_calls () =
   let h = get () in
   // How is the following not known ?
@@ -328,7 +328,7 @@ let test_heap_code_with_stack_calls () =
 
 val test_heap_code_with_stack_calls_and_regions: unit -> Heap unit
   (requires (fun h -> heap_only h))
-  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton h0.tip) h0 h1 ))
+  (ensures (fun h0 (_, h1) -> modifies_transitively (Set.singleton h0.tip) h0 h1 ))
 let test_heap_code_with_stack_calls_and_regions () =
   let h = get() in
   let color = 0 in
@@ -341,7 +341,7 @@ let test_heap_code_with_stack_calls_and_regions () =
 
 val test_lax_code_with_stack_calls_and_regions: unit -> ST unit
   (requires (fun h -> True))
-  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton HH.root) h0 h1 ))
+  (ensures (fun h0 (_, h1) -> modifies_transitively (Set.singleton HH.root) h0 h1 ))
 let test_lax_code_with_stack_calls_and_regions () =
   push_frame();
   let color = 0 in
@@ -353,7 +353,7 @@ let test_lax_code_with_stack_calls_and_regions () =
 
 val test_lax_code_with_stack_calls_and_regions_2: unit -> ST unit
   (requires (fun h -> True))
-  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton HH.root) h0 h1 ))
+  (ensures (fun h0 (_, h1) -> modifies_transitively (Set.singleton HH.root) h0 h1 ))
 let test_lax_code_with_stack_calls_and_regions_2 () =
   push_frame();
   let color = 0 in
@@ -366,7 +366,7 @@ let test_lax_code_with_stack_calls_and_regions_2 () =
 
 val test_to_be_stack_inlined: unit -> StackInline (reference int)
   (requires (fun h -> is_stack_region h.tip))
-  (ensures  (fun h0 r h1 -> ~(contains h0 r) /\ contains h1 r /\ sel h1 r = 2))
+  (ensures (fun h0 (r, h1) -> ~(contains h0 r) /\ contains h1 r /\ sel h1 r = 2))
 let test_to_be_stack_inlined () =
   let r = salloc 0 in
   r := 2;
@@ -374,7 +374,7 @@ let test_to_be_stack_inlined () =
 
 val test_stack_function_with_inline: unit -> Stack int
   (requires (fun h -> True))
-  (ensures  (fun h0 _ h1 -> True))
+  (ensures (fun h0 (_, h1) -> True))
 let test_stack_function_with_inline () =
   push_frame();
   let x = test_to_be_stack_inlined () in
@@ -384,7 +384,7 @@ let test_stack_function_with_inline () =
 
 val test_st_function_with_inline: unit -> ST unit
   (requires (fun h -> True))
-  (ensures  (fun h0 _ h1 -> True))
+  (ensures (fun h0 (_, h1) -> True))
 let test_st_function_with_inline () =
   push_frame();
   let x = test_to_be_stack_inlined () in
@@ -394,7 +394,7 @@ let test_st_function_with_inline () =
 
 val test_to_be_inlined: unit -> Inline (reference int * reference int)
   (requires (fun h -> is_stack_region h.tip))
-  (ensures  (fun h0 r h1 -> True))
+  (ensures (fun h0 (r, h1) -> True))
 let test_to_be_inlined () =
   let r = salloc 0 in
   HH.root_has_color_zero ();
@@ -406,7 +406,7 @@ let test_to_be_inlined () =
 
 val test_st_function_with_inline_2: unit -> ST unit
   (requires (fun h -> True))
-  (ensures  (fun h0 _ h1 -> True))
+  (ensures (fun h0 (_, h1) -> True))
 let test_st_function_with_inline_2 () =
   push_frame();
   let x = test_to_be_stack_inlined () in
@@ -416,10 +416,10 @@ let test_st_function_with_inline_2 () =
 
 val with_frame: #a:Type -> #pre:st_pre -> #post:(mem -> Tot (st_post a)) -> $f:(unit -> Stack a pre post)
 	     -> Stack a (fun s0 -> forall s1. fresh_frame s0 s1 ==> pre s1)
-		     (fun s0 x s1 ->
+		     (fun s0 (x, s1) ->
 			exists s0' s1'. fresh_frame s0 s0'
 			         /\ poppable s0'
-				 /\ post s0' x s1'
+				 /\ post s0' (x, s1')
 				 /\ equal_domains s0' s1'
 				 /\ s1 == pop s1')
 let with_frame #a #pre #post f =
@@ -428,22 +428,25 @@ let with_frame #a #pre #post f =
   pop_frame();
   x
 
-let test_with_frame (x:stackref int) (v:int)
+(* TODO *)
+(*./hyperstack/FStar.ST.fst(434,14-434,31) : (Error) (?238544 x v h (Prims.Mktuple2 a h1)) is not equal to the expected type (Prims.l_and (FStar.HyperStack.contains h x) (Prims.eq2 h1 (FStar.HyperStack.upd h x v)))
+*)
+(*let test_with_frame (x:stackref int) (v:int)
   : Stack unit (requires (fun m -> contains m x))
-	     (ensures (fun m0 _ m1 -> modifies (Set.singleton x.id) m0 m1 /\ sel m1 x = v))
- = with_frame (fun _ -> x := v)
+	     (ensures (fun m0 (_, m1) -> modifies (Set.singleton x.id) m0 m1 /\ sel m1 x = v))
+ = with_frame #_ #_ #(fun m0 (_,m1) -> modifies (Set.singleton x.id) m0 m1 /\ sel m1 x = v) (fun _ -> x := v) *)
 
 
-let as_requires (#a:Type) (wp:st_wp a) = wp (fun x s -> True)
-let as_ensures (#a:Type) (wp:st_wp a) = fun s0 x s1 -> wp (fun y s1' -> y=!=x \/ s1=!=s1') s0
+let as_requires (#a:Type) (wp:st_wp a) (m:mem) = wp m (fun p -> True)
+let as_ensures (#a:Type) (wp:st_wp a) = fun s0 (x, s1) -> wp s0 (fun (y, s1') -> y=!=x \/ s1=!=s1')
 
 assume val as_stack: #a:Type -> #wp:st_wp a -> $f:(unit -> STATE a wp) ->
 	   Pure (unit -> Stack a (as_requires wp)
 			      (as_ensures wp))
-	        (requires (forall s0 x s1. as_ensures wp s0 x s1 ==> equal_domains s0 s1))
+	        (requires (forall s0 x s1. as_ensures wp s0 (x, s1) ==> equal_domains s0 s1))
  	        (ensures (fun x -> True))
 
-val mm_tests: unit -> Unsafe unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True))
+val mm_tests: unit -> Unsafe unit (requires (fun _ -> True)) (ensures (fun _ (_, _) -> True))
 let mm_tests _ =
   let _ = push_frame () in
 

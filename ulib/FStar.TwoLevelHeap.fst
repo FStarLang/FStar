@@ -21,12 +21,7 @@ type t = Map.t rid heap
 
 let st_pre = st_pre_h t
 
-
 let st_post (a:Type) = st_post_h t a
-
-
-//let f : int -> Pure int = fun x -> x + 3
-
 
 let st_wp (a:Type) = st_wp_h t a
 
@@ -38,11 +33,11 @@ effect State (a:Type) (wp:st_wp a) =
        STATE a wp
 effect ST (a:Type) (pre:st_pre) (post: (t -> Tot (st_post a))) =
        STATE a
-             (fun (p:st_post a) (h:t) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
+             (fun (h:t) (p:st_post a) -> pre h /\ (forall a h1. pre h /\ post h (a, h1) ==> p (a, h1))) (* WP *)
 effect St (a:Type) =
-       ST a (fun h -> True) (fun h0 r h1 -> True)
+       ST a (fun h -> True) (fun h0 (r, h1) -> True)
 sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:t) -> wp (fun a -> p a h)
+  DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (h:t) (p:st_post a) -> wp (fun a -> p (a, h))
 
 type rref (id:rid) (a:Type) = ref a
 val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
@@ -59,29 +54,29 @@ let lemma_as_ref_inj #a #i r = ()
 
 assume val new_region: unit -> ST rid
       (requires (fun m -> True))
-      (ensures (fun (m0:t) (id:rid) (m1:t) -> exists (h:heap). not(Map.contains m0 id) /\ m1==Map.upd m0 id h))
+      (ensures (fun (m0:t) ((id,m1):rid*t) -> exists (h:heap). not(Map.contains m0 id) /\ m1==Map.upd m0 id h))
 
 let sel (#a:Type) (#i:rid) (m:t) (r:rref i a) = Heap.sel (Map.sel m i) (as_ref r)
 let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
 
 assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
     (requires (fun m -> Map.contains m i))
-    (ensures (fun m0 x m1 ->
+    (ensures (fun m0 (x, m1) ->
                     let region_i = Map.sel m0 i in
                     (not (Heap.contains region_i (as_ref x))
                     /\ m1==Map.upd m0 i (Heap.upd region_i (as_ref x) init))))
 
 assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
   (requires (fun m -> True))
-  (ensures (fun m0 _u m1 -> m1== Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)))
+  (ensures (fun m0 (_u, m1) -> m1== Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)))
 
 assume val op_Bang:#a:Type -> #i:rid -> r:rref i a -> ST a
   (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m1==m0 /\ x==Heap.sel (Map.sel m0 i) (as_ref r)))
+  (ensures (fun m0 (x, m1) -> m1==m0 /\ x==Heap.sel (Map.sel m0 i) (as_ref r)))
 
 assume val get: unit -> ST t
   (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m0==x /\ m1==m0))
+  (ensures (fun m0 (x, m1) -> m0==x /\ m1==m0))
 
 let modifies (s:Set.set rid) (m0:t) (m1:t) =
     Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement s) m0))

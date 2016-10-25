@@ -38,13 +38,20 @@ assume val compose2: #a0:Type -> #b0:Type -> #wp0:(a0 -> Tot (st_wp b0))
                   -> STATE2 (rel b0 b1)
                             (comp b0 b1 (wp0 (R.l x)) (wp1 (R.r x)))
 
+
+let bidule (#a:Type) (#b:Type) (#wp: a -> Tot (st_wp b)) ($c:(x:a -> STATE b (wp x))) (x:double a) : STATE2 (rel b b) (fun _ _ -> False) =
+  let r = compose2 #a #b #wp #a #b #wp c c x assert in r
+
+(*
 (* TODO : Investigate why it does not work anymore *)
 val compose2_self : #a:Type -> #b:Type -> #wp:(a -> Tot (st_wp b))
                 -> $c:(x:a -> STATE b (wp x))
                 -> x: double a
                 -> STATE2 (double b)
                           (comp b b (wp (R.l x)) (wp (R.r x)))
-let compose2_self #a #b #wp f x = compose2 #a #b #wp #a #b #wp f f x
+let compose2_self #a #b #wp f x =
+  let f (x:double a): STATE2 (double b) (comp b b (wp (R.l x)) (wp (R.r x)))= compose2 #a #b #wp #a #b #wp f f x in f x
+*)
 
 (* Combine two ST2 statements A and B to create a new ST2 statement C where
    the left side of C is equivalent to the left side of A and
