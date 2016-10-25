@@ -16,11 +16,13 @@ ocaml: out hello.fst
 # `FStar.Seq` (it is not realized in ML), so we pass it to `ocamlopt`.
 testseq: out testseq.fst
 	$(MAKE) -C $(ULIB_ML) PRIMS_DIR=native_int
+        # CH: This target is broken: the --use_native_int flag no longer exists
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --use_native_int --odir out --codegen OCaml testseq.fst
+        # CH: reference to $(ULIB_ML)/native_int is now bogus, there is no such thing
 	$(OCAMLOPT) -I $(ULIB_ML)/native_int -I out/ out/FStar_Seq.ml out/TestSeq.ml -o testseq.exe
 	./testseq.exe
 
-LIB=../../lib
+LIB=../../ulib
 BIN=../../bin
 FSTAR=../../bin/fstar.exe
 
@@ -44,6 +46,7 @@ fs: out hello.fst
 	$(FSC) --nowarn:0086 -o out/hello.exe $(LIB)/fs/prims.fs $(LIB)/fs/io.fs out/Hello.fs
 	$(FSRUNTIME) ./out/hello.exe
 
+# CH: this target is dead, there is no ml/native_int anywhere
 bat_testseq: out testseq.fst
 	$(FSTAR) --use_native_int --odir out --codegen OCaml testseq.fst
 	cp $(LIB)/ml/native_int/prims.ml $(LIB)/ml/FStar_IO.ml FStar_Seq.ml out
