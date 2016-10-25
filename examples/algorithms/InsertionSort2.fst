@@ -23,15 +23,15 @@ let rec insert'_sorted #a x l k =
     if k x <= k hd then ()
     else insert'_sorted x tl k
 
-val insert'_stable: #a:eqtype -> x:a -> t:int -> l:(list a) -> k:(a -> Tot int) ->
+val insert'_stable: #a:eqtype -> x:a -> l:(list a) -> k:(a -> Tot int) ->
   Lemma(requires (sorted l k))
-  (ensures(filter_eq t (insert' x l k) k = filter_eq t ([x]@l) k ))
-let rec insert'_stable #a x t l k =
+  (ensures(stable (insert' x l k) ([x]@l) k))
+let rec insert'_stable #a x l k =
   match l with
   | [] -> ()
   | hd::tl ->
-    if k x <= k hd then filter_eq_append t [x] (insert' x tl k) k
-    else insert'_stable x t tl k
+    if k x <= k hd then filter_eq_append [x] (insert' x tl k) k
+    else insert'_stable x tl k
 
 val insert'_permutation: #a:eqtype -> x:a -> l:(list a) -> k:(a -> Tot int) ->
   Lemma(ensures (permutation_2 (insert' x l k) l [x]))
@@ -57,15 +57,15 @@ let rec insertionsort'_sorted #a l k =
     insertionsort'_sorted (b::tl) k;
     insert'_sorted a (insertionsort' (b::tl) k) k
 
-val insertionsort'_stable: #a:eqtype -> t:int -> l:(list a) -> k:(a -> Tot int) ->
-  Lemma(ensures is_stable t (insertionsort' l k) l k)
-let rec insertionsort'_stable #a t l k =
+val insertionsort'_stable: #a:eqtype -> l:(list a) -> k:(a -> Tot int) ->
+  Lemma(ensures stable (insertionsort' l k) l k)
+let rec insertionsort'_stable #a l k =
   match l with
   | [] | [_] -> ()
   | a::b::tl ->
-    insertionsort'_stable t (b::tl) k;
+    insertionsort'_stable (b::tl) k;
     insertionsort'_sorted (b::tl) k;
-    insert'_stable a t (insertionsort' (b::tl) k) k
+    insert'_stable a (insertionsort' (b::tl) k) k
 
 val insertionsort'_permutation: #a:eqtype -> l:(list a) -> k:(a -> Tot int) ->
   Lemma(ensures(permutation (insertionsort' l k) l))
@@ -76,10 +76,10 @@ let rec insertionsort'_permutation #a l k =
     insertionsort'_permutation (b::tl) k;
     insert'_permutation a (insertionsort' (b::tl) k) k
 
-val insertionsort: #a:eqtype -> t:int -> l:(list a) -> k:(a -> Tot int) ->
-  Tot (l':list a{sorted l' k /\ is_stable t l l' k /\ permutation l l'})
-let insertionsort #a t l k =
+val insertionsort: #a:eqtype -> l:(list a) -> k:(a -> Tot int) ->
+  Tot (l':list a{sorted l' k /\ stable l l' k /\ permutation l l'})
+let insertionsort #a l k =
   insertionsort'_permutation l k;
-  insertionsort'_stable t l k;
+  insertionsort'_stable l k;
   insertionsort'_sorted l k;
   insertionsort' l k

@@ -45,10 +45,10 @@ let rec sorted_tl #a l k =
   | [_] -> ()
   | a::b::xs -> sorted_tl (b::xs) k
 
-val sorted_lt:  #a:eqtype -> x: int -> l:list a{is_Cons l} -> k:(a -> Tot int) ->
-  Lemma(requires (sorted l k /\ (x < k (hd l)) ))
-  (ensures (forall y. ( k y = x ==> mem y l = false)) /\ (~(existsb (fun z -> k z = x) l)))
-let sorted_lt #a x l k = ()
+val sorted_lt:  #a:eqtype -> l:list a{is_Cons l} -> k:(a -> Tot int) ->
+  Lemma(requires (sorted l k))
+  (ensures (forall x y. (x < k (hd l) /\ k y = x) ==> (mem y l = false)))
+let sorted_lt #a l k = ()
 
 type permutation (#a:Type{hasEq a}) (l1:list a) (l2:list a) =
     length l1 = length l2 /\ (forall n. mem n l1 = mem n l2)
