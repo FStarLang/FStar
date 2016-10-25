@@ -171,7 +171,7 @@ CHACHA_AEAD_ODIR=chacha_aead
 chacha-aead-extract: ulib
 	mkdir -p $(CHACHA_AEAD_ODIR)
 	$(FSTAR_EXTRACT) crypto/Test.fst --odir $(CHACHA_AEAD_ODIR)
-	@sed -i 's/^let mod.*/ /g' $(CHACHA_AEAD_ODIR)/FStar_UInt.ml ##HACK!--need to fix #310
+#	@sed -i.bak 's/^let mod.*/ /g' $(CHACHA_AEAD_ODIR)/FStar_UInt.ml ##HACK!--need to fix #310
 
 chacha-aead-compile: chacha-aead-extract
 	$(OCAMLOPT) -I crypto/ml -I $(CHACHA_AEAD_ODIR) \

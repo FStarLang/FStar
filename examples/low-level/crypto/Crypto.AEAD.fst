@@ -283,63 +283,67 @@ let inv h #i #rw e =
 let prf_state (#i:id) (#rw:rw) (e:state i rw) : PRF.state i = State.prf e
 
 val encrypt: 
-  i: id -> e:state i Writer -> 
+  i: id -> st:state i Writer -> 
   n: Cipher.iv (alg i) ->
   aadlen: UInt32.t {aadlen <=^ aadmax} -> 
-  aadtext: lbuffer (v aadlen) -> 
-  plainlen: UInt32.t {safelen i (v plainlen) 1ul} -> 
-  plaintext: plainBuffer i (v plainlen) -> 
-  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) 
+  aad: lbuffer (v aadlen) -> 
+  plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) 1ul} -> 
+  plain: plainBuffer i (v plainlen) -> 
+  cipher:lbuffer (v plainlen + v (Spec.taglen i)) 
   { 
-    Buffer.disjoint aadtext ciphertext /\
-    Buffer.disjoint (Plain.as_buffer plaintext) aadtext /\
-    Buffer.disjoint (Plain.as_buffer plaintext) ciphertext 
+    Buffer.disjoint aad cipher /\
+    Buffer.disjoint (Plain.as_buffer plain) aad /\
+    Buffer.disjoint (Plain.as_buffer plain) cipher /\
+    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) st.log_region /\
+    HH.disjoint (Buffer.frameOf cipher) st.log_region /\
+    HH.disjoint (Buffer.frameOf aad) st.log_region
   }
   ->  
   //STL -- should be STL eventually, but this requires propagation throughout the library
   ST unit
   (requires (fun h -> 
-    let prf_rgn = (State.prf e).rgn in
-    inv h #i #Writer e /\
-    Buffer.live h aadtext /\
-    Buffer.live h ciphertext /\ 
-    Plain.live h plaintext /\
-    Buffer.frameOf (Plain.as_buffer plaintext) <> prf_rgn /\
-    Buffer.frameOf ciphertext <> prf_rgn /\
-    (prf i ==> none_above ({iv=n; ctr=0ul}) e.prf h) // The nonce must be fresh!
+    let prf_rgn = st.prf.rgn in
+    inv h #i #Writer st /\
+    Buffer.live h aad /\
+    Buffer.live h cipher /\ 
+    Plain.live h plain /\
+    (prf i ==> none_above ({iv=n; ctr=0ul}) st.prf h) // The nonce must be fresh!
    ))
   (ensures (fun h0 _ h1 -> 
     //TODO some "heterogeneous" modifies that also records updates to logs and tables
-    Buffer.modifies_1 ciphertext h0 h1 /\ 
-    Buffer.live h1 aadtext /\
-    Buffer.live h1 ciphertext /\ 
-    Plain.live h1 plaintext /\
-    inv h1 #i #Writer e /\ 
+    Buffer.modifies_1 cipher h0 h1 /\ 
+    Buffer.live h1 aad /\
+    Buffer.live h1 cipher /\ 
+    Plain.live h1 plain /\
+    inv h1 #i #Writer st /\ 
     (safeId i ==> (
-      let aad = Buffer.as_seq h1 aadtext in
-      let p = Plain.sel_plain h1 plainlen plaintext in
-      let c = Buffer.as_seq h1 ciphertext in
-      HS.sel h1 e.log == SeqProperties.snoc (HS.sel h0 e.log) (Entry n aad (v plainlen) p c)))
+      let aad = Buffer.as_seq h1 aad in
+      let p = Plain.sel_plain h1 plainlen plain in
+      let c = Buffer.as_seq h1 cipher in
+      HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
    ))
-#set-options "--initial_fuel 1 --max_fuel 1"
+
+#reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   (* push_frame(); *)
   let h0 = get() in
   let x = PRF({iv = n; ctr = 0ul}) in // PRF index to the first block
-  let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC; NS:post-condition seems too weak to prove even simple liveness properties
-  let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
-  let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
+  let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC
+  let cipher = Buffer.sub cipher_tagged 0ul plainlen in
+  let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in
   let h1 = get () in
   let y = PRF.incr i x in
-  assume (none_above y st.prf h1);
-  assume (plainlen <> 0ul);
-  assume (Plain.live h1 plain);
-  assume (Buffer.live h1 cipher);
-  assume (safeId i ==> h1 `HS.contains` (itable i st.prf));
+  //calling this lemma allows us to complete the proof without using any fuel; 
+  //which makes things a a bit faster
+  counterblocks_emp i st.prf.mac_rgn y (v plainlen) 0 
+      (Plain.sel_plain h1 plainlen plain) (Buffer.as_seq h1 cipher);
   counter_enxor i st.prf y plainlen plainlen plain cipher h1;
-  assume false;
   // Compute MAC over additional data and ciphertext
-  let l, acc = accumulate ak aadlen aad plainlen cipher in 
+  let h2 = get () in
+  assert (Buffer.live h1 aad); //seem to need this hint
+  assume (HS (is_stack_region h2.tip)); //TODO: remove this once we move all functions to STL
+  let l, acc = accumulate ak aadlen aad plainlen cipher in
+  assume false;
   MAC.mac ak l acc tag
   (* pop_frame() *)
 
