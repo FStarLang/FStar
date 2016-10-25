@@ -36,7 +36,7 @@ VERIFY= \
   Crypto.AEAD.Lemmas \
   Crypto.AEAD \
   Plain \
-  Test \
+  Crypto.Test \
   TestMonotonic
 
 # Files that should fully typecheck, but not part of regression
