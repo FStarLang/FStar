@@ -20,59 +20,66 @@ let weight (t:trie) : Tot pos =
 let leq_trie (t1:trie) (t2:trie) : Tot bool =
   weight t1 <= weight t2
 
-let rec sorted (ts:list trie) : Tot bool=
+(* Copied and adapted some part about sorted int lists,
+   this should really be generic in the library *)
+
+let rec sorted (ts:list trie) : Tot bool =
   match ts with
   | [] | [_] -> true
-  | t1::t2::ts' -> leq_trie t1 t1 && sorted (t2::ts')
+  | t1::t2::ts' -> leq_trie t1 t2 && sorted (t2::ts')
+
+type permutation (l1:list trie) (l2:list trie) =
+    length l1 = length l2 /\ (forall n. mem n l1 = mem n l2)
+
+val sorted_smaller: x:trie
+                ->  y:trie
+                ->  l:list trie
+                ->  Lemma (requires (sorted (x::l) /\ mem y l))
+                          (ensures (leq_trie x y))
+                          [SMTPat (sorted (x::l)); SMTPat (mem y l)]
+let rec sorted_smaller x y l = match l with
+    | [] -> ()
+    | z::zs -> if z=y then () else sorted_smaller x y zs
 
 let rec insert_in_sorted (x:trie) (xs:list trie) : Pure (list trie)
     (requires (b2t (sorted xs)))
-    (ensures (fun ys -> sorted ys
-           /\ List.Tot.length ys == List.Tot.length xs + 1)) =
+    (ensures (fun ys -> sorted ys /\ permutation (x::xs) ys)) =
   match xs with
   | [] -> [x]
   | x'::xs' -> if leq_trie x x' then x :: xs
-               else x' :: (insert_in_sorted x xs')
+               else (let i_tl = insert_in_sorted x xs' in
+                     let (z::_) = i_tl in (* <-- needed for triggering patterns? *)
+                     x' :: i_tl)
 
 let rec insertion_sort (ts : list trie) : Pure (list trie)
-    (requires (True)) (ensures (fun ts -> sorted ts)) =
+    (requires (True)) (ensures (fun ts' -> sorted ts' /\ permutation ts ts')) =
   match ts with
   | [] -> []
   | t::ts' -> insert_in_sorted t (insertion_sort ts')
 
-let rec lemma_that_needs_induction (w:pos) (t1:trie) (t2:trie) (ts:list trie) :
-  Lemma
-    (requires (b2t (sorted ts)))
-    (ensures (sorted ts ==> (* without sorted the error message is amazing! *)
-              existsb #trie is_Node ((Node w t1 t2) `insert_in_sorted` ts)))
-    (decreases ts) =
-  match ts with
-    | [] -> ()
-    | t::ts' -> if leq_trie (Node w t1 t2) t then ()
-                else lemma_that_needs_induction w t1 t2 ts'
-
-(* TODO: This magically derives lemma_that_needs_induction? WTF? *)
 let rec huffman_trie (ts:list trie) : Pure trie
     (requires (sorted ts /\ List.Tot.length ts > 0))
     (ensures (fun t ->
-      (List.Tot.length ts > 1 \/ existsb is_Node ts ==> is_Node t)))
+      ((List.Tot.length ts > 1 \/ existsb is_Node ts) ==> is_Node t)))
     (decreases (List.Tot.length ts)) =
   match ts with
   | t1::t2::ts' ->
-      assert(List.Tot.length ts > 1); (* so it needs to prove is_Node for t *)
+      assert(List.Tot.length ts > 1); (* so it needs to prove is_Node t *)
       let w = weight t1 + weight t2 in
-      let t = huffman_trie (Node w t1 t2 `insert_in_sorted` ts') in
+      let t = huffman_trie ((Node w t1 t2) `insert_in_sorted` ts') in
       (* by the recursive call we know:
          (List.Tot.length (Node w t1 t2 `insert_in_sorted` ts') > 1
           \/ existsb is_Node (Node w t1 t2 `insert_in_sorted` ts') ==> is_Node t) *)
-      (* I think tht the only way we can use this is by proving:
-          existsb is_Node (Node w t1 t2 `insert_in_sorted` ts') *)
-      (* but somehow F* manages to prove this without! the following assert fails
-         without lemma_that_needs_induction (but works with it)
-         lemma_that_needs_induction w t1 t2 ts';
-         assert(existsb is_Node (Node w t1 t2 `insert_in_sorted` ts')); *)
+      (* Since ts' could be empty, I thought that the only way we can
+         use this is by proving: existsb is_Node (Node w t1 t2
+         `insert_in_sorted` ts'), which requires induction. But F* was smarter! *)
+      if is_Nil ts' then
+        assert(existsb is_Node (Node w t1 t2 `insert_in_sorted` ts'))
+      else
+        assert(length (Node w t1 t2 `insert_in_sorted` ts') > 1);
+      assert(is_Node t);
       t
-  | [t1] -> t1
+  | [t1] -> t1 (* this uses `existsb is_Node [t] ==> is_Node t` fact *)
 
 let huffman (sws:list (symbol*pos)) : Pure trie
     (requires (b2t (List.Tot.length sws > 0)))
