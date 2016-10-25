@@ -136,7 +136,7 @@ let const_to_string x = match x with
   | Const_string(bytes, _) -> Util.format1 "\"%s\"" (Util.string_of_bytes bytes)
   | Const_bytearray _  ->  "<bytearray>"
   | Const_int (x, _) -> x
-  | Const_char c -> Util.string_of_char c
+  | Const_char c -> "'" ^ Util.string_of_char c ^ "'"
   | Const_range r -> Range.string_of_range r
   | Const_reify -> "reify"
   | Const_reflect l -> Util.format1 "[[%s.reflect]]" (sli l)
@@ -187,8 +187,9 @@ let qual_to_string = function
   | Assumption            -> "assume"
   | New                   -> "new"             
   | Private               -> "private"
-  | Inline                -> "inline"
-  | Unfoldable            -> "unfoldable"
+  | Unfold_for_unification_and_vcgen  -> "unfold"
+  | Inline_for_extraction -> "inline"
+  | Visible_default       -> "visible"
   | Irreducible           -> "irreducible"
   | Abstract              -> "abstract"
   | Noeq                  -> "noeq"
@@ -204,9 +205,16 @@ let qual_to_string = function
   | Effect                -> "Effect"
   | Reifiable                 -> "reify"
   | Reflectable               -> "reflect"
-let quals_to_string quals = match quals with 
+
+let quals_to_string quals = 
+    match quals with 
     | [] -> ""
-    | _ -> (quals |> List.map qual_to_string |> String.concat " ") ^ " "
+    | _ -> quals |> List.map qual_to_string |> String.concat " "
+
+let quals_to_string' quals = 
+    match quals with 
+    | [] -> ""
+    | _ -> quals_to_string quals ^ " "
 
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
@@ -290,7 +298,7 @@ and lbs_to_string quals lbs =
                                         {lb with lbunivs=us; lbtyp=t; lbdef=d}))
         else lbs in
     Util.format3 "%slet %s %s"
-    (quals_to_string quals)
+    (quals_to_string' quals)
     (if fst lbs then "rec" else "")
     (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> 
                                                     Util.format4 "%s %s : %s = %s" 
@@ -442,8 +450,8 @@ let rec sigelt_to_string x = match x with
   | Sig_pragma(ResetOptions (Some s), _) -> Util.format1 "#reset-options \"%s\"" s
   | Sig_pragma(SetOptions s, _) -> Util.format1 "#set-options \"%s\"" s
   | Sig_inductive_typ(lid, univs, tps, k, _, _, quals, _) -> 
-    Util.format4 "%s type %s %s : %s" 
-             (quals_to_string quals) 
+    Util.format4 "%stype %s %s : %s" 
+             (quals_to_string' quals) 
              lid.str
              (binders_to_string " " tps) 
              (term_to_string k)
@@ -454,7 +462,7 @@ let rec sigelt_to_string x = match x with
     else Util.format2 "datacon %s : %s" lid.str (term_to_string t)
   | Sig_declare_typ(lid, univs, t, quals, _) -> 
     let univs, t = Subst.open_univ_vars univs t in
-    Util.format4 "%s val %s %s : %s" (quals_to_string quals) lid.str 
+    Util.format4 "%sval %s %s : %s" (quals_to_string' quals) lid.str 
         (if (Options.print_universes())
          then Util.format1 "<%s>" (univ_names_to_string univs)
          else "")
@@ -466,7 +474,16 @@ let rec sigelt_to_string x = match x with
   | Sig_new_effect(ed, _) -> eff_decl_to_string false ed
   | Sig_new_effect_for_free (ed, _) -> eff_decl_to_string true ed
   | Sig_sub_effect (se, r) ->
-    let us, t = Subst.open_univ_vars (fst se.lift_wp) (snd se.lift_wp) in
+    let lift_wp = match se.lift_wp, se.lift with
+      // TODO pretty-print this better
+      | None, None ->
+          failwith "impossible"
+      | Some lift_wp, _ ->
+          lift_wp
+      | _, Some lift ->
+          lift
+    in
+    let us, t = Subst.open_univ_vars (fst lift_wp) (snd lift_wp) in
     Util.format4 "sub_effect %s ~> %s : <%s> %s" 
         (lid_to_string se.source) (lid_to_string se.target) 
         (univ_names_to_string us) (term_to_string t)

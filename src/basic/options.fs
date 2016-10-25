@@ -249,7 +249,7 @@ let display_version () =
                                   version platform compiler date commit)
 
 let display_usage_aux specs =
-  Util.print_string "fstar [option] file...\n";
+  Util.print_string "fstar.exe [options] file[s]\n";
   List.iter
     (fun (_, flag, p, doc) ->
        match p with

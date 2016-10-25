@@ -29,6 +29,7 @@ val return_all: 'a -> 'a
 type time = System.DateTime
 val now : unit -> time
 val time_diff: time -> time -> float*int
+val record_time: (unit -> 'a) -> ('a * int)
 
 (* generic utils *)
 (* Functional sets *)

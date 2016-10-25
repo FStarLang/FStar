@@ -65,7 +65,7 @@ type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type =
 (* A proof-irrelevant version of h_equals *)
 type eq3 (#a:Type) (#b:Type) (x:a) (y:b) = squash (h_equals x y)
 
-inline let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
+unfold let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
 
 (* bool is a two element type with elements {'true', 'false'}
    we assume it is primitive, for convenient interop with other languages *)
@@ -100,7 +100,7 @@ type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
 (* prefix unary '~' *)
 type l_not (p:Type) = l_imp p False
 
-inline type l_ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
+unfold type l_ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
 
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
 assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
@@ -140,32 +140,32 @@ let pure_wp   (a:Type) = pure_post a -> GTot pure_pre
 
 assume type guard_free: Type0 -> Type0
 
-inline let pure_return (a:Type) (x:a) (p:pure_post a) =
+unfold let pure_return (a:Type) (x:a) (p:pure_post a) =
      forall (y:a). y==x ==> p y
 
-inline let pure_bind_wp (r1:range) (a:Type) (b:Type)
+unfold let pure_bind_wp (r1:range) (a:Type) (b:Type)
                    (wp1:pure_wp a) (wp2: (a -> GTot (pure_wp b)))
                    (p : pure_post b) =
      labeled r1 "push" unit
      /\ wp1 (fun (x:a) -> 
              labeled r1 "pop" unit
 	     /\ wp2 x p)
-inline let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
+unfold let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
      l_ITE p (wp_then post) (wp_else post)
 
-inline let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
+unfold let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
      forall (k:pure_post a).
 	 (forall (x:a).{:pattern (guard_free (k x))} k x <==> post x)
 	 ==> wp k
 
-inline let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =
+unfold let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =
         forall (p:pure_post a). wp1 p ==> wp2 p
 
-inline let pure_close_wp (a:Type) (b:Type) (wp:(b -> GTot (pure_wp a))) (p:pure_post a) = forall (b:b). wp b p
-inline let pure_assert_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q /\ wp p
-inline let pure_assume_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q ==> wp p
-inline let pure_null_wp  (a:Type) (p:pure_post a) = forall (x:a). p x
-inline let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (x:a) -> True)
+unfold let pure_close_wp (a:Type) (b:Type) (wp:(b -> GTot (pure_wp a))) (p:pure_post a) = forall (b:b). wp b p
+unfold let pure_assert_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q /\ wp p
+unfold let pure_assume_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q ==> wp p
+unfold let pure_null_wp  (a:Type) (p:pure_post a) = forall (x:a). p x
+unfold let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (x:a) -> True)
 
 total new_effect { (* The definition of the PURE effect is fixed; no user should ever change this *)
   PURE : a:Type -> wp:pure_wp a -> Effect
@@ -191,7 +191,7 @@ effect Tot (a:Type) = PURE a (pure_null_wp a)
 
 total new_effect GHOST = PURE
 
-inline let purewp_id (a:Type) (wp:pure_wp a) = wp
+unfold let purewp_id (a:Type) (wp:pure_wp a) = wp
 
 sub_effect
   PURE ~> GHOST = purewp_id
@@ -277,10 +277,10 @@ let st_pre_h  (heap:Type)          = heap -> GTot Type0
 let st_post_h (heap:Type) (a:Type) = a -> heap -> GTot Type0
 let st_wp_h   (heap:Type) (a:Type) = st_post_h heap a -> Tot (st_pre_h heap)
 
-inline let st_return        (heap:Type) (a:Type)
+unfold let st_return        (heap:Type) (a:Type)
                             (x:a) (p:st_post_h heap a) =
      p x
-inline let st_bind_wp       (heap:Type) 
+unfold let st_bind_wp       (heap:Type) 
 			    (r1:range) 
 			    (a:Type) (b:Type)
                             (wp1:st_wp_h heap a)
@@ -290,38 +290,38 @@ inline let st_bind_wp       (heap:Type)
      /\ wp1 (fun a h1 ->
        labeled r1 "pop" unit
        /\ wp2 a p h1) h0
-inline let st_if_then_else  (heap:Type) (a:Type) (p:Type)
+unfold let st_if_then_else  (heap:Type) (a:Type) (p:Type)
                              (wp_then:st_wp_h heap a) (wp_else:st_wp_h heap a)
                              (post:st_post_h heap a) (h0:heap) =
      l_ITE p
         (wp_then post h0)
 	(wp_else post h0)
-inline let st_ite_wp        (heap:Type) (a:Type)
+unfold let st_ite_wp        (heap:Type) (a:Type)
                             (wp:st_wp_h heap a)
                             (post:st_post_h heap a) (h0:heap) =
      forall (k:st_post_h heap a).
 	 (forall (x:a) (h:heap).{:pattern (guard_free (k x h))} k x h <==> post x h)
 	 ==> wp k h0
-inline let st_stronger  (heap:Type) (a:Type) (wp1:st_wp_h heap a)
+unfold let st_stronger  (heap:Type) (a:Type) (wp1:st_wp_h heap a)
                         (wp2:st_wp_h heap a) =
      (forall (p:st_post_h heap a) (h:heap). wp1 p h ==> wp2 p h)
 
-inline let st_close_wp      (heap:Type) (a:Type) (b:Type)
+unfold let st_close_wp      (heap:Type) (a:Type) (b:Type)
                              (wp:(b -> GTot (st_wp_h heap a)))
                              (p:st_post_h heap a) (h:heap) =
      (forall (b:b). wp b p h)
-inline let st_assert_p      (heap:Type) (a:Type) (p:Type)
+unfold let st_assert_p      (heap:Type) (a:Type) (p:Type)
                              (wp:st_wp_h heap a)
                              (q:st_post_h heap a) (h:heap) =
      p /\ wp q h
-inline let st_assume_p      (heap:Type) (a:Type) (p:Type)
+unfold let st_assume_p      (heap:Type) (a:Type) (p:Type)
                              (wp:st_wp_h heap a)
                              (q:st_post_h heap a) (h:heap) =
      p ==> wp q h
-inline let st_null_wp       (heap:Type) (a:Type)
+unfold let st_null_wp       (heap:Type) (a:Type)
                              (p:st_post_h heap a) (h:heap) =
      (forall (x:a) (h:heap). p x h)
-inline let st_trivial       (heap:Type) (a:Type)
+unfold let st_trivial       (heap:Type) (a:Type)
                              (wp:st_wp_h heap a) =
      (forall h0. wp (fun r h1 -> True) h0)
 
@@ -343,8 +343,8 @@ new_effect {
 let ex_pre  = Type0
 let ex_post (a:Type) = result a -> GTot Type0
 let ex_wp   (a:Type) = ex_post a -> GTot ex_pre
-inline let ex_return   (a:Type) (x:a) (p:ex_post a) : GTot Type0 = p (V x)
-inline let ex_bind_wp (r1:range) (a:Type) (b:Type)
+unfold let ex_return   (a:Type) (x:a) (p:ex_post a) : GTot Type0 = p (V x)
+unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
 		       (wp1:ex_wp a)
 		       (wp2:(a -> GTot (ex_wp b))) (p:ex_post b)
          : GTot Type0 =
@@ -355,23 +355,23 @@ inline let ex_bind_wp (r1:range) (a:Type) (b:Type)
 			/\ (is_V ra1 ==> wp2 (V.v ra1) k)
 			/\ (is_E ra1 ==> k (E (E.e ra1)))))
 
-inline let ex_ite_wp (a:Type) (wp:ex_wp a) (post:ex_post a) =
+unfold let ex_ite_wp (a:Type) (wp:ex_wp a) (post:ex_post a) =
   forall (k:ex_post a).
      (forall (rb:result a).{:pattern (guard_free (k rb))} k rb <==> post rb)
      ==> wp k
 
-inline let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a) (post:ex_post a) =
+unfold let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a) (post:ex_post a) =
    l_ITE p
        (wp_then post)
        (wp_else post)
-inline let ex_stronger (a:Type) (wp1:ex_wp a) (wp2:ex_wp a) =
+unfold let ex_stronger (a:Type) (wp1:ex_wp a) (wp2:ex_wp a) =
         (forall (p:ex_post a). wp1 p ==> wp2 p)
 
-inline let ex_close_wp (a:Type) (b:Type) (wp:(b -> GTot (ex_wp a))) (p:ex_post a) = (forall (b:b). wp b p)
-inline let ex_assert_p (a:Type) (q:Type) (wp:ex_wp a) (p:ex_post a) = (q /\ wp p)
-inline let ex_assume_p (a:Type) (q:Type) (wp:ex_wp a) (p:ex_post a) = (q ==> wp p)
-inline let ex_null_wp (a:Type) (p:ex_post a) = (forall (r:result a). p r)
-inline let ex_trivial (a:Type) (wp:ex_wp a) = wp (fun r -> True)
+unfold let ex_close_wp (a:Type) (b:Type) (wp:(b -> GTot (ex_wp a))) (p:ex_post a) = (forall (b:b). wp b p)
+unfold let ex_assert_p (a:Type) (q:Type) (wp:ex_wp a) (p:ex_post a) = (q /\ wp p)
+unfold let ex_assume_p (a:Type) (q:Type) (wp:ex_wp a) (p:ex_post a) = (q ==> wp p)
+unfold let ex_null_wp (a:Type) (p:ex_post a) = (forall (r:result a). p r)
+unfold let ex_trivial (a:Type) (wp:ex_wp a) = wp (fun r -> True)
 
 new_effect {
   EXN : result:Type -> wp:ex_wp result -> Effect
@@ -391,7 +391,7 @@ effect Exn (a:Type) (pre:ex_pre) (post:ex_post a) =
        EXN a
          (fun (p:ex_post a) -> pre /\ (forall (r:result a). (pre /\ post r) ==> p r)) (* WP *)
 
-inline let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (V a))
+unfold let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (V a))
 sub_effect DIV ~> EXN = lift_div_exn
 effect Ex (a:Type) = Exn a True (fun v -> True)
 
@@ -399,14 +399,14 @@ let all_pre_h  (h:Type)           = h -> GTot Type0
 let all_post_h (h:Type) (a:Type)  = result a -> h -> GTot Type0
 let all_wp_h   (h:Type) (a:Type)  = all_post_h h a -> Tot (all_pre_h h)
 
-inline let all_ite_wp (heap:Type) (a:Type)
+unfold let all_ite_wp (heap:Type) (a:Type)
                       (wp:all_wp_h heap a)
                       (post:all_post_h heap a) (h0:heap) =
     forall (k:all_post_h heap a).
        (forall (x:result a) (h:heap).{:pattern (guard_free (k x h))} k x h <==> post x h)
        ==> wp k h0
-inline let all_return  (heap:Type) (a:Type) (x:a) (p:all_post_h heap a) = p (V x)
-inline let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
+unfold let all_return  (heap:Type) (a:Type) (x:a) (p:all_post_h heap a) = p (V x)
+unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
                        (wp1:all_wp_h heap a)
                        (wp2:(a -> GTot (all_wp_h heap b)))
                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
@@ -415,30 +415,30 @@ inline let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
        labeled r1 "pop" unit
        /\ (is_V ra ==> wp2 (V.v ra) p h1)) h0
 
-inline let all_if_then_else (heap:Type) (a:Type) (p:Type)
+unfold let all_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)
                              (post:all_post_h heap a) (h0:heap) =
    l_ITE p
        (wp_then post h0)
        (wp_else post h0)
-inline let all_stronger (heap:Type) (a:Type) (wp1:all_wp_h heap a)
+unfold let all_stronger (heap:Type) (a:Type) (wp1:all_wp_h heap a)
                         (wp2:all_wp_h heap a) =
     (forall (p:all_post_h heap a) (h:heap). wp1 p h ==> wp2 p h)
 
-inline let all_close_wp (heap:Type) (a:Type) (b:Type)
+unfold let all_close_wp (heap:Type) (a:Type) (b:Type)
                          (wp:(b -> GTot (all_wp_h heap a)))
                          (p:all_post_h heap a) (h:heap) =
     (forall (b:b). wp b p h)
-inline let all_assert_p (heap:Type) (a:Type) (p:Type)
+unfold let all_assert_p (heap:Type) (a:Type) (p:Type)
                          (wp:all_wp_h heap a) (q:all_post_h heap a) (h:heap) =
     p /\ wp q h
-inline let all_assume_p (heap:Type) (a:Type) (p:Type)
+unfold let all_assume_p (heap:Type) (a:Type) (p:Type)
                          (wp:all_wp_h heap a) (q:all_post_h heap a) (h:heap) =
     p ==> wp q h
-inline let all_null_wp (heap:Type) (a:Type)
+unfold let all_null_wp (heap:Type) (a:Type)
                         (p:all_post_h heap a) (h0:heap) =
     (forall (a:result a) (h:heap). p a h)
-inline let all_trivial (heap:Type) (a:Type) (wp:all_wp_h heap a) =
+unfold let all_trivial (heap:Type) (a:Type) (wp:all_wp_h heap a) =
     (forall (h0:heap). wp (fun r h1 -> True) h0)
 
 new_effect {

@@ -38,10 +38,10 @@ let totality_check  = "This term may not terminate"
 
 let diag r msg =
   if Options.debug_any() 
-  then Util.print_string (format2 "%s (Diagnostic): %s\n" (Range.string_of_range r) msg)
+  then Util.print_string (format2 "%s : (Diagnostic) %s\n" (Range.string_of_range r) msg)
 
 let warn r msg =
-  Util.print_string (format2 "%s (Warning): %s\n" (Range.string_of_range r) msg)
+  Util.print2_error "%s: (Warning) %s\n" (Range.string_of_range r) msg
 
 let num_errs = Util.mk_ref 0
 let verification_errs : ref<list<(Range.range * string)>> = Util.mk_ref []
@@ -71,7 +71,7 @@ let add_errors env errs =
 let report_all () =
     let all_errs = atomically (fun () -> let x = !verification_errs in verification_errs := []; x) in
     let all_errs = List.sortWith (fun (r1, _) (r2, _) -> Range.compare r1 r2) all_errs in
-    all_errs |> List.iter (fun (r, msg) -> Util.print2 "%s: %s\n" (Range.string_of_range r) msg);
+    all_errs |> List.iter (fun (r, msg) -> Util.print2_error "%s: (Error) %s\n" (Range.string_of_range r) msg);
     List.length all_errs
 
 
@@ -79,13 +79,13 @@ let handle_err warning e =
   match e with
     | Error(msg, r) ->
         let msg = message_prefix.append_prefix msg in
-        fprint stderr "%s : %s\n%s\n" [Range.string_of_range r; (if warning then "Warning" else "Error"); msg]
+        Util.print3_error "%s : %s %s\n" (Range.string_of_range r) (if warning then "(Warning)" else "(Error)") msg
     | NYI msg ->
         let msg = message_prefix.append_prefix msg in
-        fprint stderr "Feature not yet implemented: %s" [msg]
+        Util.print1_error "Feature not yet implemented: %s" msg
     | Err msg ->
         let msg = message_prefix.append_prefix msg in
-        fprint stderr "Error: %s" [msg]
+        Util.print1_error "Error: %s" msg
     | _ -> raise e
 
 let handleable = function
@@ -97,23 +97,23 @@ let handleable = function
 let report r msg =
   incr num_errs;
   let msg = message_prefix.append_prefix msg in
-  Util.print_string (format2 "%s: %s\n" (Range.string_of_range r) msg)
+  Util.print2_error "%s: (Error) %s\n" (Range.string_of_range r) msg
 
 let get_err_count () = !num_errs
 
 let unexpected_signature_for_monad env m k =
-  format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => WP a => Effect);\ngot %s"
+  format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => Effect); got %s"
     m.str (N.term_to_string env k)
 
 let expected_a_term_of_type_t_got_a_function env msg t e =
-  format3 "Expected a term of type \"%s\";\ngot a function \"%s\" (%s)"
+  format3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
     (N.term_to_string env t) (Print.term_to_string e) msg
 
 let unexpected_implicit_argument =
   "Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"
 
 let expected_expression_of_type env t1 e t2 =
-  format3 "Expected expression of type \"%s\";\ngot expression \"%s\" of type \"%s\""
+  format3 "Expected expression of type \"%s\"; got expression \"%s\" of type \"%s\""
     (N.term_to_string env t1) (Print.term_to_string e) (N.term_to_string env t2)
 
 let expected_function_with_parameter_of_type env t1 t2 =
@@ -121,12 +121,12 @@ let expected_function_with_parameter_of_type env t1 t2 =
     (N.term_to_string env t1) (N.term_to_string env t2)
 
 let expected_pattern_of_type env t1 e t2 =
-  format3 "Expected pattern of type \"%s\";\ngot pattern \"%s\" of type \"%s\""
+  format3 "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\""
     (N.term_to_string env t1) (Print.term_to_string e) (N.term_to_string env t2)
 
 let basic_type_error env eopt t1 t2 =
   match eopt with
-    | None -> format2 "Expected type \"%s\";\ngot type \"%s\""
+    | None -> format2 "Expected type \"%s\"; got type \"%s\""
                 (N.term_to_string env t1) (N.term_to_string env t2)
     | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\""
                 (N.term_to_string env t1) (Print.term_to_string e) (N.term_to_string env t2)
@@ -158,23 +158,23 @@ let inferred_type_causes_variable_to_escape env t x =
     (N.term_to_string env t) (Print.bv_to_string x)
 
 let expected_typ_of_kind env k1 t k2 =
-  format3 "Expected type of kind \"%s\";\ngot \"%s\" of kind \"%s\""
+  format3 "Expected type of kind \"%s\"; got \"%s\" of kind \"%s\""
     (N.term_to_string env k1) (N.term_to_string env t) (N.term_to_string env k2)
 
 let expected_tcon_kind env t k =
-  format2 "Expected a type-to-type constructor or function;\ngot a type \"%s\" of kind \"%s\""
+  format2 "Expected a type-to-type constructor or function; got a type \"%s\" of kind \"%s\""
     (N.term_to_string env t) (N.term_to_string env k)
 
 let expected_dcon_kind env t k =
-  format2 "Expected a term-to-type constructor or function;\ngot a type \"%s\" of kind \"%s\""
+  format2 "Expected a term-to-type constructor or function; got a type \"%s\" of kind \"%s\""
     (N.term_to_string env t) (N.term_to_string env k)
 
 let expected_function_typ env t =
-  format1 "Expected a function;\ngot an expression of type \"%s\""
+  format1 "Expected a function; got an expression of type \"%s\""
     (N.term_to_string env t)
 
 let expected_poly_typ env f t targ =
-  format3 "Expected a polymorphic function;\ngot an expression \"%s\" of type \"%s\" applied to a type \"%s\""
+  format3 "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""
     (Print.term_to_string f) (N.term_to_string env t) (N.term_to_string env targ)
 
 let nonlinear_pattern_variable x =
@@ -204,13 +204,13 @@ let unexpected_non_trivial_precondition_on_term env f =
  format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)
 
 let expected_pure_expression e c =
-  format2 "Expected a pure expression;\ngot an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)
+  format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)
 
 let expected_ghost_expression e c =
-  format2 "Expected a ghost expression;\ngot an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)
+  format2 "Expected a ghost expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
-  format2 "Expected a computation with effect %s; but it has effect %s\n" (Print.lid_to_string c1) (Print.lid_to_string c2)
+  format2 "Expected a computation with effect %s; but it has effect %s" (Print.lid_to_string c1) (Print.lid_to_string c2)
 
 let failed_to_prove_specification_of l lbls =
   format2 "Failed to prove specification of %s; assertions at [%s] may fail" (Print.lbname_to_string l) (lbls |> String.concat ", ")
@@ -223,4 +223,4 @@ let failed_to_prove_specification lbls =
 let top_level_effect = "Top-level let-bindings must be total; this term may have effects"
 
 let cardinality_constraint_violated l a = 
-    Util.format2 "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed" (Print.lid_to_string l) (Print.bv_to_string a.v)
+    format2 "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed" (Print.lid_to_string l) (Print.bv_to_string a.v)

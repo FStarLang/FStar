@@ -30,6 +30,7 @@ type u64 = FStar_UInt64.t
 type u128 = FStar_UInt128.t
 
 let create init len = {content = Array.make len init; idx = 0; length = len}
+let createL l = {content = Array.of_list l; idx = 0; length = List.length l}
 let rcreate r init len = create init len
 let index b n = Array.get b.content (n+b.idx)
 let upd (b:'a buffer) (n:int) (v:'a) = Array.set b.content (n+b.idx) v
@@ -50,3 +51,5 @@ let only a = BatSet.empty
 
 let op_Array_Access b n = index b n
 let op_Array_Assignment b n v = upd b n v
+
+let recall = fun b -> ()

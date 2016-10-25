@@ -1,5 +1,5 @@
 [
-  "ˆ!£Ú\u0004Ð½\u0013:\u0015ÌÍ@Ï_6",
+  "ëD'&ž~Ônw†}S\r-ÐL",
   [
     [
       "FStar.Int63.t'",
@@ -26,6 +26,18 @@
     [
       "FStar.Int63.t'",
       3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Int.int_t",
+        "equation_FStar.Int63.n",
+        "haseqTm_refine_ae791d5fae3bac5aab1116259a4112c6"
+      ],
+      0
+    ],
+    [
+      "FStar.Int63.t'",
+      4,
       2,
       1,
       [

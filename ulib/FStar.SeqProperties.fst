@@ -53,6 +53,9 @@ let head #a s = index s 0
 val tail: #a:Type -> s:seq a{length s > 0} -> Tot (seq a)
 let tail #a s = slice s 1 (length s)
 
+val last: #a:Type -> s:seq a{length s > 0} -> Tot a
+let last #a s = index s (length s - 1)
+
 val cons: #a:Type -> a -> seq a -> Tot (seq a)
 let cons #a x s = append (create 1 x) s
 
@@ -89,6 +92,22 @@ let swap #a s i j = upd (upd s j (index s i)) i (index s j)
 val lemma_slice_append: #a:Type -> s1:seq a{length s1 >= 1} -> s2:seq a -> Lemma
   (ensures (equal (append s1 s2) (append (slice s1 0 1) (append (slice s1 1 (length s1)) s2))))
 let lemma_slice_append #a s1 s2 = ()
+
+val slice_upd: #a:Type -> s:seq a -> i:nat -> j:nat{i <= j /\ j <= length s}
+  -> k:nat{k < length s} -> v:a -> Lemma
+  (requires k < i \/ j <= k)
+  (ensures  slice (upd s k v) i j == slice s i j)
+  [SMTPat (slice (upd s k v) i j)]
+let slice_upd #a s i j k v =
+  lemma_eq_intro (slice (upd s k v) i j) (slice s i j)
+
+val upd_slice: #a:Type -> s:seq a -> i:nat -> j:nat{i <= j /\ j <= length s}
+  -> k:nat{k < j - i} -> v:a -> Lemma
+  (requires i + k < j)
+  (ensures  upd (slice s i j) k v == slice (upd s (i + k) v) i j)
+  [SMTPat (upd (slice s i j) k v)]
+let upd_slice #a s i j k v =
+  lemma_eq_intro (upd (slice s i j) k v) (slice (upd s (i + k) v) i j)
 
 val lemma_append_cons: #a:Type -> s1:seq a{length s1 > 0} -> s2:seq a -> Lemma
   (requires True)

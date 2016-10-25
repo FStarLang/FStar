@@ -142,3 +142,8 @@ let rec pow2 n =
     ~$1
   else
     ~$2 * pow2 (n - ~$1)
+
+let ___Cons___tl = function
+  | _::tl -> tl
+  | _     -> failwith "Impossible"
+

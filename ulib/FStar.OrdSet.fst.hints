@@ -1,5 +1,5 @@
 [
-  "¿—Ë™.¾îfw|$oîm\u0014æ",
+  "\u001dm\u0012Ìç\u0010×““ròˆ\tJÿk",
   [
     [ "FStar.OrdSet.total_order", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -50,7 +50,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list",
+        "@query", "assumption_Prims.list_haseq",
         "equation_FStar.OrdSet.ordset", "equation_Prims.eqtype",
         "haseqTm_refine_8ff386b6d2082b10b92ff9c2ec47f949",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
@@ -119,7 +119,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list",
+        "@query", "assumption_Prims.list_haseq",
         "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
         "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
@@ -322,7 +322,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0

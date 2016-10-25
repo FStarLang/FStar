@@ -3,7 +3,7 @@
   [
     [ "FStar.SquashEffect.Squash", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.SquashEffect.Sq", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.SquashEffect.2058", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.SquashEffect.1848", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.SquashEffect.resquash'", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.SquashEffect.return_squash", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.SquashEffect.bind_squash", 1, 2, 1, [ "@query" ], 0 ],

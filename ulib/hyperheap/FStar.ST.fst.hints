@@ -1,8 +1,26 @@
 [
-  "ç\u0003åa˙\u0006_\u0014˚∑k&\u0011u•\u0005",
+  ";P\u0015Òı¿÷‚S¥´¿úµU¨",
   [
+    [ "FStar.ST.modifies", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.ST.modifies",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [ "FStar.ST.modifies_none", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.ST.modifies_none",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
+      0
+    ],
     [ "FStar.ST.ST", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.11923", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.ST.13725", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.ST.new_region",
       1,

@@ -1443,19 +1443,19 @@ end
 | Some (c) -> begin
 (
 
-let _47_652 = (FStar_Util.splitlines c)
-in (match (_47_652) with
-| (hd)::tl -> begin
-(
-
-let suffix = (match (tl) with
+let _47_660 = (match ((FStar_Util.splitlines c)) with
 | [] -> begin
-""
+(FStar_All.failwith "Empty caption")
 end
-| _47_655 -> begin
-"..."
+| (h)::[] -> begin
+((h), (""))
+end
+| (h)::_47_655 -> begin
+((h), ("..."))
 end)
-in (FStar_Util.format2 ";;;;;;;;;;;;;;;;%s%s\n" hd suffix))
+in (match (_47_660) with
+| (hd, suffix) -> begin
+(FStar_Util.format2 ";;;;;;;;;;;;;;;;%s%s\n" hd suffix)
 end))
 end))
 
@@ -1485,8 +1485,8 @@ end
 | DefineFun (f, arg_sorts, retsort, body, c) -> begin
 (
 
-let _47_683 = (name_binders arg_sorts)
-in (match (_47_683) with
+let _47_687 = (name_binders arg_sorts)
+in (match (_47_687) with
 | (names, binders) -> begin
 (
 
@@ -1603,7 +1603,7 @@ end
 | Ref_sort -> begin
 (boxRef t)
 end
-| _47_723 -> begin
+| _47_727 -> begin
 (Prims.raise FStar_Util.Impos)
 end))
 
@@ -1621,7 +1621,7 @@ end
 | Ref_sort -> begin
 (unboxRef t)
 end
-| _47_731 -> begin
+| _47_735 -> begin
 (Prims.raise FStar_Util.Impos)
 end))
 
@@ -1633,57 +1633,57 @@ let mk_PreType : term  ->  term = (fun t -> (mkApp (("PreType"), ((t)::[]))))
 
 
 let mk_Valid : term  ->  term = (fun t -> (match (t.tm) with
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_Equality"), (_47_746)::(t1)::(t2)::[]); hash = _47_740; freevars = _47_738})::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_Equality"), (_47_750)::(t1)::(t2)::[]); hash = _47_744; freevars = _47_742})::[]) -> begin
 (mkEq ((t1), (t2)))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_disEquality"), (_47_765)::(t1)::(t2)::[]); hash = _47_759; freevars = _47_757})::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_disEquality"), (_47_769)::(t1)::(t2)::[]); hash = _47_763; freevars = _47_761})::[]) -> begin
 (let _144_583 = (mkEq ((t1), (t2)))
 in (mkNot _144_583))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThanOrEqual"), (t1)::(t2)::[]); hash = _47_778; freevars = _47_776})::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThanOrEqual"), (t1)::(t2)::[]); hash = _47_782; freevars = _47_780})::[]) -> begin
 (let _144_586 = (let _144_585 = (unboxInt t1)
 in (let _144_584 = (unboxInt t2)
 in ((_144_585), (_144_584))))
 in (mkLTE _144_586))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThan"), (t1)::(t2)::[]); hash = _47_795; freevars = _47_793})::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThan"), (t1)::(t2)::[]); hash = _47_799; freevars = _47_797})::[]) -> begin
 (let _144_589 = (let _144_588 = (unboxInt t1)
 in (let _144_587 = (unboxInt t2)
 in ((_144_588), (_144_587))))
 in (mkLT _144_589))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThanOrEqual"), (t1)::(t2)::[]); hash = _47_812; freevars = _47_810})::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThanOrEqual"), (t1)::(t2)::[]); hash = _47_816; freevars = _47_814})::[]) -> begin
 (let _144_592 = (let _144_591 = (unboxInt t1)
 in (let _144_590 = (unboxInt t2)
 in ((_144_591), (_144_590))))
 in (mkGTE _144_592))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThan"), (t1)::(t2)::[]); hash = _47_829; freevars = _47_827})::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThan"), (t1)::(t2)::[]); hash = _47_833; freevars = _47_831})::[]) -> begin
 (let _144_595 = (let _144_594 = (unboxInt t1)
 in (let _144_593 = (unboxInt t2)
 in ((_144_594), (_144_593))))
 in (mkGT _144_595))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_AmpAmp"), (t1)::(t2)::[]); hash = _47_846; freevars = _47_844})::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_AmpAmp"), (t1)::(t2)::[]); hash = _47_850; freevars = _47_848})::[]) -> begin
 (let _144_598 = (let _144_597 = (unboxBool t1)
 in (let _144_596 = (unboxBool t2)
 in ((_144_597), (_144_596))))
 in (mkAnd _144_598))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_BarBar"), (t1)::(t2)::[]); hash = _47_863; freevars = _47_861})::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_BarBar"), (t1)::(t2)::[]); hash = _47_867; freevars = _47_865})::[]) -> begin
 (let _144_601 = (let _144_600 = (unboxBool t1)
 in (let _144_599 = (unboxBool t2)
 in ((_144_600), (_144_599))))
 in (mkOr _144_601))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_Negation"), (t)::[]); hash = _47_880; freevars = _47_878})::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_Negation"), (t)::[]); hash = _47_884; freevars = _47_882})::[]) -> begin
 (let _144_602 = (unboxBool t)
 in (mkNot _144_602))
 end
 | App (Var ("Prims.b2t"), (t)::[]) -> begin
 (unboxBool t)
 end
-| _47_898 -> begin
+| _47_902 -> begin
 (mkApp (("Valid"), ((t)::[])))
 end))
 
@@ -1818,7 +1818,7 @@ end
 (let _144_698 = (print_smt_term_list l)
 in (FStar_Util.format2 "App %s [ %s ]" (op_to_string op) _144_698))
 end
-| Quant (qop, l, _47_983, _47_985, t) -> begin
+| Quant (qop, l, _47_987, _47_989, t) -> begin
 (let _144_700 = (print_smt_term_list_list l)
 in (let _144_699 = (print_smt_term t)
 in (FStar_Util.format3 "Quant %s %s %s" (qop_to_string qop) _144_700 _144_699)))

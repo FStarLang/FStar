@@ -5,16 +5,20 @@ Encrypt_SymEnc.fst\
 Encrypt_Sample.fst \
 SHA1.fst \
 MAC.fst \
-Sig.fst \
-CCA2.RSA.fst \
-CCA2.Plain.fst \
-CCA2.CCA2.fst
+Sig.fst 
+
 
 HH_VERFILES= \
- EtM.Plain.fst \
- EtM.MAC.fst \
- EtM.CPA.fst \
- EtM.AE.fst
+EtM.Plain.fst \
+EtM.MAC.fst \
+EtM.CPA.fst \
+EtM.AE.fst \
+HyE.RSA.fst \
+HyE.PlainPKE.fst \
+HyE.Plain.fst \
+HyE.AE.fst \
+HyE.CCA2.fst \
+HyE.HCCA2.fst
 
 LIB = ../../contrib/CoreCrypto/ml
 
@@ -29,7 +33,7 @@ FSTAR_HOME=../..
 include ../Makefile.include
 
 %.fst-in: 
-	@echo --include $(FSTAR_HOME)/ulib/hyperheap \
+	@echo --include $(FSTAR_HOME)/ulib/hyperstack \
 	      --include $(FSTAR_HOME)/ucontrib/Platform/fst \
 	      --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 	      --z3timeout 20
@@ -41,7 +45,7 @@ verify-%: __force__
 		 --z3timeout 20 $*
 
 verify_hh-%: __force__
-	$(FSTAR) --include $(FSTAR_HOME)/ulib/hyperheap \
+	$(FSTAR) --include $(FSTAR_HOME)/ulib/hyperstack \
 		 --include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		 --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 		 --z3timeout 20 $*

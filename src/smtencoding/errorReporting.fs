@@ -37,7 +37,7 @@ let fresh_label : ranges -> term -> labels -> term * labels =
         let message, range = match rs with 
             | [] -> 
               if Options.debug_any()
-              then  t.hash, Range.dummyRange
+              then hash_of_term t, Range.dummyRange
               else "Z3 provided a counterexample, but, unfortunately, F* could not translate it back to something meaningful", Range.dummyRange
             | (Some reason, r)::_ -> reason, r
             | (None, r)::_ -> "failed to prove a pre-condition", r in

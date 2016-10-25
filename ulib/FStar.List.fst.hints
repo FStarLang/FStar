@@ -1,7 +1,8 @@
 [
-  "ézÖ\t¬:ÜaŸ\u000eáJ?Úû\"",
+  "+O¹”µ“B\u0012úûU7ß<öQ",
   [
     [ "FStar.List.hd", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.List.tail", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.List.nth",
       1,

@@ -145,7 +145,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -171,7 +171,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -203,7 +203,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -232,7 +232,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -272,7 +272,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -512,7 +512,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -523,7 +523,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -534,7 +534,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -560,7 +560,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -571,7 +571,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -582,7 +582,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -593,7 +593,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -604,7 +604,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -633,7 +633,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -644,7 +644,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -683,7 +683,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -694,7 +694,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -750,7 +750,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -788,7 +788,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -811,7 +811,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -847,7 +847,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -867,7 +867,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -902,7 +902,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0

@@ -5,11 +5,10 @@ open FStar.UInt8
 open FStar.UInt64
 
 open FStar.Ghost
-open FStar.HST
 open FStar.Buffer
 
-open Math.Axioms
-open Math.Lib
+open FStar.Math.Lib
+open FStar.Math.Lemmas
 
 open Crypto.Symmetric.Poly1305.Parameters // for e.g. norm_length
 

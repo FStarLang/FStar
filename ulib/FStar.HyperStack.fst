@@ -6,7 +6,8 @@ module HH = FStar.HyperHeap
 let is_in (r:rid) (h:HH.t) = h `Map.contains` r
 
 let is_stack_region r = color r > 0
-let is_eternal_region r  = color r <= 0
+let is_eternal_color c = c <= 0
+let is_eternal_region r  = is_eternal_color (color r)
 
 type sid = r:rid{is_stack_region r} //stack region ids
 
@@ -88,25 +89,60 @@ let pop (m0:mem{poppable m0}) : GTot mem =
   	    (forall (s:sid). includes s r ==> Map.contains h1 s));
   HS h1 tip1
 
-//A (reference a) may reside in the stack or heap
-noeq type reference (a:Type) =
-  | MkRef : id:rid -> ref:HH.rref id a -> reference a
+//A (reference a) may reside in the stack or heap, and may be manually managed
+unopteq type reference (a:Type) =
+  | MkRef : id:rid -> mm:bool -> ref:HH.rref id a -> reference a
 
-let stackref (a:Type) = s:reference a { is_stack_region s.id }
-let ref (a:Type) = s:reference a{is_eternal_region s.id}
+//adding (not s.mm) to stackref and ref so as to keep their semantics as is
+let stackref (a:Type) = s:reference a { is_stack_region s.id && not s.mm }
+let ref (a:Type) = s:reference a{is_eternal_region s.id && not s.mm}
 
+let mmstackref (a:Type) = s:reference a {is_stack_region s.id && s.mm }
+let mmref (a:Type) = s:reference a{is_eternal_region s.id && s.mm}
+
+(*
+ * The Map.contains conjunct is necessary to prove that upd
+ * returns a valid mem. In particular, without Map.contains,
+ * we cannot prove the eternal regions invariant that all
+ * included regions of a region are also in the map.
+ *)
 let live_region (m:mem) (i:rid) =
   (is_eternal_region i \/ i `is_above` m.tip)
   /\ Map.contains m.h i
-  
+
+(*
+ * AR: adding a weaker version of live_region that could be
+ * used in the precondition of read.
+ *)
+let weak_live_region (m:mem) (i:rid) =
+  is_eternal_region i \/ i `is_above` m.tip
+
 let contains (#a:Type) (m:mem) (s:reference a) =
   live_region m s.id
   /\ HH.contains_ref s.ref m.h
+
+private val weak_live_region_implies_eternal_or_in_map: r:rid -> m:mem -> Lemma
+  (requires (weak_live_region m r))
+  (ensures (is_eternal_region r \/ Map.contains m.h r))
+let weak_live_region_implies_eternal_or_in_map r m = ()
+
+(*
+ * AR: corresponding to weak_live_region above.
+ * Replacing HH.contains_ref with weak_contains_ref under mm flag.
+ * If the reference is manually managed, we must prove Heap.contains
+ * before reading the ref.
+ *)
+let weak_contains (#a:Type) (m:mem) (s:reference a) =
+  weak_live_region m s.id /\
+  (if s.mm then HH.weak_contains_ref s.ref m.h else True)
 
 let upd (#a:Type) (m:mem) (s:reference a{live_region m s.id}) (v:a)
   : GTot mem
   = HS (m.h.[s.ref] <- v) m.tip
 
+(*
+ * AR: why is this not enforcing live_region ?
+ *)
 let sel (#a:Type) (m:mem) (s:reference a)
   : GTot a
   = m.h.[s.ref]
@@ -194,3 +230,13 @@ let above_tip_is_live (#a:Type) (m:mem) (x:reference a) : Lemma
   (requires (x.id `is_above` m.tip))
   (ensures (x.id `is_in` m.h))
   = ()
+
+(*
+ * AR: relating contains and weak_contains.
+ *)
+let contains_implies_weak_contains (#a:Type) (h:mem) (x:reference a) :Lemma
+  (requires (True))
+  (ensures (contains h x ==> weak_contains h x))
+  [SMTPatOr [[SMTPat (contains h x)]; [SMTPat (weak_contains h x)]] ]
+  = ()
+      

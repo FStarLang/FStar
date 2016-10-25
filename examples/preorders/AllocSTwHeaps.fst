@@ -44,7 +44,7 @@ new_effect ISTATE = STATE_h FStar.Heap.heap
 
 (* DIV is a sub-effect/sub-monad of the allocated references instance of the preorder-indexed monad. *)
 
-inline let lift_div_istate (state:Type) (rel:relation state{preorder rel}) 
+unfold let lift_div_istate (state:Type) (rel:relation state{preorder rel}) 
                            (a:Type) (wp:pure_wp a) (p:ist_post state a) (s:state) = wp (fun x -> p x s)
 sub_effect DIV ~> ISTATE = lift_div_istate FStar.Heap.heap heap_rel
 

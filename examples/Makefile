@@ -3,6 +3,7 @@ include Makefile.include
 
 ALL_EXAMPLE_DIRS=\
 bug-reports \
+low-level \
 data_structures \
 algorithms \
 crypto \
@@ -13,7 +14,6 @@ software_foundations \
 relational \
 relational/new \
 voting \
-low-level \
 maths \
 paradoxes \
 printf \

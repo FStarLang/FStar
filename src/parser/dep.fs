@@ -265,6 +265,8 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
   in
   List.iter (record_open false) auto_open;
 
+  let num_of_toplevelmods = ref 0 in
+
   let rec collect_fragment = function
     | Inl file ->
         collect_file file
@@ -313,10 +315,11 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | Main t
     | Assume (_, _, t)
     | SubEffect { lift_op = NonReifiableLift t }
+    | SubEffect { lift_op = LiftForFree t }
     | Val (_, _, t) ->
         collect_term t
     | SubEffect { lift_op = ReifiableLift (t0, t1) } ->
-        collect_term t0; 
+        collect_term t0;
         collect_term t1
     | Tycon (_, ts) ->
         let ts = List.map (fun (x,doc) -> x) ts in
@@ -330,8 +333,10 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | Pragma _ ->
         ()
     | TopLevelModule lid ->
-        raise (Err (Util.format1 "Automatic dependency analysis demands one \
-          module per file (module %s not supported)" (string_of_lid lid true)))
+        incr num_of_toplevelmods;
+        if (!num_of_toplevelmods > 1) then
+            raise (Err (Util.format1 "Automatic dependency analysis demands one \
+              module per file (module %s not supported)" (string_of_lid lid true)))
 
   and collect_tycon = function
     | TyconAbstract (_, binders, k) ->

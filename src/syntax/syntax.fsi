@@ -67,7 +67,7 @@ type universes     = list<universe>
 type monad_name    = lident
 type delta_depth = 
   | Delta_constant                  //A defined constant, e.g., int, list, etc. 
-  | Delta_unfoldable of int         //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
+  | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 type term' =
@@ -205,10 +205,11 @@ type qualifier =
   | Assumption                             //no definition provided, just a declaration 
   | New                                    //a fresh type constant, distinct from all prior type constructors
   | Private                                //name is invisible outside the module
-  | Inline                                 //a definition that *should* always be unfolded by the normalizer
-  | Unfoldable                             //a definition that may be unfolded by the normalizer, but only if necessary (default)
+  | Unfold_for_unification_and_vcgen       //a definition that *should* always be unfolded by the normalizer
+  | Visible_default                        //a definition that may be unfolded by the normalizer, but only if necessary (default)
   | Irreducible                            //a definition that can never be unfolded by the normalizer
   | Abstract                               //a symbol whose definition is only visible within the defining module
+  | Inline_for_extraction                  //a symbol whose definition must be unfolded when compiling the program
   | Noeq                                   //for this type, don't generate HasEq
   | Unopteq                                //for this type, use the unoptimized HasEq scheme
   | TotalEffect                            //an effect that forbids non-termination
@@ -233,7 +234,7 @@ type monad_abbrev = {
 type sub_eff = {
   source:lident;
   target:lident;
-  lift_wp:tscheme;
+  lift_wp:option<tscheme>;
   lift:option<tscheme>
  }
 
@@ -283,6 +284,7 @@ and sigelt =
                        * list<lident>              //data constructors for ths type
                        * list<qualifier>           
                        * Range.range
+// JP: the comment below seems out of date -- Sig_tycons is gone?!
 (* an inductive type is a Sig_bundle of all mutually defined Sig_tycons and Sig_datacons.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
    where each higher level list represents one of the inductive types and its constructors.

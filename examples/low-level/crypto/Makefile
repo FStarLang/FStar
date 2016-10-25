@@ -4,59 +4,58 @@ FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
 HINTS_ENABLED?=--use_hints
 
-OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3timeout 20  $(HINTS_ENABLED)
+OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3timeout 20  $(HINTS_ENABLED) $(OTHERFLAGS)
 
-FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperheap --include $(FSTAR_HOME)/ucontrib/Platform/fst
+FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperstack --include $(FSTAR_HOME)/ucontrib/Platform/fst
 
 # Files that should fully typecheck
 # Files commented out are broken, uncomment once fixed
 VERIFY= \
-  FStar.HST.Monotonic.RRef \
-  TestMonotonic \
   Buffer.Utils \
-  Math.Axioms \
-  Math.Lemmas \
-  Math.Lib \
-  Curve.Bigint \
-  Curve.Modulo \
-  Curve.Parameters \
+  Crypto.Symmetric.Chacha20 \
   Crypto.Symmetric.Poly1305.Bigint \
   Crypto.Symmetric.Poly1305.Parameters \
+  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1 \
+  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2 \
+  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3 \
+  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4 \
+  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5 \
+  Crypto.Symmetric.Poly1305.Bignum \
   Crypto.Symmetric.Poly1305.Spec \
   Crypto.Symmetric.Poly1305 \
-  Crypto.Symmetric.Chacha20 \
-  Crypto.Symmetric.BlockCipher \
+  Crypto.Symmetric.Bytes \
+  Crypto.Symmetric.GF128 \
   Crypto.Symmetric.GCM \
   Crypto.Symmetric.AES \
+  Crypto.Symmetric.Cipher \
   Crypto.AEAD.AES256GCM \
+  Crypto.Symmetric.PRF \
+  Crypto.AEAD.Chacha20Poly1305 \
+  Crypto.AEAD.Encoding \
+  Crypto.AEAD.Invariant \
+  Crypto.AEAD.Lemmas \
+  Crypto.AEAD \
   Plain \
-  # Test
+  Test \
+  TestMonotonic
 
-# Files not yet fully typechecking
+# Files that should fully typecheck, but not part of regression
+# because verification is too slow
+SLOW= \
+
+# Files not yet fully typechecking -- possibly due to timeouts.
 # Please move files that you know fully typecheck to VERIFY
 # Files commented out are broken, uncomment once fixed
 LAX= \
-  Math.Definitions \
-  Math.Field \
-  Math.Curve \
-  Curve.AddAndDouble \
-  Curve.Bignum \
-  Curve.Fsum \
-  Curve.FsumWide \
-  Curve.Fscalar \
-  Curve.Crecip \
-  Curve.Point \
-  Curve.Ladder \
-  Crypto.Symmetric.Poly1305.Bignum \
-  Crypto.Symmetric.Poly1305.MAC \
-  Crypto.Symmetric.Chacha20.PRF \
-  Crypto.AEAD.Chacha20Poly1305.Ideal \
-  Crypto.AEAD.Chacha20Poly1305 \
-  # AEAD
+  Crypto.Symmetric.Poly1305.MAC
+
+#16-10-09  Not sure how to verify Flag.fsti and Flag.fst
+
+all: all-ver $(addsuffix .fst-lax, $(LAX))
 
 all-ver: $(addsuffix .fst-ver, $(VERIFY))
 
-all-lax: $(addsuffix .fst-lax, $(LAX))
+all-lax: $(addsuffix .fst-lax, $(LAX)) $(addsuffix .fst-lax, $(VERIFY))
 
 # Parameter for interactive mode
 %.fst-in: 

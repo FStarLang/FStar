@@ -11,7 +11,6 @@ open FStar.UInt32
 open FStar.Int.Cast
 (*  Effects and memory layout *)
 open FStar.HyperStack
-open FStar.HST
 (*  Buffers *)
 open FStar.Buffer
 open Buffer.Utils
@@ -128,11 +127,6 @@ let chacha20_init m key iv counter =
   m.(12ul) <- counter; 
   fill m 13ul 3ul iv
 
-// was:
-//  m.(13ul) <- constant;
-//  m.(14ul) <- (Int.Cast.uint64_to_uint32 iv);
-//  m.(15ul) <- (Int.Cast.uint64_to_uint32 (UInt64.shift_right iv 32ul))
-
 (* lifted by hand for now: *)
 private val add: 
   m: matrix -> m0: matrix{disjoint m m0} -> 
@@ -150,6 +144,7 @@ private val sum_matrixes:
   (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1))
 let sum_matrixes m m0 =
 //let add i = upd m i (m.(i) +%^ m0.(i)) in // inlined? 
+// forUint32 0ul 15ul (fun i -> add m m0 i)
   add m m0  0ul;
   add m m0  1ul;
   add m m0  2ul;

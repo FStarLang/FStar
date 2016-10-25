@@ -113,7 +113,7 @@ type expr = term
 //  - Immediately before a top-level declaration
 //  - Immediately after a type constructor or record field
 //  - In the middle of a file, as a standalone documentation declaration
-type fsdoc = string * list<(string * string)> // comment + keywords (name, arguments)
+type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
 
 type tycon =
   | TyconAbstract of ident * list<binder> * option<knd>
@@ -132,7 +132,9 @@ type qualifier =
   | Effect
   | New
   | Inline                                 //a definition that *should* always be unfolded by the normalizer
-  | Unfoldable                             //a definition that may be unfolded by the normalizer, but only if necessary (default)
+  | Visible                                //a definition that may be unfolded by the normalizer, but only if necessary (default)
+  | Unfold_for_unification_and_vcgen       //a definition that will be unfolded by the normalizer, during unification and for SMT queries
+  | Inline_for_extraction                  //a definition that will be inlined only during compilation
   | Irreducible                            //a definition that can never be unfolded by the normalizer
   | Reifiable
   | Reflectable
@@ -147,6 +149,7 @@ type qualifiers = list<qualifier>
 type lift_op =
   | NonReifiableLift of term
   | ReifiableLift    of term * term //lift_wp, lift
+  | LiftForFree      of term
 
 type lift = {
   msource: lid;

@@ -29,25 +29,33 @@ let process_args () : parse_cmdline_res * list<string> =
 (* cleanup: kills background Z3 processes; relevant when --n_cores > 1 *)
 let cleanup () = Util.kill_all ()
 
+(* printing a finished message *)
+let finished_message fmods errs =
+  let print_to = if errs > 0 then Util.print_error else Util.print_string in
+  if not (Options.silent()) then begin
+    fmods |> List.iter (fun ((iface, name), time) ->
+                let tag = if iface then "i'face" else "module" in
+                if Options.should_print_message name.str
+                then if time >= 0
+                then print_to (Util.format3 "Verified %s: %s (%s milliseconds)\n" 
+                                                        tag (Ident.text_of_lid name) (Util.string_of_int time))
+                else print_to (Util.format2 "Verified %s: %s\n" tag (Ident.text_of_lid name)));
+    if errs > 0
+    then if errs = 1
+         then Util.print_error "1 error was reported (see above)\n"
+         else Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs)
+    else print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
+  end
+
 (* printing total error count *)
-let report_errors () =
+let report_errors fmods =
   let errs =
       if (Options.universes())
       then FStar.TypeChecker.Errors.get_err_count()
       else FStar.Tc.Errors.get_err_count () in
   if errs > 0 then begin
-    Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs);
+    finished_message fmods errs;
     exit 1
-  end
-
-(* printing a finished message *)
-let finished_message fmods =
-  if not (Options.silent()) then begin
-    fmods |> List.iter (fun (iface, name) ->
-                let tag = if iface then "i'face" else "module" in
-                if Options.should_print_message name.str
-                then Util.print_string (Util.format2 "Verifying %s: %s\n" tag (Ident.text_of_lid name)));
-    print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
   end
 
 (* Extraction to OCaml, F#, Kremlin or JavaScript *)
@@ -82,7 +90,7 @@ let codegen uf_mods_env =
     | Some "Kremlin" ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
-        save_value_to_file "out.krml" bin
+        save_value_to_file (Options.prepend_output_dir "out.krml") bin
    | _ -> failwith "Unrecognized option"
 
 
@@ -136,14 +144,16 @@ let go _ =
           in
           if Options.universes() then
             let fmods, dsenv, env = Universal.batch_mode_tc verify_mode filenames in
-            report_errors ();
-            codegen (Inr (fmods, env));
-            finished_message (fmods |> List.map Universal.module_or_interface_name)
+            let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
+            report_errors module_names_and_times;
+            codegen (Inr (fmods |> List.map fst, env));
+            finished_message module_names_and_times 0
           else
             let fmods, dsenv, env = Stratified.batch_mode_tc verify_mode filenames in
-            report_errors ();
-            codegen (Inl (fmods, env));
-            finished_message (fmods |> List.map Stratified.module_or_interface_name)
+            let module_names_and_times = fmods |> List.map (fun (x, t) -> Stratified.module_or_interface_name x, t) in
+            report_errors module_names_and_times;
+            codegen (Inl (fmods |> List.map fst, env));
+            finished_message module_names_and_times 0
         end else
           Util.print_error "no file provided\n"
 
@@ -166,5 +176,5 @@ let main () =
      end; 
      cleanup();
      FStar.TypeChecker.Errors.report_all () |> ignore;
-     report_errors ();
+     report_errors [];
      exit 1)

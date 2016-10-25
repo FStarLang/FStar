@@ -360,6 +360,15 @@ let rec unrefine t =
   | Tm_ascribed(t, _, _) -> unrefine t
   | _ -> t
 
+let rec is_unit t = 
+    match (unrefine t).n with
+    | Tm_type _ -> true
+    | Tm_fvar fv ->
+      fv_eq_lid fv Const.unit_lid
+      || fv_eq_lid fv Const.squash_lid
+    | Tm_uinst (t, _) -> is_unit t
+    | _ -> false
+
 let rec non_informative t =
     match (unrefine t).n with
     | Tm_type _ -> true
@@ -418,6 +427,21 @@ let rec lids_of_sigelt se = match se with
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
   | _ -> None
+
+let quals_of_sigelt x = match x with
+  | Sig_bundle(_, quals, _, _)
+  | Sig_inductive_typ (_, _, _,  _, _, _, quals, _)
+  | Sig_effect_abbrev  (_, _, _, _, quals, _)
+  | Sig_datacon (_, _, _, _, _, quals, _, _)
+  | Sig_declare_typ (_, _, _, quals, _)
+  | Sig_assume (_, _, quals, _)
+  | Sig_let(_, _, _, quals)
+  | Sig_new_effect({qualifiers=quals}, _)
+  | Sig_new_effect_for_free({qualifiers=quals}, _) ->
+    quals
+  | Sig_sub_effect(_, _)
+  | Sig_pragma(_, _)
+  | Sig_main(_, _) -> []
 
 let range_of_sigelt x = match x with
   | Sig_bundle(_, _, _, r)
@@ -729,7 +753,7 @@ let mk_has_type t x t' =
 let lex_t    = fvar_const Const.lex_t_lid 
 let lex_top  = fvar Const.lextop_lid Delta_constant (Some Data_ctor) 
 let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor) 
-let tforall  = fvar Const.forall_lid (Delta_unfoldable 1) None
+let tforall  = fvar Const.forall_lid (Delta_defined_at_level 1) None
 let t_haseq   = fvar Const.haseq_lid Delta_constant None
 
 let lcomp_of_comp c0 =
@@ -838,15 +862,15 @@ let destruct_typ_as_formula f : option<connective> =
         | None -> destruct_q_conn phi
 
 
-  let action_as_lb a = 
-        let lb = {
-            lbname=Inr (lid_as_fv a.action_name Delta_equational None);
-            lbunivs=a.action_univs;
-            lbtyp=a.action_typ;
-            lbdef=a.action_defn;
-            lbeff=Const.effect_Tot_lid
-        } in
-        Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [])
+  let action_as_lb a =
+    let lb = close_univs_and_mk_letbinding 
+                None 
+                (Inr (lid_as_fv a.action_name Delta_equational None))
+                a.action_univs
+                a.action_typ
+                Const.effect_Tot_lid
+                a.action_defn in
+    Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [])
     
 (* Some reification utilities *)
 let mk_reify t = 
@@ -881,8 +905,8 @@ let incr_delta_qualifier t =
     let d = delta_qualifier t in
     let rec aux d = match d with
         | Delta_equational -> d
-        | Delta_constant -> Delta_unfoldable 1
-        | Delta_unfoldable i -> Delta_unfoldable (i + 1)
+        | Delta_constant -> Delta_defined_at_level 1
+        | Delta_defined_at_level i -> Delta_defined_at_level (i + 1)
         | Delta_abstract d -> aux d in
     aux d
 

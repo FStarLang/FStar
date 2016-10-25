@@ -1,5 +1,5 @@
 [
-  "|Yd≤≈tq≤c‹Ωf`™≈]",
+  "¥\u000f\u0006≠åÂ#}5iŸ„ÿè„ﬂ",
   [
     [ "FStar.HST.Monotonic.RRef.rid", 1, 0, 1, [ "@query" ], 0 ],
     [ "FStar.HST.Monotonic.RRef.monotonic", 1, 0, 1, [ "@query" ], 0 ],
@@ -49,7 +49,17 @@
       ],
       0
     ],
-    [ "FStar.HST.Monotonic.RRef.m_alloc", 1, 0, 1, [ "@query" ], 0 ],
+    [
+      "FStar.HST.Monotonic.RRef.m_alloc",
+      1,
+      0,
+      1,
+      [
+        "@query", "equation_FStar.HyperStack.ref",
+        "refinement_interpretation_Tm_refine_d6fb17fbf40b19e4285d53d5cab914a5"
+      ],
+      0
+    ],
     [
       "FStar.HST.Monotonic.RRef.m_alloc",
       2,
@@ -126,12 +136,11 @@
       1,
       [
         "@query", "assumption_FStar.HyperHeap.HasEq_rid",
-        "data_elim_FStar.HyperStack.HS", "equality_tok_Prims.T@tok",
+        "data_elim_FStar.HyperStack.HS",
         "equation_FStar.HST.Monotonic.RRef.witnessed",
         "equation_FStar.HyperHeap.t",
         "equation_FStar.HyperStack.equal_domains",
         "equation_FStar.HyperStack.hh", "equation_Prims.eqtype",
-        "equation_Prims.l_True",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "function_token_typing_FStar.Heap.emp",
         "function_token_typing_FStar.Heap.heap",
@@ -142,8 +151,8 @@
         "proj_equation_FStar.HyperStack.HS_h",
         "refinement_interpretation_Tm_refine_0dc1829dbc3c1d1c42b7a4e9e5c89884",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Heap.domain", "typing_FStar.Map.domain",
-        "typing_FStar.Map.sel", "typing_tok_Prims.T@tok", "unit_typing"
+        "true_interp", "typing_FStar.Heap.domain", "typing_FStar.Map.domain",
+        "typing_FStar.Map.sel", "unit_typing"
       ],
       0
     ],

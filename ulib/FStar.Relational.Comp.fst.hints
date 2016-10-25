@@ -2,7 +2,7 @@
   "L£ƒj{Õ³½ \b-]ªºý\u0003",
   [
     [ "FStar.Relational.Comp.ST2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Relational.Comp.10530", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Relational.Comp.11619", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Relational.Comp.comp", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Relational.Comp.Monotone_comp", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Relational.Comp.compose2", 1, 2, 1, [ "@query" ], 0 ],

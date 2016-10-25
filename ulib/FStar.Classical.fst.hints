@@ -1,5 +1,5 @@
 [
-  "Ž@„\u0000²\t¬´V9²k×g<",
+  "ì\u0014Î…P\u0018·\u0010æÆéd¢Ï³™",
   [
     [ "FStar.Classical.forall_intro_gtot", 1, 0, 0, [ "@query" ], 0 ],
     [
@@ -29,6 +29,18 @@
       ],
       0
     ],
+    [ "FStar.Classical.forall_intro_2", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.Classical.forall_intro_3", 1, 0, 0, [ "@query" ], 0 ],
+    [
+      "FStar.Classical.exists_intro",
+      1,
+      0,
+      0,
+      [ "@query", "unit_typing" ],
+      0
+    ],
+    [ "FStar.Classical.forall_to_exists", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.Classical.forall_to_exists_2", 1, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Classical.give_proof",
       1,
@@ -66,6 +78,33 @@
         "@query",
         "refinement_interpretation_Tm_refine_340fcf9110ec0348a1e1a4e799da8db3",
         "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.Classical.move_requires",
+      1,
+      0,
+      0,
+      [
+        "@query", "bool_typing", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "refinement_interpretation_Tm_refine_340fcf9110ec0348a1e1a4e799da8db3"
+      ],
+      0
+    ],
+    [
+      "FStar.Classical.exists_elim",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Prims._assert", "equation_Prims.squash",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "unit_typing"
       ],
       0
     ]
