@@ -331,12 +331,18 @@ let test (h0:HS.mem) (h1:HS.mem) (r:rid) =
   assume (r <> h0.tip);
   assert (Map.sel h1.h r == Map.sel h0.h r)
   
+assume val temp_to_seq: #a:Type -> b:Buffer.buffer a -> ST (Seq.seq a)
+  (requires (fun h -> Buffer.live h b))
+  (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h1 b /\r == Buffer.as_seq #a h1 b))
+
+assume val temp_get_plain: #i:id -> #l:UInt32.t -> buf:plainBuffer i (v l) -> ST (plain i (v l))
+  (requires (fun h -> Plain.live h buf))
+  (ensures (fun h0 p h1 -> h0==h1 /\ Plain.live h0 buf /\p == Plain.sel_plain h1 l buf))
 
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   (* push_frame(); *)
   let h0 = get() in
   let x = PRF({iv = n; ctr = 0ul}) in // PRF index to the first block
-  (* assume (safeId i); *)
   let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC
   let h1 = get () in 
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
@@ -349,14 +355,34 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   counter_enxor i st.prf y plainlen plainlen plain cipher h1;
   // Compute MAC over additional data and ciphertext
   let h2 = get () in
+  intro_refines_one_entry_no_tag #i st n (v plainlen) plain cipher_tagged h0 h1 h2; //we have pre_refines_one_entry here
   assert (Buffer.live h1 aad); //seem to need this hint
   assume (HS (is_stack_region h2.tip)); //TODO: remove this once we move all functions to STL
   let l, acc = accumulate ak aadlen aad plainlen cipher in
   let h3 = get() in
+  assert (Buffer.live h2 aad); //seem to need this hint
+  assert (Buffer.live h3 aad); //seem to need this hint
   Buffer.lemma_reveal_modifies_0 h2 h3;
   MAC.mac ak l acc tag;
   assume false
-
+  
+  (* let h4 = get () in  *)
+  (* assume (HS (modifies (Set.union (Set.singleton (Buffer.frameOf tag)) *)
+  (* 				  (Set.singleton st.prf.mac_rgn)) h3 h4)); *)
+  (* assume (Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h3 h4); *)
+  (* let _ =  *)
+  (*   let mod_set = MAC (if mac_log then !{HS.as_ref (as_hsref (MAC.ilog ak.log))} else !{}) in *)
+  (*   assume (HS (modifies_ref st.prf.mac_rgn mod_set h3 h4)) in *)
+  (* if safeId i *)
+  (* then begin *)
+  (*   let aad = temp_to_seq aad in *)
+  (*   let p = temp_get_plain plain in *)
+  (*   let c = temp_to_seq cipher in *)
+  (*   assume false; *)
+  (*   let entry = Entry n aad (v plainlen) p c in *)
+  (*   st.log := SeqProperties.snoc !st.log entry *)
+  (* end; *)
+  (* assume false *)
   (* pop_frame() *)
 
 val counter_dexor: 

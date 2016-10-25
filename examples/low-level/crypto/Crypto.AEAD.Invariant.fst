@@ -96,11 +96,14 @@ let rec counterblocks i rgn x l from_pos to_pos plain cipher =
     let blocks = counterblocks i rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in
     SeqProperties.cons block blocks
 
-let num_blocks (#i:id) (e:entry i) : Tot nat = 
-  let Entry nonce ad l plain cipher_tagged = e in
+let num_blocks' (i:id) (l:nat) : Tot nat = 
   let bl = v (Cipher( blocklen (cipher_of_id i))) in
   (l + bl - 1) / bl
 
+let num_blocks (#i:id) (e:entry i) : Tot nat = 
+  let Entry nonce ad l plain cipher_tagged = e in
+  num_blocks' i l
+  
 let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (blocks:Seq.seq (PRF.entry rgn i)) = 
   let Entry nonce ad l plain cipher_tagged = e in
   let b = num_blocks e in 
