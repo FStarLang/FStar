@@ -31,7 +31,6 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS  = FStar.HyperStack
 
-
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 20"
 
 // we may separate field operations, so that we don't
@@ -947,6 +946,6 @@ let poly1305_mac tag msg len key =
   let last_block = sub msg (FStar.UInt32 (ctr *^ 16ul)) rest in
   poly1305_last l last_block acc r rest;
   (* Finish *)
-  poly1305_finish tag acc (sub key 16ul 16ul);
+  poly1305_finish tag acc (sub key 16ul 16ul); // should be s
   pop_frame()
 
