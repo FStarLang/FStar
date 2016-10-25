@@ -80,7 +80,7 @@ poly-test: poly-compile
 
 ideal-extract: ulib
 	mkdir -p $(AEAD_ODIR)
-	$(FSTAR_EXTRACT) crypto/Test.fst --odir $(AEAD_ODIR)
+	$(FSTAR_EXTRACT) crypto/Crypto.Test.fst --odir $(AEAD_ODIR)
 #	@sed -i.bak 's/Obj.magic ((fun log msg/ ((fun log msg/g' $(AEAD_ODIR)/Crypto_Symmetric_Poly1305.ml
 
 ideal-compile: ideal-extract
@@ -170,13 +170,13 @@ CHACHA_AEAD_ODIR=chacha_aead
 
 chacha-aead-extract: ulib
 	mkdir -p $(CHACHA_AEAD_ODIR)
-	$(FSTAR_EXTRACT) crypto/Test.fst --odir $(CHACHA_AEAD_ODIR)
+	$(FSTAR_EXTRACT) crypto/Crypto.Test.fst --odir $(CHACHA_AEAD_ODIR)
 	@sed -i 's/^let mod.*/ /g' $(CHACHA_AEAD_ODIR)/FStar_UInt.ml ##HACK!--need to fix #310
 
 chacha-aead-compile: chacha-aead-extract
 	$(OCAMLOPT) -I crypto/ml -I $(CHACHA_AEAD_ODIR) \
 	  $(addprefix $(CHACHA_AEAD_ODIR)/,$(CHACHA_AEAD_EXTRACTED)) \
-	  $(CHACHA_AEAD_ODIR)/Test.ml -o test_chacha_aead.exe
+	  $(CHACHA_AEAD_ODIR)/Crypto_Test.ml -o test_chacha_aead.exe
 
 chacha-aead-test: chacha-aead-compile
 	./test_chacha_aead.exe
