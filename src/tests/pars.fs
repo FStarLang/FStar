@@ -45,6 +45,9 @@ let rec init () =
         | Some e, Some f -> e, f
         | _ -> init_once(); init()
 
+open FStar.Parser.ParseIt
+let frag_of_text s = {frag_text=s; frag_line=1; frag_col=0}
+
 let pars_term_or_fragment is_term s = 
   try 
       let env, tcenv = init() in
@@ -58,10 +61,11 @@ let pars_term_or_fragment is_term s =
       resetLexbufPos filename lexbuf;
       let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
       let lexer = LexFStar.token lexargs in
+      let frag = frag_of_text s in
       if is_term 
       then let t = Parser.Parse.term lexer lexbuf in
            Some (Parser.ToSyntax.desugar_term env t)
-      else begin match FStar.Universal.interactive_tc.check_frag (env, tcenv) !test_mod_ref s with 
+      else begin match FStar.Universal.interactive_tc.check_frag (env, tcenv) !test_mod_ref frag with 
                 | Some (test_mod', (env', tcenv'), 0) ->
                   test_mod_ref := test_mod';
                   dsenv_ref := Some env';
@@ -111,12 +115,13 @@ let tc s =
     let tm, _, _ = TcTerm.type_of_tot_term tcenv tm in 
     tm
 
-let pars_and_tc_fragment s = 
+let pars_and_tc_fragment (s:string) = 
     Options.set_option "trace_error" (Options.Bool true);
     let report () = FStar.TypeChecker.Errors.report_all () |> ignore in
     try
         let env, tcenv = init() in
-        match FStar.Universal.interactive_tc.check_frag (env, tcenv) !test_mod_ref s with 
+        let frag = frag_of_text s in
+        match FStar.Universal.interactive_tc.check_frag (env, tcenv) !test_mod_ref frag with 
         | Some (test_mod', (env', tcenv'), n) ->
             test_mod_ref := test_mod';
             dsenv_ref := Some env';

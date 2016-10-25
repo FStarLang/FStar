@@ -163,8 +163,8 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
         let env = TcEnv.commit_mark env in
         dsenv, env in
 
-    let check_frag (dsenv, env) curmod text =  
-        match tc_one_fragment curmod dsenv env text with 
+    let check_frag (dsenv, env) curmod frag =  
+        match tc_one_fragment curmod dsenv env frag with
             | Some (m, dsenv, env) -> 
               Some (m, (dsenv, env), FStar.Tc.Errors.get_err_count())
             | _ -> None in

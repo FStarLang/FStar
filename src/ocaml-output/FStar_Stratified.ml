@@ -119,7 +119,7 @@ end)))
 end)))
 
 
-let tc_one_fragment : FStar_Absyn_Syntax.modul Prims.option  ->  FStar_Parser_DesugarEnv.env  ->  FStar_Tc_Env.env  ->  Prims.string  ->  (FStar_Absyn_Syntax.modul Prims.option * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) Prims.option = (fun curmod dsenv env frag -> try
+let tc_one_fragment : FStar_Absyn_Syntax.modul Prims.option  ->  FStar_Parser_DesugarEnv.env  ->  FStar_Tc_Env.env  ->  FStar_Parser_ParseIt.input_frag  ->  (FStar_Absyn_Syntax.modul Prims.option * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) Prims.option = (fun curmod dsenv env frag -> try
 (match (()) with
 | () -> begin
 (match ((FStar_Parser_Driver.parse_fragment frag)) with
@@ -269,9 +269,9 @@ in ((dsenv), (env))))
 end))
 in (
 
-let check_frag = (fun _92_158 curmod text -> (match (_92_158) with
+let check_frag = (fun _92_158 curmod frag -> (match (_92_158) with
 | (dsenv, env) -> begin
-(match ((tc_one_fragment curmod dsenv env text)) with
+(match ((tc_one_fragment curmod dsenv env frag)) with
 | Some (m, dsenv, env) -> begin
 (let _187_65 = (let _187_64 = (FStar_Tc_Errors.get_err_count ())
 in ((m), (((dsenv), (env))), (_187_64)))

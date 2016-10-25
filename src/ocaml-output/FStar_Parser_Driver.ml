@@ -49,7 +49,7 @@ _69_7
 end))
 
 
-let parse_fragment : Prims.string  ->  fragment = (fun frag -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inr (frag)))) with
+let parse_fragment : FStar_Parser_ParseIt.input_frag  ->  fragment = (fun frag -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inr (frag)))) with
 | FStar_Util.Inl (FStar_Util.Inl ([])) -> begin
 Empty
 end
@@ -75,7 +75,7 @@ end
 end))
 
 
-let parse_file : Prims.string  ->  FStar_Parser_AST.modul Prims.list = (fun fn -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inl (fn)))) with
+let parse_file : FStar_Parser_ParseIt.filename  ->  FStar_Parser_AST.modul Prims.list = (fun fn -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inl (fn)))) with
 | FStar_Util.Inl (FStar_Util.Inl (ast)) -> begin
 ast
 end
