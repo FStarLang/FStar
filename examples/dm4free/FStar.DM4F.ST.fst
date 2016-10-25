@@ -27,7 +27,7 @@ let put (s:Type) (x:s) : st s unit = fun _ -> (), x
  * Do the DM4F work. Note that the heap type is a parameter
  * of the resulting effect.
  *)
-reifiable reflectable new_effect_for_free {
+total reifiable reflectable new_effect_for_free {
   STATE_h (s:Type) : a:Type -> Effect
   with repr     = st s
      ; bind     = bind_st s
@@ -41,10 +41,6 @@ reifiable reflectable new_effect_for_free {
 //let repr0 = STATE_h.repr int
 
 // I would expect STATE.get to have type (s:Type) -> unit -> STATE s int
-// but the following gives
-// let get0 = STATE.get int
-// gives (Error) Expected expression of type "Prims.unit"; got expression "Prims.int" of type "Type"
-// whereas
-// let get0 = STATE.get
-// crashes with Failure("Universe variable not found")
-
+// but this is not a valid type in F* (the effect is depedent on the input type s)
+// In current F*, we need to create a new applied effect in order to use this definition
+// i.e. new_effect_for_free STATE_int = STATE_h int
