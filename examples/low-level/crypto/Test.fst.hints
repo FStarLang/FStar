@@ -1,5 +1,5 @@
 [
-  "j\u0012Wq3¶”JLÇº`Ró\\U",
+  "\u0010Aü›\u0013¢ñ™³/#][wË¤",
   [
     [ "Test.mk_buf_t", 1, 0, 1, [ "@query" ], 0 ],
     [
@@ -236,10 +236,9 @@
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
         "equation_FStar.UInt32.mul", "equation_FStar.UInt32.n",
         "equation_FStar.UInt32.t", "equation_FStar.UInt32.uint_to_t",
-        "equation_FStar.UInt32.v", "equation_FStar.UInt8.byte",
-        "equation_FStar.UInt8.n", "equation_FStar.UInt8.t",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Buffer._buffer",
+        "equation_FStar.UInt32.v", "equation_FStar.UInt8.n",
+        "equation_FStar.UInt8.t", "equation_Prims.eqtype",
+        "equation_Prims.nat", "fuel_guarded_inversion_FStar.Buffer._buffer",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "fuel_guarded_inversion_FStar.HyperStack.reference",
         "fuel_guarded_inversion_FStar.UInt32.t_",
@@ -273,6 +272,7 @@
         "refinement_interpretation_Tm_refine_4443aec68c3f169bb1ee3b95785469b2",
         "refinement_interpretation_Tm_refine_a57e6988f2d29bd5aa0679db10f4f337",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_c54dcb782be971742f65876a3620f44b",
         "refinement_interpretation_Tm_refine_c977f2d058f4105fd2afa6d9b48de36b",
         "refinement_interpretation_Tm_refine_d36a71b8a71855a11d8b101c5e05fd3d",
         "refinement_interpretation_Tm_refine_e21b22668ee258465249d73c3315e71f",
@@ -354,10 +354,9 @@
         "equation_FStar.UInt32.lte", "equation_FStar.UInt32.mul",
         "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
         "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
-        "equation_FStar.UInt8.byte", "equation_FStar.UInt8.n",
-        "equation_FStar.UInt8.t", "equation_Prims._assert",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Buffer._buffer",
+        "equation_FStar.UInt8.n", "equation_FStar.UInt8.t",
+        "equation_Prims._assert", "equation_Prims.eqtype",
+        "equation_Prims.nat", "fuel_guarded_inversion_FStar.Buffer._buffer",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "fuel_guarded_inversion_FStar.UInt32.t_",
         "function_token_typing_Crypto.Symmetric.AES.keylen",
@@ -446,11 +445,10 @@
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.lte",
         "equation_FStar.UInt32.mul", "equation_FStar.UInt32.n",
         "equation_FStar.UInt32.t", "equation_FStar.UInt32.uint_to_t",
-        "equation_FStar.UInt32.v", "equation_FStar.UInt8.byte",
-        "equation_FStar.UInt8.n", "equation_FStar.UInt8.t",
-        "equation_FStar.UInt8.uint_to_t", "equation_Prims._assert",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Buffer._buffer",
+        "equation_FStar.UInt32.v", "equation_FStar.UInt8.n",
+        "equation_FStar.UInt8.t", "equation_FStar.UInt8.uint_to_t",
+        "equation_Prims._assert", "equation_Prims.eqtype",
+        "equation_Prims.nat", "fuel_guarded_inversion_FStar.Buffer._buffer",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "fuel_guarded_inversion_FStar.UInt32.t_",
         "function_token_typing_Crypto.Symmetric.AES.keylen",
@@ -853,6 +851,21 @@
       0,
       1,
       [
+        "@query", "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
+        "lemma_FStar.Buffer.lemma_size", "proj_equation_FStar.UInt32.Mk_v",
+        "projection_inverse_FStar.UInt32.Mk_v",
+        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
+        "typing_FStar.UInt32.v"
+      ],
+      0
+    ],
+    [
+      "Test.test",
+      4,
+      0,
+      1,
+      [
         "@query", "data_elim_Crypto.AEAD.Invariant.State",
         "equality_tok_Crypto.AEAD.Invariant.Writer@tok",
         "equation_Crypto.AEAD.Encoding.id",
@@ -864,7 +877,52 @@
     ],
     [
       "Test.test",
-      4,
+      5,
+      0,
+      1,
+      [
+        "@query", "data_elim_Crypto.AEAD.Invariant.State",
+        "equality_tok_Crypto.AEAD.Invariant.Writer@tok",
+        "equation_Crypto.AEAD.Encoding.id",
+        "equation_Crypto.AEAD.Invariant.id",
+        "fuel_guarded_inversion_Crypto.AEAD.Invariant.state",
+        "refinement_interpretation_Tm_refine_8206ae4d19246bfc0bed5cf762cb72ac"
+      ],
+      0
+    ],
+    [
+      "Test.test",
+      6,
+      0,
+      1,
+      [
+        "@query", "data_elim_Crypto.AEAD.Invariant.State",
+        "equality_tok_Crypto.AEAD.Invariant.Writer@tok",
+        "equation_Crypto.AEAD.Encoding.id",
+        "equation_Crypto.AEAD.Invariant.id",
+        "fuel_guarded_inversion_Crypto.AEAD.Invariant.state",
+        "refinement_interpretation_Tm_refine_8206ae4d19246bfc0bed5cf762cb72ac"
+      ],
+      0
+    ],
+    [
+      "Test.test",
+      7,
+      0,
+      1,
+      [
+        "@query", "data_elim_Crypto.AEAD.Invariant.State",
+        "equality_tok_Crypto.AEAD.Invariant.Writer@tok",
+        "equation_Crypto.AEAD.Encoding.id",
+        "equation_Crypto.AEAD.Invariant.id",
+        "fuel_guarded_inversion_Crypto.AEAD.Invariant.state",
+        "refinement_interpretation_Tm_refine_8206ae4d19246bfc0bed5cf762cb72ac"
+      ],
+      0
+    ],
+    [
+      "Test.test",
+      8,
       0,
       1,
       [
@@ -879,7 +937,7 @@
     ],
     [
       "Test.test",
-      5,
+      9,
       0,
       1,
       [

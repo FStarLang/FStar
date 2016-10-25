@@ -30,7 +30,7 @@ type bytes = buffer u8
 let norm (h:heap) (b:bigint) : GTot Type0 =
   live h b /\ 
   length b >= norm_length /\ 
-  (forall (i:nat). {:pattern (v (get h b i))}
+  (forall (i:nat). {:pattern (v (get h b i)) \/ pow2 (templ i)}
     i < norm_length ==> v (get h b i) < pow2 (templ i))
 
 let null (h:heap) (b:bigint) : GTot Type0 =
