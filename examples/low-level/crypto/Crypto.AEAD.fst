@@ -37,7 +37,6 @@ let ctr x = PRF(x.ctr)
 //16-10-12 NB we are importing this restriction from Encoding too
 let id = Crypto.AEAD.Encoding.id
 
-
 // ********* StreamAE **********
 //
 // (Definitions adapted from TLS/StreamAE.fst, to be integrated later)
@@ -324,14 +323,24 @@ val encrypt:
    ))
 
 #reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let test (h0:HS.mem) (h1:HS.mem) (r:rid) = 
+  let open FStar.HyperStack in 
+  assume (r `HS.is_in` h0.h);
+  assume (Buffer.modifies_0 h0 h1);
+  Buffer.lemma_reveal_modifies_0 h0 h1;
+  assume (r <> h0.tip);
+  assert (Map.sel h1.h r == Map.sel h0.h r)
+  
+
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   (* push_frame(); *)
   let h0 = get() in
   let x = PRF({iv = n; ctr = 0ul}) in // PRF index to the first block
+  (* assume (safeId i); *)
   let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC
+  let h1 = get () in 
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in
-  let h1 = get () in
   let y = PRF.incr i x in
   //calling this lemma allows us to complete the proof without using any fuel; 
   //which makes things a a bit faster
@@ -343,8 +352,11 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   assert (Buffer.live h1 aad); //seem to need this hint
   assume (HS (is_stack_region h2.tip)); //TODO: remove this once we move all functions to STL
   let l, acc = accumulate ak aadlen aad plainlen cipher in
-  assume false;
-  MAC.mac ak l acc tag
+  let h3 = get() in
+  Buffer.lemma_reveal_modifies_0 h2 h3;
+  MAC.mac ak l acc tag;
+  assume false
+
   (* pop_frame() *)
 
 val counter_dexor: 

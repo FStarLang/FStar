@@ -341,6 +341,7 @@ val accumulate:
     Buffer.live h0 aad /\ Buffer.live h0 cipher))
   (ensures (fun h0 (l,a) h1 -> 
     Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
+    ~ (h0 `Buffer.contains` a) /\
     Buffer.live h1 aad /\ Buffer.live h1 cipher /\
     MAC.acc_inv st l a h1 /\
     (mac_log ==> l == encode_both aadlen (Buffer.as_seq h1 aad) plainlen (Buffer.as_seq h1 cipher))))

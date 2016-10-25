@@ -199,7 +199,6 @@ let gen i region =
   lemma_reveal_modifies_1 key h0 h1;
   alloc i region key
 
-
 val coerce: i:id{~(authId i)} -> r:rid -> key:lbuffer 32 -> ST (state i)
   (requires (fun m0 -> live m0 key))
   (ensures  (genPost i r))
@@ -241,7 +240,10 @@ let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
 // not framed, as we allocate private state on the caller stack
 val start: #i:id -> st:state i -> StackInline (accB i)
   (requires (fun h -> live h st.r /\ norm h st.r))
-  (ensures  (fun h0 a h1 -> acc_inv st text_0 a h1 /\ modifies_0 h0 h1))
+  (ensures  (fun h0 a h1 -> 
+	       ~ (h0 `Buffer.contains` a) /\
+	       acc_inv st text_0 a h1 /\ 
+	       modifies_0 h0 h1))
 let start #i st =
   let h0 = ST.get () in
   let a = Buffer.create 0UL 5ul in
@@ -347,7 +349,7 @@ val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit
     live h0 tag /\ live h0 st.s /\
     disjoint acc st.s /\ disjoint tag acc /\ disjoint tag st.r /\ disjoint tag st.s /\
     acc_inv st l acc h0 /\
-    (mac_log ==> m_sel h0 (ilog st.log) == None)))
+    (mac_log /\ safeId (fst i) ==> m_sel h0 (ilog st.log) == None)))
   (ensures (fun h0 _ h1 ->
     live h0 st.s /\ live h0 st.r /\ live h1 tag /\
     // modifies h0 h1 "the tag buffer and st.log" /\
