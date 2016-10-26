@@ -42,3 +42,10 @@ let test8 (x:int{test8_aux x = 0}) = () //reports expected nat; got int
 
 assume val test9_aux : x:int -> Pure bool (requires (b2t (x >= 0))) (ensures (fun x -> True))
 assume val test9 : x:int{test9_aux x} -> Tot unit //should report a failing assertion in the refinement (f x)
+
+#set-options "--detail_errors"
+let test10 = 
+  assert (0=1);
+  assert (0=0);
+  assert (1=2);
+  assert (2=2)
