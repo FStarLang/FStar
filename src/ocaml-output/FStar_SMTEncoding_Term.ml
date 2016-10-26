@@ -1780,10 +1780,13 @@ end
 (let _178_725 = (unboxBool t)
 in (mkNot _178_725 t.rng))
 end
-| App (Var ("Prims.b2t"), (t)::[]) -> begin
-(unboxBool t)
+| App (Var ("Prims.b2t"), (t1)::[]) -> begin
+(
+
+let _83_1015 = (unboxBool t1)
+in {tm = _83_1015.tm; freevars = _83_1015.freevars; rng = t.rng})
 end
-| _83_1016 -> begin
+| _83_1018 -> begin
 (mkApp (("Valid"), ((t)::[])) t.rng)
 end))
 
@@ -1914,7 +1917,7 @@ end
 (let _178_833 = (print_smt_term t)
 in (FStar_Util.format2 "(Labeled \'%s\' %s)" r1 _178_833))
 end
-| Quant (qop, l, _83_1107, _83_1109, t) -> begin
+| Quant (qop, l, _83_1109, _83_1111, t) -> begin
 (let _178_835 = (print_smt_term_list_list l)
 in (let _178_834 = (print_smt_term t)
 in (FStar_Util.format3 "(%s %s %s)" (qop_to_string qop) _178_835 _178_834)))

@@ -126,9 +126,12 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
      let t = lc.res_typ in
      let e, g = TcUtil.check_and_ascribe env e t t' in
      if debug env Options.High
-     then Util.print2 "check_and_ascribe: type is %s\n\tguard is %s\n" (Print.term_to_string t) (Rel.guard_to_string env g);
+     then Util.print4 "check_and_ascribe: type is %s<:%s \tguard is %s, %s\n" 
+                (Print.term_to_string t) (Print.term_to_string t') 
+                (Rel.guard_to_string env g) (Rel.guard_to_string env guard);
+     let msg = if Rel.is_trivial g then None else (Some <| Errors.subtyping_failed env t t') in
      let g = Rel.conj_guard g guard in
-     let lc, g = TcUtil.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env e lc g in
+     let lc, g = TcUtil.strengthen_precondition msg env e lc g in
      memo_tk e t', set_lcomp_result lc t', g in
   if debug env Options.Low
   then Util.print1 "Return comp type is %s\n" (Print.lcomp_to_string lc);
