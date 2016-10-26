@@ -83,7 +83,8 @@ and expr =
   | EWhile of expr * expr
   | EBufCreateL of list<expr>
   | ETuple of list<expr>
-  | ECons of (lident * ident * list<expr>)
+  | ECons of lident * ident * list<expr>
+  | EBufFill of expr * expr * expr
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -567,6 +568,8 @@ and translate_expr env e: expr =
       EPopFrame
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3; e4; e5 ]) when (string_of_mlpath p = "FStar.Buffer.blit") ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.fill") ->
+      EBufFill (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when string_of_mlpath p = "FStar.ST.get" ->
       // We need to reveal to Kremlin that FStar.HST.get is equivalent to
       // (void*)0 so that it can get rid of ghost calls to HST.get at the
