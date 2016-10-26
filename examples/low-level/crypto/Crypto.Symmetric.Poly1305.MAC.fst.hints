@@ -1,6 +1,7 @@
 [
-  "\u0001Tс–6?d\u0011Pбым}ш%N",
+  ",\u0012°П\u0001<K6\u001b™фнƒЁOж",
   [
+    [ "Crypto.Symmetric.Poly1305.MAC.norm", 1, 0, 1, [ "@query" ], 0 ],
     [
       "Crypto.Symmetric.Poly1305.MAC.keylen",
       1,
@@ -955,7 +956,8 @@
         "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
         "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
         "equation_FStar.UInt64.n", "equation_FStar.UInt64.t",
-        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "equation_Prims._assert", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Crypto.Symmetric.Poly1305.Spec.poly.fuel_instrumented",
         "fuel_correspondence_Crypto.Symmetric.Poly1305.Spec.poly.fuel_instrumented",
         "fuel_correspondence_Prims.pow2.fuel_instrumented",

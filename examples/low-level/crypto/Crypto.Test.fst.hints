@@ -1,5 +1,5 @@
 [
-  "\t—}?\u007fÇZl(\u001fû\\‚1Å\u0006",
+  "R…%~ÿ%À‡:FÀF-+üœ",
   [
     [ "Crypto.Test.mk_buf_t", 1, 0, 1, [ "@query" ], 0 ],
     [
@@ -349,6 +349,7 @@
       [
         "@query", "assumption_FStar.HyperHeap.HasEq_rid", "b2t_def",
         "bool_inversion", "bool_typing", "data_elim_FStar.UInt32.Mk",
+        "equation_Crypto.AEAD.Encoding.aadmax",
         "equation_Crypto.Symmetric.AES.keylen",
         "equation_Crypto.Symmetric.AES.nb",
         "equation_Crypto.Symmetric.AES.nk",
@@ -372,6 +373,7 @@
         "equation_Prims.nat", "fuel_guarded_inversion_FStar.Buffer._buffer",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "fuel_guarded_inversion_FStar.UInt32.t_",
+        "function_token_typing_Crypto.AEAD.Encoding.aadmax",
         "function_token_typing_Crypto.Symmetric.AES.keylen",
         "function_token_typing_Crypto.Symmetric.AES.nb",
         "function_token_typing_Crypto.Symmetric.Poly1305.MAC.someId",
@@ -847,6 +849,21 @@
       0,
       1,
       [
+        "@query", "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
+        "lemma_FStar.Buffer.lemma_size", "proj_equation_FStar.UInt32.Mk_v",
+        "projection_inverse_FStar.UInt32.Mk_v",
+        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
+        "typing_FStar.UInt32.v"
+      ],
+      0
+    ],
+    [
+      "Crypto.Test.test",
+      4,
+      0,
+      1,
+      [
         "@query", "data_elim_Crypto.AEAD.Invariant.State",
         "equality_tok_Crypto.AEAD.Invariant.Writer@tok",
         "equation_Crypto.AEAD.Encoding.id",
@@ -858,7 +875,52 @@
     ],
     [
       "Crypto.Test.test",
-      4,
+      5,
+      0,
+      1,
+      [
+        "@query", "data_elim_Crypto.AEAD.Invariant.State",
+        "equality_tok_Crypto.AEAD.Invariant.Writer@tok",
+        "equation_Crypto.AEAD.Encoding.id",
+        "equation_Crypto.AEAD.Invariant.id",
+        "fuel_guarded_inversion_Crypto.AEAD.Invariant.state",
+        "refinement_interpretation_Tm_refine_8206ae4d19246bfc0bed5cf762cb72ac"
+      ],
+      0
+    ],
+    [
+      "Crypto.Test.test",
+      6,
+      0,
+      1,
+      [
+        "@query", "data_elim_Crypto.AEAD.Invariant.State",
+        "equality_tok_Crypto.AEAD.Invariant.Writer@tok",
+        "equation_Crypto.AEAD.Encoding.id",
+        "equation_Crypto.AEAD.Invariant.id",
+        "fuel_guarded_inversion_Crypto.AEAD.Invariant.state",
+        "refinement_interpretation_Tm_refine_8206ae4d19246bfc0bed5cf762cb72ac"
+      ],
+      0
+    ],
+    [
+      "Crypto.Test.test",
+      7,
+      0,
+      1,
+      [
+        "@query", "data_elim_Crypto.AEAD.Invariant.State",
+        "equality_tok_Crypto.AEAD.Invariant.Writer@tok",
+        "equation_Crypto.AEAD.Encoding.id",
+        "equation_Crypto.AEAD.Invariant.id",
+        "fuel_guarded_inversion_Crypto.AEAD.Invariant.state",
+        "refinement_interpretation_Tm_refine_8206ae4d19246bfc0bed5cf762cb72ac"
+      ],
+      0
+    ],
+    [
+      "Crypto.Test.test",
+      8,
       0,
       1,
       [
@@ -873,7 +935,7 @@
     ],
     [
       "Crypto.Test.test",
-      5,
+      9,
       0,
       1,
       [
