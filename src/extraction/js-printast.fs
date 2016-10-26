@@ -38,7 +38,6 @@ let escape_char fallback = function
   | c                            -> fallback c
 
 let remove_chars_t s = String.collect (escape_char string_of_char) s
-//let remove_chars_t s =  String.filter ((<>) '\'') s |> jstr_escape
 
 let print_op_un:op_un -> doc = function
     | JSU_Minus -> text "-"
@@ -80,19 +79,20 @@ let print_op_log = function
 
 let rec pretty_print (program:Ast.t) : doc = 
     reduce ([text "/* @flow */"; hardline] @           
-            List.map (function | JS_Statement(s) -> 
-                                    match s with 
-                                    | JSS_Block l ->  pretty_print_statements l
-                                    | _ -> pretty_print_statement s) program)
+            List.map (function 
+                | JS_Statement(s) -> 
+                    match s with 
+                    | JSS_Block l ->  pretty_print_statements l
+                    | _ -> pretty_print_statement s) program)
 
 and pretty_print_statement (p:statement_t) : doc =
-  let optws (s:statement_t) = 
-    match s with 
+  let optws (s:statement_t) =
+    match s with
     | JSS_Block(b) -> pretty_print_statements b
     | _ -> reduce [ws; nest 1 (pretty_print_statement s)] in
   let f = function
     | JSS_Empty -> semi
-    | JSS_Block(l) -> reduce [ text "{"; pretty_print_statements l; text "}" ]
+    | JSS_Block(l) -> reduce [text "{"; pretty_print_statements l; text "}"]
     | JSS_Expression(e) -> reduce [ws; pretty_print_exp e; semi]
     | JSS_If(c,t,f) ->
         reduce [ws; text "if"; parens (pretty_print_exp c); text "{"; hardline; optws t; text "}";
@@ -138,8 +138,8 @@ and pretty_print_statement (p:statement_t) : doc =
 
 and pretty_print_statements l = reduce (List.map pretty_print_statement l)
 
-and print_decl_t lt = 
-    match lt with 
+and print_decl_t lt =
+    match lt with
     | Some l -> reduce [text "<"; List.map (fun s -> text (remove_chars_t s)) l |> combine comma; text ">"]
     | None -> empty
 
@@ -160,14 +160,13 @@ and pretty_print_exp = function
     | JSE_Logical(o,e1,e2) ->  reduce [pretty_print_exp e1; print_op_log o; pretty_print_exp e2]
     | JSE_Conditional(c,e,f) -> semi (*!!!*)
     | JSE_New(e,l) -> semi (*!!!*)
-    | JSE_Call(e,l) -> //reduce [pretty_print_exp e; parens (List.map pretty_print_exp l |> combine comma)]
-        reduce [pretty_print_exp e;  List.map (fun x -> parens (pretty_print_exp x)) l |> combine empty]
+    | JSE_Call(e,l) -> reduce [pretty_print_exp e;  List.map (fun x -> parens (pretty_print_exp x)) l |> combine empty]
     | JSE_Member(o, p) ->  reduce [pretty_print_exp o; pretty_print_propmem p]
     | JSE_Yield(e,b) -> semi (*!!!*)
     | JSE_Comprehension(l,e) -> semi (*!!!*)
     | JSE_Generator(l,e) -> semi (*!!!*)
     | JSE_Let(l,e) -> semi (*!!!*)
-    | JSE_Identifier(id,t) -> text (remove_chars_t id)// reduce [text (jstr_escape id); (match t with | Some v -> reduce [text ":"; print_typ v] | None -> text "")] 
+    | JSE_Identifier(id,t) -> text (remove_chars_t id)
     | JSE_Literal(l) -> print_literal (fst l)
     | JSE_TypeCast(e,t) -> reduce [ text "("; pretty_print_exp e; colon; print_typ t; text ")"]
 
@@ -209,8 +208,8 @@ and print_typ = function
     | JST_Boolean -> text "boolean"
     | JST_Nullable _ -> text "!!!"
     | JST_Function (args, ret_t, decl_vars) -> print_fun_typ args ret_t decl_vars
-    | JST_Object (lp, _, _) -> reduce [text "{" ; 
-                                       List.map (fun (k, t) -> 
+    | JST_Object (lp, _, _) -> reduce [text "{" ;
+                                       List.map (fun (k, t) ->
                                             reduce [pretty_print_prop_key k; text ":"; print_typ t]) lp |> combine comma;
                                        text "}" ]
     | JST_Array t -> reduce [text "Array"; text "<"; print_typ t; text ">"]
