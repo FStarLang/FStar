@@ -26,7 +26,7 @@ open FStar.SMTEncoding
 exception Not_a_wp_implication
 type label = error_label
 type labels = error_labels
-let sort_labels (l:labels) = List.sortWith (fun (_, _, r1) (_, _, r2) -> Range.compare r1 r2) l
+let sort_labels (l:(list<(error_label * bool)>)) = List.sortWith (fun ((_, _, r1), _) ((_, _, r2), _) -> Range.compare r1 r2) l
 let remove_dups (l:labels) = Util.remove_dups (fun (_, m1, r1) (_, m2, r2) -> r1=r2 && m1=m2) l
 type msg = string * Range.range
 type ranges = list<(option<string> * Range.range)>
@@ -222,60 +222,50 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
       -- potential_errors are the labels in the initial counterexample model
  *)
-let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*bool)> * int)) : labels = 
-    let ctr = Util.mk_ref 0 in
+let detail_errors env 
+                 (all_labels:labels) 
+                 (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*bool)> * int)) 
+    : error_labels =
+
+    let print_banner () = 
+        Util.print3_error
+            "Detailed error report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n" 
+                (Range.string_of_range (TypeChecker.Env.get_range env))
+                (Util.string_of_int 5)
+                (Util.string_of_int (List.length all_labels))
+    in
+
+    let print_result ((_, msg, r), success) =
+        if success
+        then Util.print1_error "OK: proof obligation at %s was proven\n" (Range.string_of_range r)
+        else TypeChecker.Errors.report r msg
+    in
+
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
-        incr ctr;
-        Term.Echo ("DETAILING ERRORS" ^ (string_of_int !ctr)) ::
-        (labs |> List.map (fun (l, _, _) -> Term.Assume(mkEq(mkFreeV l, mkTrue), Some "Disabling label", Some ("disable_label_"^fst l)))) in
+        (labs |> List.map (fun (l, _, _) -> 
+                 Term.Assume(mkEq(mkFreeV l, mkTrue), Some "Disabling label", Some ("disable_label_"^fst l)))) in
     let print_labs tag l = l |> List.iter (fun (l, _, _) -> Util.print2 "%s : %s; " tag (fst l)) in
-    //l1 - l2: difference of label lists
-    let minus l1 l2 = 
-        l1 |> List.filter (fun ((x, _), _, _) ->
-        not (l2 |> Util.for_some (fun ((y, _), _, _) -> x=y))) in
 
     //check all active labels linearly and classify as eliminated/error
     let rec linear_check eliminated errors active = 
         match active with 
-            | [] -> let labs = errors |> sort_labels in
-//                    print_labs "Localized errors: " labs;
-                    labs
+            | [] -> 
+              let results = 
+                List.map (fun x -> x, true) eliminated
+                @ List.map (fun x -> x, false) errors in
+              sort_labels results
+
             | hd::tl -> 
               let result, _ = askZ3 (elim <| (eliminated @ errors @ tl)) in //hd is the only thing to prove
               if Util.is_left result //hd is provable
               then linear_check (hd::eliminated) errors tl
               else linear_check eliminated (hd::errors) tl in
 
-    //bisect active labels and classify as eliminated/potential_error
-    let rec bisect (eliminated:labels) (potential_errors:labels) (active:labels) =
-        match active with
-            | [] -> (eliminated, potential_errors)
-            | _ -> 
-              let pfx, sfx = match active with 
-                | [_] -> active, []
-                | _ -> Util.first_N (List.length active / 2) active in
-              let result, _ = askZ3 (elim (eliminated @ potential_errors @ sfx)) in //focus on the goals in pfx, only
-              begin match result with 
-              | Inl _ -> //good; everything in the pfx is provable 
-                bisect (eliminated@pfx) potential_errors sfx
-              | Inr ([], timeout) ->
-                //didn't prove it, but didn't get back a useful error report either
-                //all of them may be errors
-                bisect eliminated (potential_errors@pfx) sfx
-              | Inr (pfx_subset, timeout) -> 
-                //looks like something in pfx_subset may be to blame 
-                let potential_errors = potential_errors@pfx_subset in
-                let pfx_active = minus pfx pfx_subset in //but we can't yet eliminate pfx_active
-                bisect eliminated potential_errors (pfx_active@sfx)  
-              end
-    in
+    print_banner ();
+    Options.set_option "z3timeout" (Options.Int 5);
+    let res = linear_check [] [] all_labels in
+    res |> List.iter print_result;
+    []
+//    let dummy, _, _ = all_labels |> List.hd in
+//    [(dummy, "Detailed errors provided", TypeChecker.Env.get_range env)]
 
-    //bisect until fixed point; then do a linear scan on the potential errors
-    let rec until_fixpoint eliminated potential_errors active = 
-        let eliminated', potential_errors = bisect eliminated potential_errors active in
-        if Util.physical_equality eliminated eliminated' //converged
-        then linear_check eliminated [] potential_errors
-        else until_fixpoint eliminated' [] potential_errors in
-
-    let active = minus all_labels potential_errors in
-    until_fixpoint [] potential_errors active

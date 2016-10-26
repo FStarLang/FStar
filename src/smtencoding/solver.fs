@@ -195,23 +195,19 @@ let ask_and_report_errors env all_labels prefix query suffix =
                         let res = Util.mk_ref None in
                         Z3.ask None all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
                         Option.get (!res) in
-                     detail_errors all_labels (fst errs) ask_z3, false
-                else errs in
-
-            let errs = 
-                match errs with
-                | [], true -> [(("", Term_sort), "Timeout: Unknown assertion failed", Range.dummyRange)], true
-                | [], false -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)], false
-                | _ -> errs in
+                     detail_errors env all_labels ask_z3, false
+                else match errs with
+                     | [], true -> [(("", Term_sort), "Timeout: Unknown assertion failed", Range.dummyRange)], true
+                     | [], false -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)], false
+                     | _ -> errs in
             record_hint None;
             if Options.print_fuels()
             then Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
                     (Range.string_of_range (Env.get_range env))
                     (Options.max_fuel()  |> Util.string_of_int)
                     (Options.max_ifuel() |> Util.string_of_int);
-            Errors.add_errors env (fst errs |> List.map (fun (_, x, y) -> x, y));
-            if Options.detail_errors()
-            then raise (FStar.Syntax.Syntax.Err("Detailed error report follows\n")) in
+            Errors.add_errors env (fst errs |> List.map (fun (_, x, y) -> x, y)) 
+        in
 
         let use_errors (errs:error_labels * bool) (result:z3_result) : z3_result = 
             match errs, result with 
