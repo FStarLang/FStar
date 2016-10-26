@@ -82,32 +82,7 @@
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0
     ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.isCarried_",
-      1,
-      0,
-      2,
-      [
-        "@query", "b2t_def", "data_elim_FStar.UInt64.Mk",
-        "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",
-        "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
-        "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt64.n", "equation_FStar.UInt64.t",
-        "equation_FStar.UInt64.v", "equation_Prims.pos",
-        "fuel_guarded_inversion_FStar.UInt64.t_", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_Division", "primitive_Prims.op_LessThanOrEqual",
-        "proj_equation_FStar.UInt64.Mk_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_033585b16f9282fb8c7c71161354496f",
-        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0
-    ],
+    null,
     [
       "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.isCarried_",
       2,
