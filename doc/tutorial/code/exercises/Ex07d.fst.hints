@@ -386,10 +386,9 @@
       ],
       0
     ],
-    [ "Ex07d.equal", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07d.equal",
-      2,
+      1,
       2,
       1,
       [
@@ -398,10 +397,9 @@
       ],
       0
     ],
-    [ "Ex07d.equalE", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07d.equalE",
-      2,
+      1,
       2,
       1,
       [
@@ -410,10 +408,9 @@
       ],
       0
     ],
-    [ "Ex07d.context_invariance", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07d.context_invariance",
-      2,
+      1,
       2,
       1,
       [
@@ -423,13 +420,12 @@
         "constructor_distinct_Ex07d.EAbs", "constructor_distinct_Ex07d.EApp",
         "constructor_distinct_Ex07d.EIf", "constructor_distinct_Ex07d.TBool",
         "constructor_distinct_Prims.Mktuple2",
-        "constructor_distinct_Prims.Mktuple3",
         "constructor_distinct_Prims.None",
         "constructor_distinct_Prims.option",
         "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
-        "data_elim_Ex07d.EVar", "disc_equation_Ex07d.EAbs",
-        "disc_equation_Ex07d.EApp", "disc_equation_Ex07d.EIf",
-        "disc_equation_Prims.Some", "equality_tok_Ex07d.TBool@tok",
+        "data_elim_Ex07d.EVar", "data_elim_Prims.Some",
+        "disc_equation_Ex07d.EAbs", "disc_equation_Ex07d.EApp",
+        "disc_equation_Ex07d.EIf", "equality_tok_Ex07d.TBool@tok",
         "equation_Ex07d.equalE", "equation_Ex07d.extend",
         "equation_with_fuel_Ex07d.appears_free_in.fuel_instrumented",
         "equation_with_fuel_Ex07d.typing.fuel_instrumented",
@@ -441,7 +437,6 @@
         "fuel_irrelevance_Ex07d.typing.fuel_instrumented", "int_inversion",
         "int_typing",
         "interpretation_Tm_abs_419a0019d99148f1b18160949ce1b2bb",
-        "lemma_Ex07d.typable_empty_closed",
         "pretyping_0cffc68c411d6405f301f9f7bc8e1f6c",
         "pretyping_779086306c29597e3dd1127d16405da1",
         "pretyping_ae567c2fb75be05905677af440075565",
@@ -470,10 +465,9 @@
       ],
       0
     ],
-    [ "Ex07d.typing_extensional", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07d.typing_extensional",
-      2,
+      1,
       2,
       1,
       [ "@query", "equation_Ex07d.equal", "equation_Ex07d.equalE" ],
@@ -494,7 +488,7 @@
       "Ex07d.substitution_preserves_typing",
       2,
       2,
-      2,
+      1,
       [
         "@query", "binder_x_14e1a8d169fe59cf4729c9ac1194ea49_1",
         "binder_x_14e1a8d169fe59cf4729c9ac1194ea49_2",
@@ -505,7 +499,7 @@
         "constructor_distinct_Ex07d.EIf", "constructor_distinct_Ex07d.ETrue",
         "constructor_distinct_Ex07d.EVar",
         "constructor_distinct_Ex07d.TBool",
-        "constructor_distinct_Prims.None",
+        "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
         "constructor_distinct_Prims.option",
         "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
         "data_elim_Prims.Some", "disc_equation_Ex07d.EAbs",
@@ -559,7 +553,6 @@
         "typing_Ex07d.appears_free_in", "typing_Ex07d.subst",
         "typing_Ex07d.typing",
         "typing_Tm_abs_419a0019d99148f1b18160949ce1b2bb",
-        "typing_tok_Ex07d.EFalse@tok", "typing_tok_Ex07d.ETrue@tok",
         "typing_tok_Ex07d.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0
@@ -665,10 +658,9 @@
       ],
       0
     ],
-    [ "Ex07d.typed_step", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07d.typed_step",
-      3,
+      2,
       2,
       1,
       [
@@ -688,7 +680,6 @@
         "assumption_Prims.option_haseq", "kinding_Ex07d.ty@tok"
       ],
       0
-    ],
-    [ "Ex07d.eval", 2, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

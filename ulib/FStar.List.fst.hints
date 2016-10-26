@@ -214,7 +214,6 @@
       0
     ],
     [ "FStar.List.zip", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.List.zip", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.List.sortWith",
       1,

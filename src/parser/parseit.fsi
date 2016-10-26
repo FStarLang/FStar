@@ -19,5 +19,13 @@ open FStar.Parser
 open FStar.Util
 open FStar
 
-val parse: either<string,string> -> either<AST.inputFragment, (string * Range.range)>
+type filename = string
+
+type input_frag = {
+    frag_text:string;
+    frag_line:int;
+    frag_col:int
+}   
+
+val parse: either<filename, input_frag> -> either<AST.inputFragment, (string * Range.range)>
 

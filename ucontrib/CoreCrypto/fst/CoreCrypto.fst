@@ -135,8 +135,8 @@ assume val digest_create : hash_alg -> hash_ctx
 assume val digest_update : hash_ctx -> bytes -> unit 
 assume val digest_final : hash_ctx -> bytes  
 
-assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> Tot bytes
-assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> Tot bytes
+assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> EXT bytes
+assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> EXT bytes
 
 assume new type cipher_stream : Type0
 assume val stream_encryptor : stream_cipher -> bytes -> EXT cipher_stream
@@ -146,20 +146,19 @@ assume val stream_fini : cipher_stream -> EXT unit
 
 assume val random : l:nat -> EXT (lbytes l)
 
-assume val rsa_gen_key : int -> EXT rsa_key
+assume val rsa_gen_key : int -> EXT (k:rsa_key{is_Some k.rsa_prv_exp})
 assume val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> EXT bytes
-assume val rsa_decrypt : rsa_key -> rsa_padding -> bytes -> Tot (option bytes)
-assume val rsa_sign : option hash_alg -> rsa_key -> bytes -> EXT bytes
-assume val rsa_verify : option hash_alg -> rsa_key -> bytes -> bytes -> Tot bool
+assume val rsa_decrypt : k:rsa_key{is_Some k.rsa_prv_exp} -> rsa_padding -> bytes -> EXT (option bytes)
+assume val rsa_sign : option hash_alg -> k:rsa_key{is_Some k.rsa_prv_exp} -> bytes -> EXT bytes
+assume val rsa_verify : option hash_alg -> rsa_key -> bytes -> bytes -> EXT bool
 
-assume val dsa_gen_key : int -> EXT dsa_key
-assume val dsa_sign : option hash_alg -> dsa_key -> bytes -> EXT bytes
+assume val dsa_gen_key : int -> EXT (k:dsa_key{is_Some k.dsa_private})
+assume val dsa_sign : option hash_alg -> k:dsa_key{is_Some k.dsa_private} -> bytes -> EXT bytes
 assume val dsa_verify : option hash_alg -> dsa_key -> bytes -> bytes -> Tot bool
 
 assume val dh_gen_params : int -> EXT dh_params
-assume val dh_gen_key : p:dh_params
-  -> Tot (k:dh_key{k.dh_params = p /\ length k.dh_public <= length p.dh_p})
-assume val dh_agreement : dh_key -> bytes -> Tot bytes
+assume val dh_gen_key : p:dh_params -> EXT (k:dh_key{is_Some k.dh_private /\ k.dh_params = p /\ length k.dh_public <= length p.dh_p})
+assume val dh_agreement : k:dh_key{is_Some k.dh_private} -> bytes -> EXT bytes
 
 (* type ec_prime = { ecp_prime : string; ecp_order : string; ecp_a : string; ecp_b : string; ecp_gx : string; ecp_gy : string; ecp_bytelen : int; ecp_id : bytes; } *)
 
@@ -192,12 +191,12 @@ type ec_key = {
 }
 
 assume val ec_is_on_curve: ec_params -> ec_point -> Tot bool
-assume val ecdh_agreement: ec_key -> ec_point -> Tot bytes
+assume val ecdh_agreement: k:ec_key{is_Some k.ec_priv} -> ec_point -> EXT bytes
 
-assume val ecdsa_sign: option hash_alg -> ec_key -> bytes -> EXT bytes
-assume val ecdsa_verify: option hash_alg -> ec_key -> bytes -> bytes -> Tot bool
+assume val ecdsa_sign: option hash_alg -> k:ec_key{is_Some k.ec_priv} -> bytes -> EXT bytes
+assume val ecdsa_verify: option hash_alg -> ec_key -> bytes -> bytes -> EXT bool
 assume val ec_gen_key: p:ec_params
-  -> Tot (k:ec_key{k.ec_params = p /\
+  -> EXT (k:ec_key{is_Some k.ec_priv /\ k.ec_params = p /\
                   length k.ec_point.ecx = ec_bytelen k.ec_params.curve /\
                   length k.ec_point.ecy = ec_bytelen k.ec_params.curve})
 
@@ -207,9 +206,17 @@ type key =
   | KeyDSA of dsa_key
   | KeyECDSA of ec_key
 
+// If we are careless we can cause openssl segfaults when signing or encrypting
+// with keys that are missing the "private" field.
+// The only has_priv keys are the ones loaded with load_key and or generated with gen_key
+let has_priv : key -> Type0 = function
+  | KeyRSA k -> is_Some k.rsa_prv_exp
+  | KeyDSA k -> is_Some k.dsa_private
+  | KeyECDSA k -> is_Some k.ec_priv
+
 assume val validate_chain: der_list:list bytes -> for_signing:bool -> hostname:option string -> ca_file:string -> Tot bool
 assume val get_key_from_cert: bytes -> Tot (option key)
-assume val hash_and_sign: key -> hash_alg -> bytes -> Tot bytes
+assume val hash_and_sign: k:key{has_priv k} -> hash_alg -> bytes -> Tot bytes
 assume val verify_signature: key -> hash_alg -> tbs:bytes -> sigv:bytes -> Tot bool
 assume val load_chain: pemfile:string -> Tot (option (list bytes))
-assume val load_key: keyfile:string -> Tot (option key)
+assume val load_key: keyfile:string -> Tot (option (k:key{has_priv k}))

@@ -18,8 +18,7 @@
       ],
       0
     ],
-    [ "Plain.repr", 2, 0, 1, [ "@query" ], 0 ],
-    [ "Plain.repr", 3, 0, 1, [ "@query", "equation_Plain.as_bytes" ], 0 ],
+    [ "Plain.repr", 2, 0, 1, [ "@query", "equation_Plain.as_bytes" ], 0 ],
     [
       "Plain.make",
       1,
@@ -37,8 +36,7 @@
       ],
       0
     ],
-    [ "Plain.make", 2, 0, 1, [ "@query" ], 0 ],
-    [ "Plain.make", 3, 0, 1, [ "@query", "equation_Plain.as_bytes" ], 0 ],
+    [ "Plain.make", 2, 0, 1, [ "@query", "equation_Plain.as_bytes" ], 0 ],
     [
       "Plain.slice",
       1,
@@ -107,10 +105,9 @@
       ],
       0
     ],
-    [ "Plain.as_buffer_injective", 1, 0, 1, [ "@query" ], 0 ],
     [
       "Plain.as_buffer_injective",
-      2,
+      1,
       0,
       1,
       [
@@ -119,7 +116,6 @@
       ],
       0
     ],
-    [ "Plain.live", 1, 0, 1, [ "@query" ], 0 ],
     [
       "Plain.sel_plain",
       1,
@@ -161,18 +157,6 @@
     [
       "Plain.bufferRepr",
       1,
-      0,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [ "Plain.bufferRepr", 2, 0, 1, [ "@query" ], 0 ],
-    [
-      "Plain.bufferRepr",
-      3,
       0,
       1,
       [ "@query", "equation_Plain.as_buffer" ],

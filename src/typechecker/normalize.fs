@@ -486,7 +486,7 @@ let reduce_primops steps tm =
             | Some (_, op) ->
               begin match (SS.compress a1).n with
                 | Tm_constant (Const.Const_string(b, _)) ->
-                    op (Bytes.utf8_bytes_as_string b)
+                    op (Bytes.unicode_bytes_as_string b)
                 | _ -> tm
               end
             end
@@ -569,7 +569,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_app({n=Tm_fvar fv}, [(tm, _)])   //User-requested full normalization on tm
             when S.fv_eq_lid fv Syntax.Const.normalize
               && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
-            let s = [Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
+            let s = [Reify; Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
             let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
             let stack' = Debug t :: Steps (cfg.steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
@@ -651,7 +651,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                            
             if not should_delta
             then rebuild cfg env stack t
-            else begin match Env.lookup_definition cfg.delta_level cfg.tcenv f.fv_name.v with 
+            else let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in //preserve the range info on the returned def
+                 begin match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with 
                     | None -> rebuild cfg env stack t
                     | Some (us, t) ->
                       log cfg (fun () -> Util.print2 ">>> Unfolded %s to %s\n" 

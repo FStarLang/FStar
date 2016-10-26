@@ -49,10 +49,9 @@
       ],
       0
     ],
-    [ "Ex05a.append_assoc", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex05a.append_assoc",
-      3,
+      2,
       2,
       1,
       [
@@ -80,7 +79,6 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
-    ],
-    [ "Ex05a.rev_is_ok", 2, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

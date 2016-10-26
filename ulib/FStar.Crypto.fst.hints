@@ -1,7 +1,6 @@
 [
   "zé\u0017©ˆ\bXK¥è\u000eÑÊ}!˝",
   [
-    [ "FStar.Crypto.nbytes", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Crypto.tag",
       1,
@@ -65,7 +64,6 @@
       ],
       0
     ],
-    [ "FStar.Crypto.aes_128_encrypt", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Crypto.aes_128_cbc_encrypt",
       1,
@@ -74,7 +72,6 @@
       [ "@query", "assumption_FStar.Bytes.HasEq_bytes" ],
       0
     ],
-    [ "FStar.Crypto.aes_128_cbc_encrypt", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Crypto.rsa_pkey",
       1,
