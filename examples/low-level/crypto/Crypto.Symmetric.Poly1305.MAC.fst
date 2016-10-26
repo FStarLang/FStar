@@ -23,7 +23,7 @@ module HS = FStar.HyperStack
 type alg = Flag.mac_alg
 let alg_of_id = Flag.cipher_of_id
 
-let norm = Crypto.Symmetric.Poly1305.Bigint.norm
+let norm h b = Crypto.Symmetric.Poly1305.Bigint.norm h b
 
  
 // TOWARDS AGILITY 

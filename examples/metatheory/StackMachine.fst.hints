@@ -85,7 +85,19 @@
       ],
       0
     ],
-    [ "StackMachine.eq_nat", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.eq_nat",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.eq_nat",
       2,
@@ -97,7 +109,19 @@
       ],
       0
     ],
-    [ "StackMachine.eq_bool", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.eq_bool",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.eq_bool",
       2,
@@ -112,7 +136,8 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.Plus",
+        "@query", "constructor_distinct_StackMachine.Times",
+        "disc_equation_StackMachine.Plus",
         "disc_equation_StackMachine.Times",
         "fuel_guarded_inversion_StackMachine.binop"
       ],
@@ -127,10 +152,13 @@
         "@query", "binder_x_2a319081b764dd27a6651686e4e88bbc_0",
         "disc_equation_StackMachine.Binop",
         "disc_equation_StackMachine.Const",
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
         "fuel_guarded_inversion_StackMachine.exp",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_StackMachine.Binop__1",
         "projection_inverse_StackMachine.Binop__2",
-        "subterm_ordering_StackMachine.Binop"
+        "subterm_ordering_StackMachine.Binop", "unit_typing"
       ],
       0
     ],
@@ -178,7 +206,10 @@
       [
         "@query", "disc_equation_StackMachine.IBinop",
         "disc_equation_StackMachine.IConst",
-        "fuel_guarded_inversion_StackMachine.instr"
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
+        "fuel_guarded_inversion_StackMachine.instr",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
       ],
       0
     ],
@@ -190,13 +221,19 @@
       [
         "@query", "binder_x_ce0b7b036f4e4c7e19ed25969fddd4c5_0",
         "binder_x_dcdba5a2d1eb2df70eb1f1e41b6fb908_1", "bool_inversion",
-        "bool_typing", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "bool_typing", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
         "equation_StackMachine.instrDenote", "equation_StackMachine.prog",
         "equation_StackMachine.stack", "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_FStar.List.Tot.test_sort",
         "function_token_typing_StackMachine.stack",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "subterm_ordering_Prims.Cons", "typing_StackMachine.instrDenote"
+        "lemma_Prims.invertOption",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons",
+        "typing_StackMachine.instrDenote", "unit_typing"
       ],
       0
     ],
@@ -209,12 +246,29 @@
         "@query", "binder_x_2a319081b764dd27a6651686e4e88bbc_0",
         "disc_equation_StackMachine.Binop",
         "disc_equation_StackMachine.Const",
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
         "fuel_guarded_inversion_StackMachine.exp",
-        "subterm_ordering_StackMachine.Binop"
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "projection_inverse_StackMachine.Binop__1",
+        "projection_inverse_StackMachine.Binop__2",
+        "subterm_ordering_StackMachine.Binop", "unit_typing"
       ],
       0
     ],
-    [ "StackMachine.app_assoc_reverse", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.app_assoc_reverse",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.app_assoc_reverse",
       2,
@@ -222,18 +276,24 @@
       1,
       [
         "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "binder_x_64bbe2e649c5e2dff004f077d943400a_2",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "constructor_distinct_Prims.list", "constructor_distinct_Prims.unit",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_FStar.List.Tot.op_At", "equation_FStar.List.Tot.test_sort",
         "equation_Prims._assert",
         "equation_with_fuel_FStar.List.Tot.append.fuel_instrumented",
         "fuel_correspondence_FStar.List.Tot.append.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
         "fuel_irrelevance_FStar.List.Tot.append.fuel_instrumented",
         "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.op_At",
+        "unit_typing"
       ],
       0
     ],
@@ -252,7 +312,19 @@
       ],
       0
     ],
-    [ "StackMachine.compile_correct'", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.compile_correct'",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.compile_correct'",
       3,
@@ -262,12 +334,12 @@
         "@query", "binder_x_2a319081b764dd27a6651686e4e88bbc_0",
         "binder_x_ce0b7b036f4e4c7e19ed25969fddd4c5_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Prims.Some",
+        "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
         "constructor_distinct_StackMachine.Binop",
         "constructor_distinct_StackMachine.Const",
         "constructor_distinct_StackMachine.IBinop",
         "constructor_distinct_StackMachine.IConst",
-        "disc_equation_StackMachine.Binop",
+        "constructor_distinct_Tm_unit", "disc_equation_StackMachine.Binop",
         "disc_equation_StackMachine.Const", "equation_FStar.List.Tot.op_At",
         "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
         "equation_Prims.nat", "equation_StackMachine.instrDenote",
@@ -280,6 +352,7 @@
         "fuel_correspondence_StackMachine.compile.fuel_instrumented",
         "fuel_correspondence_StackMachine.expDenote.fuel_instrumented",
         "fuel_correspondence_StackMachine.progDenote.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.option",
         "fuel_guarded_inversion_StackMachine.exp",
         "fuel_guarded_inversion_StackMachine.instr",
         "fuel_irrelevance_FStar.List.Tot.append.fuel_instrumented",
@@ -289,6 +362,7 @@
         "function_token_typing_FStar.List.Tot.test_sort",
         "kinding_StackMachine.instr@tok",
         "lemma_StackMachine.app_assoc_reverse",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
@@ -296,11 +370,13 @@
         "projection_inverse_StackMachine.Binop__0",
         "projection_inverse_StackMachine.Binop__1",
         "projection_inverse_StackMachine.Binop__2",
+        "projection_inverse_StackMachine.Const__0",
         "projection_inverse_StackMachine.IBinop__0",
         "projection_inverse_StackMachine.IConst__0",
         "subterm_ordering_StackMachine.Binop",
         "token_correspondence_StackMachine.compile.fuel_instrumented",
-        "typing_FStar.List.Tot.op_At"
+        "typing_FStar.List.Tot.op_At", "typing_StackMachine.compile",
+        "typing_StackMachine.progDenote", "unit_typing"
       ],
       0
     ],
@@ -319,7 +395,19 @@
       ],
       0
     ],
-    [ "StackMachine.app_nil_end", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.app_nil_end",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.app_nil_end",
       2,
@@ -336,9 +424,10 @@
         "fuel_guarded_inversion_Prims.list",
         "fuel_irrelevance_FStar.List.Tot.append.fuel_instrumented",
         "function_token_typing_FStar.List.Tot.test_sort",
-        "projection_inverse_Prims.Cons_a",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons", "unit_typing"
       ],
       0
     ],
@@ -349,11 +438,15 @@
       1,
       [
         "@query", "constructor_distinct_Prims.Nil",
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
         "equation_StackMachine.prog",
         "equation_with_fuel_StackMachine.progDenote.fuel_instrumented",
         "fuel_correspondence_StackMachine.progDenote.fuel_instrumented",
+        "function_token_typing_FStar.List.Tot.test_sort",
         "kinding_StackMachine.instr@tok", "lemma_StackMachine.app_nil_end",
-        "projection_inverse_Prims.Nil_a", "typing_StackMachine.compile"
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "projection_inverse_Prims.Nil_a", "typing_StackMachine.compile",
+        "unit_typing"
       ],
       0
     ],
@@ -395,7 +488,19 @@
       [ "@query", "assumption_StackMachine.typ_haseq" ],
       0
     ],
-    [ "StackMachine.TEq.t", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TEq.t",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TEq.t",
       2,
@@ -421,7 +526,19 @@
       ],
       0
     ],
-    [ "StackMachine.TNConst._0", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TNConst._0",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TNConst._0",
       2,
@@ -434,7 +551,19 @@
       ],
       0
     ],
-    [ "StackMachine.TBConst._0", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TBConst._0",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TBConst._0",
       2,
@@ -447,7 +576,19 @@
       ],
       0
     ],
-    [ "StackMachine.TBinop.t1", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TBinop.t1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TBinop.t1",
       2,
@@ -460,7 +601,19 @@
       ],
       0
     ],
-    [ "StackMachine.TBinop.t2", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TBinop.t2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TBinop.t2",
       2,
@@ -473,7 +626,19 @@
       ],
       0
     ],
-    [ "StackMachine.TBinop.t", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TBinop.t",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TBinop.t",
       2,
@@ -486,7 +651,19 @@
       ],
       0
     ],
-    [ "StackMachine.TBinop._3", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TBinop._3",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TBinop._3",
       2,
@@ -505,7 +682,19 @@
       ],
       0
     ],
-    [ "StackMachine.TBinop._4", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TBinop._4",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TBinop._4",
       2,
@@ -520,7 +709,19 @@
       ],
       0
     ],
-    [ "StackMachine.TBinop._5", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TBinop._5",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TBinop._5",
       2,
@@ -561,23 +762,42 @@
         "constructor_distinct_StackMachine.TLt",
         "constructor_distinct_StackMachine.TPlus",
         "constructor_distinct_StackMachine.TTimes",
-        "data_elim_StackMachine.TEq", "disc_equation_StackMachine.Bool",
-        "disc_equation_StackMachine.Nat", "disc_equation_StackMachine.TEq",
-        "disc_equation_StackMachine.TLt", "disc_equation_StackMachine.TPlus",
+        "disc_equation_StackMachine.Bool", "disc_equation_StackMachine.Nat",
+        "disc_equation_StackMachine.TEq", "disc_equation_StackMachine.TLt",
+        "disc_equation_StackMachine.TPlus",
         "disc_equation_StackMachine.TTimes",
         "equality_tok_StackMachine.Bool@tok",
         "equality_tok_StackMachine.Nat@tok",
         "equality_tok_StackMachine.TPlus@tok",
         "equality_tok_StackMachine.TTimes@tok",
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
         "equation_StackMachine.typeDenote",
         "fuel_guarded_inversion_StackMachine.tbinop",
         "fuel_guarded_inversion_StackMachine.typ",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_82296f4018d086bf2f117419255cd432",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "proj_equation_StackMachine.TEq_t",
-        "projection_inverse_StackMachine.TEq_t"
+        "projection_inverse_StackMachine.TEq_t",
+        "projection_inverse_StackMachine.tbinop@x2",
+        "typing_tok_StackMachine.TPlus@tok",
+        "typing_tok_StackMachine.TTimes@tok", "unit_typing"
       ],
       0
     ],
-    [ "StackMachine.texpDenote", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.texpDenote",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.texpDenote",
       2,
@@ -588,31 +808,69 @@
         "binder_x_e9914cc59dbecc2ac85148e3e6b7dd9a_1",
         "constructor_distinct_StackMachine.Bool",
         "constructor_distinct_StackMachine.Nat",
-        "constructor_distinct_StackMachine.TBinop",
-        "data_elim_StackMachine.TBConst", "data_elim_StackMachine.TBinop",
-        "data_elim_StackMachine.TNConst",
+        "constructor_distinct_StackMachine.TBConst",
+        "data_elim_StackMachine.TBinop", "data_elim_StackMachine.TNConst",
         "disc_equation_StackMachine.TBConst",
         "disc_equation_StackMachine.TBinop",
         "disc_equation_StackMachine.TNConst",
         "equality_tok_Prims.LexTop@tok",
         "equality_tok_StackMachine.Bool@tok",
         "equality_tok_StackMachine.Nat@tok",
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
         "equation_StackMachine.typeDenote",
         "fuel_guarded_inversion_StackMachine.texp",
         "fuel_guarded_inversion_StackMachine.typ",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_StackMachine.TBinop__3",
         "projection_inverse_StackMachine.TBinop__4",
         "projection_inverse_StackMachine.TBinop__5",
         "projection_inverse_StackMachine.TBinop_t",
         "projection_inverse_StackMachine.TBinop_t1",
         "projection_inverse_StackMachine.TBinop_t2",
-        "subterm_ordering_StackMachine.TBinop"
+        "subterm_ordering_StackMachine.TBinop", "unit_typing"
       ],
       0
     ],
-    [ "StackMachine.tinstr", 1, 2, 1, [ "@query" ], 0 ],
-    [ "StackMachine.tinstr", 2, 2, 1, [ "@query" ], 0 ],
-    [ "StackMachine.tinstr", 3, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.tinstr",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "StackMachine.tinstr",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "StackMachine.tinstr",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.tinstr",
       4,
@@ -629,7 +887,19 @@
       ],
       0
     ],
-    [ "StackMachine.TiNConst.s", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TiNConst.s",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TiNConst.s",
       2,
@@ -642,7 +912,19 @@
       ],
       0
     ],
-    [ "StackMachine.TiNConst._1", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TiNConst._1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TiNConst._1",
       2,
@@ -655,7 +937,19 @@
       ],
       0
     ],
-    [ "StackMachine.TiBConst.s", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TiBConst.s",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TiBConst.s",
       2,
@@ -668,7 +962,19 @@
       ],
       0
     ],
-    [ "StackMachine.TiBConst._1", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TiBConst._1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TiBConst._1",
       2,
@@ -681,7 +987,19 @@
       ],
       0
     ],
-    [ "StackMachine.TiBinop.arg1", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TiBinop.arg1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TiBinop.arg1",
       2,
@@ -694,7 +1012,19 @@
       ],
       0
     ],
-    [ "StackMachine.TiBinop.arg2", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TiBinop.arg2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TiBinop.arg2",
       2,
@@ -707,7 +1037,19 @@
       ],
       0
     ],
-    [ "StackMachine.TiBinop.res", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TiBinop.res",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TiBinop.res",
       2,
@@ -720,7 +1062,19 @@
       ],
       0
     ],
-    [ "StackMachine.TiBinop.s", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TiBinop.s",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TiBinop.s",
       2,
@@ -733,7 +1087,19 @@
       ],
       0
     ],
-    [ "StackMachine.TiBinop._4", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TiBinop._4",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TiBinop._4",
       2,
@@ -765,7 +1131,19 @@
       ],
       0
     ],
-    [ "StackMachine.TNil.s", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TNil.s",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TNil.s",
       2,
@@ -778,7 +1156,19 @@
       ],
       0
     ],
-    [ "StackMachine.TCons.s1", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TCons.s1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TCons.s1",
       2,
@@ -791,7 +1181,19 @@
       ],
       0
     ],
-    [ "StackMachine.TCons.s2", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TCons.s2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TCons.s2",
       2,
@@ -804,7 +1206,19 @@
       ],
       0
     ],
-    [ "StackMachine.TCons.s3", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TCons.s3",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TCons.s3",
       2,
@@ -817,7 +1231,19 @@
       ],
       0
     ],
-    [ "StackMachine.TCons._3", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TCons._3",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TCons._3",
       2,
@@ -834,7 +1260,19 @@
       ],
       0
     ],
-    [ "StackMachine.TCons._4", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.TCons._4",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.TCons._4",
       2,
@@ -859,8 +1297,9 @@
       [
         "@query", "binder_x_cf343fd28b20efbaca6407bd0be2d5d9_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims._assert", "equation_StackMachine.tstack",
-        "fuel_guarded_inversion_Prims.list",
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
+        "equation_StackMachine.tstack", "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_FStar.List.Tot.test_sort",
         "pretyping_f8666440faa91836cc5a13998af863fc",
         "subterm_ordering_Prims.Cons", "unit_typing"
       ],
@@ -873,35 +1312,55 @@
       1,
       [
         "@query", "binder_x_157fa1f06d1d5a6c95e32afa7f793892_3",
-        "binder_x_cf343fd28b20efbaca6407bd0be2d5d9_1",
         "binder_x_d201d0fe1ea4bf24386ad4ee58d738aa_2", "bool_typing",
         "constructor_distinct_Prims.Cons",
         "constructor_distinct_StackMachine.Bool",
         "constructor_distinct_StackMachine.Nat",
-        "data_elim_StackMachine.TiBConst", "data_elim_StackMachine.TiBinop",
+        "constructor_distinct_StackMachine.TiBConst",
+        "constructor_distinct_StackMachine.TiNConst",
+        "data_elim_Prims.Mktuple2", "data_elim_StackMachine.TiBinop",
         "data_elim_StackMachine.TiNConst",
         "disc_equation_StackMachine.TiBConst",
         "disc_equation_StackMachine.TiBinop",
         "disc_equation_StackMachine.TiNConst",
         "equality_tok_StackMachine.Bool@tok",
-        "equality_tok_StackMachine.Nat@tok", "equation_Prims.nat",
-        "equation_StackMachine.tstack", "equation_StackMachine.typeDenote",
+        "equality_tok_StackMachine.Nat@tok",
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
+        "equation_Prims.nat", "equation_StackMachine.typeDenote",
         "equation_with_fuel_StackMachine.vstack.fuel_instrumented",
         "fuel_correspondence_StackMachine.vstack.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
         "fuel_guarded_inversion_Prims.tuple2",
         "fuel_guarded_inversion_StackMachine.tinstr",
         "fuel_irrelevance_StackMachine.vstack.fuel_instrumented",
+        "function_token_typing_FStar.List.Tot.test_sort",
         "pretyping_f537159ed795b314b4e58c260361ae86",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
+        "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Mktuple2__b",
-        "projection_inverse_Prims.tuple2@x1"
+        "projection_inverse_StackMachine.TiBinop_arg1",
+        "projection_inverse_StackMachine.TiBinop_arg2",
+        "projection_inverse_StackMachine.TiBinop_s",
+        "projection_inverse_StackMachine.TiNConst__1",
+        "projection_inverse_StackMachine.TiNConst_s", "unit_typing"
       ],
       0
     ],
-    [ "StackMachine.tprogDenote", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.tprogDenote",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.tprogDenote",
       2,
@@ -909,19 +1368,30 @@
       1,
       [
         "@query", "binder_x_79caf56c07a51dbcb893cc9d588140fa_2",
-        "constructor_distinct_StackMachine.TCons",
         "constructor_distinct_StackMachine.TNil",
-        "disc_equation_StackMachine.TCons",
+        "data_elim_StackMachine.TCons", "disc_equation_StackMachine.TCons",
         "disc_equation_StackMachine.TNil", "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
         "fuel_guarded_inversion_StackMachine.tprog",
-        "projection_inverse_StackMachine.TCons__4",
-        "projection_inverse_StackMachine.TCons_s1",
-        "projection_inverse_StackMachine.TCons_s3",
-        "subterm_ordering_StackMachine.TCons"
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "subterm_ordering_StackMachine.TCons", "unit_typing"
       ],
       0
     ],
-    [ "StackMachine.tconcat", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.tconcat",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.tconcat",
       2,
@@ -929,15 +1399,31 @@
       1,
       [
         "@query", "binder_x_79caf56c07a51dbcb893cc9d588140fa_3",
-        "data_elim_StackMachine.TCons", "data_elim_StackMachine.TNil",
-        "disc_equation_StackMachine.TCons",
+        "data_elim_StackMachine.TNil", "disc_equation_StackMachine.TCons",
         "disc_equation_StackMachine.TNil", "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
         "fuel_guarded_inversion_StackMachine.tprog",
-        "subterm_ordering_StackMachine.TCons"
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "projection_inverse_StackMachine.TCons_s1",
+        "projection_inverse_StackMachine.TCons_s3",
+        "subterm_ordering_StackMachine.TCons", "unit_typing"
       ],
       0
     ],
-    [ "StackMachine.tcompile", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.tcompile",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.tcompile",
       2,
@@ -953,14 +1439,36 @@
         "disc_equation_StackMachine.TNConst",
         "equality_tok_Prims.LexTop@tok",
         "equality_tok_StackMachine.Bool@tok",
+        "equality_tok_StackMachine.Nat@tok",
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
         "fuel_guarded_inversion_StackMachine.tbinop",
         "fuel_guarded_inversion_StackMachine.texp",
         "fuel_guarded_inversion_StackMachine.typ",
-        "subterm_ordering_StackMachine.TBinop"
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "projection_inverse_StackMachine.TBinop__3",
+        "projection_inverse_StackMachine.TBinop__4",
+        "projection_inverse_StackMachine.TBinop__5",
+        "projection_inverse_StackMachine.TBinop_t",
+        "projection_inverse_StackMachine.TBinop_t1",
+        "projection_inverse_StackMachine.TBinop_t2",
+        "subterm_ordering_StackMachine.TBinop", "unit_typing"
       ],
       0
     ],
-    [ "StackMachine.tconcat_correct", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StackMachine.tconcat_correct",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
     [
       "StackMachine.tconcat_correct",
       2,
@@ -970,24 +1478,25 @@
         "@query", "binder_x_79caf56c07a51dbcb893cc9d588140fa_3",
         "constructor_distinct_StackMachine.TCons",
         "constructor_distinct_StackMachine.TNil",
-        "disc_equation_StackMachine.TCons",
+        "data_elim_StackMachine.TNil", "disc_equation_StackMachine.TCons",
         "disc_equation_StackMachine.TNil", "equality_tok_Prims.LexTop@tok",
         "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
         "equation_with_fuel_StackMachine.tconcat.fuel_instrumented",
         "equation_with_fuel_StackMachine.tprogDenote.fuel_instrumented",
         "fuel_correspondence_StackMachine.tconcat.fuel_instrumented",
-        "fuel_correspondence_StackMachine.tinstrDenote.fuel_instrumented",
         "fuel_correspondence_StackMachine.tprogDenote.fuel_instrumented",
         "fuel_guarded_inversion_StackMachine.tprog",
         "fuel_irrelevance_StackMachine.tconcat.fuel_instrumented",
         "fuel_irrelevance_StackMachine.tprogDenote.fuel_instrumented",
         "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_StackMachine.TCons__3",
         "projection_inverse_StackMachine.TCons__4",
         "projection_inverse_StackMachine.TCons_s1",
         "projection_inverse_StackMachine.TCons_s2",
         "projection_inverse_StackMachine.TCons_s3",
-        "subterm_ordering_StackMachine.TCons"
+        "projection_inverse_StackMachine.TNil_s",
+        "subterm_ordering_StackMachine.TCons", "unit_typing"
       ],
       0
     ],
@@ -998,12 +1507,15 @@
       1,
       [
         "@query", "constructor_distinct_Prims.Cons",
+        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
         "equation_with_fuel_StackMachine.vstack.fuel_instrumented",
         "fuel_correspondence_StackMachine.vstack.fuel_instrumented",
         "fuel_irrelevance_StackMachine.vstack.fuel_instrumented",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl"
+        "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0
     ],
@@ -1011,12 +1523,12 @@
       "StackMachine.tcompile_correct'",
       2,
       2,
-      1,
+      2,
       [
         "@query", "binder_x_7d54b3c439c13c0513a3d9fa17edc5ab_3",
         "binder_x_99009f55474bb74b46709f3fb0f7bfdf_0",
         "binder_x_cf343fd28b20efbaca6407bd0be2d5d9_2",
-        "binder_x_e9914cc59dbecc2ac85148e3e6b7dd9a_1", "bool_typing",
+        "binder_x_e9914cc59dbecc2ac85148e3e6b7dd9a_1",
         "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Mktuple2",
         "constructor_distinct_StackMachine.Bool",
@@ -1028,8 +1540,9 @@
         "constructor_distinct_StackMachine.TiBConst",
         "constructor_distinct_StackMachine.TiBinop",
         "constructor_distinct_StackMachine.TiNConst",
-        "data_elim_StackMachine.TCons", "data_elim_StackMachine.TNConst",
+        "data_elim_StackMachine.TBinop", "data_elim_StackMachine.TCons",
         "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_StackMachine.Nat@tok",
         "data_typing_intro_StackMachine.TCons@tok",
         "data_typing_intro_StackMachine.TNil@tok",
         "data_typing_intro_StackMachine.TiBinop@tok",
@@ -1054,19 +1567,23 @@
         "fuel_correspondence_StackMachine.tinstrDenote.fuel_instrumented",
         "fuel_correspondence_StackMachine.tprogDenote.fuel_instrumented",
         "fuel_correspondence_StackMachine.vstack.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
         "fuel_guarded_inversion_Prims.tuple2",
         "fuel_guarded_inversion_StackMachine.tbinop",
         "fuel_guarded_inversion_StackMachine.texp",
         "fuel_guarded_inversion_StackMachine.tprog",
         "fuel_guarded_inversion_StackMachine.typ",
         "fuel_irrelevance_StackMachine.tcompile.fuel_instrumented",
+        "fuel_irrelevance_StackMachine.tconcat.fuel_instrumented",
         "fuel_irrelevance_StackMachine.texpDenote.fuel_instrumented",
+        "fuel_irrelevance_StackMachine.tprogDenote.fuel_instrumented",
         "fuel_irrelevance_StackMachine.vstack.fuel_instrumented",
         "function_token_typing_FStar.List.Tot.test_sort",
         "function_token_typing_StackMachine.tconcat",
         "interpretation_Tm_arrow_14c5e4c92093ee444c8431e59d74ddd8",
         "kinding_StackMachine.typ@tok", "lemma_StackMachine.tconcat_correct",
-        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "pretyping_8c72ad37499c2c6419c92ec7d1109d1a",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
@@ -1074,7 +1591,6 @@
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Mktuple2__a",
         "projection_inverse_Prims.Mktuple2__b",
-        "projection_inverse_StackMachine.TBConst__0",
         "projection_inverse_StackMachine.TBinop__3",
         "projection_inverse_StackMachine.TBinop__4",
         "projection_inverse_StackMachine.TBinop__5",
@@ -1097,15 +1613,15 @@
         "projection_inverse_StackMachine.TiBinop_s",
         "projection_inverse_StackMachine.TiNConst__1",
         "projection_inverse_StackMachine.TiNConst_s",
-        "refinement_interpretation_Tm_refine_cb24c6a99c67fecadcc95f15dce40ab3",
-        "subterm_ordering_Prims.Cons", "subterm_ordering_Prims.Mktuple2",
+        "projection_inverse_StackMachine.tprog@x0",
+        "subterm_ordering_Prims.Mktuple2",
         "subterm_ordering_StackMachine.TBinop",
         "token_correspondence_StackMachine.tcompile.fuel_instrumented",
         "token_correspondence_StackMachine.tconcat",
         "typing_StackMachine.tcompile", "typing_StackMachine.tconcat",
         "typing_StackMachine.tprogDenote",
         "typing_tok_StackMachine.Bool@tok",
-        "typing_tok_StackMachine.Nat@tok", "typing_tok_StackMachine.TLt@tok"
+        "typing_tok_StackMachine.TLt@tok", "unit_typing"
       ],
       0
     ],
