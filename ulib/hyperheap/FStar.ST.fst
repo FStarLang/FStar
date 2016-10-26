@@ -30,12 +30,12 @@ effect ST (a:Type) (pre:st_pre) (post: (t -> Tot (st_post a))) =
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 (r, h1) -> True)
 sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (h:t) (p:st_post a) -> wp (fun a -> p a h)
+  DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (h:t) (p:st_post a) -> wp (fun a -> p (a, h))
 
 
 assume val new_region: r0:rid -> ST rid
       (requires (fun m -> True))
-      (ensures (fun (m0:t) (r1:rid) (m1:t) ->
+      (ensures (fun (m0:t) ((r1,m1):rid*t) ->
                            extends r1 r0
                         /\ fresh_region r1 m0 m1
 			/\ color r1 = color r0
@@ -43,13 +43,13 @@ assume val new_region: r0:rid -> ST rid
 
 assume val new_colored_region: r0:rid -> c:int -> ST rid
       (requires (fun m -> True))
-      (ensures (fun (m0:t) (r1:rid) (m1:t) ->
+      (ensures (fun (m0:t) ((r1,m1):rid*t) ->
                            extends r1 r0
                         /\ fresh_region r1 m0 m1
 			/\ color r1 = c
                         /\ m1==Map.upd m0 r1 Heap.emp))
 
-unfold let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
+unfold let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) ((x,m1):(rref i a) * t) =
     let region_i = Map.sel m0 i in
     not (Heap.contains region_i (as_ref x))
   /\ m1==(m0.[x]<-init)
@@ -58,7 +58,7 @@ assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
     (requires (fun m -> True))
     (ensures (ralloc_post i init))
 
-unfold let alloc_post (#a:Type) (init:a) m0 (x:ref a) m1 = 
+unfold let alloc_post (#a:Type) (init:a) m0 ((x,m1):(ref a)*t) =
    let region_i = Map.sel m0 root in
    not (Heap.contains region_i (as_ref x))
  /\ m1==(m0.[x]<-init)
@@ -67,14 +67,14 @@ assume val alloc: #a:Type -> init:a -> ST (ref a)
     (requires (fun m -> True))
     (ensures (alloc_post init))
 
-unfold let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 (_u:unit) m1 : Type = 
+unfold let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 ((_u,m1):unit*t) : Type =
   m1==(m0.[r] <- v)
 
 assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
   (requires (fun m -> True))
   (ensures (assign_post r v))
 
-unfold let deref_post (#a:Type) (#i:rid) (r:rref i a) m0 x m1 =
+unfold let deref_post (#a:Type) (#i:rid) (r:rref i a) m0 (x, m1) =
   m1==m0 /\ x==m0.[r]
 
 assume val op_Bang: #a:Type -> #i:rid -> r:rref i a -> ST a
@@ -83,10 +83,10 @@ assume val op_Bang: #a:Type -> #i:rid -> r:rref i a -> ST a
 
 assume val get: unit -> ST t
   (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m0==x /\ m1==m0 /\ map_invariant m1))
+  (ensures (fun m0 (x, m1) -> m0==x /\ m1==m0 /\ map_invariant m1))
 
 assume val recall: #a:Type -> #i:rid -> r:rref i a -> STATE unit
-   (fun 'p m0 -> Map.contains m0 i /\ Heap.contains (Map.sel m0 i) (as_ref r) ==> 'p () m0)
+   (fun m0 'p -> Map.contains m0 i /\ Heap.contains (Map.sel m0 i) (as_ref r) ==> 'p ((), m0))
 
 assume val recall_region: i:rid -> STATE unit
-   (fun 'p m0 -> Map.contains m0 i /\ map_invariant m0  ==> 'p () m0)
+   (fun m0 'p -> Map.contains m0 i /\ map_invariant m0  ==> 'p ((), m0))

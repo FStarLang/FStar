@@ -17,7 +17,7 @@ module FStar.HyperHeap
 open FStar.Map
 open FStar.Heap
 
-abstract let rid = list (int * int)
+abstract let rid : eqtype = list (int * int)
 
 let reveal (r:rid) : GTot (list (int * int)) = r
 

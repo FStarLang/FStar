@@ -4,19 +4,29 @@ open FStar.All
 open FStar.Heap
 open FStar.Relational.Relational
 
+
 type heap2 = double heap
 
+
 new_effect_for_free STATE2 = STATE_h heap2
+
+
 let st2_Pre = st_pre_h heap2
 let st2_Post (a:Type) = st_post_h heap2 a
 let st2_WP (a:Type) = st_wp_h heap2 a
+
+
 effect ST2 (a:Type) (pre:st2_Pre) (post: (heap2 -> Tot (st2_Post a))) =
     STATE2 a
       (fun (h:heap2) (p:st2_Post a) -> pre h /\ (forall a h1. pre h /\ post h (a, h1) ==> p (a, h1))) (* WP *)
+
+
 effect St2 (a:Type) = ST2 a (fun h -> True) (fun h0 (r, h1) -> True)
+
 
 sub_effect
   DIV    ~> STATE2 = (fun (a:Type) (wp:pure_wp a) (h2:heap2) (p:st2_Post a) -> wp (fun a0 -> p (a0, h2)))
+
 
 (* construct a st2_WP from 2 st_wps *)
 val comp : (a:Type) -> (b:Type) -> (wp0:st_wp a) -> (wp1:st_wp b) -> Tot (st2_WP (rel a b))
@@ -25,10 +35,12 @@ let comp a b wp0 wp1 h2 p =
       wp1 (R.r h2) (fun (y1, h1) -> p ((R y0 y1), (R h0 h1)))
       )
 
+
 //TODO: this should be conditional on the monotonicity of the wps
 assume Monotone_comp: forall a b wp1 wp2 p1 p2. (forall x h. p1 (x, h) ==> p2 (x, h))
 			==> (forall h. comp a b wp1 wp2 h p1
 			    ==> comp a b wp1 wp2 h p2)
+
 
 assume val compose2: #a0:Type -> #b0:Type -> #wp0:(a0 -> Tot (st_wp b0))
                   -> #a1:Type -> #b1:Type -> #wp1:(a1 -> Tot (st_wp b1))
@@ -38,10 +50,6 @@ assume val compose2: #a0:Type -> #b0:Type -> #wp0:(a0 -> Tot (st_wp b0))
                   -> STATE2 (rel b0 b1)
                             (comp b0 b1 (wp0 (R.l x)) (wp1 (R.r x)))
 
-
-let bidule (#a:Type) (#b:Type) (#wp: a -> Tot (st_wp b)) ($c:(x:a -> STATE b (wp x))) (x:double a) : STATE2 (rel b b) (fun _ _ -> False) =
-  let r = compose2 #a #b #wp #a #b #wp c c x assert in r
-
 (*
 (* TODO : Investigate why it does not work anymore *)
 val compose2_self : #a:Type -> #b:Type -> #wp:(a -> Tot (st_wp b))
@@ -49,9 +57,10 @@ val compose2_self : #a:Type -> #b:Type -> #wp:(a -> Tot (st_wp b))
                 -> x: double a
                 -> STATE2 (double b)
                           (comp b b (wp (R.l x)) (wp (R.r x)))
-let compose2_self #a #b #wp f x =
-  let f (x:double a): STATE2 (double b) (comp b b (wp (R.l x)) (wp (R.r x)))= compose2 #a #b #wp #a #b #wp f f x in f x
+let compose2_self #a #b #wp f x = compose2 #a #b #wp #a #b #wp f f x
 *)
+
+
 
 (* Combine two ST2 statements A and B to create a new ST2 statement C where
    the left side of C is equivalent to the left side of A and

@@ -27,18 +27,13 @@ abstract type witnessed (p:heap -> Type) = True
 type fresh(#a:Type) (#b:reln a) (x:a) h0 (r:mref a b) h1 =
   not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r x
 
-let test (h:heap) (b:reln int) (r:ref int) : Lemma (Heap.contains h r <==> contains #_ #b h r) = ()
-
-
 val alloc: #a:Type
         -> #b:reln a
         -> x:a{monotonic a b}
         -> ST (mref a b)
               (requires (fun _ -> True))
               (fun h0 (r, h1) -> fresh x h0 r h1)
-let alloc #a #b x = let h0 = ST.get () in let r = ST.alloc x in let h1 = ST.get () in
-assert (  not(Heap.contains h0 r) /\ Heap.contains h1 r /\ h1==Heap.upd h0 r x ) ;
-assert (fresh #_ #b x h0 r h1)  ; admit () ; r
+let alloc #a #b x = let r = ST.alloc x in assert (r === as_ref #a #b r) ; r
 
 
 val read: #a:Type
@@ -75,9 +70,9 @@ assume val recall_token: #a:Type
                        (requires (fun _ ->  token m p))
                        (ensures (fun h0 (_, h1) -> h0==h1 /\ p (sel h1 m)))
 
-let stable_on_heap (#a:Type) (#b:reln a) (r:mref a b) (p:(heap -> Type)) = 
+let stable_on_heap (#a:Type) (#b:reln a) (r:mref a b) (p:(heap -> Type)) : GTot Type0 =
   forall h0 h1. p h0 /\ b (sel h0 r) (sel h1 r) ==> p h1
-  
+
 assume val recall: p:(heap -> Type)
                 -> ST unit
                       (requires (fun _ ->  witnessed p))

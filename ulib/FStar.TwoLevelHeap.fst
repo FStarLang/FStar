@@ -16,7 +16,7 @@
 module FStar.TwoLevelHeap
 open FStar.Map
 open FStar.Heap
-type rid = int  //region id
+irreducible type rid : eqtype = int  //region id
 type t = Map.t rid heap
 
 let st_pre = st_pre_h t
@@ -25,15 +25,14 @@ let st_post (a:Type) = st_post_h t a
 
 let st_wp (a:Type) = st_wp_h t a
 
-
 new_effect_for_free STATE = STATE_h t
-
 
 effect State (a:Type) (wp:st_wp a) =
        STATE a wp
 effect ST (a:Type) (pre:st_pre) (post: (t -> Tot (st_post a))) =
        STATE a
              (fun (h:t) (p:st_post a) -> pre h /\ (forall a h1. pre h /\ post h (a, h1) ==> p (a, h1))) (* WP *)
+
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 (r, h1) -> True)
 sub_effect

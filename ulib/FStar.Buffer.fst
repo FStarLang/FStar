@@ -50,7 +50,7 @@ let live #a (h:mem) (b:buffer a) : GTot Type0 = contains h b
 val recall: #a:Type
   -> b:buffer a{is_eternal_region (frameOf b) && not (b.content.mm)} -> Stack unit
   (requires (fun m -> True))
-  (ensures  (fun m0 _ m1 -> m0==m1 /\ live m1 b))
+  (ensures  (fun m0 (_, m1) -> m0==m1 /\ live m1 b))
 let recall #a b = recall b.content
 
 (* Ghostly access an element of the array, or the full underlying sequence *)
@@ -718,7 +718,7 @@ let lemma_modifies_2_1'' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 
 (** Concrete getters and setters *)
 val create: #a:Type -> init:a -> len:UInt32.t -> StackInline (buffer a)
   (requires (fun h -> True))
-  (ensures (fun (h0:mem) b h1 -> ~(contains h0 b)
+  (ensures (fun (h0:mem) (b, h1) -> ~(contains h0 b)
      /\ live h1 b /\ idx b = 0 /\ length b = v len
      /\ frameOf b = h0.tip
      /\ Map.domain h1.h == Map.domain h0.h
@@ -737,7 +737,7 @@ module L = FStar.List.Tot
 (** Concrete getters and setters *)
 val createL: #a:Type -> init:list a -> StackInline (buffer a)
   (requires (fun h -> L.length init > 0 /\ L.length init < UInt.max_int 32))
-  (ensures (fun (h0:mem) b h1 ->
+  (ensures (fun (h0:mem) (b, h1) ->
      let len = L.length init in
      len > 0
      /\ ~(contains h0 b)
@@ -766,7 +766,7 @@ let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h x.id}) (v:a) : Lemm
 
 val rcreate: #a:Type -> r:HH.rid -> init:a -> len:UInt32.t -> ST (buffer a)
   (requires (fun h -> is_eternal_region r))
-  (ensures (fun (h0:mem) b h1 -> ~(contains h0 b)
+  (ensures (fun (h0:mem) (b, h1) -> ~(contains h0 b)
     /\ live h1 b /\ idx b = 0 /\ length b = v len
     /\ Map.domain h1.h == Map.domain h0.h
     /\ h1.tip = h0.tip
@@ -787,7 +787,7 @@ let rcreate #a r init len =
 // ocaml-only, used for conversions to Platform.bytes
 val to_seq: #a:Type -> b:buffer a -> l:UInt32.t{v l <= length b} -> STL (seq a)
   (requires (fun h -> live h b))
-  (ensures  (fun h0 r h1 -> h0 == h1 /\ live h1 b /\ Seq.length r = v l
+  (ensures (fun h0 (r, h1) -> h0 == h1 /\ live h1 b /\ Seq.length r = v l
     (*/\ r == as_seq #a h1 b *) ))
 let to_seq #a b l =
   let s = !b.content in
@@ -796,7 +796,7 @@ let to_seq #a b l =
 
 val index: #a:Type -> b:buffer a -> n:UInt32.t{v n < length b} -> Stack a
   (requires (fun h -> live h b))
-  (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0
+  (ensures (fun h0 (z, h1) -> live h0 b /\ h1 == h0
     /\ z == Seq.index (as_seq h0 b) (v n)))
 let index #a b n =
   let s = !b.content in
@@ -814,7 +814,7 @@ let lemma_aux #a b n z h0 = ()
 
 val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> Stack unit
   (requires (fun h -> live h b /\ v n < length b))
-  (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ v n < length b
+  (ensures (fun h0 (_, h1) -> live h0 b /\ live h1 b /\ v n < length b
     /\ modifies_1 b h0 h1
     /\ as_seq h1 b == Seq.upd (as_seq h0 b) (v n) z ))
 let upd #a b n z =
@@ -889,8 +889,8 @@ val eqb: #a:eqtype -> b1:buffer a -> b2:buffer a
   -> len:UInt32.t{v len <= length b1 /\ v len <= length b2}
   -> ST bool
     (requires (fun h -> live h b1 /\ live h b2))
-    (ensures  (fun h0 z h1 -> h1 == h0 /\
-      (z <==> equal h0 (sub b1 0ul len) h0 (sub b2 0ul len))))
+    (ensures (fun h0 (z, h1) -> h1 == h0 /\
+      (b2t z <==> equal h0 (sub b1 0ul len) h0 (sub b2 0ul len))))
 let rec eqb #a b1 b2 len =
   if len =^ 0ul then true
   else
@@ -908,13 +908,13 @@ let rec eqb #a b1 b2 len =
  * taking an extra unification parameter at extraction-time... *)
 val op_Array_Access: #a:Type -> b:buffer a -> n:UInt32.t{v n<length b} -> Stack a
      (requires (fun h -> live h b))
-     (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0
+     (ensures (fun h0 (z, h1) -> live h0 b /\ h1 == h0
        /\ z == Seq.index (as_seq h0 b) (v n)))
 let op_Array_Access #a b n = index #a b n
 
 val op_Array_Assignment: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> Stack unit
   (requires (fun h -> live h b /\ v n < length b))
-  (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ v n < length b
+  (ensures (fun h0 (_, h1) -> live h0 b /\ live h1 b /\ v n < length b
     /\ modifies_1 b h0 h1
     /\ as_seq h1 b == Seq.upd (as_seq h0 b) (v n) z ))
 let op_Array_Assignment #a b n z = upd #a b n z
@@ -929,7 +929,7 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem)
 assume val blit: #t:Type -> a:buffer t -> idx_a:UInt32.t{v idx_a <= length a} -> b:buffer t{disjoint a b} ->
   idx_b:UInt32.t{v idx_b <= length b} -> len:UInt32.t{v idx_a+v len <= length a /\ v idx_b+v len <= length b} -> Stack unit
     (requires (fun h -> live h a /\ live h b))
-    (ensures (fun h0 _ h1 -> live h0 b /\ live h0 a /\ live h1 b /\ live h1 a
+    (ensures (fun h0 (_, h1) -> live h0 b /\ live h0 a /\ live h1 b /\ live h1 a
       /\ Seq.slice (as_seq h1 b) (v idx_b) (v idx_b+v len) == Seq.slice (as_seq h0 a) (v idx_a) (v idx_a+v len)
       /\ Seq.slice (as_seq h1 b) 0 (v idx_b) == Seq.slice (as_seq h0 b) 0 (v idx_b)
       /\ Seq.slice (as_seq h1 b) (v idx_b+v len) (length b) == Seq.slice (as_seq h0 b) (v idx_b+v len) (length b)
@@ -938,7 +938,7 @@ assume val blit: #t:Type -> a:buffer t -> idx_a:UInt32.t{v idx_a <= length a} ->
 (* JK: TODO, corresponds to memset *)
 assume val fill: #t:Type -> b:buffer t -> z:t -> len:UInt32.t{v len <= length b} -> Stack unit
   (requires (fun h -> live h b))
-  (ensures  (fun h0 _ h1 -> live h0 b /\ live h1 b /\ modifies_1 b h0 h1
+  (ensures (fun h0 (_, h1) -> live h0 b /\ live h1 b /\ modifies_1 b h0 h1
     /\ Seq.slice (as_seq h1 b) 0 (v len) == Seq.create (v len) z
     /\ Seq.slice (as_seq h1 b) (v len) (length b) == Seq.slice (as_seq h0 b) (v len) (length b) ))
 

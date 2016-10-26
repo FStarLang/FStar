@@ -64,7 +64,7 @@ let alloc_mref_seq (#a:Type) (r:rid) (init:seq a)
 	 m_sel h1 m == init /\
 	 FStar.ST.ralloc_post r init h0 (as_hsref m, h1)))
   = lemma_grows_monotone #a;
-    FStar.Monotonic.RRef.m_alloc r init
+    m_alloc r init
 
 (*
  * AR: changing rids below to rid which is eternal regions.
@@ -107,7 +107,8 @@ let alloc_mref_iseq (#a:Type) (p:seq a -> Type) (r:rid) (init:seq a{p init})
        (requires (fun _ -> True))
        (ensures (fun h0 (m, h1) -> FStar.ST.ralloc_post r init h0 (MR.as_hsref m, h1)))
   = lemma_grows_monotone #a;
-    FStar.Monotonic.RRef.m_alloc r init
+  let m = FStar.Monotonic.RRef.m_alloc r init in
+    assert (MR.as_hsref m === m) ; m
 
 let i_at_least (#r:rid) (#a:Type) (#p:(seq a -> Type)) (n:nat) (x:a) (m:i_seq r a p) (h:mem) =
         Seq.length (m_sel h m) > n
@@ -435,7 +436,8 @@ let new_seqn (#l:rid) (#a:Type) (#max:nat)
   =
     m_recall log; recall_region i;
     witness log (at_most_log_len init log);
-    m_alloc i init
+    let c = m_alloc i init in
+    assert (c === as_hsref c) ; c
 
 let increment_seqn (#l:rid) (#a:Type) (#max:nat)
 	           (#i:rid) (#log:log_t l a) ($c:seqn i log max)
