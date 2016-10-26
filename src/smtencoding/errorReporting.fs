@@ -265,6 +265,7 @@ let detail_errors env
     Options.set_option "z3timeout" (Options.Int 5);
     let res = linear_check [] [] all_labels in
     res |> List.iter print_result;
-    let dummy, _, _ = all_labels |> List.hd in
-    [(dummy, "Detailed errors provided", TypeChecker.Env.get_range env)]
+    []
+//    let dummy, _, _ = all_labels |> List.hd in
+//    [(dummy, "Detailed errors provided", TypeChecker.Env.get_range env)]
 

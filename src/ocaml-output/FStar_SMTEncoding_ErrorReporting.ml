@@ -435,15 +435,7 @@ let res = (linear_check [] [] all_labels)
 in (
 
 let _87_503 = (FStar_All.pipe_right res (FStar_List.iter print_result))
-in (
-
-let _87_510 = (FStar_All.pipe_right all_labels FStar_List.hd)
-in (match (_87_510) with
-| (dummy, _87_507, _87_509) -> begin
-(let _182_120 = (let _182_119 = (FStar_TypeChecker_Env.get_range env)
-in ((dummy), ("Detailed errors provided"), (_182_119)))
-in (_182_120)::[])
-end))))))))))))
+in []))))))))))
 
 
 

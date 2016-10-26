@@ -44,8 +44,13 @@ assume val test9_aux : x:int -> Pure bool (requires (b2t (x >= 0))) (ensures (fu
 assume val test9 : x:int{test9_aux x} -> Tot unit //should report a failing assertion in the refinement (f x)
 
 #set-options "--detail_errors"
+assume val p1 : bool
+let p2 = true
+assume val p3 : bool
+assume val p4 : bool
+
 let test10 = 
-  assert (0=1);
-  assert (0=0);
-  assert (1=2);
-  assert (2=2)
+  assert p1;
+  assert p2;
+  assert p3;
+  assert (p2 \/ p3)

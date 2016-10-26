@@ -196,13 +196,10 @@ let ask_and_report_errors env all_labels prefix query suffix =
                         Z3.ask None all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
                         Option.get (!res) in
                      detail_errors env all_labels ask_z3, false
-                else errs in
-
-            let errs = 
-                match errs with
-                | [], true -> [(("", Term_sort), "Timeout: Unknown assertion failed", Range.dummyRange)], true
-                | [], false -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)], false
-                | _ -> errs in
+                else match errs with
+                     | [], true -> [(("", Term_sort), "Timeout: Unknown assertion failed", Range.dummyRange)], true
+                     | [], false -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)], false
+                     | _ -> errs in
             record_hint None;
             if Options.print_fuels()
             then Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
