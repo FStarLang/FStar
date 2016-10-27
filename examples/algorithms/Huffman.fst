@@ -5,7 +5,7 @@ open FStar.List.Tot
 
 type symbol = char
 
-// TODO: could move weights away from the nodes,
+// could consider moving weights away from the nodes,
 // only need one weight per each trie in the forest
 
 type trie =
@@ -116,22 +116,24 @@ let rec decode_one (t:trie) (bs:list bool) : Pure (option (symbol * list bool))
   | Leaf _ s, _ -> Some (s, bs)
   | Node _ _ _, [] -> None (* out of symbols *)
 
-let rec decode (t:trie) (bs:list bool) : Tot (option (list symbol))
+let rec decode' (t:trie) (bs:list bool) : Tot (option (list symbol))
     (decreases (List.Tot.length bs)) =
   match t, bs with
-  | Leaf _ s, [] -> Some [s] (* degenerate case *)
-  | Leaf _ _, _  -> None (* too many symbols *)
+  | Leaf _ s, [] -> Some [s] (* degenerate case, case omitted below *)
+  | Leaf _ _, _::_  -> None (* too many symbols, case omitted below *)
   | Node _ _ _, [] -> Some []
   | Node _ _ _, _::_ -> match decode_one t bs with
-                        | Some (s, bs') -> (match decode t bs' with
+                        | Some (s, bs') -> (match decode' t bs' with
                                             | Some ss -> Some (s :: ss)
                                             | None    -> None)
                         | _ -> None
 
 // Simplified decode using idea from Bird and Wadler's book
+// (it has more complex termination condition though)
 
 let rec decode_aux (t':trie) (t:trie) (bs:list bool) : Pure (option (list symbol))
-    (requires (b2t (is_Node t'))) (ensures (fun _ -> True))
+    (requires (b2t (is_Node t')))
+    (ensures (fun ss -> is_Some ss ==> List.Tot.length (Some.v ss) > 0))
     (decreases (%[bs; if is_Leaf t && is_Cons bs then 1 else 0]))
   =
   match t, bs with
@@ -142,29 +144,83 @@ let rec decode_aux (t':trie) (t:trie) (bs:list bool) : Pure (option (list symbol
   | Node _ t1 t2, b :: bs' -> decode_aux t' (if b then t2 else t1) bs'
   | Node _ _ _, [] -> None
 
-let decode' (t:trie) (bs:list bool) : Pure (option (list symbol))
+let decode (t:trie) (bs:list bool) : Pure (option (list symbol))
     (requires (b2t (is_Node t))) (ensures (fun _ -> True)) =
   decode_aux t t bs
 
-// proving this should require prefix freedom
-let cancelation (sws:list (symbol*pos)) (ss:list symbol) : Lemma
-  (requires (b2t (List.Tot.length sws > 0)))
+let rec cancelation_one (t':trie) (t:trie) (s:symbol) : Lemma
+  (requires (b2t (is_Node t')))
+  (ensures (is_Node t' ==>
+            (match encode_one t s with
+            | Some e -> (match decode_aux t' t e with
+                        | Some d -> d = [s]
+                        | None -> False)
+            | None -> True))) =
+  match t with
+  | Leaf _ s' -> ()
+  | Node _ t1 t2 ->
+      (match encode_one t1 s with
+      | Some e -> cancelation_one t' t1 s
+      | None   -> cancelation_one t' t2 s)
+
+let rec decode_prefix_aux (t':trie{is_Node t'}) (t:trie)
+    (bs:list bool{is_Cons bs}) (bs':list bool) (s:symbol) : Lemma
+    (requires (decode_aux t' t bs = Some [s]))
+    (ensures (decode_aux t' t (bs @ bs') = (match decode_aux t' t' bs' with
+                                     | Some ss -> Some (s :: ss)
+                                     | None -> None)))
+    (decreases (%[bs; if is_Leaf t && is_Cons bs then 1 else 0])) =
+  match t, bs with
+  | Leaf _ _, _::_ -> decode_prefix_aux t' t' bs bs' s
+  | Node _ t1 t2, b::bs'' -> admit() (* TODO: decode_prefix_aux t' (if b then t2 else t1) bs'' bs' s *)
+
+let rec decode_prefix (t:trie{is_Node t})
+  (bs:list bool) (bs':list bool) (s:symbol) : Lemma
+  (requires (decode t bs = Some [s]))
+  (ensures (decode t (bs @ bs') = (match decode t bs' with
+                                   | Some ss -> Some (s :: ss)
+                                   | None -> None))) =
+  decode_prefix_aux t t bs bs' s
+
+let rec cancelation_aux (t:trie) (ss:list symbol) : Lemma
+  (requires (b2t (is_Node t)))
+  (ensures (is_Node t ==>
+            (match encode t ss with
+            | Some e -> (match decode t e with
+                        | Some d -> d = ss
+                        | None -> True) (* <-- TODO: can we make this False? *)
+            | None -> True))) =
+  match ss with
+  | [] -> ()
+  | s::ss' ->
+    cancelation_one t t s;
+    cancelation_aux t ss';
+    (match encode_one t s, encode t ss' with
+    | Some bs, Some bs' -> decode_prefix t bs bs' s
+    | _, _ -> ())
+
+let rec cancelation (sws:list (symbol*pos)) (ss:list symbol) : Lemma
+  (requires (b2t (List.Tot.length sws > 1)))
   (ensures (List.Tot.length sws > 1 ==>
             (let t = huffman sws in
             (match encode t ss with
-            | Some e -> (match decode' t e with
+            | Some e -> (match decode t e with
                         | Some d -> d = ss
                         | None -> True)
-            | None -> True)))) = admit()
+            | None -> True)))) =
+  cancelation_aux (huffman sws) ss
 
 
+(*
+// proving this should require prefix freedom?
+Prefix freedom of the code?
 
+t = huffman sws
+  = huffman_trie (insertion_sort (List.Tot.map (fun (s,w) -> Leaf w s) sws))
 
+- set of symbols in the tree leaves the same as set of symbols in sws?
 
-
-
-
-
+*)
 
 (* open Platform.Bytes *)
 
