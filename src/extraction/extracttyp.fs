@@ -366,7 +366,7 @@ let rec firstNNats (n:int) : list<int> =
 let dummyIdent (n:int) : mlident = ("'dummyV"^(Util.string_of_int n), 0)
 let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n)
 
-let extractInductive (c:context) (ind: inductiveTypeFam ) :  context* (bool * mlsymbol * mlidents * option<mltybody>) =
+let extractInductive (c:context) (ind: inductiveTypeFam ) :  context* (bool * mlsymbol * option<mlsymbol> * mlidents * option<mltybody>) =
         let newContext = c in // (extendContext c (mfst ind.tyBinders)) in
         let nIndices = numIndices ind.k ind.tyName.ident.idText in
         let (nc, tyb) = (Util.fold_map (extractCtor ind.tyBinders) newContext ind.constructors) in
@@ -379,7 +379,7 @@ let extractInductive (c:context) (ind: inductiveTypeFam ) :  context* (bool * ml
               let fields = List.map2 (fun lid ty -> (lid.ident.idText, ty)) ids c_ty in
               MLTD_Record fields
             | _ -> MLTD_DType tyb in
-        nc, (false, lident2mlsymbol ind.tyName,  mlbs , Some tbody)
+        nc, (false, lident2mlsymbol ind.tyName,  None, mlbs , Some tbody)
 
 let mfst x = List.map fst x
 
@@ -395,7 +395,7 @@ let rec headBinders (c:context) (t:typ) : (context * binders * typ (*residual ty
         | _ -> (c,[],t)
 
 
-let extractTypeAbbrev quals (c:context) (tyab:typeAbbrev) : context * (bool * mlsymbol  * mlidents * option<mltybody>) =
+let extractTypeAbbrev quals (c:context) (tyab:typeAbbrev) : context * (bool * mlsymbol  * option<mlsymbol> * mlidents * option<mltybody>) =
     let bs = tyab.abTyBinders in
     let t = tyab.abBody in
     let l = tyab.abTyName in
@@ -413,7 +413,7 @@ let extractTypeAbbrev quals (c:context) (tyab:typeAbbrev) : context * (bool * ml
     let tyDecBody = MLTD_Abbrev mlt in
             //printfn "type is %A\n" (t);
     let assumed = Util.for_some (function Assumption -> true | _ -> false) quals in
-    let td = (assumed, mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody) in
+    let td = (assumed, mlsymbolOfLident l, None, List.map mlTyIdentOfBinder bs , Some tyDecBody) in
     let c = if quals |> Util.for_some (function Assumption | New -> true | _ -> false)
             then c
             else Env.extend_tydef c [td] in

@@ -519,7 +519,7 @@ let dummyIndexIdents : Prims.int  ->  (Prims.string * Prims.int) Prims.list = (f
 in (FStar_List.map dummyIdent _171_229)))
 
 
-let extractInductive : context  ->  inductiveTypeFam  ->  (context * (Prims.bool * FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_ML_Syntax.mlidents * FStar_Extraction_ML_Syntax.mltybody Prims.option)) = (fun c ind -> (
+let extractInductive : context  ->  inductiveTypeFam  ->  (context * (Prims.bool * FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_ML_Syntax.mlsymbol Prims.option * FStar_Extraction_ML_Syntax.mlidents * FStar_Extraction_ML_Syntax.mltybody Prims.option)) = (fun c ind -> (
 
 let newContext = c
 in (
@@ -565,7 +565,7 @@ end
 | _76_450 -> begin
 FStar_Extraction_ML_Syntax.MLTD_DType (tyb)
 end)
-in ((nc), (((false), ((lident2mlsymbol ind.tyName)), (mlbs), (Some (tbody)))))))
+in ((nc), (((false), ((lident2mlsymbol ind.tyName)), (None), (mlbs), (Some (tbody)))))))
 end)))))
 
 
@@ -592,7 +592,7 @@ end
 end)))
 
 
-let extractTypeAbbrev : FStar_Absyn_Syntax.qualifier Prims.list  ->  context  ->  typeAbbrev  ->  (context * (Prims.bool * FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_ML_Syntax.mlidents * FStar_Extraction_ML_Syntax.mltybody Prims.option)) = (fun quals c tyab -> (
+let extractTypeAbbrev : FStar_Absyn_Syntax.qualifier Prims.list  ->  context  ->  typeAbbrev  ->  (context * (Prims.bool * FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_ML_Syntax.mlsymbol Prims.option * FStar_Extraction_ML_Syntax.mlidents * FStar_Extraction_ML_Syntax.mltybody Prims.option)) = (fun quals c tyab -> (
 
 let bs = tyab.abTyBinders
 in (
@@ -637,7 +637,7 @@ end)) quals)
 in (
 
 let td = (let _171_254 = (FStar_List.map mlTyIdentOfBinder bs)
-in ((assumed), ((mlsymbolOfLident l)), (_171_254), (Some (tyDecBody))))
+in ((assumed), ((mlsymbolOfLident l)), (None), (_171_254), (Some (tyDecBody))))
 in (
 
 let c = if (FStar_All.pipe_right quals (FStar_Util.for_some (fun _76_3 -> (match (_76_3) with
