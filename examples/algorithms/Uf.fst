@@ -15,6 +15,7 @@ open FStar.FunctionalExtensionality
 type uf (a : Type) : Type = { content:a ; parent:ref (option (uf a)) }
 
 
+
 noeq type funcaccessible (#a:Type0) (f: a -> GTot (option a)) (u : a) : Type0 =
 | FAcc : next:(match f u with | Some v -> funcaccessible f v | None -> unit) -> funcaccessible f u
 
@@ -38,7 +39,7 @@ assume val recall_step : #a:eqtype -> h:heap -> z:uf a -> y:uf a -> Lemma (requi
 
 let reprfun (a:eqtype) (h:heap) = f:(uf a -> GTot (uf a)){
   (forall u. if Heap.contains h u.parent then Heap.contains h (f u).parent else u = f u) /\
-  (forall (u:ufh a h). sel h (f u).parent = None /\(sel h u.parent = None ==> f u = u)) /\
+  (forall (u:ufh a h). sel h (f u).parent = None /\ (sel h u.parent = None ==> f u = u)) /\
   (forall (u:ufh a h) (v:ufh a h). sel h u.parent = Some v ==> f u = f v)
 }
 

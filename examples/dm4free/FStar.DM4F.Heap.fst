@@ -33,10 +33,10 @@ let contains_a_well_typed_implies_contains (#a:Type) (h:heap) (r:ref a)
      	    [SMTPatOr [[SMTPat (h `contains_a_well_typed` r)]; [SMTPat (h `contains` (addr r))]]]
     = ()
 
-(* sel: selecting a well-tyepd reference from a heap *)
-abstract let sel (#a:Type) (h:heap) (r:ref a{h `contains_a_well_typed` r}) 
+(* sel: selecting a well-typed reference from a heap *)
+abstract let sel (#a:Type) (h:heap) (r:ref a{h `contains_a_well_typed` r})
   : Tot a
-  = let Some (| _, x |) = h.memory r in 
+  = let Some (| _, x |) = h.memory r in
     x
 
 (* upd: updating a heap at r with x *)

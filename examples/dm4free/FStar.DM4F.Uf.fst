@@ -135,18 +135,9 @@ let make_uf (#a:eqtype) (x:a) : ST (uf a) (requires (uf_invariant a)) (ensures (
 let distinct_cell_lemma (#a:eqtype) (h:heap) (r1:(ref a){h `contains_a_well_typed` r1}) (r2: (ref a){h `contains_a_well_typed` r2}) : Lemma (sel h r1 <> sel h r2 ==> r1 <> r2) = ()
 
 
-let reachable_step (a:eqtype) (h:heap) (u:ufh a h) (p:ufh a h) : GTot bool =
-  sel h u.parent = Some p
-
-let reachable (a:eqtype) (h:heap) = reflexive_transitive_closure (reachable_step a h)
-
-let rec collect_above (#a:eqtype) (h:heap) (u:ufh a h) : Ghost (set nat)
-                      (requires True)
-                      (ensures (fun s -> forall x. Set.mem x s <==> reachable a h u x))
-
 (* Without invariants :
 
-  let rec root (u:uf a) : St (uf a) =
+  et rec root (u:uf a) : St (uf a) =
     match !u.parent with
     | none -> u
     | some p ->
@@ -154,6 +145,30 @@ let rec collect_above (#a:eqtype) (h:heap) (u:ufh a h) : Ghost (set nat)
       u.parent := r
       r
 *)
+let build_uf_inv2 (#a:eqtype) (h1:heap) (h2:heap) (u:uf a) (r:uf a)  : Pure ((uf_inv1 : uf_invariant_fun h1) -> uf_invariant_fun h2)
+                                                                          (requires (modifies (Set.singleton u.parent) h1 h2 /\
+                                                                            h1 `contains_a_well_typed` u.parent /\
+                                                                            h1 `contains_a_well_typed` r.parent /\
+                                                                            h2 `contains_a_well_typed` u.parent /\
+                                                                            h2 `contains_a_well_typed` r.parent /\
+                                                                            (exists r'. sel h2 u.parent = Some r' /\ r' === r) /\
+                                                                            sel h2 r.parent = None /\
+                                                                            (forall (r:ref (uf a)). h2 `contains_a_well_typed` r ==> h1 `contains_a_well_typed` r)))
+                                                                           (ensures (fun _ -> True)) =
+  assert (forall (u:uf a). h1 `contains_a_well_typed` u.parent ==> h2 `contains_a_well_typed` u.parent) ;
+  let bidule (u:ufh a h1) : Tot (ufh a h2) = let u : uf a = u in u in
+  let cobidule (u:ufh a h2) : Tot (ufh a h1) = let u : uf a = u in u in
+  assert (u === bidule u) ;
+  assert (u === cobidule u) ;
+  let r' : ufh a h2 = r in
+  let rec pushforward (u0:ufh a h1) (w : funcaccessible (reach a h1) u0) : GTot (funcaccessible (reach a h2) (bidule u0)) (decreases w) =
+    if u0.parent = u.parent
+    then FAcc (FAcc () <: funcaccessible (reach a h2) r')
+    else match reach a h2 (bidule u0) with | None -> FAcc () | Some v -> assert (sel h1 u0.parent = Some v) ; recall_step h1 u0 v ; FAcc (pushforward v w.next)
+  in
+  let uf_inv2 (uf_inv1 : uf_invariant_fun h1) (u1:ufh a h2) : GTot (funcaccessible (reach a h2) u1) = pushforward (cobidule u1) (uf_inv1 (cobidule u1)) in
+  uf_inv2
+
 
 (** TODO : why do I need to ask for uf_invariant a h0 in the post-condition ??? *)
 let rec root (#a:eqtype) (u:uf a) : ST (uf a)
@@ -161,36 +176,31 @@ let rec root (#a:eqtype) (u:uf a) : ST (uf a)
                                h0 `contains_a_well_typed` u.parent))
              (ensures (fun h0 r h1 -> uf_invariant a h0 /\
                                    uf_invariant a h1 /\
-                                   modifies (collect_above h0 u) h0 h1 /\
+                                   (forall (r : ref (uf a)). h0 `contains_a_well_typed` r ==> h1 `contains_a_well_typed` r) /\
                                    same_reprfun a h0 h1 /\
                                    retrieve_reprfun a h1 u = r) ) (decreases u) (* WARNING : check the decrease clause by hand for now *) =
   match !u.parent with
   | None -> u
   | Some p ->
-    let h0 = get () in
+    let h0 : heap = STATE.get () in
     recall_step h0 u p ;
     uf_invariant_termination a h0 u p ;
     assert ( p << u ) ;
     let r = root p in
-    let h1 = get () in
+    let h1 = STATE.get () in
 //   assert (sel h0 u.parent = Some p) ;
     distinct_cell_lemma h0 r.parent u.parent ;
 //    assert (r.parent <> u.parent) ;
-    recall u.parent ;
+      assert (h0 `contains_a_well_typed` u.parent) ;
+      assert (h1 `contains_a_well_typed` u.parent) ;
     u.parent := Some r ;
-    let h2 = get () in
+    let h2 = STATE.get () in
+
+    maintain_uf_invariant (build_uf_inv2 h1 h2 u r) ;
 //    assert (forall (u0 : ufh a h2). Heap.contains h1 u0.parent);
 //    assert (forall (u0 : ufh a h2). u0.parent <> u.parent ==> reach a h2 u0 = reach a h1 u0);
-    let uf_inv2 (uf_inv1: uf_invariant_fun h1) (u1:ufh a h2) : GTot (funcaccessible (reach a h2) u1) =
-      let rec pushforward (u0:ufh a h1) (w : funcaccessible (reach a h1) u0) : GTot (funcaccessible (reach a h2) u0) (decreases w) =
-        if u0.parent = u.parent
-        then begin match reach a h2 u0 with
-          | Some r0 -> let wr0 : funcaccessible (reach a h2) r0 = match reach a h2 r0 with | None -> FAcc () in FAcc wr0
-          end(* TODO : Something's wrong here FAcc (FAcc ()) should be enough  *)
-        else match reach a h2 u0 with | None -> FAcc () | Some v -> recall_step h1 u0 v ; FAcc (pushforward v w.next)
-      in let u1 : uf a = u1 in pushforward u1 (uf_inv1 u1)
-    in maintain_uf_invariant uf_inv2 ;
 //   if p = r then give_witness #(reachable h0 r u) (Immediately u) else give_proof (map_squash (get_proof (reachable h0 r p)) (fun w -> Later p w u)) ;
+    admit () ;
     r
 
 
@@ -220,7 +230,7 @@ let rec uf_equiv (#a:eqtype) (u1:uf a) (u2:uf a) : ST bool (requires (uf_invaria
 
  *)
 
-
+(*
 
  let rec uf_merge (#a:eqtype) (u1:uf a) (u2:uf a) : ST (uf a) (requires (uf_invariant a)) (ensures (fun h0 r h1 -> uf_invariant a h0 /\ uf_invariant a h1 /\ merge_reprfun a h0 h1 u1 u2 r)) =
   let r1 = root u1 in
@@ -245,3 +255,4 @@ let rec uf_equiv (#a:eqtype) (u1:uf a) (u2:uf a) : ST bool (requires (uf_invaria
     r2
 
 
+*)

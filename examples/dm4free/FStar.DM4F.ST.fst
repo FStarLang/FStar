@@ -28,7 +28,7 @@ let put (s:Type) (x:s) : st s unit = fun _ -> (), x
  * of the resulting effect.
  *)
 reifiable reflectable new_effect_for_free {
-  STATE (s:Type) : a:Type -> Effect
+  STATE_h (s:Type) : a:Type -> Effect
   with repr     = st s
      ; bind     = bind_st s
      ; return   = return_st s
