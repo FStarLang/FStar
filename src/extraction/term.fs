@@ -455,7 +455,12 @@ and fv_app_as_mlty (g:env) (fv:fv) (args : args) : mlty =
         then let _, rest = Util.first_N n_args formals in
              mlargs @ (List.map (fun _ -> erasedContent) rest)
         else mlargs in
-    MLTY_Named (mlargs, mlpath_of_lident fv.fv_name.v)
+    let nm = match maybe_mangle_type_projector g fv with 
+             | Some p -> 
+               p
+             | None -> 
+               mlpath_of_lident fv.fv_name.v in
+    MLTY_Named (mlargs, nm)
 
 and binders_as_ml_binders (g:env) (bs:binders) : list<(mlident * mlty)> * env =
     let ml_bs, env = bs |> List.fold_left (fun (ml_bs, env) b ->

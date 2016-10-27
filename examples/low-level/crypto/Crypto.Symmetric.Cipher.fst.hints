@@ -109,8 +109,8 @@
       0,
       1,
       [
-        "@query", "b2t_def", "data_elim_FStar.UInt32.Mk",
-        "equation_Crypto.Symmetric.AES.keylen",
+        "@query", "b2t_def", "bool_inversion", "bool_typing",
+        "data_elim_FStar.UInt32.Mk", "equation_Crypto.Symmetric.AES.keylen",
         "equation_Crypto.Symmetric.AES.nb",
         "equation_Crypto.Symmetric.AES.nk",
         "equation_Crypto.Symmetric.AES.v",
@@ -124,6 +124,7 @@
         "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
         "equation_FStar.UInt8.n", "equation_Prims.nat",
         "function_token_typing_Crypto.Symmetric.AES.keylen",
+        "function_token_typing_Crypto.Symmetric.AES.nb",
         "function_token_typing_Crypto.Symmetric.AES.nk",
         "function_token_typing_FStar.UInt8.n", "int_inversion", "int_typing",
         "lemma_FStar.Buffer.lemma_size", "lemma_FStar.Int.pow2_values",
@@ -209,6 +210,8 @@
         "typing_tok_Crypto.Symmetric.Cipher.AES256@tok"
       ],
       0
-    ]
+    ],
+    [ "Crypto.Symmetric.Cipher.compute", 1, 0, 1, [ "@query" ], 0 ],
+    [ "Crypto.Symmetric.Cipher.compute", 2, 0, 1, [ "@query" ], 0 ]
   ]
 ]
