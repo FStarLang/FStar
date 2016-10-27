@@ -421,7 +421,7 @@
     [
       "FStar.Int.mod",
       2,
-      2,
+      1,
       1,
       [
         "@query", "b2t_def", "bool_inversion", "bool_typing",
@@ -431,8 +431,7 @@
         "equation_FStar.Mul.op_Star", "equation_Prims.abs",
         "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_Prims.pow2.fuel_instrumented",
-        "fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "fuel_irrelevance_Prims.pow2.fuel_instrumented", "int_inversion",
+        "fuel_correspondence_Prims.pow2.fuel_instrumented", "int_inversion",
         "int_typing", "lemma_FStar.Int.pow2_values",
         "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
@@ -449,7 +448,7 @@
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "token_correspondence_Prims.pow2.fuel_instrumented",
         "typing_FStar.Int.fits", "typing_FStar.Int.max_int",
-        "typing_FStar.Int.min_int"
+        "typing_Prims.pow2"
       ],
       0
     ],
