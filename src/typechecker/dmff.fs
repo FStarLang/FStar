@@ -341,6 +341,16 @@ let gen_wps_for_free
     | Tm_arrow _ -> false
     | _ -> true
   in
+  let rec is_discrete t = match (SS.compress t).n with
+    | Tm_type _ -> false
+    | Tm_arrow (bs, c) -> List.for_all (fun (b,_) -> is_discrete b.sort) bs && is_discrete (Util.comp_result c)
+    | _ -> true
+  in
+  let rec is_monotonic t = match (SS.compress t).n with
+    | Tm_type _ -> true
+    | Tm_arrow (bs, c) -> List.for_all (fun (b,_) -> is_discrete b.sort) bs && is_monotonic (Util.comp_result c)
+    | _ -> is_discrete t
+  in
   let rec mk_rel rel t x y =
     let mk_rel = mk_rel rel in
     let t = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.Delta_constant ] env t in
@@ -351,7 +361,7 @@ let gen_wps_for_free
     | Tm_arrow ([ binder ], { n = GTotal (b, _) })
     | Tm_arrow ([ binder ], { n = Total (b, _) }) ->
         let a = (fst binder).sort in
-        if is_zero_order a  //this is an important special case; most monads have zero-order results
+        if is_monotonic a  //this is an important special case; most monads have zero-order results
         then let a1 = S.gen_bv "a1" None a in
              let body = mk_rel b
                             (U.mk_app x [ S.as_arg (S.bv_to_name a1) ])
