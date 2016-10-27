@@ -112,7 +112,7 @@ assume type has_type : #a:Type -> a -> Type -> Type0
 type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
 
 (* The type of squashed types *)
-type prop = a:Type0{ forall (x:a). x === () }
+type prop = a:Type0{ forall (x:a) (y:a). x == y }
 
 (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
 unopteq type dtuple2 (a:Type)
