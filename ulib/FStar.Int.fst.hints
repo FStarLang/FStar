@@ -447,7 +447,9 @@
         "refinement_interpretation_Tm_refine_ae791d5fae3bac5aab1116259a4112c6",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_FStar.Int.fits"
+        "token_correspondence_Prims.pow2.fuel_instrumented",
+        "typing_FStar.Int.fits", "typing_FStar.Int.max_int",
+        "typing_FStar.Int.min_int"
       ],
       0
     ],

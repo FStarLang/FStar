@@ -609,6 +609,7 @@ assume val string_of_int: int -> Tot string
 (* Marking terms for normalization *)
 (*********************************************************************************)
 abstract let normalize_term (#a:Type) (x:a) : a = x
+abstract let normalize (a:Type0) = a
 
-val assert_norm : p:Type -> Pure unit (requires (normalize_term p)) (ensures (fun _ -> p))
+val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
