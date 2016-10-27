@@ -333,7 +333,8 @@ let gen_wps_for_free
 
       x ≤_t y            =def=       x = y      [t is base type]
       x ≤_Type0 y        =def=       x ==> y
-      x ≤_{a->b} y       =def=   ∀a1 a2, a1 ≤_a a2 ==> x a1 ≤_b y a2
+      x ≤_{a->b} y       =def=       ∀a1 : a, x a1 ≤_b y a1                if is_monotonic a
+                                     ∀a1 a2, a1 ≤_a a2 ==> x a1 ≤_b y a2   otherwise
   *)
   (* Invariant: [x] and [y] have type [t] *)
   let is_zero_order t = match (SS.compress t).n with
