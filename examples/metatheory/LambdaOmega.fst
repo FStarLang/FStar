@@ -23,6 +23,7 @@ module LambdaOmega
 open FStar.Constructive
 open FStar.Classical
 open FStar.FunctionalExtensionality
+open FStar.StrongExcludedMiddle
 
 (* Chapter 29 of TAPL: "Type Operators and Kinding",
    proof follows Chapter 30, but we don't consider polymorphism
@@ -53,7 +54,7 @@ type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 
 val is_erenaming : s:esub -> GTot (n:int{(  erenaming s  ==> n=0) /\
                                          (~(erenaming s) ==> n=1)})
-let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
+let is_erenaming s = (if strong_excluded_middle (erenaming s) then 0 else 1)
 
 val esub_inc : var -> Tot exp
 let esub_inc y = EVar (y+1)
@@ -116,7 +117,7 @@ type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
 
 val is_trenaming : s:tsub -> GTot (n:int{(  trenaming s  ==> n=0) /\
                                          (~(trenaming s) ==> n=1)})
-let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
+let is_trenaming s = (if strong_excluded_middle (trenaming s) then 0 else 1)
 
 val tsub_inc_above : nat -> var -> Tot typ
 let tsub_inc_above x y = if y<x then TVar y else TVar (y+1)
@@ -612,7 +613,7 @@ type renaming (s:esub) = (forall (x:var). is_EVar (s x))
 
 val is_renaming : s:esub -> GTot (n:int{  (renaming s  ==> n=0) /\
                                         (~(renaming s) ==> n=1)})
-let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
+let is_renaming s = (if strong_excluded_middle (renaming s) then 0 else 1)
 
 type subst_typing (s:esub) (g1:env) (g2:env) =
   f:(x:var{is_Some (lookup_evar g1 x)} ->

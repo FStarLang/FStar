@@ -93,10 +93,7 @@ let ghost_lemma #a #p #q $f =
  in forall_intro lem
 
 ////////////////////////////////////////////////////////////////////////////////
-(* one variant of excluded middle is provable by SMT *)
-val excluded_middle' : p:Type -> Lemma (requires (True))
+(* the most standard variant of excluded middle is provable by SMT *)
+val excluded_middle : p:Type -> Lemma (requires (True))
                                        (ensures (p \/ ~p))
-let excluded_middle' (p:Type) = ()
-
-(* WARNING: this breaks parametricity; use with care *)
-assume val excluded_middle : p:Type -> GTot (b:bool{b = true <==> p})
+let excluded_middle (p:Type) = ()
