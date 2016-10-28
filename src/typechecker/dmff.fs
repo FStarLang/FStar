@@ -333,13 +333,19 @@ let gen_wps_for_free
 
       x ≤_t y            =def=       x = y      [t is base type]
       x ≤_Type0 y        =def=       x ==> y
-      x ≤_{a->b} y       =def=   ∀a1 a2, a1 ≤_a a2 ==> x a1 ≤_b y a2
+      x ≤_{a->b} y       =def=       ∀a1 : a, x a1 ≤_b y a1                if is_monotonic a
+                                     ∀a1 a2, a1 ≤_a a2 ==> x a1 ≤_b y a2   otherwise
   *)
   (* Invariant: [x] and [y] have type [t] *)
-  let is_zero_order t = match (SS.compress t).n with 
-    | Tm_type _
-    | Tm_arrow _ -> false
-    | _ -> true 
+  let rec is_discrete t = match (SS.compress t).n with
+    | Tm_type _ -> false
+    | Tm_arrow (bs, c) -> List.for_all (fun (b,_) -> is_discrete b.sort) bs && is_discrete (Util.comp_result c)
+    | _ -> true
+  in
+  let rec is_monotonic t = match (SS.compress t).n with
+    | Tm_type _ -> true
+    | Tm_arrow (bs, c) -> List.for_all (fun (b,_) -> is_discrete b.sort) bs && is_monotonic (Util.comp_result c)
+    | _ -> is_discrete t
   in
   let rec mk_rel rel t x y =
     let mk_rel = mk_rel rel in
@@ -351,7 +357,7 @@ let gen_wps_for_free
     | Tm_arrow ([ binder ], { n = GTotal (b, _) })
     | Tm_arrow ([ binder ], { n = Total (b, _) }) ->
         let a = (fst binder).sort in
-        if is_zero_order a  //this is an important special case; most monads have zero-order results
+        if is_monotonic a  || is_monotonic b //this is an important special case; most monads have zero-order results
         then let a1 = S.gen_bv "a1" None a in
              let body = mk_rel b
                             (U.mk_app x [ S.as_arg (S.bv_to_name a1) ])
@@ -387,15 +393,15 @@ let gen_wps_for_free
   let stronger = register env (mk_lid "stronger") stronger in
   let stronger = mk_generic_app stronger in
 
-  let wp_ite = 
+  let wp_ite =
     let wp = S.gen_bv "wp" None wp_a in
     let wp_args, post = Util.prefix gamma in
     // forall k: post a
     let k = S.gen_bv "k" None (fst post).sort in
-    let equiv = 
+    let equiv =
         let k_tm = S.bv_to_name k in
         let eq = mk_rel Util.mk_iff k.sort
-                          k_tm 
+                          k_tm
                           (S.bv_to_name (fst post)) in
         match Util.destruct_typ_as_formula eq with
         | Some (QAll (binders, [], body)) ->
@@ -404,7 +410,7 @@ let gen_wps_for_free
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body = mk (Tm_meta (body, Meta_pattern [[as_arg pat]])) in
           Util.close_forall binders pattern_guarded_body
-        | _ -> failwith "Impossible: Expected the equivalence to be a quantified formula" 
+        | _ -> failwith "Impossible: Expected the equivalence to be a quantified formula"
     in
     let body  = U.abs gamma (
       U.mk_forall k (U.mk_imp
@@ -416,10 +422,10 @@ let gen_wps_for_free
   let wp_ite = register env (mk_lid "wp_ite") wp_ite in
   let wp_ite = mk_generic_app wp_ite in
 
-  let null_wp = 
+  let null_wp =
     let wp = S.gen_bv "wp" None wp_a in
     let wp_args, post = Util.prefix gamma in
-    let x = S.gen_bv "x" None S.tun in 
+    let x = S.gen_bv "x" None S.tun in
     let body = U.mk_forall x (U.mk_app (S.bv_to_name <| fst post) [as_arg (S.bv_to_name x)]) in
     U.abs (binders @ S.binders_of_list [ a ] @ gamma) body ret_gtot_type in
 
@@ -556,11 +562,11 @@ and star_type' env t =
       // Sums and products. TODO: re-use the cache in [env] to not recompute
       // (st a)* every time.
       let debug t s =
-        let string_of_set f s = 
-            let elts = Util.set_elements s in 
+        let string_of_set f s =
+            let elts = Util.set_elements s in
             match elts with
             | [] -> "{}"
-            | x::xs -> 
+            | x::xs ->
                 let strb = Util.new_string_builder () in
                 Util.string_builder_append strb "{" ;
                 Util.string_builder_append strb (f x) ;
@@ -571,32 +577,32 @@ and star_type' env t =
                 Util.string_builder_append strb "}" ;
                 Util.string_of_string_builder strb
         in
-        Util.print2_warning "Dependency found in term %s : %s" (Print.term_to_string t) (string_of_set Print.bv_to_string s)  
+        Util.print2_warning "Dependency found in term %s : %s" (Print.term_to_string t) (string_of_set Print.bv_to_string s)
       in
       let rec is_non_dependent_arrow ty n =
         match (SS.compress ty).n with
         | Tm_arrow (binders, c) -> begin
                 if not (U.is_tot_or_gtot_comp c)
                 then false
-                else 
-                    try 
+                else
+                    try
+                        let non_dependent_or_raise s ty =
+                            let sinter = set_intersect (Free.names ty) s in
+                            if  not (set_is_empty sinter)
+                            then (debug ty sinter ; raise Not_found)
+                        in
                         let binders, c = SS.open_comp binders c in
-                        let s = List.fold_left (fun s (bv, _) -> 
-                            let sinter = set_intersect (Free.names bv.sort) s in
-                            if  set_is_empty sinter
-                            then set_add bv s
-                            else (debug bv.sort sinter ; raise Not_found)
+                        let s = List.fold_left (fun s (bv, _) ->
+                            non_dependent_or_raise s bv.sort ;
+                            set_add bv s
                         ) S.no_names binders in
                         let ct = U.comp_result c in
-                        let sinter = set_intersect (Free.names ct) s in
-                        if  set_is_empty sinter
-                        then
-                            let k = n - List.length binders in 
-                            if k > 0 then is_non_dependent_arrow ct k else true
-                        else (debug ct sinter ; raise Not_found)
+                        non_dependent_or_raise s ct ;
+                        let k = n - List.length binders in
+                        if k > 0 then is_non_dependent_arrow ct k else true
                     with Not_found -> false
             end
-        | _ -> 
+        | _ ->
             Util.print1_warning "Not a dependent arrow : %s" (Print.term_to_string ty) ;
             false
       in
@@ -611,6 +617,15 @@ and star_type' env t =
           is_non_dependent_arrow fv.fv_name.ty (List.length args)
         ) ->
             true
+        | Tm_fvar fv when is_non_dependent_arrow fv.fv_name.ty (List.length args) ->
+            // We need to check that the result of the application is a datatype
+             let res = N.normalize [N.Inlining ; N.UnfoldUntil S.Delta_constant] env.env t in
+             begin match res.n with
+             | Tm_app _ -> true
+             | _ ->
+                Util.print1_warning "Got a term which might be a non-dependent user-defined data-type %s\n" (Print.term_to_string head) ;
+                false
+             end
         | Tm_bvar _
         | Tm_name _ ->
             true
@@ -897,7 +912,7 @@ and infer (env: env) (e: term): nm * term * term =
       // combinators that we know for sure don't return an M.
       let _, t = Env.lookup_lid env.env lid in
       let txt = text_of_lid lid in
-//      let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None"; 
+//      let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None";
 //                              "op_Addition"; "op_BarBar"; "op_AmpAmp"; "op_Negation"; "op_Equality" ] in
 //      // Util.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
 //      if List.existsb (fun s -> Util.starts_with txt ("Prims." ^ s)) allowed_prefixes then
@@ -1051,8 +1066,8 @@ and mk_match env e0 branches f =
       ) s_branches in
     let s_branches = List.map close_branch s_branches in
     let u_branches = List.map close_branch u_branches in
-    let t1_star =  U.arrow [S.mk_binder <| S.new_bv None (mk_star_to_type mk env t1)] (S.mk_Total U.ktype0) in
-    let s_e = U.abs [ S.mk_binder p ] (mk (Tm_match (s_e0, s_branches))) None in 
+    let s_e = U.abs [ S.mk_binder p ] (mk (Tm_match (s_e0, s_branches))) None in
+    let t1_star =  U.arrow [S.mk_binder <| S.new_bv None p_type] (S.mk_Total U.ktype0) in
     M t1,
     mk (Tm_ascribed (s_e, Inl t1_star, None)) ,
     mk (Tm_match (u_e0, u_branches))

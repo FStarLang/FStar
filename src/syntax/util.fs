@@ -522,11 +522,17 @@ let rec arrow_formals k =
     let bs, c = arrow_formals_comp k in 
     bs, comp_result c
 
-let rec abs_formals t = match (Subst.compress t).n with 
-    | Tm_abs(bs, t, _) -> 
-      let bs', t = abs_formals t in
-      Subst.open_term (bs@bs') t
-    | _ -> [], t 
+let abs_formals t =
+    let rec aux t =
+        match (Subst.compress t).n with
+        | Tm_abs(bs, t, _) ->
+            let bs',t = aux t in
+            bs@bs', t
+        | _ -> [], t 
+    in
+    let bs, t = aux t in
+    Subst.open_term bs t
+
 
 let abs bs t lopt = 
   if List.length bs = 0 then
