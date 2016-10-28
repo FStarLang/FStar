@@ -25,7 +25,6 @@ module MAC = Crypto.Symmetric.MAC
 type alg = Flag.mac_alg
 let alg_of_id = Flag.cipher_of_id
 
-
  
 // TOWARDS AGILITY 
 
@@ -34,8 +33,6 @@ let keylen (i:id) =
   match i.cipher with 
   | AES_256_GCM       -> 16ul
   | CHACHA20_POLY1305 -> 32ul
-
-
 
 
 // OPTIONAL STATIC AUTHENTICATION KEY (when using AES)
