@@ -396,7 +396,7 @@ and translate_decl env d: option<decl> =
   | MLM_Loc _ ->
       None
 
-  | MLM_Ty [ (assumed, name, args, Some (MLTD_Abbrev t)) ] ->
+  | MLM_Ty [ (assumed, name, _mangled_name, args, Some (MLTD_Abbrev t)) ] ->
       let name = env.module_name, name in
       let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
       if assumed then
@@ -404,12 +404,12 @@ and translate_decl env d: option<decl> =
       else
         Some (DTypeAlias (name, List.length args, translate_type env t))
 
-  | MLM_Ty [ (_, name, [], Some (MLTD_Record fields)) ] ->
+  | MLM_Ty [ (_, name, _mangled_name, [], Some (MLTD_Record fields)) ] ->
       let name = env.module_name, name in
       Some (DTypeFlat (name, List.map (fun (f, t) ->
         f, (translate_type env t, false)) fields))
 
-  | MLM_Ty [ (_, name, [], Some (MLTD_DType branches)) ] ->
+  | MLM_Ty [ (_, name, _mangled_name, [], Some (MLTD_DType branches)) ] ->
       let name = env.module_name, name in
       Some (DTypeVariant (name, List.mapi (fun i (cons, ts) ->
         cons, List.mapi (fun j t ->
@@ -418,7 +418,7 @@ and translate_decl env d: option<decl> =
         ) ts
       ) branches))
 
-  | MLM_Ty ((_, name, _, _) :: _) ->
+  | MLM_Ty ((_, name, _mangled_name, _, _) :: _) ->
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
       None
 

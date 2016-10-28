@@ -1016,10 +1016,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.UInt128.mul_wide", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.UInt128.mul_wide",
-      3,
+      2,
       2,
       1,
       [

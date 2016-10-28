@@ -26,7 +26,7 @@
 // You must not remove this notice, or any other, from this software.
 //----------------------------------------------------------------------------
 // See LICENSE-fsharp.txt at the root of this distribution for terms and conditions
-#light
+#light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Range
 
@@ -64,9 +64,18 @@ let proj_ord f a1 a2 = compare (f a1)  (f a2)
 
 type file_idx = int32
 type pos = int32
-type range = int64
 
-let dummyRange = 0L
+type range = {
+    def_range:int64;
+    use_range:int64
+}
+
+let dummyRange = {
+    def_range=0L;
+    use_range=0L
+}
+let set_use_range r2 r = if r.use_range <> 0L then {r2 with use_range=r.use_range} else r2
+let range_of_def_range i = {def_range=i; use_range=i}
 let col_nbits  = 9
 let line_nbits  = 16
 
@@ -105,11 +114,13 @@ let mk_file_idx_range fidx b e =
     ||| (int64(col_of_pos b)  <<< (file_idx_nbits + start_line_nbits))
     ||| (int64(line_of_pos e) <<< (file_idx_nbits + start_line_nbits + start_col_nbits))
     ||| (int64(col_of_pos e)  <<< (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits))
-let file_idx_of_range r   = int32(r &&& file_idx_mask)
-let start_line_of_range r = int32((r &&& start_line_mask) >>> file_idx_nbits)
-let start_col_of_range r  = int32((r &&& start_col_mask)  >>> (file_idx_nbits + start_line_nbits))
-let end_line_of_range r   = int32((r &&& end_line_mask)   >>> (file_idx_nbits + start_line_nbits + start_col_nbits))
-let end_col_of_range r    = int32((r &&& end_col_mask)    >>> (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits))
+    |> range_of_def_range
+
+let file_idx_of_range {def_range=r}   = int32(r &&& file_idx_mask)
+let start_line_of_range {def_range=r} = int32((r &&& start_line_mask) >>> file_idx_nbits)
+let start_col_of_range {def_range=r}  = int32((r &&& start_col_mask)  >>> (file_idx_nbits + start_line_nbits))
+let end_line_of_range {def_range=r}   = int32((r &&& end_line_mask)   >>> (file_idx_nbits + start_line_nbits + start_col_nbits))
+let end_col_of_range {def_range=r}    = int32((r &&& end_col_mask)    >>> (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits))
 
 
 // This is just a standard unique-index table
@@ -159,7 +170,7 @@ let end_of_range r = mk_pos (end_line_of_range r) (end_col_of_range r)
 let dest_file_idx_range r = file_idx_of_range r,start_of_range r,end_of_range r
 let dest_range r = file_of_range r,start_of_range r,end_of_range r
 let dest_pos p = line_of_pos p,col_of_pos p
-let end_range (r:range) = mk_range (file_of_range r) (end_of_range r) (end_of_range r)
+let end_range r = mk_range (file_of_range r) (end_of_range r) (end_of_range r)
 
 let trim_range_right r n =
     let fidx,p1,p2 = dest_file_idx_range r in
@@ -229,7 +240,9 @@ let decode_file_idx (s:string) =
 
 (* For Diagnostics *)
 let string_of_pos   pos = let line,col = line_of_pos pos,col_of_pos pos in sprintf "%d,%d" line col
-let string_of_range r   = sprintf "%s(%s-%s)" (file_of_range r) (string_of_pos (start_of_range r)) (string_of_pos (end_of_range r))
+let string_of_def_range r   = sprintf "%s(%s-%s)" (file_of_range r) (string_of_pos (start_of_range r)) (string_of_pos (end_of_range r))
+let string_of_use_range r   = string_of_def_range {r with def_range=r.use_range}
+let string_of_range r       = string_of_def_range r
 
 let compare r1 r2 =
     let fcomp = String.compare (file_of_range r1) (file_of_range r2) in
@@ -241,3 +254,7 @@ let compare r1 r2 =
          then col_of_pos start1 - col_of_pos start2
          else lcomp
     else fcomp
+
+let compare_use_range r1 r2 = 
+    compare ({r1 with def_range=r1.use_range})
+            ({r2 with def_range=r2.use_range})

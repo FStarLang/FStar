@@ -1,9 +1,18 @@
 [
   "Û^+\u0006¼\n<êq“QC#ûìc",
   [
-    [ "Ex12b.RPC.msg_buffer", 1, 2, 1, [ "@query" ], 0 ],
     [ "Ex12b.RPC.recv", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex12b.RPC.reqresp", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex12b.RPC.reqresp",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_Ex12b.Format.message"
+      ],
+      0
+    ],
     [
       "Ex12b.RPC.reqresp",
       2,
@@ -15,21 +24,9 @@
       ],
       0
     ],
-    [
-      "Ex12b.RPC.reqresp",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Ex12b.Format.message"
-      ],
-      0
-    ],
-    [ "Ex12b.RPC.k", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex12b.RPC.k",
-      2,
+      1,
       2,
       1,
       [

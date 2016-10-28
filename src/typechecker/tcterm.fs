@@ -126,9 +126,12 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
      let t = lc.res_typ in
      let e, g = TcUtil.check_and_ascribe env e t t' in
      if debug env Options.High
-     then Util.print2 "check_and_ascribe: type is %s\n\tguard is %s\n" (Print.term_to_string t) (Rel.guard_to_string env g);
+     then Util.print4 "check_and_ascribe: type is %s<:%s \tguard is %s, %s\n" 
+                (Print.term_to_string t) (Print.term_to_string t') 
+                (Rel.guard_to_string env g) (Rel.guard_to_string env guard);
+     let msg = if Rel.is_trivial g then None else (Some <| Errors.subtyping_failed env t t') in
      let g = Rel.conj_guard g guard in
-     let lc, g = TcUtil.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env e lc g in
+     let lc, g = TcUtil.strengthen_precondition msg env e lc g in
      memo_tk e t', set_lcomp_result lc t', g in
   if debug env Options.Low
   then Util.print1 "Return comp type is %s\n" (Print.lcomp_to_string lc);
@@ -577,6 +580,13 @@ and tc_value env (e:term) : term
 
   | Tm_fvar fv ->
     let us, t = Env.lookup_lid env fv.fv_name.v in
+    if Env.debug env <| Options.Other "Range"
+    then Util.print5 "Lookup up fvar %s at location %s (lid range = %s, %s); got type %s" 
+            (Print.lid_to_string (lid_of_fv fv)) 
+            (Range.string_of_range e.pos) 
+            (Range.string_of_range (range_of_lid (lid_of_fv fv)))
+            (Range.string_of_use_range (range_of_lid (lid_of_fv fv)))
+            (Print.term_to_string t);
     let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
     let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t

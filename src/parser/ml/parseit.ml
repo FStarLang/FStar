@@ -2,11 +2,26 @@ open FStar_Util
 open FStar_Absyn_Syntax
 open Lexing
 
+type filename = string
+
+type input_frag = {
+    frag_text:string;
+    frag_line:Prims.int;
+    frag_col:Prims.int
+}   
+
 let resetLexbufPos filename lexbuf =
   lexbuf.lex_curr_p <- {
     pos_fname= FStar_Range.encode_file filename;
     pos_cnum = 0; pos_bol = 0;
     pos_lnum=1 }
+
+let setLexbufPos filename lexbuf line col =
+  lexbuf.lex_curr_p <- {
+    pos_fname= FStar_Range.encode_file filename;
+    pos_cnum = col;
+    pos_bol  = 0;
+    pos_lnum = line }
 
 module Path = BatPathGen.OfString
 
@@ -32,16 +47,16 @@ let parse fn =
   FStar_Parser_Util.warningHandler := (function
     | e -> Printf.printf "There was some warning (TODO)\n");
 
-  let filename,lexbuf = match fn with
+  let filename,lexbuf,line,col = match fn with
     | Inl(f) ->
         check_extension f;
 	let f' = find_file f in
-        (try f', Lexing.from_string (read_file f')
+        (try f', Lexing.from_string (read_file f'), 1, 0
          with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
-    | Inr(s) ->
-      "<input>", Lexing.from_string s in
+    | Inr s ->
+      "<input>", Lexing.from_string s.frag_text, Z.to_int s.frag_line, Z.to_int s.frag_col in
 
-  resetLexbufPos filename lexbuf;
+  setLexbufPos filename lexbuf line col;
 
   let lexer = FStar_Parser_LexFStar.token in
 

@@ -14,10 +14,9 @@
       ],
       0
     ],
-    [ "TestMRef.test_frame_write_ref", 1, 2, 1, [ "@query" ], 0 ],
     [
       "TestMRef.test_frame_write_ref",
-      2,
+      1,
       2,
       1,
       [
@@ -44,16 +43,15 @@
     ],
     [
       "TestMRef.test_frame_write_ref",
-      3,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "TestMRef.test_frame_write_mref", 1, 2, 1, [ "@query" ], 0 ],
     [
       "TestMRef.test_frame_write_mref",
-      2,
+      1,
       2,
       1,
       [
@@ -83,16 +81,15 @@
     ],
     [
       "TestMRef.test_frame_write_mref",
-      3,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "TestMRef.test_frame_alloc_mref", 1, 2, 1, [ "@query" ], 0 ],
     [
       "TestMRef.test_frame_alloc_mref",
-      2,
+      1,
       2,
       1,
       [
@@ -118,16 +115,15 @@
     ],
     [
       "TestMRef.test_frame_alloc_mref",
-      3,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "TestMRef.test_write_mref", 1, 2, 1, [ "@query" ], 0 ],
     [
       "TestMRef.test_write_mref",
-      2,
+      1,
       2,
       1,
       [

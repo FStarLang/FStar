@@ -1,18 +1,9 @@
 [
   "ª\u0002◊HK* §°\"—Ûpù\u0013o",
   [
-    [ "FStar.PredicateExtensionality.peq", 1, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.PredicateExtensionality.predicateExtensionality",
       1,
-      0,
-      0,
-      [ "@query" ],
-      0
-    ],
-    [
-      "FStar.PredicateExtensionality.predicateExtensionality",
-      2,
       0,
       0,
       [

@@ -24,7 +24,6 @@ type alg = Flag.mac_alg
 let alg_of_id = Flag.cipher_of_id
 
 let norm h b = Crypto.Symmetric.Poly1305.Bigint.norm h b
-
  
 // TOWARDS AGILITY 
 
@@ -62,8 +61,6 @@ let mk_akey #rgn #i k = k
 let akey_gen (r:rid) (i:id) = 
   if skeyed i then mk_akey #r #i (Buffer.rcreate r 0uy (skeylen i))
   else ()
-
-
 
 type id = Flag.id * UInt128.t
 
@@ -199,7 +196,6 @@ let gen i region =
   lemma_reveal_modifies_1 key h0 h1;
   alloc i region key
 
-
 val coerce: i:id{~(authId i)} -> r:rid -> key:lbuffer 32 -> ST (state i)
   (requires (fun m0 -> live m0 key))
   (ensures  (genPost i r))
@@ -241,7 +237,10 @@ let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
 // not framed, as we allocate private state on the caller stack
 val start: #i:id -> st:state i -> StackInline (accB i)
   (requires (fun h -> live h st.r /\ norm h st.r))
-  (ensures  (fun h0 a h1 -> acc_inv st text_0 a h1 /\ modifies_0 h0 h1))
+  (ensures  (fun h0 a h1 -> 
+	       ~ (h0 `Buffer.contains` a) /\
+	       acc_inv st text_0 a h1 /\ 
+	       modifies_0 h0 h1))
 let start #i st =
   let h0 = ST.get () in
   let a = Buffer.create 0UL 5ul in
@@ -254,7 +253,6 @@ let start #i st =
   assert (equal h1 st.r h2 st.r);
   Bigint.norm_eq_lemma h0 h2 st.r st.r;
   a
-
 
 val update: #i:id -> st:state i -> l:itext -> a:accB i -> v:elemB -> Stack itext
   (requires (fun h0 ->
@@ -341,22 +339,28 @@ let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
 *)
 
 #set-options "--z3timeout 100 --print_fuels --initial_fuel 1 --initial_ifuel 1"
-
+#reset-options "--z3timeout 20 --initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1"
 val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit
   (requires (fun h0 ->
     live h0 tag /\ live h0 st.s /\
     disjoint acc st.s /\ disjoint tag acc /\ disjoint tag st.r /\ disjoint tag st.s /\
     acc_inv st l acc h0 /\
-    (mac_log ==> m_sel h0 (ilog st.log) == None)))
+    (mac_log ==> m_contains (ilog st.log) h0) /\
+    (mac_log /\ safeId (fst i) ==> m_sel h0 (ilog st.log) == None)))
   (ensures (fun h0 _ h1 ->
-    live h0 st.s /\ live h0 st.r /\ live h1 tag /\
-    // modifies h0 h1 "the tag buffer and st.log" /\
-    (mac_log ==>
-      (let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in
+    live h0 st.s /\ 
+    live h0 st.r /\ 
+    live h1 tag /\ (
+    if mac_log then
+      mods [Ref (as_hsref (ilog st.log)); Ref (Buffer.content tag)] h0 h1 /\
+      Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1 /\
+      m_contains (ilog st.log) h1 /\ (
+      let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in
       mac == little_endian (sel_word h1 tag) /\
-      m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag)))))
-
+      m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag))
+    else Buffer.modifies_1 tag h0 h1)))
 let mac #i st l acc tag =
+  admit();
   let h0 = ST.get () in
   poly1305_finish tag acc st.s;
   let h1 = ST.get () in
@@ -369,8 +373,6 @@ let mac #i st l acc tag =
     assume (m_sel h1 (ilog st.log) == m_sel h0 (ilog st.log));
     m_write #st.region #log #log_cmp (ilog st.log) (Some (l, t))
     end
-  else
-    admit ()
 //16-09-24 why?
 
 #set-options "--lax"

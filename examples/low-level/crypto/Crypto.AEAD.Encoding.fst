@@ -39,7 +39,6 @@ let aadmax = 2000ul
 type adata = b:bytes { Seq.length b <= v aadmax} 
 type cipher (i:id) (l:nat) = lbytes(l + v (Spec.taglen i))
 
-
 // copied from Poly1305.Spec
 
 (* * *********************************************)
@@ -83,7 +82,7 @@ let rec encode_bytes txt =
     let w = pad_0 txt0 (16 - l0) in 
     SeqProperties.cons (encode w) (encode_bytes txt)
 
-#reset-options "--z3timeout 1000"
+#reset-options "--lax"
 let rec lemma_encode_length txt: Lemma
   (ensures (Seq.length(encode_bytes txt) = (Seq.length txt + 15) / 16))
   (decreases (Seq.length txt))
@@ -97,7 +96,7 @@ let rec lemma_encode_length txt: Lemma
     assume false;
     assert(Seq.length(encode_bytes txt) = 1 + Seq.length(encode_bytes txt')))
 
-
+#reset-options
 (* * *********************************************)
 (* *          Encoding-related lemmas            *)
 (* * *********************************************)
@@ -210,9 +209,6 @@ let encode_pad_snoc prefix txt w =
   Seq.lemma_eq_intro w w';
   Seq.lemma_eq_intro txt txt'
 
-
-
-
 // If the length is not a multiple of 16, pad to 16
 // (we actually don't depend on the details of the padding)
 val pad_16: b:lbuffer 16 -> len:UInt32.t { 0 < v len /\ v len <= 16 } -> STL unit
@@ -224,14 +220,6 @@ val pad_16: b:lbuffer 16 -> len:UInt32.t { 0 < v len /\ v len <= 16 } -> STL uni
     Seq.equal (Buffer.as_seq h1 b) (Seq.append (Buffer.as_seq h0 (Buffer.sub b 0ul len)) (Seq.create (16 - v len) 0uy)))) 
 let pad_16 b len =
   memset (Buffer.offset b len) 0uy (16ul -^ len)
-
-let field i = match alg i with 
-  | Cipher.CHACHA20 -> elem
-  | Cipher.AES256   -> lbytes (v Crypto.Symmetric.GF128.len) // not there yet
-  
-let field_encode i aad cipher : Tot (Seq.seq (field i)) = 
-  //TODO
-  Seq.createEmpty
 
 open FStar.HyperStack
 
@@ -283,7 +271,7 @@ assume val lemma_append_slices: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> Lemma
 
 assume val lemma_append_nil: #a:_ -> s:Seq.seq a -> 
   Lemma (s == Seq.append s Seq.createEmpty)
-
+#set-options "--lax"
 private let encode_lengths (aadlen:UInt32.t) (plainlen:UInt32.t) : b:lbytes 16
   { v aadlen = little_endian (Seq.slice b 0 4) /\
     v plainlen = little_endian (Seq.slice b 8 12) } = 
@@ -297,12 +285,26 @@ private let encode_lengths (aadlen:UInt32.t) (plainlen:UInt32.t) : b:lbytes 16
   lemma_append_slices bp b0;
   b
 
-let encode_both aadlen (aad:lbytes (v aadlen)) plainlen (plain:lbytes (v plainlen)) :
-  e:Seq.seq elem {Seq.length e > 0 /\ SeqProperties.head e = encode(encode_lengths aadlen plainlen)} = 
-  SeqProperties.cons (encode(encode_lengths aadlen plainlen))
+#reset-options
+let encode_both aadlen (aad:lbytes (v aadlen)) clen (cipher:lbytes (v clen)) :
+  e:Seq.seq elem {Seq.length e > 0 /\ SeqProperties.head e = encode(encode_lengths aadlen clen)} = 
+  SeqProperties.cons (encode(encode_lengths aadlen clen))
     (Seq.append 
-      (encode_bytes plain) 
+      (encode_bytes cipher) 
       (encode_bytes aad))
+
+let field i = match alg i with 
+  | Cipher.CHACHA20 -> elem
+  | Cipher.AES256   -> lbytes (v Crypto.Symmetric.GF128.len) // not there yet
+
+#set-options "--prn"
+let field_encode (i:id) (aad:adata) (#l2:UInt32.t) (cipher:lbytes (v l2)) : GTot (Seq.seq (field i)) =
+  match alg i with 
+  | Cipher.CHACHA20 -> 
+    encode_both (FStar.UInt32.uint_to_t (Seq.length aad)) aad l2 cipher
+  | _ -> 
+   //TODO
+    Seq.createEmpty
 
 let lemma_encode_both_inj al0 pl0 al1 pl1 
   (a0:lbytes(v al0)) (p0:lbytes(v pl0)) (a1:lbytes(v al1)) (p1:lbytes (v pl1)) : Lemma
@@ -341,6 +343,7 @@ val accumulate:
     Buffer.live h0 aad /\ Buffer.live h0 cipher))
   (ensures (fun h0 (l,a) h1 -> 
     Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
+    ~ (h0 `Buffer.contains` a) /\
     Buffer.live h1 aad /\ Buffer.live h1 cipher /\
     MAC.acc_inv st l a h1 /\
     (mac_log ==> l == encode_both aadlen (Buffer.as_seq h1 aad) plainlen (Buffer.as_seq h1 cipher))))

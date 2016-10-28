@@ -1,7 +1,6 @@
 [
   "­\u000e¤fİ¾LğËÑ¢W)ßQæ",
   [
-    [ "TestHeap.DistinctXY", 1, 2, 1, [ "@query" ], 0 ],
     [
       "TestHeap.test0",
       1,
@@ -84,7 +83,6 @@
       ],
       0
     ],
-    [ "TestHeap.ys", 1, 2, 1, [ "@query" ], 0 ],
     [
       "TestHeap.test6",
       1,

@@ -2,7 +2,6 @@
   "\u0001¥ºfùÍÓ\u001fX\u001c1\u0015ÏÏ@\u007f",
   [
     [ "Normalization.test", 1, 0, 0, [ "@query" ], 0 ],
-    [ "Normalization.test", 2, 0, 0, [ "@query" ], 0 ],
     [
       "Normalization.id",
       1,

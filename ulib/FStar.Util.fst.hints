@@ -1,9 +1,1 @@
-[
-  "süu'M*ŸS;\u001dÿHä³\u0000º",
-  [
-    [ "FStar.Util.op_Plus_Plus", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Util.op_Plus_Plus_Hat", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Util.op_Hat_Plus_Hat", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Util.op_At_Plus_At", 1, 2, 1, [ "@query" ], 0 ]
-  ]
-]
+[ "süu'M*ŸS;\u001dÿHä³\u0000º", [] ]

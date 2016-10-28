@@ -1,7 +1,7 @@
 ULIB_GEN_DIR=./extracted
 
 ifeq ($(MEM),HST)
-	ST=$(ULIB_GEN_DIR)/FStar_Map.ml $(ULIB_GEN_DIR)/FStar_HyperHeap.ml $(ULIB_GEN_DIR)/FStar_HyperStack.ml hyperstack/FStar_ST.ml hyperstack/FStar_All.ml
+	ST=$(ULIB_GEN_DIR)/FStar_TSet.ml $(ULIB_GEN_DIR)/FStar_Map.ml $(ULIB_GEN_DIR)/FStar_HyperHeap.ml $(ULIB_GEN_DIR)/FStar_HyperStack.ml hyperstack/FStar_ST.ml hyperstack/FStar_All.ml
 else
 	ST=FStar_ST.ml FStar_All.ml
 endif
