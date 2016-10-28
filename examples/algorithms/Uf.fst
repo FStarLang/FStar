@@ -38,6 +38,11 @@ let markov_from_funcaccessible (#a:eqtype) (h:heap) (u: uf a) (w:funcaccessible 
   let aux0 (f : forall n. ~(p a h u n)) : Lemma False = give_witness f ; assert (~(p a h u n0)) ; assert (False) in
   not_intro aux0 ; get_proof (~(forall n. ~(p a h u n)))
 
+let reprfun (a:eqtype) (h:heap) = f:(uf a -> GTot (uf a)){
+  (forall u. if Heap.contains h u.parent then Heap.contains h (f u).parent else u = f u) /\
+  (forall (u:ufh a h). sel h (f u).parent = None /\ (sel h u.parent = None ==> f u = u)) /\
+  (forall (u:ufh a h) (v:ufh a h). sel h u.parent = Some v ==> f u = f v)
+}
 
 let funcaccessible_from_markov (#a:eqtype) (h:heap) (u:uf a) : Ghost (funcaccessible (reach a h) u) (requires (~(forall n. ~(p a h u n)))) (ensures (fun _ -> True)) =
   let n0 = stronger_markovs_principle (p a h u) in
@@ -51,22 +56,11 @@ let funcaccessible_from_markov (#a:eqtype) (h:heap) (u:uf a) : Ghost (funcaccess
 assume val recall_reachable : #a:Type -> #a2:Type -> #b:Type -> h:heap -> r:ref a -> f:(a2 -> Tot (ref b)) ->
 Lemma (requires (has_type (sel h r) a2 /\ f (sel h r) << sel h r)) (ensures (has_type (sel h r) a2 /\ Heap.contains h (f (sel h r))))
 
-
 let recall_step (#a:eqtype) (h:heap) (z:uf a) (y:uf a)
   : Lemma (requires (reach a h z = Some y)) (ensures (Heap.contains h y.parent)) =
   recall_reachable h z.parent (fun (r : (option (uf a)){is_Some r}) -> match r with | Some y -> y.parent)
 
-
 //assume val recall_step : #a:eqtype -> h:heap -> z:uf a -> y:uf a -> Lemma (requires (reach a h z = Some y)) (ensures (Heap.contains h y.parent))
-
-
-let reprfun (a:eqtype) (h:heap) = f:(uf a -> GTot (uf a)){
-  (forall u. if Heap.contains h u.parent then Heap.contains h (f u).parent else u = f u) /\
-  (forall (u:ufh a h). sel h (f u).parent = None /\ (sel h u.parent = None ==> f u = u)) /\
-  (forall (u:ufh a h) (v:ufh a h). sel h u.parent = Some v ==> f u = f v)
-}
-
-
 
 let uf_invariant (a:eqtype) (h:heap) : Type0 = (forall (u0:ufh a h). funcaccessible (reach a h) u0)
 let uf_invariant_fun (#a:eqtype) (h:heap) : Tot Type0 = (u0:ufh a h) -> GTot (funcaccessible (reach a h) u0)
@@ -231,13 +225,10 @@ let root (#a:eqtype) (u:uf a)
 
 
 
-let rec uf_equiv (#a:eqtype) (u1:uf a) (u2:uf a) : ST bool (requires (uf_invariant a)) (ensures (fun h0 b h1 -> uf_invariant a h0 /\ uf_invariant a h1 /\ same_reprfun a h0 h1 /\ (let f = retrieve_reprfun a h0 in b = (f u1 = f u2)))) =
-  let h0 = get () in
-  let r1 = root u1 in
-  let h1 = get () in
-  let r2 = root u2 in
-  let h2 = get () in
-  r1 = r2
+let rec uf_equiv (#a:eqtype) (u1:uf a) (u2:uf a) : ST bool (requires (uf_invariant a))
+  (ensures (fun h0 b h1 -> uf_invariant a h0 /\ uf_invariant a h1 /\ same_reprfun a h0 h1
+        /\ (let f = retrieve_reprfun a h0 in b = (f u1 = f u2))))
+  = root u1 = root u2
 
 
  (* Without invariants :
