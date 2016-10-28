@@ -201,7 +201,6 @@
         "typing_ArrayRealized.length"
       ],
       0
-    ],
-    [ "ArrayRealized.equal", 1, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

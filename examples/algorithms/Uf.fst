@@ -1,4 +1,4 @@
-module UfMarkov
+module Uf
 
 open FStar.Heap
 open FStar.List.Tot
@@ -8,16 +8,13 @@ open FStar.Ghost
 open FStar.ST
 open FStar.TSet
 open FStar.FunctionalExtensionality
+open FStar.MarkovsPrinciple
 
 
 (** TODO : Prove that forall u1 u2 : ufh a h. u1.parent = u2.parent ==> u1 = u2  using reification *)
 
 type uf (a : Type) : Type = { content:a ; parent:ref (option (uf a)) }
 
-// How wrong might this axiom be in our setting ?
-// If we put p : nat -> Tot bool, it seems just valid since we can realise it by unbounded search p 0, p 1, ...
-// With GTot it seems plainly wrong...
-assume val markov_principle : (p:(nat -> GTot bool)) -> Ghost nat (requires (~(forall(n:nat). ~(p n)))) (ensures (fun n -> p n))
 
 let rec p (a:Type) (h:heap) (u: uf a) (n:nat) : GTot bool (decreases n) =
     match sel h u.parent with
@@ -43,7 +40,7 @@ let markov_from_funcaccessible (#a:eqtype) (h:heap) (u: uf a) (w:funcaccessible 
 
 
 let funcaccessible_from_markov (#a:eqtype) (h:heap) (u:uf a) : Ghost (funcaccessible (reach a h) u) (requires (~(forall n. ~(p a h u n)))) (ensures (fun _ -> True)) =
-  let n0 = markov_principle (p a h u) in
+  let n0 = stronger_markovs_principle (p a h u) in
   let rec build_witness (n:nat) (v:uf a) : Ghost (funcaccessible (reach a h) v) (requires (p a h v n)) (ensures (fun _ -> True)) =
     match sel h v.parent with
     | None -> FAcc ()
@@ -89,16 +86,6 @@ let uf_invariant_termination (a:eqtype) (h:heap) (u:ufh a h)
 
 
 //assume val uf_invariant_termination : (a:eqtype) -> (h:heap) -> (u:ufh a h) -> (p:ufh a h) -> Lemma (requires (uf_invariant a h /\ sel h u.parent = Some p)) (ensures (p << u))
-
-
-(** Ghost functional extensionality **)
-type gfun (a:Type) (b:Type) = a -> GTot b
-
-type gfeq (#a:Type) (#b:Type) (f:gfun a b) (g:gfun a b) =
-    (forall x.{:pattern (f x) \/ (g x)} f x == g x)
-
-assume GhostExtensionality : forall (a:Type) (b:Type) (f: gfun a b) (g: gfun a b).
-                        {:pattern gfeq #a #b f g} gfeq #a #b f g <==> f==g
 
 
 let reprfun_prop (#a:eqtype) (h:heap) (f1:reprfun a h) (f2:reprfun a h) : Lemma (requires (uf_invariant a h)) (ensures (f1 == f2)) =
@@ -202,24 +189,17 @@ let rec root0 (#a:eqtype) (h0:heap) (u:uf a) (w: erased (funcaccessible (reach a
     assert ( reveal w_next << reveal w ) ;
     let r = root0 h0 p w_next in
     let h1 = get () in
-//   assert (sel h0 u.parent = Some p) ;
     distinct_cell_lemma h0 r.parent u.parent ;
-//    assert (r.parent <> u.parent) ;
     recall u.parent ;
     u.parent := Some r ;
     let h2 = get () in
-//    assert (forall (u0 : ufh a h2). Heap.contains h1 u0.parent);
-//    assert (forall (u0 : ufh a h2). u0.parent <> u.parent ==> reach a h2 u0 = reach a h1 u0);
     let uf_inv2 (uf_inv1: uf_invariant_fun h1) (u1:ufh a h2) : GTot (funcaccessible (reach a h2) u1) =
       let rec pushforward (u0:ufh a h1) (w : funcaccessible (reach a h1) u0) : GTot (funcaccessible (reach a h2) u0) (decreases w) =
         if u0.parent = u.parent
-        then begin match reach a h2 u0 with
-          | Some r0 -> let wr0 : funcaccessible (reach a h2) r0 = match reach a h2 r0 with | None -> FAcc () in FAcc wr0
-          end(* TODO : Something's wrong here FAcc (FAcc ()) should be enough  *)
+        then FAcc (FAcc () <: funcaccessible (reach a h2) r)
         else match reach a h2 u0 with | None -> FAcc () | Some v -> recall_step h1 u0 v ; FAcc (pushforward v w.next)
       in let u1 : uf a = u1 in pushforward u1 (uf_inv1 u1)
     in maintain_uf_invariant uf_inv2 ;
-//   if p = r then give_witness #(reachable h0 r u) (Immediately u) else give_proof (map_squash (get_proof (reachable h0 r p)) (fun w -> Later p w u)) ;
     r
 
 
@@ -285,9 +265,7 @@ let rec uf_equiv (#a:eqtype) (u1:uf a) (u2:uf a) : ST bool (requires (uf_invaria
     let uf_inv1 (uf_inv0:uf_invariant_fun h0) (u:ufh a h1) : GTot (funcaccessible (reach a h1) u) =
       let rec pushforward (u:ufh a h1) (acc0 : funcaccessible (reach a h0) u) : GTot (funcaccessible (reach a h1) u) (decreases acc0) =
         if u.parent = r1.parent
-        then begin match reach a h1 u with
-                | Some r0 -> let wr0 : funcaccessible (reach a h1) r0 = match reach a h1 r0 with | None -> FAcc () in FAcc wr0
-          end(* TODO : Something's wrong here FAcc (FAcc ()) should be enough  *)
+        then FAcc (FAcc () <: funcaccessible (reach a h1) r2)
         else match reach a h1 u with | None -> FAcc () | Some v -> recall_step h1 u v ; FAcc (pushforward v acc0.next)
       in let u : uf a = u in pushforward u (uf_inv0 u)
     in maintain_uf_invariant uf_inv1 ;

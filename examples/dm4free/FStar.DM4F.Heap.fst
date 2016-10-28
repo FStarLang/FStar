@@ -20,7 +20,7 @@ let addr (#a:Type) (r:ref a) : Tot nat = r
 
 (* An abstract predicate for a reference being well-typed in a heap, 
    usually written infix  *)
-abstract let contains_a_well_typed (#a:Type) (h:heap) (r:ref a) =
+abstract let contains_a_well_typed (#a:Type) (h:heap) (r:ref a) : GTot Type0 =
   exists x. h.memory r == Some (| a, x |)
 
 (* An abstract predicate for a reference simply being present in memory, 

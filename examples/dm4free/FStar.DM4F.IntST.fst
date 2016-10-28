@@ -9,8 +9,8 @@ let return_st a x = fun s -> x, s
 
 val bind_st : a:Type -> b:Type -> f:st a -> g:(a -> st b) -> st b
 let bind_st a b f g = fun s0 ->
-  let tmp = f s0 in
-  g (fst tmp) (snd tmp)
+  let (x,s) = f s0 in
+  g x s
   
 let get (_:unit): st int =
   fun x -> x, x

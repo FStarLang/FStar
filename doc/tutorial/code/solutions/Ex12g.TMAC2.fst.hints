@@ -5,7 +5,6 @@
     [ "Ex12g.TMAC2.Keys.k1", 1, 2, 1, [ "@query" ], 0 ],
     [ "Ex12g.TMAC2.bspec0", 1, 2, 1, [ "@query" ], 0 ],
     [ "Ex12g.TMAC2.bspec1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex12g.TMAC2.pkey", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex12g.TMAC2.keygen",
       1,

@@ -2,7 +2,7 @@
 
 FSTAR_HOME=../..
 
-OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28" -annot
+OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28-26-11-21" -annot
 
 #MENHIR=menhir --explain #--infer -la 1 --table
 MENHIR=ocamlyacc
@@ -27,7 +27,7 @@ FSTAR_OBJS=$(COMPILER_ML_LIB) \
 	   FStar_Parser_AST.cmx FStar_Parser_DesugarEnv.cmx FStar_Parser_Desugar.cmx FStar_Parser_Env.cmx FStar_Parser_Interleave.cmx FStar_Parser_ToSyntax.cmx FStar_Parser_Parse.cmx FStar_Parser_Lexhelp.cmx FStar_Parser_LexFStar.cmx FStar_Parser_ParseIt.cmx FStar_Parser_Driver.cmx FStar_Parser_Dep.cmx \
 	   FStar_Extraction_ML_Syntax.cmx FStar_Extraction_ML_Env.cmx FStar_Extraction_ML_UEnv.cmx FStar_Extraction_ML_Util.cmx FStar_Extraction_ML_Code.cmx FStar_Extraction_ML_ExtractTyp.cmx FStar_Extraction_ML_ExtractExp.cmx FStar_Extraction_ML_ExtractMod.cmx FStar_Extraction_ML_Term.cmx FStar_Extraction_ML_Modul.cmx FStar_Extraction_Kremlin.cmx \
 	   FStar_Fsdoc_Generator.cmx \
-	   FStar_SMTEncoding_Term.cmx FStar_SMTEncoding_Z3.cmx FStar_SMTEncoding_SplitQueryCases.cmx FStar_SMTEncoding_ErrorReporting.cmx FStar_SMTEncoding_Encode.cmx FStar_SMTEncoding_Solver.cmx \
+	   FStar_SMTEncoding_Term.cmx FStar_SMTEncoding_Util.cmx FStar_SMTEncoding_Z3.cmx FStar_SMTEncoding_SplitQueryCases.cmx FStar_SMTEncoding_ErrorReporting.cmx FStar_SMTEncoding_Encode.cmx FStar_SMTEncoding_Solver.cmx \
 	   FStar_Dependences.cmx FStar_Interactive.cmx FStar_Stratified.cmx FStar_Universal.cmx FStar_FStar.cmx
 
 GENERATED_FILES=$(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml 
@@ -57,6 +57,7 @@ endif
 # changed or not
 # NOTE: once we move to ulib, the -j 1 can disappear.
 all:
+	@echo 'if Sys.ocaml_version >= "4.02.2" then exit 0 else (print_string "ERROR: Installed OCaml too old (need version larger than 4.02.2)\n"; exit 1)' | ocaml -noinit -noprompt -stdin
 	make -j 1 -C $(FSTAR_HOME)/lib/ml
 	$(MAKE) prep
 	$(MAKE) depend
@@ -66,7 +67,7 @@ prep: parser copy_lib_files version
 
 parser:
 	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
-	$(MENHIR) parse.mly
+	$(MENHIR) parse.mly 2>&1
 	rm -f FStar_Parser_Parse.ml
 	echo "open Prims" > FStar_Parser_Parse.ml
 	echo "open FStar_List" >> FStar_Parser_Parse.ml

@@ -16,6 +16,7 @@ open FStar.Int.Cast
 (** Mathematical definitions *)
 open FStar.Math.Lib
 open FStar.Math.Lemmas
+open Crypto.Symmetric.Bytes 
 
 module U8  = FStar.UInt8
 module U32 = FStar.UInt32
@@ -52,112 +53,11 @@ let field_mul a b = (a * b) % p_1305
 let op_Plus_At = field_add
 let op_Star_At = field_mul
 
-(* Little endian integer value of a sequence of bytes *)
-let rec little_endian (b:word) : Tot (n:nat) (decreases (Seq.length b))
-  = if Seq.length b = 0 then 0
-    else U8.v (Seq.index b 0) +
-	 pow2 8 * little_endian (Seq.slice b 1 (Seq.length b))
 
-val lemma_euclidean_division: a:nat -> b:nat -> Lemma
-  (requires (a < pow2 8))
-  (ensures  (a + pow2 8 * b < pow2 8 * (b + 1)))
-let lemma_euclidean_division a b = ()
 
-val lemma_factorise: a:nat -> b:nat -> Lemma (a + a * b = a * (b + 1))
-let lemma_factorise a b = ()
 
-#reset-options "--initial_fuel 1 --max_fuel 1"
-
-val little_endian_null: len:nat{len < 16} -> Lemma
-  (little_endian (Seq.create len 0uy) == 0)
-let rec little_endian_null len =
-  if len = 0 then ()
-  else
-    begin
-    Seq.lemma_eq_intro (Seq.slice (Seq.create len 0uy) 1 len)
-		       (Seq.create (len - 1) 0uy);
-    assert (little_endian (Seq.create len 0uy) ==
-      0 + pow2 8 * little_endian (Seq.slice (Seq.create len 0uy) 1 len));
-    little_endian_null (len - 1)
-    end
-
-val little_endian_singleton: n:U8.t -> Lemma
-  (little_endian (Seq.create 1 n) == U8.v n)
-let little_endian_singleton n =
-  assert (little_endian (Seq.create 1 n) ==
-    U8.v (Seq.index (Seq.create 1 n) 0) + pow2 8 *
-    little_endian (Seq.slice (Seq.create 1 n) 1 1))
-
-#set-options "--z3timeout 20"
-
-val little_endian_append: w1:word -> w2:word{length w1 + length w2 <= 16} -> Lemma
-  (requires True)
-  (ensures 
-    little_endian (append w1 w2) ==
-    little_endian w1 + pow2 (8 * length w1) * little_endian w2)
-  (decreases (length w1))
-let rec little_endian_append w1 w2 =
-  if length w1 = 0 then
-    begin
-    assert_norm (pow2 (8 * 0) == 1);
-    Seq.lemma_eq_intro (append w1 w2) w2
-    end
-  else 
-    begin
-    let w1' = slice w1 1 (length w1) in
-    assert (length w1' == length w1 - 1);
-    little_endian_append w1' w2;
-    assert (index (append w1 w2) 0 == index w1 0);
-    Seq.lemma_eq_intro
-      (append w1' w2) 
-      (Seq.slice (append w1 w2) 1 (length (append w1 w2)));
-    assert (little_endian (append w1 w2) ==
-      U8.v (index w1 0) + pow2 8 * little_endian (append w1' w2));
-    assert (little_endian (append w1' w2) ==
-      little_endian w1' + pow2 (8 * length w1') * little_endian w2);
-    assert (U8.v (index w1 0) + pow2 8 * little_endian (append w1' w2) ==
-      U8.v (index w1 0) + 
-      pow2 8 * (little_endian w1' + pow2 (8 * length w1') * little_endian w2));
-    pow2_plus 8 (8 * (length w1 - 1));
-    assert (pow2 8 * pow2 (8 * length w1') == pow2 (8 * length w1));
-    assert (U8.v (index w1 0) + pow2 8 * little_endian (append w1' w2) ==
-      U8.v (index w1 0) + 
-      pow2 8 * little_endian w1' + pow2 (8 * length w1) * little_endian w2);
-    assert (U8.v (index w1 0) + pow2 8 * little_endian w1' == little_endian w1)  
-    end
-
-val lemma_little_endian_is_bounded: b:word -> Lemma
-  (requires True)
-  (ensures  (little_endian b < pow2 (8 * Seq.length b)))
-  (decreases (Seq.length b))
-let rec lemma_little_endian_is_bounded b =
-  if Seq.length b = 0 then ()
-  else
-    begin
-    let s = Seq.slice b 1 (Seq.length b) in
-    assert(Seq.length s = Seq.length b - 1);
-    lemma_little_endian_is_bounded s;
-    assert(U8.v (Seq.index b 0) < pow2 8);
-    assert(little_endian s < pow2 (8 * Seq.length s));
-    assert(little_endian b < pow2 8 + pow2 8 * pow2 (8 * (Seq.length b - 1)));
-    lemma_euclidean_division (U8.v (Seq.index b 0)) (little_endian s);
-    assert(little_endian b <= pow2 8 * (little_endian s + 1));
-    assert(little_endian b <= pow2 8 * pow2 (8 * (Seq.length b - 1)));
-    Math.Lemmas.pow2_plus 8 (8 * (Seq.length b - 1));
-    lemma_factorise 8 (Seq.length b - 1)
-    end
-
-#reset-options "--initial_fuel 0 --max_fuel 0"
-
-val lemma_little_endian_lt_2_128: b:word -> Lemma
-  (requires (True))
-  (ensures  (little_endian b < pow2 128))
-  [SMTPat (little_endian b)]
-let lemma_little_endian_lt_2_128 b =
-  lemma_little_endian_is_bounded b;
-  if Seq.length b = 16 then ()
-  else pow2_lt_compat 128 (8 * Seq.length b)
-
+(* REST OF THE FILE TO BE RESHUFFLED OR DELETED,
+   PARTLY COPIED TO BUFFER.UTIL OR ENCODING *)
 
 (* * *********************************************)
 (* *            Encoding                         *)
@@ -188,37 +88,7 @@ let rec encode_pad prefix txt =
     end
 
 
-//16-09-18 where is it in the libraries??
-private let min (a:nat) (b:nat) : nat = if a <= b then a else b
-
-//16-10-15 simpler variant? rediscuss injectivity.
-val encode_bytes: txt:Seq.seq UInt8.t -> Tot (Seq.seq elem) (decreases (Seq.length txt))
-let rec encode_bytes txt =
-  let l = Seq.length txt in
-  if l = 0 then 
-    Seq.createEmpty
-  else 
-    let l0 = min l 16 in
-    let txt0, txt = SeqProperties.split txt l0 in
-    let w = pad_0 txt0 (16 - l0) in 
-    SeqProperties.cons (encode w) (encode_bytes txt)
-
-
-#reset-options "--z3timeout 1000"
-let rec lemma_encode_length txt: Lemma
-  (ensures (Seq.length(encode_bytes txt) = (Seq.length txt + 15) / 16))
-  (decreases (Seq.length txt))
-=
-  let l = Seq.length txt in 
-  if l = 0 then ()
-  else if l < 16 then assert(Seq.length(encode_bytes txt) = 1)
-  else (
-    let txt0, txt' = SeqProperties.split txt 16 in
-    lemma_encode_length txt'; 
-    assert(Seq.length(encode_bytes txt) = 1 + Seq.length(encode_bytes txt')))
-
 let trunc_1305 (e:elem) : Tot elem = e % pow2 128
-
 
 (* * *********************************************)
 (* *          Encoding-related lemmas            *)
@@ -226,68 +96,6 @@ let trunc_1305 (e:elem) : Tot elem = e % pow2 128
 
 #reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 
-val lemma_little_endian_is_injective_0: b:word{Seq.length b > 0} -> Lemma
-  (little_endian b =
-   U8.v (Seq.index b 0) + pow2 8 * little_endian (Seq.slice b 1 (Seq.length b)))
-let lemma_little_endian_is_injective_0 b = ()
-
-val lemma_little_endian_is_injective_1: b:pos -> q:nat -> r:nat -> q':nat -> r':nat -> Lemma
-  (requires (r < b /\ r' < b /\ r + b * q = r' + b * q'))
-  (ensures  (r = r' /\ q = q'))
-let lemma_little_endian_is_injective_1 b q r q' r' =
-  lemma_mod_plus r q b;
-  lemma_mod_plus r' q' b;
-  lemma_mod_injective b r r'
-
-val lemma_little_endian_is_injective_2: b:word -> len:pos{len <= Seq.length b} -> Lemma
-  (let s = Seq.slice b (Seq.length b - len) (Seq.length b) in
-   let s' = Seq.slice s 1 (Seq.length s) in
-   let s'' = Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) in
-   s'' == s')
-let lemma_little_endian_is_injective_2 b len =
-  let s = Seq.slice b (Seq.length b - len) (Seq.length b) in
-  let s' = Seq.slice s 1 (Seq.length s) in
-  let s'' = Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) in
-  Seq.lemma_eq_intro s' s''
-
-val lemma_little_endian_is_injective_3: b:word -> b':word -> len:pos{len <= Seq.length b /\ len <= Seq.length b'} -> Lemma
-  (requires (Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) ==
-             Seq.slice b' (Seq.length b' - (len-1)) (Seq.length b')
-           /\ Seq.index b (Seq.length b - len) = Seq.index b' (Seq.length b' - len)))
-  (ensures  (Seq.slice b (Seq.length b - len) (Seq.length b) ==
-             Seq.slice b' (Seq.length b' - len) (Seq.length b')))
-let lemma_little_endian_is_injective_3 b b' len =
-  Seq.lemma_eq_intro (Seq.slice b' (Seq.length b' - len) (Seq.length b'))
-		     (Seq.append (Seq.create 1 (Seq.index b' (Seq.length b' - len))) (Seq.slice b' (Seq.length b' - (len-1)) (Seq.length b')));
-  Seq.lemma_eq_intro (Seq.slice b (Seq.length b - len) (Seq.length b))
-		     (Seq.append (Seq.create 1 (Seq.index b (Seq.length b - len))) (Seq.slice b (Seq.length b - (len-1)) (Seq.length b)))
-
-val lemma_little_endian_is_injective: b:word -> b':word ->
-  len:nat{Seq.length b >= len /\ Seq.length b' >= len} -> Lemma
-  (requires (little_endian (Seq.slice b (Seq.length b - len) (Seq.length b)) =
-             little_endian (Seq.slice b' (Seq.length b' - len) (Seq.length b')) ))
-  (ensures  (Seq.slice b (Seq.length b - len) (Seq.length b) ==
-             Seq.slice b' (Seq.length b' - len) (Seq.length b')))
-let rec lemma_little_endian_is_injective b b' len =
-  if len = 0 then
-    Seq.lemma_eq_intro (Seq.slice b (Seq.length b - len) (Seq.length b))
-		       (Seq.slice b' (Seq.length b' - len) (Seq.length b'))
-  else
-    begin
-    let s = Seq.slice b (Seq.length b - len) (Seq.length b) in
-    let s' = Seq.slice b' (Seq.length b' - len) (Seq.length b') in
-    assert(Seq.length s = len /\ Seq.length s' = len);
-    lemma_little_endian_is_injective_0 s; lemma_little_endian_is_injective_0 s';
-    lemma_little_endian_is_injective_1 (pow2 8)
-				      (little_endian (Seq.slice s 1 (Seq.length s)))
-				      (U8.v (Seq.index s 0))
-				      (little_endian (Seq.slice s' 1 (Seq.length s')))
-				      (U8.v (Seq.index s' 0));
-    lemma_little_endian_is_injective_2 b len;
-    lemma_little_endian_is_injective_2 b' len;
-    lemma_little_endian_is_injective b b' (len - 1);
-    lemma_little_endian_is_injective_3 b b' len
-    end
 
 val lemma_pad_0_injective: b0:Seq.seq UInt8.t -> b1:Seq.seq UInt8.t -> l:nat -> Lemma
   (requires (pad_0 b0 l == pad_0 b1 l))
@@ -310,36 +118,6 @@ let lemma_encode_injective w0 w1 =
   Seq.lemma_eq_intro (Seq.slice w0 0 l) w0;
   Seq.lemma_eq_intro (Seq.slice w1 0 l) w1;
   lemma_little_endian_is_injective w0 w1 l
-
-#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-
-assume val lemma_encode_bytes_injective: t0:Seq.seq UInt8.t -> t1:Seq.seq UInt8.t -> Lemma
-  (requires length t0 == length t1 /\ encode_bytes t0 == encode_bytes t1)
-  (ensures t0 == t1)
-  (decreases (Seq.length t0))
-(*
-let rec lemma_encode_bytes_injective t0 t1 =
-  let l = Seq.length t0 in
-  if l = 0 then Seq.lemma_eq_intro t0 t1
-  else if l < 16 then
-    begin
-    lemma_index_create 1 (encode t0) 0;
-    lemma_index_create 1 (encode t1) 0;
-    lemma_encode_injective t0 t1
-    end
-  else
-    begin
-    let w0, t0' = SeqProperties.split_eq t0 16 in
-    let w1, t1' = SeqProperties.split_eq t1 16 in
-    let p0' = Seq.create 1 (encode w0) in
-    let p1' = Seq.create 1 (encode w1) in
-    assert (encode_pad p0' t0' == encode_pad p1' t1');
-    lemma_encode_bytes_injective t0' t1';
-    lemma_index_create 1 (encode w0) 0;
-    lemma_index_create 1 (encode w1) 0;
-    lemma_encode_injective w0 w1
-    end
-*)
 
 val lemma_encode_pad_injective: p0:Seq.seq elem -> t0:Seq.seq UInt8.t -> p1:Seq.seq elem -> t1:Seq.seq UInt8.t -> Lemma
   (requires length t0 == length t1 /\ encode_pad p0 t0 == encode_pad p1 t1)
@@ -422,12 +200,13 @@ let rec eq_poly p0 p1 =
   else if Seq.length p1 = 0 then eq_poly0 p0
   else SeqProperties.head p0 = SeqProperties.head p1 && eq_poly (SeqProperties.tail p0) (SeqProperties.tail p1)
 
-#reset-options "--z3timeout 1000"
+#set-options "--lax"
 private let rec lemma_sane_eq_poly0 (p:seq elem) (r:elem) : Lemma
   (requires eq_poly0 p)
   (ensures (poly' p r = 0)) (decreases (Seq.length p)) = 
   if Seq.length p = 0 then () 
   else if SeqProperties.head p = 0 then lemma_sane_eq_poly0 (SeqProperties.tail p) r
+#reset-options "--z3timeout 1000"
 private let rec lemma_sane_eq_poly (p0:seq elem) (p1:seq elem) (r:elem) : Lemma
   (requires eq_poly p0 p1)
   (ensures (poly' p0 r = poly' p1 r)) (decreases (Seq.length p0)) = 
@@ -435,11 +214,8 @@ private let rec lemma_sane_eq_poly (p0:seq elem) (p1:seq elem) (r:elem) : Lemma
   else if Seq.length p1 = 0 then lemma_sane_eq_poly0 p0 r
   else lemma_sane_eq_poly (SeqProperties.tail p0) (SeqProperties.tail p1) r
 
-//16-10-15 to stay close to the paper, we may apply "encode" in the poly specification.
 
-
-
-
+//16-10-15 to stay close to the paper, we may apply "encode" in the poly specification
 
 private let fix (r:word_16) (i:nat {i < 16}) m : Tot word_16 =
   Seq.upd r i (U8 (Seq.index r i &^ m))
@@ -458,4 +234,6 @@ let clamp r =
   let r = fix r 12 252uy in
   little_endian r
 
-let mac_1305 (vs:seq elem) r s = (trunc_1305 (poly vs r) + little_endian s) % pow2 128
+(** REMARK: this is equivalent to (poly vs r + little_endian s) % pow2 128 *)
+val mac_1305: vs:seq elem -> r:elem -> s:seq byte -> GTot int
+let mac_1305 vs r s = (trunc_1305 (poly vs r) + little_endian s) % pow2 128

@@ -23,6 +23,7 @@ VERIFY= \
   Crypto.Symmetric.Poly1305.Bignum \
   Crypto.Symmetric.Poly1305.Spec \
   Crypto.Symmetric.Poly1305 \
+  Crypto.Symmetric.Poly1305.MAC \
   Crypto.Symmetric.Bytes \
   Crypto.Symmetric.GF128 \
   Crypto.Symmetric.GCM \
@@ -31,9 +32,12 @@ VERIFY= \
   Crypto.AEAD.AES256GCM \
   Crypto.Symmetric.PRF \
   Crypto.AEAD.Chacha20Poly1305 \
+  Crypto.AEAD.Encoding \
+  Crypto.AEAD.Invariant \
+  Crypto.AEAD.Lemmas \
   Crypto.AEAD \
   Plain \
-  Test \
+  Crypto.Test \
   TestMonotonic
 
 # Files that should fully typecheck, but not part of regression
@@ -43,8 +47,7 @@ SLOW= \
 # Files not yet fully typechecking -- possibly due to timeouts.
 # Please move files that you know fully typecheck to VERIFY
 # Files commented out are broken, uncomment once fixed
-LAX= \
-  Crypto.Symmetric.Poly1305.MAC
+LAX=
 
 #16-10-09  Not sure how to verify Flag.fsti and Flag.fst
 

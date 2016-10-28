@@ -31,7 +31,7 @@ type interactive_tc<'env,'modul> = {
     mark:        'env -> 'env;
     reset_mark:  'env -> 'env;
     commit_mark: 'env -> 'env;
-    check_frag:  'env -> 'modul -> string -> option<('modul * 'env * int)>;
+    check_frag:  'env -> 'modul -> FStar.Parser.ParseIt.input_frag -> option<('modul * 'env * int)>;
     report_fail:  unit -> unit
 }
 
@@ -39,7 +39,7 @@ type interactive_tc<'env,'modul> = {
 (* Internal data structures for managing chunks of input from the editor                *)
 (****************************************************************************************)
 type input_chunks =
-  | Push of string
+  | Push of (int * int)
   | Pop  of string
   | Code of string * (string * string)
 
@@ -106,7 +106,16 @@ let rec read_chunk () =
     Util.clear_string_builder s.chunk; Code (str, responses)
     end
   else if Util.starts_with l "#pop" then (Util.clear_string_builder s.chunk; Pop l)
-  else if Util.starts_with l "#push" then (Util.clear_string_builder s.chunk; Push l)
+  else if Util.starts_with l "#push" then (Util.clear_string_builder s.chunk; 
+        let lc = Util.substring_from l (String.length "#push") in
+        let lc = Util.trim_string lc in
+        let lcs = Util.split lc " " in
+        let lc = match lcs with 
+                 | [l; c] -> Util.int_of_string l, Util.int_of_string c
+                 | _ ->
+//                  Util.print1 "Got lcs=[%s]" (String.concat "; " lcs);
+                  1, 0 in
+        Push lc)
   else if l = "#finish" then exit 0
   else
     (Util.string_builder_append s.chunk line;
@@ -189,10 +198,11 @@ let detect_dependencies_with_first_interactive_chunk () : string         //the f
 (******************************************************************************************)
 (* The main interactive loop *)
 (******************************************************************************************)
+open FStar.Parser.ParseIt
 let interactive_mode filename (env:'env) (initial_mod:'modul) (tc:interactive_tc<'env,'modul>) =
     if Option.isSome (Options.codegen()) 
     then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
-    let rec go (stack:stack<'env,'modul>) (curmod:'modul) (env:'env) = begin
+    let rec go line_col (stack:stack<'env,'modul>) (curmod:'modul) (env:'env) = begin
       match shift_chunk () with
       | Pop msg ->
           tc.pop env msg;
@@ -201,27 +211,35 @@ let interactive_mode filename (env:'env) (initial_mod:'modul) (tc:interactive_tc
             | [] -> Util.print_error "too many pops"; exit 1
             | hd::tl -> hd, tl
           in
-          go stack curmod env
-      | Push msg ->
+          go line_col stack curmod env
+
+      | Push lc ->
           let stack = (env, curmod)::stack in
-          let env = tc.push env msg in
-          go stack curmod env
+          let env = tc.push env "#push" in
+//          Util.print2 "Got push (%s, %s)" (Util.string_of_int <| fst lc) (Util.string_of_int <| snd lc);
+          go lc stack curmod env
 
       | Code (text, (ok, fail)) ->
           let fail curmod env_mark =
             tc.report_fail();
             Util.print1 "%s\n" fail;
             let env = tc.reset_mark env_mark in
-            go stack curmod env in
+            go line_col stack curmod env in
 
           let env_mark = tc.mark env in
-          let res = tc.check_frag env_mark curmod text in begin
+          let frag = {frag_text=text;
+                      frag_line=fst line_col; 
+                      frag_col=snd line_col} in
+//          Util.print3 "got frag %s, %s, %s" frag.frag_text 
+//            (Util.string_of_int frag.frag_line)
+//            (Util.string_of_int frag.frag_col);
+          let res = tc.check_frag env_mark curmod frag in begin
             match res with
             | Some (curmod, env, n_errs) ->
                 if n_errs=0 then begin
                   Util.print1 "\n%s\n" ok;
                   let env = tc.commit_mark env in
-                  go stack curmod env
+                  go line_col stack curmod env
                   end
                 else fail curmod env_mark
             | _ -> fail curmod env_mark
@@ -231,5 +249,5 @@ let interactive_mode filename (env:'env) (initial_mod:'modul) (tc:interactive_tc
     && (FStar.Options.record_hints() //and if we're recording or using hints
     || FStar.Options.use_hints())
     && Option.isSome filename
-    then FStar.SMTEncoding.Solver.with_hints_db (Option.get filename) (fun () -> go [] initial_mod env)
-    else go [] initial_mod env
+    then FStar.SMTEncoding.Solver.with_hints_db (Option.get filename) (fun () -> go (1, 0) [] initial_mod env)
+    else go (1, 0) [] initial_mod env

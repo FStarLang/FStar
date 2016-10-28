@@ -196,7 +196,7 @@ let modifies_buf_0 rid h h' =
   modifies_ref rid !{} h h'
   /\ (forall (#tt:Type) (bb:buffer tt). (frameOf bb = rid /\ live h bb) ==> equal h bb h' bb)
 
-let modifies_buf_1 (#t:Type) rid (b:buffer t) h h' =
+let modifies_buf_1 (#t:Type) rid (b:buffer t) h h' = //would be good to drop the rid argument on these, since they can be computed from the buffers
   modifies_ref rid !{as_ref b} h h'
   /\ (forall (#tt:Type) (bb:buffer tt). (frameOf bb = rid /\ live h bb /\ disjoint b bb) ==> equal h bb h' bb)
 

@@ -19,6 +19,14 @@ module FStar.Parser.ParseIt
 open FStar
 open FStar.Util
 
+type filename = string
+
+type input_frag = {
+    frag_text:string;
+    frag_line:int;
+    frag_col:int
+}   
+
 // VALS_HACK_HERE
 
 let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
@@ -26,6 +34,12 @@ let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char
     pos_fname= Range.encode_file filename;
     pos_cnum=0;
     pos_lnum=1 }
+
+let setLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) line col =
+  lexbuf.EndPos <- {lexbuf.EndPos with
+    pos_fname= Range.encode_file filename;
+    pos_cnum=col;
+    pos_lnum=line }
 
 let find_file filename =
   match Options.find_file filename with
@@ -49,21 +63,30 @@ let check_extension fn =
           
 let parse fn =
   Parser.Util.warningHandler := (function
-    | e -> Printf.printf "Warning: %A\n" e);
-
+    | e -> let msg = Printf.sprintf "Warning: %A\n" e in
+           Util.print_warning msg);
   Parser.Util.errorHandler := (function
     | e -> raise e);
 
-  let filename,sr,fs = match fn with
+  let filename,sr,fs,line,col = match fn with
     | Inl (filename:string) ->
         check_extension filename;
         let filename' = find_file filename in
         let contents = read_file filename' in
-        filename', new System.IO.StringReader(contents) :> System.IO.TextReader, contents
-    | Inr (s:string) -> "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s  in
+        filename', 
+        new System.IO.StringReader(contents) :> System.IO.TextReader, 
+        contents,
+        1, 
+        0
+    | Inr frag -> 
+        "<input>", 
+        new System.IO.StringReader(frag.frag_text) :> System.IO.TextReader, 
+        frag.frag_text,
+        frag.frag_line,
+        frag.frag_col  in
 
   let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in
-  resetLexbufPos filename lexbuf;
+  setLexbufPos filename lexbuf line col;
   try
       let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
       let lexer = LexFStar.token lexargs in

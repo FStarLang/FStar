@@ -486,7 +486,7 @@ let reduce_primops steps tm =
             | Some (_, op) ->
               begin match (SS.compress a1).n with
                 | Tm_constant (Const.Const_string(b, _)) ->
-                    op (Bytes.utf8_bytes_as_string b)
+                    op (Bytes.unicode_bytes_as_string b)
                 | _ -> tm
               end
             end
@@ -549,6 +549,22 @@ let maybe_simplify steps tm =
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
 (********************************************************************************************************************)
+let is_norm_request hd args = 
+    match (U.un_uinst hd).n, args with 
+    | Tm_fvar fv, [_; _] ->
+      S.fv_eq_lid fv Syntax.Const.normalize_term
+          
+    | Tm_fvar fv, [_] -> 
+      S.fv_eq_lid fv Syntax.Const.normalize
+      
+    | _ -> false
+
+let get_norm_request args = 
+    match args with 
+    | [_; (tm, _)]
+    | [(tm, _)] -> tm
+    | _ -> failwith "Impossible"
+
 let rec norm : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t -> 
         let t = compress t in
@@ -565,11 +581,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_fvar( {fv_qual=Some Data_ctor } ) 
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             rebuild cfg env stack t
-     
-          | Tm_app({n=Tm_fvar fv}, [(tm, _)])   //User-requested full normalization on tm
-            when S.fv_eq_lid fv Syntax.Const.normalize
+
+          | Tm_app(hd, args) 
+            when is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
-            let s = [Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
+            let tm = get_norm_request args in
+            let s = [Reify; Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
             let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
             let stack' = Debug t :: Steps (cfg.steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
@@ -651,7 +668,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                            
             if not should_delta
             then rebuild cfg env stack t
-            else begin match Env.lookup_definition cfg.delta_level cfg.tcenv f.fv_name.v with 
+            else let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in //preserve the range info on the returned def
+                 begin match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with 
                     | None -> rebuild cfg env stack t
                     | Some (us, t) ->
                       log cfg (fun () -> Util.print2 ">>> Unfolded %s to %s\n" 
@@ -816,7 +834,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
             if not (cfg.steps |> List.contains NoDeltaSteps)
             && (Util.is_pure_effect n
-            || Util.is_ghost_effect n)
+            || (Util.is_ghost_effect n && not (cfg.steps |> List.contains PureSubtermsWithinComputations)))
             then let env = Clos(env, lb.lbdef, Util.mk_ref None, false)::env in 
                  norm cfg env stack body
             else let bs, body = Subst.open_term [lb.lbname |> Util.left |> S.mk_binder] body in
@@ -1046,7 +1064,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
               let scrutinee = t in
               let norm_and_rebuild_match () =
                 let whnf = List.contains WHNF cfg.steps in
-                let cfg = 
+                let cfg_exclude_iota_zeta = 
                     let new_delta = cfg.delta_level |> List.filter (function
                             | Env.Inlining
                             | Env.Eager_unfolding_only -> true
@@ -1055,8 +1073,8 @@ and rebuild : cfg -> env -> stack -> term -> term =
                                     steps=Exclude Iota::Exclude Zeta::cfg.steps} in
                 let norm_or_whnf env t =
                     if whnf
-                    then closure_as_term cfg env t
-                    else norm cfg env [] t in
+                    then closure_as_term cfg_exclude_iota_zeta env t
+                    else norm cfg_exclude_iota_zeta env [] t in
                  let rec norm_pat env p = match p.v with 
                     | Pat_constant _ -> p, env
                     | Pat_disj [] -> failwith "Impossible"

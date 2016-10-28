@@ -12,10 +12,9 @@
       0
     ],
     [ "SHA1.sha1", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "SHA1.sha1", 2, 2, 1, [ "@query" ], 0 ],
     [
       "SHA1.sha1",
-      3,
+      2,
       2,
       1,
       [

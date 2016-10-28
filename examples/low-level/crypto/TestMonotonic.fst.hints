@@ -18,7 +18,6 @@
       0
     ],
     [ "TestMonotonic.root_has_color_zero'", 2, 0, 1, [ "@query" ], 0 ],
-    [ "TestMonotonic.root_has_color_zero'", 3, 0, 1, [ "@query" ], 0 ],
     [
       "TestMonotonic.rel_transitive",
       1,
@@ -424,10 +423,9 @@
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [ "TestMonotonic.test", 2, 0, 1, [ "@query" ], 0 ],
     [
       "TestMonotonic.test",
-      3,
+      2,
       0,
       1,
       [
@@ -465,13 +463,29 @@
     ],
     [
       "TestMonotonic.test",
-      4,
+      3,
       0,
       1,
       [
         "@query", "assumption_Prims.HasEq_bool",
         "assumption_Prims.option_haseq", "equation_TestMonotonic.t",
         "function_token_typing_Prims.bool"
+      ],
+      0
+    ],
+    [
+      "TestMonotonic.test",
+      4,
+      0,
+      1,
+      [
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
+        "function_token_typing_FStar.HyperHeap.root",
+        "lemma_FStar.HyperHeap.lemma_root_has_color_zero",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_e6bdb61ef7ad9da4cb0868f5b96fc358"
       ],
       0
     ],
@@ -494,22 +508,6 @@
     [
       "TestMonotonic.test",
       6,
-      0,
-      1,
-      [
-        "@query", "equation_FStar.HyperStack.is_eternal_color",
-        "equation_FStar.HyperStack.is_eternal_region",
-        "function_token_typing_FStar.HyperHeap.root",
-        "lemma_FStar.HyperHeap.lemma_root_has_color_zero",
-        "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_e6bdb61ef7ad9da4cb0868f5b96fc358"
-      ],
-      0
-    ],
-    [
-      "TestMonotonic.test",
-      7,
       0,
       1,
       [

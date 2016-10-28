@@ -34,28 +34,8 @@
       ],
       0
     ],
-    [
-      "FStar.DM4F.StExnC.STEXNC_raise_complete_type",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0
-    ],
-    [ "FStar.DM4F.StExnC.STEXNC_app", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.STEXNC_lift1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.STEXNC_lift2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.STEXNC_push", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.STEXNC_wp_if_then_else", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.STEXNC_wp_assert", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.STEXNC_wp_assume", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.STEXNC_wp_close", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.STEXNC_null_wp", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.StExnC.STEXNC", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.StExnC.STEXNC", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.lift_pure_stexnc", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.StExnC", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.SC", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.StExnC.div_intrinsic",
       1,

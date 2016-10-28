@@ -1,11 +1,9 @@
 [
   "ÎiCãÎ—9şœõ\u000f4€t…",
   [
-    [ "Ex12a.Cap.UTF8_inj", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex12a.Cap.capRead", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex12a.Cap.capRead",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],

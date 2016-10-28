@@ -17,7 +17,14 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "BinarySearchTreeFirst.tree", 3, 2, 1, [ "@query" ], 0 ],
+    [
+      "BinarySearchTreeFirst.tree",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
     [
       "BinarySearchTreeFirst.tree",
       4,
@@ -33,19 +40,6 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.HasEq_option",
-        "haseqTm_refine_84b7a1a5dc6e4cfb88f6f5c9e128b319", "int_inversion",
-        "kinding_BinarySearchTreeFirst.tree@tok"
-      ],
-      0
-    ],
-    [
-      "BinarySearchTreeFirst.tree",
-      6,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
         "assumption_Prims.option_haseq",
         "haseqTm_refine_84b7a1a5dc6e4cfb88f6f5c9e128b319", "int_inversion",
         "kinding_BinarySearchTreeFirst.tree@tok"
@@ -53,11 +47,9 @@
       0
     ],
     [ "BinarySearchTreeFirst.Node.l", 1, 2, 1, [ "@query" ], 0 ],
-    [ "BinarySearchTreeFirst.Node.l", 2, 2, 1, [ "@query" ], 0 ],
-    [ "BinarySearchTreeFirst.Node.left", 1, 2, 1, [ "@query" ], 0 ],
     [
       "BinarySearchTreeFirst.Node.left",
-      2,
+      1,
       2,
       1,
       [
@@ -67,9 +59,7 @@
       0
     ],
     [ "BinarySearchTreeFirst.Node.n", 1, 2, 1, [ "@query" ], 0 ],
-    [ "BinarySearchTreeFirst.Node.n", 2, 2, 1, [ "@query" ], 0 ],
     [ "BinarySearchTreeFirst.Node.r", 1, 2, 1, [ "@query" ], 0 ],
-    [ "BinarySearchTreeFirst.Node.r", 2, 2, 1, [ "@query" ], 0 ],
     [
       "BinarySearchTreeFirst.Node.right",
       1,
@@ -86,10 +76,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "BinarySearchTreeFirst.Node.right", 3, 2, 1, [ "@query" ], 0 ],
     [
       "BinarySearchTreeFirst.Node.right",
-      4,
+      3,
       2,
       1,
       [
@@ -208,8 +197,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "BinarySearchTreeFirst.index_is_max", 2, 2, 1, [ "@query" ], 0 ],
-    [ "BinarySearchTreeFirst.index_is_max", 3, 2, 1, [ "@query" ], 0 ],
     [
       "BinarySearchTreeFirst.index_is_max2",
       1,
@@ -218,8 +205,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "BinarySearchTreeFirst.index_is_max2", 2, 2, 1, [ "@query" ], 0 ],
-    [ "BinarySearchTreeFirst.index_is_max2", 3, 2, 1, [ "@query" ], 0 ],
     [ "BinarySearchTreeFirst.ins", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

@@ -15,8 +15,6 @@
     ],
     [ "Ex04c.append_mem", 1, 2, 1, [ "@query" ], 0 ],
     [ "Ex04c.append_mem", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Ex04c.append_mem", 3, 2, 1, [ "@query" ], 0 ],
-    [ "Ex04c.append_mem", 4, 2, 1, [ "@query" ], 0 ],
-    [ "Ex04c.append_mem", 5, 2, 1, [ "@query" ], 0 ]
+    [ "Ex04c.append_mem", 3, 2, 1, [ "@query" ], 0 ]
   ]
 ]

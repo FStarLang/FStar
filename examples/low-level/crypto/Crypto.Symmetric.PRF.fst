@@ -174,7 +174,7 @@ let coerce rgn i key =
 
 private val getBlock: 
   #i:id -> t:state i -> domain i -> len:u32 {len <=^ blocklen i} -> 
-  output:lbuffer (v len) { Buffer.disjoint t.key output } -> ST unit
+  output:lbuffer (v len) { Buffer.disjoint t.key output } -> STL unit
   (requires (fun h0 -> Buffer.live h0 output))
   (ensures (fun h0 r h1 -> Buffer.live h1 output /\ Buffer.modifies_1 output h0 h1 ))
 let getBlock #i t x len output =
@@ -196,21 +196,31 @@ val prf_mac:
   (requires (fun h0 -> True))
   (ensures (fun h0 mac h1 ->
     if prf i then
-    ( let r = itable i t in
-      match find_mac (HS.sel h0 r) x with // already in the table? 
-      | Some mac' -> mac == mac' /\ h0 == h1 // when decrypting
-      | None ->  // when encrypting, we get the stateful post of MAC.create             
-        match find_mac (HS.sel h1 r) x with 
-        | Some mac' -> 
-	  mac == mac' /\ 
-	  MAC.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
-          HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
-	  HS.modifies_ref t.mac_rgn TSet.empty h0 h1
-          //16-10-11 we miss a more precise clause capturing the table update   
-        | None -> False )
+      let r = itable i t in
+      let t0 = HS.sel h0 r in
+      let t1 = HS.sel h1 r in
+      (forall (y:domain i). y <> x ==> find t0 y == find t1 y)  /\ //at most modifies t at x
+      (match find_mac (HS.sel h0 r) x with // already in the table? 
+       | Some mac' -> 
+	 h0 == h1 /\ // when decrypting
+	 mac == mac' /\ 
+	 MAC (norm h1 mac.r) /\
+	 MAC (Buffer.live h1 mac.s)
+       | None ->  // when encrypting, we get the stateful post of MAC.create             
+         (match find_mac (HS.sel h1 r) x with 
+          | Some mac' -> 
+	    mac == mac' /\ 
+	    t1 == SeqProperties.snoc t0 (Entry x mac) /\
+	    MAC.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
+            HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
+            HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
+	    HS.modifies_ref t.mac_rgn TSet.empty h0 h1
+           //16-10-11 we miss a more precise clause capturing the table update   
+          | None -> False ))
     else (
-      HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
-      HS.modifies_ref t.rgn TSet.empty h0 h1  /\
+      MAC.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
+      HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\ //allocates in t.rgn
+      HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
 
 #reset-options "--z3timeout 100"
@@ -226,7 +236,11 @@ let prf_mac i t x =
     recall r;
     let contents = !r in
     match find_mac contents x with
-    | Some mac -> mac
+    | Some mac -> 
+      assume (MAC (norm h0 mac.r)); //TODO: replace this using monotonicity
+      assume (HS (Buffer (MAC (not ((Buffer.content mac.s).mm))))); //TODO: mark this as not manually managed
+      Buffer.recall (MAC mac.s);
+      mac
     | None ->
       let mac = MAC.gen macId t.mac_rgn in
       r := SeqProperties.snoc contents (Entry x mac);
@@ -247,12 +261,15 @@ let prf_mac i t x =
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
-private let extends #rgn #i s0 s1 x =
+let extends (#rgn:region) (#i:id) (s0:Seq.seq (entry rgn i)) 
+	    (s1:Seq.seq (entry rgn i)) (x:domain i{x.ctr <> 0ul}) =
   let open FStar.Seq in 
   let open FStar.SeqProperties in 
-  ( match find s0 x with 
-    | Some _ -> s1 == s1 
-    | None   -> exists (e:entry rgn i). e.x = x /\ s1 == snoc s0 e  )
+  match find s0 x with 
+  | Some _ -> s0 == s1
+  | None   -> Seq.length s1 = Seq.length s0 + 1 /\ 
+	     (Seq.index s1 (Seq.length s0)).x = x /\
+	     Seq.equal (Seq.slice s1 0 (Seq.length s0)) s0
 
 // modifies a table (at most at x) and a buffer.
 let modifies_x_buffer_1 #i (t:state i) x b h0 h1 = 

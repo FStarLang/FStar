@@ -821,7 +821,12 @@ and tc_inductive env ses quals lids =
 
 
          let arguments, env', us = tc_tparams env arguments in
-         let result, _ = tc_trivial_guard env' result in
+         let result, res_lcomp = tc_trivial_guard env' result in
+         (match (SS.compress res_lcomp.res_typ).n with
+         | Tm_type _ -> ()
+         | ty -> raise (Error(Util.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
+                                        (Print.term_to_string result)
+                                        (Print.term_to_string (res_lcomp.res_typ)), r)));
          let head, _ = Util.head_and_args result in
          let _ = match (SS.compress head).n with
             | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> ()
@@ -1377,9 +1382,11 @@ and tc_decl env se: list<sigelt> * _ =
         | _ -> failwith "Impossible" in
       if List.length uvs <> 1
       && not (Ident.lid_equals lid Const.effect_Lemma_lid)
-      then raise (Error(Util.format2 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes" 
+      then (let _, t = Subst.open_univ_vars uvs t in
+            raise (Error(Util.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)" 
                                     (Print.lid_to_string lid) 
-                                    (List.length uvs |> Util.string_of_int), r));
+                                    (List.length uvs |> Util.string_of_int)
+                                    (Print.term_to_string t), r)));
       let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, r) in
       let env = Env.push_sigelt env0 se in
       [se], env
