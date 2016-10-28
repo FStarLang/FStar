@@ -97,19 +97,22 @@ let mk_standart_type = function
 let is_standart_type t =
   mk_standart_type t <> None
 
+let is_prim_constructors s = 
+    List.existsb (fun x -> x = s) ["Cons" ; "Nil"; "Some"; "None"]
+    
 let float_of_int i = float_of_int32 (int32_of_int i)
 
 let export_modules = ref []
 
 let current_module_name = ref ""
 
-let getName (path, n) =
-  let path = String.concat "_" path in
-  if (path = !current_module_name || path = "")
-  then JSE_Identifier(n, None)
+let getName (path, n) =   
+  let path = String.concat "_" path in  
+  if (path = !current_module_name || path = "" || path = "Prims")
+  then (n, None)
   else ((if not (List.existsb (fun x -> x = path) !export_modules)
          then export_modules := List.append [path] !export_modules);
-         JSE_Identifier(path ^ "." ^ n, None))
+         (path ^ "." ^ n, None))
 
 let rec is_pure_expr e =
   match e.expr with
@@ -180,7 +183,7 @@ and translate_module (module_name, modul, _): file =
 
 and translate_decl d: option<source_t> =
   match d with
-  | MLM_Let (_, _,  lfunc) ->
+  | MLM_Let (_, c_flag,  lfunc) ->
       let for1 { mllb_name = name, _; mllb_tysc = tys; mllb_def = expr; print_typ=pt; mllb_add_unit = unit_b} =
           let t =
             begin
@@ -198,12 +201,15 @@ and translate_decl d: option<source_t> =
                         else JST_Function([(("_1", None), translate_type t1)], translate_type t2, lp) |> Some
                      | _ -> None)
             end in
-          if is_pure_expr expr
-          then 
-              [JSS_VariableDeclaration([(JGP_Identifier(name, t), Some (translate_expr_pure expr))], JSV_Var)]
-          else 
-              [JSS_VariableDeclaration([(JGP_Identifier(name, t), None)], JSV_Var);
-               translate_expr expr (name, t) None]
+        let is_private = List.contains Private c_flag in        
+        if is_pure_expr expr
+        then
+            let c = JSS_VariableDeclaration([(JGP_Identifier(name, t), Some (translate_expr_pure expr))], JSV_Var) in 
+            if is_private then [c] else [JSS_ExportDefaultDeclaration(JSE_Declaration(c), ExportValue)]
+        else
+            let c = JSS_VariableDeclaration([(JGP_Identifier(name, t), None)], JSV_Var) in
+            let c1 = translate_expr expr (name, t) None in
+            if is_private then [c; c1] else [JSS_ExportDefaultDeclaration(JSE_Declaration(c), ExportValue); c1]
      in
         List.collect for1 lfunc |> JSS_Block |> JS_Statement |> Some
 
@@ -349,9 +355,12 @@ and translate_expr e var stmt : statement_t =
   | MLE_CTor ((path, c), lexpr) ->
       let new_fv = ref [] in
       let lexpr = create_pure_args new_fv lexpr in
-      let expr = JSS_Expression(JSE_Assignment(JGP_Identifier(var),
-                    JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String c, ""), JSO_Init)] @
-                                List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), x, JSO_Init)) lexpr))) in
+      let expr = 
+        (match c with
+        | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("_mk_" ^ c, None), lexpr)
+        | _ -> JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String c, ""), JSO_Init)] @
+                           List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), x, JSO_Init)) lexpr)) in
+      let expr = JSS_Expression(JSE_Assignment(JGP_Identifier(var), expr)) in
       let c = !new_fv @ [expr] in
       (match stmt with | Some v -> JSS_Block(c @ [v]) | None -> JSS_Block(c))
 
@@ -383,7 +392,7 @@ and create_pure_args new_fv args =
     match x.expr with 
     | MLE_CTor ((path, c), _) when c = "Nil" || c = "None" ->
         JSE_TypeCast(translate_expr_pure x, translate_type x.mlty)
-    | _ -> (*MLE_Fun should be defined in outer scope*)
+    | _ ->
         if is_pure_expr x then translate_expr_pure x
         else 
             let fv_x = Absyn.Util.gensym() in
@@ -401,7 +410,7 @@ and translate_arg_app e args: expression_t =
   | MLE_Name(["Prims"], op) when is_op_un op ->
       JSE_Unary((must (mk_op_un op)), List.nth args 0)
   | MLE_Name (path, function_name) ->
-      JSE_Call (getName(path, function_name), args)
+      JSE_Call (JSE_Identifier(getName(path, function_name)), args)
   | MLE_Var (name, _) ->
       JSE_Call (JSE_Identifier(name, None), args)
   | _ -> 
@@ -418,7 +427,7 @@ and translate_expr_pure e: expression_t =
       JSE_Identifier(name, None)
 
   | MLE_Name(path, n) ->
-      getName(path, n)
+      JSE_Identifier(getName(path, n))
 
   | MLE_Tuple lexp ->
       let create_fields = List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), translate_expr_pure x, JSO_Init)) lexp in
@@ -431,9 +440,11 @@ and translate_expr_pure e: expression_t =
         JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Record", ""), JSO_Init)] @
                     create_fields)
 
-  | MLE_CTor ((path, c), lexpr) ->
-      JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String c, ""), JSO_Init)] @
-                  List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), translate_expr_pure x, JSO_Init)) lexpr)
+  | MLE_CTor ((path, c), lexpr) ->      
+      (match c with
+      | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("_mk_" ^ c, None), List.map translate_expr_pure lexpr)
+      | _ ->  JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String c, ""), JSO_Init)] @ 
+                   List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), translate_expr_pure x, JSO_Init)) lexpr))
 
   | MLE_Coerce (e, _, _) -> translate_expr_pure e  (*!!*)
 
@@ -475,13 +486,20 @@ and translate_pat p fv_x s1 s2: statement_t =
 
   | MLP_CTor((path, c), lp) ->
       let rec translate_p_ctor lp fv_x s1 s2 i =
-        let new_fv_x = JSE_Member(fv_x, JSPM_Identifier("_" ^ string_of_int i, None)) in
-            (match lp with
-            | [] -> s1
-            | [x] -> translate_pat x new_fv_x s1 s2
-            | hd::tl -> translate_pat hd new_fv_x (translate_p_ctor tl fv_x s1 s2 (i+1)) s2)
-      in JSS_If(JSE_Binary(JSB_StrictEqual, JSE_Member(fv_x, JSPM_Identifier("_tag", Some JST_String)), JSE_Literal(JSV_String c, "")),
-                translate_p_ctor lp fv_x s1 s2 0, Some s2)
+        let new_fv_x = 
+            match c with
+            | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("_get_" ^ c ^ "_" ^ string_of_int i, None), [fv_x])
+            | _ -> JSE_Member(fv_x, JSPM_Identifier("_" ^ string_of_int i, None)) in
+       (match lp with
+        | [] -> s1
+        | [x] -> translate_pat x new_fv_x s1 s2
+        | hd::tl -> translate_pat hd new_fv_x (translate_p_ctor tl fv_x s1 s2 (i+1)) s2)
+      in
+        let if_cond = 
+            match c with
+            | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("_is_" ^ c, None), [fv_x])
+            | _ -> JSE_Binary(JSB_StrictEqual, JSE_Member(fv_x, JSPM_Identifier("_tag", Some JST_String)), JSE_Literal(JSV_String c, ""))
+        in JSS_If(if_cond, translate_p_ctor lp fv_x s1 s2 0, Some s2)
 
   | MLP_Branch (lp) ->
       let rec translate_p_branch lp fv_x s1 s2 =
@@ -557,7 +575,9 @@ and translate_type t: typ =
                 let arity = [(JSO_Identifier("_arity", None), JST_NumberLiteral(float_of_int (List.length args), ""))] in
                 JST_Object(tag @ arity @ args, [], [])
            else
-                let args = match args with
-                           | [] -> None
-                           | _ -> List.map translate_type args |> Some
-                in JST_Generic (Unqualified(name, None), args))
+                let args_t = 
+                    match args with
+                    | [] -> None
+                    | _ -> List.map translate_type args |> Some
+                in
+                   JST_Generic (Unqualified(getName (path, name)), args_t))

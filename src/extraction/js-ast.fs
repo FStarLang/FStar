@@ -39,16 +39,9 @@ and statement_t =
     | JSS_Debugger
     | JSS_FunctionDeclaration of function_t
     | JSS_VariableDeclaration of list<(pattern_t * option<expression_t>)> * kind_var_t
-    (*| JSS_ClassDeclaration of Class.t*)
-    (*| JSS_InterfaceDeclaration of Interface.t *)
     | JSS_DeclareVariable of identifier_t
     | JSS_DeclareFunction of identifier_t * option<predicate_t>
-    (*| JSS_DeclareClass of Interface.t *)
-    (*| JSS_DeclareModule of DeclareModule.t *)
-    (*| JSS_DeclareModuleExports of Type.annotation *)
-    (*| JSS_DeclareExportDeclaration of DeclareExportDeclaration.t *)  
-    (*| JSS_ExportDeclaration of ExportDeclaration.t *)
-    (*| JSS_ImportDeclaration of ImportDeclaration.t *)
+    | JSS_ExportDefaultDeclaration of export_default_declaration_t
     
 and expression_t =
     | JSE_This
@@ -72,10 +65,6 @@ and expression_t =
     | JSE_Let of list<(pattern_t * option<expression_t>)> * expression_t
     | JSE_Identifier of identifier_t
     | JSE_Literal of literal_t
-    (*| JSE_TemplateLiteral of TemplateLiteral.t *)
-    (*| JSE_TaggedTemplate of TaggedTemplate.t () *)
-    (*| JSE_JSXElement of JSX.element *)
-    (*| JSE_Class of Class.t *)
     | JSE_TypeCast of expression_t * typ
 
 and op_un =       
@@ -152,7 +141,7 @@ and value_t =
     | JSV_Number of float
     | JSV_RegExp of string * string
 
-and param_decl_t = list<string> (*?? Use only for generic types?*)
+and param_decl_t = list<string> (*Use only for generic types*)
 
 and predicate_t = | JSP_Declared of expression_t | JSP_Inferred
 
@@ -171,3 +160,13 @@ and object_prop_key_t =
     | JSO_Literal of literal_t
     | JSO_Identifier of identifier_t
     | JSO_Computed of expression_t
+
+and export_default_declaration_t = declaration * export_kind
+
+and declaration = 
+    | JSE_Declaration of statement_t
+    | JSE_Expression of expression_t
+
+and export_kind = 
+    | ExportType
+    | ExportValue
