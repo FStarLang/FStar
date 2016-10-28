@@ -440,10 +440,13 @@ let arith_ops =
 let un_ops =
     let mk x = mk x Range.dummyRange in
     let name x = mk (Tm_fvar (lid_as_fv (Const.p2l x) Delta_constant None)) in
+    let ctor x = mk (Tm_fvar (lid_as_fv (Const.p2l x) Delta_constant (Some Data_ctor))) in
     [Const.p2l ["FStar"; "String"; "list_of_string"],
      (fun s -> FStar.List.fold_right (fun c a ->
-                 mk (Tm_app (name ["Prims"; "Cons"], [(name ["FStar"; "Char"; "char"], None); (mk (Tm_constant (Const_char c)), None); (a, None)]))
-               ) (list_of_string s) (mk (Tm_app (name ["Prims"; "Nil"], [name ["FStar"; "Char"; "char"], None]))))]
+                 mk (Tm_app (mk_Tm_uinst (ctor ["Prims"; "Cons"]) [U_zero], [(name ["FStar"; "Char"; "char"], Some (S.Implicit true));
+                                                      (mk (Tm_constant (Const_char c)), None);
+                                                      (a, None)]))
+               ) (list_of_string s) (mk (Tm_app (mk_Tm_uinst (ctor ["Prims"; "Nil"]) [U_zero], [name ["FStar"; "Char"; "char"], Some (S.Implicit true)]))))]
 
 let reduce_primops steps tm = 
     let find fv (ops: list<(Ident.lident*'a)>) = match fv.n with
