@@ -337,11 +337,6 @@ let gen_wps_for_free
                                      ∀a1 a2, a1 ≤_a a2 ==> x a1 ≤_b y a2   otherwise
   *)
   (* Invariant: [x] and [y] have type [t] *)
-  let is_zero_order t = match (SS.compress t).n with
-    | Tm_type _
-    | Tm_arrow _ -> false
-    | _ -> true
-  in
   let rec is_discrete t = match (SS.compress t).n with
     | Tm_type _ -> false
     | Tm_arrow (bs, c) -> List.for_all (fun (b,_) -> is_discrete b.sort) bs && is_discrete (Util.comp_result c)
@@ -362,7 +357,7 @@ let gen_wps_for_free
     | Tm_arrow ([ binder ], { n = GTotal (b, _) })
     | Tm_arrow ([ binder ], { n = Total (b, _) }) ->
         let a = (fst binder).sort in
-        if is_monotonic a  //this is an important special case; most monads have zero-order results
+        if is_monotonic a  || is_monotonic b //this is an important special case; most monads have zero-order results
         then let a1 = S.gen_bv "a1" None a in
              let body = mk_rel b
                             (U.mk_app x [ S.as_arg (S.bv_to_name a1) ])
