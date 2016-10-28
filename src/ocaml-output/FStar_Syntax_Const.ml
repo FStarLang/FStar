@@ -397,5 +397,8 @@ let guard_free : FStar_Ident.lident = (pconst "guard_free")
 let normalize : FStar_Ident.lident = (pconst "normalize")
 
 
+let normalize_term : FStar_Ident.lident = (pconst "normalize_term")
+
+
 
 

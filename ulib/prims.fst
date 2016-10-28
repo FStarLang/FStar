@@ -411,7 +411,8 @@ assume val string_of_int: int -> Tot string
 (*********************************************************************************)
 (* Marking terms for normalization *)
 (*********************************************************************************)
-abstract let normalize (a:Type0) : Type0 = a
+abstract let normalize_term (#a:Type) (x:a) : a = x
+abstract let normalize (a:Type0) = a
 
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
@@ -639,8 +640,5 @@ new_effect {
   ; null_wp      = all_null_wp      heap
   ; trivial      = all_trivial      heap
 }
-
-
-
 
 

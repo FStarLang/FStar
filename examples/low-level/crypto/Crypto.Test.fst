@@ -1,4 +1,4 @@
-module Test 
+module Crypto.Test 
 
 open FStar.UInt32
 open FStar.Ghost

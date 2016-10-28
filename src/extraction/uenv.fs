@@ -88,7 +88,7 @@ let rec lookup_ty_local (gamma:list<binding>) (b:bv) : mlty =
         | _::tl -> lookup_ty_local tl b
         | [] -> failwith ("extraction: unbound type var "^(b.ppname.idText))
 
-let tyscheme_of_td (_, _, vars, body_opt) : option<mltyscheme> = match body_opt with
+let tyscheme_of_td (_, _, _, vars, body_opt) : option<mltyscheme> = match body_opt with
     | Some (MLTD_Abbrev t) -> Some (vars, t)
     | _ -> None
 
@@ -97,11 +97,29 @@ let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyschem
     Util.find_map env.tydefs  (fun (m, tds) ->
         if module_name = m
         then Util.find_map tds (fun td ->
-             let (_, n, _, _) = td in
+             let (_, n, _, _, _) = td in
              if n=ty_name
              then tyscheme_of_td td
              else None)
         else None)
+
+let module_name_of_fv fv = fv.fv_name.v.ns |> List.map (fun (i:ident) -> i.idText)
+    
+let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> = 
+    let mname = module_name_of_fv fv in
+    let ty_name = fv.fv_name.v.ident.idText in
+    Util.find_map env.tydefs  (fun (m, tds) ->
+        Util.find_map tds (fun (_, n, mangle_opt, _, _) ->
+            if m = mname
+            then if n=ty_name
+                 then match mangle_opt with 
+                      | None -> 
+                        Some (m, n)
+                      | Some mangled ->
+                        let modul, _ = Util.prefix m in
+                        Some (modul, mangled)
+                 else None
+            else None))
 
 let lookup_tyvar (g:env) (bt:bv) : mlty = lookup_ty_local g.gamma bt
 
@@ -220,8 +238,8 @@ let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_re
           let p, y = mlpath_of_lident f.fv_name.v in
           extend_fv' g f (p, y) t_x add_unit is_rec, (avoid_keyword y,0)
 
-let extend_tydef (g:env) (td:mltydecl) : env =
-    let m = fst (g.currentModule) @ [snd g.currentModule] in
+let extend_tydef (g:env) (fv:fv) (td:mltydecl) : env =
+    let m = module_name_of_fv fv in
     {g with tydefs=(m,td)::g.tydefs}
 
 

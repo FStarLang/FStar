@@ -120,7 +120,7 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
     m_contains mac_log h /\ (
     match m_sel h (MAC.ilog (MAC.State.log m)) with
     | None           -> False
-    | Some (msg,tag') -> msg = field_encode i ad plain /\
+    | Some (msg,tag') -> msg = field_encode i ad #(FStar.UInt32.uint_to_t l) cipher /\
 			tag = tag')))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
 
 // States consistency of the PRF table contents vs the AEAD entries

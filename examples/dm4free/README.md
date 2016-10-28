@@ -1,6 +1,9 @@
 Dijkstra Monads for Free
 ------------------------
 
+Examples associated to this paper:
+https://www.fstar-lang.org/papers/dm4free/
+
 Any `FStar.DM4F.*` file successfully verifies.
 
 To try out a basic, complete example:
@@ -45,45 +48,5 @@ generated terms are well-formed in F*); the effect definition is lifted from DM
 to F*; missing WPs are generated, and everything is sent off to the "regular"
 effect checking code.
 
-Going forward:
-- code-review of the generated code 
-  * order of arguments
-  * extra thunking
-  * error labeling
-  * subtyping problems when uncurrying (see below)
-
-- (done) change the elaboration of the match to push the return _inside_ the branches
-  instead of wrapping the whole branch on the outside (better for Z3)
-- make this work with parametrized effects (i.e. ST) #706
-
-- dm4f: support implicit arguments #721
-- try out more examples
-- inserting "return" on the fly when reflecting Tot computations
-- dm4f: generate lift from Pure to all DM4F effects #719
-
-- dm4f: M not quite a synonym for Tot #710 
-- it would be good to have a generic way of noticing that a WP
-  combinator contains a branching construct within it and that it may
-  lead to exponential blowup. In such a case, we should wrap the WP
-  with a "name_continuation" combinator, which is currently called
-  "wp_ite" and should be renamed. This is particularly important for
-  the exceptions monad, where every bind contains a branch.
-  (partially done ; it's not done when every bind includes a case analysis)
-
-- fill out various TODOs in `dmff.fs` to faithfully check everything (right now,
-  most checks are fairly lax);
-- extraction!
-
-- make the continuations example work #713
-- add some specific syntax in the decrease clause to capture other arguments
-  of the effect monad (i.e. pass the current heap for ST)
-
-- dreaming: can we also generate abbreviations for the "triples" form
-  of an effect?
-
-
-Current shortcommings in order to switch ulib to DM4F :
-- order of arguments for STATE_h wp ; needs to modify all sub_effect containing state
-- STATE_h post condition is uncurried ; need to modify all ensures clauses for the effects deriving from state (s/ensures *(fun +\(\S+\) +\(\S+\) +\(\S+\)/ensures (fun \1 (\2, \3)/gc)
-- no subtyping for pairs (i.e. int -> unit -> Tot unit <: nat -> unit -> Tot unit but it is NOT the case that int * unit -> unit <: nat * unit -> unit)
-- 
+Further work on this is tracked here:
+https://github.com/FStarLang/FStar/issues/753

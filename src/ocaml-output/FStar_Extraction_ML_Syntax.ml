@@ -821,8 +821,12 @@ _71_144
 end))
 
 
+type one_mltydecl =
+(Prims.bool * mlsymbol * mlsymbol Prims.option * mlidents * mltybody Prims.option)
+
+
 type mltydecl =
-(Prims.bool * mlsymbol * mlidents * mltybody Prims.option) Prims.list
+one_mltydecl Prims.list
 
 
 type mlmodule1 =
