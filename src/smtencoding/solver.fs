@@ -34,7 +34,7 @@ open FStar.SMTEncoding.Util
 // The type definition is now in [FStar.Util], since it needs to be visible to
 // both the F# and OCaml implementations.
 
-type z3_err = error_labels * bool
+type z3_err = error_labels * error_kind
 type z3_result = either<Z3.unsat_core, z3_err>
 type z3_replay_result = either<Z3.unsat_core, error_labels>
 let z3_result_as_replay_result = function
@@ -195,10 +195,11 @@ let ask_and_report_errors env all_labels prefix query suffix =
                         let res = Util.mk_ref None in
                         Z3.ask None all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
                         Option.get (!res) in
-                     detail_errors env all_labels ask_z3, false
+                     detail_errors env all_labels ask_z3, Default
                 else match errs with
-                     | [], true -> [(("", Term_sort), "Timeout: Unknown assertion failed", Range.dummyRange)], true
-                     | [], false -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)], false
+                     | [], Timeout -> [(("", Term_sort), "Timeout: Unknown assertion failed", Range.dummyRange)], snd errs
+                     | [], Default -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)], snd errs
+                     | _, Kill     -> [(("", Term_sort), "Killed: Unknown assertion failed", Range.dummyRange)], snd errs
                      | _ -> errs in
             record_hint None;
             if Options.print_fuels()
@@ -209,23 +210,24 @@ let ask_and_report_errors env all_labels prefix query suffix =
             Errors.add_errors env (fst errs |> List.map (fun (_, x, y) -> x, y)) 
         in
 
-        let use_errors (errs:error_labels * bool) (result:z3_result) : z3_result = 
+        let use_errors (errs:error_labels * error_kind) (result:z3_result) : z3_result = 
             match errs, result with 
             | ([], _), _
             | _, Inl _ -> result
             | _, Inr _ -> Inr errs in
         let rec try_alt_configs prev_f (p:decl) (errs:z3_err) cfgs = 
             set_minimum_workable_fuel prev_f errs;
-            match cfgs with
-            | [] -> report p errs
-            | [mi] -> //we're down to our last config; last ditch effort to get a counterexample with very low fuel
+            match cfgs, snd errs with
+            | [], _
+            | _, Kill -> report p errs
+            | [mi], _-> //we're down to our last config; last ditch effort to get a counterexample with very low fuel
                 begin match errs with
                 | [], _ -> Z3.ask None all_labels (with_fuel [] p mi) (cb false mi p [])
                 | _ -> set_minimum_workable_fuel prev_f errs;
                        report p errs
                 end
 
-            | mi::tl ->
+            | mi::tl, _ ->
                 Z3.ask None all_labels (with_fuel [] p mi) 
                     (fun (result, elapsed_time) -> cb false mi p tl (use_errors errs result, elapsed_time))
 
