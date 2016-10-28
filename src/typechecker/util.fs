@@ -985,7 +985,9 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
             | [], [] -> //nothing generalized
               e, c
 
-            | [], _ -> //only universes generalized, still need to compress out invariant-broken uvars
+            | [], _ -> 
+              //nothing generalized, or
+              //only universes generalized, still need to compress out invariant-broken uvars
               let c = N.normalize_comp [N.Beta; N.NoDeltaSteps] env c in
               let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
               e, c

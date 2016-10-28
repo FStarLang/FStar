@@ -31,7 +31,6 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS  = FStar.HyperStack
 
-
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 20"
 
 // we may separate field operations, so that we don't
@@ -488,7 +487,7 @@ val toField_plus:
     modifies_1 a h0 h1 /\ // Only a was modified
     sel_int h1 a == pow2 (8 * w len) + little_endian (sel_word h0 b) ))
 
-#set-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
 
 let toField_plus len a b =
   let h0 = ST.get() in
@@ -947,6 +946,6 @@ let poly1305_mac tag msg len key =
   let last_block = sub msg (FStar.UInt32 (ctr *^ 16ul)) rest in
   poly1305_last l last_block acc r rest;
   (* Finish *)
-  poly1305_finish tag acc (sub key 16ul 16ul);
+  poly1305_finish tag acc (sub key 16ul 16ul); // should be s
   pop_frame()
 

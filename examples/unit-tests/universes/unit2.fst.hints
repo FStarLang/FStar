@@ -2,7 +2,6 @@
   "Å-IkÇ-‘€¨‹\u001f¿ˆ\fñ‘",
   [
     [ "Unit2.test1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit2.test1", 2, 2, 1, [ "@query" ], 0 ],
     [ "Unit2.test2", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit2.test3", 1, 2, 1, [ "@query", "equation_Prims.nat" ], 0 ],
     [
@@ -69,8 +68,7 @@
       0
     ],
     [ "Unit2.f1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit2.f2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit2.f2", 2, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
+    [ "Unit2.f2", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [
       "Unit2.f3",
       1,
@@ -79,7 +77,6 @@
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0
     ],
-    [ "Unit2.eta_f4", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit2.eta_f4'",
       1,

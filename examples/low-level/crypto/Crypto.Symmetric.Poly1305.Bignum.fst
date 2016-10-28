@@ -242,9 +242,15 @@ let mod2_26 x =
   y
 
 private val div2_26: x:U64.t -> Tot (y:U64.t{v y = v x / pow2 26 /\ v y <= pow2 38})
-let div2_26 x = pow2_minus 64 26; x >>^ 26ul
-
 #reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+let div2_26 x = 
+    pow2_minus 64 26; 
+    let y = x >>^ 26ul in 
+    assert (v y = v x / pow2 26);
+    assert (v x <= pow2 64);
+    assert (v y <= pow2 64 / pow2 26);
+    assert (v y <= pow2 38);
+    y
 
 private val update_5: c:bigint ->
   c0:U64.t -> c1:U64.t -> c2:U64.t ->

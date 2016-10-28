@@ -32,7 +32,6 @@
       ],
       0
     ],
-    [ "Ex06e.mem", 2, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "Ex06e.sort", 1, 2, 1, [ "@query" ], 0 ]
+    [ "Ex06e.mem", 2, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ]
   ]
 ]

@@ -1,7 +1,6 @@
 [
   "h\u0016­šã\rï$AH­ÿÓ'“©",
   [
-    [ "Ex12e.Pad.nbytes", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex12e.Pad.block",
       1,
@@ -82,17 +81,6 @@
       0
     ],
     [ "Ex12e.Pad.lemma_append_inj", 3, 2, 1, [ "@query" ], 0 ],
-    [
-      "Ex12e.Pad.lemma_append_inj",
-      4,
-      2,
-      1,
-      [
-        "@query",
-        "refinement_interpretation_Tm_refine_3f7759c7b0675318060796211032edb1"
-      ],
-      0
-    ],
     [
       "Ex12e.Pad.inj",
       1,

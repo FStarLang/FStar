@@ -299,6 +299,10 @@ let inst_tscheme : tscheme -> universes * term = function
       let us' = us |> List.map (fun _ -> new_u_univ()) in
       inst_tscheme_with (us, t) us'
 
+let inst_tscheme_with_range (r:range) (t:tscheme) =
+    let us, t = inst_tscheme t in 
+    us, Subst.set_use_range r t
+
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
     match ed.binders with
         | [] ->
@@ -360,10 +364,6 @@ let lookup_qname env (lid:lident) : option<either<(universes * typ), (sigelt * o
         | None -> None
   else None
 
-let lid_exists env l = match lookup_qname env l with
-    | None -> false
-    | Some _ -> true
-
 let rec add_sigelt env se = match se with
     | Sig_bundle(ses, _, _, _) -> add_sigelts env ses
     | _ ->
@@ -388,14 +388,8 @@ let try_lookup_bv env (bv:bv) =
       Some id.sort
     | _ -> None)
 
-let lookup_univ env x =
-    List.find (function
-        | Binding_univ y -> x.idText=y.idText
-        | _ -> false) env.gamma
-    |> Option.isSome
-
-let lookup_type_of_let se lid = match se with
-    | Sig_let((_, [lb]), _, _, _) ->
+let lookup_type_of_let se lid = match se with 
+    | Sig_let((_, [lb]), _, _, _) -> 
       Some (inst_tscheme (lb.lbunivs, lb.lbtyp))
 
     | Sig_let((_, lbs), _, _, _) ->
@@ -408,31 +402,17 @@ let lookup_type_of_let se lid = match se with
 
     | _ -> None
 
-let lookup_bv env bv =
-    match try_lookup_bv env bv with
-        | None -> raise (Error(variable_not_found bv, range_of_bv bv))
-        | Some t -> t
-
-let effect_signature se =
+let effect_signature se = 
     match se with
-        | Sig_new_effect(ne, _) ->
-          Some (inst_tscheme (ne.univs, Util.arrow ne.binders (mk_Total ne.signature)))
+    | Sig_new_effect(ne, _) ->
+        Some (inst_tscheme (ne.univs, Util.arrow ne.binders (mk_Total ne.signature)))
 
-        | Sig_effect_abbrev (lid, us, binders, _, _, _) ->
-          Some (inst_tscheme (us, Util.arrow binders (mk_Total teff)))
+    | Sig_effect_abbrev (lid, us, binders, _, _, _) ->
+        Some (inst_tscheme (us, Util.arrow binders (mk_Total teff)))
 
-        | _ -> None
-
-let try_lookup_effect_lid env (ftv:lident) : option<typ> =
-  match lookup_qname env ftv with
-    | Some (Inr (se, None)) ->
-      begin match effect_signature se with
-        | None -> None
-        | Some (_, t) -> Some t
-      end
     | _ -> None
 
-let try_lookup_lid env lid =
+let try_lookup_lid_aux env lid =
   let mapper = function
     | Inl t ->
       Some t
@@ -470,36 +450,91 @@ let try_lookup_lid env lid =
       | Some (us, t) -> Some (us, {t with pos=range_of_lid lid})
       | None -> None
 
-let is_type_constructor env lid =
-    let mapper = function
-        | Inl _ -> Some false
-        | Inr (se, _) ->
-           begin match se with
-            | Sig_declare_typ (_, _, _, qs, _) ->
-              Some (List.contains New qs)
-            | Sig_inductive_typ _ ->
-              Some true
-            | _ -> Some false
-           end in
-    match Util.bind_opt (lookup_qname env lid) mapper with
-      | Some b -> b
-      | None -> false
+////////////////////////////////////////////////////////////////
+//External interaface for querying identifiers
+//Provides, in order from the interface env.fsi:
+//        val lid_exists             : env -> lident -> bool
+//        val lookup_bv              : env -> bv -> typ
+//        val try_lookup_lid         : env -> lident -> option<(universes * typ)>
+//        val lookup_lid             : env -> lident -> (universes * typ)
+//        val lookup_univ            : env -> univ_name -> bool
+//        val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
+//        val lookup_val_decl        : env -> lident -> (universes * typ)
+//        val lookup_datacon         : env -> lident -> universes * typ
+//        val datacons_of_typ        : env -> lident -> list<lident>
+//        val typ_of_datacon         : env -> lident -> lident
+//        val lookup_definition      : delta_level -> env -> lident -> option<(univ_names * term)>
+//        val try_lookup_effect_lid  : env -> lident -> option<term>
+//        val lookup_effect_lid      : env -> lident -> term
+//        val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
+//        val norm_eff_name          : (env -> lident -> lident)
+//        val lookup_effect_quals    : env -> lident -> list<qualifier>
+//        val lookup_projector       : env -> lident -> int -> lident
+//        val current_module         : env -> lident
+//        val is_projector           : env -> lident -> bool
+//        val is_datacon             : env -> lident -> bool
+//        val is_record              : env -> lident -> bool
+//        val is_interpreted         : (env -> term -> bool)
+//        val is_type_constructor    : env -> lident -> bool
+//Each of these functions that returns a term ensures to update
+//the range information on the term with the currrent use-site
+////////////////////////////////////////////////////////////////
 
+let lid_exists env l = 
+    match lookup_qname env l with 
+    | None -> false
+    | Some _ -> true
 
-let lookup_lid env l =
-    match try_lookup_lid env l with
-        | None -> raise (Error(name_not_found l, range_of_lid l))
-        | Some x -> x
+let lookup_bv env bv = 
+    match try_lookup_bv env bv with 
+    | None -> raise (Error(variable_not_found bv, range_of_bv bv))
+    | Some t -> Subst.set_use_range (range_of_bv bv) t
+
+let try_lookup_lid env l = 
+    match try_lookup_lid_aux env l with 
+    | None -> None
+    | Some (us, t) -> 
+      Some (us, Subst.set_use_range (range_of_lid l) t)
+
+let lookup_lid env l =  
+    match try_lookup_lid env l with 
+    | None -> raise (Error(name_not_found l, range_of_lid l))
+    | Some (us, t) -> (us, t)
+
+let lookup_univ env x = 
+    List.find (function
+        | Binding_univ y -> x.idText=y.idText
+        | _ -> false) env.gamma
+    |> Option.isSome
+
+let try_lookup_val_decl env lid =
+  //QUESTION: Why does this not inst_tscheme?
+  match lookup_qname env lid with
+    | Some (Inr (Sig_declare_typ(_, uvs, t, q, _), None)) ->
+      Some ((uvs, Subst.set_use_range (range_of_lid lid) t),q)
+    | _ -> None
 
 let lookup_val_decl env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_declare_typ(_, uvs, t, _, _), None)) -> inst_tscheme (uvs, t)
+    | Some (Inr (Sig_declare_typ(_, uvs, t, _, _), None)) ->
+      inst_tscheme_with_range (range_of_lid lid) (uvs, t)
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _, _), None)) -> inst_tscheme (uvs, t)
+    | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _, _), None)) -> 
+      inst_tscheme_with_range (range_of_lid lid) (uvs, t) 
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+
+let datacons_of_typ env lid = 
+  match lookup_qname env lid with
+    | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _), _)) -> dcs
+    | _ -> []
+
+let typ_of_datacon env lid = 
+  match lookup_qname env lid with
+    | Some (Inr (Sig_datacon (_, _, _, l, _, _, _, _), _)) -> l
+    | _ -> failwith (Util.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
 let lookup_definition delta_levels env lid =
   let visible quals =
@@ -512,10 +547,19 @@ let lookup_definition delta_levels env lid =
         | Sig_let((_, lbs), _, _, quals) when visible quals ->
             Util.find_map lbs (fun lb ->
                 let fv = right lb.lbname in
-                if fv_eq_lid fv lid
-                then Some (lb.lbunivs, Util.unascribe lb.lbdef)
+                if fv_eq_lid fv lid 
+                then Some (lb.lbunivs, Subst.set_use_range (range_of_lid lid) (Util.unascribe lb.lbdef))
                 else None)
         | _ -> None
+      end
+    | _ -> None
+
+let try_lookup_effect_lid env (ftv:lident) : option<typ> =
+  match lookup_qname env ftv with
+    | Some (Inr (se, None)) -> 
+      begin match effect_signature se with 
+        | None -> None
+        | Some (_, t) -> Some (Subst.set_use_range (range_of_lid ftv) t)
       end
     | _ -> None
 
@@ -524,25 +568,10 @@ let lookup_effect_lid env (ftv:lident) : typ =
     | None -> raise (Error(name_not_found ftv, range_of_lid ftv))
     | Some k -> k
 
-let lookup_projector env lid i =
-    let fail () = failwith (Util.format2 "Impossible: projecting field #%s from constructor %s is undefined" (Util.string_of_int i) (Print.lid_to_string lid)) in
-    let _, t = lookup_datacon env lid in
-    match (compress t).n with
-        | Tm_arrow(binders, _) ->
-          if ((i < 0) || i >= List.length binders) //this has to be within bounds!
-          then fail ()
-          else let b = List.nth binders i in
-               Util.mk_field_projector_name lid (fst b) i |> fst
-        | _ -> fail ()
-
-let try_lookup_val_decl env lid =
-  match lookup_qname env lid with
-    | Some (Inr (Sig_declare_typ(_, uvs, t, q, _), None)) -> Some ((uvs,t),q)
-    | _ -> None
-
-let lookup_effect_abbrev env (univ_insts:universes) lid =
-  match lookup_qname env lid with
+let lookup_effect_abbrev env (univ_insts:universes) lid0 =
+  match lookup_qname env lid0 with
     | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _), None)) ->
+      let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Ident.range_of_lid lid0)) in
       if quals |> Util.for_some (function Irreducible -> true | _ -> false)
       then None
       else let insts = if List.length univ_insts = List.length univs
@@ -559,9 +588,10 @@ let lookup_effect_abbrev env (univ_insts:universes) lid =
              | _, _::_::_ when not (Ident.lid_equals lid Const.effect_Lemma_lid) ->
                 failwith (Util.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
                            (Print.lid_to_string lid) (string_of_int <| List.length univs))
-             | _ -> let _, t = inst_tscheme_with (univs, Util.arrow binders c) insts in
-                    begin match (Subst.compress t).n with
-                        | Tm_arrow(binders, c) ->
+             | _ -> let _, t = inst_tscheme_with (univs, Util.arrow binders c) insts in 
+                    let t = Subst.set_use_range (range_of_lid lid) t in
+                    begin match (Subst.compress t).n with 
+                        | Tm_arrow(binders, c) -> 
                           Some (binders, c)
                         | _ -> failwith "Impossible"
                     end
@@ -587,7 +617,7 @@ let norm_eff_name =
                         | Some m -> Util.smap_add cache l.str m;
                                     m
               end in
-       res
+       Ident.set_lid_range res (range_of_lid l)
 
 let lookup_effect_quals env l =
     let l = norm_eff_name env l in
@@ -596,15 +626,22 @@ let lookup_effect_quals env l =
       ne.qualifiers
     | _ -> []
 
-let datacons_of_typ env lid =
-  match lookup_qname env lid with
-    | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _), _)) -> dcs
-    | _ -> []
+let lookup_projector env lid i =
+    let fail () = failwith (Util.format2 "Impossible: projecting field #%s from constructor %s is undefined" (Util.string_of_int i) (Print.lid_to_string lid)) in
+    let _, t = lookup_datacon env lid in
+    match (compress t).n with
+        | Tm_arrow(binders, _) ->
+          if ((i < 0) || i >= List.length binders) //this has to be within bounds!
+          then fail ()
+          else let b = List.nth binders i in
+               Util.mk_field_projector_name lid (fst b) i |> fst
+        | _ -> fail ()
 
-let typ_of_datacon env lid =
-  match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, _, _, l, _, _, _, _), _)) -> l
-    | _ -> failwith (Util.format1 "Not a datacon: %s" (Print.lid_to_string lid))
+let is_projector env (l:lident) : bool =
+    match lookup_qname env l with
+        | Some (Inr (Sig_declare_typ(_, _, _, quals, _), _)) ->
+          Util.for_some (function Projector _ -> true | _ -> false) quals
+        | _ -> false
 
 let is_datacon env lid =
   match lookup_qname env lid with
@@ -617,35 +654,44 @@ let is_record env lid =
         Util.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) tags
     | _ -> false
 
-let is_projector env (l:lident) : bool =
-    match lookup_qname env l with
-        | Some (Inr (Sig_declare_typ(_, _, _, quals, _), _)) ->
-          Util.for_some (function Projector _ -> true | _ -> false) quals
-        | _ -> false
-
-let interpreted_symbols =
-       [Const.op_Eq;
+let is_interpreted = 
+    let interpreted_symbols = 
+       [Const.op_Eq; 
         Const.op_notEq;
-        Const.op_LT;
-        Const.op_LTE;
-        Const.op_GT;
-        Const.op_GTE;
-        Const.op_Subtraction;
-        Const.op_Minus;
-        Const.op_Addition;
-        Const.op_Multiply;
-        Const.op_Division;
-        Const.op_Modulus;
-        Const.op_And;
-        Const.op_Or;
-        Const.op_Negation]
-
-let is_interpreted (env:env) head : bool =
-    match (Util.un_uinst head).n with
-        | Tm_fvar fv ->
-          fv.fv_delta=Delta_equational
-          //Util.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
+        Const.op_LT;   
+        Const.op_LTE;  
+        Const.op_GT;   
+        Const.op_GTE;  
+        Const.op_Subtraction; 
+        Const.op_Minus;       
+        Const.op_Addition;    
+        Const.op_Multiply;    
+        Const.op_Division;    
+        Const.op_Modulus;     
+        Const.op_And;         
+        Const.op_Or;          
+        Const.op_Negation] in
+    fun (env:env) head -> 
+        match (Util.un_uinst head).n with 
+        | Tm_fvar fv -> 
+            fv.fv_delta=Delta_equational
+            //Util.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
         | _ -> false
+
+let is_type_constructor env lid = 
+    let mapper = function
+        | Inl _ -> Some false
+        | Inr (se, _) -> 
+           begin match se with 
+            | Sig_declare_typ (_, _, _, qs, _) -> 
+              Some (List.contains New qs)
+            | Sig_inductive_typ _ ->
+              Some true
+            | _ -> Some false
+           end in
+    match Util.bind_opt (lookup_qname env lid) mapper with
+      | Some b -> b
+      | None -> false
 
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //

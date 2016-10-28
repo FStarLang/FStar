@@ -386,10 +386,9 @@
       ],
       0
     ],
-    [ "Ex07a.equal", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07a.equal",
-      2,
+      1,
       2,
       1,
       [
@@ -398,10 +397,9 @@
       ],
       0
     ],
-    [ "Ex07a.equalE", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07a.equalE",
-      2,
+      1,
       2,
       1,
       [
@@ -410,10 +408,9 @@
       ],
       0
     ],
-    [ "Ex07a.context_invariance", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07a.context_invariance",
-      2,
+      1,
       2,
       1,
       [
@@ -423,14 +420,13 @@
         "constructor_distinct_Ex07a.EAbs", "constructor_distinct_Ex07a.EApp",
         "constructor_distinct_Ex07a.EIf", "constructor_distinct_Ex07a.TBool",
         "constructor_distinct_Prims.Mktuple2",
-        "constructor_distinct_Prims.Mktuple3",
+        "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
         "constructor_distinct_Prims.option",
-        "constructor_distinct_Prims.unit", "data_elim_Ex07a.EApp",
-        "data_elim_Ex07a.EVar", "data_elim_Prims.Some",
-        "data_typing_intro_Ex07a.ETrue@tok", "disc_equation_Ex07a.EAbs",
+        "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
+        "data_elim_Ex07a.EVar", "disc_equation_Ex07a.EAbs",
         "disc_equation_Ex07a.EApp", "disc_equation_Ex07a.EIf",
-        "equality_tok_Ex07a.TBool@tok", "equation_Ex07a.env",
-        "equation_Ex07a.equalE", "equation_Ex07a.extend",
+        "equality_tok_Ex07a.TBool@tok", "equation_Ex07a.equalE",
+        "equation_Ex07a.extend",
         "equation_with_fuel_Ex07a.appears_free_in.fuel_instrumented",
         "equation_with_fuel_Ex07a.typing.fuel_instrumented",
         "fuel_correspondence_Ex07a.appears_free_in.fuel_instrumented",
@@ -442,7 +438,6 @@
         "int_typing",
         "interpretation_Tm_abs_3ec6e4438fd620bf2d72522edf224eab",
         "pretyping_779086306c29597e3dd1127d16405da1",
-        "pretyping_896e04207a09217ae90a78b1619cef5a",
         "pretyping_954d904f9a7601853684143df10460f5",
         "pretyping_ae567c2fb75be05905677af440075565",
         "pretyping_f8666440faa91836cc5a13998af863fc",
@@ -463,22 +458,16 @@
         "projection_inverse_Prims.Mktuple3__1",
         "projection_inverse_Prims.Mktuple3__2",
         "projection_inverse_Prims.Mktuple3__3",
-        "projection_inverse_Prims.Mktuple3__a",
-        "projection_inverse_Prims.Mktuple3__b",
-        "projection_inverse_Prims.Mktuple3__c",
-        "refinement_interpretation_Tm_refine_b4daeccc3061403c137474fb611115c1",
         "subterm_ordering_Ex07a.EAbs", "subterm_ordering_Ex07a.EApp",
-        "subterm_ordering_Ex07a.EIf",
-        "token_correspondence_Ex07a.typing.fuel_instrumented",
-        "typing_Ex07a.appears_free_in", "typing_Ex07a.typing",
-        "typing_tok_Ex07a.TBool@tok", "unit_inversion", "unit_typing"
+        "subterm_ordering_Ex07a.EIf", "typing_Ex07a.appears_free_in",
+        "typing_Ex07a.typing", "typing_tok_Ex07a.TBool@tok",
+        "unit_inversion", "unit_typing"
       ],
       0
     ],
-    [ "Ex07a.typing_extensional", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07a.typing_extensional",
-      2,
+      1,
       2,
       1,
       [ "@query", "equation_Ex07a.equal", "equation_Ex07a.equalE" ],
@@ -495,15 +484,16 @@
         "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
         "binder_x_896e04207a09217ae90a78b1619cef5a_1",
         "binder_x_896e04207a09217ae90a78b1619cef5a_2", "bool_inversion",
-        "bool_typing", "constructor_distinct_Ex07a.EAbs",
-        "constructor_distinct_Ex07a.EApp",
+        "constructor_distinct_Ex07a.EAbs", "constructor_distinct_Ex07a.EApp",
         "constructor_distinct_Ex07a.EFalse",
         "constructor_distinct_Ex07a.EIf", "constructor_distinct_Ex07a.ETrue",
         "constructor_distinct_Ex07a.EVar",
         "constructor_distinct_Ex07a.TBool",
-        "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
-        "constructor_distinct_Tm_unit", "data_elim_Ex07a.EIf",
-        "data_elim_Prims.None", "data_elim_Prims.Some",
+        "constructor_distinct_Prims.Mktuple2",
+        "constructor_distinct_Prims.None",
+        "constructor_distinct_Prims.option",
+        "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
+        "data_elim_Ex07a.EApp", "data_elim_Prims.Some",
         "data_typing_intro_Ex07a.ETrue@tok", "disc_equation_Ex07a.EAbs",
         "disc_equation_Ex07a.EApp", "disc_equation_Ex07a.EFalse",
         "disc_equation_Ex07a.EIf", "disc_equation_Ex07a.ETrue",
@@ -526,9 +516,11 @@
         "interpretation_Tm_abs_3ec6e4438fd620bf2d72522edf224eab",
         "kinding_Ex07a.ty@tok", "lemma_Ex07a.typable_empty_closed",
         "lemma_Prims.invertOption",
+        "pretyping_779086306c29597e3dd1127d16405da1",
         "pretyping_896e04207a09217ae90a78b1619cef5a",
         "pretyping_954d904f9a7601853684143df10460f5",
         "pretyping_ae567c2fb75be05905677af440075565",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "primitive_Prims.op_Equality", "proj_equation_Prims.Some_v",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Ex07a.EAbs__0",
@@ -541,6 +533,8 @@
         "projection_inverse_Ex07a.EVar__0",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Mktuple2__a",
+        "projection_inverse_Prims.Mktuple2__b",
         "projection_inverse_Prims.Mktuple3__1",
         "projection_inverse_Prims.Mktuple3__2",
         "projection_inverse_Prims.Mktuple3__3",
@@ -550,7 +544,7 @@
         "token_correspondence_Ex07a.subst.fuel_instrumented",
         "token_correspondence_Ex07a.typing.fuel_instrumented",
         "typing_Ex07a.appears_free_in", "typing_Ex07a.extend",
-        "typing_Ex07a.subst", "typing_Ex07a.typing", "typing_Prims.is_Some",
+        "typing_Ex07a.subst", "typing_Ex07a.typing",
         "typing_Tm_abs_3ec6e4438fd620bf2d72522edf224eab",
         "typing_tok_Ex07a.TBool@tok", "unit_inversion", "unit_typing"
       ],
@@ -646,7 +640,6 @@
         "assumption_Prims.option_haseq", "kinding_Ex07a.ty@tok"
       ],
       0
-    ],
-    [ "Ex07a.typed_step", 2, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

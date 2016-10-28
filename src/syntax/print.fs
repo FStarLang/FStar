@@ -28,7 +28,15 @@ open FStar.Const
 
 // VALS_HACK_HERE
 
-let lid_to_string (l:lid) = l.str
+let sli (l:lident) : string =
+    if Options.print_real_names()
+    then l.str
+    else l.ident.idText
+//    Util.format3 "%s@{def=%s;use=%s}" s 
+//        (Range.string_of_range (Ident.range_of_lid l))
+//        (Range.string_of_use_range (Ident.range_of_lid l))
+
+let lid_to_string (l:lid) = sli l
 
 //let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
 let fv_to_string fv = lid_to_string fv.fv_name.v
@@ -121,12 +129,6 @@ let find_lid (x:lident) xs : string =
 let infix_prim_op_to_string e = find_lid (get_lid e)      infix_prim_ops
 let unary_prim_op_to_string e = find_lid (get_lid e)      unary_prim_ops
 let quant_to_string t = find_lid (get_lid t) quants
-
-let rec sli (l:lident) : string =
-   if (Options.print_real_names())
-   then l.str
-   else l.ident.idText
-
 
 let const_to_string x = match x with
   | Const_effect -> "Effect"

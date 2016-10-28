@@ -1,7 +1,6 @@
 [
   "×j\u0007ç§Ážúk?ëŽ\u0019N¼ž",
   [
-    [ "TestSet.AB_distinct", 1, 2, 1, [ "@query" ], 0 ],
     [
       "TestSet.should_succeed",
       1,

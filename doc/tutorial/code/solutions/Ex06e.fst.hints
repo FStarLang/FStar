@@ -33,17 +33,16 @@
       0
     ],
     [ "Ex06e.mem", 2, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "Ex06e.sorted_smaller", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex06e.sorted_smaller",
-      2,
+      1,
       2,
       1,
       [
         "@query", "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
         "binder_x_9a691d092aa1033ae30e6c0e5e60237c_2", "bool_inversion",
         "bool_typing", "constructor_distinct_Prims.Cons",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "constructor_distinct_Prims.Nil", "disc_equation_Prims.Cons",
         "equality_tok_Prims.LexTop@tok",
         "equation_with_fuel_Ex06e.mem.fuel_instrumented",
         "equation_with_fuel_Ex06e.sorted.fuel_instrumented",
@@ -60,22 +59,21 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons",
         "token_correspondence_Ex06e.mem.fuel_instrumented",
         "token_correspondence_Ex06e.sorted.fuel_instrumented",
-        "typing_Ex06e.mem", "unit_inversion", "unit_typing"
+        "typing_Ex06e.mem", "unit_typing"
       ],
       0
     ],
     [
       "Ex06e.sorted_smaller",
-      3,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Ex06e.insert", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex06e.insert",
-      2,
+      1,
       2,
       1,
       [
@@ -91,8 +89,9 @@
         "fuel_correspondence_Ex06e.sorted.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "fuel_irrelevance_Ex06e.mem.fuel_instrumented",
-        "fuel_irrelevance_Ex06e.sorted.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_Ex06e.sorted_smaller",
+        "fuel_irrelevance_Ex06e.sorted.fuel_instrumented",
+        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "lemma_Ex06e.sorted_smaller",
         "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
@@ -100,19 +99,21 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_3c6b0a046e3ad4dc49af4e9e867061ea",
         "refinement_interpretation_Tm_refine_62eb7f31461ef77869d59625fb7b7eae",
         "refinement_interpretation_Tm_refine_7e54fe82e901fb33141bbd2f9ffee520",
+        "refinement_interpretation_Tm_refine_f33d72a41af2425dd632b2bed595c099",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_Ex06e.mem.fuel_instrumented",
         "token_correspondence_Ex06e.sorted.fuel_instrumented",
-        "typing_Ex06e.mem", "typing_Ex06e.sorted"
+        "typing_Ex06e.insert", "typing_Ex06e.mem", "typing_Ex06e.sorted",
+        "typing_Prims.is_Nil"
       ],
       0
     ],
-    [ "Ex06e.sort", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex06e.sort",
-      2,
+      1,
       2,
       1,
       [

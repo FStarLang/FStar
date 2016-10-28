@@ -25,7 +25,6 @@
       ],
       0
     ],
-    [ "Ex04f.snoc", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex04f.fold_left_cons_is_reverse",
       1,
@@ -36,8 +35,6 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
-    ],
-    [ "Ex04f.fold_left_cons_is_reverse", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Ex04f.fold_left_cons_is_reverse", 3, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

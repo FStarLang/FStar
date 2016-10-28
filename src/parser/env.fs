@@ -177,32 +177,33 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
      1. rec bindings, if the lid is unqualified
      2. sig bindings in current module
      3. each open namespace, in reverse order *)
-  let find_in_sig lid  =
-    match Util.smap_try_find (sigmap env) lid.str with
+  let find_in_sig source_lid  =
+    match Util.smap_try_find (sigmap env) source_lid.str with
       | Some (_, true) when exclude_interf -> None
       | None -> None
       | Some (se, _) ->
         begin match se with
-          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar lid Delta_constant None, false))
-          | Sig_datacon _ ->         Some (Term_name(S.fvar lid Delta_constant (fv_qual_of_se se), false))
+          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid Delta_constant None, false))
+          | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid Delta_constant (fv_qual_of_se se), false))
           | Sig_let((_, lbs), _, _, _) ->
-            let fv = lb_fv lbs lid in
-            Some (Term_name(S.fvar lid fv.fv_delta fv.fv_qual, false))
+            let fv = lb_fv lbs source_lid in
+            Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false))
           | Sig_declare_typ(lid, _, _, quals, _) ->
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
             || quals |> Util.for_some (function Assumption -> true | _ -> false)
-            then let dd = if Util.is_primop_lid lid
+            then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
+                 let dd = if Util.is_primop_lid lid
                           || (Util.starts_with lid.nsstr "Prims." && quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
-                    if quals |> List.contains Reflectable //this is really a M.reflect
-                    then let refl_monad = Ident.lid_of_path (lid.ns |> List.map (fun x -> x.idText)) occurrence_range in
-                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
-                         Some (Term_name (refl_const, false))
-                    else Some (Term_name(fvar lid dd (fv_qual_of_se se), false))
+                 if quals |> List.contains Reflectable //this is really a M.reflect
+                 then let refl_monad = Ident.lid_of_path (lid.ns |> List.map (fun x -> x.idText)) occurrence_range in
+                        let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
+                        Some (Term_name (refl_const, false))
+                 else Some (Term_name(fvar lid dd (fv_qual_of_se se), false))
             else None
-          | Sig_new_effect_for_free (ne, _) | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid lid)))
-          | Sig_effect_abbrev _ ->   Some (Eff_name(se, lid))
+          | Sig_new_effect_for_free (ne, _) | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
+          | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
           | _ -> None
         end in
 

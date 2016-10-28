@@ -27,8 +27,6 @@
       [ "@query", "equation_Sig.sksize", "projection_inverse_BoxInt_proj_0" ],
       0
     ],
-    [ "Sig.prop_pk", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Sig.pk_sk", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Sig.entry",
       1,

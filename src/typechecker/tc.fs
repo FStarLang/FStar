@@ -1413,9 +1413,11 @@ and tc_decl env se: list<sigelt> * _ =
         | _ -> failwith "Impossible" in
       if List.length uvs <> 1
       && not (Ident.lid_equals lid Const.effect_Lemma_lid)
-      then raise (Error(Util.format2 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes"
-                                    (Print.lid_to_string lid)
-                                    (List.length uvs |> Util.string_of_int), r));
+      then (let _, t = Subst.open_univ_vars uvs t in
+            raise (Error(Util.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)" 
+                                    (Print.lid_to_string lid) 
+                                    (List.length uvs |> Util.string_of_int)
+                                    (Print.term_to_string t), r)));
       let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, r) in
       let env = Env.push_sigelt env0 se in
       [se], env
