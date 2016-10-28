@@ -143,6 +143,7 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   (* assert (Buffer.live h4 cipher_tagged); *)
   (* assert (Plain.live h4 plain); *)
   intro_mac_refines i st n aad plain cipher_tagged h4;
+  pre_refines_to_refines #i st n aadlen aad (v plainlen) plain cipher_tagged h0 h4;
   admit()
   
   (* let _ = *)

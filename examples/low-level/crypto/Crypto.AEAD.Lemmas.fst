@@ -83,7 +83,6 @@ let frame_pre_refines i st nonce len plainb cipherb h0 h1 h2 =
        let table_2 = HS.sel h2 (PRF.itable i st.prf) in
        assert (pre_refines_one_entry i st nonce len plainb cipherb h0 h2)
   
-
 let frame_pre_refines_0 (i:id) (st:state i Writer) (nonce:Cipher.iv (alg i))
 		       (len:nat{len<>0}) (plainb:plainBuffer i len) (cipherb:lbuffer (len + v (Spec.taglen i)))
 		       (h0:mem) (h1:mem) (h2:mem)
@@ -194,7 +193,6 @@ let pre_refines_to_refines  (#i:id) (st:state i Writer) (nonce: Cipher.iv (alg i
 			    (aadlen: UInt32.t {aadlen <=^ aadmax})
 			    (aad: lbuffer (v aadlen))
                             (len:nat{len<>0}) (plain:plainBuffer i len) (cipher:lbuffer (len + v (Spec.taglen i)))
-			    (blocks:Seq.seq (PRF.entry st.prf.mac_rgn i))
 			    (h0:mem)
                             (h:mem{Buffer.live h aad /\ Plain.live h plain /\ Buffer.live h cipher})
    : Lemma (requires (let mac_rgn = st.prf.mac_rgn in
@@ -203,7 +201,8 @@ let pre_refines_to_refines  (#i:id) (st:state i Writer) (nonce: Cipher.iv (alg i
 	              let c, tag = SeqProperties.split c_tagged len in
 		      let ad = Buffer.as_seq h aad in
   		      safeId i ==> 
-			(pre_refines_one_entry i st nonce len plain cipher h0 h /\
+			(none_above ({iv=nonce; ctr=0ul}) st.prf h /\
+   			 pre_refines_one_entry i st nonce len plain cipher h0 h /\
 			 mac_refines i st nonce aad plain cipher h)))
             (ensures (let mac_rgn = st.prf.mac_rgn in
      		      let p = Plain.sel_plain h (u len) plain in
@@ -211,9 +210,14 @@ let pre_refines_to_refines  (#i:id) (st:state i Writer) (nonce: Cipher.iv (alg i
 	              let c, tag = SeqProperties.split c_tagged len in
 		      let ad = Buffer.as_seq h aad in
   		      let entry = Entry nonce ad len p c_tagged in
-		      safeId i ==> refines_one_entry #mac_rgn #i h entry blocks))
+		      safeId i ==>  (
+			pre_refines_one_entry i st nonce len plain cipher h0 h /\ (
+			  let table_0 = HS.sel h0 (PRF.itable i st.prf) in
+			  let table_1 = HS.sel h (PRF.itable i st.prf) in
+ 			  let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in
+			  refines_one_entry #mac_rgn #i h entry blocks))))
     = admit()
-
+    
 (* val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit *)
 (*   (requires (fun h0 -> *)
 (*     live h0 tag /\ live h0 st.s /\ *)
