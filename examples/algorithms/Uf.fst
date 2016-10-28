@@ -1,4 +1,4 @@
-module Uf
+module UfMarkov
 
 open FStar.Heap
 open FStar.List.Tot
@@ -14,15 +14,41 @@ open FStar.FunctionalExtensionality
 
 type uf (a : Type) : Type = { content:a ; parent:ref (option (uf a)) }
 
+// How wrong might this axiom be in our setting ?
+// If we put p : nat -> Tot bool, it seems just valid since we can realise it by unbounded search p 0, p 1, ...
+// With GTot it seems plainly wrong...
+assume val markov_principle : (p:(nat -> GTot bool)) -> Ghost nat (requires (~(forall(n:nat). ~(p n)))) (ensures (fun n -> p n))
 
+let rec p (a:Type) (h:heap) (u: uf a) (n:nat) : GTot bool (decreases n) =
+    match sel h u.parent with
+        | None -> true
+        | Some v -> if n = 0 then false else p a h v (n-1)
 
 noeq type funcaccessible (#a:Type0) (f: a -> GTot (option a)) (u : a) : Type0 =
 | FAcc : next:(match f u with | Some v -> funcaccessible f v | None -> unit) -> funcaccessible f u
 
-
 let ufh a h = x:(uf a){Heap.contains h x.parent}
 
 let reach (a:eqtype) h (u : uf a) : GTot (option (uf a)) = sel h u.parent
+
+let not_intro (#p:Type) ($f: p -> Lemma False) : Lemma (~p) = impl_intro f
+
+let markov_from_funcaccessible (#a:eqtype) (h:heap) (u: uf a) (w:funcaccessible (reach a h) u) : GTot (squash (~(forall n. ~(p a h u n)))) =
+  let rec witness (v:uf a) (w:funcaccessible (reach a h) v) : GTot (n:nat{p a h v n}) (decreases w)=
+    match sel h v.parent with | None -> 0 | Some v -> witness v w.next + 1
+  in
+  let n0 = witness u w in
+  let aux0 (f : forall n. ~(p a h u n)) : Lemma False = give_witness f ; assert (~(p a h u n0)) ; assert (False) in
+  not_intro aux0 ; get_proof (~(forall n. ~(p a h u n)))
+
+
+let funcaccessible_from_markov (#a:eqtype) (h:heap) (u:uf a) : Ghost (funcaccessible (reach a h) u) (requires (~(forall n. ~(p a h u n)))) (ensures (fun _ -> True)) =
+  let n0 = markov_principle (p a h u) in
+  let rec build_witness (n:nat) (v:uf a) : Ghost (funcaccessible (reach a h) v) (requires (p a h v n)) (ensures (fun _ -> True)) =
+    match sel h v.parent with
+    | None -> FAcc ()
+    | Some v' -> FAcc (build_witness (n-1) v')
+  in build_witness n0 u
 
 
 assume val recall_reachable : #a:Type -> #a2:Type -> #b:Type -> h:heap -> r:ref a -> f:(a2 -> Tot (ref b)) ->
@@ -34,7 +60,7 @@ let recall_step (#a:eqtype) (h:heap) (z:uf a) (y:uf a)
   recall_reachable h z.parent (fun (r : (option (uf a)){is_Some r}) -> match r with | Some y -> y.parent)
 
 
-assume val recall_step : #a:eqtype -> h:heap -> z:uf a -> y:uf a -> Lemma (requires (reach a h z = Some y)) (ensures (Heap.contains h y.parent))
+//assume val recall_step : #a:eqtype -> h:heap -> z:uf a -> y:uf a -> Lemma (requires (reach a h z = Some y)) (ensures (Heap.contains h y.parent))
 
 
 let reprfun (a:eqtype) (h:heap) = f:(uf a -> GTot (uf a)){
@@ -51,7 +77,18 @@ let uf_invariant_fun (#a:eqtype) (h:heap) : Tot Type0 = (u0:ufh a h) -> GTot (fu
 let maintain_uf_invariant (#a:eqtype) (#h0:heap) (#h1:heap) ($f : uf_invariant_fun h0 -> GTot (uf_invariant_fun h1)) : Lemma (requires (uf_invariant a h0)) (ensures (uf_invariant a h1)) =
   give_proof #(uf_invariant a h1) (map_squash (get_proof (uf_invariant a h0)) (fun (sq_uf_inv0 : squash (uf_invariant_fun h0)) -> map_squash sq_uf_inv0 f))
 
-assume val uf_invariant_termination : (a:eqtype) -> (h:heap) -> (u:ufh a h) -> (p:ufh a h) -> Lemma (requires (uf_invariant a h /\ sel h u.parent = Some p)) (ensures (p << u))
+
+let uf_invariant_termination (a:eqtype) (h:heap) (u:ufh a h)
+  : Ghost (funcaccessible (reach a h) u)
+          (requires (uf_invariant a h))
+          (ensures (fun _ -> True))
+  = give_proof (bind_squash (get_proof (funcaccessible (reach a h) u))
+                           (markov_from_funcaccessible h u) ) ;
+    assert (~(forall n. ~(p a h u n)));
+    funcaccessible_from_markov h u
+
+
+//assume val uf_invariant_termination : (a:eqtype) -> (h:heap) -> (u:ufh a h) -> (p:ufh a h) -> Lemma (requires (uf_invariant a h /\ sel h u.parent = Some p)) (ensures (p << u))
 
 
 (** Ghost functional extensionality **)
@@ -65,21 +102,32 @@ assume GhostExtensionality : forall (a:Type) (b:Type) (f: gfun a b) (g: gfun a b
 
 
 let reprfun_prop (#a:eqtype) (h:heap) (f1:reprfun a h) (f2:reprfun a h) : Lemma (requires (uf_invariant a h)) (ensures (f1 == f2)) =
-  let w = get_proof (uf_invariant a h) in (* TODO : check that not having this proposition in the closire of equality_proof is normal *)
-  let rec equality_proof (u:ufh a h) : Lemma (requires True) (ensures (f1 u == f2 u)) (decreases u) =
+  let rec equality_proof (u:ufh a h) (w : funcaccessible (reach a h) u): Lemma (requires True) (ensures (f1 u == f2 u)) (decreases w) =
     match sel h u.parent with
     | None -> ()
-    | Some v -> recall_step h u v ; give_proof w ; uf_invariant_termination a h u v ; equality_proof v
+    | Some v -> recall_step h u v ; equality_proof v w.next
   in
-  forall_intro equality_proof ; assert (gfeq f1 f2)
+  let aux (u:ufh a h) : Lemma (ensures (f1 u == f2 u)) = let w = uf_invariant_termination a h u in equality_proof u w in
+  forall_intro aux ; assert (gfeq f1 f2)
 
 
 let retrieve_reprfun (a:eqtype) (h:heap) : Pure (reprfun a h) (requires (uf_invariant a h)) (ensures (fun _ -> True)) =
-  let w = get_proof (uf_invariant a h) in
-  let rec f (u:uf a) : Ghost (uf a) (requires True) (ensures (fun r -> if Heap.contains h u.parent then Heap.contains h r.parent /\ sel h r.parent = None /\ (sel h u.parent = None ==> u = r) else u = r)) =
-    if Heap.contains h u.parent then
-      match reach a h u with | None -> u | Some v -> recall_step h u v ; give_proof w ; uf_invariant_termination a h u v ; f v
-    else u
+  let rec f0 (u:ufh a h) (w:funcaccessible (reach a h) u)
+    : Ghost (uf a)
+            (requires True)
+            (ensures (fun r -> Heap.contains h r.parent /\ sel h r.parent = None /\ (sel h u.parent = None ==> u = r)))
+            (decreases w)
+    = match reach a h u with | None -> u | Some v -> recall_step h u v ; f0 v w.next
+  in
+  let f (u:uf a)
+    : Ghost (uf a)
+      (requires True)
+      (ensures (fun r -> if Heap.contains h u.parent
+                      then Heap.contains h r.parent /\ sel h r.parent = None /\ (sel h u.parent = None ==> u = r)
+                      else u = r))
+    = if Heap.contains h u.parent
+      then let w = uf_invariant_termination a h u in f0 u w
+      else u
   in
   let reprfun_prop (u:ufh a h) (v:ufh a h) : Lemma (requires (reach a h u = Some v)) (ensures (f u == f v)) = admit () (* replace when bug#739 is fixed*)
     (*match reach a h v with
@@ -137,16 +185,22 @@ let distinct_cell_lemma (#a:eqtype) (h:heap) (r1:ref a) (r2: ref a) : Lemma (sel
 *)
 
 (** TODO : why do I need to ask for uf_invariant a h0 in the post-condition ??? *)
-let rec root (#a:eqtype) (u:uf a) : ST (uf a) (requires (uf_invariant a)) (ensures (fun h0 r h1 -> uf_invariant a h0 /\ uf_invariant a h1 /\ same_reprfun a h0 h1 /\ (*sel h0 r.parent = None /\ sel h1 r.parent = None*) retrieve_reprfun a h1 u = r) ) (decreases u) (* WARNING : check the decrease clause by hand for now *) =
+let rec root0 (#a:eqtype) (h0:heap) (u:uf a) (w: erased (funcaccessible (reach a h0) u)) : ST (uf a) (requires (fun h -> uf_invariant a h /\ h == h0)) (ensures (fun h0 r h1 -> uf_invariant a h0 /\ uf_invariant a h1 /\ same_reprfun a h0 h1 /\  retrieve_reprfun a h1 u = r) ) (decreases (reveal w)) (* WARNING : check the decrease clause by hand for now *) =
   match !u.parent with
   | None -> u
   | Some p ->
     let h0 = get () in
     recall u.parent ;
     recall p.parent ;
-    uf_invariant_termination a h0 u p ;
-    assert ( p << u ) ;
-    let r = root p in
+    let w_next : erased (funcaccessible (reach a h0) p) =
+      (* TODO : investigate why elift1 (fun w -> w.next) w fails *)
+      let next (w0:funcaccessible (reach a h0) u) : Tot (funcaccessible (reach a h0) p) =
+        w0.next
+      in
+      elift1 next w
+    in
+    assert ( reveal w_next << reveal w ) ;
+    let r = root0 h0 p w_next in
     let h1 = get () in
 //   assert (sel h0 u.parent = Some p) ;
     distinct_cell_lemma h0 r.parent u.parent ;
@@ -168,6 +222,26 @@ let rec root (#a:eqtype) (u:uf a) : ST (uf a) (requires (uf_invariant a)) (ensur
 //   if p = r then give_witness #(reachable h0 r u) (Immediately u) else give_proof (map_squash (get_proof (reachable h0 r p)) (fun w -> Later p w u)) ;
     r
 
+
+let root (#a:eqtype) (u:uf a)
+  : ST (uf a)
+       (requires (uf_invariant a))
+       (ensures (fun h0 r h1 -> uf_invariant a h0 /\
+                             uf_invariant a h1 /\
+                             same_reprfun a h0 h1 /\
+                             retrieve_reprfun a h1 u = r))
+  = let h0 = get () in
+    recall u.parent ;
+    let v : ufh a h0 = u in
+    let reified_proof = get_proof (uf_invariant a h0) in
+    let w : erased (funcaccessible (reach a h0) v) =
+      let intermezzo _ : GTot (funcaccessible (reach a h0) v) =
+          give_proof reified_proof ;
+          uf_invariant_termination a h0 v
+      in
+      elift1 intermezzo (hide ())
+    in
+    root0 h0 v w
 
 (* Without invariants :
 
