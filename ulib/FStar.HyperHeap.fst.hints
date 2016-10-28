@@ -1028,7 +1028,8 @@
       [
         "@query", "assumption_FStar.HyperHeap.HasEq_rid",
         "assumption_FStar.HyperHeap.Mod_set_def", "bool_inversion",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "bool_typing", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil",
         "equation_FStar.HyperHeap.modifies", "equation_FStar.HyperHeap.rid",
         "equation_FStar.HyperHeap.root", "equation_FStar.HyperHeap.t",
         "equation_FStar.Set.subset", "equation_Prims.eqtype",
@@ -1038,7 +1039,6 @@
         "fuel_correspondence_FStar.HyperHeap.includes.fuel_instrumented",
         "fuel_correspondence_FStar.List.Tot.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
-        "fuel_irrelevance_FStar.List.Tot.length.fuel_instrumented",
         "function_token_typing_FStar.Heap.emp",
         "function_token_typing_FStar.Heap.heap",
         "function_token_typing_FStar.HyperHeap.mod_set",
@@ -1068,8 +1068,7 @@
         "token_correspondence_FStar.HyperHeap.mod_set",
         "typing_FStar.HyperHeap.includes", "typing_FStar.List.Tot.length",
         "typing_FStar.Map.concat", "typing_FStar.Map.contains",
-        "typing_FStar.Map.domain", "typing_FStar.Map.restrict",
-        "typing_FStar.Set.complement", "typing_FStar.Set.mem",
+        "typing_FStar.Map.restrict", "typing_FStar.Set.complement",
         "typing_FStar.Set.singleton", "unit_typing"
       ],
       0

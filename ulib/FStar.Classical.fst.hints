@@ -1,5 +1,5 @@
 [
-  "«Úèéò—i¬‹\u0011˚tZÄ•∂",
+  "ÙT¢ìõœIvãß—u\u0004£ék",
   [
     [
       "FStar.Classical.give_witness",
@@ -55,48 +55,6 @@
     [ "FStar.Classical.impl_intro_gtot", 1, 0, 0, [ "@query" ], 0 ],
     [ "FStar.Classical.impl_intro", 1, 0, 0, [ "@query" ], 0 ],
     [
-      "FStar.Classical.excluded_middle'",
-      1,
-      0,
-      0,
-      [ "@query", "unit_typing" ],
-      0
-    ],
-    [
-      "FStar.Classical.excluded_middle",
-      1,
-      0,
-      0,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0
-    ],
-    [
-      "FStar.Classical.ghost_lemma",
-      1,
-      0,
-      0,
-      [
-        "@query",
-        "refinement_interpretation_Tm_refine_340fcf9110ec0348a1e1a4e799da8db3",
-        "unit_inversion", "unit_typing"
-      ],
-      0
-    ],
-    [
-      "FStar.Classical.move_requires",
-      1,
-      0,
-      0,
-      [
-        "@query", "bool_typing", "equation_FStar.List.Tot.test_sort",
-        "equation_Prims._assert",
-        "function_token_typing_FStar.List.Tot.test_sort",
-        "pretyping_f537159ed795b314b4e58c260361ae86",
-        "refinement_interpretation_Tm_refine_340fcf9110ec0348a1e1a4e799da8db3"
-      ],
-      0
-    ],
-    [
       "FStar.Classical.exists_elim",
       1,
       0,
@@ -107,6 +65,37 @@
         "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
         "unit_typing"
       ],
+      0
+    ],
+    [
+      "FStar.Classical.move_requires",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Prims.Left", "disc_equation_Prims.Right",
+        "equation_Prims.l_not", "fuel_guarded_inversion_Prims.c_or"
+      ],
+      0
+    ],
+    [
+      "FStar.Classical.ghost_lemma",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Prims.Left", "disc_equation_Prims.Right",
+        "equation_Prims.l_not", "fuel_guarded_inversion_Prims.c_or",
+        "unit_inversion"
+      ],
+      0
+    ],
+    [
+      "FStar.Classical.excluded_middle",
+      1,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ]
   ]

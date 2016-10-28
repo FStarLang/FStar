@@ -487,7 +487,7 @@ val toField_plus:
     modifies_1 a h0 h1 /\ // Only a was modified
     sel_int h1 a == pow2 (8 * w len) + little_endian (sel_word h0 b) ))
 
-#set-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
 
 let toField_plus len a b =
   let h0 = ST.get() in
