@@ -86,12 +86,14 @@ type z3status =
     | SAT     of list<label>          //error labels
     | UNKNOWN of list<label>          //error labels
     | TIMEOUT of list<label>          //error labels
+    | KILLED
 
 let status_to_string = function
     | SAT  _ -> "sat"
     | UNSAT _ -> "unsat"
     | UNKNOWN _ -> "unknown"
     | TIMEOUT _ -> "timeout"
+    | KILLED -> "killed"
 
 let tid () = Util.current_tid() |> Util.string_of_int
 let new_z3proc id =
@@ -105,6 +107,7 @@ type bgproc = {
     grab:unit -> proc;
     release:unit -> unit;
     refresh:unit -> unit;
+    restart:unit -> unit
 }
 
 type query_log = {
@@ -175,9 +178,16 @@ let bg_z3_proc =
         the_z3proc := Some (new_proc ());
         query_logging.close_log();
         release() in
+    let restart () =
+        Util.monitor_enter(); 
+        query_logging.close_log();
+        the_z3proc := None;
+        the_z3proc := Some (new_proc ());
+        Util.monitor_exit() in
     {grab=grab;
      release=release;
-     refresh=refresh}
+     refresh=refresh;
+     restart=restart}
 
 let doZ3Exe' (input:string) (z3proc:proc) =
   let parse (z3out:string) =
@@ -205,6 +215,7 @@ let doZ3Exe' (input:string) (z3proc:proc) =
       | "unknown"::tl -> UNKNOWN (snd (unsat_core_and_lblnegs tl))
       | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl))
       | "unsat"::tl   -> UNSAT   (fst (unsat_core tl))
+      | "killed"::tl  -> bg_z3_proc.restart(); KILLED
       | hd::tl -> 
         TypeChecker.Errors.warn Range.dummyRange (Util.format2 "%s: Unexpected output from Z3: %s\n" (query_logging.get_module_name()) hd);
         result tl
@@ -232,7 +243,11 @@ type job<'a> = {
     job:unit -> 'a;
     callback: 'a -> unit
 }
-type z3job = job<(either<unsat_core, (error_labels * bool)> * int)>
+type error_kind = 
+    | Timeout
+    | Kill
+    | Default
+type z3job = job<(either<unsat_core, (error_labels * error_kind)> * int)>
 
 let job_queue : ref<list<z3job>> = Util.mk_ref []
 
@@ -243,15 +258,19 @@ let with_monitor m f =
     Util.monitor_exit(m);
     res
 
-let z3_job fresh label_messages input () : either<unsat_core, (error_labels * bool)> * int =
-  let is_timeout = function
-    | TIMEOUT _ -> true
-    | _ -> false in
+let z3_job fresh label_messages input () : either<unsat_core, (error_labels * error_kind)> * int =
+  let ekind = function
+    | TIMEOUT _ -> Timeout
+    | SAT _
+    | UNKNOWN _ -> Default
+    | KILLED -> Kill 
+    | _ -> failwith "Impossible" in
   let start = Util.now() in
   let status = doZ3Exe fresh input in
   let _, elapsed_time = Util.time_diff start (Util.now()) in
   let result = match status with
     | UNSAT core -> Inl core, elapsed_time
+    | KILLED -> Inr ([], Kill), elapsed_time
     | TIMEOUT lblnegs
     | SAT lblnegs
     | UNKNOWN lblnegs ->
@@ -260,7 +279,7 @@ let z3_job fresh label_messages input () : either<unsat_core, (error_labels * bo
         match label_messages |> List.tryFind (fun (m, _, _) -> fst m = l) with
             | None -> []
             | Some (lbl, msg, r) -> [(lbl, msg, r)]) in
-        Inr (failing_assertions, is_timeout status), elapsed_time in
+        Inr (failing_assertions, ekind status), elapsed_time in
     result
 
 let rec dequeue' () =
@@ -377,7 +396,7 @@ let commit_mark msg =
         | _ -> failwith "Impossible"
     end
 
-let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_labels*bool)> * int) -> unit) =
+let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
   let filter_assertions theory = match core with 
     | None -> theory, false
     | Some core ->
@@ -419,7 +438,7 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
     if used_unsat_core
     then match uc_errs with 
          | Inl _ -> cb (uc_errs, time)
-         | Inr _ -> cb (Inr ([],false), time) //if we filtered the theory, then the error message is unreliable
+         | Inr (_, ek) -> cb (Inr ([],ek), time) //if we filtered the theory, then the error message is unreliable
     else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
   if Options.log_queries() then query_logging.append_to_log input;
