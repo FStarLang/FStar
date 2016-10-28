@@ -13,7 +13,6 @@
       ],
       0
     ],
-    [ "FStar.Matrix2.upd_row", 2, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Matrix2.upd_col",
       1,
@@ -25,7 +24,6 @@
       ],
       0
     ],
-    [ "FStar.Matrix2.upd_col", 2, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Matrix2.lemma_row_len",
       1,
@@ -183,7 +181,6 @@
       0
     ],
     [ "FStar.Matrix2.lemma_index_upd_col2", 3, 0, 0, [ "@query" ], 0 ],
-    [ "FStar.Matrix2.lemma_eq_intro", 1, 0, 0, [ "@query" ], 0 ],
-    [ "FStar.Matrix2.lemma_eq_elim", 1, 0, 0, [ "@query" ], 0 ]
+    [ "FStar.Matrix2.lemma_eq_intro", 1, 0, 0, [ "@query" ], 0 ]
   ]
 ]

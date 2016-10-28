@@ -72,6 +72,7 @@
   <ItemGroup>
     <Compile Include="term.fsi" />
     <Compile Include="term.fs" />
+    <Compile Include="util.fs" />
     <Compile Include="z3.fs" />
     <Compile Include="splitcases.fs" />
     <Compile Include="errorReporting.fs" />

@@ -1,6 +1,18 @@
 
 open Prims
 
+exception Not_a_wp_implication
+
+
+let is_Not_a_wp_implication = (fun _discr_ -> (match (_discr_) with
+| Not_a_wp_implication (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
 type label =
 FStar_SMTEncoding_Term.error_label
 
@@ -9,14 +21,14 @@ type labels =
 FStar_SMTEncoding_Term.error_labels
 
 
-let sort_labels : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun l -> (FStar_List.sortWith (fun _86_7 _86_13 -> (match (((_86_7), (_86_13))) with
-| ((_86_3, _86_5, r1), (_86_9, _86_11, r2)) -> begin
+let sort_labels : (FStar_SMTEncoding_Term.error_label * Prims.bool) Prims.list  ->  (((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) * Prims.bool) Prims.list = (fun l -> (FStar_List.sortWith (fun _87_10 _87_19 -> (match (((_87_10), (_87_19))) with
+| (((_87_3, _87_5, r1), _87_9), ((_87_12, _87_14, r2), _87_18)) -> begin
 (FStar_Range.compare r1 r2)
 end)) l))
 
 
-let remove_dups : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Int64.int64) Prims.list = (fun l -> (FStar_Util.remove_dups (fun _86_19 _86_24 -> (match (((_86_19), (_86_24))) with
-| ((_86_16, m1, r1), (_86_21, m2, r2)) -> begin
+let remove_dups : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun l -> (FStar_Util.remove_dups (fun _87_25 _87_30 -> (match (((_87_25), (_87_30))) with
+| ((_87_22, m1, r1), (_87_27, m2, r2)) -> begin
 ((r1 = r2) && (m1 = m2))
 end)) l))
 
@@ -29,203 +41,305 @@ type ranges =
 (Prims.string Prims.option * FStar_Range.range) Prims.list
 
 
-let fresh_label : ranges  ->  FStar_SMTEncoding_Term.term  ->  labels  ->  (FStar_SMTEncoding_Term.term * labels) = (
+let fresh_label : Prims.string  ->  FStar_Range.range  ->  FStar_SMTEncoding_Term.term  ->  (label * FStar_SMTEncoding_Term.term) = (
 
 let ctr = (FStar_ST.alloc (Prims.parse_int "0"))
-in (fun rs t labs -> (
+in (fun message range t -> (
 
 let l = (
 
-let _86_29 = (FStar_Util.incr ctr)
-in (let _180_16 = (let _180_15 = (FStar_ST.read ctr)
-in (FStar_Util.string_of_int _180_15))
-in (FStar_Util.format1 "label_%s" _180_16)))
+let _87_35 = (FStar_Util.incr ctr)
+in (let _182_17 = (let _182_16 = (FStar_ST.read ctr)
+in (FStar_Util.string_of_int _182_16))
+in (FStar_Util.format1 "label_%s" _182_17)))
 in (
 
 let lvar = ((l), (FStar_SMTEncoding_Term.Bool_sort))
 in (
 
-let _86_49 = (match (rs) with
-| [] -> begin
-if (FStar_Options.debug_any ()) then begin
-(let _180_17 = (FStar_SMTEncoding_Term.hash_of_term t)
-in ((_180_17), (FStar_Range.dummyRange)))
-end else begin
-(("Z3 provided a counterexample, but, unfortunately, F* could not translate it back to something meaningful"), (FStar_Range.dummyRange))
-end
-end
-| ((Some (reason), r))::_86_35 -> begin
-((reason), (r))
-end
-| ((None, r))::_86_42 -> begin
-(("failed to prove a pre-condition"), (r))
-end)
-in (match (_86_49) with
-| (message, range) -> begin
-(
-
 let label = ((lvar), (message), (range))
 in (
 
-let lterm = (FStar_SMTEncoding_Term.mkFreeV lvar)
+let lterm = (FStar_SMTEncoding_Util.mkFreeV lvar)
 in (
 
-let lt = (FStar_SMTEncoding_Term.mkOr ((lterm), (t)))
-in ((lt), ((label)::labs)))))
-end))))))
+let lt = (FStar_SMTEncoding_Util.mkOr ((lterm), (t)))
+in ((label), (lt)))))))))
 
 
-let label_goals : (Prims.unit  ->  Prims.string) Prims.option  ->  FStar_Int64.int64  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term * labels * ranges) = (fun use_env_msg r q -> (
+let label_goals = (fun use_env_msg r q -> (
 
-let _86_61 = (match (use_env_msg) with
+let is_a_post_condition = (fun tm -> (match (tm.FStar_SMTEncoding_Term.tm) with
+| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Var ("Valid"), ({FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Var ("ApplyTT"), ({FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.FreeV ("^^post_condition", _87_63); FStar_SMTEncoding_Term.freevars = _87_60; FStar_SMTEncoding_Term.rng = _87_58})::_87_56); FStar_SMTEncoding_Term.freevars = _87_52; FStar_SMTEncoding_Term.rng = _87_50})::[]) -> begin
+true
+end
+| _87_75 -> begin
+false
+end))
+in (
+
+let _87_81 = (match (use_env_msg) with
 | None -> begin
 ((false), (""))
 end
 | Some (f) -> begin
-(let _180_33 = (f ())
-in ((true), (_180_33)))
+(let _182_29 = (f ())
+in ((true), (_182_29)))
 end)
-in (match (_86_61) with
+in (match (_87_81) with
 | (flag, msg_prefix) -> begin
 (
 
-let fresh_label = (fun rs t labs -> (
+let fresh_label = (fun msg ropt rng t -> (
 
-let rs' = if (not (flag)) then begin
-rs
+let msg = if flag then begin
+(Prims.strcat "Failed to verify implicit argument: " msg)
 end else begin
-(match (rs) with
-| ((Some (reason), _86_71))::_86_67 -> begin
-(((Some ((Prims.strcat "Failed to verify implicit argument: " reason))), (r)))::[]
+msg
 end
-| _86_75 -> begin
-(((Some ("Failed to verify implicit argument")), (r)))::[]
+in (
+
+let rng = (match (ropt) with
+| None -> begin
+rng
+end
+| Some (r) -> begin
+r
 end)
-end
+in (fresh_label msg rng t))))
 in (
 
-let _86_79 = (fresh_label rs' t labs)
-in (match (_86_79) with
-| (lt, labs) -> begin
-((lt), (labs), (rs))
-end))))
-in (
-
-let rec aux = (fun rs q labs -> (match (q.FStar_SMTEncoding_Term.tm) with
+let rec aux = (fun default_msg ropt labels q -> (match (q.FStar_SMTEncoding_Term.tm) with
 | (FStar_SMTEncoding_Term.BoundV (_)) | (FStar_SMTEncoding_Term.Integer (_)) -> begin
-((q), (labs), (rs))
+((labels), (q))
 end
-| FStar_SMTEncoding_Term.Labeled (_86_91, "push", r) -> begin
-((FStar_SMTEncoding_Term.mkTrue), (labs), ((((None), (r)))::rs))
-end
-| FStar_SMTEncoding_Term.Labeled (_86_97, "pop", r) -> begin
-(let _180_46 = (FStar_List.tl rs)
-in ((FStar_SMTEncoding_Term.mkTrue), (labs), (_180_46)))
-end
-| FStar_SMTEncoding_Term.Labeled (arg, reason, r) -> begin
+| FStar_SMTEncoding_Term.Labeled (arg, "could not prove post-condition", _87_106) -> begin
 (
 
-let _86_110 = (aux ((((Some (reason)), (r)))::rs) arg labs)
-in (match (_86_110) with
-| (tm, labs, rs) -> begin
-(let _180_47 = (FStar_List.tl rs)
-in ((tm), (labs), (_180_47)))
+let fallback = (fun _87_110 -> (match (()) with
+| () -> begin
+(aux default_msg ropt labels arg)
 end))
+in try
+(match (()) with
+| () -> begin
+(match (arg.FStar_SMTEncoding_Term.tm) with
+| FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, pats, iopt, (post)::sorts, {FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Imp, (lhs)::(rhs)::[]); FStar_SMTEncoding_Term.freevars = _87_125; FStar_SMTEncoding_Term.rng = rng}) -> begin
+(
+
+let names = (let _182_53 = (FStar_List.mapi (fun i s -> (let _182_52 = (let _182_51 = (FStar_Util.string_of_int i)
+in (Prims.strcat "^^" _182_51))
+in ((_182_52), (s)))) sorts)
+in ((("^^post_condition"), (post)))::_182_53)
+in (
+
+let instantiation = (FStar_List.map FStar_SMTEncoding_Util.mkFreeV names)
+in (
+
+let _87_141 = (let _182_55 = (FStar_SMTEncoding_Term.inst instantiation lhs)
+in (let _182_54 = (FStar_SMTEncoding_Term.inst instantiation rhs)
+in ((_182_55), (_182_54))))
+in (match (_87_141) with
+| (lhs, rhs) -> begin
+(
+
+let _87_176 = (match (lhs.FStar_SMTEncoding_Term.tm) with
+| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.And, clauses_lhs) -> begin
+(
+
+let _87_148 = (FStar_Util.prefix clauses_lhs)
+in (match (_87_148) with
+| (req, ens) -> begin
+(match (ens.FStar_SMTEncoding_Term.tm) with
+| FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, pats_ens, iopt_ens, sorts_ens, {FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Imp, (ensures_conjuncts)::(post)::[]); FStar_SMTEncoding_Term.freevars = _87_155; FStar_SMTEncoding_Term.rng = rng_ens}) when (is_a_post_condition post) -> begin
+(
+
+let _87_167 = (aux "could not prove post-condition" None labels ensures_conjuncts)
+in (match (_87_167) with
+| (labels, ensures_conjuncts) -> begin
+(
+
+let ens = (let _182_58 = (let _182_57 = (let _182_56 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App (((FStar_SMTEncoding_Term.Imp), ((ensures_conjuncts)::(post)::[])))) rng_ens)
+in ((FStar_SMTEncoding_Term.Forall), (pats_ens), (iopt_ens), (sorts_ens), (_182_56)))
+in FStar_SMTEncoding_Term.Quant (_182_57))
+in (FStar_SMTEncoding_Term.mk _182_58 ens.FStar_SMTEncoding_Term.rng))
+in (
+
+let lhs = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App (((FStar_SMTEncoding_Term.And), ((FStar_List.append req ((ens)::[])))))) lhs.FStar_SMTEncoding_Term.rng)
+in (let _182_59 = (FStar_SMTEncoding_Term.abstr names lhs)
+in ((labels), (_182_59)))))
+end))
+end
+| _87_171 -> begin
+(Prims.raise Not_a_wp_implication)
+end)
+end))
+end
+| _87_173 -> begin
+(Prims.raise Not_a_wp_implication)
+end)
+in (match (_87_176) with
+| (labels, lhs) -> begin
+(
+
+let _87_182 = (
+
+let _87_179 = (aux default_msg None labels rhs)
+in (match (_87_179) with
+| (labels, rhs) -> begin
+(let _182_60 = (FStar_SMTEncoding_Term.abstr names rhs)
+in ((labels), (_182_60)))
+end))
+in (match (_87_182) with
+| (labels, rhs) -> begin
+(
+
+let body = (FStar_SMTEncoding_Term.mkImp ((lhs), (rhs)) rng)
+in (let _182_61 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.Quant (((FStar_SMTEncoding_Term.Forall), (pats), (iopt), ((post)::sorts), (body)))) q.FStar_SMTEncoding_Term.rng)
+in ((labels), (_182_61))))
+end))
+end))
+end))))
+end
+| _87_185 -> begin
+(fallback ())
+end)
+end)
+with
+| Not_a_wp_implication -> begin
+(fallback ())
+end)
+end
+| FStar_SMTEncoding_Term.Labeled (arg, reason, r) -> begin
+(aux reason (Some (r)) labels arg)
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Imp, (lhs)::(rhs)::[]) -> begin
 (
 
-let _86_120 = (aux rs rhs labs)
-in (match (_86_120) with
-| (rhs, labs, rs) -> begin
+let conjuncts = (fun t -> (match (t.FStar_SMTEncoding_Term.tm) with
+| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.And, cs) -> begin
+cs
+end
+| _87_204 -> begin
+(t)::[]
+end))
+in (
+
+let _87_239 = (FStar_All.pipe_right (conjuncts lhs) (FStar_List.partition (fun tm -> (match (tm.FStar_SMTEncoding_Term.tm) with
+| FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, (({FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Var ("Prims.guard_free"), (p)::[]); FStar_SMTEncoding_Term.freevars = _87_210; FStar_SMTEncoding_Term.rng = _87_208})::[])::[], iopt, sorts, {FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Iff, (l)::(r)::[]); FStar_SMTEncoding_Term.freevars = _87_225; FStar_SMTEncoding_Term.rng = _87_223}) -> begin
+true
+end
+| _87_236 -> begin
+false
+end))))
+in (match (_87_239) with
+| (named_continuation_opt, other_lhs_conjuncts) -> begin
+(match (named_continuation_opt) with
+| (_87_246)::(_87_243)::_87_241 -> begin
+(FStar_All.failwith "More than one named continuation; impossible")
+end
+| [] -> begin
 (
 
-let _86_174 = (match (lhs.FStar_SMTEncoding_Term.tm) with
+let _87_251 = (aux default_msg ropt labels rhs)
+in (match (_87_251) with
+| (labels, rhs) -> begin
+(let _182_66 = (FStar_SMTEncoding_Util.mkImp ((lhs), (rhs)))
+in ((labels), (_182_66)))
+end))
+end
+| (q)::[] -> begin
+(match (q.FStar_SMTEncoding_Term.tm) with
+| FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, (({FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Var ("Prims.guard_free"), (p)::[]); FStar_SMTEncoding_Term.freevars = _87_258; FStar_SMTEncoding_Term.rng = _87_256})::[])::[], iopt, sorts, {FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Iff, (l)::(r)::[]); FStar_SMTEncoding_Term.freevars = _87_273; FStar_SMTEncoding_Term.rng = _87_271}) -> begin
+(
+
+let _87_285 = (aux default_msg None labels r)
+in (match (_87_285) with
+| (labels, r) -> begin
+(
+
+let q = (let _182_69 = (let _182_68 = (let _182_67 = (FStar_SMTEncoding_Util.norng FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App (((FStar_SMTEncoding_Term.Iff), ((l)::(r)::[])))))
+in ((FStar_SMTEncoding_Term.Forall), (((p)::[])::[]), (Some ((Prims.parse_int "0"))), (sorts), (_182_67)))
+in FStar_SMTEncoding_Term.Quant (_182_68))
+in (FStar_SMTEncoding_Term.mk _182_69 q.FStar_SMTEncoding_Term.rng))
+in (
+
+let lhs = (FStar_SMTEncoding_Term.mk_and_l ((q)::other_lhs_conjuncts) lhs.FStar_SMTEncoding_Term.rng)
+in (
+
+let _87_292 = (
+
+let hash_of_p = (FStar_SMTEncoding_Term.hash_of_term p)
+in (FStar_All.pipe_right (conjuncts rhs) (FStar_List.partition (fun t -> ((FStar_SMTEncoding_Term.hash_of_term t) = hash_of_p)))))
+in (match (_87_292) with
+| (rhs_p, rhs_rest) -> begin
+(
+
+let _87_295 = (let _182_71 = (FStar_SMTEncoding_Term.mk_and_l rhs_rest rhs.FStar_SMTEncoding_Term.rng)
+in (aux default_msg None labels _182_71))
+in (match (_87_295) with
+| (labels, rhs_rest) -> begin
+(
+
+let rhs = (FStar_SMTEncoding_Term.mk_and_l ((rhs_rest)::rhs_p) rhs.FStar_SMTEncoding_Term.rng)
+in (let _182_72 = (FStar_SMTEncoding_Util.mkImp ((lhs), (rhs)))
+in ((labels), (_182_72))))
+end))
+end))))
+end))
+end
+| _87_298 -> begin
+(FStar_All.failwith "Impossible")
+end)
+end)
+end)))
+end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.And, conjuncts) -> begin
 (
 
-let _86_165 = (FStar_Util.fold_map (fun _86_127 tm -> (match (_86_127) with
-| (labs, rs) -> begin
-(match (tm.FStar_SMTEncoding_Term.tm) with
-| FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, (({FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Var ("Prims.guard_free"), (p)::[]); FStar_SMTEncoding_Term.freevars = _86_131})::[])::[], iopt, sorts, {FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Iff, (l)::(r)::[]); FStar_SMTEncoding_Term.freevars = _86_144}) -> begin
-(
-
-let _86_157 = (aux rs r labs)
-in (match (_86_157) with
-| (r, labs, rs) -> begin
-(
-
-let q = (let _180_52 = (let _180_51 = (let _180_50 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App (((FStar_SMTEncoding_Term.Iff), ((l)::(r)::[])))))
-in ((FStar_SMTEncoding_Term.Forall), (((p)::[])::[]), (Some ((Prims.parse_int "0"))), (sorts), (_180_50)))
-in FStar_SMTEncoding_Term.Quant (_180_51))
-in (FStar_All.pipe_left FStar_SMTEncoding_Term.mk _180_52))
-in ((((labs), (rs))), (q)))
-end))
-end
-| _86_160 -> begin
-((((labs), (rs))), (tm))
-end)
-end)) ((labs), (rs)) conjuncts)
-in (match (_86_165) with
-| ((labs, rs), conjuncts) -> begin
-(
-
-let tm = (FStar_List.fold_right (fun conjunct out -> (FStar_SMTEncoding_Term.mkAnd ((out), (conjunct)))) conjuncts FStar_SMTEncoding_Term.mkTrue)
-in ((tm), (labs), (rs)))
-end))
-end
-| _86_170 -> begin
-((lhs), (labs), (rs))
-end)
-in (match (_86_174) with
-| (lhs, labs, rs) -> begin
-(let _180_55 = (FStar_SMTEncoding_Term.mkImp ((lhs), (rhs)))
-in ((_180_55), (labs), (rs)))
-end))
-end))
-end
-| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.And, conjuncts) -> begin
-(
-
-let _86_191 = (FStar_List.fold_left (fun _86_182 c -> (match (_86_182) with
-| (rs, cs, labs) -> begin
-(
-
-let _86_187 = (aux rs c labs)
-in (match (_86_187) with
-| (c, labs, rs) -> begin
-((rs), ((c)::cs), (labs))
-end))
-end)) ((rs), ([]), (labs)) conjuncts)
-in (match (_86_191) with
-| (rs, conjuncts, labs) -> begin
-(
-
-let tm = (FStar_List.fold_left (fun out conjunct -> (FStar_SMTEncoding_Term.mkAnd ((out), (conjunct)))) FStar_SMTEncoding_Term.mkTrue conjuncts)
-in ((tm), (labs), (rs)))
+let _87_305 = (FStar_Util.fold_map (aux default_msg ropt) labels conjuncts)
+in (match (_87_305) with
+| (labels, conjuncts) -> begin
+(let _182_73 = (FStar_SMTEncoding_Term.mk_and_l conjuncts q.FStar_SMTEncoding_Term.rng)
+in ((labels), (_182_73)))
 end))
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.ITE, (hd)::(q1)::(q2)::[]) -> begin
 (
 
-let _86_206 = (aux rs q1 labs)
-in (match (_86_206) with
-| (q1, labs, _86_205) -> begin
+let _87_315 = (aux default_msg ropt labels q1)
+in (match (_87_315) with
+| (labels, q1) -> begin
 (
 
-let _86_211 = (aux rs q2 labs)
-in (match (_86_211) with
-| (q2, labs, _86_210) -> begin
-(let _180_60 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App (((FStar_SMTEncoding_Term.ITE), ((hd)::(q1)::(q2)::[])))))
-in ((_180_60), (labs), (rs)))
+let _87_318 = (aux default_msg ropt labels q2)
+in (match (_87_318) with
+| (labels, q2) -> begin
+(let _182_74 = (FStar_SMTEncoding_Term.mkITE ((hd), (q1), (q2)) q.FStar_SMTEncoding_Term.rng)
+in ((labels), (_182_74)))
 end))
 end))
 end
 | (FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Exists, _, _, _, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Iff, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Or, _)) -> begin
-(fresh_label rs q labs)
+(
+
+let _87_342 = (fresh_label default_msg ropt q.FStar_SMTEncoding_Term.rng q)
+in (match (_87_342) with
+| (lab, t) -> begin
+(((lab)::labels), (q))
+end))
+end
+| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Var (_87_344), _87_347) when (is_a_post_condition q) -> begin
+((labels), (q))
 end
 | (FStar_SMTEncoding_Term.FreeV (_)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.True, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.False, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Not, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Eq, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.LT, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.LTE, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.GT, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.GTE, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Var (_), _)) -> begin
-(fresh_label rs q labs)
+(
+
+let _87_402 = (fresh_label default_msg ropt q.FStar_SMTEncoding_Term.rng q)
+in (match (_87_402) with
+| (lab, q) -> begin
+(((lab)::labels), (q))
+end))
 end
 | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Add, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Sub, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Div, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Mul, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Minus, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Mod, _)) -> begin
 (FStar_All.failwith "Impossible: non-propositional term")
@@ -236,52 +350,53 @@ end
 | FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, pats, iopt, sorts, body) -> begin
 (
 
-let _86_333 = (aux rs body labs)
-in (match (_86_333) with
-| (body, labs, rs) -> begin
-(let _180_61 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.Quant (((FStar_SMTEncoding_Term.Forall), (pats), (iopt), (sorts), (body)))))
-in ((_180_61), (labs), (rs)))
+let _87_452 = (aux default_msg ropt labels body)
+in (match (_87_452) with
+| (labels, body) -> begin
+(let _182_75 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.Quant (((FStar_SMTEncoding_Term.Forall), (pats), (iopt), (sorts), (body)))) q.FStar_SMTEncoding_Term.rng)
+in ((labels), (_182_75)))
 end))
 end))
-in (aux [] q [])))
-end)))
-
-
-let detail_errors : labels  ->  labels  ->  (FStar_SMTEncoding_Term.decls_t  ->  ((FStar_SMTEncoding_Z3.unsat_core, (FStar_SMTEncoding_Term.error_labels * Prims.bool)) FStar_Util.either * Prims.int))  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun all_labels potential_errors askZ3 -> (
-
-let ctr = (FStar_Util.mk_ref (Prims.parse_int "0"))
-in (
-
-let elim = (fun labs -> (
-
-let _86_340 = (FStar_Util.incr ctr)
-in (let _180_84 = (let _180_77 = (let _180_76 = (let _180_75 = (FStar_ST.read ctr)
-in (FStar_Util.string_of_int _180_75))
-in (Prims.strcat "DETAILING ERRORS" _180_76))
-in FStar_SMTEncoding_Term.Echo (_180_77))
-in (let _180_83 = (FStar_All.pipe_right labs (FStar_List.map (fun _86_347 -> (match (_86_347) with
-| (l, _86_344, _86_346) -> begin
-(let _180_82 = (let _180_81 = (let _180_80 = (let _180_79 = (FStar_SMTEncoding_Term.mkFreeV l)
-in ((_180_79), (FStar_SMTEncoding_Term.mkTrue)))
-in (FStar_SMTEncoding_Term.mkEq _180_80))
-in ((_180_81), (Some ("Disabling label")), (Some ((Prims.strcat "disable_label_" (Prims.fst l))))))
-in FStar_SMTEncoding_Term.Assume (_180_82))
+in (aux "assertion failed" None [] q)))
 end))))
-in (_180_84)::_180_83))))
+
+
+let detail_errors : FStar_TypeChecker_Env.env  ->  labels  ->  (FStar_SMTEncoding_Term.decls_t  ->  ((FStar_SMTEncoding_Z3.unsat_core, (FStar_SMTEncoding_Term.error_labels * FStar_SMTEncoding_Z3.error_kind)) FStar_Util.either * Prims.int))  ->  FStar_SMTEncoding_Term.error_labels = (fun env all_labels askZ3 -> (
+
+let print_banner = (fun _87_457 -> (match (()) with
+| () -> begin
+(let _182_92 = (let _182_89 = (FStar_TypeChecker_Env.get_range env)
+in (FStar_Range.string_of_range _182_89))
+in (let _182_91 = (FStar_Util.string_of_int (Prims.parse_int "5"))
+in (let _182_90 = (FStar_Util.string_of_int (FStar_List.length all_labels))
+in (FStar_Util.print3_error "Detailed error report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n" _182_92 _182_91 _182_90))))
+end))
 in (
 
-let print_labs = (fun tag l -> (FStar_All.pipe_right l (FStar_List.iter (fun _86_356 -> (match (_86_356) with
-| (l, _86_353, _86_355) -> begin
-(FStar_Util.print2 "%s : %s; " tag (Prims.fst l))
+let print_result = (fun _87_465 -> (match (_87_465) with
+| ((_87_460, msg, r), success) -> begin
+if success then begin
+(let _182_95 = (FStar_Range.string_of_range r)
+in (FStar_Util.print1_error "OK: proof obligation at %s was proven\n" _182_95))
+end else begin
+(FStar_TypeChecker_Errors.report r msg)
+end
+end))
+in (
+
+let elim = (fun labs -> (FStar_All.pipe_right labs (FStar_List.map (fun _87_473 -> (match (_87_473) with
+| (l, _87_470, _87_472) -> begin
+(let _182_102 = (let _182_101 = (let _182_100 = (let _182_99 = (FStar_SMTEncoding_Util.mkFreeV l)
+in ((_182_99), (FStar_SMTEncoding_Util.mkTrue)))
+in (FStar_SMTEncoding_Util.mkEq _182_100))
+in ((_182_101), (Some ("Disabling label")), (Some ((Prims.strcat "disable_label_" (Prims.fst l))))))
+in FStar_SMTEncoding_Term.Assume (_182_102))
 end)))))
 in (
 
-let minus = (fun l1 l2 -> (FStar_All.pipe_right l1 (FStar_List.filter (fun _86_368 -> (match (_86_368) with
-| ((x, _86_362), _86_365, _86_367) -> begin
-(not ((FStar_All.pipe_right l2 (FStar_Util.for_some (fun _86_377 -> (match (_86_377) with
-| ((y, _86_371), _86_374, _86_376) -> begin
-(x = y)
-end))))))
+let print_labs = (fun tag l -> (FStar_All.pipe_right l (FStar_List.iter (fun _87_482 -> (match (_87_482) with
+| (l, _87_479, _87_481) -> begin
+(FStar_Util.print2 "%s : %s; " tag (Prims.fst l))
 end)))))
 in (
 
@@ -289,16 +404,18 @@ let rec linear_check = (fun eliminated errors active -> (match (active) with
 | [] -> begin
 (
 
-let labs = (FStar_All.pipe_right errors sort_labels)
-in labs)
+let results = (let _182_117 = (FStar_List.map (fun x -> ((x), (true))) eliminated)
+in (let _182_116 = (FStar_List.map (fun x -> ((x), (false))) errors)
+in (FStar_List.append _182_117 _182_116)))
+in (sort_labels results))
 end
 | (hd)::tl -> begin
 (
 
-let _86_390 = (let _180_102 = (FStar_All.pipe_left elim (FStar_List.append eliminated (FStar_List.append errors tl)))
-in (askZ3 _180_102))
-in (match (_86_390) with
-| (result, _86_389) -> begin
+let _87_497 = (let _182_118 = (FStar_All.pipe_left elim (FStar_List.append eliminated (FStar_List.append errors tl)))
+in (askZ3 _182_118))
+in (match (_87_497) with
+| (result, _87_496) -> begin
 if (FStar_Util.is_left result) then begin
 (linear_check ((hd)::eliminated) errors tl)
 end else begin
@@ -308,64 +425,17 @@ end))
 end))
 in (
 
-let rec bisect = (fun eliminated potential_errors active -> (match (active) with
-| [] -> begin
-((eliminated), (potential_errors))
-end
-| _86_397 -> begin
-(
-
-let _86_405 = (match (active) with
-| (_86_399)::[] -> begin
-((active), ([]))
-end
-| _86_402 -> begin
-(FStar_Util.first_N ((FStar_List.length active) / (Prims.parse_int "2")) active)
-end)
-in (match (_86_405) with
-| (pfx, sfx) -> begin
-(
-
-let _86_409 = (let _180_109 = (elim (FStar_List.append eliminated (FStar_List.append potential_errors sfx)))
-in (askZ3 _180_109))
-in (match (_86_409) with
-| (result, _86_408) -> begin
-(match (result) with
-| FStar_Util.Inl (_86_411) -> begin
-(bisect (FStar_List.append eliminated pfx) potential_errors sfx)
-end
-| FStar_Util.Inr ([], timeout) -> begin
-(bisect eliminated (FStar_List.append potential_errors pfx) sfx)
-end
-| FStar_Util.Inr (pfx_subset, timeout) -> begin
-(
-
-let potential_errors = (FStar_List.append potential_errors pfx_subset)
+let _87_498 = (print_banner ())
 in (
 
-let pfx_active = (minus pfx pfx_subset)
-in (bisect eliminated potential_errors (FStar_List.append pfx_active sfx))))
-end)
-end))
-end))
-end))
+let _87_500 = (FStar_Options.set_option "z3timeout" (FStar_Options.Int ((Prims.parse_int "5"))))
 in (
 
-let rec until_fixpoint = (fun eliminated potential_errors active -> (
-
-let _86_429 = (bisect eliminated potential_errors active)
-in (match (_86_429) with
-| (eliminated', potential_errors) -> begin
-if (FStar_Util.physical_equality eliminated eliminated') then begin
-(linear_check eliminated [] potential_errors)
-end else begin
-(until_fixpoint eliminated' [] potential_errors)
-end
-end)))
+let res = (linear_check [] [] all_labels)
 in (
 
-let active = (minus all_labels potential_errors)
-in (until_fixpoint [] potential_errors active))))))))))
+let _87_503 = (FStar_All.pipe_right res (FStar_List.iter print_result))
+in []))))))))))
 
 
 

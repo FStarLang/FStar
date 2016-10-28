@@ -277,7 +277,7 @@ type path = list<string>
 (* ********************************************************************************)
 (* Identifiers to/from strings *)
 (* ********************************************************************************)
-let dummyRange = 0L
+let dummyRange = Range.dummyRange
 let withinfo v s r = {v=v; sort=s; p=r}
 let withsort v s = withinfo v s dummyRange
 let mk_ident (text,range) = {idText=text; idRange=range}

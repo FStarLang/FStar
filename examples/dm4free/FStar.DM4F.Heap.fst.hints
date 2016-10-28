@@ -1,7 +1,6 @@
 [
-  "\u001575–\u0004çÌÏ\u0005&\u0014Ñ1_æl",
+  ",î\u0016cã<ŸkÍaE'b\u000fÃW",
   [
-    [ "FStar.DM4F.Heap.contains_a_well_typed", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Heap.contains_a_well_typed_implies_contains",
       1,

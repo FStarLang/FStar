@@ -1,11 +1,9 @@
 [
   "/á¢h_ÂÞnò\u0003ú\u001a\rqS\u001f",
   [
-    [ "FStar.Set.equal", 1, 0, 0, [ "@query" ], 0 ],
-    [ "FStar.Set.singleton", 1, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Set.singleton",
-      2,
+      1,
       0,
       0,
       [
@@ -14,8 +12,6 @@
       ],
       0
     ],
-    [ "FStar.Set.subset", 1, 0, 0, [ "@query" ], 0 ],
-    [ "FStar.Set.mem_empty", 1, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Set.mem_singleton",
       1,
@@ -35,7 +31,6 @@
       ],
       0
     ],
-    [ "FStar.Set.mem_singleton", 3, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Set.mem_union",
       1,
@@ -44,7 +39,6 @@
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [ "FStar.Set.mem_union", 2, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Set.mem_intersect",
       1,
@@ -53,7 +47,6 @@
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [ "FStar.Set.mem_intersect", 2, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Set.mem_complement",
       1,
@@ -62,12 +55,9 @@
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [ "FStar.Set.mem_complement", 2, 0, 0, [ "@query" ], 0 ],
-    [ "FStar.Set.mem_subset", 1, 0, 0, [ "@query" ], 0 ],
-    [ "FStar.Set.subset_mem", 1, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Set.mem_empty",
-      2,
+      1,
       0,
       0,
       [
@@ -79,7 +69,7 @@
     ],
     [
       "FStar.Set.mem_singleton",
-      4,
+      3,
       0,
       0,
       [
@@ -91,7 +81,7 @@
     ],
     [
       "FStar.Set.mem_union",
-      3,
+      2,
       0,
       0,
       [
@@ -103,7 +93,7 @@
     ],
     [
       "FStar.Set.mem_intersect",
-      3,
+      2,
       0,
       0,
       [
@@ -115,7 +105,7 @@
     ],
     [
       "FStar.Set.mem_complement",
-      3,
+      2,
       0,
       0,
       [
@@ -127,7 +117,7 @@
     ],
     [
       "FStar.Set.subset_mem",
-      2,
+      1,
       0,
       0,
       [ "@query", "equation_FStar.Set.subset", "unit_typing" ],
@@ -135,7 +125,7 @@
     ],
     [
       "FStar.Set.mem_subset",
-      2,
+      1,
       0,
       0,
       [ "@query", "equation_FStar.Set.subset", "unit_typing" ],
@@ -149,12 +139,9 @@
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [ "FStar.Set.lemma_equal_intro", 2, 0, 0, [ "@query" ], 0 ],
-    [ "FStar.Set.lemma_equal_elim", 1, 0, 0, [ "@query" ], 0 ],
-    [ "FStar.Set.lemma_equal_refl", 1, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Set.lemma_equal_intro",
-      3,
+      2,
       0,
       0,
       [
@@ -165,7 +152,7 @@
     ],
     [
       "FStar.Set.lemma_equal_elim",
-      2,
+      1,
       0,
       0,
       [
@@ -180,12 +167,11 @@
     ],
     [
       "FStar.Set.lemma_equal_refl",
-      2,
+      1,
       0,
       0,
       [ "@query", "lemma_FStar.Set.lemma_equal_intro", "unit_typing" ],
       0
-    ],
-    [ "FStar.Set.lemma_set_to_tset", 1, 0, 0, [ "@query" ], 0 ]
+    ]
   ]
 ]

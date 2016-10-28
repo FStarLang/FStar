@@ -194,7 +194,7 @@ let rec sorted_concat_lemma #a f lo pivot hi =
         lemma_append_cons lo (cons pivot hi);
         lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
 
-#set-options "--max_fuel 1 --initial_fuel 1"
+#set-options "--max_fuel 1 --initial_fuel 1 --z3timeout 10"
 val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
   (requires True)
   (ensures (fun x ->
@@ -527,8 +527,9 @@ private let intro_append_contains_from_disjunction (#a:Type) (s1:seq a) (s2:seq 
     : Lemma (requires s1 `contains` x \/ s2 `contains` x)
    	    (ensures (append s1 s2) `contains` x)
     = let open FStar.Classical in 
+      let open FStar.StrongExcludedMiddle in
       let open FStar.Squash in
-      if excluded_middle (s1 `contains` x) 
+      if strong_excluded_middle (s1 `contains` x)
       then ()
       else let s = append s1 s2 in
 	   exists_elim (s `contains` x) (get_proof (s2 `contains` x)) (fun k -> 

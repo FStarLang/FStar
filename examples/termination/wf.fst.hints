@@ -2,19 +2,15 @@
   "4î¶>àbT\u0012C`V¡€Ñ4Œ",
   [
     [ "Wf.AccIntro._0", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Wf.AccIntro._0", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Wf.acc_inv", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Wf.acc_inv",
-      2,
+      1,
       2,
       1,
       [ "@query", "subterm_ordering_Wf.AccIntro" ],
       0
     ],
-    [ "Wf.axiom1_dep", 1, 2, 1, [ "@query" ], 0 ],
     [ "Wf.axiom1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Wf.axiom1", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Wf.fix_F",
       1,
@@ -25,7 +21,6 @@
         "refinement_interpretation_Tm_refine_4bf2c2c43bbf96cb5973e75952d5d1c7"
       ],
       0
-    ],
-    [ "Wf.fix", 1, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

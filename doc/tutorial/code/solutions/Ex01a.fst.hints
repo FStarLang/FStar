@@ -2,10 +2,9 @@
   "\u00190\u0007+Ìê6\fU2=\u0005|8Nç",
   [
     [ "Ex01a.canWrite", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex01a.canRead", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex01a.canRead",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],

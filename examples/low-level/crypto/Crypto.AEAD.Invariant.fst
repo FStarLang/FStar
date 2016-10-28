@@ -96,11 +96,14 @@ let rec counterblocks i rgn x l from_pos to_pos plain cipher =
     let blocks = counterblocks i rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in
     SeqProperties.cons block blocks
 
-let num_blocks (#i:id) (e:entry i) : Tot nat = 
-  let Entry nonce ad l plain cipher_tagged = e in
+let num_blocks' (i:id) (l:nat) : Tot nat = 
   let bl = v (Cipher( blocklen (cipher_of_id i))) in
   (l + bl - 1) / bl
 
+let num_blocks (#i:id) (e:entry i) : Tot nat = 
+  let Entry nonce ad l plain cipher_tagged = e in
+  num_blocks' i l
+  
 let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (blocks:Seq.seq (PRF.entry rgn i)) = 
   let Entry nonce ad l plain cipher_tagged = e in
   let b = num_blocks e in 
@@ -117,7 +120,7 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
     m_contains mac_log h /\ (
     match m_sel h (MAC.ilog (MAC.State.log m)) with
     | None           -> False
-    | Some (msg,tag') -> msg = field_encode i ad plain /\
+    | Some (msg,tag') -> msg = field_encode i ad #(FStar.UInt32.uint_to_t l) cipher /\
 			tag = tag')))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
 
 // States consistency of the PRF table contents vs the AEAD entries

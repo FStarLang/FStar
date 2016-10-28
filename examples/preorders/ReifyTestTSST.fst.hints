@@ -16,10 +16,9 @@
       ],
       0
     ],
-    [ "ReifyTestTSST.older_than_antisymmetric", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ReifyTestTSST.older_than_antisymmetric",
-      2,
+      1,
       2,
       1,
       [
@@ -46,15 +45,10 @@
       ],
       0
     ],
-    [ "ReifyTestTSST.lift_div_tsstate", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ReifyTestTSST.5695", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ReifyTestTSST.TSST", 1, 2, 1, [ "@query" ], 0 ],
+    [ "ReifyTestTSST.5639", 1, 2, 1, [ "@query" ], 0 ],
     [ "ReifyTestTSST.witnessed", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ReifyTestTSST.get", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ReifyTestTSST.put", 1, 2, 1, [ "@query" ], 0 ],
     [ "ReifyTestTSST.witness", 1, 2, 1, [ "@query" ], 0 ],
     [ "ReifyTestTSST.recall", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ReifyTestTSST.reify_", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ReifyTestTSST.reify_recall_test",
       1,

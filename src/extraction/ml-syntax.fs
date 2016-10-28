@@ -175,7 +175,8 @@ type mltybody =
      *)
 
 // bool: this was assumed (C backend)
-type mltydecl = list<(bool * mlsymbol * mlidents * option<mltybody>)> // each element of this list is one among a collection of mutually defined types
+type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * option<mltybody>
+type mltydecl = list<one_mltydecl> // each element of this list is one among a collection of mutually defined types
 
 type mlmodule1 =
 | MLM_Ty  of mltydecl

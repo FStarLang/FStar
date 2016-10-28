@@ -175,8 +175,8 @@ let field_mul #i a b =
   | POLY1305 -> PS.field_mul a b
   | GHASH    -> GS.op_Plus_At a b
 
-let op_Plus_At = field_add
-let op_Star_At = field_mul
+let op_Plus_At #i e1 e2 = field_add #i e1 e2
+let op_Star_At #i e1 e2 = field_mul #i e1 e2
 
 #set-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
