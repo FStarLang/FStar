@@ -73,6 +73,7 @@ val frame_pre_refines: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)
 			    Buffer.modifies_buf_1 (Buffer.frameOf cipherb) tagB h1 h2
 		       else Buffer.modifies_1 tagB h1 h2)))
            (ensures pre_refines_one_entry i st nonce len plainb cipherb h0 h2)
+#set-options "--lax"	   
 let frame_pre_refines i st nonce len plainb cipherb h0 h1 h2 = 
   let tagB = Buffer.sub cipherb (u len) (Spec.taglen i) in
   FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 tagB h1) h2;
@@ -188,22 +189,81 @@ let intro_mac_refines (i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
 		         m_sel h (MAC (ilog mac_st.log)) == Some (l, Buffer.as_seq h tagB)))))
            (ensures mac_refines i st nonce aad plain cipher h)
   = ()	   
+ 
+#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 
-let pre_refines_to_refines  (#i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
-			    (aadlen: UInt32.t {aadlen <=^ aadmax})
-			    (aad: lbuffer (v aadlen))
-                            (len:nat{len<>0}) (plain:plainBuffer i len) (cipher:lbuffer (len + v (Spec.taglen i)))
-			    (h0:mem)
-                            (h:mem{Buffer.live h aad /\ Plain.live h plain /\ Buffer.live h cipher})
-   : Lemma (requires (let mac_rgn = st.prf.mac_rgn in
+unfold let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (blocks:Seq.seq (PRF.entry rgn i)) = 
+  let Entry nonce ad l plain cipher_tagged = e in
+  let b = num_blocks e in 
+  b + 1 = Seq.length blocks /\
+  (let PRF.Entry x e = Seq.index blocks 0 in
+   PRF (x.iv = nonce) /\
+   PRF (x.ctr = 0ul)  /\ (
+   let xors = Seq.slice blocks 1 (b+1) in 
+   let cipher, tag = SeqProperties.split cipher_tagged l in
+   safelen i l 1ul /\
+   xors == counterblocks i rgn (PRF.incr i x) l 0 l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
+   (let m = PRF.macRange rgn i x e in
+    let mac_log = MAC.ilog (MAC.State.log m) in
+    m_contains mac_log h /\ (
+    match m_sel h (MAC.ilog (MAC.State.log m)) with
+    | None           -> False
+    | Some (msg,tag') -> msg = field_encode i ad #(FStar.UInt32.uint_to_t l) cipher /\
+			tag = tag')))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
+
+let all_above_counterblocks (i:id)
+			(rgn:region)
+			(x:PRF.domain i{ctr x >^ 0ul})
+			(l:nat)
+			(from_pos:nat)
+			(to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) (ctr x)})
+			(plain:Plain.plain i l)
+			(cipher:lbytes l)
+   : Lemma (safeId i ==> (counterblocks i rgn x l from_pos to_pos plain cipher) `all_above` x)
+   = admit()
+
+#set-options "--z3timeout 100 --initial_fuel 2 --max_fuel 2 --initial_ifuel 2 --max_ifuel 2"
+let find_cons_hd (#a:Type) (x:a) (tl:Seq.seq a) (f:(a -> Tot bool)) 
+  : Lemma (requires (f x /\ (SeqProperties.seq_find f tl == None)))
+	  (ensures (SeqProperties.seq_find f (SeqProperties.cons x tl) == Some x))
+  = admit()
+
+let contains_intro_2 (#a:Type) (s:Seq.seq a) (x:a) (k:nat)
+  : Lemma (k < Seq.length s /\ Seq.index s k == x
+	    ==>
+	   s `SeqProperties.contains` x)
+  = SeqProperties.contains_intro s k x
+
+let seq_find_none (#a:Type) (s:Seq.seq a) (f:(a -> Tot bool)) 
+  : Lemma (requires (forall y. s `SeqProperties.contains` y ==> not (f y)))
+	  (ensures (SeqProperties.seq_find f s == None))
+  = match SeqProperties.seq_find f s with 
+    | None -> ()
+    | Some z -> FStar.Classical.forall_intro (contains_intro_2 s z)
+
+let find_mac_counterblocks_none (#rgn:region) (#i:PRF.id) (nonce:Cipher.iv (alg i)) 
+				(s:Seq.seq (PRF.entry rgn i))
+    : Lemma (requires (s `all_above` ({iv=nonce; ctr=1ul})))
+	    (ensures (find_mac s ({iv=nonce; ctr=0ul}) == None))
+    = admit()
+#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+val pre_refines_to_refines:  (i:id) -> (st:state i Writer) -> (nonce: Cipher.iv (alg i)) -> idom:domain i ->
+			    (aadlen: UInt32.t {aadlen <=^ aadmax})  ->
+			    (aad: lbuffer (v aadlen)) ->
+                            (len:nat{len<>0}) -> (plain:plainBuffer i len) -> (cipher:lbuffer (len + v (Spec.taglen i))) ->
+			    (h0:mem) ->
+                            (h:mem{Buffer.live h aad /\ Plain.live h plain /\ Buffer.live h cipher}) 
+   -> Lemma (requires (let mac_rgn = st.prf.mac_rgn in
      		      let p = Plain.sel_plain h (u len) plain in
 		      let c_tagged = Buffer.as_seq h cipher in
 	              let c, tag = SeqProperties.split c_tagged len in
 		      let ad = Buffer.as_seq h aad in
+		      idom.iv = nonce /\
+		      idom.ctr = 0ul /\ (
   		      safeId i ==> 
-			(none_above ({iv=nonce; ctr=0ul}) st.prf h /\
+			(none_above ({iv=nonce; ctr=0ul}) st.prf h0 /\
    			 pre_refines_one_entry i st nonce len plain cipher h0 h /\
-			 mac_refines i st nonce aad plain cipher h)))
+			 mac_refines i st nonce aad plain cipher h))))
             (ensures (let mac_rgn = st.prf.mac_rgn in
      		      let p = Plain.sel_plain h (u len) plain in
 		      let c_tagged = Buffer.as_seq h cipher in
@@ -216,7 +276,35 @@ let pre_refines_to_refines  (#i:id) (st:state i Writer) (nonce: Cipher.iv (alg i
 			  let table_1 = HS.sel h (PRF.itable i st.prf) in
  			  let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in
 			  refines_one_entry #mac_rgn #i h entry blocks))))
-    = admit()
+
+let pre_refines_to_refines i st nonce idom aadlen aad len plain cipher h0 h
+    = if safeId i
+      then let table_0 = HS.sel h0 (PRF.itable i st.prf) in
+	   let table_1 = HS.sel h (PRF.itable i st.prf) in
+ 	   let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in
+	   (* let idom = {iv=nonce; ctr=0ul} in *)
+	   let p = Plain.sel_plain h (u len) plain in
+	   let c_tagged = Buffer.as_seq h cipher in
+           let c, tag = SeqProperties.split c_tagged len in
+	   let hd = Seq.index blocks 0 in
+	   let PRF.Entry x e = hd in
+	   let cbs = counterblocks i st.prf.mac_rgn (PRF.incr i idom) len 0 len p c in
+	   assert (x = idom);
+	   assert (Seq.equal blocks  
+			    (SeqProperties.cons 
+				(PRF.Entry x e) 
+				cbs));
+           all_above_counterblocks i st.prf.mac_rgn (PRF.incr i idom) len 0 len p c;
+	   find_mac_counterblocks_none #st.prf.mac_rgn #i nonce cbs;
+	   let rgn = st.prf.mac_rgn in
+	   let finder (e:PRF.entry rgn i) = e.x = idom in
+	   assert (finder hd);
+	   assert (find_mac cbs idom == None);
+	   assert (find cbs idom == None);
+	   (* assert (find cbs idom === SeqProperties.seq_find (fun (e:PRF.entry rgn i) -> e.x = idom) cbs); *)
+	   (* assert (SeqProperties.seq_find finder cbs == None); *)
+	   assume (PRF.find_mac table_1 idom === e)
+	   
     
 (* val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit *)
 (*   (requires (fun h0 -> *)
