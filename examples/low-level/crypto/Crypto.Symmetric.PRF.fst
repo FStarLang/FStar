@@ -18,6 +18,7 @@ module Crypto.Symmetric.PRF
 open FStar.Ghost
 open FStar.UInt8
 open FStar.UInt32
+open FStar.Monotonic.RRef
 
 open Crypto.Symmetric.Bytes
 open Flag
@@ -210,7 +211,8 @@ val prf_mac:
 	 h0 == h1 /\ // when decrypting
 	 mac == mac' /\ 
 	 MAC (norm h1 mac.r) /\
-	 MAC (Buffer.live h1 mac.s)
+	 MAC (Buffer.live h1 mac.s) /\
+	 MAC (mac_log ==> m_contains (ilog mac.log) h1)
        | None ->  // when encrypting, we get the stateful post of MAC.create             
          (match find_mac (HS.sel h1 r) x with 
           | Some mac' -> 
