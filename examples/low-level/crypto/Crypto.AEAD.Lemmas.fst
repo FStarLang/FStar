@@ -25,7 +25,7 @@ module PRF = Crypto.Symmetric.PRF
 
 let u (n:FStar.UInt.uint_t 32) = uint_to_t n
 
-unfold let pre_refines_one_entry (i:id) (st:state i Writer) (nonce:Cipher.iv (alg i))
+let pre_refines_one_entry (i:id) (st:state i Writer) (nonce:Cipher.iv (alg i))
 				   (len:nat{len<>0}) (plainb:plainBuffer i len) (cipherb:lbuffer (len + v (Spec.taglen i)))
 				   (h0:mem) (h1:mem) =
   Buffer.live h1 cipherb /\ 
@@ -73,7 +73,7 @@ val frame_pre_refines: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)
 			    Buffer.modifies_buf_1 (Buffer.frameOf cipherb) tagB h1 h2
 		       else Buffer.modifies_1 tagB h1 h2)))
            (ensures pre_refines_one_entry i st nonce len plainb cipherb h0 h2)
-#set-options "--lax"	   
+#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1"
 let frame_pre_refines i st nonce len plainb cipherb h0 h1 h2 = 
   let tagB = Buffer.sub cipherb (u len) (Spec.taglen i) in
   FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 tagB h1) h2;
@@ -98,7 +98,6 @@ let frame_pre_refines_0 (i:id) (st:state i Writer) (nonce:Cipher.iv (alg i))
      let cipher = Buffer.sub cipherb 0ul (u len) in //necessary to trigger
      ()
 
-#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1"
 val counterblocks_len: #i:id{safeId i} -> 
 			     (rgn:region) -> 
 			     (x:domain i{x.ctr <> 0ul}) ->
@@ -192,25 +191,6 @@ let intro_mac_refines (i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
  
 #reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 
-unfold let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (blocks:Seq.seq (PRF.entry rgn i)) = 
-  let Entry nonce ad l plain cipher_tagged = e in
-  let b = num_blocks e in 
-  b + 1 = Seq.length blocks /\
-  (let PRF.Entry x e = Seq.index blocks 0 in
-   PRF (x.iv = nonce) /\
-   PRF (x.ctr = 0ul)  /\ (
-   let xors = Seq.slice blocks 1 (b+1) in 
-   let cipher, tag = SeqProperties.split cipher_tagged l in
-   safelen i l 1ul /\
-   xors == counterblocks i rgn (PRF.incr i x) l 0 l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
-   (let m = PRF.macRange rgn i x e in
-    let mac_log = MAC.ilog (MAC.State.log m) in
-    m_contains mac_log h /\ (
-    match m_sel h (MAC.ilog (MAC.State.log m)) with
-    | None           -> False
-    | Some (msg,tag') -> msg = field_encode i ad #(FStar.UInt32.uint_to_t l) cipher /\
-			tag = tag')))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
-
 let all_above_counterblocks (i:id)
 			(rgn:region)
 			(x:PRF.domain i{ctr x >^ 0ul})
@@ -278,7 +258,6 @@ val pre_refines_to_refines:  (i:id) -> (st:state i Writer) -> (nonce: Cipher.iv 
 let find_seq_find (i:id) (r:rgn) (s:Seq.seq (PRF.entry r i)) (x:domain i)
   : Lemma (is_None (find s x) <==> is_None (SeqProperties.seq_find (fun (e:PRF.entry r i) -> e.x = x) s))
   = ()
-open FStar.SeqProperties
 
 let find_append (#i:id) (#r:rid) (d:domain i) (s1:Seq.seq (PRF.entry r i)) (s2:Seq.seq (PRF.entry r i)) 
    : Lemma (requires (is_Some (find s2 d)))
@@ -413,7 +392,7 @@ let frame_refines_one_entry (h:mem) (i:id{safeId i}) (mac_rgn:region)
      assert (m_sel h mac_log = m_sel h' mac_log);
      assert (m_contains mac_log h') //this include HS.live_region, which is not derivable from modifies_ref along
      
-#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let rec extend_refines (h:mem) (i:id{safeId i}) (mac_rgn:region) 
 		    (entries:Seq.seq (entry i))
 		    (blocks:Seq.seq (PRF.entry mac_rgn i))
