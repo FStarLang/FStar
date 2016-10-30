@@ -325,7 +325,7 @@ let prf_sk0 i t =
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 let extends (#rgn:region) (#i:id) (s0:Seq.seq (entry rgn i)) 
-	    (s1:Seq.seq (entry rgn i)) (x:domain i{x.ctr <> 0ul}) =
+	    (s1:Seq.seq (entry rgn i)) (x:domain i{ctr_0 i <^ x.ctr}) =
   let open FStar.Seq in 
   let open FStar.SeqProperties in 
   match find s0 x with 
@@ -357,7 +357,7 @@ private val prf_blk:
   (ensures (fun h0 _ h1 -> modifies_x_buffer_1 t x output h0 h1)) 
 
 #reset-options "--z3timeout 100"
-
+ 
 let prf_blk i t x len output =
   if prf i then
     begin
@@ -385,7 +385,7 @@ let prf_blk i t x len output =
 
 // reuse the same block for x and XORs it with ciphertext
 val prf_dexor: 
-  i:id -> t:state i -> x:domain i{x.ctr <> 0ul} -> l:u32 {l <=^ blocklen i} -> 
+  i:id -> t:state i -> x:domain i{ctr_0 i <^ x.ctr} -> l:u32 {l <=^ blocklen i} -> 
   plain:plainBuffer i (v l) -> cipher:lbuffer (v l) 
   { Buffer.disjoint (as_buffer plain) cipher /\
     Buffer.frameOf (as_buffer plain) <> t.rgn } -> ST unit
@@ -442,7 +442,7 @@ private let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:
 
 // generates a fresh block for x and XORs it with plaintext
 val prf_enxor: 
-  i:id -> t:state i -> x:domain i{x.ctr <> 0ul} -> l:u32 {l <=^ blocklen i} -> 
+  i:id -> t:state i -> x:domain i{ctr_0 i <^ x.ctr} -> l:u32 {l <=^ blocklen i} -> 
   cipher:lbuffer (v l) -> plain:plainBuffer i (v l) 
   {  Buffer.disjoint (as_buffer plain) cipher /\ 
      Buffer.frameOf (as_buffer plain) <> t.rgn /\ 
