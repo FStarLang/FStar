@@ -356,7 +356,7 @@ val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit
       Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1 /\
       m_contains (ilog st.log) h1 /\ (
       let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in
-      mac == little_endian (sel_word h1 tag) /\
+      mac == sel_word h1 tag /\
       m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag))
     else Buffer.modifies_1 tag h0 h1)))
 let mac #i st l acc tag =
@@ -384,7 +384,7 @@ val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag:tagB ->
   (ensures (fun h0 b h1 ->
     h0 == h1 /\
     (let mac = mac_1305 (reveal l) (sel_elem h0 st.r) (sel_word h0 st.s) in
-     let verified = mac = little_endian (sel_word h1 tag) in
+     let verified = mac = sel_word h1 tag in
      let correct = HyperStack.sel h0 st.log = Some (l,mac) in
      b = verified && (not (authId i) || correct))))
 

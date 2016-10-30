@@ -11,8 +11,6 @@ open Flag
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-module Spec = Crypto.Symmetric.Poly1305.Spec
-module MAC = Crypto.Symmetric.Poly1305.MAC
 module PRF = Crypto.Symmetric.PRF
 module AE = Crypto.AEAD
 module AETypes = Crypto.AEAD.Invariant

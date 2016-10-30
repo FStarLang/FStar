@@ -1,7 +1,7 @@
 (**
   This module multiplexes between different real implementations of polynomial
   MACs. It is oblivious to the static vs one-time allocation of the r part of
-  the key (the point where the polynomial is evaluated)
+  the key (the point where the polynomial is evaluated).
 
   It has functions to allocate keys and compute MACs incrementally on
   stack-based accumulators (start; update; finish), as a refinement of 
@@ -20,7 +20,11 @@ module PL = Crypto.Symmetric.Poly1305
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-let alg i = Flag.mac_of_id i 
+type id = Flag.id * UInt128.t
+
+let alg (i:id) = Flag.mac_of_id (fst i) 
+
+type text = Seq.seq (lbytes 16) // (used to be seq elem)
 
 (** Field element *)
 
@@ -144,18 +148,11 @@ let encodeB i w =
       B_GHASH b
 
 (** Polynomial evaluation *)
-val poly: #i:id -> cs:Seq.seq (elem i) -> r:elem i -> GTot (elem i)
+val poly: #i:id -> cs:text -> r:elem i -> Tot (elem i)
 let poly #i cs r =
   match alg i with 
   | POLY1305 -> PS.poly cs r
   | GHASH    -> GS.poly cs r 
-
-(** Complete MAC-computation specifications *)
-val mac: #i:id -> cs:Seq.seq (elem i) -> r:elem i -> s:lbytes 16 -> GTot (elem i)
-let mac #i cs r s =
-  match alg i with
-  | POLY1305 -> PS.mac_1305 cs r s
-  | GHASH    -> GS.mac cs r s
 
 (** Create and initialize the accumulator *)
 val start: #i:id -> StackInline (elemB i)
@@ -221,13 +218,39 @@ let update #i r a w =
       GF.add_and_multiply a w r
     end
 
-val finish: #i:id -> s:lbuffer 16 -> a:elemB i -> tag:lbuffer 16 -> Stack unit
-  (requires (fun h -> Buffer.live h s /\ norm h a /\ Buffer.live h tag /\
-    Buffer.disjoint_2 (as_buffer a) s tag /\ Buffer.disjoint s tag ))
-  (ensures  (fun h0 _ h1 -> True))
-let finish #i s a tag =
+let taglen = 16ul
+type tag = lbytes (UInt32.v taglen) 
+type tagB = lbuffer (UInt32.v taglen)
+
+(** Complete MAC-computation specifications *)
+val mac: #i:id -> cs:text -> r:elem i -> s:tag -> GTot tag
+let mac #i cs r s =
+  match alg i with
+  | POLY1305 -> PS.mac_1305 cs r s
+  | GHASH    -> GS.mac cs r s
+
+
+val finish: #i:id -> s:tagB -> a:elemB i -> t:tagB -> Stack unit
+  (requires (fun h -> 
+    Buffer.live h s /\ 
+    norm h a /\ 
+    Buffer.live h t /\
+    Buffer.disjoint_2 (as_buffer a) s t /\ Buffer.disjoint s t ))
+  (ensures  (fun h0 () h1 -> 
+    Buffer.live h1 s /\
+    norm h1 a /\
+    Buffer.live h1 t /\
+    Buffer.modifies_2 (as_buffer a) t h0 h1 /\ (
+    let tv = Buffer.as_seq h1 t in 
+    let sv = Buffer.as_seq h1 s in 
+    let av = sel_elem h1 a in
+    match alg i with 
+    | POLY1305 -> Seq.equal tv (PS.finish av sv)
+    | GHASH    -> Seq.equal tv (GS.finish av sv) )))
+
+#reset-options "--lax" 
+let finish #i s a t =
   match a with 
-  | B_POLY1305 a -> PL.poly1305_finish tag a s; 
-                   assume false //16-10-26 strange
+  | B_POLY1305 a -> PL.poly1305_finish t a s
   | B_GHASH    a -> GF.gf128_add a s; 
-                   Buffer.blit a 0ul tag 0ul 16ul
+                   Buffer.blit a 0ul t 0ul 16ul
