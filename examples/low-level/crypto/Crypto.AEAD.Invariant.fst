@@ -113,8 +113,8 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
    PRF (x.ctr = PRF.ctr_0 i)  /\ (
    let xors = Seq.slice blocks 1 (b+1) in 
    let cipher, tag = SeqProperties.split cipher_tagged l in
-   safelen i l 1ul /\
-   xors == counterblocks i rgn (PRF.incr i x) l 0 (l + UInt32.v(ctr_0 i)) plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
+   safelen i l (PRF.ctr_0 i +^ 1ul) /\
+   xors == counterblocks i rgn (PRF.incr i x) l 0 l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
    (let m = PRF.macRange rgn i x e in
     let mac_log = CMA.ilog (CMA.State.log m) in
     m_contains mac_log h /\ (
