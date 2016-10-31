@@ -23,7 +23,6 @@ VERIFY= \
   Crypto.Symmetric.Poly1305.Bignum \
   Crypto.Symmetric.Poly1305.Spec \
   Crypto.Symmetric.Poly1305 \
-  Crypto.Symmetric.Poly1305.MAC \
   Crypto.Symmetric.Bytes \
   Crypto.Symmetric.GF128 \
   Crypto.Symmetric.GCM \
@@ -31,7 +30,6 @@ VERIFY= \
   Crypto.Symmetric.Cipher \
   Crypto.AEAD.AES256GCM \
   Crypto.Symmetric.PRF \
-  Crypto.AEAD.Chacha20Poly1305 \
   Crypto.AEAD.Encoding \
   Crypto.AEAD.Invariant \
   Crypto.AEAD.Lemmas \
@@ -39,6 +37,11 @@ VERIFY= \
   Plain \
   Crypto.Test \
   TestMonotonic
+
+#16-10-30 removed files specific to Poly1305:
+#  Crypto.Symmetric.Poly1305.MAC 
+#  Crypto.AEAD.Chacha20Poly1305
+
 
 # Files that should fully typecheck, but not part of regression
 # because verification is too slow

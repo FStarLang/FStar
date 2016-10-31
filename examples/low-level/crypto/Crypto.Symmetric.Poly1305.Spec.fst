@@ -37,9 +37,12 @@ type word = b:seq byte {Seq.length b <= 16}
 type word_16 = b:seq byte {Seq.length b = 16}
 // we only use full words for AEAD
 
-type text = seq elem // not word_16
+let taglen = 16ul 
+
+
+type text = seq word_16 // (used to be seq elem)
+let zero: word_16 = Seq.create 16 0uy 
 type tag = word_16
-let taglen 'id = 16ul
 
 (* * *********************************************)
 (* *            Field operations                 *)
@@ -54,11 +57,6 @@ let op_Plus_At = field_add
 let op_Star_At = field_mul
 
 
-
-
-(* REST OF THE FILE TO BE RESHUFFLED OR DELETED,
-   PARTLY COPIED TO BUFFER.UTIL OR ENCODING *)
-
 (* * *********************************************)
 (* *            Encoding                         *)
 (* * *********************************************)
@@ -68,34 +66,98 @@ let encode (w:word) : Tot elem =
   pow2_le_compat 128 (8 * l);
   pow2 (8 * l) +@ little_endian w
 
-// a spec for encoding and padding, convenient for injectivity proof
-// TODO: Unused now
-let pad_0 b l = Seq.append b (Seq.create l 0uy)
-
-val encode_pad: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> GTot (Seq.seq elem) 
-  (decreases (Seq.length txt))
-let rec encode_pad prefix txt =
-  let l = Seq.length txt in
-  if l = 0 then prefix
-  else if l < 16 then
-    let w = txt in
-    SeqProperties.snoc prefix (encode w)
-  else
-    begin
-    let w, txt = SeqProperties.split txt 16 in
-    let prefix = SeqProperties.snoc prefix (encode w) in
-    encode_pad prefix txt
-    end
-
+private assume val lemma_encode_nonzero: v:word_16 -> Lemma (encode v <> 0)
 
 let trunc_1305 (e:elem) : Tot elem = e % pow2 128
+
+
+(* * *********************************************)
+(* *        Poly1305 functional invariant        *)
+(* * *********************************************)
+
+let seq_head (vs:seq 'a {Seq.length vs > 0}) = Seq.slice vs 0 (Seq.length vs - 1)
+
+(* Functional specification of POLY1305 (including encode),
+   not the usual polynomial computation; for instance it maps
+
+   c_0::c_1::c_2 to c_0 X + c_1 X^2 + c_2 X^3
+
+   Accordingly, sequences seens as polynomials are implicitly extended with 0s. *)
+
+val poly: vs:text -> r:elem -> Tot (a:elem) (decreases (Seq.length vs))
+let rec poly vs r =
+  if Seq.length vs = 0 then 0
+  else 
+    let v = SeqProperties.head vs in
+    (encode v +@ poly (SeqProperties.tail vs) r) *@ r
+
+val eq_poly0: p:text -> Tot bool (decreases (length p)) 
+let rec eq_poly0 p = 
+  Seq.length p = 0 || 
+  (encode (SeqProperties.head p) = 0  && eq_poly0 (SeqProperties.tail p))
+  
+val eq_poly: p0:text -> p1:text -> Tot bool (decreases (length p0))
+let rec eq_poly p0 p1 = 
+  if Seq.length p0 = 0 then eq_poly0 p1 
+  else if Seq.length p1 = 0 then eq_poly0 p0
+  else 
+    encode (SeqProperties.head p0) = encode (SeqProperties.head p1) && 
+    eq_poly (SeqProperties.tail p0) (SeqProperties.tail p1)
+
+(* 16-10-30 would be nice to restore, to back up polynomial equality on paper. *)
+
+private let rec lemma_sane_eq_poly0 (p:text) (r:elem) : Lemma
+  (requires eq_poly0 p)
+  (ensures (poly p r = 0)) (decreases (Seq.length p)) = 
+  if Seq.length p = 0 then () 
+  else lemma_encode_nonzero (SeqProperties.head p)
+    
+#reset-options "--z3timeout 100"
+private let rec lemma_sane_eq_poly (p0:text) (p1:text) (r:elem) : Lemma
+  (requires eq_poly p0 p1)
+  (ensures (poly p0 r = poly p1 r)) (decreases (Seq.length p0)) = 
+  if Seq.length p0 = 0 then lemma_sane_eq_poly0 p1 r 
+  else if Seq.length p1 = 0 then lemma_sane_eq_poly0 p0 r
+  else lemma_sane_eq_poly (SeqProperties.tail p0) (SeqProperties.tail p1) r
+
+private let fix (r:word_16) (i:nat {i < 16}) m : Tot word_16 =
+  Seq.upd r i (U8 (Seq.index r i &^ m))
+
+// an abstract spec of clamping for our state invariant
+// for our polynomial-sampling assumption,
+// we rely solely on the number of fixed bits (22)
+val clamp: word_16 -> Tot elem
+let clamp r =
+  let r = fix r  3  15uy in // 0000****
+  let r = fix r  7  15uy in
+  let r = fix r 11  15uy in
+  let r = fix r 15  15uy in
+  let r = fix r  4 252uy in // ******00
+  let r = fix r  8 252uy in
+  let r = fix r 12 252uy in
+  little_endian r
+
+(* Specification of Poly1305 MACs. *) 
+
+val finish: a:elem -> s:tag -> Tot tag 
+let finish a s = 
+  (* REMARK: this is equivalent to n = (poly vs r + little_endian s) % pow2 128 *)
+  let n = (trunc_1305 a + little_endian s) % pow2 128 in
+  little_bytes 16ul n
+
+val mac_1305: vs:text -> r:elem -> s:tag -> Tot tag
+let mac_1305 vs r s = finish (poly vs r) s 
+
+
+(*
+(* REST OF THE FILE TO BE RESHUFFLED OR DELETED,
+   PARTLY COPIED TO BUFFER.UTIL OR ENCODING *)
 
 (* * *********************************************)
 (* *          Encoding-related lemmas            *)
 (* * *********************************************)
 
 #reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-
 
 val lemma_pad_0_injective: b0:Seq.seq UInt8.t -> b1:Seq.seq UInt8.t -> l:nat -> Lemma
   (requires (pad_0 b0 l == pad_0 b1 l))
@@ -167,73 +229,7 @@ let encode_pad_snoc prefix txt w =
   Seq.lemma_eq_intro w w';
   Seq.lemma_eq_intro txt txt'
 
-(* * *********************************************)
-(* *        Poly1305 functional invariant        *)
-(* * *********************************************)
-
-let seq_head (vs:seq 'a {Seq.length vs > 0}) = Seq.slice vs 0 (Seq.length vs - 1)
-
-val poly: vs:seq elem -> r:elem -> Tot (a:elem) (decreases (Seq.length vs))
-let rec poly vs r =
-  if Seq.length vs = 0 then 0
-  else (poly (seq_head vs) r +@ Seq.index vs (length vs - 1)) *@ r
-
-(* the definition above captures what POLY1305 does, 
-   not the usual polynomial computation; 
-   it may be more natural to flip the sequence, 
-   so that the coefficients are aligned. 
-   (i.e. a_0::a_1::a_2 stands for a_0 + a_1 X + a_2 X^2 , is implicitly extended with 0s.) *)
-
-val poly': vs:seq elem -> r:elem -> Tot (a:elem) (decreases (Seq.length vs))
-let rec poly' vs r =
-  if Seq.length vs = 0 then 0
-  else (SeqProperties.head vs +@ poly' (SeqProperties.tail vs) r ) *@ r
-
-val eq_poly0: p:seq elem -> Tot bool (decreases (length p)) 
-let rec eq_poly0 p = 
-  Seq.length p = 0 || 
-  (SeqProperties.head p = 0 && eq_poly0 (SeqProperties.tail p))
-  
-val eq_poly: p0:seq elem -> p1:seq elem -> Tot bool (decreases (length p0))
-let rec eq_poly p0 p1 = 
-  if Seq.length p0 = 0 then eq_poly0 p1 
-  else if Seq.length p1 = 0 then eq_poly0 p0
-  else SeqProperties.head p0 = SeqProperties.head p1 && eq_poly (SeqProperties.tail p0) (SeqProperties.tail p1)
-
-#set-options "--lax"
-private let rec lemma_sane_eq_poly0 (p:seq elem) (r:elem) : Lemma
-  (requires eq_poly0 p)
-  (ensures (poly' p r = 0)) (decreases (Seq.length p)) = 
-  if Seq.length p = 0 then () 
-  else if SeqProperties.head p = 0 then lemma_sane_eq_poly0 (SeqProperties.tail p) r
-#reset-options "--z3timeout 1000"
-private let rec lemma_sane_eq_poly (p0:seq elem) (p1:seq elem) (r:elem) : Lemma
-  (requires eq_poly p0 p1)
-  (ensures (poly' p0 r = poly' p1 r)) (decreases (Seq.length p0)) = 
-  if Seq.length p0 = 0 then lemma_sane_eq_poly0 p1 r 
-  else if Seq.length p1 = 0 then lemma_sane_eq_poly0 p0 r
-  else lemma_sane_eq_poly (SeqProperties.tail p0) (SeqProperties.tail p1) r
 
 
-//16-10-15 to stay close to the paper, we may apply "encode" in the poly specification
 
-private let fix (r:word_16) (i:nat {i < 16}) m : Tot word_16 =
-  Seq.upd r i (U8 (Seq.index r i &^ m))
-
-// an abstract spec of clamping for our state invariant
-// for our polynomial-sampling assumption,
-// we rely solely on the number of fixed bits (22, right?)
-val clamp: word_16 -> Tot elem
-let clamp r =
-  let r = fix r  3  15uy in // 0000****
-  let r = fix r  7  15uy in
-  let r = fix r 11  15uy in
-  let r = fix r 15  15uy in
-  let r = fix r  4 252uy in // ******00
-  let r = fix r  8 252uy in
-  let r = fix r 12 252uy in
-  little_endian r
-
-(** REMARK: this is equivalent to (poly vs r + little_endian s) % pow2 128 *)
-val mac_1305: vs:seq elem -> r:elem -> s:seq byte -> GTot int
-let mac_1305 vs r s = (trunc_1305 (poly vs r) + little_endian s) % pow2 128
+*)

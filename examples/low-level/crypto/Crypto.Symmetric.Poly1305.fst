@@ -241,8 +241,9 @@ val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block}
     /\ modifies_1 acc h0 h1 // It was the only thing modified
     /\ sel_elem h1 acc == (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r))
 
-#set-options "--z3timeout 60"
+#set-options "--z3timeout 120"
 //NS: hint fails to replay
+//CF: --z3timeout 60 not enough for me
 let add_and_multiply acc block r =
   let h0 = ST.get () in
   fsum' acc block; // acc1 = acc0 + block
@@ -487,7 +488,7 @@ val toField_plus:
     modifies_1 a h0 h1 /\ // Only a was modified
     sel_int h1 a == pow2 (8 * w len) + little_endian (sel_word h0 b) ))
 
-#set-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0"
 
 let toField_plus len a b =
   let h0 = ST.get() in
@@ -688,6 +689,7 @@ let log_t: Type0 = if mac_log then text else unit
 val ilog: l:log_t{mac_log} -> Tot text
 let ilog l = l
 
+(*
 val poly1305_update:
   current_log:log_t -> 
   msg:wordB_16 ->
@@ -700,7 +702,7 @@ val poly1305_update:
     /\ norm h0 r
     /\ modifies_1 acc h0 h1
     /\ (mac_log ==>
-         ilog updated_log == SeqProperties.snoc (ilog current_log) (encode (sel_word h1 msg))
+         ilog updated_log == SeqProperties.snoc (ilog current_log) (sel_word h1 msg)
        /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
 
 #set-options "--z3timeout 60 --initial_fuel 1 --max_fuel 1"
@@ -724,9 +726,9 @@ let poly1305_update log msgB acc r =
       begin
       let msg = read_word 16ul msgB in
       assert (encode msg == sel_elem h1 block);
-      seq_head_snoc (ilog log) (encode msg);
-      Seq.lemma_index_app2 (ilog log) (Seq.create 1 (encode msg)) (Seq.length (SeqProperties.snoc (ilog log) (encode msg)) - 1);
-      SeqProperties.snoc (ilog log) (encode msg)
+      seq_head_snoc (ilog log) msg;
+      Seq.lemma_index_app2 (ilog log) (Seq.create 1 msg) (Seq.length (SeqProperties.snoc (ilog log) msg) - 1);
+      SeqProperties.snoc (ilog log) msg
       end
     else () in
   pop_frame();
@@ -856,6 +858,7 @@ let poly1305_last log msg acc r len =
   assert (norm h3 acc);
   assert (modifies_1 acc h0 h3);
   updated_log
+*)
 
 
 (* TODO: certainly a more efficient, better implementation of that *)
@@ -885,6 +888,7 @@ let add_word a b =
   bytes_of_uint32 (Buffer.sub a 12ul 4ul) (uint64_to_uint32 z3);
   admit ()
 
+
 (* Finish function, with final accumulator value *)
 val poly1305_finish:
   tag:wordB_16 -> acc:elemB -> s:wordB_16 -> ST unit
@@ -899,6 +903,7 @@ let poly1305_finish tag acc s =
   trunc1305 acc tag;
   add_word tag s
 
+(*
 val div_aux: a:UInt32.t -> b:UInt32.t{w b <> 0} -> Lemma
   (requires True)
   (ensures FStar.UInt32(UInt.size (v a / v b) n))
@@ -917,8 +922,9 @@ val poly1305_mac:
       /\ modifies_1 tag h0 h1
       /\ (let r = Spec.clamp (sel_word h0 (sub key 0ul 16ul)) in
          let s = sel_word h0 (sub key 16ul 16ul) in
-         little_endian (sel_word h1 tag) ==
-         mac_1305 (encode_pad Seq.createEmpty (Buffer.as_seq h0 msg)) r s)))
+         Seq.equal 
+           (sel_word h1 tag)
+           (mac_1305 (encode_pad Seq.createEmpty (Buffer.as_seq h0 msg)) r s))))
 let poly1305_mac tag msg len key =
   let h0 = ST.get () in
   push_frame();
@@ -949,3 +955,4 @@ let poly1305_mac tag msg len key =
   poly1305_finish tag acc (sub key 16ul 16ul); // should be s
   pop_frame()
 
+*)

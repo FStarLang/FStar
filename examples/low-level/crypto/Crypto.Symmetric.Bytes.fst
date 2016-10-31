@@ -369,6 +369,32 @@ let rec uint32_bytes len n =
     in 
     SeqProperties.cons byte b'
 
+// turns an integer into a bytestream, little-endian
+val little_bytes: 
+  len:UInt32.t -> n:nat {n < pow2 (8 * v len)} -> 
+  Tot (b:lbytes (v len) { n == little_endian b}) (decreases (v len))
+let rec little_bytes len n = 
+  if len = 0ul then 
+    Seq.createEmpty 
+  else
+    let len = len -^ 1ul in 
+    let byte = UInt8.uint_to_t (n % 256) in
+    let n' = n / 256 in 
+    Math.Lemmas.pow2_plus 8 (8 * v len);
+    assert(n' < pow2 (8 * v len ));
+    let b' = little_bytes len n' in
+    let b = cons byte b' in
+    assert(Seq.equal b' (tail b));
+    b
+
+    //assert_norm(0 = little_endian e);
+    //assert(n == UInt8.v byte + pow2 8 * n');
+    //assert_norm (pow2 8 == 256);
+    //assert(n' == little_endian b');
+    //assert(n' == little_endian (tail b));
+    //assert(n == UInt8.v byte + pow2 8 * n');
+    //assert(n == UInt8.v (head b) + pow2 8 * little_endian (tail b));
+    //assert(n == little_endian b);
 
 // check efficient compilation for all back-ends
 val store_uint128: 

@@ -23,8 +23,8 @@ open Crypto.AEAD.Lemmas.Part2
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-module Spec = Crypto.Symmetric.Poly1305.Spec
-module MAC = Crypto.Symmetric.Poly1305.MAC
+module MAC = Crypto.Symmetric.MAC
+module CMA = Crypto.Symmetric.UF1CMA
 
 module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
@@ -35,7 +35,7 @@ let ctr x = PRF(x.ctr)
 
 //16-10-12 TEMPORARY, while PRF remains somewhat CHACHA-specific
 //16-10-12 NB we are importing this restriction from Encoding too
-let id = Crypto.AEAD.Encoding.id
+//let id = Crypto.AEAD.Encoding.id
 
 // ********* StreamAE **********
 //
@@ -343,7 +343,7 @@ val encrypt:
   aad: lbuffer (v aadlen) -> 
   plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) 1ul} -> 
   plain: plainBuffer i (v plainlen) -> 
-  cipher:lbuffer (v plainlen + v (Spec.taglen i)) 
+  cipher:lbuffer (v plainlen + v MAC.taglen) 
   { 
     Buffer.disjoint aad cipher /\
     Buffer.disjoint (Plain.as_buffer plain) aad /\
@@ -386,7 +386,7 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC
   let h1 = get () in 
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
-  let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in
+  let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
   let y = PRF.incr i x in
   //calling this lemma allows us to complete the proof without using any fuel; 
   //which makes things a a bit faster
@@ -398,16 +398,16 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   intro_refines_one_entry_no_tag #i st n (v plainlen) plain cipher_tagged h0 h1 h2; //we have pre_refines_one_entry here
   assert (Buffer.live h1 aad); //seem to need this hint
   assume (HS (is_stack_region h2.tip)); //TODO: remove this once we move all functions to STL
-  let l, acc = accumulate ak aadlen aad plainlen cipher in
+  let acc = accumulate ak aadlen aad plainlen cipher in
   let h3 = get() in
   let _ = 
     let c = Buffer.as_seq h3 cipher in
     let ad = Buffer.as_seq h3 aad in
-    assert (l == field_encode i ad #plainlen c) in
+    assert (FStar.HyperStack.sel h1 (CMA.alog acc) == encode_both aadlen ad plainlen c) in
   assert (Buffer.live h2 aad); //seem to need this hint
   assert (Buffer.live h3 aad); //seem to need this hint
   Buffer.lemma_reveal_modifies_0 h2 h3;
-  MAC.mac ak l acc tag;
+  CMA.mac ak acc tag;
   let h4 = get () in 
   assert (Buffer.live h4 aad);
   assert (Buffer.live h4 cipher_tagged);
@@ -439,7 +439,7 @@ val decrypt:
   aadtext:lbuffer (v aadlen) -> 
   plainlen:UInt32.t {safelen i (v plainlen) 1ul} -> 
   plaintext:plainBuffer i (v plainlen) -> 
-  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) 
+  ciphertext:lbuffer (v plainlen + v MAC.taglen) 
   { Buffer.disjoint aadtext ciphertext /\
     Buffer.disjoint_2 (Plain.as_buffer plaintext) aadtext ciphertext }
   -> STL bool
@@ -470,20 +470,20 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let x = PRF({iv = iv; ctr = 0ul}) in // PRF index to the first block
   let ak = PRF.prf_mac i st.prf x in   // used for keying the one-time MAC
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
-  let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
+  let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in 
 
   // First recompute and check the MAC
   let h0 = ST.get() in
   assume(
-    MAC(Buffer.live h0 ak.r /\ norm h0 ak.r) /\
+    CMA(MAC.live h0 ak.r /\ MAC.norm h0 ak.r) /\
     Buffer.live h0 aad /\ Buffer.live h0 cipher);
 
-  let l, acc = accumulate ak aadlen aad plainlen cipher in
+  let acc = accumulate ak aadlen aad plainlen cipher in
 
-  let h = ST.get() in 
-  assert(mac_log ==> l = encode_both aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher));
+  let h1 = ST.get() in 
+  assert(mac_log ==>  FStar.HyperStack.sel h1 (CMA.alog acc) == encode_both aadlen (Buffer.as_seq h1 aad) plainlen (Buffer.as_seq h1 cipher));
 
-  let verified = MAC.verify ak l acc tag in
+  let verified = CMA.verify ak acc tag in
 
   // let h1 = ST.get() in
   // assert(mac_log /\ MAC.authId (i,iv) ==> (verified == (HS.sel h1 (MAC(ilog ak)) = Some (l,tag))));  

@@ -17,20 +17,16 @@ open Crypto.AEAD.Invariant
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-module Spec = Crypto.Symmetric.Poly1305.Spec
-module MAC = Crypto.Symmetric.Poly1305.MAC
-
-module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
 
 (*** Lemmas about modifying tables and buffers ***)
 
-let trans_all_above (#rgn:region) (#i:PRF.id) (s:Seq.seq (PRF.entry rgn i)) 
+let trans_all_above (#rgn:region) (#i:id) (s:Seq.seq (PRF.entry rgn i)) 
 		    (x:PRF.domain i) (y:PRF.domain i{y `above` x})
     : Lemma (all_above s y ==> all_above s x)
     = ()
 
-let refl_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i) 
+let refl_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
 			     (x:PRF.domain i{x.ctr <> 0ul}) 
 			     (c:lbuffer l)
 			     (h:mem)
@@ -44,7 +40,7 @@ let refl_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
 	FStar.Classical.forall_intro (SeqProperties.contains_elim emp)
       else ()
 	
-let trans_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i) 
+let trans_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
 			     (x_0:PRF.domain i{x_0.ctr <> 0ul}) (x_1:PRF.domain i{x_1 `above` x_0})
 			     (c:lbuffer l)
 			     (h_0:mem) (h_1:mem) (h_2:mem)
@@ -63,7 +59,7 @@ let trans_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
 	FStar.Classical.forall_intro (SeqProperties.append_contains_equiv diff_01 diff_12)
       else ()
 
-let x_buffer_1_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i) 
+let x_buffer_1_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
 			     (x:PRF.domain i{x.ctr <> 0ul})
 			     (c:lbuffer l)
 			     (h_0:mem) (h_1:mem)
@@ -78,7 +74,7 @@ let x_buffer_1_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.sta
       else ()
 
 
-let fresh_frame_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
+let fresh_frame_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
 			     (x:PRF.domain i{x.ctr <> 0ul})
 			     (c:lbuffer l)
 			     (h_0:mem) (h_1:mem) (h_2:mem)
@@ -89,7 +85,7 @@ let fresh_frame_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.st
 	    (ensures (modifies_table_above_x_and_buffer t x c h_0 h_2))
     = admit()
 
-let pop_frame_modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
+let pop_frame_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
 			     (x:PRF.domain i{x.ctr <> 0ul})
 			     (c:lbuffer l)
 			     (h_0:mem) (h_1:mem) (h_2:mem)
@@ -106,7 +102,7 @@ let find_snoc (#a:Type) (s:Seq.seq a) (x:a) (f:a -> Tot bool)
   = admit()
 
 
-val prf_enxor_leaves_none_strictly_above_x: #i:PRF.id -> 
+val prf_enxor_leaves_none_strictly_above_x: #i:id -> 
 					   t:PRF.state i ->
 					   x:domain i{x.ctr <> 0ul} ->
 					   len:u32 ->
