@@ -191,36 +191,41 @@ let intro_mac_refines (i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
   = ()	   
  
 #reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
-
-let pre_refines_to_refines  (#i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
-			    (aadlen: UInt32.t {aadlen <=^ aadmax})
-			    (aad: lbuffer (v aadlen))
-                            (len:nat{len<>0}) (plain:plainBuffer i len) (cipher:lbuffer (len + v MAC.taglen))
-			    (h0:mem)
-                            (h:mem{Buffer.live h aad /\ Plain.live h plain /\ Buffer.live h cipher})
-   : Lemma (requires (let mac_rgn = st.prf.mac_rgn in
-     		      let p = Plain.sel_plain h (u len) plain in
-		      let c_tagged = Buffer.as_seq h cipher in
-	              let c, tag = SeqProperties.split c_tagged len in
-		      let ad = Buffer.as_seq h aad in
-  		      safeId i ==> 
-			(pre_refines_one_entry i st nonce len plain cipher h0 h /\
-			 mac_refines i st nonce aad plain cipher h)))
-            (ensures (let mac_rgn = st.prf.mac_rgn in
-     		      let p = Plain.sel_plain h (u len) plain in
-		      let c_tagged = Buffer.as_seq h cipher in
-	              let c, tag = SeqProperties.split c_tagged len in
-		      let ad = Buffer.as_seq h aad in
-  		      let entry = Entry nonce ad len p c_tagged in
-		      safeId i ==>  (
-			pre_refines_one_entry i st nonce len plain cipher h0 h /\ (
-			  let table_0 = HS.sel h0 (PRF.itable i st.prf) in
-			  let table_1 = HS.sel h (PRF.itable i st.prf) in
- 			  let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in
-			  refines_one_entry #mac_rgn #i h entry blocks))))
+let all_above_counterblocks (i:id)
+                       (rgn:region)
+                       (x:PRF.domain i{ctr x >^ 0ul})
+                       (l:nat)
+                       (from_pos:nat)
+                       (to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) (ctr x)})
+                       (plain:Plain.plain i l)
+                       (cipher:lbytes l)
+   : Lemma (safeId i ==> (counterblocks i rgn x l from_pos to_pos plain cipher) `all_above` x)
    = admit()
 
-(* not sure about this merge; was: 
+#set-options "--z3timeout 100 --initial_fuel 2 --max_fuel 2 --initial_ifuel 2 --max_ifuel 2"
+let find_cons_hd (#a:Type) (x:a) (tl:Seq.seq a) (f:(a -> Tot bool))
+  : Lemma (requires (f x /\ (SeqProperties.seq_find f tl == None)))
+         (ensures (SeqProperties.seq_find f (SeqProperties.cons x tl) == Some x))
+  = admit()
+
+let contains_intro_2 (#a:Type) (s:Seq.seq a) (x:a) (k:nat)
+  : Lemma (k < Seq.length s /\ Seq.index s k == x
+           ==>
+          s `SeqProperties.contains` x)
+  = SeqProperties.contains_intro s k x
+
+let seq_find_none (#a:Type) (s:Seq.seq a) (f:(a -> Tot bool))
+  : Lemma (requires (forall y. s `SeqProperties.contains` y ==> not (f y)))
+         (ensures (SeqProperties.seq_find f s == None))
+  = match SeqProperties.seq_find f s with
+    | None -> ()
+    | Some z -> FStar.Classical.forall_intro (contains_intro_2 s z)
+
+let find_mac_counterblocks_none (#rgn:region) (#i:id) (nonce:Cipher.iv (alg i))
+                               (s:Seq.seq (PRF.entry rgn i))
+    : Lemma (requires (s `all_above` ({iv=nonce; ctr=1ul})))
+           (ensures (find_mac s ({iv=nonce; ctr=0ul}) == None))
+    = admit()
 
 let find_seq_find (i:id) (r:rgn) (s:Seq.seq (PRF.entry r i)) (x:domain i)
   : Lemma (is_None (find s x) <==> is_None (SeqProperties.seq_find (fun (e:PRF.entry r i) -> e.x = x) s))
@@ -265,8 +270,6 @@ let pre_refines_to_refines i st nonce aadlen aad len plain cipher h0 h
 	   let prefix = Seq.slice table_1 0 (Seq.length table_0) in 
 	   assert (Seq.equal table_1 (Seq.append prefix blocks));
 	   find_append idom prefix blocks
-*)	   
-
 
 (* val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit *)
 (*   (requires (fun h0 -> *)
@@ -281,8 +284,6 @@ let pre_refines_to_refines i st nonce aadlen aad len plain cipher h0 h
 (*       (let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in *)
 (* 	mac == little_endian (sel_word h1 tag) /\ *)
 (* 	m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag))))) *)
-
-			   
 
 
 (* this version causes a crash *)
