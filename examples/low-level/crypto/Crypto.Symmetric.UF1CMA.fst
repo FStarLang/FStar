@@ -73,7 +73,10 @@ let akey_gen (r:rid) (i:id) : akey r i =
   then Some (Buffer.rcreate r 0uy (skeylen i))
   else None
 
+// not needed?
 let akey_coerce r i kb = 
+  let _ = IO.debug_print_string (UInt32.to_string (skeylen i)) in
+  let _ = print_buffer kb 0ul (skeylen i) in
   if skeyed i 
   then 
     let sk = Buffer.rcreate r 0uy (skeylen i) in

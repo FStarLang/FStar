@@ -144,11 +144,23 @@ let gf128_mul a b =
   //16-10-27 todo: functional correctness.
 
 let add_and_multiply a e k = 
+//  let _ = IO.debug_print_string "add-and-multiply a=" in 
+//  let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
+//  let _ = IO.debug_print_string "add-and-multiply e=" in 
+//  let _ = Crypto.Symmetric.Bytes.print_buffer e 0ul 16ul in
+//  let _ = IO.debug_print_string "add-and-multiply k=" in 
+//  let _ = Crypto.Symmetric.Bytes.print_buffer k 0ul 16ul in
   gf128_add a e;
   gf128_mul a k
 
+let finish a s = 
+//  let _ = IO.debug_print_string "finish a=" in 
+//  let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
+//  let _ = IO.debug_print_string "finish s=" in 
+//  let _ = Crypto.Symmetric.Bytes.print_buffer s 0ul 16ul in
+  gf128_add a s 
 
-  
+
 //16-09-23 Instead of the code below, we should re-use existing AEAD encodings
 //16-09-23 and share their injectivity proofs and crypto model.
 

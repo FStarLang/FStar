@@ -145,20 +145,18 @@ val gen: i:id -> rgn:region -> ST (state i Writer)
   (requires (fun _ -> True))
   (ensures  (fun h0 st h1 -> True))
 let gen i rgn = 
-  let log = ralloc rgn (Seq.createEmpty #(entry i)) in
   let prf = PRF.gen rgn i in 
-  let ak = assume false; CMA.akey_gen rgn i in
+  let log = ralloc rgn (Seq.createEmpty #(entry i)) in
+  let ak = if CMA.skeyed i then Some (PRF.prf_sk0 prf) else None in 
   State #i #Writer #rgn log prf ak
 
-val coerce: i:id{~(prf i)} -> rgn:region -> key:lbuffer (v (PRF.keylen i +^ CMA.skeylen i)) -> ST (state i Writer)
+val coerce: i:id{~(prf i)} -> rgn:region -> key:lbuffer (v (PRF.keylen i)) -> ST (state i Writer)
   (requires (fun h -> Buffer.live h key))
   (ensures  (fun h0 st h1 -> True))
 let coerce i rgn key = 
-  let kp = Buffer.sub key 0ul (PRF.keylen i) in
-  let ka = Buffer.sub key (PRF.keylen i) (CMA.skeylen i) in 
+  let prf = PRF.coerce rgn i key in
   let log = ralloc rgn (Seq.createEmpty #(entry i)) in // Shouldn't exist
-  let prf = PRF.coerce rgn i kp in
-  let ak = CMA.akey_coerce rgn i ka in 
+  let ak = if CMA.skeyed i then Some (PRF.prf_sk0 prf) else None in 
   State #i #Writer #rgn log prf ak
 
 val genReader: #i:id -> st:state i Writer -> ST (state i Reader)
@@ -387,7 +385,7 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   
   let h0 = get() in
   let x = PRF({iv = n; ctr = ctr_0 i}) in // PRF index to the first block
-  let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC
+  let ak = PRF.prf_mac i st.prf st.ak x in  // used for keying the one-time MAC
   let h1 = get () in 
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
@@ -473,8 +471,8 @@ val decrypt:
 
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   push_frame();
-  let x = PRF({iv = iv; ctr = 0ul}) in // PRF index to the first block
-  let ak = PRF.prf_mac i st.prf x in   // used for keying the one-time MAC
+  let x = PRF({iv = iv; ctr = ctr_0 i}) in // PRF index to the first block
+  let ak = PRF.prf_mac i st.prf st.ak x in   // used for keying the one-time MAC
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
   let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in 
 
