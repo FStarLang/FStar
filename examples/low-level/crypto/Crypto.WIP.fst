@@ -99,8 +99,8 @@ let lemma_frame_find_mac (#i:PRF.id) (#l:nat) (st:PRF.state i)
 		      let x0 = {x with ctr=0ul} in
 		      find_mac tab0 x0 == find_mac tab1 x0)))
     = admit()		      
-
-#reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+ 
+#reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   (* push_frame(); *)
   (* assume (safeId i); *)
@@ -110,6 +110,7 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let x = PRF({iv = n; ctr = 0ul}) in // PRF index to the first block
   let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC  
   let h1 = get () in 
+  assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h1);
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in
   let y = PRF.incr i x in
@@ -121,11 +122,15 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   // Compute MAC over additional data and ciphertext
   let h2 = get () in
   FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 cipher h1) h2;
+  assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h2);
   lemma_frame_find_mac #i #(v plainlen) st.prf y cipher h1 h2;
   intro_refines_one_entry_no_tag #i st n (v plainlen) plain cipher_tagged h0 h1 h2; //we have pre_refines_one_entry here
   assert (Buffer.live h1 aad); //seem to need this hint
   let l, acc = accumulate ak aadlen aad plainlen cipher in
   let h3 = get() in
+  Buffer.lemma_reveal_modifies_0 h2 h3;
+  assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h3);
+  (* assume (HH.disjoint (HS.frameOf acc) st.prf.mac_rgn); *)
   frame_pre_refines_0 i st n (v plainlen) plain cipher_tagged h0 h2 h3;
   (* let _ = *)
   (*   let c = Buffer.as_seq h3 cipher in *)
@@ -136,6 +141,9 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   Buffer.lemma_reveal_modifies_0 h2 h3;
   MAC.mac ak l acc tag;
   let h4 = get () in
+  FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 tag h3) h4;
+  //really should get this from the mods clause ... need to investigate
+  (* assume (mac_log ==> HS.modifies_ref st.prf.mac_rgn (TSet.singleton (MAC (HS.as_aref (as_hsref (ilog ak.log))))) h3 h4); *)
   frame_pre_refines i st n (v plainlen) plain cipher_tagged h0 h3 h4;
   (* assert (Buffer.as_seq h3 cipher == Buffer.as_seq h4 cipher); *)
   (* assert (Buffer.as_seq h3 aad == Buffer.as_seq h4 aad); *)
@@ -143,7 +151,8 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   (* assert (Buffer.live h4 cipher_tagged); *)
   (* assert (Plain.live h4 plain); *)
   intro_mac_refines i st n aad plain cipher_tagged h4;
-  pre_refines_to_refines #i st n aadlen aad (v plainlen) plain cipher_tagged h0 h4;
+  pre_refines_to_refines i st n aadlen aad (v plainlen) plain cipher_tagged h0 h4;
+  (* assert (safeId i /\ prf i /\ mac_log ==> HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h4); *)
   admit()
   
   (* let _ = *)
