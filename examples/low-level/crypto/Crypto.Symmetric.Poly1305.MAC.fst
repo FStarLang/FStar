@@ -340,6 +340,16 @@ let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
 
 #set-options "--z3timeout 100 --print_fuels --initial_fuel 1 --initial_ifuel 1"
 #reset-options "--z3timeout 20 --initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1"
+
+let trigger_rid (r:rid) = True
+
+unfold let mods_2 (rs:some_refs) h0 h1 =
+    modifies (normalize_term (regions_of_some_refs rs)) h0 h1
+  /\ (forall (r:rid).{:pattern (trigger_rid r)} 
+	        trigger_rid r /\
+                modifies_ref r (normalize_term (refs_in_region r rs)) h0 h1)
+
+
 val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit
   (requires (fun h0 ->
     live h0 tag /\ live h0 st.s /\
@@ -352,8 +362,9 @@ val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit
     live h0 st.r /\ 
     live h1 tag /\ (
     if mac_log then
-      mods [Ref (as_hsref (ilog st.log)); Ref (Buffer.content tag)] h0 h1 /\
+      mods_2 [Ref (as_hsref (ilog st.log)); Ref (Buffer.content tag)] h0 h1 /\
       Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1 /\
+      HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1 /\
       m_contains (ilog st.log) h1 /\ (
       let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in
       mac == little_endian (sel_word h1 tag) /\
