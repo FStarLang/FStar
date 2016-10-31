@@ -295,7 +295,7 @@ let test_aes_gcm i tn key ivBuffer aadlen aad plainlen plainrepr expected_cipher
   let ok_2 = diff "decryption" plainlen (bufferRepr #i plain) (bufferRepr #i decrypted) in
 
   pop_frame();
-  ok_1 // ok_0 && ok_1 && ok_2
+  ok_0 && ok_1 && ok_2
 
 val test_aes_gcm_1: unit -> St bool
 let test_aes_gcm_1 () =
