@@ -2,6 +2,7 @@ module Huffman
 
 open FStar.Char
 open FStar.List.Tot
+open FStar.ListProperties
 
 type symbol = char
 
@@ -97,9 +98,13 @@ let rec encode_one (t:trie) (s:symbol) : Tot (option (list bool)) =
                 | None -> None
 
 // Modulo the option this is flatten (map (encode_one t) ss)
-let rec encode (t:trie) (ss:list symbol) : Tot (option (list bool)) =
+let rec encode (t:trie) (ss:list symbol) : Pure (option (list bool))
+    (requires (True))
+    (ensures (fun bs -> is_Node t /\ is_Cons ss /\ is_Some bs
+                        ==> is_Cons (Some.v bs))) =
   match ss with
-  | [] -> Some []
+  | [] -> None (* can't encode the empty string *)
+  | [s] -> encode_one t s
   | s::ss' -> match encode_one t s, encode t ss' with
               | Some bs, Some bs' -> Some (bs @ bs')
               | _, _ -> None
@@ -131,8 +136,9 @@ let rec decode' (t:trie) (bs:list bool) : Tot (option (list symbol))
 // Simplified decode using idea from Bird and Wadler's book
 // (it has more complex termination condition though)
 
-let rec decode_aux (t':trie) (t:trie) (bs:list bool) : Pure (option (list symbol))
-    (requires (b2t (is_Node t')))
+let rec decode_aux (t':trie{is_Node t'}) (t:trie) (bs:list bool) :
+  Pure (option (list symbol))
+    (requires (True))
     (ensures (fun ss -> is_Some ss ==> List.Tot.length (Some.v ss) > 0))
     (decreases (%[bs; if is_Leaf t && is_Cons bs then 1 else 0]))
   =
@@ -155,7 +161,7 @@ let rec cancelation_one (t':trie) (t:trie) (s:symbol) : Lemma
             | Some e -> (match decode_aux t' t e with
                         | Some d -> d = [s]
                         | None -> False)
-            | None -> True))) =
+            | None -> True))) (decreases t) =
   match t with
   | Leaf _ s' -> ()
   | Node _ t1 t2 ->
@@ -164,34 +170,37 @@ let rec cancelation_one (t':trie) (t:trie) (s:symbol) : Lemma
       | None   -> cancelation_one t' t2 s)
 
 let rec decode_prefix_aux (t':trie{is_Node t'}) (t:trie)
-    (bs:list bool{is_Cons bs}) (bs':list bool) (s:symbol) : Lemma
+    (bs:list bool) (bs':list bool) (s:symbol) : Lemma
     (requires (decode_aux t' t bs = Some [s]))
-    (ensures (decode_aux t' t (bs @ bs') = (match decode_aux t' t' bs' with
+    (ensures (is_Cons bs' ==> decode_aux t' t (bs @ bs') =
+                                     (match decode_aux t' t' bs' with
                                      | Some ss -> Some (s :: ss)
                                      | None -> None)))
     (decreases (%[bs; if is_Leaf t && is_Cons bs then 1 else 0])) =
   match t, bs with
+  | Leaf _ _, [] -> ()
   | Leaf _ _, _::_ -> decode_prefix_aux t' t' bs bs' s
-  | Node _ t1 t2, b::bs'' -> admit() (* TODO: decode_prefix_aux t' (if b then t2 else t1) bs'' bs' s *)
+  | Node _ t1 t2, b::bs'' ->
+      decode_prefix_aux t' (if b then t2 else t1) bs'' bs' s
 
 let rec decode_prefix (t:trie{is_Node t})
-  (bs:list bool) (bs':list bool) (s:symbol) : Lemma
+  (bs:list bool) (bs':list bool{is_Cons bs'}) (s:symbol) : Lemma
   (requires (decode t bs = Some [s]))
   (ensures (decode t (bs @ bs') = (match decode t bs' with
                                    | Some ss -> Some (s :: ss)
                                    | None -> None))) =
   decode_prefix_aux t t bs bs' s
 
-let rec cancelation_aux (t:trie) (ss:list symbol) : Lemma
-  (requires (b2t (is_Node t)))
-  (ensures (is_Node t ==>
-            (match encode t ss with
+let rec cancelation_aux (t:trie{is_Node t}) (ss:list symbol) : Lemma
+  (requires (True))
+  (ensures (match encode t ss with
             | Some e -> (match decode t e with
                         | Some d -> d = ss
-                        | None -> True) (* <-- TODO: can we make this False? *)
-            | None -> True))) =
+                        | None -> False)
+            | None -> True)) (decreases ss) =
   match ss with
   | [] -> ()
+  | [s] -> cancelation_one t t s
   | s::ss' ->
     cancelation_one t t s;
     cancelation_aux t ss';
@@ -206,48 +215,9 @@ let rec cancelation (sws:list (symbol*pos)) (ss:list symbol) : Lemma
             (match encode t ss with
             | Some e -> (match decode t e with
                         | Some d -> d = ss
-                        | None -> True)
+                        | None -> False)
             | None -> True)))) =
   cancelation_aux (huffman sws) ss
-
-
-(*
-// proving this should require prefix freedom?
-Prefix freedom of the code?
-
-t = huffman sws
-  = huffman_trie (insertion_sort (List.Tot.map (fun (s,w) -> Leaf w s) sws))
-
-- set of symbols in the tree leaves the same as set of symbols in sws?
-
-*)
-
-(* open Platform.Bytes *)
-
-(* val huffman_trie : ss:(list (symbol * pos)) -> Pure trie *)
-(*   (requires (b2t (sorted ss))) *)
-(*   (ensures (fun cs -> True)) *)
-
-(* assume val trie_to_code : trie -> Tot (list byte) // symbols as well? *)
-
-(* assume val huffman_code : ss:(list (symbol * pos)) -> Pure (list bytes) *)
-(*   (requires (b2t (sorted ss))) *)
-(*   (ensures (fun cs -> List.Tot.length cs == List.Tot.length ss)) *)
-
-(* val code_length : ss:(list (symbol * pos)) -> cs:(list bytes) -> Pure nat *)
-(*   (requires (sorted ss /\ List.Tot.length cs == List.Tot.length ss)) *)
-(*   (ensures (fun _ -> True)) *)
-(* let code_length ss cs = *)
-(*   fold_left2 (fun (a:nat) (sw:symbol*pos) c -> *)
-(*               let (s,w) = sw in *)
-(*               a + w `op_Multiply` length c) 0 ss cs *)
-
-(* assume val minimality : ss:(list (symbol * pos)) -> cs:list bytes -> Lemma *)
-(*   (requires (sorted ss)) -- need more conditions on cs, needs to be an encoding *)
-(*   (ensures (code_length ss (huffman_code ss) >= code_length ss cs)) *)
-
-
-
 
 (* Some References:
 
@@ -264,9 +234,9 @@ Jasmin Christian Blanchette.
 Proof Pearl: Mechanizing the Textbook Proof of Huffman’s Algorithm.
 Journal of Automated Reasoning. June 2009, Volume 43, Issue 1, pp 1–18.
 http://people.mpi-inf.mpg.de/~jblanche/jar2009-huffman.pdf
-- proves optimality, doesn't even implement encode/decode
+- only proves optimality, doesn't even implement encode/decode
 
-Laurent Théry. Formalising Huffman algorithm. 
+Laurent Théry. Formalising Huffman algorithm.
 https://github.com/coq-contribs/huffman
 ftp://ftp-sop.inria.fr/marelle/Laurent.Thery/Huffman/Note.pdf
 - does include encode/decode
