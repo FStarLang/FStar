@@ -53,9 +53,9 @@ let read (#a:Type) (r:ref a)
     : ST a
   	 (requires (fun h -> h `contains_a_well_typed` r))
 	 (ensures (fun h0 v h1 ->
-		     h0 == h1                         //heap does not change
-           	  /\  h1 `contains_a_well_typed` r
-		  /\  sel h1 r == v))                  //returns the contents of r
+		        h0 == h1                         //heap does not change
+            /\  h1 `contains_a_well_typed` r
+		        /\  sel h1 r == v))                  //returns the contents of r
    = let h0 = STATE.get () in
      sel h0 r
 let (!) = read
