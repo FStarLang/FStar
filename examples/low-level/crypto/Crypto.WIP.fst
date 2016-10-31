@@ -181,12 +181,92 @@ let extend_refines_aux i st nonce aadlen aad len plain cipher h0 h1 =
      let entry = Entry nonce ad len p c_tagged in
      assume (pre_refines_one_entry i st nonce len plain cipher h0 h1);
      extend_refines h0 i mac_rgn entries_0 blocks_0 entry blocks_1 h1
- 
+
+assume val to_seq_temp: #a:Type -> b:Buffer.buffer a -> l:UInt32.t{v l <= Buffer.length b} -> ST (Seq.seq a)
+  (requires (fun h -> Buffer.live h b))
+  (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h1 b /\ r == Buffer.as_seq h1 b))
+
+#reset-options "--z3timeout 400 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let rec frame_refines (i:id{safeId i}) (mac_rgn:region) 
+		      (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry mac_rgn i))
+		      (h:mem) (h':mem)
+   : Lemma (requires refines h i mac_rgn entries blocks /\
+		     HS.modifies_ref mac_rgn TSet.empty h h' /\
+		     HS.live_region h' mac_rgn)
+	   (ensures  refines h' i mac_rgn entries blocks)
+	   (decreases (Seq.length entries))
+   = if Seq.length entries = 0 then 
+       ()
+     else let e = SeqProperties.head entries in
+          let b = num_blocks e in 
+         (let blocks_for_e = Seq.slice blocks 0 (b + 1) in
+       	  let entries_tl = SeqProperties.tail entries in
+          let blocks_tl = Seq.slice blocks (b+1) (Seq.length blocks) in
+	  frame_refines i mac_rgn entries_tl blocks_tl h h';
+	  frame_refines_one_entry h i mac_rgn e blocks_for_e h')
+
+#reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+val refines_to_inv: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)) ->
+		       (aadlen: UInt32.t {aadlen <=^ aadmax}) ->
+		       (aad: lbuffer (v aadlen)) ->
+		       (len: UInt32.t {len <> 0ul}) ->
+		       (plain:plainBuffer i (v len)) -> 
+		       (cipher:lbuffer (v len + v (Spec.taglen i))) ->
+    ST unit (requires (fun h1 ->
+		      Buffer.live h1 aad /\ 
+		      Plain.live h1 plain /\ 
+		      Buffer.live h1 cipher /\ (
+		      HS (h1.h) `Map.contains` st.prf.mac_rgn /\
+		      h1 `HS.contains` st.log /\
+		      (safeId i ==> (
+			let mac_rgn = st.prf.mac_rgn in
+      			let entries_0 = HS.sel h1 st.log in 
+			let table_1 = HS.sel h1 (PRF.itable i st.prf) in
+     			let p = Plain.sel_plain h1 len plain in
+			let c_tagged = Buffer.as_seq h1 cipher in
+			let c, tag = SeqProperties.split c_tagged (v len) in
+			let ad = Buffer.as_seq h1 aad in
+  			let entry = Entry nonce ad (v len) p c_tagged in
+			h1 `HS.contains` (itable i st.prf) /\
+			~ (st.log === (itable i st.prf)) /\
+			refines h1 i mac_rgn (SeqProperties.snoc entries_0 entry) table_1)))))
+          (ensures (fun h1 _ h2 -> 
+      		      Buffer.live h1 aad /\ 
+		      Plain.live h1 plain /\ 
+		      Buffer.live h1 cipher /\ (
+		      inv h2 st /\
+		      (if safeId i then 
+			let mac_rgn = st.prf.mac_rgn in
+      			let entries_0 = HS.sel h1 st.log in 
+			let table_1 = HS.sel h1 (PRF.itable i st.prf) in
+     			let p = Plain.sel_plain h1 len plain in
+			let c_tagged = Buffer.as_seq h1 cipher in
+			let c, tag = SeqProperties.split c_tagged (v len) in
+			let ad = Buffer.as_seq h1 aad in
+  			let entry = Entry nonce ad (v len) p c_tagged in
+  			HS.modifies (Set.singleton st.log_region) h1 h2 /\
+			HS.modifies_ref st.log_region !{HS.as_ref st.log} h1 h2 /\ 
+			HS.sel h2 st.log == SeqProperties.snoc entries_0 entry
+		      else HS.modifies Set.empty h1 h2))))
+let refines_to_inv i st nonce aadlen aad len plain cipher =
+  if safeId i then
+    let h0 = get () in 
+    let ad = to_seq_temp aad aadlen in
+    let p = Plain.load len plain in 
+    let c_tagged = to_seq_temp cipher len in
+    let entry = Entry nonce ad (v len) p c_tagged in
+    st.log := SeqProperties.snoc !st.log entry;
+    let h1 = get () in 
+    let entries = !st.log in
+    let blocks = !(itable i st.prf) in
+    frame_refines i st.prf.mac_rgn entries blocks h0 h1
+  else ()
+  
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
-  (* push_frame(); *)
-  (* assume (safeId i); *)
-  (* assume (prf i); *)
   let h0 = get() in
+  assume (h0 `HS.contains` st.log); //can be a recall
+  assume (prf i ==> h0 `HS.contains` (itable i st.prf));
+  assume (prf i ==> ~ (st.log === (itable i st.prf)));
   assume (HS (h0.h `Map.contains` st.prf.mac_rgn));
   assume (HS (HH.disjoint h0.tip st.prf.mac_rgn));
   assume (HS (is_stack_region h0.tip)); //TODO: remove this once we move all functions to STL
@@ -226,6 +306,7 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   intro_mac_refines i st n aad plain cipher_tagged h4;
   pre_refines_to_refines i st n aadlen aad (v plainlen) plain cipher_tagged h0 h4;
   extend_refines_aux i st n aadlen aad (v plainlen) plain cipher_tagged h0 h4;
+  refines_to_inv i st n aadlen aad plainlen plain cipher_tagged;
   admit()
 
 
