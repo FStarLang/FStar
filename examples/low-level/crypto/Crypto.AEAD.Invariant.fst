@@ -53,18 +53,20 @@ noeq type state (i:id) (rw:rw) =
       log: HS.ref (Seq.seq (entry i)) {HS.frameOf log == log_region} ->
       // Was PRF(prf.rgn) == region. Do readers use its own PRF state?
       prf: PRF.state i {PRF(prf.rgn) == log_region} (* including its key *) ->
-      //ak: CMA.akey log_region i (* static, optional authentication key *) -> 
+      ak: CMA.akey log_region i (* static, optional authentication key *) -> 
       state i rw
 
 // INVARIANT (WIP)
  
 let maxplain (i:id) = pow2 14 // for instance
 
+// l is the length of plaintext left to be encrypted; 
+// c is the number of plaintext blocks encrypted so far.
 let safelen (i:id) (l:nat) (c:UInt32.t{PRF.ctr_0 i <^ c /\ c <=^ PRF.maxCtr i}) = 
   l = 0 || (
     let bl = v (Cipher( blocklen (cipher_of_id i))) in
     FStar.Mul(
-      l + (v (c -^ 1ul)) * bl <= maxplain i && 
+      l + (v (c -^ PRF.ctr_0 i - 1ul)) * bl <= maxplain i && 
       l  <= v (PRF.maxCtr i -^ c) * bl ))
     
 // Computes PRF table contents for countermode encryption of 'plain' to 'cipher' starting from 'x'.
