@@ -981,10 +981,10 @@ and infer (env: env) (e: term): nm * term * term =
             arg, [ arg ]
         | _ ->
             let _, s_arg, u_arg = check_n env arg in
-            (s_arg, S.as_implicit false), (if is_C bv.sort then
-              [ SS.subst env.subst s_arg, S.as_implicit false; u_arg, S.as_implicit false ]
-            else
-              [ u_arg, S.as_implicit false ])
+            (s_arg, q),
+                (if is_C bv.sort
+                then [ SS.subst env.subst s_arg, q; u_arg, q]
+                else [ u_arg, q])
       ) binders args) in
       let u_args = List.flatten u_args in
 
@@ -1158,8 +1158,10 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       if not (List.length wp_args = List.length args) ||
          not (is_constructor wp_head (mk_tuple_data_lid (List.length wp_args) Range.dummyRange)) then
         failwith "mismatch";
-      mk (Tm_app (head, List.map2 (fun (arg, _) (wp_arg, _) ->
-        trans_F_ env arg wp_arg, S.as_implicit false)
+      mk (Tm_app (head, List.map2 (fun (arg, q) (wp_arg, q') ->
+        let print_implicit q = if S.is_implicit q then "implicit" else "explicit" in
+        if q <> q' then Util.print2_warning "Incoherent implicit qualifiers %b %b" (print_implicit q) (print_implicit q') ;
+        trans_F_ env arg wp_arg, q)
       args wp_args))
   | Tm_arrow (binders, comp) ->
       let binders = U.name_binders binders in
@@ -1168,10 +1170,10 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         let h = bv.sort in
         if is_C h then
           let w' = S.gen_bv (bv.ppname.idText ^ "-w'") None (star_type' env h) in
-          w', [ S.mk_binder w'; S.null_binder (trans_F_ env h (S.bv_to_name bv)) ]
+          w', [ w', q; S.null_bv (trans_F_ env h (S.bv_to_name bv)), q ]
         else
           let x = S.gen_bv (bv.ppname.idText ^ "-x") None (star_type' env h) in
-          x, [ S.mk_binder x ]
+          x, [ x, q ]
       ) binders_orig) in
       let binders = List.flatten binders in
       let comp = SS.subst_comp (Util.rename_binders binders_orig (S.binders_of_list bvs)) comp in
