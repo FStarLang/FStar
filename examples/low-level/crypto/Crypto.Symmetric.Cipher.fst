@@ -12,10 +12,7 @@ module HS = FStar.HyperStack
 open FStar.UInt32
 open Crypto.Symmetric.Bytes
 
-type alg =
-//| AES128
-  | AES256
-  | CHACHA20 // RFC 7539 for the AEAD algorithm; RFC 7905 for the TLS ciphersuites
+type alg = Crypto.Indexing.cipherAlg
 
 let keylen = function
 //| AES128   -> 16ul

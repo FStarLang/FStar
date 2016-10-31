@@ -1,34 +1,6 @@
 module Flag
 
-// this interface is meant to be opened -- avoid naming clashes. 
-
-(* floating *) 
-
-type mac_alg =
-  | POLY1305
-  | GHASH
-
-type aead_cipher =
-  | AES_256_GCM
-  | CHACHA20_POLY1305
-
-type id = {
-  cipher: aead_cipher;
-  uniq: UInt32.t // we'll need more
-}
-
-let mac_of_id i =
-  match i.cipher with
-  | AES_256_GCM       -> GHASH
-  | CHACHA20_POLY1305 -> POLY1305
-
-let cipher_of_id i =
-  let open Crypto.Symmetric.Cipher in 
-  match i.cipher with
-  | AES_256_GCM       -> AES256
-  | CHACHA20_POLY1305 -> CHACHA20
-
-let cipher_alg = Crypto.Symmetric.Cipher.alg
+open Crypto.Indexing
 
 (* All the idealization flags that we use for the cryptographic argument *)
 

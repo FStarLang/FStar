@@ -1,4 +1,5 @@
 module Flag
+open Crypto.Indexing
 
 (* Settings *all* flags to false, for extracting real implementation *) 
 
