@@ -224,7 +224,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
  *)
 let detail_errors env 
                  (all_labels:labels) 
-                 (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*bool)> * int)) 
+                 (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*Z3.error_kind)> * int)) 
     : error_labels =
 
     let print_banner () = 

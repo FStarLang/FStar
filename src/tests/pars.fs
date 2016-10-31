@@ -20,23 +20,31 @@ let test_mod_ref = ref (Some ({name=test_lid;
                                 exports=[]; 
                                 is_interface=false}))
 
-let parse_prims () =
-    Options.set_option "universes" (Options.Bool true);
-    let prims = (Options.prims()) in
-    match ParseIt.parse (Inl prims) with 
+let parse_mod mod_name dsenv =
+    match ParseIt.parse (Inl mod_name) with
     | Inl (Inl [m]) -> 
-        let env',  prims_mod = Parser.ToSyntax.desugar_modul (Parser.Env.empty_env()) m in
+        let env',  m = Parser.ToSyntax.desugar_modul dsenv m in
         let env' , _ = FStar.Parser.Env.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) in
         dsenv_ref := Some env';
-        env', prims_mod
+        env', m
     | _ -> failwith "Unexpected "
+
+let add_mods mod_names dsenv env =
+  List.fold_left (fun (dsenv,env) mod_name ->
+      let dsenv, string_mod = parse_mod mod_name dsenv in
+      let _mod, env = Tc.check_module env string_mod in
+      (dsenv, env)
+  ) (dsenv,env) mod_names
 
 let init_once () : unit =
   let solver = SMT.dummy in
   let env = TcEnv.initial_env TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
   env.solver.init env;
-  let dsenv, prims_mod = parse_prims () in
-  let prims_mod, env = Tc.check_module env prims_mod in
+  let dsenv, prims_mod = parse_mod (Options.prims()) (Parser.Env.empty_env()) in
+  let _prims_mod, env = Tc.check_module env prims_mod in
+// only needed by normalization test #24, probably quite expensive otherwise
+//  let dsenv, env = add_mods ["FStar.PropositionalExtensionality.fst"; "FStar.FunctionalExtensionality.fst"; "FStar.PredicateExtensionality.fst";
+//                             "FStar.TSet.fst"; "FStar.Heap.fst"; "FStar.ST.fst"; "FStar.All.fst"; "FStar.Char.fsti"; "FStar.String.fsti"] dsenv env in
   let env = TcEnv.set_current_module env test_lid in
   tcenv_ref := Some env
 
@@ -132,4 +140,3 @@ let pars_and_tc_fragment (s:string) =
         | _ -> report(); raise (FStar.Syntax.Syntax.Err ("check_frag returned None: " ^s))
     with 
         | e when not ((Options.trace_error())) -> failed_to_parse s e
-            
