@@ -39,6 +39,7 @@ let pre_refines_one_entry (i:id) (st:state i Writer) (nonce:Cipher.iv (alg i))
   Seq.length table_1 >= Seq.length table_0 /\ (
   let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in
   let b = num_blocks' i len in
+  Seq.equal table_1 (Seq.append table_0 blocks) /\
   b + 1 = Seq.length blocks /\
   (let PRF.Entry x e = Seq.index blocks 0 in
    PRF (x.iv = nonce) /\
@@ -239,7 +240,7 @@ val pre_refines_to_refines:  (i:id) -> (st:state i Writer) -> (nonce: Cipher.iv 
 	              let c, tag = SeqProperties.split c_tagged len in
 		      let ad = Buffer.as_seq h aad in
   		      safeId i ==> 
-			(none_above ({iv=nonce; ctr=0ul}) st.prf h0 /\
+			((* none_above ({iv=nonce; ctr=0ul}) st.prf h0 /\ *)
    			 pre_refines_one_entry i st nonce len plain cipher h0 h /\
 			 mac_refines i st nonce aad plain cipher h)))
             (ensures (let mac_rgn = st.prf.mac_rgn in
