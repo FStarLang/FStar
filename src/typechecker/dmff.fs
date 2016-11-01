@@ -829,6 +829,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   | Tm_meta (e, _)
   | Tm_uinst (e, _)
   | Tm_ascribed (e, _, _) ->
+      (* TODO : reinstall the type annotation *)
       check env e context_nm
 
   | Tm_let _ ->
@@ -894,6 +895,20 @@ and infer (env: env) (e: term): nm * term * term =
       // From [comp], the inferred computation type for the (original), return
       // the inferred type for the original term.
       let t = U.arrow binders comp in
+
+      let what = match what with
+        | None -> None
+        | Some (Inl lc) ->
+            if Ident.lid_equals lc.eff_name Const.monadic_lid
+            then None (* TODO : reinstall the correct type *)
+            else Some (Inl { lc with comp = begin fun () ->
+                        let c = lc.comp () in
+                        let result_typ = star_type' env (Util.comp_result c) in
+                        Util.set_result_typ c result_typ
+                      end  })
+        | Some (Inr lid) ->
+            Some (Inr (if Ident.lid_equals lid Const.monadic_lid then Const.effect_Tot_lid else lid))
+      in
 
       let s_body = close s_binders s_body in
       let s_binders = close_binders s_binders in
