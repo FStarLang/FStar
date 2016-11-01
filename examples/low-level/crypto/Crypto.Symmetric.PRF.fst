@@ -18,6 +18,7 @@ module Crypto.Symmetric.PRF
 open FStar.Ghost
 open FStar.UInt8
 open FStar.UInt32
+open FStar.Monotonic.RRef
 
 open Crypto.Symmetric.Bytes
 open Flag
@@ -26,7 +27,8 @@ open Plain
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
   
-module MAC   = Crypto.Symmetric.Poly1305.MAC 
+module MAC   = Crypto.Symmetric.MAC
+module CMA   = Crypto.Symmetric.UF1CMA
 module Block = Crypto.Symmetric.Cipher
 
 // PRF TABLE
@@ -42,7 +44,7 @@ private let lemma_lengths (i:id) : Lemma(keylen i <^ blocklen i) =
   | CHACHA20_POLY1305 -> ()
 *)
 
-let id = i:Flag.id {i.cipher = CHACHA20_POLY1305} //16-10-15 temporary
+//let id = i:Flag.id {i.cipher = CHACHA20_POLY1305} //16-10-15 temporary
 
 // IDEALIZATION
 // step 1. Flag.prf i relies on PRF just to get fresh MAC keys. 
@@ -72,19 +74,25 @@ let above #i x z = x.iv = z.iv && x.ctr >=^ z.ctr
 // the range of our PRF, after idealization and "reverse inlining."
 // for one-time-pads, we keep both the plain and cipher blocks, instead of their XOR.
 
-type smac (rgn:region) (i:id) x = mac: MAC.state (i,x.iv) { MAC.State.region mac = rgn }
+type smac (rgn:region) (i:id) x = mac: CMA.state (i,x.iv) { CMA.State.region mac = rgn }
 noeq type otp (i:id) = | OTP: l:u32 {l <=^ blocklen i} -> plain i (v l) -> cipher:lbytes (v l) -> otp i
 
+let ctr_0 (i:id) = if CMA.skeyed i then 1ul else 0ul
 let range (mac_rgn:region) (i:id) (x:domain i): Type0 =
-  if x.ctr = 0ul then smac mac_rgn i x
-  else if safeId i then otp i
-  else lbytes (v (blocklen i))
+  if      x.ctr <^ ctr_0 i then CMA.skey mac_rgn i 
+  else if x.ctr  = ctr_0 i then smac mac_rgn i x
+  else if safeId i        then otp i
+                          else lbytes (v (blocklen i))
 
-let domain_mac (i:id) = x:domain i{x.ctr = 0ul} 
-let domain_otp (i:id) = x:domain i{x.ctr <> 0ul /\ safeId i}
-let domain_blk (i:id) = x:domain i{x.ctr <> 0ul /\ ~ (safeId i)}
+let iv_0 = FStar.Int.Cast.uint64_to_uint128 0UL
+
+let domain_sk0 (i:id) = x:domain i{x.ctr <^ ctr_0 i /\ x.iv = iv_0 } 
+let domain_mac (i:id) = x:domain i{x.ctr = ctr_0 i} 
+let domain_otp (i:id) = x:domain i{x.ctr >^ ctr_0 i /\ safeId i}
+let domain_blk (i:id) = x:domain i{x.ctr >^ ctr_0 i /\ ~ (safeId i)}
 
 // explicit coercions
+let sk0Range rgn (i:id) (x:domain_sk0 i) (z:range rgn i x) : CMA.skey rgn i = z
 let macRange rgn (i:id) (x:domain_mac i) (z:range rgn i x) : smac rgn i x = z
 let otpRange rgn (i:id) (x:domain_otp i) (z:range rgn i x) : otp i = z 
 let blkRange rgn (i:id) (x:domain_blk i) (z:range rgn i x) : block i = z
@@ -95,6 +103,11 @@ noeq type entry (rgn:region) (i:id) =
 let find (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain i) : option (range rgn i x) =
   match SeqProperties.seq_find (fun (e:entry rgn i) -> e.x = x) s with
   | Some e -> Some e.range
+  | None   -> None
+  
+let find_sk0 #rgn (#i:id) s (x:domain_sk0 i) = 
+  match find s x with
+  | Some v -> Some(sk0Range rgn i x v)
   | None   -> None
 let find_mac #rgn (#i:id) s (x:domain_mac i) =
   match find s x with
@@ -108,6 +121,7 @@ let find_blk #rgn (#i:id) s (x:domain_blk i) =
   match find s x with
   | Some v -> Some (blkRange rgn i x v)
   | None   -> None
+
 
 // The table exists only for idealization
 // What's in the table stays there. And the table does not have two entries with the same x.
@@ -182,7 +196,7 @@ let getBlock #i t x len output =
   Block.compute (cipher_of_id i) output t.key x.iv x.ctr len
 
 
-// We encapsulate our 3 usages of the PRF in specific functions.
+// We encapsulate our 4 usages of the PRF in specific functions.
 // But we still use a single, ctr-dependent range in the table.
 //
 // For xor-based encryption,
@@ -192,7 +206,7 @@ let getBlock #i t x len output =
 // the first block (ctr=0) is used to generate a single-use MAC
 
 val prf_mac: 
-  i:id -> t:state i -> x:domain_mac i -> ST (MAC.state (i,x.iv))
+  i:id -> t:state i -> k_0: CMA.akey t.mac_rgn i -> x:domain_mac i -> ST (CMA.state (i,x.iv))
   (requires (fun h0 -> True))
   (ensures (fun h0 mac h1 ->
     if prf i then
@@ -204,28 +218,30 @@ val prf_mac:
        | Some mac' -> 
 	 h0 == h1 /\ // when decrypting
 	 mac == mac' /\ 
-	 MAC (norm h1 mac.r) /\
-	 MAC (Buffer.live h1 mac.s)
+	 CMA (MAC.norm h1 mac.r) /\
+	 CMA (Buffer.live h1 mac.s) /\
+	 CMA (mac_log ==> m_contains (ilog mac.log) h1)
        | None ->  // when encrypting, we get the stateful post of MAC.create             
          (match find_mac (HS.sel h1 r) x with 
           | Some mac' -> 
 	    mac == mac' /\ 
 	    t1 == SeqProperties.snoc t0 (Entry x mac) /\
-	    MAC.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
+	    CMA.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
             HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
             HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
 	    HS.modifies_ref t.mac_rgn TSet.empty h0 h1
            //16-10-11 we miss a more precise clause capturing the table update   
           | None -> False ))
     else (
-      MAC.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
+      CMA.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
       HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\ //allocates in t.rgn
       HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
 
 #reset-options "--z3timeout 100"
 
-let prf_mac i t x =
+let prf_mac i t k_0 x =
+  assume false;//16-10-30 new problem with sk0?
   let h0 = get () in
   Buffer.recall t.key;
   recall_region t.mac_rgn;
@@ -237,32 +253,80 @@ let prf_mac i t x =
     let contents = !r in
     match find_mac contents x with
     | Some mac -> 
-      assume (MAC (norm h0 mac.r)); //TODO: replace this using monotonicity
-      assume (HS (Buffer (MAC (not ((Buffer.content mac.s).mm))))); //TODO: mark this as not manually managed
-      Buffer.recall (MAC mac.s);
+      assume (CMA (MAC.norm h0 mac.r)); //TODO: replace this using monotonicity
+      assume (HS (Buffer (CMA (not ((Buffer.content mac.s).mm))))); //TODO: mark this as not manually managed
+      Buffer.recall (CMA mac.s);
       mac
     | None ->
-      let mac = MAC.gen macId t.mac_rgn in
+      let mac = CMA.gen t.mac_rgn macId k_0 in
       r := SeqProperties.snoc contents (Entry x mac);
       assume false; 
-      //16-10-16 framing after chang eto genPost0?
+      //16-10-16 framing after change to genPost0?
       //let h = ST.get() in assume(MAC(norm h mac.r));
       mac
     end
   else
-    begin
-    let keyBuffer = Buffer.rcreate t.mac_rgn 0uy (MAC.keylen i) in
+    let keyBuffer = Buffer.rcreate t.mac_rgn 0uy (CMA.keylen i) in
     let h1 = ST.get() in
-    getBlock t x (MAC.keylen i) keyBuffer;
+    getBlock t x (CMA.keylen i) keyBuffer;
     let h2 = ST.get() in
     Buffer.lemma_reveal_modifies_1 keyBuffer h1 h2;
-    MAC.coerce macId t.mac_rgn keyBuffer
+    CMA.coerce t.mac_rgn macId k_0 keyBuffer
+
+ 
+val prf_sk0: 
+  #i:id{ CMA.skeyed i } -> t:state i -> ST (CMA.skey t.mac_rgn i)
+  (requires (fun h0 -> True))
+  (ensures (fun h0 k h1 ->
+    let x = { ctr=0ul; iv=iv_0 } in 
+    if prf i then
+      let r = itable i t in
+      let t0 = HS.sel h0 r in
+      let t1 = HS.sel h1 r in
+      (forall (y:domain i). y <> x ==> find t0 y == find t1 y)  /\ //at most modifies t at x
+      Buffer.live h1 k /\ 
+      (match find_sk0 #t.mac_rgn #i (HS.sel h0 r) x with // already in the table? 
+       | Some r0 -> k == r0 /\ h0 == h1
+       | None ->  
+         (match find_sk0 (HS.sel h1 r) x with 
+          | Some r1 -> k == r1 /\
+	    t1 == SeqProperties.snoc t0 (Entry x r1) /\
+            HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
+            HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
+	    HS.modifies_ref t.mac_rgn TSet.empty h0 h1
+          | None -> False ))
+    else (
+      Buffer.live h1 k /\
+      HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\ //allocates in t.rgn
+      HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
+      HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
+
+let prf_sk0 #i t = 
+  let x = { ctr=0ul; iv=iv_0 } in 
+  if prf i then 
+    begin
+      let r = itable i t in
+      recall r;
+      let contents = !r in
+      match find_sk0 contents x with 
+      | Some sk0 -> sk0 
+      | None -> 
+          let sk0 = CMA.get_skey (CMA.akey_gen t.mac_rgn i) in
+          r := SeqProperties.snoc contents (Entry x sk0);
+          sk0
     end
+  else
+    let keyBuffer = Buffer.rcreate t.mac_rgn 0uy (CMA.skeylen i) in
+    let h1 = ST.get() in
+    getBlock t x (CMA.skeylen i) keyBuffer;
+    let h2 = ST.get() in
+    Buffer.lemma_reveal_modifies_1 keyBuffer h1 h2;
+    keyBuffer
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 let extends (#rgn:region) (#i:id) (s0:Seq.seq (entry rgn i)) 
-	    (s1:Seq.seq (entry rgn i)) (x:domain i{x.ctr <> 0ul}) =
+	    (s1:Seq.seq (entry rgn i)) (x:domain i{ctr_0 i <^ x.ctr}) =
   let open FStar.Seq in 
   let open FStar.SeqProperties in 
   match find s0 x with 
@@ -294,7 +358,7 @@ private val prf_blk:
   (ensures (fun h0 _ h1 -> modifies_x_buffer_1 t x output h0 h1)) 
 
 #reset-options "--z3timeout 100"
-
+ 
 let prf_blk i t x len output =
   if prf i then
     begin
@@ -322,7 +386,7 @@ let prf_blk i t x len output =
 
 // reuse the same block for x and XORs it with ciphertext
 val prf_dexor: 
-  i:id -> t:state i -> x:domain i{x.ctr <> 0ul} -> l:u32 {l <=^ blocklen i} -> 
+  i:id -> t:state i -> x:domain i{ctr_0 i <^ x.ctr} -> l:u32 {l <=^ blocklen i} -> 
   plain:plainBuffer i (v l) -> cipher:lbuffer (v l) 
   { Buffer.disjoint (as_buffer plain) cipher /\
     Buffer.frameOf (as_buffer plain) <> t.rgn } -> ST unit
@@ -379,7 +443,7 @@ private let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:
 
 // generates a fresh block for x and XORs it with plaintext
 val prf_enxor: 
-  i:id -> t:state i -> x:domain i{x.ctr <> 0ul} -> l:u32 {l <=^ blocklen i} -> 
+  i:id -> t:state i -> x:domain i{ctr_0 i <^ x.ctr} -> l:u32 {l <=^ blocklen i} -> 
   cipher:lbuffer (v l) -> plain:plainBuffer i (v l) 
   {  Buffer.disjoint (as_buffer plain) cipher /\ 
      Buffer.frameOf (as_buffer plain) <> t.rgn /\ 
@@ -415,7 +479,7 @@ let prf_enxor i t x l cipher plain =
     assert(p == sel_plain h1 l plain);
     r := contents';
     let h2 = ST.get() in
-    assert(p == sel_plain h2 l plain); //16-10-12  how to anti-alias a buffer?
+    assert(p == sel_plain h2 l plain); 
     assert(modifies_x_buffer_1 t x cipher h0 h2)
   else
     let h0 = ST.get() in 

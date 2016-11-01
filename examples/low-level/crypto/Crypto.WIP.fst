@@ -71,22 +71,22 @@ val encrypt:
       HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
    ))
 
-#reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let test (h0:HS.mem) (h1:HS.mem) (r:rid) = 
-  let open FStar.HyperStack in 
-  assume (r `HS.is_in` h0.h);
-  assume (Buffer.modifies_0 h0 h1);
-  Buffer.lemma_reveal_modifies_0 h0 h1;
-  assume (r <> h0.tip);
-  assert (Map.sel h1.h r == Map.sel h0.h r)
+(* #reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
+(* let test (h0:HS.mem) (h1:HS.mem) (r:rid) =  *)
+(*   let open FStar.HyperStack in  *)
+(*   assume (r `HS.is_in` h0.h); *)
+(*   assume (Buffer.modifies_0 h0 h1); *)
+(*   Buffer.lemma_reveal_modifies_0 h0 h1; *)
+(*   assume (r <> h0.tip); *)
+(*   assert (Map.sel h1.h r == Map.sel h0.h r) *)
   
-assume val temp_to_seq: #a:Type -> b:Buffer.buffer a -> ST (Seq.seq a)
-  (requires (fun h -> Buffer.live h b))
-  (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h1 b /\r == Buffer.as_seq #a h1 b))
+(* assume val temp_to_seq: #a:Type -> b:Buffer.buffer a -> ST (Seq.seq a) *)
+(*   (requires (fun h -> Buffer.live h b)) *)
+(*   (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h1 b /\r == Buffer.as_seq #a h1 b)) *)
 
-assume val temp_get_plain: #i:id -> #l:UInt32.t -> buf:plainBuffer i (v l) -> ST (plain i (v l))
-  (requires (fun h -> Plain.live h buf))
-  (ensures (fun h0 p h1 -> h0==h1 /\ Plain.live h0 buf /\p == Plain.sel_plain h1 l buf))
+(* assume val temp_get_plain: #i:id -> #l:UInt32.t -> buf:plainBuffer i (v l) -> ST (plain i (v l)) *)
+(*   (requires (fun h -> Plain.live h buf)) *)
+(*   (ensures (fun h0 p h1 -> h0==h1 /\ Plain.live h0 buf /\p == Plain.sel_plain h1 l buf)) *)
 
 let lemma_frame_find_mac (#i:PRF.id) (#l:nat) (st:PRF.state i) 
 			 (x:PRF.domain i{x.ctr <> 0ul}) (b:lbuffer l)
@@ -99,50 +99,18 @@ let lemma_frame_find_mac (#i:PRF.id) (#l:nat) (st:PRF.state i)
 		      let x0 = {x with ctr=0ul} in
 		      find_mac tab0 x0 == find_mac tab1 x0)))
     = admit()		      
-
-let temp_intro_refines_one_entry_no_tag
-                            (#i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
-                            (len:nat{len<>0}) (plain:plainBuffer i len) (cipher:lbuffer (len + v (Spec.taglen i)))
-                            (h0:mem) (h1:mem) (h2:mem{Buffer.live h2 cipher /\ Plain.live h2 plain})
-   : Lemma (requires (safeId i /\ prf i ==> 
-		     (let mac_rgn = st.prf.mac_rgn in
-		      let p = Plain.sel_plain h2 (u len) plain in
-		      let c_tagged = Buffer.as_seq h2 cipher in
-		      let table_0 = HS.sel h0 (PRF.itable i st.prf) in
-		      let table_1 = HS.sel h1 (PRF.itable i st.prf) in
-		      let table_2 = HS.sel h2 (PRF.itable i st.prf) in
-		      (* let initial_domain = {iv=nonce; ctr=1ul} in *)
-	              let c, _ = SeqProperties.split c_tagged len in
-		      True)))(* safelen i len 1ul /\ *)
-		      (* table_2 == (Seq.append table_1 (counterblocks i mac_rgn initial_domain len 0 len p c))))) *)
-	    (ensures (safeId i /\ prf i ==> 
-		     (let mac_rgn = st.prf.mac_rgn in
-		      let p = Plain.sel_plain h2 (u len) plain in
-		      let c = Buffer.as_seq h2 cipher in
-		      let table_0 = HS.sel h0 (PRF.itable i st.prf) in
-		      let table_1 = HS.sel h1 (PRF.itable i st.prf) in
-		      let table_2 = HS.sel h2 (PRF.itable i st.prf) in
-		      Seq.length table_2 >= Seq.length table_0 /\ (
-		      let blocks = Seq.slice table_2 (Seq.length table_0) (Seq.length table_2) in
-		      pre_refines_one_entry mac_rgn i h2 len nonce p c blocks))))
-   = admit()
-   (* if safeId i && prf i  *)
-   (*   then let mac_rgn = st.prf.mac_rgn in *)
-   (* 	  let p = Plain.sel_plain h2 (u len) plain in *)
-   (* 	  let c_tagged = Buffer.as_seq h2 cipher in *)
-   (* 	  let initial_domain = {iv=nonce; ctr=1ul} in *)
-   (* 	  let c, _ = SeqProperties.split c_tagged len in *)
-   (* 	  counterblocks_len #i mac_rgn initial_domain len 0 p c *)
-
-#set-options "--hint_info"
+ 
+#reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   (* push_frame(); *)
-  assume (safeId i);
-  assume (prf i);
+  (* assume (safeId i); *)
+  (* assume (prf i); *)
   let h0 = get() in
+  assume (HS (is_stack_region h0.tip)); //TODO: remove this once we move all functions to STL
   let x = PRF({iv = n; ctr = 0ul}) in // PRF index to the first block
-  let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC
+  let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC  
   let h1 = get () in 
+  assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h1);
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in
   let y = PRF.incr i x in
@@ -153,27 +121,38 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   counter_enxor i st.prf y plainlen plainlen plain cipher h1;
   // Compute MAC over additional data and ciphertext
   let h2 = get () in
+  FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 cipher h1) h2;
+  assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h2);
   lemma_frame_find_mac #i #(v plainlen) st.prf y cipher h1 h2;
   intro_refines_one_entry_no_tag #i st n (v plainlen) plain cipher_tagged h0 h1 h2; //we have pre_refines_one_entry here
   assert (Buffer.live h1 aad); //seem to need this hint
-  assume (HS (is_stack_region h2.tip)); //TODO: remove this once we move all functions to STL
   let l, acc = accumulate ak aadlen aad plainlen cipher in
   let h3 = get() in
-  let _ =
-    let c = Buffer.as_seq h3 cipher in
-    let ad = Buffer.as_seq h3 aad in
-    assert (l == field_encode i ad #plainlen c) in
+  Buffer.lemma_reveal_modifies_0 h2 h3;
+  assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h3);
+  (* assume (HH.disjoint (HS.frameOf acc) st.prf.mac_rgn); *)
+  frame_pre_refines_0 i st n (v plainlen) plain cipher_tagged h0 h2 h3;
+  (* let _ = *)
+  (*   let c = Buffer.as_seq h3 cipher in *)
+  (*   let ad = Buffer.as_seq h3 aad in *)
+  (*   assert (l == field_encode i ad #plainlen c) in *)
   assert (Buffer.live h2 aad); //seem to need this hint
   assert (Buffer.live h3 aad); //seem to need this hint
   Buffer.lemma_reveal_modifies_0 h2 h3;
   MAC.mac ak l acc tag;
   let h4 = get () in
+  FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 tag h3) h4;
+  //really should get this from the mods clause ... need to investigate
+  (* assume (mac_log ==> HS.modifies_ref st.prf.mac_rgn (TSet.singleton (MAC (HS.as_aref (as_hsref (ilog ak.log))))) h3 h4); *)
+  frame_pre_refines i st n (v plainlen) plain cipher_tagged h0 h3 h4;
   (* assert (Buffer.as_seq h3 cipher == Buffer.as_seq h4 cipher); *)
   (* assert (Buffer.as_seq h3 aad == Buffer.as_seq h4 aad); *)
   (* assert (Buffer.live h4 aad); *)
   (* assert (Buffer.live h4 cipher_tagged); *)
   (* assert (Plain.live h4 plain); *)
   intro_mac_refines i st n aad plain cipher_tagged h4;
+  pre_refines_to_refines i st n aadlen aad (v plainlen) plain cipher_tagged h0 h4;
+  (* assert (safeId i /\ prf i /\ mac_log ==> HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h4); *)
   admit()
   
   (* let _ = *)

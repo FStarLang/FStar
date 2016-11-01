@@ -241,8 +241,9 @@ val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block}
     /\ modifies_1 acc h0 h1 // It was the only thing modified
     /\ sel_elem h1 acc == (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r))
 
-#set-options "--z3timeout 60"
+#set-options "--z3timeout 120"
 //NS: hint fails to replay
+//CF: --z3timeout 60 not enough for me
 let add_and_multiply acc block r =
   let h0 = ST.get () in
   fsum' acc block; // acc1 = acc0 + block
@@ -298,7 +299,8 @@ let mk_mask nbits =
   Math.Lemmas.pow2_lt_compat 64 (FStar.UInt32.v nbits);
   U64 ((1uL <<^ nbits) -^ 1uL)
 
-(* TODO *)
+#set-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
 let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
   (requires (let open FStar.UInt8 in
     live h b /\ live h s
@@ -307,7 +309,8 @@ let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
     /\ U64.v n2 == v (get h s 8) + pow2 8 * v (get h s 9) + pow2 16 * v (get h s 10) + pow2 24 * v (get h s 11)
     /\ U64.v n3 == v (get h s 12) + pow2 8 * v (get h s 13) + pow2 16 * v (get h s 14) + pow2 24 * v (get h s 15)))
   (ensures  (live h b /\ live h s /\ v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 == little_endian (sel_word h s)))
-  = admit()
+  = Crypto.Symmetric.Poly1305.Lemmas.lemma_toField_1 s h n0 n1 n2 n3
+    
 
 val upd_elemB: b:elemB{length b == norm_length} -> n0:U64.t -> n1:U64.t -> n2:U64.t -> n3:U64.t -> n4:U64.t -> Stack unit
   (requires (fun h -> live h b
@@ -337,29 +340,34 @@ let upd_elemB b n0 n1 n2 n3 n4 =
   eval_def h1 b 0;
   pow2_lt_compat 26 24
 
+
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
 (* TODO *)
 let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4': Lemma
   (requires (let mask_26 = mk_mask 26ul in
-    n0' == (n0 &^ mask_26) 
+    v n0 < pow2 32 /\ v n1 < pow2 32 /\ v n2 < pow2 32 /\ v n3 < pow2 32
+    /\ n0' == (n0 &^ mask_26) 
     /\ n1' == ((n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26))
     /\ n2' == ((n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26))
     /\ n3' == ((n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26)) 
     /\ n4' == (n3 >>^ 8ul) ))
   (ensures  (v n0' + pow2 26 * v n1' + pow2 52 * v n2' + pow2 78 * v n3' + pow2 104 * v n4'
     == v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 ))
-  = admit()
+  = Crypto.Symmetric.Poly1305.Lemmas.lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4'
 
 (* TODO (requires the BitVector module *)
 let lemma_toField_3 n0 n1 n2 n3 n0' n1' n2' n3' n4' : Lemma
   (requires (let mask_26 = mk_mask 26ul in
-    n0' == (n0 &^ mask_26)
+    v n0 < pow2 32 /\ v n1 < pow2 32 /\ v n2 < pow2 32 /\ v n3 < pow2 32
+    /\ n0' == (n0 &^ mask_26)
     /\ n1' == ((n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26))
     /\ n2' == ((n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26))
     /\ n3' == ((n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26))
     /\ n4' == ((n3 >>^ 8ul)) ))
   (ensures  (U64.v n4' < pow2 24
     /\ U64.v n3' < pow2 26 /\ U64.v n2' < pow2 26 /\ U64.v n1' < pow2 26 /\ U64.v n0' < pow2 26))
-  = admit()
+  = Crypto.Symmetric.Poly1305.Lemmas.lemma_toField_3 n0 n1 n2 n3 n0' n1' n2' n3' n4'
 
 val sel_int_sel_elem: h:mem -> a:elemB{live h a} -> w:word -> Lemma
   (requires (sel_int h a == little_endian w))
@@ -367,6 +375,8 @@ val sel_int_sel_elem: h:mem -> a:elemB{live h a} -> w:word -> Lemma
 let sel_int_sel_elem h a w =  
   lemma_little_endian_is_bounded w;
   modulo_lemma (little_endian w) p_1305
+
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 (* Formats a wordB into an elemB *)
 val toField: a:elemB{length a == norm_length} -> b:wordB_16{disjoint a b} -> Stack unit
@@ -410,7 +420,7 @@ let toField b s =
   upd_elemB b n0' n1' n2' n3' n4'
 
 
-#set-options "--initial_fuel 1 --max_fuel 1"
+#set-options "--initial_fuel 1 --max_fuel 1 --z3timeout 5"
 
 val lemma_toField_plus_2_128_0: ha:mem -> a:elemB{live ha a} -> Lemma
   (requires True)
@@ -487,7 +497,7 @@ val toField_plus:
     modifies_1 a h0 h1 /\ // Only a was modified
     sel_int h1 a == pow2 (8 * w len) + little_endian (sel_word h0 b) ))
 
-#set-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0"
 
 let toField_plus len a b =
   let h0 = ST.get() in
@@ -592,6 +602,7 @@ let trunc1305 a b =
   upd_wordB_16 b b0 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14 b15;
   let h2 = ST.get() in
   assert (modifies_1 b h1 h2);
+  (* TODO *)
   assume (sel_elem h0 a % pow2 128 == little_endian (sel_word h2 b))
 
 
@@ -688,6 +699,7 @@ let log_t: Type0 = if mac_log then text else unit
 val ilog: l:log_t{mac_log} -> Tot text
 let ilog l = l
 
+(*
 val poly1305_update:
   current_log:log_t -> 
   msg:wordB_16 ->
@@ -700,7 +712,7 @@ val poly1305_update:
     /\ norm h0 r
     /\ modifies_1 acc h0 h1
     /\ (mac_log ==>
-         ilog updated_log == SeqProperties.snoc (ilog current_log) (encode (sel_word h1 msg))
+         ilog updated_log == SeqProperties.snoc (ilog current_log) (sel_word h1 msg)
        /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
 
 #set-options "--z3timeout 60 --initial_fuel 1 --max_fuel 1"
@@ -724,9 +736,9 @@ let poly1305_update log msgB acc r =
       begin
       let msg = read_word 16ul msgB in
       assert (encode msg == sel_elem h1 block);
-      seq_head_snoc (ilog log) (encode msg);
-      Seq.lemma_index_app2 (ilog log) (Seq.create 1 (encode msg)) (Seq.length (SeqProperties.snoc (ilog log) (encode msg)) - 1);
-      SeqProperties.snoc (ilog log) (encode msg)
+      seq_head_snoc (ilog log) msg;
+      Seq.lemma_index_app2 (ilog log) (Seq.create 1 msg) (Seq.length (SeqProperties.snoc (ilog log) msg) - 1);
+      SeqProperties.snoc (ilog log) msg
       end
     else () in
   pop_frame();
@@ -856,6 +868,7 @@ let poly1305_last log msg acc r len =
   assert (norm h3 acc);
   assert (modifies_1 acc h0 h3);
   updated_log
+*)
 
 
 (* TODO: certainly a more efficient, better implementation of that *)
@@ -883,7 +896,9 @@ let add_word a b =
   bytes_of_uint32 (Buffer.sub a 4ul 4ul) (uint64_to_uint32 z1);
   bytes_of_uint32 (Buffer.sub a 8ul 4ul) (uint64_to_uint32 z2);
   bytes_of_uint32 (Buffer.sub a 12ul 4ul) (uint64_to_uint32 z3);
+  (* TODO *)
   admit ()
+
 
 (* Finish function, with final accumulator value *)
 val poly1305_finish:
@@ -899,6 +914,7 @@ let poly1305_finish tag acc s =
   trunc1305 acc tag;
   add_word tag s
 
+(*
 val div_aux: a:UInt32.t -> b:UInt32.t{w b <> 0} -> Lemma
   (requires True)
   (ensures FStar.UInt32(UInt.size (v a / v b) n))
@@ -917,8 +933,9 @@ val poly1305_mac:
       /\ modifies_1 tag h0 h1
       /\ (let r = Spec.clamp (sel_word h0 (sub key 0ul 16ul)) in
          let s = sel_word h0 (sub key 16ul 16ul) in
-         little_endian (sel_word h1 tag) ==
-         mac_1305 (encode_pad Seq.createEmpty (Buffer.as_seq h0 msg)) r s)))
+         Seq.equal 
+           (sel_word h1 tag)
+           (mac_1305 (encode_pad Seq.createEmpty (Buffer.as_seq h0 msg)) r s))))
 let poly1305_mac tag msg len key =
   let h0 = ST.get () in
   push_frame();
@@ -949,3 +966,4 @@ let poly1305_mac tag msg len key =
   poly1305_finish tag acc (sub key 16ul 16ul); // should be s
   pop_frame()
 
+*)

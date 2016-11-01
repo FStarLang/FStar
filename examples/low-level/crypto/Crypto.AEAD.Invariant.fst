@@ -18,8 +18,8 @@ open Crypto.AEAD.Encoding
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-module Spec = Crypto.Symmetric.Poly1305.Spec
-module MAC = Crypto.Symmetric.Poly1305.MAC
+//module MAC = Crypto.Symmetric.Poly1305.MAC
+module CMA = Crypto.Symmetric.UF1CMA
 
 module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
@@ -34,7 +34,7 @@ let ctr x = PRF(x.ctr)
 
 //16-10-12 TEMPORARY, while PRF remains somewhat CHACHA-specific
 //16-10-12 NB we are importing this restriction from Encoding too
-let id = i:id {i.cipher = CHACHA20_POLY1305}
+//let id = i:id {i.cipher = CHACHA20_POLY1305}
 
 noeq type entry (i:id) =
   | Entry: 
@@ -50,21 +50,25 @@ type rw = | Reader | Writer
 noeq type state (i:id) (rw:rw) =
   | State:
       #log_region: rgn -> // this is the *writer* region; the reader allocates nothing
+      // the log should exist only when prf i
       log: HS.ref (Seq.seq (entry i)) {HS.frameOf log == log_region} ->
       // Was PRF(prf.rgn) == region. Do readers use its own PRF state?
       prf: PRF.state i {PRF(prf.rgn) == log_region} (* including its key *) ->
-      //16-10-16 ak: MAC.akey log_region i (* static, optional authentication key *) -> 
+      ak: CMA.akey log_region i (* static, optional authentication key *) -> 
       state i rw
 
 // INVARIANT (WIP)
  
 let maxplain (i:id) = pow2 14 // for instance
 
-let safelen (i:id) (l:nat) (c:UInt32.t{0ul <^ c /\ c <=^ PRF.maxCtr i}) = 
+// encryption loop invariant.
+// l is the length of plaintext left to be encrypted; 
+// c is the counter for encrypting the next block of plaintext.
+let safelen (i:id) (l:nat) (c:UInt32.t{PRF.ctr_0 i <^ c /\ c <=^ PRF.maxCtr i}) = 
   l = 0 || (
     let bl = v (Cipher( blocklen (cipher_of_id i))) in
     FStar.Mul(
-      l + (v (c -^ 1ul)) * bl <= maxplain i && 
+      l + (v (c -^ PRF.ctr_0 i -^ 1ul)) * bl <= maxplain i && 
       l  <= v (PRF.maxCtr i -^ c) * bl ))
     
 // Computes PRF table contents for countermode encryption of 'plain' to 'cipher' starting from 'x'.
@@ -74,7 +78,7 @@ val counterblocks:
 		//since it is only potentially relevant in the case of the mac, 
 		//but that's always Seq.createEmpty here
                 //16-10-13 but still needed in the result type, right?
-  x:PRF.domain i{ctr x >^ 0ul} -> 
+  x:PRF.domain i{PRF.ctr_0 i <^ ctr x} -> 
   l:nat -> 
   from_pos:nat -> 
   to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) (ctr x)} -> 
@@ -109,19 +113,18 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
   let b = num_blocks e in 
   b + 1 = Seq.length blocks /\
   (let PRF.Entry x e = Seq.index blocks 0 in
-   PRF (x.iv = nonce) /\
-   PRF (x.ctr = 0ul)  /\ (
    let xors = Seq.slice blocks 1 (b+1) in 
    let cipher, tag = SeqProperties.split cipher_tagged l in
-   safelen i l 1ul /\
+   PRF (x.iv = nonce /\ x.ctr = PRF.ctr_0 i) /\ 
+   safelen i l (PRF.ctr_0 i +^ 1ul) /\
    xors == counterblocks i rgn (PRF.incr i x) l 0 l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
    (let m = PRF.macRange rgn i x e in
-    let mac_log = MAC.ilog (MAC.State.log m) in
+    let mac_log = CMA.ilog (CMA.State.log m) in
     m_contains mac_log h /\ (
-    match m_sel h (MAC.ilog (MAC.State.log m)) with
+    match m_sel h (CMA.ilog (CMA.State.log m)) with
     | None           -> False
-    | Some (msg,tag') -> msg = field_encode i ad #(FStar.UInt32.uint_to_t l) cipher /\
-			tag = tag')))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
+    | Some (msg,tag') -> msg = encode_both i (FStar.UInt32.uint_to_t (Seq.length ad)) ad (FStar.UInt32.uint_to_t l) cipher /\
+			tag = tag'))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
 
 // States consistency of the PRF table contents vs the AEAD entries
 // (not a projection from one another because of allocated MACs and aad)
@@ -144,11 +147,11 @@ let rec refines h i rgn entries blocks =
 	refines h i rgn entries_tl remaining_blocks)
 
 open Crypto.Symmetric.PRF
-let all_above (#rgn:region) (#i:PRF.id) (s:Seq.seq (PRF.entry rgn i)) (x:PRF.domain i) = 
+let all_above (#rgn:region) (#i:id) (s:Seq.seq (PRF.entry rgn i)) (x:PRF.domain i) = 
   (forall (e:PRF.entry rgn i).{:pattern (s `SeqProperties.contains` e)} 
      s `SeqProperties.contains` e ==> e.x `PRF.above` x)
 
-let modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i) 
+let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
 				      (x:PRF.domain i) (b:lbuffer l)
 				      (h0:HS.mem) (h1:HS.mem) = 
   Buffer.live h1 b /\ 
@@ -167,5 +170,5 @@ let modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
   else
     Buffer.modifies_1 b h0 h1)
 
-let none_above (#i:PRF.id) (x:domain i) (t:PRF.state i) (h:mem) =
+let none_above (#i:id) (x:domain i) (t:PRF.state i) (h:mem) =
     safeId i ==> (forall (y:domain i{y `above` x}). find #t.mac_rgn #i (HS.sel h t.table) y == None)
