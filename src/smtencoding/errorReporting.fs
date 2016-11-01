@@ -117,7 +117,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                   let post_name = "^^post_condition_"^ (Util.string_of_int <| Syntax.Syntax.next_id ()) in
                   let names = (post_name, post)
                               ::List.mapi (fun i s -> ("^^" ^ string_of_int i, s)) sorts in
-                  let instantiation = List.map mkFreeV names |> List.rev in
+                  let instantiation = List.map mkFreeV names in
                   let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
 
                   let labels, lhs = match lhs.tm with 

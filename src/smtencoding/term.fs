@@ -294,6 +294,7 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
     aux 0 t
 
 let inst tms t =
+    let tms = List.rev tms in //forall x y . t   ... y is an index 0 in t
     let n = List.length tms in //instantiate the first n BoundV's with tms, in order
     let rec aux shift t = match t.tm with
         | Integer _
