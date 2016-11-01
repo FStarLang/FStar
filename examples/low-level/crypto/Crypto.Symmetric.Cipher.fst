@@ -11,8 +11,9 @@ module HS = FStar.HyperStack
 
 open FStar.UInt32
 open Crypto.Symmetric.Bytes
+open Crypto.Indexing
 
-type alg = Crypto.Indexing.cipherAlg
+type alg = cipherAlg
 
 let keylen = function
 //| AES128   -> 16ul

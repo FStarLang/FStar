@@ -6,6 +6,7 @@ open FStar.Ghost
 open Buffer.Utils
 open FStar.Monotonic.RRef
 
+open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Plain
 open Flag
@@ -139,7 +140,7 @@ val counterblocks_len: #i:id{safeId i} ->
 let rec counterblocks_len #i rgn x len from_pos plain cipher = 
   if from_pos = len
   then ()
-  else let blockl = v (Cipher(blocklen (cipher_of_id i))) in 
+  else let blockl = v (Cipher(blocklen (cipherAlg_of_id i))) in 
        let remaining = len - from_pos in 
        let l0 = minNat remaining blockl in 
        counterblocks_len #i rgn (PRF.incr i x) len (from_pos + l0) plain cipher

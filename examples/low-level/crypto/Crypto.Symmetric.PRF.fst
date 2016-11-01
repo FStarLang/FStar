@@ -19,6 +19,7 @@ open FStar.Ghost
 open FStar.UInt8
 open FStar.UInt32
 
+open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Flag
 open Plain
@@ -31,9 +32,9 @@ module Block = Crypto.Symmetric.Cipher
 
 // PRF TABLE
 
-let blocklen i = Block.blocklen (cipher_of_id i)
+let blocklen i = Block.blocklen (cipherAlg_of_id i)
 type block i = b:lbytes (v (blocklen i))
-let keylen i = Block.keylen (cipher_of_id i)
+let keylen i = Block.keylen (cipherAlg_of_id i)
 
 (*
 private let lemma_lengths (i:id) : Lemma(keylen i <^ blocklen i) = 
@@ -42,7 +43,7 @@ private let lemma_lengths (i:id) : Lemma(keylen i <^ blocklen i) =
   | CHACHA20_POLY1305 -> ()
 *)
 
-let id = i:Flag.id {i.cipher = CHACHA20_POLY1305} //16-10-15 temporary
+let id = i:id {aeadAlg_of_id i = CHACHA20_POLY1305} //16-10-15 temporary
 
 // IDEALIZATION
 // step 1. Flag.prf i relies on PRF just to get fresh MAC keys. 
@@ -63,7 +64,7 @@ type ctrT i = x:u32 {x <=^ maxCtr i}
 
 // The PRF domain: an IV and a counter.
 
-type domain (i:id) = { iv:Block.iv (cipher_of_id i); ctr:ctrT i} 
+type domain (i:id) = { iv:Block.iv (cipherAlg_of_id i); ctr:ctrT i} 
 let incr (i:id) (x:domain i {x.ctr <^ maxCtr i}) = { iv = x.iv; ctr = x.ctr +^ 1ul }
 
 val above: #i:id -> domain i -> domain i -> Tot bool
@@ -179,7 +180,7 @@ private val getBlock:
   (ensures (fun h0 r h1 -> Buffer.live h1 output /\ Buffer.modifies_1 output h0 h1 ))
 let getBlock #i t x len output =
   Buffer.recall t.key;
-  Block.compute (cipher_of_id i) output t.key x.iv x.ctr len
+  Block.compute (cipherAlg_of_id i) output t.key x.iv x.ctr len
 
 
 // We encapsulate our 3 usages of the PRF in specific functions.

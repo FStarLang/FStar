@@ -29,6 +29,8 @@ abstract type id = {
   uniq: UInt32.t;
 }
 
+let aeadAlg_of_id i = i.cipher
+
 let macAlg_of_id i =
   match i.cipher with
   | AES_256_GCM       -> GHASH

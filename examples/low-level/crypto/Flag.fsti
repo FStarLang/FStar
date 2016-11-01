@@ -15,13 +15,13 @@ open Crypto.Indexing
 *) 
 
 // controls idealization of each cipher as a perfect random function
-val cipher_prf: cipher_alg -> Tot bool 
+val cipher_prf: cipherAlg -> Tot bool 
 
 // controls existence of logs for all MACs
 val mac_log: bool                
 
 // idealizes each one-time MAC as perfectly INT-1CMA.
-val mac_int1cma: mac_alg -> Tot bool  
+val mac_int1cma: macAlg -> Tot bool  
 
 // controls 2nd, perfect idealization step in enxor/dexor for all PRFs.
 val prf_cpa: bool
@@ -33,10 +33,10 @@ val prf_cpa: bool
 val safeHS: i:id -> Tot bool 
 
 // controls PRF idealization of ciphers (move to PRF?)
-let prf (i: id) = safeHS i && cipher_prf(cipher_of_id i)
+let prf (i: id) = safeHS i && cipher_prf(cipherAlg_of_id i)
 
 // controls INT1CMA idealization of MACs (move to MAC?)
-let mac1 i = mac_log && mac_int1cma (mac_of_id i)
+let mac1 i = mac_log && mac_int1cma (macAlg_of_id i)
 
 // controls abstraction of plaintexts
 // (kept abstract, but requires all the crypto steps above)

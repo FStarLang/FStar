@@ -3,6 +3,7 @@ module Crypto.Test
 open FStar.UInt32
 open FStar.Ghost
 
+open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Plain 
 open Buffer
@@ -181,7 +182,7 @@ let test() =
   let plainrepr = from_string plainlen 
     "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it." in
 
-  let i:id = { cipher = CHACHA20_POLY1305; uniq = 42ul } in
+  let i:id = testId CHACHA20_POLY1305 in
   assume(not(prf i)); // Implementation used to extract satisfies this
   let plain = Plain.create i 0uy plainlen in 
   let plainval = load_bytes plainlen plainrepr in
@@ -196,7 +197,7 @@ let test() =
   dump "IV" 12ul ivBuffer;
   dump "Additional Data" 12ul aad;
 
-  let iv : Crypto.Symmetric.Cipher.iv (cipher_of_id i) = 
+  let iv : Crypto.Symmetric.Cipher.iv (cipherAlg_of_id i) = 
     lemma_little_endian_is_bounded (load_bytes 12ul ivBuffer);
     load_uint128 12ul ivBuffer in
   let expected_cipher = mk_expected_cipher () in

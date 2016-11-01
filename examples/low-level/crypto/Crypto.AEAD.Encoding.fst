@@ -10,6 +10,7 @@ open FStar.Monotonic.RRef
 
 open FStar.Math.Lib
 open FStar.Math.Lemmas
+open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Plain
 open Flag
@@ -28,7 +29,7 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 //16-10-12 TEMPORARY, while PRF remains somewhat CHACHA-specific
 let id = i:id {i.cipher = CHACHA20_POLY1305}
 
-let alg (i:id) = cipher_of_id i 
+let alg (i:id) = cipherAlg_of_id i 
 
 type rgn = rgn:HH.rid {HS.is_eternal_region rgn}
     
@@ -294,13 +295,13 @@ let encode_both aadlen (aad:lbytes (v aadlen)) clen (cipher:lbytes (v clen)) :
       (encode_bytes aad))
 
 let field i = match alg i with 
-  | Cipher.CHACHA20 -> elem
-  | Cipher.AES256   -> lbytes (v Crypto.Symmetric.GF128.len) // not there yet
+  | CHACHA20 -> elem
+  | AES256   -> lbytes (v Crypto.Symmetric.GF128.len) // not there yet
 
 #set-options "--prn"
 let field_encode (i:id) (aad:adata) (#l2:UInt32.t) (cipher:lbytes (v l2)) : GTot (Seq.seq (field i)) =
   match alg i with 
-  | Cipher.CHACHA20 -> 
+  | CHACHA20 -> 
     encode_both (FStar.UInt32.uint_to_t (Seq.length aad)) aad l2 cipher
   | _ -> 
    //TODO

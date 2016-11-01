@@ -6,6 +6,7 @@
 module Crypto.Symmetric.MAC
 
 open Crypto.Symmetric.Bytes
+open Crypto.Indexing
 open Flag
 
 module GF = Crypto.Symmetric.GF128
@@ -15,7 +16,7 @@ module PL = Crypto.Symmetric.Poly1305
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-let alg i = Flag.mac_of_id i 
+let alg i = macAlg_of_id i 
 
 (** Field element *)
 let elem i =
