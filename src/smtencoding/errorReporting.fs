@@ -40,7 +40,7 @@ let fresh_label : string -> Range.range -> term -> label * term =
         let lvar = l, Bool_sort in
         let label = (lvar, message, range) in
         let lterm = mkFreeV lvar in
-        let lt = mkOr(lterm, t) in
+        let lt = Term.mk (Term.LblPos(mkOr(lterm, t), l)) range in
         label, lt
 
 (*
@@ -105,6 +105,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | BoundV _ 
         | Integer _ ->
           labels, q
+
+        | LblPos _ -> failwith "Impossible" //these get added after errorReporting instrumentation only
 
         | Labeled(arg, "could not prove post-condition", _) ->
 //          printfn "GOT A LABELED WP IMPLICATION";

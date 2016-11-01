@@ -101,7 +101,7 @@ let update_9 c c0 c1 c2 c3 c4 c5 c6 c7 c8 =
   c.(7ul) <- c7;
   c.(8ul) <- c8
 
-#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0"
 
 private val multiplication_0:
   c:bigint{length c >= 2*norm_length-1} ->
