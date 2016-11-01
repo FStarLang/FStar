@@ -40,7 +40,7 @@ let fresh_label : string -> Range.range -> term -> label * term =
         let lvar = l, Bool_sort in
         let label = (lvar, message, range) in
         let lterm = mkFreeV lvar in
-        let lt = Term.mk (Term.LblPos(mkOr(lterm, t), l)) range in
+        let lt = Term.mkOr(lterm, t) range in 
         label, lt
 
 (*
