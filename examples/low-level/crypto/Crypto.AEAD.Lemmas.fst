@@ -165,7 +165,7 @@ let mac_refines (i:id)
 	 m_contains mac_log h /\ (
 	 match m_sel h (CMA.ilog (CMA.State.log m)) with
 	 | None           -> False
-	 | Some (msg,tag') -> msg = encode_both (uint_to_t (Seq.length ad)) ad (u len) c /\
+	 | Some (msg,tag') -> msg = encode_both i (uint_to_t (Seq.length ad)) ad (u len) c /\
 	                     tag = tag')))
 
 let intro_mac_refines (i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
@@ -181,7 +181,7 @@ let intro_mac_refines (i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
 		      let x0 : PRF.domain i = {iv=nonce; ctr=ctr_0 i} in
 	              (safeId i /\ prf i ==> 
 		      (let tab = HS.sel h (PRF.itable i st.prf) in
-		       let l : CMA.text = encode_both (u (Seq.length ad)) ad (u len) c in
+		       let l : CMA.text = encode_both i (u (Seq.length ad)) ad (u len) c in
 		       match PRF.find_mac tab x0 with 
 		       | None -> False
 		       | Some mac_st -> 

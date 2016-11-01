@@ -248,7 +248,7 @@ assume val lemma_append_slices: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> Lemma
 assume val lemma_append_nil: #a:_ -> s:Seq.seq a -> 
   Lemma (s == Seq.append s Seq.createEmpty)
 //#set-options "--lax"
-#set-options "--z3timeout 100"
+//#set-options "--z3timeout 200"
 private let encode_lengths_poly1305 (aadlen:UInt32.t) (plainlen:UInt32.t) : b:lbytes 16
   { v aadlen = little_endian (Seq.slice b 0 4) /\
     v plainlen = little_endian (Seq.slice b 8 12) } = 
@@ -261,31 +261,31 @@ private let encode_lengths_poly1305 (aadlen:UInt32.t) (plainlen:UInt32.t) : b:lb
   lemma_append_slices b0 (bp @| b0);
   lemma_append_slices bp b0;
   b
-
+//16-11-01 unclear why verification is slow above, fast below
 #reset-options
 
 open FStar.Mul
-private let encode_lengths_ghash (aadlen:aadlen_32) (plainlen:plainlen_32) : b:lbytes 16
+private let encode_lengths_ghash (aadlen:aadlen_32) (txtlen:txtlen_32) : b:lbytes 16
   { 8 * v aadlen = big_endian (Seq.slice b 4 8) /\
-    8 * v plainlen = big_endian (Seq.slice b 12 16) } =
+    8 * v txtlen = big_endian (Seq.slice b 12 16) } =
   let open FStar.Seq in 
   let b0 = create 4 0uy in 
   let ba = uint32_be 4ul (8ul *^ aadlen) in
-  let bp = uint32_be 4ul (8ul *^ plainlen) in 
+  let bp = uint32_be 4ul (8ul *^ txtlen) in 
   let b = b0 @| ba @| b0 @| bp in
   lemma_append_slices b0 (ba @| b0 @| bp);
   lemma_append_slices ba (b0 @| bp);
   lemma_append_slices b0 bp;
   b
 
-private let encode_lengths (i:id) (aadlen:aadlen_32) (plainlen:plainlen_32) : lbytes 16 =
+private let encode_lengths (i:id) (aadlen:aadlen_32) (txtlen:txtlen_32) : lbytes 16 =
   match mac_of_id i with 
-  | POLY1305 -> encode_lengths_poly1305 aadlen plainlen 
-  | GHASH    -> encode_lengths_ghash aadlen plainlen
+  | POLY1305 -> encode_lengths_poly1305 aadlen txtlen 
+  | GHASH    -> encode_lengths_ghash aadlen txtlen
 
-let encode_both (i:id) (aadlen:aadlen_32) (aad:lbytes (v aadlen)) (clen:plainlen_32) (cipher:lbytes (v clen)) :
-  e:MAC.text {Seq.length e > 0 /\ SeqProperties.head e = encode_lengths aadlen clen} = 
-  SeqProperties.cons (encode_lengths i aadlen clen)
+let encode_both (i:id) (aadlen:aadlen_32) (aad:lbytes (v aadlen)) (txtlen:txtlen_32) (cipher:lbytes (v txtlen)) :
+  e:MAC.text {Seq.length e > 0 /\ SeqProperties.head e = encode_lengths i aadlen txtlen} = 
+  SeqProperties.cons (encode_lengths i aadlen txtlen)
     (Seq.append 
       (encode_bytes cipher) 
       (encode_bytes aad))
@@ -305,15 +305,15 @@ let field_encode (i:id) (aad:adata) (#l2:UInt32.t) (cipher:lbytes (v l2)) : GTot
     Seq.createEmpty
 *)
 
-let lemma_encode_both_inj al0 pl0 al1 pl1 
+let lemma_encode_both_inj i (al0:aadlen_32) (pl0:txtlen_32) (al1:aadlen_32) (pl1:txtlen_32)
   (a0:lbytes(v al0)) (p0:lbytes(v pl0)) (a1:lbytes(v al1)) (p1:lbytes (v pl1)) : Lemma
-  (requires encode_both al0 a0 pl0 p0 = encode_both al1 a1 pl1 p1)
+  (requires encode_both i al0 a0 pl0 p0 = encode_both i al1 a1 pl1 p1)
   (ensures al0 = al1 /\ pl0 = pl1 /\ a0 = a1 /\ p0 = p1) = 
 
   let open FStar.Seq in 
   let open FStar.SeqProperties in
-  let w0 = encode_lengths al0 pl0 in 
-  let w1 = encode_lengths al1 pl1 in
+  let w0 = encode_lengths i al0 pl0 in 
+  let w1 = encode_lengths i al1 pl1 in
   //assert(encode w0 = encode w1);
   // lemma_encode_injective w0 w1; 
   //assert(al0 = al1 /\ pl0 = pl1);
@@ -335,11 +335,12 @@ let lemma_encode_both_inj al0 pl0 al1 pl1
 
 val accumulate: 
   #i: MAC.id -> st: CMA.state i -> 
-  aadlen:UInt32.t -> aad:lbuffer (v aadlen) ->
-  plainlen:UInt32.t -> cipher:lbuffer (v plainlen) -> StackInline (CMA.accBuffer i)
+  aadlen:aadlen_32 -> aad:lbuffer (v aadlen) ->
+  txtlen:txtlen_32 -> cipher:lbuffer (v txtlen) -> StackInline (CMA.accBuffer i)
   (requires (fun h0 -> 
     CMA(MAC.norm h0 st.r) /\
-    Buffer.live h0 aad /\ Buffer.live h0 cipher))
+    Buffer.live h0 aad /\ 
+    Buffer.live h0 cipher))
   (ensures (fun h0 a h1 -> 
     Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
     ~ (h0 `Buffer.contains` (CMA (MAC.as_buffer (a.a)))) /\
@@ -347,16 +348,17 @@ val accumulate:
     CMA.acc_inv st a h1 /\
     (mac_log ==> 
       FStar.HyperStack.sel h1 (CMA.alog a) ==
-      encode_both aadlen (Buffer.as_seq h1 aad) plainlen (Buffer.as_seq h1 cipher))))
+      encode_both (fst i) aadlen (Buffer.as_seq h1 aad) txtlen (Buffer.as_seq h1 cipher))))
   // StackInline required for stack-allocated accumulator
   
-let accumulate #i st (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
-  (plainlen:UInt32.t) (cipher:lbuffer (v plainlen)) = 
-
+let accumulate #i st aadlen aad txtlen cipher  = 
   let h = ST.get() in 
   let acc = CMA.start st in
   let h0 = ST.get() in
   Buffer.lemma_reveal_modifies_0 h h0;
+
+  assume false;//16-11-01 
+
   //16-10-16 :(
   assert (Buffer.disjoint_2 (MAC.as_buffer (CMA acc.a)) aad cipher);
 
@@ -366,10 +368,9 @@ let accumulate #i st (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
   assert(mac_log ==> 
     FStar.HyperStack.sel h1 (CMA.alog acc) == encode_bytes (Buffer.as_seq h1 aad));
 
-  assume false;//16-10-16 WIP
   // if mac_log then lemma_append_nil elem l;
   // assert(mac_log ==> l = encode_bytes (Buffer.as_seq h1 aad));
-  add_bytes st acc plainlen cipher;
+  add_bytes st acc txtlen cipher;
   let h2 = ST.get() in 
   assert(mac_log ==>  
     FStar.HyperStack.sel h2 (CMA.alog acc) ==
@@ -378,12 +379,12 @@ let accumulate #i st (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
   let final_word = Buffer.create 0uy 16ul in (
   match mac_of_id (fst i) with 
   | POLY1305 -> store_uint32 4ul (Buffer.sub final_word 0ul 4ul) aadlen;
-               store_uint32 4ul (Buffer.sub final_word 8ul 4ul) plainlen
+               store_uint32 4ul (Buffer.sub final_word 8ul 4ul) txtlen
   | GHASH -> store_big32 4ul (Buffer.sub final_word 4ul 4ul) (aadlen *^ 8ul);
-            store_big32 4ul (Buffer.sub final_word 12ul 4ul) (plainlen *^ 8ul));
+            store_big32 4ul (Buffer.sub final_word 12ul 4ul) (txtlen *^ 8ul));
   //16-10-31 confirm and verify the length formatting for GHASH (inferred from test vectors)
   
   let h3 = ST.get() in 
-  assert(encode_lengths aadlen plainlen = Buffer.as_seq h3 final_word);
+  assert(encode_lengths (fst i) aadlen txtlen = Buffer.as_seq h3 final_word);
   CMA.update st acc final_word;
   acc

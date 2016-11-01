@@ -258,15 +258,19 @@ let acc_inv (#i:id) (st:state i) (acc:accBuffer i) h =
     let a = MAC.sel_elem h acc.a in
     let r = MAC.sel_elem h st.r in
     a == MAC.poly log r))
-    
+      
 // not framed, as we allocate private state on the caller stack
 val start: #i:id -> st:state i -> StackInline (accBuffer i)
   (requires (fun h -> MAC.norm h st.r))
-  (ensures  (fun h0 a h1 -> acc_inv st a h1 /\ modifies_0 h0 h1))
+  (ensures  (fun h0 a h1 -> 
+    ~ (h0 `Buffer.contains` (MAC.as_buffer a.a)) /\
+    acc_inv st a h1 /\ 
+    modifies_0 h0 h1))
 let start #i st =
   // causing F* checker reported issues in other files: [C:\Users\fournet\fstar\FStar\ulib\hyperstack\FStar.ST.fst(99,85-99,90): (Error) assertion failed
   let a = MAC.start #i in
   let l = if mac_log then mk_irtext (salloc Seq.createEmpty) else () in
+  assume false;
   Acc a l
 
 

@@ -406,7 +406,7 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let _ = 
     let c = Buffer.as_seq h3 cipher in
     let ad = Buffer.as_seq h3 aad in
-    assert (FStar.HyperStack.sel h1 (CMA.alog acc) == encode_both aadlen ad plainlen c) in
+    assert (FStar.HyperStack.sel h1 (CMA.alog acc) == encode_both i aadlen ad plainlen c) in
   assert (Buffer.live h2 aad); //seem to need this hint
   assert (Buffer.live h3 aad); //seem to need this hint
   Buffer.lemma_reveal_modifies_0 h2 h3;
@@ -485,7 +485,7 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let acc = accumulate ak aadlen aad plainlen cipher in
 
   let h1 = ST.get() in 
-  assert(mac_log ==>  FStar.HyperStack.sel h1 (CMA.alog acc) == encode_both aadlen (Buffer.as_seq h1 aad) plainlen (Buffer.as_seq h1 cipher));
+  assert(mac_log ==>  FStar.HyperStack.sel h1 (CMA.alog acc) == encode_both i aadlen (Buffer.as_seq h1 aad) plainlen (Buffer.as_seq h1 cipher));
 
   let verified = CMA.verify ak acc tag in
 
