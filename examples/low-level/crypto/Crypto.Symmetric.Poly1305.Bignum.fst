@@ -190,13 +190,10 @@ let multiplication c a b =
   let h1 = ST.get() in
   lemma_multiplication h0 h1 c a b
 
-
-#reset-options "--z3timeout 5 --initial_fuel 3 --max_fuel 3"
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 val times_5: b:U64.t{5 * v b < pow2 64} -> Tot (b':U64.t{v b' = 5 * v b})
 let times_5 b = assert_norm(pow2 2 = 4); (b <<^ 2ul) +^ b
-
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 val freduce_degree_: b:bigint -> Stack unit
   (requires (fun h -> live h b /\ satisfiesModuloConstraints h b))
