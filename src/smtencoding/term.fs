@@ -607,15 +607,11 @@ let mk_and_opt p1 p2 r = match p1, p2  with
   | None, None -> None
 
 let mk_and_opt_l pl r =
-  List.fold_left (fun out p -> mk_and_opt p out r) None pl
+  List.fold_right (fun p out -> mk_and_opt p out r) pl None
 
-let mk_and_l l r = match l with
-  | [] -> mkTrue r
-  | hd::tl -> List.fold_left (fun p1 p2 -> mkAnd(p1,p2) r) hd tl
+let mk_and_l l r = List.fold_right (fun p1 p2 -> mkAnd(p1, p2) r) l (mkTrue r)
 
-let mk_or_l l r = match l with
-  | [] -> mkFalse r
-  | hd::tl -> List.fold_left (fun p1 p2 -> mkOr(p1,p2) r) hd tl
+let mk_or_l l r = List.fold_right (fun p1 p2 -> mkOr(p1,p2) r) l (mkFalse r)
 
 let mk_haseq t = mk_Valid (mkApp ("Prims.hasEq", [t]) t.rng)
 
