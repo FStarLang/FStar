@@ -35,7 +35,7 @@ let w : U32.t -> Tot int = U32.v
 
 (*** Addition ***)
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0 --lax"
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 private val fsum_: a:bigint -> b:bigint{disjoint a b} -> Stack unit
   (requires (fun h -> norm h a /\ norm h b))
@@ -101,7 +101,7 @@ let update_9 c c0 c1 c2 c3 c4 c5 c6 c7 c8 =
   c.(7ul) <- c7;
   c.(8ul) <- c8
 
-(* #reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0" *)
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0"
 
 private val multiplication_0:
   c:bigint{length c >= 2*norm_length-1} ->
@@ -111,7 +111,6 @@ private val multiplication_0:
     (requires (fun h -> live h c))
     (ensures  (fun h0 _ h1 -> modifies_1 c h0 h1 /\ live h1 c
       /\ isMultiplication_ h1 (v a0) (v a1) (v a2) (v a3) (v a4) (v b0) (v b1) (v b2) (v b3) (v b4) c))
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 1 --log_queries"
 let multiplication_0 c a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 =
   lemma_multiplication_0 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4;
   let ab00 = a0 *^ b0 in
