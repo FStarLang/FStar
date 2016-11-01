@@ -129,6 +129,11 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                         | Quant(Forall, pats_ens, iopt_ens, sorts_ens, {tm=App(Imp, [ensures_conjuncts; post]); rng=rng_ens}) 
                                 when is_a_post_condition (Some post_name) post -> 
                           let labels, ensures_conjuncts = aux "could not prove post-condition" None (Some post_name) labels ensures_conjuncts in 
+                          let pats_ens = 
+                            match pats_ens with  
+                            | [] 
+                            | [[]] -> [[post]]  //make the post-condition formula the pattern, if there isn't one already (usually there isn't) 
+                            | _ -> pats_ens in
                           let ens = Term.mk (Quant(Forall, pats_ens, iopt_ens, sorts_ens, 
                                                        Term.mk (App(Imp, [ensures_conjuncts; post])) rng_ens)) ens.rng in
                           let lhs = Term.mk (App(And, req@[ens])) lhs.rng in

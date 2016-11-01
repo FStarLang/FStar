@@ -111,6 +111,7 @@ private val multiplication_0:
     (requires (fun h -> live h c))
     (ensures  (fun h0 _ h1 -> modifies_1 c h0 h1 /\ live h1 c
       /\ isMultiplication_ h1 (v a0) (v a1) (v a2) (v a3) (v a4) (v b0) (v b1) (v b2) (v b3) (v b4) c))
+(* #reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --log_queries" *)
 let multiplication_0 c a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 =
   lemma_multiplication_0 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4;
   let ab00 = a0 *^ b0 in
