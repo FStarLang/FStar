@@ -157,7 +157,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
         | Quant(Forall, [], None, [post], {tm=App(Imp, [lhs;rhs]); rng=rng}) 
             when is_a_named_continuation lhs ->
-          printfn "Got a named continuation";
+//          printfn "Got a named continuation";
           let post_name = "^^post_condition_"^ (Util.string_of_int <| Syntax.Syntax.next_id ()) in
           let names = (post_name, post) in
           let instantiation = [mkFreeV names] in
