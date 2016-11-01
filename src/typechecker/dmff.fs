@@ -1168,7 +1168,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         let h = bv.sort in
         if is_C h then
           let w' = S.gen_bv (bv.ppname.idText ^ "-w'") None (star_type' env h) in
-          w', [ S.mk_binder w'; S.null_binder (trans_F_ env h (S.bv_to_name bv)) ]
+          w', [ S.mk_binder w'; S.null_binder (trans_F_ env h (S.bv_to_name w')) ]
         else
           let x = S.gen_bv (bv.ppname.idText ^ "-x") None (star_type' env h) in
           x, [ S.mk_binder x ]
