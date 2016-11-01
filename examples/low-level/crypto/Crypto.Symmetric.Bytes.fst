@@ -388,6 +388,26 @@ let rec uint32_bytes len n =
     in 
     SeqProperties.cons byte b'
 
+val uint32_be: 
+  len:UInt32.t {v len <= 4} -> n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> 
+  Tot (b:lbytes (v len) { UInt32.v n == big_endian b}) (decreases (v len))
+let rec uint32_be len n = 
+  if len = 0ul then 
+    let e = Seq.createEmpty #UInt8.t in
+    assert_norm(0 = big_endian e);
+    e
+  else
+    let len = len -^ 1ul in 
+    let byte = uint32_to_uint8 n in
+    let n' = FStar.UInt32(n >>^ 8ul) in 
+    assert(v n = UInt8.v byte + 256 * v n');
+    Math.Lemmas.pow2_plus 8 (8 * v len);
+    assert_norm (pow2 8 == 256);
+    assert(v n' < pow2 (8 * v len ));
+    let b' = uint32_be len n'
+    in 
+    SeqProperties.snoc b' byte 
+
 // turns an integer into a bytestream, little-endian
 val little_bytes: 
   len:UInt32.t -> n:nat {n < pow2 (8 * v len)} -> 

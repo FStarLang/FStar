@@ -28,11 +28,17 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 let alg (i:id) = cipher_of_id i 
 
 type rgn = rgn:HH.rid {HS.is_eternal_region rgn}
-    
+
+// we need bounds 
+let txtmax = 16485ul
+
 // placeholder for additional data
 let aadmax = 2000ul
 type adata = b:bytes { Seq.length b <= v aadmax} 
 type cipher (i:id) (l:nat) = lbytes(l + v MAC.taglen)
+
+type aadlen_32 = l:UInt32.t {l <=^ aadmax}
+type txtlen_32 = l:UInt32.t {l <=^ txtmax}
 
 // copied from Poly1305.Spec
 
@@ -241,8 +247,9 @@ assume val lemma_append_slices: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> Lemma
 
 assume val lemma_append_nil: #a:_ -> s:Seq.seq a -> 
   Lemma (s == Seq.append s Seq.createEmpty)
-#set-options "--lax"
-private let encode_lengths (aadlen:UInt32.t) (plainlen:UInt32.t) : b:lbytes 16
+//#set-options "--lax"
+#set-options "--z3timeout 100"
+private let encode_lengths_poly1305 (aadlen:UInt32.t) (plainlen:UInt32.t) : b:lbytes 16
   { v aadlen = little_endian (Seq.slice b 0 4) /\
     v plainlen = little_endian (Seq.slice b 8 12) } = 
   let b0 = Seq.create 4 0uy in 
@@ -256,9 +263,29 @@ private let encode_lengths (aadlen:UInt32.t) (plainlen:UInt32.t) : b:lbytes 16
   b
 
 #reset-options
-let encode_both aadlen (aad:lbytes (v aadlen)) clen (cipher:lbytes (v clen)) :
+
+open FStar.Mul
+private let encode_lengths_ghash (aadlen:aadlen_32) (plainlen:plainlen_32) : b:lbytes 16
+  { 8 * v aadlen = big_endian (Seq.slice b 4 8) /\
+    8 * v plainlen = big_endian (Seq.slice b 12 16) } =
+  let open FStar.Seq in 
+  let b0 = create 4 0uy in 
+  let ba = uint32_be 4ul (8ul *^ aadlen) in
+  let bp = uint32_be 4ul (8ul *^ plainlen) in 
+  let b = b0 @| ba @| b0 @| bp in
+  lemma_append_slices b0 (ba @| b0 @| bp);
+  lemma_append_slices ba (b0 @| bp);
+  lemma_append_slices b0 bp;
+  b
+
+private let encode_lengths (i:id) (aadlen:aadlen_32) (plainlen:plainlen_32) : lbytes 16 =
+  match mac_of_id i with 
+  | POLY1305 -> encode_lengths_poly1305 aadlen plainlen 
+  | GHASH    -> encode_lengths_ghash aadlen plainlen
+
+let encode_both (i:id) (aadlen:aadlen_32) (aad:lbytes (v aadlen)) (clen:plainlen_32) (cipher:lbytes (v clen)) :
   e:MAC.text {Seq.length e > 0 /\ SeqProperties.head e = encode_lengths aadlen clen} = 
-  SeqProperties.cons (encode_lengths aadlen clen)
+  SeqProperties.cons (encode_lengths i aadlen clen)
     (Seq.append 
       (encode_bytes cipher) 
       (encode_bytes aad))

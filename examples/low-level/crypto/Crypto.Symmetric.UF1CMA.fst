@@ -265,7 +265,6 @@ val start: #i:id -> st:state i -> StackInline (accBuffer i)
   (ensures  (fun h0 a h1 -> acc_inv st a h1 /\ modifies_0 h0 h1))
 let start #i st =
   // causing F* checker reported issues in other files: [C:\Users\fournet\fstar\FStar\ulib\hyperstack\FStar.ST.fst(99,85-99,90): (Error) assertion failed
-  assume false;
   let a = MAC.start #i in
   let l = if mac_log then mk_irtext (salloc Seq.createEmpty) else () in
   Acc a l
