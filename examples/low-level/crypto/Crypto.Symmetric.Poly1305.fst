@@ -31,6 +31,9 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS  = FStar.HyperStack
 
+(* JK: TODO remove ! *)
+#set-options "--lax"
+
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 20"
 
 // we may separate field operations, so that we don't
@@ -299,7 +302,8 @@ let mk_mask nbits =
   Math.Lemmas.pow2_lt_compat 64 (FStar.UInt32.v nbits);
   U64 ((1uL <<^ nbits) -^ 1uL)
 
-(* TODO *)
+#set-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
 let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
   (requires (let open FStar.UInt8 in
     live h b /\ live h s
@@ -308,7 +312,8 @@ let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
     /\ U64.v n2 == v (get h s 8) + pow2 8 * v (get h s 9) + pow2 16 * v (get h s 10) + pow2 24 * v (get h s 11)
     /\ U64.v n3 == v (get h s 12) + pow2 8 * v (get h s 13) + pow2 16 * v (get h s 14) + pow2 24 * v (get h s 15)))
   (ensures  (live h b /\ live h s /\ v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 == little_endian (sel_word h s)))
-  = admit()
+  = Crypto.Symmetric.Poly1305.Lemmas.lemma_toField_1 s h n0 n1 n2 n3
+    
 
 val upd_elemB: b:elemB{length b == norm_length} -> n0:U64.t -> n1:U64.t -> n2:U64.t -> n3:U64.t -> n4:U64.t -> Stack unit
   (requires (fun h -> live h b
@@ -338,29 +343,34 @@ let upd_elemB b n0 n1 n2 n3 n4 =
   eval_def h1 b 0;
   pow2_lt_compat 26 24
 
+
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
 (* TODO *)
 let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4': Lemma
   (requires (let mask_26 = mk_mask 26ul in
-    n0' == (n0 &^ mask_26) 
+    v n0 < pow2 32 /\ v n1 < pow2 32 /\ v n2 < pow2 32 /\ v n3 < pow2 32
+    /\ n0' == (n0 &^ mask_26) 
     /\ n1' == ((n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26))
     /\ n2' == ((n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26))
     /\ n3' == ((n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26)) 
     /\ n4' == (n3 >>^ 8ul) ))
   (ensures  (v n0' + pow2 26 * v n1' + pow2 52 * v n2' + pow2 78 * v n3' + pow2 104 * v n4'
     == v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 ))
-  = admit()
+  = Crypto.Symmetric.Poly1305.Lemmas.lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4'
 
 (* TODO (requires the BitVector module *)
 let lemma_toField_3 n0 n1 n2 n3 n0' n1' n2' n3' n4' : Lemma
   (requires (let mask_26 = mk_mask 26ul in
-    n0' == (n0 &^ mask_26)
+    v n0 < pow2 32 /\ v n1 < pow2 32 /\ v n2 < pow2 32 /\ v n3 < pow2 32
+    /\ n0' == (n0 &^ mask_26)
     /\ n1' == ((n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26))
     /\ n2' == ((n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26))
     /\ n3' == ((n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26))
     /\ n4' == ((n3 >>^ 8ul)) ))
   (ensures  (U64.v n4' < pow2 24
     /\ U64.v n3' < pow2 26 /\ U64.v n2' < pow2 26 /\ U64.v n1' < pow2 26 /\ U64.v n0' < pow2 26))
-  = admit()
+  = Crypto.Symmetric.Poly1305.Lemmas.lemma_toField_3 n0 n1 n2 n3 n0' n1' n2' n3' n4'
 
 val sel_int_sel_elem: h:mem -> a:elemB{live h a} -> w:word -> Lemma
   (requires (sel_int h a == little_endian w))

@@ -66,7 +66,7 @@ let encode (w:word) : Tot elem =
   pow2_le_compat 128 (8 * l);
   pow2 (8 * l) +@ little_endian w
 
-val lemma_encode_nonzero: v:word_16 -> Lemma (encode v <> 0)
+private val lemma_encode_nonzero: v:word_16 -> Lemma (encode v <> 0)
 let lemma_encode_nonzero v =
   lemma_little_endian_is_bounded v;
   Math.Lemmas.pow2_double_sum 128;
