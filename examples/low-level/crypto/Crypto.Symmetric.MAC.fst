@@ -46,7 +46,7 @@ let limb = function
   | POLY1305 -> UInt64.t
   | GHASH    -> UInt8.t
 let limb_length = function 
-  | POLY1305 ->  5 
+  | POLY1305 ->  5
   | GHASH    -> 16
 
 type buffer' a = b:Buffer.buffer (limb a){Buffer.length b == limb_length a} 
@@ -252,5 +252,5 @@ val finish: #i:id -> s:tagB -> a:elemB i -> t:tagB -> Stack unit
 let finish #i s a t =
   match a with 
   | B_POLY1305 a -> PL.poly1305_finish t a s
-  | B_GHASH    a -> GF.gf128_add a s; 
+  | B_GHASH    a -> GF.finish a s; 
                    Buffer.blit a 0ul t 0ul 16ul

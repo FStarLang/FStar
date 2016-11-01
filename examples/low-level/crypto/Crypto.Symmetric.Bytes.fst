@@ -349,6 +349,25 @@ let rec store_uint32 len buf n =
     store_uint32 len buf' n';
     buf.(0ul) <- b // updating after the recursive call helps verification
 
+val store_big32: 
+  len:UInt32.t {v len <= 4} -> buf:lbuffer (v len) -> 
+  n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> ST unit
+  (requires (fun h0 -> Buffer.live h0 buf))
+  (ensures (fun h0 r h1 -> 
+    Buffer.live h1 buf /\ Buffer.modifies_1 buf h0 h1 /\
+    UInt32.v n == big_endian (sel_bytes h1 len buf)))
+let rec store_big32 len buf n = 
+  if len <> 0ul then
+    let len = len -^ 1ul in 
+    let b = uint32_to_uint8 n in
+    let n' = FStar.UInt32(n >>^ 8ul) in 
+    assert(v n = UInt8.v b + 256 * v n');
+    let buf' = Buffer.sub buf 0ul len in
+    Math.Lemmas.pow2_plus 8 (8 * v len);
+    assert_norm (pow2 8 == 256);
+    store_big32 len buf' n';
+    buf.(len) <- b // updating after the recursive call helps verification
+
 val uint32_bytes: 
   len:UInt32.t {v len <= 4} -> n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> 
   Tot (b:lbytes (v len) { UInt32.v n == little_endian b}) (decreases (v len))

@@ -58,13 +58,35 @@ let akey (rgn:rid) (i:id) =
 val get_skey: #r:rid -> #i:id{skeyed i} -> akey r i -> Tot(skey r i)
 let get_skey #rgn #i (Some k) = k
 
+val akey_gen: r:rid -> i:id -> STL(akey r i)
+  (requires (fun h0 -> True))
+  (ensures (fun h0 r h1 -> Buffer.modifies_0 h0 h1))
+
+val akey_coerce: r:rid -> i:id -> kb: lbuffer(UInt32.v (skeylen i)) -> STL(akey r i)
+  (requires (fun h0 -> True))
+  (ensures (fun h0 r h1 -> Buffer.modifies_0 h0 h1))
+
+#reset-options "--lax"
+// 16-10-31 
 let akey_gen (r:rid) (i:id) : akey r i = 
   if skeyed i 
   then Some (Buffer.rcreate r 0uy (skeylen i))
   else None
 
+// not needed?
+let akey_coerce r i kb = 
+  let _ = IO.debug_print_string (UInt32.to_string (skeylen i)) in
+  let _ = print_buffer kb 0ul (skeylen i) in
+  if skeyed i 
+  then 
+    let sk = Buffer.rcreate r 0uy (skeylen i) in
+    Buffer.blit kb 0ul sk 0ul (skeylen i);
+    Some sk
+  else None
+  
 (* should be called at most once per i *)
 
+#reset-options ""
 
 // ONE-TIME INSTANCES 
 

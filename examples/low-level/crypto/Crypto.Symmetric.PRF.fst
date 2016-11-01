@@ -196,7 +196,7 @@ let getBlock #i t x len output =
   Block.compute (cipher_of_id i) output t.key x.iv x.ctr len
 
 
-// We encapsulate our 3 usages of the PRF in specific functions.
+// We encapsulate our 4 usages of the PRF in specific functions.
 // But we still use a single, ctr-dependent range in the table.
 //
 // For xor-based encryption,
@@ -206,7 +206,7 @@ let getBlock #i t x len output =
 // the first block (ctr=0) is used to generate a single-use MAC
 
 val prf_mac: 
-  i:id -> t:state i -> x:domain_mac i -> ST (CMA.state (i,x.iv))
+  i:id -> t:state i -> k_0: CMA.akey t.mac_rgn i -> x:domain_mac i -> ST (CMA.state (i,x.iv))
   (requires (fun h0 -> True))
   (ensures (fun h0 mac h1 ->
     if prf i then
@@ -240,7 +240,7 @@ val prf_mac:
 
 #reset-options "--z3timeout 100"
 
-let prf_mac i t x =
+let prf_mac i t k_0 x =
   assume false;//16-10-30 new problem with sk0?
   let h0 = get () in
   Buffer.recall t.key;
@@ -258,7 +258,7 @@ let prf_mac i t x =
       Buffer.recall (CMA mac.s);
       mac
     | None ->
-      let mac = CMA.gen t.mac_rgn macId None in
+      let mac = CMA.gen t.mac_rgn macId k_0 in
       r := SeqProperties.snoc contents (Entry x mac);
       assume false; 
       //16-10-16 framing after change to genPost0?
@@ -271,36 +271,37 @@ let prf_mac i t x =
     getBlock t x (CMA.keylen i) keyBuffer;
     let h2 = ST.get() in
     Buffer.lemma_reveal_modifies_1 keyBuffer h1 h2;
-    CMA.coerce t.mac_rgn macId None keyBuffer
+    CMA.coerce t.mac_rgn macId k_0 keyBuffer
 
-
+ 
 val prf_sk0: 
-  i:id{ CMA.skeyed i } -> t:state i -> ST (CMA.skey t.mac_rgn i)
+  #i:id{ CMA.skeyed i } -> t:state i -> ST (CMA.skey t.mac_rgn i)
   (requires (fun h0 -> True))
-  (ensures (fun h0 r0 h1 ->
+  (ensures (fun h0 k h1 ->
     let x = { ctr=0ul; iv=iv_0 } in 
     if prf i then
       let r = itable i t in
       let t0 = HS.sel h0 r in
       let t1 = HS.sel h1 r in
       (forall (y:domain i). y <> x ==> find t0 y == find t1 y)  /\ //at most modifies t at x
-      Buffer.live h1 r0 /\ 
+      Buffer.live h1 k /\ 
       (match find_sk0 #t.mac_rgn #i (HS.sel h0 r) x with // already in the table? 
-       | Some r0' -> r0 == r0' /\ h0 == h1
+       | Some r0 -> k == r0 /\ h0 == h1
        | None ->  
          (match find_sk0 (HS.sel h1 r) x with 
-          | Some r0' -> r0 == r0' /\
-	    t1 == SeqProperties.snoc t0 (Entry x r0) /\
+          | Some r1 -> k == r1 /\
+	    t1 == SeqProperties.snoc t0 (Entry x r1) /\
             HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
             HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
 	    HS.modifies_ref t.mac_rgn TSet.empty h0 h1
           | None -> False ))
     else (
+      Buffer.live h1 k /\
       HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\ //allocates in t.rgn
       HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
 
-let prf_sk0 i t = 
+let prf_sk0 #i t = 
   let x = { ctr=0ul; iv=iv_0 } in 
   if prf i then 
     begin
@@ -478,7 +479,7 @@ let prf_enxor i t x l cipher plain =
     assert(p == sel_plain h1 l plain);
     r := contents';
     let h2 = ST.get() in
-    assert(p == sel_plain h2 l plain); //16-10-12  how to anti-alias a buffer?
+    assert(p == sel_plain h2 l plain); 
     assert(modifies_x_buffer_1 t x cipher h0 h2)
   else
     let h0 = ST.get() in 

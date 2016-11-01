@@ -50,21 +50,25 @@ type rw = | Reader | Writer
 noeq type state (i:id) (rw:rw) =
   | State:
       #log_region: rgn -> // this is the *writer* region; the reader allocates nothing
+      // the log should exist only when prf i
       log: HS.ref (Seq.seq (entry i)) {HS.frameOf log == log_region} ->
       // Was PRF(prf.rgn) == region. Do readers use its own PRF state?
       prf: PRF.state i {PRF(prf.rgn) == log_region} (* including its key *) ->
-      //ak: CMA.akey log_region i (* static, optional authentication key *) -> 
+      ak: CMA.akey log_region i (* static, optional authentication key *) -> 
       state i rw
 
 // INVARIANT (WIP)
  
 let maxplain (i:id) = pow2 14 // for instance
 
+// encryption loop invariant.
+// l is the length of plaintext left to be encrypted; 
+// c is the counter for encrypting the next block of plaintext.
 let safelen (i:id) (l:nat) (c:UInt32.t{PRF.ctr_0 i <^ c /\ c <=^ PRF.maxCtr i}) = 
   l = 0 || (
     let bl = v (Cipher( blocklen (cipher_of_id i))) in
     FStar.Mul(
-      l + (v (c -^ 1ul)) * bl <= maxplain i && 
+      l + (v (c -^ PRF.ctr_0 i -^ 1ul)) * bl <= maxplain i && 
       l  <= v (PRF.maxCtr i -^ c) * bl ))
     
 // Computes PRF table contents for countermode encryption of 'plain' to 'cipher' starting from 'x'.
@@ -109,10 +113,9 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
   let b = num_blocks e in 
   b + 1 = Seq.length blocks /\
   (let PRF.Entry x e = Seq.index blocks 0 in
-   PRF (x.iv = nonce) /\
-   PRF (x.ctr = PRF.ctr_0 i)  /\ (
    let xors = Seq.slice blocks 1 (b+1) in 
    let cipher, tag = SeqProperties.split cipher_tagged l in
+   PRF (x.iv = nonce /\ x.ctr = PRF.ctr_0 i) /\ 
    safelen i l (PRF.ctr_0 i +^ 1ul) /\
    xors == counterblocks i rgn (PRF.incr i x) l 0 l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
    (let m = PRF.macRange rgn i x e in
@@ -121,7 +124,7 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
     match m_sel h (CMA.ilog (CMA.State.log m)) with
     | None           -> False
     | Some (msg,tag') -> msg = encode_both (FStar.UInt32.uint_to_t (Seq.length ad)) ad (FStar.UInt32.uint_to_t l) cipher /\
-			tag = tag')))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
+			tag = tag'))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
 
 // States consistency of the PRF table contents vs the AEAD entries
 // (not a projection from one another because of allocated MACs and aad)
