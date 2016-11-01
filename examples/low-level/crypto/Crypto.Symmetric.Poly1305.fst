@@ -31,9 +31,6 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS  = FStar.HyperStack
 
-(* JK: TODO remove ! *)
-#set-options "--lax"
-
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 20"
 
 // we may separate field operations, so that we don't
@@ -379,6 +376,8 @@ let sel_int_sel_elem h a w =
   lemma_little_endian_is_bounded w;
   modulo_lemma (little_endian w) p_1305
 
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
 (* Formats a wordB into an elemB *)
 val toField: a:elemB{length a == norm_length} -> b:wordB_16{disjoint a b} -> Stack unit
   (requires (fun h -> live h a /\ live h b))
@@ -421,7 +420,7 @@ let toField b s =
   upd_elemB b n0' n1' n2' n3' n4'
 
 
-#set-options "--initial_fuel 1 --max_fuel 1"
+#set-options "--initial_fuel 1 --max_fuel 1 --z3timeout 5"
 
 val lemma_toField_plus_2_128_0: ha:mem -> a:elemB{live ha a} -> Lemma
   (requires True)
@@ -603,6 +602,7 @@ let trunc1305 a b =
   upd_wordB_16 b b0 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14 b15;
   let h2 = ST.get() in
   assert (modifies_1 b h1 h2);
+  (* TODO *)
   assume (sel_elem h0 a % pow2 128 == little_endian (sel_word h2 b))
 
 
@@ -896,6 +896,7 @@ let add_word a b =
   bytes_of_uint32 (Buffer.sub a 4ul 4ul) (uint64_to_uint32 z1);
   bytes_of_uint32 (Buffer.sub a 8ul 4ul) (uint64_to_uint32 z2);
   bytes_of_uint32 (Buffer.sub a 12ul 4ul) (uint64_to_uint32 z3);
+  (* TODO *)
   admit ()
 
 
