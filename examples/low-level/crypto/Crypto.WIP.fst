@@ -30,46 +30,6 @@ module MAC = Crypto.Symmetric.Poly1305.MAC
 module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
 
-val encrypt: 
-  i: id -> st:state i Writer -> 
-  n: Cipher.iv (alg i) ->
-  aadlen: UInt32.t {aadlen <=^ aadmax} -> 
-  aad: lbuffer (v aadlen) -> 
-  plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) 1ul} -> 
-  plain: plainBuffer i (v plainlen) -> 
-  cipher:lbuffer (v plainlen + v (Spec.taglen i)) 
-  { 
-    Buffer.disjoint aad cipher /\
-    Buffer.disjoint (Plain.as_buffer plain) aad /\
-    Buffer.disjoint (Plain.as_buffer plain) cipher /\
-    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) st.log_region /\
-    HH.disjoint (Buffer.frameOf cipher) st.log_region /\
-    HH.disjoint (Buffer.frameOf aad) st.log_region
-  }
-  ->  
-  //STL -- should be STL eventually, but this requires propagation throughout the library
-  ST unit
-  (requires (fun h -> 
-    let prf_rgn = st.prf.rgn in
-    Crypto.AEAD.inv h #i #Writer st /\
-    Buffer.live h aad /\
-    Buffer.live h cipher /\ 
-    Plain.live h plain /\
-    (prf i ==> none_above ({iv=n; ctr=0ul}) st.prf h) // The nonce must be fresh!
-   ))
-  (ensures (fun h0 _ h1 -> 
-    //TODO some "heterogeneous" modifies that also records updates to logs and tables
-    Buffer.modifies_1 cipher h0 h1 /\ 
-    Buffer.live h1 aad /\
-    Buffer.live h1 cipher /\ 
-    Plain.live h1 plain /\
-    inv h1 #i #Writer st /\ 
-    (safeId i ==> (
-      let aad = Buffer.as_seq h1 aad in
-      let p = Plain.sel_plain h1 plainlen plain in
-      let c = Buffer.as_seq h1 cipher in
-      HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
-   ))
 
 (* #reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
 (* let test (h0:HS.mem) (h1:HS.mem) (r:rid) =  *)
@@ -179,7 +139,6 @@ let extend_refines_aux i st nonce aadlen aad len plain cipher h0 h1 =
      let c, tag = SeqProperties.split c_tagged len in
      let ad = Buffer.as_seq h1 aad in
      let entry = Entry nonce ad len p c_tagged in
-     assume (pre_refines_one_entry i st nonce len plain cipher h0 h1);
      extend_refines h0 i mac_rgn entries_0 blocks_0 entry blocks_1 h1
 
 assume val to_seq_temp: #a:Type -> b:Buffer.buffer a -> l:UInt32.t{v l <= Buffer.length b} -> ST (Seq.seq a)
@@ -261,7 +220,50 @@ let refines_to_inv i st nonce aadlen aad len plain cipher =
     let blocks = !(itable i st.prf) in
     frame_refines i st.prf.mac_rgn entries blocks h0 h1
   else ()
-  
+
+val encrypt: 
+  i: id -> st:state i Writer -> 
+  n: Cipher.iv (alg i) ->
+  aadlen: UInt32.t {aadlen <=^ aadmax} -> 
+  aad: lbuffer (v aadlen) -> 
+  plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) 1ul} -> 
+  plain: plainBuffer i (v plainlen) -> 
+  cipher:lbuffer (v plainlen + v (Spec.taglen i)) 
+  { 
+    Buffer.disjoint aad cipher /\
+    Buffer.disjoint (Plain.as_buffer plain) aad /\
+    Buffer.disjoint (Plain.as_buffer plain) cipher /\
+    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) st.log_region /\
+    HH.disjoint (Buffer.frameOf cipher) st.log_region /\
+    HH.disjoint (Buffer.frameOf aad) st.log_region
+  }
+  ->  
+  //STL -- should be STL eventually, but this requires propagation throughout the library
+  ST unit
+  (requires (fun h -> 
+    let prf_rgn = st.prf.rgn in
+    Crypto.AEAD.inv h #i #Writer st /\
+    Buffer.live h aad /\
+    Buffer.live h cipher /\ 
+    Plain.live h plain /\
+    (prf i ==> none_above ({iv=n; ctr=0ul}) st.prf h) // The nonce must be fresh!
+   ))
+  (ensures (fun h0 _ h1 -> 
+    //TODO some "heterogeneous" modifies that also records updates to logs and tables
+    HS.modifies (Set.union (Set.singleton st.log_region)
+			   (Set.singleton (Buffer.frameOf cipher))) h0 h1 /\
+    (* Buffer.m_ref (Buffer.frameOf cipher) !{Buffer.modifies_1 cipher h0 h1 /\  *)
+    Buffer.live h1 aad /\
+    Buffer.live h1 cipher /\ 
+    Plain.live h1 plain /\
+    inv h1 #i #Writer st /\ 
+    (safeId i ==> (
+      let aad = Buffer.as_seq h1 aad in
+      let p = Plain.sel_plain h1 plainlen plain in
+      let c = Buffer.as_seq h1 cipher in
+      HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
+   ))
+
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let h0 = get() in
   assume (h0 `HS.contains` st.log); //can be a recall
@@ -306,9 +308,9 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   intro_mac_refines i st n aad plain cipher_tagged h4;
   pre_refines_to_refines i st n aadlen aad (v plainlen) plain cipher_tagged h0 h4;
   extend_refines_aux i st n aadlen aad (v plainlen) plain cipher_tagged h0 h4;
-  refines_to_inv i st n aadlen aad plainlen plain cipher_tagged;
+  refines_to_inv i st n aadlen aad plainlen plain cipher_tagged; 
   admit()
-
+  
 
   
   (* let _ = *)
