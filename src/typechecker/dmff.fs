@@ -931,6 +931,8 @@ and infer (env: env) (e: term): nm * term * term =
             binders @ binders', comp
         | Tm_arrow (binders, comp) ->
             binders, comp
+        | Tm_ascribed (e, _, _) ->
+            flatten e
         | _ ->
             raise (Err (Util.format1 "%s: not a function type" (Print.term_to_string t_head)))
       in
@@ -1178,6 +1180,8 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       let app = mk (Tm_app (wp, List.map (fun bv -> S.bv_to_name bv, S.as_implicit false) bvs)) in
       let comp = trans_G env (type_of_comp comp) (is_monadic_comp comp) app in
       U.arrow binders comp
+  | Tm_ascribed(e, _, _) ->
+      trans_F_ env e wp
   | _ ->
       failwith "impossible trans_F_"
 
