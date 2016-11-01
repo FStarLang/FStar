@@ -2,18 +2,12 @@ module FStar.DM4F.Continuations
 
 open FStar.FunctionalExtensionality
 
-let kont (a:Type) = (a -> M Type0) -> M Type0
+let kont (a:Type0) : Tot Type = (a -> M Type0) -> M Type0
 
-let return (a:Type) (x:a) : kont a = fun (p : a -> M Type0) -> p x
+let return (a:Type0) (x:a) : Tot (kont a) = fun (p : a -> M Type0) -> p x
 
-val bind : a:Type -> b:Type -> m:kont a -> f:(a -> kont b) -> kont b
-let bind a b m f = fun k -> 
-(* This does not work. cf. #712: m (fun (x:a) -> f x k) *)
-(* Silly workaround: *)
-  //let mm : cont a = m in
-  m (fun (x:a) -> f x k)
-    (* let fx (\* : cont b *\) = f x in *)
-    (* fx k) *)
+let bind (a:Type0) (b:Type0) (m : kont a) (f : a -> kont b) : Tot (kont b) =
+                   fun k -> m (fun (x:a) -> let fx = f x in fx k)
 
 reifiable new_effect_for_free {
   CONT: Type -> Effect
@@ -22,5 +16,8 @@ reifiable new_effect_for_free {
      ; bind = bind
 }
 
-(* Error: The following term is outside of the definition language:
-(f#74:(uu___:(uu___:a -> M (Type)) -> M (Type)){(x#894:Prims.unit{(x:(uu___:a -> Type) -> Tot (x#894:Prims.unit{(x:(uu___:a -> Type) -> Tot (x#894:Prims.unit{(uu___:(x#894:Prims.unit{(x:a -> GTot {:pattern (x@5 x@0)\/(x@3 x@0)} (Prims.eq2 (x@5 x@0) (x@3 x@0)))}) -> GTot (Prims.eq2 (f@6 x@4) (f@6 x@2)))}))}))})}) *)
+(*
+Error: [check (m (fun x -> let  fx#1811 <> : ((uu___:(uu___:b -> M (Type(unknown))) -> M (Type(unknown))) : Type(unknown)) = (f x@0)
+in
+(fx@0 k)))]: got an effectful computation [Type(unknown)] in lieu of a pure computation [Tm_unknown]
+*)
