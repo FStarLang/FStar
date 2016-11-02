@@ -42,14 +42,14 @@ let elem i = (* dependent; used only ideally *)
    
    See 35380a8a for an older, more type-dependent version *)
 
-let limb = function
+unfold inline_for_extraction let limb = function
   | POLY1305 -> UInt64.t
   | GHASH    -> UInt8.t
 let limb_length = function 
   | POLY1305 ->  5
   | GHASH    -> 16
 
-type buffer' a = b:Buffer.buffer (limb a){Buffer.length b == limb_length a} 
+unfold inline_for_extraction type buffer' a = b:Buffer.buffer (limb a){Buffer.length b == limb_length a} 
 noeq type buffer'' =
   | B_POLY1305 of buffer' POLY1305
   | B_GHASH    of buffer' GHASH
