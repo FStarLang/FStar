@@ -61,7 +61,7 @@ let trans_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
       else ()
 
 let x_buffer_1_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
-			     (x:PRF.domain i{x.ctr <> 0ul})
+			     (x:PRF.domain i{ctr_0 i <^ x.ctr})
 			     (c:lbuffer l)
 			     (h_0:mem) (h_1:mem)
     : Lemma (requires (modifies_x_buffer_1 t x c h_0 h_1))
@@ -74,9 +74,8 @@ let x_buffer_1_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i
 	FStar.Classical.forall_intro (SeqProperties.contains_elim diff)
       else ()
 
-
 let fresh_frame_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
-			     (x:PRF.domain i{x.ctr <> 0ul})
+			     (x:PRF.domain i{ctr_0 i <^ x.ctr})
 			     (c:lbuffer l)
 			     (h_0:mem) (h_1:mem) (h_2:mem)
     : Lemma (requires (HS.fresh_frame h_0 h_1 /\ 
@@ -87,7 +86,7 @@ let fresh_frame_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state 
     = admit()
 
 let pop_frame_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
-			     (x:PRF.domain i{x.ctr <> 0ul})
+			     (x:PRF.domain i{ctr_0 i <^ x.ctr})
 			     (c:lbuffer l)
 			     (h_0:mem) (h_1:mem) (h_2:mem)
     : Lemma (requires (modifies_table_above_x_and_buffer t x c h_0 h_1 /\ HS.poppable h_1 /\  h_2==HS.pop h_1))
@@ -105,7 +104,7 @@ let find_snoc (#a:Type) (s:Seq.seq a) (x:a) (f:a -> Tot bool)
 
 val prf_enxor_leaves_none_strictly_above_x: #i:id -> 
 					   t:PRF.state i ->
-					   x:domain i{x.ctr <> 0ul} ->
+					   x:domain i{ctr_0 i <^ x.ctr} ->
 					   len:u32 ->
   					   remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <> 0ul /\ remaining_len <=^ len} ->
 					   c:lbuffer (v len) ->
@@ -132,4 +131,3 @@ let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
 	let y = PRF.incr i x in 
 	assert (find t_0 y == None)
       else ()
-
