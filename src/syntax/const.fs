@@ -73,16 +73,16 @@ let kbin k1 k2 k'            = mk (Tm_arrow([null_binder k1; null_binder k2], mk
 let ktern k1 k2 k3 k'        = mk (Tm_arrow([null_binder k1;
                                              null_binder k2;
                                              null_binder k3], mk_Total k'))
-let true_lid   = pconst "l_True"
-let false_lid  = pconst "l_False"
+let true_lid   = pconst "l_true"
+let false_lid  = pconst "l_false"
 let and_lid    = pconst "l_and"
 let or_lid     = pconst "l_or"
 let not_lid    = pconst "l_not"
 let imp_lid    = pconst "l_imp"
 let iff_lid    = pconst "l_iff"
-let ite_lid    = pconst "l_ITE"
-let exists_lid = pconst "l_Exists"
-let forall_lid = pconst "l_Forall"
+let ite_lid    = pconst "l_ite"
+let exists_lid = pconst "l_exists"
+let forall_lid = pconst "l_forall"
 let haseq_lid  = pconst "hasEq"
 let b2t_lid    = pconst "b2t" (* coercion from boolean to type *)
 let admit_lid  = pconst "admit"
@@ -90,8 +90,8 @@ let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
 
 (* Various equality predicates *)
-let eq2_lid    = pconst  "eq2"
-let eq3_lid    = pconst  "eq3"
+let eq2_lid    = pconst  "l_equals"
+let eq3_lid    = pconst  "l_hequals"
 
 (* Some common term constructors *)
 let exp_true_bool   = mk (Tm_constant (Const_bool true))

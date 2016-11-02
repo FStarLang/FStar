@@ -24,7 +24,7 @@ assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).            {:pat
                       sel (upd h r v) r == v
 
 assume SelUpd2:       forall (a:Type) (b:Type) (h:heap) (k1:ref a) (k2:ref b) (v:b).{:pattern (sel (upd h k2 v) k1)}
-                      ~ (eq3 k2 k1) ==> sel (upd h k2 v) k1 == sel h k1
+                      ~ (k2 === k1) ==> sel (upd h k2 v) k1 == sel h k1
 
 assume InDomEmp:      forall (a:Type) (k:ref a).                           {:pattern contains emp k}
                       not(contains emp k)

@@ -1265,7 +1265,7 @@ and tc_inductive env ses quals lids =
                 | _                                            -> failwith "Impossible"
         in
         //these are the prims type we are skipping
-        let types_to_skip = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or"; ] in
+        let types_to_skip = [ "c_false"; "c_true"; "c_equals"; "c_hequals"; "c_and"; "c_or"; ] in
         List.existsb (fun s -> s = lid.ident.idText) types_to_skip
     in
 
