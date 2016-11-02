@@ -51,13 +51,11 @@
       ],
       0
     ],
-    [ "FStar.SquashProperties.retract", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.SquashProperties.MkR.i", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.SquashProperties.MkR.j", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.SquashProperties.MkR.inv", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.SquashProperties.MkR.inv",
-      2,
+      1,
       2,
       1,
       [
@@ -70,13 +68,11 @@
       ],
       0
     ],
-    [ "FStar.SquashProperties.retract_cond", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.SquashProperties.MkC.i2", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.SquashProperties.MkC.j2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.SquashProperties.MkC.inv2", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.SquashProperties.MkC.inv2",
-      2,
+      1,
       2,
       1,
       [
@@ -89,10 +85,9 @@
       ],
       0
     ],
-    [ "FStar.SquashProperties.ac", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.SquashProperties.ac",
-      2,
+      1,
       2,
       1,
       [

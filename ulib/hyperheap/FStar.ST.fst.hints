@@ -1,26 +1,22 @@
 [
   ";P\u0015Òı¿÷‚S¥´¿úµU¨",
   [
-    [ "FStar.ST.modifies", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.ST.modifies",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
       0
     ],
-    [ "FStar.ST.modifies_none", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.ST.modifies_none",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
       0
     ],
-    [ "FStar.ST.ST", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.13725", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.ST.new_region",
       1,
@@ -37,7 +33,6 @@
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
       0
     ],
-    [ "FStar.ST.new_region", 3, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.ST.new_colored_region",
       1,
@@ -54,30 +49,23 @@
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
       0
     ],
-    [ "FStar.ST.new_colored_region", 3, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.ralloc_post", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.ST.ralloc_post",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
       0
     ],
-    [ "FStar.ST.ralloc", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.alloc_post", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.ST.alloc_post",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
       0
     ],
-    [ "FStar.ST.alloc", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.ST.assign_post", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.deref_post", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.get", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.ST.recall",
       1,
@@ -94,7 +82,6 @@
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
       0
     ],
-    [ "FStar.ST.recall", 3, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.ST.recall_region",
       1,

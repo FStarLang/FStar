@@ -43,14 +43,6 @@ let parse_fragment frag : fragment =
 
     | Inl (Inr decls) -> //interactive mode: more decls
       Decls decls 
-      
-//      (Desugar.desugar_decls env decls)
-//
-//      let env, modul = Desugar.desugar_partial_modul curmod env modul in
-//      Modul (env, modul)
-//
-//    | Inl (Inr decls) -> //interactive mode: more decls
-//      Decls (Desugar.desugar_decls env decls)
 
     | Inl (Inl _) ->
       if (Options.universes())

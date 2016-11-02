@@ -1,7 +1,6 @@
 [
   "¾´ƒ\u001e\fP~8\u0004¹L\u0018cL'Ô",
   [
-    [ "Gcd.divides", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Gcd.times_one",
       1,
@@ -10,10 +9,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Gcd.times_one", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Gcd.times_one",
-      3,
+      2,
       2,
       1,
       [

@@ -25,10 +25,9 @@
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [ "NegativeTests.False.foo", 4, 2, 1, [ "@query" ], 0 ],
     [
       "NegativeTests.False.foo",
-      5,
+      4,
       2,
       1,
       [
@@ -49,10 +48,9 @@
       ],
       0
     ],
-    [ "NegativeTests.False.f", 2, 2, 1, [ "@query" ], 0 ],
     [
       "NegativeTests.False.f",
-      3,
+      2,
       2,
       1,
       [

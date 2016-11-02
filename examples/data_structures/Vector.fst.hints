@@ -27,10 +27,9 @@
       ],
       0
     ],
-    [ "Vector.VCons.hd", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Vector.VCons.hd",
-      2,
+      1,
       2,
       1,
       [
@@ -40,10 +39,9 @@
       ],
       0
     ],
-    [ "Vector.VCons.n", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Vector.VCons.n",
-      2,
+      1,
       2,
       1,
       [

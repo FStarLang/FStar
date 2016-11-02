@@ -24,3 +24,12 @@ type feq (#a:Type) (#b:Type) (f:efun a b) (g:efun a b) =
 
 assume Extensionality : forall (a:Type) (b:Type) (f: efun a b) (g: efun a b).
                         {:pattern feq #a #b f g} feq #a #b f g <==> f==g
+
+(** Ghost functional extensionality **)
+type gfun (a:Type) (b:Type) = a -> GTot b
+
+type gfeq (#a:Type) (#b:Type) (f:gfun a b) (g:gfun a b) =
+    (forall x.{:pattern (f x) \/ (g x)} f x == g x)
+
+assume GhostExtensionality : forall (a:Type) (b:Type) (f: gfun a b) (g: gfun a b).
+                        {:pattern gfeq #a #b f g} gfeq #a #b f g <==> f==g

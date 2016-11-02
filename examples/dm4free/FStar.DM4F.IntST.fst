@@ -1,34 +1,10 @@
 module FStar.DM4F.IntST
 
+open FStar.DM4F.ST
+
 // A simple variant of state with a single integer as the state
-let st (a: Type) =
-  int -> M (a * int)
-
-val return_st : a:Type -> x:a -> st a
-let return_st a x = fun s -> x, s
-
-val bind_st : a:Type -> b:Type -> f:st a -> g:(a -> st b) -> st b
-let bind_st a b f g = fun s0 ->
-  let (x,s) = f s0 in
-  g x s
-  
-let get (_:unit): st int =
-  fun x -> x, x
-
-let put x: st unit =
-  fun _ -> (), x
-
 // Here is where all the DM4F magic happens
-reifiable reflectable new_effect_for_free {
-  STINT: a:Type -> Effect
-  with repr     = st
-     ; bind     = bind_st
-     ; return   = return_st
-  and effect_actions
-       get      = get
-     ; put      = put
-}
-
+reifiable reflectable new_effect_for_free STINT = STATE_h int
 // Some abbreviations
 let repr = STINT.repr
 let post = STINT.post

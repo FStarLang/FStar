@@ -18,7 +18,6 @@
       [ "@query", "equation_FStar.Seq.length" ],
       0
     ],
-    [ "FStar.Seq.cons", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Seq.hd",
       1,
@@ -109,10 +108,9 @@
       ],
       0
     ],
-    [ "FStar.Seq.lemma_of_list_length", 3, 0, 1, [ "@query" ], 0 ],
     [
       "FStar.Seq.lemma_of_list_length",
-      4,
+      3,
       2,
       1,
       [
@@ -170,10 +168,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.Seq.createEmpty", 2, 0, 1, [ "@query" ], 0 ],
     [
       "FStar.Seq.createEmpty",
-      3,
+      2,
       2,
       1,
       [
@@ -285,10 +282,9 @@
       ],
       0
     ],
-    [ "FStar.Seq.lemma_create_len", 2, 0, 1, [ "@query" ], 0 ],
     [
       "FStar.Seq.lemma_create_len",
-      3,
+      2,
       2,
       1,
       [
@@ -307,7 +303,8 @@
         "fuel_irrelevance_FStar.Seq.create.fuel_instrumented",
         "function_token_typing_FStar.List.Tot.test_sort", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_Subtraction", "proj_equation_FStar.Seq.MkSeq_l",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
+        "proj_equation_FStar.Seq.MkSeq_l",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Seq.MkSeq_l",
@@ -322,7 +319,7 @@
     ],
     [
       "FStar.Seq.lemma_create_len",
-      4,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -460,10 +457,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.Seq.lemma_len_append", 2, 0, 1, [ "@query" ], 0 ],
     [
       "FStar.Seq.lemma_len_append",
-      3,
+      2,
       2,
       1,
       [
@@ -471,8 +467,7 @@
         "equation_FStar.Seq.append", "equation_FStar.Seq.length",
         "fuel_guarded_inversion_FStar.Seq.seq",
         "proj_equation_FStar.Seq.MkSeq_l",
-        "projection_inverse_FStar.Seq.MkSeq_l", "unit_inversion",
-        "unit_typing"
+        "projection_inverse_FStar.Seq.MkSeq_l"
       ],
       0
     ],
@@ -1118,21 +1113,18 @@
       ],
       0
     ],
-    [ "FStar.Seq.lemma_eq_refl", 1, 0, 1, [ "@query" ], 0 ],
     [
       "FStar.Seq.lemma_eq_refl",
+      1,
       2,
-      0,
       1,
       [ "@query", "equation_FStar.Seq.equal", "unit_typing" ],
       0
     ],
-    [ "FStar.Seq.Extensionality", 1, 0, 1, [ "@query" ], 0 ],
-    [ "FStar.Seq.lemma_eq_elim", 1, 0, 1, [ "@query" ], 0 ],
     [
       "FStar.Seq.lemma_eq_elim",
+      1,
       2,
-      0,
       1,
       [ "@query", "assumption_FStar.Seq.Extensionality", "unit_typing" ],
       0

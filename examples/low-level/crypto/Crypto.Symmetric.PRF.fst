@@ -210,6 +210,7 @@ val prf_mac:
          (match find_mac (HS.sel h1 r) x with 
           | Some mac' -> 
 	    mac == mac' /\ 
+	    t1 == SeqProperties.snoc t0 (Entry x mac) /\
 	    MAC.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
             HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
             HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\

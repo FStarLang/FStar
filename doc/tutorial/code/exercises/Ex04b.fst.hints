@@ -36,8 +36,6 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
-    ],
-    [ "Ex04b.append_len", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Ex04b.append_len", 3, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

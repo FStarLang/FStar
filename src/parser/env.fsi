@@ -43,7 +43,7 @@ type env = {
   default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
-  expect_typ:           bool;                             (* syntatically, expect a type at this position in the term *)
+  expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
 }
 
 type record_or_dc = {

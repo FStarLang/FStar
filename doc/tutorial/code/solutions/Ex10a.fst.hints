@@ -61,11 +61,9 @@
       [ "@query", "assumption_Prims.HasEq_string" ],
       0
     ],
-    [ "Ex10a.acls", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex10a.grant", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex10a.grant",
-      2,
+      1,
       2,
       1,
       [
@@ -83,10 +81,9 @@
       [ "@query", "assumption_Ex10a.entry_haseq" ],
       0
     ],
-    [ "Ex10a.revoke", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex10a.revoke",
-      3,
+      2,
       2,
       1,
       [
@@ -99,7 +96,7 @@
     ],
     [
       "Ex10a.revoke",
-      4,
+      3,
       2,
       1,
       [ "@query", "assumption_Ex10a.entry_haseq" ],
@@ -107,14 +104,12 @@
     ],
     [
       "Ex10a.revoke",
-      5,
+      4,
       2,
       1,
       [ "@query", "assumption_Ex10a.entry_haseq" ],
       0
     ],
-    [ "Ex10a.canRead_t", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex10a.canWrite_t", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex10a.safe_delete",
       1,

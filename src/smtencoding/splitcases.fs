@@ -20,6 +20,7 @@ module FStar.SMTEncoding.SplitQueryCases
 open FStar
 open FStar.Util
 open FStar.SMTEncoding.Term
+open FStar.SMTEncoding.Util
 
 (* return: if is ite all the way, ite for n cases, neg guards conj, rest of t *)
 let rec get_next_n_ite (n:int) (t:term) (negs:term) (f:term -> term) :bool * term * term * term =
