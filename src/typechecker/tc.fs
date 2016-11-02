@@ -602,10 +602,10 @@ and cps_and_elaborate env ed =
   let repr = register "repr" repr in
 
   let pre, post =
-    match (SS.compress wp_type).n with
+    match (unascribe <| SS.compress wp_type).n with
     | Tm_abs (effect_param, arrow, _) ->
         let effect_param, arrow = SS.open_term effect_param arrow in
-        begin match (SS.compress arrow).n with
+        begin match (unascribe <| SS.compress arrow).n with
         | Tm_arrow (wp_binders, c) ->
             let wp_binders, c = SS.open_comp wp_binders c in
             let pre_args, post = Util.prefix wp_binders in
