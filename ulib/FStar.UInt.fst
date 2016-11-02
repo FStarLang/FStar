@@ -492,6 +492,26 @@ val lognot_lemma_1: #n:pos ->
 let lognot_lemma_1 #n = nth_lemma (lognot #n (zero n)) (ones n)
 
 
+(* JK: TODO
+   Those are bitvector lemmas that need to be proven using FStar.BitVector
+   *)
+assume val lemma_logor_dijoint: #n:pos -> a:uint_t n -> b:uint_t n -> m:nat{m < n} ->
+  Lemma (requires (a % pow2 m = 0 /\ b < pow2 m))
+        (ensures  (logor #n a b = a + b))
+
+assume val lemma_logand_pow2_gte: #n:pos -> x:uint_t n -> y:uint_t n -> m:nat ->
+       Lemma (requires (x % pow2 m = 0))
+             (ensures  (logand x y % pow2 m = 0))
+
+assume val lemma_logand_pow2_lt: #n:pos -> x:uint_t n -> y:uint_t n -> m:nat ->
+       Lemma (requires (x < pow2 m))
+             (ensures  (logand x y < pow2 m))
+
+assume val lemma_logand_mask: #n:pos -> x:uint_t n -> m:nat{m <= n} ->
+       Lemma (requires (True))
+             (ensures  (pow2 m < pow2 n /\ logand #n x (pow2 m - 1) = x % pow2 m))
+
+
 (* Shift operators *)
 val shift_left: #n:pos -> a:uint_t n -> s:nat -> Tot (uint_t n)
 let shift_left #n a s = from_vec (shift_left_vec #n (to_vec #n a) s)
@@ -609,6 +629,7 @@ let shift_right_value_lemma #n a s =
   if s >= n then shift_right_value_aux_1 #n a s
   else if s = 0 then shift_right_value_aux_2 #n a
   else shift_right_value_aux_3 #n a s
+
 
 (* val lemma_pow2_values: n:nat -> Lemma *)
 (*   (requires (n <= 64)) *)

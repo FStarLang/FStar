@@ -25,6 +25,7 @@ open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5
+open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part6
 
 let prime = prime
 let satisfiesModuloConstraints h b = satisfiesModuloConstraints h b
@@ -35,7 +36,7 @@ let w : U32.t -> Tot int = U32.v
 
 (*** Addition ***)
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
 
 private val fsum_: a:bigint -> b:bigint{disjoint a b} -> Stack unit
   (requires (fun h -> norm h a /\ norm h b))
@@ -236,7 +237,8 @@ let freduce_degree b =
 private val mod2_26: x:U64.t -> Tot (y:U64.t{v y = v x % pow2 26 /\ v y < pow2 26})
 let mod2_26 x =
   let y = x &^ 0x3ffffffuL in
-  assume (v y = v x % pow2 26);
+  assert_norm(v 0x3ffffffuL = pow2 26 - 1);
+  UInt.lemma_logand_mask (v x) 26;
   y
 
 private val div2_26: x:U64.t -> Tot (y:U64.t{v y = v x / pow2 26 /\ v y <= pow2 38})
@@ -445,27 +447,50 @@ let modulo b =
   freduce_coefficients b
 
 
-#set-options "--lax"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
 
 val finalize: b:bigint -> Stack unit
   (requires (fun h -> norm h b))
   (ensures (fun h0 _ h1 -> norm h0 b /\ norm h1 b /\ modifies_1 b h0 h1
     /\ eval h1 b norm_length = eval h0 b norm_length % reveal prime))
 let finalize b =
-  let mask_26 = U64 ((1uL <<^ 26ul) -^ 1uL) in
-  let mask2_26m5 = U64 (mask_26 -^ (1uL <<^ 2ul)) in
+  let h0 = ST.get() in
+  let mask_26 = 67108863uL in
+  let mask2_26m5 = 67108859uL in
+  assert_norm (v mask_26 = pow2 26 - 1); assert_norm(v mask2_26m5 = pow2 26 - 5);
   let b0 = b.(0ul) in
   let b1 = b.(1ul) in
   let b2 = b.(2ul) in
   let b3 = b.(3ul) in
   let b4 = b.(4ul) in
   let mask = U64.eq_mask b4 mask_26 in
-  let mask = U64.eq_mask b3 mask_26 &^ mask in
-  let mask = U64.eq_mask b2 mask_26 &^ mask in
-  let mask = U64.eq_mask b1 mask_26 &^ mask in
-  let mask = U64.gte_mask b0 mask2_26m5 &^ mask in
-  b.(0ul) <- (b0 -^ (mask &^ mask2_26m5));
-  b.(1ul) <- (b1 -^ (b1 &^ mask));
-  b.(2ul) <- (b2 -^ (b2 &^ mask));
-  b.(3ul) <- (b3 -^ (b3 &^ mask));
-  b.(4ul) <- (b4 -^ (b4 &^ mask))
+  let mask4 = U64.eq_mask b4 mask_26 in
+  let mask3 = U64.eq_mask b3 mask_26 in
+  let mask2 = U64.eq_mask b2 mask_26 in
+  let mask1 = U64.eq_mask b1 mask_26 in
+  let mask0 = U64.gte_mask b0 mask2_26m5 in
+  UInt.logand_lemma_1 (v mask4); UInt.logand_lemma_2 (v mask4);
+  UInt.logand_lemma_1 (v mask3); UInt.logand_lemma_2 (v mask3);
+  UInt.logand_lemma_1 (v mask2); UInt.logand_lemma_2 (v mask2);
+  UInt.logand_lemma_1 (v mask1); UInt.logand_lemma_2 (v mask1);
+  UInt.logand_lemma_1 (v mask0); UInt.logand_lemma_2 (v mask0);
+  let mask  = mask4 &^ mask3 &^ mask2 &^ mask1 &^ mask0 in
+  cut (maskPrime mask b0 b1 b2 b3 b4);
+  UInt.logand_lemma_1 (v mask2_26m5); UInt.logand_lemma_2 (v mask2_26m5);
+  UInt.logand_lemma_1 (v b1); UInt.logand_lemma_2 (v b1);
+  UInt.logand_lemma_1 (v b2); UInt.logand_lemma_2 (v b2);
+  UInt.logand_lemma_1 (v b3); UInt.logand_lemma_2 (v b3);
+  UInt.logand_lemma_1 (v b4); UInt.logand_lemma_2 (v b4);
+  let b0' = (b0 -^ (mask2_26m5 &^ mask)) in
+  let b1' = (b1 -^ (b1 &^ mask)) in
+  let b2' = (b2 -^ (b2 &^ mask)) in
+  let b3' =  (b3 -^ (b3 &^ mask)) in
+  let b4' =  (b4 -^ (b4 &^ mask)) in
+  cut(masked mask b0 b1 b2 b3 b4 b0' b1' b2' b3' b4');
+  b.(0ul) <- b0';
+  b.(1ul) <- b1';
+  b.(2ul) <- b2';
+  b.(3ul) <- b3';
+  b.(4ul) <- b4';
+  let h1 = ST.get() in
+  lemma_finalize h0 b h1 b mask
