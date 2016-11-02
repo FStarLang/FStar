@@ -6,6 +6,7 @@ open FStar.Ghost
 open Buffer.Utils
 open FStar.Monotonic.RRef
 
+open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Plain
 open Flag
@@ -114,7 +115,7 @@ val counterblocks_len: #i:id{safeId i} ->
 let rec counterblocks_len #i rgn x len from_pos plain cipher = 
   if from_pos = len
   then ()
-  else let blockl = v (Cipher(blocklen (cipher_of_id i))) in 
+  else let blockl = v (Cipher(blocklen (cipherAlg_of_id i))) in 
        let remaining = len - from_pos in 
        let l0 = minNat remaining blockl in 
        counterblocks_len #i rgn (PRF.incr i x) len (from_pos + l0) plain cipher
@@ -284,7 +285,6 @@ let pre_refines_to_refines i st nonce aadlen aad len plain cipher h0 h
 (*       (let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in *)
 (* 	mac == little_endian (sel_word h1 tag) /\ *)
 (* 	m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag))))) *)
-
 
 (* this version causes a crash *)
 (* let intro_refines_one_entry (#mac_rgn:region) (#i:id{safeId i) (st:state i Writer) (n: Cipher.iv (alg i)) *)

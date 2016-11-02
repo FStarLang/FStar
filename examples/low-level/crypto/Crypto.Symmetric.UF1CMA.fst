@@ -14,7 +14,8 @@ open FStar.Monotonic.RRef
 open Crypto.Symmetric.Poly1305.Spec
 open Crypto.Symmetric.Poly1305 // avoid?
 open Crypto.Symmetric.Bytes
-open Flag 
+open Crypto.Indexing
+open Flag
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -22,26 +23,26 @@ module MAC = Crypto.Symmetric.MAC
 
 // library stuff
 
-type alg = Flag.mac_alg
-let alg_of_id = Flag.cipher_of_id
+type alg = macAlg
+let alg_of_id = macAlg_of_id
 
  
 // TOWARDS AGILITY 
 
 // length of the single-use part of the key
 let keylen (i:id) = 
-  match i.cipher with 
+  match aeadAlg_of_id i with 
   | AES_256_GCM       -> 16ul
   | CHACHA20_POLY1305 -> 32ul
 
 // OPTIONAL STATIC AUTHENTICATION KEY (when using AES)
 let skeylen (i:id) =  // can't refine with {skeyed i} here
-  match i.cipher with 
+  match aeadAlg_of_id i with 
   | AES_256_GCM       -> 16ul
   | _                 ->  0ul // dummy; never allocated.
 
 let skeyed (i:id) = 
-  match i.cipher with 
+  match aeadAlg_of_id i with 
   | AES_256_GCM       -> true
   | CHACHA20_POLY1305 -> false
 

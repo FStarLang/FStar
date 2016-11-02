@@ -14,14 +14,12 @@ open FStar.Monotonic.RRef
 open Crypto.Symmetric.Poly1305.Spec
 open Crypto.Symmetric.Poly1305 // avoid?
 open Crypto.Symmetric.Bytes
+open Crypto.Indexing
 open Flag 
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 // library stuff
-
-type alg = Flag.mac_alg
-let alg_of_id = Flag.cipher_of_id
 
 let norm h b = Crypto.Symmetric.Poly1305.Bigint.norm h b
  
@@ -29,19 +27,19 @@ let norm h b = Crypto.Symmetric.Poly1305.Bigint.norm h b
 
 // length of the single-use part of the key
 let keylen (i:id) = 
-  match i.cipher with 
+  match aeadAlg_of_id i with 
   | AES_256_GCM       -> 16ul
   | CHACHA20_POLY1305 -> 32ul
 
 // OPTIONAL STATIC AUTHENTICATION KEY (when using AES)
 
 let skeyed (i:id) = 
-  match i.cipher with 
+  match aeadAlg_of_id i with 
   | AES_256_GCM       -> true
   | CHACHA20_POLY1305 -> false
 
 let skeylen (i:id {skeyed i}) = 
-  match i.cipher with 
+  match aeadAlg_of_id i with 
   | AES_256_GCM       -> 16ul
 
 type skey (rgn:rid) (i:id{skeyed i}) = b:lbuffer (UInt32.v (skeylen i)){ Buffer.frameOf b = rgn}
@@ -62,7 +60,7 @@ let akey_gen (r:rid) (i:id) =
   if skeyed i then mk_akey #r #i (Buffer.rcreate r 0uy (skeylen i))
   else ()
 
-type id = Flag.id * UInt128.t
+type id = id * UInt128.t
 
 // also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
 // this flag enables conditional idealization by keeping additional data,
@@ -78,7 +76,7 @@ type id = Flag.id * UInt128.t
 // plus the value of the unique IV for this MAC
 // TODO make it a dependent pair to support agile IV types
 
-assume val someId: i:Flag.id{~(safeHS i)} // dummy value for unit testing
+assume val someId: i:Crypto.Indexing.id{~(safeHS i)} // dummy value for unit testing
 
 (*
 type id = nat
