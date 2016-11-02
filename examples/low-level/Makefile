@@ -22,7 +22,7 @@ OCAMLOPT := $(OCAMLOPT) -w -8-20-26-28-10
 
 FSTAR_EXTRACT=$(FSTAR) $(CODEGEN_ARGS) --include $(FSTAR_HOME)/ulib/hyperstack --include crypto --include crypto/real
 
-CHACHA_EXTRACTED=Buffer_Utils.ml Crypto_Indexing.ml Crypto_Symmetric_Chacha20.ml
+CHACHA_EXTRACTED=Buffer_Utils.ml Crypto_Symmetric_Chacha20.ml
 POLY_EXTRACTED=FStar_List_Tot.ml FStar_Ghost.ml FStar_Seq.ml FStar_SeqProperties.ml Buffer_Utils.ml Crypto_Indexing.ml Crypto_Symmetric_Bytes.ml Crypto_Symmetric_Chacha20.ml Crypto_Symmetric_AES.ml Crypto_Symmetric_Cipher.ml Crypto_Symmetric_Poly1305_Parameters.ml Crypto_Symmetric_Poly1305_Bigint.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.ml Crypto_Symmetric_Poly1305_Bignum.ml Crypto_Symmetric_Poly1305_Spec.ml Flag.ml Crypto_Symmetric_Poly1305.ml
 AEAD_EXTRACTED=FStar_List_Tot.ml FStar_Seq.ml FStar_SeqProperties.ml Buffer_Utils.ml Crypto_Indexing.ml Crypto_Symmetric_Bytes.ml Crypto_Symmetric_Chacha20.ml Crypto_Symmetric_AES.ml Crypto_Symmetric_Cipher.ml FStar_Ghost.ml Crypto_Symmetric_Poly1305_Spec.ml Crypto_Symmetric_Poly1305_Parameters.ml Crypto_Symmetric_Poly1305_Bigint.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.ml Crypto_Symmetric_Poly1305_Bignum.ml Flag.ml Crypto_Symmetric_Poly1305.ml FStar_Monotonic_RRef.ml Crypto_Symmetric_Poly1305_MAC.ml Crypto_AEAD_Chacha20Poly1305.ml
 # TODO: temove FStar_BitVector below once it's no longer needed
@@ -68,7 +68,7 @@ chacha-test: chacha-compile
 
 poly-extract: ulib
 	mkdir -p $(POLY_ODIR)
-	$(FSTAR_EXTRACT) crypto/Crypto.Symmetric.Poly1305.fst --odir $(POLY_ODIR)
+	$(FSTAR_EXTRACT) crypto/Crypto.Indexing.fst crypto/Crypto.Symmetric.Poly1305.fst --odir $(POLY_ODIR)
 	@sed -i.bak 's/Obj.magic ((fun log msg/ ((fun log msg/g' $(POLY_ODIR)/Crypto_Symmetric_Poly1305.ml
 
 poly-compile: poly-extract
@@ -81,7 +81,7 @@ poly-test: poly-compile
 
 ideal-extract: ulib
 	mkdir -p $(AEAD_ODIR)
-	$(FSTAR_EXTRACT) crypto/Crypto.Test.fst --odir $(AEAD_ODIR)
+	$(FSTAR_EXTRACT) crypto/Crypto.Indexing.fst crypto/Crypto.Test.fst --odir $(AEAD_ODIR)
 #	@sed -i.bak 's/Obj.magic ((fun log msg/ ((fun log msg/g' $(AEAD_ODIR)/Crypto_Symmetric_Poly1305.ml
 
 ideal-compile: ideal-extract
@@ -94,7 +94,7 @@ ideal-test: ideal-compile
 
 aead-extract: ulib
 	mkdir -p $(AEAD_ODIR)
-	$(FSTAR_EXTRACT) crypto/Crypto.AEAD.Chacha20Poly1305.fst --odir $(AEAD_ODIR)
+	$(FSTAR_EXTRACT) crypto/Crypto.Indexing.fst crypto/Crypto.AEAD.Chacha20Poly1305.fst --odir $(AEAD_ODIR)
 	@sed -i.bak 's/Obj.magic ((fun log msg/ ((fun log msg/g' $(AEAD_ODIR)/Crypto_Symmetric_Poly1305.ml
 
 aead-compile: aead-extract
@@ -140,7 +140,7 @@ AES_EXTRACTED=Crypto_Symmetric_AES.ml
 
 aes-extract: ulib
 	mkdir -p $(AES_ODIR)
-	$(FSTAR_EXTRACT) crypto/Crypto.Symmetric.AES.fst --odir $(AES_ODIR) 
+	$(FSTAR_EXTRACT) crypto/Crypto.Indexing.fst crypto/Crypto.Symmetric.AES.fst --odir $(AES_ODIR) 
 
 aes-compile: aes-extract
 	$(OCAMLOPT) -I crypto/ml -I $(AES_ODIR) \
@@ -156,7 +156,7 @@ AESGCM_EXTRACTED=FStar_List_Tot.ml FStar_Ghost.ml FStar_Seq.ml FStar_SeqProperti
 
 aesgcm-extract: ulib
 	mkdir -p $(AESGCM_ODIR)
-	$(FSTAR_EXTRACT) crypto/Crypto.AEAD.AES256GCM.fst --odir $(AESGCM_ODIR) 
+	$(FSTAR_EXTRACT) crypto/Crypto.Indexing.fst crypto/Crypto.AEAD.AES256GCM.fst --odir $(AESGCM_ODIR) 
 
 aesgcm-compile: aesgcm-extract
 	$(OCAMLOPT) -I crypto/ml -I $(AESGCM_ODIR) \
