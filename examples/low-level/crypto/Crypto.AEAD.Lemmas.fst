@@ -225,8 +225,36 @@ let seq_find_none (#a:Type) (s:Seq.seq a) (f:(a -> Tot bool))
 let find_mac_counterblocks_none (#rgn:region) (#i:id) (nonce:Cipher.iv (alg i))
                                (s:Seq.seq (PRF.entry rgn i))
     : Lemma (requires (s `all_above` ({iv=nonce; ctr=1ul})))
-           (ensures (find_mac s ({iv=nonce; ctr=0ul}) == None))
+           (ensures (find_mac s ({iv=nonce; ctr=ctr_0 i}) == None))
     = admit()
+#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+val pre_refines_to_refines:  (i:id) -> (st:state i Writer) -> (nonce: Cipher.iv (alg i)) ->
+			    (aadlen: UInt32.t {aadlen <=^ aadmax})  ->
+			    (aad: lbuffer (v aadlen)) ->
+                            (len:nat{len<>0}) -> (plain:plainBuffer i len) -> (cipher:lbuffer (len + v (Spec.taglen i))) ->
+			    (h0:mem) ->
+                            (h:mem{Buffer.live h aad /\ Plain.live h plain /\ Buffer.live h cipher}) 
+   -> Lemma (requires (let mac_rgn = st.prf.mac_rgn in
+     		      let p = Plain.sel_plain h (u len) plain in
+		      let c_tagged = Buffer.as_seq h cipher in
+	              let c, tag = SeqProperties.split c_tagged len in
+		      let ad = Buffer.as_seq h aad in
+  		      safeId i ==> 
+			((* none_above ({iv=nonce; ctr=0ul}) st.prf h0 /\ *)
+   			 pre_refines_one_entry i st nonce len plain cipher h0 h /\
+			 mac_refines i st nonce aad plain cipher h)))
+            (ensures (let mac_rgn = st.prf.mac_rgn in
+     		      let p = Plain.sel_plain h (u len) plain in
+		      let c_tagged = Buffer.as_seq h cipher in
+	              let c, tag = SeqProperties.split c_tagged len in
+		      let ad = Buffer.as_seq h aad in
+  		      let entry = Entry nonce ad len p c_tagged in
+		      safeId i ==>  (
+			pre_refines_one_entry i st nonce len plain cipher h0 h /\ (
+			  let table_0 = HS.sel h0 (PRF.itable i st.prf) in
+			  let table_1 = HS.sel h (PRF.itable i st.prf) in
+ 			  let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in
+			  refines_one_entry #mac_rgn #i h entry blocks))))
 
 let find_seq_find (i:id) (r:rgn) (s:Seq.seq (PRF.entry r i)) (x:domain i)
   : Lemma (is_None (find s x) <==> is_None (SeqProperties.seq_find (fun (e:PRF.entry r i) -> e.x = x) s))
@@ -309,7 +337,6 @@ let pre_refines_to_refines i st nonce aadlen aad len plain cipher h0 h
 
 (*** Some basic sanity checks 
      on the `refines` invariant ***)
-
 
 (* 1. empty refines empty *)
 private let refines_empty (h:mem) (i:id{safeId i}) (rgn:region) 
