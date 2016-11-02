@@ -10,6 +10,7 @@ open FStar.Monotonic.RRef
 
 open FStar.Math.Lib
 open FStar.Math.Lemmas
+open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Plain
 open Flag
@@ -25,7 +26,7 @@ module PRF = Crypto.Symmetric.PRF
 
 type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
-let alg (i:id) = cipher_of_id i 
+let alg (i:id) = cipherAlg_of_id i 
 
 type rgn = rgn:HH.rid {HS.is_eternal_region rgn}
 
@@ -279,7 +280,7 @@ private let encode_lengths_ghash (aadlen:aadlen_32) (txtlen:txtlen_32) : b:lbyte
   b
 
 private let encode_lengths (i:id) (aadlen:aadlen_32) (txtlen:txtlen_32) : lbytes 16 =
-  match mac_of_id i with 
+  match macAlg_of_id i with 
   | POLY1305 -> encode_lengths_poly1305 aadlen txtlen 
   | GHASH    -> encode_lengths_ghash aadlen txtlen
 
@@ -292,13 +293,13 @@ let encode_both (i:id) (aadlen:aadlen_32) (aad:lbytes (v aadlen)) (txtlen:txtlen
 
 (*
 let field i = match alg i with 
-  | Cipher.CHACHA20 -> elem
-  | Cipher.AES256   -> lbytes (v Crypto.Symmetric.GF128.len) // not there yet
+  | CHACHA20 -> elem
+  | AES256   -> lbytes (v Crypto.Symmetric.GF128.len) // not there yet
 
 #set-options "--prn"
 let field_encode (i:id) (aad:adata) (#l2:UInt32.t) (cipher:lbytes (v l2)) : GTot (Seq.seq (field i)) =
   match alg i with 
-  | Cipher.CHACHA20 -> 
+  | CHACHA20 -> 
     encode_both (FStar.UInt32.uint_to_t (Seq.length aad)) aad l2 cipher
   | _ -> 
    //TODO
@@ -377,7 +378,7 @@ let accumulate #i st aadlen aad txtlen cipher  =
     Seq.append (encode_bytes (Buffer.as_seq h2 cipher)) (encode_bytes (Buffer.as_seq h2 aad)));
 
   let final_word = Buffer.create 0uy 16ul in (
-  match mac_of_id (fst i) with 
+  match macAlg_of_id (fst i) with 
   | POLY1305 -> store_uint32 4ul (Buffer.sub final_word 0ul 4ul) aadlen;
                store_uint32 4ul (Buffer.sub final_word 8ul 4ul) txtlen
   | GHASH -> store_big32 4ul (Buffer.sub final_word 4ul 4ul) (aadlen *^ 8ul);

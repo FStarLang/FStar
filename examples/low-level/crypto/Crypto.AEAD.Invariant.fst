@@ -9,6 +9,7 @@ open FStar.Ghost
 open Buffer.Utils
 open FStar.Monotonic.RRef
 
+open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Plain
 open Flag
@@ -66,7 +67,7 @@ let maxplain (i:id) = pow2 14 // for instance
 // c is the counter for encrypting the next block of plaintext.
 let safelen (i:id) (l:nat) (c:UInt32.t{PRF.ctr_0 i <^ c /\ c <=^ PRF.maxCtr i}) = 
   l = 0 || (
-    let bl = v (Cipher( blocklen (cipher_of_id i))) in
+    let bl = v (Cipher( blocklen (cipherAlg_of_id i))) in
     FStar.Mul(
       l + (v (c -^ PRF.ctr_0 i -^ 1ul)) * bl <= maxplain i && 
       l  <= v (PRF.maxCtr i -^ c) * bl ))
@@ -87,7 +88,7 @@ val counterblocks:
   Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
   (decreases (to_pos - from_pos))
 let rec counterblocks i rgn x l from_pos to_pos plain cipher = 
-  let blockl = v (Cipher(blocklen (cipher_of_id i))) in 
+  let blockl = v (Cipher(blocklen (cipherAlg_of_id i))) in 
   let remaining = to_pos - from_pos in 
   if remaining = 0 then
     Seq.createEmpty
@@ -101,7 +102,7 @@ let rec counterblocks i rgn x l from_pos to_pos plain cipher =
     SeqProperties.cons block blocks
 
 let num_blocks' (i:id) (l:nat) : Tot nat = 
-  let bl = v (Cipher( blocklen (cipher_of_id i))) in
+  let bl = v (Cipher( blocklen (cipherAlg_of_id i))) in
   (l + bl - 1) / bl
 
 let num_blocks (#i:id) (e:entry i) : Tot nat = 

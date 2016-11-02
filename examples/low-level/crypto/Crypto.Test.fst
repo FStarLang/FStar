@@ -3,6 +3,7 @@ module Crypto.Test
 open FStar.UInt32
 open FStar.Ghost
 
+open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Plain 
 open Buffer
@@ -181,7 +182,7 @@ let test() =
   let plainrepr = from_string plainlen 
     "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it." in
 
-  let i:id = { cipher = CHACHA20_POLY1305; uniq = 42ul } in
+  let i:id = testId CHACHA20_POLY1305 in
   assume(not(prf i)); // Implementation used to extract satisfies this
   let plain = Plain.create i 0uy plainlen in 
   let plainval = load_bytes plainlen plainrepr in
@@ -196,7 +197,7 @@ let test() =
   dump "IV" 12ul ivBuffer;
   dump "Additional Data" 12ul aad;
 
-  let iv : Crypto.Symmetric.Cipher.iv (cipher_of_id i) = 
+  let iv : Crypto.Symmetric.Cipher.iv (cipherAlg_of_id i) = 
     lemma_little_endian_is_bounded (load_bytes 12ul ivBuffer);
     load_uint128 12ul ivBuffer in
   let expected_cipher = mk_expected_cipher () in
@@ -281,7 +282,7 @@ let test_aes_gcm i tn key ivBuffer aadlen aad plainlen plainrepr expected_cipher
   Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
 
   let st = AE.coerce i HH.root key in
-  let iv : Crypto.Symmetric.Cipher.iv (cipher_of_id i) = 
+  let iv : Crypto.Symmetric.Cipher.iv (cipherAlg_of_id i) = 
     lemma_little_endian_is_bounded (load_bytes 12ul ivBuffer);
     load_uint128 12ul ivBuffer in
   let cipherlen = plainlen +^ 16ul in
@@ -299,7 +300,7 @@ let test_aes_gcm i tn key ivBuffer aadlen aad plainlen plainrepr expected_cipher
 
 val test_aes_gcm_1: unit -> St bool
 let test_aes_gcm_1 () =
-  let i:id = { cipher = AES_256_GCM; uniq = 42ul } in
+  let i:id = testId AES_256_GCM in
   let k = Buffer.create 0uy 32ul in
   let plainlen = 0ul in
   let plain = Buffer.create 0uy plainlen in
@@ -313,7 +314,7 @@ let test_aes_gcm_1 () =
 
 val test_aes_gcm_2: unit -> St bool
 let test_aes_gcm_2 () = 
-  let i:id = { cipher = AES_256_GCM; uniq = 42ul } in
+  let i:id = testId AES_256_GCM in
   let k = Buffer.create 0uy 32ul in
   let plainlen = 16ul in
   let plain = Buffer.create 0uy plainlen in
@@ -331,7 +332,7 @@ let test_aes_gcm_2 () =
 
 val test_aes_gcm_3: unit -> St bool
 let test_aes_gcm_3 () =
-  let i:id = { cipher = AES_256_GCM; uniq = 42ul } in
+  let i:id = testId AES_256_GCM in
   let k = Buffer.createL [
     0xfeuy; 0xffuy; 0xe9uy; 0x92uy; 0x86uy; 0x65uy; 0x73uy; 0x1cuy; 
     0x6duy; 0x6auy; 0x8fuy; 0x94uy; 0x67uy; 0x30uy; 0x83uy; 0x08uy; 
@@ -372,7 +373,7 @@ let test_aes_gcm_3 () =
 
 val test_aes_gcm_4: unit -> St bool
 let test_aes_gcm_4 () = 
-  let i:id = { cipher = AES_256_GCM; uniq = 42ul } in
+  let i:id = testId AES_256_GCM in
   let k = Buffer.createL [
     0xfeuy; 0xffuy; 0xe9uy; 0x92uy; 0x86uy; 0x65uy; 0x73uy; 0x1cuy; 
     0x6duy; 0x6auy; 0x8fuy; 0x94uy; 0x67uy; 0x30uy; 0x83uy; 0x08uy; 

@@ -10,7 +10,8 @@
 module Crypto.Symmetric.MAC
 
 open Crypto.Symmetric.Bytes
-open Flag // for the algorithms; consider moving them here.
+open Crypto.Indexing
+open Flag
 
 module GS = Crypto.Symmetric.GF128.Spec
 module GF = Crypto.Symmetric.GF128
@@ -20,9 +21,8 @@ module PL = Crypto.Symmetric.Poly1305
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-type id = Flag.id * UInt128.t
-
-let alg (i:id) = Flag.mac_of_id (fst i) 
+type id = id * UInt128.t
+let alg (i:id) = macAlg_of_id (fst i) 
 
 type text = Seq.seq (lbytes 16) // (used to be seq elem)
 
