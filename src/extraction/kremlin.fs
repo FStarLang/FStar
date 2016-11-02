@@ -460,8 +460,11 @@ and translate_type env t: typ =
       TQualified (path, type_name)
   | MLTY_Named (args, ([ "Prims" ], t)) when Util.starts_with t "tuple" ->
       TTuple (List.map (translate_type env) args)
-  | MLTY_Named (args, (path, type_name)) ->
-      TApp ((path, type_name), List.map (translate_type env) args)
+  | MLTY_Named (args, lid) ->
+      if List.length args > 0 then
+        TApp (lid, List.map (translate_type env) args)
+      else
+        TQualified lid
   | MLTY_Tuple ts ->
       TTuple (List.map (translate_type env) ts)
 
@@ -649,7 +652,11 @@ and translate_expr env e: expr =
 
 and assert_lid env t =
   match t with
-  | MLTY_Named (ts, lid) -> TApp (lid, List.map (translate_type env) ts)
+  | MLTY_Named (ts, lid) ->
+      if List.length ts > 0 then
+        TApp (lid, List.map (translate_type env) ts)
+      else
+        TQualified lid
   | _ -> failwith "invalid argument: assert_lid"
 
 and translate_branches env branches =
