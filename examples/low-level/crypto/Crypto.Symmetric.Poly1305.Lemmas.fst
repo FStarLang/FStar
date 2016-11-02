@@ -4,6 +4,7 @@ open FStar.Mul
 open FStar.Ghost
 open FStar.Seq
 (** Machine integers *)
+open FStar.UInt
 open FStar.UInt8
 open FStar.UInt64
 open FStar.Int.Cast
@@ -20,29 +21,8 @@ open Crypto.Symmetric.Bytes
 module U8 = FStar.UInt8
 module U64 = FStar.UInt64
 
+#set-options "--lax"
 #set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
-
-
-(* JK: TODO
-   Those are bitvector lemmas that need to be proven using FStar.BitVector and then go
-   to FStar.UInt
-   *)
-assume val lemma_logor_dijoint: #n:pos -> a:UInt.uint_t n -> b:UInt.uint_t n -> m:nat{m < n} ->
-  Lemma (requires (a % pow2 m = 0 /\ b < pow2 m))
-        (ensures  (UInt.logor #n a b = a + b))
-
-assume val lemma_logand_pow2_gte: #n:pos -> x:UInt.uint_t n -> y:UInt.uint_t n -> m:nat ->
-       Lemma (requires (x % pow2 m = 0))
-             (ensures  (UInt.logand x y % pow2 m = 0))
-
-assume val lemma_logand_pow2_lt: #n:pos -> x:UInt.uint_t n -> y:UInt.uint_t n -> m:nat ->
-       Lemma (requires (x < pow2 m))
-             (ensures  (UInt.logand x y < pow2 m))
-
-assume val lemma_logand_mask: #n:pos -> x:UInt.uint_t n -> m:nat{m <= n} ->
-       Lemma (requires (True))
-             (ensures  (pow2 m < pow2 n /\ UInt.logand #n x (pow2 m - 1) = x % pow2 m))
-
 
 val pow2_8_lemma: n:nat ->
   Lemma
@@ -64,7 +44,6 @@ val pow2_64_lemma: n:nat ->
     (ensures  (pow2 n = 18446744073709551616))
     [SMTPat (pow2 n)]
 let pow2_64_lemma n = assert_norm(pow2 64 = 18446744073709551616)
-
 
 #set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
@@ -233,7 +212,7 @@ let lemma_toField_2_4 n0 n1 n2 n3 n0' n1' n2' n3' n4' =
   lemma_toField_2_3 v3
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
 
 val lemma_toField_2: n0:u64_32 -> n1:u64_32 -> n2:u64_32 -> n3:u64_32 ->
   n0':U64.t -> n1':U64.t -> n2':U64.t -> n3':U64.t -> n4':U64.t -> Lemma
@@ -506,3 +485,131 @@ let lemma_toField_1 s h n0 n1 n2 n3 =
   little_endian_append s04 s48;
   little_endian_append (Seq.append s04 s48) s812;
   little_endian_append (Seq.append (Seq.append s04 s48) s812) s1216
+
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+
+(* WIP *)
+assume val lemma_eval_5: h:HyperStack.mem -> a:Buffer.buffer U64.t{live h a /\ length a >= 5} ->
+  Lemma (Crypto.Symmetric.Poly1305.Bigint.eval h a 5 =
+    v (get h a 0) + pow2 26 * v (get h a 1) + pow2 52 * v (get h a 2) + pow2 78 * v (get h a 3)
+    + pow2 104 * v (get h a 4))
+
+assume val lemma_little_endian_16: h:HyperStack.mem -> a:Buffer.buffer U8.t{live h a /\ length a = 16} ->
+  Lemma (let open FStar.UInt8 in
+    little_endian (as_seq h a) =
+            v (get h a 0) + pow2 8 * v (get h a 1) + pow2 16 * v (get h a 2) + pow2 24 * v (get h a 3)
+  + pow2 32 * v (get h a 4) + pow2 40 * v (get h a 5) + pow2 48 * v (get h a 6) + pow2 56 * v (get h a 7)
+  + pow2 64 * v (get h a 8) + pow2 72 * v (get h a 9) + pow2 80 * v (get h a 10) + pow2 88 * v (get h a 11)
+  + pow2 96 * v (get h a 12) + pow2 104 * v (get h a 13) + pow2 112 * v (get h a 14) + pow2 120 * v (get h a 15) )
+
+assume val lemma_trunc1305_0: a:U64.t -> Lemma
+  (v a % pow2 8 + pow2 8 * ((v a / pow2 8) % pow2 8) + pow2 16 * ((v a / pow2 16) % pow2 8) + pow2 24 * ((v a / pow2 24) % pow2 8)
+    = v a % pow2 32)
+
+assume val lemma_trunc1305_1: a:U64.t -> Lemma
+  ((v a * pow2 2) % pow2 8 + pow2 8 * ((v a / pow2 6) % pow2 8) + pow2 16 * ((v a / pow2 14) % pow2 8) + pow2 24 * ((v a / pow2 22) % pow2 8)
+    = pow2 2 * (v a % pow2 30))
+
+assume val lemma_trunc1305_2: a:U64.t -> Lemma
+  ((v a * pow2 4) % pow2 8 + pow2 8 * ((v a / pow2 4) % pow2 8) + pow2 16 * ((v a / pow2 12) % pow2 8) + pow2 24 * ((v a / pow2 20) % pow2 8)
+    = pow2 4 * (v a % pow2 28))
+
+assume val lemma_trunc1305_3: a:U64.t -> Lemma
+  ((v a * pow2 6) % pow2 8 + pow2 8 * ((v a / pow2 2) % pow2 8) + pow2 16 * ((v a / pow2 10) % pow2 8) + pow2 24 * ((v a / pow2 18) % pow2 8)
+    = pow2 6 * (v a % pow2 26))
+
+assume val lemma_trunc1305_4: a:U64.t -> Lemma
+  (v a % pow2 8 + pow2 8 * ((v a / pow2 8) % pow2 8) + pow2 16 * ((v a / pow2 16) % pow2 8)
+    = v a % pow2 24)
+
+assume val lemma_trunc1305_5: a0:U64.t -> a1:U64.t -> a2:U64.t -> a3:U64.t -> a4:U64.t -> Lemma
+  (requires (v a0 < pow2 26 /\ v a1 < pow2 26 /\ v a2 < pow2 26 /\ v a3 < pow2 26 /\ v a4 < pow2 26))
+  (ensures  ((v a0 + pow2 26 * v a1 + pow2 52 * v a2 + pow2 78 * v a3 + pow2 104 * v a4) % pow2 128
+    = (v a0 + pow2 26 * v a1 + pow2 52 * v a2 + pow2 78 * v a3 + pow2 104 * (v a4 % pow2 24)) ))
+
+val lemma_norm_5:
+  h:HyperStack.mem ->
+  b:Buffer.buffer U64.t{length b >= 5 /\ Crypto.Symmetric.Poly1305.Bigint.norm h b} ->
+  Lemma (requires (True))
+        (ensures  (v (get h b 0) < pow2 26 /\ v (get h b 1) < pow2 26
+          /\ v (get h b 2) < pow2 26 /\ v (get h b 3) < pow2 26 /\ v (get h b 4) < pow2 26))
+let lemma_norm_5 h b = ()
+
+(* assume val lemma_trunc1305_6: a0:U64.t -> a1:U64.t -> a2:U64.t -> a3:U64.t -> a4:U64.t -> Lemma *)
+(*   (requires (v a0 < pow2 26 /\ v a1 < pow2 26 /\ v a2 < pow2 26 /\ v a3 < pow2 26 /\ v a4 < pow2 26)) *)
+(*   (ensures  ((v a0 + pow2 26 * v a1 + pow2 52 * v a2 + pow2 78 * v a3 + pow2 104 * v a4) *)
+(*     = v a0 % pow2 8 + ((v a0 / pow2 8) % pow2 8) + ((v a0 / pow2 16) % pow2 8) + ((v a0 / pow2 24) % pow2 8 *)
+(*       + pow2 2 *)
+
+val lemma_trunc1305: hb:HyperStack.mem ->
+  b:Buffer.buffer U8.t{live hb b /\ length b = 16} ->
+  ha:HyperStack.mem ->
+  a:Crypto.Symmetric.Poly1305.Bigint.bigint{Crypto.Symmetric.Poly1305.Bigint.norm ha a} ->
+  Lemma (requires (
+    let a0 = get ha a 0 in let a1 = get ha a 1 in let a2 = get ha a 2 in let a3 = get ha a 3 in
+    let a4 = get ha a 4 in
+    let b0 = get hb b 0 in let b1 = get hb b 1 in let b2 = get hb b 2 in let b3 = get hb b 3 in
+    let b4 = get hb b 4 in let b5 = get hb b 5 in let b6 = get hb b 6 in let b7 = get hb b 7 in
+    let b8 = get hb b 8 in let b9 = get hb b 9 in let b10 = get hb b 10 in let b11 = get hb b 11 in
+    let b12 = get hb b 12 in let b13 = get hb b 13 in let b14 = get hb b 14 in let b15 = get hb b 15 in
+    ( b0 == uint64_to_uint8 a0
+    /\ b1 == uint64_to_uint8 (a0 >>^ 8ul)
+    /\ b2 == uint64_to_uint8 (a0 >>^ 16ul)
+    /\ b3 == uint64_to_uint8 ((a0 >>^ 24ul) |^ (a1 <<^ 2ul))
+    /\ b4 == uint64_to_uint8 (a1 >>^ 6ul)
+    /\ b5 == uint64_to_uint8 (a1 >>^ 14ul)
+    /\ b6 == uint64_to_uint8 ((a1 >>^ 22ul) |^ (a2 <<^ 4ul))
+    /\ b7 == uint64_to_uint8 (a2 >>^ 4ul)
+    /\ b8 == uint64_to_uint8 (a2 >>^ 12ul)
+    /\ b9 == uint64_to_uint8 ((a2 >>^ 20ul) |^ (a3 <<^ 6ul))
+    /\ b10 == uint64_to_uint8 (a3 >>^ 2ul)
+    /\ b11 == uint64_to_uint8 (a3 >>^ 10ul)
+    /\ b12 == uint64_to_uint8 (a3 >>^ 18ul)
+    /\ b13 == uint64_to_uint8 a4
+    /\ b14 == uint64_to_uint8 (a4 >>^ 8ul)
+    /\ b15 == uint64_to_uint8 (a4 >>^ 16ul)) ))
+        (ensures  ((Crypto.Symmetric.Poly1305.Bigint.eval ha a 5) % pow2 128
+          = little_endian (as_seq hb b)))
+
+let lemma_b3 (a0:U64.t{v a0 < pow2 26}) (a1:U64.t{v a1 < pow2 26}) : Lemma
+  (U8.v (uint64_to_uint8 ((a0 >>^ 24ul) |^ (a1 <<^ 2ul))) = ((v a0 / pow2 24) % pow2 8) + ((v a1*pow2 2)%pow2 8))
+  = admit()
+
+
+let lemma_b6 (a1:U64.t{v a1 < pow2 26}) (a2:U64.t{v a2 < pow2 26}) : Lemma
+  (U8.v (uint64_to_uint8 ((a1 >>^ 22ul) |^ (a2 <<^ 4ul))) = ((v a1 / pow2 22) % pow2 8) + ((v a2*pow2 4)%pow2 8))
+  = admit()
+
+
+let lemma_b9 (a2:U64.t{v a2 < pow2 26}) (a3:U64.t{v a3 < pow2 26}) : Lemma
+  (U8.v (uint64_to_uint8 ((a2 >>^ 20ul) |^ (a3 <<^ 6ul))) = ((v a2 / pow2 20) % pow2 8) + ((v a3*pow2 6)%pow2 8))
+  = admit()
+
+
+let lemma_trunc1305 hb b ha a =
+  lemma_little_endian_16 hb b;
+  lemma_norm_5 ha a;
+  let a0 = get ha a 0 in let a1 = get ha a 1 in let a2 = get ha a 2 in let a3 = get ha a 3 in
+  let a4 = get ha a 4 in
+  let b0 = get hb b 0 in let b1 = get hb b 1 in let b2 = get hb b 2 in let b3 = get hb b 3 in
+  let b4 = get hb b 4 in let b5 = get hb b 5 in let b6 = get hb b 6 in let b7 = get hb b 7 in
+  let b8 = get hb b 8 in let b9 = get hb b 9 in let b10 = get hb b 10 in let b11 = get hb b 11 in
+  let b12 = get hb b 12 in let b13 = get hb b 13 in let b14 = get hb b 14 in let b15 = get hb b 15 in
+  let p8 = pow2 8 in let p16 = pow2 16 in let p24 = pow2 24 in
+  let p32 = pow2 32 in let p40 = pow2 40 in let p48 = pow2 48 in let p56 = pow2 56 in
+  let p64 = pow2 64 in let p72 = pow2 72 in let p80 = pow2 80 in let p88 = pow2 88 in
+  let p96 = pow2 96 in let p104 = pow2 104 in let p112 = pow2 112 in let p120 = pow2 120 in
+  lemma_b3 a0 a1;
+  lemma_b6 a1 a2;
+  lemma_b9 a2 a3; admit()
+  (* assume (U8.v b3 = ((v a0 / p24) % p8) + ((v a1*pow2 2)%p8)); admit() *)
+
+  (* let le =  v (b0) + pow2 8 * v (b1) + pow2 16 * v (b2) + pow2 24 * v (b3) *)
+  (* + pow2 32 * v (b4) + pow2 40 * v (b5) + pow2 48 * v (b6) + pow2 56 * v (b7) *)
+  (* + pow2 64 * v (b8) + pow2 72 * v (b9) + pow2 80 * v (b10) + pow2 88 * v (b11) *)
+  (* + pow2 96 * v (b12) + pow2 104 * v (b13) + pow2 112 * v (b14) + pow2 120 * v (b15) in *)
+  
+
+  (* cut (le = ((v a0 % p8) + p8 * ((v a0 / p8) % p8) + p16 * ((v a0 / p16)%p8) + p24*((v a0/p24)%p8) *)
+  (*   + p32*((v a1)/pow2 6)%p8) + p40*((v a1/pow2 14)%p8) + p48*((v a1/pow2 22)%p8) + p24*((v a0/p24)%p8) *)
