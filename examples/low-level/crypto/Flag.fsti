@@ -33,10 +33,10 @@ inline_for_extraction val prf_cpa: bool
 inline_for_extraction val safeHS: i:id -> Tot bool 
 
 // controls PRF idealization of ciphers (move to PRF?)
-let prf (i: id) = safeHS i && cipher_prf(cipherAlg_of_id i)
+inline_for_extraction let prf (i: id) = safeHS i && cipher_prf(cipherAlg_of_id i)
 
 // controls INT1CMA idealization of MACs (move to MAC?)
-let mac1 i = mac_log && mac_int1cma (macAlg_of_id i)
+inline_for_extraction let mac1 i = mac_log && mac_int1cma (macAlg_of_id i)
 
 // controls abstraction of plaintexts
 // (kept abstract, but requires all the crypto steps above)
