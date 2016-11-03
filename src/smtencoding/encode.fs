@@ -1106,7 +1106,6 @@ let prims =
     let asym, a = fresh_fvar "a" Term_sort in
     let xsym, x = fresh_fvar "x" Term_sort in
     let ysym, y = fresh_fvar "y" Term_sort in
-    let deffun vars body x = [Term.DefineFun(x, vars, Term_sort, body, None)] in
     let quant vars body : string -> term * list<decl> = fun x ->
         let xname_decl = Term.DeclFun(x, vars |> List.map snd, Term_sort, None) in
         let xtok = x ^ "@tok" in
