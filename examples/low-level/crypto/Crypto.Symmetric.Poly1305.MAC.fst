@@ -214,9 +214,9 @@ type accB (i:id) = elemB
 
 // 16-10-15 TODO mac_log ==> keep stateful itext (to avoid state-passing)
 // 16-10-15 still missing region
-let irtext = if Flag.mac_log then FStar.HyperStack.ref (Seq.seq elem) else unit 
+let irtext = if Flag.mac_log then FStar.HyperStack.ref text else unit 
 noeq type accBuffer (i:id) = | Acc:  l:irtext -> a:elemB -> accBuffer i
-let alog (#i:id) (acc:accBuffer i {mac_log}): FStar.HyperStack.ref (Seq.seq elem) = acc.l
+let alog (#i:id) (acc:accBuffer i {mac_log}): FStar.HyperStack.ref text = acc.l
 let acc_inv'(#i:id) (st:state i) (acc:accBuffer i) h =
   live h st.r /\ live h acc.a /\ disjoint st.r acc.a /\
   norm h st.r /\ norm h acc.a /\

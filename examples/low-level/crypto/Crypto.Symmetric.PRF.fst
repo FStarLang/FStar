@@ -180,8 +180,11 @@ let coerce rgn i key =
   Buffer.blit key 0ul key_p 0ul (keylen i);
   State #i #rgn #mac_rgn key_p (no_table i rgn mac_rgn)
 
-// TODO leak, and eventually dynamic compromise.
-
+val leak: #i:id{~(prf i)} -> st:state i -> ST (key:lbuffer (v (keylen i)))
+  (requires (fun h -> True))
+  (ensures  (fun h0 k h1 -> h0=h1 /\ Buffer.live h1 k))
+let leak #i st =
+  st.key
 
 (** computes a PRF block and copies its len first bytes to output *)
 
