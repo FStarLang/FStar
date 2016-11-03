@@ -554,6 +554,7 @@ val finish_after_mac: h0:mem -> h3:mem -> i:id -> st:state i Writer ->
    (ensures (fun _ _ h5 -> 
               encrypt_ensures i st n aadlen aad plainlen plain cipher_tagged h0 h5))
 
+#reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let finish_after_mac h0 h3 i st n aadlen aad plainlen plain cipher_tagged ak acc tag = 
   if prf i then recall (itable i st.prf);
   if safeId i then recall st.log;
@@ -631,7 +632,7 @@ val encrypt:
   n: Cipher.iv (alg i) ->
   aadlen: UInt32.t {aadlen <=^ aadmax} ->
   aad: lbuffer (v aadlen) ->
-  plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) 1ul} ->
+  plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (ctr_0 i +^ 1ul)} ->
   plain: plainBuffer i (v plainlen) ->
   cipher_tagged:lbuffer (v plainlen + v MAC.taglen)
   {
@@ -651,53 +652,66 @@ val encrypt:
     Buffer.live h aad /\
     Buffer.live h cipher_tagged /\
     Plain.live h plain /\
-    (prf i ==> none_above ({iv=n; ctr=0ul}) st.prf h) // The nonce must be fresh!
+    (prf i ==> none_above ({iv=n; ctr=ctr_0 i}) st.prf h) // The nonce must be fresh!
    ))
   (ensures (fun h0 _ h5 ->
     encrypt_ensures i st n aadlen aad plainlen plain cipher_tagged h0 h5))
     (* Buffer.m_ref (Buffer.frameOf cipher) !{Buffer.modifies_1 cipher h0 h1 /\  *)
-    
+
    
 (* #reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
-(* let encrypt i st n aadlen aad plainlen plain cipher_tagged = *)
-(*   let h0 = get() in *)
-(*   assume (HS (is_stack_region h0.tip)); //TODO: remove this once we move all functions to STL *)
-(*   assume (HS (HH.disjoint h0.tip st.prf.mac_rgn)); //DO we need disjointness or will disequality do? *)
-(*   let x = PRF({iv = n; ctr = 0ul}) in // PRF index to the first block *)
-(*   let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC *)
-(*   let h1 = get () in *)
-(*   assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h1); *)
-(*   let cipher = Buffer.sub cipher_tagged 0ul plainlen in *)
-(*   let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in *)
-(*   let y = PRF.incr i x in *)
-(*   //calling this lemma allows us to complete the proof without using any fuel; *)
-(*   //which makes things a a bit faster *)
-(*   counterblocks_emp i st.prf.mac_rgn y (v plainlen) 0 *)
-(*       (Plain.sel_plain h1 plainlen plain) (Buffer.as_seq h1 cipher); *)
-(*   counter_enxor i st.prf y plainlen plainlen plain cipher h1; *)
-(*   // Compute MAC over additional data and ciphertext *)
-(*   let h2 = get () in *)
-(*   FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 cipher h1) h2; *)
-(*   assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h2); *)
-(*   lemma_frame_find_mac #i #(v plainlen) st.prf y cipher h1 h2; *)
-(*   intro_refines_one_entry_no_tag #i st n (v plainlen) plain cipher_tagged h0 h1 h2; //we have pre_refines_one_entry here *)
-(*   assert (Buffer.live h1 aad); //seem to need this hint *)
-(*   let l, acc = accumulate ak aadlen aad plainlen cipher in *)
-(*   //Establishing the pre-conditions of MAC.mac *)
-(*   let h3 = get() in *)
-(*   assume (HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged]) h0 h3); //TODO: prove this! *)
-(*   Buffer.lemma_reveal_modifies_0 h2 h3; *)
-(*   assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h3); *)
-(*   frame_pre_refines_0 i st n (v plainlen) plain cipher_tagged h0 h2 h3; *)
-(*   assert (Buffer.live h2 aad); //seem to need this hint *)
-(*   assert (Buffer.live h3 aad); //seem to need this hint *)
-(*   Buffer.lemma_reveal_modifies_0 h2 h3; *)
-(*   //MAC *)
-(*   mac_wrapper #(i,n) ak l acc tag; *)
-(*   //Some ideal and proof steps, to finish up *)
-(*   finish_after_mac h0 h3 i st n aadlen aad plainlen plain cipher_tagged ak l acc tag; *)
-(*   let h5 = get () in *)
-(*   assume (HS.equal_domains h0 h5) *)
+let encrypt i st n aadlen aad plainlen plain cipher_tagged =
+  let h00 = get() in
+  push_frame();
+  let h0 = get () in
+  assert (HH.modifies_rref st.prf.mac_rgn TSet.empty (HS h00.h) (HS h0.h));
+  admit()
+  
+  assert (HS (is_stack_region h0.tip)); //TODO: remove this once we move all functions to STL
+  assume (HS (HH.disjoint h0.tip st.log_region)); //DO we need disjointness or will disequality do?
+  assume (HS (HH.disjoint h0.tip (Buffer.frameOf cipher_tagged))); //DO we need disjointness or will disequality do?  
+  let x = PRF({iv = n; ctr = ctr_0 i}) in // PRF index to the first block
+  let ak = PRF.prf_mac i st.prf st.ak x in  // used for keying the one-time MAC
+  let h1 = get () in
+  assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h00 h1);
+  admit()
+  
+  let cipher = Buffer.sub cipher_tagged 0ul plainlen in
+  let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
+  let y = PRF.incr i x in
+  //calling this lemma allows us to complete the proof without using any fuel;
+  //which makes things a a bit faster
+  counterblocks_emp i st.prf.mac_rgn y (v plainlen) 0
+      (Plain.sel_plain h1 plainlen plain) (Buffer.as_seq h1 cipher);
+  counter_enxor i st.prf y plainlen plainlen plain cipher h1;
+  // Compute MAC over additional data and ciphertext
+  let h2 = get () in
+  FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 cipher h1) h2;
+  assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h2);
+  lemma_frame_find_mac #i #(v plainlen) st.prf y cipher h1 h2;
+  intro_refines_one_entry_no_tag #i st n (v plainlen) plain cipher_tagged h0 h1 h2; //we have pre_refines_one_entry here
+  assert (Buffer.live h1 aad); //seem to need this hint
+  assume (MAC.norm h2 (CMA ak.r));
+  let acc = accumulate_wrapper ak aadlen aad plainlen cipher in
+  //Establishing the pre-conditions of MAC.mac
+  let h3 = get() in
+  Buffer.lemma_reveal_modifies_0 h2 h3;
+  (* assume (HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged]) h0 h3); //TODO: prove this! *)
+  assert (HS (h0.h `Map.contains` 
+  assert false;
+  admit()
+  
+  assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h3);
+  frame_pre_refines_0 i st n (v plainlen) plain cipher_tagged h0 h2 h3;
+  assert (Buffer.live h2 aad); //seem to need this hint
+  assert (Buffer.live h3 aad); //seem to need this hint
+  Buffer.lemma_reveal_modifies_0 h2 h3;
+  //MAC
+  mac_wrapper #(i,n) ak l acc tag;
+  //Some ideal and proof steps, to finish up
+  finish_after_mac h0 h3 i st n aadlen aad plainlen plain cipher_tagged ak l acc tag;
+  let h5 = get () in
+  assume (HS.equal_domains h0 h5)
 
 
 (* //////////////////////////////////////////////////////////////////////////////// *)
