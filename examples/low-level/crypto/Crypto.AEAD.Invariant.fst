@@ -46,8 +46,6 @@ noeq type entry (i:id) =
       c:cipher i (Seq.length (as_bytes p)) -> 
       entry i
 
-type rw = | Reader | Writer 
-
 noeq type state (i:id) (rw:rw) =
   | State:
       #log_region: rgn -> // this is the *writer* region; the reader allocates nothing

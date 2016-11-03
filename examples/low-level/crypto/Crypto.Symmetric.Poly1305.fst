@@ -311,6 +311,7 @@ let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
   (ensures  (live h b /\ live h s /\ v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 == little_endian (sel_word h s)))
   = Crypto.Symmetric.Poly1305.Lemmas.lemma_toField_1 s h n0 n1 n2 n3
     
+#set-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
 
 val upd_elemB: b:elemB{length b == norm_length} -> n0:U64.t -> n1:U64.t -> n2:U64.t -> n3:U64.t -> n4:U64.t -> Stack unit
   (requires (fun h -> live h b
@@ -343,7 +344,7 @@ let upd_elemB b n0 n1 n2 n3 n4 =
 
 #reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
 
-(* TODO *)
+
 let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4': Lemma
   (requires (let mask_26 = mk_mask 26ul in
     v n0 < pow2 32 /\ v n1 < pow2 32 /\ v n2 < pow2 32 /\ v n3 < pow2 32
@@ -356,7 +357,7 @@ let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4': Lemma
     == v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 ))
   = Crypto.Symmetric.Poly1305.Lemmas.lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4'
 
-(* TODO (requires the BitVector module *)
+
 let lemma_toField_3 n0 n1 n2 n3 n0' n1' n2' n3' n4' : Lemma
   (requires (let mask_26 = mk_mask 26ul in
     v n0 < pow2 32 /\ v n1 < pow2 32 /\ v n2 < pow2 32 /\ v n3 < pow2 32
@@ -420,7 +421,7 @@ let toField b s =
   upd_elemB b n0' n1' n2' n3' n4'
 
 
-#set-options "--initial_fuel 1 --max_fuel 1 --z3timeout 5"
+#set-options "--initial_fuel 1 --max_fuel 1 --z3timeout 20"
 
 val lemma_toField_plus_2_128_0: ha:mem -> a:elemB{live ha a} -> Lemma
   (requires True)
@@ -433,12 +434,13 @@ let lemma_toField_plus_2_128_0 ha a =
   lemma_bitweight_templ_values 2;
   lemma_bitweight_templ_values 1;
   lemma_bitweight_templ_values 0;
-  assert(sel_int ha a == pow2 104 * v (get ha a 4) + eval ha a 4);
-  assert(eval ha a 4 == pow2 78 * v (get ha a 3) + eval ha a 3);
-  assert(eval ha a 3 == pow2 52 * v (get ha a 2) + eval ha a 2);
-  assert(eval ha a 2 == pow2 26 * v (get ha a 1) + eval ha a 1);
-  assert(eval ha a 1 == pow2 0 * v (get ha a 0) + eval ha a 0);
-  assert(pow2 0 * v (get ha a 0) == v (get ha a 0) /\ eval ha a 0 == 0)
+  eval_def ha a 5;
+  eval_def ha a 4;
+  eval_def ha a 3;
+  eval_def ha a 2;
+  eval_def ha a 1;
+  eval_def ha a 0;
+  assert_norm (pow2 0 = 1)
 
 #set-options "--initial_fuel 0 --max_fuel 0"
 
@@ -541,7 +543,11 @@ val upd_wordB_16: b:wordB_16 ->
   s5:U8.t -> s6:U8.t -> s7:U8.t -> s8:U8.t -> s9:U8.t -> 
   s10:U8.t -> s11:U8.t -> s12:U8.t -> s13:U8.t -> s14:U8.t -> s15:U8.t -> Stack unit
     (requires (fun h -> live h b))
-    (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
+    (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1
+      /\ get h1 b 0 == s0  /\ get h1 b 1 == s1  /\ get h1 b 2 == s2  /\ get h1 b 3 == s3
+      /\ get h1 b 4 == s4  /\ get h1 b 5 == s5  /\ get h1 b 6 == s6  /\ get h1 b 7 == s7
+      /\ get h1 b 8 == s8  /\ get h1 b 9 == s9  /\ get h1 b 10 == s10 /\ get h1 b 11 == s11
+      /\ get h1 b 12 == s12 /\ get h1 b 13 == s13  /\ get h1 b 14 == s14 /\ get h1 b 15 == s15 ))
 let upd_wordB_16 s s0 s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 =
   s.(0ul) <- s0;
   s.(1ul) <- s1;
@@ -560,6 +566,8 @@ let upd_wordB_16 s s0 s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 =
   s.(14ul) <- s14;
   s.(15ul) <- s15
 
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
 
 val trunc1305: a:elemB -> b:wordB_16{disjoint a b} -> ST unit
   (requires (fun h -> norm h a /\ live h b /\ disjoint a b))
@@ -602,9 +610,12 @@ let trunc1305 a b =
   upd_wordB_16 b b0 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14 b15;
   let h2 = ST.get() in
   assert (modifies_1 b h1 h2);
-  (* TODO *)
-  assume (sel_elem h0 a % pow2 128 == little_endian (sel_word h2 b))
+  Crypto.Symmetric.Poly1305.Lemmas.lemma_trunc1305 h2 b h1 a;
+  cut ((sel_elem h0 a) % pow2 128 = (eval h1 a 5) % pow2 128);
+  cut (sel_elem h0 a % pow2 128 == little_endian (sel_word h2 b))
 
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
 
 (* Clamps the key, see RFC
    we clear 22 bits out of 128 (where does it help?)
@@ -878,26 +889,35 @@ private val add_word: a:wordB_16 -> b:wordB_16 -> Stack unit
      little_endian (sel_word h1 a) ==
      (little_endian (sel_word h0 a) + little_endian (sel_word h0 b)) % pow2 128 ))
 let add_word a b =
-  let carry = 0ul in
-  let a04:u64 = let (x:u32) = uint32_of_bytes a in uint32_to_uint64 x  in
-  let a48:u64 = let (x:u32) = uint32_of_bytes (offset a 4ul) in uint32_to_uint64 x in
-  let a812:u64 = let (x:u32) = uint32_of_bytes (offset a 8ul) in uint32_to_uint64 x in
-  let a1216:u64 = let (x:u32) = uint32_of_bytes (offset a 12ul) in uint32_to_uint64 x in
-  let b04:u64 = let (x:u32) = uint32_of_bytes b in uint32_to_uint64 x  in
-  let b48:u64 = let (x:u32) = uint32_of_bytes (offset b 4ul) in uint32_to_uint64 x in
-  let b812:u64 = let (x:u32) = uint32_of_bytes (offset b 8ul) in uint32_to_uint64 x in
-  let b1216:u64 = let (x:u32) = uint32_of_bytes (offset b 12ul) in uint32_to_uint64 x in
+  let hinit = ST.get() in
+  let a04:u64 = let (x:u32) = uint32_of_bytes (sub a 0ul 4ul) in uint32_to_uint64 x  in
+  let a48:u64 = let (x:u32) = uint32_of_bytes (sub a 4ul 4ul) in uint32_to_uint64 x in
+  let a812:u64 = let (x:u32) = uint32_of_bytes (sub a 8ul 4ul) in uint32_to_uint64 x in
+  let a1216:u64 = let (x:u32) = uint32_of_bytes (sub a 12ul 4ul) in uint32_to_uint64 x in
+  let b04:u64 = let (x:u32) = uint32_of_bytes (sub b 0ul 4ul) in uint32_to_uint64 x  in
+  let b48:u64 = let (x:u32) = uint32_of_bytes (sub b 4ul 4ul) in uint32_to_uint64 x in
+  let b812:u64 = let (x:u32) = uint32_of_bytes (sub b 8ul 4ul) in uint32_to_uint64 x in
+  let b1216:u64 = let (x:u32) = uint32_of_bytes (sub b 12ul 4ul) in uint32_to_uint64 x in
   let open FStar.UInt64 in
   let z0 = a04 +^ b04 in
   let z1 = a48 +^ b48 +^ (z0 >>^ 32ul) in
   let z2 = a812 +^ b812 +^ (z1 >>^ 32ul) in
   let z3 = a1216 +^ b1216 +^ (z2 >>^ 32ul) in
-  bytes_of_uint32 (Buffer.sub a 0ul 4ul) (uint64_to_uint32 z0);
-  bytes_of_uint32 (Buffer.sub a 4ul 4ul) (uint64_to_uint32 z1);
-  bytes_of_uint32 (Buffer.sub a 8ul 4ul) (uint64_to_uint32 z2);
-  bytes_of_uint32 (Buffer.sub a 12ul 4ul) (uint64_to_uint32 z3);
-  (* TODO *)
-  admit ()
+  let z0' = (uint64_to_uint32 z0) in
+  let z1' = (uint64_to_uint32 z1) in
+  let z2' = (uint64_to_uint32 z2) in
+  let z3' = (uint64_to_uint32 z3) in
+  let h0 = ST.get() in
+  bytes_of_uint32 (Buffer.sub a 0ul 4ul) (z0');
+  let h1 = ST.get() in
+  bytes_of_uint32 (Buffer.sub a 4ul 4ul) (z1');
+  let h2 = ST.get() in
+  bytes_of_uint32 (Buffer.sub a 8ul 4ul) (z2');
+  let h3 = ST.get() in
+  bytes_of_uint32 (Buffer.sub a 12ul 4ul) (z3');
+  let h4 = ST.get() in
+  Crypto.Symmetric.Poly1305.Lemmas.lemma_add_word hinit a hinit b a04 a48 a812 a1216 b04 b48 b812 b1216;
+  Crypto.Symmetric.Poly1305.Lemmas.lemma_add_word2 h0 h1 h2 h3 h4 a z0' z1' z2' z3'
 
 
 (* Finish function, with final accumulator value *)

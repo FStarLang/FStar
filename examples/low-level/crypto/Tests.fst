@@ -1,7 +1,8 @@
-module Crypto.Test 
+module Tests
 
 open FStar.UInt32
 open FStar.Ghost
+open FStar.Buffer
 
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
@@ -20,9 +21,10 @@ module AETypes = Crypto.AEAD.Invariant
 
 module L = FStar.List.Tot
 
-// Some helpers for our test routines
+#set-options "--lax"
 
-unfold inline_for_extraction let mk_buf_t (len:nat) = 
+
+let mk_buf_t (len:nat) = 
   unit -> StackInline (Buffer.buffer UInt8.t)
      (requires (fun h -> True))
      (ensures (fun (h0:mem) b h1 -> 
@@ -35,10 +37,14 @@ unfold inline_for_extraction let mk_buf_t (len:nat) =
        /\ modifies_0 h0 h1
        ))
 
+
 let mk_aad : mk_buf_t 12
   = fun () ->
-    Buffer.createL [ 0x50uy; 0x51uy; 0x52uy; 0x53uy; 0xc0uy; 0xc1uy; 0xc2uy; 0xc3uy; 0xc4uy; 0xc5uy; 0xc6uy; 0xc7uy ]
-
+    let l = [ 0x50uy; 0x51uy; 0x52uy; 0x53uy; 0xc0uy; 0xc1uy; 0xc2uy; 0xc3uy; 0xc4uy; 0xc5uy; 0xc6uy; 0xc7uy ] in
+    //assert_norm (L.length l == 12); // Doesn't work, the normalizer doesn't normalize a match
+    assume (L.length l == 12);
+    Buffer.createL l
+ 
 let mk_key : mk_buf_t 32
   = fun () -> 
     let l = [0x80uy; 0x81uy; 0x82uy; 0x83uy; 0x84uy; 0x85uy; 0x86uy; 0x87uy; 0x88uy; 0x89uy; 0x8auy; 0x8buy; 0x8cuy; 0x8duy; 0x8euy; 0x8fuy; 
@@ -66,109 +72,10 @@ let mk_expected_cipher : mk_buf_t 130
 	     0x06uy; 0x91uy ] in 
     assume (L.length l == 130);	     
     Buffer.createL l
-    
-#reset-options
 
-// TESTING 
-
-val load_string: l:UInt32.t -> buf:lbuffer (v l) -> STL string // (s:string {String.length s == v l})
-  (requires (fun h0 -> Buffer.live h0 buf))
-  (ensures (fun h0 s h1 -> h0 == h1 ))
-let rec load_string l buf = 
-  if l = 0ul then "" else
-  //16-09-20 we miss String.init, proper refinements, etc
-  let b = UInt8.v (Buffer.index buf 0ul) in
-  let s = String.make 1 (Char.char_of_int b) in
-  let t = load_string (l -^ 1ul) (Buffer.sub buf 1ul (l -^ 1ul)) in
-  String.strcat s t
-
-val store_string: len:UInt32.t -> buf:lbuffer (v len) -> i:UInt32.t {i <=^ len} -> s:string {String.length s = v len} -> STL unit
-  (requires (fun h0 -> Buffer.live h0 buf))
-  (ensures (fun h0 r h1 -> Buffer.live h1 buf /\ Buffer.modifies_1 buf h0 h1))
- 
-let rec store_string len buf i s = 
-  if i <^ len then (
-  Buffer.upd buf i (UInt8.uint_to_t (Char.int_of_char (String.index s (v i)))); 
-  store_string len buf (i +^ 1ul) s )
-
-
-(*
-let print (s:bytes) (len:int) : unit =
-  for i = 0 to len - 1 do
-    Printf.printf "%02x" (index s i);
-    if i < len - 1 then print_string ":"
-  done;
-  print_string "\n"
-    
-let time f x s =
-  let t = Sys.time() in
-  let _ = f x in
-  Printf.printf "Elapsed time for %s : %fs\n" s (Sys.time() -. t)
-*)
-
-val from_string: len:UInt32.t -> string -> StackInline (lbuffer (v len))
-  (requires (fun h0 -> True))
-  (ensures (fun h0 r h1 -> Buffer.modifies_0 h0 h1 /\ Buffer.live h1 r )) // how to express freshness?
-
-let from_string len s = 
-  let buf = Buffer.create 0uy len in
-  (if String.length s = v len then store_string len buf 0ul s);
-  buf 
-
-
-(*
-val store_bytestring: len:UInt32.t -> buf:lbuffer (v len) -> i:UInt32.t {i <=^ len} -> s:string {String.length s = v len + v len} -> STL unit
-  (requires (fun h0 -> Buffer.live h0 buf))
-  (ensures (fun h0 r h1 -> Buffer.live h1 buf /\ modifies_1 buf h0 h1))
-
-let digit (c:Char.char) = 
-  let x = Char.int_of_char c - Char.int_of_char '0' in
-  if x < 0 || x >= 16 then 0uy else UInt8.uint_to_t x
-
-let rec store_bytestring len buf i s =
-  if i <^ len then (
-  let x1 = digit (String.index s (UInt32.v i + UInt32.v i)) in
-  let x0 = digit (String.index s (UInt32.v i + UInt32.v i + 1)) in
-  //assert(x1 <^ 16uy /\ x0 <^ 16uy);
-  Buffer.upd buf i (FStar.UInt8(x1 *^ 16uy +^ x0));
-  store_bytestring len buf (FStar.UInt32(i +^ 1ul)) s )
-
-let from_bytestring s = 
-  let l = String.length s in 
-  assume(l/2 + l/2 = l /\  l/2 <= UInt.max_int UInt32.n);
-  let len = UInt32.uint_to_t (l/2) in 
-  let buf = Buffer.create 0uy len in 
-  store_bytestring len buf 0ul s;  
-  buf 
-*)
-
-let verbose = false // use for debugging
-
-val diff: string -> l:UInt32.t -> expected:lbuffer (v l) -> computed:lbuffer (v l) -> ST bool
-  (requires (fun h -> Buffer.live h expected /\ Buffer.live h computed))
-  (ensures (fun h0 b h1 -> h0 == h1))
-  
-let diff name len expected computed =
-  let r = Buffer.eqb expected computed len in 
-  if verbose || not r then 
-    let _ = IO.debug_print_string ("Expected "^name^":\n") in 
-    let _ = print_buffer expected 0ul len in 
-    let _ = IO.debug_print_string ("Computed "^name^":\n") in
-    let _ = print_buffer computed 0ul len in
-    let _ = r || IO.debug_print_string "ERROR: unexpected result.\n" in
-    r
-  else r 
-
-val dump: string -> l:UInt32.t -> b:lbuffer (v l) ->  ST unit
-  (requires (fun h -> Buffer.live h b))
-  (ensures (fun h0 b h1 -> h0 == h1))
-let dump name len b =
-  if verbose then 
-    let _ = IO.debug_print_string (name^":\n") in 
-    let _ = print_buffer b 0ul len in
-    ()
 
 let tweak pos b = Buffer.upd b pos (UInt8.logxor (Buffer.index b pos) 42uy) 
+
 
 val test: unit -> ST bool //16-10-04 workaround against very large inferred type. 
   (requires (fun _ -> True))
@@ -176,9 +83,24 @@ val test: unit -> ST bool //16-10-04 workaround against very large inferred type
 #set-options "--z3timeout 1000"  
 let test() = 
   push_frame(); 
-  let plainlen = 114ul in 
-  let plainrepr = from_string plainlen 
-    "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it." in
+  let plainlen = 114ul in
+  let plainrepr = FStar.Buffer.createL [
+    0x4cuy; 0x61uy; 0x64uy; 0x69uy; 0x65uy; 0x73uy; 0x20uy; 0x61uy; 
+    0x6euy; 0x64uy; 0x20uy; 0x47uy; 0x65uy; 0x6euy; 0x74uy; 0x6cuy;
+    0x65uy; 0x6duy; 0x65uy; 0x6euy; 0x20uy; 0x6fuy; 0x66uy; 0x20uy;
+    0x74uy; 0x68uy; 0x65uy; 0x20uy; 0x63uy; 0x6cuy; 0x61uy; 0x73uy;
+    0x73uy; 0x20uy; 0x6fuy; 0x66uy; 0x20uy; 0x27uy; 0x39uy; 0x39uy;
+    0x3auy; 0x20uy; 0x49uy; 0x66uy; 0x20uy; 0x49uy; 0x20uy; 0x63uy;
+    0x6fuy; 0x75uy; 0x6cuy; 0x64uy; 0x20uy; 0x6fuy; 0x66uy; 0x66uy;
+    0x65uy; 0x72uy; 0x20uy; 0x79uy; 0x6fuy; 0x75uy; 0x20uy; 0x6fuy;
+    0x6euy; 0x6cuy; 0x79uy; 0x20uy; 0x6fuy; 0x6euy; 0x65uy; 0x20uy; 
+    0x74uy; 0x69uy; 0x70uy; 0x20uy; 0x66uy; 0x6fuy; 0x72uy; 0x20uy;
+    0x74uy; 0x68uy; 0x65uy; 0x20uy; 0x66uy; 0x75uy; 0x74uy; 0x75uy;
+    0x72uy; 0x65uy; 0x2cuy; 0x20uy; 0x73uy; 0x75uy; 0x6euy; 0x73uy;
+    0x63uy; 0x72uy; 0x65uy; 0x65uy; 0x6euy; 0x20uy; 0x77uy; 0x6fuy;
+    0x75uy; 0x6cuy; 0x64uy; 0x20uy; 0x62uy; 0x65uy; 0x20uy; 0x69uy;
+    0x74uy; 0x2euy
+    ] in
 
   let i:id = testId CHACHA20_POLY1305 in
   assume(not(prf i)); // Implementation used to extract satisfies this
@@ -189,11 +111,7 @@ let test() =
   let aad = mk_aad () in
   let aadlen = 12ul in
   let key = mk_key () in 
-  let ivBuffer = mk_ivBuffer() in 
-
-  dump "Key" 32ul key;
-  dump "IV" 12ul ivBuffer;
-  dump "Additional Data" 12ul aad;
+  let ivBuffer = mk_ivBuffer() in
 
   let iv : Crypto.Symmetric.Cipher.iv (cipherAlg_of_id i) = 
     lemma_little_endian_is_bounded (load_bytes 12ul ivBuffer);
@@ -216,12 +134,24 @@ let test() =
     HH.disjoint (Buffer.frameOf aad) (AETypes st.log_region)
   );
   AE.encrypt i st iv aadlen aad plainlen plain cipher;
-  let ok_0 = diff "cipher" cipherlen expected_cipher cipher in
+
+  // String for 'cipher'
+  let string_cipher = FStar.Buffer.createL [99y; 105y; 112y; 104y; 101y; 114y; 0y] in
+  TestLib.compare_and_print string_cipher expected_cipher cipher cipherlen;
+  
+  (* let ok_0 = diff "cipher" cipherlen expected_cipher cipher in *)
 
   let decrypted = Plain.create i 0uy plainlen in
   let st = AE.genReader st in
   let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
-  let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in
+
+  // String for 'decryption'
+  let string_decryption = FStar.Buffer.createL [
+    100y; 101y; 99y; 114y; 121y; 112y; 116y; 105y; 111y; 110y; 0y
+  ] in
+
+  TestLib.compare_and_print string_decryption (bufferRepr #i decrypted) (bufferRepr #i plain) plainlen;
+  (* let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in *)
 
   // testing that decryption fails when truncating aad or tweaking the ciphertext.
   let fail_0 = AE.decrypt i st iv (aadlen -^ 1ul) (Buffer.sub aad 0ul (aadlen -^ 1ul)) plainlen decrypted cipher in
@@ -235,43 +165,18 @@ let test() =
   tweak plainlen cipher;
   
   pop_frame ();
-  ok_0 && ok_1 && ok_2 && not (fail_0 || fail_1 || fail_2) 
+  (* ok_0 && ok_1 && ok_2 && not (fail_0 || fail_1 || fail_2)  *)
+  ok_1 && not (fail_0 || fail_1 || fail_2)
 
-let alg i = Crypto.AEAD.Encoding.alg i
-let aadmax = Crypto.AEAD.Encoding.aadmax
-let safelen = Crypto.AEAD.Invariant.safelen
-
-val test_aes_gcm: 
-  i: id -> 
-  tn: UInt32.t -> 
-  key: lbuffer 32 ->
-  ivBuffer: lbuffer 12 ->
-  aadlen: UInt32.t {aadlen <=^ aadmax} -> 
-  aad: lbuffer (v aadlen) -> 
-  plainlen: UInt32.t {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} -> 
-  plainrepr: lbuffer (v plainlen) -> 
-  cipher:lbuffer (v plainlen + v MAC.taglen) 
-  { 
-    Buffer.disjoint aad cipher /\
-    Buffer.disjoint plainrepr aad /\
-    Buffer.disjoint plainrepr cipher
-//  HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) st.log_region /\
-//  HH.disjoint (Buffer.frameOf cipher) st.log_region /\
-//  HH.disjoint (Buffer.frameOf aad) st.log_region
-  }
-  ->
-  ST bool //16-10-04 workaround against very large inferred type. 
-  (requires (fun _ -> True))
-  (ensures (fun _ _ _ -> True))
 
 let test_aes_gcm i tn key ivBuffer aadlen aad plainlen plainrepr expected_cipher =
   push_frame(); 
 
-  assume false;//16-10-31 
-  dump "Key" 32ul key;
-  dump "IV" 12ul ivBuffer;
-  dump "Plaintext" plainlen plainrepr;
-  dump "Additional Data" aadlen aad;
+  assume false;//16-10-31
+  (* dump "Key" 32ul key; *)
+  (* dump "IV" 12ul ivBuffer; *)
+  (* dump "Plaintext" plainlen plainrepr; *)
+  (* dump "Additional Data" aadlen aad; *)
 
   assume(not(prf i)); // Implementation used to extract satisfies this
   let plain = Plain.create i 1uy plainlen in 
@@ -286,15 +191,29 @@ let test_aes_gcm i tn key ivBuffer aadlen aad plainlen plainrepr expected_cipher
   let cipherlen = plainlen +^ 16ul in
   let cipher = Buffer.create 2uy cipherlen in
   AE.encrypt i st iv aadlen aad plainlen plain cipher;
-  let ok_0 = diff "cipher" cipherlen expected_cipher cipher in 
+
+  (* let ok_0 = diff "cipher" cipherlen expected_cipher cipher in  *)
+  // String for 'cipher'
+  let string_cipher = FStar.Buffer.createL [99y; 105y; 112y; 104y; 101y; 114y; 0y] in
+  TestLib.compare_and_print string_cipher expected_cipher cipher cipherlen;
 
   let st = AE.genReader st in
   let decrypted = Plain.create i 3uy plainlen in
   let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
-  let ok_2 = diff "decryption" plainlen (bufferRepr #i plain) (bufferRepr #i decrypted) in
+  (* let ok_2 = diff "decryption" plainlen (bufferRepr #i plain) (bufferRepr #i decrypted) in *)
+
+  // String for 'decryption'
+  let string_decryption = FStar.Buffer.createL [
+    100y; 101y; 99y; 114y; 121y; 112y; 116y; 105y; 111y; 110y; 0y
+  ] in
+
+  TestLib.compare_and_print string_decryption (bufferRepr #i decrypted) (bufferRepr #i plain) plainlen;
+  (* let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in *)
 
   pop_frame();
-  ok_0 && ok_1 && ok_2
+  (* ok_0 && ok_1 && ok_2 *)
+  ok_1
+
 
 val test_aes_gcm_1: unit -> St bool
 let test_aes_gcm_1 () =
@@ -309,6 +228,7 @@ let test_aes_gcm_1 () =
     0x53uy; 0x0fuy; 0x8auy; 0xfbuy; 0xc7uy; 0x45uy; 0x36uy; 0xb9uy; 
     0xa9uy; 0x63uy; 0xb4uy; 0xf1uy; 0xc4uy; 0xcbuy; 0x73uy; 0x8buy ] in
   test_aes_gcm i 1ul k iv aadlen aad plainlen plain cipher 
+
 
 val test_aes_gcm_2: unit -> St bool
 let test_aes_gcm_2 () = 
@@ -415,54 +335,13 @@ let test_aes_gcm_4 () =
   test_aes_gcm i 4ul k iv aadlen aad plainlen plain cipher 
 
 
-val main: bool
-let main =
-  let ok = test () in
-  let _  = IO.debug_print_string ("AEAD (CHACHA20_POLY1305) test vector" ^ (if ok then ": Ok.\n" else ":\nERROR.\n")) in
-  let ok = test_aes_gcm_1() in 
-  let _  = IO.debug_print_string ("AEAD (AES_256_GCM) test vector 1" ^ (if ok then ": Ok.\n" else ":\nERROR.\n")) in
-  let ok = test_aes_gcm_2() in 
-  let _  = IO.debug_print_string ("AEAD (AES_256_GCM) test vector 2" ^ (if ok then ": Ok.\n" else ":\nERROR.\n")) in
-  let ok = test_aes_gcm_3() in 
-  let _  = IO.debug_print_string ("AEAD (AES_256_GCM) test vector 3" ^ (if ok then ": Ok.\n" else ":\nERROR.\n")) in
-  let ok = test_aes_gcm_4() in 
-  IO.debug_print_string ("AEAD (AES_256_GCM) test vector 4" ^ (if ok then ": Ok.\n" else ":\nERROR.\n"))
-  
-  
-// enabling plaintext access for real test vector
-
-(* missing a library:
-
-val main: Int32.t -> FStar.Buffer.buffer (FStar.Buffer.buffer C.char) -> ST.Stack Int32.t (fun _ -> true) (fun _ _ _ -> true)
-let main argc argv =
-  test();
+val main: unit -> ST FStar.Int32.t
+  (requires (fun h -> True))
+  (ensures  (fun h0 r h1 -> True))
+let main () =
+  let _ = test() in
+  let _ = test_aes_gcm_1 () in
+  let _ = test_aes_gcm_2 () in
+  let _ = test_aes_gcm_3 () in
+  let _ = test_aes_gcm_4 () in
   C.exit_success
-
-
-private let hex1 (x:UInt8.t {FStar.UInt8(x <^ 16uy)}) = 
-  FStar.UInt8(
-    if x <^ 10uy then UInt8.to_string x else 
-    if x = 10uy then "a" else 
-    if x = 11uy then "b" else 
-    if x = 12uy then "c" else 
-    if x = 13uy then "d" else 
-    if x = 14uy then "e" else "f")
-private let hex2 x = 
-  FStar.UInt8(hex1 (x /^ 16uy) ^ hex1 (x %^ 16uy))
-
-val print_buffer: s:buffer -> i:UInt32.t{UInt32.v i <= length s} -> len:UInt32.t{UInt32.v len <= length s} -> Stack unit
-  (requires (fun h -> live h s))
-  (ensures (fun h0 _ h1 -> h0 == h1))
-let rec print_buffer s i len =
-  let open FStar.UInt32 in
-  if i <^ len then
-    begin
-      let b = Buffer.index s i in
-      print (hex2 b);
-      if i %^ 16ul = 0ul then print "\n";
-      print_buffer s (i +^ 1ul) len
-    end
-  else
-    print "\n"
-
-*)

@@ -168,6 +168,12 @@ val genReader: #i:id -> st:state i Writer -> ST (state i Reader)
 let genReader #i st =
   State #i #Reader #st.log_region st.log st.prf st.ak
 
+val leak: #i:id{~(prf i)} -> st:state i Writer -> ST (lbuffer (v (PRF.keylen i)))
+  (requires (fun _ -> True))
+  (ensures  (fun _ _ _ -> True))
+let leak #i st =
+  PRF.leak st.prf
+
 (* notes 16-10-04 
 
 Not sure what's the best style to push as an invariant.
