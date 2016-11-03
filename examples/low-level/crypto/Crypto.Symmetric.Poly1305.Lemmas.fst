@@ -21,7 +21,6 @@ open Crypto.Symmetric.Bytes
 module U8 = FStar.UInt8
 module U64 = FStar.UInt64
 
-#set-options "--lax"
 #set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
 
 val pow2_8_lemma: n:nat ->
@@ -487,7 +486,7 @@ let lemma_toField_1 s h n0 n1 n2 n3 =
   little_endian_append (Seq.append (Seq.append s04 s48) s812) s1216
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 val lemma_eval_5: h:HyperStack.mem -> a:Buffer.buffer U64.t{live h a /\ length a >= 5} ->
   Lemma (Crypto.Symmetric.Poly1305.Bigint.eval h a 5 =
@@ -507,7 +506,7 @@ let lemma_eval_5 h a =
   Crypto.Symmetric.Poly1305.Bigint.bitweight_def Crypto.Symmetric.Poly1305.Parameters.templ 0;
   assert_norm (pow2 0 = 1)
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 
 val lemma_little_endian_16: h:HyperStack.mem -> a:Buffer.buffer U8.t{live h a /\ length a = 16} ->
@@ -540,14 +539,14 @@ let lemma_little_endian_16 h a =
   assert_norm (pow2 0 = 1)
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
 
 
 let lemma_mul_mod (a:nat) (b:pos) : Lemma ((b * a) % b = 0) = Math.Lemmas.lemma_mod_plus 0 a b
 
 
 val lemma_add_disjoint_bounded:
-  b0:nat -> b1:nat -> m:nat -> n:nat{n > m /\ n <= 64} ->
+  b0:nat -> b1:nat -> m:nat -> n:nat{n > m} ->
   Lemma (requires ((b0 < pow2 m /\ b1 % pow2 m = 0 /\ b1 < pow2 n)))
         (ensures  (b0 + b1 < pow2 n))
 let lemma_add_disjoint_bounded b0 b1 m n =
@@ -755,7 +754,7 @@ val lemma_norm_5:
 let lemma_norm_5 h b = ()
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 val lemma_mod_sum_mul: x:nat -> y:nat -> l:nat -> m:nat -> Lemma
   (requires (x % pow2 l = 0 /\ y < pow2 l /\ m >= l))
@@ -773,7 +772,7 @@ let lemma_mod_sum_mul x y l m =
     Math.Lemmas.pow2_plus (m-l) l; Math.Lemmas.modulo_lemma (((c%pow2 (m-l))*pow2 l) + y) (pow2 m)
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 let lemma_b3 (a0:U64.t{v a0 < pow2 26}) (a1:U64.t{v a1 < pow2 26}) : Lemma
   (pow2 24 * (U8.v (uint64_to_uint8 ((a0 >>^ 24ul) |^ (a1 <<^ 2ul)))) = pow2 24 * ((v a0 / pow2 24) % pow2 8) + pow2 24 * ((v a1*pow2 2)%pow2 8))
@@ -858,7 +857,7 @@ let lemma_b03a0 (a0:U64.t{v a0 < pow2 26}) (a1:UInt64.t{v a1 < pow2 26}) b0 b1 b
   = lemma_trunc1305_0 a0
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 let lemma_b46a1 (a1:U64.t{v a1 < pow2 26}) (a2:UInt64.t{v a2 < pow2 26}) v3 b4 b5 b6 : Lemma
   (requires (let open FStar.UInt8 in
@@ -879,7 +878,7 @@ let lemma_b46a1 (a1:U64.t{v a1 < pow2 26}) (a2:UInt64.t{v a2 < pow2 26}) v3 b4 b
     Math.Lemmas.paren_mul_right (pow2 24) (pow2 2) (v a1 % pow2 30)
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 let lemma_b79a2 (a2:U64.t{v a2 < pow2 26}) (a3:UInt64.t{v a3 < pow2 26}) v6 b7 b8 b9 : Lemma
   (requires (let open FStar.UInt8 in
@@ -900,7 +899,7 @@ let lemma_b79a2 (a2:U64.t{v a2 < pow2 26}) (a3:UInt64.t{v a3 < pow2 26}) v6 b7 b
     Math.Lemmas.paren_mul_right (pow2 48) (pow2 4) (v a2 % pow2 28)
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 let lemma_b1012a3 (a3:U64.t{v a3 < pow2 26}) v9 b10 b11 b12 : Lemma
   (requires (let open FStar.UInt8 in
@@ -918,7 +917,7 @@ let lemma_b1012a3 (a3:U64.t{v a3 < pow2 26}) v9 b10 b11 b12 : Lemma
     Math.Lemmas.paren_mul_right (pow2 72) (pow2 6) (v a3 % pow2 26)
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 let lemma_b1315a4 (a4:U64.t{v a4 < pow2 26}) b13 b14 b15 : Lemma
   (requires (let open FStar.UInt8 in
@@ -932,7 +931,7 @@ let lemma_b1315a4 (a4:U64.t{v a4 < pow2 26}) b13 b14 b15 : Lemma
 
 let u26 = x:U64.t{v x < pow2 26}
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 val lemma_trunc1305_:
   a0:u26 -> a1:u26 -> a2:u26 -> a3:u26 -> a4:u26 ->
@@ -967,7 +966,7 @@ let lemma_sum_ a b c d e f g h : Lemma ((a-b)+((b+c)-d)+((d+e)-f)+(f+g)+h=a+c+e+
 let lemma_sum' b0 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14 b15 : Lemma
   (b0+b1+b2+b3+b4+b5+b6+b7+b8+b9+b10+b11+b12+b13+b14+b15 = (b0+b1+b2+b3)+(b4+b5+b6)+(b7+b8+b9)+(b10+b11+b12)+(b13+b14+b15)) = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
 
 let lemma_trunc1305_ a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14 b15 =
   lemma_b3 a0 a1;
@@ -1020,7 +1019,7 @@ let lemma_trunc1305_ a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b1
    Math.Lemmas.modulo_lemma (v a3) (pow2 26)
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 let lemma_mult_le_left (a:nat) (b:nat) (c:nat) : Lemma (requires (b <= c)) (ensures (a * b <= a * c)) = ()
 
@@ -1075,7 +1074,7 @@ val lemma_trunc1305: hb:HyperStack.mem ->
           = little_endian (as_seq hb b)))
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 let lemma_trunc1305 hb b ha a =
   lemma_little_endian_16 hb b;
@@ -1096,3 +1095,384 @@ let lemma_trunc1305 hb b ha a =
   lemma_b9 a2 a3;
   lemma_trunc1305_ a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14 b15;
   lemma_eval_mod a0 a1 a2 a3 a4
+
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 10"
+
+val lemma_little_endian_4: h:HyperStack.mem -> b:Buffer.buffer U8.t{live h b /\ length b = 4} ->
+  Lemma (little_endian (as_seq h b) = U8 (v (get h b 0) + pow2 8 * v (get h b 1)+ pow2 16 * v (get h b 2)+ pow2 24 * v (get h b 3)))
+let lemma_little_endian_4 h b =
+  let s = as_seq h b in
+  lemma_little_endian_from_top s;
+  lemma_little_endian_from_top_def s 4;
+  lemma_little_endian_from_top_def s 3;
+  lemma_little_endian_from_top_def s 2;
+  lemma_little_endian_from_top_def s 1;
+  lemma_little_endian_from_top_def s 0
+
+
+val lemma_as_seq_sub:
+  h:HyperStack.mem -> b:Buffer.buffer U8.t{live h b} -> i:U32.t -> len:U32.t{U32.v i + U32.v len <= length b} ->
+  Lemma (let open FStar.UInt32 in
+         Seq.slice (as_seq h b) (v i) (v i + v len) = as_seq h (Buffer.sub b i len))
+let lemma_as_seq_sub h b i len = ()
+
+
+val lemma_add_word_1:
+  ha:HyperStack.mem ->
+  a:Buffer.buffer U8.t{live ha a /\ length a = 16} ->
+  a0:u64_32 -> a4:u64_32 -> a8:u64_32 -> a12:u64_32 ->
+  Lemma (requires (
+    let a' = sub a 4ul 4ul in let a'' = sub a 8ul 4ul in let a''' = sub a 12ul 4ul in
+    let a = sub a 0ul 4ul in
+    v a0 = U8 (v (get ha a 0) + pow2 8 * v (get ha a 1)+ pow2 16 * v (get ha a 2)+ pow2 24 * v (get ha a 3))
+    /\ v a4 = U8 (v (get ha a' 0) + pow2 8 * v (get ha a' 1)+ pow2 16 * v (get ha a' 2)+ pow2 24 * v (get ha a' 3))
+    /\ v a8 = U8 (v (get ha a'' 0) + pow2 8 * v (get ha a'' 1)+ pow2 16 * v (get ha a'' 2)+ pow2 24 * v (get ha a'' 3))
+    /\ v a12 = U8 (v (get ha a''' 0) + pow2 8 * v (get ha a''' 1)+ pow2 16 * v (get ha a''' 2)+ pow2 24 * v (get ha a''' 3))))
+    (ensures (little_endian (as_seq ha a) = v a0 + pow2 32 * v a4 + pow2 64 * v a8 + pow2 96 * v a12))
+let lemma_add_word_1 ha a a0 a4 a8 a12 =
+  lemma_as_seq_sub ha a 0ul  4ul;
+  lemma_as_seq_sub ha a 4ul  4ul;
+  lemma_as_seq_sub ha a 8ul  4ul;
+  lemma_as_seq_sub ha a 12ul 4ul;
+  lemma_little_endian_4 ha (sub a 0ul  4ul);
+  lemma_little_endian_4 ha (sub a 4ul  4ul);
+  lemma_little_endian_4 ha (sub a 8ul  4ul);
+  lemma_little_endian_4 ha (sub a 12ul 4ul);
+  let s = as_seq ha a in
+  cut (v a0  = little_endian (Seq.slice s 0 4));
+  cut (v a4  = little_endian (Seq.slice s 4 8));
+  cut (v a8  = little_endian (Seq.slice s 8 12));
+  cut (v a12 = little_endian (Seq.slice s 12 16));
+  lemma_seq_append_16_to_4 s;
+  let s04 = (Seq.slice s 0 4) in
+  let s48 = (Seq.slice s 4 8) in
+  let s812 = (Seq.slice s 8 12) in
+  let s1216 = (Seq.slice s 12 16) in
+  little_endian_append s04 s48;
+  little_endian_append (Seq.append s04 s48) s812;
+  little_endian_append (Seq.append (Seq.append s04 s48) s812) (s1216)
+
+
+let eval_4 a0 a1 a2 a3 : GTot nat = v a0 + pow2 32 * v a1 + pow2 64 * v a2 + pow2 96 * v a3
+
+
+val lemma_add_word_2_2:
+  a0:u64_32 -> a4:u64_32 -> a8:u64_32 -> a12:u64_32 ->
+  b0:u64_32 -> b4:u64_32 -> b8:u64_32 -> b12:u64_32 ->
+  Lemma (let z0 = v a0 + v b0 in
+    let z1 = v a4 + v b4 + (z0 / pow2 32) in
+    let z2 = v a8 + v b8 + (z1 / pow2 32) in
+    let z3 = v a12 + v b12 + (z2 / pow2 32) in
+    (z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32) + pow2 96 * (z3 % pow2 32)
+    = ((z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32) + pow2 96 * z3) % pow2 128)
+let lemma_add_word_2_2 a0 a1 a2 a3 b0 b1 b2 b3 =
+  let z0 = v a0 + v b0 in
+  let z1 = v a1 + v b1 + (z0 / pow2 32) in
+  let z2 = v a2 + v b2 + (z1 / pow2 32) in
+  let z3 = v a3 + v b3 + (z2 / pow2 32) in
+  Math.Lemmas.lemma_mod_plus_distr_l (pow2 96 * z3) ((z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32)) (pow2 128);
+  Math.Lemmas.pow2_multiplication_modulo_lemma_2 z3 128 96;
+  let r = (z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32) + pow2 96 * (z3 % pow2 32) in
+  cut (((z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32) + pow2 96 * z3) % pow2 128 = r % pow2 128);
+  lemma_mul_mod (z1 % pow2 32) (pow2 32);
+  lemma_mul_mod (z2 % pow2 32) (pow2 32);
+  lemma_mul_mod (z3 % pow2 32) (pow2 32);
+  Math.Lemmas.pow2_plus 32 32;
+  Math.Lemmas.pow2_plus 64 32;
+  Math.Lemmas.pow2_plus 96 32;
+  lemma_add_disjoint_bounded (z0 % pow2 32) (pow2 32 * (z1 % pow2 32)) 32 64;
+  lemma_add_disjoint_bounded ((z0 % pow2 32)+(pow2 32 * (z1 % pow2 32)))
+                             (pow2 64 * (z2 % pow2 32)) 64 96;
+  lemma_add_disjoint_bounded ((z0 % pow2 32)+(pow2 32 * (z1 % pow2 32))+(pow2 64 * (z2 % pow2 32)))
+                             (pow2 96 * (z3 % pow2 32)) 96 128;
+  Math.Lemmas.modulo_lemma r (pow2 128)
+
+
+val lemma_add_word_2_1:
+  a0:u64_32 -> a4:u64_32 -> a8:u64_32 -> a12:u64_32 ->
+  b0:u64_32 -> b4:u64_32 -> b8:u64_32 -> b12:u64_32 ->
+  Lemma (let z0 = v a0 + v b0 in
+    let z1 = v a4 + v b4 + (z0 / pow2 32) in
+    let z2 = v a8 + v b8 + (z1 / pow2 32) in
+    let z3 = v a12 + v b12 + (z2 / pow2 32) in
+    (z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32) + pow2 96 * (z3 % pow2 32)
+    = ((v a0 + v b0) + pow2 32 * (v a4 + v b4) + pow2 64 * (v a8 + v b8) + pow2 96 * (v a12 + v b12)) % pow2 128)
+let lemma_add_word_2_1 a0 a4 a8 a12 b0 b4 b8 b12 =
+  let z0 = v a0 + v b0 in
+  let z1 = v a4 + v b4 + (z0 / pow2 32) in
+  let z2 = v a8 + v b8 + (z1 / pow2 32) in
+  let z3 = v a12 + v b12 + (z2 / pow2 32) in
+  let ab0 = v a0 + v b0 in let ab1 = v a4 + v b4 in
+  let ab2 = v a8 + v b8 in let ab3 = v a12 + v b12 in
+  Math.Lemmas.lemma_div_mod (z0) (pow2 32);
+  Math.Lemmas.distributivity_add_right (pow2 32) (v a4 + v b4) (z0 / pow2 32);
+  cut (ab0 + pow2 32 * ab1 = (z0 % pow2 32) + pow2 32 * z1);
+  Math.Lemmas.lemma_div_mod (z1) (pow2 32);
+  Math.Lemmas.distributivity_add_right (pow2 64) (v a8 + v b8) (z1 / pow2 32);
+  Math.Lemmas.distributivity_add_right (pow2 32) (z1 % pow2 32) (pow2 32 * (z1 / pow2 32));
+  Math.Lemmas.pow2_plus 32 32;
+  cut (ab0 + pow2 32 * ab1 + pow2 64 * ab2 = (z0 % pow2 32) + pow2 32 * (z1 % pow2 32)
+                                             + pow2 64 * z2);
+  Math.Lemmas.lemma_div_mod (z2) (pow2 32);
+  Math.Lemmas.distributivity_add_right (pow2 96) (v a12 + v b12) (z2 / pow2 32);
+  Math.Lemmas.distributivity_add_right (pow2 64) (z2 % pow2 32) (pow2 32 * (z2 / pow2 32));
+  Math.Lemmas.pow2_plus 64 32;
+  cut (ab0 + pow2 32 * ab1 + pow2 64 * ab2 + pow2 96 * ab3
+           = (z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32) + pow2 96 * z3);
+  lemma_add_word_2_2  a0 a4 a8 a12 b0 b4 b8 b12
+
+
+val lemma_add_word_2:
+  a0:u64_32 -> a4:u64_32 -> a8:u64_32 -> a12:u64_32 ->
+  b0:u64_32 -> b4:u64_32 -> b8:u64_32 -> b12:u64_32 ->
+  Lemma (let z0 = v a0 + v b0 in
+    let z1 = v a4 + v b4 + (z0 / pow2 32) in
+    let z2 = v a8 + v b8 + (z1 / pow2 32) in
+    let z3 = v a12 + v b12 + (z2 / pow2 32) in
+    (z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32) + pow2 96 * (z3 % pow2 32)
+    = (eval_4 a0 a4 a8 a12 + eval_4 b0 b4 b8 b12) % pow2 128)
+let lemma_add_word_2 a0 a4 a8 a12 b0 b4 b8 b12 =
+  let va = eval_4 a0 a4 a8 a12 in let vb = eval_4 b0 b4 b8 b12 in
+  let ab0 = v a0 + v b0 in let ab1 = v a4 + v b4 in
+  let ab2 = v a8 + v b8 in let ab3 = v a12 + v b12 in
+  Math.Lemmas.distributivity_add_right (pow2 32) (v a4) (v b4);
+  Math.Lemmas.distributivity_add_right (pow2 64) (v a8) (v b8);
+  Math.Lemmas.distributivity_add_right (pow2 96) (v a12) (v b12);
+  cut (va + vb = ab0 + pow2 32 * ab1 + pow2 64 * ab2 + pow2 96 * ab3);
+  lemma_add_word_2_1 a0 a4 a8 a12 b0 b4 b8 b12
+
+
+let lemma_add_word_post a0 a4 a8 a12 b0 b4 b8 b12 ha (a:Buffer.buffer U8.t{live ha a})
+                                                  hb (b:Buffer.buffer U8.t{live hb b})
+  = let z0 = v a0 + v b0 in
+    let z1 = v a4 + v b4 + (z0 / pow2 32) in
+    let z2 = v a8 + v b8 + (z1 / pow2 32) in
+    let z3 = v a12 + v b12 + (z2 / pow2 32) in
+    (z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32) + pow2 96 * (z3 % pow2 32)
+      = (little_endian (as_seq ha a) + little_endian (as_seq hb b)) % pow2 128
+
+
+val lemma_add_word:
+  ha:HyperStack.mem ->
+  a:Buffer.buffer U8.t{live ha a /\ length a = 16} ->
+  hb:HyperStack.mem ->
+  b:Buffer.buffer U8.t{live hb b /\ length b = 16} ->
+  a0:u64_32 -> a4:u64_32 -> a8:u64_32 -> a12:u64_32 ->
+  b0:u64_32 -> b4:u64_32 -> b8:u64_32 -> b12:u64_32 ->
+  Lemma (requires (
+    let a' = sub a 4ul 4ul in let a'' = sub a 8ul 4ul in let a''' = sub a 12ul 4ul in
+    let a = sub a 0ul 4ul in
+    let b' = sub b 4ul 4ul in let b'' = sub b 8ul 4ul in let b''' = sub b 12ul 4ul in
+    let b = sub b 0ul 4ul in
+    v a0 = U8 (v (get ha a 0) + pow2 8 * v (get ha a 1)+ pow2 16 * v (get ha a 2)+ pow2 24 * v (get ha a 3))
+    /\ v a4 = U8 (v (get ha a' 0) + pow2 8 * v (get ha a' 1)+ pow2 16 * v (get ha a' 2)+ pow2 24 * v (get ha a' 3))
+    /\ v a8 = U8 (v (get ha a'' 0) + pow2 8 * v (get ha a'' 1)+ pow2 16 * v (get ha a'' 2)+ pow2 24 * v (get ha a'' 3))
+    /\ v a12 = U8 (v (get ha a''' 0) + pow2 8 * v (get ha a''' 1)+ pow2 16 * v (get ha a''' 2)+ pow2 24 * v (get ha a''' 3))
+    /\ v b0 = U8 (v (get hb b 0) + pow2 8 * v (get hb b 1)+ pow2 16 * v (get hb b 2)+ pow2 24 * v (get hb b 3))
+    /\ v b4 = U8 (v (get hb b' 0) + pow2 8 * v (get hb b' 1)+ pow2 16 * v (get hb b' 2)+ pow2 24 * v (get hb b' 3))
+    /\ v b8 = U8 (v (get hb b'' 0) + pow2 8 * v (get hb b'' 1)+ pow2 16 * v (get hb b'' 2)+ pow2 24 * v (get hb b'' 3))
+    /\ v b12 = U8 (v (get hb b''' 0) + pow2 8 * v (get hb b''' 1)+ pow2 16 * v (get hb b''' 2)+ pow2 24 * v (get hb b''' 3))))
+    (ensures (lemma_add_word_post a0 a4 a8 a12 b0 b4 b8 b12 ha a hb b))
+let lemma_add_word ha a hb b a0 a4 a8 a12 b0 b4 b8 b12 =
+  lemma_add_word_1 ha a a0 a4 a8 a12; lemma_add_word_1 hb b b0 b4 b8 b12;
+  lemma_add_word_2 a0 a4 a8 a12 b0 b4 b8 b12
+
+
+val lemma_add_word2_1:
+  h0:HyperStack.mem ->
+  h1:HyperStack.mem ->
+  h2:HyperStack.mem ->
+  h3:HyperStack.mem ->
+  h4:HyperStack.mem ->
+  b:Buffer.buffer U8.t{live h0 b /\ live h1 b /\ live h2 b /\ live h3 b /\ live h4 b /\ length b = 16} ->
+  z0:U32.t -> z1:U32.t -> z2:U32.t -> z3:U32.t ->
+  Lemma
+    (requires (
+      let b0 = sub b 0ul 4ul in
+      let b1 = sub b 4ul 4ul in
+      let b2 = sub b 8ul 4ul in
+      let b3 = sub b 12ul 4ul in
+      modifies_1 b0 h0 h1 /\ modifies_1 b1 h1 h2 /\ modifies_1 b2 h2 h3 /\ modifies_1 b3 h3 h4
+      /\ U8.v (get h1 b0 0) = (U32.v z0) % pow2 8
+      /\ U8.v (get h1 b0 1) = (U32.v z0 / pow2 8) % pow2 8
+      /\ U8.v (get h1 b0 2) = (U32.v z0 / pow2 16) % pow2 8
+      /\ U8.v (get h1 b0 3) = (U32.v z0 / pow2 24)  % pow2 8
+      /\ U8.v (get h2 b1 0) = (U32.v z1) % pow2 8
+      /\ U8.v (get h2 b1 1) = (U32.v z1 / pow2 8) % pow2 8
+      /\ U8.v (get h2 b1 2) = (U32.v z1 / pow2 16) % pow2 8
+      /\ U8.v (get h2 b1 3) = (U32.v z1 / pow2 24)  % pow2 8
+      /\ U8.v (get h3 b2 0) = (U32.v z2) % pow2 8
+      /\ U8.v (get h3 b2 1) = (U32.v z2 / pow2 8) % pow2 8
+      /\ U8.v (get h3 b2 2) = (U32.v z2 / pow2 16) % pow2 8
+      /\ U8.v (get h3 b2 3) = (U32.v z2 / pow2 24)  % pow2 8
+      /\ U8.v (get h4 b3 0) = (U32.v z3) % pow2 8
+      /\ U8.v (get h4 b3 1) = (U32.v z3 / pow2 8) % pow2 8
+      /\ U8.v (get h4 b3 2) = (U32.v z3 / pow2 16) % pow2 8
+      /\ U8.v (get h4 b3 3) = (U32.v z3 / pow2 24)  % pow2 8 ))
+    (ensures (
+      let b0 = sub b 0ul 4ul in
+      let b1 = sub b 4ul 4ul in
+      let b2 = sub b 8ul 4ul in
+      let b3 = sub b 12ul 4ul in
+      U8.v (get h4 b0 0) = (U32.v z0) % pow2 8
+      /\ U8.v (get h4 b0 1) = (U32.v z0 / pow2 8) % pow2 8
+      /\ U8.v (get h4 b0 2) = (U32.v z0 / pow2 16) % pow2 8
+      /\ U8.v (get h4 b0 3) = (U32.v z0 / pow2 24)  % pow2 8
+      /\ U8.v (get h4 b1 0) = (U32.v z1) % pow2 8
+      /\ U8.v (get h4 b1 1) = (U32.v z1 / pow2 8) % pow2 8
+      /\ U8.v (get h4 b1 2) = (U32.v z1 / pow2 16) % pow2 8
+      /\ U8.v (get h4 b1 3) = (U32.v z1 / pow2 24)  % pow2 8
+      /\ U8.v (get h4 b2 0) = (U32.v z2) % pow2 8
+      /\ U8.v (get h4 b2 1) = (U32.v z2 / pow2 8) % pow2 8
+      /\ U8.v (get h4 b2 2) = (U32.v z2 / pow2 16) % pow2 8
+      /\ U8.v (get h4 b2 3) = (U32.v z2 / pow2 24)  % pow2 8
+      /\ U8.v (get h4 b3 0) = (U32.v z3) % pow2 8
+      /\ U8.v (get h4 b3 1) = (U32.v z3 / pow2 8) % pow2 8
+      /\ U8.v (get h4 b3 2) = (U32.v z3 / pow2 16) % pow2 8
+      /\ U8.v (get h4 b3 3) = (U32.v z3 / pow2 24)  % pow2 8 ))
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+
+let lemma_add_word2_1 h0 h1 h2 h3 h4 b z0 z1 z2 z3 =
+  let b0 = sub b 0ul 4ul in
+  let b1 = sub b 4ul 4ul in
+  let b2 = sub b 8ul 4ul in
+  let b3 = sub b 12ul 4ul in
+  cut (disjoint b0 b1 /\ disjoint b0 b2 /\ disjoint b0 b3 /\ disjoint b1 b2 /\ disjoint b1 b3 /\ disjoint b2 b3);
+  cut (live h0 b0 /\ live h0 b1 /\ live h0 b2 /\ live h0 b3);
+  cut (live h1 b0 /\ live h1 b1 /\ live h1 b2 /\ live h1 b3);
+  cut (live h2 b0 /\ live h2 b1 /\ live h2 b2 /\ live h2 b3);
+  cut (live h3 b0 /\ live h3 b1 /\ live h3 b2 /\ live h3 b3);
+  cut (live h4 b0 /\ live h4 b1 /\ live h4 b2 /\ live h4 b3);
+  cut (equal h1 b0 h4 b0);
+  cut (equal h2 b1 h4 b1);
+  cut (equal h3 b2 h4 b2);
+  cut (get h1 b0 0 == get h4 b0 0);
+  cut (get h1 b0 1 == get h4 b0 1);
+  cut (get h1 b0 2 == get h4 b0 2);
+  cut (get h1 b0 3 == get h4 b0 3);
+  cut (get h2 b1 0 == get h4 b1 0);
+  cut (get h2 b1 1 == get h4 b1 1);
+  cut (get h2 b1 2 == get h4 b1 2);
+  cut (get h2 b1 3 == get h4 b1 3);
+  cut (get h3 b2 0 == get h4 b2 0);
+  cut (get h3 b2 1 == get h4 b2 1);
+  cut (get h3 b2 2 == get h4 b2 2);
+  cut (get h3 b2 3 == get h4 b2 3)
+
+
+val lemma_add_word2_2_1: z:U32.t ->
+  Lemma (((U32.v z) % pow2 8) + pow2 8 *  ((U32.v z / pow2 8) % pow2 8) + pow2 16 * ((U32.v z / pow2 16) % pow2 8) + pow2 24 * ((U32.v z / pow2 24) % pow2 8) = U32.v z)
+let lemma_add_word2_2_1 z =
+  let va32 = U32.v z in
+  Math.Lemmas.pow2_modulo_modulo_lemma_1 (U32.v z) 8 32;
+  Math.Lemmas.pow2_modulo_modulo_lemma_1 (U32.v z) 16 32;
+  Math.Lemmas.pow2_modulo_modulo_lemma_1 (U32.v z) 24 32;
+  Math.Lemmas.lemma_div_mod (va32) (pow2 24);
+  lemma_div_pow2_mod va32 32 24;
+  cut (va32 = pow2 24 * ((va32 / pow2 24) % pow2 8) + (va32 % pow2 24));
+  Math.Lemmas.lemma_div_mod (va32 % pow2 24) (pow2 16);
+  Math.Lemmas.pow2_modulo_division_lemma_1 va32 16 24;
+  Math.Lemmas.pow2_modulo_modulo_lemma_1 va32 16 24;
+  cut (va32 % pow2 24 = pow2 16 * ((va32/pow2 16)%pow2 8) + (va32 % pow2 16));
+  Math.Lemmas.lemma_div_mod (va32 % pow2 16) (pow2 8);
+  Math.Lemmas.pow2_modulo_division_lemma_1 va32 8 16;
+  Math.Lemmas.pow2_modulo_modulo_lemma_1 va32 8 16;
+  cut (va32 % pow2 16 = pow2 8 * ((va32/pow2 8)%pow2 8) + (va32 % pow2 8))
+
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+val lemma_add_word2_2:
+  h:HyperStack.mem ->
+  b:Buffer.buffer U8.t{live h b /\ length b = 16} ->
+  z0:U32.t -> z1:U32.t -> z2:U32.t -> z3:U32.t ->
+  Lemma
+    (requires (
+      let b0 = sub b 0ul 4ul in
+      let b1 = sub b 4ul 4ul in
+      let b2 = sub b 8ul 4ul in
+      let b3 = sub b 12ul 4ul in
+      U8.v (get h b0 0) = (U32.v z0) % pow2 8
+      /\ U8.v (get h b0 1) = (U32.v z0 / pow2 8) % pow2 8
+      /\ U8.v (get h b0 2) = (U32.v z0 / pow2 16) % pow2 8
+      /\ U8.v (get h b0 3) = (U32.v z0 / pow2 24)  % pow2 8
+      /\ U8.v (get h b1 0) = (U32.v z1) % pow2 8
+      /\ U8.v (get h b1 1) = (U32.v z1 / pow2 8) % pow2 8
+      /\ U8.v (get h b1 2) = (U32.v z1 / pow2 16) % pow2 8
+      /\ U8.v (get h b1 3) = (U32.v z1 / pow2 24)  % pow2 8
+      /\ U8.v (get h b2 0) = (U32.v z2) % pow2 8
+      /\ U8.v (get h b2 1) = (U32.v z2 / pow2 8) % pow2 8
+      /\ U8.v (get h b2 2) = (U32.v z2 / pow2 16) % pow2 8
+      /\ U8.v (get h b2 3) = (U32.v z2 / pow2 24)  % pow2 8
+      /\ U8.v (get h b3 0) = (U32.v z3) % pow2 8
+      /\ U8.v (get h b3 1) = (U32.v z3 / pow2 8) % pow2 8
+      /\ U8.v (get h b3 2) = (U32.v z3 / pow2 16) % pow2 8
+      /\ U8.v (get h b3 3) = (U32.v z3 / pow2 24)  % pow2 8 ))
+    (ensures (little_endian (as_seq h b) = U32 (v z0 + pow2 32 * v z1 + pow2 64 * v z2 + pow2 96 * v z3)))
+let lemma_add_word2_2 ha a z0 z1 z2 z3 =
+  lemma_as_seq_sub ha a 0ul  4ul;
+  lemma_as_seq_sub ha a 4ul  4ul;
+  lemma_as_seq_sub ha a 8ul  4ul;
+  lemma_as_seq_sub ha a 12ul 4ul;
+  lemma_little_endian_4 ha (sub a 0ul  4ul);
+  lemma_little_endian_4 ha (sub a 4ul  4ul);
+  lemma_little_endian_4 ha (sub a 8ul  4ul);
+  lemma_little_endian_4 ha (sub a 12ul 4ul);
+  lemma_add_word2_2_1 z0;
+  lemma_add_word2_2_1 z1;
+  lemma_add_word2_2_1 z2;
+  lemma_add_word2_2_1 z3;
+  let s = as_seq ha a in
+  cut (U32.v z0  = little_endian (Seq.slice s 0 4));
+  cut (U32.v z1  = little_endian (Seq.slice s 4 8));
+  cut (U32.v z2  = little_endian (Seq.slice s 8 12));
+  cut (U32.v z3 = little_endian (Seq.slice s 12 16));
+  lemma_seq_append_16_to_4 s;
+  let s04 = (Seq.slice s 0 4) in
+  let s48 = (Seq.slice s 4 8) in
+  let s812 = (Seq.slice s 8 12) in
+  let s1216 = (Seq.slice s 12 16) in
+  little_endian_append s04 s48;
+  little_endian_append (Seq.append s04 s48) s812;
+  little_endian_append (Seq.append (Seq.append s04 s48) s812) (s1216)
+
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+
+val lemma_add_word2:
+  h0:HyperStack.mem ->
+  h1:HyperStack.mem ->
+  h2:HyperStack.mem ->
+  h3:HyperStack.mem ->
+  h4:HyperStack.mem ->
+  b:Buffer.buffer U8.t{live h0 b /\ live h1 b /\ live h2 b /\ live h3 b /\ live h4 b /\ length b = 16} ->
+  z0:U32.t -> z1:U32.t -> z2:U32.t -> z3:U32.t ->
+  Lemma
+    (requires (
+      let b0 = sub b 0ul 4ul in
+      let b1 = sub b 4ul 4ul in
+      let b2 = sub b 8ul 4ul in
+      let b3 = sub b 12ul 4ul in
+      modifies_1 b0 h0 h1 /\ modifies_1 b1 h1 h2 /\ modifies_1 b2 h2 h3 /\ modifies_1 b3 h3 h4
+      /\ U8.v (get h1 b0 0) = (U32.v z0) % pow2 8
+      /\ U8.v (get h1 b0 1) = (U32.v z0 / pow2 8) % pow2 8
+      /\ U8.v (get h1 b0 2) = (U32.v z0 / pow2 16) % pow2 8
+      /\ U8.v (get h1 b0 3) = (U32.v z0 / pow2 24)  % pow2 8
+      /\ U8.v (get h2 b1 0) = (U32.v z1) % pow2 8
+      /\ U8.v (get h2 b1 1) = (U32.v z1 / pow2 8) % pow2 8
+      /\ U8.v (get h2 b1 2) = (U32.v z1 / pow2 16) % pow2 8
+      /\ U8.v (get h2 b1 3) = (U32.v z1 / pow2 24)  % pow2 8
+      /\ U8.v (get h3 b2 0) = (U32.v z2) % pow2 8
+      /\ U8.v (get h3 b2 1) = (U32.v z2 / pow2 8) % pow2 8
+      /\ U8.v (get h3 b2 2) = (U32.v z2 / pow2 16) % pow2 8
+      /\ U8.v (get h3 b2 3) = (U32.v z2 / pow2 24)  % pow2 8
+      /\ U8.v (get h4 b3 0) = (U32.v z3) % pow2 8
+      /\ U8.v (get h4 b3 1) = (U32.v z3 / pow2 8) % pow2 8
+      /\ U8.v (get h4 b3 2) = (U32.v z3 / pow2 16) % pow2 8
+      /\ U8.v (get h4 b3 3) = (U32.v z3 / pow2 24)  % pow2 8 ))
+    (ensures (little_endian (as_seq h4 b) = U32 (v z0 + pow2 32 * v z1 + pow2 64 * v z2 + pow2 96 * v z3)))
+let lemma_add_word2 h0 h1 h2 h3 h4 b z0 z1 z2 z3 =
+  lemma_add_word2_1 h0 h1 h2 h3 h4 b z0 z1 z2 z3;
+  lemma_add_word2_2 h4 b z0 z1 z2 z3
