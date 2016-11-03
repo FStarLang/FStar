@@ -201,6 +201,57 @@ krml-test.exe:
 		-tmpdir tmp -o krml-test.exe -add-include '"testlib.h"'
 	./krml-test.exe
 
+OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List_Tot.ml \
+		tmp/FStar_Seq.ml \
+		tmp/FStar_Classical.ml tmp/FStar_ListProperties.ml tmp/FStar_SeqProperties.ml \
+		tmp/FStar_Math_Lemmas.ml tmp/FStar_BitVector.ml tmp/FStar_UInt.ml \
+		tmp/FStar_FunctionalExtensionality.ml \
+		tmp/FStar_PropositionalExtensionality.ml tmp/FStar_PredicateExtensionality.ml \
+		tmp/FStar_TSet.ml tmp/FStar_Ghost.ml \
+		tmp/FStar_Bytes.ml tmp/Buffer_Utils.ml tmp/Crypto_Symmetric_Bytes.ml \
+		tmp/Crypto_Symmetric_Poly1305_Spec.ml tmp/Crypto_Symmetric_Poly1305_Parameters.ml \
+		tmp/Crypto_Symmetric_Poly1305_Bigint.ml tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.ml \
+		tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.ml \
+		tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.ml \
+		tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.ml \
+		tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.ml \
+		tmp/FStar_Buffer_Quantifiers.ml \
+		tmp/Crypto_Symmetric_AES.ml \
+		tmp/Crypto_Symmetric_Chacha20.ml \
+		tmp/Crypto_Indexing.ml \
+		tmp/Crypto_Symmetric_Cipher.ml \
+		tmp/Crypto_Symmetric_GF128_Spec.ml \
+		tmp/Crypto_Symmetric_Poly1305_Lemmas.ml \
+		tmp/Flag.ml \
+		tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part6.ml \
+		tmp/Crypto_Symmetric_Poly1305_Bignum.ml \
+		tmp/Crypto_Symmetric_Poly1305.ml \
+		tmp/Crypto_Symmetric_GF128.ml \
+		tmp/Crypto_Symmetric_MAC.ml \
+		tmp/FStar_Monotonic_RRef.ml \
+		tmp/Crypto_Symmetric_UF1CMA.ml \
+		tmp/Plain.ml \
+		tmp/Crypto_Symmetric_PRF.ml \
+		tmp/Crypto_AEAD_Encoding.ml \
+		tmp/Crypto_AEAD_Invariant.ml \
+		tmp/Crypto_AEAD_Lemmas_Part2.ml \
+		tmp/Crypto_AEAD_Lemmas.ml \
+		tmp/Crypto_AEAD.ml \
+		crypto/ml/TestLib.ml \
+		crypto/ml/C.ml \
+		tmp/Tests.ml
+
+ocaml-test-extract: ulib
+	mkdir -p tmp
+	$(FSTAR_EXTRACT) --include $(KREMLIN_HOME)/kremlib --include $(KREMLIN_HOME)/test/ \
+		--odir tmp crypto/Tests.fst
+	echo "let _ = main()" >> tmp/Tests.ml
+
+ocaml-test.exe: ocaml-test-extract
+	$(OCAMLOPT) -I tmp -I crypto/ml -I $(AEAD_ODIR) $(OCAML_FILES) -o ocaml-test.exe
+	./ocaml-test.exe
+
+
 
 # Cleaning
 clean:
