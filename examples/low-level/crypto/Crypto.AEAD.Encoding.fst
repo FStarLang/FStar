@@ -380,7 +380,9 @@ let accumulate #i st aadlen aad txtlen cipher  =
     Seq.append (encode_bytes (Buffer.as_seq h2 cipher)) (encode_bytes (Buffer.as_seq h2 aad)));
 
   let final_word = Buffer.create 0uy 16ul in (
-  match macAlg_of_id (fst i) with 
+  let id, _ = i in
+  // JP: removed a call to Prims.fst
+  match macAlg_of_id id with 
   | POLY1305 -> store_uint32 4ul (Buffer.sub final_word 0ul 4ul) aadlen;
                store_uint32 4ul (Buffer.sub final_word 8ul 4ul) txtlen
   | GHASH -> store_big32 4ul (Buffer.sub final_word 4ul 4ul) (aadlen *^ 8ul);
