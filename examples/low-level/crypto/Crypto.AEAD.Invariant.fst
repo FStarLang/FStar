@@ -173,4 +173,4 @@ let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
     Buffer.modifies_1 b h0 h1)
 
 let none_above (#i:id) (x:domain i) (t:PRF.state i) (h:mem) =
-    safeId i ==> (forall (y:domain i{y `above` x}). find #t.mac_rgn #i (HS.sel h t.table) y == None)
+    CMA.authId (i, PRF x.iv) ==> (forall (y:domain i{y `above` x}). find #t.mac_rgn #i (HS.sel h t.table) y == None)

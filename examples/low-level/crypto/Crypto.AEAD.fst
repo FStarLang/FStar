@@ -34,6 +34,100 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let ctr x = PRF(x.ctr)
 
+////////////////////////////////////////////////////////////////////////////////
+//Wrappers for experimentation, to be moved back to their original locations
+
+//Move back to UF1CMA
+let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
+		(h0:mem) (h1:mem) = 
+    let open FStar.Buffer in
+    let open Crypto.Symmetric.Bytes in
+    let open Crypto.Symmetric.Poly1305 in
+    let open Crypto.Symmetric.UF1CMA in
+    Buffer.live h0 st.s /\ 
+    MAC.live h0 st.r /\ 
+    Buffer.live h1 tag /\
+    CMA.acc_inv st acc h0 /\ (
+    if mac_log then
+      HS.modifies (as_set [st.region; Buffer.frameOf tag]) h0 h1 /\
+      (* mods_2 [HS.Ref (as_hsref (ilog st.log)); HS.Ref (Buffer.content tag)] h0 h1 /\ *)
+      Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1 /\
+      HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1 /\
+      m_contains (ilog st.log) h1 /\ (
+      let log = FStar.HyperStack.sel h1 (alog acc) in
+      let a = MAC.sel_elem h1 acc.a in
+      let r = MAC.sel_elem h1 st.r in
+      let s = Buffer.as_seq h1 st.s in
+      let t = MAC.mac log r s in
+      sel_word h1 tag === t /\
+      m_sel h1 (ilog st.log) == Some(log,t))
+      (* let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in *)
+      (* mac == little_endian (sel_word h1 tag) /\ *)
+      (* m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag)) *)
+    else Buffer.modifies_1 tag h0 h1)
+#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
+  : ST unit
+  (requires (fun h0 ->
+    let open Crypto.Symmetric.UF1CMA in
+    Buffer.live h0 tag /\ 
+    Buffer.live h0 st.s /\
+    Buffer.disjoint_2 (MAC.as_buffer acc.a) st.s tag /\ 
+    Buffer.disjoint (MAC.as_buffer st.r) tag /\
+    Buffer.disjoint st.s tag /\ 
+    acc_inv st acc h0 /\
+    (mac_log ==> m_contains (ilog st.log) h0) /\
+    (mac_log /\ authId i ==> m_sel h0 (ilog st.log) == None)))
+  (ensures (fun h0 _ h1 -> mac_ensures i st acc tag h0 h1))
+  = let open Crypto.Symmetric.UF1CMA in
+    let h0 = get () in
+    CMA.mac #i st acc tag;
+    let h1 = get () in 
+    if mac_log then begin
+      (* Need to update UF1CMA to prove this (problem with the mods clause not working fully) *)
+      assume (Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1);
+      assume (HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1)
+    end
+
+//Move back to Crypto.AEAD.Encoding
+let alog_fresh (#a:Type0) h0 h1 (r:HS.reference a) = 
+    HS.frameOf r == HS h1.tip /\
+    h1 `HS.contains` r /\
+  ~ (h0 `HS.contains` r)
+
+let accumulate_ensures (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lbuffer (v aadlen))
+		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
+		       (h0:mem) (a:CMA.accBuffer i) (h1:mem) =
+  Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
+  ~ (h0 `Buffer.contains` (CMA (MAC.as_buffer (a.a)))) /\
+  Buffer.live h1 aad /\ 
+  Buffer.live h1 cipher /\
+  Buffer.frameOf (CMA (MAC.as_buffer a.a)) = HS h1.tip /\
+  CMA.acc_inv st a h1 /\
+  (mac_log ==> 
+    alog_fresh h0 h1 (CMA.alog a) /\
+    FStar.HyperStack.sel h1 (CMA.alog a) ==
+    encode_both (fst i) aadlen (Buffer.as_seq h1 aad) txtlen (Buffer.as_seq h1 cipher))
+
+let accumulate_wrapper (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lbuffer (v aadlen))
+		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen)) 
+   : StackInline (CMA.accBuffer i)
+      (requires (fun h0 -> 
+	  CMA(MAC.norm h0 st.r) /\
+	  Buffer.live h0 aad /\ 
+	  Buffer.live h0 cipher))
+      (ensures (fun h0 a h1 ->  accumulate_ensures #i st aadlen aad txtlen cipher h0 a h1))
+  = let h0 = get () in
+    let acc = accumulate #i st aadlen aad txtlen cipher in
+    let h1 = get () in
+    assert (Buffer.disjoint_2 (MAC.as_buffer (CMA acc.a)) (CMA st.s) cipher);
+    assume (mac_log ==> alog_fresh h0 h1 (CMA.alog acc));
+    acc
+
+//Done with wrappers
+////////////////////////////////////////////////////////////////////////////////
+
+
 //16-10-12 TEMPORARY, while PRF remains somewhat CHACHA-specific
 //16-10-12 NB we are importing this restriction from Encoding too
 //let id = Crypto.AEAD.Encoding.id
@@ -463,33 +557,6 @@ let my_inv (#i:id) (#rw:_) (st:state i rw) (h:mem) =
   (safeId i ==> h `HS.contains` st.log) /\
   (prf i ==> h `HS.contains` (itable i st.prf))
 
-let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
-		(h0:mem) (h1:mem) = 
-    let open FStar.Buffer in
-    let open Crypto.Symmetric.Bytes in
-    let open Crypto.Symmetric.Poly1305 in
-    let open Crypto.Symmetric.UF1CMA in
-    Buffer.live h0 st.s /\ 
-    MAC.live h0 st.r /\ 
-    Buffer.live h1 tag /\
-    CMA.acc_inv st acc h0 /\ (
-    if mac_log then
-      HS.modifies (as_set [st.region; Buffer.frameOf tag]) h0 h1 /\
-      (* mods_2 [HS.Ref (as_hsref (ilog st.log)); HS.Ref (Buffer.content tag)] h0 h1 /\ *)
-      Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1 /\
-      HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1 /\
-      m_contains (ilog st.log) h1 /\ (
-      let log = FStar.HyperStack.sel h1 (alog acc) in
-      let a = MAC.sel_elem h1 acc.a in
-      let r = MAC.sel_elem h1 st.r in
-      let s = Buffer.as_seq h1 st.s in
-      let t = MAC.mac log r s in
-      sel_word h1 tag === t /\
-      m_sel h1 (ilog st.log) == Some(log,t))
-      (* let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in *)
-      (* mac == little_endian (sel_word h1 tag) /\ *)
-      (* m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag)) *)
-    else Buffer.modifies_1 tag h0 h1)
 
 let encrypt_ensures (i:id) (st:state i Writer)
 		    (n: Cipher.iv (alg i))
@@ -509,7 +576,6 @@ let encrypt_ensures (i:id) (st:state i Writer)
        let p = Plain.sel_plain h5 plainlen plain in
        let c = Buffer.as_seq h5 cipher_tagged in
        HS.sel h5 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
-
 
 val finish_after_mac: h0:mem -> h3:mem -> i:id -> st:state i Writer -> 
 		      n: Cipher.iv (alg i) ->
@@ -571,39 +637,11 @@ let finish_after_mac h0 h3 i st n aadlen aad plainlen plain cipher_tagged ak acc
   end
   else FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 tag h3) h4
 
-let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
-  : ST unit
-  (requires (fun h0 ->
-    let open Crypto.Symmetric.UF1CMA in
-    Buffer.live h0 tag /\ 
-    Buffer.live h0 st.s /\
-    Buffer.disjoint_2 (MAC.as_buffer acc.a) st.s tag /\ 
-    Buffer.disjoint_2 (MAC.as_buffer st.r) st.s tag /\
-    Buffer.disjoint st.s tag /\ 
-    acc_inv st acc h0 /\
-    (mac_log ==> m_contains (ilog st.log) h0) /\
-    (mac_log /\ authId i ==> m_sel h0 (ilog st.log) == None)))
-  (ensures (fun h0 _ h1 -> mac_ensures i st acc tag h0 h1))
-  = let open Crypto.Symmetric.UF1CMA in
-    let h0 = get () in
-    CMA.mac #i st acc tag;
-    let h1 = get () in 
-    if mac_log then begin
-      (* Need to update UF1CMA to prove this (problem with the mods clause not working fully) *)
-      assume (Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1);
-      assume (HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1)
-    end
-
 let modifies_push_pop (h:HS.mem) (h0:HS.mem) (h5:HS.mem) (r:Set.set HH.rid)
   : Lemma (requires (HS.fresh_frame h h0 /\
 		     HS.modifies_transitively (Set.union r (Set.singleton (HS h0.tip))) h0 h5))
           (ensures (HS.poppable h5 /\ HS.modifies_transitively r h (HS.pop h5)))
   = ()
-
-let alog_fresh (#a:Type0) h0 h1 (r:HS.reference a) = 
-    HS.frameOf r == HS h1.tip /\
-    h1 `HS.contains` r /\
-  ~ (h0 `HS.contains` r)
 
 let encrypt_ensures' (i:id) (st:state i Writer)
 		    (n: Cipher.iv (alg i))
@@ -624,7 +662,6 @@ let encrypt_ensures' (i:id) (st:state i Writer)
        let c = Buffer.as_seq h5 cipher_tagged in
        HS.sel h5 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
 
-
 let rec frame_refines' (i:id{safeId i}) (mac_rgn:region) 
 		      (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry mac_rgn i))
 		      (h:mem) (h':mem)
@@ -634,6 +671,13 @@ let rec frame_refines' (i:id{safeId i}) (mac_rgn:region)
 	   (ensures  refines h' i mac_rgn entries blocks)
 	   (decreases (Seq.length entries))
    = admit()
+
+let frame_myinv_push (i:id) (st:state i Writer) (h:mem) (h1:mem)
+   : Lemma (requires (my_inv st h /\ 
+		      HS.fresh_frame h h1))
+	   (ensures (my_inv st h1))
+   = if safeId i
+     then frame_refines' i st.prf.mac_rgn (HS.sel h st.log) (HS.sel h (PRF.itable i st.prf)) h h1
 
 let encrypt_ensures_push_pop (i:id) (st:state i Writer)
 		    (n: Cipher.iv (alg i))
@@ -654,35 +698,6 @@ let encrypt_ensures_push_pop (i:id) (st:state i Writer)
 		     encrypt_ensures'  i st n aadlen aad plainlen plain cipher_tagged h (HS.pop h5)))
    = if safeId i
      then frame_refines' i st.prf.mac_rgn (HS.sel h5 st.log) (HS.sel h5 (PRF.itable i st.prf)) h5 (HS.pop h5)
-     
-let accumulate_ensures (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lbuffer (v aadlen))
-		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
-		       (h0:mem) (a:CMA.accBuffer i) (h1:mem) =
-  Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
-  ~ (h0 `Buffer.contains` (CMA (MAC.as_buffer (a.a)))) /\
-  Buffer.live h1 aad /\ 
-  Buffer.live h1 cipher /\
-  Buffer.frameOf (CMA (MAC.as_buffer a.a)) = HS h1.tip /\
-  CMA.acc_inv st a h1 /\
-  (mac_log ==> 
-    alog_fresh h0 h1 (CMA.alog a) /\
-    FStar.HyperStack.sel h1 (CMA.alog a) ==
-    encode_both (fst i) aadlen (Buffer.as_seq h1 aad) txtlen (Buffer.as_seq h1 cipher))
-
-let accumulate_wrapper (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lbuffer (v aadlen))
-		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen)) 
-   : StackInline (CMA.accBuffer i)
-      (requires (fun h0 -> 
-	  CMA(MAC.norm h0 st.r) /\
-	  Buffer.live h0 aad /\ 
-	  Buffer.live h0 cipher))
-      (ensures (fun h0 a h1 ->  accumulate_ensures #i st aadlen aad txtlen cipher h0 a h1))
-  = let h0 = get () in
-    let acc = accumulate #i st aadlen aad txtlen cipher in
-    let h1 = get () in
-    assert (Buffer.disjoint_2 (MAC.as_buffer (CMA acc.a)) (CMA st.s) cipher);
-    assume (mac_log ==> alog_fresh h0 h1 (CMA.alog acc));
-    acc
 
 val encrypt:
   i: id -> st:state i Writer ->
@@ -723,19 +738,10 @@ val encrypt:
   (ensures (fun h0 _ h5 ->
     encrypt_ensures' i st n aadlen aad plainlen plain cipher_tagged h0 h5))
     (* Buffer.m_ref (Buffer.frameOf cipher) !{Buffer.modifies_1 cipher h0 h1 /\  *)
-
-let frame_myinv_push (i:id) (st:state i Writer) (h:mem) (h1:mem)
-   : Lemma (requires (my_inv st h /\ 
-		      HS.fresh_frame h h1))
-	   (ensures (my_inv st h1))
-   = if safeId i
-     then frame_refines' i st.prf.mac_rgn (HS.sel h st.log) (HS.sel h (PRF.itable i st.prf)) h h1
-
 (* #reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let h_init = get() in
   push_frame();
-  assume (safeId i);
   let h0 = get () in
   frame_myinv_push i st h_init h0;
   assert (HH.modifies_rref st.prf.mac_rgn TSet.empty (HS h_init.h) (HS h0.h));
@@ -745,8 +751,8 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let x = PRF({iv = n; ctr = ctr_0 i}) in // PRF index to the first block
   let ak = PRF.prf_mac i st.prf st.ak x in  // used for keying the one-time MAC
   let h1 = get () in
-  assume (Buffer.live h1 (CMA ak.s)); //TODO: need to add liveness post-conditions in UF1CMA.genPost
-  assume (Buffer.disjoint (MAC.as_buffer (CMA ak.r)) (CMA ak.s)); //TODO: need to add separation to UF1CMA.State
+  (* assume (Buffer.live h1 (CMA ak.s)); //TODO: need to add liveness post-conditions in UF1CMA.genPost *)
+  (* assume (Buffer.disjoint (MAC.as_buffer (CMA ak.r)) (CMA ak.s)); //TODO: need to add separation to UF1CMA.State *)
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
   let y = PRF.incr i x in
@@ -781,9 +787,6 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   pop_frame();
   encrypt_ensures_push_pop i st n aadlen aad plainlen plain cipher_tagged h_init h0 h5
   
-  assume (HS.equal_domains h0 h5)
-
-
 (* //////////////////////////////////////////////////////////////////////////////// *)
 (* val counter_dexor:  *)
 (*   i:id -> t:PRF.state i -> x:PRF.domain i{PRF.ctr_0 i <^ x.ctr} -> len:u32{safelen i (v len) x.ctr} -> *)
