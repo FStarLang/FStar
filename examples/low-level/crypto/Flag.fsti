@@ -15,54 +15,54 @@ open Crypto.Indexing
 *) 
 
 // controls idealization of each cipher as a perfect random function
-val cipher_prf: cipherAlg -> Tot bool 
+inline_for_extraction val cipher_prf: cipherAlg -> Tot bool 
 
 // controls existence of logs for all MACs
-val mac_log: bool                
+inline_for_extraction val mac_log: bool                
 
 // idealizes each one-time MAC as perfectly INT-1CMA.
-val mac_int1cma: macAlg -> Tot bool  
+inline_for_extraction val mac_int1cma: macAlg -> Tot bool  
 
 // controls 2nd, perfect idealization step in enxor/dexor for all PRFs.
-val prf_cpa: bool
+inline_for_extraction val prf_cpa: bool
 
 
 (* CONDITIONAL IDEALIZATION *) 
 
 // guarantees fresh record keys (to be defined by TLS Handshake)
-val safeHS: i:id -> Tot bool 
+inline_for_extraction val safeHS: i:id -> Tot bool 
 
 // controls PRF idealization of ciphers (move to PRF?)
-let prf (i: id) = safeHS i && cipher_prf(cipherAlg_of_id i)
+inline_for_extraction let prf (i: id) = safeHS i && cipher_prf(cipherAlg_of_id i)
 
 // controls INT1CMA idealization of MACs (move to MAC?)
-let mac1 i = mac_log && mac_int1cma (macAlg_of_id i)
+inline_for_extraction let mac1 i = mac_log && mac_int1cma (macAlg_of_id i)
 
 // controls abstraction of plaintexts
 // (kept abstract, but requires all the crypto steps above)
-val safeId: i:id -> Tot bool
+inline_for_extraction val safeId: i:id -> Tot bool
 
 
 (* IDEALIZATION DEPENDENCIES *) 
 
 // review usage of these lemmas
 
-val mac1_implies_mac_log: i:id -> Lemma
+inline_for_extraction val mac1_implies_mac_log: i:id -> Lemma
   (requires (mac1 i))
   (ensures mac_log)
   [SMTPat (mac1 i)]
 
-val mac1_implies_prf: i:id -> Lemma
+inline_for_extraction val mac1_implies_prf: i:id -> Lemma
   (requires (mac1 i))
   (ensures (prf i))
   [SMTPat (mac1 i)]
 
-val safeId_implies_mac1: i:id -> Lemma
+inline_for_extraction val safeId_implies_mac1: i:id -> Lemma
   (requires (safeId i))
   (ensures (mac1 i))
   [SMTPat (safeId i)]
 
-val safeId_implies_cpa: i:id -> Lemma
+inline_for_extraction val safeId_implies_cpa: i:id -> Lemma
   (requires (safeId i))
   (ensures (prf_cpa))
   [SMTPat (safeId i)]
