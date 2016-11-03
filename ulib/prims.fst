@@ -121,7 +121,133 @@ type l_forall (#a:Type) (p:a -> GTot Type0) : Type0 = squash (x:a -> GTot (p x))
 
 (* The type of propositions (types with at most one inhabitant)
    It's trivial to show that all squashed types are in prop *)
-type prop = a:Type0{ l_forall #a (fun x -> l_forall #a (fun y -> l_equals x y)) }
+abstract let prop (* : Type1 *)
+  = a:Type0{ l_forall #a (fun x -> l_forall #a (fun y -> l_equals x y)) }
+
+assume new type range : Type0
+assume val range_0:range
+
+assume new type string : Type0
+assume HasEq_string: hasEq string
+
+type range_of (#a:Type) (x:a) = range
+
+(* PURE effect *)
+let pure_pre = Type0
+let pure_post (a:Type) = a -> GTot Type0
+let pure_wp   (a:Type) = pure_post a -> GTot pure_pre
+
+assume type guard_free: Type0 -> Type0
+
+unfold let pure_return (a:Type) (x:a) (p:pure_post a) =
+     l_forall (fun (y:a) -> l_imp (l_equals y x) (p y))
+
+unfold let pure_bind_wp (r1:range) (a:Type) (b:Type)
+                   (wp1:pure_wp a) (wp2: (a -> GTot (pure_wp b)))
+                   (p : pure_post b) : Type0 =
+	wp1 (fun (x:a) -> wp2 x p)
+unfold let pure_if_then_else (a:Type) (p:Type)
+             (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) : Type0 =
+     l_ite p (wp_then post) (wp_else post)
+
+unfold let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) : Type0 =
+     l_forall (fun (k:pure_post a)->
+	 l_imp (l_forall (fun (x:a) (* {:pattern (guard_free (k x))} XXX *) ->
+                                    l_iff (k x) (post x)))
+	       (wp k))
+
+unfold let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) : Type0
+  = l_forall (fun (p:pure_post a) -> l_imp (wp1 p) (wp2 p))
+
+unfold let pure_close_wp (a:Type) (b:Type) (wp:(b -> GTot (pure_wp a)))
+                         (p:pure_post a) : Type0
+  = l_forall (fun (b:b) -> wp b p)
+unfold let pure_assert_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) : Type0
+  = l_and q (wp p)
+unfold let pure_assume_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) : Type0
+  = l_imp q (wp p)
+unfold let pure_null_wp  (a:Type) (p:pure_post a) : Type0
+  = l_forall (fun (x:a) -> p x)
+unfold let pure_trivial  (a:Type) (wp:pure_wp a) : Type0
+  = wp (fun (x:a) -> l_true)
+
+private total new_effect { (* The definition of the PURE effect is fixed;
+                       no user should ever change this *)
+  PURE : a:Type -> wp:pure_wp a -> Effect
+  with return_wp    = pure_return
+     ; bind_wp      = pure_bind_wp
+     ; if_then_else = pure_if_then_else
+     ; ite_wp       = pure_ite_wp
+     ; stronger     = pure_stronger
+     ; close_wp     = pure_close_wp
+     ; assert_p     = pure_assert_p
+     ; assume_p     = pure_assume_p
+     ; null_wp      = pure_null_wp
+     ; trivial      = pure_trivial
+}
+
+(* The primitive effect Tot is definitionally equal to an instance of PURE *)
+effect Tot (a:Type) = PURE a (pure_null_wp a)
+
+effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> l_true)
+
+total new_effect GHOST = PURE
+
+unfold let purewp_id (a:Type) (wp:pure_wp a) = wp
+
+sub_effect
+  PURE ~> GHOST = purewp_id
+
+(* The primitive effect GTot is definitionally equal to an instance of GHOST *)
+effect GTot (a:Type) = GHOST a (pure_null_wp a)
+effect Ghost (a:Type) (pre:pure_pre) (post:pure_post a) =
+  GHOST a (fun (p:pure_post a) ->
+             l_and pre (l_forall (fun (x:a) -> l_imp (post x) (p x))))
+
+(*********************************************************************************)
+(* Propositional logical connectives *)
+(*********************************************************************************)
+
+(* prop truth and falsehood *)
+let p_true : (* Tot *) prop = l_true
+let p_false : (* Tot *) prop = l_false
+
+(* prop homogeneous equality *)
+let p_equals (#a:Type) (x:a) (y:a) : Tot prop = l_equals x y
+
+(* infix binary '==' *)
+unfold let op_Equals_Equals (#a:Type) (x:a) (y:a) : Tot prop
+  = p_equals x y
+
+(* prop heterogeneous equality *)
+let p_hequals (#a:Type) (#b:Type) (x:a) (y:b) : Tot prop
+  = l_hequals x y
+
+(* infix binary '===' *)
+unfold let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) : Tot prop
+  = p_hequals x y
+
+(* bool-to-prop coercion *)
+(* type b2p (b:bool) : prop = b2t b -- doesn't work, `logical` crap? *)
+let b2p (b:bool) : prop = (b == true)
+
+(* infix binary '/\': prop conjunction *)
+let p_and (p:prop) (q:prop) : Tot prop = l_and p q
+
+(* infix binary '\/': prop implication *)
+let p_or (p:prop) (q:prop) : Tot prop = l_or p q
+
+(* infix binary '==>': prop implication *)
+let p_imp (p:prop) (q:prop) : Tot prop = l_imp p q
+
+(* infix binary '<==>': prop equivalence *)
+let p_iff (p:prop) (q:prop) : Tot prop = l_iff p q
+
+(* prefix unary '~' *)
+let p_not (p:prop) : Tot prop = l_not p
+
+(* forall (x:a). p x : prop forall *)
+let p_forall (#a:Type) (p:a -> GTot prop) : Tot prop = l_forall #a p
 
 (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
 unopteq type dtuple2 (a:Type)
@@ -136,81 +262,20 @@ type c_exists (#a:Type) (p:a -> GTot Type) : Type = (x:a & p x)
 (* squashed exists *)
 type l_exists (#a:Type) (p:a -> GTot Type0) : Type0 = squash (x:a & p x)
 
-assume new type range : Type0
-assume val range_0:range
+(* exists (x:a). p x : prop exists *)
+let p_exists (#a:Type) (p:a -> GTot prop) : Tot prop = l_exists #a p
 
-assume new type string : Type0
-assume HasEq_string: hasEq string
+(* x:t{p}: strongly-typed refinement *)
+let p_refine (a:Type) (p:a -> GTot prop) : Tot Type = x:a{p x}
 
-irreducible let labeled (r:range) (msg:string) (b:Type) = b
-type range_of (#a:Type) (x:a) = range
+(* Pure effect defined with a strong type for pre- and post- conditions *)
 
-(* PURE effect *)
-let pure_pre = Type0
-let pure_post (a:Type) = a -> GTot Type0
-let pure_wp   (a:Type) = pure_post a -> GTot pure_pre
+let p_pure_pre = prop
+let p_pure_post (a:Type) = a -> GTot prop
 
-assume type guard_free: Type0 -> Type0
-
-unfold let pure_return (a:Type) (x:a) (p:pure_post a) =
-     forall (y:a). y==x ==> p y
-
-unfold let pure_bind_wp (r1:range) (a:Type) (b:Type)
-                   (wp1:pure_wp a) (wp2: (a -> GTot (pure_wp b)))
-                   (p : pure_post b) =
-	wp1 (fun (x:a) -> wp2 x p)
-unfold let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
-     l_ite p (wp_then post) (wp_else post)
-
-unfold let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
-     forall (k:pure_post a).
-	 (forall (x:a).{:pattern (guard_free (k x))} k x <==> post x)
-	 ==> wp k
-
-unfold let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =
-        forall (p:pure_post a). wp1 p ==> wp2 p
-
-unfold let pure_close_wp (a:Type) (b:Type) (wp:(b -> GTot (pure_wp a))) (p:pure_post a) = forall (b:b). wp b p
-unfold let pure_assert_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q /\ wp p
-unfold let pure_assume_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q ==> wp p
-unfold let pure_null_wp  (a:Type) (p:pure_post a) = forall (x:a). p x
-unfold let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (x:a) -> True)
-
-total new_effect { (* The definition of the PURE effect is fixed; no user should ever change this *)
-  PURE : a:Type -> wp:pure_wp a -> Effect
-  with return_wp    = pure_return
-     ; bind_wp      = pure_bind_wp
-     ; if_then_else = pure_if_then_else
-     ; ite_wp       = pure_ite_wp
-     ; stronger     = pure_stronger
-     ; close_wp     = pure_close_wp
-     ; assert_p     = pure_assert_p
-     ; assume_p     = pure_assume_p
-     ; null_wp      = pure_null_wp
-     ; trivial      = pure_trivial
-}
-
-effect Pure (a:Type) (pre:pure_pre) (post:pure_post a) =
-        PURE a
-             (fun (p:pure_post a) -> pre /\ (forall (x:a). pre /\ post x ==> p x)) // pure_wp
-effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
-
-(* The primitive effect Tot is definitionally equal to an instance of PURE *)
-effect Tot (a:Type) = PURE a (pure_null_wp a)
-
-total new_effect GHOST = PURE
-
-unfold let purewp_id (a:Type) (wp:pure_wp a) = wp
-
-sub_effect
-  PURE ~> GHOST = purewp_id
-
-(* The primitive effect GTot is definitionally equal to an instance of GHOST *)
-effect GTot (a:Type) = GHOST a (pure_null_wp a)
-(* #set-options "--print_universes --print_implicits --print_bound_var_types --debug Prims --debug_level Extreme" *)
-effect Ghost (a:Type) (pre:Type) (post:pure_post a) =
-       GHOST a
-           (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
+effect Pure (a:Type) (pre:p_pure_pre) (post:p_pure_post a) =
+  PURE a (fun (p:p_pure_post a) ->
+            p_and pre (p_forall (fun (x:a) -> p_and pre (p_imp (post x) (p x)))))
 
 assume new type int : Type0
 
@@ -250,7 +315,7 @@ assume type decreases : #a:Type -> a -> Type0
      Lemma phi                 for   Lemma (requires True) phi []
      Lemma t1..tn              for   Lemma unit t1..tn
 *)
-effect Lemma (a:Type) (pre:Type) (post:Type) (pats:list pattern) =
+effect Lemma (a:Type) (pre:prop) (post:prop) (pats:list pattern) =
        Pure a pre (fun r -> post)
 
 type option (a:Type) =
@@ -274,12 +339,11 @@ effect M (a:Type) = Tot a
 new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id
 
-effect Div (a:Type) (pre:pure_pre) (post:pure_post a) =
-       DIV a
-           (fun (p:pure_post a) -> pre /\ (forall a. pre /\ post a ==> p a)) (* WP *)
+effect Div (a:Type) (pre:p_pure_pre) (post:p_pure_post a) =
+  DIV a (fun (p:pure_post a) -> pre /\ (forall a. pre /\ post a ==> p a)) (* WP *)
 
 effect Dv (a:Type) =
-     DIV a (fun (p:pure_post a) -> (forall (x:a). p x))
+  DIV a (fun (p:pure_post a) -> (forall (x:a). p x))
 
 
 let st_pre_h  (heap:Type)          = heap -> GTot Type0
@@ -563,15 +627,15 @@ let dfst #a #b t = Mkdtuple2._1 t
 val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2._1 t))
 let dsnd #a #b t = Mkdtuple2._2 t
 
-assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
-assume val admit   : #a:Type -> unit -> Admit a
+assume val _assume : p:prop -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
+assume val admit   : #a:prop -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
 irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 let unsafe_coerce #a #b x = admit(); x
-assume val admitP  : p:Type -> Pure unit True (fun x -> p)
-val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> True))
+assume val admitP  : p:prop -> Pure unit True (fun x -> p)
+val _assert : p:prop -> unit -> Pure unit (requires p) (ensures (fun x -> True))
 let _assert p () = ()
-val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
+val cut     : p:prop -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
 
@@ -625,51 +689,3 @@ abstract let normalize (a:Type0) = a
 
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
-
-(*********************************************************************************)
-(* Propositional logical connectives *)
-(*********************************************************************************)
-
-(* prop truth and falsehood *)
-let p_true : (* Tot *) prop = l_true
-let p_false : (* Tot *) prop = l_false
-
-(* prop homogeneous equality *)
-let p_equals (#a:Type) (x:a) (y:a) : Tot prop = l_equals x y
-
-(* infix binary '==' *)
-unfold let op_Equals_Equals (#a:Type) (x:a) (y:a) : Tot prop
-  = p_equals x y
-
-(* prop heterogeneous equality *)
-let p_hequals (#a:Type) (#b:Type) (x:a) (y:b) : Tot prop
-  = l_hequals x y
-
-(* infix binary '===' *)
-unfold let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) : Tot prop
-  = p_hequals x y
-
-(* bool-to-prop coercion *)
-(* type b2p (b:bool) : prop = b2t b -- doesn't work, `logical` crap? *)
-let b2p (b:bool) : prop = (b == true)
-
-(* infix binary '/\': prop conjunction *)
-let p_and (p:prop) (q:prop) : Tot prop = l_and p q
-
-(* infix binary '\/': prop implication *)
-let p_or (p:prop) (q:prop) : Tot prop = l_or p q
-
-(* infix binary '==>': prop implication *)
-let p_imp (p:prop) (q:prop) : Tot prop = l_imp p q
-
-(* infix binary '<==>': prop equivalence *)
-let p_iff (p:prop) (q:prop) : Tot prop = l_iff p q
-
-(* prefix unary '~' *)
-let p_not (p:prop) : Tot prop = l_not p
-
-(* forall (x:a). p x : prop forall *)
-let p_forall (#a:Type) (p:a -> GTot prop) : Tot prop = l_forall #a p
-
-(* exists (x:a). p x : prop exists *)
-let p_exists (#a:Type) (p:a -> GTot prop) : Tot prop = l_exists #a p

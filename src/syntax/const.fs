@@ -73,16 +73,16 @@ let kbin k1 k2 k'            = mk (Tm_arrow([null_binder k1; null_binder k2], mk
 let ktern k1 k2 k3 k'        = mk (Tm_arrow([null_binder k1;
                                              null_binder k2;
                                              null_binder k3], mk_Total k'))
-let true_lid   = pconst "l_true"
-let false_lid  = pconst "l_false"
-let and_lid    = pconst "l_and"
-let or_lid     = pconst "l_or"
-let not_lid    = pconst "l_not"
-let imp_lid    = pconst "l_imp"
-let iff_lid    = pconst "l_iff"
-let ite_lid    = pconst "l_ite"
-let exists_lid = pconst "l_exists"
-let forall_lid = pconst "l_forall"
+let true_lid   = pconst "p_true"
+let false_lid  = pconst "p_false"
+let and_lid    = pconst "p_and"
+let or_lid     = pconst "p_or"
+let not_lid    = pconst "p_not"
+let imp_lid    = pconst "p_imp"
+let iff_lid    = pconst "p_iff"
+let ite_lid    = pconst "p_ite"
+let exists_lid = pconst "p_exists"
+let forall_lid = pconst "p_forall"
 let haseq_lid  = pconst "hasEq"
 let b2t_lid    = pconst "b2t" (* coercion from boolean to type *)
 let admit_lid  = pconst "admit"
