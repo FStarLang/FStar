@@ -2522,7 +2522,7 @@ and tc_decl : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.sigelt  ->  (FS
 let env = (set_hint_correlator env se)
 in (
 
-let _59_1528 = (FStar_TypeChecker_Util.check_sigelt_quals se)
+let _59_1528 = (FStar_TypeChecker_Util.check_sigelt_quals env se)
 in (match (se) with
 | (FStar_Syntax_Syntax.Sig_inductive_typ (_)) | (FStar_Syntax_Syntax.Sig_datacon (_)) -> begin
 (FStar_All.failwith "Impossible bare data-constructor")
