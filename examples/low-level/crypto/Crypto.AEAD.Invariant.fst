@@ -54,8 +54,9 @@ noeq type state (i:id) (rw:rw) =
       // the log should exist only when prf i
       log: HS.ref (Seq.seq (entry i)) {HS.frameOf log == log_region} ->
       // Was PRF(prf.rgn) == region. Do readers use its own PRF state?
-      prf: PRF.state i {PRF(prf.rgn) == log_region} (* including its key *) ->
-      ak: CMA.akey log_region i (* static, optional authentication key *) -> 
+      prf: PRF.state i {PRF(prf.rgn) == log_region /\
+		       (Flag.prf i ==> ~(log === PRF.itable i prf)) } (* including its key *) ->
+      ak: CMA.akey (PRF prf.mac_rgn) i (* static, optional authentication key *) -> 
       state i rw
 
 // INVARIANT (WIP)
