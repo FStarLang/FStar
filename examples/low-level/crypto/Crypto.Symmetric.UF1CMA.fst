@@ -142,7 +142,8 @@ noeq type state (i:id) =
   | State:
       #region: rid ->
       r: MAC.elemB i{Buffer.frameOf (MAC.as_buffer r) = region} -> 
-      s: wordB_16 {frameOf s = region} ->
+      s: wordB_16 {frameOf s = region /\
+		  Buffer.disjoint (MAC.as_buffer r) s} ->
       log: log_ref region ->
       state i
 
@@ -154,6 +155,7 @@ let genPost0 (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
     ~(contains m0 st.s) /\
     st.region == region /\
     MAC.live m1 st.r /\
+    Buffer.live m1 st.s /\
     (mac_log ==> 
         ~ (m_contains (ilog st.log) m0) /\ 
 	   m_contains (ilog st.log) m1 /\ 
