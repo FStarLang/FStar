@@ -256,6 +256,7 @@ let gen_wps_for_free
                             Tot (st2_wp heap a)
     let st2_if_then_else heap a c = st2_liftGA2 (l_ITE c) *)
   let wp_if_then_else =
+    let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
       let l_ite = fvar Const.ite_lid (S.Delta_defined_at_level 2) None in
@@ -263,8 +264,8 @@ let gen_wps_for_free
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
         ])
-      ) (Inr (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))))
-    ) ret_tot_wp_a
+      ) (Inr result_comp)
+    ) (Some (Inl (U.lcomp_of_comp result_comp)))
   in
   let wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
   let wp_if_then_else = mk_generic_app wp_if_then_else in
@@ -481,6 +482,8 @@ let empty env tc_const = {
 }
 
 type env_ = env
+
+let get_env env = env.env
 
 type nm = | N of typ | M of typ
 
@@ -926,9 +929,9 @@ and infer (env: env) (e: term): nm * term * term =
                        else lid))
       in
 
-      let u_what =
+      let u_body, u_what =
           let comp = trans_G env (U.comp_result comp) (is_monadic what) (SS.subst env.subst s_body) in
-          Some (Inl (U.lcomp_of_comp comp))
+          U.ascribe u_body (Inr comp), Some (Inl (U.lcomp_of_comp comp))
       in
 
       let s_body = close s_binders s_body in

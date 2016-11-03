@@ -477,6 +477,14 @@ and cps_and_elaborate env ed =
         failwith "bad shape for effect-for-free signature"
   in
 
+  (* TODO : having "_" as a variable name can create a really strange shadowing
+            behaviour between uu___ variables in the tcterm ; needs to be investigated *)
+  let a =
+      if a.ppname.idText = "_"
+      then { a with ppname = {a.ppname with idText = "anything^but^_" }}
+      else a
+  in
+
   let open_and_check t =
     let subst = SS.opening_of_binders effect_binders in
     let t = SS.subst subst t in
@@ -529,13 +537,14 @@ and cps_and_elaborate env ed =
       match (SS.compress return_wp).n with
       | Tm_abs (b1 :: b2 :: bs, body, what) ->
           let b1::b2::bs, body = SS.open_term (b1::b2::bs) body in
-          let bs', body = U.abs_formals body in
+          let env0 = push_binders (DMFF.get_env dmff_env) (b1::b2::bs) in
+          let bs', body, what' = U.abs_formals <|  N.eta_expand env0 body in
+          (* TODO : Should check that what' is Tot Type0 *)
           let t2 = (fst b2).sort in
-          let pure_wp_type =
-              U.arrow [S.mk_binder <| S.null_bv (U.arrow [S.mk_binder <| S.null_bv t2] (S.mk_Total U.ktype0))] (S.mk_Total U.ktype0) in
+          let pure_wp_type = DMFF.double_star t2 in
           let wp = S.gen_bv "wp" None pure_wp_type in
-          // fun b1 wp -> (fun bs -> wp (fun b2 -> body))
-          let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what, None] None Range.dummyRange in
+          // fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a
+          let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
           U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs@bs') body what) (Some (Inr Const.effect_GTot_lid))
       | _ ->
           failwith "unexpected shape for return"
@@ -601,6 +610,7 @@ and cps_and_elaborate env ed =
   let repr = recheck_debug "FC" env repr in
   let repr = register "repr" repr in
 
+(*
   let pre, post =
     match (unascribe <| SS.compress wp_type).n with
     | Tm_abs (effect_param, arrow, _) ->
@@ -622,7 +632,7 @@ and cps_and_elaborate env ed =
   // Desugaring is aware of these names and generates references to them when
   // the user writes something such as [STINT.repr]
   ignore (register "pre" pre);
-  ignore (register "post" post);
+  ignore (register "post" post);*)
   ignore (register "wp" wp_type);
 
   let ed = { ed with
@@ -1623,7 +1633,7 @@ let tc_decls env ses =
           let _, _, env, _ = acc in
           let ses, ne, lift_from_pure_opt = cps_and_elaborate env ne in
           let ses = match lift_from_pure_opt with
-                    | Some lift -> ses @ [ Sig_new_effect (ne, r) ; lift ]
+                    | Some lift -> ses @ [ Sig_new_effect (ne, r) (*; lift *) ]
                     | None -> ses @ [ Sig_new_effect (ne, r) ]
           in
           List.fold_left process_one_decl acc ses
