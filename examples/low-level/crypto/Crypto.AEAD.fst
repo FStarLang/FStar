@@ -424,7 +424,6 @@ val refines_to_inv: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)) -
 			let ad = Buffer.as_seq h1 aad in
   			let entry = Entry nonce ad (v len) p c_tagged in
 			h1 `HS.contains` (itable i st.prf) /\
-			(* ~ (st.log === (itable i st.prf)) /\ *)
 			refines h1 i mac_rgn (SeqProperties.snoc entries_0 entry) table_1)))))
           (ensures (fun h1 _ h2 -> 
       		      Buffer.live h1 aad /\ 
@@ -504,14 +503,14 @@ let encrypt_ensures (i:id) (st:state i Writer)
      Buffer.live h5 cipher_tagged /\
      Plain.live h5 plain /\
      my_inv st h5 /\
-     HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged]) h0 h5 /\ (
+     HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged; HS h5.tip]) h0 h5 /\ (
      safeId i ==>  (
        let aad = Buffer.as_seq h5 aad in
        let p = Plain.sel_plain h5 plainlen plain in
        let c = Buffer.as_seq h5 cipher_tagged in
        HS.sel h5 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
 
-#reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
 val finish_after_mac: h0:mem -> h3:mem -> i:id -> st:state i Writer -> 
 		      n: Cipher.iv (alg i) ->
 		      aadlen: UInt32.t {aadlen <=^ aadmax} -> 
@@ -523,7 +522,10 @@ val finish_after_mac: h0:mem -> h3:mem -> i:id -> st:state i Writer ->
   (requires (fun h4 -> 
     let cipher = Buffer.sub cipher_tagged 0ul plainlen in
     let x0 = {iv=n; ctr=ctr_0 i} in
-    HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged]) h0 h3 /\
+    HS (h0.tip = h4.tip) /\
+    HH.disjoint (HS h4.tip) st.log_region /\
+    HH.disjoint (HS h4.tip) (Buffer.frameOf cipher_tagged) /\
+    HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged; HS h4.tip]) h0 h3 /\
     HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h3 /\
     pre_refines_one_entry i st n (v plainlen) plain cipher_tagged h0 h3 /\
     mac_ensures (i, n) ak acc tag h3 h4 /\
@@ -540,9 +542,8 @@ val finish_after_mac: h0:mem -> h3:mem -> i:id -> st:state i Writer ->
     (Buffer.live h3 aad) /\
     (tag == Buffer.sub cipher_tagged plainlen MAC.taglen) /\
     (mac_log ==> 
-      h3 `HS.contains` CMA.alog acc /\
-      HH.disjoint (HS.frameOf (CMA.alog acc)) st.log_region /\
-      HH.disjoint (HS.frameOf (CMA.alog acc)) (Buffer.frameOf cipher_tagged) /\
+      (h3 `HS.contains` CMA.alog acc) /\
+      (HS.frameOf (CMA.alog acc) = HS h3.tip) /\
       FStar.HyperStack.sel h3 (CMA.alog acc) ==
       encode_both i aadlen (Buffer.as_seq h3 aad) plainlen (Buffer.as_seq h3 cipher)) /\ //from accumulate
     (safeId i ==>
@@ -593,11 +594,67 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
       assume (HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1)
     end
 
+let modifies_push_pop (h:HS.mem) (h0:HS.mem) (h5:HS.mem) (r:Set.set HH.rid)
+  : Lemma (requires (HS.fresh_frame h h0 /\
+		     HS.modifies_transitively (Set.union r (Set.singleton (HS h0.tip))) h0 h5))
+          (ensures (HS.poppable h5 /\ HS.modifies_transitively r h (HS.pop h5)))
+  = ()
+
 let alog_fresh (#a:Type0) h0 h1 (r:HS.reference a) = 
     HS.frameOf r == HS h1.tip /\
     h1 `HS.contains` r /\
   ~ (h0 `HS.contains` r)
 
+let encrypt_ensures' (i:id) (st:state i Writer)
+		    (n: Cipher.iv (alg i))
+		    (aadlen: UInt32.t {aadlen <=^ aadmax})
+		    (aad: lbuffer (v aadlen))
+		    (plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (ctr_0 i +^ 1ul)})
+		    (plain: plainBuffer i (v plainlen))
+		    (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+		    (h0:mem) (h5:mem) = 
+     Buffer.live h5 aad /\
+     Buffer.live h5 cipher_tagged /\
+     Plain.live h5 plain /\
+     my_inv st h5 /\
+     HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged]) h0 h5 /\ (
+     safeId i ==>  (
+       let aad = Buffer.as_seq h5 aad in
+       let p = Plain.sel_plain h5 plainlen plain in
+       let c = Buffer.as_seq h5 cipher_tagged in
+       HS.sel h5 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
+
+
+let rec frame_refines' (i:id{safeId i}) (mac_rgn:region) 
+		      (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry mac_rgn i))
+		      (h:mem) (h':mem)
+   : Lemma (requires refines h i mac_rgn entries blocks /\
+		     HH.modifies_rref mac_rgn TSet.empty (HS h.h) (HS h'.h) /\
+		     HS.live_region h' mac_rgn)
+	   (ensures  refines h' i mac_rgn entries blocks)
+	   (decreases (Seq.length entries))
+   = admit()
+
+let encrypt_ensures_push_pop (i:id) (st:state i Writer)
+		    (n: Cipher.iv (alg i))
+		    (aadlen: UInt32.t {aadlen <=^ aadmax})
+		    (aad: lbuffer (v aadlen))
+		    (plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (ctr_0 i +^ 1ul)})
+		    (plain: plainBuffer i (v plainlen))
+		    (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+		    (h:mem) (h0:mem) (h5:mem)
+   : Lemma (requires (let open FStar.HyperStack in
+		      fresh_frame h h0 /\
+		      HH.disjoint st.log_region h0.tip /\
+		      HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) h0.tip /\
+     		      HH.disjoint (Buffer.frameOf aad) h0.tip /\
+      		      HH.disjoint (Buffer.frameOf cipher_tagged) h0.tip /\
+		      encrypt_ensures i st n aadlen aad plainlen plain cipher_tagged h0 h5))
+	   (ensures (HS.poppable h5 /\
+		     encrypt_ensures'  i st n aadlen aad plainlen plain cipher_tagged h (HS.pop h5)))
+   = if safeId i
+     then frame_refines' i st.prf.mac_rgn (HS.sel h5 st.log) (HS.sel h5 (PRF.itable i st.prf)) h5 (HS.pop h5)
+     
 let accumulate_ensures (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lbuffer (v aadlen))
 		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
 		       (h0:mem) (a:CMA.accBuffer i) (h1:mem) =
@@ -641,7 +698,15 @@ val encrypt:
     Buffer.disjoint (Plain.as_buffer plain) cipher_tagged /\
     HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) st.log_region /\
     HH.disjoint (Buffer.frameOf cipher_tagged) st.log_region /\
-    HH.disjoint (Buffer.frameOf aad) st.log_region
+    HH.disjoint (Buffer.frameOf aad) st.log_region /\
+    HS.is_eternal_region st.log_region /\
+    HS.is_eternal_region (Buffer.frameOf cipher_tagged) /\
+    HS.is_eternal_region (Buffer.frameOf (Plain.as_buffer plain)) /\
+    HS.is_eternal_region (Buffer.frameOf aad) /\
+    st.log_region <> HH.root /\
+    Buffer.frameOf cipher_tagged <> HH.root /\
+    Buffer.frameOf aad <> HH.root /\
+    Buffer.frameOf (Plain.as_buffer plain) <> HH.root
   }
   ->
   //STL -- should be STL eventually, but this requires propagation throughout the library
@@ -652,30 +717,36 @@ val encrypt:
     Buffer.live h aad /\
     Buffer.live h cipher_tagged /\
     Plain.live h plain /\
+    st.log_region  `HS.is_in` (HS h.h) /\
     (prf i ==> none_above ({iv=n; ctr=ctr_0 i}) st.prf h) // The nonce must be fresh!
    ))
   (ensures (fun h0 _ h5 ->
-    encrypt_ensures i st n aadlen aad plainlen plain cipher_tagged h0 h5))
+    encrypt_ensures' i st n aadlen aad plainlen plain cipher_tagged h0 h5))
     (* Buffer.m_ref (Buffer.frameOf cipher) !{Buffer.modifies_1 cipher h0 h1 /\  *)
 
-   
+let frame_myinv_push (i:id) (st:state i Writer) (h:mem) (h1:mem)
+   : Lemma (requires (my_inv st h /\ 
+		      HS.fresh_frame h h1))
+	   (ensures (my_inv st h1))
+   = if safeId i
+     then frame_refines' i st.prf.mac_rgn (HS.sel h st.log) (HS.sel h (PRF.itable i st.prf)) h h1
+
 (* #reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
-  let h00 = get() in
+  let h_init = get() in
   push_frame();
+  assume (safeId i);
   let h0 = get () in
-  assert (HH.modifies_rref st.prf.mac_rgn TSet.empty (HS h00.h) (HS h0.h));
-  admit()
-  
-  assert (HS (is_stack_region h0.tip)); //TODO: remove this once we move all functions to STL
-  assume (HS (HH.disjoint h0.tip st.log_region)); //DO we need disjointness or will disequality do?
-  assume (HS (HH.disjoint h0.tip (Buffer.frameOf cipher_tagged))); //DO we need disjointness or will disequality do?  
+  frame_myinv_push i st h_init h0;
+  assert (HH.modifies_rref st.prf.mac_rgn TSet.empty (HS h_init.h) (HS h0.h));
+  assert (HS (is_stack_region h0.tip));
+  assert (HS (HH.disjoint h0.tip st.log_region));
+  assert (HS (HH.disjoint h0.tip (Buffer.frameOf cipher_tagged)));
   let x = PRF({iv = n; ctr = ctr_0 i}) in // PRF index to the first block
   let ak = PRF.prf_mac i st.prf st.ak x in  // used for keying the one-time MAC
   let h1 = get () in
-  assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h00 h1);
-  admit()
-  
+  assume (Buffer.live h1 (CMA ak.s)); //TODO: need to add liveness post-conditions in UF1CMA.genPost
+  assume (Buffer.disjoint (MAC.as_buffer (CMA ak.r)) (CMA ak.s)); //TODO: need to add separation to UF1CMA.State
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
   let y = PRF.incr i x in
@@ -691,26 +762,25 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   lemma_frame_find_mac #i #(v plainlen) st.prf y cipher h1 h2;
   intro_refines_one_entry_no_tag #i st n (v plainlen) plain cipher_tagged h0 h1 h2; //we have pre_refines_one_entry here
   assert (Buffer.live h1 aad); //seem to need this hint
-  assume (MAC.norm h2 (CMA ak.r));
+  assume (MAC.norm h2 (CMA ak.r)); //TODO: need to revise the definition of norm to work with an abstract type of elemB
   let acc = accumulate_wrapper ak aadlen aad plainlen cipher in
   //Establishing the pre-conditions of MAC.mac
   let h3 = get() in
   Buffer.lemma_reveal_modifies_0 h2 h3;
-  (* assume (HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged]) h0 h3); //TODO: prove this! *)
-  assert (HS (h0.h `Map.contains` 
-  assert false;
-  admit()
-  
+  assert (HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged; HS h3.tip]) h0 h3);
   assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h3);
   frame_pre_refines_0 i st n (v plainlen) plain cipher_tagged h0 h2 h3;
   assert (Buffer.live h2 aad); //seem to need this hint
   assert (Buffer.live h3 aad); //seem to need this hint
   Buffer.lemma_reveal_modifies_0 h2 h3;
   //MAC
-  mac_wrapper #(i,n) ak l acc tag;
+  mac_wrapper #(i,n) ak acc tag;
   //Some ideal and proof steps, to finish up
-  finish_after_mac h0 h3 i st n aadlen aad plainlen plain cipher_tagged ak l acc tag;
+  finish_after_mac h0 h3 i st n aadlen aad plainlen plain cipher_tagged ak acc tag;
   let h5 = get () in
+  pop_frame();
+  encrypt_ensures_push_pop i st n aadlen aad plainlen plain cipher_tagged h_init h0 h5
+  
   assume (HS.equal_domains h0 h5)
 
 
