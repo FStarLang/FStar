@@ -196,9 +196,9 @@ KRML_ARGS=-verbose -ccopt -Wno-error=pointer-sign
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
 
 krml-test.exe:
-	mkdir -p tmp
 	$(KRML) crypto/real/Flag.fst crypto/Tests.fst -no-prefix Tests $(KREMLIN_HOME)/test/testlib.c \
-		-tmpdir tmp -o krml-test.exe -add-include '"testlib.h"'
+		-tmpdir tmp -o krml-test.exe -add-include '"testlib.h"' \
+		crypto/test_hacks.c
 	./krml-test.exe
 
 OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List_Tot.ml \
