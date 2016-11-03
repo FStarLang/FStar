@@ -188,7 +188,18 @@ bignum-ver:
 	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.fst --include crypto
 	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.fst --include crypto
 	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.fst --include crypto
+	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part6.fst --include crypto
 	$(FSTAR) --use_hints --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
+
+KRML_INCLUDES=$(addprefix -I , crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
+KRML_ARGS=-verbose -ccopt -Wno-error=pointer-sign
+KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
+
+krml-test.exe:
+	mkdir -p tmp
+	$(KRML) crypto/real/Flag.fst crypto/Tests.fst -no-prefix Tests $(KREMTEST)/testlib.c \
+		-tmpdir tmp -o krml-test.exe
+	./krml-test.exe
 
 
 # Cleaning
