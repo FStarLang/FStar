@@ -21,7 +21,6 @@ open Crypto.Symmetric.Bytes
 module U8 = FStar.UInt8
 module U64 = FStar.UInt64
 
-#set-options "--lax"
 #set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
 
 val pow2_8_lemma: n:nat ->
@@ -44,24 +43,6 @@ val pow2_64_lemma: n:nat ->
     (ensures  (pow2 n = 18446744073709551616))
     [SMTPat (pow2 n)]
 let pow2_64_lemma n = assert_norm(pow2 64 = 18446744073709551616)
-
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
-
-
-val lemma_add_disjoint: #z:pos -> a:UInt.uint_t z -> b:UInt.uint_t z -> n:nat -> m:nat{m < z} -> Lemma
-  (requires (a % pow2 m = 0 /\ b < pow2 m /\ a < pow2 n /\ n >= m))
-  (ensures  (a + b < pow2 n))
-let lemma_add_disjoint #z a b n m =
-  lemma_logor_dijoint a b m;
-  let c = a / pow2 m in
-  Math.Lemmas.lemma_div_exact a (pow2 m);
-  cut(a + b < c * pow2 m + pow2 m);
-  Math.Lemmas.pow2_plus (n-m) m;
-  cut(c < pow2 (n-m));
-  Math.Lemmas.distributivity_add_right (pow2 m) c 1;
-  cut(a + b < pow2 m * (c + 1));
-  Math.Lemmas.lemma_mult_le_right (pow2 m) (c+1) (pow2 (n-m))
-
 
 #set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
 
@@ -106,10 +87,10 @@ val lemma_toField_2_0: n0:u64_32 -> n1:u64_32 -> n2:u64_32 -> n3:u64_32 -> Lemma
     /\ v (n3 >>^ 8ul) < pow2 24))
 let lemma_toField_2_0 n0 n1 n2 n3 =
   let mask_26 = mk_mask 26ul in
-  lemma_logand_mask (v (n0)) 26;
-  lemma_logand_mask (v ((n1 <<^ 6ul))) 26;
-  lemma_logand_mask (v ((n2 <<^ 12ul))) 26;
-  lemma_logand_mask (v ((n3 <<^ 18ul))) 26;
+  logand_mask (v (n0)) 26;
+  logand_mask (v ((n1 <<^ 6ul))) 26;
+  logand_mask (v ((n2 <<^ 12ul))) 26;
+  logand_mask (v ((n3 <<^ 18ul))) 26;
   lemma_div_pow2_lt (v n0) 32 26;
   lemma_div_pow2_lt (v n1) 32 20;
   lemma_div_pow2_lt (v n2) 32 14;
@@ -165,8 +146,7 @@ let lemma_toField_2_1 x =
 #set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 10"
 
 val lemma_toField_2_2: x:nat{x < pow2 32} -> Lemma
-  (requires (True))
-  (ensures  (pow2 52 * ((x * pow2 12) % pow2 26) + pow2 78 * (x / pow2 14) = pow2 64 * x))
+  (pow2 52 * ((x * pow2 12) % pow2 26) + pow2 78 * (x / pow2 14) = pow2 64 * x)
 let lemma_toField_2_2 x =
   Math.Lemmas.pow2_plus 52 12;
   Math.Lemmas.pow2_multiplication_modulo_lemma_2 x 26 12;
@@ -175,10 +155,8 @@ let lemma_toField_2_2 x =
   Math.Lemmas.lemma_div_mod x (pow2 14);
   Math.Lemmas.distributivity_add_right (pow2 64) (x % pow2 14) (pow2 14 * (x / pow2 14))
 
-
 val lemma_toField_2_3: x:nat{x < pow2 32} -> Lemma
-  (requires (True))
-  (ensures  (pow2 78 * ((x * pow2 18) % pow2 26) + pow2 104 * (x / pow2 8) = pow2 96 * x))
+  (pow2 78 * ((x * pow2 18) % pow2 26) + pow2 104 * (x / pow2 8) = pow2 96 * x)
 let lemma_toField_2_3 x =
   Math.Lemmas.pow2_plus 78 18;
   Math.Lemmas.pow2_multiplication_modulo_lemma_2 x 26 18;
@@ -186,7 +164,6 @@ let lemma_toField_2_3 x =
   Math.Lemmas.pow2_plus 96 8;
   Math.Lemmas.lemma_div_mod x (pow2 8);
   Math.Lemmas.distributivity_add_right (pow2 96) (x % pow2 8) (pow2 8 * (x / pow2 8))
-
 
 val lemma_toField_2_4: n0:u64_32 -> n1:u64_32 -> n2:u64_32 -> n3:u64_32 ->
   n0':U64.t -> n1':U64.t -> n2':U64.t -> n3':U64.t -> n4':U64.t -> Lemma
@@ -229,7 +206,7 @@ let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4' =
   let mask_26 = mk_mask 26ul in
   cut(v mask_26 = pow2 26 - 1);
   assert_norm(pow2 64 > pow2 26);
-  lemma_logand_mask #64 (v n0) 26;
+  logand_mask #64 (v n0) 26;
   lemma_toField_2_0 n0 n1 n2 n3;
   let v0_26 = v (n0 >>^ 26ul) in
   let v1_6 = v ((n1 <<^ 6ul) &^ mask_26) in
@@ -238,11 +215,11 @@ let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4' =
   let v2_14 = v (n2 >>^ 14ul) in
   let v3_18 = v ((n3 <<^ 18ul) &^ mask_26) in
   let v3_8 = v (n3 >>^ 8ul) in
-  lemma_logor_dijoint v1_6 v0_26 6;
+  logor_disjoint v1_6 v0_26 6;
   UInt.logor_commutative v1_6 v0_26;
-  lemma_logor_dijoint v2_12 v1_20 12;
+  logor_disjoint v2_12 v1_20 12;
   UInt.logor_commutative v2_12 v1_20;
-  lemma_logor_dijoint v3_18 v2_14 18;
+  logor_disjoint v3_18 v2_14 18;
   UInt.logor_commutative v3_18 v2_14;
   Math.Lemmas.nat_times_nat_is_nat (v n1) (pow2 6);
   Math.Lemmas.nat_times_nat_is_nat (v n2) (pow2 12);
@@ -250,10 +227,10 @@ let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4' =
   Math.Lemmas.pow2_modulo_modulo_lemma_1 (v n1 * pow2 6) 26 64;
   Math.Lemmas.pow2_modulo_modulo_lemma_1 (v n2 * pow2 12) 26 64;
   Math.Lemmas.pow2_modulo_modulo_lemma_1 (v n3 * pow2 18) 26 64;
-  lemma_logand_mask #64 (v n0) 26;
-  lemma_logand_mask #64 (v (n1 <<^ 6ul)) 26;
-  lemma_logand_mask #64 (v (n2 <<^ 12ul)) 26;
-  lemma_logand_mask #64 (v (n3 <<^ 18ul)) 26;
+  logand_mask #64 (v n0) 26;
+  logand_mask #64 (v (n1 <<^ 6ul)) 26;
+  logand_mask #64 (v (n2 <<^ 12ul)) 26;
+  logand_mask #64 (v (n3 <<^ 18ul)) 26;
   cut (v1_6 = (v n1 * pow2 6) % pow2 26);
   cut (v n0' = v n0 % pow2 26);
   cut (v n1' = v n0 / pow2 26 + ((v n1 * pow2 6) % pow2 26));
@@ -276,14 +253,27 @@ let lemma_mod_pow2 a b c =
   Math.Lemmas.lemma_mod_plus 0 (q * pow2 (b - c)) (pow2 c)
 
 
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+private val add_disjoint: #z:pos -> a:UInt.uint_t z -> b:UInt.uint_t z -> n:nat -> m:nat{m < z} -> Lemma
+  (requires (a % pow2 m = 0 /\ b < pow2 m /\ a < pow2 n /\ n >= m))
+  (ensures  (a + b < pow2 n))
+let add_disjoint #z a b n m =
+  let c = a / pow2 m in
+  Math.Lemmas.lemma_div_exact a (pow2 m);
+  cut(a + b < c * pow2 m + pow2 m);
+  Math.Lemmas.pow2_plus (n-m) m;
+  cut(c < pow2 (n-m));
+  Math.Lemmas.distributivity_add_right (pow2 m) c 1
+  
 val lemma_disjoint_bounded:
-  b0:U64.t -> b1:U64.t -> l:nat -> m:nat{m >= l} -> n:nat{n > m /\ n <= 64} ->
+  b0:U64.t -> b1:U64.t -> l:nat -> m:pos{m >= l} -> n:nat{n > m /\ n <= 64} ->
   Lemma (requires (U64 (v b0 < pow2 m /\ v b1 % pow2 m = 0 /\ v b1 < pow2 n /\ v b0 % pow2 l = 0)))
         (ensures  (U64 (v (b0 |^ b1) = v b0 + v b1 /\ v b0 + v b1 < pow2 n /\ (v b0 + v b1) % pow2 l = 0)))
 let lemma_disjoint_bounded b0 b1 l m n =
   let open FStar.UInt64 in
-  lemma_logor_dijoint (v b1) (v b0) m;
-  lemma_add_disjoint (v b1) (v b0) n m;
+  logor_disjoint (v b1) (v b0) m;
+  add_disjoint (v b1) (v b0) n m;
   UInt.logor_commutative (v b0) (v b1);
   lemma_mod_pow2 (v b1) m l;
   Math.Lemmas.lemma_mod_plus_distr_l (v b0) (v b1) (pow2 l);
@@ -307,7 +297,7 @@ let lemma_toField_3 n0 n1 n2 n3 n0' n1' n2' n3' n4' =
   cut(v mask_26 = pow2 26 - 1);
   assert_norm(pow2 64 > pow2 26);
   assert_norm(pow2 0 = 1);
-  lemma_logand_mask #64 (v n0) 26;
+  logand_mask #64 (v n0) 26;
   lemma_toField_2_0 n0 n1 n2 n3;
   let v0_26 = v (n0 >>^ 26ul) in
   let v1_6 = v ((n1 <<^ 6ul) &^ mask_26) in
@@ -316,11 +306,11 @@ let lemma_toField_3 n0 n1 n2 n3 n0' n1' n2' n3' n4' =
   let v2_14 = v (n2 >>^ 14ul) in
   let v3_18 = v ((n3 <<^ 18ul) &^ mask_26) in
   let v3_8 = v (n3 >>^ 8ul) in
-  lemma_logor_dijoint v1_6 v0_26 6;
+  logor_disjoint v1_6 v0_26 6;
   UInt.logor_commutative v1_6 v0_26;
-  lemma_logor_dijoint v2_12 v1_20 12;
+  logor_disjoint v2_12 v1_20 12;
   UInt.logor_commutative v2_12 v1_20;
-  lemma_logor_dijoint v3_18 v2_14 18;
+  logor_disjoint v3_18 v2_14 18;
   UInt.logor_commutative v3_18 v2_14;
   lemma_disjoint_bounded (n0 >>^ 26ul) ((n1 <<^ 6ul) &^ mask_26) 0 6 26;
   lemma_disjoint_bounded (n1 >>^ 20ul) ((n2 <<^ 12ul) &^ mask_26) 0 12 26;
@@ -341,11 +331,11 @@ let rec little_endian_from_top (s:Seq.seq U8.t) (len:nat{len <= Seq.length s}) :
 
 val lemma_little_endian_from_top_:
   s:Seq.seq U8.t{Seq.length s > 0} -> len:nat{len <= Seq.length s} ->
-  Lemma (requires (True))
-        (ensures  (little_endian (Seq.slice s 0 len) = little_endian_from_top s len))
+  Lemma (little_endian (Seq.slice s 0 len) = little_endian_from_top s len)
 let rec lemma_little_endian_from_top_ s len =
   if len = 0 then ()
-  else (
+  else
+    begin
     lemma_little_endian_from_top_ s (len-1);
     let s' = Seq.slice s 0 (len-1) in
     let s'' = Seq.slice s (len-1) len in
@@ -353,24 +343,24 @@ let rec lemma_little_endian_from_top_ s len =
     Seq.lemma_eq_intro s'' (Seq.create 1 (Seq.index s (len-1)));
     little_endian_append s' s'';
     little_endian_singleton (Seq.index s (len-1))
-  )
+    end
 
 
 #set-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
 
-val lemma_little_endian_from_top:
-  s:Seq.seq U8.t{Seq.length s > 0} ->
-  Lemma (requires (True))
-        (ensures  (little_endian s = little_endian_from_top s (Seq.length s)))
+val lemma_little_endian_from_top: s:Seq.seq U8.t{Seq.length s > 0} -> Lemma
+  (little_endian s = little_endian_from_top s (Seq.length s))
 let lemma_little_endian_from_top s =
-  Seq.lemma_eq_intro s (Seq.slice s 0 (Seq.length s)); lemma_little_endian_from_top_ s (Seq.length s)
+  Seq.lemma_eq_intro s (Seq.slice s 0 (Seq.length s));
+  lemma_little_endian_from_top_ s (Seq.length s)
 
 #set-options "--z3timeout 5 --initial_fuel 1 --max_fuel 1"
 
 val lemma_little_endian_from_top_def: s:Seq.seq U8.t -> len:nat{Seq.length s >= len} ->
-  Lemma (requires (True))
-        (ensures  ((len = 0 ==> little_endian_from_top s len = 0)
-          /\ (len > 0 ==> little_endian_from_top s len = pow2 (8*(len-1)) * U8.v (Seq.index s (len-1)) + little_endian_from_top s (len-1))))
+  Lemma ((len = 0 ==> little_endian_from_top s len = 0)
+       /\ (len > 0 ==> little_endian_from_top s len =
+                     pow2 (8*(len-1)) * U8.v (Seq.index s (len-1))
+                     + little_endian_from_top s (len-1)))
 let lemma_little_endian_from_top_def s len = ()
 
 
@@ -397,7 +387,7 @@ private let lemma_get_word #a (b:Buffer.buffer a) (h:HyperStack.mem{live h b}) (
 
 #set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 40"
 
-private let lemma_word_vals (w:Buffer.buffer U8.t{length w = 16}) (h:HyperStack.mem{live h w}) :
+private let lemma_word_vals (w:Buffer.buffer U8.t{Buffer.length w = 16}) (h:HyperStack.mem{live h w}) :
   Lemma (
     let s' = as_seq h w in
     let s04 = Seq.slice s' 0 4 in
@@ -460,7 +450,7 @@ private let lemma_seq_append_16_to_4 #a (s:Seq.seq a{Seq.length s = 16}) : Lemma
 #set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 10"
 
 val lemma_toField_1:
-  s:Buffer.buffer U8.t{length s = 16} ->
+  s:Buffer.buffer U8.t{Buffer.length s = 16} ->
   h:HyperStack.mem{live h s} ->
   n0:U64.t -> n1:U64.t -> n2:U64.t -> n3:U64.t ->
   Lemma (requires (let open FStar.UInt8 in
@@ -546,11 +536,11 @@ let lemma_little_endian_16 h a =
 let lemma_mul_mod (a:nat) (b:pos) : Lemma ((b * a) % b = 0) = Math.Lemmas.lemma_mod_plus 0 a b
 
 
-val lemma_add_disjoint_bounded:
+val add_disjoint_bounded:
   b0:nat -> b1:nat -> m:nat -> n:nat{n > m /\ n <= 64} ->
   Lemma (requires ((b0 < pow2 m /\ b1 % pow2 m = 0 /\ b1 < pow2 n)))
         (ensures  (b0 + b1 < pow2 n))
-let lemma_add_disjoint_bounded b0 b1 m n =
+let add_disjoint_bounded b0 b1 m n =
   Math.Lemmas.lemma_div_mod b1 (pow2 m);
   Math.Lemmas.lemma_mod_plus 0 b1 (pow2 m);
   let c = b1 / pow2 m in
@@ -568,12 +558,12 @@ let lemma_trunc1305_0 a =
   (* lemma_mul_mod ((v a / pow2 8) % pow2 8) (pow2 8); *)
   (* Math.Lemmas.pow2_plus 8 8; *)
   (* Math.Lemmas.pow2_plus 16 8; *)
-  (* lemma_add_disjoint_bounded (v a % pow2 8) (pow2 8 * ((v a / pow2 8) % pow2 8)) 8 16; *)
+  (* add_disjoint_bounded (v a % pow2 8) (pow2 8 * ((v a / pow2 8) % pow2 8)) 8 16; *)
   (* lemma_mul_mod ((v a / pow2 16) % pow2 8) (pow2 8); *)
-  (* lemma_add_disjoint_bounded ((v a % pow2 8) + pow2 8 * ((v a / pow2 8) % pow2 8)) *)
+  (* add_disjoint_bounded ((v a % pow2 8) + pow2 8 * ((v a / pow2 8) % pow2 8)) *)
   (*                            (pow2 16 * ((v a / pow2 16) % pow2 8)) 16 24; *)
   (* lemma_mul_mod ((v a / pow2 24) % pow2 8) (pow2 8); *)
-  (* lemma_add_disjoint_bounded ((v a % pow2 8) + pow2 8 * ((v a / pow2 8) % pow2 8) + pow2 16 * ((v a / pow2 16) % pow2 8)) *)
+  (* add_disjoint_bounded ((v a % pow2 8) + pow2 8 * ((v a / pow2 8) % pow2 8) + pow2 16 * ((v a / pow2 16) % pow2 8)) *)
   (*                            (pow2 24 * ((v a / pow2 24) % pow2 8)) 24 32; *)
    let va32 = v a % pow2 32 in
    Math.Lemmas.pow2_modulo_modulo_lemma_1 (v a) 8 32;
