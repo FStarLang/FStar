@@ -5,15 +5,13 @@ open Crypto.Indexing
 
 //16-10-08 removing any inline here as they seem incompatible with interfaces
 
-let cipher_prf  a = false 
-let mac_log       = false
-let mac_int1cma a = false 
-let prf_cpa       = false  
-let safeHS      i = false 
-let safeId      i = false 
-
-
-let mac1_implies_mac_log i = ()
-let mac1_implies_prf     i = ()
-let safeId_implies_mac1  i = ()
-let safeId_implies_cpa   i = ()
+inline_for_extraction let cipher_prf  a = false 
+inline_for_extraction let mac_log       = false
+inline_for_extraction let mac_int1cma a = false 
+inline_for_extraction let prf_cpa       = false  
+inline_for_extraction let safeHS      i = false 
+inline_for_extraction let safeId      i = false 
+inline_for_extraction let mac1_implies_mac_log i = ()
+inline_for_extraction let mac1_implies_prf     i = ()
+inline_for_extraction let safeId_implies_mac1  i = ()
+inline_for_extraction let safeId_implies_cpa   i = ()

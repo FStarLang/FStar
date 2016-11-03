@@ -53,6 +53,10 @@ and branches_t =
 and flag =
   | Private
 
+and lifetime =
+  | Eternal
+  | Stack
+
 and expr =
   | EBound of var
   | EQualified of lident
@@ -64,7 +68,7 @@ and expr =
   | ESequence of list<expr>
   | EAssign of expr * expr
   | (** left expression can only be a EBound of EOpen *)
-    EBufCreate of expr * expr
+    EBufCreate of lifetime * expr * expr
   | EBufRead of expr * expr
   | EBufWrite of expr * expr * expr
   | EBufSub of expr * expr
@@ -81,7 +85,7 @@ and expr =
   | EFlat of typ * list<(ident * expr)>
   | EField of typ * expr * ident
   | EWhile of expr * expr
-  | EBufCreateL of list<expr>
+  | EBufCreateL of lifetime * list<expr>
   | ETuple of list<expr>
   | ECons of typ * ident * list<expr>
   | EBufFill of expr * expr * expr
@@ -145,7 +149,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 18
+let current_version: version = 19
 
 type file = string * program
 type binary_format = version * list<file>
@@ -535,7 +539,9 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
-      EBufCreate (translate_expr env e1, translate_expr env e2)
+      EBufCreate (Stack, translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_Name p }, [ _e0; e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.rcreate") ->
+      EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.createL") ->
       let rec list_elements acc e2 =
         match e2.expr with
@@ -547,7 +553,7 @@ and translate_expr env e: expr =
             failwith "Argument of FStar.Buffer.createL is not a string literal!"
       in
       let list_elements = list_elements [] in
-      EBufCreateL (List.map (translate_expr env) (list_elements e2))
+      EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset") ->
