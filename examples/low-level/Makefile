@@ -197,8 +197,8 @@ KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
 
 krml-test.exe:
 	mkdir -p tmp
-	$(KRML) crypto/real/Flag.fst crypto/Tests.fst -no-prefix Tests $(KREMTEST)/testlib.c \
-		-tmpdir tmp -o krml-test.exe
+	$(KRML) crypto/real/Flag.fst crypto/Tests.fst -no-prefix Tests $(KREMLIN_HOME)/test/testlib.c \
+		-tmpdir tmp -o krml-test.exe -add-include '"testlib.h"'
 	./krml-test.exe
 
 
@@ -206,4 +206,4 @@ krml-test.exe:
 clean:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
 	@rm -f $(addprefix crypto/ml/, *.cmx *.o *.cmi *~)
-	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) $(AESGCM_ODIR) $(CHACHA_AEAD_ODIR) kremlin *~ *.exe ./crypto/*~
+	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) $(AESGCM_ODIR) $(CHACHA_AEAD_ODIR) tmp kremlin *~ *.exe ./crypto/*~

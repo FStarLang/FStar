@@ -238,7 +238,7 @@ private val mod2_26: x:U64.t -> Tot (y:U64.t{v y = v x % pow2 26 /\ v y < pow2 2
 let mod2_26 x =
   let y = x &^ 0x3ffffffuL in
   assert_norm(v 0x3ffffffuL = pow2 26 - 1);
-  UInt.lemma_logand_mask (v x) 26;
+  UInt.logand_mask (v x) 26;
   y
 
 private val div2_26: x:U64.t -> Tot (y:U64.t{v y = v x / pow2 26 /\ v y <= pow2 38})
