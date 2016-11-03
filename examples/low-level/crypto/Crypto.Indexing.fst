@@ -7,6 +7,8 @@ An application built on the Crypto namespace should re-implement this module to 
 (see mitls-fstar/src/tls/Crypto.Index.fst)
 **)
 
+type rw = | Reader | Writer
+
 type macAlg =
   | POLY1305
   | GHASH
