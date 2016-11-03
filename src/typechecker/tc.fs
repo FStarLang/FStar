@@ -1279,7 +1279,7 @@ and tc_inductive env ses quals lids =
 
 and tc_decl env se: list<sigelt> * _ =
     let env = set_hint_correlator env se in
-    TcUtil.check_sigelt_quals se;
+    TcUtil.check_sigelt_quals env se;
     match se with
     | Sig_inductive_typ _
     | Sig_datacon _ ->
