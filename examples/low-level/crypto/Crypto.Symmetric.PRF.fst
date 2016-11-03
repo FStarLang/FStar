@@ -85,16 +85,16 @@ let range (mac_rgn:region) (i:id) (x:domain i): Type0 =
 
 let iv_0 = FStar.Int.Cast.uint64_to_uint128 0UL
 
-let domain_sk0 (i:id) = x:domain i{x.ctr <^ ctr_0 i /\ x.iv = iv_0 } 
-let domain_mac (i:id) = x:domain i{x.ctr = ctr_0 i} 
-let domain_otp (i:id) = x:domain i{x.ctr >^ ctr_0 i /\ safeId i}
-let domain_blk (i:id) = x:domain i{x.ctr >^ ctr_0 i /\ ~ (safeId i)}
+noextract let domain_sk0 (i:id) = x:domain i{x.ctr <^ ctr_0 i /\ x.iv = iv_0 } 
+noextract let domain_mac (i:id) = x:domain i{x.ctr = ctr_0 i} 
+noextract let domain_otp (i:id) = x:domain i{x.ctr >^ ctr_0 i /\ safeId i}
+noextract let domain_blk (i:id) = x:domain i{x.ctr >^ ctr_0 i /\ ~ (safeId i)}
 
 // explicit coercions
-let sk0Range rgn (i:id) (x:domain_sk0 i) (z:range rgn i x) : CMA.skey rgn i = z
-let macRange rgn (i:id) (x:domain_mac i) (z:range rgn i x) : smac rgn i x = z
-let otpRange rgn (i:id) (x:domain_otp i) (z:range rgn i x) : otp i = z 
-let blkRange rgn (i:id) (x:domain_blk i) (z:range rgn i x) : block i = z
+noextract let sk0Range rgn (i:id) (x:domain_sk0 i) (z:range rgn i x) : CMA.skey rgn i = z
+noextract let macRange rgn (i:id) (x:domain_mac i) (z:range rgn i x) : smac rgn i x = z
+noextract let otpRange rgn (i:id) (x:domain_otp i) (z:range rgn i x) : otp i = z 
+noextract let blkRange rgn (i:id) (x:domain_blk i) (z:range rgn i x) : block i = z
 
 noeq type entry (rgn:region) (i:id) =
   | Entry: x:domain i -> range:range rgn i x -> entry rgn i

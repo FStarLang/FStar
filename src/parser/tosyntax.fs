@@ -43,6 +43,7 @@ let trans_qual r = function
   | AST.Assumption ->    S.Assumption
   | AST.Unfold_for_unification_and_vcgen -> S.Unfold_for_unification_and_vcgen
   | AST.Inline_for_extraction -> S.Inline_for_extraction
+  | AST.NoExtract ->     S.NoExtract
   | AST.Irreducible ->   S.Irreducible
   | AST.Logic ->         S.Logic
   | AST.TotalEffect ->   S.TotalEffect

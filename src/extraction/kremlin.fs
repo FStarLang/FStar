@@ -52,6 +52,7 @@ and branches_t =
 
 and flag =
   | Private
+  | NoExtract
 
 and lifetime =
   | Eternal
@@ -317,6 +318,13 @@ and translate_module (module_name, modul, _): file =
   in
   (String.concat "_" module_name), program
 
+and translate_flags flags =
+  List.choose (function
+    | Syntax.Private -> Some Private
+    | Syntax.NoExtract -> Some NoExtract
+    | _ -> None
+  ) flags
+
 and translate_decl env d: option<decl> =
   match d with
   | MLM_Let (flavor, flags, [ {
@@ -330,12 +338,6 @@ and translate_decl env d: option<decl> =
       mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
     } ]) ->
       let assumed = Util.for_some (function Syntax.Assumed -> true | _ -> false) flags in
-      let flags =
-        if Util.for_some (function Syntax.Private -> true | _ -> false) flags then
-          [ Private ]
-        else
-          []
-      in
       let env = if flavor = Rec then extend env name false else env in
       let rec find_return_type = function
         | MLTY_Fun (_, _, t) ->
@@ -347,6 +349,7 @@ and translate_decl env d: option<decl> =
       let binders = translate_binders env args in
       let env = add_binders env args in
       let name = env.module_name, name in
+      let flags = translate_flags flags in
       if assumed then
         Some (DExternal (None, name, translate_type env t0))
       else begin
@@ -363,12 +366,7 @@ and translate_decl env d: option<decl> =
       mllb_tysc = Some ([], t);
       mllb_def = expr
     } ]) ->
-      let flags =
-        if Util.for_some (function Syntax.Private -> true | _ -> false) flags then
-          [ Private ]
-        else
-          []
-      in
+      let flags = translate_flags flags in
       let t = translate_type env t in
       let name = env.module_name, name in
       begin try

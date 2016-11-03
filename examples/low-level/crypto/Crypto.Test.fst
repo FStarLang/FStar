@@ -20,7 +20,9 @@ module AETypes = Crypto.AEAD.Invariant
 
 module L = FStar.List.Tot
 
-let mk_buf_t (len:nat) = 
+// Some helpers for our test routines
+
+unfold inline_for_extraction let mk_buf_t (len:nat) = 
   unit -> StackInline (Buffer.buffer UInt8.t)
      (requires (fun h -> True))
      (ensures (fun (h0:mem) b h1 -> 
@@ -33,14 +35,10 @@ let mk_buf_t (len:nat) =
        /\ modifies_0 h0 h1
        ))
 
-
 let mk_aad : mk_buf_t 12
   = fun () ->
-    let l = [ 0x50uy; 0x51uy; 0x52uy; 0x53uy; 0xc0uy; 0xc1uy; 0xc2uy; 0xc3uy; 0xc4uy; 0xc5uy; 0xc6uy; 0xc7uy ] in
-    //assert_norm (L.length l == 12); // Doesn't work, the normalizer doesn't normalize a match
-    assume (L.length l == 12);
-    Buffer.createL l
- 
+    Buffer.createL [ 0x50uy; 0x51uy; 0x52uy; 0x53uy; 0xc0uy; 0xc1uy; 0xc2uy; 0xc3uy; 0xc4uy; 0xc5uy; 0xc6uy; 0xc7uy ]
+
 let mk_key : mk_buf_t 32
   = fun () -> 
     let l = [0x80uy; 0x81uy; 0x82uy; 0x83uy; 0x84uy; 0x85uy; 0x86uy; 0x87uy; 0x88uy; 0x89uy; 0x8auy; 0x8buy; 0x8cuy; 0x8duy; 0x8euy; 0x8fuy; 

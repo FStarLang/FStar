@@ -736,7 +736,7 @@ module L = FStar.List.Tot
 
 (** Concrete getters and setters *)
 val createL: #a:Type -> init:list a -> StackInline (buffer a)
-  (requires (fun h -> L.length init > 0 /\ L.length init < UInt.max_int 32))
+  (requires (fun h -> 0 < normalize_term (L.length init) /\ normalize_term (L.length init) < UInt.max_int 32))
   (ensures (fun (h0:mem) b h1 ->
      let len = L.length init in
      len > 0
