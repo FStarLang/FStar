@@ -158,7 +158,9 @@ val gen: rgn:region -> i:id -> ST (state i)
   (requires (fun h -> True))
   (ensures  (fun h0 s h1 ->
     s.rgn == rgn /\ 
-    (prf i ==> HS.sel h1 (itable i s) == Seq.createEmpty #(entry s.mac_rgn i))))
+    (prf i ==> 
+        ~ (h0 `HS.contains` (itable i s))
+	  /\ HS.sel h1 (itable i s) == Seq.createEmpty #(entry s.mac_rgn i))))
 let gen rgn i =
   let mac_rgn : (r:region{r `HH.extends` rgn}) = new_region rgn in
   let key = Buffer.rcreate rgn 0uy (keylen i) in

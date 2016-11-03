@@ -262,6 +262,14 @@ unfold let mods (rs:some_refs) h0 h1 =
   /\ (forall (r:rid). modifies_ref r (normalize_term (refs_in_region r rs)) h0 h1)
 
 ////////////////////////////////////////////////////////////////////////////////
+let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
+			      (r:rid{is_eternal_region r /\
+				     r<>HH.root /\
+				     r `is_in` h.h})
+   : Lemma (HH.disjoint h.tip r)
+   = ()
+   
+////////////////////////////////////////////////////////////////////////////////
 #set-options "--initial_fuel 0 --max_fuel 0"
 let f (a:Type0) (b:Type0) (x:reference a) (x':reference a) 
 			  (y:reference b) (z:reference nat) 

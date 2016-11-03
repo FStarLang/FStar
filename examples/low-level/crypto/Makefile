@@ -33,7 +33,6 @@ VERIFY= \
   Crypto.AEAD.Encoding \
   Crypto.AEAD.Invariant \
   Crypto.AEAD.Lemmas \
-  Crypto.AEAD \
   Plain \
   Crypto.Test \
   TestMonotonic
@@ -50,7 +49,8 @@ SLOW= \
 # Files not yet fully typechecking -- possibly due to timeouts.
 # Please move files that you know fully typecheck to VERIFY
 # Files commented out are broken, uncomment once fixed
-LAX=
+LAX=Crypto.AEAD #NS: this verifies ... but it takes 22mins on my desktop; not adding it to CI for now
+
 
 #16-10-09  Not sure how to verify Flag.fsti and Flag.fst
 
