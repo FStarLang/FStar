@@ -569,17 +569,6 @@ of_typ:
   |        {  None }
   | OF typ { Some $2 }
 
-eitherQname:
-  | eitherpath { lid_of_ids $1 }
-
-eitherpath:
-  | ident { [$1] }
-  | name maybeMorePath { $1::$2 }
-
-maybeMorePath:
-  |       { [] }
-  | DOT eitherpath  { $2 }
-
 lid:
   | idpath { lid_of_ids $1 }
 
@@ -1062,15 +1051,6 @@ insts:
       {
         (fun (x:term) -> mkFsTypApp x $2
           (union_ranges x.range (rhs2 parseState 1 3)))
-      }
-
-projectionLHS:
-  | projectionLHSNotQName
-      { $1 }
-  | qname
-      {
-          let t = Name $1 in
-          (fun x -> x) (mk_term t (rhs parseState 1) Un)
       }
 
 projectionLHSNotQName:
