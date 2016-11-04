@@ -1069,5 +1069,29 @@ let subst_to_string : FStar_Syntax_Syntax.subst_t  ->  Prims.string = (fun s -> 
 in (FStar_All.pipe_right _134_361 (FStar_String.concat "; "))))
 
 
+let abs_ascription_to_string : (FStar_Syntax_Syntax.lcomp, FStar_Ident.lident) FStar_Util.either Prims.option  ->  Prims.string = (fun ascription -> (
+
+let strb = (FStar_Util.new_string_builder ())
+in (
+
+let _39_675 = (match (ascription) with
+| None -> begin
+(FStar_Util.string_builder_append strb "None")
+end
+| Some (FStar_Util.Inl (lc)) -> begin
+(
+
+let _39_668 = (FStar_Util.string_builder_append strb "Some Inr ")
+in (FStar_Util.string_builder_append strb (FStar_Ident.text_of_lid lc.FStar_Syntax_Syntax.eff_name)))
+end
+| Some (FStar_Util.Inr (lid)) -> begin
+(
+
+let _39_673 = (FStar_Util.string_builder_append strb "Some Inr ")
+in (FStar_Util.string_builder_append strb (FStar_Ident.text_of_lid lid)))
+end)
+in (FStar_Util.string_of_string_builder strb))))
+
+
 
 

@@ -892,16 +892,11 @@ and infer (env: env) (e: term): nm * term * term =
       ) (env, []) binders in
       let u_binders = List.rev u_binders in
 
-      let print_what =
-          let strb = Util.new_string_builder () in
-          begin match what with
-              | None -> Util.string_builder_append strb "None"
-              | Some (Inl lc) -> (Util.string_builder_append strb "Some Inr " ; Util.string_builder_append strb (Ident.text_of_lid lc.eff_name))
-              | Some (Inr lid) -> (Util.string_builder_append strb "Some Inr " ; Util.string_builder_append strb (Ident.text_of_lid lid))
-          end ; Util.string_of_string_builder strb
-      in
-
-      Util.print2_warning "Term %s ::: what %s \n" (Print.term_to_string body) print_what ;
+      (*
+      Util.print2_warning "Term %s ::: what %s \n"
+                                (Print.term_to_string body)
+                                (Print.abs_ascription_to_string what) ;
+      *)
 
       let comp, s_body, u_body =
         let check_what = if is_monadic what then check_m else check_n in

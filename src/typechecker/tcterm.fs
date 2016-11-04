@@ -1791,7 +1791,7 @@ let type_of_tot_term env e =
  *
  *  Another involves reading t's universe from its memoized type in the .tk field
  *)
-let universe_of env e = if true then U_zero else
+let universe_of env e =
     let _ = if Env.debug env Options.Extreme 
             then Util.print1 "<start> universe_of %s\n" (Print.term_to_string e) in
     let env, _ = Env.clear_expected_typ env in 

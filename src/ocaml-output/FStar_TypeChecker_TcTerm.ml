@@ -4059,10 +4059,7 @@ end
 end)))))
 
 
-let universe_of : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.universe = (fun env e -> if true then begin
-FStar_Syntax_Syntax.U_zero
-end else begin
-(
+let universe_of : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.universe = (fun env e -> (
 
 let _58_2454 = if (FStar_TypeChecker_Env.debug env FStar_Options.Extreme) then begin
 (let _153_894 = (FStar_Syntax_Print.term_to_string e)
@@ -4160,8 +4157,7 @@ in (let _153_919 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_No
 in (FStar_All.pipe_left (universe_of_type e) _153_919)))
 end)
 end))))))
-end)))
-end)
+end))))
 
 
 

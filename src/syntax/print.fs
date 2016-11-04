@@ -523,4 +523,17 @@ let subst_elt_to_string = function
    | UN(i, u) -> Util.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
    | UD(u, i) -> Util.format2 "UD (%s, %s)" u.idText (string_of_int i)
 
- let subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
+let subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
+
+let abs_ascription_to_string ascription =
+  let strb = Util.new_string_builder () in
+  begin match ascription with
+      | None -> Util.string_builder_append strb "None"
+      | Some (Inl lc) ->
+          Util.string_builder_append strb "Some Inr " ;
+          Util.string_builder_append strb (Ident.text_of_lid lc.eff_name)
+      | Some (Inr lid) ->
+          Util.string_builder_append strb "Some Inr " ;
+          Util.string_builder_append strb (Ident.text_of_lid lid)
+  end ;
+  Util.string_of_string_builder strb

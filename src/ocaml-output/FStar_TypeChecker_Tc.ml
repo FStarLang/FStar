@@ -3323,7 +3323,7 @@ in (match (_59_2080) with
 
 let ses = (match (lift_from_pure_opt) with
 | Some (lift) -> begin
-(FStar_List.append ses ((FStar_Syntax_Syntax.Sig_new_effect (((ne), (r))))::[]))
+(FStar_List.append ses ((FStar_Syntax_Syntax.Sig_new_effect (((ne), (r))))::(lift)::[]))
 end
 | None -> begin
 (FStar_List.append ses ((FStar_Syntax_Syntax.Sig_new_effect (((ne), (r))))::[]))

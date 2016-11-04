@@ -1648,7 +1648,7 @@ let tc_decls env ses =
           let _, _, env, _ = acc in
           let ses, ne, lift_from_pure_opt = cps_and_elaborate env ne in
           let ses = match lift_from_pure_opt with
-                    | Some lift -> ses @ [ Sig_new_effect (ne, r) (*; lift *) ]
+                    | Some lift -> ses @ [ Sig_new_effect (ne, r) ; lift ]
                     | None -> ses @ [ Sig_new_effect (ne, r) ]
           in
           List.fold_left process_one_decl acc ses
