@@ -33,10 +33,6 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let ctr x = PRF(x.ctr)
 
-//16-10-12 TEMPORARY, while PRF remains somewhat CHACHA-specific
-//16-10-12 NB we are importing this restriction from Encoding too
-//let id = i:id {i.cipher = CHACHA20_POLY1305}
-
 noeq type entry (i:id) =
   | Entry: 
       nonce:Cipher.iv (alg i) -> 

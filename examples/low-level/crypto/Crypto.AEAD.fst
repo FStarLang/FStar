@@ -1,7 +1,12 @@
 module Crypto.AEAD
 
-// We implement ideal AEAD on top of ideal Chacha20 and ideal Poly1305. 
-// We precisely relate AEAD's log to their underlying state.
+// Implements agile, conditionally secure Authenticated Encryption
+// with Associated Data (AEAD) for TLS 1.2 and 1.3, given secure, 
+// agile PRF cipher and UF-1CMA MAC. 
+
+// For the security proof, we maintain a stateful invariant that
+// precisely relates the contents of the AEAD log to the states of the
+// PRF and the MACs.
 
 // This file intends to match the spec of AEAD0.fst in mitls-fstar. 
 
@@ -37,7 +42,9 @@ let ctr x = PRF(x.ctr)
 ////////////////////////////////////////////////////////////////////////////////
 //Wrappers for experimentation, to be moved back to their original locations
 
-//Move back to UF1CMA
+//16-11-04 We should indicate that the real accumulator may also be updated;
+//16-11-04 (we don't care since it won't be re-used, as we lose acc_inv)
+//Move to UF1CMA, together with some lemmas.
 let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
 		(h0:mem) (h1:mem) = 
     let open FStar.Buffer in
@@ -88,8 +95,9 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
       assume (Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1);
       assume (HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1)
     end
-
-//Move back to Crypto.AEAD.Encoding
+//16-11-04 disjoint st.r st.s comes from the UF1CMA state
+//16-11-04 BTW Buffer.disjoint_2 should be strengthened to imply 3 disjoints
+//Move to HS?
 let alog_fresh (#a:Type0) h0 h1 (r:HS.reference a) = 
     HS.frameOf r == HS h1.tip /\
     h1 `HS.contains` r /\
@@ -191,8 +199,10 @@ assume val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:
   (* recheck endianness *)
 
 // a bit more concrete than the spec: xor only 64 bits, copy the rest. 
- 
-// PLAN: 
+
+
+
+// Overview of the stateful invariant:
 //
 // We allocate AEAD logs at the writer (complying with our `local modifier' discipline)
 // We allocate all PRF tables in a global private region (to escape that discipline)
@@ -203,7 +213,7 @@ assume val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:
 // - their PRF table contents correctly refines their AEAD logs,
 //     (up to early decryptor allocations in initial state)
 
-// Lemma: this invariant depends only on AEAD-writer regions and the PRF region. 
+// This invariant depends only on AEAD-writer regions and the PRF region. 
 //
 // During AE encrypt, the invariant is eventually restored as we extend the AEAD log, 
 // using a precise record of all entries added to the PRF table during encryption.
@@ -221,18 +231,12 @@ assume val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:
 // both the PRF and its MACs, and may follow from the global invariant.
 //
 // Really, this depends on the functional correctness of PRF. 
-//
 // Needed: prf_read returning a ghost of the actual underlying block. 
 
-// TODO: switch to conditional idealization
 
 //let sub s start len = Seq.slice start (start+len) s // more convenient? 
 
-// REPRESENTATIONS 
-
-// LOW-LEVEL? We use high-level (immutable) bytes for convenience, but
-// we try to remain compatible with stack-based implementations, 
-
+// relocate?
 let find (#i:id) (s:Seq.seq (entry i)) (n:Cipher.iv (alg i)) : option (entry i) =
   SeqProperties.seq_find (fun (e:entry i) -> e.nonce = n) s 
 
@@ -313,7 +317,7 @@ val counter_enxor:
     Buffer.frameOf cipher <> (PRF t.rgn) 
   } -> 
   h_init:mem ->
-//  STL unit -- NS: should be in STL, but the rest of the library isn't really in STL yet
+// Not Stack, as we modify the heap-based ideal table (and don't know where the buffers are
   ST unit
   (requires (fun h -> 
     let initial_domain = {x with ctr=ctr_0 i +^ 1ul} in
