@@ -362,6 +362,8 @@ private val prf_blk:
   (ensures (fun h0 _ h1 -> modifies_x_buffer_1 t x output h0 h1)) 
 
 #reset-options "--z3timeout 100"
+
+let zero = 0
  
 let prf_blk i t x len output =
   if prf i then
@@ -380,7 +382,7 @@ let prf_blk i t x len output =
     in
     let h1 = ST.get() in
     assert(extends (HS.sel h0 r) (HS.sel h1 r) x);
-    store_bytes len output (Seq.slice block 0 (v len));
+    store_bytes len output (Seq.slice block zero (v len));
     let h2 = ST.get() in
     Buffer.lemma_reveal_modifies_1 output h1 h2
     end
