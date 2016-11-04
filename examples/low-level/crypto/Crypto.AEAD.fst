@@ -313,7 +313,6 @@ val counter_enxor:
     Buffer.frameOf cipher <> (PRF t.rgn) 
   } -> 
   h_init:mem ->
-//  STL unit -- NS: should be in STL, but the rest of the library isn't really in STL yet
   ST unit
   (requires (fun h -> 
     let initial_domain = {x with ctr=ctr_0 i +^ 1ul} in
@@ -349,7 +348,6 @@ val counter_enxor:
     ))
 #set-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let rec counter_enxor i t x len remaining_len plain cipher h_init =
-  (* *)
   let completed_len = len -^ remaining_len in
   let h0 = get () in
   if safeId i then ST.recall (itable i t);

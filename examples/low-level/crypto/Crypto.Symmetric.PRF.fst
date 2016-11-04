@@ -391,30 +391,44 @@ let prf_blk i t x len output =
 
 
 // reuse the same block for x and XORs it with ciphertext
-val prf_dexor: 
-  i:id -> t:state i -> x:domain i{ctr_0 i <^ x.ctr} -> l:u32 {l <=^ blocklen i} -> 
-  plain:plainBuffer i (v l) -> cipher:lbuffer (v l) 
-  { Buffer.disjoint (as_buffer plain) cipher /\
-    Buffer.frameOf (as_buffer plain) <> t.rgn } -> ST unit
-  (requires (fun h0 ->
-     Plain.live h0 plain /\ Buffer.live h0 cipher /\ 
-     (safeId i ==>
-     ( match find_otp (HS.sel h0 (itable i t)) x with
-       | Some (OTP l' p c) -> l == l' /\ c == sel_bytes h0 l cipher
-       | None -> False ))))
-  (ensures (fun h0 _ h1 ->
-     let pb = as_buffer plain in 
-     Plain.live h1 plain /\ Buffer.live h1 cipher /\
+unfold let prf_dexor_requires (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr}) 
+			      (l:u32 {l <=^ blocklen i})
+     			      (cipher:lbuffer (v l)) 
+			      (plain:plainBuffer i (v l))
+			      (h0:mem) = 
+   Buffer.disjoint (as_buffer plain) cipher /\
+   Buffer.frameOf (as_buffer plain) <> t.rgn /\
+   Buffer.frameOf cipher <> t.rgn /\
+   Plain.live h0 plain /\ 
+   Buffer.live h0 cipher /\ 
+   (safeId i ==> (match find_otp (HS.sel h0 (itable i t)) x with
+	         | Some (OTP l' p c) -> l == l' /\ c == sel_bytes h0 l cipher
+		 | None -> False ))
+		 
+let prf_dexor_ensures (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr}) 
+		      (l:u32 {l <=^ blocklen i})
+     		      (cipher:lbuffer (v l)) 
+		      (plain:plainBuffer i (v l))
+		      (h0:mem) (h1:mem) = 
+   let pb = as_buffer plain in 
+   Plain.live h1 plain /\ 
+   Buffer.live h1 cipher /\
      (if prf i then 
        let r = itable i t in 
        if safeId i then
-       ( match find_otp (HS.sel h1 r) x with
-         | Some (OTP l' p c) -> l == l' /\ p == sel_plain h1 l plain /\ Buffer.modifies_1 pb h0 h1
-         | None -> False )
+          Buffer.modifies_1 pb h0 h1 /\
+	  (match find_otp (HS.sel h1 r) x with
+           | Some (OTP l' p c) -> l == l' /\ p == sel_plain h1 l plain /\ Buffer.modifies_1 pb h0 h1
+           | None -> False )
        else modifies_x_buffer_1 t x pb h0 h1
-     else Buffer.modifies_1 pb h0 h1 )))
+     else Buffer.modifies_1 pb h0 h1)
 
-let prf_dexor i t x l plain cipher =
+val prf_dexor: 
+  i:id -> t:state i -> x:domain i{ctr_0 i <^ x.ctr} -> l:u32 {l <=^ blocklen i} -> 
+  cipher:lbuffer (v l) -> plain:plainBuffer i (v l) -> ST unit
+  (requires (fun h0 -> prf_dexor_requires i t x l cipher plain h0))
+  (ensures (fun h0 _ h1 -> prf_dexor_ensures i t x l cipher plain h0 h1))
+let prf_dexor i t x l cipher plain =
   if safeId i then
     let r = itable i t in 
     let contents = recall r; !r in
@@ -455,7 +469,8 @@ val prf_enxor:
      Buffer.frameOf (as_buffer plain) <> t.rgn /\ 
      Buffer.frameOf cipher <> t.rgn } -> ST unit
   (requires (fun h0 ->
-     Plain.live h0 plain /\ Buffer.live h0 cipher /\
+     Plain.live h0 plain /\ 
+     Buffer.live h0 cipher /\
      (safeId i ==> find_otp #t.mac_rgn #i (HS.sel h0 t.table) x == None)))
   (ensures (fun h0 _ h1 ->
      Plain.live h1 plain /\ Buffer.live h1 cipher /\
