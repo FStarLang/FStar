@@ -29,6 +29,7 @@ VERIFY= \
   Crypto.Symmetric.GF128 \
   Crypto.Symmetric.GCM \
   Crypto.Symmetric.AES \
+  Crypto.Symmetric.AES128 \
   Crypto.Symmetric.Cipher \
   Crypto.AEAD.AES256GCM \
   Crypto.Symmetric.PRF \
