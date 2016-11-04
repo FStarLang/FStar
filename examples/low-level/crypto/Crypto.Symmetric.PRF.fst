@@ -23,7 +23,7 @@ open FStar.Monotonic.RRef
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Flag
-open Plain
+open Crpyto.Plain
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -397,14 +397,14 @@ val prf_dexor:
   { Buffer.disjoint (as_buffer plain) cipher /\
     Buffer.frameOf (as_buffer plain) <> t.rgn } -> ST unit
   (requires (fun h0 ->
-     Plain.live h0 plain /\ Buffer.live h0 cipher /\ 
+     Crypto.Plain.live h0 plain /\ Buffer.live h0 cipher /\ 
      (safeId i ==>
      ( match find_otp (HS.sel h0 (itable i t)) x with
        | Some (OTP l' p c) -> l == l' /\ c == sel_bytes h0 l cipher
        | None -> False ))))
   (ensures (fun h0 _ h1 ->
      let pb = as_buffer plain in 
-     Plain.live h1 plain /\ Buffer.live h1 cipher /\
+     Crypo.Plain.live h1 plain /\ Buffer.live h1 cipher /\
      (if prf i then 
        let r = itable i t in 
        if safeId i then
@@ -421,7 +421,7 @@ let prf_dexor i t x l plain cipher =
     match find_otp contents x with
     | Some (OTP l' p c) -> 
         let h0 = ST.get() in
-        Plain.store #i l plain p;
+        Crypto.Plain.store #i l plain p;
         let h1 = ST.get() in
         Buffer.lemma_reveal_modifies_1 (as_buffer plain) h0 h1
   else
@@ -455,10 +455,10 @@ val prf_enxor:
      Buffer.frameOf (as_buffer plain) <> t.rgn /\ 
      Buffer.frameOf cipher <> t.rgn } -> ST unit
   (requires (fun h0 ->
-     Plain.live h0 plain /\ Buffer.live h0 cipher /\
+     Crypto.Plain.live h0 plain /\ Buffer.live h0 cipher /\
      (safeId i ==> find_otp #t.mac_rgn #i (HS.sel h0 t.table) x == None)))
   (ensures (fun h0 _ h1 ->
-     Plain.live h1 plain /\ Buffer.live h1 cipher /\
+     Crypto.Plain.live h1 plain /\ Buffer.live h1 cipher /\
      modifies_x_buffer_1 t x cipher h0 h1 /\
      (safeId i ==> 
        ( match find_otp #t.mac_rgn #i (HS.sel h1 t.table) x with
@@ -469,7 +469,7 @@ let prf_enxor i t x l cipher plain =
   if safeId i then
     let r = itable i t in 
     let contents = recall r; !r in 
-    let p = Plain.load #i l plain in
+    let p = Crypto.Plain.load #i l plain in
     let c = random_bytes l in // sample a fresh ciphertext block
     let newblock = OTP #i l p c in
     let contents' = SeqProperties.snoc contents (Entry x newblock) in
