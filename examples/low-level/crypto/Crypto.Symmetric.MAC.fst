@@ -103,11 +103,9 @@ val create: i:id -> StackInline (elemB i)
   (requires (fun h0 -> True))
   (ensures  (fun h0 r h1 -> Buffer.modifies_0 h0 h1))
 let create i =
-  let b_poly = FStar.Buffer.create 0uL 5ul in
-  let b_ghash = FStar.Buffer.create 0uy 16ul in
   match alg i with
-  | POLY1305 -> B_POLY1305 b_poly
-  | GHASH    -> B_GHASH    b_ghash
+  | POLY1305 -> B_POLY1305 (FStar.Buffer.create 0uL 5ul)
+  | GHASH    -> B_GHASH    (FStar.Buffer.create 0uy 16ul)
 
 // TODO: generalize length, add functional spec & modifies clause
 (** Encode raw bytes of static key as a field element *)

@@ -23,9 +23,9 @@ type u64 = FStar.UInt64.t
 
 (*** Chacha 20 ***)
 
-let keylen   = 32ul
-let blocklen = 64ul 
-let ivlen    = 12ul
+inline_for_extraction let keylen   = 32ul
+inline_for_extraction let blocklen = 64ul 
+inline_for_extraction let ivlen    = 12ul
 
 type lbytes l = b:bytes {length b = l}
 type key   = lbytes (v keylen)

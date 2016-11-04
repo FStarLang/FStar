@@ -15,17 +15,17 @@ open Crypto.Indexing
 
 type alg = cipherAlg
 
-let keylen = function
+inline_for_extraction let keylen = function
   | AES128   -> 16ul
   | AES256   -> 32ul
   | CHACHA20 -> 32ul
 
-let blocklen = function
+inline_for_extraction let blocklen = function
   | AES128   -> 16ul
   | AES256   -> 16ul
   | CHACHA20 -> 64ul
 
-let ivlen (a:alg) = 12ul 
+inline_for_extraction let ivlen (a:alg) = 12ul 
 
 type ctr = UInt32.t
 
