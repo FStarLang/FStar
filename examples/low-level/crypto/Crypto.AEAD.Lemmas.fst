@@ -8,7 +8,7 @@ open FStar.Monotonic.RRef
 
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
-open Plain
+open Crypto.Plain
 open Flag
 
 open Crypto.Symmetric.PRF
@@ -21,6 +21,7 @@ module HS = FStar.HyperStack
 module MAC = Crypto.Symmetric.MAC
 module CMA = Crypto.Symmetric.UF1CMA
 
+module Plain = Crypto.Plain
 module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
 

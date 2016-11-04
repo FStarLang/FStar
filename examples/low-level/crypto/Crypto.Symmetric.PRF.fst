@@ -23,7 +23,7 @@ open FStar.Monotonic.RRef
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Flag
-open Crpyto.Plain
+open Crypto.Plain
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -404,7 +404,7 @@ val prf_dexor:
        | None -> False ))))
   (ensures (fun h0 _ h1 ->
      let pb = as_buffer plain in 
-     Crypo.Plain.live h1 plain /\ Buffer.live h1 cipher /\
+     Crypto.Plain.live h1 plain /\ Buffer.live h1 cipher /\
      (if prf i then 
        let r = itable i t in 
        if safeId i then
