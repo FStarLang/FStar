@@ -1,4 +1,4 @@
-module Tests
+module Crypto.KrmlTest
 
 open FStar.UInt32
 open FStar.Ghost
@@ -95,8 +95,8 @@ let test() =
   assume(not(prf i)); // Implementation used to extract satisfies this
   let plain = Plain.create i 0uy plainlen in
   let plainval = load_bytes plainlen plainrepr in
-  let plainbytes = Plain.make #i (v plainlen) plainval in
-  Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
+  // let plainbytes = Plain.make #i (v plainlen) plainval in
+  // Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
   let aad = mk_aad () in
   let aadlen = 12ul in
   let key = mk_key () in
@@ -107,14 +107,14 @@ let test() =
     load_uint128 12ul ivBuffer in
   let expected_cipher = mk_expected_cipher () in
   let cipherlen = plainlen +^ 16ul in
-  assert(Buffer.length expected_cipher = v cipherlen);
+  (* assert(Buffer.length expected_cipher = v cipherlen); *)
   let cipher = Buffer.create 0uy cipherlen in
   let st = AE.coerce i HH.root key in
 
   // To prove the assertion below for the concrete constants in PRF, AEAD:
   assert_norm (114 <= pow2 14);
   assert_norm (FStar.Mul(114 <= 1999 * 64));
-  assert(AETypes.safelen i (v plainlen) 1ul);
+  (* assert(AETypes.safelen i (v plainlen) 1ul); *)
   //NS: These 3 separation properties are explicitly violated by allocating st in HH.root
   //    Assuming them for the moment
   assume (
@@ -172,8 +172,8 @@ let test_aes_gcm i (tn: UInt32.t) key ivBuffer aadlen aad plainlen plainrepr exp
   assume(not(prf i)); // Implementation used to extract satisfies this
   let plain = Plain.create i 1uy plainlen in
   let plainval = load_bytes plainlen plainrepr in
-  let plainbytes = Plain.make #i (v plainlen) plainval in
-  Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
+  // let plainbytes = Plain.make #i (v plainlen) plainval in
+  // Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
 
   let st = AE.coerce i HH.root key in
   let iv : Crypto.Symmetric.Cipher.iv (cipherAlg_of_id i) =

@@ -196,7 +196,7 @@ KRML_ARGS=-verbose -ccopt -Wno-error=pointer-sign
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
 
 krml-test.exe:
-	$(KRML) crypto/real/Flag.fst crypto/Tests.fst -no-prefix Tests $(KREMLIN_HOME)/test/testlib.c \
+	$(KRML) crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest $(KREMLIN_HOME)/test/testlib.c \
 		-tmpdir tmp -o krml-test.exe -add-include '"testlib.h"' \
 		crypto/test_hacks.c
 	./krml-test.exe
@@ -239,19 +239,17 @@ OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List
 		tmp/Crypto_AEAD.ml \
 		crypto/ml/TestLib.ml \
 		crypto/ml/C.ml \
-		tmp/Tests.ml
+		tmp/Crypto_KrmlTest.ml
 
 ocaml-test-extract: ulib
 	mkdir -p tmp
 	$(FSTAR_EXTRACT) --include $(KREMLIN_HOME)/kremlib --include $(KREMLIN_HOME)/test/ \
-		--odir tmp crypto/Tests.fst
-	echo "let _ = main()" >> tmp/Tests.ml
+		--odir tmp crypto/Crypto.KrmlTest.fst
+	echo "let _ = main()" >> tmp/Crypto_KrmlTest.ml
 
 ocaml-test.exe: ocaml-test-extract
 	$(OCAMLOPT) -I tmp -I crypto/ml -I $(AEAD_ODIR) $(OCAML_FILES) -o ocaml-test.exe
 	./ocaml-test.exe
-
-
 
 # Cleaning
 clean:
