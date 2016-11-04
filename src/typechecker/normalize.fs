@@ -1072,8 +1072,12 @@ and rebuild : cfg -> env -> stack -> term -> term =
                             | Env.Inlining
                             | Env.Eager_unfolding_only -> true
                             | _ -> false) in
+                    let steps' = 
+                        if cfg.steps |> List.contains PureSubtermsWithinComputations
+                        then [Exclude Zeta]
+                        else [Exclude Iota; Exclude Zeta] in
                     {cfg with delta_level=new_delta;
-                                    steps=Exclude Iota::Exclude Zeta::cfg.steps} in
+                                    steps=steps'@cfg.steps} in
                 let norm_or_whnf env t =
                     if whnf
                     then closure_as_term cfg_exclude_iota_zeta env t
