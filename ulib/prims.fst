@@ -37,8 +37,8 @@ assume HasEq_unit: hasEq unit
 type squash (p:Type) : Type0 = x:unit{p}
 
 (* Squashed versions of truth and falsehood *)
-type l_true : Type0 = squash c_true
-type l_false : Type0 = squash c_false
+private type l_true : Type0 = squash c_true
+private type l_false : Type0 = squash c_false
 
 (* An SMT-pattern to control unfolding inductives;
    In a proof, you can say `allow_inversion (option a)`
@@ -50,14 +50,15 @@ type c_equals (#a:Type) (x:a) : a -> Type =
   | Refl : c_equals x x
 
 (* Squashed Leibniz equality (i.e. homogeneous) *)
-type l_equals (#a:Type) (x:a) (y:a) = squash (c_equals x y)
+private type l_equals (#a:Type) (x:a) (y:a) = squash (c_equals x y)
 
 (* Constructive heterogeneous equality *)
 type c_hequals (#a:Type) (x:a) : #b:Type -> b -> Type =
   | HRefl : c_hequals x x
 
 (* Squashed heterogeneous equality *)
-type l_hequals (#a:Type) (#b:Type) (x:a) (y:b) : Type0 = squash (c_hequals x y)
+private type l_hequals (#a:Type) (#b:Type) (x:a) (y:b) : Type0
+  = squash (c_hequals x y)
 
 (* bool is a two element type with elements {'true', 'false'}
    we assume it is primitive, for convenient interop with other languages *)
@@ -65,14 +66,14 @@ assume new type bool : Type0
 assume HasEq_bool: hasEq bool
 
 (* bool-to-type coercion *)
-type b2t (b:bool) = (b == true)
+type b2t (b:bool) : Type0 = l_equals b true
 
 (* constructive conjunction *)
 type c_and  (p:Type) (q:Type) : Type =
   | And   : p -> q -> c_and p q
 
 (* squashed conjunction *)
-type l_and (p:Type0) (q:Type0) : Type0 = squash (c_and p q)
+private type l_and (p:Type0) (q:Type0) : Type0 = squash (c_and p q)
 
 (* constructive disjunction *)
 type c_or   (p:Type) (q:Type) : Type =
@@ -80,7 +81,7 @@ type c_or   (p:Type) (q:Type) : Type =
   | Right : q -> c_or p q
 
 (* squashed disjunction *)
-type l_or (p:Type0) (q:Type0) : Type0 = squash (c_or p q)
+private type l_or (p:Type0) (q:Type0) : Type0 = squash (c_or p q)
 
 (* constructive implication *)
 type c_imp (p:Type) (q:Type) : Type = (p -> GTot q)
@@ -95,7 +96,7 @@ type l_imp (p:Type0) (q:Type0) : Type0
 type c_iff (p:Type) (q:Type) : Type = c_and (c_imp p q) (c_imp q p)
 
 (* squashed equivalence *)
-type l_iff (p:Type0) (q:Type0) : Type0 = l_and (l_imp p q) (l_imp q p)
+private type l_iff (p:Type0) (q:Type0) : Type0 = l_and (l_imp p q) (l_imp q p)
 
 (* constructive not *)
 type c_not (p:Type) : Type = c_imp p c_false
@@ -104,7 +105,7 @@ type c_not (p:Type) : Type = c_imp p c_false
 type l_not (p:Type0) : Type0 = l_imp p l_false
 
 (* squashed if-then-else *)
-unfold type l_ite (p:Type0) (q:Type0) (r:Type0) : Type0
+private unfold type l_ite (p:Type0) (q:Type0) (r:Type0) : Type0
   = l_and (l_imp p q) (l_imp (l_not p) r)
 
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
@@ -117,7 +118,8 @@ assume type has_type : #a:Type -> a -> Type -> Type0
 type c_forall (#a:Type) (p:a -> GTot Type) : Type = (x:a -> GTot (p x))
 
 (* squashed forall *)
-type l_forall (#a:Type) (p:a -> GTot Type0) : Type0 = squash (x:a -> GTot (p x))
+private type l_forall (#a:Type) (p:a -> GTot Type0) : Type0
+  = squash (x:a -> GTot (p x))
 
 (* The type of propositions (types with at most one inhabitant)
    It's trivial to show that all squashed types are in prop *)
@@ -200,16 +202,17 @@ sub_effect
 
 (* The primitive effect GTot is definitionally equal to an instance of GHOST *)
 effect GTot (a:Type) = GHOST a (pure_null_wp a)
-effect Ghost (a:Type) (pre:pure_pre) (post:pure_post a) =
-  GHOST a (fun (p:pure_post a) ->
-             l_and pre (l_forall (fun (x:a) -> l_imp (post x) (p x))))
 
 (*********************************************************************************)
 (* Propositional logical connectives *)
 (*********************************************************************************)
 
+let xxx : prop = squash unit
+
+(*
 (* prop truth and falsehood *)
 let p_true : (* Tot *) prop = l_true
+
 let p_false : (* Tot *) prop = l_false
 
 (* prop homogeneous equality *)
@@ -229,7 +232,7 @@ unfold let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) : Tot prop
 
 (* bool-to-prop coercion *)
 (* type b2p (b:bool) : prop = b2t b -- doesn't work, `logical` crap? *)
-let b2p (b:bool) : prop = (b == true)
+let b2p (b:bool) : prop = l_equals b true
 
 (* infix binary '/\': prop conjunction *)
 let p_and (p:prop) (q:prop) : Tot prop = l_and p q
@@ -268,14 +271,19 @@ let p_exists (#a:Type) (p:a -> GTot prop) : Tot prop = l_exists #a p
 (* x:t{p}: strongly-typed refinement *)
 let p_refine (a:Type) (p:a -> GTot prop) : Tot Type = x:a{p x}
 
-(* Pure effect defined with a strong type for pre- and post- conditions *)
+(* Pure and Ghost effects defined with strong type for pre- and post- conditions *)
 
 let p_pure_pre = prop
 let p_pure_post (a:Type) = a -> GTot prop
 
+(*
 effect Pure (a:Type) (pre:p_pure_pre) (post:p_pure_post a) =
   PURE a (fun (p:p_pure_post a) ->
             p_and pre (p_forall (fun (x:a) -> p_and pre (p_imp (post x) (p x)))))
+
+(* effect Ghost (a:Type) (pre:pure_pre) (post:pure_post a) = *)
+(*   GHOST a (fun (p:pure_post a) -> *)
+(*              l_and pre (l_forall (fun (x:a) -> l_imp (post x) (p x)))) *)
 
 assume new type int : Type0
 
@@ -689,3 +697,5 @@ abstract let normalize (a:Type0) = a
 
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
+*)
+*)

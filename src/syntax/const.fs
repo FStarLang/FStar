@@ -83,6 +83,22 @@ let iff_lid    = pconst "p_iff"
 let ite_lid    = pconst "p_ite"
 let exists_lid = pconst "p_exists"
 let forall_lid = pconst "p_forall"
+let eq2_lid    = pconst "p_equals"
+let eq3_lid    = pconst "p_hequals"
+
+let l_true_lid   = pconst "l_true"
+let l_false_lid  = pconst "l_false"
+let l_and_lid    = pconst "l_and"
+let l_or_lid     = pconst "l_or"
+let l_not_lid    = pconst "l_not"
+let l_imp_lid    = pconst "l_imp"
+let l_iff_lid    = pconst "l_iff"
+let l_ite_lid    = pconst "l_ite"
+let l_exists_lid = pconst "l_exists"
+let l_forall_lid = pconst "l_forall"
+let l_eq2_lid    = pconst "l_equals"
+let l_eq3_lid    = pconst "l_hequals"
+
 let haseq_lid  = pconst "hasEq"
 let b2t_lid    = pconst "b2t" (* coercion from boolean to type *)
 let admit_lid  = pconst "admit"
@@ -90,8 +106,6 @@ let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
 
 (* Various equality predicates *)
-let eq2_lid    = pconst  "l_equals"
-let eq3_lid    = pconst  "l_hequals"
 
 (* Some common term constructors *)
 let exp_true_bool   = mk (Tm_constant (Const_bool true))

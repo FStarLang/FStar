@@ -997,6 +997,17 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         (Const.eq3_lid,   eq_op);
         (Const.true_lid,  const_op Term.mkTrue);
         (Const.false_lid, const_op Term.mkFalse);
+
+        (Const.l_and_lid,   enc_prop_c <| bin_op mkAnd);
+        (Const.l_or_lid,    enc_prop_c <| bin_op mkOr);
+        (Const.l_imp_lid,   mk_imp);
+        (Const.l_iff_lid,   enc_prop_c <| bin_op mkIff);
+        (Const.l_ite_lid,   mk_ite);
+        (Const.l_not_lid,   enc_prop_c <| un_op mkNot);
+        (Const.l_eq2_lid,   eq_op);
+        (Const.l_eq3_lid,   eq_op);
+        (Const.l_true_lid,  const_op Term.mkTrue);
+        (Const.l_false_lid, const_op Term.mkFalse);
     ] in
 
     let rec fallback phi =  match phi.n with
@@ -1536,10 +1547,7 @@ let encode_top_level_let env (is_rec, bindings) quals =
                     let (binders, body, _, _), curry = destruct_bound_function flid t_norm e in
                     let vars, guards, env', binder_decls, _ = encode_binders None binders env in
                     let app = mk_app curry f ftok vars in
-                    let app, (body, decls2) =
-                        if quals |> List.contains Logic
-                        then mk_Valid app, encode_formula body env'
-                        else app, encode_term body env' in
+                    let (body, decls2) = encode_term body env' in
                     //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
                     //But the guard is unnecessary given the pattern
                     let eqn = Term.Assume(mkForall([[app]], vars, mkEq(app,body)),
@@ -1782,7 +1790,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        decls@rest@inversions, env
 
      | Sig_inductive_typ(t, _, tps, k, _, datas, quals, _) ->
-        let is_logical = quals |> Util.for_some (function Logic | Assumption -> true | _ -> false) in
+        let is_logical = quals |> Util.for_some (function Assumption -> true | _ -> false) in
         let constructor_or_logic_type_decl c =
             if is_logical
             then let name, args, _, _, _ = c in

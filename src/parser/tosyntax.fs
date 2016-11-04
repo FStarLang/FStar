@@ -44,7 +44,6 @@ let trans_qual r = function
   | AST.Unfold_for_unification_and_vcgen -> S.Unfold_for_unification_and_vcgen
   | AST.Inline_for_extraction -> S.Inline_for_extraction
   | AST.Irreducible ->   S.Irreducible
-  | AST.Logic ->         S.Logic
   | AST.TotalEffect ->   S.TotalEffect
   | AST.Effect ->        S.Effect
   | AST.New  ->          S.New
@@ -1138,7 +1137,7 @@ let mk_data_discriminators quals env t tps k datas =
     let disc_type = U.arrow binders (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
     datas |> List.map (fun d ->
         let disc_name = Util.mk_discriminator d in
-        Sig_declare_typ(disc_name, [], disc_type, quals [S.Logic; S.Discriminator d], range_of_lid disc_name))
+        Sig_declare_typ(disc_name, [], disc_type, quals [S.Discriminator d], range_of_lid disc_name))
 
 let mk_indexed_projectors iquals fvq refine_domain env tc lid (inductive_tps:binders) imp_tps (fields:list<S.binder>) t =
     let p = range_of_lid lid in
@@ -1342,11 +1341,6 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
               else tun
             | Some k -> desugar_term env' k in
         let t0 = t in
-        let quals = if quals |> Util.for_some (function S.Logic -> true | _ -> false)
-                    then quals
-                    else if t0.level = Formula
-                    then S.Logic::quals
-                    else quals in
         let se =
             if quals |> List.contains S.Effect
             then let c = desugar_comp t.range false env' t in
@@ -1637,10 +1631,6 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
             | _ -> snd lbs |> List.collect
             (function | {lbname=Inl _} -> []
                       | {lbname=Inr fv} -> Env.lookup_letbinding_quals env fv.fv_name.v) in
-          let quals =
-            if lets |> Util.for_some (fun (_, t) -> t.level=Formula)
-            then S.Logic::quals
-            else quals in
           let lbs = if quals |> List.contains S.Abstract
                     then fst lbs, snd lbs |> List.map (fun lb ->
                             let fv = right lb.lbname in

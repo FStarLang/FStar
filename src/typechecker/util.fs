@@ -1253,14 +1253,14 @@ let check_sigelt_quals se =
         match q with
         | Assumption ->
           quals 
-          |> List.for_all (fun x -> x=q || x=Logic || inferred x || visibility x || assumption x)
+          |> List.for_all (fun x -> x=q || inferred x || visibility x || assumption x)
 
         | New -> //no definition provided
           quals 
           |> List.for_all (fun x -> x=q || inferred x || visibility x || assumption x)
 
         | Inline_for_extraction ->
-          quals |> List.for_all (fun x -> x=q || x=Logic || visibility x || reducibility x 
+          quals |> List.for_all (fun x -> x=q || visibility x || reducibility x
                                               || reification x || inferred x)
 
         | Unfold_for_unification_and_vcgen
@@ -1270,15 +1270,11 @@ let check_sigelt_quals se =
         | Noeq 
         | Unopteq ->
           quals 
-          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || x=Inline_for_extraction || has_eq x || inferred x || visibility x)
+          |> List.for_all (fun x -> x=q || x=Abstract || x=Inline_for_extraction || has_eq x || inferred x || visibility x)
 
         | TotalEffect -> 
           quals 
           |> List.for_all (fun x -> x=q || inferred x || visibility x || reification x)
-
-        | Logic -> 
-          quals 
-          |> List.for_all (fun x -> x=q || x=Assumption || inferred x || visibility x || reducibility x)
 
         | Reifiable
         | Reflectable -> 

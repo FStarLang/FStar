@@ -214,7 +214,6 @@ type qualifier =
   | Noeq                                   //for this type, don't generate HasEq
   | Unopteq                                //for this type, use the unoptimized HasEq scheme
   | TotalEffect                            //an effect that forbids non-termination
-  | Logic                                  //a symbol whose intended usage is in the refinement logic
   | Reifiable
   | Reflectable
   //the remaining qualifiers are internal: the programmer cannot write them
