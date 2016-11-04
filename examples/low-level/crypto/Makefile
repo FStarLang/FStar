@@ -20,7 +20,9 @@ VERIFY= \
   Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3 \
   Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4 \
   Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5 \
+  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part6 \
   Crypto.Symmetric.Poly1305.Bignum \
+  Crypto.Symmetric.Poly1305.Lemmas \
   Crypto.Symmetric.Poly1305.Spec \
   Crypto.Symmetric.Poly1305 \
   Crypto.Symmetric.Bytes \
