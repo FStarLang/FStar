@@ -258,9 +258,9 @@ let rec term_to_string x =
   | Tm_app(t, args) ->  Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
   | Tm_let(lbs, e) ->   Util.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
   | Tm_ascribed(e,Inl t,_) ->
-                        Util.format2 "(%s : %s)" (term_to_string e) (term_to_string t)
+                        Util.format2 "(%s <: %s)" (term_to_string e) (term_to_string t)
   | Tm_ascribed(e,Inr c,_) ->
-                        Util.format2 "(%s : %s)" (term_to_string e) (comp_to_string c)
+                        Util.format2 "(%s <: %s)" (term_to_string e) (comp_to_string c)
   | Tm_match(head, branches) ->
     Util.format2 "(match %s with\n\t| %s)"
       (term_to_string head)
@@ -403,20 +403,25 @@ and formula_to_string phi = term_to_string phi
 //    Util.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs)
 
 
+let enclose_universes s =
+    if Options.print_universes ()
+    then "<" ^ s ^ ">"
+    else ""
 
-let tscheme_to_string (us, t) = Util.format2 "<%s> %s" (univ_names_to_string us) (term_to_string t)
+let tscheme_to_string (us, t) = Util.format2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
 
 let eff_decl_to_string for_free ed =
     let actions_to_string actions =
         actions |> List.map (fun a ->
-          Util.format4 "%s<%s> : %s = %s"
+          Util.format4 "%s%s : %s = %s"
             (sli a.action_name)
-            (univ_names_to_string a.action_univs)
+            (enclose_universes <| univ_names_to_string a.action_univs)
             (term_to_string a.action_typ)
             (term_to_string a.action_defn))
         |> String.concat ",\n\t" in
-    Util.format "new_effect %s{ %s<%s> %s : %s \n  \
-        ret         = %s\n\
+    Util.format "new_effect%s { \
+      %s%s %s : %s \n  \
+        return_wp   = %s\n\
       ; bind_wp     = %s\n\
       ; if_then_else= %s\n\
       ; ite_wp      = %s\n\
@@ -429,10 +434,10 @@ let eff_decl_to_string for_free ed =
       ; repr        = %s\n\
       ; bind_repr   = %s\n\
       ; return_repr = %s\n\
-      ; actions     = \n\t%s\n}\n"
-        [(if for_free then "for free " else "");
+      and effect_actions\n\t%s\n}\n"
+        [(if for_free then "_for_free " else "");
          lid_to_string ed.mname;
-         univ_names_to_string ed.univs;
+         enclose_universes <| univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
          term_to_string ed.signature;
          tscheme_to_string ed.ret_wp;
