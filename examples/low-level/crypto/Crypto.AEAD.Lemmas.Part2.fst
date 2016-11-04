@@ -8,7 +8,7 @@ open FStar.Monotonic.RRef
 
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
-open Plain
+open Crypto.Plain
 open Flag
 
 open Crypto.Symmetric.PRF
@@ -18,6 +18,7 @@ open Crypto.AEAD.Invariant
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
+module Plain = Crypto.Plain
 module PRF = Crypto.Symmetric.PRF
 
 (*** Lemmas about modifying tables and buffers ***)

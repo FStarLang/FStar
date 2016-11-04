@@ -16,12 +16,12 @@ open Crypto.Indexing
 type alg = cipherAlg
 
 let keylen = function
-//| AES128   -> 16ul
+  | AES128   -> 16ul
   | AES256   -> 32ul
   | CHACHA20 -> 32ul
 
 let blocklen = function
-//| AES128   -> 16ul
+  | AES128   -> 16ul
   | AES256   -> 16ul
   | CHACHA20 -> 64ul
 
@@ -76,6 +76,24 @@ let compute a output k n counter len =
       let nbuf = Buffer.create 0uy (ivlen CHACHA20) in
       store_uint128 (ivlen CHACHA20) nbuf n;
       chacha20 output k nbuf counter len
+
+  // ADL: TODO single parametric AES module
+  | AES128 ->
+      let open Crypto.Symmetric.AES128 in
+
+      // all of this should be hoisted.
+      let sbox = create 0uy 256ul in
+      let w: xkey = Buffer.create 0uy (4ul *^ nb *^ (nr+^1ul)) in
+      mk_sbox sbox;
+      keyExpansion k w sbox;
+      let ctr_block = Buffer.create 0uy (blocklen AES128) in
+      store_uint128 (ivlen AES128) (Buffer.sub ctr_block 0ul (ivlen AES128)) n;
+      // blit n 0ul ctr_block 0ul 12ul;
+
+      aes_store_counter ctr_block counter;
+      let output_block = Buffer.create 0uy (blocklen AES128) in
+      cipher output_block ctr_block w sbox;
+      blit output_block 0ul output 0ul len // too much copying!
 
   | AES256 -> 
       let open Crypto.Symmetric.AES in 
