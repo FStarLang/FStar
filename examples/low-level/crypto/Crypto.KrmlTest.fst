@@ -93,10 +93,11 @@ let test() =
 
   let i:id = testId CHACHA20_POLY1305 in
   assume(not(prf i)); // Implementation used to extract satisfies this
-  let plain = Plain.create i 0uy plainlen in
-  let plainval = load_bytes plainlen plainrepr in
-  let plainbytes = Plain.make #i (v plainlen) plainval in
-  Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
+  // let plain = Plain.create i 0uy plainlen in
+  // let plainval = load_bytes plainlen plainrepr in
+  // let plainbytes = Plain.make #i (v plainlen) plainval in
+  // Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
+  let plain = Plain.unsafe_hide_buffer i plainrepr in
   let aad = mk_aad () in
   let aadlen = 12ul in
   let key = mk_key () in
@@ -170,10 +171,11 @@ let test_aes_gcm i (tn: UInt32.t) key ivBuffer aadlen aad plainlen plainrepr exp
   (* dump "Additional Data" aadlen aad; *)
 
   assume(not(prf i)); // Implementation used to extract satisfies this
-  let plain = Plain.create i 1uy plainlen in
-  let plainval = load_bytes plainlen plainrepr in
-  let plainbytes = Plain.make #i (v plainlen) plainval in
-  Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
+  // let plain = Plain.create i 1uy plainlen in
+  // let plainval = load_bytes plainlen plainrepr in
+  // let plainbytes = Plain.make #i (v plainlen) plainval in
+  // Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
+  let plain = Plain.unsafe_hide_buffer i plainrepr in
 
   let st = AE.coerce i HH.root key in
   let iv : Crypto.Symmetric.Cipher.iv (cipherAlg_of_id i) =
