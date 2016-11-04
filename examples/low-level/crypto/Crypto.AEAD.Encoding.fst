@@ -334,12 +334,6 @@ let lemma_encode_both_inj i (al0:aadlen_32) (pl0:txtlen_32) (al1:aadlen_32) (pl1
   lemma_encode_bytes_injective p0 p1;
   lemma_encode_bytes_injective a0 a1
 
-//Move back to Crypto.AEAD.Encoding 16-11-04 ?
-let alog_fresh (#a:Type0) h0 h1 (r:HS.reference a) = 
-    //HS.frameOf r == HS h1.tip /\
-    h1 `HS.contains` r /\
-  ~ (h0 `HS.contains` r)
-
 val accumulate: 
   #i: MAC.id -> st: CMA.state i -> 
   aadlen:aadlen_32 -> aad:lbuffer (v aadlen) ->
@@ -356,7 +350,6 @@ val accumulate:
     Buffer.frameOf (CMA (MAC.as_buffer a.a)) = h1.tip /\
     CMA.acc_inv st a h1 /\
     (mac_log ==> 
-      alog_fresh h0 h1 (CMA.alog a) /\
       FStar.HyperStack.sel h1 (CMA.alog a) ==
       encode_both (fst i) aadlen (Buffer.as_seq h1 aad) txtlen (Buffer.as_seq h1 cipher))))
   // StackInline required for stack-allocated accumulator
