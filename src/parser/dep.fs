@@ -210,7 +210,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
 
   let record_open let_open lid =
     let key = lowercase_join_longident lid true in
-    begin match smap_try_find original_map key with
+    begin match smap_try_find working_map key with
     | Some pair ->
         List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
     | None ->
