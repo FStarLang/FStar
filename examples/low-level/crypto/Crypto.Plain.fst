@@ -1,4 +1,4 @@
-module Plain
+module Crypto.Plain
 
 open FStar.HyperHeap
 open FStar.HyperStack

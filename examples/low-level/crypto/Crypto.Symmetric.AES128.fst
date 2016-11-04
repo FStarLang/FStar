@@ -1,11 +1,7 @@
-module Crypto.Symmetric.AES
+module Crypto.Symmetric.AES128
 
-// FIPS197 ?
-// TODO factor it out in terms of https://en.wikipedia.org/wiki/AES_instruction_set
-// see also https://software.intel.com/sites/default/files/article/165683/aes-wp-2012-09-22-v01.pdf
-
-// TODO this is AES256; 
-// we also need AES128 (nk=4ul, nr=10) and maybe AES192 (nk=6ul,nr=12).
+// THIS FILE IS GENERATED FROM Crypto.Symmetric.AES.fst WITH nk=4ul nr=10ul
+// (in the hope to get more code specialization)
 
 open FStar.Mul
 open FStar.Ghost
@@ -28,10 +24,10 @@ type bytes = FStar.Buffer.buffer byte
 type lbytes l = b:bytes {length b = l} 
 let v (x:UInt32.t) : nat  = UInt32.v x
 
-(* Parameters for AES-256 *)
-inline_for_extraction let nb =  4ul 
-inline_for_extraction let nk =  8ul // 4, 6, or 8
-inline_for_extraction let nr = 14ul // 10, 12, or 14
+(* Parameters for AES-128 *)
+inline_for_extraction let nb =  4ul
+inline_for_extraction let nk =  4ul
+inline_for_extraction let nr = 10ul
 
 let blocklen = U32(4ul *^ nb)
 let keylen   = U32(4ul *^ nk)

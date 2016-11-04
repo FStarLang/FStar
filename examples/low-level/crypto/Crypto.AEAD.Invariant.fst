@@ -11,7 +11,7 @@ open FStar.Monotonic.RRef
 
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
-open Plain
+open Crypto.Plain
 open Flag
 
 open Crypto.AEAD.Encoding 
@@ -32,10 +32,6 @@ let minNat (a:nat) (b:nat) : nat = if a <= b then a else b
 type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let ctr x = PRF(x.ctr)
-
-//16-10-12 TEMPORARY, while PRF remains somewhat CHACHA-specific
-//16-10-12 NB we are importing this restriction from Encoding too
-//let id = i:id {i.cipher = CHACHA20_POLY1305}
 
 noeq type entry (i:id) =
   | Entry: 
@@ -82,7 +78,7 @@ val counterblocks:
   l:nat -> 
   from_pos:nat -> 
   to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) (ctr x)} -> 
-  plain:Plain.plain i l -> 
+  plain:Crypto.Plain.plain i l -> 
   cipher:lbytes l -> 
   Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
   (decreases (to_pos - from_pos))
@@ -94,7 +90,7 @@ let rec counterblocks i rgn x l from_pos to_pos plain cipher =
   else 
     let l0 = minNat remaining blockl in 
     let l_32 = UInt32.uint_to_t l0 in 
-    let plain_hd = Plain.slice plain from_pos (from_pos + l0) in
+    let plain_hd = Crypto.Plain.slice plain from_pos (from_pos + l0) in
     let cipher_hd = Seq.slice cipher from_pos (from_pos + l0) in
     let block = PRF.Entry x (PRF.OTP l_32 plain_hd cipher_hd) in
     let blocks = counterblocks i rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in

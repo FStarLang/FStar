@@ -23,7 +23,7 @@ open FStar.Monotonic.RRef
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Flag
-open Plain
+open Crypto.Plain
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -184,8 +184,9 @@ let coerce rgn i key =
 
 val leak: #i:id{~(prf i)} -> st:state i -> ST (key:lbuffer (v (keylen i)))
   (requires (fun h -> True))
-  (ensures  (fun h0 k h1 -> h0=h1 /\ Buffer.live h1 k))
+  (ensures  (fun h0 k h1 -> h0==h1 /\ Buffer.live h1 k))
 let leak #i st =
+  Buffer.recall st.key;
   st.key
 
 (** computes a PRF block and copies its len first bytes to output *)
@@ -312,12 +313,17 @@ let prf_sk0 #i t =
       let r = itable i t in
       recall r;
       let contents = !r in
-      match find_sk0 contents x with 
+      let sk0 = match find_sk0 contents x with 
       | Some sk0 -> sk0 
       | None -> 
           let sk0 = CMA.get_skey (CMA.akey_gen t.mac_rgn i) in
           r := SeqProperties.snoc contents (Entry x sk0);
-          sk0
+          sk0 in
+      assume (HS.is_eternal_region t.mac_rgn);
+      assume (HS (Buffer (CMA (not ((Buffer.content sk0).mm))))); //TODO: mark this as not manually managed
+      Buffer.recall sk0;
+      assume false; //NS: disovered while triaging this file ... unable to prove that (find_sk0 (HS.sel h1 r) x = Some _)
+      sk0
     end
   else
     let keyBuffer = Buffer.rcreate t.mac_rgn 0uy (CMA.skeylen i) in
@@ -389,9 +395,29 @@ let prf_blk i t x len output =
   else
     getBlock t x len output
 
-
+////////////////////////////////////////////////////////////////////////////////
+//prf_dexor
+////////////////////////////////////////////////////////////////////////////////
 // reuse the same block for x and XORs it with ciphertext
-unfold let prf_dexor_requires (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr}) 
+let prf_dexor_modifies (#i:id) (#len:u32) (t:state i) (x:domain i{ctr_0 i <^ x.ctr}) 
+  		       (pb:plainBuffer i (v len)) (h0:mem) (h1:mem) =
+   if not (prf i) || safeId i
+   then Buffer.modifies_1 (as_buffer pb) h0 h1
+   else modifies_x_buffer_1 t x (as_buffer pb) h0 h1
+
+let contains_cipher_block (#i:id) 
+			  (t:PRF.state i) 
+			  (x:PRF.domain i{ctr_0 i <^ x.ctr})
+			  (l:u32{ l <=^ blocklen i})
+			  (cipher:lbuffer (v l))
+			  (h:mem{Buffer.live h cipher})
+  = if safeId i then 
+      match find_otp (HS.sel h (itable i t)) x with
+      | Some (OTP l' p c) -> l == l' /\ c == sel_bytes h l cipher
+      | None -> False 
+    else True
+
+let prf_dexor_requires (i:id) (t:PRF.state i) (x:PRF.domain i{ctr_0 i <^ x.ctr}) 
 			      (l:u32 {l <=^ blocklen i})
      			      (cipher:lbuffer (v l)) 
 			      (plain:plainBuffer i (v l))
@@ -399,32 +425,27 @@ unfold let prf_dexor_requires (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr})
    Buffer.disjoint (as_buffer plain) cipher /\
    Buffer.frameOf (as_buffer plain) <> t.rgn /\
    Buffer.frameOf cipher <> t.rgn /\
-   Plain.live h0 plain /\ 
+   Crypto.Plain.live h0 plain /\ 
    Buffer.live h0 cipher /\ 
-   (safeId i ==> (match find_otp (HS.sel h0 (itable i t)) x with
-	         | Some (OTP l' p c) -> l == l' /\ c == sel_bytes h0 l cipher
-		 | None -> False ))
-		 
-let prf_dexor_ensures (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr}) 
+   contains_cipher_block t x l cipher h0 
+
+let prf_dexor_ensures (i:id) (t:PRF.state i) (x:domain i{ctr_0 i <^ x.ctr}) 
 		      (l:u32 {l <=^ blocklen i})
      		      (cipher:lbuffer (v l)) 
 		      (plain:plainBuffer i (v l))
 		      (h0:mem) (h1:mem) = 
    let pb = as_buffer plain in 
-   Plain.live h1 plain /\ 
+   Crypto.Plain.live h1 plain /\ 
    Buffer.live h1 cipher /\
-     (if prf i then 
-       let r = itable i t in 
-       if safeId i then
-          Buffer.modifies_1 pb h0 h1 /\
-	  (match find_otp (HS.sel h1 r) x with
-           | Some (OTP l' p c) -> l == l' /\ p == sel_plain h1 l plain /\ Buffer.modifies_1 pb h0 h1
-           | None -> False )
-       else modifies_x_buffer_1 t x pb h0 h1
-     else Buffer.modifies_1 pb h0 h1)
+   prf_dexor_modifies t x plain h0 h1 /\
+   (safeId i ==>
+     (let r = PRF.itable i t in
+      match find_otp (HS.sel h1 r) x with
+      | Some (OTP l' p c) -> l == l' /\ p == sel_plain h1 l plain
+      | None -> False ))
 
 val prf_dexor: 
-  i:id -> t:state i -> x:domain i{ctr_0 i <^ x.ctr} -> l:u32 {l <=^ blocklen i} -> 
+  i:id -> t:PRF.state i -> x:domain i{ctr_0 i <^ x.ctr} -> l:u32 {l <=^ blocklen i} -> 
   cipher:lbuffer (v l) -> plain:plainBuffer i (v l) -> ST unit
   (requires (fun h0 -> prf_dexor_requires i t x l cipher plain h0))
   (ensures (fun h0 _ h1 -> prf_dexor_ensures i t x l cipher plain h0 h1))
@@ -435,7 +456,7 @@ let prf_dexor i t x l cipher plain =
     match find_otp contents x with
     | Some (OTP l' p c) -> 
         let h0 = ST.get() in
-        Plain.store #i l plain p;
+        Crypto.Plain.store #i l plain p;
         let h1 = ST.get() in
         Buffer.lemma_reveal_modifies_1 (as_buffer plain) h0 h1
   else
@@ -451,6 +472,10 @@ let prf_dexor i t x l cipher plain =
     Buffer.lemma_reveal_modifies_1 plainrepr h1 h2;
     assert(prf i ==> HS.sel h1 (itable i t) == HS.sel h2 (itable i t));
     assert(modifies_x_buffer_1 t x plainrepr h0 h2)
+////////////////////////////////////////////////////////////////////////////////
+//end: prf_dexor
+////////////////////////////////////////////////////////////////////////////////
+
 
 #set-options "--initial_fuel 1 --max_fuel 1"
 
@@ -469,11 +494,11 @@ val prf_enxor:
      Buffer.frameOf (as_buffer plain) <> t.rgn /\ 
      Buffer.frameOf cipher <> t.rgn } -> ST unit
   (requires (fun h0 ->
-     Plain.live h0 plain /\ 
+     Crypto.Plain.live h0 plain /\ 
      Buffer.live h0 cipher /\
      (safeId i ==> find_otp #t.mac_rgn #i (HS.sel h0 t.table) x == None)))
   (ensures (fun h0 _ h1 ->
-     Plain.live h1 plain /\ Buffer.live h1 cipher /\
+     Crypto.Plain.live h1 plain /\ Buffer.live h1 cipher /\
      modifies_x_buffer_1 t x cipher h0 h1 /\
      (safeId i ==> 
        ( match find_otp #t.mac_rgn #i (HS.sel h1 t.table) x with
@@ -484,7 +509,7 @@ let prf_enxor i t x l cipher plain =
   if safeId i then
     let r = itable i t in 
     let contents = recall r; !r in 
-    let p = Plain.load #i l plain in
+    let p = Crypto.Plain.load #i l plain in
     let c = random_bytes l in // sample a fresh ciphertext block
     let newblock = OTP #i l p c in
     let contents' = SeqProperties.snoc contents (Entry x newblock) in

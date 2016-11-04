@@ -645,8 +645,10 @@ and translate_expr env e: expr =
 
   | MLE_Fun _ ->
       failwith "todo: translate_expr [MLE_Fun]"
-  | MLE_If _ ->
-      failwith "todo: translate_expr [MLE_If]"
+  | MLE_If (e1, e2, e3) ->
+      EIfThenElse (translate_expr env e1, translate_expr env e2, (match e3 with
+        | None -> EUnit
+        | Some e3 -> translate_expr env e3))
   | MLE_Raise _ ->
       failwith "todo: translate_expr [MLE_Raise]"
   | MLE_Try _ ->
