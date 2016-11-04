@@ -480,8 +480,8 @@ and cps_and_elaborate env ed =
   (* TODO : having "_" as a variable name can create a really strange shadowing
             behaviour between uu___ variables in the tcterm ; needs to be investigated *)
   let a =
-      if a.ppname.idText = "_"
-      then { a with ppname = {a.ppname with idText = "anything^but^_" }}
+      if S.is_null_bv a
+      then S.gen_bv "a" (Some (S.range_of_bv a)) a.sort
       else a
   in
 
@@ -536,16 +536,18 @@ and cps_and_elaborate env ed =
   let lift_from_pure_wp =
       match (SS.compress return_wp).n with
       | Tm_abs (b1 :: b2 :: bs, body, what) ->
-          let b1::b2::bs, body = SS.open_term (b1::b2::bs) body in
-          let env0 = push_binders (DMFF.get_env dmff_env) (b1::b2::bs) in
-          let bs', body, what' = U.abs_formals <|  N.eta_expand env0 body in
+          let [b1 ; b2], body = SS.open_term [b1 ; b2] (U.abs bs body None) in
+          // WARNING : pushing b1 and b2 in env might break the well-typedness invariant
+          let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
+          let wp_b1 = N.normalize [ N.Beta ] env0 (mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ]))) in
+          let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type body wp_b1 in
           (* TODO : Should check that what' is Tot Type0 *)
           let t2 = (fst b2).sort in
           let pure_wp_type = DMFF.double_star t2 in
           let wp = S.gen_bv "wp" None pure_wp_type in
           // fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a
           let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
-          U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs@bs') body what) (Some (Inr Const.effect_GTot_lid))
+          U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr Const.effect_GTot_lid))
       | _ ->
           failwith "unexpected shape for return"
   in

@@ -1228,6 +1228,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       let comp = trans_G env (type_of_comp comp) (is_monadic_comp comp) app in
       U.arrow binders comp
   | Tm_ascribed(e, _, _) ->
+      (* TODO : find a way to recompute the corrected ascription *)
       trans_F_ env e wp
   | _ ->
       failwith "impossible trans_F_"

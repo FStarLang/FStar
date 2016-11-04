@@ -17,19 +17,47 @@ noeq type either : Type -> Type -> Type =
 | R : (a:Type) -> (b:Type) -> b -> either a b
 
 // Excluded-middle relative to ans : kont (either a (a -> M ans))
-// This could eventually be an action for CONT but does not respect current limitations of DM
+// This could eventually be an action for CONT
+// but it does not respect current limitations of DM wrt. sums of C-types
 let em (ans:Type) (a:Type) (k : (either a (a -> M ans)) -> M ans) : M ans =
     let devil (x:a) : M ans = k (L a (a -> M ans) x) in
   k (R a (a -> M ans) devil)
 
 
-(* Instanciating ans with False *)
+// This could eventually be an action for CONT
+// but it does not respect current limitations of DM wrt. simply-typedness
+// (a and b occurs in the type of the argument f)
+let callcc (ans:Type) (a:Type) (b:Type) (f : ((a -> Tot (kont ans b)) -> Tot (kont ans a))) (k : a -> M ans) : M ans =
+  let g (x:a) (k0: b -> M ans) : M ans = k x in
+  let fg : kont ans a = f g in
+  fg k
+
+// This could eventually be an action for CONT
+// but it does not respect current limitations of DM wrt. simply-typedness
+// (a occurs in the type of the argument h)
+let shift (ans:Type) (a:Type) (h : ((a -> Tot (kont ans ans)) -> Tot (kont ans ans))) (k: a -> M ans) : M ans =
+  let f (v:a) (k0:(ans -> M ans)) : M ans = k0 (k v) in
+  let hf : kont ans ans = h f in
+  let id (x:ans) : M ans = x in
+  hf id
+
+// (Error) Bound variables 'id#32998' escapes; add a type annotation
+let reset (ans:Type) (h:(unit -> Tot (kont ans ans))) (k: ans -> M ans) : M ans =
+  let h0 : kont ans ans = h () in
+  let id (x:ans) : M ans = x in
+  let h1 = (h0 id <: M ans) in
+  k h1
+
 reifiable reflectable new_effect_for_free {
   CONT (ans:Type) : a:Type -> Effect
   with repr = kont ans
      ; return = return ans
      ; bind = bind ans
   and effect_actions
+//    callcc = callcc ans
+//    em     = em ans
+//    shift  = shift ans
+//    reset  = reset ans
 }
 
 
