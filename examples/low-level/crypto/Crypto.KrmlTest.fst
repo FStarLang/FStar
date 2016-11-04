@@ -132,6 +132,7 @@ let test() =
   (* let ok_0 = diff "cipher" cipherlen expected_cipher cipher in *)
 
   let decrypted = Plain.create i 0uy plainlen in
+
   let st = AE.genReader st in
   let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
 
@@ -140,7 +141,7 @@ let test() =
     100y; 101y; 99y; 114y; 121y; 112y; 116y; 105y; 111y; 110y; 0y
   ] in
 
-  TestLib.compare_and_print string_decryption (bufferRepr #i decrypted) (bufferRepr #i plain) plainlen;
+  TestLib.compare_and_print string_decryption (bufferRepr #i plain) (bufferRepr #i decrypted) plainlen;
   (* let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in *)
 
   // testing that decryption fails when truncating aad or tweaking the ciphertext.
