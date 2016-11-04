@@ -35,6 +35,7 @@ inline_for_extraction let nr = 10ul
 
 let blocklen = U32(4ul *^ nb)
 let keylen   = U32(4ul *^ nk)
+let xrounds  = U32(4ul *^ nk +^ 28ul)
 
 type block = lbytes (v blocklen)
 type wkey  = lbytes (16 * (v nr+1))
@@ -328,7 +329,7 @@ val cipher_loop: state:block -> w:wkey{disjoint state w} -> sb:sbox{disjoint sb 
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let rec cipher_loop state w sbox round =
   let open FStar.UInt32 in
-  if round = 14ul then ()
+  if round = nr then ()
   else begin
     subBytes_sbox state sbox;   
     shiftRows     state;
@@ -393,13 +394,13 @@ let rec rcon i tmp =
 
 #reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
-let lemma_aux_000 (i:UInt32.t{v i < 240 /\ v i >= 4 * v nk}) : Lemma
+let lemma_aux_000 (i:UInt32.t{v i < 176 /\ v i >= 4 * v nk}) : Lemma
   (let open FStar.UInt32 in
     (4 * v nk <= pow2 32 - 1 /\ v (i+^0ul) >= v (4ul *^ nk) /\ v (i+^1ul) >= v (4ul *^ nk) /\ v (i+^2ul) >= v (4ul *^ nk) /\ v (i+^3ul) >= v (4ul *^ nk) /\ v ((i/^4ul)/^nk) >= 1)) = ()
 
 #reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
 
-val keyExpansion_aux_0:w:wkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < 60 /\ v i >= v nk} -> STL unit
+val keyExpansion_aux_0:w:wkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < v xrounds /\ v i >= v nk} -> STL unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox /\ 
                    disjoint w temp /\ disjoint w sbox /\ disjoint temp sbox))
   (ensures  (fun h0 _ h1 -> live h1 temp /\ modifies_1 temp h0 h1))
@@ -426,7 +427,7 @@ let keyExpansion_aux_0 w temp sbox j =
 
 #reset-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
 
-val keyExpansion_aux_1: w:wkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < 60 /\ v i >= v nk} -> STL unit
+val keyExpansion_aux_1: w:wkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < v xrounds /\ v i >= v nk} -> STL unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox
     /\ disjoint w temp /\ disjoint w sbox /\ disjoint temp sbox))
   (ensures  (fun h0 _ h1 -> live h1 w /\ modifies_1 w h0 h1))
@@ -446,14 +447,14 @@ let keyExpansion_aux_1 w temp sbox j =
   w.(i+^2ul) <- H8 (t2 ^^ w2);
   w.(i+^3ul) <- H8 (t3 ^^ w3)
 
-val keyExpansion_aux: w:wkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i <= 60 /\ v i >= v nk} -> STL unit
+val keyExpansion_aux: w:wkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i <= v xrounds /\ v i >= v nk} -> STL unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox
     /\ disjoint w temp /\ disjoint w sbox /\ disjoint temp sbox))
   (ensures  (fun h0 _ h1 -> live h1 temp /\ live h1 w /\ modifies_2 temp w h0 h1))
 let rec keyExpansion_aux w temp sbox j =
   let open FStar.UInt32 in
   let h0 = ST.get() in
-  if j >=^ 60ul then ()
+  if j >=^ xrounds then ()
   else begin
     let i = 4ul *^ j in
     lemma_aux_000 i;
@@ -462,7 +463,7 @@ let rec keyExpansion_aux w temp sbox j =
     keyExpansion_aux w temp sbox (j +^ 1ul)
   end
 
-let lemma_aux_001 (w:xkey) : Lemma (length w >= 240) = ()
+let lemma_aux_001 (w:xkey) : Lemma (length w >= 176) = ()
 
 val keyExpansion: key:skey -> w:xkey -> sb:sbox -> STL unit
   (requires (fun h -> live h key /\ live h w /\ live h sb /\ disjoint key w /\ disjoint w sb))
@@ -578,9 +579,10 @@ let inv_cipher out input w sbox =
   let state = create 0uy blocklen in
   blit input 0ul   state 0ul blocklen;
   addRoundKey      state w nr;
-  inv_cipher_loop  state w sbox 13ul;
+  inv_cipher_loop  state w sbox (U32(nr -^ 1ul));
   invShiftRows     state;
   invSubBytes_sbox state sbox;
   addRoundKey      state w 0ul;
   blit state 0ul out 0ul blocklen;
   pop_frame()
+
