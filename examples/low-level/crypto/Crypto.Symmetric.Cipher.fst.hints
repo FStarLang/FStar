@@ -1,5 +1,5 @@
 [
-  "RV’2>u=\rIwl\u00020*IÓ",
+  "«PíNmë7&^Ñ:P<sÎG",
   [
     [
       "Crypto.Symmetric.Cipher.keylen",
@@ -7,9 +7,10 @@
       0,
       1,
       [
-        "@query", "data_elim_FStar.UInt32.Mk",
-        "disc_equation_Crypto.Symmetric.Cipher.AES256",
-        "disc_equation_Crypto.Symmetric.Cipher.CHACHA20",
+        "@query", "constructor_distinct_Crypto.Indexing.AES256",
+        "constructor_distinct_Crypto.Indexing.CHACHA20",
+        "data_elim_FStar.UInt32.Mk", "disc_equation_Crypto.Indexing.AES256",
+        "disc_equation_Crypto.Indexing.CHACHA20",
         "equation_Crypto.Symmetric.AES.keylen",
         "equation_Crypto.Symmetric.AES.nk",
         "equation_Crypto.Symmetric.AES.v",
@@ -19,7 +20,7 @@
         "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
         "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
         "equation_Prims.nat",
-        "fuel_guarded_inversion_Crypto.Symmetric.Cipher.alg",
+        "fuel_guarded_inversion_Crypto.Indexing.cipherAlg",
         "fuel_guarded_inversion_FStar.UInt32.t_",
         "function_token_typing_Crypto.Symmetric.AES.keylen",
         "function_token_typing_Crypto.Symmetric.Chacha20.keylen",
@@ -39,9 +40,10 @@
       0,
       1,
       [
-        "@query", "data_elim_FStar.UInt32.Mk",
-        "disc_equation_Crypto.Symmetric.Cipher.AES256",
-        "disc_equation_Crypto.Symmetric.Cipher.CHACHA20",
+        "@query", "constructor_distinct_Crypto.Indexing.AES256",
+        "constructor_distinct_Crypto.Indexing.CHACHA20",
+        "data_elim_FStar.UInt32.Mk", "disc_equation_Crypto.Indexing.AES256",
+        "disc_equation_Crypto.Indexing.CHACHA20",
         "equation_Crypto.Symmetric.AES.blocklen",
         "equation_Crypto.Symmetric.AES.nb",
         "equation_Crypto.Symmetric.AES.v",
@@ -50,7 +52,7 @@
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.mul",
         "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
         "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
-        "fuel_guarded_inversion_Crypto.Symmetric.Cipher.alg",
+        "fuel_guarded_inversion_Crypto.Indexing.cipherAlg",
         "function_token_typing_Crypto.Symmetric.AES.blocklen",
         "function_token_typing_Crypto.Symmetric.Chacha20.blocklen",
         "int_inversion", "int_typing", "primitive_Prims.op_Multiply",
@@ -145,8 +147,8 @@
       0,
       1,
       [
-        "@query", "constructor_distinct_Crypto.Symmetric.Cipher.AES256",
-        "equality_tok_Crypto.Symmetric.Cipher.AES256@tok",
+        "@query", "constructor_distinct_Crypto.Indexing.AES256",
+        "equality_tok_Crypto.Indexing.AES256@tok",
         "equation_Crypto.Symmetric.Cipher.blocklen",
         "equation_FStar.Int16.n", "equation_FStar.UInt32.uint_to_t",
         "equation_FStar.UInt32.v", "function_token_typing_FStar.Int16.n",
@@ -162,9 +164,9 @@
       1,
       [
         "@query", "b2t_def", "bool_inversion", "bool_typing",
-        "constructor_distinct_Crypto.Symmetric.Cipher.AES256",
+        "constructor_distinct_Crypto.Indexing.AES256",
         "data_elim_FStar.UInt32.Mk",
-        "equality_tok_Crypto.Symmetric.Cipher.AES256@tok",
+        "equality_tok_Crypto.Indexing.AES256@tok",
         "equation_Crypto.Symmetric.AES.keylen",
         "equation_Crypto.Symmetric.AES.nb",
         "equation_Crypto.Symmetric.AES.nk",
@@ -205,8 +207,7 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_Crypto.Symmetric.AES.v",
         "typing_Crypto.Symmetric.Cipher.blocklen", "typing_FStar.UInt.fits",
-        "typing_FStar.UInt32.v",
-        "typing_tok_Crypto.Symmetric.Cipher.AES256@tok"
+        "typing_FStar.UInt32.v", "typing_tok_Crypto.Indexing.AES256@tok"
       ],
       0
     ]

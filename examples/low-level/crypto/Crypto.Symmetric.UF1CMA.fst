@@ -31,18 +31,21 @@ let alg_of_id = macAlg_of_id
 
 // length of the single-use part of the key
 let keylen (i:id) = 
-  match aeadAlg_of_id i with 
+  match aeadAlg_of_id i with
+  | AES_128_GCM       -> 16ul
   | AES_256_GCM       -> 16ul
   | CHACHA20_POLY1305 -> 32ul
 
 // OPTIONAL STATIC AUTHENTICATION KEY (when using AES)
 let skeylen (i:id) =  // can't refine with {skeyed i} here
-  match aeadAlg_of_id i with 
+  match aeadAlg_of_id i with
+  | AES_128_GCM       -> 16ul
   | AES_256_GCM       -> 16ul
   | _                 ->  0ul // dummy; never allocated.
 
 let skeyed (i:id) = 
-  match aeadAlg_of_id i with 
+  match aeadAlg_of_id i with
+  | AES_128_GCM       -> true
   | AES_256_GCM       -> true
   | CHACHA20_POLY1305 -> false
 

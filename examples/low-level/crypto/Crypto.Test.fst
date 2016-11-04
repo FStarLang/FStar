@@ -5,7 +5,7 @@ open FStar.Ghost
 
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
-open Plain 
+open Crypto.Plain 
 open Buffer
 open Flag
 
@@ -182,10 +182,10 @@ let test() =
 
   let i:id = testId CHACHA20_POLY1305 in
   assume(not(prf i)); // Implementation used to extract satisfies this
-  let plain = Plain.create i 0uy plainlen in 
+  let plain = Crypto.Plain.create i 0uy plainlen in 
   let plainval = load_bytes plainlen plainrepr in
-  let plainbytes = Plain.make #i (v plainlen) plainval in 
-  Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
+  let plainbytes = Crypto.Plain.make #i (v plainlen) plainval in 
+  Crypto.Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
   let aad = mk_aad () in
   let aadlen = 12ul in
   let key = mk_key () in 
@@ -211,14 +211,14 @@ let test() =
   //NS: These 3 separation properties are explicitly violated by allocating st in HH.root
   //    Assuming them for the moment
   assume (
-    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) (AETypes st.log_region) /\
+    HH.disjoint (Buffer.frameOf (Crypto.Plain.as_buffer plain)) (AETypes st.log_region) /\
     HH.disjoint (Buffer.frameOf cipher) (AETypes st.log_region) /\
     HH.disjoint (Buffer.frameOf aad) (AETypes st.log_region)
   );
   AE.encrypt i st iv aadlen aad plainlen plain cipher;
   let ok_0 = diff "cipher" cipherlen expected_cipher cipher in
 
-  let decrypted = Plain.create i 0uy plainlen in
+  let decrypted = Crypto.Plain.create i 0uy plainlen in
   let st = AE.genReader st in
   let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
   let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in
@@ -274,10 +274,10 @@ let test_aes_gcm i tn key ivBuffer aadlen aad plainlen plainrepr expected_cipher
   dump "Additional Data" aadlen aad;
 
   assume(not(prf i)); // Implementation used to extract satisfies this
-  let plain = Plain.create i 1uy plainlen in 
+  let plain = Crypto.Plain.create i 1uy plainlen in 
   let plainval = load_bytes plainlen plainrepr in
-  let plainbytes = Plain.make #i (v plainlen) plainval in 
-  Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
+  let plainbytes = Crypto.Plain.make #i (v plainlen) plainval in 
+  Crypto.Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
 
   let st = AE.coerce i HH.root key in
   let iv : Crypto.Symmetric.Cipher.iv (cipherAlg_of_id i) = 
@@ -289,7 +289,7 @@ let test_aes_gcm i tn key ivBuffer aadlen aad plainlen plainrepr expected_cipher
   let ok_0 = diff "cipher" cipherlen expected_cipher cipher in 
 
   let st = AE.genReader st in
-  let decrypted = Plain.create i 3uy plainlen in
+  let decrypted = Crypto.Plain.create i 3uy plainlen in
   let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
   let ok_2 = diff "decryption" plainlen (bufferRepr #i plain) (bufferRepr #i decrypted) in
 

@@ -12,7 +12,7 @@ open FStar.Math.Lib
 open FStar.Math.Lemmas
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
-open Plain
+open Crypto.Plain
 open Flag
 
 module HH = FStar.HyperHeap

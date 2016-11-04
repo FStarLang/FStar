@@ -6,13 +6,14 @@ open FStar.Buffer
 
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
-open Plain
+open Crypto.Plain
 open Buffer
 open Flag
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
+module Plain = Crypto.Plain
 module MAC = Crypto.Symmetric.MAC
 module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
