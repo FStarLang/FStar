@@ -611,13 +611,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 else app
             end
         | None ->
-            let l = Env.expand_module_abbrev env l in
-            let env = Env.push_namespace env l in
-            match args with
-            | [ (e, _) ] ->
-                desugar_term_maybe_top top_level env e
-            | _ ->
-                raise (Error("The Foo.Bar (...) local open takes exactly one argument", top.range))
+            raise (Error ("Constructor " ^ l.str ^ " not found", top.range))
         end
 
     | Sum(binders, t) ->
@@ -1593,13 +1587,14 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn bui
                 ed.actions;
     } in
     let se = build_sigelt ed d.drange in
+    let monad_env = env in
     let env = push_sigelt env0 se in
     let env = ed.actions |> List.fold_left (fun env a ->
         push_sigelt env (Util.action_as_lb a)
     ) env in
     let env =
         if quals |> List.contains Reflectable
-        then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify env in
+        then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
              let refl_decl = S.Sig_declare_typ(reflect_lid, [], S.tun, [S.Assumption; S.Reflectable], d.drange) in
              push_sigelt env refl_decl
         else env in
