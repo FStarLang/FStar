@@ -89,7 +89,7 @@ external ocaml_EVP_MD_sha384 : unit -> md = "ocaml_EVP_MD_sha384"
 external ocaml_EVP_MD_sha512 : unit -> md = "ocaml_EVP_MD_sha512"
 external ocaml_EVP_MD_block_size : md -> int = "ocaml_EVP_MD_block_size"
 external ocaml_EVP_MD_size : md -> int = "ocaml_EVP_MD_size"
-external ocaml_EVP_MD_CTX_create : md -> md_ctx = "ocaml_EVP_MD_CTX_create"
+external ocaml_EVP_MD_CTX_new : md -> md_ctx = "ocaml_EVP_MD_CTX_new"
 external ocaml_EVP_MD_CTX_fini   : md_ctx -> unit = "ocaml_EVP_MD_CTX_fini"
 external ocaml_EVP_MD_CTX_update : md_ctx -> string -> unit = "ocaml_EVP_MD_CTX_update"
 external ocaml_EVP_MD_CTX_final  : md_ctx -> string = "ocaml_EVP_MD_CTX_final"
@@ -104,7 +104,7 @@ let md_of_hash_alg h = match h with
 
 let hash (h:hash_alg) (b:bytes) =
   let md = md_of_hash_alg h in
-  let ctx = ocaml_EVP_MD_CTX_create(md) in
+  let ctx = ocaml_EVP_MD_CTX_new(md) in
   ocaml_EVP_MD_CTX_update ctx (string_of_bytes b);
   let h = ocaml_EVP_MD_CTX_final(ctx) in
   ocaml_EVP_MD_CTX_fini(ctx);
@@ -115,7 +115,7 @@ type hash_ctx = md_ctx (* exported name *)
 
 let digest_create (h:hash_alg) : hash_ctx = 
   let md = md_of_hash_alg h in
-  let ctx = ocaml_EVP_MD_CTX_create md in
+  let ctx = ocaml_EVP_MD_CTX_new md in
   ctx 
   
 let digest_update (ctx:md_ctx) (b:bytes) : unit = 
@@ -155,6 +155,8 @@ external ocaml_EVP_CIPHER_aes_256_cbc  : unit -> cipher = "ocaml_EVP_CIPHER_aes_
 external ocaml_EVP_CIPHER_aes_128_gcm  : unit -> cipher = "ocaml_EVP_CIPHER_aes_128_gcm"
 external ocaml_EVP_CIPHER_aes_256_gcm  : unit -> cipher = "ocaml_EVP_CIPHER_aes_256_gcm"
 
+external ocaml_EVP_CIPHER_chacha20_poly1305 : unit -> cipher = "ocaml_EVP_CIPHER_chacha20_poly1305"
+
 external ocaml_EVP_CIPHER_rc4 : unit -> cipher = "ocaml_EVP_CIPHER_rc4"
 
 external ocaml_EVP_CIPHER_CTX_create : cipher -> bool -> cipher_ctx = "ocaml_EVP_CIPHER_CTX_create"
@@ -184,6 +186,7 @@ let cipher_of_stream_cipher (c:stream_cipher) = match c with
 let cipher_of_aead_cipher (c:aead_cipher) = match c with
   | AES_128_GCM -> ocaml_EVP_CIPHER_aes_128_gcm()
   | AES_256_GCM -> ocaml_EVP_CIPHER_aes_256_gcm()
+  | CHACHA20_POLY1305 -> ocaml_EVP_CIPHER_chacha20_poly1305()
   | _ -> failwith "not linked to openSSL yet" 
 
 let block_encrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
@@ -683,9 +686,7 @@ let load_key keyfile =
 
 (* -------------------------------------------------------------------------- *)
 
-external ocaml_err_load_crypto_strings: unit -> unit = "ocaml_err_load_crypto_strings"
-external ocaml_rand_poll: unit -> unit = "ocaml_rand_poll"
+external ocaml_openssl_init: unit -> unit = "ocaml_openssl_init"
 
 let _ =
-  ocaml_rand_poll ();
-  ocaml_err_load_crypto_strings ()
+  ocaml_openssl_init ()
