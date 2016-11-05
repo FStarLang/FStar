@@ -315,6 +315,102 @@ val decrypt:
     decrypt_modifies st plain h0 h1 /\
     decrypt_ok i st n aadlen aad plainlen plain cipher_tagged h0 verified h1))
 
+////////////////////////////////////////////////////////////////////////////////
+//UF1CMA.verify
+////////////////////////////////////////////////////////////////////////////////
+unfold let verify_liveness (#i:CMA.id) (st:CMA.state i) (tag:lbuffer 16) (h:mem) =
+    Buffer.live h (CMA st.s) /\
+    Buffer.live h (CMA (MAC.as_buffer st.r)) /\
+    Buffer.live h tag
+    
+unfold let verify_requires (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) (h0:mem) = 
+    let open Crypto.Symmetric.UF1CMA in
+    verify_liveness st tag h0 /\
+    Buffer.disjoint_2 (MAC.as_buffer acc.a) st.s tag /\ 
+    Buffer.disjoint_2 (MAC.as_buffer st.r) st.s tag /\
+    acc_inv st acc h0 /\
+    (mac_log ==> m_contains (ilog st.log) h0) /\
+    (authId i ==> is_Some (m_sel h0 (ilog st.log)))
+			     
+unfold let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
+		     (h:mem{verify_liveness st tag h}) (b:bool)  = 
+    let open Crypto.Symmetric.UF1CMA in
+    if mac_log then 
+      let log = FStar.HyperStack.sel h (alog acc) in
+      let r = MAC.sel_elem h st.r in
+      let s = Buffer.as_seq h st.s in
+      let m = MAC.mac log r s in
+      let verified = Seq.eq m (MAC.sel_word h tag) in
+      if authId i then
+	match m_sel h (ilog st.log) with 
+	| Some(l',m') -> 
+	  let correct = m = m' && Seq.eq log l' in
+	  b == (verified && correct)
+	| None -> False
+      else b==verified
+    else True
+		  
+unfold let verify_ensures (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
+		   (h0:mem) (b:bool) (h1:mem) = 
+    Buffer.modifies_0 h0 h1 /\
+    verify_liveness st tag h1 /\
+    verify_ok st acc tag h1 b
+
+assume val verify_wrapper: 
+  #i:CMA.id -> 
+  st:CMA.state i -> 
+  acc:CMA.accBuffer i -> 
+  tag:lbuffer 16 -> Stack bool
+  (requires (fun h0 -> verify_requires st acc tag h0))
+  (ensures (fun h0 b h1 -> verify_ensures st acc tag h0 b h1))
+
+let is_mac_for_iv (#i:id) (#n:Cipher.iv (alg i)) (st:state i Reader{safeId i}) (ak:CMA.state (i, n)) (h:mem) = 
+  let x0 = {iv=n; ctr=ctr_0 i} in 
+  match find_mac (HS.sel h (itable i st.prf)) x0 with 
+  | Some mac -> ak == mac
+  | _ -> False
+
+unfold let decrypt_requires_live (#i:id) (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
+ 			  (#plainlen:UInt32.t) (plain:plainBuffer i (v plainlen))
+ 			  (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) (h:mem) =
+    Buffer.live h aad /\
+    Plain.live h plain /\
+    Buffer.live h cipher_tagged
+
+let find_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i)) : option (entry i) = 
+  SeqProperties.seq_find (fun e -> e.nonce = n) entries
+
+val entry_exists_if_verify_ok : #i:id -> #n:Cipher.iv (alg i) -> (st:state i Reader) ->
+ 			        #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
+			        #plainlen:UInt32.t {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
+			       (plain:Plain.plainBuffer i (v plainlen)) ->
+			       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) ->
+			       (ak:CMA.state (i,n)) ->
+			       (acc:CMA.accBuffer (i, n)) ->
+			       (tag:lbuffer 16{tag == Buffer.sub cipher_tagged plainlen MAC.taglen}) ->
+			       (h:mem{verify_liveness ak tag h /\ 
+				      decrypt_requires_live aad plain cipher_tagged h /\
+				      safeId i}) ->
+    Lemma (requires (my_inv st h /\
+		     CMA.acc_inv ak acc h /\
+		     verify_ok ak acc tag h true /\
+		     is_mac_for_iv st ak h))
+          (ensures (my_inv st h /\
+		    (let entries = HS.sel h st.log in 
+		      match find_entry n entries with
+		      | None -> False
+		      | Some (Entry nonce ad l p c) ->
+		        l == v plainlen /\
+			ad == Buffer.as_seq h aad /\
+			c  == Buffer.as_seq h cipher_tagged)))
+
+let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc tag h =
+  admit()
+
+////////////////////////////////////////////////////////////////////////////////
+//end UF1CMA.verify
+////////////////////////////////////////////////////////////////////////////////
+#reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let h_init = get() in
   push_frame();
@@ -333,8 +429,11 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let h2 = ST.get() in
   Buffer.lemma_reveal_modifies_0 h1 h2;
   (* assert(mac_log ==>  FStar.HyperStack.sel h2 (CMA.alog acc) == encode_both i aadlen (Buffer.as_seq h2 aad) plainlen (Buffer.as_seq h2 cipher)); *)
-  let verified = CMA.verify ak acc tag in
-  let h1 = ST.get() in
+  let verified = verify_wrapper ak acc tag in
+  let h3 = ST.get() in
+  assume (my_inv st h3); //should get this from framing
+  assume (CMA.acc_inv ak acc h3);
+  assume (safeId i ==> is_mac_for_iv st ak h3);
   // then, safeID i /\ stateful invariant ==>
   //    not verified ==> no entry in the AEAD table
   //    verified ==> exists Entry(iv ad l p c) in AEAD.log
@@ -344,11 +443,18 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   // not sure what we need to prove for 1st level of PRF idealization
   // possibly that the PRF table with ctr=0 matches the Entry table.
   // (PRF[iv,ctr=0].MAC.log =  Some(l,t) iff Entry(iv,___))
-  let p : maybe_plain i (v plainlen)
-    = if safeId i 
-      then admit() //need to read it from the AEAD table
-      else () in 
-  assume false; //16-10-16
-  if verified then counter_dexor i st.prf (PRF.incr i x) plainlen plainlen plain cipher p;
+  if verified 
+  then begin
+    let p : maybe_plain i (v plainlen) = 
+	   if safeId i
+	   then let _ = entry_exists_if_verify_ok st aad plain cipher_tagged ak acc tag h3 in
+	        let entries = !st.log in 
+	        let (Some (Entry _nonce _ad _l p _c)) = find_entry iv entries in
+		p
+	   else () in 
+     assume false;
+     counter_dexor i st.prf (PRF.incr i x) plainlen plainlen plain cipher p
+  end;
+  assume false;
   pop_frame();
   verified
