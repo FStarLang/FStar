@@ -218,7 +218,7 @@ private let rec lemma_sane_eq_poly (p0:seq elem) (p1:seq elem) (r:elem) : Lemma
 //16-10-15 to stay close to the paper, we may apply "encode" in the poly specification
 
 private let fix (r:word_16) (i:nat {i < 16}) m : Tot word_16 =
-  Seq.upd r i (U8 (Seq.index r i &^ m))
+  Seq.upd r i (U8.(Seq.index r i &^ m))
 
 // an abstract spec of clamping for our state invariant
 // for our polynomial-sampling assumption,

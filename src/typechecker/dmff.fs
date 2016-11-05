@@ -64,7 +64,7 @@ let gen_wps_for_free
    * context. [gamma] is the series of binders the precede the return type of
    * the context. *)
   let rec collect_binders (t : term) =
-    match (compress t).n with
+    match (U.unascribe <| compress t).n with
     | Tm_arrow (bs, comp) ->
         // TODO: dubious, assert no nested arrows
         let rest = match comp.n with
@@ -256,6 +256,7 @@ let gen_wps_for_free
                             Tot (st2_wp heap a)
     let st2_if_then_else heap a c = st2_liftGA2 (l_ITE c) *)
   let wp_if_then_else =
+    let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
       let l_ite = fvar Const.ite_lid (S.Delta_defined_at_level 2) None in
@@ -263,8 +264,8 @@ let gen_wps_for_free
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
         ])
-      ) (Inr (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))))
-    ) ret_tot_wp_a
+      ) (Inr result_comp)
+    ) (Some (Inl (U.lcomp_of_comp result_comp)))
   in
   let wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
   let wp_if_then_else = mk_generic_app wp_if_then_else in
@@ -482,6 +483,8 @@ let empty env tc_const = {
 
 type env_ = env
 
+let get_env env = env.env
+
 type nm = | N of typ | M of typ
 
 type nm_ = nm
@@ -517,12 +520,15 @@ exception Not_found
 
 // ... the _ and * transformations from the definition language to F* ---------
 
+let double_star typ =
+    let star_once typ = U.arrow [S.mk_binder <| S.new_bv None typ] (S.mk_Total U.ktype0) in
+    star_once <| typ |> star_once
+
 let rec mk_star_to_type mk env a =
   mk (Tm_arrow (
     [S.null_bv (star_type' env a), S.as_implicit false],
     mk_Total Util.ktype0
   ))
-
 
 // The *-transformation for types, purely syntactic. Has been enriched with the
 // [Tm_abs] case to account for parameterized types
@@ -829,6 +835,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   | Tm_meta (e, _)
   | Tm_uinst (e, _)
   | Tm_ascribed (e, _, _) ->
+      (* TODO : reinstall the type annotation *)
       check env e context_nm
 
   | Tm_let _ ->
@@ -885,6 +892,12 @@ and infer (env: env) (e: term): nm * term * term =
       ) (env, []) binders in
       let u_binders = List.rev u_binders in
 
+      (*
+      Util.print2_warning "Term %s ::: what %s \n"
+                                (Print.term_to_string body)
+                                (Print.abs_ascription_to_string what) ;
+      *)
+
       let comp, s_body, u_body =
         let check_what = if is_monadic what then check_m else check_n in
         let t, s_body, u_body = check_what env body in
@@ -895,13 +908,34 @@ and infer (env: env) (e: term): nm * term * term =
       // the inferred type for the original term.
       let t = U.arrow binders comp in
 
+      let s_what = match what with
+        | None -> None // That should not happen according to some other comment
+        | Some (Inl lc) ->
+            if Ident.lid_equals lc.eff_name Const.monadic_lid
+            then Some (Inl (U.lcomp_of_comp (S.mk_Total (double_star <| U.comp_result (lc.comp ())))))
+            else Some (Inl ({ lc with comp = begin fun () ->
+                        let c = lc.comp () in
+                        let result_typ = star_type' env (Util.comp_result c) in
+                        Util.set_result_typ c result_typ
+                      end  }))
+        | Some (Inr lid) ->
+            Some (Inr (if Ident.lid_equals lid Const.monadic_lid
+                       then Const.effect_Tot_lid
+                       else lid))
+      in
+
+      let u_body, u_what =
+          let comp = trans_G env (U.comp_result comp) (is_monadic what) (SS.subst env.subst s_body) in
+          U.ascribe u_body (Inr comp), Some (Inl (U.lcomp_of_comp comp))
+      in
+
       let s_body = close s_binders s_body in
       let s_binders = close_binders s_binders in
-      let s_term = mk (Tm_abs (s_binders, s_body, what)) in
+      let s_term = mk (Tm_abs (s_binders, s_body, s_what)) in
 
       let u_body = close u_binders u_body in
       let u_binders = close_binders u_binders in
-      let u_term = mk (Tm_abs (u_binders, u_body, what)) in
+      let u_term = mk (Tm_abs (u_binders, u_body, u_what)) in
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
@@ -931,6 +965,8 @@ and infer (env: env) (e: term): nm * term * term =
             binders @ binders', comp
         | Tm_arrow (binders, comp) ->
             binders, comp
+        | Tm_ascribed (e, _, _) ->
+            flatten e
         | _ ->
             raise (Err (Util.format1 "%s: not a function type" (Print.term_to_string t_head)))
       in
@@ -1087,19 +1123,32 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
   let x = Util.left binding.lbname in
   let x_binders = [ S.mk_binder x ] in
   let x_binders, e2 = SS.open_term x_binders e2 in
+  let s_binding =
+      if Ident.lid_equals Const.monadic_lid binding.lbeff
+      then
+          { binding with lbeff = Const.effect_Tot_lid ; lbtyp = double_star binding.lbtyp }
+      else { binding with lbtyp = star_type' env binding.lbtyp }
+  in
   begin match infer env e1 with
   | N t1, s_e1, u_e1 ->
       // Util.print1 "[debug] %s is NOT a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
+      // TODO : double-check  that correct env and lbeff are used
+      let u_binding =
+        if is_C t1
+        then { binding with lbtyp = trans_F_ env t1 (SS.subst env.subst s_e1) }
+        else binding
+      in
       // Piggyback on the environment to carry our own special terms
       let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
       // Simple case: just a regular let-binding. We defer checks to e2.
       let nm_rec, s_e2, u_e2 = proceed env e2 in
       nm_rec,
-      mk (Tm_let ((false, [ { binding with lbdef = s_e1 } ]), SS.close x_binders s_e2)),
-      mk (Tm_let ((false, [ { binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
+      mk (Tm_let ((false, [ { s_binding with lbdef = s_e1 } ]), SS.close x_binders s_e2)),
+      mk (Tm_let ((false, [ { u_binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
 
   | M t1, s_e1, u_e1 ->
       // Util.print1 "[debug] %s IS a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
+      let u_binding = { binding with lbeff = Const.effect_PURE_lid ; lbtyp = t1 } in
       let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
       let t2, s_e2, u_e2 = ensure_m env e2 in
       // Now, generate the bind.
@@ -1114,7 +1163,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       let body = mk (Tm_app (s_e1, [ s_e2, S.as_implicit false ])) in
       M t2,
       U.abs [ S.mk_binder p ] body None,
-      mk (Tm_let ((false, [ { binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
+      mk (Tm_let ((false, [ { u_binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
   end
 
 
@@ -1170,7 +1219,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         let h = bv.sort in
         if is_C h then
           let w' = S.gen_bv (bv.ppname.idText ^ "-w'") None (star_type' env h) in
-          w', [ w', q; S.null_bv (trans_F_ env h (S.bv_to_name bv)), q ]
+          w', [ w', q; S.null_bv (trans_F_ env h (S.bv_to_name w')), q ]
         else
           let x = S.gen_bv (bv.ppname.idText ^ "-x") None (star_type' env h) in
           x, [ x, q ]
@@ -1180,6 +1229,9 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       let app = mk (Tm_app (wp, List.map (fun bv -> S.bv_to_name bv, S.as_implicit false) bvs)) in
       let comp = trans_G env (type_of_comp comp) (is_monadic_comp comp) app in
       U.arrow binders comp
+  | Tm_ascribed(e, _, _) ->
+      (* TODO : find a way to recompute the corrected ascription *)
+      trans_F_ env e wp
   | _ ->
       failwith "impossible trans_F_"
 
