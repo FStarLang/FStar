@@ -388,7 +388,28 @@ let gen_wps_for_free
   let stronger =
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
-    let body = mk_rel Util.mk_imp wp_a (S.bv_to_name wp1) (S.bv_to_name wp2) in
+    let rec mk_stronger t x y =
+        let t = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.Delta_constant ] env t in
+        match (SS.compress t).n with
+        | Tm_type _ -> Util.mk_imp x y
+        | Tm_app (head, args) when is_tuple_constructor (SS.compress head) ->
+          let project i tuple =
+            (* TODO : I guess a projector shouldn't be handled as a constant... *)
+            let projector = S.fvar (Env.lookup_projector env (Util.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level 1) None in
+            mk_app projector [tuple, None]
+          in
+          let rel0 :: rels = List.mapi (fun i (t, q) -> mk_stronger t (project i x) (project i y)) args in
+          List.fold_left Util.mk_conj rel0 rels
+        | Tm_arrow (binders, { n = GTotal (b, _) })
+        | Tm_arrow (binders, { n = Total (b, _) }) ->
+          let bvs = List.mapi (fun i (bv,q) -> S.gen_bv ("a" ^ string_of_int i) None bv.sort) binders in
+          let args = List.map (fun ai -> S.as_arg (S.bv_to_name ai)) bvs in
+          let body = mk_stronger b (U.mk_app x args) (U.mk_app y args) in
+          List.fold_right (fun bv body -> mk_forall bv body) bvs body
+        | _ ->
+          failwith "Not a DM elaborated type"
+    in
+    let body = mk_stronger (U.unascribe wp_a) (S.bv_to_name wp1) (S.bv_to_name wp2) in
     U.abs (binders @ binders_of_list [ a, false; wp1, false; wp2, false ]) body ret_tot_type
   in
   let stronger = register env (mk_lid "stronger") stronger in
