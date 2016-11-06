@@ -318,12 +318,12 @@ val decrypt:
 ////////////////////////////////////////////////////////////////////////////////
 //UF1CMA.verify
 ////////////////////////////////////////////////////////////////////////////////
-unfold let verify_liveness (#i:CMA.id) (st:CMA.state i) (tag:lbuffer 16) (h:mem) =
+let verify_liveness (#i:CMA.id) (st:CMA.state i) (tag:lbuffer 16) (h:mem) =
     Buffer.live h (CMA st.s) /\
     Buffer.live h (CMA (MAC.as_buffer st.r)) /\
     Buffer.live h tag
     
-unfold let verify_requires (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) (h0:mem) = 
+let verify_requires (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) (h0:mem) = 
     let open Crypto.Symmetric.UF1CMA in
     verify_liveness st tag h0 /\
     Buffer.disjoint_2 (MAC.as_buffer acc.a) st.s tag /\ 
@@ -332,7 +332,7 @@ unfold let verify_requires (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (t
     (mac_log ==> m_contains (ilog st.log) h0) /\
     (authId i ==> is_Some (m_sel h0 (ilog st.log)))
 			     
-unfold let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
+let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
 		     (h:mem{verify_liveness st tag h}) (b:bool)  = 
     let open Crypto.Symmetric.UF1CMA in
     if mac_log then 
@@ -350,7 +350,7 @@ unfold let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbu
       else b==verified
     else True
 		  
-unfold let verify_ensures (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
+let verify_ensures (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
 		   (h0:mem) (b:bool) (h1:mem) = 
     Buffer.modifies_0 h0 h1 /\
     verify_liveness st tag h1 /\
@@ -370,7 +370,7 @@ let is_mac_for_iv (#i:id) (#n:Cipher.iv (alg i)) (st:state i Reader{safeId i}) (
   | Some mac -> ak == mac
   | _ -> False
 
-unfold let decrypt_requires_live (#i:id) (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
+let decrypt_requires_live (#i:id) (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
  			  (#plainlen:UInt32.t) (plain:plainBuffer i (v plainlen))
  			  (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) (h:mem) =
     Buffer.live h aad /\
@@ -379,6 +379,34 @@ unfold let decrypt_requires_live (#i:id) (#aadlen:UInt32.t {aadlen <=^ aadmax}) 
 
 let find_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i)) : option (entry i) = 
   SeqProperties.seq_find (fun e -> e.nonce = n) entries
+
+let accumulate_encoded (#i:CMA.id)
+ 		       (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
+		       (#plainlen:txtlen_32) (cipher:lbuffer (v plainlen))
+		       (a:CMA.accBuffer i) (h:mem{mac_log}) =
+    Buffer.live h aad /\			 
+    Buffer.live h cipher /\			     
+    h `HS.contains` (CMA.alog a) /\
+    HS.sel h (CMA.alog a) ==
+    encode_both (fst i) aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher)
+
+let prf_blocks rgn i = Seq.seq (PRF.entry rgn i)
+let aead_entries i = Seq.seq (entry i)
+let rec find_entry_blocks (#i:id) (#rgn:rid) 
+			  (n:Cipher.iv (alg i){safeId i})
+			  (entries:aead_entries i)
+			  (prf_entries:prf_blocks rgn i)
+			  (h:mem{refines h i rgn entries prf_entries /\
+			         is_Some (find_mac prf_entries ({iv=n; ctr=ctr_0 i}))})
+			  (cur:nat{cur <= Seq.length entries})
+     : Pure (entry i * prf_blocks rgn i)
+	    (requires True)
+	    (ensures (fun (entry, blocks) ->
+			let x0 = {iv=n; ctr=ctr_0 i} in
+			refines_one_entry h entry blocks /\
+			find_entry n entries == Some entry /\
+			find_mac prf_entries x0 == Some (PRF.macRange rgn i x0 (Seq.index blocks 0).range)))
+     = admit()
 
 val entry_exists_if_verify_ok : #i:id -> #n:Cipher.iv (alg i) -> (st:state i Reader) ->
  			        #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
@@ -393,6 +421,7 @@ val entry_exists_if_verify_ok : #i:id -> #n:Cipher.iv (alg i) -> (st:state i Rea
 				      safeId i}) ->
     Lemma (requires (my_inv st h /\
 		     CMA.acc_inv ak acc h /\
+		     accumulate_encoded aad #plainlen (Buffer.sub cipher_tagged 0ul plainlen) acc h /\
 		     verify_ok ak acc tag h true /\
 		     is_mac_for_iv st ak h))
           (ensures (my_inv st h /\
@@ -403,9 +432,30 @@ val entry_exists_if_verify_ok : #i:id -> #n:Cipher.iv (alg i) -> (st:state i Rea
 		        l == v plainlen /\
 			ad == Buffer.as_seq h aad /\
 			c  == Buffer.as_seq h cipher_tagged)))
-
-let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc tag h =
-  admit()
+let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged_b ak acc tag_b h =
+    let entries = HS.sel h st.log in
+    let prf_table = HS.sel h (PRF.itable i st.prf) in
+    let x0 = {iv = n; ctr=ctr_0 i} in
+    let cipher_tagged = Buffer.as_seq h cipher_tagged_b in
+    let cipher, _ = SeqProperties.split cipher_tagged (v plainlen) in
+    let tag = Buffer.as_seq h tag_b in
+    (* assert (ak == Some.v (find_mac prf_table x0)); //from is_mac_for_iv *)
+    (* assert (refines h i st.prf.mac_rgn entries prf_table); //from my_inv *)
+    let ( e, blocks ) = find_entry_blocks n entries prf_table h (Seq.length entries) in
+    let ak' = PRF.macRange st.prf.mac_rgn i x0 (Seq.index blocks 0).range in
+    assert (ak == ak');
+    let Entry nonce aad' plainlen' p' cipher_tagged' = e in
+    let cipher', _ = SeqProperties.split cipher_tagged' plainlen' in
+    let mac_log = CMA.ilog (CMA.State.log ak) in
+    match m_sel h mac_log with
+    | None           -> ()
+    | Some (msg,tag') -> 
+      lemma_encode_both_inj i aadlen plainlen (u (Seq.length aad')) (u plainlen')
+			     (Buffer.as_seq h aad) cipher aad' cipher';
+      assert (Seq.equal tag tag');
+      assert (Seq.equal cipher cipher');
+      assert (Seq.equal cipher_tagged' (Seq.append cipher' tag'));
+      assert (Seq.equal cipher_tagged (Seq.append cipher tag))
 
 ////////////////////////////////////////////////////////////////////////////////
 //end UF1CMA.verify
@@ -434,6 +484,7 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   assume (my_inv st h3); //should get this from framing
   assume (CMA.acc_inv ak acc h3);
   assume (safeId i ==> is_mac_for_iv st ak h3);
+  assume (safeId i ==> accumulate_encoded aad #plainlen cipher acc h3);
   // then, safeID i /\ stateful invariant ==>
   //    not verified ==> no entry in the AEAD table
   //    verified ==> exists Entry(iv ad l p c) in AEAD.log
