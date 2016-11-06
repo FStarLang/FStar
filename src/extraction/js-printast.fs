@@ -280,7 +280,7 @@ and print_pattern p print_t =
     | JGP_Object _ -> text "!!"
     | JGP_Array _ -> text "!!"
     | JGP_Assignment _ -> text "!!"
-    | JGP_Expression _ -> text "!!"
+    | JGP_Expression e  -> pretty_print_exp e
     | JGP_Identifier(id, t) ->
         let r = match t with
                 | Some v -> reduce [colon; print_typ v]

@@ -97,7 +97,7 @@ let mk_standart_type = function
 let is_standart_type t =
   mk_standart_type t <> None
 
-let is_prim_constructors s = 
+let is_prim_constructors s =
     List.existsb (fun x -> x = s) ["Cons" ; "Nil"; "Some"; "None"]
     
 let float_of_int i = float_of_int32 (int32_of_int i)
@@ -106,9 +106,9 @@ let export_modules = ref []
 
 let current_module_name = ref ""
 
-let getName (path, n) =   
+let getName (path, n) =
   let path = String.concat "_" path in  
-  if (path = !current_module_name || path = "" || path = "Prims")
+  if (path = !current_module_name || path = "")
   then (n, None)
   else ((if not (List.existsb (fun x -> x = path) !export_modules)
          then export_modules := List.append [path] !export_modules);
@@ -201,15 +201,16 @@ and translate_decl d: option<source_t> =
                         else JST_Function([(("_1", None), translate_type t1)], translate_type t2, lp) |> Some
                      | _ -> None)
             end in
-        let is_private = List.contains Private c_flag in        
-        if is_pure_expr expr
-        then
-            let c = JSS_VariableDeclaration([(JGP_Identifier(name, t), Some (translate_expr_pure expr))], JSV_Var) in 
-            if is_private then [c] else [JSS_ExportDefaultDeclaration(JSE_Declaration(c), ExportValue)]
-        else
-            let c = JSS_VariableDeclaration([(JGP_Identifier(name, t), None)], JSV_Var) in
-            let c1 = translate_expr expr (name, t) None in
-            if is_private then [c; c1] else [JSS_ExportDefaultDeclaration(JSE_Declaration(c), ExportValue); c1]
+        let is_private = List.contains Private c_flag in
+        let expr = 
+            (if is_pure_expr expr
+            then
+                [JSS_VariableDeclaration([(JGP_Identifier(name, t), Some (translate_expr_pure expr))], JSV_Var)]
+            else
+                [JSS_VariableDeclaration([(JGP_Identifier(name, t), None)], JSV_Var); 
+                 translate_expr expr (name, t) None]) in
+         if is_private then expr 
+         else expr @ [JSE_Assignment(JGP_Expression(JSE_Member(JSE_Identifier("exports", None), JSPM_Identifier(name, None))), JSE_Identifier(name, None)) |> JSS_Expression]
      in
         List.collect for1 lfunc |> JSS_Block |> JS_Statement |> Some
 
@@ -356,8 +357,8 @@ and translate_expr e var stmt : statement_t =
       let new_fv = ref [] in
       let lexpr = create_pure_args new_fv lexpr in
       let expr = 
-        (match c with
-        | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("_mk_" ^ c, None), lexpr)
+        (match c with        
+        | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("Prims._mk_" ^ c, None), lexpr)
         | _ -> JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String c, ""), JSO_Init)] @
                            List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), x, JSO_Init)) lexpr)) in
       let expr = JSS_Expression(JSE_Assignment(JGP_Identifier(var), expr)) in
@@ -442,7 +443,11 @@ and translate_expr_pure e: expression_t =
 
   | MLE_CTor ((path, c), lexpr) ->      
       (match c with
-      | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("_mk_" ^ c, None), List.map translate_expr_pure lexpr)
+      | x when x = "Cons" || x = "Nil" -> 
+            (match lexpr with
+            | [] -> JSE_Array(None)
+            | hd :: tl -> JSE_Call (JSE_Member(JSE_Array(Some [translate_expr_pure hd]), JSPM_Identifier("concat", None)), List.map translate_expr_pure tl))
+      | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("Prims._mk_" ^ c, None), List.map translate_expr_pure lexpr)
       | _ ->  JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String c, ""), JSO_Init)] @ 
                    List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), translate_expr_pure x, JSO_Init)) lexpr))
 
@@ -488,7 +493,7 @@ and translate_pat p fv_x s1 s2: statement_t =
       let rec translate_p_ctor lp fv_x s1 s2 i =
         let new_fv_x = 
             match c with
-            | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("_get_" ^ c ^ "_" ^ string_of_int i, None), [fv_x])
+            | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("Prims._get_" ^ c ^ "_" ^ string_of_int i, None), [fv_x])
             | _ -> JSE_Member(fv_x, JSPM_Identifier("_" ^ string_of_int i, None)) in
        (match lp with
         | [] -> s1
@@ -497,7 +502,7 @@ and translate_pat p fv_x s1 s2: statement_t =
       in
         let if_cond = 
             match c with
-            | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("_is_" ^ c, None), [fv_x])
+            | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("Prims._is_" ^ c, None), [fv_x])
             | _ -> JSE_Binary(JSB_StrictEqual, JSE_Member(fv_x, JSPM_Identifier("_tag", Some JST_String)), JSE_Literal(JSV_String c, ""))
         in JSS_If(if_cond, translate_p_ctor lp fv_x s1 s2 0, Some s2)
 

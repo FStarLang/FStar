@@ -954,8 +954,8 @@ end
 | FStar_Extraction_JavaScript_Ast.JGP_Assignment (_83_482) -> begin
 (FStar_Format.text "!!")
 end
-| FStar_Extraction_JavaScript_Ast.JGP_Expression (_83_485) -> begin
-(FStar_Format.text "!!")
+| FStar_Extraction_JavaScript_Ast.JGP_Expression (e) -> begin
+(pretty_print_exp e)
 end
 | FStar_Extraction_JavaScript_Ast.JGP_Identifier (id, t) -> begin
 (
@@ -1002,7 +1002,7 @@ FStar_Format.empty
 end)::[])
 in (FStar_Format.reduce _180_415)))
 end
-| _83_506 -> begin
+| _83_505 -> begin
 (FStar_Format.text "!!!")
 end))
 and print_body : FStar_Extraction_JavaScript_Ast.body_t  ->  FStar_Format.doc = (fun _83_15 -> (match (_83_15) with
@@ -1016,7 +1016,7 @@ end
 (let _180_420 = (pretty_print_exp e)
 in (FStar_Format.parens _180_420))
 end))
-and pretty_print_fun : FStar_Extraction_JavaScript_Ast.function_t  ->  FStar_Format.doc = (fun _83_517 -> (match (_83_517) with
+and pretty_print_fun : FStar_Extraction_JavaScript_Ast.function_t  ->  FStar_Format.doc = (fun _83_516 -> (match (_83_516) with
 | (n, pars, body, t, typePars) -> begin
 (
 
