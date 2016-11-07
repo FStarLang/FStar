@@ -406,8 +406,8 @@ let prf_dexor_modifies (#i:id) (#len:u32) (t:state i) (x:domain i{ctr_0 i <^ x.c
    else modifies_x_buffer_1 t x (as_buffer pb) h0 h1
 
 let contains_cipher_block (#i:id) 
-			  (t:PRF.state i) 
-			  (x:PRF.domain i{ctr_0 i <^ x.ctr})
+			  (t:state i) 
+			  (x:domain i{ctr_0 i <^ x.ctr})
 			  (l:u32{ l <=^ blocklen i})
 			  (cipher:lbuffer (v l))
 			  (h:mem{Buffer.live h cipher})
@@ -417,7 +417,7 @@ let contains_cipher_block (#i:id)
       | None -> False 
     else True
 
-let prf_dexor_requires (i:id) (t:PRF.state i) (x:PRF.domain i{ctr_0 i <^ x.ctr}) 
+let prf_dexor_requires (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr}) 
 			      (l:u32 {l <=^ blocklen i})
      			      (cipher:lbuffer (v l)) 
 			      (plain:plainBuffer i (v l))
@@ -429,7 +429,7 @@ let prf_dexor_requires (i:id) (t:PRF.state i) (x:PRF.domain i{ctr_0 i <^ x.ctr})
    Buffer.live h0 cipher /\ 
    contains_cipher_block t x l cipher h0 
 
-let prf_dexor_ensures (i:id) (t:PRF.state i) (x:domain i{ctr_0 i <^ x.ctr}) 
+let prf_dexor_ensures (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr}) 
 		      (l:u32 {l <=^ blocklen i})
      		      (cipher:lbuffer (v l)) 
 		      (plain:plainBuffer i (v l))
@@ -439,13 +439,13 @@ let prf_dexor_ensures (i:id) (t:PRF.state i) (x:domain i{ctr_0 i <^ x.ctr})
    Buffer.live h1 cipher /\
    prf_dexor_modifies t x plain h0 h1 /\
    (safeId i ==>
-     (let r = PRF.itable i t in
+     (let r = itable i t in
       match find_otp (HS.sel h1 r) x with
       | Some (OTP l' p c) -> l == l' /\ p == sel_plain h1 l plain
       | None -> False ))
 
 val prf_dexor: 
-  i:id -> t:PRF.state i -> x:domain i{ctr_0 i <^ x.ctr} -> l:u32 {l <=^ blocklen i} -> 
+  i:id -> t:state i -> x:domain i{ctr_0 i <^ x.ctr} -> l:u32 {l <=^ blocklen i} -> 
   cipher:lbuffer (v l) -> plain:plainBuffer i (v l) -> ST unit
   (requires (fun h0 -> prf_dexor_requires i t x l cipher plain h0))
   (ensures (fun h0 _ h1 -> prf_dexor_ensures i t x l cipher plain h0 h1))
