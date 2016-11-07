@@ -18,6 +18,9 @@ open FStar.DM4F.ST
 
 reifiable reflectable total new_effect_for_free STATE = STATE_h heap
 
+let pre_st = STATE.pre
+let post_st (a:Type) = heap -> a -> heap -> Type0
+
 unfold let lift_pure_state (a:Type) (wp:pure_wp a) (h:heap) (p:STATE.post a) = wp (fun a -> p (a, h))
 sub_effect PURE ~> STATE = lift_pure_state
 
@@ -139,3 +142,30 @@ let rec zero x ghost_heap =
 ////////////////////////////////////////////////////////////////////////////////
 (* #set-options "--print_universes" *)
 (* let bad (r:ref int) = alloc #(unit -> STNull unit) (fun () -> incr r) *)
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////
+let refine_st (#a:Type)
+                (#b:Type)
+                (pre : a -> Tot st_pre)
+                (post : a -> Tot (st_post b))
+                ($f :(x:a -> ST b (pre x) (post x)))
+                (x:a)
+  : ST b (pre x) (fun h0 z h1 -> pre x h0 /\
+                              reify (f x) h0 == (z, h1) /\
+                              post x h0 z h1)
+  = let g (h0:heap)
+      : Pure (b * heap)
+             (pre x h0)
+             (fun (z,h1) -> pre x h0 /\
+                       reify (f x) h0 == (z, h1) /\
+                       post x h0 z h1)
+      = reify (f x) h0
+    in
+    STATE.reflect g
