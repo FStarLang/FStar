@@ -235,8 +235,4 @@ let encode_pad_snoc prefix txt w =
   let prefix' = SeqProperties.snoc prefix (encode w') in
   Seq.lemma_eq_intro w w';
   Seq.lemma_eq_intro txt txt'
-
-
-
-
 *)

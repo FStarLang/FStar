@@ -34,28 +34,26 @@ private val gf128_add_loop:
   a:elemB -> b:elemB {disjoint a b} ->
   dep:u32{U32(dep <=^ len)} -> Stack unit
   (requires (fun h -> live h a /\ live h b))
-  (ensures (fun h0 _ h1 -> 
-    live h0 a /\ live h0 b /\ live h1 a /\ modifies_1 a h0 h1))
+  (ensures  (fun h0 _ h1 -> live h0 a /\ live h0 b /\ live h1 a /\ modifies_1 a h0 h1))
 let rec gf128_add_loop a b dep =
-  if dep = 0ul then assume false
+  if dep = 0ul then ()
   else
     let i = U32 (dep -^ 1ul) in
     gf128_add_loop a b i;
     a.(i) <- a.(i) ^^ b.(i)
-
 
 (* In place addition. Calculate "a + b" and store the result in a. *)
 val gf128_add: a:elemB -> b:elemB {disjoint a b} -> Stack unit
   (requires (fun h -> live h a /\ live h b))
   (ensures (fun h0 _ h1 -> 
     live h0 a /\ live h0 b /\ live h1 a /\ modifies_1 a h0 h1 /\ 
-    as_seq h1 a = as_seq h0 a +@ as_seq h0 b))
+    as_seq h1 a == as_seq h0 a +@ as_seq h0 b))
 let gf128_add a b = 
   let h0 = ST.get() in
   gf128_add_loop a b len;
   let h1 = ST.get() in
-  assume(as_seq h1 a = as_seq h0 a +@ as_seq h0 b)   
-  //16-10-27 todo: functional correctness.
+  assume (as_seq h1 a == as_seq h0 a +@ as_seq h0 b)
+  //16-10-27 TODO: functional correctness.
 
   
 private val gf128_shift_right_loop: a:elemB -> dep:u32{U32(dep <^ len)} -> Stack unit
@@ -131,7 +129,7 @@ val gf128_mul: a:elemB -> b:elemB {disjoint a b} -> Stack unit
   (requires (fun h -> live h a /\ live h b))
   (ensures (fun h0 _ h1 -> 
     live h0 a /\ live h0 b /\ live h1 a /\ modifies_1 a h0 h1 /\ 
-    as_seq h1 a = as_seq h0 a *@ as_seq h0 b ))
+    as_seq h1 a == as_seq h0 a *@ as_seq h0 b ))
 let gf128_mul a b =
   let h0 = ST.get() in
   push_frame();
@@ -140,13 +138,26 @@ let gf128_mul a b =
   blit tmp 0ul a 0ul 16ul;
   pop_frame();
   let h1 = ST.get() in
-  assume(as_seq h1 a = as_seq h0 a *@ as_seq h0 b)   
+  assume(as_seq h1 a == as_seq h0 a *@ as_seq h0 b)
   //16-10-27 todo: functional correctness.
 
-let add_and_multiply a e k = 
-  gf128_add a e;
-  gf128_mul a k
-  
+val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block}
+  -> k:elemB{disjoint acc k /\ disjoint block k} -> Stack unit
+  (requires (fun h -> live h acc /\ live h block /\ live h k))
+  (ensures (fun h0 _ h1 -> live h0 acc /\ live h0 block /\ live h0 k
+    /\ live h1 acc /\ live h1 k
+    /\ modifies_1 acc h0 h1
+    /\ as_seq h1 acc == (as_seq h0 acc +@ as_seq h0 block) *@ as_seq h0 k))
+let add_and_multiply acc block k =
+  gf128_add acc block;
+  gf128_mul acc k
+
+
+val finish: acc:elemB -> s:elemB -> Stack unit
+  (requires (fun h -> live h acc /\ live h s /\ disjoint acc s))
+  (ensures  (fun h0 _ h1 -> live h0 acc /\ live h0 s
+    /\ modifies_1 acc h0 h1 /\ live h1 acc
+    /\ as_seq h1 acc == finish (as_seq h0 acc) (as_seq h0 s)))
 let finish a s = 
   //let _ = IO.debug_print_string "finish a=" in 
   //let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
@@ -162,7 +173,7 @@ let finish a s =
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
-private val ghash_loop_: 
+private val ghash_loop_:
   tag:elemB ->
   auth_key:elemB {disjoint tag auth_key} ->
   str:buffer{disjoint tag str /\ disjoint auth_key tag} ->
@@ -187,7 +198,7 @@ private val ghash_loop:
   (requires (fun h -> live h tag /\ live h auth_key /\ live h str))
   (ensures (fun h0 _ h1 -> live h1 tag /\ live h1 auth_key /\ live h1 str /\ modifies_1 tag h0 h1))
 let rec ghash_loop tag auth_key str len dep =
-  (* Appending zeros if the last block is not a complete one. *)
+  (* Appending zeros if the last block is not complete *)
   let rest = U32(len -^ dep) in 
   if rest <> 0ul then 
   if U32 (16ul >=^ rest) then ghash_loop_ tag auth_key str len dep
