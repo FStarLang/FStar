@@ -217,6 +217,7 @@ OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List
 		tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.ml \
 		tmp/FStar_Buffer_Quantifiers.ml \
 		tmp/Crypto_Symmetric_AES.ml \
+		tmp/Crypto_Symmetric_AES128.ml \
 		tmp/Crypto_Symmetric_Chacha20.ml \
 		tmp/Crypto_Indexing.ml \
 		tmp/Crypto_Symmetric_Cipher.ml \
