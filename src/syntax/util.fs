@@ -879,9 +879,9 @@ let destruct_typ_as_formula f : option<connective> =
                 None 
                 (Inr (lid_as_fv a.action_name Delta_equational None))
                 a.action_univs
-                a.action_typ
+                (arrow a.action_params (mk_Total a.action_typ))
                 Const.effect_Tot_lid
-                a.action_defn in
+                (abs a.action_params a.action_defn None) in
     Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [])
     
 (* Some reification utilities *)

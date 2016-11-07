@@ -254,23 +254,41 @@ effect_definition:
          DefineEffect($2, $3, $5, $7::$8, $9)
       }
 
+effect_decls:
+    |				 { []     }
+    | effect_decl more_effect_decls { $1::$2 }
+
+effect_decl:
+    | ident EQUALS simpleTerm
+        {
+            mk_decl (Tycon ([], [(TyconAbbrev($1, [], None, $3), None)])) (rhs2 parseState 1 3) None
+        }
+
+more_effect_decls:
+    |                                         { []     }
+    | SEMICOLON effect_decl more_effect_decls { $2::$3 }
+
 actions:
  |				    { [] }
- | AND ACTIONS effect_decls	    { $3 }
+ | AND ACTIONS action_decls	    { $3 }
 
-effect_decls:
+action_decls:
  |				 { []     }
- | effect_decl more_effect_decls { $1::$2 }
+ | action_decl more_action_decls { $1::$2 }
  
-effect_decl:
+action_decl:
   | ident EQUALS simpleTerm
     {
         mk_decl (Tycon ([], [(TyconAbbrev($1, [], None, $3), None)])) (rhs2 parseState 1 3) None
     }
+  | ident binders EQUALS simpleTerm
+        {
+            mk_decl (Tycon ([], [(TyconAbbrev($1, $2, None, $4), None)])) (rhs2 parseState 1 3) None
+    }
 
-more_effect_decls:
+more_action_decls:
   |                                         { []     }
-  | SEMICOLON effect_decl more_effect_decls { $2::$3 }
+  | SEMICOLON action_decl more_action_decls { $2::$3 }
 
 
 sub_effect:

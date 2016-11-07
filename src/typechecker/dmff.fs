@@ -505,6 +505,7 @@ let empty env tc_const = {
 type env_ = env
 
 let get_env env = env.env
+let set_env dmff_env env' = { dmff_env with env = env' }
 
 type nm = | N of typ | M of typ
 

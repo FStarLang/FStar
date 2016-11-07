@@ -1445,22 +1445,28 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
         env, List.hd ses::out) (env, []) in
     let binders = Subst.close_binders binders in
     let actions = actions |> List.map (fun d -> match d.d with
-        | Tycon(_, [TyconAbbrev(name, _, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), _]) when not for_free ->
+        | Tycon(_, [TyconAbbrev(name, params, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), _]) when not for_free ->
             // When the effect is not for free, user has to provide a pair of
             // the definition and its cps'd type.
+            let env, params = desugar_binders env params in
+            let params = Subst.close_binders params in
             {
               action_name=Env.qualify env name;
               action_univs=[];
-              action_defn=Subst.close binders (desugar_term env def);
-              action_typ=Subst.close binders (desugar_typ env cps_type)
+              action_params = params;
+              action_defn=Subst.close (binders @ params) (desugar_term env def);
+              action_typ=Subst.close (binders @ params) (desugar_typ env cps_type)
             }
-        | Tycon(_, [TyconAbbrev(name, _, _, defn), _]) when for_free ->
+        | Tycon(_, [TyconAbbrev(name, params, _, defn), _]) when for_free ->
             // When for free, the user just provides the definition and the rest
             // is elaborated
+            let env, params = desugar_binders env params in
+            let params = Subst.close_binders params in
             {
               action_name=Env.qualify env name;
               action_univs=[];
-              action_defn=Subst.close binders (desugar_term env defn);
+              action_params = params;
+              action_defn=Subst.close (binders@params) (desugar_term env defn);
               action_typ=S.tun
             }
         | _ ->
@@ -1581,6 +1587,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn bui
                     // a name of the form FStar.ST.STATE.get
                     action_name = Env.qualify env action.action_name.ident;
                     action_univs = action.action_univs ;
+                    action_params = action.action_params ;
                     action_defn =snd (sub ([], action.action_defn)) ;
                     action_typ =snd (sub ([], action.action_typ))
                 })

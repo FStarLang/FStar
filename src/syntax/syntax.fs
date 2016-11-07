@@ -240,6 +240,7 @@ type sub_eff = {
 type action = {
     action_name:lident;
     action_univs:univ_names;
+    action_params : binders;
     action_defn:term;
     action_typ: typ;
 }
