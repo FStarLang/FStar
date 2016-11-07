@@ -3,20 +3,20 @@ module FStar.DM4F.Continuations
 open FStar.FunctionalExtensionality
 
 
-let kont (ans:Type) (a:Type) : Tot Type = (a -> M ans) -> M ans
+let cont (ans:Type) (a:Type) : Tot Type = (a -> M ans) -> M ans
 
 let return (ans:Type) (a:Type) (x:a) (p : (a -> M ans)) : M ans = p x
 
-let bind (ans:Type) (a:Type) (b:Type) (m : kont ans a) (f : a -> Tot (kont ans b)) (k: b -> M ans) : M ans =
+let bind (ans:Type) (a:Type) (b:Type) (m : cont ans a) (f : a -> Tot (cont ans b)) (k: b -> M ans) : M ans =
                    m (fun (x:a) -> let fx = f x in fx k)
-(* let bind1 a b m f : Tot (kont b) = fun k -> bind a b m f k *)
+(* let bind1 a b m f : Tot (cont b) = fun k -> bind a b m f k *)
 
 (* Sum type with explicit type anotations to bypass current lack of implicit arguments *)
 noeq type either : Type -> Type -> Type =
 | L : (a:Type) -> (b:Type) -> a -> either a b
 | R : (a:Type) -> (b:Type) -> b -> either a b
 
-// Excluded-middle relative to ans : kont (either a (a -> M ans))
+// Excluded-middle relative to ans : cont (either a (a -> M ans))
 // This could eventually be an action for CONT
 // but it does not respect current limitations of DM wrt. sums of C-types
 let em (ans:Type) (a:Type) (k : (either a (a -> M ans)) -> M ans) : M ans =
@@ -27,30 +27,30 @@ let em (ans:Type) (a:Type) (k : (either a (a -> M ans)) -> M ans) : M ans =
 // This could eventually be an action for CONT
 // but it does not respect current limitations of DM wrt. simply-typedness
 // (a and b occurs in the type of the argument f)
-let callcc (ans:Type) (a:Type) (b:Type) (f : ((a -> Tot (kont ans b)) -> Tot (kont ans a))) (k : a -> M ans) : M ans =
+let callcc (ans:Type) (a:Type) (b:Type) (f : ((a -> Tot (cont ans b)) -> Tot (cont ans a))) (k : a -> M ans) : M ans =
   let g (x:a) (k0: b -> M ans) : M ans = k x in
-  let fg : kont ans a = f g in
+  let fg : cont ans a = f g in
   fg k
 
 // This could eventually be an action for CONT
 // but it does not respect current limitations of DM wrt. simply-typedness
 // (a occurs in the type of the argument h)
-let shift (ans:Type) (a:Type) (h : ((a -> Tot (kont ans ans)) -> Tot (kont ans ans))) (k: a -> M ans) : M ans =
+let shift (ans:Type) (a:Type) (h : ((a -> Tot (cont ans ans)) -> Tot (cont ans ans))) (k: a -> M ans) : M ans =
   let f (v:a) (k0:(ans -> M ans)) : M ans = k0 (k v) in
-  let hf : kont ans ans = h f in
+  let hf : cont ans ans = h f in
   let id (x:ans) : M ans = x in
   hf id
 
 // (Error) Bound variables 'id#32998' escapes; add a type annotation
-let reset (ans:Type) (h:(unit -> Tot (kont ans ans))) (k: ans -> M ans) : M ans =
-  let h0 : kont ans ans = h () in
+let reset (ans:Type) (h:(unit -> Tot (cont ans ans))) (k: ans -> M ans) : M ans =
+  let h0 : cont ans ans = h () in
   let id (x:ans) : M ans = x in
   let h1 = (h0 id <: M ans) in
   k h1
 
 reifiable reflectable new_effect_for_free {
   CONT (ans:Type) : a:Type -> Effect
-  with repr = kont ans
+  with repr = cont ans
      ; return = return ans
      ; bind = bind ans
   and effect_actions
