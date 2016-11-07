@@ -55,6 +55,9 @@ let limb_length = function
 inline_for_extraction unfold
 type buffer_of a = b:Buffer.buffer (limb a){Buffer.length b == limb_length a}
 
+// TODO: workaround for #759
+inline_for_extraction type _buffer_of a = buffer_of a
+
 // private?
 noeq type _buffer =
   | B_POLY1305 of buffer_of POLY1305
@@ -65,7 +68,7 @@ abstract type elemB i = b:_buffer
   | POLY1305 -> is_B_POLY1305 b
   | GHASH    -> is_B_GHASH b }
 
-val as_buffer: #i:id -> elemB i -> GTot (buffer_of (alg i))
+val as_buffer: #i:id -> elemB i -> GTot (_buffer_of (alg i))
 let as_buffer #i = function
   | B_POLY1305 b -> b
   | B_GHASH    b -> b
