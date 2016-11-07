@@ -339,7 +339,7 @@ val accumulate:
   aadlen:UInt32.t -> aad:lbuffer (v aadlen) ->
   plainlen:UInt32.t -> cipher:lbuffer (v plainlen) -> StackInline (MAC.itext * MAC.accB i)
   (requires (fun h0 -> 
-    MAC.(Buffer.live h0 st.r /\ norm h0 st.r) /\
+    MAC(Buffer.live h0 st.r /\ norm h0 st.r) /\
     Buffer.live h0 aad /\ Buffer.live h0 cipher))
   (ensures (fun h0 (l,a) h1 -> 
     Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack

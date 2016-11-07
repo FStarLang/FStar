@@ -70,7 +70,7 @@ let lemma_uint32_of_bytes (a:t) (b:t) (c:t) (d:t) : Lemma
 val uint32_of_bytes: b:bytes{length b >= 4} -> STL u32
   (requires (fun h -> live h b))
   (ensures (fun h0 r h1 -> h0 == h1 /\ live h0 b
-    /\ v r = U8.(v (get h0 b 0)
+    /\ v r = U8 (v (get h0 b 0)
 		 + pow2 8 * v (get h0 b 1)
 		 + pow2 16 * v (get h0 b 2)
 		 + pow2 24 * v (get h0 b 3)) ))

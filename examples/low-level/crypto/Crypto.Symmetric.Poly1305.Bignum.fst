@@ -452,8 +452,8 @@ val finalize: b:bigint -> Stack unit
   (ensures (fun h0 _ h1 -> norm h0 b /\ norm h1 b /\ modifies_1 b h0 h1
     /\ eval h1 b norm_length = eval h0 b norm_length % reveal prime))
 let finalize b =
-  let mask_26 = U64.((1uL <<^ 26ul) -^ 1uL) in
-  let mask2_26m5 = U64.(mask_26 -^ (1uL <<^ 2ul)) in
+  let mask_26 = U64 ((1uL <<^ 26ul) -^ 1uL) in
+  let mask2_26m5 = U64 (mask_26 -^ (1uL <<^ 2ul)) in
   let b0 = b.(0ul) in
   let b1 = b.(1ul) in
   let b2 = b.(2ul) in

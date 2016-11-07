@@ -611,7 +611,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 else app
             end
         | None ->
-            raise (Error ("Constructor " ^ l.str ^ " not found", top.range))
+            let l = Env.expand_module_abbrev env l in
+            let env = Env.push_namespace env l in
+            match args with
+            | [ (e, _) ] ->
+                desugar_term_maybe_top top_level env e
+            | _ ->
+                raise (Error("The Foo.Bar (...) local open takes exactly one argument", top.range))
         end
 
     | Sum(binders, t) ->
