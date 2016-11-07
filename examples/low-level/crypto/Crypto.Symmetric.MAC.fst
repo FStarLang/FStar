@@ -52,7 +52,7 @@ let limb_length = function
   | POLY1305 ->  5
   | GHASH    -> 16
 
-inline_for_extraction
+unfold inline_for_extraction
 type buffer_of a = b:Buffer.buffer (limb a){Buffer.length b == limb_length a}
 
 // private?
