@@ -28,7 +28,8 @@ type source_t =
 | JSS_VariableDeclaration of ((pattern_t * expression_t Prims.option) Prims.list * kind_var_t)
 | JSS_DeclareVariable of identifier_t
 | JSS_DeclareFunction of (identifier_t * predicate_t Prims.option)
-| JSS_ExportDefaultDeclaration of export_default_declaration_t 
+| JSS_ExportDefaultDeclaration of export_default_declaration_t
+| JSS_ImportDeclaration of import_declaration_t 
  and expression_t =
 | JSE_This
 | JSE_Array of expression_t Prims.list Prims.option
@@ -174,7 +175,9 @@ source_t Prims.list
  and param_decl_t =
 Prims.string Prims.list 
  and export_default_declaration_t =
-(declaration * export_kind)
+(declaration * export_kind) 
+ and import_declaration_t =
+identifier_t
 
 
 let is_JS_Statement = (fun _discr_ -> (match (_discr_) with
@@ -404,6 +407,15 @@ end))
 
 let is_JSS_ExportDefaultDeclaration = (fun _discr_ -> (match (_discr_) with
 | JSS_ExportDefaultDeclaration (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_JSS_ImportDeclaration = (fun _discr_ -> (match (_discr_) with
+| JSS_ImportDeclaration (_) -> begin
 true
 end
 | _ -> begin
@@ -1581,363 +1593,369 @@ _81_71
 end))
 
 
-let ___JSE_Array____0 = (fun projectee -> (match (projectee) with
-| JSE_Array (_81_74) -> begin
+let ___JSS_ImportDeclaration____0 = (fun projectee -> (match (projectee) with
+| JSS_ImportDeclaration (_81_74) -> begin
 _81_74
 end))
 
 
-let ___JSE_Object____0 = (fun projectee -> (match (projectee) with
-| JSE_Object (_81_77) -> begin
+let ___JSE_Array____0 = (fun projectee -> (match (projectee) with
+| JSE_Array (_81_77) -> begin
 _81_77
 end))
 
 
-let ___JSE_Function____0 = (fun projectee -> (match (projectee) with
-| JSE_Function (_81_80) -> begin
+let ___JSE_Object____0 = (fun projectee -> (match (projectee) with
+| JSE_Object (_81_80) -> begin
 _81_80
 end))
 
 
-let ___JSE_ArrowFunction____0 = (fun projectee -> (match (projectee) with
-| JSE_ArrowFunction (_81_83) -> begin
+let ___JSE_Function____0 = (fun projectee -> (match (projectee) with
+| JSE_Function (_81_83) -> begin
 _81_83
 end))
 
 
-let ___JSE_Sequence____0 = (fun projectee -> (match (projectee) with
-| JSE_Sequence (_81_86) -> begin
+let ___JSE_ArrowFunction____0 = (fun projectee -> (match (projectee) with
+| JSE_ArrowFunction (_81_86) -> begin
 _81_86
 end))
 
 
-let ___JSE_Unary____0 = (fun projectee -> (match (projectee) with
-| JSE_Unary (_81_89) -> begin
+let ___JSE_Sequence____0 = (fun projectee -> (match (projectee) with
+| JSE_Sequence (_81_89) -> begin
 _81_89
 end))
 
 
-let ___JSE_Binary____0 = (fun projectee -> (match (projectee) with
-| JSE_Binary (_81_92) -> begin
+let ___JSE_Unary____0 = (fun projectee -> (match (projectee) with
+| JSE_Unary (_81_92) -> begin
 _81_92
 end))
 
 
-let ___JSE_Assignment____0 = (fun projectee -> (match (projectee) with
-| JSE_Assignment (_81_95) -> begin
+let ___JSE_Binary____0 = (fun projectee -> (match (projectee) with
+| JSE_Binary (_81_95) -> begin
 _81_95
 end))
 
 
-let ___JSE_Update____0 = (fun projectee -> (match (projectee) with
-| JSE_Update (_81_98) -> begin
+let ___JSE_Assignment____0 = (fun projectee -> (match (projectee) with
+| JSE_Assignment (_81_98) -> begin
 _81_98
 end))
 
 
-let ___JSE_Logical____0 = (fun projectee -> (match (projectee) with
-| JSE_Logical (_81_101) -> begin
+let ___JSE_Update____0 = (fun projectee -> (match (projectee) with
+| JSE_Update (_81_101) -> begin
 _81_101
 end))
 
 
-let ___JSE_Conditional____0 = (fun projectee -> (match (projectee) with
-| JSE_Conditional (_81_104) -> begin
+let ___JSE_Logical____0 = (fun projectee -> (match (projectee) with
+| JSE_Logical (_81_104) -> begin
 _81_104
 end))
 
 
-let ___JSE_New____0 = (fun projectee -> (match (projectee) with
-| JSE_New (_81_107) -> begin
+let ___JSE_Conditional____0 = (fun projectee -> (match (projectee) with
+| JSE_Conditional (_81_107) -> begin
 _81_107
 end))
 
 
-let ___JSE_Call____0 = (fun projectee -> (match (projectee) with
-| JSE_Call (_81_110) -> begin
+let ___JSE_New____0 = (fun projectee -> (match (projectee) with
+| JSE_New (_81_110) -> begin
 _81_110
 end))
 
 
-let ___JSE_Member____0 = (fun projectee -> (match (projectee) with
-| JSE_Member (_81_113) -> begin
+let ___JSE_Call____0 = (fun projectee -> (match (projectee) with
+| JSE_Call (_81_113) -> begin
 _81_113
 end))
 
 
-let ___JSE_Yield____0 = (fun projectee -> (match (projectee) with
-| JSE_Yield (_81_116) -> begin
+let ___JSE_Member____0 = (fun projectee -> (match (projectee) with
+| JSE_Member (_81_116) -> begin
 _81_116
 end))
 
 
-let ___JSE_Comprehension____0 = (fun projectee -> (match (projectee) with
-| JSE_Comprehension (_81_119) -> begin
+let ___JSE_Yield____0 = (fun projectee -> (match (projectee) with
+| JSE_Yield (_81_119) -> begin
 _81_119
 end))
 
 
-let ___JSE_Generator____0 = (fun projectee -> (match (projectee) with
-| JSE_Generator (_81_122) -> begin
+let ___JSE_Comprehension____0 = (fun projectee -> (match (projectee) with
+| JSE_Comprehension (_81_122) -> begin
 _81_122
 end))
 
 
-let ___JSE_Let____0 = (fun projectee -> (match (projectee) with
-| JSE_Let (_81_125) -> begin
+let ___JSE_Generator____0 = (fun projectee -> (match (projectee) with
+| JSE_Generator (_81_125) -> begin
 _81_125
 end))
 
 
-let ___JSE_Identifier____0 = (fun projectee -> (match (projectee) with
-| JSE_Identifier (_81_128) -> begin
+let ___JSE_Let____0 = (fun projectee -> (match (projectee) with
+| JSE_Let (_81_128) -> begin
 _81_128
 end))
 
 
-let ___JSE_Literal____0 = (fun projectee -> (match (projectee) with
-| JSE_Literal (_81_131) -> begin
+let ___JSE_Identifier____0 = (fun projectee -> (match (projectee) with
+| JSE_Identifier (_81_131) -> begin
 _81_131
 end))
 
 
-let ___JSE_TypeCast____0 = (fun projectee -> (match (projectee) with
-| JSE_TypeCast (_81_134) -> begin
+let ___JSE_Literal____0 = (fun projectee -> (match (projectee) with
+| JSE_Literal (_81_134) -> begin
 _81_134
 end))
 
 
-let ___JSF_Declaration____0 = (fun projectee -> (match (projectee) with
-| JSF_Declaration (_81_137) -> begin
+let ___JSE_TypeCast____0 = (fun projectee -> (match (projectee) with
+| JSE_TypeCast (_81_137) -> begin
 _81_137
 end))
 
 
-let ___JSF_Expression____0 = (fun projectee -> (match (projectee) with
-| JSF_Expression (_81_140) -> begin
+let ___JSF_Declaration____0 = (fun projectee -> (match (projectee) with
+| JSF_Declaration (_81_140) -> begin
 _81_140
 end))
 
 
-let ___JSPO_Property____0 = (fun projectee -> (match (projectee) with
-| JSPO_Property (_81_143) -> begin
+let ___JSF_Expression____0 = (fun projectee -> (match (projectee) with
+| JSF_Expression (_81_143) -> begin
 _81_143
 end))
 
 
-let ___JSPO_SpreadProperty____0 = (fun projectee -> (match (projectee) with
-| JSPO_SpreadProperty (_81_146) -> begin
+let ___JSPO_Property____0 = (fun projectee -> (match (projectee) with
+| JSPO_Property (_81_146) -> begin
 _81_146
 end))
 
 
-let ___JSPM_Identifier____0 = (fun projectee -> (match (projectee) with
-| JSPM_Identifier (_81_149) -> begin
+let ___JSPO_SpreadProperty____0 = (fun projectee -> (match (projectee) with
+| JSPO_SpreadProperty (_81_149) -> begin
 _81_149
 end))
 
 
-let ___JSPM_Expression____0 = (fun projectee -> (match (projectee) with
-| JSPM_Expression (_81_152) -> begin
+let ___JSPM_Identifier____0 = (fun projectee -> (match (projectee) with
+| JSPM_Identifier (_81_152) -> begin
 _81_152
 end))
 
 
-let ___JST_Nullable____0 = (fun projectee -> (match (projectee) with
-| JST_Nullable (_81_155) -> begin
+let ___JSPM_Expression____0 = (fun projectee -> (match (projectee) with
+| JSPM_Expression (_81_155) -> begin
 _81_155
 end))
 
 
-let ___JST_Function____0 = (fun projectee -> (match (projectee) with
-| JST_Function (_81_158) -> begin
+let ___JST_Nullable____0 = (fun projectee -> (match (projectee) with
+| JST_Nullable (_81_158) -> begin
 _81_158
 end))
 
 
-let ___JST_Object____0 = (fun projectee -> (match (projectee) with
-| JST_Object (_81_161) -> begin
+let ___JST_Function____0 = (fun projectee -> (match (projectee) with
+| JST_Function (_81_161) -> begin
 _81_161
 end))
 
 
-let ___JST_Array____0 = (fun projectee -> (match (projectee) with
-| JST_Array (_81_164) -> begin
+let ___JST_Object____0 = (fun projectee -> (match (projectee) with
+| JST_Object (_81_164) -> begin
 _81_164
 end))
 
 
-let ___JST_Generic____0 = (fun projectee -> (match (projectee) with
-| JST_Generic (_81_167) -> begin
+let ___JST_Array____0 = (fun projectee -> (match (projectee) with
+| JST_Array (_81_167) -> begin
 _81_167
 end))
 
 
-let ___JST_Union____0 = (fun projectee -> (match (projectee) with
-| JST_Union (_81_170) -> begin
+let ___JST_Generic____0 = (fun projectee -> (match (projectee) with
+| JST_Generic (_81_170) -> begin
 _81_170
 end))
 
 
-let ___JST_Intersection____0 = (fun projectee -> (match (projectee) with
-| JST_Intersection (_81_173) -> begin
+let ___JST_Union____0 = (fun projectee -> (match (projectee) with
+| JST_Union (_81_173) -> begin
 _81_173
 end))
 
 
-let ___JST_Typeof____0 = (fun projectee -> (match (projectee) with
-| JST_Typeof (_81_176) -> begin
+let ___JST_Intersection____0 = (fun projectee -> (match (projectee) with
+| JST_Intersection (_81_176) -> begin
 _81_176
 end))
 
 
-let ___JST_Tuple____0 = (fun projectee -> (match (projectee) with
-| JST_Tuple (_81_179) -> begin
+let ___JST_Typeof____0 = (fun projectee -> (match (projectee) with
+| JST_Typeof (_81_179) -> begin
 _81_179
 end))
 
 
-let ___JST_StringLiteral____0 = (fun projectee -> (match (projectee) with
-| JST_StringLiteral (_81_182) -> begin
+let ___JST_Tuple____0 = (fun projectee -> (match (projectee) with
+| JST_Tuple (_81_182) -> begin
 _81_182
 end))
 
 
-let ___JST_NumberLiteral____0 = (fun projectee -> (match (projectee) with
-| JST_NumberLiteral (_81_185) -> begin
+let ___JST_StringLiteral____0 = (fun projectee -> (match (projectee) with
+| JST_StringLiteral (_81_185) -> begin
 _81_185
 end))
 
 
-let ___JST_BooleanLiteral____0 = (fun projectee -> (match (projectee) with
-| JST_BooleanLiteral (_81_188) -> begin
+let ___JST_NumberLiteral____0 = (fun projectee -> (match (projectee) with
+| JST_NumberLiteral (_81_188) -> begin
 _81_188
 end))
 
 
-let ___Unqualified____0 = (fun projectee -> (match (projectee) with
-| Unqualified (_81_191) -> begin
+let ___JST_BooleanLiteral____0 = (fun projectee -> (match (projectee) with
+| JST_BooleanLiteral (_81_191) -> begin
 _81_191
 end))
 
 
-let ___Qualified____0 = (fun projectee -> (match (projectee) with
-| Qualified (_81_194) -> begin
+let ___Unqualified____0 = (fun projectee -> (match (projectee) with
+| Unqualified (_81_194) -> begin
 _81_194
 end))
 
 
-let ___JS_BodyBlock____0 = (fun projectee -> (match (projectee) with
-| JS_BodyBlock (_81_197) -> begin
+let ___Qualified____0 = (fun projectee -> (match (projectee) with
+| Qualified (_81_197) -> begin
 _81_197
 end))
 
 
-let ___JS_BodyExpression____0 = (fun projectee -> (match (projectee) with
-| JS_BodyExpression (_81_200) -> begin
+let ___JS_BodyBlock____0 = (fun projectee -> (match (projectee) with
+| JS_BodyBlock (_81_200) -> begin
 _81_200
 end))
 
 
-let ___JSV_String____0 = (fun projectee -> (match (projectee) with
-| JSV_String (_81_203) -> begin
+let ___JS_BodyExpression____0 = (fun projectee -> (match (projectee) with
+| JS_BodyExpression (_81_203) -> begin
 _81_203
 end))
 
 
-let ___JSV_Boolean____0 = (fun projectee -> (match (projectee) with
-| JSV_Boolean (_81_206) -> begin
+let ___JSV_String____0 = (fun projectee -> (match (projectee) with
+| JSV_String (_81_206) -> begin
 _81_206
 end))
 
 
-let ___JSV_Number____0 = (fun projectee -> (match (projectee) with
-| JSV_Number (_81_209) -> begin
+let ___JSV_Boolean____0 = (fun projectee -> (match (projectee) with
+| JSV_Boolean (_81_209) -> begin
 _81_209
 end))
 
 
-let ___JSV_RegExp____0 = (fun projectee -> (match (projectee) with
-| JSV_RegExp (_81_212) -> begin
+let ___JSV_Number____0 = (fun projectee -> (match (projectee) with
+| JSV_Number (_81_212) -> begin
 _81_212
 end))
 
 
-let ___JSP_Declared____0 = (fun projectee -> (match (projectee) with
-| JSP_Declared (_81_215) -> begin
+let ___JSV_RegExp____0 = (fun projectee -> (match (projectee) with
+| JSV_RegExp (_81_215) -> begin
 _81_215
 end))
 
 
-let ___JGP_Object____0 = (fun projectee -> (match (projectee) with
-| JGP_Object (_81_218) -> begin
+let ___JSP_Declared____0 = (fun projectee -> (match (projectee) with
+| JSP_Declared (_81_218) -> begin
 _81_218
 end))
 
 
-let ___JGP_Array____0 = (fun projectee -> (match (projectee) with
-| JGP_Array (_81_221) -> begin
+let ___JGP_Object____0 = (fun projectee -> (match (projectee) with
+| JGP_Object (_81_221) -> begin
 _81_221
 end))
 
 
-let ___JGP_Assignment____0 = (fun projectee -> (match (projectee) with
-| JGP_Assignment (_81_224) -> begin
+let ___JGP_Array____0 = (fun projectee -> (match (projectee) with
+| JGP_Array (_81_224) -> begin
 _81_224
 end))
 
 
-let ___JGP_Identifier____0 = (fun projectee -> (match (projectee) with
-| JGP_Identifier (_81_227) -> begin
+let ___JGP_Assignment____0 = (fun projectee -> (match (projectee) with
+| JGP_Assignment (_81_227) -> begin
 _81_227
 end))
 
 
-let ___JGP_Expression____0 = (fun projectee -> (match (projectee) with
-| JGP_Expression (_81_230) -> begin
+let ___JGP_Identifier____0 = (fun projectee -> (match (projectee) with
+| JGP_Identifier (_81_230) -> begin
 _81_230
 end))
 
 
-let ___JSP_SpreadProperty____0 = (fun projectee -> (match (projectee) with
-| JSP_SpreadProperty (_81_233) -> begin
+let ___JGP_Expression____0 = (fun projectee -> (match (projectee) with
+| JGP_Expression (_81_233) -> begin
 _81_233
 end))
 
 
-let ___JSP_Property____0 = (fun projectee -> (match (projectee) with
-| JSP_Property (_81_236) -> begin
+let ___JSP_SpreadProperty____0 = (fun projectee -> (match (projectee) with
+| JSP_SpreadProperty (_81_236) -> begin
 _81_236
 end))
 
 
-let ___JSO_Literal____0 = (fun projectee -> (match (projectee) with
-| JSO_Literal (_81_239) -> begin
+let ___JSP_Property____0 = (fun projectee -> (match (projectee) with
+| JSP_Property (_81_239) -> begin
 _81_239
 end))
 
 
-let ___JSO_Identifier____0 = (fun projectee -> (match (projectee) with
-| JSO_Identifier (_81_242) -> begin
+let ___JSO_Literal____0 = (fun projectee -> (match (projectee) with
+| JSO_Literal (_81_242) -> begin
 _81_242
 end))
 
 
-let ___JSO_Computed____0 = (fun projectee -> (match (projectee) with
-| JSO_Computed (_81_245) -> begin
+let ___JSO_Identifier____0 = (fun projectee -> (match (projectee) with
+| JSO_Identifier (_81_245) -> begin
 _81_245
 end))
 
 
-let ___JSE_Declaration____0 = (fun projectee -> (match (projectee) with
-| JSE_Declaration (_81_248) -> begin
+let ___JSO_Computed____0 = (fun projectee -> (match (projectee) with
+| JSO_Computed (_81_248) -> begin
 _81_248
 end))
 
 
-let ___JSE_Expression____0 = (fun projectee -> (match (projectee) with
-| JSE_Expression (_81_251) -> begin
+let ___JSE_Declaration____0 = (fun projectee -> (match (projectee) with
+| JSE_Declaration (_81_251) -> begin
 _81_251
+end))
+
+
+let ___JSE_Expression____0 = (fun projectee -> (match (projectee) with
+| JSE_Expression (_81_254) -> begin
+_81_254
 end))
 
 

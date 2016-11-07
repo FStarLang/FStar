@@ -42,6 +42,7 @@ and statement_t =
     | JSS_DeclareVariable of identifier_t
     | JSS_DeclareFunction of identifier_t * option<predicate_t>
     | JSS_ExportDefaultDeclaration of export_default_declaration_t
+    | JSS_ImportDeclaration of import_declaration_t
     
 and expression_t =
     | JSE_This
@@ -170,3 +171,6 @@ and declaration =
 and export_kind = 
     | ExportType
     | ExportValue
+
+(* add support only for import * as ".." from ".." *)
+and import_declaration_t = identifier_t

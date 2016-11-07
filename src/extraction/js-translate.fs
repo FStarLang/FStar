@@ -171,11 +171,10 @@ and translate_module (module_name, modul, _): file =
     | Some (_signature, decls) ->
         current_module_name := String.concat "_" module_name;
         let res = List.filter_map translate_decl decls in
-        let create_module_exports =
-            let require_f m = JSE_Call (JSE_Identifier("require", None), [JSE_Literal(JSV_String( "./" ^ m), "")]) in
-            List.map (fun m -> JSS_VariableDeclaration([(JGP_Identifier(m, None), Some (require_f m))], JSV_Var)) (!export_modules)
-            |> JSS_Block |> JS_Statement
-        in [create_module_exports] @ res
+        let create_module_imports =
+            List.map (fun m -> JSS_ImportDeclaration (m, None)) (!export_modules)
+                |> JSS_Block |> JS_Statement
+        in [create_module_imports] @ res
     | _ ->
         failwith "Unexpected standalone interface or nested modules"
   in
@@ -200,17 +199,16 @@ and translate_decl d: option<source_t> =
                         if unit_b then None
                         else JST_Function([(("_1", None), translate_type t1)], translate_type t2, lp) |> Some
                      | _ -> None)
-            end in
-        let is_private = List.contains Private c_flag in
-        let expr = 
-            (if is_pure_expr expr
-            then
-                [JSS_VariableDeclaration([(JGP_Identifier(name, t), Some (translate_expr_pure expr))], JSV_Var)]
-            else
-                [JSS_VariableDeclaration([(JGP_Identifier(name, t), None)], JSV_Var); 
-                 translate_expr expr (name, t) None]) in
-         if is_private then expr 
-         else expr @ [JSE_Assignment(JGP_Expression(JSE_Member(JSE_Identifier("exports", None), JSPM_Identifier(name, None))), JSE_Identifier(name, None)) |> JSS_Expression]
+            end in        
+        let is_private = List.contains Private c_flag in        
+        if is_pure_expr expr
+        then
+            let c = JSS_VariableDeclaration([(JGP_Identifier(name, t), Some (translate_expr_pure expr))], JSV_Var) in
+            if is_private then [c] else [JSS_ExportDefaultDeclaration(JSE_Declaration(c), ExportValue)]
+        else
+            let c = JSS_VariableDeclaration([(JGP_Identifier(name, t), None)], JSV_Var) in
+            let c1 = translate_expr expr (name, t) None in
+            if is_private then [c; c1] else [JSS_ExportDefaultDeclaration(JSE_Declaration(c), ExportValue); c1]
      in
         List.collect for1 lfunc |> JSS_Block |> JS_Statement |> Some
 
@@ -343,12 +341,17 @@ and translate_expr e var stmt : statement_t =
       (match stmt with | Some v -> JSS_Block(c @ [v]) | None -> JSS_Block(c))
 
   | MLE_Seq ls ->
-      let c = List.map (fun x -> translate_expr x var None) ls in
-      (match stmt with | Some v -> JSS_Block(c @ [v]) | None -> JSS_Block(c))
+      let rec translate_seq l = 
+        match l with
+        | [] -> failwith "Empty list in [MLE_Seq]"
+        | [x] -> translate_expr x var None
+        | hd :: tl -> translate_expr hd ("_", None)  (Some(translate_seq tl)) in
+       let c = translate_seq ls in
+      (match stmt with | Some v -> JSS_Block([c; v]) | None -> JSS_Block([c]))
 
   | MLE_App (e, args) ->
       let new_fv = ref [] in
-      let args = create_pure_args new_fv args in
+      let args = create_pure_args new_fv args in      
       let expr = JSS_Expression(JSE_Assignment(JGP_Identifier(var), translate_arg_app e args)) in
       let c = !new_fv @ [expr] in
       (match stmt with | Some v -> JSS_Block(c @ [v]) | None -> JSS_Block(c))
@@ -394,7 +397,8 @@ and create_pure_args new_fv args =
     | MLE_CTor ((path, c), _) when c = "Nil" || c = "None" ->
         JSE_TypeCast(translate_expr_pure x, translate_type x.mlty)
     | _ ->
-        if is_pure_expr x then translate_expr_pure x
+        if is_pure_expr x
+        then translate_expr_pure x
         else 
             let fv_x = Absyn.Util.gensym() in
             new_fv := List.append !new_fv

@@ -39,7 +39,7 @@ let escape_char fallback = function
 
 let remove_chars_t s = String.collect (escape_char string_of_char) s
 
-let print_op_un:op_un -> doc = function
+let print_op_un = function
     | JSU_Minus -> text "-"
     | JSU_Plus -> text "+"
     | JSU_Not -> text "!"
@@ -140,6 +140,9 @@ and pretty_print_statement (p:statement_t) : doc =
     | JSS_DeclareVariable _ -> semi (*!!!*)
     | JSS_DeclareFunction _ -> semi (*!!!*)
     | JSS_ExportDefaultDeclaration (d, k) -> reduce [print_exp_kind k; print_declaration d]
+    | JSS_ImportDeclaration d ->
+        reduce [text "import * as "; text (jstr_escape (fst d));
+                text " from "; text "\"./"; text (jstr_escape (fst d)); text "\""; text ";"]
 
   in reduce [(f p); hardline]
 
@@ -173,7 +176,10 @@ and pretty_print_exp = function
     | JSE_Sequence(e) -> reduce [ List.map pretty_print_exp e |> combine semi]
     | JSE_Unary(o,e) -> reduce [print_op_un o; pretty_print_exp e]
     | JSE_Binary(o,e1,e2) -> reduce [text "("; pretty_print_exp e1; print_op_bin o; pretty_print_exp e2; text ")"]
-    | JSE_Assignment(p,e) -> reduce [print_pattern p false; text "="; pretty_print_exp e]
+    | JSE_Assignment(p,e) ->
+        (match p with
+        | JGP_Identifier (n, _) when n = "_" -> pretty_print_exp e
+        | _ -> reduce [print_pattern p false; text "="; pretty_print_exp e])
     | JSE_Update(o,e,b) -> semi (*!!!*)
     | JSE_Logical(o,e1,e2) ->  reduce [pretty_print_exp e1; print_op_log o; pretty_print_exp e2]
     | JSE_Conditional(c,e,f) -> semi (*!!!*)
@@ -305,3 +311,4 @@ and pretty_print_fun (n, pars, body, t, typePars) =
     let returnT = match t with | Some v -> reduce [text ":"; ws; print_typ v] | None -> empty in
     reduce [text "function"; ws; name; print_decl_t typePars; parens (List.map (fun p -> print_pattern p true) pars |> combine comma); returnT;
             text "{";  hardline; print_body body; text "}"]
+    
