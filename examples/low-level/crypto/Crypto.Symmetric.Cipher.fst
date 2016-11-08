@@ -27,14 +27,40 @@ inline_for_extraction let blocklen = function
 
 inline_for_extraction let ivlen (a:alg) = 12ul 
 
+// Initialization function
+// AES: S-box (256) + expanded key 4*nb*(nr+1)
+// ChaCha20: only the key
+inline_for_extraction let statelen = function
+  | AES128   -> 432ul // 256 + 176
+  | AES256   -> 496ul // 256 + 240
+  | CHACHA20 -> 32ul
+
 type ctr = UInt32.t
 
 type key a   = lbuffer (v (keylen a))
 type block a = lbuffer (v (blocklen a))
+type state a = lbuffer (v (statelen a))
 
 // 16-10-02 an integer value, instead of a lbuffer (v (ivlen)),
 // so that it can be used both in abstract indexes and in real code.
 type iv a    = n:UInt128.t { UInt128.v n < pow2 (v (8ul *^ ivlen a)) } 
+
+let init (#a:alg) (k:key a) (s:state a) =
+  match a with
+  | CHACHA20 ->
+    Buffer.blit k 0ul s 0ul (keylen a)
+  | AES128 ->
+    let open Crypto.Symmetric.AES128 in
+    let sbox = Buffer.sub s 0ul 256ul in
+    let w = Buffer.sub s 256ul 176ul in
+    mk_sbox sbox;
+    keyExpansion k w sbox
+  | AES256 ->
+    let open Crypto.Symmetric.AES in
+    let sbox = Buffer.sub s 0ul 256ul in
+    let w = Buffer.sub s 256ul 240ul in
+    mk_sbox sbox;
+    keyExpansion k w sbox    
 
 // type ivv a   = lbytes (v (ivlen a))
 // let load_iv a (i: iv a) : ivv a = Plain.load_bytes (ivlen a) i
@@ -57,17 +83,17 @@ let aes_store_counter b x =
 val compute:
   a: alg ->
   output:buffer -> 
-  k:key a {disjoint output k} ->
+  st:state a {disjoint output st} ->
   n:iv a ->
   counter: ctr ->
   len:UInt32.t { len <=^  blocklen a /\ v len <= length output} -> STL unit
-    (requires (fun h -> live h k /\ live h output))
+    (requires (fun h -> live h st /\ live h output))
     (ensures (fun h0 _ h1 -> live h1 output /\ modifies_1 output h0 h1
       ))
 
 #reset-options "--z3timeout 10000" 
 
-let compute a output k n counter len = 
+let compute a output st n counter len = 
   assume False; //16-10-02 TODO not sure what's going on
   push_frame();
   begin match a with 
@@ -75,21 +101,15 @@ let compute a output k n counter len =
       let open Crypto.Symmetric.Chacha20 in 
       let nbuf = Buffer.create 0uy (ivlen CHACHA20) in
       store_uint128 (ivlen CHACHA20) nbuf n;
-      chacha20 output k nbuf counter len
+      chacha20 output st nbuf counter len
 
   // ADL: TODO single parametric AES module
   | AES128 ->
       let open Crypto.Symmetric.AES128 in
-
-      // all of this should be hoisted.
-      let sbox = create 0uy 256ul in
-      let w: xkey = Buffer.create 0uy (4ul *^ nb *^ (nr+^1ul)) in
-      mk_sbox sbox;
-      keyExpansion k w sbox;
+      let sbox = Buffer.sub st 0ul 256ul in
+      let w = Buffer.sub st 256ul 176ul in
       let ctr_block = Buffer.create 0uy (blocklen AES128) in
       store_uint128 (ivlen AES128) (Buffer.sub ctr_block 0ul (ivlen AES128)) n;
-      // blit n 0ul ctr_block 0ul 12ul;
-
       aes_store_counter ctr_block counter;
       let output_block = Buffer.create 0uy (blocklen AES128) in
       cipher output_block ctr_block w sbox;
@@ -97,16 +117,10 @@ let compute a output k n counter len =
 
   | AES256 -> 
       let open Crypto.Symmetric.AES in 
-
-      // all of this should be hoisted. 
-      let sbox = create 0uy 256ul in 
-      let w: xkey = Buffer.create 0uy (4ul *^ nb *^ (nr+^1ul)) in
-      mk_sbox sbox; 
-      keyExpansion k w sbox; 
+      let sbox = Buffer.sub st 0ul 256ul in
+      let w = Buffer.sub st 256ul 240ul in
       let ctr_block = Buffer.create 0uy (blocklen AES256) in 
       store_uint128 (ivlen AES256) (Buffer.sub ctr_block 0ul (ivlen AES256)) n;
-      // blit n 0ul ctr_block 0ul 12ul;
-
       aes_store_counter ctr_block counter; 
       let output_block = Buffer.create 0uy (blocklen AES256) in 
       cipher output_block ctr_block w sbox;
