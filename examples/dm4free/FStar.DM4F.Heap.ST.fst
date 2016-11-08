@@ -52,7 +52,7 @@ let alloc (#a:Type) (init:a)
       r
 
 (* Reading, aka dereference *)
-let read (#a:Type) (r:ref a)
+reifiable let read (#a:Type) (r:ref a)
     : ST a
   	 (requires (fun h -> h `contains_a_well_typed` r))
 	 (ensures (fun h0 v h1 ->
@@ -61,10 +61,10 @@ let read (#a:Type) (r:ref a)
 		        /\  sel h1 r == v))                  //returns the contents of r
    = let h0 = STATE.get () in
      sel h0 r
-let (!) = read
+reifiable let (!) = read
 
 (* Writing, aka assignment *)
-let write (#a:Type) (r:ref a) (v:a)
+reifiable let write (#a:Type) (r:ref a) (v:a)
     : ST unit
   	 (requires (fun h -> h `contains_a_well_typed` r))
 	 (ensures (fun h0 _ h1 ->
@@ -73,7 +73,7 @@ let write (#a:Type) (r:ref a) (v:a)
 		  /\  h1 == upd h0 r v))               //and is updated at location r only
     = let h0 = STATE.get () in
       STATE.put (upd h0 r v)
-let op_Colon_Equals = write
+reifiable let op_Colon_Equals = write
 
 ////////////////////////////////////////////////////////////////////////////////
 //A simple example using the local state operations
@@ -151,10 +151,41 @@ let rec zero x ghost_heap =
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+
+(* val ghost_reify : a:Type -> wp:(STATE.wp a) -> (unit -> STATE a wp) -> Tot (STATE.repr a wp) *)
+(* let ghost_reify a wp f = reify (f ()) *)
+(* Bogus error:
+./FStar.DM4F.Heap.ST.fst(157,17-157,18) : (Error) Expected expression of type "(STATE_repr<n158855> a wp)";
+got expression "a" of type "Type(n158855)" *)
+
+(* let ghost_reify (#a:Type) (#wp:STATE.wp a) f = reify (f ()) *)
+
+(* let ghost_reify (a:Type) (wp:(STATE.wp a)) (f:(unit -> STATE a wp)) : GTot (STATE.repr a wp) = reify (f ()) *)
+
+(* let refine_st (#a:Type) *)
+(*                 (#b:Type) *)
+(*                 (pre : a -> Tot pre_st) *)
+(*                 (post : a -> Tot (post_st b)) *)
+(*                 ($f :(x:a -> ST b (pre x) (post x))) *)
+(*                 (x:a) *)
+(*   : ST b (pre x) (fun h0 z h1 -> pre x h0 /\ *)
+(*                               ghost_reify (fun _ -> f x) h0 == (z, h1) /\ *)
+(*                               post x h0 z h1) *)
+(*   = let g (h0:heap) *)
+(*       : Pure (b * heap) *)
+(*              (pre x h0) *)
+(*              (fun (z,h1) -> pre x h0 /\ *)
+(*                        ghost_reify (fun _ -> f x) h0 == (z, h1) /\ *)
+(*                        post x h0 z h1) *)
+(*       = reify (f x) h0 *)
+(*     in *)
+(*     STATE.reflect g *)
+
 let refine_st (#a:Type)
                 (#b:Type)
-                (pre : a -> Tot st_pre)
-                (post : a -> Tot (st_post b))
+                (#pre : a -> Tot pre_st)
+                (#post : a -> Tot (post_st b))
                 ($f :(x:a -> ST b (pre x) (post x)))
                 (x:a)
   : ST b (pre x) (fun h0 z h1 -> pre x h0 /\
@@ -169,3 +200,31 @@ let refine_st (#a:Type)
       = reify (f x) h0
     in
     STATE.reflect g
+
+reifiable let incr' (r:ref int)
+    :  ST unit
+	  (requires (fun h -> h `contains_a_well_typed` r))
+	  (ensures (fun h0 s h1 -> h1 `contains_a_well_typed` r))
+    = r := !r + 1
+
+(* let incr_increases (s0:heap) = assert (snd (reify (incr'()) s0) = s0 + 1) *)
+
+(* #reset-options *)
+(* let yyy (r:ref int) (h0:heap) *)
+(*   : Lemma (requires (h0 `contains_a_well_typed` r)) *)
+(*      (ensures (h0 `contains_a_well_typed` r ==> *)
+(*                sel (snd (reify (incr' r) h0)) r == sel h0 r + 1)) = () *)
+
+let xxx (_:unit) : STNull unit =
+  let r = alloc 42 in
+  let i = !r in
+  let h0 = STATE.get() in
+  refine_st incr' r;
+  let h1 = STATE.get() in
+  assert(reify (incr' r) h0 == ((), h1));
+  (* assert(sel h1 r == sel h0 r + 1); *)
+  assert(h1 `contains_a_well_typed` r);
+  let j = !r in
+  (* assert(i < j); *)
+  (* assert(sel h0 r < sel h1 r);*)
+  ()

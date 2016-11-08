@@ -105,3 +105,35 @@ let reflect_on_the_fly u =
   let n1 = STINT.get () in
   assert (n0 + 2 = n1);
   n1
+
+let refine_st (#a:Type)
+                (#b:Type)
+                (#pre : a -> Tot STINT.pre)
+                (#post : a -> Tot (int -> b -> int -> Tot Type0))
+                ($f :(x:a -> StInt b (pre x) (post x)))
+                (x:a)
+  : StInt b (pre x) (fun h0 z h1 -> pre x h0 /\
+                              reify (f x) h0 == (z, h1) /\
+                              post x h0 z h1)
+  = let g (h0:int)
+      : Pure (b * int)
+             (pre x h0)
+             (fun (z,h1) -> pre x h0 /\
+                       reify (f x) h0 == (z, h1) /\
+                       post x h0 z h1)
+      = reify (f x) h0
+    in
+    STINT.reflect g
+
+reifiable val incr' : unit -> 
+  StInt unit (requires (fun _ -> True))
+             (ensures (fun _ _ _ -> True))
+let incr' u =
+  let n = STINT.get() in
+  STINT.put (n + 1)
+
+let xxx (_:unit) : StNull unit =
+  let n0 = STINT.get() in
+  refine_st incr' ();
+  let n1 = STINT.get() in
+  assert(n1 == n0 + 1)
