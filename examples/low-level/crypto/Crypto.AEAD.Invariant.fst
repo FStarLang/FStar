@@ -42,6 +42,9 @@ noeq type entry (i:id) =
       c:cipher i (Seq.length (as_bytes p)) -> 
       entry i
 
+let find_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i)) : option (entry i) = 
+  SeqProperties.seq_find (fun e -> e.nonce = n) entries
+
 noeq type state (i:id) (rw:rw) =
   | State:
       #log_region: rgn -> // this is the *writer* region; the reader allocates nothing

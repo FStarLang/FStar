@@ -28,9 +28,6 @@ let aead_entries i = Seq.seq (entry i)
 
 module Cipher = Crypto.Symmetric.Cipher
 
-let find_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i)) : option (entry i) = 
-  SeqProperties.seq_find (fun e -> e.nonce = n) entries
-
 let find_entry_last (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i){Seq.length entries > 0})
   : Lemma (let tl, last = SeqProperties.split entries (Seq.length entries - 1) in
 	   let last = Seq.index last 0 in

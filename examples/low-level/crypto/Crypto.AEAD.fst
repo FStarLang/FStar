@@ -104,6 +104,16 @@ let alog_fresh (#a:Type0) h0 h1 (r:HS.reference a) =
     h1 `HS.contains` r /\
   ~ (h0 `HS.contains` r)
 
+let accumulate_encoded (#i:CMA.id)
+ 		       (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
+		       (#plainlen:txtlen_32) (cipher:lbuffer (v plainlen))
+		       (a:CMA.accBuffer i) (h:mem{mac_log}) =
+    Buffer.live h aad /\			 
+    Buffer.live h cipher /\			     
+    h `HS.contains` (CMA.alog a) /\
+    HS.sel h (CMA.alog a) ==
+    encode_both (fst i) aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher)
+
 let accumulate_ensures (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lbuffer (v aadlen))
 		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
 		       (h0:mem) (a:CMA.accBuffer i) (h1:mem) =
@@ -115,9 +125,8 @@ let accumulate_ensures (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lb
   CMA.acc_inv st a h1 /\
   (mac_log ==> 
     alog_fresh h0 h1 (CMA.alog a) /\
-    FStar.HyperStack.sel h1 (CMA.alog a) ==
-    encode_both (fst i) aadlen (Buffer.as_seq h1 aad) txtlen (Buffer.as_seq h1 cipher))
-
+    accumulate_encoded aad cipher a h1)
+    
 let accumulate_wrapper (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lbuffer (v aadlen))
 		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen)) 
    : StackInline (CMA.accBuffer i)
@@ -682,7 +691,7 @@ let rec frame_refines' (i:id{safeId i}) (mac_rgn:region)
 	   (decreases (Seq.length entries))
    = admit()
 
-let frame_myinv_push (i:id) (st:state i Writer) (h:mem) (h1:mem)
+let frame_myinv_push (#i:id) (#rw:rw) (st:state i rw) (h:mem) (h1:mem)
    : Lemma (requires (my_inv st h /\ 
 		      HS.fresh_frame h h1))
 	   (ensures (my_inv st h1))
@@ -754,7 +763,7 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let h_init = get() in
   push_frame();
   let h0 = get () in
-  frame_myinv_push i st h_init h0;
+  frame_myinv_push st h_init h0;
   assert (HH.modifies_rref st.prf.mac_rgn TSet.empty (HS h_init.h) (HS h0.h));
   assert (HS (is_stack_region h0.tip));
   assert (HS (HH.disjoint h0.tip st.log_region));
