@@ -171,7 +171,7 @@ CHACHA_AEAD_ODIR=chacha_aead
 
 chacha-aead-extract: ulib
 	mkdir -p $(CHACHA_AEAD_ODIR)
-	$(FSTAR_EXTRACT) crypto/Crypto.Test.fst --odir $(CHACHA_AEAD_ODIR)
+	$(FSTAR_EXTRACT) crypto/Crypto.Test.fst --odir $(CHACHA_AEAD_ODIR) --__temp_no_proj Crypto.Symmetric.MAC
 #	@sed -i.bak 's/^let mod.*/ /g' $(CHACHA_AEAD_ODIR)/FStar_UInt.ml ##HACK!--need to fix #310
 
 chacha-aead-compile: chacha-aead-extract
@@ -217,6 +217,7 @@ OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List
 		tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.ml \
 		tmp/FStar_Buffer_Quantifiers.ml \
 		tmp/Crypto_Symmetric_AES.ml \
+		tmp/Crypto_Symmetric_AES128.ml \
 		tmp/Crypto_Symmetric_Chacha20.ml \
 		tmp/Crypto_Indexing.ml \
 		tmp/Crypto_Symmetric_Cipher.ml \

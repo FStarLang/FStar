@@ -310,7 +310,7 @@ let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
     /\ U64.v n3 == v (get h s 12) + pow2 8 * v (get h s 13) + pow2 16 * v (get h s 14) + pow2 24 * v (get h s 15)))
   (ensures  (live h b /\ live h s /\ v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 == little_endian (sel_word h s)))
   = Crypto.Symmetric.Poly1305.Lemmas.lemma_toField_1 s h n0 n1 n2 n3
-    
+
 #set-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
 
 val upd_elemB: b:elemB{length b == norm_length} -> n0:U64.t -> n1:U64.t -> n2:U64.t -> n3:U64.t -> n4:U64.t -> Stack unit
@@ -569,7 +569,7 @@ let upd_wordB_16 s s0 s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 =
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
 
-val trunc1305: a:elemB -> b:wordB_16{disjoint a b} -> ST unit
+val trunc1305: a:elemB -> b:wordB_16{disjoint a b} -> Stack unit
   (requires (fun h -> norm h a /\ live h b /\ disjoint a b))
   (ensures  (fun h0 _ h1 -> norm h0 a /\ live h1 a /\ live h1 b
     /\ modifies_2 a b h0 h1
@@ -922,17 +922,26 @@ let add_word a b =
 
 (* Finish function, with final accumulator value *)
 val poly1305_finish:
-  tag:wordB_16 -> acc:elemB -> s:wordB_16 -> ST unit
+  tag:wordB_16 -> acc:elemB -> s:wordB_16 -> Stack unit
   (requires (fun h -> live h tag /\ live h acc /\ live h s
     /\ norm h acc
     /\ disjoint tag acc /\ disjoint tag s /\ disjoint acc s))
   (ensures  (fun h0 _ h1 -> live h0 acc /\ live h0 s
     /\ modifies_2 tag acc h0 h1 /\ live h1 acc /\ live h1 tag
-    /\ little_endian (sel_word h1 tag) ==
-      (trunc_1305 (sel_elem h0 acc) + little_endian (sel_word h0 s)) % pow2 128))
+    /\ sel_word h1 tag == finish (sel_elem h0 acc) (sel_word h0 s)))
+//    /\ little_endian (sel_word h1 tag) ==
+//        (trunc_1305 (sel_elem h0 acc) + little_endian (sel_word h0 s)) % pow2 128))
 let poly1305_finish tag acc s =
+  let h0 = ST.get () in
   trunc1305 acc tag;
-  add_word tag s
+  add_word tag s;
+  let h1 = ST.get () in
+  let t0 = sel_word h1 tag in
+  let t1 = finish (sel_elem h0 acc) (sel_word h0 s) in
+  Seq.lemma_eq_intro t0 (Seq.slice t0 0 16);
+  Seq.lemma_eq_intro t1 (Seq.slice t1 0 16);
+  lemma_little_endian_is_injective t0 t1 16
+
 
 (*
 val div_aux: a:UInt32.t -> b:UInt32.t{w b <> 0} -> Lemma
@@ -985,5 +994,4 @@ let poly1305_mac tag msg len key =
   (* Finish *)
   poly1305_finish tag acc (sub key 16ul 16ul); // should be s
   pop_frame()
-
 *)

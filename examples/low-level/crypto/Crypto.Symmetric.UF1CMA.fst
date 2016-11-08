@@ -59,12 +59,12 @@ let akey (rgn:rid) (i:id) =
   // using a sum type for kremlin; was:
   // if skeyed i then skey rgn i else unit
 
-val get_skey: #r:rid -> #i:id{skeyed i} -> akey r i -> Tot(skey r i)
+val get_skey: #r:rid -> #i:id{skeyed i} -> akey r i -> Tot (skey r i)
 let get_skey #rgn #i (Some k) = k
 
 val akey_gen: r:rid -> i:id -> STL(akey r i)
   (requires (fun h0 -> True))
-  (ensures (fun h0 r h1 -> Buffer.modifies_0 h0 h1))
+  (ensures  (fun h0 r h1 -> Buffer.modifies_0 h0 h1))
 
 val akey_coerce: r:rid -> i:id -> kb: lbuffer(UInt32.v (skeylen i)) -> STL(akey r i)
   (requires (fun h0 -> True))
