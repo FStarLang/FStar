@@ -292,7 +292,9 @@ ocaml-test.exe: ocaml-test-extract
 	./ocaml-test.exe
 
 test-perf.exe: krml-test.exe crypto/test_perf.c
-	$(CC) -o test-perf.exe $(OBJ_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c $(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c crypto/test_perf.c -I tmp -I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test
+	$(CC) -o test-perf.exe $(OBJ_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
+		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c crypto/test_perf.c -I tmp \
+		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test -lcrypto 
 	./test-perf.exe
 
 # Cleaning
