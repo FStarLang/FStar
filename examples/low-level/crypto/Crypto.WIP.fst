@@ -109,17 +109,81 @@ let dexor_modifies_widen (#i:id) (#len:u32) (t:PRF.state i)
            Buffer.lemma_intro_modifies_1 (Plain.as_buffer pb) h0 h1)
      else ()
 
-let iv_sub_table_counterblocks (#i:id) (n:Cipher.iv (alg i)) (t:PRF.state i)
-			       (#len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
-			       (plain:plainBuffer i (v len))
-			       (cipher:lbuffer (v len))
-			       (p:maybe_plain i (v len))
-			       (h:mem) =
-    let initial_domain = {iv=n; ctr=ctr_0 i +^ 1ul} in
-    (safeId i /\ h `HS.contains` (PRF.itable i t) /\ Buffer.live h cipher ==>
-       Seq.equal (iv_sub_table (HS.sel h (PRF.itable i t)) n)
-		 (counterblocks i t.mac_rgn initial_domain (v len) 0 (v len) p (Buffer.as_seq h cipher)))
+let rec contains_all_cipher_blocks (i:id) 
+				   (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
+				   (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
+				   (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len})
+				   (t:PRF.state i) 
+				   (cipher: lbuffer (v len))
+				   (h:mem{Buffer.live h cipher})
+				   : GTot Type0 (decreases (v remaining_len))
+   = if remaining_len = 0ul then 
+       True
+     else let starting_pos = len -^ remaining_len in
+	  let l = min remaining_len (PRF.blocklen i) in
+	  let cipher_hd = Buffer.sub cipher starting_pos l in 
+	  contains_cipher_block t x l cipher_hd h /\
+	  contains_all_cipher_blocks i (PRF.incr i x) len (remaining_len -^ l) t cipher h
 
+#reset-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let counter_dexor_sep (#i:id) (#len:u32)
+		      (t:PRF.state i) 
+		      (plain:plainBuffer i (v len))
+		      (cipher:lbuffer (v len)) = 
+    let bp = as_buffer plain in		      
+    Buffer.disjoint bp cipher /\
+    Buffer.frameOf bp <> (PRF t.rgn) /\
+    Buffer.frameOf cipher <> (PRF t.rgn)
+
+let counter_dexor_live (#i:id) (#len:u32)
+		       (t:PRF.state i) 
+ 		       (plain:plainBuffer i (v len))
+		       (cipher:lbuffer (v len)) (h:mem) =
+    Plain.live h plain /\
+    Buffer.live h cipher /\
+    (prf i ==> h `HS.contains` (itable i t))
+    
+let rec frame_contains_all_cipher_blocks (i:id) 
+				     (x_init:PRF.domain i{PRF.ctr_0 i <^ x_init.ctr})
+     				     (x:PRF.domain i{x `above` x_init})
+				     (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
+				     (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len})
+				     (t:PRF.state i) 
+				     (pb:plainBuffer i (v len))
+				     (cipher: lbuffer (v len))
+				     (h0:mem)
+    				     (h1:mem)
+   : Lemma (requires (counter_dexor_sep t pb cipher  /\
+		      counter_dexor_live t pb cipher h0 /\
+		      contains_all_cipher_blocks i x len remaining_len t cipher h0 /\
+                      prf_dexor_modifies t x_init pb h0 h1))
+          (ensures (counter_dexor_live t pb cipher h1 /\
+		    contains_all_cipher_blocks i x len remaining_len t cipher h1))
+	  (decreases (v remaining_len))
+   = FStar.Classical.move_requires (FStar.Buffer.lemma_reveal_modifies_1 (as_buffer pb) h0) h1;
+     assert (counter_dexor_live t pb cipher h1);
+     if remaining_len = 0ul then
+       ()
+     else let starting_pos = len -^ remaining_len in
+	  let l = min remaining_len (PRF.blocklen i) in
+	  frame_contains_all_cipher_blocks i x_init (PRF.incr i x) len (remaining_len -^ l) t pb cipher h0 h1
+
+let invert_contains_all_cipher_blocks (i:id) 
+				      (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
+				      (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
+				      (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <> 0ul /\ remaining_len <=^ len})
+				      (t:PRF.state i) 
+ 				      (cipher: lbuffer (v len))
+				      (h:mem{Buffer.live h cipher})
+   : Lemma (requires (contains_all_cipher_blocks i x len remaining_len t cipher h))
+ 	   (ensures (let starting_pos = len -^ remaining_len in
+	             let l = min remaining_len (PRF.blocklen i) in
+		     let cipher_hd = Buffer.sub cipher starting_pos l in 
+		     contains_cipher_block t x l cipher_hd h /\
+		     contains_all_cipher_blocks i (PRF.incr i x) len (remaining_len -^ l) t cipher h))
+   = ()
+   
+#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let counter_dexor_requires (i:id) (t:PRF.state i) (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
 			   (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
 			   (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len})
@@ -130,17 +194,13 @@ let counter_dexor_requires (i:id) (t:PRF.state i) (x:PRF.domain i{PRF.ctr_0 i <^
     let bp = as_buffer plain in
     let initial_domain = {x with ctr=ctr_0 i +^ 1ul} in
     let completed_len = len -^ remaining_len in 
-    Buffer.disjoint bp cipher /\
-    Buffer.frameOf bp <> (PRF t.rgn) /\
-    Buffer.frameOf cipher <> (PRF t.rgn) /\
-    Plain.live h plain /\
-    Buffer.live h cipher /\
+    counter_dexor_sep t plain cipher /\
+    counter_dexor_live t plain cipher h /\
     (remaining_len <> 0ul ==> FStar.Mul ((v x.ctr - v (offset i)) * v (PRF.blocklen i) = v completed_len)) /\
     // if ciphertexts are authenticated, then the table already includes all we need
-    (safeId i ==>
-       decrypted_up_to completed_len plain p h /\
-       iv_sub_table_counterblocks x.iv t plain cipher p h)
-
+    contains_all_cipher_blocks i x len remaining_len t cipher h /\
+    (safeId i ==> decrypted_up_to completed_len plain p h) 
+       
 let counter_dexor_ensures (i:id) (t:PRF.state i) (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
 			   (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
 			   (plain:plainBuffer i (v len))
@@ -175,13 +235,14 @@ let rec counter_dexor i t x len remaining_len plain cipher p =
       let cipher_hd = Buffer.sub cipher starting_pos l in 
       let plain_hd = Plain.sub plain starting_pos l in 
 
-      assume (contains_cipher_block t x l cipher_hd h0);
+      invert_contains_all_cipher_blocks i x len remaining_len t cipher h0;
       prf_dexor i t x l cipher_hd plain_hd;
       
       let h1 = get() in 
-      assume (decrypted_up_to (completed_len +^ l) plain p h1);
-      
       let y = PRF.incr i x in
+      frame_contains_all_cipher_blocks i x y len (remaining_len -^ l) t plain cipher h0 h1;
+      assume (decrypted_up_to (completed_len +^ l) plain p h1);
+
       counter_dexor i t y len (remaining_len -^ l) plain cipher p;
 
       let h2 = get () in
@@ -351,7 +412,8 @@ let decrypt_requires_live (#i:id) (st:state i Reader)
     Buffer.live h aad /\
     Plain.live h plain /\
     Buffer.live h cipher_tagged /\
-    st.log_region `HS.is_in` (HS h.h)
+    st.log_region `HS.is_in` (HS h.h) /\
+    (prf i ==> h `HS.contains` (PRF.itable i st.prf))
     
 let decrypt_requires_sep (#i:id) (st:state i Reader) 
 			 (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
@@ -398,7 +460,7 @@ let rec find_entry_blocks (#i:id) (#rgn:rid)
 			refines_one_entry h entry blocks /\
 			find_entry n entries == Some entry /\
 			find_mac prf_entries x0 == Some (PRF.macRange rgn i x0 (Seq.index blocks 0).range)))
-     = admit()
+     = Crypto.AEAD.Lemmas.Part2.find_entry_blocks i rgn n entries prf_entries h //TODO: duplicate ... remove the indirection
 
 val entry_exists_if_verify_ok : #i:id -> #n:Cipher.iv (alg i) -> (st:state i Reader) ->
  			        #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
@@ -613,7 +675,7 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   if verified 
   then begin
     let y = PRF.incr i x in	   
-    assume (iv_sub_table_counterblocks iv st.prf plain cipher p h3);
+    assume (contains_all_cipher_blocks i y plainlen plainlen st.prf cipher h3);
     counter_dexor i st.prf y plainlen plainlen plain cipher p
   end;
   let h4 = get() in
