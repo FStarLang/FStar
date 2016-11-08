@@ -10,6 +10,7 @@ OCAMLMKLIB = ocamlfind mklib $(INCLUDE)
 OCAMLDEP = ocamlfind dep
 
 CCOPTS = $(addprefix -ccopt ,-Wall -std=c11 -D__USE_MINGW_ANSI_STDIO -Lopenssl -Iopenssl/include)
+CCLIBS = $(addprefix -cclib ,-lcrypto)
 
 ifeq ($(OS),Windows_NT)
     # On cygwin + cygwinports, DLLs are searched in the PATH, which is not
@@ -44,7 +45,7 @@ endif
 
 all: CoreCrypto.cmxa
 
-openssl_stub.o: openssl/libcrypto.a openssl_stub.c
+openssl_stub.o: libcrypto.a openssl_stub.c
 	$(OCAMLOPT) $(CCOPTS) $(EXTRA_OPTS) -c openssl_stub.c
 
 %.cmi: %.mli
@@ -69,6 +70,9 @@ openssl/Configure:
 openssl/libcrypto.a: openssl/Configure
 	cd openssl && $(OPENSSL_CONF) && $(MAKE) build_libs
 
+libcrypto.a: openssl/libcrypto.a
+	cp openssl/libcrypto.a .
+
 DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o $(DB)/DB.cmx DHDB.cmx
 CoreCrypto.cmxa: #explicitly sequentialize
 	make $(PLATFORM)/platform.cmx
@@ -76,7 +80,7 @@ CoreCrypto.cmxa: #explicitly sequentialize
 	make openssl_stub.o
 	make $(DB)/DB.cmx
 	make DHDB.cmx
-	$(OCAMLMKLIB) $(EXTRA_LIBS) -o CoreCrypto $(DLL_OBJ)
+	$(OCAMLMKLIB) $(CCLIBS) $(EXTRA_LIBS) -o CoreCrypto $(DLL_OBJ)
 
 DLL_BYTE = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o DHDB.cmo $(DB)/DB.cmo
 CoreCrypto.cma: $(DLL_BYTE)
@@ -85,7 +89,7 @@ CoreCrypto.cma: $(DLL_BYTE)
 TEST_CMX = Tests.cmx
 Tests.exe: CoreCrypto.cmxa $(TEST_CMX)
 	$(OCAMLOPT) $(EXTRA_OPTS) -I $(PLATFORM) -package batteries,zarith -linkpkg -o $@ \
-	CoreCrypto.cmxa openssl/libcrypto.a $(TEST_CMX)
+	CoreCrypto.cmxa $(TEST_CMX)
 
 test: Tests.exe
 	@$(EXTRA_PATH) ./Tests.exe

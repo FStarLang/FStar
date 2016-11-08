@@ -27,8 +27,6 @@
 #include <openssl/objects.h>
 #include <openssl/obj_mac.h>
 
-#define DEBUG
-
 /* -------------------------------------------------------------------- */
 static value Val_some(value mlvalue) {
     CAMLparam1(mlvalue);
@@ -428,9 +426,10 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_tag(value mlctx, value tag) {
     output = caml_alloc_string(olen);
 
     if ((EVP_DecryptFinal_ex(ctx, (uint8_t*) output, &olen) != 1) || (olen != 0))
-        caml_failwith("ciphertext and/or additional data authentication failed");
+	  CAMLreturn(Val_false);
+//        caml_failwith("ciphertext and/or additional data authentication failed");
 
-    CAMLreturn(Val_unit);
+    CAMLreturn(Val_true);
 }
 
 /* -------------------------------------------------------------------- */
