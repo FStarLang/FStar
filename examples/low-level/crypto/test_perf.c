@@ -52,6 +52,8 @@ uint8_t ivBuffer[IVLEN] = {
   0x44, 0x45, 0x46, 0x47
 };
 
+#define ROUNDS 1000
+
 void test_crypto_aead(){
   void *plain = malloc(PLAINLEN), *cipher = malloc(PLAINLEN+16);
   uint8_t mac[16];
@@ -92,13 +94,13 @@ void test_crypto_aead(){
   
   c1 = clock();
   a = rdtsc();
-  Crypto_AEAD_encrypt(i, st0, iv, AADLEN, aad, PLAINLEN, plain, cipher);
+  for (int j = 0; j < ROUNDS; j++) Crypto_AEAD_encrypt(i, st0, iv, AADLEN, aad, PLAINLEN, plain, cipher);
   b = rdtsc();
   c2 = clock();
   d1 = b - a;
-  printf("No of cycles for a 2^14 bytes AEAD block: %llu\n", d1);
+  printf("No of cycles for %d 2^14 bytes AEAD blocks: %llu (%llucycles/byte)\n", ROUNDS, d1, d1/PLAINLEN/ROUNDS);
   t1 = ((double)c2 - c1)/CLOCKS_PER_SEC;
-  printf("User time for a 2^14 bytes AEAD block: %f\n", t1);
+  printf("User time for %d 2^14 bytes AEAD blocks: %f (%fns/byte)\n", ROUNDS, t1, t1*1000000/PLAINLEN/ROUNDS);
 }
 
 
