@@ -4,10 +4,10 @@ open Printf
 let generate_string (s:string) : string =
   let v = ref "" in
   for i = 0 to String.length s - 1 do
+    if (i mod 8 = 0) && (i <> 0) then v := !v ^ "\n";
     v := !v ^ sprintf "0x%02xl; " (Char.code (String.get s i));
-    if i mod 8 = 7 then v := !v ^ "\n"
   done;
-  "createL [\n" ^ !v ^ "0l\n]\n"
+  sprintf "createL [\n%s\n] (* Buffer literal for '%s' *)\n" !v s
 
 
 let _ =
