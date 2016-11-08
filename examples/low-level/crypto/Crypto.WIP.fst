@@ -496,63 +496,65 @@ let rec counterblocks_contains_all_cipher_blocks i rgn x len remaining_len plain
   let x0 = {x with ctr=ctr_0 i +^ 1ul} in
   let all_blocks = counterblocks i rgn x0 (v len) 0 (v len) plain cipher in
   let completed_len = v x0.ctr - v (offset i) in
-  if remaining_len = 0ul then 
-    counterblocks_len rgn x0 (v len) 0 plain cipher
+  let n_blocks = v x.ctr - v x0.ctr in
+  counterblocks_len rgn x0 (v len) 0 plain cipher;
+  assert (n_blocks <= Seq.length all_blocks);
+  if remaining_len = 0ul then ()
   else let l = min remaining_len (PRF.blocklen i) in 
        counterblocks_contains_all_cipher_blocks i rgn (PRF.incr i x) len (remaining_len -^ l) plain cipher;
        admit()
   
-  assert (completed_len <= Seq.length all_blocks);
-  admit()
+(*   assert (completed_len <= Seq.length all_blocks); *)
+(*   admit() *)
   
-			     (rgn:region) -> 
-			     (x:domain i{ctr_0 i <^ x.ctr}) ->
-			     (len:nat{len <> 0}) ->
-			     (from_pos:nat{from_pos <= len /\ safelen i (len - from_pos) x.ctr}) ->
-			     (plain:Plain.plain i len) ->
-			     (cipher:lbytes len) ->
+(* 			     (rgn:region) ->  *)
+(* 			     (x:domain i{ctr_0 i <^ x.ctr}) -> *)
+(* 			     (len:nat{len <> 0}) -> *)
+(* 			     (from_pos:nat{from_pos <= len /\ safelen i (len - from_pos) x.ctr}) -> *)
+(* 			     (plain:Plain.plain i len) -> *)
+(* 			     (cipher:lbytes len) -> *)
 
-let x0 = {x with ctr=ctr_0 i +^ 1ul} in
+(* let x0 = {x with ctr=ctr_0 i +^ 1ul} in *)
 	     	     
-  let x0 = 
+(*   let x0 =  *)
   
-   if remaining_len = 0ul then ()
-   else ()
-   let from_pos = len -^ remaining_len in
-        let to_pos = len in    
-       let l0 = minNat remaining blockl in 
-    let l_32 = UInt32.uint_to_t l0 in 
-    let plain_hd = Crypto.Plain.slice plain from_pos (from_pos + l0) in
-    let cipher_hd = Seq.slice cipher from_pos (from_pos + l0) in
-    let block = PRF.Entry x (PRF.OTP l_32 plain_hd cipher_hd) in
-    let blocks = counterblocks i rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in
-    SeqProperties.cons block blocks
+(*    if remaining_len = 0ul then () *)
+(*    else () *)
+(*    let from_pos = len -^ remaining_len in *)
+(*         let to_pos = len in     *)
+(*        let l0 = minNat remaining blockl in  *)
+(*     let l_32 = UInt32.uint_to_t l0 in  *)
+(*     let plain_hd = Crypto.Plain.slice plain from_pos (from_pos + l0) in *)
+(*     let cipher_hd = Seq.slice cipher from_pos (from_pos + l0) in *)
+(*     let block = PRF.Entry x (PRF.OTP l_32 plain_hd cipher_hd) in *)
+(*     let blocks = counterblocks i rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in *)
+(*     SeqProperties.cons block blocks *)
 
    
 
-  i:id {safeId i} -> 
-  rgn:region -> 
-  x:PRF.domain i{PRF.ctr_0 i <^ ctr x} -> 
-  len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)} ->
-  remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len} -> 
-  plain:Crypto.Plain.plain i (v len) -> 
-  cipher:lbytes (v len) -> 
+(*   i:id {safeId i} ->  *)
+(*   rgn:region ->  *)
+(*   x:PRF.domain i{PRF.ctr_0 i <^ ctr x} ->  *)
+(*   len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)} -> *)
+(*   remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len} ->  *)
+(*   plain:Crypto.Plain.plain i (v len) ->  *)
+(*   cipher:lbytes (v len) ->  *)
 
-  Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
-  (decreases (to_pos - from_pos))
+(*   Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)} *)
+(*   (decreases (to_pos - from_pos)) *)
 
 
-(i:id{safeId i}) ->
-					      (n:Cipher.iv (alg i)) ->
-					      (st:state i Reader) ->
-		      			      #aadlen:UInt32.t {aadlen <=^ aadmax} ->
-					      (aad:lbuffer (v aadlen)) ->
-					      #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
-					      (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) ->
-					      (p:plain i (v plainlen)) ->
-					      (entry:entry i) ->
-					      (blocks: prf_blocks st.prf.mac_rgn i) ->
-					      (h:mem{Buffer.live h cipher_tagged}) ->
+(* (i:id{safeId i}) -> *)
+(* 					      (n:Cipher.iv (alg i)) -> *)
+(* 					      (st:state i Reader) -> *)
+(* 		      			      #aadlen:UInt32.t {aadlen <=^ aadmax} -> *)
+(* 					      (aad:lbuffer (v aadlen)) -> *)
+(* 					      #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} -> *)
+(* 					      (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) -> *)
+(* 					      (p:plain i (v plainlen)) -> *)
+(* 					      (entry:entry i) -> *)
+(* 					      (blocks: prf_blocks st.prf.mac_rgn i) -> *)
+(* 					      (h:mem{Buffer.live h cipher_tagged}) -> *)
 
 val intro_contains_all_cipher_blocks: (i:id{safeId i}) ->
 				      (n:Cipher.iv (alg i)) ->
