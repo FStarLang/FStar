@@ -246,10 +246,6 @@ assume val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:
 
 //let sub s start len = Seq.slice start (start+len) s // more convenient? 
 
-// relocate?
-let find (#i:id) (s:Seq.seq (entry i)) (n:Cipher.iv (alg i)) : option (entry i) =
-  SeqProperties.seq_find (fun (e:entry i) -> e.nonce = n) s 
-
 val gen: i:id -> rgn:region -> ST (state i Writer)
   (requires (fun _ -> True))
   (ensures  (fun h0 st h1 -> True))
@@ -894,7 +890,7 @@ val decrypt:
     Plain.live h1 plaintext /\
     Buffer.modifies_1 (Plain.as_buffer plaintext) h0 h1 /\
     (safeId i ==> (
-        let found = find (HS.sel h1 e.log) n in
+        let found = find_entry (HS.sel h1 e.log) n in
         if verified then
           let a = Buffer.as_seq h1 aadtext in
           let p = Plain.sel_plain h1 plainlen plaintext in

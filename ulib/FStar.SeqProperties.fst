@@ -422,6 +422,25 @@ val lemma_mem_snoc : #a:eqtype -> s:FStar.Seq.seq a -> x:a ->
    Lemma (ensures (forall y. mem y (snoc s x) <==> mem y s \/ x=y))
 let lemma_mem_snoc #a s x = lemma_append_count s (Seq.create 1 x)
 
+val find_l: #a:Type -> f:(a -> Tot bool) -> l:seq a -> Tot (o:option a{is_Some o ==> f (Some.v o)})
+  (decreases (Seq.length l))
+let rec find_l #a f l = 
+  if Seq.length l = 0 then None
+  else if f (head l) then Some (head l)
+  else find_l f (tail l)
+
+let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (seq a * a) =
+  let s, a = split s (length s - 1) in
+  s, Seq.index a 0
+  
+val find_r: #a:Type -> f:(a -> Tot bool) -> l:seq a -> Tot (o:option a{is_Some o ==> f (Some.v o)})
+  (decreases (Seq.length l))
+let rec find_r #a f l = 
+  if Seq.length l = 0 then None
+  else let prefix, last = un_snoc l in 
+       if f last then Some last
+       else find_r f prefix
+
 #set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 0 --max_fuel 0"
 type found (i:nat) = True
 val seq_find_aux : #a:Type -> f:(a -> Tot bool) -> l:seq a

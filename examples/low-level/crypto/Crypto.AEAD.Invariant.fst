@@ -42,8 +42,9 @@ noeq type entry (i:id) =
       c:cipher i (Seq.length (as_bytes p)) -> 
       entry i
 
+let is_entry_nonce (#i:id) (n:Cipher.iv (alg i)) (e:entry i) = e.nonce = n
 let find_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i)) : option (entry i) = 
-  SeqProperties.seq_find (fun e -> e.nonce = n) entries
+  SeqProperties.find_l (is_entry_nonce n) entries
 
 noeq type state (i:id) (rw:rw) =
   | State:
@@ -170,4 +171,4 @@ let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
     Buffer.modifies_1 b h0 h1)
 
 let none_above (#i:id) (x:domain i) (t:PRF.state i) (h:mem) =
-    CMA.authId (i, PRF x.iv) ==> (forall (y:domain i{y `above` x}). find #t.mac_rgn #i (HS.sel h t.table) y == None)
+    CMA.authId (i, PRF x.iv) ==> (forall (y:domain i{y `above` x}). PRF.find (HS.sel h (itable i t)) y == None)

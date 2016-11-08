@@ -206,11 +206,11 @@ let all_above_counterblocks (i:id)
    : Lemma (safeId i ==> (counterblocks i rgn x l from_pos to_pos plain cipher) `all_above` x)
    = admit()
 
-#set-options "--z3timeout 100 --initial_fuel 2 --max_fuel 2 --initial_ifuel 2 --max_ifuel 2"
+#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let find_cons_hd (#a:Type) (x:a) (tl:Seq.seq a) (f:(a -> Tot bool))
-  : Lemma (requires (f x /\ (SeqProperties.seq_find f tl == None)))
-         (ensures (SeqProperties.seq_find f (SeqProperties.cons x tl) == Some x))
-  = admit()
+  : Lemma (requires (f x))
+         (ensures (SeqProperties.find_l f (SeqProperties.cons x tl) == Some x))
+  = ()
 
 let contains_intro_2 (#a:Type) (s:Seq.seq a) (x:a) (k:nat)
   : Lemma (k < Seq.length s /\ Seq.index s k == x
