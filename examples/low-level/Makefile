@@ -291,13 +291,14 @@ ocaml-test.exe: ocaml-test-extract
 	$(OCAMLOPT) -I tmp -I crypto/ml -I $(AEAD_ODIR) $(OCAML_FILES) -o ocaml-test.exe
 	./ocaml-test.exe
 
+OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
+
 test-perf.exe: krml-test.exe crypto/test_perf.c
 	$(CC) -O3 -o test-perf.exe $(OBJ_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
 		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c crypto/test_perf.c -I tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
- -L ../../ucontrib/CoreCrypto/ml/openssl -lcrypto \
-		-I ../../ucontrib/CoreCrypto/ml/openssl/include
-	./test-perf.exe
+		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME) -lcrypto
+	DYLD_LIBRARY_PATH=$(OPENSSL_HOME) ./test-perf.exe
 
 # Cleaning
 clean:
