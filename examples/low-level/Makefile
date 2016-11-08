@@ -192,7 +192,7 @@ bignum-ver:
 	$(FSTAR) --use_hints --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
 
 KRML_INCLUDES=$(addprefix -I , crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
-KRML_ARGS=-verbose -ccopt -Wno-error=pointer-sign
+KRML_ARGS=-verbose -ccopt -Wno-error=pointer-sign $(KOPTS)
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
 
 krml-test.exe:
@@ -297,7 +297,7 @@ test-perf.exe: krml-test.exe crypto/test_perf.c
 	$(CC) -O3 -o test-perf.exe $(OBJ_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
 		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c crypto/test_perf.c -I tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
-		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME) -lcrypto
+		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME) -lcrypto $(CFLAGS)
 	DYLD_LIBRARY_PATH=$(OPENSSL_HOME) ./test-perf.exe
 
 # Cleaning

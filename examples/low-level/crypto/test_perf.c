@@ -428,7 +428,6 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
     Crypto_Symmetric_UF1CMA_accBuffer____ acc0 = acc;
     Crypto_Symmetric_UF1CMA_accBuffer____ acc1 = acc0;
     FStar_HyperStack_mem h3 = (void *)(uint8_t )0;
-    FStar_UInt128_t n = 0;
     Crypto_AEAD_mac_wrapper((K___Crypto_Indexing_id_FStar_UInt128_t ){ .fst = i, .snd = x.iv },
                             ak2,
                             acc1,
