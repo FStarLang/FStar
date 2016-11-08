@@ -887,7 +887,7 @@ val decrypt:
     Plain.live h1 plaintext /\
     Buffer.modifies_1 (Plain.as_buffer plaintext) h0 h1 /\
     (safeId i ==> (
-        let found = find_entry (HS.sel h1 e.log) n in
+        let found = find_entry n (HS.sel h1 e.log) in
         if verified then
           let a = Buffer.as_seq h1 aadtext in
           let p = Plain.sel_plain h1 plainlen plaintext in
