@@ -54,9 +54,16 @@ uint8_t ivBuffer[IVLEN] = {
 };
 
 #define ROUNDS 1000
+#define AES_ROUNDS 1
 
 #define AES_GCM 0
 #define CHACHA_POLY 1
+
+void print_results(char *txt, double t1, unsigned long long d1, int rounds, int plainlen){
+  printf("Testing: %s\n", txt);
+  printf("Cycles for %d 2^14 bytes: %llu (%.2fcycles/byte)\n", rounds, d1, (double)d1/plainlen/rounds);
+  printf("User time for %d 2^14 bytes: %f (%fns/byte)\n", rounds, t1, t1*1000000/plainlen/rounds);
+}
 
 int openssl_aead_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *aad,
                          int aad_len, unsigned char *key, unsigned char *iv,
@@ -109,23 +116,19 @@ int openssl_aead_encrypt(unsigned char *plaintext, int plaintext_len, unsigned c
   b = rdtsc();
   c2 = clock();
   d1 = b - a;
-  printf("[openssl-%s] No of cycles for %d 2^14 bytes AEAD blocks: %llu (%llucycles/byte)\n", cipher==AES_GCM ? "aes-gcm" : "chacha-poly", ROUNDS, d1, d1/PLAINLEN/ROUNDS);
   t1 = ((double)c2 - c1)/CLOCKS_PER_SEC;
-  printf("[openssl-%s] User time for %d 2^14 bytes AEAD blocks: %f (%fns/byte)\n", cipher==AES_GCM ? "aes-gcm" : "chacha-poly", ROUNDS, t1, t1*1000000/PLAINLEN/ROUNDS);
-  /* Clean up */
+  print_results(cipher == AES_GCM ? "openssl-aes-256-gcm" : "openssl-chacha20-poly1305", t1, d1, ROUNDS, PLAINLEN);
   EVP_CIPHER_CTX_free(ctx);
   return ciphertext_len;
 }
 
 
-void test_crypto_aead(){
-  void *plain = malloc(PLAINLEN), *cipher = malloc(PLAINLEN+16);
-  uint8_t mac[16];
+void test_kremlin_aead(void *plain, void*cipher, int alg){
   clock_t c1, c2;
   double t1, t2;
 
   FStar_UInt128_t iv = Crypto_Symmetric_Bytes_load_uint128((uint32_t )12, ivBuffer);
-  Crypto_Indexing_id i = Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305);
+  Crypto_Indexing_id i = alg == AES_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_256_GCM) : Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305);
   unsigned long long a,b,d1,d2;
   FStar_HyperHeap_rid mac_rgn = FStar_ST_new_region(FStar_HyperHeap_root);
   uint8_t *key_p = calloc(Crypto_Symmetric_PRF_keylen(i), sizeof (uint8_t ));
@@ -158,17 +161,298 @@ void test_crypto_aead(){
 
   c1 = clock();
   a = rdtsc();
-  for (int j = 0; j < ROUNDS; j++) Crypto_AEAD_encrypt(i, st0, iv, AADLEN, aad, PLAINLEN, plain, cipher);
+  int rounds = alg == AES_GCM ? 10 : ROUNDS;
+  for (int j = 0; j < rounds; j++) Crypto_AEAD_encrypt(i, st0, iv, AADLEN, aad, PLAINLEN, plain, cipher);
   b = rdtsc();
   c2 = clock();
   d1 = b - a;
-  printf("No of cycles for %d 2^14 bytes AEAD blocks: %llu (%llucycles/byte)\n", ROUNDS, d1, d1/PLAINLEN/ROUNDS);
   t1 = ((double)c2 - c1)/CLOCKS_PER_SEC;
-  printf("User time for %d 2^14 bytes AEAD blocks: %f (%fns/byte)\n", ROUNDS, t1, t1*1000000/PLAINLEN/ROUNDS);
+  print_results(alg == AES_GCM ? "Kremlin-C-aes256-gcm" : "Kremlin-C-chacha20-poly1305", t1, d1, rounds, PLAINLEN);
+}
 
+void test_kremlin_prf(void *plain, void*cipher, int alg){
+  clock_t c1, c2;
+  double t1, t2;
+
+  FStar_UInt128_t iv = Crypto_Symmetric_Bytes_load_uint128((uint32_t )12, ivBuffer);
+  Crypto_Indexing_id i = alg == AES_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_256_GCM) : Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305);
+  unsigned long long a,b,d1,d2;
+  FStar_HyperHeap_rid mac_rgn = FStar_ST_new_region(FStar_HyperHeap_root);
+  uint8_t *key_p = calloc(Crypto_Symmetric_PRF_keylen(i), sizeof (uint8_t ));
+  memcpy(key_p, key, Crypto_Symmetric_PRF_keylen(i) * sizeof key[0]);
+  Crypto_Symmetric_PRF_state____
+  prf =
+    {
+      .x00 = FStar_HyperHeap_root,
+      .x01 = mac_rgn,
+      .x02 = key_p,
+      .x03 = (Crypto_Symmetric_PRF_no_table(i, FStar_HyperHeap_root, mac_rgn) , (void *)0)
+    };
+  void *log = FStar_ST_ralloc(FStar_HyperHeap_root, FStar_Seq_createEmpty((uint8_t )0));
+  Prims_option__uint8_t_ ak;
+  if (Crypto_Symmetric_UF1CMA_skeyed(i))
+  {
+    Crypto_Symmetric_PRF_domain____ x = { .iv = Crypto_Symmetric_PRF_iv_0, .ctr = (uint32_t )0 };
+    uint8_t *keyBuffer = calloc(Crypto_Symmetric_UF1CMA_skeylen(i), sizeof (uint8_t ));
+    Crypto_Symmetric_PRF_getBlock(i, prf, x, Crypto_Symmetric_UF1CMA_skeylen(i), keyBuffer);
+    ak =
+      (Prims_option__uint8_t_ ){
+        .tag = Prims_option__uint8_t__Some,
+        { .case_Some = { .v = keyBuffer } }
+      };
+  }
+  else
+    ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None, { .case_None = {  } } };
+  Crypto_AEAD_Invariant_state_______
+  st0 = { .x00 = FStar_HyperHeap_root, .x01 = log, .x02 = prf, .x03 = ak };
+  FStar_HyperStack_mem h1 = (void *)(uint8_t )0;
+  Crypto_Symmetric_PRF_domain____ x = { .iv = Crypto_Symmetric_PRF_iv_0, .ctr = (uint32_t )0 };
+  c1 = clock();
+  a = rdtsc();
+  int rounds = alg == AES_GCM ? AES_ROUNDS : ROUNDS;
+  for (int j = 0; j < rounds; j++) Crypto_AEAD_counter_enxor(i,
+                                                             Crypto_AEAD_Invariant____State___prf(i, Crypto_Indexing_rw_Writer, st0),
+                                                             x,
+                                                             PLAINLEN,
+                                                             PLAINLEN,
+                                                             plain,
+                                                             cipher,
+                                                             h1);
+  b = rdtsc();
+  c2 = clock();
+  d1 = b - a;
+  t1 = ((double)c2 - c1)/CLOCKS_PER_SEC;
+  print_results(alg == AES_GCM ? "Kremlin-C-aes256" : "Kremlin-C-chacha20", t1, d1, rounds, PLAINLEN);
+}
+
+
+void test_kremlin_mac(void *plain, void*cipher, int alg){
+  clock_t c1, c2;
+  double t1, t2;
+  uint8_t tag[16];
+
+  FStar_UInt128_t iv = Crypto_Symmetric_Bytes_load_uint128((uint32_t )12, ivBuffer);
+  Crypto_Indexing_id i = alg == AES_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_256_GCM) : Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305);
+  unsigned long long a,b,d1,d2;
+  FStar_HyperHeap_rid mac_rgn = FStar_ST_new_region(FStar_HyperHeap_root);
+  uint8_t *key_p = calloc(Crypto_Symmetric_PRF_keylen(i), sizeof (uint8_t ));
+  memcpy(key_p, key, Crypto_Symmetric_PRF_keylen(i) * sizeof key[0]);
+  Crypto_Symmetric_PRF_state____
+  prf =
+    {
+      .x00 = FStar_HyperHeap_root,
+      .x01 = mac_rgn,
+      .x02 = key_p,
+      .x03 = (Crypto_Symmetric_PRF_no_table(i, FStar_HyperHeap_root, mac_rgn) , (void *)0)
+    };
+  void *log = FStar_ST_ralloc(FStar_HyperHeap_root, FStar_Seq_createEmpty((uint8_t )0));
+  Prims_option__uint8_t_ ak;
+  if (Crypto_Symmetric_UF1CMA_skeyed(i))
+  {
+    Crypto_Symmetric_PRF_domain____ x = { .iv = Crypto_Symmetric_PRF_iv_0, .ctr = (uint32_t )0 };
+    uint8_t *keyBuffer = calloc(Crypto_Symmetric_UF1CMA_skeylen(i), sizeof (uint8_t ));
+    Crypto_Symmetric_PRF_getBlock(i, prf, x, Crypto_Symmetric_UF1CMA_skeylen(i), keyBuffer);
+    ak =
+      (Prims_option__uint8_t_ ){
+        .tag = Prims_option__uint8_t__Some,
+        { .case_Some = { .v = keyBuffer } }
+      };
+  }
+  else
+    ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None, { .case_None = {  } } };
+  Crypto_AEAD_Invariant_state_______
+  st0 = { .x00 = FStar_HyperHeap_root, .x01 = log, .x02 = prf, .x03 = ak };
+  FStar_HyperStack_mem h1 = (void *)(uint8_t )0;
+  Crypto_Symmetric_PRF_domain____ x = { .iv = Crypto_Symmetric_PRF_iv_0, .ctr = (uint32_t )0 };
+  c1 = clock();
+  a = rdtsc();
+  int rounds = alg == AES_GCM ? AES_ROUNDS : ROUNDS;
+
+  uint64_t buf0[5], buf00[5];
+  uint8_t buf[16], buff[16];
+  K___Crypto_Indexing_id_FStar_UInt128_t macId = { .fst = i, .snd = x.iv };
+
+  /**/
+  uint8_t *keyBuffer = calloc(Crypto_Symmetric_UF1CMA_keylen(i), sizeof (uint8_t ));
+  Crypto_Symmetric_MAC__buffer r;
+  switch (Crypto_Symmetric_MAC_alg(macId))
+  {
+    case Crypto_Indexing_macAlg_POLY1305:
+      {
+        uint64_t *buf = calloc((uint32_t )5, sizeof (uint64_t ));
+        r =
+          (Crypto_Symmetric_MAC__buffer ){
+            .tag = Crypto_Symmetric_MAC__buffer_B_POLY1305,
+            { .case_B_POLY1305 = { .x00 = buf } }
+          };
+        break;
+      }
+    case Crypto_Indexing_macAlg_GHASH:
+      {
+        uint8_t *buf = calloc(Crypto_Symmetric_MAC_wlen, sizeof (uint8_t ));
+        r =
+          (Crypto_Symmetric_MAC__buffer ){
+            .tag = Crypto_Symmetric_MAC__buffer_B_GHASH,
+            { .case_B_GHASH = { .x10 = buf } }
+          };
+        break;
+      }
+    default:
+      {
+        printf("KreMLin incomplete match at %s:%d\n", __FILE__, __LINE__);
+        exit(253);
+      }
+  }
+  uint8_t *s = calloc((uint32_t )16, sizeof (uint8_t ));
+  bool scrut0 = Crypto_Symmetric_UF1CMA_skeyed(Prims_fst(macId));
+  K___uint8_t__uint8_t_ scrut;
+  if (scrut0 == true)
+    scrut =
+      (K___uint8_t__uint8_t_ ){
+        .fst
+        =
+        Crypto_Symmetric_UF1CMA_get_skey(Crypto_Symmetric_PRF____State___mac_rgn(i,
+            Crypto_AEAD_Invariant____State___prf(i, Crypto_Indexing_rw_Writer, st0)),
+          Prims_fst(macId),
+          Crypto_AEAD_Invariant____State___ak(i, Crypto_Indexing_rw_Writer, st0)),
+        .snd = keyBuffer
+      };
+  else
+  {
+    bool uu____4410 = scrut0;
+    scrut =
+      (K___uint8_t__uint8_t_ ){ .fst = keyBuffer + (uint32_t )0, .snd = keyBuffer + (uint32_t )16 };
+  }
+  uint8_t *rb = scrut.fst;
+  uint8_t *sb = scrut.snd;
+  Crypto_Symmetric_MAC_encode_r(macId, r, rb);
+  memcpy(s, sb, (uint32_t )16 * sizeof sb[0]);
+  /**/
+
+  Crypto_Symmetric_UF1CMA_state____
+  ak2 =
+    {
+      .x00
+      =
+      Crypto_Symmetric_PRF____State___mac_rgn(i,
+        Crypto_AEAD_Invariant____State___prf(i, Crypto_Indexing_rw_Writer, st0)),
+      .x01 = r,
+      .x02 = s,
+      .x03 = (uint8_t )0
+    };
+
+  for (int j = 0; j < rounds; j++){
+
+    Crypto_Symmetric_MAC__buffer a;
+    switch
+      (Crypto_Symmetric_MAC_alg((K___Crypto_Indexing_id_FStar_UInt128_t ){ .fst = i, .snd = x.iv }))
+      {
+      case Crypto_Indexing_macAlg_POLY1305:
+        {
+          memset(buf0, 0, (uint32_t )5 * sizeof buf0[0]);
+          a =
+            (Crypto_Symmetric_MAC__buffer ){
+            .tag = Crypto_Symmetric_MAC__buffer_B_POLY1305,
+            { .case_B_POLY1305 = { .x00 = buf0 } }
+          };
+          break;
+        }
+      case Crypto_Indexing_macAlg_GHASH:
+        {
+          memset(buf, 0, (uint32_t )16 * sizeof buf[0]);
+          a =
+            (Crypto_Symmetric_MAC__buffer ){
+            .tag = Crypto_Symmetric_MAC__buffer_B_GHASH,
+            { .case_B_GHASH = { .x10 = buf } }
+          };
+          break;
+        }
+      default:
+        {
+          printf("KreMLin incomplete match at %s:%d\n", __FILE__, __LINE__);
+          exit(253);
+        }
+      }
+    void *l = (uint8_t )0;
+    Crypto_Symmetric_UF1CMA_accBuffer____ acc = { .x00 = a, .x01 = (uint8_t )0 };
+    Crypto_AEAD_Encoding_add_bytes((K___Crypto_Indexing_id_FStar_UInt128_t ){
+        .fst = i,
+          .snd = x.iv
+          },
+      ak2,
+      acc,
+      AADLEN,
+      aad);
+    Crypto_AEAD_Encoding_add_bytes((K___Crypto_Indexing_id_FStar_UInt128_t ){
+        .fst = i,
+          .snd = x.iv
+          },
+      ak2,
+      acc,
+      PLAINLEN,
+      cipher);
+    uint8_t final_word[16] = { 0 };
+    Crypto_Indexing_id
+      id = ((K___Crypto_Indexing_id_FStar_UInt128_t ){ .fst = i, .snd = x.iv }).fst;
+    switch (Crypto_Indexing_macAlg_of_id(id))
+      {
+      case Crypto_Indexing_macAlg_POLY1305:
+        {
+          Crypto_Symmetric_Bytes_store_uint32((uint32_t )4, final_word + (uint32_t )0, AADLEN);
+          Crypto_Symmetric_Bytes_store_uint32((uint32_t )4, final_word + (uint32_t )8, PLAINLEN);
+          break;
+        }
+      case Crypto_Indexing_macAlg_GHASH:
+        {
+          Crypto_Symmetric_Bytes_store_big32((uint32_t )4,
+                                             final_word + (uint32_t )4,
+                                             AADLEN * (uint32_t )8);
+          Crypto_Symmetric_Bytes_store_big32((uint32_t )4,
+                                             final_word + (uint32_t )12,
+                                             PLAINLEN * (uint32_t )8);
+          break;
+        }
+      default:
+        {
+          printf("KreMLin incomplete match at %s:%d\n", __FILE__, __LINE__);
+          exit(253);
+        }
+      }
+    Crypto_Symmetric_UF1CMA_update((K___Crypto_Indexing_id_FStar_UInt128_t ){
+        .fst = i,
+          .snd = x.iv
+          },
+      ak2,
+      acc,
+      final_word);
+    Crypto_Symmetric_UF1CMA_accBuffer____ acc0 = acc;
+    Crypto_Symmetric_UF1CMA_accBuffer____ acc1 = acc0;
+    FStar_HyperStack_mem h3 = (void *)(uint8_t )0;
+    FStar_UInt128_t n = 0;
+    Crypto_AEAD_mac_wrapper((K___Crypto_Indexing_id_FStar_UInt128_t ){ .fst = i, .snd = x.iv },
+                            ak2,
+                            acc1,
+                            tag);
+  }
+
+  b = rdtsc();
+  c2 = clock();
+  d1 = b - a;
+  t1 = ((double)c2 - c1)/CLOCKS_PER_SEC;
+  print_results(alg == AES_GCM ? "Kremlin-C-gcm" : "Kremlin-C-poly1305", t1, d1, rounds, PLAINLEN);
+}
+
+void test_crypto_aead(){
+  void *plain = malloc(PLAINLEN), *cipher = malloc(PLAINLEN+16);
+  uint8_t mac[16];
+  test_kremlin_aead(plain, cipher, AES_GCM);
+  test_kremlin_aead(plain, cipher, CHACHA_POLY);
   openssl_aead_encrypt(plain, PLAINLEN, aad, AADLEN, key, ivBuffer, cipher, mac, AES_GCM);
   openssl_aead_encrypt(plain, PLAINLEN, aad, AADLEN, key, ivBuffer, cipher, mac, CHACHA_POLY);
-
+  test_kremlin_prf(plain, cipher, AES_GCM);
+  test_kremlin_prf(plain, cipher, CHACHA_POLY);
+  test_kremlin_mac(plain, cipher, AES_GCM);
+  test_kremlin_mac(plain, cipher, CHACHA_POLY);
 }
 
 
