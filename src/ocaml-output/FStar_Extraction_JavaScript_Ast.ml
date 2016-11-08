@@ -25,7 +25,7 @@ type source_t =
 | JSS_Let of ((pattern_t * expression_t Prims.option) Prims.list * statement_t)
 | JSS_Debugger
 | JSS_FunctionDeclaration of function_t
-| JSS_VariableDeclaration of ((pattern_t * expression_t Prims.option) Prims.list * kind_var_t)
+| JSS_VariableDeclaration of ((pattern_t * expression_t Prims.option) * kind_var_t)
 | JSS_DeclareVariable of identifier_t
 | JSS_DeclareFunction of (identifier_t * predicate_t Prims.option)
 | JSS_ExportDefaultDeclaration of export_default_declaration_t

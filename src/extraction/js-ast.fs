@@ -38,7 +38,7 @@ and statement_t =
     | JSS_Let of list<(pattern_t * option<expression_t>)> * statement_t
     | JSS_Debugger
     | JSS_FunctionDeclaration of function_t
-    | JSS_VariableDeclaration of list<(pattern_t * option<expression_t>)> * kind_var_t
+    | JSS_VariableDeclaration of (pattern_t * option<expression_t>) * kind_var_t
     | JSS_DeclareVariable of identifier_t
     | JSS_DeclareFunction of identifier_t * option<predicate_t>
     | JSS_ExportDefaultDeclaration of export_default_declaration_t

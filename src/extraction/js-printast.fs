@@ -131,12 +131,11 @@ and pretty_print_statement (p:statement_t) : doc =
     | JSS_Let(l,s) -> semi (*!!!*)
     | JSS_Debugger -> reduce [ws; text "debugger;"]
     | JSS_FunctionDeclaration(f) -> pretty_print_fun f
-    | JSS_VariableDeclaration(l, k) ->
-        reduce [ws; print_kind_var k; ws;  
-               (List.map (fun (p,e) -> 
-                    reduce [print_pattern1 p true; 
-                           (match e with | None -> empty | Some v -> reduce [ws; text "="; ws; pretty_print_exp v])]) l) |> combine comma;
-               semi]
+    | JSS_VariableDeclaration((p, e), k) ->
+        (match p with
+        | JGP_Identifier (n, _) when n = "_" -> (match e with | Some v -> pretty_print_exp v | None -> empty)
+        | _ -> reduce [print_kind_var k; print_pattern p true;
+                      (match e with | None -> empty | Some v -> reduce [text "="; pretty_print_exp v]); semi])
     | JSS_DeclareVariable _ -> semi (*!!!*)
     | JSS_DeclareFunction _ -> semi (*!!!*)
     | JSS_ExportDefaultDeclaration (d, k) -> reduce [print_exp_kind k; print_declaration d]
@@ -277,12 +276,12 @@ and print_literal = function
     | JSV_RegExp _ -> text "!!"
 
 and print_kind_var = function
-    | JSV_Var -> text "var"
-    | JSV_Let -> text "let"
-    | JSV_Const -> text "const"
+    | JSV_Var -> text "var "
+    | JSV_Let -> text "let "
+    | JSV_Const -> text "const "
 
 and print_pattern p print_t =
-    match p with 
+    match p with
     | JGP_Object _ -> text "!!"
     | JGP_Array _ -> text "!!"
     | JGP_Assignment _ -> text "!!"
@@ -292,15 +291,6 @@ and print_pattern p print_t =
                 | Some v -> reduce [colon; print_typ v]
                 | None -> empty
         in reduce [text (remove_chars_t id); (if print_t then r else empty)]
-
-and print_pattern1 p print_t = 
-    match p with 
-    | JGP_Identifier(id, t) ->
-        let r = match t with
-                | Some v -> reduce [colon; print_typ v]
-                | None -> empty
-        in reduce [text (remove_chars_t id); (if print_t then r else empty)]
-    | _ -> text "!!!"
 
 and print_body = function 
     | JS_BodyBlock l -> reduce [text "{"; pretty_print_statements l; text "}"]
