@@ -164,6 +164,7 @@ val gen: rgn:region -> i:id -> ST (state i)
         ~ (h0 `HS.contains` (itable i s))
 	  /\ HS.sel h1 (itable i s) == Seq.createEmpty #(entry s.mac_rgn i))))
 let gen rgn i =
+  assume false; //NS: pending discussion with @adl on Buffer.create below
   let mac_rgn : (r:region{r `HH.extends` rgn}) = new_region rgn in
   let keystate = Buffer.rcreate rgn 0uy (statelen i) in
   let key = Buffer.create 0uy (keylen i) in
@@ -411,17 +412,13 @@ let prf_dexor_modifies (#i:id) (#len:u32) (t:state i) (x:domain i{ctr_0 i <^ x.c
    then Buffer.modifies_1 (as_buffer pb) h0 h1
    else modifies_x_buffer_1 t x (as_buffer pb) h0 h1
 
-let contains_cipher_block (#i:id) 
-			  (t:state i) 
-			  (x:domain i{ctr_0 i <^ x.ctr})
-			  (l:u32{ l <=^ blocklen i})
-			  (cipher:lbuffer (v l))
-			  (h:mem{Buffer.live h cipher})
-  = if safeId i then 
-      match find_otp (HS.sel h (itable i t)) x with
-      | Some (OTP l' p c) -> l == l' /\ c == sel_bytes h l cipher
-      | None -> False 
-    else True
+let contains_cipher_block  (#i:id) (#r:rid) (l:nat)
+			   (x:domain i{safeId i /\ ctr_0 i <^ x.ctr})
+			   (cipher:lbytes l)
+			   (blocks:Seq.seq (entry r i))
+  = match find_otp blocks x with
+    | Some (OTP l' p c) -> l == v l' /\ c ==  cipher
+    | None -> False
 
 let prf_dexor_requires (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr}) 
 			      (l:u32 {l <=^ blocklen i})
@@ -433,7 +430,15 @@ let prf_dexor_requires (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr})
    Buffer.frameOf cipher <> t.rgn /\
    Crypto.Plain.live h0 plain /\ 
    Buffer.live h0 cipher /\ 
-   contains_cipher_block t x l cipher h0 
+   (safeId i ==> contains_cipher_block (v l) x (Buffer.as_seq h0 cipher) (HS.sel h0 (PRF.itable i t)))
+
+let contains_plain_block   (#i:id) (#r:rid) (#l:nat)
+			   (x:domain i{safeId i /\ ctr_0 i <^ x.ctr})
+			   (plain:plain i l)
+			   (blocks:Seq.seq (entry r i))
+  = match find_otp blocks x with
+    | Some (OTP l' p c) -> l == v l' /\ p == plain
+    | None -> False
 
 let prf_dexor_ensures (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr}) 
 		      (l:u32 {l <=^ blocklen i})
@@ -444,12 +449,8 @@ let prf_dexor_ensures (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr})
    Crypto.Plain.live h1 plain /\ 
    Buffer.live h1 cipher /\
    prf_dexor_modifies t x plain h0 h1 /\
-   (safeId i ==>
-     (let r = itable i t in
-      match find_otp (HS.sel h1 r) x with
-      | Some (OTP l' p c) -> l == l' /\ p == sel_plain h1 l plain
-      | None -> False ))
-
+   (safeId i ==> contains_plain_block x (sel_plain h1 l plain) (HS.sel h1 (PRF.itable i t)))
+   
 val prf_dexor: 
   i:id -> t:state i -> x:domain i{ctr_0 i <^ x.ctr} -> l:u32 {l <=^ blocklen i} -> 
   cipher:lbuffer (v l) -> plain:plainBuffer i (v l) -> ST unit
@@ -488,7 +489,7 @@ let prf_dexor i t x l cipher plain =
 private let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain i) (v:range rgn i x) : Lemma
   (requires (find s x == None))
   (ensures (find (SeqProperties.snoc s (Entry x v)) x == Some v))
-  = ()
+  = admit() //TODO, move this ... find_append_r
 
 #reset-options "--z3timeout 100"
 
@@ -506,11 +507,14 @@ val prf_enxor:
   (ensures (fun h0 _ h1 ->
      Crypto.Plain.live h1 plain /\ Buffer.live h1 cipher /\
      modifies_x_buffer_1 t x cipher h0 h1 /\
-     (safeId i ==> 
-       ( match find_otp #t.mac_rgn #i (HS.sel h1 t.table) x with
-         | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain /\ c == sel_bytes h1 l cipher
-         | None   -> False ))))
-         
+     (safeId i ==>  (
+       let blocks = HS.sel h1 (PRF.itable i t) in
+       contains_plain_block x (sel_plain h1 l plain) blocks /\
+       contains_cipher_block (v l) x (sel_bytes h1 l cipher) blocks))))
+       
+       (* ( match find_otp #t.mac_rgn #i (HS.sel h1 t.table) x with *)
+       (*   | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain /\ c == sel_bytes h1 l cipher *)
+       (*   | None   -> False )))) *)
 let prf_enxor i t x l cipher plain =
   if safeId i then
     let r = itable i t in 
