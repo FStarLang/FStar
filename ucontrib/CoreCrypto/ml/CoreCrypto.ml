@@ -172,7 +172,7 @@ external ocaml_EVP_CIPHER_CTX_set_iv  : cipher_ctx -> string -> bool -> unit = "
 external ocaml_EVP_CIPHER_CTX_set_additional_data : cipher_ctx -> string -> unit = "ocaml_EVP_CIPHER_CTX_set_additional_data"
 external ocaml_EVP_CIPHER_CTX_process : cipher_ctx -> string -> string = "ocaml_EVP_CIPHER_CTX_process"
 
-external ocaml_EVP_CIPHER_CTX_set_tag : cipher_ctx -> string -> unit = "ocaml_EVP_CIPHER_CTX_set_tag"
+external ocaml_EVP_CIPHER_CTX_set_tag : cipher_ctx -> string -> bool = "ocaml_EVP_CIPHER_CTX_set_tag"
 external ocaml_EVP_CIPHER_CTX_get_tag : cipher_ctx -> string = "ocaml_EVP_CIPHER_CTX_get_tag"
 
 let cipher_of_block_cipher (c:block_cipher) = match c with
@@ -212,7 +212,7 @@ let block_decrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
 let aead_encrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
   (* Printf.printf " |k|= %d, |iv|=%d\n" (Z.to_int (Platform.Bytes.length k)) (Z.to_int (Platform.Bytes.length iv)); *)
   assert (Platform.Bytes.length k = aeadKeySize c);
-  (*assert (Platform.Bytes.length iv = aeadRealIVSize c); --NS: this one seems to be failing *)
+  (*assert (Platform.Bytes.length iv = aeadRealIVSize c);*)
   let c = cipher_of_aead_cipher c in
   let ctx = ocaml_EVP_CIPHER_CTX_create c true in
   ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
@@ -223,19 +223,21 @@ let aead_encrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
   ocaml_EVP_CIPHER_CTX_fini ctx;
   Platform.Bytes.op_At_Bar (bytes_of_string e) (bytes_of_string t)
 
-let aead_decrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
-  assert (Platform.Bytes.length k = aeadKeySize c);
-  (*assert (Platform.Bytes.length iv = aeadRealIVSize c); --NS: this one seems to be failing *)
-  let c = cipher_of_aead_cipher c in
+let aead_decrypt (alg:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
+  assert (Platform.Bytes.length k = aeadKeySize alg);
+  (*assert (Platform.Bytes.length iv = aeadRealIVSize alg);*)
+  let c = cipher_of_aead_cipher alg in
   let ctx = ocaml_EVP_CIPHER_CTX_create c false in
-  let d,t = Platform.Bytes.split d (Z.sub (Platform.Bytes.length d) (Z.of_int 16)) in
+  let d,t = Platform.Bytes.split d (Z.sub (Platform.Bytes.length d) (aeadTagSize alg)) in
   ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
   ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv) true;
   ocaml_EVP_CIPHER_CTX_set_additional_data ctx (string_of_bytes ad);
   let e = ocaml_EVP_CIPHER_CTX_process ctx (string_of_bytes d) in
-  ocaml_EVP_CIPHER_CTX_set_tag ctx (string_of_bytes t);
-  ocaml_EVP_CIPHER_CTX_fini ctx;
-  Some (bytes_of_string e)
+  if not (ocaml_EVP_CIPHER_CTX_set_tag ctx (string_of_bytes t)) then
+    None
+  else
+    let _ = ocaml_EVP_CIPHER_CTX_fini ctx in
+    Some (bytes_of_string e)
 
 let stream_encryptor (c:stream_cipher) (k:bytes) =
   let c = cipher_of_stream_cipher c in

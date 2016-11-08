@@ -37,6 +37,7 @@ module Block = Crypto.Symmetric.Cipher
 let blocklen i = Block.blocklen (cipherAlg_of_id i)
 type block i = b:lbytes (v (blocklen i))
 let keylen i = Block.keylen (cipherAlg_of_id i)
+let statelen i = Block.statelen (cipherAlg_of_id i)
 
 (*
 private let lemma_lengths (i:id) : Lemma(keylen i <^ blocklen i) = 
@@ -60,7 +61,6 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 //16-10-15 how to ensure it is reduced at compile-time?
 let maxCtr i = 16384ul /^ blocklen i
 type ctrT i = x:u32 {x <=^ maxCtr i}
-
 
 // The PRF domain: an IV and a counter.
 
@@ -139,7 +139,7 @@ noeq type state (i:id) =
   | State: #rgn: region ->
 	   #mac_rgn: region{mac_rgn `HH.extends` rgn} ->
            // key is immutable once generated, we should make it private
-           key: lbuffer (v (keylen i)) 
+           key: lbuffer (v (statelen i)) 
              {Buffer.frameOf key = rgn /\ ~(HS.MkRef.mm (Buffer.content key))} ->
            table: table_t rgn mac_rgn i ->
            state i
@@ -165,14 +165,17 @@ val gen: rgn:region -> i:id -> ST (state i)
 	  /\ HS.sel h1 (itable i s) == Seq.createEmpty #(entry s.mac_rgn i))))
 let gen rgn i =
   let mac_rgn : (r:region{r `HH.extends` rgn}) = new_region rgn in
-  let key = Buffer.rcreate rgn 0uy (keylen i) in
+  let keystate = Buffer.rcreate rgn 0uy (statelen i) in
+  let key = Buffer.create 0uy (keylen i) in
+  let alg = cipherAlg_of_id i in
   Bytes.random (v (keylen i)) key;
+  Block.init #alg key keystate;
   let table: table_t rgn mac_rgn i =
     if prf i then 
       mktable i rgn mac_rgn (ralloc rgn (Seq.createEmpty #(entry mac_rgn i)))
     else ()
   in
-  State #i #rgn #mac_rgn key table
+  State #i #rgn #mac_rgn keystate table
 // no need to demand prf i so far.
 
 val coerce: rgn:region -> i:id{~(prf i)} -> key:lbuffer (v (keylen i)) -> ST (state i)
@@ -180,11 +183,12 @@ val coerce: rgn:region -> i:id{~(prf i)} -> key:lbuffer (v (keylen i)) -> ST (st
   (ensures  (fun h0 s h1 -> s.rgn == rgn))
 let coerce rgn i key =
   let mac_rgn : (r:region{r `HH.extends` rgn}) = new_region rgn in
-  let key_p = Buffer.rcreate rgn 0uy (keylen i) in
-  Buffer.blit key 0ul key_p 0ul (keylen i);
-  State #i #rgn #mac_rgn key_p (no_table i rgn mac_rgn)
+  let keystate = Buffer.rcreate rgn 0uy (statelen i) in
+  let alg = cipherAlg_of_id i in
+  Cipher.init #alg key keystate;
+  State #i #rgn #mac_rgn keystate (no_table i rgn mac_rgn)
 
-val leak: #i:id{~(prf i)} -> st:state i -> ST (key:lbuffer (v (keylen i)))
+val leak: #i:id{~(prf i)} -> st:state i -> ST (key:lbuffer (v (statelen i)))
   (requires (fun h -> True))
   (ensures  (fun h0 k h1 -> h0==h1 /\ Buffer.live h1 k))
 let leak #i st =

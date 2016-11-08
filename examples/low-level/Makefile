@@ -11,7 +11,7 @@ CODEGEN_ARGS=--lax --codegen OCaml --no_location_info $(FSTAR_DEFAULT_ARGS)
 
 KREMLIN_HOME=../../../kremlin
 KREMLIN=$(KREMLIN_HOME)/Kremlin.native
-KREMLIN_ARGS=-tmpdir kremlin -verbose --lax
+KREMLIN_ARGS=-tmpdir kremlin -verbose --lax -cc clang
 
 CHACHA_ODIR=chacha
 POLY_ODIR=poly
@@ -192,7 +192,7 @@ bignum-ver:
 	$(FSTAR) --use_hints --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
 
 KRML_INCLUDES=$(addprefix -I , crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
-KRML_ARGS=-verbose -ccopt -Wno-error=pointer-sign
+KRML_ARGS=-verbose -ccopt -Wno-error=pointer-sign $(KOPTS)
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
 
 krml-test.exe:
@@ -242,6 +242,45 @@ OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List
 		crypto/ml/C.ml \
 		tmp/Crypto_KrmlTest.ml
 
+
+OBJ_FILES=$(addprefix tmp/, \
+	FStar_Mul.o \
+	FStar_Squash.o FStar_StrongExcludedMiddle.o FStar_List_Tot.o \
+		FStar_Classical.o FStar_ListProperties.o FStar_SeqProperties.o \
+		FStar_Math_Lemmas.o FStar_BitVector.o \
+		FStar_FunctionalExtensionality.o \
+		FStar_PropositionalExtensionality.o FStar_PredicateExtensionality.o \
+		FStar_TSet.o FStar_Ghost.o \
+		FStar_Bytes.o Buffer_Utils.o Crypto_Symmetric_Bytes.o \
+		Crypto_Symmetric_Poly1305_Spec.o Crypto_Symmetric_Poly1305_Parameters.o \
+		Crypto_Symmetric_Poly1305_Bigint.o Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.o \
+		Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.o \
+		Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.o \
+		Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.o \
+		Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.o \
+		FStar_Buffer_Quantifiers.o \
+		Crypto_Symmetric_AES.o \
+		Crypto_Symmetric_AES128.o \
+		Crypto_Symmetric_Chacha20.o \
+		Crypto_Indexing.o \
+		Crypto_Symmetric_Cipher.o \
+		Crypto_Symmetric_GF128_Spec.o \
+		Crypto_Symmetric_Poly1305_Lemmas.o \
+		Flag.o \
+		Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part6.o \
+		Crypto_Symmetric_Poly1305_Bignum.o \
+		Crypto_Symmetric_Poly1305.o \
+		Crypto_Symmetric_GF128.o \
+		Crypto_Symmetric_MAC.o \
+		Crypto_Symmetric_UF1CMA.o \
+		Crypto_Plain.o \
+		Crypto_Symmetric_PRF.o \
+		Crypto_AEAD_Encoding.o \
+		Crypto_AEAD_Invariant.o \
+		Crypto_AEAD_Lemmas_Part2.o \
+		Crypto_AEAD_Lemmas.o \
+		Crypto_AEAD.o )
+
 ocaml-test-extract: ulib
 	mkdir -p tmp
 	$(FSTAR_EXTRACT) --include $(KREMLIN_HOME)/kremlib --include $(KREMLIN_HOME)/test/ \
@@ -251,6 +290,15 @@ ocaml-test-extract: ulib
 ocaml-test.exe: ocaml-test-extract
 	$(OCAMLOPT) -I tmp -I crypto/ml -I $(AEAD_ODIR) $(OCAML_FILES) -o ocaml-test.exe
 	./ocaml-test.exe
+
+OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
+
+test-perf.exe: krml-test.exe crypto/test_perf.c
+	$(CC) -O3 -o test-perf.exe $(OBJ_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
+		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c crypto/test_perf.c -I tmp \
+		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
+		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME) -lcrypto $(CFLAGS)
+	DYLD_LIBRARY_PATH=$(OPENSSL_HOME) ./test-perf.exe
 
 # Cleaning
 clean:
