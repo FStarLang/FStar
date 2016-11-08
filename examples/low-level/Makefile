@@ -11,7 +11,7 @@ CODEGEN_ARGS=--lax --codegen OCaml --no_location_info $(FSTAR_DEFAULT_ARGS)
 
 KREMLIN_HOME=../../../kremlin
 KREMLIN=$(KREMLIN_HOME)/Kremlin.native
-KREMLIN_ARGS=-tmpdir kremlin -verbose --lax
+KREMLIN_ARGS=-tmpdir kremlin -verbose --lax -cc clang
 
 CHACHA_ODIR=chacha
 POLY_ODIR=poly
@@ -292,7 +292,7 @@ ocaml-test.exe: ocaml-test-extract
 	./ocaml-test.exe
 
 test-perf.exe: krml-test.exe crypto/test_perf.c
-	$(CC) -o test-perf.exe $(OBJ_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
+	$(CC) -O3 -o test-perf.exe $(OBJ_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
 		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c crypto/test_perf.c -I tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test -lcrypto 
 	./test-perf.exe

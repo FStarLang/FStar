@@ -212,7 +212,8 @@ val access: sb:sbox -> idx:byte -> STL byte
   (requires (fun h -> live h sb))
   (ensures  (fun h0 _ h1 -> h1 == h0))
 let access sbox i =
-  access_aux sbox i 0ul 0uy
+  if Flag.aes_ct then access_aux sbox i 0ul 0uy
+  else sbox.(Int.Cast.uint8_to_uint32 i)
 
 
 // ENCRYPTION 

@@ -68,3 +68,4 @@ inline_for_extraction val safeId_implies_cpa: i:id -> Lemma
   [SMTPat (safeId i)]
 
 
+inline_for_extraction val aes_ct : bool

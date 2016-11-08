@@ -15,3 +15,4 @@ let mac1_implies_mac_log i = ()
 let mac1_implies_prf     i = ()
 let safeId_implies_mac1  i = ()
 let safeId_implies_cpa   i = ()
+let aes_ct        = false
