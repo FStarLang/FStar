@@ -51,6 +51,7 @@ unfold let pre_refines_one_entry (i:id) (st:state i Writer) (nonce:Cipher.iv (al
    safelen i len (ctr_0 i +^ 1ul) /\
    Seq.equal xors (counterblocks i st.prf.mac_rgn (PRF.incr i x) len 0 len plain cipher))))))
 
+(* TODO: MOVE THIS TO FStar.Set *)
 type eqtype = a:Type0{hasEq a}
 
 val as_set': #a:eqtype -> list a -> Tot (Set.set a)
@@ -192,7 +193,7 @@ let intro_mac_refines (i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
 			 m_contains (CMA (ilog mac_st.log)) h /\
 		         m_sel h (CMA (ilog mac_st.log)) == Some (l, Buffer.as_seq h tagB)))))
            (ensures mac_refines i st nonce aad plain cipher h)
-  = ()	   
+  = ()
  
 #reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 let all_above_counterblocks (i:id)
@@ -217,22 +218,20 @@ let contains_intro_2 (#a:Type) (s:Seq.seq a) (x:a) (k:nat)
            ==>
           s `SeqProperties.contains` x)
   = SeqProperties.contains_intro s k x
-
-let seq_find_none (#a:Type) (s:Seq.seq a) (f:(a -> Tot bool))
-  : Lemma (requires (forall y. s `SeqProperties.contains` y ==> not (f y)))
-         (ensures (SeqProperties.seq_find f s == None))
-  = match SeqProperties.seq_find f s with
-    | None -> ()
-    | Some z -> FStar.Classical.forall_intro (contains_intro_2 s z)
-
+  
 #reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let find_mac_counterblocks_none (#rgn:region) (#i:id) (nonce:Cipher.iv (alg i))
-                               (s:Seq.seq (PRF.entry rgn i))
+                                (s:Seq.seq (PRF.entry rgn i))
     : Lemma (requires (s `all_above` (PRF.incr i ({iv=nonce; ctr=ctr_0 i}))))
-           (ensures (find_mac s ({iv=nonce; ctr=ctr_0 i}) == None))
+            (ensures (find_mac s ({iv=nonce; ctr=ctr_0 i}) == None))
     = admit()
 
-val pre_refines_to_refines:  (i:id) -> (st:state i Writer) -> (nonce: Cipher.iv (alg i)) ->
+let find_append (#i:id) (#r:rid) (d:domain i) (s1:Seq.seq (PRF.entry r i)) (s2:Seq.seq (PRF.entry r i)) 
+   : Lemma (requires (is_None (find s1 d)))
+           (ensures (find (Seq.append s1 s2) d == find s2 d))
+   = admit()
+
+val pre_refines_to_refines: (i:id) -> (st:state i Writer) -> (nonce: Cipher.iv (alg i)) ->
 			    (aadlen: UInt32.t {aadlen <=^ aadmax})  ->
 			    (aad: lbuffer (v aadlen)) ->
                             (len:nat{len<>0}) -> (plain:plainBuffer i len) -> (cipher:lbuffer (len + v MAC.taglen)) ->
@@ -244,7 +243,7 @@ val pre_refines_to_refines:  (i:id) -> (st:state i Writer) -> (nonce: Cipher.iv 
 	              let c, tag = SeqProperties.split c_tagged len in
 		      let ad = Buffer.as_seq h aad in
   		      safeId i ==> 
-			((* none_above ({iv=nonce; ctr=0ul}) st.prf h0 /\ *)
+			(none_above ({iv=nonce; ctr=0ul}) st.prf h0 /\
    			 pre_refines_one_entry i st nonce len plain cipher h0 h /\
 			 mac_refines i st nonce aad plain cipher h)))
             (ensures (let mac_rgn = st.prf.mac_rgn in
@@ -259,23 +258,17 @@ val pre_refines_to_refines:  (i:id) -> (st:state i Writer) -> (nonce: Cipher.iv 
 			  let table_1 = HS.sel h (PRF.itable i st.prf) in
  			  let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in
 			  refines_one_entry #mac_rgn #i h entry blocks))))
-
-let find_seq_find (i:id) (r:rgn) (s:Seq.seq (PRF.entry r i)) (x:domain i)
-  : Lemma (is_None (find s x) <==> is_None (SeqProperties.seq_find (fun (e:PRF.entry r i) -> e.x = x) s))
-  = ()
-
-let find_append (#i:id) (#r:rid) (d:domain i) (s1:Seq.seq (PRF.entry r i)) (s2:Seq.seq (PRF.entry r i)) 
-   : Lemma (requires (is_Some (find s2 d)))
-           (ensures (find (Seq.append s1 s2) d == find s2 d))
-   = admit()
-   
 #reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 let pre_refines_to_refines i st nonce aadlen aad len plain cipher h0 h
     = if safeId i
       then let table_0 = HS.sel h0 (PRF.itable i st.prf) in
+      	   let idom = {iv=nonce; ctr=ctr_0 i} in
+	   assert (PRF.find table_0 idom == None);
 	   let table_1 = HS.sel h (PRF.itable i st.prf) in
+  	   let prefix = Seq.slice table_1 0 (Seq.length table_0) in 
+	   assert (Seq.equal prefix table_0);
+	   assert (is_None (find prefix idom));
  	   let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in
-	   let idom = {iv=nonce; ctr=ctr_0 i} in
 	   let p = Plain.sel_plain h (u len) plain in
 	   let c_tagged = Buffer.as_seq h cipher in
            let c, tag = SeqProperties.split c_tagged len in
@@ -283,25 +276,11 @@ let pre_refines_to_refines i st nonce aadlen aad len plain cipher h0 h
 	   let PRF.Entry x e = hd in
 	   let cbs = counterblocks i st.prf.mac_rgn (PRF.incr i idom) len 0 len p c in
 	   assert (x = idom);
-	   assert (Seq.equal blocks  
-			    (SeqProperties.cons 
-				(PRF.Entry x e) 
-				cbs));
+	   assert (Seq.equal blocks (SeqProperties.cons hd cbs));
            all_above_counterblocks i st.prf.mac_rgn (PRF.incr i idom) len 0 len p c;
 	   find_mac_counterblocks_none #st.prf.mac_rgn #i nonce cbs;
-	   let rgn = st.prf.mac_rgn in
-	   let finder (e:PRF.entry rgn i) = e.x = idom in
-	   assert (finder hd);
-	   assert (find_mac cbs idom == None);
-	   assert (find cbs idom == None);
-	   assert (is_None (find cbs idom) <==> is_None (SeqProperties.seq_find #(PRF.entry rgn i) finder cbs));
-	   assert (is_None (find cbs idom));
-  	   assert (is_None (SeqProperties.seq_find #(PRF.entry rgn i) finder cbs));
-	   assert (SeqProperties.seq_find finder cbs == None);
-   	   find_cons_hd hd cbs finder;
-   	   assert (find blocks idom == Some e);
-	   let prefix = Seq.slice table_1 0 (Seq.length table_0) in 
-	   assert (Seq.equal table_1 (Seq.append prefix blocks));
+	   assert (PRF.is_entry_domain idom hd);
+      	   find_cons_hd hd cbs (PRF.is_entry_domain idom);
 	   find_append idom prefix blocks
 
 
@@ -323,8 +302,6 @@ let pre_refines_to_refines i st nonce aadlen aad len plain cipher h0 h
 
 (* 	    HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c))) *)
 (* let 			     *)
-					      
-
 
 (*** Some basic sanity checks 
      on the `refines` invariant ***)

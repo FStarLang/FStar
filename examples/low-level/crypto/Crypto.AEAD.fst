@@ -293,10 +293,6 @@ For the enxor loop, we need a finer, transient invariant for the last chunk of t
 
 *) 
 
-(*
-let lookupIV (i:id) (s:Seq.seq (entry i)) = Seq.seq_find (fun e:entry i -> e.iv = iv) s // <- requires iv:UInt128.t
-*)
-
 // COUNTER_MODE LOOP from Chacha20 
 
 (*
@@ -608,6 +604,7 @@ val finish_after_mac: h0:mem -> h3:mem -> i:id -> st:state i Writer ->
     HH.disjoint (HS h4.tip) (Buffer.frameOf cipher_tagged) /\
     HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged; HS h4.tip]) h0 h3 /\
     HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h3 /\
+    (prf i ==> none_above ({iv=n; ctr=ctr_0 i}) st.prf h0) /\ // The nonce must be fresh!
     pre_refines_one_entry i st n (v plainlen) plain cipher_tagged h0 h3 /\
     mac_ensures (i, n) ak acc tag h3 h4 /\
     (my_inv st h0) /\
