@@ -70,7 +70,7 @@ abstract val includes : rid -> rid -> GTot bool
 let rec includes r1 r2 =
   if r1=r2 then true
   else if List.Tot.length r2 > List.Tot.length r1
-  then includes r1 (Cons.tl r2)
+  then includes r1 (Cons..tl r2)
   else false
 
 let disjoint (i:rid) (j:rid) : GTot bool =
@@ -81,10 +81,10 @@ private val lemma_aux: k:rid -> i:rid
                     List.Tot.length k > 0
                     /\ List.Tot.length k <= List.Tot.length i
                     /\ includes k i
-                    /\ not (includes (Cons.tl k) i))
+                    /\ not (includes (Cons..tl k) i))
                  (ensures False)
                  (decreases (List.Tot.length i))
-let rec lemma_aux k i = lemma_aux k (Cons.tl i)
+let rec lemma_aux k i = lemma_aux k (Cons..tl i)
 
 abstract val lemma_disjoint_includes: i:rid -> j:rid -> k:rid ->
   Lemma (requires (disjoint i j /\ includes j k))
@@ -95,18 +95,18 @@ abstract val lemma_disjoint_includes: i:rid -> j:rid -> k:rid ->
 let rec lemma_disjoint_includes i j k =
   if List.Tot.length k <= List.Tot.length j
   then ()
-  else (lemma_disjoint_includes i j (Cons.tl k);
-        if List.Tot.length i <= List.Tot.length (Cons.tl k)
+  else (lemma_disjoint_includes i j (Cons..tl k);
+        if List.Tot.length i <= List.Tot.length (Cons..tl k)
         then ()
         else (if includes k i
               then lemma_aux k i
               else ()))
 
 abstract val extends: rid -> rid -> GTot bool
-let extends r0 r1 = is_Cons r0 && Cons.tl r0 = r1
+let extends r0 r1 = is_Cons r0 && Cons..tl r0 = r1
 
 abstract val parent: r:rid{r<>root} -> Tot rid
-let parent r = Cons.tl r
+let parent r = Cons..tl r
 
 abstract val lemma_includes_refl: i:rid
                       -> Lemma (requires (True))

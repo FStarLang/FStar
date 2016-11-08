@@ -20,7 +20,7 @@ noeq abstract type pkey =
   | PKey: #region:rid -> rawpk:RSA.pkey -> cca_pk:CCA2.pkey  -> pkey
 
 let access_pkraw (pk:pkey) =
-  PKey.rawpk pk
+  PKey..rawpk pk
 
 noeq abstract type skey =
   | SKey: cca_sk:CCA2.skey -> pk:pkey  -> skey    type p = P.t

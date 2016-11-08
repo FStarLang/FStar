@@ -316,10 +316,10 @@ noeq type env =
   | MkEnv: a:a_env -> x:x_env -> env
 
 val lookup_tvar: env -> nat -> Tot (option knd)
-let lookup_tvar g n = MkEnv.a g n
+let lookup_tvar g n = MkEnv..a g n
 
 val lookup_evar: env -> nat -> Tot (option typ)
-let lookup_evar g n = MkEnv.x g n
+let lookup_evar g n = MkEnv..x g n
 
 val empty: env
 let empty = MkEnv empty_a empty_x
@@ -349,7 +349,7 @@ let extend_evar g n t =
 noeq type kinding : env -> typ -> knd -> Type =
   | KiVar : #g:env ->
              a:var{is_Some (lookup_tvar g a)} ->
-             kinding g (TVar a) (Some.v (lookup_tvar g a))
+             kinding g (TVar a) (Some..v (lookup_tvar g a))
   | KiLam : #g:env ->
              k:knd ->
             #t:typ ->
@@ -411,8 +411,8 @@ type tequiv : typ -> typ -> Type =
 noeq type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
              x:var{is_Some (lookup_evar g x)} ->
-            $hk:kinding g (Some.v (lookup_evar g x)) KTyp ->
-                typing g (EVar x) (Some.v (lookup_evar g x))
+            $hk:kinding g (Some..v (lookup_evar g x)) KTyp ->
+                typing g (EVar x) (Some..v (lookup_evar g x))
   | TyLam : #g:env ->
              t:typ ->
             #e1:exp ->
@@ -480,10 +480,10 @@ let rec tcontext_invariance #t #g #k h g' =
   | KiApp h1 h2 -> KiApp (tcontext_invariance h1 g') (tcontext_invariance h2 g')
   | KiArr h1 h2 -> KiArr (tcontext_invariance h1 g') (tcontext_invariance h2 g')
 (* CH: this doesn't directly follow from functional extensionality,
-       because (MkEnv.x g) and (MkEnv.x g') are completely unrelated;
+       because (MkEnv..x g) and (MkEnv..x g') are completely unrelated;
        this is just because we pass this useless argument to kinding. *)
 irreducible val kinding_extensional: #g:env -> #t:typ -> #k:knd -> h:(kinding g t k) ->
-                g':env{feq (MkEnv.a g) (MkEnv.a g')} ->
+                g':env{feq (MkEnv..a g) (MkEnv..a g')} ->
                 Tot (kinding g' t k) (decreases h)
 let rec kinding_extensional #g #t #k h g' =
   match h with
@@ -547,7 +547,7 @@ let rec typing_to_kinding #g #e #t h = match h with
   | TyLam t' hk h1 -> KiArr hk (kinding_strengthening_ebnd g 0 t'
                                   (typing_to_kinding h1))
   | TyApp #g #e1 #e2 #t1 #t2 h1 h2 ->
-    Conj.h2 (kinding_inversion_arrow #g #t1 #t2 (typing_to_kinding h1))
+    Conj..h2 (kinding_inversion_arrow #g #t1 #t2 (typing_to_kinding h1))
   | TyEqu h1 eq hk -> hk
 
 (* this folows from functional extensionality *)
@@ -617,9 +617,9 @@ let is_renaming s = (if strong_excluded_middle (renaming s) then 0 else 1)
 
 type subst_typing (s:esub) (g1:env) (g2:env) =
   f:(x:var{is_Some (lookup_evar g1 x)} ->
-     kinding g1 (Some.v (lookup_evar g1 x)) KTyp ->
-     Tot(typing g2 (s x) (Some.v (lookup_evar g1 x)))
-    ){feq (MkEnv.a g1) (MkEnv.a g2)}
+     kinding g1 (Some..v (lookup_evar g1 x)) KTyp ->
+     Tot(typing g2 (s x) (Some..v (lookup_evar g1 x)))
+    ){feq (MkEnv..a g1) (MkEnv..a g2)}
 
 irreducible val substitution :
       #g1:env -> #e:exp -> #t:typ -> s:esub -> #g2:env ->
@@ -641,7 +641,7 @@ let rec substitution #g1 #e #t s #g2 h1 hs =
          if y = 0
          then TyVar y (kinding_extensional hkindg1 (extend_evar g2 0 tlam))
          else let hgamma2
-             (* : typing g2 (s (y-1)) (Some.v (lookup_evar g1 (y-1)))
+             (* : typing g2 (s (y-1)) (Some..v (lookup_evar g1 (y-1)))
                 -- this annotation doesn't help fix inference problem below *)
              = hs (y - 1) (kinding_extensional hkindg1 g1) in
               (* XXX before universes this used to work without implicits
@@ -649,7 +649,7 @@ let rec substitution #g1 #e #t s #g2 h1 hs =
               (* substitution esub_inc hgamma2 hs'' *)
               (* Failed to verify implicit argument: Subtyping check failed;
                  expected type LambdaOmega.var; got type Prims.int [2 times] *)
-              substitution #_ #(s (y-1)) #(Some.v (lookup_evar g1 (y-1)))
+              substitution #_ #(s (y-1)) #(Some..v (lookup_evar g1 (y-1)))
                 esub_inc #_ hgamma2 hs''
      in (esub_lam_hoist tlam ebody s;
          TyLam tlam (kinding_extensional hkind g2)
@@ -874,12 +874,12 @@ let rec tred_diamond #s #t #u h1 h2 =
         h22: tred s2' u2'
         s1' = (TLam k s1); s2' = s2 *)
     (* AR: does not work without this type annotation *)
-      let h21:(tred (TLam.t s1') (TLam.t lu1')) =
+      let h21:(tred (TLam..t s1') (TLam..t lu1')) =
         match h21 with
           | TrLam _ h' -> h'
-          | TrRefl _ -> TrRefl (TLam.t s1') in
+          | TrRefl _ -> TrRefl (TLam..t s1') in
       (* magic() (\* XXX *\) *)
-      let ExIntro v1 (Conj p1a p1b) = tred_diamond #(TLam.t s1') #_ #(TLam.t lu1') h11 h21 in
+      let ExIntro v1 (Conj p1a p1b) = tred_diamond #(TLam..t s1') #_ #(TLam..t lu1') h11 h21 in
         (* XXX: tred_diamond h11 h21 (#580)
            This used to work before universes but now fails:
            Failed to verify implicit argument: Subtyping check failed;
@@ -889,7 +889,7 @@ let rec tred_diamond #s #t #u h1 h2 =
         *)
       let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
       let v = tsubst_beta v2 v1 in
-      ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta #(TLam.t lu1') #_ #_ #_ k p1b p2b))
+      ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta #(TLam..t lu1') #_ #_ #_ k p1b p2b))
       (* XXX: TrBeta k p1b p2b:
         Failed to verify implicit argument: Subtyping check failed;
         expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
@@ -899,16 +899,16 @@ let rec tred_diamond #s #t #u h1 h2 =
              (TrBeta #s1 #s2 #t1' #t2' k h11 h12) ->
       let ExIntro v1 (Conj p1 p2) = tred_diamond h21 (TrLam k h11) in
       let ExIntro v2 (Conj p3 p4) = tred_diamond h22 h12 in
-      let h_body:(tred (TLam.t lu1') (TLam.t v1)) =
+      let h_body:(tred (TLam..t lu1') (TLam..t v1)) =
         match p1 with
           | TrLam _ h' -> h'
-          | TrRefl _ -> TrRefl (TLam.t lu1') in
-      let h_body2:(tred t1' (TLam.t v1)) =
+          | TrRefl _ -> TrRefl (TLam..t lu1') in
+      let h_body2:(tred t1' (TLam..t v1)) =
         match p2 with
           | TrLam _ h' -> h'
           | TrRefl _ -> TrRefl t1' in
-      ExIntro (tsubst_beta v2 (TLam.t v1))
-              (Conj (TrBeta #(TLam.t lu1') #_ #_ #_ k h_body p3)
+      ExIntro (tsubst_beta v2 (TLam..t v1))
+              (Conj (TrBeta #(TLam..t lu1') #_ #_ #_ k h_body p3)
                     (subst_of_tred_tred 0 p4 h_body2))
       (* XXX (#580): (TrBeta k h_body p3) *)
       (* Failed to verify implicit argument: Subtyping check failed;
@@ -1163,7 +1163,7 @@ irreducible val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
                 (kinding g s1 KTyp))
 let inversion_elam_typing #g s1 e t1 t2 h =
   inversion_elam s1 e t1 t2 h (EqRefl (TArr t1 t2))
-    (Conj.h2 (kinding_inversion_arrow #g #t1 #t2 (typing_to_kinding h)))
+    (Conj..h2 (kinding_inversion_arrow #g #t1 #t2 (typing_to_kinding h)))
 
 (* Type preservation *)
 irreducible val preservation : #e:exp -> #e':exp -> hs:step e e' ->

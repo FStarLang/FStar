@@ -46,7 +46,7 @@ reifiable new_effect_for_free {
 }
 
 (* A lift from Pure *)
-unfold let lift_pure_stexnc (a:Type) (wp:pure_wp a) (h0:int) (p:STEXNC.post a) =
+unfold let lift_pure_stexnc (a:Type) (wp:pure_wp a) (h0:int) (p:STEXNC..post a) =
         wp (fun a -> p (Some a, (h0, 0)))
 sub_effect PURE ~> STEXNC = lift_pure_stexnc
 
@@ -54,10 +54,10 @@ sub_effect PURE ~> STEXNC = lift_pure_stexnc
          the abstraction of counting exceptions *)
 
 (* Pre-/postcondition variant *)
-effect StExnC (a:Type) (req:STEXNC.pre)
+effect StExnC (a:Type) (req:STEXNC..pre)
                        (ens:int -> option a -> int -> int -> GTot Type0) =
        STEXNC a
-         (fun (h0:int) (p:STEXNC.post a) -> req h0
+         (fun (h0:int) (p:STEXNC..post a) -> req h0
           /\ (forall (r:option a) (h1:int) (c:int).
                  (req h0 /\ ens h0 r h1 c) ==> p (r, (h1, c))))
 
@@ -67,11 +67,11 @@ effect SC (a:Type) =
 
 (* This rightfully fails, since STEXNC is not reflectable *)
 
-(* val f_impl : (a:Type) -> STEXNC.repr a (fun h0 post -> post (None, (h0, 0))) *)
+(* val f_impl : (a:Type) -> STEXNC..repr a (fun h0 post -> post (None, (h0, 0))) *)
 (* let f_impl a = fun h0 -> None, (h0, 0) *)
 
 (* let f (a:Type) : STEXNC a (fun h0 post -> post (None, (h0, 0))) = *)
-(*         STEXNC.reflect (f_impl a) *)
+(*         STEXNC..reflect (f_impl a) *)
 
 val div_intrinsic : i:nat -> j:int -> StExnC int
   (requires (fun h -> True))
@@ -79,11 +79,11 @@ val div_intrinsic : i:nat -> j:int -> StExnC int
                         | None -> h0 = h1 /\ c = 1 /\ j = 0
                         | Some z -> h0 = h1 /\ c = 0 /\ j <> 0 /\ z = i / j))
 let div_intrinsic i j = 
-  if j = 0 then STEXNC.raise int
+  if j = 0 then STEXNC..raise int
   else i / j
 
 reifiable let div_extrinsic (i:nat) (j:int) : SC int =
-  if j = 0 then STEXNC.raise int
+  if j = 0 then STEXNC..raise int
   else i / j
 
 let lemma_div_extrinsic (i:nat) (j:int) (h0:int) :

@@ -25,19 +25,19 @@ abstract type seq (a:Type) =
 
 (* Destructors *)
 abstract val length: #a:Type -> seq a -> Tot nat
-let length #a s = List.length (MkSeq.l s)
+let length #a s = List.length (MkSeq..l s)
 
 abstract val index:  #a:Type -> s:seq a -> i:nat{i < length s} -> Tot a
-let index #a s i = List.index (MkSeq.l s) i
+let index #a s i = List.index (MkSeq..l s) i
 
 private val cons: #a:Type -> x:a -> s:seq a -> Tot (seq a)
-let cons #a x s = MkSeq (x::(MkSeq.l s))
+let cons #a x s = MkSeq (x::(MkSeq..l s))
 
-private val hd: #a:Type -> s:seq a{is_Cons (MkSeq.l s)} -> Tot a
-let hd #a s = List.hd (MkSeq.l s)
+private val hd: #a:Type -> s:seq a{is_Cons (MkSeq..l s)} -> Tot a
+let hd #a s = List.hd (MkSeq..l s)
 
-private val tl: #a:Type -> s:seq a{is_Cons (MkSeq.l s)} -> Tot (seq a)
-let tl #a s = MkSeq (List.tl (MkSeq.l s))
+private val tl: #a:Type -> s:seq a{is_Cons (MkSeq..l s)} -> Tot (seq a)
+let tl #a s = MkSeq (List.tl (MkSeq..l s))
 
 abstract val create: #a:Type -> nat -> a -> Tot (seq a)
 let rec create #a len v = if len = 0 then MkSeq [] else cons v (create (len - 1) v)
@@ -71,7 +71,7 @@ abstract val upd: #a:Type -> s:seq a -> n:nat{n < length s} -> a ->  Tot (seq a)
 let rec upd #a s n v = if n = 0 then cons v (tl s) else cons (hd s) (upd (tl s) (n - 1) v)
 
 abstract val append: #a:Type -> seq a -> seq a -> Tot (seq a)
-let append #a s1 s2 = MkSeq (List.append (MkSeq.l s1) (MkSeq.l s2))
+let append #a s1 s2 = MkSeq (List.append (MkSeq..l s1) (MkSeq..l s2))
 
 let op_At_Bar (#a:Type) (s1:seq a) (s2:seq a) = append s1 s2
 
@@ -105,7 +105,7 @@ abstract val lemma_len_append: #a:Type -> s1:seq a -> s2:seq a -> Lemma
   (requires True)
   (ensures (length (append s1 s2) = length s1 + length s2))
   [SMTPat (length (append s1 s2))]
-let lemma_len_append #a s1 s2 = FStar.ListProperties.append_length (MkSeq.l s1) (MkSeq.l s2)
+let lemma_len_append #a s1 s2 = FStar.ListProperties.append_length (MkSeq..l s1) (MkSeq..l s2)
 
 abstract val lemma_len_slice: #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s} -> Lemma
   (requires True)
@@ -136,7 +136,7 @@ abstract val lemma_index_upd2: #a:Type -> s:seq a -> n:nat{n < length s} -> v:a 
   (requires True)
   (ensures (index (upd s n v) i == index s i)) (decreases (length s))
   [SMTPat (index (upd s n v) i)]
-let rec lemma_index_upd2 #a s n v i = match (MkSeq.l s) with
+let rec lemma_index_upd2 #a s n v i = match (MkSeq..l s) with
   | []     -> ()
   | hd::tl  ->
     if i = 0 then ()
@@ -148,7 +148,7 @@ abstract val lemma_index_app1: #a:Type -> s1:seq a -> s2:seq a -> i:nat{i < leng
   (requires True)
   (ensures (index (append s1 s2) i == index s1 i)) (decreases (length s1))
   [SMTPat (index (append s1 s2) i)]
-let rec lemma_index_app1 #a s1 s2 i  = match (MkSeq.l s1) with
+let rec lemma_index_app1 #a s1 s2 i  = match (MkSeq..l s1) with
   | []    -> ()
   | hd::tl ->
     if i = 0 then () else lemma_index_app1 #a (MkSeq tl) s2 (i - 1)

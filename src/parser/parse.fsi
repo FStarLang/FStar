@@ -46,6 +46,7 @@ type token =
   | LBRACK_BAR
   | LBRACE
   | BANG_LBRACE
+  | DOT_DOT
   | DOT
   | COLON
   | COLON_COLON
@@ -177,6 +178,7 @@ type tokenId =
     | TOKEN_LBRACK_BAR
     | TOKEN_LBRACE
     | TOKEN_BANG_LBRACE
+    | TOKEN_DOT_DOT
     | TOKEN_DOT
     | TOKEN_COLON
     | TOKEN_COLON_COLON

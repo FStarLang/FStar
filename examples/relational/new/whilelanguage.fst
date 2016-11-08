@@ -105,7 +105,7 @@ let rec interpret_exp_st e =
 val interpret_com_st : c:com -> ST unit 
   (requires (fun _ -> True))
   (ensures  (fun h _ h' -> 
-    (fun o -> is_Some o ==> equal h' (Some.v o)) 
+    (fun o -> is_Some o ==> equal h' (Some..v o)) 
       (interpret_com h c) ))
 let rec interpret_com_st c = 
   match c with

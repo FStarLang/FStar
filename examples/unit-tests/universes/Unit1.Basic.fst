@@ -80,7 +80,7 @@ let tabs_id (a:Type) (x:'a) = x
 val id_pure_annot_eq : #a:eqtype -> x:a -> Pure a True (fun y -> b2t (y=x))
 let id_pure_annot_eq #a x = x
 
-val id_all_annot_eq: #a:eqtype -> x:a -> All a (fun h -> True) (fun h0 y h1 -> is_V y /\ h0==h1 /\ x=(V.v y))
+val id_all_annot_eq: #a:eqtype -> x:a -> All a (fun h -> True) (fun h0 y h1 -> is_V y /\ h0==h1 /\ x=(V..v y))
 let id_all_annot_eq #a x = x
 
 val hd: list 'a -> 'a
@@ -100,7 +100,7 @@ val dup_pure: x:'a -> Tot ('a * 'a)
 let dup_pure x = (x,x)
 
 val dup_pure_eq: #a:eqtype -> x:a -> Pure (a * a) True
-                              (fun y -> b2t (Mktuple2._1 y=Mktuple2._2 y))
+                              (fun y -> b2t (Mktuple2.._1 y=Mktuple2.._2 y))
 let dup_pure_eq #a x = (x,x)
 
 (* the programs below are equivalent---see the refinement of the result in tc.fs/Exp_app case. *)
@@ -154,7 +154,7 @@ noeq type seq (a:Type0) =
           -> end_i:nat{end_i >= start_i}
           -> seq a
 type message = seq char
-let slength s = Seq.end_i s - Seq.start_i s
+let slength s = Seq..end_i s - Seq..start_i s
 assume val impure: m:message -> ST message
                                  (requires (fun h -> True))
                                  (ensures (fun h0 n h1 -> slength n = slength m))
@@ -183,8 +183,8 @@ let do_ok l = match l with
   | N -> N
   | C(n, l') -> if n = 0 then l else C(0, l')
 
-val short_circuit1: x:option int{is_Some x /\ Some.v x = 0} -> nat
-let short_circuit1 x = Some.v x
+val short_circuit1: x:option int{is_Some x /\ Some..v x = 0} -> nat
+let short_circuit1 x = Some..v x
 
 (* TESTING skolem variables for lambdas *)
 

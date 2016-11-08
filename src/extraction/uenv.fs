@@ -116,7 +116,7 @@ let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
                       | None -> 
                         Some (m, n)
                       | Some mangled ->
-                        let modul, _ = Util.prefix m in
+                        let modul = m in
                         Some (modul, mangled)
                  else None
             else None))

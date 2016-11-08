@@ -270,7 +270,7 @@ let extend_gen_0 t g =
   forall_intro (extend_gen_0_aux t g)
 
 val preservation : #e:exp -> #t:typ -> h:typing empty e t{is_Some (step e)} ->
-      Tot (typing empty (Some.v (step e)) t) (decreases e)
+      Tot (typing empty (Some..v (step e)) t) (decreases e)
 let rec preservation #e #t h =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = h in
      if is_value e1
@@ -278,5 +278,5 @@ let rec preservation #e #t h =
            then let TyLam t_x hbody = h1 in
                 (extend_gen_0 t_x empty;
                  substitution_preserves_typing 0 h2 hbody)
-           else TyApp #_ #_ #(Some.v (step e2)) #_ #_ h1 (preservation h2))
-     else TyApp #_ #(Some.v (step e1)) #_ #_ #_ (preservation h1) h2
+           else TyApp #_ #_ #(Some..v (step e2)) #_ #_ h1 (preservation h2))
+     else TyApp #_ #(Some..v (step e1)) #_ #_ #_ (preservation h1) h2

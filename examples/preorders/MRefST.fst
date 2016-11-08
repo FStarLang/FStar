@@ -98,11 +98,11 @@ effect IST    (a:Type)
 (* Generic effects (operations) for IST. *)
 
 val ist_get :     unit -> IST heap (fun s0 -> True) (fun s0 s s1 -> s0 == s /\ s == s1)
-let ist_get () = ISTATE.get()
+let ist_get () = ISTATE..get()
 
 val ist_put :     x:heap ->
 		  IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 == x)
-let ist_put x = ISTATE.put x		  
+let ist_put x = ISTATE..put x		  
 
 (* A box-like modality for witnessed stable predicates for IST. *)
 

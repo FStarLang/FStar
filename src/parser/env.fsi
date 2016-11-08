@@ -33,6 +33,7 @@ module U = FStar.Syntax.Util
 
 type env = {
   curmodule:            option<lident>;                   (* name of the module being desugared *)
+  curmonad:             option<ident>;                    (* current monad being desugared *)
   modules:              list<(lident * modul)>;           (* previously desugared modules *)
   open_namespaces:      list<lident>;                     (* fully qualified names, in order of precedence *)
   modul_abbrevs:        list<(ident * lident)>;           (* module X = A.B.C *)
@@ -61,7 +62,6 @@ val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
 
 val qualify: env -> ident -> lident
-val qualify_lid: env -> lident -> lident
 
 val empty_env: unit -> env
 val default_total: env -> env
@@ -97,7 +97,6 @@ val commit_mark: env -> env
 val finish_module_or_interface: env -> modul -> env
 val prepare_module_or_interface: bool -> bool -> env -> lident -> env * bool //pop the context when done desugaring
 val enter_monad_scope: env -> ident -> env
-val exit_monad_scope: env -> env -> env
 val export_interface: lident ->  env -> env
 
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term*bool)>

@@ -399,6 +399,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | Tvar _ ->
         ()
     | Var lid
+    | AST.Projector (lid, _)
     | Name lid ->
         record_lid false lid
     | Construct (lid, termimps) ->

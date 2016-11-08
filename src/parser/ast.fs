@@ -54,6 +54,10 @@ type term' =
   | Tvar      of ident
   | Var       of lid // a qualified identifier that starts with a lowercase (Foo.Bar.baz)
   | Name      of lid // a qualified identifier that starts with an uppercase (Foo.Bar.Baz)
+  | Projector of lid * ident (* a data constructor followed by one of
+                                its formal parameters, or an effect
+                                followed by one of its actions or
+                                "fields" *)
   | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)

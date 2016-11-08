@@ -33,6 +33,7 @@ module U = FStar.Syntax.Util
 
 type env = {
   curmodule:            option<lident>;                   (* name of the module being desugared *)
+  curmonad:             option<ident>;                    (* current monad being desugared *)
   modules:              list<(lident * modul)>;           (* previously desugared modules *)
   open_namespaces:      list<lident>;                     (* fully qualified names, in order of precedence *)
   modul_abbrevs:        list<(ident * lident)>;           (* module X = A.B.C *)
@@ -64,13 +65,14 @@ let open_modules e = e.modules
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
     | Some m -> m
-let qual lid id = set_lid_range (lid_of_ids (lid.ns @ [lid.ident;id])) id.idRange
-let qualify env id = qual (current_module env) id
-let qualify_lid env lid =
-  let cur = current_module env in
-  set_lid_range (lid_of_ids (cur.ns @ [cur.ident] @ lid.ns @ [lid.ident])) (range_of_lid lid)
+let qual = qual_id
+let qualify env id =
+    match env.curmonad with
+    | None -> qual (current_module env) id
+    | Some monad -> mk_field_projector_name_from_ident (qual (current_module env) monad) id
 let new_sigmap () = Util.smap_create 100
 let empty_env () = {curmodule=None;
+                    curmonad=None;
                     modules=[];
                     open_namespaces=[];
                     modul_abbrevs=[];
@@ -122,10 +124,20 @@ let resolve_in_open_namespaces' env lid (finder:lident -> option<'a>) : option<'
     match finder lid with
         | Some r -> Some r
         | _ ->
+         let found_in_monad =
+          match (lid.ns, env.curmonad) with
+          | ([], Some _) ->
+            finder (qualify env lid.ident)
+          | _ -> None
+         in
+         begin match found_in_monad with
+          | None ->
             let ids = ids_of_lid lid in
             find_map namespaces (fun (ns:lident) ->
                 let full_name = lid_of_ids (ids_of_lid ns @ ids) in
-                finder full_name) in
+                finder full_name)
+          | x -> x
+         end in
   aux (current_module env::env.open_namespaces)
 
 let expand_module_abbrev env lid =
@@ -170,6 +182,10 @@ let lb_fv lbs lid =
         let fv = right lb.lbname in
         if S.fv_eq_lid fv lid then Some fv else None) |> must 
 
+let ns_of_lid_equals (lid: lident) (ns: lident) =
+    List.length lid.ns = List.length (ids_of_lid ns) &&
+    lid_equals (lid_of_ids lid.ns) ns
+
 let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> =
   let occurrence_range = Ident.range_of_lid lid in
   (* Resolve using, in order,
@@ -193,14 +209,15 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
             || quals |> Util.for_some (function Assumption -> true | _ -> false)
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
                  let dd = if Util.is_primop_lid lid
-                          || (Util.starts_with lid.nsstr "Prims." && quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+                          || (ns_of_lid_equals lid FStar.Syntax.Const.prims_lid && quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
-                 if quals |> List.contains Reflectable //this is really a M.reflect
-                 then let refl_monad = Ident.lid_of_path (lid.ns |> List.map (fun x -> x.idText)) occurrence_range in
+                 begin match Util.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M..reflect
+                 | Some refl_monad ->
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
                         Some (Term_name (refl_const, false))
-                 else Some (Term_name(fvar lid dd (fv_qual_of_se se), false))
+                 | _ -> Some (Term_name(fvar lid dd (fv_qual_of_se se), false))
+                 end
             else None
           | Sig_new_effect_for_free (ne, _) | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
           | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
@@ -357,7 +374,7 @@ let extract_record (e:env) = function
                         if S.is_null_bv x
                         || (is_rec && S.is_implicit q)
                         then []
-                        else [(qual constrname (if is_rec then Util.unmangle_field_name x.ppname else x.ppname), x.sort)]) in
+                        else [(mk_field_projector_name_from_ident constrname (if is_rec then Util.unmangle_field_name x.ppname else x.ppname), x.sort)]) in
                 let record = {typename=typename;
                               constrname=constrname;
                               parms=parms;
@@ -371,19 +388,17 @@ let extract_record (e:env) = function
   | _ -> ()
 
 let try_lookup_record_or_dc_by_field_name env (fieldname:lident) =
-  let maybe_add_constrname ns c =
-    let rec aux ns = match ns with
-      | [] -> [c]
-      | [c'] -> if c'.idText = c.idText then [c] else [c';c]
-      | hd::tl -> hd::aux tl in
-    aux ns in
+  let needs_constrname = not (field_projector_contains_constructor fieldname.ident.idText) in
   let find_in_cache fieldname =
 //Util.print_string (Util.format1 "Trying field %s\n" fieldname.str);
-    let ns, fieldname = fieldname.ns, fieldname.ident in
+    let ns, id = fieldname.ns, fieldname.ident in
     Util.find_map (peek_record_cache()) (fun record ->
       let constrname = record.constrname.ident in
-      let ns = maybe_add_constrname ns constrname in
-      let fname = lid_of_ids (ns@[fieldname]) in
+      let fname =
+       if needs_constrname
+       then mk_field_projector_name_from_ident (lid_of_ids (ns @ [constrname])) id
+       else fieldname
+      in
       Util.find_map record.fields (fun (f, _) ->
         if lid_equals fname f
         then Some(record, fname)
@@ -404,7 +419,7 @@ let qualify_field_to_record env (recd:record_or_dc) (f:lident) =
   let qualify fieldname =
     let ns, fieldname = fieldname.ns, fieldname.ident in
     let constrname = recd.constrname.ident in
-    let fname = lid_of_ids (ns@[constrname]@[fieldname]) in
+    let fname = mk_field_projector_name_from_ident (lid_of_ids (ns @ [constrname])) fieldname in
     Util.find_map recd.fields (fun (f, _) ->
       if lid_equals fname f
       then Some(fname)
@@ -625,16 +640,9 @@ let prepare_module_or_interface intf admitted env mname =
       prep (push env), true //push a context so that we can pop it when we're done
       
 let enter_monad_scope env mname =
-  let curmod = current_module env in
-  let mscope = lid_of_ids (curmod.ns@[curmod.ident; mname]) in
-  {env with
-    curmodule=Some mscope;
-    open_namespaces=curmod::env.open_namespaces}
-
-let exit_monad_scope env0 env =
-  {env with
-    curmodule=env0.curmodule;
-    open_namespaces=env0.open_namespaces}
+  match env.curmonad with
+  | Some mname' -> raise (Error ("Trying to define monad " ^ mname.idText ^ ", but already in monad scope " ^ mname'.idText, mname.idRange))
+  | None -> {env with curmonad = Some mname}
 
 let fail_or env lookup lid = match lookup lid with
   | None ->

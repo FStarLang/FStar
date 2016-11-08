@@ -116,9 +116,9 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
    safelen i l 1ul /\
    xors == counterblocks i rgn (PRF.incr i x) l 0 l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
    (let m = PRF.macRange rgn i x e in
-    let mac_log = MAC.ilog (MAC.State.log m) in
+    let mac_log = MAC.ilog (MAC.State..log m) in
     m_contains mac_log h /\ (
-    match m_sel h (MAC.ilog (MAC.State.log m)) with
+    match m_sel h (MAC.ilog (MAC.State..log m)) with
     | None           -> False
     | Some (msg,tag') -> msg = field_encode i ad #(FStar.UInt32.uint_to_t l) cipher /\
 			tag = tag')))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log

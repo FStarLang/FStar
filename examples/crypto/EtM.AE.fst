@@ -20,27 +20,27 @@ type log_t (r:rid) = m_rref r (seq (CPA.msg * cipher)) grows
 
 noeq type key =
   | Key:  #region:rid ->
-               ke:CPA.key { extends (CPA.Key.region ke) region  } ->
-               km:MAC.key { extends (MAC.Key.region km) region /\
-                 (disjoint( CPA.Key.region ke) (MAC.Key.region km)) } ->
+               ke:CPA.key { extends (CPA.Key..region ke) region  } ->
+               km:MAC.key { extends (MAC.Key..region km) region /\
+                 (disjoint( CPA.Key..region ke) (MAC.Key..region km)) } ->
                log:log_t region -> key
 
 let get_log (h:mem) (k:key) =
   m_sel h k.log
 
 let get_mac_log (h:mem) (k:key) =
-  m_sel h (MAC.Key.log k.km)
+  m_sel h (MAC.Key..log k.km)
 
 let get_cpa_log (h:mem) (k:key) =
-  m_sel h (CPA.Key.log k.ke)
+  m_sel h (CPA.Key..log k.ke)
 
 let invariant (h:mem) (k:key) =
   let log = get_log h k in
   let mac_log = get_mac_log h k in
   let cpa_log = get_cpa_log h k in
   Map.contains h.h k.region /\
-  Map.contains h.h (MAC.Key.region k.km) /\
-  Map.contains h.h (CPA.Key.region k.ke) /\
+  Map.contains h.h (MAC.Key..region k.km) /\
+  Map.contains h.h (CPA.Key..region k.ke) /\
   Seq.length log = Seq.length mac_log /\
   Seq.length mac_log = Seq.length cpa_log /\
   (forall (i:int). indexable log i ==>

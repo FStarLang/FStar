@@ -81,7 +81,7 @@ val decrypt: k:key -> c:cipher -> ST (option msg)
     ))
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
-    ( (b2t int_ctxt /\ is_Some res) ==> mem (Some.v res,c) (m_sel h0 k.log)
+    ( (b2t int_ctxt /\ is_Some res) ==> mem (Some..v res,c) (m_sel h0 k.log)
     )
   )
   )
@@ -98,6 +98,6 @@ let decrypt k c =
     assume( B.length c' >= aeadTagSize AES_128_GCM);
     let poption = (CoreCrypto.aead_decrypt AES_128_GCM k.raw iv empty_bytes c') in
     if is_Some poption then
-      Some (coerce (Some.v poption))
+      Some (coerce (Some..v poption))
     else
       None

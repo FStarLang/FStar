@@ -251,6 +251,8 @@ and free_type_vars env t = match (unparen t).tm with
   | Var  _
   | Name _  -> []
 
+  | AST.Projector _ -> raise (Error (".. not supported by legacy desugaring", t.range))
+
   | Requires (t, _)
   | Ensures (t, _)
   | Labeled(t, _, _)

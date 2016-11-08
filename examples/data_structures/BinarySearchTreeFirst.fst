@@ -65,8 +65,8 @@ let rec contains (#k:int) t key =
   then false
   else let Node left i right = t in
        i=k
-       || (key < i && is_Some left && contains (Some.v left) key)
-       || (is_Some right && contains (Some.v right) key)
+       || (key < i && is_Some left && contains (Some..v left) key)
+       || (is_Some right && contains (Some..v right) key)
 
 val in_order_opt: #k:int -> t:option (tree k) -> Tot (list int) (decreases t)
 let rec in_order_opt (#k:int) t = match t with

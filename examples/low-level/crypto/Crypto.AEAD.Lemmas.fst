@@ -54,9 +54,9 @@ let mac_refines (i:id)
        match PRF.find_mac tab x0 with 
        | None -> False
        | Some m -> 
-         let mac_log = MAC.ilog (MAC.State.log m) in
+         let mac_log = MAC.ilog (MAC.State..log m) in
 	 m_contains mac_log h /\ (
-	 match m_sel h (MAC.ilog (MAC.State.log m)) with
+	 match m_sel h (MAC.ilog (MAC.State..log m)) with
 	 | None           -> False
 	 | Some (msg,tag') -> msg = field_encode i ad #(u len) c /\
 	                     tag = tag')))
@@ -249,7 +249,7 @@ let frame_refines_one_entry (h:mem) (i:id{safeId i}) (mac_rgn:region)
 	   (ensures  refines_one_entry h' e blocks)
    = let PRF.Entry x rng = Seq.index blocks 0 in
      let m = PRF.macRange mac_rgn i x rng in
-     let mac_log = MAC.ilog (MAC.State.log m) in
+     let mac_log = MAC.ilog (MAC.State..log m) in
      assert (m_sel h mac_log = m_sel h' mac_log);
      assert (m_contains mac_log h') //this include HS.live_region, which is not derivable from modifies_ref along
      

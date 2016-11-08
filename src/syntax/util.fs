@@ -30,6 +30,8 @@ open FStar.Const
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
 
+let qual_id lid id = set_lid_range (lid_of_ids (lid.ns @ [lid.ident;id])) id.idRange
+
 let mk_discriminator lid =
   lid_of_ids (lid.ns@[mk_ident("is_" ^ lid.ident.idText, lid.ident.idRange)])
 
@@ -484,12 +486,59 @@ let unmangle_field_name x =
     then mk_ident(Util.substring_from x.idText 7, x.idRange)
     else x
 
+(***********************************************************************************************)
+(* Combining an effect name with the name of one of its actions, or a
+   data constructor name with the name of one of its formal parameters
+
+   NOTE: the conventions defined here must be in sync with manually
+   linked ML files, such as ulib/ml/prims.ml
+ *)
+(***********************************************************************************************)
+
+let field_projector_prefix = "__proj__"
+
+(* NOTE: the following would have been desirable:
+
+<<
+let field_projector_prefix = Ident.reserved_prefix ^ "proj__"
+>>
+
+   but it DOES NOT work with --use_hints on
+   examples/preorders/MRefHeap.fst (even after regenerating hints), it
+   will produce the following error:
+
+   fstar.exe  --use_hints --verify_module MRefHeap MRefHeap.fst
+   ./MRefHeap.fst(55,51-58,27): (Error) Unknown assertion failed
+   Verified module: MRefHeap (2150 milliseconds)
+   1 error was reported (see above)
+
+   In fact, any naming convention that DOES NOT start with
+   Ident.reserved_prefix seems to work.
+*)
+
+let field_projector_sep = "__item__"
+
+let field_projector_contains_constructor s = Util.starts_with s field_projector_prefix
+
+let mk_field_projector_name_from_string constr field =
+    field_projector_prefix ^ constr ^ field_projector_sep ^ field
+
+let mk_field_projector_name_from_ident lid (i : ident) =
+    let j = unmangle_field_name i in
+    let jtext = j.idText in
+    let newi =
+        if field_projector_contains_constructor jtext
+        then j
+        else mk_ident (mk_field_projector_name_from_string lid.ident.idText jtext, i.idRange)
+    in
+    lid_of_ids (lid.ns @ [newi])
+
 let mk_field_projector_name lid (x:bv) i =
     let nm = if Syntax.is_null_bv x
              then mk_ident("_" ^ Util.string_of_int i, Syntax.range_of_bv x)
              else x.ppname in
     let y = {x with ppname=nm} in
-    lid_of_ids (ids_of_lid lid @ [unmangle_field_name nm]), y
+    mk_field_projector_name_from_ident lid nm, y
 
 let set_uvar uv t =
   match Unionfind.find uv with
