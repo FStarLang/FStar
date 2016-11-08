@@ -68,7 +68,7 @@ openssl/Configure:
 	git submodule update --init --recursive
 
 openssl/libcrypto.a: openssl/Configure
-	cd openssl && $(OPENSSL_CONF) && $(MAKE) build_libs
+	cd openssl && $(OPENSSL_CONF) && $(MAKE) -j4 build_libs
 
 libcrypto.a: openssl/libcrypto.a
 	cp openssl/libcrypto.a .
@@ -80,7 +80,7 @@ CoreCrypto.cmxa: #explicitly sequentialize
 	make openssl_stub.o
 	make $(DB)/DB.cmx
 	make DHDB.cmx
-	$(OCAMLMKLIB) $(CCLIBS) $(EXTRA_LIBS) -o CoreCrypto $(DLL_OBJ)
+	$(OCAMLMKLIB) $(EXTRA_LIBS) $(CCLIBS) -o CoreCrypto $(DLL_OBJ)
 
 DLL_BYTE = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o DHDB.cmo $(DB)/DB.cmo
 CoreCrypto.cma: $(DLL_BYTE)
