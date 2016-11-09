@@ -430,7 +430,7 @@ let prf_dexor_requires (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr})
    Buffer.frameOf cipher <> t.rgn /\
    Crypto.Plain.live h0 plain /\ 
    Buffer.live h0 cipher /\ 
-   (safeId i ==> contains_cipher_block (v l) x (Buffer.as_seq h0 cipher) (HS.sel h0 (PRF.itable i t)))
+   (safeId i ==> contains_cipher_block (v l) x (Buffer.as_seq h0 cipher) (HS.sel h0 (itable i t)))
 
 let contains_plain_block   (#i:id) (#r:rid) (#l:nat)
 			   (x:domain i{safeId i /\ ctr_0 i <^ x.ctr})
@@ -449,7 +449,7 @@ let prf_dexor_ensures (i:id) (t:state i) (x:domain i{ctr_0 i <^ x.ctr})
    Crypto.Plain.live h1 plain /\ 
    Buffer.live h1 cipher /\
    prf_dexor_modifies t x plain h0 h1 /\
-   (safeId i ==> contains_plain_block x (sel_plain h1 l plain) (HS.sel h1 (PRF.itable i t)))
+   (safeId i ==> contains_plain_block x (sel_plain h1 l plain) (HS.sel h1 (itable i t)))
    
 val prf_dexor: 
   i:id -> t:state i -> x:domain i{ctr_0 i <^ x.ctr} -> l:u32 {l <=^ blocklen i} -> 
@@ -508,7 +508,7 @@ val prf_enxor:
      Crypto.Plain.live h1 plain /\ Buffer.live h1 cipher /\
      modifies_x_buffer_1 t x cipher h0 h1 /\
      (safeId i ==>  (
-       let blocks = HS.sel h1 (PRF.itable i t) in
+       let blocks = HS.sel h1 (itable i t) in
        contains_plain_block x (sel_plain h1 l plain) blocks /\
        contains_cipher_block (v l) x (sel_bytes h1 l cipher) blocks))))
        
