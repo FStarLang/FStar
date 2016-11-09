@@ -503,59 +503,26 @@ let rec counterblocks_contains_all_cipher_blocks i rgn x len remaining_len plain
   else let l = min remaining_len (PRF.blocklen i) in 
        counterblocks_contains_all_cipher_blocks i rgn (PRF.incr i x) len (remaining_len -^ l) plain cipher;
        admit()
-  
-(*   assert (completed_len <= Seq.length all_blocks); *)
-(*   admit() *)
-  
-(* 			     (rgn:region) ->  *)
-(* 			     (x:domain i{ctr_0 i <^ x.ctr}) -> *)
-(* 			     (len:nat{len <> 0}) -> *)
-(* 			     (from_pos:nat{from_pos <= len /\ safelen i (len - from_pos) x.ctr}) -> *)
-(* 			     (plain:Plain.plain i len) -> *)
-(* 			     (cipher:lbytes len) -> *)
 
-(* let x0 = {x with ctr=ctr_0 i +^ 1ul} in *)
-	     	     
-(*   let x0 =  *)
-  
-(*    if remaining_len = 0ul then () *)
-(*    else () *)
-(*    let from_pos = len -^ remaining_len in *)
-(*         let to_pos = len in     *)
-(*        let l0 = minNat remaining blockl in  *)
-(*     let l_32 = UInt32.uint_to_t l0 in  *)
-(*     let plain_hd = Crypto.Plain.slice plain from_pos (from_pos + l0) in *)
-(*     let cipher_hd = Seq.slice cipher from_pos (from_pos + l0) in *)
-(*     let block = PRF.Entry x (PRF.OTP l_32 plain_hd cipher_hd) in *)
-(*     let blocks = counterblocks i rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in *)
-(*     SeqProperties.cons block blocks *)
+let rec widen_contains_all_cipher_blocks (#i:id) (#r:rid)
+					  (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
+					  (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
+					  (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len})
+					  (cipher:lbytes (v len))
+					  (blocks:prf_blocks r i)
+					  (blocks':prf_blocks r i)
+    : Lemma (requires (contains_all_cipher_blocks x len remaining_len cipher blocks /\
+		       (forall (y:domain i{y `above` x}). PRF.find blocks' y == PRF.find blocks y)))
+	    (ensures (contains_all_cipher_blocks x len remaining_len cipher blocks'))
+	    (decreases (v remaining_len))
+    = if not (safeId i) || remaining_len = 0ul then 
+	 ()
+      else let starting_pos = len -^ remaining_len in
+	   let l = min remaining_len (PRF.blocklen i) in
+	   let cipher_hd = Seq.slice cipher (v starting_pos) (v starting_pos + v l) in
+	   widen_contains_all_cipher_blocks (PRF.incr i x) len (remaining_len -^ l) cipher blocks blocks'
 
-   
-
-(*   i:id {safeId i} ->  *)
-(*   rgn:region ->  *)
-(*   x:PRF.domain i{PRF.ctr_0 i <^ ctr x} ->  *)
-(*   len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)} -> *)
-(*   remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len} ->  *)
-(*   plain:Crypto.Plain.plain i (v len) ->  *)
-(*   cipher:lbytes (v len) ->  *)
-
-(*   Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)} *)
-(*   (decreases (to_pos - from_pos)) *)
-
-
-(* (i:id{safeId i}) -> *)
-(* 					      (n:Cipher.iv (alg i)) -> *)
-(* 					      (st:state i Reader) -> *)
-(* 		      			      #aadlen:UInt32.t {aadlen <=^ aadmax} -> *)
-(* 					      (aad:lbuffer (v aadlen)) -> *)
-(* 					      #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} -> *)
-(* 					      (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) -> *)
-(* 					      (p:plain i (v plainlen)) -> *)
-(* 					      (entry:entry i) -> *)
-(* 					      (blocks: prf_blocks st.prf.mac_rgn i) -> *)
-(* 					      (h:mem{Buffer.live h cipher_tagged}) -> *)
-
+#set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 0 --max_fuel 0"
 val intro_contains_all_cipher_blocks: (i:id{safeId i}) ->
 				      (n:Cipher.iv (alg i)) ->
 				      (st:state i Reader) ->
@@ -570,119 +537,45 @@ val intro_contains_all_cipher_blocks: (i:id{safeId i}) ->
      Lemma (requires (let aead_entries = HS.sel h st.log in 
 		      let prf_entries = HS.sel h (PRF.itable i st.prf) in 
 		      let x0 = {iv=n; ctr=ctr_0 i} in
+		      Buffer.live h aad /\
 		      refines_one_entry h entry blocks /\
 		      find_entry n aead_entries == Some entry /\
 		      found_entry n st aad cipher_tagged q h /\
 		      (forall (y:domain i{y `above` x0}). PRF.find prf_entries y == PRF.find blocks y)))
            (ensures (let x1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
 		     let cipher = Buffer.sub cipher_tagged 0ul plainlen in
-		     contains_all_cipher_blocks i x1 plainlen plainlen st.prf cipher h))
-#set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 1 --max_fuel 1"
+		     contains_all_cipher_blocks' x1 plainlen plainlen cipher st.prf h))
+#set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 2 --max_fuel 2"
+let find_singleton (#rgn:region) (#i:id) (e:PRF.entry rgn i) (x:PRF.domain i) 
+    : Lemma (if is_entry_domain x e then PRF.find (Seq.create 1 e) x == Some e.range
+	     else PRF.find (Seq.create 1 e) x == None)
+    = ()	     
 
-let contains_cipher_block' (#i:id) (#r:rid) (#l:nat)
-			   (x:domain i{ctr_0 i <^ x.ctr})
-			   (cipher:lbytes l)
-			   (blocks:prf_blocks r i)
-  = if safeId i then
-      match find_otp blocks x with
-      | Some (OTP l' p c) -> l == v l' /\ c ==  cipher
-      | None -> False 
-    else True
-
-
-let rec contains_all_cipher_blocks' (i:id{safeId i})
-				    (rgn:region)
-				    (x:PRF.domain i{PRF.ctr_0 i <^ ctr x})
-				    (len:nat)
-				    (from_pos:nat)
-				    (to_pos:nat{from_pos <= to_pos /\ to_pos <= len /\ safelen i (to_pos - from_pos) (ctr x)})
-				    (cipher:lbytes len)
-				    (blocks:prf_blocks rgn i) 
-   : GTot Type0 (decreases (to_pos - from_pos)) 
-   = 
-   let remaining = to_pos - from_pos in 
-   if remaining = 0 then 
-     True
-   else let l = minNat remaining (v (PRF.blocklen i)) in
-        let cipher_hd = Seq.slice cipher from_pos (from_pos + l) in
-	contains_cipher_block' #i #rgn #l x cipher_hd blocks /\
-	contains_all_cipher_blocks' i rgn (PRF.incr i x) len (from_pos + l) to_pos cipher blocks
-
-(* let intro_contains_all_cipher_blocks_from_prime (i:id)  *)
-(* 				   (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr}) *)
-(* 				   (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)}) *)
-(* 				   (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len}) *)
-(* 				   (t:PRF.state i)  *)
-(* 				   (cipher: lbuffer (v len)) *)
-(* 				   (h:mem{Buffer.live h cipher}) *)
-(*     : Lemma (requires (let c = Buffer.as_seq h cipher in *)
-(* 		       safeId i  ==> ( *)
-(* 		       let blocks = HS.sel h (PRF.itable i t) in *)
-(* 		       contains_all_cipher_blocks' i t.mac_rgn x (v len) (v (len -^ remaining_len)) (v len) c blocks))) *)
-(*             (ensures (contains_all_cipher_blocks i x len remaining_len t cipher h)) *)
-(*     = admit() *)
-    
-		       
-(* 				    (rgn:region) *)
-(* 				    (x:PRF.domain i{PRF.ctr_0 i <^ ctr x}) *)
-(* 				    (len:nat) *)
-(* 				    (from_pos:nat) *)
-(* 				    (to_pos:nat{from_pos <= to_pos /\ to_pos <= len /\ safelen i (to_pos - from_pos) (ctr x)}) *)
-(* 				    (cipher:lbytes len) *)
-(* 				    (blocks:prf_blocks rgn i)  *)
-(* 				   : GTot Type0 (decreases (v remaining_len)) *)
-
-(* let contains_all_cipher_blocks_remove_prime *)
-   
-				      
-				    
-(*   Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)} *)
-
-(* 					(x:PRF.domain i{PRF.ctr_0 i <^ x.ctr}) *)
-(* 					(len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)}) *)
-(* 					(remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len}) *)
-(* 					(t:PRF.state i)  *)
-(* 					(cipher: lbuffer (v len)) *)
-(* 					(h:mem{Buffer.live h cipher}) *)
-(* 				   : GTot Type0 (decreases (v remaining_len)) *)
-(*    = if remaining_len = 0ul then  *)
-(*        True *)
-(*      else let starting_pos = len -^ remaining_len in *)
-(* 	  let l = min remaining_len (PRF.blocklen i) in *)
-(* 	  let cipher_hd = Buffer.sub cipher starting_pos l in  *)
-(* 	  contains_cipher_block t x l cipher_hd h /\ *)
-(* 	  contains_all_cipher_blocks i (PRF.incr i x) len (remaining_len -^ l) t cipher h *)
-
-
-(* let intro_contains_all_cipher_blocks i n st #aadlen aad #plainlen cipher_tagged q entry blocks h = *)
-(*   let Entry nonce ad l p c = entry in *)
-(*   assume (Buffer.live h aad); *)
-(*   assume (Buffer.live h cipher_tagged); *)
-(*   assert (nonce == n);  *)
-(*   assert (c == Buffer.as_seq h cipher_tagged); *)
-(*   let cipher = Buffer.sub cipher_tagged 0ul plainlen in  *)
-(*   let c' = Buffer.as_seq h cipher in *)
-(*     (\* assert(Seq.equal c' (Seq.slice c 0 (v plainlen))); *\) *)
-(*   let x_1 = {iv=n; ctr=ctr_0 i +^ 1ul} in *)
-(*   let blocks_tl = SeqProperties.tail blocks in *)
-(*   assert (blocks_tl == counterblocks i st.prf.mac_rgn x_1 (v plainlen) 0 (v plainlen) p c'); *)
-(*   let l_1 = min plainlen (PRF.blocklen i) in *)
-(*   let p_1 = Plain.slice p 0 (v l_1) in *)
-(*   let c_1 = Seq.slice c' 0 (v l_1) in *)
-(*   (\* assert (SeqProperties.head blocks_tl == PRF.Entry x_1 (PRF.OTP l_1 p_1 c_1)); *\) *)
-(*   match find_otp blocks_tl x_1 with  *)
-(*   | None -> () *)
-(*   | Some (OTP l_1' p_1' c_1') ->  *)
-(*     assert (l_1 == l_1' /\ p_1 == p_1' /\ c_1 == c_1'); *)
-(*     admit() *)
-  
-  
-(*   admit() *)
-  
-(*   let Entry nonce *)
-(*   admit(); () *)
-  
-
+#set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 0 --max_fuel 0"
+let intro_contains_all_cipher_blocks i n st #aadlen aad #plainlen cipher_tagged q entry blocks h =
+  let Entry nonce ad l p c = entry in
+  assume (Buffer.live h aad);
+  let prf_entries = HS.sel h (PRF.itable i st.prf) in 
+  assert (nonce == n);
+  assert (c == Buffer.as_seq h cipher_tagged);
+  let cipher = Buffer.sub cipher_tagged 0ul plainlen in
+  let c' = Buffer.as_seq h cipher in
+    (* assert(Seq.equal c' (Seq.slice c 0 (v plainlen))); *)
+  let x_1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
+  let blocks_hd = SeqProperties.head blocks in 
+  let blocks_tl = SeqProperties.tail blocks in
+  assert (blocks_tl == counterblocks i st.prf.mac_rgn x_1 (v plainlen) 0 (v plainlen) p c');
+  assert (Seq.equal (Seq.slice blocks_tl 0 (Seq.length blocks_tl)) blocks_tl);
+  counterblocks_contains_all_cipher_blocks i st.prf.mac_rgn x_1 plainlen plainlen p c'; 
+  assert (contains_all_cipher_blocks x_1 plainlen plainlen c' blocks_tl);
+  let widen_blocks_tl_blocks (y:domain i{y `above` x_1}) 
+    : Lemma (PRF.find blocks y == PRF.find blocks_tl y)  
+    = assert (Seq.equal blocks (SeqProperties.cons blocks_hd blocks_tl));
+      find_singleton blocks_hd y;
+      find_append y (Seq.create 1 blocks_hd) blocks_tl in
+  FStar.Classical.forall_intro widen_blocks_tl_blocks;
+  widen_contains_all_cipher_blocks x_1 plainlen plainlen c' blocks_tl blocks;
+  widen_contains_all_cipher_blocks x_1 plainlen plainlen c' blocks prf_entries
 
 val entry_exists_if_verify_ok : #i:id -> #n:Cipher.iv (alg i) -> (st:state i Reader) ->
  			        #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
