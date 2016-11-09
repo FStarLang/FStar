@@ -350,11 +350,8 @@ and translate_expr e var lstmt : list<statement_t> =
 
   | MLE_Tuple lexp ->
       let new_fv = ref [] in
-      let create_fields =
-        List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), List.nth (create_pure_args new_fv [x] var) 0, JSO_Init)) lexp in
-      let expr = JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Tuple", ""), JSO_Init);
-                                JSPO_Property(JSO_Identifier("_arity", Some JST_Number), JSE_Literal(JSV_Number (float_of_int (List.length lexp)), ""), JSO_Init)] @
-                                create_fields) in
+      let create_fields = List.map (fun x -> List.nth (create_pure_args new_fv [x] var) 0) lexp in
+      let expr = JSE_Array(Some (create_fields)) in
       get_res expr new_fv
 
   | _ -> failwith "todo: translation ml-expr"
@@ -405,10 +402,7 @@ and translate_expr_pure e: expression_t =
       JSE_Identifier(getName(path, n))
 
   | MLE_Tuple lexp ->
-      let create_fields = List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), translate_expr_pure x, JSO_Init)) lexp in
-        JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Tuple", ""), JSO_Init);
-                    JSPO_Property(JSO_Identifier("_arity", Some JST_Number), JSE_Literal(JSV_Number (float_of_int (List.length lexp)), ""), JSO_Init)] @
-                    create_fields)
+      JSE_Array(Some (List.map translate_expr_pure lexp))
 
   | MLE_Record (path, fields) ->
       let create_fields = List.map (fun (id, x) -> JSPO_Property(JSO_Identifier("_" ^ id, None), translate_expr_pure x, JSO_Init)) fields in
@@ -474,12 +468,24 @@ and translate_pat p fv_x s1 s2: statement_t =
         | [x] -> translate_pat x new_fv_x s1 s2
         | hd::tl -> translate_pat hd new_fv_x (translate_p_ctor tl fv_x s1 s2 (i+1)) s2)
       in
-        let if_cond =
-            match c with
-            | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("Prims._is_" ^ c, None), [fv_x])
-            | _ -> JSE_Binary(JSB_StrictEqual, JSE_Member(fv_x, JSPM_Identifier("_tag", Some JST_String)), JSE_Literal(JSV_String c, ""))
-        in JSS_If(if_cond, translate_p_ctor lp fv_x s1 s2 0, Some s2)
-
+        begin
+        match c with
+        | x when is_prim_constructors x ->
+            let if_cond = JSE_Call (JSE_Identifier("Prims._is_" ^ c, None), [fv_x]) in
+            JSS_If(if_cond, translate_p_ctor lp fv_x s1 s2 0, Some s2)
+        | _ ->
+            let isSimple = (match fv_x with |JSE_Identifier _ -> true | _ -> false) in
+            if isSimple
+            then
+                let if_cond = JSE_Binary(JSB_StrictEqual, JSE_Member(fv_x, JSPM_Identifier("_tag", Some JST_String)), JSE_Literal(JSV_String c, "")) in
+                JSS_If(if_cond, translate_p_ctor lp fv_x s1 s2 0, Some s2)
+            else
+                let new_name = Absyn.Util.gensym() in
+                let if_cond = 
+                    JSE_Binary(JSB_StrictEqual, JSE_Member(JSE_Identifier(new_name, None), JSPM_Identifier("_tag", Some JST_String)), JSE_Literal(JSV_String c, "")) in
+                JSS_Block[JSS_VariableDeclaration((JGP_Identifier(new_name, None), Some fv_x), JSV_Let);
+                          JSS_If(if_cond, translate_p_ctor lp (JSE_Identifier(new_name, None)) s1 s2 0, Some s2)]
+        end
   | MLP_Branch (lp) ->
       let rec translate_p_branch lp fv_x s1 s2 =
         (match lp with
@@ -499,7 +505,7 @@ and translate_pat p fv_x s1 s2: statement_t =
 
   | MLP_Tuple lp ->
       let rec translate_p_tuple lp d fv_x s1 s2 =
-        let new_fv_x = JSE_Member(fv_x, JSPM_Identifier("_" ^ string_of_int d, None)) in
+        let new_fv_x = JSE_Member(fv_x, JSPM_Expression(JSE_Literal(JSV_Number(float_of_int d), ""))) in
             (match lp with
             | [] -> failwith "Empty list in translate_p_tuple"
             | [x] -> translate_pat x new_fv_x s1 s2
@@ -540,10 +546,7 @@ and translate_type t: typ =
       then must (mk_standart_type name)
       else (if Option.isSome (Util.is_xtuple_ty (path, name))
            then
-                let args = List.mapi (fun i x -> (JSO_Identifier("_" ^ string_of_int i, None), translate_type x)) args in
-                let tag = [(JSO_Identifier("_tag", None), JST_StringLiteral("Tuple", ""))] in
-                let arity = [(JSO_Identifier("_arity", None), JST_NumberLiteral(float_of_int (List.length args), ""))] in
-                JST_Object(tag @ arity @ args, [], [])
+                JST_Tuple(List.map translate_type args)
            else
                 let args_t =
                     match args with
