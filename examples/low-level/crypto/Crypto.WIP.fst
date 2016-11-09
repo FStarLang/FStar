@@ -504,23 +504,39 @@ let rec counterblocks_contains_all_cipher_blocks i rgn x len remaining_len plain
        counterblocks_contains_all_cipher_blocks i rgn (PRF.incr i x) len (remaining_len -^ l) plain cipher;
        admit()
 
-let rec widen_contains_all_cipher_blocks (#i:id) (#r:rid)
-					  (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
-					  (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
-					  (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len})
-					  (cipher:lbytes (v len))
-					  (blocks:prf_blocks r i)
-					  (blocks':prf_blocks r i)
-    : Lemma (requires (contains_all_cipher_blocks x len remaining_len cipher blocks /\
-		       (forall (y:domain i{y `above` x}). PRF.find blocks' y == PRF.find blocks y)))
+let trigger (#a:Type0) (x:a) = True
+let from_x_blocks_included_in (#i:id) (#rgn:rid) (x:PRF.domain i) (blocks:prf_blocks rgn i) (blocks':prf_blocks rgn i) = 
+  forall (y:PRF.domain i).{:pattern (find blocks y)}
+       y `above` x /\
+       v y.ctr <= v (ctr_0 i +^ 1ul) + Seq.length blocks
+       ==> find blocks y == find blocks' y
+  
+#reset-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+val widen_contains_all_cipher_blocks :    #i:id -> #r:rid ->
+					  (x_init:PRF.domain i{x_init.ctr = PRF.ctr_0 i +^ 1ul}) ->
+					  (x:PRF.domain i{x `above` x_init}) ->
+					  (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)}) ->
+					  (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len}) ->
+					  (cipher:lbytes (v len)) ->
+					  (blocks: prf_blocks r i) ->
+					  (blocks':prf_blocks r i) ->
+      Lemma (requires (let completed_len = v len - v remaining_len in
+       		       let n_blocks = v x.ctr - v (offset i) in
+       		       Seq.length blocks >= num_blocks' i (v len) /\
+		       (if remaining_len = 0ul then 
+			 n_blocks == num_blocks' i (v len)
+		       else completed_len = FStar.Mul (n_blocks * v (PRF.blocklen i))) /\
+		       contains_all_cipher_blocks x len remaining_len cipher blocks /\
+		       from_x_blocks_included_in x_init blocks blocks'))
 	    (ensures (contains_all_cipher_blocks x len remaining_len cipher blocks'))
 	    (decreases (v remaining_len))
+let rec widen_contains_all_cipher_blocks #i #r x_init x len remaining_len cipher blocks blocks'
     = if not (safeId i) || remaining_len = 0ul then 
-	 ()
+	 () 
       else let starting_pos = len -^ remaining_len in
 	   let l = min remaining_len (PRF.blocklen i) in
 	   let cipher_hd = Seq.slice cipher (v starting_pos) (v starting_pos + v l) in
-	   widen_contains_all_cipher_blocks (PRF.incr i x) len (remaining_len -^ l) cipher blocks blocks'
+	   widen_contains_all_cipher_blocks #i #r x_init (PRF.incr i x) len (remaining_len -^ l) cipher blocks blocks'
 
 #set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 0 --max_fuel 0"
 val intro_contains_all_cipher_blocks: (i:id{safeId i}) ->
@@ -536,12 +552,12 @@ val intro_contains_all_cipher_blocks: (i:id{safeId i}) ->
 				      (h:mem{Buffer.live h cipher_tagged}) ->
      Lemma (requires (let aead_entries = HS.sel h st.log in 
 		      let prf_entries = HS.sel h (PRF.itable i st.prf) in 
-		      let x0 = {iv=n; ctr=ctr_0 i} in
+		      let x_1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
 		      Buffer.live h aad /\
 		      refines_one_entry h entry blocks /\
 		      find_entry n aead_entries == Some entry /\
 		      found_entry n st aad cipher_tagged q h /\
-		      (forall (y:domain i{y `above` x0}). PRF.find prf_entries y == PRF.find blocks y)))
+		      from_x_blocks_included_in x_1 blocks prf_entries))
            (ensures (let x1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
 		     let cipher = Buffer.sub cipher_tagged 0ul plainlen in
 		     contains_all_cipher_blocks' x1 plainlen plainlen cipher st.prf h))
@@ -561,21 +577,39 @@ let intro_contains_all_cipher_blocks i n st #aadlen aad #plainlen cipher_tagged 
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let c' = Buffer.as_seq h cipher in
     (* assert(Seq.equal c' (Seq.slice c 0 (v plainlen))); *)
-  let x_1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
   let blocks_hd = SeqProperties.head blocks in 
   let blocks_tl = SeqProperties.tail blocks in
+  let x_1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
   assert (blocks_tl == counterblocks i st.prf.mac_rgn x_1 (v plainlen) 0 (v plainlen) p c');
   assert (Seq.equal (Seq.slice blocks_tl 0 (Seq.length blocks_tl)) blocks_tl);
   counterblocks_contains_all_cipher_blocks i st.prf.mac_rgn x_1 plainlen plainlen p c'; 
   assert (contains_all_cipher_blocks x_1 plainlen plainlen c' blocks_tl);
-  let widen_blocks_tl_blocks (y:domain i{y `above` x_1}) 
-    : Lemma (PRF.find blocks y == PRF.find blocks_tl y)  
-    = assert (Seq.equal blocks (SeqProperties.cons blocks_hd blocks_tl));
-      find_singleton blocks_hd y;
-      find_append y (Seq.create 1 blocks_hd) blocks_tl in
+  let widen_blocks_tl_blocks (y:domain i)
+    : Lemma (y `above` x_1 ==> PRF.find blocks y == PRF.find blocks_tl y)  
+    = if y `above` x_1 
+      then (assert (Seq.equal blocks (SeqProperties.cons blocks_hd blocks_tl));
+	    find_singleton blocks_hd y;
+	    find_append y (Seq.create 1 blocks_hd) blocks_tl) in
   FStar.Classical.forall_intro widen_blocks_tl_blocks;
-  widen_contains_all_cipher_blocks x_1 plainlen plainlen c' blocks_tl blocks;
-  widen_contains_all_cipher_blocks x_1 plainlen plainlen c' blocks prf_entries
+  widen_contains_all_cipher_blocks x_1 x_1 plainlen plainlen c' blocks_tl blocks;
+  widen_contains_all_cipher_blocks x_1 x_1 plainlen plainlen c' blocks prf_entries
+
+assume val find_entry_blocks_2:    (i:id) -> (rgn:rid) ->
+			  (n:Cipher.iv (alg i){safeId i}) ->
+			  (entries:aead_entries i) ->
+			  (prf_entries:prf_blocks rgn i) ->
+			  (h:mem{refines h i rgn entries prf_entries /\
+			         is_Some (find_mac prf_entries ({iv=n; ctr=ctr_0 i}))}) ->
+     Pure (entry i * prf_blocks rgn i)
+          (requires True)
+	  (ensures (fun (entry, blocks) ->
+			let x0 = {iv=n; ctr=ctr_0 i} in
+			entry.nonce = n /\
+			refines_one_entry h entry blocks /\
+			find_entry n entries == Some entry /\
+			from_x_blocks_included_in (PRF.incr i x0) blocks prf_entries /\
+			find_mac prf_entries x0 == Some (PRF.macRange rgn i x0 (Seq.index blocks 0).range)))
+	  (decreases (Seq.length entries))
 
 val entry_exists_if_verify_ok : #i:id -> #n:Cipher.iv (alg i) -> (st:state i Reader) ->
  			        #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
@@ -607,7 +641,7 @@ let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged
     let cipher_tagged = Buffer.as_seq h cipher_tagged_b in
     let cipher, _ = SeqProperties.split cipher_tagged (v plainlen) in
     let tag = Buffer.as_seq h tag_b in
-    let ( e, blocks ) = Crypto.AEAD.Lemmas.Part2.find_entry_blocks n entries prf_table h in
+    let ( e, blocks ) = find_entry_blocks_2 i st.prf.mac_rgn n entries prf_table h in
     let ak' = PRF.macRange st.prf.mac_rgn i x0 (Seq.index blocks 0).range in
     assert (ak == ak');
     let Entry nonce aad' plainlen' p' cipher_tagged' = e in
@@ -625,7 +659,7 @@ let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged
 
 val get_verified_plain : #i:id -> #n:Cipher.iv (alg i) -> st:state i Reader ->
  			 #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
-			 #plainlen:UInt32.t {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
+			 #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
 			 plain:Plain.plainBuffer i (v plainlen) ->
 			 cipher_tagged:lbuffer (v plainlen + v MAC.taglen) ->
 		         ak:CMA.state (i,n) ->
@@ -644,8 +678,14 @@ val get_verified_plain : #i:id -> #n:Cipher.iv (alg i) -> st:state i Reader ->
 			  verify_ok ak acc tag h true
 	             else True)))
          (ensures (fun h0 p h1 -> 
+		    let cipher = Buffer.sub cipher_tagged 0ul plainlen in
+		    let x1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
 		    h0 == h1 /\
-		    (safeId i /\ verified ==> found_entry n st aad cipher_tagged p h1)))
+		    (if verified
+		     then contains_all_cipher_blocks' x1 plainlen plainlen cipher st.prf h1 /\
+		          (safeId i ==> found_entry n st aad cipher_tagged p h1)
+		     else True)))
+#set-options "--initial_fuel 1 --max_fuel 1"	     
 let get_verified_plain #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc verified = 
   if safeId i && verified then
     let h = get () in
@@ -653,11 +693,14 @@ let get_verified_plain #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc
     entry_exists_if_verify_ok st aad plain cipher_tagged ak acc tag h;
     let entries = !st.log in 
     let (Some (Entry _nonce _ad _l p _c)) = find_entry n entries in
+    let _ : unit = 
+      let prf_table = HS.sel h (PRF.itable i st.prf) in
+      let ( e, blocks ) = find_entry_blocks_2 i st.prf.mac_rgn n entries prf_table h in
+      intro_contains_all_cipher_blocks i n st aad cipher_tagged p e blocks h in
     p
   else if safeId i then 
      Plain.load plainlen plain
   else ()
-
 
 val establish_post_condition: #i:id -> #n:Cipher.iv (alg i) -> (st:state i Reader) -> 
 			      #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
@@ -721,8 +764,6 @@ val decrypt:
     decrypt_modifies st plain h0 h1 /\
     decrypt_ok n st aad plain cipher_tagged verified h1))
 
-
-  
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let h_init = get() in
   push_frame();
@@ -760,7 +801,6 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   if verified 
   then begin
     let y = PRF.incr i x in	   
-    assume (contains_all_cipher_blocks i y plainlen plainlen st.prf cipher h3);
     counter_dexor i st.prf y plainlen plainlen plain cipher p
   end;
   let h4 = get() in

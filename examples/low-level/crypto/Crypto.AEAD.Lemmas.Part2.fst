@@ -64,6 +64,17 @@ let find_blocks_append_l (#i:id) (#rgn:rid) (b:prf_blocks rgn i) (b':prf_blocks 
           (ensures (find (Seq.append b b') x == find b x))
   = admit()
 
+let from_x_blocks_included_in (#i:id) (#rgn:rid) (x:PRF.domain i) (blocks:prf_blocks rgn i) (blocks':prf_blocks rgn i) = 
+  forall (y:PRF.domain i).{:pattern (find blocks y)}
+       y `above` x /\
+       v y.ctr <= v (ctr_0 i +^ 1ul) + Seq.length blocks
+       ==> find blocks y == find blocks' y
+
+let contains_all_blocks (#i:id) (#rgn:rid) (e:entry i) (blocks:prf_blocks rgn i) =
+  let n = e.nonce in
+  let x0 = {iv=n; ctr=ctr_0 i} in
+  forall (y:domain i{y `above` x0 /\ v y.ctr <= v (ctr_0 i) + num_blocks e}). is_Some (find blocks y)
+
 val find_entry_blocks:    (i:id) -> (rgn:rid) ->
 			  (n:Cipher.iv (alg i){safeId i}) ->
 			  (entries:aead_entries i) ->
@@ -74,14 +85,17 @@ val find_entry_blocks:    (i:id) -> (rgn:rid) ->
           (requires True)
 	  (ensures (fun (entry, blocks) ->
 			let x0 = {iv=n; ctr=ctr_0 i} in
+			entry.nonce = n /\
 			refines_one_entry h entry blocks /\
 			find_entry n entries == Some entry /\
+			from_x_blocks_included_in (PRF.incr i x0) blocks prf_entries /\
 			find_mac prf_entries x0 == Some (PRF.macRange rgn i x0 (Seq.index blocks 0).range)))
 	  (decreases (Seq.length entries))
 	  
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 100"
 let rec find_entry_blocks i rgn n entries prf_entries h =
   let x0 = {iv=n; ctr=ctr_0 i} in
+  let x1 = PRF.incr i x0 in
   invert_refines h i rgn entries prf_entries;
   if Seq.length entries = 0 
   then (find_is_some prf_entries x0; false_elim())
@@ -89,12 +103,13 @@ let rec find_entry_blocks i rgn n entries prf_entries h =
        let b = num_blocks e in 
        let blocks_for_e, blocks_tl = SeqProperties.split prf_entries (b + 1) in
        assert (Seq.equal prf_entries (Seq.append blocks_for_e blocks_tl));
-       assert (refines_one_entry h e blocks_for_e);
+       assert (refines_one_entry h e blocks_for_e); //-- post-condition (1)
        let Entry nonce ad plainlen p c_tagged = e in
        let c, tag = SeqProperties.split c_tagged plainlen in
        find_entry_first n entries;
-       if e.nonce = n then 
-	 let _ = assert (find_entry n entries == Some e) in
+       if e.nonce = n then begin
+	 assert (find_entry n entries == Some e); //-- post-condition (2)
+	 assume (from_x_blocks_included_in x1 blocks_for_e prf_entries); //-- post-condition (3)
 	 let hd, tl = SeqProperties.head blocks_for_e, SeqProperties.tail blocks_for_e in
 	 assert (Seq.equal (SeqProperties.cons hd tl) blocks_for_e);
 	 let PRF.Entry x mac = hd in
@@ -102,13 +117,16 @@ let rec find_entry_blocks i rgn n entries prf_entries h =
 	 assert (tl == counterblocks i rgn (PRF.incr i x) plainlen 0 plainlen p c);
 	 find_cons_hd hd tl (PRF.is_entry_domain x0);
 	 assert (find blocks_for_e x0 == Some mac);
-	 find_blocks_append_l blocks_for_e blocks_tl x0;
+	 find_blocks_append_l blocks_for_e blocks_tl x0; //-- post-condition (4)
 	 (e, blocks_for_e)
+       end
        else let tail = SeqProperties.tail entries in
+	    assume (find_mac prf_entries x0 == find_mac blocks_tl x0);  //TODO: for pre-condition and for post-condition (4), via transitivity
+	    let (e', blocks_for_e') = find_entry_blocks i rgn n tail blocks_tl h in
+	    assume (from_x_blocks_included_in (PRF.incr i x0) blocks_tl prf_entries);    //TODO: for post-condition (3), via transitivity
+	    (e', blocks_for_e')
 	    //TODO, need to prove that find_mac blocks_prefix x0 = None
 	    //Should be easy since we know that all of their nonces do not match n
-	    let _ = assume (find_mac prf_entries x0 == find_mac blocks_tl x0) in 
-            find_entry_blocks i rgn n tail blocks_tl h
 
 (*** Lemmas about modifying tables and buffers ***)
 
