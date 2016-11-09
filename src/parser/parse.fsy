@@ -437,7 +437,7 @@ consPattern:
       }
 
 appPattern:
-  | atomicPattern atomicPatterns
+  |  atomicPattern atomicPatterns
       {
         let hd = $1 in
         let r = rhs parseState 1 in
@@ -459,6 +459,7 @@ atomicPattern2:
 
 nonTvarPattern:
   | nonTvarPattern2 { mk_pattern $1 (rhs parseState 1) }
+
 
 nonTvarPattern2:
   | UNDERSCORE { PatWild }
@@ -507,10 +508,10 @@ moreFieldPatterns:
   | SEMICOLON lid EQUALS pattern moreFieldPatterns { ($2,$4)::$5 }
 
 binder:
-  | ident { mk_binder (Variable($1)) (rhs parseState 1) Type None  }
-  | tvar  { mk_binder (TVariable($1)) (rhs parseState 1) Kind None  }
-  | LPAREN aqual_opt ident COLON typ refineOpt RPAREN
-     { mkRefinedBinder $3 $5 $6 (rhs2 parseState 1 7) $2 }
+  | ident { [mk_binder (Variable($1)) (rhs parseState 1) Type None]  }
+  | tvar  { [mk_binder (TVariable($1)) (rhs parseState 1) Kind None]  }
+  | LPAREN aqual_opt ident aqual_opt_idents COLON typ refineOpt RPAREN
+          { List.map (fun (q, x) -> mkRefinedBinder x $6 $7 (rhs2 parseState 1 8) q) (($2,$3)::$4) }
 
 typars:
   | tvarinsts              { $1 }
@@ -531,7 +532,7 @@ aqual_opt:
   |        { None }
 
 binders:
-  | binder binders { $1::$2 }
+  | binder binders { $1@$2 }
   |                { []     }
 
 tyconDefn:
@@ -593,6 +594,11 @@ eitherName:
 ident:
   | IDENT
       { mk_ident($1, rhs parseState 1)}
+
+aqual_opt_idents:
+  | aqual_opt ident aqual_opt_idents
+      { ($1, $2)::$3 }
+  |   { [] }
 
 name:
   | NAME
