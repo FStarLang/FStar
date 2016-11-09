@@ -300,13 +300,12 @@ and translate_expr e var lstmt : list<statement_t> =
       let var = (fst var, Some (translate_type in_e.mlty)) in
       translate_expr in_e var lstmt
 
-  | MLE_Match(e_in, lb) ->      
+  | MLE_Match(e_in, lb) ->
       let c =
         if is_pure_expr e_in var
-        then 
-            [translate_match lb (translate_expr_pure e_in) var]
-        else
-            [JSS_VariableDeclaration((JGP_Identifier("_match_e", None), None), JSV_Let)] @
+        then [JSS_VariableDeclaration((JGP_Identifier("_match_e", None), Some(translate_expr_pure e_in)), JSV_Let)] @
+             [translate_match lb (JSE_Identifier("_match_e", None)) var]
+        else [JSS_VariableDeclaration((JGP_Identifier("_match_e", None), None), JSV_Let)] @
              translate_expr e_in ("_match_e", None) (Some [translate_match lb (JSE_Identifier("_match_e", None)) var]) in
       let c =
         if (fst var = "_res" || fst var = "_match_e") then c
