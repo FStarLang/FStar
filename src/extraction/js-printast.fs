@@ -138,16 +138,17 @@ and pretty_print_statement (p:statement_t) : doc =
                       (match e with | None -> empty | Some v -> reduce [text "="; pretty_print_exp v]); semi])
     | JSS_DeclareVariable _ -> semi (*!!!*)
     | JSS_DeclareFunction _ -> semi (*!!!*)
-    | JSS_ExportDefaultDeclaration (d, k) -> reduce [print_exp_kind k; print_declaration d]
+    | JSS_ExportDefaultDeclaration (d, k) ->
+        let print_declaration =
+            (match d with
+            | JSE_Declaration s -> optws s
+            | JSE_Expression e -> pretty_print_exp e) in
+        reduce [print_exp_kind k; print_declaration]
     | JSS_ImportDeclaration d ->
         reduce [text "import * as "; text (jstr_escape (fst d));
                 text " from "; text "\"./"; text (jstr_escape (fst d)); text "\""; text ";"]
 
   in reduce [(f p); hardline]
-
-and print_declaration = function
-    | JSE_Declaration s -> pretty_print_statement s
-    | JSE_Expression e -> pretty_print_exp e
 
 and print_exp_kind = function
     | ExportType -> text "declare "
@@ -195,7 +196,7 @@ and pretty_print_exp = function
     | JSE_Literal(l) -> print_literal (fst l)
     | JSE_TypeCast(e,t) -> reduce [ text "("; pretty_print_exp e; colon; print_typ t; text ")"]
 
-and print_arrow_fun args body ret_t = 
+and print_arrow_fun args body ret_t =
     let ret_t = (match ret_t with | None -> empty | Some v -> reduce [colon; parens (print_typ v)]) in
     print_arrow_fun_p args body ret_t true
 

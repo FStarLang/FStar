@@ -106,6 +106,8 @@ let export_modules = ref []
 
 let current_module_name = ref ""
 
+let lp_generic = ref []
+
 let getName (path, n) =
   let path = String.concat "_" path in
   if (path = !current_module_name || path = "")
@@ -128,25 +130,6 @@ let rec is_pure_expr e var =
   | MLE_App (_, args) ->
       not (List.contains false (List.map (fun x -> is_pure_expr x var) args))
   | _ -> false
-
-let rec get_Generic t =
-  begin
-    match t with
-    | JST_Generic (g, v) ->
-        (match v with
-        | Some v1 -> List.collect get_Generic v1
-        | None ->
-            (match g with
-            | Unqualified (id, _) -> if String.get id 0 = '\'' then [id] else []
-            | _ -> []))
-    | JST_Function (_, _, gen_d) ->
-        (match gen_d with
-        | Some v -> v
-        | None -> [])
-    | JST_Tuple lt -> List.collect get_Generic lt
-    | JST_Object (l, _, _) -> List.collect (fun (_, t) -> get_Generic t) l
-    | _ -> []
-  end
 
 (* Actual translation ********************************************************)
 let rec translate (MLLib modules): list<file> =
@@ -171,7 +154,7 @@ and translate_module (module_name, modul, _): file =
   let program = match modul with
     | Some (_signature, decls) ->
         current_module_name := String.concat "_" module_name;
-        let res = List.filter_map translate_decl decls in
+        let res = List.filter_map translate_decl decls in 
         let create_module_imports =
             List.map (fun m -> JSS_ImportDeclaration (m, None)) (!export_modules)
                 |> JSS_Block |> JS_Statement
@@ -185,31 +168,18 @@ and translate_decl d: option<source_t> =
   match d with
   | MLM_Let (_, c_flag,  lfunc) ->
       let for1 { mllb_name = name, _; mllb_tysc = tys; mllb_def = expr; print_typ=pt; mllb_add_unit = unit_b} =
-          let t =
-            begin
-            if (not pt) then None
+        let t =
+            lp_generic:= [];
+            if (not pt) || unit_b then None
             else match tys with
                  | None -> None
-                 | Some ([], ty) -> translate_type ty |> Some
-                 | Some (lp, ty) ->
-                    (match ty with
-                     | MLTY_Fun (t1, _, t2) ->
-                        let lp = match lp with
-                                 | [] -> None
-                                 | _ -> List.map (fun (id, _) -> id) lp |> Some in
-                        if unit_b then None
-                        else JST_Function([(("_1", None), translate_type t1)], translate_type t2, lp) |> Some
-                     | _ -> None)
-            end in        
-        let is_private = List.contains Private c_flag in        
-        if is_pure_expr expr (name, None)
-        then
-            let c = JSS_VariableDeclaration((JGP_Identifier(name, t), Some (translate_expr_pure expr)), JSV_Let) in
-            if is_private then [c] else [JSS_ExportDefaultDeclaration(JSE_Declaration(c), ExportValue)]
-        else
-            let c = JSS_VariableDeclaration((JGP_Identifier(name, t), None), JSV_Let) in
-            let c1 = translate_expr expr (name, t) None in
-            if is_private then [c; c1] else [JSS_ExportDefaultDeclaration(JSE_Declaration(c), ExportValue); c1]
+                 | Some (lp, ty) -> lp_generic:= List.map (fun (id, _) -> id) lp; translate_type ty |> Some in
+        let is_private = List.contains Private c_flag in
+        let c =
+            if is_pure_expr expr (name, None)
+            then [JSS_VariableDeclaration((JGP_Identifier(name, t), Some(translate_expr_pure expr)), JSV_Let)]
+            else translate_expr expr (name, t) None in
+        if is_private then c else [JSS_ExportDefaultDeclaration(JSE_Declaration(JSS_Block(c)), ExportValue)]
      in
         List.collect for1 lfunc |> JSS_Block |> JS_Statement |> Some
 
@@ -258,11 +228,19 @@ and translate_decl d: option<source_t> =
   | MLM_Exn _ ->
       failwith "todo: translate_decl [MLM_Exn]"
 
-and translate_expr e var stmt : statement_t =
+and translate_expr e var lstmt : list<statement_t> =
+  let get_res expr new_fv =
+    let lstmt = (match lstmt with | Some v -> v | None -> []) in
+    let expr =
+        if (fst var = "_res" || fst var = "_match_e")
+        then [JSS_Expression(JSE_Assignment(JGP_Identifier(var), expr))]
+        else [JSS_VariableDeclaration((JGP_Identifier(var), Some(expr)), JSV_Let)]
+    in !new_fv @ [JSS_Block(expr @ lstmt)] in
+
   match e.expr with
   | x when is_pure_expr e var ->
       let c = JSS_Expression(JSE_Assignment(JGP_Identifier(var), translate_expr_pure e)) in
-      (match stmt with | Some v -> JSS_Block([c; v]) | None -> c)
+      (match lstmt with | Some v -> [c] @ v | None -> [c])
 
   | MLE_Let ((_, _,  [{
       mllb_name = name, _;
@@ -271,52 +249,46 @@ and translate_expr e var stmt : statement_t =
       mllb_def = body;
       print_typ = pt
       }]), continuation) ->
+      let c = translate_expr continuation var lstmt in
       if is_pure_expr body (name, None)
-      then
-        [JSS_VariableDeclaration((JGP_Identifier(name, None), Some (translate_expr_pure body)), JSV_Let);
-         translate_expr continuation var stmt] |> JSS_Block
+      then        
+        [JSS_VariableDeclaration((JGP_Identifier(name, None), Some (translate_expr_pure body)), JSV_Let)] @
+        [JSS_Block(c)]
       else
-        translate_expr body (name, None) (Some (translate_expr continuation var stmt))
+        translate_expr body (name, None) (Some c)
 
   | MLE_Let _ ->
       failwith "todo: translate_expr [MLE_Let]"
 
   | MLE_Fun (args, body) ->
-      let generic_t = ref [] in
-      let addUnique lst =
-        List.map (fun el ->
-            if not (List.existsb (fun x -> x = el) !generic_t)
-            then generic_t := List.append [el] !generic_t) lst in
-      let args =
-        List.map (fun ((n,_), t) ->
-            let t = translate_type t in
-            addUnique (get_Generic t) |> ignore;
-            JGP_Identifier(n, Some t)) args in
-      let generic_r = (match !generic_t with | [] -> None | _ -> Some !generic_t) in
+      let args = List.map (fun ((n,_), t) -> JGP_Identifier(n, Some (translate_type t))) args in
+      let generic_t = (match !lp_generic with | [] -> None | _ -> Some !lp_generic) in
       let body_t =
-        begin
         if is_pure_expr body var
         then JS_BodyExpression(translate_expr_pure body)
-        else JS_BodyBlock([JSS_VariableDeclaration((JGP_Identifier("_res", None), None), JSV_Let);
-                          translate_expr body ("_res", None) (Some(JSS_Return(Some(JSE_Identifier("_res", None)))))])
-        end in
+        else JS_BodyBlock([JSS_VariableDeclaration((JGP_Identifier("_res", None), None), JSV_Let)] @
+                           translate_expr body ("_res", None) (Some([JSS_Return(Some(JSE_Identifier("_res", None)))]))) in
       let ret_t =
         (match (snd var) with
          | None -> None
          | Some v -> match v with | JST_Function (_, t2, _) -> Some t2 | _ -> None) in
-      let c = JSS_Expression(JSE_Assignment(JGP_Identifier(var), JSE_ArrowFunction(None, args, body_t, ret_t, generic_r))) in
-      (match stmt with | Some v -> JSS_Block([c; v]) | None -> c)
+      (*consider the case when the returned value is function ? *)
+      let c = JSS_VariableDeclaration((JGP_Identifier(fst var, None), JSE_ArrowFunction(None, args, body_t, ret_t, generic_t) |> Some), JSV_Let) in
+      (match lstmt with | Some v -> [c] @ v | None -> [c])
 
   | MLE_If(cond, s1, s2) ->
-      let s2 = (match s2 with | Some v -> Some (translate_expr v var None) | None -> None) in
+      let s2 = (match s2 with | Some v -> Some (JSS_Block(translate_expr v var None)) | None -> None) in
       let c =
         if is_pure_expr cond var
-        then 
-            JSS_If(translate_expr_pure cond, translate_expr s1 var None, s2)
+        then
+            [JSS_If(translate_expr_pure cond, JSS_Block(translate_expr s1 var None), s2)]
         else
-            [JSS_VariableDeclaration((JGP_Identifier("_cond", Some (JST_Boolean)), None), JSV_Let);
-             translate_expr cond ("_cond", None) (Some (JSS_If(JSE_Identifier("_cond", Some JST_Boolean), translate_expr s1 var None, s2)))] |> JSS_Block in
-      (match stmt with | Some v -> JSS_Block([c; v]) | None -> c)
+            [JSS_VariableDeclaration((JGP_Identifier("_cond", Some (JST_Boolean)), None), JSV_Let)] @
+             translate_expr cond ("_cond", None) (Some [JSS_If(JSE_Identifier("_cond", Some JST_Boolean), JSS_Block(translate_expr s1 var None), s2)]) in
+      let c =
+        if (fst var = "_res" || fst var = "_match_e") then c
+        else [JSS_VariableDeclaration((JGP_Identifier(var), None), JSV_Let)] @ c in
+      (match lstmt with | Some v -> c @ v | None -> c)
 
   | MLE_Raise _ ->
       failwith "todo: translate_expr [MLE_Raise]"
@@ -326,17 +298,20 @@ and translate_expr e var stmt : statement_t =
 
   | MLE_Coerce(in_e, t_from, t_to) ->
       let var = (fst var, Some (translate_type in_e.mlty)) in
-      translate_expr in_e var stmt
+      translate_expr in_e var lstmt
 
-  | MLE_Match(e_in, lb) ->
+  | MLE_Match(e_in, lb) ->      
       let c =
         if is_pure_expr e_in var
         then 
-            translate_match lb (translate_expr_pure e_in) var
+            [translate_match lb (translate_expr_pure e_in) var]
         else
-            [JSS_VariableDeclaration((JGP_Identifier("_match_e", None), None), JSV_Let);
-             translate_expr e_in ("_match_e", None) (Some (translate_match lb (JSE_Identifier("_match_e", None)) var))] |> JSS_Block in
-      (match stmt with | Some v -> JSS_Block([c; v]) | None -> c)
+            [JSS_VariableDeclaration((JGP_Identifier("_match_e", None), None), JSV_Let)] @
+             translate_expr e_in ("_match_e", None) (Some [translate_match lb (JSE_Identifier("_match_e", None)) var]) in
+      let c =
+        if (fst var = "_res" || fst var = "_match_e") then c
+        else [JSS_VariableDeclaration((JGP_Identifier(var), None), JSV_Let)] @ c in
+      (match lstmt with | Some v -> c @ v | None -> c)
 
   | MLE_Seq ls ->
       let rec translate_seq l =
@@ -345,50 +320,43 @@ and translate_expr e var stmt : statement_t =
         | [x] -> translate_expr x var None
         | hd :: tl -> translate_expr hd ("_", None) (Some(translate_seq tl)) in
       let c = translate_seq ls in
-      (match stmt with | Some v -> JSS_Block([c; v]) | None -> c)
+      let c =
+        if (fst var = "_res" || fst var = "_match_e") then c
+        else [JSS_VariableDeclaration((JGP_Identifier(var), None), JSV_Let)] @ c in
+      (match lstmt with | Some v -> c @ v | None -> c)
 
   | MLE_App (e, args) ->
       let new_fv = ref [] in
       let args = create_pure_args new_fv args var in
-      let stmt = match stmt with | Some v -> [v] | None -> [] in
-      let expr =
-        if (fst var = "_res")
-        then [JSS_Expression(JSE_Assignment(JGP_Identifier(var), translate_arg_app e args var))] @ stmt
-        else [JSS_Block([JSS_VariableDeclaration((JGP_Identifier(var), Some(translate_arg_app e args var)), JSV_Let)] @ stmt)] in
-      JSS_Block(!new_fv @ expr)
-
+      let expr = translate_arg_app e args var in
+      get_res expr new_fv
+     
   | MLE_CTor ((path, c), lexpr) ->
       let new_fv = ref [] in
       let lexpr = create_pure_args new_fv lexpr var in
-      let expr = 
+      let expr =
         (match c with
         | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("Prims._mk_" ^ c, None), lexpr)
         | _ -> JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String c, ""), JSO_Init)] @
                            List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), x, JSO_Init)) lexpr)) in
-      let expr = JSS_Expression(JSE_Assignment(JGP_Identifier(var), expr)) in
-      let stmt = match stmt with | Some v -> [v] | None -> [] in
-      JSS_Block(!new_fv @ [JSS_Block([expr] @ stmt)])
+      get_res expr new_fv
 
   | MLE_Record (path, fields) ->
       let new_fv = ref [] in
       let create_fields =
         List.map (fun (id, x) -> JSPO_Property(JSO_Identifier("_" ^ id, None), List.nth (create_pure_args new_fv [x] var) 0, JSO_Init)) fields in
-      let expr = JSS_Expression(JSE_Assignment(JGP_Identifier(var),
-                    JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Record", ""), JSO_Init)] @
-                                create_fields))) in
-      let stmt = match stmt with | Some v -> [v] | None -> [] in
-      JSS_Block(!new_fv @ [JSS_Block([expr] @ stmt)])
+      let expr = JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Record", ""), JSO_Init)] @
+                            create_fields) in
+      get_res expr new_fv
 
   | MLE_Tuple lexp ->
       let new_fv = ref [] in
       let create_fields =
         List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), List.nth (create_pure_args new_fv [x] var) 0, JSO_Init)) lexp in
-      let expr = JSS_Expression(JSE_Assignment(JGP_Identifier(var),     
-                    JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Tuple", ""), JSO_Init);
+      let expr = JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Tuple", ""), JSO_Init);
                                 JSPO_Property(JSO_Identifier("_arity", Some JST_Number), JSE_Literal(JSV_Number (float_of_int (List.length lexp)), ""), JSO_Init)] @
-                                create_fields))) in
-      let stmt = match stmt with | Some v -> [v] | None -> [] in
-      JSS_Block(!new_fv @ [JSS_Block([expr] @ stmt)])
+                                create_fields) in
+      get_res expr new_fv
 
   | _ -> failwith "todo: translation ml-expr"
 
@@ -405,7 +373,7 @@ and create_pure_args new_fv args var =
             let c =
                 (match x.expr with
                 | MLE_Var _ -> [JSS_VariableDeclaration((JGP_Identifier(fv_x, None), Some (translate_expr_pure x)), JSV_Let)]
-                | _ -> [JSS_VariableDeclaration((JGP_Identifier(fv_x, None), None), JSV_Let); translate_expr x (fv_x, None) None]) in
+                | _ -> translate_expr x (fv_x, None) None) in
             new_fv := List.append !new_fv c;
             JSE_Identifier(fv_x, None)) args
 
@@ -476,7 +444,7 @@ and translate_expr_pure e: expression_t =
 and translate_match lb fv_x var : statement_t =
   match lb with
   | [] -> JSS_Throw (JSE_Literal(JSV_String("This value doesn't match!"), ""))
-  | (p, guard, expr_r) :: tl -> translate_pat_guard (p, guard) fv_x (translate_expr expr_r var None) (translate_match tl fv_x var)
+  | (p, guard, expr_r) :: tl -> translate_pat_guard (p, guard) fv_x (JSS_Block(translate_expr expr_r var None)) (translate_match tl fv_x var)
 
 and translate_pat_guard (p, guard) fv_x s1 s2: statement_t =
   match guard with
@@ -566,17 +534,8 @@ and translate_type t: typ =
   | MLTY_Tuple lt ->
       JST_Tuple (List.map translate_type lt)
   | MLTY_Fun (t1, _, t2) ->
-      let t1_t = translate_type t1 in
-      let t2_t = translate_type t2 in
-      let generic_t = ref [] in
-      let addUnique lst =
-        List.map (fun el -> 
-            if not (List.existsb (fun x -> x = el) !generic_t)
-            then generic_t := List.append [el] !generic_t) lst in
-      addUnique (get_Generic t1_t) |> ignore;
-      addUnique (get_Generic t2_t) |> ignore;
-      let generic_r = (match !generic_t with | [] -> None | _ -> Some !generic_t) in
-      JST_Function([(("_1", None), t1_t)], t2_t, generic_r)  (*we want to save the source names of function parameters*)
+      (*we want to save the source names of function parameters*)
+      JST_Function([(("_1", None), translate_type t1)], translate_type t2, None)
   | MLTY_Named (args, (path, name)) ->
       if is_standart_type name
       then must (mk_standart_type name)
@@ -587,7 +546,7 @@ and translate_type t: typ =
                 let arity = [(JSO_Identifier("_arity", None), JST_NumberLiteral(float_of_int (List.length args), ""))] in
                 JST_Object(tag @ arity @ args, [], [])
            else
-                let args_t = 
+                let args_t =
                     match args with
                     | [] -> None
                     | _ -> List.map translate_type args |> Some
