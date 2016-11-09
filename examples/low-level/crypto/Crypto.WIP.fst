@@ -266,7 +266,9 @@ val extend_decrypted_up_to: #i:id -> (t:PRF.state i) -> (x:PRF.domain i) ->
       Lemma (requires (let starting_pos = len -^ remaining_len in
 		       let l = min remaining_len (PRF.blocklen i) in
 		       let plain = Plain.sub pb starting_pos l in
-		       Plain.live h0 pb /\
+		       counter_dexor_sep t pb cipher /\
+		       counter_dexor_live t pb cipher h0 /\
+		       remaining_len <> 0ul /\
 		       Plain.live h1 pb /\
 		       prf_dexor_modifies t x plain h0 h1 /\
 	               contains_all_blocks' x len remaining_len p cipher t h0 /\
@@ -278,7 +280,30 @@ val extend_decrypted_up_to: #i:id -> (t:PRF.state i) -> (x:PRF.domain i) ->
 		      Plain.live h1 pb /\
 		      (safeId i ==> 
 			   decrypted_up_to (starting_pos +^ l) pb p h1)))
-let extend_decrypted_up_to #i t x #len remaining_len pb p cipher h0 h1 = admit()
+#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let extend_decrypted_up_to #i t x #len remaining_len pb p cipher h0 h1 = 
+  let starting_pos = len -^ remaining_len in
+  let l = min remaining_len (PRF.blocklen i) in
+  let frame = Plain.sub pb 0ul starting_pos in
+  let plain = Plain.sub pb starting_pos l in
+  assert (Buffer.disjoint (Plain.as_buffer frame) (Plain.as_buffer plain));
+  let next = starting_pos +^ l in
+  if safeId i then begin
+    Buffer.lemma_reveal_modifies_1 (as_buffer plain) h0 h1;
+    let pb_contents_0 = as_bytes (Plain.slice (Plain.sel_plain h0 len pb) 0 (v starting_pos)) in
+    let p_contents_0  = as_bytes (Plain.slice (as_plain p) 0 (v starting_pos)) in
+    (* *)
+    let pb_contents_1 = as_bytes (Plain.slice (Plain.sel_plain h1 len pb) 0 (v next)) in
+    let plain_contents_1 = as_bytes (Plain.sel_plain h1 l plain) in
+    let frame_pb_contents_1 = as_bytes (Plain.slice (Plain.sel_plain h1 len pb) 0 (v starting_pos)) in
+    (* *)
+    assert (Seq.equal pb_contents_0 frame_pb_contents_1);
+    assert (Seq.equal pb_contents_1 (Seq.append p_contents_0 plain_contents_1));
+    (* *)
+    (* *)
+    invert_contains_all_cipher_blocks i x len remaining_len t p cipher h0
+  end
+
  
 val counter_dexor:
   i:id -> t:PRF.state i -> x:PRF.domain i ->
@@ -309,7 +334,6 @@ let rec counter_dexor i t x len remaining_len plain cipher p =
       FStar.Classical.move_requires (FStar.Buffer.lemma_reveal_modifies_1 (as_buffer plain) h0) h1;
       extend_decrypted_up_to t x remaining_len plain p cipher h0 h1;
       incr_remaining_len_ok x len remaining_len;
-      (* *)
 
       counter_dexor i t y len (remaining_len -^ l) plain cipher p;
 
@@ -431,6 +455,10 @@ assume val verify_wrapper:
   tag:lbuffer 16 -> Stack bool
   (requires (fun h0 -> verify_requires st acc tag h0))
   (ensures (fun h0 b h1 -> verify_ensures st acc tag h0 b h1))
+
+////////////////////////////////////////////////////////////////////////////////
+//end UF1CMA.verify
+////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 //decrypt
@@ -623,7 +651,6 @@ val intro_contains_all_blocks: (i:id{safeId i}) ->
 #set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 0 --max_fuel 0"
 let intro_contains_all_blocks i n st #aadlen aad #plainlen cipher_tagged q entry blocks h =
   let Entry nonce ad l p c = entry in
-  assume (Buffer.live h aad);
   let prf_entries = HS.sel h (PRF.itable i st.prf) in 
   assert (nonce == n);
   assert (c == Buffer.as_seq h cipher_tagged);
@@ -793,9 +820,6 @@ let establish_post_condition #i #n st #aadlen aad #plainlen plain cipher_tagged 
 	end)
   else FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 (Plain.as_buffer plain) h3) h4
 
-////////////////////////////////////////////////////////////////////////////////
-//end UF1CMA.verify
-////////////////////////////////////////////////////////////////////////////////
 #reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val decrypt:
   i:id -> st:state i Reader ->
