@@ -198,7 +198,7 @@ KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
 krml-test.exe:
 	$(KRML) crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest $(KREMLIN_HOME)/test/testlib.c \
 		-tmpdir tmp -o krml-test.exe -add-include '"testlib.h"' \
-		crypto/test_hacks.c -ccopt -Wno-pointer-sign
+		crypto/test_hacks.c -ccopt -Wno-pointer-sign crypto/intrinsics.o
 	./krml-test.exe
 
 OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List_Tot.ml \
@@ -281,6 +281,45 @@ OBJ_FILES=$(addprefix tmp/, \
 		Crypto_AEAD_Lemmas.o \
 		Crypto_AEAD.o )
 
+
+C_FILES=$(addprefix tmp/, \
+	FStar_Mul.c \
+	FStar_Squash.c FStar_StrongExcludedMiddle.c FStar_List_Tot.c \
+		FStar_Classical.c FStar_ListProperties.c FStar_SeqProperties.c \
+		FStar_Math_Lemmas.c FStar_BitVector.c \
+		FStar_FunctionalExtensionality.c \
+		FStar_PropositionalExtensionality.c FStar_PredicateExtensionality.c \
+		FStar_TSet.c FStar_Ghost.c \
+		FStar_Bytes.c Buffer_Utils.c Crypto_Symmetric_Bytes.c \
+		Crypto_Symmetric_Poly1305_Spec.c Crypto_Symmetric_Poly1305_Parameters.c \
+		Crypto_Symmetric_Poly1305_Bigint.c Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.c \
+		Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.c \
+		Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.c \
+		Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.c \
+		Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.c \
+		FStar_Buffer_Quantifiers.c \
+		Crypto_Symmetric_AES.c \
+		Crypto_Symmetric_AES128.c \
+		Crypto_Symmetric_Chacha20.c \
+		Crypto_Indexing.c \
+		Crypto_Symmetric_Cipher.c \
+		Crypto_Symmetric_GF128_Spec.c \
+		Crypto_Symmetric_Poly1305_Lemmas.c \
+		Flag.c \
+		Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part6.c \
+		Crypto_Symmetric_Poly1305_Bignum.c \
+		Crypto_Symmetric_Poly1305.c \
+		Crypto_Symmetric_GF128.c \
+		Crypto_Symmetric_MAC.c \
+		Crypto_Symmetric_UF1CMA.c \
+		Crypto_Plain.c \
+		Crypto_Symmetric_PRF.c \
+		Crypto_AEAD_Encoding.c \
+		Crypto_AEAD_Invariant.c \
+		Crypto_AEAD_Lemmas_Part2.c \
+		Crypto_AEAD_Lemmas.c \
+		Crypto_AEAD.c )
+
 ocaml-test-extract: ulib
 	mkdir -p tmp
 	$(FSTAR_EXTRACT) --include $(KREMLIN_HOME)/kremlib --include $(KREMLIN_HOME)/test/ \
@@ -294,10 +333,11 @@ ocaml-test.exe: ocaml-test-extract
 OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
 
 test-perf.exe: krml-test.exe crypto/test_perf.c
-	$(CC) -O3 -o test-perf.exe $(OBJ_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
-		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c crypto/test_perf.c -I tmp \
+	$(CC) -O3 -o test-perf.exe crypto/intrinsics.c $(C_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
+		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c  crypto/test_perf.c -I tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
-		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME) -lcrypto $(CFLAGS)
+		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME) -lcrypto $(CFLAGS) \
+		-g -Wall -msse2 -msse -march=native -maes 
 	LD_LIBRARY_PATH=$(OPENSSL_HOME) ./test-perf.exe
 
 KRML32=$(KRML) -ccopt -m32
