@@ -5,7 +5,7 @@ CORECRYPTO = $(FSTAR_HOME)/$(CONTRIB)/CoreCrypto/ml
 INCLUDE=-package batteries,zarith -I $(PLATFORM) -I $(CORECRYPTO)
 
 KREMLIN_HOME=../../../../kremlin
-KRML_INCLUDES=$(addprefix -I , crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
+KRML_INCLUDES=$(addprefix -I ,.. $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
 KRML_ARGS=-verbose -ccopt -Wno-error=pointer-sign $(KOPTS)
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
 
@@ -56,19 +56,17 @@ all: LowCProvider.cmxa
 $(CORECRYPTO)/CoreCrypto.cmx: $(CORECRYPTO)/CoreCrypto.ml
 	$(MAKE) -C $(CORECRYPTO)
 
-libllcrypto.a: krml-test.exe
-	ar -cr libllcrypto.a tmp/*.o
+libllcrypto.a: ../krml-test.exe
+	ar -cr libllcrypto.a ../tmp/*.o
 	ar -d libllcrypto.a Crypto_KrmlTest.o
 
 lowc_stub.o: libllcrypto.a
 	$(OCAMLOPT) $(CCOPTS) $(EXTRA_OPTS) $(KRML_INCLUDES) -c lowc_stub.c
 
-krml-test.exe:
-	$(KRML) crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest $(KREMLIN_HOME)/test/testlib.c \
-		-tmpdir tmp -o krml-test.exe -add-include '"testlib.h"' \
-		crypto/test_hacks.c -ccopt -Wno-pointer-sign
+../krml-test.exe:
+	make -C .. krml-test.exe
 
-LowCProvider.cmxa: $(CORECRYPTO)/CoreCrypto.cmx lowc_stub.o LowCProvider.cmx
+LowCProvider.cmxa: $(CORECRYPTO)/CoreCrypto.cmx libllcrypto.a lowc_stub.o LowCProvider.cmx
 	$(OCAMLMKLIB) $(EXTRA_LIBS) $(CCLIBS) -o LowCProvider $^
 
 clean:
