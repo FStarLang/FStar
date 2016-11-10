@@ -39,7 +39,8 @@ val blank: int -> document
 
 val break_: int -> document
 
-val (^^): document -> document -> document
+// val (^^): document -> document -> document
+val conat : document -> document -> document
 
 val nest: int -> document -> document
 
@@ -149,9 +150,9 @@ val surround_separate: int -> int -> document -> document -> document -> documen
 
 val surround_separate_map: int -> int -> document -> document -> document -> document -> ('a -> document) -> 'a list -> document
 
-val ( !^ ) : string -> document
-
-val ( ^/^ ) : document -> document -> document
-
-val ( ^//^ ) : document -> document -> document
+// val ( !^ ) : string -> document
+// 
+// val ( ^/^ ) : document -> document -> document
+// 
+// val ( ^//^ ) : document -> document -> document
 

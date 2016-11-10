@@ -13,26 +13,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
-module FStar.Pprint
+// prettyprint.fst's OCaml implementation is just a thin wrapper around pprint. 
+type document = PPrint.document
 
-type document = 
-  | Empty
-  | Char of char
-  | String of string * int * int
-  | FancyString of string * int * int * int
-  | Blank of int
-  | IfFlat of document * document
-  | HardLine
-  | Cat of document * document
-  | Nest of int * document
-  | Group of document
-  //| Probe of (indentation:int -> bol:int -> line:int -> column:int -> document)
-  
-let not_impl_msg = "F# prettyprinter not yet implemented." 
+let empty = PPrint.empty 
 
-let empty : document = failwith not_impl_msg
+let not_impl_msg = "OCaml prettyprinter not yet implemented"
 
 let char (c:char) : document = failwith not_impl_msg
 

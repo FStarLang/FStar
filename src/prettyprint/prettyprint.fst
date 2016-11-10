@@ -79,7 +79,8 @@ assume val blank: int -> document
 assume val break_: int -> document
 
 (** [doc1 ^^ doc2] is the concatenation of the documents [doc1] and [doc2]. *)
-assume val (^^): document -> document -> document
+//assume val (^^): document -> document -> document
+//assume val concat : document -> document -> document
 
 (** [nest j doc] is the document [doc], in which the indentation level has
     been increased by [j], that is, in which [j] blanks have been inserted
@@ -353,15 +354,15 @@ assume val surround_separate: int -> int -> document -> document -> document -> 
     [surround_separate n b void opening sep closing (List.map f xs)]. *)
 assume val surround_separate_map: int -> int -> document -> document -> document -> document -> ('a -> document) -> 'a list -> document
 
-(** {1 Short-hands} *)
-
-(** [!^s] is a short-hand for [string s]. *)
-assume val ( !^ ) : string -> document
-
-(** [x ^/^ y] separates [x] and [y] with a breakable space.
-    It is a short-hand for [x ^^ break 1 ^^ y]. *)
-assume val ( ^/^ ) : document -> document -> document
-
-(** [x ^//^ y] is a short-hand for [prefix 2 1 x y]. *)
-assume val ( ^//^ ) : document -> document -> document
+// (** {1 Short-hands} *)
+// 
+// (** [!^s] is a short-hand for [string s]. *)
+// assume val ( !^ ) : string -> document
+// 
+// (** [x ^/^ y] separates [x] and [y] with a breakable space.
+//     It is a short-hand for [x ^^ break 1 ^^ y]. *)
+// assume val ( ^/^ ) : document -> document -> document
+// 
+// (** [x ^//^ y] is a short-hand for [prefix 2 1 x y]. *)
+// assume val ( ^//^ ) : document -> document -> document
 
