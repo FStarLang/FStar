@@ -70,8 +70,8 @@ type pub_elemB (i:id) = b:_buffer
 
 abstract type elemB (i:id) = pub_elemB i
 
-noextract val reveal_elemB : #i:id -> elemB i -> GTot (pub_elemB i)
-let reveal_elemB #i e = e
+assume val reveal_elemB : #i:id -> elemB i -> GTot (pub_elemB i)
+(* let reveal_elemB #i e = e *)
 
 val as_buffer: #i:id -> elemB i -> GTot (_buffer_of (alg i))
 let as_buffer #i = function
