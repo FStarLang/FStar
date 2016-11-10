@@ -99,9 +99,10 @@ noextract let blkRange rgn (i:id) (x:domain_blk i) (z:range rgn i x) : block i =
 noeq type entry (rgn:region) (i:id) =
   | Entry: x:domain i -> range:range rgn i x -> entry rgn i
 
-let is_entry_domain (#i:id) (#rgn:rid) (x:domain i) (e:entry rgn i) : Tot bool = e.x = x
+// Doesn't extract because: polymorphic comparison
+noextract let is_entry_domain (#i:id) (#rgn:rid) (x:domain i) (e:entry rgn i) : Tot bool = e.x = x
 
-let find (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain i) : option (range rgn i x) =
+noextract let find (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain i) : option (range rgn i x) =
   match SeqProperties.find_l (is_entry_domain x) s with
   | Some e -> Some e.range
   | None   -> None
