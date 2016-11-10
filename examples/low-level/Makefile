@@ -198,7 +198,7 @@ KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
 krml-test.exe:
 	$(KRML) crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest $(KREMLIN_HOME)/test/testlib.c \
 		-tmpdir tmp -o krml-test.exe -add-include '"testlib.h"' \
-		crypto/test_hacks.c
+		crypto/test_hacks.c -ccopt -Wno-pointer-sign
 	./krml-test.exe
 
 OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List_Tot.ml \
@@ -298,7 +298,24 @@ test-perf.exe: krml-test.exe crypto/test_perf.c
 		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c crypto/test_perf.c -I tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
 		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME) -lcrypto $(CFLAGS)
-	DYLD_LIBRARY_PATH=$(OPENSSL_HOME) ./test-perf.exe
+	LD_LIBRARY_PATH=$(OPENSSL_HOME) ./test-perf.exe
+
+KRML32=$(KRML) -ccopt -m32
+
+test-perf32:
+	$(KRML32) crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest $(KREMLIN_HOME)/test/testlib.c \
+		-tmpdir tmp -o krml-test.exe -add-include '"testlib.h"' \
+		crypto/test_hacks.c
+
+test-perf32.exe:
+	+make test-perf32 -i
+	cp crypto/Crypto_Symmetric_PRF.c.bak tmp/Crypto_Symmetric_PRF.c
+	gcc-5 -Wno-unused-but-set-variable -std=c11 -Wall -Werror -Wno-parentheses -Wno-unused-variable -g -O3 -fwrapv -I FSTAR_HOME/ulib/hyperstack -I crypto -I ../../../kremlin/kremlib -I ../../../kremlin/test -I /home/jkz/dev/kremlin/kremlib -I tmp -Wno-error=pointer-sign -m32 -c tmp/Crypto_Symmetric_PRF.c -o tmp/Crypto_Symmetric_PRF.o
+	$(CC) -O3 -o test-perf.exe $(OBJ_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
+		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c crypto/test_perf.c -I tmp \
+		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
+		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME) -lcrypto -m32
+	LD_LIBRARY_PATH=~/tools/openssl ./test-perf.exe
 
 # Cleaning
 clean:

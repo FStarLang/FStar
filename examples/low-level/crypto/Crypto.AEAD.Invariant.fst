@@ -42,9 +42,13 @@ noeq type entry (i:id) =
       c:cipher i (Seq.length (as_bytes p)) -> 
       entry i
 
-let is_entry_nonce (#i:id) (n:Cipher.iv (alg i)) (e:entry i) = e.nonce = n
-let find_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i)) : option (entry i) = 
-  SeqProperties.find_l (is_entry_nonce n) entries
+(* let is_entry_nonce (#i:id) (n:Cipher.iv (alg i)) (e:entry i) = e.nonce = n *)
+(* let find_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i)) : option (entry i) =  *)
+(*   SeqProperties.find_l (is_entry_nonce n) entries *)
+let is_entry_nonce (#i:id) (n:Cipher.iv (alg i)) (e:entry i) = false
+let find_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i)) : option (entry i) =
+  None
+
 
 noeq type state (i:id) (rw:rw) =
   | State:
