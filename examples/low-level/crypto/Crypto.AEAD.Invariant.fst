@@ -43,7 +43,9 @@ noeq type entry (i:id) =
       entry i
 
 let is_entry_nonce (#i:id) (n:Cipher.iv (alg i)) (e:entry i) = e.nonce = n
-let find_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i)) : option (entry i) = 
+// No such thing as seqproperties.find_l; cannot write a macro that returns the
+// right option
+noextract let find_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i)) : option (entry i) = 
   SeqProperties.find_l (is_entry_nonce n) entries
 
 noeq type state (i:id) (rw:rw) =
