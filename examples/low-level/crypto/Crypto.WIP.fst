@@ -20,6 +20,7 @@ open Crypto.AEAD.Encoding
 open Crypto.AEAD.Invariant
 open Crypto.AEAD.Lemmas
 open Crypto.AEAD.Lemmas.Part2
+open Crypto.AEAD.BufferUtils
 open Crypto.AEAD
 
 module HH = FStar.HyperHeap
@@ -32,7 +33,6 @@ module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
 module Plain = Crypto.Plain
 
-#set-options "--lax"
 ////////////////////////////////////////////////////////////////////////////////
 let maybe_plain (i:id) (l:nat) = if safeId i then Plain.plain i l else unit
 let filter_seq (#a:Type) (f:a -> Tot bool) (s:Seq.seq a) : Tot (Seq.seq a) = admit()
@@ -67,7 +67,6 @@ let dexor_modifies (#i:id) (#len:u32) (t:PRF.state i) (x:PRF.domain i)
    else modifies_table_above_x_and_buffer t x (as_buffer pb) h0 h1
 
 #reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-#set-options "--lax"
 let dexor_of_prf_dexor_modifies (#i:id) (#len:u32) (t:PRF.state i) 
 				(x:PRF.domain i{ctr_0 i <^ x.ctr}) 
 				(pb:plainBuffer i (v len)) (h0:mem) (h1:mem)
@@ -133,7 +132,6 @@ let rec contains_all_blocks (#i:id) (#r:rid)
 	  contains_all_blocks (PRF.incr i x) len (remaining_len -^ l) plain cipher blocks
 
 #reset-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-#set-options "--lax"
 let counter_dexor_sep (#i:id) (#len:u32)
 		      (t:PRF.state i) 
 		      (plain:plainBuffer i (v len))
@@ -182,7 +180,6 @@ let frame_contains_all_blocks (i:id)
    = FStar.Classical.move_requires (FStar.Buffer.lemma_reveal_modifies_1 (as_buffer pb) h0) h1
 
 #reset-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-#set-options "--lax"
 let invert_contains_all_cipher_blocks (i:id) 
 				      (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
 				      (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
@@ -205,7 +202,6 @@ let invert_contains_all_cipher_blocks (i:id)
    = ()
    
 #reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-#set-options "--lax"
 let remaining_len_ok (#i:id) (x:PRF.domain i) (len:u32) (remaining_len:u32) = 
   PRF.ctr_0 i <^ x.ctr &&
   safelen i (v remaining_len) x.ctr &&
@@ -285,7 +281,6 @@ val extend_decrypted_up_to: #i:id -> (t:PRF.state i) -> (x:PRF.domain i) ->
 		      (safeId i ==> 
 			   decrypted_up_to (starting_pos +^ l) pb p h1)))
 #reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-#set-options "--lax"
 let extend_decrypted_up_to #i t x #len remaining_len pb p cipher h0 h1 = 
   let starting_pos = len -^ remaining_len in
   let l = min remaining_len (PRF.blocklen i) in
@@ -319,7 +314,6 @@ val counter_dexor:
   ST unit (requires (fun h -> counter_dexor_requires i t x len remaining_len plain cipher p h))
  	  (ensures (fun h0 _ h1 -> counter_dexor_ensures i t x len plain cipher p h0 h1))
 #reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-#set-options "--lax" 
 let rec counter_dexor i t x len remaining_len plain cipher p =
   let completed_len = len -^ remaining_len in
   let h0 = get () in
@@ -470,15 +464,7 @@ assume val verify_wrapper:
 //decrypt
 ////////////////////////////////////////////////////////////////////////////////
 let decrypt_modifies (#i:id) (#len:u32) (st:state i Reader) (pb:plainBuffer i (v len)) (h0:mem) (h1:mem) =
-   if safeId i
-   then Buffer.modifies_1 (as_buffer pb) h0 h1
-   else let r = Buffer.frameOf (Plain.as_buffer pb) in 
-        HS.modifies_transitively (as_set [st.log_region; r]) h0 h1 /\
-        Buffer.modifies_buf_1 r (Plain.as_buffer pb) h0 h1 /\
-	(not (prf i) ==>
-	     HS.modifies_ref st.log_region TSet.empty h0 h1  /\             
-	     HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h1)
-
+   Crypto.AEAD.BufferUtils.decrypt_modifies (safeId i) st.log_region (as_buffer pb) h0 h1
 
 let found_entry (#i:id) (n:Cipher.iv (alg i)) (st:state i Reader)
 		(#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen)) 
@@ -586,7 +572,6 @@ val counterblocks_contains_all_blocks:
 	      contains_all_blocks x len remaining_len plain cipher remaining_blocks)))
 	(decreases (v remaining_len))
 #reset-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-#set-options "--lax" 
 let rec counterblocks_contains_all_blocks i rgn x len remaining_len plain cipher = 
   let x0 = {x with ctr=ctr_0 i +^ 1ul} in
   (* let all_blocks = counterblocks i rgn x0 (v len) 0 (v len) plain cipher in *)
@@ -606,7 +591,6 @@ let from_x_blocks_included_in (#i:id) (#rgn:rid) (x:PRF.domain i) (blocks:prf_bl
        ==> find blocks y == find blocks' y
   
 #reset-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-#set-options "--lax" 
 val widen_contains_all_blocks:   #i:id -> #r:rid ->
 				 (x_init:PRF.domain i{x_init.ctr = PRF.ctr_0 i +^ 1ul}) ->
 				 (x:PRF.domain i{x `above` x_init}) ->
@@ -631,14 +615,12 @@ let rec widen_contains_all_blocks #i #r x_init x len remaining_len p cipher bloc
 	   widen_contains_all_blocks #i #r x_init (PRF.incr i x) len (remaining_len -^ l) p cipher blocks blocks'
 
 #set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 2 --max_fuel 2"
-#set-options "--lax" 
 let find_singleton (#rgn:region) (#i:id) (e:PRF.entry rgn i) (x:PRF.domain i) 
     : Lemma (if is_entry_domain x e then PRF.find (Seq.create 1 e) x == Some e.range
 	     else PRF.find (Seq.create 1 e) x == None)
     = ()	     
 
 #set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 0 --max_fuel 0"
-#set-options "--lax" 
 val intro_contains_all_blocks: (i:id{safeId i}) ->
 		  	       (n:Cipher.iv (alg i)) ->
 			       (st:state i Reader) ->
@@ -663,7 +645,6 @@ val intro_contains_all_blocks: (i:id{safeId i}) ->
 		     contains_all_blocks' x1 plainlen plainlen q cipher st.prf h))
 
 #set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 0 --max_fuel 0"
-#set-options "--lax" 
 let intro_contains_all_blocks i n st #aadlen aad #plainlen cipher_tagged q entry blocks h =
   let Entry nonce ad l p c = entry in
   let prf_entries = HS.sel h (PRF.itable i st.prf) in 
@@ -781,7 +762,6 @@ val get_verified_plain : #i:id -> #n:Cipher.iv (alg i) -> st:state i Reader ->
 		          (safeId i ==> found_entry n st aad cipher_tagged p h1)
 		     else True)))
 #set-options "--initial_fuel 1 --max_fuel 1"	     
-#set-options "--lax" 
 let get_verified_plain #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc verified = 
   if safeId i && verified then
     let h = get () in
@@ -856,67 +836,14 @@ let frame_decrypt_ok (#i:id) (n:Cipher.iv (alg i)) (st:state i Reader)
 
 #reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let prf_mac_modifies (i:id) (t:PRF.state i) (h0:mem) (h1:mem) = 
-  if safeId i then h0 == h1
-  else if not (prf i) then 
-      HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
-      HS.modifies_ref t.rgn TSet.empty h0 h1  /\             
-      HS.modifies_ref t.mac_rgn TSet.empty h0 h1
-  else HS.modifies_transitively (Set.singleton t.rgn) h0 h1
+  Crypto.AEAD.BufferUtils.prf_mac_modifies (safeId i) t.rgn h0 h1
 
-val chain_mods_02: (i:id) -> (n:Cipher.iv (alg i)) -> (st:state i Reader) ->
-		        #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
-		        #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
-		       (plain:plainBuffer i (v plainlen)) ->
-		       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) ->
-		       (h_init:mem) -> (h0:mem) ->(h1:mem)-> (h2:mem) -> (h3:mem) -> (h4:mem) ->
-     Lemma (requires
-	    (decrypt_requires_sep st aad plain cipher_tagged /\
-	    decrypt_requires_live st aad plain cipher_tagged h_init /\
-	    HS.fresh_frame h_init h0 /\
-	    prf_mac_modifies i st.prf h0 h1 /\
-	    Buffer.modifies_0 h1 h2))
-	   (ensures (HS.modifies_transitively (as_set [st.log_region; HS h0.tip]) h0 h2))
-let chain_mods_02 i n st #aadlen aad #plainlen plain cipher_tagged h_init h0 h1 h2 h3 h4 =
-    Buffer.lemma_reveal_modifies_0 h1 h2
+let adapt_dexor_modifies (#i:id) (#len:u32) (t:PRF.state i) (x:PRF.domain i) 
+			 (pb:plainBuffer i (v len)) (h0:mem) (h1:mem)
+     : Lemma (dexor_modifies t x pb h0 h1
+	      ==> Crypto.AEAD.BufferUtils.dexor_modifies (safeId i) t.rgn (as_buffer pb) h0 h1)
+     = FStar.Classical.move_requires (FStar.Buffer.lemma_reveal_modifies_1 (as_buffer pb) h0) h1
 
-val chain_mods_03: (i:id) -> (n:Cipher.iv (alg i)) -> (st:state i Reader) ->
-		        #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
-		        #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
-		       (plain:plainBuffer i (v plainlen)) ->
-		       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) ->
-		       (h_init:mem) -> (h0:mem) ->(h1:mem)-> (h2:mem) -> (h3:mem) -> (h4:mem) ->
-     Lemma (requires
-	    (decrypt_requires_sep st aad plain cipher_tagged /\
-	    decrypt_requires_live st aad plain cipher_tagged h_init /\
-	    HS.fresh_frame h_init h0 /\
-	    prf_mac_modifies i st.prf h0 h1 /\
-	    Buffer.modifies_0 h1 h2 /\
-    	    Buffer.modifies_0 h2 h3 ))
-	   (ensures (HS.modifies_transitively (as_set [st.log_region; HS h0.tip]) h0 h3))
-let chain_mods_03 i n st #aadlen aad #plainlen plain cipher_tagged h_init h0 h1 h2 h3 h4 =
-    Buffer.lemma_reveal_modifies_0 h2 h3;
-    chain_mods_02 i n st aad plain cipher_tagged h_init h0 h1 h2 h3 h4
-
-val chain_mods_04: (i:id) -> (n:Cipher.iv (alg i)) -> (st:state i Reader) ->
-		        #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
-		        #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
-		       (plain:plainBuffer i (v plainlen)) ->
-		       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) ->
-		       (h_init:mem) -> (h0:mem) ->(h1:mem)-> (h2:mem) -> (h3:mem) -> (h4:mem) ->
-     Lemma (requires
-	    (let x1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
-	    decrypt_requires_sep st aad plain cipher_tagged /\
-	    decrypt_requires_live st aad plain cipher_tagged h_init /\
-	    HS.fresh_frame h_init h0 /\
-	    prf_mac_modifies i st.prf h0 h1 /\
-	    Buffer.modifies_0 h1 h2 /\
-    	    Buffer.modifies_0 h2 h3 /\
-    	    dexor_modifies st.prf x1 plain h3 h4))
-	   (ensures (HS.modifies_transitively (as_set [st.log_region; HS h0.tip; Buffer.frameOf (as_buffer plain)]) h0 h4))
-let chain_mods_04 i n st #aadlen aad #plainlen plain cipher_tagged h_init h0 h1 h2 h3 h4 =
-    chain_mods_03 i n st aad plain cipher_tagged h_init h0 h1 h2 h3 h4;
-    FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 (as_buffer plain) h3) h4
-    
 val chain_modification: (i:id) -> (n:Cipher.iv (alg i)) -> (st:state i Reader) ->
 		        #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
 		        #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
@@ -931,14 +858,54 @@ val chain_modification: (i:id) -> (n:Cipher.iv (alg i)) -> (st:state i Reader) -
 	    prf_mac_modifies i st.prf h0 h1 /\
 	    Buffer.modifies_0 h1 h2 /\
 	    Buffer.modifies_0 h2 h3 /\
-	    dexor_modifies st.prf x1 plain h3 h4))
+	    (h3 == h4 \/ dexor_modifies st.prf x1 plain h3 h4)))
 	    (ensures (HS.poppable h4 /\
 		      decrypt_modifies st plain h_init (HS.pop h4)))
 let chain_modification i n st #aadlen aad #plainlen plain cipher_tagged h_init h0 h1 h2 h3 h4 =
-    chain_mods_04 i n st aad plain cipher_tagged h_init h0 h1 h2 h3 h4;
-    assert (HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf (as_buffer plain)]) h_init (HS.pop h4)); 
-    admit()
-       
+    let x1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
+    adapt_dexor_modifies st.prf x1 plain h3 h4;
+    Crypto.AEAD.BufferUtils.chain_modification (safeId i) st.log_region (as_buffer plain) h_init h0 h1 h2 h3 h4
+
+
+val frame_my_inv: (i:id) -> (st:state i Reader) -> (h0:mem) ->(h1:mem)-> (h2:mem) -> (h3:mem) -> 
+     Lemma (requires
+	    (HS.is_eternal_region st.log_region /\
+  	     HS (st.log_region `is_in` h0.h) /\
+ 	     HS (is_stack_region h0.tip) /\
+ 	     prf_mac_modifies i st.prf h0 h1 /\
+	     (prf i ==> h1 `HS.contains` (PRF.itable i st.prf)) /\
+	     (h0 == h1 \/ HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h1) /\
+	     Buffer.modifies_0 h1 h2 /\
+	     Buffer.modifies_0 h2 h3 /\
+	     my_inv st h0))
+	    (ensures (my_inv st h3))
+let frame_my_inv i st h0 h1 h2 h3 = 
+  FStar.Buffer.lemma_reveal_modifies_0 h1 h2;
+  FStar.Buffer.lemma_reveal_modifies_0 h2 h3;
+  if safeId i 
+  then frame_refines' i st.prf.mac_rgn (HS.sel h0 st.log) (HS.sel h0 (PRF.itable i st.prf)) h0 h3
+
+val frame_acc: #i: MAC.id -> st: CMA.state i -> #aadlen:aadlen_32 -> aad:lbuffer (v aadlen) ->
+	       #txtlen:txtlen_32 -> cipher:lbuffer (v txtlen) -> 
+	       (h0:mem) -> (a:CMA.accBuffer i) -> (h1:mem) -> h2:mem -> 
+    Lemma (requires (accumulate_ensures st aadlen aad txtlen cipher h0 a h1 /\	       
+		     Buffer.modifies_0 h1 h2))
+          (ensures (accumulate_ensures st aadlen aad txtlen cipher h0 a h2))
+let frame_acc #i st #aalen aad #txtlent cipher h0 a h1 h2 = 
+  FStar.Buffer.lemma_reveal_modifies_0 h0 h1;
+  FStar.Buffer.lemma_reveal_modifies_0 h1 h2;
+  FStar.Buffer.lemma_intro_modifies_0 h0 h2;
+  if mac_log 
+  then (assert (h1  `HS.contains` CMA.alog a);
+        assert (HS.sel h2 (CMA.alog a) == HS.sel h1 (CMA.alog a));
+	assert (Buffer.as_seq h2 (MAC.as_buffer (CMA st.r)) ==
+	        Buffer.as_seq h1 (MAC.as_buffer (CMA st.r)));
+	assert (Buffer.as_seq h2 (MAC.as_buffer (CMA a.a)) ==
+	        Buffer.as_seq h1 (MAC.as_buffer (CMA a.a)));
+        assume (MAC.sel_elem h2 (CMA st.r) == MAC.sel_elem h1 (CMA st.r));  //missing some framing lemmas for MAC.sel_elem
+        assume (MAC.sel_elem h2 (CMA a.a) == MAC.sel_elem h1 (CMA a.a)))
+  else ()
+
 val decrypt:
   i:id -> st:state i Reader ->
   n:Cipher.iv (alg i) ->
@@ -965,25 +932,26 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let h0 = get () in
   frame_myinv_push st h_init h0;
   let x = PRF({iv = iv; ctr = ctr_0 i}) in // PRF index to the first block
-  //assert (CMA.authId (i, iv) ==> is_Some (find_mac (HS.sel h0 (PRF.itable i st.prf)) x));
   let ak = prf_mac_wrapper i st.prf st.ak x in   // used for keying the one-time MAC
   let h1 = get() in 
   assert (prf_mac_modifies i st.prf h0 h1);
   assert (safeId i ==> is_mac_for_iv st ak h1);
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
-  assume(CMA(MAC.norm h1 ak.r));
-  // First recompute and check the MAC
+  assert(CMA(MAC.norm h1 ak.r));
+// First recompute and check the MAC
   let acc = accumulate_wrapper ak aadlen aad plainlen cipher in
   let h2 = ST.get() in
   assert (safeId i ==> accumulate_encoded aad #plainlen cipher acc h2);
   Buffer.lemma_reveal_modifies_0 h1 h2;
   let verified = verify_wrapper ak acc tag in
   let h3 = ST.get() in
-  assume (my_inv st h3); //should get these from framing
-  assume (CMA.acc_inv ak acc h3);
-  assume (safeId i ==> is_mac_for_iv st ak h3);
-  assume (safeId i ==> accumulate_encoded aad #plainlen cipher acc h3);
+  Buffer.lemma_reveal_modifies_0 h2 h3;
+  frame_my_inv i st h0 h1 h2 h3; //my_inv st h3
+  frame_acc #(i, iv) ak #aadlen aad #plainlen cipher h1 acc h2 h3;
+  (*  *)
+  (*  *)
+  (*  *)
   // then, safeID i /\ stateful invariant ==>
   //    not verified ==> no entry in the AEAD table
   //    verified ==> exists Entry(iv ad l p c) in AEAD.log
@@ -1004,5 +972,5 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   pop_frame();
   frame_myinv_pop st h4;
   frame_decrypt_ok iv st aad plain cipher_tagged verified h4;
-  assume (decrypt_modifies st plain h_init (HS.pop h4));
+  chain_modification i iv st aad plain cipher_tagged h_init h0 h1 h2 h3 h4;
   verified

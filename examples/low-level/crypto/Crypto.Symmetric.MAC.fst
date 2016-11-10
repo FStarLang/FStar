@@ -63,10 +63,15 @@ noeq type _buffer =
   | B_POLY1305 of buffer_of POLY1305
   | B_GHASH    of buffer_of GHASH
 
-abstract type elemB i = b:_buffer
+type pub_elemB (i:id) = b:_buffer
   { match alg i with
   | POLY1305 -> is_B_POLY1305 b
   | GHASH    -> is_B_GHASH b }
+
+abstract type elemB (i:id) = pub_elemB i
+
+val reveal_elemB : #i:id -> elemB i -> GTot (pub_elemB i)
+let reveal_elemB #i e = e
 
 val as_buffer: #i:id -> elemB i -> GTot (_buffer_of (alg i))
 let as_buffer #i = function
@@ -77,7 +82,8 @@ val live: mem -> #i:id -> elemB i -> Type0
 let live h #i b = Buffer.live h (as_buffer b)
 
 val norm: mem -> #i:id -> b:elemB i -> Type0
-let norm h #i = function
+let norm h #i b = 
+  match reveal_elemB b with
   | B_POLY1305 b -> Crypto.Symmetric.Poly1305.Bigint.norm h b // implies live
   | B_GHASH    b -> Buffer.live h b
 
@@ -98,7 +104,8 @@ val sel_word: h:mem -> b:wordB{Buffer.live h b} -> GTot word
 let sel_word h b = Buffer.as_seq h b
 
 val sel_elem: h:mem -> #i:id -> b:elemB i{live h b} -> GTot (elem i)
-let sel_elem h #i = function
+let sel_elem h #i b = 
+  match reveal_elemB b with
   | B_POLY1305 b -> PL.sel_elem h b
   | B_GHASH    b -> Buffer.as_seq h b
 

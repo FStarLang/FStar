@@ -157,7 +157,7 @@ let genPost0 (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
     ~(contains m0 (MAC.as_buffer st.r)) /\
     ~(contains m0 st.s) /\
     st.region == region /\
-    MAC.live m1 st.r /\
+    MAC.norm m1 st.r /\
     Buffer.live m1 st.s /\
     (mac_log ==> 
         ~ (m_contains (ilog st.log) m0) /\ 
