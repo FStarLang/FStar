@@ -33,13 +33,15 @@ inline_for_extraction let ivlen (a:alg) = 12ul
 inline_for_extraction let statelen = function
   | AES128   -> 432ul // 256 + 176
   | AES256   -> 496ul // 256 + 240
-  | CHACHA20 -> 32ul
+  | CHACHA20 -> 64ul
 
 type ctr = UInt32.t
 
 type key a   = lbuffer (v (keylen a))
 type block a = lbuffer (v (blocklen a))
 type state a = lbuffer (v (statelen a))
+
+assume val p8_to_p32: Buffer.buffer UInt8.t -> Tot (Buffer.buffer UInt32.t)
 
 // 16-10-02 an integer value, instead of a lbuffer (v (ivlen)),
 // so that it can be used both in abstract indexes and in real code.
@@ -48,7 +50,9 @@ type iv a    = n:UInt128.t { UInt128.v n < pow2 (v (8ul *^ ivlen a)) }
 let init (#a:alg) (k:key a) (s:state a) =
   match a with
   | CHACHA20 ->
-    Buffer.blit k 0ul s 0ul (keylen a)
+    let ctx = p8_to_p32 s in
+    Crypto.Symmetric.Chacha20.chacha_keysetup ctx k
+    (* Buffer.blit k 0ul s 0ul (keylen a) *)
   | AES128 ->
     let open Crypto.Symmetric.AES128 in
     let sbox = Buffer.sub s 0ul 256ul in
@@ -98,10 +102,14 @@ let compute a output st n counter len =
   push_frame();
   begin match a with 
   | CHACHA20 -> // already specialized for counter mode
-      let open Crypto.Symmetric.Chacha20 in 
-      let nbuf = Buffer.create 0uy (ivlen CHACHA20) in
-      store_uint128 (ivlen CHACHA20) nbuf n;
-      chacha20 output st nbuf counter len
+      let open Crypto.Symmetric.Chacha20 in
+      let ctx = p8_to_p32 st in
+      if FStar.UInt32 (counter <=^ 1ul) then (
+        let nbuf = Buffer.create 0uy (ivlen CHACHA20) in
+        store_uint128 (ivlen CHACHA20) nbuf n;
+        Crypto.Symmetric.Chacha20.chacha_ietf_ivsetup ctx nbuf counter);
+      Crypto.Symmetric.Chacha20.chacha_encrypt_bytes ctx output output len
+      (* chacha20 output st nbuf counter len *)
 
   // ADL: TODO single parametric AES module
   | AES128 ->

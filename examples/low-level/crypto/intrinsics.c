@@ -86,3 +86,7 @@ void Intrinsics_aes128_dec(int8_t *plainText, int8_t *cipherText){
 
     _mm_storeu_si128((__m128i *) plainText, m);
 }
+
+unsigned int* Crypto_Symmetric_Cipher_p8_to_p32(unsigned char* ptr){
+  return (unsigned int*)ptr;
+}

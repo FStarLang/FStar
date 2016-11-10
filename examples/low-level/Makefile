@@ -196,9 +196,10 @@ KRML_ARGS=-verbose -ccopt -Wno-error=pointer-sign $(KOPTS)
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
 
 krml-test.exe:
-	$(KRML) crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest $(KREMLIN_HOME)/test/testlib.c \
+	$(KRML) crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest $(KREMLIN_HOME)/test/testlib.c crypto/intrinsics.c \
 		-tmpdir tmp -o krml-test.exe -add-include '"testlib.h"' \
-		crypto/test_hacks.c -ccopt -Wno-pointer-sign crypto/intrinsics.o
+		crypto/test_hacks.c -ccopt -Wno-pointer-sign crypto/intrinsics.o \
+		-ccopt "-g -Wall -msse2 -msse -march=native -maes"
 	./krml-test.exe
 
 OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List_Tot.ml \
@@ -332,7 +333,7 @@ ocaml-test.exe: ocaml-test-extract
 
 OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
 
-test-perf.exe: krml-test.exe crypto/test_perf.c
+test-perf.exe: #krml-test.exe crypto/test_perf.c
 	$(CC) -O3 -o test-perf.exe crypto/intrinsics.c $(C_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
 		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c  crypto/test_perf.c -I tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
