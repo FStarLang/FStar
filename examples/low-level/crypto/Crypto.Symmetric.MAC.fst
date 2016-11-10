@@ -24,11 +24,21 @@ module HS = FStar.HyperStack
 type id = id * UInt128.t
 let alg (i:id) = macAlg_of_id (fst i) 
 
-type text = Seq.seq (lbytes 16) // (used to be seq elem)
+type text = Seq.seq (lbytes 16) // Used to be seq elem, then seq (lbytes 16)
+
+val text_to_PS_text: t:text -> Tot (t':PS.text{
+  Seq.length t == Seq.length t' /\
+  (forall (i:nat).{:pattern Seq.index t' i}
+    i < Seq.length t ==> Seq.index t i == Seq.index t' i)})
+  (decreases (Seq.length t))
+let rec text_to_PS_text t =
+  if Seq.length t = 0 then Seq.createEmpty
+  else
+    SeqProperties.cons (SeqProperties.head t)
+                       (text_to_PS_text (SeqProperties.tail t))
 
 (** Field element *)
-
-let elem i = (* dependent; used only ideally *) 
+let elem i = (* dependent; used only ideally *)
   match alg i with 
   | POLY1305 -> PS.elem
   | GHASH    -> GS.elem
@@ -109,6 +119,16 @@ let sel_elem h #i b =
   | B_POLY1305 b -> PL.sel_elem h b
   | B_GHASH    b -> Buffer.as_seq h b
 
+val eq_sel_elem: h:mem -> #i:id -> b1:elemB i{live h b1} -> b2:elemB i{live h b2} -> Lemma
+ (requires (Buffer.as_seq h (as_buffer b1) == Buffer.as_seq h (as_buffer b2)))
+ (ensures  (sel_elem h b1 == sel_elem h b2))
+let eq_sel_elem h #i b1 b2 =
+  match alg i with
+  | POLY1305 ->
+    Crypto.Symmetric.Poly1305.Bigint.eval_eq_lemma h h
+      (as_buffer b1) (as_buffer b2) (limb_length POLY1305)
+  | _ -> ()
+
 (** Create and initialize an element (used for r) *)
 val rcreate: rgn:HH.rid{HS.is_eternal_region rgn} -> i:id -> ST (elemB i)
   (requires (fun h0 -> True))
@@ -179,8 +199,8 @@ let encodeB i w =
 val poly: #i:id -> cs:text -> r:elem i -> Tot (elem i)
 let poly #i cs r =
   match alg i with 
-  | POLY1305 -> PS.poly cs r
-  | GHASH    -> GS.poly cs r 
+  | POLY1305 -> PS.poly (text_to_PS_text cs) r
+  | GHASH    -> GS.poly cs r
 
 (** Create and initialize the accumulator *)
 val start: #i:id -> StackInline (elemB i)
@@ -254,7 +274,7 @@ type tagB = lbuffer (UInt32.v taglen)
 val mac: #i:id -> cs:text -> r:elem i -> s:tag -> GTot tag
 let mac #i cs r s =
   match alg i with
-  | POLY1305 -> PS.mac_1305 cs r s
+  | POLY1305 -> PS.mac_1305 (text_to_PS_text cs) r s
   | GHASH    -> GS.mac cs r s
 
 
