@@ -165,7 +165,7 @@ val gen: rgn:region -> i:id -> ST (state i)
         ~ (h0 `HS.contains` (itable i s))
 	  /\ HS.sel h1 (itable i s) == Seq.createEmpty #(entry s.mac_rgn i))))
 let gen rgn i =
-  assume false; //NS: pending discussion with @adl on Buffer.create below
+  push_frame();
   let mac_rgn : (r:region{r `HH.extends` rgn}) = new_region rgn in
   let keystate = Buffer.rcreate rgn 0uy (statelen i) in
   let key = Buffer.create 0uy (keylen i) in
@@ -177,6 +177,7 @@ let gen rgn i =
       mktable i rgn mac_rgn (ralloc rgn (Seq.createEmpty #(entry mac_rgn i)))
     else ()
   in
+  pop_frame();
   State #i #rgn #mac_rgn keystate table
 // no need to demand prf i so far.
 
