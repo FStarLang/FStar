@@ -174,3 +174,51 @@ let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
 
 let none_above (#i:id) (x:domain i) (t:PRF.state i) (h:mem) =
     CMA.authId (i, PRF x.iv) ==> (forall (y:domain i{y `above` x}). PRF.find (HS.sel h (itable i t)) y == None)
+
+val inv: h:mem -> #i:id -> #rw:rw -> e:state i rw -> Tot Type0
+let inv h #i #rw e =
+  match e with
+  | State #i_ #rw_ #log_region log prf ak ->
+    safeId i ==>
+    ( let r = itable i_ prf in 
+      let blocks = HS.sel h r in
+      let entries = HS.sel h log in
+      h `HS.contains` r /\
+      refines h i (PRF prf.mac_rgn) entries blocks )
+
+let my_inv (#i:id) (#rw:_) (st:state i rw) (h:mem) = 
+  inv h st /\
+  HS (h.h `Map.contains` st.prf.mac_rgn) /\
+  (safeId i ==> h `HS.contains` st.log) /\
+  (prf i ==> h `HS.contains` (itable i st.prf))
+
+let prf_blocks rgn i = Seq.seq (PRF.entry rgn i)
+let aead_entries i = Seq.seq (entry i)
+
+////////////////////////////////////////////////////////////////////////////////
+#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let offset (i:id) = ctr_0 i +^ 1ul
+
+let remaining_len_ok (#i:id) (x:PRF.domain i) (len:u32) (remaining_len:u32) = 
+  PRF.ctr_0 i <^ x.ctr &&
+  safelen i (v remaining_len) x.ctr &&
+  remaining_len <=^ len &&
+  len <> 0ul &&
+  safelen i (v len) (PRF.ctr_0 i +^ 1ul) &&
+  (let completed_len = v len - v remaining_len in
+   let n_blocks = v x.ctr - v (offset i) in
+   if remaining_len = 0ul then 
+      n_blocks = num_blocks' i (v len)
+   else completed_len = FStar.Mul (n_blocks * v (PRF.blocklen i)))
+
+let incr_remaining_len_ok (#i:id) (x:PRF.domain i) (len:u32) (remaining_len:u32)
+    : Lemma (let l = min remaining_len (PRF.blocklen i) in 
+	     remaining_len_ok x len remaining_len /\ 
+             remaining_len <> 0ul ==>
+	     remaining_len_ok (PRF.incr i x) len (remaining_len -^ l))
+    = ()
+
+let init_remaining_len_ok (#i:id) (x:PRF.domain i{PRF.ctr_0 i +^ 1ul = x.ctr})
+			  (len:u32{len <> 0ul /\ safelen i (v len) x.ctr})
+    : Lemma (remaining_len_ok x len len)
+    = ()

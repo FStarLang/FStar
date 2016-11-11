@@ -413,8 +413,6 @@ let lemma_cons_snoc (#a:Type) (hd:a) (s:Seq.seq a) (tl:a)
 		 	      (SeqProperties.snoc (SeqProperties.cons hd s) tl)))
   = ()	  
 
-let offset (i:id) = ctr_0 i +^ 1ul
-
 #reset-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 val counterblocks_snoc: #i:id{safeId i} -> (rgn:region) -> (x:domain i{ctr_0 i <^ x.ctr}) -> (k:nat{v x.ctr <= k}) ->
 			 (len:nat{len <> 0 /\ safelen i len (ctr_0 i +^ 1ul)})  ->

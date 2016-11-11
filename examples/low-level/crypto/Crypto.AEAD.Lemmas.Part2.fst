@@ -123,7 +123,7 @@ let rec find_entry_blocks i rgn n entries prf_entries h =
        else let tail = SeqProperties.tail entries in
 	    assume (find_mac prf_entries x0 == find_mac blocks_tl x0);  //TODO: for pre-condition and for post-condition (4), via transitivity
 	    let (e', blocks_for_e') = find_entry_blocks i rgn n tail blocks_tl h in
-	    assume (from_x_blocks_included_in (PRF.incr i x0) blocks_tl prf_entries);    //TODO: for post-condition (3), via transitivity
+	    assume (from_x_blocks_included_in x1 blocks_for_e' prf_entries);    //TODO: for post-condition (3), via transitivity
 	    (e', blocks_for_e')
 	    //TODO, need to prove that find_mac blocks_prefix x0 = None
 	    //Should be easy since we know that all of their nonces do not match n

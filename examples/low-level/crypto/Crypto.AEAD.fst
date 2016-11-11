@@ -25,6 +25,8 @@ open Crypto.AEAD.Encoding
 open Crypto.AEAD.Invariant
 open Crypto.AEAD.Lemmas
 open Crypto.AEAD.Lemmas.Part2
+open Crypto.AEAD.Lemmas.Part3
+open Crypto.AEAD.Wrappers
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -40,110 +42,6 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let ctr x = PRF(x.ctr)
 
-////////////////////////////////////////////////////////////////////////////////
-//Wrappers for experimentation, to be moved back to their original locations
-
-//16-11-04 We should indicate that the real accumulator may also be updated;
-//16-11-04 (we don't care since it won't be re-used, as we lose acc_inv)
-//Move to UF1CMA, together with some lemmas.
-let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
-		(h0:mem) (h1:mem) = 
-    let open FStar.Buffer in
-    let open Crypto.Symmetric.Bytes in
-    let open Crypto.Symmetric.Poly1305 in
-    let open Crypto.Symmetric.UF1CMA in
-    Buffer.live h0 st.s /\ 
-    MAC.live h0 st.r /\ 
-    Buffer.live h1 tag /\
-    CMA.acc_inv st acc h0 /\ (
-    if mac_log then
-      HS.modifies (as_set [st.region; Buffer.frameOf tag]) h0 h1 /\
-      (* mods_2 [HS.Ref (as_hsref (ilog st.log)); HS.Ref (Buffer.content tag)] h0 h1 /\ *)
-      Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1 /\
-      HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1 /\
-      m_contains (ilog st.log) h1 /\ (
-      let log = FStar.HyperStack.sel h1 (alog acc) in
-      let a = MAC.sel_elem h1 acc.a in
-      let r = MAC.sel_elem h1 st.r in
-      let s = Buffer.as_seq h1 st.s in
-      let t = MAC.mac log r s in
-      sel_word h1 tag === t /\
-      m_sel h1 (ilog st.log) == Some(log,t))
-      (* let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in *)
-      (* mac == little_endian (sel_word h1 tag) /\ *)
-      (* m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag)) *)
-    else Buffer.modifies_1 tag h0 h1)
-#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
-  : ST unit
-  (requires (fun h0 ->
-    let open Crypto.Symmetric.UF1CMA in
-    Buffer.live h0 tag /\ 
-    Buffer.live h0 st.s /\
-    Buffer.disjoint_2 (MAC.as_buffer acc.a) st.s tag /\ 
-    Buffer.disjoint (MAC.as_buffer st.r) tag /\
-    Buffer.disjoint st.s tag /\ 
-    acc_inv st acc h0 /\
-    (mac_log ==> m_contains (ilog st.log) h0) /\
-    (mac_log /\ authId i ==> m_sel h0 (ilog st.log) == None)))
-  (ensures (fun h0 _ h1 -> mac_ensures i st acc tag h0 h1))
-  = let open Crypto.Symmetric.UF1CMA in
-    let h0 = get () in
-    CMA.mac #i st acc tag;
-    let h1 = get () in 
-    if mac_log then begin
-      (* Need to update UF1CMA to prove this (problem with the mods clause not working fully) *)
-      assume (Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1);
-      assume (HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1)
-    end
-//16-11-04 disjoint st.r st.s comes from the UF1CMA state
-//16-11-04 BTW Buffer.disjoint_2 should be strengthened to imply 3 disjoints
-//Move to HS?
-let alog_fresh (#a:Type0) h0 h1 (r:HS.reference a) = 
-    HS.frameOf r == HS h1.tip /\
-    h1 `HS.contains` r /\
-  ~ (h0 `HS.contains` r)
-
-let accumulate_encoded (#i:CMA.id)
- 		       (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
-		       (#plainlen:txtlen_32) (cipher:lbuffer (v plainlen))
-		       (a:CMA.accBuffer i) (h:mem{mac_log}) =
-    Buffer.live h aad /\			 
-    Buffer.live h cipher /\			     
-    h `HS.contains` (CMA.alog a) /\
-    HS.sel h (CMA.alog a) ==
-    encode_both (fst i) aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher)
-
-let accumulate_ensures (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lbuffer (v aadlen))
-		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
-		       (h0:mem) (a:CMA.accBuffer i) (h1:mem) =
-  Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
-  ~ (h0 `Buffer.contains` (CMA (MAC.as_buffer (a.a)))) /\
-  Buffer.live h1 aad /\ 
-  Buffer.live h1 cipher /\
-  Buffer.frameOf (CMA (MAC.as_buffer a.a)) = HS h1.tip /\
-  CMA.acc_inv st a h1 /\
-  (mac_log ==> 
-    alog_fresh h0 h1 (CMA.alog a) /\
-    accumulate_encoded aad cipher a h1)
-    
-let accumulate_wrapper (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lbuffer (v aadlen))
-		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen)) 
-   : StackInline (CMA.accBuffer i)
-      (requires (fun h0 -> 
-	  CMA(MAC.norm h0 st.r) /\
-	  Buffer.live h0 aad /\ 
-	  Buffer.live h0 cipher))
-      (ensures (fun h0 a h1 ->  accumulate_ensures #i st aadlen aad txtlen cipher h0 a h1))
-  = let h0 = get () in
-    let acc = accumulate #i st aadlen aad txtlen cipher in
-    let h1 = get () in
-    assert (Buffer.disjoint_2 (MAC.as_buffer (CMA acc.a)) (CMA st.s) cipher);
-    assume (mac_log ==> alog_fresh h0 h1 (CMA.alog acc));
-    acc
-
-//Done with wrappers
-////////////////////////////////////////////////////////////////////////////////
 
 
 //16-10-12 TEMPORARY, while PRF remains somewhat CHACHA-specific
@@ -376,64 +274,10 @@ let rec counter_enxor i t x len remaining_len plain cipher h_init =
     end
   else refl_modifies_table_above_x_and_buffer t x cipher h0
 
-//TODO: Move this to AEAD.Invariant
-val inv: h:mem -> #i:id -> #rw:rw -> e:state i rw -> Tot Type0
-let inv h #i #rw e =
-  match e with
-  | State #i_ #rw_ #log_region log prf ak ->
-    safeId i ==>
-    ( let r = itable i_ prf in 
-      let blocks = HS.sel h r in
-      let entries = HS.sel h log in
-      h `HS.contains` r /\
-      refines h i (PRF prf.mac_rgn) entries blocks )
-
 let prf_state (#i:id) (#rw:rw) (e:state i rw) : PRF.state i = State.prf e
 ////////////////////////////////////////////////////////////////////////////////
 
-let lemma_frame_find_mac (#i:id) (#l:nat) (st:PRF.state i) 
-			 (x:PRF.domain i{ctr_0 i <^ x.ctr}) (b:lbuffer l)
-			 (h0:HS.mem) (h1:HS.mem) 
-    : Lemma (requires (modifies_table_above_x_and_buffer st x b h0 h1))
-	    (ensures (prf i ==> (
-		      let r = PRF.itable i st in
-		      let tab0 = HS.sel h0 r in
-		      let tab1 = HS.sel h1 r in
-		      let x0 = {x with ctr=ctr_0 i} in
-		      find_mac tab0 x0 == find_mac tab1 x0)))
-    = admit()		      
-
-open FStar.Heap
-let heap_modifies_fresh_empty_0  (h0:heap) (h1:heap) (h2:heap) (x:FStar.Heap.ref nat)
-  : Lemma (requires (Heap.modifies TSet.empty h0 h1 /\
-		     Heap.modifies !{x} h1 h2 /\
-		     not(h0 `Heap.contains` x)))
-          (ensures (Heap.modifies TSet.empty h0 h2))
-  = ()	  
-
-let modifies_fresh_empty_0  (h0:mem) (h1:mem) (h2:mem) (r:rid) (x:HS.reference nat)
-  : Lemma (requires (HS (h0.h) `Map.contains` r /\
-		     HS.modifies_ref r TSet.empty h0 h1 /\
-  		     HS.modifies_ref r (TSet.singleton (HS.as_aref x)) h1 h2 /\
-		     HS.frameOf x == r /\
-		     ~(h0 `HS.contains` x)))
-          (ensures (HS.modifies_ref r TSet.empty h0 h2))
-  = ()	  
-  
-let modifies_fresh_empty (i:id) (n: Cipher.iv (alg i)) (r:rid) (m:CMA.state (i,n)) 
-			 (h0:mem) (h1:mem) (h2:mem) 
-  : Lemma (requires (HS (h0.h) `Map.contains` r /\
-		     HS.modifies_ref r TSet.empty h0 h1 /\
-		    (mac_log ==> 
-		        (let ref = CMA (as_hsref (ilog m.log)) in
-			 HS.frameOf ref == r /\
-			 HS.modifies_ref r (TSet.singleton (HS.as_aref ref)) h1 h2)) /\
-		    (safeId i ==> ~ (m_contains (CMA (ilog m.log)) h0))))
-          (ensures (safeId i ==> HS.modifies_ref r TSet.empty h0 h2))
-  = ()
-  
 #reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-
 val extend_refines_aux: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)) ->
 		       (aadlen: UInt32.t {aadlen <=^ aadmax}) ->
 		       (aad: lbuffer (v aadlen)) ->
@@ -483,110 +327,48 @@ let extend_refines_aux i st nonce aadlen aad len plain cipher h0 h1 =
      let entry = Entry nonce ad len p c_tagged in
      extend_refines h0 i mac_rgn entries_0 blocks_0 entry blocks_1 h1
 
-assume val to_seq_temp: #a:Type -> b:Buffer.buffer a -> l:UInt32.t{v l <= Buffer.length b} -> ST (Seq.seq a)
-  (requires (fun h -> Buffer.live h b))
-  (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h1 b /\ r == Buffer.as_seq h1 b))
-
-#reset-options "--z3timeout 400 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-let rec frame_refines (i:id{safeId i}) (mac_rgn:region) 
-		      (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry mac_rgn i))
-		      (h:mem) (h':mem)
-   : Lemma (requires refines h i mac_rgn entries blocks /\
-		     HS.modifies_ref mac_rgn TSet.empty h h' /\
-		     HS.live_region h' mac_rgn)
-	   (ensures  refines h' i mac_rgn entries blocks)
-	   (decreases (Seq.length entries))
-   = if Seq.length entries = 0 then 
-       ()
-     else let e = SeqProperties.head entries in
-          let b = num_blocks e in 
-         (let blocks_for_e = Seq.slice blocks 0 (b + 1) in
-       	  let entries_tl = SeqProperties.tail entries in
-          let blocks_tl = Seq.slice blocks (b+1) (Seq.length blocks) in
-	  frame_refines i mac_rgn entries_tl blocks_tl h h';
-	  frame_refines_one_entry h i mac_rgn e blocks_for_e h')
-
 #reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-val refines_to_inv: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)) ->
-		       (aadlen: UInt32.t {aadlen <=^ aadmax}) ->
-		       (aad: lbuffer (v aadlen)) ->
-		       (len: UInt32.t {len <> 0ul}) ->
-		       (plain:plainBuffer i (v len)) -> 
-		       (cipher:lbuffer (v len + v MAC.taglen)) ->
-    ST unit (requires (fun h1 ->
-		      Buffer.live h1 aad /\ 
-		      Plain.live h1 plain /\ 
-		      Buffer.live h1 cipher /\ (
-		      HS (h1.h) `Map.contains` st.prf.mac_rgn /\
-		      h1 `HS.contains` st.log /\
-		      (safeId i ==> (
-			let mac_rgn = st.prf.mac_rgn in
-      			let entries_0 = HS.sel h1 st.log in 
-			let table_1 = HS.sel h1 (PRF.itable i st.prf) in
-     			let p = Plain.sel_plain h1 len plain in
-			let c_tagged = Buffer.as_seq h1 cipher in
-			let c, tag = SeqProperties.split c_tagged (v len) in
-			let ad = Buffer.as_seq h1 aad in
-  			let entry = Entry nonce ad (v len) p c_tagged in
-			h1 `HS.contains` (itable i st.prf) /\
-			refines h1 i mac_rgn (SeqProperties.snoc entries_0 entry) table_1)))))
-          (ensures (fun h1 _ h2 -> 
-      		      Buffer.live h1 aad /\ 
-		      Plain.live h1 plain /\ 
-		      Buffer.live h1 cipher /\ (
-		      inv h2 st /\
-		      (if safeId i then 
-			let mac_rgn = st.prf.mac_rgn in
-      			let entries_0 = HS.sel h1 st.log in 
-			let table_1 = HS.sel h1 (PRF.itable i st.prf) in
-     			let p = Plain.sel_plain h1 len plain in
-			let c_tagged = Buffer.as_seq h1 cipher in
-			let c, tag = SeqProperties.split c_tagged (v len) in
-			let ad = Buffer.as_seq h1 aad in
-  			let entry = Entry nonce ad (v len) p c_tagged in
-  			HS.modifies (Set.singleton st.log_region) h1 h2 /\
-			HS.modifies_ref st.log_region !{HS.as_ref st.log} h1 h2 /\ 
-			HS.sel h2 st.log == SeqProperties.snoc entries_0 entry
-		      else HS.modifies Set.empty h1 h2))))
-let refines_to_inv i st nonce aadlen aad len plain cipher =
-  if safeId i then
-    let h0 = get () in 
-    let ad = to_seq_temp aad aadlen in
-    let p = Plain.load len plain in 
-    let c_tagged = to_seq_temp cipher len in
-    let entry = Entry nonce ad (v len) p c_tagged in
-    st.log := SeqProperties.snoc !st.log entry;
-    let h1 = get () in 
-    let entries = !st.log in
-    let blocks = !(itable i st.prf) in
-    frame_refines i st.prf.mac_rgn entries blocks h0 h1
-  else ()
-
-let my_inv (#i:id) (#rw:_) (st:state i rw) (h:mem) = 
-  inv h st /\
-  HS (h.h `Map.contains` st.prf.mac_rgn) /\
-  (safeId i ==> h `HS.contains` st.log) /\
-  (prf i ==> h `HS.contains` (itable i st.prf))
-
-
-let encrypt_ensures (i:id) (st:state i Writer)
-		    (n: Cipher.iv (alg i))
-		    (aadlen: UInt32.t {aadlen <=^ aadmax})
-		    (aad: lbuffer (v aadlen))
-		    (plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (ctr_0 i +^ 1ul)})
-		    (plain: plainBuffer i (v plainlen))
-		    (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
-		    (h0:mem) (h5:mem) = 
+let encrypt_ensures' (regions:Set.set rid)
+		     (i:id) (st:state i Writer)
+		     (n: Cipher.iv (alg i))
+ 		     (aadlen: UInt32.t {aadlen <=^ aadmax})
+		     (aad: lbuffer (v aadlen))
+		     (plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (ctr_0 i +^ 1ul)})
+		     (plain: plainBuffer i (v plainlen))
+		     (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+		     (h0:mem) (h5:mem) = 
      Buffer.live h5 aad /\
      Buffer.live h5 cipher_tagged /\
      Plain.live h5 plain /\
      my_inv st h5 /\
-     HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged; HS h5.tip]) h0 h5 /\ (
+     HS.modifies_transitively regions h0 h5 /\ (
      safeId i ==>  (
        let aad = Buffer.as_seq h5 aad in
        let p = Plain.sel_plain h5 plainlen plain in
        let c = Buffer.as_seq h5 cipher_tagged in
        HS.sel h5 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
+
+let encrypt_ensures_tip (i:id) (st:state i Writer)
+		     (n: Cipher.iv (alg i))
+ 		     (aadlen: UInt32.t {aadlen <=^ aadmax})
+		     (aad: lbuffer (v aadlen))
+		     (plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (ctr_0 i +^ 1ul)})
+		     (plain: plainBuffer i (v plainlen))
+		     (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+		     (h0:mem) (h5:mem) =
+  encrypt_ensures' (as_set [st.log_region; Buffer.frameOf cipher_tagged; HS h5.tip])
+    i st n aadlen aad plainlen plain cipher_tagged h0 h5
+
+let encrypt_ensures  (i:id) (st:state i Writer)
+		     (n: Cipher.iv (alg i))
+ 		     (aadlen: UInt32.t {aadlen <=^ aadmax})
+		     (aad: lbuffer (v aadlen))
+		     (plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (ctr_0 i +^ 1ul)})
+		     (plain: plainBuffer i (v plainlen))
+		     (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+		     (h0:mem) (h5:mem) =
+  encrypt_ensures' (as_set [st.log_region; Buffer.frameOf cipher_tagged])
+    i st n aadlen aad plainlen plain cipher_tagged h0 h5
 
 val finish_after_mac: h0:mem -> h3:mem -> i:id -> st:state i Writer -> 
 		      n: Cipher.iv (alg i) ->
@@ -631,7 +413,7 @@ val finish_after_mac: h0:mem -> h3:mem -> i:id -> st:state i Writer ->
 	| None -> False
 	| Some mac_st -> mac_st == ak))))
    (ensures (fun _ _ h5 -> 
-              encrypt_ensures i st n aadlen aad plainlen plain cipher_tagged h0 h5))
+              encrypt_ensures_tip i st n aadlen aad plainlen plain cipher_tagged h0 h5))
 
 #reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let finish_after_mac h0 h3 i st n aadlen aad plainlen plain cipher_tagged ak acc tag = 
@@ -649,48 +431,6 @@ let finish_after_mac h0 h3 i st n aadlen aad plainlen plain cipher_tagged ak acc
   end
   else FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 tag h3) h4
 
-let modifies_push_pop (h:HS.mem) (h0:HS.mem) (h5:HS.mem) (r:Set.set HH.rid)
-  : Lemma (requires (HS.fresh_frame h h0 /\
-		     HS.modifies_transitively (Set.union r (Set.singleton (HS h0.tip))) h0 h5))
-          (ensures (HS.poppable h5 /\ HS.modifies_transitively r h (HS.pop h5)))
-  = ()
-
-let encrypt_ensures' (i:id) (st:state i Writer)
-		    (n: Cipher.iv (alg i))
-		    (aadlen: UInt32.t {aadlen <=^ aadmax})
-		    (aad: lbuffer (v aadlen))
-		    (plainlen: UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (ctr_0 i +^ 1ul)})
-		    (plain: plainBuffer i (v plainlen))
-		    (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
-		    (h0:mem) (h5:mem) = 
-     Buffer.live h5 aad /\
-     Buffer.live h5 cipher_tagged /\
-     Plain.live h5 plain /\
-     my_inv st h5 /\
-     HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged]) h0 h5 /\ (
-     safeId i ==>  (
-       let aad = Buffer.as_seq h5 aad in
-       let p = Plain.sel_plain h5 plainlen plain in
-       let c = Buffer.as_seq h5 cipher_tagged in
-       HS.sel h5 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
-
-let rec frame_refines' (i:id{safeId i}) (mac_rgn:region) 
-		      (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry mac_rgn i))
-		      (h:mem) (h':mem)
-   : Lemma (requires refines h i mac_rgn entries blocks /\
-		     HH.modifies_rref mac_rgn TSet.empty (HS h.h) (HS h'.h) /\
-		     HS.live_region h' mac_rgn)
-	   (ensures  refines h' i mac_rgn entries blocks)
-	   (decreases (Seq.length entries))
-   = admit()
-
-let frame_myinv_push (#i:id) (#rw:rw) (st:state i rw) (h:mem) (h1:mem)
-   : Lemma (requires (my_inv st h /\ 
-		      HS.fresh_frame h h1))
-	   (ensures (my_inv st h1))
-   = if safeId i
-     then frame_refines' i st.prf.mac_rgn (HS.sel h st.log) (HS.sel h (PRF.itable i st.prf)) h h1
-
 let encrypt_ensures_push_pop (i:id) (st:state i Writer)
 		    (n: Cipher.iv (alg i))
 		    (aadlen: UInt32.t {aadlen <=^ aadmax})
@@ -705,9 +445,9 @@ let encrypt_ensures_push_pop (i:id) (st:state i Writer)
 		      HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) h0.tip /\
      		      HH.disjoint (Buffer.frameOf aad) h0.tip /\
       		      HH.disjoint (Buffer.frameOf cipher_tagged) h0.tip /\
-		      encrypt_ensures i st n aadlen aad plainlen plain cipher_tagged h0 h5))
+		      encrypt_ensures_tip i st n aadlen aad plainlen plain cipher_tagged h0 h5))
 	   (ensures (HS.poppable h5 /\
-		     encrypt_ensures'  i st n aadlen aad plainlen plain cipher_tagged h (HS.pop h5)))
+		     encrypt_ensures i st n aadlen aad plainlen plain cipher_tagged h (HS.pop h5)))
    = if safeId i
      then frame_refines' i st.prf.mac_rgn (HS.sel h5 st.log) (HS.sel h5 (PRF.itable i st.prf)) h5 (HS.pop h5)
      
@@ -749,9 +489,8 @@ val encrypt:
     (prf i ==> none_above ({iv=n; ctr=ctr_0 i}) st.prf h) // The nonce must be fresh!
    ))
   (ensures (fun h0 _ h5 ->
-    encrypt_ensures' i st n aadlen aad plainlen plain cipher_tagged h0 h5))
-    (* Buffer.m_ref (Buffer.frameOf cipher) !{Buffer.modifies_1 cipher h0 h1 /\  *)
-(*  *)
+    encrypt_ensures i st n aadlen aad plainlen plain cipher_tagged h0 h5))
+    
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let h_init = get() in
   push_frame();
@@ -799,127 +538,779 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let h5 = get () in
   pop_frame();
   encrypt_ensures_push_pop i st n aadlen aad plainlen plain cipher_tagged h_init h0 h5
-  
+
 ////////////////////////////////////////////////////////////////////////////////
-val counter_dexor:
-  i:id -> t:PRF.state i -> x:PRF.domain i{PRF.ctr_0 i <^ x.ctr} -> len:u32{safelen i (v len) x.ctr} ->
-  plain:plainBuffer i (v len) ->
-  cipher:lbuffer (v len)
-  { let bp = as_buffer plain in
+//DECRYPT SIDE
+////////////////////////////////////////////////////////////////////////////////
+
+
+//counter_dexor
+let maybe_plain (i:id) (l:nat) = if safeId i then Plain.plain i l else unit
+let as_plain (#i:id) (#l:nat) (m:maybe_plain i l{safeId i}) : plain i l = m
+
+let decrypted_up_to (#i:id) (#len:u32) (completed:u32{completed <=^ len}) 
+		    (pb:plainBuffer i (v len)) (p:maybe_plain i (v len)) 
+		    (h:mem{Buffer.live h (as_buffer pb)}) =
+  safeId i ==> 		    
+    Seq.equal (as_bytes (Plain.slice (Plain.sel_plain h len pb) 0 (v completed)))
+	      (as_bytes (Plain.slice (as_plain p) 0 (v completed)))
+
+let decrypted_up_to_end (#i:id) (#len:u32) (pb:plainBuffer i (v len)) (p:maybe_plain i (v len)) 
+			(h:mem{Buffer.live h (as_buffer pb)})
+    : Lemma (requires (decrypted_up_to len pb p h))
+	    (ensures (safeId i ==> Plain.sel_plain h len pb == as_plain p))
+    = if safeId i then begin
+	assert (Seq.equal (Plain.as_bytes (Plain.sel_plain h len pb))
+			(Plain.as_bytes (Plain.slice (Plain.sel_plain h len pb) 0 (v len))));
+        assert (Seq.equal (Plain.as_bytes (as_plain p))
+	   		  (Plain.as_bytes (Plain.slice (as_plain p) 0 (v len))))
+      end
+
+let dexor_modifies (#i:id) (#len:u32) (t:PRF.state i) (x:PRF.domain i) 
+		   (pb:plainBuffer i (v len)) (h0:mem) (h1:mem) =
+   if not (prf i) || safeId i
+   then Buffer.modifies_1 (as_buffer pb) h0 h1
+   else modifies_table_above_x_and_buffer t x (as_buffer pb) h0 h1
+
+#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let dexor_of_prf_dexor_modifies (#i:id) (#len:u32) (t:PRF.state i) 
+				(x:PRF.domain i{ctr_0 i <^ x.ctr}) 
+				(pb:plainBuffer i (v len)) (h0:mem) (h1:mem)
+   : Lemma (requires (prf_dexor_modifies t x pb h0 h1))
+	   (ensures (dexor_modifies t x pb h0 h1))
+   = if not (prf i) || safeId i
+     then ()
+     else x_buffer_1_modifies_table_above_x_and_buffer t x (as_buffer pb) h0 h1
+
+let dexor_modifies_trans (#i:id) (#len:u32) (t:PRF.state i) 
+			 (x:PRF.domain i{ctr_0 i <^ x.ctr}) 
+			 (y:PRF.domain i{y `above` x})
+			 (pb:plainBuffer i (v len)) (h0:mem) (h1:mem) (h2:mem)
+   : Lemma (requires (dexor_modifies t x pb h0 h1 /\
+		      dexor_modifies t y pb h1 h2))
+	   (ensures (dexor_modifies t x pb h0 h2))
+   = if not (prf i) || safeId i
+     then ()
+     else trans_modifies_table_above_x_and_buffer t x y (as_buffer pb) h0 h1 h2
+
+let dexor_modifies_refl (#i:id) (#len:u32) (t:PRF.state i) 
+			 (x:PRF.domain i{ctr_0 i <^ x.ctr}) 
+			 (pb:plainBuffer i (v len)) (h0:mem)
+   : Lemma (requires (Buffer.live h0 (as_buffer pb)))
+	   (ensures (dexor_modifies t x pb h0 h0))
+   = if not (prf i) || safeId i
+     then ()
+     else refl_modifies_table_above_x_and_buffer t x (as_buffer pb) h0
+
+let dexor_modifies_widen (#i:id) (#len:u32) (t:PRF.state i) 
+			 (x:PRF.domain i{ctr_0 i <^ x.ctr}) 
+			 (pb:plainBuffer i (v len))
+			 (from:u32{FStar.Buffer (v from + v (Plain.as_buffer pb).idx) < pow2 n})
+			 (len:u32{FStar.Buffer (v len <= length (Plain.as_buffer pb) /\ v from + v len <= length (Plain.as_buffer pb))})
+			 (h0:mem) (h1:mem)
+   : Lemma (requires (Buffer.live h0 (Plain.as_buffer pb) /\ 
+		      dexor_modifies t x (Plain.sub pb from len) h0 h1))
+	   (ensures (dexor_modifies t x pb h0 h1))
+   = if not (prf i) || safeId i
+     then (Buffer.lemma_reveal_modifies_1 (Plain.as_buffer (Plain.sub pb from len)) h0 h1;
+           Buffer.lemma_intro_modifies_1 (Plain.as_buffer pb) h0 h1)
+     else ()
+
+let rec contains_all_blocks (#i:id) (#r:rid)
+  		 	    (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
+			    (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
+			    (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len})
+			    (plain:maybe_plain i (v len))
+			    (cipher:lbytes (v len))
+			    (blocks:prf_blocks r i)
+				   : GTot Type0 (decreases (v remaining_len))
+   = if not (safeId i) || remaining_len = 0ul then 
+       True
+     else let starting_pos = len -^ remaining_len in
+	  let l = min remaining_len (PRF.blocklen i) in
+	  let plain_hd = Plain.slice (as_plain plain) (v starting_pos) (v starting_pos + v l) in
+	  let cipher_hd = Seq.slice cipher (v starting_pos) (v starting_pos + v l) in
+	  contains_cipher_block (v l) x cipher_hd blocks /\
+	  contains_plain_block x plain_hd blocks /\
+	  contains_all_blocks (PRF.incr i x) len (remaining_len -^ l) plain cipher blocks
+
+#reset-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let counter_dexor_sep (#i:id) (#len:u32)
+		      (t:PRF.state i) 
+		      (plain:plainBuffer i (v len))
+		      (cipher:lbuffer (v len)) = 
+    let bp = as_buffer plain in		      
     Buffer.disjoint bp cipher /\
     Buffer.frameOf bp <> (PRF t.rgn) /\
     Buffer.frameOf cipher <> (PRF t.rgn)
-  } -> STL unit
-  (requires (fun h ->
+
+let counter_dexor_live (#i:id) (#len:u32)
+		       (t:PRF.state i) 
+ 		       (plain:plainBuffer i (v len))
+		       (cipher:lbuffer (v len)) (h:mem) =
     Plain.live h plain /\
     Buffer.live h cipher /\
-    // if ciphertexts are authenticated, then the table already includes all we need
-    (safeId i ==> (let expected = counterblocks i t.mac_rgn x (v len) 0 (v len) (Plain.sel_plain h len plain) (Buffer.as_seq h cipher) in
-                True //TODO say that expected is found in the table
-    ))))
-  (ensures (fun h0 _ h1 ->
+    (prf i ==> h `HS.contains` (itable i t))
+
+let contains_all_blocks' (#i:id)
+ 		 	 (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
+			 (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
+			 (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len})
+			 (plain:maybe_plain i (v len))
+			 (cipher:lbuffer (v len))
+			 (t:PRF.state i)
+			 (h:mem)
+   = safeId i /\ Buffer.live h cipher ==> 				
+     contains_all_blocks x len remaining_len plain (Buffer.as_seq h cipher) (HS.sel h (PRF.itable i t))
+     
+let frame_contains_all_blocks (i:id) 
+			      (x_init:PRF.domain i{PRF.ctr_0 i <^ x_init.ctr})
+     			      (x:PRF.domain i{x `above` x_init})
+			      (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
+			      (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len})
+			      (t:PRF.state i) 
+			      (pb:plainBuffer i (v len))
+			      (p:maybe_plain i (v len))
+			      (cipher: lbuffer (v len))
+			      (h0:mem)
+    			      (h1:mem)
+   : Lemma (requires (counter_dexor_sep t pb cipher  /\
+		      counter_dexor_live t pb cipher h0 /\
+		      contains_all_blocks' x len remaining_len p cipher t h0 /\
+                      prf_dexor_modifies t x_init pb h0 h1))
+          (ensures  (counter_dexor_live t pb cipher h1 /\
+		     contains_all_blocks' x len remaining_len p cipher t h1))
+   = FStar.Classical.move_requires (FStar.Buffer.lemma_reveal_modifies_1 (as_buffer pb) h0) h1
+
+#reset-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let invert_contains_all_blocks (i:id) 
+				      (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
+				      (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
+				      (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <> 0ul /\ remaining_len <=^ len})
+				      (t:PRF.state i) 
+				      (p:maybe_plain i (v len))
+ 				      (cipher: lbuffer (v len))
+				      (h:mem{Buffer.live h cipher})
+   : Lemma (requires (contains_all_blocks' x len remaining_len p cipher t h))
+ 	   (ensures  (let starting_pos = len -^ remaining_len in
+	              let l = min remaining_len (PRF.blocklen i) in
+		      let cipher_hd = Buffer.sub cipher starting_pos l in 
+		      safeId i ==> (
+		       let plain_hd = Plain.slice (as_plain p) (v starting_pos) (v starting_pos + v l) in
+		       let blocks = HS.sel h (PRF.itable i t) in
+		       let c = Buffer.as_seq h cipher_hd in
+		       PRF.contains_cipher_block (v l) x c blocks /\
+       		       PRF.contains_plain_block x plain_hd blocks /\
+		       contains_all_blocks' (PRF.incr i x) len (remaining_len -^ l) p cipher t h)))
+   = ()
+
+
+let counter_dexor_requires (i:id) (t:PRF.state i) (x:PRF.domain i)
+			   (len:u32) (remaining_len:u32)
+			   (plain:plainBuffer i (v len))
+			   (cipher:lbuffer (v len))
+			   (p:maybe_plain i (v len))
+			   (h:mem) =
+    remaining_len_ok x len remaining_len /\			   
+    (let bp = as_buffer plain in
+     let initial_domain = {x with ctr=ctr_0 i +^ 1ul} in
+     let completed_len = len -^ remaining_len in 
+     counter_dexor_sep t plain cipher /\
+     counter_dexor_live t plain cipher h /\
+     // if ciphertexts are authenticated, then the table already includes all we need
+     contains_all_blocks' x len remaining_len p cipher t h /\
+     (safeId i ==> decrypted_up_to completed_len plain p h))
+       
+let counter_dexor_ensures (i:id) (t:PRF.state i) (x:PRF.domain i)
+			  (len:u32)
+			  (plain:plainBuffer i (v len))
+			  (cipher:lbuffer (v len))
+			  (p:maybe_plain i (v len))
+			  (h0:mem) (h1:mem) = 
     Plain.live h1 plain /\
     Buffer.live h1 cipher /\
     // in all cases, we extend the table only at x and its successors.
-    modifies_table_above_x_and_buffer t x (as_buffer plain) h0 h1 /\
-    (safeId i ==> Seq.equal #(PRF.entry (PRF t.mac_rgn) i) (HS.sel h1 t.table) (HS.sel h0 t.table))))
-  
-let rec counter_dexor i t x len plaintext ciphertext =
-  assume false;//16-10-12
-  if len <> 0ul
-  then
+    dexor_modifies t x plain h0 h1 /\
+    (safeId i ==> 
+       decrypted_up_to len plain p h1 /\
+       Seq.equal (HS.sel h0 (PRF.itable i t)) (HS.sel h1 (PRF.itable i t)))
+
+val extend_decrypted_up_to: #i:id -> (t:PRF.state i) -> (x:PRF.domain i) ->
+			    #len:u32 -> (remaining_len:u32{remaining_len_ok x len remaining_len}) ->
+			   (pb:plainBuffer i (v len)) ->
+			   (p:maybe_plain i (v len)) ->
+   			   (cipher:lbuffer (v len)) ->
+			   (h0:mem) ->
+			   (h1:mem) ->
+      Lemma (requires (let starting_pos = len -^ remaining_len in
+		       let l = min remaining_len (PRF.blocklen i) in
+		       let plain = Plain.sub pb starting_pos l in
+		       counter_dexor_sep t pb cipher /\
+		       counter_dexor_live t pb cipher h0 /\
+		       remaining_len <> 0ul /\
+		       Plain.live h1 pb /\
+		       prf_dexor_modifies t x plain h0 h1 /\
+	               contains_all_blocks' x len remaining_len p cipher t h0 /\
+		       (safeId i ==> 
+			   decrypted_up_to starting_pos pb p h0 /\
+			   contains_plain_block x (sel_plain h1 l plain) (HS.sel h1 (PRF.itable i t)))))
+	    (ensures (let starting_pos = len -^ remaining_len in
+		      let l = min remaining_len (PRF.blocklen i) in
+		      Plain.live h1 pb /\
+		      (safeId i ==> 
+			   decrypted_up_to (starting_pos +^ l) pb p h1)))
+#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let extend_decrypted_up_to #i t x #len remaining_len pb p cipher h0 h1 = 
+  let starting_pos = len -^ remaining_len in
+  let l = min remaining_len (PRF.blocklen i) in
+  let frame = Plain.sub pb 0ul starting_pos in
+  let plain = Plain.sub pb starting_pos l in
+  assert (Buffer.disjoint (Plain.as_buffer frame) (Plain.as_buffer plain));
+  let next = starting_pos +^ l in
+  if safeId i then begin
+    Buffer.lemma_reveal_modifies_1 (as_buffer plain) h0 h1;
+    let pb_contents_0 = as_bytes (Plain.slice (Plain.sel_plain h0 len pb) 0 (v starting_pos)) in
+    let p_contents_0  = as_bytes (Plain.slice (as_plain p) 0 (v starting_pos)) in
+    let pb_contents_1 = as_bytes (Plain.slice (Plain.sel_plain h1 len pb) 0 (v next)) in
+    let plain_contents_1 = as_bytes (Plain.sel_plain h1 l plain) in
+    let frame_pb_contents_1 = as_bytes (Plain.slice (Plain.sel_plain h1 len pb) 0 (v starting_pos)) in
+    assert (Seq.equal pb_contents_0 frame_pb_contents_1);
+    assert (Seq.equal pb_contents_1 (Seq.append p_contents_0 plain_contents_1));
+    invert_contains_all_blocks i x len remaining_len t p cipher h0
+  end
+
+ 
+val counter_dexor:
+  i:id -> t:PRF.state i -> x:PRF.domain i ->
+  len:u32 -> remaining_len:u32 ->
+  plain:plainBuffer i (v len) ->
+  cipher:lbuffer (v len) ->
+  p:maybe_plain i (v len) ->
+  ST unit (requires (fun h -> counter_dexor_requires i t x len remaining_len plain cipher p h))
+ 	  (ensures (fun h0 _ h1 -> counter_dexor_ensures i t x len plain cipher p h0 h1))
+#reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let rec counter_dexor i t x len remaining_len plain cipher p =
+  let completed_len = len -^ remaining_len in
+  let h0 = get () in
+  if safeId i then ST.recall (itable i t);
+  if remaining_len <> 0ul then
     begin // at least one more block
-      let l = min len (PRF.blocklen i) in
-      let cipher = Buffer.sub ciphertext 0ul l  in
-      let plain = Plain.sub plaintext 0ul l in
+      let starting_pos = len -^ remaining_len in
+      let l = min remaining_len (PRF.blocklen i) in
+      let cipher_hd = Buffer.sub cipher starting_pos l in 
+      let plain_hd = Plain.sub plain starting_pos l in 
 
-      (*
-      recall (PRF t.table); //16-09-22 could this be done by ! ??
-      let s = PRF !t.table in
-      let h = ST.get() in
-      // WARNING: moving the PRF.find_otp outside the assume will segfault
-      // at runtime, because t.table doesn't exist in real code
-      assume(match PRF.find_otp #(PRF.State.rgn t) #i s x with
-        | Some (PRF.OTP l' p c) -> l == l' /\ c = sel_bytes h l cipher
-        | None -> False);
-      *)
-      PRF.prf_dexor i t x l cipher plain;
+      invert_contains_all_blocks i x len remaining_len t p cipher h0;
+      prf_dexor i t x l cipher_hd plain_hd;
+      
+      let h1 = get() in 
+      let y = PRF.incr i x in
+      frame_contains_all_blocks i x y len (remaining_len -^ l) t plain p cipher h0 h1;
+      FStar.Classical.move_requires (FStar.Buffer.lemma_reveal_modifies_1 (as_buffer plain) h0) h1;
+      extend_decrypted_up_to t x remaining_len plain p cipher h0 h1;
+      incr_remaining_len_ok x len remaining_len;
 
-      let len = len -^ l in
-      let ciphertext = Buffer.sub ciphertext l len in
-      let plaintext = Plain.sub plaintext l len in
-      counter_dexor i t (PRF.incr i x) len plaintext ciphertext
+      counter_dexor i t y len (remaining_len -^ l) plain cipher p;
+
+      let h2 = get () in
+      dexor_of_prf_dexor_modifies t x plain_hd h0 h1;
+      dexor_modifies_widen t x plain starting_pos l h0 h1;
+      dexor_modifies_trans t x y plain h0 h1 h2;
+      FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 (Plain.as_buffer plain) h0) h1;
+      FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 (Plain.as_buffer plain) h1) h2
     end
+   else dexor_modifies_refl t x plain h0
 
-(*
-      // no need to be so specific here --- details follow from the invariant
-      let c = Buffer.as_seq h1 (Buffer.sub ciphertext 0ul plainlen) in
-      let t: lbuffer 16 = Buffer.as_seq h1 (Buffer.sub ciphertext plainlen (Spec.taglen i)) in
-      let a = Buffer.as_seq h1 aadtext in
-      let l = field_encode i a c in (
-      match PRF.find_0 (HS.sel h1 (PRF.State.table e.prf)) (PRF({iv=n; ctr=0ul})) with
-      | Some mac ->
-          let log = MAC.ilog (MAC.State.log mac) in
-          m_contains log h1 /\ m_sel h1 log == Some (l,t)
-      | None -> False))
-*)
+
+////////////////////////////////////////////////////////////////////////////////
+//decrypt
+////////////////////////////////////////////////////////////////////////////////
+let decrypt_modifies (#i:id) (#len:u32) (st:state i Reader) (pb:plainBuffer i (v len)) (h0:mem) (h1:mem) =
+   Crypto.AEAD.BufferUtils.decrypt_modifies (safeId i) st.log_region (as_buffer pb) h0 h1
+
+let found_entry (#i:id) (n:Cipher.iv (alg i)) (st:state i Reader)
+		(#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen)) 
+	        (#plainlen:UInt32.t {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)})
+		(cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+		(q:maybe_plain i (v plainlen))
+		(h:mem) =
+    Buffer.live h cipher_tagged /\
+    Buffer.live h aad /\
+    safeId i ==> 		
+    (let entries = HS.sel h st.log in 		
+     match find_entry n entries with
+     | None -> False
+     | Some (Entry nonce ad l p c) ->
+         nonce == n /\
+	 ad == Buffer.as_seq h aad /\
+	 l  == v plainlen /\
+	 c  == Buffer.as_seq h cipher_tagged /\ 
+	 p  == as_plain q )
+
+let decrypt_ok (#i:id) (n:Cipher.iv (alg i)) (st:state i Reader) 
+	       (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
+	       (#plainlen:UInt32.t {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)}) 
+	       (plain:plainBuffer i (v plainlen))
+	       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+	       (verified:bool) (h1:mem) = 
+  Buffer.live h1 aad /\
+  Buffer.live h1 cipher_tagged /\
+  Plain.live h1 plain /\
+  (safeId i /\ verified ==> 
+   found_entry n st aad cipher_tagged (Plain.sel_plain h1 plainlen plain) h1)
+
+let decrypt_requires_live (#i:id) (st:state i Reader) 
+			  (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
+ 			  (#plainlen:UInt32.t) (plain:plainBuffer i (v plainlen))
+ 			  (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) (h:mem) =
+    Buffer.live h aad /\
+    Plain.live h plain /\
+    Buffer.live h cipher_tagged /\
+    st.log_region `HS.is_in` (HS h.h) /\
+    (prf i ==> h `HS.contains` (PRF.itable i st.prf))
+    
+let decrypt_requires_sep (#i:id) (st:state i Reader) 
+			 (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
+			 (#plainlen:UInt32.t {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)}) 
+			 (plain:plainBuffer i (v plainlen))
+			 (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) =
+    Buffer.disjoint aad cipher_tagged /\
+    Buffer.disjoint (Plain.as_buffer plain) aad /\
+    Buffer.disjoint (Plain.as_buffer plain) cipher_tagged /\
+    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) st.log_region /\
+    HH.disjoint (Buffer.frameOf cipher_tagged) st.log_region /\
+    HH.disjoint (Buffer.frameOf aad) st.log_region /\
+    HS.is_eternal_region st.log_region /\
+    HS.is_eternal_region (Buffer.frameOf cipher_tagged) /\
+    HS.is_eternal_region (Buffer.frameOf (Plain.as_buffer plain)) /\
+    HS.is_eternal_region (Buffer.frameOf aad) /\
+    st.log_region <> HH.root /\
+    Buffer.frameOf cipher_tagged <> HH.root /\
+    Buffer.frameOf aad <> HH.root /\
+    Buffer.frameOf (Plain.as_buffer plain) <> HH.root
+
+let decrypt_when_auth (i:id) (n:Cipher.iv (alg i)) (st:state i Reader) (h0:mem) = 
+  let x0 = {iv=n; ctr=ctr_0 i} in
+  CMA.authId (i, n) ==> is_Some (find_mac (HS.sel h0 (itable i st.prf)) x0)
+
+let is_mac_for_iv (#i:id) (#n:Cipher.iv (alg i)) (st:state i Reader{safeId i}) (ak:CMA.state (i, n)) (h:mem) = 
+  let x0 = {iv=n; ctr=ctr_0 i} in 
+  match find_mac (HS.sel h (itable i st.prf)) x0 with 
+  | Some mac -> ak == mac
+  | _ -> False
+
+let rec find_entry_blocks (#i:id) (#rgn:rid) 
+			  (n:Cipher.iv (alg i){safeId i})
+			  (entries:aead_entries i)
+			  (prf_entries:prf_blocks rgn i)
+			  (h:mem{refines h i rgn entries prf_entries /\
+			         is_Some (find_mac prf_entries ({iv=n; ctr=ctr_0 i}))})
+     : Pure (entry i * prf_blocks rgn i)
+	    (requires True)
+	    (ensures (fun (entry, blocks) ->
+			let x0 = {iv=n; ctr=ctr_0 i} in
+			(* let Entry nonce ad l p c = entry in *)
+			(* contains_all_cipher_blocks *)
+			refines_one_entry h entry blocks /\
+			find_entry n entries == Some entry /\
+			find_mac prf_entries x0 == Some (PRF.macRange rgn i x0 (Seq.index blocks 0).range)))
+     = Crypto.AEAD.Lemmas.Part2.find_entry_blocks i rgn n entries prf_entries h //TODO: duplicate ... remove the indirection
+
+val counterblocks_contains_all_blocks:   
+  i:id{safeId i} ->
+  rgn:region -> 
+  x:PRF.domain i ->
+  len:u32 ->
+  remaining_len:u32{remaining_len_ok x len remaining_len} ->
+  plain:Crypto.Plain.plain i (v len) ->
+  cipher:lbytes (v len) ->
+  Lemma (requires True)
+        (ensures
+	    (let x0 = {x with ctr=ctr_0 i +^ 1ul} in
+	     let all_blocks = counterblocks i rgn x0 (v len) 0 (v len) plain cipher in
+	     let n_blocks = v x.ctr - v x0.ctr in
+	     n_blocks <= Seq.length all_blocks /\
+	     (let remaining_blocks = Seq.slice all_blocks n_blocks (Seq.length all_blocks) in
+	      contains_all_blocks x len remaining_len plain cipher remaining_blocks)))
+	(decreases (v remaining_len))
+#reset-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let rec counterblocks_contains_all_blocks i rgn x len remaining_len plain cipher = 
+  let x0 = {x with ctr=ctr_0 i +^ 1ul} in
+  (* let all_blocks = counterblocks i rgn x0 (v len) 0 (v len) plain cipher in *)
+  (* let completed_len = v x0.ctr - v (offset i) in *)
+  (* let n_blocks = v x.ctr - v x0.ctr in *)
+  counterblocks_len rgn x0 (v len) 0 plain cipher;
+  incr_remaining_len_ok x len remaining_len;
+  if remaining_len = 0ul then ()
+  else let l = min remaining_len (PRF.blocklen i) in 
+       counterblocks_contains_all_blocks i rgn (PRF.incr i x) len (remaining_len -^ l) plain cipher;
+       admit()
+
+let from_x_blocks_included_in (#i:id) (#rgn:rid) (x:PRF.domain i) (blocks:prf_blocks rgn i) (blocks':prf_blocks rgn i) = 
+  forall (y:PRF.domain i).{:pattern (find blocks y)}
+       y `above` x /\
+       v y.ctr <= v (ctr_0 i +^ 1ul) + Seq.length blocks
+       ==> find blocks y == find blocks' y
+  
+#reset-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+val widen_contains_all_blocks:   #i:id -> #r:rid ->
+				 (x_init:PRF.domain i{x_init.ctr = PRF.ctr_0 i +^ 1ul}) ->
+				 (x:PRF.domain i{x `above` x_init}) ->
+				 (len:u32) -> (remaining_len:u32{remaining_len_ok x len remaining_len}) ->
+				 (p:maybe_plain i (v len)) ->
+				 (cipher:lbytes (v len)) ->
+				 (blocks: prf_blocks r i) ->
+				 (blocks':prf_blocks r i) ->
+      Lemma (requires (let completed_len = v len - v remaining_len in
+       		       let n_blocks = v x.ctr - v (offset i) in
+       		       Seq.length blocks >= num_blocks' i (v len) /\
+		       contains_all_blocks x len remaining_len p cipher blocks /\
+		       from_x_blocks_included_in x_init blocks blocks'))
+	    (ensures (contains_all_blocks x len remaining_len p cipher blocks'))
+	    (decreases (v remaining_len))
+let rec widen_contains_all_blocks #i #r x_init x len remaining_len p cipher blocks blocks'
+    = if not (safeId i) || remaining_len = 0ul then 
+	 () 
+      else let starting_pos = len -^ remaining_len in
+	   let l = min remaining_len (PRF.blocklen i) in
+	   (*  *)
+	   widen_contains_all_blocks #i #r x_init (PRF.incr i x) len (remaining_len -^ l) p cipher blocks blocks'
+
+#set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 2 --max_fuel 2"
+let find_singleton (#rgn:region) (#i:id) (e:PRF.entry rgn i) (x:PRF.domain i) 
+    : Lemma (if is_entry_domain x e then PRF.find (Seq.create 1 e) x == Some e.range
+	     else PRF.find (Seq.create 1 e) x == None)
+    = ()	     
+
+#set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 0 --max_fuel 0"
+val intro_contains_all_blocks: (i:id{safeId i}) ->
+		  	       (n:Cipher.iv (alg i)) ->
+			       (st:state i Reader) ->
+	      		       #aadlen:UInt32.t {aadlen <=^ aadmax} ->
+			       (aad:lbuffer (v aadlen)) ->
+			       #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
+			       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) ->
+			       (q:maybe_plain i (v plainlen)) ->
+			       (entry:entry i) ->
+			       (blocks: prf_blocks st.prf.mac_rgn i) ->
+			       (h:mem{Buffer.live h cipher_tagged}) ->
+     Lemma (requires (let aead_entries = HS.sel h st.log in 
+		      let prf_entries = HS.sel h (PRF.itable i st.prf) in 
+		      let x_1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
+		      Buffer.live h aad /\
+		      refines_one_entry h entry blocks /\
+		      find_entry n aead_entries == Some entry /\
+		      found_entry n st aad cipher_tagged q h /\
+		      from_x_blocks_included_in x_1 blocks prf_entries))
+           (ensures (let x1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
+		     let cipher = Buffer.sub cipher_tagged 0ul plainlen in
+		     contains_all_blocks' x1 plainlen plainlen q cipher st.prf h))
+
+#set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 0 --max_fuel 0"
+let intro_contains_all_blocks i n st #aadlen aad #plainlen cipher_tagged q entry blocks h =
+  let Entry nonce ad l p c = entry in
+  let prf_entries = HS.sel h (PRF.itable i st.prf) in 
+  assert (nonce == n);
+  assert (c == Buffer.as_seq h cipher_tagged);
+  let cipher = Buffer.sub cipher_tagged 0ul plainlen in
+  let c' = Buffer.as_seq h cipher in
+    (* *)
+  let blocks_hd = SeqProperties.head blocks in 
+  let blocks_tl = SeqProperties.tail blocks in
+  let x_1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
+  assert (blocks_tl == counterblocks i st.prf.mac_rgn x_1 (v plainlen) 0 (v plainlen) p c');
+  assert (Seq.equal (Seq.slice blocks_tl 0 (Seq.length blocks_tl)) blocks_tl);
+  counterblocks_contains_all_blocks i st.prf.mac_rgn x_1 plainlen plainlen p c'; 
+  (*  *)
+  let widen_blocks_tl_blocks (y:domain i)
+    : Lemma (y `above` x_1 ==> PRF.find blocks y == PRF.find blocks_tl y)  
+    = if y `above` x_1 
+      then (assert (Seq.equal blocks (SeqProperties.cons blocks_hd blocks_tl));
+	    find_singleton blocks_hd y;
+	    find_append y (Seq.create 1 blocks_hd) blocks_tl) in
+  FStar.Classical.forall_intro widen_blocks_tl_blocks;
+  widen_contains_all_blocks x_1 x_1 plainlen plainlen q c' blocks_tl blocks;
+  widen_contains_all_blocks x_1 x_1 plainlen plainlen q c' blocks prf_entries
+
+assume val find_entry_blocks_2:    (i:id) -> (rgn:rid) ->
+			  (n:Cipher.iv (alg i){safeId i}) ->
+			  (entries:aead_entries i) ->
+			  (prf_entries:prf_blocks rgn i) ->
+			  (h:mem{refines h i rgn entries prf_entries /\
+			         is_Some (find_mac prf_entries ({iv=n; ctr=ctr_0 i}))}) ->
+     Pure (entry i * prf_blocks rgn i)
+          (requires True)
+	  (ensures (fun (entry, blocks) ->
+			let x0 = {iv=n; ctr=ctr_0 i} in
+			entry.nonce = n /\
+			refines_one_entry h entry blocks /\
+			find_entry n entries == Some entry /\
+			from_x_blocks_included_in (PRF.incr i x0) blocks prf_entries /\
+			find_mac prf_entries x0 == Some (PRF.macRange rgn i x0 (Seq.index blocks 0).range)))
+	  (decreases (Seq.length entries))
+
+val entry_exists_if_verify_ok : #i:id -> #n:Cipher.iv (alg i) -> (st:state i Reader) ->
+ 			        #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
+			        #plainlen:UInt32.t {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
+			       (plain:Plain.plainBuffer i (v plainlen)) ->
+			       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) ->
+			       (ak:CMA.state (i,n)) ->
+			       (acc:CMA.accBuffer (i, n)) ->
+			       (tag:lbuffer 16{tag == Buffer.sub cipher_tagged plainlen MAC.taglen}) ->
+			       (h:mem{verify_liveness ak tag h /\ 
+				      decrypt_requires_live st aad plain cipher_tagged h /\
+				      safeId i}) ->
+    Lemma (requires (my_inv st h /\
+		     CMA.acc_inv ak acc h /\
+		     accumulate_encoded aad #plainlen (Buffer.sub cipher_tagged 0ul plainlen) acc h /\
+		     verify_ok ak acc tag h true /\
+		     is_mac_for_iv st ak h))
+          (ensures (my_inv st h /\
+		    (let entries = HS.sel h st.log in 
+		     match find_entry n entries with
+		     | None -> False
+		     | Some (Entry _ _ l p _) ->
+		       l == v plainlen /\
+		       found_entry n st aad cipher_tagged p h)))
+let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged_b ak acc tag_b h =
+    let entries = HS.sel h st.log in
+    let prf_table = HS.sel h (PRF.itable i st.prf) in
+    let x0 = {iv = n; ctr=ctr_0 i} in
+    let cipher_tagged = Buffer.as_seq h cipher_tagged_b in
+    let cipher, _ = SeqProperties.split cipher_tagged (v plainlen) in
+    let tag = Buffer.as_seq h tag_b in
+    let ( e, blocks ) = find_entry_blocks_2 i st.prf.mac_rgn n entries prf_table h in
+    let ak' = PRF.macRange st.prf.mac_rgn i x0 (Seq.index blocks 0).range in
+    assert (ak == ak');
+    let Entry nonce aad' plainlen' p' cipher_tagged' = e in
+    let cipher', _ = SeqProperties.split cipher_tagged' plainlen' in
+    let mac_log = CMA.ilog (CMA.State.log ak) in
+    match m_sel h mac_log with
+    | None           -> ()
+    | Some (msg,tag') -> 
+      lemma_encode_both_inj i aadlen plainlen (u (Seq.length aad')) (u plainlen')
+			     (Buffer.as_seq h aad) cipher aad' cipher';
+      assert (Seq.equal tag tag');
+      assert (Seq.equal cipher cipher');
+      assert (Seq.equal cipher_tagged' (Seq.append cipher' tag'));
+      assert (Seq.equal cipher_tagged (Seq.append cipher tag))
+
+val get_verified_plain : #i:id -> #n:Cipher.iv (alg i) -> st:state i Reader ->
+ 			 #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
+			 #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
+			 plain:Plain.plainBuffer i (v plainlen) ->
+			 cipher_tagged:lbuffer (v plainlen + v MAC.taglen) ->
+		         ak:CMA.state (i,n) ->
+			 acc:CMA.accBuffer (i, n) ->
+			 verified:bool ->
+      ST (maybe_plain i (v plainlen))
+         (requires (fun h -> 
+		    let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in 
+	            decrypt_requires_live st aad plain cipher_tagged h /\ 
+		    (if safeId i && verified
+		     then verify_liveness ak tag h /\ 
+		  	  is_mac_for_iv st ak h /\
+			  my_inv st h /\
+			  CMA.acc_inv ak acc h /\
+			  accumulate_encoded aad #plainlen (Buffer.sub cipher_tagged 0ul plainlen) acc h /\
+			  verify_ok ak acc tag h true
+	             else True)))
+         (ensures (fun h0 p h1 -> 
+		    let cipher = Buffer.sub cipher_tagged 0ul plainlen in
+		    let x1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
+		    h0 == h1 /\
+		    (if verified
+		     then contains_all_blocks' x1 plainlen plainlen p cipher st.prf h1 /\
+		          (safeId i ==> found_entry n st aad cipher_tagged p h1)
+		     else True)))
+#set-options "--initial_fuel 1 --max_fuel 1"	     
+let get_verified_plain #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc verified = 
+  if safeId i && verified then
+    let h = get () in
+    let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in 
+    entry_exists_if_verify_ok st aad plain cipher_tagged ak acc tag h;
+    let entries = !st.log in 
+    let (Some (Entry _nonce _ad _l p _c)) = find_entry n entries in
+    let _ : unit = 
+      let prf_table = HS.sel h (PRF.itable i st.prf) in
+      let ( e, blocks ) = find_entry_blocks_2 i st.prf.mac_rgn n entries prf_table h in
+      intro_contains_all_blocks i n st aad cipher_tagged p e blocks h in
+    p
+  else if safeId i then 
+     Plain.load plainlen plain
+  else ()
+
+val establish_post_condition: #i:id -> #n:Cipher.iv (alg i) -> (st:state i Reader) -> 
+			      #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
+ 			      #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
+			      (plain:plainBuffer i (v plainlen)) ->
+			      (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) ->
+			      (p:maybe_plain i (v plainlen)) ->
+			      (ak:CMA.state (i, n)) ->
+			      (acc:CMA.accBuffer (i, n)) ->
+			      (verified:bool) -> (h2:mem) -> (h3:mem) -> (h4:mem) ->
+   Lemma (requires (let cipher = Buffer.sub cipher_tagged 0ul plainlen in
+		     let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
+		     let x = PRF.incr i ({iv=n; ctr=ctr_0 i}) in
+		     decrypt_requires_live st aad plain cipher_tagged h3 /\
+		     decrypt_requires_sep st aad plain cipher_tagged /\
+		     verify_ensures ak acc tag h2 verified h3 /\
+		     HS (is_stack_region h3.tip) /\
+		     (safeId i ==> is_mac_for_iv st ak h3) /\
+		     (safeId i ==> accumulate_encoded aad #plainlen cipher acc h3) /\
+		     my_inv st h3 /\
+		     (if verified
+		      then (safeId i ==> found_entry n st aad cipher_tagged p h3) /\
+			   counter_dexor_ensures i st.prf x plainlen plain cipher p h3 h4
+		      else h3 == h4)))
+          (ensures (my_inv st h4 /\
+		    decrypt_ok n st aad plain cipher_tagged verified h4))
+let establish_post_condition #i #n st #aadlen aad #plainlen plain cipher_tagged p ak acc verified h2 h3 h4 =
+  if not verified
+  then ()
+  else if safeId i || not (prf i)
+  then (Buffer.lemma_reveal_modifies_1 (Plain.as_buffer plain) h3 h4;
+        if safeId i then begin
+	   let entries = HS.sel h3 st.log in 
+           let blocks = HS.sel h3 (PRF (itable i st.prf)) in 
+	   frame_refines i st.prf.mac_rgn entries blocks h3 h4;
+	   decrypted_up_to_end plain p h4
+	end)
+  else FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 (Plain.as_buffer plain) h3) h4
+
+let frame_myinv_pop (#i:id) (#r:rw) (st:state i r) (h:mem{HS.poppable h})
+   : Lemma (requires (my_inv st h))
+	   (ensures (my_inv st (HS.pop h)))
+   = if safeId i
+     then frame_refines' i st.prf.mac_rgn (HS.sel h st.log) (HS.sel h (PRF.itable i st.prf)) h (HS.pop h)
+
+let frame_decrypt_ok (#i:id) (n:Cipher.iv (alg i)) (st:state i Reader) 
+	       (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
+	       (#plainlen:UInt32.t {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)}) 
+	       (plain:plainBuffer i (v plainlen))
+	       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+	       (verified:bool) (h:mem{HS.poppable h})
+   : Lemma (requires (decrypt_requires_sep st aad plain cipher_tagged /\
+		      decrypt_requires_live st aad plain cipher_tagged h /\
+		      decrypt_ok n st aad plain cipher_tagged verified h))
+	   (ensures (decrypt_ok n st aad plain cipher_tagged verified (HS.pop h)))
+   = ()	   
+
+#reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let prf_mac_modifies (i:id) (t:PRF.state i) (h0:mem) (h1:mem) = 
+  Crypto.AEAD.BufferUtils.prf_mac_modifies (safeId i) t.rgn h0 h1
+
+let adapt_dexor_modifies (#i:id) (#len:u32) (t:PRF.state i) (x:PRF.domain i) 
+			 (pb:plainBuffer i (v len)) (h0:mem) (h1:mem)
+     : Lemma (dexor_modifies t x pb h0 h1
+	      ==> Crypto.AEAD.BufferUtils.dexor_modifies (safeId i) t.rgn (as_buffer pb) h0 h1)
+     = FStar.Classical.move_requires (FStar.Buffer.lemma_reveal_modifies_1 (as_buffer pb) h0) h1
+
+val chain_modification: (i:id) -> (n:Cipher.iv (alg i)) -> (st:state i Reader) ->
+		        #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
+		        #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
+		       (plain:plainBuffer i (v plainlen)) ->
+		       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) ->
+		       (h_init:mem) -> (h0:mem) ->(h1:mem)-> (h2:mem) -> (h3:mem) -> (h4:mem) ->
+     Lemma (requires
+	    (let x1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
+	    decrypt_requires_sep st aad plain cipher_tagged /\
+	    decrypt_requires_live st aad plain cipher_tagged h_init /\
+	    HS.fresh_frame h_init h0 /\
+	    prf_mac_modifies i st.prf h0 h1 /\
+	    Buffer.modifies_0 h1 h2 /\
+	    Buffer.modifies_0 h2 h3 /\
+	    (h3 == h4 \/ dexor_modifies st.prf x1 plain h3 h4)))
+	    (ensures (HS.poppable h4 /\
+		      decrypt_modifies st plain h_init (HS.pop h4)))
+let chain_modification i n st #aadlen aad #plainlen plain cipher_tagged h_init h0 h1 h2 h3 h4 =
+    let x1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
+    adapt_dexor_modifies st.prf x1 plain h3 h4;
+    Crypto.AEAD.BufferUtils.chain_modification (safeId i) st.log_region (as_buffer plain) h_init h0 h1 h2 h3 h4
+
+
+val frame_my_inv: (i:id) -> (st:state i Reader) -> (h0:mem) ->(h1:mem)-> (h2:mem) -> (h3:mem) -> 
+     Lemma (requires
+	    (HS.is_eternal_region st.log_region /\
+  	     HS (st.log_region `is_in` h0.h) /\
+ 	     HS (is_stack_region h0.tip) /\
+ 	     prf_mac_modifies i st.prf h0 h1 /\
+	     (prf i ==> h1 `HS.contains` (PRF.itable i st.prf)) /\
+	     (h0 == h1 \/ HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h1) /\
+	     Buffer.modifies_0 h1 h2 /\
+	     Buffer.modifies_0 h2 h3 /\
+	     my_inv st h0))
+	    (ensures (my_inv st h3))
+let frame_my_inv i st h0 h1 h2 h3 = 
+  FStar.Buffer.lemma_reveal_modifies_0 h1 h2;
+  FStar.Buffer.lemma_reveal_modifies_0 h2 h3;
+  if safeId i 
+  then frame_refines' i st.prf.mac_rgn (HS.sel h0 st.log) (HS.sel h0 (PRF.itable i st.prf)) h0 h3
+
+val frame_acc: #i: MAC.id -> st: CMA.state i -> #aadlen:aadlen_32 -> aad:lbuffer (v aadlen) ->
+	       #txtlen:txtlen_32 -> cipher:lbuffer (v txtlen) -> 
+	       (h0:mem) -> (a:CMA.accBuffer i) -> (h1:mem) -> h2:mem -> 
+    Lemma (requires (accumulate_ensures st aadlen aad txtlen cipher h0 a h1 /\	       
+		     Buffer.modifies_0 h1 h2))
+          (ensures (accumulate_ensures st aadlen aad txtlen cipher h0 a h2))
+let frame_acc #i st #aalen aad #txtlent cipher h0 a h1 h2 = 
+  FStar.Buffer.lemma_reveal_modifies_0 h0 h1;
+  FStar.Buffer.lemma_reveal_modifies_0 h1 h2;
+  FStar.Buffer.lemma_intro_modifies_0 h0 h2;
+  if mac_log 
+  then (assert (h1  `HS.contains` CMA.alog a);
+        assert (HS.sel h2 (CMA.alog a) == HS.sel h1 (CMA.alog a));
+	assert (Buffer.as_seq h2 (MAC.as_buffer (CMA st.r)) ==
+	        Buffer.as_seq h1 (MAC.as_buffer (CMA st.r)));
+	assert (Buffer.as_seq h2 (MAC.as_buffer (CMA a.a)) ==
+	        Buffer.as_seq h1 (MAC.as_buffer (CMA a.a)));
+        assume (MAC.sel_elem h2 (CMA st.r) == MAC.sel_elem h1 (CMA st.r));  //missing some framing lemmas for MAC.sel_elem
+        assume (MAC.sel_elem h2 (CMA a.a) == MAC.sel_elem h1 (CMA a.a)))
+  else ()
 
 val decrypt:
-  i:id -> e:state i Reader ->
+  i:id -> st:state i Reader ->
   n:Cipher.iv (alg i) ->
   aadlen:UInt32.t {aadlen <=^ aadmax} ->
-  aadtext:lbuffer (v aadlen) ->
-  plainlen:UInt32.t {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
-  plaintext:plainBuffer i (v plainlen) ->
-  ciphertext:lbuffer (v plainlen + v MAC.taglen)
-  { Buffer.disjoint aadtext ciphertext /\
-    Buffer.disjoint_2 (Plain.as_buffer plaintext) aadtext ciphertext }
-  -> STL bool
+  aad:lbuffer (v aadlen) ->
+  plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
+  plain:plainBuffer i (v plainlen) ->
+  cipher_tagged:lbuffer (v plainlen + v MAC.taglen) ->
+  ST bool
   (requires (fun h ->
-    inv h #i #Reader e /\
-    Buffer.live h aadtext /\
-    Buffer.live h ciphertext /\
-    Plain.live h plaintext ))
+    decrypt_requires_sep st aad plain cipher_tagged /\
+    decrypt_requires_live st aad plain cipher_tagged h /\
+    my_inv st h /\
+    decrypt_when_auth i n st h))
   (ensures (fun h0 verified h1 ->
-    inv h1 #i #Reader e /\
-    Buffer.live h1 aadtext /\
-    Buffer.live h1 ciphertext /\
-    Plain.live h1 plaintext /\
-    Buffer.modifies_1 (Plain.as_buffer plaintext) h0 h1 /\
-    (safeId i ==> (
-        let found = find_entry n (HS.sel h1 e.log) in
-        if verified then
-          let a = Buffer.as_seq h1 aadtext in
-          let p = Plain.sel_plain h1 plainlen plaintext in
-          let c = Buffer.as_seq h1 ciphertext in
-          found == Some (Entry n a (v plainlen) p c)
-        else
-          found == None /\ h0 == h1 ))))
-
-
+    my_inv st h1 /\
+    decrypt_requires_live st aad plain cipher_tagged h1 /\
+    decrypt_modifies st plain h0 h1 /\
+    decrypt_ok n st aad plain cipher_tagged verified h1))
+#reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
+  let h_init = get() in
   push_frame();
+  let h0 = get () in
+  frame_myinv_push st h_init h0;
   let x = PRF({iv = iv; ctr = ctr_0 i}) in // PRF index to the first block
-  let ak = PRF.prf_mac i st.prf st.ak x in   // used for keying the one-time MAC
+  let ak = prf_mac_wrapper i st.prf st.ak x in   // used for keying the one-time MAC
+  let h1 = get() in 
+  assert (prf_mac_modifies i st.prf h0 h1);
+  assert (safeId i ==> is_mac_for_iv st ak h1);
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
-
-  // First recompute and check the MAC
-  let h0 = ST.get() in
-  assume(
-    CMA(MAC.live h0 ak.r /\ MAC.norm h0 ak.r) /\
-    Buffer.live h0 aad /\ Buffer.live h0 cipher);
-
-  let acc = accumulate ak aadlen aad plainlen cipher in
-
-  let h1 = ST.get() in
-  assert(mac_log ==>  FStar.HyperStack.sel h1 (CMA.alog acc) == encode_both i aadlen (Buffer.as_seq h1 aad) plainlen (Buffer.as_seq h1 cipher));
-  assume false; //NS:11/03
-  let verified = CMA.verify ak acc tag in
-
-  // let h1 = ST.get() in
-  // assert(mac_log /\ MAC.authId (i,iv) ==> (verified == (HS.sel h1 (MAC(ilog ak)) = Some (l,tag))));
-
+  assert(CMA(MAC.norm h1 ak.r));
+// First recompute and check the MAC
+  let acc = accumulate_wrapper ak aadlen aad plainlen cipher in
+  let h2 = ST.get() in
+  assert (safeId i ==> accumulate_encoded aad #plainlen cipher acc h2);
+  Buffer.lemma_reveal_modifies_0 h1 h2;
+  let verified = verify_wrapper ak acc tag in
+  let h3 = ST.get() in
+  Buffer.lemma_reveal_modifies_0 h2 h3;
+  frame_my_inv i st h0 h1 h2 h3; //my_inv st h3
+  frame_acc #(i, iv) ak #aadlen aad #plainlen cipher h1 acc h2 h3;
   // then, safeID i /\ stateful invariant ==>
   //    not verified ==> no entry in the AEAD table
   //    verified ==> exists Entry(iv ad l p c) in AEAD.log
@@ -929,8 +1320,16 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   // not sure what we need to prove for 1st level of PRF idealization
   // possibly that the PRF table with ctr=0 matches the Entry table.
   // (PRF[iv,ctr=0].MAC.log =  Some(l,t) iff Entry(iv,___))
-
-  assume false; //16-10-16
-  if verified then counter_dexor i st.prf (PRF.incr i x) plainlen plain cipher;
+  let p = get_verified_plain st aad plain cipher_tagged ak acc verified in 
+  if verified 
+  then begin
+    let y = PRF.incr i x in	   
+    counter_dexor i st.prf y plainlen plainlen plain cipher p
+  end;
+  let h4 = get() in
+  establish_post_condition st aad plain cipher_tagged p ak acc verified h2 h3 h4;
   pop_frame();
+  frame_myinv_pop st h4;
+  frame_decrypt_ok iv st aad plain cipher_tagged verified h4;
+  chain_modification i iv st aad plain cipher_tagged h_init h0 h1 h2 h3 h4;
   verified
