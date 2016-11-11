@@ -130,8 +130,8 @@ let refine_for_pattern t phi_opt pat pos_t pos =
 %right IFF
 %right IMPLIES
 
-%right DISJUNCTION
-%right CONJUNCTION
+%left DISJUNCTION
+%left CONJUNCTION
 
 %right COMMA
 %right COLON_COLON
@@ -286,7 +286,7 @@ letbinding:
         | None -> (pat, tm)
         | Some t -> (mk_pattern (PatAscribed(pat, t)) pos, tm)
       }
-  | pat=ascriptionFreePattern ascr=ascribeTyp EQUALS tm=term
+  | pat=pattern ascr=ascribeTyp EQUALS tm=term
       { (mk_pattern (PatAscribed(pat, ascr)) (rhs2 parseState 1 4), tm) }
   | pat=pattern EQUALS tm=term
       { (pat, tm) }
@@ -408,47 +408,34 @@ aqual:
 /******************************************************************************/
 
 pattern:
-  | pat=openPatternRec1(pattern0) { pat }
+  | pat=openPatternRec1 { pat }
 
-ascriptionFreePattern:
-  | pat=openPatternRec1(ascriptionFreePattern0) { pat }
-
-openPatternRec1(Pattern):
-  | pat=openPatternRec1(Pattern) COMMA pats=openPatternRec1(Pattern)
+openPatternRec1:
+  | pat=openPatternRec1 COMMA pats=openPatternRec1
       { mk_pattern (extendTuplePat pat pats) (rhs2 parseState 1 3) }
-  | pat=openPatternRec2(Pattern)
+  | pat=openPatternRec2
       { pat }
 
-openPatternRec2(Pattern):
-  | pat=openPatternRec2(Pattern) COLON_COLON pats=openPatternRec2(Pattern)
+openPatternRec2:
+  | pat=openPatternRec2 COLON_COLON pats=openPatternRec2
       { mk_pattern (consPat (rhs parseState 3) pat pats) (rhs2 parseState 1 3) }
-  | pat=patternRec(Pattern)
+  | pat=patternRec
       { pat }
 
-patternRec(Pattern):
-  | LBRACK pats=separated_list(SEMICOLON, openPatternRec1(Pattern)) RBRACK
+patternRec:
+  | LBRACK pats=separated_list(SEMICOLON, openPatternRec1) RBRACK
       { mk_pattern (PatList pats) (rhs2 parseState 1 3) }
-  | LBRACE record_pat=separated_nonempty_list(SEMICOLON, separated_pair(lid, EQUALS, openPatternRec1(Pattern))) RBRACE
+  | LBRACE record_pat=separated_nonempty_list(SEMICOLON, separated_pair(lid, EQUALS, openPatternRec1)) RBRACE
       { mk_pattern (PatRecord record_pat) (rhs2 parseState 1 4) }
-  | LENS_PAREN_LEFT pat0=Pattern COMMA pats=separated_nonempty_list(COMMA, openPatternRec2(Pattern)) LENS_PAREN_RIGHT
+  | LENS_PAREN_LEFT pat0=openPatternRec2 COMMA pats=separated_nonempty_list(COMMA, openPatternRec2) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) }
-  | pat=Pattern { pat }
-
-pattern0:
-  | pat=ascriptionFreePattern0   { pat }
   | LPAREN pat=pattern RPAREN   { pat }
-  | LPAREN pat=ascriptionFreePattern COLON t=typ phi_opt=refineOpt RPAREN
+  | LPAREN pat=pattern COLON t=typ phi_opt=refineOpt RPAREN
       {
         let pos_t = rhs2 parseState 2 4 in
         let pos = rhs2 parseState 2 5 in
         mk_pattern (PatAscribed(pat, refine_for_pattern t phi_opt pat pos_t pos)) (rhs2 parseState 1 6)
       }
-
-ascriptionFreePattern0:
-  | pat=patternTerminal                        { pat }
-  | LPAREN pat=ascriptionFreePattern RPAREN    { pat }
-
-patternTerminal:
   | tv=tvar                   { mk_pattern (PatTvar (tv, None)) (rhs parseState 1) }
   | pat=operatorPattern
       { pat }
@@ -486,7 +473,7 @@ operatorPattern:
       { mk_pattern (PatOp($2)) (rhs2 parseState 1 3) }
 
 bindingPattern:
-  | pat=patternRec(pattern0) { [pat] }
+  | pat=patternRec { [pat] }
   | LPAREN pat=pattern RPAREN { [pat] }
   /* TODO : multiple binders in binding pattern */
 /*  | LPAREN pats=nonempty_list(ascriptionFreePattern) COLON t=typ phi_opt=refineOpt RPAREN
