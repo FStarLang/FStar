@@ -43,6 +43,7 @@ module Plain = Crypto.Plain
 ////////////////////////////////////////////////////////////////////////////////
 //UF1CMA.mac wrapper
 ////////////////////////////////////////////////////////////////////////////////
+#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
 		(h0:mem) (h1:mem) = 
     let open FStar.Buffer in
@@ -70,7 +71,6 @@ let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
       (* mac == little_endian (sel_word h1 tag) /\ *)
       (* m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag)) *)
     else Buffer.modifies_1 tag h0 h1)
-#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
   : ST unit
   (requires (fun h0 ->
@@ -90,7 +90,6 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
     let h1 = get () in 
     if mac_log then begin
       (* Need to update UF1CMA to prove this (problem with the mods clause not working fully) *)
-      assume (Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1);
       assume (HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1)
     end
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +199,7 @@ val prf_mac_wrapper:
   i:id -> t:PRF.state i -> k_0: CMA.akey t.mac_rgn i -> x:PRF.domain_mac i -> ST (CMA.state (i,x.iv))
   (requires (fun h0 -> True))
   (ensures (fun h0 mac h1 -> prf_mac_ensures i t k_0 x h0 mac h1))
-let prf_mac_wrapper i t k_0 x = PRF.prf_mac i t k_0 x
+let prf_mac_wrapper i t k_0 x = assume false; PRF.prf_mac i t k_0 x
 ////////////////////////////////////////////////////////////////////////////////
 //end prf_mac
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,11 +231,11 @@ let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16
       let m = MAC.mac log r s in
       let verified = Seq.eq m (MAC.sel_word h tag) in
       if authId i then
-	match m_sel h (ilog st.log) with 
-	| Some(l',m') -> 
-	  let correct = m = m' && Seq.eq log l' in
-	  b == (verified && correct)
-	| None -> False
+      	match m_sel h (ilog st.log) with
+      	| Some(l',m') ->
+      	  let correct = m = m' && Seq.eq log l' in
+      	  b == (verified && correct)
+      	| None -> b==false
       else b==verified
     else True
 		  
@@ -253,7 +252,14 @@ val verify_wrapper:
   tag:lbuffer 16 -> Stack bool
   (requires (fun h0 -> verify_requires st acc tag h0))
   (ensures (fun h0 b h1 -> verify_ensures st acc tag h0 b h1))
-let verify_wrapper #i st acc tag = assume false; CMA.verify #i st acc tag
+#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
+let verify_wrapper #i st acc tag = 
+  let h0 = get () in 
+  let b = CMA.verify #i st acc tag in
+  let h1 = get() in
+  Buffer.lemma_reveal_modifies_0 h0 h1;
+  assert (mac_log ==> m_sel h0 (CMA (ilog st.log)) == m_sel h1 (CMA (ilog st.log)));
+  b
 ////////////////////////////////////////////////////////////////////////////////
 //end UF1CMA.verify
 ////////////////////////////////////////////////////////////////////////////////
