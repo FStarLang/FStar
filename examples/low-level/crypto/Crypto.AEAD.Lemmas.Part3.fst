@@ -28,35 +28,6 @@ module PRF = Crypto.Symmetric.PRF
 open Crypto.AEAD.Lemmas
 open Crypto.AEAD.Lemmas.Part2
 
-#reset-options "--z3timeout 400 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-let rec frame_refines (i:id{safeId i}) (mac_rgn:region) 
-		      (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry mac_rgn i))
-		      (h:mem) (h':mem)
-   : Lemma (requires refines h i mac_rgn entries blocks /\
-		     HS.modifies_ref mac_rgn TSet.empty h h' /\
-		     HS.live_region h' mac_rgn)
-	   (ensures  refines h' i mac_rgn entries blocks)
-	   (decreases (Seq.length entries))
-   = if Seq.length entries = 0 then 
-       ()
-     else let e = SeqProperties.head entries in
-          let b = num_blocks e in 
-         (let blocks_for_e = Seq.slice blocks 0 (b + 1) in
-       	  let entries_tl = SeqProperties.tail entries in
-          let blocks_tl = Seq.slice blocks (b+1) (Seq.length blocks) in
-	  frame_refines i mac_rgn entries_tl blocks_tl h h';
-	  frame_refines_one_entry h i mac_rgn e blocks_for_e h')
-
-let rec frame_refines' (i:id{safeId i}) (mac_rgn:region) 
-		      (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry mac_rgn i))
-		      (h:mem) (h':mem)
-   : Lemma (requires refines h i mac_rgn entries blocks /\
-		     HH.modifies_rref mac_rgn TSet.empty (HS h.h) (HS h'.h) /\
-		     HS.live_region h' mac_rgn)
-	   (ensures  refines h' i mac_rgn entries blocks)
-	   (decreases (Seq.length entries))
-   = admit()
-
 let modifies_push_pop (h:HS.mem) (h0:HS.mem) (h5:HS.mem) (r:Set.set HH.rid)
   : Lemma (requires (HS.fresh_frame h h0 /\
 		     HS.modifies_transitively (Set.union r (Set.singleton (HS h0.tip))) h0 h5))
@@ -68,7 +39,7 @@ let frame_myinv_push (#i:id) (#rw:rw) (st:state i rw) (h:mem) (h1:mem)
 		      HS.fresh_frame h h1))
 	   (ensures (my_inv st h1))
    = if safeId i
-     then frame_refines' i st.prf.mac_rgn (HS.sel h st.log) (HS.sel h (PRF.itable i st.prf)) h h1
+     then frame_refines i st.prf.mac_rgn (HS.sel h st.log) (HS.sel h (PRF.itable i st.prf)) h h1
 
 
 #reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
@@ -137,7 +108,7 @@ let lemma_frame_find_mac (#i:id) (#l:nat) (st:PRF.state i)
 		      let tab1 = HS.sel h1 r in
 		      let x0 = {x with ctr=ctr_0 i} in
 		      find_mac tab0 x0 == find_mac tab1 x0)))
-    = admit()		      
+    = admit() //easy, should do it		      
 
 open FStar.Heap
 let modifies_fresh_empty (i:id) (n: Cipher.iv (alg i)) (r:rid) (m:CMA.state (i,n)) 

@@ -55,8 +55,7 @@ let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
     Buffer.live h1 tag /\
     CMA.acc_inv st acc h0 /\ (
     if mac_log then
-      HS.modifies (as_set [st.region; Buffer.frameOf tag]) h0 h1 /\
-      (* mods_2 [HS.Ref (as_hsref (ilog st.log)); HS.Ref (Buffer.content tag)] h0 h1 /\ *)
+      HS.modifies (Set.as_set [st.region; Buffer.frameOf tag]) h0 h1 /\
       Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1 /\
       HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1 /\
       m_contains (ilog st.log) h1 /\ (
@@ -67,9 +66,6 @@ let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
       let t = MAC.mac log r s in
       sel_word h1 tag === t /\
       m_sel h1 (ilog st.log) == Some(log,t))
-      (* let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in *)
-      (* mac == little_endian (sel_word h1 tag) /\ *)
-      (* m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag)) *)
     else Buffer.modifies_1 tag h0 h1)
 let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
   : ST unit

@@ -281,7 +281,7 @@ let encrypt_ensures_tip (i:id) (st:state i Writer)
 		     (plain: plainBuffer i (v plainlen))
 		     (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
 		     (h0:mem) (h5:mem) =
-  encrypt_ensures' (as_set [st.log_region; Buffer.frameOf cipher_tagged; HS h5.tip])
+  encrypt_ensures' (Set.as_set [st.log_region; Buffer.frameOf cipher_tagged; HS h5.tip])
     i st n aadlen aad plainlen plain cipher_tagged h0 h5
 
 let encrypt_ensures  (i:id) (st:state i Writer)
@@ -292,7 +292,7 @@ let encrypt_ensures  (i:id) (st:state i Writer)
 		     (plain: plainBuffer i (v plainlen))
 		     (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
 		     (h0:mem) (h5:mem) =
-  encrypt_ensures' (as_set [st.log_region; Buffer.frameOf cipher_tagged])
+  encrypt_ensures' (Set.as_set [st.log_region; Buffer.frameOf cipher_tagged])
     i st n aadlen aad plainlen plain cipher_tagged h0 h5
 
 val finish_after_mac: h0:mem -> h3:mem -> i:id -> st:state i Writer -> 
@@ -309,7 +309,7 @@ val finish_after_mac: h0:mem -> h3:mem -> i:id -> st:state i Writer ->
     HS (h0.tip = h4.tip) /\
     HH.disjoint (HS h4.tip) st.log_region /\
     HH.disjoint (HS h4.tip) (Buffer.frameOf cipher_tagged) /\
-    HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged; HS h4.tip]) h0 h3 /\
+    HS.modifies_transitively (Set.as_set [st.log_region; Buffer.frameOf cipher_tagged; HS h4.tip]) h0 h3 /\
     HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h3 /\
     (prf i ==> none_above ({iv=n; ctr=ctr_0 i}) st.prf h0) /\ // The nonce must be fresh!
     pre_refines_one_entry i st n (v plainlen) plain cipher_tagged h0 h3 /\
@@ -374,7 +374,7 @@ let encrypt_ensures_push_pop (i:id) (st:state i Writer)
 	   (ensures (HS.poppable h5 /\
 		     encrypt_ensures i st n aadlen aad plainlen plain cipher_tagged h (HS.pop h5)))
    = if safeId i
-     then frame_refines' i st.prf.mac_rgn (HS.sel h5 st.log) (HS.sel h5 (PRF.itable i st.prf)) h5 (HS.pop h5)
+     then frame_refines i st.prf.mac_rgn (HS.sel h5 st.log) (HS.sel h5 (PRF.itable i st.prf)) h5 (HS.pop h5)
      
 
 val encrypt:
@@ -450,7 +450,7 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   //Establishing the pre-conditions of MAC.mac
   let h3 = get() in
   Buffer.lemma_reveal_modifies_0 h2 h3;
-  assert (HS.modifies_transitively (as_set [st.log_region; Buffer.frameOf cipher_tagged; HS h3.tip]) h0 h3);
+  assert (HS.modifies_transitively (Set.as_set [st.log_region; Buffer.frameOf cipher_tagged; HS h3.tip]) h0 h3);
   assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h3);
   frame_pre_refines_0 i st n (v plainlen) plain cipher_tagged h0 h2 h3;
   assert (Buffer.live h2 aad); //seem to need this hint
@@ -852,7 +852,7 @@ let rec counterblocks_contains_all_blocks i rgn x len remaining_len plain cipher
   if remaining_len = 0ul then ()
   else let l = min remaining_len (PRF.blocklen i) in 
        counterblocks_contains_all_blocks i rgn (PRF.incr i x) len (remaining_len -^ l) plain cipher;
-       admit()
+       admit() //NS: significant --- but will change for Plan A
 
 let from_x_blocks_included_in (#i:id) (#rgn:rid) (x:PRF.domain i) (blocks:prf_blocks rgn i) (blocks':prf_blocks rgn i) = 
   forall (y:PRF.domain i).{:pattern (find blocks y)}
@@ -1073,7 +1073,7 @@ let frame_myinv_pop (#i:id) (#r:rw) (st:state i r) (h:mem{HS.poppable h})
    : Lemma (requires (my_inv st h))
 	   (ensures (my_inv st (HS.pop h)))
    = if safeId i
-     then frame_refines' i st.prf.mac_rgn (HS.sel h st.log) (HS.sel h (PRF.itable i st.prf)) h (HS.pop h)
+     then frame_refines i st.prf.mac_rgn (HS.sel h st.log) (HS.sel h (PRF.itable i st.prf)) h (HS.pop h)
 
 let frame_decrypt_ok (#i:id) (n:Cipher.iv (alg i)) (st:state i Reader) 
 	       (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
@@ -1136,7 +1136,7 @@ let frame_my_inv i st h0 h1 h2 h3 =
   FStar.Buffer.lemma_reveal_modifies_0 h1 h2;
   FStar.Buffer.lemma_reveal_modifies_0 h2 h3;
   if safeId i 
-  then frame_refines' i st.prf.mac_rgn (HS.sel h0 st.log) (HS.sel h0 (PRF.itable i st.prf)) h0 h3
+  then frame_refines i st.prf.mac_rgn (HS.sel h0 st.log) (HS.sel h0 (PRF.itable i st.prf)) h0 h3
 
 val frame_acc: #i: MAC.id -> st: CMA.state i -> #aadlen:aadlen_32 -> aad:lbuffer (v aadlen) ->
 	       #txtlen:txtlen_32 -> cipher:lbuffer (v txtlen) -> 
