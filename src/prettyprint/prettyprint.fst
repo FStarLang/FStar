@@ -79,8 +79,7 @@ assume val blank: int -> document
 assume val break_: int -> document
 
 (** [doc1 ^^ doc2] is the concatenation of the documents [doc1] and [doc2]. *)
-//assume val (^^): document -> document -> document
-//assume val concat : document -> document -> document
+assume val op_Hat_Hat: document -> document -> document
 
 (** [nest j doc] is the document [doc], in which the indentation level has
     been increased by [j], that is, in which [j] blanks have been inserted

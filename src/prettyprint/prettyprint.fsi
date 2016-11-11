@@ -39,8 +39,7 @@ val blank: int -> document
 
 val break_: int -> document
 
-// val (^^): document -> document -> document
-val conat : document -> document -> document
+val op_Hat_Hat : document -> document -> document
 
 val nest: int -> document -> document
 
