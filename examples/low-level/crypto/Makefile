@@ -90,3 +90,6 @@ aead-ver: $(addsuffix -ver, $(AEAD_FILES))
 
 aead-wc:
 	wc -l $(AEAD_FILES)
+
+aead-assumes:
+	grep "\(assume\)\|\(admit\)\|\(lax\)" $(AEAD_FILES)

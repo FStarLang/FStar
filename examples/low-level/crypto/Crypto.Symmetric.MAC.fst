@@ -129,6 +129,16 @@ let eq_sel_elem h #i b1 b2 =
       (as_buffer b1) (as_buffer b2) (limb_length POLY1305)
   | _ -> ()
 
+val frame_sel_elem: h1:mem -> h2:mem -> #i:id -> b:elemB i{live h1 b /\ live h2 b} -> Lemma
+ (requires (Buffer.as_seq h1 (as_buffer b) == Buffer.as_seq h2 (as_buffer b)))
+ (ensures  (sel_elem h1 b == sel_elem h2 b))
+let frame_sel_elem h1 h2 #i b =
+  match alg i with
+  | POLY1305 ->
+    Crypto.Symmetric.Poly1305.Bigint.eval_eq_lemma h1 h2
+      (as_buffer b) (as_buffer b) (limb_length POLY1305)
+  | _ -> ()
+
 (** Create and initialize an element (used for r) *)
 val rcreate: rgn:HH.rid{HS.is_eternal_region rgn} -> i:id -> ST (elemB i)
   (requires (fun h0 -> True))

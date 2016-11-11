@@ -412,7 +412,6 @@ val encrypt:
    ))
   (ensures (fun h0 _ h5 ->
     encrypt_ensures i st n aadlen aad plainlen plain cipher_tagged h0 h5))
-    
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let h_init = get() in
   push_frame();
@@ -442,7 +441,6 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   lemma_frame_find_mac #i #(v plainlen) st.prf y cipher h1 h2;
   intro_refines_one_entry_no_tag #i st n (v plainlen) plain cipher_tagged h0 h1 h2; //we have pre_refines_one_entry here
   assert (Buffer.live h1 aad); //seem to need this hint
-  assume (MAC.norm h2 (CMA ak.r)); //TODO: need to revise the definition of norm to work with an abstract type of elemB
   let acc = accumulate_wrapper ak aadlen aad plainlen cipher in
   //Establishing the pre-conditions of MAC.mac
   let h3 = get() in
@@ -464,7 +462,6 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
 ////////////////////////////////////////////////////////////////////////////////
 //DECRYPT SIDE
 ////////////////////////////////////////////////////////////////////////////////
-
 
 //counter_dexor
 let maybe_plain (i:id) (l:nat) = if safeId i then Plain.plain i l else unit
@@ -1152,8 +1149,8 @@ let frame_acc #i st #aalen aad #txtlent cipher h0 a h1 h2 =
 	        Buffer.as_seq h1 (MAC.as_buffer (CMA st.r)));
 	assert (Buffer.as_seq h2 (MAC.as_buffer (CMA a.a)) ==
 	        Buffer.as_seq h1 (MAC.as_buffer (CMA a.a)));
-        assume (MAC.sel_elem h2 (CMA st.r) == MAC.sel_elem h1 (CMA st.r));  //missing some framing lemmas for MAC.sel_elem
-        assume (MAC.sel_elem h2 (CMA a.a) == MAC.sel_elem h1 (CMA a.a)))
+        MAC.frame_sel_elem h1 h2 (CMA st.r);
+        MAC.frame_sel_elem h1 h2 (CMA a.a))
   else ()
 
 val decrypt:
