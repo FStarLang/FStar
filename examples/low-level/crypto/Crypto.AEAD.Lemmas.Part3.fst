@@ -41,7 +41,6 @@ let frame_myinv_push (#i:id) (#rw:rw) (st:state i rw) (h:mem) (h1:mem)
    = if safeId i
      then frame_refines i st.prf.mac_rgn (HS.sel h st.log) (HS.sel h (PRF.itable i st.prf)) h h1
 
-
 #reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val refines_to_inv: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)) ->
 		       (aadlen: UInt32.t {aadlen <=^ aadmax}) ->
@@ -108,7 +107,19 @@ let lemma_frame_find_mac (#i:id) (#l:nat) (st:PRF.state i)
 		      let tab1 = HS.sel h1 r in
 		      let x0 = {x with ctr=ctr_0 i} in
 		      find_mac tab0 x0 == find_mac tab1 x0)))
-    = admit() //easy, should do it		      
+    = if prf i
+      then begin
+	let r = PRF.itable i st in
+	let tab_0 = HS.sel h0 r in
+	let tab_1 = HS.sel h1 r in
+	let x0 = {x with ctr=ctr_0 i} in
+	let tl_tab_1 = Seq.slice tab_1 (Seq.length tab_0) (Seq.length tab_1) in
+	assert (Seq.equal tab_1 (Seq.append tab_0 tl_tab_1));
+	match find tab_0 x0 with 
+	| Some _ -> find_blocks_append_l tab_0 tl_tab_1 x0
+	| _ -> find_mac_counterblocks_none x0.iv tl_tab_1;
+	      find_append x0 tab_0 tl_tab_1
+      end
 
 open FStar.Heap
 let modifies_fresh_empty (i:id) (n: Cipher.iv (alg i)) (r:rid) (m:CMA.state (i,n)) 
