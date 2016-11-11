@@ -36,7 +36,7 @@ VERIFY= \
   Crypto.AEAD.Encoding \
   Crypto.AEAD.Invariant \
   Crypto.AEAD.Lemmas \
-  Plain \
+  Crypto.Plain \
   Crypto.Test \
   TestMonotonic
 
