@@ -72,8 +72,6 @@ let ctr x = PRF(x.ctr)
 //
 // Really, this depends on the functional correctness of PRF. 
 // Needed: prf_read returning a ghost of the actual underlying block. 
-
-
 //let sub s start len = Seq.slice start (start+len) s // more convenient? 
 
 val gen: i:id -> rgn:region -> ST (state i Writer)
@@ -102,11 +100,10 @@ val genReader: #i:id -> st:state i Writer -> ST (state i Reader)
 let genReader #i st =
   State #i #Reader #st.log_region st.log st.prf st.ak
 
-val leak: #i:id{~(prf i)} -> st:state i Writer -> ST (lbuffer (v (PRF.keylen i)))
+val leak: #i:id{~(prf i)} -> st:state i Writer -> ST (lbuffer (v (PRF.statelen i)))
   (requires (fun _ -> True))
   (ensures  (fun _ _ _ -> True))
-let leak #i st =
-  PRF.leak st.prf
+let leak #i st = PRF.leak st.prf
 
 (* notes 16-10-04 
 
@@ -253,7 +250,7 @@ let extend_refines_aux i st nonce aadlen aad len plain cipher h0 h1 =
      extend_refines h0 i mac_rgn entries_0 blocks_0 entry blocks_1 h1
 
 #reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let encrypt_ensures' (regions:Set.set rid)
+let encrypt_ensures' (regions:Set.set HH.rid)
 		     (i:id) (st:state i Writer)
 		     (n: Cipher.iv (alg i))
  		     (aadlen: UInt32.t {aadlen <=^ aadmax})

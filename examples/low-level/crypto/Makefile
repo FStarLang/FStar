@@ -84,3 +84,9 @@ all-lax: $(addsuffix .fst-lax, $(LAX)) $(addsuffix .fst-lax, $(VERIFY))
 	$(FSTAR_INCLUDE_PATHS) --lax \
 	--verify_module $(basename $(notdir $@)) \
 	$(basename $@).fst
+
+AEAD_FILES=Crypto.AEAD.Invariant.fst Crypto.AEAD.BufferUtils.fst Crypto.AEAD.Lemmas.fst Crypto.AEAD.Lemmas.Part2.fst Crypto.AEAD.Lemmas.Part3.fst Crypto.AEAD.Wrappers.fst Crypto.AEAD.fst
+aead-ver: $(addsuffix -ver, $(AEAD_FILES))
+
+aead-wc:
+	wc -l $(AEAD_FILES)
