@@ -54,16 +54,6 @@ let find_entry_first (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i){Se
 val false_elim : #a:Type -> u:unit{false} -> Tot a
 let rec false_elim #a u = false_elim ()
 
-let find_is_some (#i:id) (#rgn:rid) (b:prf_blocks rgn i) (x:domain i)
-  : Lemma (requires (is_Some (find b x)))
-          (ensures (Seq.length b <> 0))
-  = admit()	  
-
-let find_blocks_append_l (#i:id) (#rgn:rid) (b:prf_blocks rgn i) (b':prf_blocks rgn i) (x:domain i) 
-  : Lemma (requires (is_Some (find b x)))
-          (ensures (find (Seq.append b b') x == find b x))
-  = admit()
-
 let from_x_blocks_included_in (#i:id) (#rgn:rid) (x:PRF.domain i) (blocks:prf_blocks rgn i) (blocks':prf_blocks rgn i) = 
   forall (y:PRF.domain i).{:pattern (find blocks y)}
        y `above` x /\
@@ -181,33 +171,6 @@ let x_buffer_1_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i
 	let diff = Seq.slice c1 (Seq.length c0) (Seq.length c1) in
 	FStar.Classical.forall_intro (SeqProperties.contains_elim diff)
       else ()
-
-let fresh_frame_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
-			     (x:PRF.domain i{ctr_0 i <^ x.ctr})
-			     (c:lbuffer l)
-			     (h_0:mem) (h_1:mem) (h_2:mem)
-    : Lemma (requires (HS.fresh_frame h_0 h_1 /\ 
-		       (* Buffer.live h_0 c /\ *)
-		       (* (prf i ==> HS.contains h_0 (PRF.itable i t)) /\ *)
-		       modifies_table_above_x_and_buffer t x c h_1 h_2))
-	    (ensures (modifies_table_above_x_and_buffer t x c h_0 h_2))
-    = admit()
-
-let pop_frame_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
-			     (x:PRF.domain i{ctr_0 i <^ x.ctr})
-			     (c:lbuffer l)
-			     (h_0:mem) (h_1:mem) (h_2:mem)
-    : Lemma (requires (modifies_table_above_x_and_buffer t x c h_0 h_1 /\ HS.poppable h_1 /\  h_2==HS.pop h_1))
-	    (ensures (modifies_table_above_x_and_buffer t x c h_0 h_2))
-    = admit()
-
-//A generic sequence lemma to prove
-let find_snoc (#a:Type) (s:Seq.seq a) (x:a) (f:a -> Tot bool)
-  : Lemma (let res = SeqProperties.find_l f (SeqProperties.snoc s x) in
-	   match res with 
-	   | None -> SeqProperties.find_l f s == None /\ not (f x)
-	   | Some y -> res == SeqProperties.find_l f s \/ (f x /\ x==y))
-  = admit()
 
 val prf_enxor_leaves_none_strictly_above_x: #i:id -> 
 					   t:PRF.state i ->

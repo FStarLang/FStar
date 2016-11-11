@@ -25,6 +25,36 @@ module Plain = Crypto.Plain
 module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
 
+////////////////////////////////////////////////////////////////////////////////
+// Some generic sequence lemmas, easy but boring ... assumed for now
+////////////////////////////////////////////////////////////////////////////////
+let find_snoc (#a:Type) (s:Seq.seq a) (x:a) (f:a -> Tot bool)
+  : Lemma (let res = SeqProperties.find_l f (SeqProperties.snoc s x) in
+	   match res with 
+	   | None -> SeqProperties.find_l f s == None /\ not (f x)
+	   | Some y -> res == SeqProperties.find_l f s \/ (f x /\ x==y))
+  = admit()
+
+let find_is_some (#i:id) (#rgn:rid) (b:prf_blocks rgn i) (x:domain i)
+  : Lemma (requires (is_Some (find b x)))
+          (ensures (Seq.length b <> 0))
+  = admit()	  
+
+let find_blocks_append_l (#i:id) (#rgn:rid) (b:prf_blocks rgn i) (b':prf_blocks rgn i) (x:domain i) 
+  : Lemma (requires (is_Some (find b x)))
+          (ensures (find (Seq.append b b') x == find b x))
+  = admit()
+
+let find_append (#i:id) (#r:rid) (d:domain i) (s1:Seq.seq (PRF.entry r i)) (s2:Seq.seq (PRF.entry r i)) 
+   : Lemma (requires (is_None (find s1 d)))
+           (ensures (find (Seq.append s1 s2) d == find s2 d))
+   = admit()
+
+assume val to_seq_temp: #a:Type -> b:Buffer.buffer a -> l:UInt32.t{v l <= Buffer.length b} -> ST (Seq.seq a)
+  (requires (fun h -> Buffer.live h b))
+  (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h1 b /\ r == Buffer.as_seq h1 b))
+////////////////////////////////////////////////////////////////////////////////
+
 let u (n:FStar.UInt.uint_t 32) = uint_to_t n
 
 unfold let pre_refines_one_entry (i:id) (st:state i Writer) (nonce:Cipher.iv (alg i))
@@ -225,11 +255,6 @@ let find_mac_counterblocks_none (#rgn:region) (#i:id) (nonce:Cipher.iv (alg i))
     : Lemma (requires (s `all_above` (PRF.incr i ({iv=nonce; ctr=ctr_0 i}))))
             (ensures (find_mac s ({iv=nonce; ctr=ctr_0 i}) == None))
     = admit()
-
-let find_append (#i:id) (#r:rid) (d:domain i) (s1:Seq.seq (PRF.entry r i)) (s2:Seq.seq (PRF.entry r i)) 
-   : Lemma (requires (is_None (find s1 d)))
-           (ensures (find (Seq.append s1 s2) d == find s2 d))
-   = admit()
 
 val pre_refines_to_refines: (i:id) -> (st:state i Writer) -> (nonce: Cipher.iv (alg i)) ->
 			    (aadlen: UInt32.t {aadlen <=^ aadmax})  ->

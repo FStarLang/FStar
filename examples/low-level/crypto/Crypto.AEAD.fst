@@ -42,74 +42,6 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let ctr x = PRF(x.ctr)
 
-
-
-//16-10-12 TEMPORARY, while PRF remains somewhat CHACHA-specific
-//16-10-12 NB we are importing this restriction from Encoding too
-//let id = Crypto.AEAD.Encoding.id
-
-// ********* StreamAE **********
-//
-// (Definitions adapted from TLS/StreamAE.fst, to be integrated later)
-//
-// The per-record nonce for the AEAD construction is formed as follows:
-//
-// 1. The 64-bit record sequence number is padded to the left with zeroes to iv_length.
-//
-// 2. The padded sequence number is XORed with the static client_write_iv or server_write_iv,
-//    depending on the role.
-//
-// The XORing is a fixed, ad hoc, random permutation; not sure what is gained;
-// we can reason about sequence-number collisions before applying it.
-
-// TODO: prove, generalize and move
-assume val lt_pow2_index_to_vec: n:nat -> x:UInt128.t -> Lemma
-  (requires FStar.UInt128(v x < pow2 n))
-  (ensures  FStar.UInt128(forall (i:nat). (i < 128 /\ i >= n) ==>
-    Seq.index (FStar.UInt.to_vec (v x)) (127-i) = false))
-
-// TODO: prove, generalize and move
-assume val index_to_vec_lt_pow2: n:nat -> x:FStar.BitVector.bv_t 128 -> Lemma
-  (requires (forall (i:nat). (i < 128 /\ i >= n) ==> Seq.index x (127-i) = false))
-  (ensures  (FStar.UInt.from_vec x < pow2 n))
-
-// TODO: move
-val lemma_xor_bounded: n:nat -> x:UInt128.t -> y:UInt128.t -> Lemma
-  (requires FStar.UInt128(v x < pow2 n /\ v y < pow2 n))
-  (ensures  FStar.UInt128(v (logxor x y) < pow2 n))
-let lemma_xor_bounded n x y =
-  let open FStar.BitVector in
-  let open FStar.UInt128 in
-  let vx = FStar.UInt.to_vec (v x) in
-  let vy = FStar.UInt.to_vec (v y) in
-  lt_pow2_index_to_vec n x;
-  lt_pow2_index_to_vec n y;
-  lemma_xor_bounded 128 n vx vy;
-  index_to_vec_lt_pow2 n (logxor_vec vx vy)
-
-//16-10-05 by induction on n, given a bitwise definition of logxor.
-
-//16-10-12 computes nonce from static IV and sequence number
-let aeIV i (seqn:UInt64.t) (staticIV:Cipher.iv (alg i)) : Tot (Cipher.iv (alg i)) =
-  let x = FStar.Int.Cast.uint64_to_uint128 seqn in
-  let r = UInt128.logxor x staticIV in
-  assert(FStar.UInt128.v staticIV < pow2 96);
-  assert(FStar.UInt128.v x < pow2 64);
-  assume(FStar.UInt128.v x < pow2 96);
-  lemma_xor_bounded 96 x staticIV; 
-  r
-
-assume val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:Cipher.iv (alg i) -> Lemma
-  (aeIV i seqn0 staticIV = aeIV i seqn1 staticIV ==> seqn0 = seqn1)
-//let aeIV_injective i seqn0 seqn1 staticIV = ()
-
-  (* relying on 0 xor 0 = 0 for the higher-order bytes *) 
-  (* recheck endianness *)
-
-// a bit more concrete than the spec: xor only 64 bits, copy the rest. 
-
-
-
 // Overview of the stateful invariant:
 //
 // We allocate AEAD logs at the writer (complying with our `local modifier' discipline)
@@ -192,13 +124,6 @@ For the enxor loop, we need a finer, transient invariant for the last chunk of t
 *) 
 
 // COUNTER_MODE LOOP from Chacha20 
-
-(*
-let ctr_inv ctr len = 
-  len =^ 0ul \/
-  ( 0ul <^ ctr /\
-    v ctr + v(len /^ PRF.blocklen) < v PRF.maxCtr)  //we use v... to avoid ^+ overflow
-*)
 
 // XOR-based encryption and decryption (just swap ciphertext and plaintext)
 // prf i    ==> writing at most at indexes x and above (same iv, higher ctr) at the end of the PRF table.
@@ -899,23 +824,6 @@ let is_mac_for_iv (#i:id) (#n:Cipher.iv (alg i)) (st:state i Reader{safeId i}) (
   | Some mac -> ak == mac
   | _ -> False
 
-let rec find_entry_blocks (#i:id) (#rgn:rid) 
-			  (n:Cipher.iv (alg i){safeId i})
-			  (entries:aead_entries i)
-			  (prf_entries:prf_blocks rgn i)
-			  (h:mem{refines h i rgn entries prf_entries /\
-			         is_Some (find_mac prf_entries ({iv=n; ctr=ctr_0 i}))})
-     : Pure (entry i * prf_blocks rgn i)
-	    (requires True)
-	    (ensures (fun (entry, blocks) ->
-			let x0 = {iv=n; ctr=ctr_0 i} in
-			(* let Entry nonce ad l p c = entry in *)
-			(* contains_all_cipher_blocks *)
-			refines_one_entry h entry blocks /\
-			find_entry n entries == Some entry /\
-			find_mac prf_entries x0 == Some (PRF.macRange rgn i x0 (Seq.index blocks 0).range)))
-     = Crypto.AEAD.Lemmas.Part2.find_entry_blocks i rgn n entries prf_entries h //TODO: duplicate ... remove the indirection
-
 val counterblocks_contains_all_blocks:   
   i:id{safeId i} ->
   rgn:region -> 
@@ -1032,23 +940,6 @@ let intro_contains_all_blocks i n st #aadlen aad #plainlen cipher_tagged q entry
   widen_contains_all_blocks x_1 x_1 plainlen plainlen q c' blocks_tl blocks;
   widen_contains_all_blocks x_1 x_1 plainlen plainlen q c' blocks prf_entries
 
-assume val find_entry_blocks_2:    (i:id) -> (rgn:rid) ->
-			  (n:Cipher.iv (alg i){safeId i}) ->
-			  (entries:aead_entries i) ->
-			  (prf_entries:prf_blocks rgn i) ->
-			  (h:mem{refines h i rgn entries prf_entries /\
-			         is_Some (find_mac prf_entries ({iv=n; ctr=ctr_0 i}))}) ->
-     Pure (entry i * prf_blocks rgn i)
-          (requires True)
-	  (ensures (fun (entry, blocks) ->
-			let x0 = {iv=n; ctr=ctr_0 i} in
-			entry.nonce = n /\
-			refines_one_entry h entry blocks /\
-			find_entry n entries == Some entry /\
-			from_x_blocks_included_in (PRF.incr i x0) blocks prf_entries /\
-			find_mac prf_entries x0 == Some (PRF.macRange rgn i x0 (Seq.index blocks 0).range)))
-	  (decreases (Seq.length entries))
-
 val entry_exists_if_verify_ok : #i:id -> #n:Cipher.iv (alg i) -> (st:state i Reader) ->
  			        #aadlen:UInt32.t {aadlen <=^ aadmax} -> (aad:lbuffer (v aadlen)) ->
 			        #plainlen:UInt32.t {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
@@ -1079,7 +970,7 @@ let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged
     let cipher_tagged = Buffer.as_seq h cipher_tagged_b in
     let cipher, _ = SeqProperties.split cipher_tagged (v plainlen) in
     let tag = Buffer.as_seq h tag_b in
-    let ( e, blocks ) = find_entry_blocks_2 i st.prf.mac_rgn n entries prf_table h in
+    let ( e, blocks ) = find_entry_blocks i st.prf.mac_rgn n entries prf_table h in
     let ak' = PRF.macRange st.prf.mac_rgn i x0 (Seq.index blocks 0).range in
     assert (ak == ak');
     let Entry nonce aad' plainlen' p' cipher_tagged' = e in
@@ -1133,7 +1024,7 @@ let get_verified_plain #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc
     let (Some (Entry _nonce _ad _l p _c)) = find_entry n entries in
     let _ : unit = 
       let prf_table = HS.sel h (PRF.itable i st.prf) in
-      let ( e, blocks ) = find_entry_blocks_2 i st.prf.mac_rgn n entries prf_table h in
+      let ( e, blocks ) = find_entry_blocks i st.prf.mac_rgn n entries prf_table h in
       intro_contains_all_blocks i n st aad cipher_tagged p e blocks h in
     p
   else if safeId i then 

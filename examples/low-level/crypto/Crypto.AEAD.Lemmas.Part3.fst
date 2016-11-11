@@ -28,10 +28,6 @@ module PRF = Crypto.Symmetric.PRF
 open Crypto.AEAD.Lemmas
 open Crypto.AEAD.Lemmas.Part2
 
-assume val to_seq_temp: #a:Type -> b:Buffer.buffer a -> l:UInt32.t{v l <= Buffer.length b} -> ST (Seq.seq a)
-  (requires (fun h -> Buffer.live h b))
-  (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h1 b /\ r == Buffer.as_seq h1 b))
-
 #reset-options "--z3timeout 400 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let rec frame_refines (i:id{safeId i}) (mac_rgn:region) 
 		      (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry mac_rgn i))
