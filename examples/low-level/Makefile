@@ -353,10 +353,10 @@ test-perf32:
 		crypto/test_hacks.c
 
 test-perf32.exe:
-	+make test-perf32 -i
+	# +make test-perf32 -i
 	cp crypto/Crypto_Symmetric_PRF.c.bak tmp/Crypto_Symmetric_PRF.c
 	gcc-5 -Wno-unused-but-set-variable -std=c11 -Wall -Werror -Wno-parentheses -Wno-unused-variable -g -O3 -fwrapv -I FSTAR_HOME/ulib/hyperstack -I crypto -I ../../../kremlin/kremlib -I ../../../kremlin/test -I /home/jkz/dev/kremlin/kremlib -I tmp -Wno-error=pointer-sign -m32 -c tmp/Crypto_Symmetric_PRF.c -o tmp/Crypto_Symmetric_PRF.o
-	$(CC) -O3 -o test-perf.exe $(OBJ_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
+	$(CC) -O3 -o test-perf.exe $(C_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
 		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c crypto/test_perf.c -I tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
 		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME) -lcrypto -m32
