@@ -198,9 +198,13 @@ KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
 krml-test.exe:
 	$(KRML) crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest $(KREMLIN_HOME)/test/testlib.c crypto/intrinsics.c \
 		-tmpdir tmp -o krml-test.exe -add-include '"testlib.h"' \
-		crypto/test_hacks.c -ccopt -Wno-pointer-sign crypto/intrinsics.o \
-		-ccopt "-g -Wall -msse2 -msse -march=native -maes"
+		crypto/test_hacks.c -ccopt -Wno-pointer-sign crypto/intrinsics.c
 	./krml-test.exe
+
+krml-extract:
+	$(KRML) crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst $(KREMLIN_HOME)/test/testlib.c \
+		crypto/intrinsics.c -tmpdir tmp -add-include '"testlib.h"' crypto/test_hacks.c \
+		-skip-compilation
 
 OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List_Tot.ml \
 		tmp/FStar_Seq.ml \
