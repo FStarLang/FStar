@@ -117,7 +117,7 @@ sed -i '/[A-Za-z0-9]/s/\(.*\)/[\1](\1.html)/' index.md
 ### convert index.md to index.html.  
 pandoc index.md -s --css=style.ccs -f markdown -t html -o index.html
 popd
-exit
+
 # push fstarlang.github.io with latest html.
 # The flow is described at https://github.com/blog/1270-easier-builds-and-deployments-using-git-over-https-and-oauth;
 # $PAT is stored in the Build Defn. 
