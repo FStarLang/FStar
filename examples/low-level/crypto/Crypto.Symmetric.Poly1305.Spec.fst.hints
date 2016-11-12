@@ -410,8 +410,8 @@
       0,
       1,
       [
-        "@query", "b2t_def", "data_elim_FStar.UInt32.Mk",
-        "equation_Crypto.Symmetric.Bytes.bytes",
+        "@query", "b2t_def", "bool_inversion", "bool_typing",
+        "data_elim_FStar.UInt32.Mk", "equation_Crypto.Symmetric.Bytes.bytes",
         "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
         "equation_Crypto.Symmetric.Poly1305.Spec.taglen",
         "equation_Crypto.Symmetric.Poly1305.Spec.word_16",
