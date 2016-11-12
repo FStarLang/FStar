@@ -4,8 +4,9 @@ FSTAR_HOME=../..
 
 OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28-26-11-21" -annot
 
-#MENHIR=menhir --explain #--infer -la 1 --table
-MENHIR=ocamlyacc
+MENHIR=menhir --explain #--infer -la 1 --table
+#MENHIR=ocamlyacc
+OCAMLYACC=ocamlyacc
 OCAMLC=ocamlfind ocamlc $(OPTIONS)
 OCAMLOPT=ocamlfind ocamlopt $(OPTIONS)
 OCAMLDEP=ocamldep
@@ -66,8 +67,11 @@ all:
 prep: parser copy_lib_files version
 
 parser:
-	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
-	$(MENHIR) parse.mly 2>&1
+	#cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
+	cp ../parser/parse.mly ./parse.mly
+	#$(MENHIR) --only-preprocess-for-ocamlyacc parse.mly > parse.preprocessed.mly
+	$(OCAMLYACC) parse.preprocessed.mly 2>&1
+	#$(MENHIR) parse.mly
 	rm -f FStar_Parser_Parse.ml
 	echo "open Prims" > FStar_Parser_Parse.ml
 	echo "open FStar_List" >> FStar_Parser_Parse.ml
@@ -81,9 +85,30 @@ parser:
 	echo "open FStar_Parser_Util" >> FStar_Parser_Parse.ml
 	echo "open FStar_Const" >> FStar_Parser_Parse.ml
 	echo "open FStar_Ident" >> FStar_Parser_Parse.ml
-	cat parse.ml >> FStar_Parser_Parse.ml
+	cat parse.preprocessed.ml >> FStar_Parser_Parse.ml
+	#cat parse.ml >> FStar_Parser_Parse.ml
 	ocamllex ../parser/ml/lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parser/ml/parseit.ml FStar_Parser_ParseIt.ml
+
+
+fsharp-parser:
+	rm -f parse.preprocessed.fsy
+	echo "%{" > parse.preprocessed.fsy
+	echo "#light \"off\"" >> parse.preprocessed.fsy
+	echo "// (c) Microsoft Corporation. All rights reserved" >> parse.preprocessed.fsy
+	echo "open Prims" >> parse.preprocessed.fsy
+	echo "open FStar.List" >> parse.preprocessed.fsy
+	echo "open FStar.Util" >> parse.preprocessed.fsy
+	echo "open FStar.Range" >> parse.preprocessed.fsy
+	echo "open FStar.Options" >> parse.preprocessed.fsy
+	echo "open FStar.Absyn.Syntax" >> parse.preprocessed.fsy
+	echo "open FStar.Absyn.Const" >> parse.preprocessed.fsy
+	echo "open FStar.Absyn.Util" >> parse.preprocessed.fsy
+	echo "open FStar.Parser.AST" >> parse.preprocessed.fsy
+	echo "open FStar.Parser.Util" >> parse.preprocessed.fsy
+	echo "open FStar.Const" >> parse.preprocessed.fsy
+	echo "open FStar.Ident" >> parse.preprocessed.fsy
+	cat parse.preprocessed.mly | sed -e '/%{/d' -e '/^open /d' -e 's/%token <.*\./%token </' -e 's/%type <.*\./%type </'>> parse.preprocessed.fsy
 
 copy_lib_files: $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
 	cp $^ .

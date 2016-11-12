@@ -125,8 +125,10 @@ let refine_for_pattern t phi_opt pat pos_t pos =
 %nonassoc THEN
 %nonassoc ELSE
 
+
 /********************************************************************************/
 /* TODO : check that precedence of the following section mix well with the rest */
+
 %right IFF
 %right IMPLIES
 
@@ -214,11 +216,11 @@ decl2:
       { Assume(tag, lid, phi) }
   | EXCEPTION lid=name t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
-  | qs=qualifiers NEW_EFFECT ne=new_effect
+  | qs=qualifiers NEW_EFFECT ne=newEffect
       { NewEffect (qs, ne) }
-  | qs=qualifiers SUB_EFFECT se=sub_effect
+  | qs=qualifiers SUB_EFFECT se=subEffect
       { SubEffect se } (* TODO (KM) : Why are we dropping the qualifiers here ? Does that mean we should not accept them ? *)
-  | qs=qualifiers NEW_EFFECT_FOR_FREE ne=new_effect
+  | qs=qualifiers NEW_EFFECT_FOR_FREE ne=newEffect
       { NewEffectForFree (qs, ne) }
   | p=pragma
       { Pragma p }
@@ -226,8 +228,8 @@ decl2:
       { Fsdoc doc }
 
 tycon:
-  (* This rule accepts a documentation on the first type which was prohibited before (why ?) *)
-  | qs=qualifiers TYPE tcdefs=list(pair(option(FSDOC), tyconDefinition))
+  (* We have to special case the head  *)
+  | qs=qualifiers TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), tyconDefinition))
       { Tycon (qs, List.map (fun (doc, f) -> (f false, doc)) tcdefs) }
 
   | qs=qualifiers EFFECT tcdef=tyconDefinition
@@ -252,7 +254,7 @@ tyconDefn:
   /* A documentation on the first branch creates a conflict with { x with a = ... }/{ a = ... } */
   | EQUALS LBRACE
       decl0=separated_pair(ident, COLON, typ)
-      record_field_decls=separated_list(SEMICOLON, recordFieldDecl) SEMICOLON?
+      record_field_decls=recordFieldDecls
    RBRACE
    {
      let (lid, t) = decl0 in
@@ -262,8 +264,10 @@ tyconDefn:
   | EQUALS ct_decls=list(constructorDecl)
       { (fun id binders kopt eff -> if not eff then check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
-recordFieldDecl:
-  | doc_opt=FSDOC? lid=ident COLON t=typ { (lid, t, doc_opt) }
+recordFieldDecls:
+  | ioption(SEMICOLON) { [] }
+  | SEMICOLON doc_opt=ioption(FSDOC) lid=ident COLON t=typ decls=recordFieldDecls
+      { (lid, t, doc_opt)::decls }
 
 constructorDecl:
   | BAR doc_opt=FSDOC? uid=name COLON t=typ                { (uid, Some t, doc_opt, false) }
@@ -274,7 +278,7 @@ kind_abbrev:
       { KindAbbrev(lid, bs, k) }
 
 letbindings:
-  | lbs=separated_list(AND, pair(maybeFocus,letbinding)) { lbs }
+  | lbs=list(AND p=pair(maybeFocus,letbinding) {p}) { lbs }
 
 letbinding:
   | lid=ident lbp=nonempty_list(bindingPattern) ascr_opt=ascribeTyp? EQUALS tm=term
@@ -295,35 +299,41 @@ letbinding:
 /*                                Effects                                     */
 /******************************************************************************/
 
-new_effect:
-  | ed=effect_redefinition
-  | ed=effect_definition
+newEffect:
+  | ed=effectRedefinition
+  | ed=effectDefinition
        { ed }
 
-effect_redefinition:
+effectRedefinition:
   | lid=name EQUALS t=simpleTerm
       { RedefineEffect(lid, [], t) }
 
-effect_definition:
+effectDefinition:
   | LBRACE lid=name bs=binders COLON k=kind
-    	   WITH eds=separated_nonempty_list(SEMICOLON, effect_decl)
-		     AND ACTIONS actions=separated_nonempty_list(SEMICOLON, effect_decl)
+    	   WITH eds=separated_nonempty_list(SEMICOLON, effectDecl)
+         actions=actionDecls
     RBRACE
       {
          DefineEffect(lid, bs, k, eds, actions)
       }
 
-effect_decl:
+actionDecls:
+  |   { [] }
+  | AND ACTIONS actions=separated_nonempty_list(SEMICOLON, effectDecl)
+      { actions }
+
+effectDecl:
   | lid=ident EQUALS t=simpleTerm
      { mk_decl (Tycon ([], [(TyconAbbrev(lid, [], None, t), None)])) (rhs2 parseState 1 3) None }
 
-sub_effect:
+subEffect:
   | src_eff=qname SQUIGGLY_RARROW tgt_eff=qname EQUALS lift=simpleTerm
       { { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift } }
   | src_eff=qname SQUIGGLY_RARROW tgt_eff=qname
     LBRACE
       lift1=separated_pair(IDENT, EQUALS, simpleTerm)
-      lift2_opt=separated_pair(IDENT, EQUALS, simpleTerm)?
+      lift2_opt=ioption(separated_pair(SEMICOLON id=IDENT {id}, EQUALS, simpleTerm))
+      /* might be nice for homogeneity if possible : ioption(SEMICOLON) */
     RBRACE
      {
        match lift2_opt with
@@ -411,14 +421,17 @@ pattern:
   | pat=openPatternRec1 { pat }
 
 openPatternRec1:
-  | pat=openPatternRec1 COMMA pats=openPatternRec1
-      { mk_pattern (extendTuplePat pat pats) (rhs2 parseState 1 3) }
-  | pat=openPatternRec2
-      { pat }
+  | pats=separated_nonempty_list(COMMA, openPatternRec2)
+      { match pats with | [x] -> x | l -> mk_pattern (PatTuple (l, false)) (rhs parseState 1) }
 
 openPatternRec2:
   | pat=openPatternRec2 COLON_COLON pats=openPatternRec2
       { mk_pattern (consPat (rhs parseState 3) pat pats) (rhs2 parseState 1 3) }
+  | uid=qname args=nonempty_list(patternRec)
+      {
+        let head_pat = mk_pattern (PatName uid) (rhs parseState 1) in
+        mk_pattern (PatApp (head_pat, args)) (rhs2 parseState 1 2)
+      }
   | pat=patternRec
       { pat }
 
@@ -437,7 +450,8 @@ patternRec:
         mk_pattern (PatAscribed(pat, refine_for_pattern t phi_opt pat pos_t pos)) (rhs2 parseState 1 6)
       }
   | tv=tvar                   { mk_pattern (PatTvar (tv, None)) (rhs parseState 1) }
-  | pat=operatorPattern
+  | LPAREN op=operator RPAREN
+      { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
       { pat }
   | UNDERSCORE
       { mk_pattern PatWild (rhs parseState 1) }
@@ -452,29 +466,8 @@ patternRec:
   | uid=qname
       { mk_pattern (PatName uid) (rhs parseState 1) }
 
-operatorPattern:
-  | LPAREN OPPREFIX RPAREN
-      { mk_pattern (PatOp($2)) (rhs2 parseState 1 3) }
-  | LPAREN OPINFIX0a RPAREN
-      { mk_pattern (PatOp($2)) (rhs2 parseState 1 3) }
-  | LPAREN OPINFIX0b RPAREN
-      { mk_pattern (PatOp($2)) (rhs2 parseState 1 3) }
-  | LPAREN OPINFIX0c RPAREN
-      { mk_pattern (PatOp($2)) (rhs2 parseState 1 3) }
-  | LPAREN OPINFIX0d RPAREN
-      { mk_pattern (PatOp($2)) (rhs2 parseState 1 3) }
-  | LPAREN OPINFIX1 RPAREN
-      { mk_pattern (PatOp($2)) (rhs2 parseState 1 3) }
-  | LPAREN OPINFIX2 RPAREN
-      { mk_pattern (PatOp($2)) (rhs2 parseState 1 3) }
-  | LPAREN OPINFIX3 RPAREN
-      { mk_pattern (PatOp($2)) (rhs2 parseState 1 3) }
-  | LPAREN OPINFIX4 RPAREN
-      { mk_pattern (PatOp($2)) (rhs2 parseState 1 3) }
-
 bindingPattern:
   | pat=patternRec { [pat] }
-  | LPAREN pat=pattern RPAREN { [pat] }
   /* TODO : multiple binders in binding pattern */
 /*  | LPAREN pats=nonempty_list(ascriptionFreePattern) COLON t=typ phi_opt=refineOpt RPAREN
       {
@@ -630,7 +623,7 @@ maybeFocusArrow:
   | SQUIGGLY_RARROW { true }
 
 firstPatternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */
-  | pb=patternBranchSep(BAR?) { pb }
+  | pb=patternBranchSep(ioption(BAR)) { pb }
 
 patternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */
   | pb=patternBranchSep(BAR) { pb }
@@ -650,6 +643,7 @@ patternBranch: /* shift/reduce conflict on BAR ... expected for nested matches *
   | WHEN e=tmFormula     { Some e }
 
 
+(* Should I move this to the pattern section ? Moreover disjunction should be allowed in nested patterns *)
 disjunctivePattern:
   | pats=separated_nonempty_list(BAR, pattern) { pats }
 
@@ -664,7 +658,7 @@ tmIff:
 
 (* Tm : tmDisjunction (now tmFormula, with equals) or tmCons (now tmNoEq, without equals) *)
 tmArrow(Tm):
-  | aq_opt=aqual? dom_tm=Tm RARROW tgt=tmArrow(Tm)
+  | aq_opt=ioption(aqual) dom_tm=Tm RARROW tgt=tmArrow(Tm)
      {
         let b = match extract_named_refinement dom_tm with
             | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
@@ -691,23 +685,13 @@ tmFormula:
 tmEq:
   | e1=tmEq BACKTICK id=lid BACKTICK e2=tmEq
       { mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) }
-  | e1=tmEq op=OPINFIX0a e2=tmEq
-      { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq op=OPINFIX0b e2=tmEq
-      { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq op=OPINFIX0c e2=tmEq
-      { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
   | e1=tmEq EQUALS e2=tmEq
       { mk_term (Op("=", [e1; e2])) (rhs2 parseState 1 3) Un}
   | e1=tmEq COLON_EQUALS e2=tmEq
       { mk_term (Op(":=", [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq op=OPINFIX0d e2=tmEq
-      { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
   | e1=tmEq PIPE_RIGHT e2=tmEq
       { mk_term (Op("|>", [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq op=OPINFIX1 e2=tmEq
-      { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
-  | e1=tmEq op=OPINFIX2 e2=tmEq
+  | e1=tmEq op=operatorInfix0ad12 e2=tmEq
       { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
   | e=tmNoEq
       { e }
@@ -756,7 +740,7 @@ refineOpt:
   | e=noSeqTerm { {e with level=Formula} }
 
 recordExp:
-  | e_opt=option(e=appTerm WITH {e}) record_fields=separated_trailing_list(SEMICOLON, separated_pair(lid, EQUALS, simpleTerm))
+  | e_opt=ioption(e=appTerm WITH {e}) record_fields=separated_trailing_list(SEMICOLON, separated_pair(lid, EQUALS, simpleTerm))
       { mk_term (Record (e_opt, record_fields)) (rhs2 parseState 1 2) Expr }
 
 unaryTerm:
@@ -789,7 +773,7 @@ atomicTerm:
   | L_FALSE   { mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type }
   | op=OPPREFIX e=atomicTerm
       { mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr }
-  | LPAREN op=operatorTm RPAREN
+  | LPAREN op=operator RPAREN
       { mk_term (Op(op, [])) (rhs2 parseState 1 3) Un }
   (* TODO (KM) : there seems to be a discrepancy here with dependent sums types which need to have at least 2 components *)
   | LENS_PAREN_LEFT el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
@@ -803,18 +787,6 @@ atomicTerm:
       { fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs }
   | BEGIN e=term END
       { e }
-
-%inline operatorTm:
-  | op=OPPREFIX
-  | op=OPINFIX0a
-  | op=OPINFIX0b
-  | op=OPINFIX0c
-  | op=OPINFIX0d
-  | op=OPINFIX1
-  | op=OPINFIX2
-  | op=OPINFIX3
-  | op=OPINFIX4
-     { op }
 
 
 projectionLHS:
@@ -843,7 +815,7 @@ projectionLHS:
       { mkConsList (rhs2 parseState 1 3) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
       { mkLexList (rhs2 parseState 1 3) es }
-  | BANG_LBRACE es=separated_list(COMMA, noSeqTerm) RBRACE
+  | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
       { mkRefSet (rhs2 parseState 1 3) es }
 
 hasSort:
@@ -905,6 +877,27 @@ constant:
 %inline string:
   | s=STRING { string_of_bytes s }
 
+%inline operator:
+  | op=OPPREFIX
+  | op=OPINFIX3
+  | op=OPINFIX4
+  | op=operatorInfix0ad12
+     { op }
+
+/* These infix operators have a lower precedence than EQUALS */
+%inline operatorInfix0ad12:
+  | op=OPINFIX0a
+  | op=OPINFIX0b
+  | op=OPINFIX0c
+  | op=OPINFIX0d
+  | op=OPINFIX1
+  | op=OPINFIX2
+     { op }
+
 separated_trailing_list(SEP,X):
   | { [] }
-  | l=separated_nonempty_list(SEP, X) SEP? { l }
+  | x=X l=separated_trailing_tail(SEP,X) { x::l }
+
+separated_trailing_tail(SEP, X):
+  | ioption(SEP) { [] }
+  | SEP x=X l=separated_trailing_tail(SEP, X)  { x::l }
