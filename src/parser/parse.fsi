@@ -330,6 +330,7 @@ type nonTerminalId =
     | NONTERM_qname
     | NONTERM_eitherName
     | NONTERM_ident
+    | NONTERM_aqual_opt_idents
     | NONTERM_name
     | NONTERM_tvars
     | NONTERM_tvar

@@ -161,18 +161,15 @@ let refine_for_pattern t phi_opt pat pos_t pos =
 
 %%
 
+(* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
 inputFragment:
-  | option(PRAGMALIGHT STRING {}) md=moduleDecl decls=list(decl) main_opt=mainDecl? EOF
+  | option(PRAGMALIGHT STRING {}) d=decl decls=list(decl) main_opt=mainDecl? EOF
        {
          let decls = match main_opt with
            | None -> decls
            | Some main -> decls @ [main]
-         in as_frag md decls
+         in as_frag d decls
        }
-
-moduleDecl:
-  | doc_opt=FSDOC? MODULE module_name=qname
-     { mk_decl (TopLevelModule module_name) (rhs2 parseState 1 2) doc_opt }
 
 mainDecl:
   | SEMICOLON_SEMICOLON doc_opt=FSDOC? t=term
@@ -193,17 +190,16 @@ decl:
   | fsdoc_opt=FSDOC? decl=decl2 { mk_decl decl (rhs parseState 2) fsdoc_opt }
 
 decl2:
-  | OPEN qname
-      { Open $2 }
-  | MODULE name EQUALS qname
-      {  ModuleAbbrev($2, $4) }
-(* Seems to be deprecated *)
-(*  | MODULE qname
-             {  TopLevelModule $2  } *)
-  | kind_abbrev
-      { $1 }
-  | tycon
-      { $1 }
+  | OPEN uid=qname
+      { Open uid }
+  | MODULE uid1=name EQUALS uid2=qname
+      {  ModuleAbbrev(uid1, uid2) }
+  | MODULE uid=qname
+      {  TopLevelModule uid }
+  | k=kind_abbrev
+      { k }
+  | t=tycon
+      { t }
   | qs=qualifiers LET lq=letqualifier lb=letbinding lbs=letbindings
       {
         let r, focus = lq in

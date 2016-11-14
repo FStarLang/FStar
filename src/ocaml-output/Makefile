@@ -69,7 +69,8 @@ prep: parser copy_lib_files version
 parser:
 	#cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
 	cp ../parser/parse.mly ./parse.mly
-	#$(MENHIR) --only-preprocess-for-ocamlyacc parse.mly > parse.preprocessed.mly
+	$(MENHIR) --only-preprocess-for-ocamlyacc parse.mly > parse.preprocessed.mly
+	sed -i -e 's/\b_[0-9]\b/_protect_&/g' parse.preprocessed.mly
 	$(OCAMLYACC) parse.preprocessed.mly 2>&1
 	#$(MENHIR) parse.mly
 	rm -f FStar_Parser_Parse.ml
