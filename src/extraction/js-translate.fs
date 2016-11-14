@@ -194,23 +194,25 @@ and translate_decl d: option<source_t> =
         | _ -> List.map (fun (id, _) -> id) tparams |> Some
         in
       let forbody body =
+        let get_export stmt = 
+            (JSE_Declaration(stmt), ExportType) |> JSS_ExportDefaultDeclaration in
         match body with
-        | MLTD_Abbrev t -> 
-            JSS_TypeAlias((name, None), tparams, translate_type t)
+        | MLTD_Abbrev t ->
+            get_export (JSS_TypeAlias((name, None), tparams, translate_type t))
         | MLTD_Record fields ->
             let tag = [(JSO_Identifier("_tag", None), JST_StringLiteral("Record", ""))] in
             let fields_t = List.map (fun (n, t) -> (JSO_Identifier("_" ^ n, None), translate_type t)) fields in
-            JSS_TypeAlias((name, None), tparams, JST_Object(tag @ fields_t, [], []))
+            get_export (JSS_TypeAlias((name, None), tparams, JST_Object(tag @ fields_t, [], [])))
         | MLTD_DType lfields ->
             let tag n = [(JSO_Identifier("_tag", None), JST_StringLiteral(n, ""))] in
             let fields_t fields = List.mapi (fun i t -> (JSO_Identifier("_" ^ string_of_int i, None), translate_type t)) fields in
-            let lfields_t = List.map (fun (n, l) -> JSS_TypeAlias((n, None), tparams, JST_Object((tag n) @ fields_t l, [], []))) lfields in
+            let lfields_t = List.map (fun (n, l) -> get_export(JSS_TypeAlias((n, None), tparams, JST_Object((tag n) @ fields_t l, [], [])))) lfields in
             let tparams_gen =
                 match tparams with
                 | Some t -> List.map (fun x -> JST_Generic(Unqualified(x, None), None)) t |> Some
                 | None -> None in
             let lnames = List.map (fun (n,l) -> JST_Generic(Unqualified(n, None), tparams_gen)) lfields in
-            let union_t = JSS_TypeAlias((name, None), tparams, JST_Union(lnames)) in
+            let union_t = get_export(JSS_TypeAlias((name, None), tparams, JST_Union(lnames))) in
             JSS_Block(lfields_t @ [union_t]) in
       let body_t =
         match body with

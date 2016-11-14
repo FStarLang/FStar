@@ -151,7 +151,7 @@ and pretty_print_statement (p:statement_t) : doc =
   in reduce [(f p); hardline]
 
 and print_exp_kind = function
-    | ExportType -> text "declare "
+    | ExportType -> text "export "
     | ExportValue -> text "export "
 
 and pretty_print_statements l = reduce (List.map pretty_print_statement l)
@@ -293,7 +293,7 @@ and print_pattern p print_t =
         in reduce [text (remove_chars_t id); (if print_t then r else empty)]
 
 and print_body = function 
-    | JS_BodyBlock l -> reduce [text "{"; pretty_print_statements l; text "}"]
+    | JS_BodyBlock l -> reduce [text "{"; hardline; pretty_print_statements l; text "}"]
     | JS_BodyExpression e -> parens(pretty_print_exp e)
 
 and pretty_print_fun (n, pars, body, t, typePars) =
