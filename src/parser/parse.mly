@@ -68,7 +68,7 @@ let refine_for_pattern t phi_opt pat pos_t pos =
   | Some phi,  PatVar(x, _) ->
      mk_term (Refine(mk_binder (Annotated(x, t)) pos_t Type None, phi)) pos Type
   | Some _, _ ->
-     errorR(Error("Not a valid refinement type", lhs(parseState))); t
+     errorR(Error("Not a valid refinement type", pos)); t
   end
 
 %}
@@ -452,7 +452,6 @@ patternRec:
   | tv=tvar                   { mk_pattern (PatTvar (tv, None)) (rhs parseState 1) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
-      { pat }
   | UNDERSCORE
       { mk_pattern PatWild (rhs parseState 1) }
   | c=constant
