@@ -125,10 +125,10 @@ and pretty_print_statement (p:statement_t) : doc =
     | JSS_While(e, s) -> reduce [ws; text "while"; parens (pretty_print_exp e); hardline; optws s]
     | JSS_DoWhile(s, e) -> reduce [ws; text "do"; hardline; optws s; pretty_print_statement s;
                                    ws; text "while"; parens (pretty_print_exp e); semi]
-    | JSS_For(i,c,l,s) -> semi (*!!!*)
-    | JSS_Forin(i,e,s) -> semi (*!!!*)
-    | JSS_ForOf(i,e,s) -> semi (*!!!*)
-    | JSS_Let(l,s) -> semi (*!!!*)
+    | JSS_For(i,c,l,s) -> failwith "todo: pretty-print [JSS_For]"
+    | JSS_Forin(i,e,s) -> failwith "todo: pretty-print [JSS_Forin]"
+    | JSS_ForOf(i,e,s) -> failwith "todo: pretty-print [JSS_ForOf]"
+    | JSS_Let(l,s) -> failwith "todo: pretty-print [JSS_Let]"
     | JSS_Debugger -> reduce [ws; text "debugger;"]
     | JSS_FunctionDeclaration(f) -> pretty_print_fun f
     | JSS_VariableDeclaration((p, e), k) ->
@@ -136,8 +136,8 @@ and pretty_print_statement (p:statement_t) : doc =
         | JGP_Identifier (n, _) when n = "_" -> (match e with | Some v -> pretty_print_exp v | None -> empty)
         | _ -> reduce [print_kind_var k; print_pattern p true;
                       (match e with | None -> empty | Some v -> reduce [text "="; pretty_print_exp v]); semi])
-    | JSS_DeclareVariable _ -> semi (*!!!*)
-    | JSS_DeclareFunction _ -> semi (*!!!*)
+    | JSS_DeclareVariable _ -> failwith "todo: pretty-print [JSS_DeclareVariable]"
+    | JSS_DeclareFunction _ -> failwith "todo: pretty-print [JSS_DeclareFunction]"
     | JSS_ExportDefaultDeclaration (d, k) ->
         let print_declaration =
             (match d with
@@ -179,19 +179,18 @@ and pretty_print_exp = function
     | JSE_Assignment(p,e) ->
         (match p with
         | JGP_Identifier (n, _) when n = "_" -> pretty_print_exp e
-        | _ -> reduce [print_pattern p false; text "="; pretty_print_exp e])
-    | JSE_Update(o,e,b) -> semi (*!!!*)
+        | _ -> reduce [print_pattern p false; text "="; pretty_print_exp e])    
     | JSE_Logical(o,e1,e2) ->  reduce [pretty_print_exp e1; print_op_log o; pretty_print_exp e2]
-    | JSE_Conditional(c,e,f) -> semi (*!!!*)
-    | JSE_New(e,l) -> semi (*!!!*)
+    | JSE_Conditional(c,e,f) -> failwith "todo: pretty-print [JSE_Conditional]"
+    | JSE_New(e,l) -> failwith "todo: pretty-print [JSE_New]"
     | JSE_Call(e,l) -> 
         let le = List.map (fun x -> parens (pretty_print_exp x)) l |> combine empty in
         reduce [pretty_print_exp e;  (match l with | [] -> text "()" | _ -> le)]
     | JSE_Member(o, p) ->  reduce [pretty_print_exp o; pretty_print_propmem p]
-    | JSE_Yield(e,b) -> semi (*!!!*)
-    | JSE_Comprehension(l,e) -> semi (*!!!*)
-    | JSE_Generator(l,e) -> semi (*!!!*)
-    | JSE_Let(l,e) -> semi (*!!!*)
+    | JSE_Yield(e,b) -> failwith "todo: pretty-print [JSE_Yield]"
+    | JSE_Comprehension(l,e) -> failwith "todo: pretty-print [JSE_Comprehension]"
+    | JSE_Generator(l,e) -> failwith "todo: pretty-print [JSE_Generator]"
+    | JSE_Let(l,e) -> failwith "todo: pretty-print [JSE_Let]"
     | JSE_Identifier(id,t) -> text (remove_chars_t id)
     | JSE_Literal(l) -> print_literal (fst l)
     | JSE_TypeCast(e,t) -> reduce [ text "("; pretty_print_exp e; colon; print_typ t; text ")"]
@@ -226,13 +225,13 @@ and pretty_print_propmem p =
 and print_typ = function
     | JST_Any -> text "any"
     | JST_Mixed -> text "mixed"
-    | JST_Empty -> text "!!!"
+    | JST_Empty -> failwith "todo: pretty-print [JST_Empty]"
     | JST_Void -> text "void"
     | JST_Null -> text "null"
     | JST_Number -> text "number"
     | JST_String -> text "string"
     | JST_Boolean -> text "boolean"
-    | JST_Nullable _ -> text "!!!"
+    | JST_Nullable _ -> failwith "todo: pretty-print [JST_Nullable]"
     | JST_Function (args, ret_t, decl_vars) -> 
         let decl_vars = (if !f_print_arrow_fun_t then decl_vars else None) in
             f_print_arrow_fun_t := false;
@@ -249,7 +248,7 @@ and print_typ = function
     | JST_StringLiteral (s,_) -> text ("\"" ^ (jstr_escape s) ^ "\"")
     | JST_NumberLiteral (n, _)-> text (string_of_float n)
     | JST_BooleanLiteral (b, _) -> text (string_of_bool b)
-    | JST_Exists -> text "!!!"
+    | JST_Exists -> failwith "todo: pretty-print [JST_Exists]"
     | JST_Generic(n, lt) ->
         let print_lt = match lt with 
                       | None -> empty 
@@ -283,9 +282,9 @@ and print_kind_var = function
 
 and print_pattern p print_t =
     match p with
-    | JGP_Object _ -> text "!!"
-    | JGP_Array _ -> text "!!"
-    | JGP_Assignment _ -> text "!!"
+    | JGP_Object _ -> failwith "todo: pretty-print [JGP_Object]"
+    | JGP_Array _ -> failwith "todo: pretty-print [JGP_Array]"
+    | JGP_Assignment _ -> failwith "todo: pretty-print [JGP_Assignment]"
     | JGP_Expression e  -> pretty_print_exp e
     | JGP_Identifier(id, t) ->
         let r = match t with
@@ -301,5 +300,4 @@ and pretty_print_fun (n, pars, body, t, typePars) =
     let name = match n with | Some v -> text (fst v) | None -> empty in
     let returnT = match t with | Some v -> reduce [text ":"; ws; print_typ v] | None -> empty in
     reduce [text "function"; ws; name; print_decl_t typePars; parens (List.map (fun p -> print_pattern p true) pars |> combine comma); returnT;
-            text "{";  hardline; print_body body; text "}"]
-    
+            text "{";  hardline; print_body body; text "}"]    

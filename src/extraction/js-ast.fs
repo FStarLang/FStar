@@ -53,8 +53,7 @@ and expression_t =
     | JSE_Sequence of list<expression_t>
     | JSE_Unary of op_un * expression_t
     | JSE_Binary of op_bin * expression_t * expression_t   
-    | JSE_Assignment of pattern_t * expression_t
-    | JSE_Update of op_update * expression_t * bool
+    | JSE_Assignment of pattern_t * expression_t    
     | JSE_Logical of op_log * expression_t * expression_t
     | JSE_Conditional of expression_t * expression_t * expression_t
     | JSE_New of expression_t * list<expression_t>    
@@ -77,8 +76,6 @@ and op_bin =
     | JSB_LessThan | JSB_LessThanEqual | JSB_GreaterThan | JSB_GreaterThanEqual
     | JSB_LShift | JSB_RShift | JSB_RShift3 | JSB_Plus | JSB_Minus | JSB_Mult | JSB_Exp
     | JSB_Div | JSB_Mod | JSB_BitOr | JSB_Xor | JSB_BitAnd | JSB_In | JSB_Instanceof
-
-and op_update = | JSUP_Increment | JSUP_Decrement
 
 and op_log = | JSL_Or | JSL_And
 
