@@ -14,7 +14,8 @@
    limitations under the License.
 *)
 
-// prettyprint.fst's OCaml implementation is just a thin wrapper around pprint. 
+(*  prettyprint.fst's OCaml implementation is just a thin wrapper around the
+    opam pprint package. *)
 type document = PPrint.document
 
 let empty = PPrint.empty 
@@ -33,14 +34,13 @@ let fancysubstring (s:string) (ofs:int) (len:int) (app_len:int) : document = fai
 
 let utf8string (s:string) : document = failwith not_impl_msg
 
-let hardline : document = failwith not_impl_msg
+let hardline : document = PPrint.hardline 
 
 let blank (n:int) : document = failwith not_impl_msg
 
 let break_ (n:int) : document = failwith not_impl_msg
 
-//let (^^) (doc1:document) (doc2:document) : document = failwith not_impl_msg
-let concat (doc1:document) (doc2:document) : document = failwith not_impl_msg
+let op_Hat_Hat (doc1:document) (doc2:document) : document = failwith not_impl_msg
 
 let nest (j:int) (doc:document) : document = failwith not_impl_msg
 
@@ -54,39 +54,39 @@ let position (f: int -> int ->  int -> document) : document = failwith not_impl_
 
 let ifflat (doc1:document) (doc2:document) : document = failwith not_impl_msg
 
-let lparen: document = failwith not_impl_msg
-let rparen: document = failwith not_impl_msg
-let langle: document = failwith not_impl_msg
-let rangle: document = failwith not_impl_msg
-let lbrace: document = failwith not_impl_msg
-let rbrace: document = failwith not_impl_msg
-let lbracket: document = failwith not_impl_msg
-let rbracket: document = failwith not_impl_msg
-let squote: document = failwith not_impl_msg
-let dquote: document = failwith not_impl_msg
-let bquote: document = failwith not_impl_msg
-let semi: document = failwith not_impl_msg
-let colon: document = failwith not_impl_msg
-let comma: document = failwith not_impl_msg
-let space: document = failwith not_impl_msg
-let dot: document = failwith not_impl_msg
-let sharp: document = failwith not_impl_msg
-let slash: document = failwith not_impl_msg
-let backslash: document = failwith not_impl_msg
-let equals: document = failwith not_impl_msg
-let qmark: document = failwith not_impl_msg
-let tilde: document = failwith not_impl_msg
-let at: document = failwith not_impl_msg
-let percent: document = failwith not_impl_msg
-let dollar: document = failwith not_impl_msg
-let caret: document = failwith not_impl_msg
-let ampersand: document = failwith not_impl_msg
-let star: document = failwith not_impl_msg
-let plus: document = failwith not_impl_msg
-let minus: document = failwith not_impl_msg
-let underscore: document = failwith not_impl_msg
-let bang: document = failwith not_impl_msg
-let bar: document = failwith not_impl_msg
+let lparen: document = PPrint.lparen
+let rparen: document = PPrint.rparen
+let langle: document = PPrint.langle
+let rangle: document = PPrint.rangle
+let lbrace: document = PPrint.lbrace
+let rbrace: document = PPrint.rbrace
+let lbracket: document = PPrint.lbracket
+let rbracket: document = PPrint.rbracket
+let squote: document = PPrint.squote
+let dquote: document = PPrint.dquote
+let bquote: document = PPrint.bquote
+let semi: document = PPrint.semi
+let colon: document = PPrint.colon
+let comma: document = PPrint.comma
+let space: document = PPrint.space
+let dot: document = PPrint.dot
+let sharp: document = PPrint.sharp
+let slash: document = PPrint.slash
+let backslash: document = PPrint.backslash
+let equals: document = PPrint.equals
+let qmark: document = PPrint.qmark
+let tilde: document = PPrint.tilde
+let at: document = PPrint.at
+let percent: document = PPrint.percent
+let dollar: document = PPrint.dollar
+let caret: document = PPrint.caret
+let ampersand: document = PPrint.ampersand
+let star: document = PPrint.star
+let plus: document = PPrint.plus
+let minus: document = PPrint.minus
+let underscore: document = PPrint.underscore
+let bang: document = PPrint.bang
+let bar: document = PPrint.bar
 
 let precede (l:document) (x:document) : document = failwith not_impl_msg
 
@@ -150,9 +150,10 @@ let surround_separate (n:int) (b:int) (v:document) (opening:document) (sep:docum
 
 let surround_separate_map (n:int) (b:int) (v:document) (opening:document) (sep:document) (closing:document) (f:('a -> document)) (docs:'a list) : document = failwith not_impl_msg
 
-// let ( !^ ) (s:string) : document = failwith not_impl_msg
-// 
-// let ( ^/^ ) (x:document) (y:document) : document = failwith not_impl_msg
-// 
-// let ( ^//^ ) (x:document) (y:document) : document = failwith not_impl_msg
+(*
+let ( !^ ) (s:string) : document = failwith not_impl_msg
 
+let ( ^/^ ) (x:document) (y:document) : document = failwith not_impl_msg
+
+let ( ^//^ ) (x:document) (y:document) : document = failwith not_impl_msg
+*)
