@@ -1,8 +1,8 @@
-.PHONY: all __force__
+_.PHONY: all __force__
 
 FSTAR_HOME=../..
 
-OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28-26-11-21" -annot
+OPTIONS=-thread -package batteries,zarith,yojson,pprint -linkpkg -g -w "-28-26-11-21" -annot
 
 HAS_MENHIR := $(shell command -v menhir 2> /dev/null)
 ifdef HAS_MENHIR
@@ -22,8 +22,10 @@ OCAMLOPTFLAGS=$(INCLUDES) -w -8  # add other options for ocamlopt here
 
 COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
+PRETTYPRINT_ML_LIB=FStar_Prettyprint.cmx
 FSTAR_OBJS=$(COMPILER_ML_LIB) \
 	   $(PARSER_ML_LIB) \
+	   $(PRETTYPRINT_ML_LIB) \
 	   FStar_Version.cmx FStar_Options.cmx FStar_Ident.cmx FStar_Const.cmx \
 	   FStar_Absyn_Syntax.cmx FStar_Absyn_Const.cmx FStar_Absyn_Visit.cmx FStar_Absyn_Util.cmx FStar_Absyn_Print.cmx \
 	   FStar_Syntax_Syntax.cmx FStar_Syntax_Const.cmx FStar_Syntax_Subst.cmx FStar_Syntax_Free.cmx FStar_Syntax_InstFV.cmx FStar_Syntax_Util.cmx FStar_Syntax_Print.cmx \
@@ -37,7 +39,7 @@ FSTAR_OBJS=$(COMPILER_ML_LIB) \
 	   FStar_SMTEncoding_Term.cmx FStar_SMTEncoding_Util.cmx FStar_SMTEncoding_Z3.cmx FStar_SMTEncoding_SplitQueryCases.cmx FStar_SMTEncoding_ErrorReporting.cmx FStar_SMTEncoding_Encode.cmx FStar_SMTEncoding_Solver.cmx \
 	   FStar_Dependences.cmx FStar_Interactive.cmx FStar_Stratified.cmx FStar_Universal.cmx FStar_FStar.cmx
 
-GENERATED_FILES=$(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml
+GENERATED_FILES=$(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) $(PRETTYPRINT_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml 
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
@@ -106,7 +108,6 @@ endif
 	ocamllex ../parser/ml/lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parser/ml/parseit.ml FStar_Parser_ParseIt.ml
 
-
 fsharp-parser:
 	rm -f parse.preprocessed.fsy
 	echo "%{" > parse.preprocessed.fsy
@@ -135,7 +136,7 @@ fsharp-parser:
 											>> parse.preprocessed.fsy
 	mv parse.preprocessed.fsy ../parser/parse.fsy
 
-copy_lib_files: $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
+copy_lib_files: $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../prettyprint/ml/$(PRETTYPRINT_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
 	cp $^ .
 
 # Dependencies
