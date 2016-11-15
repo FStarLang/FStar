@@ -603,8 +603,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_app({n=Tm_constant Const.Const_reify}, [a])
                 when (cfg.steps |> List.contains Reify) ->
             let reify_head, _ = Util.head_and_args t in
-            let a = SS.compress (fst a) in
-            // printfn "TRYING NORMALIZATION OF REIFY: %s ... %s" (Print.tag_of_term a) (Print.term_to_string a);
+            let a = SS.compress (Util.unascribe <| fst a) in
+            Util.print2_warning "TRYING NORMALIZATION OF REIFY: %s ... %s\n" (Print.tag_of_term a) (Print.term_to_string a);
             begin match a.n with
             | Tm_meta(e, Meta_monadic (m, t_body)) ->
                 begin match (SS.compress e).n with
@@ -625,13 +625,37 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       norm cfg env stack reified
                     | Inr _ -> failwith "Cannot reify a top-level let binding"
                     end
-                | Tm_app _ ->
+                | Tm_app (head, args) ->
                   //monadic application
-                  failwith "NYI: monadic application"
+                  // Check that head is reifiable
+                  // if so, just normalize
+                  let head_reifiable =
+                      match Env.try_lookup_val_decl env head with
+                      | Some (_, quals) -> List.mem Reifiable quals
+                      | _ -> false
+                  in
+                  if head_reifiable
+                  then norm cfg env stack e
+                  else
+                    let stack = App(reify_head, None, t.pos)::stack in
+                     norm cfg env stack a
+                  //failwith "NYI: monadic application"
                 | _ ->
                   let stack = App(reify_head, None, t.pos)::stack in
                   norm cfg env stack a
                 end
+
+            | Tm_meta(e, Meta_monadic_lift (msrc, mtgt)) ->
+                // check if the lift is concrete, if so replace by its definition on terms
+                // if msrc is PURE or Tot we can use mtgt.return
+                if Syntax.Util.is_pure_effect msrc
+                then
+                  let ed = Env.get_effect_decl cfg.tcenv mtgt in
+                  let _, return_repr = ed.return_repr in
+                  let lifted = S.mk (Tm_app(return_repr, [as_arg S.tun ; as_arg e])) None t.pos in
+                  norm cfg env stack lifted
+                else
+                  failwith "NYI: monadic lift normalisation"
 
             | Tm_app({n=Tm_constant (Const.Const_reflect _)}, [a]) ->
               //reify (reflect e) ~> e
