@@ -267,6 +267,7 @@ let refine_for_pattern t phi_opt pat pos_t pos =
 %type <(bool * FStar_Parser_AST.branch) list> list_patternBranch_
 %type <FStar_Parser_AST.qualifiers> list_qualifier_
 %type <FStar_Parser_AST.term Prims.list> loption_separated_nonempty_list_COMMA_appTerm__
+%type <FStar_Parser_AST.decl Prims.list> loption_separated_nonempty_list_SEMICOLON_effectDecl__
 %type <FStar_Parser_AST.pattern Prims.list> loption_separated_nonempty_list_SEMICOLON_openPatternRec1__
 %type <FStar_Parser_AST.decl> mainDecl
 %type <bool> maybeFocus
@@ -485,6 +486,13 @@ loption_separated_nonempty_list_COMMA_appTerm__:
   
     {    ( [] )}
 | separated_nonempty_list_COMMA_appTerm_
+    {let x = $1 in
+    ( x )}
+
+loption_separated_nonempty_list_SEMICOLON_effectDecl__:
+  
+    {    ( [] )}
+| separated_nonempty_list_SEMICOLON_effectDecl_
     {let x = $1 in
     ( x )}
 
@@ -1122,10 +1130,14 @@ let _9 = () in
 actionDecls:
   
     {      ( [] )}
-| AND ACTIONS separated_nonempty_list_SEMICOLON_effectDecl_
+| AND ACTIONS loption_separated_nonempty_list_SEMICOLON_effectDecl__
     {let _1 = () in
 let _2 = () in
-let actions = $3 in
+let xs0 = $3 in
+let actions =
+  let xs = xs0 in
+      ( xs )
+in
       ( actions )}
 
 effectDecl:

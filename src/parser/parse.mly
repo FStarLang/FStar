@@ -315,7 +315,7 @@ effectDefinition:
 
 actionDecls:
   |   { [] }
-  | AND ACTIONS actions=separated_nonempty_list(SEMICOLON, effectDecl)
+  | AND ACTIONS actions=separated_list(SEMICOLON, effectDecl)
       { actions }
 
 effectDecl:
