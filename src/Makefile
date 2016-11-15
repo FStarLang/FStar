@@ -103,7 +103,7 @@ EXTRACTION=ml-syntax.fs env.fs uenv.fs util.fs codegen.fsi codegen.fs extracttyp
 EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
 FSDOC=generator.fs
 FSDOC_SRC=$(addprefix fsdoc/, $(FSDOC))
-SMTENCODING=term.fsi term.fs z3.fs splitcases.fs errorReporting.fs encode.fs solver.fs
+SMTENCODING=term.fsi term.fs util.fs z3.fs splitcases.fs errorReporting.fs encode.fs solver.fs
 SMTENCODING_SRC=$(addprefix smtencoding/, $(SMTENCODING))
 TOPLEVEL=dependences.fs interactive.fs stratified.fs universal.fs fstar.fs
 TOPLEVEL_SRC=$(addprefix fstar/, $(TOPLEVEL))
@@ -123,7 +123,7 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 		FStar.Parser.AST.fst FStar.Parser.DesugarEnv.fst FStar.Parser.Desugar.fst FStar.Parser.Env.fst FStar.Parser.Interleave.fst FStar.Parser.ToSyntax.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst \
 		FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.Env.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.ExtractTyp.fst FStar.Extraction.ML.ExtractExp.fst FStar.Extraction.ML.ExtractMod.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst FStar.Extraction.Kremlin.fst \
 		FStar.Fsdoc.Generator.fst \
-	    	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
+	    	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
 	    	FStar.Dependences.fst FStar.Interactive.fst FStar.Stratified.fst FStar.Universal.fst FStar.FStar.fst
 
 ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse

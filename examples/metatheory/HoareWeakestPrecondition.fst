@@ -1,5 +1,7 @@
 module HoareWeakestPrecondition
+
 open FStar.Classical
+open FStar.StrongExcludedMiddle
 
 (*We define :
   * types for boolean and arithmetic expressions 'aexp' and 'bexp'
@@ -606,7 +608,7 @@ val seq1 : c1:com -> c2:com -> p : pred -> q:pred ->
            pr1 : reval c1 h0 h1 -> Tot(hoare (fun x -> FEq h1 x) c2 q)
 let seq1 c1 c2 p q hpc1c2q h0 vph0 h1 pr1 =
     fun h1' h2 pr2 veq ->
-        if excluded_middle (heap_equal h1 h1') then
+        if strong_excluded_middle (heap_equal h1 h1') then
             hpc1c2q (ESeq pr1 pr2) vph0
         else
             let vfalse = DImplElim (FEq h1 h1') FFalse (DNotEq h1 h1') veq in

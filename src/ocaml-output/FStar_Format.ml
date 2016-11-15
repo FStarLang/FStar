@@ -80,8 +80,8 @@ Doc (d)
 end))
 
 
-let groups : doc Prims.list  ->  doc = (fun docs -> (let _121_35 = (reduce docs)
-in (group _121_35)))
+let groups : doc Prims.list  ->  doc = (fun docs -> (let _122_35 = (reduce docs)
+in (group _122_35)))
 
 
 let combine : doc  ->  doc Prims.list  ->  doc = (fun _27_27 docs -> (match (_27_27) with

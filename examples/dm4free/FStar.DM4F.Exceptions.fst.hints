@@ -27,27 +27,8 @@
       ],
       0
     ],
-    [
-      "FStar.DM4F.Exceptions.EXN_raise_complete_type",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0
-    ],
-    [ "FStar.DM4F.Exceptions.EXN_app", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Exceptions.EXN_lift1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Exceptions.EXN_lift2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Exceptions.EXN_push", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Exceptions.EXN_wp_if_then_else", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Exceptions.EXN_wp_assert", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Exceptions.EXN_wp_assume", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Exceptions.EXN_wp_close", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Exceptions.EXN_null_wp", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Exceptions.EXN", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Exceptions.EXN", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Exceptions.lift_pure_ex", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Exceptions.Ex", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Exceptions.div_intrinsic",
       1,

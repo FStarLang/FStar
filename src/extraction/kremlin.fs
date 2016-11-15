@@ -35,9 +35,9 @@ and decl =
   | DGlobal of list<flag> * lident * typ * expr
   | DFunction of option<cc> * list<flag> * typ * lident * list<binder> * expr
   | DTypeAlias of lident * int * typ
-  | DTypeFlat of lident * fields_t
+  | DTypeFlat of lident * int * fields_t
   | DExternal of option<cc> * lident * typ
-  | DTypeVariant of (lident * branches_t)
+  | DTypeVariant of lident * int * branches_t
 
 and cc =
   | StdCall
@@ -78,12 +78,13 @@ and expr =
   | EAny
   | EAbort
   | EReturn of expr
-  | EFlat of lident * list<(ident * expr)>
-  | EField of lident * expr * ident
+  | EFlat of typ * list<(ident * expr)>
+  | EField of typ * expr * ident
   | EWhile of expr * expr
   | EBufCreateL of list<expr>
   | ETuple of list<expr>
-  | ECons of (lident * ident * list<expr>)
+  | ECons of typ * ident * list<expr>
+  | EBufFill of expr * expr * expr
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -144,7 +145,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 17
+let current_version: version = 18
 
 type file = string * program
 type binary_format = version * list<file>
@@ -395,7 +396,7 @@ and translate_decl env d: option<decl> =
   | MLM_Loc _ ->
       None
 
-  | MLM_Ty [ (assumed, name, args, Some (MLTD_Abbrev t)) ] ->
+  | MLM_Ty [ (assumed, name, _mangled_name, args, Some (MLTD_Abbrev t)) ] ->
       let name = env.module_name, name in
       let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
       if assumed then
@@ -403,21 +404,23 @@ and translate_decl env d: option<decl> =
       else
         Some (DTypeAlias (name, List.length args, translate_type env t))
 
-  | MLM_Ty [ (_, name, [], Some (MLTD_Record fields)) ] ->
+  | MLM_Ty [ (_, name, _mangled_name, args, Some (MLTD_Record fields)) ] ->
       let name = env.module_name, name in
-      Some (DTypeFlat (name, List.map (fun (f, t) ->
+      let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
+      Some (DTypeFlat (name, List.length args, List.map (fun (f, t) ->
         f, (translate_type env t, false)) fields))
 
-  | MLM_Ty [ (_, name, [], Some (MLTD_DType branches)) ] ->
+  | MLM_Ty [ (_, name, _mangled_name, args, Some (MLTD_DType branches)) ] ->
       let name = env.module_name, name in
-      Some (DTypeVariant (name, List.map (fun (cons, ts) ->
-        cons, List.mapi (fun i t ->
+      let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
+      Some (DTypeVariant (name, List.length args, List.mapi (fun i (cons, ts) ->
+        cons, List.mapi (fun j t ->
           // TODO: carry the right names
-          Util.format1 "x%s" (string_of_int i), (translate_type env t, false)
+          Util.format2 "x%s%s" (string_of_int i) (string_of_int j), (translate_type env t, false)
         ) ts
       ) branches))
 
-  | MLM_Ty ((_, name, _, _) :: _) ->
+  | MLM_Ty ((_, name, _mangled_name, _, _) :: _) ->
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
       None
 
@@ -567,6 +570,8 @@ and translate_expr env e: expr =
       EPopFrame
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3; e4; e5 ]) when (string_of_mlpath p = "FStar.Buffer.blit") ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.fill") ->
+      EBufFill (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when string_of_mlpath p = "FStar.ST.get" ->
       // We need to reveal to Kremlin that FStar.HST.get is equivalent to
       // (void*)0 so that it can get rid of ghost calls to HST.get at the
@@ -622,11 +627,11 @@ and translate_expr env e: expr =
       ECast (translate_expr env e, translate_type env t_to)
 
   | MLE_Record (_, fields) ->
-      EFlat (assert_lid e.mlty, List.map (fun (field, expr) ->
+      EFlat (assert_lid env e.mlty, List.map (fun (field, expr) ->
         field, translate_expr env expr) fields)
 
   | MLE_Proj (e, path) ->
-      EField (assert_lid e.mlty, translate_expr env e, snd path)
+      EField (assert_lid env e.mlty, translate_expr env e, snd path)
 
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
@@ -641,7 +646,7 @@ and translate_expr env e: expr =
       ETuple (List.map (translate_expr env) es)
 
   | MLE_CTor ((_, cons), es) ->
-      ECons (assert_lid e.mlty, cons, List.map (translate_expr env) es)
+      ECons (assert_lid env e.mlty, cons, List.map (translate_expr env) es)
 
   | MLE_Fun _ ->
       failwith "todo: translate_expr [MLE_Fun]"
@@ -654,9 +659,9 @@ and translate_expr env e: expr =
   | MLE_Coerce _ ->
       failwith "todo: translate_expr [MLE_Coerce]"
 
-and assert_lid t =
+and assert_lid env t =
   match t with
-  | MLTY_Named ([], lid) -> lid
+  | MLTY_Named (ts, lid) -> TApp (lid, List.map (translate_type env) ts)
   | _ -> failwith "invalid argument: assert_lid"
 
 and translate_branches env branches =

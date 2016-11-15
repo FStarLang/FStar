@@ -86,10 +86,11 @@ let ask_process (p:proc) (stdin:string) : string =
   let out = Buffer.create 16 in
 
   let rec read_out _ =
-    let s = BatString.trim (input_line p.inc) in
-    if s = "Done!" then ()
-    else
-      (Buffer.add_string out (s ^ "\n"); read_out ())
+    try
+      let s = BatString.trim (input_line p.inc) in
+      if s = "Done!" then ()
+      else (Buffer.add_string out (s ^ "\n"); read_out ())
+    with End_of_file -> Buffer.add_string out ("\nkilled\n")
   in
 
   let child_thread = Thread.create (fun _ -> read_out ()) () in

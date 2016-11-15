@@ -985,7 +985,9 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
             | [], [] -> //nothing generalized
               e, c
 
-            | [], _ -> //only universes generalized, still need to compress out invariant-broken uvars
+            | [], _ -> 
+              //nothing generalized, or
+              //only universes generalized, still need to compress out invariant-broken uvars
               let c = N.normalize_comp [N.Beta; N.NoDeltaSteps] env c in
               let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
               e, c
@@ -1228,7 +1230,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
 /////////////////////////////////////////////////////////////////////////////
 //Checks that the qualifiers on this sigelt are legal for it
 /////////////////////////////////////////////////////////////////////////////
-let check_sigelt_quals se =
+let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
     let visibility = function Private -> true | _ -> false in
     let reducibility = function 
         | Abstract | Irreducible 
@@ -1251,7 +1253,7 @@ let check_sigelt_quals se =
         match q with
         | Assumption ->
           quals 
-          |> List.for_all (fun x -> x=q || x=Logic || inferred x || visibility x || assumption x)
+          |> List.for_all (fun x -> x=q || x=Logic || inferred x || visibility x || assumption x || (env.is_iface && x=Inline_for_extraction))
 
         | New -> //no definition provided
           quals 
@@ -1259,7 +1261,8 @@ let check_sigelt_quals se =
 
         | Inline_for_extraction ->
           quals |> List.for_all (fun x -> x=q || x=Logic || visibility x || reducibility x 
-                                              || reification x || inferred x)
+                                              || reification x || inferred x
+                                              || (env.is_iface && x=Assumption))
 
         | Unfold_for_unification_and_vcgen
         | Visible_default

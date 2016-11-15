@@ -32,18 +32,7 @@
       ],
       0
     ],
-    [ "FStar.DM4F.IFC.IFC_app", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IFC.IFC_lift1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IFC.IFC_lift2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IFC.IFC_push", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IFC.IFC_wp_if_then_else", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IFC.IFC_wp_assert", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IFC.IFC_wp_assume", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IFC.IFC_wp_close", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IFC.IFC_null_wp", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.IFC.IFC", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IFC.Ifc", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IFC.lift_pure_exnst", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IFC.join",
       1,
@@ -71,7 +60,14 @@
       [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
       0
     ],
-    [ "FStar.DM4F.IFC.flows", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.IFC.flows",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
+      0
+    ],
     [
       "FStar.DM4F.IFC.flows",
       2,
@@ -80,15 +76,6 @@
       [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
       0
     ],
-    [
-      "FStar.DM4F.IFC.flows",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
-      0
-    ],
-    [ "FStar.DM4F.IFC.read", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.IFC.write", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.IFC.xor", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -114,10 +101,9 @@
       ],
       0
     ],
-    [ "FStar.DM4F.IFC.p", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IFC.p",
-      3,
+      2,
       2,
       1,
       [
@@ -128,15 +114,7 @@
         "equality_tok_FStar.DM4F.IFC.High@tok",
         "equality_tok_FStar.DM4F.IFC.Low@tok",
         "equation_FStar.DM4F.IFC.flows", "equation_FStar.DM4F.IFC.join",
-        "forall-interp", "fuel_guarded_inversion_FStar.DM4F.IFC.label",
         "function_token_typing_Prims.unit",
-        "interpretation_Tm_abs_28b8cdd0a0c935bbfc9051bded51afe8",
-        "interpretation_Tm_abs_440cc9e40c52c8694d894aa5abc21016",
-        "interpretation_Tm_abs_9e4fe83db662fea0750d33d8ff33351e",
-        "interpretation_Tm_abs_ac5f74e7b173f3a731f026d9d85a18e5",
-        "interpretation_Tm_abs_b1118669693e326d0daddd311ba36070",
-        "interpretation_Tm_abs_db044cc1067f4fe8ee159a2d6cac6183",
-        "interpretation_Tm_abs_ef8cdd475fff1b3612b3f465c65f7312",
         "kinding_FStar.DM4F.IFC.label@tok", "kinding_Prims.tuple2@tok",
         "pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
         "pretyping_f537159ed795b314b4e58c260361ae86",
@@ -149,8 +127,7 @@
         "projection_inverse_Prims.Mktuple2__a",
         "projection_inverse_Prims.Mktuple2__b",
         "projection_inverse_Prims.None_a", "projection_inverse_Prims.Some_a",
-        "projection_inverse_Prims.Some_v", "typing_FStar.DM4F.IFC.join",
-        "typing_tok_FStar.DM4F.IFC.Low@tok"
+        "projection_inverse_Prims.Some_v"
       ],
       0
     ]

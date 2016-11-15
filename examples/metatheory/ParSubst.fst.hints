@@ -93,7 +93,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "ParSubst.is_renaming", 3, 2, 1, [ "@query" ], 0 ],
     [
       "ParSubst.sub_inc",
       1,
@@ -129,10 +128,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "ParSubst.subst", 2, 2, 1, [ "@query" ], 0 ],
     [
       "ParSubst.subst",
-      3,
+      2,
       2,
       1,
       [
@@ -166,7 +164,7 @@
     ],
     [
       "ParSubst.subst",
-      4,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -201,10 +199,9 @@
       [ "@query", "assumption_ParSubst.exp_haseq" ],
       0
     ],
-    [ "ParSubst.subst_extensional", 2, 2, 1, [ "@query" ], 0 ],
     [
       "ParSubst.subst_extensional",
-      3,
+      2,
       2,
       1,
       [

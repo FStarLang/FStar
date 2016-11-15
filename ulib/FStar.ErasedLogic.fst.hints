@@ -1,9 +1,1 @@
-[
-  "\u001aõ\\··å\rÀh.üÔqx-†",
-  [
-    [ "FStar.ErasedLogic.exists_proj1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ErasedLogic.mkexists", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ErasedLogic.ex_proj1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ErasedLogic.gex_proj1", 1, 2, 1, [ "@query" ], 0 ]
-  ]
-]
+[ "\u001aõ\\··å\rÀh.üÔqx-†", [] ]

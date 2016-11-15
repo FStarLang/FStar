@@ -63,7 +63,8 @@ let binders_as_mlty_binders (env:UEnv.env) bs =
     env bs
 
 //Type abbreviations
-let extract_typ_abbrev env lid quals def = 
+let extract_typ_abbrev env fv quals def = 
+    let lid = fv.fv_name.v in
     let def = SS.compress def |> U.unmeta |> U.un_uinst in
     let def = match def.n with
         | Tm_abs _ -> Term.normalize_abs def
@@ -75,11 +76,16 @@ let extract_typ_abbrev env lid quals def =
     let assumed = Util.for_some (function Assumption -> true | _ -> false) quals in
     let env, ml_bs = binders_as_mlty_binders env bs in
     let body = Term.term_as_mlty env body |> Util.eraseTypeDeep (Util.udelta_unfold env) in
-    let td = [(assumed, lident_as_mlsymbol lid, ml_bs, Some (MLTD_Abbrev body))] in 
+    let mangled_projector = 
+         if quals |> Util.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
+         then let mname = mangle_projector_lid lid in
+              Some mname.ident.idText
+         else None in          
+    let td = [assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, Some (MLTD_Abbrev body)] in 
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty td] in
     let env = if quals |> Util.for_some (function Assumption | New -> true | _ -> false)
               then env
-              else UEnv.extend_tydef env td in
+              else UEnv.extend_tydef env fv td in
     env, def
 
 
@@ -150,7 +156,7 @@ let extract_bundle env se =
               MLTD_Record fields
 
             | _ -> MLTD_DType ctors in
-        env,  (false, lident_as_mlsymbol ind.iname,  ml_params, Some tbody) in
+        env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, Some tbody) in
 
 
     match se with 
@@ -249,10 +255,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           if quals |> Util.for_some (function Assumption -> true | _ -> false) |> not
           then g, []
           else let bs, _ = Util.arrow_formals t in
-               extract_typ_abbrev g lid quals (U.abs bs TypeChecker.Common.t_unit None)
+               let fv = S.lid_as_fv lid Delta_constant None in
+               extract_typ_abbrev g fv quals (U.abs bs TypeChecker.Common.t_unit None)
 
         | Sig_let((false, [lb]), _, _, quals) when (Term.level g lb.lbtyp = Term.Kind_level) ->
-          extract_typ_abbrev g (right lb.lbname).fv_name.v quals lb.lbdef
+          extract_typ_abbrev g (right lb.lbname) quals lb.lbdef
 
         | Sig_let (lbs, r, _, quals) ->
           let elet = mk (Tm_let(lbs, Const.exp_false_bool)) None r in

@@ -56,7 +56,6 @@ noeq type state (i:id) (rw:rw) =
       //16-10-16 ak: MAC.akey log_region i (* static, optional authentication key *) -> 
       state i rw
 
-
 // INVARIANT (WIP)
  
 let maxplain (i:id) = pow2 14 // for instance
@@ -97,11 +96,14 @@ let rec counterblocks i rgn x l from_pos to_pos plain cipher =
     let blocks = counterblocks i rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in
     SeqProperties.cons block blocks
 
-let num_blocks (#i:id) (e:entry i) : Tot nat = 
-  let Entry nonce ad l plain cipher_tagged = e in
+let num_blocks' (i:id) (l:nat) : Tot nat = 
   let bl = v (Cipher( blocklen (cipher_of_id i))) in
   (l + bl - 1) / bl
 
+let num_blocks (#i:id) (e:entry i) : Tot nat = 
+  let Entry nonce ad l plain cipher_tagged = e in
+  num_blocks' i l
+  
 let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (blocks:Seq.seq (PRF.entry rgn i)) = 
   let Entry nonce ad l plain cipher_tagged = e in
   let b = num_blocks e in 
@@ -113,15 +115,13 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
    let cipher, tag = SeqProperties.split cipher_tagged l in
    safelen i l 1ul /\
    xors == counterblocks i rgn (PRF.incr i x) l 0 l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
-                                         
    (let m = PRF.macRange rgn i x e in
     let mac_log = MAC.ilog (MAC.State.log m) in
     m_contains mac_log h /\ (
     match m_sel h (MAC.ilog (MAC.State.log m)) with
     | None           -> False
-    | Some (msg,tag') -> msg = field_encode i ad plain /\
+    | Some (msg,tag') -> msg = field_encode i ad #(FStar.UInt32.uint_to_t l) cipher /\
 			tag = tag')))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
-
 
 // States consistency of the PRF table contents vs the AEAD entries
 // (not a projection from one another because of allocated MACs and aad)
@@ -160,6 +160,7 @@ let modifies_table_above_x_and_buffer (#i:PRF.id) (#l:nat) (t:PRF.state i)
     let contents1 = HS.sel h1 r in
     HS.modifies rgns h0 h1 /\ 
     HS.modifies_ref t.rgn (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1 /\
+    Buffer.modifies_buf_1 rb b h0 h1 /\
     Seq.length contents0 <= Seq.length contents1 /\
     Seq.equal (Seq.slice contents1 0 (Seq.length contents0)) contents0 /\
     all_above (Seq.slice contents1 (Seq.length contents0) (Seq.length contents1)) x

@@ -2,7 +2,9 @@ module FStar.Heap
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 open FStar.TSet
 assume new type heap : Type0
-abstract type ref (a:Type) = 
+abstract type ref (a:Type0) = //NS:10/24---fixing ref to live in Type0, 
+			      //otherwise functions like domain below don't work right
+			      //The problem was revealed by by fixes in nik_error_reporting
   | MkRef of a //this implementation of ref is not realistic; it's just to get the universes right
 assume HasEq_ref: (forall (a:Type).{:pattern (hasEq (ref a))} hasEq (ref a))
 

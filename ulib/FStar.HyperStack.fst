@@ -239,4 +239,44 @@ let contains_implies_weak_contains (#a:Type) (h:mem) (x:reference a) :Lemma
   (ensures (contains h x ==> weak_contains h x))
   [SMTPatOr [[SMTPat (contains h x)]; [SMTPat (weak_contains h x)]] ]
   = ()
-      
+
+noeq type some_ref =
+| Ref : #a:Type0 -> reference a -> some_ref
+
+let some_refs = list some_ref
+
+let rec regions_of_some_refs (rs:some_refs) : Tot (Set.set rid) = 
+  match rs with
+  | [] -> Set.empty
+  | (Ref r)::tl -> Set.union (Set.singleton r.id) (regions_of_some_refs tl)
+
+let rec refs_in_region (r:rid) (rs:some_refs) : GTot (TSet.set Heap.aref) =
+  match rs with
+  | [] -> TSet.empty
+  | (Ref x)::tl ->
+    TSet.union (if x.id=r then TSet.singleton (as_aref x) else TSet.empty)
+               (refs_in_region r tl)
+
+unfold let mods (rs:some_refs) h0 h1 =
+    modifies (normalize_term (regions_of_some_refs rs)) h0 h1
+  /\ (forall (r:rid). modifies_ref r (normalize_term (refs_in_region r rs)) h0 h1)
+
+
+////////////////////////////////////////////////////////////////////////////////
+#set-options "--initial_fuel 0 --max_fuel 0"
+let f (a:Type0) (b:Type0) (x:reference a) (x':reference a) 
+			  (y:reference b) (z:reference nat) 
+			  (h0:mem) (h1:mem) = 
+  assume (h0 `contains` x);
+  assume (h0 `contains` x');  
+  assume (~ (as_ref x == as_ref x'));
+  assume (x.id == x'.id);
+  assume (x.id <> y.id);
+  assume (x.id <> z.id);
+  assume (mods [Ref x; Ref y; Ref z] h0 h1);
+ //--------------------------------------------------------------------------------
+  assert (modifies (Set.union (Set.singleton x.id)
+			      (Set.union (Set.singleton y.id)
+					 (Set.singleton z.id))) h0 h1);
+  assert (sel h0 x' == sel h1 x');
+  assert (modifies_ref x.id (TSet.singleton (as_aref x)) h0 h1)

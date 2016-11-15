@@ -67,4 +67,4 @@ wc:
 
 mgen:
 	mkdir -p ml/extracted
-	$(FSTAR) --lax --codegen OCaml --odir ml/extracted FStar.Set.fst FStar.Map.fst FStar.HyperHeap.fst FStar.HyperStack.fst
+	$(FSTAR) --lax --codegen OCaml --odir ml/extracted FStar.Set.fst FStar.TSet.fst FStar.Map.fst FStar.HyperHeap.fst FStar.HyperStack.fst

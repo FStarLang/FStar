@@ -16,15 +16,7 @@
     [
       "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
       2,
-      2,
-      1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-      3,
-      2,
+      0,
       1,
       [
         "@query", "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
@@ -410,19 +402,11 @@
       2,
       0,
       1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.factorization_lemma",
-      3,
-      0,
-      1,
       [
         "@query", "equation_FStar.Mul.op_Star", "int_inversion",
         "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
-        "unit_typing"
+        "unit_inversion"
       ],
       0
     ],
