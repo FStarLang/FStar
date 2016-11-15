@@ -112,11 +112,13 @@ fsharp-parser:
 	echo "open FStar.Parser.Util" >> parse.preprocessed.fsy
 	echo "open FStar.Const" >> parse.preprocessed.fsy
 	echo "open FStar.Ident" >> parse.preprocessed.fsy
-  # TODO : this last sed might break on stuff of the form '%type <F.a * F.b> ..'
+  # TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
 	cat parse.preprocessed.mly | sed -e '/%{/d' \
 																	 -e '/^open /d' \
-																	 -e 's/%token <.*\./%token </' \
-																	 -e 's/%type <.*\./%type </' \
+																	 -e '/%token/s/[a-zA-Z0-9_]*\.//g' \
+																	 -e '/%type/s/[a-zA-Z0-9_]*\.//g' \
+																	 -e '/%token.*->.*/d' \
+																	 -e '/%type.*->.*/d' \
 																	 >> parse.preprocessed.fsy
 
 copy_lib_files: $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml

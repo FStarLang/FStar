@@ -214,7 +214,7 @@ let refine_for_pattern t phi_opt pat pos_t pos =
 %left OPINFIX3
 %left BACKTICK
 %right OPINFIX4
-%type <list> actionDecls
+%type <decl list> actionDecls
 %type <term> appTerm
 %type <arg_qualifier> aqual
 %type <knd> ascribeKind
@@ -222,43 +222,43 @@ let refine_for_pattern t phi_opt pat pos_t pos =
 %type <qualifiers> assumeTag
 %type <term> atomicTerm
 %type <binder list> binder
-%type <list> binders
+%type <binder list> binders
 %type <pattern list> bindingPattern
 %type <bool> boption_SQUIGGLY_RARROW_
-%type <list> conjunctivePat
+%type <term list> conjunctivePat
 %type <sconst> constant
-%type <bool> constructorDecl
+%type <ident * term option *   fsdoc option * bool> constructorDecl
 %type <decl> decl
 %type <decl'> decl2
-%type <list> disjunctivePats
-%type <list> disjunctivePattern
+%type <term list list> disjunctivePats
+%type <pattern list> disjunctivePattern
 %type <decl> effectDecl
 %type <effect_decl> effectDefinition
 %type <effect_decl> effectRedefinition
 %type <ident> eitherName
 %type <lid> eitherQname
-%type <branch> firstPatternBranch
+%type <bool * branch> firstPatternBranch
 %type <level> hasSort
 %type <ident> ident
 %type <term> indexingTerm
 %type <inputFragment> inputFragment
 %type <knd> kind
 %type <decl'> kind_abbrev
-%type <term> letbinding
-%type <term)) list> letbindings
+%type <pattern * term> letbinding
+%type <(bool * (pattern * term)) list> letbindings
 %type <let_qualifier * bool> letqualifier
 %type <lid> lid
-%type <term)) list> list___anonymous_3_
+%type <(bool * (pattern * term)) list> list___anonymous_3_
 %type <lid list> list___anonymous_7_
 %type <binder list list> list_binder_
-%type <list> list_constructorDecl_
+%type <(ident * term option *    fsdoc option * bool)   list> list_constructorDecl_
 %type <decl list> list_decl_
-%type <term) list> list_pair_maybeHash_indexingTerm__
-%type <branch) list> list_patternBranch_
+%type <(imp * term) list> list_pair_maybeHash_indexingTerm__
+%type <(bool * branch) list> list_patternBranch_
 %type <qualifiers> list_qualifier_
-%type <list> loption_separated_nonempty_list_COMMA_appTerm__
-%type <list> loption_separated_nonempty_list_SEMICOLON_effectDecl__
-%type <list> loption_separated_nonempty_list_SEMICOLON_openPatternRec1__
+%type <term list> loption_separated_nonempty_list_COMMA_appTerm__
+%type <decl list> loption_separated_nonempty_list_SEMICOLON_effectDecl__
+%type <pattern list> loption_separated_nonempty_list_SEMICOLON_openPatternRec1__
 %type <decl> mainDecl
 %type <bool> maybeFocus
 %type <bool> maybeFocusArrow
@@ -266,54 +266,53 @@ let refine_for_pattern t phi_opt pat pos_t pos =
 %type <effect_decl> newEffect
 %type <term> noSeqTerm
 %type <pattern list list> nonempty_list_bindingPattern_
-%type <ident) list> nonempty_list_pair_option_aqual__ident__
-%type <list> nonempty_list_patternRec_
+%type <(aqual * ident) list> nonempty_list_pair_option_aqual__ident__
+%type <pattern list> nonempty_list_patternRec_
 %type <pattern> openPatternRec1
 %type <pattern> openPatternRec2
-%type <option> option_FSDOC_
+%type <fsdoc option> option_FSDOC_
 %type <unit option> option___anonymous_0_
-%type <option> option___anonymous_1_
-%type <option> option___anonymous_2_
-%type <option> option___anonymous_5_
-%type <list option> option___anonymous_8_
+%type <term option> option___anonymous_1_
+%type <term option> option___anonymous_2_
+%type <term option> option___anonymous_5_
+%type <term list option> option___anonymous_8_
 %type <aqual> option_aqual_
-%type <option> option_ascribeKind_
+%type <knd option> option_ascribeKind_
 %type <term option> option_ascribeTyp_
 %type <decl option> option_mainDecl_
-%type <term) option> option_pair_hasSort_simpleTerm__
-%type <option> option_string_
-%type <list> path_eitherName_
-%type <list> path_ident_
-%type <list> path_name_
+%type <(level * term) option> option_pair_hasSort_simpleTerm__
+%type <string option> option_string_
+%type <ident list> path_eitherName_
+%type <ident list> path_ident_
+%type <ident list> path_name_
 %type <pattern> pattern
-%type <branch> patternBranch
-%type <branch) list> patternBranches
+%type <bool * branch> patternBranch
+%type <(bool * branch) list> patternBranches
 %type <pattern> patternRec
 %type <pragma> pragma
 %type <term> projectionLHS
 %type <lid> qname
-%type <list> qpat
+%type <term list list> qpat
 %type <qualifier> qualifier
 %type <term> recordExp
-%type <option)   list> recordFieldDecls
-%type <option> refineOpt
+%type <(ident * term *    fsdoc option)   list> recordFieldDecls
+%type <term option> refineOpt
 %type <term> refinementTerm
-%type <tycon))   list> separated_nonempty_list_AND_pair_option_FSDOC__tyconDefinition__
-%type <list> separated_nonempty_list_BAR_pattern_
-%type <list> separated_nonempty_list_COMMA_appTerm_
-%type <list> separated_nonempty_list_COMMA_atomicTerm_
-%type <list> separated_nonempty_list_COMMA_openPatternRec2_
-%type <list> separated_nonempty_list_COMMA_tmEq_
+%type <pattern list> separated_nonempty_list_BAR_pattern_
+%type <term list> separated_nonempty_list_COMMA_appTerm_
+%type <term list> separated_nonempty_list_COMMA_atomicTerm_
+%type <pattern list> separated_nonempty_list_COMMA_openPatternRec2_
+%type <term list> separated_nonempty_list_COMMA_tmEq_
 %type <ident list> separated_nonempty_list_COMMA_tvar_
-%type <list> separated_nonempty_list_DISJUNCTION_conjunctivePat_
-%type <list> separated_nonempty_list_SEMICOLON_appTerm_
-%type <list> separated_nonempty_list_SEMICOLON_effectDecl_
-%type <list> separated_nonempty_list_SEMICOLON_openPatternRec1_
-%type <list> separated_nonempty_list_SEMICOLON_separated_pair_lid_EQUALS_openPatternRec1__
-%type <list> separated_trailing_list_SEMICOLON_noSeqTerm_
-%type <list> separated_trailing_list_SEMICOLON_separated_pair_lid_EQUALS_simpleTerm__
+%type <term list list> separated_nonempty_list_DISJUNCTION_conjunctivePat_
+%type <term list> separated_nonempty_list_SEMICOLON_appTerm_
+%type <decl list> separated_nonempty_list_SEMICOLON_effectDecl_
+%type <pattern list> separated_nonempty_list_SEMICOLON_openPatternRec1_
+%type <(lid * pattern) list> separated_nonempty_list_SEMICOLON_separated_pair_lid_EQUALS_openPatternRec1__
+%type <term list> separated_trailing_list_SEMICOLON_noSeqTerm_
+%type <(lid * term) list> separated_trailing_list_SEMICOLON_separated_pair_lid_EQUALS_simpleTerm__
 %type <term list> separated_trailing_tail_SEMICOLON_noSeqTerm_
-%type <term) list> separated_trailing_tail_SEMICOLON_separated_pair_lid_EQUALS_simpleTerm__
+%type <(lid * term) list> separated_trailing_tail_SEMICOLON_separated_pair_lid_EQUALS_simpleTerm__
 %type <term> simpleTerm
 %type <lift> subEffect
 %type <term> term
@@ -324,12 +323,10 @@ let refine_for_pattern t phi_opt pat pos_t pos =
 %type <term> tmIff
 %type <term> tmNoEq
 %type <ident> tvar
-%type <list> tvarinsts
+%type <binder list> tvarinsts
 %type <decl'> tycon
-%type <tycon> tyconDefinition
-%type <tycon> tyconDefn
 %type <term> typ
-%type <list> typars
+%type <binder list> typars
 %type <term> unaryTerm
 %%
 
