@@ -84,6 +84,7 @@ STDLIB=$(addprefix $(LIB)/, allboot.fsti stboot.fsti list.fsti option.fsti \
   FStar.Float.fsti FStar.Char.fsti $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti \
   FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
 BOOT_BASIC_FSTI=$(addprefix boot_fstis/, string.fsti bytes.fsti platform.fsti version.fsti range.fsti)
+BOOT_PRETTYPRINT_FSTI=$(addprefix boot_fstis/, prettyprint.fsti)
 
 # All the .fs and .fsi files that need to be pre-processed into valid .fst files.
 BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
@@ -111,7 +112,7 @@ TOPLEVEL_SRC=$(addprefix fstar/, $(TOPLEVEL))
 BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) \
   $(TOSMT_SRC) $(BOOT_PARSER) $(TYPECHECKER_SRC) $(EXTRACTION_SRC) $(FSDOC_SRC) $(SMTENCODING_SRC) $(TOPLEVEL_SRC)
 
-ALL_INTERFACES=$(STDLIB) $(BOOT_BASIC_FSTI)
+ALL_INTERFACES=$(STDLIB) $(BOOT_BASIC_FSTI) $(BOOT_PRETTYPRINT_FSTI)
 # In the dependency order... eventually we want to use auto-deps
 ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 	        FStar.Format.fst \
@@ -133,6 +134,9 @@ FSTAROPTS=
 
 all_boot_fsts:
 	./tools/make_all_boot_fsts "$(BOOT_ALL)"
+
+boot_fstis/prettyprint.fsti: prettyprint/prettyprint.fsti
+	cp $^ $@
 
 boot_fstis/%.fsti: basic/%.fsi
 	cp $^ $@
