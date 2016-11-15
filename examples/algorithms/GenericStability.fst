@@ -1,5 +1,5 @@
 (**
-  @summary: This module defines sorting stability on the integers.
+  @summary: This module defines sorting stability on generic lists.
   @author: A Manning
 **)
 module GenericStability
@@ -108,3 +108,24 @@ val stable_append_r: #a:eqtype ->
 let rec stable_append_r #a l l' r k =
   filter_eq_append l r k;
   filter_eq_append l' r k
+
+val stable_commutative: #a:eqtype
+  -> (l1:list a)
+  -> (l2:list a)
+  -> (l3:list a)
+  -> k:(a -> Tot int)
+  -> Lemma(requires(stable l1 l2 k /\ stable l2 l3 k))
+  (ensures(stable l1 l3 k))
+let stable_commutative #a l1 l2 l3 k = ()
+
+val stable_append: #a:eqtype
+  -> (l1:list a)
+  -> (l2:list a)
+  -> (r1:list a)
+  -> (r2:list a)
+  -> k:(a -> Tot int)
+  -> Lemma(requires(stable l1 l2 k /\ stable r1 r2 k))
+  (ensures(stable (l1@r1) (l2@r2) k))
+let stable_append #a l1 l2 r1 r2 k =
+  stable_append_r l1 l2 r1 k;
+  stable_append_l l2 r1 r2 k
