@@ -4,8 +4,8 @@ FSTAR_HOME=../..
 
 OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28-26-11-21" -annot
 
+HAS_MENHIR := $(shell command -v menhir 2> /dev/null)
 MENHIR=menhir --explain #--infer -la 1 --table
-#MENHIR=ocamlyacc
 OCAMLYACC=ocamlyacc
 OCAMLC=ocamlfind ocamlc $(OPTIONS)
 OCAMLOPT=ocamlfind ocamlopt $(OPTIONS)
@@ -31,7 +31,7 @@ FSTAR_OBJS=$(COMPILER_ML_LIB) \
 	   FStar_SMTEncoding_Term.cmx FStar_SMTEncoding_Util.cmx FStar_SMTEncoding_Z3.cmx FStar_SMTEncoding_SplitQueryCases.cmx FStar_SMTEncoding_ErrorReporting.cmx FStar_SMTEncoding_Encode.cmx FStar_SMTEncoding_Solver.cmx \
 	   FStar_Dependences.cmx FStar_Interactive.cmx FStar_Stratified.cmx FStar_Universal.cmx FStar_FStar.cmx
 
-GENERATED_FILES=$(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml 
+GENERATED_FILES=$(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
@@ -67,13 +67,17 @@ all:
 prep: parser copy_lib_files version
 
 parser:
-	#cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
 	cp ../parser/parse.mly ./parse.mly
-	#$(MENHIR) --only-preprocess-for-ocamlyacc parse.mly > parse.preprocessed.mly
-	sed -i -e 's/\b_[0-9]\b/_protect_&/g' parse.preprocessed.mly
+ifdef HAS_MENHIR
+	$(MENHIR) --only-preprocess-for-ocamlyacc parse.mly > parse.preprocessed.mly
+	$(MENHIR) parse.mly
+	mv parse.ml parse.preprocessed.ml
+else
 	$(OCAMLYACC) parse.preprocessed.mly 2>&1
-	#$(MENHIR) parse.mly
+endif
 	rm -f FStar_Parser_Parse.ml
+	# We are opening the same module twice but we need these modules
+	# open for the definition of tokens
 	echo "open Prims" > FStar_Parser_Parse.ml
 	echo "open FStar_List" >> FStar_Parser_Parse.ml
 	echo "open FStar_Util" >> FStar_Parser_Parse.ml
@@ -87,7 +91,6 @@ parser:
 	echo "open FStar_Const" >> FStar_Parser_Parse.ml
 	echo "open FStar_Ident" >> FStar_Parser_Parse.ml
 	cat parse.preprocessed.ml >> FStar_Parser_Parse.ml
-	#cat parse.ml >> FStar_Parser_Parse.ml
 	ocamllex ../parser/ml/lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parser/ml/parseit.ml FStar_Parser_ParseIt.ml
 
@@ -109,7 +112,12 @@ fsharp-parser:
 	echo "open FStar.Parser.Util" >> parse.preprocessed.fsy
 	echo "open FStar.Const" >> parse.preprocessed.fsy
 	echo "open FStar.Ident" >> parse.preprocessed.fsy
-	cat parse.preprocessed.mly | sed -e '/%{/d' -e '/^open /d' -e 's/%token <.*\./%token </' -e 's/%type <.*\./%type </'>> parse.preprocessed.fsy
+  # TODO : this last sed might break on stuff of the form '%type <F.a * F.b> ..'
+	cat parse.preprocessed.mly | sed -e '/%{/d' \
+																	 -e '/^open /d' \
+																	 -e 's/%token <.*\./%token </' \
+																	 -e 's/%type <.*\./%type </' \
+																	 >> parse.preprocessed.fsy
 
 copy_lib_files: $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
 	cp $^ .
