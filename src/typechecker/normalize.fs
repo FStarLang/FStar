@@ -29,6 +29,7 @@ open FStar.TypeChecker
 open FStar.TypeChecker.Env
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
+module TcUtil = FStar.TypeChecker.Util
 module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 
@@ -605,7 +606,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let reify_head, _ = Util.head_and_args t in
             let a = SS.compress (Util.unascribe <| fst a) in
             Util.print2_warning "TRYING NORMALIZATION OF REIFY: %s ... %s\n" (Print.tag_of_term a) (Print.term_to_string a);
-            begin match a.n with
+            let normalization_reify_result = begin match a.n with
             | Tm_meta(e, Meta_monadic (m, t_body)) ->
                 begin match (SS.compress e).n with
                 | Tm_let((false, [lb]), body) ->
@@ -615,8 +616,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     let _, bind_repr = ed.bind_repr in
                     begin match lb.lbname with
                     | Inl x ->
-                      let head = U.mk_reify lb.lbdef in
-                      let body = S.mk (Tm_abs([S.mk_binder x], U.mk_reify body, None)) None body.pos in
+                      let head = U.mk_reify <| S.mk (Tm_meta(lb.lbdef, Meta_monadic(m, lb.lbtyp))) None lb.lbdef.pos in
+                      let body = U.mk_reify <| S.mk (Tm_meta(body, Meta_monadic(m, t_body))) None body.pos in
+                      let body = S.mk (Tm_abs([S.mk_binder x], body, None)) None body.pos in
                       let reified = S.mk (Tm_app(bind_repr, [as_arg lb.lbtyp; as_arg t_body;  //a, b
                                                              as_arg S.tun; as_arg head;   //wp_head, head--the term shouldn't depend on wp_head
                                                              as_arg S.tun; as_arg body])) //wp_body, body--the term shouldn't depend on wp_body
@@ -627,35 +629,53 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     end
                 | Tm_app (head, args) ->
                   //monadic application
-                  // Check that head is reifiable
-                  // if so, just normalize
-                  let head_reifiable =
-                      match Env.try_lookup_val_decl env head with
-                      | Some (_, quals) -> List.mem Reifiable quals
-                      | _ -> false
-                  in
-                  if head_reifiable
-                  then norm cfg env stack e
-                  else
-                    let stack = App(reify_head, None, t.pos)::stack in
-                     norm cfg env stack a
+                  //Do we need to check that head is reifiable ?
+                  // let head_reifiable =
+                  //     match (SS.compress head).n with
+                  //         | Tm_fvar head_lid ->
+                  //             let ed = Env.get_effect_decl cfg.tcenv m in
+                  //             let b =
+                  //                 let find f = List.fold_left (fun b x -> b || f x) false in
+                  //                 find (fun action -> S.fv_eq_lid head_lid action.action_name) ed.actions
+                  //             in
+                  //             if b
+                  //             then true
+                  //             else
+                  //                 begin match S.lid_of_fv head_lid |> Env.try_lookup_val_decl cfg.tcenv with
+                  //                     | Some (_, quals) -> List.contains Reifiable quals
+                  //                     | _ -> false
+                  //                 end
+                  //         |  _ -> false
+                  // in
+                  // Util.print1_warning "head is %sreifiable !\n" (if head_reifiable then "" else "non ") ;
+                  // if head_reifiable
+                  // then
+                      let args = List.map (fun (e,q) ->
+                                           let e = match (SS.compress e).n with
+                                           | Tm_meta(e, Meta_monadic_lift(_, _)) -> (Util.print_warning "Stripping one level of lift\n"; e)
+                                           | _ -> e
+                                           in (e, q)) args in
+                      let e = S.mk (Tm_app(head, args)) None t.pos in
+                      norm cfg env stack e
+                  // else
+                  //   let stack = App(reify_head, None, t.pos)::stack in
+                  //    norm cfg env stack a
                   //failwith "NYI: monadic application"
+                | Tm_meta(e, Meta_monadic_lift (msrc, mtgt)) ->
+                    // check if the lift is concrete, if so replace by its definition on terms
+                    // if msrc is PURE or Tot we can use mtgt.return
+                    if Syntax.Util.is_pure_effect msrc
+                    then
+                        let ed = Env.get_effect_decl cfg.tcenv mtgt in
+                        let _, return_repr = ed.return_repr in
+                        let lifted = S.mk (Tm_app(return_repr, [as_arg t_body ; as_arg e])) None t.pos in
+                        norm cfg env stack lifted
+                    else
+                        failwith "NYI: monadic lift normalisation"
                 | _ ->
                   let stack = App(reify_head, None, t.pos)::stack in
                   norm cfg env stack a
                 end
-
-            | Tm_meta(e, Meta_monadic_lift (msrc, mtgt)) ->
-                // check if the lift is concrete, if so replace by its definition on terms
-                // if msrc is PURE or Tot we can use mtgt.return
-                if Syntax.Util.is_pure_effect msrc
-                then
-                  let ed = Env.get_effect_decl cfg.tcenv mtgt in
-                  let _, return_repr = ed.return_repr in
-                  let lifted = S.mk (Tm_app(return_repr, [as_arg S.tun ; as_arg e])) None t.pos in
-                  norm cfg env stack lifted
-                else
-                  failwith "NYI: monadic lift normalisation"
 
             | Tm_app({n=Tm_constant (Const.Const_reflect _)}, [a]) ->
               //reify (reflect e) ~> e
@@ -672,6 +692,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let stack = App(reify_head, None, t.pos)::stack in
               norm cfg env stack a
             end
+        in
+        Util.print1_warning "RESULT OF NORMALIZATION : %s\n" (Print.term_to_string normalization_reify_result) ;
+        normalization_reify_result
+
 
           | Tm_type u ->
             let u = norm_universe cfg env u in

@@ -205,7 +205,12 @@ reifiable let incr' (r:ref int)
     :  ST unit
 	  (requires (fun h -> h `contains_a_well_typed` r))
 	  (ensures (fun h0 s h1 -> h1 `contains_a_well_typed` r))
-    = r := !r + 1
+    = let x  = read r in write r (x + 1)
+
+#reset-options "--debug_level Norm"
+let chose (h0 : heap) (r:(ref int){h0 `contains_a_well_typed` r}) = assert (snd (normalize_term (reify (write r 42) h0)) == upd h0 r 42)
+#reset-options ""
+(* let bidule (h0:heap) (r:(ref int){h0 `contains_a_well_typed` r}) = assert (snd (normalize_term (reify (incr' r) h0)) == upd h0 r (sel h0 r)) *)
 
 (* let incr_increases (s0:heap) = assert (snd (reify (incr'()) s0) = s0 + 1) *)
 
@@ -215,16 +220,16 @@ reifiable let incr' (r:ref int)
 (*      (ensures (h0 `contains_a_well_typed` r ==> *)
 (*                sel (snd (reify (incr' r) h0)) r == sel h0 r + 1)) = () *)
 
-let xxx (_:unit) : STNull unit =
-  let r = alloc 42 in
-  let i = !r in
-  let h0 = STATE.get() in
-  refine_st incr' r;
-  let h1 = STATE.get() in
-  assert(reify (incr' r) h0 == ((), h1));
-  (* assert(sel h1 r == sel h0 r + 1); *)
-  assert(h1 `contains_a_well_typed` r);
-  let j = !r in
-  (* assert(i < j); *)
-  (* assert(sel h0 r < sel h1 r);*)
-  ()
+(* let xxx (_:unit) : STNull unit = *)
+(*   let r = alloc 42 in *)
+(*   let i = !r in *)
+(*   let h0 = STATE.get() in *)
+(*   refine_st incr' r; *)
+(*   let h1 = STATE.get() in *)
+(*   assert(reify (incr' r) h0 == ((), h1)); *)
+(*   (\* assert(sel h1 r == sel h0 r + 1); *\) *)
+(*   assert(h1 `contains_a_well_typed` r); *)
+(*   let j = !r in *)
+(*   (\* assert(i < j); *\) *)
+(*   (\* assert(sel h0 r < sel h1 r);*\) *)
+(*   () *)
