@@ -22,9 +22,9 @@ let empty = PPrint.empty
 
 let not_impl_msg = "OCaml prettyprinter not yet implemented"
 
-let char (c:char) : document = failwith not_impl_msg
+let document_of_char (c:char) : document = failwith not_impl_msg
 
-let string (s:string) : document = failwith not_impl_msg
+let document_of_string (s:string) : document = failwith not_impl_msg
 
 let substring (s:string) (sofs:int) (len:int) : document = failwith not_impl_msg
 
