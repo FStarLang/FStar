@@ -36,11 +36,11 @@ assume val empty: document
 
 (** [char c] is a document that consists of the single character [c]. This
     character must not be a newline. *)
-assume val char: char -> document
+assume val document_of_char: char -> document
 
 (** [string s] is a document that consists of the string [s]. This string must
     not contain a newline. *)
-assume val string: string -> document
+assume val document_of_string: string -> document
 
 (** [substring s ofs len] is a document that consists of the portion of the
     string [s] delimited by the offset [ofs] and the length [len]. This

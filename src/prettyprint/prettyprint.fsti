@@ -15,17 +15,15 @@
 *)
 module FStar.Pprint
 
-open Prims
 open FStar.Char
-open FStar.String
 
-new type document // SI: check use of [new]
+type document // SI: check use of [new]
 
 val empty: document
 
-val char: 	char -> document
+val document_of_char: 	char -> document
 
-val string: string -> document
+val document_of_string: string -> document
 
 val substring: string -> int -> int -> document
 

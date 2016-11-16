@@ -34,9 +34,9 @@ let not_impl_msg = "F# prettyprinter not yet implemented."
 
 let empty : document = failwith not_impl_msg
 
-let char (c:char) : document = failwith not_impl_msg
+let document_of_char (c:char) : document = failwith not_impl_msg
 
-let string (s:string) : document = failwith not_impl_msg
+let document_of_string (s:string) : document = failwith not_impl_msg
 
 let substring (s:string) (sofs:int) (len:int) : document = failwith not_impl_msg
 

@@ -21,9 +21,9 @@ type document
 
 val empty: document
 
-val char: char -> document
+val document_of_char: char -> document
 
-val string: string -> document
+val document_of_string: string -> document
 
 val substring: string -> int -> int -> document
 
