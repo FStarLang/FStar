@@ -105,29 +105,29 @@ val twice: document -> document
 
 val repeat: int -> document -> document
 
-val concat: document list -> document
+val concat: list<document> -> document
 
-val separate: document -> document list -> document
+val separate: document -> list<document> -> document
 
-val concat_map: ('a -> document) -> 'a list -> document
+val concat_map: ('a -> document) -> list<'a> -> document
 
-val separate_map: document -> ('a -> document) -> 'a list -> document
+val separate_map: document -> ('a -> document) -> list<'a> -> document
 
-val separate2: document -> document -> document list -> document
+val separate2: document -> document -> list<document> -> document
 
-val optional: ('a -> document) -> 'a option -> document
+val optional: ('a -> document) -> option<'a> -> document
 
-val lines: string -> document list
+val lines: string -> list<document>
 
 val arbitrary_string: string -> document
 
-val words: string -> document list
+val words: string -> list<document>
 
-val split: (char -> bool) -> string -> document list
+val split: (char -> bool) -> string -> list<document>
 
-val flow: document -> document list -> document
+val flow: document -> list<document> -> document
 
-val flow_map: document -> ('a -> document) -> 'a list -> document
+val flow_map: document -> ('a -> document) -> list<'a> -> document
 
 val url: string -> document
 
@@ -145,9 +145,9 @@ val surround: int -> int -> document -> document -> document -> document
 
 val soft_surround: int -> int -> document -> document -> document -> document
 
-val surround_separate: int -> int -> document -> document -> document -> document -> document list -> document
+val surround_separate: int -> int -> document -> document -> document -> document -> list<document> -> document
 
-val surround_separate_map: int -> int -> document -> document -> document -> document -> ('a -> document) -> 'a list -> document
+val surround_separate_map: int -> int -> document -> document -> document -> document -> ('a -> document) -> list<'a> -> document
 
 // val ( !^ ) : string -> document
 // 
