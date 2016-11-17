@@ -439,6 +439,8 @@ patternRec:
   | LENS_PAREN_LEFT pat0=openPatternRec2 COMMA pats=separated_nonempty_list(COMMA, openPatternRec2) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) }
   | LPAREN pat=pattern RPAREN   { pat }
+  (** TODO  : We could allow an arbitrary pattern for pat by doing the following transformation **)
+  (** (pat : t {phi}) ~> (pat : (x:t{ match x with | pat -> phi | _ -> False })) **)
   | LPAREN pat=pattern COLON t=typ phi_opt=refineOpt RPAREN
       {
         let pos_t = rhs2 parseState 2 4 in
@@ -461,9 +463,14 @@ patternRec:
   | uid=qname
       { mk_pattern (PatName uid) (rhs parseState 1) }
 
+(* TODO : disjunction should be allowed in nested patterns *)
+disjunctivePattern:
+  | pats=separated_nonempty_list(BAR, pattern) { pats }
+
 bindingPattern:
   | pat=patternRec { [pat] }
   /* TODO : multiple binders in binding pattern */
+  /* If there is more than one pattern the refinement can not use any of these varaible */
 /*  | LPAREN pats=nonempty_list(ascriptionFreePattern) COLON t=typ phi_opt=refineOpt RPAREN
       {
         List.map (fun pat ->
@@ -638,9 +645,6 @@ patternBranch: /* shift/reduce conflict on BAR ... expected for nested matches *
   | WHEN e=tmFormula     { Some e }
 
 
-(* Should I move this to the pattern section ? Moreover disjunction should be allowed in nested patterns *)
-disjunctivePattern:
-  | pats=separated_nonempty_list(BAR, pattern) { pats }
 
 tmIff:
   | e1=tmIff IFF e2=tmIff
@@ -735,8 +739,13 @@ refineOpt:
   | e=noSeqTerm { {e with level=Formula} }
 
 recordExp:
-  | e_opt=ioption(e=appTerm WITH {e}) record_fields=separated_trailing_list(SEMICOLON, separated_pair(lid, EQUALS, simpleTerm))
-      { mk_term (Record (e_opt, record_fields)) (rhs2 parseState 1 2) Expr }
+  | record_fields=separated_trailing_list(SEMICOLON, simpleDef)
+      { mk_term (Record (None, record_fields)) (rhs2 parseState 1 2) Expr }
+  | e=appTerm WITH first_field=simpleDef record_fields=separated_trailing_tail(SEMICOLON, simpleDef)
+      { mk_term (Record (Some e, first_field::record_fields)) (rhs2 parseState 1 2) Expr }
+
+simpleDef:
+  | e=separated_pair(lid, EQUALS, simpleTerm) { e }
 
 unaryTerm:
   | op=TILDE e=atomicTerm
@@ -770,13 +779,8 @@ atomicTerm:
       { mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr }
   | LPAREN op=operator RPAREN
       { mk_term (Op(op, [])) (rhs2 parseState 1 3) Un }
-  (* TODO (KM) : there seems to be a discrepancy here with dependent sums types which need to have at least 2 components *)
-  | LENS_PAREN_LEFT el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
-      {
-        match el with
-          | [x] -> x
-          | components -> mkDTuple components (rhs2 parseState 1 1)
-      }
+  | LENS_PAREN_LEFT e0=tmEq COMMA el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
+      { mkDTuple (e0::el) (rhs2 parseState 1 1) }
   (* TODO : field should have the possibility to be qualified by a module path when projecting *)
   | e=projectionLHS field_projs=list(DOT id=lid {id})
       { fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs }
