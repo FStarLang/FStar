@@ -45,13 +45,9 @@ val nest: int -> document -> document
 
 val group: document -> document
 
-val column: (int -> document) -> document
-
-val nesting: (int -> document) -> document
-
-val position : (bol:int -> line:int -> column:int -> document) -> document
-
 val ifflat: document -> document -> document
+
+val align : document -> document 
 
 val lparen: document
 val rparen: document
@@ -130,8 +126,6 @@ val flow: document -> list document -> document
 val flow_map: document -> ('a -> document) -> list 'a -> document
 
 val url: string -> document
-
-val align: document -> document
 
 val hang: int -> document -> document
 

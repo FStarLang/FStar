@@ -22,138 +22,123 @@ let empty = PPrint.empty
 
 let not_impl_msg = "OCaml prettyprinter not yet implemented"
 
-let document_of_char (c:char) : document = failwith not_impl_msg
+let document_of_char = PPrint.char 
 
-let document_of_string (s:string) : document = failwith not_impl_msg
+let document_of_string = PPrint.string 
 
-let substring (s:string) (sofs:int) (len:int) : document = failwith not_impl_msg
+let substring = PPrint.substring
 
-let fancystring (s:string) (ofs:int) : document = failwith not_impl_msg
+let fancystring = PPrint.fancystring 
 
-let fancysubstring (s:string) (ofs:int) (len:int) (app_len:int) : document = failwith not_impl_msg
+let fancysubstring = PPrint.fancysubstring 
 
-let utf8string (s:string) : document = failwith not_impl_msg
+let utf8string = PPrint.utf8string 
 
-let hardline : document = PPrint.hardline 
+let hardline = PPrint.hardline 
 
-let blank (n:int) : document = failwith not_impl_msg
+let blank = PPrint.blank 
 
-let break_ (n:int) : document = failwith not_impl_msg
+let break_ = PPrint.break 
 
-let op_Hat_Hat (doc1:document) (doc2:document) : document = failwith not_impl_msg
+let op_Hat_Hat = PPrint.(^^) 
 
-let nest (j:int) (doc:document) : document = failwith not_impl_msg
+let nest = PPrint.nest 
 
-let group (doc:document) : document = failwith not_impl_msg
+let group = PPrint.group 
 
-let column (f:int -> document) : document = failwith not_impl_msg
+let ifflat = PPrint.ifflat 
 
-let nesting (f:int -> document) : document = failwith not_impl_msg
+let align = PPrint.align 
 
-let position (f: int -> int ->  int -> document) : document = failwith not_impl_msg
+let lparen = PPrint.lparen
+let rparen = PPrint.rparen
+let langle = PPrint.langle
+let rangle = PPrint.rangle
+let lbrace = PPrint.lbrace
+let rbrace = PPrint.rbrace
+let lbracket = PPrint.lbracket
+let rbracket = PPrint.rbracket
+let squote = PPrint.squote
+let dquote = PPrint.dquote
+let bquote = PPrint.bquote
+let semi = PPrint.semi
+let colon = PPrint.colon
+let comma = PPrint.comma
+let space = PPrint.space
+let dot = PPrint.dot
+let sharp = PPrint.sharp
+let slash = PPrint.slash
+let backslash = PPrint.backslash
+let equals = PPrint.equals
+let qmark = PPrint.qmark
+let tilde = PPrint.tilde
+let at = PPrint.at
+let percent = PPrint.percent
+let dollar = PPrint.dollar
+let caret  = PPrint.caret
+let ampersand = PPrint.ampersand
+let star = PPrint.star
+let plus = PPrint.plus
+let minus = PPrint.minus
+let underscore = PPrint.underscore
+let bang = PPrint.bang
+let bar = PPrint.bar
 
-let ifflat (doc1:document) (doc2:document) : document = failwith not_impl_msg
+let precede = PPrint.precede
+let terminate = PPrint.terminate 
 
-let lparen: document = PPrint.lparen
-let rparen: document = PPrint.rparen
-let langle: document = PPrint.langle
-let rangle: document = PPrint.rangle
-let lbrace: document = PPrint.lbrace
-let rbrace: document = PPrint.rbrace
-let lbracket: document = PPrint.lbracket
-let rbracket: document = PPrint.rbracket
-let squote: document = PPrint.squote
-let dquote: document = PPrint.dquote
-let bquote: document = PPrint.bquote
-let semi: document = PPrint.semi
-let colon: document = PPrint.colon
-let comma: document = PPrint.comma
-let space: document = PPrint.space
-let dot: document = PPrint.dot
-let sharp: document = PPrint.sharp
-let slash: document = PPrint.slash
-let backslash: document = PPrint.backslash
-let equals: document = PPrint.equals
-let qmark: document = PPrint.qmark
-let tilde: document = PPrint.tilde
-let at: document = PPrint.at
-let percent: document = PPrint.percent
-let dollar: document = PPrint.dollar
-let caret: document = PPrint.caret
-let ampersand: document = PPrint.ampersand
-let star: document = PPrint.star
-let plus: document = PPrint.plus
-let minus: document = PPrint.minus
-let underscore: document = PPrint.underscore
-let bang: document = PPrint.bang
-let bar: document = PPrint.bar
+let enclose = PPrint.enclose 
 
-let precede (l:document) (x:document) : document = failwith not_impl_msg
+let squotes = PPrint.squotes
+let dquotes = PPrint.dquotes
+let bquotes = PPrint.bquotes
+let braces  = PPrint.braces
+let parens  = PPrint.parens
+let angles  = PPrint.angles
+let brackets= PPrint.brackets
 
-let terminate (r:document) (x:document) : document = failwith not_impl_msg
+let twice = PPrint.twice 
 
-let enclose (l:document) (r:document) (x:document) : document = failwith not_impl_msg
+let repeat = PPrint.repeat 
 
-let squotes (d:document) : document = failwith not_impl_msg
-let dquotes (d:document) : document = failwith not_impl_msg
-let bquotes (d:document) : document = failwith not_impl_msg
-let braces  (d:document) : document = failwith not_impl_msg
-let parens  (d:document) : document = failwith not_impl_msg
-let angles  (d:document) : document = failwith not_impl_msg
-let brackets(d:document) : document = failwith not_impl_msg
+let concat = PPrint.concat 
 
-let twice (doc:document) : document = failwith not_impl_msg
+let separate = PPrint.separate 
 
-let repeat (n:int) (doc:document) : document = failwith not_impl_msg
+let concat_map = PPrint.concat_map 
 
-let concat (docs:document list) : document = failwith not_impl_msg
+let separate_map = PPrint.separate_map 
 
-let separate (sep:document) (docs:document list) : document = failwith not_impl_msg
+let separate2 = PPrint.separate2 
 
-let concat_map (f:('a -> document)) (xs:'a list) : document = failwith not_impl_msg
+let optional = PPrint.optional 
 
-let separate_map (sep:document) (f:('a -> document)) (xs:'a list) : document = failwith not_impl_msg
+let lines = PPrint.lines
 
-let separate2 (sep:document) (last_sep:document) (docs:document list) : document = failwith not_impl_msg
+let arbitrary_string = PPrint.arbitrary_string 
 
-let optional (f:('a -> document)) (opt:'a option) : document = failwith not_impl_msg
+let words = PPrint.words 
 
-let lines (s:string) : document list = failwith not_impl_msg
+let split = PPrint.split 
 
-let arbitrary_string (s:string) : document = failwith not_impl_msg
+let flow = PPrint.flow 
 
-let words (s:string) : document list = failwith not_impl_msg
+let flow_map = PPrint.flow_map 
 
-let split (ok:(char -> bool)) (s:string) : document list = failwith not_impl_msg
+let url = PPrint.url 
 
-let flow (sep:document) (docs:document list) : document = failwith not_impl_msg
+let hang = PPrint.hang 
 
-let flow_map (sep:document) (f:('a -> document)) (docs:'a list) : document = failwith not_impl_msg
+let prefix = PPrint.prefix 
 
-let url (s:string) : document = failwith not_impl_msg
+let jump = PPrint.jump 
 
-let align (doc:document) : document = failwith not_impl_msg
+let infix = PPrint.infix 
 
-let hang (n:int) (doc:document) : document = failwith not_impl_msg
+let surround = PPrint.surround 
 
-let prefix (n:int) (b:int) (left: document) (right:document) : document = failwith not_impl_msg
+let soft_surround = PPrint.soft_surround 
 
-let jump (n:int) (b:int) (right:document) : document = failwith not_impl_msg
+let surround_separate = PPrint.surround_separate 
 
-let infix (n:int) (b:int) (middle:document) (left: document) (right:document) : document = failwith not_impl_msg
-
-let surround (n:int) (b:int) (opening:document) (contents:document) (closing:document) : document = failwith not_impl_msg
-
-let soft_surround (n:int) (b:int) (opening:document) (contents:document) (closing:document) : document = failwith not_impl_msg
-
-let surround_separate (n:int) (b:int) (v:document) (opening:document) (sep:document) (closing:document) (docs:document list) : document = failwith not_impl_msg
-
-let surround_separate_map (n:int) (b:int) (v:document) (opening:document) (sep:document) (closing:document) (f:('a -> document)) (docs:'a list) : document = failwith not_impl_msg
-
-(*
-let ( !^ ) (s:string) : document = failwith not_impl_msg
-
-let ( ^/^ ) (x:document) (y:document) : document = failwith not_impl_msg
-
-let ( ^//^ ) (x:document) (y:document) : document = failwith not_impl_msg
-*)
+let surround_separate_map = PPrint.surround_separate_map 

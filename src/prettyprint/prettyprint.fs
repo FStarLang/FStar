@@ -58,13 +58,9 @@ let nest (j:int) (doc:document) : document = failwith not_impl_msg
 
 let group (doc:document) : document = failwith not_impl_msg
 
-let column (f:int -> document) : document = failwith not_impl_msg
-
-let nesting (f:int -> document) : document = failwith not_impl_msg
-
-let position (f: int -> int ->  int -> document) : document = failwith not_impl_msg
-
 let ifflat (doc1:document) (doc2:document) : document = failwith not_impl_msg
+
+let align (doc:document) : document = failwith not_impl_msg
 
 let lparen: document = failwith not_impl_msg
 let rparen: document = failwith not_impl_msg
@@ -143,8 +139,6 @@ let flow (sep:document) (docs:document list) : document = failwith not_impl_msg
 let flow_map (sep:document) (f:('a -> document)) (docs:'a list) : document = failwith not_impl_msg
 
 let url (s:string) : document = failwith not_impl_msg
-
-let align (doc:document) : document = failwith not_impl_msg
 
 let hang (n:int) (doc:document) : document = failwith not_impl_msg
 
