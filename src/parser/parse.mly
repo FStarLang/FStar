@@ -57,20 +57,6 @@ let as_frag d ds =
                        | _ -> ()) ds;
         Inr ds
 
-let extendTuplePat pat pats =
-  match pats.pat with
-  | PatTuple (l, false) -> PatTuple (pat::l, false)
-  | _ -> PatTuple ([pat; pats], false)
-
-let refine_for_pattern t phi_opt pat pos_t pos =
-  begin match phi_opt, pat.pat with
-  | None, _ -> t
-  | Some phi,  PatVar(x, _) ->
-     mk_term (Refine(mk_binder (Annotated(x, t)) pos_t Type None, phi)) pos Type
-  | Some _, _ ->
-     errorR(Error("Not a valid refinement type", pos)); t
-  end
-
 %}
 
 %token <bytes> BYTEARRAY
@@ -402,10 +388,13 @@ letqualifier:
   |                     { NoLetQualifier, false }
 
 aqual:
-  | HASH      { Implicit }
   | EQUALS    { if universes()
                 then print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
-				Equality }
+				        Equality }
+  | q=aqual_universes { q }
+
+aqual_universes:
+  | HASH      { Implicit }
   | DOLLAR    { Equality }
 
 
@@ -432,6 +421,12 @@ openPatternRec2:
       { pat }
 
 patternRec:
+  | LPAREN pat=pattern COLON t=typ phi_opt=refineOpt RPAREN
+      {
+        let pos_t = rhs2 parseState 2 4 in
+        let pos = rhs2 parseState 1 6 in
+        mkRefinedPattern pat t true phi_opt pos_t pos
+      }
   | LBRACK pats=separated_list(SEMICOLON, openPatternRec1) RBRACK
       { mk_pattern (PatList pats) (rhs2 parseState 1 3) }
   | LBRACE record_pat=separated_nonempty_list(SEMICOLON, separated_pair(lid, EQUALS, openPatternRec1)) RBRACE
@@ -441,12 +436,6 @@ patternRec:
   | LPAREN pat=pattern RPAREN   { pat }
   (** TODO  : We could allow an arbitrary pattern for pat by doing the following transformation **)
   (** (pat : t {phi}) ~> (pat : (x:t{ match x with | pat -> phi | _ -> False })) **)
-  | LPAREN pat=pattern COLON t=typ phi_opt=refineOpt RPAREN
-      {
-        let pos_t = rhs2 parseState 2 4 in
-        let pos = rhs2 parseState 2 5 in
-        mk_pattern (PatAscribed(pat, refine_for_pattern t phi_opt pat pos_t pos)) (rhs2 parseState 1 6)
-      }
   | tv=tvar                   { mk_pattern (PatTvar (tv, None)) (rhs parseState 1) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
@@ -454,12 +443,8 @@ patternRec:
       { mk_pattern PatWild (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
-  | HASH lid=ident
-      { mk_pattern (PatVar (lid, Some Implicit)) (rhs2 parseState 1 2) }
-  | DOLLAR lid=ident
-      { mk_pattern (PatVar (lid, Some Equality)) (rhs2 parseState 1 2)}
-  | lid=ident
-      { mk_pattern (PatVar (lid, None)) (rhs parseState 1)}
+  | qual_id=qualId
+      { mk_pattern (PatVar (snd qual_id, fst qual_id)) (rhs parseState 1) }
   | uid=qname
       { mk_pattern (PatName uid) (rhs parseState 1) }
 
@@ -469,24 +454,44 @@ disjunctivePattern:
 
 bindingPattern:
   | pat=patternRec { [pat] }
-  /* TODO : multiple binders in binding pattern */
-  /* If there is more than one pattern the refinement can not use any of these varaible */
-/*  | LPAREN pats=nonempty_list(ascriptionFreePattern) COLON t=typ phi_opt=refineOpt RPAREN
+  | LPAREN qual_id0=qualId qual_ids=nonempty_list(qualId) COLON t=typ r=refineOpt RPAREN
       {
-        List.map (fun pat ->
-                 mk_term (Refine(mk_binder (Annotated(x, t)) pos_t Type None, phi)) pos Type
-          )
-      }*/
+        let pos = rhs2 parseState 1 6 in
+        let t_pos = rhs parseState 4 in
+        let qual_ids = qual_id0 :: qual_ids in
+        List.map (fun (q, x) -> mkRefinedPattern (mk_pattern (PatVar (x, q)) pos) t false r t_pos pos) qual_ids
+      }
+  /* Multiple pattern in binding pattern */
+  /* If there is more than one pattern the refinement can not use any of these varaible */
+  (* | LPAREN pats=nonempty_list(topLevelAscriptionFreePatternRec) COLON t=typ phi_opt=refineOpt RPAREN *)
+  (*     { *)
+  (*       (\* We first need to catch the case of a constructor applied to patterns *\) *)
+  (*       let pats = match (List.hd pats).pat with *)
+  (*         | PatName _ -> [mk_pattern (PatApp (List.hd pats, List.tl pats)) (rhs parseState 2)] *)
+  (*         | _ -> pats *)
+  (*       in *)
+  (*       match pats with *)
+  (*       | [pat] -> [mkRefinedPattern pat t true phi_opt (rhs parseState 4) (rhs2 parseState 1 6)] *)
+  (*       | _ -> *)
+  (*          List.map (fun pat -> *)
+  (*           (\* TODO : What should we do about range here since it is split in 2 parts ? *\) *)
+  (*           mkRefinedPattern pat t false phi_opt (rhs parseState 4) pat.prange *)
+  (*         ) pats *)
+  (*     } *)
 
 binder:
   | lid=ident { [mk_binder (Variable lid) (rhs parseState 1) Type None]  }
   | tv=tvar  { [mk_binder (TVariable tv) (rhs parseState 1) Kind None]  }
-  | LPAREN qual_lids=nonempty_list(pair(option(aqual), ident)) COLON t=typ r=refineOpt RPAREN
-          { List.map (fun (q, x) -> mkRefinedBinder x t r (rhs2 parseState 1 5) q) qual_lids }
+       (* small regression here : fun (=x : t) ... is not accepted anymore *)
+  | LPAREN qual_ids=nonempty_list(qualId) COLON t=typ r=refineOpt RPAREN
+     {
+       let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
+       List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 5) q) qual_ids
+     }
 
 binders: bs=list(binder) { flatten bs }
 
-
+qualId: x=pair(ioption(aqual_universes), ident) { x }
 
 /******************************************************************************/
 /*                      Identifiers, module paths                             */
@@ -657,16 +662,20 @@ tmIff:
 
 (* Tm : tmDisjunction (now tmFormula, with equals) or tmCons (now tmNoEq, without equals) *)
 tmArrow(Tm):
-  | aq_opt=ioption(aqual) dom_tm=Tm RARROW tgt=tmArrow(Tm)
+  | dom=tmArrowDomain(Tm) RARROW tgt=tmArrow(Tm)
      {
-        let b = match extract_named_refinement dom_tm with
-            | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
-            | Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq_opt
-        in
-        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+       let (aq_opt, dom_tm) = dom in
+       let b = match extract_named_refinement dom_tm with
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+       in
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      }
   | e=Tm { e }
 
+%inline tmArrowDomain(Tm):
+  | LPAREN q=aqual dom_tm=Tm RPAREN { Some q, dom_tm }
+  | aq_opt=ioption(aqual) dom_tm=Tm { aq_opt, dom_tm }
 
 tmFormula:
   | e1=tmFormula DISJUNCTION e2=tmFormula
@@ -703,7 +712,7 @@ tmNoEq:
         let x, t, f = match extract_named_refinement e1 with
             | Some (x, t, f) -> x, t, f
             | _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs2 parseState 1 2)) in
-        let dom = mkRefinedBinder x t f (rhs2 parseState 1 2) None in
+        let dom = mkRefinedBinder x t true f (rhs2 parseState 1 2) None in
         let tail = e2 in
         let dom, res = match tail.tm with
             | Sum(dom', res) -> dom::dom', res

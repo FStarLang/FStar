@@ -57,20 +57,6 @@ let as_frag d ds =
                        | _ -> ()) ds;
         Inr ds
 
-let extendTuplePat pat pats =
-  match pats.pat with
-  | PatTuple (l, false) -> PatTuple (pat::l, false)
-  | _ -> PatTuple ([pat; pats], false)
-
-let refine_for_pattern t phi_opt pat pos_t pos =
-  begin match phi_opt, pat.pat with
-  | None, _ -> t
-  | Some phi,  PatVar(x, _) ->
-     mk_term (Refine(mk_binder (Annotated(x, t)) pos_t Type None, phi)) pos Type
-  | Some _, _ ->
-     errorR(Error("Not a valid refinement type", pos)); t
-  end
-
 %}
 %start inputFragment
 %start term
@@ -224,123 +210,9 @@ let refine_for_pattern t phi_opt pat pos_t pos =
 %left OPINFIX3
 %left BACKTICK
 %right OPINFIX4
-%type <FStar_Parser_AST.decl Prims.list> actionDecls
-%type <FStar_Parser_AST.term> appTerm
-%type <FStar_Parser_AST.arg_qualifier> aqual
-%type <FStar_Parser_AST.knd> ascribeKind
-%type <FStar_Parser_AST.term> ascribeTyp
-%type <FStar_Parser_AST.qualifiers> assumeTag
-%type <FStar_Parser_AST.term> atomicTerm
-%type <FStar_Parser_AST.binder list> binder
-%type <FStar_Parser_AST.binder Prims.list> binders
-%type <FStar_Parser_AST.pattern list> bindingPattern
-%type <bool> boption_SQUIGGLY_RARROW_
-%type <FStar_Parser_AST.term Prims.list> conjunctivePat
-%type <FStar_Const.sconst> constant
-%type <FStar_Ident.ident * FStar_Parser_AST.term Prims.option *   FStar_Parser_AST.fsdoc Prims.option * Prims.bool> constructorDecl
-%type <FStar_Parser_AST.decl> decl
-%type <FStar_Parser_AST.decl'> decl2
-%type <FStar_Parser_AST.term Prims.list Prims.list> disjunctivePats
-%type <FStar_Parser_AST.pattern Prims.list> disjunctivePattern
-%type <FStar_Parser_AST.decl> effectDecl
-%type <FStar_Parser_AST.effect_decl> effectDefinition
-%type <FStar_Parser_AST.effect_decl> effectRedefinition
-%type <FStar_Ident.ident> eitherName
-%type <FStar_Ident.lid> eitherQname
-%type <bool * FStar_Parser_AST.branch> firstPatternBranch
-%type <FStar_Parser_AST.level> hasSort
 %type <FStar_Ident.ident> ident
-%type <FStar_Parser_AST.term> indexingTerm
 %type <inputFragment> inputFragment
-%type <FStar_Parser_AST.knd> kind
-%type <FStar_Parser_AST.decl'> kind_abbrev
-%type <FStar_Parser_AST.pattern * FStar_Parser_AST.term> letbinding
-%type <(bool * (FStar_Parser_AST.pattern * FStar_Parser_AST.term)) list> letbindings
-%type <FStar_Parser_AST.let_qualifier * bool> letqualifier
-%type <FStar_Ident.lid> lid
-%type <(bool * (FStar_Parser_AST.pattern * FStar_Parser_AST.term)) list> list___anonymous_3_
-%type <FStar_Ident.lid list> list___anonymous_7_
-%type <FStar_Parser_AST.binder list list> list_binder_
-%type <(FStar_Ident.ident * FStar_Parser_AST.term Prims.option *    FStar_Parser_AST.fsdoc Prims.option * Prims.bool)   Prims.list> list_constructorDecl_
-%type <FStar_Parser_AST.decl list> list_decl_
-%type <(FStar_Parser_AST.imp * FStar_Parser_AST.term) list> list_pair_maybeHash_indexingTerm__
-%type <(bool * FStar_Parser_AST.branch) list> list_patternBranch_
-%type <FStar_Parser_AST.qualifiers> list_qualifier_
-%type <FStar_Parser_AST.term Prims.list> loption_separated_nonempty_list_COMMA_appTerm__
-%type <FStar_Parser_AST.decl Prims.list> loption_separated_nonempty_list_SEMICOLON_effectDecl__
-%type <FStar_Parser_AST.pattern Prims.list> loption_separated_nonempty_list_SEMICOLON_openPatternRec1__
-%type <FStar_Parser_AST.decl> mainDecl
-%type <bool> maybeFocus
-%type <bool> maybeFocusArrow
-%type <FStar_Ident.ident> name
-%type <FStar_Parser_AST.effect_decl> newEffect
-%type <FStar_Parser_AST.term> noSeqTerm
-%type <FStar_Parser_AST.pattern list list> nonempty_list_bindingPattern_
-%type <(FStar_Parser_AST.aqual * FStar_Ident.ident) list> nonempty_list_pair_option_aqual__ident__
-%type <FStar_Parser_AST.pattern Prims.list> nonempty_list_patternRec_
-%type <FStar_Parser_AST.pattern> openPatternRec1
-%type <FStar_Parser_AST.pattern> openPatternRec2
-%type <FStar_Parser_AST.fsdoc Prims.option> option_FSDOC_
-%type <unit option> option___anonymous_0_
-%type <FStar_Parser_AST.term Prims.option> option___anonymous_1_
-%type <FStar_Parser_AST.term Prims.option> option___anonymous_2_
-%type <FStar_Parser_AST.term Prims.option> option___anonymous_5_
-%type <FStar_Parser_AST.term Prims.list option> option___anonymous_8_
-%type <FStar_Parser_AST.aqual> option_aqual_
-%type <FStar_Parser_AST.knd Prims.option> option_ascribeKind_
-%type <FStar_Parser_AST.term option> option_ascribeTyp_
-%type <FStar_Parser_AST.decl option> option_mainDecl_
-%type <(FStar_Parser_AST.level * FStar_Parser_AST.term) option> option_pair_hasSort_simpleTerm__
-%type <Prims.string Prims.option> option_string_
-%type <FStar_Ident.ident Prims.list> path_eitherName_
-%type <FStar_Ident.ident Prims.list> path_ident_
-%type <FStar_Ident.ident Prims.list> path_name_
-%type <FStar_Parser_AST.pattern> pattern
-%type <bool * FStar_Parser_AST.branch> patternBranch
-%type <(bool * FStar_Parser_AST.branch) list> patternBranches
-%type <FStar_Parser_AST.pattern> patternRec
-%type <FStar_Parser_AST.pragma> pragma
-%type <FStar_Parser_AST.term> projectionLHS
-%type <FStar_Ident.lid> qname
-%type <FStar_Parser_AST.term Prims.list Prims.list> qpat
-%type <FStar_Parser_AST.qualifier> qualifier
-%type <FStar_Parser_AST.term> recordExp
-%type <(FStar_Ident.ident * FStar_Parser_AST.term *    FStar_Parser_AST.fsdoc Prims.option)   list> recordFieldDecls
-%type <FStar_Parser_AST.term Prims.option> refineOpt
-%type <FStar_Parser_AST.term> refinementTerm
-%type <(FStar_Parser_AST.fsdoc Prims.option * (bool -> FStar_Parser_AST.tycon))   list> separated_nonempty_list_AND_pair_option_FSDOC__tyconDefinition__
-%type <FStar_Parser_AST.pattern Prims.list> separated_nonempty_list_BAR_pattern_
-%type <FStar_Parser_AST.term Prims.list> separated_nonempty_list_COMMA_appTerm_
-%type <FStar_Parser_AST.term Prims.list> separated_nonempty_list_COMMA_atomicTerm_
-%type <FStar_Parser_AST.pattern Prims.list> separated_nonempty_list_COMMA_openPatternRec2_
-%type <FStar_Parser_AST.term Prims.list> separated_nonempty_list_COMMA_tmEq_
-%type <FStar_Ident.ident list> separated_nonempty_list_COMMA_tvar_
-%type <FStar_Parser_AST.term Prims.list Prims.list> separated_nonempty_list_DISJUNCTION_conjunctivePat_
-%type <FStar_Parser_AST.term Prims.list> separated_nonempty_list_SEMICOLON_appTerm_
-%type <FStar_Parser_AST.decl Prims.list> separated_nonempty_list_SEMICOLON_effectDecl_
-%type <FStar_Parser_AST.pattern Prims.list> separated_nonempty_list_SEMICOLON_openPatternRec1_
-%type <(FStar_Ident.lid * FStar_Parser_AST.pattern) Prims.list> separated_nonempty_list_SEMICOLON_separated_pair_lid_EQUALS_openPatternRec1__
-%type <FStar_Parser_AST.term Prims.list> separated_trailing_list_SEMICOLON_noSeqTerm_
-%type <(FStar_Ident.lid * FStar_Parser_AST.term) Prims.list> separated_trailing_list_SEMICOLON_separated_pair_lid_EQUALS_simpleTerm__
-%type <FStar_Parser_AST.term list> separated_trailing_tail_SEMICOLON_noSeqTerm_
-%type <(FStar_Ident.lid * FStar_Parser_AST.term) list> separated_trailing_tail_SEMICOLON_separated_pair_lid_EQUALS_simpleTerm__
-%type <FStar_Parser_AST.term> simpleTerm
-%type <FStar_Parser_AST.lift> subEffect
 %type <term> term
-%type <FStar_Parser_AST.term> tmArrow_tmFormula_
-%type <FStar_Parser_AST.term> tmArrow_tmNoEq_
-%type <FStar_Parser_AST.term> tmEq
-%type <FStar_Parser_AST.term> tmFormula
-%type <FStar_Parser_AST.term> tmIff
-%type <FStar_Parser_AST.term> tmNoEq
-%type <FStar_Ident.ident> tvar
-%type <FStar_Parser_AST.binder Prims.list> tvarinsts
-%type <FStar_Parser_AST.decl'> tycon
-%type <bool -> FStar_Parser_AST.tycon> tyconDefinition
-%type <FStar_Ident.ident ->   FStar_Parser_AST.binder Prims.list ->   FStar_Parser_AST.knd Prims.option -> bool -> FStar_Parser_AST.tycon> tyconDefn
-%type <FStar_Parser_AST.term> typ
-%type <FStar_Parser_AST.binder Prims.list> typars
-%type <FStar_Parser_AST.term> unaryTerm
 %%
 
 option_FSDOC_:
@@ -403,7 +275,7 @@ let x =
 in
     ( Some x )}
 
-option___anonymous_8_:
+option___anonymous_7_:
   
     {    ( None )}
 | TYP_APP_LESS separated_nonempty_list_COMMA_atomicTerm_ TYP_APP_GREATER
@@ -414,13 +286,6 @@ let x =
   let _1 = _10 in
                                                                                                                     (targs)
 in
-    ( Some x )}
-
-option_aqual_:
-  
-    {    ( None )}
-| aqual
-    {let x = $1 in
     ( Some x )}
 
 option_ascribeKind_:
@@ -513,10 +378,10 @@ let x =
 in
     ( x :: xs )}
 
-list___anonymous_7_:
+list___anonymous_6_:
   
     {    ( [] )}
-| DOT lid list___anonymous_7_
+| DOT lid list___anonymous_6_
     {let (_10, id0, xs) = ((), $2, $3) in
 let x =
   let id = id0 in
@@ -594,29 +459,19 @@ nonempty_list_bindingPattern_:
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
-nonempty_list_pair_option_aqual__ident__:
-  option_aqual_ ident
-    {let (x0, y0) = ($1, $2) in
-let x =
-  let y = y0 in
-  let x = x0 in
-      ( (x, y) )
-in
-    ( [ x ] )}
-| option_aqual_ ident nonempty_list_pair_option_aqual__ident__
-    {let (x0, y0, xs) = ($1, $2, $3) in
-let x =
-  let y = y0 in
-  let x = x0 in
-      ( (x, y) )
-in
-    ( x :: xs )}
-
 nonempty_list_patternRec_:
   patternRec
     {let x = $1 in
     ( [ x ] )}
 | patternRec nonempty_list_patternRec_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
+nonempty_list_qualId_:
+  qualId
+    {let x = $1 in
+    ( [ x ] )}
+| qualId nonempty_list_qualId_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -1165,14 +1020,19 @@ letqualifier:
     {                        ( NoLetQualifier, false )}
 
 aqual:
-  HASH
-    {let _1 = () in
-              ( Implicit )}
-| EQUALS
+  EQUALS
     {let _1 = () in
               ( if universes()
                 then print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
-				Equality )}
+				        Equality )}
+| aqual_universes
+    {let q = $1 in
+                      ( q )}
+
+aqual_universes:
+  HASH
+    {let _1 = () in
+              ( Implicit )}
 | DOLLAR
     {let _1 = () in
               ( Equality )}
@@ -1202,7 +1062,14 @@ openPatternRec2:
       ( pat )}
 
 patternRec:
-  LBRACK loption_separated_nonempty_list_SEMICOLON_openPatternRec1__ RBRACK
+  LPAREN pattern COLON typ refineOpt RPAREN
+    {let (_1, pat, _3, t, phi_opt, _6) = ((), $2, (), $4, $5, ()) in
+      (
+        let pos_t = rhs2 parseState 2 4 in
+        let pos = rhs2 parseState 1 6 in
+        mkRefinedPattern pat t true phi_opt pos_t pos
+      )}
+| LBRACK loption_separated_nonempty_list_SEMICOLON_openPatternRec1__ RBRACK
     {let (_1, xs0, _3) = ((), $2, ()) in
 let pats =
   let xs = xs0 in
@@ -1218,13 +1085,6 @@ in
 | LPAREN pattern RPAREN
     {let (_1, pat, _3) = ((), $2, ()) in
                                 ( pat )}
-| LPAREN pattern COLON typ refineOpt RPAREN
-    {let (_1, pat, _3, t, phi_opt, _6) = ((), $2, (), $4, $5, ()) in
-      (
-        let pos_t = rhs2 parseState 2 4 in
-        let pos = rhs2 parseState 2 5 in
-        mk_pattern (PatAscribed(pat, refine_for_pattern t phi_opt pat pos_t pos)) (rhs2 parseState 1 6)
-      )}
 | tvar
     {let tv = $1 in
                               ( mk_pattern (PatTvar (tv, None)) (rhs parseState 1) )}
@@ -1321,23 +1181,30 @@ in
 | constant
     {let c = $1 in
       ( mk_pattern (PatConst c) (rhs parseState 1) )}
-| HASH ident
-    {let (_1, lid) = ((), $2) in
-      ( mk_pattern (PatVar (lid, Some Implicit)) (rhs2 parseState 1 2) )}
-| DOLLAR ident
-    {let (_1, lid) = ((), $2) in
-      ( mk_pattern (PatVar (lid, Some Equality)) (rhs2 parseState 1 2))}
-| ident
-    {let lid = $1 in
-      ( mk_pattern (PatVar (lid, None)) (rhs parseState 1))}
+| qualId
+    {let qual_id = $1 in
+      ( mk_pattern (PatVar (snd qual_id, fst qual_id)) (rhs parseState 1) )}
 | qname
     {let uid = $1 in
       ( mk_pattern (PatName uid) (rhs parseState 1) )}
+
+disjunctivePattern:
+  separated_nonempty_list_BAR_pattern_
+    {let pats = $1 in
+                                               ( pats )}
 
 bindingPattern:
   patternRec
     {let pat = $1 in
                    ( [pat] )}
+| LPAREN qualId nonempty_list_qualId_ COLON typ refineOpt RPAREN
+    {let (_1, qual_id0, qual_ids, _4, t, r, _7) = ((), $2, $3, (), $5, $6, ()) in
+      (
+        let pos = rhs2 parseState 1 6 in
+        let t_pos = rhs parseState 4 in
+        let qual_ids = qual_id0 :: qual_ids in
+        List.map (fun (q, x) -> mkRefinedPattern (mk_pattern (PatVar (x, q)) pos) t false r t_pos pos) qual_ids
+      )}
 
 binder:
   ident
@@ -1346,14 +1213,41 @@ binder:
 | tvar
     {let tv = $1 in
              ( [mk_binder (TVariable tv) (rhs parseState 1) Kind None]  )}
-| LPAREN nonempty_list_pair_option_aqual__ident__ COLON typ refineOpt RPAREN
-    {let (_1, qual_lids, _3, t, r, _6) = ((), $2, (), $4, $5, ()) in
-          ( List.map (fun (q, x) -> mkRefinedBinder x t r (rhs2 parseState 1 5) q) qual_lids )}
+| LPAREN nonempty_list_qualId_ COLON typ refineOpt RPAREN
+    {let (_1, qual_ids, _3, t, r, _6) = ((), $2, (), $4, $5, ()) in
+     (
+       let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
+       List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 5) q) qual_ids
+     )}
 
 binders:
   list_binder_
     {let bs = $1 in
                          ( flatten bs )}
+
+qualId:
+  ident
+    {let y0 = $1 in
+let x =
+  let y = y0 in
+  let x =
+        ( None )
+  in
+      ( (x, y) )
+in
+                                                ( x )}
+| aqual_universes ident
+    {let (x00, y0) = ($1, $2) in
+let x =
+  let y = y0 in
+  let x0 = x00 in
+  let x =
+    let x = x0 in
+        ( Some x )
+  in
+      ( (x, y) )
+in
+                                                ( x )}
 
 lid:
   path_ident_
@@ -1699,11 +1593,6 @@ let pb =
 in
                              ( pb )}
 
-disjunctivePattern:
-  separated_nonempty_list_BAR_pattern_
-    {let pats = $1 in
-                                               ( pats )}
-
 tmIff:
   tmIff IFF tmIff
     {let (e1, _2, e2) = ($1, (), $3) in
@@ -1716,60 +1605,116 @@ tmIff:
       ( e )}
 
 tmArrow_tmFormula_:
-  tmFormula RARROW tmArrow_tmFormula_
-    {let (dom_tm, _3, tgt) = ($1, (), $3) in
-let aq_opt =
-      ( None )
+  LPAREN aqual tmFormula RPAREN RARROW tmArrow_tmFormula_
+    {let (_10, q0, dom_tm0, _40, _2, tgt) = ((), $2, $3, (), (), $6) in
+let dom =
+  let _4 = _40 in
+  let dom_tm = dom_tm0 in
+  let q = q0 in
+  let _1 = _10 in
+                                      ( Some q, dom_tm )
 in
      (
-        let b = match extract_named_refinement dom_tm with
-            | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
-            | Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq_opt
-        in
-        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+       let (aq_opt, dom_tm) = dom in
+       let b = match extract_named_refinement dom_tm with
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+       in
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+     )}
+| tmFormula RARROW tmArrow_tmFormula_
+    {let (dom_tm0, _2, tgt) = ($1, (), $3) in
+let dom =
+  let dom_tm = dom_tm0 in
+  let aq_opt =
+        ( None )
+  in
+                                      ( aq_opt, dom_tm )
+in
+     (
+       let (aq_opt, dom_tm) = dom in
+       let b = match extract_named_refinement dom_tm with
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+       in
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
 | aqual tmFormula RARROW tmArrow_tmFormula_
-    {let (x0, dom_tm, _3, tgt) = ($1, $2, (), $4) in
-let aq_opt =
-  let x = x0 in
-      ( Some x )
+    {let (x00, dom_tm0, _2, tgt) = ($1, $2, (), $4) in
+let dom =
+  let dom_tm = dom_tm0 in
+  let x0 = x00 in
+  let aq_opt =
+    let x = x0 in
+        ( Some x )
+  in
+                                      ( aq_opt, dom_tm )
 in
      (
-        let b = match extract_named_refinement dom_tm with
-            | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
-            | Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq_opt
-        in
-        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+       let (aq_opt, dom_tm) = dom in
+       let b = match extract_named_refinement dom_tm with
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+       in
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
 | tmFormula
     {let e = $1 in
          ( e )}
 
 tmArrow_tmNoEq_:
-  tmNoEq RARROW tmArrow_tmNoEq_
-    {let (dom_tm, _3, tgt) = ($1, (), $3) in
-let aq_opt =
-      ( None )
+  LPAREN aqual tmNoEq RPAREN RARROW tmArrow_tmNoEq_
+    {let (_10, q0, dom_tm0, _40, _2, tgt) = ((), $2, $3, (), (), $6) in
+let dom =
+  let _4 = _40 in
+  let dom_tm = dom_tm0 in
+  let q = q0 in
+  let _1 = _10 in
+                                      ( Some q, dom_tm )
 in
      (
-        let b = match extract_named_refinement dom_tm with
-            | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
-            | Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq_opt
-        in
-        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+       let (aq_opt, dom_tm) = dom in
+       let b = match extract_named_refinement dom_tm with
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+       in
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+     )}
+| tmNoEq RARROW tmArrow_tmNoEq_
+    {let (dom_tm0, _2, tgt) = ($1, (), $3) in
+let dom =
+  let dom_tm = dom_tm0 in
+  let aq_opt =
+        ( None )
+  in
+                                      ( aq_opt, dom_tm )
+in
+     (
+       let (aq_opt, dom_tm) = dom in
+       let b = match extract_named_refinement dom_tm with
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+       in
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
 | aqual tmNoEq RARROW tmArrow_tmNoEq_
-    {let (x0, dom_tm, _3, tgt) = ($1, $2, (), $4) in
-let aq_opt =
-  let x = x0 in
-      ( Some x )
+    {let (x00, dom_tm0, _2, tgt) = ($1, $2, (), $4) in
+let dom =
+  let dom_tm = dom_tm0 in
+  let x0 = x00 in
+  let aq_opt =
+    let x = x0 in
+        ( Some x )
+  in
+                                      ( aq_opt, dom_tm )
 in
      (
-        let b = match extract_named_refinement dom_tm with
-            | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
-            | Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq_opt
-        in
-        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+       let (aq_opt, dom_tm) = dom in
+       let b = match extract_named_refinement dom_tm with
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+       in
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
 | tmNoEq
     {let e = $1 in
@@ -1859,7 +1804,7 @@ tmNoEq:
         let x, t, f = match extract_named_refinement e1 with
             | Some (x, t, f) -> x, t, f
             | _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs2 parseState 1 2)) in
-        let dom = mkRefinedBinder x t f (rhs2 parseState 1 2) None in
+        let dom = mkRefinedBinder x t true f (rhs2 parseState 1 2) None in
         let tail = e2 in
         let dom, res = match tail.tm with
             | Sum(dom', res) -> dom::dom', res
@@ -1904,25 +1849,23 @@ refineOpt:
                                                     (phi_opt)}
 
 recordExp:
-  separated_trailing_list_SEMICOLON_separated_pair_lid_EQUALS_simpleTerm__
+  separated_trailing_list_SEMICOLON_simpleDef_
     {let record_fields = $1 in
-let e_opt =
-      ( None )
+      ( mk_term (Record (None, record_fields)) (rhs2 parseState 1 2) Expr )}
+| appTerm WITH simpleDef separated_trailing_tail_SEMICOLON_simpleDef_
+    {let (e, _2, first_field, record_fields) = ($1, (), $3, $4) in
+      ( mk_term (Record (Some e, first_field::record_fields)) (rhs2 parseState 1 2) Expr )}
+
+simpleDef:
+  lid EQUALS simpleTerm
+    {let (x0, _20, y0) = ($1, (), $3) in
+let e =
+  let y = y0 in
+  let _2 = _20 in
+  let x = x0 in
+      ( (x, y) )
 in
-      ( mk_term (Record (e_opt, record_fields)) (rhs2 parseState 1 2) Expr )}
-| appTerm WITH separated_trailing_list_SEMICOLON_separated_pair_lid_EQUALS_simpleTerm__
-    {let (e00, _200, record_fields) = ($1, (), $3) in
-let e_opt =
-  let _20 = _200 in
-  let e0 = e00 in
-  let x =
-    let _2 = _20 in
-    let e = e0 in
-                                     (e)
-  in
-      ( Some x )
-in
-      ( mk_term (Record (e_opt, record_fields)) (rhs2 parseState 1 2) Expr )}
+                                              ( e )}
 
 unaryTerm:
   TILDE atomicTerm
@@ -2057,14 +2000,10 @@ let op =
        ( op )
 in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
-| LENS_PAREN_LEFT separated_nonempty_list_COMMA_tmEq_ LENS_PAREN_RIGHT
-    {let (_1, el, _3) = ((), $2, ()) in
-      (
-        match el with
-          | [x] -> x
-          | components -> mkDTuple components (rhs2 parseState 1 1)
-      )}
-| projectionLHS list___anonymous_7_
+| LENS_PAREN_LEFT tmEq COMMA separated_nonempty_list_COMMA_tmEq_ LENS_PAREN_RIGHT
+    {let (_1, e0, _3, el, _5) = ((), $2, (), $4, ()) in
+      ( mkDTuple (e0::el) (rhs2 parseState 1 1) )}
+| projectionLHS list___anonymous_6_
     {let (e, field_projs) = ($1, $2) in
       ( fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs )}
 | BEGIN term END
@@ -2072,7 +2011,7 @@ in
       ( e )}
 
 projectionLHS:
-  eitherQname option___anonymous_8_
+  eitherQname option___anonymous_7_
     {let (id, targs_opt) = ($1, $2) in
       (
         let t = if is_name id then Name id else Var id in
@@ -2210,17 +2149,11 @@ separated_trailing_list_SEMICOLON_noSeqTerm_:
     {let (x, l) = ($1, $2) in
                                          ( x::l )}
 
-separated_trailing_list_SEMICOLON_separated_pair_lid_EQUALS_simpleTerm__:
+separated_trailing_list_SEMICOLON_simpleDef_:
   
     {    ( [] )}
-| lid EQUALS simpleTerm separated_trailing_tail_SEMICOLON_separated_pair_lid_EQUALS_simpleTerm__
-    {let (x0, _20, y0, l) = ($1, (), $3, $4) in
-let x =
-  let y = y0 in
-  let _2 = _20 in
-  let x = x0 in
-      ( (x, y) )
-in
+| simpleDef separated_trailing_tail_SEMICOLON_simpleDef_
+    {let (x, l) = ($1, $2) in
                                          ( x::l )}
 
 separated_trailing_tail_SEMICOLON_noSeqTerm_:
@@ -2240,7 +2173,7 @@ in
     {let (_1, x, l) = ((), $2, $3) in
                                                ( x::l )}
 
-separated_trailing_tail_SEMICOLON_separated_pair_lid_EQUALS_simpleTerm__:
+separated_trailing_tail_SEMICOLON_simpleDef_:
   
     {let _1 =
       ( None )
@@ -2253,14 +2186,8 @@ let _1 =
       ( Some x )
 in
                  ( [] )}
-| SEMICOLON lid EQUALS simpleTerm separated_trailing_tail_SEMICOLON_separated_pair_lid_EQUALS_simpleTerm__
-    {let (_1, x0, _20, y0, l) = ((), $2, (), $4, $5) in
-let x =
-  let y = y0 in
-  let _2 = _20 in
-  let x = x0 in
-      ( (x, y) )
-in
+| SEMICOLON simpleDef separated_trailing_tail_SEMICOLON_simpleDef_
+    {let (_1, x, l) = ((), $2, $3) in
                                                ( x::l )}
 
 %%
