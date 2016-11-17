@@ -628,6 +628,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Inr _ -> failwith "Cannot reify a top-level let binding"
                     end
                 | Tm_app (head, args) ->
+                  // Turn it into let x0 = head in let x1 = arg0 in ... let xn = argn in x0 x1 ... xn
                   //monadic application
                   //Do we need to check that head is reifiable ?
                   // let head_reifiable =
