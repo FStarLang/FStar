@@ -28,7 +28,10 @@ let slash_star_axiom a b c =
 
 val log_2: x:pos -> Tot nat
 let rec log_2 x =
-  if x >= 2 then 1 + log_2 (x / 2) else 0
+  let rec mult_to_x (acc:pos) (n:nat) (x:pos): Tot nat (decreases (x - acc)) =
+    if (acc*2) >= x then n
+    else mult_to_x (acc*2) (n+1) x in
+  if x = 1 then 0 else mult_to_x 1 1 x
 
 (* Function: power of x *)
 val powx : x:int -> n:nat -> Tot int
@@ -38,7 +41,7 @@ let rec powx x n =
   | n -> x * powx x (n - 1)
 
 (* Function: absolute value *)
-val abs: x:int -> Tot (y:int{ (x >= 0 ==> y = x) /\ (x < 0 ==> y = -x) })
+val abs: x:int -> Tot (y:nat{ (x >= 0 ==> y = x) /\ (x < 0 ==> y = -x) })
 let abs x = if x >= 0 then x else -x
 
 (* Function: maximum value *)
