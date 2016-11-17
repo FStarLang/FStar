@@ -6,29 +6,29 @@ files
 end else begin
 (
 
-let _90_8 = (FStar_Parser_Dep.collect verify_mode files)
-in (match (_90_8) with
-| (_90_4, deps, _90_7) -> begin
+let _92_8 = (FStar_Parser_Dep.collect verify_mode files)
+in (match (_92_8) with
+| (_92_4, deps, _92_7) -> begin
 (match (deps) with
 | [] -> begin
 (
 
-let _90_10 = (FStar_Util.print_error "Dependency analysis failed; reverting to using only the files provided")
+let _92_10 = (FStar_Util.print_error "Dependency analysis failed; reverting to using only the files provided")
 in files)
 end
-| _90_13 -> begin
+| _92_13 -> begin
 (
 
 let deps = (FStar_List.rev deps)
 in (
 
-let deps = if ((let _185_5 = (FStar_List.hd deps)
-in (FStar_Util.basename _185_5)) = "prims.fst") then begin
+let deps = if ((let _189_5 = (FStar_List.hd deps)
+in (FStar_Util.basename _189_5)) = "prims.fst") then begin
 (FStar_List.tl deps)
 end else begin
 (
 
-let _90_15 = (FStar_Util.print_error "dependency analysis did not find prims.fst?!")
+let _92_15 = (FStar_Util.print_error "dependency analysis did not find prims.fst?!")
 in (FStar_All.exit (Prims.parse_int "1")))
 end
 in deps))
