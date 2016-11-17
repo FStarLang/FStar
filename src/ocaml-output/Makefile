@@ -1,4 +1,4 @@
-_.PHONY: all __force__
+.PHONY: all __force__
 
 FSTAR_HOME=../..
 
