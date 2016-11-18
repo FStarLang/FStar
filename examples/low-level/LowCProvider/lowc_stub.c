@@ -83,12 +83,12 @@ CAMLprim value ocaml_AEAD_create(value alg, value key) {
                 default:
                         caml_failwith("LowCProvider: unsupported AEAD alg");
         }
-        Crypto_Indexing_id id = {.cipher = calg, .uniq = 0};
+        Crypto_Indexing_id id = {.cipher = calg, .aes=Crypto_Indexing_aesImpl_SpartanAES, .uniq = 0};
         uint8_t* ckey = (uint8_t*) String_val(key);
         uint32_t keylen = caml_string_length(key);
 
   	uint8_t *keystate = calloc(Crypto_Symmetric_PRF_statelen(id), sizeof (uint8_t));
-	Crypto_Symmetric_Cipher_init(calg, ckey, keystate);
+	Crypto_Symmetric_Cipher_init(id, ckey, keystate);
   
 	PRF_ST* prf = malloc(sizeof(PRF_ST));
 

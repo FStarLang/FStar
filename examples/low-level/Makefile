@@ -191,14 +191,22 @@ bignum-ver:
 	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part6.fst --include crypto
 	$(FSTAR) --use_hints --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
 
-KRML_INCLUDES=$(addprefix -I , crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
-KRML_ARGS=-verbose -ccopt -Wno-error=pointer-sign $(KOPTS)
+KRML_INCLUDES=$(addprefix -I ,spartan_aes crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
+KRML_ARGS=-verbose -m32 -ccopt -maes -ccopt -Wno-error=pointer-sign $(KOPTS)
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
 
-krml-test.exe:
-	$(KRML) crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest $(KREMLIN_HOME)/test/testlib.c \
-		-tmpdir tmp -o krml-test.exe -add-include '"testlib.h"' \
-		crypto/test_hacks.c
+spartan_aes/aes.o:
+	make -C spartan_aes
+
+krml-test.exe: spartan_aes/aes.o
+	$(KRML) crypto/real/Flag.fst spartan_aes/aes.o crypto/spartan_stub.c \
+	       	crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest \
+	       	$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c \
+		-tmpdir tmp -add-include '"testlib.h"' -o krml-test.exe
+#	$(CC) -O3 -o krml-test.exe spartan_aes/aes.o tmp/*.c $(KREMLIN_HOME)/kremlib/kremlib.c \
+#		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c \
+#		$(KRML_INCLUDES) $(CFLAGS) \
+#		-g -Wall -msse2 -msse -m32 -maes -Wno-unused-variable
 	./krml-test.exe
 
 OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List_Tot.ml \

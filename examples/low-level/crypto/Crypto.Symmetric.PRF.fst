@@ -67,7 +67,7 @@ type ctrT i = x:u32 {x <=^ maxCtr i}
 type domain (i:id) = { iv:Block.iv (cipherAlg_of_id i); ctr:ctrT i} 
 let incr (i:id) (x:domain i {x.ctr <^ maxCtr i}) = { iv = x.iv; ctr = x.ctr +^ 1ul }
 
-val above: #i:id -> domain i -> domain i -> Tot bool
+val above: #i:id -> domain i -> domain i -> GTot bool
 let above #i x z = x.iv = z.iv && x.ctr >=^ z.ctr
 
 // the range of our PRF, after idealization and "reverse inlining."
@@ -83,9 +83,8 @@ let range (mac_rgn:region) (i:id) (x:domain i): Type0 =
   else if safeId i        then otp i
                           else lbytes (v (blocklen i))
 
-let iv_0 = FStar.Int.Cast.uint64_to_uint128 0UL
-
-noextract let domain_sk0 (i:id) = x:domain i{x.ctr <^ ctr_0 i /\ x.iv = iv_0 } 
+inline_for_extraction let iv_0 () = FStar.Int.Cast.uint64_to_uint128 0UL
+noextract let domain_sk0 (i:id) = x:domain i{x.ctr <^ ctr_0 i /\ x.iv = iv_0 () } 
 noextract let domain_mac (i:id) = x:domain i{x.ctr = ctr_0 i} 
 noextract let domain_otp (i:id) = x:domain i{x.ctr >^ ctr_0 i /\ safeId i}
 noextract let domain_blk (i:id) = x:domain i{x.ctr >^ ctr_0 i /\ ~ (safeId i)}
@@ -171,7 +170,7 @@ let gen rgn i =
   let key = Buffer.create 0uy (keylen i) in
   let alg = cipherAlg_of_id i in
   Bytes.random (v (keylen i)) key;
-  Block.init #alg key keystate;
+  Block.init #i key keystate;
   let table: table_t rgn mac_rgn i =
     if prf i then 
       mktable i rgn mac_rgn (ralloc rgn (Seq.createEmpty #(entry mac_rgn i)))
@@ -188,7 +187,7 @@ let coerce rgn i key =
   let mac_rgn : (r:region{r `HH.extends` rgn}) = new_region rgn in
   let keystate = Buffer.rcreate rgn 0uy (statelen i) in
   let alg = cipherAlg_of_id i in
-  Cipher.init #alg key keystate;
+  Cipher.init #i key keystate;
   State #i #rgn #mac_rgn keystate (no_table i rgn mac_rgn)
 
 val leak: #i:id{~(prf i)} -> st:state i -> ST (key:lbuffer (v (statelen i)))
@@ -207,7 +206,7 @@ private val getBlock:
   (ensures (fun h0 r h1 -> Buffer.live h1 output /\ Buffer.modifies_1 output h0 h1 ))
 let getBlock #i t x len output =
   Buffer.recall t.key;
-  Block.compute (cipherAlg_of_id i) output t.key x.iv x.ctr len
+  Block.compute i output t.key x.iv x.ctr len
 
 
 // We encapsulate our 4 usages of the PRF in specific functions.
@@ -292,7 +291,7 @@ val prf_sk0:
   #i:id{ CMA.skeyed i } -> t:state i -> ST (CMA.skey t.mac_rgn i)
   (requires (fun h0 -> True))
   (ensures (fun h0 k h1 ->
-    let x = { ctr=0ul; iv=iv_0 } in 
+    let x = { ctr=0ul; iv=iv_0() } in 
     if prf i then
       let r = itable i t in
       let t0 = HS.sel h0 r in
@@ -316,7 +315,7 @@ val prf_sk0:
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
 
 let prf_sk0 #i t = 
-  let x = { ctr=0ul; iv=iv_0 } in 
+  let x = { ctr=0ul; iv=iv_0() } in 
   if prf i then 
     begin
       let r = itable i t in

@@ -18,6 +18,10 @@ type cipherAlg =
   | AES256
   | CHACHA20
 
+type aesImpl =
+  | SpartanAES
+  | HaclAES
+
 // References:
 //  - RFC 7539 for the AEAD algorithm
 //  - RFC 7905 for ChaCha20_Poly1305 TLS ciphersuites
@@ -28,6 +32,7 @@ type aeadAlg =
 
 abstract type id = {
   cipher: aeadAlg;
+  aes: aesImpl;
   uniq: UInt32.t;
 }
 
@@ -45,11 +50,13 @@ let cipherAlg_of_id i =
   | AES_256_GCM       -> AES256
   | CHACHA20_POLY1305 -> CHACHA20
 
+let aesImpl_of_id (i:id) = i.aes
+
 // controls abstraction of plaintexts
 // (kept abstract, but requires all the crypto steps above)
 assume val safeId: i:id -> Tot bool
 
 let testId (a:aeadAlg) : i:id{~(safeId i)} =
-  let i = {cipher = a; uniq = 0ul; } in
+  let i = {cipher = a; aes=SpartanAES; uniq = 0ul; } in
   assume(~(safeId i)); i
 

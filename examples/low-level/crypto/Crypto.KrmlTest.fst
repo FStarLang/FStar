@@ -210,6 +210,20 @@ let test_aes_gcm i (tn: UInt32.t) key ivBuffer aadlen aad plainlen plainrepr exp
   ok_1
 
 
+val test_aes_gcm_0: unit -> St bool
+let test_aes_gcm_0 () =
+  let i:id = testId AES_128_GCM in
+  let k = Buffer.create 0uy 16ul in
+  let plainlen = 0ul in
+  let plain = Buffer.create 0uy plainlen in
+  let iv = Buffer.create 0uy 12ul in
+  let aadlen = 0ul in
+  let aad = Buffer.create 0uy aadlen in
+  let cipher = Buffer.createL [
+    0x58uy; 0xe2uy; 0xfcuy; 0xceuy; 0xfauy; 0x7euy; 0x30uy; 0x61uy;
+    0x36uy; 0x7fuy; 0x1duy; 0x57uy; 0xa4uy; 0xe7uy; 0x45uy; 0x5auy ] in
+  test_aes_gcm i 1ul k iv aadlen aad plainlen plain cipher
+
 val test_aes_gcm_1: unit -> St bool
 let test_aes_gcm_1 () =
   let i:id = testId AES_256_GCM in
@@ -333,6 +347,7 @@ val main: unit -> ST FStar.Int32.t
   (ensures  (fun h0 r h1 -> True))
 let main () =
   let _ = test() in
+  let _ = test_aes_gcm_0 () in
   let _ = test_aes_gcm_1 () in
   let _ = test_aes_gcm_2 () in
   let _ = test_aes_gcm_3 () in
