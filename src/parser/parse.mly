@@ -593,8 +593,11 @@ term:
 
 noSeqTerm:
   | t=typ  { t }
-  | e1=atomicTerm op=dotOperator e2=term RBRACK LARROW e3=noSeqTerm
-      { mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr }
+  | e1=atomicTerm op_expr=dotOperator LARROW e3=noSeqTerm
+      {
+        let (op, e2) = op_expr in
+        mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr
+      }
   | REQUIRES t=typ
       { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type }
   | ENSURES t=typ
@@ -780,10 +783,12 @@ appTerm:
   | HASH { Hash }
 
 indexingTerm:
-  | e1=atomicTerm op=dotOperator e2=term RPAREN
-      { mk_term (Op(op, [ e1; e2 ])) (rhs2 parseState 1 3) Expr }
-  | e=atomicTerm
-      { e }
+  | e1=atomicTerm op_expr_opt=ioption(dotOperator)
+      {
+        match op_expr_opt with
+        | None -> e1
+        | Some (op, e2) -> mk_term (Op(op, [ e1; e2 ])) (rhs2 parseState 1 3) Expr
+      }
 
 atomicTerm:
   | UNDERSCORE { mk_term Wild (rhs parseState 1) Un }
@@ -911,8 +916,8 @@ constant:
      { op }
 
 %inline dotOperator:
-  | DOT_LPAREN { ".()"}
-  | DOT_LBRACK { ".[]" }
+  | DOT_LPAREN e=term RPAREN { ".()", e }
+  | DOT_LBRACK e=term RBRACK { ".[]", e }
 
 separated_trailing_list(SEP,X):
   | { [] }

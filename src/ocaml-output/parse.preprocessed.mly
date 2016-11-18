@@ -1397,20 +1397,30 @@ noSeqTerm:
   typ
     {let t = $1 in
            ( t )}
-| atomicTerm DOT_LPAREN term RBRACK LARROW noSeqTerm
-    {let (e1, _10, e2, _4, _5, e3) = ($1, (), $3, (), (), $6) in
-let op =
+| atomicTerm DOT_LPAREN term RPAREN LARROW noSeqTerm
+    {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
+let op_expr =
+  let _3 = _30 in
+  let e = e0 in
   let _1 = _10 in
-                 ( ".()")
+                               ( ".()", e )
 in
-      ( mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr )}
+      (
+        let (op, e2) = op_expr in
+        mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr
+      )}
 | atomicTerm DOT_LBRACK term RBRACK LARROW noSeqTerm
-    {let (e1, _10, e2, _4, _5, e3) = ($1, (), $3, (), (), $6) in
-let op =
+    {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
+let op_expr =
+  let _3 = _30 in
+  let e = e0 in
   let _1 = _10 in
-                 ( ".[]" )
+                               ( ".[]", e )
 in
-      ( mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr )}
+      (
+        let (op, e2) = op_expr in
+        mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr
+      )}
 | REQUIRES typ
     {let (_1, t) = ((), $2) in
       ( mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type )}
@@ -1902,23 +1912,54 @@ appTerm:
       ( mkApp head (map (fun (x,y) -> (y,x)) args) (rhs2 parseState 1 2) )}
 
 indexingTerm:
-  atomicTerm DOT_LPAREN term RPAREN
-    {let (e1, _10, e2, _4) = ($1, (), $3, ()) in
-let op =
-  let _1 = _10 in
-                 ( ".()")
+  atomicTerm
+    {let e1 = $1 in
+let op_expr_opt =
+      ( None )
 in
-      ( mk_term (Op(op, [ e1; e2 ])) (rhs2 parseState 1 3) Expr )}
-| atomicTerm DOT_LBRACK term RPAREN
-    {let (e1, _10, e2, _4) = ($1, (), $3, ()) in
-let op =
-  let _1 = _10 in
-                 ( ".[]" )
+      (
+        match op_expr_opt with
+        | None -> e1
+        | Some (op, e2) -> mk_term (Op(op, [ e1; e2 ])) (rhs2 parseState 1 3) Expr
+      )}
+| atomicTerm DOT_LPAREN term RPAREN
+    {let (e1, _100, e00, _300) = ($1, (), $3, ()) in
+let op_expr_opt =
+  let _30 = _300 in
+  let e0 = e00 in
+  let _10 = _100 in
+  let x =
+    let _3 = _30 in
+    let e = e0 in
+    let _1 = _10 in
+                                 ( ".()", e )
+  in
+      ( Some x )
 in
-      ( mk_term (Op(op, [ e1; e2 ])) (rhs2 parseState 1 3) Expr )}
-| atomicTerm
-    {let e = $1 in
-      ( e )}
+      (
+        match op_expr_opt with
+        | None -> e1
+        | Some (op, e2) -> mk_term (Op(op, [ e1; e2 ])) (rhs2 parseState 1 3) Expr
+      )}
+| atomicTerm DOT_LBRACK term RBRACK
+    {let (e1, _100, e00, _300) = ($1, (), $3, ()) in
+let op_expr_opt =
+  let _30 = _300 in
+  let e0 = e00 in
+  let _10 = _100 in
+  let x =
+    let _3 = _30 in
+    let e = e0 in
+    let _1 = _10 in
+                                 ( ".[]", e )
+  in
+      ( Some x )
+in
+      (
+        match op_expr_opt with
+        | None -> e1
+        | Some (op, e2) -> mk_term (Op(op, [ e1; e2 ])) (rhs2 parseState 1 3) Expr
+      )}
 
 atomicTerm:
   UNDERSCORE
