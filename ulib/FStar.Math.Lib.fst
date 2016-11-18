@@ -41,7 +41,7 @@ let rec powx x n =
   | n -> x * powx x (n - 1)
 
 (* Function: absolute value *)
-val abs: x:int -> Tot (y:nat{ (x >= 0 ==> y = x) /\ (x < 0 ==> y = -x) })
+val abs: x:int -> Tot (y:int{ (x >= 0 ==> y = x) /\ (x < 0 ==> y = -x) })
 let abs x = if x >= 0 then x else -x
 
 (* Function: maximum value *)
