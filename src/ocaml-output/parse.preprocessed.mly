@@ -1,22 +1,37 @@
 %{
+(*
+ Known (intentional) ambiguities: 8 s/r conflicts in total; resolved by shifting
+   4 s/r conflicts on BAR
+      function | P -> match with | Q -> _ | R -> _
+      function | P -> function ...  (x2)
+      function | P -> try e with | ...
 
-(* (c) Microsoft Corporation. All rights reserved *)
+   1 s/r conflict on SEMICOLON
+       fun x -> e1 ; e2
+     is parsed as
+        (fun x -> e1; e2)
+     rather than
+        (fun x -> e1); e2
 
-(* TO BE ADDED IN parse.fsy
-open Prims
-open FStar.List
-open FStar.Util
-open FStar.Range
-open FStar.Options
-open FStar.Absyn.Syntax
-open FStar.Absyn.Const
-open FStar.Absyn.Util
-open FStar.Parser.AST
-open FStar.Parser.Util
-open FStar.Const
-open FStar.Ident
+   2 s/r conflict on DOT
+      A.B ^ .C  (x2)
+
+   1 s/r conflict on LBRACE
+
+      Consider:
+          let f (x: y:int & z:vector y{z=z /\ y=0}) = 0
+
+      This is parsed as:
+        let f (x: (y:int & z:vector y{z=z /\ y=0})) = 0
+      rather than:
+        let f (x: (y:int & z:vector y){z=z /\ y=0}) = 0
+
+      Analogous ambiguities with -> and * as well.
+
+ A lot (140) of end-of-stream conflicts are also reported and
+ should be investigated...
 *)
-
+(* (c) Microsoft Corporation. All rights reserved *)
 open Prims
 open FStar_List
 open FStar_Util
@@ -1331,19 +1346,44 @@ typ:
     {let t = $1 in
                   ( t )}
 | FORALL binders DOT qpat noSeqTerm
-    {let (_1, bs, _3, trigger, e) = ((), $2, (), $4, $5) in
+    {let (_10, bs, _3, trigger, e) = ((), $2, (), $4, $5) in
+let q =
+  let _1 = _10 in
+             ( fun x -> QForall x )
+in
       (
         match bs with
             | [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 3))
-            | _ -> mk_term (QForall(bs, trigger, e)) (rhs2 parseState 1 5) Formula
+            | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) Formula
       )}
 | EXISTS binders DOT qpat noSeqTerm
-    {let (_1, bs, _3, trigger, e) = ((), $2, (), $4, $5) in
+    {let (_10, bs, _3, trigger, e) = ((), $2, (), $4, $5) in
+let q =
+  let _1 = _10 in
+             ( fun x -> QExists x)
+in
       (
         match bs with
             | [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 3))
-            | _ -> mk_term (QExists(bs, trigger, e)) (rhs2 parseState 1 5) Formula
+            | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) Formula
       )}
+
+qpat:
+  
+    {      ( [] )}
+| LBRACE_COLON_PATTERN disjunctivePats RBRACE
+    {let (_1, pats, _3) = ((), $2, ()) in
+                                                     ( pats )}
+
+disjunctivePats:
+  separated_nonempty_list_DISJUNCTION_conjunctivePat_
+    {let pats = $1 in
+                                                              ( pats )}
+
+conjunctivePat:
+  separated_nonempty_list_SEMICOLON_appTerm_
+    {let pats = $1 in
+                                                              ( pats )}
 
 term:
   noSeqTerm
@@ -1357,12 +1397,20 @@ noSeqTerm:
   typ
     {let t = $1 in
            ( t )}
+| atomicTerm DOT_LPAREN term RBRACK LARROW noSeqTerm
+    {let (e1, _10, e2, _4, _5, e3) = ($1, (), $3, (), (), $6) in
+let op =
+  let _1 = _10 in
+                 ( ".()")
+in
+      ( mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr )}
 | atomicTerm DOT_LBRACK term RBRACK LARROW noSeqTerm
-    {let (e1, _2, e2, _4, _5, e3) = ($1, (), $3, (), (), $6) in
-      ( mk_term (Op(".[]<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr )}
-| atomicTerm DOT_LPAREN term RPAREN LARROW noSeqTerm
-    {let (e1, _2, e2, _4, _5, e3) = ($1, (), $3, (), (), $6) in
-      ( mk_term (Op(".()<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr )}
+    {let (e1, _10, e2, _4, _5, e3) = ($1, (), $3, (), (), $6) in
+let op =
+  let _1 = _10 in
+                 ( ".[]" )
+in
+      ( mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr )}
 | REQUIRES typ
     {let (_1, t) = ((), $2) in
       ( mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type )}
@@ -1412,23 +1460,6 @@ noSeqTerm:
 | ident LARROW noSeqTerm
     {let (id, _2, e) = ($1, (), $3) in
       ( mk_term (Assign(id, e)) (rhs2 parseState 1 3) Expr )}
-
-qpat:
-  
-    {      ( [] )}
-| LBRACE_COLON_PATTERN disjunctivePats RBRACE
-    {let (_1, pats, _3) = ((), $2, ()) in
-                                                     ( pats )}
-
-disjunctivePats:
-  separated_nonempty_list_DISJUNCTION_conjunctivePat_
-    {let pats = $1 in
-                                                              ( pats )}
-
-conjunctivePat:
-  separated_nonempty_list_SEMICOLON_appTerm_
-    {let pats = $1 in
-                                                              ( pats )}
 
 simpleTerm:
   tmIff
@@ -1823,12 +1854,7 @@ tmNoEq:
 | MINUS tmNoEq
     {let (_1, e) = ((), $2) in
       ( mk_uminus e (rhs2 parseState 1 3) Expr )}
-| refinementTerm
-    {let e = $1 in
-      ( e )}
-
-refinementTerm:
-  ident COLON appTerm refineOpt
+| ident COLON appTerm refineOpt
     {let (id, _2, e, phi_opt) = ($1, (), $3, $4) in
       (
         let t = match phi_opt with
@@ -1839,9 +1865,12 @@ refinementTerm:
 | LBRACE recordExp RBRACE
     {let (_1, e, _3) = ((), $2, ()) in
                               ( e )}
-| unaryTerm
+| TILDE atomicTerm
+    {let (op, e) = ($1, $2) in
+      ( mk_term (Op(op, [e])) (rhs2 parseState 1 3) Formula )}
+| appTerm
     {let e = $1 in
-                ( e )}
+              ( e )}
 
 refineOpt:
   option___anonymous_5_
@@ -1867,14 +1896,6 @@ let e =
 in
                                               ( e )}
 
-unaryTerm:
-  TILDE atomicTerm
-    {let (op, e) = ($1, $2) in
-      ( mk_term (Op(op, [e])) (rhs2 parseState 1 3) Formula )}
-| appTerm
-    {let e = $1 in
-              ( e )}
-
 appTerm:
   indexingTerm list_pair_maybeHash_indexingTerm__
     {let (head, args) = ($1, $2) in
@@ -1882,11 +1903,19 @@ appTerm:
 
 indexingTerm:
   atomicTerm DOT_LPAREN term RPAREN
-    {let (e1, _2, e2, _4) = ($1, (), $3, ()) in
-      ( mk_term (Op(".()", [ e1; e2 ])) (rhs2 parseState 1 3) Expr )}
-| atomicTerm DOT_LBRACK term RBRACK
-    {let (e1, _2, e2, _4) = ($1, (), $3, ()) in
-      ( mk_term (Op(".[]", [ e1; e2 ])) (rhs2 parseState 1 3) Expr )}
+    {let (e1, _10, e2, _4) = ($1, (), $3, ()) in
+let op =
+  let _1 = _10 in
+                 ( ".()")
+in
+      ( mk_term (Op(op, [ e1; e2 ])) (rhs2 parseState 1 3) Expr )}
+| atomicTerm DOT_LBRACK term RPAREN
+    {let (e1, _10, e2, _4) = ($1, (), $3, ()) in
+let op =
+  let _1 = _10 in
+                 ( ".[]" )
+in
+      ( mk_term (Op(op, [ e1; e2 ])) (rhs2 parseState 1 3) Expr )}
 | atomicTerm
     {let e = $1 in
       ( e )}

@@ -95,7 +95,7 @@ endif
 	cp ../parser/ml/parseit.ml FStar_Parser_ParseIt.ml
 
 
-fsharp-parser:
+fsharp-parser: parser
 	rm -f parse.preprocessed.fsy
 	echo "%{" > parse.preprocessed.fsy
 	echo "#light \"off\"" >> parse.preprocessed.fsy
@@ -120,6 +120,7 @@ fsharp-parser:
 																	 -e '/%token.*->.*/d' \
 																	 -e '/%type.*->.*/d' \
 																	 >> parse.preprocessed.fsy
+	cp parse.preprocessed.fsy ../parser/parse.fsy
 
 copy_lib_files: $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
 	cp $^ .

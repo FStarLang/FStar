@@ -1,22 +1,37 @@
 %{
+(*
+ Known (intentional) ambiguities: 8 s/r conflicts in total; resolved by shifting
+   4 s/r conflicts on BAR
+      function | P -> match with | Q -> _ | R -> _
+      function | P -> function ...  (x2)
+      function | P -> try e with | ...
 
-(* (c) Microsoft Corporation. All rights reserved *)
+   1 s/r conflict on SEMICOLON
+       fun x -> e1 ; e2
+     is parsed as
+        (fun x -> e1; e2)
+     rather than
+        (fun x -> e1); e2
 
-(* TO BE ADDED IN parse.fsy
-open Prims
-open FStar.List
-open FStar.Util
-open FStar.Range
-open FStar.Options
-open FStar.Absyn.Syntax
-open FStar.Absyn.Const
-open FStar.Absyn.Util
-open FStar.Parser.AST
-open FStar.Parser.Util
-open FStar.Const
-open FStar.Ident
+   2 s/r conflict on DOT
+      A.B ^ .C  (x2)
+
+   1 s/r conflict on LBRACE
+
+      Consider:
+          let f (x: y:int & z:vector y{z=z /\ y=0}) = 0
+
+      This is parsed as:
+        let f (x: (y:int & z:vector y{z=z /\ y=0})) = 0
+      rather than:
+        let f (x: (y:int & z:vector y){z=z /\ y=0}) = 0
+
+      Analogous ambiguities with -> and * as well.
+
+ A lot (140) of end-of-stream conflicts are also reported and
+ should be investigated...
 *)
-
+(* (c) Microsoft Corporation. All rights reserved *)
 open Prims
 open FStar_List
 open FStar_Util
@@ -537,22 +552,36 @@ ascribeKind:
 kind:
   | t=tmArrow(tmNoEq) { {t with level=Kind} }
 
+
+
+
 typ:
   | t=simpleTerm  { t }
 
-  | FORALL bs=binders DOT trigger=qpat e=noSeqTerm
+  | q=quantifier bs=binders DOT trigger=qpat e=noSeqTerm
       {
         match bs with
             | [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 3))
-            | _ -> mk_term (QForall(bs, trigger, e)) (rhs2 parseState 1 5) Formula
+            | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) Formula
       }
 
-  | EXISTS bs=binders DOT trigger=qpat e=noSeqTerm
-      {
-        match bs with
-            | [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 3))
-            | _ -> mk_term (QExists(bs, trigger, e)) (rhs2 parseState 1 5) Formula
-      }
+%inline quantifier:
+  | FORALL { fun x -> QForall x }
+  | EXISTS { fun x -> QExists x}
+
+qpat:
+  |   { [] }
+  | LBRACE_COLON_PATTERN pats=disjunctivePats RBRACE { pats }
+
+disjunctivePats:
+  | pats=separated_nonempty_list(DISJUNCTION, conjunctivePat) { pats }
+
+conjunctivePat:
+  | pats=separated_nonempty_list(SEMICOLON, appTerm)          { pats }
+
+
+
+
 
 
 term:
@@ -564,10 +593,8 @@ term:
 
 noSeqTerm:
   | t=typ  { t }
-  | e1=atomicTerm DOT_LBRACK e2=term RBRACK LARROW e3=noSeqTerm
-      { mk_term (Op(".[]<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr }
-  | e1=atomicTerm DOT_LPAREN e2=term RPAREN LARROW e3=noSeqTerm
-      { mk_term (Op(".()<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr }
+  | e1=atomicTerm op=dotOperator e2=term RBRACK LARROW e3=noSeqTerm
+      { mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr }
   | REQUIRES t=typ
       { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type }
   | ENSURES t=typ
@@ -606,16 +633,6 @@ noSeqTerm:
       { mkExplicitApp (mk_term (Var assume_lid) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
   | id=ident LARROW e=noSeqTerm
       { mk_term (Assign(id, e)) (rhs2 parseState 1 3) Expr }
-
-qpat:
-  |   { [] }
-  | LBRACE_COLON_PATTERN pats=disjunctivePats RBRACE { pats }
-
-disjunctivePats:
-  | pats=separated_nonempty_list(DISJUNCTION, conjunctivePat) { pats }
-
-conjunctivePat:
-  | pats=separated_nonempty_list(SEMICOLON, appTerm)          { pats }
 
 simpleTerm:
   | e=tmIff { e }
@@ -660,7 +677,7 @@ tmIff:
       { e }
 
 
-(* Tm : tmDisjunction (now tmFormula, with equals) or tmCons (now tmNoEq, without equals) *)
+(* Tm : tmDisjunction (now tmFormula, containing EQUALS) or tmCons (now tmNoEq, without EQUALS) *)
 tmArrow(Tm):
   | dom=tmArrowDomain(Tm) RARROW tgt=tmArrow(Tm)
      {
@@ -727,10 +744,6 @@ tmNoEq:
       { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
   | MINUS e=tmNoEq
       { mk_uminus e (rhs2 parseState 1 3) Expr }
-  | e=refinementTerm
-      { e }
-
-refinementTerm:
   | id=ident COLON e=appTerm phi_opt=refineOpt
       {
         let t = match phi_opt with
@@ -739,7 +752,9 @@ refinementTerm:
         in mk_term t (rhs2 parseState 1 4) Type
       }
   | LBRACE e=recordExp RBRACE { e }
-  | e=unaryTerm { e }
+  | op=TILDE e=atomicTerm
+      { mk_term (Op(op, [e])) (rhs2 parseState 1 3) Formula }
+  | e=appTerm { e }
 
 refineOpt:
   | phi_opt=option(LBRACE phi=formula RBRACE {phi}) {phi_opt}
@@ -756,11 +771,6 @@ recordExp:
 simpleDef:
   | e=separated_pair(lid, EQUALS, simpleTerm) { e }
 
-unaryTerm:
-  | op=TILDE e=atomicTerm
-      { mk_term (Op(op, [e])) (rhs2 parseState 1 3) Formula }
-  | e=appTerm { e }
-
 appTerm:
   | head=indexingTerm args=list(pair(maybeHash, indexingTerm))
       { mkApp head (map (fun (x,y) -> (y,x)) args) (rhs2 parseState 1 2) }
@@ -770,10 +780,8 @@ appTerm:
   | HASH { Hash }
 
 indexingTerm:
-  | e1=atomicTerm DOT_LPAREN e2=term RPAREN
-      { mk_term (Op(".()", [ e1; e2 ])) (rhs2 parseState 1 3) Expr }
-  | e1=atomicTerm DOT_LBRACK e2=term RBRACK
-      { mk_term (Op(".[]", [ e1; e2 ])) (rhs2 parseState 1 3) Expr }
+  | e1=atomicTerm op=dotOperator e2=term RPAREN
+      { mk_term (Op(op, [ e1; e2 ])) (rhs2 parseState 1 3) Expr }
   | e=atomicTerm
       { e }
 
@@ -901,6 +909,10 @@ constant:
   | op=OPINFIX1
   | op=OPINFIX2
      { op }
+
+%inline dotOperator:
+  | DOT_LPAREN { ".()"}
+  | DOT_LBRACK { ".[]" }
 
 separated_trailing_list(SEP,X):
   | { [] }
