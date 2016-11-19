@@ -201,7 +201,7 @@ decl2:
       { k }
   | t=tycon
       { t }
-  | qs=qualifiers LET lq=letqualifier lb=toplevelLetbinding lbs=letbindings(toplevelLetbinding)
+  | qs=qualifiers LET lq=letqualifier lb=letbinding lbs=letbindings
       {
         let r, focus = lq in
         let lbs = focusLetBindings ((focus, lb)::lbs) (rhs2 parseState 1 5) in
@@ -274,23 +274,8 @@ kind_abbrev:
   | KIND lid=eitherName bs=binders EQUALS k=kind
       { KindAbbrev(lid, bs, k) }
 
-letbindings(LetBinding):
-  | lbs=list(AND p=pair(maybeFocus,LetBinding) {p}) { lbs }
-
-toplevelLetbinding:
-  | lid=ident lbp=list(bindingPattern) ascr_opt=ascribeTyp? EQUALS tm=term
-      {
-        let pat = mk_pattern (PatVar(lid, None)) (rhs parseState 1) in
-        let pat = match lbp with
-          | [] -> pat
-          | lbp -> mk_pattern (PatApp (pat, flatten lbp)) (rhs2 parseState 1 2)
-        in
-        let pos = rhs2 parseState 1 5 in
-        match ascr_opt with
-        | None -> (pat, tm)
-        | Some t -> (mk_pattern (PatAscribed(pat, t)) pos, tm)
-      }
-
+letbindings:
+  | lbs=list(AND p=pair(maybeFocus,letbinding) {p}) { lbs }
 
 letbinding:
   | lid=ident lbp=nonempty_list(bindingPattern) ascr_opt=ascribeTyp? EQUALS tm=term
@@ -636,7 +621,7 @@ noSeqTerm:
       }
   | LET OPEN uid=qname IN e=term
       { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr }
-  | LET q=letqualifier lb=letbinding lbs=letbindings(letbinding) IN e=term
+  | LET q=letqualifier lb=letbinding lbs=letbindings IN e=term
       {
         let r, focus = q in
         let lbs = focusLetBindings ((focus,lb)::lbs) (rhs2 parseState 2 4) in
