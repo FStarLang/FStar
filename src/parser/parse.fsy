@@ -377,10 +377,28 @@ loption_separated_nonempty_list_SEMICOLON_openPatternRec1__:
     {let x = $1 in
     ( x )}
 
-list___anonymous_3_:
+list___anonymous_3_letbinding__:
   
     {    ( [] )}
-| AND maybeFocus letbinding list___anonymous_3_
+| AND maybeFocus letbinding list___anonymous_3_letbinding__
+    {let (_10, x00, y00, xs) = ((), $2, $3, $4) in
+let x =
+  let y0 = y00 in
+  let x0 = x00 in
+  let _1 = _10 in
+  let p =
+    let y = y0 in
+    let x = x0 in
+        ( (x, y) )
+  in
+                                                 (p)
+in
+    ( x :: xs )}
+
+list___anonymous_3_toplevelLetbinding__:
+  
+    {    ( [] )}
+| AND maybeFocus toplevelLetbinding list___anonymous_3_toplevelLetbinding__
     {let (_10, x00, y00, xs) = ((), $2, $3, $4) in
 let x =
   let y0 = y00 in
@@ -411,6 +429,13 @@ list_binder_:
   
     {    ( [] )}
 | binder list_binder_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
+list_bindingPattern_:
+  
+    {    ( [] )}
+| bindingPattern list_bindingPattern_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -658,7 +683,7 @@ decl2:
 | tycon
     {let t = $1 in
       ( t )}
-| list_qualifier_ LET letqualifier letbinding letbindings
+| list_qualifier_ LET letqualifier toplevelLetbinding letbindings_toplevelLetbinding_
     {let (qs0, _2, lq, lb, lbs) = ($1, $2, $3, $4, $5) in
 let qs =
   let qs = qs0 in
@@ -811,10 +836,30 @@ kind_abbrev:
     {let (_1, lid, bs, _4, k) = ((), $2, $3, (), $5) in
       ( KindAbbrev(lid, bs, k) )}
 
-letbindings:
-  list___anonymous_3_
+letbindings_letbinding_:
+  list___anonymous_3_letbinding__
     {let lbs = $1 in
                                                     ( lbs )}
+
+letbindings_toplevelLetbinding_:
+  list___anonymous_3_toplevelLetbinding__
+    {let lbs = $1 in
+                                                    ( lbs )}
+
+toplevelLetbinding:
+  ident list_bindingPattern_ option_ascribeTyp_ EQUALS term
+    {let (lid, lbp, ascr_opt, _4, tm) = ($1, $2, $3, (), $5) in
+      (
+        let pat = mk_pattern (PatVar(lid, None)) (rhs parseState 1) in
+        let pat = match lbp with
+          | [] -> pat
+          | lbp -> mk_pattern (PatApp (pat, flatten lbp)) (rhs2 parseState 1 2)
+        in
+        let pos = rhs2 parseState 1 5 in
+        match ascr_opt with
+        | None -> (pat, tm)
+        | Some t -> (mk_pattern (PatAscribed(pat, t)) pos, tm)
+      )}
 
 letbinding:
   ident nonempty_list_bindingPattern_ option_ascribeTyp_ EQUALS term
@@ -1453,7 +1498,7 @@ in
 | LET OPEN qname IN term
     {let (_1, _2, uid, _4, e) = ($1, (), $3, (), $5) in
       ( mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr )}
-| LET letqualifier letbinding letbindings IN term
+| LET letqualifier letbinding letbindings_letbinding_ IN term
     {let (_1, q, lb, lbs, _5, e) = ($1, $2, $3, $4, (), $6) in
       (
         let r, focus = q in

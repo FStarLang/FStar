@@ -89,7 +89,13 @@ let parse fn =
   setLexbufPos filename lexbuf line col;
   try
       let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
-      let lexer = LexFStar.token lexargs in
+      let lexer =
+          let lexer0 = LexFStar.token lexargs in
+          fun lexbuf ->
+              let tok = lexer0 lexbuf in
+              // printfn "token : %+A\n" tok ;
+              tok
+      in
       let fileOrFragment = Parse.inputFragment lexer lexbuf in
       let frags = match fileOrFragment with
         | Inl mods ->

@@ -283,9 +283,11 @@ type nonTerminalId =
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_effectDecl__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_openPatternRec1__
-    | NONTERM_list___anonymous_3_
+    | NONTERM_list___anonymous_3_letbinding__
+    | NONTERM_list___anonymous_3_toplevelLetbinding__
     | NONTERM_list___anonymous_6_
     | NONTERM_list_binder_
+    | NONTERM_list_bindingPattern_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
     | NONTERM_list_pair_maybeHash_indexingTerm__
@@ -319,7 +321,9 @@ type nonTerminalId =
     | NONTERM_recordFieldDecls
     | NONTERM_constructorDecl
     | NONTERM_kind_abbrev
-    | NONTERM_letbindings
+    | NONTERM_letbindings_letbinding_
+    | NONTERM_letbindings_toplevelLetbinding_
+    | NONTERM_toplevelLetbinding
     | NONTERM_letbinding
     | NONTERM_newEffect
     | NONTERM_effectRedefinition
