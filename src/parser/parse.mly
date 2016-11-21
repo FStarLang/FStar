@@ -44,6 +44,7 @@ open FStar_Parser_AST
 open FStar_Parser_Util
 open FStar_Const
 open FStar_Ident
+open FStar_String
 
 let as_frag d ds =
     let rec as_mlist out ((m,r,doc), cur) ds =
@@ -72,6 +73,32 @@ let as_frag d ds =
                        | _ -> ()) ds;
         Inr ds
 
+let compile_op arity s =
+    let name_of_char = function
+            |'&' -> "Amp"
+            |'@'  -> "At"
+            |'+' -> "Plus"
+            |'-' when (arity=1) -> "Minus"
+            |'-' -> "Subtraction"
+            |'/' -> "Slash"
+            |'<' -> "Less"
+            |'=' -> "Equals"
+            |'>' -> "Greater"
+            |'_' -> "Underscore"
+            |'|' -> "Bar"
+            |'!' -> "Bang"
+            |'^' -> "Hat"
+            |'%' -> "Percent"
+            |'*' -> "Star"
+            |'?' -> "Question"
+            |':' -> "Colon"
+            | _ -> "UNKNOWN" in
+    match s with
+    | ".[]<-" -> "op_String_Assignment"
+    | ".()<-" -> "op_Array_Assignment"
+    | ".[]" -> "op_String_Access"
+    | ".()" -> "op_Array_Access"
+    | _ -> "op_"^ (concat "_" (map name_of_char (list_of_string s)))
 %}
 
 %token <bytes> BYTEARRAY
@@ -207,7 +234,7 @@ decl2:
         let lbs = focusLetBindings ((focus, lb)::lbs) (rhs2 parseState 1 5) in
         ToplevelLet(qs, r, lbs)
       }
-  | qs=qualifiers VAL lid=ident COLON t=typ
+  | qs=qualifiers VAL lid=identOrOperator COLON t=typ
       { Val(qs, lid, t) }
   | tag=assumeTag lid=name COLON phi=formula
       { Assume(tag, lid, phi) }
@@ -278,7 +305,7 @@ letbindings:
   | lbs=list(AND p=pair(maybeFocus,letbinding) {p}) { lbs }
 
 letbinding:
-  | lid=ident lbp=nonempty_list(bindingPattern) ascr_opt=ascribeTyp? EQUALS tm=term
+  | lid=identOrOperator lbp=nonempty_list(bindingPattern) ascr_opt=ascribeTyp? EQUALS tm=term
       {
         let pat = mk_pattern (PatVar(lid, None)) (rhs parseState 1) in
         let pat = mk_pattern (PatApp (pat, flatten lbp)) (rhs2 parseState 1 2) in
@@ -528,6 +555,12 @@ path(Id):
 eitherName:
   | x=ident { x }
   | x=name  { x }
+
+identOrOperator:
+  | id=IDENT
+    { mk_ident(id, rhs parseState 1) }
+  | LPAREN id=operator RPAREN
+    { mk_ident(compile_op (-1) id, rhs parseState 1) }
 
 ident:
   | id=IDENT { mk_ident(id, rhs parseState 1)}

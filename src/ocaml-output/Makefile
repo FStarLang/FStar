@@ -67,11 +67,12 @@ all:
 prep: parser copy_lib_files version
 
 parser:
-	cp ../parser/parse.mly ./parse.mly
 ifdef HAS_MENHIR
+	cp ../parser/parse.mly ./parse.mly
 	$(MENHIR) --only-preprocess-for-ocamlyacc parse.mly > parse.preprocessed.mly
 	$(MENHIR) parse.mly
 	mv parse.ml parse.preprocessed.ml
+	$(MAKE) fsharp-parser
 else
 	$(OCAMLYACC) parse.preprocessed.mly 2>&1
 endif
@@ -90,12 +91,13 @@ endif
 	echo "open FStar_Parser_Util" >> FStar_Parser_Parse.ml
 	echo "open FStar_Const" >> FStar_Parser_Parse.ml
 	echo "open FStar_Ident" >> FStar_Parser_Parse.ml
+	echo "open FStar_String" >> FStar_Parser_Parse.ml
 	cat parse.preprocessed.ml >> FStar_Parser_Parse.ml
 	ocamllex ../parser/ml/lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parser/ml/parseit.ml FStar_Parser_ParseIt.ml
 
 
-fsharp-parser: parser
+fsharp-parser:
 	rm -f parse.preprocessed.fsy
 	echo "%{" > parse.preprocessed.fsy
 	echo "#light \"off\"" >> parse.preprocessed.fsy
@@ -112,6 +114,7 @@ fsharp-parser: parser
 	echo "open FStar.Parser.Util" >> parse.preprocessed.fsy
 	echo "open FStar.Const" >> parse.preprocessed.fsy
 	echo "open FStar.Ident" >> parse.preprocessed.fsy
+	echo "open FStar.String" >> parse.preprocessed.fsy
   # TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
 	cat parse.preprocessed.mly | sed -e '/%{/d' \
 																	 -e '/^open /d' \

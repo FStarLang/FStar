@@ -13,6 +13,7 @@ open FStar.Parser.AST
 open FStar.Parser.Util
 open FStar.Const
 open FStar.Ident
+open FStar.String
 (*
  Known (intentional) ambiguities: 8 s/r conflicts in total; resolved by shifting
    4 s/r conflicts on BAR
@@ -74,6 +75,32 @@ let as_frag d ds =
                        | _ -> ()) ds;
         Inr ds
 
+let compile_op arity s =
+    let name_of_char = function
+            |'&' -> "Amp"
+            |'@'  -> "At"
+            |'+' -> "Plus"
+            |'-' when (arity=1) -> "Minus"
+            |'-' -> "Subtraction"
+            |'/' -> "Slash"
+            |'<' -> "Less"
+            |'=' -> "Equals"
+            |'>' -> "Greater"
+            |'_' -> "Underscore"
+            |'|' -> "Bar"
+            |'!' -> "Bang"
+            |'^' -> "Hat"
+            |'%' -> "Percent"
+            |'*' -> "Star"
+            |'?' -> "Question"
+            |':' -> "Colon"
+            | _ -> "UNKNOWN" in
+    match s with
+    | ".[]<-" -> "op_String_Assignment"
+    | ".()<-" -> "op_Array_Assignment"
+    | ".[]" -> "op_String_Access"
+    | ".()" -> "op_Array_Access"
+    | _ -> "op_"^ (concat "_" (map name_of_char (list_of_string s)))
 %}
 %start inputFragment
 %start term
@@ -669,7 +696,7 @@ in
         let lbs = focusLetBindings ((focus, lb)::lbs) (rhs2 parseState 1 5) in
         ToplevelLet(qs, r, lbs)
       )}
-| list_qualifier_ VAL ident COLON typ
+| list_qualifier_ VAL identOrOperator COLON typ
     {let (qs0, _2, lid, _4, t) = ($1, (), $3, (), $5) in
 let qs =
   let qs = qs0 in
@@ -817,7 +844,7 @@ letbindings:
                                                     ( lbs )}
 
 letbinding:
-  ident nonempty_list_bindingPattern_ option_ascribeTyp_ EQUALS term
+  identOrOperator nonempty_list_bindingPattern_ option_ascribeTyp_ EQUALS term
     {let (lid, lbp, ascr_opt, _4, tm) = ($1, $2, $3, (), $5) in
       (
         let pat = mk_pattern (PatVar(lid, None)) (rhs parseState 1) in
@@ -1312,6 +1339,98 @@ eitherName:
 | name
     {let x = $1 in
             ( x )}
+
+identOrOperator:
+  IDENT
+    {let id = $1 in
+    ( mk_ident(id, rhs parseState 1) )}
+| LPAREN OPPREFIX RPAREN
+    {let (_1, op0, _3) = ((), $2, ()) in
+let id =
+  let op = op0 in
+       ( op )
+in
+    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+| LPAREN OPINFIX3 RPAREN
+    {let (_1, op0, _3) = ((), $2, ()) in
+let id =
+  let op = op0 in
+       ( op )
+in
+    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+| LPAREN OPINFIX4 RPAREN
+    {let (_1, op0, _3) = ((), $2, ()) in
+let id =
+  let op = op0 in
+       ( op )
+in
+    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+| LPAREN OPINFIX0a RPAREN
+    {let (_1, op00, _3) = ((), $2, ()) in
+let id =
+  let op0 = op00 in
+  let op =
+    let op = op0 in
+         ( op )
+  in
+       ( op )
+in
+    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+| LPAREN OPINFIX0b RPAREN
+    {let (_1, op00, _3) = ((), $2, ()) in
+let id =
+  let op0 = op00 in
+  let op =
+    let op = op0 in
+         ( op )
+  in
+       ( op )
+in
+    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+| LPAREN OPINFIX0c RPAREN
+    {let (_1, op00, _3) = ((), $2, ()) in
+let id =
+  let op0 = op00 in
+  let op =
+    let op = op0 in
+         ( op )
+  in
+       ( op )
+in
+    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+| LPAREN OPINFIX0d RPAREN
+    {let (_1, op00, _3) = ((), $2, ()) in
+let id =
+  let op0 = op00 in
+  let op =
+    let op = op0 in
+         ( op )
+  in
+       ( op )
+in
+    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+| LPAREN OPINFIX1 RPAREN
+    {let (_1, op00, _3) = ((), $2, ()) in
+let id =
+  let op0 = op00 in
+  let op =
+    let op = op0 in
+         ( op )
+  in
+       ( op )
+in
+    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+| LPAREN OPINFIX2 RPAREN
+    {let (_1, op00, _3) = ((), $2, ()) in
+let id =
+  let op0 = op00 in
+  let op =
+    let op = op0 in
+         ( op )
+  in
+       ( op )
+in
+    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
 
 ident:
   IDENT
