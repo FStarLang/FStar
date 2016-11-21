@@ -30,7 +30,7 @@ let escape_or fallback = function
 
 let jstr_escape s = String.collect (escape_or string_of_char) s
 
-let escape_char fallback = function 
+let escape_char fallback = function
   | c when (c = '\'')            -> "_"
   | c when (is_letter_or_digit c)-> string_of_char c
   | c when (is_punctuation c)    -> string_of_char c
@@ -111,7 +111,7 @@ and pretty_print_statement (p:statement_t) : doc =
     | JSS_Continue(i) -> reduce [ws; text "continue";
         (match i with | None -> empty | Some (v, t) -> reduce [ws; text (jstr_escape v)]); semi]
     | JSS_With(e,s) -> reduce [ws; text "with"; parens (pretty_print_exp e); hardline; optws s]
-    | JSS_TypeAlias((id,_),lt,t) -> reduce [text "type "; text (jstr_escape id); print_decl_t lt; text "="; print_typ t; semi]
+    | JSS_TypeAlias((id,_),lt,t) -> reduce [text "type "; text (remove_chars_t id); print_decl_t lt; text "="; print_typ t; semi]
     | JSS_Switch(e,lcase) ->
         reduce [ws; text "switch"; parens (pretty_print_exp e); hardline;
                 ws; text "{"; hardline;
@@ -133,7 +133,7 @@ and pretty_print_statement (p:statement_t) : doc =
     | JSS_FunctionDeclaration(f) -> pretty_print_fun f
     | JSS_VariableDeclaration((p, e), k) ->
         (match p with
-        | JGP_Identifier (n, _) when n = "_" -> (match e with | Some v -> pretty_print_exp v | None -> empty)
+        | JGP_Identifier (n, _) when n = "_" -> (match e with | Some v -> reduce [pretty_print_exp v; semi] | None -> empty)
         | _ -> reduce [print_kind_var k; print_pattern p true;
                       (match e with | None -> empty | Some v -> reduce [text "="; pretty_print_exp v]); semi])
     | JSS_DeclareVariable _ -> failwith "todo: pretty-print [JSS_DeclareVariable]"
@@ -146,9 +146,10 @@ and pretty_print_statement (p:statement_t) : doc =
         reduce [print_exp_kind k; print_declaration]
     | JSS_ImportDeclaration d ->
         reduce [text "import * as "; text (jstr_escape (fst d));
-                text " from "; text "\"./"; text (jstr_escape (fst d)); text "\""; text ";"]
+                text " from "; text "\"./"; text (jstr_escape (fst d)); text "\""; semi]
+    | JSS_Seq(l) -> pretty_print_statements l
 
-  in reduce [(f p); hardline]
+  in (match p with | JSS_Seq _ -> (f p) | _ -> reduce [(f p); hardline])
 
 and print_exp_kind = function
     | ExportType -> text "export "

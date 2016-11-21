@@ -43,6 +43,7 @@ and statement_t =
     | JSS_DeclareFunction of identifier_t * option<predicate_t>
     | JSS_ExportDefaultDeclaration of export_default_declaration_t
     | JSS_ImportDeclaration of import_declaration_t
+    | JSS_Seq of list<statement_t>
     
 and expression_t =
     | JSE_This
