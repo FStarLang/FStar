@@ -15,7 +15,7 @@ OCAMLMKLIB = ocamlfind mklib $(INCLUDE)
 OCAMLDEP = ocamlfind dep
 
 CCOPTS = $(addprefix -ccopt ,-Wall -std=c11 -D__USE_MINGW_ANSI_STDIO)
-CCLIBS = $(addprefix -cclib ,-L. -lllcrypto -lLowCProvider)
+CCLIBS = $(addprefix -cclib ,-L.)
 
 ifeq ($(OS),Windows_NT)
     # On cygwin + cygwinports, DLLs are searched in the PATH, which is not
@@ -68,6 +68,9 @@ lowc_stub.o: libllcrypto.a
 
 LowCProvider.cmxa: $(CORECRYPTO)/CoreCrypto.cmx libllcrypto.a lowc_stub.o LowCProvider.cmx
 	$(OCAMLMKLIB) $(EXTRA_LIBS) $(CCLIBS) -o LowCProvider $^
+
+Tests.exe: LowCProvider.cmxa Tests.cmx
+	$(OCAMLOPT) $(EXTRA_OPTS) -I $(PLATFORM) -package batteries,zarith -linkpkg -o $@ libllcrypto.a lowc_stub.o CoreCrypto.cmxa LowCProvider.cmx Tests.cmx
 
 clean:
 	$(MAKE) -C $(PLATFORM) clean

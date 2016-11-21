@@ -90,6 +90,7 @@ static uint8_t* buffer_of_platform_bytes(value mlbytes, size_t* out_length) {
 CAMLprim value ocaml_openssl_init(value unit) {
   CAMLparam1(unit);
   OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS | OPENSSL_INIT_ADD_ALL_CIPHERS | OPENSSL_INIT_ADD_ALL_DIGESTS, NULL);
+  OPENSSL_config("CoreCrypto");
   RAND_poll();
   CAMLreturn(Val_unit);
 }

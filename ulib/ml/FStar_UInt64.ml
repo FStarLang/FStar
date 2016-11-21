@@ -1,5 +1,4 @@
 type uint64 = Stdint.Uint64.t
-type uint8 = int
 type t = uint64
            
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
@@ -33,8 +32,8 @@ let lognot (a:uint64) : uint64 = Stdint.Uint64.lognot a
                                               
 let int_to_uint64 (x:Prims.int) : uint64= Stdint.Uint64.of_string (Prims.to_string x)
 
-let shift_right (a:uint64) (b:uint8) : uint64 = Stdint.Uint64.shift_right a b
-let shift_left  (a:uint64) (b:uint8) : uint64 = Stdint.Uint64.shift_left a b
+let shift_right (a:uint64) (b:int64) : uint64 = Stdint.Uint64.shift_right a (Int64.to_int b)
+let shift_left  (a:uint64) (b:int64) : uint64 = Stdint.Uint64.shift_left a (Int64.to_int b)
 
 (* Comparison operators *)
 let eq (a:uint64) (b:uint64) : bool = a = b
