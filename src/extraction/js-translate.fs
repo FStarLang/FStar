@@ -180,7 +180,7 @@ and translate_decl d: option<source_t> =
         let c =
             if is_pure_expr expr (name, None)
             then [JSS_VariableDeclaration((JGP_Identifier(name, t), Some(translate_expr_pure expr)), JSV_Let)]
-            else translate_expr expr (name, t) None false [] in
+            else translate_expr expr (name, t) None false (ref []) in
         if is_private then c else [JSS_ExportDefaultDeclaration(JSE_Declaration(JSS_Block(c)), ExportValue)]
      in
         List.collect for1 lfunc |> JSS_Block |> JS_Statement |> Some
@@ -235,18 +235,20 @@ and translate_decl d: option<source_t> =
 and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
   let get_res expr new_fv =
     let lstmt = (match lstmt with | Some v -> v | None -> []) in
+    let isAssgmnt = ref [] in
+    let expr =
+       (match expr with | JSE_Assignment _ -> (isAssgmnt := [JSS_Expression(expr)]; JSE_Literal(JSV_Null, "")) | _ -> expr) in
     let expr =
         if isDecl
         then JSS_Expression(JSE_Assignment(JGP_Identifier(var), expr))
-        else
-            let lDecl = [fst var] @ lDecl in
-            JSS_VariableDeclaration((JGP_Identifier(var), Some(expr)), JSV_Let)
+        else (lDecl := [fst var] @ !lDecl;
+              JSS_VariableDeclaration((JGP_Identifier(var), Some(expr)), JSV_Let))
     in (match new_fv with
         | Some v -> if !isEqVar
                     then (isEqVar := false;
-                         !v @ [JSS_Block([expr] @ lstmt)])
-                    else !v @ [expr] @ lstmt
-        | None -> [expr] @ lstmt) in
+                         !v @ !isAssgmnt @ [JSS_Block([expr] @ lstmt)])
+                    else !v @ !isAssgmnt @ [expr] @ lstmt
+        | None -> !isAssgmnt @ [expr] @ lstmt) in
     
   match e.expr with
   | x when is_pure_expr e var ->
@@ -260,15 +262,15 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
       mllb_def = body;
       print_typ = pt
       }]), continuation) ->
-      let c = translate_expr continuation var lstmt isDecl lDecl in
-      if is_pure_expr body (name, None)
-      then
+     if is_pure_expr body (name, None)
+     then
+        let isEqName = List.existsb (fun x -> x = name) !lDecl in
+        let lDecl = if isEqName then (ref [name]) else (lDecl := [name] @ !lDecl; lDecl) in
+        let c = translate_expr continuation var lstmt isDecl lDecl in
         let c = [JSS_VariableDeclaration((JGP_Identifier(name, None), Some (translate_expr_pure body)), JSV_Let)] @ c in
-        if List.existsb (fun x -> x = name) lDecl
-        then [JSS_Block(c)] 
-        else
-            let lDecl = [name] @ lDecl in c
-      else        
+        if isEqName then [JSS_Block(c)] else c
+     else
+        let c = translate_expr continuation var lstmt isDecl lDecl in
         translate_expr body (name, None) (Some c) false lDecl
 
   | MLE_Let _ ->
@@ -280,10 +282,8 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
       let body_t =
         if is_pure_expr body var
         then JS_BodyExpression(translate_expr_pure body)
-        else
-            let lDecl = ["_res"] @ lDecl in
-            JS_BodyBlock([JSS_VariableDeclaration((JGP_Identifier("_res", None), None), JSV_Let)] @
-                           translate_expr body ("_res", None) (Some([JSS_Return(Some(JSE_Identifier("_res", None)))])) true lDecl) in
+        else JS_BodyBlock([JSS_VariableDeclaration((JGP_Identifier("_res", None), None), JSV_Let)] @
+                           translate_expr body ("_res", None) (Some([JSS_Return(Some(JSE_Identifier("_res", None)))])) true (ref [])) in
       let ret_t =
         (match (snd var) with
          | None -> None
@@ -294,25 +294,25 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
         if isDecl
         then [JSS_Expression(JSE_Assignment(JGP_Identifier(fst var, None), expr))]
         else
-            let lDecl = [fst var] @ lDecl in
-            [JSS_VariableDeclaration((JGP_Identifier(fst var, None), Some(expr)), JSV_Let)] in
+           (lDecl := [fst var] @ !lDecl;
+            [JSS_VariableDeclaration((JGP_Identifier(fst var, None), Some(expr)), JSV_Let)]) in
       expr @ lstmt
 
   | MLE_If(cond, s1, s2) ->
-      let lDecl = if isDecl then lDecl else [fst var] @ lDecl in
-      let s1 = JSS_Block(translate_expr s1 var None true lDecl) in
-      let s2 = (match s2 with | Some v -> Some (JSS_Block(translate_expr v var None true lDecl)) | None -> None) in
+      let s1 = JSS_Block(translate_expr s1 var None true (ref [])) in
+      let s2 = (match s2 with | Some v -> Some (JSS_Block(translate_expr v var None true (ref []))) | None -> None) in
       let c =
         if is_pure_expr cond var
         then
             [JSS_If(translate_expr_pure cond, s1, s2)]
         else
-            let lDecl = ["_cond"] @ lDecl in
             [JSS_VariableDeclaration((JGP_Identifier("_cond", Some (JST_Boolean)), None), JSV_Let)] @
-             translate_expr cond ("_cond", None) (Some [JSS_If(JSE_Identifier("_cond", Some JST_Boolean), s1, s2)]) true lDecl in
+             translate_expr cond ("_cond", None) (Some [JSS_If(JSE_Identifier("_cond", Some JST_Boolean), s1, s2)]) true (ref []) in
       let c =
         if isDecl then c
-        else [JSS_VariableDeclaration((JGP_Identifier(var), None), JSV_Let)] @ c in
+        else
+            (lDecl := [fst var] @ !lDecl;
+            [JSS_VariableDeclaration((JGP_Identifier(var), None), JSV_Let)] @ c) in
       (match lstmt with | Some v -> c @ v | None -> c)
 
   | MLE_Raise _ ->
@@ -326,20 +326,18 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
       translate_expr in_e var lstmt isDecl lDecl
 
   | MLE_Match(e_in, lb) ->
-      let lDecl = ["_match_e"] @ lDecl in
+      let match_e = (Absyn.Util.gensym(), None) in
       let c =
         if is_pure_expr e_in var
         then
-            [JSS_VariableDeclaration((JGP_Identifier("_match_e", None), Some(translate_expr_pure e_in)), JSV_Let);
-             translate_match lb (JSE_Identifier("_match_e", None)) var lDecl]
+            [JSS_VariableDeclaration((JGP_Identifier(match_e), Some(translate_expr_pure e_in)), JSV_Let);
+             translate_match lb (JSE_Identifier(match_e)) var]
         else
-            [JSS_VariableDeclaration((JGP_Identifier("_match_e", None), None), JSV_Let)] @
-             translate_expr e_in ("_match_e", None) (Some [translate_match lb (JSE_Identifier("_match_e", None)) var lDecl]) true lDecl in
+            [JSS_VariableDeclaration((JGP_Identifier(match_e), None), JSV_Let)] @
+             translate_expr e_in match_e (Some [translate_match lb (JSE_Identifier(match_e)) var]) true (ref []) in
       let c =
         if isDecl then c
-        else
-            let lDecl = [fst var] @ lDecl in
-            [JSS_VariableDeclaration((JGP_Identifier(var), None), JSV_Let)] @ c in
+        else [JSS_VariableDeclaration((JGP_Identifier(var), None), JSV_Let)] @ c in
       (match lstmt with | Some v -> c @ v | None -> c)
 
   | MLE_Seq ls ->
@@ -353,13 +351,13 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
 
   | MLE_App (e, args) ->
       let new_fv = ref [] in
-      let args = create_pure_args new_fv args var lDecl in
+      let args = create_pure_args new_fv args var in
       let expr = translate_arg_app e args var in
       get_res expr (Some new_fv)
      
   | MLE_CTor ((path, c), lexpr) ->
       let new_fv = ref [] in
-      let lexpr = create_pure_args new_fv lexpr var lDecl in
+      let lexpr = create_pure_args new_fv lexpr var in
       let expr =
         (match c with
         | x when x = "Cons" || x = "Nil" ->
@@ -374,20 +372,20 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
   | MLE_Record (path, fields) ->
       let new_fv = ref [] in
       let create_fields =
-        List.map (fun (id, x) -> JSPO_Property(JSO_Identifier("_" ^ id, None), List.nth (create_pure_args new_fv [x] var lDecl) 0, JSO_Init)) fields in
+        List.map (fun (id, x) -> JSPO_Property(JSO_Identifier("_" ^ id, None), List.nth (create_pure_args new_fv [x] var) 0, JSO_Init)) fields in
       let expr = JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Record", ""), JSO_Init)] @
                             create_fields) in
       get_res expr (Some new_fv)
 
   | MLE_Tuple lexp ->
       let new_fv = ref [] in
-      let create_fields = List.map (fun x -> List.nth (create_pure_args new_fv [x] var lDecl) 0) lexp in
+      let create_fields = List.map (fun x -> List.nth (create_pure_args new_fv [x] var) 0) lexp in
       let expr = JSE_Array(Some (create_fields)) in
       get_res expr (Some new_fv)
 
   | _ -> failwith "todo: translation ml-expr"
 
-and create_pure_args new_fv args var lDecl =
+and create_pure_args new_fv args var =
   List.map (fun x ->
     match x.expr with
     | MLE_CTor ((path, c), _) when c = "Nil" || c = "None" ->
@@ -400,7 +398,7 @@ and create_pure_args new_fv args var lDecl =
             let c =
                 (match x.expr with
                 | MLE_Var _ -> ( isEqVar:= true; [JSS_VariableDeclaration((JGP_Identifier(fv_x, None), Some (translate_expr_pure x)), JSV_Let)])
-                | _ -> translate_expr x (fv_x, None) None false lDecl) in
+                | _ -> translate_expr x (fv_x, None) None false (ref [])) in
             new_fv := List.append !new_fv c;
             JSE_Identifier(fv_x, None)) args
 
@@ -412,6 +410,14 @@ and translate_arg_app e args var: expression_t =
       JSE_Logical((must (mk_op_bool op)), List.nth args 0, List.nth args 1)
   | MLE_Name(["Prims"], op) when is_op_un op ->
       JSE_Unary((must (mk_op_un op)), List.nth args 0)
+  | MLE_Name p when string_of_mlpath p = "FStar.Buffer.op_Array_Access"
+                 || string_of_mlpath p = "FStar.Buffer.index" ->
+      let ind = JSE_Binary(JSB_Plus, JSE_Member(List.nth args 0, JSPM_Identifier("_idx", None)), List.nth args 1) in
+      JSE_Member(JSE_Member(List.nth args 0, JSPM_Identifier("_content", None)), JSPM_Expression(ind))
+  | MLE_Name p when string_of_mlpath p = "FStar.Buffer.op_Array_Assignment" ->
+      let ind = JSE_Binary(JSB_Plus, JSE_Member(List.nth args 0, JSPM_Identifier("_idx", None)), List.nth args 1) in
+      let expr = JSE_Member(JSE_Member(List.nth args 0, JSPM_Identifier("_content", None)), JSPM_Expression(ind)) in
+      JSE_Assignment(JGP_Expression(expr), List.nth args 2)
   | MLE_Name (path, function_name) ->
       JSE_Call (JSE_Identifier(getName(path, function_name)), args)
   | MLE_Var (name, _) ->
@@ -465,15 +471,15 @@ and translate_expr_pure e: expression_t =
    
   | _ -> failwith "todo: translation ml-expr-pure"
 
-and translate_match lb fv_x var lDecl: statement_t =
+and translate_match lb fv_x var: statement_t =
   match lb with
   | [] -> JSS_Throw (JSE_Literal(JSV_String("This value doesn't match!"), ""))
   | (p, guard, expr_r) :: tl ->
     let expr_t =
         if is_pure_expr expr_r var
         then JSE_Assignment(JGP_Identifier(var), translate_expr_pure expr_r) |> JSS_Expression
-        else translate_expr expr_r var None true lDecl |> JSS_Block in
-    translate_pat_guard (p, guard) fv_x expr_t (translate_match tl fv_x var lDecl)        
+        else translate_expr expr_r var None true (ref []) |> JSS_Seq in
+    translate_pat_guard (p, guard) fv_x expr_t (translate_match tl fv_x var)        
 
 and translate_pat_guard (p, guard) fv_x s1 s2: statement_t =
   match guard with
@@ -581,12 +587,10 @@ and translate_type t: typ =
       if is_standart_type name
       then must (mk_standart_type name)
       else (if Option.isSome (Util.is_xtuple_ty (path, name))
-           then
-                JST_Tuple(List.map translate_type args)
-           else
-                let args_t =
-                    match args with
-                    | [] -> None
-                    | _ -> List.map translate_type args |> Some
-                in
-                   JST_Generic (Unqualified(getName (path, name)), args_t))
+           then JST_Tuple(List.map translate_type args)
+           else 
+              let args_t =
+                 match args with
+                 | [] -> None
+                 | _ -> List.map translate_type args |> Some in
+              JST_Generic (Unqualified(getName (path, name)), args_t))

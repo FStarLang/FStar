@@ -112,7 +112,7 @@ end
 ".krml"
 end
 | Some ("JavaScript") -> begin
-".js"
+".flow"
 end
 | _96_39 -> begin
 (FStar_All.failwith "Unrecognized option")

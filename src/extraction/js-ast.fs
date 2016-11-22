@@ -21,54 +21,35 @@ and statement_t =
     | JSS_Block of list<statement_t>
     | JSS_Expression of expression_t
     | JSS_If of expression_t * statement_t * option<statement_t>
-    | JSS_Labeled of identifier_t * statement_t  
-    | JSS_Break of option<identifier_t>
-    | JSS_Continue of option<identifier_t>
     | JSS_With of expression_t * statement_t
     | JSS_TypeAlias of identifier_t * option<param_decl_t> * typ
     | JSS_Switch of expression_t * list<(option<expression_t> * list<statement_t>)>
     | JSS_Return of option<expression_t>
     | JSS_Throw of expression_t
     | JSS_Try of list<statement_t> * option<(pattern_t * list<statement_t>)>
-    | JSS_While of expression_t * statement_t
-    | JSS_DoWhile of statement_t * expression_t
-    | JSS_For of option<forinit_t> * option<expression_t> * option<expression_t> * statement_t
-    | JSS_Forin of forinit_t * expression_t * statement_t
-    | JSS_ForOf of forinit_t * expression_t * statement_t
-    | JSS_Let of list<(pattern_t * option<expression_t>)> * statement_t
-    | JSS_Debugger
     | JSS_FunctionDeclaration of function_t
     | JSS_VariableDeclaration of (pattern_t * option<expression_t>) * kind_var_t
-    | JSS_DeclareVariable of identifier_t
-    | JSS_DeclareFunction of identifier_t * option<predicate_t>
     | JSS_ExportDefaultDeclaration of export_default_declaration_t
     | JSS_ImportDeclaration of import_declaration_t
     | JSS_Seq of list<statement_t>
     
-and expression_t =
-    | JSE_This
+and expression_t =    
     | JSE_Array of option<(list<expression_t>)>
     | JSE_Object of list<property_obj_t>
     | JSE_Function of function_t
     | JSE_ArrowFunction of function_t
     | JSE_Sequence of list<expression_t>
     | JSE_Unary of op_un * expression_t
-    | JSE_Binary of op_bin * expression_t * expression_t   
-    | JSE_Assignment of pattern_t * expression_t    
+    | JSE_Binary of op_bin * expression_t * expression_t
+    | JSE_Assignment of pattern_t * expression_t
     | JSE_Logical of op_log * expression_t * expression_t
-    | JSE_Conditional of expression_t * expression_t * expression_t
-    | JSE_New of expression_t * list<expression_t>    
-    | JSE_Call of expression_t * list<expression_t>    
+    | JSE_Call of expression_t * list<expression_t>
     | JSE_Member of expression_t * propmem_t
-    | JSE_Yield of option<expression_t> * bool
-    | JSE_Comprehension of list<t> * option<expression_t>
-    | JSE_Generator of list<t> * option<expression_t>
-    | JSE_Let of list<(pattern_t * option<expression_t>)> * expression_t
     | JSE_Identifier of identifier_t
     | JSE_Literal of literal_t
     | JSE_TypeCast of expression_t * typ
 
-and op_un =       
+and op_un =
     | JSU_Minus | JSU_Plus | JSU_Not | JSU_BitNot
     | JSU_Typeof | JSU_Void | JSU_Delete | JSU_Await
 
@@ -125,9 +106,7 @@ and generic_t =
 
 and identifier_t = string * option<typ>
 
-and function_t = (*option<identifier_t> * list<pattern_t> * option<list<expression_t>> * option<identifier_t> 
-                    * body_t * option<predicate_t> * option<typ> * option<param_decl_t> *)
-                 option<identifier_t> * list<pattern_t> * body_t * option<typ> * option<param_decl_t>
+and function_t = option<identifier_t> * list<pattern_t> * body_t * option<typ> * option<param_decl_t>
 
 and body_t = | JS_BodyBlock of list<statement_t> | JS_BodyExpression of expression_t
 
@@ -137,8 +116,7 @@ and value_t =
     | JSV_String of string
     | JSV_Boolean of bool
     | JSV_Null
-    | JSV_Number of float
-    | JSV_RegExp of string * string
+    | JSV_Number of float    
 
 and param_decl_t = list<string> (*Use only for generic types*)
 
