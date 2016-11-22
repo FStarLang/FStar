@@ -179,7 +179,7 @@ and translate_decl d: option<source_t> =
         let is_private = List.contains Private c_flag in
         let c =
             if is_pure_expr expr (name, None)
-            then [JSS_VariableDeclaration((JGP_Identifier(name, t), Some(translate_expr_pure expr)), JSV_Let)]
+            then [JSS_VariableDeclaration((JGP_Identifier(name, t), Some(translate_expr_pure expr)), JSV_Const)]
             else translate_expr expr (name, t) None false (ref []) in
         if is_private then c else [JSS_ExportDefaultDeclaration(JSE_Declaration(JSS_Block(c)), ExportValue)]
      in
@@ -242,7 +242,7 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
         if isDecl
         then JSS_Expression(JSE_Assignment(JGP_Identifier(var), expr))
         else (lDecl := [fst var] @ !lDecl;
-              JSS_VariableDeclaration((JGP_Identifier(var), Some(expr)), JSV_Let))
+              JSS_VariableDeclaration((JGP_Identifier(var), Some(expr)), JSV_Const))
     in (match new_fv with
         | Some v -> if !isEqVar
                     then (isEqVar := false;
@@ -267,7 +267,7 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
         let isEqName = List.existsb (fun x -> x = name) !lDecl in
         let lDecl = if isEqName then (ref [name]) else (lDecl := [name] @ !lDecl; lDecl) in
         let c = translate_expr continuation var lstmt isDecl lDecl in
-        let c = [JSS_VariableDeclaration((JGP_Identifier(name, None), Some (translate_expr_pure body)), JSV_Let)] @ c in
+        let c = [JSS_VariableDeclaration((JGP_Identifier(name, None), Some (translate_expr_pure body)), JSV_Const)] @ c in
         if isEqName then [JSS_Block(c)] else c
      else
         let c = translate_expr continuation var lstmt isDecl lDecl in
@@ -295,7 +295,7 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
         then [JSS_Expression(JSE_Assignment(JGP_Identifier(fst var, None), expr))]
         else
            (lDecl := [fst var] @ !lDecl;
-            [JSS_VariableDeclaration((JGP_Identifier(fst var, None), Some(expr)), JSV_Let)]) in
+            [JSS_VariableDeclaration((JGP_Identifier(fst var, None), Some(expr)), JSV_Const)]) in
       expr @ lstmt
 
   | MLE_If(cond, s1, s2) ->
@@ -330,7 +330,7 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
       let c =
         if is_pure_expr e_in var
         then
-            [JSS_VariableDeclaration((JGP_Identifier(match_e), Some(translate_expr_pure e_in)), JSV_Let);
+            [JSS_VariableDeclaration((JGP_Identifier(match_e), Some(translate_expr_pure e_in)), JSV_Const);
              translate_match lb (JSE_Identifier(match_e)) var]
         else
             [JSS_VariableDeclaration((JGP_Identifier(match_e), None), JSV_Let)] @
@@ -397,7 +397,7 @@ and create_pure_args new_fv args var =
             let fv_x = Absyn.Util.gensym() in
             let c =
                 (match x.expr with
-                | MLE_Var _ -> ( isEqVar:= true; [JSS_VariableDeclaration((JGP_Identifier(fv_x, None), Some (translate_expr_pure x)), JSV_Let)])
+                | MLE_Var _ -> ( isEqVar:= true; [JSS_VariableDeclaration((JGP_Identifier(fv_x, None), Some (translate_expr_pure x)), JSV_Const)])
                 | _ -> translate_expr x (fv_x, None) None false (ref [])) in
             new_fv := List.append !new_fv c;
             JSE_Identifier(fv_x, None)) args
@@ -500,7 +500,7 @@ and translate_pat_guard (p, guard) fv_x s1 s2: statement_t =
 and translate_pat p fv_x s1 s2: statement_t =
   match p with
   | MLP_Var (name, _) ->
-      JSS_Seq([JSS_VariableDeclaration((JGP_Identifier(name, None), Some fv_x), JSV_Let); s1])
+      JSS_Seq([JSS_VariableDeclaration((JGP_Identifier(name, None), Some fv_x), JSV_Const); s1])
 
   | MLP_Wild ->
       s1
@@ -534,7 +534,7 @@ and translate_pat p fv_x s1 s2: statement_t =
                 let new_name = Absyn.Util.gensym() in
                 let if_cond = 
                     JSE_Binary(JSB_StrictEqual, JSE_Member(JSE_Identifier(new_name, None), JSPM_Identifier("_tag", Some JST_String)), JSE_Literal(JSV_String c, "")) in
-                JSS_Seq [JSS_VariableDeclaration((JGP_Identifier(new_name, None), Some fv_x), JSV_Let);
+                JSS_Seq [JSS_VariableDeclaration((JGP_Identifier(new_name, None), Some fv_x), JSV_Const);
                          JSS_If(if_cond, translate_p_ctor lp (JSE_Identifier(new_name, None)) s1 s2 0, Some s2)]
         end
   | MLP_Branch (lp) ->

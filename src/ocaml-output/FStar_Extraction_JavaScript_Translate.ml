@@ -290,7 +290,7 @@ let c = if (is_pure_expr expr ((name), (None))) then begin
 (let _179_105 = (let _179_104 = (let _179_103 = (let _179_102 = (let _179_101 = (translate_expr_pure expr)
 in Some (_179_101))
 in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((name), (t)))), (_179_102)))
-in ((_179_103), (FStar_Extraction_JavaScript_Ast.JSV_Let)))
+in ((_179_103), (FStar_Extraction_JavaScript_Ast.JSV_Const)))
 in FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (_179_104))
 in (_179_105)::[])
 end else begin
@@ -456,7 +456,7 @@ end else begin
 let _82_268 = (let _179_164 = (let _179_163 = (FStar_ST.read lDecl)
 in (FStar_List.append (((Prims.fst var))::[]) _179_163))
 in (FStar_ST.op_Colon_Equals lDecl _179_164))
-in FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (Some (expr)))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))
+in FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (Some (expr)))), (FStar_Extraction_JavaScript_Ast.JSV_Const))))
 end
 in (match (new_fv) with
 | Some (v) -> begin
@@ -512,7 +512,7 @@ in (
 let c = (let _179_181 = (let _179_180 = (let _179_179 = (let _179_178 = (let _179_177 = (let _179_176 = (translate_expr_pure body)
 in Some (_179_176))
 in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((name), (None)))), (_179_177)))
-in ((_179_178), (FStar_Extraction_JavaScript_Ast.JSV_Let)))
+in ((_179_178), (FStar_Extraction_JavaScript_Ast.JSV_Const)))
 in FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (_179_179))
 in (_179_180)::[])
 in (FStar_List.append _179_181 c))
@@ -599,7 +599,7 @@ end else begin
 let _82_341 = (let _179_192 = (let _179_191 = (FStar_ST.read lDecl)
 in (FStar_List.append (((Prims.fst var))::[]) _179_191))
 in (FStar_ST.op_Colon_Equals lDecl _179_192))
-in (FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier ((((Prims.fst var)), (None)))), (Some (expr)))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::[])
+in (FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier ((((Prims.fst var)), (None)))), (Some (expr)))), (FStar_Extraction_JavaScript_Ast.JSV_Const))))::[])
 end
 in (FStar_List.append expr lstmt))))))))
 end
@@ -678,7 +678,7 @@ let c = if (is_pure_expr e_in var) then begin
 (let _179_214 = (let _179_211 = (let _179_210 = (let _179_209 = (let _179_208 = (translate_expr_pure e_in)
 in Some (_179_208))
 in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (match_e)), (_179_209)))
-in ((_179_210), (FStar_Extraction_JavaScript_Ast.JSV_Let)))
+in ((_179_210), (FStar_Extraction_JavaScript_Ast.JSV_Const)))
 in FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (_179_211))
 in (let _179_213 = (let _179_212 = (translate_match lb (FStar_Extraction_JavaScript_Ast.JSE_Identifier (match_e)) var)
 in (_179_212)::[])
@@ -836,7 +836,7 @@ let _82_458 = (FStar_ST.op_Colon_Equals isEqVar true)
 in (let _179_250 = (let _179_249 = (let _179_248 = (let _179_247 = (let _179_246 = (translate_expr_pure x)
 in Some (_179_246))
 in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((fv_x), (None)))), (_179_247)))
-in ((_179_248), (FStar_Extraction_JavaScript_Ast.JSV_Let)))
+in ((_179_248), (FStar_Extraction_JavaScript_Ast.JSV_Const)))
 in FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (_179_249))
 in (_179_250)::[]))
 end
@@ -1074,7 +1074,7 @@ end)
 end))
 and translate_pat : FStar_Extraction_ML_Syntax.mlpattern  ->  FStar_Extraction_JavaScript_Ast.expression_t  ->  FStar_Extraction_JavaScript_Ast.statement_t  ->  FStar_Extraction_JavaScript_Ast.statement_t  ->  FStar_Extraction_JavaScript_Ast.statement_t = (fun p fv_x s1 s2 -> (match (p) with
 | FStar_Extraction_ML_Syntax.MLP_Var (name, _82_603) -> begin
-FStar_Extraction_JavaScript_Ast.JSS_Seq ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((name), (None)))), (Some (fv_x)))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::(s1)::[])
+FStar_Extraction_JavaScript_Ast.JSS_Seq ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((name), (None)))), (Some (fv_x)))), (FStar_Extraction_JavaScript_Ast.JSV_Const))))::(s1)::[])
 end
 | FStar_Extraction_ML_Syntax.MLP_Wild -> begin
 s1
@@ -1158,7 +1158,7 @@ in (let _179_392 = (let _179_391 = (let _179_390 = (let _179_389 = (let _179_388
 in ((if_cond), (_179_388), (Some (s2))))
 in FStar_Extraction_JavaScript_Ast.JSS_If (_179_389))
 in (_179_390)::[])
-in (FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((new_name), (None)))), (Some (fv_x)))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::_179_391)
+in (FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((new_name), (None)))), (Some (fv_x)))), (FStar_Extraction_JavaScript_Ast.JSV_Const))))::_179_391)
 in FStar_Extraction_JavaScript_Ast.JSS_Seq (_179_392))))
 end)
 end))
