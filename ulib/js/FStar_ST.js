@@ -2,7 +2,7 @@
 
 import * as FStar_CommonST from "./FStar_CommonST";
 
-export type ref<T> = T;
+export type ref<T> = T[];
 
 export let read = FStar_CommonST.read;
 export let op_Bang = FStar_CommonST.op_Bang;

@@ -99,7 +99,7 @@ let is_standart_type t =
 
 let is_prim_constructors s =
     List.existsb (fun x -> x = s) ["Cons" ; "Nil"; "Some"; "None"]
-    
+
 let float_of_int i = float_of_int32 (int32_of_int i)
 
 let export_modules = ref []
@@ -418,6 +418,15 @@ and translate_arg_app e args var: expression_t =
       let ind = JSE_Binary(JSB_Plus, JSE_Member(List.nth args 0, JSPM_Identifier("_idx", None)), List.nth args 1) in
       let expr = JSE_Member(JSE_Member(List.nth args 0, JSPM_Identifier("_content", None)), JSPM_Expression(ind)) in
       JSE_Assignment(JGP_Expression(expr), List.nth args 2)
+  | MLE_Name p when string_of_mlpath p = "FStar.ST.op_Bang"
+                 || string_of_mlpath p = "FStar.ST.read" ->
+      JSE_Member(List.nth args 0, JSPM_Expression(JSE_Literal(JSV_Number(float_of_int 0), "")))
+  | MLE_Name p when string_of_mlpath p = "FStar.ST.op_Colon_Equals"
+                 || string_of_mlpath p = "FStar.ST.write" ->
+      let expr = JSE_Member(List.nth args 0, JSPM_Expression(JSE_Literal(JSV_Number(float_of_int 0), ""))) in
+      JSE_Assignment(JGP_Expression(expr), List.nth args 1)
+  | MLE_Name p when string_of_mlpath p = "FStar.ST.alloc" ->
+      JSE_Array(Some [List.nth args 0])
   | MLE_Name (path, function_name) ->
       JSE_Call (JSE_Identifier(getName(path, function_name)), args)
   | MLE_Var (name, _) ->
@@ -583,6 +592,8 @@ and translate_type t: typ =
   | MLTY_Fun (t1, _, t2) ->
       (*we want to save the source names of function parameters*)
       JST_Function([(("_1", None), translate_type t1)], translate_type t2, None)
+  | MLTY_Named(args, p) when string_of_mlpath p = "FStar.ST.ref" ->
+       JST_Array(translate_type (List.nth args 0))
   | MLTY_Named (args, (path, name)) ->
       if is_standart_type name
       then must (mk_standart_type name)
