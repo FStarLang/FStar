@@ -38,6 +38,7 @@ type step =
   | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
   | Reify
   | CompressUvars
+  | NoFullNorm
 and steps = list<step>
 
 val eta_expand_with_type :term -> typ -> term
