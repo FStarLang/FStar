@@ -100,8 +100,8 @@ let remove_chars s =
     then
         let v = List.tryFind (fun x -> s = x) keywords_js in
         Util.print1 "Warning: this name is a keyword in JavaScript: %s \n" (must v);
-        remove_chars_t (String.Concat ["_"; s])
-    else remove_chars_t s
+        reduce [text "_"; text (remove_chars_t s)]
+    else text (remove_chars_t s)
 
 let rec pretty_print (program:Ast.t) : doc = 
     reduce ([text "/* @flow */"; hardline] @           
@@ -128,7 +128,7 @@ and pretty_print_statement (p:statement_t) : doc =
          | None -> empty
          | Some s -> reduce [ws; text "else"; text "{"; optws s; text "}"]); hardline]
     | JSS_With(e,s) -> reduce [ws; text "with"; parens (pretty_print_exp e); hardline; optws s]
-    | JSS_TypeAlias((id,_),lt,t) -> reduce [ws; text "type "; text (remove_chars id); print_decl_t lt; text "="; print_typ t; semi; hardline]
+    | JSS_TypeAlias((id,_),lt,t) -> reduce [ws; text "type "; remove_chars id; print_decl_t lt; text "="; print_typ t; semi; hardline]
     | JSS_Switch(e,lcase) ->
         reduce [ws; text "switch "; parens (pretty_print_exp e); ws; text "{"; hardline;
                (List.map (fun (e,l) ->
@@ -195,13 +195,13 @@ and pretty_print_exp = function
         let le = List.map (fun x -> parens (pretty_print_exp x)) l |> combine empty in
         reduce [pretty_print_exp e; (match l with | [] -> text "()" | _ -> le)]
     | JSE_Member(o, p) ->  reduce [pretty_print_exp o; pretty_print_propmem p]
-    | JSE_Identifier(id,t) -> text (remove_chars id)
+    | JSE_Identifier(id,t) -> remove_chars id
     | JSE_Literal(l) -> print_literal (fst l)
     | JSE_TypeCast(e,t) -> reduce [ text "("; pretty_print_exp e; colon; print_typ t; text ")"]
 
 and print_decl_t lt =
     match lt with
-    | Some l -> reduce [text "<"; List.map (fun s -> text (remove_chars s)) l |> combine comma; text ">"]
+    | Some l -> reduce [text "<"; List.map (fun s -> remove_chars s) l |> combine comma; text ">"]
     | None -> empty
 
 and print_arrow_fun args body ret_t =
@@ -274,8 +274,8 @@ and print_fun_typ args ret_t decl_vars =
     in reduce [print_decl_t decl_vars; args_t]
 
 and print_gen_t = function 
-    | Unqualified (id, _) -> text (remove_chars id)
-    | Qualified (g, (id, _)) -> reduce [print_gen_t g; comma; text (remove_chars id)]
+    | Unqualified (id, _) -> remove_chars id
+    | Qualified (g, (id, _)) -> reduce [print_gen_t g; comma; remove_chars id]
 
 and print_literal = function
     | JSV_String s -> text ("\"" ^ (jstr_escape s) ^ "\"")
@@ -299,7 +299,7 @@ and print_pattern p print_t =
             match t with
             | Some v -> reduce [colon; print_typ v]
             | None -> empty
-        in reduce [text (remove_chars id); (if print_t then r else empty)]
+        in reduce [remove_chars id; (if print_t then r else empty)]
 
 and print_body = function 
     | JS_BodyBlock l -> reduce [text "{"; hardline; pretty_print_statements l; text "}"]
