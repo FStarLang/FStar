@@ -1,50 +1,98 @@
 JavaScript backend
 ===================================================================
-### Example ###
+#### Extraction F\* code to JavaScript ####
 
-1. Create project `javascript`:
-   ```
-   $ mkdir javascript
-   $ cd javascript
-   $ echo '{"name": "javascript", "scripts": {"flow": "flow"}}' > package.json
-   ```
-   
-2. Create folders `src` and `build` that would be contain results of 
-   running F\* and Babel respectively.
+As an intermediate step, we translate F\* code to Flow to check type-correctness 
+of the extracted code:
 
-3. Add Flow to our main project: 
-   ```
-   $ touch .flowconfig
-   $ npm install --save-dev flow-bin
-   ```
-   
-4. Create `SimpleTest.fst` file and write some code in F\*
+.fst -[step 1]-> .flow -[step 2]-> .js -[step 3]-> .js
 
-5. Verify this code and extract it in Flow:
+#### Step 1 ####
+
+To extract F\* code to Flow, F\* has the command line argument `--codegen JavaScript`.
+The JavaScript extractor will produce `<ModuleName>.flow` files, which will be saved 
+in the directory specified with `--out`. 
+
+#### Step 2 ####
+
+Step 2 is only used for pretty printing of the extracted code.
+
+To verify the code by Flow, one needs to link the extracted code with library `ulib/js`
+that is a version of the standard F\* library written in Flow.
+
+#### Step 3 ####
+
+To compile the verified code, one needs to erasure types from `.flow` files and translate
+ES modules (export/import) to CommandJS modules.
+
+###  Getting start ###
+
+1. install Node v6.6.0
+  
+2. install Flow package (https://github.com/facebook/flow)
+
+   - to create `.flowconfig` file, one can use the following command:
+   
    ```
-   $ fstar.exe SimpleTest.fst --codegen JavaScript --odir src
+   $ flow init
    ```
    
-   Flow code also can be checked:
+   - to verify Flow code:
+   
    ```
-   $ cd src
-   $ npm run-script flow
+   $ flow check
+   ```
+
+3. how to run Flow code, see https://flowtype.org/docs/running.html#_
+
+   - to erasure Flow types, one can install the following plugin:
+   
+   ```
+   npm install babel-plugin-transform-flow-strip-types
+   ```
+
+   - to translate ES modules (export/import) to CommandJS modules:
+
+   ```
+   npm install --save-dev babel-plugin-transform-es2015-modules-simple-commonjs
    ```
    
-6. Add Babel to our project (to remove types from Flow program):
+   - the above plugins should be added to `.babelrc` file
+ 
+4. The `Esformatter` with plugin `esformatter-flow` can be used for pretty printing 
+   of Flow code: (see https://github.com/millermedeiros/esformatter)
+  
    ```
-   $ npm install -g babel-cli
-   $ mkdir -p node_modules && npm install babel-plugin-transform-flow-strip-types
-   $ echo '{"plugins": ["transform-flow-strip-types"]}' > .babelrc
-   ```
-   
-   And we can run Babel in the background:
-   ```
-   $ babel --watch=./src --out-dir=./build
+   esformatter --plugins=esformatter-flow SimpleTest.flow > SimpleTest.js
    ```
    
-7. Now we can run JavaScript code (version of Node should be 6.6.0):
+  ###  Example ###
+  
+  Example that demonstrates how it works can be found in `examples/javascript` directory.
+  The structure of the `javascript` directory can be the following:
+  
+   /
+   
+  |- js
+  
+  |- build
+  
+  |- node_modules
+  
+  |- .flowconfig
+  
+  |- .babelrc
+  
+  |- package.json
+  
+  |- Makefile
+  
+  |- `<ModuleName>.fst` files
+  
+ where `js` is the directory specified with `--odir` and `build` is the directory spicified 
+ with `--out-dir` for babel:
+ 
    ```
-   $ cd build
-   $ babel-node SimpleTest.js
+   babel --watch=./src --out-dir=./build
    ```
+ 
