@@ -4,6 +4,9 @@ open FStar.Squash
 val give_witness: #a:Type -> a -> Lemma (ensures a)
 let give_witness #a x = return_squash x (* CH: this looks fishy *)
 
+val get_witness: p:Type -> Pure (squash p) (requires (squash p)) (ensures (fun _ -> True))
+let get_witness p = join_squash #p (get_proof (squash p))
+
 (* TODO: Maybe this should move to FStar.Squash.fst *)
 val forall_intro_gtot  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (p x)) -> Tot (squash (forall (x:a). p x))
 let forall_intro_gtot #a #p $f = return_squash #(forall (x:a). p x) ()
@@ -52,6 +55,9 @@ let forall_to_exists_2 (#a:Type) (#p:(a -> Type)) (#b:Type) (#q:(b -> Type)) (#r
 		 ($f:(x:a -> y:b -> Lemma ((p x /\ q y) ==> r)))
   : Lemma (((exists (x:a). p x) /\ (exists (y:b). q y)) ==> r)
   = forall_intro_2 f
+
+let impl_intro_squash_gtot (#p:Type0) (#q:Type0) ($f:p -> GTot (squash q)) : Tot (squash (p ==> q))
+  = return_squash (squash_double_arrow #p #(fun _ -> q) (return_squash f))
 
 let impl_intro_gtot (#p:Type0) (#q:Type0) ($f:p -> GTot q) : GTot (p ==> q) = return_squash f
 
