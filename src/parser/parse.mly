@@ -522,7 +522,7 @@ bindingPattern:
   (*     } *)
 
 binder:
-  | lid=ident { [mk_binder (Variable lid) (rhs parseState 1) Type None]  }
+  | lid=identOrUnderscore { [mk_binder (Variable lid) (rhs parseState 1) Type None]  }
   | tv=tvar  { [mk_binder (TVariable tv) (rhs parseState 1) Kind None]  }
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
   | LPAREN qual_ids=nonempty_list(qualId) COLON t=typ r=refineOpt RPAREN
@@ -561,6 +561,10 @@ identOrOperator:
     { mk_ident(id, rhs parseState 1) }
   | LPAREN id=operator RPAREN
     { mk_ident(compile_op (-1) id, rhs parseState 1) }
+
+identOrUnderscore:
+  | id=IDENT { mk_ident(id, rhs parseState 1)}
+  | UNDERSCORE { gen (rhs parseState 1) }
 
 ident:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -780,7 +784,7 @@ tmNoEq:
       { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
   | MINUS e=tmNoEq
       { mk_uminus e (rhs2 parseState 1 3) Expr }
-  | id=ident COLON e=appTerm phi_opt=refineOpt
+  | id=identOrUnderscore COLON e=appTerm phi_opt=refineOpt
       {
         let t = match phi_opt with
           | None -> NamedTyp(id, e)

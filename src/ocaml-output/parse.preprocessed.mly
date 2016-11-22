@@ -1249,9 +1249,9 @@ bindingPattern:
       )}
 
 binder:
-  ident
+  identOrUnderscore
     {let lid = $1 in
-              ( [mk_binder (Variable lid) (rhs parseState 1) Type None]  )}
+                          ( [mk_binder (Variable lid) (rhs parseState 1) Type None]  )}
 | tvar
     {let tv = $1 in
              ( [mk_binder (TVariable tv) (rhs parseState 1) Kind None]  )}
@@ -1429,6 +1429,14 @@ let id =
        ( op )
 in
     ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+
+identOrUnderscore:
+  IDENT
+    {let id = $1 in
+             ( mk_ident(id, rhs parseState 1))}
+| UNDERSCORE
+    {let _1 = () in
+               ( gen (rhs parseState 1) )}
 
 ident:
   IDENT
@@ -1983,7 +1991,7 @@ tmNoEq:
 | MINUS tmNoEq
     {let (_1, e) = ((), $2) in
       ( mk_uminus e (rhs2 parseState 1 3) Expr )}
-| ident COLON appTerm refineOpt
+| identOrUnderscore COLON appTerm refineOpt
     {let (id, _2, e, phi_opt) = ($1, (), $3, $4) in
       (
         let t = match phi_opt with
