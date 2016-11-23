@@ -133,6 +133,14 @@ let rec is_pure_expr e var =
       not (List.contains false (List.map (fun x -> is_pure_expr x var) args))
   | _ -> false
 
+let isMutable tys =
+    match tys with
+    | None -> false
+    | Some (_, ty) ->
+        (match ty with
+         | MLTY_Named(_, p) when string_of_mlpath p = "FStar.ST.ref" -> true
+         | _ -> false)
+          
 (* Actual translation ********************************************************)
 let rec translate (MLLib modules): list<file> =
   List.filter_map (fun m ->
@@ -175,12 +183,14 @@ and translate_decl d: option<source_t> =
             if (not pt) || unit_b then None
             else match tys with
                  | None -> None
-                 | Some (lp, ty) -> lp_generic:= List.map (fun (id, _) -> id) lp; translate_type ty |> Some in
+                 | Some (lp, ty) -> lp_generic:= List.map (fun (id, _) -> id) lp; translate_type ty |> Some in        
         let is_private = List.contains Private c_flag in
         let c =
             if is_pure_expr expr (name, None)
-            then [JSS_VariableDeclaration((JGP_Identifier(name, t), Some(translate_expr_pure expr)), JSV_Const)]
-            else translate_expr expr (name, t) None false (ref []) in
+            then
+                let var_decl_q = if (isMutable tys) then JSV_Let else JSV_Const in
+                [JSS_VariableDeclaration((JGP_Identifier(name, t), Some(translate_expr_pure expr)), var_decl_q)]
+            else translate_expr expr (name, t) None false (ref []) (isMutable tys) in
         if is_private then c else [JSS_ExportDefaultDeclaration(JSE_Declaration(JSS_Block(c)), ExportValue)]
      in
         List.collect for1 lfunc |> JSS_Block |> JS_Statement |> Some
@@ -232,7 +242,7 @@ and translate_decl d: option<source_t> =
   | MLM_Exn _ ->
       failwith "todo: translate_decl [MLM_Exn]"
 
-and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
+and translate_expr e var lstmt isDecl lDecl isMutableV: list<statement_t> =
   let get_res expr new_fv =
     let lstmt = (match lstmt with | Some v -> v | None -> []) in
     let isAssgmnt = ref [] in
@@ -242,7 +252,8 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
         if isDecl
         then JSS_Expression(JSE_Assignment(JGP_Identifier(var), expr))
         else (lDecl := [fst var] @ !lDecl;
-              JSS_VariableDeclaration((JGP_Identifier(var), Some(expr)), JSV_Const))
+              let var_decl_q = if isMutableV then JSV_Let else JSV_Const in 
+              JSS_VariableDeclaration((JGP_Identifier(var), Some(expr)), var_decl_q))
     in (match new_fv with
         | Some v -> if !isEqVar
                     then (isEqVar := false;
@@ -266,12 +277,13 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
      then
         let isEqName = List.existsb (fun x -> x = name) !lDecl in
         let lDecl = if isEqName then (ref [name]) else (lDecl := [name] @ !lDecl; lDecl) in
-        let c = translate_expr continuation var lstmt isDecl lDecl in
-        let c = [JSS_VariableDeclaration((JGP_Identifier(name, None), Some (translate_expr_pure body)), JSV_Const)] @ c in
+        let c = translate_expr continuation var lstmt isDecl lDecl isMutableV in
+        let var_decl_q = if (isMutable tys) then JSV_Let else JSV_Const in
+        let c = [JSS_VariableDeclaration((JGP_Identifier(name, None), Some (translate_expr_pure body)), var_decl_q)] @ c in
         if isEqName then [JSS_Block(c)] else c
      else
-        let c = translate_expr continuation var lstmt isDecl lDecl in
-        translate_expr body (name, None) (Some c) false lDecl
+        let c = translate_expr continuation var lstmt isDecl lDecl isMutableV in
+        translate_expr body (name, None) (Some c) false lDecl (isMutable tys)
 
   | MLE_Let _ ->
       failwith "todo: translate_expr [MLE_Let]"
@@ -283,7 +295,7 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
         if is_pure_expr body var
         then JS_BodyExpression(translate_expr_pure body)
         else JS_BodyBlock([JSS_VariableDeclaration((JGP_Identifier("_res", None), None), JSV_Let)] @
-                           translate_expr body ("_res", None) (Some([JSS_Return(Some(JSE_Identifier("_res", None)))])) true (ref [])) in
+                           translate_expr body ("_res", None) (Some([JSS_Return(Some(JSE_Identifier("_res", None)))])) true (ref []) true) in
       let ret_t =
         (match (snd var) with
          | None -> None
@@ -299,15 +311,15 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
       expr @ lstmt
 
   | MLE_If(cond, s1, s2) ->
-      let s1 = JSS_Block(translate_expr s1 var None true (ref [])) in
-      let s2 = (match s2 with | Some v -> Some (JSS_Block(translate_expr v var None true (ref []))) | None -> None) in
+      let s1 = JSS_Block(translate_expr s1 var None true (ref []) isMutableV) in
+      let s2 = (match s2 with | Some v -> Some (JSS_Block(translate_expr v var None true (ref []) isMutableV)) | None -> None) in
       let c =
         if is_pure_expr cond var
         then
             [JSS_If(translate_expr_pure cond, s1, s2)]
         else
             [JSS_VariableDeclaration((JGP_Identifier("_cond", Some (JST_Boolean)), None), JSV_Let)] @
-             translate_expr cond ("_cond", None) (Some [JSS_If(JSE_Identifier("_cond", Some JST_Boolean), s1, s2)]) true (ref []) in
+             translate_expr cond ("_cond", None) (Some [JSS_If(JSE_Identifier("_cond", Some JST_Boolean), s1, s2)]) true (ref []) true in
       let c =
         if isDecl then c
         else
@@ -323,7 +335,7 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
 
   | MLE_Coerce(in_e, t_from, t_to) ->
       let var = (fst var, Some (translate_type in_e.mlty)) in
-      translate_expr in_e var lstmt isDecl lDecl
+      translate_expr in_e var lstmt isDecl lDecl isMutableV
 
   | MLE_Match(e_in, lb) ->
       let match_e = (Absyn.Util.gensym(), None) in
@@ -331,10 +343,10 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
         if is_pure_expr e_in var
         then
             [JSS_VariableDeclaration((JGP_Identifier(match_e), Some(translate_expr_pure e_in)), JSV_Const);
-             translate_match lb (JSE_Identifier(match_e)) var]
+             translate_match lb (JSE_Identifier(match_e)) var isMutableV]
         else
             [JSS_VariableDeclaration((JGP_Identifier(match_e), None), JSV_Let)] @
-             translate_expr e_in match_e (Some [translate_match lb (JSE_Identifier(match_e)) var]) true (ref []) in
+             translate_expr e_in match_e (Some [translate_match lb (JSE_Identifier(match_e)) var isMutableV]) true (ref []) true in
       let c =
         if isDecl then c
         else [JSS_VariableDeclaration((JGP_Identifier(var), None), JSV_Let)] @ c in
@@ -344,8 +356,8 @@ and translate_expr e var lstmt isDecl lDecl: list<statement_t> =
       let rec translate_seq l =
         match l with
         | [] -> failwith "Empty list in [MLE_Seq]"
-        | [x] -> translate_expr x var None isDecl lDecl
-        | hd :: tl -> translate_expr hd ("_", None) (Some(translate_seq tl)) false lDecl in
+        | [x] -> translate_expr x var None isDecl lDecl isMutableV
+        | hd :: tl -> translate_expr hd ("_", None) (Some(translate_seq tl)) false lDecl true in
       let c = translate_seq ls in
       (match lstmt with | Some v -> c @ v | None -> c)
 
@@ -398,7 +410,7 @@ and create_pure_args new_fv args var =
             let c =
                 (match x.expr with
                 | MLE_Var _ -> ( isEqVar:= true; [JSS_VariableDeclaration((JGP_Identifier(fv_x, None), Some (translate_expr_pure x)), JSV_Const)])
-                | _ -> translate_expr x (fv_x, None) None false (ref [])) in
+                | _ -> translate_expr x (fv_x, None) None false (ref []) false) in
             new_fv := List.append !new_fv c;
             JSE_Identifier(fv_x, None)) args
 
@@ -480,15 +492,15 @@ and translate_expr_pure e: expression_t =
    
   | _ -> failwith "todo: translation ml-expr-pure"
 
-and translate_match lb fv_x var: statement_t =
+and translate_match lb fv_x var isMutableV: statement_t =
   match lb with
   | [] -> JSS_Throw (JSE_Literal(JSV_String("This value doesn't match!"), ""))
   | (p, guard, expr_r) :: tl ->
     let expr_t =
         if is_pure_expr expr_r var
         then JSE_Assignment(JGP_Identifier(var), translate_expr_pure expr_r) |> JSS_Expression
-        else translate_expr expr_r var None true (ref []) |> JSS_Seq in
-    translate_pat_guard (p, guard) fv_x expr_t (translate_match tl fv_x var)        
+        else translate_expr expr_r var None true (ref []) isMutableV |> JSS_Seq in
+    translate_pat_guard (p, guard) fv_x expr_t (translate_match tl fv_x var isMutableV)        
 
 and translate_pat_guard (p, guard) fv_x s1 s2: statement_t =
   match guard with
