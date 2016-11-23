@@ -250,8 +250,7 @@ val lemma_append_nil: #a:_ -> s:Seq.seq a ->
   Lemma (s == Seq.append s Seq.createEmpty)
 let lemma_append_nil #a s = assert (Seq.equal s (Seq.append s Seq.createEmpty))
 
-//#set-options "--lax"
-//#set-options "--z3timeout 200"
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 private let encode_lengths_poly1305 (aadlen:UInt32.t) (plainlen:UInt32.t) : b:lbytes 16
   { v aadlen = little_endian (Seq.slice b 0 4) /\
     v plainlen = little_endian (Seq.slice b 8 12) } = 
