@@ -477,6 +477,14 @@ and cps_and_elaborate env ed =
         failwith "bad shape for effect-for-free signature"
   in
 
+  (* TODO : having "_" as a variable name can create a really strange shadowing
+            behaviour between uu___ variables in the tcterm ; needs to be investigated *)
+  let a =
+      if S.is_null_bv a
+      then S.gen_bv "a" (Some (S.range_of_bv a)) a.sort
+      else a
+  in
+
   let open_and_check t =
     let subst = SS.opening_of_binders effect_binders in
     let t = SS.subst subst t in
@@ -528,15 +536,18 @@ and cps_and_elaborate env ed =
   let lift_from_pure_wp =
       match (SS.compress return_wp).n with
       | Tm_abs (b1 :: b2 :: bs, body, what) ->
-          let b1::b2::bs, body = SS.open_term (b1::b2::bs) body in
-          let bs', body = U.abs_formals body in
+          let [b1 ; b2], body = SS.open_term [b1 ; b2] (U.abs bs body None) in
+          // WARNING : pushing b1 and b2 in env might break the well-typedness invariant
+          let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
+          let wp_b1 = N.normalize [ N.Beta ] env0 (mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ]))) in
+          let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type body (Util.unascribe wp_b1) in
+          (* TODO : Should check that what' is Tot Type0 *)
           let t2 = (fst b2).sort in
-          let pure_wp_type =
-              U.arrow [S.mk_binder <| S.null_bv (U.arrow [S.mk_binder <| S.null_bv t2] (S.mk_Total U.ktype0))] (S.mk_Total U.ktype0) in
+          let pure_wp_type = DMFF.double_star t2 in
           let wp = S.gen_bv "wp" None pure_wp_type in
-          // fun b1 wp -> (fun bs -> wp (fun b2 -> body))
-          let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what, None] None Range.dummyRange in
-          U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs@bs') body what) (Some (Inr Const.effect_GTot_lid))
+          // fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a
+          let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
+          U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr Const.effect_GTot_lid))
       | _ ->
           failwith "unexpected shape for return"
   in
@@ -571,8 +582,12 @@ and cps_and_elaborate env ed =
     fv
   in
   let lift_from_pure_wp = register "lift_from_pure" lift_from_pure_wp in
+
+  // we do not expect the return_elab to verify, since that may require internalizing monotonicity of WPs (i.e. continuation monad)
   let return_wp = register "return_wp" return_wp in
+  sigelts := Sig_pragma (SetOptions "--admit_smt_queries true", Range.dummyRange) :: !sigelts;
   let return_elab = register "return_elab" return_elab in
+  sigelts := Sig_pragma (SetOptions "--admit_smt_queries false", Range.dummyRange) :: !sigelts;
 
   // we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
   let bind_wp = register "bind_wp" bind_wp in
@@ -601,18 +616,30 @@ and cps_and_elaborate env ed =
   let repr = recheck_debug "FC" env repr in
   let repr = register "repr" repr in
 
+  (* We are still lacking a principled way to generate pre/post condition *)
+  (* Current algorithm takes the type of wps : fun (a: Type) -> (t1 -> t2 ... -> tn -> Type0) *)
+  (* Checks that there is exactly one ti containing the type variable a and returns that ti *)
+  (* as type of postconditons, the rest as type of preconditions *)
   let pre, post =
-    match (SS.compress wp_type).n with
-    | Tm_abs (effect_param, arrow, _) ->
-        let effect_param, arrow = SS.open_term effect_param arrow in
-        begin match (SS.compress arrow).n with
+    match (unascribe <| SS.compress wp_type).n with
+    | Tm_abs (type_param :: effect_param, arrow, _) ->
+        let (type_param :: effect_param), arrow = SS.open_term (type_param :: effect_param) arrow in
+        begin match (unascribe <| SS.compress arrow).n with
         | Tm_arrow (wp_binders, c) ->
             let wp_binders, c = SS.open_comp wp_binders c in
-            let pre_args, post = Util.prefix wp_binders in
+            let pre_args, post_args =
+                List.partition (fun (bv,_) ->
+                  Free.names bv.sort |> Util.set_mem (fst type_param) |> not
+                ) wp_binders
+            in
+            let post = match post_args with
+                | [post] -> post
+                | _ -> failwith (Util.format1 "Impossible: multiple post candidates %s" (Print.term_to_string arrow))
+            in
             // Pre-condition does not mention the return type; don't close over it
             U.arrow pre_args c,
             // Post-condition does, however!
-            U.abs effect_param (fst post).sort None
+            U.abs (type_param :: effect_param) (fst post).sort None
         | _ ->
             failwith (Util.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow))
         end
@@ -1414,8 +1441,8 @@ and tc_decl env se: list<sigelt> * _ =
       if List.length uvs <> 1
       && not (Ident.lid_equals lid Const.effect_Lemma_lid)
       then (let _, t = Subst.open_univ_vars uvs t in
-            raise (Error(Util.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)" 
-                                    (Print.lid_to_string lid) 
+            raise (Error(Util.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
+                                    (Print.lid_to_string lid)
                                     (List.length uvs |> Util.string_of_int)
                                     (Print.term_to_string t), r)));
       let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, r) in

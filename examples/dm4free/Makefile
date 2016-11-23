@@ -14,6 +14,7 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.Heap.ST.uver \
 	FStar.DM4F.StExnC.uver \
 	FStar.DM4F.IFC.uver \
+	FStar.DM4F.Continuations.uver \
 	delimcc.uver
 
 sall:

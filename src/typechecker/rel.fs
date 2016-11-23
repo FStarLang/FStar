@@ -415,7 +415,7 @@ let u_abs k ys t =
         | Tm_arrow(bs, c) -> 
           if List.length bs = List.length ys
           then (ys, t), SS.open_comp bs c 
-          else let ys', t = U.abs_formals t in
+          else let ys', t, _ = U.abs_formals t in
                (ys@ys', t), U.arrow_formals_comp k
         | _ -> (ys, t), ([], S.mk_Total k) in
     if List.length xs <> List.length ys

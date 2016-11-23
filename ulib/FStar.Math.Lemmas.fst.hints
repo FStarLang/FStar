@@ -2499,7 +2499,7 @@
       "FStar.Math.Lemmas.pow2_multiplication_modulo_lemma_2",
       3,
       0,
-      2,
+      1,
       [
         "@query", "equation_FStar.Mul.op_Star", "equation_Prims.nat",
         "equation_Prims.nonzero", "equation_Prims.pos",
