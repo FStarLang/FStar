@@ -323,6 +323,9 @@ type nonTerminalId =
     | NONTERM_recordFieldDecl
     | NONTERM_constructorDecl
     | NONTERM_of_typ
+    | NONTERM_eitherQname
+    | NONTERM_eitherpath
+    | NONTERM_maybeMorePath
     | NONTERM_lid
     | NONTERM_qname
     | NONTERM_eitherName
@@ -372,13 +375,10 @@ type nonTerminalId =
     | NONTERM_indexingTerm
     | NONTERM_formula
     | NONTERM_atomicTerm
-    | NONTERM_atomicTermNotQName
     | NONTERM_maybeFieldProjections
-    | NONTERM_fieldProjections
     | NONTERM_targs
     | NONTERM_maybeInsts
-    | NONTERM_insts
-    | NONTERM_projectionLHSNotQName
+    | NONTERM_projectionLHS
     | NONTERM_commaTermList
     | NONTERM_moreCommaTerms
     | NONTERM_semiColonTermList

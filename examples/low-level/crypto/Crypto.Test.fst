@@ -131,7 +131,7 @@ let rec store_bytestring len buf i s =
   let x1 = digit (String.index s (UInt32.v i + UInt32.v i)) in
   let x0 = digit (String.index s (UInt32.v i + UInt32.v i + 1)) in
   //assert(x1 <^ 16uy /\ x0 <^ 16uy);
-  Buffer.upd buf i (FStar.UInt8.(x1 *^ 16uy +^ x0));
+  Buffer.upd buf i (FStar.UInt8(x1 *^ 16uy +^ x0));
   store_bytestring len buf (FStar.UInt32(i +^ 1ul)) s )
 
 let from_bytestring s = 
@@ -207,14 +207,14 @@ let test() =
 
   // To prove the assertion below for the concrete constants in PRF, AEAD:
   assert_norm (114 <= pow2 14);  
-  assert_norm (FStar.Mul.(114 <= 1999 * 64));
+  assert_norm (FStar.Mul(114 <= 1999 * 64));
   assert(AETypes.safelen i (v plainlen) 1ul);
   //NS: These 3 separation properties are explicitly violated by allocating st in HH.root
   //    Assuming them for the moment
   assume (
-    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) (AETypes.(st.log_region)) /\
-    HH.disjoint (Buffer.frameOf cipher) (AETypes.(st.log_region)) /\
-    HH.disjoint (Buffer.frameOf aad) (AETypes.(st.log_region))
+    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) (AETypes st.log_region) /\
+    HH.disjoint (Buffer.frameOf cipher) (AETypes st.log_region) /\
+    HH.disjoint (Buffer.frameOf aad) (AETypes st.log_region)
   );
   AE.encrypt i st iv aadlen aad plainlen plain cipher;
   let ok_0 = diff "cipher" cipherlen expected_cipher cipher in
@@ -253,8 +253,8 @@ let main argc argv =
   C.exit_success
 
 
-private let hex1 (x:UInt8.t {FStar.UInt8.(x <^ 16uy)}) = 
-  FStar.UInt8.(
+private let hex1 (x:UInt8.t {FStar.UInt8(x <^ 16uy)}) = 
+  FStar.UInt8(
     if x <^ 10uy then UInt8.to_string x else 
     if x = 10uy then "a" else 
     if x = 11uy then "b" else 
@@ -262,7 +262,7 @@ private let hex1 (x:UInt8.t {FStar.UInt8.(x <^ 16uy)}) =
     if x = 13uy then "d" else 
     if x = 14uy then "e" else "f")
 private let hex2 x = 
-  FStar.UInt8.(hex1 (x /^ 16uy) ^ hex1 (x %^ 16uy))
+  FStar.UInt8(hex1 (x /^ 16uy) ^ hex1 (x %^ 16uy))
 
 val print_buffer: s:buffer -> i:UInt32.t{UInt32.v i <= length s} -> len:UInt32.t{UInt32.v len <= length s} -> Stack unit
   (requires (fun h -> live h s))

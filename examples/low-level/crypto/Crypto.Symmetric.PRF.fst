@@ -204,8 +204,8 @@ val prf_mac:
        | Some mac' -> 
 	 h0 == h1 /\ // when decrypting
 	 mac == mac' /\ 
-	 MAC.(norm h1 mac.r) /\
-	 MAC.(Buffer.live h1 mac.s)
+	 MAC (norm h1 mac.r) /\
+	 MAC (Buffer.live h1 mac.s)
        | None ->  // when encrypting, we get the stateful post of MAC.create             
          (match find_mac (HS.sel h1 r) x with 
           | Some mac' -> 
@@ -237,16 +237,16 @@ let prf_mac i t x =
     let contents = !r in
     match find_mac contents x with
     | Some mac -> 
-      assume (MAC.(norm h0 mac.r)); //TODO: replace this using monotonicity
-      assume (HS.(Buffer.(MAC.(not ((Buffer.content mac.s).mm))))); //TODO: mark this as not manually managed
-      Buffer.recall (MAC.(mac.s));
+      assume (MAC (norm h0 mac.r)); //TODO: replace this using monotonicity
+      assume (HS (Buffer (MAC (not ((Buffer.content mac.s).mm))))); //TODO: mark this as not manually managed
+      Buffer.recall (MAC mac.s);
       mac
     | None ->
       let mac = MAC.gen macId t.mac_rgn in
       r := SeqProperties.snoc contents (Entry x mac);
       assume false; 
       //16-10-16 framing after chang eto genPost0?
-      //let h = ST.get() in assume(MAC.(norm h mac.r));
+      //let h = ST.get() in assume(MAC(norm h mac.r));
       mac
     end
   else

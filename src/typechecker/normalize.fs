@@ -59,6 +59,7 @@ type step =
   | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
   | Reify
   | CompressUvars
+  | NoFullNorm
 and steps = list<step>
 
 type closure =
@@ -589,7 +590,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
 
           | Tm_app(hd, args) 
-            when is_norm_request hd args
+            when not (cfg.steps |> List.contains NoFullNorm)
+              && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
             let tm = get_norm_request args in
             let s = [Reify; Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in

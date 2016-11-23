@@ -928,7 +928,7 @@ let maybe_set_tk ts = function
       ts
     
 let generalize_universes (env:env) (t0:term) : tscheme = 
-    let t = N.normalize [N.Beta] env t0 in
+    let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
     let univs = Free.univs t in 
     if Env.debug env <| Options.Other "Gen" 
     then Util.print1 "univs to gen : %s\n" (string_of_univs univs);
@@ -946,8 +946,8 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
         if debug env Options.Medium 
         then Util.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
          let c = if Env.should_verify env
-                 then Normalize.normalize_comp [N.Beta; N.Eager_unfolding] env c
-                 else Normalize.normalize_comp [N.Beta] env c in
+                 then Normalize.normalize_comp [N.Beta; N.Eager_unfolding; N.NoFullNorm] env c
+                 else Normalize.normalize_comp [N.Beta; N.NoFullNorm] env c in
          if debug env Options.Medium then 
             Util.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
          c in
@@ -988,15 +988,15 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
             | [], _ -> 
               //nothing generalized, or
               //only universes generalized, still need to compress out invariant-broken uvars
-              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps] env c in
-              let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
+              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.NoFullNorm] env c in
+              let e = N.normalize [N.Beta; N.NoDeltaSteps; N.NoFullNorm] env e in
               e, c
 
             | _ -> 
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
               let e0, c0 = e, c in 
-              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.CompressUvars] env c in
-              let e = N.normalize [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.Exclude N.Zeta; N.Exclude N.Iota] env e in
+              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.NoFullNorm] env c in
+              let e = N.normalize [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.Exclude N.Zeta; N.Exclude N.Iota; N.NoFullNorm] env e in
               //now, with the uvars gone, we can close over the newly introduced type names
               let t = match (SS.compress (U.comp_result c)).n with 
                     | Tm_arrow(bs, cod) -> 
