@@ -70,38 +70,49 @@ val akey_coerce: r:rid -> i:id -> kb: lbuffer(UInt32.v (skeylen i)) -> STL(akey 
   (requires (fun h0 -> True))
   (ensures (fun h0 r h1 -> Buffer.modifies_0 h0 h1))
 
-#reset-options "--lax"
-// 16-10-31 
-let akey_gen (r:rid) (i:id) : akey r i = 
+val akey_gen: r:rid -> i:id -> ST (akey r i)
+  (requires (fun _ -> True))
+  (ensures  (fun h0 k h1 ->
+    if skeyed i then
+      HS.modifies (Set.singleton r) h0 h1 /\
+      HS.modifies_ref r TSet.empty h0 h1 /\
+      (~(live h0 (get_skey #r #i k)) /\ live h1 (get_skey #r #i k))
+    else h0 == h1))
+let akey_gen r i =
   if skeyed i 
-  then Some (Buffer.rcreate r 0uy (skeylen i))
+  then
+    let k:skey r i = Buffer.rcreate r 0uy (skeylen i) in
+    Some k
   else None
 
-// not needed?
-let akey_coerce r i kb = 
-  let _ = IO.debug_print_string (UInt32.to_string (skeylen i)) in
-  let _ = print_buffer kb 0ul (skeylen i) in
+val akey_coerce: r:rid -> i:id -> kb:lbuffer (UInt32.v (skeylen i)) -> ST (akey r i)
+  (requires (fun h -> live h kb))
+  (ensures  (fun h0 k h1 ->
+    if skeyed i then
+      HS.modifies (Set.singleton r) h0 h1 /\
+      HS.modifies_ref r TSet.empty h0 h1 /\
+      (~(live h0 (get_skey #r #i k)) /\ live h1 (get_skey #r #i k))
+    else h0 == h1))
+let akey_coerce r i kb =
   if skeyed i 
-  then 
-    let sk = Buffer.rcreate r 0uy (skeylen i) in
+  then
+    let sk:skey r i = Buffer.rcreate r 0uy (skeylen i) in
+    let h1 = ST.get () in
     Buffer.blit kb 0ul sk 0ul (skeylen i);
+    let h2 = ST.get () in
+    lemma_reveal_modifies_1 sk h1 h2;
     Some sk
   else None
-  
-(* should be called at most once per i *)
 
-#reset-options ""
-
-// ONE-TIME INSTANCES 
-
-type id = MAC.id 
+// ONE-TIME INSTANCES
+type id = MAC.id
 
 // also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
 // this flag enables conditional idealization by keeping additional data,
 // - this should not affect the code behavior
 // - this may cause the code not to compile to Kremlin/C.
 (* inline_for_extraction *) 
-unfold let authId (i: id) =
+unfold let authId (i:id) =
   let i = fst i in
   safeHS i && mac1 i
 
@@ -145,8 +156,7 @@ noeq type state (i:id) =
   | State:
       #region: rid ->
       r: MAC.elemB i{Buffer.frameOf (MAC.as_buffer r) = region} -> 
-      s: wordB_16 {frameOf s = region /\
-		  Buffer.disjoint (MAC.as_buffer r) s} ->
+      s: wordB_16 {frameOf s = region /\ disjoint (MAC.as_buffer r) s} ->
       log: log_ref region ->
       state i
 
@@ -164,43 +174,50 @@ let genPost0 (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
 	   m_contains (ilog st.log) m1 /\ 
 	   m_sel m1 (ilog st.log) == None)
 
-let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
-    genPost0 i region m0 st m1 /\
-    modifies (Set.singleton region) m0 m1 /\ 
-    modifies_rref region TSet.empty m0.h m1.h  
+let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st:state i) m1 =
+  genPost0 i region m0 st m1 /\
+  modifies (Set.singleton region) m0 m1 /\
+  modifies_rref region TSet.empty m0.h m1.h
 
 val alloc: region:rid{is_eternal_region region} -> i:id
-  -> ak: akey region (fst i) 
+  -> ak:akey region (fst i)
   -> k:lbuffer (UInt32.v (keylen (fst i)))
   -> ST (state i)
   (requires (fun m0 -> live m0 k /\ live_ak m0 ak))
-  (ensures  (genPost i region))
- 
-#reset-options "--z3timeout 100"
+  (ensures  (fun m0 st m1 -> genPost i region m0 st m1))
+ //   (skeyed (fst i) ==> modifies_1 (get_skey #region #(fst i) st.r) m0 m1)
+
+#reset-options "--z3timeout 30 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
 let alloc region i sk k =
-  let r = MAC.rcreate region i in
-  let s = FStar.Buffer.rcreate region 0uy 16ul in
-  assume false;//16-10-17 TODO
-  cut (disjoint (MAC.as_buffer r) k /\ disjoint s k);
   let h0 = ST.get() in
-  let (rb, sb) = 
-    if skeyed (fst i) 
-    then get_skey #region #(fst i) sk, k
-    else Buffer.sub k  0ul 16ul, Buffer.sub k 16ul 16ul in
-  MAC.encode_r r rb;
-  Buffer.blit sb 0ul s 0ul 16ul; 
-  // note that we never call poly1305_init r s key;
-  // consider restoring it for stateful verification
+  let r = MAC.rcreate region i in
+  assert (frameOf (MAC.as_buffer r) == region);
+  let s = FStar.Buffer.rcreate region 0uy 16ul in
+  cut (disjoint (MAC.as_buffer r) k /\ disjoint s k);
   let h1 = ST.get() in
-  lemma_reveal_modifies_2 (MAC.as_buffer r) s h0 h1;
+  let rb, sb =
+    if skeyed (fst i) then
+      get_skey #region #(fst i) sk, k
+    else
+      sub k 0ul 16ul, sub k 16ul 16ul
+  in
+  MAC.encode_r r rb;
+  let h2 = ST.get() in
+  lemma_reveal_modifies_2 (MAC.as_buffer r) rb h1 h2;
+  Buffer.blit sb 0ul s 0ul 16ul; 
+  let h3 = ST.get() in
+  lemma_reveal_modifies_1 s h2 h3;
+  assume (MAC.norm h3 r);
+  assume False;
   if mac_log then
     let log = m_alloc #log #log_cmp region None in
-    //16-10-16 missing frame
-    let h2 = ST.get() in
-    assume (MAC.live h1 r ==> MAC.live h2 r);
+    let h4 = ST.get() in
+    assume (MAC.norm h4 r);
     State #i #region r s log
   else
     State #i #region r s ()
+
 
 // for now, we require an eternal region to get monotonicity
 val gen: region:rid{is_eternal_region region} -> i:id -> ak:akey region (fst i) -> ST (state i)
@@ -273,10 +290,9 @@ val start: #i:id -> st:state i -> StackInline (accBuffer i)
     acc_inv st a h1 /\ 
     modifies_0 h0 h1))
 let start #i st =
-  // causing F* checker reported issues in other files: [C:\Users\fournet\fstar\FStar\ulib\hyperstack\FStar.ST.fst(99,85-99,90): (Error) assertion failed
   let a = MAC.start #i in
   let l = if mac_log then mk_irtext (salloc Seq.createEmpty) else () in
-  assume false;
+  assume False;
   Acc a l
 
 
@@ -302,7 +318,7 @@ let update #i st acc w =
   MAC.update st.r acc.a w
 
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3timeout 100 --lax"
 (*
 val mk_itext: s:Seq.seq (lbytes 16){Flag.mac_log} -> itext
 let mk_itext s = s
@@ -401,8 +417,7 @@ let verify #i st acc received =
   let tag = Buffer.create 0uy 16ul in
   MAC.finish st.s acc.a tag;
   let verified = Buffer.eqb tag received 16ul in
-
-  let b = 
+  let b =
   if mac_log && authId i then
     let st = !st.log in
     let t = load_bytes 16ul tag in
@@ -414,7 +429,5 @@ let verify #i st acc received =
     verified && correct
   else
     verified in
-
   pop_frame();
   b
-  

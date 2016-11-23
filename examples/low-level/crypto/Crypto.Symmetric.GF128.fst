@@ -192,7 +192,7 @@ let ghash_loop_ tag auth_key str len dep =
 private val ghash_loop: 
   tag:elemB ->
   auth_key:elemB {disjoint tag auth_key} ->
-  str:buffer{disjoint tag str /\ disjoint auth_key tag} ->
+  str:buffer{disjoint tag str /\ disjoint auth_key str} ->
   len:u32{length str = U32.v len} ->
   dep:u32{U32.v dep <= U32.v len} -> Stack unit
   (requires (fun h -> live h tag /\ live h auth_key /\ live h str))

@@ -144,7 +144,10 @@ val rcreate: rgn:HH.rid{HS.is_eternal_region rgn} -> i:id -> ST (elemB i)
   (requires (fun h0 -> True))
   (ensures  (fun h0 r h1 ->
     HS.modifies (Set.singleton rgn) h0 h1 /\
-    HS.modifies_ref rgn TSet.empty h0 h1))
+    HS.modifies_ref rgn TSet.empty h0 h1 /\
+    Buffer.frameOf (as_buffer r) == rgn /\
+    ~(live h0 r) /\
+    live h1 r))
 let rcreate rgn i =
   match alg i with
   | POLY1305 -> B_POLY1305 (FStar.Buffer.rcreate rgn 0UL  5ul)
@@ -163,7 +166,7 @@ let create i =
 (** Encode raw bytes of static key as a field element *)
 val encode_r: #i:id -> b:elemB i -> raw:lbuffer 16{Buffer.disjoint (as_buffer b) raw} -> Stack unit
   (requires (fun h -> live h b /\ Buffer.live h raw))
-  (ensures  (fun h0 _ h1 -> live h1 b /\ Buffer.live h1 raw 
+  (ensures  (fun h0 _ h1 -> norm h1 b /\ Buffer.live h1 raw
     /\ Buffer.modifies_2 (as_buffer b) raw h0 h1))
 let encode_r #i b raw =
   match b with 

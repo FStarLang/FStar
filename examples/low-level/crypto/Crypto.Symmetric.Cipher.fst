@@ -14,6 +14,7 @@ open Crypto.Symmetric.Bytes
 open Crypto.Indexing
 
 type alg = cipherAlg
+let algi = cipherAlg_of_id
 
 inline_for_extraction let keylen = function
   | AES128   -> 16ul
@@ -45,16 +46,23 @@ type state a = lbuffer (v (statelen a))
 // so that it can be used both in abstract indexes and in real code.
 type iv a    = n:UInt128.t { UInt128.v n < pow2 (v (8ul *^ ivlen a)) } 
 
-let init (#a:alg) (k:key a) (s:state a) =
+let init (#i:id) (k:key (algi i)) (s:state (algi i)) =
+  let a = algi i in
   match a with
   | CHACHA20 ->
     Buffer.blit k 0ul s 0ul (keylen a)
+
   | AES128 ->
     let open Crypto.Symmetric.AES128 in
     let sbox = Buffer.sub s 0ul 256ul in
     let w = Buffer.sub s 256ul 176ul in
-    mk_sbox sbox;
-    keyExpansion k w sbox
+    (match aesImpl_of_id i with
+    | HaclAES ->
+      mk_sbox sbox;
+      keyExpansion k w sbox
+    | SpartanAES ->
+      Spartan.keyExpansion k w sbox)
+
   | AES256 ->
     let open Crypto.Symmetric.AES in
     let sbox = Buffer.sub s 0ul 256ul in
@@ -81,19 +89,20 @@ let aes_store_counter b x =
   b.(12ul) <- b3
 
 val compute:
-  a: alg ->
+  i:id ->
   output:buffer -> 
-  st:state a {disjoint output st} ->
-  n:iv a ->
+  st:state (algi i) {disjoint output st} ->
+  n:iv (algi i) ->
   counter: ctr ->
-  len:UInt32.t { len <=^  blocklen a /\ v len <= length output} -> STL unit
+  len:UInt32.t { len <=^  blocklen (algi i) /\ v len <= length output} -> STL unit
     (requires (fun h -> live h st /\ live h output))
     (ensures (fun h0 _ h1 -> live h1 output /\ modifies_1 output h0 h1
       ))
 
 #reset-options "--z3timeout 10000" 
 
-let compute a output st n counter len = 
+let compute i output st n counter len = 
+  let a = algi i in
   assume False; //16-10-02 TODO not sure what's going on
   push_frame();
   begin match a with 
@@ -112,7 +121,9 @@ let compute a output st n counter len =
       store_uint128 (ivlen AES128) (Buffer.sub ctr_block 0ul (ivlen AES128)) n;
       aes_store_counter ctr_block counter;
       let output_block = Buffer.create 0uy (blocklen AES128) in
-      cipher output_block ctr_block w sbox;
+      let () = match aesImpl_of_id i with
+        | HaclAES -> cipher output_block ctr_block w sbox
+        | SpartanAES -> Spartan.cipher output_block ctr_block w sbox in
       blit output_block 0ul output 0ul len // too much copying!
 
   | AES256 -> 
@@ -129,3 +140,4 @@ let compute a output st n counter len =
   pop_frame()
 
 //NB double-check this is indeed big-endian.
+
