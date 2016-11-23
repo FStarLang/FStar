@@ -479,14 +479,14 @@ val lemma_finalize':
   mask:U64.t{v mask = 0 \/ v mask = pow2 64 - 1} ->
   Lemma
     (requires (
-      live h' b' /\ (
+      live h' b /\ (
       let b0 = (get h b 0) in let b1 = (get h b 1) in let b2 = (get h b 2) in
       let b3 = (get h b 3) in let b4 = (get h b 4) in
-      let b0' = (get h' b' 0) in let b1' = (get h' b' 1) in let b2' = (get h' b' 2) in
-      let b3' = (get h' b' 3) in let b4' = (get h' b' 4) in
+      let b0' = (get h' b 0) in let b1' = (get h' b 1) in let b2' = (get h' b 2) in
+      let b3' = (get h' b 3) in let b4' = (get h' b 4) in
       maskPrime mask b0 b1 b2 b3 b4 /\ masked mask b0 b1 b2 b3 b4 b0' b1' b2' b3' b4')))
-    (ensures  (live h' b' /\ eval h' b' 5 = eval h b 5 % (pow2 130 - 5) /\ norm h' b'))
-let lemma_finalize' h b h' b' mask = lemma_finalize h b h' b' mask
+    (ensures  (live h' b /\ eval h' b 5 = eval h b 5 % (pow2 130 - 5) /\ norm h' b))
+let lemma_finalize' h h' b mask = lemma_finalize h b h' b mask
 
 //This is the code, as presented in the PLDI '17 submission
 let finalize b =
@@ -503,4 +503,4 @@ let finalize b =
   b.(2ul) <- b.(2ul) -^ b.(2ul) `logand` mask;
   b.(3ul) <- b.(3ul) -^ b.(3ul) `logand` mask;
   b.(4ul) <- b.(4ul) -^ b.(4ul) `logand` mask;
-  lemma_finalize' h0 b (ST.get()) b mask 
+  lemma_finalize' h0 (ST.get()) b mask 
