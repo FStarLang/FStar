@@ -20,15 +20,14 @@ val return : (a:Type) -> (x:a) -> stexnc a
 let return a x = fun s -> Some x, (s, 0)
 
 val bind : (a:Type) -> (b:Type) ->
-           (f:stexnc a) -> (g:a -> stexnc b) -> stexnc b
-let bind a b f g =
+           (m:stexnc a) -> (f:a -> stexnc b) -> stexnc b
+let bind a b m f =
   fun s0 ->
-    let fs0 = f s0 in
-    match fs0 with
+    let r0 = m s0 in
+    match r0 with
     | None, (s1, c1) -> None, (s1, c1)
-    | Some r, (s1, c1) -> let grs1 = g r s1 in
-                          match grs1 with
-                          | res, (s, c2) -> res, (s, c1 + c2)
+    | Some r, (s1, c1) -> let res, (s, c2) = f r s1
+                           in res, (s, c1 + c2)
 
 let raise (a:Type) : stexnc a = fun s0 -> (None, (s0, 1))
 
