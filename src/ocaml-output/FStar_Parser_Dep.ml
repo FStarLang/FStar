@@ -293,7 +293,7 @@ in (
 let record_open = (fun let_open lid -> (
 
 let key = (lowercase_join_longident lid true)
-in (match ((FStar_Util.smap_try_find original_map key)) with
+in (match ((FStar_Util.smap_try_find working_map key)) with
 | Some (pair) -> begin
 (FStar_List.iter (fun f -> (let _165_100 = (lowercase_module_name f)
 in (add_dep _165_100))) (list_of_pair pair))
