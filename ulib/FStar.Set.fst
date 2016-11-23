@@ -116,6 +116,7 @@ assume val lemma_set_to_tset:
     [SMTPat (TSet.mem x (set_to_tset s))]
 
 (* Converting lists to sets *)
+#reset-options //restore fuel usage here
 type eqtype = a:Type0{hasEq a}
 
 val as_set': #a:eqtype -> list a -> Tot (set a)
