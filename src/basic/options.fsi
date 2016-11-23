@@ -100,6 +100,7 @@ val print_fuels                 : unit    -> bool
 val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
+val print_z3_statistics         : unit    -> bool
 val push                        : unit    -> unit
 val record_hints                : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>

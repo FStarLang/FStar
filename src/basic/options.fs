@@ -126,6 +126,7 @@ let init () =
         ("print_fuels"                  , Bool false);
         ("print_implicits"              , Bool false);
         ("print_universes"              , Bool false);
+        ("print_z3_statistics"          , Bool false);
         ("prn"                          , Bool false);
         ("record_hints"                 , Bool false);
         ("reuse_hint_for"               , Unset);
@@ -202,6 +203,7 @@ let get_print_effect_args       ()      = lookup_opt "print_effect_args"        
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
+let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
@@ -516,6 +518,11 @@ let rec specs () : list<Getopt.opt> =
         "Print universes");
 
        ( noshort,
+        "print_z3_statistics",
+        ZeroArgs(fun () -> Bool true),
+        "Print Z3 statistics for each SMT query");
+
+       ( noshort,
         "prn",
         ZeroArgs (fun () -> Bool true),
         "Print real names (you may want to use this in conjunction with log_queries)");
@@ -669,6 +676,7 @@ let settable = function
     | "print_fuels"
     | "print_implicits"
     | "print_universes"
+    | "print_z3_statistics"
     | "prn"
     | "show_signatures"
     | "silent"
@@ -821,6 +829,7 @@ let print_fuels                  () = get_print_fuels                 ()
 let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn                         ()
 let print_universes              () = get_print_universes             ()
+let print_z3_statistics          () = get_print_z3_statistics         ()
 let record_hints                 () = get_record_hints                ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()

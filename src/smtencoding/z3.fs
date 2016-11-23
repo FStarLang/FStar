@@ -192,6 +192,15 @@ let bg_z3_proc =
 let doZ3Exe' (input:string) (z3proc:proc) =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map Util.trim_string in
+    let print_stats (lines:list<string>) =
+       let starts_with c s = String.length s >= 1 && String.get s 0 = c in
+       let ends_with c s = String.length s >= 1 && String.get s (String.length s - 1) = c in
+       let last l = List.nth l (List.length l - 1) in
+       if Options.print_z3_statistics() then
+         if List.length lines >= 2 && starts_with '(' (List.hd lines) && ends_with ')' (last lines) then
+           List.iter (fun s -> Util.print_string (Util.format1 "%s\n" s)) lines
+         else failwith "Unexpected output from Z3: could not find statistics\n" //-- only works if rest doesn't include labels
+    in
     let unsat_core lines = 
         let parse_core s =
             let s = Util.trim_string s in
@@ -207,9 +216,10 @@ let doZ3Exe' (input:string) (z3proc:proc) =
       | lname::"false"::rest -> lname::lblnegs rest
       | lname::_::rest -> lblnegs rest
       | _ -> [] in
-    let rec unsat_core_and_lblnegs lines = 
+    let unsat_core_and_lblnegs lines =
        let core_opt, rest = unsat_core lines in
        core_opt, lblnegs rest in
+
     let rec result x = match x with
       | "timeout"::tl -> TIMEOUT []
       | "unknown"::tl -> UNKNOWN (snd (unsat_core_and_lblnegs tl))
@@ -221,7 +231,7 @@ let doZ3Exe' (input:string) (z3proc:proc) =
         result tl
       | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n" 
                             (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
-      result lines in
+    result lines in
   let stdout = Util.ask_process z3proc input in
   parse (Util.trim_string stdout)
 
