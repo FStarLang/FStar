@@ -369,7 +369,7 @@ type term' =
 | Meta_labeled of (Prims.string * FStar_Range.range * Prims.bool)
 | Meta_desugared of meta_source_info
 | Meta_monadic of (monad_name * typ)
-| Meta_monadic_lift of (monad_name * monad_name) 
+| Meta_monadic_lift of (monad_name * monad_name * typ) 
  and 'a uvar_basis =
 | Uvar
 | Fixed of 'a 

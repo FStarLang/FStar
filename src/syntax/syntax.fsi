@@ -138,7 +138,9 @@ and metadata =
   | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
   | Meta_monadic       of monad_name * typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
-  | Meta_monadic_lift  of monad_name * monad_name                (* Sub-effecting: a lift from m1 to m2 *)
+                                                                 (* Contains the name of the monadic effect and  the type of the subterm *)
+  | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
+                                                                 (* from the first monad_name m1 to the second monad name  m2 *)
 and uvar_basis<'a> =
   | Uvar
   | Fixed of 'a
