@@ -143,7 +143,7 @@ let init () =
         ("verify"                       , Bool true);
         ("verify_all"                   , Bool false);
         ("verify_module"                , List []);
-        ("warn_top_level_effects"       , Bool false);
+        ("no_warn_top_level_effects"       , Bool true);
         ("z3timeout"                    , Int 5)] in
    let o = peek () in
    Util.smap_clear o;
@@ -221,7 +221,7 @@ let get_verify_all              ()      = lookup_opt "verify_all"               
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
-let get_warn_top_level_effects  ()      = lookup_opt "warn_top_level_effects"   as_bool
+let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects"   as_bool
 let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
 
 let dlevel = function
@@ -613,9 +613,9 @@ let rec specs () : list<Getopt.opt> =
          "Display version number");
 
        ( noshort,
-        "warn_top_level_effects",
-        ZeroArgs (fun () -> Bool true),
-        "Top-level effects are ignored by default; turn this flag on to be warned when this happens");
+        "no_warn_top_level_effects",
+        ZeroArgs (fun () -> Bool false),
+        "Top-level effects are checked by default; turn this flag on to prevent warning when this happens");
 
        ( noshort,
         "z3timeout",
@@ -686,7 +686,7 @@ let settable = function
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
     | "__temp_no_proj"
-    | "warn_top_level_effects"
+    | "no_warn_top_level_effects"
     | "reuse_hint_for" -> true
     | _ -> false
 

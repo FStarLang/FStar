@@ -40,16 +40,16 @@ module PP = FStar.Syntax.Print
 
 //set the name of the query so that we can correlate hints to source program fragments
 let set_hint_correlator env se =
-    match Options.reuse_hint_for () with 
-    | Some l -> 
+    match Options.reuse_hint_for () with
+    | Some l ->
       let lid = Ident.lid_add_suffix (Env.current_module env) l in
       {env with qname_and_index=Some (lid, 0)}
 
-    | None -> 
+    | None ->
       let lids = Util.lids_of_sigelt se in
-      let lid = match lids with 
-            | [] -> Ident.lid_add_suffix (Env.current_module env) 
-                                         (S.next_id () |> Util.string_of_int) 
+      let lid = match lids with
+            | [] -> Ident.lid_add_suffix (Env.current_module env)
+                                         (S.next_id () |> Util.string_of_int)
             | l::_ -> l in
       {env with qname_and_index=Some (lid, 0)}
 
@@ -249,13 +249,13 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     check_and_gen' env ed.trivial expected_k in
 
   let repr, bind_repr, return_repr, actions =
-      match (SS.compress ed.repr).n with 
+      match (SS.compress ed.repr).n with
       | Tm_unknown -> //This is not a DM4F effect definition; so nothing to do
         ed.repr, ed.bind_repr, ed.return_repr, ed.actions
-      | _ -> 
+      | _ ->
         //This is a DM4F effect definition
         //Need to check that the repr, bind, return and actions have their expected types
-        let repr = 
+        let repr =
             let t, _ = Util.type_u () in
             let expected_k = Util.arrow [S.mk_binder a;
                                          S.null_binder wp_a]
@@ -267,15 +267,15 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             let repr = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env repr in
             mk (Tm_app(repr, [as_arg t; as_arg wp])) None Range.dummyRange in
 
-        let mk_repr a wp = 
+        let mk_repr a wp =
             mk_repr' (S.bv_to_name a) wp in
 
-        let destruct_repr t = 
-            match (SS.compress t).n with 
+        let destruct_repr t =
+            match (SS.compress t).n with
             | Tm_app(_, [(t, _); (wp, _)]) -> t, wp
             | _ -> failwith "Unexpected repr type" in
 
-        let bind_repr = 
+        let bind_repr =
             let r = S.lid_as_fv FStar.Syntax.Const.range_0 Delta_constant None |> S.fv_to_tm in
             let b, wp_b = fresh_effect_signature () in
             let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
@@ -283,47 +283,47 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             let wp_g = S.gen_bv "wp_g" None a_wp_b in
             let x_a = S.gen_bv "x_a" None (S.bv_to_name a) in
             let wp_g_x = mk_Tm_app (S.bv_to_name wp_g) [as_arg <| S.bv_to_name x_a] None Range.dummyRange in
-            let res = 
+            let res =
                 let wp = mk_Tm_app (Env.inst_tscheme bind_wp |> snd)
-                                   (List.map as_arg [r; S.bv_to_name a; 
-                                                     S.bv_to_name b; S.bv_to_name wp_f; 
+                                   (List.map as_arg [r; S.bv_to_name a;
+                                                     S.bv_to_name b; S.bv_to_name wp_f;
                                                      S.bv_to_name wp_g])
                                    None Range.dummyRange in
                 mk_repr b wp in
 
-            let expected_k = Util.arrow [S.mk_binder a; 
+            let expected_k = Util.arrow [S.mk_binder a;
                                          S.mk_binder b;
                                          S.mk_binder wp_f;
                                          S.null_binder (mk_repr a (S.bv_to_name wp_f));
                                          S.mk_binder wp_g;
                                          S.null_binder (Util.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))]
                                         (S.mk_Total res) in
-//            printfn "About to check expected_k %s\n" 
+//            printfn "About to check expected_k %s\n"
 //                     (Print.term_to_string expected_k);
-            let expected_k, _, _ = 
+            let expected_k, _, _ =
                 tc_tot_or_gtot_term env expected_k in
-//            printfn "About to check bind=%s\n\n, at type %s\n" 
-//                     (Print.term_to_string (snd ed.bind_repr)) 
-//                     (Print.term_to_string expected_k); 
+//            printfn "About to check bind=%s\n\n, at type %s\n"
+//                     (Print.term_to_string (snd ed.bind_repr))
+//                     (Print.term_to_string expected_k);
             let env = Env.set_range env (snd (ed.bind_repr)).pos in
             let env = {env with lax=true} in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
             let br = check_and_gen' env ed.bind_repr expected_k in
 //            let _ = printfn "After checking bind_repr is %s\nexpected_k is %s\n" (Print.tscheme_to_string br) (Print.term_to_string expected_k) in
             br in
 
-        let return_repr = 
+        let return_repr =
             let x_a = S.gen_bv "x_a" None (S.bv_to_name a) in
-            let res = 
+            let res =
                 let wp = mk_Tm_app (Env.inst_tscheme return_wp |> snd)
-                                   (List.map as_arg [S.bv_to_name a; S.bv_to_name x_a]) 
+                                   (List.map as_arg [S.bv_to_name a; S.bv_to_name x_a])
                                    None Range.dummyRange in
                 mk_repr a wp in
             let expected_k = Util.arrow [S.mk_binder a;
                                          S.mk_binder x_a]
                                        (S.mk_Total res) in
-            let expected_k, _, _ = 
+            let expected_k, _, _ =
                 tc_tot_or_gtot_term env expected_k in
-            (* printfn "About to check return_repr=%s, at type %s\n" *) 
+            (* printfn "About to check return_repr=%s, at type %s\n" *)
             (*         (Print.term_to_string (snd ed.return_repr)) *)
             (*         (Print.term_to_string expected_k); *)
             let env = Env.set_range env (snd (ed.return_repr)).pos in
@@ -356,10 +356,10 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
           // 3) Unify [action_typ] against [expected_k], because we also need
           // to check that the action typ is of the form [binders -> repr ...]
-          let expected_k, g_k = 
+          let expected_k, g_k =
             let act_typ = SS.compress act_typ in
-            match act_typ.n with 
-            | Tm_arrow(bs, c) -> 
+            match act_typ.n with
+            | Tm_arrow(bs, c) ->
               let bs, _ = SS.open_comp bs c in
               let res = mk_repr' S.tun S.tun in
               let k = Util.arrow bs (S.mk_Total res) in
@@ -374,8 +374,8 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
           // 4) Do a bunch of plumbing to assign a type in the new monad to
           //    the action
-          let act_typ = match (SS.compress expected_k).n with 
-              | Tm_arrow(bs, c) -> 
+          let act_typ = match (SS.compress expected_k).n with
+              | Tm_arrow(bs, c) ->
                 let bs, c = SS.open_comp bs c in
                 let a, wp = destruct_repr (Util.comp_result c) in
                 let c = {
@@ -383,17 +383,17 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
 		          effect_name = ed.mname;
                   result_typ = a;
                   effect_args = [as_arg wp];
-                  flags = [] 
+                  flags = []
                 } in
                 Util.arrow bs (S.mk_Comp c)
               | _ -> failwith "" in
 
-          (* printfn "Checked action %s against type %s\n" *) 
-          (*         (Print.term_to_string act_defn) *) 
+          (* printfn "Checked action %s against type %s\n" *)
+          (*         (Print.term_to_string act_defn) *)
           (*         (Print.term_to_string (N.normalize [N.Beta] env act_typ)); *)
           let univs, act_defn = TcUtil.generalize_universes env act_defn in
           let act_typ = N.normalize [N.Beta] env act_typ in
-          {act with 
+          {act with
               action_univs=univs;
               action_defn=act_defn;
               action_typ =act_typ } in
@@ -418,11 +418,11 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
           (string_of_int n)
           (Print.tscheme_to_string ts));
     ts in
-  let close_action act = 
+  let close_action act =
     let univs, defn = close (-1) (act.action_univs, act.action_defn) in
     let univs', typ = close (-1) (act.action_univs, act.action_typ) in
     assert (List.length univs = List.length univs');
-    { act with 
+    { act with
         action_univs=univs;
         action_defn=defn;
         action_typ=typ; } in
@@ -477,6 +477,14 @@ and cps_and_elaborate env ed =
         failwith "bad shape for effect-for-free signature"
   in
 
+  (* TODO : having "_" as a variable name can create a really strange shadowing
+            behaviour between uu___ variables in the tcterm ; needs to be investigated *)
+  let a =
+      if S.is_null_bv a
+      then S.gen_bv "a" (Some (S.range_of_bv a)) a.sort
+      else a
+  in
+
   let open_and_check t =
     let subst = SS.opening_of_binders effect_binders in
     let t = SS.subst subst t in
@@ -515,7 +523,7 @@ and cps_and_elaborate env ed =
     // TODO: assert no universe polymorphism
     let item, item_comp = open_and_check item in
     if not (Util.is_total_lcomp item_comp) then
-      raise (Err ("Computation for [item] is not total!"));
+      raise (Err (Util.format2 "Computation for [%s] is not total : %s !" (Print.term_to_string item) (Print.lcomp_to_string item_comp)));
     let item_t, item_wp, item_elab = DMFF.star_expr dmff_env item in
     let item_wp = recheck_debug "*" env item_wp in
     let item_elab = recheck_debug "_" env item_elab in
@@ -524,6 +532,25 @@ and cps_and_elaborate env ed =
 
   let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
   let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env ed.return_repr in
+
+  let lift_from_pure_wp =
+      match (SS.compress return_wp).n with
+      | Tm_abs (b1 :: b2 :: bs, body, what) ->
+          let [b1 ; b2], body = SS.open_term [b1 ; b2] (U.abs bs body None) in
+          // WARNING : pushing b1 and b2 in env might break the well-typedness invariant
+          let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
+          let wp_b1 = N.normalize [ N.Beta ] env0 (mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ]))) in
+          let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type body (Util.unascribe wp_b1) in
+          (* TODO : Should check that what' is Tot Type0 *)
+          let t2 = (fst b2).sort in
+          let pure_wp_type = DMFF.double_star t2 in
+          let wp = S.gen_bv "wp" None pure_wp_type in
+          // fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a
+          let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
+          U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr Const.effect_GTot_lid))
+      | _ ->
+          failwith "unexpected shape for return"
+  in
 
   let return_wp =
     // TODO: fix [tc_eff_decl] to deal with currying
@@ -554,8 +581,13 @@ and cps_and_elaborate env ed =
     sigelts := sigelt :: !sigelts;
     fv
   in
+  let lift_from_pure_wp = register "lift_from_pure" lift_from_pure_wp in
+
+  // we do not expect the return_elab to verify, since that may require internalizing monotonicity of WPs (i.e. continuation monad)
   let return_wp = register "return_wp" return_wp in
+  sigelts := Sig_pragma (SetOptions "--admit_smt_queries true", Range.dummyRange) :: !sigelts;
   let return_elab = register "return_elab" return_elab in
+  sigelts := Sig_pragma (SetOptions "--admit_smt_queries false", Range.dummyRange) :: !sigelts;
 
   // we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
   let bind_wp = register "bind_wp" bind_wp in
@@ -584,18 +616,30 @@ and cps_and_elaborate env ed =
   let repr = recheck_debug "FC" env repr in
   let repr = register "repr" repr in
 
+  (* We are still lacking a principled way to generate pre/post condition *)
+  (* Current algorithm takes the type of wps : fun (a: Type) -> (t1 -> t2 ... -> tn -> Type0) *)
+  (* Checks that there is exactly one ti containing the type variable a and returns that ti *)
+  (* as type of postconditons, the rest as type of preconditions *)
   let pre, post =
-    match (SS.compress wp_type).n with
-    | Tm_abs (effect_param, arrow, _) ->
-        let effect_param, arrow = SS.open_term effect_param arrow in
-        begin match (SS.compress arrow).n with
+    match (unascribe <| SS.compress wp_type).n with
+    | Tm_abs (type_param :: effect_param, arrow, _) ->
+        let (type_param :: effect_param), arrow = SS.open_term (type_param :: effect_param) arrow in
+        begin match (unascribe <| SS.compress arrow).n with
         | Tm_arrow (wp_binders, c) ->
             let wp_binders, c = SS.open_comp wp_binders c in
-            let pre_args, post = Util.prefix wp_binders in
+            let pre_args, post_args =
+                List.partition (fun (bv,_) ->
+                  Free.names bv.sort |> Util.set_mem (fst type_param) |> not
+                ) wp_binders
+            in
+            let post = match post_args with
+                | [post] -> post
+                | _ -> failwith (Util.format1 "Impossible: multiple post candidates %s" (Print.term_to_string arrow))
+            in
             // Pre-condition does not mention the return type; don't close over it
             U.arrow pre_args c,
             // Post-condition does, however!
-            U.abs effect_param (fst post).sort None
+            U.abs (type_param :: effect_param) (fst post).sort None
         | _ ->
             failwith (Util.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow))
         end
@@ -619,12 +663,26 @@ and cps_and_elaborate env ed =
     binders = close_binders effect_binders
   } in
 
+
   // Generate the missing combinators.
   let sigelts', ed = DMFF.gen_wps_for_free env effect_binders a wp_a ed in
   if Env.debug env (Options.Other "ED") then
     Util.print_string (Print.eff_decl_to_string true ed);
 
-  List.rev !sigelts @ sigelts', ed
+  let lift_from_pure_opt =
+    if List.length effect_binders = 0 then begin
+      // Won't work with parameterized effect
+      let lift_from_pure = {
+          source = Const.effect_PURE_lid;
+          target = ed.mname ;
+          lift_wp = Some ([], apply_close lift_from_pure_wp) ;
+          lift = None //Some ([], apply_close return_elab)
+      } in
+      Some (Sig_sub_effect (lift_from_pure, Range.dummyRange))
+    end else None
+  in
+
+  List.rev !sigelts @ sigelts', ed, lift_from_pure_opt
 
 
 and tc_lex_t env ses quals lids =
@@ -762,7 +820,7 @@ and tc_inductive env ses quals lids =
          let tps, env_tps, guard_params, us = tc_binders env tps in
          let indices, t = Util.arrow_formals k in
          let indices, env', guard_indices, us' = tc_binders env_tps indices in
-         let t, guard = 
+         let t, guard =
              let t, _, g = tc_tot_or_gtot_term env' t in
              t, Rel.discharge_guard env' (Rel.conj_guard guard_params (Rel.conj_guard guard_indices g)) in
          let k = Util.arrow indices (S.mk_Total t) in
@@ -775,7 +833,7 @@ and tc_inductive env ses quals lids =
          let fv_tc = S.lid_as_fv tc Delta_constant None in
          Env.push_let_binding env_tps (Inr fv_tc) ([], t_tc),
          Sig_inductive_typ(tc, [], tps, k, mutuals, data, quals, r),
-         u, 
+         u,
          guard
 
         | _ -> failwith "impossible" in
@@ -830,7 +888,7 @@ and tc_inductive env ses quals lids =
          let head, _ = Util.head_and_args result in
          let _ = match (SS.compress head).n with
             | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> ()
-            | _ -> raise (Error(Util.format2 "Expected a constructor of type %s; got %s" 
+            | _ -> raise (Error(Util.format2 "Expected a constructor of type %s; got %s"
                                         (Print.lid_to_string tc_lid)
                                         (Print.term_to_string head), r)) in
          let g =List.fold_left2 (fun g (x, _) u_x ->
@@ -897,7 +955,7 @@ and tc_inductive env ses quals lids =
 
     let tys, datas = ses |> List.partition (function Sig_inductive_typ _ -> true | _ -> false) in
     if datas |> Util.for_some (function Sig_datacon _ -> false | _ -> true)
-    then raise (Error("Mutually defined type contains a non-inductive element", Env.get_range env)); 
+    then raise (Error("Mutually defined type contains a non-inductive element", Env.get_range env));
     let env0 = env in
 
     (* Check each tycon *)
@@ -945,7 +1003,7 @@ and tc_inductive env ses quals lids =
                     | Sig_inductive_typ (lid, _, bs, t, _, d_lids, _, _) -> lid, bs, t, d_lids
                     | _                                                  -> failwith "Impossible!"
             in
- 
+
              //apply usubt to bs
             let bs = SS.subst_binders usubst bs in
             //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t together ?
@@ -1064,9 +1122,9 @@ and tc_inductive env ses quals lids =
         env.solver.push "haseq";
         env.solver.encode_sig env sig_bndle;
         let env = Env.push_univ_vars env us in
-	
+
         let axioms, env, guard, cond = List.fold_left (haseq_ty usubst us) ([], env, U.t_true, U.t_true) tcs in
-            
+
         let phi = U.mk_imp guard cond in
         let phi, _ = tc_trivial_guard env phi in
         let _ =
@@ -1080,13 +1138,13 @@ and tc_inductive env ses quals lids =
         let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
             let se = tc_assume env lid fml [] dr in
             //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
-            l @ [se] 
+            l @ [se]
         ) [] axioms in
 
         env.solver.pop "haseq";
         ses
     in
-    
+
     let unoptimized_haseq_scheme (_:unit) :list<sigelt> =
         //TODO: perhaps make it a map ?
         let mutuals = List.map (fun ty ->
@@ -1106,7 +1164,7 @@ and tc_inductive env ses quals lids =
                     | Sig_inductive_typ (lid, _, bs, t, _, d_lids, _, _) -> lid, bs, t, d_lids
                     | _                                                  -> failwith "Impossible!"
             in
- 
+
              //apply usubt to bs
             let bs = SS.subst_binders usubst bs in
             //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t together ?
@@ -1129,7 +1187,7 @@ and tc_inductive env ses quals lids =
             let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None dr in
             //haseq of ind applied to all bs and ibs
             let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None dr in
-            
+
             //identify if the type t is a mutually defined type
             let rec is_mutual t =  //TODO: this should handle more cases
                 match (SS.compress t).n with
@@ -1139,7 +1197,7 @@ and tc_inductive env ses quals lids =
                     | Tm_app (t', args)  -> if is_mutual t' then true else exists_mutual (List.map fst args)
                     | Tm_meta (t', _)    -> is_mutual t'
                     | _                  -> false
-            
+
             and exists_mutual = function
                 | [] -> false
                 | hd::tl -> is_mutual hd || exists_mutual tl
@@ -1171,7 +1229,7 @@ and tc_inductive env ses quals lids =
                         //fold right with dbs, close and add a forall b
 	                    //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
                         let cond = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) dbs cond in
-                    
+
                         //new accumulator is old one /\ cond
                         U.mk_conj acc cond
                     | _                -> acc
@@ -1239,16 +1297,16 @@ and tc_inductive env ses quals lids =
     in
 
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
-    
+
     if ((List.length tcs = 0) || ((lid_equals env.curmodule Const.prims_lid) && skip_prims_type ()) || is_noeq) then [sig_bndle]
     else
         let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
         let ses = if is_unopteq then unoptimized_haseq_scheme () else optimized_haseq_scheme () in
         (Sig_bundle(tcs@datas, quals, lids, Env.get_range env0))::ses
 
-and tc_decl env se: list<sigelt> * _ = 
+and tc_decl env se: list<sigelt> * _ =
     let env = set_hint_correlator env se in
-    TcUtil.check_sigelt_quals se;
+    TcUtil.check_sigelt_quals env se;
     match se with
     | Sig_inductive_typ _
     | Sig_datacon _ ->
@@ -1298,7 +1356,7 @@ and tc_decl env se: list<sigelt> * _ =
       let ne = tc_eff_decl env ne in
       let se = Sig_new_effect(ne, r) in
       let env = Env.push_sigelt env se in
-      let env, ses = ne.actions |> List.fold_left (fun (env, ses) a -> 
+      let env, ses = ne.actions |> List.fold_left (fun (env, ses) a ->
           let se_let = Util.action_as_lb a in
           Env.push_sigelt env se_let, se_let::ses) (env, [se]) in
       [se], env
@@ -1314,7 +1372,7 @@ and tc_decl env se: list<sigelt> * _ =
         let no_reify l = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, Env.get_range env)) in
         match Env.effect_decl_opt env eff_name with
         | None -> no_reify eff_name
-        | Some ed -> 
+        | Some ed ->
             let repr = Env.inst_effect_fun_with [U_unknown] env ed ([], ed.repr) in
             if not (ed.qualifiers |> List.contains Reifiable) then
               no_reify eff_name
@@ -1336,20 +1394,20 @@ and tc_decl env se: list<sigelt> * _ =
       in
       let lax = env.lax in
       let env = {env with lax=true} in //we do not expect the lift to verify, since that requires internalizing monotonicity of WPs
-      let lift = match lift with 
+      let lift = match lift with
         | None -> None
-        | Some (_, lift) -> 
+        | Some (_, lift) ->
           let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
           let wp_a = S.new_bv None wp_a_src in
           let a_typ = S.bv_to_name a in
           let wp_a_typ = S.bv_to_name wp_a in
           let repr_f = repr_type sub.source a_typ wp_a_typ in
-          let repr_result = 
+          let repr_result =
             let lift_wp = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env (snd lift_wp) in
             let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
             repr_type sub.target a_typ lift_wp_a in
           let expected_k =
-            Util.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f] 
+            Util.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f]
                         (S.mk_Total repr_result) in
 //          printfn "LIFT: Expected type for lift = %s\n" (Print.term_to_string expected_k);
           let expected_k, _, _ =
@@ -1383,8 +1441,8 @@ and tc_decl env se: list<sigelt> * _ =
       if List.length uvs <> 1
       && not (Ident.lid_equals lid Const.effect_Lemma_lid)
       then (let _, t = Subst.open_univ_vars uvs t in
-            raise (Error(Util.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)" 
-                                    (Print.lid_to_string lid) 
+            raise (Error(Util.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
+                                    (Print.lid_to_string lid)
                                     (List.length uvs |> Util.string_of_int)
                                     (Print.term_to_string t), r)));
       let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, r) in
@@ -1590,8 +1648,11 @@ let tc_decls env ses =
           // Let the power of Dijkstra generate everything "for free", then defer
           // the rest of the job to [tc_decl].
           let _, _, env, _ = acc in
-          let ses, ne = cps_and_elaborate env ne in
-          let ses = ses @ [ Sig_new_effect (ne, r) ] in
+          let ses, ne, lift_from_pure_opt = cps_and_elaborate env ne in
+          let ses = match lift_from_pure_opt with
+                    | Some lift -> ses @ [ Sig_new_effect (ne, r) ; lift ]
+                    | None -> ses @ [ Sig_new_effect (ne, r) ]
+          in
           List.fold_left process_one_decl acc ses
       | _ ->
           process_one_decl acc se
@@ -1602,7 +1663,7 @@ let tc_decls env ses =
 let tc_partial_modul env modul =
   let name = Util.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
   let msg = "Internals for " ^name in
-  let env = {env with Env.is_iface=modul.is_interface; 
+  let env = {env with Env.is_iface=modul.is_interface;
                       admit=not (Options.should_verify modul.name.str)} in
   env.solver.push msg;
   let env = Env.set_current_module env modul.name in
@@ -1619,7 +1680,7 @@ let tc_more_partial_modul env modul decls =
         abstract type t = nat
         let f (x:t{x > 0}) : Tot t = x
 
-   The type of f : x:t{x>0} -> t 
+   The type of f : x:t{x>0} -> t
    from the perspective of a client of Test
    is ill-formed, since it the sub-term `x > 0` requires x:int, not x:t
 
@@ -1628,41 +1689,41 @@ let tc_more_partial_modul env modul decls =
    perspective.
 *)
 open FStar.TypeChecker.Errors
-let check_exports env (modul:modul) exports = 
+let check_exports env (modul:modul) exports =
     let env = {env with lax=true; lax_universes=true; top_level=true} in
-    let check_term lid univs t = 
+    let check_term lid univs t =
         let univs, t = SS.open_univ_vars univs t in
         if Env.debug (Env.set_current_module env modul.name) <| Options.Other "Exports"
-        then Util.print3 "Checking for export %s <%s> : %s\n" 
-                (Print.lid_to_string lid) 
+        then Util.print3 "Checking for export %s <%s> : %s\n"
+                (Print.lid_to_string lid)
                 (univs |> List.map (fun x -> Print.univ_to_string (U_name x)) |> String.concat ", ")
                 (Print.term_to_string t);
         let env = Env.push_univ_vars env univs in
         TcTerm.tc_trivial_guard env t |> ignore
     in
-    let check_term lid univs t = 
-        let _ = Errors.message_prefix.set_prefix 
-                (Util.format2 "Interface of %s violates its abstraction (add a 'private' qualifier to '%s'?)" 
+    let check_term lid univs t =
+        let _ = Errors.message_prefix.set_prefix
+                (Util.format2 "Interface of %s violates its abstraction (add a 'private' qualifier to '%s'?)"
                         (Print.lid_to_string modul.name)
                         (Print.lid_to_string lid)) in
         check_term lid univs t;
-        Errors.message_prefix.clear_prefix() 
+        Errors.message_prefix.clear_prefix()
     in
     let rec check_sigelt = function
-        | Sig_bundle(ses, quals, _, _) -> 
+        | Sig_bundle(ses, quals, _, _) ->
           if not (quals |> List.contains Private)
           then ses |> List.iter check_sigelt
         | Sig_inductive_typ (l, univs, binders, typ, _, _, _, r) ->
           let t = S.mk (Tm_arrow(binders, S.mk_Total typ)) None r in
           check_term l univs t
-        | Sig_datacon(l , univs, t, _, _, _, _, _) -> 
+        | Sig_datacon(l , univs, t, _, _, _, _, _) ->
           check_term l univs t
         | Sig_declare_typ(l, univs, t, quals, _) ->
           if not (quals |> List.contains Private)
           then check_term l univs t
         | Sig_let((_, lbs), _, _, quals) ->
           if not (quals |> List.contains Private)
-          then lbs |> List.iter (fun lb -> 
+          then lbs |> List.iter (fun lb ->
                let fv = right lb.lbname in
                check_term fv.fv_name.v lb.lbunivs lb.lbtyp)
         | Sig_effect_abbrev(l, univs, binders, comp, quals, r) ->
@@ -1699,6 +1760,6 @@ let check_module env m =
     if Options.debug_any()
     then Util.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
     let m, env = tc_modul env m in
-    if Options.dump_module m.name.str 
+    if Options.dump_module m.name.str
     then Util.print1 "%s\n" (Print.modul_to_string m);
     m, env

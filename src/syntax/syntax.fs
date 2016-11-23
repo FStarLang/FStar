@@ -49,10 +49,10 @@ type pragma =
 type memo<'a> = ref<option<'a>>
 
 type arg_qualifier =
-  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor 
+  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
   | Equality
 type aqual = option<arg_qualifier>
-type universe = 
+type universe =
   | U_zero
   | U_succ  of universe
   | U_max   of list<universe>
@@ -66,8 +66,8 @@ type universe_uvar = Unionfind.uvar<option<universe>>
 type univ_names    = list<univ_name>
 type universes     = list<universe>
 type monad_name    = lident
-type delta_depth = 
-  | Delta_constant                  //A defined constant, e.g., int, list, etc. 
+type delta_depth =
+  | Delta_constant                  //A defined constant, e.g., int, list, etc.
   | Delta_defined_at_level of int         //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
@@ -76,8 +76,8 @@ type term' =
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
   | Tm_fvar       of fv                //fully qualified reference to a top-level symbol from a module
   | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
-  | Tm_constant   of sconst 
-  | Tm_type       of universe       
+  | Tm_constant   of sconst
+  | Tm_type       of universe
   | Tm_abs        of binders*term*option<either<lcomp, lident>>  (* fun (xi:ti) -> t : (M t' wp | N) *)
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
@@ -86,7 +86,7 @@ type term' =
   | Tm_ascribed   of term * either<term,comp> * option<lident>   (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e; monadic bind in monad_name *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
-  | Tm_delayed    of either<(term * subst_ts), (unit -> term)> 
+  | Tm_delayed    of either<(term * subst_ts), (unit -> term)>
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
@@ -98,7 +98,7 @@ and pat' =
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
   | Pat_dot_term of bv * term                                    (* dot patterns: determined by other elements in the pattern and type *)
-and letbinding = {  //let f : forall u1..un. M t = e 
+and letbinding = {  //let f : forall u1..un. M t = e
     lbname :lbname;          //f
     lbunivs:list<univ_name>; //u1..un
     lbtyp  :typ;             //t
@@ -142,7 +142,7 @@ and metadata =
   | Meta_monadic_lift  of monad_name * monad_name                (* Sub-effecting: a lift from m1 to m2 *)
 and uvar_basis<'a> =
   | Uvar
-  | Fixed of 'a 
+  | Fixed of 'a
 and meta_source_info =
   | Data_app
   | Sequence
@@ -159,7 +159,7 @@ and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
              * option<range>                    (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
-and subst_elt = 
+and subst_elt =
    | DB of int * bv                            (* DB i t: replace a bound variable with index i with name bv                 *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
@@ -174,7 +174,7 @@ and syntax<'a,'b> = {
     vars:memo<free_vars>;
 }
 and bv = {
-    ppname:ident;  //programmer-provided name for pretty-printing 
+    ppname:ident;  //programmer-provided name for pretty-printing
     index:int;     //de Bruijn index 0-based, counting up from the binder
     sort:term
 }
@@ -201,7 +201,7 @@ type freenames_l = list<bv>
 type formula = typ
 type formulae = list<typ>
 type qualifier =
-  | Assumption                             //no definition provided, just a declaration 
+  | Assumption                             //no definition provided, just a declaration
   | New                                    //a fresh type constant, distinct from all prior type constructors
   | Private                                //name is invisible outside the module
   | Unfold_for_unification_and_vcgen       //a definition that *should* always be unfolded by the normalizer
@@ -216,11 +216,11 @@ type qualifier =
   | Reifiable
   | Reflectable
   //the remaining qualifiers are internal: the programmer cannot write them
-  | Discriminator of lident                //discriminator for a datacon l 
+  | Discriminator of lident                //discriminator for a datacon l
   | Projector of lident * ident            //projector for datacon l's argument x
   | RecordType of list<fieldname>          //record type whose unmangled field names are ...
   | RecordConstructor of list<fieldname>   //record constructor whose unmangled field names are ...
-  | ExceptionConstructor                   //a constructor of Prims.exn 
+  | ExceptionConstructor                   //a constructor of Prims.exn
   | HasMaskedEffect                        //a let binding that may have a top-level effect
   | Effect                                 //qualifier on a name that corresponds to an effect constructor
 
@@ -269,45 +269,45 @@ type eff_decl = {
     actions     :list<action>
 }
 and sigelt =
-  | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t 
+  | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
                        * univ_names                //u1..un
                        * binders                   //(x1:t1) ... (xn:tn)
                        * typ                       //t
                        * list<lident>              //mutually defined types
                        * list<lident>              //data constructors for ths type
-                       * list<qualifier>           
+                       * list<qualifier>
                        * Range.range
 (* an inductive type is a Sig_bundle of all mutually defined Sig_tycons and Sig_datacons.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
    where each higher level list represents one of the inductive types and its constructors.
    However, the current order is convenient as it matches the type-checking order for the mutuals;
    i.e., all the tycons and typ_abbrevs first; then all the data which may refer to the tycons/abbrevs *)
-  | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors 
-                       * list<qualifier> 
+  | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
+                       * list<qualifier>
                        * list<lident>               //all the inductive types and data constructor names in this bundle
                        * Range.range
-  | Sig_datacon        of lident 
+  | Sig_datacon        of lident
                        * univ_names                 //universe variables
-                       * typ 
+                       * typ
                        * lident                     //the inductive type of the value this constructs
                        * int                        //and the number of parameters of the inductive
-                       * list<qualifier> 
-                       * list<lident>               //mutually defined types 
+                       * list<qualifier>
+                       * list<lident>               //mutually defined types
                        * Range.range
-  | Sig_declare_typ       of lident 
+  | Sig_declare_typ       of lident
                        * univ_names
-                       * typ 
-                       * list<qualifier> 
+                       * typ
+                       * list<qualifier>
                        * Range.range
-  | Sig_let            of letbindings 
-                       * Range.range 
+  | Sig_let            of letbindings
+                       * Range.range
                        * list<lident>               //mutually defined
                        * list<qualifier>
   | Sig_main           of term
                        * Range.range
-  | Sig_assume         of lident 
-                       * formula 
-                       * list<qualifier> 
+  | Sig_assume         of lident
+                       * formula
+                       * list<qualifier>
                        * Range.range
   | Sig_new_effect     of eff_decl * Range.range
   | Sig_new_effect_for_free of eff_decl * Range.range // in this case, most fields have a dummy value
@@ -337,9 +337,9 @@ let withinfo v s r = {v=v; ty=s; p=r}
 let withsort v s = withinfo v s dummyRange
 
 let bv_eq (bv1:bv) (bv2:bv) = bv1.ppname.idText=bv2.ppname.idText && bv1.index=bv2.index
-let order_bv x y = 
+let order_bv x y =
   let i = String.compare x.ppname.idText y.ppname.idText in
-  if i = 0 
+  if i = 0
   then x.index - y.index
   else i
 
@@ -358,10 +358,10 @@ let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
-let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_id x - Unionfind.uvar_id y)  
+let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_id x - Unionfind.uvar_id y)
                                            (fun (x, _) -> Unionfind.uvar_id x)
-let new_universe_uvar_set () : set<universe_uvar> = 
-    Util.new_set (fun x y -> Unionfind.uvar_id x - Unionfind.uvar_id y)  
+let new_universe_uvar_set () : set<universe_uvar> =
+    Util.new_set (fun x y -> Unionfind.uvar_id x - Unionfind.uvar_id y)
                  (fun x -> Unionfind.uvar_id x)
 let no_names  = new_bv_set()
 let no_uvs : uvars = new_uv_set()
@@ -392,11 +392,11 @@ let mk_Tm_app (t1:typ) (args:list<arg>) : mk_t = fun k p ->
 let mk_Tm_uinst (t:term) = function
     | [] -> t
     | us ->
-      match t.n with 
+      match t.n with
         | Tm_fvar _ ->  mk (Tm_uinst(t, us)) None t.pos
         | _ -> failwith "Unexpected universe instantiation"
 
-let extend_app_n t args' kopt r = match t.n with 
+let extend_app_n t args' kopt r = match t.n with
     | Tm_app(head, args) -> mk_Tm_app head (args@args') kopt r
     | _ -> mk_Tm_app t args' kopt r
 let extend_app t arg kopt r = extend_app_n t [arg] kopt r
@@ -413,10 +413,10 @@ let argpos (x:arg) = (fst x).pos
 
 let tun : term = mk (Tm_unknown) None dummyRange
 let teff : term = mk (Tm_constant Const_effect) (Some Tm_unknown) dummyRange
-let is_teff (t:term) = match t.n with 
+let is_teff (t:term) = match t.n with
     | Tm_constant Const_effect -> true
     | _ -> false
-let is_type (t:term) = match t.n with 
+let is_type (t:term) = match t.n with
     | Tm_type _ -> true
     | _ -> false
 let null_id  = mk_ident("_", dummyRange)
@@ -429,8 +429,8 @@ let as_arg t : arg = t, None
 let is_null_bv (b:bv) = b.ppname.idText = null_id.idText
 let is_null_binder (b:binder) = is_null_bv (fst b)
 
-let is_top_level = function 
-    | {lbname=Inr _}::_ -> true 
+let is_top_level = function
+    | {lbname=Inr _}::_ -> true
     | _ -> false
 
 let freenames_of_binders (bs:binders) : freenames =
@@ -441,26 +441,26 @@ let binders_of_freenames (fvs:freenames) = Util.set_elements fvs |> binders_of_l
 let is_implicit = function Some (Implicit _) -> true | _ -> false
 let as_implicit = function true -> Some imp_tag | _ -> None
 
-let pat_bvs (p:pat) : list<bv> = 
+let pat_bvs (p:pat) : list<bv> =
     let rec aux b p = match p.v with
         | Pat_dot_term _
         | Pat_constant _ -> b
-        | Pat_wild x 
+        | Pat_wild x
         | Pat_var x -> x::b
         | Pat_cons(_, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
         | Pat_disj(p::_) -> aux b p
         | Pat_disj [] -> failwith "impossible" in
   List.rev <| aux [] p
-         
+
 (* Gen sym *)
-let gen_reset = 
+let gen_reset =
     let x = ref 0 in
     let gen () = incr x; !x in
     let reset () = x := 0 in
     gen, reset
 let next_id = fst gen_reset
 let reset_gensym = snd gen_reset
-let range_of_ropt = function 
+let range_of_ropt = function
     | None -> dummyRange
     | Some r -> r
 let gen_bv : string -> option<Range.range> -> typ -> bv = fun s r t ->
@@ -471,8 +471,8 @@ let freshen_bv bv =
     if is_null_bv bv
     then new_bv (Some (range_of_bv bv)) bv.sort
     else {bv with index=next_id()}
-let new_univ_name ropt = 
-    let id = next_id() in 
+let new_univ_name ropt =
+    let id = next_id() in
     mk_ident (Util.string_of_int id, range_of_ropt ropt)
 let mkbv x y t  = {ppname=x;index=y;sort=t}
 let lbname_eq l1 l2 = match l1, l2 with
@@ -488,6 +488,6 @@ let lid_as_fv l dd dq : fv = {
     fv_qual =dq;
 }
 let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid fv.fv_name.v)
-let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq) 
+let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)

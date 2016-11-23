@@ -89,4 +89,4 @@ val reify_comp: env -> lcomp -> universe -> term
 val effect_repr: env -> comp -> universe -> option<term>
 
 //qualifiers
-val check_sigelt_quals: sigelt -> unit
+val check_sigelt_quals: env -> sigelt -> unit

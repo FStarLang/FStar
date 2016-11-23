@@ -67,6 +67,7 @@ type term' =
   | App        of op  * list<term>
   | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term
   | Labeled    of term * string * Range.range
+  | LblPos     of term * string
 and pat  = term
 and term = {tm:term'; freevars:Syntax.memo<fvs>; rng:Range.range}
 and fv = string * sort
