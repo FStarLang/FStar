@@ -142,3 +142,8 @@ let soft_surround = PPrint.soft_surround
 let surround_separate = PPrint.surround_separate 
 
 let surround_separate_map = PPrint.surround_separate_map 
+
+let tostring_pretty (width:int) (doc:document) : string = 
+    let buf = Buffer.create 0 in 
+    PPrint.ToBuffer.pretty 0.8 width buf doc;
+    Buffer.contents buf 

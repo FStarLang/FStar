@@ -149,3 +149,4 @@ val surround_separate_map: int -> int -> document -> document -> document -> doc
 // 
 // val ( ^//^ ) : document -> document -> document
 
+val tostring_pretty : int -> document -> string 

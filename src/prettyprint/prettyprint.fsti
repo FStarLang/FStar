@@ -142,3 +142,7 @@ val soft_surround: int -> int -> document -> document -> document -> document
 val surround_separate: int -> int -> document -> document -> document -> document -> list document -> document
 
 val surround_separate_map: int -> int -> document -> document -> document -> document -> ('a -> document) -> list 'a -> document
+
+// Expose Renderer implementations (flat, no inner modules)
+// Wrapper tostring_pretty uses ToBuffer:RENDERER implementation, rfrac is set to 0.8. 
+val tostring_pretty : int -> document -> string 

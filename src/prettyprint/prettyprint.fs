@@ -162,3 +162,4 @@ let surround_separate_map (n:int) (b:int) (v:document) (opening:document) (sep:d
 // 
 // let ( ^//^ ) (x:document) (y:document) : document = failwith not_impl_msg
 
+let tostring_pretty (width:int) (doc:document) : string = failwith not_impl_msg 
