@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -148,7 +149,7 @@ CAMLprim value ocaml_AEAD_encrypt(value state, value iv, value ad, value plain) 
 	cipher = caml_alloc_string(plainlen + 16);
 	uint8_t* ccipher = (uint8_t*) String_val(cipher);
         for (uint32_t i = 0; i < plainlen + 16; ++i)
-          ccipher[i] = (uint8_t )2;
+          ccipher[i] = (uint8_t )0;
 
 	Crypto_AEAD_encrypt(id, *ast, n, adlen, cad, plainlen, cplain, ccipher);
 	CAMLreturn(cipher);
@@ -173,6 +174,8 @@ CAMLprim value ocaml_AEAD_decrypt(value state, value iv, value ad, value cipher)
 	uint32_t plainlen = cipherlen - 16;
         plain = caml_alloc_string(plainlen);
         uint8_t* cplain = (uint8_t*) String_val(plain);
+	for (uint32_t i = 0; i < plainlen; ++i)
+          cplain[i] = (uint8_t )0;
         
 	if(Crypto_AEAD_decrypt(id, *ast, n, adlen, cad, plainlen, cplain, ccipher))
 	{

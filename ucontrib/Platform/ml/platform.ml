@@ -150,6 +150,7 @@ module Bytes = struct
   let bytes_of_int nb i =
     let nb = Z.to_int nb in
     let i = Z.to_int64 i in
+    if Int64.compare i Int64.zero < 0 then failwith "Negative 64bit.";
     let rec put_bytes bb lb n =
       if lb = 0 then failwith "not enough bytes"
       else
