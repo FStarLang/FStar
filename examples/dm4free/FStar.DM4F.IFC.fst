@@ -57,9 +57,9 @@ let xor (b1:bool) (b2:bool) : Tot bool = not (b1 = b2)
 val p : unit ->  Ifc unit (requires (fun l   -> True))
                           (ensures  (fun l r -> r = None))
 let p () =
-  let b1 = IFC.read Low in
-  let b2 = IFC.read Low in
-  IFC.write Low (b1 && b2);
-  let b3 = IFC.read High in
-  IFC.write High (b1 || b3);
-  IFC.write Low (xor b3 b3)
+  let b1 = IFC..read Low in
+  let b2 = IFC..read Low in
+  IFC..write Low (b1 && b2);
+  let b3 = IFC..read High in
+  IFC..write High (b1 || b3);
+  IFC..write Low (xor b3 b3)
