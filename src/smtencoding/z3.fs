@@ -213,9 +213,9 @@ let doZ3Exe' (input:string) (z3proc:proc) =
           parse_core core, lines 
         | _ -> None, lines in
     let rec lblnegs lines = match lines with
-      | lname::"false"::rest -> lname::lblnegs rest
-      | lname::_::rest -> lblnegs rest
-      | _ -> [] in
+      | lname::"false"::rest when Util.starts_with lname "label_" -> lname::lblnegs rest
+      | lname::_::rest when Util.starts_with lname "label_" -> lblnegs rest
+      | _ -> print_stats lines; [] in
     let unsat_core_and_lblnegs lines =
        let core_opt, rest = unsat_core lines in
        core_opt, lblnegs rest in
@@ -224,7 +224,7 @@ let doZ3Exe' (input:string) (z3proc:proc) =
       | "timeout"::tl -> TIMEOUT []
       | "unknown"::tl -> UNKNOWN (snd (unsat_core_and_lblnegs tl))
       | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl))
-      | "unsat"::tl   -> UNSAT   (fst (unsat_core tl))
+      | "unsat"::tl   -> UNSAT   (fst (unsat_core_and_lblnegs tl))
       | "killed"::tl  -> bg_z3_proc.restart(); KILLED
       | hd::tl -> 
         TypeChecker.Errors.warn Range.dummyRange (Util.format2 "%s: Unexpected output from Z3: %s\n" (query_logging.get_module_name()) hd);
