@@ -11,14 +11,13 @@ type ('a, 'b, 'c) live = unit
 
 type abuffer = | Buff of (unit * unit)
 
-type uint32 = FStar_UInt32.t
-let zero = FStar_UInt32.zero
-
 type 'a buffer = {
     content:'a array;
-    idx: uint32;
-    length: int;
+    idx:int;
+    length:int;
   }
+
+type uint32 = int
 
 type uint8s = FStar_UInt8.uint8 buffer
 type uint32s = FStar_UInt32.uint32 buffer
@@ -30,37 +29,21 @@ type u32 = FStar_UInt32.t
 type u64 = FStar_UInt64.t
 type u128 = FStar_UInt128.t
 
-let create init len = {content = Array.make (Int64.to_int len) init; idx = zero; length = Int64.to_int len}
-let createL l = {content = Array.of_list l; idx = zero; length = List.length l}
+let create init len = {content = Array.make len init; idx = 0; length = len}
+let createL l = {content = Array.of_list l; idx = 0; length = List.length l}
 let rcreate r init len = create init len
-
-let index b n =
-  let idx = Int64.to_int (Int64.add n b.idx) in
-   Array.get b.content idx
-
-let upd (b:'a buffer) (n:uint32) (v:'a) =
-  let idx = Int64.to_int (Int64.add n b.idx) in
-  Array.set b.content idx v
-
-let sub b i len = {content = b.content; idx = Int64.add b.idx i; length = Int64.to_int len}
-let offset b i  = {content = b.content; idx = Int64.add b.idx i; length = b.length - (Int64.to_int i)}
-
-let blit a idx_a b idx_b len =
-  let ida = Int64.to_int (Int64.add idx_a b.idx) in
-  let idb = Int64.to_int (Int64.add idx_b b.idx) in
-  Array.blit a.content ida b.content idb (Int64.to_int len)
-
-let fill a z len = Array.fill a.content 0 (Int64.to_int len) z
-let split a i =
-  let al = Int64.of_int a.length in
-  (sub a zero i, sub a i (Int64.sub al i))
+let index b n = Array.get b.content (n+b.idx)
+let upd (b:'a buffer) (n:int) (v:'a) = Array.set b.content (n+b.idx) v
+let sub b i len = {content = b.content; idx = b.idx+i; length = len}
+let offset b i  = {content = b.content; idx = b.idx+i; length = b.length-i}
+let blit a idx_a b idx_b len = Array.blit a.content (idx_a+a.idx) b.content (idx_b+b.idx) len
+let fill a z len = Array.fill a.content 0 len z
+let split a i = (sub a 0 i, sub a i (a.length - i))
 let of_seq s l = ()
-let copy b l =
-  {content = Array.sub b.content (Int64.to_int b.idx) (Int64.to_int l); idx = zero; length = Int64.to_int l}
+let copy b l = {content = Array.sub b.content b.idx l; idx = 0; length = l}
 
 let eqb b1 b2 len =
-  Array.sub b1.content (Int64.to_int b1.idx) (Int64.to_int len) 
-  = Array.sub b2.content (Int64.to_int b2.idx) (Int64.to_int len)
+  Array.sub b1.content b1.idx len = Array.sub b2.content b2.idx len
 
 type ('a, 'b, 'c, 'd) modifies_buf = ()
 let op_Plus_Plus a b = BatSet.empty
