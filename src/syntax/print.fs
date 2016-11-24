@@ -371,20 +371,20 @@ and comp_to_string c =
       let basic =
           if c.flags |> Util.for_some (function TOTAL -> true | _ -> false)
           && not (Options.print_effect_args())
-          then Util.format1 "Tot %s" (term_to_string c.result_typ)
+          then Util.format1 "Tot %s" "UN"// (term_to_string c.result_typ)
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
                   && lid_equals c.effect_name Const.effect_ML_lid
-          then term_to_string c.result_typ
+          then "UN" //term_to_string c.result_typ
           else if not (Options.print_effect_args())
                && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
-          then Util.format1 "ALL %s" (term_to_string c.result_typ)
+          then Util.format1 "ALL %s" "UN"//(term_to_string c.result_typ)
           else if (Options.print_effect_args())
           then Util.format3 "%s (%s) %s"
                     (sli c.effect_name)
-                    (term_to_string c.result_typ)
+                    "UN" //(term_to_string c.result_typ)
                     (c.effect_args |> List.map arg_to_string |> String.concat ", ")
-          else Util.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
+          else Util.format2 "%s (%s)" (sli c.effect_name) "UN" in //(term_to_string c.result_typ) in
       let dec = c.flags |> List.collect (function DECREASES e -> [Util.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
       Util.format2 "%s%s" basic dec
 

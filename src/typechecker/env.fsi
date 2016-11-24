@@ -165,6 +165,13 @@ val univ_vars    : env -> Util.set<universe_uvar>
 val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 
+(* Utilities on computation types *)
+val comp_to_comp_typ       : env -> comp -> comp_typ
+val unfold_effect_abbrev   : env -> comp -> comp_typ
+val result_typ             : env -> comp -> typ
+val non_informative        : env -> typ -> bool
+val lcomp_of_comp          : env -> comp -> lcomp
+
 (* operations on monads *)
 val join            : env -> lident -> lident -> lident * mlift * mlift
 val monad_leq       : env -> lident -> lident -> option<edge>

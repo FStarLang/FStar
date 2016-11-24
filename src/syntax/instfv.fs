@@ -98,8 +98,7 @@ and inst_args s args = args |> List.map (fun (a, imp) -> inst s a, imp)
 and inst_comp s c = match c.n with 
     | Total (t, uopt) -> S.mk_Total' (inst s t) uopt
     | GTotal (t, uopt) -> S.mk_GTotal' (inst s t) uopt
-    | Comp ct -> let ct = {ct with result_typ=inst s ct.result_typ;
-                                   effect_args=inst_args s ct.effect_args;
+    | Comp ct -> let ct = {ct with effect_args=inst_args s ct.effect_args;
                                    flags=ct.flags |> List.map (function 
                                         | DECREASES t -> DECREASES (inst s t)
                                         | f -> f)} in

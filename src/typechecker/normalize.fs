@@ -128,30 +128,6 @@ let lookup_bvar env x =
     try List.nth env x.index
     with _ -> failwith (Util.format1 "Failed to find %s\n" (Print.db_to_string x))
 
-let comp_to_comp_typ (env:Env.env) c =
-    let c = match c.n with
-            | Total (t, None) ->
-              let u = env.universe_of env t in
-              S.mk_Total' t (Some u)
-            | GTotal (t, None) ->
-              let u = env.universe_of env t in
-              S.mk_GTotal' t (Some u)
-            | _ -> c in
-    U.comp_to_comp_typ c
-
-let rec unfold_effect_abbrev env comp =
-  let c = comp_to_comp_typ env comp in
-  match Env.lookup_effect_abbrev env c.comp_univs c.effect_name with
-    | None -> c
-    | Some (binders, cdef) ->
-      let binders, cdef = SS.open_comp binders cdef in
-      if List.length binders <> List.length c.effect_args + 1
-      then raise (Error ("Effect constructor is not fully applied", comp.pos));
-      let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
-      let c1 = SS.subst_comp inst cdef in
-      let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
-      unfold_effect_abbrev env c
-
 let downgrade_ghost_effect_name l =
     if Ident.lid_equals l Const.effect_Ghost_lid
     then Some Const.effect_Pure_lid
@@ -397,13 +373,11 @@ and close_comp cfg env c =
               mk_GTotal' (closure_as_term_delayed cfg env t)
                          (Option.map (norm_universe cfg env) uopt)
             | Comp c ->
-              let rt = closure_as_term_delayed cfg env c.result_typ in
               let args = closures_as_args_delayed cfg env c.effect_args in
               let flags = c.flags |> List.map (function
                 | DECREASES t -> DECREASES (closure_as_term_delayed cfg env t)
                 | f -> f) in
               mk_Comp ({c with comp_univs=List.map (norm_universe cfg env) c.comp_univs;
-                               result_typ=rt;
                                effect_args=args;
                                flags=flags})
 
@@ -780,7 +754,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
                   else let bs, body, opening = open_term' bs body in
                        let lopt = match lopt with
-                        | Some (Inl l) -> SS.subst_comp opening (l.comp()) |> Util.lcomp_of_comp |> Inl |> Some
+                        | Some (Inl l) -> Some (Inl (Env.lcomp_of_comp cfg.tcenv (SS.subst_comp opening (l.comp()))))
                         | _ -> lopt in
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        log cfg  (fun () -> Util.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
@@ -939,7 +913,6 @@ and norm_comp : cfg -> env -> comp -> comp =
               let norm_args args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
               let flags = ct.flags |> List.map (function DECREASES t -> DECREASES (norm cfg env [] t) | f -> f) in
               {comp with n=Comp ({ct with comp_univs=List.map (norm_universe cfg env) ct.comp_univs;
-                                          result_typ=norm cfg env [] ct.result_typ;
                                           effect_args=norm_args ct.effect_args;
                                           flags=flags})}
 
@@ -949,20 +922,20 @@ and norm_comp : cfg -> env -> comp -> comp =
 and ghost_to_pure_aux cfg env c =
     let norm t =
         norm ({cfg with steps=[Eager_unfolding; UnfoldUntil Delta_constant; AllowUnboundUniverses]}) env [] t in
-    let non_info t = non_informative (norm t) in
+    let non_info t = non_informative cfg.tcenv (norm t) in
     match c.n with
     | Total _ -> c
     | GTotal(t,uopt) when non_info t -> {c with n=Total(t, uopt)}
     | Comp ct ->
         let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
         if Util.is_ghost_effect l
-        && non_info ct.result_typ
+        && non_info (Env.result_typ cfg.tcenv c)
         then let ct =
                  match downgrade_ghost_effect_name ct.effect_name with
                  | Some pure_eff ->
                    {ct with effect_name=pure_eff}
                  | None ->
-                    let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
+                    let ct = Env.unfold_effect_abbrev cfg.tcenv c in //must be GHOST
                     {ct with effect_name=Const.effect_PURE_lid} in
              {c with n=Comp ct}
         else c
@@ -987,8 +960,8 @@ and norm_lcomp_opt : cfg -> env -> option<either<lcomp, Ident.lident>> -> option
           if Util.is_tot_or_gtot_lcomp lc
           then let t = norm cfg env [] lc.res_typ in
                if Util.is_total_lcomp lc
-               then Some (Inl (Util.lcomp_of_comp (S.mk_Total t)))
-               else Some (Inl (Util.lcomp_of_comp (S.mk_GTotal t)))
+               then Some (Inl (Env.lcomp_of_comp cfg.tcenv (S.mk_Total t)))
+               else Some (Inl (Env.lcomp_of_comp cfg.tcenv (S.mk_GTotal t)))
           else Some (Inr lc.eff_name)
        | _ -> lopt
 
@@ -1218,7 +1191,7 @@ let ghost_to_pure env c = ghost_to_pure_aux (config [] env) [] c
 
 let ghost_to_pure_lcomp env (lc:lcomp) =
     let cfg = config [Eager_unfolding; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses] env in
-    let non_info t = non_informative (norm cfg [] [] t) in
+    let non_info t = non_informative env (norm cfg [] [] t) in
     if Util.is_ghost_effect lc.eff_name
     && non_info lc.res_typ
     then match downgrade_ghost_effect_name lc.eff_name with
@@ -1247,30 +1220,31 @@ let normalize_refinement steps env t0 =
        | _ -> t in
    aux t
 
-let eta_expand_with_type (t:term) (sort:typ) =
+let eta_expand_with_type (env:Env.env) (t:term) (sort:typ) =
   let binders, c = Util.arrow_formals_comp sort in
   match binders with
   | [] -> t
   | _ ->
       let binders, args = binders |> Util.args_of_binders in
-      Util.abs binders (mk_Tm_app t args None t.pos) (Util.lcomp_of_comp c |> Inl |> Some)
+      Util.abs binders (mk_Tm_app t args None t.pos) 
+                       (Some (Inl (Env.lcomp_of_comp env c)))
 
 let eta_expand (env:Env.env) (t:typ) : typ =
   match !t.tk, t.n with
   | Some sort, _ ->
-      eta_expand_with_type t (mk sort t.pos)
+      eta_expand_with_type env t (mk sort t.pos)
   | _, Tm_name x ->
-      eta_expand_with_type t x.sort
+      eta_expand_with_type env t x.sort
   | _ ->
       let head, args = Util.head_and_args t in
       begin match (SS.compress head).n with
       | Tm_uvar(_, thead) ->
-        let formals, tres = Util.arrow_formals thead in
+        let formals, _ = Util.arrow_formals_comp thead in
         if List.length formals = List.length args
         then t
         else let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
-             eta_expand_with_type t ty
+             eta_expand_with_type env t ty
       | _ ->
         let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
-        eta_expand_with_type t ty
+        eta_expand_with_type env t ty
       end

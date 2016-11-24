@@ -26,6 +26,10 @@ open FStar.Util
 open FStar.Ident
 open FStar.Range
 open FStar.TypeChecker.Common
+module S  = FStar.Syntax.Syntax
+module SS = FStar.Syntax.Subst
+module U  = FStar.Syntax.Util
+module I  = FStar.Ident
 
 type binding =
   | Binding_var      of bv
@@ -694,6 +698,68 @@ let is_type_constructor env lid =
       | None -> false
 
 ////////////////////////////////////////////////////////////
+// Utilities on computation types                         //
+////////////////////////////////////////////////////////////
+let comp_to_comp_typ (env:env) c =
+    let c = 
+        match c.n with
+        | Total (t, None) ->
+            let u = env.universe_of env t in
+            S.mk_Total' t (Some u)
+        | GTotal (t, None) ->
+            let u = env.universe_of env t in
+            S.mk_GTotal' t (Some u)
+        | _ -> c in
+    U.comp_to_comp_typ c
+
+let rec unfold_effect_abbrev env comp =
+  let c = comp_to_comp_typ env comp in
+  match lookup_effect_abbrev env c.comp_univs c.effect_name with
+  | None -> c
+  | Some (binders, cdef) ->
+    let binders, cdef = SS.open_comp binders cdef in
+    if List.length binders <> List.length c.effect_args + 1
+    then raise (Error ("Effect constructor is not fully applied", comp.pos));
+    let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders c.effect_args in
+    let c1 = SS.subst_comp inst cdef in
+    let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
+    unfold_effect_abbrev env c
+
+let result_typ env comp = 
+    match comp.n with 
+    | Total (t, _)
+    | GTotal (t, _) -> t
+    | _ ->  
+      let ct = unfold_effect_abbrev env comp in
+      fst <| List.nth ct.effect_args (List.length ct.effect_args - 2)
+
+let rec non_informative env t =
+    match (unrefine t).n with
+    | Tm_type _ -> true
+    | Tm_fvar fv ->
+      fv_eq_lid fv Const.unit_lid
+      || fv_eq_lid fv Const.squash_lid
+      || fv_eq_lid fv Const.erased_lid
+    | Tm_app(head, _) -> non_informative env head
+    | Tm_uinst (t, _) -> non_informative env t
+    | Tm_arrow(_, c) ->
+      is_tot_or_gtot_comp c
+      && non_informative env (result_typ env c)
+    | _ -> false
+
+let lcomp_of_comp env c0 =
+    let eff_name, flags = 
+        match c0.n with 
+        | Total _ -> Const.effect_Tot_lid, [TOTAL]
+        | GTotal _ -> Const.effect_GTot_lid, [SOMETRIVIAL]
+        | Comp c -> c.effect_name, c.flags in
+    {eff_name = eff_name;
+     res_typ = result_typ env c0;
+     cflags = flags;
+     comp = fun() -> c0}
+
+
+////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
 ////////////////////////////////////////////////////////////
 let effect_decl_opt env l =
@@ -720,17 +786,17 @@ let monad_leq env l1 l2 : option<edge> =
   then Some ({msource=l1; mtarget=l2; mlift=(fun t wp -> wp)})
   else env.effects.order |> Util.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
 
-let wp_sig_aux decls m =
+let wp_sig_aux env decls m =
   match decls |> Util.find_opt (fun d -> lid_equals d.mname m) with
   | None -> failwith (Util.format1 "Impossible: declaration for monad %s not found" m.str)
   | Some md ->
     let _, s = inst_tscheme (md.univs, md.signature) in
     let s = Subst.compress s in
     match md.binders, s.n with
-      | [], Tm_arrow([(a, _); (wp, _)], c) when (is_teff (comp_result c)) -> a, wp.sort
+      | [], Tm_arrow([(a, _); (wp, _)], c) when is_teff (result_typ env c) -> a, wp.sort
       | _ -> failwith "Impossible"
 
-let wp_signature env m = wp_sig_aux env.effects.decls m
+let wp_signature env m = wp_sig_aux env env.effects.decls m
 
 let build_lattice env se = match se with
   | Sig_new_effect(ne, _) ->

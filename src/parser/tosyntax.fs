@@ -863,7 +863,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       let env = Env.default_ml env in
       let c = desugar_comp t.range true env t in
       let annot = if Util.is_ml_comp c
-                  then Inl (Util.comp_result c)
+                  then let res = match c.n with 
+                       | Comp ct -> ct.effect_args |> List.hd |> fst 
+                       | _ -> failwith "Impossible" in
+                       Inl res
                   else Inr c in
       mk <| Tm_ascribed(desugar_term env e, annot, None)
 
@@ -995,8 +998,8 @@ and desugar_comp r default_ok env t =
     let eff, args = pre_process_comp_typ t in
     if List.length args = 0
     then fail (Util.format1 "Not enough args to effect %s" (Print.lid_to_string eff));
-    let result_arg, rest = List.hd args, List.tl args in
-    let result_typ = desugar_typ env (fst result_arg) in
+    let first_arg, rest = List.hd args, List.tl args in
+    let first_typ = desugar_typ env (fst first_arg) in
     let rest = desugar_args env rest in
     let dec, rest = rest |> List.partition (fun (t, _) ->
             begin match t.n with
@@ -1012,10 +1015,10 @@ and desugar_comp r default_ok env t =
                              && List.length rest = 0 in
     if no_additional_args
     && lid_equals eff C.effect_Tot_lid
-    then mk_Total result_typ
+    then mk_Total first_typ
     else if no_additional_args
          && lid_equals eff C.effect_GTot_lid
-    then mk_GTotal result_typ
+    then mk_GTotal first_typ
     else let flags =
             if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
             else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
@@ -1038,8 +1041,7 @@ and desugar_comp r default_ok env t =
             else rest in
         mk_Comp ({comp_univs=[];
                   effect_name=eff;
-                  result_typ=result_typ;
-                  effect_args=rest;
+                  effect_args=(as_arg first_typ::rest);
                   flags=flags@decreases_clause})
 
 and desugar_formula env (f:term) : S.term =
@@ -1130,7 +1132,7 @@ let mk_data_discriminators quals env t tps k datas =
     let quals q = if not <| env.iface || env.admitted_iface
                   then S.Assumption::q@quals
                   else q@quals in
-    let binders = tps @ fst (U.arrow_formals k) in
+    let binders = tps @ fst (U.arrow_formals_comp k) in
     let p = range_of_lid t in
     let binders, args = Util.args_of_binders binders in
     let imp_binders = binders |> List.map (fun (x, _) -> x, Some S.imp_tag) in
@@ -1232,7 +1234,8 @@ let mk_data_projectors iquals env (inductive_tps, se) = match se with
         else match Env.find_all_datacons env l with
                 | Some l -> List.length l > 1
                 | _ -> true in
-        let formals, cod = U.arrow_formals t in
+        let formals, cod = U.arrow_formals_comp t in
+        let cod_ty = U.tot_or_gtot_result cod in
         begin match formals with
             | [] -> [] //no fields to project
             | _ ->
@@ -1243,7 +1246,7 @@ let mk_data_projectors iquals env (inductive_tps, se) = match se with
                            then S.Private::iquals
                            else iquals in
               let tps, rest = Util.first_N n formals in
-              mk_indexed_projectors iquals fv_qual refine_domain env l lid inductive_tps tps rest cod
+              mk_indexed_projectors iquals fv_qual refine_domain env l lid inductive_tps tps rest cod_ty
         end
 
   | _ -> []

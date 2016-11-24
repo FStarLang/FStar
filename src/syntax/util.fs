@@ -169,21 +169,10 @@ let eq_univs u1 u2 = compare_univs u1 u2 = 0
 (********************************************************************************)
 
 let ml_comp t r =
-  mk_Comp ({comp_univs=[U_unknown];
-            effect_name=set_lid_range Const.effect_ML_lid r;
-            result_typ=t;
-            effect_args=[];
+  mk_Comp ({effect_name=set_lid_range Const.effect_ML_lid r;
+            comp_univs=[U_unknown];
+            effect_args=[as_arg t];
             flags=[MLEFFECT]})
-
-//let total_comp t r = mk_Total t
-
-//let gtotal_comp t =
-//    mk_Comp ({
-//        effect_name=Const.effect_GTot_lid;
-//        result_typ=t;
-//        effect_args=[];
-//        flags=[SOMETRIVIAL]
-//   })
 
 let comp_set_flags (c:comp) f = match c.n with
   | Total _ 
@@ -207,8 +196,7 @@ let comp_to_comp_typ (c:comp) : comp_typ =
     | GTotal(t, Some u) -> 
       {comp_univs=[u];
        effect_name=comp_effect_name c; 
-       result_typ=t; 
-       effect_args=[]; 
+       effect_args=[as_arg t]; 
        flags=comp_flags c}
     | _ -> failwith "Assertion failed: Computation type without universe"
 
@@ -305,16 +293,6 @@ let is_ml_comp c = match c.n with
 
   | _ -> false
 
-let comp_result c = match c.n with
-  | Total (t, _)  
-  | GTotal (t, _) -> t
-  | Comp ct -> ct.result_typ
-
-let set_result_typ c t = match c.n with
-  | Total _ -> mk_Total t
-  | GTotal _ -> mk_GTotal t
-  | Comp ct -> mk_Comp({ct with result_typ=t})
-
 let is_trivial_wp c =
   comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
@@ -367,20 +345,6 @@ let rec is_unit t =
       fv_eq_lid fv Const.unit_lid
       || fv_eq_lid fv Const.squash_lid
     | Tm_uinst (t, _) -> is_unit t
-    | _ -> false
-
-let rec non_informative t =
-    match (unrefine t).n with
-    | Tm_type _ -> true
-    | Tm_fvar fv ->
-      fv_eq_lid fv Const.unit_lid
-      || fv_eq_lid fv Const.squash_lid
-      || fv_eq_lid fv Const.erased_lid
-    | Tm_app(head, _) -> non_informative head
-    | Tm_uinst (t, _) -> non_informative t
-    | Tm_arrow(_, c) ->
-      is_tot_or_gtot_comp c
-      && non_informative (comp_result c)
     | _ -> false
 
 let is_fun e = match (compress e).n with
@@ -530,7 +494,7 @@ let abs bs t lopt =
           mk (Tm_abs(close_binders bs, body, lopt)) None t.pos 
 
 let arrow bs c = match bs with 
-  | [] -> comp_result c 
+  | [] -> failwith "Arrow with empty binders"
   | _ -> mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
 
 let flat_arrow bs c = 
@@ -549,22 +513,27 @@ let flat_arrow bs c =
 
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) !b.sort.tk (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
-
+    
+let tot_or_gtot_result c = 
+    match c.n with 
+    | Total (t, _)
+    | GTotal (t, _) -> t
+    | _ -> failwith "Expected a Tot or GTot computation"
 
 let rec arrow_formals_comp k =
     let k = Subst.compress k in
     match k.n with
-        | Tm_arrow(bs, c) ->
-            let bs, c = Subst.open_comp bs c in
-            if is_tot_or_gtot_comp c
-            then let bs', k = arrow_formals_comp (comp_result c) in
-                bs@bs', k
-            else bs, c
-        | _ -> [], Syntax.mk_Total k
+    | Tm_arrow(bs, c) ->
+        let bs, c = Subst.open_comp bs c in
+        if is_tot_or_gtot_comp c
+        then let bs', k = arrow_formals_comp (tot_or_gtot_result c) in
+             bs@bs', k
+        else bs, c
+    | _ -> [], Syntax.mk_Total k
 
-let rec arrow_formals k =
-    let bs, c = arrow_formals_comp k in
-    bs, comp_result c
+//let rec arrow_formals k =
+//    let bs, c = arrow_formals_comp k in
+//    bs, comp_result c
 
 let abs_formals t =
     let rec aux t what =
@@ -768,20 +737,15 @@ let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor)
 let tforall  = fvar Const.forall_lid (Delta_defined_at_level 1) None
 let t_haseq   = fvar Const.haseq_lid Delta_constant None
 
-let lcomp_of_comp c0 =
-    let eff_name, flags = 
-        match c0.n with 
-        | Total _ -> Const.effect_Tot_lid, [TOTAL]
-        | GTotal _ -> Const.effect_GTot_lid, [SOMETRIVIAL]
-        | Comp c -> c.effect_name, c.flags in
-    {eff_name = eff_name;
-     res_typ = comp_result c0;
-     cflags = flags;
-     comp = fun() -> c0}
-
 let mk_forall (x:bv) (body:typ) : typ =
+  let lc = {
+    eff_name=Const.effect_Tot_lid;
+    res_typ=ktype0;
+    cflags=[TOTAL];
+    comp = (fun () -> mk_Total ktype0)
+  } in
   mk (Tm_app(tforall, [ iarg (x.sort);
-                        as_arg (abs [mk_binder x] body (Some (Inl (lcomp_of_comp <| mk_Total ktype0))))])) None dummyRange
+                        as_arg (abs [mk_binder x] body (Some (Inl lc)))])) None dummyRange
 
 let rec close_forall bs f =
   List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall (fst b) f) bs f

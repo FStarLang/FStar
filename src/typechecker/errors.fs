@@ -194,14 +194,15 @@ let disjunctive_pattern_vars v1 v2 =
     "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")"
     (vars v1) (vars v2)
 
-let name_and_result c = match c.n with
+let name_and_result env c = match c.n with
   | Total (t, _) -> "Tot", t
   | GTotal (t, _) -> "GTot", t
-  | Comp ct -> Print.lid_to_string ct.effect_name, ct.result_typ
+  | Comp ct -> Print.lid_to_string ct.effect_name, 
+               Env.result_typ env c
 
 let computed_computation_type_does_not_match_annotation env e c c' =
-  let f1, r1 = name_and_result c in
-  let f2, r2 = name_and_result c' in
+  let f1, r1 = name_and_result env c in
+  let f2, r2 = name_and_result env c' in
   format4
     "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
       (N.term_to_string env r1) f1 (N.term_to_string env r2) f2
@@ -210,10 +211,12 @@ let unexpected_non_trivial_precondition_on_term env f =
  format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)
 
 let expected_pure_expression e c =
-  format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)
+  format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" 
+           (Print.term_to_string e) (Ident.string_of_lid (Util.comp_effect_name c))
 
 let expected_ghost_expression e c =
-  format2 "Expected a ghost expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)
+  format2 "Expected a ghost expression; got an expression \"%s\" with effect \"%s\""
+          (Print.term_to_string e) (Ident.string_of_lid (Util.comp_effect_name c))
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
   format2 "Expected a computation with effect %s; but it has effect %s" (Print.lid_to_string c1) (Print.lid_to_string c2)

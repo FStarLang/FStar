@@ -105,9 +105,8 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbdef  :term             //e
 }
 and comp_typ = {
-  comp_univs:universes;
   effect_name:lident;
-  result_typ:typ;
+  comp_univs:universes;
   effect_args:args;
   flags:list<cflags>
 }
