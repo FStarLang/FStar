@@ -52,9 +52,10 @@ let id = Crypto.AEAD.Encoding.id
 // we can reason about sequence-number collisions before applying it.
 
 // TODO: prove, generalize and move
-assume val lt_pow2_index_to_vec: n:nat -> x:UInt128.t -> Lemma
-  (requires FStar.UInt128.(v x < pow2 n))
-  (ensures  FStar.UInt128.(forall (i:nat). (i < 128 /\ i >= n) ==>
+ (* n defined in FStar.UInt128, so is shadowed. Thus, we have to rename n into n' *)
+assume val lt_pow2_index_to_vec: n':nat -> x:UInt128.t -> Lemma
+  (requires FStar.UInt128.(v x < pow2 n'))
+  (ensures  FStar.UInt128.(forall (i:nat). (i < 128 /\ i >= n') ==>
     Seq.index (FStar.UInt.to_vec (v x)) (127-i) = false))
 
 // TODO: prove, generalize and move
@@ -63,14 +64,17 @@ assume val index_to_vec_lt_pow2: n:nat -> x:FStar.BitVector.bv_t 128 -> Lemma
   (ensures  (FStar.UInt.from_vec x < pow2 n))
 
 // TODO: move
-val lemma_xor_bounded: n:nat -> x:UInt128.t -> y:UInt128.t -> Lemma
-  (requires FStar.UInt128.(v x < pow2 n /\ v y < pow2 n))
-  (ensures  FStar.UInt128.(v (logxor x y) < pow2 n))
+ (* n defined in FStar.UInt128, so is shadowed. Thus, we have to rename n into n' *)
+val lemma_xor_bounded: n':nat -> x:UInt128.t -> y:UInt128.t -> Lemma
+  (requires FStar.UInt128.(v x < pow2 n' /\ v y < pow2 n'))
+  (ensures  FStar.UInt128.(v (logxor x y) < pow2 n'))
 let lemma_xor_bounded n x y =
+  let n' = n in
   let open FStar.BitVector in
   let open FStar.UInt128 in
   let vx = FStar.UInt.to_vec (v x) in
   let vy = FStar.UInt.to_vec (v y) in
+  let n = n' in (* n defined in FStar.UInt128, so was shadowed, so renamed into n' *)
   lt_pow2_index_to_vec n x;
   lt_pow2_index_to_vec n y;
   lemma_xor_bounded 128 n vx vy;

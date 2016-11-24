@@ -738,7 +738,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                   Meta_desugared Sequence))
 
     | LetOpen (lid, e) ->
-      let lid = Env.expand_module_abbrev env lid in
       let env = Env.push_namespace env lid in
       desugar_term_maybe_top top_level env e
 

@@ -8,6 +8,12 @@ module HS   = FStar.HyperStack
 module MR   = FStar.Monotonic.RRef
 module SeqP = FStar.SeqProperties
 
+(* 2016-11-22: The following is meant to override the fact that the
+   enclosing namespace of the current module (here FStar.Monotonic) is
+   automatically opened, which makes Seq resolve into
+   FStar.Monotonic.Seq instead of FStar.Seq. *)
+module Seq = FStar.Seq
+
 ////////////////////////////////////////////////////////////////////////////////
 
 abstract let seq_extension (#a:Type) (s1:seq a) (s2:seq a) (s3:seq a) =

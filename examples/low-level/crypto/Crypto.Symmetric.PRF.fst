@@ -204,8 +204,8 @@ val prf_mac:
        | Some mac' -> 
 	 h0 == h1 /\ // when decrypting
 	 mac == mac' /\ 
-	 MAC.(norm h1 mac.r) /\
-	 MAC.(Buffer.live h1 mac.s)
+	 MAC.(norm h1 mac'.r) /\ (* [MAC.mac] is defined, so shadows local definition [mac] *)
+	 MAC.(Buffer.live h1 mac'.s)
        | None ->  // when encrypting, we get the stateful post of MAC.create             
          (match find_mac (HS.sel h1 r) x with 
           | Some mac' -> 
@@ -236,10 +236,11 @@ let prf_mac i t x =
     recall r;
     let contents = !r in
     match find_mac contents x with
-    | Some mac -> 
-      assume (MAC.(norm h0 mac.r)); //TODO: replace this using monotonicity
-      assume (HS.(Buffer.(MAC.(not ((Buffer.content mac.s).mm))))); //TODO: mark this as not manually managed
-      Buffer.recall (MAC.(mac.s));
+    | Some mac ->
+      let mac' = mac in (* [MAC.mac] is defined, so shadows locally defined [mac] *)
+      assume (MAC.(norm h0 mac'.r)); //TODO: replace this using monotonicity
+      assume (HS.(Buffer.(MAC.(not ((Buffer.content mac'.s).mm))))); //TODO: mark this as not manually managed
+      Buffer.recall (MAC.(mac'.s));
       mac
     | None ->
       let mac = MAC.gen macId t.mac_rgn in

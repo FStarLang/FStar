@@ -2,6 +2,11 @@ module QuickSort.Seq
 open FStar.Seq
 open FStar.SeqProperties
 
+(* 2016-11-22: Due to the QuickSort namespace being opened *after* the
+FStar namespace, Seq resolves to QuickSort.Seq instead of FStar.Seq,
+so we have to fix this explicitly as a module abbrev. *)
+module Seq = FStar.Seq
+
 (* the last recursive call to partition fails for me if I use the F# version
    of F* and and the option here:
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)

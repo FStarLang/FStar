@@ -31,6 +31,11 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS  = FStar.HyperStack
 
+(* 2016-11-22: we now forbid opening the current module name as a
+namespace, so we need to make the following abbrevs explicit *)
+module Spec = Crypto.Symmetric.Poly1305.Spec
+module Parameters = Crypto.Symmetric.Poly1305.Parameters
+
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 20"
 
 // we may separate field operations, so that we don't
@@ -739,15 +744,16 @@ let poly1305_update log msgB acc r =
 
 #set-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-val append_as_seq_sub: h:mem -> n:UInt32.t -> m:UInt32.t -> msg:bytes{live h msg /\ w m <= w n /\ w n <= length msg} -> Lemma
+(* 2016-11-23: n shadowed by U32.n by local open, so rename into n' *)
+val append_as_seq_sub: h:mem -> n':UInt32.t -> m:UInt32.t -> msg:bytes{live h msg /\ w m <= w n' /\ w n' <= length msg} -> Lemma
   (append (as_seq h (Buffer.sub msg 0ul m))
-          (as_seq h (Buffer.sub (Buffer.offset msg m) 0ul (U32.(n -^ m)))) ==
-   as_seq h (Buffer.sub msg 0ul n))
-let append_as_seq_sub h n m msg =
+          (as_seq h (Buffer.sub (Buffer.offset msg m) 0ul (U32.(n' -^ m)))) ==
+   as_seq h (Buffer.sub msg 0ul n'))
+let append_as_seq_sub h n' m msg =
   Seq.lemma_eq_intro
     (append (as_seq h (Buffer.sub msg 0ul m))
-            (as_seq h (Buffer.sub (Buffer.offset msg m) 0ul (U32.(n -^ m)))))
-     (as_seq h (Buffer.sub msg 0ul n))
+            (as_seq h (Buffer.sub (Buffer.offset msg m) 0ul (U32.(n' -^ m)))))
+     (as_seq h (Buffer.sub msg 0ul n'))
 
 (* Loop over Poly1305_update; could go below MAC *)
 val poly1305_loop: current_log:log_t -> msg:bytes -> acc:elemB{disjoint msg acc} ->
