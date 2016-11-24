@@ -196,7 +196,7 @@ and pretty_print_exp = function
         reduce [pretty_print_exp e; (match l with | [] -> text "()" | _ -> le)]
     | JSE_Member(o, p) ->  reduce [pretty_print_exp o; pretty_print_propmem p]
     | JSE_Identifier(id,t) -> remove_chars id
-    | JSE_Literal(l) -> print_literal (fst l)
+    | JSE_Literal(l) -> print_literal l
     | JSE_TypeCast(e,t) -> reduce [ text "("; pretty_print_exp e; colon; print_typ t; text ")"]
 
 and print_decl_t lt =
@@ -222,7 +222,7 @@ and pretty_print_obj el =
 
 and pretty_print_prop_key k =
     match k with 
-    | JSO_Literal l -> print_literal (fst l)
+    | JSO_Literal l -> print_literal l
     | JSO_Identifier(id, t) -> text (jstr_escape id)
     | JSO_Computed e -> pretty_print_exp e
 
@@ -277,11 +277,12 @@ and print_gen_t = function
     | Unqualified (id, _) -> remove_chars id
     | Qualified (g, (id, _)) -> reduce [print_gen_t g; comma; remove_chars id]
 
-and print_literal = function
-    | JSV_String s -> text ("\"" ^ (jstr_escape s) ^ "\"")
-    | JSV_Boolean b -> text (string_of_bool b)
-    | JSV_Null -> text "null"
-    | JSV_Number f -> text (string_of_float f)
+and print_literal (v, s) = 
+    match (v, s) with
+    | (JSV_String s, _) -> text ("\"" ^ (jstr_escape s) ^ "\"")
+    | (JSV_Boolean b, _) -> text (string_of_bool b)
+    | (JSV_Null, _) -> text "null"
+    | (JSV_Number f, s) -> text s
 
 and print_kind_var = function
     | JSV_Var -> text "var "
