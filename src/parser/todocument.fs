@@ -18,13 +18,18 @@
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStar.Parser.ToDocument
 
+open FStar
 open FStar.Parser.AST
+open FStar.Ident
+open FStar.Const
 open FStar.Pprint
+
+// VALS_HACK_HERE
 
 // abbrev 
 let str s = document_of_string s
-let (^^) d1 d2  = op_Hat_Hat d1 d2 
 
+// doc_of_* begins
 let doc_of_fsdoc (comment,keywords) = 
     group (concat [(str comment); space; 
                    (separate_map (str ",") 
@@ -43,17 +48,17 @@ let doc_of_imp = function
     | _ -> empty 
 
 let doc_of_const x = match x with
-  | FStar.Const.Const_effect -> str "eff"
-  | FStar.Const.Const_unit -> str "()"
-  | FStar.Const.Const_bool b -> str (if b then "true" else "false")
-  | FStar.Const.Const_float x ->  str (FStar.Util.string_of_float x)
-  | FStar.Const.Const_char x ->   squotes (document_of_char x )
-  | FStar.Const.Const_string(bytes, _) -> dquotes (str (FStar.Util.string_of_bytes bytes))
-  | FStar.Const.Const_bytearray _  ->  str "<bytearray>"
-  | FStar.Const.Const_int (x, _) -> str x
-  | FStar.Const.Const_range r -> str (FStar.Range.string_of_range r)
-  | FStar.Const.Const_reify
-  | FStar.Const.Const_reflect _ -> str "unsupported constant"
+  | Const_effect -> str "eff"
+  | Const_unit -> str "()"
+  | Const_bool b -> str (if b then "true" else "false")
+  | Const_float x ->  str (Util.string_of_float x)
+  | Const_char x ->   squotes (document_of_char x )
+  | Const_string(bytes, _) -> dquotes (str (Util.string_of_bytes bytes))
+  | Const_bytearray _  ->  str "<bytearray>"
+  | Const_int (x, _) -> str x
+  | Const_range r -> str (Range.string_of_range r)
+  | Const_reify
+  | Const_reflect _ -> str "unsupported constant"
 
 // SI: maybe do nesting for terms with args? 
 let rec doc_of_term (x:term) = match x.tm with
@@ -66,14 +71,14 @@ let rec doc_of_term (x:term) = match x.tm with
         group (brackets (concat [(str "labeled"); space; (str l); (doc_of_term t)]))
   | Const c -> group (doc_of_const c)
   | Op(s, xs) -> 
-        group ((str s) ^^ (brackets (separate_map (str ", ") doc_of_term xs)))
+        group (concat [(str s); (brackets (separate_map (str ", ") doc_of_term xs))])
   | Tvar id -> group (str id.idText)
   | Var l
   | Name l -> group (str l.str)
   | Construct (l, args) ->
         group (brackets (
                 concat [(str l.str); space; 
-                        (separate_map space (fun (a,imp) -> (doc_of_imp imp) ^^ (doc_of_term a)) args)]))
+                        (separate_map space (fun (a,imp) -> concat [(doc_of_imp imp); (doc_of_term a)]) args)]))
   | Abs(pats, t) ->
         group (brackets (
                 concat [(str "fun"); space; 
@@ -110,7 +115,7 @@ let rec doc_of_term (x:term) = match x.tm with
                  (separate_map hardline 
                      (fun (p,w,e) -> concat [(str " | ");
                                              (doc_of_pat p); space; 
-                                             (match w with | None -> empty | Some e -> str "when " ^^ (doc_of_term e));
+                                             (match w with | None -> empty | Some e -> concat [str "when "; (doc_of_term e)]);
                                              space; (str "->"); space;
                                              (doc_of_term e)])
                      branches)])
@@ -120,19 +125,19 @@ let rec doc_of_term (x:term) = match x.tm with
         group (concat [
                     lbrace; (doc_of_term e); space; str "with"; space;
                     separate_map space 
-                        (fun ((l:FStar.Ident.lid),e) -> str l.str ^^ equals ^^ doc_of_term e)
+                        (fun (l,e) -> concat [str l.str; equals; doc_of_term e])
                         fields;
                     rbrace])
   | Record(None, fields) ->
         group (concat [
                     lbrace; 
                     separate_map space
-                        (fun ((l:FStar.Ident.lid),e) -> (str l.str) ^^ equals ^^ (doc_of_term e))
+                        (fun (l,e) -> concat [(str l.str); equals; (doc_of_term e)])
                         fields;
                     rbrace
                     ])
   | Project(e,l) ->
-        group (doc_of_term e ^^ dot ^^ str l.str)
+        group (concat [doc_of_term e; dot; str l.str])
   | Product([], t) ->
         group (doc_of_term t)
   | Product(b::hd::tl, t) ->
@@ -151,7 +156,7 @@ let rec doc_of_term (x:term) = match x.tm with
                     separate_map space doc_of_binder bs; 
                     dot; lbrace; colon; str "pattern"; space;
                     // TODO: should the separator be /\ here? 
-                    separate_map (str " \/ ") (separate_map (semi ^^ space) doc_of_term) pats;
+                    separate_map (str " \/ ") (separate_map (concat [semi; space]) doc_of_term) pats;
                     rbrace; space;
                     doc_of_term t])
   | QExists(bs, pats, t) ->
@@ -159,7 +164,7 @@ let rec doc_of_term (x:term) = match x.tm with
                     str "exists"; space;
                     separate_map space doc_of_binder bs; 
                     dot; lbrace; colon; str "pattern"; space;
-                    separate_map (str " \/ ") (separate_map (semi ^^ space) doc_of_term) pats;
+                    separate_map (str " \/ ") (separate_map (concat [semi; space]) doc_of_term) pats;
                     rbrace; space;
                     doc_of_term t])
 
@@ -187,7 +192,7 @@ and doc_of_binder x =
   | TAnnotated(i,t)
   | Annotated(i,t) -> concat [str i.idText; colon; doc_of_term t]
   | NoName t -> doc_of_term t in
-  (doc_of_aqual x.aqual) ^^ s
+  concat [doc_of_aqual x.aqual;  s]
 
 and doc_of_aqual = function
    | Some Equality -> str "$"
@@ -201,20 +206,20 @@ and doc_of_pat x = match x.pat with
         group (parens (concat [(doc_of_pat p); space; (separate_map space doc_of_pat ps)]))
   | PatTvar (i, aq)
   | PatVar (i,  aq) -> 
-        group ((doc_of_aqual aq) ^^ (str i.idText))
+        group (concat [(doc_of_aqual aq); (str i.idText)])
   | PatName l -> str l.str
-  | PatList l -> group (brackets (separate_map (semi ^^ space) doc_of_pat l))
-  | PatTuple (l, false) -> group (parens (separate_map (semi ^^ space) doc_of_pat l))
-  | PatTuple (l, true) -> group (parens (concat [bar; (separate_map (comma ^^ space) doc_of_pat l); bar]))
+  | PatList l -> group (brackets (separate_map (concat [semi; space]) doc_of_pat l))
+  | PatTuple (l, false) -> group (parens (separate_map (concat [semi; space]) doc_of_pat l))
+  | PatTuple (l, true) -> group (parens (concat [bar; (separate_map (concat [comma; space]) doc_of_pat l); bar]))
   | PatRecord l -> 
-        group (braces (separate_map (semi ^^ space) (fun (f:FStar.Ident.lid,e) -> (str f.str) ^^ equals ^^ (e |> doc_of_pat)) l))
-  | PatOr l ->  separate_map (bar ^^ hardline ^^ space) doc_of_pat l
+        group (braces (separate_map (concat [semi; space]) (fun (f,e) -> concat [(str f.str); equals; (doc_of_pat e)]) l))
+  | PatOr l ->  separate_map (concat [bar; hardline; space]) doc_of_pat l
   | PatOp op ->  parens (str op)
-  | PatAscribed(p,t) -> group (parens (doc_of_pat p) ^^ colon ^^ (doc_of_term t))
+  | PatAscribed(p,t) -> group (parens (concat [doc_of_pat p; colon; doc_of_term t]))
 
 let rec head_id_of_pat p = match p.pat with
         | PatName l -> [l]
-        | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
+        | PatVar (i, _) -> [Ident.lid_of_ids [i]]
         | PatApp(p, _) -> head_id_of_pat p
         | PatAscribed(p, _) -> head_id_of_pat p
         | _ -> []
@@ -245,7 +250,7 @@ let doc_of_decl (d:decl) = match d.d with
         let head_ids = List.collect (fun (p,_) -> head_id_of_pat p) pats_terms in 
         group (concat [(str "let"); space;
                        (separate_map (str ", ")
-                            (fun (l:FStar.Ident.lid) -> str l.str)
+                            (fun l -> str l.str)
                             head_ids); 
                        hardline] )
   | Main e -> group (concat [str "main"; space; doc_of_term e])
@@ -258,12 +263,12 @@ let doc_of_decl (d:decl) = match d.d with
                     (separate_map (str ", ")
                         (fun (x,_) -> doc_of_tycon x)
                         tys) ])
-  | Val(_, i, _) -> (str "val ") ^^ (str i.idText)
-  | Exception(i, _) -> (str "exception ") ^^ (str i.idText)
+  | Val(_, i, _) -> concat [(str "val "); (str i.idText)]
+  | Exception(i, _) -> concat [(str "exception "); (str i.idText)]
   | NewEffect(_, DefineEffect(i, _, _, _, _))
-  | NewEffect(_, RedefineEffect(i, _, _)) -> (str "new_effect) ") ^^ (str i.idText)
+  | NewEffect(_, RedefineEffect(i, _, _)) -> concat [(str "new_effect) "); (str i.idText)]
   | NewEffectForFree(_, DefineEffect(i, _, _, _, _))
-  | NewEffectForFree(_, RedefineEffect(i, _, _)) -> (str "new_effect_for_free ") ^^ (str i.idText)
+  | NewEffectForFree(_, RedefineEffect(i, _, _)) -> concat [(str "new_effect_for_free "); (str i.idText)]
   | SubEffect _ -> str "sub_effect"
   | Pragma _ -> str "pragma"
   | Fsdoc _ -> str "fsdoc"
