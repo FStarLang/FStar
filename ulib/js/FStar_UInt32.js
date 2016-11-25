@@ -21,7 +21,7 @@ export let mul = (a:uint32) : ((b:uint32) => uint32) => ((b:uint32) => a * b);
 export let mul_underspec = (a:uint32) => ((b:uint32) => mul(a)(b));
 export let mul_mod = (a:uint32) => ((b:uint32) => mul(a)(b) & 4294967295);
 
-export let div = (a:uint32) : ((b:uint32) => uint32) => ((b:uint32) => a / b);
+export let div = (a:uint32) : ((b:uint32) => uint32) => ((b:uint32) => Math.floor(a / b));
 
 export let rem = (a:uint32) : ((b:uint32) => uint32) => ((b:uint32) => a % b);
 
@@ -32,8 +32,11 @@ export let lognot = (a:uint32) : uint32 => ~a;
 
 export let int_to_uint32 =  (x:number) => x % 4294967296;
 
-export let shift_right = (a:uint32) : ((b:uint32) => uint32) => ((b:uint32) => (a >> b));
+export let shift_right = (a:uint32) : ((b:uint32) => uint32) => ((b:uint32) => (a >>> b));
 export let shift_left = (a:uint32) : ((b:uint32) => uint32) => ((b:uint32) => (a << b) & 4294967295);  
+
+export let gte_mask = (a:uint32) : ((b:uint32) => uint32) => ((b:uint32) => ~((a-b) >> 62) & 255);
+export let eq_mask = (a:uint32) : ((b:uint32) => uint32) => ((b:uint32) => gte_mask(a)(b) & gte_mask(b)(a));
 
 /* Comparison operators */
 export let eq = (a:uint32) : ((b:uint32) => boolean) => ((b:uint32) => (a == b)); 

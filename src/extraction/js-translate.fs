@@ -97,9 +97,6 @@ let mk_standart_type = function
 let is_standart_type t =
   mk_standart_type t <> None
 
-let is_prim_constructors s =
-    List.existsb (fun x -> x = s) ["Cons" ; "Nil"; "Some"; "None"]
-
 let float_of_int i = float_of_int32 (int32_of_int i)
 
 let export_modules = ref []
@@ -247,7 +244,7 @@ and translate_expr e var lstmt isDecl lDecl isMutableV: list<statement_t> =
     let lstmt = (match lstmt with | Some v -> v | None -> []) in
     let isAssgmnt = ref [] in
     let expr =
-       (match expr with | JSE_Assignment _ -> (isAssgmnt := [JSS_Expression(expr)]; JSE_Literal(JSV_Null, "")) | _ -> expr) in
+       (match expr with | JSE_Assignment _ -> (isAssgmnt := [JSS_Expression(expr)]; JSE_Literal(JSV_Null, "")) | _ -> expr) in    
     let expr =
         if isDecl
         then JSS_Expression(JSE_Assignment(JGP_Identifier(var), expr))
@@ -280,7 +277,8 @@ and translate_expr e var lstmt isDecl lDecl isMutableV: list<statement_t> =
         let c = translate_expr continuation var lstmt isDecl lDecl isMutableV in
         let var_decl_q = if (isMutable tys) then JSV_Let else JSV_Const in
         let c = [JSS_VariableDeclaration((JGP_Identifier(name, None), Some (translate_expr_pure body)), var_decl_q)] @ c in
-        if isEqName then [JSS_Block(c)] else c
+        //if isEqName then [JSS_Block(c)] else c
+        [JSS_Block(c)]
      else
         let c = translate_expr continuation var lstmt isDecl lDecl isMutableV in
         translate_expr body (name, None) (Some c) false lDecl (isMutable tys)
@@ -376,7 +374,10 @@ and translate_expr e var lstmt isDecl lDecl isMutableV: list<statement_t> =
             (match lexpr with
             | [] -> JSE_Array(None)
             | hd :: tl -> JSE_Call (JSE_Member(JSE_Array(Some [hd]), JSPM_Identifier("concat", None)), tl))
-        | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("Prims.mk_" ^ c, None), lexpr)
+        | x when x = "Some" || x = "None" ->
+            (match lexpr with
+            | [] -> JSE_Literal(JSV_Null, "")
+            | hd :: tl -> List.nth lexpr 0)
         | _ -> JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String c, ""), JSO_Init)] @
                            List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), x, JSO_Init)) lexpr)) in
       get_res expr (Some new_fv)
@@ -432,10 +433,10 @@ and translate_arg_app e args var: expression_t =
       JSE_Assignment(JGP_Expression(expr), List.nth args 2)
   | MLE_Name p when string_of_mlpath p = "FStar.ST.op_Bang"
                  || string_of_mlpath p = "FStar.ST.read" ->
-      JSE_Member(List.nth args 0, JSPM_Expression(JSE_Literal(JSV_Number(float_of_int 0), "")))
+      JSE_Member(List.nth args 0, JSPM_Expression(JSE_Literal(JSV_Number(float_of_int 0), "0")))
   | MLE_Name p when string_of_mlpath p = "FStar.ST.op_Colon_Equals"
                  || string_of_mlpath p = "FStar.ST.write" ->
-      let expr = JSE_Member(List.nth args 0, JSPM_Expression(JSE_Literal(JSV_Number(float_of_int 0), ""))) in
+      let expr = JSE_Member(List.nth args 0, JSPM_Expression(JSE_Literal(JSV_Number(float_of_int 0), "0"))) in
       JSE_Assignment(JGP_Expression(expr), List.nth args 1)
   | MLE_Name p when string_of_mlpath p = "FStar.ST.alloc" ->
       JSE_Array(Some [List.nth args 0])
@@ -473,7 +474,10 @@ and translate_expr_pure e: expression_t =
             (match lexpr with
             | [] -> JSE_Array(None)
             | hd :: tl -> JSE_Call (JSE_Member(JSE_Array(Some [translate_expr_pure hd]), JSPM_Identifier("concat", None)), List.map translate_expr_pure tl))
-      | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("Prims.mk_" ^ c, None), List.map translate_expr_pure lexpr)
+      | x when x = "Some" || x = "None" ->
+            (match lexpr with
+            | [] -> JSE_Literal(JSV_Null, "")
+            | hd :: tl -> List.nth (List.map translate_expr_pure lexpr) 0)
       | _ ->  JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String c, ""), JSO_Init)] @
                    List.mapi (fun i x -> JSPO_Property(JSO_Identifier("_" ^ string_of_int i, None), translate_expr_pure x, JSO_Init)) lexpr))
 
@@ -524,7 +528,9 @@ and translate_pat p fv_x s1 s2: statement_t =
       let rec translate_p_ctor lp fv_x s1 s2 i =
         let new_fv_x =
             match c with
-            | x when is_prim_constructors x -> JSE_Call (JSE_Identifier("Prims.get_" ^ c ^ "_" ^ string_of_int i, None), [fv_x])
+            | x when x = "Some" -> fv_x
+            | x when x = "Cons" && i = 0 -> JSE_Member(fv_x, JSPM_Expression(JSE_Literal(JSV_Number(float_of_int 0), "0")))
+            | x when x = "Cons" && i = 1 -> JSE_Member(fv_x, JSPM_Identifier("slice(1)", None))
             | _ -> JSE_Member(fv_x, JSPM_Identifier("_" ^ string_of_int i, None)) in
        (match lp with
         | [] -> s1
@@ -532,19 +538,23 @@ and translate_pat p fv_x s1 s2: statement_t =
         | hd::tl -> translate_pat hd new_fv_x (translate_p_ctor tl fv_x s1 s2 (i+1)) s2)
       in
         begin
+        let if_stmt if_cond = JSS_If(if_cond, translate_p_ctor lp fv_x s1 s2 0, Some s2) in
         match c with
-        | x when is_prim_constructors x ->
-            let if_cond = JSE_Call (JSE_Identifier("Prims.is_" ^ c, None), [fv_x]) in
-            JSS_If(if_cond, translate_p_ctor lp fv_x s1 s2 0, Some s2)
+        | x when x = "Cons" ->
+            if_stmt (JSE_Binary(JSB_GreaterThan, JSE_Member(fv_x, JSPM_Identifier("length", None)), JSE_Literal(JSV_Number (float_of_int 0), "0")))
+        | x when x = "Nil" ->
+            if_stmt (JSE_Binary(JSB_Equal, JSE_Member(fv_x, JSPM_Identifier("length", None)), JSE_Literal(JSV_Number (float_of_int 0), "0")))
+        | x when x = "Some" ->
+            if_stmt (JSE_Binary(JSB_NotEqual, fv_x, JSE_Literal(JSV_Null, "")))
+        | x when x = "None" ->
+            if_stmt (JSE_Binary(JSB_Equal, fv_x, JSE_Literal(JSV_Null, "")))
         | _ ->
             let isSimple = (match fv_x with |JSE_Identifier _ -> true | _ -> false) in
             if isSimple
-            then
-                let if_cond = JSE_Binary(JSB_StrictEqual, JSE_Member(fv_x, JSPM_Identifier("_tag", Some JST_String)), JSE_Literal(JSV_String c, "")) in
-                JSS_If(if_cond, translate_p_ctor lp fv_x s1 s2 0, Some s2)
+            then if_stmt (JSE_Binary(JSB_StrictEqual, JSE_Member(fv_x, JSPM_Identifier("_tag", Some JST_String)), JSE_Literal(JSV_String c, "")))
             else
                 let new_name = Absyn.Util.gensym() in
-                let if_cond = 
+                let if_cond =
                     JSE_Binary(JSB_StrictEqual, JSE_Member(JSE_Identifier(new_name, None), JSPM_Identifier("_tag", Some JST_String)), JSE_Literal(JSV_String c, "")) in
                 JSS_Seq [JSS_VariableDeclaration((JGP_Identifier(new_name, None), Some fv_x), JSV_Const);
                          JSS_If(if_cond, translate_p_ctor lp (JSE_Identifier(new_name, None)) s1 s2 0, Some s2)]
@@ -568,7 +578,7 @@ and translate_pat p fv_x s1 s2: statement_t =
 
   | MLP_Tuple lp ->
       let rec translate_p_tuple lp d fv_x s1 s2 =
-        let new_fv_x = JSE_Member(fv_x, JSPM_Expression(JSE_Literal(JSV_Number(float_of_int d), ""))) in
+        let new_fv_x = JSE_Member(fv_x, JSPM_Expression(JSE_Literal(JSV_Number(float_of_int d), string_of_int d))) in
             (match lp with
             | [] -> failwith "Empty list in translate_p_tuple"
             | [x] -> translate_pat x new_fv_x s1 s2
@@ -582,7 +592,8 @@ and translate_constant c: expression_t =
   | MLC_Bool b ->
       JSE_Literal(JSV_Boolean b, "")
   | MLC_Int (s, _) ->
-      JSE_Literal(JSV_Number (float_of_int (int_of_string s)), s)
+      //JSE_Literal(JSV_Number (float_of_int (int_of_string s)), s)
+      JSE_Literal(JSV_Number (float_of_int 0), s) (*print only s*)
   | MLC_Float f ->
       JSE_Literal(JSV_Number f, string_of_float f)
   | MLC_Char _ ->

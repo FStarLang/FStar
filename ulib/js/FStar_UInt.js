@@ -1,3 +1,3 @@
 /* @flow */
 
-export type uint_t<T> = number; 
+export type uint_t<T> = T; 

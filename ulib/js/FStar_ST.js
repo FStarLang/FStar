@@ -12,3 +12,6 @@ export let alloc = FStar_CommonST.alloc;
 
 export let recall = FStar_CommonST.recall;
 export let get = FStar_CommonST.get;
+
+export let push_frame = () => null;
+export let pop_frame = () => null;

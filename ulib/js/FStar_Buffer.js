@@ -16,6 +16,14 @@ export let create = <T>(init:T): ((len:number) => buffer<T>) => ((len:number) =>
     };
 });
 
+export let createL = <T>(l:T[]): buffer<T> => {
+    return {
+        _content: l,
+        _idx: 0,
+        _len: l.length
+    };
+};
+
 export let index = <T>(b:buffer<T>): ((n:number) => T) => ((n:number) => b._content[n + b._idx]);
 
 export let upd = <T>(b:buffer<T>): ((n:number) => ((v:T) => null)) => ((n:number) => ((v:T) => {
@@ -45,3 +53,10 @@ export let split = <T>(b:buffer<T>): ((i:number) => [buffer<T>, buffer<T>]) => (
 export let op_Array_Access = <T>(b:buffer<T>): ((n:number) => T) => ((n:number) => index(b)(n));
 
 export let op_Array_Assignment = <T>(b:buffer<T>): ((n:number) => ((v:T) => null) ) => ((n:number) => ((v:T) => upd(b)(n)(v)));
+
+export let blit = <T>(a:buffer<T>): ((idx_a: number) => ((b:buffer<T>) => ((idx_b:number) => ((len:number) => null)))) => ((idx_a: number) => ((b:buffer<T>) => ((idx_b:number) => ((len:number) => {
+    for (let i = 0; i < len; i++){
+        b._content[b._idx + idx_b + i] = a._content[a._idx + idx_a + i];
+    };
+    return null;
+}))));
