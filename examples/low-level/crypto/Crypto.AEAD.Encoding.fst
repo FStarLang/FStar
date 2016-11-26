@@ -69,9 +69,12 @@ let rec encode_pad i prefix txt =
 
 //16-09-18 where is it in the libraries??
 private let min (a:nat) (b:nat) : nat = if a <= b then a else b
-
+ 
 //16-10-15 simpler variant? rediscuss injectivity.
-val encode_bytes: txt:Seq.seq UInt8.t -> GTot MAC.text (decreases (Seq.length txt))
+val encode_bytes: txt:Seq.seq UInt8.t -> 
+  GTot (r:MAC.text{Seq.length r = (Seq.length txt + 15)/16}) 
+  (decreases (Seq.length txt))
+
 let rec encode_bytes txt =
   let l = Seq.length txt in
   if l = 0 then 
@@ -82,21 +85,19 @@ let rec encode_bytes txt =
     let w = pad_0 txt0 (16 - l0) in 
     SeqProperties.cons w (encode_bytes txt)
 
-#reset-options "--lax"
+(* now intrinsic (easier to prove)
 let rec lemma_encode_length txt: Lemma
   (ensures (Seq.length(encode_bytes txt) = (Seq.length txt + 15) / 16))
-  (decreases (Seq.length txt))
-=
+  (decreases (Seq.length txt)) =
   let l = Seq.length txt in 
   if l = 0 then ()
   else if l < 16 then assert(Seq.length(encode_bytes txt) = 1)
   else (
     let txt0, txt' = SeqProperties.split txt 16 in
-    lemma_encode_length txt'; //NS: this is provable, but it takes 4mins for Z3 to prove; disabling it until we can find a better, faster proof
-    assume false;
+    lemma_encode_length txt';
     assert(Seq.length(encode_bytes txt) = 1 + Seq.length(encode_bytes txt')))
+*)
 
-#reset-options
 (* * *********************************************)
 (* *          Encoding-related lemmas            *)
 (* * *********************************************)
@@ -134,35 +135,31 @@ let lemma_encode_injective w0 w1 =
   lemma_little_endian_is_injective w0 w1 l
 *)
 
-#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 
-assume val lemma_encode_bytes_injective: t0:Seq.seq UInt8.t -> t1:Seq.seq UInt8.t -> Lemma
+val lemma_encode_bytes_injective: t0:Seq.seq UInt8.t -> t1:Seq.seq UInt8.t -> Lemma
   (requires length t0 == length t1 /\ encode_bytes t0 == encode_bytes t1)
   (ensures t0 == t1)
   (decreases (Seq.length t0))
-(*  
+
+#reset-options "--z3timeout 100" 
 let rec lemma_encode_bytes_injective t0 t1 =
   let l = Seq.length t0 in
   if l = 0 then Seq.lemma_eq_intro t0 t1
-  else if l < 16 then
-    begin
-    lemma_index_create 1 t0 0;
-    lemma_index_create 1 t1 0
-    //lemma_encode_injective t0 t1
-    end
-  else
-    begin
-    let w0, t0' = SeqProperties.split_eq t0 16 in
-    let w1, t1' = SeqProperties.split_eq t1 16 in
-    let p0' = Seq.create 1 w0 in
-    let p1' = Seq.create 1 w1 in
-    assert (encode_bytes t0' == encode_bytes t1');
+  else 
+    let l0 = min l 16 in 
+    let v0, t0' = SeqProperties.split_eq t0 l0 in
+    let v1, t1' = SeqProperties.split_eq t1 l0 in
+    let w0 = pad_0 v0 (16 - l0) in 
+    let w1 = pad_0 v1 (16 - l0) in 
+    assert(encode_bytes t0 == SeqProperties.cons w0 (encode_bytes t0'));
+    assert(encode_bytes t1 == SeqProperties.cons w1 (encode_bytes t1'));
+    Seq.lemma_eq_refl (encode_bytes t0) (encode_bytes t1);
+    SeqProperties.lemma_cons_inj w0 w1 (encode_bytes t0') (encode_bytes t1');
     lemma_encode_bytes_injective t0' t1';
-    lemma_index_create 1 w0 0;
-    lemma_index_create 1 w1 0
-    //lemma_encode_injective w0 w1
-    end
-*)
+    lemma_pad_0_injective v0 v1 (16 - l0);
+    Seq.lemma_eq_elim t0' t1'
+    
+#reset-options ""
 
 (*
 val encode_pad_empty: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> Lemma
@@ -323,8 +320,6 @@ let lemma_encode_both_inj i (al0:aadlen_32) (pl0:txtlen_32) (al1:aadlen_32) (pl1
   let ea1 = encode_bytes a1 in
   let ep0 = encode_bytes p0 in
   let ep1 = encode_bytes p1 in
-  lemma_encode_length p0;
-  lemma_encode_length p1;
   //assert(length ep0 = length ep1);
   //assert(encode_both al0 pl0 a0 p0 = cons (encode w0) (ep0 @| ea0));
   //assert(encode_both al1 pl1 a1 p1 = cons (encode w1) (ep1 @| ea1));

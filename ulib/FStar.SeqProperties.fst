@@ -59,6 +59,15 @@ let last #a s = index s (length s - 1)
 val cons: #a:Type -> a -> seq a -> Tot (seq a)
 let cons #a x s = append (create 1 x) s
 
+val lemma_cons_inj: #a:Type -> v1:a -> v2:a -> s1:seq a -> s2:seq a 
+  -> Lemma (requires (equal (cons v1 s1) (cons v2 s2)))
+          (ensures (v1 == v2 /\ equal s1 s2))
+let lemma_cons_inj #a v1 v2 s1 s2 =
+  let t1 = create 1 v1 in 
+  let t2 = create 1 v2 in 
+  lemma_append_inj t1 s1 t2 s2;
+  assert(index t1 0 == index t2 0)
+
 val split: #a:Type -> s:seq a -> i:nat{(0 <= i /\ i <= length s)} -> Tot (seq a * seq a)
 let split #a s i = slice s 0 i, slice s i (length s)
 
