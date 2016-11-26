@@ -47,8 +47,6 @@ let isCarried (h0:mem) (h1:mem) (b:bigint) : GTot Type0 =
 
 let u633 = x:U64.t{v x < pow2 63}
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
-
 
 let isCarried_
   (h1:mem)
@@ -68,6 +66,7 @@ let isCarried_
       /\ v (get h1 b 4) = (v b4 + r3)  % pow2 26
     )
 
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
 
 let carried_1 (h:mem) (b:bigint) : GTot Type0 =
   live h b /\ length b >= norm_length+1
@@ -78,8 +77,6 @@ let carried_1 (h:mem) (b:bigint) : GTot Type0 =
   /\ v (get h b 4) < pow2 26
   /\ v (get h b 5) <= pow2 38
 
-
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
 
 let lemma_carry_10_0 (x:int) (y:pos) : Lemma (x % y < y) = ()
 let lemma_carry_10_1 (x:nat) (y:nat) (z:pos) : Lemma (requires (x < y)) (ensures (x / z <= y / z))

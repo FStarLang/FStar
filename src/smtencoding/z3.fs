@@ -214,19 +214,19 @@ let doZ3Exe' (input:string) (z3proc:proc) =
         | "<unsat-core>"::core::"</unsat-core>"::rest -> 
           parse_core core, lines 
         | _ -> None, lines in
-    let rec lblnegs lines = match lines with
-      | lname::"false"::rest when Util.starts_with lname "label_" -> lname::lblnegs rest
-      | lname::_::rest when Util.starts_with lname "label_" -> lblnegs rest
-      | _ -> print_stats lines; [] in
-    let unsat_core_and_lblnegs lines =
+    let rec lblnegs lines succeeded = match lines with
+      | lname::"false"::rest when Util.starts_with lname "label_" -> lname::lblnegs rest succeeded
+      | lname::_::rest when Util.starts_with lname "label_" -> lblnegs rest succeeded
+      | _ -> if succeeded then print_stats lines; [] in
+    let unsat_core_and_lblnegs lines succeeded =
        let core_opt, rest = unsat_core lines in
-       core_opt, lblnegs rest in
+       core_opt, lblnegs rest succeeded in
 
     let rec result x = match x with
       | "timeout"::tl -> TIMEOUT []
-      | "unknown"::tl -> UNKNOWN (snd (unsat_core_and_lblnegs tl))
-      | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl))
-      | "unsat"::tl   -> UNSAT   (fst (unsat_core_and_lblnegs tl))
+      | "unknown"::tl -> UNKNOWN (snd (unsat_core_and_lblnegs tl false))
+      | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl false))
+      | "unsat"::tl   -> UNSAT   (fst (unsat_core_and_lblnegs tl true))
       | "killed"::tl  -> bg_z3_proc.restart(); KILLED
       | hd::tl -> 
         TypeChecker.Errors.warn Range.dummyRange (Util.format2 "%s: Unexpected output from Z3: %s\n" (query_logging.get_module_name()) hd);

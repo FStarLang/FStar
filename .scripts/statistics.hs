@@ -37,7 +37,7 @@ data Stat = Stat {rlimitCount :: Int,
                   time :: Float}
 
 instance Show Stat where
-  show st = show (rlimitCount st) ++ "," ++ showFFloat (Just 2) (time st) ""
+  show st = show (rlimitCount st) ++ "  " ++ showFFloat (Just 2) (time st) ""
 
 processStat' :: [(String, String)] -> Maybe Stat
 processStat' m = do
