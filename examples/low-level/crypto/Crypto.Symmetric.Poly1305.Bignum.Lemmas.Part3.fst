@@ -237,7 +237,7 @@ val lemma_freduce_degree2:
   Lemma (requires (isDegreeReduced h0 h1 b))
 	(ensures  (isDegreeReduced h0 h1 b
 	  /\ eval h1 b norm_length % reveal prime = eval h0 b (2*norm_length-1) % reveal prime))
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
+#reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 let lemma_freduce_degree2 h0 h1 b =
   let b0 = v (get h0 b 0) in
   let b1 = v (get h0 b 1) in

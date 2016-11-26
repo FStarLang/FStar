@@ -198,7 +198,9 @@ let doZ3Exe' (input:string) (z3proc:proc) =
        let last l = List.nth l (List.length l - 1) in
        if Options.print_z3_statistics() then
          if List.length lines >= 2 && starts_with '(' (List.hd lines) && ends_with ')' (last lines) then
-           List.iter (fun s -> Util.print_string (Util.format1 "%s\n" s)) lines
+          (Util.print_string "BEGIN-STATS\n";
+           List.iter (fun s -> Util.print_string (Util.format1 "%s\n" s)) lines;
+           Util.print_string "END-STATS\n")
          else failwith "Unexpected output from Z3: could not find statistics\n" //-- only works if rest doesn't include labels
     in
     let unsat_core lines = 
