@@ -182,13 +182,12 @@ chacha-aead-test: chacha-aead-compile
 	./test_chacha_aead.exe
 
 bignum-ver:
-	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.fst --include crypto
-	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2.fst --include crypto
-	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.fst --include crypto
-	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.fst --include crypto
-	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.fst --include crypto
-	$(FSTAR) --use_hints --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
-
+	$(FSTAR) crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.fst --include crypto
+	$(FSTAR) crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2.fst --include crypto
+	$(FSTAR) crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.fst --include crypto
+	$(FSTAR) crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.fst --include crypto
+	$(FSTAR) crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.fst --include crypto
+	$(FSTAR) --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
 
 # Cleaning
 clean:
