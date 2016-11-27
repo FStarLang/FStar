@@ -239,7 +239,7 @@ val lemma_freduce_degree2:
 	  /\ eval h1 b norm_length % reveal prime = eval h0 b (2*norm_length-1) % reveal prime))
 #reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 let lemma_freduce_degree2 h0 h1 b = admit()
-(* CH: this often fails for me even with 2000 seconds!
+(* CH: this fails for me even with 2000 seconds and max_fuel 8!
   let b0 = v (get h0 b 0) in
   let b1 = v (get h0 b 1) in
   let b2 = v (get h0 b 2) in

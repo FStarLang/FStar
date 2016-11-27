@@ -382,6 +382,8 @@ let subWord word sbox =
   word.(2ul) <- access sbox word.(2ul);
   word.(3ul) <- access sbox word.(3ul)
 
+#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0"
+
 val rcon: i:UInt32.t{v i >= 1} -> byte -> Tot byte (decreases (v i))
 let rec rcon i tmp =
   if i = 1ul then tmp

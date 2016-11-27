@@ -101,7 +101,7 @@ private let lemma_multiplication064
     lemma_swap (pow2 104) a4 (pow2 78) b3;
     lemma_swap (pow2 104) a4 (pow2 104) b4
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0"
 
 private let lemma_multiplication06
   (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
