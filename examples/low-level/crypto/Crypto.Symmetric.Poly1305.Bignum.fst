@@ -35,7 +35,7 @@ let w : U32.t -> Tot int = U32.v
 
 (*** Addition ***)
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0"
 
 private val fsum_: a:bigint -> b:bigint{disjoint a b} -> Stack unit
   (requires (fun h -> norm h a /\ norm h b))
@@ -68,6 +68,8 @@ let fsum_ a b =
   a.(3ul) <- ab3;
   a.(4ul) <- ab4
 
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+
 val fsum': a:bigint -> b:bigint{disjoint a b} -> Stack unit
     (requires (fun h -> norm h a /\ norm h b))
     (ensures (fun h0 u h1 -> norm h0 a /\ norm h0 b /\ bound27 h1 a /\ modifies_1 a h0 h1
@@ -79,6 +81,8 @@ let fsum' a b =
   fsum_ a b;
   let h1 = ST.get() in
   lemma_fsum h0 h1 a b
+
+#reset-options "--z3timeout 80 --initial_fuel 0 --max_fuel 0"
 
 private val update_9: c:bigint{length c >= 2*norm_length-1} ->
   c0:U64.t -> c1:U64.t -> c2:U64.t ->
@@ -265,7 +269,7 @@ let update_5 c c0 c1 c2 c3 c4 =
   c.(3ul) <- c3;
   c.(4ul) <- c4
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0"
 
 private val update_6: c:bigint{length c >= norm_length+1} ->
   c0:U64.t -> c1:U64.t -> c2:U64.t ->
@@ -283,7 +287,7 @@ let update_6 c c0 c1 c2 c3 c4 c5  =
   c.(4ul) <- c4;
   c.(5ul) <- c5
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0"
 
 
 private val carry_1_0:

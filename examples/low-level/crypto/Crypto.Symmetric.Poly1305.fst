@@ -826,7 +826,7 @@ val poly1305_last:
            ilog updated_log == SeqProperties.snoc (ilog current_log) (encode (sel_word h1 msg))
          /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
 
-#set-options "--z3timeout 60 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1"
 
 let poly1305_last log msg acc r len =
   let h0 = ST.get() in
@@ -906,6 +906,8 @@ val div_aux: a:UInt32.t -> b:UInt32.t{w b <> 0} -> Lemma
   (ensures FStar.UInt32(UInt.size (v a / v b) n))
   [SMTPat (FStar.UInt32(UInt.size (v a / v b) n))]
 let div_aux a b = ()
+
+#reset-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1"
 
 (** Computes the Poly1305 MAC on a buffer *)
 val poly1305_mac:

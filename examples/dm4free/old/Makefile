@@ -1,5 +1,4 @@
 FSTAR_HOME=../../..
-OTHERFLAGS=
 include ../../Makefile.include
 
 all: uall

@@ -53,8 +53,7 @@ type partition_post (a:eqtype) (f:tot_ord a) (start:nat) (len:nat{start <= len} 
                       (index (sel h1 x) i)
                       (slice (sel h1 x) i len)))
 
-#reset-options
-#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
+#reset-options "--z3timeout 10 --initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
 val partition: #a:eqtype -> f:tot_ord a
                -> start:nat -> len:nat{start <= len}
                -> pivot:nat{start <= pivot /\ pivot < len}

@@ -225,7 +225,7 @@ let lemma_mod_plus a b p =
   let y = a - p * (a / p) in
   lemma_eq_trans_2 w x y z
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0"
 
 private let lemma_mod_mul_distr_l_0 (a:nat) (b:nat) (p:pos) : Lemma
   ((((a % p) + (a / p) * p) * b) % p = ((a % p) * b + ((a / p) * b) * p) % p)
@@ -505,7 +505,7 @@ let modulo_division_lemma a b c =
   division_multiplication_lemma a b c;
   euclidean_division_definition (a / b) c
 
-#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0"
 
 val modulo_modulo_lemma: a:nat -> b:pos -> c:pos ->
     Lemma ( (a % (b * c)) % b = a % b )
