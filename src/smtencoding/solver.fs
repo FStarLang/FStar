@@ -233,10 +233,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
         and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (result, elapsed_time) =
             if used_hint then (Z3.refresh(); record_hint_stat hint_opt result elapsed_time (Env.get_range env));
-            let at_log_file () = 
-                if Options.log_queries() 
-                then "@" ^ (Z3.query_logging.log_file_name())
-                else "" in
+            if Options.print_z3_statistics() then Z3.refresh();
             let query_info tag = 
                  Util.print "(%s%s)\n\tQuery (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s\n"
                                 [Range.string_of_range (Env.get_range env);

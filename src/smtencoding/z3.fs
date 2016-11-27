@@ -189,6 +189,11 @@ let bg_z3_proc =
      refresh=refresh;
      restart=restart}
 
+let at_log_file () =
+  if Options.log_queries()
+  then "@" ^ (query_logging.log_file_name())
+  else ""
+
 let doZ3Exe' (input:string) (z3proc:proc) =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map Util.trim_string in
@@ -198,7 +203,7 @@ let doZ3Exe' (input:string) (z3proc:proc) =
        let last l = List.nth l (List.length l - 1) in
        if Options.print_z3_statistics() then
          if List.length lines >= 2 && starts_with '(' (List.hd lines) && ends_with ')' (last lines) then
-          (Util.print_string "BEGIN-STATS\n";
+          (Util.print_string (Util.format1 "BEGIN-STATS %s\n" (query_logging.get_module_name()) ^ at_log_file ());
            List.iter (fun s -> Util.print_string (Util.format1 "%s\n" s)) lines;
            Util.print_string "END-STATS\n")
          else failwith "Unexpected output from Z3: could not find statistics\n" //-- only works if rest doesn't include labels
