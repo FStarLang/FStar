@@ -43,6 +43,11 @@ let elem i = (* dependent; used only ideally *)
   | POLY1305 -> PS.elem
   | GHASH    -> GS.elem
 
+let zero i : elem i = 
+  match alg i with 
+  | POLY1305 -> PS.zero
+  | GHASH    -> GS.zero
+
 (** Private representation of a field element as a buffer *)
 
 (* 16-10-26 for the time being, we avoid value-dependent types (after
@@ -153,30 +158,45 @@ let rcreate rgn i =
   | POLY1305 -> B_POLY1305 (FStar.Buffer.rcreate rgn 0UL  5ul)
   | GHASH    -> B_GHASH    (FStar.Buffer.rcreate rgn 0uy wlen)
 
-// unused for now
 val create: i:id -> StackInline (elemB i)
   (requires (fun h0 -> True))
-  (ensures  (fun h0 r h1 -> Buffer.modifies_0 h0 h1))
+  (ensures  (fun h0 r h1 -> 
+     let b = as_buffer r in 
+     ~(Buffer.contains h0 b) /\ 
+     norm h1 r /\
+     sel_elem h1 r = zero i /\
+     Buffer.frameOf b = HS(h0.tip) /\ // /\ Map.domain h1.h == Map.domain h0.h
+     Buffer.modifies_0 h0 h1 ))
+
 let create i =
   match alg i with
-  | POLY1305 -> B_POLY1305 (FStar.Buffer.create 0uL 5ul)
-  | GHASH    -> B_GHASH    (FStar.Buffer.create 0uy 16ul)
+  | POLY1305 -> 
+      // hide in Poly1305.fst?
+      let b = FStar.Buffer.create 0uL 5ul in
+      let h1 = ST.get() in 
+      Crypto.Symmetric.Poly1305.Bigint.eval_null h1 b 5;
+      //assert(Crypto.Symmetric.Poly1305.Bigint.norm h1 b);
+      B_POLY1305 b
+  | GHASH -> 
+      B_GHASH (FStar.Buffer.create 0uy 16ul)
 
 // TODO: generalize length, add functional spec
 (** Encode raw bytes of static key as a field element *)
 val encode_r: #i:id -> b:elemB i -> raw:lbuffer 16{Buffer.disjoint (as_buffer b) raw} -> Stack unit
   (requires (fun h -> live h b /\ Buffer.live h raw))
-  (ensures  (fun h0 _ h1 -> norm h1 b /\ Buffer.live h1 raw
-    /\ Buffer.modifies_2 (as_buffer b) raw h0 h1))
+  (ensures  (fun h0 _ h1 -> 
+    norm h1 b /\ 
+    Buffer.live h1 raw /\ 
+    Buffer.modifies_2 (as_buffer b) raw h0 h1))
 let encode_r #i b raw =
   match b with 
-  | B_POLY1305 b -> PL.clamp raw; PL.toField b raw
+  | B_POLY1305 b -> 
+      PL.clamp raw; 
+      PL.toField b raw
   | B_GHASH    b -> 
-    begin
-    let h0 = ST.get () in
-    assert (Buffer.modifies_1 raw h0 h0); // Necessary for triggering right lemmas
-    Buffer.blit raw 0ul b 0ul 16ul
-    end
+      let h0 = ST.get () in
+      assert (Buffer.modifies_1 raw h0 h0); // Necessary for triggering right lemmas
+      Buffer.blit raw 0ul b 0ul 16ul
 
 // TODO: generalize to word
 (** Encode a word of a message as a field element *)
@@ -218,7 +238,15 @@ let poly #i cs r =
 (** Create and initialize the accumulator *)
 val start: #i:id -> StackInline (elemB i)
   (requires (fun h0 -> True))
-  (ensures  (fun h0 r h1 -> Buffer.modifies_0 h0 h1))
+  (ensures  (fun h0 r h1 -> 
+     let b = as_buffer r in 
+       ~(Buffer.contains h0 b)
+     /\ norm h1 r 
+     /\ sel_elem h1 r = zero i 
+     /\ Buffer.frameOf b = HS(h0.tip) // /\ Map.domain h1.h == Map.domain h0.h
+     /\ Buffer.modifies_0 h0 h1 ))
+//16-11-27 factor out this kind of post?
+
 let start #i = create i
 
 val field_add: #i:id -> elem i -> elem i -> Tot (elem i)
@@ -236,8 +264,6 @@ let field_mul #i a b =
 let op_Plus_At #i e1 e2 = field_add #i e1 e2
 let op_Star_At #i e1 e2 = field_mul #i e1 e2
 
-#set-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
-
 
 (** Process one message block and update the accumulator *)
 val update: #i:id -> r:elemB i -> a:elemB i -> w:wordB_16 -> Stack unit
@@ -250,6 +276,8 @@ val update: #i:id -> r:elemB i -> a:elemB i -> w:wordB_16 -> Stack unit
     /\ norm h1 a
     /\ Buffer.modifies_1 (as_buffer a) h0 h1
     /\ sel_elem h1 a == (sel_elem h0 a +@ encode i (sel_word h0 w)) *@ sel_elem h0 r))
+
+#set-options "--z3timeout 40"
 
 // TODO: use encodeB?
 let update #i r a w =
@@ -278,9 +306,7 @@ let update #i r a w =
 
 
 let taglen = 16ul
-
 type tag = lbytes (UInt32.v taglen) 
-
 type tagB = lbuffer (UInt32.v taglen)
 
 (** Complete MAC-computation specifications *)

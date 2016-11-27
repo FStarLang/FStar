@@ -4,7 +4,6 @@ open Crypto.Symmetric.Bytes
 
 type text = Seq.seq (lbytes 16)
 type elem = lbytes 16 (* use instead a bit vector? *) 
-
 assume val op_Plus_At: elem -> elem -> Tot elem
 assume val op_Star_At: elem -> elem -> Tot elem
 

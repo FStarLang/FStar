@@ -12,7 +12,7 @@ FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperstack --include $(FSTAR_HO
 # Files commented out are broken, uncomment once fixed
 VERIFY= \
   Buffer.Utils \
-  Crypto.Symmetric.Chacha20 \
+  Crypto.Symmetric.Bytes \
   Crypto.Symmetric.Poly1305.Bigint \
   Crypto.Symmetric.Poly1305.Parameters \
   Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1 \
@@ -25,14 +25,16 @@ VERIFY= \
   Crypto.Symmetric.Poly1305.Lemmas \
   Crypto.Symmetric.Poly1305.Spec \
   Crypto.Symmetric.Poly1305 \
-  Crypto.Symmetric.Bytes \
   Crypto.Symmetric.GF128 \
   Crypto.Symmetric.GCM \
+  Crypto.Symmetric.MAC \
+  Crypto.Symmetric.UF1CMA \
   Crypto.Symmetric.AES \
   Crypto.Symmetric.AES128 \
+  Crypto.Symmetric.Chacha20 \
   Crypto.Symmetric.Cipher \
-  Crypto.AEAD.AES256GCM \
   Crypto.Symmetric.PRF \
+  Crypto.AEAD.AES256GCM \
   Crypto.AEAD.Encoding \
   Crypto.AEAD.Invariant \
   Crypto.AEAD.Lemmas \

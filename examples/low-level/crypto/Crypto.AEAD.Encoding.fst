@@ -158,8 +158,7 @@ let rec lemma_encode_bytes_injective t0 t1 =
     lemma_encode_bytes_injective t0' t1';
     lemma_pad_0_injective v0 v1 (16 - l0);
     Seq.lemma_eq_elim t0' t1'
-    
-#reset-options ""
+#reset-options 
 
 (*
 val encode_pad_empty: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> Lemma
@@ -349,6 +348,7 @@ val accumulate:
       FStar.HyperStack.sel h1 (CMA.alog a) ==
       encode_both (fst i) aadlen (Buffer.as_seq h1 aad) txtlen (Buffer.as_seq h1 cipher))))
   // StackInline required for stack-allocated accumulator
+
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 100"
 let accumulate #i st aadlen aad txtlen cipher  = 
   let h = ST.get() in 

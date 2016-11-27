@@ -29,6 +29,7 @@ let p_1305: p:nat{pow2 128 < p} =
 
 (** Elements of the field GF(p_1305) *)
 type elem = n:nat{n < p_1305}
+let zero:elem = 0
 
 (** Words are at most 16 bytes *)
 type word = b:bytes{Seq.length b <= 16}
