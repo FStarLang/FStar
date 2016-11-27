@@ -65,7 +65,7 @@ let isCarried_
       /\ v (get h1 b 3) = (v b3 + r2)  % pow2 26
       /\ v (get h1 b 4) = (v b4 + r3)  % pow2 26
     )
-(*
+
 #reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
 
 let carried_1 (h:mem) (b:bigint) : GTot Type0 =
@@ -467,5 +467,3 @@ val lemma_carry_2:
 let lemma_carry_2 h0 h1 b =
   lemma_carry_20 h0 h1 b;
   lemma_carry_11 h0 h1 b
-  
-*)
