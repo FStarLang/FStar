@@ -763,7 +763,9 @@ val poly1305_loop: current_log:log_t -> msg:bytes -> acc:elemB{disjoint msg acc}
         encode_pad (ilog current_log) (as_seq h0 (Buffer.sub msg 0ul (UInt32.mul 16ul ctr))) /\
         sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r))) ))
     (decreases (w ctr))
-#set-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
+#set-options "--z3timeout 300 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
 let rec poly1305_loop log msg acc r ctr =
   let h0 = ST.get () in
   if U32.lte ctr 0ul then
