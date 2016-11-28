@@ -234,6 +234,7 @@ decl2:
   | qs=qualifiers LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
         let lbs = focusLetBindings lbs (rhs2 parseState 1 5) in
+        (* TODO : Why ToplevelLet vs TopLevelModule ??? *)
         ToplevelLet(qs, q, lbs)
       }
   | qs=qualifiers VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
@@ -300,9 +301,9 @@ kind_abbrev:
 letbinding:
   | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
       {
-        let pat = mk_pattern (PatVar(lid, None)) (rhs parseState 1) in
-        let pat = mk_pattern (PatApp (pat, flatten lbp)) (rhs2 parseState 1 2) in
-        let pos = rhs2 parseState 1 5 in
+        let pat = mk_pattern (PatVar(lid, None)) (rhs parseState 2) in
+        let pat = mk_pattern (PatApp (pat, flatten lbp)) (rhs2 parseState 1 3) in
+        let pos = rhs2 parseState 1 6 in
         match ascr_opt with
         | None -> (focus_opt, (pat, tm))
         | Some t -> (focus_opt, (mk_pattern (PatAscribed(pat, t)) pos, tm))
