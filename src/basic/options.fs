@@ -143,7 +143,9 @@ let init () =
         ("verify"                       , Bool true);
         ("verify_all"                   , Bool false);
         ("verify_module"                , List []);
-        ("no_warn_top_level_effects"       , Bool true);
+        ("no_warn_top_level_effects"    , Bool true);
+        ("z3refresh"                    , Bool false);
+        ("z3rlimit"                     , Int 5);
         ("z3timeout"                    , Int 5)] in
    let o = peek () in
    Util.smap_clear o;
@@ -222,6 +224,8 @@ let get_verify_module           ()      = lookup_opt "verify_module"            
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
 let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects"   as_bool
+let get_z3refresh               ()      = lookup_opt "z3refresh"                as_bool
+let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
 
 let dlevel = function
@@ -618,10 +622,22 @@ let rec specs () : list<Getopt.opt> =
         "Top-level effects are checked by default; turn this flag on to prevent warning when this happens");
 
        ( noshort,
+        "z3refresh",
+        ZeroArgs (fun () -> Bool false),
+        "Restart Z3 after each query; useful for ensuring proof robustness");
+
+       ( noshort,
+        "z3rlimit",
+         OneArg ((fun s -> Int (int_of_string s)),
+                  "[positive integer]"),
+        "Set the Z3 per-query resource limit (default 5 units, taking roughtly 5s)");
+
+       ( noshort,
         "z3timeout",
          OneArg ((fun s -> Int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
+
   ] in
      ( 'h',
         "help",
@@ -687,10 +703,11 @@ let settable = function
     | "use_eq_at_higher_order"
     | "__temp_no_proj"
     | "no_warn_top_level_effects"
-    | "reuse_hint_for" -> true
+    | "reuse_hint_for"
+    | "z3refresh" -> true
     | _ -> false
 
-let resettable s = settable s || s="z3timeout"
+let resettable s = settable s || s="z3timeout" || s="z3rlimit"
 let all_specs = specs ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
@@ -847,4 +864,6 @@ let warn_top_level_effects       () = get_warn_top_level_effects      ()
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
+let z3_refresh                   () = get_z3refresh                   ()
+let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_timeout                   () = get_z3timeout                   ()
