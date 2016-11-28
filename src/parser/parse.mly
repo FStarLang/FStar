@@ -496,7 +496,11 @@ patternOrMultibinder:
       }
 
 binder:
-  | lid=lidentOrUnderscore { mk_binder (Variable lid) (rhs parseState 1) Type None  }
+  | aqualified_lid=aqualified(lidentOrUnderscore)
+     {
+       let (q, lid) = aqualified_lid in
+       mk_binder (Variable lid) (rhs parseState 1) Type q
+     }
   | tv=tvar  { mk_binder (TVariable tv) (rhs parseState 1) Kind None  }
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 

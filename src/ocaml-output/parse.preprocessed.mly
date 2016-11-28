@@ -1248,9 +1248,12 @@ patternOrMultibinder:
       )}
 
 binder:
-  lidentOrUnderscore
-    {let lid = $1 in
-                           ( mk_binder (Variable lid) (rhs parseState 1) Type None  )}
+  aqualified_lidentOrUnderscore_
+    {let aqualified_lid = $1 in
+     (
+       let (q, lid) = aqualified_lid in
+       mk_binder (Variable lid) (rhs parseState 1) Type q
+     )}
 | tvar
     {let tv = $1 in
              ( mk_binder (TVariable tv) (rhs parseState 1) Kind None  )}
