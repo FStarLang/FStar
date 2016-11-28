@@ -297,7 +297,6 @@ type nonTerminalId =
     | NONTERM_nonempty_list_atomicPattern_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_
-    | NONTERM_separated_nonempty_list_AND_letbinding_tail_
     | NONTERM_separated_nonempty_list_AND_pair_option_FSDOC__typeDefinition__
     | NONTERM_separated_nonempty_list_BAR_tuplePattern_
     | NONTERM_separated_nonempty_list_COMMA_appTerm_

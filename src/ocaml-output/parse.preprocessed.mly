@@ -734,7 +734,8 @@ let qs =
                          ( qs )
 in
       (
-        let lbs = focusLetBindings lbs (rhs2 parseState 1 5) in
+        let lbs = focusLetBindings lbs (rhs2 parseState 1 4) in
+        (* TODO : Why ToplevelLet vs TopLevelModule ??? *)
         ToplevelLet(qs, q, lbs)
       )}
 | list_qualifier_ VAL lidentOrOperator list_multiBinder_ COLON typ
@@ -850,9 +851,9 @@ letbinding:
   maybeFocus lidentOrOperator nonempty_list_patternOrMultibinder_ option_ascribeTyp_ EQUALS term
     {let (focus_opt, lid, lbp, ascr_opt, _5, tm) = ($1, $2, $3, $4, (), $6) in
       (
-        let pat = mk_pattern (PatVar(lid, None)) (rhs parseState 1) in
-        let pat = mk_pattern (PatApp (pat, flatten lbp)) (rhs2 parseState 1 2) in
-        let pos = rhs2 parseState 1 5 in
+        let pat = mk_pattern (PatVar(lid, None)) (rhs parseState 2) in
+        let pat = mk_pattern (PatApp (pat, flatten lbp)) (rhs2 parseState 1 3) in
+        let pos = rhs2 parseState 1 6 in
         match ascr_opt with
         | None -> (focus_opt, (pat, tm))
         | Some t -> (focus_opt, (mk_pattern (PatAscribed(pat, t)) pos, tm))
@@ -1504,6 +1505,9 @@ noSeqTerm:
   typ
     {let t = $1 in
            ( t )}
+| tmIff SUBTYPE typ
+    {let (e, _2, t) = ($1, (), $3) in
+      ( mk_term (Ascribed(e,{t with level=Expr})) (rhs2 parseState 1 3) Expr )}
 | atomicTerm DOT_LPAREN term RPAREN LARROW noSeqTerm
     {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =
@@ -1561,8 +1565,8 @@ in
 | LET letqualifier separated_nonempty_list_AND_letbinding_ IN term
     {let (_1, q, lbs, _4, e) = ($1, $2, $3, (), $5) in
       (
-        let lbs = focusLetBindings lbs (rhs2 parseState 2 4) in
-        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 6) Expr
+        let lbs = focusLetBindings lbs (rhs2 parseState 2 3) in
+        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
       )}
 | FUNCTION firstPatternBranch patternBranches
     {let (_1, pb, pbs) = ((), $2, $3) in
@@ -2015,7 +2019,7 @@ tmNoEq:
         let dom, res = match tail.tm with
             | Sum(dom', res) -> dom::dom', res
             | _ -> [dom], tail in
-        mk_term (Sum(dom, res)) (rhs2 parseState 1 6) Type
+        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type
       )}
 | tmNoEq MINUS tmNoEq
     {let (e1, _2, e2) = ($1, (), $3) in
@@ -2196,7 +2200,7 @@ in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LENS_PAREN_LEFT tmEq COMMA separated_nonempty_list_COMMA_tmEq_ LENS_PAREN_RIGHT
     {let (_1, e0, _3, el, _5) = ((), $2, (), $4, ()) in
-      ( mkDTuple (e0::el) (rhs2 parseState 1 1) )}
+      ( mkDTuple (e0::el) (rhs2 parseState 1 5) )}
 | projectionLHS list___anonymous_6_
     {let (e, field_projs) = ($1, $2) in
       ( fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs )}
@@ -2212,7 +2216,7 @@ projectionLHS:
         let e = mk_term t (rhs parseState 1) Un in
         match targs_opt with
         | None -> e
-        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 4)
+        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
       )}
 | LPAREN term option_pair_hasSort_simpleTerm__ RPAREN
     {let (_1, e, sort_opt, _4) = ((), $2, $3, ()) in
@@ -2256,10 +2260,7 @@ in
       ( mkRefSet (rhs2 parseState 1 3) es )}
 
 hasSort:
-  SUBTYPE
-    {let _1 = () in
-            ( Expr )}
-| SUBKIND
+  SUBKIND
     {let _1 = () in
             ( Type )}
 

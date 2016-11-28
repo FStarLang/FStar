@@ -119,4 +119,5 @@ let parse fn =
         let p = lexbuf.EndPos in
         Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol + 1) in
       let r = Range.mk_range filename p0 p1 in
-      Inr ("Syntax error", r)
+      // printfn "error : %A\n" e ;
+      Inr ("Syntax error (the actual error was dropped)", r)

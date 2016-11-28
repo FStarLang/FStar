@@ -233,7 +233,7 @@ decl2:
   (* change to menhir : let ~> rec changed to let rec ~> *)
   | qs=qualifiers LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
-        let lbs = focusLetBindings lbs (rhs2 parseState 1 5) in
+        let lbs = focusLetBindings lbs (rhs2 parseState 1 4) in
         (* TODO : Why ToplevelLet vs TopLevelModule ??? *)
         ToplevelLet(qs, q, lbs)
       }
@@ -614,8 +614,8 @@ noSeqTerm:
       { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr }
   | LET q=letqualifier lbs=separated_nonempty_list(AND,letbinding) IN e=term
       {
-        let lbs = focusLetBindings lbs (rhs2 parseState 2 4) in
-        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 6) Expr
+        let lbs = focusLetBindings lbs (rhs2 parseState 2 3) in
+        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
       }
   (* TODO : Use left_flexible_list *)
   | FUNCTION pb=firstPatternBranch pbs=patternBranches
@@ -740,6 +740,8 @@ tmEq:
       { mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) }
   | e1=tmEq EQUALS e2=tmEq
       { mk_term (Op("=", [e1; e2])) (rhs2 parseState 1 3) Un}
+  (* non-associativity of COLON_EQUALS is currently not well handled by fsyacc which reports a s/r conflict *)
+  (* see https://github.com/fsprojects/FsLexYacc/issues/39 *)
   | e1=tmEq COLON_EQUALS e2=tmEq
       { mk_term (Op(":=", [e1; e2])) (rhs2 parseState 1 3) Un}
   | e1=tmEq PIPE_RIGHT e2=tmEq
@@ -762,7 +764,7 @@ tmNoEq:
         let dom, res = match tail.tm with
             | Sum(dom', res) -> dom::dom', res
             | _ -> [dom], tail in
-        mk_term (Sum(dom, res)) (rhs2 parseState 1 6) Type
+        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type
       }
   | e1=tmNoEq MINUS e2=tmNoEq
       { mk_term (Op("-", [e1; e2])) (rhs2 parseState 1 3) Un}
@@ -827,7 +829,7 @@ atomicTerm:
   | LPAREN op=operator RPAREN
       { mk_term (Op(op, [])) (rhs2 parseState 1 3) Un }
   | LENS_PAREN_LEFT e0=tmEq COMMA el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
-      { mkDTuple (e0::el) (rhs2 parseState 1 1) }
+      { mkDTuple (e0::el) (rhs2 parseState 1 5) }
   (* TODO : field should have the possibility to be qualified by a module path when projecting *)
   | e=projectionLHS field_projs=list(DOT id=qlident {id})
       { fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs }
@@ -842,7 +844,7 @@ projectionLHS:
         let e = mk_term t (rhs parseState 1) Un in
         match targs_opt with
         | None -> e
-        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 4)
+        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
       }
   | LPAREN e=term sort_opt=option(pair(hasSort, simpleTerm)) RPAREN
       {
