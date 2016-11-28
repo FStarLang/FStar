@@ -29,6 +29,13 @@ open FStar.Pprint
 // abbrev 
 let str s = document_of_string s
 
+// lib
+let doc_of_option n f x = 
+    match x with 
+    | None -> n
+    | Some x' -> f x'
+
+
 // doc_of_* begins
 let doc_of_fsdoc (comment,keywords) = 
     group (concat [(str comment); space; 
@@ -226,11 +233,24 @@ let rec head_id_of_pat p = match p.pat with
 
 let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p)
 
+// TODO: check with parser re how these are printed.
 let doc_of_tycon = function
-  | TyconAbstract(i, _, _)
-  | TyconAbbrev(i, _, _, _)
-  | TyconRecord(i, _, _, _)
-  | TyconVariant(i, _, _, _) -> (str i.idText)
+  | TyconAbstract(i, bb, k) ->
+        group (concat [str "abstract"; space;
+                       (separate_map space doc_of_binder bb); space;
+                       doc_of_option empty doc_of_term k; space;
+                       hardline
+                       ])
+// TODO bb, k, t, flds, vars
+  | TyconAbbrev(i, bb, k, t) -> group (str i.idText)
+  | TyconRecord(i, bb, k, flds) -> 
+        group (concat [str i.idText; space; equals; space;
+                       (separate_map space doc_of_binder bb); space;
+                       doc_of_option empty doc_of_term k; space; 
+                       (separate_map (concat [space; bar; space])
+                            (fun (i,t,d) -> concat [str i.idText; space; colon; space; doc_of_term t])
+                            flds)])
+  | TyconVariant(i, bb, k, vars) -> group (str i.idText)
 
 let doc_of_decl (d:decl) = match d.d with
   | TopLevelModule l -> 
@@ -256,22 +276,24 @@ let doc_of_decl (d:decl) = match d.d with
   | Main e -> group (concat [str "main"; space; doc_of_term e])
   | Assume(q, i, t) -> 
     // TODO: q, i.
-        group (concat [ (str "assume"); space; (str i.idText)])
+        group (concat [ (str "assume"); space; (str i.idText); hardline])
   | Tycon(q, tys) -> 
-    // TODO: q
-    group (concat [(str "type"); space; 
-                    (separate_map (str ", ")
-                        (fun (x,_) -> doc_of_tycon x)
-                        tys) ])
-  | Val(_, i, _) -> concat [(str "val "); (str i.idText)]
-  | Exception(i, _) -> concat [(str "exception "); (str i.idText)]
+    // TODO: q. Also, print "type" here, or in doc_of_tycon?
+        group (concat [(str "type"); space; 
+                        (separate_map (str ", ")
+                            // TODO: d
+                            (fun (x,d) -> doc_of_tycon x)
+                            tys);
+                        hardline ])
+  | Val(_, i, _) -> concat [(str "val "); (str i.idText); hardline]
+  | Exception(i, _) -> concat [(str "exception "); (str i.idText); hardline]
   | NewEffect(_, DefineEffect(i, _, _, _, _))
-  | NewEffect(_, RedefineEffect(i, _, _)) -> concat [(str "new_effect) "); (str i.idText)]
+  | NewEffect(_, RedefineEffect(i, _, _)) -> concat [(str "new_effect) "); (str i.idText); hardline]
   | NewEffectForFree(_, DefineEffect(i, _, _, _, _))
-  | NewEffectForFree(_, RedefineEffect(i, _, _)) -> concat [(str "new_effect_for_free "); (str i.idText)]
-  | SubEffect _ -> str "sub_effect"
-  | Pragma _ -> str "pragma"
-  | Fsdoc _ -> str "fsdoc"
+  | NewEffectForFree(_, RedefineEffect(i, _, _)) -> concat [(str "new_effect_for_free "); (str i.idText); hardline]
+  | SubEffect l -> str "sub_effect"
+  | Pragma p -> str "pragma"
+  | Fsdoc d -> group (concat [doc_of_fsdoc d; hardline]) 
 
 // SI: go straight to decls (might have to change if TopLevel is not the first decl). 
 let doc_of_modul (m:modul) = match m with
