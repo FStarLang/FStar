@@ -20,29 +20,30 @@ type document = PPrint.document
 
 let empty = PPrint.empty 
 
-let not_impl_msg = "OCaml prettyprinter not yet implemented"
-
 let document_of_char = PPrint.char 
 
 let document_of_string = PPrint.string 
 
-let substring = PPrint.substring
+let substring s ofs len = 
+    PPrint.substring s (Z.to_int ofs) (Z.to_int len)
 
-let fancystring = PPrint.fancystring 
+let fancystring s apparent_length = 
+    PPrint.fancystring s (Z.to_int apparent_length)
 
-let fancysubstring = PPrint.fancysubstring 
+let fancysubstring s ofs len apparent_length = 
+    PPrint.fancysubstring  s (Z.to_int ofs) (Z.to_int len) (Z.to_int apparent_length)
 
 let utf8string = PPrint.utf8string 
 
 let hardline = PPrint.hardline 
 
-let blank = PPrint.blank 
+let blank n = PPrint.blank (Z.to_int n)
 
-let break_ = PPrint.break 
+let break_ n = PPrint.break (Z.to_int n)
 
 let op_Hat_Hat = PPrint.(^^) 
 
-let nest = PPrint.nest 
+let nest j doc = PPrint.nest (Z.to_int j) doc 
 
 let group = PPrint.group 
 
@@ -99,7 +100,7 @@ let brackets= PPrint.brackets
 
 let twice = PPrint.twice 
 
-let repeat = PPrint.repeat 
+let repeat n doc = PPrint.repeat (Z.to_int n) doc
 
 let concat = PPrint.concat 
 
@@ -127,23 +128,30 @@ let flow_map = PPrint.flow_map
 
 let url = PPrint.url 
 
-let hang = PPrint.hang 
+let hang n doc = PPrint.hang (Z.to_int n) doc
 
-let prefix = PPrint.prefix 
+let prefix n b left right = 
+    PPrint.prefix (Z.to_int n) (Z.to_int b) left right
 
-let jump = PPrint.jump 
+let jump n b right = 
+    PPrint.jump (Z.to_int n) (Z.to_int b) right
 
-let infix = PPrint.infix 
+let infix n b middle left right = 
+    PPrint.infix (Z.to_int n) (Z.to_int b) middle left right
 
-let surround = PPrint.surround 
+let surround n b opening contents closing = 
+    PPrint.surround (Z.to_int n) (Z.to_int b) opening contents closing
 
-let soft_surround = PPrint.soft_surround 
+let soft_surround n b opening contents closing = 
+    PPrint.soft_surround (Z.to_int n) (Z.to_int b) opening contents closing
 
-let surround_separate = PPrint.surround_separate 
+let surround_separate n b void_ opening sep closing docs = 
+    PPrint.surround_separate (Z.to_int n) (Z.to_int b) void_ opening sep closing docs
 
-let surround_separate_map = PPrint.surround_separate_map 
+let surround_separate_map n b void_ opening sep closing f xs = 
+    PPrint.surround_separate_map (Z.to_int n) (Z.to_int b) void_ opening sep closing f xs
 
-let tostring_pretty (width:int) (doc:document) : string = 
+let tostring_pretty width doc = 
     let buf = Buffer.create 0 in 
-    PPrint.ToBuffer.pretty 0.8 width buf doc;
+    PPrint.ToBuffer.pretty 0.5 (Z.to_int width) buf doc;
     Buffer.contents buf 
