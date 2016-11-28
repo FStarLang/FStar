@@ -282,44 +282,46 @@ type nonTerminalId =
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_effectDecl__
-    | NONTERM_loption_separated_nonempty_list_SEMICOLON_openPatternRec1__
-    | NONTERM_list___anonymous_3_
+    | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
+    | NONTERM_list___anonymous_4_
     | NONTERM_list___anonymous_6_
-    | NONTERM_list_binder_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
+    | NONTERM_list_dotOperator_
+    | NONTERM_list_multiBinder_
     | NONTERM_list_pair_maybeHash_indexingTerm__
     | NONTERM_list_patternBranch_
     | NONTERM_list_qualifier_
-    | NONTERM_nonempty_list_bindingPattern_
-    | NONTERM_nonempty_list_patternRec_
-    | NONTERM_nonempty_list_qualId_
-    | NONTERM_separated_nonempty_list_AND_pair_option_FSDOC__tyconDefinition__
-    | NONTERM_separated_nonempty_list_BAR_pattern_
+    | NONTERM_nonempty_list_aqualified_lident__
+    | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
+    | NONTERM_nonempty_list_atomicPattern_
+    | NONTERM_nonempty_list_patternOrMultibinder_
+    | NONTERM_separated_nonempty_list_AND_letbinding_
+    | NONTERM_separated_nonempty_list_AND_letbinding_tail_
+    | NONTERM_separated_nonempty_list_AND_pair_option_FSDOC__typeDefinition__
+    | NONTERM_separated_nonempty_list_BAR_tuplePattern_
     | NONTERM_separated_nonempty_list_COMMA_appTerm_
     | NONTERM_separated_nonempty_list_COMMA_atomicTerm_
-    | NONTERM_separated_nonempty_list_COMMA_openPatternRec2_
+    | NONTERM_separated_nonempty_list_COMMA_constructorPattern_
     | NONTERM_separated_nonempty_list_COMMA_tmEq_
     | NONTERM_separated_nonempty_list_COMMA_tvar_
     | NONTERM_separated_nonempty_list_DISJUNCTION_conjunctivePat_
     | NONTERM_separated_nonempty_list_SEMICOLON_appTerm_
     | NONTERM_separated_nonempty_list_SEMICOLON_effectDecl_
-    | NONTERM_separated_nonempty_list_SEMICOLON_openPatternRec1_
-    | NONTERM_separated_nonempty_list_SEMICOLON_separated_pair_lid_EQUALS_openPatternRec1__
+    | NONTERM_separated_nonempty_list_SEMICOLON_separated_pair_qlident_EQUALS_tuplePattern__
+    | NONTERM_separated_nonempty_list_SEMICOLON_tuplePattern_
     | NONTERM_inputFragment
     | NONTERM_mainDecl
     | NONTERM_pragma
     | NONTERM_decl
     | NONTERM_decl2
-    | NONTERM_tycon
-    | NONTERM_tyconDefinition
+    | NONTERM_typeDefinition
     | NONTERM_typars
     | NONTERM_tvarinsts
     | NONTERM_tyconDefn
-    | NONTERM_recordFieldDecls
+    | NONTERM_recordFieldDecl
     | NONTERM_constructorDecl
     | NONTERM_kind_abbrev
-    | NONTERM_letbindings
     | NONTERM_letbinding
     | NONTERM_newEffect
     | NONTERM_effectRedefinition
@@ -332,45 +334,50 @@ type nonTerminalId =
     | NONTERM_maybeFocus
     | NONTERM_letqualifier
     | NONTERM_aqual
-    | NONTERM_aqual_universes
-    | NONTERM_pattern
-    | NONTERM_openPatternRec1
-    | NONTERM_openPatternRec2
-    | NONTERM_patternRec
+    | NONTERM_aqualUniverses
     | NONTERM_disjunctivePattern
-    | NONTERM_bindingPattern
+    | NONTERM_tuplePattern
+    | NONTERM_constructorPattern
+    | NONTERM_atomicPattern
+    | NONTERM_patternOrMultibinder
     | NONTERM_binder
+    | NONTERM_multiBinder
     | NONTERM_binders
-    | NONTERM_qualId
-    | NONTERM_lid
-    | NONTERM_qname
-    | NONTERM_eitherQname
-    | NONTERM_path_eitherName_
+    | NONTERM_aqualified_lident_
+    | NONTERM_aqualified_lidentOrUnderscore_
+    | NONTERM_qlident
+    | NONTERM_quident
+    | NONTERM_qident
     | NONTERM_path_ident_
-    | NONTERM_path_name_
-    | NONTERM_eitherName
-    | NONTERM_identOrOperator
+    | NONTERM_path_lident_
+    | NONTERM_path_uident_
     | NONTERM_ident
-    | NONTERM_name
+    | NONTERM_lidentOrOperator
+    | NONTERM_lidentOrUnderscore
+    | NONTERM_lident
+    | NONTERM_uident
     | NONTERM_tvar
     | NONTERM_ascribeTyp
     | NONTERM_ascribeKind
     | NONTERM_kind
-    | NONTERM_typ
-    | NONTERM_qpat
-    | NONTERM_disjunctivePats
-    | NONTERM_conjunctivePat
     | NONTERM_term
     | NONTERM_noSeqTerm
+    | NONTERM_typ
+    | NONTERM_trigger
+    | NONTERM_disjunctivePats
+    | NONTERM_conjunctivePat
     | NONTERM_simpleTerm
     | NONTERM_patternBranches
     | NONTERM_maybeFocusArrow
     | NONTERM_firstPatternBranch
     | NONTERM_patternBranch
     | NONTERM_tmIff
+    | NONTERM_tmImplies
     | NONTERM_tmArrow_tmFormula_
     | NONTERM_tmArrow_tmNoEq_
     | NONTERM_tmFormula
+    | NONTERM_tmConjunction
+    | NONTERM_tmTuple
     | NONTERM_tmEq
     | NONTERM_tmNoEq
     | NONTERM_refineOpt
@@ -382,10 +389,11 @@ type nonTerminalId =
     | NONTERM_projectionLHS
     | NONTERM_hasSort
     | NONTERM_constant
-    | NONTERM_separated_trailing_list_SEMICOLON_noSeqTerm_
-    | NONTERM_separated_trailing_list_SEMICOLON_simpleDef_
-    | NONTERM_separated_trailing_tail_SEMICOLON_noSeqTerm_
-    | NONTERM_separated_trailing_tail_SEMICOLON_simpleDef_
+    | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_
+    | NONTERM_right_flexible_list_SEMICOLON_recordFieldDecl_
+    | NONTERM_right_flexible_list_SEMICOLON_simpleDef_
+    | NONTERM_right_flexible_nonempty_list_SEMICOLON_recordFieldDecl_
+    | NONTERM_right_flexible_nonempty_list_SEMICOLON_simpleDef_
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int
 

@@ -1893,7 +1893,7 @@ in (
 let pat_branch = ((pat), (None), (phi))
 in (
 
-let otherwise_branch = (let _155_1271 = (let _155_1270 = (let _155_1269 = (FStar_Ident.lid_of_path (("Prims")::("False")::[]) phi.range)
+let otherwise_branch = (let _155_1271 = (let _155_1270 = (let _155_1269 = (FStar_Ident.lid_of_path (("False")::[]) phi.range)
 in Name (_155_1269))
 in (mk_term _155_1270 phi.range Formula))
 in (((mk_pattern PatWild phi.range)), (None), (_155_1271)))

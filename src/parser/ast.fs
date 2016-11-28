@@ -340,7 +340,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                         let pat_branch = (pat, None, phi)in
                         let otherwise_branch =
                             (mk_pattern PatWild phi.range, None,
-                             mk_term (Name (lid_of_path ["Prims";"False"] phi.range)) phi.range Formula)
+                             mk_term (Name (lid_of_path ["False"] phi.range)) phi.range Formula)
                         in
                         mk_term (Match (x_var, [pat_branch ; otherwise_branch])) phi.range Formula
                     in
