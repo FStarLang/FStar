@@ -4,7 +4,7 @@ module Rel
 type rel (t:Type)  =
 | R : l:t -> r:t -> rel t
 
-type eq (t:Type) = v:(rel t){R..l v == R..r v}
+type eq (t:Type) = v:(rel t){R?.l v == R?.r v}
 
 val lift : #t:Type -> #t2:Type 
            -> f:(t -> Tot t2) -> rel t 

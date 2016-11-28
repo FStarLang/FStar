@@ -65,9 +65,9 @@ val bsearch_rec_correct : t:(seq int)
                           -> Lemma
                                (requires True)
                                (ensures (is_Some (bsearch_rec t a i j) ==>
-                                           (Some..v (bsearch_rec t a i j) >= i) /\
-                                           (Some..v (bsearch_rec t a i j) <= j) /\
-                                           (index t (Some..v (bsearch_rec t a i j)) = a)))
+                                           (Some?.v (bsearch_rec t a i j) >= i) /\
+                                           (Some?.v (bsearch_rec t a i j) <= j) /\
+                                           (index t (Some?.v (bsearch_rec t a i j)) = a)))
                                (decreases %[(j+1)-i])
 let rec bsearch_rec_correct t a i j =
   if i > j then
@@ -87,9 +87,9 @@ val bsearch_correct : t:(seq int) -> a:int
                       -> Lemma
                            (requires True)
                            (ensures (is_Some (bsearch t a) ==>
-                                       (Some..v (bsearch t a) >= 0) /\
-                                       (Some..v (bsearch t a) < (length t)) /\
-                                       (index t (Some..v (bsearch t a)) = a)))
+                                       (Some?.v (bsearch t a) >= 0) /\
+                                       (Some?.v (bsearch t a) < (length t)) /\
+                                       (index t (Some?.v (bsearch t a)) = a)))
 let bsearch_correct t a =
   bsearch_rec_correct t a 0 ((length t)-1)
 

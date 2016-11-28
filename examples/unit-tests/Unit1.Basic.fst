@@ -80,7 +80,7 @@ let tabs_id (a:Type) (x:'a) = x
 val id_pure_annot_eq : x:'a -> Pure 'a True (fun y -> b2t (y=x))
 let id_pure_annot_eq x = x
 
-val id_all_annot_eq: x:'a -> All 'a (fun h -> True) (fun h0 y h1 -> is_V y /\ h0=h1 /\ x=(V..v y))
+val id_all_annot_eq: x:'a -> All 'a (fun h -> True) (fun h0 y h1 -> is_V y /\ h0=h1 /\ x=(V?.v y))
 let id_all_annot_eq x = x
 
 val hd: list 'a -> 'a

@@ -114,7 +114,7 @@ let as_frag d ds =
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
-%token DOT_DOT
+%token QMARK_DOT
 %token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK DOT_LBRACK DOT_LPAREN LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
@@ -1093,7 +1093,7 @@ projectionLHSNotQName:
       {
         mkRefSet (rhs2 parseState 1 3) $2
       }
-  | qname DOT_DOT ident
+  | qname QMARK_DOT ident
       {
           mk_term (Projector ($1, $3)) (rhs2 parseState 1 3) Expr
       }

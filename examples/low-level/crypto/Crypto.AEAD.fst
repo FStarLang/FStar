@@ -279,7 +279,7 @@ let inv h #i #rw e =
       h `HS.contains` r /\
       refines h i (PRF.(prf.mac_rgn)) entries blocks )
 
-let prf_state (#i:id) (#rw:rw) (e:state i rw) : PRF.state i = State..prf e
+let prf_state (#i:id) (#rw:rw) (e:state i rw) : PRF.state i = State?.prf e
 
 val counter_dexor: 
   i:id -> t:PRF.state i -> x:PRF.domain i{x.ctr <> 0ul} -> len:u32{safelen i (v len) x.ctr} ->
@@ -319,7 +319,7 @@ let rec counter_dexor i t x len plaintext ciphertext =
       let h = ST.get() in
       // WARNING: moving the PRF.find_otp outside the assume will segfault
       // at runtime, because t.table doesn't exist in real code
-      assume(match PRF.find_otp #(PRF.State..rgn t) #i s x with
+      assume(match PRF.find_otp #(PRF.State?.rgn t) #i s x with
         | Some (PRF.OTP l' p c) -> l == l' /\ c = sel_bytes h l cipher
         | None -> False);
       *)
@@ -425,9 +425,9 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
       let t: lbuffer 16 = Buffer.as_seq h1 (Buffer.sub ciphertext plainlen (Spec.taglen i)) in
       let a = Buffer.as_seq h1 aadtext in
       let l = field_encode i a c in (
-      match PRF.find_0 (HS.sel h1 (PRF.State..table e.prf)) (PRF.({iv=n; ctr=0ul})) with 
+      match PRF.find_0 (HS.sel h1 (PRF.State?.table e.prf)) (PRF.({iv=n; ctr=0ul})) with 
       | Some mac -> 
-          let log = MAC.ilog (MAC.State..log mac) in 
+          let log = MAC.ilog (MAC.State?.log mac) in 
           m_contains log h1 /\ m_sel h1 log == Some (l,t)
       | None -> False))
 *)      

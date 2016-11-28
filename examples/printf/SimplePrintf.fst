@@ -98,8 +98,8 @@ let rec parse_format_string (s:string) : Tot (option (list dir)) =
   parse_format_pure (list_of_string s)
 
 let sprintf (s:string{normalize_term #bool (is_Some (parse_format_string s))})
-  : Tot (normalize_term (dir_type (Some..v (parse_format_string s)))) =
-  string_of_dirs (Some..v (parse_format_string s)) (fun s -> s)
+  : Tot (normalize_term (dir_type (Some?.v (parse_format_string s)))) =
+  string_of_dirs (Some?.v (parse_format_string s)) (fun s -> s)
 
 (* trying to make sure that it's not the SMT solver doing the reduction *)
 #reset-options "--initial_fuel 0 --max_fuel 0"
@@ -145,7 +145,7 @@ let example5 : string =
 (* Take 1: *)
 (* let example6 : string = *)
 (*   (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer" *)
-(* ./SimplePrintf.fst(140,3-140,18): Subtyping check failed; expected type (uu___:Prims.int -> uu___:Prims.string -> Tot Prims.string); got type (((match (Prims.Some..v (match (FStar.String.list_of_string "%d=%s") with *)
+(* ./SimplePrintf.fst(140,3-140,18): Subtyping check failed; expected type (uu___:Prims.int -> uu___:Prims.string -> Tot Prims.string); got type (((match (Prims.Some?.v (match (FStar.String.list_of_string "%d=%s") with *)
 (* 	| (Prims.Nil #.uu___#12770)  -> (Prims.Some (Prims.Nil )) *)
 (* 	|(Prims.Cons #.uu___#12974 % (Prims.Cons #.uu___#12970 c#39352 s'#39353))  -> ((match c@1 with *)
 (* 	| %  -> (SimplePrintf.add_dir (SimplePrintf.Lit %) (SimplePrintf.parse_format_pure s'@0)) *)
@@ -174,7 +174,7 @@ let example5 : string =
 (* 	|s  -> (SimplePrintf.add_dir (SimplePrintf.Arg SimplePrintf.String) (SimplePrintf.parse_format_pure s'@0)) *)
 (* 	|_  -> (Prims.None )) : (Prims.option (Prims.list SimplePrintf.dir))) *)
 (* 	|(Prims.Cons #.uu___#14938 % (Prims.Nil #.uu___#14934))  -> (Prims.None ) *)
-(* 	|(Prims.Cons #.uu___#15706 c#38769 s'#38770)  -> (SimplePrintf.add_dir (SimplePrintf.Lit c@1) (SimplePrintf.parse_format_pure s'@0)))) true)}) -> Tot (((match (Prims.Some..v (match (FStar.String.list_of_string s@0) with *)
+(* 	|(Prims.Cons #.uu___#15706 c#38769 s'#38770)  -> (SimplePrintf.add_dir (SimplePrintf.Lit c@1) (SimplePrintf.parse_format_pure s'@0)))) true)}) -> Tot (((match (Prims.Some?.v (match (FStar.String.list_of_string s@0) with *)
 (* 	| (Prims.Nil #.uu___#12770)  -> (Prims.Some (Prims.Nil )) *)
 (* 	|(Prims.Cons #.uu___#12974 % (Prims.Cons #.uu___#12970 c#38755 s'#38756))  -> ((match c@1 with *)
 (* 	| %  -> (SimplePrintf.add_dir (SimplePrintf.Lit %) (SimplePrintf.parse_format_pure s'@0)) *)

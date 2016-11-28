@@ -123,15 +123,15 @@ let rec in_tree t k = match t with
  * may have a red child either on left branch or right branch.
  *)
 type not_c_inv (t:rbtree') =
-    (is_T t) /\ (T..col t = R) /\ (((is_T (T..left t) /\ T..col (T..left t) = R)) \/
-                                  ((is_T (T..right t) /\ T..col (T..right t) = R)))
+    (is_T t) /\ (T?.col t = R) /\ (((is_T (T?.left t) /\ T?.col (T?.left t) = R)) \/
+                                  ((is_T (T?.right t) /\ T?.col (T?.right t) = R)))
 
 (*
  * in Okasaki's algorithm the re-establishment of invariants takes place
  * bottom up, meaning although the invariants may be violated at top,
  * the subtrees still satisfy c_inv.
  *)
-type lr_c_inv (t:rbtree') = is_T t /\ c_inv (T..left t) /\ c_inv (T..right t)
+type lr_c_inv (t:rbtree') = is_T t /\ c_inv (T?.left t) /\ c_inv (T?.right t)
 
 (*
  * this is the predicate satisfied by a tree before call to balance
@@ -154,7 +154,7 @@ type pre_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') =
      * the second condition ensures that if resulting tree has (lt k rt), it
      * satisfies h_inv
      *)
-    (h_inv lt /\ h_inv rt /\ Some..v (black_height lt) = Some..v (black_height rt))
+    (h_inv lt /\ h_inv rt /\ Some?.v (black_height lt) = Some?.v (black_height rt))
 
     /\
 
@@ -195,15 +195,15 @@ type post_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') (r:rbtree') =
 	       *)
 		 
               ((h_inv r) /\
-	      ((c = B /\ Some..v(black_height r) = Some..v(black_height lt) + 1) \/
-               (c = R /\ Some..v(black_height r) = Some..v(black_height lt)))) /\
+	      ((c = B /\ Some?.v(black_height r) = Some?.v(black_height lt) + 1) \/
+               (c = R /\ Some?.v(black_height r) = Some?.v(black_height lt)))) /\
 
               (*
 	       * returned tree either satisfies c_inv OR
-	       * if it doesn't, it must be the case that c (and hence T..col r) = R
+	       * if it doesn't, it must be the case that c (and hence T?.col r) = R
 	       *)
 	      (c_inv r  \/
-	      (T..col r = R /\ c = R /\ not_c_inv r /\ lr_c_inv r)) /\
+	      (T?.col r = R /\ c = R /\ not_c_inv r /\ lr_c_inv r)) /\
 	      
               (*
 	       * resulting tree contains all elements from lt, ly, and rt, and
@@ -265,7 +265,7 @@ val ins: t:rbtree' -> k:nat ->
 	   * these are copied from post condition of balance
 	   *)
 	  (c_inv r \/
-	  (is_T t /\ T..col r = R /\ T..col t = R /\ not_c_inv r /\ lr_c_inv r)) /\
+	  (is_T t /\ T?.col r = R /\ T?.col t = R /\ not_c_inv r /\ lr_c_inv r)) /\
 	  
           (*
            * returned tree has all the elements of t and k and nothing else
@@ -327,4 +327,4 @@ noeq type rbtree =
   | Mk: tr:rbtree'{balanced_rbtree' tr} -> rbtree
 
 val proj: rbtree -> Pure rbtree' (requires True) (ensures (fun r -> balanced_rbtree' r))
-let proj tr = Mk..tr tr
+let proj tr = Mk?.tr tr

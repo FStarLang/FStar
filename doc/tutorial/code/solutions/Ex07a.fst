@@ -172,10 +172,10 @@ val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
       g:env ->
       Lemma
         (requires ( is_Some (typing empty v) /\
-              is_Some (typing (extend g x (Some..v (typing empty v))) e)))
+              is_Some (typing (extend g x (Some?.v (typing empty v))) e)))
         (ensures (is_Some (typing empty v) /\
                   typing g (subst x v e) ==
-                  typing (extend g x (Some..v (typing empty v))) e))
+                  typing (extend g x (Some?.v (typing empty v))) e))
 let rec substitution_preserves_typing x e v g =
   let Some t_x = typing empty v in
   let gx = extend g x t_x in
@@ -209,7 +209,7 @@ let rec substitution_preserves_typing x e v g =
 val preservation : e:exp ->
       Lemma
         (requires(is_Some (typing empty e) /\ is_Some (step e) ))
-        (ensures(is_Some (step e) /\ typing empty (Some..v (step e)) == typing empty e))
+        (ensures(is_Some (step e) /\ typing empty (Some?.v (step e)) == typing empty e))
 let rec preservation e =
   match e with
   | EApp e1 e2 ->
@@ -226,4 +226,4 @@ let rec preservation e =
 
 val typed_step : e:exp{is_Some (typing empty e) /\ not(is_value e)} ->
                  Tot (e':exp{typing empty e' = typing empty e})
-let typed_step e = progress e; preservation e; Some..v (step e)
+let typed_step e = progress e; preservation e; Some?.v (step e)

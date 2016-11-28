@@ -212,7 +212,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                           || (ns_of_lid_equals lid FStar.Syntax.Const.prims_lid && quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
-                 begin match Util.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M..reflect
+                 begin match Util.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
                         Some (Term_name (refl_const, false))

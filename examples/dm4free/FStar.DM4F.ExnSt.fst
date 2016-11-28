@@ -38,18 +38,18 @@ reifiable reflectable new_effect_for_free {
 }
 
 (* A lift from Pure *)
-unfold let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:EXNST..post a) =
+unfold let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:EXNST?.post a) =
         wp (fun a -> p (Some (a, h0)))
 sub_effect PURE ~> EXNST = lift_pure_exnst
 
 (* A lift from a previously defined state effect *)
-val lift_state_exnst_wp : (a:Type) -> IntST.wp a -> EXNST..wp a
-let lift_state_exnst_wp a wp (h0:int) (p:EXNST..post a) =
+val lift_state_exnst_wp : (a:Type) -> IntST.wp a -> EXNST?.wp a
+let lift_state_exnst_wp a wp (h0:int) (p:EXNST?.post a) =
         wp h0 (fun r -> p (Some r))
 
 val lift_state_exnst : (a:Type) ->
                        (wp:IntST.wp a) -> (f:IntST.repr a wp) ->
-                       EXNST..repr a (lift_state_exnst_wp a wp)
+                       EXNST?.repr a (lift_state_exnst_wp a wp)
 let lift_state_exnst a wp f =
         fun h0 -> admit(); Some (f h0)
 
@@ -59,9 +59,9 @@ sub_effect IntST.STINT ~> EXNST {
 }
 
 (* Pre-/postcondition variant *)
-effect ExnSt (a:Type) (req:EXNST..pre) (ens:int -> option (a * int) -> GTot Type0) =
+effect ExnSt (a:Type) (req:EXNST?.pre) (ens:int -> option (a * int) -> GTot Type0) =
        EXNST a
-         (fun (h0:int) (p:EXNST..post a) -> req h0 /\ (forall r. (req h0 /\ ens h0 r) ==> p r))
+         (fun (h0:int) (p:EXNST?.post a) -> req h0 /\ (forall r. (req h0 /\ ens h0 r) ==> p r))
 
 (* Total variant *)
 effect S (a:Type) =
@@ -82,13 +82,13 @@ let div_intrinsic i j =
     if j = 0 then (
         (* Despite the incr (implicitly lifted), the state is reset *)
         IntST.incr ();
-        EXNST..raise int
+        EXNST?.raise int
     ) else
         i / j
 
 reifiable let div_extrinsic (i:nat) (j:int) : S int =
     if j = 0 then
-        EXNST..raise int
+        EXNST?.raise int
     else
         i / j
 

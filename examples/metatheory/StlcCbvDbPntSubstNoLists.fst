@@ -75,7 +75,7 @@ let extend g x t y = if y < x then g y
 noeq type rtyping : env -> exp -> ty -> Type =
   | TyVar : #g:env ->
             x:var{is_Some (g x)} ->
-              rtyping g (EVar x) (Some..v (g x))
+              rtyping g (EVar x) (Some?.v (g x))
   | TyAbs : #g:env ->
             t:ty ->
             #e1:exp ->
@@ -165,13 +165,13 @@ let rec substitution_preserves_typing x #e #v #t_x #t #g h1 h2 =
        (substitution_preserves_typing x h1 h22))
 
 val preservation : #e:exp -> #t:ty -> h:rtyping empty e t{is_Some (step e)} ->
-      Tot (rtyping empty (Some..v (step e)) t) (decreases e)
+      Tot (rtyping empty (Some?.v (step e)) t) (decreases e)
 let rec preservation #e #t h =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = h in
      if is_value e1
      then (if is_value e2
            then let TyAbs t_x hbody = h1 in
                 substitution_preserves_typing 0 h2 hbody
-           else TyApp #_ #_ #(Some..v (step e2)) #_ #_ h1 (preservation h2)) 
+           else TyApp #_ #_ #(Some?.v (step e2)) #_ #_ h1 (preservation h2)) 
                            //^^^^^^^^^^^^^^^^^
-     else TyApp #_ #(Some..v (step e1)) #_ #_ #_ (preservation h1) h2
+     else TyApp #_ #(Some?.v (step e1)) #_ #_ #_ (preservation h1) h2
