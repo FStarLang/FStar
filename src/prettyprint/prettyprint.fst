@@ -367,4 +367,4 @@ assume val surround_separate_map: int -> int -> document -> document -> document
 
 // Expose Renderer implementations (flat, no inner modules)
 // Wrapper tostring_pretty uses ToBuffer:RENDERER implementation. 
-assume val tostring_pretty : float -> int -> document -> string 
+assume val tostring_pretty : int -> document -> string 
