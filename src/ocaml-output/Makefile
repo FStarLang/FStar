@@ -5,6 +5,12 @@ FSTAR_HOME=../..
 OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28-26-11-21" -annot
 
 HAS_MENHIR := $(shell command -v menhir 2> /dev/null)
+ifdef HAS_MENHIR
+HAS_VALID_MENHIR := $(shell expr `menhir --version | sed -e 's/.*version \([0-9]*\)/\1/'` \>= 20161115)
+else
+HAS_VALID_MENHIR := 0
+endif
+
 MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLYACC=ocamlyacc
 OCAMLC=ocamlfind ocamlc $(OPTIONS)
@@ -67,14 +73,12 @@ all:
 prep: parser copy_lib_files version
 
 parser:
-ifdef HAS_MENHIR
+ifeq ($(HAS_VALID_MENHIR), 1)
 	cp ../parser/parse.mly ./parse.mly
-	menhir --version
 	#$(MENHIR) parse.mly
 	$(MENHIR) --only-preprocess-for-ocamlyacc parse.mly > parse.preprocessed.mly
 	mv parse.preprocessed.mly parse.mly
 	# TODO : Remove the 2 next line as soon as positions are fixed
-	cp ../parser/ml/parse.mly ./parse.mly
 	$(OCAMLYACC) parse.mly 2>&1
 	cp parse.mly ../parser/ml/
 	$(MAKE) fsharp-parser
