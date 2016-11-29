@@ -247,9 +247,9 @@ let doc_of_tycon = function
         group (concat [str i.idText; space; equals; space;
                        (separate_map space doc_of_binder bb); space;
                        doc_of_option empty doc_of_term k; space; 
-                       (separate_map (concat [space; bar; space])
-                            (fun (i,t,d) -> concat [str i.idText; space; colon; space; doc_of_term t])
-                            flds)])
+                       braces ((separate_map (concat [space; semi; space])
+                                    (fun (i,t,d) -> concat [str i.idText; space; colon; space; doc_of_term t])
+                                    flds))])
   | TyconVariant(i, bb, k, vars) -> group (str i.idText)
 
 let doc_of_decl (d:decl) = match d.d with
