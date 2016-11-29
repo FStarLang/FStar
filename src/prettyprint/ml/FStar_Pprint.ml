@@ -14,8 +14,8 @@
    limitations under the License.
 *)
 
-(*  prettyprint.fst's OCaml implementation is just a thin wrapper around the
-    opam pprint package. *)
+(*  prettyprint.fsti's OCaml implementation is just a thin wrapper around
+    Francois Pottier's pprint package. *)
 type document = PPrint.document
 
 let empty = PPrint.empty 
@@ -151,7 +151,13 @@ let surround_separate n b void_ opening sep closing docs =
 let surround_separate_map n b void_ opening sep closing f xs = 
     PPrint.surround_separate_map (Z.to_int n) (Z.to_int b) void_ opening sep closing f xs
 
-let tostring_pretty width doc = 
+(* Wrap up ToBuffer.pretty. *)
+let to_string width doc = 
     let buf = Buffer.create 0 in 
     PPrint.ToBuffer.pretty 0.5 (Z.to_int width) buf doc;
     Buffer.contents buf 
+
+(* Wrap up ToChannel.pretty *)
+let print width doc ch = 
+    PPrint.ToChannel.pretty 0.5 (Z.to_int width) ch doc;
+    flush ch
