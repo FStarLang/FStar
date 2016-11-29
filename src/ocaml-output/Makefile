@@ -69,12 +69,12 @@ prep: parser copy_lib_files version
 parser:
 ifdef HAS_MENHIR
 	cp ../parser/parse.mly ./parse.mly
-	$(MENHIR) --only-preprocess-for-ocamlyacc parse.mly > parse.preprocessed.mly
 	$(MENHIR) parse.mly
-	mv parse.ml parse.preprocessed.ml
+	$(MENHIR) --only-preprocess-for-ocamlyacc parse.mly > parse.preprocessed.mly
+	mv parse.preprocessed.mly parse.mly
 	$(MAKE) fsharp-parser
 else
-	$(OCAMLYACC) parse.preprocessed.mly 2>&1
+	$(OCAMLYACC) parse.mly 2>&1
 endif
 	rm -f FStar_Parser_Parse.ml
 	# We are opening the same module twice but we need these modules
@@ -92,7 +92,7 @@ endif
 	echo "open FStar_Const" >> FStar_Parser_Parse.ml
 	echo "open FStar_Ident" >> FStar_Parser_Parse.ml
 	echo "open FStar_String" >> FStar_Parser_Parse.ml
-	cat parse.preprocessed.ml >> FStar_Parser_Parse.ml
+	cat parse.ml >> FStar_Parser_Parse.ml
 	ocamllex ../parser/ml/lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parser/ml/parseit.ml FStar_Parser_ParseIt.ml
 
@@ -116,14 +116,14 @@ fsharp-parser:
 	echo "open FStar.Ident" >> parse.preprocessed.fsy
 	echo "open FStar.String" >> parse.preprocessed.fsy
   # TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
-	cat parse.preprocessed.mly | sed -e '/%{/d' \
-																	 -e '/^open /d' \
-																	 -e '/%token/s/[a-zA-Z0-9_]*\.//g' \
-																	 -e '/%type/s/[a-zA-Z0-9_]*\.//g' \
-																	 -e '/%token.*->.*/d' \
-																	 -e '/%type.*->.*/d' \
-																	 >> parse.preprocessed.fsy
-	cp parse.preprocessed.fsy ../parser/parse.fsy
+	cat parse.mly | sed -e '/%{/d' \
+											-e '/^open /d' \
+											-e '/%token/s/[a-zA-Z0-9_]*\.//g' \
+											-e '/%type/s/[a-zA-Z0-9_]*\.//g' \
+											-e '/%token.*->.*/d' \
+											-e '/%type.*->.*/d' \
+											>> parse.preprocessed.fsy
+	mv parse.preprocessed.fsy ../parser/parse.fsy
 
 copy_lib_files: $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
 	cp $^ .
