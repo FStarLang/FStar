@@ -72,8 +72,10 @@ ifdef HAS_MENHIR
 	$(MENHIR) parse.mly
 	$(MENHIR) --only-preprocess-for-ocamlyacc parse.mly > parse.preprocessed.mly
 	mv parse.preprocessed.mly parse.mly
+	cp parse.mly ../parser/ml/
 	$(MAKE) fsharp-parser
 else
+	cp ../parser/ml/parse.mly ./parse.mly
 	$(OCAMLYACC) parse.mly 2>&1
 endif
 	rm -f FStar_Parser_Parse.ml
