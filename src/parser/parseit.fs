@@ -89,7 +89,13 @@ let parse fn =
   setLexbufPos filename lexbuf line col;
   try
       let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
-      let lexer = LexFStar.token lexargs in
+      let lexer =
+          let lexer0 = LexFStar.token lexargs in
+          fun lexbuf ->
+              let tok = lexer0 lexbuf in
+              // printfn "token : %+A\n" tok ;
+              tok
+      in
       let fileOrFragment = Parse.inputFragment lexer lexbuf in
       let frags = match fileOrFragment with
         | Inl mods ->
@@ -113,4 +119,5 @@ let parse fn =
         let p = lexbuf.EndPos in
         Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol + 1) in
       let r = Range.mk_range filename p0 p1 in
-      Inr ("Syntax error", r)
+      // printfn "error : %A\n" e ;
+      Inr ("Syntax error (the actual error was dropped)", r)

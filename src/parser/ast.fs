@@ -316,11 +316,44 @@ let mkDTuple args r =
         else U.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
-let mkRefinedBinder id t refopt m implicit =
+let mkRefinedBinder id t should_bind_var refopt m implicit =
   let b = mk_binder (Annotated(id, t)) m Type implicit in
   match refopt with
     | None -> b
-    | Some t -> mk_binder (Annotated(id, mk_term (Refine(b, t)) m Type)) m Type implicit
+    | Some phi ->
+        if should_bind_var
+        then mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type)) m Type implicit
+        else
+            let b = mk_binder (NoName t) m Type implicit in
+            mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type)) m Type implicit
+
+let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
+    let t = match phi_opt with
+        | None     -> t
+        | Some phi ->
+            if should_bind_pat
+            then
+                begin match pat.pat with
+                | PatVar (x,_) ->
+                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type None, phi)) range Type
+                | _ ->
+                    let x = gen t_range in
+                    let phi =
+                        (* match x with | pat -> phi | _ -> False *)
+                        let x_var = mk_term (Var (lid_of_ids [x])) phi.range Formula in
+                        let pat_branch = (pat, None, phi)in
+                        let otherwise_branch =
+                            (mk_pattern PatWild phi.range, None,
+                             mk_term (Name (lid_of_path ["False"] phi.range)) phi.range Formula)
+                        in
+                        mk_term (Match (x_var, [pat_branch ; otherwise_branch])) phi.range Formula
+                    in
+                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type None, phi)) range Type
+                end
+            else
+                mk_term (Refine(mk_binder (NoName t) t_range Type None, phi)) range Type
+     in
+     mk_pattern (PatAscribed(pat, t)) range
 
 let rec extract_named_refinement t1  =
     match t1.tm with

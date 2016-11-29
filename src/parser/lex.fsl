@@ -105,7 +105,7 @@ type delimiters = {
 
 let n_typ_apps = Util.mk_ref 0
 let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) =
- if not (Options.fs_typ_app()) then false else
+ if not (Options.fs_typ_app()) then ((* printfn "False 0" ; *) false) else
  try
    let char_ok = new System.Text.RegularExpressions.Regex(@"\w|\s|\(|\)|<|>|\*|-|'|,|\.") in
    let balanced (contents : string) pos =
@@ -116,26 +116,29 @@ let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBu
       | '(' -> incr d.paren
       | ')' -> decr d.paren
       | '<' -> incr d.angle
-      | '>' -> decr d.angle
+      | '>' when Util.char_at contents (i-1) <> '-' -> decr d.angle
       | _ -> () in
-    let ok () = !d.angle >= 0 && !d.paren >= 0 in
+    let ok () = !d.angle > 0 && !d.paren >= 0 in
     let rec aux i =
       if !d.angle=0 && !d.paren=0 then true
       else if i >= String.length contents || not (ok ())
-      then ((* printfn "False 1: %d, %A" i (!d.angle, !d.paren);  *)false)
+      then ((* printfn "False 1: %d, %A" i (!d.angle, !d.paren); *) false)
       else if (not <| char_ok.IsMatch(contents, i)) || (contents.IndexOf("then", i)=i)
-      then ((* printfn "False 2: %A\n" (Util.char_at contents i);  *)false)
+      then ((* printfn "False 2: %A\n" (Util.char_at contents i);*)  false)
       else (upd i; aux (i + 1)) in
       aux (pos + 1) in
    let res = balanced args.contents lexbuf.StartPos.AbsoluteOffset in
    if res then Util.incr n_typ_apps;
-   res
+   ((*printfn "Result < : %s" (if res then "true" else "false") ;*) res)
  with e -> printfn "Resolving typ_app<...> syntax failed: %A" e; false
 
 let is_typ_app_gt () =
-  if !n_typ_apps > 0
-  then (Util.decr n_typ_apps; true)
-  else false
+  let res =
+      if !n_typ_apps > 0
+      then (Util.decr n_typ_apps; true)
+      else false
+   in
+   ((* printfn "Result > : %s" (if res then "true" else "false") ; *) res)
 }
 
 
