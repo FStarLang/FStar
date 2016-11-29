@@ -301,8 +301,6 @@ let test_stack x =
   pop_frame ();
   x
 
-#reset-options "z3timeout 10"
-
 val test_stack_with_long_lived: s:reference int -> Stack unit
   (requires (fun h -> contains h s))
   (ensures  (fun h0 _ h1 -> contains h1 s /\ sel h1 s = (sel h0 s) + 1
@@ -312,8 +310,6 @@ let test_stack_with_long_lived s =
   let _ = test_stack !s in
   s := !s + 1;
   pop_frame()
-
-#reset-options
 
 val test_heap_code_with_stack_calls: unit -> Heap unit
   (requires (fun h -> heap_only h))
