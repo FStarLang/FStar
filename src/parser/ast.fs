@@ -166,7 +166,7 @@ type decl' =
   | Open of lid
   | ModuleAbbrev of ident * lid
   | KindAbbrev of ident * list<binder> * knd
-  | ToplevelLet of qualifiers * let_qualifier * list<(pattern * term)>
+  | TopLevelLet of qualifiers * let_qualifier * list<(pattern * term)>
   | Main of term
   | Assume of qualifiers * ident * term
   | Tycon of qualifiers * list<(tycon * option<fsdoc>)>
@@ -491,7 +491,7 @@ let decl_to_string (d:decl) = match d.d with
   | Open l -> "open " ^ l.str
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
   | KindAbbrev(i, _, _) -> "kind " ^ i.idText
-  | ToplevelLet(_, _, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
+  | TopLevelLet(_, _, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
   | Main _ -> "main ..."
   | Assume(_, i, _) -> "assume " ^ i.idText
   | Tycon(_, tys) -> "type " ^ (tys |> List.map (fun (x,_)->id_of_tycon x) |> String.concat ", ")

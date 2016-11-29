@@ -3636,7 +3636,7 @@ end)) tcs)
 in (let _157_1030 = (trans_quals qual)
 in (desugar_tycon env d.FStar_Parser_AST.drange _157_1030 tcs)))
 end
-| FStar_Parser_AST.ToplevelLet (quals, isrec, lets) -> begin
+| FStar_Parser_AST.TopLevelLet (quals, isrec, lets) -> begin
 (match ((let _157_1032 = (let _157_1031 = (desugar_exp_maybe_top true env (FStar_Parser_AST.mk_term (FStar_Parser_AST.Let (((isrec), (lets), ((FStar_Parser_AST.mk_term (FStar_Parser_AST.Const (FStar_Const.Const_unit)) d.FStar_Parser_AST.drange FStar_Parser_AST.Expr))))) d.FStar_Parser_AST.drange FStar_Parser_AST.Expr))
 in (FStar_All.pipe_left FStar_Absyn_Util.compress_exp _157_1031))
 in _157_1032.FStar_Absyn_Syntax.n)) with

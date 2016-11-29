@@ -129,7 +129,7 @@ end
 | FStar_Parser_AST.KindAbbrev (i, _82_71, _82_73) -> begin
 (Prims.strcat "kind " i.FStar_Ident.idText)
 end
-| FStar_Parser_AST.ToplevelLet (_82_77, _82_79, pats) -> begin
+| FStar_Parser_AST.TopLevelLet (_82_77, _82_79, pats) -> begin
 (
 
 let termty = (FStar_List.map (fun _82_85 -> (match (_82_85) with
