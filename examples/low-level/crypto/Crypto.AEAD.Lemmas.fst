@@ -38,6 +38,8 @@ abstract let pre_refines_one_entry (rgn:region) (i:id{safeId i}) (h:mem) (l:nat{
    safelen i l 1ul /\
    Seq.equal xors (counterblocks i rgn (PRF.incr i x) l 0 l plain cipher)))
 
+#reset-options "--z3rlimit 20"
+
 let mac_refines (i:id) 
 		(st:state i Writer) (nonce: Cipher.iv (alg i))
 		(#aadlen: UInt32.t {aadlen <=^ aadmax}) (aad: lbuffer (v aadlen))
@@ -123,7 +125,7 @@ let pre_refines_to_refines  (#i:id) (st:state i Writer) (nonce: Cipher.iv (alg i
     = admit()
 
 
-#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 1"
 val counterblocks_len: #i:id{safeId i} -> 
 			     (rgn:region) -> 
 			     (x:domain i{x.ctr <> 0ul}) ->
@@ -215,7 +217,7 @@ private let rec block_lengths (#i:id{safeId i}) (entries:Seq.seq (entry i))
     else let e = SeqProperties.head entries in
 	 num_blocks e + 1 + block_lengths (SeqProperties.tail entries)
 
-#set-options "--z3timeout 20 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 40 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 (* 2. refines sums block lengths *)
 private let rec refines_length (#rgn:region) (#i:id{safeId i}) (h:mem) 
 		       (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry rgn i))
@@ -232,7 +234,7 @@ private let rec refines_length (#rgn:region) (#i:id{safeId i}) (h:mem)
 
 (*** Extending `refines` by adding one block ***)
 
-#set-options "--z3timeout 200 --initial_fuel 2 --max_fuel 2 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 100 --initial_fuel 2 --max_fuel 2 --initial_ifuel 0 --max_ifuel 0"
 (* refines_one_entry can be lifted refines sums block lengths *)
 private let refines_singleton (h:mem) (i:id{safeId i}) (rgn:region) (e:entry i) (blocks_for_e:Seq.seq (PRF.entry rgn i))
   : Lemma (requires (refines_one_entry h e blocks_for_e))
@@ -253,7 +255,7 @@ let frame_refines_one_entry (h:mem) (i:id{safeId i}) (mac_rgn:region)
      assert (m_sel h mac_log = m_sel h' mac_log);
      assert (m_contains mac_log h') //this include HS.live_region, which is not derivable from modifies_ref along
      
-#set-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let rec extend_refines (h:mem) (i:id{safeId i}) (mac_rgn:region) 
 		    (entries:Seq.seq (entry i))
 		    (blocks:Seq.seq (PRF.entry mac_rgn i))
@@ -301,7 +303,7 @@ let counterblocks_emp   (i:id)
    : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
    = ()
 
-#set-options "--z3timeout 100"
+#set-options "--z3rlimit 50"
 
 let lemma_cons_snoc (#a:Type) (hd:a) (s:Seq.seq a) (tl:a)
   : Lemma (requires True)
@@ -350,7 +352,7 @@ let rec counterblocks_snoc (#i:id{safeId i}) (rgn:region) (x:domain i{x.ctr <> 0
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-#set-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1"
 val counterblocks_slice: #i:id{safeId i} -> 
 			     (rgn:region) -> 
 			     (x:domain i{x.ctr <> 0ul}) ->

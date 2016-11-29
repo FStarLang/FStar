@@ -31,7 +31,7 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS  = FStar.HyperStack
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 20"
 
 // we may separate field operations, so that we don't
 // need to open the bignum modules elsewhere
@@ -241,7 +241,7 @@ val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block}
     /\ modifies_1 acc h0 h1 // It was the only thing modified
     /\ sel_elem h1 acc == (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r))
 
-#set-options "--z3timeout 60"
+#set-options "--z3rlimit 60"
 //NS: hint fails to replay
 let add_and_multiply acc block r =
   let h0 = ST.get () in
@@ -487,7 +487,7 @@ val toField_plus:
     modifies_1 a h0 h1 /\ // Only a was modified
     sel_int h1 a == pow2 (8 * w len) + little_endian (sel_word h0 b) ))
 
-#set-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
 
 let toField_plus len a b =
   let h0 = ST.get() in
@@ -703,7 +703,7 @@ val poly1305_update:
          ilog updated_log == SeqProperties.snoc (ilog current_log) (encode (sel_word h1 msg))
        /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
 
-#set-options "--z3timeout 60 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 60 --initial_fuel 1 --max_fuel 1"
 
 let poly1305_update log msgB acc r =
   let h0 = ST.get () in
@@ -737,7 +737,7 @@ let poly1305_update log msgB acc r =
   updated_log
 
 
-#set-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 val append_as_seq_sub: h:mem -> n:UInt32.t -> m:UInt32.t -> msg:bytes{live h msg /\ w m <= w n /\ w n <= length msg} -> Lemma
   (append (as_seq h (Buffer.sub msg 0ul m))
@@ -764,7 +764,7 @@ val poly1305_loop: current_log:log_t -> msg:bytes -> acc:elemB{disjoint msg acc}
         sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r))) ))
     (decreases (w ctr))
 
-#set-options "--z3timeout 300 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 300 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 let rec poly1305_loop log msg acc r ctr =
   let h0 = ST.get () in
@@ -826,7 +826,7 @@ val poly1305_last:
            ilog updated_log == SeqProperties.snoc (ilog current_log) (encode (sel_word h1 msg))
          /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
 
-#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1"
 
 let poly1305_last log msg acc r len =
   let h0 = ST.get() in
@@ -907,7 +907,7 @@ val div_aux: a:UInt32.t -> b:UInt32.t{w b <> 0} -> Lemma
   [SMTPat (FStar.UInt32(UInt.size (v a / v b) n))]
 let div_aux a b = ()
 
-#reset-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1"
+#reset-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1"
 
 (** Computes the Poly1305 MAC on a buffer *)
 val poly1305_mac:

@@ -4,7 +4,7 @@ FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
 HINTS_ENABLED?=--use_hints
 
-OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3timeout 20  $(HINTS_ENABLED) $(OTHERFLAGS)
+OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3rlimit 20  $(HINTS_ENABLED) $(OTHERFLAGS)
 
 FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperstack --include $(FSTAR_HOME)/ucontrib/Platform/fst
 
