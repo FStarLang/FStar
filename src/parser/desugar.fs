@@ -1528,7 +1528,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     let tcs = List.map (fun (x,_) -> x) tcs in
     desugar_tycon env d.drange (trans_quals qual) tcs
 
-  | ToplevelLet(quals, isrec, lets) ->
+  | TopLevelLet(quals, isrec, lets) ->
     begin match (compress_exp <| desugar_exp_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
         | Exp_let(lbs, _) ->
           let lids = snd lbs |> List.map (fun lb -> match lb.lbname with

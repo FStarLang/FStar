@@ -119,7 +119,7 @@ let string_of_decl' d =
   | Open l -> "open " ^ l.str
   | ModuleAbbrev (i, l) -> "module " ^ i.idText ^ " = " ^ l.str
   | KindAbbrev(i, _, _) -> "kind " ^ i.idText
-  | ToplevelLet(_, _, pats) -> 
+  | TopLevelLet(_, _, pats) -> 
         let termty = List.map (fun (p,t) -> (pat_to_string p, term_to_string t)) pats in 
         let termty' = List.map (fun (p,t) -> p ^ ":" ^ t) termty in
         "let " ^ (String.concat ", " termty')
