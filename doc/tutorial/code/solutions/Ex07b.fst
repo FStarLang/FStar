@@ -231,7 +231,7 @@ val typing_extensional : g:env -> g':env -> e:exp
                            (ensures (typing g e == typing g' e))
 let typing_extensional g g' e = context_invariance e g g'
 
-#reset-options "z3rlimit 10"
+#reset-options "--z3rlimit 10"
 
 val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
       g:env{is_Some (typing empty v) &&

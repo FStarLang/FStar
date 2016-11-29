@@ -160,6 +160,8 @@ val encode_pad_empty: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> Lemma
   (ensures  encode_pad prefix txt == prefix)
 let encode_pad_empty prefix txt = ()
 
+#reset-options "--z3rlimit 20"
+
 val encode_pad_snoc: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> w:word_16 -> Lemma
   (encode_pad (SeqProperties.snoc prefix (encode w)) txt ==
    encode_pad prefix (append w txt))
@@ -170,6 +172,8 @@ let encode_pad_snoc prefix txt w =
   let prefix' = SeqProperties.snoc prefix (encode w') in
   Seq.lemma_eq_intro w w';
   Seq.lemma_eq_intro txt txt'
+
+#reset-options
 
 (* * *********************************************)
 (* *        Poly1305 functional invariant        *)
