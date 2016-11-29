@@ -316,8 +316,8 @@ The latter step is not always guaranteed to work but almost always does, and is 
 
 ## Runtime dependency: Z3 SMT solver ##
 
-To use F* for verification you need a Z3 4.4.1 binary.
+To use F* for verification you need a Z3 4.5.0 binary.
 Our binary packages include that already in `bin`, but if you compile
 F* from sources you need to get a Z3 binary yourself and add it to
-your `PATH`. We recommend you use the 4.4.1 binaries here:
-https://github.com/Z3Prover/z3/releases/tag/z3-4.4.1
+your `PATH`. We recommend you use the 4.5.0 binaries here:
+https://github.com/Z3Prover/z3/releases/tag/z3-4.5.0
