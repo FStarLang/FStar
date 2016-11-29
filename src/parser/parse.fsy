@@ -198,6 +198,7 @@ let compile_op arity s =
 %token PRAGMA_RESET_OPTIONS
 %token PRAGMA_SET_OPTIONS
 %token PRIVATE
+%token QMARK_DOT
 %token RARROW
 %token RBRACE
 %token RBRACK
@@ -2309,6 +2310,11 @@ let es =
       ( xs )
 in
       ( mkRefSet (rhs2 parseState 1 3) es )}
+| quident QMARK_DOT lident
+    {let (ns, _2, id) = ($1, (), $3) in
+      (
+        mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr
+      )}
 
 hasSort:
   SUBKIND

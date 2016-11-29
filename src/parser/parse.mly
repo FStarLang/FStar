@@ -136,6 +136,7 @@ let compile_op arity s =
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
+%token QMARK_DOT
 %token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK DOT_LBRACK DOT_LPAREN LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
@@ -897,6 +898,10 @@ projectionLHS:
       { mkLexList (rhs2 parseState 1 3) es }
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
       { mkRefSet (rhs2 parseState 1 3) es }
+  | ns=quident QMARK_DOT id=lident
+      {
+        mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr
+      }
 
 hasSort:
   (* | SUBTYPE { Expr } *)
