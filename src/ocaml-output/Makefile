@@ -69,9 +69,12 @@ prep: parser copy_lib_files version
 parser:
 ifdef HAS_MENHIR
 	cp ../parser/parse.mly ./parse.mly
+	menhir --version
 	#$(MENHIR) parse.mly
 	$(MENHIR) --only-preprocess-for-ocamlyacc parse.mly > parse.preprocessed.mly
 	mv parse.preprocessed.mly parse.mly
+	# TODO : Remove the 2 next line as soon as positions are fixed
+	cp ../parser/ml/parse.mly ./parse.mly
 	$(OCAMLYACC) parse.mly 2>&1
 	cp parse.mly ../parser/ml/
 	$(MAKE) fsharp-parser
