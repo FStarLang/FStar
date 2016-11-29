@@ -525,9 +525,6 @@ qlident:
 quident:
   | ids=path(uident) { lid_of_ids ids }
 
-qident:
-  | ids=path(ident) { lid_of_ids ids }
-
 path(Id):
   | id=Id { [id] }
   | uid=uident DOT p=path(Id) { uid::p }
@@ -587,7 +584,7 @@ noSeqTerm:
   | t=typ  { t }
   | e=tmIff SUBTYPE t=typ
       { mk_term (Ascribed(e,{t with level=Expr})) (rhs2 parseState 1 3) Expr }
-  | e1=atomicTerm op_expr=dotOperator LARROW e3=noSeqTerm
+  | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
         mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr
@@ -814,14 +811,30 @@ appTerm:
   | HASH { Hash }
 
 indexingTerm:
-  | e1=atomicTerm op_exprs=list(dotOperator)
+  | e1=atomicTermNotQUident op_exprs=nonempty_list(dotOperator)
       {
         List.fold_left (fun e1 (op, e2, r) ->
             mk_term (Op(op, [ e1; e2 ])) (union_ranges e1.range r) Expr)
             e1 op_exprs
       }
+  | e=atomicTerm
+    { e }
 
 atomicTerm:
+  | x=atomicTermNotQUident
+    { x }
+  | id=quident
+    {
+        let t = Name id in
+        let e = mk_term t (rhs parseState 1) Un in
+	e
+    }
+  | id=quident DOT_LPAREN t=term RPAREN
+    {
+      mk_term (LetOpen (id, t)) (rhs2 parseState 1 4) Expr
+    }
+
+atomicTermNotQUident:
   | UNDERSCORE { mk_term Wild (rhs parseState 1) Un }
   | ASSERT   { mk_term (Var assert_lid) (rhs parseState 1) Expr }
   | tv=tvar     { mk_term (Tvar tv) (rhs parseState 1) Type }
@@ -840,9 +853,18 @@ atomicTerm:
   | BEGIN e=term END
       { e }
 
+fsTypeArgs:
+  | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER
+    {targs}
 
-projectionLHS:
-  | id=qident targs_opt=option(TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER {targs})
+someFsTypeArgs:
+  | targs=fsTypeArgs
+    { Some targs }
+
+(* Qid : quident or qlident.
+   TypeArgs : option(fsTypeArgs) or someFsTypeArgs. *)
+qidentWithTypeArgs(Qid,TypeArgs):
+  | id=Qid targs_opt=TypeArgs
       {
         let t = if is_name id then Name id else Var id in
         let e = mk_term t (rhs parseState 1) Un in
@@ -850,6 +872,12 @@ projectionLHS:
         | None -> e
         | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
       }
+
+projectionLHS:
+  | e=qidentWithTypeArgs(qlident,option(fsTypeArgs))
+      { e }
+  | e=qidentWithTypeArgs(quident,someFsTypeArgs)
+      { e }
   | LPAREN e=term sort_opt=option(pair(hasSort, simpleTerm)) RPAREN
       {
         let e1 = match sort_opt with
