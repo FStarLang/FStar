@@ -673,14 +673,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
                             | [] ->
                                 begin match List.rev acc with
                                 | [] -> failwith "bind_on_lift should be always called with a non-empty list"
-                                | head :: args ->
-                                    S.mk (Tm_app(head, List.map as_arg args)) None t.pos
+                                | (head, _) :: args ->
+                                    S.mk (Tm_app(head, args)) None t.pos
                                 end
-                            | e :: es ->
+                            | (e,q) :: es ->
                                 begin match (SS.compress e).n with
                                 | Tm_meta (e0, Meta_monadic_lift(m1, m2, t')) ->
                                     let x = S.gen_bv "monadic_app_var" None t' in
-                                    let body = bind_on_lift es (S.bv_to_name x::acc) in
+                                    let body = bind_on_lift es ((S.bv_to_name x, q)::acc) in
                                     (* bind t' t _ (lift e) _ (fun x -> body) *)
                                     let lifted_e0 = reify_lift e0 m1 m2 t' in
                                     let continuation = U.abs [x,None] body (Some (Inr m2)) in
@@ -688,10 +688,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                                               as_arg S.tun; as_arg lifted_e0;
                                                               as_arg S.tun; as_arg continuation ]))
                                          None e0.pos
-                                | _ -> bind_on_lift es (e::acc)
+                                | _ -> bind_on_lift es ((e,q)::acc)
                                 end
                     in
-                    let binded_e = bind_on_lift (head::List.map fst args) [] in
+                    let binded_e = bind_on_lift ((as_arg head)::args) [] in
                     norm cfg env stack binded_e
                   // else
                   //   let stack = App(reify_head, None, t.pos)::stack in
