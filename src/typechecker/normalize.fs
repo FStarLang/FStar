@@ -29,7 +29,6 @@ open FStar.TypeChecker
 open FStar.TypeChecker.Env
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module TcUtil = FStar.TypeChecker.Util
 module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 
