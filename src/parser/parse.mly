@@ -106,6 +106,7 @@ let compile_op arity s =
 %token <string> IDENT
 %token <string> NAME
 %token <string> TVAR
+%token <string> UNIVAR
 %token <string> TILDE
 
 /* bool indicates if INT8 was 'bad' max_int+1, e.g. '128'  */
@@ -143,7 +144,7 @@ let compile_op arity s =
 %token NEW_EFFECT NEW_EFFECT_FOR_FREE SUB_EFFECT SQUIGGLY_RARROW TOTAL KIND
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS
-%token BACKTICK
+%token BACKTICK UNIV_HASH
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 
@@ -794,8 +795,12 @@ simpleDef:
   | e=separated_pair(qlident, EQUALS, simpleTerm) { e }
 
 appTerm:
-  | head=indexingTerm args=list(pair(maybeHash, indexingTerm))
+  | head=indexingTerm args=list(argTerm)
       { mkApp head (map (fun (x,y) -> (y,x)) args) (rhs2 parseState 1 2) }
+
+argTerm:
+  | x=pair(maybeHash, indexingTerm) { x }
+  | u=universe { u }
 
 %inline maybeHash:
   |      { Nothing }
@@ -909,6 +914,47 @@ constant:
         Const_int (fst n, Some (Signed, Int64))
       }
   | REIFY   { Const_reify }
+
+
+universe:
+  | UNIV_HASH ua=atomicUniverse { (UnivApp, ua) }
+
+universeFrom:
+  | ua=atomicUniverse { ua }
+  | u1=universeFrom op_plus=OPINFIX2 u2=universeFrom
+       {
+         if op_plus <> "+"
+         then errorR(Error("The operator " ^ op_plus ^ " was found in universe context."
+                           ^ "The only allowed operator in that context is +.",
+                           rhs parseState 2)) ;
+         mk_term (Op(op_plus, [u1 ; u2])) (rhs2 parseState 1 3) Expr
+       }
+  | max=ident us=list(atomicUniverse)
+      {
+        if text_of_id max <> "max"
+        then errorR(Error("A lower case ident " ^ text_of_id max ^
+                          " was found in a universe context. " ^
+                          "It should be either max or a universe variable 'usomething.",
+                          rhs parseState 1)) ;
+        let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in
+        mkApp max (map (fun u -> u, Nothing) us) (rhs2 parseState 1 2)
+      }
+
+atomicUniverse:
+  | n=INT
+      {
+        if snd n then
+          errorR(Error("This number is outside the allowable range for representable integer constants",
+                       lhs(parseState)));
+        mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
+      }
+  | id=UNIVAR
+      {
+        let pos = rhs parseState 1 in
+        mk_term (Tvar (mk_ident (id, pos))) pos Expr
+      }
+  | LPAREN u=universeFrom RPAREN { u }
+
 
 /******************************************************************************/
 /*                       Miscellanous, tools                                   */

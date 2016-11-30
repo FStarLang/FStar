@@ -35,6 +35,7 @@ type level = | Un | Expr | Type | Kind | Formula
 type imp =
     | FsTypApp
     | Hash
+    | UnivApp
     | Nothing
 type arg_qualifier =
     | Implicit
