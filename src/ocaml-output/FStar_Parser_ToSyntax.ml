@@ -3812,7 +3812,7 @@ end)) tcs)
 in (let _160_1094 = (FStar_List.map (trans_qual None) qual)
 in (desugar_tycon env d.FStar_Parser_AST.drange _160_1094 tcs)))
 end
-| FStar_Parser_AST.ToplevelLet (quals, isrec, lets) -> begin
+| FStar_Parser_AST.TopLevelLet (quals, isrec, lets) -> begin
 (match ((let _160_1096 = (let _160_1095 = (desugar_term_maybe_top true env (FStar_Parser_AST.mk_term (FStar_Parser_AST.Let (((isrec), (lets), ((FStar_Parser_AST.mk_term (FStar_Parser_AST.Const (FStar_Const.Const_unit)) d.FStar_Parser_AST.drange FStar_Parser_AST.Expr))))) d.FStar_Parser_AST.drange FStar_Parser_AST.Expr))
 in (FStar_All.pipe_left FStar_Syntax_Subst.compress _160_1095))
 in _160_1096.FStar_Syntax_Syntax.n)) with

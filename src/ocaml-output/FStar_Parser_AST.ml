@@ -1277,7 +1277,7 @@ type decl' =
 | Open of FStar_Ident.lid
 | ModuleAbbrev of (FStar_Ident.ident * FStar_Ident.lid)
 | KindAbbrev of (FStar_Ident.ident * binder Prims.list * knd)
-| ToplevelLet of (qualifiers * let_qualifier * (pattern * term) Prims.list)
+| TopLevelLet of (qualifiers * let_qualifier * (pattern * term) Prims.list)
 | Main of term
 | Assume of (qualifiers * FStar_Ident.ident * term)
 | Tycon of (qualifiers * (tycon * fsdoc Prims.option) Prims.list)
@@ -1331,8 +1331,8 @@ false
 end))
 
 
-let is_ToplevelLet = (fun _discr_ -> (match (_discr_) with
-| ToplevelLet (_) -> begin
+let is_TopLevelLet = (fun _discr_ -> (match (_discr_) with
+| TopLevelLet (_) -> begin
 true
 end
 | _ -> begin
@@ -1475,8 +1475,8 @@ _60_197
 end))
 
 
-let ___ToplevelLet____0 = (fun projectee -> (match (projectee) with
-| ToplevelLet (_60_200) -> begin
+let ___TopLevelLet____0 = (fun projectee -> (match (projectee) with
+| TopLevelLet (_60_200) -> begin
 _60_200
 end))
 
@@ -2273,7 +2273,7 @@ end
 | KindAbbrev (i, _60_751, _60_753) -> begin
 (Prims.strcat "kind " i.FStar_Ident.idText)
 end
-| ToplevelLet (_60_757, _60_759, pats) -> begin
+| TopLevelLet (_60_757, _60_759, pats) -> begin
 (let _155_1400 = (let _155_1399 = (let _155_1398 = (lids_of_let pats)
 in (FStar_All.pipe_right _155_1398 (FStar_List.map (fun l -> l.FStar_Ident.str))))
 in (FStar_All.pipe_right _155_1399 (FStar_String.concat ", ")))
