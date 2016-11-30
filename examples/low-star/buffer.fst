@@ -69,7 +69,7 @@ val nth_lemma:
   #a:Type -> l:list a -> n:nat{ n < List.length l } ->
   Lemma
     (requires (True))
-    (ensures (is_Some (List.total_nth l n)))
+    (ensures (Some? (List.total_nth l n)))
     [SMTPat (List.total_nth l n)]
 let rec nth_lemma l n =
   match n, l with
@@ -86,14 +86,14 @@ type AllDistinct (m:smem) (l:list buffer) =
   /\ (forall (i:nat{i < List.length l}) (j:nat{j < List.length l /\ j <> i}).
         Distinct m (nth l i) (nth l j))
 
-val nth_lemma2: #a:Type -> l:list a{ is_Cons l } -> n:pos{ n < List.length l } ->
+val nth_lemma2: #a:Type -> l:list a{ Cons? l } -> n:pos{ n < List.length l } ->
   Lemma
     (requires (True))
     (ensures (nth l n = nth (List.Tot.tl l) (n-1)))
     [SMTPat (nth (List.Tot.tl l) (n-1))]
 let nth_lemma2 l n = ()
 
-val allDistinctLemma : m:smem -> l:list buffer{ is_Cons l } ->
+val allDistinctLemma : m:smem -> l:list buffer{ Cons? l } ->
   Lemma
     (requires (AllDistinct m l))
     (ensures (AllDistinct m (List.Tot.tl l)))

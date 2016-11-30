@@ -250,6 +250,7 @@ and free_type_vars env t = match (unparen t).tm with
   | Const _
   | Var  _
   | AST.Projector _
+  | AST.Discrim _
   | Name _  -> []
 
   | Requires (t, _)
@@ -815,6 +816,10 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
          precisely examples/unit_tests/Unit1.Basic.fst *)
       let l = qual ns id in
       desugar_name setpos env l
+
+    | Discrim lid ->
+      let lid' = Util.mk_discriminator lid in
+      desugar_name setpos env lid'
 
     | _ ->
       error "Unexpected term" top top.range

@@ -199,6 +199,7 @@ and free_type_vars env t = match (unparen t).tm with
   | Const _
   | Var  _
   | Projector _
+  | Discrim _
   | Name _  -> []
 
   | Assign (_, t)
@@ -605,6 +606,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Projector (l, i) ->
       desugar_name mk setpos env (mk_field_projector_name_from_ident l i)
+
+    | Discrim lid ->
+      let lid' = Util.mk_discriminator lid in
+      desugar_name mk setpos env lid'
 
     | Construct(l, args) ->
         begin match Env.try_lookup_datacon env l with

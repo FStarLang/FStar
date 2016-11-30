@@ -177,7 +177,7 @@ let rec lemma_mem_rid #rs bs b =
   | Nil -> ()
   | Cons hd tl -> if b <> hd then lemma_mem_rid tl b
 
-val lemma_bots_tl_disjoint: #rs:set rid -> bs:bots rs{is_Cons bs}
+val lemma_bots_tl_disjoint: #rs:set rid -> bs:bots rs{Cons? bs}
   -> Lemma (requires True)
           (ensures (forall b. let Cons hd tl = bs in
 			 mem b tl ==> disjoint (Bot?.r b) (Bot?.r hd)))

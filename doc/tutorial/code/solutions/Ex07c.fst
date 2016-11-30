@@ -101,8 +101,8 @@ let rec typing g e =
       | None -> None)
 
 val progress : e:exp -> Lemma
-      (requires (is_Some (typing empty e)))
-      (ensures (is_value e \/ (is_Some (step e))))
+      (requires (Some? (typing empty e)))
+      (ensures (is_value e \/ (Some? (step e))))
 let rec progress e =
   match e with
   | EVar y -> ()
@@ -138,8 +138,8 @@ let rec appears_free_in x e =
   | ELet y e1 e2 -> appears_free_in x e1 || (x <> y && appears_free_in x e2)
 
 val free_in_context : x:int -> e:exp -> g:env -> Lemma
-      (requires (is_Some (typing g e)))
-      (ensures (appears_free_in x e ==> is_Some (g x)))
+      (requires (Some? (typing g e)))
+      (ensures (appears_free_in x e ==> Some? (g x)))
 let rec free_in_context x e g =
   match e with
   | EVar _
@@ -154,7 +154,7 @@ let rec free_in_context x e g =
       free_in_context x e2 (extend g y (Some?.v (typing g e1))))
 
 val typable_empty_closed : x:int -> e:exp -> Lemma
-      (requires (is_Some (typing empty e)))
+      (requires (Some? (typing empty e)))
       (ensures (not(appears_free_in x e)))
       [SMTPat (appears_free_in x e)]
 let typable_empty_closed x e = free_in_context x e empty
@@ -195,8 +195,8 @@ val typing_extensional : g:env -> g':env -> e:exp
 let typing_extensional g g' e = context_invariance e g g'
 
 val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
-      g:env{is_Some (typing empty v) &&
-            is_Some (typing (extend g x (Some?.v (typing empty v))) e)} ->
+      g:env{Some? (typing empty v) &&
+            Some? (typing (extend g x (Some?.v (typing empty v))) e)} ->
       Tot (u:unit{typing g (subst x v e) ==
                   typing (extend g x (Some?.v (typing empty v))) e})
 let rec substitution_preserves_typing x e v g =
@@ -240,7 +240,7 @@ let rec substitution_preserves_typing x e v g =
         typing_extensional gxy gyx e2;
         substitution_preserves_typing x e2 v gy))
 
-val preservation : e:exp{is_Some (typing empty e) /\ is_Some (step e)} ->
+val preservation : e:exp{Some? (typing empty e) /\ Some? (step e)} ->
       Tot (u:unit{typing empty (Some?.v (step e)) == typing empty e})
 let rec preservation e =
   match e with

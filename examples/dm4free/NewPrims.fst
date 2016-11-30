@@ -347,10 +347,10 @@ let ex2_return a x p = p (V x)
 unfold let ex2_bind_wp (r:range) (a:Type) (b:Type)
                        (wp1:ex2_wp a)
                        (wp2:(a -> GTot (ex2_wp b))) = fun p ->
-   (forall (rb:result b). p rb \/ wp1 (fun ra1 -> if is_V ra1
+   (forall (rb:result b). p rb \/ wp1 (fun ra1 -> if V? ra1
                                          then wp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
                                          else ~ (ra1 === rb)))
-   /\ wp1 (fun ra1 -> if is_V ra1
+   /\ wp1 (fun ra1 -> if V? ra1
                    then wp2 (V.v ra1) (fun rb2 -> True)
                    else True)
 
@@ -455,7 +455,7 @@ let all2_return _ a x p = fun h -> p (V x) h
 unfold let all2_bind_wp (heap:Type) (r:range) (a:Type) (b:Type)
                         (wp1:all2_wp heap a)
                         (wp2:(a -> GTot (all2_wp heap b))) = fun p h0 ->
-   (wp1 (fun ra h1 -> is_V ra ==> wp2 (V.v ra) p h1) h0)
+   (wp1 (fun ra h1 -> V? ra ==> wp2 (V.v ra) p h1) h0)
 
 val all2_null_wp : heap:Type -> a:Type -> Tot (all2_wp heap a)
 let all2_null_wp _ a = fun p _ -> forall x h. p x h

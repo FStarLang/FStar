@@ -400,6 +400,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         ()
     | Var lid
     | AST.Projector (lid, _)
+    | AST.Discrim lid
     | Name lid ->
         record_lid false lid
     | Construct (lid, termimps) ->

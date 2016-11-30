@@ -44,7 +44,7 @@ let hd_int_impure_default_case l = match l with
   | hd::_ -> hd
   | _ -> failwith "Empty list"
 
-val hd_int_pure : x:list int{is_Cons x} -> Tot int
+val hd_int_pure : x:list int{Cons? x} -> Tot int
 let hd_int_pure l = match l with
   | hd::_ -> hd
 
@@ -80,7 +80,7 @@ let tabs_id (a:Type) (x:'a) = x
 val id_pure_annot_eq : #a:eqtype -> x:a -> Pure a True (fun y -> b2t (y=x))
 let id_pure_annot_eq #a x = x
 
-val id_all_annot_eq: #a:eqtype -> x:a -> All a (fun h -> True) (fun h0 y h1 -> is_V y /\ h0==h1 /\ x=(V?.v y))
+val id_all_annot_eq: #a:eqtype -> x:a -> All a (fun h -> True) (fun h0 y h1 -> V? y /\ h0==h1 /\ x=(V?.v y))
 let id_all_annot_eq #a x = x
 
 val hd: list 'a -> 'a
@@ -88,11 +88,11 @@ let hd = function
   | x::_ -> x
   | _ -> failwith "empty list"
 
-val hd_pure: l:list 'a{is_Cons l} -> Tot 'a
+val hd_pure: l:list 'a{Cons? l} -> Tot 'a
 let hd_pure l = match l with
   | x::_ -> x
 
-val hd_pure_alt: x:list 'a{is_Cons x} -> Tot 'a
+val hd_pure_alt: x:list 'a{Cons? x} -> Tot 'a
 let hd_pure_alt = function
   | hd::_ -> hd
 
@@ -183,7 +183,7 @@ let do_ok l = match l with
   | N -> N
   | C(n, l') -> if n = 0 then l else C(0, l')
 
-val short_circuit1: x:option int{is_Some x /\ Some?.v x = 0} -> nat
+val short_circuit1: x:option int{Some? x /\ Some?.v x = 0} -> nat
 let short_circuit1 x = Some?.v x
 
 (* TESTING skolem variables for lambdas *)
@@ -211,7 +211,7 @@ let rec find f = function
 val test_skolem_let: x:int -> Tot (b:bool{b ==> x=0})
 let test_skolem_let x =
   let found = find (fun y -> x=0) [x] in
-  is_Some found
+  Some? found
 
 (* TESTING implicit binding of conditionally total function arguments *)
 assume val id_wrap1: x:int -> Pure int (requires True) (ensures (fun y -> x=y))

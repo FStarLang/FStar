@@ -50,7 +50,7 @@ type exp =
    (in this calculus doesn't interact with type substitution below) *)
 
 type esub = var -> Tot exp
-type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
+type erenaming (s:esub) = (forall (x:var). EVar? (s x))
 
 val is_erenaming : s:esub -> GTot (n:int{(  erenaming s  ==> n=0) /\
                                          (~(erenaming s) ==> n=1)})
@@ -59,13 +59,13 @@ let is_erenaming s = (if strong_excluded_middle (erenaming s) then 0 else 1)
 val esub_inc : var -> Tot exp
 let esub_inc y = EVar (y+1)
 
-let is_evar (e:exp) : int = if is_EVar e then 0 else 1
+let is_evar (e:exp) : int = if EVar? e then 0 else 1
 
 val esubst : s:esub -> e:exp -> Pure exp (requires True)
-      (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
+      (ensures (fun e' -> erenaming s /\ EVar? e ==> EVar? e'))
       (decreases %[is_evar e; is_erenaming s; 1; e])
 
-val esub_lam: s:esub -> x:var -> Tot (e:exp{ erenaming s ==> is_EVar e})
+val esub_lam: s:esub -> x:var -> Tot (e:exp{ erenaming s ==> EVar? e})
       (decreases %[1;is_erenaming s; 0; EVar 0])
 
 let rec esubst s e =
@@ -78,7 +78,7 @@ and esub_lam s = fun y ->
            else esubst esub_inc (s (y-1))
 
 val esub_lam_renaming: s:esub -> Lemma
-  (ensures (forall (x:var). erenaming s ==> is_EVar (esub_lam s x)))
+  (ensures (forall (x:var). erenaming s ==> EVar? (esub_lam s x)))
 let esub_lam_renaming s = ()
 
 (* Substitution extensional; trivial with the extensionality axiom *)
@@ -113,7 +113,7 @@ let esubst_beta e = esubst (esub_beta e)
    (via confluence); so we can still hope we can do better for TinyF*.*)
 
 type tsub = var -> Tot typ
-type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
+type trenaming (s:tsub) = (forall (x:var). TVar? (s x))
 
 val is_trenaming : s:tsub -> GTot (n:int{(  trenaming s  ==> n=0) /\
                                          (~(trenaming s) ==> n=1)})
@@ -128,17 +128,17 @@ let tsub_inc = tsub_inc_above 0
 val trenaming_sub_inc : unit -> Lemma (trenaming (tsub_inc))
 let trenaming_sub_inc _ = ()
 
-let is_tvar (t:typ) : int = if is_TVar t then 0 else 1
+let is_tvar (t:typ) : int = if TVar? t then 0 else 1
 
 val tsubst : s:tsub -> t:typ -> Pure typ (requires True)
-      (ensures (fun t' -> trenaming s /\ is_TVar t ==> is_TVar t'))
+      (ensures (fun t' -> trenaming s /\ TVar? t ==> TVar? t'))
       (decreases %[is_tvar t; is_trenaming s; t])
 let rec tsubst s t =
   match t with
   | TVar x -> s x
 
   | TLam k t1 ->
-     let tsub_lam : y:var -> Tot (t:typ{trenaming s ==> is_TVar t}) =
+     let tsub_lam : y:var -> Tot (t:typ{trenaming s ==> TVar? t}) =
        fun y -> if y=0 then TVar y
                        else (tsubst tsub_inc (s (y-1))) in
      TLam k (tsubst tsub_lam t1)
@@ -174,7 +174,7 @@ val tsub_comp_inc : s:tsub -> x:var ->
 let tsub_comp_inc s x = ()
 
 val tsub_lam_renaming: s:tsub -> Lemma
-  (ensures (forall (x:var). trenaming s ==> is_TVar (tsub_lam s x)))
+  (ensures (forall (x:var). trenaming s ==> TVar? (tsub_lam s x)))
 let tsub_lam_renaming s = ()
 
 val tsubst_comp : s1:tsub -> s2:tsub -> t:typ -> Lemma
@@ -348,7 +348,7 @@ let extend_evar g n t =
 
 noeq type kinding : env -> typ -> knd -> Type =
   | KiVar : #g:env ->
-             a:var{is_Some (lookup_tvar g a)} ->
+             a:var{Some? (lookup_tvar g a)} ->
              kinding g (TVar a) (Some?.v (lookup_tvar g a))
   | KiLam : #g:env ->
              k:knd ->
@@ -410,7 +410,7 @@ type tequiv : typ -> typ -> Type =
 
 noeq type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
-             x:var{is_Some (lookup_evar g x)} ->
+             x:var{Some? (lookup_evar g x)} ->
             $hk:kinding g (Some?.v (lookup_evar g x)) KTyp ->
                 typing g (EVar x) (Some?.v (lookup_evar g x))
   | TyLam : #g:env ->
@@ -440,7 +440,7 @@ noeq type typing : env -> exp -> typ -> Type =
 (* Progress proof *)
 
 val is_value : exp -> Tot bool
-let is_value = is_ELam
+let is_value = ELam?
 
 irreducible val progress : #e:exp -> #t:typ -> h:typing empty e t ->
                Pure (cexists (fun e' -> step e e'))
@@ -608,15 +608,15 @@ let rec tequiv_tshift #t1 #t2 h x =
   | EqArr h1 h2 -> EqArr (tequiv_tshift h1 x) (tequiv_tshift h2 x)
 
 val is_var : exp -> Tot(nat)
-let is_var e = if is_EVar e then 0 else 1
-type renaming (s:esub) = (forall (x:var). is_EVar (s x))
+let is_var e = if EVar? e then 0 else 1
+type renaming (s:esub) = (forall (x:var). EVar? (s x))
 
 val is_renaming : s:esub -> GTot (n:int{  (renaming s  ==> n=0) /\
                                         (~(renaming s) ==> n=1)})
 let is_renaming s = (if strong_excluded_middle (renaming s) then 0 else 1)
 
 type subst_typing (s:esub) (g1:env) (g2:env) =
-  f:(x:var{is_Some (lookup_evar g1 x)} ->
+  f:(x:var{Some? (lookup_evar g1 x)} ->
      kinding g1 (Some?.v (lookup_evar g1 x)) KTyp ->
      Tot(typing g2 (s x) (Some?.v (lookup_evar g1 x)))
     ){feq (MkEnv?.a g1) (MkEnv?.a g2)}
@@ -884,7 +884,7 @@ let rec tred_diamond #s #t #u h1 h2 =
            This used to work before universes but now fails:
            Failed to verify implicit argument: Subtyping check failed;
            expected type
-           (uu___#3285:LambdaOmega.typ{(Prims.b2t (LambdaOmega.is_TLam uu___@0))}
+           (uu___#3285:LambdaOmega.typ{(Prims.b2t (LambdaOmega.TLam? uu___@0))}
            ); got type LambdaOmega.typ
         *)
       let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
@@ -893,7 +893,7 @@ let rec tred_diamond #s #t #u h1 h2 =
       (* XXX: TrBeta k p1b p2b:
         Failed to verify implicit argument: Subtyping check failed;
         expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
-        (LambdaOmega.is_TLam uu___@0))}); got type LambdaOmega.typ*)
+        (LambdaOmega.TLam? uu___@0))}); got type LambdaOmega.typ*)
 
     | MkLTup (TrApp #s1' #s2' #lu1' #u2' h21 h22)
              (TrBeta #s1 #s2 #t1' #t2' k h11 h12) ->
@@ -913,7 +913,7 @@ let rec tred_diamond #s #t #u h1 h2 =
       (* XXX (#580): (TrBeta k h_body p3) *)
       (* Failed to verify implicit argument: Subtyping check failed;
         expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
-        (LambdaOmega.is_TLam uu___@0))}); got type LambdaOmega.typ *)
+        (LambdaOmega.TLam? uu___@0))}); got type LambdaOmega.typ *)
 
 type tred_star: typ -> typ -> Type =
   | TsRefl : t:typ ->
