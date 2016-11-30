@@ -17,18 +17,21 @@
 
 module FStar.Pprint
 
-type document = 
-  | Empty
-  | Char of char
-  | String of string * int * int
-  | FancyString of string * int * int * int
-  | Blank of int
-  | IfFlat of document * document
-  | HardLine
-  | Cat of document * document
-  | Nest of int * document
-  | Group of document
-  //| Probe of (indentation:int -> bol:int -> line:int -> column:int -> document)
+open FSharp.PPrint
+
+type document = Doc of FSharp.PPrint.Engine.document
+//
+//  | Empty
+//  | Char of char
+//  | String of string * int * int
+//  | FancyString of string * int * int * int
+//  | Blank of int
+//  | IfFlat of document * document
+//  | HardLine
+//  | Cat of document * document
+//  | Nest of int * document
+//  | Group of document
+//  //| Probe of (indentation:int -> bol:int -> line:int -> column:int -> document)
   
 let not_impl_msg = "F# prettyprinter not yet implemented." 
 

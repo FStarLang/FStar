@@ -53,6 +53,13 @@
     <Compile Include="prettyprint.fsi" />
     <Compile Include="prettyprint.fs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\basic\basic.fsproj">
+      <Name>basic</Name>
+      <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
