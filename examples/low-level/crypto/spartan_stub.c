@@ -1,15 +1,15 @@
 #include <stdint.h>
 
-extern __stdcall void keyExpansion(uint8_t *x0, uint8_t *x1, uint8_t *x2);
-extern __stdcall void cipher(uint8_t *x0, uint8_t *x1, uint8_t *x2, uint8_t *x3);
+extern void __stdcall KeyExpansionStdcall(const void *key_ptr, void *expanded_key_ptr);
+extern void __stdcall AES128EncryptOneBlockStdcall(void *output_ptr, const void *input_ptr, const void *expanded_key_ptr);
 
-void Spartan_keyExpansion(uint8_t *x0, uint8_t *x1, uint8_t *x2)
+void Spartan_keyExpansion(uint8_t *k, uint8_t *w, uint8_t *sb)
 {
-  keyExpansion(x0, x1, x2);
+  KeyExpansionStdcall(k, w);
 }
 
-void Spartan_cipher(uint8_t *x0, uint8_t *x1, uint8_t *x2, uint8_t *x3)
+void Spartan_cipher(uint8_t *out, uint8_t *in, uint8_t *w, uint8_t *sb)
 {
-  cipher(x0, x1, x2, x3);
+  AES128EncryptOneBlockStdcall(out, in, w);
 }
 
