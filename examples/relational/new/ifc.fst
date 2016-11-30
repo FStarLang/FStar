@@ -25,7 +25,7 @@ let op_Less_Equals l1 l2 =
 type label_fun = ref int -> Tot label
 
 type low_equiv (env:label_fun) (h1:rel heap) = 
-  forall (x:ref int). env x = Low ==> sel (R..l h1) x = sel (R..r h1) x
+  forall (x:ref int). env x = Low ==> sel (R?.l h1) x = sel (R?.r h1) x
 
 
 (**************************** Typing Judgements ****************************)
@@ -39,7 +39,7 @@ type low_equiv (env:label_fun) (h1:rel heap) =
 type ni_exp (env:label_fun) (e:exp) (l:label) = 
   forall (h: (rel heap)).
    (low_equiv env h /\ is_Low l) ==> 
-     (interpret_exp (R..r h) e = interpret_exp (R..l h) e)
+     (interpret_exp (R?.r h) e = interpret_exp (R?.l h) e)
 
 (* env,pc:l |- c
    - References with a label below l are not modified
@@ -47,34 +47,34 @@ type ni_exp (env:label_fun) (e:exp) (l:label) =
    - Low equivalent input heaps ==> Low equivalet output heaps 
 *)
 type ni_com' (env:label_fun) (c:com) (l:label) (h0:(rel (option heap))) = 
-    (is_Some (R..l h0) /\ is_Some (R..r h0) ==>
+    (is_Some (R?.l h0) /\ is_Some (R?.r h0) ==>
       (fun h0 -> 
       (fun o_l -> 
       (fun o_r -> 
        ((is_Some o_l /\ is_Some o_r) 
         ==> (low_equiv env h0 
-          ==> low_equiv env (R (Some..v o_l) (Some..v o_r)))))
-        (interpret_com (R..r h0) c))
-        (interpret_com (R..l h0) c))
-        (R (Some..v (R..l h0)) (Some..v (R..r h0))))
+          ==> low_equiv env (R (Some?.v o_l) (Some?.v o_r)))))
+        (interpret_com (R?.r h0) c))
+        (interpret_com (R?.l h0) c))
+        (R (Some?.v (R?.l h0)) (Some?.v (R?.r h0))))
     /\
-    (is_Some (R..l h0) ==>
+    (is_Some (R?.l h0) ==>
       (fun hl -> 
       (fun o_l -> 
         (forall r. (env r < l) 
         ==> (is_Some o_l 
-          ==> b2t (sel hl r = sel (Some..v o_l) r))))
+          ==> b2t (sel hl r = sel (Some?.v o_l) r))))
         (interpret_com hl c))
-        ((Some..v (R..l h0))))
+        ((Some?.v (R?.l h0))))
     /\
-    (is_Some (R..r h0) ==>
+    (is_Some (R?.r h0) ==>
       (fun hr -> 
       (fun o_r -> 
         (forall r. (env r < l) 
         ==> (is_Some o_r 
-          ==> b2t (sel hr r = sel (Some..v o_r) r))))
+          ==> b2t (sel hr r = sel (Some?.v o_r) r))))
         (interpret_com hr c))
-        ((Some..v (R..r h0))))
+        ((Some?.v (R?.r h0))))
 
 type ni_com (env:label_fun) (c:com) (l:label) = 
     forall (h0:(rel (option heap))). ni_com' env c l h0
@@ -224,7 +224,7 @@ let decr_while h v = match h with
 val loop_com' : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> h:(rel (option heap)) -> 
   Lemma (requires (ni_exp env e l /\ ni_com env c l))
         (ensures  (ni_com' env (While e c v) l h)) 
-        (decreases (decr_while (R..l h) v + decr_while (R..r h) v))
+        (decreases (decr_while (R?.l h) v + decr_while (R?.r h) v))
         (* Probably not the best solution... *)
         [SMTPat (true)]
 let rec loop_com' env e c v l h = 

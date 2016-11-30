@@ -72,7 +72,7 @@ let above #i x z = x.iv = z.iv && x.ctr >=^ z.ctr
 // the range of our PRF, after idealization and "reverse inlining."
 // for one-time-pads, we keep both the plain and cipher blocks, instead of their XOR.
 
-type smac (rgn:region) (i:id) x = mac: MAC.state (i,x.iv) { MAC.State..region mac = rgn }
+type smac (rgn:region) (i:id) x = mac: MAC.state (i,x.iv) { MAC.State?.region mac = rgn }
 noeq type otp (i:id) = | OTP: l:u32 {l <=^ blocklen i} -> plain i (v l) -> cipher:lbytes (v l) -> otp i
 
 let range (mac_rgn:region) (i:id) (x:domain i): Type0 =
@@ -125,7 +125,7 @@ noeq type state (i:id) =
 	   #mac_rgn: region{mac_rgn `HH.extends` rgn} ->
            // key is immutable once generated, we should make it private
            key: lbuffer (v (keylen i)) 
-             {Buffer.frameOf key = rgn /\ ~(HS.MkRef..mm (Buffer.content key))} ->
+             {Buffer.frameOf key = rgn /\ ~(HS.MkRef?.mm (Buffer.content key))} ->
            table: table_t rgn mac_rgn i ->
            state i
 

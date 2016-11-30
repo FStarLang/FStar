@@ -101,7 +101,7 @@ let rec encode_one (t:trie) (s:symbol) : Tot (option (list bool)) =
 let rec encode (t:trie) (ss:list symbol) : Pure (option (list bool))
     (requires (True))
     (ensures (fun bs -> is_Node t /\ is_Cons ss /\ is_Some bs
-                        ==> is_Cons (Some..v bs))) =
+                        ==> is_Cons (Some?.v bs))) =
   match ss with
   | [] -> None (* can't encode the empty string *)
   | [s] -> encode_one t s
@@ -114,8 +114,8 @@ let rec encode (t:trie) (ss:list symbol) : Pure (option (list bool))
 let rec decode_one (t:trie) (bs:list bool) : Pure (option (symbol * list bool))
     (requires (True))
     (ensures (fun r -> is_Some r ==>
-                   (List.Tot.length (snd (Some..v r)) <= List.Tot.length bs /\
-     (is_Node t ==> List.Tot.length (snd (Some..v r)) < List.Tot.length bs)))) =
+                   (List.Tot.length (snd (Some?.v r)) <= List.Tot.length bs /\
+     (is_Node t ==> List.Tot.length (snd (Some?.v r)) < List.Tot.length bs)))) =
   match t, bs with
   | Node _ t1 t2, b::bs' -> decode_one (if b then t2 else t1) bs'
   | Leaf _ s, _ -> Some (s, bs)
@@ -139,7 +139,7 @@ let rec decode' (t:trie) (bs:list bool) : Tot (option (list symbol))
 let rec decode_aux (t':trie{is_Node t'}) (t:trie) (bs:list bool) :
   Pure (option (list symbol))
     (requires (True))
-    (ensures (fun ss -> is_Some ss ==> List.Tot.length (Some..v ss) > 0))
+    (ensures (fun ss -> is_Some ss ==> List.Tot.length (Some?.v ss) > 0))
     (decreases (%[bs; if is_Leaf t && is_Cons bs then 1 else 0]))
   =
   match t, bs with

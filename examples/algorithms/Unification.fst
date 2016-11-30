@@ -159,7 +159,7 @@ let rec unify e s = match e with
   | [] -> Some s
 
   | (V x, t)::tl ->
-    if is_V t && V..i t = x
+    if is_V t && V?.i t = x
     then unify tl s //t is a flex-rhs
     else if occurs x t
     then None
@@ -355,7 +355,7 @@ let rec unify_correct_aux l = function
   | hd::tl ->
     begin match hd with
       | (V x, y) ->
-	if is_V y && V..i y=x
+	if is_V y && V?.i y=x
 	then unify_correct_aux l tl
 	else if occurs x y
 	then (lemma_occurs_not_solveable x y; [])
@@ -394,7 +394,7 @@ val unify_eqns_correct: e:eqns -> Lemma
   (requires True)
   (ensures (if is_None (unify_eqns e)
 	    then not_solveable_eqns e
-	    else solved (lsubst_eqns (Some..v (unify_eqns e)) e)))
+	    else solved (lsubst_eqns (Some?.v (unify_eqns e)) e)))
 let unify_eqns_correct e =
   let _ = unify_correct_aux [] e in ()
 

@@ -556,33 +556,6 @@ let qualifier_equal q1 q2 = match q1, q2 with
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
-let rec arrow_formals_comp k =
-    let k = Subst.compress k in
-    match k.n with
-        | Tm_arrow(bs, c) ->
-            let bs, c = Subst.open_comp bs c in
-            if is_tot_or_gtot_comp c
-            then let bs', k = arrow_formals_comp (comp_result c) in
-                 bs@bs', k
-            else bs, c
-        | _ -> [], Syntax.mk_Total k
-
-let rec arrow_formals k =
-    let bs, c = arrow_formals_comp k in 
-    bs, comp_result c
-
-let abs_formals t =
-    let rec aux t =
-        match (Subst.compress t).n with
-        | Tm_abs(bs, t, _) ->
-            let bs',t = aux t in
-            bs@bs', t
-        | _ -> [], t 
-    in
-    let bs, t = aux t in
-    Subst.open_term bs t
-
-
 let abs bs t lopt = 
   if List.length bs = 0 then
     t
@@ -625,6 +598,39 @@ let flat_arrow bs c =
 
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) !b.sort.tk (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
+
+
+let rec arrow_formals_comp k =
+    let k = Subst.compress k in
+    match k.n with
+        | Tm_arrow(bs, c) ->
+            let bs, c = Subst.open_comp bs c in
+            if is_tot_or_gtot_comp c
+            then let bs', k = arrow_formals_comp (comp_result c) in
+                bs@bs', k
+            else bs, c
+        | _ -> [], Syntax.mk_Total k
+
+let rec arrow_formals k =
+    let bs, c = arrow_formals_comp k in
+    bs, comp_result c
+
+let abs_formals t =
+    let rec aux t what =
+        match (unascribe <| Subst.compress t).n with
+        | Tm_abs(bs, t, what) ->
+            let bs',t, what = aux t what in
+            bs@bs', t, what
+        | _ -> [], t, what
+    in
+    let bs, t, what = aux t None in
+    (* TODO : what should be open, no ? *)
+    (*let what = match what with
+        | Some (Inr lc) -> Subst.open_lc bs what
+        | _ -> what
+    in*)
+    let bs, t = Subst.open_term bs t in
+    bs, t, what
 
 let mk_letbinding lbname univ_vars typ eff def =
     {lbname=lbname; 

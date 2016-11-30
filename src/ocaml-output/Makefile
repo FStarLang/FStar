@@ -4,8 +4,15 @@ FSTAR_HOME=../..
 
 OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28-26-11-21" -annot
 
-#MENHIR=menhir --explain #--infer -la 1 --table
-MENHIR=ocamlyacc
+HAS_MENHIR := $(shell command -v menhir 2> /dev/null)
+ifdef HAS_MENHIR
+HAS_VALID_MENHIR := $(shell expr `menhir --version | sed -e 's/.*version \([0-9]*\)/\1/'` \>= 20161115)
+else
+HAS_VALID_MENHIR := 0
+endif
+
+MENHIR=menhir #--explain --infer -la 1 --table
+OCAMLYACC=ocamlyacc
 OCAMLC=ocamlfind ocamlc $(OPTIONS)
 OCAMLOPT=ocamlfind ocamlopt $(OPTIONS)
 OCAMLDEP=ocamldep
@@ -30,7 +37,7 @@ FSTAR_OBJS=$(COMPILER_ML_LIB) \
 	   FStar_SMTEncoding_Term.cmx FStar_SMTEncoding_Util.cmx FStar_SMTEncoding_Z3.cmx FStar_SMTEncoding_SplitQueryCases.cmx FStar_SMTEncoding_ErrorReporting.cmx FStar_SMTEncoding_Encode.cmx FStar_SMTEncoding_Solver.cmx \
 	   FStar_Dependences.cmx FStar_Interactive.cmx FStar_Stratified.cmx FStar_Universal.cmx FStar_FStar.cmx
 
-GENERATED_FILES=$(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml 
+GENERATED_FILES=$(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
@@ -66,9 +73,22 @@ all:
 prep: parser copy_lib_files version
 
 parser:
-	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
-	$(MENHIR) parse.mly 2>&1
+ifeq ($(HAS_VALID_MENHIR), 1)
+	cp ../parser/parse.mly ./parse.mly
+	#$(MENHIR) parse.mly
+	$(MENHIR) --only-preprocess-for-ocamlyacc parse.mly > parse.preprocessed.mly
+	mv parse.preprocessed.mly parse.mly
+	# TODO : Remove the 2 next line as soon as positions are fixed
+	$(OCAMLYACC) parse.mly 2>&1
+	cp parse.mly ../parser/ml/
+	$(MAKE) fsharp-parser
+else
+	cp ../parser/ml/parse.mly ./parse.mly
+	$(OCAMLYACC) parse.mly 2>&1
+endif
 	rm -f FStar_Parser_Parse.ml
+	# We are opening the same module twice but we need these modules
+	# open for the definition of tokens
 	echo "open Prims" > FStar_Parser_Parse.ml
 	echo "open FStar_List" >> FStar_Parser_Parse.ml
 	echo "open FStar_Util" >> FStar_Parser_Parse.ml
@@ -81,9 +101,39 @@ parser:
 	echo "open FStar_Parser_Util" >> FStar_Parser_Parse.ml
 	echo "open FStar_Const" >> FStar_Parser_Parse.ml
 	echo "open FStar_Ident" >> FStar_Parser_Parse.ml
+	echo "open FStar_String" >> FStar_Parser_Parse.ml
 	cat parse.ml >> FStar_Parser_Parse.ml
 	ocamllex ../parser/ml/lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parser/ml/parseit.ml FStar_Parser_ParseIt.ml
+
+
+fsharp-parser:
+	rm -f parse.preprocessed.fsy
+	echo "%{" > parse.preprocessed.fsy
+	echo "#light \"off\"" >> parse.preprocessed.fsy
+	echo "// (c) Microsoft Corporation. All rights reserved" >> parse.preprocessed.fsy
+	echo "open Prims" >> parse.preprocessed.fsy
+	echo "open FStar.List" >> parse.preprocessed.fsy
+	echo "open FStar.Util" >> parse.preprocessed.fsy
+	echo "open FStar.Range" >> parse.preprocessed.fsy
+	echo "open FStar.Options" >> parse.preprocessed.fsy
+	echo "open FStar.Absyn.Syntax" >> parse.preprocessed.fsy
+	echo "open FStar.Absyn.Const" >> parse.preprocessed.fsy
+	echo "open FStar.Absyn.Util" >> parse.preprocessed.fsy
+	echo "open FStar.Parser.AST" >> parse.preprocessed.fsy
+	echo "open FStar.Parser.Util" >> parse.preprocessed.fsy
+	echo "open FStar.Const" >> parse.preprocessed.fsy
+	echo "open FStar.Ident" >> parse.preprocessed.fsy
+	echo "open FStar.String" >> parse.preprocessed.fsy
+  # TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
+	cat parse.mly | sed -e '/%{/d' \
+											-e '/^open /d' \
+											-e '/%token/s/[a-zA-Z0-9_]*\.//g' \
+											-e '/%type/s/[a-zA-Z0-9_]*\.//g' \
+											-e '/%token.*->.*/d' \
+											-e '/%type.*->.*/d' \
+											>> parse.preprocessed.fsy
+	mv parse.preprocessed.fsy ../parser/parse.fsy
 
 copy_lib_files: $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
 	cp $^ .

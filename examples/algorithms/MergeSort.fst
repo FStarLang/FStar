@@ -8,7 +8,7 @@ type split_inv (l:list int) (l1:list int) (l2:list int) =
     length l > length l1 /\ length l > length l2
 
 val split: l:list int -> Pure (list int * list int)
-             (requires (is_Cons l /\ is_Cons (Cons..tl l)))
+             (requires (is_Cons l /\ is_Cons (Cons?.tl l)))
 	     (ensures (fun r -> split_inv l (fst r) (snd r)))
 let rec split (x::y::l) =
   match l with
@@ -20,8 +20,8 @@ let rec split (x::y::l) =
 (* Verification succeeds even without this invariant;
    it just takes a lot longer (22s vs 7s) *)
 type merge_inv (l1:list int) (l2:list int) (l:list int) =
-    (is_Cons l1 /\ is_Cons l /\ Cons..hd l1 = Cons..hd l) \/
-    (is_Cons l2 /\ is_Cons l /\ Cons..hd l2 = Cons..hd l) \/
+    (is_Cons l1 /\ is_Cons l /\ Cons?.hd l1 = Cons?.hd l) \/
+    (is_Cons l2 /\ is_Cons l /\ Cons?.hd l2 = Cons?.hd l) \/
     (is_Nil l1 /\ is_Nil l2 /\ is_Nil l)
 
 val merge: l1:list int -> l2:list int -> Pure (list int)

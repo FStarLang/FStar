@@ -1,19 +1,4 @@
 %{
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
-open Prims
-open FStar.List
-open FStar.Util
-open FStar.Range
-open FStar.Options
-open FStar.Absyn.Syntax
-open FStar.Absyn.Const
-open FStar.Absyn.Util
-open FStar.Parser.AST
-open FStar.Parser.Util
-open FStar.Const
-open FStar.Ident
-open FStar.String
 (*
  Known (intentional) ambiguities: 8 s/r conflicts in total; resolved by shifting
    4 s/r conflicts on BAR
@@ -47,6 +32,19 @@ open FStar.String
  should be investigated...
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
+open Prims
+open FStar_List
+open FStar_Util
+open FStar_Range
+open FStar_Options
+open FStar_Absyn_Syntax
+open FStar_Absyn_Const
+open FStar_Absyn_Util
+open FStar_Parser_AST
+open FStar_Parser_Util
+open FStar_Const
+open FStar_Ident
+open FStar_String
 
 let as_frag d ds =
     let rec as_mlist out ((m,r,doc), cur) ds =
@@ -138,8 +136,8 @@ let compile_op arity s =
 %token EXISTS
 %token FALSE
 %token FORALL
-%token <fsdoc> FSDOC
-%token <fsdoc> FSDOC_STANDALONE
+%token <FStar_Parser_AST.fsdoc> FSDOC
+%token <FStar_Parser_AST.fsdoc> FSDOC_STANDALONE
 %token FUN
 %token FUNCTION
 %token HASH
@@ -251,7 +249,7 @@ let compile_op arity s =
 %left BACKTICK
 %right OPINFIX4
 %type <inputFragment> inputFragment
-%type <ident> lident
+%type <FStar_Ident.ident> lident
 %type <term> term
 %%
 

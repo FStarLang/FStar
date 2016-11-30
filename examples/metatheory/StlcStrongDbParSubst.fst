@@ -123,7 +123,7 @@ let extend t g y = if y = 0 then Some t
 noeq type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
              x:var{is_Some (g x)} ->
-             typing g (EVar x) (Some..v (g x))
+             typing g (EVar x) (Some?.v (g x))
   | TyLam : #g :env ->
              t :typ ->
             #e1:exp ->
@@ -167,7 +167,7 @@ let subst_extensional s1 s2 e = ()
 
 (* Typing of substitutions (very easy, actually) *)
 type subst_typing (s:sub) (g1:env) (g2:env) =
-  (x:var{is_Some (g1 x)} -> Tot(typing g2 (s x) (Some..v (g1 x))))
+  (x:var{is_Some (g1 x)} -> Tot(typing g2 (s x) (Some?.v (g1 x))))
 
 (* Substitution preserves typing
    Strongest possible statement; suggested by Steven Schäfer *)
@@ -187,7 +187,7 @@ let rec substitution #g1 #e #t s #g2 h1 hs =
      let hs' : subst_typing (sub_elam s) (extend tlam g1) (extend tlam g2) =
        fun y -> if y = 0 then TyVar y
              else let n:var = y - 1 in //Silly limitation of implicits and refinements
-                  substitution #_ #_ #(Some..v (g1 n)) sub_inc #_ (hs n) hs'' //NS: needed to instantiate the Some..v 
+                  substitution #_ #_ #(Some?.v (g1 n)) sub_inc #_ (hs n) hs'' //NS: needed to instantiate the Some?.v 
      in TyLam tlam (substitution (sub_elam s) hbody hs')
   | TyUnit -> TyUnit
 
@@ -211,6 +211,6 @@ val preservation : #e:exp -> #e':exp -> #g:env -> #t:typ ->
 let rec preservation #e #e' #g #t ht hs =
   let TyApp h1 h2 = ht in
   match hs with
-  | SBeta tx e1' e2' -> substitution_beta #e1' #_ #_ #t #_ h2 (TyLam..hbody h1)
+  | SBeta tx e1' e2' -> substitution_beta #e1' #_ #_ #t #_ h2 (TyLam?.hbody h1)
   | SApp1 e2' hs1   -> TyApp (preservation h1 hs1) h2
   | SApp2 e1' hs2   -> TyApp h1 (preservation h2 hs2)
