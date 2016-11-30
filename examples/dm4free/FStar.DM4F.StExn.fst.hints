@@ -36,6 +36,9 @@
       ],
       0
     ],
+    [ "FStar.DM4F.StExn.STEXN_get_elab", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.StExn.STEXN_put_elab", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.StExn.STEXN_raise_elab", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.StExn.STEXN", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.StExn.STEXN", 2, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.StExn.STEXN", 3, 2, 1, [ "@query" ], 0 ],
