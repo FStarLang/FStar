@@ -446,7 +446,7 @@ let _70_207 = (let _165_150 = (lowercase_join_longident lid true)
 in (add_dep _165_150))
 in (record_module_alias ident lid))
 end
-| FStar_Parser_AST.ToplevelLet (_70_210, _70_212, patterms) -> begin
+| FStar_Parser_AST.TopLevelLet (_70_210, _70_212, patterms) -> begin
 (FStar_List.iter (fun _70_218 -> (match (_70_218) with
 | (pat, t) -> begin
 (

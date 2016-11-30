@@ -272,7 +272,7 @@ type nonTerminalId =
     | NONTERM_option___anonymous_0_
     | NONTERM_option___anonymous_1_
     | NONTERM_option___anonymous_2_
-    | NONTERM_option___anonymous_5_
+    | NONTERM_option___anonymous_6_
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
     | NONTERM_option_fsTypeArgs_
@@ -284,12 +284,12 @@ type nonTerminalId =
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_effectDecl__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
     | NONTERM_list___anonymous_4_
-    | NONTERM_list___anonymous_6_
+    | NONTERM_list___anonymous_5_
+    | NONTERM_list___anonymous_7_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
     | NONTERM_list_multiBinder_
     | NONTERM_list_pair_maybeHash_indexingTerm__
-    | NONTERM_list_patternBranch_
     | NONTERM_list_qualifier_
     | NONTERM_nonempty_list_aqualified_lident__
     | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
@@ -297,7 +297,7 @@ type nonTerminalId =
     | NONTERM_nonempty_list_dotOperator_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_
-    | NONTERM_separated_nonempty_list_AND_pair_option_FSDOC__typeDefinition__
+    | NONTERM_separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
     | NONTERM_separated_nonempty_list_BAR_tuplePattern_
     | NONTERM_separated_nonempty_list_COMMA_appTerm_
     | NONTERM_separated_nonempty_list_COMMA_atomicTerm_
@@ -314,10 +314,10 @@ type nonTerminalId =
     | NONTERM_pragma
     | NONTERM_decl
     | NONTERM_decl2
-    | NONTERM_typeDefinition
+    | NONTERM_typeDecl
     | NONTERM_typars
     | NONTERM_tvarinsts
-    | NONTERM_tyconDefn
+    | NONTERM_typeDefinition
     | NONTERM_recordFieldDecl
     | NONTERM_constructorDecl
     | NONTERM_kind_abbrev
@@ -364,9 +364,7 @@ type nonTerminalId =
     | NONTERM_disjunctivePats
     | NONTERM_conjunctivePat
     | NONTERM_simpleTerm
-    | NONTERM_patternBranches
     | NONTERM_maybeFocusArrow
-    | NONTERM_firstPatternBranch
     | NONTERM_patternBranch
     | NONTERM_tmIff
     | NONTERM_tmImplies
@@ -399,6 +397,7 @@ type nonTerminalId =
     | NONTERM_right_flexible_list_SEMICOLON_simpleDef_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_simpleDef_
+    | NONTERM_reverse_left_flexible_nonempty_list_BAR_patternBranch_
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int
 
