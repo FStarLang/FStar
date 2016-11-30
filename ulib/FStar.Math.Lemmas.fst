@@ -117,8 +117,6 @@ let mul_binds_tighter a b c = ()
 (* Lemma: multiplication keeps symetric bounds :
     b > 0 && d > 0 && -b < a < b && -d < c < d ==> - b * d < a * c < b * d *)
 #reset-options "--initial_fuel 0 --max_fuel 0"
-(* XYZ: CH: this reset should really be nop, still, it makes a difference
-   without it the next query seems to loop (> 2hours)*)
 val mul_ineq1: a:int -> b:nat -> c:int -> d:nat -> Lemma
     (requires (a < b /\ a > -b /\ c < d /\ c > -d))
     (ensures  (a * c < b * d /\ a * c > - (b * d)))
@@ -282,6 +280,8 @@ private let lemma_mod_plus_injective_1 (p:pos) (a:nat) (b:nat) (c:nat) : Lemma
   = lemma_mod_spec2 (a + b) p;
     lemma_mod_spec2 (a + c) p
 
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 10"
+
 val lemma_mod_plus_injective: p:pos -> a:nat -> b:nat -> c:nat -> Lemma
   (requires (b < p /\ c < p /\ (a + b) % p = (a + c) % p))
   (ensures  (b = c))
@@ -303,7 +303,6 @@ let lemma_mod_plus_distr_l a b p =
   lemma_mod_spec2 a p;
   lemma_mod_plus (a % p + b) q p
 
-(* XYZ: CH: useless reset *)
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_mod_plus_mul_distr: a:nat -> b:nat -> c:nat -> p:pos -> Lemma

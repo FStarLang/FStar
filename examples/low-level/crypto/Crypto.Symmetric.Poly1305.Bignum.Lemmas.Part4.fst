@@ -42,7 +42,7 @@ let isCarried (h0:mem) (h1:mem) (b:bigint) : GTot Type0 =
       /\ v (get h1 b 4) = (b4 + r3)  % pow2 26
     )
 
-#reset-options "--z3rlimit 500 --initial_fuel 2 --max_fuel 2"
+#reset-options "--z3rlimit 10000 --initial_fuel 4 --max_fuel 4"
 
 
 let u633 = x:U64.t{v x < pow2 63}
