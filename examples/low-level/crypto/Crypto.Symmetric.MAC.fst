@@ -235,6 +235,7 @@ let poly #i cs r =
   | POLY1305 -> PS.poly (text_to_PS_text cs) r
   | GHASH    -> GS.poly cs r
 
+
 (** Create and initialize the accumulator *)
 val start: #i:id -> StackInline (elemB i)
   (requires (fun h0 -> True))
@@ -263,6 +264,16 @@ let field_mul #i a b =
 
 let op_Plus_At #i e1 e2 = field_add #i e1 e2
 let op_Star_At #i e1 e2 = field_mul #i e1 e2
+
+val poly_cons: #i:id -> x:word_16 -> xs:text -> r:elem i ->
+  Lemma (poly #i (SeqProperties.cons x xs) r == (poly #i xs r +@ encode i x) *@ r)
+let poly_cons #i x xs r =
+  match alg i with
+  | POLY1305 ->
+    assert (Seq.equal (text_to_PS_text (SeqProperties.cons x xs))
+                      (SeqProperties.cons x (text_to_PS_text xs)));
+    PL.poly_cons x (text_to_PS_text xs) r
+  | GHASH    ->  GS.poly_cons x xs r; GS.add_comm (poly #i xs r) (encode i x)
 
 
 (** Process one message block and update the accumulator *)
