@@ -616,7 +616,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 then
                     let ed = Env.get_effect_decl cfg.tcenv mtgt in
                     let _, return_repr = ed.return_repr in
-                    S.mk (Tm_app(return_repr, [as_arg t ; as_arg e])) None e.pos
+                    let return_inst = match (SS.compress return_repr).n with
+                        | Tm_uinst(return_tm, [_]) ->
+                            S.mk (Tm_uinst (return_tm, [ cfg.tcenv.universe_of cfg.tcenv t ])) None e.pos
+                        | _ -> failwith "NIY : Reification of indexed effects"
+                    in
+                    S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
                 else
                     failwith "NYI: monadic lift normalisation"
             in
@@ -633,7 +638,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       let head = U.mk_reify <| S.mk (Tm_meta(lb.lbdef, Meta_monadic(m, lb.lbtyp))) None lb.lbdef.pos in
                       let body = U.mk_reify <| S.mk (Tm_meta(body, Meta_monadic(m, t_body))) None body.pos in
                       let body = S.mk (Tm_abs([S.mk_binder x], body, None)) None body.pos in
-                      let reified = S.mk (Tm_app(bind_repr, [as_arg lb.lbtyp; as_arg t_body;  //a, b
+                      let bind_inst = match (SS.compress bind_repr).n with
+                          | Tm_uinst (bind, [_ ; _]) ->
+                              S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv lb.lbtyp
+                                                    ; cfg.tcenv.universe_of cfg.tcenv t_body]))
+                              None t.pos
+                          | _ -> failwith "NIY : Reification of indexed effects"
+                      in
+                      let reified = S.mk (Tm_app(bind_inst, [as_arg lb.lbtyp; as_arg t_body;  //a, b
                                                              as_arg S.tun; as_arg head;   //wp_head, head--the term shouldn't depend on wp_head
                                                              as_arg S.tun; as_arg body])) //wp_body, body--the term shouldn't depend on wp_body
                                                              None t.pos in
@@ -683,14 +695,23 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                     (* bind t' t _ (lift e) _ (fun x -> body) *)
                                     let lifted_e0 = reify_lift e0 m1 m2 t' in
                                     let continuation = U.abs [x,None] body (Some (Inr m2)) in
-                                    S.mk (Tm_app (bind_repr, [as_arg t'; as_arg t_body ;
+                                    let bind_inst = match (SS.compress bind_repr).n with
+                                        | Tm_uinst (bind, [_ ; _]) ->
+                                            S.mk (Tm_uinst (bind, [cfg.tcenv.universe_of cfg.tcenv t'
+                                                                  ; cfg.tcenv.universe_of cfg.tcenv t_body]))
+                                            None e0.pos
+                                        | _ -> failwith "NIY : Reification of indexed effects"
+                                    in
+                                    S.mk (Tm_app (bind_inst, [as_arg t'; as_arg t_body ;
                                                               as_arg S.tun; as_arg lifted_e0;
                                                               as_arg S.tun; as_arg continuation ]))
                                          None e0.pos
+                                (* Tm_meta(_, Meta_monadic _) should not appear here *)
                                 | _ -> bind_on_lift es ((e,q)::acc)
                                 end
                     in
                     let binded_e = bind_on_lift ((as_arg head)::args) [] in
+                    Util.print1_warning "BEFORE NORMALIZING MONADIC APP : %s\n" (Print.term_to_string binded_e);
                     norm cfg env stack binded_e
                   // else
                   //   let stack = App(reify_head, None, t.pos)::stack in
@@ -719,9 +740,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let stack = App(reify_head, None, t.pos)::stack in
               norm cfg env stack a
             end
-        in
-        Util.print2_warning "RESULT OF NORMALIZATION : before %s    after %s\n" (Print.term_to_string a) (Print.term_to_string normalization_reify_result) ;
-        normalization_reify_result
+            in
+            Util.print2_warning "RESULT OF NORMALIZATION : before %s    after %s\n" (Print.term_to_string a) (Print.term_to_string normalization_reify_result) ;
+            normalization_reify_result
 
 
           | Tm_type u ->
