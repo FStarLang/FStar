@@ -383,7 +383,10 @@ type nonTerminalId =
     | NONTERM_appTerm
     | NONTERM_indexingTerm
     | NONTERM_atomicTerm
+    | NONTERM_atomicTermQUident
     | NONTERM_atomicTermNotQUident
+    | NONTERM_opPrefixTerm_atomicTermNotQUident_
+    | NONTERM_opPrefixTerm_atomicTermQUident_
     | NONTERM_fsTypeArgs
     | NONTERM_someFsTypeArgs
     | NONTERM_qidentWithTypeArgs_qlident_option_fsTypeArgs__

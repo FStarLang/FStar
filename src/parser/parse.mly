@@ -823,6 +823,12 @@ indexingTerm:
 atomicTerm:
   | x=atomicTermNotQUident
     { x }
+  | x=atomicTermQUident
+    { x }
+  | x=opPrefixTerm(atomicTermQUident)
+    { x }
+
+atomicTermQUident:
   | id=quident
     {
         let t = Name id in
@@ -841,8 +847,8 @@ atomicTermNotQUident:
   | c=constant { mk_term (Const c) (rhs parseState 1) Expr }
   | L_TRUE   { mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type }
   | L_FALSE   { mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type }
-  | op=OPPREFIX e=atomicTerm
-      { mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr }
+  | x=opPrefixTerm(atomicTermNotQUident)
+    { x }
   | LPAREN op=operator RPAREN
       { mk_term (Op(op, [])) (rhs2 parseState 1 3) Un }
   | LENS_PAREN_LEFT e0=tmEq COMMA el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
@@ -852,6 +858,11 @@ atomicTermNotQUident:
       { fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs }
   | BEGIN e=term END
       { e }
+
+(* Tm: atomicTermQUident or atomicTermNotQUident *)
+opPrefixTerm(Tm):
+  | op=OPPREFIX e=Tm
+      { mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr }
 
 fsTypeArgs:
   | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER

@@ -2096,7 +2096,15 @@ atomicTerm:
   atomicTermNotQUident
     {let x = $1 in
     ( x )}
-| quident
+| atomicTermQUident
+    {let x = $1 in
+    ( x )}
+| opPrefixTerm_atomicTermQUident_
+    {let x = $1 in
+    ( x )}
+
+atomicTermQUident:
+  quident
     {let id = $1 in
     (
         let t = Name id in
@@ -2128,9 +2136,9 @@ atomicTermNotQUident:
 | L_FALSE
     {let _1 = () in
               ( mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type )}
-| OPPREFIX atomicTerm
-    {let (op, e) = ($1, $2) in
-      ( mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr )}
+| opPrefixTerm_atomicTermNotQUident_
+    {let x = $1 in
+    ( x )}
 | LPAREN OPPREFIX RPAREN
     {let (_1, op0, _3) = ((), $2, ()) in
 let op =
@@ -2227,6 +2235,16 @@ in
 | BEGIN term END
     {let (_1, e, _3) = ((), $2, ()) in
       ( e )}
+
+opPrefixTerm_atomicTermNotQUident_:
+  OPPREFIX atomicTermNotQUident
+    {let (op, e) = ($1, $2) in
+      ( mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr )}
+
+opPrefixTerm_atomicTermQUident_:
+  OPPREFIX atomicTermQUident
+    {let (op, e) = ($1, $2) in
+      ( mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr )}
 
 fsTypeArgs:
   TYP_APP_LESS separated_nonempty_list_COMMA_atomicTerm_ TYP_APP_GREATER
