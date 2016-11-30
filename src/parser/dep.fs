@@ -307,7 +307,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | ModuleAbbrev (ident, lid) ->
         add_dep (lowercase_join_longident lid true);
         record_module_alias ident lid
-    | ToplevelLet (_, _, patterms) ->
+    | TopLevelLet (_, _, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | KindAbbrev (_, binders, t) ->
         collect_term t;
