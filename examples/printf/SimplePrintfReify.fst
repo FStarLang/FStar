@@ -151,7 +151,7 @@ let parse_format_pure (s:list char) : option (list dir) =
 (* Interface of SimplePrintf violates its abstraction (add a 'private' *)
 (* qualifier to *)
 (* 'SimplePrintf.example2_lemma_looks_nicer_but_not_usable'?): Expected *)
-(* expression of type "(Prims.list (?50858 uu___))"; got expression "%" *)
+(* expression of type "(Prims.list (?50858 ww___))"; got expression "%" *)
 (* of type "FStar.Char.char" *\) *)
 
 (* Doesn't work; why does reify-action not trigger?

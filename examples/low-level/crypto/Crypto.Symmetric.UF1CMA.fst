@@ -62,7 +62,7 @@ private val mk_akey: #r:rid -> #i:id{skeyed i} -> skey r i -> Tot(akey r i)
 let mk_akey #rgn #i k = k
 
 //16-10-16 without the #r #i below, getting
-//16-10-16 Error: Unexpected error... Failure("Bound term variable not found (after unmangling): uu___#215762")
+//16-10-16 Error: Unexpected error... Failure("Bound term variable not found (after unmangling): ww___#215762")
 let akey_gen (r:rid) (i:id) = 
   if skeyed i then mk_akey #r #i (Buffer.rcreate r 0uy (skeylen i))
   else ()

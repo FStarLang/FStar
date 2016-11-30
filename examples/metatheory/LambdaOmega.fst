@@ -884,7 +884,7 @@ let rec tred_diamond #s #t #u h1 h2 =
            This used to work before universes but now fails:
            Failed to verify implicit argument: Subtyping check failed;
            expected type
-           (uu___#3285:LambdaOmega.typ{(Prims.b2t (LambdaOmega.TLam? uu___@0))}
+           (ww___#3285:LambdaOmega.typ{(Prims.b2t (LambdaOmega.TLam? ww___@0))}
            ); got type LambdaOmega.typ
         *)
       let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
@@ -892,8 +892,8 @@ let rec tred_diamond #s #t #u h1 h2 =
       ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta #(TLam?.t lu1') #_ #_ #_ k p1b p2b))
       (* XXX: TrBeta k p1b p2b:
         Failed to verify implicit argument: Subtyping check failed;
-        expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
-        (LambdaOmega.TLam? uu___@0))}); got type LambdaOmega.typ*)
+        expected type (ww___#3285:LambdaOmega.typ{(Prims.b2t
+        (LambdaOmega.TLam? ww___@0))}); got type LambdaOmega.typ*)
 
     | MkLTup (TrApp #s1' #s2' #lu1' #u2' h21 h22)
              (TrBeta #s1 #s2 #t1' #t2' k h11 h12) ->
@@ -912,8 +912,8 @@ let rec tred_diamond #s #t #u h1 h2 =
                     (subst_of_tred_tred 0 p4 h_body2))
       (* XXX (#580): (TrBeta k h_body p3) *)
       (* Failed to verify implicit argument: Subtyping check failed;
-        expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
-        (LambdaOmega.TLam? uu___@0))}); got type LambdaOmega.typ *)
+        expected type (ww___#3285:LambdaOmega.typ{(Prims.b2t
+        (LambdaOmega.TLam? ww___@0))}); got type LambdaOmega.typ *)
 
 type tred_star: typ -> typ -> Type =
   | TsRefl : t:typ ->

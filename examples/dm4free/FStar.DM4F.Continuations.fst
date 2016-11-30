@@ -65,15 +65,15 @@ reifiable reflectable new_effect_for_free CONTINUATION = CONT False
 
 (*
 let repr (a:Type)
-         (wp_a:((uu___:(uu___:a@0 -> uu___:(uu___:l_False -> Tot Type) -> Tot Type) -> uu___:(uu___:l_False -> Tot Type) -> Tot Type) <: Type))
+         (wp_a:((ww___:(ww___:a@0 -> ww___:(ww___:l_False -> Tot Type) -> Tot Type) -> ww___:(ww___:l_False -> Tot Type) -> Tot Type) <: Type))
   : PURE (Type) (fun p ->
-              ((l_Forall #Type (fun y -> ((l_imp (eq2 #Type y@0 (uu___-w':(uu___:a@3 -> uu___:(uu___:l_False -> Tot Type) -> Tot Type) -> uu___:(uu___-x:a@4 -> PURE (l_False) (uu___-w'@1 uu___-x@0)) -> PURE (l_False) (wp_a@4 uu___-w'@1))) (p@1 y@0)) $$ Tot Type))) $$ Tot Type))
-  = uu___-w':(uu___:a@1 -> uu___:(uu___:l_False -> Tot Type) -> Tot Type) ->
-    uu___:(uu___-x:a@2 -> PURE (l_False) (uu___-w'@1 uu___-x@0)) ->
-    PURE (l_False) (wp_a@2 uu___-w'@1)
+              ((l_Forall #Type (fun y -> ((l_imp (eq2 #Type y@0 (ww___-w':(ww___:a@3 -> ww___:(ww___:l_False -> Tot Type) -> Tot Type) -> ww___:(ww___-x:a@4 -> PURE (l_False) (ww___-w'@1 ww___-x@0)) -> PURE (l_False) (wp_a@4 ww___-w'@1))) (p@1 y@0)) $$ Tot Type))) $$ Tot Type))
+  = ww___-w':(ww___:a@1 -> ww___:(ww___:l_False -> Tot Type) -> Tot Type) ->
+    ww___:(ww___-x:a@2 -> PURE (l_False) (ww___-w'@1 ww___-x@0)) ->
+    PURE (l_False) (wp_a@2 ww___-w'@1)
 
-unfold let  CONTINUATION_pre  : Type = (uu___:(uu___:l_False -> Tot Type) -> Tot Type)
-unfold let  CONTINUATION_post  : (a:Type -> PURE (Type) (fun p -> ((l_Forall #Type (fun y -> ((l_imp (eq2 #Type y@0 (uu___:a@2 -> uu___:(uu___:l_False -> Tot Type) -> Tot Type)) (p@1 y@0)) $$ Tot Type))) $$ Tot Type))) = (fun a -> ((uu___:a@0 -> uu___:(uu___:l_False -> Tot Type) -> Tot Type) $$ Tot Type))
+unfold let  CONTINUATION_pre  : Type = (ww___:(ww___:l_False -> Tot Type) -> Tot Type)
+unfold let  CONTINUATION_post  : (a:Type -> PURE (Type) (fun p -> ((l_Forall #Type (fun y -> ((l_imp (eq2 #Type y@0 (ww___:a@2 -> ww___:(ww___:l_False -> Tot Type) -> Tot Type)) (p@1 y@0)) $$ Tot Type))) $$ Tot Type))) = (fun a -> ((ww___:a@0 -> ww___:(ww___:l_False -> Tot Type) -> Tot Type) $$ Tot Type))
 
 
 *)

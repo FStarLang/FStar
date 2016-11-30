@@ -25,7 +25,7 @@ let mk_ident : (Prims.string * FStar_Range.range)  ->  ident = (fun _25_11 -> (m
 end))
 
 
-let reserved_prefix : Prims.string = "uu___"
+let reserved_prefix : Prims.string = "ww___"
 
 
 let gen : FStar_Range.range  ->  ident = (
