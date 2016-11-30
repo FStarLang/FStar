@@ -608,123 +608,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 when (cfg.steps |> List.contains Reify) ->
             let reify_head, _ = Util.head_and_args t in
             let a = SS.compress (Util.unascribe <| fst a) in
-            Util.print2_warning "TRYING NORMALIZATION OF REIFY: %s ... %s\n" (Print.tag_of_term a) (Print.term_to_string a);
-            let reify_lift e msrc mtgt t =
-                // check if the lift is concrete, if so replace by its definition on terms
-                // if msrc is PURE or Tot we can use mtgt.return
-                if Syntax.Util.is_pure_effect msrc
-                then
-                    let ed = Env.get_effect_decl cfg.tcenv mtgt in
-                    let _, return_repr = ed.return_repr in
-                    let return_inst = match (SS.compress return_repr).n with
-                        | Tm_uinst(return_tm, [_]) ->
-                            S.mk (Tm_uinst (return_tm, [ cfg.tcenv.universe_of cfg.tcenv t ])) None e.pos
-                        | _ -> failwith "NIY : Reification of indexed effects"
-                    in
-                    S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
-                else
-                    failwith "NYI: monadic lift normalisation"
-            in
+            //Util.print2_warning "TRYING NORMALIZATION OF REIFY: %s ... %s\n" (Print.tag_of_term a) (Print.term_to_string a);
             let normalization_reify_result = begin match a.n with
-            | Tm_meta(e, Meta_monadic (m, t_body)) ->
-                begin match (SS.compress e).n with
-                | Tm_let((false, [lb]), body) ->
-                    //this is M.bind
-                    //reify (M.bind e1 \x.e2) ~> M.bind_repr (reify e1) (\x. (reify e2))
-                    let ed = Env.get_effect_decl cfg.tcenv m in
-                    let _, bind_repr = ed.bind_repr in
-                    begin match lb.lbname with
-                    | Inl x ->
-                      let head = U.mk_reify <| S.mk (Tm_meta(lb.lbdef, Meta_monadic(m, lb.lbtyp))) None lb.lbdef.pos in
-                      let body = U.mk_reify <| S.mk (Tm_meta(body, Meta_monadic(m, t_body))) None body.pos in
-                      let body = S.mk (Tm_abs([S.mk_binder x], body, None)) None body.pos in
-                      let bind_inst = match (SS.compress bind_repr).n with
-                          | Tm_uinst (bind, [_ ; _]) ->
-                              S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv lb.lbtyp
-                                                    ; cfg.tcenv.universe_of cfg.tcenv t_body]))
-                              None t.pos
-                          | _ -> failwith "NIY : Reification of indexed effects"
-                      in
-                      let reified = S.mk (Tm_app(bind_inst, [as_arg lb.lbtyp; as_arg t_body;  //a, b
-                                                             as_arg S.tun; as_arg head;   //wp_head, head--the term shouldn't depend on wp_head
-                                                             as_arg S.tun; as_arg body])) //wp_body, body--the term shouldn't depend on wp_body
-                                                             None t.pos in
-                      // printfn "Reified %s to %s\n" (Print.term_to_string t) (Print.term_to_string reified);
-                      norm cfg env stack reified
-                    | Inr _ -> failwith "Cannot reify a top-level let binding"
-                    end
-                | Tm_app (head, args) ->
-                  // Turn it into let x0 = head in let x1 = arg0 in ... let xn = argn in x0 x1 ... xn
-                  //monadic application
-                  //Do we need to check that head is reifiable ?
-                  // let head_reifiable =
-                  //     match (SS.compress head).n with
-                  //         | Tm_fvar head_lid ->
-                  //             let ed = Env.get_effect_decl cfg.tcenv m in
-                  //             let b =
-                  //                 let find f = List.fold_left (fun b x -> b || f x) false in
-                  //                 find (fun action -> S.fv_eq_lid head_lid action.action_name) ed.actions
-                  //             in
-                  //             if b
-                  //             then true
-                  //             else
-                  //                 begin match S.lid_of_fv head_lid |> Env.try_lookup_val_decl cfg.tcenv with
-                  //                     | Some (_, quals) -> List.contains Reifiable quals
-                  //                     | _ -> false
-                  //                 end
-                  //         |  _ -> false
-                  // in
-                  // Util.print1_warning "head is %sreifiable !\n" (if head_reifiable then "" else "non ") ;
-                  // if head_reifiable
-                  // then
-                    let ed = Env.get_effect_decl cfg.tcenv m in
-                    let _, bind_repr = ed.bind_repr in
-                    let rec bind_on_lift args acc =
-                        match args with
-                            | [] ->
-                                begin match List.rev acc with
-                                | [] -> failwith "bind_on_lift should be always called with a non-empty list"
-                                | (head, _) :: args ->
-                                    S.mk (Tm_app(head, args)) None t.pos
-                                end
-                            | (e,q) :: es ->
-                                begin match (SS.compress e).n with
-                                | Tm_meta (e0, Meta_monadic_lift(m1, m2, t')) ->
-                                    let x = S.gen_bv "monadic_app_var" None t' in
-                                    let body = bind_on_lift es ((S.bv_to_name x, q)::acc) in
-                                    (* bind t' t _ (lift e) _ (fun x -> body) *)
-                                    let lifted_e0 = reify_lift e0 m1 m2 t' in
-                                    let continuation = U.abs [x,None] body (Some (Inr m2)) in
-                                    let bind_inst = match (SS.compress bind_repr).n with
-                                        | Tm_uinst (bind, [_ ; _]) ->
-                                            S.mk (Tm_uinst (bind, [cfg.tcenv.universe_of cfg.tcenv t'
-                                                                  ; cfg.tcenv.universe_of cfg.tcenv t_body]))
-                                            None e0.pos
-                                        | _ -> failwith "NIY : Reification of indexed effects"
-                                    in
-                                    S.mk (Tm_app (bind_inst, [as_arg t'; as_arg t_body ;
-                                                              as_arg S.tun; as_arg lifted_e0;
-                                                              as_arg S.tun; as_arg continuation ]))
-                                         None e0.pos
-                                (* Tm_meta(_, Meta_monadic _) should not appear here *)
-                                | _ -> bind_on_lift es ((e,q)::acc)
-                                end
-                    in
-                    let binded_e = bind_on_lift ((as_arg head)::args) [] in
-                    Util.print1_warning "BEFORE NORMALIZING MONADIC APP : %s\n" (Print.term_to_string binded_e);
-                    norm cfg env stack binded_e
-                  // else
-                  //   let stack = App(reify_head, None, t.pos)::stack in
-                  //    norm cfg env stack a
-                  //failwith "NYI: monadic application"
-                | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
-                    let lifted = reify_lift e msrc mtgt t' in
-                    norm cfg env stack lifted
-                | _ ->
-                  let stack = App(reify_head, None, t.pos)::stack in
-                  norm cfg env stack a
-                end
-
             | Tm_app({n=Tm_constant (Const.Const_reflect _)}, [a]) ->
               //reify (reflect e) ~> e
               norm cfg env stack (fst a)
@@ -972,12 +857,135 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_meta (head, m) ->
             begin match m with
                   | Meta_monadic (m, t) ->
-                      (* TODO : why is t normalized with an empty stack  ??? *)
-                    let t = norm cfg env [] t in
-                    let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                    let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
-                                        delta_level=[NoDelta]} in
-                    norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+
+                    let should_reify = match stack with
+                        | App ({n=Tm_constant Const.Const_reify}, _, _) :: _ ->
+                            cfg.steps |> List.contains Reify
+                        | _ -> false
+                    in
+
+                    if not should_reify
+                    then
+                        (* TODO : why is t normalized with an empty stack  ??? *)
+                        let t = norm cfg env [] t in
+                        let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                        let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
+                                   delta_level=[NoDelta]} in
+                        norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+
+                    else
+                        let reify_lift e msrc mtgt t =
+                            // check if the lift is concrete, if so replace by its definition on terms
+                            // if msrc is PURE or Tot we can use mtgt.return
+                            if Syntax.Util.is_pure_effect msrc
+                            then
+                                let ed = Env.get_effect_decl cfg.tcenv mtgt in
+                                let _, return_repr = ed.return_repr in
+                                let return_inst = match (SS.compress return_repr).n with
+                                    | Tm_uinst(return_tm, [_]) ->
+                                        S.mk (Tm_uinst (return_tm, [ cfg.tcenv.universe_of cfg.tcenv t ])) None e.pos
+                                    | _ -> failwith "NIY : Reification of indexed effects"
+                                in
+                                S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
+                            else
+                                failwith "NYI: monadic lift normalisation"
+                        in
+
+                        begin match (SS.compress head).n with
+                            | Tm_let((false, [lb]), body) ->
+                                //this is M.bind
+                                //reify (M.bind e1 \x.e2) ~> M.bind_repr (reify e1) (\x. (reify e2))
+                                let ed = Env.get_effect_decl cfg.tcenv m in
+                                let _, bind_repr = ed.bind_repr in
+                                begin match lb.lbname with
+                                    | Inl x ->
+                                        let head = U.mk_reify <| lb.lbdef in
+                                        let body = U.mk_reify <| body in
+                                        let body = S.mk (Tm_abs([S.mk_binder x], body, None)) None body.pos in
+                                        let bind_inst = match (SS.compress bind_repr).n with
+                                            | Tm_uinst (bind, [_ ; _]) ->
+                                                S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv lb.lbtyp
+                                                                        ; cfg.tcenv.universe_of cfg.tcenv t]))
+                                                None t.pos
+                                            | _ -> failwith "NIY : Reification of indexed effects"
+                                        in
+                                        let reified = S.mk (Tm_app(bind_inst, [as_arg lb.lbtyp; as_arg t;  //a, b
+                                                                               as_arg S.tun; as_arg head;   //wp_head, head--the term shouldn't depend on wp_head
+                                                                               as_arg S.tun; as_arg body])) //wp_body, body--the term shouldn't depend on wp_body
+                                                      None t.pos
+                                        in
+                                        // printfn "Reified %s to %s\n" (Print.term_to_string t) (Print.term_to_string reified);
+                                        norm cfg env stack reified
+                                    | Inr _ -> failwith "Cannot reify a top-level let binding"
+                                end
+                            | Tm_app (head, args) ->
+                                // Turn it into let x0 = head in let x1 = arg0 in ... let xn = argn in x0 x1 ... xn
+                                //monadic application
+                                //Do we need to check that head is reifiable ?
+                                // let head_reifiable =
+                                //     match (SS.compress head).n with
+                                //         | Tm_fvar head_lid ->
+                                //             let ed = Env.get_effect_decl cfg.tcenv m in
+                                //             let b =
+                                //                 let find f = List.fold_left (fun b x -> b || f x) false in
+                                //                 find (fun action -> S.fv_eq_lid head_lid action.action_name) ed.actions
+                                //             in
+                                //             if b
+                                //             then true
+                                //             else
+                                //                 begin match S.lid_of_fv head_lid |> Env.try_lookup_val_decl cfg.tcenv with
+                                //                     | Some (_, quals) -> List.contains Reifiable quals
+                                //                     | _ -> false
+                                //                 end
+                                //         |  _ -> false
+                                // in
+                                // Util.print1_warning "head is %sreifiable !\n" (if head_reifiable then "" else "non ") ;
+                                // if head_reifiable
+                                // then
+                                let ed = Env.get_effect_decl cfg.tcenv m in
+                                let _, bind_repr = ed.bind_repr in
+                                let rec bind_on_lift args acc =
+                                    match args with
+                                        | [] ->
+                                            begin match List.rev acc with
+                                               | [] -> failwith "bind_on_lift should be always called with a non-empty list"
+                                               | (head, _) :: args ->
+                                                   S.mk (Tm_app(head, args)) None t.pos
+                                            end
+                                        | (e,q) :: es ->
+                                            begin match (SS.compress e).n with
+                                                | Tm_meta (e0, Meta_monadic_lift(m1, m2, t')) ->
+                                                    let x = S.gen_bv "monadic_app_var" None t' in
+                                                    let body = bind_on_lift es ((S.bv_to_name x, q)::acc) in
+                                                    (* bind t' t _ (lift e) _ (fun x -> body) *)
+                                                    let lifted_e0 = reify_lift e0 m1 m2 t' in
+                                                    let continuation = U.abs [x,None] body (Some (Inr m2)) in
+                                                    let bind_inst = match (SS.compress bind_repr).n with
+                                                        | Tm_uinst (bind, [_ ; _]) ->
+                                                            S.mk (Tm_uinst (bind, [cfg.tcenv.universe_of cfg.tcenv t'
+                                                                                   ; cfg.tcenv.universe_of cfg.tcenv t]))
+                                                            None e0.pos
+                                                        | _ -> failwith "NIY : Reification of indexed effects"
+                                                    in
+                                                    S.mk (Tm_app (bind_inst, [as_arg t'; as_arg t ;
+                                                                              as_arg S.tun; as_arg lifted_e0;
+                                                                              as_arg S.tun; as_arg continuation ]))
+                                                    None e0.pos
+                                                    (* Tm_meta(_, Meta_monadic _) should not appear here *)
+                                                | _ -> bind_on_lift es ((e,q)::acc)
+                                            end
+                                in
+                                let binded_head = bind_on_lift ((as_arg head)::args) [] in
+                                Util.print1_warning "BEFORE NORMALIZING MONADIC APP : %s\n" (Print.term_to_string binded_head);
+                                norm cfg env stack binded_head
+                            | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
+                                let lifted = reify_lift e msrc mtgt t' in
+                                norm cfg env stack lifted
+                            | _ ->
+                                (* TODO : that seems a little fishy *)
+                                norm cfg env stack head
+                            end
+
 
                  | Meta_monadic_lift (m, m', t) ->
                     (* TODO : don't we need to normalize t here ? *)
