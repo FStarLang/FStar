@@ -265,7 +265,7 @@ let doc_of_decl (d:decl) = match d.d with
                             (fun b -> doc_of_binder b)
                             bb);
                         space; equals; space; (doc_of_term k);  hardline])
-  | ToplevelLet(qq, lq, pats_terms) ->  
+  | TopLevelLet(qq, lq, pats_terms) ->  
         // TODO: qq, lq. 
         let head_ids = List.collect (fun (p,_) -> head_id_of_pat p) pats_terms in 
         group (concat [(str "let"); space;
