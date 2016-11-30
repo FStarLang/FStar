@@ -241,6 +241,7 @@ let run_test section test_vectors print_test_vector test_vector =
   let doit v =
     total := !total + 1;
     if test_vector v then
+      let () = Printf.printf "Test %d OK\n" (!total) in
       passed := !passed + 1
     else (
       Printf.printf "Test failed:\n";

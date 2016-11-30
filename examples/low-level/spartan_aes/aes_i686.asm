@@ -1,11 +1,9 @@
 .686p
-.model flat, C
-PUBLIC keyExpansion@12
-PUBLIC cipher@16
+.model flat
 .code
 .XMM
 ALIGN 16
-keyExpansion@12 proc
+KeyExpansionStdcall@12 proc
   mov eax, dword ptr [esp + 4]
   movdqu xmm1, xmmword ptr [eax + 0]
   mov eax, dword ptr [esp + 8]
@@ -115,7 +113,7 @@ keyExpansion@12 proc
   pxor xmm2, xmm2
   pxor xmm3, xmm3
   ret 12
-keyExpansion@12 endp
+KeyExpansionStdcall@12 endp
 ALIGN 16
 KeyExpansionAndInversionStdcall@12 proc
   mov eax, dword ptr [esp + 4]
@@ -256,7 +254,7 @@ KeyExpansionAndInversionStdcall@12 proc
   ret 12
 KeyExpansionAndInversionStdcall@12 endp
 ALIGN 16
-cipher@16 proc
+AES128EncryptOneBlockStdcall@16 proc
   mov eax, dword ptr [esp + 8]
   movdqu xmm0, xmmword ptr [eax + 0]
   mov eax, dword ptr [esp + 12]
@@ -286,7 +284,7 @@ cipher@16 proc
   mov eax, dword ptr [esp + 4]
   movdqu xmmword ptr [eax + 0], xmm0
   ret 16
-cipher@16 endp
+AES128EncryptOneBlockStdcall@16 endp
 ALIGN 16
 AES128EncryptOneBlock proc
   movdqu xmm2, xmmword ptr [eax + 0]
