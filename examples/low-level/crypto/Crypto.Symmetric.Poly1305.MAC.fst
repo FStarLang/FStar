@@ -144,7 +144,7 @@ noeq type state (i:id) =
       log: log_ref region ->
       state i
 
-let genPost0 (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
+let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
     ~(contains m0 st.r) /\
     ~(contains m0 st.s) /\
     st.region == region /\
@@ -156,7 +156,7 @@ let genPost0 (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
 	   m_sel m1 (ilog st.log) == None)
 
 let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
-    genPost0 i region m0 st m1 /\
+    genPost i region m0 st m1 /\
     modifies (Set.singleton region) m0 m1 /\ 
     modifies_rref region TSet.empty m0.h m1.h 
 

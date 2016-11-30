@@ -235,16 +235,15 @@ let coerce region i ak k =
 (** Should be abstract, but causes code duplication *)
 let irtext (r:rid) = if mac_log then (x:HS.reference text{x.id == r}) else unit
 
-// REMARK: rgn used to be an argument of Acc; this broke extraction
-noeq abstract type accBuffer (i:id) (rgn:rid) =
-  | Acc: a:MAC.elemB i{Buffer.frameOf (MAC.as_buffer a) == rgn} ->
-         l:irtext rgn ->
-         accBuffer i rgn
+noeq abstract type accBuffer (i:id) =
+  | Acc: a:MAC.elemB i ->
+         l:irtext (Buffer.frameOf (MAC.as_buffer a)) ->
+         accBuffer i
 
-let alog (#i:id) (#rgn:rid) (acc:accBuffer i rgn{mac_log}) : HS.reference text =
+let alog (#i:id) (acc:accBuffer i{mac_log}) : HS.reference text =
   acc.l
 
-let acc_inv (#i:id) (#rgn:rid) (st:state i) (acc:accBuffer i rgn) h =
+let acc_inv (#i:id) (st:state i) (acc:accBuffer i) h =
   MAC.norm h st.r /\ MAC.norm h acc.a /\
   disjoint (MAC.as_buffer st.r) (MAC.as_buffer acc.a) /\
   (mac_log ==> (
@@ -255,17 +254,17 @@ let acc_inv (#i:id) (#rgn:rid) (st:state i) (acc:accBuffer i rgn) h =
     a == MAC.poly log r))
 
 // not framed, as we allocate private state on the caller stack
-val start: #i:id -> #rgn:rid -> st:state i -> StackInline (accBuffer i rgn)
-  (requires (fun h -> rgn == h.tip /\ MAC.norm h st.r))
+val start: #i:id -> st:state i -> StackInline (accBuffer i)
+  (requires (fun h -> MAC.norm h st.r))
   (ensures  (fun h0 a h1 ->
-    rgn == h1.tip /\
+    Buffer.frameOf (MAC.as_buffer a.a) == h1.tip /\
     ~(h0 `Buffer.contains` (MAC.as_buffer a.a)) /\
     acc_inv st a h1 /\ 
     modifies_0 h0 h1))
 
 #set-options "--z3timeout 60 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 
-let start #i #rgn st =
+let start #i st =
   let h0 = ST.get () in
   let log:irtext h0.tip = if mac_log then salloc #text Seq.createEmpty else () in
   let h1 = ST.get () in
@@ -275,11 +274,11 @@ let start #i #rgn st =
   lemma_reveal_modifies_0 h1 h2;
   if mac_log then
     assert_norm (MAC.poly #i (HS.sel h2 log) (MAC.sel_elem h2 st.r) == MAC.zero i);
-  Acc #i #rgn a log
+  Acc #i a log
 
 
 // update [was add]; could add finalize (for POLY1305 when last block < 16).
-val update: #i:id -> #rgn:rid -> st:state i -> acc:accBuffer i rgn -> w:lbuffer 16 ->
+val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
   Stack unit
   (requires (fun h ->
     acc_inv st acc h /\
@@ -298,7 +297,7 @@ val update: #i:id -> #rgn:rid -> st:state i -> acc:accBuffer i rgn -> w:lbuffer 
 
 #set-options "--lax"
 
-let update #i #rgn st acc w =
+let update #i st acc w =
   let h0 = ST.get () in
   MAC.update st.r acc.a w;
   if mac_log then
@@ -311,9 +310,8 @@ let update #i #rgn st acc w =
 
 val mac: 
   #i:id ->
-  #rgn:rid ->
-  st:state i -> 
-  acc:accBuffer i rgn ->
+  st:state i ->
+  acc:accBuffer i ->
   tag:lbuffer 16 -> ST unit
   (requires (fun h0 ->
     live h0 tag /\ live h0 st.s /\
@@ -342,7 +340,7 @@ val mac:
     else
       Buffer.modifies_1 tag h0 h1)))
 
-let mac #i #rgn st acc tag =
+let mac #i st acc tag =
   let h0 = ST.get () in
   assert(MAC.live h0 acc.a);
   assert(MAC.norm h0 acc.a);
@@ -361,9 +359,8 @@ let mac #i #rgn st acc tag =
 
 val verify: 
   #i:id ->
-  #rgn:rid ->
-  st:state i -> 
-  acc:accBuffer i rgn ->
+  st:state i ->
+  acc:accBuffer i ->
   tag:lbuffer 16 -> Stack bool
   (requires (fun h0 -> 
     live h0 tag /\ live h0 st.s /\
@@ -394,7 +391,7 @@ val verify:
         else verified)
     else true)))
 
-let verify #i #rgn st acc received =
+let verify #i st acc received =
   assume false; //16-10-30 
   push_frame();
   let tag = Buffer.create 0uy 16ul in

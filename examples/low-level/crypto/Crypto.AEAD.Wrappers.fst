@@ -167,7 +167,7 @@ let prf_mac_when_encrypting (i:id{prf i}) (t:PRF.state i) (k_0: CMA.akey t.mac_r
  | Some mac' -> 
     mac == mac' /\ 
     t1 == SeqProperties.snoc t0 (PRF.Entry x mac) /\
-    CMA.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
+    CMA.genPost (i,x.iv) t.mac_rgn h0 mac h1 /\
     HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
     HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
     HS.modifies_ref t.mac_rgn TSet.empty h0 h1
@@ -186,7 +186,7 @@ let prf_mac_ensures (i:id) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:PRF.do
        | None ->  // when encrypting, we get the stateful post of MAC.create             
          prf_mac_when_encrypting i t k_0 x h0 mac h1)
     else 
-      CMA.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
+      CMA.genPost (i,x.iv) t.mac_rgn h0 mac h1 /\
       HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\ //allocates in t.rgn
       HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1

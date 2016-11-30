@@ -239,14 +239,14 @@ val prf_mac:
           | Some mac' -> 
 	    mac == mac' /\ 
 	    t1 == SeqProperties.snoc t0 (Entry x mac) /\
-	    CMA.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
+	    CMA.genPost (i,x.iv) t.mac_rgn h0 mac h1 /\
             HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
             HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
 	    HS.modifies_ref t.mac_rgn TSet.empty h0 h1
            //16-10-11 we miss a more precise clause capturing the table update   
           | None -> False ))
     else (
-      CMA.genPost0 (i,x.iv) t.mac_rgn h0 mac h1 /\
+      CMA.genPost (i,x.iv) t.mac_rgn h0 mac h1 /\
       HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\ //allocates in t.rgn
       HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
@@ -274,7 +274,7 @@ let prf_mac i t k_0 x =
       let mac = CMA.gen t.mac_rgn macId k_0 in
       r := SeqProperties.snoc contents (Entry x mac);
       assume false; 
-      //16-10-16 framing after change to genPost0?
+      //16-10-16 framing after change to genPost?
       //let h = ST.get() in assume(MAC(norm h mac.r));
       mac
     end
