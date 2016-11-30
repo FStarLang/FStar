@@ -119,7 +119,7 @@ val decrypt: alg:'a -> k:key -> iv:iv -> aad:bbytes -> c:cipher -> ST (option bb
   (requires (fun _ -> True)) 
   (ensures (fun h0 o h1 -> h0 == h1 (* /\ (match o with | Some p -> length c = length p + v taglen | None -> True) *) ))
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 
 let decrypt _ k iv aad cipher = 
   push_frame();

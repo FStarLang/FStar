@@ -5581,7 +5581,13 @@ in ((_183_2573), (Some ("query")), (_183_2572))))
 in FStar_SMTEncoding_Term.Assume (_183_2574))
 in (
 
-let suffix = (FStar_List.append label_suffix ((FStar_SMTEncoding_Term.Echo ("Done!"))::[]))
+let suffix = (let _183_2576 = (let _183_2575 = if (FStar_Options.print_z3_statistics ()) then begin
+(FStar_SMTEncoding_Term.PrintStats)::[]
+end else begin
+[]
+end
+in (FStar_List.append _183_2575 ((FStar_SMTEncoding_Term.Echo ("Done!"))::[])))
+in (FStar_List.append label_suffix _183_2576))
 in ((query_prelude), (labels), (qry), (suffix)))))
 end))
 end))

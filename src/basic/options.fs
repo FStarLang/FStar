@@ -634,7 +634,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "z3timeout",
-         OneArg ((fun s -> Int (int_of_string s)),
+         OneArg ((fun s -> Util.print_string "Warning: z3timeout ignored with universes; use z3rlimit instead\n"; Int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
 

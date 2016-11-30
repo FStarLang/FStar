@@ -71,7 +71,7 @@ val encrypt:
       HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
    ))
 
-#reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let test (h0:HS.mem) (h1:HS.mem) (r:rid) = 
   let open FStar.HyperStack in 
   assume (r `HS.is_in` h0.h);
