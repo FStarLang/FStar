@@ -186,6 +186,7 @@ and free_vars = {
     free_names:set<bv>;
     free_uvars:uvars;
     free_univs:set<universe_uvar>;
+    free_univ_names:set<univ_name>;
 }
 and lcomp = {
     eff_name: lident;
@@ -201,6 +202,7 @@ type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
 val new_uv_set: unit -> uvars
 val new_universe_uvar_set: unit -> set<universe_uvar>
+val new_universe_names_set: unit -> set<univ_name>
 
 type qualifier =
   | Assumption                             //no definition provided, just a declaration
@@ -370,6 +372,7 @@ val is_type:  term -> bool
 val no_names:          freenames
 val no_uvs:            uvars
 val no_universe_uvars: set<universe_uvar>
+val no_universe_names: set<univ_name>
 
 val freenames_of_list:    list<bv> -> freenames
 val freenames_of_binders: binders -> freenames

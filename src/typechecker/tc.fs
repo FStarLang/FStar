@@ -536,7 +536,11 @@ and cps_and_elaborate env ed =
   let lift_from_pure_wp =
       match (SS.compress return_wp).n with
       | Tm_abs (b1 :: b2 :: bs, body, what) ->
-          let [b1 ; b2], body = SS.open_term [b1 ; b2] (U.abs bs body None) in
+          let b1,b2, body =
+              match SS.open_term [b1 ; b2] (U.abs bs body None) with
+                  | [b1 ; b2], body -> b1, b2, body
+                  | _ -> failwith "Impossible : open_term not preserving binders arity"
+          in
           // WARNING : pushing b1 and b2 in env might break the well-typedness invariant
           let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
           let wp_b1 = N.normalize [ N.Beta ] env0 (mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ]))) in
@@ -623,7 +627,11 @@ and cps_and_elaborate env ed =
   let pre, post =
     match (unascribe <| SS.compress wp_type).n with
     | Tm_abs (type_param :: effect_param, arrow, _) ->
-        let (type_param :: effect_param), arrow = SS.open_term (type_param :: effect_param) arrow in
+        let type_param , effect_param, arrow =
+            match SS.open_term (type_param :: effect_param) arrow with
+                | (b :: bs), body -> b, bs, body
+                | _ -> failwith "Impossible : open_term nt preserving binders arity"
+        in
         begin match (unascribe <| SS.compress arrow).n with
         | Tm_arrow (wp_binders, c) ->
             let wp_binders, c = SS.open_comp wp_binders c in
