@@ -478,7 +478,7 @@ and cps_and_elaborate env ed =
   in
 
   (* TODO : having "_" as a variable name can create a really strange shadowing
-            behaviour between ww___ variables in the tcterm ; needs to be investigated *)
+            behaviour between uu___ variables in the tcterm ; needs to be investigated *)
   let a =
       if S.is_null_bv a
       then S.gen_bv "a" (Some (S.range_of_bv a)) a.sort

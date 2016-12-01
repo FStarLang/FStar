@@ -25,24 +25,24 @@ module Prims
   | Left of ' p
   | Right of ' q
 
-  let ww___is_Left = function
+  let uu___is_Left = function
     | Left _ -> true
     | _ -> false
 
-  let ww___is_Right = function
+  let uu___is_Right = function
     | Right _ -> true
     | _ -> false
 
   type (' p, ' q) l_and =
   | And of ' p * ' q
 
-  let ww___is_And = function
+  let uu___is_And = function
     | And _ -> true
 
   type l__True =
     | T
 
-  let ww___is_T = function
+  let uu___is_T = function
     | T -> true
 
   type l__False = unit
@@ -101,8 +101,8 @@ module Prims
   let op_disEquality x y = x<>y
   let op_AmpAmp x y = x && y
   let op_BarBar x y  = x || y
-  let ww___is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
-  let ww___is_Cons l = not (ww___is_Nil l)
+  let uu___is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
+  let uu___is_Cons l = not (uu___is_Nil l)
   let raise e = raise e
   let string_of_bool b = sprintf "%b" b
   let string_of_int i = sprintf "%d" i

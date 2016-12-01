@@ -135,7 +135,7 @@ let rec zero x ghost_heap =
 //Uncomment the last two lines below to see the following error message:
 //   .\FStar.DM4F.Heap.ST.fst(169,29-169,50) : Error
 //   Expected expression of type "Type(0)";
-//   got expression "(ww___:Prims.int -> STNull Prims.int)" of type "Type((S 0))"
+//   got expression "(uu___:Prims.int -> STNull Prims.int)" of type "Type((S 0))"
 ////////////////////////////////////////////////////////////////////////////////
 (* #set-options "--print_universes" *)
 (* let bad (r:ref int) = alloc #(unit -> STNull unit) (fun () -> incr r) *)

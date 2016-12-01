@@ -8,7 +8,7 @@ let bind (a:Type0) (b:Type0)
          (m : cont a) (f : a -> Tot (cont b)) (k : b -> M Type0) : M Type0 =
   (* m (fun (x:a) -> f x k) -- This variant causes:
     unknown(0,0-0,0) : Error
-    Variable "ww___#2279" not found
+    Variable "uu___#2279" not found
   *)
   let mm : cont a = m in mm (fun (x:a) -> let fx : cont b = f x in fx k)
 

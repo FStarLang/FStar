@@ -13,7 +13,7 @@ type lident = {ns:list<ident>; //["FStar"; "Basic"]
 type lid = lident
 
 let mk_ident (text,range) = {idText=text; idRange=range}
-let reserved_prefix = "ww___"
+let reserved_prefix = "uu___"
 let gen = 
     let x = Util.mk_ref 0 in 
     fun r -> x := !x + 1; mk_ident (reserved_prefix ^ string_of_int !x, r)

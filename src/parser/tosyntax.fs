@@ -1592,7 +1592,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn bui
             actions     = List.map (fun action ->
                 {
                     // Since we called enter_monad_env before, this is going to generate
-                    // a name of the form FStar.ST.ww___proj__STATE__item__get
+                    // a name of the form FStar.ST.uu___proj__STATE__item__get
                     action_name = Env.qualify env (action.action_unqualified_name);
                     action_unqualified_name = action.action_unqualified_name;
                     action_univs = action.action_univs ;

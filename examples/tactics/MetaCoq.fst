@@ -15,8 +15,8 @@ noeq type goal : Type =
 
 (* Without --__temp_no_proj hitting bug (#736)
 ./MetaCoq.fst(12,2-12,6) : Error
-Expected expression of type "(ww___:(MetaCoq.AHyp.a projectee) -> Tot MetaCoq.goal)";
-got expression "_2" of type "(ww___:a -> Tot MetaCoq.goal)" *)
+Expected expression of type "(uu___:(MetaCoq.AHyp.a projectee) -> Tot MetaCoq.goal)";
+got expression "_2" of type "(uu___:a -> Tot MetaCoq.goal)" *)
 
 let tactic : Type = goal -> ML (list goal)
 
