@@ -2281,7 +2281,10 @@ universeFrom:
       )}
 
 atomicUniverse:
-  INT
+  UNDERSCORE
+    {let _1 = () in
+      ( mk_term Wild (rhs parseState 1) Expr )}
+| INT
     {let n = $1 in
       (
         if snd n then
@@ -2293,11 +2296,11 @@ atomicUniverse:
     {let id = $1 in
       (
         let pos = rhs parseState 1 in
-        mk_term (Tvar (mk_ident (id, pos))) pos Expr
+        mk_term (Uvar (mk_ident (id, pos))) pos Expr
       )}
 | LPAREN universeFrom RPAREN
     {let (_1, u, _3) = ((), $2, ()) in
-                                 ( u )}
+      ( mk_term (Paren u) (rhs2 parseState 1 3) Expr )}
 
 right_flexible_list_SEMICOLON_noSeqTerm_:
   

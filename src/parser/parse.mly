@@ -941,6 +941,8 @@ universeFrom:
       }
 
 atomicUniverse:
+  | UNDERSCORE
+      { mk_term Wild (rhs parseState 1) Expr }
   | n=INT
       {
         if snd n then
@@ -951,9 +953,10 @@ atomicUniverse:
   | id=UNIVAR
       {
         let pos = rhs parseState 1 in
-        mk_term (Tvar (mk_ident (id, pos))) pos Expr
+        mk_term (Uvar (mk_ident (id, pos))) pos Expr
       }
-  | LPAREN u=universeFrom RPAREN { u }
+  | LPAREN u=universeFrom RPAREN
+      { mk_term (Paren u) (rhs2 parseState 1 3) Expr }
 
 
 /******************************************************************************/
