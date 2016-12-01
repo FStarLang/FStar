@@ -100,6 +100,8 @@ let num_blocks' (i:id) (l:nat) : Tot nat =
   let bl = v (Cipher.( blocklen (cipher_of_id i))) in
   (l + bl - 1) / bl
 
+#reset-options "--z3rlimit 20"
+
 let num_blocks (#i:id) (e:entry i) : Tot nat = 
   let Entry nonce ad l plain cipher_tagged = e in
   num_blocks' i l

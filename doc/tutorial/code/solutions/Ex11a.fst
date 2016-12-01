@@ -183,6 +183,8 @@ val lemma_bots_tl_disjoint: #rs:set rid -> bs:bots rs{is_Cons bs}
 			 mem b tl ==> disjoint (Bot?.r b) (Bot?.r hd)))
 let lemma_bots_tl_disjoint #rs bs = ()
 
+#reset-options "--z3rlimit 10"
+
 val fly_robot_army: #rs:set rid -> bs:bots rs -> ST unit
   (requires (fun h -> (forall b. mem b bs ==> robot_inv b h)))
   (ensures  (fun h0 _u h1 ->   modifies rs h0 h1
@@ -195,6 +197,8 @@ let rec fly_robot_army #rs bs =
     //lemma_bots_tl_disjoint bs;      //not necessary; doesnt' improve speed
     fly b;
     fly_robot_army bs'
+
+#reset-options
 
 val main: unit -> ST unit
     (requires (fun _ -> True))

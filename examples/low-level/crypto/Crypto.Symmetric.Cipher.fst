@@ -67,7 +67,7 @@ val compute:
     (ensures (fun h0 _ h1 -> live h1 output /\ modifies_1 output h0 h1
       ))
 
-#reset-options "--z3timeout 10000" 
+#reset-options "--z3rlimit 10000" 
 
 let compute a output k n counter len = 
   assume False; //16-10-02 TODO not sure what's going on

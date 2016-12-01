@@ -104,6 +104,8 @@ let lemma_pad_0_injective b0 b1 l =
   SeqProperties.lemma_append_inj b0 (Seq.create l 0uy) b1 (Seq.create l 0uy);
   Seq.lemma_eq_intro b0 b1
 
+#reset-options "--z3rlimit 20"
+
 val lemma_encode_injective: w0:word -> w1:word -> Lemma
   (requires (length w0 == length w1 /\ encode w0 == encode w1))
   (ensures  (w0 == w1))
@@ -151,10 +153,14 @@ let rec lemma_encode_pad_injective p0 t0 p1 t1 =
     lemma_encode_injective w0 w1
     end
 
+#reset-options
+
 val encode_pad_empty: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> Lemma
   (requires Seq.length txt == 0)
   (ensures  encode_pad prefix txt == prefix)
 let encode_pad_empty prefix txt = ()
+
+#reset-options "--z3rlimit 20"
 
 val encode_pad_snoc: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> w:word_16 -> Lemma
   (encode_pad (SeqProperties.snoc prefix (encode w)) txt ==
@@ -166,6 +172,8 @@ let encode_pad_snoc prefix txt w =
   let prefix' = SeqProperties.snoc prefix (encode w') in
   Seq.lemma_eq_intro w w';
   Seq.lemma_eq_intro txt txt'
+
+#reset-options
 
 (* * *********************************************)
 (* *        Poly1305 functional invariant        *)
@@ -206,7 +214,7 @@ private let rec lemma_sane_eq_poly0 (p:seq elem) (r:elem) : Lemma
   (ensures (poly' p r = 0)) (decreases (Seq.length p)) = 
   if Seq.length p = 0 then () 
   else if SeqProperties.head p = 0 then lemma_sane_eq_poly0 (SeqProperties.tail p) r
-#reset-options "--z3timeout 1000"
+#reset-options ""
 private let rec lemma_sane_eq_poly (p0:seq elem) (p1:seq elem) (r:elem) : Lemma
   (requires eq_poly p0 p1)
   (ensures (poly' p0 r = poly' p1 r)) (decreases (Seq.length p0)) = 

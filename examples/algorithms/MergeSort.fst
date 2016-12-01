@@ -28,7 +28,7 @@ val merge: l1:list int -> l2:list int -> Pure (list int)
              (requires (sorted l1 /\ sorted l2))
              (ensures (fun l -> sorted l /\ permutation_2 l l1 l2
                                          /\ merge_inv l1 l2 l))
-#set-options "--z3timeout 10"
+#set-options "--z3rlimit 10"
 let rec merge l1 l2 = match (l1, l2) with
   | [], _ -> l2
   | _, [] -> l1

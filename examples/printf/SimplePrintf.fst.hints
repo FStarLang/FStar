@@ -1,5 +1,5 @@
 [
-  "IB\u001f$⁄ÍÚçÊ¯\u0005Sƒí'Ë",
+  "|T!\u0002!—i±√-|mÜxÆ≠",
   [
     [
       "SimplePrintf.dir",
@@ -193,7 +193,7 @@
         "@query", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "constructor_distinct_Prims.None",
         "constructor_distinct_SimplePrintf.Lit",
-        "constructor_distinct_Tm_unit", "data_elim_Prims.None",
+        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "equation_FStar.Char.char", "equation_FStar.String.char",
         "equation_SimplePrintf.add_dir",
@@ -209,8 +209,8 @@
         "fuel_guarded_inversion_Prims.option",
         "fuel_irrelevance_SimplePrintf.dir_type.fuel_instrumented",
         "fuel_irrelevance_SimplePrintf.parse_format_pure.fuel_instrumented",
+        "interpretation_Tm_abs_c3549fe1b7e2196f88903cfe9b9232df",
         "interpretation_Tm_arrow_39510f957430f3e1b585e8742918fc25",
-        "interpretation_Tm_arrow_e6c430e76be26dc6ad28f8fdd2dc70ca",
         "kinding_Prims.list@tok", "kinding_SimplePrintf.dir@tok",
         "lemma_Prims.invertOption",
         "pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
@@ -220,10 +220,13 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "projection_inverse_Prims.Some_v",
         "projection_inverse_SimplePrintf.Lit__0",
-        "refinement_interpretation_Tm_refine_26a59ef7c9592c08834dc2e3fae024ca",
-        "string_inversion", "typing_FStar.String.list_of_string",
+        "refinement_interpretation_Tm_refine_3a4c6d17dc5ce023672e4dd1e3f15e46",
+        "string_inversion",
+        "token_correspondence_SimplePrintf.string_of_dirs.fuel_instrumented",
+        "typing_FStar.String.list_of_string",
         "typing_SimplePrintf.parse_format_string",
-        "typing_Tm_abs_c3549fe1b7e2196f88903cfe9b9232df"
+        "typing_Tm_abs_771e56bdbeeb25db5ef4c533af184e04",
+        "typing_Tm_abs_d7959793b0c45bd3e92cb7785d36822f"
       ],
       0
     ],

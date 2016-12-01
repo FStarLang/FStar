@@ -1,5 +1,5 @@
 [
-  "žÛ345yqñÒìpÔv\"öX",
+  "-lÙ`\u0002#šqóè|¯«P\u0016'",
   [
     [ "FStar.DM4F.StExnC.return", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -34,6 +34,7 @@
       ],
       0
     ],
+    [ "FStar.DM4F.StExnC.STEXNC_raise_elab", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.StExnC.STEXNC", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.StExnC.STEXNC", 2, 2, 1, [ "@query" ], 0 ],
     [
