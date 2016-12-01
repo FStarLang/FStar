@@ -220,7 +220,9 @@ let decr_while h v = match h with
     let tmp = interpret_exp h0 v in
     if 0 > tmp then 0 else tmp
 
-(* This needs a high timeout *)
+
+#reset-options "--z3rlimit 30"
+
 val loop_com' : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> h:(rel (option heap)) -> 
   Lemma (requires (ni_exp env e l /\ ni_com env c l))
         (ensures  (ni_com' env (While e c v) l h)) 
@@ -279,6 +281,7 @@ let rec loop_com' env e c v l h =
     | None, None -> ()
   end
 
+#reset-options
 
 val loop_com : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> 
   Lemma (requires (ni_exp env e l /\ ni_com env c l))

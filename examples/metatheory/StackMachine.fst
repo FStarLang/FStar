@@ -183,6 +183,8 @@ let rec tcompile #t (e : texp t) (ts : tstack) : Tot (tprog ts (t :: ts)) (decre
 ./StackMachine.fst(175,27-175,28): Failed to verify implicit argument: Subtyping check failed; expected type (ts#82697:StackMachine.tstack{(Prims.precedes (Prims.LexCons e2 Prims.LexTop) (Prims.LexCons e Prims.LexTop))}); got type StackMachine.tstack
 ./StackMachine.fst(176,30-176,31): Failed to verify implicit argument: Subtyping check failed; expected type (ts#82697:StackMachine.tstack{(Prims.precedes (Prims.LexCons e1 Prims.LexTop) (Prims.LexCons e Prims.LexTop))}); got type (Prims.list StackMachine.typ)  *)
 
+#reset-options "--z3rlimit 10"
+
 let rec tconcat_correct #ts #ts' #ts''
                        (p : tprog ts ts') (p' : tprog ts' ts'') (s : vstack ts) :
     Lemma (requires True)

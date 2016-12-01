@@ -152,20 +152,20 @@ let ask_and_report_errors env all_labels prefix query suffix =
                     | Some _ -> ()
                     | None -> minimum_workable_fuel := Some (f, errs) in
 
-    let with_fuel label_assumptions p (n, i, timeout_ms) =
+    let with_fuel label_assumptions p (n, i, rlimit) =
        [Term.Caption (Util.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
         Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, None);
         Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, None);
         p]
         @label_assumptions
-        @[Term.SetOption ("timeout", string_of_int timeout_ms)]
+        @[Term.SetOption ("rlimit", string_of_int rlimit)]
         @[Term.CheckSat]
         @(if Options.record_hints() then [Term.GetUnsatCore] else [])
         @suffix in
 
     let check (p:decl) =
-        let default_timeout = Options.z3_timeout () * 1000 in
-        let default_initial_config = Options.initial_fuel(), Options.initial_ifuel(), default_timeout in
+        let rlimit = Options.z3_rlimit () * 544656 in
+        let default_initial_config = Options.initial_fuel(), Options.initial_ifuel(), rlimit in
         let hint_opt = next_hint query_name query_index in
         let unsat_core, initial_config =
             match hint_opt with
@@ -173,24 +173,24 @@ let ask_and_report_errors env all_labels prefix query suffix =
             | Some hint -> 
               let core, timeout = 
                 if Option.isSome hint.unsat_core 
-                then hint.unsat_core, default_timeout
-                else None, 60 * 1000 in
+                then hint.unsat_core, rlimit
+                else None, 60 * 544656 in
               core,
               (hint.fuel, hint.ifuel, timeout) in
         let alt_configs = List.flatten 
            [(if default_initial_config <> initial_config  
              || Option.isSome unsat_core                          then [default_initial_config]                                       else []); 
-            (if Options.max_ifuel()    >  Options.initial_ifuel() then [Options.initial_fuel(), Options.max_ifuel(), default_timeout] else []);
-            (if Options.max_fuel() / 2 >  Options.initial_fuel()  then [Options.max_fuel() / 2, Options.max_ifuel(), default_timeout] else []);
+            (if Options.max_ifuel()    >  Options.initial_ifuel() then [Options.initial_fuel(), Options.max_ifuel(), rlimit] else []);
+            (if Options.max_fuel() / 2 >  Options.initial_fuel()  then [Options.max_fuel() / 2, Options.max_ifuel(), rlimit] else []);
             (if Options.max_fuel()     >  Options.initial_fuel() && 
-                Options.max_ifuel()    >  Options.initial_ifuel() then [Options.max_fuel(),     Options.max_ifuel(), default_timeout] else []);
-            (if Options.min_fuel()     <  Options.initial_fuel()  then [Options.min_fuel(), 1, default_timeout]                       else [])] in
+                Options.max_ifuel()    >  Options.initial_ifuel() then [Options.max_fuel(),     Options.max_ifuel(), rlimit] else []);
+            (if Options.min_fuel()     <  Options.initial_fuel()  then [Options.min_fuel(), 1, rlimit]                       else [])] in
         let report p (errs:z3_err) : unit =
             let errs : z3_err = 
                 if Options.detail_errors() && Options.n_cores() = 1
                 then let min_fuel, potential_errors = match !minimum_workable_fuel with 
                         | Some (f, errs) -> f, errs
-                        | None -> (Options.min_fuel(), 1, default_timeout), errs in
+                        | None -> (Options.min_fuel(), 1, rlimit), errs in
                      let ask_z3 label_assumptions = 
                         let res = Util.mk_ref None in
                         Z3.ask None all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
@@ -233,10 +233,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
         and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (result, elapsed_time) =
             if used_hint then (Z3.refresh(); record_hint_stat hint_opt result elapsed_time (Env.get_range env));
-            let at_log_file () = 
-                if Options.log_queries() 
-                then "@" ^ (Z3.query_logging.log_file_name())
-                else "" in
+            if Options.z3_refresh() || Options.print_z3_statistics() then Z3.refresh();
             let query_info tag = 
                  Util.print "(%s%s)\n\tQuery (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s\n"
                                 [Range.string_of_range (Env.get_range env);

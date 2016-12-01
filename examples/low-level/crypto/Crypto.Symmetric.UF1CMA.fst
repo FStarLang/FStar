@@ -152,7 +152,7 @@ val alloc: i:id
   (requires (fun m0 -> live m0 key))
   (ensures  (genPost i region))
  
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 let alloc i region key =
   let r = MAC.rcreate region (fst i) in
   let s = FStar.Buffer.rcreate region 0uy 16ul in

@@ -231,6 +231,8 @@ val typing_extensional : g:env -> g':env -> e:exp
                            (ensures (typing g e == typing g' e))
 let typing_extensional g g' e = context_invariance e g g'
 
+#reset-options "--z3rlimit 10"
+
 val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
       g:env{Some? (typing empty v) &&
             Some? (typing (extend g x (Some?.v (typing empty v))) e)} ->
@@ -273,6 +275,8 @@ let rec substitution_preserves_typing x e v g =
   | EFst e1
   | ESnd e1 ->
       substitution_preserves_typing x e1 v g
+
+#reset-options
 
 val preservation : e:exp{Some? (typing empty e) /\ Some? (step e)} ->
       Tot (u:unit{typing empty (Some?.v (step e)) == typing empty e})

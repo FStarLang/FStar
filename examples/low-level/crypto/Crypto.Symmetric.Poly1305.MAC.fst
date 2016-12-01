@@ -169,7 +169,7 @@ val alloc: i:id
   (requires (fun m0 -> live m0 key))
   (ensures  (genPost i region))
 
-#reset-options "--z3timeout 1000"
+#reset-options "--z3rlimit 100"
 let alloc i region key =
   let r = FStar.Buffer.rcreate region 0UL 5ul in
   let s = FStar.Buffer.rcreate region 0uy 16ul in
@@ -276,7 +276,7 @@ let seq_head_snoc #a xs x =
   Seq.lemma_len_append xs (Seq.create 1 x);
   Seq.lemma_eq_intro (seq_head (SeqProperties.snoc xs x)) xs
 
-#set-options "--z3timeout 100 --print_fuels --initial_fuel 1 --initial_ifuel 1"
+#reset-options "--z3rlimit 100 --print_fuels --initial_fuel 1 --initial_ifuel 1"
 
 let update #i st l a v =
   let h0 = ST.get () in
@@ -338,8 +338,7 @@ let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
    mac_log ==> a == poly l r)
 *)
 
-#set-options "--z3timeout 100 --print_fuels --initial_fuel 1 --initial_ifuel 1"
-#reset-options "--z3timeout 20 --initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1"
+#reset-options "--z3rlimit 20 --initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1"
 val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit
   (requires (fun h0 ->
     live h0 tag /\ live h0 st.s /\

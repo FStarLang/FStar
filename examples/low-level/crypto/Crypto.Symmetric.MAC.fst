@@ -161,7 +161,7 @@ let field_mul #i a b =
 let op_Plus_At = field_add
 let op_Star_At = field_mul
 
-#set-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 (** Process one message block and update the accumulator *)
 val update: #i:id -> r:elemB i -> a:elemB i -> w:wordB_16 -> Stack unit

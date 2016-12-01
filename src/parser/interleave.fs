@@ -105,7 +105,7 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
 
     //is d of of the form 'let x = ...' or 'type x = ...'
     let is_let x d = match d.d with 
-        | ToplevelLet(_, _, defs) -> 
+        | TopLevelLet(_, _, defs) -> 
           lids_of_let defs |> Util.for_some (id_eq_lid x)
         | Tycon(_, tys) ->
           tys |> List.map (fun (x,_) -> x)
@@ -153,7 +153,7 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
                                     | Some d -> raise (Error (Util.format2 "%s is out of order with %s" (decl_to_string d) (decl_to_string let_x), d.drange))
                                     | _ ->
                                       begin match let_x.d with 
-                                         | ToplevelLet(_, _, defs) ->
+                                         | TopLevelLet(_, _, defs) ->
                                            let def_lids = lids_of_let defs in //let rec x and y, etc.
                                            let iface_prefix_opt = iface |> FStar.Util.prefix_until (fun d -> 
                                             match d.d with 

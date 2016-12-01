@@ -228,7 +228,7 @@ decl2:
       {  TopLevelModule uid }
   | k=kind_abbrev  (* TODO : Remove with stratify *)
       { k }
-  | qs=qualifiers TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDefinition))
+  | qs=qualifiers TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
       { Tycon (qs, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
   | qs=qualifiers EFFECT uid=uident tparams=typars EQUALS t=typ
       { Tycon(Effect::qs, [(TyconAbbrev(uid, tparams, None, t), None)]) }
@@ -236,8 +236,7 @@ decl2:
   | qs=qualifiers LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
         let lbs = focusLetBindings lbs (rhs2 parseState 1 4) in
-        (* TODO : Why ToplevelLet vs TopLevelModule ??? *)
-        ToplevelLet(qs, q, lbs)
+        TopLevelLet(qs, q, lbs)
       }
   | qs=qualifiers VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
       {
@@ -261,9 +260,9 @@ decl2:
   | doc=FSDOC_STANDALONE
       { Fsdoc doc }
 
-typeDefinition:
+typeDecl:
   (* TODO : change to lident with stratify *)
-  | lid=ident tparams=typars ascr_opt=ascribeKind? tcdef=tyconDefn
+  | lid=ident tparams=typars ascr_opt=ascribeKind? tcdef=typeDefinition
       { tcdef lid tparams ascr_opt }
 
 typars:
@@ -274,7 +273,7 @@ tvarinsts:
   | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, tvar) TYP_APP_GREATER
       { map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) tvs }
 
-tyconDefn:
+typeDefinition:
   |   { (fun id binders kopt -> check_id id; TyconAbstract(id, binders, kopt)) }
   | EQUALS t=typ
       { (fun id binders kopt ->  check_id id; TyconAbbrev(id, binders, kopt, t)) }
@@ -283,7 +282,7 @@ tyconDefn:
       record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl)
    RBRACE
       { (fun id binders kopt -> check_id id; TyconRecord(id, binders, kopt, record_field_decls)) }
-  (* TODO : try to have the first BAR optional using left-flexible list *)
+  (* having the first BAR optional using left-flexible list creates a s/r on FSDOC since any decl can be preceded by a FSDOC *)
   | EQUALS ct_decls=list(constructorDecl)
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
@@ -602,13 +601,12 @@ noSeqTerm:
         let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
         mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
       }
-  (* TODO : Use left_flexible_list *)
-  | TRY e1=term WITH pb=firstPatternBranch pbs=patternBranches
+  | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
-         let branches = focusBranches (pb::pbs) (rhs2 parseState 1 5) in
-         mk_term (TryWith(e1, branches)) (rhs2 parseState 1 5) Expr
+         let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
+         mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       }
-  | MATCH e=term WITH pbs=patternBranches
+  | MATCH e=term WITH pbs=list(BAR pb=patternBranch {pb})
       {
         let branches = focusBranches pbs (rhs2 parseState 1 4) in
         mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
@@ -620,11 +618,10 @@ noSeqTerm:
         let lbs = focusLetBindings lbs (rhs2 parseState 2 3) in
         mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
       }
-  (* TODO : Use left_flexible_list *)
-  | FUNCTION pb=firstPatternBranch pbs=patternBranches
+  | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
-        let branches = focusBranches (pb::pbs) (rhs2 parseState 1 3) in
-        mk_function branches (lhs parseState) (rhs2 parseState 1 3)
+        let branches = focusBranches (pbs) (rhs2 parseState 1 2) in
+        mk_function branches (lhs parseState) (rhs2 parseState 1 2)
       }
   | ASSUME e=atomicTerm
       { mkExplicitApp (mk_term (Var assume_lid) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
@@ -660,21 +657,12 @@ simpleTerm:
   | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
       { mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) Un }
 
-patternBranches:
-  | pbs=list(patternBranch) { pbs }
-
 maybeFocusArrow:
   | RARROW          { false }
   | SQUIGGLY_RARROW { true }
 
-firstPatternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */
-  | pb=patternBranchSep(ioption(BAR)) { pb }
-
-patternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */
-  | pb=patternBranchSep(BAR) { pb }
-
-%inline patternBranchSep(SEP):
-  | SEP pat=disjunctivePattern when_opt=maybeWhen focus=maybeFocusArrow e=term
+patternBranch:
+  | pat=disjunctivePattern when_opt=maybeWhen focus=maybeFocusArrow e=term
       {
         let pat = match pat with
           | [p] -> p
@@ -825,6 +813,12 @@ indexingTerm:
 atomicTerm:
   | x=atomicTermNotQUident
     { x }
+  | x=atomicTermQUident
+    { x }
+  | x=opPrefixTerm(atomicTermQUident)
+    { x }
+
+atomicTermQUident:
   | id=quident
     {
         let t = Name id in
@@ -843,17 +837,21 @@ atomicTermNotQUident:
   | c=constant { mk_term (Const c) (rhs parseState 1) Expr }
   | L_TRUE   { mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type }
   | L_FALSE   { mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type }
-  | op=OPPREFIX e=atomicTerm
-      { mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr }
+  | x=opPrefixTerm(atomicTermNotQUident)
+    { x }
   | LPAREN op=operator RPAREN
       { mk_term (Op(op, [])) (rhs2 parseState 1 3) Un }
   | LENS_PAREN_LEFT e0=tmEq COMMA el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
       { mkDTuple (e0::el) (rhs2 parseState 1 5) }
-  (* TODO : field should have the possibility to be qualified by a module path when projecting *)
   | e=projectionLHS field_projs=list(DOT id=qlident {id})
       { fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs }
   | BEGIN e=term END
       { e }
+
+(* Tm: atomicTermQUident or atomicTermNotQUident *)
+opPrefixTerm(Tm):
+  | op=OPPREFIX e=Tm
+      { mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr }
 
 fsTypeArgs:
   | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER
@@ -1010,4 +1008,14 @@ reverse_left_flexible_list(delim, X):
 
 %inline left_flexible_list(delim, X):
  xs = reverse_left_flexible_list(delim, X)
+   { List.rev xs }
+
+reverse_left_flexible_nonempty_list(delim, X):
+| ioption(delim) x = X
+   { [x] }
+| xs = reverse_left_flexible_nonempty_list(delim, X) delim x = X
+   { x :: xs }
+
+%inline left_flexible_nonempty_list(delim, X):
+ xs = reverse_left_flexible_nonempty_list(delim, X)
    { List.rev xs }

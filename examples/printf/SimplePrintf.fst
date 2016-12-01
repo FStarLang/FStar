@@ -133,6 +133,8 @@ let example4_lemma () :
   Lemma (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]) =
   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String])
 
+// #reset-options "--z3timeout 10"
+
 let example5 : string =
   (* Requiring such an assert_norm on each usage seems quite bad for usability *)
   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]);

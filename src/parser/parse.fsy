@@ -299,7 +299,7 @@ let x =
 in
     ( Some x )}
 
-option___anonymous_5_:
+option___anonymous_6_:
   
     {    ( None )}
 | LBRACE noSeqTerm RBRACE
@@ -413,10 +413,22 @@ let x =
 in
     ( x :: xs )}
 
-list___anonymous_6_:
+list___anonymous_5_:
   
     {    ( [] )}
-| DOT qlident list___anonymous_6_
+| BAR patternBranch list___anonymous_5_
+    {let (_10, pb0, xs) = ((), $2, $3) in
+let x =
+  let pb = pb0 in
+  let _1 = _10 in
+                                                      (pb)
+in
+    ( x :: xs )}
+
+list___anonymous_7_:
+  
+    {    ( [] )}
+| DOT qlident list___anonymous_7_
     {let (_10, id0, xs) = ((), $2, $3) in
 let x =
   let id = id0 in
@@ -470,13 +482,6 @@ let x =
   in
       ( (x, y) )
 in
-    ( x :: xs )}
-
-list_patternBranch_:
-  
-    {    ( [] )}
-| patternBranch list_patternBranch_
-    {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
 list_qualifier_:
@@ -564,8 +569,8 @@ separated_nonempty_list_AND_letbinding_:
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
-separated_nonempty_list_AND_pair_option_FSDOC__typeDefinition__:
-  option_FSDOC_ typeDefinition
+separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__:
+  option_FSDOC_ typeDecl
     {let (x0, y0) = ($1, $2) in
 let x =
   let y = y0 in
@@ -573,7 +578,7 @@ let x =
       ( (x, y) )
 in
     ( [ x ] )}
-| option_FSDOC_ typeDefinition AND separated_nonempty_list_AND_pair_option_FSDOC__typeDefinition__
+| option_FSDOC_ typeDecl AND separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
     {let (x0, y0, _2, xs) = ($1, $2, (), $4) in
 let x =
   let y = y0 in
@@ -727,7 +732,7 @@ decl2:
 | kind_abbrev
     {let k = $1 in
       ( k )}
-| list_qualifier_ TYPE separated_nonempty_list_AND_pair_option_FSDOC__typeDefinition__
+| list_qualifier_ TYPE separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
     {let (qs0, _2, tcdefs) = ($1, (), $3) in
 let qs =
   let qs = qs0 in
@@ -749,8 +754,7 @@ let qs =
 in
       (
         let lbs = focusLetBindings lbs (rhs2 parseState 1 4) in
-        (* TODO : Why ToplevelLet vs TopLevelModule ??? *)
-        ToplevelLet(qs, q, lbs)
+        TopLevelLet(qs, q, lbs)
       )}
 | list_qualifier_ VAL lidentOrOperator list_multiBinder_ COLON typ
     {let (qs0, _2, lid, bss, _5, t) = ($1, (), $3, $4, (), $6) in
@@ -802,8 +806,8 @@ in
     {let doc = $1 in
       ( Fsdoc doc )}
 
-typeDefinition:
-  ident typars option_ascribeKind_ tyconDefn
+typeDecl:
+  ident typars option_ascribeKind_ typeDefinition
     {let (lid, tparams, ascr_opt, tcdef) = ($1, $2, $3, $4) in
       ( tcdef lid tparams ascr_opt )}
 
@@ -820,7 +824,7 @@ tvarinsts:
     {let (_1, tvs, _3) = ((), $2, ()) in
       ( map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) tvs )}
 
-tyconDefn:
+typeDefinition:
   
     {      ( (fun id binders kopt -> check_id id; TyconAbstract(id, binders, kopt)) )}
 | EQUALS typ
@@ -1551,13 +1555,17 @@ in
         let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
         mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
       )}
-| TRY term WITH firstPatternBranch patternBranches
-    {let (_1, e1, _3, pb, pbs) = ((), $2, (), $4, $5) in
+| TRY term WITH reverse_left_flexible_nonempty_list_BAR_patternBranch_
+    {let (_1, e1, _3, xs0) = ((), $2, (), $4) in
+let pbs =
+  let xs = xs0 in
+     ( List.rev xs )
+in
       (
-         let branches = focusBranches (pb::pbs) (rhs2 parseState 1 5) in
-         mk_term (TryWith(e1, branches)) (rhs2 parseState 1 5) Expr
+         let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
+         mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       )}
-| MATCH term WITH patternBranches
+| MATCH term WITH list___anonymous_5_
     {let (_1, e, _3, pbs) = ((), $2, (), $4) in
       (
         let branches = focusBranches pbs (rhs2 parseState 1 4) in
@@ -1572,11 +1580,15 @@ in
         let lbs = focusLetBindings lbs (rhs2 parseState 2 3) in
         mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
       )}
-| FUNCTION firstPatternBranch patternBranches
-    {let (_1, pb, pbs) = ((), $2, $3) in
+| FUNCTION reverse_left_flexible_nonempty_list_BAR_patternBranch_
+    {let (_1, xs0) = ((), $2) in
+let pbs =
+  let xs = xs0 in
+     ( List.rev xs )
+in
       (
-        let branches = focusBranches (pb::pbs) (rhs2 parseState 1 3) in
-        mk_function branches (lhs parseState) (rhs2 parseState 1 3)
+        let branches = focusBranches (pbs) (rhs2 parseState 1 2) in
+        mk_function branches (lhs parseState) (rhs2 parseState 1 2)
       )}
 | ASSUME atomicTerm
     {let (_1, e) = ((), $2) in
@@ -1637,11 +1649,6 @@ simpleTerm:
     {let (_1, pats, _3, e) = ((), $2, (), $4) in
       ( mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) Un )}
 
-patternBranches:
-  list_patternBranch_
-    {let pbs = $1 in
-                            ( pbs )}
-
 maybeFocusArrow:
   RARROW
     {let _1 = () in
@@ -1650,147 +1657,33 @@ maybeFocusArrow:
     {let _1 = () in
                     ( true )}
 
-firstPatternBranch:
-  disjunctivePattern maybeFocusArrow term
-    {let (pat0, focus0, e0) = ($1, $2, $3) in
-let pb =
-  let e = e0 in
-  let focus = focus0 in
-  let pat = pat0 in
-  let when_opt =
-                             ( None )
-  in
-  let _1 =
-        ( None )
-  in
-        (
-        let pat = match pat with
-          | [p] -> p
-          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2)
-        in
-        (focus, (pat, when_opt, e))
-      )
-in
-                                      ( pb )}
-| disjunctivePattern WHEN tmFormula maybeFocusArrow term
-    {let (pat0, _100, e00, focus0, e1) = ($1, (), $3, $4, $5) in
-let pb =
-  let e = e1 in
-  let focus = focus0 in
-  let e0 = e00 in
-  let _10 = _100 in
-  let pat = pat0 in
-  let when_opt =
-    let e = e0 in
-    let _1 = _10 in
-                             ( Some e )
-  in
-  let _1 =
-        ( None )
-  in
-        (
-        let pat = match pat with
-          | [p] -> p
-          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2)
-        in
-        (focus, (pat, when_opt, e))
-      )
-in
-                                      ( pb )}
-| BAR disjunctivePattern maybeFocusArrow term
-    {let (x00, pat0, focus0, e0) = ((), $2, $3, $4) in
-let pb =
-  let e = e0 in
-  let focus = focus0 in
-  let pat = pat0 in
-  let x0 = x00 in
-  let when_opt =
-                             ( None )
-  in
-  let _1 =
-    let x = x0 in
-        ( Some x )
-  in
-        (
-        let pat = match pat with
-          | [p] -> p
-          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2)
-        in
-        (focus, (pat, when_opt, e))
-      )
-in
-                                      ( pb )}
-| BAR disjunctivePattern WHEN tmFormula maybeFocusArrow term
-    {let (x00, pat0, _100, e00, focus0, e1) = ((), $2, (), $4, $5, $6) in
-let pb =
-  let e = e1 in
-  let focus = focus0 in
-  let e0 = e00 in
-  let _10 = _100 in
-  let pat = pat0 in
-  let x0 = x00 in
-  let when_opt =
-    let e = e0 in
-    let _1 = _10 in
-                             ( Some e )
-  in
-  let _1 =
-    let x = x0 in
-        ( Some x )
-  in
-        (
-        let pat = match pat with
-          | [p] -> p
-          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2)
-        in
-        (focus, (pat, when_opt, e))
-      )
-in
-                                      ( pb )}
-
 patternBranch:
-  BAR disjunctivePattern maybeFocusArrow term
-    {let (_10, pat0, focus0, e0) = ((), $2, $3, $4) in
-let pb =
+  disjunctivePattern maybeFocusArrow term
+    {let (pat, focus, e) = ($1, $2, $3) in
+let when_opt =
+                           ( None )
+in
+      (
+        let pat = match pat with
+          | [p] -> p
+          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2)
+        in
+        (focus, (pat, when_opt, e))
+      )}
+| disjunctivePattern WHEN tmFormula maybeFocusArrow term
+    {let (pat, _10, e0, focus, e) = ($1, (), $3, $4, $5) in
+let when_opt =
   let e = e0 in
-  let focus = focus0 in
-  let pat = pat0 in
   let _1 = _10 in
-  let when_opt =
-                             ( None )
-  in
-        (
+                           ( Some e )
+in
+      (
         let pat = match pat with
           | [p] -> p
           | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2)
         in
         (focus, (pat, when_opt, e))
-      )
-in
-                             ( pb )}
-| BAR disjunctivePattern WHEN tmFormula maybeFocusArrow term
-    {let (_11, pat0, _100, e00, focus0, e1) = ((), $2, (), $4, $5, $6) in
-let pb =
-  let e = e1 in
-  let focus = focus0 in
-  let e0 = e00 in
-  let _10 = _100 in
-  let pat = pat0 in
-  let _1 = _11 in
-  let when_opt =
-    let e = e0 in
-    let _1 = _10 in
-                             ( Some e )
-  in
-        (
-        let pat = match pat with
-          | [p] -> p
-          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2)
-        in
-        (focus, (pat, when_opt, e))
-      )
-in
-                             ( pb )}
+      )}
 
 tmIff:
   tmImplies IFF tmIff
@@ -2056,7 +1949,7 @@ tmNoEq:
               ( e )}
 
 refineOpt:
-  option___anonymous_5_
+  option___anonymous_6_
     {let phi_opt = $1 in
                                                     (phi_opt)}
 
@@ -2100,7 +1993,15 @@ atomicTerm:
   atomicTermNotQUident
     {let x = $1 in
     ( x )}
-| quident
+| atomicTermQUident
+    {let x = $1 in
+    ( x )}
+| opPrefixTerm_atomicTermQUident_
+    {let x = $1 in
+    ( x )}
+
+atomicTermQUident:
+  quident
     {let id = $1 in
     (
         let t = Name id in
@@ -2132,9 +2033,9 @@ atomicTermNotQUident:
 | L_FALSE
     {let _1 = () in
               ( mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type )}
-| OPPREFIX atomicTerm
-    {let (op, e) = ($1, $2) in
-      ( mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr )}
+| opPrefixTerm_atomicTermNotQUident_
+    {let x = $1 in
+    ( x )}
 | LPAREN OPPREFIX RPAREN
     {let (_1, op0, _3) = ((), $2, ()) in
 let op =
@@ -2225,12 +2126,22 @@ in
 | LENS_PAREN_LEFT tmEq COMMA separated_nonempty_list_COMMA_tmEq_ LENS_PAREN_RIGHT
     {let (_1, e0, _3, el, _5) = ((), $2, (), $4, ()) in
       ( mkDTuple (e0::el) (rhs2 parseState 1 5) )}
-| projectionLHS list___anonymous_6_
+| projectionLHS list___anonymous_7_
     {let (e, field_projs) = ($1, $2) in
       ( fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs )}
 | BEGIN term END
     {let (_1, e, _3) = ((), $2, ()) in
       ( e )}
+
+opPrefixTerm_atomicTermNotQUident_:
+  OPPREFIX atomicTermNotQUident
+    {let (op, e) = ($1, $2) in
+      ( mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr )}
+
+opPrefixTerm_atomicTermQUident_:
+  OPPREFIX atomicTermQUident
+    {let (op, e) = ($1, $2) in
+      ( mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr )}
 
 fsTypeArgs:
   TYP_APP_LESS separated_nonempty_list_COMMA_atomicTerm_ TYP_APP_GREATER
@@ -2447,6 +2358,24 @@ right_flexible_nonempty_list_SEMICOLON_simpleDef_:
 | simpleDef SEMICOLON right_flexible_list_SEMICOLON_simpleDef_
     {let (x, _2, xs) = ($1, (), $3) in
                                            ( x :: xs )}
+
+reverse_left_flexible_nonempty_list_BAR_patternBranch_:
+  patternBranch
+    {let x = $1 in
+let _1 =
+      ( None )
+in
+   ( [x] )}
+| BAR patternBranch
+    {let (x0, x) = ((), $2) in
+let _1 =
+  let x = x0 in
+      ( Some x )
+in
+   ( [x] )}
+| reverse_left_flexible_nonempty_list_BAR_patternBranch_ BAR patternBranch
+    {let (xs, _2, x) = ($1, (), $3) in
+   ( x :: xs )}
 
 %%
 
