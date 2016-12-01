@@ -22,8 +22,8 @@ assume type key_prop : key -> text2 -> Type
 
 type pkey (p:(text2 -> Type)) = 
   k:key{ key_prop k == p
-      /\ BMAC.key_prop (Keys.k0 k) == bspec0 p
-      /\ BMAC.key_prop (Keys.k1 k) == bspec1 p }
+      /\ BMAC.key_prop (Keys?.k0 k) == bspec0 p
+      /\ BMAC.key_prop (Keys?.k1 k) == bspec1 p }
 
 val keygen: p:(text2 -> Type) -> pkey p
 val mac:    p:(text2 -> Type) -> k:pkey p -> t:text2{p  t} -> tag

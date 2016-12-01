@@ -8,6 +8,12 @@ module HS   = FStar.HyperStack
 module MR   = FStar.Monotonic.RRef
 module SeqP = FStar.SeqProperties
 
+(* 2016-11-22: The following is meant to override the fact that the
+   enclosing namespace of the current module (here FStar.Monotonic) is
+   automatically opened, which makes Seq resolve into
+   FStar.Monotonic.Seq instead of FStar.Seq. *)
+module Seq = FStar.Seq
+
 ////////////////////////////////////////////////////////////////////////////////
 
 abstract let seq_extension (#a:Type) (s1:seq a) (s2:seq a) (s3:seq a) =
@@ -216,7 +222,7 @@ val map_append: f:('a -> Tot 'b) -> s1:seq 'a -> s2:seq 'a -> Lemma
   (requires True)
   (ensures (map f (s1@s2) == (map f s1 @ map f s2)))
   (decreases (Seq.length s2))
-#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+#reset-options "--z3rlimit 10 --initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 let rec map_append f s_1 s_2 =
   if Seq.length s_2 = 0
   then (cut (Seq.equal (s_1@s_2) s_1);
@@ -231,6 +237,8 @@ let rec map_append f s_1 s_2 =
   	cut (Seq.equal (SeqP.snoc (m_s_1 @ m_p_2) flast)
   		       (m_s_1 @ SeqP.snoc m_p_2 flast));                 //              = map f s1 @ (snoc (map f p) (f last))
         map_snoc f prefix_2 last)                                       //              = map f s1 @ map f (snoc p last)
+
+#reset-options "--z3rlimit 5"
 
 val map_length: f:('a -> Tot 'b) -> s1:seq 'a -> Lemma
   (requires True)
@@ -311,11 +319,12 @@ let collect_snoc f s a =
   let prefix, last = un_snoc (SeqP.snoc s a) in
   cut (Seq.equal prefix s)
 
+#reset-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+
 val collect_append: f:('a -> Tot (seq 'b)) -> s1:seq 'a -> s2:seq 'a -> Lemma
   (requires True)
   (ensures (collect f (s1@s2) == (collect f s1 @ collect f s2)))
   (decreases (Seq.length s2))
-#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 let rec collect_append f s_1 s_2 =
   if Seq.length s_2 = 0
   then (cut (Seq.equal (s_1@s_2) s_1);
@@ -330,6 +339,8 @@ let rec collect_append f s_1 s_2 =
   	cut (Seq.equal ((m_s_1 @ m_p_2) @ flast)
   		       (m_s_1 @ (m_p_2 @ flast)));                 //              = map f s1 @ (snoc (map f p) (f last))
         collect_snoc f prefix_2 last)                                       //              = map f s1 @ map f (snoc p last)
+
+#reset-options "--z3rlimit 5"
 
 let collect_grows_aux (f:'a -> Tot (seq 'b))
 		  (s1:seq 'a) (s3:seq 'a) (s2:seq 'a)

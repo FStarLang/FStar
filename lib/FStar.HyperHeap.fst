@@ -73,7 +73,7 @@ let rec lemma_disjoint_includes i j k =
               else ()))
 
 val extends: rid -> rid -> Tot bool
-let extends r0 r1 = is_Cons r0 && Cons.tl r0 = r1
+let extends r0 r1 = Cons? r0 && Cons.tl r0 = r1
 
 val parent: r:rid{r<>root} -> Tot rid
 let parent r = Cons.tl r

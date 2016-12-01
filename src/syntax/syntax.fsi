@@ -218,7 +218,7 @@ type qualifier =
   | TotalEffect                            //an effect that forbids non-termination
   | Logic                                  //a symbol whose intended usage is in the refinement logic
   | Reifiable
-  | Reflectable
+  | Reflectable of lident                  // with fully qualified effect name
   //the remaining qualifiers are internal: the programmer cannot write them
   | Discriminator of lident                //discriminator for a datacon l
   | Projector of lident * ident            //projector for datacon l's argument x
@@ -249,6 +249,7 @@ type sub_eff = {
 *)
 type action = {
     action_name:lident;
+    action_unqualified_name: ident; // necessary for effect redefinitions, this name shall not contain the name of the effect
     action_univs:univ_names;
     action_defn:term;
     action_typ: typ;
@@ -337,6 +338,8 @@ type path = list<string>
 type subst_t = list<subst_elt>
 type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
 type mk_t = mk_t_a<term',term'>
+
+val contains_reflectable:  list<qualifier> -> bool
 
 val withsort: 'a -> 'b -> withinfo_t<'a,'b>
 val withinfo: 'a -> 'b -> Range.range -> withinfo_t<'a,'b>

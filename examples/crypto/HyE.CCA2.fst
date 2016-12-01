@@ -24,7 +24,7 @@ noeq abstract type pkey =
   | PKey: #region:rid -> rawpk:RSA.pkey -> log: log_t region -> pkey
 
 let access_pk_raw (pk:pkey) =
-  PKey.rawpk pk
+  PKey?.rawpk pk
 
 
 noeq abstract type skey =
@@ -47,9 +47,9 @@ let encrypt pk (p:PlainPKE.t) : RSA.cipher =
 
 
 let decrypt sk (c:RSA.cipher) : option (PlainPKE.t) =
-  let log = m_read (PKey.log sk.pk) in
+  let log = m_read (PKey?.log sk.pk) in
   match Ideal.ind_cca, seq_find (function Entry c' _ -> c=c') log with
-  | true,  Some t  -> Some(Entry.p t)
+  | true,  Some t  -> Some(Entry?.p t)
   | _,  _       -> None
   | false, _ -> 
     (match RSA.dec sk.raw c with

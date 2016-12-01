@@ -27,6 +27,7 @@
       ],
       0
     ],
+    [ "FStar.DM4F.Exceptions.EXN_raise_elab", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Exceptions.EXN", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Exceptions.EXN", 2, 2, 1, [ "@query" ], 0 ],
     [

@@ -15,11 +15,11 @@ type db = list entry
 (* We define two pure functions that test whether
    the suitable permission exists in some db *)
 let canWrite db file =
-  is_Some (tryFind (function Writable x -> x=file | _ -> false) db)
+  Some? (tryFind (function Writable x -> x=file | _ -> false) db)
 
 
 let canRead db file =
-  is_Some (tryFind (function Readable x | Writable x -> x=file) db)
+  Some? (tryFind (function Readable x | Writable x -> x=file) db)
 
 (* The acls reference stores the current access-control list, initially empty *)
 val acls: ref db

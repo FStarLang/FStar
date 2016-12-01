@@ -53,7 +53,7 @@ let decr h c =
   | _ ->   0
 
 (* Returns Some heap if the variant is correct *)
-val interpret_while : h:heap -> c:com{is_While c}
+val interpret_while : h:heap -> c:com{While? c}
   -> Tot (option heap) (decreases %[c; decr h c; 0])
 val interpret_com : h:heap -> c:com -> Tot (option heap) (decreases %[c; decr h c; 1])
 
@@ -103,7 +103,7 @@ val interpret_com_st : c:com -> ST unit
   (requires (fun _ -> True))
   (ensures  (fun h _ h' -> 
     Let (interpret_com h c) (fun o ->
-     is_Some o ==> equal h' (Some.v o))))
+     Some? o ==> equal h' (Some.v o))))
 let rec interpret_com_st c = 
   match c with
   | Skip -> ()

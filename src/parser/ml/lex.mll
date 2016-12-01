@@ -330,6 +330,8 @@ rule token = parse
  | "<==>"      { IFF }
  | "==>"       { IMPLIES }
  | "."         { DOT }
+ | "?."        { QMARK_DOT }
+ | "?"         { QMARK }
  | ".["        { DOT_LBRACK }
  | ".("        { DOT_LPAREN }
  | "{:pattern" { LBRACE_COLON_PATTERN }

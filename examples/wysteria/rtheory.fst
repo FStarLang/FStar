@@ -26,11 +26,11 @@ opaque type tpre_assec' (ps:prins) (ps':prins) (pi:tpar ps') (x:varname) (e:exp)
        (contains p en_m /\ contains p red_m /\
         (Let (Some.v (select p pi))
          (fun c ->
-	  is_T_red (Conf.t c) /\
+	  T_red? (Conf.t c) /\
 	  (Let (T_red.r (Conf.t c))
 	   (fun r ->
 	    r = Some.v (select p red_m) /\
-	    is_R_assec r /\ R_assec.ps r = ps /\ is_clos (R_assec.v r) /\
+	    R_assec? r /\ R_assec.ps r = ps /\ is_clos (R_assec.v r) /\
 	    MkTuple3._2 (get_en_b (R_assec.v r)) = x /\
 	    MkTuple3._3 (get_en_b (R_assec.v r)) = e /\
 	    Some.v (select p en_m) = MkTuple3._1 (get_en_b (R_assec.v r)))))))
@@ -63,7 +63,7 @@ opaque type final_prop (ps:prins) (pi:tpar ps) (c:config{is_value c}) =
   forall p.{:pattern (contains p pi)} contains p pi ==>
        (Let (Conf.t (Some.v (select p pi)))
         (fun t ->
-	 is_T_val t /\
+	 T_val? t /\
 	 (Let (D_v (T_val.meta t) (T_val.v t))
 	  (fun dvt ->
 	   b2t (dvt = slice_v #(T_val.meta (Conf.t c)) p
@@ -232,11 +232,11 @@ let create_pstep_star ps en_m red_m x e c_sec h pi =
 
 (* val sec_enter_is_parametric: *)
 (*   ps:prins -> pi:protocol ps -> pi':protocol ps *)
-(*   -> h:pstep #ps pi pi'{is_P_sec_enter h /\ P_sec_enter.ps h = ps} *)
+(*   -> h:pstep #ps pi pi'{P_sec_enter? h /\ P_sec_enter.ps h = ps} *)
 (*   -> p:prin{contains p (fst pi)} -> c:tconfig_par{same_c (Some.v (select p (fst pi))) c} *)
 (*   -> Tot (h':(pstep #ps (update #prin #tconfig_par #p_cmp p c (fst pi), snd pi) *)
 (*                        (update #prin #tconfig_par #p_cmp p (step_p_to_wait c p) (fst pi'), snd pi')) *)
-(*             {is_P_sec_enter h'}) *)
+(*             {P_sec_enter? h'}) *)
 (* let sec_enter_is_parametric ps pi pi' h p c = *)
 (*   let x = P_sec_enter.x h in *)
 (*   let e = P_sec_enter.e h in *)
@@ -265,18 +265,18 @@ let create_pstep_star ps en_m red_m x e c_sec h pi =
 
 (* val sec_step_is_parametric: *)
 (*   ps:prins -> pi:protocol ps -> pi':protocol ps *)
-(*   -> h:pstep #ps pi pi'{is_P_sec h /\ P_sec.ps h = ps} *)
+(*   -> h:pstep #ps pi pi'{P_sec? h /\ P_sec.ps h = ps} *)
 (*   -> p:prin{contains p (fst pi)} -> c:tconfig_par{same_c (Some.v (select p (fst pi))) c} *)
 (*   -> Tot (h':(pstep #ps (update #prin #tconfig_par #p_cmp p c (fst pi), snd pi) *)
 (*                        (update #prin #tconfig_par #p_cmp p c (fst pi), snd pi')) *)
-(* 	    {is_P_sec h'}) *)
+(* 	    {P_sec? h'}) *)
 (* let sec_step_is_parametric ps pi pi' h p c = *)
 (*   P_sec #ps #(P_sec.c' h) (update p c (fst pi), snd pi) ps (P_sec.h h) (update p c (fst pi), snd pi') *)
 
 (* val all_sec_steps: ps:prins -> pi:protocol ps -> pi':protocol ps -> h:pstep_star #ps pi pi' -> Tot bool (decreases h) *)
 (* let rec all_sec_steps ps pi pi' = function *)
 (*   | PS_refl _                        -> true *)
-(*   | PS_tran #ps #pi #pi' #pi'' h1 h2 -> is_P_sec h1 && P_sec.ps h1 = ps && all_sec_steps ps pi' pi'' h2 *)
+(*   | PS_tran #ps #pi #pi' #pi'' h1 h2 -> P_sec? h1 && P_sec.ps h1 = ps && all_sec_steps ps pi' pi'' h2 *)
 
 (* val sec_step_star_is_parametric: *)
 (*   ps:prins -> pi:protocol ps -> pi':protocol ps -> h:pstep_star #ps pi pi'{all_sec_steps ps pi pi' h} *)
@@ -313,7 +313,7 @@ let create_pstep_star ps en_m red_m x e c_sec h pi =
 (*   -> pi:protocol ps *)
 (*   -> pi_enter:protocol ps *)
 (*   -> pi_final:protocol ps{contains ps (snd pi_final) /\ is_sterminal (Some.v (select ps (snd pi_final)))} *)
-(*   -> h1:pstep #ps pi pi_enter{is_P_sec_enter h1 /\ P_sec_enter.ps h1 = ps} *)
+(*   -> h1:pstep #ps pi pi_enter{P_sec_enter? h1 /\ P_sec_enter.ps h1 = ps} *)
 (*   -> h2:pstep_star #ps pi_enter pi_final{all_sec_steps ps pi_enter pi_final h2} *)
 (*   -> p:prin{contains p (fst pi)} -> c:tconfig_par{same_c (Some.v (select p (fst pi))) c} *)
 (*   -> Lemma (requires (True)) *)

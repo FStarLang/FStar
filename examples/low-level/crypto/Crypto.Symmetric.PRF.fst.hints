@@ -1,5 +1,5 @@
 [
-  "\u0003ˇ)o\u001c.Ï≠—«T“C•¨ì",
+  "Ú¯œˆÇ\\~JŒ¨ó˜\u001f”ÅB",
   [
     [
       "Crypto.Symmetric.PRF.block",
@@ -38,8 +38,8 @@
       0,
       1,
       [
-        "@query", "b2t_def",
-        "equality_tok_Crypto.Symmetric.Cipher.AES256@tok",
+        "@query", "b2t_def", "bool_inversion", "bool_typing",
+        "constructor_distinct_Tm_unit", "data_elim_FStar.UInt32.Mk",
         "equation_Crypto.Symmetric.AES.keylen",
         "equation_Crypto.Symmetric.AES.nb",
         "equation_Crypto.Symmetric.AES.nk",
@@ -51,13 +51,13 @@
         "equation_FStar.Mul.op_Star", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
         "equation_FStar.UInt.mul", "equation_FStar.UInt.size",
-        "equation_FStar.UInt32.mul", "equation_FStar.UInt32.n",
-        "equation_FStar.UInt32.t", "equation_FStar.UInt32.uint_to_t",
-        "equation_FStar.UInt32.v", "equation_Flag.cipher_of_id",
-        "equation_Prims.nat",
-        "fuel_guarded_inversion_Crypto.Symmetric.Cipher.alg",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.mul",
+        "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
+        "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
+        "equation_Prims.nat", "fuel_guarded_inversion_FStar.UInt32.t_",
         "fuel_guarded_inversion_Flag.id",
-        "function_token_typing_Crypto.Symmetric.AES.keylen", "int_inversion",
+        "function_token_typing_Crypto.Symmetric.AES.keylen",
+        "function_token_typing_Crypto.Symmetric.AES.nb", "int_inversion",
         "int_typing", "lemma_Crypto.Symmetric.Poly1305.div_aux",
         "lemma_FStar.Int.pow2_values", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
@@ -65,10 +65,11 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.UInt32.Mk_v",
+        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
         "refinement_interpretation_Tm_refine_814770d986f06f66b84225be16b5517a",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_e6018cc7c2288c656285cfad2308ec66",
-        "typing_Crypto.Symmetric.AES.v", "typing_Flag.cipher_of_id"
+        "typing_Crypto.Symmetric.AES.v"
       ],
       0
     ],

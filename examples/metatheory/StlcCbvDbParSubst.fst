@@ -66,7 +66,7 @@ let rec step e =
   | _ -> None
 
 val progress : #e:exp -> #t:typ -> h:typing empty e t ->
-      Lemma (requires True) (ensures (is_value e \/ (is_Some (step e)))) (decreases h)
+      Lemma (requires True) (ensures (is_value e \/ (Some? (step e)))) (decreases h)
 let rec progress #e #t h =
   match h with
   | TyVar _   -> ()
@@ -109,7 +109,7 @@ let rec context_invariance #e #g #t h g' =
   | TyUnit -> TyUnit
 
 val free_in_context : x:var -> #e:exp -> #g:env -> #t:typ -> h:typing g e t ->
-      Lemma (requires True) (ensures (appears_free_in x e ==> is_Some (g x))) (decreases h)
+      Lemma (requires True) (ensures (appears_free_in x e ==> Some? (g x))) (decreases h)
 let rec free_in_context x #e #g #t h =
   match h with
   | TyVar x -> ()
@@ -269,8 +269,8 @@ val extend_gen_0 : t:typ -> g:env ->
 let extend_gen_0 t g =
   forall_intro (extend_gen_0_aux t g)
 
-val preservation : #e:exp -> #t:typ -> h:typing empty e t{is_Some (step e)} ->
-      Tot (typing empty (Some.v (step e)) t) (decreases e)
+val preservation : #e:exp -> #t:typ -> h:typing empty e t{Some? (step e)} ->
+      Tot (typing empty (Some?.v (step e)) t) (decreases e)
 let rec preservation #e #t h =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = h in
      if is_value e1
@@ -278,5 +278,5 @@ let rec preservation #e #t h =
            then let TyLam t_x hbody = h1 in
                 (extend_gen_0 t_x empty;
                  substitution_preserves_typing 0 h2 hbody)
-           else TyApp #_ #_ #(Some.v (step e2)) #_ #_ h1 (preservation h2))
-     else TyApp #_ #(Some.v (step e1)) #_ #_ #_ (preservation h1) h2
+           else TyApp #_ #_ #(Some?.v (step e2)) #_ #_ h1 (preservation h2))
+     else TyApp #_ #(Some?.v (step e1)) #_ #_ #_ (preservation h1) h2

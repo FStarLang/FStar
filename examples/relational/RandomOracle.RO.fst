@@ -46,17 +46,17 @@ type state_hash =
 type Ok : double log -> Type =
   | Null: Ok (twice [])
   | ConsH: k:double key{safe_key k} -> t:double tag{safe t}
-           -> l:double log{and_irel (rel_map2T (fun k l -> is_None (assoc k l)) k l)}
+           -> l:double log{and_irel (rel_map2T (fun k l -> None? (assoc k l)) k l)}
            -> p: Ok l
            -> Ok (cons_rel (pair_rel k (pair_rel (twice Hon) t)) l)
   | ConsA: k:eq key -> t:eq tag
-           -> l:double log{and_irel (rel_map2T (fun k l -> is_None (assoc k l)) k l)}
+           -> l:double log{and_irel (rel_map2T (fun k l -> None? (assoc k l)) k l)}
            -> p: Ok l
            -> Ok (cons_rel (pair_rel k (pair_rel (twice Adv) t)) l)
 
 (* keys are fresh if they are not in the hash function's log yet *)
 val fresh_keys : k:double key -> l:double log -> Tot bool
-let fresh_keys k l = and_irel (rel_map2T (fun k l -> is_None (assoc k l)) k l)
+let fresh_keys k l = and_irel (rel_map2T (fun k l -> None? (assoc k l)) k l)
 
 (* We need these lemmas to use our inductive datatype Ok without having access
    to an element of Ok l (it exists only in refinements) *)
@@ -65,7 +65,7 @@ assume val ok_as_proof : l: double log{Ok l} -> Tot (Ok l)
 
 val ok_consH : k:double key{safe_key k}
              -> t:double tag{safe t}
-             -> l:double log{and_irel (rel_map2T (fun k l  -> is_None (assoc k l)) k l)
+             -> l:double log{and_irel (rel_map2T (fun k l  -> None? (assoc k l)) k l)
                           /\ Ok l}
              ->  Lemma (requires True)
                        (ensures Ok (cons_rel (pair_rel k (pair_rel (twice Hon) t)) l))
@@ -73,7 +73,7 @@ let ok_consH k t l = ok_as_refinement(ConsH k t l (ok_as_proof l))
 
 val ok_consA : k:eq key
              -> t:eq tag
-             -> l:double log{and_irel (rel_map2T (fun k l  -> is_None (assoc k l)) k l)
+             -> l:double log{and_irel (rel_map2T (fun k l  -> None? (assoc k l)) k l)
                           /\ Ok l}
              ->  Lemma (requires True)
                        (ensures Ok (cons_rel (pair_rel k (pair_rel (twice Adv) t)) l))
@@ -104,8 +104,8 @@ let ok_adv_eq k l = ok_adv_eq' k l (ok_as_proof l)
 val ok_hon_safe' : k:double key -> l:double log -> p:Ok l
                 -> Lemma
                    (requires (safe_key k))
-                   (ensures ( (is_Some(assoc (R.l k) (R.l l)) /\ is_Hon(fst (Some.v(assoc (R.l k) (R.l l))))) <==>
-                               is_Some(assoc (R.r k) (R.r l)) /\ is_Hon(fst (Some.v(assoc (R.r k) (R.r l))))))
+                   (ensures ( (Some?(assoc (R.l k) (R.l l)) /\ Hon?(fst (Some.v(assoc (R.l k) (R.l l))))) <==>
+                               Some?(assoc (R.r k) (R.r l)) /\ Hon?(fst (Some.v(assoc (R.r k) (R.r l))))))
                    (decreases (R.l l))
 let rec ok_hon_safe' k l p = match p with
         | Null -> ()
@@ -119,8 +119,8 @@ let rec ok_hon_safe' k l p = match p with
  val ok_hon_safe : k:double key -> l:double log{Ok l}
                 -> Lemma
                    (requires (safe_key k))
-                   (ensures ( (is_Some(assoc (R.l k) (R.l l)) /\ is_Hon(fst (Some.v(assoc (R.l k) (R.l l))))) <==>
-                               is_Some(assoc (R.r k) (R.r l)) /\ is_Hon(fst (Some.v(assoc (R.r k) (R.r l))))))
+                   (ensures ( (Some?(assoc (R.l k) (R.l l)) /\ Hon?(fst (Some.v(assoc (R.l k) (R.l l))))) <==>
+                               Some?(assoc (R.r k) (R.r l)) /\ Hon?(fst (Some.v(assoc (R.r k) (R.r l))))))
 let ok_hon_safe k l = ok_hon_safe' k l (ok_as_proof l)
 
 
@@ -129,9 +129,9 @@ let ok_hon_safe k l = ok_hon_safe' k l (ok_as_proof l)
 val ok_hon_safe2' : k:double key -> l:double log -> p:Ok l
                 -> Lemma
                    (requires (safe_key k))
-                   (ensures (is_Some(assoc (R.l k) (R.l l)) /\ is_Some(assoc (R.r k) (R.r l)) /\
-                             is_Hon(fst(Some.v (assoc (R.l k) (R.l l)))) /\
-                             is_Hon(fst(Some.v (assoc (R.r k) (R.r l)))) ==>
+                   (ensures (Some?(assoc (R.l k) (R.l l)) /\ Some?(assoc (R.r k) (R.r l)) /\
+                             Hon?(fst(Some.v (assoc (R.l k) (R.l l)))) /\
+                             Hon?(fst(Some.v (assoc (R.r k) (R.r l)))) ==>
                                safe (R (snd(Some.v (assoc (R.l k) (R.l l))))
                                        (snd(Some.v (assoc (R.r k) (R.r l)))))))
                    (decreases (R.l l))
@@ -147,9 +147,9 @@ let rec ok_hon_safe2' k l p = match p with
 val ok_hon_safe2 : k:double key -> l:double log{Ok l}
                 -> Lemma
                    (requires (safe_key k))
-                   (ensures (is_Some(assoc (R.l k) (R.l l)) /\ is_Some(assoc (R.r k) (R.r l)) /\
-                             is_Hon(fst(Some.v (assoc (R.l k) (R.l l)))) /\
-                             is_Hon(fst(Some.v (assoc (R.r k) (R.r l)))) ==>
+                   (ensures (Some?(assoc (R.l k) (R.l l)) /\ Some?(assoc (R.r k) (R.r l)) /\
+                             Hon?(fst(Some.v (assoc (R.l k) (R.l l)))) /\
+                             Hon?(fst(Some.v (assoc (R.r k) (R.r l)))) ==>
                                safe (R (snd(Some.v (assoc (R.l k) (R.l l))))
                                        (snd(Some.v (assoc (R.r k) (R.r l)))))))
 let ok_hon_safe2 k l = ok_hon_safe2' k l (ok_as_proof l)
@@ -169,7 +169,7 @@ opaque val hash_hon:  k:double key -> f:(tag -> Tot tag){good_sample_fun #tag #t
                           safe_key k))
                (ensures (fun h2' p h2 -> goodstate_hash (sel_rel1 h2 s) /\
                                          (not (or_irel (rel_map1T (fun s -> s.bad) (sel_rel1 h2 s))) ==>
-                                         (is_Some (R.l p) /\ is_Some (R.r p)
+                                         (Some? (R.l p) /\ Some? (R.r p)
                                            /\ safe (R (Some.v(R.l p)) (Some.v(R.r p)))
                                            /\ (fresh_keys k (rel_map1T (fun s -> s.l) (sel_rel1 h2' s))
                                                ==> Some.v #tag (R.r p) = f (Some.v #tag (R.l p)))
@@ -181,7 +181,7 @@ opaque val hash_hon2:  k:double key -> f:(tag -> Tot tag){good_sample_fun #tag #
                           safe_key k))
                (ensures (fun h2' p h2 -> goodstate_hash (sel_rel1 h2 s) /\
                                          (not (or_irel (rel_map1T (fun s -> s.bad) (sel_rel1 h2 s))) ==>
-                                         (is_Some (R.l p) /\ is_Some (R.r p)
+                                         (Some? (R.l p) /\ Some? (R.r p)
                                            /\ safe (R (Some.v(R.l p)) (Some.v(R.r p)))
                                            /\ (fresh_keys k (rel_map1T (fun s -> s.l) (sel_rel1 h2' s))
                                                ==> Some.v #tag (R.r p) = f (Some.v #tag (R.l p)))
@@ -192,7 +192,7 @@ opaque val hash_adv: k:eq key ->
                (requires (fun h2 -> goodstate_hash (sel_rel1 h2 s)))
                (ensures (fun h2' p h2 -> goodstate_hash (sel_rel1 h2 s) /\
                                          (or_irel (rel_map1T (fun s -> s.bad) (sel_rel1 h2 s)) \/
-                                         is_Some (R.l p) /\ is_Some (R.r p) /\
+                                         Some? (R.l p) /\ Some? (R.r p) /\
                                          Some.v(R.l p) = Some.v(R.r p)
                                          /\ Ok (rel_map1T (fun s -> s.l)(sel_rel1 h2 s)))))
 
@@ -231,10 +231,10 @@ let hash_hon k f = let s = compose2_self (fun s -> !s) (twice s)in
 
                    good_sample_fun_bijection #tag #tag f;
                    if (not (or_irel (rel_map1T (fun s -> s.bad) s))) then
-                     if and_irel (rel_map1T is_Some t) then
+                     if and_irel (rel_map1T Some? t) then
                        (ok_hon_safe k l;
                        ok_hon_safe2 k l;
-                       if and_irel (rel_map2T (fun k l -> is_None (assoc k l)) k l) then
+                       if and_irel (rel_map2T (fun k l -> None? (assoc k l)) k l) then
                          ok_consH k (R (Some.v (R.l t)) (Some.v (R.r t))) l);
                    t
 
@@ -302,9 +302,9 @@ let hash_adv k  = let s = compose2_self (fun s -> !s) (twice s) in
                                         (pair_rel k r) in 
 
                   if (not (or_irel (rel_map1T (fun s -> s.bad) s))) then
-                    if and_irel (rel_map1T is_Some t) then
+                    if and_irel (rel_map1T Some? t) then
                       (ok_adv_eq k l;
-                      if and_irel (rel_map2T (fun k l -> is_None (assoc k l)) k l) then
+                      if and_irel (rel_map2T (fun k l -> None? (assoc k l)) k l) then
                         ok_consA k (R (Some.v (R.l t)) (Some.v (R.r t))) l);
                   t
 

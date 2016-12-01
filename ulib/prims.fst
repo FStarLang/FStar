@@ -344,8 +344,8 @@ unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
          : GTot Type0 =
   forall (k:ex_post b).
      (forall (rb:result b).{:pattern (guard_free (k rb))} k rb <==> p rb)
-     ==> (wp1 (fun ra1 -> (is_V ra1 ==> wp2 (V.v ra1) k)
-			/\ (is_E ra1 ==> k (E (E.e ra1)))))
+     ==> (wp1 (fun ra1 -> (V? ra1 ==> wp2 (V?.v ra1) k)
+			/\ (E? ra1 ==> k (E (E?.e ra1)))))
 
 unfold let ex_ite_wp (a:Type) (wp:ex_wp a) (post:ex_post a) =
   forall (k:ex_post a).
@@ -402,7 +402,7 @@ unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
                        (wp1:all_wp_h heap a)
                        (wp2:(a -> GTot (all_wp_h heap b)))
                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
-  wp1 (fun ra h1 -> (is_V ra ==> wp2 (V.v ra) p h1)) h0
+  wp1 (fun ra h1 -> (V? ra ==> wp2 (V?.v ra) p h1)) h0
 
 unfold let all_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)
@@ -604,16 +604,16 @@ let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
 let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
 
 val fst : ('a * 'b) -> Tot 'a
-let fst x = Mktuple2._1 x
+let fst x = Mktuple2?._1 x
 
 val snd : ('a * 'b) -> Tot 'b
-let snd x = Mktuple2._2 x
+let snd x = Mktuple2?._2 x
 
 val dfst : #a:Type -> #b:(a -> GTot Type) -> dtuple2 a b -> Tot a
-let dfst #a #b t = Mkdtuple2._1 t
+let dfst #a #b t = Mkdtuple2?._1 t
 
-val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2._1 t))
-let dsnd #a #b t = Mkdtuple2._2 t
+val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2?._1 t))
+let dsnd #a #b t = Mkdtuple2?._2 t
 
 assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
@@ -641,7 +641,7 @@ let allow_inversion (a:Type)
 //allowing inverting option without having to globally increase the fuel just for this
 val invertOption : a:Type -> Lemma
   (requires True)
-  (ensures (forall (x:option a). is_None x \/ is_Some x))
+  (ensures (forall (x:option a). None? x \/ Some? x))
   [SMTPatT (option a)]
 let invertOption a = allow_inversion (option a)
 

@@ -1,5 +1,5 @@
 [
-  "RV’2>u=\rIwl\u00020*IÓ",
+  "öÖ0é&^æ\u000bI\u0015Eñ©9v\u0018",
   [
     [
       "Crypto.Symmetric.Cipher.keylen",
@@ -7,7 +7,9 @@
       0,
       1,
       [
-        "@query", "data_elim_FStar.UInt32.Mk",
+        "@query", "constructor_distinct_Crypto.Symmetric.Cipher.AES256",
+        "constructor_distinct_Crypto.Symmetric.Cipher.CHACHA20",
+        "data_elim_FStar.UInt32.Mk",
         "disc_equation_Crypto.Symmetric.Cipher.AES256",
         "disc_equation_Crypto.Symmetric.Cipher.CHACHA20",
         "equation_Crypto.Symmetric.AES.keylen",
@@ -39,7 +41,9 @@
       0,
       1,
       [
-        "@query", "data_elim_FStar.UInt32.Mk",
+        "@query", "constructor_distinct_Crypto.Symmetric.Cipher.AES256",
+        "constructor_distinct_Crypto.Symmetric.Cipher.CHACHA20",
+        "data_elim_FStar.UInt32.Mk",
         "disc_equation_Crypto.Symmetric.Cipher.AES256",
         "disc_equation_Crypto.Symmetric.Cipher.CHACHA20",
         "equation_Crypto.Symmetric.AES.blocklen",

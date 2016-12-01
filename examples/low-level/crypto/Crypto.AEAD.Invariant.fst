@@ -30,7 +30,7 @@ let minNat (a:nat) (b:nat) : nat = if a <= b then a else b
 
 type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
-let ctr x = PRF(x.ctr)
+let ctr x = PRF.(x.ctr)
 
 //16-10-12 TEMPORARY, while PRF remains somewhat CHACHA-specific
 //16-10-12 NB we are importing this restriction from Encoding too
@@ -51,8 +51,8 @@ noeq type state (i:id) (rw:rw) =
   | State:
       #log_region: rgn -> // this is the *writer* region; the reader allocates nothing
       log: HS.ref (Seq.seq (entry i)) {HS.frameOf log == log_region} ->
-      // Was PRF(prf.rgn) == region. Do readers use its own PRF state?
-      prf: PRF.state i {PRF(prf.rgn) == log_region} (* including its key *) ->
+      // Was PRF.(prf.rgn) == region. Do readers use its own PRF state?
+      prf: PRF.state i {PRF.(prf.rgn) == log_region} (* including its key *) ->
       //16-10-16 ak: MAC.akey log_region i (* static, optional authentication key *) -> 
       state i rw
 
@@ -62,8 +62,8 @@ let maxplain (i:id) = pow2 14 // for instance
 
 let safelen (i:id) (l:nat) (c:UInt32.t{0ul <^ c /\ c <=^ PRF.maxCtr i}) = 
   l = 0 || (
-    let bl = v (Cipher( blocklen (cipher_of_id i))) in
-    FStar.Mul(
+    let bl = v (Cipher.( blocklen (cipher_of_id i))) in
+    FStar.Mul.(
       l + (v (c -^ 1ul)) * bl <= maxplain i && 
       l  <= v (PRF.maxCtr i -^ c) * bl ))
     
@@ -80,10 +80,10 @@ val counterblocks:
   to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) (ctr x)} -> 
   plain:Plain.plain i l -> 
   cipher:lbytes l -> 
-  Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
+  Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF.(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
   (decreases (to_pos - from_pos))
 let rec counterblocks i rgn x l from_pos to_pos plain cipher = 
-  let blockl = v (Cipher(blocklen (cipher_of_id i))) in 
+  let blockl = v (Cipher.(blocklen (cipher_of_id i))) in 
   let remaining = to_pos - from_pos in 
   if remaining = 0 then
     Seq.createEmpty
@@ -97,8 +97,10 @@ let rec counterblocks i rgn x l from_pos to_pos plain cipher =
     SeqProperties.cons block blocks
 
 let num_blocks' (i:id) (l:nat) : Tot nat = 
-  let bl = v (Cipher( blocklen (cipher_of_id i))) in
+  let bl = v (Cipher.( blocklen (cipher_of_id i))) in
   (l + bl - 1) / bl
+
+#reset-options "--z3rlimit 20"
 
 let num_blocks (#i:id) (e:entry i) : Tot nat = 
   let Entry nonce ad l plain cipher_tagged = e in
@@ -109,16 +111,16 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
   let b = num_blocks e in 
   b + 1 = Seq.length blocks /\
   (let PRF.Entry x e = Seq.index blocks 0 in
-   PRF (x.iv = nonce) /\
-   PRF (x.ctr = 0ul)  /\ (
+   PRF.(x.iv = nonce) /\
+   PRF.(x.ctr = 0ul)  /\ (
    let xors = Seq.slice blocks 1 (b+1) in 
    let cipher, tag = SeqProperties.split cipher_tagged l in
    safelen i l 1ul /\
    xors == counterblocks i rgn (PRF.incr i x) l 0 l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
    (let m = PRF.macRange rgn i x e in
-    let mac_log = MAC.ilog (MAC.State.log m) in
+    let mac_log = MAC.ilog (MAC.State?.log m) in
     m_contains mac_log h /\ (
-    match m_sel h (MAC.ilog (MAC.State.log m)) with
+    match m_sel h (MAC.ilog (MAC.State?.log m)) with
     | None           -> False
     | Some (msg,tag') -> msg = field_encode i ad #(FStar.UInt32.uint_to_t l) cipher /\
 			tag = tag')))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log

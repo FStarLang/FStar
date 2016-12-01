@@ -198,6 +198,8 @@ val encode_pad_empty: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> Lemma
   (ensures  encode_pad prefix txt == prefix)
 let encode_pad_empty prefix txt = ()
 
+#reset-options "--z3rlimit 20"
+
 val encode_pad_snoc: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> w:lbytes 16 -> Lemma
   (encode_pad (SeqProperties.snoc prefix (encode w)) txt ==
    encode_pad prefix (append w txt))
@@ -339,7 +341,7 @@ val accumulate:
   aadlen:UInt32.t -> aad:lbuffer (v aadlen) ->
   plainlen:UInt32.t -> cipher:lbuffer (v plainlen) -> StackInline (MAC.itext * MAC.accB i)
   (requires (fun h0 -> 
-    MAC(Buffer.live h0 st.r /\ norm h0 st.r) /\
+    MAC.(Buffer.live h0 st.r /\ norm h0 st.r) /\
     Buffer.live h0 aad /\ Buffer.live h0 cipher))
   (ensures (fun h0 (l,a) h1 -> 
     Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack

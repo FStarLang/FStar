@@ -929,7 +929,11 @@ let maybe_set_tk ts = function
 
 let generalize_universes (env:env) (t0:term) : tscheme =
     let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
-    let univnames = Util.set_difference (Free.univnames t) (Env.univnames env) |> Util.set_elements in
+    let ctx_univnames = Env.univnames env in
+    let tm_univnames = Free.univnames t in
+    let univnames = Util.set_difference ctx_univnames tm_univnames |> Util.set_elements in
+    // Util.print4 "Closing universe variables in term %s : %s in ctx, %s in tm, globally %s"
+    //     (Print.term_to_string t)
     let univs = Free.univs t in
     if Env.debug env <| Options.Other "Gen"
     then Util.print1 "univs to gen : %s\n" (string_of_univs univs);
@@ -1240,7 +1244,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | Inline_for_extraction -> true
         | _ -> false in
     let assumption = function Assumption | New -> true | _ -> false in
-    let reification = function Reifiable | Reflectable -> true | _ -> false in
+    let reification = function Reifiable | Reflectable _ -> true | _ -> false in
     let inferred = function
       | Discriminator _
       | Projector _
@@ -1284,7 +1288,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
           |> List.for_all (fun x -> x=q || x=Assumption || inferred x || visibility x || reducibility x)
 
         | Reifiable
-        | Reflectable ->
+        | Reflectable _ ->
           quals
           |> List.for_all (fun x -> reification x || inferred x || visibility x || x=TotalEffect)
 

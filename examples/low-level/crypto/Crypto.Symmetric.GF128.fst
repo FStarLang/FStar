@@ -29,12 +29,12 @@ type elemB = b:lbuffer 16
 
 private val gf128_add_loop: 
   a:elemB -> b:elemB {disjoint a b} ->
-  dep:u32{U32(dep <=^ len)} -> Stack unit
+  dep:u32{U32.(dep <=^ len)} -> Stack unit
   (requires (fun h -> live h a /\ live h b))
   (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
 let rec gf128_add_loop a b dep =
   if dep <> 0ul then begin
-    let i = U32 (dep -^ 1ul) in
+    let i = U32.(dep -^ 1ul) in
     a.(i) <- a.(i) ^^ b.(i);
     gf128_add_loop a b i
   end
@@ -45,14 +45,14 @@ val gf128_add: a:elemB -> b:elemB {disjoint a b} -> Stack unit
   (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
 let gf128_add a b = gf128_add_loop a b len
 
-private val gf128_shift_right_loop: a:elemB -> dep:u32{U32(dep <^ len)} -> Stack unit
+private val gf128_shift_right_loop: a:elemB -> dep:u32{U32.(dep <^ len)} -> Stack unit
   (requires (fun h -> live h a))
   (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
 let rec gf128_shift_right_loop a dep =
   if dep = 0ul 
   then a.(0ul) <- shift_right a.(0ul) 1ul
   else begin
-    let i = U32 (dep -^ 1ul) in
+    let i = U32.(dep -^ 1ul) in
     a.(dep) <- (a.(i) <<^ 7ul) +%^ (a.(dep) >>^ 1ul);
     gf128_shift_right_loop a i
   end
@@ -76,7 +76,7 @@ private val apply_mask_loop: a:elemB -> m:elemB {disjoint a m} -> msk:byte -> de
 let rec apply_mask_loop a m msk dep =
   if dep <> 0ul then 
   begin
-    let i = U32 (dep -^ 1ul) in
+    let i = U32.(dep -^ 1ul) in
     m.(i) <- a.(i) &^ msk;
     apply_mask_loop a m msk i
   end
@@ -100,7 +100,7 @@ let rec gf128_mul_loop a b tmp dep =
   begin
     let r = sub tmp 0ul len in
     let m = sub tmp len len in
-    let num = b.(U32 (dep /^ 8ul)) in
+    let num = b.(U32.(dep /^ 8ul)) in
     let msk = ith_bit_mask num (U32.rem dep 8ul) in
     apply_mask a m msk;
     gf128_add r m;
@@ -109,7 +109,7 @@ let rec gf128_mul_loop a b tmp dep =
     gf128_shift_right a;
     let num = a.(0ul) in
     a.(0ul) <- (num ^^ (logand msk r_mul));
-    gf128_mul_loop a b tmp (U32 (dep +^ 1ul))
+    gf128_mul_loop a b tmp (U32.(dep +^ 1ul))
   end
 
 (* In place multiplication. Calculate "a * b" and store the result in a.    *)
@@ -133,7 +133,7 @@ let add_and_multiply a e k =
 //16-09-23 Instead of the code below, we should re-use existing AEAD encodings
 //16-09-23 and share their injectivity proofs and crypto model.
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 private val ghash_loop_: 
   tag:elemB ->
@@ -146,7 +146,7 @@ private val ghash_loop_:
 let ghash_loop_ tag auth_key str len dep =
   push_frame();
   let last = create 0uy 16ul in
-  blit str dep last 0ul (U32 (len -^ dep)); 
+  blit str dep last 0ul (U32.(len -^ dep)); 
   add_and_multiply tag last auth_key;
   pop_frame()
 
@@ -161,9 +161,9 @@ private val ghash_loop:
   (ensures (fun h0 _ h1 -> live h1 tag /\ live h1 auth_key /\ live h1 str /\ modifies_1 tag h0 h1))
 let rec ghash_loop tag auth_key str len dep =
   (* Appending zeros if the last block is not a complete one. *)
-  let rest = U32(len -^ dep) in 
+  let rest = U32.(len -^ dep) in 
   if rest <> 0ul then 
-  if U32 (16ul >=^ rest) then ghash_loop_ tag auth_key str len dep
+  if U32.(16ul >=^ rest) then ghash_loop_ tag auth_key str len dep
   else 
   begin
     let next = U32.add dep 16ul in
@@ -192,7 +192,7 @@ let mk_len_info len_info len_1 len_2 =
   upd len_info 4ul (uint32_to_uint8 len_1);
   let len_1 = len_1 >>^ 8ul in
   upd len_info 3ul (uint32_to_uint8 len_1);
-  let last = FStar.UInt8 (uint32_to_uint8 len_2 <<^ 3ul) in
+  let last = FStar.UInt8.(uint32_to_uint8 len_2 <<^ 3ul) in
   upd len_info 15ul last;
   let len_2 = len_2 >>^ 5ul in
   upd len_info 14ul (uint32_to_uint8 len_2);
@@ -204,7 +204,7 @@ let mk_len_info len_info len_1 len_2 =
   upd len_info 11ul (uint32_to_uint8 len_2)
 // relying on outer initialization?
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 (* A hash function used in authentication. It will authenticate additional data first, *)
 (* then ciphertext and at last length information. The result is stored in tag.        *)

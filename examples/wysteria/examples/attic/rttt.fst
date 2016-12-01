@@ -19,11 +19,11 @@ let tstep_assec_lemma ps' pi ps x e pi' = admit ()
 
 val sec_enter_is_parametric:
   ps:prins -> pi:protocol ps -> pi':protocol ps
-  -> h:pstep #ps pi pi'{is_P_sec_enter h /\ P_sec_enter.ps h = ps}
+  -> h:pstep #ps pi pi'{P_sec_enter? h /\ P_sec_enter.ps h = ps}
   -> p:prin{contains p (fst pi)} -> c:tconfig_par{same_c (Some.v (select p (fst pi))) c}
   -> Tot (h':(pstep #ps (update #prin #tconfig_par #p_cmp p c (fst pi), snd pi)
                        (update #prin #tconfig_par #p_cmp p (step_p_to_wait c p) (fst pi'), snd pi'))
-            {is_P_sec_enter h'})
+            {P_sec_enter? h'})
 let sec_enter_is_parametric ps pi pi' h p c =
   let x = P_sec_enter.x h in
   let e = P_sec_enter.e h in
@@ -52,11 +52,11 @@ let sec_enter_is_parametric ps pi pi' h p c =
 
 val sec_step_is_parametric:
   ps:prins -> pi:protocol ps -> pi':protocol ps
-  -> h:pstep #ps pi pi'{is_P_sec h /\ P_sec.ps h = ps}
+  -> h:pstep #ps pi pi'{P_sec? h /\ P_sec.ps h = ps}
   -> p:prin{contains p (fst pi)} -> c:tconfig_par{same_c (Some.v (select p (fst pi))) c}
   -> Tot (h':(pstep #ps (update #prin #tconfig_par #p_cmp p c (fst pi), snd pi)
                        (update #prin #tconfig_par #p_cmp p c (fst pi), snd pi'))
-	    {is_P_sec h'})
+	    {P_sec? h'})
 let sec_step_is_parametric ps pi pi' h p c =
   P_sec #ps #(P_sec.c' h) (update p c (fst pi), snd pi) ps (P_sec.h h) (update p c (fst pi), snd pi')
 
@@ -97,7 +97,7 @@ val sec_comp_is_parametric:
   -> pi_final:protocol ps{contains ps (snd pi_final) /\
                          Conf.m (Some.v (select ps (snd pi_final))) = Mode Sec ps /\
 		         is_sterminal (Some.v (select ps (snd pi_final)))}
-  -> h1:pstep #ps (pi, OrdMap.empty #prins #tconfig_sec #ps_cmp) pi_enter{is_P_sec_enter h1 /\ P_sec_enter.ps h1 = ps}
+  -> h1:pstep #ps (pi, OrdMap.empty #prins #tconfig_sec #ps_cmp) pi_enter{P_sec_enter? h1 /\ P_sec_enter.ps h1 = ps}
   -> h2:pstep_star #ps pi_enter pi_final{all_sec_steps ps pi_enter pi_final h2 ps}
   -> p:prin{contains p pi} -> c:tconfig_par{same_c (Some.v (select p pi)) c}
   -> dv:dvalue{dv = slice_v p (D_v.v (c_value (Some.v (select ps (snd pi_final)))))}
@@ -157,7 +157,7 @@ index ad86356..90e3641 100644
 +  (decreases h)
 +let rec all_sec_steps ps pi pi' h ps' = match h with
 +  | PS_refl _                        -> true
-+  | PS_tran #ps #pi #pi' #pi'' h1 h2 -> is_P_sec h1 && P_sec.ps h1 = ps' && all_sec_steps ps pi' pi'' h2 ps'
++  | PS_tran #ps #pi #pi' #pi'' h1 h2 -> P_sec? h1 && P_sec.ps h1 = ps' && all_sec_steps ps pi' pi'' h2 ps'
 +
  opaque val sec_sstep_star_to_pstep_star:
    c:config{is_sec_comp c} -> c':config{is_sec_comp c'} -> h:sstep_star c c'
