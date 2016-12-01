@@ -325,7 +325,11 @@ let rec load_uint128 len buf =
     assert_norm (256 * pow2 (8 * 16 - 8) - 256 <= pow2 128 - 256);
     Math.Lemmas.pow2_le_compat (8 * 16 - 8) (8 * v len - 8);
     assert (256 * pow2 (8 * v len - 8) - 256 <= pow2 128 - 256);
+    Math.Lemmas.modulo_lemma (256 * UInt128.v n) (pow2 128);
+    assert_norm (pow2 (UInt32.v 8ul) == 256);
+    assert (256 * UInt128.v n == FStar.UInt128 (v (n <<^ 8ul)));
     FStar.UInt128(uint8_to_uint128 b +^ (n <<^ 8ul))
+
 
 (* stores a machine integer into a buffer of len bytes *)
 // 16-10-02 subsumes Buffer.Utils.bytes_of_uint32 ?
