@@ -194,6 +194,11 @@ val typing_extensional : g:env -> g':env -> e:exp
                            (ensures (typing g e == typing g' e))
 let typing_extensional g g' e = context_invariance e g g'
 
+(* The following proof requires raising z3's resource limits from the
+   default 5 to 8 (7 will fail), which is performed by the following
+   pragma (needed regardless of whether hints are enabled or not). *)
+#set-options "--z3rlimit 8"
+
 val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
       g:env{Some? (typing empty v) &&
             Some? (typing (extend g x (Some?.v (typing empty v))) e)} ->
