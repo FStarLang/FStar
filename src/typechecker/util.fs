@@ -929,13 +929,13 @@ let maybe_set_tk ts = function
 
 let generalize_universes (env:env) (t0:term) : tscheme =
     let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
+    let univnames = Util.set_difference (Free.univnames t) (Env.univnames env) |> Util.set_elements in
     let univs = Free.univs t in
     if Env.debug env <| Options.Other "Gen"
     then Util.print1 "univs to gen : %s\n" (string_of_univs univs);
     let gen = gen_univs env univs in
     if Env.debug env <| Options.Other "Gen"
     then Util.print1 "After generalization: %s\n"  (Print.term_to_string t);
-    let univnames = Util.set_difference (Free.univnames t) (Env.univnames env) |> Util.set_elements in
     let univs = univnames@gen in
     let ts = SS.close_univ_vars univs t in
     maybe_set_tk (univs, ts) (!t0.tk)

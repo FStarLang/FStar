@@ -412,11 +412,16 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme effect_params ts) in
     // We always close [bind_repr], even though it may be [Tm_unknown]
     // (non-reifiable, non-reflectable effect)
-    if n > 0 && not (is_unknown (snd ts)) && List.length (fst ts) <> n then
-        failwith (Util.format2
-          "The effect combinator is not universe-polymorphic enough (n=%s) (%s)"
-          (string_of_int n)
-          (Print.tscheme_to_string ts));
+    let m = List.length (fst ts) in
+    if n >= 0 && not (is_unknown (snd ts)) && m <> n
+    then begin
+        let error = if m < n then "not universe-polymorphic enough" else "too universe-polymorphic" in
+        failwith (Util.format3
+                  "The effect combinator is %s (n=%s) (%s)"
+                  error
+                  (string_of_int n)
+                  (Print.tscheme_to_string ts))
+    end ;
     ts in
   let close_action act =
     let univs, defn = close (-1) (act.action_univs, act.action_defn) in
@@ -426,7 +431,8 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
         action_univs=univs;
         action_defn=defn;
         action_typ=typ; } in
-  assert (List.length effect_params > 0 || List.length univs = 1);
+  let nunivs = List.length univs in
+  assert (List.length effect_params > 0 || nunivs = 1);
   let ed = { ed with
       univs       = univs
     ; binders     = effect_params

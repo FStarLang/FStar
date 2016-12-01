@@ -713,12 +713,14 @@ and tc_universe env u : universe =
         | U_zero    -> u
         | U_succ u  -> U_succ (aux u)
         | U_max us  -> U_max (List.map aux us)
-        | U_name x  -> if env.use_bv_sorts || Env.lookup_univ env x
-                       then u
-                       else raise (Error (Util.format1 "Universe variable '%s' not found" x.idText, Env.get_range env)) in
-    match u with
-        | U_unknown -> U.type_u () |> snd
-        | _ -> aux u
+        | U_name x  -> u
+            (* TODO : Is that really okay ? (any free variable should be automatically bound at top-level) *)
+            // if env.use_bv_sorts || Env.lookup_univ env x
+            // then u
+            // else raise (Error (Util.format1 "Universe variable '%s' not found" x.idText, Env.get_range env))
+   in match u with
+       | U_unknown -> U.type_u () |> snd
+       | _ -> aux u
 
 (* Several complex cases from the main type-checker are factored in to separate functions below *)
 

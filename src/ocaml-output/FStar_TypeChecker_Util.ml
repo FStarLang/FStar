@@ -2204,12 +2204,18 @@ let generalize_universes : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.te
 let t = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.NoFullNorm)::(FStar_TypeChecker_Normalize.Beta)::[]) env t0)
 in (
 
+let univnames = (let _151_777 = (let _151_776 = (FStar_Syntax_Free.univnames t)
+in (let _151_775 = (FStar_TypeChecker_Env.univnames env)
+in (FStar_Util.set_difference _151_776 _151_775)))
+in (FStar_All.pipe_right _151_777 FStar_Util.set_elements))
+in (
+
 let univs = (FStar_Syntax_Free.univs t)
 in (
 
-let _56_1278 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Gen"))) then begin
-(let _151_775 = (string_of_univs univs)
-in (FStar_Util.print1 "univs to gen : %s\n" _151_775))
+let _56_1279 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Gen"))) then begin
+(let _151_778 = (string_of_univs univs)
+in (FStar_Util.print1 "univs to gen : %s\n" _151_778))
 end else begin
 ()
 end
@@ -2218,18 +2224,12 @@ in (
 let gen = (gen_univs env univs)
 in (
 
-let _56_1281 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Gen"))) then begin
-(let _151_776 = (FStar_Syntax_Print.term_to_string t)
-in (FStar_Util.print1 "After generalization: %s\n" _151_776))
+let _56_1282 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Gen"))) then begin
+(let _151_779 = (FStar_Syntax_Print.term_to_string t)
+in (FStar_Util.print1 "After generalization: %s\n" _151_779))
 end else begin
 ()
 end
-in (
-
-let univnames = (let _151_779 = (let _151_778 = (FStar_Syntax_Free.univnames t)
-in (let _151_777 = (FStar_TypeChecker_Env.univnames env)
-in (FStar_Util.set_difference _151_778 _151_777)))
-in (FStar_All.pipe_right _151_779 FStar_Util.set_elements))
 in (
 
 let univs = (FStar_List.append univnames gen)

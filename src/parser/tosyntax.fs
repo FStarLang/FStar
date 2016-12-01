@@ -371,13 +371,13 @@ let rec desugar_maybe_non_constant_universe t
         end
     | App _ ->
         let rec aux t univargs  =
-            match t.tm with
+            match (unparen t).tm with
                 | App(t, targ, _) ->
                     let uarg = desugar_maybe_non_constant_universe targ in
                     aux t (uarg::univargs)
                 | Var max_lid ->
                     assert (Ident.text_of_lid max_lid = "max") ;
-                    if List.existsb (function Inl _ -> true | _ -> false) univargs
+                    if List.existsb (function Inr _ -> true | _ -> false) univargs
                     then Inr (U_max (List.map (function Inl n -> int_to_universe n | Inr u -> u) univargs))
                     else
                         let nargs = List.map (function Inl n -> n | Inr _ -> failwith "impossible") univargs in

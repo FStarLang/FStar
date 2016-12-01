@@ -504,6 +504,7 @@ let lookup_lid env l =
 let lookup_univ env x = 
     List.find (function
         | Binding_univ y -> x.idText=y.idText
+//      | Binding_var({sort=t}) -> Util.set_mem x (Free.univnames t)
         | _ -> false) env.gamma
     |> Option.isSome
 

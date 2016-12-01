@@ -234,10 +234,10 @@ rule token args = parse
      { BACKTICK }
  | constructor
      { NAME(ulexeme lexbuf) }
- | tvar
-     { TVAR (ulexeme lexbuf) }
  | univar
      { UNIVAR (ulexeme lexbuf) }
+ | tvar
+     { TVAR (ulexeme lexbuf) }
  | "#light"
      { PRAGMALIGHT }
  | "#set-options"
@@ -355,7 +355,7 @@ rule token args = parse
 
  | "=" { EQUALS }
  | '#' { HASH }
- | "u#" { UNIV_HASH }
+ | "u#"{ UNIV_HASH }
  | '&' { AMP }
  | "()" { LPAREN_RPAREN }
  | '(' { LPAREN }
