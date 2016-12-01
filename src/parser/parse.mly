@@ -137,6 +137,7 @@ let compile_op arity s =
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
+%token QMARK
 %token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK DOT_LBRACK DOT_LPAREN LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
@@ -899,6 +900,12 @@ projectionLHS:
   | ns=quident QMARK_DOT id=lident
       {
         mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr
+      }
+  | lid=quident QMARK
+      {
+	let t = Discrim lid in
+        let e = mk_term t (rhs parseState 1) Un in
+	e
       }
 
 hasSort:

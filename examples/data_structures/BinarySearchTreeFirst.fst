@@ -34,8 +34,8 @@ type tree: int -> Type =
         -> #r   :int
         -> right:option (tree r){l <= n
                                  /\ n <= r
-                                 /\ (is_None right <==> n=r)
-                                 /\ (is_None left <==> n=l)}
+                                 /\ (None? right <==> n=r)
+                                 /\ (None? left <==> n=l)}
         -> tree r
 
 (* Need to supply #i for the empty sub-trees, since it can't be inferred by unification *)
@@ -65,8 +65,8 @@ let rec contains (#k:int) t key =
   then false
   else let Node left i right = t in
        i=k
-       || (key < i && is_Some left && contains (Some?.v left) key)
-       || (is_Some right && contains (Some?.v right) key)
+       || (key < i && Some? left && contains (Some?.v left) key)
+       || (Some? right && contains (Some?.v right) key)
 
 val in_order_opt: #k:int -> t:option (tree k) -> Tot (list int) (decreases t)
 let rec in_order_opt (#k:int) t = match t with

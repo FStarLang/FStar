@@ -344,8 +344,8 @@ unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
          : GTot Type0 =
   forall (k:ex_post b).
      (forall (rb:result b).{:pattern (guard_free (k rb))} k rb <==> p rb)
-     ==> (wp1 (fun ra1 -> (is_V ra1 ==> wp2 (V?.v ra1) k)
-			/\ (is_E ra1 ==> k (E (E?.e ra1)))))
+     ==> (wp1 (fun ra1 -> (V? ra1 ==> wp2 (V?.v ra1) k)
+			/\ (E? ra1 ==> k (E (E?.e ra1)))))
 
 unfold let ex_ite_wp (a:Type) (wp:ex_wp a) (post:ex_post a) =
   forall (k:ex_post a).
@@ -402,7 +402,7 @@ unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
                        (wp1:all_wp_h heap a)
                        (wp2:(a -> GTot (all_wp_h heap b)))
                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
-  wp1 (fun ra h1 -> (is_V ra ==> wp2 (V?.v ra) p h1)) h0
+  wp1 (fun ra h1 -> (V? ra ==> wp2 (V?.v ra) p h1)) h0
 
 unfold let all_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)
@@ -641,7 +641,7 @@ let allow_inversion (a:Type)
 //allowing inverting option without having to globally increase the fuel just for this
 val invertOption : a:Type -> Lemma
   (requires True)
-  (ensures (forall (x:option a). is_None x \/ is_Some x))
+  (ensures (forall (x:option a). None? x \/ Some? x))
   [SMTPatT (option a)]
 let invertOption a = allow_inversion (option a)
 

@@ -198,6 +198,7 @@ let compile_op arity s =
 %token PRAGMA_RESET_OPTIONS
 %token PRAGMA_SET_OPTIONS
 %token PRIVATE
+%token QMARK
 %token QMARK_DOT
 %token RARROW
 %token RBRACE
@@ -2225,6 +2226,13 @@ in
     {let (ns, _2, id) = ($1, (), $3) in
       (
         mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr
+      )}
+| quident QMARK
+    {let (lid, _2) = ($1, ()) in
+      (
+	let t = Discrim lid in
+        let e = mk_term t (rhs parseState 1) Un in
+	e
       )}
 
 hasSort:

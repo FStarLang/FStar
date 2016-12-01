@@ -189,9 +189,25 @@ let bg_z3_proc =
      refresh=refresh;
      restart=restart}
 
+let at_log_file () =
+  if Options.log_queries()
+  then "@" ^ (query_logging.log_file_name())
+  else ""
+
 let doZ3Exe' (input:string) (z3proc:proc) =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map Util.trim_string in
+    let print_stats (lines:list<string>) =
+       let starts_with c s = String.length s >= 1 && String.get s 0 = c in
+       let ends_with c s = String.length s >= 1 && String.get s (String.length s - 1) = c in
+       let last l = List.nth l (List.length l - 1) in
+       if Options.print_z3_statistics() then
+         if List.length lines >= 2 && starts_with '(' (List.hd lines) && ends_with ')' (last lines) then
+          (Util.print_string (Util.format1 "BEGIN-STATS %s\n" (query_logging.get_module_name()) ^ at_log_file ());
+           List.iter (fun s -> Util.print_string (Util.format1 "%s\n" s)) lines;
+           Util.print_string "END-STATS\n")
+         else failwith "Unexpected output from Z3: could not find statistics\n" //-- only works if rest doesn't include labels
+    in
     let unsat_core lines = 
         let parse_core s =
             let s = Util.trim_string s in
@@ -203,25 +219,26 @@ let doZ3Exe' (input:string) (z3proc:proc) =
         | "<unsat-core>"::core::"</unsat-core>"::rest -> 
           parse_core core, lines 
         | _ -> None, lines in
-    let rec lblnegs lines = match lines with
-      | lname::"false"::rest -> lname::lblnegs rest
-      | lname::_::rest -> lblnegs rest
-      | _ -> [] in
-    let rec unsat_core_and_lblnegs lines = 
+    let rec lblnegs lines succeeded = match lines with
+      | lname::"false"::rest when Util.starts_with lname "label_" -> lname::lblnegs rest succeeded
+      | lname::_::rest when Util.starts_with lname "label_" -> lblnegs rest succeeded
+      | _ -> if succeeded then print_stats lines; [] in
+    let unsat_core_and_lblnegs lines succeeded =
        let core_opt, rest = unsat_core lines in
-       core_opt, lblnegs rest in
+       core_opt, lblnegs rest succeeded in
+
     let rec result x = match x with
       | "timeout"::tl -> TIMEOUT []
-      | "unknown"::tl -> UNKNOWN (snd (unsat_core_and_lblnegs tl))
-      | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl))
-      | "unsat"::tl   -> UNSAT   (fst (unsat_core tl))
+      | "unknown"::tl -> UNKNOWN (snd (unsat_core_and_lblnegs tl false))
+      | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl false))
+      | "unsat"::tl   -> UNSAT   (fst (unsat_core_and_lblnegs tl true))
       | "killed"::tl  -> bg_z3_proc.restart(); KILLED
       | hd::tl -> 
         TypeChecker.Errors.warn Range.dummyRange (Util.format2 "%s: Unexpected output from Z3: %s\n" (query_logging.get_module_name()) hd);
         result tl
       | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n" 
                             (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
-      result lines in
+    result lines in
   let stdout = Util.ask_process z3proc input in
   parse (Util.trim_string stdout)
 

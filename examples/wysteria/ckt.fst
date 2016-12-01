@@ -63,16 +63,16 @@ let is_nat t = match t with
   | T_cons s _ -> s = "Prims.int"
   | _          -> false
 
-let hd_of_cons (l:list 'a{is_Cons l}) = match l with
+let hd_of_cons (l:list 'a{Cons? l}) = match l with
   | Cons x y -> x
 
-let tl_of_cons (l:list 'a{is_Cons l}) = match l with
+let tl_of_cons (l:list 'a{Cons? l}) = match l with
   | Cons x y -> y
 
 val is_int_list: typ -> Tot bool
 let is_int_list t = match t with
   | T_cons l _ ->
-    l = "Prims.list" && is_Cons (T_cons.args t) && is_nat (hd_of_cons (T_cons.args t))
+    l = "Prims.list" && Cons? (T_cons.args t) && is_nat (hd_of_cons (T_cons.args t))
   | _          -> false
 
 type inputmap = ordmap prin varset p_cmp
@@ -94,7 +94,7 @@ let supported_input_type t = match t with
   | _ -> false
 
 val is_share_var: varname -> Tot bool
-let is_share_var (Var _ t) = is_T_sh t
+let is_share_var (Var _ t) = T_sh? t
 
 val assign_prin: prins -> v:varname{not (is_share_var v)} -> env -> prin
 let assign_prin ps v en =
@@ -223,7 +223,7 @@ let rec alloc_shinput_wires rbegin rend fvs cs cen =
     let Some v = choose fvs in
     let fvs' = remove v fvs in
     let Var s t = v in
-    if is_T_sh t then
+    if T_sh? t then
       let r = alloc_wires natsize in
       let rbegin = if rbegin = 0 then fst r else rbegin in
       alloc_shinput_wires rbegin (snd r) fvs' cs (fun s' -> if s' = s then Some r else cen s')
@@ -265,7 +265,7 @@ let rec get_cth_mem (c:nat) (r:wrange) =
 
 let f x = failwith "This is a never called function"
 
-let rec mem_exp_to_exp (x:exp{is_E_var x}) (l:exp{is_E_var l}) (c:nat) =
+let rec mem_exp_to_exp (x:exp{E_var? x}) (l:exp{E_var? l}) (c:nat) =
   if c = listsize then E_const (C_bool false)
   else
     let cth = E_ffi 2 "FFI.nth" f  [E_const (C_opaque c (T_cons "Prims.int" [])); l] f in
@@ -276,7 +276,7 @@ let rec mem_exp_to_exp (x:exp{is_E_var x}) (l:exp{is_E_var l}) (c:nat) =
 
     E_cond cond thenb elseb
 
-let rec intersect_exp_to_exp (l1:exp{is_E_var l1}) (l2:exp{is_E_var l2}) (c:nat) =
+let rec intersect_exp_to_exp (l1:exp{E_var? l1}) (l2:exp{E_var? l2}) (c:nat) =
   if c = listsize then E_ffi 0 "FFI.mk_nil" f [] f
   else
     let nth_v = Var "__tmp_n__" (T_cons "Prims.int" []) in
@@ -303,7 +303,7 @@ let rec exp_to_ckt cen e = match e with
   | E_const c -> const_to_ckt c
   | E_var (Var s t) ->
     let r_opt = cen s in
-    if is_None r_opt then failwith "Variable not found in cenv"
+    if None? r_opt then failwith "Variable not found in cenv"
     else
       [], Some.v r_opt, t
   | E_let x e1 e2 ->
@@ -342,7 +342,7 @@ let rec exp_to_ckt cen e = match e with
       let a1 = List.hd args in
       let a2 = List.hd (List.tl args) in
       let cs2, r2, _ = exp_to_ckt cen a2 in
-      if is_E_const a1 && is_C_opaque (E_const.c a1) then
+      if E_const? a1 && C_opaque? (E_const.c a1) then
         let c = Ffibridge.nat_of_c_opaque (E_const.c a1) in
 	//FStar.IO.print_string "get_cth_mem with c: "; FStar.IO.print_string (string_of_int c); FStar.IO.print_string ", with range: "; FStar.IO.print_string (range_to_string r2); FStar.IO.print_string "\n";
 	cs2, get_cth_mem c r2, T_cons "Prims.int" []
@@ -351,7 +351,7 @@ let rec exp_to_ckt cen e = match e with
     else if fname = "FFI.list_mem" then
       let a1 = List.hd args in
       let a2 = List.hd (List.tl args) in
-      if is_E_var a1 && is_E_var a2 then
+      if E_var? a1 && E_var? a2 then
         let e' = mem_exp_to_exp a1 a2 0 in
 	//FStar.IO.print_string (Print.exp_to_string e');
 	exp_to_ckt cen e'
@@ -360,7 +360,7 @@ let rec exp_to_ckt cen e = match e with
     else if fname = "FFI.list_intersect" then
       let a1 = List.hd args in
       let a2 = List.hd (List.tl args) in
-      if is_E_var a1 && is_E_var a2 then
+      if E_var? a1 && E_var? a2 then
 	let e' = intersect_exp_to_exp a1 a2 0 in
 	exp_to_ckt cen e'
       else failwith "FFI.list_intersect is supported only for variable expressions"
@@ -671,13 +671,13 @@ let dump_gmw prs bckt fd =
   let ps s = write_string fd s in
   let psi i = write_string fd (string_of_int i) in
 
-  let inps = filter (fun bcelt -> is_INPUT bcelt || is_SHINPUT bcelt) bckt in
+  let inps = filter (fun bcelt -> INPUT? bcelt || SHINPUT? bcelt) bckt in
   //print_string "done1";
-  let outs = filter (fun bcelt -> is_OUTPUT bcelt || is_SHOUTPUT bcelt) bckt in
+  let outs = filter (fun bcelt -> OUTPUT? bcelt || SHOUTPUT? bcelt) bckt in
   //print_string "done2";
-  let ands = filter (fun bcelt -> is_AND bcelt) bckt in
+  let ands = filter (fun bcelt -> AND? bcelt) bckt in
   //print_string "done3";
-  let xors = filter (fun bcelt -> is_XOR bcelt) bckt in
+  let xors = filter (fun bcelt -> XOR? bcelt) bckt in
   let aux = calc_auxinf bckt in
   //print_string "done4";
 
@@ -792,11 +792,11 @@ let rec dump_inps vars en fd =
     let Some v = choose vars in
     let vars' = remove v vars in
     let Var _ t = v in
-    if is_T_sh t then dump_inps vars' en fd
+    if T_sh? t then dump_inps vars' en fd
     else
       if supported_input_type t then
 	let dv_opt = en v in
-	if is_None dv_opt then failwith "Input is not mapped in the env"
+	if None? dv_opt then failwith "Input is not mapped in the env"
 	else
 	  let Some (D_v _ v) = dv_opt in
 	  dump_val v t fd;
@@ -815,10 +815,10 @@ let rec dump_shinps vars en fd =
     let Some v = choose vars in
     let vars' = remove v vars in
     let Var _ t = v in
-    if not (is_T_sh t) then dump_shinps vars' en fd
+    if not (T_sh? t) then dump_shinps vars' en fd
     else
       let dv_opt = en v in
-      if is_None dv_opt then failwith "Sh input not mapped in the env"
+      if None? dv_opt then failwith "Sh input not mapped in the env"
       else
 	let Some (D_v _ v) = dv_opt in
 	if is_v_sh v then

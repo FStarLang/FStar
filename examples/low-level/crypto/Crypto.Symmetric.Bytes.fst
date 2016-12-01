@@ -59,6 +59,8 @@ val sel_bytes: h:mem -> l:UInt32.t -> buf:lbuffer (v l){Buffer.live h buf}
   -> GTot (lbytes (v l))
 let sel_bytes h l buf = Buffer.as_seq h buf
 
+#reset-options "--z3rlimit 20"
+
 // Should be polymorphic on the integer size
 // This will be leaky (using implicitly the heap)
 // TODO: We should isolate it in a different module, e.g. Buffer.Alloc
@@ -253,7 +255,7 @@ let lemma_little_endian_lt_2_128 b =
   else Math.Lemmas.pow2_lt_compat 128 (8 * Seq.length b)
 
 
-#reset-options "--z3timeout 100 --max_fuel 1 --initial_fuel 1"
+#reset-options "--z3rlimit 100 --max_fuel 1 --initial_fuel 1"
 
 (* REMARK: The trigger in lemma_little_endian_lt_2_128 is used to prove absence of
    overflow *)
@@ -289,7 +291,7 @@ let rec load_big32 len buf =
     FStar.UInt32.(uint8_to_uint32 b +^ 256ul *^ n')
 
 (** Used e.g. for converting TLS sequence numbers into AEAD nonces *)
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 val load_big64: len:UInt32.t { v len <= 8 } -> buf:lbuffer (v len) -> ST UInt64.t
   (requires (fun h0 -> live h0 buf))
   (ensures (fun h0 n h1 -> 

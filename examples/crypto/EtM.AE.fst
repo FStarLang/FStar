@@ -81,7 +81,7 @@ val encrypt: k:key -> m:Plain.plain -> ST cipher
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log)
      /\ invariant h1 k)))
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3timeout 100"
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 100"
 let encrypt k plain =
   let c = CPA.encrypt k.ke plain in
   let t = MAC.mac k.km c in
@@ -93,8 +93,8 @@ val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
   (ensures (fun h0 res h1 ->
     modifies_none h0 h1 /\
     invariant h1 k /\
-      ( (b2t Ideal.uf_cma /\ is_Some res) ==>
-        (is_Some (seq_find (fun (_,c') -> c = c') (get_log h0 k)))
+      ( (b2t Ideal.uf_cma /\ Some? res) ==>
+        (Some? (seq_find (fun (_,c') -> c = c') (get_log h0 k)))
 
 (* CH*MK: If we wanted to also prove correctness of the EtM.AE
           we would use this stronger post-condition:

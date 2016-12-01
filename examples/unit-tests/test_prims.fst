@@ -304,14 +304,14 @@ type ExPost (a:Type) = result a -> Type0
 type ExWP   (a:Type) = ExPost a -> Tot ExPre
 type ex_return (a:Type) (x:a) (p:ExPost a) = p (V x)
 type ex_bind_wlp (a:Type) (b:Type) (wlp1:ExWP a) (wlp2:(a -> Tot (ExWP b))) (p:ExPost b) =
-   (forall (rb:result b). p rb \/ wlp1 (fun ra1 -> if is_V ra1
+   (forall (rb:result b). p rb \/ wlp1 (fun ra1 -> if V? ra1
                                           then wlp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
                                           else ra1 =!= rb))
 type ex_bind_wp (a:Type) (b:Type)
 		(wp1:ExWP a) (wlp1:ExWP a)
 		(wp2:(a -> Tot (ExWP b))) (wlp2:(a -> Tot (ExWP b))) (p:ExPost b) =
    ex_bind_wlp a b wlp1 wlp2 p
-   /\ wp1 (fun ra1 -> if is_V ra1
+   /\ wp1 (fun ra1 -> if V? ra1
                    then wp2 (V.v ra1) (fun rb2 -> True)
                    else True)
 type ex_if_then_else (a:Type) (p:Type) (wp_then:ExWP a) (wp_else:ExWP a) (post:ExPost a) =
@@ -364,12 +364,12 @@ type all_bind_wp (heap:Type) (a:Type) (b:Type)
                  (wp1:AllWP_h heap a) (wlp1:AllWP_h heap a)
                  (wp2:(a -> Tot (AllWP_h heap b))) (wlp2:(a -> Tot (AllWP_h heap b)))
                  (p:AllPost_h heap b) (h0:heap) =
-   (wp1 (fun ra h1 -> is_V ra ==> wp2 (V.v ra) p h1) h0)
+   (wp1 (fun ra h1 -> V? ra ==> wp2 (V.v ra) p h1) h0)
 type all_bind_wlp (heap:Type) (a:Type) (b:Type)
                   (wlp1:AllWP_h heap a) (wlp2:(a -> Tot (AllWP_h heap b)))
                   (p:AllPost_h heap b) (h0:heap) =
    (forall rb h. wlp1 (fun ra h1 ->
-       if is_V ra
+       if V? ra
        then wlp2 (V.v ra) (fun rb2 h2 -> rb=!=rb2 \/ h=!=h2) h1
        else rb=!=ra \/ h=!=h1) h0 \/ p rb h)
 type all_if_then_else (heap:Type) (a:Type) (p:Type)

@@ -27,7 +27,7 @@ type exp =
   | EAbs   : ty -> exp -> exp
 
 val is_value : exp -> Tot bool
-let is_value = is_EAbs
+let is_value = EAbs?
 
 (* subst_beta is a generalization of the substitution we do for the beta rule,
    when we've under x binders (useful for the substitution lemma) *)
@@ -74,7 +74,7 @@ let extend g x t y = if y < x then g y
 
 noeq type rtyping : env -> exp -> ty -> Type =
   | TyVar : #g:env ->
-            x:var{is_Some (g x)} ->
+            x:var{Some? (g x)} ->
               rtyping g (EVar x) (Some?.v (g x))
   | TyAbs : #g:env ->
             t:ty ->
@@ -92,7 +92,7 @@ noeq type rtyping : env -> exp -> ty -> Type =
             rtyping g (EApp e1 e2) t12
 
 val progress : #e:exp -> #t:ty -> h:rtyping empty e t ->
-      Lemma (requires True) (ensures (is_value e \/ (is_Some (step e)))) (decreases h)
+      Lemma (requires True) (ensures (is_value e \/ (Some? (step e)))) (decreases h)
 let rec progress #e #t h =
   match h with
   | TyVar _     -> ()
@@ -107,7 +107,7 @@ let rec appears_free_in x e =
   | EAbs _ e1 -> appears_free_in (x+1) e1
 
 val free_in_context : x:var -> #e:exp -> #g:env -> #t:ty -> h:rtyping g e t ->
-      Lemma (requires True) (ensures (appears_free_in x e ==> is_Some (g x))) (decreases h)
+      Lemma (requires True) (ensures (appears_free_in x e ==> Some? (g x))) (decreases h)
 let rec free_in_context x #e #g #t h =
   match h with
   | TyVar x -> ()
@@ -164,7 +164,7 @@ let rec substitution_preserves_typing x #e #v #t_x #t #g h1 h2 =
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22))
 
-val preservation : #e:exp -> #t:ty -> h:rtyping empty e t{is_Some (step e)} ->
+val preservation : #e:exp -> #t:ty -> h:rtyping empty e t{Some? (step e)} ->
       Tot (rtyping empty (Some?.v (step e)) t) (decreases e)
 let rec preservation #e #t h =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = h in

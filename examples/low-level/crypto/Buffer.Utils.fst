@@ -98,7 +98,7 @@ let uint32_of_bytes (b:bytes{length b >= 4}) =
   lemma_uint32_of_bytes b0' b1' b2' b3';
   b0' +^ b1'' +^ b2'' +^ b3''
 
-#reset-options "--z3timeout 20"
+#reset-options "--z3rlimit 20"
 
 (** Stores the content of a byte buffer into a unsigned int32 buffer *)
 (* TODO: add functional spec *)

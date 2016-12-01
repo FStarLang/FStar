@@ -163,6 +163,8 @@ let coerce i rgn key =
   //16-10-16 let ak = MAC.akey_gen rgn i // should actually split key into two.
   State #i #Writer #rgn log prf
 
+#reset-options "--z3rlimit 20"
+
 val genReader: #i:id -> st:state i Writer -> ST (state i Reader)
   (requires (fun _ -> True))
   (ensures  (fun _ _ _ -> True))
@@ -248,7 +250,7 @@ val counter_enxor:
     				      (Plain.sel_plain h1 len plain)
     				      (Buffer.as_seq h1 cipher)))
     ))
-#set-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let rec counter_enxor i t x len remaining_len plain cipher h_init =
   let completed_len = len -^ remaining_len in
   let h0 = get () in

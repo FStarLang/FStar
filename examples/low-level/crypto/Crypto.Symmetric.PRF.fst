@@ -223,7 +223,7 @@ val prf_mac:
       HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 
 let prf_mac i t x =
   let h0 = get () in
@@ -260,7 +260,7 @@ let prf_mac i t x =
     MAC.coerce macId t.mac_rgn keyBuffer
     end
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 let extends (#rgn:region) (#i:id) (s0:Seq.seq (entry rgn i)) 
 	    (s1:Seq.seq (entry rgn i)) (x:domain i{x.ctr <> 0ul}) =
@@ -294,7 +294,7 @@ private val prf_blk:
   (requires (fun h0 -> Buffer.live h0 output))
   (ensures (fun h0 _ h1 -> modifies_x_buffer_1 t x output h0 h1)) 
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 
 let prf_blk i t x len output =
   if prf i then
@@ -376,7 +376,7 @@ private let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:
   (ensures (find (SeqProperties.snoc s (Entry x v)) x == Some v))
   = ()
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 
 // generates a fresh block for x and XORs it with plaintext
 val prf_enxor: 

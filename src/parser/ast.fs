@@ -81,6 +81,7 @@ type term' =
   | Ensures   of term * option<string>
   | Labeled   of term * string * bool
   | Assign    of ident * term
+  | Discrim   of lid   (* Some?  (formerly is_Some) *)
 
 and term = {tm:term'; range:range; level:level}
 

@@ -97,7 +97,7 @@ let rec parse_format_pure (s:list char) : Tot (option (list dir)) =
 let rec parse_format_string (s:string) : Tot (option (list dir)) =
   parse_format_pure (list_of_string s)
 
-let sprintf (s:string{normalize_term #bool (is_Some (parse_format_string s))})
+let sprintf (s:string{normalize_term #bool (Some? (parse_format_string s))})
   : Tot (normalize_term (dir_type (Some?.v (parse_format_string s)))) =
   string_of_dirs (Some?.v (parse_format_string s)) (fun s -> s)
 
@@ -133,6 +133,8 @@ let example4_lemma () :
   Lemma (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]) =
   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String])
 
+// #reset-options "--z3timeout 10"
+
 let example5 : string =
   (* Requiring such an assert_norm on each usage seems quite bad for usability *)
   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]);
@@ -164,7 +166,7 @@ let example5 : string =
 (* let example6 : string = *)
 (*   sprintf "%d=%s" 42 " answer" *)
 (* ./SimplePrintf.fst(162,18-162,20) : Error *)
-(* Too many arguments to function of type (s:(s#17162:Prims.string{(Prims.eq2 (Prims.is_Some (match (FStar.String.list_of_string s@0) with *)
+(* Too many arguments to function of type (s:(s#17162:Prims.string{(Prims.eq2 (Prims.Some? (match (FStar.String.list_of_string s@0) with *)
 (* 	| (Prims.Nil #.uu___#12770)  -> (Prims.Some (Prims.Nil )) *)
 (* 	|(Prims.Cons #.uu___#12974 % (Prims.Cons #.uu___#12970 c#38766 s'#38767))  -> ((match c@1 with *)
 (* 	| %  -> (SimplePrintf.add_dir (SimplePrintf.Lit %) (SimplePrintf.parse_format_pure s'@0)) *)

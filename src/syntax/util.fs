@@ -33,7 +33,7 @@ open FStar.Const
 let qual_id lid id = set_lid_range (lid_of_ids (lid.ns @ [lid.ident;id])) id.idRange
 
 let mk_discriminator lid =
-  lid_of_ids (lid.ns@[mk_ident("is_" ^ lid.ident.idText, lid.ident.idRange)])
+  lid_of_ids (lid.ns@[mk_ident(Ident.reserved_prefix ^ "is_" ^ lid.ident.idText, lid.ident.idRange)])
 
 let is_name (lid:lident) =
   let c = Util.char_at lid.ident.idText 0 in
