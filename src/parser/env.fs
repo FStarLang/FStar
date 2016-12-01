@@ -253,7 +253,7 @@ let module_is_defined env lid =
     lid_equals lid (current_module env) ||
     List.existsb (fun x -> lid_equals lid (fst x)) env.modules
 
-let resolve_module_name env lid : option<lident> =
+let resolve_module_name env lid (honor_ns: bool) : option<lident> =
     let nslen = List.length lid.ns in
     let rec aux = function
         | [] ->
@@ -261,7 +261,8 @@ let resolve_module_name env lid : option<lident> =
           then Some lid
           else None
 
-        | Open_module_or_namespace (ns, Open_namespace) :: q ->
+        | Open_module_or_namespace (ns, Open_namespace) :: q
+          when honor_ns ->
           let new_lid = lid_of_path (path_of_lid ns @ path_of_lid lid) (range_of_lid lid)
           in
           if module_is_defined env new_lid
@@ -292,7 +293,7 @@ let resolve_in_open_namespaces''
   : option<'a> =
   match lid.ns with
   | _ :: _ ->
-    begin match resolve_module_name env (set_lid_range (lid_of_ids lid.ns) (range_of_lid lid)) with
+    begin match resolve_module_name env (set_lid_range (lid_of_ids lid.ns) (range_of_lid lid)) true with
     | None -> None
     | Some modul ->
         let lid' = qual modul lid.ident in
@@ -629,7 +630,8 @@ let push_sigelt env s =
   env
 
 let push_namespace env ns =
-  let (ns', kd) = match resolve_module_name env ns with (* NOTE: can be replaced with "module_is_defined", to disable module name resolution *)
+  (* namespace resolution disabled, but module abbrevs enabled *)
+  let (ns', kd) = match resolve_module_name env ns false with
   | None ->
      let modules = env.modules in
      if modules |> Util.for_some (fun (m, _) ->
@@ -642,9 +644,11 @@ let push_namespace env ns =
      push_scope_mod env (Open_module_or_namespace (ns', kd))
 
 let push_module_abbrev env x l =
-  match resolve_module_name env l with (* NOTE: can be replaced with "module_is_defined", to disable module name resolution *)
-  | None -> raise (Error(Util.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
-  | Some modul -> push_scope_mod env (Module_abbrev (x,modul))
+  (* both namespace resolution and module abbrevs disabled:
+     in 'module A = B', B must be fully qualified *)
+  if module_is_defined env l
+  then push_scope_mod env (Module_abbrev (x,l))
+  else raise (Error(Util.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
 
 let check_admits env =
   env.sigaccum |> List.iter (fun se -> match se with
@@ -806,7 +810,7 @@ let fail_or env lookup lid = match lookup lid with
        msg
       else
        let modul = set_lid_range (lid_of_ids lid.ns) (range_of_lid lid) in
-       match resolve_module_name env modul with
+       match resolve_module_name env modul true with
        | None ->
            let opened_modules = String.concat ", " opened_modules in
            Util.format3
