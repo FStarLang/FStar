@@ -303,7 +303,7 @@ let lemma_mod_plus_distr_l a b p =
   lemma_mod_spec2 a p;
   lemma_mod_plus (a % p + b) q p
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 1000 --initial_fuel 0 --max_fuel 0"
 
 val lemma_mod_plus_mul_distr: a:nat -> b:nat -> c:nat -> p:pos -> Lemma
   (((a + b) * c) % p = ((((a % p) + (b % p)) % p) * (c % p)) % p)
@@ -312,6 +312,8 @@ let lemma_mod_plus_mul_distr a b c p =
   lemma_mod_mul_distr_l c ((a + b) % p) p;
   lemma_mod_plus_distr_l a b p;
   lemma_mod_plus_distr_l b (a % p) p
+
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_mod_mod: a:int -> b:int -> p:pos -> Lemma
   (requires (a = b % p))
@@ -538,7 +540,7 @@ let pow2_multiplication_modulo_lemma_1 a b c =
   paren_mul_left a (pow2 (c - b)) (pow2 b);
   multiple_modulo_lemma (a * pow2 (c - b)) (pow2 b)
 
-#reset-options "--z3rlimit 500 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 1000 --initial_fuel 0 --max_fuel 0"
 
 val pow2_multiplication_modulo_lemma_2: a:nat -> b:nat -> c:nat{c <= b} ->
     Lemma ( (a * pow2 c) % pow2 b = (a % pow2 (b - c)) * pow2 c )
