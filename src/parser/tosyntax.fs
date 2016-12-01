@@ -605,11 +605,22 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       desugar_name mk setpos env l
 
     | Projector (l, i) ->
-      desugar_name mk setpos env (mk_field_projector_name_from_ident l i)
+      let found = 
+        Option.isSome (Env.try_lookup_datacon env l) ||
+        Option.isSome (Env.try_lookup_effect_defn env l)
+      in
+      if found
+      then desugar_name mk setpos env (mk_field_projector_name_from_ident l i)
+      else raise (Error (Util.format1 "Data constructor or effect %s not found" l.str, top.range))
 
     | Discrim lid ->
-      let lid' = Util.mk_discriminator lid in
-      desugar_name mk setpos env lid'
+      begin match Env.try_lookup_datacon env lid with
+      | None ->
+        raise (Error (Util.format1 "Data constructor %s not found" lid.str, top.range))
+      | _ ->
+        let lid' = Util.mk_discriminator lid in
+        desugar_name mk setpos env lid'
+      end
 
     | Construct(l, args) ->
         begin match Env.try_lookup_datacon env l with
