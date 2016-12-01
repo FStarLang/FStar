@@ -284,29 +284,41 @@ val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
     acc_inv st acc h /\
     Buffer.live h w /\
     Buffer.disjoint (MAC.as_buffer acc.a) w /\
-    Buffer.disjoint (MAC.as_buffer st.r) w))
+    Buffer.disjoint (MAC.as_buffer st.r) w /\
+    (if mac_log then
+      Buffer.disjoint_ref_1 w (HS.as_aref (alog acc)) /\
+      Buffer.disjoint_ref_1 (MAC.as_buffer acc.a) (HS.as_aref (alog acc)) /\
+      Buffer.disjoint_ref_1 (MAC.as_buffer st.r)  (HS.as_aref (alog acc))
+    else True)))
   (ensures  (fun h0 _ h1 ->
      Buffer.live h0 w /\
      MAC.norm h1 st.r /\ MAC.norm h1 acc.a /\
-     disjoint (MAC.as_buffer st.r) (MAC.as_buffer acc.a) /\
      acc_inv st acc h1 /\
      (if mac_log then
        let v = Buffer.as_seq h0 w in
        HS.sel h1 (alog acc) == SeqProperties.cons v (HS.sel h0 (alog acc))
      else True)))
 
-#set-options "--lax"
-
 let update #i st acc w =
   let h0 = ST.get () in
-  MAC.update st.r acc.a w;
   if mac_log then
     begin
     let v = read_word 16ul w in
     let vs = !(alog acc) in
-    acc.l := SeqProperties.cons v vs
-    end
+    acc.l := SeqProperties.cons v vs;
+    let h1 = ST.get () in
+    MAC.frame_sel_elem h0 h1 st.r;
+    MAC.frame_sel_elem h0 h1 acc.a;
+    MAC.poly_cons #i v vs (MAC.sel_elem h0 st.r)
+    end;
+  let h1 = ST.get () in
+  MAC.update st.r acc.a w;
+  let h2 = ST.get () in
+  lemma_reveal_modifies_1 (MAC.as_buffer acc.a) h1 h2;
+  MAC.frame_sel_elem h1 h2 st.r
 
+
+#set-options "--lax"
 
 val mac: 
   #i:id ->
