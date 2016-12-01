@@ -366,7 +366,7 @@ val surround_separate_map: int -> int -> document -> document -> document -> doc
 // val ( ^//^ ) : document -> document -> document
 
 // Expose underlying Renderer.pretty implementations (avoid inner modules).
-// [to_string] uses ToBuffer:RENDERER implementation; [print] uses the
-// ToChannel:RENDERER one. 
-val to_string : int -> document -> string 
-val print : int -> document -> FStar.Util.out_channel -> unit 
+// [pretty_string] uses ToBuffer:RENDERER implementation; 
+// [print_out_channel] uses the ToChannel:RENDERER one. 
+val pretty_string : int -> document -> string 
+val pretty_out_channel : int -> document -> FStar.Util.out_channel -> unit 

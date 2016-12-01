@@ -152,12 +152,12 @@ let surround_separate_map n b void_ opening sep closing f xs =
     PPrint.surround_separate_map (Z.to_int n) (Z.to_int b) void_ opening sep closing f xs
 
 (* Wrap up ToBuffer.pretty. *)
-let to_string width doc = 
+let pretty_string width doc = 
     let buf = Buffer.create 0 in 
     PPrint.ToBuffer.pretty 0.5 (Z.to_int width) buf doc;
     Buffer.contents buf 
 
 (* Wrap up ToChannel.pretty *)
-let print width doc ch = 
+let pretty_out_channel width doc ch = 
     PPrint.ToChannel.pretty 0.5 (Z.to_int width) ch doc;
     flush ch

@@ -149,5 +149,5 @@ val surround_separate_map: int -> int -> document -> document -> document -> doc
 // 
 // val ( ^//^ ) : document -> document -> document
 
-val to_string : int -> document -> string 
-val print : int -> document -> FStar.Util.out_channel -> unit 
+val pretty_string : int -> document -> string 
+val pretty_out_channel : int -> document -> FStar.Util.out_channel -> unit 

@@ -165,5 +165,5 @@ let surround_separate_map (n:int) (b:int) (v:document) (opening:document) (sep:d
 // 
 // let ( ^//^ ) (x:document) (y:document) : document = failwith not_impl_msg
 
-let to_string (width:int) (doc:document) : string = failwith not_impl_msg 
-let print (width:int) (doc:document) (channel:FStar.Util.out_channel) : unit = failwith not_impl_msg 
+let pretty_string (width:int) (doc:document) : string = failwith not_impl_msg 
+let pretty_out_channel (width:int) (doc:document) (channel:FStar.Util.out_channel) : unit = failwith not_impl_msg 
