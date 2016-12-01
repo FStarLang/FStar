@@ -1,6 +1,6 @@
 module Ex12e.Pad
 
-#set-options "--z3timeout 20"
+//#set-options "--z3timeout 20"
 open FStar.UInt8
 open FStar.Seq
 open FStar.SeqProperties

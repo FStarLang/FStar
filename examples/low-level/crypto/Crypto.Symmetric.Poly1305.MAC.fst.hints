@@ -1,5 +1,5 @@
 [
-  "\u0002ö∞è[\u0006…å-`»\b«\u001a[Ñ",
+  "+R5~}ë£RZw\u0013\u0003#é\u007f¸",
   [
     [
       "Crypto.Symmetric.Poly1305.MAC.keylen",
@@ -87,18 +87,16 @@
         "equation_FStar.Mul.op_Star", "equation_FStar.UInt.mul",
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.mul",
         "equation_FStar.UInt32.n", "equation_FStar.UInt32.uint_to_t",
-        "equation_FStar.UInt32.v", "fuel_guarded_inversion_Flag.id",
+        "equation_FStar.UInt32.v",
         "function_token_typing_Crypto.Symmetric.AES.blocklen",
         "int_inversion", "int_typing", "primitive_Prims.op_Multiply",
         "proj_equation_FStar.UInt32.Mk_v",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.UInt32.Mk_v",
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
         "refinement_interpretation_Tm_refine_db794f03bab458bb6a19b73606e66b3a",
         "typing_Crypto.Symmetric.Poly1305.MAC.skeyed",
-        "typing_FStar.UInt32.v", "typing_Flag.Mkid.cipher",
-        "typing_Flag.is_AES_256_GCM"
+        "typing_FStar.UInt32.v"
       ],
       0
     ],
