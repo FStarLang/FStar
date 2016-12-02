@@ -21,7 +21,7 @@ ifeq ($(OS),Windows_NT)
     ARCH = win32
     EXTRA_OPTS =
     EXTRA_LIBS = -L.
-    OPENSSL_CONF = ./Configure mingw64
+    OPENSSL_CONF = CC=x86_64-w64-mingw32-gcc ./Configure mingw64
 else
     # On Unix-like systems, the library search path is LD_LIBRARY_PATH, which is
     # correctly setup to find libssleay.so and the like, but never includes the
