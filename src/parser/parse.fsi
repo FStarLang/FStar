@@ -405,6 +405,7 @@ type nonTerminalId =
     | NONTERM_universe
     | NONTERM_universeFrom
     | NONTERM_atomicUniverse
+    | NONTERM_univar
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_
     | NONTERM_right_flexible_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_list_SEMICOLON_simpleDef_

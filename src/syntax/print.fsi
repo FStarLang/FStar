@@ -19,6 +19,7 @@ module FStar.Syntax.Print
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Const
+open FStar.Util
 
 val db_to_string      : bv -> string
 val bv_to_string      : bv -> string
