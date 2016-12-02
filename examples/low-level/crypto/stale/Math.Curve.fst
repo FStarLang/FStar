@@ -16,14 +16,14 @@ type affine_point =
   | Inf
   | Finite: x:felem -> y:felem -> affine_point
   
-val get_x: p:affine_point{is_Finite p} -> Tot felem
+val get_x: p:affine_point{Finite? p} -> Tot felem
 let get_x p = Finite.x p
-val get_y: p:affine_point{is_Finite p} -> Tot felem
+val get_y: p:affine_point{Finite? p} -> Tot felem
 let get_y p = Finite.y p
 
 (* Definition of an affine point on the curve *)
 val on_curve: affine_point -> Tot bool
-let on_curve p = (is_Inf p || (is_Finite p && (let x, y = get_x p, get_y p in (y ^^ 2) = ((x ^^ 3) ^+ (a ^* x) ^+ b))))
+let on_curve p = (Inf? p || (Finite? p && (let x, y = get_x p, get_y p in (y ^^ 2) = ((x ^^ 3) ^+ (a ^* x) ^+ b))))
 type curvePoint (p:affine_point) = b2t(on_curve p)
 
 (* Type of points on the curve *)
@@ -32,7 +32,7 @@ type celem = p:affine_point{curvePoint p}
 (* Definition of the opposite *)
 val neg': affine_point -> Tot affine_point
 let neg' p = 
-  if is_Inf p then Inf
+  if Inf? p then Inf
   else Finite (Finite.x p) (opp (Finite.y p))
 
 (* The opposite of a point on the curve is on the curve, proven in Coq *)
@@ -48,10 +48,10 @@ val add': affine_point -> affine_point -> Tot affine_point
 let add' p1 p2 =
   if not(on_curve p1) then Inf
   else if not(on_curve p2) then Inf 
-  else if is_Inf p1 then p2
-  else if is_Inf p2 then p1
+  else if Inf? p1 then p2
+  else if Inf? p2 then p1
   else (
-    cut(is_Finite p1 /\ is_Finite p2); 
+    cut(Finite? p1 /\ Finite? p2); 
     let x1 = get_x p1 in 
     let x2 = get_x p2 in 
     let y1 = get_y p1 in 
@@ -98,8 +98,8 @@ let smul n p =
 (* Equality of curve elements *)
 assume type equal: celem -> celem -> Type
 assume val lemma_equal_intro: e1:celem -> e2:celem -> Lemma
-  (requires (Curve.is_Inf e1 /\ Curve.is_Inf e2) 
-	     \/ (Curve.is_Finite e1 /\ Curve.is_Finite e2 /\ get_x e1 == get_x e2 /\ get_y e1 == get_y e2))
+  (requires (Curve.Inf? e1 /\ Curve.Inf? e2) 
+	     \/ (Curve.Finite? e1 /\ Curve.Finite? e2 /\ get_x e1 == get_x e2 /\ get_y e1 == get_y e2))
   (ensures (equal e1 e2))
   [SMTPatT (equal e1 e2)]
 assume val lemma_equal_elim: e1:celem -> e2:celem -> Lemma
@@ -130,18 +130,18 @@ type point = | Affine: p:affine_point -> point
 	     | Projective: p:projective_point -> point
 	     | Jacobian: p:jacobian_point -> point
 
-assume val to_affine: point -> Tot (p:point{is_Affine p})
-assume val to_projective: point -> Tot (p:point{is_Projective p})
-assume val to_jacobian: point -> Tot (p:point{is_Jacobian p })
+assume val to_affine: point -> Tot (p:point{Affine? p})
+assume val to_projective: point -> Tot (p:point{Projective? p})
+assume val to_jacobian: point -> Tot (p:point{Jacobian? p })
 
-type onCurve (p:point{is_Affine p}) =
+type onCurve (p:point{Affine? p}) =
   (let p' = Affine.p p in curvePoint p')
   
 (* Extension of the definition to all coordinate systems *)
 type isOnCurve (p:point) =
-  (is_Affine p /\ onCurve p)
-  \/ (is_Projective p /\ onCurve (to_affine p))
-  \/ (is_Jacobian p /\ onCurve (to_affine p))
+  (Affine? p /\ onCurve p)
+  \/ (Projective? p /\ onCurve (to_affine p))
+  \/ (Jacobian? p /\ onCurve (to_affine p))
 
 type ec_elem = p:point{ isOnCurve p }
 
@@ -152,8 +152,8 @@ let add_point p q =
   Affine (add' p' q')
   
 type eq (p1:point) (p2:point) = 
-  (is_Inf (Affine.p (to_affine p1)) /\ is_Inf (Affine.p (to_affine p2))) \/
-  (is_Finite (Affine.p (to_affine p1)) /\ is_Finite (Affine.p (to_affine p2)) /\ get_x (Affine.p (to_affine p1)) ^- get_x (Affine.p (to_affine p2)) = zero)
+  (Inf? (Affine.p (to_affine p1)) /\ Inf? (Affine.p (to_affine p2))) \/
+  (Finite? (Affine.p (to_affine p1)) /\ Finite? (Affine.p (to_affine p2)) /\ get_x (Affine.p (to_affine p1)) ^- get_x (Affine.p (to_affine p2)) = zero)
 
 let op_Plus_Star n p = smul n p
 

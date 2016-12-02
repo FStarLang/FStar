@@ -48,7 +48,7 @@ let gen () =
   Both region (Enc log key) (Dec log key)
 
 assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
-            -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
+            -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { None? o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
 
 assume val enc0: s:seq cipher (* ghost *) -> ST cipher
   (fun h -> True)
@@ -74,9 +74,9 @@ val dec: #i:rid -> d:decryptor i -> a:ad -> c:cipher -> ST (option plain)
               TwoLevelHeap.modifies Set.empty h0 h1
               /\ (Let (sel h0 (Dec.log d))
                       (fun log ->
-                          (is_None o ==> (forall (i:nat{i < Seq.length log}).{:pattern (trigger i)}
+                          (None? o ==> (forall (i:nat{i < Seq.length log}).{:pattern (trigger i)}
                                             trigger i /\ ~(basicMatch a c (Seq.index log i))))
-                          /\ (is_Some o ==> (exists (i:nat{i < Seq.length log}).{:pattern (trigger i)}
+                          /\ (Some? o ==> (exists (i:nat{i < Seq.length log}).{:pattern (trigger i)}
                                                   trigger i
                                                   /\ basicMatch a c (Seq.index log i)
                                                   /\ Entry.p (Seq.index log i) = Some.v o))))))
@@ -203,10 +203,10 @@ val stateful_dec: #i:rid -> d:st_decryptor i -> c:cipher -> ST (option plain)
                 /\ Heap.modifies !{as_ref (StDec.ctr d)} (Map.sel h0 i) (Map.sel h1 i)
                 /\ Let (sel h0 (StDec.ctr d)) (fun (r:nat{r=sel h0 (StDec.ctr d)}) ->
                    Let (sel h0 (StDec.log d)) (fun (log:seq statefulEntry{log=sel h0 (StDec.log d)}) ->
-                    (is_None p ==> (r = Seq.length log                     //nothing encrypted yet
+                    (None? p ==> (r = Seq.length log                     //nothing encrypted yet
                                     || StEntry.c (Seq.index log r) <> c    //wrong cipher
                                     ) /\ sel h1 (StDec.ctr d) = r)
-                   /\ (is_Some p ==>
+                   /\ (Some? p ==>
                           ((sel h1 (StDec.ctr d) = r + 1)
                            /\ StEntry.p (Seq.index log r) = Some.v p))))))
 // note that we do not increment the counter in case of decryption failure,

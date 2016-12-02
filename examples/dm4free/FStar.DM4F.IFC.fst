@@ -42,11 +42,11 @@ reifiable new_effect_for_free {
   ; write = write
 }
 
-effect Ifc (a:Type) (req:IFC.pre) (ens:label -> option (a * label) -> GTot Type0) =
-  IFC a (fun (h0:label) (p:IFC.post a) -> req h0 /\
+effect Ifc (a:Type) (req:IFC?.pre) (ens:label -> option (a * label) -> GTot Type0) =
+  IFC a (fun (h0:label) (p:IFC?.post a) -> req h0 /\
              (forall r. (req h0 /\ ens h0 r) ==> p r))
 
-unfold let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:label) (p:IFC.post a) =
+unfold let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:label) (p:IFC?.post a) =
   wp (fun a -> p (Some (a, h0)))
 sub_effect PURE ~> IFC = lift_pure_exnst
 
@@ -57,9 +57,9 @@ let xor (b1:bool) (b2:bool) : Tot bool = not (b1 = b2)
 val p : unit ->  Ifc unit (requires (fun l   -> True))
                           (ensures  (fun l r -> r = None))
 let p () =
-  let b1 = IFC.read Low in
-  let b2 = IFC.read Low in
-  IFC.write Low (b1 && b2);
-  let b3 = IFC.read High in
-  IFC.write High (b1 || b3);
-  IFC.write Low (xor b3 b3)
+  let b1 = IFC?.read Low in
+  let b2 = IFC?.read Low in
+  IFC?.write Low (b1 && b2);
+  let b3 = IFC?.read High in
+  IFC?.write High (b1 || b3);
+  IFC?.write Low (xor b3 b3)

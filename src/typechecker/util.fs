@@ -1238,7 +1238,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | Inline_for_extraction -> true 
         | _ -> false in
     let assumption = function Assumption | New -> true | _ -> false in
-    let reification = function Reifiable | Reflectable -> true | _ -> false in
+    let reification = function Reifiable | Reflectable _ -> true | _ -> false in
     let inferred = function
       | Discriminator _
       | Projector _
@@ -1282,7 +1282,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
           |> List.for_all (fun x -> x=q || x=Assumption || inferred x || visibility x || reducibility x)
 
         | Reifiable
-        | Reflectable -> 
+        | Reflectable _ -> 
           quals 
           |> List.for_all (fun x -> reification x || inferred x || visibility x || x=TotalEffect)
 

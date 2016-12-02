@@ -307,10 +307,10 @@ let update #i st l a v =
 
 (*
 type invoked (#i:id) (st:state i) (m:mem) : Type =
-  mac_log /\ is_Some (sel m (State.log st))
+  mac_log /\ Some? (sel m (State.log st))
 
 val mac: #i:id -> st:state i -> m:msg -> buf:buffer{lbytes 16} -> ST tag
-  (requires (fun m0 -> is_None (m_sel m0 st.log)))
+  (requires (fun m0 -> None? (m_sel m0 st.log)))
   (ensures  (fun m0 tag m1 ->
     modifies (Set.singleton (State.rid st)) m0 m1
     /\ modifies_rref st.rid !{HH.as_ref (as_rref st.log)} m0.h m1.h

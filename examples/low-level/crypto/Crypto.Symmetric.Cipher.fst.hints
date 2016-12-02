@@ -7,7 +7,9 @@
       0,
       1,
       [
-        "@query", "data_elim_FStar.UInt32.Mk",
+        "@query", "constructor_distinct_Crypto.Symmetric.Cipher.AES256",
+        "constructor_distinct_Crypto.Symmetric.Cipher.CHACHA20",
+        "data_elim_FStar.UInt32.Mk",
         "disc_equation_Crypto.Symmetric.Cipher.AES256",
         "disc_equation_Crypto.Symmetric.Cipher.CHACHA20",
         "equation_Crypto.Symmetric.AES.keylen",
@@ -39,7 +41,9 @@
       0,
       1,
       [
-        "@query", "data_elim_FStar.UInt32.Mk",
+        "@query", "constructor_distinct_Crypto.Symmetric.Cipher.AES256",
+        "constructor_distinct_Crypto.Symmetric.Cipher.CHACHA20",
+        "data_elim_FStar.UInt32.Mk",
         "disc_equation_Crypto.Symmetric.Cipher.AES256",
         "disc_equation_Crypto.Symmetric.Cipher.CHACHA20",
         "equation_Crypto.Symmetric.AES.blocklen",

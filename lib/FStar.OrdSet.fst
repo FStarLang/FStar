@@ -19,14 +19,14 @@ abstract val mem: #a:Type -> #f:cmp a -> a -> s:ordset a f -> Tot bool
 let mem (#a:Type) #f x s = FStar.List.Tot.mem x s
 
 private val set_props:
-  #a:Type -> #f:cmp a -> s:ordset a f{is_Cons s}
+  #a:Type -> #f:cmp a -> s:ordset a f{Cons? s}
   -> Lemma (requires (True))
           (ensures (forall x. mem #a #f x (Cons.tl s) ==> (f (Cons.hd s) x /\ Cons.hd s =!= x)))
 let rec set_props (#a:Type) #f s = match s with
   | x::tl -> if tl = [] then () else set_props #a #f tl
 
-private val hd_unique: #a:Type -> #f:cmp a -> s:ordset a f{is_Cons s}
-               -> Lemma (requires (is_Cons s))
+private val hd_unique: #a:Type -> #f:cmp a -> s:ordset a f{Cons? s}
+               -> Lemma (requires (Cons? s))
                        (ensures (not (mem #a #f (Cons.hd s) (Cons.tl s))))
 let hd_unique (#a:Type) #f s = set_props #a #f s
 
@@ -34,9 +34,9 @@ abstract val empty: #a:Type -> #f:cmp a -> Tot (ordset a f)
 let empty (#a:Type) #f = []
 
 private val insert': #a:Type -> #f:cmp a -> x:a -> s:ordset a f
-             -> Tot (l:(ordset a f){is_Cons l /\
+             -> Tot (l:(ordset a f){Cons? l /\
                                     (Cons.hd l = x \/
-                                    (is_Cons s /\ Cons.hd l = Cons.hd s))})
+                                    (Cons? s /\ Cons.hd l = Cons.hd s))})
 let rec insert' (#a:Type) #f x s = match s with
   | []     -> [x]
   | hd::tl ->
@@ -64,9 +64,9 @@ let choose (#a:Type) #f s = match s with
   | x::_ -> Some x
 
 private val remove': #a:Type -> #f:cmp a -> x:a -> s:ordset a f
-             -> Tot (l:(ordset a f){(is_Nil s ==> is_Nil l) /\
-                                    (is_Cons s ==> Cons.hd s = x ==> l = Cons.tl s) /\
-                                    (is_Cons s ==> Cons.hd s =!= x ==> (is_Cons l /\ Cons.hd l = Cons.hd s))})
+             -> Tot (l:(ordset a f){(Nil? s ==> Nil? l) /\
+                                    (Cons? s ==> Cons.hd s = x ==> l = Cons.tl s) /\
+                                    (Cons? s ==> Cons.hd s =!= x ==> (Cons? l /\ Cons.hd l = Cons.hd s))})
 let rec remove' (#a:Type) #f x s = match s with
   | []     -> []
   | hd::tl ->
@@ -95,7 +95,7 @@ opaque type Equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
   (forall x. mem #_ #f x s1 = mem #_ #f x s2)
 
 private abstract val eq_helper: #a:Type -> #f:cmp a -> x:a -> s:ordset a f
-               -> Lemma (requires (is_Cons s /\ f x (Cons.hd s) /\ x =!= Cons.hd s))
+               -> Lemma (requires (Cons? s /\ f x (Cons.hd s) /\ x =!= Cons.hd s))
                        (ensures (not (mem #a #f x s)))
 let eq_helper (#a:Type) #f x (y::s) = set_props #a #f (y::s)
 
@@ -198,13 +198,13 @@ let mem_subset (#a:Type) #f s1 s2 =
   subset_implies_mem #a #f s1 s2; mem_implies_subset #a #f s1 s2
 
 abstract val choose_empty: #a:Type -> #f:cmp a
-                  -> Lemma (requires True) (ensures (is_None (choose #a #f (empty #a #f))))
+                  -> Lemma (requires True) (ensures (None? (choose #a #f (empty #a #f))))
                      [SMTPat (choose #a #f (empty #a #f))]
 let choose_empty (#a:Type) #f = ()
 
 abstract val choose_s: #a:Type -> #f:cmp a -> s:ordset a f
               -> Lemma (requires (not (s = (empty #a #f))))
-                       (ensures (is_Some (choose #a #f s) /\
+                       (ensures (Some? (choose #a #f s) /\
                                  s = union #a #f (singleton #a #f (Some.v (choose #a #f s)))
                                                  (remove #a #f (Some.v (choose #a #f s)) s)))
                  [SMTPat (choose #a #f s)]

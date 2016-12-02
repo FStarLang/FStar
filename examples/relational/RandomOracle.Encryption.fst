@@ -49,7 +49,7 @@ opaque val encrypt_hon : k:double key{safe_key_pre k}
                  (ensures (fun h2' p h2 -> goodstate_hash (sel_rel1 h2 s)
                                            /\( not (or_irel (rel_map1T (fun s -> s.bad) (sel_rel1 h2 s)))
                                              ==> Ok (rel_map1T (fun s -> s.l)(sel_rel1 h2 s))
-                                             /\ is_Some (R.l p) /\ is_Some (R.r p)
+                                             /\ Some? (R.l p) /\ Some? (R.r p)
                                              /\ snd (Some.v (R.l p)) = snd (Some.v (R.r p))
                                              /\ (fresh_keys (rel_map2T append k (R (snd(Some.v #(block * block) (R.l p)))
                                                                                   (snd(Some.v #(block * block) (R.r p)))))
@@ -65,9 +65,9 @@ let encrypt_hon k p =
 
                   let h = hash_hon kh sample_fun in
                   (* Writing the code in this style causes the loss of some typing information *)
-(*                   let c = rel_map3 (fun h p r -> if is_Some h then Some ((encrypt p (Some.v h)), r) else None) h p r in *)
-                  let c = R (if is_Some (R.l h) then Some ((encrypt (R.l p) (Some.v (R.l h))), (R.l r)) else None)
-                            (if is_Some (R.r h) then Some ((encrypt (R.r p) (Some.v (R.r h))), (R.r r)) else None) in 
+(*                   let c = rel_map3 (fun h p r -> if Some? h then Some ((encrypt p (Some.v h)), r) else None) h p r in *)
+                  let c = R (if Some? (R.l h) then Some ((encrypt (R.l p) (Some.v (R.l h))), (R.l r)) else None)
+                            (if Some? (R.r h) then Some ((encrypt (R.r p) (Some.v (R.r h))), (R.r r)) else None) in 
                   c
 
 (* We only show that decryption does not violate our relational invariants *)
@@ -83,6 +83,6 @@ let decrypt_hon k c =
                   id_good_sample_fun ();
                   let h = hash_hon kh (fun x -> x) in
                   (* Writing the code in this style causes the loss of some typing information *)
-(*                   rel_map2T (fun h c -> if is_Some h then Some (decrypt (fst c) (Some.v h)) else None) h c *)
-                  R (if is_Some (R.l h) then Some (decrypt (fst (R.l c)) (Some.v (R.l h))) else None)
-                    (if is_Some (R.r h) then Some (decrypt (fst (R.r c)) (Some.v (R.r h))) else None)
+(*                   rel_map2T (fun h c -> if Some? h then Some (decrypt (fst c) (Some.v h)) else None) h c *)
+                  R (if Some? (R.l h) then Some (decrypt (fst (R.l c)) (Some.v (R.l h))) else None)
+                    (if Some? (R.r h) then Some (decrypt (fst (R.r c)) (Some.v (R.r h))) else None)
