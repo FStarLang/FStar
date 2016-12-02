@@ -146,10 +146,7 @@ unfold let pure_return (a:Type) (x:a) (p:pure_post a) =
 unfold let pure_bind_wp (r1:range) (a:Type) (b:Type)
                    (wp1:pure_wp a) (wp2: (a -> GTot (pure_wp b)))
                    (p : pure_post b) =
-     labeled r1 "push" unit
-     /\ wp1 (fun (x:a) -> 
-             labeled r1 "pop" unit
-	     /\ wp2 x p)
+	wp1 (fun (x:a) -> wp2 x p)
 unfold let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
      l_ITE p (wp_then post) (wp_else post)
 
@@ -169,7 +166,7 @@ unfold let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (x:a) -> True)
 
 total new_effect { (* The definition of the PURE effect is fixed; no user should ever change this *)
   PURE : a:Type -> wp:pure_wp a -> Effect
-  with return_wp       = pure_return
+  with return_wp    = pure_return
      ; bind_wp      = pure_bind_wp
      ; if_then_else = pure_if_then_else
      ; ite_wp       = pure_ite_wp
@@ -286,10 +283,7 @@ unfold let st_bind_wp       (heap:Type)
                             (wp1:st_wp_h heap a)
                             (wp2:(a -> GTot (st_wp_h heap b)))
                             (p:st_post_h heap b) (h0:heap) =
-     labeled r1 "push" unit
-     /\ wp1 (fun a h1 ->
-       labeled r1 "pop" unit
-       /\ wp2 a p h1) h0
+  wp1 (fun a h1 -> wp2 a p h1) h0
 unfold let st_if_then_else  (heap:Type) (a:Type) (p:Type)
                              (wp_then:st_wp_h heap a) (wp_else:st_wp_h heap a)
                              (post:st_post_h heap a) (h0:heap) =
@@ -350,9 +344,7 @@ unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
          : GTot Type0 =
   forall (k:ex_post b).
      (forall (rb:result b).{:pattern (guard_free (k rb))} k rb <==> p rb)
-     ==> (labeled r1 "push" unit
-         /\ wp1 (fun ra1 -> labeled r1 "pop" unit
-			/\ (is_V ra1 ==> wp2 (V.v ra1) k)
+     ==> (wp1 (fun ra1 -> (is_V ra1 ==> wp2 (V.v ra1) k)
 			/\ (is_E ra1 ==> k (E (E.e ra1)))))
 
 unfold let ex_ite_wp (a:Type) (wp:ex_wp a) (post:ex_post a) =
@@ -410,10 +402,7 @@ unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
                        (wp1:all_wp_h heap a)
                        (wp2:(a -> GTot (all_wp_h heap b)))
                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
-   labeled r1 "push" unit
-   /\ wp1 (fun ra h1 -> 
-       labeled r1 "pop" unit
-       /\ (is_V ra ==> wp2 (V.v ra) p h1)) h0
+  wp1 (fun ra h1 -> (is_V ra ==> wp2 (V.v ra) p h1)) h0
 
 unfold let all_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)
@@ -547,6 +536,70 @@ unopteq type dtuple4 (a:Type)
            -> _4:d _1 _2 _3
            -> dtuple4 a b c d
 
+(* Concrete syntax (w:a & x:b w & y:c w x & z:d w x y & e w x y z) *)
+unopteq type dtuple5 (a:Type)
+             (b:(w:a -> GTot Type))
+             (c:(w:a -> b w -> GTot Type))
+             (d:(w:a -> x:b w -> y:c w x -> GTot Type))
+             (e:(w:a -> x:b w -> y:c w x -> z:d w x y -> GTot Type)) =
+ | Mkdtuple5:_1:a
+           -> _2:b _1
+           -> _3:c _1 _2
+           -> _4:d _1 _2 _3
+           -> _5:e _1 _2 _3 _4
+           -> dtuple5 a b c d e
+
+(* Concrete syntax (v:a & w:b v & x:c v w & y:d v w x & z:e v w x y & f v w x y z) *)
+unopteq type dtuple6 (a:Type)
+             (b:(v:a -> GTot Type))
+             (c:(v:a -> b v -> GTot Type))
+             (d:(v:a -> w:b v -> x:c v w -> GTot Type))
+             (e:(v:a -> w:b v -> x:c v w -> y:d v w x -> GTot Type))
+             (f:(v:a -> w:b v -> x:c v w -> y:d v w x -> z:e v w x y -> GTot Type)) =
+ | Mkdtuple6:_1:a
+           -> _2:b _1
+           -> _3:c _1 _2
+           -> _4:d _1 _2 _3
+           -> _5:e _1 _2 _3 _4
+           -> _6:f _1 _2 _3 _4 _5
+           -> dtuple6 a b c d e f
+
+(* Concrete syntax (u:a & v:b u & w:c u v & x:d u v w & y:e u v w x & z:f u v w x y & g u v w x y z) *)
+unopteq type dtuple7 (a:Type)
+             (b:(u:a -> GTot Type))
+             (c:(u:a -> b u -> GTot Type))
+             (d:(u:a -> v:b u -> w:c u v -> GTot Type))
+             (e:(u:a -> v:b u -> w:c u v -> x:d u v w -> GTot Type))
+             (f:(u:a -> v:b u -> w:c u v -> x:d u v w -> y:e u v w x -> GTot Type))
+             (g:(u:a -> v:b u -> w:c u v -> x:d u v w -> y:e u v w x -> z:f u v w x y -> GTot Type)) =
+ | Mkdtuple7:_1:a
+           -> _2:b _1
+           -> _3:c _1 _2
+           -> _4:d _1 _2 _3
+           -> _5:e _1 _2 _3 _4
+           -> _6:f _1 _2 _3 _4 _5
+           -> _7:g _1 _2 _3 _4 _5 _6
+           -> dtuple7 a b c d e f g
+
+(* Concrete syntax (t:a & u:b t & v:c t u & w:d t u v & x:e t u v w & y:f t u v w x & z:g t u v w x y & h t u v w x y z) *)
+unopteq type dtuple8 (a:Type)
+             (b:(t:a -> GTot Type))
+             (c:(t:a -> b t -> GTot Type))
+             (d:(t:a -> u:b t -> v:c t u -> GTot Type))
+             (e:(t:a -> u:b t -> v:c t u -> w:d t u v -> GTot Type))
+             (f:(t:a -> u:b t -> v:c t u -> w:d t u v -> x:e t u v w -> GTot Type))
+             (g:(t:a -> u:b t -> v:c t u -> w:d t u v -> x:e t u v w -> y:f t u v w x -> GTot Type))
+             (h:(t:a -> u:b t -> v:c t u -> w:d t u v -> x:e t u v w -> y:f t u v w x -> z:g t u v w x y -> GTot Type)) =
+ | Mkdtuple8:_1:a
+           -> _2:b _1
+           -> _3:c _1 _2
+           -> _4:d _1 _2 _3
+           -> _5:e _1 _2 _3 _4
+           -> _6:f _1 _2 _3 _4 _5
+           -> _7:g _1 _2 _3 _4 _5 _6
+           -> _8:h _1 _2 _3 _4 _5 _6 _7
+           -> dtuple8 a b c d e f g h
+
 let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
 let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
 
@@ -619,7 +672,8 @@ assume val string_of_int: int -> Tot string
 (*********************************************************************************)
 (* Marking terms for normalization *)
 (*********************************************************************************)
-abstract let normalize (a:Type0) : Type0 = a
+abstract let normalize_term (#a:Type) (x:a) : a = x
+abstract let normalize (a:Type0) = a
 
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()

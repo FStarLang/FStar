@@ -79,7 +79,6 @@ let rec sorted_app_lemma #a f l1 l2 pivot =
 type is_permutation (a:eqtype) (l:list a) (m:list a) =
   forall x. count x l = count x m
 
-#set-options "--z3timeout 20"
 val quicksort: #a:eqtype -> f:total_order a -> l:list a ->
   Tot (m:list a{sorted f m /\ is_permutation a l m})
   (decreases (length l))

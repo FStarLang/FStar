@@ -237,18 +237,17 @@
       0
     ],
     [ "WhileLanguage.decr", 1, 2, 1, [ "@query" ], 0 ],
-    [ "WhileLanguage.interpret_while", 1, 2, 1, [ "@query" ], 0 ],
-    [ "WhileLanguage.interpret_com", 1, 2, 1, [ "@query" ], 0 ],
     [
       "WhileLanguage.interpret_while",
-      2,
+      1,
       2,
       1,
       [
         "@query", "binder_x_6d2d986ae2193e10b7b088fdfea59c2f_0",
         "binder_x_bf30dda4e107bc142c424b48e0c62927_1", "bool_inversion",
-        "disc_equation_Prims.Some", "disc_equation_WhileLanguage.While",
-        "equality_tok_Prims.LexTop@tok", "equation_WhileLanguage.decr",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "disc_equation_WhileLanguage.While", "equality_tok_Prims.LexTop@tok",
+        "equation_WhileLanguage.decr",
         "fuel_correspondence_WhileLanguage.interpret_exp.fuel_instrumented",
         "function_token_typing_FStar.Heap.heap", "lemma_Prims.invertOption",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_GreaterThanOrEqual",
@@ -265,13 +264,12 @@
     ],
     [
       "WhileLanguage.interpret_while",
-      3,
+      2,
       2,
       1,
       [
         "@query", "binder_x_e9cca96f89020d43f5f8aa6022076d85_1",
-        "bool_inversion", "disc_equation_Prims.None",
-        "disc_equation_WhileLanguage.Assign",
+        "bool_inversion", "disc_equation_WhileLanguage.Assign",
         "disc_equation_WhileLanguage.If", "disc_equation_WhileLanguage.Seq",
         "disc_equation_WhileLanguage.Skip",
         "disc_equation_WhileLanguage.While", "equality_tok_Prims.LexTop@tok",
@@ -281,9 +279,17 @@
         "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "subterm_ordering_WhileLanguage.If",
-        "subterm_ordering_WhileLanguage.Seq", "typing_Prims.is_Some",
-        "well-founded-ordering-on-nat"
+        "subterm_ordering_WhileLanguage.Seq", "typing_Prims.is_None",
+        "typing_Prims.is_Some", "well-founded-ordering-on-nat"
       ],
+      0
+    ],
+    [
+      "WhileLanguage.interpret_while",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
     [
@@ -295,14 +301,6 @@
       0
     ],
     [
-      "WhileLanguage.interpret_while",
-      5,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
       "WhileLanguage.interpret_exp_st",
       1,
       2,
@@ -310,17 +308,15 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "WhileLanguage.interpret_exp_st", 2, 2, 1, [ "@query" ], 0 ],
     [
       "WhileLanguage.interpret_exp_st",
-      3,
+      2,
       2,
       1,
       [
         "@query", "assumption_FStar.Heap.Equals",
         "assumption_FStar.Heap.Extensional",
         "constructor_distinct_WhileLanguage.AInt",
-        "constructor_distinct_WhileLanguage.AOp",
         "constructor_distinct_WhileLanguage.AVar",
         "disc_equation_WhileLanguage.AInt",
         "disc_equation_WhileLanguage.AOp",

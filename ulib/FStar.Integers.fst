@@ -104,7 +104,8 @@ let modulo (s:signed) (x:int) (y:pos{s=Signed ==> y%2=0}) =
   | Unsigned ->  x % y
   | _ -> FStar.Int (x @% y)
 
-#set-options "--z3timeout 20 --initial_fuel 1 --max_fuel 1"
+#reset-options "--z3rlimit 5 --initial_fuel 1 --max_fuel 1"
+
 unfold let op_Plus_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
   : Tot (z:int_t s n{v z = modulo s (v x + v y) (pow2 n)})
   = match s, n with
@@ -122,6 +123,8 @@ unfold let op_Plus_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
     | Signed, 63 -> FStar.Int63(x +%^ y)
     | Signed, 64 -> FStar.Int64(x +%^ y)
     | Signed, 128 -> FStar.Int128(x +%^ y)
+
+#reset-options "--z3rlimit 5"
 
 unfold let op_Subtraction (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n (v x - v y)})
   : Tot (z:int_t s n{v z = v x - v y})
@@ -162,6 +165,8 @@ unfold let op_Subtraction_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s
     | Signed, 64 -> FStar.Int64(x -?^ y)
     | Signed, 128 -> FStar.Int128(x -?^ y)
 
+#reset-options "--z3rlimit 20"
+
 unfold let op_Subtraction_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
   : Tot (z:int_t s n{v z = modulo s (v x - v y) (pow2 n)})
   = match s, n with
@@ -179,6 +184,8 @@ unfold let op_Subtraction_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s 
     | Signed, 63 -> FStar.Int63(x -%^ y)
     | Signed, 64 -> FStar.Int64(x -%^ y)
     | Signed, 128 -> FStar.Int128(x -%^ y)
+
+#reset-options "--z3rlimit 5"
 
 open FStar.Mul
 
@@ -201,6 +208,8 @@ unfold let op_Star (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n (v x *
     | Signed, 64 -> FStar.Int64(x *^ y)
     | Signed, 128 -> FStar.Int128(x *^ y)
 
+#reset-options "--z3rlimit 20"
+
 unfold let op_Star_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
   : Tot (z:int_t s n{ok s n (v x * v y) ==> v z = v x * v y})
   = match s, n with
@@ -219,6 +228,8 @@ unfold let op_Star_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
     | Signed, 63 -> FStar.Int63(x *?^ y)
     | Signed, 64 -> FStar.Int64(x *?^ y)
     | Signed, 128 -> FStar.Int128(x *?^ y)
+
+#reset-options "--z3rlimit 5"
 
 unfold let op_Star_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
   : Tot (z:int_t s n{v z = modulo s (v x * v y) (pow2 n)})

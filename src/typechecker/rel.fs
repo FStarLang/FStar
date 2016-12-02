@@ -209,7 +209,8 @@ let mk_problem scope orig lhs rel rhs elt reason = {
      relation=rel;
      rhs=rhs;
      element=elt;
-     logical_guard=new_uvar (p_loc orig) scope U.ktype0; //logical guards are always squashed?
+     logical_guard=new_uvar Range.dummyRange scope U.ktype0; //logical guards are always squashed; 
+                                                             //their range is intentionally dummy
      reason=reason::p_reason orig;
      loc=p_loc orig;
      rank=None;
@@ -223,7 +224,8 @@ let new_problem env lhs rel rhs elt loc reason =
     relation=rel;
     rhs=rhs;
     element=elt;
-    logical_guard=new_uvar (Env.get_range env) scope U.ktype0; //logical guards are always squashed?
+    logical_guard=new_uvar Range.dummyRange scope U.ktype0; //logical guards are always squashed?
+                                                            //their range is intentionally dummy
     reason=[reason];
     loc=loc;
     rank=None;
@@ -413,7 +415,7 @@ let u_abs k ys t =
         | Tm_arrow(bs, c) -> 
           if List.length bs = List.length ys
           then (ys, t), SS.open_comp bs c 
-          else let ys', t = U.abs_formals t in
+          else let ys', t, _ = U.abs_formals t in
                (ys@ys', t), U.arrow_formals_comp k
         | _ -> (ys, t), ([], S.mk_Total k) in
     if List.length xs <> List.length ys

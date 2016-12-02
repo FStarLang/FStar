@@ -97,9 +97,12 @@ let rec parse_format_pure (s:list char) : Tot (option (list dir)) =
 let rec parse_format_string (s:string) : Tot (option (list dir)) =
   parse_format_pure (list_of_string s)
 
-let sprintf (s:string{normalize (is_Some (parse_format_string s))})
-  : Tot (normalize (dir_type (Some.v (parse_format_string s)))) =
+let sprintf (s:string{normalize_term #bool (is_Some (parse_format_string s))})
+  : Tot (normalize_term (dir_type (Some.v (parse_format_string s)))) =
   string_of_dirs (Some.v (parse_format_string s)) (fun s -> s)
+
+(* trying to make sure that it's not the SMT solver doing the reduction *)
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 let example2 () =
   assert_norm (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])
@@ -112,7 +115,7 @@ let example2_lemma () :
 (* It might seem nicer to just call normalize in the lemma statement,
    but that doesn't allow using the lemma later on; so we're stuck with the duplication *)
 private let example2_lemma_looks_nicer_but_not_usable () :
-  Lemma (normalize (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])) = ()
+  Lemma (normalize_term (list_of_string "%d=%s" == ['%'; 'd'; '='; '%'; 's'])) = ()
 (* This also needs the private qualifier, otherwise getting this:
 Interface of SimplePrintf violates its abstraction (add a 'private'
 qualifier to
@@ -129,6 +132,8 @@ let example3_lemma () :
 let example4_lemma () :
   Lemma (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]) =
   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String])
+
+// #reset-options "--z3timeout 10"
 
 let example5 : string =
   (* Requiring such an assert_norm on each usage seems quite bad for usability *)

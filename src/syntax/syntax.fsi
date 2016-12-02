@@ -157,6 +157,7 @@ and fv_qual =
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
+             * option<range>                    (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
 and subst_elt = 
    | DB of int * bv                            (* DB i t: replace a bound variable with index i with name bv                 *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
@@ -402,5 +403,7 @@ val fv_to_tm:       fv -> term
 val fvar:           lident -> delta_depth -> option<fv_qual> -> term
 val fv_eq:          fv -> fv -> bool
 val fv_eq_lid:      fv -> lident -> bool
+val range_of_fv:    fv -> range
+val lid_of_fv:      fv -> lid
 
 

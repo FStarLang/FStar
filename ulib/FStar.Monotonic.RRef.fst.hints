@@ -1,12 +1,9 @@
 [
   " ‡ExXs¹YE´+/¥¨\u0016p",
   [
-    [ "FStar.Monotonic.RRef.monotonic", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Monotonic.RRef.rid", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Monotonic.RRef.m_rref", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Monotonic.RRef.m_rref",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
@@ -38,10 +35,9 @@
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
       0
     ],
-    [ "FStar.Monotonic.RRef.as_hsref", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Monotonic.RRef.as_hsref",
-      3,
+      2,
       2,
       1,
       [
@@ -50,9 +46,6 @@
       ],
       0
     ],
-    [ "FStar.Monotonic.RRef.m_contains", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Monotonic.RRef.m_fresh", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Monotonic.RRef.m_sel", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Monotonic.RRef.m_upd",
       1,
@@ -107,10 +100,9 @@
       ],
       0
     ],
-    [ "FStar.Monotonic.RRef.m_read", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Monotonic.RRef.m_read",
-      2,
+      1,
       2,
       1,
       [
@@ -145,10 +137,9 @@
       ],
       0
     ],
-    [ "FStar.Monotonic.RRef.m_write", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Monotonic.RRef.m_write",
-      2,
+      1,
       2,
       1,
       [
@@ -171,11 +162,9 @@
       ],
       0
     ],
-    [ "FStar.Monotonic.RRef.stable_on_t", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Monotonic.RRef.witness", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Monotonic.RRef.witness",
-      2,
+      1,
       2,
       1,
       [
@@ -198,15 +187,9 @@
       ],
       0
     ],
-    [ "FStar.Monotonic.RRef.weaken_witness", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Monotonic.RRef.testify", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Monotonic.RRef.testify", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Monotonic.RRef.testify_forall", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Monotonic.RRef.testify_forall", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Monotonic.RRef.m_recall", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Monotonic.RRef.m_recall",
-      2,
+      1,
       2,
       1,
       [
@@ -253,7 +236,6 @@
         "haseqTm_refine_5a09de1efe4b8e150cfdaeaf95d864d4"
       ],
       0
-    ],
-    [ "FStar.Monotonic.RRef.ex_rid_of_rid", 2, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

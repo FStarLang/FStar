@@ -1,10 +1,9 @@
 [
   "Ô\rç¸À\u0007*fÚë=\"U◊\u0006#",
   [
-    [ "MAC.nbytes", 1, 2, 1, [ "@query" ], 0 ],
     [
       "MAC.nbytes",
-      2,
+      1,
       2,
       1,
       [
@@ -44,9 +43,6 @@
       ],
       0
     ],
-    [ "MAC.pkey", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MAC.leak", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MAC.leaked", 1, 2, 1, [ "@query" ], 0 ],
     [ "MAC.Entry.k", 1, 2, 1, [ "@query" ], 0 ],
     [
       "MAC.Entry.t",

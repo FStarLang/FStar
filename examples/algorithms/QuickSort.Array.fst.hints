@@ -1,7 +1,6 @@
 [
-  "˙ÎtFÍÛ\u001c€¸ò’¥Íè¢E",
+  "b˛_©À¸Ä•˛H8å\u001b\u0007ﬁÖ",
   [
-    [ "QuickSort.Array.partition_inv", 1, 1, 0, [ "@query" ], 0 ],
     [
       "QuickSort.Array.partition_pre",
       1,
@@ -269,24 +268,21 @@
       ],
       0
     ],
-    [ "QuickSort.Array.qsort", 1, 1, 0, [ "@query" ], 0 ],
     [
       "QuickSort.Array.qsort",
-      2,
+      1,
       1,
       0,
       [
-        "@query", "bool_inversion", "equation_FStar.Array.array",
-        "equation_FStar.SeqProperties.tot_ord", "equation_Prims.eqtype",
-        "equation_Prims.nat",
+        "@query", "assumption_FStar.Seq.Extensionality", "bool_inversion",
+        "equation_FStar.Array.array", "equation_FStar.SeqProperties.tot_ord",
+        "equation_Prims.eqtype", "equation_Prims.nat",
         "fuel_correspondence_FStar.SeqProperties.sorted.fuel_instrumented",
-        "fuel_irrelevance_FStar.SeqProperties.sorted.fuel_instrumented",
         "int_inversion", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro",
         "lemma_FStar.Seq.lemma_index_slice",
-        "lemma_FStar.Seq.lemma_len_slice",
-        "pretyping_ae567c2fb75be05905677af440075565",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
+        "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "ref_inversion",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
@@ -296,9 +292,9 @@
         "refinement_interpretation_Tm_refine_9d67d51cc95f7cd6f4b036168d71bd8b",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_c90e16742d2e633e32c657b87c3493b3",
-        "token_correspondence_FStar.SeqProperties.sorted.fuel_instrumented",
         "typing_FStar.Heap.contains", "typing_FStar.Heap.sel",
-        "typing_FStar.Seq.seq", "typing_FStar.Seq.slice"
+        "typing_FStar.Seq.seq", "typing_FStar.Seq.slice",
+        "typing_FStar.SeqProperties.sorted"
       ],
       0
     ]

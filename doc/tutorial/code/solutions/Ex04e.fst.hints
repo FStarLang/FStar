@@ -60,10 +60,9 @@
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [ "Ex04e.find_some", 3, 2, 1, [ "@query" ], 0 ],
     [
       "Ex04e.find_some",
-      4,
+      3,
       2,
       1,
       [
@@ -76,8 +75,8 @@
         "fuel_irrelevance_Ex04e.find_.fuel_instrumented",
         "projection_inverse_Ex04e.Some__0",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons", "unit_typing"
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons",
+        "unit_typing"
       ],
       0
     ]

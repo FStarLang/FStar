@@ -23,6 +23,184 @@ module MAC = Crypto.Symmetric.Poly1305.MAC
 module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
 
+let u (n:FStar.UInt.uint_t 32) = uint_to_t n
+
+abstract let pre_refines_one_entry (rgn:region) (i:id{safeId i}) (h:mem) (l:nat{l<>0}) 
+			  (nonce:Cipher.iv (alg i)) (plain:plain i l) (c_tagged:cipher i l) 
+			  (blocks:Seq.seq (PRF.entry rgn i)) =
+  let b = num_blocks' i l in
+  b + 1 = Seq.length blocks /\
+  (let PRF.Entry x e = Seq.index blocks 0 in
+   PRF (x.iv = nonce) /\
+   PRF (x.ctr = 0ul)  /\ (
+   let xors = Seq.slice blocks 1 (b+1) in 
+   let cipher, tag = SeqProperties.split c_tagged l in
+   safelen i l 1ul /\
+   Seq.equal xors (counterblocks i rgn (PRF.incr i x) l 0 l plain cipher)))
+
+#reset-options "--z3rlimit 20"
+
+let mac_refines (i:id) 
+		(st:state i Writer) (nonce: Cipher.iv (alg i))
+		(#aadlen: UInt32.t {aadlen <=^ aadmax}) (aad: lbuffer (v aadlen))
+                (#len:nat{len<>0}) (plain:plainBuffer i len) (cipher:lbuffer (len + v (Spec.taglen i)))
+   		(h:mem{Buffer.live h aad /\ Plain.live h plain /\ Buffer.live h cipher})
+   = let mac_rgn = st.prf.mac_rgn in
+     let p = Plain.sel_plain h (u len) plain in
+     let c, tag = SeqProperties.split (Buffer.as_seq h cipher) len in
+     let ad = Buffer.as_seq h aad in
+     let x0 : PRF.domain i = {iv=nonce; ctr=0ul} in
+     x0.ctr = 0ul /\
+     (safeId i /\ prf i ==> 
+      (let tab = HS.sel h (PRF.itable i st.prf) in
+       match PRF.find_mac tab x0 with 
+       | None -> False
+       | Some m -> 
+         let mac_log = MAC.ilog (MAC.State.log m) in
+	 m_contains mac_log h /\ (
+	 match m_sel h (MAC.ilog (MAC.State.log m)) with
+	 | None           -> False
+	 | Some (msg,tag') -> msg = field_encode i ad #(u len) c /\
+	                     tag = tag')))
+
+let intro_mac_refines (i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
+		      (#aadlen: UInt32.t {aadlen <=^ aadmax}) (aad: lbuffer (v aadlen))
+                      (#len:nat{len<>0}) (plain:plainBuffer i len) (cipher:lbuffer (len + v (Spec.taglen i)))
+   		      (h:mem{Buffer.live h aad /\ Plain.live h plain /\ Buffer.live h cipher})
+   : Lemma (requires (let x0 : PRF.domain i = {iv=nonce; ctr=0ul} in
+		      let mac_rgn = st.prf.mac_rgn in
+		      let p = Plain.sel_plain h (u len) plain in
+		      let c, _ = SeqProperties.split (Buffer.as_seq h cipher) len in
+		      let tagB = Buffer.sub cipher (u len) (Spec.taglen i) in
+		      let ad = Buffer.as_seq h aad in
+		      let x0 : PRF.domain i = {iv=nonce; ctr=0ul} in
+	              (safeId i /\ prf i ==> 
+		      (let tab = HS.sel h (PRF.itable i st.prf) in
+		       let l : MAC.itext = field_encode i ad #(u len) c in
+		       match PRF.find_mac tab x0 with 
+		       | None -> False
+		       | Some mac_st -> 
+			 m_contains (MAC (ilog mac_st.log)) h /\
+		         m_sel h (MAC (ilog mac_st.log)) == Some (l, Buffer.as_seq h tagB)))))
+           (ensures mac_refines i st nonce aad plain cipher h)
+  = ()	   
+
+(* val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit *)
+(*   (requires (fun h0 -> *)
+(*     live h0 tag /\ live h0 st.s /\ *)
+(*     disjoint acc st.s /\ disjoint tag acc /\ disjoint tag st.r /\ disjoint tag st.s /\ *)
+(*     acc_inv st l acc h0 /\ *)
+(*     (mac_log /\ safeId (fst i) ==> m_sel h0 (ilog st.log) == None))) *)
+(*   (ensures (fun h0 _ h1 -> *)
+(*     live h0 st.s /\ live h0 st.r /\ live h1 tag /\ *)
+(*     // modifies h0 h1 "the tag buffer and st.log" /\ *)
+(*     (mac_log ==> *)
+(*       (let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in *)
+(* 	mac == little_endian (sel_word h1 tag) /\ *)
+(* 	m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag))))) *)
+
+			   
+#set-options "--detail_errors"
+let pre_refines_to_refines  (#i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
+			    (aadlen: UInt32.t {aadlen <=^ aadmax})
+			    (aad: lbuffer (v aadlen))
+                            (len:nat{len<>0}) (plain:plainBuffer i len) (cipher:lbuffer (len + v (Spec.taglen i)))
+			    (blocks:Seq.seq (PRF.entry st.prf.mac_rgn i))
+                            (h:mem{Buffer.live h aad /\ Plain.live h plain /\ Buffer.live h cipher})
+   : Lemma (requires (let mac_rgn = st.prf.mac_rgn in
+     		      let p = Plain.sel_plain h (u len) plain in
+		      let c_tagged = Buffer.as_seq h cipher in
+	              let c, tag = SeqProperties.split c_tagged len in
+		      let ad = Buffer.as_seq h aad in
+  		      safeId i ==> 
+			(pre_refines_one_entry mac_rgn i h len nonce p c_tagged blocks /\
+			 mac_refines i st nonce aad plain cipher h)))
+            (ensures (let mac_rgn = st.prf.mac_rgn in
+     		      let p = Plain.sel_plain h (u len) plain in
+		      let c_tagged = Buffer.as_seq h cipher in
+	              let c, tag = SeqProperties.split c_tagged len in
+		      let ad = Buffer.as_seq h aad in
+  		      let entry = Entry nonce ad len p c_tagged in
+		      safeId i ==> refines_one_entry #mac_rgn #i h entry blocks))
+    = admit()
+
+
+#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 1"
+val counterblocks_len: #i:id{safeId i} -> 
+			     (rgn:region) -> 
+			     (x:domain i{x.ctr <> 0ul}) ->
+			     (len:nat{len <> 0}) ->
+			     (from_pos:nat{from_pos <= len /\ safelen i (len - from_pos) x.ctr}) ->
+			     (plain:Plain.plain i len) ->
+			     (cipher:lbytes len) ->
+    Lemma (requires True)
+  	  (ensures
+	     (Seq.length (counterblocks i rgn x len from_pos len plain cipher) =
+			 (num_blocks' i (len - from_pos))))
+          (decreases (len - from_pos))
+let rec counterblocks_len #i rgn x len from_pos plain cipher = 
+  if from_pos = len
+  then ()
+  else let blockl = v (Cipher(blocklen (cipher_of_id i))) in 
+       let remaining = len - from_pos in 
+       let l0 = minNat remaining blockl in 
+       counterblocks_len #i rgn (PRF.incr i x) len (from_pos + l0) plain cipher
+  
+let intro_refines_one_entry_no_tag
+                            (#i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
+                            (len:nat{len<>0}) (plain:plainBuffer i len) (cipher:lbuffer (len + v (Spec.taglen i)))
+                            (h0:mem) (h1:mem) (h2:mem{Buffer.live h2 cipher /\ Plain.live h2 plain})
+   : Lemma (requires (safeId i /\ prf i ==> 
+		     (let mac_rgn = st.prf.mac_rgn in
+		      let p = Plain.sel_plain h2 (u len) plain in
+		      let c_tagged = Buffer.as_seq h2 cipher in
+		      let table_0 = HS.sel h0 (PRF.itable i st.prf) in
+		      let table_1 = HS.sel h1 (PRF.itable i st.prf) in
+		      let table_2 = HS.sel h2 (PRF.itable i st.prf) in
+		      let initial_domain = {iv=nonce; ctr=1ul} in
+	              let c, _ = SeqProperties.split c_tagged len in
+		      (exists mac. Seq.equal table_1 (SeqProperties.snoc table_0 (PRF (Entry ({iv=nonce; ctr=0ul}) mac)))) /\
+		      safelen i len 1ul /\
+		      table_2 == (Seq.append table_1 (counterblocks i mac_rgn initial_domain len 0 len p c)))))
+	    (ensures (safeId i /\ prf i ==> 
+		     (let mac_rgn = st.prf.mac_rgn in
+		      let p = Plain.sel_plain h2 (u len) plain in
+		      let c = Buffer.as_seq h2 cipher in
+		      let table_0 = HS.sel h0 (PRF.itable i st.prf) in
+		      let table_1 = HS.sel h1 (PRF.itable i st.prf) in
+		      let table_2 = HS.sel h2 (PRF.itable i st.prf) in
+		      Seq.length table_2 >= Seq.length table_0 /\ (
+		      let blocks = Seq.slice table_2 (Seq.length table_0) (Seq.length table_2) in
+		      pre_refines_one_entry mac_rgn i h2 len nonce p c blocks))))
+   = if safeId i && prf i 
+     then let mac_rgn = st.prf.mac_rgn in
+	  let p = Plain.sel_plain h2 (u len) plain in
+	  let c_tagged = Buffer.as_seq h2 cipher in
+	  let initial_domain = {iv=nonce; ctr=1ul} in
+	  let c, _ = SeqProperties.split c_tagged len in
+	  counterblocks_len #i mac_rgn initial_domain len 0 p c
+
+(* this version causes a crash *)
+(* let intro_refines_one_entry (#mac_rgn:region) (#i:id{safeId i) (st:state i Writer) (n: Cipher.iv (alg i)) *)
+(*                             (aadlen: UInt32.t {aadlen <=^ aadmax}) (aad: lbuffer (v aadlen)) *)
+(*                             (l:nat) (plain:plainBuffer i l) (cipher:lbuffer (l + v (Spec.taglen i))) *)
+(*                             (h0:mem) (h1:mem{Buffer.live h1 aad /\ Buffer.live h1 cipher /\ Plain.live h1 plain}) *)
+(*    : Lemma (let aad = Buffer.as_seq h1 aad in *)
+(*             let p = Plain.sel_plain h1 (u l) plain in *)
+(*             let c = Buffer.as_seq h1 cipher in *)
+(*             let entry = Entry n aad l p c in *)
+(*             let table_0 = HS.sel h0 st.prf in *)
+(*             let table_1 = HS.sel h1 st.prf in *)
+(*             Seq.length table_1 >= Seq.length table_0 /\ *)
+(*             (let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in *)
+(*             refines_one_entry h1 entry blocks)) *)
+(*    = admit() *)
+
+(* 	    HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c))) *)
+(* let 			     *)
+					      
+
+
 (*** Some basic sanity checks 
      on the `refines` invariant ***)
 
@@ -39,7 +217,7 @@ private let rec block_lengths (#i:id{safeId i}) (entries:Seq.seq (entry i))
     else let e = SeqProperties.head entries in
 	 num_blocks e + 1 + block_lengths (SeqProperties.tail entries)
 
-#set-options "--z3timeout 20 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 40 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 (* 2. refines sums block lengths *)
 private let rec refines_length (#rgn:region) (#i:id{safeId i}) (h:mem) 
 		       (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry rgn i))
@@ -56,7 +234,7 @@ private let rec refines_length (#rgn:region) (#i:id{safeId i}) (h:mem)
 
 (*** Extending `refines` by adding one block ***)
 
-#set-options "--z3timeout 100 --initial_fuel 2 --max_fuel 2 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 100 --initial_fuel 2 --max_fuel 2 --initial_ifuel 0 --max_ifuel 0"
 (* refines_one_entry can be lifted refines sums block lengths *)
 private let refines_singleton (h:mem) (i:id{safeId i}) (rgn:region) (e:entry i) (blocks_for_e:Seq.seq (PRF.entry rgn i))
   : Lemma (requires (refines_one_entry h e blocks_for_e))
@@ -77,7 +255,7 @@ let frame_refines_one_entry (h:mem) (i:id{safeId i}) (mac_rgn:region)
      assert (m_sel h mac_log = m_sel h' mac_log);
      assert (m_contains mac_log h') //this include HS.live_region, which is not derivable from modifies_ref along
      
-#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let rec extend_refines (h:mem) (i:id{safeId i}) (mac_rgn:region) 
 		    (entries:Seq.seq (entry i))
 		    (blocks:Seq.seq (PRF.entry mac_rgn i))
@@ -115,17 +293,17 @@ let rec extend_refines (h:mem) (i:id{safeId i}) (mac_rgn:region)
 			(Seq.append blocks_tl blocks_for_e))
 
 #reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-let counterblocks_emp   (i:id {safeId i})
+let counterblocks_emp   (i:id)
 			(rgn:region)
 			(x:PRF.domain i{ctr x >^ 0ul})
 			(l:nat)
 			(to_pos:nat{to_pos <= l /\ safelen i 0 (ctr x)})
 			(plain:Plain.plain i l)
 			(cipher:lbytes l)
-   : Lemma (counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
+   : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
    = ()
 
-#set-options "--z3timeout 100"
+#set-options "--z3rlimit 50"
 
 let lemma_cons_snoc (#a:Type) (hd:a) (s:Seq.seq a) (tl:a)
   : Lemma (requires True)
@@ -173,9 +351,8 @@ let rec counterblocks_snoc (#i:id{safeId i}) (rgn:region) (x:domain i{x.ctr <> 0
           lemma_cons_snoc head middle last_entry
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let u (n:FStar.UInt.uint_t 32) = uint_to_t n
 
-#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1"
 val counterblocks_slice: #i:id{safeId i} -> 
 			     (rgn:region) -> 
 			     (x:domain i{x.ctr <> 0ul}) ->

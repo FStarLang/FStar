@@ -9,9 +9,8 @@
       [ "@query", "equation_AllocST.contains", "unit_typing" ],
       0
     ],
-    [ "AllocST.lift_div_istate", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "AllocST.6653",
+      "AllocST.5986",
       1,
       2,
       1,
@@ -21,7 +20,6 @@
       ],
       0
     ],
-    [ "AllocST.IST", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AllocST.ist_witnessed",
       1,
@@ -33,8 +31,6 @@
       ],
       0
     ],
-    [ "AllocST.ist_get", 1, 2, 1, [ "@query" ], 0 ],
-    [ "AllocST.ist_put", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AllocST.ist_witness",
       1,
@@ -69,18 +65,17 @@
       ],
       0
     ],
-    [ "AllocST.alloc", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AllocST.alloc",
-      2,
+      1,
       2,
       1,
       [
         "@query", "equation_AllocST.contains", "equation_AllocST.heap_rel",
         "equation_NatHeap.alloc_ref", "equation_Preorder.stable",
-        "equation_Prims.fst", "equation_Prims.snd",
+        "equation_Prims.fst", "equation_Prims.nat", "equation_Prims.snd",
         "function_token_typing_NatHeap.heap", "lemma_AllocST.contains_lemma",
-        "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
+        "proj_equation_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__1",
         "refinement_interpretation_Tm_refine_2d642eaad3f6e1c69a279efd7fe135d5",
         "token_correspondence_AllocST.contains",
@@ -128,10 +123,9 @@
       ],
       0
     ],
-    [ "AllocST.recall", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AllocST.recall",
-      2,
+      1,
       2,
       1,
       [

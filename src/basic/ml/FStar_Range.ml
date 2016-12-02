@@ -27,7 +27,16 @@ let proj_ord f a1 a2 = compare (f a1)  (f a2)
 
 type file_idx = FStar_BaseTypes.int32
 type pos = FStar_BaseTypes.int32
-type range = FStar_BaseTypes.int64
+type range = {
+    def_range:FStar_BaseTypes.int64;
+    use_range:FStar_BaseTypes.int64
+}
+let dummyRange = {
+    def_range=0L;
+    use_range=0L
+}
+let set_use_range r2 r = if r.use_range <> 0L then {r2 with use_range=r.use_range} else r2
+let range_of_def_range i = {def_range=i; use_range=i}
 
 let col_nbits  = 9
 let line_nbits  = 16
@@ -62,6 +71,7 @@ let end_line_mask   = mask64 (file_idx_nbits + start_line_nbits + start_col_nbit
 let end_col_mask    = mask64 (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits) end_col_nbits
 
 let mk_file_idx_range fidx b e =
+  range_of_def_range (
   lor64
     (lor64
        (lor64
@@ -70,12 +80,12 @@ let mk_file_idx_range fidx b e =
              (lsl64 (BatInt64.of_int (line_of_pos b)) file_idx_nbits))
           (lsl64 (BatInt64.of_int (col_of_pos b)) (file_idx_nbits + start_line_nbits)))
        (lsl64 (BatInt64.of_int (line_of_pos e)) (file_idx_nbits + start_line_nbits + start_col_nbits)))
-    (lsl64 (BatInt64.of_int (col_of_pos e)) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits))
-let file_idx_of_range r   = BatInt64.to_int (land64 r file_idx_mask)
-let start_line_of_range r = BatInt64.to_int (lsr64 (land64 r start_line_mask) file_idx_nbits)
-let start_col_of_range r  = BatInt64.to_int (lsr64 (land64 r start_col_mask) (file_idx_nbits + start_line_nbits))
-let end_line_of_range r   = BatInt64.to_int (lsr64 (land64 r end_line_mask) (file_idx_nbits + start_line_nbits + start_col_nbits))
-let end_col_of_range r    = BatInt64.to_int (lsr64 (land64 r end_col_mask) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits))
+    (lsl64 (BatInt64.of_int (col_of_pos e)) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits)))
+let file_idx_of_range {def_range=r}   = BatInt64.to_int (land64 r file_idx_mask)
+let start_line_of_range {def_range=r} = BatInt64.to_int (lsr64 (land64 r start_line_mask) file_idx_nbits)
+let start_col_of_range {def_range=r}  = BatInt64.to_int (lsr64 (land64 r start_col_mask) (file_idx_nbits + start_line_nbits))
+let end_line_of_range {def_range=r}   = BatInt64.to_int (lsr64 (land64 r end_line_mask) (file_idx_nbits + start_line_nbits + start_col_nbits))
+let end_col_of_range {def_range=r}    = BatInt64.to_int (lsr64 (land64 r end_col_mask) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits))
 
 (* This is just a standard unique-index table *)
 module FileIndexTable = struct
@@ -185,7 +195,10 @@ let decode_file_idx (s:string) =
 
 (* For Diagnostics *)
 let string_of_pos   pos = let line,col = line_of_pos pos,col_of_pos pos in Printf.sprintf "%d,%d" line col
-let string_of_range r   = Printf.sprintf "%s(%s-%s)" (file_of_range r) (string_of_pos (start_of_range r)) (string_of_pos (end_of_range r))
+let string_of_def_range r   = Printf.sprintf "%s(%s-%s)" (file_of_range r) (string_of_pos (start_of_range r)) (string_of_pos (end_of_range r))
+let string_of_use_range r   = string_of_def_range {r with def_range=r.use_range}
+let string_of_range r       = string_of_def_range r
+
 
 let compare r1 r2 =
   let fcomp = String.compare (file_of_range r1) (file_of_range r2) in
@@ -199,6 +212,10 @@ let compare r1 r2 =
   else fcomp
 
 let compare r1 r2 = Z.of_int (compare r1 r2)
+
+let compare_use_range r1 r2 = 
+    compare ({r1 with def_range=r1.use_range})
+            ({r2 with def_range=r2.use_range})
 
 let mk_range f b e = mk_range f (Z.to_int b) (Z.to_int e)
 let line_of_pos p = Z.of_int (line_of_pos p)

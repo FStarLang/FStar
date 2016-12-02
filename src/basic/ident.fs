@@ -36,13 +36,8 @@ let lid_of_path path pos =
     lid_of_ids ids
 let text_of_lid lid = lid.str
 let lid_equals l1 l2 = l1.str = l2.str
-let lid_with_range (lid:lid) (r:Range.range) =
-    let id = {lid.ident with idRange=r} in
-    {lid with ident=id}
 let range_of_lid (lid:lid) = lid.ident.idRange
-let set_lid_range l r =
-  let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
-  lid_of_ids ids
+let set_lid_range l r = {l with ident={l.ident with idRange=r}}
 let lid_add_suffix l s = 
     let path = path_of_lid l in
     lid_of_path (path@[s]) (range_of_lid l)

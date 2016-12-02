@@ -1,12 +1,8 @@
 [
   "zUCe)\u001fG9Ï\u001eyè\u000f¹C‚",
   [
-    [ "AllocSTwHeaps.sel", 1, 2, 1, [ "@query" ], 0 ],
-    [ "AllocSTwHeaps.upd", 1, 2, 1, [ "@query" ], 0 ],
-    [ "AllocSTwHeaps.heap_rel", 1, 2, 1, [ "@query" ], 0 ],
-    [ "AllocSTwHeaps.lift_div_istate", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "AllocSTwHeaps.4663",
+      "AllocSTwHeaps.4243",
       1,
       2,
       1,
@@ -17,7 +13,6 @@
       ],
       0
     ],
-    [ "AllocSTwHeaps.IST", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AllocSTwHeaps.ist_witnessed",
       1,
@@ -30,8 +25,6 @@
       ],
       0
     ],
-    [ "AllocSTwHeaps.ist_get", 1, 2, 1, [ "@query" ], 0 ],
-    [ "AllocSTwHeaps.ist_put", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AllocSTwHeaps.ist_witness",
       1,
@@ -56,11 +49,9 @@
       ],
       0
     ],
-    [ "AllocSTwHeaps.contains", 1, 2, 1, [ "@query" ], 0 ],
-    [ "AllocSTwHeaps.contains_lemma", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AllocSTwHeaps.contains_lemma",
-      2,
+      1,
       2,
       1,
       [
@@ -82,11 +73,9 @@
       ],
       0
     ],
-    [ "AllocSTwHeaps.gen_ref", 1, 2, 1, [ "@query" ], 0 ],
-    [ "AllocSTwHeaps.alloc", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AllocSTwHeaps.alloc",
-      2,
+      1,
       2,
       1,
       [
@@ -98,7 +87,7 @@
         "equation_Preorder.stable", "kinding_FStar.Heap.aref@tok",
         "l_or-interp", "lemma_AllocSTwHeaps.contains_lemma",
         "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_union",
-        "pretyping_6c86c071b92797cdf01eb016249a9465", "ref_inversion",
+        "pretyping_6c86c071b92797cdf01eb016249a9465",
         "refinement_interpretation_Tm_refine_572a38bbd13f86f374f9c1d684eda1dd",
         "refinement_interpretation_Tm_refine_9bebff24f4d420e70db08d1035457fbe",
         "refinement_interpretation_Tm_refine_c3ad7b12cbe4b2476807f377c3846893",
@@ -109,10 +98,9 @@
       ],
       0
     ],
-    [ "AllocSTwHeaps.read", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AllocSTwHeaps.read",
-      2,
+      1,
       2,
       1,
       [
@@ -121,10 +109,9 @@
       ],
       0
     ],
-    [ "AllocSTwHeaps.write", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AllocSTwHeaps.write",
-      2,
+      1,
       2,
       1,
       [
@@ -142,10 +129,9 @@
       ],
       0
     ],
-    [ "AllocSTwHeaps.precise_write", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AllocSTwHeaps.precise_write",
-      2,
+      1,
       2,
       1,
       [
@@ -163,10 +149,9 @@
       ],
       0
     ],
-    [ "AllocSTwHeaps.recall", 1, 2, 1, [ "@query" ], 0 ],
     [
       "AllocSTwHeaps.recall",
-      2,
+      1,
       2,
       1,
       [

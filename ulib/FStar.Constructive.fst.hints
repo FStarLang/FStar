@@ -31,7 +31,6 @@
     ],
     [ "FStar.Constructive.cimp", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Constructive.ciff", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Constructive.cexists", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Constructive.ExIntro.x", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.ExIntro.h",
@@ -44,66 +43,48 @@
       ],
       0
     ],
-    [ "FStar.Constructive.ceq", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Constructive.eq_ind", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.eq_ind",
-      2,
+      1,
       2,
       1,
-      [
-        "@query", "fuel_guarded_inversion_FStar.Constructive.ceq",
-        "token_correspondence_FStar.Constructive.ceq@tok"
-      ],
+      [ "@query", "fuel_guarded_inversion_FStar.Constructive.ceq" ],
       0
     ],
     [ "FStar.Constructive.ceq_eq", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Constructive.ceq_eq", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.ceq_eq",
-      3,
+      2,
       2,
       1,
       [
         "@query", "fuel_guarded_inversion_FStar.Constructive.ceq",
-        "token_correspondence_FStar.Constructive.ceq@tok", "unit_typing"
+        "unit_typing"
       ],
       0
     ],
-    [ "FStar.Constructive.ceq_congruence", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.ceq_congruence",
-      2,
+      1,
       2,
       1,
-      [
-        "@query", "fuel_guarded_inversion_FStar.Constructive.ceq",
-        "token_correspondence_FStar.Constructive.ceq@tok"
-      ],
+      [ "@query", "fuel_guarded_inversion_FStar.Constructive.ceq" ],
       0
     ],
-    [ "FStar.Constructive.ceq_symm", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.ceq_symm",
-      2,
+      1,
       2,
       1,
-      [
-        "@query", "fuel_guarded_inversion_FStar.Constructive.ceq",
-        "token_correspondence_FStar.Constructive.ceq@tok"
-      ],
+      [ "@query", "fuel_guarded_inversion_FStar.Constructive.ceq" ],
       0
     ],
-    [ "FStar.Constructive.ceq_trans", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.ceq_trans",
-      2,
+      1,
       2,
       1,
-      [
-        "@query", "fuel_guarded_inversion_FStar.Constructive.ceq",
-        "token_correspondence_FStar.Constructive.ceq@tok"
-      ],
+      [ "@query", "fuel_guarded_inversion_FStar.Constructive.ceq" ],
       0
     ],
     [

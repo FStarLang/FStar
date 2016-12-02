@@ -1,7 +1,6 @@
 [
   "mžq\n‚ŒN‰õ¶|qä;\u0007µ",
   [
-    [ "SnapshotST.snapshot_rel", 1, 2, 1, [ "@query" ], 0 ],
     [ "SnapshotST.snapshot_rel_assoc", 1, 2, 1, [ "@query" ], 0 ],
     [
       "SnapshotST.snapshot_rel_assoc",
@@ -49,9 +48,8 @@
       ],
       0
     ],
-    [ "SnapshotST.lift_div_istate", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "SnapshotST.42419",
+      "SnapshotST.62937",
       1,
       2,
       1,
@@ -69,7 +67,6 @@
       ],
       0
     ],
-    [ "SnapshotST.IST", 1, 2, 1, [ "@query" ], 0 ],
     [
       "SnapshotST.ist_witnessed",
       1,
@@ -89,7 +86,6 @@
       ],
       0
     ],
-    [ "SnapshotST.ist_get", 1, 2, 1, [ "@query" ], 0 ],
     [ "SnapshotST.ist_put", 1, 2, 1, [ "@query" ], 0 ],
     [
       "SnapshotST.ist_witness",
@@ -145,7 +141,6 @@
       0
     ],
     [ "SnapshotST.read", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SnapshotST.read", 2, 2, 1, [ "@query" ], 0 ],
     [ "SnapshotST.write", 1, 2, 1, [ "@query" ], 0 ],
     [
       "SnapshotST.write",
@@ -196,10 +191,9 @@
       ],
       0
     ],
-    [ "SnapshotST.make_snapshot", 1, 2, 1, [ "@query" ], 0 ],
     [
       "SnapshotST.make_snapshot",
-      2,
+      1,
       2,
       1,
       [
@@ -218,10 +212,9 @@
       ],
       0
     ],
-    [ "SnapshotST.restore_consistency", 1, 2, 1, [ "@query" ], 0 ],
     [
       "SnapshotST.restore_consistency",
-      2,
+      1,
       2,
       1,
       [

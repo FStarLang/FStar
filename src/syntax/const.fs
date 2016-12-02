@@ -178,4 +178,5 @@ let range_0        = pconst "range_0"
 let guard_free     = pconst "guard_free"
 
 (* Constants for marking terms with normalization hints *)
-let normalize   = pconst "normalize"
+let normalize      = pconst "normalize"
+let normalize_term = pconst "normalize_term"

@@ -16,7 +16,6 @@
         "well-founded-ordering-on-nat"
       ],
       0
-    ],
-    [ "Ex03c.fibonacci_greater_than_arg", 1, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

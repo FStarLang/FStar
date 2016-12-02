@@ -1,11 +1,9 @@
 [
-  "p§y,m¶\u0005Ê\u0002ê\u0005¿±Ú•\\",
+  "w!\"ìëuo¿T\u0018K”?§©P",
   [
-    [ "Effects.Def.eq_m", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.monad_laws_via_eq", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.monad_laws_via_eq",
-      2,
+      1,
       2,
       1,
       [
@@ -19,10 +17,9 @@
       ],
       0
     ],
-    [ "Effects.Def.morphism_laws_via_eq", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.morphism_laws_via_eq",
-      2,
+      1,
       0,
       0,
       [
@@ -37,11 +34,7 @@
       ],
       0
     ],
-    [ "Effects.Def.eq_st", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.return_st", 1, 2, 1, [ "@query" ], 0 ],
     [ "Effects.Def.bind_st", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.get", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.put", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.st_laws",
       1,
@@ -70,8 +63,6 @@
       ],
       0
     ],
-    [ "Effects.Def.eq_ex", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.return_ex", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.bind_ex",
       1,
@@ -137,8 +128,6 @@
       ],
       0
     ],
-    [ "Effects.Def.eq_stexn", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.return_stexn", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.bind_stexn",
       1,
@@ -190,8 +179,6 @@
       ],
       0
     ],
-    [ "Effects.Def.eq_exnst", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.eq_exnst", 2, 2, 1, [ "@query" ], 0 ],
     [ "Effects.Def.return_exnst", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.bind_exnst",
@@ -287,7 +274,6 @@
       ],
       0
     ],
-    [ "Effects.Def.lift_ex_stexn", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
       1,

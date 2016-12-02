@@ -54,7 +54,6 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0
-    ],
-    [ "Ex05b.fib_is_ok", 3, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

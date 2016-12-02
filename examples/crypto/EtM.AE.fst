@@ -81,7 +81,7 @@ val encrypt: k:key -> m:Plain.plain -> ST cipher
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log)
      /\ invariant h1 k)))
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3timeout 100"
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 100"
 let encrypt k plain =
   let c = CPA.encrypt k.ke plain in
   let t = MAC.mac k.km c in

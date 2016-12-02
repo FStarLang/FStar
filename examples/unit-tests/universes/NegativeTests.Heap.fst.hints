@@ -1,7 +1,6 @@
 [
   "Í\tyù\u0005Âc@6°3¯†\u000b\r‡",
   [
-    [ "NegativeTests.Heap.DistinctXY", 1, 2, 1, [ "@query" ], 0 ],
     null,
     [
       "NegativeTests.Heap.test2",

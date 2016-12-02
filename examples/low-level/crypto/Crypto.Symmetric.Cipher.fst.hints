@@ -1,5 +1,5 @@
 [
-  "RV’2>u=\rIwl\u00020*IÓ",
+  "öÖ0é&^æ\u000bI\u0015Eñ©9v\u0018",
   [
     [
       "Crypto.Symmetric.Cipher.keylen",
@@ -109,7 +109,7 @@
       0,
       1,
       [
-        "@query", "b2t_def", "bool_inversion", "data_elim_FStar.UInt32.Mk",
+        "@query", "b2t_def", "data_elim_FStar.UInt32.Mk",
         "equation_Crypto.Symmetric.AES.keylen",
         "equation_Crypto.Symmetric.AES.nb",
         "equation_Crypto.Symmetric.AES.nk",
@@ -124,7 +124,6 @@
         "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
         "equation_FStar.UInt8.n", "equation_Prims.nat",
         "function_token_typing_Crypto.Symmetric.AES.keylen",
-        "function_token_typing_Crypto.Symmetric.AES.nb",
         "function_token_typing_Crypto.Symmetric.AES.nk",
         "function_token_typing_FStar.UInt8.n", "int_inversion", "int_typing",
         "lemma_FStar.Buffer.lemma_size", "lemma_FStar.Int.pow2_values",
@@ -136,8 +135,7 @@
         "projection_inverse_FStar.UInt32.Mk_v",
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_Crypto.Symmetric.AES.v", "typing_FStar.Mul.op_Star",
-        "typing_FStar.UInt.fits"
+        "typing_Crypto.Symmetric.AES.v", "typing_FStar.Mul.op_Star"
       ],
       0
     ],
@@ -211,8 +209,6 @@
         "typing_tok_Crypto.Symmetric.Cipher.AES256@tok"
       ],
       0
-    ],
-    [ "Crypto.Symmetric.Cipher.compute", 1, 0, 1, [ "@query" ], 0 ],
-    [ "Crypto.Symmetric.Cipher.compute", 2, 0, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

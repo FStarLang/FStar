@@ -81,7 +81,7 @@ install the latest F\* release and required dependencies (except for
 Z3) using the opam package:
 
         $ opam install fstar
-        
+
 Right now, the opam package is version 0.9.3-beta1. You can easily get the latest development version of F* with some opam magic:
 
         $ opam pin add fstar --dev-repo
@@ -97,16 +97,16 @@ For building and installing the latest F\* sources from GitHub (the `master` bra
 instead of the latest release you can do:
 
         $ brew install --HEAD fstar
-        
+
 ### Running F* from a docker image ###
 
-An alternative to installing binaries is to install a docker image. 
-We currently provide the following two on docker hub: `fstarlang/fstar-emacs` 
-with emacs support and `fstarlang/fstar` for purists. 
-The image is automatically kept up to date through a cloud build. 
+An alternative to installing binaries is to install a docker image.
+We currently provide the following two on docker hub: `fstarlang/fstar-emacs`
+with emacs support and `fstarlang/fstar` for purists.
+The image is automatically kept up to date through a cloud build.
 
-You only have to install docker and an X server for your platform and you are good to go. 
-See [Running F* from a docker image] (https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image) for the details on how to use docker. 
+You only have to install docker and an X server for your platform and you are good to go.
+See [Running F* from a docker image] (https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image) for the details on how to use docker.
 
 
 
@@ -185,7 +185,7 @@ Read on for the more complete solution involving Visual Studio itself.
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono (any version from 4.0.3.0 to 4.4.x) and fsharp (version 4.0.1.x)
+  - Install mono (any version from 4.0.3.0 to 4.6.x) and fsharp (version 4.0.1.x)
 
     - On Debian/Ubuntu
 
@@ -270,7 +270,7 @@ that's over there (it's optimized for F*).
 3. F* depends on a bunch of external OCaml packages which you can install using OPAM:
 
   ```sh
-  $ opam install ocamlfind batteries stdint zarith yojson fileutils 
+  $ opam install ocamlfind batteries stdint zarith yojson fileutils
   ```
   Some of the examples also require the `sqlite3` opam package, which depends
   on SQLite itself that you can install with `opam depext sqlite3` (at least on Linux)
@@ -316,8 +316,8 @@ The latter step is not always guaranteed to work but almost always does, and is 
 
 ## Runtime dependency: Z3 SMT solver ##
 
-To use F* for verification you need a Z3 4.4.1 binary.
+To use F* for verification you need a Z3 4.5.0 binary.
 Our binary packages include that already in `bin`, but if you compile
 F* from sources you need to get a Z3 binary yourself and add it to
-your `PATH`. We recommend you use the 4.4.1 binaries here:
-https://github.com/Z3Prover/z3/releases/tag/z3-4.4.1
+your `PATH`. We recommend you use the 4.5.0 binaries here:
+https://github.com/Z3Prover/z3/releases/tag/z3-4.5.0

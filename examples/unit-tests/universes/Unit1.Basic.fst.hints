@@ -20,7 +20,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic.zero", 2, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.Basic.z", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.list_zero_to_int_assert",
@@ -120,7 +119,6 @@
       0
     ],
     [ "Unit1.Basic.tabs_id_pure_annot_eq", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Basic.tabs_id_pure_annot_eq", 3, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.id_pure_annot_eq",
       1,
@@ -133,7 +131,6 @@
       0
     ],
     [ "Unit1.Basic.id_pure_annot_eq", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Basic.id_pure_annot_eq", 3, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.id_all_annot_eq",
       1,
@@ -186,7 +183,6 @@
       ],
       0
     ],
-    [ "Unit1.Basic.dup_pure", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.dup_pure_eq",
       1,
@@ -198,10 +194,9 @@
       ],
       0
     ],
-    [ "Unit1.Basic.dup_pure_eq", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.dup_pure_eq",
-      3,
+      2,
       2,
       1,
       [
@@ -220,7 +215,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic.get_0", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.get_1",
       1,
@@ -229,7 +223,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic.get_1", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.get_false",
       1,
@@ -238,10 +231,9 @@
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [ "Unit1.Basic.get_false", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.get_false",
-      3,
+      2,
       2,
       1,
       [
@@ -258,10 +250,9 @@
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [ "Unit1.Basic.get_false_ANF", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.get_false_ANF",
-      3,
+      2,
       2,
       1,
       [
@@ -398,7 +389,6 @@
       ],
       0
     ],
-    [ "Unit1.Basic.slength", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.impure",
       1,
@@ -407,7 +397,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic.impure", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.lm_corr",
       1,
@@ -416,7 +405,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic.lm_corr", 2, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.Basic.unsafe_slice", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.test_impure",
@@ -426,10 +414,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic.test_impure", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.test_impure",
-      3,
+      2,
       2,
       1,
       [
@@ -631,7 +618,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic._T", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.test_skolem_refinement",
       1,
@@ -667,10 +653,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic.test_skolem_let", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.test_skolem_let",
-      3,
+      2,
       2,
       1,
       [
@@ -683,7 +668,7 @@
     ],
     [
       "Unit1.Basic.test_skolem_let",
-      4,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -691,7 +676,7 @@
     ],
     [
       "Unit1.Basic.test_skolem_let",
-      5,
+      4,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -705,7 +690,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic.id_wrap1", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.id_wrap2",
       1,
@@ -714,7 +698,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic.id_wrap2", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.use_id_wrap",
       1,
@@ -724,7 +707,6 @@
       0
     ],
     [ "Unit1.Basic.use_id_wrap", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Basic.use_id_wrap", 3, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.idl",
       1,
@@ -736,10 +718,9 @@
       ],
       0
     ],
-    [ "Unit1.Basic.idl", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.idl",
-      3,
+      2,
       2,
       1,
       [
@@ -765,7 +746,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic.st_id_wrap", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.st_f",
       1,
@@ -775,7 +755,6 @@
       0
     ],
     [ "Unit1.Basic.st_f", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Basic.st_f", 3, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.factorial",
       1,
@@ -851,7 +830,6 @@
       ],
       0
     ],
-    [ "Unit1.Basic.plus_one", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.test_map1",
       1,
@@ -915,27 +893,8 @@
       ],
       0
     ],
-    [ "Unit1.Basic.test_pred_lemma_1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Basic.test_pred_lemma_2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Basic.test_pred_lemma_unif", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.Basic.test_pred_lemma_2'", 1, 2, 1, [ "@query" ], 0 ],
-    [
-      "Unit1.Basic.test_pred_lemma_2'",
-      2,
-      2,
-      1,
-      [ "@query", "unit_inversion", "unit_typing" ],
-      0
-    ],
     [ "Unit1.Basic.test_pred_lemma_unif'", 1, 2, 1, [ "@query" ], 0 ],
-    [
-      "Unit1.Basic.test_pred_lemma_unif'",
-      2,
-      2,
-      1,
-      [ "@query", "unit_inversion", "unit_typing" ],
-      0
-    ],
     [
       "Unit1.Basic.even",
       1,

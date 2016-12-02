@@ -139,7 +139,7 @@ val chacha20_aead_decrypt:
     modifies_1 plaintext h0 h1 /\ 
     live h1 plaintext))
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 // still failing below 
 
 let chacha20_aead_encrypt key n aadlen aadtext plainlen plaintext ciphertext tag =
