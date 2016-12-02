@@ -130,7 +130,7 @@ let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
 	let rgn = t.mac_rgn in 
 	assert (find t_0 x == None);
 	find_snoc t_0 ex (fun (e:PRF.entry rgn i) -> e.x = x);
-	assert (is_Some (find t_1 x));
+	assert (Some? (find t_1 x));
 	assert (find t_1 x == Some ex.range);
 	let y = PRF.incr i x in 
 	assert (find t_0 y == None)

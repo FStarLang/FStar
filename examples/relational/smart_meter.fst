@@ -101,9 +101,9 @@ let thd3=MkTuple3._3
 
 assume logic type readings (l:double (list int))
 assume logic type rates (l:double (list int))
-assume ReadingsTail : (forall l. is_Cons (R.l l) /\ is_Cons (R.r l)
+assume ReadingsTail : (forall l. Cons? (R.l l) /\ Cons? (R.r l)
                                   ==> readings (tl_rel l))
-assume RatesTail : (forall l. is_Cons (R.l l) /\ is_Cons (R.r l)
+assume RatesTail : (forall l. Cons? (R.l l) /\ Cons? (R.r l)
                                   ==> rates (tl_rel l))
 
 type signed (pp:pparam) (cs:double (list elt)) =

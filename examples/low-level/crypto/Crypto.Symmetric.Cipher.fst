@@ -26,8 +26,10 @@ let blocklen = function
 //| AES128   -> 16ul
   | AES256   -> 16ul
   | CHACHA20 -> 64ul
+private let blocklen' = blocklen (* blocklen may be shadowed by Crypto.Symmetric.AES *)
 
 let ivlen (a:alg) = 12ul 
+private let ivlen' = ivlen (* ivlen may be shadowed by Crypto.Symmetric.Chacha20 *)
 
 type ctr = UInt32.t
 
@@ -75,6 +77,7 @@ let compute a output k n counter len =
   begin match a with 
   | CHACHA20 -> // already specialized for counter mode
       let open Crypto.Symmetric.Chacha20 in 
+      let ivlen = ivlen' in (* to undo shadowing by Crypto.Symmetric.Chacha20 *)
       let nbuf = Buffer.create 0uy (ivlen CHACHA20) in
       store_uint128 (ivlen CHACHA20) nbuf n;
       chacha20 output k nbuf counter len
@@ -87,6 +90,7 @@ let compute a output k n counter len =
       let w: xkey = Buffer.create 0uy (4ul *^ nb *^ (nr+^1ul)) in
       mk_sbox sbox; 
       keyExpansion k w sbox; 
+      let blocklen = blocklen' in (* to undo shadowing by Crypto.Symmetric.AES *)
       let ctr_block = Buffer.create 0uy (blocklen AES256) in 
       store_uint128 (ivlen AES256) (Buffer.sub ctr_block 0ul (ivlen AES256)) n;
       // blit n 0ul ctr_block 0ul 12ul;

@@ -38,6 +38,8 @@ type token =
   | RBRACK
   | RBRACE
   | RARROW
+  | QMARK_DOT
+  | QMARK
   | PRIVATE
   | PRAGMA_SET_OPTIONS
   | PRAGMA_RESET_OPTIONS
@@ -169,6 +171,8 @@ type tokenId =
     | TOKEN_RBRACK
     | TOKEN_RBRACE
     | TOKEN_RARROW
+    | TOKEN_QMARK_DOT
+    | TOKEN_QMARK
     | TOKEN_PRIVATE
     | TOKEN_PRAGMA_SET_OPTIONS
     | TOKEN_PRAGMA_RESET_OPTIONS
@@ -273,9 +277,9 @@ type nonTerminalId =
     | NONTERM_option___anonymous_1_
     | NONTERM_option___anonymous_2_
     | NONTERM_option___anonymous_6_
-    | NONTERM_option___anonymous_8_
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
+    | NONTERM_option_fsTypeArgs_
     | NONTERM_option_mainDecl_
     | NONTERM_option_pair_hasSort_simpleTerm__
     | NONTERM_option_string_
@@ -288,13 +292,13 @@ type nonTerminalId =
     | NONTERM_list___anonymous_7_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
-    | NONTERM_list_dotOperator_
     | NONTERM_list_multiBinder_
     | NONTERM_list_pair_maybeHash_indexingTerm__
     | NONTERM_list_qualifier_
     | NONTERM_nonempty_list_aqualified_lident__
     | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
     | NONTERM_nonempty_list_atomicPattern_
+    | NONTERM_nonempty_list_dotOperator_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_
     | NONTERM_separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
@@ -346,8 +350,6 @@ type nonTerminalId =
     | NONTERM_aqualified_lidentOrUnderscore_
     | NONTERM_qlident
     | NONTERM_quident
-    | NONTERM_qident
-    | NONTERM_path_ident_
     | NONTERM_path_lident_
     | NONTERM_path_uident_
     | NONTERM_ident
@@ -383,6 +385,14 @@ type nonTerminalId =
     | NONTERM_appTerm
     | NONTERM_indexingTerm
     | NONTERM_atomicTerm
+    | NONTERM_atomicTermQUident
+    | NONTERM_atomicTermNotQUident
+    | NONTERM_opPrefixTerm_atomicTermNotQUident_
+    | NONTERM_opPrefixTerm_atomicTermQUident_
+    | NONTERM_fsTypeArgs
+    | NONTERM_someFsTypeArgs
+    | NONTERM_qidentWithTypeArgs_qlident_option_fsTypeArgs__
+    | NONTERM_qidentWithTypeArgs_quident_someFsTypeArgs_
     | NONTERM_projectionLHS
     | NONTERM_hasSort
     | NONTERM_constant
