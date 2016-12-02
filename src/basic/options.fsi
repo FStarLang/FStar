@@ -123,4 +123,5 @@ val warn_top_level_effects      : unit    -> bool
 val z3_exe                      : unit    -> string
 val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
+val z3_seed                     : unit    -> int
 val z3_timeout                  : unit    -> int
