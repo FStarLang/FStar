@@ -230,10 +230,18 @@ type monad_abbrev = {
   def:typ
   }
 type sub_eff = {
-  source:lident;
-  target:lident;
-  lift_wp:option<tscheme>;
-  lift:option<tscheme>
+ (*  <u_1...u_m'v_1...v_l>.  //first all universes binders for the LHS, then maybe some more
+     #y_1:t_1 ... #y_m:t_m ->  //first all index binders for the LHS
+     #x_1:t_1' .. #x_o:t_o' ->  //then maybe some more
+     M<u_1..u_m'> y_1..y_m ~>   //then the source computation type applied to all its index variables
+     N<uu1..uu_n'> s_1...s_n    //coerced to the target computation type
+ *)
+  sub_eff_univs  : univ_names;     (* u_1 ... u_k *)
+  sub_eff_binders: binders;        (* x_1 ... x_l *)
+  sub_eff_source : term;           (* M y_1..y_m --- all the args are expected to be bound variables *)
+  sub_eff_target : term;           (* N s_1..s_n *)
+  sub_eff_lift_wp:option<tscheme>; (* #a:Type -> (M y_1 ... y_m a)* -> (N s_1...s_n)* *)
+  sub_eff_lift   :option<tscheme>  (* #a:Type -> #wp:(M y_1 ... y_m a)* -> (M y_1..y_m a wp).repr -> (N s_1..s_n a (lift_wp wp)).repr *)
  }
 
 type action = {

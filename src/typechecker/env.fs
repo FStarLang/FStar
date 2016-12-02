@@ -44,12 +44,22 @@ type delta_level =
   | Eager_unfolding_only
   | Unfold of delta_depth
 
-type mlift = typ -> typ -> typ
+
+type normal_comp_typ = {
+    comp_name: Ident.lident;
+    comp_univs: universes;
+    comp_indices: args;
+    comp_result: arg;
+    comp_wp: arg; 
+    comp_flags: list<cflags>
+}
+
+type mlift = normal_comp_typ -> normal_comp_typ
 
 type edge = {
   msource :lident;
   mtarget :lident;
-  mlift   :typ -> typ -> typ;
+  mlift_wp:mlift;
 }
 type effects = {
   decls :list<eff_decl>;
@@ -287,21 +297,21 @@ let variable_not_found v =
 let new_u_univ () = U_unif (Unionfind.fresh None)
 
 //Instantiate the universe variables in a type scheme with provided universes
-let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
+let inst_tscheme_with : tscheme -> universes -> term = fun ts us ->
     match ts, us with
-    | ([], t), [] -> [], t
+    | ([], t), [] -> t
     | (formals, t), _ ->
       assert (List.length us = List.length formals);
       let n = List.length formals - 1 in
       let vs = us |> List.mapi (fun i u -> UN (n - i, u)) in
-      us, Subst.subst vs t
+      Subst.subst vs t
 
 //Instantiate the universe variables in a type scheme with new unification variables
 let inst_tscheme : tscheme -> universes * term = function
     | [], t -> [], t
     | us, t ->
       let us' = us |> List.map (fun _ -> new_u_univ()) in
-      inst_tscheme_with (us, t) us'
+      us', inst_tscheme_with (us, t) us'
 
 let inst_tscheme_with_range (r:range) (t:tscheme) =
     let us, t = inst_tscheme t in 
@@ -315,7 +325,7 @@ let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
           then failwith (Util.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
                             (string_of_int <| List.length univs) (string_of_int <| List.length insts)
                             (Print.lid_to_string ed.mname) (Print.term_to_string t));
-          snd (inst_tscheme_with (ed.univs@us, t) insts)
+          inst_tscheme_with (ed.univs@us, t) insts
         | _  -> failwith (Util.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
 
 type tri =
@@ -439,8 +449,8 @@ let try_lookup_lid_aux env lid =
 
     | Inr (Sig_inductive_typ (lid, uvs, tps, k, _, _, _, _), Some us) ->
       begin match tps with
-        | [] -> Some <| inst_tscheme_with (uvs, k) us
-        | _ ->  Some <| inst_tscheme_with (uvs, Util.flat_arrow tps (mk_Total k)) us
+        | [] -> Some <| (us, inst_tscheme_with (uvs, k) us)
+        | _ ->  Some <| (us, inst_tscheme_with (uvs, Util.flat_arrow tps (mk_Total k)) us)
       end
 
     | Inr se ->
@@ -592,7 +602,7 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
              | _, _::_::_ when not (Ident.lid_equals lid Const.effect_Lemma_lid) ->
                 failwith (Util.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
                            (Print.lid_to_string lid) (string_of_int <| List.length univs))
-             | _ -> let _, t = inst_tscheme_with (univs, Util.arrow binders c) insts in 
+             | _ -> let t = inst_tscheme_with (univs, Util.arrow binders c) insts in 
                     let t = Subst.set_use_range (range_of_lid lid) t in
                     begin match (Subst.compress t).n with 
                         | Tm_arrow(binders, c) -> 
@@ -758,6 +768,23 @@ let lcomp_of_comp env c0 =
      cflags = flags;
      comp = fun() -> c0}
 
+let comp_as_normal_comp_typ env c = 
+    let ct = unfold_effect_abbrev env c in
+    let rec aux = function 
+        | []
+        | [_] -> failwith "Expected at least two arguments to comp_typ"
+        | [res; wp] -> [], res, wp
+        | hd::rest -> 
+          let i, res, wp = aux rest in 
+          hd::i, res, wp
+    in
+    let indices, result, wp = aux ct.effect_args in
+    { comp_name = ct.effect_name;
+      comp_univs = ct.comp_univs;
+      comp_indices = indices;
+      comp_result = result;
+      comp_wp = wp; 
+      comp_flags = ct.flags}
 
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
@@ -770,12 +797,14 @@ let get_effect_decl env l =
     | None -> raise (Error(name_not_found l, range_of_lid l))
     | Some md -> md
 
-let join env l1 l2 : (lident * (typ -> typ -> typ) * (typ -> typ -> typ)) =
+let join env l1 l2 : (lident * mlift * mlift) =
   if lid_equals l1 l2
-  then l1, (fun t wp -> wp), (fun t wp -> wp)
+  then let id x = x in
+       l1, id, id
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
-  then Const.effect_GTot_lid, (fun t wp -> wp), (fun t wp -> wp)
+  then let lift_gtot nct = {nct with comp_name=Const.effect_GTot_lid} in //TODO: watchout, GTot is not an nct
+       Const.effect_GTot_lid, lift_gtot, lift_gtot
   else match env.effects.joins |> Util.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
         | None -> raise (Error(Util.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2), env.range))
         | Some (_, _, m3, j1, j2) -> m3, j1, j2
@@ -783,7 +812,7 @@ let join env l1 l2 : (lident * (typ -> typ -> typ) * (typ -> typ -> typ)) =
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2
   || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
-  then Some ({msource=l1; mtarget=l2; mlift=(fun t wp -> wp)})
+  then Some ({msource=l1; mtarget=l2; mlift_wp=(fun nct -> {nct with comp_name=l2})})
   else env.effects.order |> Util.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
 
 let wp_sig_aux env decls m =
@@ -809,11 +838,43 @@ let build_lattice env se = match se with
         mtarget=e2.mtarget;
         mlift=(fun r wp1 -> e2.mlift r (e1.mlift r wp1))} in
 
+    let mk_lift nct1 = 
+        let lift_term = 
+            S.mk (S.Tm_arrow(sub.sub_eff_binders,
+                            S.mk_GTotal(S.mk (S.Tm_arrow([S.new_bv None sub.sub_eff_source |> S.mk_binder], 
+                                                         S.mk_GTotal sub.sub_eff_target))
+                                             None Range.dummyRange)))
+                 None Range.dummyRange in
+        let univ_vars, binders, lhs, rhs =
+            let univ_vars, lift_term = Subst.open_univ_vars sub.sub_eff_univs lift_term in
+            match (SS.compress lift_term).n with
+            | Tm_arrow(binders, {n=GTotal(t, _)}) -> 
+              let binders, t = Subst.open_term binders t in
+              (match (SS.compress t).n with 
+               | Tm_arrow([lhs], {n=GTotal(rhs, _)}) -> 
+                 let _, rhs = Subst.open_term [lhs] rhs in
+                 univ_vars, binders, (fst lhs).sort, rhs
+               | _ -> failwith "Impossible")
+            | _ -> failwith "Impossible" in 
+
+        let univ_subst = 
+            let lhs_univ_vars, rest = Util.first_N (List.length nct.comp_univs) univ_vars in
+            let lhs_subst = List.map2 (fun uname u -> S.UN(uname, u)) lhs_univ_vars nct.comp_univs in
+            let rest_subst = List.map (fun u -> S.UN(uname, new_u_univ())) rest in
+            lhs_subst@rest_subst in 
+
+        let binder_subst = 
+            let lhs_index_vars, rest = Util.first_N (List.length nct.comp_indices) binders in 
+            let lhs_subst = U.subst_of_list lhs_index_vars nct.comp_indices in
+            let rest_subst = List.map (fun (x, _) -> new_uvar)
+        let _ = Subst.op
+        let univ_subst = 
+
     let mk_lift lift_t r wp1 =
         let _, lift_t = inst_tscheme lift_t in
         mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos in
 
-    let sub_lift_wp = match sub.lift_wp with
+    let sub_lift_wp = match sub.sub_eff_lift_wp with
       | Some sub_lift_wp ->
           sub_lift_wp
       | None ->
@@ -821,8 +882,8 @@ let build_lattice env se = match se with
     in
 
     let edge =
-      {msource=sub.source;
-       mtarget=sub.target;
+      {msource=fst sub.sub_eff_source;
+       mtarget=fst sub.sub_eff_target;
        mlift=mk_lift sub_lift_wp} in
     let id_edge l = {
        msource=sub.source;

@@ -92,6 +92,15 @@ and guard_t = {
   implicits:  list<(string * env * uvar * term * typ * Range.range)>;
 }
 
+type normal_comp_typ = {
+    comp_name: Ident.lident;
+    comp_univs: universes;
+    comp_indices: args;
+    comp_result: arg;
+    comp_wp: arg;
+    comp_flags: list<cflags>
+}
+
 type implicits = list<(env * uvar * term * typ * Range.range)>
 type env_t = env
 val initial_env : (env -> term -> term*typ*guard_t) -> (env -> term -> universe) -> solver_t -> lident -> env
@@ -140,6 +149,7 @@ val is_type_constructor    : env -> lident -> bool
 (* Universe instantiation *)
 val new_u_univ             : unit -> universe
 val inst_tscheme           : tscheme -> universes * term 
+val inst_tscheme_with      : tscheme -> universes -> term 
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 
 (* Introducing identifiers and updating the environment *)
@@ -171,6 +181,7 @@ val unfold_effect_abbrev   : env -> comp -> comp_typ
 val result_typ             : env -> comp -> typ
 val non_informative        : env -> typ -> bool
 val lcomp_of_comp          : env -> comp -> lcomp
+val comp_as_normal_comp_typ: env -> comp -> normal_comp_typ
 
 (* operations on monads *)
 val join            : env -> lident -> lident -> lident * mlift * mlift

@@ -484,7 +484,7 @@ let rec sigelt_to_string x = match x with
   | Sig_new_effect(ed, _) -> eff_decl_to_string false ed
   | Sig_new_effect_for_free (ed, _) -> eff_decl_to_string true ed
   | Sig_sub_effect (se, r) ->
-    let lift_wp = match se.lift_wp, se.lift with
+    let lift_wp = match se.sub_eff_lift_wp, se.sub_eff_lift with
       // TODO pretty-print this better
       | None, None ->
           failwith "impossible"
@@ -495,7 +495,7 @@ let rec sigelt_to_string x = match x with
     in
     let us, t = Subst.open_univ_vars (fst lift_wp) (snd lift_wp) in
     Util.format4 "sub_effect %s ~> %s : <%s> %s"
-        (lid_to_string se.source) (lid_to_string se.target)
+        (term_to_string se.sub_eff_source) (term_to_string se.sub_eff_target)
         (univ_names_to_string us) (term_to_string t)
   | Sig_effect_abbrev(l, univs, tps, c, _, _) ->
     if (Options.print_universes())

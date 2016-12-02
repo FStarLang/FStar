@@ -514,7 +514,7 @@ let nm_of_comp = function
   | Total (t, _) ->
       N t
   | Comp c when lid_equals c.effect_name Const.monadic_lid ->
-      M c.result_typ
+      M (fst (List.hd c.effect_args))
   | Comp c ->
       failwith (Util.format1 "[nm_of_comp]: impossible (%s)" (string_of_lid c.effect_name))
   | GTotal _ ->
@@ -1209,8 +1209,7 @@ and mk_M (t: typ): comp =
   mk_Comp ({
     comp_univs=[U_unknown];
     effect_name = Const.monadic_lid;
-    result_typ = t;
-    effect_args = [];
+    effect_args = [S.as_arg t];
     flags = []
   })
 
@@ -1262,8 +1261,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
     mk_Comp ({
       comp_univs = [U_unknown];
       effect_name = Const.effect_PURE_lid;
-      result_typ = star_type' env h;
-      effect_args = [ wp, S.as_implicit false ];
+      effect_args = [ S.as_arg (star_type' env h); S.as_arg wp ];
       flags = []
     })
   else

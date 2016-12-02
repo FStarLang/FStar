@@ -1725,7 +1725,12 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
         | ReifiableLift (wp, t) -> Some ([],desugar_term env wp), Some([], desugar_term env t)
         | LiftForFree t -> None, Some ([],desugar_term env t)
     in
-    let se = Sig_sub_effect({source=src; target=dst; lift_wp=lift_wp; lift=lift}, d.drange) in
+    let se = Sig_sub_effect({sub_eff_univs=[];
+                             sub_eff_binders=[];
+                             sub_eff_source=(src, []); 
+                             sub_eff_target=(dst, []); 
+                             sub_eff_lift_wp=lift_wp; 
+                             sub_eff_lift=lift}, d.drange) in
     env, [se]
 
  let desugar_decls env decls =
