@@ -73,7 +73,7 @@ val tl_strange_length_pred : l:ilist{l =!= Nil} -> Lemma
       (ensures ((length l) - 1 = length (tl_strange l)))
 let tl_strange_length_pred l = ()
 
-val tl_strange_length_pred_equiv : l:ilist{is_Cons l} -> Lemma
+val tl_strange_length_pred_equiv : l:ilist{Cons? l} -> Lemma
       (ensures ((length l) - 1 = length (tl_strange l)))
 let tl_strange_length_pred_equiv l = ()
 

@@ -223,7 +223,7 @@ val counter_mode:
     (requires (fun h -> live h ciphertext /\ live h k /\ live h n /\ live h plaintext))
     (ensures (fun h0 _ h1 -> live h1 ciphertext /\ modifies_1 ciphertext h0 h1))
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 // a bit slow, e.g. on the len precondition
 
 let rec counter_mode key iv counter len plaintext ciphertext =

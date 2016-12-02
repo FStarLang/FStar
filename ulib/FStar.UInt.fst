@@ -12,7 +12,7 @@ open FStar.Math.Lemmas
  * - definition of max and min
  * - use of regular integer modulus instead of wrap-around modulus *)
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 let max_int (n:nat) : Tot int = pow2 n - 1
 let min_int (n:nat) : Tot int = 0
@@ -27,7 +27,7 @@ type uint_t (n:nat) = x:int{size x n}
 val zero: n:nat -> Tot (uint_t n)
 let zero n = 0
 
-#reset-options "--z3timeout 5 --initial_fuel 1 --max_fuel 1"
+#reset-options "--initial_fuel 1 --max_fuel 1"
 
 val pow2_n: #n:pos -> p:nat{p < n} -> Tot (uint_t n)
 let pow2_n #n p = pow2_le_compat (n - 1) p; pow2 p
@@ -35,7 +35,7 @@ let pow2_n #n p = pow2_le_compat (n - 1) p; pow2 p
 val one: n:pos -> Tot (uint_t n)
 let one n = 1
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val ones: n:nat -> Tot (uint_t n)
 let ones n = max_int n
@@ -154,7 +154,7 @@ open FStar.Seq
 
 (* WARNING: Mind the big endian vs little endian definition *)
 
-#reset-options "--z3timeout 5 --initial_fuel 1 --max_fuel 1"
+#reset-options "--initial_fuel 1 --max_fuel 1"
 
 (* Casts *)
 val to_vec: #n:nat -> num:uint_t n -> Tot (bv_t n)
@@ -210,7 +210,7 @@ let from_vec_lemma_2 #n a b = inverse_vec_lemma a; inverse_vec_lemma b
 
 open FStar.Math.Lemmas
 
-#set-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#set-options "--initial_fuel 0 --max_fuel 0"
 
 val from_vec_aux: #n:nat -> a:bv_t n -> s1:nat{s1 < n} -> s2:nat{s2 < s1} ->
   Lemma (requires True)
@@ -220,13 +220,13 @@ let from_vec_aux #n a s1 s2 =
   paren_mul_right (from_vec #s2 (slice a 0 s2)) (pow2 (s1 - s2)) (pow2 (n - s1));
   pow2_plus (s1 - s2) (n - s1)
 
-#set-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#set-options "--initial_fuel 0 --max_fuel 0"
 
 val seq_slice_lemma: #n:nat -> a:bv_t n -> s1:nat{s1 < n} -> t1:nat{t1 >= s1 && t1 <= n} -> s2:nat{s2 < t1 - s1} -> t2:nat{t2 >= s2 && t2 <= t1 - s1} ->
   Lemma (equal (slice (slice a s1 t1) s2 t2) (slice a (s1 + s2) (s1 + t2)))
 let seq_slice_lemma #n a s1 t1 s2 t2 = ()
 
-#set-options "--z3timeout 20 --initial_fuel 1 --max_fuel 1"
+#set-options "--initial_fuel 1 --max_fuel 1"
 
 val from_vec_propriety: #n:pos -> a:bv_t n -> s:nat{s < n} ->
   Lemma (requires True)
@@ -244,7 +244,7 @@ let rec from_vec_propriety #n a s =
     seq_slice_lemma #n a s n 1 (n - s)
   end
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val append_lemma: #n:pos -> #m:pos -> a:bv_t n -> b:bv_t m ->
   Lemma (from_vec #(n + m) (append a b) = (from_vec #n a) * pow2 m + (from_vec #m b))
@@ -269,7 +269,7 @@ let slice_right_lemma #n a s =
   modulo_addition_lemma (from_vec #s (slice a (n - s) n)) (pow2 s) (from_vec #(n - s) (slice a 0 (n - s)));
   small_modulo_lemma_1 (from_vec #s (slice a (n - s) n)) (pow2 s)
 
-#set-options "--z3timeout 5 --initial_fuel 1 --max_fuel 1"
+#set-options "--initial_fuel 1 --max_fuel 1"
 
 (* Relations between constants in BitVector and in UInt. *)
 val zero_to_vec_lemma: #n:pos -> i:nat{i < n} ->

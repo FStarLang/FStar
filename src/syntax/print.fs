@@ -207,7 +207,7 @@ let qual_to_string = function
   | HasMaskedEffect       -> "HasMaskedEffect"
   | Effect                -> "Effect"
   | Reifiable                 -> "reify"
-  | Reflectable               -> "reflect"
+  | Reflectable l               -> Util.format1 "(reflect %s)" l.str
 
 let quals_to_string quals =
     match quals with

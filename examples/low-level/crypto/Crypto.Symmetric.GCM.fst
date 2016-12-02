@@ -10,7 +10,7 @@ open FStar.Buffer
 module U32 = FStar.UInt32
 type u32 = FStar.UInt32.t
 
-#set-options "--z3timeout 10 --max_fuel 0 --initial_fuel 0"
+#set-options "--z3rlimit 10 --max_fuel 0 --initial_fuel 0"
 
 type bytes = buffer byte
 
@@ -59,7 +59,7 @@ private val auth_body: #k:pos -> alg:cipher_alg k ->
     (requires (fun h -> live h ciphertext /\ live h tag /\ live h key /\ live h nonce /\ live h ad /\ live h tmp))
     (ensures (fun h0 _ h1 -> live h1 ciphertext /\ live h1 tag /\ live h1 key /\ live h1 nonce /\ live h1 ad /\ live h1 tmp
         /\ modifies_2 tag tmp h0 h1))
-#set-options "--z3timeout 20"	
+#set-options "--z3rlimit 20"	
 //NS: Hints are not replayable for this function, and for a few others below	
 let auth_body #k alg ciphertext tag key nonce cnt ad adlen len tmp =
   let h0 = ST.get() in
@@ -76,7 +76,7 @@ let auth_body #k alg ciphertext tag key nonce cnt ad adlen len tmp =
   let h1 = ST.get() in
   assert(live h1 ciphertext /\ live h1 tag /\ live h1 key /\ live h1 nonce /\ live h1 ad /\ live h1 tmp /\ modifies_2 tag tmp h0 h1)
 
-#set-options "--z3timeout 10"	
+#set-options "--z3rlimit 10"	
 private val authenticate: #k:pos -> alg:cipher_alg k ->
     ciphertext:bytes ->
     tag:bytes{length tag = 16 /\ disjoint ciphertext tag} ->
@@ -96,7 +96,7 @@ let authenticate #k alg ciphertext tag key nonce cnt ad adlen len =
   auth_body #k alg ciphertext tag key nonce cnt ad adlen len tmp;
   pop_frame()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 50"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 50"
 
 private val encrypt_loop: #k:pos -> alg:cipher_alg k ->
     ciphertext:bytes ->
@@ -112,16 +112,16 @@ private val encrypt_loop: #k:pos -> alg:cipher_alg k ->
         /\ modifies_2 ciphertext tmp h0 h1))
 let rec encrypt_loop #k alg ciphertext key cnt plaintext len tmp dep =
   (* Appending zeros if the last block is not a complete one. *)
-  if U32 (16ul >=^ (len -^ dep)) then begin
+  if U32.(16ul >=^ (len -^ dep)) then begin
     let h0 = ST.get() in
     let counter = sub tmp 0ul 16ul in
     update_counter counter cnt;
     let last = sub tmp 16ul 16ul in
-    blit plaintext dep last 0ul (U32 (len -^ dep));
+    blit plaintext dep last 0ul (U32.(len -^ dep));
     let ci = sub tmp 32ul 16ul in
     alg key counter ci;
     gf128_add ci last;
-    blit ci 0ul ciphertext dep (U32 (len -^ dep));
+    blit ci 0ul ciphertext dep (U32.(len -^ dep));
     let h1 = ST.get() in
     assert(live h1 ciphertext /\ live h1 key /\ live h1 plaintext /\ live h1 tmp /\ modifies_2 ciphertext tmp h0 h1)
   end else begin
@@ -132,12 +132,12 @@ let rec encrypt_loop #k alg ciphertext key cnt plaintext len tmp dep =
     let ci = sub ciphertext dep 16ul in
     alg key counter ci;
     gf128_add ci pi;
-    encrypt_loop #k alg ciphertext key (U32 (cnt +%^ 1ul)) plaintext len tmp (U32 (dep +^ 16ul));
+    encrypt_loop #k alg ciphertext key (U32.(cnt +%^ 1ul)) plaintext len tmp (U32.(dep +^ 16ul));
     let h1 = ST.get() in
     assert(live h1 ciphertext /\ live h1 key /\ live h1 plaintext /\ live h1 tmp /\ modifies_2 ciphertext tmp h0 h1)
   end
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 private val encrypt_body: #k:pos -> alg:cipher_alg k ->
     ciphertext:bytes ->
@@ -157,7 +157,7 @@ let encrypt_body #k alg ciphertext tag key nonce cnt ad adlen plaintext len =
   push_frame();
   let tmp = create (0uy) 48ul in
   blit nonce 0ul tmp 0ul 12ul;
-  encrypt_loop #k alg ciphertext key (U32 (cnt +%^ 1ul)) plaintext len tmp 0ul;
+  encrypt_loop #k alg ciphertext key (U32.(cnt +%^ 1ul)) plaintext len tmp 0ul;
   authenticate #k alg ciphertext tag key nonce cnt ad adlen len;
   pop_frame()
 

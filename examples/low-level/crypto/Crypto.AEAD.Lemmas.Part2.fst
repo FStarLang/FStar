@@ -187,7 +187,7 @@ val prf_enxor_leaves_none_strictly_above_x: #i:id ->
 
 module CMA = Crypto.Symmetric.UF1CMA
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 100"
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
     = if CMA.authId (i, PRF x.iv) then
 	let r = itable i t in

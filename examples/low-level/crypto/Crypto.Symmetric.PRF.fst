@@ -251,7 +251,7 @@ val prf_mac:
       HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 
 let prf_mac i t k_0 x =
   assume false;//16-10-30 new problem with sk0?
@@ -275,7 +275,7 @@ let prf_mac i t k_0 x =
       r := SeqProperties.snoc contents (Entry x mac);
       assume false; 
       //16-10-16 framing after change to genPost?
-      //let h = ST.get() in assume(MAC(norm h mac.r));
+      //let h = ST.get() in assume(MAC.(norm h mac.r));
       mac
     end
   else
@@ -341,7 +341,7 @@ let prf_sk0 #i t =
     Buffer.lemma_reveal_modifies_1 keyBuffer h1 h2;
     keyBuffer
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 let extends (#rgn:region) (#i:id) (s0:Seq.seq (entry rgn i)) 
 	    (s1:Seq.seq (entry rgn i)) (x:domain i{ctr_0 i <^ x.ctr}) =
@@ -375,7 +375,7 @@ private val prf_blk:
   (requires (fun h0 -> Buffer.live h0 output))
   (ensures (fun h0 _ h1 -> modifies_x_buffer_1 t x output h0 h1)) 
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 
 let zero = 0
  
@@ -492,7 +492,7 @@ private let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:
   (ensures (find (SeqProperties.snoc s (Entry x v)) x == Some v))
   = admit() //TODO, move this ... find_append_r
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 
 // generates a fresh block for x and XORs it with plaintext
 val prf_enxor: 

@@ -91,18 +91,18 @@ let rec insert_lemma x t = match t with
 val ge : int -> int -> Tot bool
 let ge n1 n2 = n1 >= n2
 
-val find_max : t:tree{is_bst t /\ is_Node t} ->
+val find_max : t:tree{is_bst t /\ Node? t} ->
       Tot (x:int{b2t (all (ge x) t) /\ in_tree x t})
-let rec find_max (Node n _ t2) = if is_Leaf t2 then n else find_max t2
+let rec find_max (Node n _ t2) = if Leaf? t2 then n else find_max t2
 
-val find_max' : t:tree{is_Node t}-> Tot int
-let rec find_max' (Node n _ t2) = if is_Leaf t2 then n else find_max' t2
+val find_max' : t:tree{Node? t}-> Tot int
+let rec find_max' (Node n _ t2) = if Leaf? t2 then n else find_max' t2
 
-val find_max_lemma : t:tree{is_Node t /\ is_bst t} ->
+val find_max_lemma : t:tree{Node? t /\ is_bst t} ->
       Lemma (in_tree (find_max' t) t /\ b2t (all (ge (find_max' t)) t))
-let rec find_max_lemma (Node _ _ t2) = if is_Node t2 then find_max_lemma t2
+let rec find_max_lemma (Node _ _ t2) = if Node? t2 then find_max_lemma t2
 
-val find_max_eq : t:tree{is_Node t /\ is_bst t} -> Lemma (find_max t = find_max' t)
+val find_max_eq : t:tree{Node? t /\ is_bst t} -> Lemma (find_max t = find_max' t)
 let find_max_eq t = find_max_lemma t
 
 val delete : x:int -> t:tree{is_bst t} ->
@@ -141,4 +141,4 @@ let rec delete_lemma x t = match t with
   | Leaf -> ()
   | Node n t1 t2 ->
      if x <> n then (delete_lemma x t1; delete_lemma x t2)
-     else if is_Node t1 then (find_max_lemma t1; delete_lemma (find_max' t1) t1)
+     else if Node? t1 then (find_max_lemma t1; delete_lemma (find_max' t1) t1)

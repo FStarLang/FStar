@@ -30,7 +30,7 @@ else
     | Some (D_v _ (V_prin p)) ->
       let c = Conf Target (Mode Par (OrdSet.singleton p)) [] init_env (T_exp Prog.program) (hide []) in
       let c' = tstep_star p c in
-      if is_Some c' then
+      if Some? c' then
         let Some c' = c' in
 	()
       else

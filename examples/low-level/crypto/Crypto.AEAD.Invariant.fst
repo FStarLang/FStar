@@ -31,7 +31,7 @@ let minNat (a:nat) (b:nat) : nat = if a <= b then a else b
 
 type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
-let ctr x = PRF(x.ctr)
+let ctr x = PRF.(x.ctr)
 
 noeq type entry (i:id) =
   | Entry: 
@@ -86,7 +86,7 @@ val counterblocks:
   to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) (ctr x)} -> 
   plain:Crypto.Plain.plain i l -> 
   cipher:lbytes l -> 
-  Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
+  Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF.(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
   (decreases (to_pos - from_pos))
 let rec counterblocks i rgn x l from_pos to_pos plain cipher = 
   let blockl = v (Cipher(blocklen (cipherAlg_of_id i))) in 
@@ -105,6 +105,8 @@ let rec counterblocks i rgn x l from_pos to_pos plain cipher =
 let num_blocks' (i:id) (l:nat) : Tot nat = 
   let bl = v (Cipher( blocklen (cipherAlg_of_id i))) in
   (l + bl - 1) / bl
+
+#reset-options "--z3rlimit 20"
 
 let num_blocks (#i:id) (e:entry i) : Tot nat = 
   let Entry nonce ad l plain cipher_tagged = e in

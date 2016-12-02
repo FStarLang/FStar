@@ -40,7 +40,7 @@ module PRF = Crypto.Symmetric.PRF
 
 type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
-let ctr x = PRF(x.ctr)
+let ctr x = PRF.(x.ctr)
 
 // Overview of the stateful invariant:
 //
@@ -94,6 +94,8 @@ let coerce i rgn key =
   let ak = if CMA.skeyed i then Some (PRF.prf_sk0 #i prf) else None in 
   State #i #Writer #rgn log prf ak
 
+#reset-options "--z3rlimit 20"
+
 val genReader: #i:id -> st:state i Writer -> ST (state i Reader)
   (requires (fun _ -> True))
   (ensures  (fun _ _ _ -> True))
@@ -135,8 +137,8 @@ val counter_enxor:
   cipher:lbuffer (v len)
   { let bp = as_buffer plain in 
     Buffer.disjoint bp cipher /\
-    Buffer.frameOf bp <> (PRF t.rgn) /\
-    Buffer.frameOf cipher <> (PRF t.rgn) 
+    Buffer.frameOf bp <> (PRF.(t.rgn)) /\
+    Buffer.frameOf cipher <> (PRF.(t.rgn)) 
   } -> 
   h_init:mem ->
   // Not Stack, as we modify the heap-based ideal table (and don't know where the buffers are
@@ -173,7 +175,7 @@ val counter_enxor:
     				      (Plain.sel_plain h1 len plain)
     				      (Buffer.as_seq h1 cipher)))
     ))
-#set-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let rec counter_enxor i t x len remaining_len plain cipher h_init =
   let completed_len = len -^ remaining_len in
   let h0 = get () in

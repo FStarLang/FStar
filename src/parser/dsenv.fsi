@@ -69,6 +69,7 @@ type foundname =
 val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
 
+val qual: lident -> ident -> lident
 val qualify: env -> ident -> lident
 val qualify_lid: env -> lident -> lident
 

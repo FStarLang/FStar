@@ -85,6 +85,7 @@ let lemma_encode_nonzero v =
    Accordingly, sequences seen as polynomials are implicitly extended with 0s.
 *)
 val poly: vs:text -> r:elem -> Tot (a:elem) (decreases (Seq.length vs))
+
 let rec poly vs r =
   if Seq.length vs = 0 then 0
   else 

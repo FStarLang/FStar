@@ -36,19 +36,19 @@ include ../Makefile.include
 	@echo --include $(FSTAR_HOME)/ulib/hyperstack \
 	      --include $(FSTAR_HOME)/ucontrib/Platform/fst \
 	      --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
-	      --z3timeout 20
+	      --z3rlimit 20
 	      --verify_module $(basename $(notdir $@))
 
 verify-%: __force__
 	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		 --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
-		 --z3timeout 20 $*
+		 --z3rlimit 20 $*
 
 verify_hh-%: __force__
 	$(FSTAR) --include $(FSTAR_HOME)/ulib/hyperstack \
 		 --include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		 --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
-		 --z3timeout 20 $*
+		 --z3rlimit 20 $*
 
 all: uall sall
 
@@ -73,14 +73,14 @@ merkle_tree: MerkleTree.fst
 	$^
 
 acls-cap: SHA1.fst MAC.fst ../security/ACLs_simplified.fst Cap.fst
-	$(FSTAR) --z3timeout 10 \
+	$(FSTAR) --z3rlimit 10 \
 	--verify_module ACLs_simplified --verify_module Cap \
 	--include $(FSTAR_HOME)/ucontrib/Platform/fst \
 	--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 	$^
 
 rpc: Formatting.fst SHA1.fst MAC.fst RPC.fst
-	$(FSTAR) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
+	$(FSTAR) --z3rlimit 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
 		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst RPC.fst
 
@@ -115,12 +115,12 @@ rpc-test: RPC.exe
 	$(EXTRA_PATH) ./RPC.exe
 
 CntProtocol: CntFormat.fst MAC.fst SHA1.fst CntProtocol.fst
-	$(FSTAR) --z3timeout 10 --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
+	$(FSTAR) --z3rlimit 10 --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
 		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst CntProtocol.fst
 
 CntProtocol.ml: CntFormat.fst MAC.fst SHA1.fst CntProtocol.fst
-	$(FSTAR_ALWAYS) --stratified --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+	$(FSTAR_ALWAYS) --stratified --z3rlimit 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst CntProtocol.fst \

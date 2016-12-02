@@ -25,11 +25,11 @@ module FStar.List.Tot
 val isEmpty: list 'a -> Tot bool
 let isEmpty l = match l with | [] -> true | _ -> false
 
-val hd: l:list 'a{is_Cons l} -> Tot 'a
+val hd: l:list 'a{Cons? l} -> Tot 'a
 let hd = function
   | hd::_ -> hd
 
-val tl: l:list 'a {is_Cons l} -> Tot (list 'a)
+val tl: l:list 'a {Cons? l} -> Tot (list 'a)
 let tl = function
   | _::tl -> tl
 

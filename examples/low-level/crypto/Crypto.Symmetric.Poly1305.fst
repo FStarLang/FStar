@@ -31,7 +31,12 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS  = FStar.HyperStack
 
-#set-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 "
+(* 2016-11-22: we now forbid opening the current module name as a
+namespace, so we need to make the following abbrevs explicit *)
+module Spec = Crypto.Symmetric.Poly1305.Spec
+module Parameters = Crypto.Symmetric.Poly1305.Parameters
+
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 20"
 
 // we may separate field operations, so that we don't
 // need to open the bignum modules elsewhere
@@ -70,9 +75,9 @@ let rec _read_word len b s i =
   else
     begin
     let x = b.(i) in
-    let s' = FStar.Seq (s @| Seq.create 1 x) in
+    let s' = FStar.Seq.(s @| Seq.create 1 x) in
     Seq.lemma_eq_intro s' (Seq.slice (sel_word h b) 0 (w i + 1));
-    _read_word len b s' (U32 (i +^ 1ul))
+    _read_word len b s' (U32.(i +^ 1ul))
     end
 
 val read_word: len:u32 -> b:wordB{length b == w len} -> ST word
@@ -225,7 +230,7 @@ val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block}
     /\ modifies_1 acc h0 h1 // It was the only thing modified
     /\ sel_elem h1 acc == (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r))
 
-#set-options "--z3timeout 120"
+#set-options "--z3rlimit 60"
 //NS: hint fails to replay
 let add_and_multiply acc block r =
   let h0 = ST.get () in
@@ -234,7 +239,7 @@ let add_and_multiply acc block r =
   cut (eval h1 acc 5 == eval h0 acc 5 + eval h0 block 5);
   bound27_isSum h0 h1 acc block;
   push_frame();
-  let tmp = create 0UL (U32 (2ul *^ nlength -^ 1ul)) in
+  let tmp = create 0UL (U32.(2ul *^ nlength -^ 1ul)) in
   let h2 = ST.get () in
   eval_eq_lemma h1 h2 acc acc norm_length;
   eval_eq_lemma h0 h2 r r norm_length;
@@ -280,7 +285,7 @@ private val mk_mask: nbits:FStar.UInt32.t{FStar.UInt32.v nbits < 64} ->
   Tot (z:U64.t{v z == pow2 (FStar.UInt32.v nbits) - 1})
 let mk_mask nbits =
   Math.Lemmas.pow2_lt_compat 64 (FStar.UInt32.v nbits);
-  U64 ((1uL <<^ nbits) -^ 1uL)
+  U64.((1uL <<^ nbits) -^ 1uL)
 
 #set-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
 
@@ -481,7 +486,7 @@ val toField_plus:
     modifies_1 a h0 h1 /\ // Only a was modified
     sel_int h1 a == pow2 (8 * w len) + little_endian (sel_word h0 b) ))
 
-#set-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
 
 let toField_plus len a b =
   let h0 = ST.get() in
@@ -599,7 +604,7 @@ let trunc1305 a b =
 
 (* Clamps the key, see RFC. Clears 22 bits out of 128
 *)
-private let fix r i mask = r.(i) <- U8(r.(i) &^ mask)
+private let fix r i mask = r.(i) <- U8.(r.(i) &^ mask)
 
 val clamp: r:wordB{length r == 16} -> Stack unit
   (requires (fun h -> live h r))
@@ -770,6 +775,9 @@ val poly1305_update:
     /\ (mac_log ==>
        ilog updated_log == SeqProperties.cons (sel_word h0 msg) (ilog current_log)
        /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
+
+#set-options "--z3rlimit 60 --initial_fuel 1 --max_fuel 1"
+
 let poly1305_update log msgB acc r =
   let h0 = ST.get () in
   push_frame();
@@ -876,16 +884,18 @@ let snoc_cons #a s x y = ()
 val append_assoc: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> s3:Seq.seq a -> Lemma
   (FStar.Seq (equal (append s1 (append s2 s3)) (append (append s1 s2) s3)))
 let append_assoc #a s1 s2 s3 = ()
+#set-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-val append_as_seq_sub: h:mem -> n:UInt32.t -> m:UInt32.t -> msg:bytes{live h msg /\ w m <= w n /\ w n <= length msg} -> Lemma
+(* 2016-11-23: n shadowed by U32.n by local open, so rename into n' *)
+val append_as_seq_sub: h:mem -> n':UInt32.t -> m:UInt32.t -> msg:bytes{live h msg /\ w m <= w n' /\ w n' <= length msg} -> Lemma
   (append (as_seq h (Buffer.sub msg 0ul m))
-          (as_seq h (Buffer.sub (Buffer.offset msg m) 0ul (U32 (n -^ m)))) ==
-   as_seq h (Buffer.sub msg 0ul n))
-let append_as_seq_sub h n m msg =
+          (as_seq h (Buffer.sub (Buffer.offset msg m) 0ul (U32.(n' -^ m)))) ==
+   as_seq h (Buffer.sub msg 0ul n'))
+let append_as_seq_sub h n' m msg =
   Seq.lemma_eq_intro
     (append (as_seq h (Buffer.sub msg 0ul m))
-            (as_seq h (Buffer.sub (Buffer.offset msg m) 0ul (U32 (n -^ m)))))
-     (as_seq h (Buffer.sub msg 0ul n))
+            (as_seq h (Buffer.sub (Buffer.offset msg m) 0ul (U32.(n' -^ m)))))
+     (as_seq h (Buffer.sub msg 0ul n'))
 
 val append_as_seq: h:mem -> m:UInt32.t -> n:UInt32.t ->
   msg:bytes{live h msg /\ w m + w n == length msg} -> Lemma
@@ -951,6 +961,9 @@ val poly1305_loop: log:log_t -> msg:bytes -> acc:elemB{disjoint msg acc} ->
                    (ilog log) 
         /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
     (decreases (w ctr))
+
+#set-options "--z3rlimit 300 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
 let rec poly1305_loop log msg acc r ctr =
   let h0 = ST.get () in
   if U32.lte ctr 0ul then
@@ -991,11 +1004,11 @@ let rec poly1305_loop log msg acc r ctr =
 
 val div_aux: a:UInt32.t -> b:UInt32.t{w b <> 0} -> Lemma
   (requires True)
-  (ensures FStar.UInt32(UInt.size (v a / v b) n))
-  [SMTPat (FStar.UInt32(UInt.size (v a / v b) n))]
+  (ensures FStar.UInt32.(UInt.size (v a / v b) n))
+  [SMTPat (FStar.UInt32.(UInt.size (v a / v b) n))]
 let div_aux a b = ()
 
-#reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --max_ifuel 0 --initial_ifuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1"
 
 val poly1305_process:
     msg:bytes

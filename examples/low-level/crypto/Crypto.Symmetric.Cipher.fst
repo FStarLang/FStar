@@ -25,6 +25,7 @@ inline_for_extraction let blocklen = function
   | AES128   -> 16ul
   | AES256   -> 16ul
   | CHACHA20 -> 64ul
+private let blocklen' = blocklen (* blocklen may be shadowed by Crypto.Symmetric.AES *)
 
 inline_for_extraction let ivlen (a:alg) = 12ul 
 
@@ -99,7 +100,7 @@ val compute:
     (ensures (fun h0 _ h1 -> live h1 output /\ modifies_1 output h0 h1
       ))
 
-#reset-options "--z3timeout 10000" 
+#reset-options "--z3rlimit 10000" 
 
 let compute i output st n counter len = 
   let a = algi i in
@@ -108,6 +109,7 @@ let compute i output st n counter len =
   begin match a with 
   | CHACHA20 -> // already specialized for counter mode
       let open Crypto.Symmetric.Chacha20 in 
+      let ivlen = ivlen' in (* to undo shadowing by Crypto.Symmetric.Chacha20 *)
       let nbuf = Buffer.create 0uy (ivlen CHACHA20) in
       store_uint128 (ivlen CHACHA20) nbuf n;
       chacha20 output st nbuf counter len

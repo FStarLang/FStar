@@ -64,7 +64,7 @@ let rec subst_zero_lem e1 e2 = match e1 with
   | EApp e1' e2' -> (subst_zero_lem e1' e2; subst_zero_lem e2' e2)
 
 val is_value: exp -> Tot bool
-let is_value = is_EAbs
+let is_value = EAbs?
 
 val step: exp -> Tot (option exp)
 let rec step = function
@@ -99,8 +99,8 @@ let rec typing g e = match e with
      | Some (TArrow t1 t2), Some t1' -> if t1 = t1' then Some t2 else None
      | _, _ -> None
 
-val progress: e:exp{is_Some (typing [] e)} ->
-              Lemma (requires True) (ensures (is_value e \/ is_Some (step e)))
+val progress: e:exp{Some? (typing [] e)} ->
+              Lemma (requires True) (ensures (is_value e \/ Some? (step e)))
 let rec progress e =
   match e with
   | EApp e1 e2 -> progress e1; progress e2
@@ -126,13 +126,13 @@ val list_assoc_b: g:env -> g':env -> t1':typ -> t:typ -> Lemma (requires True) (
 let list_assoc_b g g' t1' t = ()
 
 (* inversion for lookup, lookup for indices less than length of env succeeds *)
-val lookup_inv: g:env -> n:nat -> Lemma (requires True) (ensures (if n < len g then is_Some (lookup g n) else is_None (lookup g n))) [SMTPat (lookup g n)]
+val lookup_inv: g:env -> n:nat -> Lemma (requires True) (ensures (if n < len g then Some? (lookup g n) else None? (lookup g n))) [SMTPat (lookup g n)]
 let rec lookup_inv g n = match g with
   | []    -> ()
   | _::tl -> if n = 0 then () else lookup_inv tl (n - 1)
 
 (* inversion for lookup in app, lookup in g' @ g means either lookup in g' or in g *)
-val lookup_app_inv: g:env -> g':env -> k:nat{is_Some (lookup (g' @ g) k)} -> Lemma (requires (True))
+val lookup_app_inv: g:env -> g':env -> k:nat{Some? (lookup (g' @ g) k)} -> Lemma (requires (True))
                    (ensures ((k < len g' /\ lookup (g' @ g) k = lookup g' k) \/ (k >= len g' /\ lookup (g' @ g) k = lookup g (k - len g'))))
                    [SMTPat (lookup (g' @ g) k)]
 let rec lookup_app_inv g g' k = match g' with
@@ -140,8 +140,8 @@ let rec lookup_app_inv g g' k = match g' with
   | hd::tl -> if k = 0 then () else lookup_app_inv g tl (k - 1)
 
 (* lookup g k ==> lookup (g' @ g) (k + len g') *)
-val lookup_ext_f: g:env -> n:nat{is_Some (lookup g n)} -> g':env ->
-                  Lemma (requires True) (ensures (is_Some (lookup (g' @ g) (n + len g')) /\
+val lookup_ext_f: g:env -> n:nat{Some? (lookup g n)} -> g':env ->
+                  Lemma (requires True) (ensures (Some? (lookup (g' @ g) (n + len g')) /\
                                                   Some.v  (lookup (g' @ g) (n + len g')) = Some.v (lookup g n)))
                   (decreases g')
 let rec lookup_ext_f g n g' = match g' with
@@ -149,8 +149,8 @@ let rec lookup_ext_f g n g' = match g' with
   | _::tl -> lookup_ext_f g n tl
 
 (* if g' @ g |- e : t then g' @ g'' @ g |- (shift e (len g') (len g'')) : t *)
-val weakening: g:env -> g':env -> g'':env -> e:exp{is_Some (typing (g' @ g) e)} ->
-               Lemma (requires True) (ensures (is_Some (typing (g' @ (g'' @ g)) (shift e (len g') (len g''))) /\
+val weakening: g:env -> g':env -> g'':env -> e:exp{Some? (typing (g' @ g) e)} ->
+               Lemma (requires True) (ensures (Some? (typing (g' @ (g'' @ g)) (shift e (len g') (len g''))) /\
                                                Some.v (typing (g' @ (g'' @ g)) (shift e (len g') (len g''))) = Some.v (typing (g' @ g) e))) (decreases e)
 let rec weakening g g' g'' e = match e with
   | EVar k     ->
@@ -168,8 +168,8 @@ let rec free_in e x = match e with
   | EApp e1 e2 -> free_in e1 x || free_in e2 x
 
 (* if g' @ (t::g) |- e : t and (len g') is not free in e, then we can essentially drop t from gamma (but adjust the indices in e *)
-val strengthening: g:env -> g':env -> t:typ -> e:exp{is_Some (typing (g' @ (t::g)) e) /\ not (free_in e (len g'))} ->
-                   Lemma (requires True) (ensures (is_Some (typing (g' @ g) (shift e (len g' + 1) (-1))) /\
+val strengthening: g:env -> g':env -> t:typ -> e:exp{Some? (typing (g' @ (t::g)) e) /\ not (free_in e (len g'))} ->
+                   Lemma (requires True) (ensures (Some? (typing (g' @ g) (shift e (len g' + 1) (-1))) /\
                                                    Some.v (typing (g' @ g) (shift e (len g' + 1) (-1))) = Some.v (typing (g' @ (t::g)) e))) (decreases e)
 let rec strengthening g g' t e = match e with
   | EVar k     ->
@@ -211,8 +211,8 @@ let sexp e1 n e2 = shift (substitute e1 n (shift e2 0 (n + 1))) (n + 1) (-1)
 (*
  * if g |- e2 : t2, g' @ (t2::g) |- e1 : t1, then g' @ g |- sexp e1 (len g') e2 : t1
  *)
-val subst_lem: g:env -> e2:exp{is_Some (typing g e2)} -> g':env -> e1:exp{is_Some (typing (g' @ ((Some.v (typing g e2))::g)) e1)} ->
-               Lemma (requires True) (ensures (is_Some (typing (g' @ g) (sexp e1 (len g') e2)) /\
+val subst_lem: g:env -> e2:exp{Some? (typing g e2)} -> g':env -> e1:exp{Some? (typing (g' @ ((Some.v (typing g e2))::g)) e1)} ->
+               Lemma (requires True) (ensures (Some? (typing (g' @ g) (sexp e1 (len g') e2)) /\
                                                Some.v (typing (g' @ g) (sexp e1 (len g') e2)) = Some.v (typing (g' @ ((Some.v (typing g e2))::g)) e1)))
                                      (decreases e1)
 let rec subst_lem g e2 g' e1 =
@@ -235,10 +235,10 @@ let rec subst_lem g e2 g' e1 =
       consec_shifts_lem e2 0 (len g' + 1) 1)
   | EApp e1' e2'  -> subst_lem g e2 g' e1'; subst_lem g e2 g' e2'
 
-val preservation: g:env -> e:exp{is_Some (typing g e)} ->
+val preservation: g:env -> e:exp{Some? (typing g e)} ->
                   Lemma (requires True)
-                  (ensures (is_Some (step e) ==>
-                            (is_Some (typing g (Some.v (step e))) /\
+                  (ensures (Some? (step e) ==>
+                            (Some? (typing g (Some.v (step e))) /\
                              Some.v (typing g (Some.v (step e))) = Some.v (typing g e))))
                   (decreases e)
 let rec preservation g e = match e with
@@ -263,15 +263,15 @@ let rec preservation g e = match e with
 (*let id = EAbs TBool (EVar 0) (* \x.x *)
 let id_app_id = EApp id id (* (\x.x) (\x.x) *)
 
-let test0 = assert (is_Some (step id_app_id) /\ Some.v (step id_app_id) = id)
+let test0 = assert (Some? (step id_app_id) /\ Some.v (step id_app_id) = id)
 
 let self_app = EAbs TBool (EApp (EVar 0) (EVar 0)) (* \x. x x *)
 let self_app_app_id = EApp self_app id
 
-let test1 = assert (is_Some (step self_app_app_id) /\ Some.v (step self_app_app_id) = id_app_id)
+let test1 = assert (Some? (step self_app_app_id) /\ Some.v (step self_app_app_id) = id_app_id)
 
 let self_app_app_self_app = EApp self_app self_app
-let test2 = assert (is_Some (step self_app_app_self_app) /\ Some.v (step self_app_app_self_app) = self_app_app_self_app)
+let test2 = assert (Some? (step self_app_app_self_app) /\ Some.v (step self_app_app_self_app) = self_app_app_self_app)
 
 (* two binders *)
 let app_fn = EAbs TBool (EAbs TBool (EApp (EVar 1) (EVar 0))) (* \x \y. x y *)
@@ -283,5 +283,5 @@ let s2 =
   | None -> None
   | Some s1' -> step s1'
 
-let test3 = assert (is_Some s2 /\ Some.v s2 = id_app_id)*)
+let test3 = assert (Some? s2 /\ Some.v s2 = id_app_id)*)
  *)

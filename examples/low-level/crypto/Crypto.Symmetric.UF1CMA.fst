@@ -172,6 +172,7 @@ val alloc: region:erid -> i:id
   -> ST (state i)
   (requires (fun m0 -> live m0 k /\ live_ak m0 ak))
   (ensures  (fun m0 st m1 -> genPost i region m0 st m1 /\ modifies_one region m0 m1))
+#reset-options "--z3rlimit 100"
 let alloc region i ak k =
   let r = MAC.rcreate region i in
   let s = FStar.Buffer.rcreate region 0uy 16ul in

@@ -28,7 +28,7 @@ end))
 in (
 
 let is_let = (fun x d -> (match (d.FStar_Parser_AST.d) with
-| FStar_Parser_AST.ToplevelLet (_64_38, _64_40, defs) -> begin
+| FStar_Parser_AST.TopLevelLet (_64_38, _64_40, defs) -> begin
 (let _159_22 = (FStar_Parser_AST.lids_of_let defs)
 in (FStar_All.pipe_right _159_22 (FStar_Util.for_some (id_eq_lid x))))
 end
@@ -137,7 +137,7 @@ in (Prims.raise _159_61))
 end
 | _64_138 -> begin
 (match (let_x.FStar_Parser_AST.d) with
-| FStar_Parser_AST.ToplevelLet (_64_140, _64_142, defs) -> begin
+| FStar_Parser_AST.TopLevelLet (_64_140, _64_142, defs) -> begin
 (
 
 let def_lids = (FStar_Parser_AST.lids_of_let defs)

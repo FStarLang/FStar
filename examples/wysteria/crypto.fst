@@ -15,7 +15,7 @@ open Platform.Bytes
 open SHA1
 
 opaque type client_prop (p:prin) (r:redex) =
-  is_R_assec r /\ is_clos (R_assec.v r) /\ mem p (R_assec.ps r) /\
+  R_assec? r /\ is_clos (R_assec.v r) /\ mem p (R_assec.ps r) /\
   (exists c. Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p))
 
 opaque type server_prop_witness (#a:Type) (#b:Type) (x:a) (y:b) = True
@@ -26,7 +26,7 @@ opaque type server_prop (p:prin) (r:redex) (ps:prins) (x:varname) (e:exp) (dv:dv
      tpre_assec #ps (pi, OrdMap.empty #prins #tconfig_sec #ps_cmp) ps x e /\
      T_red.r (Conf.t (Some.v (select p pi))) = r /\
      pstep_star #ps (pi, OrdMap.empty #prins #tconfig_sec #ps_cmp) pi_final /\
-     is_T_val (Conf.t (Some.v (select p (fst pi_final)))) /\
+     T_val? (Conf.t (Some.v (select p (fst pi_final)))) /\
      D_v (T_val.meta (Conf.t (Some.v (select p (fst pi_final)))))
 	 (T_val.v (Conf.t (Some.v (select p (fst pi_final))))) = dv)
 
@@ -92,7 +92,7 @@ let verify_client_msg k m t =
   if (not b) then None
   else
     let msg = unmarshal #(prin * redex) m in
-    let found = is_Some (List.find (fun (CEntry k' msg' mac') -> k = k' && msg' = msg && mac' = t) !client_log) in
+    let found = Some? (List.find (fun (CEntry k' msg' mac') -> k = k' && msg' = msg && mac' = t) !client_log) in
     if found then Some msg
     else None
 
@@ -115,7 +115,7 @@ let verify_server_msg k m t =
   if (not b) then None
   else
     let msg = unmarshal #server_ret_type m in
-    let found = is_Some (List.find (fun (SEntry k' msg' mac') -> k = k' && msg' = msg && mac' = t) !server_log) in
+    let found = Some? (List.find (fun (SEntry k' msg' mac') -> k = k' && msg' = msg && mac' = t) !server_log) in
     if found then Some msg
     else None
 

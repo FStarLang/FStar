@@ -211,6 +211,8 @@ let intro_refines_one_entry_no_tag
 	  let c, _ = SeqProperties.split c_tagged len in
 	  counterblocks_len #i mac_rgn initial_domain len 0 p c
 
+#reset-options "--z3rlimit 20"
+
 let mac_refines (i:id) 
 		(st:state i Writer) (nonce: Cipher.iv (alg i))
 		(#aadlen: UInt32.t {aadlen <=^ aadmax}) (aad: lbuffer (v aadlen))
@@ -376,7 +378,7 @@ private let rec block_lengths (#i:id{safeId i}) (entries:Seq.seq (entry i))
     else let e = SeqProperties.head entries in
 	 num_blocks e + 1 + block_lengths (SeqProperties.tail entries)
 
-#set-options "--z3timeout 20 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 40 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 (* 2. refines sums block lengths *)
 private let rec refines_length (#rgn:region) (#i:id{safeId i}) (h:mem) 
 		       (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry rgn i))
@@ -393,7 +395,7 @@ private let rec refines_length (#rgn:region) (#i:id{safeId i}) (h:mem)
 
 (*** Extending `refines` by adding one block ***)
 
-#set-options "--z3timeout 100 --initial_fuel 2 --max_fuel 2 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 100 --initial_fuel 2 --max_fuel 2 --initial_ifuel 0 --max_ifuel 0"
 (* refines_one_entry can be lifted refines sums block lengths *)
 private let refines_singleton (h:mem) (i:id{safeId i}) (rgn:region) (e:entry i) (blocks_for_e:Seq.seq (PRF.entry rgn i))
   : Lemma (requires (refines_one_entry h e blocks_for_e))
@@ -401,7 +403,7 @@ private let refines_singleton (h:mem) (i:id{safeId i}) (rgn:region) (e:entry i) 
   = let b = num_blocks e in 
     cut (Seq.equal (Seq.slice blocks_for_e 0 (b + 1)) blocks_for_e)
 
-#reset-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let rec extend_refines (h:mem) (i:id{safeId i}) (mac_rgn:region) 
 		    (entries:Seq.seq (entry i))
 		    (blocks:Seq.seq (PRF.entry mac_rgn i))
@@ -449,7 +451,7 @@ let counterblocks_emp   (i:id)
    : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
    = ()
 
-#set-options "--z3timeout 100"
+#set-options "--z3rlimit 50"
 
 let lemma_cons_snoc (#a:Type) (hd:a) (s:Seq.seq a) (tl:a)
   : Lemma (requires True)
@@ -501,6 +503,7 @@ let rec counterblocks_snoc #i rgn x k len next completed_len plain cipher =
 
 #reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 
+#set-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1"
 val counterblocks_slice: #i:id{safeId i} -> 
 			     (rgn:region) -> 
 			     (x:domain i{ctr_0 i <^ x.ctr}) ->

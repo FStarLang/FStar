@@ -166,6 +166,8 @@ val encode_pad_empty: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> Lemma
   (ensures  encode_pad prefix txt == prefix)
 let encode_pad_empty prefix txt = ()
 
+#reset-options "--z3rlimit 20"
+
 val encode_pad_snoc: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> w:lbytes 16 -> Lemma
   (encode_pad (SeqProperties.snoc prefix (encode w)) txt ==
    encode_pad prefix (append w txt))

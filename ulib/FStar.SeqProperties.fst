@@ -203,7 +203,7 @@ let rec sorted_concat_lemma #a f lo pivot hi =
         lemma_append_cons lo (cons pivot hi);
         lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
 
-#set-options "--max_fuel 1 --initial_fuel 1 --z3timeout 10"
+#set-options "--max_fuel 1 --initial_fuel 1 --z3rlimit 30"
 val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
   (requires True)
   (ensures (fun x ->
@@ -236,8 +236,7 @@ let lemma_swap_permutes_aux_frag_eq #a s i j i' j' =
   cut (equal (slice s i (i + 1))  (slice (swap s i j) j (j + 1)));
   cut (equal (slice s j (j + 1))  (slice (swap s i j) i (i + 1)))
 
-//#set-options "--max_fuel 1 --initial_fuel 1 --initial_ifuel 0 --max_ifuel 0 --z3timeout 10"
-#set-options "--z3timeout 10"
+#set-options "--z3rlimit 20"
 val lemma_swap_permutes_aux: #a:eqtype -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> x:a -> Lemma
   (requires True)
   (ensures (count x s = count x (swap s i j)))
@@ -267,6 +266,7 @@ let lemma_swap_permutes_aux #a s i j x =
       lemma_append_count_aux x frag_mid (append frag_i frag_hi);
       lemma_append_count_aux x frag_i frag_hi
   end
+#reset-options
 
 #set-options "--max_fuel 0 --initial_fuel 0"
 type permutation (a:eqtype) (s1:seq a) (s2:seq a) =
