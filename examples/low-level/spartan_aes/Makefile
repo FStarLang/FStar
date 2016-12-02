@@ -26,7 +26,7 @@ endif
 all: aes.o
 
 clean:
-	rm *.o *~
+	rm -f *.o *~
 
 aes.o: $(AES)
 	$(ML) -c -Fo aes.o -coff $^
