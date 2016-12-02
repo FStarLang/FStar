@@ -33,8 +33,8 @@ val return: #a:Type -> x:a -> Tot (DExn a (wp_return x))
 let return (#a:Type) x _ = V x
 
 type wp_bind (#a:Type) (#b:Type) (f:WP a) (g:a -> WP b) : WP b =
-  fun (post:Post b) -> f (fun r -> (is_E r ==> post (E #b (E.e r))) /\
-                                   (is_V r ==> (g (V.v r)) post))
+  fun (post:Post b) -> f (fun r -> (E? r ==> post (E #b (E.e r))) /\
+                                   (V? r ==> (g (V.v r)) post))
 val bind: #a:Type -> #b:Type -> #wp1:WP a -> #wp2:(a -> WP b)
           -> f:DExn a wp1{monotone_WP wp1 /\ (forall x. monotone_WP (wp2 x))}
           -> g:(x:a -> Tot (DExn b (wp2 x)))
@@ -66,17 +66,17 @@ let lemma_bind_assoc (a:Type) (b:Type) (c:Type)
                      (wp1:WP a) (wp2:(a -> WP b)) (wp3:(b -> WP c)) =
   let _ = assert (forall (post:Post c).
                   wp_bind wp1 (fun (x:a) -> wp_bind (wp2 x) wp3) post <==>
-                  wp1 (fun (r:result a) -> (is_E r ==> post (E #c (E.e r))) /\
-                                           (is_V r ==> wp2 (V.v r) (fun (r':result b) -> (is_E r' ==> post (E #c (E.e r'))) /\
-                                                                                         (is_V r' ==> wp3 (V.v r') post))))) in
+                  wp1 (fun (r:result a) -> (E? r ==> post (E #c (E.e r))) /\
+                                           (V? r ==> wp2 (V.v r) (fun (r':result b) -> (E? r' ==> post (E #c (E.e r'))) /\
+                                                                                         (V? r' ==> wp3 (V.v r') post))))) in
                                                                                          
-  let _ = cut (forall (a:Type) (r:result a{is_E r}) (b:Type). E.e (E #b (E.e r)) = E.e r) in
+  let _ = cut (forall (a:Type) (r:result a{E? r}) (b:Type). E.e (E #b (E.e r)) = E.e r) in
   
   (*let _ = assert (forall (post:Post c).
                   wp_bind (wp_bind wp1 wp2) wp3 post ==>
-                  wp1 (fun (r:result a) -> (is_E r ==> post (E #c (E.e r))) /\
-                                           (is_V r ==> wp2 (V.v r) (fun (r':result b) -> (is_E r' ==> post (E #c (E.e r'))) /\
-                                                                                         (is_V r' ==> wp3 (V.v r') post))))) in
+                  wp1 (fun (r:result a) -> (E? r ==> post (E #c (E.e r))) /\
+                                           (V? r ==> wp2 (V.v r) (fun (r':result b) -> (E? r' ==> post (E #c (E.e r'))) /\
+                                                                                         (V? r' ==> wp3 (V.v r') post))))) in
 *)
   admit ()
 

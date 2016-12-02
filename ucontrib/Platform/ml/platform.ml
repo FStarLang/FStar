@@ -6,11 +6,11 @@ module Error = struct
   let perror (file:string) (line:Z.t) (text:string) =
       text
 
-  let is_Correct = function
+  let uu___is_Correct = function
     | Correct _ -> true
     | _ -> false
 
-  let is_Error = function
+  let uu___is_Error = function
     | Error _ -> true
     | _ -> false
 

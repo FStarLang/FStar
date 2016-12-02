@@ -72,7 +72,7 @@ let above #i x z = x.iv = z.iv && x.ctr >=^ z.ctr
 // the range of our PRF, after idealization and "reverse inlining."
 // for one-time-pads, we keep both the plain and cipher blocks, instead of their XOR.
 
-type smac (rgn:region) (i:id) x = mac: MAC.state (i,x.iv) { MAC.State.region mac = rgn }
+type smac (rgn:region) (i:id) x = mac: MAC.state (i,x.iv) { MAC.State?.region mac = rgn }
 noeq type otp (i:id) = | OTP: l:u32 {l <=^ blocklen i} -> plain i (v l) -> cipher:lbytes (v l) -> otp i
 
 let range (mac_rgn:region) (i:id) (x:domain i): Type0 =
@@ -125,7 +125,7 @@ noeq type state (i:id) =
 	   #mac_rgn: region{mac_rgn `HH.extends` rgn} ->
            // key is immutable once generated, we should make it private
            key: lbuffer (v (keylen i)) 
-             {Buffer.frameOf key = rgn /\ ~(HS.MkRef.mm (Buffer.content key))} ->
+             {Buffer.frameOf key = rgn /\ ~(HS.MkRef?.mm (Buffer.content key))} ->
            table: table_t rgn mac_rgn i ->
            state i
 
@@ -204,8 +204,8 @@ val prf_mac:
        | Some mac' -> 
 	 h0 == h1 /\ // when decrypting
 	 mac == mac' /\ 
-	 MAC (norm h1 mac.r) /\
-	 MAC (Buffer.live h1 mac.s)
+	 MAC.(norm h1 mac'.r) /\ (* [MAC.mac] is defined, so shadows local definition [mac] *)
+	 MAC.(Buffer.live h1 mac'.s)
        | None ->  // when encrypting, we get the stateful post of MAC.create             
          (match find_mac (HS.sel h1 r) x with 
           | Some mac' -> 
@@ -236,17 +236,18 @@ let prf_mac i t x =
     recall r;
     let contents = !r in
     match find_mac contents x with
-    | Some mac -> 
-      assume (MAC (norm h0 mac.r)); //TODO: replace this using monotonicity
-      assume (HS (Buffer (MAC (not ((Buffer.content mac.s).mm))))); //TODO: mark this as not manually managed
-      Buffer.recall (MAC mac.s);
+    | Some mac ->
+      let mac' = mac in (* [MAC.mac] is defined, so shadows locally defined [mac] *)
+      assume (MAC.(norm h0 mac'.r)); //TODO: replace this using monotonicity
+      assume (HS.(Buffer.(MAC.(not ((Buffer.content mac'.s).mm))))); //TODO: mark this as not manually managed
+      Buffer.recall (MAC.(mac'.s));
       mac
     | None ->
       let mac = MAC.gen macId t.mac_rgn in
       r := SeqProperties.snoc contents (Entry x mac);
       assume false; 
       //16-10-16 framing after chang eto genPost0?
-      //let h = ST.get() in assume(MAC(norm h mac.r));
+      //let h = ST.get() in assume(MAC.(norm h mac.r));
       mac
     end
   else

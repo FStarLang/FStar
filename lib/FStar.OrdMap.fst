@@ -10,7 +10,7 @@ opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
 type cmp (a:Type) = f:(a -> a -> Tot bool){total_order a f}
 
 private type map_t (k:Type) (v:Type) (f:cmp k) (d:ordset k f) =
-  g:(k -> Tot (option v)){(forall x. (mem #k #f x d = is_Some (g x)))}
+  g:(k -> Tot (option v)){(forall x. (mem #k #f x d = Some? (g x)))}
 
 abstract type ordmap: key:Type -> value:Type -> cmp key -> Type =
   | Mk_map: #k:Type -> #v:Type -> #f:cmp k -> d:ordset k f -> m:map_t k v f d -> ordmap k v f
@@ -131,7 +131,7 @@ let sel_empty (#k:Type) (#v:Type) #f x = ()
                   
 abstract val sel_contains: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
                   -> Lemma (requires (True))
-                           (ensures (contains #k #v #f x m = is_Some (select #k #v #f x m)))
+                           (ensures (contains #k #v #f x m = Some? (select #k #v #f x m)))
                      [SMTPat (select #k #v #f x m); SMTPat (contains #k #v #f x m)]
 let sel_contains (#k:Type) (#v:Type) #f x m = ()
 
@@ -176,7 +176,7 @@ let eq_remove (#k:Type) (#v:Type) #f x m =
   ()
 
 abstract val choose_empty: #k:Type -> #v:Type -> #f:cmp k
-                 -> Lemma (requires True) (ensures (is_None (choose #k #v #f
+                 -> Lemma (requires True) (ensures (None? (choose #k #v #f
                                                              (empty #k #v #f))))
                     [SMTPat (choose #k #v #f (empty #k #v #f))]
 let choose_empty (#k:Type) (#v:Type) #f = ()
@@ -194,7 +194,7 @@ let dom_empty_helper (#k:Type) (#v:Type) #f m =
 
 abstract val choose_m: #k:Type -> #v:Type -> #f:cmp k -> m:ordmap k v f
              -> Lemma (requires (~ (Equal m (empty #k #v #f))))
-                     (ensures (is_Some (choose #k #v #f m) /\
+                     (ensures (Some? (choose #k #v #f m) /\
                                 (select #k #v #f (fst (Some.v (choose #k #v #f m))) m =
                                  Some (snd (Some.v (choose #k #v #f m)))) /\
                                 (Equal m (update #k #v #f (fst (Some.v (choose #k #v #f m)))

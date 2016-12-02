@@ -45,7 +45,7 @@ type ni_exp (env:label_fun) (e:exp) (l:label) = double unit -> ST2 (double int)
              /\ equal (R.r h0) (R.r h1)
              /\ R.l r = interpret_exp (R.l h0) e
              /\ R.r r = interpret_exp (R.r h0) e
-             /\ (low_equiv env h0 /\ is_Low l ==> R.l r = R.r r)))
+             /\ (low_equiv env h0 /\ Low? l ==> R.l r = R.r r)))
 
 
 (* env,pc:l |- c
@@ -61,9 +61,9 @@ type ni_com (env:label_fun) (c:com) (l:label) = double unit -> ST2 (double unit)
                   ==>   sel (R.l h0) r = sel (R.l h1) r
                     /\ sel (R.r h0) r = sel (R.r h1) r)
                 /\ Let (interpret_com (R.l h0) c) (fun o -> 
-                    is_Some o ==> equal (Some.v o) (R.l h1))
+                    Some? o ==> equal (Some.v o) (R.l h1))
                 /\ Let (interpret_com (R.r h0) c) (fun o -> 
-                    is_Some o ==> equal (Some.v o) (R.r h1))
+                    Some? o ==> equal (Some.v o) (R.r h1))
                 /\ (low_equiv env h0 ==> low_equiv env h1)))
 
 
@@ -194,13 +194,13 @@ val loop_loop : env:label_fun -> e:exp -> c:com -> v:variant -> l:label
                   ==>   sel (R.l h0) r = sel (R.l h1) r
                     /\ sel (R.r h0) r = sel (R.r h1) r)
                 /\ Let (interpret_com (R.l h0) c) (fun o -> 
-                    is_Some o ==> 
+                    Some? o ==> 
                     Let (interpret_com (Some.v o) (While e c v)) (fun o -> 
-                      is_Some o ==> equal (Some.v o) (R.l h1)))
+                      Some? o ==> equal (Some.v o) (R.l h1)))
                 /\ Let (interpret_com (R.r h0) c) (fun o -> 
-                    is_Some o ==> 
+                    Some? o ==> 
                     Let (interpret_com (Some.v o) (While e c v)) (fun o -> 
-                      is_Some o ==> equal (Some.v o) (R.r h1)))
+                      Some? o ==> equal (Some.v o) (R.r h1)))
                 /\ (low_equiv env h0 ==> low_equiv env h1)))
 
 (* While rule for commands
@@ -220,9 +220,9 @@ val loop_com : env:label_fun -> e:exp -> c:com -> v:variant -> l:label
                   ==>   sel (R.l h0) r = sel (R.l h1) r
                     /\ sel (R.r h0) r = sel (R.r h1) r)
                 /\ Let (interpret_com (R.l h0) (While e c v)) (fun o -> 
-                    is_Some o ==> equal (Some.v o) (R.l h1))
+                    Some? o ==> equal (Some.v o) (R.l h1))
                 /\ Let (interpret_com (R.r h0) (While e c v)) (fun o -> 
-                    is_Some o ==> equal (Some.v o) (R.r h1))
+                    Some? o ==> equal (Some.v o) (R.r h1))
                 /\ (low_equiv env h0 ==> low_equiv env h1)))
 
 let rec loop_com env e c v l e_ni c_ni _ = 
@@ -278,7 +278,7 @@ let rec tc_com env l c =
   | Seq c1 c2 ->
     let r1 = tc_com env l c1 in   
     let r2 = tc_com env l c2 in 
-    if is_None r1 || is_None r2 then
+    if None? r1 || None? r2 then
       None
     else
       Some (seq_com env c1 c2 l (Some.v r1) (Some.v r2))
@@ -289,7 +289,7 @@ let rec tc_com env l c =
     let r1 = sub_exp env e l1' l1 r1' in
     let r2 = tc_com env l1 ct in 
     let r3 = tc_com env l1 cf in 
-    if is_None r2 || is_None r3 then
+    if None? r2 || None? r3 then
       None
     else
       let s = cond_com env e ct cf l1 r1 (Some.v r2) (Some.v r3) in 
@@ -300,7 +300,7 @@ let rec tc_com env l c =
     let l1 = if l1' <= l then l else l1' in 
     let r1 = sub_exp env e l1' l1 r1' in
     let r2 = tc_com env l1 cb in 
-    if is_None r2 then 
+    if None? r2 then 
       None
     else
       let s = loop_com env e cb v l1 r1 (Some.v r2) in

@@ -37,14 +37,14 @@ reifiable reflectable new_effect_for_free {
 }
 
 (* A lift from `Pure´ into the new effect *)
-unfold let lift_pure_ex (a:Type) (wp:pure_wp a) (_:unit) (p:EXN.post a) =
+unfold let lift_pure_ex (a:Type) (wp:pure_wp a) (_:unit) (p:EXN?.post a) =
   wp (fun a -> p (Some a))
 sub_effect PURE ~> EXN = lift_pure_ex
 
 (* An effect to alias easily write pre- and postconditions *)
-(* Note: we use Type0 instead of EXN.pre to avoid having to thunk everything. *)
-effect Exn (a:Type) (pre:Type0) (post:EXN.post a) =
-  EXN a (fun (_:unit) (p:EXN.post a) -> pre /\
+(* Note: we use Type0 instead of EXN?.pre to avoid having to thunk everything. *)
+effect Exn (a:Type) (pre:Type0) (post:EXN?.post a) =
+  EXN a (fun (_:unit) (p:EXN?.post a) -> pre /\
           (forall (r:option a). (pre /\ post r) ==> p r))
 
 (* Another alias. Ex a is the effect type for total exception-throwing
@@ -81,11 +81,11 @@ val div_intrinsic : i:nat -> j:int -> Exn int
   (requires True)
   (ensures (function None -> j=0 | Some z -> j<>0 /\ z = i / j))
 let div_intrinsic i j =
-  if j=0 then EXN.raise int
+  if j=0 then EXN?.raise int
   else i / j
 
 reifiable let div_extrinsic (i:nat) (j:int) : Ex int =
-  if j=0 then EXN.raise int
+  if j=0 then EXN?.raise int
   else i / j
 
 let lemma_div_extrinsic (i:nat) (j:int) :
@@ -98,9 +98,9 @@ let lemma_div_extrinsic (i:nat) (j:int) :
  * Here we define raise_ as a pure function working with the
  * representation of Ex.
  *)
-val raise_ : a:Type -> Tot (EXN.repr a (fun (_:unit) (p:EXN.post a) -> p None))
+val raise_ : a:Type -> Tot (EXN?.repr a (fun (_:unit) (p:EXN?.post a) -> p None))
 let raise_ a (_:unit) = None
 
 (* We reflect it back to Exn *)
 reifiable let raise__ (a:Type) : Exn a True (fun r -> r == None)
-  = EXN.reflect (raise_ a)
+  = EXN?.reflect (raise_ a)

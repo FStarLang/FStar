@@ -915,7 +915,7 @@ in (match (_58_591) with
 (no_reflect ())
 end
 | Some (ed) -> begin
-if (not ((FStar_All.pipe_right ed.FStar_Syntax_Syntax.qualifiers (FStar_List.contains FStar_Syntax_Syntax.Reflectable)))) then begin
+if (not ((FStar_All.pipe_right ed.FStar_Syntax_Syntax.qualifiers FStar_Syntax_Syntax.contains_reflectable))) then begin
 (no_reflect ())
 end else begin
 (

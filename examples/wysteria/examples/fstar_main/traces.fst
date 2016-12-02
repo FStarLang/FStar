@@ -500,18 +500,18 @@ let rec lemma_row_elim_some b s j0 j =
     if j0=j then ()
     else lemma_row_elim_some b s (j0 + 1) j
 
-val lemma_row_elims_until: b:seq int -> row:seq entry{Seq.length row = Seq.length b} -> l:list int{is_Cons l}
+val lemma_row_elims_until: b:seq int -> row:seq entry{Seq.length row = Seq.length b} -> l:list int{Cons? l}
 			   -> i:bound b -> j:ix b{i < j}
 			   -> Lemma 
   (requires (l = row_as_list b row i 
 	    /\ elim_streak row (i + 1) j
 	    /\ Seq.index row i <> Elim
 	    /\ Seq.index row j <> Elim))
-  (ensures (Cons.tl l = row_as_list b row j /\ is_Cons (Cons.tl l)))
+  (ensures (Cons.tl l = row_as_list b row j /\ Cons? (Cons.tl l)))
 let lemma_row_elims_until b row l i j = 
     lemma_row_elim_some b row (i + 1) j
 
-val lemma_elim_tail: b:seq int -> row:seq entry{Seq.length row = Seq.length b} -> l:list int{is_Cons l} 
+val lemma_elim_tail: b:seq int -> row:seq entry{Seq.length row = Seq.length b} -> l:list int{Cons? l} 
 		    -> j:ix b 
 		    -> Lemma
   (requires (l=row_as_list b row j
@@ -556,7 +556,7 @@ let next_ith_row_from_false a b i j j' p q =
 
 val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j<j'}
 	    -> p:iter a b i j' -> q:iter a b (i + 1) 0
-	    -> lb:list int{is_Cons lb}
+	    -> lb:list int{Cons? lb}
 	    -> Pure (bound b)
   (requires (lb=row_as_list b (Matrix2.row p i) j 
 	    /\ index p i j = NotEqual 
@@ -633,7 +633,7 @@ let move_elim_streak a b i j j' p q =
   move_elim_streak' a b i j j' q
 
 val next_row_elements: a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:ix b -> j':bound b {j < j'} 
-		     -> lb:list int{is_Cons lb}
+		     -> lb:list int{Cons? lb}
 		     -> p:iter a b i j' 
 		     -> q:iter a b (i + 1) 0
 		     -> Lemma
@@ -645,7 +645,7 @@ val next_row_elements: a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:ix b -> j
 let next_row_elements a b i j j' lb p q = 
   assert (index q i j = NotEqual);
   assert (index q (i + 1) j = Unknown);
-  assert (is_Cons (row_as_list b (row q (i + 1)) j));
+  assert (Cons? (row_as_list b (row q (i + 1)) j));
   assert (Cons.hd (row_as_list b (row q (i + 1)) j) = Cons.hd lb);
   if j + 1 = j'
   then ()
@@ -656,7 +656,7 @@ let next_row_elements a b i j j' lb p q =
 
 val advance':  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j<j'}
 	    -> p:iter a b i j' -> q:iter a b (i + 1) 0
-	    -> lb:list int{is_Cons lb}
+	    -> lb:list int{Cons? lb}
 	    -> Pure (bound b)
   (requires (lb=row_as_list b (Matrix2.row p i) j 
 	    /\ index p i j = NotEqual 

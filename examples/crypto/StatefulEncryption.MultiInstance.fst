@@ -66,7 +66,7 @@ let enc e p =
     c
 
 assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
-            -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
+            -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { None? o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
 
 val dec: d:decryptor -> c:cipher -> ST (option plain)
   (requires (fun h -> True))
@@ -74,8 +74,8 @@ val dec: d:decryptor -> c:cipher -> ST (option plain)
               modifies !{} h0 h1
               /\ (Let (Heap.sel h0 (Dec.log d))
                       (fun log ->
-                          (is_None p ==> (forall (i:nat{i < Seq.length log}). Entry.c (Seq.index log i) <> c))
-                          /\ (is_Some p ==> (exists (i:nat{i < Seq.length log}). Seq.index log i = Entry (Some.v p) c))))))
+                          (None? p ==> (forall (i:nat{i < Seq.length log}). Entry.c (Seq.index log i) <> c))
+                          /\ (Some? p ==> (exists (i:nat{i < Seq.length log}). Seq.index log i = Entry (Some.v p) c))))))
 let dec d c =
   let s = !(Dec.log d) in
   match find_seq (function Entry p c' -> c=c') s with
@@ -173,10 +173,10 @@ val stateful_dec: ad:nat -> d:st_decryptor -> c:cipher -> ST (option plain)
                 /\ modifies !{StDec.ctr d} h0 h1
                 /\ Let (Heap.sel h0 (StDec.ctr d)) (fun (r:nat{r=Heap.sel h0 (StDec.ctr d)}) ->
                    Let (Heap.sel h0 (StDec.log d)) (fun (log:seq statefulEntry{log=Heap.sel h0 (StDec.log d)}) ->
-                    (is_None p ==> (r = Seq.length log                     //nothing encrypted yet
+                    (None? p ==> (r = Seq.length log                     //nothing encrypted yet
                                     || StEntry.c (Seq.index log r) <> c    //bogus cipher
                                     || r <> ad))                           //reading at the wrong postition
-                   /\ (is_Some p ==>
+                   /\ (Some? p ==>
                           ((Heap.sel h1 (StDec.ctr d) = r + 1)
                            /\ StEntry.p (Seq.index log r) = Some.v p))))))
 let stateful_dec ad d c =
