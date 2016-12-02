@@ -377,7 +377,7 @@ end
 
 let _87_378 = (fresh_label default_msg ropt q.FStar_SMTEncoding_Term.rng q)
 in (match (_87_378) with
-| (lab, t) -> begin
+| (lab, q) -> begin
 (((lab)::labels), (q))
 end))
 end

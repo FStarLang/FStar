@@ -1516,6 +1516,7 @@ let trans_qual r = function
   | AST.Unopteq
   | AST.Visible
   | AST.Unfold_for_unification_and_vcgen
+  | AST.NoExtract -> raise (Error("The noextract qualifier is supported only with the --universes option", r))
   | AST.Inline_for_extraction -> raise (Error("This qualifier is supported only with the --universes option", r))
 
 let trans_pragma = function
