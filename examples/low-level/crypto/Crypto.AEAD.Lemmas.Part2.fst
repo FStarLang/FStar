@@ -63,14 +63,14 @@ let from_x_blocks_included_in (#i:id) (#rgn:rid) (x:PRF.domain i) (blocks:prf_bl
 let contains_all_blocks (#i:id) (#rgn:rid) (e:entry i) (blocks:prf_blocks rgn i) =
   let n = e.nonce in
   let x0 = {iv=n; ctr=ctr_0 i} in
-  forall (y:domain i{y `above` x0 /\ v y.ctr <= v (ctr_0 i) + num_blocks e}). is_Some (find blocks y)
+  forall (y:domain i{y `above` x0 /\ v y.ctr <= v (ctr_0 i) + num_blocks e}). Some? (find blocks y)
 
 val find_entry_blocks:    (i:id) -> (rgn:rid) ->
 			  (n:Cipher.iv (alg i){safeId i}) ->
 			  (entries:aead_entries i) ->
 			  (prf_entries:prf_blocks rgn i) ->
 			  (h:mem{refines h i rgn entries prf_entries /\
-			         is_Some (find_mac prf_entries ({iv=n; ctr=ctr_0 i}))}) ->
+			         Some? (find_mac prf_entries ({iv=n; ctr=ctr_0 i}))}) ->
      Pure (entry i * prf_blocks rgn i)
           (requires True)
 	  (ensures (fun (entry, blocks) ->
@@ -189,7 +189,7 @@ module CMA = Crypto.Symmetric.UF1CMA
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
-    = if CMA.authId (i, PRF x.iv) then
+    = if CMA.authId (i, PRF.(x.iv)) then
 	let r = itable i t in
 	let t_0 = HS.sel h_0 r in 
 	let t_1 = HS.sel h_1 r in
@@ -199,7 +199,7 @@ let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
 	let rgn = t.mac_rgn in
 	assert (find t_0 x == None);
 	find_snoc t_0 ex (PRF.is_entry_domain x);
-	assert (is_Some (find t_1 x));
+	assert (Some? (find t_1 x));
 	assert (find t_1 x == Some ex.range);
 	let y = PRF.incr i x in
 	let aux (z:domain i{z `above` y}) 

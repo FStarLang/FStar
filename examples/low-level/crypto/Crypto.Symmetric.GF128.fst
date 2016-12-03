@@ -38,7 +38,7 @@ private val gf128_add_loop:
 let rec gf128_add_loop a b dep =
   if dep = 0ul then ()
   else
-    let i = U32 (dep -^ 1ul) in
+    let i = U32.(dep -^ 1ul) in
     gf128_add_loop a b i;
     a.(i) <- a.(i) ^^ b.(i)
 
@@ -56,7 +56,7 @@ let gf128_add a b =
   //16-10-27 TODO: functional correctness.
 
   
-private val gf128_shift_right_loop: a:elemB -> dep:u32{U32(dep <^ len)} -> Stack unit
+private val gf128_shift_right_loop: a:elemB -> dep:u32{U32.(dep <^ len)} -> Stack unit
   (requires (fun h -> live h a))
   (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
 let rec gf128_shift_right_loop a dep =
@@ -199,7 +199,7 @@ private val ghash_loop:
   (ensures (fun h0 _ h1 -> live h1 tag /\ live h1 auth_key /\ live h1 str /\ modifies_1 tag h0 h1))
 let rec ghash_loop tag auth_key str len dep =
   (* Appending zeros if the last block is not complete *)
-  let rest = U32(len -^ dep) in 
+  let rest = U32.(len -^ dep) in 
   if rest <> 0ul then 
   if U32.(16ul >=^ rest) then ghash_loop_ tag auth_key str len dep
   else 

@@ -211,9 +211,9 @@ let test() =
   //NS: These 3 separation properties are explicitly violated by allocating st in HH.root
   //    Assuming them for the moment
   assume (
-    HH.disjoint (Buffer.frameOf (Crypto.Plain.as_buffer plain)) (AETypes st.log_region) /\
-    HH.disjoint (Buffer.frameOf cipher) (AETypes st.log_region) /\
-    HH.disjoint (Buffer.frameOf aad) (AETypes st.log_region)
+    HH.disjoint (Buffer.frameOf (Crypto.Plain.as_buffer plain)) (AETypes.(st.log_region)) /\
+    HH.disjoint (Buffer.frameOf cipher) (AETypes.(st.log_region)) /\
+    HH.disjoint (Buffer.frameOf aad) (AETypes.(st.log_region))
   );
   AE.encrypt i st iv aadlen aad plainlen plain cipher;
   let ok_0 = diff "cipher" cipherlen expected_cipher cipher in

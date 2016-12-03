@@ -36,17 +36,17 @@ let find_snoc (#a:Type) (s:Seq.seq a) (x:a) (f:a -> Tot bool)
   = admit() //NS: boring
 
 let find_is_some (#i:id) (#rgn:rid) (b:prf_blocks rgn i) (x:domain i)
-  : Lemma (requires (is_Some (find b x)))
+  : Lemma (requires (Some? (find b x)))
           (ensures (Seq.length b <> 0))
   = admit() //NS: boring
 
 let find_blocks_append_l (#i:id) (#rgn:rid) (b:prf_blocks rgn i) (b':prf_blocks rgn i) (x:domain i) 
-  : Lemma (requires (is_Some (find b x)))
+  : Lemma (requires (Some? (find b x)))
           (ensures (find (Seq.append b b') x == find b x))
   = admit() //NS: boring
 
 let find_append (#i:id) (#r:rid) (d:domain i) (s1:Seq.seq (PRF.entry r i)) (s2:Seq.seq (PRF.entry r i)) 
-   : Lemma (requires (is_None (find s1 d)))
+   : Lemma (requires (None? (find s1 d)))
            (ensures (find (Seq.append s1 s2) d == find s2 d))
    = admit() //NS: boring
 
@@ -68,12 +68,12 @@ let frame_refines_one_entry (h:mem) (i:id{safeId i}) (mac_rgn:region)
 			    (e:entry i) (blocks:Seq.seq (PRF.entry mac_rgn i))
 			    (h':mem)
    : Lemma (requires refines_one_entry h e blocks /\			    
-		     HH.modifies_rref mac_rgn TSet.empty (HS h.h) (HS h'.h) /\
+		     HH.modifies_rref mac_rgn TSet.empty (HS.(h.h)) (HS.(h'.h)) /\
 		     HS.live_region h' mac_rgn)
 	   (ensures  refines_one_entry h' e blocks)
    = let PRF.Entry x rng = Seq.index blocks 0 in
      let m = PRF.macRange mac_rgn i x rng in
-     let mac_log = CMA.ilog (CMA.State.log m) in
+     let mac_log = CMA.ilog (CMA.State?.log m) in
      assert (m_sel h mac_log = m_sel h' mac_log);
      assert (m_contains mac_log h') //this include HS.live_region, which is not derivable from modifies_ref along
 
@@ -82,7 +82,7 @@ let rec frame_refines (i:id{safeId i}) (mac_rgn:region)
 		      (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry mac_rgn i))
 		      (h:mem) (h':mem)
    : Lemma (requires refines h i mac_rgn entries blocks /\
-   		     HH.modifies_rref mac_rgn TSet.empty (HS h.h) (HS h'.h) /\
+   		     HH.modifies_rref mac_rgn TSet.empty (HS.(h.h)) (HS.(h'.h)) /\
 		     HS.live_region h' mac_rgn)
 	   (ensures  refines h' i mac_rgn entries blocks)
 	   (decreases (Seq.length entries))
@@ -118,8 +118,8 @@ unfold let pre_refines_one_entry (i:id) (st:state i Writer) (nonce:Cipher.iv (al
   Seq.equal table_1 (Seq.append table_0 blocks) /\
   b + 1 = Seq.length blocks /\
   (let PRF.Entry x e = Seq.index blocks 0 in
-   PRF (x.iv = nonce) /\
-   PRF (x.ctr = ctr_0 i) /\  (
+   PRF.(x.iv = nonce) /\
+   PRF.(x.ctr = ctr_0 i) /\  (
    let xors = Seq.slice blocks 1 (b+1) in 
    let cipher, tag = SeqProperties.split c_tagged len in
    safelen i len (ctr_0 i +^ 1ul) /\
@@ -180,7 +180,7 @@ val counterblocks_len: #i:id{safeId i} ->
 let rec counterblocks_len #i rgn x len from_pos plain cipher = 
   if from_pos = len
   then ()
-  else let blockl = v (Cipher(blocklen (cipherAlg_of_id i))) in 
+  else let blockl = v (Cipher.(blocklen (cipherAlg_of_id i))) in 
        let remaining = len - from_pos in 
        let l0 = minNat remaining blockl in 
        counterblocks_len #i rgn (PRF.incr i x) len (from_pos + l0) plain cipher
@@ -199,7 +199,7 @@ let intro_refines_one_entry_no_tag
 		      let x_0 = {iv=nonce; ctr=ctr_0 i} in
 	              let c, _ = SeqProperties.split c_tagged len in
 	              h2 `HS.contains` (PRF.itable i st.prf) /\
-		      (exists mac. Seq.equal table_1 (SeqProperties.snoc table_0 (PRF (Entry x_0 mac)))) /\
+		      (exists mac. Seq.equal table_1 (SeqProperties.snoc table_0 (PRF.(Entry x_0 mac)))) /\
 		      safelen i len (ctr_0 i +^ 1ul) /\
 		      table_2 == (Seq.append table_1 (counterblocks i mac_rgn (PRF.incr i x_0) len 0 len p c)))))
 	    (ensures (pre_refines_one_entry i st nonce len plain cipher h0 h2))
@@ -230,9 +230,9 @@ let mac_refines (i:id)
        match PRF.find_mac tab x0 with 
        | None -> False
        | Some m -> 
-         let mac_log = CMA.ilog (CMA.State.log m) in
+         let mac_log = CMA.ilog (CMA.State?.log m) in
 	 m_contains mac_log h /\ (
-	 match m_sel h (CMA.ilog (CMA.State.log m)) with
+	 match m_sel h (CMA.ilog (CMA.State?.log m)) with
 	 | None           -> False
 	 | Some (msg,tag') -> msg = encode_both i (uint_to_t (Seq.length ad)) ad (u len) c /\
 	                     tag = tag')))
@@ -255,8 +255,8 @@ let intro_mac_refines (i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
 		       match PRF.find_mac tab x0 with 
 		       | None -> False
 		       | Some mac_st -> 
-			 m_contains (CMA (ilog mac_st.log)) h /\
-		         m_sel h (CMA (ilog mac_st.log)) == Some (l, Buffer.as_seq h tagB)))))
+			 m_contains (CMA.(ilog mac_st.log)) h /\
+		         m_sel h (CMA.(ilog mac_st.log)) == Some (l, Buffer.as_seq h tagB)))))
            (ensures mac_refines i st nonce aad plain cipher h)
   = ()
  
@@ -327,7 +327,7 @@ let pre_refines_to_refines i st nonce aadlen aad len plain cipher h0 h
 	   let table_1 = HS.sel h (PRF.itable i st.prf) in
   	   let prefix = Seq.slice table_1 0 (Seq.length table_0) in 
 	   assert (Seq.equal prefix table_0);
-	   assert (is_None (find prefix idom));
+	   assert (None? (find prefix idom));
  	   let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in
 	   let p = Plain.sel_plain h (u len) plain in
 	   let c_tagged = Buffer.as_seq h cipher in
@@ -464,7 +464,7 @@ val counterblocks_snoc: #i:id{safeId i} -> (rgn:region) -> (x:domain i{ctr_0 i <
 			 (len:nat{len <> 0 /\ safelen i len (ctr_0 i +^ 1ul)})  ->
 			 (next:nat{0 < next /\ next <= v (PRF.blocklen i)}) ->
 			 (completed_len:nat{ completed_len + next <= len /\ 
-					   FStar.Mul ((k - v (offset i)) * v (PRF.blocklen i) = completed_len)}) ->
+					   FStar.Mul.((k - v (offset i)) * v (PRF.blocklen i) = completed_len)}) ->
 			 (plain:Plain.plain i len) ->
 			 (cipher:lbytes len) ->
      Lemma (requires True)
@@ -555,7 +555,7 @@ let rec counterblocks_slice #i rgn x len from_pos to_pos plain cipher
 val frame_counterblocks_snoc: i:id{safeId i} -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^ x.ctr}) -> k:nat{v x.ctr <= k} ->
 			     len:nat{len <> 0 /\ safelen i len (ctr_0 i +^ 1ul)} -> 
 			     (completed_len:nat{completed_len < len /\
-				              FStar.Mul ((k - v (offset i)) * v (PRF.blocklen i) = completed_len)}) ->
+				              FStar.Mul.((k - v (offset i)) * v (PRF.blocklen i) = completed_len)}) ->
 			     (plain:plainBuffer i len) -> 
 			     (cipher:lbuffer len) ->
 			     (h0:mem{Plain.live h0 plain /\ 
@@ -623,7 +623,7 @@ let invert_contains_plain_and_cipher_block   (#i:id) (#r:rid) (#l:u32{l <=^ PRF.
 val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^ x.ctr}) ->
 			     len:nat{len <> 0 /\ safelen i len (ctr_0 i +^ 1ul)} -> 
 			     (completed_len:nat{completed_len < len /\
-				              FStar.Mul ((v x.ctr - v (offset i)) * v (PRF.blocklen i) = completed_len)}) ->
+				              FStar.Mul.((v x.ctr - v (offset i)) * v (PRF.blocklen i) = completed_len)}) ->
 			     (plain:plainBuffer i len) -> 
 			     (cipher:lbuffer len) ->
 			     (h0:mem{Plain.live h0 plain /\ 

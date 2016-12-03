@@ -98,7 +98,7 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
 //16-11-04 BTW Buffer.disjoint_2 should be strengthened to imply 3 disjoints
 //Move to HS?
 let alog_fresh (#a:Type0) h0 h1 (r:HS.reference a) = 
-    HS.frameOf r == HS h1.tip /\
+    HS.frameOf r == HS.(h1.tip) /\
     h1 `HS.contains` r /\
   ~ (h0 `HS.contains` r)
 
@@ -119,10 +119,10 @@ let accumulate_ensures (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lb
 		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
 		       (h0:mem) (a:CMA.accBuffer i) (h1:mem) =
   Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
-  ~ (h0 `Buffer.contains` (CMA (MAC.as_buffer (a.a)))) /\
+  ~ (h0 `Buffer.contains` (CMA.(MAC.as_buffer (a.a)))) /\
   Buffer.live h1 aad /\ 
   Buffer.live h1 cipher /\
-  Buffer.frameOf (CMA (MAC.as_buffer a.a)) = HS h1.tip /\
+  Buffer.frameOf (CMA.(MAC.as_buffer a.a)) = HS.(h1.tip) /\
   CMA.acc_inv st a h1 /\
   (mac_log ==> 
     alog_fresh h0 h1 (CMA.alog a) /\
@@ -132,14 +132,14 @@ let accumulate_wrapper (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lb
 		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen)) 
    : StackInline (CMA.accBuffer i)
       (requires (fun h0 -> 
-	  CMA(MAC.norm h0 st.r) /\
+	  CMA.(MAC.norm h0 st.r) /\
 	  Buffer.live h0 aad /\ 
 	  Buffer.live h0 cipher))
       (ensures (fun h0 a h1 ->  accumulate_ensures #i st aadlen aad txtlen cipher h0 a h1))
   = let h0 = get () in
     let acc = accumulate #i st aadlen aad txtlen cipher in
     let h1 = get () in
-    assert (Buffer.disjoint_2 (MAC.as_buffer (CMA acc.a)) (CMA st.s) cipher);
+    assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.(acc.a))) (CMA.(st.s)) cipher);
     assume (mac_log ==> alog_fresh h0 h1 (CMA.alog acc)); //NS: this goes away when Encoding.accumulate is restored
     acc
 ////////////////////////////////////////////////////////////////////////////////
@@ -153,10 +153,10 @@ let prf_mac_when_decrypting (i:id) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (
 			    (h0:mem) (mac:CMA.state (i,x.iv)) (h1:mem) (mac':CMA.state (i, x.iv)) =
   h0 == h1 /\
   mac == mac' /\ 
-  CMA (MAC.norm h1 mac.r) /\
-  CMA (Buffer.live h1 mac.s) /\
-  CMA (mac_log ==> m_contains (ilog mac.log) h1) /\
-  (CMA.authId (i, x.iv) ==> is_Some (m_sel h1 (CMA (ilog mac.log))))
+  CMA.(MAC.norm h1 mac'.r) /\ // mac shadowed by CMA.mac
+  CMA.(Buffer.live h1 mac'.s) /\ // mac shadowed by CMA.mac
+  CMA.(mac_log ==> m_contains (ilog mac'.log) h1) /\ // mac shadowed by CMA.mac
+  (CMA.authId (i, x.iv) ==> Some? (m_sel h1 (CMA.(ilog mac'.log)))) // mac shadowed by CMA.mac
 
 let prf_mac_when_encrypting (i:id{prf i}) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:PRF.domain_mac i)
 			    (h0:mem) (mac:CMA.state (i,x.iv)) (h1:mem) =
@@ -206,8 +206,8 @@ let prf_mac_wrapper i t k_0 x =
 //UF1CMA.verify
 ////////////////////////////////////////////////////////////////////////////////
 let verify_liveness (#i:CMA.id) (st:CMA.state i) (tag:lbuffer 16) (h:mem) =
-    Buffer.live h (CMA st.s) /\
-    Buffer.live h (CMA (MAC.as_buffer st.r)) /\
+    Buffer.live h (CMA.(st.s)) /\
+    Buffer.live h (CMA.(MAC.as_buffer st.r)) /\
     Buffer.live h tag
     
 let verify_requires (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) (h0:mem) = 
@@ -217,7 +217,7 @@ let verify_requires (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuf
     Buffer.disjoint_2 (MAC.as_buffer st.r) st.s tag /\
     acc_inv st acc h0 /\
     (mac_log ==> m_contains (ilog st.log) h0) /\
-    (authId i ==> is_Some (m_sel h0 (ilog st.log)))
+    (authId i ==> Some? (m_sel h0 (ilog st.log)))
 			     
 let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
 		     (h:mem{verify_liveness st tag h}) (b:bool)  = 
@@ -256,7 +256,7 @@ let verify_wrapper #i st acc tag =
   let b = CMA.verify #i st acc tag in
   let h1 = get() in
   Buffer.lemma_reveal_modifies_0 h0 h1;
-  assert (mac_log ==> m_sel h0 (CMA (ilog st.log)) == m_sel h1 (CMA (ilog st.log)));
+  assert (mac_log ==> m_sel h0 (CMA.(ilog st.log)) == m_sel h1 (CMA.(ilog st.log)));
   b
 ////////////////////////////////////////////////////////////////////////////////
 //end UF1CMA.verify

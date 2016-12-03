@@ -204,7 +204,7 @@ private val add_bytes:
   (requires (fun h0 -> 
     Buffer.live h0 txt /\ CMA.acc_inv st a h0))
   (ensures (fun h0 () h1 -> 
-    Buffer.modifies_1 (CMA(MAC.as_buffer a.a)) h0 h1 /\ 
+    Buffer.modifies_1 (CMA.(MAC.as_buffer a.a)) h0 h1 /\ 
     Buffer.live h1 txt /\ CMA.acc_inv st a h1 /\
     (mac_log ==> (
       let l0 = FStar.HyperStack.sel h0 (CMA.alog a) in
@@ -336,15 +336,15 @@ val accumulate:
   aadlen:aadlen_32 -> aad:lbuffer (v aadlen) ->
   txtlen:txtlen_32 -> cipher:lbuffer (v txtlen) -> StackInline (CMA.accBuffer i)
   (requires (fun h0 -> 
-    CMA(MAC.norm h0 st.r) /\
+    CMA.(MAC.norm h0 st.r) /\
     Buffer.live h0 aad /\ 
     Buffer.live h0 cipher))
   (ensures (fun h0 a h1 -> 
     Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
-    ~ (h0 `Buffer.contains` (CMA (MAC.as_buffer (a.a)))) /\
+    ~ (h0 `Buffer.contains` (CMA.(MAC.as_buffer (a.a)))) /\
     Buffer.live h1 aad /\ 
     Buffer.live h1 cipher /\
-    Buffer.frameOf (CMA (MAC.as_buffer a.a)) = h1.tip /\
+    Buffer.frameOf (CMA.(MAC.as_buffer a.a)) = h1.tip /\
     CMA.acc_inv st a h1 /\
     (mac_log ==> 
       FStar.HyperStack.sel h1 (CMA.alog a) ==
@@ -361,11 +361,11 @@ let accumulate #i st aadlen aad txtlen cipher  =
   assume false;//16-11-01
 
   //16-10-16 :(
-  assert (Buffer.disjoint_2 (MAC.as_buffer (CMA acc.a)) aad cipher);
+  assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.(acc.a))) aad cipher);
 
   add_bytes st acc aadlen aad;
   let h1 = ST.get() in 
-  Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA acc.a)) h0 h1;
+  Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.(acc.a))) h0 h1;
   //NS: this one fails too (11/10)
   assert(mac_log ==> 
     FStar.HyperStack.sel h1 (CMA.alog acc) == encode_bytes (Buffer.as_seq h1 aad));

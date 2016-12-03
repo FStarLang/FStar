@@ -30,7 +30,7 @@ open Crypto.AEAD.Lemmas.Part2
 
 let modifies_push_pop (h:HS.mem) (h0:HS.mem) (h5:HS.mem) (r:Set.set HH.rid)
   : Lemma (requires (HS.fresh_frame h h0 /\
-		     HS.modifies_transitively (Set.union r (Set.singleton (HS h0.tip))) h0 h5))
+		     HS.modifies_transitively (Set.union r (Set.singleton (HS.(h0.tip)))) h0 h5))
           (ensures (HS.poppable h5 /\ HS.modifies_transitively r h (HS.pop h5)))
   = ()
 
@@ -52,7 +52,7 @@ val refines_to_inv: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)) -
 		      Buffer.live h1 aad /\ 
 		      Plain.live h1 plain /\ 
 		      Buffer.live h1 cipher /\ (
-		      HS (h1.h) `Map.contains` st.prf.mac_rgn /\
+		      HS.(h1.h) `Map.contains` st.prf.mac_rgn /\
 		      h1 `HS.contains` st.log /\
 		      (safeId i ==> (
 			let mac_rgn = st.prf.mac_rgn in
@@ -124,13 +124,13 @@ let lemma_frame_find_mac (#i:id) (#l:nat) (st:PRF.state i)
 open FStar.Heap
 let modifies_fresh_empty (i:id) (n: Cipher.iv (alg i)) (r:rid) (m:CMA.state (i,n)) 
 			 (h0:mem) (h1:mem) (h2:mem) 
-  : Lemma (requires (HS (h0.h) `Map.contains` r /\
+  : Lemma (requires (HS.(h0.h) `Map.contains` r /\
 		     HS.modifies_ref r TSet.empty h0 h1 /\
 		    (mac_log ==> 
-		        (let ref = CMA (as_hsref (ilog m.log)) in
+		        (let ref = CMA.(as_hsref (ilog m.log)) in
 			 HS.frameOf ref == r /\
 			 HS.modifies_ref r (TSet.singleton (HS.as_aref ref)) h1 h2)) /\
-		    (safeId i ==> ~ (m_contains (CMA (ilog m.log)) h0))))
+		    (safeId i ==> ~ (m_contains (CMA.(ilog m.log)) h0))))
           (ensures (safeId i ==> HS.modifies_ref r TSet.empty h0 h2))
   = ()
 

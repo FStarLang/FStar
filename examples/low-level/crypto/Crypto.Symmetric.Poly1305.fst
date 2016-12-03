@@ -878,11 +878,11 @@ let append_cons_snoc #a s1 hd tl =
     (Seq.append (SeqProperties.snoc s1 hd) tl)
 
 val snoc_cons: #a:Type -> s:Seq.seq a -> x:a -> y:a -> Lemma
-  (FStar.SeqProperties (Seq.equal (snoc (cons x s) y) (cons x (snoc s y))))
+  (FStar.SeqProperties.(Seq.equal (snoc (cons x s) y) (cons x (snoc s y))))
 let snoc_cons #a s x y = ()
 
 val append_assoc: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> s3:Seq.seq a -> Lemma
-  (FStar.Seq (equal (append s1 (append s2 s3)) (append (append s1 s2) s3)))
+  (FStar.Seq.(equal (append s1 (append s2 s3)) (append (append s1 s2) s3)))
 let append_assoc #a s1 s2 s3 = ()
 #set-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
@@ -940,7 +940,7 @@ let rec encode_bytes_append len s w =
     snoc_encode_bytes (append s' w) w0;
     append_assoc w0 s' w;
     snoc_cons (encode_bytes s') w w0;
-    encode_bytes_append (U32(len -^ 16ul)) s' w
+    encode_bytes_append (U32.(len -^ 16ul)) s' w
     end
 
 
@@ -980,18 +980,18 @@ let rec poly1305_loop log msg acc r ctr =
     let msg1 = offset msg 16ul in
     eval_eq_lemma h0 h1 r r norm_length;
     assert (live h1 msg1 /\ norm h1 acc /\ norm h1 r /\ modifies_1 acc h0 h1);
-    let log2 = poly1305_loop log1 msg1 acc r (U32 (ctr -^ 1ul)) in
+    let log2 = poly1305_loop log1 msg1 acc r (U32.(ctr -^ 1ul)) in
     if mac_log then
       begin
       assert (sel_elem h1 acc == poly (ilog log1) (sel_elem h0 r));
       assert (ilog log1 == SeqProperties.cons (sel_word h0 msg0) (ilog log));
-      let s = as_seq h0 (sub msg1 0ul (UInt32.mul 16ul (U32 (ctr -^ 1ul)))) in
+      let s = as_seq h0 (sub msg1 0ul (UInt32.mul 16ul (U32.(ctr -^ 1ul)))) in
       append_cons_snoc (encode_bytes s) (sel_word h0 msg0) (ilog log);
    //   assert (ilog log2 ==
    //     Seq.append (SeqProperties.snoc (encode_bytes s) 
    //                (sel_word h0 msg0)) (ilog log));
       snoc_encode_bytes 
-        (as_seq h0 (sub msg1 0ul (U32.mul 16ul (U32 (ctr -^ 1ul)))))
+        (as_seq h0 (sub msg1 0ul (U32.mul 16ul (U32.(ctr -^ 1ul)))))
         (sel_word h0 msg0);
       append_as_seq_sub h0 (U32.mul 16ul ctr) 16ul msg
    //   assert (Seq.equal
@@ -1032,7 +1032,8 @@ let poly1305_process msg len acc r =
     Seq.equal (ilog log1)
       (encode_bytes (as_seq h0 (sub msg 0ul (UInt32.mul 16ul ctr))))
     /\ sel_elem h1 acc == poly (ilog log1) (sel_elem h0 r));
-  if U32 (rem =^ 0ul) then
+  let rem' = rem in (* rem shadowed by U32.rem *)
+  if U32.(rem' =^ 0ul) then
     Seq.lemma_eq_intro
       (as_seq h0 (sub msg 0ul (UInt32.mul 16ul ctr)))
       (as_seq h0 msg)

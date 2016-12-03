@@ -25,9 +25,11 @@ inline_for_extraction let blocklen = function
   | AES128   -> 16ul
   | AES256   -> 16ul
   | CHACHA20 -> 64ul
+inline_for_extraction
 private let blocklen' = blocklen (* blocklen may be shadowed by Crypto.Symmetric.AES *)
 
 inline_for_extraction let ivlen (a:alg) = 12ul 
+inline_for_extraction private let ivlen' = ivlen (* may be shadowed by Crypto.Symmetric.Chacha20.ivlen *)
 
 // Initialization function
 // AES: S-box (256) + expanded key 4*nb*(nr+1)
@@ -119,6 +121,7 @@ let compute i output st n counter len =
       let open Crypto.Symmetric.AES128 in
       let sbox = Buffer.sub st 0ul 256ul in
       let w = Buffer.sub st 256ul 176ul in
+      let blocklen = blocklen' in (* shadowed by Crypto.Symmetric.AES128 *)
       let ctr_block = Buffer.create 0uy (blocklen AES128) in
       store_uint128 (ivlen AES128) (Buffer.sub ctr_block 0ul (ivlen AES128)) n;
       aes_store_counter ctr_block counter;
@@ -132,6 +135,7 @@ let compute i output st n counter len =
       let open Crypto.Symmetric.AES in 
       let sbox = Buffer.sub st 0ul 256ul in
       let w = Buffer.sub st 256ul 240ul in
+      let blocklen = blocklen' in (* shadowed by Crypto.Symmetric.AES *)
       let ctr_block = Buffer.create 0uy (blocklen AES256) in 
       store_uint128 (ivlen AES256) (Buffer.sub ctr_block 0ul (ivlen AES256)) n;
       aes_store_counter ctr_block counter; 

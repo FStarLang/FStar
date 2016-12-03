@@ -33,9 +33,9 @@ inline_for_extraction let nb =  4ul
 inline_for_extraction let nk =  8ul // 4, 6, or 8
 inline_for_extraction let nr = 14ul // 10, 12, or 14
 
-let blocklen = U32(4ul *^ nb)
-let keylen   = U32(4ul *^ nk)
-let xkeylen  = U32(4ul *^ nb *^ (nr +^ 1ul)) // 176, 208, or 240
+let blocklen = U32.(4ul *^ nb)
+let keylen   = U32.(4ul *^ nk)
+let xkeylen  = U32.(4ul *^ nb *^ (nr +^ 1ul)) // 176, 208, or 240
 
 type block = lbytes (v blocklen)
 type skey  = lbytes (v keylen)
@@ -540,7 +540,7 @@ let keyExpansion_aux_0 w temp sbox j =
     subWord temp sbox;
     let t0 = temp.(0ul) in
     let rc = rcon (j/^nk) 1uy in
-    let z = H8 (t0 ^^ rc) in
+    let z = H8.(t0 ^^ rc) in
     temp.(0ul) <- z ) 
   else if j %^ nk = 4ul then 
     subWord temp sbox
@@ -690,7 +690,7 @@ let inv_cipher out input w sbox =
   let state = create 0uy blocklen in
   blit input 0ul   state 0ul blocklen;
   addRoundKey      state w nr;
-  inv_cipher_loop  state w sbox (U32(nr -^ 1ul));
+  inv_cipher_loop  state w sbox (U32.(nr -^ 1ul));
   invShiftRows     state;
   invSubBytes_sbox state sbox;
   addRoundKey      state w 0ul;

@@ -80,8 +80,8 @@ noeq type _buffer =
 
 type pub_elemB (i:id) = b:_buffer
   { match alg i with
-  | POLY1305 -> is_B_POLY1305 b
-  | GHASH    -> is_B_GHASH b }
+  | POLY1305 -> B_POLY1305? b
+  | GHASH    -> B_GHASH? b }
 
 abstract type elemB (i:id) = pub_elemB i
 
@@ -165,7 +165,7 @@ val create: i:id -> StackInline (elemB i)
      ~(Buffer.contains h0 b) /\ 
      norm h1 r /\
      sel_elem h1 r = zero i /\
-     Buffer.frameOf b = HS(h0.tip) /\ // /\ Map.domain h1.h == Map.domain h0.h
+     Buffer.frameOf b = HS.(h0.tip) /\ // /\ Map.domain h1.h == Map.domain h0.h
      Buffer.modifies_0 h0 h1 ))
 
 let create i =
@@ -244,7 +244,7 @@ val start: #i:id -> StackInline (elemB i)
        ~(Buffer.contains h0 b)
      /\ norm h1 r 
      /\ sel_elem h1 r = zero i 
-     /\ Buffer.frameOf b = HS(h0.tip) // /\ Map.domain h1.h == Map.domain h0.h
+     /\ Buffer.frameOf b = HS.(h0.tip) // /\ Map.domain h1.h == Map.domain h0.h
      /\ Buffer.modifies_0 h0 h1 ))
 //16-11-27 factor out this kind of post?
 

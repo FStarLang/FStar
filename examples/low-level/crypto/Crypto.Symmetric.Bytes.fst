@@ -332,8 +332,9 @@ let rec load_uint128 len buf =
     assert (256 * pow2 (8 * v len - 8) - 256 <= pow2 128 - 256);
     Math.Lemmas.modulo_lemma (256 * UInt128.v n) (pow2 128);
     assert_norm (pow2 (UInt32.v 8ul) == 256);
-    assert (256 * UInt128.v n == FStar.UInt128 (v (n <<^ 8ul)));
-    FStar.UInt128(uint8_to_uint128 b +^ (n <<^ 8ul))
+    let n' = n in (* n shadowed by FStar.UInt128.n *)
+    assert (256 * UInt128.v n' == FStar.UInt128.(v (n' <<^ 8ul)));
+    FStar.UInt128.(uint8_to_uint128 b +^ (n' <<^ 8ul))
 
 
 (* stores a machine integer into a buffer of len bytes *)
@@ -370,7 +371,8 @@ let rec store_big32 len buf n =
   if len <> 0ul then
     let len = len -^ 1ul in 
     let b = uint32_to_uint8 n in
-    let n' = FStar.UInt32(n >>^ 8ul) in 
+    let n1 = n in (* n shadowed by FStar.UInt32.n *)
+    let n' = FStar.UInt32.(n1 >>^ 8ul) in 
     assert(v n = UInt8.v b + 256 * v n');
     let buf' = Buffer.sub buf 0ul len in
     Math.Lemmas.pow2_plus 8 (8 * v len);
@@ -410,7 +412,8 @@ let rec uint32_be len n =
   else
     let len = len -^ 1ul in 
     let byte = uint32_to_uint8 n in
-    let n' = FStar.UInt32(n >>^ 8ul) in 
+    let n1 = n in (* n shadowed by FStar.UInt32.n *)
+    let n' = FStar.UInt32.(n1 >>^ 8ul) in 
     assert(v n = UInt8.v byte + 256 * v n');
     Math.Lemmas.pow2_plus 8 (8 * v len);
     assert_norm (pow2 8 == 256);
