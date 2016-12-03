@@ -41,7 +41,7 @@ let frame_myinv_push (#i:id) (#rw:rw) (st:state i rw) (h:mem) (h1:mem)
    = if safeId i
      then frame_refines i st.prf.mac_rgn (HS.sel h st.log) (HS.sel h (PRF.itable i st.prf)) h h1
 
-#reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val refines_to_inv: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)) ->
 		       (aadlen: UInt32.t {aadlen <=^ aadmax}) ->
 		       (aad: lbuffer (v aadlen)) ->

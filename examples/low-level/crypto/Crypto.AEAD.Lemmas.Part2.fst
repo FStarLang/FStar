@@ -28,7 +28,7 @@ let aead_entries i = Seq.seq (entry i)
 
 module Cipher = Crypto.Symmetric.Cipher
 
-#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0 --z3timeout 1000"
+#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 1000"
 let invert_refines (h:mem) (i:id {safeId i}) (rgn:region)
 		   (entries: Seq.seq (entry i)) (blocks: Seq.seq (PRF.entry rgn i))
    : Lemma (refines h i rgn entries blocks
@@ -82,7 +82,7 @@ val find_entry_blocks:    (i:id) -> (rgn:rid) ->
 			find_mac prf_entries x0 == Some (PRF.macRange rgn i x0 (Seq.index blocks 0).range)))
 	  (decreases (Seq.length entries))
 	  
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 100"
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 let rec find_entry_blocks i rgn n entries prf_entries h =
   let x0 = {iv=n; ctr=ctr_0 i} in
   let x1 = PRF.incr i x0 in

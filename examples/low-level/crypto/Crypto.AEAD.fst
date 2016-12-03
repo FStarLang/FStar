@@ -201,7 +201,7 @@ let rec counter_enxor i t x len remaining_len plain cipher h_init =
 let prf_state (#i:id) (#rw:rw) (e:state i rw) : PRF.state i = State?.prf e
 ////////////////////////////////////////////////////////////////////////////////
 
-#reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val extend_refines_aux: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)) ->
 		       (aadlen: UInt32.t {aadlen <=^ aadmax}) ->
 		       (aad: lbuffer (v aadlen)) ->
@@ -251,7 +251,7 @@ let extend_refines_aux i st nonce aadlen aad len plain cipher h0 h1 =
      let entry = Entry nonce ad len p c_tagged in
      extend_refines h0 i mac_rgn entries_0 blocks_0 entry blocks_1 h1
 
-#reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let encrypt_ensures' (regions:Set.set HH.rid)
 		     (i:id) (st:state i Writer)
 		     (n: Cipher.iv (alg i))
@@ -339,7 +339,7 @@ val finish_after_mac: h0:mem -> h3:mem -> i:id -> st:state i Writer ->
    (ensures (fun _ _ h5 -> 
               encrypt_ensures_tip i st n aadlen aad plainlen plain cipher_tagged h0 h5))
 
-#reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let finish_after_mac h0 h3 i st n aadlen aad plainlen plain cipher_tagged ak acc tag = 
   if prf i then recall (itable i st.prf);
   if safeId i then recall st.log;
@@ -493,7 +493,7 @@ let dexor_modifies (#i:id) (#len:u32) (t:PRF.state i) (x:PRF.domain i)
    then Buffer.modifies_1 (as_buffer pb) h0 h1
    else modifies_table_above_x_and_buffer t x (as_buffer pb) h0 h1
 
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let dexor_of_prf_dexor_modifies (#i:id) (#len:u32) (t:PRF.state i) 
 				(x:PRF.domain i{ctr_0 i <^ x.ctr}) 
 				(pb:plainBuffer i (v len)) (h0:mem) (h1:mem)
@@ -555,7 +555,7 @@ let rec contains_all_blocks (#i:id) (#r:rid)
 	  contains_plain_block x plain_hd blocks /\
 	  contains_all_blocks (PRF.incr i x) len (remaining_len -^ l) plain cipher blocks
 
-#reset-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let counter_dexor_sep (#i:id) (#len:u32)
 		      (t:PRF.state i) 
 		      (plain:plainBuffer i (v len))
@@ -603,7 +603,7 @@ let frame_contains_all_blocks (i:id)
 		     contains_all_blocks' x len remaining_len p cipher t h1))
    = FStar.Classical.move_requires (FStar.Buffer.lemma_reveal_modifies_1 (as_buffer pb) h0) h1
 
-#reset-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let invert_contains_all_blocks (i:id) 
 				      (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
 				      (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
@@ -680,7 +680,7 @@ val extend_decrypted_up_to: #i:id -> (t:PRF.state i) -> (x:PRF.domain i) ->
 		      Plain.live h1 pb /\
 		      (safeId i ==> 
 			   decrypted_up_to (starting_pos +^ l) pb p h1)))
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let extend_decrypted_up_to #i t x #len remaining_len pb p cipher h0 h1 = 
   let starting_pos = len -^ remaining_len in
   let l = min remaining_len (PRF.blocklen i) in
@@ -709,7 +709,7 @@ val counter_dexor:
   p:maybe_plain i (v len) ->
   ST unit (requires (fun h -> counter_dexor_requires i t x len remaining_len plain cipher p h))
  	  (ensures (fun h0 _ h1 -> counter_dexor_ensures i t x len plain cipher p h0 h1))
-#reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let rec counter_dexor i t x len remaining_len plain cipher p =
   let completed_len = len -^ remaining_len in
   let h0 = get () in
@@ -837,7 +837,7 @@ val counterblocks_contains_all_blocks:
 	     (let remaining_blocks = Seq.slice all_blocks n_blocks (Seq.length all_blocks) in
 	      contains_all_blocks x len remaining_len plain cipher remaining_blocks)))
 	(decreases (v remaining_len))
-#reset-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let rec counterblocks_contains_all_blocks i rgn x len remaining_len plain cipher = 
   let x0 = {x with ctr=ctr_0 i +^ 1ul} in
   (* let all_blocks = counterblocks i rgn x0 (v len) 0 (v len) plain cipher in *)
@@ -856,7 +856,7 @@ let from_x_blocks_included_in (#i:id) (#rgn:rid) (x:PRF.domain i) (blocks:prf_bl
        v y.ctr <= v (ctr_0 i +^ 1ul) + Seq.length blocks
        ==> find blocks y == find blocks' y
   
-#reset-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 val widen_contains_all_blocks:   #i:id -> #r:rid ->
 				 (x_init:PRF.domain i{x_init.ctr = PRF.ctr_0 i +^ 1ul}) ->
 				 (x:PRF.domain i{x `above` x_init}) ->
@@ -1083,7 +1083,7 @@ let frame_decrypt_ok (#i:id) (n:Cipher.iv (alg i)) (st:state i Reader)
 	   (ensures (decrypt_ok n st aad plain cipher_tagged verified (HS.pop h)))
    = ()	   
 
-#reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let prf_mac_modifies (i:id) (t:PRF.state i) (h0:mem) (h1:mem) = 
   Crypto.AEAD.BufferUtils.prf_mac_modifies (safeId i) t.rgn h0 h1
 
@@ -1174,7 +1174,7 @@ val decrypt:
     decrypt_requires_live st aad plain cipher_tagged h1 /\
     decrypt_modifies st plain h0 h1 /\
     decrypt_ok n st aad plain cipher_tagged verified h1))
-#reset-options "--z3timeout 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let h_init = get() in
   push_frame();

@@ -449,7 +449,7 @@ let modulo b =
   freduce_coefficients b
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 100"
 
 val finalize: b:bigint -> Stack unit
   (requires (fun h -> norm h b))

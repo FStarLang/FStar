@@ -289,7 +289,7 @@ val update: #i:id -> r:elemB i -> a:elemB i -> w:wordB_16 -> Stack unit
     /\ Buffer.modifies_1 (as_buffer a) h0 h1
     /\ sel_elem h1 a == (sel_elem h0 a +@ encode i (sel_word h0 w)) *@ sel_elem h0 r))
 
-#set-options "--z3timeout 40"
+#set-options "--z3rlimit 40"
 
 // TODO: use encodeB?
 let update #i r a w =

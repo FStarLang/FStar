@@ -163,7 +163,7 @@ let genPost (i:id) (region:erid) m0 (st:state i) m1 =
       RR.m_contains (ilog st.log) m1 /\
       RR.m_sel m1 (ilog st.log) == None)
 
-#set-options "--z3timeout 60 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 60 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 val alloc: region:erid -> i:id
   -> ak:akey region (fst i)
@@ -263,7 +263,7 @@ val start: #i:id -> st:state i -> StackInline (accBuffer i)
     acc_inv st a h1 /\ 
     modifies_0 h0 h1))
 
-#set-options "--z3timeout 60 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 60 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 
 let start #i st =
   let h0 = ST.get () in

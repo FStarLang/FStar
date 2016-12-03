@@ -77,7 +77,7 @@ let frame_refines_one_entry (h:mem) (i:id{safeId i}) (mac_rgn:region)
      assert (m_sel h mac_log = m_sel h' mac_log);
      assert (m_contains mac_log h') //this include HS.live_region, which is not derivable from modifies_ref along
 
-#reset-options "--z3timeout 400 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 400 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let rec frame_refines (i:id{safeId i}) (mac_rgn:region) 
 		      (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry mac_rgn i))
 		      (h:mem) (h':mem)
@@ -140,7 +140,7 @@ val frame_pre_refines: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)
 			    Buffer.modifies_buf_1 (Buffer.frameOf cipherb) tagB h1 h2
 		       else Buffer.modifies_1 tagB h1 h2)))
            (ensures pre_refines_one_entry i st nonce len plainb cipherb h0 h2)
-#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1"
 let frame_pre_refines i st nonce len plainb cipherb h0 h1 h2 = 
   let tagB = Buffer.sub cipherb (u len) MAC.taglen in
   FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 tagB h1) h2;
@@ -260,7 +260,7 @@ let intro_mac_refines (i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
            (ensures mac_refines i st nonce aad plain cipher h)
   = ()
  
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 let all_above_counterblocks (i:id)
                        (rgn:region)
                        (x:PRF.domain i{ctr_0 i <^ ctr x})
@@ -272,7 +272,7 @@ let all_above_counterblocks (i:id)
    : Lemma (safeId i ==> (counterblocks i rgn x l from_pos to_pos plain cipher) `all_above` x)
    = admit() //easy, should do it
 
-#set-options "--z3timeout 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let find_cons_hd (#a:Type) (x:a) (tl:Seq.seq a) (f:(a -> Tot bool))
   : Lemma (requires (f x))
          (ensures (SeqProperties.find_l f (SeqProperties.cons x tl) == Some x))
@@ -284,7 +284,7 @@ let contains_intro_2 (#a:Type) (s:Seq.seq a) (x:a) (k:nat)
           s `SeqProperties.contains` x)
   = SeqProperties.contains_intro s k x
   
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let find_mac_counterblocks_none (#rgn:region) (#i:id) (nonce:Cipher.iv (alg i))
                                 (s:Seq.seq (PRF.entry rgn i))
     : Lemma (requires (s `all_above` (PRF.incr i ({iv=nonce; ctr=ctr_0 i}))))
@@ -318,7 +318,7 @@ val pre_refines_to_refines: (i:id) -> (st:state i Writer) -> (nonce: Cipher.iv (
 			  let table_1 = HS.sel h (PRF.itable i st.prf) in
  			  let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in
 			  refines_one_entry #mac_rgn #i h entry blocks))))
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 let pre_refines_to_refines i st nonce aadlen aad len plain cipher h0 h
     = if safeId i
       then let table_0 = HS.sel h0 (PRF.itable i st.prf) in
@@ -459,7 +459,7 @@ let lemma_cons_snoc (#a:Type) (hd:a) (s:Seq.seq a) (tl:a)
 		 	      (SeqProperties.snoc (SeqProperties.cons hd s) tl)))
   = ()	  
 
-#reset-options "--z3timeout 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 val counterblocks_snoc: #i:id{safeId i} -> (rgn:region) -> (x:domain i{ctr_0 i <^ x.ctr}) -> (k:nat{v x.ctr <= k}) ->
 			 (len:nat{len <> 0 /\ safelen i len (ctr_0 i +^ 1ul)})  ->
 			 (next:nat{0 < next /\ next <= v (PRF.blocklen i)}) ->
@@ -551,7 +551,7 @@ let rec counterblocks_slice #i rgn x len from_pos to_pos plain cipher
           assert (Seq.equal (Seq.slice (Seq.slice cipher from_pos to_pos) 0 l)
 			    (Seq.slice cipher from_pos from_pos'))
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 100"
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 val frame_counterblocks_snoc: i:id{safeId i} -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^ x.ctr}) -> k:nat{v x.ctr <= k} ->
 			     len:nat{len <> 0 /\ safelen i len (ctr_0 i +^ 1ul)} -> 
 			     (completed_len:nat{completed_len < len /\
@@ -586,7 +586,7 @@ val frame_counterblocks_snoc: i:id{safeId i} -> (t:PRF.state i) -> (x:domain i{c
 		    let last_entry = PRF.Entry ({x with ctr=UInt32.uint_to_t k})
 	 				       (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last) in
 		    final_blocks == SeqProperties.snoc initial_blocks last_entry))
-(* #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 100" *)
+(* #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100" *)
 let frame_counterblocks_snoc i t x k len completed_len plain cipher h0 h1 = 
   let open FStar.Mul in
   let remaining_len = len - completed_len in
@@ -619,7 +619,7 @@ let invert_contains_plain_and_cipher_block   (#i:id) (#r:rid) (#l:u32{l <=^ PRF.
             (ensures (b == PRF.Entry #r #i x (PRF.OTP l plain cipher)))
     = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 400"
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 400"
 val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^ x.ctr}) ->
 			     len:nat{len <> 0 /\ safelen i len (ctr_0 i +^ 1ul)} -> 
 			     (completed_len:nat{completed_len < len /\

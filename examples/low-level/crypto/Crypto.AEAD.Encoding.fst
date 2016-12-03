@@ -141,7 +141,7 @@ val lemma_encode_bytes_injective: t0:Seq.seq UInt8.t -> t1:Seq.seq UInt8.t -> Le
   (ensures t0 == t1)
   (decreases (Seq.length t0))
 
-#reset-options "--z3timeout 100" 
+#reset-options "--z3rlimit 100" 
 let rec lemma_encode_bytes_injective t0 t1 =
   let l = Seq.length t0 in
   if l = 0 then Seq.lemma_eq_intro t0 t1
@@ -351,7 +351,7 @@ val accumulate:
       encode_both (fst i) aadlen (Buffer.as_seq h1 aad) txtlen (Buffer.as_seq h1 cipher))))
   // StackInline required for stack-allocated accumulator
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 100"
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 let accumulate #i st aadlen aad txtlen cipher  = 
   let h = ST.get() in 
   let acc = CMA.start st in

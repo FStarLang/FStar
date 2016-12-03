@@ -154,7 +154,7 @@ let rec maxValueIdx h b l =
   | 1 -> 0
   | _ -> if maxValue h b l = v (get h b (l-1)) then l - 1 else maxValueIdx h b (l-1)
 
-#reset-options "--z3timeout 60"
+#reset-options "--z3rlimit 60"
 
 val maxValue_eq_lemma: 
   ha:heap -> hb:heap -> a:bigint{live ha a} -> b:bigint{live hb b} -> l:pos -> Lemma

@@ -287,7 +287,7 @@ let mk_mask nbits =
   Math.Lemmas.pow2_lt_compat 64 (FStar.UInt32.v nbits);
   U64.((1uL <<^ nbits) -^ 1uL)
 
-#set-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
 
 let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
   (requires (let open FStar.UInt8 in
@@ -299,7 +299,7 @@ let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
   (ensures  (live h b /\ live h s /\ v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 == little_endian (sel_word h s)))
   = Crypto.Symmetric.Poly1305.Lemmas.lemma_toField_1 s h n0 n1 n2 n3
 
-#set-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 50 --initial_fuel 0 --max_fuel 0"
 
 val upd_elemB: b:elemB{length b == norm_length} -> n0:U64.t -> n1:U64.t -> n2:U64.t -> n3:U64.t -> n4:U64.t -> Stack unit
   (requires (fun h -> live h b
@@ -330,7 +330,7 @@ let upd_elemB b n0 n1 n2 n3 n4 =
   pow2_lt_compat 26 24
 
 
-#set-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
 
 let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4': Lemma
   (requires (let mask_26 = mk_mask 26ul in
@@ -364,7 +364,7 @@ let sel_int_sel_elem h a w =
   lemma_little_endian_is_bounded w;
   modulo_lemma (little_endian w) p_1305
 
-#set-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 (* Formats a wordB into an elemB *)
 val toField: a:elemB{length a == norm_length} -> b:wordB_16{disjoint a b} -> Stack unit
@@ -408,7 +408,7 @@ let toField b s =
   upd_elemB b n0' n1' n2' n3' n4'
 
 
-#set-options "--z3timeout 20 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1"
 
 val lemma_toField_plus_2_128_0: ha:mem -> a:elemB{live ha a} -> Lemma
   (requires True)
@@ -554,7 +554,7 @@ let upd_wordB_16 s s0 s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 =
   s.(15ul) <- s15
 
 
-#set-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
 
 val trunc1305: a:elemB -> b:wordB_16{disjoint a b} -> Stack unit
   (requires (fun h -> norm h a /\ live h b /\ disjoint a b))
@@ -753,7 +753,7 @@ val poly_empty: t:text{Seq.length t == 0} -> r:elem ->
   Lemma (poly t r == 0)
 let poly_empty t r = ()
 
-#set-options "--z3timeout 60 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 60 --initial_fuel 0 --max_fuel 0"
 
 (**
    Update function:
@@ -944,7 +944,7 @@ let rec encode_bytes_append len s w =
     end
 
 
-#set-options "--z3timeout 60 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 60 --initial_fuel 0 --max_fuel 0"
 
 (* Loop over Poly1305_update; could go below MAC *)
 val poly1305_loop: log:log_t -> msg:bytes -> acc:elemB{disjoint msg acc} ->

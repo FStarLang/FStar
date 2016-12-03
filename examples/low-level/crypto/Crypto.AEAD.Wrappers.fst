@@ -43,7 +43,7 @@ module Plain = Crypto.Plain
 ////////////////////////////////////////////////////////////////////////////////
 //UF1CMA.mac wrapper
 ////////////////////////////////////////////////////////////////////////////////
-#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
 		(h0:mem) (h1:mem) = 
     let open FStar.Buffer in
@@ -250,7 +250,7 @@ val verify_wrapper:
   tag:lbuffer 16 -> Stack bool
   (requires (fun h0 -> verify_requires st acc tag h0))
   (ensures (fun h0 b h1 -> verify_ensures st acc tag h0 b h1))
-#reset-options "--z3timeout 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 let verify_wrapper #i st acc tag = 
   let h0 = get () in 
   let b = CMA.verify #i st acc tag in

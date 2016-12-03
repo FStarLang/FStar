@@ -199,7 +199,7 @@ let prf_blocks rgn i = Seq.seq (PRF.entry rgn i)
 let aead_entries i = Seq.seq (entry i)
 
 ////////////////////////////////////////////////////////////////////////////////
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let offset (i:id) = PRF.ctr_0 i +^ 1ul
 
 let remaining_len_ok (#i:id) (x:PRF.domain i) (len:u32) (remaining_len:u32) = 
