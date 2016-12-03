@@ -35,17 +35,17 @@ let find_snoc (#a:Type) (s:Seq.seq a) (x:a) (f:a -> Tot bool)
 	   | Some y -> res == SeqProperties.find_l f s \/ (f x /\ x==y))
   = admit() //NS: boring
 
-let find_is_some (#i:id) (#rgn:rid) (b:prf_blocks rgn i) (x:domain i)
+let find_is_some (#i:id) (#rgn:rid) (b:prf_table rgn i) (x:domain i)
   : Lemma (requires (is_Some (find b x)))
           (ensures (Seq.length b <> 0))
   = admit() //NS: boring
 
-let find_blocks_append_l (#i:id) (#rgn:rid) (b:prf_blocks rgn i) (b':prf_blocks rgn i) (x:domain i) 
+let find_blocks_append_l (#i:id) (#rgn:rid) (b:prf_table rgn i) (b':prf_table rgn i) (x:domain i) 
   : Lemma (requires (is_Some (find b x)))
           (ensures (find (Seq.append b b') x == find b x))
   = admit() //NS: boring
 
-let find_append (#i:id) (#r:rid) (d:domain i) (s1:Seq.seq (PRF.entry r i)) (s2:Seq.seq (PRF.entry r i)) 
+let find_append (#i:id) (#r:rid) (d:domain i) (s1:prf_table r i) (s2:prf_table r i)
    : Lemma (requires (is_None (find s1 d)))
            (ensures (find (Seq.append s1 s2) d == find s2 d))
    = admit() //NS: boring
@@ -62,39 +62,29 @@ val to_seq_temp: #a:Type -> b:Buffer.buffer a -> l:UInt32.t{v l <= Buffer.length
   (requires (fun h -> Buffer.live h b))
   (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h1 b /\ r == Buffer.as_seq h1 b))
 ////////////////////////////////////////////////////////////////////////////////
-
+#reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 //Basic framing for the main predicate of the invariant
-let frame_refines_one_entry (h:mem) (i:id{safeId i}) (mac_rgn:region) 
-			    (e:entry i) (blocks:Seq.seq (PRF.entry mac_rgn i))
-			    (h':mem)
-   : Lemma (requires refines_one_entry h e blocks /\			    
+let frame_refines_one_entry (#i:id{safeId i}) (#mac_rgn:region) 
+			    (h:mem) (h':mem) 
+			    (blocks:prf_table mac_rgn i)
+			    (e:aead_entry i) 
+   : Lemma (requires refines_one_entry blocks e h /\			    
 		     HH.modifies_rref mac_rgn TSet.empty (HS h.h) (HS h'.h) /\
 		     HS.live_region h' mac_rgn)
-	   (ensures  refines_one_entry h' e blocks)
-   = let PRF.Entry x rng = Seq.index blocks 0 in
-     let m = PRF.macRange mac_rgn i x rng in
-     let mac_log = CMA.ilog (CMA.State.log m) in
-     assert (m_sel h mac_log = m_sel h' mac_log);
-     assert (m_contains mac_log h') //this include HS.live_region, which is not derivable from modifies_ref along
+	   (ensures  refines_one_entry blocks e h')
+   = ()
 
-#reset-options "--z3timeout 400 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-let rec frame_refines (i:id{safeId i}) (mac_rgn:region) 
-		      (entries:Seq.seq (entry i)) (blocks:Seq.seq (PRF.entry mac_rgn i))
+let frame_refines (i:id{safeId i}) (mac_rgn:region) 
+		      (blocks:prf_table mac_rgn i)
+		      (entries:aead_entries i)
 		      (h:mem) (h':mem)
-   : Lemma (requires refines h i mac_rgn entries blocks /\
+   : Lemma (requires refines blocks entries h /\
    		     HH.modifies_rref mac_rgn TSet.empty (HS h.h) (HS h'.h) /\
 		     HS.live_region h' mac_rgn)
-	   (ensures  refines h' i mac_rgn entries blocks)
-	   (decreases (Seq.length entries))
-   = if Seq.length entries = 0 then 
-       ()
-     else let e = SeqProperties.head entries in
-          let b = num_blocks e in 
-         (let blocks_for_e = Seq.slice blocks 0 (b + 1) in
-       	  let entries_tl = SeqProperties.tail entries in
-          let blocks_tl = Seq.slice blocks (b+1) (Seq.length blocks) in
-	  frame_refines i mac_rgn entries_tl blocks_tl h h';
-	  frame_refines_one_entry h i mac_rgn e blocks_for_e h')
+	   (ensures  refines blocks entries h')
+   = let open FStar.Classical in 
+     forall_intro (move_requires (frame_refines_one_entry h h' blocks)) 
+     //maybe worthwhile proving a framing lemma for mac_is_unset
 
 ////////////////////////////////////////////////////////////////////////////////
 //A weaker version of the invariant, as it is broken and re-established
@@ -103,7 +93,7 @@ let u (n:FStar.UInt.uint_t 32) = uint_to_t n
 
 unfold let pre_refines_one_entry (i:id) (st:state i Writer) (nonce:Cipher.iv (alg i))
 				   (len:nat{len<>0}) (plainb:plainBuffer i len) (cipherb:lbuffer (len + v MAC.taglen))
-				   (h0:mem) (h1:mem) =
+				   (h0:mem) (h1:mem) (h2:mem) =
   Buffer.live h1 cipherb /\ 
   Plain.live h1 plainb /\ (
   safeId i /\ prf i ==> (
@@ -114,7 +104,7 @@ unfold let pre_refines_one_entry (i:id) (st:state i Writer) (nonce:Cipher.iv (al
   h1 `HS.contains` (PRF.itable i st.prf) /\
   Seq.length table_1 >= Seq.length table_0 /\ (
   let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in
-  let b = num_blocks' i len in
+  let b = num_blocks_for_len i len in
   Seq.equal table_1 (Seq.append table_0 blocks) /\
   b + 1 = Seq.length blocks /\
   (let PRF.Entry x e = Seq.index blocks 0 in
