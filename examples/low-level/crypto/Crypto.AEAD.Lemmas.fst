@@ -28,27 +28,33 @@ module PRF = Crypto.Symmetric.PRF
 ////////////////////////////////////////////////////////////////////////////////
 // Some generic sequence lemmas, easy but boring ... assumed for now
 ////////////////////////////////////////////////////////////////////////////////
-let find_snoc (#a:Type) (s:Seq.seq a) (x:a) (f:a -> Tot bool)
-  : Lemma (let res = SeqProperties.find_l f (SeqProperties.snoc s x) in
-	   match res with 
-	   | None -> SeqProperties.find_l f s == None /\ not (f x)
-	   | Some y -> res == SeqProperties.find_l f s \/ (f x /\ x==y))
-  = admit() //NS: boring
+val find_snoc: #a:Type -> s:Seq.seq a -> x:a -> f:(a -> Tot bool)
+               -> Lemma (ensures (let res = SeqProperties.find_l f (SeqProperties.snoc s x) in
+	                         match res with 
+	                         | None -> SeqProperties.find_l f s == None /\ not (f x)
+	                         | Some y -> res == SeqProperties.find_l f s \/ (f x /\ x==y)))
+                 (decreases (Seq.length s))
+let rec find_snoc #a s x f =
+  if Seq.length s = 0 then ()
+  else if f (SeqProperties.head s) then ()
+  else
+    let _ = SeqProperties.lemma_tail_snoc s x in
+    find_snoc (SeqProperties.tail s) x f
 
 let find_is_some (#i:id) (#rgn:rid) (b:prf_table rgn i) (x:domain i)
   : Lemma (requires (is_Some (find b x)))
           (ensures (Seq.length b <> 0))
-  = admit() //NS: boring
+  = ()
 
 let find_blocks_append_l (#i:id) (#rgn:rid) (b:prf_table rgn i) (b':prf_table rgn i) (x:domain i) 
   : Lemma (requires (is_Some (find b x)))
           (ensures (find (Seq.append b b') x == find b x))
-  = admit() //NS: boring
+  = SeqProperties.find_append_some b b' (is_entry_domain x)
 
 let find_append (#i:id) (#r:rid) (d:domain i) (s1:prf_table r i) (s2:prf_table r i)
    : Lemma (requires (is_None (find s1 d)))
            (ensures (find (Seq.append s1 s2) d == find s2 d))
-   = admit() //NS: boring
+   = SeqProperties.find_append_none s1 s2 (is_entry_domain d)
 
 #set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 2 --max_fuel 2"
 let find_singleton (#rgn:region) (#i:id) (e:PRF.entry rgn i) (x:PRF.domain i) 
