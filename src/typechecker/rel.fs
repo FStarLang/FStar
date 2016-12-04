@@ -37,24 +37,6 @@ module N = FStar.TypeChecker.Normalize
 
 // VALS_HACK_HERE
 
-(* --------------------------------------------------------- *)
-(* <new_uvar> Generating new unification variables/patterns  *)
-(* --------------------------------------------------------- *)
-let new_uvar r binders k =
-  let uv = Unionfind.fresh Uvar in
-  match binders with
-    | [] ->
-      let uv = mk (Tm_uvar(uv,k)) (Some k.n) r in
-      uv, uv
-    | _ ->
-      let args = binders |> List.map U.arg_of_non_null_binder in 
-      let k' = U.arrow binders (mk_Total k) in
-      let uv = mk (Tm_uvar(uv,k')) None r in
-      mk (Tm_app(uv, args)) (Some k.n) r, uv
-(* --------------------------------------------------------- *)
-(* </new_uvar>                                               *)
-(* --------------------------------------------------------- *)
-
 (* Instantiation of unification variables *)
 type uvi = 
     | TERM of (uvar * typ)    * term 
@@ -2162,32 +2144,38 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
 
     let solve_sub nct1 edge nct2 = 
         let r = Env.get_range env in
-        if problem.relation = EQ
-        then let lifted_wp1 = as_arg (edge.mlift (fst nct1.comp_result) (fst nct1.comp_wp)) in
-             let nct1 = {
-                comp_univs=nct1.comp_univs;
-                effect_name=nct2.comp_name;
-                effect_args=nct1.comp_indices@[nct1.comp_result; lifted_wp1];
-                flags=nct1.comp_flags
-             } in
-             solve_eq nct1 nct2
-        else let is_null_wp_2 = nct2.comp_flags |> Util.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
-             if Util.physical_equality nct1.comp_wp nct2.comp_wp
-             then solve_t env (problem_using_guard orig (fst nct1.comp_result) problem.relation 
-                                                        (fst nct2.comp_result)
-                               None "result type") wl
-             else let c2_decl = Env.get_effect_decl env nct2.comp_name in
-                  let g =
-                     if is_null_wp_2
-                     then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
-                          mk (Tm_app(inst_effect_fun_with [env.universe_of env nct1.result_typ] env c2_decl c2_decl.trivial, 
-                                    [as_arg ct1.result_typ; as_arg <| edge.mlift ct1.result_typ wpc1])) 
-                             (Some U.ktype0.n) r
-                     else mk (Tm_app(inst_effect_fun_with [env.universe_of env ct2.result_typ] env c2_decl c2_decl.stronger,
-                                        [as_arg ct2.result_typ; as_arg wpc2; as_arg <| edge.mlift ct1.result_typ wpc1])) (Some U.ktype0.n) r  in
-                  let base_prob = TProb <| sub_prob ct1.result_typ problem.relation ct2.result_typ "result type" in
-                  let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) g) [] wl in
-                  solve env (attempt [base_prob] wl) 
+        if Util.physical_equality nct1.comp_wp nct2.comp_wp //This is an optimization; not sure how effective it really is
+        then solve_t env (problem_using_guard orig (fst nct1.comp_result) 
+                            problem.relation (fst nct2.comp_result) None "result type")
+                          wl
+        else if problem.relation = EQ
+        then solve_eq (edge.mlift nct1) nct2
+        else let nct1 = edge.mlift nct1 in //they both have the same comp type constructor now
+             let c2_decl = Env.get_effect_decl env nct2.comp_name in
+             let wp2_stronger_than_wp1 = 
+                let is_null_wp_2 = nct2.comp_flags |> Util.for_some (function 
+                    | TOTAL | MLEFFECT | SOMETRIVIAL -> true 
+                    | _ -> false) in
+                if is_null_wp_2 //just check that nct1 has a trivial pre-condition
+                then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
+                     mk (Tm_app(inst_effect_fun_with nct2.comp_univs env c2_decl c2_decl.trivial, 
+                                nct1.comp_indices@[nct1.comp_result; nct1.comp_wp]))
+                        (Some U.ktype0.n) r
+                else mk (Tm_app(inst_effect_fun_with nct2.comp_univs env c2_decl c2_decl.stronger,
+                                nct2.comp_indices@[nct1.comp_result; nct2.comp_wp; nct1.comp_wp]))
+                        (Some U.ktype0.n) r  
+             in
+             let base_prob = TProb <| sub_prob (fst nct1.comp_result) problem.relation (fst nct2.comp_result) "result type" in
+             let index_probs = List.map2 
+                (fun i j -> TProb <| sub_prob (fst i) EQ (fst j) "computation index") 
+                nct1.comp_indices nct2.comp_indices in
+             let univ_probs = 
+                let mk_type u = S.mk (Tm_type u) None Range.dummyRange in 
+                List.map2 
+                    (fun u u' -> TProb <| sub_prob (mk_type u) EQ (mk_type u') "computation universes")
+                    nct1.comp_univs nct2.comp_univs in
+             let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) wp2_stronger_than_wp1) [] wl in
+             solve env (attempt (base_prob::index_probs@univ_probs) wl) 
     in
 
     if Util.physical_equality c1 c2
@@ -2236,7 +2224,9 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                              if Util.is_ghost_effect nct1.comp_name
                              && Util.is_pure_effect nct2.comp_name
                              && Env.non_informative env (N.normalize [N.Eager_unfolding; N.UnfoldUntil Delta_constant] env (fst nct2.comp_result))
-                             then let edge = {msource=nct1.comp_name; mtarget=nct2.comp_name; mlift=fun r t -> t} in
+                             then let edge = {msource=nct1.comp_name; 
+                                              mtarget=nct2.comp_name; 
+                                              mlift=fun nct -> {nct with comp_name=nct2.comp_name}} in
                                   solve_sub nct1 edge nct2
                              else giveup env (Util.format2 "incompatible monad ordering: %s </: %s" 
                                              (Print.lid_to_string nct1.comp_name) 

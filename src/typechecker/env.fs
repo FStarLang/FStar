@@ -59,7 +59,7 @@ type mlift = normal_comp_typ -> normal_comp_typ
 type edge = {
   msource :lident;
   mtarget :lident;
-  mlift_wp:mlift;
+  mlift   :mlift;
 }
 type effects = {
   decls :list<eff_decl>;
@@ -270,6 +270,7 @@ let pop env msg =
     stack_ops.es_pop env
 let incr_query_index env =
     stack_ops.es_incr_query_index env
+
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
 ////////////////////////////////////////////////////////////
@@ -392,6 +393,62 @@ let rec add_sigelt env se = match se with
 
 and add_sigelts env ses =
     ses |> List.iter (add_sigelt env)
+
+////////////////////////////////////////////////////////////
+// Collections from the environment                       //
+////////////////////////////////////////////////////////////
+let uvars_in_env env =
+  let no_uvs = new_uv_set () in
+  let ext out uvs = Util.set_union out uvs in
+  let rec aux out g = match g with
+    | [] -> out
+    | Binding_univ _ :: tl -> aux out tl
+    | Binding_lid(_, (_, t))::tl
+    | Binding_var({sort=t})::tl -> aux (ext out (Free.uvars t)) tl
+    | Binding_sig _::_
+    | Binding_sig_inst _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
+  aux no_uvs env.gamma
+
+let univ_vars env =
+    let no_univs = Syntax.no_universe_uvars in
+    let ext out uvs = Util.set_union out uvs in
+    let rec aux out g = match g with
+      | [] -> out
+      | Binding_sig_inst _::tl
+      | Binding_univ _ :: tl -> aux out tl
+      | Binding_lid(_, (_, t))::tl
+      | Binding_var({sort=t})::tl -> aux (ext out (Free.univs t)) tl
+      | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more uvars beyond this *)
+    aux no_univs env.gamma
+
+let bound_vars_of_bindings bs =
+  bs |> List.collect (function
+        | Binding_var x -> [x]
+        | Binding_lid _
+        | Binding_sig _
+        | Binding_univ _
+        | Binding_sig_inst _ -> [])
+
+let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
+
+let bound_vars env = bound_vars_of_bindings env.gamma
+
+let all_binders env = binders_of_bindings env.gamma
+                
+let t_binders env = 
+    all_binders env |> List.filter (fun (x, _) -> 
+        match (compress x.sort).n with 
+        | Tm_type _ -> true
+        | _ -> false)
+
+let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
+
+let lidents env : list<lident> =
+  let keys = List.fold_left (fun keys -> function
+    | Binding_sig(lids, _) -> lids@keys
+    | _ -> keys) [] env.gamma in
+  Util.smap_fold (sigtab env) (fun _ v keys -> Util.lids_of_sigelt v@keys) keys
+
 
 ////////////////////////////////////////////////////////////
 // Lookup up various kinds of identifiers                 //
@@ -786,6 +843,33 @@ let comp_as_normal_comp_typ env c =
       comp_wp = wp; 
       comp_flags = ct.flags}
 
+(* --------------------------------------------------------- *)
+(* <new_uvar> Generating new unification variables/patterns  *)
+(* --------------------------------------------------------- *)
+let new_uvar r binders k =
+  let uv = Unionfind.fresh Uvar in
+  match binders with
+    | [] ->
+      let uv = mk (Tm_uvar(uv,k)) (Some k.n) r in
+      uv, uv
+    | _ ->
+      let args = binders |> List.map U.arg_of_non_null_binder in 
+      let k' = U.arrow binders (mk_Total k) in
+      let uv = mk (Tm_uvar(uv,k')) None r in
+      mk (Tm_app(uv, args)) (Some k.n) r, uv
+
+let new_uvar_for_env env k = 
+    let bs = if (Options.full_context_dependency())
+             || Ident.lid_equals Const.prims_lid (current_module env)
+             then all_binders env 
+             else t_binders env in
+    new_uvar (get_range env) bs k
+
+(* --------------------------------------------------------- *)
+(* </new_uvar>                                               *)
+(* --------------------------------------------------------- *)
+
+
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
 ////////////////////////////////////////////////////////////
@@ -812,7 +896,7 @@ let join env l1 l2 : (lident * mlift * mlift) =
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2
   || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
-  then Some ({msource=l1; mtarget=l2; mlift_wp=(fun nct -> {nct with comp_name=l2})})
+  then Some ({msource=l1; mtarget=l2; mlift=(fun nct -> {nct with comp_name=l2})})
   else env.effects.order |> Util.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
 
 let wp_sig_aux env decls m =
@@ -827,73 +911,102 @@ let wp_sig_aux env decls m =
 
 let wp_signature env m = wp_sig_aux env env.effects.decls m
 
-let build_lattice env se = match se with
-  | Sig_new_effect(ne, _) ->
-    let effects = {env.effects with decls=ne::env.effects.decls} in
-    {env with effects=effects}
+/////////////////////////////////////////////////////////////////////////
+//Build effect lattice
+/////////////////////////////////////////////////////////////////////////
 
-  | Sig_sub_effect(sub, _) ->
-    let compose_edges e1 e2 : edge =
-       {msource=e1.msource;
-        mtarget=e2.mtarget;
-        mlift=(fun r wp1 -> e2.mlift r (e1.mlift r wp1))} in
+let destruct_comp_term m = 
+    match (SS.compress m).n with 
+    | Tm_uinst({n=Tm_fvar fv}, univs) -> S.lid_of_fv fv, univs 
+    | Tm_fvar fv -> S.lid_of_fv fv, []
+    | _ -> failwith "Impossible"
 
-    let mk_lift nct1 = 
+(* Given a sub_eff, returns a (lhs:nct -> nct) function
+   by instantiating the indicces in the sub_eff with the indices of the lhs
+   and all remaining binders to fresh unification variables
+*)
+let mlift_of_sub_eff env sub : mlift = 
+    let mlift (nct:normal_comp_typ) = 
+        //build an arrow term reflecting the binding structure of the sub_eff
+        //A template for the type of a computation type transfomer
+        //lift_term ~= x_0, ... x_n -> GTot (M i1..im -> GTot (N j1..jn))
         let lift_term = 
             S.mk (S.Tm_arrow(sub.sub_eff_binders,
                             S.mk_GTotal(S.mk (S.Tm_arrow([S.new_bv None sub.sub_eff_source |> S.mk_binder], 
-                                                         S.mk_GTotal sub.sub_eff_target))
-                                             None Range.dummyRange)))
-                 None Range.dummyRange in
-        let univ_vars, binders, lhs, rhs =
-            let univ_vars, lift_term = Subst.open_univ_vars sub.sub_eff_univs lift_term in
+                                                            S.mk_GTotal sub.sub_eff_target))
+                                                None Range.dummyRange)))
+                    None Range.dummyRange in
+        //then, instantiate it with the universes from nct, and fresh universes variables for any extra
+        let universe_arguments =
+            let _, extra_univ_vars = Util.first_N (List.length nct.comp_univs) sub.sub_eff_univs in
+            let extra_univs = extra_univ_vars |> List.map (fun _ -> new_u_univ()) in
+            nct.comp_univs @ extra_univs in
+
+        let lift_term = inst_tscheme_with (sub.sub_eff_univs, lift_term) universe_arguments in
+
+        //then, open all the binders
+        let xs_formals, lhs_M_is, rhs_N_js =
             match (SS.compress lift_term).n with
             | Tm_arrow(binders, {n=GTotal(t, _)}) -> 
-              let binders, t = Subst.open_term binders t in
-              (match (SS.compress t).n with 
-               | Tm_arrow([lhs], {n=GTotal(rhs, _)}) -> 
-                 let _, rhs = Subst.open_term [lhs] rhs in
-                 univ_vars, binders, (fst lhs).sort, rhs
-               | _ -> failwith "Impossible")
-            | _ -> failwith "Impossible" in 
+                let binders, t = Subst.open_term binders t in
+                (match (SS.compress t).n with 
+                | Tm_arrow([lhs], {n=GTotal(rhs, _)}) -> 
+                    let _, rhs = Subst.open_term [lhs] rhs in
+                    binders, (fst lhs).sort, rhs
+                | _ -> failwith "Impossible")
+            | _ -> failwith "Impossible" 
+        in 
 
-        let univ_subst = 
-            let lhs_univ_vars, rest = Util.first_N (List.length nct.comp_univs) univ_vars in
-            let lhs_subst = List.map2 (fun uname u -> S.UN(uname, u)) lhs_univ_vars nct.comp_univs in
-            let rest_subst = List.map (fun u -> S.UN(uname, new_u_univ())) rest in
-            lhs_subst@rest_subst in 
-
-        let binder_subst = 
-            let lhs_index_vars, rest = Util.first_N (List.length nct.comp_indices) binders in 
+        //then, compute the instantiation of the xs_formals
+        //using nct.indices first, and then additional unification variables if necessary
+        let xs_actuals, subst = 
+            let lhs_index_vars, rest = Util.first_N (List.length nct.comp_indices) xs_formals in 
             let lhs_subst = U.subst_of_list lhs_index_vars nct.comp_indices in
-            let rest_subst = List.map (fun (x, _) -> new_uvar)
-        let _ = Subst.op
-        let univ_subst = 
+            let rest_uvars = List.map (fun (x, aq) -> (fst <| new_uvar_for_env env x.sort, aq)) rest in
+            nct.comp_indices@rest_uvars,
+            lhs_subst@U.subst_of_list rest rest_uvars 
+        in
 
-    let mk_lift lift_t r wp1 =
-        let _, lift_t = inst_tscheme lift_t in
-        mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos in
-
-    let sub_lift_wp = match sub.sub_eff_lift_wp with
-      | Some sub_lift_wp ->
-          sub_lift_wp
-      | None ->
-          failwith "sub effect should've been elaborated at this stage"
-    in
-
+        let rhs_N_js = Subst.subst subst rhs_N_js in 
+        let rhs_N, rhs_js = Util.head_and_args rhs_N_js in
+        let rhs_name_N, rhs_univs = destruct_comp_term rhs_N in
+        let rhs_wp = 
+            let lift_wp = Util.must sub.sub_eff_lift_wp in
+            let lift_wp = inst_tscheme_with lift_wp universe_arguments in
+            let lift_args = xs_actuals @ [nct.comp_result; nct.comp_wp] in
+            S.as_arg <| S.mk_Tm_app lift_wp lift_args None (fst nct.comp_wp).pos
+        in
+        { comp_name=rhs_name_N;
+          comp_univs=rhs_univs;
+          comp_indices=rhs_js;
+          comp_result=nct.comp_result;
+          comp_wp=rhs_wp;
+          comp_flags=nct.comp_flags }
+   in //end mlift
+   mlift
+     
+let extend_effect_lattice env sub_eff = 
+    let compose_edges e1 e2 : edge =
+       {msource=e1.msource;
+        mtarget=e2.mtarget;
+        mlift=(fun nct -> e2.mlift (e1.mlift nct))} in
+    
     let edge =
-      {msource=fst sub.sub_eff_source;
-       mtarget=fst sub.sub_eff_target;
-       mlift=mk_lift sub_lift_wp} in
+      {msource=fst (destruct_comp_term sub_eff.sub_eff_source);
+       mtarget=fst (destruct_comp_term sub_eff.sub_eff_target);
+       mlift=mlift_of_sub_eff env sub_eff} in
+
     let id_edge l = {
-       msource=sub.source;
-       mtarget=sub.target;
-       mlift=(fun t wp -> wp)
+       msource=l;
+       mtarget=l;
+       mlift=(fun nct -> nct);
     } in
+
     let print_mlift l =
-        let arg = lid_as_fv (lid_of_path ["ARG"] dummyRange) Delta_constant None in
-        let wp = lid_as_fv (lid_of_path  ["WP"]  dummyRange) Delta_constant None in //A couple of bogus constants, just for printing
+        let arg = lid_as_fv (lid_of_path ["ARG"] Range.dummyRange) Delta_constant None in
+        let wp = lid_as_fv (lid_of_path  ["WP"]  Range.dummyRange) Delta_constant None in //A couple of bogus constants, just for printing
         Print.term_to_string (l arg wp) in
+
     let order = edge::env.effects.order in
 
     let ms = env.effects.decls |> List.map (fun (e:eff_decl) -> e.mname) in
@@ -949,6 +1062,14 @@ let build_lattice env se = match se with
 //    order |> List.iter (fun o -> Printf.printf "%s <: %s\n\t%s\n" o.msource.str o.mtarget.str (print_mlift o.mlift));
 //    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" e1.str e2.str e3.str (print_mlift l1) (print_mlift l2));
     {env with effects=effects}
+
+let build_lattice env se = 
+  match se with
+  | Sig_new_effect(ne, _) ->
+    {env with effects={env.effects with decls=ne::env.effects.decls}}
+
+  | Sig_sub_effect(sub, _) ->
+    extend_effect_lattice env sub
 
   | _ -> env
 
@@ -1035,56 +1156,6 @@ let finish_module =
         curmodule=empty_lid;
         gamma=[];
         modules=m::env.modules}
-
-////////////////////////////////////////////////////////////
-// Collections from the environment                       //
-////////////////////////////////////////////////////////////
-let uvars_in_env env =
-  let no_uvs = new_uv_set () in
-  let ext out uvs = Util.set_union out uvs in
-  let rec aux out g = match g with
-    | [] -> out
-    | Binding_univ _ :: tl -> aux out tl
-    | Binding_lid(_, (_, t))::tl
-    | Binding_var({sort=t})::tl -> aux (ext out (Free.uvars t)) tl
-    | Binding_sig _::_
-    | Binding_sig_inst _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
-  aux no_uvs env.gamma
-
-let univ_vars env =
-    let no_univs = Syntax.no_universe_uvars in
-    let ext out uvs = Util.set_union out uvs in
-    let rec aux out g = match g with
-      | [] -> out
-      | Binding_sig_inst _::tl
-      | Binding_univ _ :: tl -> aux out tl
-      | Binding_lid(_, (_, t))::tl
-      | Binding_var({sort=t})::tl -> aux (ext out (Free.univs t)) tl
-      | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more uvars beyond this *)
-    aux no_univs env.gamma
-
-let bound_vars_of_bindings bs =
-  bs |> List.collect (function
-        | Binding_var x -> [x]
-        | Binding_lid _
-        | Binding_sig _
-        | Binding_univ _
-        | Binding_sig_inst _ -> [])
-
-let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
-
-let bound_vars env = bound_vars_of_bindings env.gamma
-
-let all_binders env = binders_of_bindings env.gamma
-
-let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
-
-let lidents env : list<lident> =
-  let keys = List.fold_left (fun keys -> function
-    | Binding_sig(lids, _) -> lids@keys
-    | _ -> keys) [] env.gamma in
-  Util.smap_fold (sigtab env) (fun _ v keys -> Util.lids_of_sigelt v@keys) keys
-
 
 (* <Move> this out of here *)
 let dummy_solver = {

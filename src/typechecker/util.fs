@@ -46,22 +46,7 @@ let report env errs =
 (************************************************************************)
 (* Unification variables *)
 (************************************************************************)
-let is_type t = match (compress t).n with 
-    | Tm_type _ -> true
-    | _ -> false
-                
-let t_binders env = 
-    Env.all_binders env |> List.filter (fun (x, _) -> is_type x.sort)
-
-//new unification variable
-let new_uvar_aux env k = 
-    let bs = if (Options.full_context_dependency())
-             || Ident.lid_equals Const.prims_lid (Env.current_module env)
-             then Env.all_binders env 
-             else t_binders env in
-    Rel.new_uvar (Env.get_range env) bs k
-
-let new_uvar env k = fst (new_uvar_aux env k)
+let new_uvar env t = Env.new_uvar_for_env env t |> fst
 
 let as_uvar : typ -> uvar = function
     | {n=Tm_uvar(uv, _)} -> uv
@@ -74,7 +59,7 @@ let new_implicit_var reason r env k =
        t, [], Rel.trivial_guard
 
      | _ -> 
-       let t, u = new_uvar_aux env k in
+       let t, u = Env.new_uvar_for_env env k in
        let g = {Rel.trivial_guard with implicits=[(reason, env, as_uvar u, t, k, r)]} in
        t, [(as_uvar u, r)], g
      
@@ -112,7 +97,7 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
         match (SS.compress a.sort).n with
         | Tm_unknown ->
           let k, _ = U.type_u() in
-          let t =  Rel.new_uvar e.pos scope k |> fst in 
+          let t =  Env.new_uvar e.pos scope k |> fst in 
           {a with sort=t}, false
         | _ -> a, true in
 
@@ -141,9 +126,9 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
                 (Range.string_of_range r) (Print.term_to_string t);
         Inl t, check_res || check
 
-      | _ -> Inl (Rel.new_uvar r vars Util.ktype0 |> fst), false in
+      | _ -> Inl (Env.new_uvar r vars Util.ktype0 |> fst), false in
 
-     let t, b = aux (t_binders env) e in 
+     let t, b = aux (Env.t_binders env) e in 
      let t = match t with 
         | Inr c -> 
           raise (Error(Util.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
@@ -185,7 +170,7 @@ let pat_as_exps allow_implicits env p
              let k, _ = Util.type_u () in
              let t = new_uvar env k in
              let x = {x with sort=t} in
-             let e, u = Rel.new_uvar p.p (Env.all_binders env) t in
+             let e, u = Env.new_uvar p.p (Env.all_binders env) t in
              let p = {p with v=Pat_dot_term(x, e)} in
              ([], [], [], env, e, p)
 
@@ -395,20 +380,20 @@ let decorate_pattern env p exps =
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
-let destruct_comp c : (universe * typ * typ) =
-  let wp = match c.effect_args with
-    | [(wp, _)] -> wp
-    | _ -> failwith (Util.format2 "Impossible: Got a computation %s with effect args [%s]" c.effect_name.str
-      (List.map (fun (x, _) -> Print.term_to_string x) c.effect_args |> String.concat ", ")) in
-  List.hd c.comp_univs, c.result_typ, wp
-
-let lift_comp c m lift =
-  let u, _, wp = destruct_comp c in
-  {comp_univs=[u];
-   effect_name=m;
-   result_typ=c.result_typ;
-   effect_args=[as_arg (lift c.result_typ wp)];
-   flags=[]}
+//let destruct_comp c : (universe * typ * typ) =
+//  let wp = match c.effect_args with
+//    | [(wp, _)] -> wp
+//    | _ -> failwith (Util.format2 "Impossible: Got a computation %s with effect args [%s]" c.effect_name.str
+//      (List.map (fun (x, _) -> Print.term_to_string x) c.effect_args |> String.concat ", ")) in
+//  List.hd c.comp_univs, c.result_typ, wp
+//
+//let lift_comp c m lift =
+//  let u, _, wp = destruct_comp c in
+//  {comp_univs=[u];
+//   effect_name=m;
+//   result_typ=c.result_typ;
+//   effect_args=[as_arg (lift c.result_typ wp)];
+//   flags=[]}
 
 let join_effects env l1 l2 =
   let m, _, _ = Env.join env (norm_eff_name env l1) (norm_eff_name env l2) in
@@ -421,14 +406,16 @@ let join_lcomp env c1 c2 =
   else join_effects env c1.eff_name c2.eff_name
 
 let lift_and_destruct env c1 c2 =
-  let c1 = Normalize.unfold_effect_abbrev env c1 in
-  let c2 = Normalize.unfold_effect_abbrev env c2 in
-  let m, lift1, lift2 = Env.join env c1.effect_name c2.effect_name in
-  let m1 = lift_comp c1 m lift1 in
-  let m2 = lift_comp c2 m lift2 in
-  let md = Env.get_effect_decl env m in
-  let a, kwp = Env.wp_signature env md.mname in
-  (md, a, kwp), destruct_comp m1, destruct_comp m2
+  let c1 = Env.comp_as_normal_comp_typ env c1 in
+  let c2 = Env.comp_as_normal_comp_typ env c2 in
+  let m, lift1, lift2 = Env.join env c1.comp_name c2.comp_name in
+  lift1 c1, lift2 c2
+//
+//  let m1 = lift_comp c1 m lift1 in
+//  let m2 = lift_comp c2 m lift2 in
+//  let md = Env.get_effect_decl env m in
+//  let a, kwp = Env.wp_signature env md.mname in
+//  (md, a, kwp), destruct_comp m1, destruct_comp m2
 
 let is_pure_effect env l =
   let l = norm_eff_name env l in
@@ -1361,6 +1348,12 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
 //Build effect lattice
 /////////////////////////////////////////////////////////////////////////
 
+let destruct_comp_term m = 
+    match (SS.compress m).n with 
+    | Tm_uinst({n=Tm_fvar fv}, univs) -> S.lid_of_fv fv, univs 
+    | Tm_fvar fv -> S.lid_of_fv fv, []
+    | _ -> failwith "Impossible"
+
 (* Given a sub_eff, returns a (lhs:nct -> nct) function
    by instantiating the indicces in the sub_eff with the indices of the lhs
    and all remaining binders to fresh unification variables
@@ -1368,6 +1361,8 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
 let mlift_of_sub_eff env sub : mlift = 
     let mlift (nct:normal_comp_typ) = 
         //build an arrow term reflecting the binding structure of the sub_eff
+        //A template for the type of a computation type transfomer
+        //lift_term ~= x_0, ... x_n -> GTot (M i1..im -> GTot (N j1..jn))
         let lift_term = 
             S.mk (S.Tm_arrow(sub.sub_eff_binders,
                             S.mk_GTotal(S.mk (S.Tm_arrow([S.new_bv None sub.sub_eff_source |> S.mk_binder], 
@@ -1375,13 +1370,15 @@ let mlift_of_sub_eff env sub : mlift =
                                                 None Range.dummyRange)))
                     None Range.dummyRange in
         //then, instantiate it with the universes from nct, and fresh universes variables for any extra
-        let extra_univs = 
+        let universe_arguments =
             let _, extra_univ_vars = Util.first_N (List.length nct.comp_univs) sub.sub_eff_univs in
-            extra_univ_vars |> List.map (fun _ -> new_u_univ()) in
-        let lift_term = Env.inst_tscheme_with (sub.sub_eff_univs, lift_term) (nct.comp_univs @ extra_univs) in
+            let extra_univs = extra_univ_vars |> List.map (fun _ -> new_u_univ()) in
+            nct.comp_univs @ extra_univs in
 
-        let binders, lhs, rhs =
-            //then, open all the binders
+        let lift_term = Env.inst_tscheme_with (sub.sub_eff_univs, lift_term) universe_arguments in
+
+        //then, open all the binders
+        let xs_formals, lhs_M_is, rhs_N_js =
             match (SS.compress lift_term).n with
             | Tm_arrow(binders, {n=GTotal(t, _)}) -> 
                 let binders, t = Subst.open_term binders t in
@@ -1393,65 +1390,56 @@ let mlift_of_sub_eff env sub : mlift =
             | _ -> failwith "Impossible" 
         in 
 
-        //then, instantiate the binders with nct.indices, and extra uvars if necessary
-        let subst = 
-            let lhs_index_vars, rest = Util.first_N (List.length nct.comp_indices) binders in 
+        //then, compute the instantiation of the xs_formals
+        //using nct.indices first, and then additional unification variables if necessary
+        let xs_actuals, subst = 
+            let lhs_index_vars, rest = Util.first_N (List.length nct.comp_indices) xs_formals in 
             let lhs_subst = U.subst_of_list lhs_index_vars nct.comp_indices in
             let rest_uvars = List.map (fun (x, aq) -> (new_uvar env x.sort, aq)) rest in
+            nct.comp_indices@rest_uvars,
             lhs_subst@U.subst_of_list rest rest_uvars 
         in
 
-        let rhs = Subst.subst subst rhs in 
-        let rhs_head, rhs_indices = Util.head_and_args rhs in
-        let rhs_name, rhs_univs = 
-            match (SS.compress rhs_head).n with 
-            | Tm_uinst({n=Tm_fvar (fv, _)}, univs) -> S.lid_of_fv fv, univs 
-            | Tm_fvar(fv, _) -> S.lid_of_fv fv, []
-            | _ -> failwith "Impossible" in
-        let nct_rhs = {
-            comp_name=rhs_name;
-            comp_univs=rhs_univs;
-            comp_indices=rhs_indices;
-            comp_result=nct.comp_result;
-            comp_wp=failwith "Unknown"
-        } in
-        nct_rhs
-
-             
-        let _ = Subst.op
-        let univ_subst = 
-
+        let rhs_N_js = Subst.subst subst rhs_N_js in 
+        let rhs_N, rhs_js = Util.head_and_args rhs_N_js in
+        let rhs_name_N, rhs_univs = destruct_comp_term rhs_N in
+        let rhs_wp = 
+            let lift_wp = Util.must sub.sub_eff_lift_wp in
+            let lift_wp = Env.inst_tscheme_with lift_wp universe_arguments in
+            let lift_args = xs_actuals @ [nct.comp_result; nct.comp_wp] in
+            S.as_arg <| S.mk_Tm_app lift_wp lift_args None (fst nct.comp_wp).pos
+        in
+        { comp_name=rhs_name_N;
+          comp_univs=rhs_univs;
+          comp_indices=rhs_js;
+          comp_result=nct.comp_result;
+          comp_wp=rhs_wp;
+          comp_flags=nct.comp_flags }
+   in //end mlift
+   mlift
+     
 let extend_effect_lattice env sub_eff = 
     let compose_edges e1 e2 : edge =
        {msource=e1.msource;
         mtarget=e2.mtarget;
-        mlift=(fun r wp1 -> e2.mlift r (e1.mlift r wp1))} in
-
-
-    let mk_lift lift_t r wp1 =
-        let _, lift_t = inst_tscheme lift_t in
-        mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos in
-
-    let sub_lift_wp = match sub.sub_eff_lift_wp with
-      | Some sub_lift_wp ->
-          sub_lift_wp
-      | None ->
-          failwith "sub effect should've been elaborated at this stage"
-    in
-
+        mlift=(fun nct -> e2.mlift (e1.mlift nct))} in
+    
     let edge =
-      {msource=fst sub.sub_eff_source;
-       mtarget=fst sub.sub_eff_target;
-       mlift=mk_lift sub_lift_wp} in
+      {msource=fst (destruct_comp_term sub_eff.sub_eff_source);
+       mtarget=fst (destruct_comp_term sub_eff.sub_eff_target);
+       mlift=mlift_of_sub_eff env sub_eff} in
+
     let id_edge l = {
-       msource=sub.source;
-       mtarget=sub.target;
-       mlift=(fun t wp -> wp)
+       msource=l;
+       mtarget=l;
+       mlift=(fun nct -> nct);
     } in
+
     let print_mlift l =
-        let arg = lid_as_fv (lid_of_path ["ARG"] dummyRange) Delta_constant None in
-        let wp = lid_as_fv (lid_of_path  ["WP"]  dummyRange) Delta_constant None in //A couple of bogus constants, just for printing
+        let arg = lid_as_fv (lid_of_path ["ARG"] Range.dummyRange) Delta_constant None in
+        let wp = lid_as_fv (lid_of_path  ["WP"]  Range.dummyRange) Delta_constant None in //A couple of bogus constants, just for printing
         Print.term_to_string (l arg wp) in
+
     let order = edge::env.effects.order in
 
     let ms = env.effects.decls |> List.map (fun (e:eff_decl) -> e.mname) in

@@ -32,12 +32,21 @@ type delta_level =
   | Eager_unfolding_only
   | Unfold of delta_depth
 
-type mlift = typ -> typ -> typ
+type normal_comp_typ = {
+    comp_name: Ident.lident;
+    comp_univs: universes;
+    comp_indices: args;
+    comp_result: arg;
+    comp_wp: arg;
+    comp_flags: list<cflags>
+}
+
+type mlift = normal_comp_typ -> normal_comp_typ
 
 type edge = {
   msource :lident;
   mtarget :lident;
-  mlift   :typ -> typ -> typ;
+  mlift   :mlift;
 }
 type effects = {
   decls :list<eff_decl>;
@@ -92,15 +101,6 @@ and guard_t = {
   implicits:  list<(string * env * uvar * term * typ * Range.range)>;
 }
 
-type normal_comp_typ = {
-    comp_name: Ident.lident;
-    comp_univs: universes;
-    comp_indices: args;
-    comp_result: arg;
-    comp_wp: arg;
-    comp_flags: list<cflags>
-}
-
 type implicits = list<(env * uvar * term * typ * Range.range)>
 type env_t = env
 val initial_env : (env -> term -> term*typ*guard_t) -> (env -> term -> universe) -> solver_t -> lident -> env
@@ -108,6 +108,8 @@ val initial_env : (env -> term -> term*typ*guard_t) -> (env -> term -> universe)
 (* Some utilities *)
 val should_verify   : env -> bool
 val incr_query_index: env -> env
+val new_uvar        : Range.range -> binders -> typ -> term * term
+val new_uvar_for_env: env -> typ -> term * term
 
 (* Marking and resetting the environment, for the interactive mode *)
 val push        : env -> string -> env
@@ -169,6 +171,7 @@ val finish_module      : (env -> modul -> env)
 (* Collective state of the environment *)
 val bound_vars   : env -> list<bv>
 val all_binders  : env -> binders
+val t_binders    : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
 val univ_vars    : env -> Util.set<universe_uvar>

@@ -24,8 +24,6 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 
-val new_uvar: Range.range -> binders -> typ -> typ * typ
-
 val close_guard               : binders -> guard_t -> guard_t
 val apply_guard               : guard_t -> term -> guard_t
 val trivial_guard             : guard_t
