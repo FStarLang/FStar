@@ -191,6 +191,7 @@ let qual_to_string = function
   | Private               -> "private"
   | Unfold_for_unification_and_vcgen  -> "unfold"
   | Inline_for_extraction -> "inline"
+  | NoExtract             -> "noextract"
   | Visible_default       -> "visible"
   | Irreducible           -> "irreducible"
   | Abstract              -> "abstract"

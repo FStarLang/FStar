@@ -5,6 +5,7 @@ open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
 open Crypto.Symmetric.Chacha20
+open Crypto.Indexing
 
 //16-10-02 THIS FILE IS USED ONLY BY AEAD-TEST; use Crypto.AEAD instead.
 
