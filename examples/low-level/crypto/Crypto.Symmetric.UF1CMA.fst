@@ -98,7 +98,6 @@ let akey_coerce r i kb =
     Some sk
   else None
 
-
 (** One-time MAC instance *)
 type id = MAC.id
 
@@ -151,17 +150,22 @@ noeq type state (i:id) =
 let live_ak #r (#i:id) m (ak:akey r (fst i)) = 
   skeyed (fst i) ==> live m (get_skey #r #(fst i) ak)
 
-
-let genPost (i:id) (region:erid) m0 (st:state i) m1 =
+let mac_is_fresh (i:id) (region:erid) m0 (st:state i) m1 =
    ~(contains m0 (MAC.as_buffer st.r)) /\
    ~(contains m0 st.s) /\
+   (mac_log ==> ~(RR.m_contains (ilog st.log) m0))
+
+let mac_is_unset (i:id) (region:erid) (st:state i) m =
    st.region == region /\
-   MAC.norm m1 st.r /\
-   Buffer.live m1 st.s /\
+   MAC.norm m st.r /\
+   Buffer.live m st.s /\
    (mac_log ==>
-      ~(RR.m_contains (ilog st.log) m0) /\
-      RR.m_contains (ilog st.log) m1 /\
-      RR.m_sel m1 (ilog st.log) == None)
+      RR.m_contains (ilog st.log) m /\
+      RR.m_sel m (ilog st.log) == None)
+
+let genPost (i:id) (region:erid) m0 (st:state i) m1 =
+  mac_is_fresh i region m0 st m1 /\
+  mac_is_unset i region st m1
 
 #set-options "--z3timeout 60 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 

@@ -66,6 +66,10 @@ noeq type aead_state (i:id) (rw:rw) =
       ak: CMA.akey prf.mac_rgn i (* static, optional authentication key *) ->
       aead_state i rw
 
+let fresh_nonce (#i:id) (#rw:rw) (n:Cipher.iv (alg i)) (aead_st:aead_state i rw) (h:mem) = 
+  let entries = HS.sel h aead_st.log in
+  is_None (find_aead_entry n entries)
+
 let maxplain (i:id) = pow2 14 // for instance
 
 (* safelen: The length of the plaintext is not too large *)
@@ -183,20 +187,15 @@ let all_above (#rgn:region) (#i:id) (s:prf_table rgn i) (x:PRF.domain i) =
   (forall (e:PRF.entry rgn i).{:pattern (s `SeqProperties.contains` e)}
      s `SeqProperties.contains` e ==> e.x `PRF.above` x)
 
-let mac_is_unset (#rgn:region) (#i:id)
-	         (prf_table:prf_table rgn i) //the entire prf table
-  	         (iv:Cipher.iv (alg i))
-		 (h:mem{safeId i}) : GTot Type0
+let unused_aead_iv_for_prf (#mac_rgn:region) (#i:id)
+			   (prf_table:prf_table mac_rgn i) //the entire prf table
+  			   (iv:Cipher.iv (alg i))
+			   (h:mem{safeId i}) : GTot Type0
   = let dom_0 = {iv=iv; ctr=PRF.ctr_0 i} in
     none_above (PRF.incr i dom_0) prf_table h /\ //There are no OTP entries for this IV at all
     (match PRF.find_mac prf_table dom_0 with
      | None           -> True //and no MAC entry either
-     | Some mac_range ->
-       let mac_log = CMA.ilog (CMA.State.log mac_range) in
-       m_contains mac_log h /\ (
-       match m_sel h mac_log with
-       | None            ->  True //or, MAC entry exists, but it is not yet used
-       | Some (msg,tag') -> False))
+     | Some mac_range -> CMA.mac_is_unset (i, iv) mac_rgn mac_range h) //Or, a mac exists, but it's not yet used
 
 (** THE MAIN CLAUSE OF THE STATEFUL INVARIANT:
     States consistency of the PRF table contents vs the AEAD entries
@@ -212,7 +211,7 @@ let refines (#rgn:region) (#i:id)
   (forall (iv:Cipher.iv (alg i)).
     match find_aead_entry iv aead_entries with
     | Some _ -> True //already covered by refines_one_entry
-    | None   -> mac_is_unset prf_table iv h)
+    | None   -> unused_aead_iv_for_prf prf_table iv h)
 
 let aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
   HS (h.h `Map.contains` st.prf.mac_rgn) /\      //contains the mac region

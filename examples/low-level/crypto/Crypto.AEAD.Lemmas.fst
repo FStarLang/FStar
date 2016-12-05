@@ -14,6 +14,7 @@ open Flag
 open Crypto.Symmetric.PRF
 open Crypto.AEAD.Encoding 
 open Crypto.AEAD.Invariant
+open Crypto.AEAD.Wrappers
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -62,7 +63,6 @@ let find_singleton (#rgn:region) (#i:id) (e:PRF.entry rgn i) (x:PRF.domain i)
 	     else PRF.find (Seq.create 1 e) x == None)
     = ()	     
 
-#reset-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 2 --max_fuel 2"
 assume //NS: boring, this should be in the buffer library
 val to_seq_temp: #a:Type -> b:Buffer.buffer a -> l:UInt32.t{v l <= Buffer.length b} -> ST (Seq.seq a)
   (requires (fun h -> Buffer.live h b))
@@ -80,14 +80,14 @@ let frame_refines_one_entry (#i:id{safeId i}) (#mac_rgn:region)
 	   (ensures  refines_one_entry blocks e h')
    = ()
 
-//Framing lemma for mac_is_unset
-let frame_mac_is_unset (#mac_rgn:region) (#i:id) (h0:mem{safeId i}) (h1:mem)
-                       (prf_table:prf_table mac_rgn i)
-		       (iv:Cipher.iv (alg i))
-  : Lemma (requires mac_is_unset prf_table iv h0                            /\
+//Framing lemma for unused_aead_iv_for_prf
+let frame_unused_aead_iv_for_prf (#mac_rgn:region) (#i:id) (h0:mem{safeId i}) (h1:mem)
+				 (prf_table:prf_table mac_rgn i)
+				 (iv:Cipher.iv (alg i))
+  : Lemma (requires unused_aead_iv_for_prf prf_table iv h0                            /\
                     HH.modifies_rref mac_rgn TSet.empty (HS h0.h) (HS h1.h) /\
 		    HS.live_region h1 mac_rgn)
-	  (ensures  mac_is_unset prf_table iv h1)
+	  (ensures  unused_aead_iv_for_prf prf_table iv h1)
 
   = ()
 
@@ -101,9 +101,71 @@ let frame_refines (i:id{safeId i}) (mac_rgn:region)
 	   (ensures  refines blocks entries h')
    = let open FStar.Classical in 
      forall_intro (move_requires (frame_refines_one_entry h h' blocks));
-     forall_intro (move_requires (frame_mac_is_unset h h' blocks))
+     forall_intro (move_requires (frame_unused_aead_iv_for_prf h h' blocks))
 
 let u (n:FStar.UInt.uint_t 32) = uint_to_t n
+
+////////////////////////////////////////////////////////////////////////////////
+// Lemmas related to the invariant and prf_mac
+////////////////////////////////////////////////////////////////////////////////
+(* Re-establishing the invariant after a call to prf_mac *)
+let unused_mac_exists (#i:id) (t:PRF.state i) (x:PRF.domain_mac i) (h:mem) =
+  safeId i ==> 
+    (let table = HS.sel h (itable i t) in
+     match find_mac table x with 
+     | None -> False
+     | Some mac -> CMA.mac_is_unset (i, x.iv) t.mac_rgn mac h)
+
+val inv_after_prf_mac: 
+  #i:id -> 
+  #rw:rw -> 
+  aead_st:aead_state i rw -> 
+  k_0: CMA.akey aead_st.prf.mac_rgn i -> 
+  x:PRF.domain_mac i -> 
+  mac:CMA.state (i,x.iv) ->
+  h0:mem -> 
+  h1:mem -> 
+  Lemma (requires inv aead_st h0 /\
+		  (safeId i ==> fresh_nonce x.iv aead_st h0) /\
+		  prf_mac_ensures i aead_st.prf k_0 x h0 mac h1)
+        (ensures inv aead_st h1 /\
+		 (safeId i ==> 
+		   (let prf_table = HS.sel h1 (itable i aead_st.prf) in
+		    unused_mac_exists aead_st.prf x h1 /\
+		    none_above (PRF.incr i x) prf_table h1)))
+let inv_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 =
+  if safeId i
+  then begin
+    let aead_entries = HS.sel h0 aead_st.log in 
+    let prf_table = HS.sel h0 (itable i aead_st.prf) in
+    assert (unused_aead_iv_for_prf prf_table x.iv h0);
+    assert (refines prf_table aead_entries h0);
+    frame_refines i aead_st.prf.mac_rgn prf_table aead_entries h0 h1;
+    assert (refines prf_table aead_entries h1);
+    let prf_table' = SeqProperties.snoc prf_table (PRF.Entry x mac) in
+    //TODO: we need a lemma for this assume below
+    //we need to use the pre-condition that tells us that x.iv is fresh for aead_entries
+    let b = FStar.StrongExcludedMiddle.strong_excluded_middle (h0 == h1) in
+    if b then
+      ()
+    else begin 
+      assume (refines prf_table' aead_entries h1);
+      assume (unused_mac_exists aead_st.prf x h1); //from a find_snoc lemma and mac_is_unset
+      assume (none_above (PRF.incr i x) prf_table' h1) //from initial invariant and snoc
+    end
+  end
+
+#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let counterblocks_emp   (i:id)
+			(rgn:region)
+			(x:PRF.domain i{ctr_0 i <^ ctr x })
+			(l:nat)
+			(to_pos:nat{to_pos <= l /\ safelen i 0 (ctr x)})
+			(plain:Plain.plain i l)
+			(cipher:lbytes l)
+   : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
+   = ()
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 (*
  * h0 is the initial state. h1 is when mac entry has been reserved (not set yet) but no otp entries.
@@ -469,16 +531,6 @@ let rec extend_refines (h:mem) (i:id{safeId i}) (mac_rgn:region)
 	 cut (Seq.equal (Seq.slice ext_blocks (b + 1) (Seq.length ext_blocks)) 
 			(Seq.append blocks_tl blocks_for_e))
 
-#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-let counterblocks_emp   (i:id)
-			(rgn:region)
-			(x:PRF.domain i{ctr_0 i <^ ctr x })
-			(l:nat)
-			(to_pos:nat{to_pos <= l /\ safelen i 0 (ctr x)})
-			(plain:Plain.plain i l)
-			(cipher:lbytes l)
-   : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
-   = ()
 
 #set-options "--z3timeout 100"
 
