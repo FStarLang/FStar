@@ -577,7 +577,7 @@ let lemma_modifies_2_trans' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 
   [SMTPatT (modifies_2 b' b h0 h1); SMTPatT (modifies_2 b b' h1 h2)]
   = ()
 
-#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
 
 let lemma_modifies_3_trans (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer a') (b'':buffer a'') h0 h1 h2 : Lemma
   (requires (modifies_3 b b' b'' h0 h1 /\ modifies_3 b b' b'' h1 h2))

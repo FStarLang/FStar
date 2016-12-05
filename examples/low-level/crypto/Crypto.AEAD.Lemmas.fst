@@ -211,7 +211,7 @@ let intro_refines_one_entry_no_tag
 	  let c, _ = SeqProperties.split c_tagged len in
 	  counterblocks_len #i mac_rgn initial_domain len 0 p c
 
-#reset-options "--z3rlimit 20"
+#reset-options "--z3rlimit 40"
 
 let mac_refines (i:id) 
 		(st:state i Writer) (nonce: Cipher.iv (alg i))

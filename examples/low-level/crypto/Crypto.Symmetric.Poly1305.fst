@@ -753,7 +753,7 @@ val poly_empty: t:text{Seq.length t == 0} -> r:elem ->
   Lemma (poly t r == 0)
 let poly_empty t r = ()
 
-#set-options "--z3rlimit 60 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 60 --initial_fuel 0"
 
 (**
    Update function:
@@ -776,7 +776,7 @@ val poly1305_update:
        ilog updated_log == SeqProperties.cons (sel_word h0 msg) (ilog current_log)
        /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
 
-#set-options "--z3rlimit 60 --initial_fuel 1 --max_fuel 1"
+#reset-options "--z3rlimit 200 --initial_fuel 2"
 
 let poly1305_update log msgB acc r =
   let h0 = ST.get () in
@@ -904,6 +904,8 @@ val append_as_seq: h:mem -> m:UInt32.t -> n:UInt32.t ->
     (as_seq h msg))
 let append_as_seq h n m msg = ()
 
+#reset-options "--z3rlimit 60"
+
 val encode_bytes_empty: txt:Seq.seq UInt8.t -> Lemma
     (requires Seq.length txt == 0)
     (ensures  encode_bytes txt == Seq.createEmpty)
@@ -1008,7 +1010,7 @@ val div_aux: a:UInt32.t -> b:UInt32.t{w b <> 0} -> Lemma
   [SMTPat (FStar.UInt32.(UInt.size (v a / v b) n))]
 let div_aux a b = ()
 
-#reset-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1"
+#reset-options "--z3rlimit 1000 --initial_fuel 1 --max_fuel 10"
 
 val poly1305_process:
     msg:bytes

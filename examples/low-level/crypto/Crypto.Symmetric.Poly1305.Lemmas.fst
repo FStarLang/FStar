@@ -265,13 +265,18 @@ let add_disjoint #z a b n m =
   Math.Lemmas.pow2_plus (n-m) m;
   cut(c < pow2 (n-m));
   Math.Lemmas.distributivity_add_right (pow2 m) c 1
-  
+
+#reset-options
+
+(* n renamed into n', because n is shadowed by U64.n *)
 val lemma_disjoint_bounded:
-  b0:U64.t -> b1:U64.t -> l:nat -> m:pos{m >= l} -> n:nat{n > m /\ n <= 64} ->
-  Lemma (requires (U64.(v b0 < pow2 m /\ v b1 % pow2 m = 0 /\ v b1 < pow2 n /\ v b0 % pow2 l = 0)))
-        (ensures  (U64.(v (b0 |^ b1) = v b0 + v b1 /\ v b0 + v b1 < pow2 n /\ (v b0 + v b1) % pow2 l = 0)))
+  b0:U64.t -> b1:U64.t -> l:nat -> m:pos{m >= l} -> n':nat{n' > m /\ n' <= 64} ->
+  Lemma (requires (U64.(v b0 < pow2 m /\ v b1 % pow2 m = 0 /\ v b1 < pow2 n' /\ v b0 % pow2 l = 0)))
+        (ensures  (U64.(v (b0 |^ b1) = v b0 + v b1 /\ v b0 + v b1 < pow2 n' /\ (v b0 + v b1) % pow2 l = 0)))
 let lemma_disjoint_bounded b0 b1 l m n =
+  let n' = n in (* n shadowed by FStar.UInt64.n *)
   let open FStar.UInt64 in
+  let n = n' in
   logor_disjoint (v b1) (v b0) m;
   add_disjoint (v b1) (v b0) n m;
   UInt.logor_commutative (v b0) (v b1);
@@ -781,6 +786,7 @@ let lemma_b3 (a0:U64.t{v a0 < pow2 26}) (a1:U64.t{v a1 < pow2 26}) : Lemma
     cut (r = ((v a0 / pow2 24) + (v a1 * pow2 2)) % pow2 8);
     lemma_mod_sum_mul (v a1 * pow2 2) (v a0 / pow2 24) 2 8
 
+#reset-options "--z3rlimit 1000 --max_fuel 10"
 
 let lemma_b6 (a1:U64.t{v a1 < pow2 26}) (a2:U64.t{v a2 < pow2 26}) : Lemma
   (pow2 48 * (U8.v (uint64_to_uint8 ((a1 >>^ 22ul) |^ (a2 <<^ 4ul)))) = pow2 48 * ((v a1 / pow2 22) % pow2 8) + pow2 48 * ((v a2*pow2 4)%pow2 8))
@@ -1147,6 +1153,7 @@ let lemma_add_word_1 ha a a0 a4 a8 a12 =
 
 let eval_4 a0 a1 a2 a3 : GTot nat = v a0 + pow2 32 * v a1 + pow2 64 * v a2 + pow2 96 * v a3
 
+#reset-options
 
 val lemma_add_word_2_2:
   a0:u64_32 -> a4:u64_32 -> a8:u64_32 -> a12:u64_32 ->

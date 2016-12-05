@@ -258,6 +258,8 @@ val div_exact_r: a:nat -> p:pos -> Lemma
   (ensures  (a = (a / p) * p))
 let div_exact_r a p = ()
 
+#set-options "--z3rlimit 10"
+
 val lemma_mod_spec: a:nat -> p:pos -> Lemma
   (a / p = (a - (a % p)) / p)
 let lemma_mod_spec a p =
