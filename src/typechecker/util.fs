@@ -922,7 +922,7 @@ let gen_univs env (x:Util.set<universe_uvar>) : list<univ_name> =
 let gather_free_univnames env t : list<univ_name> =
     let ctx_univnames = Env.univnames env in
     let tm_univnames = Free.univnames t in
-    let univnames = Util.set_difference tm_univnames ctx_univnames |> Util.set_elements in
+    let univnames = Util.fifo_set_difference tm_univnames ctx_univnames |> Util.fifo_set_elements in
     // Util.print4 "Closing universe variables in term %s : %s in ctx, %s in tm, %s globally\n"
     //     (Print.term_to_string t)
     //     (Print.set_to_string Ident.text_of_id ctx_univnames)
@@ -939,6 +939,14 @@ let maybe_set_tk ts = function
       (snd ts).tk := Some t.n;
       ts
 
+let check_universe_generalization (explicit_univ_names : list<univ_name>)
+                         (generalized_univ_names : list<univ_name>)
+                         (t : term) : list<univ_name> =
+                             match explicit_univ_names, generalized_univ_names with
+                                 | [], _ -> generalized_univ_names
+                                 | _, [] -> explicit_univ_names
+                                 | _ -> raise (Error("Generalized universe in a term containing explicit universe annotation : "^ Print.term_to_string t, t.pos))
+
 let generalize_universes (env:env) (t0:term) : tscheme =
     let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
     let univnames = gather_free_univnames env t in
@@ -948,7 +956,7 @@ let generalize_universes (env:env) (t0:term) : tscheme =
     let gen = gen_univs env univs in
     if Env.debug env <| Options.Other "Gen"
     then Util.print1 "After generalization: %s\n"  (Print.term_to_string t);
-    let univs = univnames@gen in
+    let univs = check_universe_generalization univnames gen t0 in
     let ts = SS.close_univ_vars univs t in
     maybe_set_tk (univs, ts) (!t0.tk)
 
@@ -1042,7 +1050,8 @@ let generalize env (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*te
                                           (Print.term_to_string e);
                          (l, us, e, c)) lecs ecs
    in
-   List.map2 (fun univnames (l,generalized_univs, t, c) -> (l, univnames@generalized_univs, t, c))
+   List.map2 (fun univnames (l,generalized_univs, t, c) ->
+              (l, check_universe_generalization univnames generalized_univs t, t, c))
              univnames_lecs
              generalized_lecs
 

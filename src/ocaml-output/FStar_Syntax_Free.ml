@@ -19,15 +19,15 @@ in (FStar_Util.set_add x _131_11))
 in {FStar_Syntax_Syntax.free_names = FStar_Syntax_Syntax.no_names; FStar_Syntax_Syntax.free_uvars = FStar_Syntax_Syntax.no_uvs; FStar_Syntax_Syntax.free_univs = _131_12; FStar_Syntax_Syntax.free_univ_names = FStar_Syntax_Syntax.no_universe_names}))
 
 
-let singleton_univ_name : FStar_Syntax_Syntax.univ_name  ->  FStar_Syntax_Syntax.free_vars = (fun x -> (let _131_16 = (let _131_15 = (FStar_Syntax_Syntax.new_universe_names_set ())
-in (FStar_Util.set_add x _131_15))
+let singleton_univ_name : FStar_Syntax_Syntax.univ_name  ->  FStar_Syntax_Syntax.free_vars = (fun x -> (let _131_16 = (let _131_15 = (FStar_Syntax_Syntax.new_universe_names_fifo_set ())
+in (FStar_Util.fifo_set_add x _131_15))
 in {FStar_Syntax_Syntax.free_names = FStar_Syntax_Syntax.no_names; FStar_Syntax_Syntax.free_uvars = FStar_Syntax_Syntax.no_uvs; FStar_Syntax_Syntax.free_univs = FStar_Syntax_Syntax.no_universe_uvars; FStar_Syntax_Syntax.free_univ_names = _131_16}))
 
 
 let union : FStar_Syntax_Syntax.free_vars  ->  FStar_Syntax_Syntax.free_vars  ->  FStar_Syntax_Syntax.free_vars = (fun f1 f2 -> (let _131_24 = (FStar_Util.set_union f1.FStar_Syntax_Syntax.free_names f2.FStar_Syntax_Syntax.free_names)
 in (let _131_23 = (FStar_Util.set_union f1.FStar_Syntax_Syntax.free_uvars f2.FStar_Syntax_Syntax.free_uvars)
 in (let _131_22 = (FStar_Util.set_union f1.FStar_Syntax_Syntax.free_univs f2.FStar_Syntax_Syntax.free_univs)
-in (let _131_21 = (FStar_Util.set_union f1.FStar_Syntax_Syntax.free_univ_names f2.FStar_Syntax_Syntax.free_univ_names)
+in (let _131_21 = (FStar_Util.fifo_set_union f1.FStar_Syntax_Syntax.free_univ_names f2.FStar_Syntax_Syntax.free_univ_names)
 in {FStar_Syntax_Syntax.free_names = _131_24; FStar_Syntax_Syntax.free_uvars = _131_23; FStar_Syntax_Syntax.free_univs = _131_22; FStar_Syntax_Syntax.free_univ_names = _131_21})))))
 
 
@@ -52,16 +52,19 @@ end))
 
 let rec free_names_and_uvs' : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.free_vars = (fun tm -> (
 
-let aux_binders = (fun bs acc -> (FStar_All.pipe_right bs (FStar_List.fold_left (fun n _36_31 -> (match (_36_31) with
+let aux_binders = (fun bs from_body -> (
+
+let from_binders = (FStar_All.pipe_right bs (FStar_List.fold_left (fun n _36_31 -> (match (_36_31) with
 | (x, _36_30) -> begin
 (let _131_45 = (free_names_and_uvars x.FStar_Syntax_Syntax.sort)
 in (union n _131_45))
-end)) acc)))
+end)) no_free_vars))
+in (union from_binders from_body)))
 in (
 
 let t = (FStar_Syntax_Subst.compress tm)
 in (match (t.FStar_Syntax_Syntax.n) with
-| FStar_Syntax_Syntax.Tm_delayed (_36_34) -> begin
+| FStar_Syntax_Syntax.Tm_delayed (_36_35) -> begin
 (FStar_All.failwith "Impossible")
 end
 | FStar_Syntax_Syntax.Tm_name (x) -> begin
@@ -83,7 +86,7 @@ let f = (free_names_and_uvars t)
 in (FStar_List.fold_left (fun out u -> (let _131_51 = (free_univs u)
 in (union out _131_51))) f us))
 end
-| FStar_Syntax_Syntax.Tm_abs (bs, t, _36_64) -> begin
+| FStar_Syntax_Syntax.Tm_abs (bs, t, _36_65) -> begin
 (let _131_52 = (free_names_and_uvars t)
 in (aux_binders bs _131_52))
 end
@@ -101,7 +104,7 @@ in (free_names_and_uvars_args args _131_55))
 end
 | FStar_Syntax_Syntax.Tm_match (t, pats) -> begin
 (let _131_64 = (let _131_63 = (free_names_and_uvars t)
-in (FStar_List.fold_left (fun n _36_87 -> (match (_36_87) with
+in (FStar_List.fold_left (fun n _36_88 -> (match (_36_88) with
 | (p, wopt, t) -> begin
 (
 
@@ -117,20 +120,20 @@ in (
 let n2 = (free_names_and_uvars t)
 in (
 
-let n = (let _131_58 = (union n2 n)
-in (union n1 _131_58))
-in (let _131_62 = (FStar_Syntax_Syntax.pat_bvs p)
-in (FStar_All.pipe_right _131_62 (FStar_List.fold_left (fun n x -> (let _131_61 = (free_names_and_uvars x.FStar_Syntax_Syntax.sort)
-in (union n _131_61))) n))))))
+let n = (let _131_61 = (FStar_Syntax_Syntax.pat_bvs p)
+in (FStar_All.pipe_right _131_61 (FStar_List.fold_left (fun n x -> (let _131_60 = (free_names_and_uvars x.FStar_Syntax_Syntax.sort)
+in (union n _131_60))) n)))
+in (let _131_62 = (union n1 n2)
+in (union n _131_62)))))
 end)) _131_63))
 in (FStar_All.pipe_right pats _131_64))
 end
-| FStar_Syntax_Syntax.Tm_ascribed (t1, FStar_Util.Inl (t2), _36_100) -> begin
+| FStar_Syntax_Syntax.Tm_ascribed (t1, FStar_Util.Inl (t2), _36_101) -> begin
 (let _131_66 = (free_names_and_uvars t1)
 in (let _131_65 = (free_names_and_uvars t2)
 in (union _131_66 _131_65)))
 end
-| FStar_Syntax_Syntax.Tm_ascribed (t1, FStar_Util.Inr (c), _36_107) -> begin
+| FStar_Syntax_Syntax.Tm_ascribed (t1, FStar_Util.Inr (c), _36_108) -> begin
 (let _131_68 = (free_names_and_uvars t1)
 in (let _131_67 = (free_names_and_uvars_comp c)
 in (union _131_68 _131_67)))
@@ -147,12 +150,12 @@ end
 (let _131_76 = (free_names_and_uvars t)
 in (FStar_List.fold_right free_names_and_uvars_args args _131_76))
 end
-| FStar_Syntax_Syntax.Tm_meta (t, FStar_Syntax_Syntax.Meta_monadic (_36_123, t')) -> begin
+| FStar_Syntax_Syntax.Tm_meta (t, FStar_Syntax_Syntax.Meta_monadic (_36_124, t')) -> begin
 (let _131_78 = (free_names_and_uvars t)
 in (let _131_77 = (free_names_and_uvars t')
 in (union _131_78 _131_77)))
 end
-| FStar_Syntax_Syntax.Tm_meta (t, _36_131) -> begin
+| FStar_Syntax_Syntax.Tm_meta (t, _36_132) -> begin
 (free_names_and_uvars t)
 end))))
 and free_names_and_uvars : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.free_vars = (fun t -> (
@@ -163,28 +166,28 @@ in (match ((FStar_ST.read t.FStar_Syntax_Syntax.vars)) with
 if (should_invalidate_cache n) then begin
 (
 
-let _36_138 = (FStar_ST.op_Colon_Equals t.FStar_Syntax_Syntax.vars None)
+let _36_139 = (FStar_ST.op_Colon_Equals t.FStar_Syntax_Syntax.vars None)
 in (free_names_and_uvars t))
 end else begin
 n
 end
 end
-| _36_141 -> begin
+| _36_142 -> begin
 (
 
 let n = (free_names_and_uvs' t)
 in (
 
-let _36_143 = (FStar_ST.op_Colon_Equals t.FStar_Syntax_Syntax.vars (Some (n)))
+let _36_144 = (FStar_ST.op_Colon_Equals t.FStar_Syntax_Syntax.vars (Some (n)))
 in n))
 end)))
-and free_names_and_uvars_args : FStar_Syntax_Syntax.args  ->  FStar_Syntax_Syntax.free_vars  ->  FStar_Syntax_Syntax.free_vars = (fun args acc -> (FStar_All.pipe_right args (FStar_List.fold_left (fun n _36_151 -> (match (_36_151) with
-| (x, _36_150) -> begin
+and free_names_and_uvars_args : FStar_Syntax_Syntax.args  ->  FStar_Syntax_Syntax.free_vars  ->  FStar_Syntax_Syntax.free_vars = (fun args acc -> (FStar_All.pipe_right args (FStar_List.fold_left (fun n _36_152 -> (match (_36_152) with
+| (x, _36_151) -> begin
 (let _131_84 = (free_names_and_uvars x)
 in (union n _131_84))
 end)) acc)))
-and free_names_and_uvars_binders = (fun bs acc -> (FStar_All.pipe_right bs (FStar_List.fold_left (fun n _36_158 -> (match (_36_158) with
-| (x, _36_157) -> begin
+and free_names_and_uvars_binders = (fun bs acc -> (FStar_All.pipe_right bs (FStar_List.fold_left (fun n _36_159 -> (match (_36_159) with
+| (x, _36_158) -> begin
 (let _131_87 = (free_names_and_uvars x.FStar_Syntax_Syntax.sort)
 in (union n _131_87))
 end)) acc)))
@@ -193,13 +196,13 @@ and free_names_and_uvars_comp : FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Synta
 if (should_invalidate_cache n) then begin
 (
 
-let _36_162 = (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars None)
+let _36_163 = (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars None)
 in (free_names_and_uvars_comp c))
 end else begin
 n
 end
 end
-| _36_165 -> begin
+| _36_166 -> begin
 (
 
 let n = (match (c.FStar_Syntax_Syntax.n) with
@@ -221,22 +224,22 @@ in (union us _131_94))) us ct.FStar_Syntax_Syntax.comp_univs))
 end)
 in (
 
-let _36_187 = (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars (Some (n)))
+let _36_188 = (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars (Some (n)))
 in n))
 end))
 and should_invalidate_cache : FStar_Syntax_Syntax.free_vars  ->  Prims.bool = (fun n -> ((let _131_97 = (FStar_All.pipe_right n.FStar_Syntax_Syntax.free_uvars FStar_Util.set_elements)
-in (FStar_All.pipe_right _131_97 (FStar_Util.for_some (fun _36_193 -> (match (_36_193) with
-| (u, _36_192) -> begin
+in (FStar_All.pipe_right _131_97 (FStar_Util.for_some (fun _36_194 -> (match (_36_194) with
+| (u, _36_193) -> begin
 (match ((FStar_Unionfind.find u)) with
-| FStar_Syntax_Syntax.Fixed (_36_195) -> begin
+| FStar_Syntax_Syntax.Fixed (_36_196) -> begin
 true
 end
-| _36_198 -> begin
+| _36_199 -> begin
 false
 end)
 end))))) || (let _131_99 = (FStar_All.pipe_right n.FStar_Syntax_Syntax.free_univs FStar_Util.set_elements)
 in (FStar_All.pipe_right _131_99 (FStar_Util.for_some (fun u -> (match ((FStar_Unionfind.find u)) with
-| Some (_36_201) -> begin
+| Some (_36_202) -> begin
 true
 end
 | None -> begin

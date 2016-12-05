@@ -58,14 +58,14 @@ let singleton_univ_name x = {
     free_names=no_names;
     free_uvars=no_uvs;
     free_univs=no_universe_uvars;
-    free_univ_names=Util.set_add x (new_universe_names_set ())
+    free_univ_names=Util.fifo_set_add x (new_universe_names_fifo_set ())
 }
 
 let union f1 f2 = {
     free_names=Util.set_union f1.free_names f2.free_names;
     free_uvars=Util.set_union f1.free_uvars f2.free_uvars;
     free_univs=Util.set_union f1.free_univs f2.free_univs;
-    free_univ_names=Util.set_union f1.free_univ_names f2.free_univ_names
+    free_univ_names=Util.fifo_set_union f1.free_univ_names f2.free_univ_names
 }
 
 let rec free_univs u = match Subst.compress_univ u with
@@ -78,8 +78,10 @@ let rec free_univs u = match Subst.compress_univ u with
   | U_unif u -> singleton_univ u
 
 let rec free_names_and_uvs' tm : free_vars =
-    let aux_binders bs acc =
-        bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort)) acc in
+    let aux_binders bs from_body =
+        let from_binders = bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort)) no_free_vars in
+        union from_binders from_body
+    in
     let t = Subst.compress tm in
     match t.n with
       | Tm_delayed _ -> failwith "Impossible"
@@ -119,10 +121,13 @@ let rec free_names_and_uvs' tm : free_vars =
         pats |> List.fold_left (fun n (p, wopt, t) ->
             let n1 = match wopt with
                 | None ->   no_free_vars
-                | Some w -> free_names_and_uvars w in
+                | Some w -> free_names_and_uvars w
+            in
             let n2 = free_names_and_uvars t in
-            let n = union n1 (union n2 n) in
-            pat_bvs p |> List.fold_left (fun n x -> union n (free_names_and_uvars x.sort)) n)
+            let n =
+              pat_bvs p |> List.fold_left (fun n x -> union n (free_names_and_uvars x.sort)) n
+            in
+            union n (union n1 n2) )
             (free_names_and_uvars t)
 
       | Tm_ascribed(t1, Inl t2, _) ->

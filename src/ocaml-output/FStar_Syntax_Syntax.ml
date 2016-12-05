@@ -398,7 +398,7 @@ type term' =
  and fv =
 {fv_name : term var; fv_delta : delta_depth; fv_qual : fv_qual Prims.option} 
  and free_vars =
-{free_names : bv FStar_Util.set; free_uvars : uvars; free_univs : universe_uvar FStar_Util.set; free_univ_names : univ_name FStar_Util.set} 
+{free_names : bv FStar_Util.set; free_uvars : uvars; free_univs : universe_uvar FStar_Util.set; free_univ_names : univ_name FStar_Util.fifo_set} 
  and lcomp =
 {eff_name : FStar_Ident.lident; res_typ : typ; cflags : cflags Prims.list; comp : Prims.unit  ->  comp} 
  and branch =
@@ -1794,9 +1794,9 @@ let new_universe_uvar_set : Prims.unit  ->  universe_uvar FStar_Util.set = (fun 
 end))
 
 
-let new_universe_names_set : Prims.unit  ->  univ_name FStar_Util.set = (fun _33_359 -> (match (()) with
+let new_universe_names_fifo_set : Prims.unit  ->  univ_name FStar_Util.fifo_set = (fun _33_359 -> (match (()) with
 | () -> begin
-(FStar_Util.new_set (fun x y -> (FStar_String.compare (FStar_Ident.text_of_id x) (FStar_Ident.text_of_id y))) (fun x -> (FStar_Util.hashcode (FStar_Ident.text_of_id x))))
+(FStar_Util.new_fifo_set (fun x y -> (FStar_String.compare (FStar_Ident.text_of_id x) (FStar_Ident.text_of_id y))) (fun x -> (FStar_Util.hashcode (FStar_Ident.text_of_id x))))
 end))
 
 
@@ -1809,7 +1809,7 @@ let no_uvs : uvars = (new_uv_set ())
 let no_universe_uvars : universe_uvar FStar_Util.set = (new_universe_uvar_set ())
 
 
-let no_universe_names : univ_name FStar_Util.set = (new_universe_names_set ())
+let no_universe_names : univ_name FStar_Util.fifo_set = (new_universe_names_fifo_set ())
 
 
 let empty_free_vars : free_vars = {free_names = no_names; free_uvars = no_uvs; free_univs = no_universe_uvars; free_univ_names = no_universe_names}

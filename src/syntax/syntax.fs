@@ -187,7 +187,7 @@ and free_vars = {
     free_names:set<bv>;
     free_uvars:uvars;
     free_univs:set<universe_uvar>;
-    free_univ_names:set<univ_name>;
+    free_univ_names:fifo_set<univ_name>;
 }
 and lcomp = {
     eff_name: lident;
@@ -368,14 +368,14 @@ let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_
 let new_universe_uvar_set () : set<universe_uvar> =
     Util.new_set (fun x y -> Unionfind.uvar_id x - Unionfind.uvar_id y)
                  (fun x -> Unionfind.uvar_id x)
-let new_universe_names_set () : set<univ_name> =
-    Util.new_set (fun  x y -> String.compare (Ident.text_of_id x) (Ident.text_of_id y))
+let new_universe_names_fifo_set () : fifo_set<univ_name> =
+    Util.new_fifo_set (fun  x y -> String.compare (Ident.text_of_id x) (Ident.text_of_id y))
                  (fun x -> Util.hashcode (Ident.text_of_id x))
 
 let no_names  = new_bv_set()
 let no_uvs : uvars = new_uv_set()
 let no_universe_uvars = new_universe_uvar_set()
-let no_universe_names = new_universe_names_set ()
+let no_universe_names = new_universe_names_fifo_set ()
 let empty_free_vars = {
         free_names=no_names;
         free_uvars=no_uvs;
