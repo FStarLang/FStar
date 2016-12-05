@@ -263,6 +263,9 @@ ulib:
 uexamples:
 	+make -C ../examples uall
 
+examples:
+	+make -C ../examples sall
+
 wc-boot:
 	wc -l $(BOOT_ALL)
 
