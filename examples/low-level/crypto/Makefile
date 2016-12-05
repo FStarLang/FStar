@@ -37,7 +37,11 @@ VERIFY= \
   Crypto.AEAD.AES256GCM \
   Crypto.AEAD.Encoding \
   Crypto.AEAD.Invariant \
+  Crypto.AEAD.BufferUtils \
   Crypto.AEAD.Lemmas \
+  Crypto.AEAD.Lemmas.Part2 \
+  Crypto.AEAD.Lemmas.Part3 \
+  Crypto.AEAD.Wrappers \
   Crypto.Plain \
   Crypto.Test \
   TestMonotonic
@@ -93,5 +97,5 @@ aead-ver: $(addsuffix -ver, $(AEAD_FILES))
 aead-wc:
 	wc -l $(AEAD_FILES)
 
-aead-assumes:
-	grep "\(assume\)\|\(admit\)\|\(lax\)" $(AEAD_FILES)
+all-assumes: $(addsuffix .fst, $(VERIFY) $(LAX))
+	grep "\(assume\)\|\(admit\)\|\(lax\)" $^
