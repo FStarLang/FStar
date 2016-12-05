@@ -66,7 +66,7 @@ LAX= \
 
 all: all-ver $(addsuffix .fst-lax, $(LAX))
 
-extra: all-ver $(addsuffix .fst-ver $(EXTRA))
+extra: all-ver $(addsuffix .fst-ver, $(EXTRA))
 
 all-ver: $(addsuffix .fst-ver, $(VERIFY))
 
