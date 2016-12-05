@@ -1,5 +1,5 @@
 [
-  ".ßÉsä¤\u007fø’9ß\u0010\u001fà\u0014ê",
+  "èÀ—”!@r:=Ü\u0017\u001d°9;Š",
   [
     [
       "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.carriedTopBottom",
@@ -223,7 +223,7 @@
         "@query", "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",
         "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.carried_1",
+        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.carried_2",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.carriedTopBottom",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
         "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
@@ -290,7 +290,7 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_c90e16742d2e633e32c657b87c3493b3",
         "typing_FStar.Buffer.as_seq", "typing_FStar.Seq.index",
-        "typing_FStar.UInt64.Mk.v", "unit_typing"
+        "typing_FStar.UInt64.__proj__Mk__item__v", "unit_typing"
       ],
       0
     ],
@@ -311,7 +311,6 @@
         "@query", "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",
         "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.carried_3",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.carriedTopBottom",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
         "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
@@ -468,17 +467,19 @@
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.carried_4",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.isCarried01",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
-        "equation_FStar.Buffer.contains", "equation_FStar.Buffer.live",
+        "equation_FStar.Buffer.buffer", "equation_FStar.Buffer.contains",
+        "equation_FStar.Buffer.live",
         "equation_FStar.HyperHeap.contains_ref",
         "equation_FStar.HyperStack.contains", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt64.n",
         "equation_FStar.UInt64.t", "equation_FStar.UInt64.v",
-        "equation_Prims.pos",
+        "equation_Prims.nat", "equation_Prims.pos",
         "fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.HyperStack.mem",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_Equality",
+        "fuel_guarded_inversion_FStar.Buffer._buffer",
+        "fuel_guarded_inversion_FStar.HyperStack.mem", "int_typing",
+        "lemma_FStar.Int.pow2_values", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
         "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Modulus",
         "primitive_Prims.op_Subtraction",
@@ -486,6 +487,7 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_033585b16f9282fb8c7c71161354496f",
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0
@@ -517,7 +519,6 @@
       [
         "@query", "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",
         "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.carried_4",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.isCarried01",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
         "equation_FStar.UInt64.t", "projection_inverse_BoxInt_proj_0",
@@ -534,7 +535,6 @@
         "@query", "b2t_def",
         "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",
         "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.carried_4",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.isCarried01",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
         "equation_FStar.Mul.op_Star", "equation_FStar.UInt.fits",
@@ -596,7 +596,6 @@
       1,
       [
         "@query", "equation_Crypto.Symmetric.Poly1305.Bigint.norm",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.carried_4",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.isCarried01",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
         "projection_inverse_BoxInt_proj_0"

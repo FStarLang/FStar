@@ -227,7 +227,7 @@ in (let _154_87 = (let _154_84 = (op (([]), (a.FStar_Syntax_Syntax.action_defn))
 in (Prims.snd _154_84))
 in (let _154_86 = (let _154_85 = (op (([]), (a.FStar_Syntax_Syntax.action_typ)))
 in (Prims.snd _154_85))
-in {FStar_Syntax_Syntax.action_name = _59_144.FStar_Syntax_Syntax.action_name; FStar_Syntax_Syntax.action_univs = _59_144.FStar_Syntax_Syntax.action_univs; FStar_Syntax_Syntax.action_defn = _154_87; FStar_Syntax_Syntax.action_typ = _154_86})))) ed.FStar_Syntax_Syntax.actions)
+in {FStar_Syntax_Syntax.action_name = _59_144.FStar_Syntax_Syntax.action_name; FStar_Syntax_Syntax.action_unqualified_name = _59_144.FStar_Syntax_Syntax.action_unqualified_name; FStar_Syntax_Syntax.action_univs = _59_144.FStar_Syntax_Syntax.action_univs; FStar_Syntax_Syntax.action_defn = _154_87; FStar_Syntax_Syntax.action_typ = _154_86})))) ed.FStar_Syntax_Syntax.actions)
 in {FStar_Syntax_Syntax.qualifiers = _59_141.FStar_Syntax_Syntax.qualifiers; FStar_Syntax_Syntax.mname = _59_141.FStar_Syntax_Syntax.mname; FStar_Syntax_Syntax.univs = _59_141.FStar_Syntax_Syntax.univs; FStar_Syntax_Syntax.binders = _59_141.FStar_Syntax_Syntax.binders; FStar_Syntax_Syntax.signature = _59_141.FStar_Syntax_Syntax.signature; FStar_Syntax_Syntax.ret_wp = _154_101; FStar_Syntax_Syntax.bind_wp = _154_100; FStar_Syntax_Syntax.if_then_else = _154_99; FStar_Syntax_Syntax.ite_wp = _154_98; FStar_Syntax_Syntax.stronger = _154_97; FStar_Syntax_Syntax.close_wp = _154_96; FStar_Syntax_Syntax.assert_p = _154_95; FStar_Syntax_Syntax.assume_p = _154_94; FStar_Syntax_Syntax.null_wp = _154_93; FStar_Syntax_Syntax.trivial = _154_92; FStar_Syntax_Syntax.repr = _154_91; FStar_Syntax_Syntax.return_repr = _154_90; FStar_Syntax_Syntax.bind_repr = _154_89; FStar_Syntax_Syntax.actions = _154_88}))))))))))))))))
 end)
 in (
@@ -784,7 +784,7 @@ let act_typ = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normali
 in (
 
 let _59_359 = act
-in {FStar_Syntax_Syntax.action_name = _59_359.FStar_Syntax_Syntax.action_name; FStar_Syntax_Syntax.action_univs = univs; FStar_Syntax_Syntax.action_defn = act_defn; FStar_Syntax_Syntax.action_typ = act_typ}))
+in {FStar_Syntax_Syntax.action_name = _59_359.FStar_Syntax_Syntax.action_name; FStar_Syntax_Syntax.action_unqualified_name = _59_359.FStar_Syntax_Syntax.action_unqualified_name; FStar_Syntax_Syntax.action_univs = univs; FStar_Syntax_Syntax.action_defn = act_defn; FStar_Syntax_Syntax.action_typ = act_typ}))
 end)))))
 end))))
 end))))
@@ -852,7 +852,7 @@ let _59_400 = ()
 in (
 
 let _59_402 = act
-in {FStar_Syntax_Syntax.action_name = _59_402.FStar_Syntax_Syntax.action_name; FStar_Syntax_Syntax.action_univs = univs; FStar_Syntax_Syntax.action_defn = defn; FStar_Syntax_Syntax.action_typ = typ}))
+in {FStar_Syntax_Syntax.action_name = _59_402.FStar_Syntax_Syntax.action_name; FStar_Syntax_Syntax.action_unqualified_name = _59_402.FStar_Syntax_Syntax.action_unqualified_name; FStar_Syntax_Syntax.action_univs = univs; FStar_Syntax_Syntax.action_defn = defn; FStar_Syntax_Syntax.action_typ = typ}))
 end))
 end)))
 in (
@@ -1237,7 +1237,7 @@ in (let _154_428 = (let _154_427 = (
 let _59_585 = action
 in (let _154_426 = (apply_close action_elab)
 in (let _154_425 = (apply_close action_typ_with_wp)
-in {FStar_Syntax_Syntax.action_name = _59_585.FStar_Syntax_Syntax.action_name; FStar_Syntax_Syntax.action_univs = _59_585.FStar_Syntax_Syntax.action_univs; FStar_Syntax_Syntax.action_defn = _154_426; FStar_Syntax_Syntax.action_typ = _154_425})))
+in {FStar_Syntax_Syntax.action_name = _59_585.FStar_Syntax_Syntax.action_name; FStar_Syntax_Syntax.action_unqualified_name = _59_585.FStar_Syntax_Syntax.action_unqualified_name; FStar_Syntax_Syntax.action_univs = _59_585.FStar_Syntax_Syntax.action_univs; FStar_Syntax_Syntax.action_defn = _154_426; FStar_Syntax_Syntax.action_typ = _154_425})))
 in (_154_427)::actions)
 in ((dmff_env), (_154_428)))))))
 end))

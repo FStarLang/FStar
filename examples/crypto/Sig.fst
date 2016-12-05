@@ -64,4 +64,4 @@ val verify: p:pk
          -> b:bool{b ==> key_prop p t}
 let verify p t m =
   let found = List.Tot.find (function (Entry p' t' _) -> p=p' && t=t') !log in
-  is_Some found
+  Some? found

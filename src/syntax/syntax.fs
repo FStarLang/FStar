@@ -215,7 +215,7 @@ type qualifier =
   | TotalEffect                            //an effect that forbis non-termination
   | Logic                                  //a symbol whose intended usage is in the refinement logic
   | Reifiable
-  | Reflectable
+  | Reflectable of lident                  // with fully qualified effect name
   //the remaining qualifiers are internal: the programmer cannot write them
   | Discriminator of lident                //discriminator for a datacon l
   | Projector of lident * ident            //projector for datacon l's argument x
@@ -240,6 +240,7 @@ type sub_eff = {
 
 type action = {
     action_name:lident;
+    action_unqualified_name: ident; // necessary for effect redefinitions, this name shall not contain the name of the effect
     action_univs:univ_names;
     action_defn:term;
     action_typ: typ;
@@ -330,6 +331,9 @@ type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
 type mk_t = mk_t_a<term',term'>
 
 // VALS_HACK_HERE
+
+let contains_reflectable (l: list<qualifier>): bool =
+    Util.for_some (function Reflectable _ -> true | _ -> false) l
 
 (*********************************************************************************)
 (* Identifiers to/from strings *)

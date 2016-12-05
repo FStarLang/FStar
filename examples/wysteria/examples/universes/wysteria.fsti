@@ -95,9 +95,9 @@ sub_effect PURE ~> WYS = lift_pure_wys
 
 val rest_trace: t1:trace -> t2:trace -> Tot (option trace)
 
-val last_elt: t:trace{is_Cons t} -> Tot telt
+val last_elt: t:trace{Cons? t} -> Tot telt
 
-val all_but_last: t:trace{is_Cons t} -> Tot trace
+val all_but_last: t:trace{Cons? t} -> Tot trace
 
 val equal_trace_rest_lemma: t1:trace -> t2:trace
                             -> Lemma (requires (t1 == t2))
@@ -111,22 +111,22 @@ val rest_equal_trace_lemma: t1:trace -> t2:trace
                                
 val append_rest_lemma: t1:trace -> t2:trace -> t3:trace
                        -> Lemma (requires (append t1 t2 == t3))
-                                (ensures (is_Some (rest_trace t3 t1) /\ Some.v (rest_trace t3 t1) == t2))
+                                (ensures (Some? (rest_trace t3 t1) /\ Some.v (rest_trace t3 t1) == t2))
                           [SMTPat (rest_trace t3 t1); SMTPat (append t1 t2)]
 
 val rest_append_lemma: t1:trace -> t2:trace -> t3:trace
-                       -> Lemma (requires (is_Some (rest_trace t3 t1) /\ Some.v (rest_trace t3 t1) == t2))
+                       -> Lemma (requires (Some? (rest_trace t3 t1) /\ Some.v (rest_trace t3 t1) == t2))
                                 (ensures (append t1 t2 == t3))
                           [SMTPat (rest_trace t3 t1); SMTPat (append t1 t2)]
 
 val trace_assoc: t1:trace -> t2:trace -> t3:trace
-                 -> Lemma (requires (is_Some (rest_trace t2 t1) /\ is_Some (rest_trace t3 t2)))
-                          (ensures (is_Some (rest_trace t2 t1) /\ is_Some (rest_trace t3 t2) /\ is_Some (rest_trace t3 t1) /\
+                 -> Lemma (requires (Some? (rest_trace t2 t1) /\ Some? (rest_trace t3 t2)))
+                          (ensures (Some? (rest_trace t2 t1) /\ Some? (rest_trace t3 t2) /\ Some? (rest_trace t3 t1) /\
                                     Some.v (rest_trace t3 t1) == append (Some.v (rest_trace t2 t1))
                                                                        (Some.v (rest_trace t3 t2))))
                     [SMTPat (rest_trace t2 t1); SMTPat (rest_trace t3 t2)]
 
-val last_elt_singleton_lemma: t:trace{is_Cons t}
+val last_elt_singleton_lemma: t:trace{Cons? t}
                               -> Lemma (requires (all_but_last t == []))
                                        (ensures (t == [last_elt t]))
                                  [SMTPat (last_elt t); SMTPat (all_but_last t)]
@@ -141,7 +141,7 @@ val snoc_all_but_last_lemma: elt:telt -> t:trace
                                       (ensures (all_but_last (t @ [elt]) == t))
                             [SMTPat (all_but_last (t @ [elt]))]
 
-val all_but_last_append_lemma: t:trace{is_Cons t} ->
+val all_but_last_append_lemma: t:trace{Cons? t} ->
                                Lemma (requires (True))
                                      (ensures (append (all_but_last t) ([last_elt t]) == t))
                                [SMTPat (append (all_but_last t) ([last_elt t]))]
@@ -160,7 +160,7 @@ val all_but_last_append_lemma: t:trace{is_Cons t} ->
 
 (* type wys_encoding (a:Type) (req:mode -> Type) (ens:mode -> a -> trace -> Type) (p:a -> heap -> Type) (h0:heap) = *)
 (*   req (sel h0 moderef) /\ *)
-(*   (forall x h1. (sel h1 moderef = sel h0 moderef /\ is_Some (rest_trace (sel h1 traceref) (sel h0 traceref)) /\ *)
+(*   (forall x h1. (sel h1 moderef = sel h0 moderef /\ Some? (rest_trace (sel h1 traceref) (sel h0 traceref)) /\ *)
 (*                  ens (sel h0 moderef) x (Some.v (rest_trace (sel h1 traceref) (sel h0 traceref)))) ==> p x h1) *)
 
 (* effect Wys (a:Type) (req:mode -> Type) (ens:mode -> a -> trace -> Type) = *)
@@ -176,8 +176,8 @@ val all_but_last_append_lemma: t:trace{is_Cons t} ->
 (*   req (R (sel (R.l h0) moderef) (sel (R.r h0) moderef)) /\ *)
 (*   (forall x h1. (sel (R.l h1) moderef = sel (R.l h0) moderef /\ *)
 (*                  sel (R.r h1) moderef = sel (R.r h0) moderef /\ *)
-(*                  is_Some (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref)) /\ *)
-(*                  is_Some (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref)) /\ *)
+(*                  Some? (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref)) /\ *)
+(*                  Some? (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref)) /\ *)
 (*                  ens (R (sel (R.l h0) moderef) (sel (R.r h0) moderef)) x *)
 (*                      (R (Some.v (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref))) *)
 (*                         (Some.v (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref))))) ==> p x h1) *)
@@ -285,8 +285,8 @@ val as_par: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Ty
             -> Wys (box a ps) (fun m0     -> req_f (Mode Par ps) /\
                                              delPar m0 ps        /\
                                              can_box a ps)
-                              (fun m0 r t -> is_Cons t /\ Cons.tl t == [] /\
-                                             is_TScope (Cons.hd t)       /\
+                              (fun m0 r t -> Cons? t /\ Cons.tl t == [] /\
+                                             TScope? (Cons.hd t)       /\
                                              TScope.ps (Cons.hd t) = ps  /\
                                              ens_f (Mode Par ps) (v_of_box r) (TScope.t (Cons.hd t)))
 
@@ -298,7 +298,7 @@ val as_sec: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Ty
             -> ps:prins
             -> $f:(unit -> Wys a req_f ens_f)
             -> Wys a (fun m0     -> req_f (Mode Sec ps) /\ decSec m0 ps)
-                     (fun m0 r t -> is_Cons t /\ last_elt t == TMsg #a r /\
+                     (fun m0 r t -> Cons? t /\ last_elt t == TMsg #a r /\
                                     ens_f (Mode Sec ps) r (all_but_last t))
                                     
 (*****)
@@ -395,7 +395,7 @@ val comb_sh: #a:Type -> x:sh a
 (*           -> ps:prins *)
 (*           -> $f:(unit -> Wys a req_f ens_f) *)
 (*           -> All a (fun h0      -> req_f (Mode Par ps)) *)
-(*                    (fun h0 r h1 -> is_V r /\ ens_f (Mode Par ps) (V.v r) (sel h1 traceref)) *)
+(*                    (fun h0 r h1 -> V? r /\ ens_f (Mode Par ps) (V.v r) (sel h1 traceref)) *)
 
 (*****)
 

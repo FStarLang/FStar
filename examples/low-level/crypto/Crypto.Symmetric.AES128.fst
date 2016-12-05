@@ -29,9 +29,9 @@ inline_for_extraction let nb =  4ul
 inline_for_extraction let nk =  4ul
 inline_for_extraction let nr = 10ul
 
-let blocklen = U32(4ul *^ nb)
-let keylen   = U32(4ul *^ nk)
-let xkeylen  = U32(4ul *^ nb *^ (nr +^ 1ul)) // 176, 208, or 240
+let blocklen = U32.(4ul *^ nb)
+let keylen   = U32.(4ul *^ nk)
+let xkeylen  = U32.(4ul *^ nb *^ (nr +^ 1ul)) // 176, 208, or 240
 
 type block = lbytes (v blocklen)
 type skey  = lbytes (v keylen)
@@ -206,7 +206,7 @@ let rec access_aux: sb:sbox -> byte -> ctr:UInt32.t{v ctr <= 256} -> byte -> STL
   if ctr = 256ul then tmp
   else let mask = eq_mask i (uint32_to_uint8 ctr) in
        let tmp = tmp |^ (mask &^ sbox.(ctr)) in
-       access_aux sbox i (U32 (ctr +^ 1ul)) tmp
+       access_aux sbox i (U32.(ctr +^ 1ul)) tmp
 
 val access: sb:sbox -> idx:byte -> STL byte
   (requires (fun h -> live h sb))
@@ -227,7 +227,7 @@ let rec subBytes_aux_sbox state sbox ctr =
     let si = state.(ctr) in
     let si' = access sbox si in
     state.(ctr) <- si';
-    subBytes_aux_sbox state sbox (U32 (ctr +^ 1ul))
+    subBytes_aux_sbox state sbox (U32.(ctr +^ 1ul))
   end
 
 val subBytes_sbox: state:block -> sbox:sbox{disjoint state sbox} -> STL unit
@@ -263,21 +263,21 @@ let shiftRows state =
   state.(i+^ 8ul) <- state.(i+^ 4ul);
   state.(i+^ 4ul) <- tmp
 
-#reset-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 50 --initial_fuel 0 --max_fuel 0"
 
 val mixColumns_: state:block -> c:UInt32.t{v c < 4} -> STL unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let mixColumns_ state c =
-  let s = Buffer.sub state (H32(4ul*^c)) 4ul in 
+  let s = Buffer.sub state (H32.(4ul*^c)) 4ul in 
   let s0 = s.(0ul) in
   let s1 = s.(1ul) in
   let s2 = s.(2ul) in
   let s3 = s.(3ul) in
-  s.(0ul) <- H8 (multiply 0x2uy s0 ^^ multiply 0x3uy s1 ^^ s2 ^^ s3);
-  s.(1ul) <- H8 (multiply 0x2uy s1 ^^ multiply 0x3uy s2 ^^ s3 ^^ s0);
-  s.(2ul) <- H8 (multiply 0x2uy s2 ^^ multiply 0x3uy s3 ^^ s0 ^^ s1);
-  s.(3ul) <- H8 (multiply 0x2uy s3 ^^ multiply 0x3uy s0 ^^ s1 ^^ s2)
+  s.(0ul) <- H8.(multiply 0x2uy s0 ^^ multiply 0x3uy s1 ^^ s2 ^^ s3);
+  s.(1ul) <- H8.(multiply 0x2uy s1 ^^ multiply 0x3uy s2 ^^ s3 ^^ s0);
+  s.(2ul) <- H8.(multiply 0x2uy s2 ^^ multiply 0x3uy s3 ^^ s0 ^^ s1);
+  s.(3ul) <- H8.(multiply 0x2uy s3 ^^ multiply 0x3uy s0 ^^ s1 ^^ s2)
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
@@ -290,7 +290,7 @@ let mixColumns state =
   mixColumns_ state 2ul;
   mixColumns_ state 3ul
 
-#reset-options "--z3timeout 10 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 10 --initial_fuel 0 --max_fuel 0"
 
 val addRoundKey_: state:block -> w:xkey{disjoint state w} -> rnd -> c:UInt32.t{v c < 4} -> STL unit
   (requires (fun h -> live h state /\ live h w))
@@ -328,7 +328,7 @@ let rec cipher_loop state w sbox round =
     cipher_loop   state w sbox (round+^1ul)
   end
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 val cipher: out:block -> input:block -> w:xkey -> sb:sbox -> STL unit
   (requires (fun h -> live h out /\ live h input /\ live h w /\ live h sb /\ 
@@ -371,17 +371,17 @@ let subWord word sbox =
   word.(2ul) <- access sbox word.(2ul);
   word.(3ul) <- access sbox word.(3ul)
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 
 val rcon: i:UInt32.t{v i >= 1} -> byte -> Tot byte (decreases (v i))
 let rec rcon i tmp =
   if i = 1ul then tmp
   else begin
     let tmp = multiply 0x2uy tmp in
-    rcon (U32(i-^1ul)) tmp
+    rcon (U32.(i-^1ul)) tmp
   end
 
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
 
 val keyExpansion_aux_0:w:xkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < (v xkeylen / 4) /\ v i >= v nk} -> STL unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox /\ 
@@ -396,13 +396,13 @@ let keyExpansion_aux_0 w temp sbox j =
     subWord temp sbox;
     let t0 = temp.(0ul) in
     let rc = rcon (j/^nk) 1uy in
-    let z = H8 (t0 ^^ rc) in
+    let z = H8.(t0 ^^ rc) in
     temp.(0ul) <- z ) 
   else if j %^ nk = 4ul then 
     subWord temp sbox
   
 
-#reset-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 50 --initial_fuel 0 --max_fuel 0"
 
 val keyExpansion_aux_1: w:xkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < (v xkeylen / 4) /\ v i >= v nk} -> STL unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox
@@ -419,10 +419,10 @@ let keyExpansion_aux_1 w temp sbox j =
   let t1 = temp.(1ul) in
   let t2 = temp.(2ul) in
   let t3 = temp.(3ul) in
-  w.(i+^0ul) <- H8 (t0 ^^ w0);
-  w.(i+^1ul) <- H8 (t1 ^^ w1);
-  w.(i+^2ul) <- H8 (t2 ^^ w2);
-  w.(i+^3ul) <- H8 (t3 ^^ w3)
+  w.(i+^0ul) <- H8.(t0 ^^ w0);
+  w.(i+^1ul) <- H8.(t1 ^^ w1);
+  w.(i+^2ul) <- H8.(t2 ^^ w2);
+  w.(i+^3ul) <- H8.(t3 ^^ w3)
 
 val keyExpansion_aux: w:xkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i <= (v xkeylen / 4) /\ v i >= v nk} -> STL unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox
@@ -461,7 +461,7 @@ let rec invSubBytes_aux_sbox state sbox ctr =
     let si = state.(ctr) in
     let si' = access sbox si in
     state.(ctr) <- si';
-    invSubBytes_aux_sbox state sbox (U32 (ctr+^1ul))
+    invSubBytes_aux_sbox state sbox (U32.(ctr+^1ul))
   end
 
 val invSubBytes_sbox: state:block -> sbox:sbox -> STL unit
@@ -497,18 +497,18 @@ let invShiftRows state =
   state.(i+^8ul)  <- state.(i+^4ul);
   state.(i+^4ul)  <- tmp
 
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
 
 val invMixColumns_: state:block -> c:UInt32.t{v c < 4} -> STL unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1 ))
 let invMixColumns_ state c =
-  let s = Buffer.sub state (H32(4ul*^c)) 4ul in 
+  let s = Buffer.sub state (H32.(4ul*^c)) 4ul in 
   let s0 = s.(0ul) in
   let s1 = s.(1ul) in
   let s2 = s.(2ul) in
   let s3 = s.(3ul) in
-  let mix x0 x1 x2 x3 = H8 (multiply 0xeuy x0 ^^ multiply 0xbuy x1 ^^ multiply 0xduy x2 ^^ multiply 0x9uy x3) in
+  let mix x0 x1 x2 x3 = H8.(multiply 0xeuy x0 ^^ multiply 0xbuy x1 ^^ multiply 0xduy x2 ^^ multiply 0x9uy x3) in
   s.(0ul) <- mix s0 s1 s2 s3;
   s.(1ul) <- mix s1 s2 s3 s0;
   s.(2ul) <- mix s2 s3 s0 s1;
@@ -539,7 +539,7 @@ let rec inv_cipher_loop state w sbox round =
     inv_cipher_loop state w sbox (round -^ 1ul)
   end
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 100"
 
 val inv_cipher: out:block -> input:block -> w:xkey -> sb:sbox -> STL unit
   (requires (fun h -> live h out /\ live h input /\ live h w /\ live h sb /\ 
@@ -550,7 +550,7 @@ let inv_cipher out input w sbox =
   let state = create 0uy blocklen in
   blit input 0ul   state 0ul blocklen;
   addRoundKey      state w nr;
-  inv_cipher_loop  state w sbox (U32(nr -^ 1ul));
+  inv_cipher_loop  state w sbox (U32.(nr -^ 1ul));
   invShiftRows     state;
   invSubBytes_sbox state sbox;
   addRoundKey      state w 0ul;

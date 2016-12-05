@@ -36,7 +36,7 @@ assume val rand: n:pos -> Tot (r:nat{r < n})
 val get_deck: deck:list nat -> remaining:list nat
               -> Tot (list nat) (decreases (length remaining))
 let rec get_deck deck remaining =
-  if is_Nil remaining then deck
+  if Nil? remaining then deck
   else
     let r = rand (length remaining) in  // a random index in the remaining list
     let e = nth remaining r in  // the rth element in the list
@@ -57,7 +57,7 @@ let to_s2 p1 p2 = union (singleton p1) (singleton p2)
 
 val deck_to_int_list: list nat -> Tot (list int)
 let rec deck_to_int_list l =
-  if is_Nil l then mk_nil () else mk_cons (hd_of_cons l) (deck_to_int_list (tl_of_cons l))
+  if Nil? l then mk_nil () else mk_cons (hd_of_cons l) (deck_to_int_list (tl_of_cons l))
   
 val shuffle_deck: ps:prins -> unit -> Wys (list nat * nat) (pre (Mode Par ps)) post
 let shuffle_deck ps _ =

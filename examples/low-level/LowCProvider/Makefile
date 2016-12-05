@@ -78,6 +78,8 @@ clean:
 	rm -fr tmp
 	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll *.annot *~
 
+.depend: depend
+
 depend:
 	$(OCAMLDEP) *.ml *.mli > .depend
 

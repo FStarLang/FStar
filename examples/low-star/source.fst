@@ -27,11 +27,11 @@ type t =
 (*** Function experiements ***)
 let fst (Pair x y) = x
 
-val proj: #a:Type -> o:option a{ is_Some o} -> Tot a
+val proj: #a:Type -> o:option a{ Some? o} -> Tot a
 let proj o =
   Some.v o
 
-val proj_int: o:option int{ is_Some o } -> Tot int
+val proj_int: o:option int{ Some? o } -> Tot int
 let proj_int o = 
   Some.v o
 

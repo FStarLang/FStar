@@ -1,4 +1,3 @@
-OTHERFLAGS=
 
 FSTAR_HOME=../..
 include ../Makefile.include
