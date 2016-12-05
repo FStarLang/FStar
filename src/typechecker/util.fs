@@ -498,18 +498,20 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             if Util.is_trivial_wp c1
             then match b with
                     | None -> Some (c2, "trivial no binder")
-                    | Some _ -> 
+                    | Some _ ->
                         if Util.is_ml_comp c2 //|| not (Util.is_free [Inr x] (Util.freevars_comp c2))
                         then Some (c2, "trivial ml")
                         else None
             else if Util.is_ml_comp c1 && Util.is_ml_comp c2
             then Some (c2, "both ml")
-            else None in
-        let subst_c2 reason = 
-            match e1opt, b with 
-                | Some e, Some x -> 
+            else None
+        in
+        let subst_c2 reason =
+            match e1opt, b with
+                | Some e, Some x ->
                   Some (SS.subst_comp [NT(x,e)] c2, reason)
-                | _ -> aux() in 
+                | _ -> aux()
+        in
         if Util.is_total_comp c1
         && Util.is_total_comp c2
         then subst_c2 "both total"
@@ -521,7 +523,8 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 if Util.is_total_comp c1 && not (Syntax.is_null_bv x)
                 then subst_c2 "substituted e"
                 else aux ()
-            | _ -> aux () in
+            | _ -> aux ()
+      in
       match try_simplify () with
         | Some (c, reason) ->
           c
@@ -536,11 +539,12 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           let k = SS.subst [NT(a, t2)] kwp in
           let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md md.bind_wp)  wp_args None t2.pos in
           let c = mk_comp md u_t2 t2 wp [] in
-          c in
-    {eff_name=join_lcomp env lc1 lc2;
-     res_typ=lc2.res_typ;
-     cflags=[];
-     comp=bind_it}
+          c
+  in {eff_name=join_lcomp env lc1 lc2;
+      res_typ=lc2.res_typ;
+      (* TODO : these cflags might be inconsistent with the one returned by bind_it  !!! *)
+      cflags=[];
+      comp=bind_it}
 
 let lift_formula env t mk_wp f =
   let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in

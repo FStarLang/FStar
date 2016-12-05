@@ -108,6 +108,7 @@ let compile_op arity s =
 %token AND
 %token ASSERT
 %token ASSUME
+%token ATTRIBUTES
 %token BACKTICK
 %token BANG_LBRACE
 %token BAR
@@ -510,6 +511,14 @@ nonempty_list_atomicPattern_:
     {let x = $1 in
     ( [ x ] )}
 | atomicPattern nonempty_list_atomicPattern_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
+nonempty_list_atomicTerm_:
+  atomicTerm
+    {let x = $1 in
+    ( [ x ] )}
+| atomicTerm nonempty_list_atomicTerm_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -1544,6 +1553,9 @@ in
 | ENSURES typ
     {let (_1, t) = ((), $2) in
       ( mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type )}
+| ATTRIBUTES nonempty_list_atomicTerm_
+    {let (_1, es) = ((), $2) in
+      ( mk_term (Attributes es) (rhs2 parseState 1 2) Type )}
 | IF noSeqTerm THEN noSeqTerm ELSE noSeqTerm
     {let (_1, e1, _3, e2, _5, e3) = ((), $2, (), $4, (), $6) in
       ( mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr )}

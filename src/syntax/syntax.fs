@@ -131,6 +131,7 @@ and cflags =
   | PARTIAL_RETURN
   | SOMETRIVIAL
   | LEMMA
+  | CPS
   | DECREASES of term
 and uvar = Unionfind.uvar<uvar_basis<term>>
 and metadata =
@@ -246,6 +247,7 @@ type action = {
 }
 type eff_decl = {
     qualifiers  :list<qualifier>;
+    cattributes  :list<cflags>;
     mname       :lident;
     univs       :univ_names;
     binders     :binders;

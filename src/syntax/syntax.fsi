@@ -130,6 +130,7 @@ and cflags =
   | PARTIAL_RETURN
   | SOMETRIVIAL
   | LEMMA
+  | CPS
   | DECREASES of term
 and uvar = Unionfind.uvar<uvar_basis<term>>
 and metadata =
@@ -254,6 +255,7 @@ type action = {
 }
 type eff_decl = {
     qualifiers  :list<qualifier>;  //[Reify;Reflect; ...]
+    cattributes  :list<cflags>;     // default cflags
     mname       :lident;           //STATE_h
     univs       :univ_names;       //initially empty; but after type-checking and generalization, usually the universe of the result type etc.
     binders     :binders;          //heap:Type
@@ -284,7 +286,7 @@ and sigelt =
                        * typ                       //t
                        * list<lident>              //mutually defined types
                        * list<lident>              //data constructors for ths type
-                       * list<qualifier>           
+                       * list<qualifier>
                        * Range.range
 // JP: the comment below seems out of date -- Sig_tycons is gone?!
 (* an inductive type is a Sig_bundle of all mutually defined Sig_tycons and Sig_datacons.

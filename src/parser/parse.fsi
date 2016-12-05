@@ -128,6 +128,7 @@ type token =
   | BAR
   | BANG_LBRACE
   | BACKTICK
+  | ATTRIBUTES
   | ASSUME
   | ASSERT
   | AND
@@ -261,6 +262,7 @@ type tokenId =
     | TOKEN_BAR
     | TOKEN_BANG_LBRACE
     | TOKEN_BACKTICK
+    | TOKEN_ATTRIBUTES
     | TOKEN_ASSUME
     | TOKEN_ASSERT
     | TOKEN_AND
@@ -298,6 +300,7 @@ type nonTerminalId =
     | NONTERM_nonempty_list_aqualified_lident__
     | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
     | NONTERM_nonempty_list_atomicPattern_
+    | NONTERM_nonempty_list_atomicTerm_
     | NONTERM_nonempty_list_dotOperator_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_

@@ -459,6 +459,8 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | Ensures (t, _)
     | Labeled (t, _, _) ->
         collect_term t
+    | Attributes cattributes  ->
+        List.iter collect_term cattributes
 
   and collect_patterns ps =
     List.iter collect_pattern ps

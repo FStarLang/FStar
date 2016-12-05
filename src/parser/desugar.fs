@@ -279,6 +279,10 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Project(t, _) -> free_type_vars env t
 
+  | Attributes cattributes ->
+      (* attributes should be closed but better safe than sorry *)
+      List.collect (free_type_vars env) cattributes
+
 
   | Abs _  (* not closing implicitly over free vars in type-level functions *)
   | Let _

@@ -125,7 +125,7 @@ let compile_op arity s =
 %token <FStar_Parser_AST.fsdoc> FSDOC
 %token <FStar_Parser_AST.fsdoc> FSDOC_STANDALONE
 
-%token FORALL EXISTS ASSUME NEW LOGIC
+%token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
 %token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
@@ -433,7 +433,6 @@ aqualUniverses:
   | HASH      { Implicit }
   | DOLLAR    { Equality }
 
-
 /******************************************************************************/
 /*                         Patterns, binders                                  */
 /******************************************************************************/
@@ -594,6 +593,8 @@ noSeqTerm:
       { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type }
   | ENSURES t=typ
       { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type }
+  | ATTRIBUTES es=nonempty_list(atomicTerm)
+      { mk_term (Attributes es) (rhs2 parseState 1 2) Type }
   | IF e1=noSeqTerm THEN e2=noSeqTerm ELSE e3=noSeqTerm
       { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr }
   | IF e1=noSeqTerm THEN e2=noSeqTerm
