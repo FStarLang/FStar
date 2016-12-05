@@ -25,6 +25,7 @@ open FStar.Util
 val shift_subst:        int -> subst_t -> subst_t
 val subst:              list<subst_elt> -> term -> term
 val subst_comp:         list<subst_elt> -> comp -> comp
+val subst_lcomp:        list<subst_elt> -> lcomp -> lcomp
 val subst_binders:      list<subst_elt> -> binders -> binders
 val compress:           term -> term
 val compress_univ:      universe -> universe

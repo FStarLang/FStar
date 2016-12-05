@@ -814,17 +814,6 @@ let rec non_informative env t =
       && non_informative env (result_typ env c)
     | _ -> false
 
-let lcomp_of_comp env c0 =
-    let eff_name, flags = 
-        match c0.n with 
-        | Total _ -> Const.effect_Tot_lid, [TOTAL]
-        | GTotal _ -> Const.effect_GTot_lid, [SOMETRIVIAL]
-        | Comp c -> c.effect_name, c.flags in
-    {eff_name = eff_name;
-     res_typ = result_typ env c0;
-     cflags = flags;
-     comp = fun() -> c0}
-
 let comp_as_normal_comp_typ env c = 
     let ct = unfold_effect_abbrev env c in
     let rec aux = function 
@@ -842,6 +831,24 @@ let comp_as_normal_comp_typ env c =
       comp_result = result;
       comp_wp = wp; 
       comp_flags = ct.flags}
+
+let normal_comp_typ_as_comp (env:env) nct =
+    let ct = {
+        effect_name=nct.comp_name;
+        comp_univs=nct.comp_univs;
+        effect_args=nct.comp_indices@[nct.comp_result; nct.comp_wp];
+        flags=nct.comp_flags
+    } in
+    S.mk_Comp ct
+
+let lcomp_of_comp env c0 =
+    let nct = comp_as_normal_comp_typ env c0 in
+    {lcomp_name = nct.comp_name;
+     lcomp_univs= nct.comp_univs;
+     lcomp_indices=nct.comp_indices;
+     lcomp_res_typ=fst nct.comp_result;
+     lcomp_cflags=nct.comp_flags;
+     lcomp_as_comp=(fun () -> c0)}
 
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)

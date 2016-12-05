@@ -387,7 +387,7 @@ and close_lcomp_opt cfg env lopt = match lopt with
       then Some (Inr Const.effect_Tot_lid)
       else if Util.is_tot_or_gtot_lcomp lc
       then Some (Inr Const.effect_GTot_lid)
-      else Some (Inr lc.eff_name) //retaining the effect name is sufficient
+      else Some (Inr lc.lcomp_name) //retaining the effect name is sufficient
     | _ -> lopt
 
 (*******************************************************************)
@@ -754,7 +754,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
                   else let bs, body, opening = open_term' bs body in
                        let lopt = match lopt with
-                        | Some (Inl l) -> Some (Inl (Env.lcomp_of_comp cfg.tcenv (SS.subst_comp opening (l.comp()))))
+                        | Some (Inl l) -> Some (Inl (Env.lcomp_of_comp cfg.tcenv (SS.subst_comp opening (l.lcomp_as_comp()))))
                         | _ -> lopt in
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        log cfg  (fun () -> Util.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
@@ -958,11 +958,12 @@ and norm_lcomp_opt : cfg -> env -> option<either<lcomp, Ident.lident>> -> option
         match lopt with
         | Some (Inl lc) ->
           if Util.is_tot_or_gtot_lcomp lc
-          then let t = norm cfg env [] lc.res_typ in
+          then let u = norm_universe cfg env (List.hd lc.lcomp_univs) in
+               let t = norm cfg env [] lc.lcomp_res_typ in
                if Util.is_total_lcomp lc
-               then Some (Inl (Env.lcomp_of_comp cfg.tcenv (S.mk_Total t)))
-               else Some (Inl (Env.lcomp_of_comp cfg.tcenv (S.mk_GTotal t)))
-          else Some (Inr lc.eff_name)
+               then Some (Inl (Env.lcomp_of_comp cfg.tcenv (S.mk_Total' t (Some u))))
+               else Some (Inl (Env.lcomp_of_comp cfg.tcenv (S.mk_GTotal' t (Some u))))
+          else Some (Inr lc.lcomp_name)
        | _ -> lopt
 
 
@@ -1192,12 +1193,12 @@ let ghost_to_pure env c = ghost_to_pure_aux (config [] env) [] c
 let ghost_to_pure_lcomp env (lc:lcomp) =
     let cfg = config [Eager_unfolding; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses] env in
     let non_info t = non_informative env (norm cfg [] [] t) in
-    if Util.is_ghost_effect lc.eff_name
-    && non_info lc.res_typ
-    then match downgrade_ghost_effect_name lc.eff_name with
+    if Util.is_ghost_effect lc.lcomp_name
+    && non_info lc.lcomp_res_typ
+    then match downgrade_ghost_effect_name lc.lcomp_name with
          | Some pure_eff ->
-           {lc with eff_name=pure_eff;
-                    comp=(fun () -> ghost_to_pure env (lc.comp()))}
+           {lc with lcomp_name=pure_eff;
+                    lcomp_as_comp=(fun () -> ghost_to_pure env (lc.lcomp_as_comp()))}
          | None -> //can't downgrade, don't know the particular incarnation of PURE to use
            lc
     else lc

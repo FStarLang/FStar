@@ -185,6 +185,7 @@ val result_typ             : env -> comp -> typ
 val non_informative        : env -> typ -> bool
 val lcomp_of_comp          : env -> comp -> lcomp
 val comp_as_normal_comp_typ: env -> comp -> normal_comp_typ
+val normal_comp_typ_as_comp: env -> normal_comp_typ -> comp
 
 (* operations on monads *)
 val join            : env -> lident -> lident -> lident * mlift * mlift

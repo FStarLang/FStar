@@ -203,15 +203,20 @@ let comp_to_comp_typ (c:comp) : comp_typ =
 let is_total_comp c =
     comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_total_lcomp c = lid_equals c.eff_name Const.effect_Tot_lid || c.cflags |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
+let is_total_lcomp c = 
+    lid_equals c.lcomp_name Const.effect_Tot_lid 
+    || c.lcomp_cflags |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_tot_or_gtot_lcomp c = lid_equals c.eff_name Const.effect_Tot_lid
-                             || lid_equals c.eff_name Const.effect_GTot_lid
-                             || c.cflags |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
+let is_tot_or_gtot_lcomp c = 
+    lid_equals c.lcomp_name Const.effect_Tot_lid
+    || lid_equals c.lcomp_name Const.effect_GTot_lid
+    || c.lcomp_cflags |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_partial_return c = comp_flags c |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
+let is_partial_return c = 
+    comp_flags c |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
-let is_lcomp_partial_return c = c.cflags |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
+let is_lcomp_partial_return c = 
+    c.lcomp_cflags |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
 let is_tot_or_gtot_comp c =
     is_total_comp c
@@ -238,11 +243,11 @@ let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_nam
 
 let is_pure_lcomp lc =
     is_total_lcomp lc
-    || is_pure_effect lc.eff_name
-    || lc.cflags |> Util.for_some (function LEMMA -> true | _ -> false)
+    || is_pure_effect lc.lcomp_name
+    || lc.lcomp_cflags |> Util.for_some (function LEMMA -> true | _ -> false)
 
 let is_pure_or_ghost_lcomp lc =
-    is_pure_lcomp lc || is_ghost_effect lc.eff_name
+    is_pure_lcomp lc || is_ghost_effect lc.lcomp_name
 
 let is_pure_or_ghost_function t = match (compress t).n with
     | Tm_arrow(_, c) -> is_pure_or_ghost_comp c
@@ -682,6 +687,10 @@ let type_u () : typ * universe =
     let u = U_unif <| Unionfind.fresh None in
     mk (Tm_type u) None Range.dummyRange, u
 
+//Type(u)
+let type_at_u (u:universe) : typ = 
+    mk (Tm_type u) None Range.dummyRange
+
 let kt_kt = Const.kunary ktype0 ktype0
 let kt_kt_kt = Const.kbin ktype0 ktype0 ktype0
 
@@ -737,15 +746,19 @@ let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor)
 let tforall  = fvar Const.forall_lid (Delta_defined_at_level 1) None
 let t_haseq   = fvar Const.haseq_lid Delta_constant None
 
+let lc_tot_type0 = {
+    lcomp_name=Const.effect_Tot_lid;
+    lcomp_univs=[U_succ U_zero];
+    lcomp_indices=[];
+    lcomp_res_typ=ktype0;
+    lcomp_cflags=[TOTAL];
+    lcomp_as_comp = (fun () -> mk_Total ktype0)
+  }
+
 let mk_forall (x:bv) (body:typ) : typ =
-  let lc = {
-    eff_name=Const.effect_Tot_lid;
-    res_typ=ktype0;
-    cflags=[TOTAL];
-    comp = (fun () -> mk_Total ktype0)
-  } in
   mk (Tm_app(tforall, [ iarg (x.sort);
-                        as_arg (abs [mk_binder x] body (Some (Inl lc)))])) None dummyRange
+                        as_arg (abs [mk_binder x] body (Some (Inl lc_tot_type0)))])) 
+     None dummyRange
 
 let rec close_forall bs f =
   List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall (fst b) f) bs f

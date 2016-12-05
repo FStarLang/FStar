@@ -109,8 +109,9 @@ and inst_lcomp_opt s l = match l with
     | None 
     | Some (Inr _) -> l
     | Some (Inl lc) -> 
-       Some (Inl ({lc with res_typ=inst s lc.res_typ;
-                           comp=(fun () -> inst_comp s (lc.comp()))}))
+       Some (Inl ({lc with lcomp_indices=inst_args s lc.lcomp_indices;
+                           lcomp_res_typ=inst s lc.lcomp_res_typ;
+                           lcomp_as_comp=(fun () -> inst_comp s (lc.lcomp_as_comp()))}))
 
 let instantiate i t = match i with 
     | [] -> t

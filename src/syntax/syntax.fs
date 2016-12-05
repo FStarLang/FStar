@@ -187,11 +187,13 @@ and free_vars = {
     free_uvars:uvars;
     free_univs:set<universe_uvar>;
 }
-and lcomp = {
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflags>;
-    comp: unit -> comp //a lazy computation
+and lcomp = { //a computation type whose WP is not yet computed
+    lcomp_name   : lident;
+    lcomp_univs  : universes;
+    lcomp_indices: args;
+    lcomp_res_typ: typ;
+    lcomp_cflags : list<cflags>;
+    lcomp_as_comp: unit -> comp //a lazy computation
 }
 
 type tscheme = list<univ_name> * typ

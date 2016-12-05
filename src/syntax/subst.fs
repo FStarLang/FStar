@@ -303,8 +303,10 @@ let push_subst_lcomp s lopt = match lopt with
     | None 
     | Some (Inr _) -> lopt
     | Some (Inl l) -> 
-      Some (Inl ({l with res_typ=subst' s l.res_typ;
-                         comp=(fun () -> subst_comp' s (l.comp()))}))
+      Some (Inl ({l with lcomp_univs=List.map (subst_univ (fst s)) l.lcomp_univs;
+                         lcomp_indices=subst_args' s l.lcomp_indices;
+                         lcomp_res_typ=subst' s l.lcomp_res_typ;
+                         lcomp_as_comp=(fun () -> subst_comp' s (l.lcomp_as_comp()))}))
 
 let push_subst s t = 
     //makes a syntax node, setting it's use range as appropriate from s
@@ -395,10 +397,17 @@ let rec compress (t:term) =
            | Tm_delayed _ -> compress t'
            | _ -> t'
             
-
 let subst s t = subst' ([s], None) t
 let set_use_range r t = subst' ([], Some ({r with def_range=r.use_range})) t
 let subst_comp s t = subst_comp' ([s], None) t
+let subst_args s args = List.map (fun (x, a) -> subst s x, a) args
+let subst_lcomp s lc = 
+    {lc with lcomp_univs=List.map (subst_univ [s]) lc.lcomp_univs;
+             lcomp_indices=subst_args s lc.lcomp_indices;
+             lcomp_res_typ=subst s lc.lcomp_res_typ;
+             lcomp_as_comp=(fun () -> subst_comp s (lc.lcomp_as_comp())); }
+
+
 let closing_subst bs = 
     List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst 
 let open_binders' bs = 
@@ -506,8 +515,9 @@ let close_binders (bs:binders) : binders =
 
 let close_lcomp (bs:binders) lc = 
     let s = closing_subst bs in 
-    {lc with res_typ=subst s lc.res_typ;
-             comp=(fun () -> subst_comp s (lc.comp())); }
+    {lc with lcomp_indices=subst_args s lc.lcomp_indices;
+             lcomp_res_typ=subst s lc.lcomp_res_typ;
+             lcomp_as_comp=(fun () -> subst_comp s (lc.lcomp_as_comp())); }
 
 let close_pat p = 
     let rec aux sub p = match p.v with

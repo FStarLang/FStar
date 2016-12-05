@@ -248,7 +248,10 @@ let rec term_to_string x =
   | Tm_abs(bs, t2, lc) ->
     begin match lc with
         | Some (Inl l) when (Options.print_implicits()) ->
-          Util.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| l.comp())
+          Util.format3 "(fun %s -> (%s $$ %s))" 
+                        (binders_to_string " " bs) 
+                        (term_to_string t2) 
+                        (comp_to_string <| l.lcomp_as_comp())
         | Some (Inr l) when (Options.print_implicits()) ->
           Util.format3 "(fun %s -> (%s $$ (name only) %s))" (binders_to_string " " bs) (term_to_string t2) l.str
         | _ ->
@@ -313,9 +316,9 @@ and lbs_to_string quals lbs =
 
 and lcomp_to_string lc =
     if Options.print_effect_args () then
-        comp_to_string (lc.comp ())
+        comp_to_string (lc.lcomp_as_comp ())
     else
-        Util.format2 "%s %s" (sli lc.eff_name) (term_to_string lc.res_typ)
+        Util.format2 "%s %s" (sli lc.lcomp_name) (term_to_string lc.lcomp_res_typ)
 
 //and uvar_t_to_string (uv, k) =
 //   if false && (Options.print_real_names())
@@ -531,7 +534,7 @@ let abs_ascription_to_string ascription =
       | None -> Util.string_builder_append strb "None"
       | Some (Inl lc) ->
           Util.string_builder_append strb "Some Inr " ;
-          Util.string_builder_append strb (Ident.text_of_lid lc.eff_name)
+          Util.string_builder_append strb (Ident.text_of_lid lc.lcomp_name)
       | Some (Inr lid) ->
           Util.string_builder_append strb "Some Inr " ;
           Util.string_builder_append strb (Ident.text_of_lid lid)
