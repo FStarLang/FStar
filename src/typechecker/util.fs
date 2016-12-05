@@ -488,7 +488,7 @@ let return_value env t v =
                     (Range.string_of_range v.pos)  (P.term_to_string v) (N.comp_to_string env c);
   c
 
-let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
+let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
   let lc1 = N.ghost_to_pure_lcomp env lc1 in //downgrade from ghost to pure, if possible
   let lc2 = N.ghost_to_pure_lcomp env lc2 in
   if debug env Options.Extreme
@@ -630,7 +630,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                     && not (Util.is_partial_return c)
                     then let x = S.gen_bv "strengthen_pre_x" None (Env.result_typ env c) in
                          let xret = Util.comp_set_flags (return_value env x.sort (S.bv_to_name x)) [PARTIAL_RETURN] in
-                         let lc = bind e.pos env (Some e) (Env.lcomp_of_comp env c) (Some x, Env.lcomp_of_comp env xret) in
+                         let lc = bind env (Some e) (Env.lcomp_of_comp env c) (Some x, Env.lcomp_of_comp env xret) in
                          lc.lcomp_as_comp()
                     else c in
 
@@ -682,7 +682,7 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
             [S.as_arg res_t; S.as_arg res_t; S.as_arg <| U.abs [mk_binder y] x_eq_y_yret (Some (Inr Const.effect_Tot_lid))] 
             None res_t.pos in
     let lc2 = mk_comp md_pure [u_res_t] [] res_t forall_y_x_eq_y_yret [PARTIAL_RETURN] in
-    let lc = bind (Env.get_range env) env None (Env.lcomp_of_comp env comp) (Some x, Env.lcomp_of_comp env lc2) in
+    let lc = bind env None (Env.lcomp_of_comp env comp) (Some x, Env.lcomp_of_comp env lc2) in
     lc.lcomp_as_comp()
 
 let ite env (guard:formula) lcomp_then lcomp_else =
@@ -796,7 +796,7 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
            let ret = Env.lcomp_of_comp env <| (Util.comp_set_flags (return_value env t xexp) [PARTIAL_RETURN]) in
            let eq = Util.mk_eq t t xexp e in
            let eq_ret = weaken_precondition env ret (NonTrivial eq) in
-           let bind_lc = bind e.pos env None (Env.lcomp_of_comp env c) (Some x, eq_ret) in
+           let bind_lc = bind env None (Env.lcomp_of_comp env c) (Some x, eq_ret) in
            U.comp_set_flags (bind_lc.lcomp_as_comp()) (PARTIAL_RETURN::U.comp_flags c)
   in
   let flags =
@@ -821,7 +821,7 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
         | Tm_fvar fv when S.fv_eq_lid fv Const.bool_lid -> 
             let _ = Env.lookup_lid env Const.b2t_lid in  //check that we have Prims.b2t in the context
             let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_defined_at_level 1) None in
-            let lc = bind e.pos env (Some e) lc (None, Env.lcomp_of_comp env (S.mk_Total (Util.ktype0))) in
+            let lc = bind env (Some e) lc (None, Env.lcomp_of_comp env (S.mk_Total (Util.ktype0))) in
             let e = mk_Tm_app b2t [S.as_arg e] (Some Util.ktype0.n) e.pos in
             e, lc
         | _ -> e, lc)
@@ -878,7 +878,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                                         (Env.set_range env e.pos) e cret
                                         (guard_of_guard_formula <| NonTrivial guard) in
               let x = {x with sort=lc.lcomp_res_typ} in
-              let c = bind e.pos env (Some e) (Env.lcomp_of_comp env (Env.normal_comp_typ_as_comp env nct)) (Some x, eq_ret) in
+              let c = bind env (Some e) (Env.lcomp_of_comp env (Env.normal_comp_typ_as_comp env nct)) (Some x, eq_ret) in
               let c = c.lcomp_as_comp () in
               if Env.debug env <| Options.Extreme
               then Util.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
@@ -1251,7 +1251,7 @@ let maybe_monadic env e c t =
     then e
     else mk (Tm_meta(e, Meta_monadic (m, t))) !e.tk e.pos
 
-let effect_repr_aux only_reifiable env c u_c = 
+let effect_repr_aux only_reifiable env c = 
     match Env.effect_decl_opt env (Env.norm_eff_name env (Util.comp_effect_name c)) with
     | None -> None
     | Some ed -> 
@@ -1264,10 +1264,10 @@ let effect_repr_aux only_reifiable env c u_c =
           let repr = Env.inst_effect_fun_with nct.comp_univs env ed ([], ed.repr) in
           Some (mk (Tm_app(repr, [nct.comp_result; nct.comp_wp])) None (Env.get_range env))
 
-let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c
+let effect_repr env c : option<term> = effect_repr_aux false env c
 
-let reify_comp env lc u_c : term = 
-  match effect_repr_aux true env (lc.lcomp_as_comp()) u_c with
+let reify_comp env lc : term = 
+  match effect_repr_aux true env (lc.lcomp_as_comp()) with
   | None -> raise (Error(Util.format1 "Effect %s cannot be reified" lc.lcomp_name.str, Env.get_range env))
   | Some tm -> tm
 

@@ -50,11 +50,10 @@ val generalize_universes: env -> term -> tscheme
 //operations on computation types
 (* most operations on computations are lazy *)
 type lcomp_with_binder = option<bv> * lcomp
-val subst_lcomp: subst_t -> lcomp -> lcomp
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool
 val return_value: env -> typ -> term -> comp
-val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
+val bind: env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val bind_cases: env -> typ -> list<(typ * lcomp)> -> lcomp
 val ite: env -> formula -> lcomp -> lcomp -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
@@ -85,8 +84,8 @@ val maybe_lift: env -> term -> lident -> lident -> term
 val maybe_monadic: env -> term -> lident -> typ -> term
    
 //reification
-val reify_comp: env -> lcomp -> universe -> term
-val effect_repr: env -> comp -> universe -> option<term>
+val reify_comp: env -> lcomp -> term
+val effect_repr: env -> comp -> option<term>
 
 //qualifiers
 val check_sigelt_quals: env -> sigelt -> unit

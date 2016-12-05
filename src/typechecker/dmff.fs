@@ -135,7 +135,7 @@ let gen_wps_for_free
   let c_pure =
     let t = S.gen_bv "t" None U.ktype in
     let x = S.gen_bv "x" None (S.bv_to_name t) in
-    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_ctx (S.bv_to_name t))))) in
+    let ret = Some (Inl (Env.lcomp_of_comp env (mk_Total (mk_ctx (S.bv_to_name t))))) in
     let body = U.abs gamma (S.bv_to_name x) ret in
     U.abs (mk_all_implicit binders @ binders_of_list [ a, true; t, true; x, false ]) body ret
   in
@@ -153,7 +153,7 @@ let gen_wps_for_free
       (U.arrow [ S.mk_binder (S.new_bv None (S.bv_to_name t1)) ] (S.mk_GTotal (S.bv_to_name t2))))
     in
     let r = S.gen_bv "r" None (mk_gctx (S.bv_to_name t1)) in
-    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
+    let ret = Some (Inl (Env.lcomp_of_comp env (mk_Total (mk_gctx (S.bv_to_name t2))))) in
     let outer_body =
       let gamma_as_args = args_of_binders gamma in
       let inner_body =
@@ -180,7 +180,7 @@ let gen_wps_for_free
     let t_f = U.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)) in
     let f = S.gen_bv "f" None t_f in
     let a1 = S.gen_bv "a1" None (mk_gctx (S.bv_to_name t1)) in
-    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
+    let ret = Some (Inl (Env.lcomp_of_comp env (mk_Total (mk_gctx (S.bv_to_name t2))))) in
     U.abs (mk_all_implicit binders @ binders_of_list [ a, true; t1, true; t2, true; f, false; a1, false ]) (
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_pure (List.map S.as_arg [ S.bv_to_name f ]);
@@ -209,7 +209,7 @@ let gen_wps_for_free
     let f = S.gen_bv "f" None t_f in
     let a1 = S.gen_bv "a1" None (mk_gctx (S.bv_to_name t1)) in
     let a2 = S.gen_bv "a2" None (mk_gctx (S.bv_to_name t2)) in
-    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t3))))) in
+    let ret = Some (Inl (Env.lcomp_of_comp env (mk_Total (mk_gctx (S.bv_to_name t3))))) in
     U.abs (mk_all_implicit binders @ binders_of_list [ a, true; t1, true; t2, true; t3, true; f, false; a1, false; a2, false ]) (
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_app (List.map S.as_arg [
@@ -232,7 +232,7 @@ let gen_wps_for_free
       (S.mk_Total (mk_gctx (S.bv_to_name t2)))
     in
     let f = S.gen_bv "f" None t_f in
-    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_ctx (
+    let ret = Some (Inl (Env.lcomp_of_comp env (mk_Total (mk_ctx (
       U.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)))))))
     in
     let e1 = S.gen_bv "e1" None (S.bv_to_name t1) in
@@ -243,7 +243,7 @@ let gen_wps_for_free
   in
   let c_push = register env (mk_lid "push") c_push in
 
-  let ret_tot_wp_a = Some (Inl (U.lcomp_of_comp (mk_Total wp_a))) in
+  let ret_tot_wp_a = Some (Inl (Env.lcomp_of_comp env (mk_Total wp_a))) in
   let mk_generic_app c =
     if List.length binders > 0 then
       mk (Tm_app (c, args_of_binders binders))
@@ -265,7 +265,7 @@ let gen_wps_for_free
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
         ])
       ) (Inr result_comp)
-    ) (Some (Inl (U.lcomp_of_comp result_comp)))
+    ) (Some (Inl (Env.lcomp_of_comp env result_comp)))
   in
   let wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
   let wp_if_then_else = mk_generic_app wp_if_then_else in
@@ -324,8 +324,8 @@ let gen_wps_for_free
   let wp_close = register env (mk_lid "wp_close") wp_close in
   let wp_close = mk_generic_app wp_close in
 
-  let ret_tot_type = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype)) in
-  let ret_gtot_type = Some (Inl (U.lcomp_of_comp <| S.mk_GTotal U.ktype)) in
+  let ret_tot_type = Some (Inl (Env.lcomp_of_comp env <| S.mk_Total U.ktype)) in
+  let ret_gtot_type = Some (Inl (Env.lcomp_of_comp env <| S.mk_GTotal U.ktype)) in
   let mk_forall (x: S.bv) (body: S.term): S.term =
     S.mk (Tm_app (U.tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type)])) None Range.dummyRange
   in
@@ -340,12 +340,12 @@ let gen_wps_for_free
   (* Invariant: [x] and [y] have type [t] *)
   let rec is_discrete t = match (SS.compress t).n with
     | Tm_type _ -> false
-    | Tm_arrow (bs, c) -> List.for_all (fun (b,_) -> is_discrete b.sort) bs && is_discrete (Util.comp_result c)
+    | Tm_arrow (bs, c) -> List.for_all (fun (b,_) -> is_discrete b.sort) bs && is_discrete (Env.result_typ env c)
     | _ -> true
   in
   let rec is_monotonic t = match (SS.compress t).n with
     | Tm_type _ -> true
-    | Tm_arrow (bs, c) -> List.for_all (fun (b,_) -> is_discrete b.sort) bs && is_monotonic (Util.comp_result c)
+    | Tm_arrow (bs, c) -> List.for_all (fun (b,_) -> is_discrete b.sort) bs && is_monotonic (Env.result_typ env c)
     | _ -> is_discrete t
   in
   let rec mk_rel rel t x y =
@@ -622,7 +622,7 @@ and star_type' env t =
                             non_dependent_or_raise s bv.sort ;
                             set_add bv s
                         ) S.no_names binders in
-                        let ct = U.comp_result c in
+                        let ct = Env.result_typ env.env c in
                         non_dependent_or_raise s ct ;
                         let k = n - List.length binders in
                         if k > 0 then is_non_dependent_arrow ct k else true
@@ -732,7 +732,7 @@ and star_type' env t =
 let is_monadic = function
   | None ->
       failwith "un-annotated lambda?!"
-  | Some (Inl { eff_name = lid }) | Some (Inr lid) ->
+  | Some (Inl { lcomp_name = lid }) | Some (Inr lid) ->
       lid_equals lid Const.monadic_lid
 
 // TODO: this function implements a (partial) check for the well-formedness of
@@ -932,12 +932,14 @@ and infer (env: env) (e: term): nm * term * term =
       let s_what = match what with
         | None -> None // That should not happen according to some other comment
         | Some (Inl lc) ->
-            if Ident.lid_equals lc.eff_name Const.monadic_lid
-            then Some (Inl (U.lcomp_of_comp (S.mk_Total (double_star <| U.comp_result (lc.comp ())))))
-            else Some (Inl ({ lc with comp = begin fun () ->
-                        let c = lc.comp () in
-                        let result_typ = star_type' env (Util.comp_result c) in
-                        Util.set_result_typ c result_typ
+            if Ident.lid_equals lc.lcomp_name Const.monadic_lid
+            then Some (Inl (Env.lcomp_of_comp env.env (S.mk_Total (double_star <| Env.result_typ env.env (lc.lcomp_as_comp ())))))
+            else Some (Inl ({ lc with lcomp_as_comp = begin fun () ->
+                        let c = lc.lcomp_as_comp () in
+                        let nct = Env.comp_as_normal_comp_typ env.env c in
+                        let result_typ = star_type' env (fst nct.comp_result) in
+                        let nct' = {nct with comp_result=S.as_arg result_typ} in
+                        Env.normal_comp_typ_as_comp env.env nct'
                       end  }))
         | Some (Inr lid) ->
             Some (Inr (if Ident.lid_equals lid Const.monadic_lid
@@ -946,8 +948,8 @@ and infer (env: env) (e: term): nm * term * term =
       in
 
       let u_body, u_what =
-          let comp = trans_G env (U.comp_result comp) (is_monadic what) (SS.subst env.subst s_body) in
-          U.ascribe u_body (Inr comp), Some (Inl (U.lcomp_of_comp comp))
+          let comp = trans_G env (Env.result_typ env.env comp) (is_monadic what) (SS.subst env.subst s_body) in
+          U.ascribe u_body (Inr comp), Some (Inl (Env.lcomp_of_comp env.env comp))
       in
 
       let s_body = close s_binders s_body in
@@ -1213,7 +1215,7 @@ and mk_M (t: typ): comp =
     flags = []
   })
 
-and type_of_comp t = Util.comp_result t
+and type_of_comp env t = Env.result_typ env.env t
 
 // This function expects its argument [c] to be normalized and to satisfy [is_C c]
 and trans_F_ (env: env_) (c: typ) (wp: term): term =
@@ -1247,7 +1249,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       let binders = List.flatten binders in
       let comp = SS.subst_comp (Util.rename_binders binders_orig (S.binders_of_list bvs)) comp in
       let app = mk (Tm_app (wp, List.map (fun bv -> S.bv_to_name bv, S.as_implicit false) bvs)) in
-      let comp = trans_G env (type_of_comp comp) (is_monadic_comp comp) app in
+      let comp = trans_G env (type_of_comp env comp) (is_monadic_comp comp) app in
       U.arrow binders comp
   | Tm_ascribed(e, _, _) ->
       (* TODO : find a way to recompute the corrected ascription *)
