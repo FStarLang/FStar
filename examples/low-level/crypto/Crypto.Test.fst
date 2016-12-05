@@ -29,8 +29,8 @@ val createL: #a:Type -> len:nat -> init:list a -> StackInline (Buffer.buffer a)
      len > 0
      /\ ~(Buffer.contains h0 b)
      /\ Buffer.live h1 b /\ Buffer.idx b = 0 /\ Buffer.length b = len
-     /\ Buffer.frameOf b = (HS h0.tip)
-     /\ Map.domain (HS h1.h) == Map.domain (HS h0.h)
+     /\ Buffer.frameOf b = (HS.(h0.tip))
+     /\ Map.domain (HS.(h1.h)) == Map.domain (HS.(h0.h))
      /\ Buffer.modifies_0 h0 h1
      /\ Buffer.as_seq h1 b == Seq.of_list init))
 let createL #a len init =
@@ -228,7 +228,7 @@ let test () =
   let st = AE.coerce i rgn key in
   // To prove the assertion below for the concrete constants in PRF, AEAD:
   assert_norm (114 <= pow2 14);  
-  assert_norm (FStar.Mul(114 <= 1999 * 64));
+  assert_norm (FStar.Mul.(114 <= 1999 * 64));
   assert_norm (AETypes.safelen i (v plainlen) 1ul);
   //TODO: may as well assume False
   assume (
