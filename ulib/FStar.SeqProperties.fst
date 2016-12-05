@@ -582,6 +582,8 @@ let contains_elim (#a:Type) (s:seq a) (x:a)
 	  (exists (k:nat). k < Seq.length s /\ Seq.index s k == x))
   = ()
 
+let lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.createEmpty x)) = ()
+
 private let intro_append_contains_from_disjunction (#a:Type) (s1:seq a) (s2:seq a) (x:a)
     : Lemma (requires s1 `contains` x \/ s2 `contains` x)
    	    (ensures (append s1 s2) `contains` x)
@@ -604,3 +606,10 @@ val contains_snoc : #a:Type -> s:FStar.Seq.seq a -> x:a ->
    Lemma (ensures (forall y. (snoc s x) `contains` y  <==> s `contains` y \/ x==y))
 let contains_snoc #a s x =
   FStar.Classical.forall_intro (append_contains_equiv s (Seq.create 1 x))
+
+let rec lemma_find_l_contains (#a:Type) (f:a -> Tot bool) (l:seq a)
+  : Lemma (requires True) (ensures is_Some (find_l f l) ==> l `contains` (Some.v (find_l f l)))
+          (decreases (Seq.length l))
+  = if length l = 0 then ()
+    else if f (head l) then ()
+    else lemma_find_l_contains f (tail l)
