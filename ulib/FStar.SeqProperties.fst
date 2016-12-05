@@ -102,6 +102,13 @@ val lemma_slice_append: #a:Type -> s1:seq a{length s1 >= 1} -> s2:seq a -> Lemma
   (ensures (equal (append s1 s2) (append (slice s1 0 1) (append (slice s1 1 (length s1)) s2))))
 let lemma_slice_append #a s1 s2 = ()
 
+val lemma_slice_first_in_append: #a:Type -> s1:seq a -> s2:seq a -> i:nat{i <= length s1} -> Lemma
+  (ensures (equal (slice (append s1 s2) i (length (append s1 s2))) (append (slice s1 i (length s1)) s2)))
+  (decreases (length s1))
+let rec lemma_slice_first_in_append #a s1 s2 i =
+  if i = 0 then ()
+  else lemma_slice_first_in_append #a (tail s1) s2 (i - 1)
+
 val slice_upd: #a:Type -> s:seq a -> i:nat -> j:nat{i <= j /\ j <= length s}
   -> k:nat{k < length s} -> v:a -> Lemma
   (requires k < i \/ j <= k)
@@ -426,6 +433,10 @@ let lemma_trans_perm #a s1 s2 s3 i j = ()
 val snoc : #a:Type -> seq a -> a -> Tot (seq a)
 let snoc #a s x = Seq.append s (Seq.create 1 x)
 
+val lemma_tail_snoc: #a:Type -> s:Seq.seq a{Seq.length s > 0} -> x:a
+                     -> Lemma (ensures (tail (snoc s x) == snoc (tail s) x))
+let lemma_tail_snoc #a s x = lemma_slice_first_in_append s (Seq.create 1 x) 1
+
 #set-options "--initial_fuel 2 --max_fuel 2"
 val lemma_mem_snoc : #a:eqtype -> s:FStar.Seq.seq a -> x:a ->
    Lemma (ensures (forall y. mem y (snoc s x) <==> mem y s \/ x=y))
@@ -437,6 +448,26 @@ let rec find_l #a f l =
   if Seq.length l = 0 then None
   else if f (head l) then Some (head l)
   else find_l f (tail l)
+
+val find_append_some: #a:Type -> s1:seq a -> s2:seq a -> f:(a -> Tot bool) -> Lemma
+  (requires (is_Some (find_l f s1)))
+  (ensures (find_l f (append s1 s2) == find_l f s1))
+  (decreases (length s1))
+let rec find_append_some #a s1 s2 f =
+  if f (head s1) then ()
+  else
+    let _ = cut (equal (tail (append s1 s2)) (append (tail s1) s2)) in
+    find_append_some (tail s1) s2 f
+
+val find_append_none: #a:Type -> s1:seq a -> s2:seq a -> f:(a -> Tot bool) -> Lemma
+  (requires (is_None (find_l f s1)))
+  (ensures (find_l f (append s1 s2) == find_l f s2))
+  (decreases (length s1))
+let rec find_append_none #a s1 s2 f =
+  if Seq.length s1 = 0 then cut (equal (append s1 s2) s2)
+  else
+    let _ = cut (equal (tail (append s1 s2)) (append (tail s1) s2)) in
+    find_append_none (tail s1) s2 f
 
 let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (seq a * a) =
   let s, a = split s (length s - 1) in
@@ -551,6 +582,8 @@ let contains_elim (#a:Type) (s:seq a) (x:a)
 	  (exists (k:nat). k < Seq.length s /\ Seq.index s k == x))
   = ()
 
+let lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.createEmpty x)) = ()
+
 private let intro_append_contains_from_disjunction (#a:Type) (s1:seq a) (s2:seq a) (x:a)
     : Lemma (requires s1 `contains` x \/ s2 `contains` x)
    	    (ensures (append s1 s2) `contains` x)
@@ -573,3 +606,10 @@ val contains_snoc : #a:Type -> s:FStar.Seq.seq a -> x:a ->
    Lemma (ensures (forall y. (snoc s x) `contains` y  <==> s `contains` y \/ x==y))
 let contains_snoc #a s x =
   FStar.Classical.forall_intro (append_contains_equiv s (Seq.create 1 x))
+
+let rec lemma_find_l_contains (#a:Type) (f:a -> Tot bool) (l:seq a)
+  : Lemma (requires True) (ensures is_Some (find_l f l) ==> l `contains` (Some.v (find_l f l)))
+          (decreases (Seq.length l))
+  = if length l = 0 then ()
+    else if f (head l) then ()
+    else lemma_find_l_contains f (tail l)

@@ -112,6 +112,15 @@ let rec counterblocks i rgn x l from_pos to_pos plain cipher =
     let blocks = counterblocks i rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in
     SeqProperties.cons block blocks
 
+(*
+ * AR: this is an unnecessary lemma, but in Lemmas module, can't seem to prove it.
+ *)
+val counterblocks_lemma: i:id{safeId i} -> rgn:region -> x:PRF.domain i{PRF.ctr_0 i <^ ctr x} -> l:nat
+                         -> from:nat -> to:nat{to = from /\ to <= l /\ safelen i (to - from) (ctr x)}
+			 -> plain:Crypto.Plain.plain i l -> cipher:lbytes l
+			 -> Lemma (counterblocks i rgn x l from to plain cipher == Seq.createEmpty)
+let counterblocks_lemma i rgn x l from to plain cipher = ()
+
 let num_blocks_for_len (i:id) (l:nat) : Tot nat =
   let bl = v (Cipher( blocklen (cipherAlg_of_id i))) in
   (l + bl - 1) / bl
@@ -124,8 +133,8 @@ let encode_ad_cipher (i:id) (ad:adata) (l:plainLen{safelen i l (PRF.ctr_0 i +^ 1
   encode_both i (FStar.UInt32.uint_to_t (Seq.length ad)) ad (FStar.UInt32.uint_to_t l) cipher
 
 #reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let mac_is_set (#rgn:region) (#i:id{safeId i})
-	       (prf_table:prf_table rgn i) //the entire prf table
+let mac_is_set (#rgn:region) (#i:id)
+	       (prf_table:prf_table rgn i{safeId i}) //the entire prf table
 	       (iv:Cipher.iv (alg i))
 	       (ad:adata)
 	       (l:plainLen)
@@ -181,12 +190,12 @@ let mac_is_unset (#rgn:region) (#i:id)
   = let dom_0 = {iv=iv; ctr=PRF.ctr_0 i} in
     none_above (PRF.incr i dom_0) prf_table h /\ //There are no OTP entries for this IV at all
     (match PRF.find_mac prf_table dom_0 with
-     | None -> True //and no MAC entry either
+     | None           -> True //and no MAC entry either
      | Some mac_range ->
        let mac_log = CMA.ilog (CMA.State.log mac_range) in
        m_contains mac_log h /\ (
        match m_sel h mac_log with
-       | None           ->  True //or, MAC entry exists, but it is not yet used
+       | None            ->  True //or, MAC entry exists, but it is not yet used
        | Some (msg,tag') -> False))
 
 (** THE MAIN CLAUSE OF THE STATEFUL INVARIANT:
@@ -203,7 +212,7 @@ let refines (#rgn:region) (#i:id)
   (forall (iv:Cipher.iv (alg i)).
     match find_aead_entry iv aead_entries with
     | Some _ -> True //already covered by refines_one_entry
-    | None -> mac_is_unset prf_table iv h)
+    | None   -> mac_is_unset prf_table iv h)
 
 let aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
   HS (h.h `Map.contains` st.prf.mac_rgn) /\      //contains the mac region
