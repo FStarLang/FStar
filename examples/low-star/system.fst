@@ -23,7 +23,7 @@ type fd = nat * lref nat
 (* Input stream to be read from a file descriptor *)
 assume val readStreamT :
   f:fd -> m:smem{refIsLive (snd f) m} -> n:nat ->
-  Tot (s:(option (Seq.seq byte)){ is_Some s ==> Seq.length (Some.v s) <= n })
+  Tot (s:(option (Seq.seq byte)){ Some? s ==> Seq.length (Some.v s) <= n })
 
 assume val readStream :
   f:fd -> n:nat ->
@@ -50,7 +50,7 @@ assume val read :
     (ensures (fun m0 n m1 ->
       (liveBuffer m0 b) /\ (liveBuffer m1 b)
       /\ (refIsLive (snd f) m0)
-      /\ (is_Some (readStreamT f m0 count) ==>
+      /\ (Some? (readStreamT f m0 count) ==>
 	    (n = Seq.length (Some.v (readStreamT f m0 count))
 	    /\ (EqSub (sel m1 b.content) off (Some.v (readStreamT f m0 count)) 0 n)))
       /\ (EqSubInv (sel m0 b.content) (sel m1 b.content) off count)
@@ -74,7 +74,7 @@ assume val write :
       (liveBuffer m0 b) /\ (liveBuffer m1 b)
       /\ (refIsLive (snd f) m0) /\ (refIsLive (snd f) m1)
       /\ (n <= b.length /\ n >= 0) (* Issue : does not get it from the returned type *)
-      /\ (is_Some (readStreamT f m1 n) /\ Seq.length (Some.v (readStreamT f m1 n)) = n)
+      /\ (Some? (readStreamT f m1 n) /\ Seq.length (Some.v (readStreamT f m1 n)) = n)
       /\ (EqSub (Some.v (readStreamT f m1 n)) 0 (sel m0 b.content) b.start_idx n)
      ))
     (only (snd f))
@@ -106,7 +106,7 @@ assume val readv :
 	          /\ (refIsLive (snd f) m0)
 	           /\ (forall (b:buffer{List.mem b l}). glength b.content m0 = glength b.content m1)
 	            /\ (bufferListLength m0 l = bufferListLength m1 l)
-	             /\ (is_Some (readStreamT f m0 (bufferListLength m0 l)) ==>
+	             /\ (Some? (readStreamT f m0 (bufferListLength m0 l)) ==>
 	              (n = Seq.length (Some.v (readStreamT f m0 (bufferListLength m0 l)))
 	               /\ (Seq.Eq (Seq.slice (bufferListContent m1 l) 0 n) (Some.v (readStreamT f m0 (bufferListLength m0 l))))))
 	                /\ (forall (b:buffer{List.mem b l}) (i:nat{i < glength b.content m0}).
@@ -129,7 +129,7 @@ assume val writev:
 	(AllDistinct m0 l) /\ (AllDistinct m1 l)
 	/\ (refIsLive (snd f) m0) /\ (refIsLive (snd f) m1)
 	/\ (n <= bufferListLength m0 l /\ n >= 0)
-	/\ (is_Some (readStreamT f m1 n) /\ Seq.length (Some.v (readStreamT f m1 n)) = n)
+	/\ (Some? (readStreamT f m1 n) /\ Seq.length (Some.v (readStreamT f m1 n)) = n)
 	/\ (Some.v (readStreamT f m1 n) = Seq.slice (bufferListContent m0 l) 0 n)
        ))
       (only (snd f))

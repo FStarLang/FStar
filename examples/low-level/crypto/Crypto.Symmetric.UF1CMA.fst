@@ -56,7 +56,7 @@ type skey (rgn:rid) (i:id) =
 //16-10-16 can't make it abstract?
 (** Conditionally-allocated abstract key (accessed only in this module) *)
 let akey (rgn:rid) (i:id) = 
-  o:option (skey rgn i) {is_Some o <==> skeyed i}
+  o:option (skey rgn i) {Some? o <==> skeyed i}
   // using a sum type for KreMLin. Was: if skeyed i then skey rgn i else unit
 
 val get_skey: #r:rid -> #i:id{skeyed i} -> akey r i -> Tot (skey r i)
@@ -163,7 +163,7 @@ let genPost (i:id) (region:erid) m0 (st:state i) m1 =
       RR.m_contains (ilog st.log) m1 /\
       RR.m_sel m1 (ilog st.log) == None)
 
-#set-options "--z3timeout 60 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 60 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 val alloc: region:erid -> i:id
   -> ak:akey region (fst i)
@@ -172,6 +172,7 @@ val alloc: region:erid -> i:id
   -> ST (state i)
   (requires (fun m0 -> live m0 k /\ live_ak m0 ak))
   (ensures  (fun m0 st m1 -> genPost i region m0 st m1 /\ modifies_one region m0 m1))
+#reset-options "--z3rlimit 100"
 let alloc region i ak k =
   let r = MAC.rcreate region i in
   let s = FStar.Buffer.rcreate region 0uy 16ul in
@@ -262,7 +263,7 @@ val start: #i:id -> st:state i -> StackInline (accBuffer i)
     acc_inv st a h1 /\ 
     modifies_0 h0 h1))
 
-#set-options "--z3timeout 60 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 60 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 
 let start #i st =
   let h0 = ST.get () in
@@ -380,7 +381,7 @@ val verify:
     disjoint_2 (MAC.as_buffer st.r) st.s tag /\
     acc_inv st acc h0 /\
     (mac_log ==> RR.m_contains (ilog st.log) h0) /\
-    (mac_log /\ authId i ==> is_Some (RR.m_sel h0 (ilog st.log)))))
+    (mac_log /\ authId i ==> Some? (RR.m_sel h0 (ilog st.log)))))
   (ensures (fun h0 b h1 ->
     Buffer.modifies_0 h0 h1 /\
     live h0 st.s /\ 

@@ -29,8 +29,8 @@ val createL: #a:Type -> len:nat -> init:list a -> StackInline (Buffer.buffer a)
      len > 0
      /\ ~(Buffer.contains h0 b)
      /\ Buffer.live h1 b /\ Buffer.idx b = 0 /\ Buffer.length b = len
-     /\ Buffer.frameOf b = (HS h0.tip)
-     /\ Map.domain (HS h1.h) == Map.domain (HS h0.h)
+     /\ Buffer.frameOf b = (HS.(h0.tip))
+     /\ Map.domain (HS.(h1.h)) == Map.domain (HS.(h0.h))
      /\ Buffer.modifies_0 h0 h1
      /\ Buffer.as_seq h1 b == Seq.of_list init))
 let createL #a len init =
@@ -153,7 +153,7 @@ let rec store_bytestring len buf i s =
   let x1 = digit (String.index s (UInt32.v i + UInt32.v i)) in
   let x0 = digit (String.index s (UInt32.v i + UInt32.v i + 1)) in
   //assert(x1 <^ 16uy /\ x0 <^ 16uy);
-  Buffer.upd buf i (FStar.UInt8(x1 *^ 16uy +^ x0));
+  Buffer.upd buf i (FStar.UInt8.(x1 *^ 16uy +^ x0));
   store_bytestring len buf (FStar.UInt32(i +^ 1ul)) s )
 
 let from_bytestring s = 
@@ -195,6 +195,7 @@ let tweak pos b = Buffer.upd b pos (UInt8.logxor (Buffer.index b pos) 42uy)
 val test: unit -> ST bool 
   (requires (fun _ -> True))
   (ensures  (fun h0 _ h1 -> True))
+#set-options "--z3rlimit 50"
 let test () = 
   push_frame(); 
   let plainlen = 114ul in 
@@ -227,7 +228,7 @@ let test () =
   let st = AE.coerce i rgn key in
   // To prove the assertion below for the concrete constants in PRF, AEAD:
   assert_norm (114 <= pow2 14);  
-  assert_norm (FStar.Mul(114 <= 1999 * 64));
+  assert_norm (FStar.Mul.(114 <= 1999 * 64));
   assert_norm (AETypes.safelen i (v plainlen) 1ul);
   //TODO: may as well assume False
   assume (

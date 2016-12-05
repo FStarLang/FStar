@@ -31,7 +31,7 @@ let minNat (a:nat) (b:nat) : nat = if a <= b then a else b
 
 type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
-let ctr x = PRF(x.ctr)
+let ctr x = PRF.(x.ctr)
 
 noeq type entry (i:id) =
   | Entry: 
@@ -53,11 +53,12 @@ noeq type state (i:id) (rw:rw) =
       #log_region: rgn -> // this is the *writer* region; the reader allocates nothing
       // the log should exist only when prf i
       log: HS.ref (Seq.seq (entry i)) {HS.frameOf log == log_region} ->
-      // Was PRF(prf.rgn) == region. Do readers use its own PRF state?
-      prf: PRF.state i {PRF(prf.rgn) == log_region /\
+      // Was PRF.(prf.rgn) == region. Do readers use its own PRF state?
+      prf: PRF.state i {PRF.(prf.rgn) == log_region /\
 		       (Flag.prf i ==> ~(log === PRF.itable i prf)) } (* including its key *) ->
-      ak: CMA.akey (PRF prf.mac_rgn) i (* static, optional authentication key *) -> 
+      ak: CMA.akey (PRF.(prf.mac_rgn)) i (* static, optional authentication key *) -> 
       state i rw
+// private inline_for_extraction let state' = state (* state may be a by Crypto.Symmetric.PRF.state *)
 
 // INVARIANT (WIP)
  
@@ -68,8 +69,8 @@ let maxplain (i:id) = pow2 14 // for instance
 // c is the counter for encrypting the next block of plaintext.
 let safelen (i:id) (l:nat) (c:UInt32.t{PRF.ctr_0 i <^ c /\ c <=^ PRF.maxCtr i}) = 
   l = 0 || (
-    let bl = v (Cipher( blocklen (cipherAlg_of_id i))) in
-    FStar.Mul(
+    let bl = v (Cipher.( blocklen (cipherAlg_of_id i))) in
+    FStar.Mul.(
       l + (v (c -^ PRF.ctr_0 i -^ 1ul)) * bl <= maxplain i && 
       l  <= v (PRF.maxCtr i -^ c) * bl ))
     
@@ -86,10 +87,10 @@ val counterblocks:
   to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) (ctr x)} -> 
   plain:Crypto.Plain.plain i l -> 
   cipher:lbytes l -> 
-  Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
+  Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF.(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
   (decreases (to_pos - from_pos))
 let rec counterblocks i rgn x l from_pos to_pos plain cipher = 
-  let blockl = v (Cipher(blocklen (cipherAlg_of_id i))) in 
+  let blockl = v (Cipher.(blocklen (cipherAlg_of_id i))) in 
   let remaining = to_pos - from_pos in 
   if remaining = 0 then
     Seq.createEmpty
@@ -103,8 +104,10 @@ let rec counterblocks i rgn x l from_pos to_pos plain cipher =
     SeqProperties.cons block blocks
 
 let num_blocks' (i:id) (l:nat) : Tot nat = 
-  let bl = v (Cipher( blocklen (cipherAlg_of_id i))) in
+  let bl = v (Cipher.( blocklen (cipherAlg_of_id i))) in
   (l + bl - 1) / bl
+
+#reset-options "--z3rlimit 20"
 
 let num_blocks (#i:id) (e:entry i) : Tot nat = 
   let Entry nonce ad l plain cipher_tagged = e in
@@ -117,13 +120,13 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
   (let PRF.Entry x e = Seq.index blocks 0 in
    let xors = Seq.slice blocks 1 (b+1) in 
    let cipher, tag = SeqProperties.split cipher_tagged l in
-   PRF (x.iv = nonce /\ x.ctr = PRF.ctr_0 i) /\ 
+   PRF.(x.iv = nonce /\ x.ctr = PRF.ctr_0 i) /\ 
    safelen i l (PRF.ctr_0 i +^ 1ul) /\
    xors == counterblocks i rgn (PRF.incr i x) l 0 l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
    (let m = PRF.macRange rgn i x e in
-    let mac_log = CMA.ilog (CMA.State.log m) in
+    let mac_log = CMA.ilog (CMA.State?.log m) in
     m_contains mac_log h /\ (
-    match m_sel h (CMA.ilog (CMA.State.log m)) with
+    match m_sel h (CMA.ilog (CMA.State?.log m)) with
     | None           -> False
     | Some (msg,tag') -> msg = encode_both i (FStar.UInt32.uint_to_t (Seq.length ad)) ad (FStar.UInt32.uint_to_t l) cipher /\
 			tag = tag'))) //NS: adding this bit to relate the tag in the entries to the tag in that MAC log
@@ -148,10 +151,10 @@ let rec refines h i rgn entries blocks =
         refines_one_entry h e blocks_for_e /\
 	refines h i rgn entries_tl remaining_blocks)
 
-open Crypto.Symmetric.PRF
+// open Crypto.Symmetric.PRF // shadows 'state' !
 let all_above (#rgn:region) (#i:id) (s:Seq.seq (PRF.entry rgn i)) (x:PRF.domain i) = 
   (forall (e:PRF.entry rgn i).{:pattern (s `SeqProperties.contains` e)} 
-     s `SeqProperties.contains` e ==> e.x `PRF.above` x)
+     s `SeqProperties.contains` e ==> e.PRF.x `PRF.above` x)
 
 let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
 				      (x:PRF.domain i) (b:lbuffer l)
@@ -160,11 +163,11 @@ let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
   (if prf i then 
     let r = PRF.itable i t in
     let rb = Buffer.frameOf b in 
-    let rgns = Set.union (Set.singleton #HH.rid t.rgn) (Set.singleton #HH.rid rb) in 
+    let rgns = Set.union (Set.singleton #HH.rid t.PRF.rgn) (Set.singleton #HH.rid rb) in 
     let contents0 = HS.sel h0 r in
     let contents1 = HS.sel h1 r in
     HS.modifies rgns h0 h1 /\ 
-    HS.modifies_ref t.rgn (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1 /\
+    HS.modifies_ref t.PRF.rgn (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1 /\
     Buffer.modifies_buf_1 rb b h0 h1 /\
     Seq.length contents0 <= Seq.length contents1 /\
     Seq.equal (Seq.slice contents1 0 (Seq.length contents0)) contents0 /\
@@ -172,44 +175,44 @@ let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
   else
     Buffer.modifies_1 b h0 h1)
 
-let none_above (#i:id) (x:domain i) (t:PRF.state i) (h:mem) =
-    CMA.authId (i, PRF x.iv) ==> (forall (y:domain i{y `above` x}). PRF.find (HS.sel h (itable i t)) y == None)
+let none_above (#i:id) (x:PRF.domain i) (t:PRF.state i) (h:mem) =
+    CMA.authId (i, PRF.(x.iv)) ==> (forall (y:PRF.domain i{y `PRF.above` x}). PRF.find (HS.sel h (PRF.itable i t)) y == None)
 
 val inv: h:mem -> #i:id -> #rw:rw -> e:state i rw -> Tot Type0
 let inv h #i #rw e =
   match e with
   | State #i_ #rw_ #log_region log prf ak ->
     safeId i ==>
-    ( let r = itable i_ prf in 
+    ( let r = PRF.itable i_ prf in 
       let blocks = HS.sel h r in
       let entries = HS.sel h log in
       h `HS.contains` r /\
-      refines h i (PRF prf.mac_rgn) entries blocks )
+      refines h i (PRF.(prf.mac_rgn)) entries blocks )
 
 let my_inv (#i:id) (#rw:_) (st:state i rw) (h:mem) = 
   inv h st /\
-  HS (h.h `Map.contains` st.prf.mac_rgn) /\
+  HS.(h.h `Map.contains` st.prf.PRF.mac_rgn) /\
   (safeId i ==> h `HS.contains` st.log) /\
-  (prf i ==> h `HS.contains` (itable i st.prf))
+  (prf i ==> h `HS.contains` (PRF.itable i st.prf))
 
 let prf_blocks rgn i = Seq.seq (PRF.entry rgn i)
 let aead_entries i = Seq.seq (entry i)
 
 ////////////////////////////////////////////////////////////////////////////////
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let offset (i:id) = ctr_0 i +^ 1ul
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let offset (i:id) = PRF.ctr_0 i +^ 1ul
 
 let remaining_len_ok (#i:id) (x:PRF.domain i) (len:u32) (remaining_len:u32) = 
-  PRF.ctr_0 i <^ x.ctr &&
-  safelen i (v remaining_len) x.ctr &&
+  PRF.ctr_0 i <^ x.PRF.ctr &&
+  safelen i (v remaining_len) x.PRF.ctr &&
   remaining_len <=^ len &&
   len <> 0ul &&
   safelen i (v len) (PRF.ctr_0 i +^ 1ul) &&
   (let completed_len = v len - v remaining_len in
-   let n_blocks = v x.ctr - v (offset i) in
+   let n_blocks = v x.PRF.ctr - v (offset i) in
    if remaining_len = 0ul then 
       n_blocks = num_blocks' i (v len)
-   else completed_len = FStar.Mul (n_blocks * v (PRF.blocklen i)))
+   else completed_len = FStar.Mul.(n_blocks * v (PRF.blocklen i)))
 
 let incr_remaining_len_ok (#i:id) (x:PRF.domain i) (len:u32) (remaining_len:u32)
     : Lemma (let l = min remaining_len (PRF.blocklen i) in 
@@ -218,7 +221,7 @@ let incr_remaining_len_ok (#i:id) (x:PRF.domain i) (len:u32) (remaining_len:u32)
 	     remaining_len_ok (PRF.incr i x) len (remaining_len -^ l))
     = ()
 
-let init_remaining_len_ok (#i:id) (x:PRF.domain i{PRF.ctr_0 i +^ 1ul = x.ctr})
-			  (len:u32{len <> 0ul /\ safelen i (v len) x.ctr})
+let init_remaining_len_ok (#i:id) (x:PRF.domain i{PRF.ctr_0 i +^ 1ul = x.PRF.ctr})
+			  (len:u32{len <> 0ul /\ safelen i (v len) x.PRF.ctr})
     : Lemma (remaining_len_ok x len len)
     = ()

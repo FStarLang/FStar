@@ -289,7 +289,7 @@ let detail_errors env
               else linear_check eliminated (hd::errors) tl in
 
     print_banner ();
-    Options.set_option "z3timeout" (Options.Int 5);
+    Options.set_option "z3rlimit" (Options.Int 5);
     let res = linear_check [] [] all_labels in
     res |> List.iter print_result;
     []

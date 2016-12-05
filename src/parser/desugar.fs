@@ -249,6 +249,8 @@ and free_type_vars env t = match (unparen t).tm with
   | Wild
   | Const _
   | Var  _
+  | AST.Projector _
+  | AST.Discrim _
   | Name _  -> []
 
   | Requires (t, _)
@@ -550,6 +552,15 @@ and desugar_typ_or_exp (env:env_t) (t:term) : either<typ,exp> =
 
 and desugar_exp env e = desugar_exp_maybe_top false env e
 
+and desugar_name setpos env l =
+      if l.str = "ref"
+      then begin match DesugarEnv.try_lookup_lid env Const.alloc_lid with
+            | None -> raise (Error ("Identifier 'ref' not found; include lib/FStar.ST.fst in your path", range_of_lid l))
+            | Some e -> setpos e
+           end
+      else setpos <| fail_or env (DesugarEnv.try_lookup_lid env) l
+
+
 and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
   let pos e = e None top.range in
   let setpos e = {e with pos=top.range} in
@@ -568,12 +579,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
 
     | Var l
     | Name l ->
-      if l.str = "ref"
-      then begin match DesugarEnv.try_lookup_lid env Const.alloc_lid with
-            | None -> raise (Error ("Identifier 'ref' not found; include lib/FStar.ST.fst in your path", range_of_lid l))
-            | Some e -> setpos e
-           end
-      else setpos <| fail_or env (DesugarEnv.try_lookup_lid env) l
+      desugar_name setpos env l
 
     | Construct(l, args) ->
       let dt = pos <| mk_Exp_fvar(fail_or env (DesugarEnv.try_lookup_datacon env) l, Some Data_ctor) in
@@ -803,6 +809,17 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
 
     | Paren e ->
       desugar_exp env e
+
+    | AST.Projector (ns, id) ->
+      (* translating ".." back into "." -- support needed by 'make -C
+         src test', namely 'make -C examples/unit-tests sall', more
+         precisely examples/unit_tests/Unit1.Basic.fst *)
+      let l = qual ns id in
+      desugar_name setpos env l
+
+    | Discrim lid ->
+      let lid' = Util.mk_discriminator lid in
+      desugar_name setpos env lid'
 
     | _ ->
       error "Unexpected term" top top.range
@@ -1499,6 +1516,7 @@ let trans_qual r = function
   | AST.Unopteq
   | AST.Visible
   | AST.Unfold_for_unification_and_vcgen
+  | AST.NoExtract -> raise (Error("The noextract qualifier is supported only with the --universes option", r))
   | AST.Inline_for_extraction -> raise (Error("This qualifier is supported only with the --universes option", r))
 
 let trans_pragma = function
@@ -1528,7 +1546,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     let tcs = List.map (fun (x,_) -> x) tcs in
     desugar_tycon env d.drange (trans_quals qual) tcs
 
-  | ToplevelLet(quals, isrec, lets) ->
+  | TopLevelLet(quals, isrec, lets) ->
     begin match (compress_exp <| desugar_exp_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
         | Exp_let(lbs, _) ->
           let lids = snd lbs |> List.map (fun lb -> match lb.lbname with

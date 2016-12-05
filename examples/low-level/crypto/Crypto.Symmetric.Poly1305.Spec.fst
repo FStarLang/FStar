@@ -85,6 +85,7 @@ let lemma_encode_nonzero v =
    Accordingly, sequences seen as polynomials are implicitly extended with 0s.
 *)
 val poly: vs:text -> r:elem -> Tot (a:elem) (decreases (Seq.length vs))
+
 let rec poly vs r =
   if Seq.length vs = 0 then 0
   else 
@@ -126,7 +127,7 @@ let rec eq_poly_spec p0 p1 r =
 
 
 private val fix: word_16 -> i:nat{i < 16} -> m:U8.t -> Tot word_16
-let fix r i m = Seq.upd r i (U8 (Seq.index r i &^ m))
+let fix r i m = Seq.upd r i (U8.(Seq.index r i &^ m))
 
 (** Abstract spec of clamping for the state invariant.
     For our polynomial-sampling assumption, we rely solely on the number of

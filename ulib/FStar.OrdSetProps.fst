@@ -25,7 +25,7 @@ val union_lemma: #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
 let rec union_lemma (#a:eqtype) #f s1 s2 =
   if s1 = empty then ()
   else
-    union_lemma (remove (Some.v (choose s1)) s1) s2
+    union_lemma (remove (Some?.v (choose s1)) s1) s2
 
 val union_lemma': #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
                   -> Lemma (requires (True))

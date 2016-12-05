@@ -96,6 +96,8 @@ let rec maxValue_increases h b n m =
   | 0 -> ()
   | _ -> maxValue_increases h b n (m - 1)
 
+#reset-options "z3rlimit 20"
+
 (*  All elements in cells < l are smaller or equal to the max *)
 val maxValue_lemma_aux: h:heap -> b:bigint{live h b} -> l:pos{l <= length b} -> Lemma
   (forall (i:nat). i < l ==> v (get h b i) <= maxValue h b l)
@@ -103,6 +105,8 @@ let rec maxValue_lemma_aux h b l =
   match l with 
   | 1 -> () 
   | _ -> maxValue_lemma_aux h b (l-1)
+
+#reset-options
 
 (*  All elements are smaller or equal to the max *)
 val maxValue_lemma: h:heap -> b:bigint{live h b /\ length b > 0} -> Lemma
@@ -177,7 +181,7 @@ val norm_eq_lemma: ha:heap -> hb:heap -> a:bigint -> b:bigint -> Lemma
 let norm_eq_lemma ha hb a b =
   eval_eq_lemma ha hb a b norm_length
 
-#reset-options "--z3timeout 60"
+#reset-options "--z3rlimit 60"
 
 val eval_partial_eq_lemma: ha:heap -> hb:heap -> a:bigint{live ha a} -> b:bigint{live hb b} -> ctr:nat -> len:nat{ ctr <= len /\ len <= length a /\ len <= length b} -> Lemma
   (requires (live ha a /\ live hb b
@@ -190,7 +194,9 @@ let rec eval_partial_eq_lemma ha hb a b ctr len =
       eval_def ha a len;
       eval_def hb b len;
       eval_partial_eq_lemma ha hb a b ctr (len-1)
-    end     	 
+    end
+
+#reset-options
 
 (* The mathematical value of a bigint that only contains 0 is 0 *)
 val eval_null: h:heap -> b:bigint{live h b} -> len:nat{len <= length b} -> Lemma

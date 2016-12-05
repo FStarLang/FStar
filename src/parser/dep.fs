@@ -210,7 +210,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
 
   let record_open let_open lid =
     let key = lowercase_join_longident lid true in
-    begin match smap_try_find original_map key with
+    begin match smap_try_find working_map key with
     | Some pair ->
         List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
     | None ->
@@ -307,7 +307,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | ModuleAbbrev (ident, lid) ->
         add_dep (lowercase_join_longident lid true);
         record_module_alias ident lid
-    | ToplevelLet (_, _, patterms) ->
+    | TopLevelLet (_, _, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | KindAbbrev (_, binders, t) ->
         collect_term t;
@@ -399,6 +399,8 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | Tvar _ ->
         ()
     | Var lid
+    | AST.Projector (lid, _)
+    | AST.Discrim lid
     | Name lid ->
         record_lid false lid
     | Construct (lid, termimps) ->

@@ -90,7 +90,7 @@ let em_wp (a:Type)
           (forall (x: either a (a -> Tot False)) (post' : False -> Type0). pbpost x post')
 
 
-let em2 (a:Type) : CONTINUATION.repr (either a (a -> Tot False)) (em_wp a)
+let em2 (a:Type) : CONTINUATION?.repr (either a (a -> Tot False)) (em_wp a)
   = fun (kspec : (either a (a -> Tot False)) -> (False -> Tot Type0) -> Tot Type0)
       (k : (x:(either a (a -> Tot False))) -> PURE False (kspec x)) ->
       begin
@@ -104,5 +104,5 @@ let em2 (a:Type) : CONTINUATION.repr (either a (a -> Tot False)) (em_wp a)
 // TODO : to be investigated ./FStar.DM4F.Continuations.fst(19,2-19,3): (Error) assertion failed
 reifiable let excluded_middle (a:Type)
   : CONTINUATION (either a (a -> Tot False)) (em_wp a)
-  = CONTINUATION.reflect (em2 a)
+  = CONTINUATION?.reflect (em2 a)
 *)

@@ -1,5 +1,5 @@
 [
-  "¼’²æŒiDg­ádÇêŽ„ý",
+  "~ïq›Nî¢S6\u000bÐª?œàË",
   [
     [
       "Unification.lemma_shift_append",
@@ -2015,13 +2015,23 @@
       2,
       1,
       [
-        "@query", "disc_equation_Prims.None",
-        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
-        "equation_Unification.lsubst", "equation_Unification.unify_eqns",
+        "@query", "bool_inversion", "data_elim_Prims.Some",
+        "disc_equation_Prims.None", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert", "equation_Unification.lsubst",
+        "equation_Unification.op_At", "equation_Unification.subst",
+        "equation_Unification.unify_eqns",
+        "equation_with_fuel_Unification.solved.fuel_instrumented",
         "fuel_correspondence_Unification.lsubst_eqns.fuel_instrumented",
+        "fuel_correspondence_Unification.solved.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.option",
         "function_token_typing_FStar.List.Tot.test_sort",
         "lemma_Unification.lemma_lsubst_eqns_nil",
-        "proj_equation_Prims.Some_v", "projection_inverse_BoxBool_proj_0"
+        "primitive_Prims.op_LessThan", "proj_equation_Prims.Some_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "token_correspondence_Prims.op_LessThan",
+        "typing_Unification.lsubst_eqns", "typing_Unification.solved",
+        "typing_Unification.unify_eqns"
       ],
       0
     ]

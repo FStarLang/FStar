@@ -57,7 +57,7 @@ let do_sec_comp' c =
 
 (* Using non opaque types as patterns is risky *)
 opaque type config_prop (ps:prins) (x:varname) (e:exp) (p:prin) (r:redex) (c:config) =
-  mem p ps /\ is_R_assec r /\ is_clos (R_assec.v r) /\ R_assec.ps r = ps /\
+  mem p ps /\ R_assec? r /\ is_clos (R_assec.v r) /\ R_assec.ps r = ps /\
   MkTuple3._2 (get_en_b (R_assec.v r)) = x /\ MkTuple3._3 (get_en_b (R_assec.v r)) = e /\
   Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p)
 
@@ -93,7 +93,7 @@ val build_pi_lemma:
   -> red_m:redex_map{forall p.{:pattern (mem p ps')} mem p ps' = contains p red_m}
   -> x:varname -> e:exp
   -> p:prin
-  -> r:redex{is_R_assec r /\ is_clos (R_assec.v r) /\ R_assec.ps r = ps /\
+  -> r:redex{R_assec? r /\ is_clos (R_assec.v r) /\ R_assec.ps r = ps /\
             MkTuple3._2 (get_en_b (R_assec.v r)) = x /\
 	    MkTuple3._3 (get_en_b (R_assec.v r)) = e}
   -> Lemma (requires (exists (c:config) (pi:tpar ps').
@@ -226,7 +226,7 @@ let build_initial_pi ps p x e r c =
 
 val build_initial_pi_lemma:
   ps:prins -> p:prin{mem p ps} -> x:varname -> e:exp
-  -> r:redex{is_R_assec r /\ is_clos (R_assec.v r) /\
+  -> r:redex{R_assec? r /\ is_clos (R_assec.v r) /\
             R_assec.ps r = ps /\
 	    MkTuple3._2 (get_en_b (R_assec.v r)) = x /\
 	    MkTuple3._3 (get_en_b (R_assec.v r)) = e}

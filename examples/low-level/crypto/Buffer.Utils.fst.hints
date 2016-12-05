@@ -1,5 +1,5 @@
 [
-  "iS¥\u001aâª£Ø taÃ\u001aí\u000eî",
+  "Â\u001b£RÁ8¡„\rJ>kƒÖ½¨",
   [
     [
       "Buffer.Utils.op_Greater_Greater_Greater",
@@ -370,72 +370,14 @@
         "typing_FStar.Buffer.MkBuffer.length", "typing_FStar.Buffer.length",
         "typing_FStar.Heap.domain", "typing_FStar.HyperStack.HS.h",
         "typing_FStar.Map.domain", "typing_FStar.Map.sel",
-        "typing_FStar.UInt.fits", "typing_FStar.UInt32.v", "unit_inversion"
+        "typing_FStar.Mul.op_Star", "typing_FStar.UInt.fits",
+        "typing_FStar.UInt32.v", "unit_inversion"
       ],
       0
     ],
     [
       "Buffer.Utils.bytes_of_uint32",
       1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Buffer.Utils.bytes_of_uint32",
-      2,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Buffer.Utils.bytes_of_uint32",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Buffer.Utils.bytes_of_uint32",
-      4,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Buffer.Utils.bytes_of_uint32",
-      5,
-      0,
-      1,
-      [
-        "@query", "b2t_def", "data_elim_FStar.UInt32.Mk",
-        "equation_Buffer.Utils.bytes", "equation_Buffer.Utils.u32",
-        "equation_Buffer.Utils.u8", "equation_FStar.UInt.fits",
-        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
-        "equation_FStar.UInt32.v", "equation_FStar.UInt8.n",
-        "equation_FStar.UInt8.t", "equation_Prims.pos",
-        "fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.UInt32.t_", "int_inversion",
-        "int_typing", "lemma_FStar.Buffer.lemma_size",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction", "proj_equation_FStar.UInt32.Mk_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
-        "refinement_interpretation_Tm_refine_e109ab7b3f20d6fc94fbda4e245a9911",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0
-    ],
-    [
-      "Buffer.Utils.bytes_of_uint32",
-      6,
       0,
       1,
       [

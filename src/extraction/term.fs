@@ -56,6 +56,20 @@ let eraseTypeDeep g t = Util.eraseTypeDeep (Util.udelta_unfold g) t
 
 module Print = FStar.Syntax.Print
 
+
+(* taramana 2016-10-31: we redefine
+FStar.Extraction.ML.Util.record_field_path here because the desugaring
+of field names has changed, but we cannot change the definition in
+FStar.Extraction.ML.Util for now because it is used by legacy
+extraction, which is still used in the bootstrapping process *)
+
+let record_field_path = function
+    | f::_ ->
+        let ns = f.ns in
+        ns |> List.map (fun id -> id.idText)
+    | _ -> failwith "impos"
+
+
 (********************************************************************************************)
 (* Some basic error reporting; all are fatal errors at this stage                           *)
 (********************************************************************************************)
@@ -674,7 +688,7 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
    let as_record qual e =
         match e.expr, qual with
             | MLE_CTor(_, args), Some (Record_ctor(_, fields)) ->
-               let path = Util.record_field_path fields in
+               let path = record_field_path fields in
                let fields = Util.record_fields fields args in
                with_ty e.mlty <| MLE_Record(path, fields)
             | _ -> e in

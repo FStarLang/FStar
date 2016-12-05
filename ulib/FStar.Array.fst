@@ -163,6 +163,8 @@ val blit:
 let rec blit #a s s_idx t t_idx len =
   blit_aux s s_idx t t_idx len 0
 
+#reset-options "--z3rlimit 5"
+
 val sub :
   #a:Type -> s:array a -> idx:nat -> len:nat ->
   ST (array a)

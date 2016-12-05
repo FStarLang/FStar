@@ -12,7 +12,7 @@ abstract noeq type pre_heap = {
 }
 
 (* A heap is a pre_heap together with an invariant that nothing is allocated beyond next_addr *)
-abstract type heap = h:pre_heap{forall (n:nat). n >= h.next_addr ==> is_None (h.memory n)}
+abstract type heap = h:pre_heap{forall (n:nat). n >= h.next_addr ==> None? (h.memory n)}
 
 (* References are represented by just their address in the heap *)
 type ref (a:Type) = nat
@@ -25,7 +25,7 @@ abstract let contains_a_well_typed (#a:Type) (h:heap) (r:ref a) : GTot Type0 =
 
 (* An abstract predicate for a reference simply being present in memory,
    usually written infix *)
-abstract let contains (h:heap) (r:nat): GTot Type0 = is_Some (h.memory r)
+abstract let contains (h:heap) (r:nat): GTot Type0 = Some? (h.memory r)
 
 let contains_a_well_typed_implies_contains (#a:Type) (h:heap) (r:ref a)
     : Lemma (requires (h `contains_a_well_typed` r))

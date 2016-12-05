@@ -377,7 +377,7 @@ end
 
 let _87_378 = (fresh_label default_msg ropt q.FStar_SMTEncoding_Term.rng q)
 in (match (_87_378) with
-| (lab, t) -> begin
+| (lab, q) -> begin
 (((lab)::labels), (q))
 end))
 end
@@ -480,7 +480,7 @@ in (
 let _87_534 = (print_banner ())
 in (
 
-let _87_536 = (FStar_Options.set_option "z3timeout" (FStar_Options.Int ((Prims.parse_int "5"))))
+let _87_536 = (FStar_Options.set_option "z3rlimit" (FStar_Options.Int ((Prims.parse_int "5"))))
 in (
 
 let res = (linear_check [] [] all_labels)

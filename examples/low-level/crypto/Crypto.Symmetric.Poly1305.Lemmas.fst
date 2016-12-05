@@ -21,7 +21,7 @@ open Crypto.Symmetric.Bytes
 module U8 = FStar.UInt8
 module U64 = FStar.UInt64
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 5"
 
 val pow2_8_lemma: n:nat ->
   Lemma
@@ -44,16 +44,16 @@ val pow2_64_lemma: n:nat ->
     [SMTPat (pow2 n)]
 let pow2_64_lemma n = assert_norm(pow2 64 = 18446744073709551616)
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 5"
 
 private val mk_mask: nbits:FStar.UInt32.t{FStar.UInt32.v nbits < 64} ->
   Tot (z:U64.t{v z == pow2 (FStar.UInt32.v nbits) - 1})
 let mk_mask nbits =
   Math.Lemmas.pow2_lt_compat 64 (FStar.UInt32.v nbits);
-  U64 ((1uL <<^ nbits) -^ 1uL)
+  U64.((1uL <<^ nbits) -^ 1uL)
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 5"
 
 let u64_32 = u:U64.t{U64.v u < pow2 32}
 
@@ -143,7 +143,7 @@ let lemma_toField_2_1 x =
   Math.Lemmas.distributivity_add_right (pow2 32) (x % pow2 20) (pow2 20 * (x / pow2 20))
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 10"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 10"
 
 val lemma_toField_2_2: x:nat{x < pow2 32} -> Lemma
   (pow2 52 * ((x * pow2 12) % pow2 26) + pow2 78 * (x / pow2 14) = pow2 64 * x)
@@ -189,7 +189,7 @@ let lemma_toField_2_4 n0 n1 n2 n3 n0' n1' n2' n3' n4' =
   lemma_toField_2_3 v3
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 5"
 
 val lemma_toField_2: n0:u64_32 -> n1:u64_32 -> n2:u64_32 -> n3:u64_32 ->
   n0':U64.t -> n1':U64.t -> n2':U64.t -> n3':U64.t -> n4':U64.t -> Lemma
@@ -253,7 +253,7 @@ let lemma_mod_pow2 a b c =
   Math.Lemmas.lemma_mod_plus 0 (q * pow2 (b - c)) (pow2 c)
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 private val add_disjoint: #z:pos -> a:UInt.uint_t z -> b:UInt.uint_t z -> n:nat -> m:nat{m < z} -> Lemma
   (requires (a % pow2 m = 0 /\ b < pow2 m /\ a < pow2 n /\ n >= m))
@@ -265,13 +265,18 @@ let add_disjoint #z a b n m =
   Math.Lemmas.pow2_plus (n-m) m;
   cut(c < pow2 (n-m));
   Math.Lemmas.distributivity_add_right (pow2 m) c 1
-  
+
+#reset-options
+
+(* n renamed into n', because n is shadowed by U64.n *)
 val lemma_disjoint_bounded:
-  b0:U64.t -> b1:U64.t -> l:nat -> m:pos{m >= l} -> n:nat{n > m /\ n <= 64} ->
-  Lemma (requires (U64 (v b0 < pow2 m /\ v b1 % pow2 m = 0 /\ v b1 < pow2 n /\ v b0 % pow2 l = 0)))
-        (ensures  (U64 (v (b0 |^ b1) = v b0 + v b1 /\ v b0 + v b1 < pow2 n /\ (v b0 + v b1) % pow2 l = 0)))
+  b0:U64.t -> b1:U64.t -> l:nat -> m:pos{m >= l} -> n':nat{n' > m /\ n' <= 64} ->
+  Lemma (requires (U64.(v b0 < pow2 m /\ v b1 % pow2 m = 0 /\ v b1 < pow2 n' /\ v b0 % pow2 l = 0)))
+        (ensures  (U64.(v (b0 |^ b1) = v b0 + v b1 /\ v b0 + v b1 < pow2 n' /\ (v b0 + v b1) % pow2 l = 0)))
 let lemma_disjoint_bounded b0 b1 l m n =
+  let n' = n in (* n shadowed by FStar.UInt64.n *)
   let open FStar.UInt64 in
+  let n = n' in
   logor_disjoint (v b1) (v b0) m;
   add_disjoint (v b1) (v b0) n m;
   UInt.logor_commutative (v b0) (v b1);
@@ -279,7 +284,7 @@ let lemma_disjoint_bounded b0 b1 l m n =
   Math.Lemmas.lemma_mod_plus_distr_l (v b0) (v b1) (pow2 l);
   Math.Lemmas.lemma_mod_plus_distr_l (v b1) ((v b0) % pow2 l) (pow2 l)
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 val lemma_toField_3: n0:u64_32 -> n1:u64_32 -> n2:u64_32 -> n3:u64_32 ->
   n0':U64.t -> n1':U64.t -> n2':U64.t -> n3':U64.t -> n4':U64.t -> Lemma
@@ -318,7 +323,7 @@ let lemma_toField_3 n0 n1 n2 n3 n0' n1' n2' n3' n4' =
   lemma_div_pow2_lt (v n3) 32 8
 
 
-#set-options "--initial_fuel 1 --max_fuel 1 --z3timeout 5"
+#set-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 5"
 
 (* The little_endian function but computed from the most significant bit, makes the
    enrolling of the function to concrete values easiers for math *)
@@ -327,7 +332,7 @@ let rec little_endian_from_top (s:Seq.seq U8.t) (len:nat{len <= Seq.length s}) :
     else pow2 (8 * (len - 1)) * U8.v (Seq.index s (len-1)) + little_endian_from_top s (len-1)
 
 
-#set-options "--z3timeout 50 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 1"
 
 val lemma_little_endian_from_top_:
   s:Seq.seq U8.t{Seq.length s > 0} -> len:nat{len <= Seq.length s} ->
@@ -346,7 +351,7 @@ let rec lemma_little_endian_from_top_ s len =
     end
 
 
-#set-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
 
 val lemma_little_endian_from_top: s:Seq.seq U8.t{Seq.length s > 0} -> Lemma
   (little_endian s = little_endian_from_top s (Seq.length s))
@@ -354,7 +359,7 @@ let lemma_little_endian_from_top s =
   Seq.lemma_eq_intro s (Seq.slice s 0 (Seq.length s));
   lemma_little_endian_from_top_ s (Seq.length s)
 
-#set-options "--z3timeout 5 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 5 --initial_fuel 1 --max_fuel 1"
 
 val lemma_little_endian_from_top_def: s:Seq.seq U8.t -> len:nat{Seq.length s >= len} ->
   Lemma ((len = 0 ==> little_endian_from_top s len = 0)
@@ -364,7 +369,7 @@ val lemma_little_endian_from_top_def: s:Seq.seq U8.t -> len:nat{Seq.length s >= 
 let lemma_little_endian_from_top_def s len = ()
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 -z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 -z3rlimit 20"
 
 val lemma_little_endian_of_u64: u:U64.t -> w:Seq.seq U8.t{Seq.length w = 4} ->
   Lemma (requires  (U64.v u == U8.v (Seq.index w 0) + pow2 8 * U8.v (Seq.index w 1) + pow2 16 * U8.v (Seq.index w 2) + pow2 24 * U8.v (Seq.index w 3)))
@@ -379,13 +384,13 @@ let lemma_little_endian_of_u64 u w =
   lemma_little_endian_from_top_def w 0
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 -z3timeout 5"
+#set-options "--initial_fuel 0 --max_fuel 0 -z3rlimit 5"
 
 private let lemma_get_word #a (b:Buffer.buffer a) (h:HyperStack.mem{live h b}) (i:nat{i < Buffer.length b}) :
   Lemma (Seq.index (as_seq h b) i == get h b i)
   = ()
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 40"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 40"
 
 private let lemma_word_vals (w:Buffer.buffer U8.t{Buffer.length w = 16}) (h:HyperStack.mem{live h w}) :
   Lemma (
@@ -447,7 +452,7 @@ private let lemma_seq_append_16_to_4 #a (s:Seq.seq a{Seq.length s = 16}) : Lemma
     Seq.lemma_eq_intro (Seq.append (Seq.slice s 0 8) (Seq.slice s 8 12)) (Seq.slice s 0 12);
     Seq.lemma_eq_intro (Seq.append (Seq.slice s 0 4) (Seq.slice s 4 8)) (Seq.slice s 0 8)
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 10"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 10"
 
 val lemma_toField_1:
   s:Buffer.buffer U8.t{Buffer.length s = 16} ->
@@ -477,7 +482,7 @@ let lemma_toField_1 s h n0 n1 n2 n3 =
   little_endian_append (Seq.append (Seq.append s04 s48) s812) s1216
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 val lemma_eval_5: h:HyperStack.mem -> a:Buffer.buffer U64.t{live h a /\ length a >= 5} ->
   Lemma (Crypto.Symmetric.Poly1305.Bigint.eval h a 5 =
@@ -497,7 +502,7 @@ let lemma_eval_5 h a =
   Crypto.Symmetric.Poly1305.Bigint.bitweight_def Crypto.Symmetric.Poly1305.Parameters.templ 0;
   assert_norm (pow2 0 = 1)
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 
 val lemma_little_endian_16: h:HyperStack.mem -> a:Buffer.buffer U8.t{live h a /\ length a = 16} ->
@@ -530,7 +535,7 @@ let lemma_little_endian_16 h a =
   assert_norm (pow2 0 = 1)
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 5"
 
 
 let lemma_mul_mod (a:nat) (b:pos) : Lemma ((b * a) % b = 0) = Math.Lemmas.lemma_mod_plus 0 a b
@@ -745,7 +750,7 @@ val lemma_norm_5:
 let lemma_norm_5 h b = ()
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 val lemma_mod_sum_mul: x:nat -> y:nat -> l:nat -> m:nat -> Lemma
   (requires (x % pow2 l = 0 /\ y < pow2 l /\ m >= l))
@@ -763,7 +768,7 @@ let lemma_mod_sum_mul x y l m =
     Math.Lemmas.pow2_plus (m-l) l; Math.Lemmas.modulo_lemma (((c%pow2 (m-l))*pow2 l) + y) (pow2 m)
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 let lemma_b3 (a0:U64.t{v a0 < pow2 26}) (a1:U64.t{v a1 < pow2 26}) : Lemma
   (pow2 24 * (U8.v (uint64_to_uint8 ((a0 >>^ 24ul) |^ (a1 <<^ 2ul)))) = pow2 24 * ((v a0 / pow2 24) % pow2 8) + pow2 24 * ((v a1*pow2 2)%pow2 8))
@@ -781,6 +786,7 @@ let lemma_b3 (a0:U64.t{v a0 < pow2 26}) (a1:U64.t{v a1 < pow2 26}) : Lemma
     cut (r = ((v a0 / pow2 24) + (v a1 * pow2 2)) % pow2 8);
     lemma_mod_sum_mul (v a1 * pow2 2) (v a0 / pow2 24) 2 8
 
+#reset-options "--z3rlimit 1000 --max_fuel 10"
 
 let lemma_b6 (a1:U64.t{v a1 < pow2 26}) (a2:U64.t{v a2 < pow2 26}) : Lemma
   (pow2 48 * (U8.v (uint64_to_uint8 ((a1 >>^ 22ul) |^ (a2 <<^ 4ul)))) = pow2 48 * ((v a1 / pow2 22) % pow2 8) + pow2 48 * ((v a2*pow2 4)%pow2 8))
@@ -848,7 +854,7 @@ let lemma_b03a0 (a0:U64.t{v a0 < pow2 26}) (a1:UInt64.t{v a1 < pow2 26}) b0 b1 b
   = lemma_trunc1305_0 a0
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 let lemma_b46a1 (a1:U64.t{v a1 < pow2 26}) (a2:UInt64.t{v a2 < pow2 26}) v3 b4 b5 b6 : Lemma
   (requires (let open FStar.UInt8 in
@@ -869,7 +875,7 @@ let lemma_b46a1 (a1:U64.t{v a1 < pow2 26}) (a2:UInt64.t{v a2 < pow2 26}) v3 b4 b
     Math.Lemmas.paren_mul_right (pow2 24) (pow2 2) (v a1 % pow2 30)
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 let lemma_b79a2 (a2:U64.t{v a2 < pow2 26}) (a3:UInt64.t{v a3 < pow2 26}) v6 b7 b8 b9 : Lemma
   (requires (let open FStar.UInt8 in
@@ -890,7 +896,7 @@ let lemma_b79a2 (a2:U64.t{v a2 < pow2 26}) (a3:UInt64.t{v a3 < pow2 26}) v6 b7 b
     Math.Lemmas.paren_mul_right (pow2 48) (pow2 4) (v a2 % pow2 28)
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 let lemma_b1012a3 (a3:U64.t{v a3 < pow2 26}) v9 b10 b11 b12 : Lemma
   (requires (let open FStar.UInt8 in
@@ -908,7 +914,7 @@ let lemma_b1012a3 (a3:U64.t{v a3 < pow2 26}) v9 b10 b11 b12 : Lemma
     Math.Lemmas.paren_mul_right (pow2 72) (pow2 6) (v a3 % pow2 26)
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 let lemma_b1315a4 (a4:U64.t{v a4 < pow2 26}) b13 b14 b15 : Lemma
   (requires (let open FStar.UInt8 in
@@ -922,7 +928,7 @@ let lemma_b1315a4 (a4:U64.t{v a4 < pow2 26}) b13 b14 b15 : Lemma
 
 let u26 = x:U64.t{v x < pow2 26}
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 val lemma_trunc1305_:
   a0:u26 -> a1:u26 -> a2:u26 -> a3:u26 -> a4:u26 ->
@@ -945,7 +951,7 @@ val lemma_trunc1305_:
     /\ v b13 = ((U64.v a4)%pow2 8)
     /\ v b14 = (U64.v a4 / pow2 8) % pow2 8
     /\ v b15 = (U64.v a4 / pow2 16) % pow2 8 ))
-        (ensures  (U8 (v (b0) + pow2 8 * v (b1) + pow2 16 * v (b2) + pow2 24 * v (b3)
+        (ensures  (U8.(v (b0) + pow2 8 * v (b1) + pow2 16 * v (b2) + pow2 24 * v (b3)
   + pow2 32 * v (b4) + pow2 40 * v (b5) + pow2 48 * v (b6) + pow2 56 * v (b7)
   + pow2 64 * v (b8) + pow2 72 * v (b9) + pow2 80 * v (b10) + pow2 88 * v (b11)
   + pow2 96 * v (b12) + pow2 104 * v (b13) + pow2 112 * v (b14) + pow2 120 * v (b15))
@@ -957,7 +963,7 @@ let lemma_sum_ a b c d e f g h : Lemma ((a-b)+((b+c)-d)+((d+e)-f)+(f+g)+h=a+c+e+
 let lemma_sum' b0 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14 b15 : Lemma
   (b0+b1+b2+b3+b4+b5+b6+b7+b8+b9+b10+b11+b12+b13+b14+b15 = (b0+b1+b2+b3)+(b4+b5+b6)+(b7+b8+b9)+(b10+b11+b12)+(b13+b14+b15)) = ()
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 100"
 
 let lemma_trunc1305_ a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14 b15 =
   lemma_b3 a0 a1;
@@ -1010,7 +1016,7 @@ let lemma_trunc1305_ a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b1
    Math.Lemmas.modulo_lemma (v a3) (pow2 26)
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 let lemma_mult_le_left (a:nat) (b:nat) (c:nat) : Lemma (requires (b <= c)) (ensures (a * b <= a * c)) = ()
 
@@ -1065,7 +1071,7 @@ val lemma_trunc1305: hb:HyperStack.mem ->
           = little_endian (as_seq hb b)))
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 let lemma_trunc1305 hb b ha a =
   lemma_little_endian_16 hb b;
@@ -1088,10 +1094,10 @@ let lemma_trunc1305 hb b ha a =
   lemma_eval_mod a0 a1 a2 a3 a4
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 10"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 10"
 
 val lemma_little_endian_4: h:HyperStack.mem -> b:Buffer.buffer U8.t{live h b /\ length b = 4} ->
-  Lemma (little_endian (as_seq h b) = U8 (v (get h b 0) + pow2 8 * v (get h b 1)+ pow2 16 * v (get h b 2)+ pow2 24 * v (get h b 3)))
+  Lemma (little_endian (as_seq h b) = U8.(v (get h b 0) + pow2 8 * v (get h b 1)+ pow2 16 * v (get h b 2)+ pow2 24 * v (get h b 3)))
 let lemma_little_endian_4 h b =
   let s = as_seq h b in
   lemma_little_endian_from_top s;
@@ -1116,10 +1122,10 @@ val lemma_add_word_1:
   Lemma (requires (
     let a' = sub a 4ul 4ul in let a'' = sub a 8ul 4ul in let a''' = sub a 12ul 4ul in
     let a = sub a 0ul 4ul in
-    v a0 = U8 (v (get ha a 0) + pow2 8 * v (get ha a 1)+ pow2 16 * v (get ha a 2)+ pow2 24 * v (get ha a 3))
-    /\ v a4 = U8 (v (get ha a' 0) + pow2 8 * v (get ha a' 1)+ pow2 16 * v (get ha a' 2)+ pow2 24 * v (get ha a' 3))
-    /\ v a8 = U8 (v (get ha a'' 0) + pow2 8 * v (get ha a'' 1)+ pow2 16 * v (get ha a'' 2)+ pow2 24 * v (get ha a'' 3))
-    /\ v a12 = U8 (v (get ha a''' 0) + pow2 8 * v (get ha a''' 1)+ pow2 16 * v (get ha a''' 2)+ pow2 24 * v (get ha a''' 3))))
+    v a0 = U8.(v (get ha a 0) + pow2 8 * v (get ha a 1)+ pow2 16 * v (get ha a 2)+ pow2 24 * v (get ha a 3))
+    /\ v a4 = U8.(v (get ha a' 0) + pow2 8 * v (get ha a' 1)+ pow2 16 * v (get ha a' 2)+ pow2 24 * v (get ha a' 3))
+    /\ v a8 = U8.(v (get ha a'' 0) + pow2 8 * v (get ha a'' 1)+ pow2 16 * v (get ha a'' 2)+ pow2 24 * v (get ha a'' 3))
+    /\ v a12 = U8.(v (get ha a''' 0) + pow2 8 * v (get ha a''' 1)+ pow2 16 * v (get ha a''' 2)+ pow2 24 * v (get ha a''' 3))))
     (ensures (little_endian (as_seq ha a) = v a0 + pow2 32 * v a4 + pow2 64 * v a8 + pow2 96 * v a12))
 let lemma_add_word_1 ha a a0 a4 a8 a12 =
   lemma_as_seq_sub ha a 0ul  4ul;
@@ -1147,6 +1153,7 @@ let lemma_add_word_1 ha a a0 a4 a8 a12 =
 
 let eval_4 a0 a1 a2 a3 : GTot nat = v a0 + pow2 32 * v a1 + pow2 64 * v a2 + pow2 96 * v a3
 
+#reset-options
 
 val lemma_add_word_2_2:
   a0:u64_32 -> a4:u64_32 -> a8:u64_32 -> a12:u64_32 ->
@@ -1256,14 +1263,14 @@ val lemma_add_word:
     let a = sub a 0ul 4ul in
     let b' = sub b 4ul 4ul in let b'' = sub b 8ul 4ul in let b''' = sub b 12ul 4ul in
     let b = sub b 0ul 4ul in
-    v a0 = U8 (v (get ha a 0) + pow2 8 * v (get ha a 1)+ pow2 16 * v (get ha a 2)+ pow2 24 * v (get ha a 3))
-    /\ v a4 = U8 (v (get ha a' 0) + pow2 8 * v (get ha a' 1)+ pow2 16 * v (get ha a' 2)+ pow2 24 * v (get ha a' 3))
-    /\ v a8 = U8 (v (get ha a'' 0) + pow2 8 * v (get ha a'' 1)+ pow2 16 * v (get ha a'' 2)+ pow2 24 * v (get ha a'' 3))
-    /\ v a12 = U8 (v (get ha a''' 0) + pow2 8 * v (get ha a''' 1)+ pow2 16 * v (get ha a''' 2)+ pow2 24 * v (get ha a''' 3))
-    /\ v b0 = U8 (v (get hb b 0) + pow2 8 * v (get hb b 1)+ pow2 16 * v (get hb b 2)+ pow2 24 * v (get hb b 3))
-    /\ v b4 = U8 (v (get hb b' 0) + pow2 8 * v (get hb b' 1)+ pow2 16 * v (get hb b' 2)+ pow2 24 * v (get hb b' 3))
-    /\ v b8 = U8 (v (get hb b'' 0) + pow2 8 * v (get hb b'' 1)+ pow2 16 * v (get hb b'' 2)+ pow2 24 * v (get hb b'' 3))
-    /\ v b12 = U8 (v (get hb b''' 0) + pow2 8 * v (get hb b''' 1)+ pow2 16 * v (get hb b''' 2)+ pow2 24 * v (get hb b''' 3))))
+    v a0 = U8.(v (get ha a 0) + pow2 8 * v (get ha a 1)+ pow2 16 * v (get ha a 2)+ pow2 24 * v (get ha a 3))
+    /\ v a4 = U8.(v (get ha a' 0) + pow2 8 * v (get ha a' 1)+ pow2 16 * v (get ha a' 2)+ pow2 24 * v (get ha a' 3))
+    /\ v a8 = U8.(v (get ha a'' 0) + pow2 8 * v (get ha a'' 1)+ pow2 16 * v (get ha a'' 2)+ pow2 24 * v (get ha a'' 3))
+    /\ v a12 = U8.(v (get ha a''' 0) + pow2 8 * v (get ha a''' 1)+ pow2 16 * v (get ha a''' 2)+ pow2 24 * v (get ha a''' 3))
+    /\ v b0 = U8.(v (get hb b 0) + pow2 8 * v (get hb b 1)+ pow2 16 * v (get hb b 2)+ pow2 24 * v (get hb b 3))
+    /\ v b4 = U8.(v (get hb b' 0) + pow2 8 * v (get hb b' 1)+ pow2 16 * v (get hb b' 2)+ pow2 24 * v (get hb b' 3))
+    /\ v b8 = U8.(v (get hb b'' 0) + pow2 8 * v (get hb b'' 1)+ pow2 16 * v (get hb b'' 2)+ pow2 24 * v (get hb b'' 3))
+    /\ v b12 = U8.(v (get hb b''' 0) + pow2 8 * v (get hb b''' 1)+ pow2 16 * v (get hb b''' 2)+ pow2 24 * v (get hb b''' 3))))
     (ensures (lemma_add_word_post a0 a4 a8 a12 b0 b4 b8 b12 ha a hb b))
 let lemma_add_word ha a hb b a0 a4 a8 a12 b0 b4 b8 b12 =
   lemma_add_word_1 ha a a0 a4 a8 a12; lemma_add_word_1 hb b b0 b4 b8 b12;
@@ -1323,7 +1330,7 @@ val lemma_add_word2_1:
       /\ U8.v (get h4 b3 2) = (U32.v z3 / pow2 16) % pow2 8
       /\ U8.v (get h4 b3 3) = (U32.v z3 / pow2 24)  % pow2 8 ))
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 5"
 
 let lemma_add_word2_1 h0 h1 h2 h3 h4 b z0 z1 z2 z3 =
   let b0 = sub b 0ul 4ul in
@@ -1373,7 +1380,7 @@ let lemma_add_word2_2_1 z =
   cut (va32 % pow2 16 = pow2 8 * ((va32/pow2 8)%pow2 8) + (va32 % pow2 8))
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 val lemma_add_word2_2:
   h:HyperStack.mem ->
@@ -1401,7 +1408,7 @@ val lemma_add_word2_2:
       /\ U8.v (get h b3 1) = (U32.v z3 / pow2 8) % pow2 8
       /\ U8.v (get h b3 2) = (U32.v z3 / pow2 16) % pow2 8
       /\ U8.v (get h b3 3) = (U32.v z3 / pow2 24)  % pow2 8 ))
-    (ensures (little_endian (as_seq h b) = U32 (v z0 + pow2 32 * v z1 + pow2 64 * v z2 + pow2 96 * v z3)))
+    (ensures (little_endian (as_seq h b) = U32.(v z0 + pow2 32 * v z1 + pow2 64 * v z2 + pow2 96 * v z3)))
 let lemma_add_word2_2 ha a z0 z1 z2 z3 =
   lemma_as_seq_sub ha a 0ul  4ul;
   lemma_as_seq_sub ha a 4ul  4ul;
@@ -1430,7 +1437,7 @@ let lemma_add_word2_2 ha a z0 z1 z2 z3 =
   little_endian_append (Seq.append (Seq.append s04 s48) s812) (s1216)
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 5"
 
 val lemma_add_word2:
   h0:HyperStack.mem ->
@@ -1463,7 +1470,7 @@ val lemma_add_word2:
       /\ U8.v (get h4 b3 1) = (U32.v z3 / pow2 8) % pow2 8
       /\ U8.v (get h4 b3 2) = (U32.v z3 / pow2 16) % pow2 8
       /\ U8.v (get h4 b3 3) = (U32.v z3 / pow2 24)  % pow2 8 ))
-    (ensures (little_endian (as_seq h4 b) = U32 (v z0 + pow2 32 * v z1 + pow2 64 * v z2 + pow2 96 * v z3)))
+    (ensures (little_endian (as_seq h4 b) = U32.(v z0 + pow2 32 * v z1 + pow2 64 * v z2 + pow2 96 * v z3)))
 let lemma_add_word2 h0 h1 h2 h3 h4 b z0 z1 z2 z3 =
   lemma_add_word2_1 h0 h1 h2 h3 h4 b z0 z1 z2 z3;
   lemma_add_word2_2 h4 b z0 z1 z2 z3

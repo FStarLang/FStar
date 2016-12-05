@@ -130,7 +130,7 @@ let parse_format_pure (s:list char) : option (list dir) =
 (* let rec parse_format_string (s:string) : Tot (option (list dir)) = *)
 (*   parse_format_pure (list_of_string s) *)
 
-(* let sprintf (s:string{is_Some (parse_format_string s)}) *)
+(* let sprintf (s:string{Some? (parse_format_string s)}) *)
 (*   : Tot (dir_type (Some.v (parse_format_string s))) = *)
 (*   string_of_dirs (Some.v (parse_format_string s)) (fun s -> s) *)
 

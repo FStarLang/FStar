@@ -39,7 +39,7 @@ val poly_empty: t:text{Seq.length t == 0} -> r:elem ->
   Lemma (poly t r == 0)
 let poly_empty t r = ()
 
-#set-options "--z3timeout 60 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 60 --initial_fuel 0 --max_fuel 0"
 
 (**
    Update function:
@@ -225,7 +225,7 @@ let rec encode_bytes_append len s w =
     end
 
 
-#set-options "--z3timeout 60 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 60 --initial_fuel 0 --max_fuel 0"
 
 (* Loop over Poly1305_update; could go below MAC *)
 val poly1305_loop: log:log_t -> msg:bytes -> acc:elemB{disjoint msg acc} ->
@@ -286,7 +286,7 @@ val div_aux: a:UInt32.t -> b:UInt32.t{w b <> 0} -> Lemma
   [SMTPat (FStar.UInt32(UInt.size (v a / v b) n))]
 let div_aux a b = ()
 
-#reset-options "--z3timeout 200 --initial_fuel 0 --max_fuel 0 --max_ifuel 0 --initial_ifuel 0"
+#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --max_ifuel 0 --initial_ifuel 0"
 
 val poly1305_process:
     msg:bytes
