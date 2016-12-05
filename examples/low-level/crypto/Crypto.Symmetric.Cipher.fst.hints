@@ -1,5 +1,5 @@
 [
-  "oìr¶½8Êä—\u0012Eá\u0001ýD·",
+  "\u001d\u0019Nì\u0018„ìèºX¦¦ýâƒ\u001f",
   [
     [
       "Crypto.Symmetric.Cipher.keylen",
@@ -102,6 +102,9 @@
         "data_elim_FStar.UInt32.Mk", "disc_equation_Crypto.Indexing.AES128",
         "disc_equation_Crypto.Indexing.AES256",
         "disc_equation_Crypto.Indexing.CHACHA20",
+        "equality_tok_Crypto.Indexing.AES128@tok",
+        "equality_tok_Crypto.Indexing.AES256@tok",
+        "equality_tok_Crypto.Indexing.CHACHA20@tok",
         "equation_Crypto.Symmetric.AES.blocklen",
         "equation_Crypto.Symmetric.AES.keylen",
         "equation_Crypto.Symmetric.AES.nb",
@@ -120,7 +123,7 @@
         "function_token_typing_Crypto.Symmetric.AES.blocklen",
         "function_token_typing_Crypto.Symmetric.AES.keylen",
         "function_token_typing_Crypto.Symmetric.Chacha20.keylen",
-        "int_inversion", "int_typing", "lemma_FStar.Int.pow2_values",
+        "int_inversion", "lemma_FStar.Int.pow2_values",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.UInt32.Mk_v",
