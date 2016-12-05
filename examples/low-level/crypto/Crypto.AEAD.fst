@@ -392,9 +392,9 @@ val encrypt:
     HH.disjoint (Buffer.frameOf cipher_tagged) st.log_region /\
     HH.disjoint (Buffer.frameOf aad) st.log_region /\
     HS.is_eternal_region st.log_region /\
-    HS.is_eternal_region (Buffer.frameOf cipher_tagged) /\
-    HS.is_eternal_region (Buffer.frameOf (Plain.as_buffer plain)) /\
-    HS.is_eternal_region (Buffer.frameOf aad) /\
+    HS.is_eternal_region (Buffer.frameOf cipher_tagged) /\ // why?
+    HS.is_eternal_region (Buffer.frameOf (Plain.as_buffer plain)) /\ //why?
+    HS.is_eternal_region (Buffer.frameOf aad) /\ //why?
     st.log_region <> HH.root /\
     Buffer.frameOf cipher_tagged <> HH.root /\
     Buffer.frameOf aad <> HH.root /\

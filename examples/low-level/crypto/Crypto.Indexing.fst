@@ -56,7 +56,7 @@ let aesImpl_of_id (i:id) = i.aes
 // (kept abstract, but requires all the crypto steps above)
 assume val safeId: i:id -> Tot bool
 
-let testId (a:aeadAlg) : i:id{~(safeId i)} =
+let testId (a:aeadAlg) : i:id{~(safeId i) /\ i.cipher == a} =
   let i = {cipher = a; aes=SpartanAES; uniq = 0ul; } in
-  assume(~(safeId i)); i
-
+  assume(~(safeId i));
+  i
