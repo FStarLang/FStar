@@ -35,17 +35,17 @@ let invert_refines (h:mem) (i:id {safeId i}) (rgn:region)
 	     <==>
 	    ((Seq.length entries = 0 /\ Seq.length blocks = 0) \/ (
 	     Seq.length entries > 0 /\ (
-	     let e = SeqProperties.head entries in
-	     let entries_tl = SeqProperties.tail entries in
+	     let e = Seq.head entries in
+	     let entries_tl = Seq.tail entries in
 	     let b = num_blocks e in 
 	     b < Seq.length blocks /\
-	     (let blocks_for_e, blocks_tl = SeqProperties.split blocks (b + 1) in
+	     (let blocks_for_e, blocks_tl = Seq.split blocks (b + 1) in
              refines_one_entry h e blocks_for_e /\
 	     refines h i rgn entries_tl blocks_tl)))))
    = ()
 
 let find_entry_first (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i){Seq.length entries > 0})
-  : Lemma (let head, tl = SeqProperties.head entries, SeqProperties.tail entries in
+  : Lemma (let head, tl = Seq.head entries, Seq.tail entries in
            if head.nonce = n then 
 	     find_entry n entries == Some head
 	   else find_entry n entries == find_entry n tl)
@@ -89,19 +89,19 @@ let rec find_entry_blocks i rgn n entries prf_entries h =
   invert_refines h i rgn entries prf_entries;
   if Seq.length entries = 0 
   then (find_is_some prf_entries x0; false_elim())
-  else let e = SeqProperties.head entries in
+  else let e = Seq.head entries in
        let b = num_blocks e in 
-       let blocks_for_e, blocks_tl = SeqProperties.split prf_entries (b + 1) in
+       let blocks_for_e, blocks_tl = Seq.split prf_entries (b + 1) in
        assert (Seq.equal prf_entries (Seq.append blocks_for_e blocks_tl));
        assert (refines_one_entry h e blocks_for_e); //-- post-condition (1)
        let Entry nonce ad plainlen p c_tagged = e in
-       let c, tag = SeqProperties.split c_tagged plainlen in
+       let c, tag = Seq.split c_tagged plainlen in
        find_entry_first n entries;
        if e.nonce = n then begin
 	 assert (find_entry n entries == Some e); //-- post-condition (2)
 	 assume (from_x_blocks_included_in x1 blocks_for_e prf_entries); //-- post-condition (3)
-	 let hd, tl = SeqProperties.head blocks_for_e, SeqProperties.tail blocks_for_e in
-	 assert (Seq.equal (SeqProperties.cons hd tl) blocks_for_e);
+	 let hd, tl = Seq.head blocks_for_e, Seq.tail blocks_for_e in
+	 assert (Seq.equal (Seq.cons hd tl) blocks_for_e);
 	 let PRF.Entry x mac = hd in
 	 assert (x == x0);
 	 assert (tl == counterblocks i rgn (PRF.incr i x) plainlen 0 plainlen p c);
@@ -110,7 +110,7 @@ let rec find_entry_blocks i rgn n entries prf_entries h =
 	 find_blocks_append_l blocks_for_e blocks_tl x0; //-- post-condition (4)
 	 (e, blocks_for_e)
        end
-       else let tail = SeqProperties.tail entries in
+       else let tail = Seq.tail entries in
 	    assume (find_mac prf_entries x0 == find_mac blocks_tl x0);  //TODO: for pre-condition and for post-condition (4), via transitivity
 	    let (e', blocks_for_e') = find_entry_blocks i rgn n tail blocks_tl h in
 	    assume (from_x_blocks_included_in x1 blocks_for_e' prf_entries);    //TODO: for post-condition (3), via transitivity
@@ -136,7 +136,7 @@ let refl_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
 	let c0 = HS.sel h r in
 	let emp = Seq.slice c0 (Seq.length c0) (Seq.length c0) in
 	cut (Seq.equal Seq.createEmpty emp);
-	FStar.Classical.forall_intro (SeqProperties.contains_elim emp)
+	FStar.Classical.forall_intro (Seq.contains_elim emp)
       else ()
 	
 let trans_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
@@ -155,7 +155,7 @@ let trans_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
 	let diff_12 = Seq.slice c2 (Seq.length c1) (Seq.length c2) in
 	let diff_02 = Seq.slice c2 (Seq.length c0) (Seq.length c2) in
 	assert (Seq.equal diff_02 (Seq.append diff_01 diff_12));
-	FStar.Classical.forall_intro (SeqProperties.append_contains_equiv diff_01 diff_12)
+	FStar.Classical.forall_intro (Seq.append_contains_equiv diff_01 diff_12)
       else ()
 
 let x_buffer_1_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
@@ -169,7 +169,7 @@ let x_buffer_1_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i
         let c0 = HS.sel h_0 r in
       	let c1 = HS.sel h_1 r in
 	let diff = Seq.slice c1 (Seq.length c0) (Seq.length c1) in
-	FStar.Classical.forall_intro (SeqProperties.contains_elim diff)
+	FStar.Classical.forall_intro (Seq.contains_elim diff)
       else ()
 
 val prf_enxor_leaves_none_strictly_above_x: #i:id -> 
@@ -195,7 +195,7 @@ let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
 	let t_1 = HS.sel h_1 r in
 	let ex = Seq.index t_1 (Seq.length t_0) in
 	assert (PRF.is_entry_domain x ex);
-	assert (Seq.equal t_1 (SeqProperties.snoc t_0 ex));
+	assert (Seq.equal t_1 (Seq.snoc t_0 ex));
 	let rgn = t.mac_rgn in
 	assert (find t_0 x == None);
 	find_snoc t_0 ex (PRF.is_entry_domain x);

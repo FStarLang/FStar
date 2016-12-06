@@ -62,14 +62,14 @@
       [
         "@query", "assumption_FStar.Char.char__haseq",
         "assumption_FStar.Heap.Extensional",
-        "assumption_FStar.Seq.Extensionality", "b2t_def", "bool_typing",
+        "assumption_FStar.Seq.Base.Extensionality", "b2t_def", "bool_typing",
         "constructor_distinct_Prims.V", "data_elim_Prims.V",
         "disc_equation_Prims.V", "equation_Ex12.SHA1.key",
         "equation_Ex12.SHA1.macsize", "equation_Ex12b.Format.message",
         "equation_Ex12b.Format.response", "equation_Ex12b.Format.string16",
         "equation_Ex12b.Format.tag1", "equation_Ex12b.RPC.reqresp",
         "equation_FStar.Char.char", "equation_FStar.ST.modifies",
-        "equation_FStar.SeqProperties.split", "equation_Platform.Bytes.byte",
+        "equation_FStar.Seq.Properties.split", "equation_Platform.Bytes.byte",
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.length",
         "equation_Platform.Bytes.split", "equation_Prims.eqtype",
         "function_token_typing_Ex12b.RPC.k", "kinding_FStar.Char.char_@tok",
@@ -92,7 +92,7 @@
         "token_correspondence_Ex12.MAC.key_prop",
         "token_correspondence_Ex12b.RPC.reqresp",
         "typing_Ex12b.Format.response", "typing_FStar.Heap.concat",
-        "typing_FStar.Heap.restrict", "typing_FStar.Seq.eq",
+        "typing_FStar.Heap.restrict", "typing_FStar.Seq.Base.eq",
         "typing_FStar.TSet.complement", "typing_FStar.TSet.empty"
       ],
       0
@@ -105,14 +105,14 @@
       [
         "@query", "assumption_Ex12b.Format.UTF8_inj",
         "assumption_FStar.Char.char__haseq",
-        "assumption_FStar.Seq.Extensionality", "bool_typing",
+        "assumption_FStar.Seq.Base.Extensionality", "bool_typing",
         "constructor_distinct_Prims.V", "disc_equation_Prims.Err",
         "disc_equation_Prims.V", "equation_Ex12.SHA1.key",
         "equation_Ex12.SHA1.macsize", "equation_Ex12.SHA1.text",
         "equation_Ex12b.Format.message", "equation_Ex12b.Format.request",
         "equation_Ex12b.Format.string16", "equation_Ex12b.Format.tag0",
         "equation_Ex12b.Format.uInt16", "equation_Ex12b.RPC.reqresp",
-        "equation_FStar.Char.char", "equation_FStar.SeqProperties.split",
+        "equation_FStar.Char.char", "equation_FStar.Seq.Properties.split",
         "equation_Platform.Bytes.byte", "equation_Platform.Bytes.bytes",
         "equation_Platform.Bytes.lbytes", "equation_Platform.Bytes.length",
         "equation_Platform.Bytes.split", "equation_Prims.eqtype",
@@ -141,7 +141,7 @@
         "string_inversion", "string_typing",
         "token_correspondence_Ex12.MAC.key_prop",
         "token_correspondence_Ex12b.RPC.reqresp",
-        "typing_Ex12b.Format.request", "typing_FStar.Seq.eq",
+        "typing_Ex12b.Format.request", "typing_FStar.Seq.Base.eq",
         "typing_Platform.Bytes.utf8", "typing_Prims.V.v"
       ],
       0

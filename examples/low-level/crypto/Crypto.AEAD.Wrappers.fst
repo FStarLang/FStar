@@ -166,7 +166,7 @@ let prf_mac_when_encrypting (i:id{prf i}) (t:PRF.state i) (k_0: CMA.akey t.mac_r
  match find_mac t1 x with 
  | Some mac' -> 
     mac == mac' /\ 
-    t1 == SeqProperties.snoc t0 (PRF.Entry x mac) /\
+    t1 == Seq.snoc t0 (PRF.Entry x mac) /\
     CMA.genPost (i,x.iv) t.mac_rgn h0 mac h1 /\
     HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
     HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\

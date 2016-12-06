@@ -297,7 +297,7 @@ val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
      acc_inv st acc h1 /\
      (if mac_log then
        let v = Buffer.as_seq h0 w in
-       HS.sel h1 (alog acc) == SeqProperties.cons v (HS.sel h0 (alog acc))
+       HS.sel h1 (alog acc) == Seq.cons v (HS.sel h0 (alog acc))
      else True)))
 
 let update #i st acc w =
@@ -306,7 +306,7 @@ let update #i st acc w =
     begin
     let v = read_word 16ul w in
     let vs = !(alog acc) in
-    acc.l := SeqProperties.cons v vs;
+    acc.l := Seq.cons v vs;
     let h1 = ST.get () in
     MAC.frame_sel_elem h0 h1 st.r;
     MAC.frame_sel_elem h0 h1 acc.a;

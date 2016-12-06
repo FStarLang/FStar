@@ -73,8 +73,9 @@ FStar.Reader.fst \
 FStar.Relational.Comp.fst \
 FStar.Relational.Relational.fst \
 FStar.Relational.State.fst \
+FStar.Seq.Base.fst \
+FStar.Seq.Properties.fst \
 FStar.Seq.fst \
-FStar.SeqProperties.fst \
 FStar.Set.fst \
 FStar.Squash.fst \
 FStar.Squash.fsti \

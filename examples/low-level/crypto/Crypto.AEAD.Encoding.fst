@@ -58,11 +58,11 @@ let rec encode_pad i prefix txt =
   if l = 0 then prefix
   else if l < 16 then
     let w = txt in
-    SeqProperties.snoc prefix (MAC.encode i w)
+    Seq.snoc prefix (MAC.encode i w)
   else
     begin
-    let w, txt = SeqProperties.split txt 16 in
-    let prefix = SeqProperties.snoc prefix (MAC.encode i w) in
+    let w, txt = Seq.split txt 16 in
+    let prefix = Seq.snoc prefix (MAC.encode i w) in
     encode_pad i prefix txt
     end
 *)
@@ -81,9 +81,9 @@ let rec encode_bytes txt =
     Seq.createEmpty
   else 
     let l0 = min l 16 in
-    let txt0, txt = SeqProperties.split txt l0 in
+    let txt0, txt = Seq.split txt l0 in
     let w = pad_0 txt0 (16 - l0) in 
-    SeqProperties.cons w (encode_bytes txt)
+    Seq.cons w (encode_bytes txt)
 
 (* now intrinsic (easier to prove)
 let rec lemma_encode_length txt: Lemma
@@ -93,7 +93,7 @@ let rec lemma_encode_length txt: Lemma
   if l = 0 then ()
   else if l < 16 then assert(Seq.length(encode_bytes txt) = 1)
   else (
-    let txt0, txt' = SeqProperties.split txt 16 in
+    let txt0, txt' = Seq.split txt 16 in
     lemma_encode_length txt';
     assert(Seq.length(encode_bytes txt) = 1 + Seq.length(encode_bytes txt')))
 *)
@@ -113,7 +113,7 @@ val lemma_pad_0_injective: b0:Seq.seq UInt8.t -> b1:Seq.seq UInt8.t -> l:nat -> 
   (requires (pad_0 b0 l == pad_0 b1 l))
   (ensures  (b0 == b1))
 let lemma_pad_0_injective b0 b1 l =
-  SeqProperties.lemma_append_inj b0 (Seq.create l 0uy) b1 (Seq.create l 0uy);
+  Seq.lemma_append_inj b0 (Seq.create l 0uy) b1 (Seq.create l 0uy);
   Seq.lemma_eq_intro b0 b1
 
 (* use the one in Poly1305.Spec:
@@ -147,14 +147,14 @@ let rec lemma_encode_bytes_injective t0 t1 =
   if l = 0 then Seq.lemma_eq_intro t0 t1
   else 
     let l0 = min l 16 in 
-    let v0, t0' = SeqProperties.split_eq t0 l0 in
-    let v1, t1' = SeqProperties.split_eq t1 l0 in
+    let v0, t0' = Seq.split_eq t0 l0 in
+    let v1, t1' = Seq.split_eq t1 l0 in
     let w0 = pad_0 v0 (16 - l0) in 
     let w1 = pad_0 v1 (16 - l0) in 
-    assert(encode_bytes t0 == SeqProperties.cons w0 (encode_bytes t0'));
-    assert(encode_bytes t1 == SeqProperties.cons w1 (encode_bytes t1'));
+    assert(encode_bytes t0 == Seq.cons w0 (encode_bytes t0'));
+    assert(encode_bytes t1 == Seq.cons w1 (encode_bytes t1'));
     Seq.lemma_eq_refl (encode_bytes t0) (encode_bytes t1);
-    SeqProperties.lemma_cons_inj w0 w1 (encode_bytes t0') (encode_bytes t1');
+    Seq.lemma_cons_inj w0 w1 (encode_bytes t0') (encode_bytes t1');
     lemma_encode_bytes_injective t0' t1';
     lemma_pad_0_injective v0 v1 (16 - l0);
     Seq.lemma_eq_elim t0' t1'
@@ -169,13 +169,13 @@ let encode_pad_empty prefix txt = ()
 #reset-options "--z3rlimit 20"
 
 val encode_pad_snoc: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> w:lbytes 16 -> Lemma
-  (encode_pad (SeqProperties.snoc prefix (encode w)) txt ==
+  (encode_pad (Seq.snoc prefix (encode w)) txt ==
    encode_pad prefix (append w txt))
 let encode_pad_snoc prefix txt w =
   Seq.lemma_len_append w txt;
   assert (16 <= Seq.length (append w txt));
-  let w', txt' = SeqProperties.split (append w txt) 16 in
-  let prefix' = SeqProperties.snoc prefix (encode w') in
+  let w', txt' = Seq.split (append w txt) 16 in
+  let prefix' = Seq.snoc prefix (encode w') in
   Seq.lemma_eq_intro w w';
   Seq.lemma_eq_intro txt txt'
 *)
@@ -235,7 +235,7 @@ let rec add_bytes #i st a len txt =
   pop_frame(); 
   r
 
-//16-10-16 TODO in SeqProperties
+//16-10-16 TODO in Seq.Properties
 assume val lemma_append_slices: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> Lemma
   (ensures 
     ( s1 == Seq.slice (Seq.append s1 s2) 0 (Seq.length s1)
@@ -284,8 +284,8 @@ private let encode_lengths (i:id) (aadlen:aadlen_32) (txtlen:txtlen_32) : lbytes
   | GHASH    -> encode_lengths_ghash aadlen txtlen
 
 let encode_both (i:id) (aadlen:aadlen_32) (aad:lbytes (v aadlen)) (txtlen:txtlen_32) (cipher:lbytes (v txtlen)) :
-  e:MAC.text {Seq.length e > 0 /\ SeqProperties.head e = encode_lengths i aadlen txtlen} = 
-  SeqProperties.cons (encode_lengths i aadlen txtlen)
+  e:MAC.text {Seq.length e > 0 /\ Seq.head e = encode_lengths i aadlen txtlen} = 
+  Seq.cons (encode_lengths i aadlen txtlen)
     (Seq.append 
       (encode_bytes cipher) 
       (encode_bytes aad))
@@ -311,7 +311,6 @@ let lemma_encode_both_inj i (al0:aadlen_32) (pl0:txtlen_32) (al1:aadlen_32) (pl1
   (ensures al0 = al1 /\ pl0 = pl1 /\ a0 = a1 /\ p0 = p1) = 
 
   let open FStar.Seq in 
-  let open FStar.SeqProperties in
   let w0 = encode_lengths i al0 pl0 in 
   let w1 = encode_lengths i al1 pl1 in
   //assert(encode w0 = encode w1);

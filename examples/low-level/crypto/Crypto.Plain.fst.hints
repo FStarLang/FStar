@@ -7,7 +7,7 @@
       0,
       1,
       [
-        "@query", "assumption_FStar.Seq.seq_haseq",
+        "@query", "assumption_FStar.Seq.Base.seq_haseq",
         "assumption_FStar.UInt8.t__haseq",
         "equation_Crypto.Symmetric.Bytes.bytes", "equation_FStar.UInt8.t",
         "haseqTm_refine_c035ebcf0a64c9d71ea03c34bbe7f0a8",
@@ -29,7 +29,7 @@
       0,
       1,
       [
-        "@query", "assumption_FStar.Seq.seq_haseq",
+        "@query", "assumption_FStar.Seq.Base.seq_haseq",
         "assumption_FStar.UInt8.t__haseq",
         "equation_Crypto.Symmetric.Bytes.bytes", "equation_FStar.UInt8.t",
         "haseqTm_refine_c035ebcf0a64c9d71ea03c34bbe7f0a8",
@@ -51,7 +51,7 @@
       0,
       1,
       [
-        "@query", "assumption_FStar.Seq.seq_haseq",
+        "@query", "assumption_FStar.Seq.Base.seq_haseq",
         "assumption_FStar.UInt8.t__haseq", "equation_FStar.UInt8.t",
         "kinding_FStar.UInt8.t_@tok"
       ],
@@ -103,7 +103,7 @@
         "equation_Crypto.Symmetric.Bytes.bytes",
         "equation_Crypto.Symmetric.Bytes.lbytes", "equation_FStar.UInt8.t",
         "equation_Prims.nat", "int_inversion", "kinding_FStar.UInt8.t_@tok",
-        "lemma_FStar.Seq.lemma_len_slice",
+        "lemma_FStar.Seq.Base.lemma_len_slice",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_6d225ce07de2247b5d87ae4e35eb4e9c",
@@ -449,7 +449,7 @@
         "function_token_typing_FStar.Heap.heap",
         "function_token_typing_FStar.HyperHeap.rid",
         "kinding_FStar.Heap.aref@tok", "kinding_FStar.UInt8.t_@tok",
-        "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.TSet.lemma_equal_refl",
+        "lemma_FStar.Seq.Base.lemma_eq_elim", "lemma_FStar.TSet.lemma_equal_refl",
         "pretyping_6c86c071b92797cdf01eb016249a9465",
         "proj_equation_FStar.Buffer.MkBuffer_length",
         "proj_equation_FStar.HyperStack.HS_h",
@@ -543,7 +543,7 @@
         "equation_FStar.UInt8.t",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "fuel_guarded_inversion_FStar.UInt32.t_",
-        "kinding_FStar.UInt8.t_@tok", "lemma_FStar.Seq.lemma_eq_elim",
+        "kinding_FStar.UInt8.t_@tok", "lemma_FStar.Seq.Base.lemma_eq_elim",
         "proj_equation_FStar.Buffer.MkBuffer_length",
         "proj_equation_FStar.UInt32.Mk_v",
         "refinement_interpretation_Tm_refine_1b5d9020cc8f44163e9c491b867a8c24",

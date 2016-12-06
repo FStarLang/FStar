@@ -886,7 +886,7 @@
         "function_token_typing_Curve.Parameters.a24_",
         "function_token_typing_Curve.Parameters.platform_size",
         "int_inversion", "int_typing", "kinding_FStar.UInt64.t_@tok",
-        "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
+        "lemma_FStar.Seq.Base.lemma_len_slice", "primitive_Prims.op_Addition",
         "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",

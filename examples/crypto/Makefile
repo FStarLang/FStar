@@ -109,7 +109,7 @@ $(CONTRIB_LIBS):
 	$(MAKE) -C $(FSTAR_HOME)/contrib/
 
 RPC.exe: RPC.ml $(CONTRIB_LIBS)
-	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml FStar_List_Tot.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
+	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq_Base.ml FStar_Seq_Properties.ml FStar_Seq.ml FStar_List_Tot.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 rpc-test: RPC.exe
 	$(EXTRA_PATH) ./RPC.exe
@@ -127,7 +127,7 @@ CntProtocol.ml: CntFormat.fst MAC.fst SHA1.fst CntProtocol.fst
 		--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml
 
 CntProtocol.exe: CntProtocol.ml $(CONTRIB_LIBS)
-	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml ../../ulib/ml/FStar_Set.ml FStar_SeqProperties.ml SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
+	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq_Base.ml ../../ulib/ml/FStar_Set.ml FStar_Seq_Properties.ml FStar_Seq.ml SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
 
 cnt-test: CntProtocol.exe
 	$(EXTRA_PATH) ./CntProtocol.exe

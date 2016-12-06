@@ -16,7 +16,7 @@ list:
 	$(FSTAR) FStar.List.Tot.fst FStar.ListProperties.fst FStar.List.fst
 
 array:
-	$(FSTAR) FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst
+	$(FSTAR) FStar.Seq.Base.fst FStar.Classical.fst FStar.Seq.Properties.fst FStar.Seq.fst FStar.Array.fst
 
 tcp:
 	$(FSTAR) FStar.Axiomatic.Array.fst FStar.Char.fsti FStar.Option.fsti FStar.Bytes.fst FStar.Crypto.fst FStar.Tcp.fst

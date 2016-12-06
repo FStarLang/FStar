@@ -46,7 +46,7 @@ noextract let is_entry_nonce (#i:id) (n:Cipher.iv (alg i)) (e:entry i) = e.nonce
 // No such thing as seqproperties.find_l; cannot write a macro that returns the
 // right option
 noextract let find_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (entry i)) : option (entry i) = 
-  SeqProperties.find_l (is_entry_nonce n) entries
+  Seq.find_l (is_entry_nonce n) entries
 
 noeq type state (i:id) (rw:rw) =
   | State:
@@ -101,7 +101,7 @@ let rec counterblocks i rgn x l from_pos to_pos plain cipher =
     let cipher_hd = Seq.slice cipher from_pos (from_pos + l0) in
     let block = PRF.Entry x (PRF.OTP l_32 plain_hd cipher_hd) in
     let blocks = counterblocks i rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in
-    SeqProperties.cons block blocks
+    Seq.cons block blocks
 
 let num_blocks' (i:id) (l:nat) : Tot nat = 
   let bl = v (Cipher.( blocklen (cipherAlg_of_id i))) in
@@ -119,7 +119,7 @@ let refines_one_entry (#rgn:region) (#i:id{safeId i}) (h:mem) (e:entry i) (block
   b + 1 = Seq.length blocks /\
   (let PRF.Entry x e = Seq.index blocks 0 in
    let xors = Seq.slice blocks 1 (b+1) in 
-   let cipher, tag = SeqProperties.split cipher_tagged l in
+   let cipher, tag = Seq.split cipher_tagged l in
    PRF.(x.iv = nonce /\ x.ctr = PRF.ctr_0 i) /\ 
    safelen i l (PRF.ctr_0 i +^ 1ul) /\
    xors == counterblocks i rgn (PRF.incr i x) l 0 l plain cipher /\ //NS: forced to use propositional equality here, since this compares sequences of abstract plain texts. CF 16-10-13: annoying, but intuitively right?
@@ -142,19 +142,19 @@ val refines:
 let rec refines h i rgn entries blocks = 
   if Seq.length entries = 0 then 
     Seq.length blocks == 0 //NS:using == to get it to match with the Type returned by the other branch
-  else let e = SeqProperties.head entries in
+  else let e = Seq.head entries in
        let b = num_blocks e in 
        b < Seq.length blocks /\
        (let blocks_for_e = Seq.slice blocks 0 (b + 1) in
-       	let entries_tl = SeqProperties.tail entries in
+       	let entries_tl = Seq.tail entries in
         let remaining_blocks = Seq.slice blocks (b+1) (Seq.length blocks) in
         refines_one_entry h e blocks_for_e /\
 	refines h i rgn entries_tl remaining_blocks)
 
 // open Crypto.Symmetric.PRF // shadows 'state' !
 let all_above (#rgn:region) (#i:id) (s:Seq.seq (PRF.entry rgn i)) (x:PRF.domain i) = 
-  (forall (e:PRF.entry rgn i).{:pattern (s `SeqProperties.contains` e)} 
-     s `SeqProperties.contains` e ==> e.PRF.x `PRF.above` x)
+  (forall (e:PRF.entry rgn i).{:pattern (s `Seq.contains` e)} 
+     s `Seq.contains` e ==> e.PRF.x `PRF.above` x)
 
 let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
 				      (x:PRF.domain i) (b:lbuffer l)

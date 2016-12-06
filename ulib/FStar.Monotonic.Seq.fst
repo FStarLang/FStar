@@ -1,12 +1,10 @@
 module FStar.Monotonic.Seq
 
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Classical
 module HH   = FStar.HyperHeap
 module HS   = FStar.HyperStack
 module MR   = FStar.Monotonic.RRef
-module SeqP = FStar.SeqProperties
 
 (* 2016-11-22: The following is meant to override the fact that the
    enclosing namespace of the current module (here FStar.Monotonic) is
@@ -58,8 +56,8 @@ let snoc (s:seq 'a) (x:'a)
 
 let lemma_snoc_extends (s:seq 'a) (x:'a)
   : Lemma (requires True)
-	  (ensures (grows s (SeqP.snoc s x)))
-	  [SMTPat (grows s (SeqP.snoc s x))]
+	  (ensures (grows s (Seq.snoc s x)))
+	  [SMTPat (grows s (Seq.snoc s x))]
   = ()
 
 let alloc_mref_seq (#a:Type) (r:rid) (init:seq a)
@@ -91,15 +89,15 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
 	               m_contains r h1
 		     /\ modifies_one i h0 h1
 		     /\ modifies_rref i !{HH.as_ref r_ashsref.ref} h0.h h1.h
-		     /\ m_sel h1 r == SeqP.snoc (m_sel h0 r) x
+		     /\ m_sel h1 r == Seq.snoc (m_sel h0 r) x
 		     /\ witnessed (at_least (Seq.length (m_sel h0 r)) x r)))
   =
     m_recall r;
     let s0 = m_read r in
     let n = Seq.length s0 in
-    m_write r (SeqP.snoc s0 x);
+    m_write r (Seq.snoc s0 x);
     at_least_is_stable n x r;
-    SeqP.contains_snoc s0 x;
+    Seq.contains_snoc s0 x;
     witness r (at_least n x r)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,19 +144,19 @@ let i_contains (#r:rid) (#a:Type) (#p:seq a -> Type) (m:i_seq r a p) (h:mem)
 
 let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:a)
   : ST unit
-       (requires (fun h -> p (SeqP.snoc (i_sel h r) x)))
+       (requires (fun h -> p (Seq.snoc (i_sel h r) x)))
        (ensures (fun h0 _ h1 ->
                        let r_ashsref = MR.as_hsref r in
 	               i_contains r h1
 		     /\ modifies_one rgn h0 h1
 		     /\ modifies_rref rgn !{HH.as_ref r_ashsref.ref} h0.h h1.h
-		     /\ i_sel h1 r == SeqP.snoc (i_sel h0 r) x
+		     /\ i_sel h1 r == Seq.snoc (i_sel h0 r) x
 		     /\ witnessed (i_at_least (Seq.length (i_sel h0 r)) x r)))
   =
     m_recall r;
     let s0 = m_read r in
     let n = Seq.length s0 in
-    m_write r (SeqP.snoc s0 x);
+    m_write r (Seq.snoc s0 x);
     i_at_least_is_stable n x r;
     contains_snoc s0 x;
     witness r (i_at_least n x r)
@@ -178,7 +176,7 @@ let test0 r a k =
   let _ = 
     let s = m_sel h0 a in 
     at_least_is_stable k (Seq.index (m_sel h0 a) k) a;
-    SeqP.contains_intro s k (Seq.index s k) in
+    Seq.contains_intro s k (Seq.index s k) in
   MR.witness a (at_least k (Seq.index (m_sel h0 a) k) a)
   
 val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
@@ -208,12 +206,12 @@ val map: ('a -> Tot 'b) -> s:seq 'a -> Tot (seq 'b)
 let rec map f s =
   if Seq.length s = 0 then Seq.createEmpty
   else let prefix, last = un_snoc s in
-       SeqP.snoc (map f prefix) (f last)
+       Seq.snoc (map f prefix) (f last)
 
 val map_snoc: f:('a -> Tot 'b) -> s:seq 'a -> a:'a -> Lemma
-  (map f (SeqP.snoc s a) == SeqP.snoc (map f s) (f a))
+  (map f (Seq.snoc s a) == Seq.snoc (map f s) (f a))
 let map_snoc f s a =
-  let prefix, last = un_snoc (SeqP.snoc s a) in
+  let prefix, last = un_snoc (Seq.snoc s a) in
   cut (Seq.equal prefix s)
 
 private let op_At s1 s2 = Seq.append s1 s2
@@ -231,11 +229,11 @@ let rec map_append f s_1 s_2 =
         let m_s_1 = map f s_1 in
   	let m_p_2 = map f prefix_2 in
   	let flast = f last in
-  	cut (Seq.equal (s_1@s_2) (SeqP.snoc (s_1@prefix_2) last));         //map f (s1@s2) = map f (snoc (s1@p) last)
+  	cut (Seq.equal (s_1@s_2) (Seq.snoc (s_1@prefix_2) last));         //map f (s1@s2) = map f (snoc (s1@p) last)
   	map_snoc f (Seq.append s_1 prefix_2) last;                       //              = snoc (map f (s1@p)) (f last)
         map_append f s_1 prefix_2;                                       //              = snoc (map f s_1 @ map f p) (f last)
-  	cut (Seq.equal (SeqP.snoc (m_s_1 @ m_p_2) flast)
-  		       (m_s_1 @ SeqP.snoc m_p_2 flast));                 //              = map f s1 @ (snoc (map f p) (f last))
+  	cut (Seq.equal (Seq.snoc (m_s_1 @ m_p_2) flast)
+  		       (m_s_1 @ Seq.snoc m_p_2 flast));                 //              = map f s1 @ (snoc (map f p) (f last))
         map_snoc f prefix_2 last)                                       //              = map f s1 @ map f (snoc p last)
 
 #reset-options "--z3rlimit 5"
@@ -314,9 +312,9 @@ let rec collect f s =
        Seq.append (collect f prefix) (f last)
 
 val collect_snoc: f:('a -> Tot (seq 'b)) -> s:seq 'a -> a:'a -> Lemma
-  (collect f (SeqP.snoc s a) == Seq.append (collect f s) (f a))
+  (collect f (Seq.snoc s a) == Seq.append (collect f s) (f a))
 let collect_snoc f s a =
-  let prefix, last = un_snoc (SeqP.snoc s a) in
+  let prefix, last = un_snoc (Seq.snoc s a) in
   cut (Seq.equal prefix s)
 
 #reset-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
@@ -333,7 +331,7 @@ let rec collect_append f s_1 s_2 =
         let m_s_1 = collect f s_1 in
   	let m_p_2 = collect f prefix_2 in
   	let flast = f last in
-  	cut (Seq.equal (s_1@s_2) (SeqP.snoc (s_1@prefix_2) last));         //map f (s1@s2) = map f (snoc (s1@p) last)
+  	cut (Seq.equal (s_1@s_2) (Seq.snoc (s_1@prefix_2) last));         //map f (s1@s2) = map f (snoc (s1@p) last)
   	collect_snoc f (Seq.append s_1 prefix_2) last;                       //              = snoc (map f (s1@p)) (f last)
         collect_append f s_1 prefix_2;                                       //              = snoc (map f s_1 @ map f p) (f last)
   	cut (Seq.equal ((m_s_1 @ m_p_2) @ flast)

@@ -1,7 +1,6 @@
 module Padding.MAC2
 
 open FStar.Seq
-open FStar.SeqProperties
 
 open Padding.Pad
 open Padding.BMAC

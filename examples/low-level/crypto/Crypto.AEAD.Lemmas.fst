@@ -29,10 +29,10 @@ module PRF = Crypto.Symmetric.PRF
 // Some generic sequence lemmas, easy but boring ... assumed for now
 ////////////////////////////////////////////////////////////////////////////////
 let find_snoc (#a:Type) (s:Seq.seq a) (x:a) (f:a -> Tot bool)
-  : Lemma (let res = SeqProperties.find_l f (SeqProperties.snoc s x) in
+  : Lemma (let res = Seq.find_l f (Seq.snoc s x) in
 	   match res with 
-	   | None -> SeqProperties.find_l f s == None /\ not (f x)
-	   | Some y -> res == SeqProperties.find_l f s \/ (f x /\ x==y))
+	   | None -> Seq.find_l f s == None /\ not (f x)
+	   | Some y -> res == Seq.find_l f s \/ (f x /\ x==y))
   = admit() //NS: boring
 
 let find_is_some (#i:id) (#rgn:rid) (b:prf_blocks rgn i) (x:domain i)
@@ -88,10 +88,10 @@ let rec frame_refines (i:id{safeId i}) (mac_rgn:region)
 	   (decreases (Seq.length entries))
    = if Seq.length entries = 0 then 
        ()
-     else let e = SeqProperties.head entries in
+     else let e = Seq.head entries in
           let b = num_blocks e in 
          (let blocks_for_e = Seq.slice blocks 0 (b + 1) in
-       	  let entries_tl = SeqProperties.tail entries in
+       	  let entries_tl = Seq.tail entries in
           let blocks_tl = Seq.slice blocks (b+1) (Seq.length blocks) in
 	  frame_refines i mac_rgn entries_tl blocks_tl h h';
 	  frame_refines_one_entry h i mac_rgn e blocks_for_e h')
@@ -121,7 +121,7 @@ unfold let pre_refines_one_entry (i:id) (st:state i Writer) (nonce:Cipher.iv (al
    PRF.(x.iv = nonce) /\
    PRF.(x.ctr = ctr_0 i) /\  (
    let xors = Seq.slice blocks 1 (b+1) in 
-   let cipher, tag = SeqProperties.split c_tagged len in
+   let cipher, tag = Seq.split c_tagged len in
    safelen i len (ctr_0 i +^ 1ul) /\
    Seq.equal xors (counterblocks i st.prf.mac_rgn (PRF.incr i x) len 0 len plain cipher))))))
 
@@ -197,9 +197,9 @@ let intro_refines_one_entry_no_tag
 		      let table_1 = HS.sel h1 (PRF.itable i st.prf) in
 		      let table_2 = HS.sel h2 (PRF.itable i st.prf) in
 		      let x_0 = {iv=nonce; ctr=ctr_0 i} in
-	              let c, _ = SeqProperties.split c_tagged len in
+	              let c, _ = Seq.split c_tagged len in
 	              h2 `HS.contains` (PRF.itable i st.prf) /\
-		      (exists mac. Seq.equal table_1 (SeqProperties.snoc table_0 (PRF.(Entry x_0 mac)))) /\
+		      (exists mac. Seq.equal table_1 (Seq.snoc table_0 (PRF.(Entry x_0 mac)))) /\
 		      safelen i len (ctr_0 i +^ 1ul) /\
 		      table_2 == (Seq.append table_1 (counterblocks i mac_rgn (PRF.incr i x_0) len 0 len p c)))))
 	    (ensures (pre_refines_one_entry i st nonce len plain cipher h0 h2))
@@ -208,7 +208,7 @@ let intro_refines_one_entry_no_tag
 	  let p = Plain.sel_plain h2 (u len) plain in
 	  let c_tagged = Buffer.as_seq h2 cipher in
 	  let initial_domain = PRF.incr i ({iv=nonce; ctr=ctr_0 i}) in
-	  let c, _ = SeqProperties.split c_tagged len in
+	  let c, _ = Seq.split c_tagged len in
 	  counterblocks_len #i mac_rgn initial_domain len 0 p c
 
 #reset-options "--z3rlimit 40"
@@ -220,7 +220,7 @@ let mac_refines (i:id)
    		(h:mem{Buffer.live h aad /\ Plain.live h plain /\ Buffer.live h cipher})
    = let mac_rgn = st.prf.mac_rgn in
      let p = Plain.sel_plain h (u len) plain in
-     let c, tag = SeqProperties.split (Buffer.as_seq h cipher) len in
+     let c, tag = Seq.split (Buffer.as_seq h cipher) len in
      let ad = Buffer.as_seq h aad in
      let x0 : PRF.domain i = {iv=nonce; ctr=ctr_0 i} in
      x0.ctr = ctr_0 i /\
@@ -244,7 +244,7 @@ let intro_mac_refines (i:id) (st:state i Writer) (nonce: Cipher.iv (alg i))
    : Lemma (requires (let x0 : PRF.domain i = {iv=nonce; ctr=ctr_0 i} in
 		      let mac_rgn = st.prf.mac_rgn in
 		      let p = Plain.sel_plain h (u len) plain in
-		      let c, _ = SeqProperties.split (Buffer.as_seq h cipher) len in
+		      let c, _ = Seq.split (Buffer.as_seq h cipher) len in
 		      let tagB = Buffer.sub cipher (u len) MAC.taglen in
 		      let ad = Buffer.as_seq h aad in
 		      let x0 : PRF.domain i = {iv=nonce; ctr=ctr_0 i} in
@@ -275,14 +275,14 @@ let all_above_counterblocks (i:id)
 #set-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let find_cons_hd (#a:Type) (x:a) (tl:Seq.seq a) (f:(a -> Tot bool))
   : Lemma (requires (f x))
-         (ensures (SeqProperties.find_l f (SeqProperties.cons x tl) == Some x))
+         (ensures (Seq.find_l f (Seq.cons x tl) == Some x))
   = ()
 
 let contains_intro_2 (#a:Type) (s:Seq.seq a) (x:a) (k:nat)
   : Lemma (k < Seq.length s /\ Seq.index s k == x
            ==>
-          s `SeqProperties.contains` x)
-  = SeqProperties.contains_intro s k x
+          s `Seq.contains` x)
+  = Seq.contains_intro s k x
   
 #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let find_mac_counterblocks_none (#rgn:region) (#i:id) (nonce:Cipher.iv (alg i))
@@ -300,7 +300,7 @@ val pre_refines_to_refines: (i:id) -> (st:state i Writer) -> (nonce: Cipher.iv (
    -> Lemma (requires (let mac_rgn = st.prf.mac_rgn in
      		      let p = Plain.sel_plain h (u len) plain in
 		      let c_tagged = Buffer.as_seq h cipher in
-	              let c, tag = SeqProperties.split c_tagged len in
+	              let c, tag = Seq.split c_tagged len in
 		      let ad = Buffer.as_seq h aad in
   		      safeId i ==> 
 			(none_above ({iv=nonce; ctr=ctr_0 i}) st.prf h0 /\
@@ -309,7 +309,7 @@ val pre_refines_to_refines: (i:id) -> (st:state i Writer) -> (nonce: Cipher.iv (
             (ensures (let mac_rgn = st.prf.mac_rgn in
      		      let p = Plain.sel_plain h (u len) plain in
 		      let c_tagged = Buffer.as_seq h cipher in
-	              let c, tag = SeqProperties.split c_tagged len in
+	              let c, tag = Seq.split c_tagged len in
 		      let ad = Buffer.as_seq h aad in
   		      let entry = Entry nonce ad len p c_tagged in
 		      safeId i ==>  (
@@ -331,12 +331,12 @@ let pre_refines_to_refines i st nonce aadlen aad len plain cipher h0 h
  	   let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in
 	   let p = Plain.sel_plain h (u len) plain in
 	   let c_tagged = Buffer.as_seq h cipher in
-           let c, tag = SeqProperties.split c_tagged len in
+           let c, tag = Seq.split c_tagged len in
 	   let hd = Seq.index blocks 0 in
 	   let PRF.Entry x e = hd in
 	   let cbs = counterblocks i st.prf.mac_rgn (PRF.incr i idom) len 0 len p c in
 	   assert (x = idom);
-	   assert (Seq.equal blocks (SeqProperties.cons hd cbs));
+	   assert (Seq.equal blocks (Seq.cons hd cbs));
            all_above_counterblocks i st.prf.mac_rgn (PRF.incr i idom) len 0 len p c;
 	   find_mac_counterblocks_none #st.prf.mac_rgn #i nonce cbs;
 	   assert (PRF.is_entry_domain idom hd);
@@ -359,7 +359,7 @@ let pre_refines_to_refines i st nonce aadlen aad len plain cipher h0 h
 (*             (let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in *)
 (*             refines_one_entry h1 entry blocks)) *)
 
-(* 	    HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c))) *)
+(* 	    HS.sel h1 st.log == Seq.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c))) *)
 (* let 			     *)
 
 (*** Some basic sanity checks 
@@ -375,8 +375,8 @@ private let rec block_lengths (#i:id{safeId i}) (entries:Seq.seq (entry i))
   : Tot nat (decreases (Seq.length entries))
   = if Seq.length entries = 0 then
       0
-    else let e = SeqProperties.head entries in
-	 num_blocks e + 1 + block_lengths (SeqProperties.tail entries)
+    else let e = Seq.head entries in
+	 num_blocks e + 1 + block_lengths (Seq.tail entries)
 
 #set-options "--z3rlimit 40 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 (* 2. refines sums block lengths *)
@@ -387,8 +387,8 @@ private let rec refines_length (#rgn:region) (#i:id{safeId i}) (h:mem)
   	   (decreases (Seq.length entries))
    = if Seq.length entries = 0 then 
        ()
-     else let hd = SeqProperties.head entries in
-	  let entries_tl = SeqProperties.tail entries in
+     else let hd = Seq.head entries in
+	  let entries_tl = Seq.tail entries in
 	  let b = num_blocks hd in
 	  let blocks_tail = Seq.slice blocks (b + 1) (Seq.length blocks) in
 	  refines_length h entries_tl blocks_tail
@@ -414,24 +414,24 @@ let rec extend_refines (h:mem) (i:id{safeId i}) (mac_rgn:region)
 		    refines_one_entry h' e blocks_for_e /\
 		    HS.modifies_ref mac_rgn TSet.empty h h' /\
 		    HS.live_region h' mac_rgn)
-	  (ensures (refines h' i mac_rgn (SeqProperties.snoc entries e) (Seq.append blocks blocks_for_e)))
+	  (ensures (refines h' i mac_rgn (Seq.snoc entries e) (Seq.append blocks blocks_for_e)))
 	  (decreases (Seq.length entries))
   = if Seq.length entries = 0 then
       (refines_singleton h' i mac_rgn e blocks_for_e;
-       cut (Seq.equal (SeqProperties.snoc entries e) (Seq.create 1 e));
+       cut (Seq.equal (Seq.snoc entries e) (Seq.create 1 e));
        cut (Seq.equal (Seq.append blocks blocks_for_e) blocks_for_e))
-    else let hd = SeqProperties.head entries in
-	 let entries_tl = SeqProperties.tail entries in
+    else let hd = Seq.head entries in
+	 let entries_tl = Seq.tail entries in
 	 let b = num_blocks hd in
 	 let blocks_hd = Seq.slice blocks 0 (b + 1) in
 	 let blocks_tl = Seq.slice blocks (b + 1) (Seq.length blocks) in
 	 assert (refines h i mac_rgn entries_tl blocks_tl);
 	 frame_refines_one_entry h i mac_rgn hd blocks_hd h';
 	 extend_refines h i mac_rgn entries_tl blocks_tl e blocks_for_e h';
-	 assert (refines h' i mac_rgn (SeqProperties.snoc entries_tl e) (Seq.append blocks_tl blocks_for_e));
-	 cut (Seq.equal (SeqProperties.snoc entries e) (SeqProperties.cons hd (SeqProperties.snoc entries_tl e)));
-	 cut (SeqProperties.head (SeqProperties.snoc entries e) == hd);
-	 cut (Seq.equal (SeqProperties.tail (SeqProperties.snoc entries e)) (SeqProperties.snoc entries_tl e));
+	 assert (refines h' i mac_rgn (Seq.snoc entries_tl e) (Seq.append blocks_tl blocks_for_e));
+	 cut (Seq.equal (Seq.snoc entries e) (Seq.cons hd (Seq.snoc entries_tl e)));
+	 cut (Seq.head (Seq.snoc entries e) == hd);
+	 cut (Seq.equal (Seq.tail (Seq.snoc entries e)) (Seq.snoc entries_tl e));
 	 let blocks_hd = Seq.slice blocks 0 (b + 1) in
 	 let ext_blocks = Seq.append blocks blocks_for_e in
 	 cut (Seq.equal ext_blocks
@@ -455,8 +455,8 @@ let counterblocks_emp   (i:id)
 
 let lemma_cons_snoc (#a:Type) (hd:a) (s:Seq.seq a) (tl:a)
   : Lemma (requires True)
-	  (ensures (Seq.equal (SeqProperties.cons hd (SeqProperties.snoc s tl))
-		 	      (SeqProperties.snoc (SeqProperties.cons hd s) tl)))
+	  (ensures (Seq.equal (Seq.cons hd (Seq.snoc s tl))
+		 	      (Seq.snoc (Seq.cons hd s) tl)))
   = ()	  
 
 #reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
@@ -474,7 +474,7 @@ val counterblocks_snoc: #i:id{safeId i} -> (rgn:region) -> (x:domain i{ctr_0 i <
 	      let cipher_last = Seq.slice cipher completed_len (completed_len + next) in
 	      let from = (v x.ctr - (v (offset i))) * v (PRF.blocklen i) in
 	      Seq.equal (counterblocks i rgn x len from (completed_len + next) plain cipher)
-			(SeqProperties.snoc (counterblocks i rgn x len from completed_len plain cipher)
+			(Seq.snoc (counterblocks i rgn x len from completed_len plain cipher)
 							   (PRF.Entry ({x with ctr=UInt32.uint_to_t k}) (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last)))))
 	   (decreases (completed_len - v x.ctr))
 let rec counterblocks_snoc #i rgn x k len next completed_len plain cipher =
@@ -496,9 +496,9 @@ let rec counterblocks_snoc #i rgn x k len next completed_len plain cipher =
 	  let middle = counterblocks i rgn y len (from_pos + l0) completed_len plain cipher in
 	  let last_entry = PRF.Entry ({x with ctr=UInt32.uint_to_t k}) (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last) in
 	  assert (counterblocks i rgn x len from_pos to_pos plain cipher ==
-		  SeqProperties.cons head recursive_call);
+		  Seq.cons head recursive_call);
 	  counterblocks_snoc rgn y k len next completed_len plain cipher;
-	  assert (recursive_call == SeqProperties.snoc middle last_entry);
+	  assert (recursive_call == Seq.snoc middle last_entry);
           lemma_cons_snoc head middle last_entry
 
 #reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
@@ -585,7 +585,7 @@ val frame_counterblocks_snoc: i:id{safeId i} -> (t:PRF.state i) -> (x:domain i{c
 		    let cipher_last = Seq.slice c completed_len (completed_len + next) in
 		    let last_entry = PRF.Entry ({x with ctr=UInt32.uint_to_t k})
 	 				       (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last) in
-		    final_blocks == SeqProperties.snoc initial_blocks last_entry))
+		    final_blocks == Seq.snoc initial_blocks last_entry))
 (* #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100" *)
 let frame_counterblocks_snoc i t x k len completed_len plain cipher h0 h1 = 
   let open FStar.Mul in
@@ -691,8 +691,8 @@ let extending_counter_blocks #i t x len completed_len plain cipher h0 h1 h_init
 	 let r = itable i t in 
 	 let r0 = HS.sel h0 r in
 	 let r1 = HS.sel h1 r in 
- 	 let suffix = SeqProperties.last r1 in
-	 assert (Seq.equal r1 (SeqProperties.snoc r0 suffix));
+ 	 let suffix = Seq.last r1 in
+	 assert (Seq.equal r1 (Seq.snoc r0 suffix));
 	 assert (PRF.find r0 x == None);
 	 find_append x r0 (Seq.create 1 suffix);
 	 find_singleton suffix x;

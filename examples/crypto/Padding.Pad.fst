@@ -1,7 +1,6 @@
 module Padding.Pad
 
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.BaseTypes
 open Platform.Bytes
 

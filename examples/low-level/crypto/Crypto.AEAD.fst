@@ -218,7 +218,7 @@ val extend_refines_aux: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i
 
      		      let p = Plain.sel_plain h1 (u len) plain in
 		      let c_tagged = Buffer.as_seq h1 cipher in
-	              let c, tag = SeqProperties.split c_tagged len in
+	              let c, tag = Seq.split c_tagged len in
 		      let ad = Buffer.as_seq h1 aad in
   		      let entry = Entry nonce ad len p c_tagged in
 		      pre_refines_one_entry i st nonce len plain cipher h0 h1 /\
@@ -233,10 +233,10 @@ val extend_refines_aux: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i
 		      let table_1 = HS.sel h1 (PRF.itable i st.prf) in
      		      let p = Plain.sel_plain h1 (u len) plain in
 		      let c_tagged = Buffer.as_seq h1 cipher in
-	              let c, tag = SeqProperties.split c_tagged len in
+	              let c, tag = Seq.split c_tagged len in
 		      let ad = Buffer.as_seq h1 aad in
   		      let entry = Entry nonce ad len p c_tagged in
-		      refines h1 i mac_rgn (SeqProperties.snoc entries_0 entry) table_1)))
+		      refines h1 i mac_rgn (Seq.snoc entries_0 entry) table_1)))
 let extend_refines_aux i st nonce aadlen aad len plain cipher h0 h1 = 
   if safeId i then
      let mac_rgn = st.prf.mac_rgn in
@@ -246,7 +246,7 @@ let extend_refines_aux i st nonce aadlen aad len plain cipher h0 h1 =
      let blocks_1 = Seq.slice table_1 (Seq.length blocks_0) (Seq.length table_1) in
      let p = Plain.sel_plain h1 (u len) plain in
      let c_tagged = Buffer.as_seq h1 cipher in
-     let c, tag = SeqProperties.split c_tagged len in
+     let c, tag = Seq.split c_tagged len in
      let ad = Buffer.as_seq h1 aad in
      let entry = Entry nonce ad len p c_tagged in
      extend_refines h0 i mac_rgn entries_0 blocks_0 entry blocks_1 h1
@@ -270,7 +270,7 @@ let encrypt_ensures' (regions:Set.set HH.rid)
        let aad = Buffer.as_seq h5 aad in
        let p = Plain.sel_plain h5 plainlen plain in
        let c = Buffer.as_seq h5 cipher_tagged in
-       HS.sel h5 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
+       HS.sel h5 st.log == Seq.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
 
 let encrypt_ensures_tip (i:id) (st:state i Writer)
 		     (n: Cipher.iv (alg i))
@@ -919,8 +919,8 @@ let intro_contains_all_blocks i n st #aadlen aad #plainlen cipher_tagged q entry
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let c' = Buffer.as_seq h cipher in
     (* *)
-  let blocks_hd = SeqProperties.head blocks in 
-  let blocks_tl = SeqProperties.tail blocks in
+  let blocks_hd = Seq.head blocks in 
+  let blocks_tl = Seq.tail blocks in
   let x_1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
   assert (blocks_tl == counterblocks i st.prf.mac_rgn x_1 (v plainlen) 0 (v plainlen) p c');
   assert (Seq.equal (Seq.slice blocks_tl 0 (Seq.length blocks_tl)) blocks_tl);
@@ -929,7 +929,7 @@ let intro_contains_all_blocks i n st #aadlen aad #plainlen cipher_tagged q entry
   let widen_blocks_tl_blocks (y:domain i)
     : Lemma (y `above` x_1 ==> PRF.find blocks y == PRF.find blocks_tl y)  
     = if y `above` x_1 
-      then (assert (Seq.equal blocks (SeqProperties.cons blocks_hd blocks_tl));
+      then (assert (Seq.equal blocks (Seq.cons blocks_hd blocks_tl));
 	    find_singleton blocks_hd y;
 	    find_append y (Seq.create 1 blocks_hd) blocks_tl) in
   FStar.Classical.forall_intro widen_blocks_tl_blocks;
@@ -964,13 +964,13 @@ let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged
     let prf_table = HS.sel h (PRF.itable i st.prf) in
     let x0 = {iv = n; ctr=ctr_0 i} in
     let cipher_tagged = Buffer.as_seq h cipher_tagged_b in
-    let cipher, _ = SeqProperties.split cipher_tagged (v plainlen) in
+    let cipher, _ = Seq.split cipher_tagged (v plainlen) in
     let tag = Buffer.as_seq h tag_b in
     let ( e, blocks ) = find_entry_blocks i st.prf.mac_rgn n entries prf_table h in
     let ak' = PRF.macRange st.prf.mac_rgn i x0 (Seq.index blocks 0).range in
     assert (ak == ak');
     let Entry nonce aad' plainlen' p' cipher_tagged' = e in
-    let cipher', _ = SeqProperties.split cipher_tagged' plainlen' in
+    let cipher', _ = Seq.split cipher_tagged' plainlen' in
     let mac_log = CMA.ilog (CMA.State?.log ak) in
     match m_sel h mac_log with
     | None           -> ()

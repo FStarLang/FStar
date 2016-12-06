@@ -33,7 +33,7 @@ theory:
 	$(SFSTAR) --explicit_deps \
 	      --z3timeout 10 --__temp_no_proj PSemantics --__temp_no_proj Metatheory \
 	  FStar.FunctionalExtensionality.fst FStar.Classical.fst FStar.Ghost.fst FStar.List.Tot.fst FStar.Set.fst \
-	  FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.OrdSet.fst FStar.OrdMap.fst \
+	  FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.Base.fst FStar.Seq.Properties.fst FStar.Seq.fst FStar.OrdSet.fst FStar.OrdMap.fst \
 	  FStar.Constructive.fst prins.fsti FStar.UInt8.fst FStar.Char.fsti $(CONTRIB)/Platform/fst/Platform.Bytes.fst ast.fst ffibridge.fsti sem.fst psem.fst \
 	  theory.fst
 
@@ -44,7 +44,7 @@ crypto:
 	export CONTRIB=../../contrib
 	$(SFSTAR) --explicit_deps \
 	       --__temp_no_proj PSemantics --verify_module Crypto \
-	FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Ghost.fst FStar.List.Tot.fst FStar.OrdSet.fst FStar.OrdMap.fst FStar.List.fst \
+	FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.Base.fst FStar.Seq.Properties.fst FStar.Seq.fst FStar.Ghost.fst FStar.List.Tot.fst FStar.OrdSet.fst FStar.OrdMap.fst FStar.List.fst \
 	FStar.Float.fsti FStar.IO.fsti FStar.Char.fsti FStar.String.fsti prins.fst FStar.UInt8.fst $(CONTRIB)/Platform/fst/Platform.Bytes.fst ast.fst ffibridge.fsti sem.fst psem.fst runtime.fsti print.fst $(CONTRIB)/CoreCrypto/fst/CoreCrypto.fst ../crypto/SHA1.fst
 
 secserver:
@@ -52,8 +52,8 @@ secserver:
 	$(SFSTAR) --explicit_deps \
 	         --__temp_no_proj  PSemantics --__temp_no_proj SecServer --verify_module SecServer \
 						FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst \
-						FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst \
-						FStar.SeqProperties.fst FStar.Ghost.fst FStar.Squash.fsti FStar.List.Tot.fst \
+						FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.Base.fst \
+						FStar.Seq.Properties.fst FStar.Seq.fst FStar.Ghost.fst FStar.Squash.fsti FStar.List.Tot.fst \
 						FStar.OrdSet.fst FStar.OrdMap.fst FStar.List.fst FStar.Float.fsti FStar.IO.fsti \
 						FStar.Char.fsti FStar.String.fsti \
 						prins.fst FStar.UInt8.fst $(CONTRIB)/Platform/fst/Platform.Bytes.fst ast.fst \
@@ -69,7 +69,7 @@ CODEGEN_FLAGS=   --no_location_info \
                  --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --odir $(OUTPUT_DIR)\
                  --__temp_no_proj PSemantics --__temp_no_proj SecServer
 
-FSTAR_LIB_FILES=FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Ghost.fst FStar.Squash.fsti\
+FSTAR_LIB_FILES=FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.Base.fst FStar.Seq.Properties.fst FStar.Seq.fst FStar.Ghost.fst FStar.Squash.fsti\
                 FStar.List.Tot.fst FStar.List.fst FStar.ListProperties.fst FStar.OrdSet.fst FStar.OrdMap.fst FStar.Float.fsti FStar.IO.fsti FStar.Char.fsti FStar.String.fsti hashtable.fsti\
 
 # removed SHA1, CoreCrypto, crypto, and sec_server
@@ -89,7 +89,7 @@ codegen:
 # codegen:
 # 	$(FSTAR)       \
 #                  --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --odir $(OUTPUT_DIR) --__temp_no_proj PSemantics --__temp_no_proj SecServer\
-#                  FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Ghost.fst FStar.Squash.fsti\
+#                  FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.Base.fst FStar.Seq.Properties.fst FStar.Seq.fst FStar.Ghost.fst FStar.Squash.fsti\
 #                  FStar.List.Tot.fst FStar.List.fst FStar.ListProperties.fst ordset.fsti FStar.OrdSet.fst ordmap.fsti FStar.OrdMap.fst FStar.IO.fsti string.fsti\
 #                  prins.fst ast.fst ffibridge.fsti sem.fst psem.fst rtheory.fst $(CONTRIB)/Platform/fst/Platform.Bytes.fst runtime.fsti print.fst ckt.fst $(CONTRIB)/CoreCrypto/fst/CoreCrypto.fst ../crypto/SHA1.fst crypto.fst interpreter.fst sec_server.fst examples/ffi.fst prog.fsti main.fst 
 

@@ -37,7 +37,7 @@
         "equation_FStar.UInt8.byte", "equation_FStar.UInt8.t",
         "equation_Prims.nat", "function_token_typing_Ex12g.TMAC2.keysize",
         "int_inversion", "kinding_FStar.UInt8.t_@tok", "lemma_Ex12.Pad.inj",
-        "lemma_FStar.Seq.lemma_eq_elim", "primitive_Prims.op_LessThan",
+        "lemma_FStar.Seq.Base.lemma_eq_elim", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_Multiply", "proj_equation_Ex12g.TMAC2.Keys_k0",
         "proj_equation_Ex12g.TMAC2.Keys_k1",
         "projection_inverse_BoxBool_proj_0",
@@ -52,7 +52,7 @@
         "token_correspondence_Ex12.BMAC.key_prop",
         "token_correspondence_Ex12g.TMAC2.bspec0",
         "token_correspondence_Ex12g.TMAC2.bspec1",
-        "token_correspondence_Prims.op_LessThan", "typing_FStar.Seq.length"
+        "token_correspondence_Prims.op_LessThan", "typing_FStar.Seq.Base.length"
       ],
       0
     ],
@@ -62,7 +62,7 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Seq.Extensionality",
+        "@query", "assumption_FStar.Seq.Base.Extensionality",
         "equation_Ex12.BMAC.keysize", "equation_Ex12.Pad.block",
         "equation_Ex12.Pad.blocksize", "equation_Ex12.Pad.bytes",
         "equation_Ex12.Pad.nbytes", "equation_Ex12.Pad.text",
@@ -85,7 +85,7 @@
         "refinement_interpretation_Tm_refine_cbce66aad24caa207d3234e4cb330c4b",
         "token_correspondence_Ex12.BMAC.key_prop",
         "token_correspondence_Ex12g.TMAC2.bspec0",
-        "token_correspondence_Ex12g.TMAC2.bspec1", "typing_FStar.Seq.length"
+        "token_correspondence_Ex12g.TMAC2.bspec1", "typing_FStar.Seq.Base.length"
       ],
       0
     ]

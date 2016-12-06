@@ -34,8 +34,8 @@ val text_to_PS_text: t:text -> Tot (t':PS.text{
 let rec text_to_PS_text t =
   if Seq.length t = 0 then Seq.createEmpty
   else
-    SeqProperties.cons (SeqProperties.head t)
-                       (text_to_PS_text (SeqProperties.tail t))
+    Seq.cons (Seq.head t)
+                       (text_to_PS_text (Seq.tail t))
 
 (** Field element *)
 let elem i = (* dependent; used only ideally *)
@@ -266,12 +266,12 @@ let op_Plus_At #i e1 e2 = field_add #i e1 e2
 let op_Star_At #i e1 e2 = field_mul #i e1 e2
 
 val poly_cons: #i:id -> x:word_16 -> xs:text -> r:elem i ->
-  Lemma (poly #i (SeqProperties.cons x xs) r == (poly #i xs r +@ encode i x) *@ r)
+  Lemma (poly #i (Seq.cons x xs) r == (poly #i xs r +@ encode i x) *@ r)
 let poly_cons #i x xs r =
   match alg i with
   | POLY1305 ->
-    assert (Seq.equal (text_to_PS_text (SeqProperties.cons x xs))
-                      (SeqProperties.cons x (text_to_PS_text xs)));
+    assert (Seq.equal (text_to_PS_text (Seq.cons x xs))
+                      (Seq.cons x (text_to_PS_text xs)));
     PL.poly_cons x (text_to_PS_text xs) r
   | GHASH    ->  GS.poly_cons x xs r; GS.add_comm (poly #i xs r) (encode i x)
 

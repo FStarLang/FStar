@@ -60,11 +60,11 @@ val refines_to_inv: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)) -
 			let table_1 = HS.sel h1 (PRF.itable i st.prf) in
      			let p = Plain.sel_plain h1 len plain in
 			let c_tagged = Buffer.as_seq h1 cipher in
-			let c, tag = SeqProperties.split c_tagged (v len) in
+			let c, tag = Seq.split c_tagged (v len) in
 			let ad = Buffer.as_seq h1 aad in
   			let entry = Entry nonce ad (v len) p c_tagged in
 			h1 `HS.contains` (itable i st.prf) /\
-			refines h1 i mac_rgn (SeqProperties.snoc entries_0 entry) table_1)))))
+			refines h1 i mac_rgn (Seq.snoc entries_0 entry) table_1)))))
           (ensures (fun h1 _ h2 -> 
       		      Buffer.live h1 aad /\ 
 		      Plain.live h1 plain /\ 
@@ -76,12 +76,12 @@ val refines_to_inv: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)) -
 			let table_1 = HS.sel h1 (PRF.itable i st.prf) in
      			let p = Plain.sel_plain h1 len plain in
 			let c_tagged = Buffer.as_seq h1 cipher in
-			let c, tag = SeqProperties.split c_tagged (v len) in
+			let c, tag = Seq.split c_tagged (v len) in
 			let ad = Buffer.as_seq h1 aad in
   			let entry = Entry nonce ad (v len) p c_tagged in
   			HS.modifies (Set.singleton st.log_region) h1 h2 /\
 			HS.modifies_ref st.log_region !{HS.as_ref st.log} h1 h2 /\ 
-			HS.sel h2 st.log == SeqProperties.snoc entries_0 entry
+			HS.sel h2 st.log == Seq.snoc entries_0 entry
 		      else HS.modifies Set.empty h1 h2))))
 let refines_to_inv i st nonce aadlen aad len plain cipher =
   if safeId i then
@@ -90,7 +90,7 @@ let refines_to_inv i st nonce aadlen aad len plain cipher =
     let p = Plain.load len plain in 
     let c_tagged = to_seq_temp cipher len in
     let entry = Entry nonce ad (v len) p c_tagged in
-    st.log := SeqProperties.snoc !st.log entry;
+    st.log := Seq.snoc !st.log entry;
     let h1 = get () in 
     let entries = !st.log in
     let blocks = !(itable i st.prf) in
