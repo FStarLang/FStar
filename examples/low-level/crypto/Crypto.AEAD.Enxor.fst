@@ -1,15 +1,4 @@
 module Crypto.AEAD.Enxor
-
-// Implements agile, conditionally secure Authenticated Encryption
-// with Associated Data (AEAD) for TLS 1.2 and 1.3, given secure, 
-// agile PRF cipher and UF-1CMA MAC. 
-
-// For the security proof, we maintain a stateful invariant that
-// precisely relates the contents of the AEAD log to the states of the
-// PRF and the MACs.
-
-// This file intends to match the spec of AEAD0.fst in mitls-fstar. 
-
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils

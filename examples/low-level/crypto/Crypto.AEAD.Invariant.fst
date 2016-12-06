@@ -37,6 +37,8 @@ let prf_table (r:rgn) (i:id) = Seq.seq (PRF.entry r i)
 (* The ctr value associated with the first otp block *)
 let otp_offset (i:id) = ctr_0 i +^ 1ul
 
+let aadlen = x:UInt32.t{x <=^ aadmax}
+
 let maxplain (i:id) = pow2 14 // for instance
 
 let num_blocks_for_len (i:id) (l:nat) : Tot nat =
