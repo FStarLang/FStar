@@ -321,8 +321,6 @@ let update #i st acc w =
   MAC.frame_sel_elem h1 h2 st.r
 
 
-#set-options "--lax"
-
 val mac: 
   #i:id ->
   st:state i ->
