@@ -347,16 +347,9 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let y = PRF.incr i x in
 (* end *)
   
-  //TODO: move this lemma call into the definition of enxor
-  //calling this lemma allows us to complete the proof without using any fuel;
-  //which makes things a a bit faster
-  counterblocks_emp i st.prf.mac_rgn y (v plainlen) 0
-      (Plain.sel_plain h1 plainlen plain) (Buffer.as_seq h1 cipher); 
-      
 (* start: a loop to fragment the plaintext, call the prf, and fill in the cipher text *)  
-  Crypto.AEAD.Encrypt.Enxor.counter_enxor i st.prf y plainlen plainlen plain cipher h1;
+  Crypto.AEAD.Enxor.enxor st.prf n plain cipher;
 (* end *)
-  //TODO: wrap counter_enxor to give the post-condition from the lemma we proved
   
   // Compute MAC over additional data and ciphertext
   let h2 = get () in

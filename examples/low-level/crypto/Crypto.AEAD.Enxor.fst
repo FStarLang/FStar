@@ -1,4 +1,4 @@
-module Crypto.AEAD.Encrypt.Enxor
+module Crypto.AEAD.Enxor
 
 // Implements agile, conditionally secure Authenticated Encryption
 // with Associated Data (AEAD) for TLS 1.2 and 1.3, given secure, 
@@ -23,6 +23,7 @@ open Flag
 open Crypto.Symmetric.PRF
 open Crypto.AEAD.Invariant
 
+module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
 module Plain = Crypto.Plain
 module Invariant = Crypto.AEAD.Invariant
@@ -292,7 +293,7 @@ let invert_contains_plain_and_cipher_block   (#i:id) (#r:rid) (#l:u32{l <=^ PRF.
             (ensures (b == PRF.Entry #r #i x (PRF.OTP l plain cipher)))
     = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 400"
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 400"
 val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^ x.ctr}) ->
 			     len:nat{len <> 0 /\ safelen i len (ctr_0 i +^ 1ul)} -> 
 			     (completed_len:nat{completed_len < len /\
@@ -358,8 +359,6 @@ val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^
    = Seq.append init (snoc (counterblocks ..) last_entry)  //by a standard snoc/append lemma
    = Seq.append init final_blocks                          //by frame_counterblocks_snoc
 *)
-
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 400"
 let extending_counter_blocks #i t x len completed_len plain cipher h0 h1 h_init
   = if safeId i
     then begin
@@ -391,7 +390,7 @@ let extending_counter_blocks #i t x len completed_len plain cipher h0 h1 h_init
     end
 
 (*** THE MAIN FUNCTION PROVIDED:
-     counter_enxor ***)
+     enxor ***)
 let enxor_separation (#i:id) 
 		     (t:PRF.state i)
 		     (#len:u32)
@@ -497,4 +496,38 @@ let rec counter_enxor #i t x len remaining_len plain cipher h_init =
       trans_modifies_table_above_x_and_buffer t x y cipher h0 h1 h2
     end
   else refl_modifies_table_above_x_and_buffer t x cipher h0
-  
+
+val enxor:
+  #i:id ->
+  t:PRF.state i ->
+  iv:Cipher.iv (Cipher.algi i) ->
+  #len:u32 ->
+  plain:plainBuffer i (v len) ->
+  cipher:lbuffer (v len) ->
+  // Not Stack, as we modify the heap-based ideal table (and don't know where the buffers are
+  ST unit
+  (requires (fun h ->
+    let x = {iv=iv; ctr=otp_offset i} in
+    enxor_separation t plain cipher /\
+    enxor_liveness t plain cipher h /\
+    enxor_dexor_lengths_ok x len len /\
+    none_above_if_authId x t h))    // if ciphertexts are authenticated, then fresh blocks are available
+  (ensures (fun h0 _ h1 ->
+    let x = {iv=iv; ctr=otp_offset i} in
+    enxor_liveness t plain cipher h1 /\
+    enxor_dexor_lengths_ok x len len /\
+    // in all cases, we extend the table only at x and its successors.
+    modifies_table_above_x_and_buffer t x cipher h0 h1 /\
+    enxor_invariant t x len 0ul plain cipher h0 h1))
+let enxor #i t iv #len plain_b cipher_b = 
+  let h_init = ST.get () in
+  let x = {iv=iv; ctr=otp_offset i} in
+  let _ = 
+    let plain = Plain.sel_plain h_init len plain_b in
+    let cipher = Buffer.as_seq h_init cipher_b in
+    counterblocks_emp i t.mac_rgn x (v len) 0 plain cipher;
+    assert (safeId i ==> Seq.equal (HS.sel h_init (itable i t))
+				   (Seq.append (HS.sel h_init (itable i t))
+				 	        Seq.createEmpty)) in
+  counter_enxor t x len len plain_b cipher_b h_init
+
