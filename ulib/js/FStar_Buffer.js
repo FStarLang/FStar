@@ -1,62 +1,36 @@
 /* @flow */
 
-export type buffer<T> = {
-    _content: T[],
-    _idx: number,
-    _len: number
-};
+export type buffer = Uint32Array; 
 
-export let create = <T>(init:T): ((len:number) => buffer<T>) => ((len:number) => {
-    let a = new Array(len);
-    a.fill(init);
-    return {
-        _content: a,
-        _idx: 0,
-        _len: len
-    };
+export let create =  (init:number) : ((len:number) => buffer) => ((len:number) => {
+    let res = new Uint32Array(len);
+    res.fill(init);
+    return res;
 });
+ 
+export let createL = (l:Array<number>): buffer => Uint32Array.from(l);    
+    
+export let index = (b:buffer) => ((n:number) => b[n]);
 
-export let createL = <T>(l:T[]): buffer<T> => {
-    return {
-        _content: l,
-        _idx: 0,
-        _len: l.length
-    };
-};
-
-export let index = <T>(b:buffer<T>): ((n:number) => T) => ((n:number) => b._content[n + b._idx]);
-
-export let upd = <T>(b:buffer<T>): ((n:number) => ((v:T) => null)) => ((n:number) => ((v:T) => {
-    b._content[n + b._idx] = v;
+export let upd = (b:buffer) => ((n:number) => ((v:number) => {
+    b[n] = v;
     return null;
 }));
 
-export let sub = <T>(b:buffer<T>): ((i:number) => ((len:number) => buffer<T>)) => ((i:number) => ((len:number) => ({
-        _content: b._content,
-        _idx :  b._idx + i,
-        _len: len 
-})));
+export let sub = (b:buffer) => ((i:number) => ((len:number) => b.subarray(i, i + len)));
 
-export let offset = <T>(b:buffer<T>): ((i:number) => buffer<T>) => ((i:number) => ({
-        _content: b._content,
-        _idx: b._idx + i,
-        _len: b._len - i
-}));
+export let offset = (b:buffer) => ((i:number) => b.subarray(i, b.length));
 
-export let fill = <T>(b:buffer<T>): ((z:T) => ((len:number) => null)) => ((z:T) => ((len:number) => {
-    b._content.fill(z, 0, len);
-    return null;
-}));
+export let blit = (a:buffer) => ((idx_a:number) => ((b:buffer) => ((idx_b:number) => ((len:number) => {
+    let tmp = sub(a)(idx_a)(len);
+    b.set(tmp, idx_b);
+    return b;
+})))); 
 
-export let split = <T>(b:buffer<T>): ((i:number) => [buffer<T>, buffer<T>]) => ((i:number) => [sub(b)(0)(i), sub(b)(i)(b._len - i)]);
+export let fill = (b:buffer) => ((z:number) => ((len:number) => b.fill(z, 0, len)));
 
-export let op_Array_Access = <T>(b:buffer<T>): ((n:number) => T) => ((n:number) => index(b)(n));
+export let split = (b:buffer) => ((i:number) =>  [sub(b)(0)(i), sub(b)(i)(b.length - i)]);
 
-export let op_Array_Assignment = <T>(b:buffer<T>): ((n:number) => ((v:T) => null) ) => ((n:number) => ((v:T) => upd(b)(n)(v)));
+export let op_Array_Access = (b:buffer) => ((n:number) => index(b)(n));
 
-export let blit = <T>(a:buffer<T>): ((idx_a: number) => ((b:buffer<T>) => ((idx_b:number) => ((len:number) => null)))) => ((idx_a: number) => ((b:buffer<T>) => ((idx_b:number) => ((len:number) => {
-    for (let i = 0; i < len; i++){
-        b._content[b._idx + idx_b + i] = a._content[a._idx + idx_a + i];
-    };
-    return null;
-}))));
+export let op_Array_Assignment = (b:buffer) => ((n:number) => ((v:number) => upd(b)(n)(v)));

@@ -2,12 +2,12 @@
 
 import * as FStar_Buffer from "./FStar_Buffer";
 
-export type uint8_p = FStar_Buffer.buffer<number>;
+export type uint8_p = FStar_Buffer.buffer;
 
-export let uint8_p_to_string = (b:FStar_Buffer.buffer<number>) : ((len:number) => string) => ((len:number) => {
+export let uint8_p_to_string = (b:FStar_Buffer.buffer) : ((len:number) => string) => ((len:number) => {
     let res = "";
     for (let i = 0; i < len; i++){
-        res = res.concat(b._content[i].toString());
+        res = res.concat(b[i].toString());
     };
     return res;
 });

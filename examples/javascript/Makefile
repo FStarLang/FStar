@@ -26,8 +26,8 @@ js/%.js: js/%.flow
 	rm -f $<
 
 pp-print: $(JS_DIR)
+	  cp -r $(ULIB_JS)/* js/
 
 ver:  	$(VERFILES) 
 	mkdir -p js
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --codegen JavaScript --odir js --lax  $^	
-	cp -r $(ULIB_JS)/* js/
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --codegen JavaScript --odir js --lax  $^		
