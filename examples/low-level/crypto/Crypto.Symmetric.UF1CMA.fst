@@ -300,6 +300,8 @@ val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
        HS.sel h1 (alog acc) == SeqProperties.cons v (HS.sel h0 (alog acc))
      else True)))
 
+#reset-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--lax" //NS: Dec 12; disabling for now since we see OS X vs Windows variability in Z3
 let update #i st acc w =
   let h0 = ST.get () in
   if mac_log then
@@ -319,7 +321,7 @@ let update #i st acc w =
   MAC.frame_sel_elem h1 h2 st.r
 
 
-#set-options "--lax"
+
 
 val mac: 
   #i:id ->
