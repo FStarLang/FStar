@@ -107,19 +107,15 @@ let rec read_chunk () =
     end
   else if Util.starts_with l "#pop" then (Util.clear_string_builder s.chunk; Pop l)
   else if Util.starts_with l "#push" then (Util.clear_string_builder s.chunk;
-        let lc = Util.substring_from l (String.length "#push") in
-        (* AR: commenting out the code that checks and sets lcs, emacs editor currently sends only #push or #push lax *)
-        let lax = Util.trim_string lc = "#lax" in
-        let lc = if lax then true, 1, 0 else false, 1, 0 in
+        let lc_lax = Util.trim_string (Util.substring_from l (String.length "#push")) in
+        let lc = match Util.split lc_lax " " with
+            | [l; c; "#lax"] -> true, Util.int_of_string l, Util.int_of_string c
+            | [l; c]         -> false, Util.int_of_string l, Util.int_of_string c
+            | _              ->
+              Util.print_warning ("Error locations may be wrong, unrecognized string after #push: " ^ lc_lax);
+              false, 1, 0
+        in
         Push lc)
-        (*let lc = Util.trim_string lc in
-        let lcs = Util.split lc " " in
-        let lc = match lcs with 
-                 | [l; c] -> Util.int_of_string l, Util.int_of_string c
-                 | _ ->
-//                  Util.print1 "Got lcs=[%s]" (String.concat "; " lcs);
-                  1, 0 in
-        Push lc)*)
   else if l = "#finish" then exit 0
   else
     (Util.string_builder_append s.chunk line;
