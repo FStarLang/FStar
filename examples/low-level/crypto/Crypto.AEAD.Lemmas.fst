@@ -26,22 +26,6 @@ module Plain = Crypto.Plain
 module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
 
-////////////////////////////////////////////////////////////////////////////////
-// Some generic sequence lemmas, easy but boring ... assumed for now
-////////////////////////////////////////////////////////////////////////////////
-val find_snoc: #a:Type -> s:Seq.seq a -> x:a -> f:(a -> Tot bool)
-               -> Lemma (ensures (let res = SeqProperties.find_l f (SeqProperties.snoc s x) in
-	                         match res with 
-	                         | None -> SeqProperties.find_l f s == None /\ not (f x)
-	                         | Some y -> res == SeqProperties.find_l f s \/ (f x /\ x==y)))
-                 (decreases (Seq.length s))
-let rec find_snoc #a s x f =
-  if Seq.length s = 0 then ()
-  else if f (SeqProperties.head s) then ()
-  else
-    let _ = SeqProperties.lemma_tail_snoc s x in
-    find_snoc (SeqProperties.tail s) x f
-
 let find_is_some (#i:id) (#rgn:rid) (b:prf_table rgn i) (x:domain i)
   : Lemma (requires (Some? (find b x)))
           (ensures (Seq.length b <> 0))
@@ -107,16 +91,6 @@ let frame_refines (i:id{safeId i}) (mac_rgn:region)
 
 let u (n:FStar.UInt.uint_t 32) = uint_to_t n
 
-////////////////////////////////////////////////////////////////////////////////
-// Lemmas related to the invariant and prf_mac
-////////////////////////////////////////////////////////////////////////////////
-(* Re-establishing the invariant after a call to prf_mac *)
-let unused_mac_exists (#i:id) (t:PRF.state i) (x:PRF.domain_mac i) (h:mem) =
-  safeId i ==> 
-    (let table = HS.sel h (itable i t) in
-     match find_mac table x with 
-     | None -> False
-     | Some mac -> CMA.mac_is_unset (i, x.iv) t.mac_rgn mac h)
 
 val inv_after_prf_mac: 
   #i:id -> 

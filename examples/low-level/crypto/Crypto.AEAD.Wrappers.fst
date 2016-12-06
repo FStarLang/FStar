@@ -145,55 +145,6 @@ let accumulate_wrapper (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lb
 ////////////////////////////////////////////////////////////////////////////////
 //prf_mac
 ////////////////////////////////////////////////////////////////////////////////
-let prf_mac_found (i:id) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:PRF.domain_mac i)
-		  (h0:mem) (mac_returned:CMA.state (i,x.iv)) 
-		  (h1:mem) (mac_found:CMA.state (i, x.iv)) =
-  h0 == h1 /\                                               //we didn't change the state
-  mac_returned == mac_found /\                              //we returned the mac we found
-  CMA.(MAC.norm h1 mac_returned.r) /\                       //it's repr is in canonical form
-  CMA.(Buffer.live h1 mac_returned.s) /\                    //it's live
-  CMA.(mac_log ==> m_contains (ilog mac_returned.log) h1)  //and its underlying log is live too
-
-let prf_mac_fresh (i:id{prf i}) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:PRF.domain_mac i)
-		  (h0:mem) (mac_returned:CMA.state (i,x.iv)) (h1:mem) =
- let r = itable i t in
- let t0 = HS.sel h0 r in
- let t1 = HS.sel h1 r in
- match find_mac t1 x with 
- | Some mac_found -> 
-   mac_returned == mac_found /\                              //returned what is now in the table
-   t1 == SeqProperties.snoc t0 (PRF.Entry x mac_returned) /\ //precisely extended the table with 1 new entry
-   CMA.genPost (i,x.iv) t.mac_rgn h0 mac_returned h1 /\      //the mac is freshly generated
-   HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\   //we only touched the prf's region (and its children)
-   HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\             //within the prf region, only modified the table
-   HS.modifies_ref t.mac_rgn TSet.empty h0 h1               //within the mac region, we didn't touch any existing ref
- | None -> False //we definitely allocated a new mac, so we should find it
-
-let prf_mac_ensures (i:id) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:PRF.domain_mac i)
-		    (h0:mem) (mac_returned:CMA.state (i,x.iv)) (h1:mem) = 
-    if prf i then
-      let r = itable i t in
-      let t0 = HS.sel h0 r in
-      let t1 = HS.sel h1 r in
-      (forall (y:domain i). y <> x ==> PRF.find t0 y == PRF.find t1 y)  /\ //at most modifies t at x
-      (match find_mac t0 x with // already in the table? 
-       | Some mac_found -> 
-         prf_mac_found i t k_0 x h0 mac_returned h1 mac_found
-       | None ->
-         prf_mac_fresh i t k_0 x h0 mac_returned h1)
-    else 
-      CMA.genPost (i,x.iv) t.mac_rgn h0 mac_returned h1 /\
-      HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\ //allocates in t.rgn
-      HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
-      HS.modifies_ref t.mac_rgn TSet.empty h0 h1
-
-val prf_mac_wrapper: 
-  i:id -> t:PRF.state i -> k_0: CMA.akey t.mac_rgn i -> x:PRF.domain_mac i -> ST (CMA.state (i,x.iv))
-  (requires (fun h0 -> True))
-  (ensures (fun h0 mac h1 -> prf_mac_ensures i t k_0 x h0 mac h1))
-let prf_mac_wrapper i t k_0 x = 
-  assume false;  //NS: this goes away once prf_mac is restored
-  PRF.prf_mac i t k_0 x
 ////////////////////////////////////////////////////////////////////////////////
 //end prf_mac
 ////////////////////////////////////////////////////////////////////////////////
