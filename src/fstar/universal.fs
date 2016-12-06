@@ -128,7 +128,8 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
           pop_context (dsenv, env) msg;
           Options.pop() in
 
-    let push (dsenv, env) msg = 
+    let push (dsenv, env) lax msg =
+          let env = { env with lax = lax } in
           let res = push_context (dsenv, env) msg in
           Options.push();
           res in

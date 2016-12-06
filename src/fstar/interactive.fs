@@ -27,7 +27,7 @@ open FStar.Ident
 (******************************************************************************************)
 type interactive_tc<'env,'modul> = {
     pop:         'env -> string -> unit;
-    push:        'env -> string -> 'env;
+    push:        'env -> bool -> string -> 'env;
     mark:        'env -> 'env;
     reset_mark:  'env -> 'env;
     commit_mark: 'env -> 'env;
@@ -39,7 +39,7 @@ type interactive_tc<'env,'modul> = {
 (* Internal data structures for managing chunks of input from the editor                *)
 (****************************************************************************************)
 type input_chunks =
-  | Push of (int * int)
+  | Push of (bool * int * int) //the bool flag indicates lax flag set from the editor
   | Pop  of string
   | Code of string * (string * string)
 
@@ -106,16 +106,20 @@ let rec read_chunk () =
     Util.clear_string_builder s.chunk; Code (str, responses)
     end
   else if Util.starts_with l "#pop" then (Util.clear_string_builder s.chunk; Pop l)
-  else if Util.starts_with l "#push" then (Util.clear_string_builder s.chunk; 
+  else if Util.starts_with l "#push" then (Util.clear_string_builder s.chunk;
         let lc = Util.substring_from l (String.length "#push") in
-        let lc = Util.trim_string lc in
+        (* AR: commenting out the code that checks and sets lcs, emacs editor currently sends only #push or #push lax *)
+        let lax = Util.trim_string lc = "#lax" in
+        let lc = if lax then true, 1, 0 else false, 1, 0 in
+        Push lc)
+        (*let lc = Util.trim_string lc in
         let lcs = Util.split lc " " in
         let lc = match lcs with 
                  | [l; c] -> Util.int_of_string l, Util.int_of_string c
                  | _ ->
 //                  Util.print1 "Got lcs=[%s]" (String.concat "; " lcs);
                   1, 0 in
-        Push lc)
+        Push lc)*)
   else if l = "#finish" then exit 0
   else
     (Util.string_builder_append s.chunk line;
@@ -213,11 +217,11 @@ let interactive_mode filename (env:'env) (initial_mod:'modul) (tc:interactive_tc
           in
           go line_col stack curmod env
 
-      | Push lc ->
+      | Push (lax, l, c) ->
           let stack = (env, curmod)::stack in
-          let env = tc.push env "#push" in
+          let env = tc.push env lax "#push" in
 //          Util.print2 "Got push (%s, %s)" (Util.string_of_int <| fst lc) (Util.string_of_int <| snd lc);
-          go lc stack curmod env
+          go (l, c) stack curmod env
 
       | Code (text, (ok, fail)) ->
           let fail curmod env_mark =

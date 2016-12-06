@@ -140,7 +140,8 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
           env.solver.refresh();
           Options.pop() in
 
-    let push (dsenv, env) msg = 
+    let push (dsenv, env) lax msg =
+          //Warning: ignoring the lax flag, stratified should go away 
           let dsenv = DsEnv.push dsenv in
           let env = TcEnv.push env msg in
           Options.push();
