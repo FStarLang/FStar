@@ -1,4 +1,4 @@
-.section .text
+.text
 .global KeyExpansionStdcall
 KeyExpansionStdcall:
   movdqu 0 (%rcx), %xmm1

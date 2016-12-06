@@ -21,6 +21,7 @@ import:
 	@if [ x"$(SPARTAN_HOME)" = x ]; then echo "SPARTAN_HOME not defined"; exit 1; fi
 	cp $(SPARTAN_HOME)/obj/aes-gcc.S aes-x86_64.S
 	cp $(SPARTAN_HOME)/obj/sha256-gcc.S sha256-x86_64.S
+	sed -i 's/.section .text/.text/' *.S
 
 clean:
 	rm -f *.o *~

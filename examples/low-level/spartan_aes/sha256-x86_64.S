@@ -1,4 +1,4 @@
-.section .text
+.text
 .global sha256_main_i_SHA256_Compute64Steps
 sha256_main_i_SHA256_Compute64Steps:
   mov %rdx, %r9
