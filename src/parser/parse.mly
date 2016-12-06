@@ -134,6 +134,7 @@ let compile_op arity s =
 %token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
 %token OPEN REC MUTABLE THEN TRUE L_TRUE TRY TYPE EFFECT VAL
+%token INCLUDE
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
@@ -223,6 +224,8 @@ decl:
 decl2:
   | OPEN uid=quident
       { Open uid }
+  | INCLUDE uid=quident
+      { Include uid }
   | MODULE uid1=uident EQUALS uid2=quident
       {  ModuleAbbrev(uid1, uid2) }
   | MODULE uid=quident

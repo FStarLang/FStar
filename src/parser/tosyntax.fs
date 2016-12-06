@@ -1641,6 +1641,10 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let env = Env.push_namespace env lid in
     env, []
 
+  | Include lid ->
+    let env = Env.push_include env lid in
+    env, []
+
   | ModuleAbbrev(x, l) ->
     Env.push_module_abbrev env x l, []
 

@@ -302,6 +302,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     List.iter (fun x -> collect_decl x.d) decls
 
   and collect_decl = function
+    | Include lid
     | Open lid ->
         record_open false lid
     | ModuleAbbrev (ident, lid) ->

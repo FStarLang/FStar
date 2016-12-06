@@ -58,6 +58,7 @@
     Hashtbl.add keywords "if"            IF          ;
     Hashtbl.add keywords "kind"          KIND        ;
     Hashtbl.add keywords "in"            IN          ;
+    Hashtbl.add keywords "include"       INCLUDE     ;
     Hashtbl.add keywords "inline"        INLINE      ;
     Hashtbl.add keywords "inline_for_extraction"        INLINE_FOR_EXTRACTION      ;
     Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;

@@ -147,6 +147,7 @@ let compile_op arity s =
 %token IFF
 %token IMPLIES
 %token IN
+%token INCLUDE
 %token INLINE
 %token INLINE_FOR_EXTRACTION
 %token <string * bool> INT
@@ -722,6 +723,9 @@ decl2:
   OPEN quident
     {let (_1, uid) = ((), $2) in
       ( Open uid )}
+| INCLUDE quident
+    {let (_1, uid) = ((), $2) in
+      ( Include uid )}
 | MODULE uident EQUALS quident
     {let (_1, uid1, _3, uid2) = ((), $2, (), $4) in
       (  ModuleAbbrev(uid1, uid2) )}

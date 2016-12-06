@@ -57,11 +57,33 @@ type scope_mod =
 | Top_level_def            of ident           (* top-level definition for an unqualified identifier x to be resolved as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
+type string_set = set<string>
+
+type exported_id_kind = (* kinds of identifiers exported by a module *)
+| Exported_id_term_type (* term and type identifiers *)
+| Exported_id_field     (* field identifiers *)
+type exported_id_set = exported_id_kind -> ref<string_set>
+
 type env = {
   curmodule:            option<lident>;                   (* name of the module being desugared *)
   curmonad:             option<ident>;                    (* current monad being desugared *)
   modules:              list<(lident * modul)>;           (* previously desugared modules *)
   scope_mods:           list<scope_mod>;                  (* toplevel or definition-local scope modifiers *)
+  exported_ids:         Util.smap<exported_id_set>;       (* identifiers (stored as strings for efficiency)
+                                                             reachable in a module, not shadowed by "include"
+                                                             declarations. Used only to handle such shadowings,
+                                                             not "private"/"abstract" definitions which it is
+                                                             enough to just remove from the sigmap. Formally,
+                                                             iden is in exported_ids[ModulA] if, and only if,
+                                                             there is no 'include ModulB' (with ModulB.iden
+                                                             defined or reachable) after iden in ModulA.
+                                                           *)
+  trans_exported_ids:   Util.smap<exported_id_set>;       (* transitive version of exported_ids along the
+                                                             "include" relation: an identifier is in this set
+                                                             for a module if and only if it is defined either
+                                                             in this module or in one of its included modules.
+                                                           *)
+  includes:             Util.smap<(ref<(list<lident>)>)>; (* list of "includes" declarations for each module. *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
   sigmap:               Util.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
   default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
@@ -75,6 +97,8 @@ type foundname =
   | Eff_name  of sigelt * lident
 
 // VALS_HACK_HERE
+
+let all_exported_id_kinds: list<exported_id_kind> = [ Exported_id_field; Exported_id_term_type ]
 
 let open_modules e = e.modules
 let current_module env = match env.curmodule with
@@ -90,6 +114,9 @@ let empty_env () = {curmodule=None;
                     curmonad=None;
                     modules=[];
                     scope_mods=[];
+                    exported_ids=new_sigmap();
+                    trans_exported_ids=new_sigmap();
+                    includes=new_sigmap();
                     sigaccum=[];
                     sigmap=new_sigmap();
                     default_result_effect=Const.effect_Tot_lid;
@@ -159,9 +186,61 @@ let find_in_record ns id record cont =
       | Some r -> cont r
       | None -> Cont_ignore
 
+let get_exported_id_set (e: env) (mname: string) : option<(exported_id_kind -> ref<string_set>)> =
+    Util.smap_try_find e.exported_ids mname
+
+let get_trans_exported_id_set (e: env) (mname: string) : option<(exported_id_kind -> ref<string_set>)> =
+    Util.smap_try_find e.trans_exported_ids mname
+
+let string_of_exported_id_kind = function
+    | Exported_id_field -> "field"
+    | Exported_id_term_type -> "term/type"
+
+let find_in_module_with_includes
+    (eikind: exported_id_kind)
+    (find_in_module: lident -> cont_t<'a>)
+    (find_in_module_default: cont_t<'a>)
+    env
+    (ns: lident)
+    (id: ident)
+    : cont_t<'a> =
+  let idstr = id.idText in
+  let rec aux = function
+  | [] ->
+    find_in_module_default
+  | modul :: q ->
+    let mname = modul.str in
+    let not_shadowed = match get_exported_id_set env mname with
+    | None -> true
+    | Some mex ->
+      let mexports = !(mex eikind) in
+      Util.set_mem idstr mexports
+    in
+    let mincludes = match Util.smap_try_find env.includes mname with
+    | None -> []
+    | Some minc -> !minc
+    in
+    let look_into =
+     if not_shadowed
+     then find_in_module (qual modul id)
+     else Cont_ignore
+    in
+    begin match look_into with
+    | Cont_ignore ->
+      aux (mincludes @ q)
+    | _ ->
+      look_into
+    end
+  in aux [ ns ]
+
+let is_exported_id_field = function
+  | Exported_id_field -> true
+  | _ -> false
+
 let try_lookup_id''
   env
   (id: ident)
+  (eikind: exported_id_kind)
   (k_local_binding: local_binding -> cont_t<'a>)
   (k_rec_binding:   rec_binding   -> cont_t<'a>)
   (k_record: (record_or_dc * fieldname) -> cont_t<'a>)
@@ -185,8 +264,7 @@ let try_lookup_id''
         k_rec_binding r
 
       | Open_module_or_namespace (ns, _) ->
-        let lid = qual ns id in
-        find_in_module lid
+        find_in_module_with_includes eikind find_in_module Cont_ignore env ns id
 
       | Top_level_def id'
         when id'.idText = id.idText ->
@@ -197,8 +275,13 @@ let try_lookup_id''
         [let] not defined yet, so we must not fail, but ignore. *)
         lookup_default_id Cont_ignore id
 
-      | Record_or_dc r ->
-        find_in_record curmod_ns id r k_record
+      | Record_or_dc r
+        when (is_exported_id_field eikind) ->
+        find_in_module_with_includes Exported_id_field (
+            fun lid ->
+            let id = lid.ident in
+            find_in_record lid.ns id r k_record
+        ) Cont_ignore env (lid_of_ids curmod_ns) id
 
       | _ ->
         Cont_ignore
@@ -224,7 +307,7 @@ let try_lookup_id env (id:ident) =
   match unmangleOpName id with
   | Some f -> Some f
   | _ ->
-    try_lookup_id'' env id (fun r -> Cont_ok (found_local_binding r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
+    try_lookup_id'' env id Exported_id_term_type (fun r -> Cont_ok (found_local_binding r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
 
 (* Unqualified identifier lookup, if lookup in all open namespaces failed. *)
 
@@ -285,10 +368,11 @@ let resolve_module_name env lid (honor_ns: bool) : option<lident> =
 let resolve_in_open_namespaces''
   env
   lid
+  (eikind: exported_id_kind)
   (k_local_binding: local_binding -> cont_t<'a>)
   (k_rec_binding:   rec_binding   -> cont_t<'a>)
   (k_record: (record_or_dc * fieldname) -> cont_t<'a>)
-  (f_module: cont_t<'a> -> lident -> cont_t<'a>)
+  (f_module: lident -> cont_t<'a>)
   (l_default: cont_t<'a> -> ident -> cont_t<'a>)
   : option<'a> =
   match lid.ns with
@@ -296,11 +380,10 @@ let resolve_in_open_namespaces''
     begin match resolve_module_name env (set_lid_range (lid_of_ids lid.ns) (range_of_lid lid)) true with
     | None -> None
     | Some modul ->
-        let lid' = qual modul lid.ident in
-        option_of_cont (fun _ -> None) (f_module Cont_fail lid')
+        option_of_cont (fun _ -> None) (find_in_module_with_includes eikind f_module Cont_fail env modul lid.ident)
     end
   | [] ->
-    try_lookup_id'' env lid.ident k_local_binding k_rec_binding k_record (f_module Cont_ignore) l_default
+    try_lookup_id'' env lid.ident eikind k_local_binding k_rec_binding k_record f_module l_default
 
 let cont_of_option (k_none: cont_t<'a>) = function
     | Some v -> Cont_ok v
@@ -314,9 +397,9 @@ let resolve_in_open_namespaces'
   (k_global_def: lident -> (sigelt * bool) -> option<'a>)
   : option<'a> =
   let k_global_def' k lid def = cont_of_option k (k_global_def lid def) in
-  let f_module k lid' = find_in_module env lid' (k_global_def' k) k in
+  let f_module lid' = let k = Cont_ignore in find_in_module env lid' (k_global_def' k) k in
   let l_default k i = lookup_default_id env i (k_global_def' k) k in
-  resolve_in_open_namespaces'' env lid (fun l -> cont_of_option Cont_fail (k_local_binding l)) (fun r -> cont_of_option Cont_fail (k_rec_binding r)) (fun _ -> Cont_ignore) f_module l_default
+  resolve_in_open_namespaces'' env lid Exported_id_term_type (fun l -> cont_of_option Cont_fail (k_local_binding l)) (fun r -> cont_of_option Cont_fail (k_rec_binding r)) (fun _ -> Cont_ignore) f_module l_default
 
 let fv_qual_of_se = function
     | Sig_datacon(_, _, _, l, _, quals, _, _) ->
@@ -515,12 +598,17 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = function
         begin match must <| find_dc dc with
             | Sig_datacon(constrname, _, t, _, _, _, _, _) ->
                 let formals, _ = U.arrow_formals t in
-                let is_rec = is_rec tags in 
-                let fields = formals |> List.collect (fun (x,q) ->
+                let is_rec = is_rec tags in
+                let formals' = formals |> List.collect (fun (x,q) ->
                         if S.is_null_bv x
                         || (is_rec && S.is_implicit q)
                         then []
-                        else [(mk_field_projector_name_from_ident constrname (if is_rec then Util.unmangle_field_name x.ppname else x.ppname), x.sort)]) in
+                        else [(x,q)] )
+                in
+                let fields' = formals' |> List.map (fun (x,q) -> ((if is_rec then Util.unmangle_field_name x.ppname else x.ppname), x.sort))
+                in
+                let fields = fields' |> List.map (fun (xid,xsort) -> mk_field_projector_name_from_ident constrname xid, xsort)
+                in
                 let record = {typename=typename;
                               constrname=constrname;
                               parms=parms;
@@ -530,6 +618,22 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = function
                 top-level definitions, to allow shadowing field names
                 that were reachable through previous "open"s. *)
                 let () = new_globs := Record_or_dc record :: !new_globs in
+                (* the field names are added into the set of exported fields for "include" *)
+                let () =
+                  let add_field (id, _) =
+                    let modul = (lid_of_ids constrname.ns).str in
+                    match get_exported_id_set e modul with
+                    | Some my_ex ->
+                      let my_exported_ids = my_ex Exported_id_field in
+                      let () = my_exported_ids := Util.set_add id.idText !my_exported_ids in
+                      (* also add the projector name *)
+                      let projname = (mk_field_projector_name_from_ident constrname id).ident.idText in
+                      let () = my_exported_ids := Util.set_add projname !my_exported_ids in
+                      ()
+                    | None -> () (* current module was not prepared? should not happen *)
+                  in
+                  List.iter add_field fields'
+                in
                 insert_record_cache record
             | _ -> ()
         end
@@ -545,7 +649,7 @@ let try_lookup_record_or_dc_by_field_name env (fieldname:lident) =
     Util.find_map (peek_record_cache()) (fun record ->
       option_of_cont (fun _ -> None) (find_in_record ns id record (fun r -> Cont_ok r))
     ) in
-  resolve_in_open_namespaces'' env fieldname (fun _ -> Cont_ignore) (fun _ -> Cont_ignore) (fun r -> Cont_ok r)  (fun k fn -> cont_of_option k (find_in_cache fn)) (fun k _ -> k)
+  resolve_in_open_namespaces'' env fieldname Exported_id_field (fun _ -> Cont_ignore) (fun _ -> Cont_ignore) (fun r -> Cont_ok r)  (fun fn -> cont_of_option Cont_ignore (find_in_cache fn)) (fun k _ -> k)
 
 let try_lookup_record_by_field_name env (fieldname:lident) =
     match try_lookup_record_or_dc_by_field_name env fieldname with 
@@ -566,11 +670,28 @@ let qualify_field_to_record env (recd:record_or_dc) (f:lident) =
       if lid_equals fname f
       then Some(fname)
       else None) in
-  resolve_in_open_namespaces'' env f (fun _ -> Cont_ignore) (fun _ -> Cont_ignore) (fun r -> Cont_ok (snd r)) (fun k fn -> cont_of_option k (qualify fn)) (fun k _ -> k)
+  resolve_in_open_namespaces'' env f Exported_id_field (fun _ -> Cont_ignore) (fun _ -> Cont_ignore) (fun r -> Cont_ok (snd r)) (fun  fn -> cont_of_option Cont_ignore (qualify fn)) (fun k _ -> k)
+
+let string_set_ref_new () = Util.mk_ref (Util.new_set Util.compare Util.hashcode)
+let exported_id_set_new () =
+    let term_type_set = string_set_ref_new () in
+    let field_set = string_set_ref_new () in
+    function
+    | Exported_id_term_type -> term_type_set
+    | Exported_id_field -> field_set
+
+let empty_include_smap : Util.smap<(ref<(list<lident>)>)> = new_sigmap()
+let empty_exported_id_smap : Util.smap<exported_id_set> = new_sigmap()
 
 let unique any_val exclude_if env lid =
-  let this_env = {env with scope_mods=[]} in
-  match try_lookup_lid' any_val exclude_if env lid with
+  (* Disable name resolution altogether, thus lid is assumed to be fully qualified *)
+  let filter_scope_mods = function
+    | Rec_binding _
+        -> true
+    | _ -> false
+  in
+  let this_env = {env with scope_mods = List.filter filter_scope_mods env.scope_mods; exported_ids=empty_exported_id_smap; includes=empty_include_smap } in
+  match try_lookup_lid' any_val exclude_if this_env lid with
     | None -> true
     | Some _ -> false
 
@@ -625,6 +746,15 @@ let push_sigelt env s =
       declarations, to allow shadowing of definitions that were
       formerly reachable by previous "open"s. *)
       let () = globals := Top_level_def lid.ident :: !globals in
+      (* the identifier is added into the list of global identifiers
+         of the corresponding module to shadow any "include" *)
+      let modul = (lid_of_ids lid.ns).str in
+      let () = match get_exported_id_set env modul with
+      | Some f ->
+        let my_exported_ids = f Exported_id_term_type in
+        my_exported_ids := Util.set_add lid.ident.idText !my_exported_ids
+      | None -> () (* current module was not prepared? should not happen *)
+      in
       Util.smap_add (sigmap env) lid.str (se, env.iface && not env.admitted_iface)));
   let env = {env with scope_mods = !globals } in
   env
@@ -642,6 +772,44 @@ let push_namespace env ns =
      (ns', Open_module)
   in
      push_scope_mod env (Open_module_or_namespace (ns', kd))
+
+let push_include env ns =
+    (* similarly to push_namespace in the case of modules, we allow
+       module abbrevs, but not namespace resolution *)
+    match resolve_module_name env ns false with
+    | Some ns ->
+      (* from within the current module, include is equivalent to open *)
+      let env = push_scope_mod env (Open_module_or_namespace (ns, Open_module)) in
+      (* update the list of includes *)
+      let curmod = (current_module env).str in
+      let () = match Util.smap_try_find env.includes curmod with
+      | None -> ()
+      | Some incl -> incl := ns :: !incl
+      in
+      (* the names of the included module and its transitively
+         included modules shadow the names of the current module *)
+      begin match get_trans_exported_id_set env ns.str with
+      | Some ns_trans_exports ->
+        let () = match (get_exported_id_set env curmod, get_trans_exported_id_set env curmod) with
+        | (Some cur_exports, Some cur_trans_exports) ->
+          let update_exports (k: exported_id_kind) =
+            let ns_ex = ! (ns_trans_exports k) in
+            let ex = cur_exports k in
+            let () = ex := Util.set_difference (!ex) ns_ex in
+            let trans_ex = cur_trans_exports k in
+            let () = trans_ex := Util.set_union (!ex) ns_ex in
+            ()
+          in
+          List.iter update_exports all_exported_id_kinds
+        | _ -> () (* current module was not prepared? should not happen *)
+        in
+        env
+      | None ->
+        (* module to be included was not prepared, so forbid the 'include'. It may be the case for modules such as FStar.ST, etc. *)
+        raise (Error (Util.format1 "include: Module %s was not prepared" ns.str, Ident.range_of_lid ns))
+      end
+    | _ ->
+      raise (Error (Util.format1 "include: Module %s cannot be found" ns.str, Ident.range_of_lid ns))
 
 let push_module_abbrev env x l =
   (* both namespace resolution and module abbrevs disabled:
@@ -688,6 +856,19 @@ let finish env modul =
            Util.smap_add (sigmap env) lid.str (decl, false))
 
     | _ -> ());
+  (* update the sets of transitively exported names of this module by
+     adding the unshadowed names defined only in the current module. *)
+  let curmod = (current_module env).str in
+  let () = match (get_exported_id_set env curmod, get_trans_exported_id_set env curmod) with
+    | (Some cur_ex, Some cur_trans_ex) ->
+      let update_exports eikind =
+        let cur_ex_set = ! (cur_ex eikind) in
+        let cur_trans_ex_set_ref = cur_trans_ex eikind in
+        cur_trans_ex_set_ref := Util.set_union cur_ex_set (!cur_trans_ex_set_ref)
+       in
+       List.iter update_exports all_exported_id_kinds
+    | _ -> ()
+  in
   {env with
     curmodule=None;
     modules=(modul.name, modul)::env.modules;
@@ -776,6 +957,12 @@ let prepare_module_or_interface intf admitted env mname =
       then let ns = Ident.lid_of_ids mname.ns in
            ns::open_ns //the namespace of the current module, if any, is implicitly in scope
       else open_ns in
+    (* Create new empty set of exported identifiers for the current module, for 'include' *)
+    let () = Util.smap_add env.exported_ids mname.str (exported_id_set_new ()) in
+    (* Create new empty set of transitively exported identifiers for the current module, for 'include' *)
+    let () = Util.smap_add env.trans_exported_ids mname.str (exported_id_set_new ()) in
+    (* Create new empty list of includes for the current module *)
+    let () = Util.smap_add env.includes mname.str (Util.mk_ref []) in
     {
       env with curmodule=Some mname;
       sigmap=env.sigmap;

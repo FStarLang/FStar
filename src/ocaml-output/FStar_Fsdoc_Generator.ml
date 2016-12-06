@@ -123,16 +123,19 @@ end
 | FStar_Parser_AST.Open (l) -> begin
 (Prims.strcat "open " l.FStar_Ident.str)
 end
+| FStar_Parser_AST.Include (l) -> begin
+(Prims.strcat "include " l.FStar_Ident.str)
+end
 | FStar_Parser_AST.ModuleAbbrev (i, l) -> begin
 (Prims.strcat "module " (Prims.strcat i.FStar_Ident.idText (Prims.strcat " = " l.FStar_Ident.str)))
 end
-| FStar_Parser_AST.KindAbbrev (i, _82_71, _82_73) -> begin
+| FStar_Parser_AST.KindAbbrev (i, _82_73, _82_75) -> begin
 (Prims.strcat "kind " i.FStar_Ident.idText)
 end
-| FStar_Parser_AST.TopLevelLet (_82_77, _82_79, pats) -> begin
+| FStar_Parser_AST.TopLevelLet (_82_79, _82_81, pats) -> begin
 (
 
-let termty = (FStar_List.map (fun _82_85 -> (match (_82_85) with
+let termty = (FStar_List.map (fun _82_87 -> (match (_82_87) with
 | (p, t) -> begin
 (let _177_70 = (FStar_Parser_AST.pat_to_string p)
 in (let _177_69 = (FStar_Parser_AST.term_to_string t)
@@ -140,23 +143,23 @@ in ((_177_70), (_177_69))))
 end)) pats)
 in (
 
-let termty' = (FStar_List.map (fun _82_89 -> (match (_82_89) with
+let termty' = (FStar_List.map (fun _82_91 -> (match (_82_91) with
 | (p, t) -> begin
 (Prims.strcat p (Prims.strcat ":" t))
 end)) termty)
 in (Prims.strcat "let " (FStar_String.concat ", " termty'))))
 end
-| FStar_Parser_AST.Main (_82_92) -> begin
+| FStar_Parser_AST.Main (_82_94) -> begin
 "main ..."
 end
-| FStar_Parser_AST.Assume (_82_95, i, t) -> begin
+| FStar_Parser_AST.Assume (_82_97, i, t) -> begin
 (let _177_74 = (let _177_73 = (let _177_72 = (FStar_Parser_AST.term_to_string t)
 in (Prims.strcat ":" _177_72))
 in (Prims.strcat i.FStar_Ident.idText _177_73))
 in (Prims.strcat "assume " _177_74))
 end
-| FStar_Parser_AST.Tycon (_82_101, tys) -> begin
-(let _177_80 = (let _177_79 = (FStar_All.pipe_right tys (FStar_List.map (fun _82_107 -> (match (_82_107) with
+| FStar_Parser_AST.Tycon (_82_103, tys) -> begin
+(let _177_80 = (let _177_79 = (FStar_All.pipe_right tys (FStar_List.map (fun _82_109 -> (match (_82_109) with
 | (t, d) -> begin
 (let _177_78 = (string_of_tycon t)
 in (let _177_77 = (let _177_76 = (string_of_fsdoco d)
@@ -166,13 +169,13 @@ end))))
 in (FStar_All.pipe_right _177_79 (FStar_String.concat " and ")))
 in (Prims.strcat "type " _177_80))
 end
-| FStar_Parser_AST.Val (_82_109, i, t) -> begin
+| FStar_Parser_AST.Val (_82_111, i, t) -> begin
 (let _177_83 = (let _177_82 = (let _177_81 = (FStar_Parser_AST.term_to_string t)
 in (Prims.strcat ":" _177_81))
 in (Prims.strcat i.FStar_Ident.idText _177_82))
 in (Prims.strcat "val " _177_83))
 end
-| FStar_Parser_AST.Exception (i, _82_116) -> begin
+| FStar_Parser_AST.Exception (i, _82_118) -> begin
 (Prims.strcat "exception " i.FStar_Ident.idText)
 end
 | (FStar_Parser_AST.NewEffect (_, FStar_Parser_AST.DefineEffect (i, _, _, _, _))) | (FStar_Parser_AST.NewEffect (_, FStar_Parser_AST.RedefineEffect (i, _, _))) -> begin
@@ -181,13 +184,13 @@ end
 | (FStar_Parser_AST.NewEffectForFree (_, FStar_Parser_AST.DefineEffect (i, _, _, _, _))) | (FStar_Parser_AST.NewEffectForFree (_, FStar_Parser_AST.RedefineEffect (i, _, _))) -> begin
 (Prims.strcat "new_effect_for_free " i.FStar_Ident.idText)
 end
-| FStar_Parser_AST.SubEffect (_82_170) -> begin
+| FStar_Parser_AST.SubEffect (_82_172) -> begin
 "sub_effect"
 end
-| FStar_Parser_AST.Pragma (_82_173) -> begin
+| FStar_Parser_AST.Pragma (_82_175) -> begin
 "pragma"
 end
-| FStar_Parser_AST.Fsdoc (comm, _82_177) -> begin
+| FStar_Parser_AST.Fsdoc (comm, _82_179) -> begin
 comm
 end))
 
@@ -200,35 +203,35 @@ let tyconvars_documented = (fun tycon -> (match (tycon) with
 | (FStar_Parser_AST.TyconAbstract (_)) | (FStar_Parser_AST.TyconAbbrev (_)) -> begin
 false
 end
-| FStar_Parser_AST.TyconRecord (_82_192, _82_194, _82_196, fields) -> begin
-(FStar_List.existsb (fun _82_203 -> (match (_82_203) with
+| FStar_Parser_AST.TyconRecord (_82_194, _82_196, _82_198, fields) -> begin
+(FStar_List.existsb (fun _82_205 -> (match (_82_205) with
 | (_id, _t, doco) -> begin
 (FStar_Util.is_some doco)
 end)) fields)
 end
-| FStar_Parser_AST.TyconVariant (_82_205, _82_207, _82_209, vars) -> begin
-(FStar_List.existsb (fun _82_217 -> (match (_82_217) with
+| FStar_Parser_AST.TyconVariant (_82_207, _82_209, _82_211, vars) -> begin
+(FStar_List.existsb (fun _82_219 -> (match (_82_219) with
 | (_id, _t, doco, _u) -> begin
 (FStar_Util.is_some doco)
 end)) vars)
 end))
-in (FStar_List.existsb (fun _82_220 -> (match (_82_220) with
+in (FStar_List.existsb (fun _82_222 -> (match (_82_222) with
 | (tycon, doco) -> begin
 ((tyconvars_documented tycon) || (FStar_Util.is_some doco))
 end)) tt)))
 in (match (d.FStar_Parser_AST.doc) with
-| Some (_82_222) -> begin
+| Some (_82_224) -> begin
 true
 end
-| _82_225 -> begin
+| _82_227 -> begin
 (match (d.FStar_Parser_AST.d) with
-| FStar_Parser_AST.Fsdoc (_82_227) -> begin
+| FStar_Parser_AST.Fsdoc (_82_229) -> begin
 true
 end
-| FStar_Parser_AST.Tycon (_82_230, ty) -> begin
+| FStar_Parser_AST.Tycon (_82_232, ty) -> begin
 (tycon_documented ty)
 end
-| _82_235 -> begin
+| _82_237 -> begin
 false
 end)
 end)))
@@ -237,21 +240,21 @@ end)))
 let document_decl : (Prims.string  ->  Prims.unit)  ->  FStar_Parser_AST.decl  ->  Prims.unit = (fun w d -> if (decl_documented d) then begin
 (
 
-let _82_242 = d
-in (match (_82_242) with
-| {FStar_Parser_AST.d = decl; FStar_Parser_AST.drange = _82_240; FStar_Parser_AST.doc = fsdoc} -> begin
+let _82_244 = d
+in (match (_82_244) with
+| {FStar_Parser_AST.d = decl; FStar_Parser_AST.drange = _82_242; FStar_Parser_AST.doc = fsdoc} -> begin
 (
 
-let _82_243 = (let _177_103 = (let _177_102 = (string_of_decl' d.FStar_Parser_AST.d)
+let _82_245 = (let _177_103 = (let _177_102 = (string_of_decl' d.FStar_Parser_AST.d)
 in (code_wrap _177_102))
 in (w _177_103))
 in (
 
-let _82_251 = (match (fsdoc) with
+let _82_253 = (match (fsdoc) with
 | Some (doc, _kw) -> begin
 (w (Prims.strcat "\n" doc))
 end
-| _82_250 -> begin
+| _82_252 -> begin
 ()
 end)
 in (w "")))
@@ -262,17 +265,17 @@ end)
 
 
 let document_toplevel = (fun name topdecl -> (match (topdecl.FStar_Parser_AST.d) with
-| FStar_Parser_AST.TopLevelModule (_82_256) -> begin
+| FStar_Parser_AST.TopLevelModule (_82_258) -> begin
 (match (topdecl.FStar_Parser_AST.doc) with
 | Some (doc, kw) -> begin
-(match ((FStar_List.tryFind (fun _82_264 -> (match (_82_264) with
+(match ((FStar_List.tryFind (fun _82_266 -> (match (_82_266) with
 | (k, v) -> begin
 (k = "summary")
 end)) kw)) with
 | None -> begin
 ((None), (Some (doc)))
 end
-| Some (_82_267, summary) -> begin
+| Some (_82_269, summary) -> begin
 ((Some (summary)), (Some (doc)))
 end)
 end
@@ -280,21 +283,21 @@ end
 ((None), (None))
 end)
 end
-| _82_273 -> begin
+| _82_275 -> begin
 (Prims.raise (FStar_Syntax_Syntax.Err ("Not a TopLevelModule")))
 end))
 
 
 let document_module : FStar_Parser_AST.modul  ->  FStar_Ident.lid = (fun m -> (
 
-let _82_288 = (match (m) with
+let _82_290 = (match (m) with
 | FStar_Parser_AST.Module (n, d) -> begin
 ((n), (d), ("module"))
 end
-| FStar_Parser_AST.Interface (n, d, _82_282) -> begin
+| FStar_Parser_AST.Interface (n, d, _82_284) -> begin
 ((n), (d), ("interface"))
 end)
-in (match (_82_288) with
+in (match (_82_290) with
 | (name, decls, _mt) -> begin
 (match ((one_toplevel decls)) with
 | Some (top_decl, other_decls) -> begin
@@ -315,8 +318,8 @@ in (
 let no_comment = "fsdoc: no-comment-found"
 in (
 
-let _82_300 = (document_toplevel name top_decl)
-in (match (_82_300) with
+let _82_302 = (document_toplevel name top_decl)
+in (match (_82_302) with
 | (summary, comment) -> begin
 (
 
@@ -338,22 +341,22 @@ no_comment
 end)
 in (
 
-let _82_309 = (let _177_110 = (FStar_Util.format "# module %s" ((name.FStar_Ident.str)::[]))
+let _82_311 = (let _177_110 = (FStar_Util.format "# module %s" ((name.FStar_Ident.str)::[]))
 in (w _177_110))
 in (
 
-let _82_311 = (let _177_111 = (FStar_Util.format "%s\n" ((summary)::[]))
+let _82_313 = (let _177_111 = (FStar_Util.format "%s\n" ((summary)::[]))
 in (w _177_111))
 in (
 
-let _82_313 = (let _177_112 = (FStar_Util.format "%s\n" ((comment)::[]))
+let _82_315 = (let _177_112 = (FStar_Util.format "%s\n" ((comment)::[]))
 in (w _177_112))
 in (
 
-let _82_315 = (FStar_List.iter (document_decl w) other_decls)
+let _82_317 = (FStar_List.iter (document_decl w) other_decls)
 in (
 
-let _82_317 = (FStar_Util.close_file fd)
+let _82_319 = (FStar_Util.close_file fd)
 in name)))))))
 end)))))))
 end
@@ -379,7 +382,7 @@ in (
 let fd = (FStar_Util.open_file_for_writing on)
 in (
 
-let _82_327 = (FStar_List.iter (fun m -> (let _177_119 = (FStar_Util.format "%s\n" ((m.FStar_Ident.str)::[]))
+let _82_329 = (FStar_List.iter (fun m -> (let _177_119 = (FStar_Util.format "%s\n" ((m.FStar_Ident.str)::[]))
 in (FStar_Util.append_to_file fd _177_119))) mods)
 in (FStar_Util.close_file fd)))))))
 

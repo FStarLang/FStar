@@ -1539,6 +1539,9 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     let env = DesugarEnv.push_namespace env lid in
     env, []
 
+  | Include _ ->
+      failwith "include not supported by legacy desugaring"
+
   | ModuleAbbrev(x, l) -> 
     DesugarEnv.push_module_abbrev env x l, []
 
