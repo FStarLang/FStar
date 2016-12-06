@@ -67,45 +67,6 @@ assume //NS: boring, this should be in the buffer library
 val to_seq_temp: #a:Type -> b:Buffer.buffer a -> l:UInt32.t{v l <= Buffer.length b} -> ST (Seq.seq a)
   (requires (fun h -> Buffer.live h b))
   (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h1 b /\ r == Buffer.as_seq h1 b))
-////////////////////////////////////////////////////////////////////////////////
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-//Basic framing for the main predicate of the invariant
-let frame_refines_one_entry (#i:id{safeId i}) (#mac_rgn:region) 
-			    (h:mem) (h':mem) 
-			    (blocks:prf_table mac_rgn i)
-			    (e:aead_entry i) 
-   : Lemma (requires (let open HS in
-		      refines_one_entry blocks e h /\			    
-		      HH.modifies_rref mac_rgn TSet.empty h.h h'.h /\
-		      live_region h' mac_rgn))
-	   (ensures  refines_one_entry blocks e h')
-   = ()
-
-//Framing lemma for unused_aead_iv_for_prf
-let frame_unused_aead_iv_for_prf (#mac_rgn:region) (#i:id) (h0:mem{safeId i}) (h1:mem)
-				 (prf_table:prf_table mac_rgn i)
-				 (iv:Cipher.iv (alg i))
-  : Lemma (requires (let open HS in
-		     unused_aead_iv_for_prf prf_table iv h0        /\
-                     HH.modifies_rref mac_rgn TSet.empty h0.h h1.h /\
-		     live_region h1 mac_rgn))
-	  (ensures  unused_aead_iv_for_prf prf_table iv h1)
-  = ()
-
-let frame_refines (i:id{safeId i}) (mac_rgn:region) 
-		  (blocks:prf_table mac_rgn i)
-		  (entries:aead_entries i)
-		  (h:mem) (h':mem)
-   : Lemma (requires (let open HS in 
-		      refines blocks entries h                     /\
-   		      HH.modifies_rref mac_rgn TSet.empty h.h h'.h /\
-		      HS.live_region h' mac_rgn))
-	   (ensures  refines blocks entries h')
-   = let open FStar.Classical in
-     forall_intro (move_requires (frame_refines_one_entry h h' blocks));
-     forall_intro (move_requires (frame_unused_aead_iv_for_prf h h' blocks))
-
-let u (n:FStar.UInt.uint_t 32) = uint_to_t n
 
 ////////////////////////////////////////////////////////////////////////////////
 // Lemmas related to the invariant and prf_mac
@@ -161,37 +122,6 @@ let inv_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 =
 ////////////////////////////////////////////////////////////////////////////////
 // Lemmas related to the invariant and counter_enxor
 ////////////////////////////////////////////////////////////////////////////////
-let aead_separation (#i:id) (#rw:rw) (st:aead_state i rw)
-		    (#aadlen:nat) (aad: lbuffer aadlen)
-		    (#plainlen:nat) (plain: plainBuffer i plainlen)
-		    (#cipherlen: nat) (cipher:lbuffer cipherlen) =
-    Buffer.disjoint aad cipher /\
-    Buffer.disjoint (Plain.as_buffer plain) aad /\
-    Buffer.disjoint (Plain.as_buffer plain) cipher /\
-    HS.is_eternal_region st.log_region /\
-    HS.is_eternal_region (Buffer.frameOf cipher) /\ // why?
-    HS.is_eternal_region (Buffer.frameOf (Plain.as_buffer plain)) /\ //why?
-    HS.is_eternal_region (Buffer.frameOf aad) /\ //why?
-    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) st.log_region /\
-    HH.disjoint (Buffer.frameOf cipher) st.log_region /\
-    HH.disjoint (Buffer.frameOf aad) st.log_region /\
-    st.log_region <> HH.root /\
-    Buffer.frameOf cipher <> HH.root /\
-    Buffer.frameOf aad <> HH.root /\
-    Buffer.frameOf (Plain.as_buffer plain) <> HH.root
-
-let aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw)
-		  (#aadlen:nat) (aad: lbuffer aadlen)
-		  (#plainlen:nat) (plain: plainBuffer i plainlen)
-		  (#cipherlen: nat) (cipher:lbuffer cipherlen) (h:mem) =
-    let open HS in		  
-    Buffer.live h aad /\
-    Buffer.live h cipher /\
-    Plain.live h plain /\
-    st.log_region `is_in` h.h
-
-
-
 let prf_extended_with_counterblocks (#i:id) (prf:PRF.state i) (x_1:PRF.domain_otp i)
 				    (#len:nat) (plain:plainBuffer i len) (cipher:lbuffer len) 
 				    (h0:mem) (h1:mem) = 

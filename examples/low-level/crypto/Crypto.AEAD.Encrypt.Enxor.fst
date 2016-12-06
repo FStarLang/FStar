@@ -26,13 +26,30 @@ open Crypto.AEAD.Invariant
 module PRF = Crypto.Symmetric.PRF
 module Plain = Crypto.Plain
 module Invariant = Crypto.AEAD.Invariant
+module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module CMA = Crypto.Symmetric.UF1CMA
+module SeqProperties = FStar.SeqProperties
 
-
-let trans_all_above (#rgn:region) (#i:id) (s:Seq.seq (PRF.entry rgn i)) 
-		    (x:PRF.domain i) (y:PRF.domain i{y `above` x})
-    : Lemma (all_above s y ==> all_above s x)
-    = ()
+(*** THE WRITE EFFECT OF COUNTER_ENXOR ***)
+let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
+				      (x:PRF.domain i) (b:lbuffer l)
+				      (h0:HS.mem) (h1:HS.mem) =
+  Buffer.live h1 b /\
+  (if prf i then
+    let r = PRF.itable i t in
+    let rb = Buffer.frameOf b in
+    let rgns = Set.union (Set.singleton #HH.rid t.rgn) (Set.singleton #HH.rid rb) in
+    let contents0 = HS.sel h0 r in
+    let contents1 = HS.sel h1 r in
+    HS.modifies rgns h0 h1 /\
+    HS.modifies_ref t.rgn (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1 /\
+    Buffer.modifies_buf_1 rb b h0 h1 /\
+    Seq.length contents0 <= Seq.length contents1 /\
+    Seq.equal (Seq.slice contents1 0 (Seq.length contents0)) contents0 /\
+    all_above x (Seq.slice contents1 (Seq.length contents0) (Seq.length contents1))
+  else
+    Buffer.modifies_1 b h0 h1)
 
 let refl_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
 			     (x:PRF.domain i{x.ctr <> 0ul}) 
@@ -81,13 +98,6 @@ let x_buffer_1_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i
 	let diff = Seq.slice c1 (Seq.length c0) (Seq.length c1) in
 	FStar.Classical.forall_intro (SeqProperties.contains_elim diff)
       else ()
-
-module CMA = Crypto.Symmetric.UF1CMA
-
-let none_above_if_authId (#i:id) (x:PRF.domain i) (st:PRF.state i) (h:mem) =
-  CMA.authId (i, x.iv) ==>
-    (let prf_table = HS.sel h (itable i st) in
-     none_above x prf_table)
   
 val prf_enxor_leaves_none_strictly_above_x: #i:id -> 
 					   t:PRF.state i ->
@@ -101,8 +111,6 @@ val prf_enxor_leaves_none_strictly_above_x: #i:id ->
 		     modifies_x_buffer_1 t x c h_0 h_1 /\ 
 		     Buffer.frameOf c <> t.rgn)
            (ensures none_above_if_authId (PRF.incr i x) t h_1)
-
-module SeqProperties = FStar.SeqProperties
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
@@ -144,20 +152,7 @@ val counterblocks_snoc: #i:id{safeId i} -> (rgn:region) -> (x:domain i{ctr_0 i <
 							   (PRF.Entry ({x with ctr=UInt32.uint_to_t k}) 
 							              (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last)))))
 	   (decreases (completed_len - v x.ctr))
-
-
-(* TODO: REFACTOR THIS INTO A COMMON LEMMAS *)
-let counterblocks_emp   (i:id)
-			(rgn:region)
-			(x:PRF.domain i{ctr_0 i <^ ctr x })
-			(l:nat)
-			(to_pos:nat{to_pos <= l /\ safelen i 0 (ctr x)})
-			(plain:Plain.plain i l)
-			(cipher:lbytes l)
-   : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
-   = ()
-
-
+#reset-options "--z3rlimit 400 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let rec counterblocks_snoc #i rgn x k len next completed_len plain cipher =
    let open FStar.Mul in
    let from_pos = (v x.ctr - (v (otp_offset i))) * v (PRF.blocklen i) in
@@ -231,9 +226,6 @@ let rec counterblocks_slice #i rgn x len from_pos to_pos plain cipher
 			    (Seq.slice cipher from_pos from_pos'))
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
-
-let u (n:FStar.UInt.uint_t 32) = uint_to_t n //TODO: MOVE ME
-
 val frame_counterblocks_snoc: i:id{safeId i} -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^ x.ctr}) -> k:nat{v x.ctr <= k} ->
 			     len:nat{len <> 0 /\ safelen i len (ctr_0 i +^ 1ul)} -> 
 			     (completed_len:nat{completed_len < len /\
@@ -268,7 +260,6 @@ val frame_counterblocks_snoc: i:id{safeId i} -> (t:PRF.state i) -> (x:domain i{c
 		    let last_entry = PRF.Entry ({x with ctr=UInt32.uint_to_t k})
 	 				       (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last) in
 		    final_blocks == SeqProperties.snoc initial_blocks last_entry))
-(* #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 100" *)
 let frame_counterblocks_snoc i t x k len completed_len plain cipher h0 h1 = 
   let open FStar.Mul in
   let remaining_len = len - completed_len in
@@ -368,18 +359,6 @@ val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^
    = Seq.append init final_blocks                          //by frame_counterblocks_snoc
 *)
 
-//TODO:MOVE ME
-let find_append (#i:id) (#r:rid) (d:domain i) (s1:prf_table r i) (s2:prf_table r i)
-   : Lemma (requires (None? (find s1 d)))
-           (ensures (find (Seq.append s1 s2) d == find s2 d))
-   = SeqProperties.find_append_none s1 s2 (is_entry_domain d)
-
-#set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 2 --max_fuel 2"
-let find_singleton (#rgn:region) (#i:id) (e:PRF.entry rgn i) (x:PRF.domain i) 
-    : Lemma (if is_entry_domain x e then PRF.find (Seq.create 1 e) x == Some e.range
-	     else PRF.find (Seq.create 1 e) x == None)
-    = ()	     
-
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 400"
 let extending_counter_blocks #i t x len completed_len plain cipher h0 h1 h_init
   = if safeId i
@@ -411,63 +390,96 @@ let extending_counter_blocks #i t x len completed_len plain cipher h0 h1 h_init
 	 frame_counterblocks_snoc i t x (v x.ctr) len completed_len plain cipher h0 h1
     end
 
-// COUNTER_MODE LOOP from Chacha20 
-// XOR-based encryption and decryption (just swap ciphertext and plaintext)
-// prf i    ==> writing at most at indexes x and above (same iv, higher ctr) at the end of the PRF table.
-// safeId i ==> appending *exactly* "counterblocks i x l plain cipher" at the end of the PRF table
-//              the proof seems easier without tail recursion.
-val counter_enxor:
-  i:id -> t:PRF.state i -> x:PRF.domain i{PRF.ctr_0 i <^ x.ctr} ->
-  len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)} ->
-  remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len} ->
-  plain:plainBuffer i (v len) ->
-  cipher:lbuffer (v len)
-  { let bp = as_buffer plain in
+(*** THE MAIN FUNCTION PROVIDED:
+     counter_enxor ***)
+let enxor_separation (#i:id) 
+		     (t:PRF.state i)
+		     (#len:u32)
+		     (plain:plainBuffer i (v len))
+		     (cipher:lbuffer (v len)) =
+    let bp = as_buffer plain in
     Buffer.disjoint bp cipher /\
     Buffer.frameOf bp <> (PRF.(t.rgn)) /\
     Buffer.frameOf cipher <> (PRF.(t.rgn))
-  } ->
-  h_init:mem ->
-  // Not Stack, as we modify the heap-based ideal table (and don't know where the buffers are
-  ST unit
-  (requires (fun h ->
-    let initial_domain = {x with ctr=ctr_0 i +^ 1ul} in
-    let completed_len = len -^ remaining_len in
+
+let enxor_liveness (#i:id) 
+		   (t:PRF.state i)
+		   (#len:u32) 
+		   (plain:plainBuffer i (v len))   
+		   (cipher:lbuffer (v len))
+		   (h:mem) =
     Plain.live h plain /\
     Buffer.live h cipher /\
-    (remaining_len <> 0ul ==> FStar.Mul.((v x.ctr - v (otp_offset i)) * v (PRF.blocklen i) = v completed_len)) /\
-    // if ciphertexts are authenticated, then fresh blocks are available
-    none_above_if_authId x t h /\
     (safeId i
       ==> (let r = itable i t in
-           let prf_table = HS.sel h t.table in
-	   h `HS.contains` r /\
+	   h `HS.contains` r))
+
+let enxor_dexor_lengths_ok (#i:id)
+			   (x:PRF.domain i)
+			   (len:u32)
+			   (remaining_len:u32) = 
+    len <> 0ul /\ 
+    remaining_len <=^ len /\
+    (let completed_len = len -^ remaining_len in			   
+     PRF.ctr_0 i <^ x.ctr /\
+     safelen i (v len) (PRF.ctr_0 i +^ 1ul) /\
+     safelen i (v remaining_len) PRF.(x.ctr) /\ 
+     (remaining_len <> 0ul ==> 
+       FStar.Mul.((v x.ctr - v (otp_offset i)) * v (PRF.blocklen i) = v completed_len)))
+
+let enxor_invariant (#i:id) (t:PRF.state i) (x:PRF.domain i)
+		    (len:u32) (remaining_len:u32)
+		    (plain:plainBuffer i (v len))
+		    (cipher:lbuffer (v len))
+		    (h_init:mem) (h:mem) = 
+  enxor_liveness t plain cipher h /\
+  enxor_dexor_lengths_ok x len remaining_len /\
+  (safeId i
+      ==> (let prf_table = HS.sel h (itable i t) in
+           let initial_domain = {x with ctr=ctr_0 i +^ 1ul} in
+           let completed_len = len -^ remaining_len in
 	   Seq.equal prf_table
     		     (Seq.append (HS.sel h_init t.table)
     				 (counterblocks i t.mac_rgn initial_domain
     				      (v len) 0 (v completed_len)
     				      (Plain.sel_plain h len plain)
     				      (Buffer.as_seq h cipher)))))
-    ))
+
+(** counter_enxor: 
+      COUNTER_MODE LOOP from Chacha20 
+      XOR-based encryption and decryption (just swap ciphertext and plaintext)
+      prf i    ==> writing at most at indexes x and above (same iv, higher ctr) at the end of the PRF table.
+      safeId i ==> appending *exactly* "counterblocks i x l plain cipher" at the end of the PRF table
+ **)      
+val counter_enxor:
+  #i:id -> 
+  t:PRF.state i -> 
+  x:PRF.domain i ->
+  len:u32 ->
+  remaining_len:u32 ->
+  plain:plainBuffer i (v len) ->
+  cipher:lbuffer (v len) ->
+  h_init:mem ->
+  // Not Stack, as we modify the heap-based ideal table (and don't know where the buffers are
+  ST unit
+  (requires (fun h ->
+    enxor_separation t plain cipher /\
+    enxor_liveness t plain cipher h /\
+    enxor_dexor_lengths_ok x len remaining_len /\
+    // if ciphertexts are authenticated, then fresh blocks are available
+    none_above_if_authId x t h /\
+    enxor_invariant t x len remaining_len plain cipher h_init h))
   (ensures (fun h0 _ h1 ->
-    let initial_domain = {x with ctr=ctr_0 i +^ 1ul} in
-    Plain.live h1 plain /\
-    Buffer.live h1 cipher /\
+    enxor_liveness t plain cipher h1 /\
+    enxor_dexor_lengths_ok x len remaining_len /\
     // in all cases, we extend the table only at x and its successors.
     modifies_table_above_x_and_buffer t x cipher h0 h1 /\
-    (safeId i
-      ==> HS.sel h1 t.table ==
-    	  Seq.append (HS.sel h_init t.table)
-    		     (counterblocks i t.mac_rgn initial_domain
-    				      (v len) 0 (v len)
-    				      (Plain.sel_plain h1 len plain)
-    				      (Buffer.as_seq h1 cipher)))
-    ))
+    enxor_invariant t x len len plain cipher h_init h1))
 #set-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let rec counter_enxor i t x len remaining_len plain cipher h_init =
+let rec counter_enxor #i t x len remaining_len plain cipher h_init =
   let completed_len = len -^ remaining_len in
   let h0 = get () in
-   if safeId i then ST.recall (itable i t);
+  if safeId i then ST.recall (itable i t);
   if remaining_len <> 0ul then
     begin // at least one more block
       let starting_pos = len -^ remaining_len in
@@ -480,7 +492,7 @@ let rec counter_enxor i t x len remaining_len plain cipher h_init =
       prf_enxor_leaves_none_strictly_above_x t x len remaining_len cipher h0 h1;
       extending_counter_blocks t x (v len) (v completed_len) plain cipher h0 h1 h_init;
       let y = PRF.incr i x in
-      counter_enxor i t y len (remaining_len -^ l) plain cipher h_init;
+      counter_enxor t y len (remaining_len -^ l) plain cipher h_init;
       let h2 = get () in
       trans_modifies_table_above_x_and_buffer t x y cipher h0 h1 h2
     end
