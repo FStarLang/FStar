@@ -24,6 +24,7 @@ open FStar.Ident
 open FStar.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
+open FStar.Syntax.Print
 open FStar.Const
 
 (********************************************************************************)
@@ -213,6 +214,12 @@ let comp_to_comp_typ (c:comp) : comp_typ =
        effect_args=[]; 
        flags=comp_flags c}
     | _ -> failwith "Assertion failed: Computation type without universe"
+
+let is_named_tot c =
+    match c.n with
+        | Comp c -> lid_equals c.effect_name Const.effect_Tot_lid
+        | Total _ -> true
+        | GTotal _ -> false
 
 let is_total_comp c =
     comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
@@ -416,7 +423,7 @@ let rec lids_of_sigelt se = match se with
   | Sig_let(_, _, lids, _)
   | Sig_bundle(_, _, lids, _) -> lids
   | Sig_inductive_typ (lid, _, _,  _, _, _, _, _)
-  | Sig_effect_abbrev(lid, _, _, _,  _, _)
+  | Sig_effect_abbrev(lid, _, _, _,  _, _, _)
   | Sig_datacon (lid, _, _, _, _, _, _, _)
   | Sig_declare_typ (lid, _, _, _, _)
   | Sig_assume (lid, _, _, _) -> [lid]
@@ -433,7 +440,7 @@ let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
 let quals_of_sigelt x = match x with
   | Sig_bundle(_, quals, _, _)
   | Sig_inductive_typ (_, _, _,  _, _, _, quals, _)
-  | Sig_effect_abbrev  (_, _, _, _, quals, _)
+  | Sig_effect_abbrev  (_, _, _, _, quals, _, _)
   | Sig_datacon (_, _, _, _, _, quals, _, _)
   | Sig_declare_typ (_, _, _, quals, _)
   | Sig_assume (_, _, quals, _)
@@ -448,7 +455,7 @@ let quals_of_sigelt x = match x with
 let range_of_sigelt x = match x with
   | Sig_bundle(_, _, _, r)
   | Sig_inductive_typ (_, _, _,  _, _, _, _, r)
-  | Sig_effect_abbrev  (_, _, _, _, _, r)
+  | Sig_effect_abbrev  (_, _, _, _, _, _, r)
   | Sig_datacon (_, _, _, _, _, _, _, r)
   | Sig_declare_typ (_, _, _, _, r)
   | Sig_assume (_, _, _, r)
@@ -561,9 +568,11 @@ let abs bs t lopt =
     t
   else
     let close_lopt lopt = match lopt with
-        | None
-        | Some (Inr _)  -> lopt
-        | Some (Inl lc) -> Some (Inl (close_lcomp bs lc)) in
+        | None -> lopt
+        | Some (Inr (lid, flags))  -> (* printfn "Abstracting over %s with annotation %s %s" (Print.term_to_string t) (Ident.text_of_lid lid) (flags|> List.map Print.cflags_to_string |> String.concat " ") ;*) lopt
+        | Some (Inl lc) ->(*
+printfn "Abstracting over %s with annotation %s" (Print.term_to_string t) (Print.lcomp_to_string lc) ;*)
+            Some (Inl (close_lcomp bs lc)) in
     match bs with 
     | [] -> t
     | _ -> 
@@ -572,11 +581,7 @@ let abs bs t lopt =
         | Tm_abs(bs', t, lopt'), None -> 
           mk (Tm_abs(close_binders bs@bs', t, close_lopt lopt')) None t.pos
         | _ -> 
-          let lopt = match lopt with 
-            | None
-            | Some (Inr _)  -> lopt
-            | Some (Inl lc) -> Some (Inl (close_lcomp bs lc)) in
-          mk (Tm_abs(close_binders bs, body, lopt)) None t.pos 
+          mk (Tm_abs(close_binders bs, body, close_lopt lopt)) None t.pos 
 
 let arrow bs c = match bs with 
   | [] -> comp_result c 
@@ -818,8 +823,8 @@ let tforall  = fvar Const.forall_lid (Delta_defined_at_level 1) None
 let t_haseq   = fvar Const.haseq_lid Delta_constant None
 
 let lcomp_of_comp c0 =
-    let eff_name, flags = 
-        match c0.n with 
+    let eff_name, flags =
+        match c0.n with
         | Total _ -> Const.effect_Tot_lid, [TOTAL]
         | GTotal _ -> Const.effect_GTot_lid, [SOMETRIVIAL]
         | Comp c -> c.effect_name, c.flags in

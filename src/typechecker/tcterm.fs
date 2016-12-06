@@ -837,7 +837,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                         | Some (Inl more_bs) ->  //more actual args
                           let c = SS.subst_comp subst c_expected in
                           (* the expected type is explicitly curried *)
-                          if Util.is_total_comp c
+                          if Util.is_named_tot c
                           then let t = unfold_whnf env (Util.comp_result c) in
                                match t.n with
                                 | Tm_arrow(bs_expected, c_expected) ->
@@ -848,24 +848,24 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
                        handle_more (check_binders env bs bs_expected) c_expected in
 
-                 let mk_letrec_env envbody bs c =
-                     let letrecs = guard_letrecs envbody bs c in
-                     let envbody = {envbody with letrecs=[]} in
-                     letrecs |> List.fold_left (fun (env, letrec_binders) (l,t) ->
+                  let mk_letrec_env envbody bs c =
+                      let letrecs = guard_letrecs envbody bs c in
+                      let envbody = {envbody with letrecs=[]} in
+                      letrecs |> List.fold_left (fun (env, letrec_binders) (l,t) ->
 //                        let t = N.normalize [N.EraseUniverses; N.Beta] env t in
 //                        printfn "Checking let rec annot: %s\n" (Print.term_to_string t);
-                        let t, _, _ = tc_term (Env.clear_expected_typ env |> fst) t in
-                        let env = Env.push_let_binding env l ([], t) in
-                        let lb = match l with
-                            | Inl x -> S.mk_binder ({x with sort=t})::letrec_binders
-                            | _ -> letrec_binders in
-                        env, lb)
-                      (envbody, []) in
+                          let t, _, _ = tc_term (Env.clear_expected_typ env |> fst) t in
+                          let env = Env.push_let_binding env l ([], t) in
+                          let lb = match l with
+                              | Inl x -> S.mk_binder ({x with sort=t})::letrec_binders
+                              | _ -> letrec_binders in
+                          env, lb)
+                        (envbody, []) in
 
-                 let envbody, bs, g, c = check_actuals_against_formals env bs bs_expected in
-                 let envbody, letrecs = if Env.should_verify env then mk_letrec_env envbody bs c else envbody, [] in
-                 let envbody = Env.set_expected_typ envbody (Util.comp_result c) in
-                 Some (t, false), bs, letrecs, Some c, envbody, body, g
+                  let envbody, bs, g, c = check_actuals_against_formals env bs bs_expected in
+                  let envbody, letrecs = if Env.should_verify env then mk_letrec_env envbody bs c else envbody, [] in
+                  let envbody = Env.set_expected_typ envbody (Util.comp_result c) in
+                  Some (t, false), bs, letrecs, Some c, envbody, body, g
 
                 | _ -> (* expected type is not a function;
                           try normalizing it first;
@@ -903,7 +903,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                      guard in
 
     let tfun_computed = Util.arrow bs cbody in
-    let e = Util.abs bs body (Some (Util.lcomp_of_comp cbody |> Inl)) in
+    (* TODO : this debug  print should be cleaned up *)
+    let e = Util.abs bs body (Some (dflt cbody c_opt (* |> (fun c -> Util.print1 "Using comp type %s in annotation\n" (Print.comp_to_string c); c) *) |> Util.lcomp_of_comp |> Inl)) in
     let e, tfun, guard = match tfun_opt with
         | Some (t, use_teq) ->
            let t = SS.compress t in
@@ -924,6 +925,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
     let c = if env.top_level then mk_Total tfun else TcUtil.return_value env tfun e in
     let c, g = TcUtil.strengthen_precondition None env e (U.lcomp_of_comp c) guard in
+    //Util.print2 "Result of abstracting %s\n With comp %s\n" (Print.term_to_string e) (Print.lcomp_to_string c);
     e, c, g
 
 (******************************************************************************)

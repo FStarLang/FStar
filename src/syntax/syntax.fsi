@@ -77,7 +77,7 @@ type term' =
   | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst 
   | Tm_type       of universe       
-  | Tm_abs        of binders*term*option<either<lcomp, lident>>  (* fun (xi:ti) -> t : (M t' wp | N) *)
+  | Tm_abs        of binders*term*option<either<lcomp, residual_comp>>  (* fun (xi:ti) -> t : (M t' wp | N) *)
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
@@ -174,7 +174,7 @@ and syntax<'a,'b> = {
     vars:memo<free_vars>;
 }
 and bv = {
-    ppname:ident;  //programmer-provided name for pretty-printing 
+    ppname:ident;  //programmer-provided name for pretty-printing
     index:int;     //de Bruijn index 0-based, counting up from the binder
     sort:term
 }
@@ -195,6 +195,10 @@ and lcomp = {
     comp: unit -> comp //a lazy computation
 }
 
+and residual_comp = lident * list<cflags> (* Residual of a computation type after typechecking *)
+                                          (* first component is the effect name *)
+                                          (* second component contains (an approximation of) the cflags *)
+
 type tscheme = list<univ_name> * typ
 type freenames_l = list<bv>
 type formula = typ
@@ -204,7 +208,7 @@ val new_uv_set: unit -> uvars
 val new_universe_uvar_set: unit -> set<universe_uvar>
 
 type qualifier =
-  | Assumption                             //no definition provided, just a declaration 
+  | Assumption                             //no definition provided, just a declaration
   | New                                    //a fresh type constant, distinct from all prior type constructors
   | Private                                //name is invisible outside the module
   | Unfold_for_unification_and_vcgen       //a definition that *should* always be unfolded by the normalizer
@@ -324,7 +328,13 @@ and sigelt =
   | Sig_new_effect     of eff_decl * Range.range
   | Sig_new_effect_for_free of eff_decl * Range.range
   | Sig_sub_effect     of sub_eff  * Range.range
-  | Sig_effect_abbrev  of lident   * univ_names * binders * comp * list<qualifier> * Range.range
+  | Sig_effect_abbrev  of lident
+                       * univ_names
+                       * binders
+                       * comp
+                       * list<qualifier>
+                       * list<cflags>
+                       * Range.range
   | Sig_pragma         of pragma   * Range.range
 type sigelts = list<sigelt>
 

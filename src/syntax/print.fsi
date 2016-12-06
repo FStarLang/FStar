@@ -41,3 +41,4 @@ val const_to_string   : sconst -> string
 val qual_to_string    : qualifier -> string
 val quals_to_string   : list<qualifier> -> string
 val tscheme_to_string : tscheme -> string
+val cflags_to_string  : cflags -> string

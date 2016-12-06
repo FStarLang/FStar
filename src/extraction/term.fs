@@ -859,7 +859,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_app(head, args) ->
           let is_total = function
             | Inl l -> FStar.Syntax.Util.is_total_lcomp l
-            | Inr l -> Ident.lid_equals l FStar.Syntax.Const.effect_Tot_lid in
+            | Inr (l, flags) -> Ident.lid_equals l FStar.Syntax.Const.effect_Tot_lid
+                             || flags |> List.existsb (function CPS -> true | _ -> false)
+          in
           begin match head.n, (SS.compress head).n with
             | Tm_uvar _, _ -> //This should be a resolved uvar --- so reduce it before extraction
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in

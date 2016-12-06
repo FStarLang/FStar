@@ -329,7 +329,7 @@ type term' =
 | Tm_uinst of (term * universes)
 | Tm_constant of sconst
 | Tm_type of universe
-| Tm_abs of (binders * term * (lcomp, FStar_Ident.lident) FStar_Util.either Prims.option)
+| Tm_abs of (binders * term * (lcomp, residual_comp) FStar_Util.either Prims.option)
 | Tm_arrow of (binders * comp)
 | Tm_refine of (bv * term)
 | Tm_app of (term * args)
@@ -431,7 +431,9 @@ term uvar_basis FStar_Unionfind.uvar
  and freenames =
 bv FStar_Util.set 
  and uvars =
-(uvar * typ) FStar_Util.set
+(uvar * typ) FStar_Util.set 
+ and residual_comp =
+(FStar_Ident.lident * cflags Prims.list)
 
 
 let is_Tm_bvar = (fun _discr_ -> (match (_discr_) with
@@ -1505,7 +1507,7 @@ type eff_decl =
 | Sig_new_effect of (eff_decl * FStar_Range.range)
 | Sig_new_effect_for_free of (eff_decl * FStar_Range.range)
 | Sig_sub_effect of (sub_eff * FStar_Range.range)
-| Sig_effect_abbrev of (FStar_Ident.lident * univ_names * binders * comp * qualifier Prims.list * FStar_Range.range)
+| Sig_effect_abbrev of (FStar_Ident.lident * univ_names * binders * comp * qualifier Prims.list * cflags Prims.list * FStar_Range.range)
 | Sig_pragma of (pragma * FStar_Range.range)
 
 

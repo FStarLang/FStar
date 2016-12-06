@@ -536,6 +536,13 @@ and desugar_name mk setpos (env: env_t) (l: lid) : S.term =
     if mut then mk <| Tm_meta (mk_ref_read tm, Meta_desugared Mutable_rval)
     else tm
 
+and desugar_attributes env (cattributes:list<term>) : list<cflags> =
+    let desugar_attribute t =
+        match (unparen t).tm with
+            | Var ({str="cps"}) -> CPS
+            | _ -> raise (Error("Unknown attribute " ^ term_to_string t, t.range))
+    in List.map desugar_attribute cattributes
+
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
   let mk e = S.mk e None top.range in
   let setpos e = {e with pos=top.range} in
@@ -549,6 +556,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Ensures (t, lopt) ->
       desugar_formula env t
+
+    | Attributes ts ->
+        failwith "Attributes should not be desugared by desugar_term_maybe_top"
+        // desugar_attributes env ts
 
     | Const (Const_int (i, Some size)) ->
         desugar_machine_integer env i size top.range
@@ -1369,10 +1380,28 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                     else quals in
         let se =
             if quals |> List.contains S.Effect
-            then let c = desugar_comp t.range false env' t in
+            then
+                let t, cattributes =
+                    match (unparen t).tm with
+                        (* TODO : we are only handling the case Effect args (attributes ...) *)
+                        | Construct (head, args) ->
+                            let cattributes, args =
+                                match List.rev args with
+                                    | (last_arg, _) :: args_rev ->
+                                        begin match (unparen last_arg).tm with
+                                            | Attributes ts -> ts, List.rev (args_rev)
+                                            | _ -> [], args
+                                        end
+                                    | _ -> [], args
+                            in
+                            mk_term (Construct (head, args)) t.range t.level,
+                            desugar_attributes env cattributes
+                         | _ -> t, []
+                 in
+                 let c = desugar_comp t.range false env' t in
                  let typars = Subst.close_binders typars in
                  let c = Subst.close_comp typars c in
-                 Sig_effect_abbrev(qualify env id, [], typars, c, quals |> List.filter (function S.Effect -> false | _ -> true), rng)
+                 Sig_effect_abbrev(qualify env id, [], typars, c, quals |> List.filter (function S.Effect -> false | _ -> true), cattributes @ comp_flags c, rng)
             else let t = desugar_typ env' t in
                  let nm = qualify env id in
                  mk_typ_abbrev nm [] typars k t [nm] quals rng in
@@ -1642,13 +1671,6 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn bui
              push_sigelt env refl_decl
         else env in
     env, [se]
-
-and desugar_attributes env (cattributes:list<term>) : list<cflags> =
-    let desugar_attribute t =
-        match (unparen t).tm with
-            | Var ({str="cps"}) -> CPS
-            | _ -> raise (Error("Unknown attribute " ^ term_to_string t, t.range))
-    in List.map desugar_attribute cattributes
 
 and desugar_decl env (d:decl) : (env_t * sigelts) =
   let trans_qual = trans_qual d.drange in

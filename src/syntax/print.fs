@@ -21,7 +21,7 @@ open FStar
 open FStar.Syntax
 open FStar.Util
 open FStar.Syntax.Syntax
-open FStar.Syntax.Util
+//open FStar.Syntax.Util
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
@@ -249,7 +249,8 @@ let rec term_to_string x =
     begin match lc with
         | Some (Inl l) when (Options.print_implicits()) ->
           Util.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| l.comp())
-        | Some (Inr l) when (Options.print_implicits()) ->
+          (* TODO : Consider adding an option printing the cflags *)
+        | Some (Inr (l, flags)) when (Options.print_implicits()) ->
           Util.format3 "(fun %s -> (%s $$ (name only) %s))" (binders_to_string " " bs) (term_to_string t2) l.str
         | _ ->
           Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
@@ -257,8 +258,8 @@ let rec term_to_string x =
   | Tm_refine(xt, f) -> Util.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
   | Tm_let(lbs, e) ->   Util.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
-  | Tm_ascribed(e,Inl t,_) ->
-                        Util.format2 "(%s <: %s)" (term_to_string e) (term_to_string t)
+  | Tm_ascribed(e,Inl t,eff_name) ->
+                        Util.format3 "(%s <: [%s] %s)" (term_to_string e) (map_opt eff_name Ident.text_of_lid |> dflt "default") (term_to_string t)
   | Tm_ascribed(e,Inr c,_) ->
                         Util.format2 "(%s <: %s)" (term_to_string e) (comp_to_string c)
   | Tm_match(head, branches) ->
@@ -293,7 +294,7 @@ and  pat_to_string x = match x.v with
 and lbs_to_string quals lbs =
     let lbs =
         if (Options.print_universes())
-        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs (Util.mk_conj lb.lbtyp lb.lbdef) in
+        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs ((* temporary removed Util.mk_conj lb.lbtyp *) lb.lbdef) in
                                         let t, d = match (Subst.compress td).n with
                                             | Tm_app(_, [(t, _); (d, _)]) -> t, d
                                             | _ -> failwith "Impossibe" in
@@ -368,8 +369,14 @@ and comp_to_string c =
         | _ -> Util.format1 "GTot %s" (term_to_string t)
       end
     | Comp c ->
-      let basic =
-          if c.flags |> Util.for_some (function TOTAL -> true | _ -> false)
+        let basic =
+          if (Options.print_effect_args())
+          then Util.format4 "%s (%s) %s (attributes %s)"
+                            (sli c.effect_name)
+                            (term_to_string c.result_typ)
+                            (c.effect_args |> List.map arg_to_string |> String.concat ", ")
+                            (c.flags |> List.map cflags_to_string |> String.concat " ")
+          else if c.flags |> Util.for_some (function TOTAL -> true | _ -> false)
           && not (Options.print_effect_args())
           then Util.format1 "Tot %s" (term_to_string c.result_typ)
           else if not (Options.print_effect_args())
@@ -379,14 +386,21 @@ and comp_to_string c =
           else if not (Options.print_effect_args())
                && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
           then Util.format1 "ALL %s" (term_to_string c.result_typ)
-          else if (Options.print_effect_args())
-          then Util.format3 "%s (%s) %s"
-                    (sli c.effect_name)
-                    (term_to_string c.result_typ)
-                    (c.effect_args |> List.map arg_to_string |> String.concat ", ")
           else Util.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
       let dec = c.flags |> List.collect (function DECREASES e -> [Util.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
       Util.format2 "%s%s" basic dec
+
+and cflags_to_string c =
+    match c with
+        | TOTAL -> "total"
+        | MLEFFECT -> "ml"
+        | RETURN -> "return"
+        | PARTIAL_RETURN -> "partial_return"
+        | SOMETRIVIAL -> "sometrivial"
+        | LEMMA -> "lemma"
+        | CPS -> "cps"
+        | DECREASES _ -> "" (* TODO : already printed for now *)
+
 
 (* CH: at this point not even trying to detect if something looks like a formula,
        only locally detecting certain patterns *)
@@ -497,7 +511,7 @@ let rec sigelt_to_string x = match x with
     Util.format4 "sub_effect %s ~> %s : <%s> %s"
         (lid_to_string se.source) (lid_to_string se.target)
         (univ_names_to_string us) (term_to_string t)
-  | Sig_effect_abbrev(l, univs, tps, c, _, _) ->
+  | Sig_effect_abbrev(l, univs, tps, c, _, flags, _) ->
     if (Options.print_universes())
     then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in
          let tps, c = match (Subst.compress t).n with
@@ -511,7 +525,7 @@ let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
 let rec sigelt_to_string_short x = match x with
   | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _, _) -> Util.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
-  | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
+  | _ ->  "temporary removed" //lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =
   Util.format2 "module %s\n%s" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")

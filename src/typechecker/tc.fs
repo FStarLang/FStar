@@ -547,7 +547,7 @@ and cps_and_elaborate env ed =
           let wp = S.gen_bv "wp" None pure_wp_type in
           // fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a
           let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
-          U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr Const.effect_GTot_lid))
+          U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr (Const.effect_GTot_lid, [])))
       | _ ->
           failwith "unexpected shape for return"
   in
@@ -556,7 +556,7 @@ and cps_and_elaborate env ed =
     // TODO: fix [tc_eff_decl] to deal with currying
     match (SS.compress return_wp).n with
     | Tm_abs (b1 :: b2 :: bs, body, what) ->
-        U.abs ([ b1; b2 ]) (U.abs bs body what) (Some (Inr Const.effect_GTot_lid))
+        U.abs ([ b1; b2 ]) (U.abs bs body what) (Some (Inr (Const.effect_GTot_lid, [])))
     | _ ->
         failwith "unexpected shape for return"
   in
@@ -1423,7 +1423,7 @@ and tc_decl env se: list<sigelt> * _ =
       let env = Env.push_sigelt env se in
       [se], env
 
-    | Sig_effect_abbrev(lid, uvs, tps, c, tags, r) ->
+    | Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) ->
       assert (uvs = []);
       let env0 = env in
       let env = Env.set_range env r in
@@ -1445,7 +1445,7 @@ and tc_decl env se: list<sigelt> * _ =
                                     (Print.lid_to_string lid)
                                     (List.length uvs |> Util.string_of_int)
                                     (Print.term_to_string t), r)));
-      let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, r) in
+      let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) in
       let env = Env.push_sigelt env0 se in
       [se], env
 
@@ -1726,7 +1726,7 @@ let check_exports env (modul:modul) exports =
           then lbs |> List.iter (fun lb ->
                let fv = right lb.lbname in
                check_term fv.fv_name.v lb.lbunivs lb.lbtyp)
-        | Sig_effect_abbrev(l, univs, binders, comp, quals, r) ->
+        | Sig_effect_abbrev(l, univs, binders, comp, quals, flags, r) ->
           if not (quals |> List.contains Private)
           then let arrow = S.mk (Tm_arrow(binders, comp)) None r in
                check_term l univs arrow

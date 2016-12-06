@@ -513,7 +513,8 @@ type nm_ = nm
 let nm_of_comp = function
   | Total (t, _) ->
       N t
-  | Comp c when lid_equals c.effect_name Const.monadic_lid ->
+  | Comp c when c.flags |> Util.for_some (function CPS -> true | _ -> false) ->
+                //lid_equals c.effect_name Const.monadic_lid ->
       M c.result_typ
   | Comp c ->
       failwith (Util.format1 "[nm_of_comp]: impossible (%s)" (string_of_lid c.effect_name))
@@ -732,8 +733,9 @@ and star_type' env t =
 let is_monadic = function
   | None ->
       failwith "un-annotated lambda?!"
-  | Some (Inl { eff_name = lid }) | Some (Inr lid) ->
-      lid_equals lid Const.monadic_lid
+  | Some (Inl { cflags = flags }) | Some (Inr (_, flags)) ->
+      // lid_equals lid Const.monadic_lid
+      flags |> Util.for_some (function CPS -> true | _ -> false)
 
 // TODO: this function implements a (partial) check for the well-formedness of
 // C-types...
@@ -826,7 +828,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
     in
     match context_nm with
     | N t -> raise (Error ("let-bound monadic body has a non-monadic continuation \
-        or a branch of a match is monadic and the others aren't", e2.pos))
+        or a branch of a match is monadic and the others aren't : "  ^ Print.term_to_string t, e2.pos))
     | M _ -> strip_m (check env e2 context_nm)
   in
 
@@ -920,6 +922,7 @@ and infer (env: env) (e: term): nm * term * term =
       *)
 
       let comp, s_body, u_body =
+        Util.print1 "About to check what : %s\n" (Print.term_to_string e) ;
         let check_what = if is_monadic what then check_m else check_n in
         let t, s_body, u_body = check_what env body in
         comp_of_nm (if is_monadic what then M t else N t), s_body, u_body
@@ -932,21 +935,23 @@ and infer (env: env) (e: term): nm * term * term =
       let s_what = match what with
         | None -> None // That should not happen according to some other comment
         | Some (Inl lc) ->
-            if Ident.lid_equals lc.eff_name Const.monadic_lid
+            if lc.cflags |> Util.for_some (function CPS -> true | _ -> false)
+            (* TODO (KM) : We are dropping the flags of lc in the first case *)
             then Some (Inl (U.lcomp_of_comp (S.mk_Total (double_star <| U.comp_result (lc.comp ())))))
             else Some (Inl ({ lc with comp = begin fun () ->
                         let c = lc.comp () in
                         let result_typ = star_type' env (Util.comp_result c) in
                         Util.set_result_typ c result_typ
                       end  }))
-        | Some (Inr lid) ->
-            Some (Inr (if Ident.lid_equals lid Const.monadic_lid
-                       then Const.effect_Tot_lid
-                       else lid))
+        | Some (Inr (lid, flags)) ->
+            Some (Inr (if flags |> Util.for_some (function CPS -> true | _ -> false)
+                       then (Const.effect_Tot_lid, List.filter (function CPS -> false | _ -> true) flags)
+                       else (lid, flags)))
       in
 
       let u_body, u_what =
           let comp = trans_G env (U.comp_result comp) (is_monadic what) (SS.subst env.subst s_body) in
+          (* TODO : consider removing this ascription *)
           U.ascribe u_body (Inr comp), Some (Inl (U.lcomp_of_comp comp))
       in
 
@@ -1271,7 +1276,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 
 // A helper --------------------------------------------------------------------
 
-let n = N.normalize [ N.Beta; N.UnfoldUntil Delta_constant; N.NoDeltaSteps; N.Eager_unfolding; N.EraseUniverses ]
+let n = N.normalize [ N.Exclude N.Beta; N.UnfoldUntil Delta_constant; N.NoDeltaSteps; N.Eager_unfolding; N.EraseUniverses ]
 
 // Exported definitions -------------------------------------------------------
 
@@ -1279,6 +1284,8 @@ let star_type env t =
   star_type' env (n env.env t)
 
 let star_expr env t =
+  let t' = n env.env t in
+  Util.print2 "Before normalization %s\nAfter normalization %s" (Print.term_to_string t) (Print.term_to_string t');
   check_n env (n env.env t)
 
 let trans_F (env: env_) (c: typ) (wp: term): term =

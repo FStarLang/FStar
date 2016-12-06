@@ -1129,7 +1129,7 @@ in (_151_352)::[])
 end)
 in (
 
-let mk_lam = (fun wp -> (FStar_Syntax_Util.abs bs wp (Some (FStar_Util.Inr (FStar_Syntax_Const.effect_Tot_lid)))))
+let mk_lam = (fun wp -> (FStar_Syntax_Util.abs bs wp (Some (FStar_Util.Inr (((FStar_Syntax_Const.effect_Tot_lid), ([])))))))
 in (
 
 let r1 = (FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range (r1))) None r1)
@@ -1442,7 +1442,7 @@ in (let _151_501 = (let _151_500 = (FStar_Syntax_Syntax.as_arg res_t)
 in (let _151_499 = (let _151_498 = (FStar_Syntax_Syntax.as_arg res_t)
 in (let _151_497 = (let _151_496 = (let _151_495 = (let _151_494 = (let _151_493 = (FStar_Syntax_Syntax.mk_binder y)
 in (_151_493)::[])
-in (FStar_Syntax_Util.abs _151_494 x_eq_y_yret (Some (FStar_Util.Inr (FStar_Syntax_Const.effect_Tot_lid)))))
+in (FStar_Syntax_Util.abs _151_494 x_eq_y_yret (Some (FStar_Util.Inr (((FStar_Syntax_Const.effect_Tot_lid), ([])))))))
 in (FStar_All.pipe_left FStar_Syntax_Syntax.as_arg _151_495))
 in (_151_496)::[])
 in (_151_498)::_151_497))
@@ -1564,7 +1564,7 @@ in (let _151_588 = (let _151_587 = (let _151_585 = (FStar_TypeChecker_Env.get_ra
 in (label FStar_TypeChecker_Errors.exhaustiveness_check _151_585))
 in (let _151_586 = (fvar_const env FStar_Syntax_Const.false_lid)
 in (FStar_All.pipe_left _151_587 _151_586)))
-in (FStar_Syntax_Util.abs _151_589 _151_588 (Some (FStar_Util.Inr (FStar_Syntax_Const.effect_Tot_lid))))))
+in (FStar_Syntax_Util.abs _151_589 _151_588 (Some (FStar_Util.Inr (((FStar_Syntax_Const.effect_Tot_lid), ([]))))))))
 in (
 
 let md = (FStar_TypeChecker_Env.get_effect_decl env FStar_Syntax_Const.effect_PURE_lid)
@@ -1635,7 +1635,7 @@ in (_151_620)::[])
 in (u_res)::_151_621)
 in (
 
-let wp = (FStar_Syntax_Util.abs bs wp (Some (FStar_Util.Inr (FStar_Syntax_Const.effect_Tot_lid))))
+let wp = (FStar_Syntax_Util.abs bs wp (Some (FStar_Util.Inr (((FStar_Syntax_Const.effect_Tot_lid), ([]))))))
 in (let _151_628 = (FStar_TypeChecker_Env.inst_effect_fun_with us env md md.FStar_Syntax_Syntax.close_wp)
 in (let _151_627 = (let _151_626 = (FStar_Syntax_Syntax.as_arg res_t)
 in (let _151_625 = (let _151_624 = (FStar_Syntax_Syntax.as_arg x.FStar_Syntax_Syntax.sort)
@@ -2827,7 +2827,7 @@ tm
 end)))
 
 
-let d : Prims.string  ->  Prims.unit = (fun s -> (FStar_Util.print1 "[01;36m%s[00m\n" s))
+let d : Prims.string  ->  Prims.unit = (fun s -> (FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s))
 
 
 let mk_toplevel_definition : FStar_TypeChecker_Env.env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.term) = (fun env lident def -> (
