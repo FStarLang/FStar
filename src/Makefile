@@ -266,6 +266,9 @@ uexamples:
 examples:
 	+make -C ../examples sall
 
+extra:
+	+make -C ../examples/low-level/crypto extra
+
 wc-boot:
 	wc -l $(BOOT_ALL)
 
