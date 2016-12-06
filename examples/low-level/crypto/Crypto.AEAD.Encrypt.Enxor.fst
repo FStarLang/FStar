@@ -445,15 +445,15 @@ let enxor_invariant (#i:id) (t:PRF.state i) (x:PRF.domain i)
     				      (Plain.sel_plain h len plain)
     				      (Buffer.as_seq h cipher)))))
 
-(** counter_enxor: 
-      COUNTER_MODE LOOP from Chacha20 
+(** counter_enxor:
+      COUNTER_MODE LOOP from Chacha20
       XOR-based encryption and decryption (just swap ciphertext and plaintext)
       prf i    ==> writing at most at indexes x and above (same iv, higher ctr) at the end of the PRF table.
       safeId i ==> appending *exactly* "counterblocks i x l plain cipher" at the end of the PRF table
- **)      
+ **)
 val counter_enxor:
-  #i:id -> 
-  t:PRF.state i -> 
+  #i:id ->
+  t:PRF.state i ->
   x:PRF.domain i ->
   len:u32 ->
   remaining_len:u32 ->
@@ -474,7 +474,7 @@ val counter_enxor:
     enxor_dexor_lengths_ok x len remaining_len /\
     // in all cases, we extend the table only at x and its successors.
     modifies_table_above_x_and_buffer t x cipher h0 h1 /\
-    enxor_invariant t x len len plain cipher h_init h1))
+    enxor_invariant t x len 0ul plain cipher h_init h1))
 #set-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let rec counter_enxor #i t x len remaining_len plain cipher h_init =
   let completed_len = len -^ remaining_len in
@@ -497,3 +497,4 @@ let rec counter_enxor #i t x len remaining_len plain cipher h_init =
       trans_modifies_table_above_x_and_buffer t x y cipher h0 h1 h2
     end
   else refl_modifies_table_above_x_and_buffer t x cipher h0
+  
