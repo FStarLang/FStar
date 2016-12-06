@@ -6,7 +6,7 @@ HINTS_ENABLED?=--use_hints
 
 OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3rlimit 20  $(HINTS_ENABLED) $(OTHERFLAGS)
 
-FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperstack
+FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperstack --include hacl
 
 # Files that should fully typecheck
 # Files commented out are broken, uncomment once fixed
