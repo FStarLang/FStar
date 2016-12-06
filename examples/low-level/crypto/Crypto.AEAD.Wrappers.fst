@@ -18,10 +18,6 @@ open Flag
 open Crypto.Symmetric.PRF
 open Crypto.AEAD.Encoding 
 open Crypto.AEAD.Invariant
-(* open Crypto.AEAD.Lemmas *)
-(* open Crypto.AEAD.Lemmas.Part2 *)
-(* open Crypto.AEAD.Lemmas.Part3 *)
-(* open Crypto.AEAD.BufferUtils *)
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack

@@ -433,6 +433,12 @@ let lemma_trans_perm #a s1 s2 s3 i j = ()
 val snoc : #a:Type -> seq a -> a -> Tot (seq a)
 let snoc #a s x = Seq.append s (Seq.create 1 x)
 
+let lemma_cons_snoc (#a:Type) (hd:a) (s:Seq.seq a) (tl:a)
+  : Lemma (requires True)
+	  (ensures (Seq.equal (cons hd (snoc s tl))
+		 	      (snoc (cons hd s) tl)))
+  = ()	  
+
 val lemma_tail_snoc: #a:Type -> s:Seq.seq a{Seq.length s > 0} -> x:a
                      -> Lemma (ensures (tail (snoc s x) == snoc (tail s) x))
 let lemma_tail_snoc #a s x = lemma_slice_first_in_append s (Seq.create 1 x) 1
@@ -450,7 +456,7 @@ let rec find_l #a f l =
   else find_l f (tail l)
 
 val find_append_some: #a:Type -> s1:seq a -> s2:seq a -> f:(a -> Tot bool) -> Lemma
-  (requires (is_Some (find_l f s1)))
+  (requires (Some? (find_l f s1)))
   (ensures (find_l f (append s1 s2) == find_l f s1))
   (decreases (length s1))
 let rec find_append_some #a s1 s2 f =
@@ -460,7 +466,7 @@ let rec find_append_some #a s1 s2 f =
     find_append_some (tail s1) s2 f
 
 val find_append_none: #a:Type -> s1:seq a -> s2:seq a -> f:(a -> Tot bool) -> Lemma
-  (requires (is_None (find_l f s1)))
+  (requires (None? (find_l f s1)))
   (ensures (find_l f (append s1 s2) == find_l f s2))
   (decreases (length s1))
 let rec find_append_none #a s1 s2 f =
@@ -468,6 +474,19 @@ let rec find_append_none #a s1 s2 f =
   else
     let _ = cut (equal (tail (append s1 s2)) (append (tail s1) s2)) in
     find_append_none (tail s1) s2 f
+
+val find_snoc: #a:Type -> s:Seq.seq a -> x:a -> f:(a -> Tot bool)
+               -> Lemma (ensures (let res = find_l f (snoc s x) in
+	                         match res with 
+	                         | None -> find_l f s == None /\ not (f x)
+	                         | Some y -> res == find_l f s \/ (f x /\ x==y)))
+                 (decreases (Seq.length s))
+let rec find_snoc #a s x f =
+  if Seq.length s = 0 then ()
+  else if f (head s) then ()
+  else
+    let _ = lemma_tail_snoc s x in
+    find_snoc (tail s) x f
 
 let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (seq a * a) =
   let s, a = split s (length s - 1) in
@@ -608,7 +627,7 @@ let contains_snoc #a s x =
   FStar.Classical.forall_intro (append_contains_equiv s (Seq.create 1 x))
 
 let rec lemma_find_l_contains (#a:Type) (f:a -> Tot bool) (l:seq a)
-  : Lemma (requires True) (ensures is_Some (find_l f l) ==> l `contains` (Some.v (find_l f l)))
+  : Lemma (requires True) (ensures Some? (find_l f l) ==> l `contains` (Some?.v (find_l f l)))
           (decreases (Seq.length l))
   = if length l = 0 then ()
     else if f (head l) then ()

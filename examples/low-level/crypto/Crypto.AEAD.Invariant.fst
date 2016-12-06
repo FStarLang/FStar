@@ -31,7 +31,7 @@ let minNat (a:nat) (b:nat) : nat = if a <= b then a else b
 
 type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
-let ctr x = PRF(x.ctr)
+let ctr x = PRF.(x.ctr)
 
 noeq type aead_entry (i:id) =
   | AEADEntry:
@@ -68,7 +68,7 @@ noeq type aead_state (i:id) (rw:rw) =
 
 let fresh_nonce (#i:id) (#rw:rw) (n:Cipher.iv (alg i)) (aead_st:aead_state i rw) (h:mem) = 
   let entries = HS.sel h aead_st.log in
-  is_None (find_aead_entry n entries)
+  None? (find_aead_entry n entries)
 
 let maxplain (i:id) = pow2 14 // for instance
 
@@ -80,7 +80,7 @@ let safelen (i:id)
   let open FStar.Mul in
   PRF.ctr_0 i <^ next_block_index &&                  //next_block_index is strictly greater than the mac domain position
   next_block_index <=^ PRF.maxCtr i &&               //and less then the max counter
-  (let block_length = v (Cipher( blocklen (cipherAlg_of_id i))) in
+  (let block_length = v (Cipher.(blocklen (cipherAlg_of_id i))) in
    let len_all_blocks_so_far = v (next_block_index -^ PRF.ctr_0 i -^ 1ul) * block_length in
    let max_len_for_remaining_blocks = v (PRF.maxCtr i -^ next_block_index) * block_length in
    remaining_len = 0 ||                               //no more text left to encrypt, or
@@ -103,7 +103,7 @@ val counterblocks:
   Tot (prf_table rgn i) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
   (decreases (to_pos - from_pos))
 let rec counterblocks i rgn x l from_pos to_pos plain cipher =
-  let blockl = v (Cipher(blocklen (cipherAlg_of_id i))) in
+  let blockl = v (Cipher.(blocklen (cipherAlg_of_id i))) in
   let remaining = to_pos - from_pos in
   if remaining = 0 then
     Seq.createEmpty
@@ -116,17 +116,8 @@ let rec counterblocks i rgn x l from_pos to_pos plain cipher =
     let blocks = counterblocks i rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in
     SeqProperties.cons block blocks
 
-(*
- * AR: this is an unnecessary lemma, but in Lemmas module, can't seem to prove it.
- *)
-val counterblocks_lemma: i:id{safeId i} -> rgn:region -> x:PRF.domain i{PRF.ctr_0 i <^ ctr x} -> l:nat
-                         -> from:nat -> to:nat{to = from /\ to <= l /\ safelen i (to - from) (ctr x)}
-			 -> plain:Crypto.Plain.plain i l -> cipher:lbytes l
-			 -> Lemma (counterblocks i rgn x l from to plain cipher == Seq.createEmpty)
-let counterblocks_lemma i rgn x l from to plain cipher = ()
-
 let num_blocks_for_len (i:id) (l:nat) : Tot nat =
-  let bl = v (Cipher( blocklen (cipherAlg_of_id i))) in
+  let bl = v (Cipher.( blocklen (cipherAlg_of_id i))) in
   (l + bl - 1) / bl
 
 let num_blocks_for_entry (#i:id) (e:aead_entry i) : Tot nat =
@@ -136,7 +127,7 @@ let num_blocks_for_entry (#i:id) (e:aead_entry i) : Tot nat =
 let encode_ad_cipher (i:id) (ad:adata) (l:plainLen{safelen i l (PRF.ctr_0 i +^ 1ul)}) (cipher:lbytes l) =
   encode_both i (FStar.UInt32.uint_to_t (Seq.length ad)) ad (FStar.UInt32.uint_to_t l) cipher
 
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let mac_is_set (#rgn:region) (#i:id)
 	       (prf_table:prf_table rgn i{safeId i}) //the entire prf table
 	       (iv:Cipher.iv (alg i))
@@ -150,7 +141,7 @@ let mac_is_set (#rgn:region) (#i:id)
     (match PRF.find_mac prf_table dom_0 with
      | None -> False
      | Some mac_range ->
-       let mac_log = CMA.ilog (CMA.State.log mac_range) in
+       let mac_log = CMA.ilog (CMA.State?.log mac_range) in
        m_contains mac_log h /\ (
        match m_sel h mac_log with
        | None           -> False
@@ -180,8 +171,8 @@ let refines_one_entry (#rgn:region) (#i:id)
       otp_blocks `contains` prf_entry ==>
       PRF.find prf_table prf_entry.x == Some (prf_entry.range)))
 
-let none_above (#r:region) (#i:id) (x:PRF.domain i) (prf_table:prf_table r i) (h:mem) =
-    CMA.authId (i, x.iv) ==> (forall (y:PRF.domain i{y `PRF.above` x}). PRF.find prf_table y == None)
+let none_above (#r:region) (#i:id) (x:PRF.domain i) (prf_table:prf_table r i) =
+    forall (y:PRF.domain i{y `PRF.above` x}). PRF.find prf_table y == None
 
 let all_above (#rgn:region) (#i:id) (s:prf_table rgn i) (x:PRF.domain i) =
   (forall (e:PRF.entry rgn i).{:pattern (s `SeqProperties.contains` e)}
@@ -192,7 +183,7 @@ let unused_aead_iv_for_prf (#mac_rgn:region) (#i:id)
   			   (iv:Cipher.iv (alg i))
 			   (h:mem{safeId i}) : GTot Type0
   = let dom_0 = {iv=iv; ctr=PRF.ctr_0 i} in
-    none_above (PRF.incr i dom_0) prf_table h /\ //There are no OTP entries for this IV at all
+    none_above (PRF.incr i dom_0) prf_table /\ //There are no OTP entries for this IV at all
     (match PRF.find_mac prf_table dom_0 with
      | None           -> True //and no MAC entry either
      | Some mac_range -> CMA.mac_is_unset (i, iv) mac_rgn mac_range h) //Or, a mac exists, but it's not yet used
@@ -214,7 +205,7 @@ let refines (#rgn:region) (#i:id)
     | None   -> unused_aead_iv_for_prf prf_table iv h)
 
 let aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
-  HS (h.h `Map.contains` st.prf.mac_rgn) /\      //contains the mac region
+  HS.(h.h `Map.contains` st.prf.mac_rgn) /\      //contains the mac region
   (safeId i ==> h `HS.contains` st.log) /\       //contains the aead log
   (prf i ==> h `HS.contains` (itable i st.prf)) //contains the prf table
 
@@ -225,7 +216,6 @@ let inv (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
      (let prf_table = HS.sel h (itable i st.prf) in
       let aead_entries = HS.sel h st.log in
       refines prf_table aead_entries h))
-
 
 (* TODO: Move this out of here to be closer to AEAD.encrypt, where it is mainly used *)
 let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
@@ -260,7 +250,7 @@ let remaining_len_ok (#i:id) (current_block_index:PRF.domain i) (len:u32) (remai
    let n_blocks = v current_block_index.ctr - v (otp_offset i) in
    if remaining_len = 0ul then
       n_blocks = num_blocks_for_len i (v len)
-   else completed_len = FStar.Mul (n_blocks * v (PRF.blocklen i)))
+   else completed_len = FStar.Mul.(n_blocks * v (PRF.blocklen i)))
 
 let incr_remaining_len_ok (#i:id) (x:PRF.domain i) (len:u32) (remaining_len:u32)
     : Lemma (let l = min remaining_len (PRF.blocklen i) in

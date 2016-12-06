@@ -23,9 +23,9 @@ open Flag
 open Crypto.Symmetric.PRF
 open Crypto.AEAD.Encoding 
 open Crypto.AEAD.Invariant
-open Crypto.AEAD.Lemmas
-open Crypto.AEAD.Lemmas.Part2
-open Crypto.AEAD.Lemmas.Part3
+(* open Crypto.AEAD.Lemmas *)
+(* open Crypto.AEAD.Lemmas.Part2 *)
+(* open Crypto.AEAD.Lemmas.Part3 *)
 open Crypto.AEAD.Wrappers
 
 module HH = FStar.HyperHeap
@@ -106,97 +106,6 @@ val leak: #i:id{~(prf i)} -> st:state i Writer -> ST (lbuffer (v (PRF.statelen i
   (requires (fun _ -> True))
   (ensures  (fun _ _ _ -> True))
 let leak #i st = PRF.leak st.prf
-
-(* notes 16-10-04 
-
-Not sure what's the best style to push as an invariant.
-It may be easier to first split blocks by iv. 
-
-This corresponds to the PRF state "at rest" for the invariant.
-Should be uniform between i:id {MAC.ideal /\ authId i }.
-
-For the dexor loop, we have as `pre` that the PRF state contains the correct entries.
-We need as a monotonic invariant that "containing implies finding"; more like map than seq.
-
-For the enxor loop, we need a finer, transient invariant for the last chunk of the PRF log. 
-
-*) 
-
-// COUNTER_MODE LOOP from Chacha20 
-
-// XOR-based encryption and decryption (just swap ciphertext and plaintext)
-// prf i    ==> writing at most at indexes x and above (same iv, higher ctr) at the end of the PRF table.
-// safeId i ==> appending *exactly* "counterblocks i x l plain cipher" at the end of the PRF table
-//              the proof seems easier without tail recursion.
-
-val counter_enxor: 
-  i:id -> t:PRF.state i -> x:PRF.domain i{PRF.ctr_0 i <^ x.ctr} ->
-  len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)} ->
-  remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len} ->
-  plain:plainBuffer i (v len) ->
-  cipher:lbuffer (v len)
-  { let bp = as_buffer plain in 
-    Buffer.disjoint bp cipher /\
-    Buffer.frameOf bp <> (PRF.(t.rgn)) /\
-    Buffer.frameOf cipher <> (PRF.(t.rgn)) 
-  } -> 
-  h_init:mem ->
-  // Not Stack, as we modify the heap-based ideal table (and don't know where the buffers are
-  ST unit
-  (requires (fun h -> 
-    let initial_domain = {x with ctr=ctr_0 i +^ 1ul} in
-    let completed_len = len -^ remaining_len in 
-    Plain.live h plain /\ 
-    Buffer.live h cipher /\ 
-    (remaining_len <> 0ul ==> FStar.Mul.((v x.ctr - v (offset i)) * v (PRF.blocklen i) = v completed_len)) /\
-    // if ciphertexts are authenticated, then fresh blocks are available
-    none_above x t h /\
-    (safeId i
-      ==> (let r = itable i t in 
-	   h `HS.contains` r /\
-	   Seq.equal (HS.sel h t.table)
-    		     (Seq.append (HS.sel h_init t.table)
-    				 (counterblocks i t.mac_rgn initial_domain
-    				      (v len) 0 (v completed_len)
-    				      (Plain.sel_plain h len plain)
-    				      (Buffer.as_seq h cipher)))))
-    ))
-  (ensures (fun h0 _ h1 -> 
-    let initial_domain = {x with ctr=ctr_0 i +^ 1ul} in
-    Plain.live h1 plain /\
-    Buffer.live h1 cipher /\
-    // in all cases, we extend the table only at x and its successors.
-    modifies_table_above_x_and_buffer t x cipher h0 h1 /\
-    (safeId i
-      ==> HS.sel h1 t.table ==
-    	  Seq.append (HS.sel h_init t.table)
-    		     (counterblocks i t.mac_rgn initial_domain
-    				      (v len) 0 (v len)
-    				      (Plain.sel_plain h1 len plain)
-    				      (Buffer.as_seq h1 cipher)))
-    ))
-#set-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let rec counter_enxor i t x len remaining_len plain cipher h_init =
-  let completed_len = len -^ remaining_len in
-  let h0 = get () in
-  if safeId i then ST.recall (itable i t);
-  if remaining_len <> 0ul then
-    begin // at least one more block
-      let starting_pos = len -^ remaining_len in
-      let l = min remaining_len (PRF.blocklen i) in
-      let cipher_hd = Buffer.sub cipher starting_pos l in 
-      let plain_hd = Plain.sub plain starting_pos l in 
-      PRF.prf_enxor i t x l cipher_hd plain_hd;
-      let h1 = get () in 
-      x_buffer_1_modifies_table_above_x_and_buffer t x cipher h0 h1;
-      prf_enxor_leaves_none_strictly_above_x t x len remaining_len cipher h0 h1;
-      extending_counter_blocks t x (v len) (v completed_len) plain cipher h0 h1 h_init;
-      let y = PRF.incr i x in
-      counter_enxor i t y len (remaining_len -^ l) plain cipher h_init;
-      let h2 = get () in
-      trans_modifies_table_above_x_and_buffer t x y cipher h0 h1 h2
-    end
-  else refl_modifies_table_above_x_and_buffer t x cipher h0
 
 let prf_state (#i:id) (#rw:rw) (e:state i rw) : PRF.state i = State?.prf e
 ////////////////////////////////////////////////////////////////////////////////
@@ -418,44 +327,50 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   push_frame(); 
   let h0 = get () in
   frame_myinv_push st h_init h0;
-  assert (HH.modifies_rref st.prf.mac_rgn TSet.empty (HS.(h_init.h)) (HS.(h0.h));
+  assert (HH.modifies_rref st.prf.mac_rgn TSet.empty (HS.(h_init.h)) (HS.(h0.h)));
   assert (HS.(is_stack_region h0.tip));
   assert (HS.(HH.disjoint h0.tip st.log_region));
   assert (HS.(HH.disjoint h0.tip (Buffer.frameOf cipher_tagged)));
   
-(** start: allocate mac entry **)  
+(* start: allocate mac entry *)  
+  (* TODO: move this into a wrapper module Crypto.AEAD.PRF_MAC 
+          together with the lemmas we proved about it *)
   let x = PRF.({iv = n; ctr = ctr_0 i}) in // PRF index to the first block
   let ak = PRF.prf_mac i st.prf st.ak x in  // used for keying the one-time MAC
-(** end **)
+(* end *)
   
   let h1 = get () in
 
-(** start: partition the out buffer into space for the ciphertext and the tag **)  
+(* start: partition the out buffer into space for the ciphertext and the tag *)  
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
   let y = PRF.incr i x in
-(** end **)
-
+(* end *)
+  
+  //TODO: move this lemma call into the definition of enxor
   //calling this lemma allows us to complete the proof without using any fuel;
   //which makes things a a bit faster
   counterblocks_emp i st.prf.mac_rgn y (v plainlen) 0
       (Plain.sel_plain h1 plainlen plain) (Buffer.as_seq h1 cipher); 
       
-(** start: a loop to fragment the plaintext, call the prf, and fill in the cipher text *)  
-  counter_enxor i st.prf y plainlen plainlen plain cipher h1;
-(** end *)
-
+(* start: a loop to fragment the plaintext, call the prf, and fill in the cipher text *)  
+  Crypto.AEAD.Encrypt.Enxor.counter_enxor i st.prf y plainlen plainlen plain cipher h1;
+(* end *)
+  //TODO: wrap counter_enxor to give the post-condition from the lemma we proved
+  
   // Compute MAC over additional data and ciphertext
   let h2 = get () in
   FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 cipher h1) h2;
   assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h2);
+  //TODO: remove this ... we don't use pre_refines any more
   lemma_frame_find_mac #i #(v plainlen) st.prf y cipher h1 h2;
+  //TODO: remove this ... we don't use pre_refines any more
   intro_refines_one_entry_no_tag #i st n (v plainlen) plain cipher_tagged h0 h1 h2; //we have pre_refines_one_entry here
   assert (Buffer.live h1 aad); //seem to need this hint
 
-(** start: encode the ciphertext and additional data for mac'ing *)  
+(* start: encode the ciphertext and additional data for mac'ing *)  
   let acc = accumulate_wrapper ak aadlen aad plainlen cipher in
-(** end *)
+(* end *)
 
   //Establishing the pre-conditions of MAC.mac
   let h3 = get() in
@@ -468,13 +383,13 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   Buffer.lemma_reveal_modifies_0 h2 h3;
   //MAC
 
-(** start: call the mac, filling in the tag component of the out buffer *)
+(* start: call the mac, filling in the tag component of the out buffer *)
   mac_wrapper #(i,n) ak acc tag;
-(** end *)
+(* end *)
 
-(** start: ideal and proof steps, to finish up, notably writing to the AEAD table  *)
+(* start: ideal and proof steps, to finish up, notably writing to the AEAD table  *)
   finish_after_mac h0 h3 i st n aadlen aad plainlen plain cipher_tagged ak acc tag;
-(** end *)
+(* end *)
 
   let h5 = get () in  
   pop_frame(); //clean up any local allocation on our stack

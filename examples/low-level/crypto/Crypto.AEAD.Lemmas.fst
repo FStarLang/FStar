@@ -43,17 +43,17 @@ let rec find_snoc #a s x f =
     find_snoc (SeqProperties.tail s) x f
 
 let find_is_some (#i:id) (#rgn:rid) (b:prf_table rgn i) (x:domain i)
-  : Lemma (requires (is_Some (find b x)))
+  : Lemma (requires (Some? (find b x)))
           (ensures (Seq.length b <> 0))
   = ()
 
 let find_blocks_append_l (#i:id) (#rgn:rid) (b:prf_table rgn i) (b':prf_table rgn i) (x:domain i) 
-  : Lemma (requires (is_Some (find b x)))
+  : Lemma (requires (Some? (find b x)))
           (ensures (find (Seq.append b b') x == find b x))
   = SeqProperties.find_append_some b b' (is_entry_domain x)
 
 let find_append (#i:id) (#r:rid) (d:domain i) (s1:prf_table r i) (s2:prf_table r i)
-   : Lemma (requires (is_None (find s1 d)))
+   : Lemma (requires (None? (find s1 d)))
            (ensures (find (Seq.append s1 s2) d == find s2 d))
    = SeqProperties.find_append_none s1 s2 (is_entry_domain d)
 
@@ -68,15 +68,16 @@ val to_seq_temp: #a:Type -> b:Buffer.buffer a -> l:UInt32.t{v l <= Buffer.length
   (requires (fun h -> Buffer.live h b))
   (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h1 b /\ r == Buffer.as_seq h1 b))
 ////////////////////////////////////////////////////////////////////////////////
-#reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 //Basic framing for the main predicate of the invariant
 let frame_refines_one_entry (#i:id{safeId i}) (#mac_rgn:region) 
 			    (h:mem) (h':mem) 
 			    (blocks:prf_table mac_rgn i)
 			    (e:aead_entry i) 
-   : Lemma (requires refines_one_entry blocks e h /\			    
-		     HH.modifies_rref mac_rgn TSet.empty (HS h.h) (HS h'.h) /\
-		     HS.live_region h' mac_rgn)
+   : Lemma (requires (let open HS in
+		      refines_one_entry blocks e h /\			    
+		      HH.modifies_rref mac_rgn TSet.empty h.h h'.h /\
+		      live_region h' mac_rgn))
 	   (ensures  refines_one_entry blocks e h')
    = ()
 
@@ -84,22 +85,23 @@ let frame_refines_one_entry (#i:id{safeId i}) (#mac_rgn:region)
 let frame_unused_aead_iv_for_prf (#mac_rgn:region) (#i:id) (h0:mem{safeId i}) (h1:mem)
 				 (prf_table:prf_table mac_rgn i)
 				 (iv:Cipher.iv (alg i))
-  : Lemma (requires unused_aead_iv_for_prf prf_table iv h0                            /\
-                    HH.modifies_rref mac_rgn TSet.empty (HS h0.h) (HS h1.h) /\
-		    HS.live_region h1 mac_rgn)
+  : Lemma (requires (let open HS in
+		     unused_aead_iv_for_prf prf_table iv h0        /\
+                     HH.modifies_rref mac_rgn TSet.empty h0.h h1.h /\
+		     live_region h1 mac_rgn))
 	  (ensures  unused_aead_iv_for_prf prf_table iv h1)
-
   = ()
 
 let frame_refines (i:id{safeId i}) (mac_rgn:region) 
 		  (blocks:prf_table mac_rgn i)
 		  (entries:aead_entries i)
 		  (h:mem) (h':mem)
-   : Lemma (requires refines blocks entries h                               /\
-   		     HH.modifies_rref mac_rgn TSet.empty (HS h.h) (HS h'.h) /\
-		     HS.live_region h' mac_rgn)
+   : Lemma (requires (let open HS in 
+		      refines blocks entries h                     /\
+   		      HH.modifies_rref mac_rgn TSet.empty h.h h'.h /\
+		      HS.live_region h' mac_rgn))
 	   (ensures  refines blocks entries h')
-   = let open FStar.Classical in 
+   = let open FStar.Classical in
      forall_intro (move_requires (frame_refines_one_entry h h' blocks));
      forall_intro (move_requires (frame_unused_aead_iv_for_prf h h' blocks))
 
@@ -129,10 +131,11 @@ val inv_after_prf_mac:
 		  (safeId i ==> fresh_nonce x.iv aead_st h0) /\
 		  prf_mac_ensures i aead_st.prf k_0 x h0 mac h1)
         (ensures inv aead_st h1 /\
-		 (safeId i ==> 
+		 (safeId i ==>  //TODO: should this be authId i??
 		   (let prf_table = HS.sel h1 (itable i aead_st.prf) in
 		    unused_mac_exists aead_st.prf x h1 /\
-		    none_above (PRF.incr i x) prf_table h1)))
+		    none_above (PRF.incr i x) prf_table)))
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let inv_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 =
   if safeId i
   then begin
@@ -151,9 +154,101 @@ let inv_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 =
     else begin 
       assume (refines prf_table' aead_entries h1);
       assume (unused_mac_exists aead_st.prf x h1); //from a find_snoc lemma and mac_is_unset
-      assume (none_above (PRF.incr i x) prf_table' h1) //from initial invariant and snoc
+      assume (none_above (PRF.incr i x) prf_table') //from initial invariant and snoc
     end
   end
+
+////////////////////////////////////////////////////////////////////////////////
+// Lemmas related to the invariant and counter_enxor
+////////////////////////////////////////////////////////////////////////////////
+let aead_separation (#i:id) (#rw:rw) (st:aead_state i rw)
+		    (#aadlen:nat) (aad: lbuffer aadlen)
+		    (#plainlen:nat) (plain: plainBuffer i plainlen)
+		    (#cipherlen: nat) (cipher:lbuffer cipherlen) =
+    Buffer.disjoint aad cipher /\
+    Buffer.disjoint (Plain.as_buffer plain) aad /\
+    Buffer.disjoint (Plain.as_buffer plain) cipher /\
+    HS.is_eternal_region st.log_region /\
+    HS.is_eternal_region (Buffer.frameOf cipher) /\ // why?
+    HS.is_eternal_region (Buffer.frameOf (Plain.as_buffer plain)) /\ //why?
+    HS.is_eternal_region (Buffer.frameOf aad) /\ //why?
+    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) st.log_region /\
+    HH.disjoint (Buffer.frameOf cipher) st.log_region /\
+    HH.disjoint (Buffer.frameOf aad) st.log_region /\
+    st.log_region <> HH.root /\
+    Buffer.frameOf cipher <> HH.root /\
+    Buffer.frameOf aad <> HH.root /\
+    Buffer.frameOf (Plain.as_buffer plain) <> HH.root
+
+let aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw)
+		  (#aadlen:nat) (aad: lbuffer aadlen)
+		  (#plainlen:nat) (plain: plainBuffer i plainlen)
+		  (#cipherlen: nat) (cipher:lbuffer cipherlen) (h:mem) =
+    let open HS in		  
+    Buffer.live h aad /\
+    Buffer.live h cipher /\
+    Plain.live h plain /\
+    st.log_region `is_in` h.h
+
+
+
+let prf_extended_with_counterblocks (#i:id) (prf:PRF.state i) (x_1:PRF.domain_otp i)
+				    (#len:nat) (plain:plainBuffer i len) (cipher:lbuffer len) 
+				    (h0:mem) (h1:mem) = 
+   safelen i len x_1.ctr /\
+   Plain.live h1 plain /\
+   Buffer.live h1 cipher /\
+   (safeId i ==>
+     HS.sel h1 prf.table ==
+       Seq.append (HS.sel h0 prf.table)
+   	  	  (counterblocks i prf.mac_rgn x_1
+    				 len 0 len
+				 (Plain.sel_plain h1 (u len) plain)
+    				 (Buffer.as_seq h1 cipher)))
+
+
+
+let only_mac_allocated (#i:id) (#rw:rw) (aead_st:aead_state i rw) (x:PRF.domain_mac i) (h:mem) =
+    (CMA.authId (i, x.iv) ==> 
+     (let prf_table = HS.sel h (itable i aead_st.prf) in
+      unused_mac_exists aead_st.prf x h /\
+      none_above (PRF.incr i x) prf_table))
+
+let unused_mac_after_counter_enxor
+  (i:id)
+  (rw:rw)
+  (iv:Cipher.iv (alg i))
+  (aead_st:aead_state i rw)
+  (len:nat)
+  (cipher:lbuffer len)
+  (h0 h1:mem)
+  : Lemma (requires (let open PRF in 
+  		     let x_0 = {iv=iv; ctr=ctr_0 i} in //position of the MAC block
+		     let x_1 = PRF.incr i x_0 in
+		     HH.disjoint (Buffer.frameOf cipher) aead_st.log_region /\
+		     only_mac_allocated aead_st x_0 h0 /\
+		     modifies_table_above_x_and_buffer aead_st.prf x_1 cipher h0 h1))
+	(ensures (let open PRF in 
+		  let x_0 = {iv=iv; ctr=ctr_0 i} in //position of the MAC block
+		  (CMA.authId (i, iv) ==>
+		     unused_mac_exists aead_st.prf x_0 h1)))
+		     
+  = 
+  let x_0 = {iv=iv; ctr=ctr_0 i} in //position of the first OTP block
+  if CMA.authId (i, iv) 
+  then begin
+    assert (prf i);
+    assert (unused_mac_exists aead_st.prf x_0 h0);
+    let prf_table = itable i aead_st.prf in
+    let blocks_0 = HS.sel h0 prf_table in
+    let blocks_1 = HS.sel h1 prf_table in
+    let blocks_tail_1 = Seq.slice blocks_1 (Seq.length blocks_0) (Seq.length blocks_1) in
+    let blocks_1' = Seq.append blocks_0 blocks_tail_1 in
+    assert (Seq.equal blocks_1 blocks_1');
+    if safeId i  //this is too strong, but unused_mac_exists is guarded by it
+    then find_blocks_append_l blocks_0 blocks_tail_1 x_0
+  end
+
 
 #reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 let counterblocks_emp   (i:id)
@@ -166,6 +261,8 @@ let counterblocks_emp   (i:id)
    : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
    = ()
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
+
 
 (*
  * h0 is the initial state. h1 is when mac entry has been reserved (not set yet) but no otp entries.
@@ -192,7 +289,7 @@ let counterblocks_emp   (i:id)
 (*      mac_is_unset prf_table_0 nonce h0 /\ *)
 
 (*      //the mac block is present in h1, no otp entries (AR: should we say mac block is None ?) *)
-(*      is_Some (PRF.find_mac prf_table_1 dom_0) /\ none_above (PRF.incr i dom_0) prf_table_1 h1 /\ *)
+(*      Some? (PRF.find_mac prf_table_1 dom_0) /\ none_above (PRF.incr i dom_0) prf_table_1 h1 /\ *)
 
 (*      //the mac block does not change from h1 to h2 *)
 (*      PRF.find_mac prf_table_2 dom_0 == PRF.find_mac prf_table_1 dom_0 /\ *)
@@ -415,7 +512,7 @@ let find_mac_counterblocks_none (#rgn:region) (#i:id) (s:prf_table rgn i)
 (* 	   let table_1 = HS.sel h (PRF.itable i st.prf) in *)
 (*   	   let prefix = Seq.slice table_1 0 (Seq.length table_0) in  *)
 (* 	   assert (Seq.equal prefix table_0); *)
-(* 	   assert (is_None (find prefix idom)); *)
+(* 	   assert (None? (find prefix idom)); *)
 (*  	   let blocks = Seq.slice table_1 (Seq.length table_0) (Seq.length table_1) in *)
 (* 	   let p = Plain.sel_plain h (u len) plain in *)
 (* 	   let c_tagged = Buffer.as_seq h cipher in *)
