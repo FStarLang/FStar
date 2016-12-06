@@ -345,15 +345,13 @@ let check_fields env fields rg =
     let (f, _) = List.hd fields in
     let record, _ = fail_or env (try_lookup_record_by_field_name env) f in
     let check_field (f', _) =
-        let record', _ = fail_or env (try_lookup_record_by_field_name env) f' in
-        if lid_equals record.typename record'.typename
+        if Env.belongs_to_record env f' record
         then ()
-        else let msg = Util.format4
-                       "Field %s belongs to record type %s, whereas field %s belongs to record type %s"
+        else let msg = Util.format3
+                       "Field %s belongs to record type %s, whereas field %s does not"
                        f.str
                        record.typename.str
                        f'.str
-                       record'.typename.str
              in
              raise (Error (msg, rg))
     in
