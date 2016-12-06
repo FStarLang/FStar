@@ -12,6 +12,7 @@ module HS = FStar.HyperStack
 open FStar.UInt32
 open Crypto.Symmetric.Bytes
 open Crypto.Indexing
+open Crypto.Config
 
 type alg = cipherAlg
 let algi = cipherAlg_of_id

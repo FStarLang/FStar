@@ -1,5 +1,7 @@
 module Crypto.Indexing
 
+open Crypto.Config
+
 (**
 This module defines the type of indexes and helper functions.
 An application built on the Crypto namespace should re-implement this module to suit its own indexing practices.
@@ -17,10 +19,6 @@ type cipherAlg =
   | AES128
   | AES256
   | CHACHA20
-
-type aesImpl =
-  | SpartanAES
-  | HaclAES
 
 // References:
 //  - RFC 7539 for the AEAD algorithm
@@ -52,11 +50,5 @@ let cipherAlg_of_id i =
 
 let aesImpl_of_id (i:id) = i.aes
 
-// controls abstraction of plaintexts
-// (kept abstract, but requires all the crypto steps above)
-assume val safeId: i:id -> Tot bool
-
-let testId (a:aeadAlg) : i:id{~(safeId i) /\ i.cipher == a} =
-  let i = {cipher = a; aes=HaclAES; uniq = 0ul; } in
-  assume(~(safeId i));
-  i
+let testId (a:aeadAlg) : i:id{i.cipher == a} =
+  { cipher = a; aes=Crypto.Config.aes_implementation; uniq = 0ul; }
