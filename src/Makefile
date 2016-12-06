@@ -266,7 +266,8 @@ uexamples:
 examples:
 	+make -C ../examples sall
 
-extra:
+ulong:
+	+make utest
 	+make -C ../examples/low-level/crypto extra
 
 wc-boot:
