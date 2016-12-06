@@ -1,4 +1,4 @@
-module Crypto.AEAD.Encrypt.Enxor
+module Crypto.AEAD.Enxor
 
 // Implements agile, conditionally secure Authenticated Encryption
 // with Associated Data (AEAD) for TLS 1.2 and 1.3, given secure, 
@@ -23,6 +23,7 @@ open Flag
 open Crypto.Symmetric.PRF
 open Crypto.AEAD.Invariant
 
+module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
 module Plain = Crypto.Plain
 module Invariant = Crypto.AEAD.Invariant
@@ -292,7 +293,7 @@ let invert_contains_plain_and_cipher_block   (#i:id) (#r:rid) (#l:u32{l <=^ PRF.
             (ensures (b == PRF.Entry #r #i x (PRF.OTP l plain cipher)))
     = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 400"
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 400"
 val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^ x.ctr}) ->
 			     len:nat{len <> 0 /\ safelen i len (ctr_0 i +^ 1ul)} -> 
 			     (completed_len:nat{completed_len < len /\
@@ -358,8 +359,6 @@ val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^
    = Seq.append init (snoc (counterblocks ..) last_entry)  //by a standard snoc/append lemma
    = Seq.append init final_blocks                          //by frame_counterblocks_snoc
 *)
-
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 400"
 let extending_counter_blocks #i t x len completed_len plain cipher h0 h1 h_init
   = if safeId i
     then begin
@@ -497,8 +496,6 @@ let rec counter_enxor #i t x len remaining_len plain cipher h_init =
       trans_modifies_table_above_x_and_buffer t x y cipher h0 h1 h2
     end
   else refl_modifies_table_above_x_and_buffer t x cipher h0
-
-module Cipher = Crypto.Symmetric.Cipher
 
 val enxor:
   #i:id ->
