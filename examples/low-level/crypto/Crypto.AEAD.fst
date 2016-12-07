@@ -74,7 +74,6 @@ let leak #i st = PRF.leak st.prf
 
 ////////////////////////////////////////////////////////////////////////////////
 #reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let aadlen = x:UInt32.t{x <=^ aadmax}
 let encrypt_ensures' (regions:Set.set HH.rid)
 		     (#i:id) (st:aead_state i Writer)
 		     (n: Cipher.iv (alg i))

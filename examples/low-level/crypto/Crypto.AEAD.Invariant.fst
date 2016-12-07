@@ -33,6 +33,9 @@ type eternal_region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let prf_table (r:rgn) (i:id) = Seq.seq (PRF.entry r i)
 
+(* An idealization flag controlling per-id authentication alone *)
+let safeMac (i:id) = safeHS i && mac1 i
+
 (*** COUNTERS AND LENGTHS ***)
 (* The ctr value associated with the first otp block *)
 let otp_offset (i:id) = ctr_0 i +^ 1ul
@@ -88,19 +91,34 @@ noeq type aead_entry (i:id) =
 
 let aead_entries i = Seq.seq (aead_entry i)
 
+//TODO: move this to HyperStack
+let rref (r:rid) (a:Type) = x:HS.ref a {HS.frameOf x == r}
+
+(** aead_log: The type of the conditional, ideal aead_log **)
+let aead_log (r:rgn) (i:id) =
+  if safeMac i 
+  then rref r (aead_entries i)
+  else unit
+
+(** aead_log_as_ref: A coercion from a conditional log to the ideal case *)
+let aead_log_as_ref (#r:rgn) (#i:id) (x:aead_log r i{safeMac i}) 
+  : rref r (aead_entries i)
+  = x
+
+(** aead_state: the type of aead keys, also encapsulating their ideal state *)
 noeq type aead_state (i:id) (rw:rw) =
   | AEADState:
       #log_region: rgn -> // this is the *writer* region; the reader allocates nothing
-      // the log should exist only when prf i
-      (* TODO: this should follow the pattern used everywhere else:
-	 log: if safeId i then HS.ref (Seq.seq (entry i)) else unit
-      *)
-      log: HS.ref (Seq.seq (aead_entry i)) {HS.frameOf log == log_region} ->
-      // Was PRF(prf.rgn) == region. Do readers use its own PRF state?
-      prf: PRF.state i {prf.rgn == log_region /\
-		       (Flag.prf i ==> ~(log === PRF.itable i prf)) } (* including its key *) ->
+      log: aead_log log_region i ->
+      prf: PRF.state i {prf.rgn == log_region /\ //TODO: PRF state will move to the TLS region
+		       (safeMac i ==> ~(aead_log_as_ref log === PRF.itable i prf)) } ->
       ak: CMA.akey prf.mac_rgn i (* static, optional authentication key *) ->
       aead_state i rw
+
+(** st_ilog: Projecting the log from an aead_state, in the ideal case *)
+let st_ilog (#i:id) (#rw:rw) (x:aead_state i rw{safeMac i})
+  : rref x.log_region (aead_entries i)
+  = aead_log_as_ref x.log
 
 (*** MAIN STATEFUL INVARIANT ***)
 
@@ -112,9 +130,12 @@ noextract let find_aead_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (ae
   : option (aead_entry i)
   = SeqProperties.find_l (is_aead_entry_nonce n) entries
 
-let fresh_nonce (#i:id) (#rw:rw) (n:Cipher.iv (alg i)) (aead_st:aead_state i rw) (h:mem) = 
-  let entries = HS.sel h aead_st.log in
-  None? (find_aead_entry n entries)
+let fresh_nonce (#i:id) (n:Cipher.iv (alg i)) (entries:aead_entries i) =
+    None? (find_aead_entry n entries)
+
+let fresh_nonce_st (#i:id) (#rw:rw) (n:Cipher.iv (alg i)) (aead_st:aead_state i rw) (h:mem) = 
+  safeMac i ==> 
+  fresh_nonce n (HS.sel h aead_st.log)
 
 let num_blocks_for_entry (#i:id) (e:aead_entry i) : Tot nat =
   let AEADEntry nonce ad l plain cipher_tagged = e in
@@ -150,6 +171,8 @@ let rec counterblocks i mac_rgn x l from_pos to_pos plain cipher =
     let plain_hd = Crypto.Plain.slice plain from_pos (from_pos + l0) in
     let cipher_hd = Seq.slice cipher from_pos (from_pos + l0) in
     //safeId i is needed here, to show that OTP is a suitable range
+    //NB: cf issue: Separate integrity from confidentiality in AEAD (#153)
+    //    this could account for both the cases of safe_mac/safeId here
     let block = PRF.Entry x (PRF.OTP l_32 plain_hd cipher_hd) in 
     let blocks = counterblocks i mac_rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in
     SeqProperties.cons block blocks
@@ -159,7 +182,7 @@ let rec counterblocks i mac_rgn x l from_pos to_pos plain cipher =
 	is set to the suitable encoded ad + cipher, tag      **)
 #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let mac_is_set (#rgn:region) (#i:id)
-	       (prf_table:prf_table rgn i{safeId i}) //the entire prf table
+	       (prf_table:prf_table rgn i{mac_log}) //the entire prf table
 	       (iv:Cipher.iv (alg i))
 	       (ad:adata)
 	       (l:plainLen)
@@ -171,9 +194,9 @@ let mac_is_set (#rgn:region) (#i:id)
     (match PRF.find_mac prf_table dom_0 with
      | None -> False
      | Some mac_range ->
-       let mac_log = CMA.ilog (CMA.State?.log mac_range) in
-       m_contains mac_log h /\ (
-       match m_sel h mac_log with
+       let mac_st = CMA.ilog (CMA.State?.log mac_range) in
+       m_contains mac_st h /\ (
+       match m_sel h mac_st with
        | None           -> False
        | Some (msg,tag') ->
 	 safelen i l (PRF.ctr_0 i +^ 1ul) /\
@@ -202,19 +225,20 @@ let refines_one_entry (#rgn:region) (#i:id)
    //NB: this does not forbid the prf_table from containing other OTP blocks with the same IV;
    //    not clear whether we need that
    (let otp_blocks = counterblocks i rgn dom_1 l 0 l plain cipher in
-    (forall (prf_entry:PRF.entry rgn i).
+    (forall (prf_entry:PRF.entry rgn i).{:pattern (otp_blocks `contains` prf_entry)} //Pattern added: 12/7
       otp_blocks `contains` prf_entry ==>
       PRF.find prf_table prf_entry.x == Some (prf_entry.range)))
 
 (** none_above x prf_table:
 	no entry in the prf_table at ({iv=x.iv; ctr=i}) for any i >= x.ctr **)
 let none_above (#r:region) (#i:id) (x:PRF.domain i) (prf_table:prf_table r i) =
-    forall (y:PRF.domain i{y `PRF.above` x}). PRF.find prf_table y == None
+    forall (y:PRF.domain i{y `PRF.above` x}).{:pattern (y `PRF.above` x)} //Pattern added: 12/7
+	PRF.find prf_table y == None
 
-(** none_above_if_authId x prf_state h:
+(** none_above_prf_st x prf_state h:
         A stateful variant of none_above, using the full prf_table in h **)
-let none_above_if_authId (#i:id) (x:PRF.domain i) (st:PRF.state i) (h:mem) =
-  CMA.authId (i, x.iv) ==>
+let none_above_prf_st (#i:id) (x:PRF.domain i) (st:PRF.state i) (h:mem) =
+  prf i ==> 
     (let prf_table = HS.sel h (itable i st) in
      none_above x prf_table)
 
@@ -235,7 +259,7 @@ let all_above (#rgn:region) (#i:id) (x:PRF.domain i) (s:prf_table rgn i) =
 let unused_aead_iv_for_prf (#mac_rgn:region) (#i:id)
 			   (prf_table:prf_table mac_rgn i) //the entire prf table
   			   (iv:Cipher.iv (alg i))
-			   (h:mem{safeId i}) : GTot Type0
+			   (h:mem{safeMac i}) : GTot Type0
   = let dom_0 = {iv=iv; ctr=PRF.ctr_0 i} in
     none_above (PRF.incr i dom_0) prf_table /\ //There are no OTP entries for this IV at all
     (match PRF.find_mac prf_table dom_0 with
@@ -249,24 +273,23 @@ let unused_aead_iv_for_prf (#mac_rgn:region) (#i:id)
 let refines (#rgn:region) (#i:id)
             (prf_table: prf_table rgn i)
 	    (aead_entries:Seq.seq (aead_entry i))
-	    (h:mem{safeId i}) : GTot Type0 =
+	    (h:mem{safeMac i}) : GTot Type0 =
   let open FStar.SeqProperties in
   (* 1. Each aead entry is refined by the PRF table *)
-  (forall (aead_entry:aead_entry i).
-    aead_entries `contains` aead_entry ==>
-    refines_one_entry prf_table aead_entry h) /\
+  (safeId i ==> (forall (aead_entry:aead_entry i).{:pattern (aead_entries `contains` aead_entry)}
+		   aead_entries `contains` aead_entry ==>
+		   refines_one_entry prf_table aead_entry h)) /\
   (* 2. Every iv that does not appear in the aead table is unused in the PRF table *)
-  (forall (iv:Cipher.iv (alg i)).
-    match find_aead_entry iv aead_entries with
-    | Some _ -> True //already covered by refines_one_entry
-    | None   -> unused_aead_iv_for_prf prf_table iv h)
+  (forall (iv:Cipher.iv (alg i)).{:pattern (fresh_nonce iv aead_entries)}
+     fresh_nonce iv aead_entries ==> 
+     unused_aead_iv_for_prf prf_table iv h)
 
 (** aead_liveness:
 	The aead_state and its regions etc. are live **)
 let aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
-  HS.(h.h `Map.contains` st.prf.mac_rgn) /\      //contains the mac region
-  (safeId i ==> h `HS.contains` st.log) /\       //contains the aead log
-  (prf i ==> h `HS.contains` (itable i st.prf)) //contains the prf table
+  HS.(h.h `Map.contains` st.prf.mac_rgn) /\        //contains the mac region
+  (safeMac i ==> h `HS.contains` (st_ilog st)) /\  //contains the aead log
+  (prf i ==> h `HS.contains` (itable i st.prf))   //contains the prf table
 
 
 (*** inv st h:
@@ -274,7 +297,7 @@ let aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
        refines and aead_state_live ***)
 let inv (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
   aead_liveness st h /\
-  (safeId i ==>
+  (safeMac i ==>
      (let prf_table = HS.sel h (itable i st.prf) in
       let aead_entries = HS.sel h st.log in
       refines prf_table aead_entries h))
