@@ -24,7 +24,6 @@ open FStar.Ident
 open FStar.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
-open FStar.Syntax.Print
 open FStar.Const
 
 (********************************************************************************)
@@ -92,7 +91,7 @@ open FStar.Syntax.Subst
 let rec unmeta e =
     let e = compress e in
     match e.n with
-        | Tm_meta(e, _) 
+        | Tm_meta(e, _)
         | Tm_ascribed(e, _, _) -> unmeta e
         | _ -> e
 
@@ -108,8 +107,8 @@ let rec univ_kernel u = match u with
     | U_unif _
     | U_zero -> u, 0
     | U_succ u -> let k, n = univ_kernel u in k, n+1
-    | U_max _  -> failwith "Imposible: univ_kernel (U_max _)" 
-    | U_bvar _ -> failwith "Imposible: univ_kernel (U_bvar _)" 
+    | U_max _  -> failwith "Imposible: univ_kernel (U_max _)"
+    | U_bvar _ -> failwith "Imposible: univ_kernel (U_bvar _)"
 
 //requires: kernel u = U_zero, n
 //returns: n
@@ -120,11 +119,11 @@ let constant_univ_as_nat u = snd (univ_kernel u)
 //    named universes come next, in lexical order of their kernels and their offsets
 //    unification variables next, in lexical order of their kernels and their offsets
 //    max terms come last
-//e.g, [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2] 
-let rec compare_univs u1 u2 = match u1, u2 with 
+//e.g, [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2]
+let rec compare_univs u1 u2 = match u1, u2 with
     | U_bvar _, _
     | _, U_bvar _  -> failwith "Impossible: compare_univs"
-   
+
     | U_unknown, U_unknown -> 0
     | U_unknown, _ -> -1
     | _, U_unknown -> 1
@@ -139,12 +138,12 @@ let rec compare_univs u1 u2 = match u1, u2 with
 
     | U_unif u1, U_unif u2 -> Unionfind.uvar_id u1 - Unionfind.uvar_id u2
 
-    | U_max us1, U_max us2 -> 
-      let n1 = List.length us1 in  
+    | U_max us1, U_max us2 ->
+      let n1 = List.length us1 in
       let n2 = List.length us2 in
       if n1 <> n2
       then n1 - n2
-      else let copt = Util.find_map (List.zip us1 us2) (fun (u1, u2) -> 
+      else let copt = Util.find_map (List.zip us1 us2) (fun (u1, u2) ->
                 let c = compare_univs u1 u2 in
                 if c<>0 then Some c
                 else None) in
@@ -156,14 +155,14 @@ let rec compare_univs u1 u2 = match u1, u2 with
     | U_max _, _ -> -1
 
     | _, U_max _ -> 1
-     
-    | _ -> 
+
+    | _ ->
         let k1, n1 = univ_kernel u1 in
-        let k2, n2 = univ_kernel u2 in 
+        let k2, n2 = univ_kernel u2 in
         let r = compare_univs k1 k2 in
         if r=0
         then n1 - n2
-        else r 
+        else r
 
 let eq_univs u1 u2 = compare_univs u1 u2 = 0
 
@@ -280,7 +279,7 @@ let is_pure_or_ghost_function t = match (compress t).n with
     | _ -> true
 
 let is_lemma t =  match (compress t).n with
-    | Tm_arrow(_, c) -> 
+    | Tm_arrow(_, c) ->
       begin match c.n with
         | Comp ct -> lid_equals ct.effect_name Const.effect_Lemma_lid
         | _ -> false
@@ -293,15 +292,15 @@ let head_and_args t =
     match t.n with
         | Tm_app(head, args) -> head, args
         | _ -> t, []
-        
- let un_uinst t = 
-    let t = Subst.compress t in 
-    match t.n with 
+
+ let un_uinst t =
+    let t = Subst.compress t in
+    match t.n with
         | Tm_uinst(t, _) -> Subst.compress t
-        | _ -> t 
-   
+        | _ -> t
+
 let is_smt_lemma t = match (compress t).n with
-    | Tm_arrow(_, c) -> 
+    | Tm_arrow(_, c) ->
       begin match c.n with
         | Comp ct when lid_equals ct.effect_name Const.effect_Lemma_lid ->
             begin match ct.effect_args with
@@ -325,7 +324,7 @@ let is_ml_comp c = match c.n with
   | _ -> false
 
 let comp_result c = match c.n with
-  | Total (t, _)  
+  | Total (t, _)
   | GTotal (t, _) -> t
   | Comp ct -> ct.result_typ
 
@@ -362,7 +361,7 @@ let is_primop f = match f.n with
   | Tm_fvar fv -> is_primop_lid fv.fv_name.v
   | _ -> false
 
-let rec unascribe e = 
+let rec unascribe e =
     let e = Subst.compress e in
     match e.n with
       | Tm_ascribed (e, _, _) -> unascribe e
@@ -379,7 +378,7 @@ let rec unrefine t =
   | Tm_ascribed(t, _, _) -> unrefine t
   | _ -> t
 
-let rec is_unit t = 
+let rec is_unit t =
     match (unrefine t).n with
     | Tm_type _ -> true
     | Tm_fvar fv ->
@@ -420,9 +419,9 @@ let rec pre_typ t =
 let destruct typ lid =
   let typ = compress typ in
   match (un_uinst typ).n with
-    | Tm_app(head, args) -> 
-      let head = un_uinst head in 
-      begin match head.n with 
+    | Tm_app(head, args) ->
+      let head = un_uinst head in
+      begin match head.n with
               | Tm_fvar tc when fv_eq_lid tc lid -> Some args
               | _ -> None
       end
@@ -560,49 +559,49 @@ let mk_field_projector_name lid (x:bv) i =
 let set_uvar uv t =
   match Unionfind.find uv with
     | Fixed _ -> failwith (Util.format1 "Changing a fixed uvar! ?%s\n" (Util.string_of_int <| Unionfind.uvar_id uv))
-    | _ -> Unionfind.change uv (Fixed t) 
+    | _ -> Unionfind.change uv (Fixed t)
 
-let qualifier_equal q1 q2 = match q1, q2 with 
+let qualifier_equal q1 q2 = match q1, q2 with
   | Discriminator l1, Discriminator l2 -> lid_equals l1 l2
   | Projector (l1a, l1b), Projector (l2a, l2b) -> lid_equals l1a l2a && l1b.idText=l2b.idText
-  | RecordType f1, RecordType f2 
+  | RecordType f1, RecordType f2
   | RecordConstructor f1, RecordConstructor f2 -> List.length f1 = List.length f2 && List.forall2 lid_equals f1 f2
   | _ -> q1=q2
-  
+
 
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
-let abs bs t lopt = 
+let abs bs t lopt =
   if List.length bs = 0 then
     t
   else
     let close_lopt lopt = match lopt with
-        | None -> lopt
-        | Some (Inr (lid, flags))  -> (* printfn "Abstracting over %s with annotation %s %s" (Print.term_to_string t) (Ident.text_of_lid lid) (flags|> List.map Print.cflags_to_string |> String.concat " ") ;*) lopt
-        | Some (Inl lc) ->(*
-printfn "Abstracting over %s with annotation %s" (Print.term_to_string t) (Print.lcomp_to_string lc) ;*)
-            Some (Inl (close_lcomp bs lc)) in
-    match bs with 
+        | None
+        | Some (Inr _) -> lopt
+        | Some (Inl lc) ->
+            Some (Inl (close_lcomp bs lc))
+    in
+    match bs with
     | [] -> t
-    | _ -> 
+    | _ ->
     let body = compress (Subst.close bs t) in
-    match body.n, lopt with 
-        | Tm_abs(bs', t, lopt'), None -> 
+    match body.n, lopt with
+        | Tm_abs(bs', t, lopt'), None ->
           mk (Tm_abs(close_binders bs@bs', t, close_lopt lopt')) None t.pos
-        | _ -> 
-          mk (Tm_abs(close_binders bs, body, close_lopt lopt)) None t.pos 
+        | _ ->
+          mk (Tm_abs(close_binders bs, body, close_lopt lopt)) None t.pos
 
-let arrow bs c = match bs with 
-  | [] -> comp_result c 
+let arrow bs c = match bs with
+  | [] -> comp_result c
   | _ -> mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
 
-let flat_arrow bs c = 
-  let t = arrow bs c in 
-  match (Subst.compress t).n with 
+let flat_arrow bs c =
+  let t = arrow bs c in
+  match (Subst.compress t).n with
   | Tm_arrow(bs, c) ->
-    begin match c.n with 
-        | Total (tres, _) -> 
+    begin match c.n with
+        | Total (tres, _) ->
           begin match (Subst.compress tres).n with
                | Tm_arrow(bs', c') -> mk (Tm_arrow(bs@bs', c')) (!t.tk) t.pos
                | _ -> t
@@ -648,14 +647,14 @@ let abs_formals t =
     bs, t, what
 
 let mk_letbinding lbname univ_vars typ eff def =
-    {lbname=lbname; 
+    {lbname=lbname;
      lbunivs=univ_vars;
      lbtyp=typ;
      lbeff=eff;
      lbdef=def}
 
 let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
-    let def = match recs, univ_vars with 
+    let def = match recs, univ_vars with
         | None, _
         | _, [] -> def
         | Some fvs, _ ->
@@ -666,14 +665,14 @@ let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
     let def = Subst.close_univ_vars univ_vars def in
     mk_letbinding lbname univ_vars typ eff def
 
-let open_univ_vars_binders_and_comp uvs binders c = 
-    match binders with 
-        | [] -> 
+let open_univ_vars_binders_and_comp uvs binders c =
+    match binders with
+        | [] ->
           let uvs, c = Subst.open_univ_vars_comp uvs c in
           uvs, [], c
-        | _ -> 
+        | _ ->
           let t' = arrow binders c in
-          let uvs, t' = Subst.open_univ_vars uvs t' in 
+          let uvs, t' = Subst.open_univ_vars uvs t' in
           match (Subst.compress t').n with
             | Tm_arrow(binders, c) -> uvs, binders, c
             | _ -> failwith "Impossible"
@@ -710,7 +709,7 @@ let mk_dtuple_data_lid n r =
 
 let is_lid_equality x = lid_equals x Const.eq2_lid
 
-let is_forall lid = lid_equals lid Const.forall_lid 
+let is_forall lid = lid_equals lid Const.forall_lid
 let is_exists lid = lid_equals lid Const.exists_lid
 let is_qlid lid   = is_forall lid || is_exists lid
 let is_equality x = is_lid_equality x.v
@@ -773,7 +772,7 @@ let ktype  : term = mk (Tm_type(U_unknown)) None dummyRange
 let ktype0 : term = mk (Tm_type(U_zero)) None dummyRange
 
 //Type(u), where u is a new universe unification variable
-let type_u () : typ * universe = 
+let type_u () : typ * universe =
     let u = U_unif <| Unionfind.fresh None in
     mk (Tm_type u) None Range.dummyRange, u
 
@@ -781,15 +780,15 @@ let kt_kt = Const.kunary ktype0 ktype0
 let kt_kt_kt = Const.kbin ktype0 ktype0 ktype0
 
 let fvar_const l = fvar l Delta_constant None
-let tand    = fvar_const Const.and_lid 
-let tor     = fvar_const Const.or_lid  
-let timp    = fvar_const Const.imp_lid 
-let tiff    = fvar_const Const.iff_lid 
+let tand    = fvar_const Const.and_lid
+let tor     = fvar_const Const.or_lid
+let timp    = fvar_const Const.imp_lid
+let tiff    = fvar_const Const.iff_lid
 let t_bool  = fvar_const Const.bool_lid
 let t_false = fvar_const Const.false_lid
-let t_true  = fvar_const Const.true_lid 
-let b2t_v   = fvar_const Const.b2t_lid  
-let t_not   = fvar_const Const.not_lid  
+let t_true  = fvar_const Const.true_lid
+let b2t_v   = fvar_const Const.b2t_lid
+let t_not   = fvar_const Const.not_lid
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
@@ -817,7 +816,7 @@ let mk_imp phi1 phi2  =
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
 
-let teq = fvar_const Const.eq2_lid 
+let teq = fvar_const Const.eq2_lid
 
 let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
 
@@ -826,9 +825,9 @@ let mk_has_type t x t' =
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) None dummyRange in
     mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) None dummyRange
 
-let lex_t    = fvar_const Const.lex_t_lid 
-let lex_top  = fvar Const.lextop_lid Delta_constant (Some Data_ctor) 
-let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor) 
+let lex_t    = fvar_const Const.lex_t_lid
+let lex_top  = fvar Const.lextop_lid Delta_constant (Some Data_ctor)
+let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor)
 let tforall  = fvar Const.forall_lid (Delta_defined_at_level 1) None
 let t_haseq   = fvar Const.haseq_lid Delta_constant None
 
@@ -870,9 +869,9 @@ type connective =
     | BaseConn of lident * args
 
 let destruct_typ_as_formula f : option<connective> =
-    let rec unmeta_monadic f = 
+    let rec unmeta_monadic f =
       let f = Subst.compress f in
-      match f.n with 
+      match f.n with
       | Tm_meta(t, Meta_monadic _)
       | Tm_meta(t, Meta_monadic_lift _) -> unmeta_monadic t
       | _ -> f in
@@ -922,10 +921,10 @@ let destruct_typ_as_formula f : option<connective> =
               aux (Some (is_forall tc.fv_name.v)) (b::out) t2
 
             | Some b, _ ->
-              let bs = List.rev out in 
+              let bs = List.rev out in
               let bs, t = Subst.open_term bs t in
               let pats, body = patterns t in
-              if b 
+              if b
               then Some (QAll(bs, pats, body))
               else Some  (QEx(bs, pats, body))
 
@@ -939,32 +938,32 @@ let destruct_typ_as_formula f : option<connective> =
 
 
   let action_as_lb a =
-    let lb = close_univs_and_mk_letbinding 
-                None 
+    let lb = close_univs_and_mk_letbinding
+                None
                 (Inr (lid_as_fv a.action_name Delta_equational None))
                 a.action_univs
                 a.action_typ
                 Const.effect_Tot_lid
                 a.action_defn in
     Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [])
-    
+
 (* Some reification utilities *)
-let mk_reify t = 
+let mk_reify t =
     let reify_ = mk (Tm_constant(FStar.Const.Const_reify)) None t.pos in
-    mk (Tm_app(reify_, [as_arg t])) None t.pos 
+    mk (Tm_app(reify_, [as_arg t])) None t.pos
 
 (* Some utilities for clients who wish to build top-level bindings and keep
  * their delta-qualifiers correct (e.g. dmff). *)
 
-let rec delta_qualifier t = 
+let rec delta_qualifier t =
     let t = Subst.compress t in
     match t.n with
         | Tm_delayed _ -> failwith "Impossible"
-        | Tm_fvar fv -> fv.fv_delta 
+        | Tm_fvar fv -> fv.fv_delta
         | Tm_bvar _
-        | Tm_name _ 
-        | Tm_match _ 
-        | Tm_uvar _ 
+        | Tm_name _
+        | Tm_match _
+        | Tm_uvar _
         | Tm_unknown -> Delta_equational
         | Tm_type _
         | Tm_constant _
@@ -973,11 +972,11 @@ let rec delta_qualifier t =
         | Tm_refine({sort=t}, _)
         | Tm_meta(t, _)
         | Tm_ascribed(t, _, _)
-        | Tm_app(t, _) 
-        | Tm_abs(_, t, _) 
+        | Tm_app(t, _)
+        | Tm_abs(_, t, _)
         | Tm_let(_, t) -> delta_qualifier t
 
-let incr_delta_qualifier t = 
+let incr_delta_qualifier t =
     let d = delta_qualifier t in
     let rec aux d = match d with
         | Delta_equational -> d
@@ -988,7 +987,7 @@ let incr_delta_qualifier t =
 
 let is_unknown t = match (Subst.compress t).n with | Tm_unknown -> true | _ -> false
 
-let rec list_elements (e:term) : option<list<term>> = 
+let rec list_elements (e:term) : option<list<term>> =
   let head, args = head_and_args (unmeta e) in
   match (un_uinst head).n, args with
   | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid ->

@@ -90,7 +90,7 @@ BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
 BOOT_FORMAT=$(addprefix format/, formatml.fs)
 ABSYN=syntax.fs const.fs visit.fs util.fs print.fs
 ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
-SYNTAX=syntax.fsi syntax.fs const.fs subst.fsi subst.fs free.fsi free.fs instfv.fsi instfv.fs print.fsi print.fs util.fs
+SYNTAX=syntax.fsi syntax.fs const.fs subst.fsi subst.fs free.fsi free.fs instfv.fsi instfv.fs util.fs print.fsi print.fs
 SYNTAX_SRC=$(addprefix syntax/, $(SYNTAX))
 TC=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 TC_SRC=$(addprefix tc/, $(TC))
@@ -262,6 +262,13 @@ ulib:
 
 uexamples:
 	+make -C ../examples uall
+
+examples:
+	+make -C ../examples sall
+
+ulong:
+	+make utest
+	+make -C ../examples/low-level/crypto extra
 
 wc-boot:
 	wc -l $(BOOT_ALL)

@@ -21,7 +21,7 @@ open FStar
 open FStar.Syntax
 open FStar.Util
 open FStar.Syntax.Syntax
-//open FStar.Syntax.Util
+open FStar.Syntax.Util
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
@@ -32,7 +32,7 @@ let sli (l:lident) : string =
     if Options.print_real_names()
     then l.str
     else l.ident.idText
-//    Util.format3 "%s@{def=%s;use=%s}" s 
+//    Util.format3 "%s@{def=%s;use=%s}" s
 //        (Range.string_of_range (Ident.range_of_lid l))
 //        (Range.string_of_use_range (Ident.range_of_lid l))
 
@@ -294,7 +294,7 @@ and  pat_to_string x = match x.v with
 and lbs_to_string quals lbs =
     let lbs =
         if (Options.print_universes())
-        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs ((* temporary removed Util.mk_conj lb.lbtyp *) lb.lbdef) in
+        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs (Util.mk_conj lb.lbtyp lb.lbdef) in
                                         let t, d = match (Subst.compress td).n with
                                             | Tm_app(_, [(t, _); (d, _)]) -> t, d
                                             | _ -> failwith "Impossibe" in
@@ -525,7 +525,7 @@ let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
 let rec sigelt_to_string_short x = match x with
   | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _, _) -> Util.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
-  | _ ->  "temporary removed" //lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
+  | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =
   Util.format2 "module %s\n%s" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
