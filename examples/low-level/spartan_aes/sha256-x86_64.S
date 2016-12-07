@@ -3211,7 +3211,7 @@ sha256_main_i_SHA256_Compute64Steps:
   movl $0, 104(%rsp)
   movl $0, 108(%rsp)
   movl $0, 112(%rsp)
-  sub 76, %rsp
+  sub $112, %rsp
   ret 
 
 .global sha256_main_i_SHA256_ComputeInitialWs
@@ -4328,7 +4328,7 @@ sha256_main_i_SHA256_ComputeInitialWs:
   movl 188 (%r9), %eax
   add %eax, %edx
   movl %edx, 252 (%r9)
-  sub 28, %rsp
+  sub $0, %rsp
   ret 
 
 
