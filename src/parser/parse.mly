@@ -127,6 +127,7 @@ let compile_op arity s =
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
+%token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
 %token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
 %token AND ASSERT BEGIN ELSE END
@@ -395,6 +396,7 @@ qualifier:
      Unfold_for_unification_and_vcgen
   }
   | IRREDUCIBLE   { Irreducible }
+  | NOEXTRACT     { NoExtract }
   | DEFAULT       { DefaultEffect }
   | TOTAL         { TotalEffect }
   | PRIVATE       { Private }

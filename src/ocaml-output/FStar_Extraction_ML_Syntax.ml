@@ -467,7 +467,8 @@ type mlexpr' =
  and c_flag =
 | Mutable
 | Assumed
-| Private 
+| Private
+| NoExtract 
  and mlletflavor =
 | Rec
 | NonRec 
@@ -649,6 +650,15 @@ end))
 
 let is_Private = (fun _discr_ -> (match (_discr_) with
 | Private (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_NoExtract = (fun _discr_ -> (match (_discr_) with
+| NoExtract (_) -> begin
 true
 end
 | _ -> begin
@@ -1042,10 +1052,10 @@ end)
 
 
 let bv_as_mlident : FStar_Syntax_Syntax.bv  ->  mlident = (fun x -> if (((FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText FStar_Ident.reserved_prefix) || (FStar_Syntax_Syntax.is_null_bv x)) || (is_reserved x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText)) then begin
-(let _166_729 = (let _166_728 = (let _166_727 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
-in (Prims.strcat "_" _166_727))
-in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _166_728))
-in ((_166_729), ((Prims.parse_int "0"))))
+(let _166_730 = (let _166_729 = (let _166_728 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
+in (Prims.strcat "_" _166_728))
+in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _166_729))
+in ((_166_730), ((Prims.parse_int "0"))))
 end else begin
 ((x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText), ((Prims.parse_int "0")))
 end)

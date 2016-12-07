@@ -274,17 +274,12 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                     else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                  g, ml_lb::ml_lbs)
               (g, []) bindings (snd lbs) in
-              let flags =
-                (if Util.for_some (function Assumption -> true | _ -> false) quals then
-                  [ Assumed ]
-                else
-                  [])
-                @
-                (if Util.for_some (function Syntax.Private -> true | _ -> false) quals then
-                  [ Private ]
-                else
-                  [])
-              in
+              let flags = List.choose (function
+                | Assumption -> Some Assumed
+                | Syntax.Private -> Some Private
+                | Syntax.NoExtract -> Some NoExtract
+                | _ -> None
+              ) quals in
               g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (flavor, flags, List.rev ml_lbs')]
 
             | _ -> 

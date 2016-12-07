@@ -330,8 +330,12 @@ let rec load_uint128 len buf =
     assert_norm (256 * pow2 (8 * 16 - 8) - 256 <= pow2 128 - 256);
     Math.Lemmas.pow2_le_compat (8 * 16 - 8) (8 * v len - 8);
     assert (256 * pow2 (8 * v len - 8) - 256 <= pow2 128 - 256);
-    let n' = n in (* n defined in FStar.UInt128, so was shadowed, so renamed into n' *)
-    FStar.UInt128.(uint8_to_uint128 b +^ uint64_to_uint128 256UL *^ n') 
+    Math.Lemmas.modulo_lemma (256 * UInt128.v n) (pow2 128);
+    assert_norm (pow2 (UInt32.v 8ul) == 256);
+    let n' = n in (* n shadowed by FStar.UInt128.n *)
+    assert (256 * UInt128.v n' == FStar.UInt128.(v (n' <<^ 8ul)));
+    FStar.UInt128.(uint8_to_uint128 b +^ (n' <<^ 8ul))
+
 
 (* stores a machine integer into a buffer of len bytes *)
 // 16-10-02 subsumes Buffer.Utils.bytes_of_uint32 ?
@@ -356,6 +360,26 @@ let rec store_uint32 len buf n =
     store_uint32 len buf' n';
     buf.(0ul) <- b // updating after the recursive call helps verification
 
+val store_big32: 
+  len:UInt32.t {v len <= 4} -> buf:lbuffer (v len) -> 
+  n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> ST unit
+  (requires (fun h0 -> Buffer.live h0 buf))
+  (ensures (fun h0 r h1 -> 
+    Buffer.live h1 buf /\ Buffer.modifies_1 buf h0 h1 /\
+    UInt32.v n == big_endian (sel_bytes h1 len buf)))
+let rec store_big32 len buf n = 
+  if len <> 0ul then
+    let len = len -^ 1ul in 
+    let b = uint32_to_uint8 n in
+    let n1 = n in (* n shadowed by FStar.UInt32.n *)
+    let n' = FStar.UInt32.(n1 >>^ 8ul) in 
+    assert(v n = UInt8.v b + 256 * v n');
+    let buf' = Buffer.sub buf 0ul len in
+    Math.Lemmas.pow2_plus 8 (8 * v len);
+    assert_norm (pow2 8 == 256);
+    store_big32 len buf' n';
+    buf.(len) <- b // updating after the recursive call helps verification
+
 val uint32_bytes: 
   len:UInt32.t {v len <= 4} -> n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> 
   Tot (b:lbytes (v len) { UInt32.v n == little_endian b}) (decreases (v len))
@@ -377,6 +401,44 @@ let rec uint32_bytes len n =
     in 
     SeqProperties.cons byte b'
 
+val uint32_be: 
+  len:UInt32.t {v len <= 4} -> n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> 
+  Tot (b:lbytes (v len) { UInt32.v n == big_endian b}) (decreases (v len))
+let rec uint32_be len n = 
+  if len = 0ul then 
+    let e = Seq.createEmpty #UInt8.t in
+    assert_norm(0 = big_endian e);
+    e
+  else
+    let len = len -^ 1ul in 
+    let byte = uint32_to_uint8 n in
+    let n1 = n in (* n shadowed by FStar.UInt32.n *)
+    let n' = FStar.UInt32.(n1 >>^ 8ul) in 
+    assert(v n = UInt8.v byte + 256 * v n');
+    Math.Lemmas.pow2_plus 8 (8 * v len);
+    assert_norm (pow2 8 == 256);
+    assert(v n' < pow2 (8 * v len ));
+    let b' = uint32_be len n'
+    in 
+    SeqProperties.snoc b' byte 
+
+// turns an integer into a bytestream, little-endian
+val little_bytes: 
+  len:UInt32.t -> n:nat{n < pow2 (8 * v len)} ->
+  Tot (b:lbytes (v len) {n == little_endian b}) (decreases (v len))
+let rec little_bytes len n = 
+  if len = 0ul then 
+    Seq.createEmpty 
+  else
+    let len = len -^ 1ul in 
+    let byte = UInt8.uint_to_t (n % 256) in
+    let n' = n / 256 in 
+    Math.Lemmas.pow2_plus 8 (8 * v len);
+    assert(n' < pow2 (8 * v len ));
+    let b' = little_bytes len n' in
+    let b = cons byte b' in
+    assert(Seq.equal b' (tail b));
+    b
 
 // check efficient compilation for all back-ends
 val store_uint128: 

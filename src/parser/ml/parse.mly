@@ -179,6 +179,7 @@ let compile_op arity s =
 %token NEW_EFFECT
 %token NEW_EFFECT_FOR_FREE
 %token NOEQUALITY
+%token NOEXTRACT
 %token OF
 %token OPAQUE
 %token OPEN
@@ -1036,6 +1037,9 @@ qualifier:
 | IRREDUCIBLE
     {let _1 = () in
                   ( Irreducible )}
+| NOEXTRACT
+    {let _1 = () in
+                  ( NoExtract )}
 | DEFAULT
     {let _1 = () in
                   ( DefaultEffect )}
