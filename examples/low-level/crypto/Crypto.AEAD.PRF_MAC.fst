@@ -67,13 +67,6 @@ let prf_mac_ensures (i:id) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:PRF.do
       HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1
 
-val prf_mac_wrapper:
-  i:id -> t:PRF.state i -> k_0: CMA.akey t.mac_rgn i -> x:PRF.domain_mac i -> ST (CMA.state (i,x.iv))
-  (requires (fun h0 -> True))
-  (ensures  (fun h0 mac h1 -> prf_mac_ensures i t k_0 x h0 mac h1))
-let prf_mac_wrapper i t k_0 x = 
-  PRF.prf_mac i t k_0 x
-
 (*
  * For the AEAD invariant, after prf_mac, the PRF table must contain an unused mac for the nonce,
  * and no corresponding otp entries, further the AEAD invariant should hold
@@ -147,7 +140,13 @@ val unused_mac_exists_after_prf_mac
   (ensures (safeMac i ==> unused_mac_exists aead_st.prf x h1))
 let unused_mac_exists_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 = ()
 
-val inv_after_prf_mac
+let aead_inv_after_prf_mac (#i:id) (#rw:rw) (aead_st:aead_state i rw) (x:PRF.domain_mac i) (h:mem) =
+  safeMac i ==>
+    (let prf_table = HS.sel h (itable i aead_st.prf) in
+     unused_mac_exists aead_st.prf x h /\        //unused mac exists in the prf table
+     none_above (PRF.incr i x) prf_table)       //no otp entries exist in the prf table for this nonce
+  
+val lemma_aead_inv_after_prf_mac
   (#i:id)
   (#rw:rw)
   (aead_st:aead_state i rw)
@@ -158,17 +157,34 @@ val inv_after_prf_mac
   (requires inv aead_st h0 /\                                  //invariant holds in h0
             (safeMac i ==> fresh_nonce_st x.iv aead_st h0) /\  //the nonce is fresh w.r.t. the AEAD table
             prf_mac_ensures i aead_st.prf k_0 x h0 mac h1)     //prf_mac_ensures holds from h0 to h1
-  (ensures //TODO: inv aead_st h1 /\                                  //invariant holds in h1
-           (safeMac i ==>
-             (let prf_table = HS.sel h1 (itable i aead_st.prf) in
-	      unused_mac_exists aead_st.prf x h1 /\        //unused mac exists in the prf table
-              none_above (PRF.incr i x) prf_table)))      //no otp entries exist in the prf table for this nonce
-let inv_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 =
+  (ensures  (aead_inv_after_prf_mac aead_st x h1))  //TODO: inv aead_st h1
+let lemma_aead_inv_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 =
   if safeMac i
   then begin
-    unused_mac_exists_after_prf_mac aead_st k_0 x mac h0 h1;  //establish unused_mac_exists
-    none_above_otp_after_prf_mac aead_st k_0 x mac h0 h1      //establish none_above
+    unused_mac_exists_after_prf_mac aead_st k_0 x mac h0 h1;
+    none_above_otp_after_prf_mac aead_st k_0 x mac h0 h1
   end
+
+val prf_mac_wrapper
+  (#i:id)
+  (#rw:rw)
+  (aead_st:aead_state i rw)
+  (k_0:CMA.akey aead_st.prf.mac_rgn i)
+  (x:PRF.domain_mac i)
+  : ST (CMA.state (i,x.iv))
+       (requires (fun h0 -> inv aead_st h0 /\
+                          (safeMac  i ==> fresh_nonce_st x.iv aead_st h0)))
+       (ensures (fun h0 mac h1 -> prf_mac_ensures i aead_st.prf k_0 x h0 mac h1 /\
+                               aead_inv_after_prf_mac aead_st x h1))
+let prf_mac_wrapper #i #rw aead_st k_0 x =
+  let h0 = get () in
+  
+  let mac = PRF.prf_mac i aead_st.prf k_0 x in
+
+  let h1 = get () in
+  lemma_aead_inv_after_prf_mac aead_st k_0 x mac h0 h1;
+
+  mac
 
 (* open Crypto.AEAD.Encoding *)
 (* open Crypto.Plain *)
