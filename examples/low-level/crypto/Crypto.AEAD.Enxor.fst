@@ -39,7 +39,10 @@ let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
     Seq.equal (Seq.slice contents1 0 (Seq.length contents0)) contents0 /\
     all_above x (Seq.slice contents1 (Seq.length contents0) (Seq.length contents1))
   else
-    Buffer.modifies_1 b h0 h1)
+    (let rid = Buffer.frameOf b in
+     HS.modifies_one rid h0 h1 /\ 
+     Buffer.modifies_buf_1 rid b h0 h1))
+    
 
 let refl_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
 			     (x:PRF.domain i{x.ctr <> 0ul}) 
@@ -87,7 +90,7 @@ let x_buffer_1_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i
       	let c1 = HS.sel h_1 r in
 	let diff = Seq.slice c1 (Seq.length c0) (Seq.length c1) in
 	FStar.Classical.forall_intro (SeqProperties.contains_elim diff)
-      else ()
+      else Buffer.lemma_reveal_modifies_1 c h_0 h_1
   
 val prf_enxor_leaves_none_strictly_above_x: #i:id -> 
 					   t:PRF.state i ->
@@ -455,7 +458,7 @@ val counter_enxor:
     enxor_liveness t plain cipher h /\
     enxor_dexor_lengths_ok x len remaining_len /\
     // if ciphertexts are authenticated, then fresh blocks are available
-    none_above_if_authId x t h /\
+    (safeId i ==> none_above_if_authId x t h) /\
     enxor_invariant t x len remaining_len plain cipher h_init h))
   (ensures (fun h0 _ h1 ->
     enxor_liveness t plain cipher h1 /\
@@ -477,7 +480,7 @@ let rec counter_enxor #i t x len remaining_len plain cipher h_init =
       PRF.prf_enxor i t x l cipher_hd plain_hd;
       let h1 = get () in
       x_buffer_1_modifies_table_above_x_and_buffer t x cipher h0 h1;
-      prf_enxor_leaves_none_strictly_above_x t x len remaining_len cipher h0 h1;
+      if safeId i then prf_enxor_leaves_none_strictly_above_x t x len remaining_len cipher h0 h1;
       extending_counter_blocks t x (v len) (v completed_len) plain cipher h0 h1 h_init;
       let y = PRF.incr i x in
       counter_enxor t y len (remaining_len -^ l) plain cipher h_init;
@@ -499,8 +502,9 @@ val enxor:
     let x = {iv=iv; ctr=otp_offset i} in
     enxor_separation t plain cipher /\
     enxor_liveness t plain cipher h /\
-    enxor_dexor_lengths_ok x len len /\
-    none_above_if_authId x t h))    // if ciphertexts are authenticated, then fresh blocks are available
+    len <> 0ul /\
+    safelen i (v len) (otp_offset i) /\
+    (safeId i ==> none_above_if_authId x t h)))    // if ciphertexts are authenticated, then fresh blocks are available
   (ensures (fun h0 _ h1 ->
     let x = {iv=iv; ctr=otp_offset i} in
     enxor_liveness t plain cipher h1 /\
