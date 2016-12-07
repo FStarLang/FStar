@@ -1,33 +1,27 @@
+# Override to get cross-compilation
+MARCH?=$(shell uname -m)
 
-MARCH = $(shell uname -m)
-
-ifeq ($(MARCH),x86_64)
-  AES = aes_x64.asm
-  ML = ml64
-  MLSUF = /amd64
-else ifeq ($(MARCH),i686)
-  AES = aes_i686.asm
-  ML = ml
-  MLSUF = 
+ifeq ($(shell uname | cut -c 1-6),CYGWIN)
+  CC=$(MARCH)-w64-mingw32-gcc
 else
-  $(error Platform $(MARCH) is not supported)
-endif
-
-ifeq (, $(shell which $(ML) 2> /dev/null))
-  ifeq ($(OS),Windows_NT)
-	ML := "/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 12.0/VC/bin$(MLSUF)/$(ML).exe"
+  ifeq ($(MARCH),i686)
+    CC=gcc -m32
+  else
+    CC=gcc
   endif
 endif
 
-ifeq (, $(shell which $(ML) 2> /dev/null))
-  $(error Command $(ML) not found in $(PATH))
-endif
+all: aes.o sha256.o
 
-all: aes.o
+%.o: %-$(MARCH).S
+	$(CC) -c $< -o $@
+
+.PHONY: import
+import:
+	@if [ x"$(SPARTAN_HOME)" = x ]; then echo "SPARTAN_HOME not defined"; exit 1; fi
+	cp $(SPARTAN_HOME)/obj/aes-gcc.S aes-x86_64.S
+	cp $(SPARTAN_HOME)/obj/sha256-gcc.S sha256-x86_64.S
+	sed -i 's/.section .text/.text/' *.S
 
 clean:
 	rm -f *.o *~
-
-aes.o: $(AES)
-	$(ML) -c -Fo aes.o -coff $^
-
