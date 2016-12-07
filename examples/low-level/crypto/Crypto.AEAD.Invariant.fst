@@ -369,6 +369,13 @@ let frame_refines (i:id{safeId i}) (mac_rgn:region)
      forall_intro (move_requires (frame_refines_one_entry h h' blocks));
      forall_intro (move_requires (frame_unused_aead_iv_for_prf h h' blocks))
 
+let frame_inv_push (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) (h1:mem)
+   : Lemma (requires (inv st h /\ 
+		      HS.fresh_frame h h1))
+	   (ensures (inv st h1))
+   = if safeId i
+     then frame_refines i st.prf.mac_rgn (HS.sel h (PRF.itable i st.prf)) (HS.sel h st.log) h h1
+
 let weaken_all_above (#rgn:region) (#i:id) (s:Seq.seq (PRF.entry rgn i)) 
 		    (x:PRF.domain i) (y:PRF.domain i{y `above` x})
     : Lemma (all_above y s ==> all_above x s)

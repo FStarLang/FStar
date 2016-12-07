@@ -73,13 +73,6 @@ val leak: #i:id{~(prf i)} -> st:aead_state i Writer -> ST (lbuffer (v (PRF.state
 let leak #i st = PRF.leak st.prf
 
 ////////////////////////////////////////////////////////////////////////////////
-let fresh_nonce (#i:id) (#rw:rw) 
-		(n:Cipher.iv (alg i)) 
-		(st:aead_state i rw)
-		(h:mem) = 
-   let entries = HS.sel h st.log in		  
-   None? (find_aead_entry n entries)
-
 #reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let aadlen = x:UInt32.t{x <=^ aadmax}
 let encrypt_ensures' (regions:Set.set HH.rid)
@@ -150,48 +143,30 @@ val encrypt:
     (ensures (fun h0 _ h1 ->
 	enc_dec_liveness st aad plain cipher_tagged h1 /\
 	encrypt_ensures st n aad plain cipher_tagged h0 h1))
+
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let h_init = get() in
   push_frame(); 
   let h0 = get () in
-  frame_myinv_push st h_init h0;
-  assert (HH.modifies_rref st.prf.mac_rgn TSet.empty (HS.(h_init.h)) (HS.(h0.h)));
-  assert (HS.(is_stack_region h0.tip));
-  assert (HS.(HH.disjoint h0.tip st.log_region));
-  assert (HS.(HH.disjoint h0.tip (Buffer.frameOf cipher_tagged)));
+  frame_inv_push st h_init h0; //inv st h0
   
-(* start: allocate mac entry *)  
-  (* TODO: move this into a wrapper module Crypto.AEAD.PRF_MAC 
-          together with the lemmas we proved about it *)
-  let x = PRF.({iv = n; ctr = ctr_0 i}) in // PRF index to the first block
-  let ak = PRF.prf_mac i st.prf st.ak x in  // used for keying the one-time MAC
-(* end *)
-  
-  let h1 = get () in
-
-(* start: partition the out buffer into space for the ciphertext and the tag *)  
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
-  let y = PRF.incr i x in
-(* end *)
-  
-(* start: a loop to fragment the plaintext, call the prf, and fill in the cipher text *)  
-  Crypto.AEAD.Enxor.enxor st.prf n plain cipher;
-(* end *)
-  
-  // Compute MAC over additional data and ciphertext
-  let h2 = get () in
-  FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 cipher h1) h2;
-  assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h2);
-  //TODO: remove this ... we don't use pre_refines any more
-  lemma_frame_find_mac #i #(v plainlen) st.prf y cipher h1 h2;
-  //TODO: remove this ... we don't use pre_refines any more
-  intro_refines_one_entry_no_tag #i st n (v plainlen) plain cipher_tagged h0 h1 h2; //we have pre_refines_one_entry here
-  assert (Buffer.live h1 aad); //seem to need this hint
+  let x_0 = PRF.({iv = n; ctr = ctr_0 i}) in // PRF index to the first block
 
-(* start: encode the ciphertext and additional data for mac'ing *)  
-  let acc = accumulate_wrapper ak aadlen aad plainlen cipher in
-(* end *)
+  //call prf_mac: get a mac key, ak
+  let ak = PRF.prf_mac i st.prf st.ak x_0 in  // used for keying the one-time MAC
+  let h1 = get () in
+
+  //call enxor: fragment the plaintext, call the prf, and fill in the cipher text
+  Crypto.AEAD.Enxor.enxor st.prf n plain cipher;
+  let h2 = get () in
+  
+  //call accumulate: encode the ciphertext and additional data for mac'ing 
+  let acc = Crypto.AEAD.Encoding.accumulate ak aadlen aad plainlen cipher in
+  let h3 = get () in
+  admit()
+  
 
   //Establishing the pre-conditions of MAC.mac
   let h3 = get() in
@@ -204,9 +179,8 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   Buffer.lemma_reveal_modifies_0 h2 h3;
   //MAC
 
-(* start: call the mac, filling in the tag component of the out buffer *)
+  //call mac: filling in the tag component of the out buffer
   mac_wrapper #(i,n) ak acc tag;
-(* end *)
 
 (* start: ideal and proof steps, to finish up, notably writing to the AEAD table  *)
   finish_after_mac h0 h3 i st n aadlen aad plainlen plain cipher_tagged ak acc tag;
