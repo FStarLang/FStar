@@ -517,7 +517,7 @@ let nm_of_comp = function
                 //lid_equals c.effect_name Const.monadic_lid ->
       M c.result_typ
   | Comp c ->
-      failwith (Util.format1 "[nm_of_comp]: impossible (%s)" (string_of_lid c.effect_name))
+      failwith (Util.format1 "[nm_of_comp]: impossible (%s)" (Print.comp_to_string <| mk_Comp c))
   | GTotal _ ->
       failwith "[nm_of_comp]: impossible (GTot)"
 
@@ -922,7 +922,6 @@ and infer (env: env) (e: term): nm * term * term =
       *)
 
       let comp, s_body, u_body =
-        Util.print1 "About to check what : %s\n" (Print.term_to_string e) ;
         let check_what = if is_monadic what then check_m else check_n in
         let t, s_body, u_body = check_what env body in
         comp_of_nm (if is_monadic what then M t else N t), s_body, u_body
@@ -1150,6 +1149,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
   let x_binders = [ S.mk_binder x ] in
   let x_binders, e2 = SS.open_term x_binders e2 in
   let s_binding =
+      (* TODO : relying on the syntactic annotation M *)
       if Ident.lid_equals Const.monadic_lid binding.lbeff
       then
           { binding with lbeff = Const.effect_Tot_lid ; lbtyp = double_star binding.lbtyp }
@@ -1216,7 +1216,7 @@ and mk_M (t: typ): comp =
     effect_name = Const.monadic_lid;
     result_typ = t;
     effect_args = [];
-    flags = []
+    flags = [CPS ; TOTAL]
   })
 
 and type_of_comp t = Util.comp_result t
@@ -1285,7 +1285,6 @@ let star_type env t =
 
 let star_expr env t =
   let t' = n env.env t in
-  Util.print2 "Before normalization %s\nAfter normalization %s" (Print.term_to_string t) (Print.term_to_string t');
   check_n env (n env.env t)
 
 let trans_F (env: env_) (c: typ) (wp: term): term =

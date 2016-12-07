@@ -188,10 +188,6 @@ let ml_comp t r =
 //        flags=[SOMETRIVIAL]
 //   })
 
-let comp_set_flags (c:comp) f = match c.n with
-  | Total _ 
-  | GTotal _ -> c
-  | Comp ct -> {c with n=Comp ({ct with flags=f})}
 
 let comp_flags c = match c.n with
   | Total _ -> [TOTAL]
@@ -206,14 +202,28 @@ let comp_effect_name c = match c.n with
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
     | Comp c -> c
-    | Total (t, Some u)  
-    | GTotal(t, Some u) -> 
+    | Total (t, Some u)
+    | GTotal(t, Some u) ->
       {comp_univs=[u];
-       effect_name=comp_effect_name c; 
-       result_typ=t; 
-       effect_args=[]; 
+       effect_name=comp_effect_name c;
+       result_typ=t;
+       effect_args=[];
        flags=comp_flags c}
     | _ -> failwith "Assertion failed: Computation type without universe"
+
+let comp_set_flags (c:comp) f =
+    let comp_to_comp_typ (c:comp) : comp_typ =
+      match c.n with
+      | Comp c -> c
+      | Total (t, u_opt)
+      | GTotal(t, u_opt) ->
+          {comp_univs=dflt [] (map_opt u_opt (fun x -> [x]));
+          effect_name=comp_effect_name c;
+          result_typ=t;
+          effect_args=[];
+          flags=comp_flags c}
+    in
+    {c with n=Comp ({comp_to_comp_typ c with flags=f})}
 
 let is_named_tot c =
     match c.n with
@@ -238,7 +248,7 @@ let is_tot_or_gtot_comp c =
     is_total_comp c
     || lid_equals Const.effect_GTot_lid (comp_effect_name c)
 
-let is_pure_effect l = 
+let is_pure_effect l =
      lid_equals l Const.effect_Tot_lid
      || lid_equals l Const.effect_PURE_lid
      || lid_equals l Const.effect_Pure_lid

@@ -989,13 +989,13 @@ and norm_lcomp_opt : cfg -> env -> option<either<lcomp, residual_comp>> -> optio
     fun cfg env lopt ->
         match lopt with
         | Some (Inl lc) ->
+          let flags = filter_out_lcomp_cflags lc in
           if Util.is_tot_or_gtot_lcomp lc
           then let t = norm cfg env [] lc.res_typ in
-          (* TODO : we are dropping the cflags *)
                if Util.is_total_lcomp lc
-               then Some (Inl (Util.lcomp_of_comp (S.mk_Total t)))
-               else Some (Inl (Util.lcomp_of_comp (S.mk_GTotal t)))
-          else Some (Inr (lc.eff_name, filter_out_lcomp_cflags lc))
+               then Some (Inl (Util.lcomp_of_comp (comp_set_flags (S.mk_Total t) flags)))
+               else Some (Inl (Util.lcomp_of_comp (comp_set_flags (S.mk_GTotal t) flags)))
+          else Some (Inr (lc.eff_name, flags))
        | _ -> lopt
 
 
