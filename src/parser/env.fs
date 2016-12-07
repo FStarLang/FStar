@@ -552,6 +552,22 @@ let try_lookup_record_by_field_name env (fieldname:lident) =
         | Some (r, f) when r.is_record -> Some (r,f)
         | _ -> None
 
+let belongs_to_record env lid record =
+    (* first determine whether lid is a valid record field name, and
+    that it resolves to a record' type in the same module as record
+    (even though the record types may be different.) *)
+    match try_lookup_record_by_field_name env lid with
+    | Some (record', _)
+      when text_of_path (path_of_ns record.constrname.ns)
+         = text_of_path (path_of_ns record'.constrname.ns)
+      ->
+      (* now, check whether field belongs to record *)
+      begin match find_in_record record.constrname.ns lid.ident record (fun _ -> Cont_ok ()) with
+      | Cont_ok _ -> true
+      | _ -> false
+      end
+    | _ -> false
+
 let try_lookup_projector_by_field_name env (fieldname:lident) = 
     match try_lookup_record_or_dc_by_field_name env fieldname with 
         | Some (r, f) -> Some (f, r.is_record)

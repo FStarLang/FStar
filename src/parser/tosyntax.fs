@@ -339,6 +339,25 @@ let is_special_effect_combinator = function
   | "repr" | "post" | "pre" | "wp" -> true
   | _ -> false
 
+(* issue 769: check that other fields are also of the same record. If
+   so, then return the record found by field name resolution. *)
+let check_fields env fields rg =
+    let (f, _) = List.hd fields in
+    let record, _ = fail_or env (try_lookup_record_by_field_name env) f in
+    let check_field (f', _) =
+        if Env.belongs_to_record env f' record
+        then ()
+        else let msg = Util.format3
+                       "Field %s belongs to record type %s, whereas field %s does not"
+                       f.str
+                       record.typename.str
+                       f'.str
+             in
+             raise (Error (msg, rg))
+    in
+    let () = List.iter check_field (List.tl fields)
+    in
+    record
 
 let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
   let check_linear_pattern_variables (p:Syntax.pat) =
@@ -463,8 +482,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
         raise (Error ("Unexpected pattern", p.prange))
 
       | PatRecord (fields) ->
-        let (f, _) = List.hd fields in
-        let record, _ = fail_or env (try_lookup_record_by_field_name env) f in
+        let record = check_fields env fields p.prange in
         let fields = fields |> List.map (fun (f, p) ->
           (fail_or env (qualify_field_to_record env record) f, p)) in
         let args = record.fields |> List.map (fun (f, _) ->
@@ -892,8 +910,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       raise (Error("Unexpected empty record", top.range))
 
     | Record(eopt, fields) ->
-      let f, _ = List.hd fields in
-      let record, _ = fail_or env  (try_lookup_record_by_field_name env) f in
+      let record = check_fields env fields top.range in
       let fields' = fields |> List.map (fun (f, e) -> (mk_field_projector_name_from_ident record.constrname f.ident, e)) in
       let get_field xopt f =
         let found = fields' |> Util.find_opt (fun (g, _) -> lid_equals f g) in

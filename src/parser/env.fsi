@@ -90,6 +90,7 @@ val try_lookup_effect_name: env -> lident -> option<lident>
 val try_lookup_effect_defn: env -> lident -> option<eff_decl>
 val try_lookup_datacon: env -> lident -> option<fv>
 val try_lookup_record_by_field_name: env -> lident -> option<(record_or_dc * lident)>
+val belongs_to_record: env -> lident -> record_or_dc -> bool
 val try_lookup_projector_by_field_name: env -> lident -> option<(lident * bool)>
 val try_lookup_definition: env -> lident -> option<term>
 val is_effect_name: env -> lident -> bool
