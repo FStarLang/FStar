@@ -358,18 +358,19 @@ let u (n:FStar.UInt.uint_t 32) = uint_to_t n
 
 (** Framing lemmas for clauses of the main invariant **)
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let frame_refines_one_entry (#i:id{safeId i}) (#mac_rgn:region) 
+let frame_refines_one_entry (#i:id) (#mac_rgn:region) 
 			    (h:mem) (h':mem) 
 			    (blocks:prf_table mac_rgn i)
 			    (e:aead_entry i) 
    : Lemma (requires (let open HS in
+		      safeId i /\  //AR: (safeId i) earlier was a refinement on h, but then this gave type inference error in frame_refines
 		      refines_one_entry blocks e h /\			    
 		      HH.modifies_rref mac_rgn TSet.empty h.h h'.h /\
 		      live_region h' mac_rgn))
-	   (ensures  refines_one_entry blocks e h')
+	   (ensures  safeId i /\ refines_one_entry blocks e h')
    = ()
 
-let frame_unused_aead_iv_for_prf (#mac_rgn:region) (#i:id) (h0:mem{safeId i}) (h1:mem)
+let frame_unused_aead_iv_for_prf (#mac_rgn:region) (#i:id) (h0:mem{safeMac i}) (h1:mem)
 				 (prf_table:prf_table mac_rgn i)
 				 (iv:Cipher.iv (alg i))
   : Lemma (requires (let open HS in
@@ -379,7 +380,7 @@ let frame_unused_aead_iv_for_prf (#mac_rgn:region) (#i:id) (h0:mem{safeId i}) (h
 	  (ensures  unused_aead_iv_for_prf prf_table iv h1)
   = ()
 
-let frame_refines (i:id{safeId i}) (mac_rgn:region) 
+let frame_refines (i:id{safeMac i}) (mac_rgn:region) 
 		  (blocks:prf_table mac_rgn i)
 		  (entries:aead_entries i)
 		  (h:mem) (h':mem)
@@ -389,14 +390,14 @@ let frame_refines (i:id{safeId i}) (mac_rgn:region)
 		      HS.live_region h' mac_rgn))
 	   (ensures  refines blocks entries h')
    = let open FStar.Classical in
-     forall_intro (move_requires (frame_refines_one_entry h h' blocks));
-     forall_intro (move_requires (frame_unused_aead_iv_for_prf h h' blocks))
+     forall_intro (move_requires (frame_unused_aead_iv_for_prf h h' blocks));
+     if safeId i then forall_intro (move_requires (frame_refines_one_entry h h' blocks))
 
 let frame_inv_push (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) (h1:mem)
    : Lemma (requires (inv st h /\ 
 		      HS.fresh_frame h h1))
-	   (ensures (inv st h1))
-   = if safeId i
+	   (ensures  (inv st h1))
+   = if safeMac i
      then frame_refines i st.prf.mac_rgn (HS.sel h (PRF.itable i st.prf)) (HS.sel h st.log) h h1
 
 let weaken_all_above (#rgn:region) (#i:id) (s:Seq.seq (PRF.entry rgn i)) 
