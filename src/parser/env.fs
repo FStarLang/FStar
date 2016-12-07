@@ -211,8 +211,8 @@ let try_lookup_id''
 
     in aux env.scope_mods
 
-let found_local_binding (id', x, mut) =
-    (bv_to_name x id'.idRange, mut)
+let found_local_binding r (id', x, mut) =
+    (bv_to_name x r, mut)
 
 let find_in_module env lid k_global_def k_not_found =
     begin match Util.smap_try_find (sigmap env) lid.str with
@@ -224,7 +224,7 @@ let try_lookup_id env (id:ident) =
   match unmangleOpName id with
   | Some f -> Some f
   | _ ->
-    try_lookup_id'' env id (fun r -> Cont_ok (found_local_binding r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
+    try_lookup_id'' env id (fun r -> Cont_ok (found_local_binding id.idRange r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
 
 (* Unqualified identifier lookup, if lookup in all open namespaces failed. *)
 
@@ -372,7 +372,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
           | _ -> None
         end in
 
-  let k_local_binding r = Some (Term_name (found_local_binding r))
+  let k_local_binding r = Some (Term_name (found_local_binding (range_of_lid lid) r))
   in
 
   let k_rec_binding (id, l, dd) = Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, false))
