@@ -533,8 +533,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           let bs = match b with
             | None -> [null_binder t1]
             | Some x -> [S.mk_binder x] in
-            (* WARNING : dropping any cflags in the annotation *)
-          let mk_lam wp = U.abs bs wp (Some (Inr (Const.effect_Tot_lid, []))) in //we know it's total; let the normalizer reduce it
+          let mk_lam wp = U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in //we know it's total; let the normalizer reduce it
           let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
           let wp_args = [S.as_arg r1; S.as_arg t1; S.as_arg t2; S.as_arg wp1; S.as_arg (mk_lam wp2)] in
           let k = SS.subst [NT(a, t2)] kwp in
@@ -645,7 +644,7 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
         mk_Tm_app (inst_effect_fun_with [u_res_t;u_res_t] env md_pure md_pure.close_wp)
                   [S.as_arg res_t;
                    S.as_arg res_t;
-                   S.as_arg <| U.abs [mk_binder y] x_eq_y_yret (Some (Inr (Const.effect_Tot_lid, [])))] //mark it as Tot for the normalizer
+                   S.as_arg <| U.abs [mk_binder y] x_eq_y_yret (Some (Inr (Const.effect_Tot_lid, [TOTAL])))] //mark it as Tot for the normalizer
                    None res_t.pos in
     let lc2 = mk_comp md_pure u_res_t res_t forall_y_x_eq_y_yret [PARTIAL_RETURN] in
     let lc = bind (Env.get_range env) env None (Util.lcomp_of_comp comp) (Some x, Util.lcomp_of_comp lc2) in
@@ -680,7 +679,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
             let post   = S.new_bv None post_k in
             let wp     = U.abs [mk_binder post]
                                (label Errors.exhaustiveness_check (Env.get_range env) <| fvar_const env Const.false_lid)
-                               (Some (Inr (Const.effect_Tot_lid, []))) in
+                               (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in
             let md     = Env.get_effect_decl env Const.effect_PURE_lid in
             mk_comp md u_res_t res_t wp [] in
         let comp = List.fold_right (fun (g, cthen) celse ->
@@ -707,7 +706,7 @@ let close_comp env bvs (lc:lcomp) =
           List.fold_right (fun x wp ->
               let bs = [mk_binder x] in
               let us = u_res::[env.universe_of env x.sort] in
-              let wp = U.abs bs wp (Some (Inr (Const.effect_Tot_lid, []))) in
+              let wp = U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in
               mk_Tm_app (inst_effect_fun_with us env md md.close_wp) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
           bvs wp0 in
         let c = Normalize.unfold_effect_abbrev env c in
@@ -785,44 +784,56 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
         | NonTrivial f ->
           let g = {g with guard_f=Trivial} in
           let strengthen () =
-                //try to normalize one more time, since more unification variables may be resolved now
-                let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
-                match (SS.compress f).n with
-                    | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv Const.true_lid ->
-                      //it's trivial
-                      let lc = {lc with res_typ=t} in
-                      lc.comp()
+              //try to normalize one more time, since more unification variables may be resolved now
+              let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
+              match (SS.compress f).n with
+                  | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv Const.true_lid ->
+                    //it's trivial
+                    let lc = {lc with res_typ=t} in
+                    lc.comp()
 
-                    | _ ->
-                        let c = lc.comp() in
-                        if Env.debug env <| Options.Extreme
-                        then Util.print4 "Weakened from %s to %s\nStrengthening %s with guard %s\n"
-                                (N.term_to_string env lc.res_typ)
-                                (N.term_to_string env t)
-                                (N.comp_to_string env c)
-                                (N.term_to_string env f);
+                  | _ ->
+                      let c = lc.comp() in
+                      if Env.debug env <| Options.Extreme
+                      then Util.print4 "Weakened from %s to %s\nStrengthening %s with guard %s\n"
+                              (N.term_to_string env lc.res_typ)
+                              (N.term_to_string env t)
+                              (N.comp_to_string env c)
+                              (N.term_to_string env f);
 
-                        let ct = Normalize.unfold_effect_abbrev env c in
-                        let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
-                        let k = SS.subst [NT(a, t)] kwp in
-                        let md = Env.get_effect_decl env ct.effect_name in
-                        let x = S.new_bv (Some t.pos) t in
-                        let xexp = S.bv_to_name x in
-                        let u_t, _, _ = destruct_comp ct in
-                        let wp = mk_Tm_app (inst_effect_fun_with [u_t] env md md.ret_wp) [S.as_arg t; S.as_arg xexp] (Some k.n) xexp.pos in
-                        let cret = Util.lcomp_of_comp <| mk_comp md u_t t wp [RETURN] in
-                        let guard = if apply_guard then mk_Tm_app f [S.as_arg xexp] (Some U.ktype0.n) f.pos else f in
-                        let eq_ret, _trivial_so_ok_to_discard =
-                            strengthen_precondition (Some <| Errors.subtyping_failed env lc.res_typ t)
-                                                    (Env.set_range env e.pos) e cret
-                                                    (guard_of_guard_formula <| NonTrivial guard) in
-                        let x = {x with sort=lc.res_typ} in
-                        let c = bind e.pos env (Some e) (Util.lcomp_of_comp <| mk_Comp ct) (Some x, eq_ret) in
-                        let c = c.comp () in
-                        if Env.debug env <| Options.Extreme
-                        then Util.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
-                        c in
-              let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | CPS -> [CPS] | _ -> []) in
+                      let ct = Normalize.unfold_effect_abbrev env c in
+                      let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
+                      let k = SS.subst [NT(a, t)] kwp in
+                      let md = Env.get_effect_decl env ct.effect_name in
+                      let x = S.new_bv (Some t.pos) t in
+                      let xexp = S.bv_to_name x in
+                      let u_t, _, _ = destruct_comp ct in
+                      let wp = mk_Tm_app (inst_effect_fun_with [u_t] env md md.ret_wp)
+                                         [S.as_arg t; S.as_arg xexp]
+                                         (Some k.n) xexp.pos
+                      in
+                      let cret = Util.lcomp_of_comp <| mk_comp md u_t t wp [RETURN] in
+                      let guard = if apply_guard
+                                  then mk_Tm_app f [S.as_arg xexp] (Some U.ktype0.n) f.pos
+                                  else f
+                      in
+                      let eq_ret, _trivial_so_ok_to_discard =
+                          strengthen_precondition (Some <| Errors.subtyping_failed env lc.res_typ t)
+                                                  (Env.set_range env e.pos) e cret
+                                                  (guard_of_guard_formula <| NonTrivial guard)
+                      in
+                      let x = {x with sort=lc.res_typ} in
+                      let c = bind e.pos env (Some e) (Util.lcomp_of_comp <| mk_Comp ct) (Some x, eq_ret) in
+                      let c = c.comp () in
+                      if Env.debug env <| Options.Extreme
+                      then Util.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
+                      c
+          in
+          let flags = lc.cflags |> List.collect (function
+                                                 | RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN]
+                                                 | CPS -> [CPS] // KM : Not exactly sure if it is necessary
+                                                 | _ -> [])
+          in
           let lc = {lc with res_typ=t; comp=strengthen; cflags=flags; eff_name=norm_eff_name env lc.eff_name} in
           let g = {g with guard_f=Trivial} in
           (e, lc, g)

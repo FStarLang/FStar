@@ -417,7 +417,7 @@ and close_lcomp_opt cfg env lopt = match lopt with
       then Some (Inr (Const.effect_Tot_lid, flags))
       else if Util.is_tot_or_gtot_lcomp lc
       then Some (Inr (Const.effect_GTot_lid, flags))
-      else Some (Inr (lc.eff_name, flags)) //retaining the effect name is sufficient
+      else Some (Inr (lc.eff_name, flags)) //retaining the effect name and flags is sufficient
     | _ -> lopt
 
 (*******************************************************************)
@@ -743,7 +743,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                             | Some (Inr (l, cflags))
                             (* TODO (KM) : wouldn't it be better to check the TOTAL cflag ? *)
                                 when (Ident.lid_equals l Const.effect_Tot_lid
-                                      || Ident.lid_equals l Const.effect_GTot_lid) ->
+                                      || Ident.lid_equals l Const.effect_GTot_lid
+                                      || cflags |> Util.for_some (function TOTAL -> true | _ -> false)) ->
                               log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
                               norm cfg (c :: env) stack_rest body
 

@@ -1398,7 +1398,7 @@ let is_total = (fun _79_6 -> (match (_79_6) with
 end
 | FStar_Util.Inr (l, flags) -> begin
 ((FStar_Ident.lid_equals l FStar_Syntax_Const.effect_Tot_lid) || (FStar_All.pipe_right flags (FStar_List.existsb (fun _79_5 -> (match (_79_5) with
-| FStar_Syntax_Syntax.CPS -> begin
+| FStar_Syntax_Syntax.TOTAL -> begin
 true
 end
 | _79_1175 -> begin

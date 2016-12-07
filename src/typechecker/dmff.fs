@@ -935,8 +935,10 @@ and infer (env: env) (e: term): nm * term * term =
         | None -> None // That should not happen according to some other comment
         | Some (Inl lc) ->
             if lc.cflags |> Util.for_some (function CPS -> true | _ -> false)
-            (* TODO (KM) : We are dropping the flags of lc in the first case *)
-            then Some (Inl (U.lcomp_of_comp (S.mk_Total (double_star <| U.comp_result (lc.comp ())))))
+            then
+                let double_starred_comp = S.mk_Total (double_star <| U.comp_result (lc.comp ())) in
+                let flags = List.filter (function CPS -> false | _ -> true) lc.cflags in
+                Some (Inl (U.lcomp_of_comp (comp_set_flags double_starred_comp flags)))
             else Some (Inl ({ lc with comp = begin fun () ->
                         let c = lc.comp () in
                         let result_typ = star_type' env (Util.comp_result c) in
@@ -1148,13 +1150,6 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
   let x = Util.left binding.lbname in
   let x_binders = [ S.mk_binder x ] in
   let x_binders, e2 = SS.open_term x_binders e2 in
-  let s_binding =
-      (* TODO : relying on the syntactic annotation M *)
-      if Ident.lid_equals Const.monadic_lid binding.lbeff
-      then
-          { binding with lbeff = Const.effect_Tot_lid ; lbtyp = double_star binding.lbtyp }
-      else { binding with lbtyp = star_type' env binding.lbtyp }
-  in
   begin match infer env e1 with
   | N t1, s_e1, u_e1 ->
       // Util.print1 "[debug] %s is NOT a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
@@ -1168,6 +1163,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
       // Simple case: just a regular let-binding. We defer checks to e2.
       let nm_rec, s_e2, u_e2 = proceed env e2 in
+      let s_binding = { binding with lbtyp = star_type' env binding.lbtyp } in
       nm_rec,
       mk (Tm_let ((false, [ { s_binding with lbdef = s_e1 } ]), SS.close x_binders s_e2)),
       mk (Tm_let ((false, [ { u_binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
@@ -1185,7 +1181,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       let s_e2 = mk (Tm_app (s_e2, [ S.bv_to_name p, S.as_implicit false ])) in
       // fun x -> s_e2* p; this takes care of closing [x].
       let s_e2 = U.abs x_binders s_e2 None in
-      // e1* (fun x -> s_e2* p)
+      // e1* (fun x -> e2* p)
       let body = mk (Tm_app (s_e1, [ s_e2, S.as_implicit false ])) in
       M t2,
       U.abs [ S.mk_binder p ] body None,
@@ -1276,7 +1272,8 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 
 // A helper --------------------------------------------------------------------
 
-let n = N.normalize [ N.Exclude N.Beta; N.UnfoldUntil Delta_constant; N.NoDeltaSteps; N.Eager_unfolding; N.EraseUniverses ]
+(* KM : why is there both NoDeltaSteps and UnfoldUntil Delta_constant ? *)
+let n = N.normalize [ N.Beta; N.UnfoldUntil Delta_constant; N.NoDeltaSteps; N.Eager_unfolding; N.EraseUniverses ]
 
 // Exported definitions -------------------------------------------------------
 
@@ -1284,7 +1281,6 @@ let star_type env t =
   star_type' env (n env.env t)
 
 let star_expr env t =
-  let t' = n env.env t in
   check_n env (n env.env t)
 
 let trans_F (env: env_) (c: typ) (wp: term): term =

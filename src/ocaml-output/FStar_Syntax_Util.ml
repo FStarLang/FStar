@@ -257,39 +257,27 @@ let eq_univs : FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe  -
 let ml_comp : FStar_Syntax_Syntax.typ  ->  FStar_Range.range  ->  FStar_Syntax_Syntax.comp = (fun t r -> (FStar_Syntax_Syntax.mk_Comp {FStar_Syntax_Syntax.comp_univs = (FStar_Syntax_Syntax.U_unknown)::[]; FStar_Syntax_Syntax.effect_name = (FStar_Ident.set_lid_range FStar_Syntax_Const.effect_ML_lid r); FStar_Syntax_Syntax.result_typ = t; FStar_Syntax_Syntax.effect_args = []; FStar_Syntax_Syntax.flags = (FStar_Syntax_Syntax.MLEFFECT)::[]}))
 
 
-let comp_flags = (fun c -> (match (c.FStar_Syntax_Syntax.n) with
-| FStar_Syntax_Syntax.Total (_38_202) -> begin
-(FStar_Syntax_Syntax.TOTAL)::[]
-end
-| FStar_Syntax_Syntax.GTotal (_38_205) -> begin
-(FStar_Syntax_Syntax.SOMETRIVIAL)::[]
-end
-| FStar_Syntax_Syntax.Comp (ct) -> begin
-ct.FStar_Syntax_Syntax.flags
-end))
-
-
 let comp_effect_name = (fun c -> (match (c.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Comp (c) -> begin
 c.FStar_Syntax_Syntax.effect_name
 end
-| FStar_Syntax_Syntax.Total (_38_213) -> begin
+| FStar_Syntax_Syntax.Total (_38_204) -> begin
 FStar_Syntax_Const.effect_Tot_lid
 end
-| FStar_Syntax_Syntax.GTotal (_38_216) -> begin
+| FStar_Syntax_Syntax.GTotal (_38_207) -> begin
 FStar_Syntax_Const.effect_GTot_lid
 end))
 
 
-let comp_to_comp_typ : FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp_typ = (fun c -> (match (c.FStar_Syntax_Syntax.n) with
-| FStar_Syntax_Syntax.Comp (c) -> begin
-c
+let comp_flags = (fun c -> (match (c.FStar_Syntax_Syntax.n) with
+| FStar_Syntax_Syntax.Total (_38_211) -> begin
+(FStar_Syntax_Syntax.TOTAL)::[]
 end
-| (FStar_Syntax_Syntax.Total (t, Some (u))) | (FStar_Syntax_Syntax.GTotal (t, Some (u))) -> begin
-{FStar_Syntax_Syntax.comp_univs = (u)::[]; FStar_Syntax_Syntax.effect_name = (comp_effect_name c); FStar_Syntax_Syntax.result_typ = t; FStar_Syntax_Syntax.effect_args = []; FStar_Syntax_Syntax.flags = (comp_flags c)}
+| FStar_Syntax_Syntax.GTotal (_38_214) -> begin
+(FStar_Syntax_Syntax.SOMETRIVIAL)::[]
 end
-| _38_230 -> begin
-(FStar_All.failwith "Assertion failed: Computation type without universe")
+| FStar_Syntax_Syntax.Comp (ct) -> begin
+ct.FStar_Syntax_Syntax.flags
 end))
 
 
@@ -300,19 +288,31 @@ let comp_to_comp_typ = (fun c -> (match (c.FStar_Syntax_Syntax.n) with
 c
 end
 | (FStar_Syntax_Syntax.Total (t, u_opt)) | (FStar_Syntax_Syntax.GTotal (t, u_opt)) -> begin
-(let _133_94 = (let _133_93 = (FStar_Util.map_opt u_opt (fun x -> (x)::[]))
-in (FStar_Util.dflt [] _133_93))
-in {FStar_Syntax_Syntax.comp_univs = _133_94; FStar_Syntax_Syntax.effect_name = (comp_effect_name c); FStar_Syntax_Syntax.result_typ = t; FStar_Syntax_Syntax.effect_args = []; FStar_Syntax_Syntax.flags = (comp_flags c)})
+(let _133_92 = (let _133_91 = (FStar_Util.map_opt u_opt (fun x -> (x)::[]))
+in (FStar_Util.dflt [] _133_91))
+in {FStar_Syntax_Syntax.comp_univs = _133_92; FStar_Syntax_Syntax.effect_name = (comp_effect_name c); FStar_Syntax_Syntax.result_typ = t; FStar_Syntax_Syntax.effect_args = []; FStar_Syntax_Syntax.flags = (comp_flags c)})
 end))
 in (
 
-let _38_244 = c
-in (let _133_96 = (let _133_95 = (
+let _38_231 = c
+in (let _133_94 = (let _133_93 = (
 
-let _38_246 = (comp_to_comp_typ c)
-in {FStar_Syntax_Syntax.comp_univs = _38_246.FStar_Syntax_Syntax.comp_univs; FStar_Syntax_Syntax.effect_name = _38_246.FStar_Syntax_Syntax.effect_name; FStar_Syntax_Syntax.result_typ = _38_246.FStar_Syntax_Syntax.result_typ; FStar_Syntax_Syntax.effect_args = _38_246.FStar_Syntax_Syntax.effect_args; FStar_Syntax_Syntax.flags = f})
-in FStar_Syntax_Syntax.Comp (_133_95))
-in {FStar_Syntax_Syntax.n = _133_96; FStar_Syntax_Syntax.tk = _38_244.FStar_Syntax_Syntax.tk; FStar_Syntax_Syntax.pos = _38_244.FStar_Syntax_Syntax.pos; FStar_Syntax_Syntax.vars = _38_244.FStar_Syntax_Syntax.vars}))))
+let _38_233 = (comp_to_comp_typ c)
+in {FStar_Syntax_Syntax.comp_univs = _38_233.FStar_Syntax_Syntax.comp_univs; FStar_Syntax_Syntax.effect_name = _38_233.FStar_Syntax_Syntax.effect_name; FStar_Syntax_Syntax.result_typ = _38_233.FStar_Syntax_Syntax.result_typ; FStar_Syntax_Syntax.effect_args = _38_233.FStar_Syntax_Syntax.effect_args; FStar_Syntax_Syntax.flags = f})
+in FStar_Syntax_Syntax.Comp (_133_93))
+in {FStar_Syntax_Syntax.n = _133_94; FStar_Syntax_Syntax.tk = _38_231.FStar_Syntax_Syntax.tk; FStar_Syntax_Syntax.pos = _38_231.FStar_Syntax_Syntax.pos; FStar_Syntax_Syntax.vars = _38_231.FStar_Syntax_Syntax.vars}))))
+
+
+let comp_to_comp_typ : FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp_typ = (fun c -> (match (c.FStar_Syntax_Syntax.n) with
+| FStar_Syntax_Syntax.Comp (c) -> begin
+c
+end
+| (FStar_Syntax_Syntax.Total (t, Some (u))) | (FStar_Syntax_Syntax.GTotal (t, Some (u))) -> begin
+{FStar_Syntax_Syntax.comp_univs = (u)::[]; FStar_Syntax_Syntax.effect_name = (comp_effect_name c); FStar_Syntax_Syntax.result_typ = t; FStar_Syntax_Syntax.effect_args = []; FStar_Syntax_Syntax.flags = (comp_flags c)}
+end
+| _38_247 -> begin
+(FStar_All.failwith "Assertion failed: Computation type without universe")
+end))
 
 
 let is_named_tot = (fun c -> (match (c.FStar_Syntax_Syntax.n) with

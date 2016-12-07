@@ -660,7 +660,7 @@ let head_redex : env_t  ->  FStar_Syntax_Syntax.term  ->  Prims.bool = (fun env 
 in _183_409.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_abs (_88_468, _88_470, Some (FStar_Util.Inr (l, flags))) -> begin
 (((FStar_Ident.lid_equals l FStar_Syntax_Const.effect_Tot_lid) || (FStar_Ident.lid_equals l FStar_Syntax_Const.effect_GTot_lid)) || (FStar_List.existsb (fun _88_7 -> (match (_88_7) with
-| FStar_Syntax_Syntax.CPS -> begin
+| FStar_Syntax_Syntax.TOTAL -> begin
 true
 end
 | _88_481 -> begin
@@ -4270,7 +4270,7 @@ let close_effect_params = (fun tm -> (match (ed.FStar_Syntax_Syntax.binders) wit
 tm
 end
 | _88_2612 -> begin
-(let _183_2252 = (let _183_2251 = (let _183_2250 = (FStar_All.pipe_left (fun _183_2249 -> Some (_183_2249)) (FStar_Util.Inr (((FStar_Syntax_Const.effect_Tot_lid), ([])))))
+(let _183_2252 = (let _183_2251 = (let _183_2250 = (FStar_All.pipe_left (fun _183_2249 -> Some (_183_2249)) (FStar_Util.Inr (((FStar_Syntax_Const.effect_Tot_lid), ((FStar_Syntax_Syntax.TOTAL)::[])))))
 in ((ed.FStar_Syntax_Syntax.binders), (tm), (_183_2250)))
 in FStar_Syntax_Syntax.Tm_abs (_183_2251))
 in (FStar_Syntax_Syntax.mk _183_2252 None tm.FStar_Syntax_Syntax.pos))

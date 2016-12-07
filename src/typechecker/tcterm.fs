@@ -903,8 +903,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                      guard in
 
     let tfun_computed = Util.arrow bs cbody in
-    (* TODO : this debug  print should be cleaned up *)
-    let e = Util.abs bs body (Some (dflt cbody c_opt (* |> (fun c -> Util.print1 "Using comp type %s in annotation\n" (Print.comp_to_string c); c) *) |> Util.lcomp_of_comp |> Inl)) in
+    let e = Util.abs bs body (Some (dflt cbody c_opt |> Util.lcomp_of_comp |> Inl)) in
     let e, tfun, guard = match tfun_opt with
         | Some (t, use_teq) ->
            let t = SS.compress t in
@@ -925,7 +924,6 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
     let c = if env.top_level then mk_Total tfun else TcUtil.return_value env tfun e in
     let c, g = TcUtil.strengthen_precondition None env e (U.lcomp_of_comp c) guard in
-    //Util.print2 "Result of abstracting %s\n With comp %s\n" (Print.term_to_string e) (Print.lcomp_to_string c);
     e, c, g
 
 (******************************************************************************)

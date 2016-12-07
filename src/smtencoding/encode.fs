@@ -286,7 +286,7 @@ let head_redex env t =
     | Tm_abs(_, _, Some (Inr (l, flags))) ->
       Ident.lid_equals l Const.effect_Tot_lid
       || Ident.lid_equals l Const.effect_GTot_lid
-      || List.existsb (function CPS -> true | _ -> false) flags
+      || List.existsb (function TOTAL -> true | _ -> false) flags
 
     | Tm_abs(_, _, Some (Inl lc)) ->
       Util.is_tot_or_gtot_lcomp lc
@@ -1658,7 +1658,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let close_effect_params tm =
                 match ed.binders with
                 | [] -> tm
-                | _ -> S.mk (Tm_abs(ed.binders, tm, Some <| Inr (Const.effect_Tot_lid, []))) None tm.pos
+                | _ -> S.mk (Tm_abs(ed.binders, tm, Some <| Inr (Const.effect_Tot_lid, [TOTAL]))) None tm.pos
             in
 
             let encode_action env (a:S.action) =

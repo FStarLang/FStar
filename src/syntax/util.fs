@@ -177,26 +177,30 @@ let ml_comp t r =
             effect_args=[];
             flags=[MLEFFECT]})
 
-//let total_comp t r = mk_Total t
-
-//let gtotal_comp t =
-//    mk_Comp ({
-//        effect_name=Const.effect_GTot_lid;
-//        result_typ=t;
-//        effect_args=[];
-//        flags=[SOMETRIVIAL]
-//   })
-
-
-let comp_flags c = match c.n with
-  | Total _ -> [TOTAL]
-  | GTotal _ -> [SOMETRIVIAL]
-  | Comp ct -> ct.flags
-
 let comp_effect_name c = match c.n with
     | Comp c  -> c.effect_name
     | Total _ -> Const.effect_Tot_lid
     | GTotal _ -> Const.effect_GTot_lid
+
+let comp_flags c = match c.n with
+    | Total _ -> [TOTAL]
+    | GTotal _ -> [SOMETRIVIAL]
+    | Comp ct -> ct.flags
+
+let comp_set_flags (c:comp) f =
+    (* Duplicate of the function below not failing when universe is not provided *)
+    let comp_to_comp_typ (c:comp) : comp_typ =
+        match c.n with
+            | Comp c -> c
+            | Total (t, u_opt)
+            | GTotal(t, u_opt) ->
+                {comp_univs=dflt [] (map_opt u_opt (fun x -> [x]));
+                 effect_name=comp_effect_name c;
+                 result_typ=t;
+                 effect_args=[];
+                 flags=comp_flags c}
+    in
+    {c with n=Comp ({comp_to_comp_typ c with flags=f})}
 
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
@@ -209,20 +213,6 @@ let comp_to_comp_typ (c:comp) : comp_typ =
        effect_args=[];
        flags=comp_flags c}
     | _ -> failwith "Assertion failed: Computation type without universe"
-
-let comp_set_flags (c:comp) f =
-    let comp_to_comp_typ (c:comp) : comp_typ =
-      match c.n with
-      | Comp c -> c
-      | Total (t, u_opt)
-      | GTotal(t, u_opt) ->
-          {comp_univs=dflt [] (map_opt u_opt (fun x -> [x]));
-          effect_name=comp_effect_name c;
-          result_typ=t;
-          effect_args=[];
-          flags=comp_flags c}
-    in
-    {c with n=Comp ({comp_to_comp_typ c with flags=f})}
 
 let is_named_tot c =
     match c.n with
