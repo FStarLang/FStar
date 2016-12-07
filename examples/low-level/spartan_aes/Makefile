@@ -15,7 +15,7 @@ endif
 
 ifeq (, $(shell which $(ML) 2> /dev/null))
   ifeq ($(OS),Windows_NT)
-	ML := "/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 12.0/VC/bin$(MLSUF)/$(ML).exe"
+	ML := "/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin$(MLSUF)/$(ML).exe"
   endif
 endif
 

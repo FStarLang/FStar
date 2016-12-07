@@ -15,6 +15,8 @@
 #include <caml/mlvalues.h>
 
 #include "tmp/Prims.h"
+
+#include "tmp/Crypto_Config.h"
 #include "tmp/Crypto_Indexing.h"
 #include "tmp/Crypto_Symmetric_Bytes.h"
 #include "tmp/Crypto_Symmetric_PRF.h"
@@ -84,7 +86,8 @@ CAMLprim value ocaml_AEAD_create(value alg, value key) {
                 default:
                         caml_failwith("LowCProvider: unsupported AEAD alg");
         }
-        Crypto_Indexing_id id = {.cipher = calg, .aes=Crypto_Indexing_aesImpl_SpartanAES, .uniq = 0};
+        Crypto_Indexing_id id = Crypto_Indexing_testId(calg);
+
         uint8_t* ckey = (uint8_t*) String_val(key);
         uint32_t keylen = caml_string_length(key);
 
@@ -103,7 +106,9 @@ CAMLprim value ocaml_AEAD_create(value alg, value key) {
 
 	if (Crypto_Symmetric_UF1CMA_skeyed(id))
 	{
-		Crypto_Symmetric_PRF_domain____ x = { .iv = FStar_Int_Cast_uint64_to_uint128((uint64_t )0), .ctr = (uint32_t )0 };
+		Crypto_Symmetric_PRF_domain____ x = {
+                  .__proj__Mkdomain__item__iv = FStar_Int_Cast_uint64_to_uint128((uint64_t )0),
+                  .__proj__Mkdomain__item__ctr = (uint32_t )0 };
 		uint8_t *keyBuffer = calloc(Crypto_Symmetric_UF1CMA_skeylen(id), sizeof (uint8_t ));
 		Crypto_Symmetric_PRF_getBlock(id, *prf, x, Crypto_Symmetric_UF1CMA_skeylen(id), keyBuffer);
     
