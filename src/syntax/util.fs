@@ -548,8 +548,10 @@ let set_uvar uv t =
 let qualifier_equal q1 q2 = match q1, q2 with 
   | Discriminator l1, Discriminator l2 -> lid_equals l1 l2
   | Projector (l1a, l1b), Projector (l2a, l2b) -> lid_equals l1a l2a && l1b.idText=l2b.idText
-  | RecordType f1, RecordType f2 
-  | RecordConstructor f1, RecordConstructor f2 -> List.length f1 = List.length f2 && List.forall2 lid_equals f1 f2
+  | RecordType (ns1, f1), RecordType (ns2, f2) 
+  | RecordConstructor (ns1, f1), RecordConstructor (ns2, f2) ->
+      List.length ns1 = List.length ns2 && List.forall2 (fun x1 x2 -> x1.idText = x2.idText) f1 f2 &&
+      List.length f1 = List.length f2 && List.forall2 (fun x1 x2 -> x1.idText = x2.idText) f1 f2
   | _ -> q1=q2
   
 
@@ -723,13 +725,6 @@ let rec get_tycon t =
   | Tm_fvar _  -> Some t
   | Tm_app(t, _) -> get_tycon t
   | _ -> None
-
-let sortByFieldName (fn_a_l:list<(fieldname * 'a)>) =
-  fn_a_l |> List.sortWith
-      (fun (fn1, _) (fn2, _) ->
-        String.compare
-          (text_of_lid fn1)
-          (text_of_lid fn2))
 
 let is_interpreted l =
   let theory_syms =
