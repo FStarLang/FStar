@@ -603,6 +603,8 @@ let contains_elim (#a:Type) (s:seq a) (x:a)
 
 let lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.createEmpty x)) = ()
 
+let lemma_contains_singleton (#a:Type) (x:a) : Lemma (forall (y:a). contains (create 1 x) y ==> y == x) = ()
+
 private let intro_append_contains_from_disjunction (#a:Type) (s1:seq a) (s2:seq a) (x:a)
     : Lemma (requires s1 `contains` x \/ s2 `contains` x)
    	    (ensures (append s1 s2) `contains` x)
