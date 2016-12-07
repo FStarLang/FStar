@@ -66,10 +66,6 @@ type 't var =
 (FStar_Ident.lident, 't) withinfo_t
 
 
-type fieldname =
-FStar_Ident.lident
-
-
 type sconst =
 FStar_Const.sconst
 
@@ -383,8 +379,8 @@ type term' =
 | Mutable_rval 
  and fv_qual =
 | Data_ctor
-| Record_projector of FStar_Ident.lident
-| Record_ctor of (FStar_Ident.lident * fieldname Prims.list) 
+| Record_projector of (FStar_Ident.lident * FStar_Ident.ident)
+| Record_ctor of (FStar_Ident.lident * FStar_Ident.ident Prims.list) 
  and subst_elt =
 | DB of (Prims.int * bv)
 | NM of (bv * Prims.int)
@@ -1232,8 +1228,8 @@ type qualifier =
 | Reflectable of FStar_Ident.lident
 | Discriminator of FStar_Ident.lident
 | Projector of (FStar_Ident.lident * FStar_Ident.ident)
-| RecordType of fieldname Prims.list
-| RecordConstructor of fieldname Prims.list
+| RecordType of (FStar_Ident.ident Prims.list * FStar_Ident.ident Prims.list)
+| RecordConstructor of (FStar_Ident.ident Prims.list * FStar_Ident.ident Prims.list)
 | ExceptionConstructor
 | HasMaskedEffect
 | Effect

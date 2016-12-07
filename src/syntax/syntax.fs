@@ -38,7 +38,6 @@ type withinfo_t<'a,'t> = {
 
 (* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
-type fieldname = lident
 (* Term language *)
 type sconst = FStar.Const.sconst
 
@@ -153,8 +152,8 @@ and meta_source_info =
   | Mutable_rval
 and fv_qual =
   | Data_ctor
-  | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
-  | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
+  | Record_projector of (lident * ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
+  | Record_ctor of lident * list<ident>       (* the type of the record being constructed and its (unmangled) fields in order *)
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
@@ -219,8 +218,8 @@ type qualifier =
   //the remaining qualifiers are internal: the programmer cannot write them
   | Discriminator of lident                //discriminator for a datacon l
   | Projector of lident * ident            //projector for datacon l's argument x
-  | RecordType of list<fieldname>          //record type whose unmangled field names are ...
-  | RecordConstructor of list<fieldname>   //record constructor whose unmangled field names are ...
+  | RecordType of (list<ident> * list<ident>)          //record type whose namespace is fst and unmangled field names are snd
+  | RecordConstructor of (list<ident> * list<ident>)   //record constructor whose namespace is fst and unmangled field names are snd
   | ExceptionConstructor                   //a constructor of Prims.exn
   | HasMaskedEffect                        //a let binding that may have a top-level effect
   | Effect                                 //qualifier on a name that corresponds to an effect constructor
