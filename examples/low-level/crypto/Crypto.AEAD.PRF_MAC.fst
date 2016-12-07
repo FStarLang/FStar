@@ -20,8 +20,6 @@ module CMA = Crypto.Symmetric.UF1CMA
 // AEAD functions and lemmas related to the invariant and prf_mac
 //////////////////////////////////////////////////////////////////
 
-(** Start: postcondition of prf_mac **)
-
 (*
  * There are two cases for prf_mac:
  *   Either the unset mac was already there (prf_mac_existed)
@@ -70,22 +68,12 @@ let prf_mac_ensures (i:id) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:PRF.do
       HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1
 
-
-(** End: postcondition of prf_mac **)
-
-(** Start: prf_mac ensures prf_mac_ensures **)
-
 val prf_mac_wrapper:
   i:id -> t:PRF.state i -> k_0: CMA.akey t.mac_rgn i -> x:PRF.domain_mac i -> ST (CMA.state (i,x.iv))
   (requires (fun h0 -> True))
   (ensures  (fun h0 mac h1 -> prf_mac_ensures i t k_0 x h0 mac h1))
 let prf_mac_wrapper i t k_0 x = 
   PRF.prf_mac i t k_0 x
-
-(** End: prf_mac ensures prf_mac_ensures **)
-
-
-(** Start: relate prf_mac_ensures to AEAD invariant **)
 
 (*
  * For the AEAD invariant, after prf_mac, the PRF table must contain an unused mac for the nonce,
@@ -106,7 +94,8 @@ private val frame_prf_find_snoc
   (prf_table:prf_table r i)
   (entry:entry r i)
   (y:PRF.domain i{y `PRF.above` x}) : Lemma
-  (requires (PRF.find prf_table y == None /\ entry.x.ctr <^ x.ctr))
+  (requires (PRF.find prf_table y == None /\
+             entry.x.ctr <^ x.ctr))
   (ensures  (PRF.find (SeqProperties.snoc prf_table entry) y == None))
 let frame_prf_find_snoc #i #r x prf_table entry y = SeqProperties.find_snoc prf_table entry (is_entry_domain y)
 
@@ -121,9 +110,9 @@ private val frame_none_above_snoc
   (ensures  (none_above x (SeqProperties.snoc prf_table entry)))
 let frame_none_above_snoc #i #r x prf_table entry =
   let open FStar.Classical in
-  forall_intro (move_requires (frame_prf_find #i #r x prf_table entry))
+  forall_intro (move_requires (frame_prf_find_snoc #i #r x prf_table entry))
 
-val inv_after_prf_mac
+private val none_above_otp_after_prf_mac
   (#i:id)
   (#rw:rw)
   (aead_st:aead_state i rw)
@@ -131,35 +120,155 @@ val inv_after_prf_mac
   (x:PRF.domain_mac i)
   (mac:CMA.state (i,x.iv))
   (h0 h1:mem) : Lemma
-  (requires inv aead_st h0 /\                              //invariant holds in h0
-            (safeId i ==> fresh_nonce x.iv aead_st h0) /\  //the nonce is fresh w.r.t. the AEAD table
-            prf_mac_ensures i aead_st.prf k_0 x h0 mac h1) //prf_mac_ensures holds from h0 to h1
-
-  (ensures inv aead_st h1 /\                                       //invariant holds in h1
-           (safeId i ==>  //TODO: should this be authId i??      
-             (let prf_table = HS.sel h1 (itable i aead_st.prf) in
-	      unused_mac_exists aead_st.prf x h1 /\                //unused mac exists in the prf table
-              none_above (PRF.incr i x) prf_table)))              //no otp entries exist in the prf table for this nonce
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let inv_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 =
-  if safeId i
-  then begin
-    let aead_entries = HS.sel h0 aead_st.log in
-    let prf_table = HS.sel h0 (itable i aead_st.prf) in
-    assert (unused_aead_iv_for_prf prf_table x.iv h0);
-    assert (refines prf_table aead_entries h0);
-    frame_refines i aead_st.prf.mac_rgn prf_table aead_entries h0 h1;
-    assert (refines prf_table aead_entries h1);
-    let prf_table' = SeqProperties.snoc prf_table (PRF.Entry x mac) in
-    //TODO: we need a lemma for this assume below
-    //we need to use the pre-condition that tells us that x.iv is fresh for aead_entries
-    let b = FStar.StrongExcludedMiddle.strong_excluded_middle (h0 == h1) in
-    if b then
-      ()
-    else begin
-      assume (refines prf_table' aead_entries h1);
-      assume (unused_mac_exists aead_st.prf x h1); //from a find_snoc lemma and mac_is_unset
-      frame_none_above_snoc (PRF.incr i x) prf_table (PRF.Entry x mac);
-      //assert (none_above (PRF.incr i x) prf_table') //from initial invariant and snoc
-    end
+  (requires inv aead_st h0 /\
+            (safeId i ==> fresh_nonce x.iv aead_st h0) /\
+            prf_mac_ensures i aead_st.prf k_0 x h0 mac h1)
+  (ensures  (safeId i ==>
+              (let prf_table_1 = HS.sel h1 (PRF.itable i aead_st.prf) in
+               none_above (PRF.incr i x) prf_table_1)))
+let none_above_otp_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 =
+  if safeId i then begin
+    let prf_table_0 = HS.sel h0 (itable i aead_st.prf) in 
+    (match find_mac prf_table_0 x with
+     | Some _ -> ()
+     | None   -> frame_none_above_snoc (PRF.incr i x) prf_table_0 (PRF.Entry x mac))
   end
+
+val unused_mac_exists_after_prf_mac
+  (#i:id)
+  (#rw:rw)
+  (aead_st:aead_state i rw)
+  (k_0:CMA.akey aead_st.prf.mac_rgn i)
+  (x:PRF.domain_mac i)
+  (mac:CMA.state (i,x.iv))
+  (h0 h1:mem) : Lemma
+  (requires inv aead_st h0 /\
+            (safeId i ==> fresh_nonce x.iv aead_st h0) /\
+            prf_mac_ensures i aead_st.prf k_0 x h0 mac h1)
+  (ensures (safeId i ==> unused_mac_exists aead_st.prf x h1))
+let unused_mac_exists_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 = ()
+
+val frame_prf_find_snoc_iv
+  (#r:region)
+  (#i:id)
+  (prf_table:prf_table r i)
+  (entry:entry r i)
+  (x:domain i) : Lemma
+  (requires (x.iv <> entry.x.iv))
+  (ensures (PRF.find prf_table x == PRF.find (SeqProperties.snoc prf_table entry) x))
+let frame_prf_find_snoc_iv #r #i prf_table entry x = SeqProperties.find_snoc prf_table entry (is_entry_domain x)
+
+open Crypto.AEAD.Encoding
+open Crypto.Plain
+open Crypto.Symmetric.Bytes
+
+let frame_mac_is_set_snoc_iv
+  (#r:region)
+  (#i:id)
+  (prf_table:prf_table r i{safeId i})
+  (iv:Crypto.Symmetric.Cipher.iv (alg i))
+  (ad:adata)
+  (l:plainLen)
+  (cipher:lbytes l)
+  (tag:MAC.tag)
+  (h:mem)
+  (entry:entry r i) : Lemma
+  (requires (mac_is_set prf_table iv ad l cipher tag h /\
+             iv <> entry.x.iv))
+  (ensures  (mac_is_set (SeqProperties.snoc prf_table entry) iv ad l cipher tag h))
+  = let dom_0 = {iv = iv; ctr = PRF.ctr_0 i} in
+    SeqProperties.find_snoc prf_table entry (is_entry_domain dom_0)
+
+let rec lemma_counterblocks_iv
+  (i:id{safeId i})
+  (r:eternal_region)
+  (x:PRF.domain i{PRF.ctr_0 i <^ PRF.(x.ctr)})
+  (l:nat)
+  (from_pos:nat)
+  (to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) PRF.(x.ctr)})
+  (plain:Crypto.Plain.plain i l)
+  (cipher:lbytes l) : Lemma
+  (requires True)
+  (ensures (let otp_entries = counterblocks i r x l from_pos to_pos plain cipher in
+            forall (prf_entry:entry r i).
+              otp_entries `SeqProperties.contains` prf_entry ==> prf_entry.x.iv = x.iv))
+  (decreases (to_pos - from_pos))
+  = let blockl = v (Crypto.Symmetric.Cipher.(blocklen (cipherAlg_of_id i))) in
+    let remaining = to_pos - from_pos in
+    if remaining = 0 then SeqProperties.lemma_contains_empty #(entry r i)
+    else
+      let l0 = minNat remaining blockl in
+      let l_32 = UInt32.uint_to_t l0 in
+      let plain_hd = Crypto.Plain.slice plain from_pos (from_pos + l0) in
+      let cipher_hd = Seq.slice cipher from_pos (from_pos + l0) in
+      let block = PRF.Entry x (PRF.OTP l_32 plain_hd cipher_hd) in 
+      let blocks = counterblocks i r (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in
+      lemma_counterblocks_iv i r (PRF.incr i x) l (from_pos + l0) to_pos plain cipher;
+      SeqProperties.lemma_contains_singleton block;
+      FStar.Classical.forall_intro (SeqProperties.append_contains_equiv (Seq.create 1 block) blocks)
+
+val frame_refines_one_entry_snoc
+  (#r:region)
+  (#i:id)
+  (prf_table:prf_table r i)
+  (h:mem{safeId i})
+  (mac_entry:entry r i)
+  (aead_entry:aead_entry i) : Lemma
+  (requires (refines_one_entry prf_table aead_entry h /\
+             not (aead_entry.nonce = mac_entry.x.iv)))
+  (ensures  (refines_one_entry (SeqProperties.snoc prf_table mac_entry) aead_entry h))
+#set-options "--z3rlimit 100"
+let frame_refines_one_entry_snoc #r #i prf_table h mac_entry aead_entry =
+  let open FStar.Classical in
+  forall_intro (move_requires (frame_prf_find_snoc_iv #r #i prf_table mac_entry))
+
+(* val aead_inv_after_prf_mac *)
+(*   (#i:id) *)
+(*   (#rw:rw) *)
+(*   (aead_st:aead_state i rw) *)
+(*   (k_0:CMA.akey aead_st.prf.mac_rgn i) *)
+(*   (x:PRF.domain_mac i) *)
+(*   (mac:CMA.state (i,x.iv)) *)
+(*   (h0 h1:mem) : Lemma *)
+(*   (requires inv aead_st h0 /\                              //invariant holds in h0 *)
+(*             (safeId i ==> fresh_nonce x.iv aead_st h0) /\  //the nonce is fresh w.r.t. the AEAD table *)
+(*             prf_mac_ensures i aead_st.prf k_0 x h0 mac h1) //prf_mac_ensures holds from h0 to h1 *)
+(*   (ensures (inv aead_st h1)) *)
+(* let aead_inv_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 = *)
+(*   if safeId i then begin *)
+(*     let prf_table_0 = HS.sel h0 (itable i aead_st.prf) in  *)
+(*     (match find_mac prf_table_0 x with *)
+(*      | Some _ -> () *)
+(*      | None   -> *)
+(*        let aead_entries = HS.sel h0 aead_st.log in *)
+(*        let prf_table_0 = HS.sel h0 (PRF.itable i aead_st.prf) in *)
+(*        frame_refines i aead_st.prf.mac_rgn prf_table_0 aead_entries h0 h1; *)
+(*        assert (refines prf_table_0 aead_entries h1); *)
+(*        admit()) *)
+(*   end *)
+
+(* val inv_after_prf_mac *)
+(*   (#i:id) *)
+(*   (#rw:rw) *)
+(*   (aead_st:aead_state i rw) *)
+(*   (k_0:CMA.akey aead_st.prf.mac_rgn i) *)
+(*   (x:PRF.domain_mac i) *)
+(*   (mac:CMA.state (i,x.iv)) *)
+(*   (h0 h1:mem) : Lemma *)
+(*   (requires inv aead_st h0 /\                              //invariant holds in h0 *)
+(*             (safeId i ==> fresh_nonce x.iv aead_st h0) /\  //the nonce is fresh w.r.t. the AEAD table *)
+(*             prf_mac_ensures i aead_st.prf k_0 x h0 mac h1) //prf_mac_ensures holds from h0 to h1 *)
+
+(*   (ensures inv aead_st h1 /\                                       //invariant holds in h1 *)
+(*            (safeId i ==>  //TODO: should this be authId i??       *)
+(*              (let prf_table = HS.sel h1 (itable i aead_st.prf) in *)
+(* 	      unused_mac_exists aead_st.prf x h1 /\                //unused mac exists in the prf table *)
+(*               none_above (PRF.incr i x) prf_table)))              //no otp entries exist in the prf table for this nonce *)
+(* #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
+(* let inv_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 = *)
+(*   if safeId i *)
+(*   then begin *)
+(*     unused_mac_exists_after_prf_mac aead_st k_0 x mac h0 h1;  //establish unused_mac_exists *)
+(*     none_above_otp_after_prf_mac aead_st k_0 x mac h0 h1;     //establish none_above *)
+(*     () *)
+(*   end *)
