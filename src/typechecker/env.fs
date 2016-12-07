@@ -850,6 +850,11 @@ let lcomp_of_comp env c0 =
      lcomp_cflags=nct.comp_flags;
      lcomp_as_comp=(fun () -> c0)}
 
+let set_result_typ env c t = 
+    let nct = comp_as_normal_comp_typ env c in
+    let nct = { nct with comp_result=S.as_arg t} in
+    normal_comp_typ_as_comp env nct
+
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
