@@ -55,7 +55,7 @@ let prf_mac_ensures (i:id) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:PRF.do
       let r = itable i t in
       let t0 = HS.sel h0 r in
       let t1 = HS.sel h1 r in
-      (forall (y:domain i). y <> x ==> PRF.find t0 y == PRF.find t1 y)  /\ //at most modifies t at x
+      (forall (y:domain i).{:pattern (PRF.find t1 y)} y <> x ==> PRF.find t0 y == PRF.find t1 y)  /\ //at most modifies t at x
       (match find_mac t0 x with // already in the table? yes, from some (unsuccessful) decrypt call earlier
        | Some existing_mac ->
          prf_mac_existed i t k_0 x h0 returned_mac h1 existing_mac
@@ -165,6 +165,27 @@ let lemma_aead_inv_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 =
     none_above_otp_after_prf_mac aead_st k_0 x mac h0 h1
   end
 
+val prf_mac_wrapper
+  (#i:id)
+  (#rw:rw)
+  (aead_st:aead_state i rw)
+  (k_0:CMA.akey aead_st.prf.mac_rgn i)
+  (x:PRF.domain_mac i)
+  : ST (CMA.state (i,x.iv))
+       (requires (fun h0 -> inv aead_st h0 /\
+                         fresh_nonce_st x.iv aead_st h0))
+       (ensures (fun h0 mac h1 -> prf_mac_ensures i aead_st.prf k_0 x h0 mac h1 /\
+                               aead_inv_after_prf_mac aead_st x h1))
+let prf_mac_wrapper #i #rw aead_st k_0 x =
+  let h0 = get () in
+  
+  let mac = PRF.prf_mac i aead_st.prf k_0 x in
+
+  let h1 = get () in
+  lemma_aead_inv_after_prf_mac aead_st k_0 x mac h0 h1;
+
+  mac
+
 val lemma_prf_find_append_some
   (#r:region)
   (#i:id)
@@ -174,6 +195,87 @@ val lemma_prf_find_append_some
   (requires (Some? (PRF.find table x)))
   (ensures  (PRF.find (Seq.append table blocks) x == PRF.find table x))
 let lemma_prf_find_append_some #r #i table blocks x = SeqProperties.find_append_some table blocks (is_entry_domain x)
+
+val lemma_prf_find_append_some_forall
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (blocks:prf_table r i) : Lemma
+  (forall (x:PRF.domain i).{:pattern (PRF.find (Seq.append table blocks) x) }
+     (Some? (PRF.find table x)) ==>
+       (PRF.find (Seq.append table blocks) x == PRF.find table x))
+let lemma_prf_find_append_some_forall #r #i table blocks =
+  let open FStar.Classical in
+  forall_intro (move_requires (lemma_prf_find_append_some #r #i table blocks))
+
+val lemma_frame_refines_one_entry_append
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (h:mem)
+  (blocks:prf_table r i)
+  (aead_ent: aead_entry i) : Lemma
+  (requires (safeId i /\ refines_one_entry table aead_ent h))
+  (ensures  (safeId i /\ refines_one_entry (Seq.append table blocks) aead_ent h))
+let lemma_frame_refines_one_entry_append #r #i table h blocks aead_ent =
+  lemma_prf_find_append_some_forall table blocks
+
+let lemma_frame_refines_entries_append
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (entries:aead_entries i)
+  (h:mem)
+  (blocks:prf_table r i) : Lemma
+  (requires (aead_entries_are_refined table entries h))
+  (ensures  (aead_entries_are_refined (Seq.append table blocks) entries h))
+  = let open FStar.Classical in
+    if safeId i then
+      forall_intro (move_requires (lemma_frame_refines_one_entry_append table h blocks))
+    else ()
+
+val frame_inv_prf_mac
+  (#i:id)
+  (#rw:rw)
+  (aead_st:aead_state i rw)
+  (k_0:CMA.akey aead_st.prf.mac_rgn i)
+  (x:PRF.domain_mac i)
+  (h0 h1:mem)
+  (mac:CMA.state (i, x.iv)) : Lemma
+  (requires (inv aead_st h0 /\
+             prf_mac_ensures i aead_st.prf k_0 x h0 mac h1))
+  (ensures  (inv aead_st h1))
+#set-options "--z3rlimit 100"
+let frame_inv_prf_mac #i #rw aead_st k_0 x h0 h1 mac =
+  if safeMac i then begin
+    let aead_ent_0 = HS.sel #(aead_entries i) h0 aead_st.log in
+    //AR: this should just follow from modifies of prf_mac_ensures, but it takes a long time
+    let _ = assume (aead_ent_0 == HS.sel #(aead_entries i) h1 aead_st.log) in
+    let table_0 = HS.sel h0 (itable i aead_st.prf) in
+    let table_1 = HS.sel h1 (itable i aead_st.prf) in
+    frame_refines i aead_st.prf.mac_rgn table_0 aead_ent_0 h0 h1;
+    (match PRF.find_mac table_0 x with
+     | Some _ -> ()
+     | None   ->
+       lemma_frame_refines_entries_append table_0 aead_ent_0 h1 (Seq.create 1 (PRF.Entry x mac));
+       assume (fresh_nonces_are_unused table_1 aead_ent_0 h1))
+  end  
+  
+  (* if safeMac i then begin *)
+  (*     let table_0 = HS.sel h0 (itable i aead_st.prf) in *)
+  (*     let aead_entries = HS.sel h0 aead_st.log in *)
+  (*     frame_refines i aead_st.prf.mac_rgn table_0 aead_entries h0 h1; *)
+  (*     let table_1 = HS.sel h1 (itable i aead_st.prf) in *)
+  (*     match find_mac table_0 x with *)
+  (*     | Some _ -> () *)
+  (*     | None   -> *)
+  (*       frame_refines_entries_append table_0 aead_entries h1 (Seq.create 1 (PRF.Entry x mac)); *)
+  (*     	let open FStar.Classical in *)
+  (*     	forall_intro (move_requires (frame_unused_aead_iv_for_prf_mac aead_st k_0 x h0 h1 mac)); *)
+  (* 	admit () *)
+  (*   end *)
+  
+
 
 val lemma_prf_find_append_none_in_s2
   (#r:region)
