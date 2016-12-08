@@ -100,14 +100,14 @@ val prf_enxor_leaves_none_strictly_above_x: #i:id ->
 					   c:lbuffer (v len) ->
 					   h_0:mem ->
 					   h_1:mem ->
-     Lemma (requires none_above_if_authId x t h_0 /\
+     Lemma (requires none_above_prf_st x t h_0 /\
 		     modifies_x_buffer_1 t x c h_0 h_1 /\ 
 		     Buffer.frameOf c <> t.rgn)
-           (ensures none_above_if_authId (PRF.incr i x) t h_1)
+           (ensures none_above_prf_st (PRF.incr i x) t h_1)
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
-    = if CMA.authId (i, PRF.(x.iv)) then
+    = if prf i then
 	let r = itable i t in
 	let t_0 = HS.sel h_0 r in 
 	let t_1 = HS.sel h_1 r in
@@ -120,9 +120,10 @@ let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
 	assert (Some? (find t_1 x));
 	assert (find t_1 x == Some ex.range);
 	let y = PRF.incr i x in
-	let aux (z:domain i{z `above` y}) 
-	  : Lemma (find t_1 z == None) 
-	  = SeqProperties.find_snoc t_0 ex (PRF.is_entry_domain z) in
+	let aux (z:domain i{z `above` y})
+	  : Lemma (find t_1 z == None)
+	  = assert (z `above` x); 
+	    SeqProperties.find_snoc t_0 ex (PRF.is_entry_domain z) in
 	FStar.Classical.forall_intro aux
       else ()
 
@@ -310,7 +311,7 @@ val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^
 		    (safeId i ==> 
 		       (let r = itable i t in
 			let blocks_1 = HS.sel h1 (PRF.itable i t) in
-			none_above_if_authId x t h0 /\
+			none_above_prf_st x t h0 /\
 		        h0 `HS.contains` r /\
 			HS.sel h0 t.table == 
 			  Seq.append (HS.sel h_init t.table)
@@ -401,9 +402,8 @@ let enxor_liveness (#i:id)
 		   (h:mem) =
     Plain.live h plain /\
     Buffer.live h cipher /\
-    (safeId i
-      ==> (let r = itable i t in
-	   h `HS.contains` r))
+    (prf i
+      ==> h `HS.contains` (itable i t))
 
 let enxor_dexor_lengths_ok (#i:id)
 			   (x:PRF.domain i)
@@ -458,7 +458,7 @@ val counter_enxor:
     enxor_liveness t plain cipher h /\
     enxor_dexor_lengths_ok x len remaining_len /\
     // if ciphertexts are authenticated, then fresh blocks are available
-    (safeId i ==> none_above_if_authId x t h) /\
+    (safeMac i ==> none_above_prf_st x t h) /\
     enxor_invariant t x len remaining_len plain cipher h_init h))
   (ensures (fun h0 _ h1 ->
     enxor_liveness t plain cipher h1 /\
@@ -470,7 +470,6 @@ val counter_enxor:
 let rec counter_enxor #i t x len remaining_len plain cipher h_init =
   let completed_len = len -^ remaining_len in
   let h0 = get () in
-  if safeId i then ST.recall (itable i t);
   if remaining_len <> 0ul then
     begin // at least one more block
       let starting_pos = len -^ remaining_len in
@@ -480,7 +479,7 @@ let rec counter_enxor #i t x len remaining_len plain cipher h_init =
       PRF.prf_enxor i t x l cipher_hd plain_hd;
       let h1 = get () in
       x_buffer_1_modifies_table_above_x_and_buffer t x cipher h0 h1;
-      if safeId i then prf_enxor_leaves_none_strictly_above_x t x len remaining_len cipher h0 h1;
+      if safeMac i then prf_enxor_leaves_none_strictly_above_x t x len remaining_len cipher h0 h1;
       extending_counter_blocks t x (v len) (v completed_len) plain cipher h0 h1 h_init;
       let y = PRF.incr i x in
       counter_enxor t y len (remaining_len -^ l) plain cipher h_init;
@@ -496,7 +495,7 @@ val enxor:
   #len:u32 ->
   plain:plainBuffer i (v len) ->
   cipher:lbuffer (v len) ->
-  // Not Stack, as we modify the heap-based ideal table (and don't know where the buffers are
+  // not Stack effect, as we don't care where the buffers are
   ST unit
   (requires (fun h ->
     let x = {iv=iv; ctr=otp_offset i} in
@@ -504,12 +503,11 @@ val enxor:
     enxor_liveness t plain cipher h /\
     len <> 0ul /\
     safelen i (v len) (otp_offset i) /\
-    (safeId i ==> none_above_if_authId x t h)))    // if ciphertexts are authenticated, then fresh blocks are available
+    (safeMac i ==> none_above_prf_st x t h)))    // if ciphertexts are authenticated, then fresh blocks are available
   (ensures (fun h0 _ h1 ->
     let x = {iv=iv; ctr=otp_offset i} in
     enxor_liveness t plain cipher h1 /\
     enxor_dexor_lengths_ok x len len /\
-    // in all cases, we extend the table only at x and its successors.
     modifies_table_above_x_and_buffer t x cipher h0 h1 /\
     enxor_invariant t x len 0ul plain cipher h0 h1))
 let enxor #i t iv #len plain_b cipher_b = 

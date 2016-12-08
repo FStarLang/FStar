@@ -155,7 +155,7 @@ val lemma_aead_inv_after_prf_mac
   (mac:CMA.state (i,x.iv))
   (h0 h1:mem) : Lemma
   (requires inv aead_st h0 /\                                  //invariant holds in h0
-            (safeMac i ==> fresh_nonce_st x.iv aead_st h0) /\  //the nonce is fresh w.r.t. the AEAD table
+            fresh_nonce_st x.iv aead_st h0 /\                  //the nonce is fresh w.r.t. the AEAD table
             prf_mac_ensures i aead_st.prf k_0 x h0 mac h1)     //prf_mac_ensures holds from h0 to h1
   (ensures  (aead_inv_after_prf_mac aead_st x h1))  //TODO: inv aead_st h1
 let lemma_aead_inv_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 =
@@ -173,7 +173,7 @@ val prf_mac_wrapper
   (x:PRF.domain_mac i)
   : ST (CMA.state (i,x.iv))
        (requires (fun h0 -> inv aead_st h0 /\
-                          (safeMac  i ==> fresh_nonce_st x.iv aead_st h0)))
+                         fresh_nonce_st x.iv aead_st h0))
        (ensures (fun h0 mac h1 -> prf_mac_ensures i aead_st.prf k_0 x h0 mac h1 /\
                                aead_inv_after_prf_mac aead_st x h1))
 let prf_mac_wrapper #i #rw aead_st k_0 x =

@@ -37,10 +37,12 @@ let prf_table (r:rgn) (i:id) = Seq.seq (PRF.entry r i)
 let safeMac (i:id) = safeHS i && mac1 i
 
 (*** COUNTERS AND LENGTHS ***)
+let u (n:FStar.UInt.uint_t 32) = uint_to_t n
+
 (* The ctr value associated with the first otp block *)
 let otp_offset (i:id) = ctr_0 i +^ 1ul
 
-let aadlen = x:UInt32.t{x <=^ aadmax}
+let aadlen = aadlen_32
 
 let maxplain (i:id) = pow2 14 // for instance
 
@@ -232,7 +234,7 @@ let refines_one_entry (#rgn:region) (#i:id)
 (** none_above x prf_table:
 	no entry in the prf_table at ({iv=x.iv; ctr=i}) for any i >= x.ctr **)
 let none_above (#r:region) (#i:id) (x:PRF.domain i) (prf_table:prf_table r i) =
-    forall (y:PRF.domain i{y `PRF.above` x}).{:pattern (y `PRF.above` x)} //Pattern added: 12/7
+    forall (y:PRF.domain i{y `PRF.above` x}).{:pattern (y `PRF.above` x) \/ (PRF.find prf_table y)} //Pattern added: 12/7
 	PRF.find prf_table y == None
 
 (** none_above_prf_st x prf_state h:
@@ -354,20 +356,17 @@ let init_remaining_len_ok (#i:id) (x:PRF.domain i{PRF.ctr_0 i +^ 1ul = x.ctr})
     : Lemma (remaining_len_ok x len len)
     = ()
 
-let u (n:FStar.UInt.uint_t 32) = uint_to_t n
-
 (** Framing lemmas for clauses of the main invariant **)
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let frame_refines_one_entry (#i:id) (#mac_rgn:region) 
 			    (h:mem) (h':mem) 
 			    (blocks:prf_table mac_rgn i)
-			    (e:aead_entry i) 
+			    (e:aead_entry i{safeId i}) //NB: moving the refinement earlier causes typing problems in frame_refines below
    : Lemma (requires (let open HS in
-		      safeId i /\  //AR: (safeId i) earlier was a refinement on h, but then this gave type inference error in frame_refines
 		      refines_one_entry blocks e h /\			    
 		      HH.modifies_rref mac_rgn TSet.empty h.h h'.h /\
 		      live_region h' mac_rgn))
-	   (ensures  safeId i /\ refines_one_entry blocks e h')
+	   (ensures  refines_one_entry blocks e h')
    = ()
 
 let frame_unused_aead_iv_for_prf (#mac_rgn:region) (#i:id) (h0:mem{safeMac i}) (h1:mem)
