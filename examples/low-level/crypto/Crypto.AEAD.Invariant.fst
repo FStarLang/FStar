@@ -441,3 +441,74 @@ let find_singleton (#rgn:region) (#i:id) (e:PRF.entry rgn i) (x:PRF.domain i)
     : Lemma (if is_entry_domain x e then PRF.find (Seq.create 1 e) x == Some e.range
 	     else PRF.find (Seq.create 1 e) x == None)
     = ()	     
+
+val lemma_prf_find_append_some
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (blocks:prf_table r i)
+  (x:PRF.domain i) : Lemma
+  (requires (Some? (PRF.find table x)))
+  (ensures  (PRF.find (Seq.append table blocks) x == PRF.find table x))
+let lemma_prf_find_append_some #r #i table blocks x = SeqProperties.find_append_some table blocks (is_entry_domain x)
+
+val lemma_prf_find_append_some_forall
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (blocks:prf_table r i) : Lemma
+  (forall (x:PRF.domain i).{:pattern (PRF.find (Seq.append table blocks) x) }
+     (Some? (PRF.find table x)) ==>
+       (PRF.find (Seq.append table blocks) x == PRF.find table x))
+let lemma_prf_find_append_some_forall #r #i table blocks =
+  let open FStar.Classical in
+  forall_intro (move_requires (lemma_prf_find_append_some #r #i table blocks))
+
+(*
+ * refines_one_entry framing lemma for append to the PRF blocks
+ *)
+val frame_refines_one_entry_append
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (h:mem{safeId i})
+  (blocks:prf_table r i)
+  (aead_ent: aead_entry i) : Lemma
+  (requires (refines_one_entry table aead_ent h))
+  (ensures  (refines_one_entry (Seq.append table blocks) aead_ent h))
+let frame_refines_one_entry_append #r #i table h blocks aead_ent =
+  lemma_prf_find_append_some_forall table blocks
+
+(*
+ * aead_entries_are_refined framing lemma for append to the PRF blocks
+ *)
+let frame_refines_entries_append
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (entries:aead_entries i)
+  (h:mem)
+  (blocks:prf_table r i) : Lemma
+  (requires (aead_entries_are_refined table entries h))
+  (ensures  (aead_entries_are_refined (Seq.append table blocks) entries h))
+  = let open FStar.Classical in
+    if safeId i then
+      let h':(h:mem{safeId i}) = h in  //AR: this should not be required
+      forall_intro (move_requires (frame_refines_one_entry_append table h' blocks))
+    else ()
+
+(*
+ * aead_entries_are_refined framing lemma for no changes to heap in the mac_rgn
+ *)
+let frame_refines_aead_entries_h (i:id{safeMac i}) (mac_rgn:region) 
+		                 (blocks:prf_table mac_rgn i)
+		                 (entries:aead_entries i)
+		                 (h:mem) (h':mem)
+   : Lemma (requires (let open HS in 
+		      aead_entries_are_refined blocks entries h    /\
+   		      HH.modifies_rref mac_rgn TSet.empty h.h h'.h /\
+		      HS.live_region h' mac_rgn))
+	   (ensures  aead_entries_are_refined blocks entries h')
+   = let open FStar.Classical in
+     forall_intro (move_requires (frame_unused_aead_iv_for_prf h h' blocks));
+     if safeId i then forall_intro (move_requires (frame_refines_one_entry h h' blocks))
