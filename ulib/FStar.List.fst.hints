@@ -195,10 +195,10 @@
       [
         "@query", "bool_inversion", "bool_typing", "data_elim_Prims.V",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "disc_equation_Prims.Some", "disc_equation_Prims.V",
-        "fuel_guarded_inversion_Prims.list", "lemma_Prims.invertOption",
-        "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.is_None"
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "disc_equation_Prims.V", "fuel_guarded_inversion_Prims.list",
+        "lemma_Prims.invertOption", "proj_equation_Prims.V_v",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0
     ],
@@ -255,13 +255,13 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "disc_equation_Prims.Some",
+        "@query", "bool_inversion", "data_elim_Prims.V",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "disc_equation_Prims.V", "fuel_guarded_inversion_Prims.list",
-        "kinding_Prims.option@tok", "lemma_Prims.invertOption",
-        "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_4c6ebfa415384bc16f78df7e5ba5eba9",
-        "typing_Prims.V.v", "typing_Prims.is_None"
+        "lemma_Prims.invertOption", "proj_equation_Prims.V_v",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_None",
+        "typing_Prims.uu___is_Some"
       ],
       0
     ],

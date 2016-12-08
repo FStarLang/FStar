@@ -1,5 +1,5 @@
 [
-  "P×w—¾\u0006÷~S%)\u0004PYNÊ",
+  "D^D‡=fé„<Ži¤Èz '",
   [
     [ "FStar.DM4F.ExnSt.return", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -8,10 +8,9 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "disc_equation_Prims.None",
-        "function_token_typing_Prims.int", "kinding_Prims.tuple2@tok",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.is_Some"
+        "@query", "bool_inversion", "function_token_typing_Prims.int",
+        "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption",
+        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some"
       ],
       0
     ],
@@ -29,7 +28,14 @@
       ],
       0
     ],
-    [ "FStar.DM4F.ExnSt.EXNST_raise_elab", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.ExnSt.EXNST___proj__EXNST__item__raise_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     [ "FStar.DM4F.ExnSt.EXNST", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.ExnSt.EXNST", 2, 2, 1, [ "@query" ], 0 ],
     [
@@ -149,25 +155,23 @@
       2,
       1,
       [
-        "@query", "FStar.DM4F.ExnSt.EXNST.raise_equality", "bool_inversion",
+        "@query", "FStar.DM4F.ExnSt.__proj__EXNST__item__raise_equality",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.int",
         "disc_equation_Prims.None",
         "equation_FStar.DM4F.ExnSt.div_extrinsic",
         "equation_FStar.DM4F.IntST.ni_ifc", "equation_Prims._assert",
         "equation_Prims.nat",
-        "function_token_typing_FStar.DM4F.IntST.ni_ifc",
-        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "function_token_typing_FStar.DM4F.IntST.ni_ifc", "int_inversion",
+        "int_typing",
         "interpretation_Tm_abs_6d04ff4eba9c98d0fc8aeb7eb2cf5423",
         "interpretation_Tm_abs_7c3b722ae6ca7ba9cc94839489ff9047",
-        "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption",
         "pre_typing_Tm_arrow_c84e82f855c6d28253036544e398ccc6",
         "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_Division", "primitive_Prims.op_Equality",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.None_a",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.DM4F.ExnSt.div_extrinsic", "typing_Prims.is_None",
-        "typing_Prims.is_Some"
+        "typing_FStar.DM4F.ExnSt.div_extrinsic"
       ],
       0
     ],

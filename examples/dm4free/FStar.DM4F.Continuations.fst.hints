@@ -1,36 +1,43 @@
 [
-  "áD@ã◊6ùãì4z≈•!U-",
+  "8%⁄U˝Ó\u0018\u0011,ò|%™°T\u0015",
   [
     [ "FStar.DM4F.Continuations.cont", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Continuations.return", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Continuations.bind", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.DM4F.Continuations.L.a",
+      "FStar.DM4F.Continuations.__proj__L__item__a",
       1,
       2,
       1,
       [
         "@query", "disc_equation_FStar.DM4F.Continuations.L",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_073073d60065bd9ad34f0da1050df716"
+        "refinement_interpretation_Tm_refine_9d1e289857847b04e83630d17b0076fb"
       ],
       0
     ],
     [
-      "FStar.DM4F.Continuations.L.b",
+      "FStar.DM4F.Continuations.__proj__L__item__b",
       1,
       2,
       1,
       [
         "@query", "disc_equation_FStar.DM4F.Continuations.L",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_073073d60065bd9ad34f0da1050df716"
+        "refinement_interpretation_Tm_refine_9d1e289857847b04e83630d17b0076fb"
       ],
       0
     ],
-    [ "FStar.DM4F.Continuations.L._2", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.DM4F.Continuations.L._2",
+      "FStar.DM4F.Continuations.__proj__L__item___2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.DM4F.Continuations.__proj__L__item___2",
       2,
       2,
       1,
@@ -39,37 +46,44 @@
         "proj_equation_FStar.DM4F.Continuations.L_a",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.DM4F.Continuations.L_a",
-        "refinement_interpretation_Tm_refine_073073d60065bd9ad34f0da1050df716"
+        "refinement_interpretation_Tm_refine_9d1e289857847b04e83630d17b0076fb"
       ],
       0
     ],
     [
-      "FStar.DM4F.Continuations.R.a",
+      "FStar.DM4F.Continuations.__proj__R__item__a",
       1,
       2,
       1,
       [
         "@query", "disc_equation_FStar.DM4F.Continuations.R",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3714b8090a3cd0a1a8ec3deacd2335d3"
+        "refinement_interpretation_Tm_refine_c8eb3f8a785360e9d5b6f0e59bdcde30"
       ],
       0
     ],
     [
-      "FStar.DM4F.Continuations.R.b",
+      "FStar.DM4F.Continuations.__proj__R__item__b",
       1,
       2,
       1,
       [
         "@query", "disc_equation_FStar.DM4F.Continuations.R",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3714b8090a3cd0a1a8ec3deacd2335d3"
+        "refinement_interpretation_Tm_refine_c8eb3f8a785360e9d5b6f0e59bdcde30"
       ],
       0
     ],
-    [ "FStar.DM4F.Continuations.R._2", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.DM4F.Continuations.R._2",
+      "FStar.DM4F.Continuations.__proj__R__item___2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.DM4F.Continuations.__proj__R__item___2",
       2,
       2,
       1,
@@ -78,7 +92,7 @@
         "proj_equation_FStar.DM4F.Continuations.R_b",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.DM4F.Continuations.R_b",
-        "refinement_interpretation_Tm_refine_3714b8090a3cd0a1a8ec3deacd2335d3"
+        "refinement_interpretation_Tm_refine_c8eb3f8a785360e9d5b6f0e59bdcde30"
       ],
       0
     ],
