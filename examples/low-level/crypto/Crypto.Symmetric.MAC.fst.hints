@@ -1,5 +1,5 @@
 [
-  "‡QÉî3e\u0007ŒC,\u0016g\u0013¾•\u0007",
+  "Ù\u0017Q<¡ê“N±º\u001fªø‰þ",
   [
     [
       "Crypto.Symmetric.MAC.text",
@@ -1195,6 +1195,42 @@
         "fuel_guarded_inversion_Crypto.Indexing.macAlg",
         "fuel_guarded_inversion_Prims.tuple2",
         "typing_Crypto.Symmetric.MAC.alg"
+      ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.MAC.poly_empty",
+      1,
+      0,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.MAC.poly_empty",
+      2,
+      0,
+      1,
+      [
+        "@query", "constructor_distinct_Crypto.Indexing.POLY1305",
+        "disc_equation_Crypto.Indexing.GHASH",
+        "disc_equation_Crypto.Indexing.POLY1305",
+        "equality_tok_Crypto.Indexing.GHASH@tok",
+        "equality_tok_Crypto.Indexing.POLY1305@tok",
+        "equation_Crypto.Symmetric.MAC.alg",
+        "equation_Crypto.Symmetric.MAC.elem",
+        "equation_Crypto.Symmetric.MAC.id",
+        "equation_Crypto.Symmetric.MAC.poly",
+        "equation_Crypto.Symmetric.MAC.text",
+        "equation_Crypto.Symmetric.MAC.zero",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero",
+        "equation_FStar.List.Tot.test_sort", "equation_FStar.UInt128.t",
+        "equation_Prims._assert",
+        "fuel_guarded_inversion_Crypto.Indexing.macAlg",
+        "fuel_guarded_inversion_Prims.tuple2",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "refinement_interpretation_Tm_refine_9b4eeb493b05d0fe44b57793db1fc753",
+        "typing_Crypto.Symmetric.MAC.alg", "unit_inversion"
       ],
       0
     ],

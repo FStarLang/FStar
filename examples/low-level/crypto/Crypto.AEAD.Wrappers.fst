@@ -58,17 +58,6 @@ let fresh_sref (#a:Type0) h0 h1 (r:HS.reference a) =
     HS.frameOf r == HS.(h1.tip) /\
     h1 `HS.contains` r
 
-
-(* let accumulate_encoded (#i:CMA.id) *)
-(*  		       (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen)) *)
-(* 		       (#plainlen:txtlen_32) (cipher:lbuffer (v plainlen)) *)
-(* 		       (a:CMA.accBuffer i) (h:mem{mac_log}) = *)
-(*     Buffer.live h aad /\			  *)
-(*     Buffer.live h cipher /\			      *)
-(*     h `HS.contains` (CMA.alog a) /\ *)
-(*     HS.sel h (CMA.alog a) == *)
-(*     encode_both (fst i) aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher) *)
-
 let accumulate_ensures (#i: MAC.id) (st: CMA.state i) 
 		       (#aadlen:aadlen_32) (aad:lbuffer (v aadlen))
 		       (#txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
@@ -123,7 +112,7 @@ let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
       HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1 /\
       m_contains (ilog st.log) h1 /\ (
       let log = FStar.HyperStack.sel h1 (alog acc) in
-      let a = MAC.sel_elem h1 acc.a in
+      let a = MAC.sel_elem h1 (abuf acc) in
       let r = MAC.sel_elem h1 st.r in
       let s = Buffer.as_seq h1 st.s in
       let t = MAC.mac log r s in
@@ -137,7 +126,7 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
     let open Crypto.Symmetric.UF1CMA in
     Buffer.live h0 tag /\ 
     Buffer.live h0 st.s /\
-    Buffer.disjoint_2 (MAC.as_buffer acc.a) st.s tag /\ 
+    Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) st.s tag /\
     Buffer.disjoint (MAC.as_buffer st.r) tag /\
     Buffer.disjoint st.s tag /\ 
     acc_inv st acc h0 /\
@@ -162,14 +151,6 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
 //16-11-04 BTW Buffer.disjoint_2 should be strengthened to imply 3 disjoints
 //Move to HS?
 
-
-////////////////////////////////////////////////////////////////////////////////
-//prf_mac
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-//end prf_mac
-////////////////////////////////////////////////////////////////////////////////
-
 ////////////////////////////////////////////////////////////////////////////////
 //UF1CMA.verify
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,7 +162,7 @@ let verify_liveness (#i:CMA.id) (st:CMA.state i) (tag:lbuffer 16) (h:mem) =
 let verify_requires (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) (h0:mem) = 
     let open Crypto.Symmetric.UF1CMA in
     verify_liveness st tag h0 /\
-    Buffer.disjoint_2 (MAC.as_buffer acc.a) st.s tag /\ 
+    Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) st.s tag /\
     Buffer.disjoint_2 (MAC.as_buffer st.r) st.s tag /\
     acc_inv st acc h0 /\
     (mac_log ==> m_contains (ilog st.log) h0) /\

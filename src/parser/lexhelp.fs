@@ -134,6 +134,7 @@ type compatibilityMode =
 
 let keywords =
   [ ALWAYS, "abstract"   ,ABSTRACT;
+    ALWAYS, "attributes" ,ATTRIBUTES;
     ALWAYS, "noeq"       ,NOEQUALITY;
     ALWAYS, "unopteq"    ,UNOPTEQUALITY;
     ALWAYS, "and"        ,AND;
