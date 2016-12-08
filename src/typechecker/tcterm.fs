@@ -713,12 +713,14 @@ and tc_universe env u : universe =
         | U_zero    -> u
         | U_succ u  -> U_succ (aux u)
         | U_max us  -> U_max (List.map aux us)
-        | U_name x  -> if env.use_bv_sorts || Env.lookup_univ env x
-                       then u
-                       else raise (Error (Util.format1 "Universe variable '%s' not found" x.idText, Env.get_range env)) in
-    match u with
-        | U_unknown -> U.type_u () |> snd
-        | _ -> aux u
+        | U_name x  -> u
+            (* TODO : Is that really okay ? (any free variable should be automatically bound at top-level) *)
+            // if env.use_bv_sorts || Env.lookup_univ env x
+            // then u
+            // else raise (Error (Util.format1 "Universe variable '%s' not found" x.idText, Env.get_range env))
+   in match u with
+       | U_unknown -> U.type_u () |> snd
+       | _ -> aux u
 
 (* Several complex cases from the main type-checker are factored in to separate functions below *)
 
@@ -837,7 +839,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                         | Some (Inl more_bs) ->  //more actual args
                           let c = SS.subst_comp subst c_expected in
                           (* the expected type is explicitly curried *)
-                          if Util.is_total_comp c
+                          if Util.is_named_tot c
                           then let t = unfold_whnf env (Util.comp_result c) in
                                match t.n with
                                 | Tm_arrow(bs_expected, c_expected) ->
@@ -848,24 +850,24 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
                        handle_more (check_binders env bs bs_expected) c_expected in
 
-                 let mk_letrec_env envbody bs c =
-                     let letrecs = guard_letrecs envbody bs c in
-                     let envbody = {envbody with letrecs=[]} in
-                     letrecs |> List.fold_left (fun (env, letrec_binders) (l,t) ->
+                  let mk_letrec_env envbody bs c =
+                      let letrecs = guard_letrecs envbody bs c in
+                      let envbody = {envbody with letrecs=[]} in
+                      letrecs |> List.fold_left (fun (env, letrec_binders) (l,t) ->
 //                        let t = N.normalize [N.EraseUniverses; N.Beta] env t in
 //                        printfn "Checking let rec annot: %s\n" (Print.term_to_string t);
-                        let t, _, _ = tc_term (Env.clear_expected_typ env |> fst) t in
-                        let env = Env.push_let_binding env l ([], t) in
-                        let lb = match l with
-                            | Inl x -> S.mk_binder ({x with sort=t})::letrec_binders
-                            | _ -> letrec_binders in
-                        env, lb)
-                      (envbody, []) in
+                          let t, _, _ = tc_term (Env.clear_expected_typ env |> fst) t in
+                          let env = Env.push_let_binding env l ([], t) in
+                          let lb = match l with
+                              | Inl x -> S.mk_binder ({x with sort=t})::letrec_binders
+                              | _ -> letrec_binders in
+                          env, lb)
+                        (envbody, []) in
 
-                 let envbody, bs, g, c = check_actuals_against_formals env bs bs_expected in
-                 let envbody, letrecs = if Env.should_verify env then mk_letrec_env envbody bs c else envbody, [] in
-                 let envbody = Env.set_expected_typ envbody (Util.comp_result c) in
-                 Some (t, false), bs, letrecs, Some c, envbody, body, g
+                  let envbody, bs, g, c = check_actuals_against_formals env bs bs_expected in
+                  let envbody, letrecs = if Env.should_verify env then mk_letrec_env envbody bs c else envbody, [] in
+                  let envbody = Env.set_expected_typ envbody (Util.comp_result c) in
+                  Some (t, false), bs, letrecs, Some c, envbody, body, g
 
                 | _ -> (* expected type is not a function;
                           try normalizing it first;
@@ -903,7 +905,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                      guard in
 
     let tfun_computed = Util.arrow bs cbody in
-    let e = Util.abs bs body (Some (Util.lcomp_of_comp cbody |> Inl)) in
+    let e = Util.abs bs body (Some (dflt cbody c_opt |> Util.lcomp_of_comp |> Inl)) in
     let e, tfun, guard = match tfun_opt with
         | Some (t, use_teq) ->
            let t = SS.compress t in
@@ -1432,6 +1434,7 @@ and check_top_level_let env e =
          (* Maybe generalize its type *)
          let g1, e1, univ_vars, c1 =
             if annotated && not env.generalize
+            (* TODO : Should we gather the fre univnames ? e.g. (TcUtil.gather_free_univnames env e1)@univ_vars *)
             then g1, e1, univ_vars, c1
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
                  let _, univs, e1, c1 = List.hd (TcUtil.generalize env [lb.lbname, e1, c1.comp()]) in
@@ -1530,6 +1533,7 @@ and check_top_level_let_rec env top =
            let lbs =
               if not env.generalize
               then lbs |> List.map (fun lb ->
+            (* TODO : Should we gather the fre univnames ? e.g. (TcUtil.gather_free_univnames env e1)@lb.lbunivs *)
                     if lb.lbunivs = []
                     then lb
                     else Util.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lb.lbdef)

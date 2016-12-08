@@ -108,6 +108,7 @@ let compile_op arity s =
 %token AND
 %token ASSERT
 %token ASSUME
+%token ATTRIBUTES
 %token BACKTICK
 %token BANG_LBRACE
 %token BAR
@@ -231,6 +232,8 @@ let compile_op arity s =
 %token UNDERSCORE
 %token UNFOLD
 %token UNFOLDABLE
+%token <string> UNIVAR
+%token UNIV_HASH
 %token UNOPTEQUALITY
 %token VAL
 %token WHEN
@@ -436,6 +439,20 @@ let x =
 in
     ( x :: xs )}
 
+list_argTerm_:
+  
+    {    ( [] )}
+| argTerm list_argTerm_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
+list_atomicUniverse_:
+  
+    {    ( [] )}
+| atomicUniverse list_atomicUniverse_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
 list_constructorDecl_:
   
     {    ( [] )}
@@ -455,32 +472,6 @@ list_multiBinder_:
     {    ( [] )}
 | multiBinder list_multiBinder_
     {let (x, xs) = ($1, $2) in
-    ( x :: xs )}
-
-list_pair_maybeHash_indexingTerm__:
-  
-    {    ( [] )}
-| indexingTerm list_pair_maybeHash_indexingTerm__
-    {let (y0, xs) = ($1, $2) in
-let x =
-  let y = y0 in
-  let x =
-             ( Nothing )
-  in
-      ( (x, y) )
-in
-    ( x :: xs )}
-| HASH indexingTerm list_pair_maybeHash_indexingTerm__
-    {let (_100, y0, xs) = ((), $2, $3) in
-let x =
-  let y = y0 in
-  let _10 = _100 in
-  let x =
-    let _1 = _10 in
-             ( Hash )
-  in
-      ( (x, y) )
-in
     ( x :: xs )}
 
 list_qualifier_:
@@ -511,6 +502,14 @@ nonempty_list_atomicPattern_:
     {let x = $1 in
     ( [ x ] )}
 | atomicPattern nonempty_list_atomicPattern_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
+nonempty_list_atomicTerm_:
+  atomicTerm
+    {let x = $1 in
+    ( [ x ] )}
+| atomicTerm nonempty_list_atomicTerm_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -1548,6 +1547,9 @@ in
 | ENSURES typ
     {let (_1, t) = ((), $2) in
       ( mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type )}
+| ATTRIBUTES nonempty_list_atomicTerm_
+    {let (_1, es) = ((), $2) in
+      ( mk_term (Attributes es) (rhs2 parseState 1 2) Type )}
 | IF noSeqTerm THEN noSeqTerm ELSE noSeqTerm
     {let (_1, e1, _3, e2, _5, e3) = ((), $2, (), $4, (), $6) in
       ( mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr )}
@@ -1975,9 +1977,39 @@ in
                                                   ( e )}
 
 appTerm:
-  indexingTerm list_pair_maybeHash_indexingTerm__
+  indexingTerm list_argTerm_
     {let (head, args) = ($1, $2) in
       ( mkApp head (map (fun (x,y) -> (y,x)) args) (rhs2 parseState 1 2) )}
+
+argTerm:
+  indexingTerm
+    {let y0 = $1 in
+let x =
+  let y = y0 in
+  let x =
+             ( Nothing )
+  in
+      ( (x, y) )
+in
+                                    ( x )}
+| HASH indexingTerm
+    {let (_100, y0) = ((), $2) in
+let x =
+  let y = y0 in
+  let _10 = _100 in
+  let x =
+    let _1 = _10 in
+             ( Hash )
+  in
+      ( (x, y) )
+in
+                                    ( x )}
+| universe
+    {let u = $1 in
+               ( u )}
+| univar
+    {let u = $1 in
+             ( UnivApp, u )}
 
 indexingTerm:
   atomicTermNotQUident nonempty_list_dotOperator_
@@ -2008,7 +2040,7 @@ atomicTermQUident:
     (
         let t = Name id in
         let e = mk_term t (rhs parseState 1) Un in
-	e
+	      e
     )}
 | quident DOT_LPAREN term RPAREN
     {let (id, _2, t, _4) = ($1, (), $3, ()) in
@@ -2314,6 +2346,63 @@ constant:
 | REIFY
     {let _1 = () in
             ( Const_reify )}
+
+universe:
+  UNIV_HASH atomicUniverse
+    {let (_1, ua) = ((), $2) in
+                                ( (UnivApp, ua) )}
+
+universeFrom:
+  atomicUniverse
+    {let ua = $1 in
+                      ( ua )}
+| universeFrom OPINFIX2 universeFrom
+    {let (u1, op_plus, u2) = ($1, $2, $3) in
+       (
+         if op_plus <> "+"
+         then errorR(Error("The operator " ^ op_plus ^ " was found in universe context."
+                           ^ "The only allowed operator in that context is +.",
+                           rhs parseState 2)) ;
+         mk_term (Op(op_plus, [u1 ; u2])) (rhs2 parseState 1 3) Expr
+       )}
+| ident list_atomicUniverse_
+    {let (max, us) = ($1, $2) in
+      (
+        if text_of_id max <> "max"
+        then errorR(Error("A lower case ident " ^ text_of_id max ^
+                          " was found in a universe context. " ^
+                          "It should be either max or a universe variable 'usomething.",
+                          rhs parseState 1)) ;
+        let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in
+        mkApp max (map (fun u -> u, Nothing) us) (rhs2 parseState 1 2)
+      )}
+
+atomicUniverse:
+  UNDERSCORE
+    {let _1 = () in
+      ( mk_term Wild (rhs parseState 1) Expr )}
+| INT
+    {let n = $1 in
+      (
+        if snd n then
+          errorR(Error("This number is outside the allowable range for representable integer constants",
+                       lhs(parseState)));
+        mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
+      )}
+| univar
+    {let u = $1 in
+             ( u )}
+| LPAREN universeFrom RPAREN
+    {let (_1, u, _3) = ((), $2, ()) in
+      ( mk_term (Paren u) (rhs2 parseState 1 3) Expr )}
+
+univar:
+  UNIVAR
+    {let id = $1 in
+      (
+        let pos = rhs parseState 1 in
+        mk_term (Uvar (mk_ident (id, pos))) pos Expr
+      )}
 
 right_flexible_list_SEMICOLON_noSeqTerm_:
   

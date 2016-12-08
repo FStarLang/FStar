@@ -398,7 +398,11 @@ let gen_wps_for_free
             let projector = S.fvar (Env.lookup_projector env (Util.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level 1) None in
             mk_app projector [tuple, None]
           in
-          let rel0 :: rels = List.mapi (fun i (t, q) -> mk_stronger t (project i x) (project i y)) args in
+          let (rel0,rels) =
+              match List.mapi (fun i (t, q) -> mk_stronger t (project i x) (project i y)) args with
+                  | [] -> failwith "Impossible : Empty application when creating stronger relation in DM4F"
+                  | rel0 :: rels -> rel0, rels
+          in
           List.fold_left Util.mk_conj rel0 rels
         | Tm_arrow (binders, { n = GTotal (b, _) })
         | Tm_arrow (binders, { n = Total (b, _) }) ->
@@ -513,10 +517,11 @@ type nm_ = nm
 let nm_of_comp = function
   | Total (t, _) ->
       N t
-  | Comp c when lid_equals c.effect_name Const.monadic_lid ->
+  | Comp c when c.flags |> Util.for_some (function CPS -> true | _ -> false) ->
+                //lid_equals c.effect_name Const.monadic_lid ->
       M c.result_typ
   | Comp c ->
-      failwith (Util.format1 "[nm_of_comp]: impossible (%s)" (string_of_lid c.effect_name))
+      failwith (Util.format1 "[nm_of_comp]: impossible (%s)" (Print.comp_to_string <| mk_Comp c))
   | GTotal _ ->
       failwith "[nm_of_comp]: impossible (GTot)"
 
@@ -732,8 +737,9 @@ and star_type' env t =
 let is_monadic = function
   | None ->
       failwith "un-annotated lambda?!"
-  | Some (Inl { eff_name = lid }) | Some (Inr lid) ->
-      lid_equals lid Const.monadic_lid
+  | Some (Inl { cflags = flags }) | Some (Inr (_, flags)) ->
+      // lid_equals lid Const.monadic_lid
+      flags |> Util.for_some (function CPS -> true | _ -> false)
 
 // TODO: this function implements a (partial) check for the well-formedness of
 // C-types...
@@ -826,7 +832,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
     in
     match context_nm with
     | N t -> raise (Error ("let-bound monadic body has a non-monadic continuation \
-        or a branch of a match is monadic and the others aren't", e2.pos))
+        or a branch of a match is monadic and the others aren't : "  ^ Print.term_to_string t, e2.pos))
     | M _ -> strip_m (check env e2 context_nm)
   in
 
@@ -932,21 +938,25 @@ and infer (env: env) (e: term): nm * term * term =
       let s_what = match what with
         | None -> None // That should not happen according to some other comment
         | Some (Inl lc) ->
-            if Ident.lid_equals lc.eff_name Const.monadic_lid
-            then Some (Inl (U.lcomp_of_comp (S.mk_Total (double_star <| U.comp_result (lc.comp ())))))
+            if lc.cflags |> Util.for_some (function CPS -> true | _ -> false)
+            then
+                let double_starred_comp = S.mk_Total (double_star <| U.comp_result (lc.comp ())) in
+                let flags = List.filter (function CPS -> false | _ -> true) lc.cflags in
+                Some (Inl (U.lcomp_of_comp (comp_set_flags double_starred_comp flags)))
             else Some (Inl ({ lc with comp = begin fun () ->
                         let c = lc.comp () in
                         let result_typ = star_type' env (Util.comp_result c) in
                         Util.set_result_typ c result_typ
                       end  }))
-        | Some (Inr lid) ->
-            Some (Inr (if Ident.lid_equals lid Const.monadic_lid
-                       then Const.effect_Tot_lid
-                       else lid))
+        | Some (Inr (lid, flags)) ->
+            Some (Inr (if flags |> Util.for_some (function CPS -> true | _ -> false)
+                       then (Const.effect_Tot_lid, List.filter (function CPS -> false | _ -> true) flags)
+                       else (lid, flags)))
       in
 
       let u_body, u_what =
           let comp = trans_G env (U.comp_result comp) (is_monadic what) (SS.subst env.subst s_body) in
+          (* TODO : consider removing this ascription *)
           U.ascribe u_body (Inr comp), Some (Inl (U.lcomp_of_comp comp))
       in
 
@@ -1144,12 +1154,6 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
   let x = Util.left binding.lbname in
   let x_binders = [ S.mk_binder x ] in
   let x_binders, e2 = SS.open_term x_binders e2 in
-  let s_binding =
-      if Ident.lid_equals Const.monadic_lid binding.lbeff
-      then
-          { binding with lbeff = Const.effect_Tot_lid ; lbtyp = double_star binding.lbtyp }
-      else { binding with lbtyp = star_type' env binding.lbtyp }
-  in
   begin match infer env e1 with
   | N t1, s_e1, u_e1 ->
       // Util.print1 "[debug] %s is NOT a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
@@ -1163,6 +1167,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
       // Simple case: just a regular let-binding. We defer checks to e2.
       let nm_rec, s_e2, u_e2 = proceed env e2 in
+      let s_binding = { binding with lbtyp = star_type' env binding.lbtyp } in
       nm_rec,
       mk (Tm_let ((false, [ { s_binding with lbdef = s_e1 } ]), SS.close x_binders s_e2)),
       mk (Tm_let ((false, [ { u_binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
@@ -1180,7 +1185,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       let s_e2 = mk (Tm_app (s_e2, [ S.bv_to_name p, S.as_implicit false ])) in
       // fun x -> s_e2* p; this takes care of closing [x].
       let s_e2 = U.abs x_binders s_e2 None in
-      // e1* (fun x -> s_e2* p)
+      // e1* (fun x -> e2* p)
       let body = mk (Tm_app (s_e1, [ s_e2, S.as_implicit false ])) in
       M t2,
       U.abs [ S.mk_binder p ] body None,
@@ -1211,7 +1216,7 @@ and mk_M (t: typ): comp =
     effect_name = Const.monadic_lid;
     result_typ = t;
     effect_args = [];
-    flags = []
+    flags = [CPS ; TOTAL]
   })
 
 and type_of_comp t = Util.comp_result t
@@ -1271,6 +1276,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 
 // A helper --------------------------------------------------------------------
 
+(* KM : why is there both NoDeltaSteps and UnfoldUntil Delta_constant ? *)
 let n = N.normalize [ N.Beta; N.UnfoldUntil Delta_constant; N.NoDeltaSteps; N.Eager_unfolding; N.EraseUniverses ]
 
 // Exported definitions -------------------------------------------------------
