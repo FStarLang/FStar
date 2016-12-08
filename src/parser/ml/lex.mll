@@ -36,6 +36,7 @@
 
   let () =
     Hashtbl.add keywords "abstract"      ABSTRACT    ;
+    Hashtbl.add keywords "attributes"    ATTRIBUTES  ;
     Hashtbl.add keywords "noeq"          NOEQUALITY  ;
     Hashtbl.add keywords "unopteq"       UNOPTEQUALITY  ;
     Hashtbl.add keywords "and"           AND         ;
@@ -69,6 +70,7 @@
     Hashtbl.add keywords "new"           NEW         ;
     Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
     Hashtbl.add keywords "new_effect_for_free" NEW_EFFECT_FOR_FREE  ;
+    Hashtbl.add keywords "noextract"     NOEXTRACT   ;
     Hashtbl.add keywords "of"            OF          ;
     Hashtbl.add keywords "open"          OPEN        ;
     Hashtbl.add keywords "opaque"        OPAQUE      ;
@@ -213,6 +215,7 @@ let tvar_char              = letter | digit | '\'' | '_'
 let constructor = constructor_start_char ident_char*
 let ident       = ident_start_char ident_char*
 let tvar        = '\'' (ident_start_char | constructor_start_char) tvar_char*
+let univar      = '\'' 'u' tvar_char+
 
 rule token = parse
  | "\xef\xbb\xbf"   (* UTF-8 byte order mark, some compiler files have them *)
@@ -244,6 +247,8 @@ rule token = parse
      { id |> Hashtbl.find_option keywords |> Option.default (IDENT id) }
  | constructor as id
      { NAME id }
+ | univar as id
+     { UNIVAR id }
  | tvar as id
      { TVAR id }
  | (integer | xinteger) as x
@@ -315,6 +320,7 @@ rule token = parse
  | "(|"        { LENS_PAREN_LEFT }
  | "|)"        { LENS_PAREN_RIGHT }
  | '#'         { HASH }
+ | "u#"        { UNIV_HASH }
  | "&"         { AMP }
  | "()"        { LPAREN_RPAREN }
  | '('         { LPAREN }

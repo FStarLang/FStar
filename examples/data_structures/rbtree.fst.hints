@@ -1,5 +1,5 @@
 [
-  "bˆü\u00189\u000eÖªxt\u0012\u007f√“Œ\u0000",
+  "Ω‚,„†B8“É÷ƒ\u0019f…‚ü",
   [
     [
       "RBTree.rbtree'",
@@ -14,50 +14,50 @@
       0
     ],
     [
-      "RBTree.T.col",
+      "RBTree.__proj__T__item__col",
       1,
       2,
       1,
       [
         "@query", "disc_equation_RBTree.T",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_50fb47f0209684a038dc0b7cc9c62f3b"
+        "refinement_interpretation_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd"
       ],
       0
     ],
     [
-      "RBTree.T.left",
+      "RBTree.__proj__T__item__left",
       1,
       2,
       1,
       [
         "@query", "disc_equation_RBTree.T",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_50fb47f0209684a038dc0b7cc9c62f3b"
+        "refinement_interpretation_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd"
       ],
       0
     ],
     [
-      "RBTree.T.key",
+      "RBTree.__proj__T__item__key",
       1,
       2,
       1,
       [
         "@query", "disc_equation_RBTree.T",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_50fb47f0209684a038dc0b7cc9c62f3b"
+        "refinement_interpretation_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd"
       ],
       0
     ],
     [
-      "RBTree.T.right",
+      "RBTree.__proj__T__item__right",
       1,
       2,
       1,
       [
         "@query", "disc_equation_RBTree.T",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_50fb47f0209684a038dc0b7cc9c62f3b"
+        "refinement_interpretation_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd"
       ],
       0
     ],
@@ -158,16 +158,16 @@
       1,
       [
         "@query", "binder_x_a489a5e64fbe6f9e47d2efe45c07dd11_0",
-        "disc_equation_RBTree.B", "disc_equation_RBTree.E",
-        "disc_equation_RBTree.R", "disc_equation_RBTree.T",
-        "equality_tok_RBTree.B@tok", "equality_tok_RBTree.R@tok",
-        "fuel_guarded_inversion_RBTree.color",
+        "constructor_distinct_RBTree.E", "disc_equation_RBTree.B",
+        "disc_equation_RBTree.E", "disc_equation_RBTree.R",
+        "disc_equation_RBTree.T", "equality_tok_RBTree.B@tok",
+        "equality_tok_RBTree.R@tok", "fuel_guarded_inversion_RBTree.color",
         "fuel_guarded_inversion_RBTree.rbtree_",
         "proj_equation_RBTree.T_col", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_RBTree.T_left",
         "projection_inverse_RBTree.T_right",
-        "refinement_interpretation_Tm_refine_50fb47f0209684a038dc0b7cc9c62f3b",
-        "subterm_ordering_RBTree.T", "typing_RBTree.T.col"
+        "refinement_interpretation_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd",
+        "subterm_ordering_RBTree.T", "typing_RBTree.__proj__T__item__col"
       ],
       0
     ],
@@ -748,7 +748,7 @@
       ],
       0
     ],
-    [ "RBTree.Mk.tr", 1, 2, 1, [ "@query" ], 0 ],
+    [ "RBTree.__proj__Mk__item__tr", 1, 2, 1, [ "@query" ], 0 ],
     [
       "RBTree.proj",
       1,

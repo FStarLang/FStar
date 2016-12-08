@@ -407,7 +407,7 @@ let effect_signature se =
     | Sig_new_effect(ne, _) ->
         Some (inst_tscheme (ne.univs, Util.arrow ne.binders (mk_Total ne.signature)))
 
-    | Sig_effect_abbrev (lid, us, binders, _, _, _) ->
+    | Sig_effect_abbrev (lid, us, binders, _, _, _, _) ->
         Some (inst_tscheme (us, Util.arrow binders (mk_Total teff)))
 
     | _ -> None
@@ -504,6 +504,7 @@ let lookup_lid env l =
 let lookup_univ env x = 
     List.find (function
         | Binding_univ y -> x.idText=y.idText
+//      | Binding_var({sort=t}) -> Util.set_mem x (Free.univnames t)
         | _ -> false) env.gamma
     |> Option.isSome
 
@@ -570,7 +571,7 @@ let lookup_effect_lid env (ftv:lident) : typ =
 
 let lookup_effect_abbrev env (univ_insts:universes) lid0 =
   match lookup_qname env lid0 with
-    | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _), None)) ->
+    | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _, _), None)) ->
       let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Ident.range_of_lid lid0)) in
       if quals |> Util.for_some (function Irreducible -> true | _ -> false)
       then None
@@ -935,6 +936,18 @@ let univ_vars env =
       | Binding_var({sort=t})::tl -> aux (ext out (Free.univs t)) tl
       | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more uvars beyond this *)
     aux no_univs env.gamma
+
+let univnames env =
+    let no_univ_names = Syntax.no_universe_names in
+    let ext out uvs = Util.set_union out uvs in
+    let rec aux out g = match g with
+        | [] -> out
+        | Binding_sig_inst _::tl -> aux out tl
+        | Binding_univ uname :: tl -> aux (Util.set_add uname out) tl
+        | Binding_lid(_, (_, t))::tl
+        | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
+        | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more universe names beyond this *)
+    aux no_univ_names env.gamma
 
 let bound_vars_of_bindings bs =
   bs |> List.collect (function

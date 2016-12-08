@@ -1,5 +1,4 @@
-module FStar.Integers
-#set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 0 --max_fuel 0"
+module FStar.Integers#set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 0 --max_fuel 0"
 
 type signed = 
   | Signed
@@ -35,7 +34,7 @@ let v (#s:signed) (#n:nat) (x:int_t s n) : Tot (y:int_t Signed 0{size y n s}) =
   match s with 
   | Unsigned -> 
     (match n with
-    | 0 -> (x <: int)
+    | 0 -> (x <: nat)
     | 8 -> FStar.UInt8.v x
     | 16 -> FStar.UInt16.v x
     | 31 -> FStar.UInt31.v x

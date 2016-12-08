@@ -577,7 +577,7 @@ let lemma_modifies_2_trans' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 
   [SMTPatT (modifies_2 b' b h0 h1); SMTPatT (modifies_2 b b' h1 h2)]
   = ()
 
-#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
 
 let lemma_modifies_3_trans (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer a') (b'':buffer a'') h0 h1 h2 : Lemma
   (requires (modifies_3 b b' b'' h0 h1 /\ modifies_3 b b' b'' h1 h2))
@@ -731,7 +731,7 @@ module L = FStar.List.Tot
 
 (** Concrete getters and setters *)
 val createL: #a:Type -> init:list a -> StackInline (buffer a)
-  (requires (fun h -> L.length init > 0 /\ L.length init < UInt.max_int 32))
+  (requires (fun h -> 0 < normalize_term (L.length init) /\ normalize_term (L.length init) < UInt.max_int 32))
   (ensures (fun (h0:mem) b h1 ->
      let len = L.length init in
      len > 0
@@ -741,6 +741,8 @@ val createL: #a:Type -> init:list a -> StackInline (buffer a)
      /\ Map.domain h1.h == Map.domain h0.h
      /\ modifies_0 h0 h1
      /\ as_seq h1 b == Seq.of_list init))
+#set-options "--initial_fuel 1 --max_fuel 1" //the normalize_term (L.length init) in the pre-condition will be unfolded
+	                                     //whereas the L.length init below will not
 let createL #a init =
   let len = UInt32.uint_to_t (L.length init) in
   let s = Seq.of_list init in
@@ -752,6 +754,7 @@ let createL #a init =
   assert (Seq.equal (as_seq h b) (sel h b));
   b
 
+#reset-options "--initial_fuel 0 --max_fuel 0"
 let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h x.id}) (v:a) : Lemma
   (requires True)
   (ensures  (Map.domain h.h == Map.domain (upd h x v).h))

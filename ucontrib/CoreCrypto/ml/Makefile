@@ -9,7 +9,8 @@ OCAMLOPT = ocamlfind opt $(INCLUDE) -g -annot
 OCAMLMKLIB = ocamlfind mklib $(INCLUDE)
 OCAMLDEP = ocamlfind dep
 
-CCOPTS = $(addprefix -ccopt ,-Wall -std=c11 -D__USE_MINGW_ANSI_STDIO)
+CCOPTS = $(addprefix -ccopt ,-Wall -std=c11 -D__USE_MINGW_ANSI_STDIO -Lopenssl -Iopenssl/include)
+CCLIBS = $(addprefix -cclib ,-lcrypto)
 
 ifeq ($(OS),Windows_NT)
     # On cygwin + cygwinports, DLLs are searched in the PATH, which is not
@@ -18,6 +19,9 @@ ifeq ($(OS),Windows_NT)
     # always uses to search for DLLs.
     EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
     ARCH = win32
+    EXTRA_OPTS =
+    EXTRA_LIBS = -L.
+    OPENSSL_CONF = CC=x86_64-w64-mingw32-gcc ./Configure mingw64
 else
     # On Unix-like systems, the library search path is LD_LIBRARY_PATH, which is
     # correctly setup to find libssleay.so and the like, but never includes the
@@ -25,12 +29,15 @@ else
     EXTRA_PATH = LD_LIBRARY_PATH=.
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
-        EXTRA_OPTS = -ccopt -L. -I /usr/local/opt/openssl/include -I /opt/local/include/openssl
-        EXTRA_LIBS = -L /usr/local/opt/openssl/lib -L /opt/local/lib
+        EXTRA_OPTS =
+        EXTRA_LIBS = -L.
         ARCH = osx
+        OPENSSL_CONF = ./config
     else
-        EXTRA_OPTS = -ccopt -fPIC -ccopt -L.
+        EXTRA_OPTS = -thread -ccopt -fPIC
+        EXTRA_LIBS = -L.
         ARCH = x86_64
+        OPENSSL_CONF = ./config
     endif
 endif
 
@@ -38,8 +45,8 @@ endif
 
 all: CoreCrypto.cmxa
 
-%.o: %.c
-	$(OCAMLOPT) $(CCOPTS) $(EXTRA_OPTS) -c $<
+openssl_stub.o: libcrypto.a openssl_stub.c
+	$(OCAMLOPT) $(CCOPTS) $(EXTRA_OPTS) -c openssl_stub.c
 
 %.cmi: %.mli
 	$(OCAMLC) -c $<
@@ -56,6 +63,16 @@ $(PLATFORM)/platform.cmx: $(PLATFORM)/platform.ml
 $(DB)/DB.cmx: $(DB)/DB.ml
 	$(MAKE) -C $(DB)
 
+openssl/Configure:
+	echo "openssl folder is empty, running git submodule update..."
+	git submodule update --init --recursive
+
+openssl/libcrypto.a: openssl/Configure
+	cd openssl && $(OPENSSL_CONF) && $(MAKE) -j4 build_libs
+
+libcrypto.a: openssl/libcrypto.a
+	cp openssl/libcrypto.a .
+
 DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o $(DB)/DB.cmx DHDB.cmx
 CoreCrypto.cmxa: #explicitly sequentialize
 	make $(PLATFORM)/platform.cmx
@@ -63,11 +80,11 @@ CoreCrypto.cmxa: #explicitly sequentialize
 	make openssl_stub.o
 	make $(DB)/DB.cmx
 	make DHDB.cmx
-	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $(DLL_OBJ)
+	$(OCAMLMKLIB) $(EXTRA_LIBS) $(CCLIBS) -o CoreCrypto $(DLL_OBJ)
 
 DLL_BYTE = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o DHDB.cmo $(DB)/DB.cmo
 CoreCrypto.cma: $(DLL_BYTE)
-	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $^
+	$(OCAMLMKLIB) $(EXTRA_LIBS) -o CoreCrypto $^
 
 TEST_CMX = Tests.cmx
 Tests.exe: CoreCrypto.cmxa $(TEST_CMX)

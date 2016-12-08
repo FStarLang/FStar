@@ -200,7 +200,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | Quant(Exists, _, _, _, _)
         | App(Iff, _)
         | App(Or, _) -> //non-atomic, but can't case split 
-          let lab, t = fresh_label default_msg ropt q.rng q in
+          let lab, q = fresh_label default_msg ropt q.rng q in
           lab::labels, q
 
         | App (Var _, _) when is_a_post_condition post_name_opt q ->

@@ -39,7 +39,7 @@
       [
         "@query", "assumption_FStar.Heap.SelUpd1",
         "assumption_Prims.HasEq_int", "bool_inversion", "bool_typing",
-        "equation_FStar.TwoLevelHeap.as_ref",
+        "equation_FStar.Set.eqtype", "equation_FStar.TwoLevelHeap.as_ref",
         "equation_FStar.TwoLevelHeap.modifies",
         "equation_FStar.TwoLevelHeap.rid",
         "equation_FStar.TwoLevelHeap.rref",

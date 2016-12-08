@@ -6,6 +6,8 @@ type token =
   | WHEN
   | VAL
   | UNOPTEQUALITY
+  | UNIV_HASH
+  | UNIVAR of (string)
   | UNFOLDABLE
   | UNFOLD
   | UNDERSCORE
@@ -58,6 +60,7 @@ type token =
   | OPEN
   | OPAQUE
   | OF
+  | NOEXTRACT
   | NOEQUALITY
   | NEW_EFFECT_FOR_FREE
   | NEW_EFFECT
@@ -128,6 +131,7 @@ type token =
   | BAR
   | BANG_LBRACE
   | BACKTICK
+  | ATTRIBUTES
   | ASSUME
   | ASSERT
   | AND
@@ -139,6 +143,8 @@ type tokenId =
     | TOKEN_WHEN
     | TOKEN_VAL
     | TOKEN_UNOPTEQUALITY
+    | TOKEN_UNIV_HASH
+    | TOKEN_UNIVAR
     | TOKEN_UNFOLDABLE
     | TOKEN_UNFOLD
     | TOKEN_UNDERSCORE
@@ -191,6 +197,7 @@ type tokenId =
     | TOKEN_OPEN
     | TOKEN_OPAQUE
     | TOKEN_OF
+    | TOKEN_NOEXTRACT
     | TOKEN_NOEQUALITY
     | TOKEN_NEW_EFFECT_FOR_FREE
     | TOKEN_NEW_EFFECT
@@ -261,6 +268,7 @@ type tokenId =
     | TOKEN_BAR
     | TOKEN_BANG_LBRACE
     | TOKEN_BACKTICK
+    | TOKEN_ATTRIBUTES
     | TOKEN_ASSUME
     | TOKEN_ASSERT
     | TOKEN_AND
@@ -290,14 +298,16 @@ type nonTerminalId =
     | NONTERM_list___anonymous_4_
     | NONTERM_list___anonymous_5_
     | NONTERM_list___anonymous_7_
+    | NONTERM_list_argTerm_
+    | NONTERM_list_atomicUniverse_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
     | NONTERM_list_multiBinder_
-    | NONTERM_list_pair_maybeHash_indexingTerm__
     | NONTERM_list_qualifier_
     | NONTERM_nonempty_list_aqualified_lident__
     | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
     | NONTERM_nonempty_list_atomicPattern_
+    | NONTERM_nonempty_list_atomicTerm_
     | NONTERM_nonempty_list_dotOperator_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_
@@ -383,6 +393,7 @@ type nonTerminalId =
     | NONTERM_recordExp
     | NONTERM_simpleDef
     | NONTERM_appTerm
+    | NONTERM_argTerm
     | NONTERM_indexingTerm
     | NONTERM_atomicTerm
     | NONTERM_atomicTermQUident
@@ -396,6 +407,10 @@ type nonTerminalId =
     | NONTERM_projectionLHS
     | NONTERM_hasSort
     | NONTERM_constant
+    | NONTERM_universe
+    | NONTERM_universeFrom
+    | NONTERM_atomicUniverse
+    | NONTERM_univar
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_
     | NONTERM_right_flexible_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_list_SEMICOLON_simpleDef_

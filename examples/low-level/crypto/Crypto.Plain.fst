@@ -1,4 +1,4 @@
-module Plain
+module Crypto.Plain
 
 open FStar.HyperHeap
 open FStar.HyperStack
@@ -20,7 +20,7 @@ open Crypto.Symmetric.Bytes
 // Type abstraction protects against aliasing inasmuch
 // as it is enforced from allocation.
 
-
+open Crypto.Indexing
 open Flag 
 
 // -----------------------------------------------------------------------------
@@ -65,6 +65,10 @@ abstract type plainBuffer (i:id) (l:plainLen) = b:lbuffer l
 // ghost (was named bufferT; no need to be live)
 val as_buffer: #i:id -> #l:plainLen -> pb: plainBuffer i l -> GTot(lbuffer l)
 let as_buffer #i #l pb = pb
+
+// for tests
+val unsafe_hide_buffer: i:id -> #l:plainLen -> b:lbuffer l -> Tot (plainBuffer i l)
+let unsafe_hide_buffer i #l b = b
 
 // usage?
 val hide_buffer: i:id -> #l:plainLen -> b:lbuffer l -> GTot (plainBuffer i l)

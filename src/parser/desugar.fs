@@ -248,6 +248,7 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Wild
   | Const _
+  | AST.Uvar _
   | Var  _
   | AST.Projector _
   | AST.Discrim _
@@ -278,6 +279,10 @@ and free_type_vars env t = match (unparen t).tm with
     free@free_type_vars env body
 
   | Project(t, _) -> free_type_vars env t
+
+  | Attributes cattributes ->
+      (* attributes should be closed but better safe than sorry *)
+      List.collect (free_type_vars env) cattributes
 
 
   | Abs _  (* not closing implicitly over free vars in type-level functions *)
@@ -1516,6 +1521,7 @@ let trans_qual r = function
   | AST.Unopteq
   | AST.Visible
   | AST.Unfold_for_unification_and_vcgen
+  | AST.NoExtract -> raise (Error("The noextract qualifier is supported only with the --universes option", r))
   | AST.Inline_for_extraction -> raise (Error("This qualifier is supported only with the --universes option", r))
 
 let trans_pragma = function

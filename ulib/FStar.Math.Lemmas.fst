@@ -253,6 +253,13 @@ val lemma_div_exact: a:nat -> p:pos -> Lemma
   (ensures  (a = p * (a / p)))
 let lemma_div_exact a p = ()
 
+val div_exact_r: a:nat -> p:pos -> Lemma
+  (requires (a % p = 0))
+  (ensures  (a = (a / p) * p))
+let div_exact_r a p = ()
+
+#set-options "--z3rlimit 10"
+
 val lemma_mod_spec: a:nat -> p:pos -> Lemma
   (a / p = (a - (a % p)) / p)
 let lemma_mod_spec a p =
@@ -452,6 +459,27 @@ val lemma_mod_sub: a:nat -> b:pos -> n:nat ->
         (ensures  ((a - n*b) % b = a % b))
 let lemma_mod_sub a b n =
   modulo_addition_lemma (a-n*b) b n
+
+val mod_mult_exact: a:nat -> p:pos -> q:pos ->
+  Lemma (requires (a % (p * q) == 0))
+        (ensures  (a % p == 0))
+let mod_mult_exact a p q =
+  assert (a = (p * q) * (a / (p * q)));
+  assert (a = (q * (a / (p * q))) * p);
+  multiple_modulo_lemma (q * (a / (p * q))) p
+
+#set-options "--initial_fuel 1 --max_fuel 1"
+
+val mod_pow2_div2: a:nat -> m:pos ->
+  Lemma (requires (a % pow2 m == 0))
+        (ensures  ((a / 2) % pow2 (m - 1) == 0))
+let mod_pow2_div2 a m =
+  lemma_div_exact a (pow2 m);
+  assert (a == 2 * (pow2 (m - 1) * (a / pow2 m)));
+  assert (a / 2 == pow2 (m - 1) * (a / pow2 m));
+  multiple_modulo_lemma (a / pow2 m) (pow2 (m - 1))
+
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 (* Lemma: Divided by a product is equivalent to being divided one by one *)
 val division_multiplication_lemma: a:nat -> b:pos -> c:pos ->

@@ -161,6 +161,7 @@ and c_flag = // C backend only
   | Mutable
   | Assumed
   | Private
+  | NoExtract
 
 and mlletflavor =
   | Rec
