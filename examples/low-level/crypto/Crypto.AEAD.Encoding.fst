@@ -240,8 +240,7 @@ let rec add_bytes #i st acc len txt =
         assert(Buffer.modifies_0 h0 h1);         
         Buffer.lemma_reveal_modifies_0 h0 h1;
         assume(CMA.acc_inv st acc h1);
-        CMA.update st acc w;
-        assume false
+        CMA.update st acc w
       end
     else 
       begin
@@ -249,10 +248,10 @@ let rec add_bytes #i st acc len txt =
         let w = Buffer.sub txt 0ul 16ul in 
         let log = CMA.update st acc w in
         //assume false;
-        add_bytes st acc (len -^ 16ul) (Buffer.offset txt 16ul);
-        assume false
+        add_bytes st acc (len -^ 16ul) (Buffer.offset txt 16ul)
       end
   in
+  assume false;
   pop_frame(); 
   r
 
