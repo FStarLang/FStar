@@ -254,6 +254,7 @@ let all_above (#rgn:region) (#i:id) (x:PRF.domain i) (s:prf_table rgn i) =
   (forall (e:PRF.entry rgn i).{:pattern (s `SeqProperties.contains` e)}
      s `SeqProperties.contains` e ==> e.x `PRF.above` x)
 
+
 (** unused_aead_iv_for_prf prf_table iv:
 	the iv is either fresh, i.e., doesn't appear anywhere in the prf_table
 	Or, it occurs there with an unused mac (e.g., decrypt allocated one early)
@@ -268,6 +269,24 @@ let unused_aead_iv_for_prf (#mac_rgn:region) (#i:id)
      | None           -> True //and no MAC entry either
      | Some mac_range -> CMA.mac_is_unset (i, iv) mac_rgn mac_range h) //Or, a mac exists, but it's not yet used
 
+let aead_entries_are_refined (#rgn:region) (#i:id)
+                             (prf_table: prf_table rgn i)
+	                     (aead_entries:Seq.seq (aead_entry i))
+	                     (h:mem) : GTot Type0 =
+  let open FStar.SeqProperties in
+  (safeId i ==> (forall (aead_entry:aead_entry i).{:pattern (aead_entries `contains` aead_entry)}
+		   aead_entries `contains` aead_entry ==>
+		   refines_one_entry prf_table aead_entry h))
+
+let fresh_nonces_are_unused (#rgn:region) (#i:id)
+                            (prf_table: prf_table rgn i)
+	                    (aead_entries:Seq.seq (aead_entry i))
+	                    (h:mem{safeMac i}) : GTot Type0 =
+  let open FStar.SeqProperties in
+  (forall (iv:Cipher.iv (alg i)).{:pattern (fresh_nonce iv aead_entries)}
+     fresh_nonce iv aead_entries ==> 
+     unused_aead_iv_for_prf prf_table iv h)
+
 (** refines prf_table aead_entries h:
 	THE MAIN CLAUSE OF THE STATEFUL INVARIANT:
 	In state h, prf_table refines aead_entries
@@ -276,15 +295,8 @@ let refines (#rgn:region) (#i:id)
             (prf_table: prf_table rgn i)
 	    (aead_entries:Seq.seq (aead_entry i))
 	    (h:mem{safeMac i}) : GTot Type0 =
-  let open FStar.SeqProperties in
-  (* 1. Each aead entry is refined by the PRF table *)
-  (safeId i ==> (forall (aead_entry:aead_entry i).{:pattern (aead_entries `contains` aead_entry)}
-		   aead_entries `contains` aead_entry ==>
-		   refines_one_entry prf_table aead_entry h)) /\
-  (* 2. Every iv that does not appear in the aead table is unused in the PRF table *)
-  (forall (iv:Cipher.iv (alg i)).{:pattern (fresh_nonce iv aead_entries)}
-     fresh_nonce iv aead_entries ==> 
-     unused_aead_iv_for_prf prf_table iv h)
+  aead_entries_are_refined prf_table aead_entries h /\
+  fresh_nonces_are_unused  prf_table aead_entries h
 
 (** aead_liveness:
 	The aead_state and its regions etc. are live **)
