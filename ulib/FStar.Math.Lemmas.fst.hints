@@ -1,5 +1,5 @@
 [
-  "Ü\u000f¦àTðq¯òÁ\u0004uY†‡^",
+  "Ì$Aè$,>¥Ïôöeö+ÛË",
   [
     [
       "FStar.Math.Lemmas.euclidean_div_axiom",
@@ -2142,7 +2142,7 @@
       "FStar.Math.Lemmas.division_multiplication_lemma",
       3,
       0,
-      1,
+      2,
       [
         "@query", "equation_FStar.Mul.op_Star", "equation_Prims.nat",
         "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Addition",

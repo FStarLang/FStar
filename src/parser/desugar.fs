@@ -248,6 +248,7 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Wild
   | Const _
+  | AST.Uvar _
   | Var  _
   | AST.Projector _
   | AST.Discrim _
@@ -278,6 +279,10 @@ and free_type_vars env t = match (unparen t).tm with
     free@free_type_vars env body
 
   | Project(t, _) -> free_type_vars env t
+
+  | Attributes cattributes ->
+      (* attributes should be closed but better safe than sorry *)
+      List.collect (free_type_vars env) cattributes
 
 
   | Abs _  (* not closing implicitly over free vars in type-level functions *)

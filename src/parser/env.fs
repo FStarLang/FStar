@@ -397,6 +397,12 @@ let try_lookup_effect_name env l =
     match try_lookup_effect_name' (not env.iface) env l with
         | Some (o, l) -> Some l
         | _ -> None
+let try_lookup_effect_name_and_attributes env l =
+    match try_lookup_effect_name' (not env.iface) env l with
+        | Some (Sig_new_effect(ne, _), l) -> Some (l, ne.cattributes)
+        | Some (Sig_new_effect_for_free(ne, _), l) -> Some (l, ne.cattributes)
+        | Some (Sig_effect_abbrev(_,_,_,_,_,cattributes,_), l) -> Some (l, cattributes)
+        | _ -> None
 let try_lookup_effect_defn env l =
     match try_lookup_effect_name' (not env.iface) env l with
         | Some (Sig_new_effect(ne, _), _) -> Some ne

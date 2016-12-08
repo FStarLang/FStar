@@ -225,6 +225,7 @@ let constructor = constructor_start_char ident_char*
 let ident = ident_start_char ident_char*
 let tvar = '\'' (ident_start_char | constructor_start_char) tvar_char*
 let tvar_alt = constructor_start_char+
+let univar = '\'' 'u' tvar_char+
 
 rule token args = parse
  | ident
@@ -233,6 +234,8 @@ rule token args = parse
      { BACKTICK }
  | constructor
      { NAME(ulexeme lexbuf) }
+ | univar
+     { UNIVAR (ulexeme lexbuf) }
  | tvar
      { TVAR (ulexeme lexbuf) }
  | "#light"
@@ -352,6 +355,7 @@ rule token args = parse
 
  | "=" { EQUALS }
  | '#' { HASH }
+ | "u#"{ UNIV_HASH }
  | '&' { AMP }
  | "()" { LPAREN_RPAREN }
  | '(' { LPAREN }

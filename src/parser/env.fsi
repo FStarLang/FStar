@@ -88,6 +88,7 @@ val current_module: env -> lident
 val try_lookup_id: env -> ident -> option<(term*bool)>
 val try_lookup_lid: env -> lident -> option<(term*bool)>
 val try_lookup_effect_name: env -> lident -> option<lident>
+val try_lookup_effect_name_and_attributes: env -> lident -> option<(lident * list<cflags>)>
 val try_lookup_effect_defn: env -> lident -> option<eff_decl>
 val try_lookup_datacon: env -> lident -> option<fv>
 val try_lookup_record_by_field_name: env -> lident -> option<record_or_dc>

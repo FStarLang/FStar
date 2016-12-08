@@ -3,14 +3,14 @@
   [
     [ "NegativeTests.Bug260.pnat", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "NegativeTests.Bug260.S._0",
+      "NegativeTests.Bug260.__proj__S__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_NegativeTests.Bug260.S",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_464343f4c6e2f5d5d38631bf5f84d7c1"
+        "refinement_interpretation_Tm_refine_c7798980fdaa69b62544817f36c3402f"
       ],
       0
     ],
@@ -22,7 +22,14 @@
       [ "@query", "assumption_NegativeTests.Bug260.pnat_haseq" ],
       0
     ],
-    [ "NegativeTests.Bug260.VSucc.n", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NegativeTests.Bug260.__proj__VSucc__item__n",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     null
   ]
 ]
