@@ -361,11 +361,11 @@ let accumulate #i st aadlen aad txtlen cipher  =
   assume false;//16-11-01
 
   //16-10-16 :(
-  assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.(abuf a))) aad cipher);
+  assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.(abuf acc))) aad cipher);
 
   add_bytes st acc aadlen aad;
   let h1 = ST.get() in 
-  Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.(abuf a))) h0 h1;
+  Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.(abuf acc))) h0 h1;
   //NS: this one fails too (11/10)
   assert(mac_log ==> 
     FStar.HyperStack.sel h1 (CMA.alog acc) == encode_bytes (Buffer.as_seq h1 aad));
