@@ -7,7 +7,7 @@
 #endif
 
 extern void STDCALL KeyExpansionStdcall(const void *key_ptr, void *expanded_key_ptr, void *placeholder);
-extern void STDCALL AES128EncryptOneBlockStdcall(void *output_ptr, const void *input_ptr, const void *expanded_key_ptr);
+extern void STDCALL AES128EncryptOneBlockStdcall(void *output_ptr, const void *input_ptr, const void *expanded_key_ptr, void *placeholder);
 
 void Spartan_keyExpansion(uint8_t *k, uint8_t *w, uint8_t *sb)
 {
