@@ -526,7 +526,7 @@ let dexor_modifies_refl (#i:id) (#len:u32) (t:PRF.state i)
 let dexor_modifies_widen (#i:id) (#len:u32) (t:PRF.state i) 
 			 (x:PRF.domain i{ctr_0 i <^ x.ctr}) 
 			 (pb:plainBuffer i (v len))
-			 (from:u32{FStar.Buffer.(v from + v (Plain.as_buffer pb).idx) < pow2 n})
+                         (from:u32{FStar.Buffer.(v from + idx (Plain.as_buffer pb)) < pow2 n})
 			 (len:u32{FStar.Buffer.(v len <= length (Plain.as_buffer pb) /\ v from + v len <= length (Plain.as_buffer pb))})
 			 (h0:mem) (h1:mem)
    : Lemma (requires (Buffer.live h0 (Plain.as_buffer pb) /\ 
@@ -1149,10 +1149,10 @@ let frame_acc #i st #aalen aad #txtlent cipher h0 a h1 h2 =
         assert (HS.sel h2 (CMA.alog a) == HS.sel h1 (CMA.alog a));
 	assert (Buffer.as_seq h2 (MAC.as_buffer (CMA.(st.r))) ==
 	        Buffer.as_seq h1 (MAC.as_buffer (CMA.(st.r))));
-	assert (Buffer.as_seq h2 (MAC.as_buffer (CMA.(a.a))) ==
-	        Buffer.as_seq h1 (MAC.as_buffer (CMA.(a.a))));
+        assert (Buffer.as_seq h2 (MAC.as_buffer (CMA.(abuf a))) ==
+                Buffer.as_seq h1 (MAC.as_buffer (CMA.(abuf a))));
         MAC.frame_sel_elem h1 h2 (CMA.(st.r));
-        MAC.frame_sel_elem h1 h2 (CMA.(a.a)))
+        MAC.frame_sel_elem h1 h2 (CMA.(abuf a)))
   else ()
 
 val decrypt:

@@ -245,6 +245,9 @@ noeq abstract type accBuffer (i:id) =
 let alog (#i:id) (acc:accBuffer i{mac_log}) : HS.reference text =
   acc.l
 
+val abuf: #i:id -> acc:accBuffer i -> GTot (MAC.elemB i)
+let abuf #i acc = acc.a
+
 let acc_inv (#i:id) (st:state i) (acc:accBuffer i) h =
   MAC.norm h st.r /\ MAC.norm h acc.a /\
   disjoint (MAC.as_buffer st.r) (MAC.as_buffer acc.a) /\
