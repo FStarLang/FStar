@@ -1,13 +1,27 @@
 [
-  "ž/ðZé½\u001d„‚|6êºšÍŽ",
+  "W(`ós\tô‹©öÜ†ö[W1",
   [
     [ "MRefST.return_st", 1, 2, 1, [ "@query" ], 0 ],
     [ "MRefST.bind_st", 1, 2, 1, [ "@query" ], 0 ],
     [ "MRefST.get", 1, 2, 1, [ "@query" ], 0 ],
     [ "MRefST.put", 1, 2, 1, [ "@query" ], 0 ],
     [ "MRefST.ISTATE_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MRefST.ISTATE_get_elab", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MRefST.ISTATE_put_elab", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "MRefST.ISTATE___proj__ISTATE__item__get_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "MRefST.ISTATE___proj__ISTATE__item__put_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     [ "MRefST.ISTATE", 1, 2, 1, [ "@query" ], 0 ],
     [ "MRefST.ISTATE", 2, 2, 1, [ "@query" ], 0 ],
     [ "MRefST.ISTATE", 3, 2, 1, [ "@query" ], 0 ],
