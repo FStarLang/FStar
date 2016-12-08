@@ -58,17 +58,6 @@ let fresh_sref (#a:Type0) h0 h1 (r:HS.reference a) =
     HS.frameOf r == HS.(h1.tip) /\
     h1 `HS.contains` r
 
-
-(* let accumulate_encoded (#i:CMA.id) *)
-(*  		       (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen)) *)
-(* 		       (#plainlen:txtlen_32) (cipher:lbuffer (v plainlen)) *)
-(* 		       (a:CMA.accBuffer i) (h:mem{mac_log}) = *)
-(*     Buffer.live h aad /\			  *)
-(*     Buffer.live h cipher /\			      *)
-(*     h `HS.contains` (CMA.alog a) /\ *)
-(*     HS.sel h (CMA.alog a) == *)
-(*     encode_both (fst i) aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher) *)
-
 let accumulate_ensures (#i: MAC.id) (st: CMA.state i) 
 		       (#aadlen:aadlen_32) (aad:lbuffer (v aadlen))
 		       (#txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
