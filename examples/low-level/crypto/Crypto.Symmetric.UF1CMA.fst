@@ -260,6 +260,25 @@ let acc_inv (#i:id) (st:state i) (acc:accBuffer i) h =
     disjoint_ref_1 (MAC.as_buffer st.r)  (HS.as_aref (alog acc)) /\
     a == MAC.poly log r))
 
+val frame_acc_inv: #i:id -> st:state i -> acc:accBuffer i -> h0:mem -> h1:mem -> Lemma
+  (requires
+     (acc_inv st acc h0 /\ MAC.live h1 acc.a /\ MAC.live h1 st.r /\
+      (mac_log ==>
+        HS.contains h1 (alog acc) /\
+        HS.sel h0 (alog acc) == HS.sel h1 (alog acc)) /\
+        as_seq h0 (MAC.as_buffer acc.a) == as_seq h1 (MAC.as_buffer acc.a) /\
+        as_seq h0 (MAC.as_buffer st.r) == as_seq h1 (MAC.as_buffer st.r)))
+  (ensures (acc_inv st acc h1))
+let frame_acc_inv #i st acc h0 h1 =
+  match MAC.reveal_elemB st.r, MAC.reveal_elemB acc.a with
+  | MAC.B_POLY1305 r, MAC.B_POLY1305 a ->
+    Poly1305.Bigint.norm_eq_lemma h0 h1 a a;
+    Poly1305.Bigint.norm_eq_lemma h0 h1 r r;
+    MAC.frame_sel_elem h0 h1 acc.a;
+    MAC.frame_sel_elem h0 h1 st.r
+  | _, _ -> ()
+
+
 #set-options "--z3rlimit 100"
 
 // not framed, as we allocate private state on the caller stack
