@@ -265,6 +265,13 @@ let field_mul #i a b =
 let op_Plus_At #i e1 e2 = field_add #i e1 e2
 let op_Star_At #i e1 e2 = field_mul #i e1 e2
 
+val poly_empty: #i:id -> t:text{Seq.length t == 0} -> r:elem i ->
+  Lemma (poly #i t r == zero i)
+let poly_empty #i t r =
+  match alg i with
+  | POLY1305 -> PL.poly_empty (text_to_PS_text t) r
+  | GHASH    -> GS.poly_empty t r
+
 val poly_cons: #i:id -> x:word_16 -> xs:text -> r:elem i ->
   Lemma (poly #i (SeqProperties.cons x xs) r == (poly #i xs r +@ encode i x) *@ r)
 let poly_cons #i x xs r =

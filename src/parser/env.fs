@@ -46,6 +46,7 @@ type record_or_dc = {
   constrname: ident;
   parms: binders;
   fields: list<(ident * typ)>;
+  is_private_or_abstract: bool;
   is_record:bool
 }
 
@@ -468,7 +469,7 @@ let find_all_datacons env (lid:lident) =
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 //no top-level pattern in F*, so need to do this ugliness
-let record_cache_aux = 
+let record_cache_aux_with_filter = 
     let record_cache : ref<list<list<record_or_dc>>> = Util.mk_ref [[]] in
     let push () =
         record_cache := List.hd !record_cache::!record_cache in
@@ -479,7 +480,22 @@ let record_cache_aux =
     let commit () = match !record_cache with 
         | hd::_::tl -> record_cache := hd::tl
         | _ -> failwith "Impossible" in
-    (push, pop, peek, insert, commit) 
+    (* remove private/abstract records *)
+    let filter () =
+        let rc = peek () in
+        let () = pop () in
+        let filtered = List.filter (fun r -> not r.is_private_or_abstract) rc in
+        record_cache := filtered :: !record_cache
+    in
+    let aux =
+    (push, pop, peek, insert, commit)
+    in (aux, filter)
+
+let record_cache_aux =
+    let (aux, _) = record_cache_aux_with_filter in aux
+
+let filter_record_cache =
+    let (_, filter) = record_cache_aux_with_filter in filter
     
 let push_record_cache = 
     let push, _, _, _, _ = record_cache_aux in
@@ -528,6 +544,9 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = function
                               constrname=constrname.ident;
                               parms=parms;
                               fields=fields;
+                              is_private_or_abstract =
+                                List.contains Private tags ||
+                                List.contains Abstract tags;
                               is_record=is_rec} in
                 (* the record is added to the current list of
                 top-level definitions, to allow shadowing field names
@@ -695,6 +714,8 @@ let finish env modul =
            Util.smap_add (sigmap env) lid.str (decl, false))
 
     | _ -> ());
+  (* remove abstract/private records *)
+  let () = filter_record_cache () in
   {env with
     curmodule=None;
     modules=(modul.name, modul)::env.modules;

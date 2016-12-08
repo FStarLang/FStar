@@ -46,6 +46,7 @@ type record_or_dc = {
   constrname: ident;
   parms: binders;
   fields: list<(ident * typ)>;
+  is_private_or_abstract: bool;
   is_record:bool
 }
 
