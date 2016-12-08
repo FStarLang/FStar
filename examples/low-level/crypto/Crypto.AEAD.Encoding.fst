@@ -204,7 +204,7 @@ private val add_bytes:
   (requires (fun h0 -> 
     Buffer.live h0 txt /\ CMA.acc_inv st a h0))
   (ensures (fun h0 () h1 -> 
-    Buffer.modifies_1 (CMA.(MAC.as_buffer a.a)) h0 h1 /\ 
+    Buffer.modifies_1 CMA.(MAC.as_buffer (abuf a)) h0 h1 /\
     Buffer.live h1 txt /\ CMA.acc_inv st a h1 /\
     (mac_log ==> (
       let l0 = FStar.HyperStack.sel h0 (CMA.alog a) in
@@ -341,10 +341,10 @@ val accumulate:
     Buffer.live h0 cipher))
   (ensures (fun h0 a h1 -> 
     Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
-    ~ (h0 `Buffer.contains` (CMA.(MAC.as_buffer (a.a)))) /\
+    ~ (h0 `Buffer.contains` CMA.(MAC.as_buffer (abuf a))) /\
     Buffer.live h1 aad /\ 
     Buffer.live h1 cipher /\
-    Buffer.frameOf (CMA.(MAC.as_buffer a.a)) = h1.tip /\
+    Buffer.frameOf CMA.(MAC.as_buffer (abuf a)) = h1.tip /\
     CMA.acc_inv st a h1 /\
     (mac_log ==> 
       FStar.HyperStack.sel h1 (CMA.alog a) ==

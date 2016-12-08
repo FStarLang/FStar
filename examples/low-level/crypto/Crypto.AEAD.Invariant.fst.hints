@@ -1065,15 +1065,17 @@
         "equation_Prims.nat",
         "function_token_typing_Crypto.Symmetric.AES.keylen", "int_inversion",
         "lemma_Crypto.Symmetric.Poly1305.Lemmas.pow2_32_lemma",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
-        "primitive_Prims.op_Subtraction", "proj_equation_FStar.UInt32.Mk_v",
+        "lemma_FStar.Buffer.lemma_size", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "proj_equation_FStar.UInt32.Mk_v",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.UInt32.Mk_v",
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_Crypto.Symmetric.AES.v", "typing_FStar.UInt32.v"
+        "typing_Crypto.Symmetric.AES.v", "typing_Crypto.Symmetric.PRF.ctr_0",
+        "typing_FStar.UInt32.v"
       ],
       0
     ],
@@ -1284,7 +1286,6 @@
       0,
       [
         "@query", "b2t_def", "bool_inversion", "bool_typing",
-        "constructor_distinct_Tm_unit",
         "equation_Crypto.AEAD.Invariant.offset",
         "equation_Crypto.AEAD.Invariant.remaining_len_ok",
         "equation_Crypto.AEAD.Invariant.safelen",
@@ -1295,7 +1296,6 @@
         "equation_Crypto.Symmetric.PRF.blocklen",
         "equation_Crypto.Symmetric.PRF.ctrT",
         "equation_Crypto.Symmetric.PRF.ctr_0",
-        "equation_Crypto.Symmetric.UF1CMA.skeyed",
         "equation_FStar.List.Tot.test_sort", "equation_FStar.Mul.op_Star",
         "equation_FStar.UInt.add", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.lt", "equation_FStar.UInt.lte",
@@ -1324,18 +1324,13 @@
         "projection_inverse_FStar.UInt32.Mk_v",
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
         "refinement_interpretation_Tm_refine_447596233eabc27306a9fed2b091d5b1",
-        "refinement_interpretation_Tm_refine_9d836f17260390394ee04e04c2340c0e",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_bf508e8beb5acc14a1d69e7187345e9c",
         "refinement_interpretation_Tm_refine_dad30cf5955cedfe940486a493d7cf03",
-        "refinement_interpretation_Tm_refine_e8a3b061c144fe07c532f73daf3668ea",
-        "typing_Crypto.AEAD.Invariant.remaining_len_ok",
         "typing_Crypto.Symmetric.AES.v",
         "typing_Crypto.Symmetric.PRF.__proj__Mkdomain__item__ctr",
-        "typing_Crypto.Symmetric.PRF.ctr_0",
-        "typing_Crypto.Symmetric.UF1CMA.skeyed", "typing_FStar.UInt.fits",
-        "typing_FStar.UInt32.add", "typing_FStar.UInt32.sub",
-        "typing_FStar.UInt32.v"
+        "typing_Crypto.Symmetric.PRF.ctr_0", "typing_FStar.UInt.fits",
+        "typing_FStar.UInt32.__proj__Mk__item__v", "typing_FStar.UInt32.v"
       ],
       0
     ],

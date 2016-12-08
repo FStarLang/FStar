@@ -119,10 +119,10 @@ let accumulate_ensures (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lb
 		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
 		       (h0:mem) (a:CMA.accBuffer i) (h1:mem) =
   Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
-  ~ (h0 `Buffer.contains` (CMA.(MAC.as_buffer (a.a)))) /\
+  ~ (h0 `Buffer.contains` CMA.(MAC.as_buffer (abuf a))) /\
   Buffer.live h1 aad /\ 
   Buffer.live h1 cipher /\
-  Buffer.frameOf (CMA.(MAC.as_buffer a.a)) = HS.(h1.tip) /\
+  Buffer.frameOf CMA.(MAC.as_buffer (abuf a)) = HS.(h1.tip) /\
   CMA.acc_inv st a h1 /\
   (mac_log ==> 
     alog_fresh h0 h1 (CMA.alog a) /\
