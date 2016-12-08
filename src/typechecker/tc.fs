@@ -412,11 +412,16 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme effect_params ts) in
     // We always close [bind_repr], even though it may be [Tm_unknown]
     // (non-reifiable, non-reflectable effect)
-    if n > 0 && not (is_unknown (snd ts)) && List.length (fst ts) <> n then
-        failwith (Util.format2
-          "The effect combinator is not universe-polymorphic enough (n=%s) (%s)"
-          (string_of_int n)
-          (Print.tscheme_to_string ts));
+    let m = List.length (fst ts) in
+    if n >= 0 && not (is_unknown (snd ts)) && m <> n
+    then begin
+        let error = if m < n then "not universe-polymorphic enough" else "too universe-polymorphic" in
+        failwith (Util.format3
+                  "The effect combinator is %s (n=%s) (%s)"
+                  error
+                  (string_of_int n)
+                  (Print.tscheme_to_string ts))
+    end ;
     ts in
   let close_action act =
     let univs, defn = close (-1) (act.action_univs, act.action_defn) in
@@ -426,7 +431,8 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
         action_univs=univs;
         action_defn=defn;
         action_typ=typ; } in
-  assert (List.length effect_params > 0 || List.length univs = 1);
+  let nunivs = List.length univs in
+  assert (List.length effect_params > 0 || nunivs = 1);
   let ed = { ed with
       univs       = univs
     ; binders     = effect_params
@@ -536,7 +542,11 @@ and cps_and_elaborate env ed =
   let lift_from_pure_wp =
       match (SS.compress return_wp).n with
       | Tm_abs (b1 :: b2 :: bs, body, what) ->
-          let [b1 ; b2], body = SS.open_term [b1 ; b2] (U.abs bs body None) in
+          let b1,b2, body =
+              match SS.open_term [b1 ; b2] (U.abs bs body None) with
+                  | [b1 ; b2], body -> b1, b2, body
+                  | _ -> failwith "Impossible : open_term not preserving binders arity"
+          in
           // WARNING : pushing b1 and b2 in env might break the well-typedness invariant
           let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
           let wp_b1 = N.normalize [ N.Beta ] env0 (mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ]))) in
@@ -623,7 +633,11 @@ and cps_and_elaborate env ed =
   let pre, post =
     match (unascribe <| SS.compress wp_type).n with
     | Tm_abs (type_param :: effect_param, arrow, _) ->
-        let (type_param :: effect_param), arrow = SS.open_term (type_param :: effect_param) arrow in
+        let type_param , effect_param, arrow =
+            match SS.open_term (type_param :: effect_param) arrow with
+                | (b :: bs), body -> b, bs, body
+                | _ -> failwith "Impossible : open_term nt preserving binders arity"
+        in
         begin match (unascribe <| SS.compress arrow).n with
         | Tm_arrow (wp_binders, c) ->
             let wp_binders, c = SS.open_comp wp_binders c in

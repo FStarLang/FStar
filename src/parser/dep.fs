@@ -396,7 +396,8 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         if s = "@" then
           collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.append") Range.dummyRange));
         List.iter collect_term ts
-    | Tvar _ ->
+    | Tvar _
+    | AST.Uvar _ ->
         ()
     | Var lid
     | AST.Projector (lid, _)

@@ -19,6 +19,7 @@ module FStar.Syntax.Print
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Const
+open FStar.Util
 
 val db_to_string      : bv -> string
 val bv_to_string      : bv -> string
@@ -42,3 +43,5 @@ val qual_to_string    : qualifier -> string
 val quals_to_string   : list<qualifier> -> string
 val tscheme_to_string : tscheme -> string
 val cflags_to_string  : cflags -> string
+val set_to_string     : ('a -> string) -> set<'a> -> string
+val list_to_string    : ('a -> string) -> list<'a> -> string

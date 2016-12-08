@@ -248,6 +248,7 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Wild
   | Const _
+  | AST.Uvar _
   | Var  _
   | AST.Projector _
   | AST.Discrim _

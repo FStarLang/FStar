@@ -713,12 +713,14 @@ and tc_universe env u : universe =
         | U_zero    -> u
         | U_succ u  -> U_succ (aux u)
         | U_max us  -> U_max (List.map aux us)
-        | U_name x  -> if env.use_bv_sorts || Env.lookup_univ env x
-                       then u
-                       else raise (Error (Util.format1 "Universe variable '%s' not found" x.idText, Env.get_range env)) in
-    match u with
-        | U_unknown -> U.type_u () |> snd
-        | _ -> aux u
+        | U_name x  -> u
+            (* TODO : Is that really okay ? (any free variable should be automatically bound at top-level) *)
+            // if env.use_bv_sorts || Env.lookup_univ env x
+            // then u
+            // else raise (Error (Util.format1 "Universe variable '%s' not found" x.idText, Env.get_range env))
+   in match u with
+       | U_unknown -> U.type_u () |> snd
+       | _ -> aux u
 
 (* Several complex cases from the main type-checker are factored in to separate functions below *)
 
@@ -1432,6 +1434,7 @@ and check_top_level_let env e =
          (* Maybe generalize its type *)
          let g1, e1, univ_vars, c1 =
             if annotated && not env.generalize
+            (* TODO : Should we gather the fre univnames ? e.g. (TcUtil.gather_free_univnames env e1)@univ_vars *)
             then g1, e1, univ_vars, c1
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
                  let _, univs, e1, c1 = List.hd (TcUtil.generalize env [lb.lbname, e1, c1.comp()]) in
@@ -1530,6 +1533,7 @@ and check_top_level_let_rec env top =
            let lbs =
               if not env.generalize
               then lbs |> List.map (fun lb ->
+            (* TODO : Should we gather the fre univnames ? e.g. (TcUtil.gather_free_univnames env e1)@lb.lbunivs *)
                     if lb.lbunivs = []
                     then lb
                     else Util.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lb.lbdef)

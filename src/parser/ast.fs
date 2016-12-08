@@ -35,6 +35,7 @@ type level = | Un | Expr | Type | Kind | Formula
 type imp =
     | FsTypApp
     | Hash
+    | UnivApp
     | Nothing
 type arg_qualifier =
     | Implicit
@@ -49,39 +50,40 @@ type let_qualifier =
 
 type term' =
   | Wild
-  | Const      of sconst
-  | Op         of string * list<term>
-  | Tvar       of ident
-  | Var        of lid // a qualified identifier that starts with a lowercase (Foo.Bar.baz)
-  | Name       of lid // a qualified identifier that starts with an uppercase (Foo.Bar.Baz)
-  | Projector  of lid * ident (* a data constructor followed by one of
+  | Const     of sconst
+  | Op        of string * list<term>
+  | Tvar      of ident
+  | Uvar      of ident                                (* universe variable *)
+  | Var       of lid // a qualified identifier that starts with a lowercase (Foo.Bar.baz)
+  | Name      of lid // a qualified identifier that starts with an uppercase (Foo.Bar.Baz)
+  | Projector of lid * ident (* a data constructor followed by one of
                                 its formal parameters, or an effect
                                 followed by one  of its actions or
                                 "fields" *)
-  | Construct  of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
-  | Abs        of list<pattern> * term
-  | App        of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
-  | Let        of let_qualifier * list<(pattern * term)> * term
-  | LetOpen    of lid * term
-  | Seq        of term * term
-  | If         of term * term * term
-  | Match      of term * list<branch>
-  | TryWith    of term * list<branch>
-  | Ascribed   of term * term
-  | Record     of option<term> * list<(lid * term)>
-  | Project    of term * lid
-  | Product    of list<binder> * term (* function space *)
-  | Sum        of list<binder> * term (* dependent tuple *)
-  | QForall    of list<binder> * list<list<term>> * term
-  | QExists    of list<binder> * list<list<term>> * term
-  | Refine     of binder * term
-  | NamedTyp   of ident * term
-  | Paren      of term
-  | Requires   of term * option<string>
-  | Ensures    of term * option<string>
-  | Labeled    of term * string * bool
-  | Assign     of ident * term
-  | Discrim    of lid   (* Some?  (formerly is_Some) *)
+  | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
+  | Abs       of list<pattern> * term
+  | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
+  | Let       of let_qualifier * list<(pattern * term)> * term
+  | LetOpen   of lid * term
+  | Seq       of term * term
+  | If        of term * term * term
+  | Match     of term * list<branch>
+  | TryWith   of term * list<branch>
+  | Ascribed  of term * term
+  | Record    of option<term> * list<(lid * term)>
+  | Project   of term * lid
+  | Product   of list<binder> * term                 (* function space *)
+  | Sum       of list<binder> * term                 (* dependent tuple *)
+  | QForall   of list<binder> * list<list<term>> * term
+  | QExists   of list<binder> * list<list<term>> * term
+  | Refine    of binder * term
+  | NamedTyp  of ident * term
+  | Paren     of term
+  | Requires  of term * option<string>
+  | Ensures   of term * option<string>
+  | Labeled   of term * string * bool
+  | Assign    of ident * term
+  | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
 
 and term = {tm:term'; range:range; level:level}
@@ -388,7 +390,8 @@ let rec term_to_string (x:term) = match x.tm with
   | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
   | Const c -> P.const_to_string c
   | Op(s, xs) -> Util.format2 "%s(%s)" s (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
-  | Tvar id -> id.idText
+  | Tvar id
+  | Uvar id -> id.idText
   | Var l
   | Name l -> l.str
   | Construct (l, args) ->

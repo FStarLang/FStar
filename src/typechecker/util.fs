@@ -935,6 +935,18 @@ let gen_univs env (x:Util.set<universe_uvar>) : list<univ_name> =
             u_name) in
          u_names
 
+let gather_free_univnames env t : list<univ_name> =
+    let ctx_univnames = Env.univnames env in
+    let tm_univnames = Free.univnames t in
+    let univnames = Util.fifo_set_difference tm_univnames ctx_univnames |> Util.fifo_set_elements in
+    // Util.print4 "Closing universe variables in term %s : %s in ctx, %s in tm, %s globally\n"
+    //     (Print.term_to_string t)
+    //     (Print.set_to_string Ident.text_of_id ctx_univnames)
+    //     (Print.set_to_string Ident.text_of_id tm_univnames)
+    //     (Print.list_to_string Ident.text_of_id univnames);
+    univnames
+
+
 let maybe_set_tk ts = function
     | None -> ts
     | Some t ->
@@ -943,16 +955,26 @@ let maybe_set_tk ts = function
       (snd ts).tk := Some t.n;
       ts
 
+let check_universe_generalization (explicit_univ_names : list<univ_name>)
+                         (generalized_univ_names : list<univ_name>)
+                         (t : term) : list<univ_name> =
+                             match explicit_univ_names, generalized_univ_names with
+                                 | [], _ -> generalized_univ_names
+                                 | _, [] -> explicit_univ_names
+                                 | _ -> raise (Error("Generalized universe in a term containing explicit universe annotation : "^ Print.term_to_string t, t.pos))
+
 let generalize_universes (env:env) (t0:term) : tscheme =
     let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
+    let univnames = gather_free_univnames env t in
     let univs = Free.univs t in
     if Env.debug env <| Options.Other "Gen"
     then Util.print1 "univs to gen : %s\n" (string_of_univs univs);
     let gen = gen_univs env univs in
     if Env.debug env <| Options.Other "Gen"
     then Util.print1 "After generalization: %s\n"  (Print.term_to_string t);
-    let ts = SS.close_univ_vars gen t in
-    maybe_set_tk (gen, ts) (!t0.tk)
+    let univs = check_universe_generalization univnames gen t0 in
+    let ts = SS.close_univ_vars univs t in
+    maybe_set_tk (univs, ts) (!t0.tk)
 
 let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * comp)>> =
   if not <| (Util.for_all (fun (_, c) -> Util.is_pure_or_ghost_comp c) ecs) //No value restriction in F*---generalize the types of pure computations
@@ -1030,17 +1052,24 @@ let generalize env (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*te
   if debug env Options.Low
   then Util.print1 "Generalizing: %s\n"
        (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
-  match gen env (lecs |> List.map (fun (_, e, c) -> (e, c))) with
-    | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c)
-    | Some ecs ->
-      List.map2 (fun (l, _, _) (us, e, c) ->
-         if debug env Options.Medium
-         then Util.print4 "(%s) Generalized %s at type %s\n%s\n"
-                    (Range.string_of_range e.pos)
-                    (Print.lbname_to_string l)
-                    (Print.term_to_string (Util.comp_result c))
-                    (Print.term_to_string e);
-      (l, us, e, c)) lecs ecs
+  let univnames_lecs = List.map (fun (l, t, c) -> gather_free_univnames env t) lecs in
+  let generalized_lecs =
+      match gen env (lecs |> List.map (fun (_, e, c) -> (e, c))) with
+          | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c)
+          | Some ecs ->
+              List.map2 (fun (l, _, _) (us, e, c) ->
+                         if debug env Options.Medium
+                         then Util.print4 "(%s) Generalized %s at type %s\n%s\n"
+                                          (Range.string_of_range e.pos)
+                                          (Print.lbname_to_string l)
+                                          (Print.term_to_string (Util.comp_result c))
+                                          (Print.term_to_string e);
+                         (l, us, e, c)) lecs ecs
+   in
+   List.map2 (fun univnames (l,generalized_univs, t, c) ->
+              (l, check_universe_generalization univnames generalized_univs t, t, c))
+             univnames_lecs
+             generalized_lecs
 
 (************************************************************************)
 (* Convertibility *)

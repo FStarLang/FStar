@@ -398,7 +398,11 @@ let gen_wps_for_free
             let projector = S.fvar (Env.lookup_projector env (Util.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level 1) None in
             mk_app projector [tuple, None]
           in
-          let rel0 :: rels = List.mapi (fun i (t, q) -> mk_stronger t (project i x) (project i y)) args in
+          let (rel0,rels) =
+              match List.mapi (fun i (t, q) -> mk_stronger t (project i x) (project i y)) args with
+                  | [] -> failwith "Impossible : Empty application when creating stronger relation in DM4F"
+                  | rel0 :: rels -> rel0, rels
+          in
           List.fold_left Util.mk_conj rel0 rels
         | Tm_arrow (binders, { n = GTotal (b, _) })
         | Tm_arrow (binders, { n = Total (b, _) }) ->

@@ -1672,6 +1672,36 @@ end))
 in (aux no_univs env.gamma)))))
 
 
+let univnames : env  ->  FStar_Syntax_Syntax.univ_name FStar_Util.set = (fun env -> (
+
+let no_univ_names = FStar_Syntax_Syntax.no_universe_names
+in (
+
+let ext = (fun out uvs -> (FStar_Util.set_union out uvs))
+in (
+
+let rec aux = (fun out g -> (match (g) with
+| [] -> begin
+out
+end
+| (Binding_sig_inst (_52_1359))::tl -> begin
+(aux out tl)
+end
+| (Binding_univ (uname))::tl -> begin
+(let _147_1249 = (FStar_Util.set_add uname out)
+in (aux _147_1249 tl))
+end
+| ((Binding_lid (_, (_, t)))::tl) | ((Binding_var ({FStar_Syntax_Syntax.ppname = _; FStar_Syntax_Syntax.index = _; FStar_Syntax_Syntax.sort = t}))::tl) -> begin
+(let _147_1251 = (let _147_1250 = (FStar_Syntax_Free.univnames t)
+in (ext out _147_1250))
+in (aux _147_1251 tl))
+end
+| (Binding_sig (_52_1386))::_52_1384 -> begin
+out
+end))
+in (aux no_univ_names env.gamma)))))
+
+
 let bound_vars_of_bindings : binding Prims.list  ->  FStar_Syntax_Syntax.bv Prims.list = (fun bs -> (FStar_All.pipe_right bs (FStar_List.collect (fun _52_11 -> (match (_52_11) with
 | Binding_var (x) -> begin
 (x)::[]
@@ -1681,9 +1711,9 @@ end
 end)))))
 
 
-let binders_of_bindings : binding Prims.list  ->  FStar_Syntax_Syntax.binders = (fun bs -> (let _147_1245 = (let _147_1244 = (bound_vars_of_bindings bs)
-in (FStar_All.pipe_right _147_1244 (FStar_List.map FStar_Syntax_Syntax.mk_binder)))
-in (FStar_All.pipe_right _147_1245 FStar_List.rev)))
+let binders_of_bindings : binding Prims.list  ->  FStar_Syntax_Syntax.binders = (fun bs -> (let _147_1258 = (let _147_1257 = (bound_vars_of_bindings bs)
+in (FStar_All.pipe_right _147_1257 (FStar_List.map FStar_Syntax_Syntax.mk_binder)))
+in (FStar_All.pipe_right _147_1258 FStar_List.rev)))
 
 
 let bound_vars : env  ->  FStar_Syntax_Syntax.bv Prims.list = (fun env -> (bound_vars_of_bindings env.gamma))
@@ -1698,17 +1728,17 @@ let fold_env = (fun env f a -> (FStar_List.fold_right (fun e a -> (f a e)) env.g
 let lidents : env  ->  FStar_Ident.lident Prims.list = (fun env -> (
 
 let keys = (FStar_List.fold_left (fun keys _52_12 -> (match (_52_12) with
-| Binding_sig (lids, _52_1377) -> begin
+| Binding_sig (lids, _52_1418) -> begin
 (FStar_List.append lids keys)
 end
-| _52_1381 -> begin
+| _52_1422 -> begin
 keys
 end)) [] env.gamma)
-in (FStar_Util.smap_fold (sigtab env) (fun _52_1383 v keys -> (let _147_1268 = (FStar_Syntax_Util.lids_of_sigelt v)
-in (FStar_List.append _147_1268 keys))) keys)))
+in (FStar_Util.smap_fold (sigtab env) (fun _52_1424 v keys -> (let _147_1281 = (FStar_Syntax_Util.lids_of_sigelt v)
+in (FStar_List.append _147_1281 keys))) keys)))
 
 
-let dummy_solver : solver_t = {init = (fun _52_1387 -> ()); push = (fun _52_1389 -> ()); pop = (fun _52_1391 -> ()); mark = (fun _52_1393 -> ()); reset_mark = (fun _52_1395 -> ()); commit_mark = (fun _52_1397 -> ()); encode_modul = (fun _52_1399 _52_1401 -> ()); encode_sig = (fun _52_1403 _52_1405 -> ()); solve = (fun _52_1407 _52_1409 _52_1411 -> ()); is_trivial = (fun _52_1413 _52_1415 -> false); finish = (fun _52_1417 -> ()); refresh = (fun _52_1418 -> ())}
+let dummy_solver : solver_t = {init = (fun _52_1428 -> ()); push = (fun _52_1430 -> ()); pop = (fun _52_1432 -> ()); mark = (fun _52_1434 -> ()); reset_mark = (fun _52_1436 -> ()); commit_mark = (fun _52_1438 -> ()); encode_modul = (fun _52_1440 _52_1442 -> ()); encode_sig = (fun _52_1444 _52_1446 -> ()); solve = (fun _52_1448 _52_1450 _52_1452 -> ()); is_trivial = (fun _52_1454 _52_1456 -> false); finish = (fun _52_1458 -> ()); refresh = (fun _52_1459 -> ())}
 
 
 

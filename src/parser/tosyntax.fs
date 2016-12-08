@@ -198,6 +198,7 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Wild
   | Const _
+  | Uvar _
   | Var  _
   | Projector _
   | Discrim _
@@ -317,6 +318,7 @@ let as_binder env imp = function
 type env_t = Env.env
 type lenv_t = list<bv>
 
+(* TODO : shouldn't this be Tot by default ? *)
 let mk_lb (n, t, e) = {lbname=n; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=e}
 let no_annot_abs bs t = U.abs bs t None
 
@@ -341,6 +343,64 @@ let mk_ref_assign t1 t2 pos =
 let is_special_effect_combinator = function
   | "repr" | "post" | "pre" | "wp" -> true
   | _ -> false
+
+let rec sum_to_universe u n =
+    if n = 0 then u else U_succ (sum_to_universe u (n-1))
+
+let int_to_universe n = sum_to_universe U_zero n
+
+let rec desugar_maybe_non_constant_universe t
+    : either<int, Syntax.universe>  (* level of universe or desugared universe *)
+    =
+    match (unparen t).tm with
+        (* TODO : Check how this unification works *)
+        (* The unification might introduce universe variables *)
+    | Wild -> Inr (FStar.TypeChecker.Env.new_u_univ ())
+    | Uvar u -> Inr (U_name u)
+
+    | Const (Const_int (repr, _)) ->
+        (* TODO : That might be a little dangerous... *)
+        let n = int_of_string repr in
+        if n < 0
+        then raise (Error("Negative universe constant  are not supported : "
+                          ^ repr, t.range)) ;
+        Inl n
+    | Op (op_plus, [t1 ; t2]) ->
+        assert (op_plus = "+") ;
+        let u1 = desugar_maybe_non_constant_universe t1 in
+        let u2 = desugar_maybe_non_constant_universe t2 in
+        begin match u1, u2 with
+            | Inl n1, Inl n2 -> Inl (n1+n2)
+            | Inl n, Inr u
+            | Inr u, Inl n -> Inr (sum_to_universe u n)
+            | Inr u1, Inr u2 ->
+                raise(Error("This universe might contain a sum of two universe variables "
+                            ^ term_to_string t,
+                            t.range))
+        end
+    | App _ ->
+        let rec aux t univargs  =
+            match (unparen t).tm with
+                | App(t, targ, _) ->
+                    let uarg = desugar_maybe_non_constant_universe targ in
+                    aux t (uarg::univargs)
+                | Var max_lid ->
+                    assert (Ident.text_of_lid max_lid = "max") ;
+                    if List.existsb (function Inr _ -> true | _ -> false) univargs
+                    then Inr (U_max (List.map (function Inl n -> int_to_universe n | Inr u -> u) univargs))
+                    else
+                        let nargs = List.map (function Inl n -> n | Inr _ -> failwith "impossible") univargs in
+                        Inl (List.fold_left (fun m n -> if m > n then m else n) 0 nargs)
+                (* TODO : Might not be the best place to raise the error... *)
+                | _ -> raise(Error("Unexpected term " ^ term_to_string t ^ " in universe context", t.range))
+        in aux t []
+    | _ -> raise(Error("Unexpected term " ^ term_to_string t ^ " in universe context", t.range))
+
+let rec desugar_universe t : Syntax.universe =
+    let u = desugar_maybe_non_constant_universe t in
+    match u with
+        | Inl n -> int_to_universe n
+        | Inr u -> u
 
 (* issue 769: check that other fields are also of the same record. If
    so, then return the record found by field name resolution. *)
@@ -396,12 +456,6 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
       | _ ->
         let e, x = push_bv_maybe_mut e x in
         (x::l), e, x in
-  let resolvea (l:lenv_t) e a =
-    match l |> Util.find_opt (fun b -> b.ppname.idText=a.idText) with
-      | Some b -> l, e, b
-      | _ ->
-        let e, a = push_bv_maybe_mut e a in
-        (a::l), e, a in
   let rec aux (loc:lenv_t) env (p:pattern) =
     let pos q = Syntax.withinfo q tun.n p.prange in
     let pos_r r q = Syntax.withinfo q tun.n r in
@@ -600,6 +654,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Tvar a ->
       setpos <| fst (fail_or2 (try_lookup_id env) a)
 
+    | Uvar u ->
+        raise (Error("Unexpected universe variable " ^ text_of_id u ^ " in non-universe context", top.range))
+
     | Op(s, args) ->
       begin match op_as_term env (List.length args) top.range s with
         | None -> raise (Error("Unexpected or unbound operator: " ^ s, top.range))
@@ -613,6 +670,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Name {str="Type0"}  -> mk (Tm_type U_zero)
     | Name {str="Type"}   -> mk (Tm_type U_unknown)
+    | Construct ({str="Type"}, [t, UnivApp]) -> mk (Tm_type (desugar_universe t))
     | Name {str="Effect"} -> mk (Tm_constant Const_effect)
     | Name {str="True"}   -> S.fvar (Ident.set_lid_range Const.true_lid top.range) Delta_constant None
     | Name {str="False"}   -> S.fvar (Ident.set_lid_range Const.false_lid top.range) Delta_constant None
@@ -771,6 +829,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                  [as_arg phi;
                   as_arg <| mk (Tm_constant(Const_unit))]))
 
+    | App (_, _, UnivApp) ->
+       let rec aux universes e = match (unparen e).tm with
+           | App(e, t, UnivApp) ->
+               let univ_arg = desugar_universe t in
+               aux (univ_arg::universes) e
+            | _ ->
+                let head = desugar_term env e in
+                mk (Tm_uinst(head, universes))
+       in aux [] top
     | App _ ->
       let rec aux args e = match (unparen e).tm with
         | App(e, t, imp) ->
