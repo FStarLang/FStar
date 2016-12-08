@@ -15,10 +15,6 @@
 #include <caml/mlvalues.h>
 
 #include "tmp/Prims.h"
-<<<<<<< HEAD
-
-=======
->>>>>>> 9b55ac14ac7c5e19b9f46ad451faaffd2cb97fde
 #include "tmp/Crypto_Config.h"
 #include "tmp/Crypto_Indexing.h"
 #include "tmp/Crypto_Symmetric_Bytes.h"

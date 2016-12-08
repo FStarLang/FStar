@@ -1,5 +1,5 @@
 [
-  "Ñê—˜QBþO¡‹¸Î…^êˆ",
+  "ò».\tÍv–;^e´e®\u0014Fã",
   [
     [
       "Sig.sig_t",
@@ -42,9 +42,9 @@
       ],
       0
     ],
-    [ "Sig.Entry.k", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Sig.__proj__Entry__item__k", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Sig.Entry.t",
+      "Sig.__proj__Entry__item__t",
       1,
       2,
       1,
@@ -55,7 +55,7 @@
       ],
       0
     ],
-    [ "Sig.Entry.m", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Sig.__proj__Entry__item__m", 1, 2, 1, [ "@query" ], 0 ],
     [ "Sig.sign", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Sig.verify",

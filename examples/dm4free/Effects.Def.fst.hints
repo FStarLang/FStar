@@ -139,8 +139,9 @@
         "function_token_typing_Effects.Def.s",
         "interpretation_Tm_arrow_d31be72f7ffa26a6c694331da23e23e2",
         "kinding_Prims.option@tok", "lemma_Prims.invertOption",
-        "proj_equation_Prims.Mktuple2__1", "typing_Prims.Mktuple2._1",
-        "typing_Prims.is_None", "typing_Prims.is_Some"
+        "proj_equation_Prims.Mktuple2__1",
+        "typing_Prims.__proj__Mktuple2__item___1",
+        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some"
       ],
       0
     ],

@@ -283,9 +283,10 @@ let head_normal env t =
 
 let head_redex env t =
     match (FStar.Syntax.Util.un_uinst t).n with
-    | Tm_abs(_, _, Some (Inr l)) ->
+    | Tm_abs(_, _, Some (Inr (l, flags))) ->
       Ident.lid_equals l Const.effect_Tot_lid
       || Ident.lid_equals l Const.effect_GTot_lid
+      || List.existsb (function TOTAL -> true | _ -> false) flags
 
     | Tm_abs(_, _, Some (Inl lc)) ->
       Util.is_tot_or_gtot_lcomp lc
@@ -700,17 +701,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
           let is_impure = function
             | Inl lc -> not (Util.is_pure_or_ghost_lcomp lc)
-            | Inr eff -> TypeChecker.Util.is_pure_or_ghost_effect env.tcenv eff |> not
+            | Inr (eff, _) -> TypeChecker.Util.is_pure_or_ghost_effect env.tcenv eff |> not
           in
 
           let codomain_eff lc = match lc with
             | Inl lc -> SS.subst_comp opening (lc.comp()) |> Some
-            | Inr eff ->
+            | Inr (eff, flags) ->
                 let new_uvar () = FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (Util.ktype0) |> fst in
                 if Ident.lid_equals eff Const.effect_Tot_lid
                 then S.mk_Total (new_uvar()) |> Some
                 else if Ident.lid_equals eff Const.effect_GTot_lid
                 then S.mk_GTotal (new_uvar()) |> Some
+                (* TODO (KM) : shouldn't we do something when flags contains TOTAL ? *)
                 else None
           in
 
@@ -1656,7 +1658,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let close_effect_params tm =
                 match ed.binders with
                 | [] -> tm
-                | _ -> S.mk (Tm_abs(ed.binders, tm, Some <| Inr Const.effect_Tot_lid)) None tm.pos
+                | _ -> S.mk (Tm_abs(ed.binders, tm, Some <| Inr (Const.effect_Tot_lid, [TOTAL]))) None tm.pos
             in
 
             let encode_action env (a:S.action) =

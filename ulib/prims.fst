@@ -14,6 +14,12 @@
    limitations under the License.
 *)
 module Prims
+
+(* Type of attributes *)
+assume new type attribute : Type0
+(* An attribute indicating that some effect must be processed by dmff *)
+assume val cps : attribute
+
 (* A predicate to express when a type supports decidable equality
    The type-checker emits axioms for hasEq for each inductive type *)
 assume type hasEq: Type -> GTot Type0
@@ -257,7 +263,9 @@ noeq type result (a:Type) =
 (* This new bit for Dijkstra Monads for Free; it has a "double meaning",
  * either as an alias for reasoning about the direct definitions, or as a marker
  * for places where a CPS transformation should happen. *)
-effect M (a:Type) = Tot a
+effect M (a:Type) = Tot a (attributes cps)
+
+let returnM (a:Type) (x:a) : M a = x
 
 new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id

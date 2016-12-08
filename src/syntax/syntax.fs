@@ -38,7 +38,6 @@ type withinfo_t<'a,'t> = {
 
 (* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
-type fieldname = lident
 (* Term language *)
 type sconst = FStar.Const.sconst
 
@@ -78,7 +77,7 @@ type term' =
   | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst
   | Tm_type       of universe
-  | Tm_abs        of binders*term*option<either<lcomp, lident>>  (* fun (xi:ti) -> t : (M t' wp | N) *)
+  | Tm_abs        of binders*term*option<either<lcomp, residual_comp>>  (* fun (xi:ti) -> t : (M t' wp | N) *)
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right; with monadic application in monad_name *)
@@ -131,6 +130,7 @@ and cflags =
   | PARTIAL_RETURN
   | SOMETRIVIAL
   | LEMMA
+  | CPS
   | DECREASES of term
 and uvar = Unionfind.uvar<uvar_basis<term>>
 and metadata =
@@ -153,8 +153,8 @@ and meta_source_info =
   | Mutable_rval
 and fv_qual =
   | Data_ctor
-  | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
-  | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
+  | Record_projector of (lident * ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
+  | Record_ctor of lident * list<ident>       (* the type of the record being constructed and its (unmangled) fields in order *)
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
@@ -187,6 +187,7 @@ and free_vars = {
     free_names:set<bv>;
     free_uvars:uvars;
     free_univs:set<universe_uvar>;
+    free_univ_names:fifo_set<univ_name>;
 }
 and lcomp = {
     eff_name: lident;
@@ -194,6 +195,8 @@ and lcomp = {
     cflags: list<cflags>;
     comp: unit -> comp //a lazy computation
 }
+
+and residual_comp = lident * list<cflags>
 
 type tscheme = list<univ_name> * typ
 
@@ -219,8 +222,8 @@ type qualifier =
   //the remaining qualifiers are internal: the programmer cannot write them
   | Discriminator of lident                //discriminator for a datacon l
   | Projector of lident * ident            //projector for datacon l's argument x
-  | RecordType of list<fieldname>          //record type whose unmangled field names are ...
-  | RecordConstructor of list<fieldname>   //record constructor whose unmangled field names are ...
+  | RecordType of (list<ident> * list<ident>)          //record type whose namespace is fst and unmangled field names are snd
+  | RecordConstructor of (list<ident> * list<ident>)   //record constructor whose namespace is fst and unmangled field names are snd
   | ExceptionConstructor                   //a constructor of Prims.exn
   | HasMaskedEffect                        //a let binding that may have a top-level effect
   | Effect                                 //qualifier on a name that corresponds to an effect constructor
@@ -247,6 +250,7 @@ type action = {
 }
 type eff_decl = {
     qualifiers  :list<qualifier>;
+    cattributes  :list<cflags>;
     mname       :lident;
     univs       :univ_names;
     binders     :binders;
@@ -315,7 +319,13 @@ and sigelt =
   | Sig_new_effect_for_free of eff_decl * Range.range // in this case, most fields have a dummy value
                                                       // and are reconstructed using the DMFF theory
   | Sig_sub_effect     of sub_eff * Range.range
-  | Sig_effect_abbrev  of lident * univ_names * binders * comp * list<qualifier> * Range.range
+  | Sig_effect_abbrev  of lident
+                       * univ_names
+                       * binders
+                       * comp
+                       * list<qualifier>
+                       * list<cflags>
+                       * Range.range
   | Sig_pragma         of pragma * Range.range
 type sigelts = list<sigelt>
 
@@ -368,13 +378,19 @@ let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_
 let new_universe_uvar_set () : set<universe_uvar> =
     Util.new_set (fun x y -> Unionfind.uvar_id x - Unionfind.uvar_id y)
                  (fun x -> Unionfind.uvar_id x)
+let new_universe_names_fifo_set () : fifo_set<univ_name> =
+    Util.new_fifo_set (fun  x y -> String.compare (Ident.text_of_id x) (Ident.text_of_id y))
+                 (fun x -> Util.hashcode (Ident.text_of_id x))
+
 let no_names  = new_bv_set()
 let no_uvs : uvars = new_uv_set()
 let no_universe_uvars = new_universe_uvar_set()
+let no_universe_names = new_universe_names_fifo_set ()
 let empty_free_vars = {
         free_names=no_names;
         free_uvars=no_uvs;
         free_univs=no_universe_uvars;
+        free_univ_names=no_universe_names;
     }
 let memo_no_uvs = Util.mk_ref (Some no_uvs)
 let memo_no_names = Util.mk_ref (Some no_names)

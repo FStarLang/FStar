@@ -10,38 +10,38 @@
       0
     ],
     [
-      "BinarySearchTree0.Node._0",
+      "BinarySearchTree0.__proj__Node__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_BinarySearchTree0.Node",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_4b193e4a2eabbd6bef3db8a93298d58d"
+        "refinement_interpretation_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
       0
     ],
     [
-      "BinarySearchTree0.Node._1",
+      "BinarySearchTree0.__proj__Node__item___1",
       1,
       2,
       1,
       [
         "@query", "disc_equation_BinarySearchTree0.Node",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_4b193e4a2eabbd6bef3db8a93298d58d"
+        "refinement_interpretation_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
       0
     ],
     [
-      "BinarySearchTree0.Node._2",
+      "BinarySearchTree0.__proj__Node__item___2",
       1,
       2,
       1,
       [
         "@query", "disc_equation_BinarySearchTree0.Node",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_4b193e4a2eabbd6bef3db8a93298d58d"
+        "refinement_interpretation_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
       0
     ],

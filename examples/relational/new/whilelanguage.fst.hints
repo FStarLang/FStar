@@ -1,5 +1,5 @@
 [
-  "WÉ\u0014<)>ã\u0006w“‘f\u0003%\u0016²",
+  "üïzÌñ&+·Â$ÕÅ­ÿ´<",
   [
     [
       "WhileLanguage.interpret_binop",
@@ -29,62 +29,62 @@
       0
     ],
     [
-      "WhileLanguage.AInt._0",
+      "WhileLanguage.__proj__AInt__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.AInt",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_ff79d9f766f1fa3364c1b1967f8c7118"
+        "refinement_interpretation_Tm_refine_6cc93dd93ee8279d301d2645366edf95"
       ],
       0
     ],
     [
-      "WhileLanguage.AVar._0",
+      "WhileLanguage.__proj__AVar__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.AVar",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_4a4de2d0197217b23023875600d8462f"
+        "refinement_interpretation_Tm_refine_1986e5829e9bd312ec868a75b5f9f780"
       ],
       0
     ],
     [
-      "WhileLanguage.AOp._0",
+      "WhileLanguage.__proj__AOp__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.AOp",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_616489a27dabd3ad5e885a370f60d0ec"
+        "refinement_interpretation_Tm_refine_4e344f29bbff6af3d3cf9ea14de3a434"
       ],
       0
     ],
     [
-      "WhileLanguage.AOp._1",
+      "WhileLanguage.__proj__AOp__item___1",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.AOp",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_616489a27dabd3ad5e885a370f60d0ec"
+        "refinement_interpretation_Tm_refine_4e344f29bbff6af3d3cf9ea14de3a434"
       ],
       0
     ],
     [
-      "WhileLanguage.AOp._2",
+      "WhileLanguage.__proj__AOp__item___2",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.AOp",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_616489a27dabd3ad5e885a370f60d0ec"
+        "refinement_interpretation_Tm_refine_4e344f29bbff6af3d3cf9ea14de3a434"
       ],
       0
     ],
@@ -117,122 +117,122 @@
       0
     ],
     [
-      "WhileLanguage.Assign.var",
+      "WhileLanguage.__proj__Assign__item__var",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.Assign",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_44ade9f405356b9977df37e0f8e2323a"
+        "refinement_interpretation_Tm_refine_a7c064b43f1bc33bcd0d1d4e205bab68"
       ],
       0
     ],
     [
-      "WhileLanguage.Assign.term",
+      "WhileLanguage.__proj__Assign__item__term",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.Assign",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_44ade9f405356b9977df37e0f8e2323a"
+        "refinement_interpretation_Tm_refine_a7c064b43f1bc33bcd0d1d4e205bab68"
       ],
       0
     ],
     [
-      "WhileLanguage.Seq.first",
+      "WhileLanguage.__proj__Seq__item__first",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.Seq",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3dba003a5a3fc830601f586be9566b56"
+        "refinement_interpretation_Tm_refine_52b2ead4bdf7074cb85e78a19e9df8cb"
       ],
       0
     ],
     [
-      "WhileLanguage.Seq.second",
+      "WhileLanguage.__proj__Seq__item__second",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.Seq",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3dba003a5a3fc830601f586be9566b56"
+        "refinement_interpretation_Tm_refine_52b2ead4bdf7074cb85e78a19e9df8cb"
       ],
       0
     ],
     [
-      "WhileLanguage.If.cond",
+      "WhileLanguage.__proj__If__item__cond",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.If",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9f5821301c6a6d81716d0d1db253eb0c"
+        "refinement_interpretation_Tm_refine_68cf795eef5913f3d6d60256d1bd26eb"
       ],
       0
     ],
     [
-      "WhileLanguage.If.then_branch",
+      "WhileLanguage.__proj__If__item__then_branch",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.If",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9f5821301c6a6d81716d0d1db253eb0c"
+        "refinement_interpretation_Tm_refine_68cf795eef5913f3d6d60256d1bd26eb"
       ],
       0
     ],
     [
-      "WhileLanguage.If.else_branch",
+      "WhileLanguage.__proj__If__item__else_branch",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.If",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9f5821301c6a6d81716d0d1db253eb0c"
+        "refinement_interpretation_Tm_refine_68cf795eef5913f3d6d60256d1bd26eb"
       ],
       0
     ],
     [
-      "WhileLanguage.While.cond",
+      "WhileLanguage.__proj__While__item__cond",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.While",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_07633b7fdeee46dad797fe29fa367ec7"
+        "refinement_interpretation_Tm_refine_25fc26271a1d51c4d8e979c06f18d4ab"
       ],
       0
     ],
     [
-      "WhileLanguage.While.body",
+      "WhileLanguage.__proj__While__item__body",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.While",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_07633b7fdeee46dad797fe29fa367ec7"
+        "refinement_interpretation_Tm_refine_25fc26271a1d51c4d8e979c06f18d4ab"
       ],
       0
     ],
     [
-      "WhileLanguage.While.variant",
+      "WhileLanguage.__proj__While__item__variant",
       1,
       2,
       1,
       [
         "@query", "disc_equation_WhileLanguage.While",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_07633b7fdeee46dad797fe29fa367ec7"
+        "refinement_interpretation_Tm_refine_25fc26271a1d51c4d8e979c06f18d4ab"
       ],
       0
     ],
@@ -243,9 +243,8 @@
       2,
       1,
       [
-        "@query", "binder_x_6d2d986ae2193e10b7b088fdfea59c2f_0",
-        "binder_x_bf30dda4e107bc142c424b48e0c62927_1", "bool_inversion",
-        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "@query", "binder_x_09ed0269ff54a508b9c2db04a15ad694_1",
+        "binder_x_6d2d986ae2193e10b7b088fdfea59c2f_0", "bool_inversion",
         "disc_equation_WhileLanguage.While", "equality_tok_Prims.LexTop@tok",
         "equation_WhileLanguage.decr",
         "fuel_correspondence_WhileLanguage.interpret_exp.fuel_instrumented",
@@ -256,9 +255,10 @@
         "projection_inverse_WhileLanguage.While_body",
         "projection_inverse_WhileLanguage.While_cond",
         "projection_inverse_WhileLanguage.While_variant",
-        "refinement_interpretation_Tm_refine_07633b7fdeee46dad797fe29fa367ec7",
-        "subterm_ordering_WhileLanguage.While", "typing_Prims.is_None",
-        "typing_WhileLanguage.decr", "well-founded-ordering-on-nat"
+        "refinement_interpretation_Tm_refine_25fc26271a1d51c4d8e979c06f18d4ab",
+        "subterm_ordering_WhileLanguage.While", "typing_Prims.uu___is_None",
+        "typing_Prims.uu___is_Some", "typing_WhileLanguage.decr",
+        "well-founded-ordering-on-nat"
       ],
       0
     ],
@@ -269,7 +269,8 @@
       1,
       [
         "@query", "binder_x_e9cca96f89020d43f5f8aa6022076d85_1",
-        "bool_inversion", "disc_equation_WhileLanguage.Assign",
+        "bool_inversion", "disc_equation_Prims.Some",
+        "disc_equation_WhileLanguage.Assign",
         "disc_equation_WhileLanguage.If", "disc_equation_WhileLanguage.Seq",
         "disc_equation_WhileLanguage.Skip",
         "disc_equation_WhileLanguage.While", "equality_tok_Prims.LexTop@tok",
@@ -279,8 +280,8 @@
         "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "subterm_ordering_WhileLanguage.If",
-        "subterm_ordering_WhileLanguage.Seq", "typing_Prims.is_None",
-        "typing_Prims.is_Some", "well-founded-ordering-on-nat"
+        "subterm_ordering_WhileLanguage.Seq", "typing_Prims.uu___is_None",
+        "typing_Prims.uu___is_Some", "well-founded-ordering-on-nat"
       ],
       0
     ],
