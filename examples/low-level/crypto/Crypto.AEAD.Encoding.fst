@@ -194,27 +194,40 @@ let pad_16 b len =
 
 open FStar.HyperStack
 
+//16-12-07  copied from UF1CMA for now
+let modifies_buf_and_ref (#a:Type) (#b:Type) (buf:Buffer.buffer a) (ref:reference b) (h:mem) (h':mem) : GTot Type0 =
+  (forall rid. Set.mem rid (Map.domain h.h) ==>
+    HH.modifies_rref rid !{Buffer.as_ref buf, HS.as_ref ref} h.h h'.h
+    /\ (forall (#a:Type) (b:Buffer.buffer a). 
+      (Buffer.frameOf b == rid /\ Buffer.live h b /\ Buffer.disjoint b buf
+      /\ Buffer.disjoint_ref_1 b (HS.as_aref ref)) ==> Buffer.equal h b h' b))
+
 // add variable-length bytes to a MAC accumulator, one 16-byte word at a time
 private val add_bytes:
   #i: MAC.id ->
   st: CMA.state i ->
-  a : CMA.accBuffer i ->
+  acc: CMA.accBuffer i ->
   len: UInt32.t ->
-  txt:lbuffer (v len) -> STL unit
+  txt: lbuffer (v len) -> STL unit
   (requires (fun h0 -> 
-    Buffer.live h0 txt /\ CMA.acc_inv st a h0))
+    Buffer.live h0 txt /\ CMA.acc_inv st acc h0))
   (ensures (fun h0 () h1 -> 
-    Buffer.modifies_1 (CMA.(MAC.as_buffer a.a)) h0 h1 /\ 
-    Buffer.live h1 txt /\ CMA.acc_inv st a h1 /\
-    (mac_log ==> (
-      let l0 = FStar.HyperStack.sel h0 (CMA.alog a) in
-      let l1 = FStar.HyperStack.sel h1 (CMA.alog a) in
-      Seq.equal l1 (Seq.append (encode_bytes (Buffer.as_seq h1 txt)) l0)
-    ))))
-
-let rec add_bytes #i st a len txt =
-  assume false; //TODO after specifying CMA.update
+    let b = CMA.(MAC.as_buffer acc.a) in
+    Buffer.live h1 txt /\ CMA.acc_inv st acc h1 /\
+    (if mac_log then 
+      let log = CMA.alog acc in
+      let l0 = FStar.HyperStack.sel h0 log in
+      let l1 = FStar.HyperStack.sel h1 log in
+      Seq.equal l1 (Seq.append (encode_bytes (Buffer.as_seq h1 txt)) l0) /\
+      modifies_buf_and_ref  b log h0 h1
+    else 
+      Buffer.modifies_1 b h0 h1)))
+ 
+let rec add_bytes #i st acc len txt =
+  //assume false; //TODO after specifying CMA.update
   push_frame();
+  let h0 = ST.get() in 
+  Buffer.lemma_intro_modifies_1 (CMA.(MAC.as_buffer acc.a)) h0 h0;
   let r = 
     if len <> 0ul 
     then 
@@ -223,17 +236,26 @@ let rec add_bytes #i st a len txt =
         let w = Buffer.create 0uy 16ul in
         Buffer.blit txt 0ul w 0ul len;
         pad_16 w len;
-        CMA.update st a w
+        let h1 = ST.get() in
+        assert(Buffer.modifies_0 h0 h1);         
+        Buffer.lemma_reveal_modifies_0 h0 h1;
+        assume(CMA.acc_inv st acc h1);
+        CMA.update st acc w;
+        assume false
       end
     else 
       begin
+        assume false;
         let w = Buffer.sub txt 0ul 16ul in 
-        let log = CMA.update st a w in
-        add_bytes st a (len -^ 16ul) (Buffer.offset txt 16ul)
+        let log = CMA.update st acc w in
+        //assume false;
+        add_bytes st acc (len -^ 16ul) (Buffer.offset txt 16ul);
+        assume false
       end
   in
   pop_frame(); 
   r
+
 
 //16-10-16 TODO in SeqProperties
 assume val lemma_append_slices: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> Lemma
