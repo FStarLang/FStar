@@ -60,7 +60,7 @@ let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
       HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1 /\
       m_contains (ilog st.log) h1 /\ (
       let log = FStar.HyperStack.sel h1 (alog acc) in
-      let a = MAC.sel_elem h1 acc.a in
+      let a = MAC.sel_elem h1 (abuf acc) in
       let r = MAC.sel_elem h1 st.r in
       let s = Buffer.as_seq h1 st.s in
       let t = MAC.mac log r s in
@@ -73,7 +73,7 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
     let open Crypto.Symmetric.UF1CMA in
     Buffer.live h0 tag /\ 
     Buffer.live h0 st.s /\
-    Buffer.disjoint_2 (MAC.as_buffer acc.a) st.s tag /\ 
+    Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) st.s tag /\
     Buffer.disjoint (MAC.as_buffer st.r) tag /\
     Buffer.disjoint st.s tag /\ 
     acc_inv st acc h0 /\
@@ -139,7 +139,7 @@ let accumulate_wrapper (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lb
   = let h0 = get () in
     let acc = accumulate #i st aadlen aad txtlen cipher in
     let h1 = get () in
-    assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.(acc.a))) (CMA.(st.s)) cipher);
+    assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.(abuf acc))) (CMA.(st.s)) cipher);
     assume (mac_log ==> alog_fresh h0 h1 (CMA.alog acc)); //NS: this goes away when Encoding.accumulate is restored
     acc
 ////////////////////////////////////////////////////////////////////////////////
@@ -213,7 +213,7 @@ let verify_liveness (#i:CMA.id) (st:CMA.state i) (tag:lbuffer 16) (h:mem) =
 let verify_requires (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) (h0:mem) = 
     let open Crypto.Symmetric.UF1CMA in
     verify_liveness st tag h0 /\
-    Buffer.disjoint_2 (MAC.as_buffer acc.a) st.s tag /\ 
+    Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) st.s tag /\
     Buffer.disjoint_2 (MAC.as_buffer st.r) st.s tag /\
     acc_inv st acc h0 /\
     (mac_log ==> m_contains (ilog st.log) h0) /\
