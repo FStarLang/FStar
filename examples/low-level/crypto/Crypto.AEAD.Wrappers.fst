@@ -30,11 +30,78 @@ module PRF = Crypto.Symmetric.PRF
 module Plain = Crypto.Plain
 
 ////////////////////////////////////////////////////////////////////////////////
-//Wrappers for experimentation, to be moved back to their original locations
+//Wrappers encapsulate the calls to various routines used in encrypt/decrypt
 
 //16-11-04 We should indicate that the real accumulator may also be updated;
 //16-11-04 (we don't care since it won't be re-used, as we lose acc_inv)
 //Move to UF1CMA, together with some lemmas.
+
+////////////////////////////////////////////////////////////////////////////////
+//AEAD.Encoding.accumulate wrapper
+////////////////////////////////////////////////////////////////////////////////
+let accumulate_liveness (#i: MAC.id) (st: CMA.state i) 
+			(#aadlen:aadlen_32) (aad:lbuffer (v aadlen))
+			(#txtlen:txtlen_32) (cipher:lbuffer (v txtlen)) (h:mem) = 
+  MAC.norm h CMA.(st.r) /\
+  Buffer.live h aad /\ 
+  Buffer.live h cipher
+
+// modifies only fresh buffers on the current stack
+let accumulate_modifies_nothing h0 h1 = 
+  let open HS in
+  modifies_one h0.tip h0 h1
+  /\ Buffer.modifies_buf_0 h0.tip h0 h1
+  /\ h0.tip=h1.tip
+
+let fresh_sref (#a:Type0) h0 h1 (r:HS.reference a) = 
+  ~ (h0 `HS.contains` r) /\
+    HS.frameOf r == HS.(h1.tip) /\
+    h1 `HS.contains` r
+
+
+(* let accumulate_encoded (#i:CMA.id) *)
+(*  		       (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen)) *)
+(* 		       (#plainlen:txtlen_32) (cipher:lbuffer (v plainlen)) *)
+(* 		       (a:CMA.accBuffer i) (h:mem{mac_log}) = *)
+(*     Buffer.live h aad /\			  *)
+(*     Buffer.live h cipher /\			      *)
+(*     h `HS.contains` (CMA.alog a) /\ *)
+(*     HS.sel h (CMA.alog a) == *)
+(*     encode_both (fst i) aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher) *)
+
+let accumulate_ensures (#i: MAC.id) (st: CMA.state i) 
+		       (#aadlen:aadlen_32) (aad:lbuffer (v aadlen))
+		       (#txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
+		       (h0:mem) (a:CMA.accBuffer i) (h1:mem) =
+  let open HS in		       
+  let open CMA in 		       
+  accumulate_liveness st aad cipher h1 /\
+  fresh_sref h0 h1 (Buffer.content (MAC.as_buffer a.a)) /\
+  CMA.acc_inv st a h1 /\
+  (mac_log ==> 
+    fresh_sref h0 h1 (alog a) /\
+    HS.sel h1 (alog a) == encode_both (fst i) aadlen (Buffer.as_seq h1 aad) txtlen (Buffer.as_seq h1 cipher))
+    
+let accumulate (#i: MAC.id) (st: CMA.state i) (#aadlen:aadlen_32) (aad:lbuffer (v aadlen))
+	       (#txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
+   : StackInline (CMA.accBuffer i)
+      (requires (fun h0 -> 
+	  accumulate_liveness st aad cipher h0))
+      (ensures (fun h0 a h1 ->  
+      	  accumulate_liveness st aad cipher h0 /\
+          accumulate_modifies_nothing h0 h1 /\
+	  accumulate_ensures st aad cipher h0 a h1))
+  = let h0 = get () in
+    let acc = accumulate #i st aadlen aad txtlen cipher in
+    let h1 = get () in
+    assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.(acc.a))) (CMA.(st.s)) cipher);
+    assume (mac_log ==> fresh_sref h0 h1 (CMA.alog acc)); //NS: this goes away when Encoding.accumulate is restored
+    assume (fresh_sref h0 h1 (Buffer.content (MAC.as_buffer CMA.(acc.a))));
+    FStar.Buffer.lemma_reveal_modifies_0 h0 h1;
+    acc
+////////////////////////////////////////////////////////////////////////////////
+//end AEAD.Encoding.accumulate wrapper
+////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 //UF1CMA.mac wrapper
@@ -63,6 +130,7 @@ let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
       sel_word h1 tag === t /\
       m_sel h1 (ilog st.log) == Some(log,t))
     else Buffer.modifies_1 tag h0 h1)
+
 let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
   : ST unit
   (requires (fun h0 ->
@@ -93,54 +161,7 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
 //16-11-04 disjoint st.r st.s comes from the UF1CMA state
 //16-11-04 BTW Buffer.disjoint_2 should be strengthened to imply 3 disjoints
 //Move to HS?
-let alog_fresh (#a:Type0) h0 h1 (r:HS.reference a) = 
-    HS.frameOf r == HS.(h1.tip) /\
-    h1 `HS.contains` r /\
-  ~ (h0 `HS.contains` r)
 
-////////////////////////////////////////////////////////////////////////////////
-//AEAD.Encoding.accumulate wrapper
-////////////////////////////////////////////////////////////////////////////////
-let accumulate_encoded (#i:CMA.id)
- 		       (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
-		       (#plainlen:txtlen_32) (cipher:lbuffer (v plainlen))
-		       (a:CMA.accBuffer i) (h:mem{mac_log}) =
-    Buffer.live h aad /\			 
-    Buffer.live h cipher /\			     
-    h `HS.contains` (CMA.alog a) /\
-    HS.sel h (CMA.alog a) ==
-    encode_both (fst i) aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher)
-
-let accumulate_ensures (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lbuffer (v aadlen))
-		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
-		       (h0:mem) (a:CMA.accBuffer i) (h1:mem) =
-  Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
-  ~ (h0 `Buffer.contains` (CMA.(MAC.as_buffer (a.a)))) /\
-  Buffer.live h1 aad /\ 
-  Buffer.live h1 cipher /\
-  Buffer.frameOf (CMA.(MAC.as_buffer a.a)) = HS.(h1.tip) /\
-  CMA.acc_inv st a h1 /\
-  (mac_log ==> 
-    alog_fresh h0 h1 (CMA.alog a) /\
-    accumulate_encoded aad cipher a h1)
-    
-let accumulate_wrapper (#i: MAC.id) (st: CMA.state i) (aadlen:aadlen_32) (aad:lbuffer (v aadlen))
-		       (txtlen:txtlen_32) (cipher:lbuffer (v txtlen)) 
-   : StackInline (CMA.accBuffer i)
-      (requires (fun h0 -> 
-	  CMA.(MAC.norm h0 st.r) /\
-	  Buffer.live h0 aad /\ 
-	  Buffer.live h0 cipher))
-      (ensures (fun h0 a h1 ->  accumulate_ensures #i st aadlen aad txtlen cipher h0 a h1))
-  = let h0 = get () in
-    let acc = accumulate #i st aadlen aad txtlen cipher in
-    let h1 = get () in
-    assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.(acc.a))) (CMA.(st.s)) cipher);
-    assume (mac_log ==> alog_fresh h0 h1 (CMA.alog acc)); //NS: this goes away when Encoding.accumulate is restored
-    acc
-////////////////////////////////////////////////////////////////////////////////
-//end AEAD.Encoding.accumulate wrapper
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 //prf_mac
