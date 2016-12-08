@@ -58,17 +58,12 @@ module Print = FStar.Syntax.Print
 
 
 (* taramana 2016-10-31: we redefine
-FStar.Extraction.ML.Util.record_field_path here because the desugaring
+FStar.Extraction.ML.Util.record_fields here because the desugaring
 of field names has changed, but we cannot change the definition in
 FStar.Extraction.ML.Util for now because it is used by legacy
 extraction, which is still used in the bootstrapping process *)
 
-let record_field_path = function
-    | f::_ ->
-        let ns = f.ns in
-        ns |> List.map (fun id -> id.idText)
-    | _ -> failwith "impos"
-
+let record_fields fs vs = List.map2 (fun (f:ident) e -> f.idText, e) fs vs
 
 (********************************************************************************************)
 (* Some basic error reporting; all are fatal errors at this stage                           *)
@@ -534,10 +529,10 @@ let resugar_pat q p = match p with
         | Some n -> MLP_Tuple(pats)
         | _ ->
           match q with
-            | Some (Record_ctor (_, fns)) ->
-              let p = record_field_path fns in
+              | Some (Record_ctor (ty, fns)) ->
+              let path = List.map text_of_id ty.ns in
               let fs = record_fields fns pats in
-              MLP_Record(p, fs)
+              MLP_Record(path, fs)
             | _ -> p
       end
     | _ -> p
@@ -687,9 +682,9 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
 
    let as_record qual e =
         match e.expr, qual with
-            | MLE_CTor(_, args), Some (Record_ctor(_, fields)) ->
-               let path = record_field_path fields in
-               let fields = Util.record_fields fields args in
+            | MLE_CTor(_, args), Some (Record_ctor(tyname, fields)) ->
+               let path = List.map text_of_id tyname.ns in
+               let fields = record_fields fields args in
                with_ty e.mlty <| MLE_Record(path, fields)
             | _ -> e in
 
@@ -708,7 +703,8 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
     match mlAppExpr.expr, qual with
         | _, None -> mlAppExpr
 
-        | MLE_App({expr=MLE_Name mlp}, mle::args), Some (Record_projector f) ->
+        | MLE_App({expr=MLE_Name mlp}, mle::args), Some (Record_projector (constrname, f)) ->
+          let f = lid_of_ids (constrname.ns @ [f]) in
           let fn = Util.mlpath_of_lid f in
           let proj = MLE_Proj(mle, fn) in
           let e = match args with

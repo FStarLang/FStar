@@ -146,10 +146,10 @@ let extract_bundle env se =
        let indices, _ = U.arrow_formals ind.ityp in
        let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ Util.string_of_int i, 0)) in
        let tbody = match Util.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
-            | Some (RecordType ids) ->
-              let c_name, c_ty = List.hd ctors in
+            | Some (RecordType (ns, ids)) ->
+              let _, c_ty = List.hd ctors in
               assert (List.length ids = List.length c_ty);
-              let fields = List.map2 (fun lid ty -> U.mk_field_projector_name_from_string c_name (lident_as_mlsymbol lid), ty) ids c_ty in
+              let fields = List.map2 (fun id ty -> let lid = lid_of_ids (ns @ [id]) in (lident_as_mlsymbol lid), ty) ids c_ty in
               MLTD_Record fields
 
             | _ -> MLTD_DType ctors in
