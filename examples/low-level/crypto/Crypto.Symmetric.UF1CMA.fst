@@ -286,6 +286,13 @@ let start #i st =
     Acc #i a ()
 
 
+let modifies_buf_and_ref (#a:Type) (#b:Type) (buf:Buffer.buffer a) (ref:reference b) h h' : GTot Type0 =
+  (forall rid. Set.mem rid (Map.domain h.h) ==>
+    HH.modifies_rref rid !{Buffer.as_ref buf, HS.as_ref ref} h.h h'.h
+    /\ (forall (#a:Type) (b:Buffer.buffer a). 
+      (frameOf b == rid /\ live h b /\ disjoint b buf
+      /\ disjoint_ref_1 b (HS.as_aref ref)) ==> equal h b h' b))
+
 // update [was add]; could add finalize (for POLY1305 when last block < 16).
 val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
   Stack unit
@@ -298,9 +305,22 @@ val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
   (ensures  (fun h0 _ h1 ->
      acc_inv st acc h1 /\
      Buffer.live h0 w /\
-     (mac_log ==>
+     (if mac_log then
        HS.sel h1 (alog acc) ==
-       SeqProperties.cons (Buffer.as_seq h0 w) (HS.sel h0 (alog acc))) ))
+       SeqProperties.cons (Buffer.as_seq h0 w) (HS.sel h0 (alog acc)) /\
+       (let buf = MAC.as_buffer acc.a in
+        let rid = frameOf buf in
+        //Alternative 1:
+        //HS.modifies (Set.singleton rid) h0 h1 /\
+        //HS.modifies_ref rid (TSet.singleton (FStar.Heap.Ref (HS.as_ref (alog acc)))) h0 h1 /\
+        //Buffer.modifies_buf_1 rid buf h0 h1)
+        // Alternative 2:
+        //modifies_bufs_and_refs 
+        //  (Buffer.only buf) (TSet.singleton (HS.as_aref (alog acc))) h0 h1)
+        // Alternative 3 (works):
+        modifies_buf_and_ref buf (alog acc) h0 h1) 
+     else
+       Buffer.modifies_1 (MAC.as_buffer acc.a) h0 h1) ))
 
 let update #i st acc w =
   let h0 = ST.get () in
