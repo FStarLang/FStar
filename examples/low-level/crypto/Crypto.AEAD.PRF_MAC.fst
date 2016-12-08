@@ -90,11 +90,12 @@ private val lemma_aead_entries_are_same_after_prf_mac
   (x:PRF.domain_mac i)
   (h0 h1:mem)
   (mac:CMA.state (i, x.iv)) : Lemma
-  (requires (prf_mac_ensures i aead_st.prf k_0 x h0 mac h1))
+  (requires (h0 `HS.contains` (st_ilog aead_st) /\
+             prf_mac_ensures i aead_st.prf k_0 x h0 mac h1))
   (ensures  (let entries_0 = HS.sel #(aead_entries i) h0 aead_st.log in
              let entries_1 = HS.sel #(aead_entries i) h1 aead_st.log in
 	     entries_0 == entries_1))
-let lemma_aead_entries_are_same_after_prf_mac #i #rw aead_st k_0 x h0 h1 mac = admit ()
+let lemma_aead_entries_are_same_after_prf_mac #i #rw aead_st k_0 x h0 h1 mac = ()
 
 private val frame_fresh_nonce_st_prf_mac
   (#i:id)
@@ -105,7 +106,8 @@ private val frame_fresh_nonce_st_prf_mac
   (h0 h1:mem)
   (mac:CMA.state (i, x.iv))
   (iv:Cipher.iv (alg i)) : Lemma
-  (requires (prf_mac_ensures i aead_st.prf k_0 x h0 mac h1))
+  (requires (h0 `HS.contains` (st_ilog aead_st) /\
+             prf_mac_ensures i aead_st.prf k_0 x h0 mac h1))
   (ensures  (fresh_nonce_st iv aead_st h0 <==> fresh_nonce_st iv aead_st h1))
 let frame_fresh_nonce_st_prf_mac #i #rw aead_st k_0 x h0 h1 mac iv =
   lemma_aead_entries_are_same_after_prf_mac aead_st k_0 x h0 h1 mac
@@ -144,10 +146,11 @@ private val frame_refines_aead_entries_prf_mac
   (x:PRF.domain_mac i)
   (h0 h1:mem)
   (mac:CMA.state (i, x.iv)) : Lemma
-  (requires (let entries_0 = HS.sel #(aead_entries i) h0 aead_st.log in
-	     let table_0 = HS.sel h0 (itable i aead_st.prf) in
-             aead_entries_are_refined table_0 entries_0 h0 /\
-	     prf_mac_ensures i aead_st.prf k_0 x h0 mac h1))
+  (requires (h0 `HS.contains` (st_ilog aead_st) /\
+             (let entries_0 = HS.sel #(aead_entries i) h0 aead_st.log in
+	      let table_0 = HS.sel h0 (itable i aead_st.prf) in
+              aead_entries_are_refined table_0 entries_0 h0 /\
+	      prf_mac_ensures i aead_st.prf k_0 x h0 mac h1)))
   (ensures  (let entries_1 = HS.sel #(aead_entries i) h1 aead_st.log in
 	     let table_1 = HS.sel h1 (itable i aead_st.prf) in
              aead_entries_are_refined table_1 entries_1 h1))
