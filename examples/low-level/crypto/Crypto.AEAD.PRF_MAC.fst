@@ -165,6 +165,154 @@ let lemma_aead_inv_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 =
     none_above_otp_after_prf_mac aead_st k_0 x mac h0 h1
   end
 
+val lemma_prf_find_append_some
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (blocks:prf_table r i)
+  (x:PRF.domain i) : Lemma
+  (requires (Some? (PRF.find table x)))
+  (ensures  (PRF.find (Seq.append table blocks) x == PRF.find table x))
+let lemma_prf_find_append_some #r #i table blocks x = SeqProperties.find_append_some table blocks (is_entry_domain x)
+
+val lemma_prf_find_append_none_in_s2
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (blocks:prf_table r i)
+  (x:PRF.domain i) : Lemma
+  (requires (None? (PRF.find blocks x)))
+  (ensures (PRF.find (Seq.append table blocks) x == PRF.find table x))
+let lemma_prf_find_append_none_in_s2 #r #i table blocks x =
+  let b = PRF.find table x in
+  if Some? b then SeqProperties.find_append_some table blocks (is_entry_domain x)
+  else SeqProperties.find_append_none table blocks (is_entry_domain x)
+
+val lemma_prf_find_append_some_forall
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (blocks:prf_table r i) : Lemma
+  (forall (x:PRF.domain i).{:pattern (PRF.find (Seq.append table blocks) x) }
+     (Some? (PRF.find table x)) ==>
+       (PRF.find (Seq.append table blocks) x == PRF.find table x))
+let lemma_prf_find_append_some_forall #r #i table blocks =
+  let open FStar.Classical in
+  forall_intro (move_requires (lemma_prf_find_append_some #r #i table blocks))
+
+open Crypto.AEAD.Encoding
+open Crypto.Plain
+open Crypto.Symmetric.Bytes
+
+let frame_refines_entries_append
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (entries:aead_entries i)
+  (h:mem)
+  (blocks:prf_table r i) : Lemma
+  (requires (safeId i ==> (forall (aead_entry:aead_entry i).{:pattern (entries `SeqProperties.contains` aead_entry)}
+		             entries `SeqProperties.contains` aead_entry ==>
+		             refines_one_entry table aead_entry h)))
+  (ensures  (safeId i ==> (forall (aead_entry:aead_entry i).{:pattern (entries `SeqProperties.contains` aead_entry)}
+		             entries `SeqProperties.contains` aead_entry ==>
+		             refines_one_entry (Seq.append table blocks) aead_entry h)))
+  = lemma_prf_find_append_some_forall #r #i table blocks
+
+type erid = r:rid{is_eternal_region r}
+
+let mac_is_unset (i:CMA.id) (region:erid) (st:CMA.state i) m =
+   CMA.(st.region) == region /\
+   Crypto.Symmetric.MAC.norm m CMA.(st.r) /\
+   Buffer.live m CMA.(st.s) /\
+   (mac_log ==>
+      FStar.Monotonic.RRef.m_contains (CMA.ilog CMA.(st.log)) m /\
+      FStar.Monotonic.RRef.m_sel m (CMA.ilog CMA.(st.log)) == None)
+
+let lemma_prf_find_singleton_blocks
+  (#r:region)
+  (#i:id)
+  (prf_entry:PRF.entry r i)
+  (x:PRF.domain i) : Lemma
+  (Some? (PRF.find (Seq.create 1 prf_entry) x) <==> prf_entry.x = x)
+  = ()
+
+let lemma_frame_mac_is_unset_prf_mac
+  (#i:id)
+  (#rw:rw)
+  (aead_st:aead_state i rw{safeMac i})
+  (k_0:CMA.akey aead_st.prf.mac_rgn i)
+  (x:PRF.domain_mac i)
+  (h0 h1:mem)
+  (mac:CMA.state (i, x.iv))
+  (iv:Crypto.Symmetric.Cipher.iv (alg i))
+  (mac_st:CMA.state (i, iv)) : Lemma
+  (requires (let table = HS.sel h0 (itable i aead_st.prf) in
+             prf_mac_ensures i aead_st.prf k_0 x h0 mac h1 /\
+	     iv <> x.iv /\
+	     CMA.mac_is_unset (i, iv) aead_st.prf.mac_rgn mac_st h0))
+  (ensures (CMA.mac_is_unset (i, iv) aead_st.prf.mac_rgn mac_st h1))
+  = ()
+
+let frame_unused_aead_iv_for_prf_mac
+  (#i:id)
+  (#rw:rw)
+  (aead_st:aead_state i rw{safeMac i})
+  (k_0:CMA.akey aead_st.prf.mac_rgn i)
+  (x:PRF.domain_mac i)
+  (h0 h1:mem)
+  (mac:CMA.state (i, x.iv))
+  (iv:Crypto.Symmetric.Cipher.iv (alg i)) : Lemma
+  (requires (let table = HS.sel h0 (itable i aead_st.prf) in
+             prf_mac_ensures i aead_st.prf k_0 x h0 mac h1 /\
+             unused_aead_iv_for_prf table iv h0))
+  (ensures  (let table = HS.sel h1 (itable i aead_st.prf) in
+             unused_aead_iv_for_prf table iv h1))
+  = if prf i then begin
+      let table_0 = HS.sel h0 (itable i aead_st.prf) in
+      let table_1 = HS.sel h1 (itable i aead_st.prf) in      
+      match find_mac table_0 x with
+      | Some _ -> ()
+      | None   ->
+        (let dom_0 = {iv=iv; ctr=PRF.ctr_0 i} in
+	 let _ = assert (none_above (PRF.incr i dom_0) table_1) in
+	 if x.iv = iv then
+	   ()
+	 else
+	   let _ = lemma_prf_find_singleton_blocks #aead_st.prf.mac_rgn #i (PRF.Entry x mac) dom_0 in
+	   let _ = assert (PRF.find_mac #aead_st.prf.mac_rgn #i (Seq.create 1 (PRF.Entry x mac)) dom_0 == None) in
+	   lemma_prf_find_append_none_in_s2 table_0 (Seq.create 1 (PRF.Entry x mac)) dom_0;
+	   match PRF.find_mac table_0 dom_0 with
+	   | None    -> ()
+	   | Some mr -> lemma_frame_mac_is_unset_prf_mac aead_st k_0 x h0 h1 mac iv mr)
+    end
+
+#set-options "--z3rlimit 200"
+let frame_inv_prf_mac
+  (#i:id)
+  (#rw:rw)
+  (aead_st:aead_state i rw)
+  (k_0:CMA.akey aead_st.prf.mac_rgn i)
+  (x:PRF.domain_mac i)
+  (h0 h1:mem)
+  (mac:CMA.state (i, x.iv)) : Lemma
+  (requires (inv aead_st h0 /\
+             prf_mac_ensures i aead_st.prf k_0 x h0 mac h1))
+  (ensures  (inv aead_st h1))
+  = if safeMac i then begin
+      let table_0 = HS.sel h0 (itable i aead_st.prf) in
+      let aead_entries = HS.sel h0 aead_st.log in
+      frame_refines i aead_st.prf.mac_rgn table_0 aead_entries h0 h1;
+      let table_1 = HS.sel h1 (itable i aead_st.prf) in
+      match find_mac table_0 x with
+      | Some _ -> ()
+      | None   ->
+        frame_refines_entries_append table_0 aead_entries h1 (Seq.create 1 (PRF.Entry x mac));
+      	let open FStar.Classical in
+      	forall_intro (move_requires (frame_unused_aead_iv_for_prf_mac aead_st k_0 x h0 h1 mac));
+	admit ()
+    end
+   
 val prf_mac_wrapper
   (#i:id)
   (#rw:rw)
@@ -175,7 +323,8 @@ val prf_mac_wrapper
        (requires (fun h0 -> inv aead_st h0 /\
                          fresh_nonce_st x.iv aead_st h0))
        (ensures (fun h0 mac h1 -> prf_mac_ensures i aead_st.prf k_0 x h0 mac h1 /\
-                               aead_inv_after_prf_mac aead_st x h1))
+                               aead_inv_after_prf_mac aead_st x h1 /\
+			       inv aead_st h1))
 let prf_mac_wrapper #i #rw aead_st k_0 x =
   let h0 = get () in
   
@@ -183,104 +332,6 @@ let prf_mac_wrapper #i #rw aead_st k_0 x =
 
   let h1 = get () in
   lemma_aead_inv_after_prf_mac aead_st k_0 x mac h0 h1;
+  frame_inv_prf_mac aead_st k_0 x h0 h1 mac;
 
   mac
-
-val lemma_prf_find_append
-  (#r:region)
-  (#i:id)
-  (table:prf_table r i)
-  (blocks:prf_table r i)
-  (x:PRF.domain i) : Lemma
-  (requires (Some? (PRF.find table x)))
-  (ensures  (PRF.find (Seq.append table blocks) x == PRF.find table x))
-let lemma_prf_find_append #r #i table blocks x = SeqProperties.find_append_some table blocks (is_entry_domain x)
-
-val lemma_prf_find_append_forall
-  (#r:region)
-  (#i:id)
-  (table:prf_table r i)
-  (blocks:prf_table r i) : Lemma
-  (forall (x:PRF.domain i).{:pattern (PRF.find (Seq.append table blocks) x) }
-     (Some? (PRF.find table x)) ==>
-       (PRF.find (Seq.append table blocks) x == PRF.find table x))
-let lemma_prf_find_append_forall #r #i table blocks =
-  let open FStar.Classical in
-  forall_intro (move_requires (lemma_prf_find_append #r #i table blocks))
-
-open Crypto.AEAD.Encoding
-open Crypto.Plain
-open Crypto.Symmetric.Bytes
-
-let frame_mac_is_set_append
-  (#r:region)
-  (#i:id)
-  (table:prf_table r i{mac_log})
-  (iv:Crypto.Symmetric.Cipher.iv (alg i))
-  (ad:adata)
-  (l:plainLen)
-  (cipher:lbytes l)
-  (tag:MAC.tag)
-  (h:mem)
-  (blocks:prf_table r i) : Lemma
-  (requires (mac_is_set table iv ad l cipher tag h))
-  (ensures  (mac_is_set (Seq.append table blocks) iv ad l cipher tag h))
-  = lemma_prf_find_append_forall #r #i table blocks
-
-let frame_refines_one_entry_append
-  (#r:region)
-  (#i:id)
-  (table:prf_table r i{safeId i})
-  (h:mem)
-  (aead_entry:aead_entry i)
-  (blocks:prf_table r i) : Lemma
-  (requires (refines_one_entry table aead_entry h))
-  (ensures  (refines_one_entry (Seq.append table blocks) aead_entry h))
-  = lemma_prf_find_append_forall #r #i table blocks
-
-(* let frame_mac_is_set_snoc_iv *)
-(*   (#r:region) *)
-(*   (#i:id) *)
-(*   (prf_table:prf_table r i{safeId i}) *)
-(*   (iv:Crypto.Symmetric.Cipher.iv (alg i)) *)
-(*   (ad:adata) *)
-(*   (l:plainLen) *)
-(*   (cipher:lbytes l) *)
-(*   (tag:MAC.tag) *)
-(*   (h:mem) *)
-(*   (entry:entry r i) : Lemma *)
-(*   (requires (mac_is_set prf_table iv ad l cipher tag h /\ *)
-(*              iv <> entry.x.iv)) *)
-(*   (ensures  (mac_is_set (SeqProperties.snoc prf_table entry) iv ad l cipher tag h)) *)
-(*   = let dom_0 = {iv = iv; ctr = PRF.ctr_0 i} in *)
-(*     SeqProperties.find_snoc prf_table entry (is_entry_domain dom_0) *)
-
-(* let rec lemma_counterblocks_iv *)
-(*   (i:id{safeId i}) *)
-(*   (r:eternal_region) *)
-(*   (x:PRF.domain i{PRF.ctr_0 i <^ PRF.(x.ctr)}) *)
-(*   (l:nat) *)
-(*   (from_pos:nat) *)
-(*   (to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) PRF.(x.ctr)}) *)
-(*   (plain:Crypto.Plain.plain i l) *)
-(*   (cipher:lbytes l) : Lemma *)
-(*   (requires True) *)
-(*   (ensures (let otp_entries = counterblocks i r x l from_pos to_pos plain cipher in *)
-(*             forall (prf_entry:entry r i). *)
-(*               otp_entries `SeqProperties.contains` prf_entry ==> prf_entry.x.iv = x.iv)) *)
-(*   (decreases (to_pos - from_pos)) *)
-(*   = let blockl = v (Crypto.Symmetric.Cipher.(blocklen (cipherAlg_of_id i))) in *)
-(*     let remaining = to_pos - from_pos in *)
-(*     if remaining = 0 then SeqProperties.lemma_contains_empty #(entry r i) *)
-(*     else *)
-(*       let l0 = minNat remaining blockl in *)
-(*       let l_32 = UInt32.uint_to_t l0 in *)
-(*       let plain_hd = Crypto.Plain.slice plain from_pos (from_pos + l0) in *)
-(*       let cipher_hd = Seq.slice cipher from_pos (from_pos + l0) in *)
-(*       let block = PRF.Entry x (PRF.OTP l_32 plain_hd cipher_hd) in  *)
-(*       let blocks = counterblocks i r (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in *)
-(*       lemma_counterblocks_iv i r (PRF.incr i x) l (from_pos + l0) to_pos plain cipher; *)
-(*       SeqProperties.lemma_contains_singleton block; *)
-(*       FStar.Classical.forall_intro (SeqProperties.append_contains_equiv (Seq.create 1 block) blocks) *)
-
-
