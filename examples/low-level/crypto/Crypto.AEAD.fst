@@ -33,7 +33,8 @@ module Plain  = Crypto.Plain
 module Cipher = Crypto.Symmetric.Cipher
 module PRF    = Crypto.Symmetric.PRF
 module Enxor  = Crypto.AEAD.Enxor
-
+   
+	 
 val gen: 
   i:id -> 
   rgn:eternal_region -> 
