@@ -1,4 +1,4 @@
-module Crypto.AEAD.Enxor
+module Crypto.AEAD.EnxorDexor
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils

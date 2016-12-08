@@ -25,15 +25,17 @@ open Crypto.AEAD.Encoding
 open Crypto.AEAD.Invariant
 (* open Crypto.AEAD.Wrappers *)
 
-module HH     = FStar.HyperHeap
-module HS     = FStar.HyperStack
-module MAC    = Crypto.Symmetric.MAC
-module CMA    = Crypto.Symmetric.UF1CMA
-module Plain  = Crypto.Plain
-module Cipher = Crypto.Symmetric.Cipher
-module PRF    = Crypto.Symmetric.PRF
-module Enxor  = Crypto.AEAD.Enxor
-   
+module HH       = FStar.HyperHeap
+module HS       = FStar.HyperStack
+module MAC      = Crypto.Symmetric.MAC
+module CMA      = Crypto.Symmetric.UF1CMA
+module Plain    = Crypto.Plain
+module Cipher   = Crypto.Symmetric.Cipher
+module PRF      = Crypto.Symmetric.PRF
+module Enxor    = Crypto.AEAD.EnxorDexor
+module Dexor    = Crypto.AEAD.EnxorDexor
+module PRF_MAC  = Crypto.AEAD.PRF_MAC
+module Encoding = Crypto.AEAD.Encoding   
 	 
 val gen: 
   i:id -> 
@@ -177,13 +179,13 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let x_0 = PRF.({iv = n; ctr = ctr_0 i}) in // PRF index to the first block
 
   //call prf_mac: get a mac key, ak
-  let ak = Crypto.AEAD.PRF_MAC.prf_mac_wrapper st st.ak x_0 in  // used for keying the one-time MAC
+  let ak = PRF_MAC.prf_mac_wrapper st st.ak x_0 in  // used for keying the one-time MAC
   let h1 = get () in
   assume (CMA.(MAC.norm h1 ak.r));
 
-  assume (Crypto.AEAD.Enxor.enxor_liveness st.prf plain cipher h1); //THIS TAKES A LONG TIME TO PROVE
+  assume (Enxor.enxor_liveness st.prf plain cipher h1); //THIS TAKES A LONG TIME TO PROVE
   //call enxor: fragment the plaintext, call the prf, and fill in the cipher text
-  Crypto.AEAD.Enxor.enxor st.prf n plain cipher;
+  Enxor.enxor st.prf n plain cipher;
   let h2 = get () in
  
   assume (CMA.(MAC.norm h2 ak.r));
