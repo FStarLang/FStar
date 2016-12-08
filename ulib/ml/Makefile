@@ -43,5 +43,6 @@ CLEAN=*.cmi *.cmo *.cmx *.exe *.o *.a *.cmxa *~ $(subst .ml,.cmx,$(ST)) $(subst 
 clean:
 	rm -f $(CLEAN)
 	rm -f $(ULIB_GEN_DIR)/*
+	rm -f hyperstack/*.o hyperstack/*.cm*
 
 -include .depend

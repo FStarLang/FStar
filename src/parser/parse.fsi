@@ -60,6 +60,7 @@ type token =
   | OPEN
   | OPAQUE
   | OF
+  | NOEXTRACT
   | NOEQUALITY
   | NEW_EFFECT_FOR_FREE
   | NEW_EFFECT
@@ -195,6 +196,7 @@ type tokenId =
     | TOKEN_OPEN
     | TOKEN_OPAQUE
     | TOKEN_OF
+    | TOKEN_NOEXTRACT
     | TOKEN_NOEQUALITY
     | TOKEN_NEW_EFFECT_FOR_FREE
     | TOKEN_NEW_EFFECT

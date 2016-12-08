@@ -72,7 +72,7 @@ let auth_body #k alg ciphertext tag key nonce cnt ad adlen len tmp =
   update_counter counter cnt;
   let c0 = sub tmp 32ul 16ul in
   alg key counter c0;
-  gf128_add tag c0;
+  finish tag c0;
   let h1 = ST.get() in
   assert(live h1 ciphertext /\ live h1 tag /\ live h1 key /\ live h1 nonce /\ live h1 ad /\ live h1 tmp /\ modifies_2 tag tmp h0 h1)
 

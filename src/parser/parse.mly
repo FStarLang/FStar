@@ -128,6 +128,7 @@ let compile_op arity s =
 
 %token FORALL EXISTS ASSUME NEW LOGIC
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
+%token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
 %token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
 %token AND ASSERT BEGIN ELSE END
@@ -396,6 +397,7 @@ qualifier:
      Unfold_for_unification_and_vcgen
   }
   | IRREDUCIBLE   { Irreducible }
+  | NOEXTRACT     { NoExtract }
   | DEFAULT       { DefaultEffect }
   | TOTAL         { TotalEffect }
   | PRIVATE       { Private }
@@ -468,7 +470,7 @@ atomicPattern:
   | LBRACK pats=separated_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rhs2 parseState 1 3) }
   | LBRACE record_pat=separated_nonempty_list(SEMICOLON, separated_pair(qlident, EQUALS, tuplePattern)) RBRACE
-      { mk_pattern (PatRecord record_pat) (rhs2 parseState 1 4) }
+      { mk_pattern (PatRecord record_pat) (rhs2 parseState 1 3) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) }
   | LPAREN pat=tuplePattern RPAREN   { pat }
@@ -491,8 +493,8 @@ patternOrMultibinder:
   | pat=atomicPattern { [pat] }
   | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=typ r=refineOpt RPAREN
       {
-        let pos = rhs2 parseState 1 6 in
-        let t_pos = rhs parseState 4 in
+        let pos = rhs2 parseState 1 7 in
+        let t_pos = rhs parseState 5 in
         let qual_ids = qual_id0 :: qual_ids in
         List.map (fun (q, x) -> mkRefinedPattern (mk_pattern (PatVar (x, q)) pos) t false r t_pos pos) qual_ids
       }
@@ -510,7 +512,7 @@ multiBinder:
   | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=typ r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
-       List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 5) q) qual_ids
+       List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q) qual_ids
      }
 
 binders: bss=list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
@@ -539,7 +541,7 @@ lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
   | LPAREN id=operator RPAREN
-    { mk_ident(compile_op (-1) id, rhs parseState 1) }
+    { mk_ident(compile_op (-1) id, rhs parseState 2) }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -589,7 +591,7 @@ noSeqTerm:
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
-        mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr
+        mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       }
   | REQUIRES t=typ
       { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type }
@@ -667,7 +669,7 @@ patternBranch:
       {
         let pat = match pat with
           | [p] -> p
-          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2)
+          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 1)
         in
         (focus, (pat, when_opt, e))
       }
@@ -750,8 +752,8 @@ tmNoEq:
       {
         let x, t, f = match extract_named_refinement e1 with
             | Some (x, t, f) -> x, t, f
-            | _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs2 parseState 1 2)) in
-        let dom = mkRefinedBinder x t true f (rhs2 parseState 1 2) None in
+            | _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs parseState 1)) in
+        let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
         let tail = e2 in
         let dom, res = match tail.tm with
             | Sum(dom', res) -> dom::dom', res
@@ -765,7 +767,7 @@ tmNoEq:
   | e1=tmNoEq op=OPINFIX4 e2=tmNoEq
       { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
   | MINUS e=tmNoEq
-      { mk_uminus e (rhs2 parseState 1 3) Expr }
+      { mk_uminus e (rhs2 parseState 1 2) Expr }
   | id=lidentOrUnderscore COLON e=appTerm phi_opt=refineOpt
       {
         let t = match phi_opt with
@@ -775,7 +777,7 @@ tmNoEq:
       }
   | LBRACE e=recordExp RBRACE { e }
   | op=TILDE e=atomicTerm
-      { mk_term (Op(op, [e])) (rhs2 parseState 1 3) Formula }
+      { mk_term (Op(op, [e])) (rhs2 parseState 1 2) Formula }
   | e=appTerm { e }
 
 refineOpt:
@@ -786,9 +788,9 @@ refineOpt:
 
 recordExp:
   | record_fields=right_flexible_nonempty_list(SEMICOLON, simpleDef)
-      { mk_term (Record (None, record_fields)) (rhs2 parseState 1 2) Expr }
+      { mk_term (Record (None, record_fields)) (rhs parseState 1) Expr }
   | e=appTerm WITH  record_fields=right_flexible_nonempty_list(SEMICOLON, simpleDef)
-      { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 2) Expr }
+      { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr }
 
 simpleDef:
   | e=separated_pair(qlident, EQUALS, simpleTerm) { e }
@@ -857,7 +859,7 @@ atomicTermNotQUident:
 (* Tm: atomicTermQUident or atomicTermNotQUident *)
 opPrefixTerm(Tm):
   | op=OPPREFIX e=Tm
-      { mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr }
+      { mk_term (Op(op, [e])) (rhs2 parseState 1 2) Expr }
 
 fsTypeArgs:
   | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER
@@ -910,7 +912,7 @@ projectionLHS:
   | lid=quident QMARK
       {
 	let t = Discrim lid in
-        let e = mk_term t (rhs parseState 1) Un in
+        let e = mk_term t (rhs2 parseState 1 2) Un in
 	e
       }
 

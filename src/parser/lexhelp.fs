@@ -167,6 +167,7 @@ let keywords =
     ALWAYS, "new"        ,NEW;
     ALWAYS, "new_effect" ,NEW_EFFECT;
     ALWAYS, "new_effect_for_free", NEW_EFFECT_FOR_FREE;
+    ALWAYS, "noextract",  NOEXTRACT;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;
     ALWAYS, "opaque"     ,OPAQUE;
