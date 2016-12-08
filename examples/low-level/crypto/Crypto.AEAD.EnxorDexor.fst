@@ -58,7 +58,7 @@ let iteration_lengths_ok (#i:id)
      (remaining_len <> 0ul ==> 
        FStar.Mul.((v x.ctr - v (otp_offset i)) * v (PRF.blocklen i) = v completed_len)))
 
-(** modifies_table_above_x_and_buffer: 
+(*+ modifies_table_above_x_and_buffer: 
        A clause in the write effect counter_enxor and counter_dexor
 	   -- modifies the prf table at domains at or above x
 	      and a buffer b
@@ -86,7 +86,7 @@ let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
      HS.modifies_one rid h0 h1 /\ 
      Buffer.modifies_buf_1 rid b h0 h1))
     
-(** modifies_table_above_x_and_buffer is a pre-order, 
+(*+ modifies_table_above_x_and_buffer is a pre-order, 
 	as proven by the reflexivity and transitivity lemmas below *)
 let refl_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
 			     (x:PRF.domain i{x.ctr <> 0ul}) 
@@ -122,7 +122,7 @@ let trans_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
 	FStar.Classical.forall_intro (SeqProperties.append_contains_equiv diff_01 diff_12)
       else ()
 
-(** modifies_x_buffer_1 is the write effect of prf_enxor and prf_dexor, 
+(*+ modifies_x_buffer_1 is the write effect of prf_enxor and prf_dexor, 
         which modifies the buffer and a single point x in the prf table.
 	
         This lemma weakens that write effect to a write effect on all
@@ -145,7 +145,7 @@ let x_buffer_1_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i
 
 (*** Enxor specifics ***)
 
-(** prf_enxor_leaves_none_strictly_above_x: 
+(*+ prf_enxor_leaves_none_strictly_above_x: 
 	modifying a single point in the table 
 	leaves those above it unchanged **)
 val prf_enxor_leaves_none_strictly_above_x: 
@@ -184,9 +184,9 @@ let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
 	FStar.Classical.forall_intro aux
       else ()
 
-(** Working towards a main auxiliary lemma:  extending_counter_blocks **)
+(*+ Working towards a main auxiliary lemma:  extending_counter_blocks **)
 
-(** counterblocks_snoc: 
+(*+ counterblocks_snoc: 
         rewrite the indexed-based invocation of counterblocks into a 
 	and inductive form based on snoc.
         Each recursive invocation effectively snoc's a PRF block **)
@@ -234,7 +234,7 @@ let rec counterblocks_snoc #i rgn x k len next completed_len plain cipher =
           SeqProperties.lemma_cons_snoc head middle last_entry //REVIEW: THIS PROOF TAKES A WHILE ...optimize
 
 #reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-(** counterblocks_slice: 
+(*+ counterblocks_slice: 
 	counterblocks only depends on the fragment of plain and cipher
 	accessible to it between from_pos and to_pos **)
 val counterblocks_slice: #i:id{safeId i} -> 
@@ -285,7 +285,7 @@ let rec counterblocks_slice #i rgn x len from_pos to_pos plain cipher
 			    (Seq.slice cipher from_pos from_pos'))
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
-(** frame_counterblocks_snoc:
+(*+ frame_counterblocks_snoc:
 	 modifying a single entry in the prf table and the cipher
 	 carries counterblocks forward by snoc'ing a single OTP block **)
 val frame_counterblocks_snoc: i:id{safeId i} -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^ x.ctr}) -> k:nat{v x.ctr <= k} ->
@@ -355,7 +355,7 @@ let invert_contains_plain_and_cipher_block   (#i:id) (#r:rid) (#l:u32{l <=^ PRF.
     = ()
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 400"
-(** extending_counter_blocks: 
+(*+ extending_counter_blocks: 
 	 A main auxiliary lemma
 	 Shows that each iteration of counter_enxor extends the counterblocks
 	 to include the block just encrypted, without touching existing blocks
@@ -455,7 +455,7 @@ let extending_counter_blocks #i t x len completed_len plain cipher h0 h1 h_init
 	 frame_counterblocks_snoc i t x (v x.ctr) len completed_len plain cipher h0 h1
     end
 
-(** enxor_invariant: 
+(*+ enxor_invariant: 
       An inductive invariant for counter_enxor 
       
       stated relative to h_init, 
@@ -481,7 +481,7 @@ let enxor_invariant (#i:id) (t:PRF.state i) (x:PRF.domain i)
     				      (Plain.sel_plain h len plain)
     				      (Buffer.as_seq h cipher)))))
 
-(** counter_enxor:
+(*+ counter_enxor:
       COUNTER_MODE LOOP from Chacha20
       XOR-based encryption and decryption (just swap ciphertext and plaintext)
       prf i    ==> writing at most at indexes x and above (same iv, higher ctr) at the end of the PRF table.
@@ -533,7 +533,7 @@ let rec counter_enxor #i t x len remaining_len plain cipher h_init =
     end
   else refl_modifies_table_above_x_and_buffer t x cipher h0
 
-(** enxor: The main function exposed to clients for encryption **)
+(*+ enxor: The main function exposed to clients for encryption **)
 val enxor:
   #i:id ->
   t:PRF.state i ->
@@ -567,10 +567,9 @@ let enxor #i t iv #len plain_b cipher_b =
 				 	        Seq.createEmpty)) in
   counter_enxor t x len len plain_b cipher_b h_init
 
-
 (*** Dexor specifics ***)
 
-(** dexor_modifies: 
+(*+ dexor_modifies: 
 	the write effect of dexor 
 	  -- either just the plain buffer, if either not idealized or safe
 	  -- or both the plain buffer and the prf table otherwise 
@@ -592,9 +591,9 @@ let dexor_of_prf_dexor_modifies (#i:id) (#len:u32) (t:PRF.state i)
      then ()
      else x_buffer_1_modifies_table_above_x_and_buffer t x (as_buffer pb) h0 h1
 
-(** dexor_modifies is a pre-order **)
+(*+ dexor_modifies is a pre-order **)
 
-(** reflexivity **)
+(*+ reflexivity **)
 let dexor_modifies_refl (#i:id) (#len:u32) (t:PRF.state i) 
 			 (x:PRF.domain i{ctr_0 i <^ x.ctr}) 
 			 (pb:plainBuffer i (v len)) (h0:mem)
@@ -604,7 +603,7 @@ let dexor_modifies_refl (#i:id) (#len:u32) (t:PRF.state i)
      then ()
      else refl_modifies_table_above_x_and_buffer t x (as_buffer pb) h0
 
-(** transitivity **)
+(*+ transitivity **)
 let dexor_modifies_trans (#i:id) (#len:u32) (t:PRF.state i) 
 			 (x:PRF.domain i{ctr_0 i <^ x.ctr}) 
 			 (y:PRF.domain i{y `above` x})
@@ -616,7 +615,7 @@ let dexor_modifies_trans (#i:id) (#len:u32) (t:PRF.state i)
      then ()
      else trans_modifies_table_above_x_and_buffer t x y (as_buffer pb) h0 h1 h2
 
-(** dexor_modifies_widen: 
+(*+ dexor_modifies_widen: 
 	weakening a modifies clause to cover a wider range of a buffer *)
 let dexor_modifies_widen (#i:id) (#len:u32) (t:PRF.state i) 
 			 (x:PRF.domain i{ctr_0 i <^ x.ctr}) 
@@ -633,7 +632,7 @@ let dexor_modifies_widen (#i:id) (#len:u32) (t:PRF.state i)
            Buffer.lemma_intro_modifies_1 (Plain.as_buffer pb) h0 h1)
      else ()
 
-(** maybe_plain:
+(*+ maybe_plain:
       counter_dexor takes a conditionally ideal argument, 
 	maybe_plain i l
 	
@@ -645,7 +644,7 @@ let dexor_modifies_widen (#i:id) (#len:u32) (t:PRF.state i)
 let maybe_plain (i:id) (l:nat) = if safeId i then Plain.plain i l else unit
 let as_plain (#i:id) (#l:nat) (m:maybe_plain i l{safeId i}) : plain i l = m
 
-(** decrypted_up_to: 
+(*+ decrypted_up_to: 
       A predicate relating the contents of the partially filled
       concrete plain buffer pb 
       to a fragment of the expected ideal plain text p **)
@@ -656,7 +655,7 @@ let decrypted_up_to (#i:id) (#len:u32) (completed:u32{completed <=^ len})
     Seq.equal (as_bytes (Plain.slice (Plain.sel_plain h len pb) 0 (v completed)))
 	      (as_bytes (Plain.slice (as_plain p) 0 (v completed)))
 
-(** decrypted_up_to_end: 
+(*+ decrypted_up_to_end: 
       When filled completely, the concrete buffer contains 
       the expected plain text **)
 let decrypted_up_to_end (#i:id) (#len:u32) (pb:plainBuffer i (v len)) (p:maybe_plain i (v len)) 
@@ -670,32 +669,123 @@ let decrypted_up_to_end (#i:id) (#len:u32) (pb:plainBuffer i (v len)) (p:maybe_p
 	   		  (Plain.as_bytes (Plain.slice (as_plain p) 0 (v len))))
       end
 
-(** contains_all_blocks plain cipher prf_table: 
-          fragments plain and cipher into blocks
-	  and states that each of then is present in the prf_table
+(*+ contains_all_blocks x plain cipher prf_table: 
+          fragments plain and cipher into blocks, 
+	    starting from position x onwards,
+	    ignoring the blocks from [otp_offset i .. x)
+	  and states that each of them is present in the prf_table
 
     NOTE: this duplicates a lot of the structure of counterblocks
 	  perhaps it should be restated in terms of counterblocks 
  **)
-let rec contains_all_blocks (#i:id) (#r:rid)
-  		 	    (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
-			    (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
-			    (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len})
-			    (plain:maybe_plain i (v len))
-			    (cipher:lbytes (v len))
-			    (blocks:prf_table r i)
-   : GTot Type0 (decreases (v remaining_len))
-   = if not (safeId i) || remaining_len = 0ul then 
-       True
-     else let starting_pos = len -^ remaining_len in
-	  let l = min remaining_len (PRF.blocklen i) in
-	  let plain_hd = Plain.slice (as_plain plain) (v starting_pos) (v starting_pos + v l) in
-	  let cipher_hd = Seq.slice cipher (v starting_pos) (v starting_pos + v l) in
-	  contains_cipher_block (v l) x cipher_hd blocks /\
-	  contains_plain_block x plain_hd blocks /\
-	  contains_all_blocks (PRF.incr i x) len (remaining_len -^ l) plain cipher blocks
+(* let rec contains_all_blocks (#i:id) (#r:rid) *)
+(*   		 	    (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr}) *)
+(* 			    (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)}) *)
+(* 			    (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len}) *)
+(* 			    (plain:maybe_plain i (v len)) *)
+(* 			    (cipher:lbytes (v len)) *)
+(* 			    (blocks:prf_table r i) *)
+(*    : GTot Type0 (decreases (v remaining_len)) *)
+(*    = if not (safeId i) || remaining_len = 0ul then  *)
+(*        True *)
+(*      else let starting_pos = len -^ remaining_len in *)
+(* 	  let l = min remaining_len (PRF.blocklen i) in *)
+(* 	  let plain_hd = Plain.slice (as_plain plain) (v starting_pos) (v starting_pos + v l) in *)
+(* 	  let cipher_hd = Seq.slice cipher (v starting_pos) (v starting_pos + v l) in *)
+(* 	  contains_cipher_block (v l) x cipher_hd blocks /\ *)
+(* 	  contains_plain_block x plain_hd blocks /\ *)
+(* 	  contains_all_blocks (PRF.incr i x) len (remaining_len -^ l) plain cipher blocks *)
 
-(** contains_all_blocks_st: 
+let contains_all_blocks (#i:id) (#r:rid)
+  	 		(x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
+			(len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)})
+			(remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len})
+			(plain:plain i (v len))
+			(cipher:lbytes (v len))
+			(blocks:prf_table r i)
+   = let open SeqProperties in
+     (safeId i ==> (
+      let completed_len = len -^ remaining_len in
+      let otp_blocks = counterblocks i r x (v len) (v completed_len) (v len) plain cipher in
+      (forall (prf_entry:PRF.entry r i).{:pattern (otp_blocks `contains` prf_entry)} 
+       PRF.find otp_blocks prf_entry.x == Some (prf_entry.range))))
+
+     (*   True *)
+     (* else let starting_pos = len -^ remaining_len in *)
+     (* 	  let l = min remaining_len (PRF.blocklen i) in *)
+     (* 	  let plain_hd = Plain.slice (as_plain plain) (v starting_pos) (v starting_pos + v l) in *)
+     (* 	  let cipher_hd = Seq.slice cipher (v starting_pos) (v starting_pos + v l) in *)
+     (* 	  contains_cipher_block (v l) x cipher_hd blocks /\ *)
+     (* 	  contains_plain_block x plain_hd blocks /\ *)
+     (* 	  contains_all_blocks (PRF.incr i x) len (remaining_len -^ l) plain cipher blocks *)
+
+val counterblocks_contains_all_blocks:   
+  i:id{safeId i} ->
+  rgn:region -> 
+  x:PRF.domain i ->
+  len:u32 ->
+  remaining_len:u32{remaining_len_ok x len remaining_len} ->
+  plain:Crypto.Plain.plain i (v len) ->
+  cipher:lbytes (v len) ->
+  Lemma (requires True)
+        (ensures
+	    (let x0 = {x with ctr=ctr_0 i +^ 1ul} in
+	     let all_blocks = counterblocks i rgn x0 (v len) 0 (v len) plain cipher in
+	     let n_blocks = v x.ctr - v x0.ctr in
+	     n_blocks <= Seq.length all_blocks /\
+	     (let remaining_blocks = Seq.slice all_blocks n_blocks (Seq.length all_blocks) in
+	      contains_all_blocks x len remaining_len plain cipher remaining_blocks)))
+	(decreases (v remaining_len))
+#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
+(*
+ * AR: this does not go through even in trivial case.
+ *)
+val counterblocks_len: #i:id{safeId i} -> 
+		       rgn:region -> 
+		       x:domain i{ctr_0 i <^ x.ctr} ->
+		       len:nat{len <> 0} ->
+		       from_pos:nat{from_pos <= len /\ safelen i (len - from_pos) x.ctr} ->
+		       plain:Plain.plain i len ->
+		       cipher:lbytes len -> Lemma
+  (ensures Seq.length (counterblocks i rgn x len from_pos len plain cipher) =
+           num_blocks_for_len i (len - from_pos))
+  (decreases (len - from_pos))
+#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let rec counterblocks_len #i rgn x len from_pos plain cipher =
+  if from_pos = len
+  then ()
+  else let blockl = v (Cipher.(blocklen (cipherAlg_of_id i))) in
+       let remaining = len - from_pos in
+       let l0 = minNat remaining blockl in
+       counterblocks_len #i rgn (PRF.incr i x) len (from_pos + l0) plain cipher
+
+let counterblocks_contains_all_blocks i rgn x len remaining_len plain cipher = 
+  if safeId i
+  then let x_1 = {x with ctr=otp_offset i} in
+       let all_blocks = counterblocks i rgn x_1 (v len) 0 (v len) plain cipher in
+       let n_blocks = v x.ctr - v x_1.ctr in
+       counterblocks_len rgn x_1 (v len) 0 plain cipher;
+       assert (n_blocks <= Seq.length all_blocks);
+       counterblocks_slice #i rgn x
+       admit()
+       
+       (let remaining_blocks = Seq.slice all_blocks n_blocks (Seq.length all_blocks) in
+	      contains_all_blocks x len remaining_len plain cipher remaining_blocks)))
+
+
+  let x0 = {x with ctr=ctr_0 i +^ 1ul} in
+  (* let all_blocks = counterblocks i rgn x0 (v len) 0 (v len) plain cipher in *)
+  (* let completed_len = v x0.ctr - v (offset i) in *)
+  (* let n_blocks = v x.ctr - v x0.ctr in *)
+
+  incr_remaining_len_ok x len remaining_len;
+  if remaining_len = 0ul then ()
+  else let l = min remaining_len (PRF.blocklen i) in 
+       counterblocks_contains_all_blocks i rgn (PRF.incr i x) len (remaining_len -^ l) plain cipher;
+       admit() //NS: significant --- but will change for Plan A
+
+(*+ contains_all_blocks_st: 
          A wrapper around contains_all_blocks, 
 	 requiring it of the entire current prf table
  **)
@@ -710,7 +800,7 @@ let contains_all_blocks_st (#i:id)
    = safeId i /\ Buffer.live h cipher ==> 				
      contains_all_blocks x len remaining_len plain (Buffer.as_seq h cipher) (HS.sel h (PRF.itable i t))
 
-(** frame_contains_all_blocks_st:
+(*+ frame_contains_all_blocks_st:
 	if we have contains_all_blocks_st,
 	and we call prf_dexor,
 	then in the safeId case, it only modifies the plain buffer
@@ -737,7 +827,8 @@ let frame_contains_all_blocks_st (i:id)
    = FStar.Classical.move_requires (FStar.Buffer.lemma_reveal_modifies_1 (as_buffer pb) h0) h1
 
 #reset-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-(** invert_contains_all_blocks_st:
+
+(*+ invert_contains_all_blocks_st:
 	This is just an unfolding of contains_all_blocks
 	using a unit of fuel for it. 
 	Contexts that use 0 fuel must invoke this lemma to reason
@@ -767,7 +858,7 @@ let invert_contains_all_blocks_st
 		       contains_all_blocks_st (PRF.incr i x) len (remaining_len -^ l) p cipher t h)))
    = ()
 
-(** extend_decrypted_up_to: 
+(*+ extend_decrypted_up_to: 
 	A main auxiliary lemma for counter_dexor 
 	If the prf table contains_all_blocks
 	And we have partially filled the plain buffer with the expected plain
@@ -817,7 +908,7 @@ let extend_decrypted_up_to #i t x #len remaining_len pb p cipher h0 h1 =
     invert_contains_all_blocks_st i x len remaining_len t p cipher h0
   end
 
-(** dexor_requires:
+(*+ dexor_requires:
 	pre-condition for counter_dexor **)
 let dexor_requires (#i:id) (t:PRF.state i) (x:PRF.domain i)
 		   (#len:u32) (remaining_len:u32)
