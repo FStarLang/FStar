@@ -713,7 +713,7 @@ end)
 in (match (_55_443) with
 | ((ys, t), (xs, c)) -> begin
 if ((FStar_List.length xs) <> (FStar_List.length ys)) then begin
-(FStar_Syntax_Util.abs ys t (Some (FStar_Util.Inr (FStar_Syntax_Const.effect_Tot_lid))))
+(FStar_Syntax_Util.abs ys t (Some (FStar_Util.Inr (((FStar_Syntax_Const.effect_Tot_lid), ([]))))))
 end else begin
 (
 

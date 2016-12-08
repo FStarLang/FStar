@@ -1,5 +1,5 @@
 [
-  "¹sôÑ„ÃKém”­\u0000jñE·",
+  "åéÅ\u0003Ø¶Ø\u0005î‚©’~\\×ª",
   [
     [ "FStar.DM4F.Exceptions.return_ex", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -10,7 +10,7 @@
       [
         "@query", "bool_inversion", "disc_equation_Prims.Some",
         "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.is_None"
+        "typing_Prims.uu___is_None"
       ],
       0
     ],
@@ -27,7 +27,14 @@
       ],
       0
     ],
-    [ "FStar.DM4F.Exceptions.EXN_raise_elab", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.Exceptions.EXN___proj__EXN__item__raise_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     [ "FStar.DM4F.Exceptions.EXN", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Exceptions.EXN", 2, 2, 1, [ "@query" ], 0 ],
     [
@@ -122,7 +129,7 @@
       2,
       1,
       [
-        "@query", "FStar.DM4F.Exceptions.EXN.raise_equality",
+        "@query", "FStar.DM4F.Exceptions.__proj__EXN__item__raise_equality",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.int",
         "disc_equation_Prims.None",
         "equation_FStar.DM4F.Exceptions.div_extrinsic", "equation_Prims.nat",
