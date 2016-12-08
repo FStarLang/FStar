@@ -20,6 +20,7 @@ let apply (#a #b : Type) (f : a -> Tot b) (x:a) : Pure b (requires True) (ensure
 
 assume type input
 assume type output
+assume val bidule : output
 
 let cps (datatype : Type0 -> Type0 -> Tot Type0) (ans a:Type0) : Type = (datatype ans a -> M ans) -> M ans
 
@@ -44,11 +45,11 @@ let rec bind (ans a b:Type0) (x:ioM ans a) (f:a -> ioM ans b) : ioM ans b =
 and cont' (ans a b:Type0) (cont: io ans b -> M ans) (f:a -> ioM ans b) (x : io ans a)  : M ans =
   match x with
   | Return x0 -> let xa = x0 () in f xa cont   (* bind_M (x0 ()) (f xa cont) *)
-    | Read input_cont -> cont (Read (fun (ci:input) -> bind ans a b (apply input_cont ci) f))
+  | Read input_cont -> cont (Read (fun (ci:input) -> bind ans a b (apply input_cont ci) f))
   | Write xio co -> cont (Write (bind ans a b xio f) co)
 
-
-
+(* The following kind of object should never be constructible... *)
+(* let rec x_bad () : ioM False int = fun cont -> cont (Read (fun _ -> x_bad ())) *)
 
 
 (********************************************************************************)
