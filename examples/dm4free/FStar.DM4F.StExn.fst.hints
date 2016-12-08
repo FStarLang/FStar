@@ -1,5 +1,5 @@
 [
-  "HYqË∏{\u000eôê25ﬂ≠\u0013˛≈",
+  "Øß@¿®gÕÛ=\u0011Ø}◊ \u000f…",
   [
     [ "FStar.DM4F.StExn.return", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -9,11 +9,11 @@
       1,
       [
         "@query", "bool_inversion", "bool_typing",
-        "disc_equation_Prims.None", "function_token_typing_Prims.int",
-        "kinding_Prims.option@tok", "lemma_Prims.invertOption",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "function_token_typing_Prims.int", "kinding_Prims.option@tok",
+        "lemma_Prims.invertOption",
         "pretyping_ae567c2fb75be05905677af440075565",
-        "proj_equation_Prims.Mktuple2__1", "typing_Prims.Mktuple2._1",
-        "typing_Prims.is_Some"
+        "typing_Prims.__proj__Mktuple2__item___1"
       ],
       0
     ],
@@ -27,18 +27,39 @@
       1,
       [
         "@query", "bool_inversion", "bool_typing",
-        "disc_equation_Prims.None", "fuel_guarded_inversion_Prims.tuple2",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "fuel_guarded_inversion_Prims.tuple2",
         "function_token_typing_Prims.int", "kinding_Prims.option@tok",
         "lemma_Prims.invertOption",
         "pretyping_ae567c2fb75be05905677af440075565",
-        "proj_equation_Prims.Mktuple2__1", "typing_Prims.Mktuple2._1",
-        "typing_Prims.is_Some"
+        "typing_Prims.__proj__Mktuple2__item___1"
       ],
       0
     ],
-    [ "FStar.DM4F.StExn.STEXN_get_elab", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExn.STEXN_put_elab", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExn.STEXN_raise_elab", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.StExn.STEXN___proj__STEXN__item__get_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.DM4F.StExn.STEXN___proj__STEXN__item__put_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.DM4F.StExn.STEXN___proj__STEXN__item__raise_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     [ "FStar.DM4F.StExn.STEXN", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.StExn.STEXN", 2, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.StExn.STEXN", 3, 2, 1, [ "@query" ], 0 ],
@@ -155,15 +176,14 @@
       2,
       1,
       [
-        "@query", "FStar.DM4F.StExn.STEXN.raise_equality", "bool_inversion",
+        "@query", "FStar.DM4F.StExn.__proj__STEXN__item__raise_equality",
         "constructor_distinct_Prims.Mktuple2",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.int",
         "disc_equation_Prims.None",
         "equation_FStar.DM4F.StExn.div_extrinsic", "equation_Prims.nat",
-        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "int_inversion", "int_typing",
         "interpretation_Tm_abs_515d8cb13a3b284daf34b277b02fcbd2",
         "interpretation_Tm_abs_8d38f3893cc0fcf813803c366a1778c1",
-        "kinding_Prims.option@tok", "lemma_Prims.invertOption",
         "pre_typing_Tm_arrow_fdf8b0a16c83e951655a1b71290396e0",
         "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_Division", "primitive_Prims.op_Equality",
@@ -175,8 +195,7 @@
         "projection_inverse_Prims.Mktuple2__b",
         "projection_inverse_Prims.None_a",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.DM4F.StExn.div_extrinsic", "typing_Prims.Mktuple2._1",
-        "typing_Prims.is_Some", "unit_typing"
+        "typing_FStar.DM4F.StExn.div_extrinsic", "unit_typing"
       ],
       0
     ],

@@ -1,5 +1,5 @@
 [
-  "xo®”hÀ7\u001fÖìxñ\u0002¹lV",
+  "wÔÖ'‰„Ž'\rpÎ”i[\u0016N",
   [
     [
       "MAC.entry",
@@ -16,9 +16,9 @@
       ],
       0
     ],
-    [ "MAC.Entry.k", 1, 2, 1, [ "@query" ], 0 ],
+    [ "MAC.__proj__Entry__item__k", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "MAC.Entry.t",
+      "MAC.__proj__Entry__item__t",
       1,
       2,
       1,
@@ -29,7 +29,7 @@
       ],
       0
     ],
-    [ "MAC.Entry.m", 1, 2, 1, [ "@query" ], 0 ],
+    [ "MAC.__proj__Entry__item__m", 1, 2, 1, [ "@query" ], 0 ],
     [
       "MAC.keygen",
       1,
