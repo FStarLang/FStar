@@ -12,8 +12,8 @@
       ],
       0
     ],
-    [ "Unit1.Projectors1.T.x", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Projectors1.T.y", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit1.Projectors1.__proj__T__item__x", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit1.Projectors1.__proj__T__item__y", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Projectors1.s",
       1,
@@ -26,8 +26,8 @@
       ],
       0
     ],
-    [ "Unit1.Projectors1.S.x", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Projectors1.S.y", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit1.Projectors1.__proj__S__item__x", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit1.Projectors1.__proj__S__item__y", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Projectors1.u",
       1,
@@ -51,7 +51,7 @@
       ],
       0
     ],
-    [ "Unit1.Projectors1.V.field1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Projectors1.V.field2", 1, 2, 1, [ "@query" ], 0 ]
+    [ "Unit1.Projectors1.__proj__V__item__field1", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit1.Projectors1.__proj__V__item__field2", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

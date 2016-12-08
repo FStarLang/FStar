@@ -263,6 +263,13 @@ ulib:
 uexamples:
 	+make -C ../examples uall
 
+examples:
+	+make -C ../examples sall
+
+ulong:
+	+make utest
+	+make -C ../examples/low-level/crypto extra
+
 wc-boot:
 	wc -l $(BOOT_ALL)
 

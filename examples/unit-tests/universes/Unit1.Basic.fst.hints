@@ -1,5 +1,5 @@
 [
-  "µñ\b¸g\u0015W©å˛¡[KáÍQ",
+  "võ\u0012á~èá–·ó˚5Ìë[\u001c",
   [
     [ "Unit1.Basic.comp", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.Basic.foo", 1, 2, 1, [ "@query" ], 0 ],
@@ -64,7 +64,7 @@
       [
         "@query", "disc_equation_Prims.Cons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_5f5fd1baf8ea34bf72e4012bafe805ec"
+        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0
     ],
@@ -167,7 +167,7 @@
       [
         "@query", "disc_equation_Prims.Cons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_5f5fd1baf8ea34bf72e4012bafe805ec"
+        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0
     ],
@@ -179,7 +179,7 @@
       [
         "@query", "disc_equation_Prims.Cons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_5f5fd1baf8ea34bf72e4012bafe805ec"
+        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0
     ],
@@ -279,13 +279,10 @@
       1,
       [
         "@query", "bool_inversion", "bool_typing",
-        "disc_equation_Prims.Some", "equation_FStar.UInt32.n",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "fuel_guarded_inversion_Unit1.Basic.record",
-        "function_token_typing_FStar.UInt32.n",
         "function_token_typing_Prims.int", "lemma_Prims.invertOption",
-        "pretyping_ae567c2fb75be05905677af440075565",
-        "proj_equation_Unit1.Basic.Mkrecord_f", "typing_Prims.is_None",
-        "typing_Unit1.Basic.Mkrecord.f"
+        "typing_Unit1.Basic.__proj__Mkrecord__item__f"
       ],
       0
     ],
@@ -307,14 +304,14 @@
     ],
     [ "Unit1.Basic.inat", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Unit1.Basic.S._0",
+      "Unit1.Basic.__proj__S__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_Unit1.Basic.S",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_de440320e433e5857687714a049bfaa6"
+        "refinement_interpretation_Tm_refine_032c459a1771732822c24b5fb03d8206"
       ],
       0
     ],
@@ -374,10 +371,10 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic.Seq.c", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Basic.Seq.start_i", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit1.Basic.__proj__Seq__item__c", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit1.Basic.__proj__Seq__item__start_i", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Unit1.Basic.Seq.end_i",
+      "Unit1.Basic.__proj__Seq__item__end_i",
       1,
       2,
       1,
@@ -451,14 +448,14 @@
       0
     ],
     [
-      "Unit1.Basic.C._0",
+      "Unit1.Basic.__proj__C__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_Unit1.Basic.C",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_69ae934f6651624e7433f322a22610af"
+        "refinement_interpretation_Tm_refine_cf0a408a7bcff1bd8c91cbe0536a3232"
       ],
       0
     ],
@@ -574,7 +571,7 @@
       1,
       [
         "@query",
-        "refinement_interpretation_Tm_refine_4fc3fc8de71bce7039389fb486e8eda8"
+        "refinement_interpretation_Tm_refine_9342dc895f4a00d7c6a9519cfb8cdaff"
       ],
       0
     ],

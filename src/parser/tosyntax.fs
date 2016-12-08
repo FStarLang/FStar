@@ -339,6 +339,25 @@ let is_special_effect_combinator = function
   | "repr" | "post" | "pre" | "wp" -> true
   | _ -> false
 
+(* issue 769: check that other fields are also of the same record. If
+   so, then return the record found by field name resolution. *)
+let check_fields env fields rg =
+    let (f, _) = List.hd fields in
+    let record = fail_or env (try_lookup_record_by_field_name env) f in
+    let check_field (f', _) =
+        if Env.belongs_to_record env f' record
+        then ()
+        else let msg = Util.format3
+                       "Field %s belongs to record type %s, whereas field %s does not"
+                       f.str
+                       record.typename.str
+                       f'.str
+             in
+             raise (Error (msg, rg))
+    in
+    let () = List.iter check_field (List.tl fields)
+    in
+    record
 
 let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
   let check_linear_pattern_variables (p:Syntax.pat) =
@@ -463,15 +482,13 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
         raise (Error ("Unexpected pattern", p.prange))
 
       | PatRecord (fields) ->
-        let (f, _) = List.hd fields in
-        let record, _ = fail_or env (try_lookup_record_by_field_name env) f in
-        let fields = fields |> List.map (fun (f, p) ->
-          (fail_or env (qualify_field_to_record env record) f, p)) in
+        let record = check_fields env fields p.prange in
+        let fields = fields |> List.map (fun (f, p) -> (f.ident, p)) in
         let args = record.fields |> List.map (fun (f, _) ->
-          match fields |> List.tryFind (fun (g, _) -> lid_equals f g) with
+          match fields |> List.tryFind (fun (g, _) -> f.idText = g.idText) with
             | None -> mk_pattern PatWild p.prange
             | Some (_, p) -> p) in
-        let app = mk_pattern (PatApp(mk_pattern (PatName record.constrname) p.prange, args)) p.prange in
+        let app = mk_pattern (PatApp(mk_pattern (PatName (lid_of_ids (record.typename.ns @ [record.constrname]))) p.prange, args)) p.prange in
         let env, e, b, p, _ = aux loc env app in
         let p = match p.v with
             | Pat_cons(fv, args) -> pos <| Pat_cons(({fv with fv_qual=Some (Record_ctor (record.typename, record.fields |> List.map fst))}), args)
@@ -892,23 +909,25 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       raise (Error("Unexpected empty record", top.range))
 
     | Record(eopt, fields) ->
-      let f, _ = List.hd fields in
-      let record, _ = fail_or env  (try_lookup_record_by_field_name env) f in
-      let fields' = fields |> List.map (fun (f, e) -> (mk_field_projector_name_from_ident record.constrname f.ident, e)) in
+      let record = check_fields env fields top.range in
+      (* Namespace qualifier given by the user, needed to requalify fields in 'recterm' (MUST NOT be already resolved, since it will be re-resolved afterwards and thus may undergo rewriting e.g. by module abbrev *)
+      let user_ns = let (f, _) = List.hd fields in f.ns in
       let get_field xopt f =
-        let found = fields' |> Util.find_opt (fun (g, _) -> lid_equals f g) in
+        let found = fields |> Util.find_opt (fun (g, _) -> f.idText = g.ident.idText) in
+        let fn = lid_of_ids (user_ns @ [f]) in
         match found with
-          | Some (_, e) -> (f, e)
+          | Some (_, e) -> (fn, e)
           | None ->
             match xopt with
               | None ->
-                raise (Error (Util.format1 "Field %s is missing" (text_of_lid f), top.range))
+                raise (Error (Util.format2 "Field %s of record type %s is missing" f.idText record.typename.str, top.range))
               | Some x ->
-                (f, mk_term (Project(x, f)) x.range x.level) in
+                (fn, mk_term (Project(x, fn)) x.range x.level) in
 
+      let user_constrname = lid_of_ids (user_ns @ [record.constrname]) in
       let recterm = match eopt with
         | None ->
-          Construct(record.constrname,
+          Construct(user_constrname,
                     record.fields |> List.map (fun (f, _) ->
                     snd <| get_field None f, Nothing))
 
@@ -930,11 +949,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       end
 
     | Project(e, f) ->
-      let fieldname, is_rec = fail_or env  (try_lookup_projector_by_field_name env) f in
+      let constrname, is_rec = fail_or env  (try_lookup_dc_by_field_name env) f in
       let e = desugar_term env e in
-      let fn = fieldname in
-      let qual = if is_rec then Some (Record_projector fn) else None in
-      mk <| Tm_app(S.fvar (Ident.set_lid_range fieldname (range_of_lid f)) Delta_equational qual, [as_arg e])
+      let projname = mk_field_projector_name_from_ident constrname f.ident in
+      let qual = if is_rec then Some (Record_projector (constrname, f.ident)) else None in
+      mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) Delta_equational qual, [as_arg e])
 
     | NamedTyp(_, e)
     | Paren e ->
@@ -1252,7 +1271,7 @@ let mk_data_projectors iquals env (inductive_tps, se) = match se with
         begin match formals with
             | [] -> [] //no fields to project
             | _ ->
-              let fv_qual = match Util.find_map quals (function RecordConstructor fns -> Some (Record_ctor(lid, fns)) | _ -> None) with
+              let fv_qual = match Util.find_map quals (function RecordConstructor (_, fns) -> Some (Record_ctor(lid, fns)) | _ -> None) with
                 | None -> Data_ctor
                 | Some q -> q in
               let iquals = if List.contains S.Abstract iquals
@@ -1300,11 +1319,12 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->
       let constrName = mk_ident("Mk" ^ id.idText, id.idRange) in
+      (* it is necessary to mangle field names to avoid capture as they are turned into the formal parameters of the data constructor *)
       let mfields = List.map (fun (x,t,_) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr None) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type in
       //let _ = Util.print_string (Util.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in
-      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, None, false)]), fields |> List.map (fun (x, _, _) -> Env.qualify env x)
+      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, None, false)]), fields |> List.map (fun (x, _, _) -> unmangle_field_name x)
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
     | TyconAbstract(id, binders, kopt) ->
@@ -1379,7 +1399,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | [TyconRecord _] ->
       let trec = List.hd tcs in
       let t, fs = tycon_record_as_variant trec in
-      desugar_tycon env rng (RecordType fs::quals) [t]
+      desugar_tycon env rng (RecordType (ids_of_lid (current_module env), fs)::quals) [t]
 
     |  _::_ ->
       let env0 = env in
@@ -1390,7 +1410,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
           | TyconRecord _ ->
             let trec = tc in
             let t, fs = tycon_record_as_variant trec in
-            collect_tcs (RecordType fs::quals) (env, tcs) t
+            collect_tcs (RecordType (ids_of_lid (current_module env), fs)::quals) (env, tcs) t
           | TyconVariant(id, binders, kopt, constructors) ->
             let env, _, se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
             env, Inl(se, constructors, tconstr, quals)::tcs

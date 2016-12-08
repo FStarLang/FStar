@@ -2,38 +2,45 @@
   "\u007fÙ¿æ­`Ù8Pq¦\u0001‹î%á",
   [
     [ "FStar.Constructive.cand", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Constructive.Conj.h1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Constructive.Conj.h2", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Constructive.__proj__Conj__item__h1", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Constructive.__proj__Conj__item__h2", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Constructive.cor", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.Constructive.IntroL.h",
+      "FStar.Constructive.__proj__IntroL__item__h",
       1,
       2,
       1,
       [
         "@query", "disc_equation_FStar.Constructive.IntroL",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9ff01248601143beb3d8870b74a98d2a"
+        "refinement_interpretation_Tm_refine_873fe770bf2eb685b0cbd9912aa26df7"
       ],
       0
     ],
     [
-      "FStar.Constructive.IntroR.h",
+      "FStar.Constructive.__proj__IntroR__item__h",
       1,
       2,
       1,
       [
         "@query", "disc_equation_FStar.Constructive.IntroR",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_6debde9cbf4e6e0d3d6c92515bcd9dbc"
+        "refinement_interpretation_Tm_refine_c2a28d0576651e02ca4ed7241dbb792f"
       ],
       0
     ],
     [ "FStar.Constructive.cimp", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Constructive.ciff", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Constructive.ExIntro.x", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.Constructive.ExIntro.h",
+      "FStar.Constructive.__proj__ExIntro__item__x",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.Constructive.__proj__ExIntro__item__h",
       1,
       2,
       1,
