@@ -50,7 +50,7 @@ let num_blocks_for_len (i:id) (l:nat) : Tot nat =
   let bl = v (Cipher.( blocklen (cipherAlg_of_id i))) in
   (l + bl - 1) / bl
 
-(** safelen: The length of the plaintext is not too large **)
+(*+ safelen: The length of the plaintext is not too large **)
 let safelen (i:id)
 	    (remaining_len:nat)  //the length of plaintext left to be encrypted;
 	    (next_block_index:UInt32.t) //the counter for encrypting the next block of plaintext
@@ -65,7 +65,7 @@ let safelen (i:id)
    (remaining_len + len_all_blocks_so_far <= maxplain i &&
     remaining_len <= max_len_for_remaining_blocks))
 
-(** remaining_len_ok: 
+(*+ remaining_len_ok: 
       Given a plaintext of length len, with remaining_len left to encrypt,
       the current_block_index accurately characterizes the number of blocks 
       already encrypted **)
@@ -96,18 +96,18 @@ let aead_entries i = Seq.seq (aead_entry i)
 //TODO: move this to HyperStack
 let rref (r:rid) (a:Type) = x:HS.ref a {HS.frameOf x == r}
 
-(** aead_log: The type of the conditional, ideal aead_log **)
+(*+ aead_log: The type of the conditional, ideal aead_log **)
 let aead_log (r:rgn) (i:id) =
   if safeMac i 
   then rref r (aead_entries i)
   else unit
 
-(** aead_log_as_ref: A coercion from a conditional log to the ideal case *)
+(*+ aead_log_as_ref: A coercion from a conditional log to the ideal case *)
 let aead_log_as_ref (#r:rgn) (#i:id) (x:aead_log r i{safeMac i}) 
   : rref r (aead_entries i)
   = x
 
-(** aead_state: the type of aead keys, also encapsulating their ideal state *)
+(*+ aead_state: the type of aead keys, also encapsulating their ideal state *)
 noeq type aead_state (i:id) (rw:rw) =
   | AEADState:
       #log_region: rgn -> // this is the *writer* region; the reader allocates nothing
@@ -117,14 +117,14 @@ noeq type aead_state (i:id) (rw:rw) =
       ak: CMA.akey prf.mac_rgn i (* static, optional authentication key *) ->
       aead_state i rw
 
-(** st_ilog: Projecting the log from an aead_state, in the ideal case *)
+(*+ st_ilog: Projecting the log from an aead_state, in the ideal case *)
 let st_ilog (#i:id) (#rw:rw) (x:aead_state i rw{safeMac i})
   : rref x.log_region (aead_entries i)
   = aead_log_as_ref x.log
 
 (*** MAIN STATEFUL INVARIANT ***)
 
-(** Some utilities for stating the invariant **)
+(*+ Some utilities for stating the invariant **)
 noextract let is_aead_entry_nonce (#i:id) (n:Cipher.iv (alg i)) (e:aead_entry i) =
   e.nonce = n
 
@@ -146,7 +146,7 @@ let num_blocks_for_entry (#i:id) (e:aead_entry i) : Tot nat =
 let encode_ad_cipher (i:id) (ad:adata) (l:plainLen{safelen i l (PRF.ctr_0 i +^ 1ul)}) (cipher:lbytes l) =
   encode_both i (FStar.UInt32.uint_to_t (Seq.length ad)) ad (FStar.UInt32.uint_to_t l) cipher
 
-(** counterblocks:
+(*+ counterblocks:
          A sequence of OTP entries for the PRF table
 	 corresponding to the fragmentation of the 
 	 plain and cipher into encrypted blocks, 
@@ -179,7 +179,7 @@ let rec counterblocks i mac_rgn x l from_pos to_pos plain cipher =
     let blocks = counterblocks i mac_rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in
     SeqProperties.cons block blocks
 
-(** mac_is_set prf_table iv: 
+(*+ mac_is_set prf_table iv: 
         the mac entry in the prf_table, at location (iv, ctr_0 i)
 	is set to the suitable encoded ad + cipher, tag      **)
 #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
@@ -205,11 +205,11 @@ let mac_is_set (#rgn:region) (#i:id)
 	 msg = encode_ad_cipher i ad l cipher /\
  	 tag = tag'))
 
-(** prf_contains_all_otp_blocks:
-        Conceptually, it states that there are entries in the
+(*+ prf_contains_all_otp_blocks:
+        There are entries in the
 	prf_table (order unspecified) for all the otp entries
-	corresponding to the encrypting plain text
-**)
+	corresponding to the encrypted plain text
+ **)
 let prf_contains_all_otp_blocks 
       (#i:id) (#r:rid)
       (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
@@ -225,7 +225,7 @@ let prf_contains_all_otp_blocks
        otp_blocks `contains` prf_entry ==>
        PRF.find prf_table prf_entry.x == Some prf_entry.range)))
 
-(** refines_one_entry:
+(*+ refines_one_entry:
         Conceptually, read it as (prf_table `refines_one_entry` aead_entry)
 	It states that there are entries in the prf_table (order unspecified)
 	that contains the mac and otp entries corresponding to aead_entry
@@ -248,20 +248,20 @@ let refines_one_entry (#rgn:region) (#i:id)
    //NB: this does not forbid the prf_table from containing other OTP blocks with the same IV;
    //    not clear whether we need that
 
-(** none_above x prf_table:
+(*+ none_above x prf_table:
 	no entry in the prf_table at ({iv=x.iv; ctr=i}) for any i >= x.ctr **)
 let none_above (#r:region) (#i:id) (x:PRF.domain i) (prf_table:prf_table r i) =
     forall (y:PRF.domain i{y `PRF.above` x}).{:pattern (y `PRF.above` x) \/ (PRF.find prf_table y)} //Pattern added: 12/7
 	PRF.find prf_table y == None
 
-(** none_above_prf_st x prf_state h:
+(*+ none_above_prf_st x prf_state h:
         A stateful variant of none_above, using the full prf_table in h **)
 let none_above_prf_st (#i:id) (x:PRF.domain i) (st:PRF.state i) (h:mem) =
   prf i ==> 
     (let prf_table = HS.sel h (itable i st) in
      none_above x prf_table)
 
-(** all_above x prf_blocks
+(*+ all_above x prf_blocks
 	every entry in the prf_blocks is above x  ({iv=x.iv; ctr=i}) for any i >= x.ctr
 
 	This is generally used for some sequence of prf entries,
@@ -272,7 +272,7 @@ let all_above (#rgn:region) (#i:id) (x:PRF.domain i) (s:prf_table rgn i) =
      s `SeqProperties.contains` e ==> e.x `PRF.above` x)
 
 
-(** unused_aead_iv_for_prf prf_table iv:
+(*+ unused_aead_iv_for_prf prf_table iv:
 	the iv is either fresh, i.e., doesn't appear anywhere in the prf_table
 	Or, it occurs there with an unused mac (e.g., decrypt allocated one early)
  **)
@@ -304,7 +304,7 @@ let fresh_nonces_are_unused (#rgn:region) (#i:id)
      fresh_nonce iv aead_entries ==> 
      unused_aead_iv_for_prf prf_table iv h)
 
-(** refines prf_table aead_entries h:
+(*+ refines prf_table aead_entries h:
 	THE MAIN CLAUSE OF THE STATEFUL INVARIANT:
 	In state h, prf_table refines aead_entries
  **)
@@ -315,7 +315,7 @@ let refines (#rgn:region) (#i:id)
   aead_entries_are_refined prf_table aead_entries h /\
   fresh_nonces_are_unused  prf_table aead_entries h
 
-(** aead_liveness:
+(*+ aead_liveness:
 	The aead_state and its regions etc. are live **)
 let aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
   HS.(h.h `Map.contains` st.prf.mac_rgn) /\        //contains the mac region
@@ -338,7 +338,7 @@ let inv (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
      REQUIREMENTS OF THE INTERFACE ***)
 
 module Plain = Crypto.Plain
-(** enc_dec_separation:
+(*+ enc_dec_separation:
 	Calling AEAD.encrypt/decrypt requires this separation **)
 let enc_dec_separation (#i:id) (#rw:rw) (st:aead_state i rw)
 		       (#aadlen:nat) (aad: lbuffer aadlen)
@@ -359,7 +359,7 @@ let enc_dec_separation (#i:id) (#rw:rw) (st:aead_state i rw)
     Buffer.frameOf aad <> HH.root /\
     Buffer.frameOf (Plain.as_buffer plain) <> HH.root
 
-(** enc_dec_liveness:
+(*+ enc_dec_liveness:
 	Calling AEAD.encrypt/decrypt requires and ensures this liveness **)
 let enc_dec_liveness (#i:id) (#rw:rw) (st:aead_state i rw)
 		  (#aadlen:nat) (aad: lbuffer aadlen)
@@ -385,7 +385,7 @@ let init_remaining_len_ok (#i:id) (x:PRF.domain i{PRF.ctr_0 i +^ 1ul = x.ctr})
     : Lemma (remaining_len_ok x len len)
     = ()
 
-(** Framing lemmas for clauses of the main invariant **)
+(*+ Framing lemmas for clauses of the main invariant **)
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let frame_refines_one_entry (#i:id) (#mac_rgn:region) 
 			    (h:mem) (h':mem) 
@@ -433,7 +433,7 @@ let weaken_all_above (#rgn:region) (#i:id) (s:Seq.seq (PRF.entry rgn i))
     : Lemma (all_above y s ==> all_above x s)
     = ()
 
-(** counterblocks_emp:
+(*+ counterblocks_emp:
 	proves that counterblocks on a zero range is the empty sequence
  **)
 #set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
@@ -447,7 +447,7 @@ let counterblocks_emp   (i:id)
    : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
    = ()
 
-(** Lemmas about searching for entries in prf_blocks **)
+(*+ Lemmas about searching for entries in prf_blocks **)
 let find_append (#i:id) (#r:rid) (d:domain i) (s1:prf_table r i) (s2:prf_table r i)
    : Lemma (requires (None? (find s1 d)))
            (ensures (find (Seq.append s1 s2) d == find s2 d))
@@ -532,7 +532,7 @@ let frame_refines_entries_h (i:id{safeMac i}) (mac_rgn:region)
      forall_intro (move_requires (frame_unused_aead_iv_for_prf h h' blocks));
      if safeId i then forall_intro (move_requires (frame_refines_one_entry h h' blocks))
 
-(** mac_is_used prf_table iv: 
+(*+ mac_is_used prf_table iv: 
 	the mac entry for iv is present
 	and the corresponding one-time mac has been used already
  **)	
