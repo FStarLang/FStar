@@ -139,7 +139,7 @@ val is_type_constructor    : env -> lident -> bool
 
 (* Universe instantiation *)
 val new_u_univ             : unit -> universe
-val inst_tscheme           : tscheme -> universes * term 
+val inst_tscheme           : tscheme -> universes * term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 
 (* Introducing identifiers and updating the environment *)
@@ -162,6 +162,7 @@ val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
 val univ_vars    : env -> Util.set<universe_uvar>
+val univnames   : env -> Util.set<univ_name>
 val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 

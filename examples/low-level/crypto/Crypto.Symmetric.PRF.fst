@@ -73,7 +73,7 @@ let above #i x z = x.iv = z.iv && x.ctr >=^ z.ctr
 // the range of our PRF, after idealization and "reverse inlining."
 // for one-time-pads, we keep both the plain and cipher blocks, instead of their XOR.
 
-type smac (rgn:region) (i:id) x = mac: CMA.state (i,x.iv) { CMA.State.region mac = rgn }
+type smac (rgn:region) (i:id) x = mac: CMA.state (i,x.iv) { CMA.State?.region mac = rgn }
 noeq type otp (i:id) = | OTP: l:u32 {l <=^ blocklen i} -> plain i (v l) -> cipher:lbytes (v l) -> otp i
 
 let ctr_0 (i:id) = if CMA.skeyed i then 1ul else 0ul
@@ -140,7 +140,7 @@ noeq type state (i:id) =
 	   #mac_rgn: region{mac_rgn `HH.extends` rgn} ->
            // key is immutable once generated, we should make it private
            key: lbuffer (v (statelen i)) 
-             {Buffer.frameOf key = rgn /\ ~(HS.MkRef.mm (Buffer.content key))} ->
+             {Buffer.frameOf key = rgn /\ ~(HS.MkRef?.mm (Buffer.content key))} ->
            table: table_t rgn mac_rgn i ->
            state i
 
@@ -231,9 +231,9 @@ val prf_mac:
        | Some mac' -> 
 	 h0 == h1 /\ // when decrypting
 	 mac == mac' /\ 
-	 CMA (MAC.norm h1 mac.r) /\
-	 CMA (Buffer.live h1 mac.s) /\
-	 CMA (mac_log ==> m_contains (ilog mac.log) h1)
+	 CMA.(MAC.norm h1 mac'.r) /\ (* mac shadowed by CMA.mac *)
+	 CMA.(Buffer.live h1 mac'.s) /\ (* mac shadowed by CMA.mac *)
+	 CMA.(mac_log ==> m_contains (ilog mac'.log) h1) (* mac shadowed by CMA.mac *)
        | None ->  // when encrypting, we get the stateful post of MAC.create             
          (match find_mac (HS.sel h1 r) x with 
           | Some mac' -> 
@@ -251,7 +251,7 @@ val prf_mac:
       HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 
 let prf_mac i t k_0 x =
   assume false;//16-10-30 new problem with sk0?
@@ -266,16 +266,17 @@ let prf_mac i t k_0 x =
     let contents = !r in
     match find_mac contents x with
     | Some mac -> 
-      assume (CMA (MAC.norm h0 mac.r)); //TODO: replace this using monotonicity
-      assume (HS (Buffer (CMA (not ((Buffer.content mac.s).mm))))); //TODO: mark this as not manually managed
-      Buffer.recall (CMA mac.s);
+      let mac0 = mac in (* mac shadowed by CMA.mac *)
+      assume (CMA.(MAC.norm h0 mac0.r)); //TODO: replace this using monotonicity
+      assume (HS.(Buffer.(CMA.(not ((Buffer.content mac0.s).mm))))); //TODO: mark this as not manually managed
+      Buffer.recall (CMA.(mac0.s));
       mac
     | None ->
       let mac = CMA.gen t.mac_rgn macId k_0 in
       r := SeqProperties.snoc contents (Entry x mac);
       assume false; 
       //16-10-16 framing after change to genPost?
-      //let h = ST.get() in assume(MAC(norm h mac.r));
+      //let h = ST.get() in assume(MAC.(norm h mac.r));
       mac
     end
   else
@@ -328,7 +329,7 @@ let prf_sk0 #i t =
           r := SeqProperties.snoc contents (Entry x sk0);
           sk0 in
       assume (HS.is_eternal_region t.mac_rgn);
-      assume (HS (Buffer (CMA (not ((Buffer.content sk0).mm))))); //TODO: mark this as not manually managed
+      assume (HS.(Buffer.(CMA.(not ((Buffer.content sk0).mm))))); //TODO: mark this as not manually managed
       Buffer.recall sk0;
       assume false; //NS: disovered while triaging this file ... unable to prove that (find_sk0 (HS.sel h1 r) x = Some _)
       sk0
@@ -341,7 +342,7 @@ let prf_sk0 #i t =
     Buffer.lemma_reveal_modifies_1 keyBuffer h1 h2;
     keyBuffer
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 let extends (#rgn:region) (#i:id) (s0:Seq.seq (entry rgn i)) 
 	    (s1:Seq.seq (entry rgn i)) (x:domain i{ctr_0 i <^ x.ctr}) =
@@ -375,7 +376,7 @@ private val prf_blk:
   (requires (fun h0 -> Buffer.live h0 output))
   (ensures (fun h0 _ h1 -> modifies_x_buffer_1 t x output h0 h1)) 
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 
 let zero = 0
  
@@ -492,7 +493,7 @@ private let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:
   (ensures (find (SeqProperties.snoc s (Entry x v)) x == Some v))
   = admit() //TODO, move this ... find_append_r
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 
 // generates a fresh block for x and XORs it with plaintext
 val prf_enxor: 

@@ -67,7 +67,7 @@ let rec subst_zero_lem e1 e2 =
   | _            -> ()
 
 val is_value: exp -> Tot bool
-let is_value = is_EAbs
+let is_value = EAbs?
 
 val step: exp -> Tot (option exp)
 let rec step = function

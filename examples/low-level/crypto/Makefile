@@ -4,9 +4,9 @@ FSTAR?=$(FSTAR_HOME)/bin/fstar.exe
 
 HINTS_ENABLED?=--use_hints
 
-OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3timeout 20  $(HINTS_ENABLED) $(OTHERFLAGS)
+OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3rlimit 20  $(HINTS_ENABLED) $(OTHERFLAGS)
 
-FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperstack
+FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperstack --include hacl
 
 # Files that should fully typecheck
 # Files commented out are broken, uncomment once fixed
@@ -24,7 +24,6 @@ VERIFY= \
   Crypto.Symmetric.Poly1305.Bignum \
   Crypto.Symmetric.Poly1305.Lemmas \
   Crypto.Symmetric.Poly1305.Spec \
-  Crypto.Symmetric.Poly1305 \
   Crypto.Symmetric.GF128 \
   Crypto.Symmetric.GCM \
   Crypto.Symmetric.MAC \
@@ -42,6 +41,10 @@ VERIFY= \
   Crypto.Test \
   TestMonotonic
 
+EXTRA= \
+  Crypto.Symmetric.Poly1305 \
+  Crypto.AEAD
+
 #16-10-30 removed files specific to Poly1305:
 #  Crypto.Symmetric.Poly1305.MAC 
 #  Crypto.AEAD.Chacha20Poly1305
@@ -54,12 +57,16 @@ SLOW= \
 # Files not yet fully typechecking -- possibly due to timeouts.
 # Please move files that you know fully typecheck to VERIFY
 # Files commented out are broken, uncomment once fixed
-LAX=Crypto.AEAD #NS: this verifies ... but it takes 22mins on my desktop; not adding it to CI for now
+LAX= \
+  Crypto.Symmetric.Poly1305 \
+  Crypto.AEAD #NS: both of these verify, but each takes 20+ mins to verify
 
 
 #16-10-09  Not sure how to verify Flag.fsti and Flag.fst
 
 all: all-ver $(addsuffix .fst-lax, $(LAX))
+
+extra: all-ver $(addsuffix .fst-ver, $(EXTRA))
 
 all-ver: $(addsuffix .fst-ver, $(VERIFY))
 

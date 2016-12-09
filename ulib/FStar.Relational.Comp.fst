@@ -22,8 +22,8 @@ val comp : (a:Type) -> (b:Type) -> (wp0:st_wp a) -> (wp1:st_wp b) -> Tot (st2_WP
 let comp a b wp0 wp1 p h2 =
     wp0 (fun y0 h0 ->
       wp1 (fun y1 h1 -> p (R y0 y1) (R h0 h1))
-      (R.r h2))
-    (R.l h2)
+      (R?.r h2))
+    (R?.l h2)
 
 //TODO: this should be conditional on the monotonicity of the wps
 assume Monotone_comp: forall a b wp1 wp2 p1 p2. (forall x h. p1 x h ==> p2 x h)
@@ -37,13 +37,13 @@ assume val compose2: #a0:Type -> #b0:Type -> #wp0:(a0 -> Tot (st_wp b0))
                   -> $c1:(x1:a1 -> STATE b1 (wp1 x1))
                   -> x: rel a0 a1
                   -> STATE2 (rel b0 b1)
-                            (comp b0 b1 (wp0 (R.l x)) (wp1 (R.r x)))
+                            (comp b0 b1 (wp0 (R?.l x)) (wp1 (R?.r x)))
 
 val compose2_self : #a:Type -> #b:Type -> #wp:(a -> Tot (st_wp b))
                 -> $c:(x:a -> STATE b (wp x))
                 -> x: double a
                 -> STATE2 (double b)
-                          (comp b b (wp (R.l x)) (wp (R.r x)))
+                          (comp b b (wp (R?.l x)) (wp (R?.r x)))
 let compose2_self #a #b #wp f x = compose2 #a #b #wp #a #b #wp f f x
 
 (* Combine two ST2 statements A and B to create a new ST2 statement C where
@@ -61,11 +61,11 @@ assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
                                            (requires (fun h -> p' h))
                                            (ensures (fun h1 r h2 -> q' h1 r h2)))
                 -> ST2 (rel a d) (requires (fun h -> (exists (hl:heap) (hr:heap).
-                                                             p (R (R.l h) hr)
-                                                          /\ p' (R hl (R.r h)))))
+                                                             p (R (R?.l h) hr)
+                                                          /\ p' (R hl (R?.r h)))))
                                  (ensures (fun h1 r h2 -> (exists (h2l:heap) (h2r:heap) (rl:c) (rr:b).
-                                                                  q h1 (R (R.l r) rr) (R (R.l h2) (h2r))
-                                                               /\ q' h1 (R rl (R.r r)) (R h2l (R.r h2)))))
+                                                                  q h1 (R (R?.l r) rr) (R (R?.l h2) (h2r))
+                                                               /\ q' h1 (R rl (R?.r r)) (R h2l (R?.r h2)))))
 
 
 (* Create a ST statment from a ST2 statement by projection *)
@@ -74,7 +74,7 @@ val decomp_l : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (al:a0) -> (w
 let decomp_l a0 a1 b0 b1 al wp =
   fun p hl ->
     (exists (ar:a1) (hr:heap).
-      wp (R al ar) (fun y2 h2 -> p (R.l y2) (R.l h2))
+      wp (R al ar) (fun y2 h2 -> p (R?.l y2) (R?.l h2))
          (R hl hr))
 
 val decomp_r : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (ar:a1) -> (wp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1))))
@@ -82,7 +82,7 @@ val decomp_r : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (ar:a1) -> (w
 let decomp_r a0 a1 b0 b1 ar wp =
   fun p hr ->
     (exists (al:a0) (hl:heap).
-      wp (R al ar) (fun y2 h2 -> p (R.r y2) (R.r h2))
+      wp (R al ar) (fun y2 h2 -> p (R?.r y2) (R?.r h2))
          (R hl hr))
 
 assume val project_l : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type

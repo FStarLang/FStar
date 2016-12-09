@@ -82,6 +82,7 @@ let as_buffer_injective i l p = ()
 
 
 let live #i #l h (p:plainBuffer i l) = Buffer.live h (as_buffer p)
+private let live' = live (* live may be shadowed by Buffer.live in case of local open *)
 
 // unconditional access in specs; rename to as_plain? 
 val sel_plain: h:mem -> #i:id -> l:UInt32.t -> buf:plainBuffer i (v l){live h buf} -> GTot (plain i (v l))
@@ -98,6 +99,7 @@ let create (i:id) (zero:UInt8.t) (len:UInt32.t) :
      (ensures (fun (h0:mem) p h1 ->
        let b = as_buffer p in
        let open FStar.Buffer in
+       let live = live' in (* to undo shadowing by FStar.Buffer.live *)
          ~(contains h0 b)
        /\ live h1 p /\ idx b = 0 /\ length b = v len
        /\ frameOf b = h0.tip
@@ -108,8 +110,8 @@ let create (i:id) (zero:UInt8.t) (len:UInt32.t) :
  = Buffer.create zero len
 
 let sub #id #l (b:plainBuffer id l)
-               (i:UInt32.t{FStar.Buffer (v i + v (as_buffer b).idx) < pow2 n})
-               (len:UInt32.t{FStar.Buffer (v len <= length (as_buffer b) /\ v i + v len <= length (as_buffer b))}) : Tot (b':plainBuffer id (v len))
+               (i:UInt32.t{FStar.Buffer.(v i + idx (as_buffer b)) < pow2 n})
+               (len:UInt32.t{FStar.Buffer.(v len <= length (as_buffer b) /\ v i + v len <= length (as_buffer b))}) : Tot (b':plainBuffer id (v len))
   = Buffer.sub b i len
 // ...
 

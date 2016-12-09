@@ -35,6 +35,7 @@ type level = | Un | Expr | Type | Kind | Formula
 type imp =
     | FsTypApp
     | Hash
+    | UnivApp
     | Nothing
 type arg_qualifier =
     | Implicit
@@ -52,8 +53,13 @@ type term' =
   | Const     of sconst
   | Op        of string * list<term>
   | Tvar      of ident
+  | Uvar      of ident                                (* universe variable *)
   | Var       of lid // a qualified identifier that starts with a lowercase (Foo.Bar.baz)
   | Name      of lid // a qualified identifier that starts with an uppercase (Foo.Bar.Baz)
+  | Projector of lid * ident (* a data constructor followed by one of
+                                its formal parameters, or an effect
+                                followed by one  of its actions or
+                                "fields" *)
   | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
@@ -66,8 +72,8 @@ type term' =
   | Ascribed  of term * term
   | Record    of option<term> * list<(lid * term)>
   | Project   of term * lid
-  | Product   of list<binder> * term (* function space *)
-  | Sum       of list<binder> * term (* dependent tuple *)
+  | Product   of list<binder> * term                 (* function space *)
+  | Sum       of list<binder> * term                 (* dependent tuple *)
   | QForall   of list<binder> * list<list<term>> * term
   | QExists   of list<binder> * list<list<term>> * term
   | Refine    of binder * term
@@ -77,6 +83,8 @@ type term' =
   | Ensures   of term * option<string>
   | Labeled   of term * string * bool
   | Assign    of ident * term
+  | Discrim   of lid   (* Some?  (formerly is_Some) *)
+  | Attributes of list<term>   (* attributes decorating a term *)
 
 and term = {tm:term'; range:range; level:level}
 
@@ -167,7 +175,7 @@ type decl' =
   | Open of lid
   | ModuleAbbrev of ident * lid
   | KindAbbrev of ident * list<binder> * knd
-  | ToplevelLet of qualifiers * let_qualifier * list<(pattern * term)>
+  | TopLevelLet of qualifiers * let_qualifier * list<(pattern * term)>
   | Main of term
   | Assume of qualifiers * ident * term
   | Tycon of qualifiers * list<(tycon * option<fsdoc>)>
@@ -313,11 +321,44 @@ let mkDTuple args r =
         else U.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
-let mkRefinedBinder id t refopt m implicit =
+let mkRefinedBinder id t should_bind_var refopt m implicit =
   let b = mk_binder (Annotated(id, t)) m Type implicit in
   match refopt with
     | None -> b
-    | Some t -> mk_binder (Annotated(id, mk_term (Refine(b, t)) m Type)) m Type implicit
+    | Some phi ->
+        if should_bind_var
+        then mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type)) m Type implicit
+        else
+            let b = mk_binder (NoName t) m Type implicit in
+            mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type)) m Type implicit
+
+let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
+    let t = match phi_opt with
+        | None     -> t
+        | Some phi ->
+            if should_bind_pat
+            then
+                begin match pat.pat with
+                | PatVar (x,_) ->
+                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type None, phi)) range Type
+                | _ ->
+                    let x = gen t_range in
+                    let phi =
+                        (* match x with | pat -> phi | _ -> False *)
+                        let x_var = mk_term (Var (lid_of_ids [x])) phi.range Formula in
+                        let pat_branch = (pat, None, phi)in
+                        let otherwise_branch =
+                            (mk_pattern PatWild phi.range, None,
+                             mk_term (Name (lid_of_path ["False"] phi.range)) phi.range Formula)
+                        in
+                        mk_term (Match (x_var, [pat_branch ; otherwise_branch])) phi.range Formula
+                    in
+                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type None, phi)) range Type
+                end
+            else
+                mk_term (Refine(mk_binder (NoName t) t_range Type None, phi)) range Type
+     in
+     mk_pattern (PatAscribed(pat, t)) range
 
 let rec extract_named_refinement t1  =
     match t1.tm with
@@ -349,7 +390,8 @@ let rec term_to_string (x:term) = match x.tm with
   | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
   | Const c -> P.const_to_string c
   | Op(s, xs) -> Util.format2 "%s(%s)" s (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
-  | Tvar id -> id.idText
+  | Tvar id
+  | Uvar id -> id.idText
   | Var l
   | Name l -> l.str
   | Construct (l, args) ->
@@ -459,7 +501,7 @@ let decl_to_string (d:decl) = match d.d with
   | Open l -> "open " ^ l.str
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
   | KindAbbrev(i, _, _) -> "kind " ^ i.idText
-  | ToplevelLet(_, _, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
+  | TopLevelLet(_, _, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
   | Main _ -> "main ..."
   | Assume(_, i, _) -> "assume " ^ i.idText
   | Tycon(_, tys) -> "type " ^ (tys |> List.map (fun (x,_)->id_of_tycon x) |> String.concat ", ")

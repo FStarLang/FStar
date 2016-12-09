@@ -514,8 +514,7 @@ let lemma_ststack_1 (#a:Type) (b:buffer a) h0 h1 h2 h3 : Lemma
   [SMTPatT (modifies_1 b h1 h2); SMTPatT (fresh_frame h0 h1); SMTPatT (popped h2 h3)]
   = ()
 
-#reset-options "--z3timeout 100"
-#set-options "--lax" // OK
+#reset-options "--z3rlimit 100"
 
 let lemma_ststack_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 h3 : Lemma
   (requires (live h0 b /\ live h0 b' /\ fresh_frame h0 h1 /\ modifies_2 b b' h1 h2 /\ popped h2 h3))
@@ -523,8 +522,7 @@ let lemma_ststack_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 h3
   [SMTPatT (modifies_2 b b' h1 h2); SMTPatT (fresh_frame h0 h1); SMTPatT (popped h2 h3)]
   = ()
 
-#reset-options "--z3timeout 20"
-#set-options "--lax"
+#reset-options "--z3rlimit 40"
 
 (* Specialized modifies clauses lemmas + associated SMTPatterns. Those are critical for
    verification as the specialized modifies clauses are abstract from outside the
@@ -543,7 +541,7 @@ let lemma_modifies_3_2_comm (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 
   = ()
 (* TODO: add commutativity lemmas for modifies_3 *)
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 (** Transitivity lemmas *)
 let lemma_modifies_0_trans h0 h1 h2 : Lemma
@@ -579,8 +577,7 @@ let lemma_modifies_2_trans' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 
   [SMTPatT (modifies_2 b' b h0 h1); SMTPatT (modifies_2 b b' h1 h2)]
   = ()
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
-#set-options "--lax" // OK
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
 
 let lemma_modifies_3_trans (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer a') (b'':buffer a'') h0 h1 h2 : Lemma
   (requires (modifies_3 b b' b'' h0 h1 /\ modifies_3 b b' b'' h1 h2))
@@ -589,8 +586,7 @@ let lemma_modifies_3_trans (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buf
   [SMTPatT (modifies_3 b b' b'' h0 h1); SMTPatT (modifies_3 b b' b'' h1 h2)]
   = ()
 
-#reset-options "--z3timeout 200"
-#set-options "--lax" // OK
+#reset-options "--z3rlimit 200"
 
 let lemma_modifies_3_2_trans (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 : Lemma
   (requires (live h0 b /\ live h0 b' /\ live h1 b /\ live h1 b'
@@ -605,8 +601,7 @@ let lemma_modifies_3_2_trans' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h
   [SMTPatT (modifies_3_2 b' b h0 h1); SMTPatT (modifies_3_2 b b' h1 h2)]
   = ()
 
-#reset-options "--z3timeout 20"
-#set-options "--lax" // OK
+#reset-options "--z3rlimit 20"
 
 (* Specific modifies clause lemmas *)
 val lemma_modifies_0_0: h0:mem -> h1:mem -> h2:mem -> Lemma
@@ -615,7 +610,7 @@ val lemma_modifies_0_0: h0:mem -> h1:mem -> h2:mem -> Lemma
   [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_0 h1 h2)]
 let lemma_modifies_0_0 h0 h1 h2 = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 let lemma_modifies_1_0 (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
   (requires (live h0 b /\ live h1 b /\ modifies_1 b h0 h1 /\ modifies_0 h1 h2))
@@ -635,7 +630,7 @@ let lemma_modifies_0_1' (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
   [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_1 b h1 h2)]
   = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
 
 let lemma_modifies_1_1 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 : Lemma
   (requires (live h0 b /\ live h0 b' /\ disjoint b b'
@@ -871,6 +866,8 @@ private val eq_lemma1:
 let eq_lemma1 #a b1 b2 len h =
   Seq.lemma_eq_intro (as_seq h (sub b1 0ul len)) (as_seq h (sub b2 0ul len))
 
+#reset-options "--z3rlimit 20"
+
 private val eq_lemma2:
     #a:eqtype
   -> b1:buffer a
@@ -964,7 +961,7 @@ val no_upd_lemma_1: #t:Type -> #t':Type -> h0:mem -> h1:mem -> a:buffer t -> b:b
   [SMTPatT (modifies_1 a h0 h1); SMTPatT (live h0 b)]
 let no_upd_lemma_1 #t #t' h0 h1 a b = ()
 
-#reset-options "--z3timeout 30 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 30 --initial_fuel 0 --max_fuel 0"
 
 val no_upd_lemma_2: #t:Type -> #t':Type -> #t'':Type -> h0:mem -> h1:mem -> a:buffer t -> a':buffer t' -> b:buffer t'' -> Lemma
   (requires (live h0 b /\ disjoint a b /\ disjoint a' b /\ modifies_2 a a' h0 h1))
@@ -1015,7 +1012,7 @@ let lemma_modifies_sub_2_1 #t h0 h1 (b:buffer t) : Lemma
   [SMTPatT (live h0 b); SMTPatT (modifies_2_1 b h0 h1)]
   = ()
 
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
 
 let modifies_subbuffer_1 (#t:Type) h0 h1 (sub:buffer t) (a:buffer t) : Lemma
   (requires (live h0 a /\ modifies_1 sub h0 h1 /\ live h1 sub /\ includes a sub))

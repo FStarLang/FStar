@@ -22,6 +22,7 @@ module HS = FStar.HyperStack
 module RR = FStar.Monotonic.RRef
 module MAC = Crypto.Symmetric.MAC
 
+
 // should go elsewhere
 let erid = r:rid{is_eternal_region r}
 
@@ -56,7 +57,7 @@ type skey (rgn:rid) (i:id) =
 //16-10-16 can't make it abstract?
 (** Conditionally-allocated abstract key (accessed only in this module) *)
 let akey (rgn:rid) (i:id) = 
-  o:option (skey rgn i) {is_Some o <==> skeyed i}
+  o:option (skey rgn i) {Some? o <==> skeyed i}
   // using a sum type for KreMLin. Was: if skeyed i then skey rgn i else unit
 
 val get_skey: #r:rid -> #i:id{skeyed i} -> akey r i -> Tot (skey r i)
@@ -163,7 +164,7 @@ let genPost (i:id) (region:erid) m0 (st:state i) m1 =
       RR.m_contains (ilog st.log) m1 /\
       RR.m_sel m1 (ilog st.log) == None)
 
-#set-options "--z3timeout 60 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 60 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 val alloc: region:erid -> i:id
   -> ak:akey region (fst i)
@@ -172,6 +173,7 @@ val alloc: region:erid -> i:id
   -> ST (state i)
   (requires (fun m0 -> live m0 k /\ live_ak m0 ak))
   (ensures  (fun m0 st m1 -> genPost i region m0 st m1 /\ modifies_one region m0 m1))
+#reset-options "--z3rlimit 100"
 let alloc region i ak k =
   let r = MAC.rcreate region i in
   let s = FStar.Buffer.rcreate region 0uy 16ul in
@@ -243,6 +245,9 @@ noeq abstract type accBuffer (i:id) =
 let alog (#i:id) (acc:accBuffer i{mac_log}) : HS.reference text =
   acc.l
 
+noextract val abuf: #i:id -> acc:accBuffer i -> GTot (MAC.elemB i)
+noextract let abuf #i acc = acc.a
+
 let acc_inv (#i:id) (st:state i) (acc:accBuffer i) h =
   MAC.norm h st.r /\ MAC.norm h acc.a /\
   disjoint (MAC.as_buffer st.r) (MAC.as_buffer acc.a) /\
@@ -251,7 +256,30 @@ let acc_inv (#i:id) (st:state i) (acc:accBuffer i) h =
     let a = MAC.sel_elem h acc.a in
     let r = MAC.sel_elem h st.r in
     HS.contains h (alog acc) /\
+    disjoint_ref_1 (MAC.as_buffer acc.a) (HS.as_aref (alog acc)) /\
+    disjoint_ref_1 (MAC.as_buffer st.r)  (HS.as_aref (alog acc)) /\
     a == MAC.poly log r))
+
+val frame_acc_inv: #i:id -> st:state i -> acc:accBuffer i -> h0:mem -> h1:mem -> Lemma
+  (requires
+     (acc_inv st acc h0 /\ MAC.live h1 acc.a /\ MAC.live h1 st.r /\
+      (mac_log ==>
+        HS.contains h1 (alog acc) /\
+        HS.sel h0 (alog acc) == HS.sel h1 (alog acc)) /\
+        as_seq h0 (MAC.as_buffer acc.a) == as_seq h1 (MAC.as_buffer acc.a) /\
+        as_seq h0 (MAC.as_buffer st.r) == as_seq h1 (MAC.as_buffer st.r)))
+  (ensures (acc_inv st acc h1))
+let frame_acc_inv #i st acc h0 h1 =
+  match MAC.reveal_elemB st.r, MAC.reveal_elemB acc.a with
+  | MAC.B_POLY1305 r, MAC.B_POLY1305 a ->
+    Poly1305.Bigint.norm_eq_lemma h0 h1 a a;
+    Poly1305.Bigint.norm_eq_lemma h0 h1 r r;
+    MAC.frame_sel_elem h0 h1 acc.a;
+    MAC.frame_sel_elem h0 h1 st.r
+  | _, _ -> ()
+
+
+#set-options "--z3rlimit 100"
 
 // not framed, as we allocate private state on the caller stack
 val start: #i:id -> st:state i -> StackInline (accBuffer i)
@@ -259,23 +287,33 @@ val start: #i:id -> st:state i -> StackInline (accBuffer i)
   (ensures  (fun h0 a h1 ->
     Buffer.frameOf (MAC.as_buffer a.a) == h1.tip /\
     ~(h0 `Buffer.contains` (MAC.as_buffer a.a)) /\
-    acc_inv st a h1 /\ 
+    acc_inv st a h1 /\
     modifies_0 h0 h1))
-
-#set-options "--z3timeout 60 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 
 let start #i st =
   let h0 = ST.get () in
-  let log:irtext h0.tip = if mac_log then salloc #text Seq.createEmpty else () in
-  let h1 = ST.get () in
-  lemma_intro_modifies_0 h0 h1;
   let a = MAC.start #i in
-  let h2 = ST.get () in
-  lemma_reveal_modifies_0 h1 h2;
+  let h1 = ST.get () in
+  lemma_reveal_modifies_0 h0 h1;
   if mac_log then
-    assert_norm (MAC.poly #i (HS.sel h2 log) (MAC.sel_elem h2 st.r) == MAC.zero i);
-  Acc #i a log
+    let log = salloc #text Seq.createEmpty in
+    let h2 = ST.get () in
+    // Needed to prove disjointness of st.r and log
+    assert (HS.sel h2 (Buffer.content (MAC.as_buffer st.r)) =!= Seq.createEmpty);
+    lemma_intro_modifies_0 h0 h2;
+    MAC.frame_sel_elem h1 h2 a;
+    MAC.poly_empty #i (HS.sel h2 log) (MAC.sel_elem h2 st.r);
+    Acc #i a log
+  else
+    Acc #i a ()
 
+
+let modifies_buf_and_ref (#a:Type) (#b:Type) (buf:Buffer.buffer a) (ref:reference b) h h' : GTot Type0 =
+  (forall rid. Set.mem rid (Map.domain h.h) ==>
+    HH.modifies_rref rid !{Buffer.as_ref buf, HS.as_ref ref} h.h h'.h
+    /\ (forall (#a:Type) (b:Buffer.buffer a). 
+      (frameOf b == rid /\ live h b /\ disjoint b buf
+      /\ disjoint_ref_1 b (HS.as_aref ref)) ==> equal h b h' b))
 
 // update [was add]; could add finalize (for POLY1305 when last block < 16).
 val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
@@ -285,19 +323,26 @@ val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
     Buffer.live h w /\
     Buffer.disjoint (MAC.as_buffer acc.a) w /\
     Buffer.disjoint (MAC.as_buffer st.r) w /\
-    (if mac_log then
-      Buffer.disjoint_ref_1 w (HS.as_aref (alog acc)) /\
-      Buffer.disjoint_ref_1 (MAC.as_buffer acc.a) (HS.as_aref (alog acc)) /\
-      Buffer.disjoint_ref_1 (MAC.as_buffer st.r)  (HS.as_aref (alog acc))
-    else True)))
+    (mac_log ==> Buffer.disjoint_ref_1 w (HS.as_aref (alog acc))) ))
   (ensures  (fun h0 _ h1 ->
-     Buffer.live h0 w /\
-     MAC.norm h1 st.r /\ MAC.norm h1 acc.a /\
      acc_inv st acc h1 /\
+     Buffer.live h0 w /\
      (if mac_log then
-       let v = Buffer.as_seq h0 w in
-       HS.sel h1 (alog acc) == SeqProperties.cons v (HS.sel h0 (alog acc))
-     else True)))
+       HS.sel h1 (alog acc) ==
+       SeqProperties.cons (Buffer.as_seq h0 w) (HS.sel h0 (alog acc)) /\
+       (let buf = MAC.as_buffer acc.a in
+        let rid = frameOf buf in
+        //Alternative 1:
+        //HS.modifies (Set.singleton rid) h0 h1 /\
+        //HS.modifies_ref rid (TSet.singleton (FStar.Heap.Ref (HS.as_ref (alog acc)))) h0 h1 /\
+        //Buffer.modifies_buf_1 rid buf h0 h1)
+        // Alternative 2:
+        //modifies_bufs_and_refs 
+        //  (Buffer.only buf) (TSet.singleton (HS.as_aref (alog acc))) h0 h1)
+        // Alternative 3 (works):
+        modifies_buf_and_ref buf (alog acc) h0 h1) 
+     else
+       Buffer.modifies_1 (MAC.as_buffer acc.a) h0 h1) ))
 
 let update #i st acc w =
   let h0 = ST.get () in
@@ -380,7 +425,7 @@ val verify:
     disjoint_2 (MAC.as_buffer st.r) st.s tag /\
     acc_inv st acc h0 /\
     (mac_log ==> RR.m_contains (ilog st.log) h0) /\
-    (mac_log /\ authId i ==> is_Some (RR.m_sel h0 (ilog st.log)))))
+    (mac_log /\ authId i ==> Some? (RR.m_sel h0 (ilog st.log)))))
   (ensures (fun h0 b h1 ->
     Buffer.modifies_0 h0 h1 /\
     live h0 st.s /\ 

@@ -57,7 +57,7 @@ let mill8_sec ps w _ =
           -> (p:prin{w_contains p w}) -> (y:int{w_select p w = y})
           -> Wys (option (p:prin{w_contains p w})) (pre (Mode Sec ps)) post =
     fun x p y ->
-      if is_None x then mk_some p
+      if None? x then mk_some p
       else
       	let p' = Some.v x in
         let y' = projwire_s p' w in
@@ -69,7 +69,7 @@ let mill8_sec ps w _ =
   in
 
   let p = as_sec ps g in
-  if is_None p then mk_none () else mk_some (Some.v p)
+  if None? p then mk_none () else mk_some (Some.v p)
 
 val mill8: unit -> Wys bool (pre (Mode Par abc)) post
 let mill8 _ =

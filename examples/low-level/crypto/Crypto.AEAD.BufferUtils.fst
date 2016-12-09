@@ -38,7 +38,7 @@ val chain_modification: cond:bool -> log_region:rid -> b:buffer ->
 	      (h3 == h4 \/ dexor_modifies cond log_region b h3 h4))
 	    (ensures (HS.poppable h4 /\
 		      decrypt_modifies cond log_region b h_init (HS.pop h4)))
-#reset-options "--initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 0 --z3timeout 100"
+#reset-options "--initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 0 --z3rlimit 100"
 let chain_modification cond log_region b h_init h0 h1 h2 h3 h4 =
     Buffer.lemma_reveal_modifies_0 h1 h2;
     Buffer.lemma_reveal_modifies_0 h2 h3;

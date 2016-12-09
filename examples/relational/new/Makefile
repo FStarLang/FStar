@@ -1,4 +1,4 @@
-FLAGS=--z3timeout 30
+#FLAGS=
 #LIB=
 
 OTHERFLAGS+=$(FLAGS) $(LIB)

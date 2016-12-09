@@ -259,7 +259,7 @@ let rec tc_com l c =
   | Seq c1 c2 ->
     let r1 = tc_com l c1 in   
     let r2 = tc_com l c2 in 
-    if is_None r1 || is_None r2 then
+    if None? r1 || None? r2 then
       None
     else
       Some (seq_com c1 c2 l (Some.v r1) (Some.v r2))
@@ -270,7 +270,7 @@ let rec tc_com l c =
     let r1 = sub_exp e l1' l1 r1' in
     let r2 = tc_com l1 ct in 
     let r3 = tc_com l1 cf in 
-    if is_None r2 || is_None r3 then
+    if None? r2 || None? r3 then
       None
     else
       let s = cond_com e ct cf  l1 r1 (Some.v r2) (Some.v r3) in 
@@ -282,7 +282,7 @@ let rec tc_com l c =
     let l1 = max l1' l in 
     let r1 = sub_exp l1' l1 r1' in
     let r2 = tc_com l1 cb in 
-    if is_None r2 then 
+    if None? r2 then 
       None
     else
       let s = loop_com l1 r1 (Some.v r2) in 

@@ -1,5 +1,5 @@
 [
-  "Á¡Î-s\tΩC#\nxÖZÇ6z",
+  "F’H*«X—ﬂù\u000b^Ãˇ*ˆØ",
   [
     [
       "Crypto.Plain.repr",
@@ -177,7 +177,7 @@
       [
         "@query", "data_elim_FStar.UInt32.Mk",
         "equation_Crypto.Plain.as_buffer", "equation_Crypto.Plain.live",
-        "equation_Crypto.Plain.plainBuffer",
+        "equation_Crypto.Plain.live_", "equation_Crypto.Plain.plainBuffer",
         "equation_Crypto.Symmetric.Bytes.buffer",
         "equation_Crypto.Symmetric.Bytes.lbuffer",
         "equation_FStar.Buffer.buffer", "equation_FStar.UInt.uint_t",
@@ -356,10 +356,10 @@
       1,
       [
         "@query", "data_elim_FStar.UInt32.Mk",
-        "equation_Crypto.Plain.as_buffer", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
-        "equation_FStar.UInt32.v", "equation_FStar.UInt8.t",
-        "fuel_guarded_inversion_FStar.UInt32.t_",
+        "equation_Crypto.Plain.as_buffer", "equation_FStar.Buffer.idx",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt32.t", "equation_FStar.UInt32.v",
+        "equation_FStar.UInt8.t", "fuel_guarded_inversion_FStar.UInt32.t_",
         "lemma_FStar.Buffer.lemma_size", "proj_equation_FStar.UInt32.Mk_v",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
@@ -458,11 +458,11 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_46641acd90d2b6089d6e481fd82969c8",
         "refinement_interpretation_Tm_refine_7e3beb6acccffb41919f80afab550fdd",
-        "refinement_interpretation_Tm_refine_a57e6988f2d29bd5aa0679db10f4f337",
+        "refinement_interpretation_Tm_refine_a2e6366d2de5a2469cf7063420642cdc",
         "refinement_interpretation_Tm_refine_cbce66aad24caa207d3234e4cb330c4b",
-        "typing_FStar.Buffer.MkBuffer.length", "typing_FStar.Buffer.as_seq",
-        "typing_FStar.Heap.domain", "typing_FStar.HyperStack.HS.h",
-        "typing_FStar.Map.sel"
+        "typing_FStar.Buffer.__proj__MkBuffer__item__length",
+        "typing_FStar.Buffer.as_seq", "typing_FStar.Heap.domain",
+        "typing_FStar.HyperStack.__proj__HS__item__h", "typing_FStar.Map.sel"
       ],
       0
     ],
@@ -546,11 +546,11 @@
         "proj_equation_FStar.Buffer.MkBuffer_length",
         "proj_equation_FStar.UInt32.Mk_v",
         "refinement_interpretation_Tm_refine_1b5d9020cc8f44163e9c491b867a8c24",
-        "refinement_interpretation_Tm_refine_a57e6988f2d29bd5aa0679db10f4f337",
+        "refinement_interpretation_Tm_refine_a2e6366d2de5a2469cf7063420642cdc",
         "refinement_interpretation_Tm_refine_a917a802cdb0c45fe1a8176d288f4ee0",
         "refinement_interpretation_Tm_refine_cbce66aad24caa207d3234e4cb330c4b",
         "typing_Crypto.Symmetric.Bytes.sel_bytes",
-        "typing_FStar.Buffer.MkBuffer.length"
+        "typing_FStar.Buffer.__proj__MkBuffer__item__length"
       ],
       0
     ]

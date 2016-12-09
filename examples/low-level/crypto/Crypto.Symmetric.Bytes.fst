@@ -31,8 +31,8 @@ type lbuffer (l:nat) = b:buffer {Buffer.length b == l}
 let uint128_to_uint8 (a:UInt128.t) : Tot (b:UInt8.t{UInt8.v b == UInt128.v a % pow2 8})
   = uint64_to_uint8 (uint128_to_uint64 a)
 
-private let hex1 (x:UInt8.t {FStar.UInt8(x <^ 16uy)}) = 
-  FStar.UInt8(
+private let hex1 (x:UInt8.t {FStar.UInt8.(x <^ 16uy)}) = 
+  FStar.UInt8.(
     if x <^ 10uy then UInt8.to_string x else 
     if x = 10uy then "a" else 
     if x = 11uy then "b" else 
@@ -40,7 +40,7 @@ private let hex1 (x:UInt8.t {FStar.UInt8(x <^ 16uy)}) =
     if x = 13uy then "d" else 
     if x = 14uy then "e" else "f")
 private let hex2 x = 
-  FStar.UInt8(hex1 (x /^ 16uy) ^ hex1 (x %^ 16uy))
+  FStar.UInt8.(hex1 (x /^ 16uy) ^ hex1 (x %^ 16uy))
 
 val print_buffer: s:buffer -> i:UInt32.t{UInt32.v i <= length s} -> len:UInt32.t{UInt32.v len <= length s} -> Stack unit
   (requires (fun h -> live h s))
@@ -58,6 +58,8 @@ let rec print_buffer s i len =
 val sel_bytes: h:mem -> l:UInt32.t -> buf:lbuffer (v l){Buffer.live h buf}
   -> GTot (lbytes (v l))
 let sel_bytes h l buf = Buffer.as_seq h buf
+
+#reset-options "--z3rlimit 20"
 
 // Should be polymorphic on the integer size
 // This will be leaky (using implicitly the heap)
@@ -253,7 +255,7 @@ let lemma_little_endian_lt_2_128 b =
   else Math.Lemmas.pow2_lt_compat 128 (8 * Seq.length b)
 
 
-#reset-options "--z3timeout 100 --max_fuel 1 --initial_fuel 1"
+#reset-options "--z3rlimit 100 --max_fuel 1 --initial_fuel 1"
 
 (* REMARK: The trigger in lemma_little_endian_lt_2_128 is used to prove absence of
    overflow *)
@@ -270,7 +272,8 @@ let rec load_uint32 len buf =
     let n = load_uint32 len (sub buf 1ul len) in
     let b = buf.(0ul) in
     assert_norm (pow2 8 == 256);
-    FStar.UInt32(uint8_to_uint32 b +^ 256ul *^ n)
+    let n' = n in (* n defined in FStar.UInt32, so was shadowed, so renamed into n' *)
+    FStar.UInt32.(uint8_to_uint32 b +^ 256ul *^ n')
 
 val load_big32: len:UInt32.t { v len <= 4 } -> buf:lbuffer (v len) -> ST UInt32.t
   (requires (fun h0 -> live h0 buf))
@@ -284,10 +287,11 @@ let rec load_big32 len buf =
     let n = load_big32 len (sub buf 0ul len) in
     let b = buf.(len) in
     assert_norm (pow2 8 == 256);
-    FStar.UInt32(uint8_to_uint32 b +^ 256ul *^ n)
+    let n' = n in (* n defined in FStar.UInt32, so was shadowed, so renamed into n' *)
+    FStar.UInt32.(uint8_to_uint32 b +^ 256ul *^ n')
 
 (** Used e.g. for converting TLS sequence numbers into AEAD nonces *)
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 val load_big64: len:UInt32.t { v len <= 8 } -> buf:lbuffer (v len) -> ST UInt64.t
   (requires (fun h0 -> live h0 buf))
   (ensures (fun h0 n h1 -> 
@@ -300,7 +304,8 @@ let rec load_big64 len buf =
     let n = load_big64 len (sub buf 0ul len) in
     let b = buf.(len) in
     assert_norm (pow2 8 == 256);
-    FStar.UInt64(uint8_to_uint64 b +^ 256UL *^ n)
+    let n' = n in (* n defined in FStar.UInt64, so was shadowed, so renamed into n' *)
+    FStar.UInt64.(uint8_to_uint64 b +^ 256UL *^ n')
 
 
 (* TODO: Add to FStar.Int.Cast and Kremlin and OCaml implementations *)
@@ -327,8 +332,9 @@ let rec load_uint128 len buf =
     assert (256 * pow2 (8 * v len - 8) - 256 <= pow2 128 - 256);
     Math.Lemmas.modulo_lemma (256 * UInt128.v n) (pow2 128);
     assert_norm (pow2 (UInt32.v 8ul) == 256);
-    assert (256 * UInt128.v n == FStar.UInt128 (v (n <<^ 8ul)));
-    FStar.UInt128(uint8_to_uint128 b +^ (n <<^ 8ul))
+    let n' = n in (* n shadowed by FStar.UInt128.n *)
+    assert (256 * UInt128.v n' == FStar.UInt128.(v (n' <<^ 8ul)));
+    FStar.UInt128.(uint8_to_uint128 b +^ (n' <<^ 8ul))
 
 
 (* stores a machine integer into a buffer of len bytes *)
@@ -345,7 +351,8 @@ let rec store_uint32 len buf n =
   if len <> 0ul then
     let len = len -^ 1ul in 
     let b = uint32_to_uint8 n in
-    let n' = FStar.UInt32(n >>^ 8ul) in 
+    let n1 = n in (* n defined in FStar.UInt32, so was shadowed, so renamed into n1 *)
+    let n' = FStar.UInt32.(n1 >>^ 8ul) in 
     assert(v n = UInt8.v b + 256 * v n');
     let buf' = Buffer.sub buf 1ul len in
     Math.Lemmas.pow2_plus 8 (8 * v len);
@@ -364,7 +371,8 @@ let rec store_big32 len buf n =
   if len <> 0ul then
     let len = len -^ 1ul in 
     let b = uint32_to_uint8 n in
-    let n' = FStar.UInt32(n >>^ 8ul) in 
+    let n1 = n in (* n shadowed by FStar.UInt32.n *)
+    let n' = FStar.UInt32.(n1 >>^ 8ul) in 
     assert(v n = UInt8.v b + 256 * v n');
     let buf' = Buffer.sub buf 0ul len in
     Math.Lemmas.pow2_plus 8 (8 * v len);
@@ -383,7 +391,8 @@ let rec uint32_bytes len n =
   else
     let len = len -^ 1ul in 
     let byte = uint32_to_uint8 n in
-    let n' = FStar.UInt32(n >>^ 8ul) in 
+    let n1 = n in (* n defined in FStar.UInt32, so was shadowed, so renamed into n1 *)
+    let n' = FStar.UInt32.(n1 >>^ 8ul) in 
     assert(v n = UInt8.v byte + 256 * v n');
     Math.Lemmas.pow2_plus 8 (8 * v len);
     assert_norm (pow2 8 == 256);
@@ -403,7 +412,8 @@ let rec uint32_be len n =
   else
     let len = len -^ 1ul in 
     let byte = uint32_to_uint8 n in
-    let n' = FStar.UInt32(n >>^ 8ul) in 
+    let n1 = n in (* n shadowed by FStar.UInt32.n *)
+    let n' = FStar.UInt32.(n1 >>^ 8ul) in 
     assert(v n = UInt8.v byte + 256 * v n');
     Math.Lemmas.pow2_plus 8 (8 * v len);
     assert_norm (pow2 8 == 256);
@@ -442,7 +452,8 @@ let rec store_uint128 len buf n =
   if len <> 0ul then
     let len = len -^ 1ul in 
     let b = uint128_to_uint8 n in
-    let n' = FStar.UInt128(n >>^ 8ul) in 
+    let n1 = n in (* n defined in FStar.UInt128, so was shadowed, so renamed into n1 *)
+    let n' = FStar.UInt128.(n1 >>^ 8ul) in 
     assert(UInt128.v n = UInt8.v b + 256 * UInt128.v n');
     let buf' = Buffer.sub buf 1ul len in
     Math.Lemmas.pow2_plus 8 (8 * v len);

@@ -1,11 +1,23 @@
 [
-  "\u001bŒ$A'¥vV\u001b‚\u001aRZ7ÂÊ",
+  "¨êõ^Ë\b5\u0011®¥°M‘ß’I",
   [
-    [ "FStar.DM4F.Heap.ST.return_st", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Heap.ST.bind_st", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Heap.ST.get", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Heap.ST.put", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Heap.ST.STATE_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.Heap.ST.STATE___proj__STATE__item__get_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.DM4F.Heap.ST.STATE___proj__STATE__item__put_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     [ "FStar.DM4F.Heap.ST.STATE", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Heap.ST.STATE", 2, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Heap.ST.STATE", 3, 2, 1, [ "@query" ], 0 ],
