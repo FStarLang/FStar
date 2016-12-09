@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #ifdef _WIN32
 #define STDCALL __attribute__((stdcall))
@@ -18,4 +20,3 @@ void Spartan_cipher(uint8_t *out, uint8_t *in, uint8_t *w, uint8_t *sb)
 {
   AES128EncryptOneBlockStdcall(out, in, w, sb);
 }
-
