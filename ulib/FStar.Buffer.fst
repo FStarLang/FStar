@@ -948,6 +948,10 @@ assume val fill: #t:Type -> b:buffer t -> z:t -> len:UInt32.t{v len <= length b}
 let split #t (b:buffer t) (i:UInt32.t{v i <= length b /\ v i + v b.idx < pow2 n}) : Tot (buffer t * buffer t)
   = sub b 0ul i, offset b i
 
+let inflate #t (b:buffer t) (b':buffer t{b.content == b'.content /\ idx b + length b = idx b'}) : Tot (buffer t)
+  = MkBuffer (b'.max_length) (b.content) (b.idx) (FStar.UInt32 (b.length +^ b'.length))
+
+
 val no_upd_lemma_0: #t:Type -> h0:mem -> h1:mem -> b:buffer t -> Lemma
   (requires (live h0 b /\ modifies_0 h0 h1))
   (ensures  (live h0 b /\ live h1 b /\ equal h0 b h1 b))

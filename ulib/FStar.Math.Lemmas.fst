@@ -191,6 +191,15 @@ let lemma_div_mod a p = ()
 val lemma_mod_lt: a:int -> p:pos -> Lemma (0 <= a % p /\ a % p < p)
 let lemma_mod_lt a p = ()
 
+val lemma_div_lt: a:nat -> n:nat -> m:nat{m <= n} ->
+  Lemma (requires (a < pow2 n))
+	(ensures  (a / pow2 m < pow2 (n-m)))
+let lemma_div_lt a n m =
+  lemma_div_mod a (pow2 m);
+  assert(a = pow2 m * (a / pow2 m) + a % pow2 m);
+  pow2_plus m (n-m);
+  assert(pow2 n = pow2 m * pow2 (n - m))
+
 val lemma_eq_trans_2: w:int -> x:int -> y:int -> z:int -> Lemma
   (requires (w = x /\ x = y /\ y = z))
   (ensures  (x = z))
