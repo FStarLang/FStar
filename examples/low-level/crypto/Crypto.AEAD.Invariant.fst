@@ -482,7 +482,7 @@ let frame_refines_one_entry_append #r #i table h blocks aead_ent =
 (*
  * aead_entries_are_refined framing lemma for append to the PRF blocks
  *)
-let frame_refines_entries_append
+let frame_refines_entries_prf_append
   (#r:region)
   (#i:id)
   (table:prf_table r i)
@@ -500,7 +500,7 @@ let frame_refines_entries_append
 (*
  * aead_entries_are_refined framing lemma for no changes to heap in the mac_rgn
  *)
-let frame_refines_aead_entries_h (i:id{safeMac i}) (mac_rgn:region) 
+let frame_refines_entries_h (i:id{safeMac i}) (mac_rgn:region) 
 		                 (blocks:prf_table mac_rgn i)
 		                 (entries:aead_entries i)
 		                 (h:mem) (h':mem)

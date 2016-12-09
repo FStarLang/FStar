@@ -79,9 +79,6 @@ let prf_mac_ensures (i:id) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:PRF.do
 
 (*****)
 
-(*
- * AR: this should be an easy proof, but does not go through.
- *)
 private val lemma_aead_entries_are_same_after_prf_mac
   (#i:id)
   (#rw:rw)
@@ -138,6 +135,15 @@ private val lemma_unused_mac_exists_after_prf_mac
   (ensures (safeMac i ==> unused_mac_exists aead_st.prf x h1))
 let lemma_unused_mac_exists_after_prf_mac #i #rw aead_st k_0 x mac h0 h1 = ()
 
+(*
+ * The proof case analyzes on PRF.find_mac table_0 x
+ *   -- If it's Some, we know that the PRF table and the heap did not change, and we are done
+ *   -- If it's None, we go in two steps:
+ *      -- First we show that aead entries are still refined with table_0 and h1, since the mac region did not change from h0 -to-> h1
+ *         (frame_refines_entries_h)
+ *      -- Then we precisely know that table_1 is append of a single block to table_0, we show that entries are still refined
+ *         (frame_refines_entries_prf_append)
+ *)
 private val frame_refines_aead_entries_prf_mac
   (#i:id)
   (#rw:rw)
@@ -156,12 +162,15 @@ private val frame_refines_aead_entries_prf_mac
              aead_entries_are_refined table_1 entries_1 h1))
 let frame_refines_aead_entries_prf_mac #i #rw aead_st k_0 x h0 h1 mac =
   let aead_ent_0 = HS.sel #(aead_entries i) h0 aead_st.log in
+  //this is recalling that aead_entries are not changed from h0 to h1, makes the proof go faster
   lemma_aead_entries_are_same_after_prf_mac aead_st k_0 x h0 h1 mac;
+  
   let table_0 = HS.sel h0 (itable i aead_st.prf) in
-  frame_refines_aead_entries_h i aead_st.prf.mac_rgn table_0 aead_ent_0 h0 h1;
   match PRF.find_mac table_0 x with
   | Some _ -> ()
-  | None   -> frame_refines_entries_append table_0 aead_ent_0 h1 (Seq.create 1 (PRF.Entry x mac))
+  | None   ->
+    frame_refines_entries_h i aead_st.prf.mac_rgn table_0 aead_ent_0 h0 h1;
+    frame_refines_entries_prf_append table_0 aead_ent_0 h1 (Seq.create 1 (PRF.Entry x mac))
 
 private val lemma_iv_of_x_is_unused_prf_mac
   (#i:id)
@@ -179,8 +188,20 @@ private val lemma_iv_of_x_is_unused_prf_mac
 let lemma_iv_of_x_is_unused_prf_mac #i #rw aead_st k_0 x mac h0 h1 = ()
 
 (*
- * AR: this needs to be fixed, takes a long time.
+ * Factoring it out, makes the proof go faster
  *)
+val frame_cma_mac_is_unset_h
+  (i:CMA.id)
+  (r:rid{is_eternal_region r})
+  (r':rid{r' `HS.is_above` r})
+  (mac_st:CMA.state i)
+  (h0 h1:mem) : Lemma
+  (requires (CMA.mac_is_unset i r mac_st h0 /\
+             HS.modifies_transitively (Set.singleton r') h0 h1 /\
+             HS.modifies_ref r TSet.empty h0 h1))
+  (ensures  (CMA.mac_is_unset i r mac_st h1))
+let frame_cma_mac_is_unset_h i r r' mac_st h0 h1 = ()
+
 private val frame_unused_aead_iv_different_from_x_prf_mac
   (#i:id)
   (#rw:rw)
@@ -196,7 +217,17 @@ private val frame_unused_aead_iv_different_from_x_prf_mac
 	     not (iv = x.iv)))
   (ensures  (let table_1 = HS.sel h1 (itable i aead_st.prf) in
              unused_aead_iv_for_prf table_1 iv h1))
-let frame_unused_aead_iv_different_from_x_prf_mac #i #rw aead_st k_0 x mac h0 h1 iv = ()
+let frame_unused_aead_iv_different_from_x_prf_mac #i #rw aead_st k_0 x mac h0 h1 iv =
+  let table_0 = HS.sel h0 (itable i aead_st.prf) in
+  let table_1 = HS.sel h1 (itable i aead_st.prf) in
+  let dom_0 = {iv=iv; ctr=PRF.ctr_0 i} in
+  match PRF.find_mac table_1 dom_0 with
+  | None           -> ()
+  | Some mac_range ->
+    (match PRF.find_mac table_0 x with
+     | Some _ -> ()
+     | None   ->
+       frame_cma_mac_is_unset_h (i, iv) CMA.(mac_range.region) aead_st.prf.rgn mac_range h0 h1)
 
 private val frame_unused_aead_iv_prf_mac
   (#i:id)
@@ -264,7 +295,9 @@ val prf_mac_wrapper
 			       inv aead_st h1 /\
                                (safeMac i ==>
 			         (fresh_nonce_st x.iv aead_st h1 /\
-				  unused_mac_exists aead_st.prf x h1))))
+				  unused_mac_exists aead_st.prf x h1 /\
+				  (let table_1 = HS.sel h1 (itable i aead_st.prf) in
+				   none_above (PRF.incr i x) table_1))))) //adding this none_above clause to match the precondition of the next step in the encrypt function, it's easily provable from inv h1 and fresh_nonce x.iv h1
 let prf_mac_wrapper #i #rw aead_st k_0 x =
   let h0 = get () in
   
