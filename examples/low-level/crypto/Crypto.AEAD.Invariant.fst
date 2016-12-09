@@ -205,6 +205,26 @@ let mac_is_set (#rgn:region) (#i:id)
 	 msg = encode_ad_cipher i ad l cipher /\
  	 tag = tag'))
 
+(** prf_contains_all_otp_blocks:
+        Conceptually, it states that there are entries in the
+	prf_table (order unspecified) for all the otp entries
+	corresponding to the encrypting plain text
+**)
+let prf_contains_all_otp_blocks 
+      (#i:id) (#r:rid)
+      (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
+      (#len:nat)
+      (from_pos:nat{from_pos <= len /\ safelen i (len - from_pos) PRF.(x.ctr)})
+      (plain:plain i len)
+      (cipher:lbytes len)
+      (prf_table:prf_table r i)
+   = let open FStar.SeqProperties in
+     (safeId i ==> (
+      let otp_blocks = counterblocks i r x len from_pos len plain cipher in
+      (forall (prf_entry:PRF.entry r i).{:pattern (otp_blocks `contains` prf_entry)} 
+       otp_blocks `contains` prf_entry ==>
+       PRF.find prf_table prf_entry.x == Some prf_entry.range)))
+
 (** refines_one_entry:
         Conceptually, read it as (prf_table `refines_one_entry` aead_entry)
 	It states that there are entries in the prf_table (order unspecified)
@@ -224,12 +244,9 @@ let refines_one_entry (#rgn:region) (#i:id)
    //1. the mac entry for this nonce in the prf table contains a mac'd ad+cipher
    mac_is_set prf_table iv ad l cipher tag h /\
    //2. all the expected otp_blocks are in the table, in some order
+   prf_contains_all_otp_blocks dom_1 0 plain cipher prf_table
    //NB: this does not forbid the prf_table from containing other OTP blocks with the same IV;
    //    not clear whether we need that
-   (let otp_blocks = counterblocks i rgn dom_1 l 0 l plain cipher in
-    (forall (prf_entry:PRF.entry rgn i).{:pattern (otp_blocks `contains` prf_entry)} //Pattern added: 12/7
-      otp_blocks `contains` prf_entry ==>
-      PRF.find prf_table prf_entry.x == Some (prf_entry.range)))
 
 (** none_above x prf_table:
 	no entry in the prf_table at ({iv=x.iv; ctr=i}) for any i >= x.ctr **)
@@ -442,42 +459,44 @@ let find_singleton (#rgn:region) (#i:id) (e:PRF.entry rgn i) (x:PRF.domain i)
 	     else PRF.find (Seq.create 1 e) x == None)
     = ()	     
 
-val lemma_prf_find_append_some
+let lemma_prf_find_append_some
   (#r:region)
   (#i:id)
   (table:prf_table r i)
   (blocks:prf_table r i)
-  (x:PRF.domain i) : Lemma
-  (requires (Some? (PRF.find table x)))
-  (ensures  (PRF.find (Seq.append table blocks) x == PRF.find table x))
-let lemma_prf_find_append_some #r #i table blocks x = SeqProperties.find_append_some table blocks (is_entry_domain x)
+  (x:PRF.domain i) 
+  : Lemma
+    (requires (Some? (PRF.find table x)))
+    (ensures  (PRF.find (Seq.append table blocks) x == PRF.find table x))
+  = SeqProperties.find_append_some table blocks (is_entry_domain x)
 
-val lemma_prf_find_append_some_forall
+let lemma_prf_find_append_some_forall
   (#r:region)
   (#i:id)
   (table:prf_table r i)
-  (blocks:prf_table r i) : Lemma
-  (forall (x:PRF.domain i).{:pattern (PRF.find (Seq.append table blocks) x) }
-     (Some? (PRF.find table x)) ==>
-       (PRF.find (Seq.append table blocks) x == PRF.find table x))
-let lemma_prf_find_append_some_forall #r #i table blocks =
-  let open FStar.Classical in
-  forall_intro (move_requires (lemma_prf_find_append_some #r #i table blocks))
+  (blocks:prf_table r i) : 
+  Lemma 
+    (ensures 
+	(forall (x:PRF.domain i).{:pattern (PRF.find (Seq.append table blocks) x) }
+	   Some? (PRF.find table x) ==>
+	   PRF.find (Seq.append table blocks) x == PRF.find table x))
+ = let open FStar.Classical in
+   forall_intro (move_requires (lemma_prf_find_append_some #r #i table blocks))
 
 (*
  * refines_one_entry framing lemma for append to the PRF blocks
  *)
-val frame_refines_one_entry_append
+let frame_refines_one_entry_append
   (#r:region)
   (#i:id)
   (table:prf_table r i)
-  (h:mem{safeId i})
+  (h:mem)
   (blocks:prf_table r i)
-  (aead_ent: aead_entry i) : Lemma
-  (requires (refines_one_entry table aead_ent h))
-  (ensures  (refines_one_entry (Seq.append table blocks) aead_ent h))
-let frame_refines_one_entry_append #r #i table h blocks aead_ent =
-  lemma_prf_find_append_some_forall table blocks
+  (aead_ent: aead_entry i{safeId i}) 
+  : Lemma
+      (requires (refines_one_entry table aead_ent h))
+      (ensures  (refines_one_entry (Seq.append table blocks) aead_ent h))
+  = lemma_prf_find_append_some_forall table blocks; admit() //NS: doesn't go through
 
 (*
  * aead_entries_are_refined framing lemma for append to the PRF blocks
@@ -488,14 +507,14 @@ let frame_refines_entries_prf_append
   (table:prf_table r i)
   (entries:aead_entries i)
   (h:mem)
-  (blocks:prf_table r i) : Lemma
-  (requires (aead_entries_are_refined table entries h))
-  (ensures  (aead_entries_are_refined (Seq.append table blocks) entries h))
+  (blocks:prf_table r i) 
+  : Lemma
+      (requires (aead_entries_are_refined table entries h))
+      (ensures  (aead_entries_are_refined (Seq.append table blocks) entries h))
   = let open FStar.Classical in
-    if safeId i then
-      let h':(h:mem{safeId i}) = h in  //AR: this should not be required
-      forall_intro (move_requires (frame_refines_one_entry_append table h' blocks))
-    else ()
+    if safeId i 
+    then forall_intro (move_requires (frame_refines_one_entry_append table h blocks))
+
 
 (*
  * aead_entries_are_refined framing lemma for no changes to heap in the mac_rgn
@@ -512,3 +531,42 @@ let frame_refines_entries_h (i:id{safeMac i}) (mac_rgn:region)
    = let open FStar.Classical in
      forall_intro (move_requires (frame_unused_aead_iv_for_prf h h' blocks));
      if safeId i then forall_intro (move_requires (frame_refines_one_entry h h' blocks))
+
+(** mac_is_used prf_table iv: 
+	the mac entry for iv is present
+	and the corresponding one-time mac has been used already
+ **)	
+let mac_is_used (#rgn:region) (#i:id)
+	        (prf_table:prf_table rgn i) //the entire prf table
+ 	        (iv:Cipher.iv (alg i))
+	        (h:mem) : GTot Type0
+  = mac_log ==> (
+    let dom_0 = {iv=iv; ctr=PRF.ctr_0 i} in
+    //the mac entry for this nonce in the prf table contains a mac that's already been used
+    (match PRF.find_mac prf_table dom_0 with
+     | None -> False
+     | Some mac_range ->
+       let mac_st = CMA.ilog (CMA.State?.log mac_range) in
+       m_contains mac_st h /\ 
+       Some? (m_sel h mac_st)))
+
+let find_refined_aead_entry
+    (#i:id) (#r:rid)
+    (n:Cipher.iv (alg i){safeId i})
+    (aead_entries:aead_entries i)
+    (prf_entries:prf_table r i)
+    (h:mem)
+  : Pure (aead_entry i)
+         (requires (refines prf_entries aead_entries h /\
+		    mac_is_used prf_entries n h))
+	 (ensures (fun entry ->
+		  entry.nonce = n /\
+		  refines_one_entry prf_entries entry h /\
+		  find_aead_entry n aead_entries == Some entry))
+  = match find_aead_entry n aead_entries with
+    | None -> 
+      assert (fresh_nonce n aead_entries); 
+      false_elim()
+    | Some e -> 
+      SeqProperties.lemma_find_l_contains (is_aead_entry_nonce n) aead_entries;
+      e

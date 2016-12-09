@@ -367,28 +367,46 @@ let find_singleton (#rgn:region) (#i:id) (e:PRF.entry rgn i) (x:PRF.domain i)
     = ()	     
 
 #set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 0 --max_fuel 0"
-val intro_contains_all_blocks: (i:id{safeId i}) ->
+val intro_contains_all_blocks: (#i:id) ->
 		  	       (n:Cipher.iv (alg i)) ->
 			       (st:state i Reader) ->
-	      		       #aadlen:UInt32.t {aadlen <=^ aadmax} ->
-			       (aad:lbuffer (v aadlen)) ->
-			       #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
-			       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) ->
-			       (q:maybe_plain i (v plainlen)) ->
-			       (entry:entry i) ->
-			       (blocks: prf_blocks st.prf.mac_rgn i) ->
-			       (h:mem{Buffer.live h cipher_tagged}) ->
+	      		       #aadlen:aadlen_32 -> aad:lbuffer (v aadlen) ->
+			       #plainlen:txtlen_32 -> cipher_tagged:lbuffer (v plainlen + v MAC.taglen) ->
+			       q:maybe_plain i (v plainlen) ->
+			       entry:entry i ->
+			       h:mem{Buffer.live h cipher_tagged /\ safeId i} ->
      Lemma (requires (let aead_entries = HS.sel h st.log in 
 		      let prf_entries = HS.sel h (PRF.itable i st.prf) in 
-		      let x_1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
-		      Buffer.live h aad /\
-		      refines_one_entry h entry blocks /\
-		      find_entry n aead_entries == Some entry /\
-		      found_entry n st aad cipher_tagged q h /\
-		      from_x_blocks_included_in x_1 blocks prf_entries))
-           (ensures (let x1 = {iv=n; ctr=ctr_0 i +^ 1ul} in
+		      refines_one_entry prf_entries aead_entry h /\
+		      find_entry n aead_entries == Some aead_entry /\
+		      found_entry n st aad cipher_tagged q h))
+           (ensures (let x_1 = {iv=n; ctr=otp_offset i} in
 		     let cipher = Buffer.sub cipher_tagged 0ul plainlen in
-		     contains_all_blocks' x1 plainlen plainlen q cipher st.prf h))
+		     contains_all_blocks_st x_1 plainlen plainlen (as_plain q) cipher st.prf h))
+
+(* #set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 0 --max_fuel 0" *)
+(* val intro_contains_all_blocks: (i:id{safeId i}) -> *)
+(* 		  	       (n:Cipher.iv (alg i)) -> *)
+(* 			       (st:state i Reader) -> *)
+(* 	      		       #aadlen:UInt32.t {aadlen <=^ aadmax} -> *)
+(* 			       (aad:lbuffer (v aadlen)) -> *)
+(* 			       #plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} -> *)
+(* 			       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen)) -> *)
+(* 			       (q:maybe_plain i (v plainlen)) -> *)
+(* 			       (entry:entry i) -> *)
+(* 			       (blocks: prf_blocks st.prf.mac_rgn i) -> *)
+(* 			       (h:mem{Buffer.live h cipher_tagged}) -> *)
+(*      Lemma (requires (let aead_entries = HS.sel h st.log in  *)
+(* 		      let prf_entries = HS.sel h (PRF.itable i st.prf) in  *)
+(* 		      let x_1 = {iv=n; ctr=ctr_0 i +^ 1ul} in *)
+(* 		      Buffer.live h aad /\ *)
+(* 		      refines_one_entry h entry blocks /\ *)
+(* 		      find_entry n aead_entries == Some entry /\ *)
+(* 		      found_entry n st aad cipher_tagged q h /\ *)
+(* 		      from_x_blocks_included_in x_1 blocks prf_entries)) *)
+(*            (ensures (let x1 = {iv=n; ctr=ctr_0 i +^ 1ul} in *)
+(* 		     let cipher = Buffer.sub cipher_tagged 0ul plainlen in *)
+(* 		     contains_all_blocks' x1 plainlen plainlen q cipher st.prf h)) *)
 
 #set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 0 --max_fuel 0"
 let intro_contains_all_blocks i n st #aadlen aad #plainlen cipher_tagged q entry blocks h =
