@@ -337,7 +337,7 @@ ocaml-test.exe: ocaml-test-extract
 
 OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
 
-test-perf.exe: krml-test.exe crypto/test_perf.c
+test-perf.exe: #krml-test.exe crypto/test_perf.c
 	$(CC) -O3 -o test-perf.exe crypto/intrinsics.c $(C_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
 		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c  crypto/test_perf.c -I tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
@@ -366,4 +366,4 @@ test-perf32.exe:
 clean:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
 	@rm -f $(addprefix crypto/ml/, *.cmx *.o *.cmi *~)
-	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) $(AESGCM_ODIR) $(CHACHA_AEAD_ODIR) tmp kremlin *~ *.exe ./crypto/*~
+	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) $(AESGCM_ODIR) $(CHACHA_AEAD_ODIR) kremlin *~ *.exe ./crypto/*~
