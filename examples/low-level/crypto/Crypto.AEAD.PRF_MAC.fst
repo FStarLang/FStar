@@ -21,8 +21,6 @@ module CMA = Crypto.Symmetric.UF1CMA
 module Cipher = Crypto.Symmetric.Cipher
 
 
-
-
 ///////////////////////////////////////////////////////////////////
 // AEAD functions and lemmas related to the invariant and prf_mac
 //////////////////////////////////////////////////////////////////
@@ -92,8 +90,10 @@ private val lemma_aead_entries_are_same_after_prf_mac
   (ensures  (let entries_0 = HS.sel #(aead_entries i) h0 aead_st.log in
              let entries_1 = HS.sel #(aead_entries i) h1 aead_st.log in
 	     entries_0 == entries_1))
+#set-options "--z3rlimit 100"
 let lemma_aead_entries_are_same_after_prf_mac #i #rw aead_st k_0 x h0 h1 mac = ()
 
+#reset-options
 private val frame_fresh_nonce_st_prf_mac
   (#i:id)
   (#rw:rw)
@@ -367,7 +367,9 @@ val lemma_propagate_inv_enxor
 	       (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_1 /\ nonce' <> nonce) ==>
 	                                      unused_aead_iv_for_prf table_1 nonce' h1) /\
 	       unused_mac_exists aead_st.prf dom_0 h1 /\
-	       otp_entries_exist nonce (v plainlen) (Plain.sel_plain h1 plainlen plain) (Buffer.as_seq h1 cipher) table_1))))
+	       prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
+	                                   (Plain.sel_plain h1 plainlen plain)
+	                                   (Buffer.as_seq h1 cipher) table_1))))
 
 val lemma_propagate_inv_accumulate
   (#i:id)
@@ -389,7 +391,9 @@ val lemma_propagate_inv_accumulate
 	        (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_0 /\ nonce' <> nonce) ==>
 	                                       unused_aead_iv_for_prf table_0 nonce' h0) /\
 	        unused_mac_exists aead_st.prf dom_0 h0 /\
-	        otp_entries_exist nonce (v plainlen) (Plain.sel_plain h0 plainlen plain) (Buffer.as_seq h0 cipher) table_0))))
+	        prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
+	                                    (Plain.sel_plain h0 plainlen plain)
+	                                    (Buffer.as_seq h0 cipher) table_0))))
   (ensures  (Plain.live h1 plain /\
              Buffer.live h1 cipher /\
              (safeId i ==>
@@ -400,7 +404,9 @@ val lemma_propagate_inv_accumulate
 	        (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_1 /\ nonce' <> nonce) ==>
 	                                       unused_aead_iv_for_prf table_1 nonce' h1) /\
 	        unused_mac_exists aead_st.prf dom_0 h1 /\
-	        otp_entries_exist nonce (v plainlen) (Plain.sel_plain h1 plainlen plain) (Buffer.as_seq h1 cipher) table_1))))
+	        prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
+	                                    (Plain.sel_plain h1 plainlen plain)
+	                                    (Buffer.as_seq h1 cipher) table_1))))
 
 val lemma_propagate_mac_wrapper
   (#i:id)
@@ -425,6 +431,8 @@ val lemma_propagate_mac_wrapper
 	        (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_0 /\ nonce' <> nonce) ==>
 	                                       unused_aead_iv_for_prf table_0 nonce' h0) /\
 	        unused_mac_exists aead_st.prf dom_0 h0 /\
-	        otp_entries_exist nonce (v plainlen) (Plain.sel_plain h0 plainlen plain) (Buffer.as_seq h0 cipher) table_0))))
+	        prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
+	                                    (Plain.sel_plain h0 plainlen plain)
+	                                    (Buffer.as_seq h0 cipher) table_0))))
   (ensures (True))
 

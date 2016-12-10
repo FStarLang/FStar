@@ -218,3 +218,32 @@ let encrypt_ensures_push_pop (i:id) (st:state i Writer)
 (* 		     (h0:mem) (h5:mem) = *)
 (*   encrypt_ensures' (Set.as_set [st.log_region; Buffer.frameOf cipher_tagged; HS.(h5.tip)]) *)
 (*     i st n aadlen aad plainlen plain cipher_tagged h0 h5 *)
+
+
+
+(*+ contains_all_blocks x plain cipher prf_table: 
+          fragments plain and cipher into blocks, 
+	    starting from position x onwards,
+	    ignoring the blocks from [otp_offset i .. x)
+	  and states that each of them is present in the prf_table
+
+    NOTE: this duplicates a lot of the structure of counterblocks
+	  perhaps it should be restated in terms of counterblocks 
+ **)
+(* let rec contains_all_blocks (#i:id) (#r:rid) *)
+(*   		 	    (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr}) *)
+(* 			    (len:u32{len <> 0ul /\ safelen i (v len) (PRF.ctr_0 i +^ 1ul)}) *)
+(* 			    (remaining_len:u32{safelen i (v remaining_len) x.ctr /\ remaining_len <=^ len}) *)
+(* 			    (plain:maybe_plain i (v len)) *)
+(* 			    (cipher:lbytes (v len)) *)
+(* 			    (blocks:prf_table r i) *)
+(*    : GTot Type0 (decreases (v remaining_len)) *)
+(*    = if not (safeId i) || remaining_len = 0ul then  *)
+(*        True *)
+(*      else let starting_pos = len -^ remaining_len in *)
+(* 	  let l = min remaining_len (PRF.blocklen i) in *)
+(* 	  let plain_hd = Plain.slice (as_plain plain) (v starting_pos) (v starting_pos + v l) in *)
+(* 	  let cipher_hd = Seq.slice cipher (v starting_pos) (v starting_pos + v l) in *)
+(* 	  contains_cipher_block (v l) x cipher_hd blocks /\ *)
+(* 	  contains_plain_block x plain_hd blocks /\ *)
+(* 	  contains_all_blocks (PRF.incr i x) len (remaining_len -^ l) plain cipher blocks *)
