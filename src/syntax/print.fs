@@ -172,12 +172,21 @@ let tag_of_term (t:term) = match t.n with
 
 let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int)
 
+let rec int_of_univ n u = match Subst.compress_univ u with
+    | U_zero -> n, None
+    | U_succ u -> int_of_univ (n+1) u
+    | _ -> n, Some u
+
 let rec univ_to_string u = match Subst.compress_univ u with
     | U_unif u -> uvar_to_string u
-    | U_name x -> "n"^x.idText
+    | U_name x -> x.idText
     | U_bvar x -> "@"^string_of_int x
     | U_zero   -> "0"
-    | U_succ u -> Util.format1 "(S %s)" (univ_to_string u)
+    | U_succ u ->
+        begin match int_of_univ 1 u with
+            | n, None -> string_of_int n
+            | n, Some u -> Util.format2 "(%s + %s)" (univ_to_string u) (string_of_int n)
+        end
     | U_max us -> Util.format1 "(max %s)" (List.map univ_to_string us |> String.concat ", ")
     | U_unknown -> "unknown"
 
@@ -208,6 +217,7 @@ let qual_to_string = function
   | Effect                -> "Effect"
   | Reifiable                 -> "reify"
   | Reflectable l               -> Util.format1 "(reflect %s)" l.str
+  | OnlyName              -> "OnlyName"
 
 let quals_to_string quals =
     match quals with

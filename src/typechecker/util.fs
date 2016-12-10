@@ -37,6 +37,7 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module N = FStar.TypeChecker.Normalize
 module P = FStar.Syntax.Print
+module C = FStar.Syntax.Const
 
 //Reporting errors
 let report env errs =
@@ -1338,53 +1339,309 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
           true
     in
     let quals = Util.quals_of_sigelt se in
-    let r = Util.range_of_sigelt se in
-    let no_dup_quals = Util.remove_dups (fun x y -> x=y) quals in
-    let err' msg =
-        raise (Error(Util.format2
-                        "The qualifier list \"[%s]\" is not permissible for this element%s"
-                        (Print.quals_to_string quals) msg
-                        , r)) in
-    let err msg = err' (": " ^ msg) in
-    let err' () = err' "" in
-    if List.length quals <> List.length no_dup_quals
-    then err "duplicate qualifiers";
-    if not (quals |> List.for_all (quals_combo_ok quals))
-    then err "ill-formed combination";
-    match se with
-    | Sig_let((is_rec, _), _, _, _) -> //let rec
-      if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
-      then err "recursive definitions cannot be marked inline";
-      if quals |> Util.for_some (fun x -> assumption x || has_eq x)
-      then err "definitions cannot be assumed or marked with equality qualifiers"
-    | Sig_bundle _ ->
-      if not (quals |> Util.for_all (fun x ->
-            x=Abstract
-            || inferred x
-            || visibility x
-            || has_eq x))
-      then err' ()
-    | Sig_declare_typ _ ->
-      if quals |> Util.for_some has_eq
-      then err' ()
-    | Sig_assume _ ->
-      if not (quals |> Util.for_all (fun x -> visibility x || x=Assumption))
-      then err' ()
-    | Sig_new_effect _ ->
-      if not (quals |> Util.for_all (fun x ->
-            x=TotalEffect
-            || inferred x
-            || visibility x
-            || reification x))
-      then err' ()
-    | Sig_new_effect_for_free _ ->
-      if not (quals |> Util.for_all (fun x ->
-            x=TotalEffect
-            || inferred x
-            || visibility x
-            || reification x))
-      then err' ()
-    | Sig_effect_abbrev _ ->
-      if not (quals |> Util.for_all (fun x -> inferred x || visibility x))
-      then err' ()
-    | _ -> ()
+    if quals |> Util.for_some (function OnlyName -> true | _ -> false) |> not
+    then
+      let r = Util.range_of_sigelt se in
+      let no_dup_quals = Util.remove_dups (fun x y -> x=y) quals in
+      let err' msg =
+          raise (Error(Util.format2
+                          "The qualifier list \"[%s]\" is not permissible for this element%s"
+                          (Print.quals_to_string quals) msg
+                          , r)) in
+      let err msg = err' (": " ^ msg) in
+      let err' () = err' "" in
+      if List.length quals <> List.length no_dup_quals
+      then err "duplicate qualifiers";
+      if not (quals |> List.for_all (quals_combo_ok quals))
+      then err "ill-formed combination";
+      match se with
+      | Sig_let((is_rec, _), _, _, _) -> //let rec
+        if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
+        then err "recursive definitions cannot be marked inline";
+        if quals |> Util.for_some (fun x -> assumption x || has_eq x)
+        then err "definitions cannot be assumed or marked with equality qualifiers"
+      | Sig_bundle _ ->
+        if not (quals |> Util.for_all (fun x ->
+              x=Abstract
+              || inferred x
+              || visibility x
+              || has_eq x))
+        then err' ()
+      | Sig_declare_typ _ ->
+        if quals |> Util.for_some has_eq
+        then err' ()
+      | Sig_assume _ ->
+        if not (quals |> Util.for_all (fun x -> visibility x || x=Assumption))
+        then err' ()
+      | Sig_new_effect _ ->
+        if not (quals |> Util.for_all (fun x ->
+              x=TotalEffect
+              || inferred x
+              || visibility x
+              || reification x))
+        then err' ()
+      | Sig_new_effect_for_free _ ->
+        if not (quals |> Util.for_all (fun x ->
+              x=TotalEffect
+              || inferred x
+              || visibility x
+              || reification x))
+        then err' ()
+      | Sig_effect_abbrev _ ->
+        if not (quals |> Util.for_all (fun x -> inferred x || visibility x))
+        then err' ()
+      | _ -> ()
+
+
+
+(******************************************************************************)
+(*                                                                            *)
+(*                Elaboration of the projectors                               *)
+(*                                                                            *)
+(******************************************************************************)
+
+
+
+let mk_discriminator_and_indexed_projectors iquals                   (* Qualifiers of the envelopping bundle    *)
+                                            (fvq:fv_qual)            (*                                         *)
+                                            (refine_domain:bool)     (* If true, discriminates the projectee    *)
+                                            env                      (*                                         *)
+                                            (tc:lident)              (* Type constructor name                   *)
+                                            (lid:lident)             (* Constructor name                        *)
+                                            (uvs:univ_names)        (* Original universe names                 *)
+                                            (inductive_tps:binders)  (* Type parameters of the type constructor *)
+                                            (imp_tps:binders)        (* Implicit type parameters                *)
+                                            (fields:binders)         (* Fields of the constructor               *)
+                                            t                        (* Result type fully applied with params   *)
+                                            : list<sigelt> =
+    let p = range_of_lid lid in
+    let pos q = Syntax.withinfo q tun.n p in
+    let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
+    let tps = List.map2 (fun (_, imp) (x, _) -> (x, imp)) inductive_tps imp_tps in
+    let unrefined_arg_binder, arg_binder, indices, inst_univs =
+        let head, args0 = Util.head_and_args t in
+        let args =
+            let rec arguments tps args = match tps, args with
+                | [], _ -> args
+                | _, [] -> raise (Error("Not enough arguments to type", Ident.range_of_lid lid))
+                | (_, Some (S.Implicit _))::tps', (_, Some (S.Implicit _))::args' -> arguments tps' args'
+                | (_, Some (S.Implicit _))::tps', (_, _)::_ -> arguments tps' args
+                | (_, _)::_, (a, Some (S.Implicit _))::_ ->
+                  raise (Error("Unexpected implicit annotation on argument", a.pos))
+                | (_, _)::tps', (_, _)::args' -> arguments tps' args'
+            in
+            arguments inductive_tps args0
+        in
+        let indices = args |> List.map (fun (_, imp) -> S.new_bv (Some p) tun, imp) in
+        let inst_univs =
+            match (SS.compress head).n with
+                | Tm_uinst (_, univs) -> univs
+                | _ -> []
+        in
+        let arg_typ = S.mk_Tm_app (S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc Delta_constant None), inst_univs)) None p)
+                                  (tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp))
+                                  None p
+        in
+        let unrefined_arg_binder = S.mk_binder (projectee arg_typ) in
+        let arg_binder =
+            if not refine_domain
+            then  unrefined_arg_binder //records have only one constructor; no point refining the domain
+            else let disc_name = Util.mk_discriminator lid in
+                 let x = S.new_bv (Some p) arg_typ in
+                 let sort =
+                     let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) Delta_equational None in
+                     U.refine x (Util.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] None p))
+                 in
+                 S.mk_binder ({projectee arg_typ with sort = sort})
+        in
+        unrefined_arg_binder, arg_binder, indices, inst_univs
+    in
+
+    let arg_exp = S.bv_to_name (fst arg_binder) in
+    let imp_binders = imp_tps @ (indices |> List.map (fun (x, _) -> x, Some S.imp_tag)) in
+    let binders = imp_binders@[arg_binder] in
+
+    let arg = Util.arg_of_non_null_binder arg_binder in
+
+    let subst = fields |> List.mapi (fun i (a, _) ->
+            let field_name, _ = Util.mk_field_projector_name lid a i in
+            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name Delta_equational None)) inst_univs in
+            let proj = mk_Tm_app field_proj_tm [arg] None p in
+            NT(a, proj))
+    in
+
+    let ntps = List.length tps in
+    let all_params = imp_tps@fields in
+
+    let discriminator_ses =
+        let discriminator_name = Util.mk_discriminator lid in
+        let only_decl =
+              lid_equals C.prims_lid  (Env.current_module env)
+              || fvq<>Data_ctor
+        in
+        let quals =
+            (* KM : What about Logic ? should it still be there even with an implementation *)
+            S.Discriminator lid ::
+            (if only_decl then [S.Logic] else []) @
+            (if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
+            List.filter (function S.Abstract -> not only_decl | S.Private -> true | _ -> false ) iquals
+        in
+
+        (* Type of the discriminator *)
+        let binders = imp_binders@[unrefined_arg_binder] in
+        let t =
+            let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
+            SS.close_univ_vars uvs <| U.arrow binders bool_typ
+        in
+        let decl = Sig_declare_typ(discriminator_name, uvs, t, quals, range_of_lid discriminator_name) in
+
+        if only_decl
+        then [decl]
+        else
+            (* Term of the discriminator *)
+            let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
+                let b = S.is_implicit imp in
+                if b && j < ntps
+                then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
+                else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
+            in
+            let pat_true = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, C.exp_true_bool in
+            let pat_false = pos (Pat_wild (S.new_bv None tun)), None, C.exp_false_bool in
+            let arg_exp = S.bv_to_name (fst unrefined_arg_binder) in
+            let body = mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) None p in
+
+            let dd =
+                if quals |> List.contains S.Abstract
+                then Delta_abstract Delta_equational
+                else Delta_equational
+            in
+            let imp = U.abs binders body None in
+            let lb = {
+                lbname=Inr (S.lid_as_fv discriminator_name dd None);
+                lbunivs=uvs;
+                lbtyp=t;
+                lbeff=C.effect_Tot_lid;
+                lbdef=SS.close_univ_vars uvs imp
+            } in
+            let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
+            (* TODO : Are there some cases where we don't want one of these ? *)
+            (* If not the declaration is useless, isn't it ?*)
+            Util.print1 "Result of elaborating discriminator %s\n" (Print.sigelt_to_string impl);
+            [decl ; impl]
+    in
+
+    let projectors_ses =
+      fields |> List.mapi (fun i (x, _) ->
+          let field_name, _ = Util.mk_field_projector_name lid x i in
+          let t = SS.close_univ_vars uvs <| U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
+          let only_decl =
+              lid_equals C.prims_lid  (Env.current_module env)
+              || fvq<>Data_ctor
+              || Options.dont_gen_projectors (Env.current_module env).str
+          in
+          let no_decl = false (* Syntax.is_type x.sort *) in
+          let quals q =
+              if only_decl
+              then S.Assumption::List.filter (function S.Abstract -> false | _ -> true) q
+              else q
+          in
+          let quals =
+              let iquals = iquals |> List.filter (function
+                  | S.Abstract
+                  | S.Private -> true
+                  | _ -> false)
+              in
+              quals (S.Projector(lid, x.ppname)::iquals) in
+          let decl = Sig_declare_typ(field_name, uvs, t, quals, range_of_lid field_name) in
+          Util.print2 "Declaration of a projector %s : %s\n" (Ident.text_of_lid field_name) (Print.term_to_string t);
+          if only_decl
+          then [decl] //only the signature
+          else
+              let projection = S.gen_bv x.ppname.idText None tun in
+              let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
+                  let b = S.is_implicit imp in
+                  if i+ntps=j  //this is the one to project
+                  then pos (Pat_var projection), b
+                  else if b && j < ntps
+                  then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
+                  else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
+              in
+              let pat = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
+              let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
+              let imp = U.abs binders body None in
+              let dd =
+                  if quals |> List.contains S.Abstract
+                  then Delta_abstract Delta_equational
+                  else Delta_equational
+              in
+              (* This is strange : universes are closed in the type but not in the def *)
+              let lb = {
+                  lbname=Inr (S.lid_as_fv field_name dd None);
+                  lbunivs=uvs;
+                  lbtyp=t;
+                  lbeff=C.effect_Tot_lid;
+                  lbdef=SS.close_univ_vars uvs imp
+              } in
+              let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
+              if no_decl then [impl] else [decl;impl]) |> List.flatten
+    in
+    discriminator_ses @ projectors_ses
+
+let mk_data_operations iquals env tcs se = match se with
+  | Sig_datacon(lid, uvs, t, l, n, quals, _, r) when not (lid_equals lid C.lexcons_lid) ->
+      Util.print4 "Debugging projectors : type %s, datacon %s, type %s, tps %s\n"
+                  (Ident.text_of_lid lid)
+                  (Ident.text_of_lid l)
+                  (Print.term_to_string t)
+                  (string_of_int n) ;
+
+     let inductive_tps, should_refine =
+         let tps_opt = Util.find_map tcs (fun se ->
+             if lid_equals l (must (Util.lid_of_sigelt se))
+             then match se with
+                  | Sig_inductive_typ(_, _, tps, _, _, constrs, _, _) -> Some (tps, List.length constrs > 1)
+                  | _ -> failwith "Impossible"
+             else None)
+         in
+         match tps_opt with
+             | Some x -> x
+             | None ->
+                 if lid_equals l Const.exn_lid
+                 then [], true
+                 else raise (Error("Unexpected data constructor", r))
+    in
+
+    let uvs, t = SS.open_univ_vars uvs t in
+    let refine_domain =
+        if (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false))
+        then false
+        else should_refine
+    in
+    let formals, cod = U.arrow_formals t in
+    begin match formals with
+        | [] -> [] //no fields to project
+        | _ ->
+            let filter_records = function
+                | RecordConstructor (_, fns) -> Some (Record_ctor(lid, fns))
+                | _ -> None
+            in
+            let fv_qual = match Util.find_map quals filter_records with
+                | None -> Data_ctor
+                | Some q -> q
+            in
+            let iquals =
+                if List.contains S.Abstract iquals
+                then S.Private::iquals
+                else iquals
+            in
+            let tps, rest = Util.first_N n formals in
+            Util.print5 "After splitting : %s, %inductive_tps %s ; tps %s ; rest %s ; cod %s \n"
+                        (if refine_domain then "refine" else "do not refine")
+                        (Print.binders_to_string "," inductive_tps)
+                        (Print.binders_to_string "," tps)
+                        (Print.binders_to_string "," rest)
+                        (Print.term_to_string cod) ;
+            mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env l lid uvs inductive_tps tps rest cod
+    end
+
+  | _ -> []
