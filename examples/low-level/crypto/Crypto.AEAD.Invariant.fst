@@ -205,6 +205,18 @@ let mac_is_set (#rgn:region) (#i:id)
 	 msg = encode_ad_cipher i ad l cipher /\
  	 tag = tag'))
 
+let otp_entries_exist (#r:region) (#i:id)
+                      (nonce:Cipher.iv (alg i))
+		      (l:nat{safelen i l (PRF.ctr_0 i +^ 1ul)})
+		      (plain:Crypto.Plain.plain i l)
+		      (cipher:lbytes l)
+		      (prf_table:prf_table r i{safeId i})
+  = let dom_1 = {iv=nonce; ctr=PRF.ctr_0 i +^ 1ul} in
+    let otp_blocks = counterblocks i r dom_1 l 0 l plain cipher in
+    (forall (prf_entry:PRF.entry r i).{:pattern (otp_blocks `SeqProperties.contains` prf_entry)} //Pattern added: 12/7
+       otp_blocks `SeqProperties.contains` prf_entry ==>
+       PRF.find prf_table prf_entry.x == Some (prf_entry.range))
+
 (** refines_one_entry:
         Conceptually, read it as (prf_table `refines_one_entry` aead_entry)
 	It states that there are entries in the prf_table (order unspecified)
@@ -219,17 +231,14 @@ let refines_one_entry (#rgn:region) (#i:id)
    let b = num_blocks_for_entry aead_entry in //number of expected OTP blocks
    let total_blocks = b + 1 in //including the MAC block
    let cipher, tag = split cipher_tagged l in
-   let dom_1 = {iv=iv; ctr=PRF.ctr_0 i +^ 1ul} in
+   let dom_1:(PRF.domain i) = {iv=iv; ctr=PRF.ctr_0 i +^ 1ul} in
    safelen i l dom_1.ctr /\ //it's not too long
    //1. the mac entry for this nonce in the prf table contains a mac'd ad+cipher
    mac_is_set prf_table iv ad l cipher tag h /\
    //2. all the expected otp_blocks are in the table, in some order
    //NB: this does not forbid the prf_table from containing other OTP blocks with the same IV;
    //    not clear whether we need that
-   (let otp_blocks = counterblocks i rgn dom_1 l 0 l plain cipher in
-    (forall (prf_entry:PRF.entry rgn i).{:pattern (otp_blocks `contains` prf_entry)} //Pattern added: 12/7
-      otp_blocks `contains` prf_entry ==>
-      PRF.find prf_table prf_entry.x == Some (prf_entry.range)))
+   otp_entries_exist #rgn #i iv l plain cipher prf_table
 
 (** none_above x prf_table:
 	no entry in the prf_table at ({iv=x.iv; ctr=i}) for any i >= x.ctr **)
