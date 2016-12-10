@@ -271,7 +271,6 @@ let all_above (#rgn:region) (#i:id) (x:PRF.domain i) (s:prf_table rgn i) =
   (forall (e:PRF.entry rgn i).{:pattern (s `SeqProperties.contains` e)}
      s `SeqProperties.contains` e ==> e.x `PRF.above` x)
 
-
 (*+ unused_aead_iv_for_prf prf_table iv:
 	the iv is either fresh, i.e., doesn't appear anywhere in the prf_table
 	Or, it occurs there with an unused mac (e.g., decrypt allocated one early)
@@ -570,3 +569,244 @@ let find_refined_aead_entry
     | Some e -> 
       SeqProperties.lemma_find_l_contains (is_aead_entry_nonce n) aead_entries;
       e
+
+(*** LEMMAS ABOUT counterblocks
+	      AND prf_contains_all_otp_blocks ***)
+
+(*+ counterblocks_snoc: 
+        rewrite the indexed-based invocation of counterblocks into a 
+	and inductive form based on snoc.
+        Each recursive invocation effectively snoc's a PRF block **)
+#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+val counterblocks_snoc: #i:id{safeId i} -> (rgn:region) -> (x:domain i{ctr_0 i <^ x.ctr}) -> (k:nat{v x.ctr <= k}) ->
+			 (len:nat{len <> 0 /\ safelen i len (ctr_0 i +^ 1ul)})  ->
+			 (next:nat{0 < next /\ next <= v (PRF.blocklen i)}) ->
+			 (completed_len:nat{ completed_len + next <= len /\ 
+					   FStar.Mul.((k - v (otp_offset i)) * v (PRF.blocklen i) = completed_len)}) ->
+			 (plain:Plain.plain i len) ->
+			 (cipher:lbytes len) ->
+     Lemma (requires True)
+	   (ensures
+	     (let open FStar.Mul in
+	      let plain_last = Plain.slice plain completed_len (completed_len + next) in
+	      let cipher_last = Seq.slice cipher completed_len (completed_len + next) in
+	      let from = (v x.ctr - (v (otp_offset i))) * v (PRF.blocklen i) in
+	      Seq.equal (counterblocks i rgn x len from (completed_len + next) plain cipher)
+			(SeqProperties.snoc (counterblocks i rgn x len from completed_len plain cipher)
+							   (PRF.Entry ({x with ctr=UInt32.uint_to_t k}) 
+							              (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last)))))
+	   (decreases (completed_len - v x.ctr))
+#reset-options "--z3rlimit 400 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let rec counterblocks_snoc #i rgn x k len next completed_len plain cipher =
+   let open FStar.Mul in
+   let from_pos = (v x.ctr - (v (otp_offset i))) * v (PRF.blocklen i) in
+   let to_pos = completed_len + next in
+   if completed_len - from_pos = 0
+   then counterblocks_emp i rgn (PRF.incr i x) len to_pos plain cipher
+   else   let y = PRF.incr i x in
+	  let remaining = to_pos - from_pos in 
+	  let l0 = minNat remaining (v (PRF.blocklen i)) in
+	  let plain_hd = Plain.slice plain from_pos (from_pos + l0) in
+	  let cipher_hd = Seq.slice cipher from_pos (from_pos + l0) in
+	  let plain_last = Plain.slice plain completed_len (completed_len + next) in
+	  let cipher_last = Seq.slice cipher completed_len (completed_len + next) in
+	  let head = PRF.Entry x (PRF.OTP (UInt32.uint_to_t l0) plain_hd cipher_hd) in
+	  let recursive_call = counterblocks i rgn y len (from_pos + l0) to_pos plain cipher in
+	  let middle = counterblocks i rgn y len (from_pos + l0) completed_len plain cipher in
+	  let last_entry = PRF.Entry ({x with ctr=UInt32.uint_to_t k}) (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last) in
+	  assert (counterblocks i rgn x len from_pos to_pos plain cipher ==
+		  SeqProperties.cons head recursive_call);
+	  counterblocks_snoc rgn y k len next completed_len plain cipher;
+	  assert (recursive_call == SeqProperties.snoc middle last_entry);
+          SeqProperties.lemma_cons_snoc head middle last_entry //REVIEW: THIS PROOF TAKES A WHILE ...optimize
+
+#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+(*+ counterblocks_slice: 
+	counterblocks only depends on the fragment of plain and cipher
+	accessible to it between from_pos and to_pos **)
+val counterblocks_slice: #i:id{safeId i} -> 
+			     (rgn:region) -> 
+			     (x:domain i{ctr_0 i <^ x.ctr}) ->
+			     (len:nat{len <> 0}) ->
+			     (from_pos:nat) ->
+			     (to_pos:nat{from_pos <= to_pos /\ to_pos <= len /\ safelen i (to_pos - from_pos) x.ctr}) ->
+			     (plain:Plain.plain i len) ->
+			     (cipher:lbytes len) ->
+    Lemma (requires True)
+	   (ensures
+	     (Seq.equal (counterblocks i rgn x len from_pos to_pos plain cipher)
+	 	        (counterblocks i rgn x (to_pos - from_pos) 0 (to_pos - from_pos)
+					       (Plain.slice plain from_pos to_pos) 
+ 					       (Seq.slice cipher from_pos to_pos))))
+           (decreases (to_pos - from_pos))						 
+#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let rec counterblocks_slice #i rgn x len from_pos to_pos plain cipher =
+    (* The general proof idea:
+       let from' = from + l
+       cb from to p
+       = slice p from from'          @ cb from' to p                           //unfolding
+       =      ''      ''             @ cb 0 (to - from') (slice p from' to)    //IH1
+       =      ''      ''             @ cb 0 (to - from') (slice (slice p from to) l (to - from)) //slice-slice-1
+       =      ''      ''             @ cb l (to - from) (slice p from to)      //IH2 (backwards)
+       = slice (slice p from to) 0 l @     ''                ''                //slice-slice-2
+       = cb 0 (to - from) (slice p from to)                                    //folding
+     *)
+   let remaining = to_pos - from_pos in 
+   if remaining = 0
+   then ()
+   else let l = minNat remaining (v (PRF.blocklen i)) in
+        let y = PRF.incr i x in
+	let from_pos' = from_pos + l in
+	let ih1 = counterblocks_slice rgn y len from_pos' to_pos plain cipher in
+  	let ih2 = counterblocks_slice rgn y (to_pos - from_pos) l (to_pos - from_pos) (Plain.slice plain from_pos to_pos) (Seq.slice cipher from_pos to_pos) in
+	  //slice-slice-1
+	  assert (Seq.equal (as_bytes #i #(to_pos - from_pos') (Plain.slice plain from_pos' to_pos))
+			    (as_bytes #i #(to_pos - from_pos') (Plain.slice (Plain.slice plain from_pos to_pos) l (to_pos - from_pos))));
+	  assert (Seq.equal (Seq.slice cipher from_pos' to_pos)
+			    (Seq.slice (Seq.slice cipher from_pos to_pos) l (to_pos - from_pos)));
+	  //slice-slice-2
+          assert (Seq.equal (as_bytes #i #l (Plain.slice (Plain.slice plain from_pos to_pos) 0 l))
+			    (as_bytes #i #l (Plain.slice plain from_pos from_pos')));
+          assert (Seq.equal (Seq.slice (Seq.slice cipher from_pos to_pos) 0 l)
+			    (Seq.slice cipher from_pos from_pos'))
+
+(*+ counterblocks_suffix: 
+	counterblocks starting from some domain x >= x_1
+	is a suffix of counterblocks starting from x_1
+ **)	
+assume val counterblocks_suffix
+       (#i:id{safeId i})
+       (rgn:region)
+       (x:domain i{ctr_0 i <^ x.ctr})
+       (len:u32{len <> 0ul})
+       (from_pos:nat{from_pos <= v len /\
+ 		   remaining_len_ok x len (u (v len - from_pos))})
+       (plain:Plain.plain i (v len))
+       (cipher:lbytes (v len))
+   : Lemma (requires True)
+ 	   (ensures (
+	    let x_1 = {iv=x.iv; ctr=otp_offset i} in
+	    let cb_from = counterblocks i rgn x (v len) from_pos (v len) plain cipher in
+	    let all_blocks = counterblocks i rgn x_1 (v len) 0 (v len) plain cipher in
+	    let offset = v (x.ctr -^ x_1.ctr) in
+	    offset <= Seq.length all_blocks /\ (
+	    let all_blocks_suffix = Seq.slice all_blocks offset (Seq.length all_blocks) in 
+	    Seq.equal cb_from all_blocks_suffix)))
+
+
+val counterblocks_len: #i:id{safeId i} -> 
+		       rgn:region -> 
+		       x:domain i{ctr_0 i <^ x.ctr} ->
+		       len:nat{len <> 0} ->
+		       from_pos:nat{from_pos <= len /\ safelen i (len - from_pos) x.ctr} ->
+		       plain:Plain.plain i len ->
+		       cipher:lbytes len -> Lemma
+  (ensures Seq.length (counterblocks i rgn x len from_pos len plain cipher) =
+           num_blocks_for_len i (len - from_pos))
+  (decreases (len - from_pos))
+#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let rec counterblocks_len #i rgn x len from_pos plain cipher =
+  if from_pos = len
+  then ()
+  else let blockl = v (Cipher.(blocklen (cipherAlg_of_id i))) in
+       let remaining = len - from_pos in
+       let l0 = minNat remaining blockl in
+       counterblocks_len #i rgn (PRF.incr i x) len (from_pos + l0) plain cipher
+
+assume val counterblocks_contains_all_otp_blocks:   
+  i:id{safeId i} ->
+  r:rid -> 
+  x:PRF.domain i ->
+  len:u32 ->
+  remaining_len:u32{remaining_len_ok x len remaining_len} ->
+  plain:Crypto.Plain.plain i (v len) ->
+  cipher:lbytes (v len) ->
+  Lemma (requires True)
+        (ensures
+	    (let from_pos = v (len -^ remaining_len) in
+	     let all_blocks = counterblocks i r x (v len) from_pos (v len) plain cipher in
+	     prf_contains_all_otp_blocks x from_pos plain cipher all_blocks))
+
+val counterblocks_suffix_contains_otp_blocks
+    (i:id{safeId i})
+    (r:region)
+    (x:PRF.domain i)
+    (#len:u32)
+    (remaining_len:u32{remaining_len_ok x len remaining_len})
+    (plain:Crypto.Plain.plain i (v len))
+    (cipher:lbytes (v len))
+    : Lemma 
+	(requires True)
+        (ensures
+	    (let x_1 = {x with ctr=otp_offset i} in
+	     let from_pos = v (len -^ remaining_len) in
+	     let all_blocks = counterblocks i r x_1 (v len) 0 (v len) plain cipher in
+	     let n_blocks = v x.ctr - v x_1.ctr in
+	     n_blocks <= Seq.length all_blocks /\
+	     (let cb_suffix = Seq.slice all_blocks n_blocks (Seq.length all_blocks) in
+	      prf_contains_all_otp_blocks x from_pos plain cipher cb_suffix)))
+let counterblocks_suffix_contains_otp_blocks
+    (i:id{safeId i})
+    (r:region)
+    (x:PRF.domain i)
+    (#len:u32)
+    (remaining_len:u32{remaining_len_ok x len remaining_len})
+    (plain:Crypto.Plain.plain i (v len))
+    (cipher:lbytes (v len))
+  = let x_1 = {x with ctr=otp_offset i} in
+    let from_pos = v (len -^ remaining_len) in
+    let all_blocks = counterblocks i r x_1 (v len) 0 (v len) plain cipher in
+    let blocks_from_x = counterblocks i r x (v len) from_pos (v len) plain cipher in
+    counterblocks_len r x_1 (v len) 0 plain cipher;
+    counterblocks_contains_all_otp_blocks i r x len remaining_len plain cipher;
+    counterblocks_suffix r x len from_pos plain cipher
+
+assume val prf_contains_all_otp_blocks_tail
+    (#i:id) 
+    (#r:rid)
+    (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
+    (#len:nat)
+    (from_pos:nat{len <> 0 /\ 
+		from_pos < len /\ 
+		safelen i (len - from_pos) PRF.(x.ctr) /\
+		safelen i len (otp_offset i)
+		})
+    (plain:plain i len)
+    (cipher:lbytes len)
+    (prf_table:prf_table r i)
+   : Lemma (requires (prf_contains_all_otp_blocks x from_pos plain cipher prf_table))
+ 	   (ensures  (let remaining_len = len - from_pos in
+	              let l = minNat remaining_len (v (PRF.blocklen i)) in
+		      prf_contains_all_otp_blocks (PRF.incr i x) (from_pos + l) plain cipher prf_table))
+
+
+(*+ invert_prf_contains_all_otp_blocks:
+	This restates prf_contains_all_otp_blocks inductively, 
+	as a property of the first block and inductively on the tail
+ **)
+#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+val invert_prf_contains_all_otp_blocks
+    (#i:id) (#r:rid)
+    (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
+    (#len:nat)
+    (from_pos:nat{len <> 0 /\ 
+		from_pos < len /\ 
+		safelen i (len - from_pos) PRF.(x.ctr) /\
+		safelen i len (otp_offset i)
+		})
+    (plain:plain i len)
+    (cipher:lbytes len)
+    (blocks:prf_table r i{safeId i})
+   : Lemma (requires (prf_contains_all_otp_blocks x from_pos plain cipher blocks))
+ 	   (ensures  (let remaining_len = len - from_pos in
+	              let l = minNat remaining_len (v (PRF.blocklen i)) in
+     		      let plain_hd = Plain.slice plain from_pos (from_pos + l) in
+	              let cipher_hd = Seq.slice cipher from_pos (from_pos + l) in
+		      PRF.contains_cipher_block l x cipher_hd blocks /\
+     		      PRF.contains_plain_block x plain_hd blocks /\ 
+		      prf_contains_all_otp_blocks (PRF.incr i x) (from_pos + l) plain cipher blocks))
+let invert_prf_contains_all_otp_blocks #i #r x #len from_pos plain cipher blocks
+   = if safeId i 
+     then let otp_blocks = counterblocks i r x len from_pos len plain cipher in
+	  SeqProperties.contains_intro otp_blocks 0 (SeqProperties.head otp_blocks);
+	  prf_contains_all_otp_blocks_tail x from_pos plain cipher blocks
