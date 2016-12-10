@@ -794,7 +794,7 @@ recordExp:
       { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr }
 
 simpleDef:
-  | e=separated_pair(qlident, EQUALS, simpleTerm) { e }
+  | e=separated_pair(qlident, EQUALS, noSeqTerm) { e }
 
 appTerm:
   | head=indexingTerm args=list(argTerm)

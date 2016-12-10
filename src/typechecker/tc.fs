@@ -1534,7 +1534,10 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
       let should_generalize, lbs', quals_opt = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
             let lbname = right lb.lbname in //this is definitely not a local let binding
             let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
-              | None -> gen, lb, quals_opt //no annotation found; use whatever was in the let binding
+              | None ->
+                  if lb.lbunivs <> []
+                  then false, lb, quals_opt // we already have generalized universes (e.g. elaborated term)
+                  else gen, lb, quals_opt //no annotation found; use whatever was in the let binding
 
               | Some ((uvs,tval), quals) ->
                 let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
@@ -1542,6 +1545,8 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
                   | Tm_unknown -> ()
                   | _ -> Errors.warn r "Annotation from val declaration overrides inline type annotation"
                 in
+                if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
+                then raise (Error ("Inline universes are incoherent with annotation from val declaration", r));
                 false, //explicit annotation provided; do not generalize
                 mk_lb (Inr lbname, uvs, Const.effect_ALL_lid, tval, lb.lbdef),
                 quals_opt

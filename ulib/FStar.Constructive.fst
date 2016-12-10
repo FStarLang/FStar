@@ -20,7 +20,9 @@ noeq type cexists (#a:Type) (p:a -> Type) =
 type ceq (#a:Type) x : a -> Type =
   | Refl : ceq #a x x
 
-type ceq_type a : Type -> Type =
+assume val ceq_type0 (a:Type 'ua) : Type 'ua -> Type u#('ua+1)
+
+type ceq_type (a:Type 'ua) : Type 'ua -> Type u#('ua+1) =
   | ReflType : ceq_type a a
 
 val eq_ind : #a:Type -> x:a -> p:(a -> Type) -> f:p x -> y:a -> e:ceq x y -> Tot (p y)

@@ -1475,6 +1475,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let discriminator_ses =
         let discriminator_name = Util.mk_discriminator lid in
+        let no_decl = false in
         let only_decl =
               lid_equals C.prims_lid  (Env.current_module env)
               || fvq<>Data_ctor
@@ -1494,6 +1495,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             SS.close_univ_vars uvs <| U.arrow binders bool_typ
         in
         let decl = Sig_declare_typ(discriminator_name, uvs, t, quals, range_of_lid discriminator_name) in
+        if Env.debug env (Options.Other "LogTypes")
+        then Util.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
 
         if only_decl
         then [decl]
@@ -1519,14 +1522,15 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             let lb = {
                 lbname=Inr (S.lid_as_fv discriminator_name dd None);
                 lbunivs=uvs;
-                lbtyp=t;
+                lbtyp=if no_decl then t else tun;
                 lbeff=C.effect_Tot_lid;
                 lbdef=SS.close_univ_vars uvs imp
             } in
             let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
+            if Env.debug env (Options.Other "LogTypes")
+            then Util.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
             (* TODO : Are there some cases where we don't want one of these ? *)
             (* If not the declaration is useless, isn't it ?*)
-            Util.print1 "Result of elaborating discriminator %s\n" (Print.sigelt_to_string impl);
             [decl ; impl]
     in
 
@@ -1539,7 +1543,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               || fvq<>Data_ctor
               || Options.dont_gen_projectors (Env.current_module env).str
           in
-          let no_decl = false (* Syntax.is_type x.sort *) in
+          (* KM : Why would we want to prevent a declaration only in this particular case ? *)
+          let no_decl = Syntax.is_type x.sort in
           let quals q =
               if only_decl
               then S.Assumption::List.filter (function S.Abstract -> false | _ -> true) q
@@ -1553,7 +1558,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               in
               quals (S.Projector(lid, x.ppname)::iquals) in
           let decl = Sig_declare_typ(field_name, uvs, t, quals, range_of_lid field_name) in
-          Util.print2 "Declaration of a projector %s : %s\n" (Ident.text_of_lid field_name) (Print.term_to_string t);
+          if Env.debug env (Options.Other "LogTypes")
+          then Util.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
           then [decl] //only the signature
           else
@@ -1574,32 +1580,30 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   then Delta_abstract Delta_equational
                   else Delta_equational
               in
-              (* This is strange : universes are closed in the type but not in the def *)
               let lb = {
                   lbname=Inr (S.lid_as_fv field_name dd None);
                   lbunivs=uvs;
-                  lbtyp=t;
+                  lbtyp=if no_decl then t else tun;
                   lbeff=C.effect_Tot_lid;
                   lbdef=SS.close_univ_vars uvs imp
               } in
               let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
+              if Env.debug env (Options.Other "LogTypes")
+              then Util.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten
     in
     discriminator_ses @ projectors_ses
 
 let mk_data_operations iquals env tcs se = match se with
   | Sig_datacon(lid, uvs, t, l, n, quals, _, r) when not (lid_equals lid C.lexcons_lid) ->
-      Util.print4 "Debugging projectors : type %s, datacon %s, type %s, tps %s\n"
-                  (Ident.text_of_lid lid)
-                  (Ident.text_of_lid l)
-                  (Print.term_to_string t)
-                  (string_of_int n) ;
 
-     let inductive_tps, should_refine =
+     let inductive_tps, typ0, should_refine =
          let tps_opt = Util.find_map tcs (fun se ->
              if lid_equals l (must (Util.lid_of_sigelt se))
              then match se with
-                  | Sig_inductive_typ(_, _, tps, _, _, constrs, _, _) -> Some (tps, List.length constrs > 1)
+                  | Sig_inductive_typ(_, uvs', tps, typ0, _, constrs, _, _) ->
+                      assert (List.length uvs = List.length uvs') ;
+                      Some (tps, typ0, List.length constrs > 1)
                   | _ -> failwith "Impossible"
              else None)
          in
@@ -1607,17 +1611,20 @@ let mk_data_operations iquals env tcs se = match se with
              | Some x -> x
              | None ->
                  if lid_equals l Const.exn_lid
-                 then [], true
+                 then [], U.ktype0, true
                  else raise (Error("Unexpected data constructor", r))
     in
 
-    let uvs, t = SS.open_univ_vars uvs t in
+    let univ_opening, uvs = SS.univ_var_opening uvs in
+    let t = SS.subst univ_opening t in
+    let typ0 = SS.subst univ_opening in
     let refine_domain =
         if (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false))
         then false
         else should_refine
     in
     let formals, cod = U.arrow_formals t in
+    let indices, _ = U.arrow_formals typ0 in
     begin match formals with
         | [] -> [] //no fields to project
         | _ ->
@@ -1635,12 +1642,6 @@ let mk_data_operations iquals env tcs se = match se with
                 else iquals
             in
             let tps, rest = Util.first_N n formals in
-            Util.print5 "After splitting : %s, %inductive_tps %s ; tps %s ; rest %s ; cod %s \n"
-                        (if refine_domain then "refine" else "do not refine")
-                        (Print.binders_to_string "," inductive_tps)
-                        (Print.binders_to_string "," tps)
-                        (Print.binders_to_string "," rest)
-                        (Print.term_to_string cod) ;
             mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env l lid uvs inductive_tps tps rest cod
     end
 

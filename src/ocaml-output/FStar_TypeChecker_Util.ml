@@ -12,17 +12,17 @@ in (FStar_TypeChecker_Errors.report _151_6 _151_5))))
 
 let is_type : FStar_Syntax_Syntax.term  ->  Prims.bool = (fun t -> (match ((let _151_9 = (FStar_Syntax_Subst.compress t)
 in _151_9.FStar_Syntax_Syntax.n)) with
-| FStar_Syntax_Syntax.Tm_type (_56_19) -> begin
+| FStar_Syntax_Syntax.Tm_type (_56_25) -> begin
 true
 end
-| _56_22 -> begin
+| _56_28 -> begin
 false
 end))
 
 
 let t_binders : FStar_TypeChecker_Env.env  ->  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list = (fun env -> (let _151_13 = (FStar_TypeChecker_Env.all_binders env)
-in (FStar_All.pipe_right _151_13 (FStar_List.filter (fun _56_27 -> (match (_56_27) with
-| (x, _56_26) -> begin
+in (FStar_All.pipe_right _151_13 (FStar_List.filter (fun _56_33 -> (match (_56_33) with
+| (x, _56_32) -> begin
 (is_type x.FStar_Syntax_Syntax.sort)
 end))))))
 
@@ -44,36 +44,36 @@ in (Prims.fst _151_24)))
 
 
 let as_uvar : FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.uvar = (fun _56_1 -> (match (_56_1) with
-| {FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_uvar (uv, _56_42); FStar_Syntax_Syntax.tk = _56_39; FStar_Syntax_Syntax.pos = _56_37; FStar_Syntax_Syntax.vars = _56_35} -> begin
+| {FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_uvar (uv, _56_48); FStar_Syntax_Syntax.tk = _56_45; FStar_Syntax_Syntax.pos = _56_43; FStar_Syntax_Syntax.vars = _56_41} -> begin
 uv
 end
-| _56_47 -> begin
+| _56_53 -> begin
 (FStar_All.failwith "Impossible")
 end))
 
 
 let new_implicit_var : Prims.string  ->  FStar_Range.range  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term * (FStar_Syntax_Syntax.uvar * FStar_Range.range) Prims.list * FStar_TypeChecker_Env.guard_t) = (fun reason r env k -> (match ((FStar_Syntax_Util.destruct k FStar_Syntax_Const.range_of_lid)) with
-| Some ((_56_57)::((tm, _56_54))::[]) -> begin
+| Some ((_56_63)::((tm, _56_60))::[]) -> begin
 (
 
 let t = (FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range (tm.FStar_Syntax_Syntax.pos))) None tm.FStar_Syntax_Syntax.pos)
 in ((t), ([]), (FStar_TypeChecker_Rel.trivial_guard)))
 end
-| _56_62 -> begin
+| _56_68 -> begin
 (
 
-let _56_65 = (new_uvar_aux env k)
-in (match (_56_65) with
+let _56_71 = (new_uvar_aux env k)
+in (match (_56_71) with
 | (t, u) -> begin
 (
 
 let g = (
 
-let _56_66 = FStar_TypeChecker_Rel.trivial_guard
+let _56_72 = FStar_TypeChecker_Rel.trivial_guard
 in (let _151_37 = (let _151_36 = (let _151_35 = (as_uvar u)
 in ((reason), (env), (_151_35), (t), (k), (r)))
 in (_151_36)::[])
-in {FStar_TypeChecker_Env.guard_f = _56_66.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _56_66.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _56_66.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _151_37}))
+in {FStar_TypeChecker_Env.guard_f = _56_72.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _56_72.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _56_72.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _151_37}))
 in (let _151_40 = (let _151_39 = (let _151_38 = (as_uvar u)
 in ((_151_38), (r)))
 in (_151_39)::[])
@@ -89,23 +89,23 @@ in if (not ((FStar_Util.set_is_empty uvs))) then begin
 (
 
 let us = (let _151_47 = (let _151_46 = (FStar_Util.set_elements uvs)
-in (FStar_List.map (fun _56_75 -> (match (_56_75) with
-| (x, _56_74) -> begin
+in (FStar_List.map (fun _56_81 -> (match (_56_81) with
+| (x, _56_80) -> begin
 (FStar_Syntax_Print.uvar_to_string x)
 end)) _151_46))
 in (FStar_All.pipe_right _151_47 (FStar_String.concat ", ")))
 in (
 
-let _56_77 = (FStar_Options.push ())
+let _56_83 = (FStar_Options.push ())
 in (
 
-let _56_79 = (FStar_Options.set_option "hide_uvar_nums" (FStar_Options.Bool (false)))
+let _56_85 = (FStar_Options.set_option "hide_uvar_nums" (FStar_Options.Bool (false)))
 in (
 
-let _56_81 = (FStar_Options.set_option "print_implicits" (FStar_Options.Bool (true)))
+let _56_87 = (FStar_Options.set_option "print_implicits" (FStar_Options.Bool (true)))
 in (
 
-let _56_83 = (let _151_49 = (let _151_48 = (FStar_Syntax_Print.term_to_string t)
+let _56_89 = (let _151_49 = (let _151_48 = (FStar_Syntax_Print.term_to_string t)
 in (FStar_Util.format2 "Unconstrained unification variables %s in type signature %s; please add an annotation" us _151_48))
 in (FStar_TypeChecker_Errors.report r _151_49))
 in (FStar_Options.pop ()))))))
@@ -130,8 +130,8 @@ let force_sort = (fun s -> (let _151_56 = (force_sort' s)
 in (FStar_Syntax_Syntax.mk _151_56 None s.FStar_Syntax_Syntax.pos)))
 
 
-let extract_let_rec_annotation : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.letbinding  ->  (FStar_Syntax_Syntax.univ_names * FStar_Syntax_Syntax.typ * Prims.bool) = (fun env _56_98 -> (match (_56_98) with
-| {FStar_Syntax_Syntax.lbname = _56_97; FStar_Syntax_Syntax.lbunivs = univ_vars; FStar_Syntax_Syntax.lbtyp = t; FStar_Syntax_Syntax.lbeff = _56_93; FStar_Syntax_Syntax.lbdef = e} -> begin
+let extract_let_rec_annotation : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.letbinding  ->  (FStar_Syntax_Syntax.univ_names * FStar_Syntax_Syntax.typ * Prims.bool) = (fun env _56_104 -> (match (_56_104) with
+| {FStar_Syntax_Syntax.lbname = _56_103; FStar_Syntax_Syntax.lbunivs = univ_vars; FStar_Syntax_Syntax.lbtyp = t; FStar_Syntax_Syntax.lbeff = _56_99; FStar_Syntax_Syntax.lbdef = e} -> begin
 (
 
 let rng = t.FStar_Syntax_Syntax.pos
@@ -142,7 +142,7 @@ in (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_unknown -> begin
 (
 
-let _56_102 = if (univ_vars <> []) then begin
+let _56_108 = if (univ_vars <> []) then begin
 (FStar_All.failwith "Impossible: non-empty universe variables but the type is unknown")
 end else begin
 ()
@@ -157,20 +157,20 @@ in _151_65.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_unknown -> begin
 (
 
-let _56_112 = (FStar_Syntax_Util.type_u ())
-in (match (_56_112) with
-| (k, _56_111) -> begin
+let _56_118 = (FStar_Syntax_Util.type_u ())
+in (match (_56_118) with
+| (k, _56_117) -> begin
 (
 
 let t = (let _151_66 = (FStar_TypeChecker_Rel.new_uvar e.FStar_Syntax_Syntax.pos scope k)
 in (FStar_All.pipe_right _151_66 Prims.fst))
 in (((
 
-let _56_114 = a
-in {FStar_Syntax_Syntax.ppname = _56_114.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_114.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = t})), (false)))
+let _56_120 = a
+in {FStar_Syntax_Syntax.ppname = _56_120.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_120.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = t})), (false)))
 end))
 end
-| _56_117 -> begin
+| _56_123 -> begin
 ((a), (true))
 end))
 in (
@@ -179,21 +179,21 @@ let rec aux = (fun vars e -> (
 
 let e = (FStar_Syntax_Subst.compress e)
 in (match (e.FStar_Syntax_Syntax.n) with
-| FStar_Syntax_Syntax.Tm_meta (e, _56_124) -> begin
+| FStar_Syntax_Syntax.Tm_meta (e, _56_130) -> begin
 (aux vars e)
 end
-| FStar_Syntax_Syntax.Tm_ascribed (e, t, _56_130) -> begin
+| FStar_Syntax_Syntax.Tm_ascribed (e, t, _56_136) -> begin
 ((t), (true))
 end
-| FStar_Syntax_Syntax.Tm_abs (bs, body, _56_136) -> begin
+| FStar_Syntax_Syntax.Tm_abs (bs, body, _56_142) -> begin
 (
 
-let _56_155 = (FStar_All.pipe_right bs (FStar_List.fold_left (fun _56_142 _56_145 -> (match (((_56_142), (_56_145))) with
+let _56_161 = (FStar_All.pipe_right bs (FStar_List.fold_left (fun _56_148 _56_151 -> (match (((_56_148), (_56_151))) with
 | ((scope, bs, check), (a, imp)) -> begin
 (
 
-let _56_148 = (mk_binder scope a)
-in (match (_56_148) with
+let _56_154 = (mk_binder scope a)
+in (match (_56_154) with
 | (tb, c) -> begin
 (
 
@@ -207,12 +207,12 @@ let scope = (FStar_List.append scope ((b)::[]))
 in ((scope), (bs), ((c || check))))))
 end))
 end)) ((vars), ([]), (false))))
-in (match (_56_155) with
+in (match (_56_161) with
 | (scope, bs, check) -> begin
 (
 
-let _56_158 = (aux scope body)
-in (match (_56_158) with
+let _56_164 = (aux scope body)
+in (match (_56_164) with
 | (res, check_res) -> begin
 (
 
@@ -228,7 +228,7 @@ in (
 let t = (FStar_Syntax_Util.arrow bs c)
 in (
 
-let _56_165 = if (FStar_TypeChecker_Env.debug env FStar_Options.High) then begin
+let _56_171 = if (FStar_TypeChecker_Env.debug env FStar_Options.High) then begin
 (let _151_74 = (FStar_Range.string_of_range r)
 in (let _151_73 = (FStar_Syntax_Print.term_to_string t)
 in (FStar_Util.print2 "(%s) Using type %s\n" _151_74 _151_73)))
@@ -239,7 +239,7 @@ in ((FStar_Util.Inl (t)), ((check_res || check))))))
 end))
 end))
 end
-| _56_168 -> begin
+| _56_174 -> begin
 (let _151_77 = (let _151_76 = (let _151_75 = (FStar_TypeChecker_Rel.new_uvar r vars FStar_Syntax_Util.ktype0)
 in (FStar_All.pipe_right _151_75 Prims.fst))
 in FStar_Util.Inl (_151_76))
@@ -247,9 +247,9 @@ in ((_151_77), (false)))
 end)))
 in (
 
-let _56_171 = (let _151_78 = (t_binders env)
+let _56_177 = (let _151_78 = (t_binders env)
 in (aux _151_78 e))
-in (match (_56_171) with
+in (match (_56_177) with
 | (t, b) -> begin
 (
 
@@ -267,11 +267,11 @@ end)
 in (([]), (t), (b)))
 end))))))
 end
-| _56_178 -> begin
+| _56_184 -> begin
 (
 
-let _56_181 = (FStar_Syntax_Subst.open_univ_vars univ_vars t)
-in (match (_56_181) with
+let _56_187 = (FStar_Syntax_Subst.open_univ_vars univ_vars t)
+in (match (_56_187) with
 | (univ_vars, t) -> begin
 ((univ_vars), (t), (false))
 end))
@@ -288,12 +288,12 @@ let rec pat_as_arg_with_env = (fun allow_wc_dependence env p -> (match (p.FStar_
 let e = (FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_constant (c)) None p.FStar_Syntax_Syntax.p)
 in (([]), ([]), ([]), (env), (e), (p)))
 end
-| FStar_Syntax_Syntax.Pat_dot_term (x, _56_194) -> begin
+| FStar_Syntax_Syntax.Pat_dot_term (x, _56_200) -> begin
 (
 
-let _56_200 = (FStar_Syntax_Util.type_u ())
-in (match (_56_200) with
-| (k, _56_199) -> begin
+let _56_206 = (FStar_Syntax_Util.type_u ())
+in (match (_56_206) with
+| (k, _56_205) -> begin
 (
 
 let t = (new_uvar env k)
@@ -301,20 +301,20 @@ in (
 
 let x = (
 
-let _56_202 = x
-in {FStar_Syntax_Syntax.ppname = _56_202.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_202.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = t})
+let _56_208 = x
+in {FStar_Syntax_Syntax.ppname = _56_208.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_208.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = t})
 in (
 
-let _56_207 = (let _151_95 = (FStar_TypeChecker_Env.all_binders env)
+let _56_213 = (let _151_95 = (FStar_TypeChecker_Env.all_binders env)
 in (FStar_TypeChecker_Rel.new_uvar p.FStar_Syntax_Syntax.p _151_95 t))
-in (match (_56_207) with
+in (match (_56_213) with
 | (e, u) -> begin
 (
 
 let p = (
 
-let _56_208 = p
-in {FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_dot_term (((x), (e))); FStar_Syntax_Syntax.ty = _56_208.FStar_Syntax_Syntax.ty; FStar_Syntax_Syntax.p = _56_208.FStar_Syntax_Syntax.p})
+let _56_214 = p
+in {FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_dot_term (((x), (e))); FStar_Syntax_Syntax.ty = _56_214.FStar_Syntax_Syntax.ty; FStar_Syntax_Syntax.p = _56_214.FStar_Syntax_Syntax.p})
 in (([]), ([]), ([]), (env), (e), (p)))
 end))))
 end))
@@ -322,16 +322,16 @@ end
 | FStar_Syntax_Syntax.Pat_wild (x) -> begin
 (
 
-let _56_216 = (FStar_Syntax_Util.type_u ())
-in (match (_56_216) with
-| (t, _56_215) -> begin
+let _56_222 = (FStar_Syntax_Util.type_u ())
+in (match (_56_222) with
+| (t, _56_221) -> begin
 (
 
 let x = (
 
-let _56_217 = x
+let _56_223 = x
 in (let _151_96 = (new_uvar env t)
-in {FStar_Syntax_Syntax.ppname = _56_217.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_217.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _151_96}))
+in {FStar_Syntax_Syntax.ppname = _56_223.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_223.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _151_96}))
 in (
 
 let env = if allow_wc_dependence then begin
@@ -348,16 +348,16 @@ end
 | FStar_Syntax_Syntax.Pat_var (x) -> begin
 (
 
-let _56_227 = (FStar_Syntax_Util.type_u ())
-in (match (_56_227) with
-| (t, _56_226) -> begin
+let _56_233 = (FStar_Syntax_Util.type_u ())
+in (match (_56_233) with
+| (t, _56_232) -> begin
 (
 
 let x = (
 
-let _56_228 = x
+let _56_234 = x
 in (let _151_97 = (new_uvar env t)
-in {FStar_Syntax_Syntax.ppname = _56_228.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_228.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _151_97}))
+in {FStar_Syntax_Syntax.ppname = _56_234.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_234.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _151_97}))
 in (
 
 let env = (FStar_TypeChecker_Env.push_bv env x)
@@ -370,12 +370,12 @@ end
 | FStar_Syntax_Syntax.Pat_cons (fv, pats) -> begin
 (
 
-let _56_261 = (FStar_All.pipe_right pats (FStar_List.fold_left (fun _56_243 _56_246 -> (match (((_56_243), (_56_246))) with
+let _56_267 = (FStar_All.pipe_right pats (FStar_List.fold_left (fun _56_249 _56_252 -> (match (((_56_249), (_56_252))) with
 | ((b, a, w, env, args, pats), (p, imp)) -> begin
 (
 
-let _56_253 = (pat_as_arg_with_env allow_wc_dependence env p)
-in (match (_56_253) with
+let _56_259 = (pat_as_arg_with_env allow_wc_dependence env p)
+in (match (_56_259) with
 | (b', a', w', env, te, pat) -> begin
 (
 
@@ -387,7 +387,7 @@ end
 in (((b')::b), ((a')::a), ((w')::w), (env), ((arg)::args), ((((pat), (imp)))::pats)))
 end))
 end)) (([]), ([]), ([]), (env), ([]), ([]))))
-in (match (_56_261) with
+in (match (_56_267) with
 | (b, a, w, env, args, pats) -> begin
 (
 
@@ -402,11 +402,11 @@ in (let _151_106 = (FStar_All.pipe_right (FStar_List.rev a) FStar_List.flatten)
 in (let _151_105 = (FStar_All.pipe_right (FStar_List.rev w) FStar_List.flatten)
 in ((_151_107), (_151_106), (_151_105), (env), (e), ((
 
-let _56_263 = p
-in {FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_cons (((fv), ((FStar_List.rev pats)))); FStar_Syntax_Syntax.ty = _56_263.FStar_Syntax_Syntax.ty; FStar_Syntax_Syntax.p = _56_263.FStar_Syntax_Syntax.p})))))))
+let _56_269 = p
+in {FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_cons (((fv), ((FStar_List.rev pats)))); FStar_Syntax_Syntax.ty = _56_269.FStar_Syntax_Syntax.ty; FStar_Syntax_Syntax.p = _56_269.FStar_Syntax_Syntax.p})))))))
 end))
 end
-| FStar_Syntax_Syntax.Pat_disj (_56_266) -> begin
+| FStar_Syntax_Syntax.Pat_disj (_56_272) -> begin
 (FStar_All.failwith "impossible")
 end))
 in (
@@ -422,32 +422,32 @@ in (match (p.FStar_Syntax_Syntax.v) with
 | FStar_Syntax_Syntax.Pat_cons (fv, pats) -> begin
 (
 
-let pats = (FStar_List.map (fun _56_281 -> (match (_56_281) with
+let pats = (FStar_List.map (fun _56_287 -> (match (_56_287) with
 | (p, imp) -> begin
 (let _151_119 = (elaborate_pat env p)
 in ((_151_119), (imp)))
 end)) pats)
 in (
 
-let _56_286 = (FStar_TypeChecker_Env.lookup_datacon env fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
-in (match (_56_286) with
-| (_56_284, t) -> begin
+let _56_292 = (FStar_TypeChecker_Env.lookup_datacon env fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
+in (match (_56_292) with
+| (_56_290, t) -> begin
 (
 
-let _56_290 = (FStar_Syntax_Util.arrow_formals t)
-in (match (_56_290) with
-| (f, _56_289) -> begin
+let _56_296 = (FStar_Syntax_Util.arrow_formals t)
+in (match (_56_296) with
+| (f, _56_295) -> begin
 (
 
 let rec aux = (fun formals pats -> (match (((formals), (pats))) with
 | ([], []) -> begin
 []
 end
-| ([], (_56_301)::_56_299) -> begin
+| ([], (_56_307)::_56_305) -> begin
 (Prims.raise (FStar_Syntax_Syntax.Error ((("Too many pattern arguments"), ((FStar_Ident.range_of_lid fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v))))))
 end
-| ((_56_307)::_56_305, []) -> begin
-(FStar_All.pipe_right formals (FStar_List.map (fun _56_313 -> (match (_56_313) with
+| ((_56_313)::_56_311, []) -> begin
+(FStar_All.pipe_right formals (FStar_List.map (fun _56_319 -> (match (_56_319) with
 | (t, imp) -> begin
 (match (imp) with
 | Some (FStar_Syntax_Syntax.Implicit (inaccessible)) -> begin
@@ -462,7 +462,7 @@ let r = (FStar_Ident.range_of_lid fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Sy
 in (let _151_127 = (maybe_dot inaccessible a r)
 in ((_151_127), (true)))))
 end
-| _56_320 -> begin
+| _56_326 -> begin
 (let _151_131 = (let _151_130 = (let _151_129 = (let _151_128 = (FStar_Syntax_Print.pat_to_string p)
 in (FStar_Util.format1 "Insufficient pattern arguments (%s)" _151_128))
 in ((_151_129), ((FStar_Ident.range_of_lid fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v))))
@@ -473,11 +473,11 @@ end))))
 end
 | ((f)::formals', ((p, p_imp))::pats') -> begin
 (match (f) with
-| (_56_331, Some (FStar_Syntax_Syntax.Implicit (_56_333))) when p_imp -> begin
+| (_56_337, Some (FStar_Syntax_Syntax.Implicit (_56_339))) when p_imp -> begin
 (let _151_132 = (aux formals' pats')
 in (((p), (true)))::_151_132)
 end
-| (_56_338, Some (FStar_Syntax_Syntax.Implicit (inaccessible))) -> begin
+| (_56_344, Some (FStar_Syntax_Syntax.Implicit (inaccessible))) -> begin
 (
 
 let a = (FStar_Syntax_Syntax.new_bv (Some (p.FStar_Syntax_Syntax.p)) FStar_Syntax_Syntax.tun)
@@ -487,7 +487,7 @@ let p = (maybe_dot inaccessible a (FStar_Ident.range_of_lid fv.FStar_Syntax_Synt
 in (let _151_133 = (aux formals' pats)
 in (((p), (true)))::_151_133)))
 end
-| (_56_346, imp) -> begin
+| (_56_352, imp) -> begin
 (let _151_136 = (let _151_134 = (FStar_Syntax_Syntax.is_implicit imp)
 in ((p), (_151_134)))
 in (let _151_135 = (aux formals' pats')
@@ -496,15 +496,15 @@ end)
 end))
 in (
 
-let _56_349 = p
+let _56_355 = p
 in (let _151_139 = (let _151_138 = (let _151_137 = (aux f pats)
 in ((fv), (_151_137)))
 in FStar_Syntax_Syntax.Pat_cons (_151_138))
-in {FStar_Syntax_Syntax.v = _151_139; FStar_Syntax_Syntax.ty = _56_349.FStar_Syntax_Syntax.ty; FStar_Syntax_Syntax.p = _56_349.FStar_Syntax_Syntax.p})))
+in {FStar_Syntax_Syntax.v = _151_139; FStar_Syntax_Syntax.ty = _56_355.FStar_Syntax_Syntax.ty; FStar_Syntax_Syntax.p = _56_355.FStar_Syntax_Syntax.p})))
 end))
 end)))
 end
-| _56_352 -> begin
+| _56_358 -> begin
 p
 end)))
 in (
@@ -514,8 +514,8 @@ let one_pat = (fun allow_wc_dependence env p -> (
 let p = (elaborate_pat env p)
 in (
 
-let _56_364 = (pat_as_arg_with_env allow_wc_dependence env p)
-in (match (_56_364) with
+let _56_370 = (pat_as_arg_with_env allow_wc_dependence env p)
+in (match (_56_370) with
 | (b, a, w, env, arg, p) -> begin
 (match ((FStar_All.pipe_right b (FStar_Util.find_dup FStar_Syntax_Syntax.bv_eq))) with
 | Some (x) -> begin
@@ -524,7 +524,7 @@ in ((_151_146), (p.FStar_Syntax_Syntax.p)))
 in FStar_Syntax_Syntax.Error (_151_147))
 in (Prims.raise _151_148))
 end
-| _56_368 -> begin
+| _56_374 -> begin
 ((b), (a), (w), (arg), (p))
 end)
 end))))
@@ -537,17 +537,17 @@ end
 | FStar_Syntax_Syntax.Pat_disj ((q)::pats) -> begin
 (
 
-let _56_384 = (one_pat false env q)
-in (match (_56_384) with
-| (b, a, _56_381, te, q) -> begin
+let _56_390 = (one_pat false env q)
+in (match (_56_390) with
+| (b, a, _56_387, te, q) -> begin
 (
 
-let _56_399 = (FStar_List.fold_right (fun p _56_389 -> (match (_56_389) with
+let _56_405 = (FStar_List.fold_right (fun p _56_395 -> (match (_56_395) with
 | (w, args, pats) -> begin
 (
 
-let _56_395 = (one_pat false env p)
-in (match (_56_395) with
+let _56_401 = (one_pat false env p)
+in (match (_56_401) with
 | (b', a', w', arg, p) -> begin
 if (not ((FStar_Util.multiset_equiv FStar_Syntax_Syntax.bv_eq a a'))) then begin
 (let _151_158 = (let _151_157 = (let _151_156 = (FStar_TypeChecker_Errors.disjunctive_pattern_vars a a')
@@ -562,23 +562,23 @@ in (((FStar_List.append w' w)), (_151_160), ((p)::pats)))
 end
 end))
 end)) pats (([]), ([]), ([])))
-in (match (_56_399) with
+in (match (_56_405) with
 | (w, args, pats) -> begin
 (let _151_162 = (let _151_161 = (FStar_Syntax_Syntax.as_arg te)
 in (_151_161)::args)
 in (((FStar_List.append b w)), (_151_162), ((
 
-let _56_400 = p
-in {FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_disj ((q)::pats); FStar_Syntax_Syntax.ty = _56_400.FStar_Syntax_Syntax.ty; FStar_Syntax_Syntax.p = _56_400.FStar_Syntax_Syntax.p}))))
+let _56_406 = p
+in {FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_disj ((q)::pats); FStar_Syntax_Syntax.ty = _56_406.FStar_Syntax_Syntax.ty; FStar_Syntax_Syntax.p = _56_406.FStar_Syntax_Syntax.p}))))
 end))
 end))
 end
-| _56_403 -> begin
+| _56_409 -> begin
 (
 
-let _56_411 = (one_pat true env p)
-in (match (_56_411) with
-| (b, _56_406, _56_408, arg, p) -> begin
+let _56_417 = (one_pat true env p)
+in (match (_56_417) with
+| (b, _56_412, _56_414, arg, p) -> begin
 (let _151_164 = (let _151_163 = (FStar_Syntax_Syntax.as_arg arg)
 in (_151_163)::[])
 in ((b), (_151_164), (p)))
@@ -586,8 +586,8 @@ end))
 end))
 in (
 
-let _56_415 = (top_level_pat_as_args env p)
-in (match (_56_415) with
+let _56_421 = (top_level_pat_as_args env p)
+in (match (_56_421) with
 | (b, args, p) -> begin
 (
 
@@ -608,17 +608,17 @@ in (
 
 let e = (FStar_Syntax_Util.unmeta e)
 in (match (((p.FStar_Syntax_Syntax.v), (e.FStar_Syntax_Syntax.n))) with
-| (_56_429, FStar_Syntax_Syntax.Tm_uinst (e, _56_432)) -> begin
+| (_56_435, FStar_Syntax_Syntax.Tm_uinst (e, _56_438)) -> begin
 (aux p e)
 end
-| (FStar_Syntax_Syntax.Pat_constant (_56_437), FStar_Syntax_Syntax.Tm_constant (_56_440)) -> begin
+| (FStar_Syntax_Syntax.Pat_constant (_56_443), FStar_Syntax_Syntax.Tm_constant (_56_446)) -> begin
 (let _151_179 = (force_sort' e)
 in (pkg p.FStar_Syntax_Syntax.v _151_179))
 end
 | (FStar_Syntax_Syntax.Pat_var (x), FStar_Syntax_Syntax.Tm_name (y)) -> begin
 (
 
-let _56_448 = if (not ((FStar_Syntax_Syntax.bv_eq x y))) then begin
+let _56_454 = if (not ((FStar_Syntax_Syntax.bv_eq x y))) then begin
 (let _151_182 = (let _151_181 = (FStar_Syntax_Print.bv_to_string x)
 in (let _151_180 = (FStar_Syntax_Print.bv_to_string y)
 in (FStar_Util.format2 "Expected pattern variable %s; got %s" _151_181 _151_180)))
@@ -628,7 +628,7 @@ end else begin
 end
 in (
 
-let _56_450 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Pat"))) then begin
+let _56_456 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Pat"))) then begin
 (let _151_184 = (FStar_Syntax_Print.bv_to_string x)
 in (let _151_183 = (FStar_TypeChecker_Normalize.term_to_string env y.FStar_Syntax_Syntax.sort)
 in (FStar_Util.print2 "Pattern variable %s introduced at type %s\n" _151_184 _151_183)))
@@ -642,14 +642,14 @@ in (
 
 let x = (
 
-let _56_453 = x
-in {FStar_Syntax_Syntax.ppname = _56_453.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_453.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = s})
+let _56_459 = x
+in {FStar_Syntax_Syntax.ppname = _56_459.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_459.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = s})
 in (pkg (FStar_Syntax_Syntax.Pat_var (x)) s.FStar_Syntax_Syntax.n)))))
 end
 | (FStar_Syntax_Syntax.Pat_wild (x), FStar_Syntax_Syntax.Tm_name (y)) -> begin
 (
 
-let _56_461 = if (FStar_All.pipe_right (FStar_Syntax_Syntax.bv_eq x y) Prims.op_Negation) then begin
+let _56_467 = if (FStar_All.pipe_right (FStar_Syntax_Syntax.bv_eq x y) Prims.op_Negation) then begin
 (let _151_187 = (let _151_186 = (FStar_Syntax_Print.bv_to_string x)
 in (let _151_185 = (FStar_Syntax_Print.bv_to_string y)
 in (FStar_Util.format2 "Expected pattern variable %s; got %s" _151_186 _151_185)))
@@ -664,11 +664,11 @@ in (
 
 let x = (
 
-let _56_464 = x
-in {FStar_Syntax_Syntax.ppname = _56_464.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_464.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = s})
+let _56_470 = x
+in {FStar_Syntax_Syntax.ppname = _56_470.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_470.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = s})
 in (pkg (FStar_Syntax_Syntax.Pat_wild (x)) s.FStar_Syntax_Syntax.n))))
 end
-| (FStar_Syntax_Syntax.Pat_dot_term (x, _56_469), _56_473) -> begin
+| (FStar_Syntax_Syntax.Pat_dot_term (x, _56_475), _56_479) -> begin
 (
 
 let s = (force_sort e)
@@ -676,14 +676,14 @@ in (
 
 let x = (
 
-let _56_476 = x
-in {FStar_Syntax_Syntax.ppname = _56_476.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_476.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = s})
+let _56_482 = x
+in {FStar_Syntax_Syntax.ppname = _56_482.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_482.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = s})
 in (pkg (FStar_Syntax_Syntax.Pat_dot_term (((x), (e)))) s.FStar_Syntax_Syntax.n)))
 end
 | (FStar_Syntax_Syntax.Pat_cons (fv, []), FStar_Syntax_Syntax.Tm_fvar (fv')) -> begin
 (
 
-let _56_486 = if (not ((FStar_Syntax_Syntax.fv_eq fv fv'))) then begin
+let _56_492 = if (not ((FStar_Syntax_Syntax.fv_eq fv fv'))) then begin
 (let _151_188 = (FStar_Util.format2 "Expected pattern constructor %s; got %s" fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str fv'.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str)
 in (FStar_All.failwith _151_188))
 end else begin
@@ -695,7 +695,7 @@ end
 | ((FStar_Syntax_Syntax.Pat_cons (fv, argpats), FStar_Syntax_Syntax.Tm_app ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar (fv'); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, args))) | ((FStar_Syntax_Syntax.Pat_cons (fv, argpats), FStar_Syntax_Syntax.Tm_app ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_uinst ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar (fv'); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, _); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, args))) -> begin
 (
 
-let _56_529 = if (let _151_190 = (FStar_Syntax_Syntax.fv_eq fv fv')
+let _56_535 = if (let _151_190 = (FStar_Syntax_Syntax.fv_eq fv fv')
 in (FStar_All.pipe_right _151_190 Prims.op_Negation)) then begin
 (let _151_191 = (FStar_Util.format2 "Expected pattern constructor %s; got %s" fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str fv'.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str)
 in (FStar_All.failwith _151_191))
@@ -712,9 +712,9 @@ let rec match_args = (fun matched_pats args argpats -> (match (((args), (argpats
 (let _151_198 = (force_sort' e)
 in (pkg (FStar_Syntax_Syntax.Pat_cons (((fv), ((FStar_List.rev matched_pats))))) _151_198))
 end
-| ((arg)::args, ((argpat, _56_545))::argpats) -> begin
+| ((arg)::args, ((argpat, _56_551))::argpats) -> begin
 (match (((arg), (argpat.FStar_Syntax_Syntax.v))) with
-| ((e, Some (FStar_Syntax_Syntax.Implicit (true))), FStar_Syntax_Syntax.Pat_dot_term (_56_555)) -> begin
+| ((e, Some (FStar_Syntax_Syntax.Implicit (true))), FStar_Syntax_Syntax.Pat_dot_term (_56_561)) -> begin
 (
 
 let x = (let _151_199 = (force_sort e)
@@ -724,7 +724,7 @@ in (
 let q = (FStar_Syntax_Syntax.withinfo (FStar_Syntax_Syntax.Pat_dot_term (((x), (e)))) x.FStar_Syntax_Syntax.sort.FStar_Syntax_Syntax.n p.FStar_Syntax_Syntax.p)
 in (match_args ((((q), (true)))::matched_pats) args argpats)))
 end
-| ((e, imp), _56_564) -> begin
+| ((e, imp), _56_570) -> begin
 (
 
 let pat = (let _151_201 = (aux argpat e)
@@ -733,7 +733,7 @@ in ((_151_201), (_151_200))))
 in (match_args ((pat)::matched_pats) args argpats))
 end)
 end
-| _56_568 -> begin
+| _56_574 -> begin
 (let _151_204 = (let _151_203 = (FStar_Syntax_Print.pat_to_string p)
 in (let _151_202 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format2 "Unexpected number of pattern arguments: \n\t%s\n\t%s\n" _151_203 _151_202)))
@@ -741,7 +741,7 @@ in (FStar_All.failwith _151_204))
 end))
 in (match_args [] args argpats))))
 end
-| _56_570 -> begin
+| _56_576 -> begin
 (let _151_209 = (let _151_208 = (FStar_Range.string_of_range qq.FStar_Syntax_Syntax.p)
 in (let _151_207 = (FStar_Syntax_Print.pat_to_string qq)
 in (let _151_206 = (let _151_205 = (FStar_All.pipe_right exps (FStar_List.map FStar_Syntax_Print.term_to_string))
@@ -750,16 +750,16 @@ in (FStar_Util.format3 "(%s) Impossible: pattern to decorate is %s; expression i
 in (FStar_All.failwith _151_209))
 end))))
 in (match (((p.FStar_Syntax_Syntax.v), (exps))) with
-| (FStar_Syntax_Syntax.Pat_disj (ps), _56_574) when ((FStar_List.length ps) = (FStar_List.length exps)) -> begin
+| (FStar_Syntax_Syntax.Pat_disj (ps), _56_580) when ((FStar_List.length ps) = (FStar_List.length exps)) -> begin
 (
 
 let ps = (FStar_List.map2 aux ps exps)
 in (FStar_Syntax_Syntax.withinfo (FStar_Syntax_Syntax.Pat_disj (ps)) FStar_Syntax_Syntax.tun.FStar_Syntax_Syntax.n p.FStar_Syntax_Syntax.p))
 end
-| (_56_578, (e)::[]) -> begin
+| (_56_584, (e)::[]) -> begin
 (aux p e)
 end
-| _56_583 -> begin
+| _56_589 -> begin
 (FStar_All.failwith "Unexpected number of patterns")
 end))))
 
@@ -772,12 +772,12 @@ in (
 let mk = (fun f -> (FStar_Syntax_Syntax.mk f topt pat.FStar_Syntax_Syntax.p))
 in (
 
-let pat_as_arg = (fun _56_591 -> (match (_56_591) with
+let pat_as_arg = (fun _56_597 -> (match (_56_597) with
 | (p, i) -> begin
 (
 
-let _56_594 = (decorated_pattern_as_term p)
-in (match (_56_594) with
+let _56_600 = (decorated_pattern_as_term p)
+in (match (_56_600) with
 | (vars, te) -> begin
 (let _151_217 = (let _151_216 = (FStar_Syntax_Syntax.as_implicit i)
 in ((te), (_151_216)))
@@ -785,7 +785,7 @@ in ((vars), (_151_217)))
 end))
 end))
 in (match (pat.FStar_Syntax_Syntax.v) with
-| FStar_Syntax_Syntax.Pat_disj (_56_596) -> begin
+| FStar_Syntax_Syntax.Pat_disj (_56_602) -> begin
 (FStar_All.failwith "Impossible")
 end
 | FStar_Syntax_Syntax.Pat_constant (c) -> begin
@@ -799,9 +799,9 @@ end
 | FStar_Syntax_Syntax.Pat_cons (fv, pats) -> begin
 (
 
-let _56_609 = (let _151_220 = (FStar_All.pipe_right pats (FStar_List.map pat_as_arg))
+let _56_615 = (let _151_220 = (FStar_All.pipe_right pats (FStar_List.map pat_as_arg))
 in (FStar_All.pipe_right _151_220 FStar_List.unzip))
-in (match (_56_609) with
+in (match (_56_615) with
 | (vars, args) -> begin
 (
 
@@ -821,12 +821,12 @@ end)))))
 let destruct_comp : FStar_Syntax_Syntax.comp_typ  ->  (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.typ * (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax) = (fun c -> (
 
 let wp = (match (c.FStar_Syntax_Syntax.effect_args) with
-| ((wp, _56_618))::[] -> begin
+| ((wp, _56_624))::[] -> begin
 wp
 end
-| _56_622 -> begin
-(let _151_230 = (let _151_229 = (let _151_228 = (FStar_List.map (fun _56_626 -> (match (_56_626) with
-| (x, _56_625) -> begin
+| _56_628 -> begin
+(let _151_230 = (let _151_229 = (let _151_228 = (FStar_List.map (fun _56_632 -> (match (_56_632) with
+| (x, _56_631) -> begin
 (FStar_Syntax_Print.term_to_string x)
 end)) c.FStar_Syntax_Syntax.effect_args)
 in (FStar_All.pipe_right _151_228 (FStar_String.concat ", ")))
@@ -839,9 +839,9 @@ in ((_151_231), (c.FStar_Syntax_Syntax.result_typ), (wp)))))
 
 let lift_comp : FStar_Syntax_Syntax.comp_typ  ->  FStar_Ident.lident  ->  (FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  FStar_Syntax_Syntax.term)  ->  FStar_Syntax_Syntax.comp_typ = (fun c m lift -> (
 
-let _56_635 = (destruct_comp c)
-in (match (_56_635) with
-| (u, _56_633, wp) -> begin
+let _56_641 = (destruct_comp c)
+in (match (_56_641) with
+| (u, _56_639, wp) -> begin
 (let _151_250 = (let _151_249 = (let _151_248 = (lift c.FStar_Syntax_Syntax.result_typ wp)
 in (FStar_Syntax_Syntax.as_arg _151_248))
 in (_151_249)::[])
@@ -851,11 +851,11 @@ end)))
 
 let join_effects : FStar_TypeChecker_Env.env  ->  FStar_Ident.lident  ->  FStar_Ident.lident  ->  FStar_Ident.lident = (fun env l1 l2 -> (
 
-let _56_644 = (let _151_258 = (FStar_TypeChecker_Env.norm_eff_name env l1)
+let _56_650 = (let _151_258 = (FStar_TypeChecker_Env.norm_eff_name env l1)
 in (let _151_257 = (FStar_TypeChecker_Env.norm_eff_name env l2)
 in (FStar_TypeChecker_Env.join env _151_258 _151_257)))
-in (match (_56_644) with
-| (m, _56_641, _56_643) -> begin
+in (match (_56_650) with
+| (m, _56_647, _56_649) -> begin
 m
 end)))
 
@@ -875,8 +875,8 @@ in (
 let c2 = (FStar_TypeChecker_Normalize.unfold_effect_abbrev env c2)
 in (
 
-let _56_656 = (FStar_TypeChecker_Env.join env c1.FStar_Syntax_Syntax.effect_name c2.FStar_Syntax_Syntax.effect_name)
-in (match (_56_656) with
+let _56_662 = (FStar_TypeChecker_Env.join env c1.FStar_Syntax_Syntax.effect_name c2.FStar_Syntax_Syntax.effect_name)
+in (match (_56_662) with
 | (m, lift1, lift2) -> begin
 (
 
@@ -889,8 +889,8 @@ in (
 let md = (FStar_TypeChecker_Env.get_effect_decl env m)
 in (
 
-let _56_662 = (FStar_TypeChecker_Env.wp_signature env md.FStar_Syntax_Syntax.mname)
-in (match (_56_662) with
+let _56_668 = (FStar_TypeChecker_Env.wp_signature env md.FStar_Syntax_Syntax.mname)
+in (match (_56_668) with
 | (a, kwp) -> begin
 (let _151_272 = (destruct_comp m1)
 in (let _151_271 = (destruct_comp m2)
@@ -919,9 +919,9 @@ in (FStar_Syntax_Syntax.mk_Comp _151_293)))
 
 let subst_lcomp : FStar_Syntax_Syntax.subst_t  ->  FStar_Syntax_Syntax.lcomp  ->  FStar_Syntax_Syntax.lcomp = (fun subst lc -> (
 
-let _56_676 = lc
+let _56_682 = lc
 in (let _151_300 = (FStar_Syntax_Subst.subst subst lc.FStar_Syntax_Syntax.res_typ)
-in {FStar_Syntax_Syntax.eff_name = _56_676.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = _151_300; FStar_Syntax_Syntax.cflags = _56_676.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = (fun _56_678 -> (match (()) with
+in {FStar_Syntax_Syntax.eff_name = _56_682.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = _151_300; FStar_Syntax_Syntax.cflags = _56_682.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = (fun _56_684 -> (match (()) with
 | () -> begin
 (let _151_299 = (lc.FStar_Syntax_Syntax.comp ())
 in (FStar_Syntax_Subst.subst_comp subst _151_299))
@@ -930,10 +930,10 @@ end))})))
 
 let is_function : FStar_Syntax_Syntax.term  ->  Prims.bool = (fun t -> (match ((let _151_303 = (FStar_Syntax_Subst.compress t)
 in _151_303.FStar_Syntax_Syntax.n)) with
-| FStar_Syntax_Syntax.Tm_arrow (_56_681) -> begin
+| FStar_Syntax_Syntax.Tm_arrow (_56_687) -> begin
 true
 end
-| _56_684 -> begin
+| _56_690 -> begin
 false
 end))
 
@@ -950,8 +950,8 @@ let m = (let _151_311 = (FStar_TypeChecker_Env.effect_decl_opt env FStar_Syntax_
 in (FStar_Util.must _151_311))
 in (
 
-let _56_691 = (FStar_TypeChecker_Env.wp_signature env FStar_Syntax_Const.effect_PURE_lid)
-in (match (_56_691) with
+let _56_697 = (FStar_TypeChecker_Env.wp_signature env FStar_Syntax_Const.effect_PURE_lid)
+in (match (_56_697) with
 | (a, kwp) -> begin
 (
 
@@ -973,7 +973,7 @@ end)))
 end
 in (
 
-let _56_696 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Return"))) then begin
+let _56_702 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Return"))) then begin
 (let _151_320 = (FStar_Range.string_of_range v.FStar_Syntax_Syntax.pos)
 in (let _151_319 = (FStar_Syntax_Print.term_to_string v)
 in (let _151_318 = (FStar_TypeChecker_Normalize.comp_to_string env c)
@@ -984,7 +984,7 @@ end
 in c)))
 
 
-let bind : FStar_Range.range  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term Prims.option  ->  FStar_Syntax_Syntax.lcomp  ->  lcomp_with_binder  ->  FStar_Syntax_Syntax.lcomp = (fun r1 env e1opt lc1 _56_704 -> (match (_56_704) with
+let bind : FStar_Range.range  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term Prims.option  ->  FStar_Syntax_Syntax.lcomp  ->  lcomp_with_binder  ->  FStar_Syntax_Syntax.lcomp = (fun r1 env e1opt lc1 _56_710 -> (match (_56_710) with
 | (b, lc2) -> begin
 (
 
@@ -994,7 +994,7 @@ in (
 let lc2 = (FStar_TypeChecker_Normalize.ghost_to_pure_lcomp env lc2)
 in (
 
-let _56_714 = if (FStar_TypeChecker_Env.debug env FStar_Options.Extreme) then begin
+let _56_720 = if (FStar_TypeChecker_Env.debug env FStar_Options.Extreme) then begin
 (
 
 let bstr = (match (b) with
@@ -1019,7 +1019,7 @@ end else begin
 end
 in (
 
-let bind_it = (fun _56_717 -> (match (()) with
+let bind_it = (fun _56_723 -> (match (()) with
 | () -> begin
 (
 
@@ -1029,7 +1029,7 @@ in (
 let c2 = (lc2.FStar_Syntax_Syntax.comp ())
 in (
 
-let _56_723 = if (FStar_TypeChecker_Env.debug env FStar_Options.Extreme) then begin
+let _56_729 = if (FStar_TypeChecker_Env.debug env FStar_Options.Extreme) then begin
 (let _151_340 = (match (b) with
 | None -> begin
 "none"
@@ -1047,18 +1047,18 @@ end else begin
 end
 in (
 
-let try_simplify = (fun _56_726 -> (match (()) with
+let try_simplify = (fun _56_732 -> (match (()) with
 | () -> begin
 (
 
-let aux = (fun _56_728 -> (match (()) with
+let aux = (fun _56_734 -> (match (()) with
 | () -> begin
 if (FStar_Syntax_Util.is_trivial_wp c1) then begin
 (match (b) with
 | None -> begin
 Some (((c2), ("trivial no binder")))
 end
-| Some (_56_731) -> begin
+| Some (_56_737) -> begin
 if (FStar_Syntax_Util.is_ml_comp c2) then begin
 Some (((c2), ("trivial ml")))
 end else begin
@@ -1081,7 +1081,7 @@ let subst_c2 = (fun reason -> (match (((e1opt), (b))) with
 in ((_151_347), (reason)))
 in Some (_151_348))
 end
-| _56_741 -> begin
+| _56_747 -> begin
 (aux ())
 end))
 in if ((FStar_Syntax_Util.is_total_comp c1) && (FStar_Syntax_Util.is_total_comp c2)) then begin
@@ -1100,7 +1100,7 @@ end else begin
 (aux ())
 end
 end
-| _56_748 -> begin
+| _56_754 -> begin
 (aux ())
 end)
 end
@@ -1113,8 +1113,8 @@ end
 | None -> begin
 (
 
-let _56_766 = (lift_and_destruct env c1 c2)
-in (match (_56_766) with
+let _56_772 = (lift_and_destruct env c1 c2)
+in (match (_56_772) with
 | ((md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2)) -> begin
 (
 
@@ -1170,8 +1170,8 @@ let lift_formula : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  
 let md_pure = (FStar_TypeChecker_Env.get_effect_decl env FStar_Syntax_Const.effect_PURE_lid)
 in (
 
-let _56_785 = (FStar_TypeChecker_Env.wp_signature env md_pure.FStar_Syntax_Syntax.mname)
-in (match (_56_785) with
+let _56_791 = (FStar_TypeChecker_Env.wp_signature env md_pure.FStar_Syntax_Syntax.mname)
+in (match (_56_791) with
 | (a, kwp) -> begin
 (
 
@@ -1212,10 +1212,10 @@ end
 | FStar_TypeChecker_Common.NonTrivial (f) -> begin
 (
 
-let _56_804 = g
+let _56_810 = g
 in (let _151_411 = (let _151_410 = (label reason r f)
 in FStar_TypeChecker_Common.NonTrivial (_151_410))
-in {FStar_TypeChecker_Env.guard_f = _151_411; FStar_TypeChecker_Env.deferred = _56_804.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _56_804.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _56_804.FStar_TypeChecker_Env.implicits}))
+in {FStar_TypeChecker_Env.guard_f = _151_411; FStar_TypeChecker_Env.deferred = _56_810.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _56_810.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _56_810.FStar_TypeChecker_Env.implicits}))
 end))
 
 
@@ -1226,14 +1226,14 @@ let weaken_guard : FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker
 let g = (FStar_Syntax_Util.mk_imp f1 f2)
 in FStar_TypeChecker_Common.NonTrivial (g))
 end
-| _56_815 -> begin
+| _56_821 -> begin
 g2
 end))
 
 
 let weaken_precondition : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.lcomp  ->  FStar_TypeChecker_Common.guard_formula  ->  FStar_Syntax_Syntax.lcomp = (fun env lc f -> (
 
-let weaken = (fun _56_820 -> (match (()) with
+let weaken = (fun _56_826 -> (match (()) with
 | () -> begin
 (
 
@@ -1251,8 +1251,8 @@ end else begin
 let c = (FStar_TypeChecker_Normalize.unfold_effect_abbrev env c)
 in (
 
-let _56_829 = (destruct_comp c)
-in (match (_56_829) with
+let _56_835 = (destruct_comp c)
+in (match (_56_835) with
 | (u_res_t, res_t, wp) -> begin
 (
 
@@ -1274,8 +1274,8 @@ end))
 end))
 in (
 
-let _56_832 = lc
-in {FStar_Syntax_Syntax.eff_name = _56_832.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = _56_832.FStar_Syntax_Syntax.res_typ; FStar_Syntax_Syntax.cflags = _56_832.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = weaken})))
+let _56_838 = lc
+in {FStar_Syntax_Syntax.eff_name = _56_838.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = _56_838.FStar_Syntax_Syntax.res_typ; FStar_Syntax_Syntax.cflags = _56_838.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = weaken})))
 
 
 let strengthen_precondition : (Prims.unit  ->  Prims.string) Prims.option  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.lcomp  ->  FStar_TypeChecker_Env.guard_t  ->  (FStar_Syntax_Syntax.lcomp * FStar_TypeChecker_Env.guard_t) = (fun reason env e lc g0 -> if (FStar_TypeChecker_Rel.is_trivial g0) then begin
@@ -1283,7 +1283,7 @@ let strengthen_precondition : (Prims.unit  ->  Prims.string) Prims.option  ->  F
 end else begin
 (
 
-let _56_839 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme) then begin
+let _56_845 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme) then begin
 (let _151_450 = (FStar_TypeChecker_Normalize.term_to_string env e)
 in (let _151_449 = (FStar_TypeChecker_Rel.guard_to_string env g0)
 in (FStar_Util.print2 "+++++++++++++Strengthening pre-condition of term %s with guard %s\n" _151_450 _151_449)))
@@ -1296,12 +1296,12 @@ let flags = (FStar_All.pipe_right lc.FStar_Syntax_Syntax.cflags (FStar_List.coll
 | (FStar_Syntax_Syntax.RETURN) | (FStar_Syntax_Syntax.PARTIAL_RETURN) -> begin
 (FStar_Syntax_Syntax.PARTIAL_RETURN)::[]
 end
-| _56_845 -> begin
+| _56_851 -> begin
 []
 end))))
 in (
 
-let strengthen = (fun _56_848 -> (match (()) with
+let strengthen = (fun _56_854 -> (match (()) with
 | () -> begin
 (
 
@@ -1334,7 +1334,7 @@ c
 end
 in (
 
-let _56_858 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme) then begin
+let _56_864 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme) then begin
 (let _151_457 = (FStar_TypeChecker_Normalize.term_to_string env e)
 in (let _151_456 = (FStar_TypeChecker_Normalize.term_to_string env f)
 in (FStar_Util.print2 "-------------Strengthening pre-condition of term %s with guard %s\n" _151_457 _151_456)))
@@ -1346,8 +1346,8 @@ in (
 let c = (FStar_TypeChecker_Normalize.unfold_effect_abbrev env c)
 in (
 
-let _56_864 = (destruct_comp c)
-in (match (_56_864) with
+let _56_870 = (destruct_comp c)
+in (match (_56_870) with
 | (u_res_t, res_t, wp) -> begin
 (
 
@@ -1366,7 +1366,7 @@ in (_151_464)::_151_463))
 in (FStar_Syntax_Syntax.mk_Tm_app _151_466 _151_465 None wp.FStar_Syntax_Syntax.pos)))
 in (
 
-let _56_867 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme) then begin
+let _56_873 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme) then begin
 (let _151_467 = (FStar_Syntax_Print.term_to_string wp)
 in (FStar_Util.print1 "-------------Strengthened pre-condition is %s\n" _151_467))
 end else begin
@@ -1381,7 +1381,7 @@ end)))
 end))
 in (let _151_471 = (
 
-let _56_870 = lc
+let _56_876 = lc
 in (let _151_470 = (FStar_TypeChecker_Env.norm_eff_name env lc.FStar_Syntax_Syntax.eff_name)
 in (let _151_469 = if ((FStar_Syntax_Util.is_pure_lcomp lc) && (let _151_468 = (FStar_Syntax_Util.is_function_typ lc.FStar_Syntax_Syntax.res_typ)
 in (FStar_All.pipe_left Prims.op_Negation _151_468))) then begin
@@ -1389,11 +1389,11 @@ flags
 end else begin
 []
 end
-in {FStar_Syntax_Syntax.eff_name = _151_470; FStar_Syntax_Syntax.res_typ = _56_870.FStar_Syntax_Syntax.res_typ; FStar_Syntax_Syntax.cflags = _151_469; FStar_Syntax_Syntax.comp = strengthen})))
+in {FStar_Syntax_Syntax.eff_name = _151_470; FStar_Syntax_Syntax.res_typ = _56_876.FStar_Syntax_Syntax.res_typ; FStar_Syntax_Syntax.cflags = _151_469; FStar_Syntax_Syntax.comp = strengthen})))
 in ((_151_471), ((
 
-let _56_872 = g0
-in {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = _56_872.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _56_872.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _56_872.FStar_TypeChecker_Env.implicits})))))))
+let _56_878 = g0
+in {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = _56_878.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _56_878.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _56_878.FStar_TypeChecker_Env.implicits})))))))
 end)
 
 
@@ -1408,10 +1408,10 @@ in (
 let y = (FStar_Syntax_Syntax.new_bv None res_t)
 in (
 
-let _56_882 = (let _151_479 = (FStar_Syntax_Syntax.bv_to_name x)
+let _56_888 = (let _151_479 = (FStar_Syntax_Syntax.bv_to_name x)
 in (let _151_478 = (FStar_Syntax_Syntax.bv_to_name y)
 in ((_151_479), (_151_478))))
-in (match (_56_882) with
+in (match (_56_888) with
 | (xexp, yexp) -> begin
 (
 
@@ -1461,15 +1461,15 @@ end))))))
 
 let ite : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.formula  ->  FStar_Syntax_Syntax.lcomp  ->  FStar_Syntax_Syntax.lcomp  ->  FStar_Syntax_Syntax.lcomp = (fun env guard lcomp_then lcomp_else -> (
 
-let comp = (fun _56_894 -> (match (()) with
+let comp = (fun _56_900 -> (match (()) with
 | () -> begin
 (
 
-let _56_911 = (let _151_515 = (lcomp_then.FStar_Syntax_Syntax.comp ())
+let _56_917 = (let _151_515 = (lcomp_then.FStar_Syntax_Syntax.comp ())
 in (let _151_514 = (lcomp_else.FStar_Syntax_Syntax.comp ())
 in (lift_and_destruct env _151_515 _151_514)))
-in (match (_56_911) with
-| ((md, _56_897, _56_899), (u_res_t, res_t, wp_then), (_56_906, _56_908, wp_else)) -> begin
+in (match (_56_917) with
+| ((md, _56_903, _56_905), (u_res_t, res_t, wp_then), (_56_912, _56_914, wp_else)) -> begin
 (
 
 let ifthenelse = (fun md res_t g wp_t wp_e -> (let _151_535 = (FStar_TypeChecker_Env.inst_effect_fun_with ((u_res_t)::[]) env md md.FStar_Syntax_Syntax.if_then_else)
@@ -1515,13 +1515,13 @@ in (FStar_Syntax_Syntax.fvar _151_547 FStar_Syntax_Syntax.Delta_constant None)))
 
 let bind_cases : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.lcomp) Prims.list  ->  FStar_Syntax_Syntax.lcomp = (fun env res_t lcases -> (
 
-let eff = (FStar_List.fold_left (fun eff _56_930 -> (match (_56_930) with
-| (_56_928, lc) -> begin
+let eff = (FStar_List.fold_left (fun eff _56_936 -> (match (_56_936) with
+| (_56_934, lc) -> begin
 (join_effects env eff lc.FStar_Syntax_Syntax.eff_name)
 end)) FStar_Syntax_Const.effect_PURE_lid lcases)
 in (
 
-let bind_cases = (fun _56_933 -> (match (()) with
+let bind_cases = (fun _56_939 -> (match (()) with
 | () -> begin
 (
 
@@ -1571,14 +1571,14 @@ let md = (FStar_TypeChecker_Env.get_effect_decl env FStar_Syntax_Const.effect_PU
 in (mk_comp md u_res_t res_t wp []))))))
 in (
 
-let comp = (FStar_List.fold_right (fun _56_949 celse -> (match (_56_949) with
+let comp = (FStar_List.fold_right (fun _56_955 celse -> (match (_56_955) with
 | (g, cthen) -> begin
 (
 
-let _56_969 = (let _151_592 = (cthen.FStar_Syntax_Syntax.comp ())
+let _56_975 = (let _151_592 = (cthen.FStar_Syntax_Syntax.comp ())
 in (lift_and_destruct env _151_592 celse))
-in (match (_56_969) with
-| ((md, _56_953, _56_955), (_56_958, _56_960, wp_then), (_56_964, _56_966, wp_else)) -> begin
+in (match (_56_975) with
+| ((md, _56_959, _56_961), (_56_964, _56_966, wp_then), (_56_970, _56_972, wp_else)) -> begin
 (let _151_593 = (ifthenelse md res_t g wp_then wp_else)
 in (mk_comp md u_res_t res_t _151_593 []))
 end))
@@ -1594,9 +1594,9 @@ in (
 let md = (FStar_TypeChecker_Env.get_effect_decl env comp.FStar_Syntax_Syntax.effect_name)
 in (
 
-let _56_978 = (destruct_comp comp)
-in (match (_56_978) with
-| (_56_974, _56_976, wp) -> begin
+let _56_984 = (destruct_comp comp)
+in (match (_56_984) with
+| (_56_980, _56_982, wp) -> begin
 (
 
 let wp = (let _151_598 = (FStar_TypeChecker_Env.inst_effect_fun_with ((u_res_t)::[]) env md md.FStar_Syntax_Syntax.ite_wp)
@@ -1614,7 +1614,7 @@ in {FStar_Syntax_Syntax.eff_name = eff; FStar_Syntax_Syntax.res_typ = res_t; FSt
 
 let close_comp : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.bv Prims.list  ->  FStar_Syntax_Syntax.lcomp  ->  FStar_Syntax_Syntax.lcomp = (fun env bvs lc -> (
 
-let close = (fun _56_984 -> (match (()) with
+let close = (fun _56_990 -> (match (()) with
 | () -> begin
 (
 
@@ -1649,8 +1649,8 @@ in (
 let c = (FStar_TypeChecker_Normalize.unfold_effect_abbrev env c)
 in (
 
-let _56_1001 = (destruct_comp c)
-in (match (_56_1001) with
+let _56_1007 = (destruct_comp c)
+in (match (_56_1007) with
 | (u_res_t, res_t, wp) -> begin
 (
 
@@ -1664,13 +1664,13 @@ end)
 end))
 in (
 
-let _56_1004 = lc
-in {FStar_Syntax_Syntax.eff_name = _56_1004.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = _56_1004.FStar_Syntax_Syntax.res_typ; FStar_Syntax_Syntax.cflags = _56_1004.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = close})))
+let _56_1010 = lc
+in {FStar_Syntax_Syntax.eff_name = _56_1010.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = _56_1010.FStar_Syntax_Syntax.res_typ; FStar_Syntax_Syntax.cflags = _56_1010.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = close})))
 
 
 let maybe_assume_result_eq_pure_term : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.lcomp  ->  FStar_Syntax_Syntax.lcomp = (fun env e lc -> (
 
-let refine = (fun _56_1010 -> (match (()) with
+let refine = (fun _56_1016 -> (match (()) with
 | () -> begin
 (
 
@@ -1732,8 +1732,8 @@ lc.FStar_Syntax_Syntax.cflags
 end
 in (
 
-let _56_1022 = lc
-in {FStar_Syntax_Syntax.eff_name = _56_1022.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = _56_1022.FStar_Syntax_Syntax.res_typ; FStar_Syntax_Syntax.cflags = flags; FStar_Syntax_Syntax.comp = refine}))))
+let _56_1028 = lc
+in {FStar_Syntax_Syntax.eff_name = _56_1028.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = _56_1028.FStar_Syntax_Syntax.res_typ; FStar_Syntax_Syntax.cflags = flags; FStar_Syntax_Syntax.comp = refine}))))
 
 
 let check_comp : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t) = (fun env e c c' -> (match ((FStar_TypeChecker_Rel.sub_comp env c c')) with
@@ -1751,13 +1751,13 @@ end))
 
 let maybe_coerce_bool_to_type : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.lcomp  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp) = (fun env e lc t -> (match ((let _151_664 = (FStar_Syntax_Subst.compress t)
 in _151_664.FStar_Syntax_Syntax.n)) with
-| FStar_Syntax_Syntax.Tm_type (_56_1036) -> begin
+| FStar_Syntax_Syntax.Tm_type (_56_1042) -> begin
 (match ((let _151_665 = (FStar_Syntax_Subst.compress lc.FStar_Syntax_Syntax.res_typ)
 in _151_665.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_fvar (fv) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.bool_lid) -> begin
 (
 
-let _56_1040 = (FStar_TypeChecker_Env.lookup_lid env FStar_Syntax_Const.b2t_lid)
+let _56_1046 = (FStar_TypeChecker_Env.lookup_lid env FStar_Syntax_Const.b2t_lid)
 in (
 
 let b2t = (FStar_Syntax_Syntax.fvar (FStar_Ident.set_lid_range FStar_Syntax_Const.b2t_lid e.FStar_Syntax_Syntax.pos) (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "1"))) None)
@@ -1774,11 +1774,11 @@ in (_151_669)::[])
 in (FStar_Syntax_Syntax.mk_Tm_app b2t _151_670 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) e.FStar_Syntax_Syntax.pos))
 in ((e), (lc))))))
 end
-| _56_1046 -> begin
+| _56_1052 -> begin
 ((e), (lc))
 end)
 end
-| _56_1048 -> begin
+| _56_1054 -> begin
 ((e), (lc))
 end))
 
@@ -1793,14 +1793,14 @@ end else begin
 in ((_151_680), (true)))
 end
 in (match (gopt) with
-| (None, _56_1056) -> begin
+| (None, _56_1062) -> begin
 (
 
-let _56_1058 = (FStar_TypeChecker_Rel.subtype_fail env e lc.FStar_Syntax_Syntax.res_typ t)
+let _56_1064 = (FStar_TypeChecker_Rel.subtype_fail env e lc.FStar_Syntax_Syntax.res_typ t)
 in ((e), ((
 
-let _56_1060 = lc
-in {FStar_Syntax_Syntax.eff_name = _56_1060.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = t; FStar_Syntax_Syntax.cflags = _56_1060.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = _56_1060.FStar_Syntax_Syntax.comp})), (FStar_TypeChecker_Rel.trivial_guard)))
+let _56_1066 = lc
+in {FStar_Syntax_Syntax.eff_name = _56_1066.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = t; FStar_Syntax_Syntax.cflags = _56_1066.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = _56_1066.FStar_Syntax_Syntax.comp})), (FStar_TypeChecker_Rel.trivial_guard)))
 end
 | (Some (g), apply_guard) -> begin
 (match ((FStar_TypeChecker_Rel.guard_form g)) with
@@ -1809,8 +1809,8 @@ end
 
 let lc = (
 
-let _56_1067 = lc
-in {FStar_Syntax_Syntax.eff_name = _56_1067.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = t; FStar_Syntax_Syntax.cflags = _56_1067.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = _56_1067.FStar_Syntax_Syntax.comp})
+let _56_1073 = lc
+in {FStar_Syntax_Syntax.eff_name = _56_1073.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = t; FStar_Syntax_Syntax.cflags = _56_1073.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = _56_1073.FStar_Syntax_Syntax.comp})
 in ((e), (lc), (g)))
 end
 | FStar_TypeChecker_Common.NonTrivial (f) -> begin
@@ -1818,33 +1818,33 @@ end
 
 let g = (
 
-let _56_1072 = g
-in {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = _56_1072.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _56_1072.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _56_1072.FStar_TypeChecker_Env.implicits})
+let _56_1078 = g
+in {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = _56_1078.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _56_1078.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _56_1078.FStar_TypeChecker_Env.implicits})
 in (
 
-let strengthen = (fun _56_1076 -> (match (()) with
+let strengthen = (fun _56_1082 -> (match (()) with
 | () -> begin
 (
 
 let f = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Eager_unfolding)::(FStar_TypeChecker_Normalize.Simplify)::[]) env f)
 in (match ((let _151_683 = (FStar_Syntax_Subst.compress f)
 in _151_683.FStar_Syntax_Syntax.n)) with
-| FStar_Syntax_Syntax.Tm_abs (_56_1079, {FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar (fv); FStar_Syntax_Syntax.tk = _56_1085; FStar_Syntax_Syntax.pos = _56_1083; FStar_Syntax_Syntax.vars = _56_1081}, _56_1090) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.true_lid) -> begin
+| FStar_Syntax_Syntax.Tm_abs (_56_1085, {FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar (fv); FStar_Syntax_Syntax.tk = _56_1091; FStar_Syntax_Syntax.pos = _56_1089; FStar_Syntax_Syntax.vars = _56_1087}, _56_1096) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.true_lid) -> begin
 (
 
 let lc = (
 
-let _56_1093 = lc
-in {FStar_Syntax_Syntax.eff_name = _56_1093.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = t; FStar_Syntax_Syntax.cflags = _56_1093.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = _56_1093.FStar_Syntax_Syntax.comp})
+let _56_1099 = lc
+in {FStar_Syntax_Syntax.eff_name = _56_1099.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = t; FStar_Syntax_Syntax.cflags = _56_1099.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = _56_1099.FStar_Syntax_Syntax.comp})
 in (lc.FStar_Syntax_Syntax.comp ()))
 end
-| _56_1097 -> begin
+| _56_1103 -> begin
 (
 
 let c = (lc.FStar_Syntax_Syntax.comp ())
 in (
 
-let _56_1099 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme) then begin
+let _56_1105 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme) then begin
 (let _151_687 = (FStar_TypeChecker_Normalize.term_to_string env lc.FStar_Syntax_Syntax.res_typ)
 in (let _151_686 = (FStar_TypeChecker_Normalize.term_to_string env t)
 in (let _151_685 = (FStar_TypeChecker_Normalize.comp_to_string env c)
@@ -1858,8 +1858,8 @@ in (
 let ct = (FStar_TypeChecker_Normalize.unfold_effect_abbrev env c)
 in (
 
-let _56_1104 = (FStar_TypeChecker_Env.wp_signature env FStar_Syntax_Const.effect_PURE_lid)
-in (match (_56_1104) with
+let _56_1110 = (FStar_TypeChecker_Env.wp_signature env FStar_Syntax_Const.effect_PURE_lid)
+in (match (_56_1110) with
 | (a, kwp) -> begin
 (
 
@@ -1875,9 +1875,9 @@ in (
 let xexp = (FStar_Syntax_Syntax.bv_to_name x)
 in (
 
-let _56_1114 = (destruct_comp ct)
-in (match (_56_1114) with
-| (u_t, _56_1111, _56_1113) -> begin
+let _56_1120 = (destruct_comp ct)
+in (match (_56_1120) with
+| (u_t, _56_1117, _56_1119) -> begin
 (
 
 let wp = (let _151_692 = (FStar_TypeChecker_Env.inst_effect_fun_with ((u_t)::[]) env md md.FStar_Syntax_Syntax.ret_wp)
@@ -1901,18 +1901,18 @@ f
 end
 in (
 
-let _56_1120 = (let _151_703 = (FStar_All.pipe_left (fun _151_700 -> Some (_151_700)) (FStar_TypeChecker_Errors.subtyping_failed env lc.FStar_Syntax_Syntax.res_typ t))
+let _56_1126 = (let _151_703 = (FStar_All.pipe_left (fun _151_700 -> Some (_151_700)) (FStar_TypeChecker_Errors.subtyping_failed env lc.FStar_Syntax_Syntax.res_typ t))
 in (let _151_702 = (FStar_TypeChecker_Env.set_range env e.FStar_Syntax_Syntax.pos)
 in (let _151_701 = (FStar_All.pipe_left FStar_TypeChecker_Rel.guard_of_guard_formula (FStar_TypeChecker_Common.NonTrivial (guard)))
 in (strengthen_precondition _151_703 _151_702 e cret _151_701))))
-in (match (_56_1120) with
+in (match (_56_1126) with
 | (eq_ret, _trivial_so_ok_to_discard) -> begin
 (
 
 let x = (
 
-let _56_1121 = x
-in {FStar_Syntax_Syntax.ppname = _56_1121.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_1121.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = lc.FStar_Syntax_Syntax.res_typ})
+let _56_1127 = x
+in {FStar_Syntax_Syntax.ppname = _56_1127.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_1127.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = lc.FStar_Syntax_Syntax.res_typ})
 in (
 
 let c = (let _151_705 = (let _151_704 = (FStar_Syntax_Syntax.mk_Comp ct)
@@ -1923,7 +1923,7 @@ in (
 let c = (c.FStar_Syntax_Syntax.comp ())
 in (
 
-let _56_1126 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme) then begin
+let _56_1132 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme) then begin
 (let _151_706 = (FStar_TypeChecker_Normalize.comp_to_string env c)
 in (FStar_Util.print1 "Strengthened to %s\n" _151_706))
 end else begin
@@ -1944,22 +1944,22 @@ end
 | FStar_Syntax_Syntax.CPS -> begin
 (FStar_Syntax_Syntax.CPS)::[]
 end
-| _56_1133 -> begin
+| _56_1139 -> begin
 []
 end))))
 in (
 
 let lc = (
 
-let _56_1135 = lc
+let _56_1141 = lc
 in (let _151_708 = (FStar_TypeChecker_Env.norm_eff_name env lc.FStar_Syntax_Syntax.eff_name)
 in {FStar_Syntax_Syntax.eff_name = _151_708; FStar_Syntax_Syntax.res_typ = t; FStar_Syntax_Syntax.cflags = flags; FStar_Syntax_Syntax.comp = strengthen}))
 in (
 
 let g = (
 
-let _56_1138 = g
-in {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = _56_1138.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _56_1138.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _56_1138.FStar_TypeChecker_Env.implicits})
+let _56_1144 = g
+in {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = _56_1144.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _56_1144.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _56_1144.FStar_TypeChecker_Env.implicits})
 in ((e), (lc), (g)))))))
 end)
 end)))
@@ -1988,14 +1988,14 @@ end
 | FStar_Syntax_Syntax.Comp (ct) -> begin
 if ((FStar_Ident.lid_equals ct.FStar_Syntax_Syntax.effect_name FStar_Syntax_Const.effect_Pure_lid) || (FStar_Ident.lid_equals ct.FStar_Syntax_Syntax.effect_name FStar_Syntax_Const.effect_Ghost_lid)) then begin
 (match (ct.FStar_Syntax_Syntax.effect_args) with
-| ((req, _56_1166))::((ens, _56_1161))::_56_1158 -> begin
+| ((req, _56_1172))::((ens, _56_1167))::_56_1164 -> begin
 (let _151_726 = (let _151_723 = (norm req)
 in Some (_151_723))
 in (let _151_725 = (let _151_724 = (mk_post_type ct.FStar_Syntax_Syntax.result_typ ens)
 in (FStar_All.pipe_left norm _151_724))
 in ((_151_726), (_151_725))))
 end
-| _56_1170 -> begin
+| _56_1176 -> begin
 (Prims.raise (FStar_Syntax_Syntax.Error ((("Effect constructor is not fully applied"), (comp.FStar_Syntax_Syntax.pos)))))
 end)
 end else begin
@@ -2003,17 +2003,17 @@ end else begin
 
 let ct = (FStar_TypeChecker_Normalize.unfold_effect_abbrev env comp)
 in (match (ct.FStar_Syntax_Syntax.effect_args) with
-| ((wp, _56_1176))::_56_1173 -> begin
+| ((wp, _56_1182))::_56_1179 -> begin
 (
 
-let _56_1182 = (FStar_TypeChecker_Env.lookup_lid env FStar_Syntax_Const.as_requires)
-in (match (_56_1182) with
-| (us_r, _56_1181) -> begin
+let _56_1188 = (FStar_TypeChecker_Env.lookup_lid env FStar_Syntax_Const.as_requires)
+in (match (_56_1188) with
+| (us_r, _56_1187) -> begin
 (
 
-let _56_1186 = (FStar_TypeChecker_Env.lookup_lid env FStar_Syntax_Const.as_ensures)
-in (match (_56_1186) with
-| (us_e, _56_1185) -> begin
+let _56_1192 = (FStar_TypeChecker_Env.lookup_lid env FStar_Syntax_Const.as_ensures)
+in (match (_56_1192) with
+| (us_e, _56_1191) -> begin
 (
 
 let r = ct.FStar_Syntax_Syntax.result_typ.FStar_Syntax_Syntax.pos
@@ -2045,7 +2045,7 @@ in ((_151_738), (_151_737)))))))))
 end))
 end))
 end
-| _56_1193 -> begin
+| _56_1199 -> begin
 (FStar_All.failwith "Impossible")
 end))
 end
@@ -2063,8 +2063,8 @@ end else begin
 | FStar_Syntax_Syntax.Tm_arrow (bs, c) -> begin
 (
 
-let _56_1204 = (FStar_Syntax_Subst.open_comp bs c)
-in (match (_56_1204) with
+let _56_1210 = (FStar_Syntax_Subst.open_comp bs c)
+in (match (_56_1210) with
 | (bs, c) -> begin
 (
 
@@ -2075,16 +2075,16 @@ let rec aux = (fun subst _56_4 -> (match (_56_4) with
 let t = (FStar_Syntax_Subst.subst subst x.FStar_Syntax_Syntax.sort)
 in (
 
-let _56_1220 = (new_implicit_var "Instantiation of implicit argument" e.FStar_Syntax_Syntax.pos env t)
-in (match (_56_1220) with
-| (v, _56_1218, g) -> begin
+let _56_1226 = (new_implicit_var "Instantiation of implicit argument" e.FStar_Syntax_Syntax.pos env t)
+in (match (_56_1226) with
+| (v, _56_1224, g) -> begin
 (
 
 let subst = (FStar_Syntax_Syntax.NT (((x), (v))))::subst
 in (
 
-let _56_1226 = (aux subst rest)
-in (match (_56_1226) with
+let _56_1232 = (aux subst rest)
+in (match (_56_1232) with
 | (args, bs, subst, g') -> begin
 (let _151_749 = (FStar_TypeChecker_Rel.conj_guard g g')
 in (((((v), (Some (FStar_Syntax_Syntax.Implicit (dot)))))::args), (bs), (subst), (_151_749)))
@@ -2096,24 +2096,24 @@ end
 end))
 in (
 
-let _56_1232 = (aux [] bs)
-in (match (_56_1232) with
+let _56_1238 = (aux [] bs)
+in (match (_56_1238) with
 | (args, bs, subst, guard) -> begin
 (match (((args), (bs))) with
-| ([], _56_1235) -> begin
+| ([], _56_1241) -> begin
 ((e), (torig), (guard))
 end
-| (_56_1238, []) when (not ((FStar_Syntax_Util.is_total_comp c))) -> begin
+| (_56_1244, []) when (not ((FStar_Syntax_Util.is_total_comp c))) -> begin
 ((e), (torig), (FStar_TypeChecker_Rel.trivial_guard))
 end
-| _56_1242 -> begin
+| _56_1248 -> begin
 (
 
 let t = (match (bs) with
 | [] -> begin
 (FStar_Syntax_Util.comp_result c)
 end
-| _56_1245 -> begin
+| _56_1251 -> begin
 (FStar_Syntax_Util.arrow bs c)
 end)
 in (
@@ -2127,7 +2127,7 @@ end)
 end)))
 end))
 end
-| _56_1250 -> begin
+| _56_1256 -> begin
 ((e), (t), (FStar_TypeChecker_Rel.trivial_guard))
 end)
 end))
@@ -2149,7 +2149,7 @@ in (FStar_Util.set_difference x _151_759))
 in (FStar_All.pipe_right _151_760 FStar_Util.set_elements))
 in (
 
-let _56_1256 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Gen"))) then begin
+let _56_1262 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Gen"))) then begin
 (let _151_762 = (let _151_761 = (FStar_TypeChecker_Env.univ_vars env)
 in (string_of_univs _151_761))
 in (FStar_Util.print1 "univ_vars in env: %s\n" _151_762))
@@ -2167,7 +2167,7 @@ let u_names = (FStar_All.pipe_right s (FStar_List.map (fun u -> (
 let u_name = (FStar_Syntax_Syntax.new_univ_name r)
 in (
 
-let _56_1261 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Gen"))) then begin
+let _56_1267 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Gen"))) then begin
 (let _151_768 = (let _151_765 = (FStar_Unionfind.uvar_id u)
 in (FStar_All.pipe_left FStar_Util.string_of_int _151_765))
 in (let _151_767 = (FStar_Syntax_Print.univ_to_string (FStar_Syntax_Syntax.U_unif (u)))
@@ -2178,7 +2178,7 @@ end else begin
 end
 in (
 
-let _56_1263 = (FStar_Unionfind.change u (Some (FStar_Syntax_Syntax.U_name (u_name))))
+let _56_1269 = (FStar_Unionfind.change u (Some (FStar_Syntax_Syntax.U_name (u_name))))
 in u_name))))))
 in u_names))))
 end)
@@ -2210,19 +2210,19 @@ in (
 let t = (FStar_Syntax_Subst.close_univ_vars (Prims.fst ts) t)
 in (
 
-let _56_1278 = (FStar_ST.op_Colon_Equals (Prims.snd ts).FStar_Syntax_Syntax.tk (Some (t.FStar_Syntax_Syntax.n)))
+let _56_1284 = (FStar_ST.op_Colon_Equals (Prims.snd ts).FStar_Syntax_Syntax.tk (Some (t.FStar_Syntax_Syntax.n)))
 in ts)))
 end))
 
 
 let check_universe_generalization : FStar_Syntax_Syntax.univ_name Prims.list  ->  FStar_Syntax_Syntax.univ_name Prims.list  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.univ_name Prims.list = (fun explicit_univ_names generalized_univ_names t -> (match (((explicit_univ_names), (generalized_univ_names))) with
-| ([], _56_1285) -> begin
+| ([], _56_1291) -> begin
 generalized_univ_names
 end
-| (_56_1288, []) -> begin
+| (_56_1294, []) -> begin
 explicit_univ_names
 end
-| _56_1292 -> begin
+| _56_1298 -> begin
 (let _151_785 = (let _151_784 = (let _151_783 = (let _151_782 = (FStar_Syntax_Print.term_to_string t)
 in (Prims.strcat "Generalized universe in a term containing explicit universe annotation : " _151_782))
 in ((_151_783), (t.FStar_Syntax_Syntax.pos)))
@@ -2242,7 +2242,7 @@ in (
 let univs = (FStar_Syntax_Free.univs t)
 in (
 
-let _56_1298 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Gen"))) then begin
+let _56_1304 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Gen"))) then begin
 (let _151_790 = (string_of_univs univs)
 in (FStar_Util.print1 "univs to gen : %s\n" _151_790))
 end else begin
@@ -2253,7 +2253,7 @@ in (
 let gen = (gen_univs env univs)
 in (
 
-let _56_1301 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Gen"))) then begin
+let _56_1307 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Gen"))) then begin
 (let _151_791 = (FStar_Syntax_Print.term_to_string t)
 in (FStar_Util.print1 "After generalization: %s\n" _151_791))
 end else begin
@@ -2269,8 +2269,8 @@ in (let _151_792 = (FStar_ST.read t0.FStar_Syntax_Syntax.tk)
 in (maybe_set_tk ((univs), (ts)) _151_792)))))))))))
 
 
-let gen : FStar_TypeChecker_Env.env  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp) Prims.list  ->  (FStar_Syntax_Syntax.univ_name Prims.list * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp) Prims.list Prims.option = (fun env ecs -> if (let _151_798 = (FStar_Util.for_all (fun _56_1310 -> (match (_56_1310) with
-| (_56_1308, c) -> begin
+let gen : FStar_TypeChecker_Env.env  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp) Prims.list  ->  (FStar_Syntax_Syntax.univ_name Prims.list * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp) Prims.list Prims.option = (fun env ecs -> if (let _151_798 = (FStar_Util.for_all (fun _56_1316 -> (match (_56_1316) with
+| (_56_1314, c) -> begin
 (FStar_Syntax_Util.is_pure_or_ghost_comp c)
 end)) ecs)
 in (FStar_All.pipe_left Prims.op_Negation _151_798)) then begin
@@ -2280,7 +2280,7 @@ end else begin
 
 let norm = (fun c -> (
 
-let _56_1313 = if (FStar_TypeChecker_Env.debug env FStar_Options.Medium) then begin
+let _56_1319 = if (FStar_TypeChecker_Env.debug env FStar_Options.Medium) then begin
 (let _151_801 = (FStar_Syntax_Print.comp_to_string c)
 in (FStar_Util.print1 "Normalizing before generalizing:\n\t %s\n" _151_801))
 end else begin
@@ -2295,7 +2295,7 @@ end else begin
 end
 in (
 
-let _56_1316 = if (FStar_TypeChecker_Env.debug env FStar_Options.Medium) then begin
+let _56_1322 = if (FStar_TypeChecker_Env.debug env FStar_Options.Medium) then begin
 (let _151_802 = (FStar_Syntax_Print.comp_to_string c)
 in (FStar_Util.print1 "Normalized to:\n\t %s\n" _151_802))
 end else begin
@@ -2311,7 +2311,7 @@ let gen_uvars = (fun uvs -> (let _151_805 = (FStar_Util.set_difference uvs env_u
 in (FStar_All.pipe_right _151_805 FStar_Util.set_elements)))
 in (
 
-let _56_1332 = (let _151_807 = (FStar_All.pipe_right ecs (FStar_List.map (fun _56_1323 -> (match (_56_1323) with
+let _56_1338 = (let _151_807 = (FStar_All.pipe_right ecs (FStar_List.map (fun _56_1329 -> (match (_56_1329) with
 | (e, c) -> begin
 (
 
@@ -2334,7 +2334,7 @@ let uvs = (gen_uvars uvt)
 in ((univs), (((uvs), (e), (c))))))))))
 end))))
 in (FStar_All.pipe_right _151_807 FStar_List.unzip))
-in (match (_56_1332) with
+in (match (_56_1338) with
 | (univs, uvars) -> begin
 (
 
@@ -2344,34 +2344,34 @@ in (
 let gen_univs = (gen_univs env univs)
 in (
 
-let _56_1336 = if (FStar_TypeChecker_Env.debug env FStar_Options.Medium) then begin
+let _56_1342 = if (FStar_TypeChecker_Env.debug env FStar_Options.Medium) then begin
 (FStar_All.pipe_right gen_univs (FStar_List.iter (fun x -> (FStar_Util.print1 "Generalizing uvar %s\n" x.FStar_Ident.idText))))
 end else begin
 ()
 end
 in (
 
-let ecs = (FStar_All.pipe_right uvars (FStar_List.map (fun _56_1341 -> (match (_56_1341) with
+let ecs = (FStar_All.pipe_right uvars (FStar_List.map (fun _56_1347 -> (match (_56_1347) with
 | (uvs, e, c) -> begin
 (
 
-let tvars = (FStar_All.pipe_right uvs (FStar_List.map (fun _56_1344 -> (match (_56_1344) with
+let tvars = (FStar_All.pipe_right uvs (FStar_List.map (fun _56_1350 -> (match (_56_1350) with
 | (u, k) -> begin
 (match ((FStar_Unionfind.find u)) with
 | (FStar_Syntax_Syntax.Fixed ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_name (a); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _})) | (FStar_Syntax_Syntax.Fixed ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_abs (_, {FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_name (a); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, _); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _})) -> begin
 ((a), (Some (FStar_Syntax_Syntax.imp_tag)))
 end
-| FStar_Syntax_Syntax.Fixed (_56_1378) -> begin
+| FStar_Syntax_Syntax.Fixed (_56_1384) -> begin
 (FStar_All.failwith "Unexpected instantiation of mutually recursive uvar")
 end
-| _56_1381 -> begin
+| _56_1387 -> begin
 (
 
 let k = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::[]) env k)
 in (
 
-let _56_1385 = (FStar_Syntax_Util.arrow_formals k)
-in (match (_56_1385) with
+let _56_1391 = (FStar_Syntax_Util.arrow_formals k)
+in (match (_56_1391) with
 | (bs, kres) -> begin
 (
 
@@ -2388,18 +2388,18 @@ in Some (_151_816))
 in (FStar_Syntax_Util.abs bs _151_818 _151_817)))
 in (
 
-let _56_1388 = (FStar_Syntax_Util.set_uvar u t)
+let _56_1394 = (FStar_Syntax_Util.set_uvar u t)
 in ((a), (Some (FStar_Syntax_Syntax.imp_tag))))))
 end)))
 end)
 end))))
 in (
 
-let _56_1420 = (match (((tvars), (gen_univs))) with
+let _56_1426 = (match (((tvars), (gen_univs))) with
 | ([], []) -> begin
 ((e), (c))
 end
-| ([], _56_1396) -> begin
+| ([], _56_1402) -> begin
 (
 
 let c = (FStar_TypeChecker_Normalize.normalize_comp ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.NoDeltaSteps)::(FStar_TypeChecker_Normalize.NoFullNorm)::[]) env c)
@@ -2408,11 +2408,11 @@ in (
 let e = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.NoDeltaSteps)::(FStar_TypeChecker_Normalize.NoFullNorm)::[]) env e)
 in ((e), (c))))
 end
-| _56_1401 -> begin
+| _56_1407 -> begin
 (
 
-let _56_1404 = ((e), (c))
-in (match (_56_1404) with
+let _56_1410 = ((e), (c))
+in (match (_56_1410) with
 | (e0, c0) -> begin
 (
 
@@ -2427,13 +2427,13 @@ in _151_819.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_arrow (bs, cod) -> begin
 (
 
-let _56_1413 = (FStar_Syntax_Subst.open_comp bs cod)
-in (match (_56_1413) with
+let _56_1419 = (FStar_Syntax_Subst.open_comp bs cod)
+in (match (_56_1419) with
 | (bs, cod) -> begin
 (FStar_Syntax_Util.arrow (FStar_List.append tvars bs) cod)
 end))
 end
-| _56_1415 -> begin
+| _56_1421 -> begin
 (FStar_Syntax_Util.arrow tvars c)
 end)
 in (
@@ -2443,7 +2443,7 @@ in (let _151_820 = (FStar_Syntax_Syntax.mk_Total t)
 in ((e'), (_151_820)))))))
 end))
 end)
-in (match (_56_1420) with
+in (match (_56_1426) with
 | (e, c) -> begin
 ((gen_univs), (e), (c))
 end)))
@@ -2455,9 +2455,9 @@ end)
 
 let generalize : FStar_TypeChecker_Env.env  ->  (FStar_Syntax_Syntax.lbname * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp) Prims.list  ->  (FStar_Syntax_Syntax.lbname * FStar_Syntax_Syntax.univ_names * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp) Prims.list = (fun env lecs -> (
 
-let _56_1430 = if (FStar_TypeChecker_Env.debug env FStar_Options.Low) then begin
-(let _151_827 = (let _151_826 = (FStar_List.map (fun _56_1429 -> (match (_56_1429) with
-| (lb, _56_1426, _56_1428) -> begin
+let _56_1436 = if (FStar_TypeChecker_Env.debug env FStar_Options.Low) then begin
+(let _151_827 = (let _151_826 = (FStar_List.map (fun _56_1435 -> (match (_56_1435) with
+| (lb, _56_1432, _56_1434) -> begin
 (FStar_Syntax_Print.lbname_to_string lb)
 end)) lecs)
 in (FStar_All.pipe_right _151_826 (FStar_String.concat ", ")))
@@ -2467,29 +2467,29 @@ end else begin
 end
 in (
 
-let univnames_lecs = (FStar_List.map (fun _56_1435 -> (match (_56_1435) with
+let univnames_lecs = (FStar_List.map (fun _56_1441 -> (match (_56_1441) with
 | (l, t, c) -> begin
 (gather_free_univnames env t)
 end)) lecs)
 in (
 
-let generalized_lecs = (match ((let _151_830 = (FStar_All.pipe_right lecs (FStar_List.map (fun _56_1441 -> (match (_56_1441) with
-| (_56_1438, e, c) -> begin
+let generalized_lecs = (match ((let _151_830 = (FStar_All.pipe_right lecs (FStar_List.map (fun _56_1447 -> (match (_56_1447) with
+| (_56_1444, e, c) -> begin
 ((e), (c))
 end))))
 in (gen env _151_830))) with
 | None -> begin
-(FStar_All.pipe_right lecs (FStar_List.map (fun _56_1446 -> (match (_56_1446) with
+(FStar_All.pipe_right lecs (FStar_List.map (fun _56_1452 -> (match (_56_1452) with
 | (l, t, c) -> begin
 ((l), ([]), (t), (c))
 end))))
 end
 | Some (ecs) -> begin
-(FStar_List.map2 (fun _56_1454 _56_1458 -> (match (((_56_1454), (_56_1458))) with
-| ((l, _56_1451, _56_1453), (us, e, c)) -> begin
+(FStar_List.map2 (fun _56_1460 _56_1464 -> (match (((_56_1460), (_56_1464))) with
+| ((l, _56_1457, _56_1459), (us, e, c)) -> begin
 (
 
-let _56_1459 = if (FStar_TypeChecker_Env.debug env FStar_Options.Medium) then begin
+let _56_1465 = if (FStar_TypeChecker_Env.debug env FStar_Options.Medium) then begin
 (let _151_837 = (FStar_Range.string_of_range e.FStar_Syntax_Syntax.pos)
 in (let _151_836 = (FStar_Syntax_Print.lbname_to_string l)
 in (let _151_835 = (FStar_Syntax_Print.term_to_string (FStar_Syntax_Util.comp_result c))
@@ -2501,7 +2501,7 @@ end
 in ((l), (us), (e), (c)))
 end)) lecs ecs)
 end)
-in (FStar_List.map2 (fun univnames _56_1467 -> (match (_56_1467) with
+in (FStar_List.map2 (fun univnames _56_1473 -> (match (_56_1473) with
 | (l, generalized_univs, t, c) -> begin
 (let _151_840 = (check_universe_generalization univnames generalized_univs t)
 in ((l), (_151_840), (t), (c)))
@@ -2529,10 +2529,10 @@ in (
 
 let is_var = (fun e -> (match ((let _151_859 = (FStar_Syntax_Subst.compress e)
 in _151_859.FStar_Syntax_Syntax.n)) with
-| FStar_Syntax_Syntax.Tm_name (_56_1483) -> begin
+| FStar_Syntax_Syntax.Tm_name (_56_1489) -> begin
 true
 end
-| _56_1486 -> begin
+| _56_1492 -> begin
 false
 end))
 in (
@@ -2544,23 +2544,23 @@ in (match (e.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_name (x) -> begin
 (FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name ((
 
-let _56_1493 = x
-in {FStar_Syntax_Syntax.ppname = _56_1493.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_1493.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = t2}))) (Some (t2.FStar_Syntax_Syntax.n)) e.FStar_Syntax_Syntax.pos)
+let _56_1499 = x
+in {FStar_Syntax_Syntax.ppname = _56_1499.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_1499.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = t2}))) (Some (t2.FStar_Syntax_Syntax.n)) e.FStar_Syntax_Syntax.pos)
 end
-| _56_1496 -> begin
+| _56_1502 -> begin
 (
 
-let _56_1497 = e
+let _56_1503 = e
 in (let _151_864 = (FStar_Util.mk_ref (Some (t2.FStar_Syntax_Syntax.n)))
-in {FStar_Syntax_Syntax.n = _56_1497.FStar_Syntax_Syntax.n; FStar_Syntax_Syntax.tk = _151_864; FStar_Syntax_Syntax.pos = _56_1497.FStar_Syntax_Syntax.pos; FStar_Syntax_Syntax.vars = _56_1497.FStar_Syntax_Syntax.vars}))
+in {FStar_Syntax_Syntax.n = _56_1503.FStar_Syntax_Syntax.n; FStar_Syntax_Syntax.tk = _151_864; FStar_Syntax_Syntax.pos = _56_1503.FStar_Syntax_Syntax.pos; FStar_Syntax_Syntax.vars = _56_1503.FStar_Syntax_Syntax.vars}))
 end)))
 in (
 
 let env = (
 
-let _56_1499 = env
+let _56_1505 = env
 in (let _151_865 = (env.FStar_TypeChecker_Env.use_eq || (env.FStar_TypeChecker_Env.is_pattern && (is_var e)))
-in {FStar_TypeChecker_Env.solver = _56_1499.FStar_TypeChecker_Env.solver; FStar_TypeChecker_Env.range = _56_1499.FStar_TypeChecker_Env.range; FStar_TypeChecker_Env.curmodule = _56_1499.FStar_TypeChecker_Env.curmodule; FStar_TypeChecker_Env.gamma = _56_1499.FStar_TypeChecker_Env.gamma; FStar_TypeChecker_Env.gamma_cache = _56_1499.FStar_TypeChecker_Env.gamma_cache; FStar_TypeChecker_Env.modules = _56_1499.FStar_TypeChecker_Env.modules; FStar_TypeChecker_Env.expected_typ = _56_1499.FStar_TypeChecker_Env.expected_typ; FStar_TypeChecker_Env.sigtab = _56_1499.FStar_TypeChecker_Env.sigtab; FStar_TypeChecker_Env.is_pattern = _56_1499.FStar_TypeChecker_Env.is_pattern; FStar_TypeChecker_Env.instantiate_imp = _56_1499.FStar_TypeChecker_Env.instantiate_imp; FStar_TypeChecker_Env.effects = _56_1499.FStar_TypeChecker_Env.effects; FStar_TypeChecker_Env.generalize = _56_1499.FStar_TypeChecker_Env.generalize; FStar_TypeChecker_Env.letrecs = _56_1499.FStar_TypeChecker_Env.letrecs; FStar_TypeChecker_Env.top_level = _56_1499.FStar_TypeChecker_Env.top_level; FStar_TypeChecker_Env.check_uvars = _56_1499.FStar_TypeChecker_Env.check_uvars; FStar_TypeChecker_Env.use_eq = _151_865; FStar_TypeChecker_Env.is_iface = _56_1499.FStar_TypeChecker_Env.is_iface; FStar_TypeChecker_Env.admit = _56_1499.FStar_TypeChecker_Env.admit; FStar_TypeChecker_Env.lax = _56_1499.FStar_TypeChecker_Env.lax; FStar_TypeChecker_Env.lax_universes = _56_1499.FStar_TypeChecker_Env.lax_universes; FStar_TypeChecker_Env.type_of = _56_1499.FStar_TypeChecker_Env.type_of; FStar_TypeChecker_Env.universe_of = _56_1499.FStar_TypeChecker_Env.universe_of; FStar_TypeChecker_Env.use_bv_sorts = _56_1499.FStar_TypeChecker_Env.use_bv_sorts; FStar_TypeChecker_Env.qname_and_index = _56_1499.FStar_TypeChecker_Env.qname_and_index}))
+in {FStar_TypeChecker_Env.solver = _56_1505.FStar_TypeChecker_Env.solver; FStar_TypeChecker_Env.range = _56_1505.FStar_TypeChecker_Env.range; FStar_TypeChecker_Env.curmodule = _56_1505.FStar_TypeChecker_Env.curmodule; FStar_TypeChecker_Env.gamma = _56_1505.FStar_TypeChecker_Env.gamma; FStar_TypeChecker_Env.gamma_cache = _56_1505.FStar_TypeChecker_Env.gamma_cache; FStar_TypeChecker_Env.modules = _56_1505.FStar_TypeChecker_Env.modules; FStar_TypeChecker_Env.expected_typ = _56_1505.FStar_TypeChecker_Env.expected_typ; FStar_TypeChecker_Env.sigtab = _56_1505.FStar_TypeChecker_Env.sigtab; FStar_TypeChecker_Env.is_pattern = _56_1505.FStar_TypeChecker_Env.is_pattern; FStar_TypeChecker_Env.instantiate_imp = _56_1505.FStar_TypeChecker_Env.instantiate_imp; FStar_TypeChecker_Env.effects = _56_1505.FStar_TypeChecker_Env.effects; FStar_TypeChecker_Env.generalize = _56_1505.FStar_TypeChecker_Env.generalize; FStar_TypeChecker_Env.letrecs = _56_1505.FStar_TypeChecker_Env.letrecs; FStar_TypeChecker_Env.top_level = _56_1505.FStar_TypeChecker_Env.top_level; FStar_TypeChecker_Env.check_uvars = _56_1505.FStar_TypeChecker_Env.check_uvars; FStar_TypeChecker_Env.use_eq = _151_865; FStar_TypeChecker_Env.is_iface = _56_1505.FStar_TypeChecker_Env.is_iface; FStar_TypeChecker_Env.admit = _56_1505.FStar_TypeChecker_Env.admit; FStar_TypeChecker_Env.lax = _56_1505.FStar_TypeChecker_Env.lax; FStar_TypeChecker_Env.lax_universes = _56_1505.FStar_TypeChecker_Env.lax_universes; FStar_TypeChecker_Env.type_of = _56_1505.FStar_TypeChecker_Env.type_of; FStar_TypeChecker_Env.universe_of = _56_1505.FStar_TypeChecker_Env.universe_of; FStar_TypeChecker_Env.use_bv_sorts = _56_1505.FStar_TypeChecker_Env.use_bv_sorts; FStar_TypeChecker_Env.qname_and_index = _56_1505.FStar_TypeChecker_Env.qname_and_index}))
 in (match ((check env t1 t2)) with
 | None -> begin
 (let _151_869 = (let _151_868 = (let _151_867 = (FStar_TypeChecker_Errors.expected_expression_of_type env t2 e t1)
@@ -2572,7 +2572,7 @@ end
 | Some (g) -> begin
 (
 
-let _56_1505 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _56_1511 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _151_870 = (FStar_TypeChecker_Rel.guard_to_string env g)
 in (FStar_All.pipe_left (FStar_Util.print1 "Applied guard is %s\n") _151_870))
 end else begin
@@ -2587,7 +2587,7 @@ let check_top_level : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Env.guard
 
 let discharge = (fun g -> (
 
-let _56_1512 = (FStar_TypeChecker_Rel.force_trivial_guard env g)
+let _56_1518 = (FStar_TypeChecker_Rel.force_trivial_guard env g)
 in (FStar_Syntax_Util.is_pure_lcomp lc)))
 in (
 
@@ -2614,8 +2614,8 @@ in (
 let md = (FStar_TypeChecker_Env.get_effect_decl env c.FStar_Syntax_Syntax.effect_name)
 in (
 
-let _56_1522 = (destruct_comp c)
-in (match (_56_1522) with
+let _56_1528 = (destruct_comp c)
+in (match (_56_1528) with
 | (u_t, t, wp) -> begin
 (
 
@@ -2628,7 +2628,7 @@ in (let _151_888 = (FStar_TypeChecker_Env.get_range env)
 in (FStar_Syntax_Syntax.mk_Tm_app _151_890 _151_889 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) _151_888))))
 in (
 
-let _56_1524 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Simplification"))) then begin
+let _56_1530 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Simplification"))) then begin
 (let _151_891 = (FStar_Syntax_Print.term_to_string vc)
 in (FStar_Util.print1 "top-level VC: %s\n" _151_891))
 end else begin
@@ -2651,10 +2651,10 @@ let short_bin_op = (fun f _56_6 -> (match (_56_6) with
 | [] -> begin
 FStar_TypeChecker_Common.Trivial
 end
-| ((fst, _56_1535))::[] -> begin
+| ((fst, _56_1541))::[] -> begin
 (f fst)
 end
-| _56_1539 -> begin
+| _56_1545 -> begin
 (FStar_All.failwith "Unexpexted args to binary operator")
 end))
 in (
@@ -2682,14 +2682,14 @@ let short_op_ite = (fun _56_7 -> (match (_56_7) with
 | [] -> begin
 FStar_TypeChecker_Common.Trivial
 end
-| ((guard, _56_1554))::[] -> begin
+| ((guard, _56_1560))::[] -> begin
 FStar_TypeChecker_Common.NonTrivial (guard)
 end
-| (_then)::((guard, _56_1559))::[] -> begin
+| (_then)::((guard, _56_1565))::[] -> begin
 (let _151_934 = (FStar_Syntax_Util.mk_neg guard)
 in (FStar_All.pipe_right _151_934 (fun _151_933 -> FStar_TypeChecker_Common.NonTrivial (_151_933))))
 end
-| _56_1564 -> begin
+| _56_1570 -> begin
 (FStar_All.failwith "Unexpected args to ITE")
 end))
 in (
@@ -2700,7 +2700,7 @@ in (match (head.FStar_Syntax_Syntax.n) with
 (
 
 let lid = fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v
-in (match ((FStar_Util.find_map table (fun _56_1572 -> (match (_56_1572) with
+in (match ((FStar_Util.find_map table (fun _56_1578 -> (match (_56_1578) with
 | (x, mk) -> begin
 if (FStar_Ident.lid_equals x lid) then begin
 (let _151_967 = (mk seen_args)
@@ -2716,7 +2716,7 @@ end
 g
 end))
 end
-| _56_1577 -> begin
+| _56_1583 -> begin
 FStar_TypeChecker_Common.Trivial
 end))))))))))
 
@@ -2726,7 +2726,7 @@ in _151_970.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_fvar (fv) -> begin
 (FStar_Util.for_some (FStar_Syntax_Syntax.fv_eq_lid fv) ((FStar_Syntax_Const.op_And)::(FStar_Syntax_Const.op_Or)::(FStar_Syntax_Const.and_lid)::(FStar_Syntax_Const.or_lid)::(FStar_Syntax_Const.imp_lid)::(FStar_Syntax_Const.ite_lid)::[]))
 end
-| _56_1582 -> begin
+| _56_1588 -> begin
 false
 end))
 
@@ -2734,17 +2734,17 @@ end))
 let maybe_add_implicit_binders : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.binders = (fun env bs -> (
 
 let pos = (fun bs -> (match (bs) with
-| ((hd, _56_1591))::_56_1588 -> begin
+| ((hd, _56_1597))::_56_1594 -> begin
 (FStar_Syntax_Syntax.range_of_bv hd)
 end
-| _56_1595 -> begin
+| _56_1601 -> begin
 (FStar_TypeChecker_Env.get_range env)
 end))
 in (match (bs) with
-| ((_56_1599, Some (FStar_Syntax_Syntax.Implicit (_56_1601))))::_56_1597 -> begin
+| ((_56_1605, Some (FStar_Syntax_Syntax.Implicit (_56_1607))))::_56_1603 -> begin
 bs
 end
-| _56_1607 -> begin
+| _56_1613 -> begin
 (match ((FStar_TypeChecker_Env.expected_typ env)) with
 | None -> begin
 bs
@@ -2752,23 +2752,23 @@ end
 | Some (t) -> begin
 (match ((let _151_977 = (FStar_Syntax_Subst.compress t)
 in _151_977.FStar_Syntax_Syntax.n)) with
-| FStar_Syntax_Syntax.Tm_arrow (bs', _56_1613) -> begin
+| FStar_Syntax_Syntax.Tm_arrow (bs', _56_1619) -> begin
 (match ((FStar_Util.prefix_until (fun _56_8 -> (match (_56_8) with
-| (_56_1618, Some (FStar_Syntax_Syntax.Implicit (_56_1620))) -> begin
+| (_56_1624, Some (FStar_Syntax_Syntax.Implicit (_56_1626))) -> begin
 false
 end
-| _56_1625 -> begin
+| _56_1631 -> begin
 true
 end)) bs')) with
 | None -> begin
 bs
 end
-| Some ([], _56_1629, _56_1631) -> begin
+| Some ([], _56_1635, _56_1637) -> begin
 bs
 end
-| Some (imps, _56_1636, _56_1638) -> begin
-if (FStar_All.pipe_right imps (FStar_Util.for_all (fun _56_1644 -> (match (_56_1644) with
-| (x, _56_1643) -> begin
+| Some (imps, _56_1642, _56_1644) -> begin
+if (FStar_All.pipe_right imps (FStar_Util.for_all (fun _56_1650 -> (match (_56_1650) with
+| (x, _56_1649) -> begin
 (FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText "\'")
 end)))) then begin
 (
@@ -2776,7 +2776,7 @@ end)))) then begin
 let r = (pos bs)
 in (
 
-let imps = (FStar_All.pipe_right imps (FStar_List.map (fun _56_1648 -> (match (_56_1648) with
+let imps = (FStar_All.pipe_right imps (FStar_List.map (fun _56_1654 -> (match (_56_1654) with
 | (x, i) -> begin
 (let _151_981 = (FStar_Syntax_Syntax.set_range_of_bv x r)
 in ((_151_981), (i)))
@@ -2787,7 +2787,7 @@ bs
 end
 end)
 end
-| _56_1651 -> begin
+| _56_1657 -> begin
 bs
 end)
 end)
@@ -2832,15 +2832,15 @@ end else begin
 | FStar_Syntax_Syntax.Tm_unknown -> begin
 None
 end
-| _56_1672 -> begin
+| _56_1678 -> begin
 (
 
 let c = (FStar_TypeChecker_Normalize.unfold_effect_abbrev env c)
 in (
 
-let _56_1676 = (let _151_1005 = (FStar_List.hd c.FStar_Syntax_Syntax.effect_args)
+let _56_1682 = (let _151_1005 = (FStar_List.hd c.FStar_Syntax_Syntax.effect_args)
 in ((c.FStar_Syntax_Syntax.result_typ), (_151_1005)))
-in (match (_56_1676) with
+in (match (_56_1682) with
 | (res_typ, wp) -> begin
 (
 
@@ -2883,10 +2883,10 @@ let d : Prims.string  ->  Prims.unit = (fun s -> (FStar_Util.print1 "\\x1b[01;36
 
 let mk_toplevel_definition : FStar_TypeChecker_Env.env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.term) = (fun env lident def -> (
 
-let _56_1695 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("ED"))) then begin
+let _56_1701 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("ED"))) then begin
 (
 
-let _56_1693 = (d (FStar_Ident.text_of_lid lident))
+let _56_1699 = (d (FStar_Ident.text_of_lid lident))
 in (let _151_1039 = (FStar_Syntax_Print.term_to_string def)
 in (FStar_Util.print2 "Registering top-level definition: %s\n%s\n" (FStar_Ident.text_of_lid lident) _151_1039)))
 end else begin
@@ -2915,7 +2915,7 @@ let visibility = (fun _56_9 -> (match (_56_9) with
 | FStar_Syntax_Syntax.Private -> begin
 true
 end
-| _56_1706 -> begin
+| _56_1712 -> begin
 false
 end))
 in (
@@ -2924,7 +2924,7 @@ let reducibility = (fun _56_10 -> (match (_56_10) with
 | (FStar_Syntax_Syntax.Abstract) | (FStar_Syntax_Syntax.Irreducible) | (FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen) | (FStar_Syntax_Syntax.Visible_default) | (FStar_Syntax_Syntax.Inline_for_extraction) -> begin
 true
 end
-| _56_1715 -> begin
+| _56_1721 -> begin
 false
 end))
 in (
@@ -2933,7 +2933,7 @@ let assumption = (fun _56_11 -> (match (_56_11) with
 | (FStar_Syntax_Syntax.Assumption) | (FStar_Syntax_Syntax.New) -> begin
 true
 end
-| _56_1721 -> begin
+| _56_1727 -> begin
 false
 end))
 in (
@@ -2942,7 +2942,7 @@ let reification = (fun _56_12 -> (match (_56_12) with
 | (FStar_Syntax_Syntax.Reifiable) | (FStar_Syntax_Syntax.Reflectable (_)) -> begin
 true
 end
-| _56_1729 -> begin
+| _56_1735 -> begin
 false
 end))
 in (
@@ -2951,7 +2951,7 @@ let inferred = (fun _56_13 -> (match (_56_13) with
 | (FStar_Syntax_Syntax.Discriminator (_)) | (FStar_Syntax_Syntax.Projector (_)) | (FStar_Syntax_Syntax.RecordType (_)) | (FStar_Syntax_Syntax.RecordConstructor (_)) | (FStar_Syntax_Syntax.ExceptionConstructor) | (FStar_Syntax_Syntax.HasMaskedEffect) | (FStar_Syntax_Syntax.Effect) -> begin
 true
 end
-| _56_1748 -> begin
+| _56_1754 -> begin
 false
 end))
 in (
@@ -2960,7 +2960,7 @@ let has_eq = (fun _56_14 -> (match (_56_14) with
 | (FStar_Syntax_Syntax.Noeq) | (FStar_Syntax_Syntax.Unopteq) -> begin
 true
 end
-| _56_1754 -> begin
+| _56_1760 -> begin
 false
 end))
 in (
@@ -2990,13 +2990,21 @@ end
 | FStar_Syntax_Syntax.Private -> begin
 true
 end
-| _56_1783 -> begin
+| _56_1789 -> begin
 true
 end))
 in (
 
 let quals = (FStar_Syntax_Util.quals_of_sigelt se)
-in (
+in if (let _151_1070 = (FStar_All.pipe_right quals (FStar_Util.for_some (fun _56_15 -> (match (_56_15) with
+| FStar_Syntax_Syntax.OnlyName -> begin
+true
+end
+| _56_1794 -> begin
+false
+end))))
+in (FStar_All.pipe_right _151_1070 Prims.op_Negation)) then begin
+(
 
 let r = (FStar_Syntax_Util.range_of_sigelt se)
 in (
@@ -3004,39 +3012,39 @@ in (
 let no_dup_quals = (FStar_Util.remove_dups (fun x y -> (x = y)) quals)
 in (
 
-let err' = (fun msg -> (let _151_1076 = (let _151_1075 = (let _151_1074 = (let _151_1073 = (FStar_Syntax_Print.quals_to_string quals)
-in (FStar_Util.format2 "The qualifier list \"[%s]\" is not permissible for this element%s" _151_1073 msg))
-in ((_151_1074), (r)))
-in FStar_Syntax_Syntax.Error (_151_1075))
-in (Prims.raise _151_1076)))
+let err' = (fun msg -> (let _151_1078 = (let _151_1077 = (let _151_1076 = (let _151_1075 = (FStar_Syntax_Print.quals_to_string quals)
+in (FStar_Util.format2 "The qualifier list \"[%s]\" is not permissible for this element%s" _151_1075 msg))
+in ((_151_1076), (r)))
+in FStar_Syntax_Syntax.Error (_151_1077))
+in (Prims.raise _151_1078)))
 in (
 
 let err = (fun msg -> (err' (Prims.strcat ": " msg)))
 in (
 
-let err' = (fun _56_1794 -> (match (()) with
+let err' = (fun _56_1804 -> (match (()) with
 | () -> begin
 (err' "")
 end))
 in (
 
-let _56_1795 = if ((FStar_List.length quals) <> (FStar_List.length no_dup_quals)) then begin
+let _56_1805 = if ((FStar_List.length quals) <> (FStar_List.length no_dup_quals)) then begin
 (err "duplicate qualifiers")
 end else begin
 ()
 end
 in (
 
-let _56_1797 = if (not ((FStar_All.pipe_right quals (FStar_List.for_all (quals_combo_ok quals))))) then begin
+let _56_1807 = if (not ((FStar_All.pipe_right quals (FStar_List.for_all (quals_combo_ok quals))))) then begin
 (err "ill-formed combination")
 end else begin
 ()
 end
 in (match (se) with
-| FStar_Syntax_Syntax.Sig_let ((is_rec, _56_1801), _56_1804, _56_1806, _56_1808) -> begin
+| FStar_Syntax_Syntax.Sig_let ((is_rec, _56_1811), _56_1814, _56_1816, _56_1818) -> begin
 (
 
-let _56_1811 = if (is_rec && (FStar_All.pipe_right quals (FStar_List.contains FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen))) then begin
+let _56_1821 = if (is_rec && (FStar_All.pipe_right quals (FStar_List.contains FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen))) then begin
 (err "recursive definitions cannot be marked inline")
 end else begin
 ()
@@ -3047,51 +3055,609 @@ end else begin
 ()
 end)
 end
-| FStar_Syntax_Syntax.Sig_bundle (_56_1815) -> begin
+| FStar_Syntax_Syntax.Sig_bundle (_56_1825) -> begin
 if (not ((FStar_All.pipe_right quals (FStar_Util.for_all (fun x -> ((((x = FStar_Syntax_Syntax.Abstract) || (inferred x)) || (visibility x)) || (has_eq x))))))) then begin
 (err' ())
 end else begin
 ()
 end
 end
-| FStar_Syntax_Syntax.Sig_declare_typ (_56_1819) -> begin
+| FStar_Syntax_Syntax.Sig_declare_typ (_56_1829) -> begin
 if (FStar_All.pipe_right quals (FStar_Util.for_some has_eq)) then begin
 (err' ())
 end else begin
 ()
 end
 end
-| FStar_Syntax_Syntax.Sig_assume (_56_1822) -> begin
+| FStar_Syntax_Syntax.Sig_assume (_56_1832) -> begin
 if (not ((FStar_All.pipe_right quals (FStar_Util.for_all (fun x -> ((visibility x) || (x = FStar_Syntax_Syntax.Assumption))))))) then begin
 (err' ())
 end else begin
 ()
 end
 end
-| FStar_Syntax_Syntax.Sig_new_effect (_56_1826) -> begin
+| FStar_Syntax_Syntax.Sig_new_effect (_56_1836) -> begin
 if (not ((FStar_All.pipe_right quals (FStar_Util.for_all (fun x -> ((((x = FStar_Syntax_Syntax.TotalEffect) || (inferred x)) || (visibility x)) || (reification x))))))) then begin
 (err' ())
 end else begin
 ()
 end
 end
-| FStar_Syntax_Syntax.Sig_new_effect_for_free (_56_1830) -> begin
+| FStar_Syntax_Syntax.Sig_new_effect_for_free (_56_1840) -> begin
 if (not ((FStar_All.pipe_right quals (FStar_Util.for_all (fun x -> ((((x = FStar_Syntax_Syntax.TotalEffect) || (inferred x)) || (visibility x)) || (reification x))))))) then begin
 (err' ())
 end else begin
 ()
 end
 end
-| FStar_Syntax_Syntax.Sig_effect_abbrev (_56_1834) -> begin
+| FStar_Syntax_Syntax.Sig_effect_abbrev (_56_1844) -> begin
 if (not ((FStar_All.pipe_right quals (FStar_Util.for_all (fun x -> ((inferred x) || (visibility x))))))) then begin
 (err' ())
 end else begin
 ()
 end
 end
-| _56_1838 -> begin
+| _56_1848 -> begin
 ()
-end)))))))))))))))))
+end))))))))
+end else begin
+()
+end)))))))))
+
+
+let mk_discriminator_and_indexed_projectors : FStar_Syntax_Syntax.qualifier Prims.list  ->  FStar_Syntax_Syntax.fv_qual  ->  Prims.bool  ->  FStar_TypeChecker_Env.env  ->  FStar_Ident.lident  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.univ_names  ->  FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.sigelt Prims.list = (fun iquals fvq refine_domain env tc lid uvs inductive_tps imp_tps fields t -> (
+
+let p = (FStar_Ident.range_of_lid lid)
+in (
+
+let pos = (fun q -> (FStar_Syntax_Syntax.withinfo q FStar_Syntax_Syntax.tun.FStar_Syntax_Syntax.n p))
+in (
+
+let projectee = (fun ptyp -> (FStar_Syntax_Syntax.gen_bv "projectee" (Some (p)) ptyp))
+in (
+
+let tps = (FStar_List.map2 (fun _56_1868 _56_1872 -> (match (((_56_1868), (_56_1872))) with
+| ((_56_1866, imp), (x, _56_1871)) -> begin
+((x), (imp))
+end)) inductive_tps imp_tps)
+in (
+
+let _56_1988 = (
+
+let _56_1876 = (FStar_Syntax_Util.head_and_args t)
+in (match (_56_1876) with
+| (head, args0) -> begin
+(
+
+let args = (
+
+let rec arguments = (fun tps args -> (match (((tps), (args))) with
+| ([], _56_1882) -> begin
+args
+end
+| (_56_1885, []) -> begin
+(Prims.raise (FStar_Syntax_Syntax.Error ((("Not enough arguments to type"), ((FStar_Ident.range_of_lid lid))))))
+end
+| (((_56_1890, Some (FStar_Syntax_Syntax.Implicit (_56_1892))))::tps', ((_56_1899, Some (FStar_Syntax_Syntax.Implicit (_56_1901))))::args') -> begin
+(arguments tps' args')
+end
+| (((_56_1909, Some (FStar_Syntax_Syntax.Implicit (_56_1911))))::tps', ((_56_1919, _56_1921))::_56_1917) -> begin
+(arguments tps' args)
+end
+| (((_56_1928, _56_1930))::_56_1926, ((a, Some (FStar_Syntax_Syntax.Implicit (_56_1937))))::_56_1934) -> begin
+(Prims.raise (FStar_Syntax_Syntax.Error ((("Unexpected implicit annotation on argument"), (a.FStar_Syntax_Syntax.pos)))))
+end
+| (((_56_1945, _56_1947))::tps', ((_56_1952, _56_1954))::args') -> begin
+(arguments tps' args')
+end))
+in (arguments inductive_tps args0))
+in (
+
+let indices = (FStar_All.pipe_right args (FStar_List.map (fun _56_1962 -> (match (_56_1962) with
+| (_56_1960, imp) -> begin
+(let _151_1122 = (FStar_Syntax_Syntax.new_bv (Some (p)) FStar_Syntax_Syntax.tun)
+in ((_151_1122), (imp)))
+end))))
+in (
+
+let inst_univs = (match ((let _151_1123 = (FStar_Syntax_Subst.compress head)
+in _151_1123.FStar_Syntax_Syntax.n)) with
+| FStar_Syntax_Syntax.Tm_uinst (_56_1965, univs) -> begin
+univs
+end
+| _56_1970 -> begin
+[]
+end)
+in (
+
+let arg_typ = (let _151_1131 = (let _151_1127 = (let _151_1126 = (let _151_1125 = (let _151_1124 = (FStar_Syntax_Syntax.lid_as_fv tc FStar_Syntax_Syntax.Delta_constant None)
+in (FStar_Syntax_Syntax.fv_to_tm _151_1124))
+in ((_151_1125), (inst_univs)))
+in FStar_Syntax_Syntax.Tm_uinst (_151_1126))
+in (FStar_Syntax_Syntax.mk _151_1127 None p))
+in (let _151_1130 = (FStar_All.pipe_right (FStar_List.append tps indices) (FStar_List.map (fun _56_1974 -> (match (_56_1974) with
+| (x, imp) -> begin
+(let _151_1129 = (FStar_Syntax_Syntax.bv_to_name x)
+in ((_151_1129), (imp)))
+end))))
+in (FStar_Syntax_Syntax.mk_Tm_app _151_1131 _151_1130 None p)))
+in (
+
+let unrefined_arg_binder = (let _151_1132 = (projectee arg_typ)
+in (FStar_Syntax_Syntax.mk_binder _151_1132))
+in (
+
+let arg_binder = if (not (refine_domain)) then begin
+unrefined_arg_binder
+end else begin
+(
+
+let disc_name = (FStar_Syntax_Util.mk_discriminator lid)
+in (
+
+let x = (FStar_Syntax_Syntax.new_bv (Some (p)) arg_typ)
+in (
+
+let sort = (
+
+let disc_fvar = (FStar_Syntax_Syntax.fvar (FStar_Ident.set_lid_range disc_name p) FStar_Syntax_Syntax.Delta_equational None)
+in (let _151_1138 = (let _151_1137 = (let _151_1136 = (FStar_Syntax_Syntax.mk_Tm_uinst disc_fvar inst_univs)
+in (let _151_1135 = (let _151_1134 = (let _151_1133 = (FStar_Syntax_Syntax.bv_to_name x)
+in (FStar_All.pipe_left FStar_Syntax_Syntax.as_arg _151_1133))
+in (_151_1134)::[])
+in (FStar_Syntax_Syntax.mk_Tm_app _151_1136 _151_1135 None p)))
+in (FStar_Syntax_Util.b2t _151_1137))
+in (FStar_Syntax_Util.refine x _151_1138)))
+in (let _151_1139 = (
+
+let _56_1981 = (projectee arg_typ)
+in {FStar_Syntax_Syntax.ppname = _56_1981.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _56_1981.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = sort})
+in (FStar_Syntax_Syntax.mk_binder _151_1139)))))
+end
+in ((unrefined_arg_binder), (arg_binder), (indices), (inst_univs))))))))
+end))
+in (match (_56_1988) with
+| (unrefined_arg_binder, arg_binder, indices, inst_univs) -> begin
+(
+
+let arg_exp = (FStar_Syntax_Syntax.bv_to_name (Prims.fst arg_binder))
+in (
+
+let imp_binders = (let _151_1141 = (FStar_All.pipe_right indices (FStar_List.map (fun _56_1993 -> (match (_56_1993) with
+| (x, _56_1992) -> begin
+((x), (Some (FStar_Syntax_Syntax.imp_tag)))
+end))))
+in (FStar_List.append imp_tps _151_1141))
+in (
+
+let binders = (FStar_List.append imp_binders ((arg_binder)::[]))
+in (
+
+let arg = (FStar_Syntax_Util.arg_of_non_null_binder arg_binder)
+in (
+
+let subst = (FStar_All.pipe_right fields (FStar_List.mapi (fun i _56_2001 -> (match (_56_2001) with
+| (a, _56_2000) -> begin
+(
+
+let _56_2005 = (FStar_Syntax_Util.mk_field_projector_name lid a i)
+in (match (_56_2005) with
+| (field_name, _56_2004) -> begin
+(
+
+let field_proj_tm = (let _151_1145 = (let _151_1144 = (FStar_Syntax_Syntax.lid_as_fv field_name FStar_Syntax_Syntax.Delta_equational None)
+in (FStar_Syntax_Syntax.fv_to_tm _151_1144))
+in (FStar_Syntax_Syntax.mk_Tm_uinst _151_1145 inst_univs))
+in (
+
+let proj = (FStar_Syntax_Syntax.mk_Tm_app field_proj_tm ((arg)::[]) None p)
+in FStar_Syntax_Syntax.NT (((a), (proj)))))
+end))
+end))))
+in (
+
+let ntps = (FStar_List.length tps)
+in (
+
+let all_params = (FStar_List.append imp_tps fields)
+in (
+
+let discriminator_ses = (
+
+let discriminator_name = (FStar_Syntax_Util.mk_discriminator lid)
+in (
+
+let no_decl = false
+in (
+
+let only_decl = ((let _151_1146 = (FStar_TypeChecker_Env.current_module env)
+in (FStar_Ident.lid_equals FStar_Syntax_Const.prims_lid _151_1146)) || (fvq <> FStar_Syntax_Syntax.Data_ctor))
+in (
+
+let quals = (let _151_1150 = (let _151_1149 = if (only_decl && ((FStar_All.pipe_left Prims.op_Negation env.FStar_TypeChecker_Env.is_iface) || env.FStar_TypeChecker_Env.admit)) then begin
+(FStar_Syntax_Syntax.Assumption)::[]
+end else begin
+[]
+end
+in (let _151_1148 = (FStar_List.filter (fun _56_16 -> (match (_56_16) with
+| FStar_Syntax_Syntax.Abstract -> begin
+(not (only_decl))
+end
+| FStar_Syntax_Syntax.Private -> begin
+true
+end
+| _56_2018 -> begin
+false
+end)) iquals)
+in (FStar_List.append _151_1149 _151_1148)))
+in (FStar_List.append ((FStar_Syntax_Syntax.Discriminator (lid))::if only_decl then begin
+(FStar_Syntax_Syntax.Logic)::[]
+end else begin
+[]
+end) _151_1150))
+in (
+
+let binders = (FStar_List.append imp_binders ((unrefined_arg_binder)::[]))
+in (
+
+let t = (
+
+let bool_typ = (let _151_1152 = (let _151_1151 = (FStar_Syntax_Syntax.lid_as_fv FStar_Syntax_Const.bool_lid FStar_Syntax_Syntax.Delta_constant None)
+in (FStar_Syntax_Syntax.fv_to_tm _151_1151))
+in (FStar_Syntax_Syntax.mk_Total _151_1152))
+in (let _151_1153 = (FStar_Syntax_Util.arrow binders bool_typ)
+in (FStar_All.pipe_left (FStar_Syntax_Subst.close_univ_vars uvs) _151_1153)))
+in (
+
+let decl = FStar_Syntax_Syntax.Sig_declare_typ (((discriminator_name), (uvs), (t), (quals), ((FStar_Ident.range_of_lid discriminator_name))))
+in (
+
+let _56_2024 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("LogTypes"))) then begin
+(let _151_1154 = (FStar_Syntax_Print.sigelt_to_string decl)
+in (FStar_Util.print1 "Declaration of a discriminator %s\n" _151_1154))
+end else begin
+()
+end
+in if only_decl then begin
+(decl)::[]
+end else begin
+(
+
+let arg_pats = (FStar_All.pipe_right all_params (FStar_List.mapi (fun j _56_2029 -> (match (_56_2029) with
+| (x, imp) -> begin
+(
+
+let b = (FStar_Syntax_Syntax.is_implicit imp)
+in if (b && (j < ntps)) then begin
+(let _151_1160 = (let _151_1159 = (let _151_1158 = (let _151_1157 = (FStar_Syntax_Syntax.gen_bv x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText None FStar_Syntax_Syntax.tun)
+in ((_151_1157), (FStar_Syntax_Syntax.tun)))
+in FStar_Syntax_Syntax.Pat_dot_term (_151_1158))
+in (pos _151_1159))
+in ((_151_1160), (b)))
+end else begin
+(let _151_1163 = (let _151_1162 = (let _151_1161 = (FStar_Syntax_Syntax.gen_bv x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText None FStar_Syntax_Syntax.tun)
+in FStar_Syntax_Syntax.Pat_wild (_151_1161))
+in (pos _151_1162))
+in ((_151_1163), (b)))
+end)
+end))))
+in (
+
+let pat_true = (let _151_1167 = (let _151_1166 = (let _151_1165 = (let _151_1164 = (FStar_Syntax_Syntax.lid_as_fv lid FStar_Syntax_Syntax.Delta_constant (Some (fvq)))
+in ((_151_1164), (arg_pats)))
+in FStar_Syntax_Syntax.Pat_cons (_151_1165))
+in (pos _151_1166))
+in ((_151_1167), (None), (FStar_Syntax_Const.exp_true_bool)))
+in (
+
+let pat_false = (let _151_1170 = (let _151_1169 = (let _151_1168 = (FStar_Syntax_Syntax.new_bv None FStar_Syntax_Syntax.tun)
+in FStar_Syntax_Syntax.Pat_wild (_151_1168))
+in (pos _151_1169))
+in ((_151_1170), (None), (FStar_Syntax_Const.exp_false_bool)))
+in (
+
+let arg_exp = (FStar_Syntax_Syntax.bv_to_name (Prims.fst unrefined_arg_binder))
+in (
+
+let body = (let _151_1176 = (let _151_1175 = (let _151_1174 = (let _151_1173 = (FStar_Syntax_Util.branch pat_true)
+in (let _151_1172 = (let _151_1171 = (FStar_Syntax_Util.branch pat_false)
+in (_151_1171)::[])
+in (_151_1173)::_151_1172))
+in ((arg_exp), (_151_1174)))
+in FStar_Syntax_Syntax.Tm_match (_151_1175))
+in (FStar_Syntax_Syntax.mk _151_1176 None p))
+in (
+
+let dd = if (FStar_All.pipe_right quals (FStar_List.contains FStar_Syntax_Syntax.Abstract)) then begin
+FStar_Syntax_Syntax.Delta_abstract (FStar_Syntax_Syntax.Delta_equational)
+end else begin
+FStar_Syntax_Syntax.Delta_equational
+end
+in (
+
+let imp = (FStar_Syntax_Util.abs binders body None)
+in (
+
+let lb = (let _151_1179 = (let _151_1177 = (FStar_Syntax_Syntax.lid_as_fv discriminator_name dd None)
+in FStar_Util.Inr (_151_1177))
+in (let _151_1178 = (FStar_Syntax_Subst.close_univ_vars uvs imp)
+in {FStar_Syntax_Syntax.lbname = _151_1179; FStar_Syntax_Syntax.lbunivs = uvs; FStar_Syntax_Syntax.lbtyp = if no_decl then begin
+t
+end else begin
+FStar_Syntax_Syntax.tun
+end; FStar_Syntax_Syntax.lbeff = FStar_Syntax_Const.effect_Tot_lid; FStar_Syntax_Syntax.lbdef = _151_1178}))
+in (
+
+let impl = (let _151_1184 = (let _151_1183 = (let _151_1182 = (let _151_1181 = (FStar_All.pipe_right lb.FStar_Syntax_Syntax.lbname FStar_Util.right)
+in (FStar_All.pipe_right _151_1181 (fun fv -> fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)))
+in (_151_1182)::[])
+in ((((false), ((lb)::[]))), (p), (_151_1183), (quals)))
+in FStar_Syntax_Syntax.Sig_let (_151_1184))
+in (
+
+let _56_2041 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("LogTypes"))) then begin
+(let _151_1185 = (FStar_Syntax_Print.sigelt_to_string impl)
+in (FStar_Util.print1 "Implementation of a discriminator %s\n" _151_1185))
+end else begin
+()
+end
+in (decl)::(impl)::[]))))))))))
+end))))))))
+in (
+
+let projectors_ses = (let _151_1228 = (FStar_All.pipe_right fields (FStar_List.mapi (fun i _56_2048 -> (match (_56_2048) with
+| (x, _56_2047) -> begin
+(
+
+let _56_2052 = (FStar_Syntax_Util.mk_field_projector_name lid x i)
+in (match (_56_2052) with
+| (field_name, _56_2051) -> begin
+(
+
+let t = (let _151_1190 = (let _151_1189 = (let _151_1188 = (FStar_Syntax_Subst.subst subst x.FStar_Syntax_Syntax.sort)
+in (FStar_Syntax_Syntax.mk_Total _151_1188))
+in (FStar_Syntax_Util.arrow binders _151_1189))
+in (FStar_All.pipe_left (FStar_Syntax_Subst.close_univ_vars uvs) _151_1190))
+in (
+
+let only_decl = (((let _151_1191 = (FStar_TypeChecker_Env.current_module env)
+in (FStar_Ident.lid_equals FStar_Syntax_Const.prims_lid _151_1191)) || (fvq <> FStar_Syntax_Syntax.Data_ctor)) || (let _151_1193 = (let _151_1192 = (FStar_TypeChecker_Env.current_module env)
+in _151_1192.FStar_Ident.str)
+in (FStar_Options.dont_gen_projectors _151_1193)))
+in (
+
+let no_decl = (FStar_Syntax_Syntax.is_type x.FStar_Syntax_Syntax.sort)
+in (
+
+let quals = (fun q -> if only_decl then begin
+(let _151_1197 = (FStar_List.filter (fun _56_17 -> (match (_56_17) with
+| FStar_Syntax_Syntax.Abstract -> begin
+false
+end
+| _56_2061 -> begin
+true
+end)) q)
+in (FStar_Syntax_Syntax.Assumption)::_151_1197)
+end else begin
+q
+end)
+in (
+
+let quals = (
+
+let iquals = (FStar_All.pipe_right iquals (FStar_List.filter (fun _56_18 -> (match (_56_18) with
+| (FStar_Syntax_Syntax.Abstract) | (FStar_Syntax_Syntax.Private) -> begin
+true
+end
+| _56_2066 -> begin
+false
+end))))
+in (quals ((FStar_Syntax_Syntax.Projector (((lid), (x.FStar_Syntax_Syntax.ppname))))::iquals)))
+in (
+
+let decl = FStar_Syntax_Syntax.Sig_declare_typ (((field_name), (uvs), (t), (quals), ((FStar_Ident.range_of_lid field_name))))
+in (
+
+let _56_2070 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("LogTypes"))) then begin
+(let _151_1199 = (FStar_Syntax_Print.sigelt_to_string decl)
+in (FStar_Util.print1 "Declaration of a projector %s\n" _151_1199))
+end else begin
+()
+end
+in if only_decl then begin
+(decl)::[]
+end else begin
+(
+
+let projection = (FStar_Syntax_Syntax.gen_bv x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText None FStar_Syntax_Syntax.tun)
+in (
+
+let arg_pats = (FStar_All.pipe_right all_params (FStar_List.mapi (fun j _56_2076 -> (match (_56_2076) with
+| (x, imp) -> begin
+(
+
+let b = (FStar_Syntax_Syntax.is_implicit imp)
+in if ((i + ntps) = j) then begin
+(let _151_1202 = (pos (FStar_Syntax_Syntax.Pat_var (projection)))
+in ((_151_1202), (b)))
+end else begin
+if (b && (j < ntps)) then begin
+(let _151_1206 = (let _151_1205 = (let _151_1204 = (let _151_1203 = (FStar_Syntax_Syntax.gen_bv x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText None FStar_Syntax_Syntax.tun)
+in ((_151_1203), (FStar_Syntax_Syntax.tun)))
+in FStar_Syntax_Syntax.Pat_dot_term (_151_1204))
+in (pos _151_1205))
+in ((_151_1206), (b)))
+end else begin
+(let _151_1209 = (let _151_1208 = (let _151_1207 = (FStar_Syntax_Syntax.gen_bv x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText None FStar_Syntax_Syntax.tun)
+in FStar_Syntax_Syntax.Pat_wild (_151_1207))
+in (pos _151_1208))
+in ((_151_1209), (b)))
+end
+end)
+end))))
+in (
+
+let pat = (let _151_1214 = (let _151_1212 = (let _151_1211 = (let _151_1210 = (FStar_Syntax_Syntax.lid_as_fv lid FStar_Syntax_Syntax.Delta_constant (Some (fvq)))
+in ((_151_1210), (arg_pats)))
+in FStar_Syntax_Syntax.Pat_cons (_151_1211))
+in (pos _151_1212))
+in (let _151_1213 = (FStar_Syntax_Syntax.bv_to_name projection)
+in ((_151_1214), (None), (_151_1213))))
+in (
+
+let body = (let _151_1218 = (let _151_1217 = (let _151_1216 = (let _151_1215 = (FStar_Syntax_Util.branch pat)
+in (_151_1215)::[])
+in ((arg_exp), (_151_1216)))
+in FStar_Syntax_Syntax.Tm_match (_151_1217))
+in (FStar_Syntax_Syntax.mk _151_1218 None p))
+in (
+
+let imp = (FStar_Syntax_Util.abs binders body None)
+in (
+
+let dd = if (FStar_All.pipe_right quals (FStar_List.contains FStar_Syntax_Syntax.Abstract)) then begin
+FStar_Syntax_Syntax.Delta_abstract (FStar_Syntax_Syntax.Delta_equational)
+end else begin
+FStar_Syntax_Syntax.Delta_equational
+end
+in (
+
+let lb = (let _151_1221 = (let _151_1219 = (FStar_Syntax_Syntax.lid_as_fv field_name dd None)
+in FStar_Util.Inr (_151_1219))
+in (let _151_1220 = (FStar_Syntax_Subst.close_univ_vars uvs imp)
+in {FStar_Syntax_Syntax.lbname = _151_1221; FStar_Syntax_Syntax.lbunivs = uvs; FStar_Syntax_Syntax.lbtyp = if no_decl then begin
+t
+end else begin
+FStar_Syntax_Syntax.tun
+end; FStar_Syntax_Syntax.lbeff = FStar_Syntax_Const.effect_Tot_lid; FStar_Syntax_Syntax.lbdef = _151_1220}))
+in (
+
+let impl = (let _151_1226 = (let _151_1225 = (let _151_1224 = (let _151_1223 = (FStar_All.pipe_right lb.FStar_Syntax_Syntax.lbname FStar_Util.right)
+in (FStar_All.pipe_right _151_1223 (fun fv -> fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)))
+in (_151_1224)::[])
+in ((((false), ((lb)::[]))), (p), (_151_1225), (quals)))
+in FStar_Syntax_Syntax.Sig_let (_151_1226))
+in (
+
+let _56_2086 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("LogTypes"))) then begin
+(let _151_1227 = (FStar_Syntax_Print.sigelt_to_string impl)
+in (FStar_Util.print1 "Implementation of a projector %s\n" _151_1227))
+end else begin
+()
+end
+in if no_decl then begin
+(impl)::[]
+end else begin
+(decl)::(impl)::[]
+end)))))))))
+end)))))))
+end))
+end))))
+in (FStar_All.pipe_right _151_1228 FStar_List.flatten))
+in (FStar_List.append discriminator_ses projectors_ses))))))))))
+end)))))))
+
+
+let mk_data_operations : FStar_Syntax_Syntax.qualifier Prims.list  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.sigelt Prims.list  ->  FStar_Syntax_Syntax.sigelt  ->  FStar_Syntax_Syntax.sigelt Prims.list = (fun iquals env tcs se -> (match (se) with
+| FStar_Syntax_Syntax.Sig_datacon (lid, uvs, t, l, n, quals, _56_2100, r) when (not ((FStar_Ident.lid_equals lid FStar_Syntax_Const.lexcons_lid))) -> begin
+(
+
+let _56_2129 = (
+
+let tps_opt = (FStar_Util.find_map tcs (fun se -> if (let _151_1239 = (let _151_1238 = (FStar_Syntax_Util.lid_of_sigelt se)
+in (FStar_Util.must _151_1238))
+in (FStar_Ident.lid_equals l _151_1239)) then begin
+(match (se) with
+| FStar_Syntax_Syntax.Sig_inductive_typ (_56_2106, _56_2108, tps, _56_2111, _56_2113, constrs, _56_2116, _56_2118) -> begin
+Some (((tps), (((FStar_List.length constrs) > (Prims.parse_int "1")))))
+end
+| _56_2122 -> begin
+(FStar_All.failwith "Impossible")
+end)
+end else begin
+None
+end))
+in (match (tps_opt) with
+| Some (x) -> begin
+x
+end
+| None -> begin
+if (FStar_Ident.lid_equals l FStar_Syntax_Const.exn_lid) then begin
+(([]), (true))
+end else begin
+(Prims.raise (FStar_Syntax_Syntax.Error ((("Unexpected data constructor"), (r)))))
+end
+end))
+in (match (_56_2129) with
+| (inductive_tps, should_refine) -> begin
+(
+
+let _56_2132 = (FStar_Syntax_Subst.open_univ_vars uvs t)
+in (match (_56_2132) with
+| (uvs, t) -> begin
+(
+
+let refine_domain = if (FStar_All.pipe_right quals (FStar_Util.for_some (fun _56_19 -> (match (_56_19) with
+| FStar_Syntax_Syntax.RecordConstructor (_56_2135) -> begin
+true
+end
+| _56_2138 -> begin
+false
+end)))) then begin
+false
+end else begin
+should_refine
+end
+in (
+
+let _56_2142 = (FStar_Syntax_Util.arrow_formals t)
+in (match (_56_2142) with
+| (formals, cod) -> begin
+(match (formals) with
+| [] -> begin
+[]
+end
+| _56_2145 -> begin
+(
+
+let filter_records = (fun _56_20 -> (match (_56_20) with
+| FStar_Syntax_Syntax.RecordConstructor (_56_2148, fns) -> begin
+Some (FStar_Syntax_Syntax.Record_ctor (((lid), (fns))))
+end
+| _56_2153 -> begin
+None
+end))
+in (
+
+let fv_qual = (match ((FStar_Util.find_map quals filter_records)) with
+| None -> begin
+FStar_Syntax_Syntax.Data_ctor
+end
+| Some (q) -> begin
+q
+end)
+in (
+
+let iquals = if (FStar_List.contains FStar_Syntax_Syntax.Abstract iquals) then begin
+(FStar_Syntax_Syntax.Private)::iquals
+end else begin
+iquals
+end
+in (
+
+let _56_2162 = (FStar_Util.first_N n formals)
+in (match (_56_2162) with
+| (tps, rest) -> begin
+(mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env l lid uvs inductive_tps tps rest cod)
+end)))))
+end)
+end)))
+end))
+end))
+end
+| _56_2164 -> begin
+[]
+end))
 
 
 
