@@ -840,7 +840,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
        in aux [] top
     | App _ ->
       let rec aux args e = match (unparen e).tm with
-        | App(e, t, imp) ->
+        | App(e, t, imp) when imp <> UnivApp ->
           let arg = arg_withimp_e imp <| desugar_term env t in
           aux (arg::args) e
         | _ ->

@@ -1410,7 +1410,6 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                                             (lid:lident)             (* Constructor name                        *)
                                             (uvs:univ_names)         (* Original universe names                 *)
                                             (inductive_tps:binders)  (* Type parameters of the type constructor *)
-                                            (implicit_tps:binders)   (* Implicit type parameters of the constr  *)
                                             (indices:binders)        (* Implicit type parameters                *)
                                             (fields:binders)         (* Fields of the constructor               *)
                                             : list<sigelt> =
@@ -1418,7 +1417,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let pos q = Syntax.withinfo q tun.n p in
     let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
     let inst_univs = List.map (fun u -> U_name u) uvs in
-    let tps = List.map2 (fun (x,_) (_,imp) -> (x,imp)) implicit_tps inductive_tps in
+    let tps = inductive_tps in //List.map2 (fun (x,_) (_,imp) -> ({x,imp)) implicit_tps inductive_tps in
     let arg_typ =
         let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc Delta_constant None), inst_univs)) None p in
         let args = tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp) in
@@ -1466,8 +1465,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             SS.close_univ_vars uvs <| U.arrow binders bool_typ
         in
         let decl = Sig_declare_typ(discriminator_name, uvs, t, quals, range_of_lid discriminator_name) in
-        // if Env.debug env (Options.Other "LogTypes")
-        // then Util.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
+        if Env.debug env (Options.Other "LogTypes")
+        then Util.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
 
         if only_decl
         then [decl]
@@ -1498,8 +1497,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 lbdef=SS.close_univ_vars uvs imp
             } in
             let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
-            // if Env.debug env (Options.Other "LogTypes")
-            // then Util.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
+            if Env.debug env (Options.Other "LogTypes")
+            then Util.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
             (* TODO : Are there some cases where we don't want one of these ? *)
             (* If not the declaration is useless, isn't it ?*)
             [decl ; impl]
@@ -1527,7 +1526,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               || Options.dont_gen_projectors (Env.current_module env).str
           in
           (* KM : Why would we want to prevent a declaration only in this particular case ? *)
-          let no_decl = Syntax.is_type x.sort in
+          (* TODO : If we don't want the declaration then we need to propagate the right types in the patterns *)
+          let no_decl = false (* Syntax.is_type x.sort *) in
           let quals q =
               if only_decl
               then S.Assumption::List.filter (function S.Abstract -> false | _ -> true) q
@@ -1541,8 +1541,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               in
               quals (S.Projector(lid, x.ppname)::iquals) in
           let decl = Sig_declare_typ(field_name, uvs, t, quals, range_of_lid field_name) in
-          // if Env.debug env (Options.Other "LogTypes")
-          // then Util.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
+          if Env.debug env (Options.Other "LogTypes")
+          then Util.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
           then [decl] //only the signature
           else
@@ -1584,54 +1584,54 @@ let mk_data_operations iquals env tcs se = match se with
     let t = SS.subst univ_opening t in
     let formals, _ = U.arrow_formals t in
 
-    begin match formals with
-        | [] -> [] //no fields to project
-        | _ ->
-            let inductive_tps, typ0, should_refine =
-                let tps_opt = Util.find_map tcs (fun se ->
-                    if lid_equals typ_lid (must (Util.lid_of_sigelt se))
-                    then match se with
-                          | Sig_inductive_typ(_, uvs', tps, typ0, _, constrs, _, _) ->
-                              assert (List.length uvs = List.length uvs') ;
-                              Some (tps, typ0, List.length constrs > 1)
-                          | _ -> failwith "Impossible"
-                    else None)
-                in
-                match tps_opt with
-                    | Some x -> x
-                    | None ->
-                        if lid_equals typ_lid Const.exn_lid
-                        then [], U.ktype0, true
-                        else raise (Error("Unexpected data constructor", r))
-            in
+    let inductive_tps, typ0, should_refine =
+        let tps_opt = Util.find_map tcs (fun se ->
+            if lid_equals typ_lid (must (Util.lid_of_sigelt se))
+            then match se with
+                  | Sig_inductive_typ(_, uvs', tps, typ0, _, constrs, _, _) ->
+                      assert (List.length uvs = List.length uvs') ;
+                      Some (tps, typ0, List.length constrs > 1)
+                  | _ -> failwith "Impossible"
+            else None)
+        in
+        match tps_opt with
+            | Some x -> x
+            | None ->
+                if lid_equals typ_lid Const.exn_lid
+                then [], U.ktype0, true
+                else raise (Error("Unexpected data constructor", r))
+    in
 
-            let inductive_tps = SS.subst_binders univ_opening inductive_tps in
-            let typ0 = SS.subst univ_opening typ0 in
-            let indices, _ = U.arrow_formals typ0 in
+    let inductive_tps = SS.subst_binders univ_opening inductive_tps in
+    let typ0 = SS.subst univ_opening typ0 in
+    let indices, _ = U.arrow_formals typ0 in
 
-            let refine_domain =
-                if (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false))
-                then false
-                else should_refine
-            in
+    let refine_domain =
+        if (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false))
+        then false
+        else should_refine
+    in
 
-            let fv_qual =
-                let filter_records = function
-                    | RecordConstructor (_, fns) -> Some (Record_ctor(constr_lid, fns))
-                    | _ -> None
-                in match Util.find_map quals filter_records with
-                    | None -> Data_ctor
-                    | Some q -> q
-            in
+    let fv_qual =
+        let filter_records = function
+            | RecordConstructor (_, fns) -> Some (Record_ctor(constr_lid, fns))
+            | _ -> None
+        in match Util.find_map quals filter_records with
+            | None -> Data_ctor
+            | Some q -> q
+    in
 
-            let iquals =
-                if List.contains S.Abstract iquals
-                then S.Private::iquals
-                else iquals
-            in
+    let iquals =
+        if List.contains S.Abstract iquals
+        then S.Private::iquals
+        else iquals
+    in
 
-            let imp_tps, fields = Util.first_N n_typars formals in
-            mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env typ_lid constr_lid uvs inductive_tps imp_tps indices fields
-    end
+    let fields =
+        let imp_tps, fields = Util.first_N n_typars formals in
+        let rename = List.map2 (fun (x, _) (x', _) -> S.NT(x, S.bv_to_name x')) imp_tps inductive_tps in
+        SS.subst_binders rename fields
+    in
+    mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env typ_lid constr_lid uvs inductive_tps indices fields
 
   | _ -> []

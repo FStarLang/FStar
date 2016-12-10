@@ -1887,7 +1887,7 @@ end
 
 let rec aux = (fun args e -> (match ((let _160_554 = (unparen e)
 in _160_554.FStar_Parser_AST.tm)) with
-| FStar_Parser_AST.App (e, t, imp) -> begin
+| FStar_Parser_AST.App (e, t, imp) when (imp <> FStar_Parser_AST.UnivApp) -> begin
 (
 
 let arg = (let _160_555 = (desugar_term env t)
