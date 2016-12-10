@@ -300,66 +300,6 @@ let is_mac_for_iv (#i:id) (#n:Cipher.iv (alg i)) (st:state i Reader{safeId i}) (
   | Some mac -> ak == mac
   | _ -> False
 
-val counterblocks_contains_all_blocks:   
-  i:id{safeId i} ->
-  rgn:region -> 
-  x:PRF.domain i ->
-  len:u32 ->
-  remaining_len:u32{remaining_len_ok x len remaining_len} ->
-  plain:Crypto.Plain.plain i (v len) ->
-  cipher:lbytes (v len) ->
-  Lemma (requires True)
-        (ensures
-	    (let x0 = {x with ctr=ctr_0 i +^ 1ul} in
-	     let all_blocks = counterblocks i rgn x0 (v len) 0 (v len) plain cipher in
-	     let n_blocks = v x.ctr - v x0.ctr in
-	     n_blocks <= Seq.length all_blocks /\
-	     (let remaining_blocks = Seq.slice all_blocks n_blocks (Seq.length all_blocks) in
-	      contains_all_blocks x len remaining_len plain cipher remaining_blocks)))
-	(decreases (v remaining_len))
-#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-let rec counterblocks_contains_all_blocks i rgn x len remaining_len plain cipher = 
-  let x0 = {x with ctr=ctr_0 i +^ 1ul} in
-  (* let all_blocks = counterblocks i rgn x0 (v len) 0 (v len) plain cipher in *)
-  (* let completed_len = v x0.ctr - v (offset i) in *)
-  (* let n_blocks = v x.ctr - v x0.ctr in *)
-  counterblocks_len rgn x0 (v len) 0 plain cipher;
-  incr_remaining_len_ok x len remaining_len;
-  if remaining_len = 0ul then ()
-  else let l = min remaining_len (PRF.blocklen i) in 
-       counterblocks_contains_all_blocks i rgn (PRF.incr i x) len (remaining_len -^ l) plain cipher;
-       admit() //NS: significant --- but will change for Plan A
-
-let from_x_blocks_included_in (#i:id) (#rgn:rid) (x:PRF.domain i) (blocks:prf_blocks rgn i) (blocks':prf_blocks rgn i) = 
-  forall (y:PRF.domain i).{:pattern (find blocks y)}
-       y `above` x /\
-       v y.ctr <= v (ctr_0 i +^ 1ul) + Seq.length blocks
-       ==> find blocks y == find blocks' y
-  
-#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
-val widen_contains_all_blocks:   #i:id -> #r:rid ->
-				 (x_init:PRF.domain i{x_init.ctr = PRF.ctr_0 i +^ 1ul}) ->
-				 (x:PRF.domain i{x `above` x_init}) ->
-				 (len:u32) -> (remaining_len:u32{remaining_len_ok x len remaining_len}) ->
-				 (p:maybe_plain i (v len)) ->
-				 (cipher:lbytes (v len)) ->
-				 (blocks: prf_blocks r i) ->
-				 (blocks':prf_blocks r i) ->
-      Lemma (requires (let completed_len = v len - v remaining_len in
-       		       let n_blocks = v x.ctr - v (offset i) in
-       		       Seq.length blocks >= num_blocks' i (v len) /\
-		       contains_all_blocks x len remaining_len p cipher blocks /\
-		       from_x_blocks_included_in x_init blocks blocks'))
-	    (ensures (contains_all_blocks x len remaining_len p cipher blocks'))
-	    (decreases (v remaining_len))
-let rec widen_contains_all_blocks #i #r x_init x len remaining_len p cipher blocks blocks'
-    = if not (safeId i) || remaining_len = 0ul then 
-	 () 
-      else let starting_pos = len -^ remaining_len in
-	   let l = min remaining_len (PRF.blocklen i) in
-	   (*  *)
-	   widen_contains_all_blocks #i #r x_init (PRF.incr i x) len (remaining_len -^ l) p cipher blocks blocks'
-
 #set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 2 --max_fuel 2"
 let find_singleton (#rgn:region) (#i:id) (e:PRF.entry rgn i) (x:PRF.domain i) 
     : Lemma (if is_entry_domain x e then PRF.find (Seq.create 1 e) x == Some e.range
