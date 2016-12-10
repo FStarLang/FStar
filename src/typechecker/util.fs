@@ -1408,70 +1408,40 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                                             env                      (*                                         *)
                                             (tc:lident)              (* Type constructor name                   *)
                                             (lid:lident)             (* Constructor name                        *)
-                                            (uvs:univ_names)        (* Original universe names                 *)
+                                            (uvs:univ_names)         (* Original universe names                 *)
                                             (inductive_tps:binders)  (* Type parameters of the type constructor *)
-                                            (imp_tps:binders)        (* Implicit type parameters                *)
+                                            (implicit_tps:binders)   (* Implicit type parameters of the constr  *)
+                                            (indices:binders)        (* Implicit type parameters                *)
                                             (fields:binders)         (* Fields of the constructor               *)
-                                            t                        (* Result type fully applied with params   *)
                                             : list<sigelt> =
     let p = range_of_lid lid in
     let pos q = Syntax.withinfo q tun.n p in
     let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
-    let tps = List.map2 (fun (_, imp) (x, _) -> (x, imp)) inductive_tps imp_tps in
-    let unrefined_arg_binder, arg_binder, indices, inst_univs =
-        let head, args0 = Util.head_and_args t in
-        let args =
-            let rec arguments tps args = match tps, args with
-                | [], _ -> args
-                | _, [] -> raise (Error("Not enough arguments to type", Ident.range_of_lid lid))
-                | (_, Some (S.Implicit _))::tps', (_, Some (S.Implicit _))::args' -> arguments tps' args'
-                | (_, Some (S.Implicit _))::tps', (_, _)::_ -> arguments tps' args
-                | (_, _)::_, (a, Some (S.Implicit _))::_ ->
-                  raise (Error("Unexpected implicit annotation on argument", a.pos))
-                | (_, _)::tps', (_, _)::args' -> arguments tps' args'
-            in
-            arguments inductive_tps args0
-        in
-        let indices = args |> List.map (fun (_, imp) -> S.new_bv (Some p) tun, imp) in
-        let inst_univs =
-            match (SS.compress head).n with
-                | Tm_uinst (_, univs) -> univs
-                | _ -> []
-        in
-        let arg_typ = S.mk_Tm_app (S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc Delta_constant None), inst_univs)) None p)
-                                  (tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp))
-                                  None p
-        in
-        let unrefined_arg_binder = S.mk_binder (projectee arg_typ) in
-        let arg_binder =
-            if not refine_domain
-            then  unrefined_arg_binder //records have only one constructor; no point refining the domain
-            else let disc_name = Util.mk_discriminator lid in
-                 let x = S.new_bv (Some p) arg_typ in
-                 let sort =
-                     let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) Delta_equational None in
-                     U.refine x (Util.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] None p))
-                 in
-                 S.mk_binder ({projectee arg_typ with sort = sort})
-        in
-        unrefined_arg_binder, arg_binder, indices, inst_univs
+    let inst_univs = List.map (fun u -> U_name u) uvs in
+    let tps = List.map2 (fun (x,_) (_,imp) -> (x,imp)) implicit_tps inductive_tps in
+    let arg_typ =
+        let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc Delta_constant None), inst_univs)) None p in
+        let args = tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp) in
+        S.mk_Tm_app inst_tc args None p
+    in
+    let unrefined_arg_binder = S.mk_binder (projectee arg_typ) in
+    let arg_binder =
+        if not refine_domain
+        then unrefined_arg_binder //records have only one constructor; no point refining the domain
+        else let disc_name = Util.mk_discriminator lid in
+             let x = S.new_bv (Some p) arg_typ in
+             let sort =
+                 let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) Delta_equational None in
+                 U.refine x (Util.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] None p))
+             in
+             S.mk_binder ({projectee arg_typ with sort = sort})
     in
 
-    let arg_exp = S.bv_to_name (fst arg_binder) in
-    let imp_binders = imp_tps @ (indices |> List.map (fun (x, _) -> x, Some S.imp_tag)) in
-    let binders = imp_binders@[arg_binder] in
-
-    let arg = Util.arg_of_non_null_binder arg_binder in
-
-    let subst = fields |> List.mapi (fun i (a, _) ->
-            let field_name, _ = Util.mk_field_projector_name lid a i in
-            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name Delta_equational None)) inst_univs in
-            let proj = mk_Tm_app field_proj_tm [arg] None p in
-            NT(a, proj))
-    in
 
     let ntps = List.length tps in
-    let all_params = imp_tps@fields in
+    let all_params = List.map (fun (x, _) -> x, Some S.imp_tag) tps @ fields in
+
+    let imp_binders = tps @ indices |> List.map (fun (x, _) -> x, Some S.imp_tag) in
 
     let discriminator_ses =
         let discriminator_name = Util.mk_discriminator lid in
@@ -1479,6 +1449,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
         let only_decl =
               lid_equals C.prims_lid  (Env.current_module env)
               || fvq<>Data_ctor
+              || Options.dont_gen_projectors (Env.current_module env).str
         in
         let quals =
             (* KM : What about Logic ? should it still be there even with an implementation *)
@@ -1532,6 +1503,18 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             (* TODO : Are there some cases where we don't want one of these ? *)
             (* If not the declaration is useless, isn't it ?*)
             [decl ; impl]
+    in
+
+
+    let arg_exp = S.bv_to_name (fst arg_binder) in
+    let binders = imp_binders@[arg_binder] in
+    let arg = Util.arg_of_non_null_binder arg_binder in
+
+    let subst = fields |> List.mapi (fun i (a, _) ->
+            let field_name, _ = Util.mk_field_projector_name lid a i in
+            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name Delta_equational None)) inst_univs in
+            let proj = mk_Tm_app field_proj_tm [arg] None p in
+            NT(a, proj))
     in
 
     let projectors_ses =
@@ -1595,54 +1578,60 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     discriminator_ses @ projectors_ses
 
 let mk_data_operations iquals env tcs se = match se with
-  | Sig_datacon(lid, uvs, t, l, n, quals, _, r) when not (lid_equals lid C.lexcons_lid) ->
-
-     let inductive_tps, typ0, should_refine =
-         let tps_opt = Util.find_map tcs (fun se ->
-             if lid_equals l (must (Util.lid_of_sigelt se))
-             then match se with
-                  | Sig_inductive_typ(_, uvs', tps, typ0, _, constrs, _, _) ->
-                      assert (List.length uvs = List.length uvs') ;
-                      Some (tps, typ0, List.length constrs > 1)
-                  | _ -> failwith "Impossible"
-             else None)
-         in
-         match tps_opt with
-             | Some x -> x
-             | None ->
-                 if lid_equals l Const.exn_lid
-                 then [], U.ktype0, true
-                 else raise (Error("Unexpected data constructor", r))
-    in
+  | Sig_datacon(constr_lid, uvs, t, typ_lid, n_typars, quals, _, r) when not (lid_equals constr_lid C.lexcons_lid) ->
 
     let univ_opening, uvs = SS.univ_var_opening uvs in
     let t = SS.subst univ_opening t in
-    let typ0 = SS.subst univ_opening in
-    let refine_domain =
-        if (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false))
-        then false
-        else should_refine
-    in
-    let formals, cod = U.arrow_formals t in
-    let indices, _ = U.arrow_formals typ0 in
+    let formals, _ = U.arrow_formals t in
+
     begin match formals with
         | [] -> [] //no fields to project
         | _ ->
-            let filter_records = function
-                | RecordConstructor (_, fns) -> Some (Record_ctor(lid, fns))
-                | _ -> None
+            let inductive_tps, typ0, should_refine =
+                let tps_opt = Util.find_map tcs (fun se ->
+                    if lid_equals typ_lid (must (Util.lid_of_sigelt se))
+                    then match se with
+                          | Sig_inductive_typ(_, uvs', tps, typ0, _, constrs, _, _) ->
+                              assert (List.length uvs = List.length uvs') ;
+                              Some (tps, typ0, List.length constrs > 1)
+                          | _ -> failwith "Impossible"
+                    else None)
+                in
+                match tps_opt with
+                    | Some x -> x
+                    | None ->
+                        if lid_equals typ_lid Const.exn_lid
+                        then [], U.ktype0, true
+                        else raise (Error("Unexpected data constructor", r))
             in
-            let fv_qual = match Util.find_map quals filter_records with
-                | None -> Data_ctor
-                | Some q -> q
+
+            let inductive_tps = SS.subst_binders univ_opening inductive_tps in
+            let typ0 = SS.subst univ_opening typ0 in
+            let indices, _ = U.arrow_formals typ0 in
+
+            let refine_domain =
+                if (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false))
+                then false
+                else should_refine
             in
+
+            let fv_qual =
+                let filter_records = function
+                    | RecordConstructor (_, fns) -> Some (Record_ctor(constr_lid, fns))
+                    | _ -> None
+                in match Util.find_map quals filter_records with
+                    | None -> Data_ctor
+                    | Some q -> q
+            in
+
             let iquals =
                 if List.contains S.Abstract iquals
                 then S.Private::iquals
                 else iquals
             in
-            let tps, rest = Util.first_N n formals in
-            mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env l lid uvs inductive_tps tps rest cod
+
+            let imp_tps, fields = Util.first_N n_typars formals in
+            mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env typ_lid constr_lid uvs inductive_tps imp_tps indices fields
     end
 
   | _ -> []
