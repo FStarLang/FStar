@@ -81,7 +81,6 @@ unfold let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
 (* bool-to-type coercion *)
 type b2t (b:bool) = (b == true)
 
-
 (* constructive conjunction *)
 type c_and  (p:Type) (q:Type) =
   | And   : p -> q -> c_and p q

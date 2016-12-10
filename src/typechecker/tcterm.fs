@@ -1467,8 +1467,6 @@ and check_top_level_let env e =
          let cres = U.lcomp_of_comp <| Util.ml_comp Common.t_unit e.pos in
          e2.tk := Some (Common.t_unit.n);
 
-         // Util.print2 "Closing %s with universes %s" (Print.lbname_to_string lb.lbname) (List.map Ident.text_of_id univ_vars |> String.concat ", ") ;
-
 (*close*)let lb = Util.close_univs_and_mk_letbinding None lb.lbname univ_vars (Util.comp_result c1) (Util.comp_effect_name c1) e1 in
          mk (Tm_let((false, [lb]), e2))
            (Some (Common.t_unit.n))
@@ -1668,7 +1666,6 @@ and check_let_bound_def top_level env lb
     then raise (Error("Inner let-bound definitions cannot be universe polymorphic", e1.pos));
 
     (* 2. type-check e1 *)
-    // Util.print2 "Opening def of %s with universes %s\n" (Print.lbname_to_string lb.lbname) (List.map Ident.text_of_id univ_vars |> String.concat ", ") ;
     (* Only toplevel terms should have universe openings *)
     assert ( top_level || List.length univ_opening = 0 );
     let e1 = subst univ_opening e1 in
@@ -1703,7 +1700,6 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
           None, Rel.trivial_guard, [], [], env
 
         | _ ->
-            // Util.print2 "Opening type of %s with universes %s\n" (Print.lbname_to_string lb.lbname) (List.map Ident.text_of_id lb.lbunivs |> String.concat ", ") ;
           let univ_opening, univ_vars = univ_var_opening lb.lbunivs in
           let t = subst univ_opening t in
           let env1 = Env.push_univ_vars env univ_vars in

@@ -1466,8 +1466,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             SS.close_univ_vars uvs <| U.arrow binders bool_typ
         in
         let decl = Sig_declare_typ(discriminator_name, uvs, t, quals, range_of_lid discriminator_name) in
-        if Env.debug env (Options.Other "LogTypes")
-        then Util.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
+        // if Env.debug env (Options.Other "LogTypes")
+        // then Util.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
 
         if only_decl
         then [decl]
@@ -1498,8 +1498,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 lbdef=SS.close_univ_vars uvs imp
             } in
             let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
-            if Env.debug env (Options.Other "LogTypes")
-            then Util.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
+            // if Env.debug env (Options.Other "LogTypes")
+            // then Util.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
             (* TODO : Are there some cases where we don't want one of these ? *)
             (* If not the declaration is useless, isn't it ?*)
             [decl ; impl]
@@ -1541,8 +1541,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               in
               quals (S.Projector(lid, x.ppname)::iquals) in
           let decl = Sig_declare_typ(field_name, uvs, t, quals, range_of_lid field_name) in
-          if Env.debug env (Options.Other "LogTypes")
-          then Util.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
+          // if Env.debug env (Options.Other "LogTypes")
+          // then Util.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
           then [decl] //only the signature
           else

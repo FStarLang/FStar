@@ -1671,7 +1671,6 @@ let for_export hidden se : list<sigelt> * list<lident> =
       let lid = fv.fv_name.v in
       if hidden |> Util.for_some (S.fv_eq_lid fv)
       then [], hidden //this projector definition already has a declare_typ
-      (* TODO : Projector type might need to be elaborated here *)
       else let dec = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption], Ident.range_of_lid lid) in
            [dec], lid::hidden
 

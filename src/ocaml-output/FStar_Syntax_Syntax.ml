@@ -2119,9 +2119,10 @@ end)
 let new_univ_name : FStar_Range.range Prims.option  ->  univ_name = (fun ropt -> (
 
 let id = (next_id ())
-in (let _128_1456 = (let _128_1455 = (FStar_Util.string_of_int id)
-in ((_128_1455), ((range_of_ropt ropt))))
-in (FStar_Ident.mk_ident _128_1456))))
+in (let _128_1457 = (let _128_1456 = (let _128_1455 = (FStar_Util.string_of_int id)
+in (Prims.strcat "\'uu___" _128_1455))
+in ((_128_1456), ((range_of_ropt ropt))))
+in (FStar_Ident.mk_ident _128_1457))))
 
 
 let mkbv : FStar_Ident.ident  ->  Prims.int  ->  term  ->  bv = (fun x y t -> {ppname = x; index = y; sort = t})
@@ -2151,22 +2152,22 @@ let _33_553 = bv
 in {ppname = (FStar_Ident.mk_ident ((bv.ppname.FStar_Ident.idText), (r))); index = _33_553.index; sort = _33_553.sort}))
 
 
-let lid_as_fv : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  fv = (fun l dd dq -> (let _128_1485 = (withinfo l tun (FStar_Ident.range_of_lid l))
-in {fv_name = _128_1485; fv_delta = dd; fv_qual = dq}))
+let lid_as_fv : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  fv = (fun l dd dq -> (let _128_1486 = (withinfo l tun (FStar_Ident.range_of_lid l))
+in {fv_name = _128_1486; fv_delta = dd; fv_qual = dq}))
 
 
 let fv_to_tm : fv  ->  term = (fun fv -> (mk (Tm_fvar (fv)) None (FStar_Ident.range_of_lid fv.fv_name.v)))
 
 
-let fvar : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  term = (fun l dd dq -> (let _128_1494 = (lid_as_fv l dd dq)
-in (fv_to_tm _128_1494)))
+let fvar : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  term = (fun l dd dq -> (let _128_1495 = (lid_as_fv l dd dq)
+in (fv_to_tm _128_1495)))
 
 
 let lid_of_fv : fv  ->  FStar_Ident.lid = (fun fv -> fv.fv_name.v)
 
 
-let range_of_fv : fv  ->  FStar_Range.range = (fun fv -> (let _128_1499 = (lid_of_fv fv)
-in (FStar_Ident.range_of_lid _128_1499)))
+let range_of_fv : fv  ->  FStar_Range.range = (fun fv -> (let _128_1500 = (lid_of_fv fv)
+in (FStar_Ident.range_of_lid _128_1500)))
 
 
 
