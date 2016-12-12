@@ -16,6 +16,9 @@ OCAMLYACC=ocamlyacc
 OCAMLC=ocamlfind ocamlc $(OPTIONS)
 OCAMLOPT=ocamlfind ocamlopt $(OPTIONS)
 OCAMLDEP=ocamldep
+OCAMLBUILD=cd ../../ && ocamlbuild -I src/ocaml-output -I src/basic/ml \
+  -I src/parser/ml -I src/fstar/ml -j 24 -build-dir src/ocaml-output/_build \
+  -I lib/ml
 INCLUDES=-I $(FSTAR_HOME)/lib/ml/ # all relevant -I options here
 OCAMLFLAGS=$(INCLUDES)    -w -8  # add other options for ocamlc here
 OCAMLOPTFLAGS=$(INCLUDES) -w -8  # add other options for ocamlopt here
@@ -60,17 +63,14 @@ else
    DATE_EXEC := date
 endif
 
-# FIXME this target is always rebuilt, regardless of whether the sources have
-# changed or not
 # NOTE: once we move to ulib, the -j 1 can disappear.
-all:
+all: fstar.exe
 	@echo 'if Sys.ocaml_version >= "4.02.2" then exit 0 else (print_string "ERROR: Installed OCaml too old (need version larger than 4.02.2)\n"; exit 1)' | ocaml -noinit -noprompt -stdin
-	make -j 1 -C $(FSTAR_HOME)/lib/ml
-	$(MAKE) prep
-	$(MAKE) depend
-	$(MAKE) fstar.exe
 
-prep: parser copy_lib_files version
+.PHONY: fstar.exe
+fstar.exe: parser
+	$(OCAMLBUILD) main.native
+	cp _build/main.native $@
 
 parser:
 ifeq ($(HAS_VALID_MENHIR), 1)
@@ -135,17 +135,6 @@ fsharp-parser:
 											>> parse.preprocessed.fsy
 	mv parse.preprocessed.fsy ../parser/parse.fsy
 
-copy_lib_files: $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
-	cp $^ .
-
-# Dependencies
-depend:
-	$(OCAMLDEP) *.ml > .depend
-
-
-fstar.exe: $(FSTAR_OBJS) main.ml
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(FSTAR_HOME)/lib/ml/fstarlib.cmxa -o fstar.exe $^
-	cp fstar.exe ../../bin/fstar.exe
 
 # always bump version for a release
 VERSION=$(shell head -n 1 ../../version.txt)
