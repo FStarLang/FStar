@@ -7,7 +7,7 @@ type nnat =
 | S : nnat -> nnat
 
 val isPositive : nnat -> Tot bool
-let isPositive  = is_S
+let isPositive  = S?
 
 let idnat = fun (x:nnat) -> x
 let idnat2 (x:nnat) = x

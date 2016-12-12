@@ -412,11 +412,16 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme effect_params ts) in
     // We always close [bind_repr], even though it may be [Tm_unknown]
     // (non-reifiable, non-reflectable effect)
-    if n > 0 && not (is_unknown (snd ts)) && List.length (fst ts) <> n then
-        failwith (Util.format2
-          "The effect combinator is not universe-polymorphic enough (n=%s) (%s)"
-          (string_of_int n)
-          (Print.tscheme_to_string ts));
+    let m = List.length (fst ts) in
+    if n >= 0 && not (is_unknown (snd ts)) && m <> n
+    then begin
+        let error = if m < n then "not universe-polymorphic enough" else "too universe-polymorphic" in
+        failwith (Util.format3
+                  "The effect combinator is %s (n=%s) (%s)"
+                  error
+                  (string_of_int n)
+                  (Print.tscheme_to_string ts))
+    end ;
     ts in
   let close_action act =
     let univs, defn = close (-1) (act.action_univs, act.action_defn) in
@@ -426,7 +431,8 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
         action_univs=univs;
         action_defn=defn;
         action_typ=typ; } in
-  assert (List.length effect_params > 0 || List.length univs = 1);
+  let nunivs = List.length univs in
+  assert (List.length effect_params > 0 || nunivs = 1);
   let ed = { ed with
       univs       = univs
     ; binders     = effect_params
@@ -536,7 +542,11 @@ and cps_and_elaborate env ed =
   let lift_from_pure_wp =
       match (SS.compress return_wp).n with
       | Tm_abs (b1 :: b2 :: bs, body, what) ->
-          let [b1 ; b2], body = SS.open_term [b1 ; b2] (U.abs bs body None) in
+          let b1,b2, body =
+              match SS.open_term [b1 ; b2] (U.abs bs body None) with
+                  | [b1 ; b2], body -> b1, b2, body
+                  | _ -> failwith "Impossible : open_term not preserving binders arity"
+          in
           // WARNING : pushing b1 and b2 in env might break the well-typedness invariant
           let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
           let wp_b1 = N.normalize [ N.Beta ] env0 (mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ]))) in
@@ -547,7 +557,7 @@ and cps_and_elaborate env ed =
           let wp = S.gen_bv "wp" None pure_wp_type in
           // fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a
           let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
-          U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr Const.effect_GTot_lid))
+          U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr (Const.effect_GTot_lid, [])))
       | _ ->
           failwith "unexpected shape for return"
   in
@@ -556,7 +566,7 @@ and cps_and_elaborate env ed =
     // TODO: fix [tc_eff_decl] to deal with currying
     match (SS.compress return_wp).n with
     | Tm_abs (b1 :: b2 :: bs, body, what) ->
-        U.abs ([ b1; b2 ]) (U.abs bs body what) (Some (Inr Const.effect_GTot_lid))
+        U.abs ([ b1; b2 ]) (U.abs bs body what) (Some (Inr (Const.effect_GTot_lid, [])))
     | _ ->
         failwith "unexpected shape for return"
   in
@@ -623,7 +633,11 @@ and cps_and_elaborate env ed =
   let pre, post =
     match (unascribe <| SS.compress wp_type).n with
     | Tm_abs (type_param :: effect_param, arrow, _) ->
-        let (type_param :: effect_param), arrow = SS.open_term (type_param :: effect_param) arrow in
+        let type_param , effect_param, arrow =
+            match SS.open_term (type_param :: effect_param) arrow with
+                | (b :: bs), body -> b, bs, body
+                | _ -> failwith "Impossible : open_term nt preserving binders arity"
+        in
         begin match (unascribe <| SS.compress arrow).n with
         | Tm_arrow (wp_binders, c) ->
             let wp_binders, c = SS.open_comp wp_binders c in
@@ -1423,7 +1437,7 @@ and tc_decl env se: list<sigelt> * _ =
       let env = Env.push_sigelt env se in
       [se], env
 
-    | Sig_effect_abbrev(lid, uvs, tps, c, tags, r) ->
+    | Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) ->
       assert (uvs = []);
       let env0 = env in
       let env = Env.set_range env r in
@@ -1445,7 +1459,7 @@ and tc_decl env se: list<sigelt> * _ =
                                     (Print.lid_to_string lid)
                                     (List.length uvs |> Util.string_of_int)
                                     (Print.term_to_string t), r)));
-      let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, r) in
+      let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) in
       let env = Env.push_sigelt env0 se in
       [se], env
 
@@ -1726,7 +1740,7 @@ let check_exports env (modul:modul) exports =
           then lbs |> List.iter (fun lb ->
                let fv = right lb.lbname in
                check_term fv.fv_name.v lb.lbunivs lb.lbtyp)
-        | Sig_effect_abbrev(l, univs, binders, comp, quals, r) ->
+        | Sig_effect_abbrev(l, univs, binders, comp, quals, flags, r) ->
           if not (quals |> List.contains Private)
           then let arrow = S.mk (Tm_arrow(binders, comp)) None r in
                check_term l univs arrow

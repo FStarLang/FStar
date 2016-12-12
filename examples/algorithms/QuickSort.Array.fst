@@ -22,6 +22,11 @@ open FStar.Heap
 open FStar.ST
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
 
+(* 2016-11-22: Due to the QuickSort namespace being opened *after* the
+FStar namespace,Array resolves to QuickSort.Array instead of
+FStar.Array, so we have to fix this explicitly as a module abbrev. *)
+module Array = FStar.Array
+
 type partition_inv (a:eqtype) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) =
            ((length hi) >= 0)
            /\ (forall y. (mem y hi ==> f pv y) /\ (mem y lo ==> f y pv))

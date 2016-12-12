@@ -8,12 +8,15 @@ open FStar.Int.Cast
 open FStar.Buffer
 
 open Crypto.Symmetric.Bytes
+open Crypto.Symmetric.GF128.Spec
 
 module U32 = FStar.UInt32
+module Spec = Crypto.Symmetric.GF128.Spec
+
 
 let len = 16ul // length of GF128 in bytes
 
-type elem = lbytes 16
+type elem = Spec.elem 
 type elemB = b:lbuffer 16
 
 (* * Every block of message is regarded as an element in Galois field GF(2^128), **)
@@ -29,30 +32,38 @@ type elemB = b:lbuffer 16
 
 private val gf128_add_loop: 
   a:elemB -> b:elemB {disjoint a b} ->
-  dep:u32{U32(dep <=^ len)} -> Stack unit
+  dep:u32{U32.(dep <=^ len)} -> Stack unit
   (requires (fun h -> live h a /\ live h b))
-  (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
+  (ensures  (fun h0 _ h1 -> live h0 a /\ live h0 b /\ live h1 a /\ modifies_1 a h0 h1))
 let rec gf128_add_loop a b dep =
-  if dep <> 0ul then begin
-    let i = U32 (dep -^ 1ul) in
-    a.(i) <- a.(i) ^^ b.(i);
-    gf128_add_loop a b i
-  end
+  if dep = 0ul then ()
+  else
+    let i = U32.(dep -^ 1ul) in
+    gf128_add_loop a b i;
+    a.(i) <- a.(i) ^^ b.(i)
 
 (* In place addition. Calculate "a + b" and store the result in a. *)
 val gf128_add: a:elemB -> b:elemB {disjoint a b} -> Stack unit
   (requires (fun h -> live h a /\ live h b))
-  (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
-let gf128_add a b = gf128_add_loop a b len
+  (ensures (fun h0 _ h1 -> 
+    live h0 a /\ live h0 b /\ live h1 a /\ modifies_1 a h0 h1 /\ 
+    as_seq h1 a == as_seq h0 a +@ as_seq h0 b))
+let gf128_add a b = 
+  let h0 = ST.get() in
+  gf128_add_loop a b len;
+  let h1 = ST.get() in
+  assume (as_seq h1 a == as_seq h0 a +@ as_seq h0 b)
+  //16-10-27 TODO: functional correctness.
 
-private val gf128_shift_right_loop: a:elemB -> dep:u32{U32(dep <^ len)} -> Stack unit
+  
+private val gf128_shift_right_loop: a:elemB -> dep:u32{U32.(dep <^ len)} -> Stack unit
   (requires (fun h -> live h a))
   (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
 let rec gf128_shift_right_loop a dep =
   if dep = 0ul 
   then a.(0ul) <- shift_right a.(0ul) 1ul
   else begin
-    let i = U32 (dep -^ 1ul) in
+    let i = U32.(dep -^ 1ul) in
     a.(dep) <- (a.(i) <<^ 7ul) +%^ (a.(dep) >>^ 1ul);
     gf128_shift_right_loop a i
   end
@@ -76,7 +87,7 @@ private val apply_mask_loop: a:elemB -> m:elemB {disjoint a m} -> msk:byte -> de
 let rec apply_mask_loop a m msk dep =
   if dep <> 0ul then 
   begin
-    let i = U32 (dep -^ 1ul) in
+    let i = U32.(dep -^ 1ul) in
     m.(i) <- a.(i) &^ msk;
     apply_mask_loop a m msk i
   end
@@ -100,7 +111,7 @@ let rec gf128_mul_loop a b tmp dep =
   begin
     let r = sub tmp 0ul len in
     let m = sub tmp len len in
-    let num = b.(U32 (dep /^ 8ul)) in
+    let num = b.(U32.(dep /^ 8ul)) in
     let msk = ith_bit_mask num (U32.rem dep 8ul) in
     apply_mask a m msk;
     gf128_add r m;
@@ -109,33 +120,60 @@ let rec gf128_mul_loop a b tmp dep =
     gf128_shift_right a;
     let num = a.(0ul) in
     a.(0ul) <- (num ^^ (logand msk r_mul));
-    gf128_mul_loop a b tmp (U32 (dep +^ 1ul))
+    gf128_mul_loop a b tmp (U32.(dep +^ 1ul))
   end
 
 (* In place multiplication. Calculate "a * b" and store the result in a.    *)
 (* WARNING: may have issues with constant time. *)
 val gf128_mul: a:elemB -> b:elemB {disjoint a b} -> Stack unit
   (requires (fun h -> live h a /\ live h b))
-  (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
+  (ensures (fun h0 _ h1 -> 
+    live h0 a /\ live h0 b /\ live h1 a /\ modifies_1 a h0 h1 /\ 
+    as_seq h1 a == as_seq h0 a *@ as_seq h0 b ))
 let gf128_mul a b =
+  let h0 = ST.get() in
   push_frame();
   let tmp = create 0uy 32ul in
   gf128_mul_loop a b tmp 0ul;
   blit tmp 0ul a 0ul 16ul;
-  pop_frame()
+  pop_frame();
+  let h1 = ST.get() in
+  assume(as_seq h1 a == as_seq h0 a *@ as_seq h0 b)
+  //16-10-27 todo: functional correctness.
 
-let add_and_multiply a e k = 
-  gf128_add a e;
-  gf128_mul a k
+val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block}
+  -> k:elemB{disjoint acc k /\ disjoint block k} -> Stack unit
+  (requires (fun h -> live h acc /\ live h block /\ live h k))
+  (ensures (fun h0 _ h1 -> live h0 acc /\ live h0 block /\ live h0 k
+    /\ live h1 acc /\ live h1 k
+    /\ modifies_1 acc h0 h1
+    /\ as_seq h1 acc == (as_seq h0 acc +@ as_seq h0 block) *@ as_seq h0 k))
+let add_and_multiply acc block k =
+  gf128_add acc block;
+  gf128_mul acc k
 
 
-  
+val finish: acc:elemB -> s:elemB -> Stack unit
+  (requires (fun h -> live h acc /\ live h s /\ disjoint acc s))
+  (ensures  (fun h0 _ h1 -> live h0 acc /\ live h0 s
+    /\ modifies_1 acc h0 h1 /\ live h1 acc
+    /\ as_seq h1 acc == finish (as_seq h0 acc) (as_seq h0 s)))
+let finish a s = 
+  //let _ = IO.debug_print_string "finish a=" in 
+  //let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
+  //let _ = IO.debug_print_string "finish s=" in 
+  //let _ = Crypto.Symmetric.Bytes.print_buffer s 0ul 16ul in
+  gf128_add a s
+  //let _ = IO.debug_print_string "finish a=" in 
+  //let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
+
+
 //16-09-23 Instead of the code below, we should re-use existing AEAD encodings
 //16-09-23 and share their injectivity proofs and crypto model.
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
-private val ghash_loop_: 
+private val ghash_loop_:
   tag:elemB ->
   auth_key:elemB {disjoint tag auth_key} ->
   str:buffer{disjoint tag str /\ disjoint auth_key tag} ->
@@ -146,7 +184,7 @@ private val ghash_loop_:
 let ghash_loop_ tag auth_key str len dep =
   push_frame();
   let last = create 0uy 16ul in
-  blit str dep last 0ul (U32 (len -^ dep)); 
+  blit str dep last 0ul (U32.(len -^ dep)); 
   add_and_multiply tag last auth_key;
   pop_frame()
 
@@ -154,16 +192,16 @@ let ghash_loop_ tag auth_key str len dep =
 private val ghash_loop: 
   tag:elemB ->
   auth_key:elemB {disjoint tag auth_key} ->
-  str:buffer{disjoint tag str /\ disjoint auth_key tag} ->
+  str:buffer{disjoint tag str /\ disjoint auth_key str} ->
   len:u32{length str = U32.v len} ->
   dep:u32{U32.v dep <= U32.v len} -> Stack unit
   (requires (fun h -> live h tag /\ live h auth_key /\ live h str))
   (ensures (fun h0 _ h1 -> live h1 tag /\ live h1 auth_key /\ live h1 str /\ modifies_1 tag h0 h1))
 let rec ghash_loop tag auth_key str len dep =
-  (* Appending zeros if the last block is not a complete one. *)
-  let rest = U32(len -^ dep) in 
+  (* Appending zeros if the last block is not complete *)
+  let rest = U32.(len -^ dep) in 
   if rest <> 0ul then 
-  if U32 (16ul >=^ rest) then ghash_loop_ tag auth_key str len dep
+  if U32.(16ul >=^ rest) then ghash_loop_ tag auth_key str len dep
   else 
   begin
     let next = U32.add dep 16ul in
@@ -192,7 +230,7 @@ let mk_len_info len_info len_1 len_2 =
   upd len_info 4ul (uint32_to_uint8 len_1);
   let len_1 = len_1 >>^ 8ul in
   upd len_info 3ul (uint32_to_uint8 len_1);
-  let last = FStar.UInt8 (uint32_to_uint8 len_2 <<^ 3ul) in
+  let last = FStar.UInt8.(uint32_to_uint8 len_2 <<^ 3ul) in
   upd len_info 15ul last;
   let len_2 = len_2 >>^ 5ul in
   upd len_info 14ul (uint32_to_uint8 len_2);

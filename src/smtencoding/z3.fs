@@ -71,13 +71,14 @@ let get_z3version () =
 let ini_params () =
   let z3_v = get_z3version () in
   begin if z3v_le (get_z3version ()) (4, 4, 0)
-  then raise <| Util.Failure (Util.format1 "Z3 v4.4.1 is required; got %s\n" (z3version_as_string z3_v))
+  then raise <| Util.Failure (Util.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
   else ()
   end;
-  "-smt2 -in \
+  Util.format1 "-smt2 -in \
     AUTO_CONFIG=false \
     MODEL=true \
-    SMT.RELEVANCY=2"
+    SMT.RELEVANCY=2 \
+    SMT.RANDOM_SEED=%s" (string_of_int (Options.z3_seed()))
 
 type label = string
 type unsat_core = option<list<string>>
@@ -252,9 +253,10 @@ let doZ3Exe =
         res
 
 let z3_options () =
-    "(set-option :global-decls false)\
+    Util.format1 "(set-option :global-decls false)\
      (set-option :smt.mbqi false)\
-     (set-option :produce-unsat-cores true)\n"
+     (set-option :produce-unsat-cores true)\
+     (set-option :smt.random_seed %s)\n" (string_of_int (Options.z3_seed()))
 
 type job<'a> = {
     job:unit -> 'a;

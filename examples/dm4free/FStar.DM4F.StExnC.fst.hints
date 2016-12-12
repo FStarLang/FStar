@@ -1,5 +1,5 @@
 [
-  "-lÙ`\u0002#šqóè|¯«P\u0016'",
+  "„ÌC(\u0019'Ÿy´\fÀP¥X}M",
   [
     [ "FStar.DM4F.StExnC.return", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -8,12 +8,12 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "disc_equation_Prims.None",
+        "@query", "bool_inversion", "bool_typing",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "function_token_typing_Prims.int", "kinding_Prims.option@tok",
         "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption",
-        "proj_equation_Prims.Mktuple2__1",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.Mktuple2._1",
-        "typing_Prims.is_Some"
+        "projection_inverse_BoxBool_proj_0",
+        "typing_Prims.__proj__Mktuple2__item___1"
       ],
       0
     ],
@@ -24,17 +24,23 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "disc_equation_Prims.None",
+        "@query", "bool_inversion", "bool_typing",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "fuel_guarded_inversion_Prims.tuple2",
         "function_token_typing_Prims.int", "kinding_Prims.option@tok",
         "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption",
-        "proj_equation_Prims.Mktuple2__1",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.Mktuple2._1",
-        "typing_Prims.is_Some"
+        "typing_Prims.__proj__Mktuple2__item___1"
       ],
       0
     ],
-    [ "FStar.DM4F.StExnC.STEXNC_raise_elab", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.StExnC.STEXNC___proj__STEXNC__item__raise_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     [ "FStar.DM4F.StExnC.STEXNC", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.StExnC.STEXNC", 2, 2, 1, [ "@query" ], 0 ],
     [
@@ -180,7 +186,7 @@
       2,
       1,
       [
-        "@query", "FStar.DM4F.StExnC.STEXNC.raise_equality",
+        "@query", "FStar.DM4F.StExnC.__proj__STEXNC__item__raise_equality",
         "constructor_distinct_Prims.Mktuple2",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.int",
         "disc_equation_Prims.None",

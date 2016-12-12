@@ -1,5 +1,5 @@
 [
-  "™Šº&\u007fÊ9\u0013ÃhL¥y°\u001b—",
+  "\f\u0019NÕ÷Z\u0000è{èH/)\u0014&¼",
   [
     [
       "BinarySearchTreeFirst.tree",
@@ -41,14 +41,21 @@
       [
         "@query", "assumption_Prims.HasEq_int",
         "assumption_Prims.option_haseq",
-        "haseqTm_refine_84b7a1a5dc6e4cfb88f6f5c9e128b319", "int_inversion",
+        "haseqTm_refine_14c0cf24272e36bc03f3b9eac89c4c8b", "int_inversion",
         "kinding_BinarySearchTreeFirst.tree@tok"
       ],
       0
     ],
-    [ "BinarySearchTreeFirst.Node.l", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "BinarySearchTreeFirst.Node.left",
+      "BinarySearchTreeFirst.__proj__Node__item__l",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "BinarySearchTreeFirst.__proj__Node__item__left",
       1,
       2,
       1,
@@ -58,10 +65,24 @@
       ],
       0
     ],
-    [ "BinarySearchTreeFirst.Node.n", 1, 2, 1, [ "@query" ], 0 ],
-    [ "BinarySearchTreeFirst.Node.r", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "BinarySearchTreeFirst.Node.right",
+      "BinarySearchTreeFirst.__proj__Node__item__n",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "BinarySearchTreeFirst.__proj__Node__item__r",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "BinarySearchTreeFirst.__proj__Node__item__right",
       1,
       2,
       1,
@@ -69,7 +90,7 @@
       0
     ],
     [
-      "BinarySearchTreeFirst.Node.right",
+      "BinarySearchTreeFirst.__proj__Node__item__right",
       2,
       2,
       1,
@@ -77,12 +98,13 @@
       0
     ],
     [
-      "BinarySearchTreeFirst.Node.right",
+      "BinarySearchTreeFirst.__proj__Node__item__right",
       3,
       2,
       1,
       [
-        "@query", "fuel_guarded_inversion_BinarySearchTreeFirst.tree",
+        "@query", "data_elim_BinarySearchTreeFirst.Node",
+        "fuel_guarded_inversion_BinarySearchTreeFirst.tree", "int_inversion",
         "proj_equation_BinarySearchTreeFirst.Node_l",
         "proj_equation_BinarySearchTreeFirst.Node_left",
         "proj_equation_BinarySearchTreeFirst.Node_n",
@@ -92,7 +114,7 @@
         "projection_inverse_BinarySearchTreeFirst.Node_n",
         "projection_inverse_BinarySearchTreeFirst.Node_r",
         "projection_inverse_BinarySearchTreeFirst.Node_right",
-        "refinement_interpretation_Tm_refine_84b7a1a5dc6e4cfb88f6f5c9e128b319"
+        "refinement_interpretation_Tm_refine_14c0cf24272e36bc03f3b9eac89c4c8b"
       ],
       0
     ],
@@ -121,18 +143,16 @@
         "constructor_distinct_Prims.Some", "disc_equation_Prims.None",
         "disc_equation_Prims.Some", "equality_tok_Prims.LexTop@tok",
         "equation_BinarySearchTreeFirst.max",
-        "fuel_guarded_inversion_BinarySearchTreeFirst.tree",
-        "fuel_guarded_inversion_Prims.option", "int_inversion",
+        "fuel_guarded_inversion_BinarySearchTreeFirst.tree", "int_inversion",
         "kinding_BinarySearchTreeFirst.tree@tok", "lemma_Prims.invertOption",
         "pretyping_32c99cb150ee6f474d09a93f2f2fb96e",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
         "projection_inverse_BinarySearchTreeFirst.Node_r",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_84b7a1a5dc6e4cfb88f6f5c9e128b319",
+        "refinement_interpretation_Tm_refine_14c0cf24272e36bc03f3b9eac89c4c8b",
         "subterm_ordering_BinarySearchTreeFirst.Node",
-        "subterm_ordering_Prims.Some", "typing_Prims.is_None",
-        "typing_Prims.is_Some"
+        "subterm_ordering_Prims.Some", "typing_Prims.uu___is_None"
       ],
       0
     ],
@@ -158,7 +178,7 @@
         "projection_inverse_BinarySearchTreeFirst.Node_r",
         "projection_inverse_BinarySearchTreeFirst.Node_right",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_84b7a1a5dc6e4cfb88f6f5c9e128b319",
+        "refinement_interpretation_Tm_refine_14c0cf24272e36bc03f3b9eac89c4c8b",
         "subterm_ordering_BinarySearchTreeFirst.Node",
         "subterm_ordering_Prims.Some"
       ],

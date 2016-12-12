@@ -146,6 +146,7 @@ let init () =
         ("no_warn_top_level_effects"    , Bool true);
         ("z3refresh"                    , Bool false);
         ("z3rlimit"                     , Int 5);
+        ("z3seed"                       , Int 0);
         ("z3timeout"                    , Int 5)] in
    let o = peek () in
    Util.smap_clear o;
@@ -226,6 +227,7 @@ let get_version                 ()      = lookup_opt "version"                  
 let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects"   as_bool
 let get_z3refresh               ()      = lookup_opt "z3refresh"                as_bool
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
+let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
 let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
 
 let dlevel = function
@@ -633,6 +635,12 @@ let rec specs () : list<Getopt.opt> =
         "Set the Z3 per-query resource limit (default 5 units, taking roughtly 5s)");
 
        ( noshort,
+        "z3seed",
+         OneArg ((fun s -> Int (int_of_string s)),
+                  "[positive integer]"),
+        "Set the Z3 random seed (default 0)");
+
+       ( noshort,
         "z3timeout",
          OneArg ((fun s -> Util.print_string "Warning: z3timeout ignored with universes; use z3rlimit instead\n"; Int (int_of_string s)),
                   "[positive integer]"),
@@ -707,7 +715,7 @@ let settable = function
     | "z3refresh" -> true
     | _ -> false
 
-let resettable s = settable s || s="z3timeout" || s="z3rlimit"
+let resettable s = settable s || s="z3timeout" || s="z3rlimit" || s="z3seed"
 let all_specs = specs ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
@@ -866,4 +874,5 @@ let z3_exe                       () = match get_smt () with
                                     | Some s -> s
 let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
+let z3_seed                      () = get_z3seed                      ()
 let z3_timeout                   () = get_z3timeout                   ()

@@ -10,7 +10,7 @@ type random_tape = int -> Tot int
 val sample : random_tape -> int -> Tot int
 let sample r i =  r i
 
-type rel_random_tape (b:(int -> Tot bij)) = r:(rel random_tape){forall i. b i (R.l r i) = R.r r i}
+type rel_random_tape (b:(int -> Tot bij)) = r:(rel random_tape){forall i. b i (R?.l r i) = R?.r r i}
 
 val id : bij #int #int 
 let id x = x 
@@ -29,7 +29,7 @@ let otp n r i = n + r i
   (* Random tape used for relational verification *)
 val otp_rand : x:(rel int) -> int -> Tot (bij #int #int)
 let otp_rand x i = if i = 0 then 
-                     add (R.l x - R.r x)
+                     add (R?.l x - R?.r x)
                    else 
                      id
 
@@ -45,8 +45,8 @@ let otp2 n m r i j = (n + r i, m + r j)
 val otp2_rand : x:(rel int) -> y:(rel int) -> int -> Tot (bij #int #int)
 let otp2_rand x y i = 
   match i with
-  | 0 -> add (R.l x - R.r x)
-  | 1 -> add (R.l y - R.r y)
+  | 0 -> add (R?.l x - R?.r x)
+  | 1 -> add (R?.l y - R?.r y)
   | _ -> id
 
 val otp2_eq : x:(rel int) -> y:(rel int) -> r:(rel_random_tape (otp2_rand x y)) ->

@@ -21,7 +21,7 @@ let rec mem x = function
   | hd::tl -> if hd = x then true else mem x tl
 
 type map_t (k:Type) (v:Type) (f:cmp k) (d:ordset k f) =
-  g:(k -> Tot (option v)){(forall x. (mem x d = is_Some (g x)))}
+  g:(k -> Tot (option v)){(forall x. (mem x d = Some? (g x)))}
 
 type ordmap: key:Type -> value:Type -> cmp key -> Type =
   | Mk_map: #k:Type -> #v:Type -> #f:cmp k -> d:ordset k f -> m:map_t k v f d -> ordmap k v f
@@ -36,13 +36,13 @@ let contains (#k:Type) (#v:Type) #f x (Mk_map s g) = mem x s
 
 val sel_contains: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
       -> Lemma (requires (True))
-               (ensures (contains #k #v #f x m = is_Some (select #k #v #f x m)))
+               (ensures (contains #k #v #f x m = Some? (select #k #v #f x m)))
 #reset-options
 let sel_contains (#k:Type) (#v:Type) #f x m = ()
 (* intuitive proof:
    - contains #k #v #f x m = mem x (Mk_map.d m)
-   - is_Some (select #k #v #f x m) = is_Some ((Mk_map.m m) x)
-   - by map_t type: forall x. (mem x d = is_Some (g x)))
+   - Some? (select #k #v #f x m) = Some? ((Mk_map.m m) x)
+   - by map_t type: forall x. (mem x d = Some? (g x)))
 
  *)
 

@@ -72,7 +72,7 @@ let auth_body #k alg ciphertext tag key nonce cnt ad adlen len tmp =
   update_counter counter cnt;
   let c0 = sub tmp 32ul 16ul in
   alg key counter c0;
-  gf128_add tag c0;
+  finish tag c0;
   let h1 = ST.get() in
   assert(live h1 ciphertext /\ live h1 tag /\ live h1 key /\ live h1 nonce /\ live h1 ad /\ live h1 tmp /\ modifies_2 tag tmp h0 h1)
 
@@ -112,16 +112,16 @@ private val encrypt_loop: #k:pos -> alg:cipher_alg k ->
         /\ modifies_2 ciphertext tmp h0 h1))
 let rec encrypt_loop #k alg ciphertext key cnt plaintext len tmp dep =
   (* Appending zeros if the last block is not a complete one. *)
-  if U32 (16ul >=^ (len -^ dep)) then begin
+  if U32.(16ul >=^ (len -^ dep)) then begin
     let h0 = ST.get() in
     let counter = sub tmp 0ul 16ul in
     update_counter counter cnt;
     let last = sub tmp 16ul 16ul in
-    blit plaintext dep last 0ul (U32 (len -^ dep));
+    blit plaintext dep last 0ul (U32.(len -^ dep));
     let ci = sub tmp 32ul 16ul in
     alg key counter ci;
     gf128_add ci last;
-    blit ci 0ul ciphertext dep (U32 (len -^ dep));
+    blit ci 0ul ciphertext dep (U32.(len -^ dep));
     let h1 = ST.get() in
     assert(live h1 ciphertext /\ live h1 key /\ live h1 plaintext /\ live h1 tmp /\ modifies_2 ciphertext tmp h0 h1)
   end else begin
@@ -132,7 +132,7 @@ let rec encrypt_loop #k alg ciphertext key cnt plaintext len tmp dep =
     let ci = sub ciphertext dep 16ul in
     alg key counter ci;
     gf128_add ci pi;
-    encrypt_loop #k alg ciphertext key (U32 (cnt +%^ 1ul)) plaintext len tmp (U32 (dep +^ 16ul));
+    encrypt_loop #k alg ciphertext key (U32.(cnt +%^ 1ul)) plaintext len tmp (U32.(dep +^ 16ul));
     let h1 = ST.get() in
     assert(live h1 ciphertext /\ live h1 key /\ live h1 plaintext /\ live h1 tmp /\ modifies_2 ciphertext tmp h0 h1)
   end
@@ -157,7 +157,7 @@ let encrypt_body #k alg ciphertext tag key nonce cnt ad adlen plaintext len =
   push_frame();
   let tmp = create (0uy) 48ul in
   blit nonce 0ul tmp 0ul 12ul;
-  encrypt_loop #k alg ciphertext key (U32 (cnt +%^ 1ul)) plaintext len tmp 0ul;
+  encrypt_loop #k alg ciphertext key (U32.(cnt +%^ 1ul)) plaintext len tmp 0ul;
   authenticate #k alg ciphertext tag key nonce cnt ad adlen len;
   pop_frame()
 

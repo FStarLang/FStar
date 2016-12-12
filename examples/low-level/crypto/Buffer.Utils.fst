@@ -64,13 +64,11 @@ let lemma_uint32_of_bytes (a:t) (b:t) (c:t) (d:t) : Lemma
     pow2_plus 8 24;
     lemma_euclidean_division (v a + pow2 8 * v b + pow2 16 * v c) (v d) (pow2 24)
 
-#reset-options
-
 (** Reads an unsigned int32 out of 4 bytes *)
 val uint32_of_bytes: b:bytes{length b >= 4} -> STL u32
   (requires (fun h -> live h b))
   (ensures (fun h0 r h1 -> h0 == h1 /\ live h0 b
-    /\ v r = U8 (v (get h0 b 0)
+    /\ v r = U8.(v (get h0 b 0)
 		 + pow2 8 * v (get h0 b 1)
 		 + pow2 16 * v (get h0 b 2)
 		 + pow2 24 * v (get h0 b 3)) ))
@@ -146,24 +144,25 @@ let rec bytes_of_uint32s output m l =
       end
     end
 
-#reset-options
-
 (** Stores the content of a byte buffer into a unsigned int32 buffer *)
-(* TODO: add functional spec *)
 val bytes_of_uint32: output:bytes{length output >= 4} -> m:u32 -> STL unit
   (requires (fun h -> live h output))
   (ensures (fun h0 _ h1 -> live h1 output
-    /\ modifies_1 output h0 h1 ))
+    /\ modifies_1 output h0 h1
+    /\ U8.v (get h1 output 0) = (U32.v m) % pow2 8
+    /\ U8.v (get h1 output 1) = (U32.v m / pow2 8) % pow2 8
+    /\ U8.v (get h1 output 2) = (U32.v m / pow2 16) % pow2 8
+    /\ U8.v (get h1 output 3) = (U32.v m / pow2 24)  % pow2 8 ))
 let rec bytes_of_uint32 output x =
-  let b0 = uint32_to_uint8 (x &^ 255ul) in
-  let b1 = uint32_to_uint8 ((x >>^ 8ul) &^ 255ul) in
-  let b2 = uint32_to_uint8 ((x >>^ 16ul) &^ 255ul) in
-  let b3 = uint32_to_uint8 ((x >>^ 24ul) &^ 255ul) in
+  let b0 = uint32_to_uint8 (x) in
+  let b1 = uint32_to_uint8 ((x >>^ 8ul)) in
+  let b2 = uint32_to_uint8 ((x >>^ 16ul)) in
+  let b3 = uint32_to_uint8 ((x >>^ 24ul)) in
   output.(0ul) <- b0;
   output.(1ul) <- b1;
   output.(2ul) <- b2;
   output.(3ul) <- b3
- 
+
 (* A form of memset, could go into some "Utils" functions module *)
 //16-10-03 added functional step; made pre-condition tighter (sufficient for use in AEAD)
 val memset: b:bytes -> z:u8 -> len:u32 -> STL unit
