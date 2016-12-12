@@ -110,7 +110,7 @@ let create (i:id) (zero:UInt8.t) (len:UInt32.t) :
  = Buffer.create zero len
 
 let sub #id #l (b:plainBuffer id l)
-               (i:UInt32.t{FStar.Buffer.(v i + v (as_buffer b).idx) < pow2 n})
+               (i:UInt32.t{FStar.Buffer.(v i + idx (as_buffer b)) < pow2 n})
                (len:UInt32.t{FStar.Buffer.(v len <= length (as_buffer b) /\ v i + v len <= length (as_buffer b))}) : Tot (b':plainBuffer id (v len))
   = Buffer.sub b i len
 // ...

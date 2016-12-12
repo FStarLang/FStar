@@ -1,5 +1,5 @@
 [
-  "ï\rüË\u0007*fò‘=\"U×\u0006#",
+  "§Çûé_ûe)‹\u0001/.4|XÚ",
   [
     [
       "MAC.nbytes",
@@ -43,9 +43,9 @@
       ],
       0
     ],
-    [ "MAC.Entry.k", 1, 2, 1, [ "@query" ], 0 ],
+    [ "MAC.__proj__Entry__item__k", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "MAC.Entry.t",
+      "MAC.__proj__Entry__item__t",
       1,
       2,
       1,
@@ -56,7 +56,7 @@
       ],
       0
     ],
-    [ "MAC.Entry.m", 1, 2, 1, [ "@query" ], 0 ],
+    [ "MAC.__proj__Entry__item__m", 1, 2, 1, [ "@query" ], 0 ],
     [ "MAC.mac", 1, 2, 1, [ "@query" ], 0 ],
     [
       "MAC.verify",

@@ -48,7 +48,7 @@
       0
     ],
     [
-      "FStar.Int32.Mk.v",
+      "FStar.Int32.__proj__Mk__item__v",
       1,
       2,
       1,
@@ -58,7 +58,7 @@
       ],
       0
     ],
-    [ "FStar.Int32.Mk.v", 2, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Int32.__proj__Mk__item__v", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Int32.v",
       1,

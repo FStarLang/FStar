@@ -200,7 +200,7 @@ end))))
 in {FStar_Syntax_Syntax.comp_univs = _37_146.FStar_Syntax_Syntax.comp_univs; FStar_Syntax_Syntax.effect_name = _37_146.FStar_Syntax_Syntax.effect_name; FStar_Syntax_Syntax.result_typ = _132_80; FStar_Syntax_Syntax.effect_args = _132_79; FStar_Syntax_Syntax.flags = _132_78}))))
 in (FStar_Syntax_Syntax.mk_Comp ct))
 end))
-and inst_lcomp_opt : inst_t  ->  (FStar_Syntax_Syntax.lcomp, FStar_Ident.lident) FStar_Util.either Prims.option  ->  (FStar_Syntax_Syntax.lcomp, FStar_Ident.lident) FStar_Util.either Prims.option = (fun s l -> (match (l) with
+and inst_lcomp_opt : inst_t  ->  (FStar_Syntax_Syntax.lcomp, FStar_Syntax_Syntax.residual_comp) FStar_Util.either Prims.option  ->  (FStar_Syntax_Syntax.lcomp, FStar_Syntax_Syntax.residual_comp) FStar_Util.either Prims.option = (fun s l -> (match (l) with
 | (None) | (Some (FStar_Util.Inr (_))) -> begin
 l
 end

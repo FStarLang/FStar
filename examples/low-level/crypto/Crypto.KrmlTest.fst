@@ -7,6 +7,7 @@ open FStar.Buffer
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Crypto.Plain
+open Crypto.Config
 open Buffer
 open Flag
 
@@ -115,14 +116,14 @@ let test() =
 
   // To prove the assertion below for the concrete constants in PRF, AEAD:
   assert_norm (114 <= pow2 14);
-  assert_norm (FStar.Mul(114 <= 1999 * 64));
+  assert_norm (FStar.Mul.(114 <= 1999 * 64));
   assert(AETypes.safelen i (v plainlen) 1ul);
   //NS: These 3 separation properties are explicitly violated by allocating st in HH.root
   //    Assuming them for the moment
   assume (
-    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) (AETypes st.log_region) /\
-    HH.disjoint (Buffer.frameOf cipher) (AETypes st.log_region) /\
-    HH.disjoint (Buffer.frameOf aad) (AETypes st.log_region)
+    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) (AETypes.State?.log_region st) /\
+    HH.disjoint (Buffer.frameOf cipher) (AETypes.State?.log_region st) /\
+    HH.disjoint (Buffer.frameOf aad) (AETypes.State?.log_region st)
   );
   AE.encrypt i st iv aadlen aad plainlen plain cipher;
 

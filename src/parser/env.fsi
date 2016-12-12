@@ -42,10 +42,11 @@ type open_kind =                                          (* matters only for re
 type open_module_or_namespace = (lident * open_kind)      (* lident fully qualified name, already resolved. *)
 
 type record_or_dc = {
-  typename: lident;
-  constrname: lident;
+  typename: lident; (* the namespace part applies to the constructor and fields as well *)
+  constrname: ident;
   parms: binders;
-  fields: list<(fieldname * typ)>;
+  fields: list<(ident * typ)>;
+  is_private_or_abstract: bool;
   is_record:bool
 }
 
@@ -109,15 +110,16 @@ val current_module: env -> lident
 val try_lookup_id: env -> ident -> option<(term*bool)>
 val try_lookup_lid: env -> lident -> option<(term*bool)>
 val try_lookup_effect_name: env -> lident -> option<lident>
+val try_lookup_effect_name_and_attributes: env -> lident -> option<(lident * list<cflags>)>
 val try_lookup_effect_defn: env -> lident -> option<eff_decl>
 val try_lookup_datacon: env -> lident -> option<fv>
-val try_lookup_record_by_field_name: env -> lident -> option<(record_or_dc * lident)>
-val try_lookup_projector_by_field_name: env -> lident -> option<(lident * bool)>
+val try_lookup_record_by_field_name: env -> lident -> option<record_or_dc>
+val belongs_to_record: env -> lident -> record_or_dc -> bool
+val try_lookup_dc_by_field_name: env -> lident -> option<(lident * bool)>
 val try_lookup_definition: env -> lident -> option<term>
 val is_effect_name: env -> lident -> bool
 val find_all_datacons: env -> lident -> option<list<lident>>
 val lookup_letbinding_quals: env -> lident -> list<qualifier>
-val qualify_field_to_record: env -> record_or_dc -> lident -> option<lident>
 
 val push_bv: env -> ident -> env * bv
 val push_bv_mutable: env -> ident -> env * bv

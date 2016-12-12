@@ -12,6 +12,7 @@ module HS = FStar.HyperStack
 open FStar.UInt32
 open Crypto.Symmetric.Bytes
 open Crypto.Indexing
+open Crypto.Config
 
 type alg = cipherAlg
 let algi = cipherAlg_of_id
@@ -110,36 +111,33 @@ let compute i output st n counter len =
   push_frame();
   begin match a with 
   | CHACHA20 -> // already specialized for counter mode
-      let open Crypto.Symmetric.Chacha20 in 
-      let ivlen = ivlen' in (* to undo shadowing by Crypto.Symmetric.Chacha20 *)
-      let nbuf = Buffer.create 0uy (ivlen CHACHA20) in
-      store_uint128 (ivlen CHACHA20) nbuf n;
+      let open Crypto.Symmetric.Chacha20 in // shadows ivlen
+      let nbuf = Buffer.create 0uy (ivlen' CHACHA20) in
+      store_uint128 (ivlen' CHACHA20) nbuf n;
       chacha20 output st nbuf counter len
 
   // ADL: TODO single parametric AES module
   | AES128 ->
-      let open Crypto.Symmetric.AES128 in
+      let open Crypto.Symmetric.AES128 in // shadows blocklen
       let sbox = Buffer.sub st 0ul 256ul in
       let w = Buffer.sub st 256ul 176ul in
-      let blocklen = blocklen' in (* shadowed by Crypto.Symmetric.AES128 *)
-      let ctr_block = Buffer.create 0uy (blocklen AES128) in
+      let ctr_block = Buffer.create 0uy (blocklen' AES128) in
       store_uint128 (ivlen AES128) (Buffer.sub ctr_block 0ul (ivlen AES128)) n;
       aes_store_counter ctr_block counter;
-      let output_block = Buffer.create 0uy (blocklen AES128) in
+      let output_block = Buffer.create 0uy (blocklen' AES128) in
       let () = match aesImpl_of_id i with
         | HaclAES -> cipher output_block ctr_block w sbox
         | SpartanAES -> Spartan.cipher output_block ctr_block w sbox in
       blit output_block 0ul output 0ul len // too much copying!
 
   | AES256 -> 
-      let open Crypto.Symmetric.AES in 
+      let open Crypto.Symmetric.AES in  // shadows blocklen
       let sbox = Buffer.sub st 0ul 256ul in
       let w = Buffer.sub st 256ul 240ul in
-      let blocklen = blocklen' in (* shadowed by Crypto.Symmetric.AES *)
-      let ctr_block = Buffer.create 0uy (blocklen AES256) in 
+      let ctr_block = Buffer.create 0uy (blocklen' AES256) in 
       store_uint128 (ivlen AES256) (Buffer.sub ctr_block 0ul (ivlen AES256)) n;
       aes_store_counter ctr_block counter; 
-      let output_block = Buffer.create 0uy (blocklen AES256) in 
+      let output_block = Buffer.create 0uy (blocklen' AES256) in 
       cipher output_block ctr_block w sbox;
       blit output_block 0ul output 0ul len // too much copying!
   end;

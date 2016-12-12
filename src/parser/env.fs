@@ -42,10 +42,11 @@ type open_kind =                                          (* matters only for re
 type open_module_or_namespace = (lident * open_kind)      (* lident fully qualified name, already resolved. *)
 
 type record_or_dc = {
-  typename: lident;
-  constrname: lident;
+  typename: lident; (* the namespace part applies to the constructor and fields as well *)
+  constrname: ident;
   parms: binders;
-  fields: list<(fieldname * typ)>;
+  fields: list<(ident * typ)>;
+  is_private_or_abstract: bool;
   is_record:bool
 }
 
@@ -168,23 +169,20 @@ let option_of_cont (k_ignore: unit -> option<'a>) = function
 (* Unqualified identifier lookup *)
 
 let find_in_record ns id record cont =
-      let needs_constrname = not (field_projector_contains_constructor id.idText) in
-      let constrname = record.constrname.ident in
-      let fname =
-       if needs_constrname
-       then mk_field_projector_name_from_ident (lid_of_ids (ns @ [constrname])) id
-       else lid_of_ids (ns @ [id])
-      in
-      let fname = set_lid_range fname id.idRange in
-      let find =
-      Util.find_map record.fields (fun (f, _) ->
-        if lid_equals fname f
-        then Some(record, fname)
+ let typename' = lid_of_ids (ns @ [record.typename.ident]) in
+ if lid_equals typename' record.typename
+ then
+      let fname = lid_of_ids (record.typename.ns @ [id]) in
+      let find = Util.find_map record.fields (fun (f, _) ->
+        if id.idText = f.idText
+        then Some record
         else None)
       in
       match find with
       | Some r -> cont r
       | None -> Cont_ignore
+ else
+      Cont_ignore
 
 let get_exported_id_set (e: env) (mname: string) : option<(exported_id_kind -> ref<string_set>)> =
     Util.smap_try_find e.exported_ids mname
@@ -243,7 +241,7 @@ let try_lookup_id''
   (eikind: exported_id_kind)
   (k_local_binding: local_binding -> cont_t<'a>)
   (k_rec_binding:   rec_binding   -> cont_t<'a>)
-  (k_record: (record_or_dc * fieldname) -> cont_t<'a>)
+  (k_record: (record_or_dc) -> cont_t<'a>)
   (find_in_module: lident -> cont_t<'a>)
   (lookup_default_id: cont_t<'a> -> ident -> cont_t<'a>)
   =
@@ -294,8 +292,8 @@ let try_lookup_id''
 
     in aux env.scope_mods
 
-let found_local_binding (id', x, mut) =
-    (bv_to_name x id'.idRange, mut)
+let found_local_binding r (id', x, mut) =
+    (bv_to_name x r, mut)
 
 let find_in_module env lid k_global_def k_not_found =
     begin match Util.smap_try_find (sigmap env) lid.str with
@@ -307,7 +305,7 @@ let try_lookup_id env (id:ident) =
   match unmangleOpName id with
   | Some f -> Some f
   | _ ->
-    try_lookup_id'' env id Exported_id_term_type (fun r -> Cont_ok (found_local_binding r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
+    try_lookup_id'' env id Exported_id_term_type (fun r -> Cont_ok (found_local_binding id.idRange r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
 
 (* Unqualified identifier lookup, if lookup in all open namespaces failed. *)
 
@@ -371,7 +369,7 @@ let resolve_in_open_namespaces''
   (eikind: exported_id_kind)
   (k_local_binding: local_binding -> cont_t<'a>)
   (k_rec_binding:   rec_binding   -> cont_t<'a>)
-  (k_record: (record_or_dc * fieldname) -> cont_t<'a>)
+  (k_record: (record_or_dc) -> cont_t<'a>)
   (f_module: lident -> cont_t<'a>)
   (l_default: cont_t<'a> -> ident -> cont_t<'a>)
   : option<'a> =
@@ -404,7 +402,7 @@ let resolve_in_open_namespaces'
 let fv_qual_of_se = function
     | Sig_datacon(_, _, _, l, _, quals, _, _) ->
       let qopt = Util.find_map quals (function
-          | RecordConstructor fs -> Some (Record_ctor(l, fs))
+          | RecordConstructor (_, fs) -> Some (Record_ctor(l, fs))
           | _ -> None) in
       begin match qopt with
         | None -> Some Data_ctor
@@ -455,7 +453,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
           | _ -> None
         end in
 
-  let k_local_binding r = Some (Term_name (found_local_binding r))
+  let k_local_binding r = Some (Term_name (found_local_binding (range_of_lid lid) r))
   in
 
   let k_rec_binding (id, l, dd) = Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, false))
@@ -481,6 +479,12 @@ let try_lookup_effect_name' exclude_interf env (lid:lident) : option<(sigelt*lid
 let try_lookup_effect_name env l =
     match try_lookup_effect_name' (not env.iface) env l with
         | Some (o, l) -> Some l
+        | _ -> None
+let try_lookup_effect_name_and_attributes env l =
+    match try_lookup_effect_name' (not env.iface) env l with
+        | Some (Sig_new_effect(ne, _), l) -> Some (l, ne.cattributes)
+        | Some (Sig_new_effect_for_free(ne, _), l) -> Some (l, ne.cattributes)
+        | Some (Sig_effect_abbrev(_,_,_,_,_,cattributes,_), l) -> Some (l, cattributes)
         | _ -> None
 let try_lookup_effect_defn env l =
     match try_lookup_effect_name' (not env.iface) env l with
@@ -548,7 +552,7 @@ let find_all_datacons env (lid:lident) =
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 //no top-level pattern in F*, so need to do this ugliness
-let record_cache_aux = 
+let record_cache_aux_with_filter = 
     let record_cache : ref<list<list<record_or_dc>>> = Util.mk_ref [[]] in
     let push () =
         record_cache := List.hd !record_cache::!record_cache in
@@ -559,7 +563,22 @@ let record_cache_aux =
     let commit () = match !record_cache with 
         | hd::_::tl -> record_cache := hd::tl
         | _ -> failwith "Impossible" in
-    (push, pop, peek, insert, commit) 
+    (* remove private/abstract records *)
+    let filter () =
+        let rc = peek () in
+        let () = pop () in
+        let filtered = List.filter (fun r -> not r.is_private_or_abstract) rc in
+        record_cache := filtered :: !record_cache
+    in
+    let aux =
+    (push, pop, peek, insert, commit)
+    in (aux, filter)
+
+let record_cache_aux =
+    let (aux, _) = record_cache_aux_with_filter in aux
+
+let filter_record_cache =
+    let (_, filter) = record_cache_aux_with_filter in filter
     
 let push_record_cache = 
     let push, _, _, _, _ = record_cache_aux in
@@ -607,12 +626,15 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = function
                 in
                 let fields' = formals' |> List.map (fun (x,q) -> ((if is_rec then Util.unmangle_field_name x.ppname else x.ppname), x.sort))
                 in
-                let fields = fields' |> List.map (fun (xid,xsort) -> mk_field_projector_name_from_ident constrname xid, xsort)
+                let fields = fields'
                 in
                 let record = {typename=typename;
-                              constrname=constrname;
+                              constrname=constrname.ident;
                               parms=parms;
                               fields=fields;
+                              is_private_or_abstract =
+                                List.contains Private tags ||
+                                List.contains Abstract tags;
                               is_record=is_rec} in
                 (* the record is added to the current list of
                 top-level definitions, to allow shadowing field names
@@ -642,7 +664,6 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = function
   | _ -> ()
 
 let try_lookup_record_or_dc_by_field_name env (fieldname:lident) =
-  let needs_constrname = not (field_projector_contains_constructor fieldname.ident.idText) in
   let find_in_cache fieldname =
 //Util.print_string (Util.format1 "Trying field %s\n" fieldname.str);
     let ns, id = fieldname.ns, fieldname.ident in
@@ -653,24 +674,29 @@ let try_lookup_record_or_dc_by_field_name env (fieldname:lident) =
 
 let try_lookup_record_by_field_name env (fieldname:lident) =
     match try_lookup_record_or_dc_by_field_name env fieldname with 
-        | Some (r, f) when r.is_record -> Some (r,f)
+        | Some r when r.is_record -> Some r
         | _ -> None
 
-let try_lookup_projector_by_field_name env (fieldname:lident) = 
+let belongs_to_record env lid record =
+    (* first determine whether lid is a valid record field name, and
+    that it resolves to a record' type in the same module as record
+    (even though the record types may be different.) *)
+    match try_lookup_record_by_field_name env lid with
+    | Some record'
+      when text_of_path (path_of_ns record.typename.ns)
+         = text_of_path (path_of_ns record'.typename.ns)
+      ->
+      (* now, check whether field belongs to record *)
+      begin match find_in_record record.typename.ns lid.ident record (fun _ -> Cont_ok ()) with
+      | Cont_ok _ -> true
+      | _ -> false
+      end
+    | _ -> false
+
+let try_lookup_dc_by_field_name env (fieldname:lident) = 
     match try_lookup_record_or_dc_by_field_name env fieldname with 
-        | Some (r, f) -> Some (f, r.is_record)
+        | Some r -> Some (set_lid_range (lid_of_ids (r.typename.ns @ [r.constrname])) (range_of_lid fieldname), r.is_record)
         | _ -> None
-
-let qualify_field_to_record env (recd:record_or_dc) (f:lident) =
-  let qualify fieldname =
-    let ns, fieldname = fieldname.ns, fieldname.ident in
-    let constrname = recd.constrname.ident in
-    let fname = mk_field_projector_name_from_ident (lid_of_ids (ns @ [constrname])) fieldname in
-    Util.find_map recd.fields (fun (f, _) ->
-      if lid_equals fname f
-      then Some(fname)
-      else None) in
-  resolve_in_open_namespaces'' env f Exported_id_field (fun _ -> Cont_ignore) (fun _ -> Cont_ignore) (fun r -> Cont_ok (snd r)) (fun  fn -> cont_of_option Cont_ignore (qualify fn)) (fun k _ -> k)
 
 let string_set_ref_new () = Util.mk_ref (Util.new_set Util.compare Util.hashcode)
 let exported_id_set_new () =
@@ -869,6 +895,8 @@ let finish env modul =
        List.iter update_exports all_exported_id_kinds
     | _ -> ()
   in
+  (* remove abstract/private records *)
+  let () = filter_record_cache () in
   {env with
     curmodule=None;
     modules=(modul.name, modul)::env.modules;

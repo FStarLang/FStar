@@ -6,8 +6,22 @@
     [ "FStar.DM4F.ST.get", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.ST.put", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.ST.STATE_h_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.ST.STATE_h_get_elab", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.ST.STATE_h_put_elab", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.ST.STATE_h___proj__STATE_h__item__get_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.DM4F.ST.STATE_h___proj__STATE_h__item__put_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     [ "FStar.DM4F.ST.STATE_h", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.ST.STATE_h", 2, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.ST.STATE_h", 3, 2, 1, [ "@query" ], 0 ]

@@ -5,7 +5,8 @@ open FStar.Ghost
 
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
-open Crypto.Plain 
+open Crypto.Plain
+open Crypto.Config
 open Buffer
 open Flag
 
@@ -518,7 +519,7 @@ let plain7 = [
     0xb1uy; 0x6auy; 0xeduy; 0xf5uy; 0xaauy; 0x0duy; 0xe6uy; 0x57uy;
     0xbauy; 0x63uy; 0x7buy; 0x39uy; 0x1auy; 0xafuy; 0xd2uy; 0x55uy ]
 
-#set-options "--z3timeout 100"
+#set-options "--z3rlimit 100"
 
 val test_aes_gcm_7: unit -> St bool
 let test_aes_gcm_7 () =

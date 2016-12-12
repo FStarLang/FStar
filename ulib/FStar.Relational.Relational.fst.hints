@@ -1,9 +1,23 @@
 [
-  "\\]≥\u001b…êx\u0012≥ö5hÆdﬂa",
+  "@JH\u0013j•âï”ÙÎpcöö\u007f",
   [
     [ "FStar.Relational.Relational.rel", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Relational.Relational.R.l", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Relational.Relational.R.r", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Relational.Relational.__proj__R__item__l",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.Relational.Relational.__proj__R__item__r",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     [ "FStar.Relational.Relational.rel_map1T", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Relational.Relational.rel_map2Teq", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Relational.Relational.rel_map2T", 1, 2, 1, [ "@query" ], 0 ],
@@ -18,7 +32,7 @@
       [
         "@query", "disc_equation_Prims.Cons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7aae8661a8039ca5361a10bc621bf770"
+        "refinement_interpretation_Tm_refine_12775a49c16ac0863ce1a5e5a1a8be3f"
       ],
       0
     ],
@@ -33,7 +47,7 @@
       [
         "@query", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "uvar_typing_112161"
+        "uvar_typing_112132"
       ],
       0
     ],

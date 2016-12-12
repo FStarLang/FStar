@@ -1,0 +1,134 @@
+[
+  "Ú|Ö’ÅÛZﬁjG^K˜òÂ\u0005",
+  [
+    [
+      "FStar.IndefiniteDescription.aux",
+      1,
+      2,
+      1,
+      [
+        "@query", "bool_inversion", "bool_typing",
+        "disc_equation_Prims.Left", "disc_equation_Prims.Right",
+        "equation_Prims.l_not", "fuel_guarded_inversion_Prims.c_or",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.is_Left",
+        "typing_Prims.l_not"
+      ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.aux",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.aux",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.aux",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.aux",
+      5,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.aux",
+      6,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.aux",
+      7,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.aux",
+      8,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.aux",
+      9,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.aux",
+      10,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.strong_excluded_middle",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.strong_excluded_middle",
+      2,
+      2,
+      1,
+      [ "@query", "bool_inversion", "bool_typing" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.strong_excluded_middle",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.strong_excluded_middle",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "FStar.IndefiniteDescription.stronger_markovs_principle",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.nat", "int_inversion",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ]
+  ]
+]

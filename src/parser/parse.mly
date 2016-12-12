@@ -106,6 +106,7 @@ let compile_op arity s =
 %token <string> IDENT
 %token <string> NAME
 %token <string> TVAR
+%token <string> UNIVAR
 %token <string> TILDE
 
 /* bool indicates if INT8 was 'bad' max_int+1, e.g. '128'  */
@@ -125,7 +126,7 @@ let compile_op arity s =
 %token <FStar_Parser_AST.fsdoc> FSDOC
 %token <FStar_Parser_AST.fsdoc> FSDOC_STANDALONE
 
-%token FORALL EXISTS ASSUME NEW LOGIC
+%token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
@@ -147,7 +148,7 @@ let compile_op arity s =
 %token NEW_EFFECT NEW_EFFECT_FOR_FREE SUB_EFFECT SQUIGGLY_RARROW TOTAL KIND
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS
-%token BACKTICK
+%token BACKTICK UNIV_HASH
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 
@@ -438,7 +439,6 @@ aqualUniverses:
   | HASH      { Implicit }
   | DOLLAR    { Equality }
 
-
 /******************************************************************************/
 /*                         Patterns, binders                                  */
 /******************************************************************************/
@@ -472,7 +472,7 @@ atomicPattern:
   | LBRACK pats=separated_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rhs2 parseState 1 3) }
   | LBRACE record_pat=separated_nonempty_list(SEMICOLON, separated_pair(qlident, EQUALS, tuplePattern)) RBRACE
-      { mk_pattern (PatRecord record_pat) (rhs2 parseState 1 4) }
+      { mk_pattern (PatRecord record_pat) (rhs2 parseState 1 3) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) }
   | LPAREN pat=tuplePattern RPAREN   { pat }
@@ -495,8 +495,8 @@ patternOrMultibinder:
   | pat=atomicPattern { [pat] }
   | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=typ r=refineOpt RPAREN
       {
-        let pos = rhs2 parseState 1 6 in
-        let t_pos = rhs parseState 4 in
+        let pos = rhs2 parseState 1 7 in
+        let t_pos = rhs parseState 5 in
         let qual_ids = qual_id0 :: qual_ids in
         List.map (fun (q, x) -> mkRefinedPattern (mk_pattern (PatVar (x, q)) pos) t false r t_pos pos) qual_ids
       }
@@ -514,7 +514,7 @@ multiBinder:
   | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=typ r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
-       List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 5) q) qual_ids
+       List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q) qual_ids
      }
 
 binders: bss=list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
@@ -543,7 +543,7 @@ lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
   | LPAREN id=operator RPAREN
-    { mk_ident(compile_op (-1) id, rhs parseState 1) }
+    { mk_ident(compile_op (-1) id, rhs parseState 2) }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -593,12 +593,14 @@ noSeqTerm:
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
-        mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr
+        mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       }
   | REQUIRES t=typ
       { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type }
   | ENSURES t=typ
       { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type }
+  | ATTRIBUTES es=nonempty_list(atomicTerm)
+      { mk_term (Attributes es) (rhs2 parseState 1 2) Type }
   | IF e1=noSeqTerm THEN e2=noSeqTerm ELSE e3=noSeqTerm
       { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr }
   | IF e1=noSeqTerm THEN e2=noSeqTerm
@@ -671,7 +673,7 @@ patternBranch:
       {
         let pat = match pat with
           | [p] -> p
-          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2)
+          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 1)
         in
         (focus, (pat, when_opt, e))
       }
@@ -754,8 +756,8 @@ tmNoEq:
       {
         let x, t, f = match extract_named_refinement e1 with
             | Some (x, t, f) -> x, t, f
-            | _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs2 parseState 1 2)) in
-        let dom = mkRefinedBinder x t true f (rhs2 parseState 1 2) None in
+            | _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs parseState 1)) in
+        let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
         let tail = e2 in
         let dom, res = match tail.tm with
             | Sum(dom', res) -> dom::dom', res
@@ -769,7 +771,7 @@ tmNoEq:
   | e1=tmNoEq op=OPINFIX4 e2=tmNoEq
       { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
   | MINUS e=tmNoEq
-      { mk_uminus e (rhs2 parseState 1 3) Expr }
+      { mk_uminus e (rhs2 parseState 1 2) Expr }
   | id=lidentOrUnderscore COLON e=appTerm phi_opt=refineOpt
       {
         let t = match phi_opt with
@@ -779,7 +781,7 @@ tmNoEq:
       }
   | LBRACE e=recordExp RBRACE { e }
   | op=TILDE e=atomicTerm
-      { mk_term (Op(op, [e])) (rhs2 parseState 1 3) Formula }
+      { mk_term (Op(op, [e])) (rhs2 parseState 1 2) Formula }
   | e=appTerm { e }
 
 refineOpt:
@@ -790,16 +792,21 @@ refineOpt:
 
 recordExp:
   | record_fields=right_flexible_nonempty_list(SEMICOLON, simpleDef)
-      { mk_term (Record (None, record_fields)) (rhs2 parseState 1 2) Expr }
+      { mk_term (Record (None, record_fields)) (rhs parseState 1) Expr }
   | e=appTerm WITH  record_fields=right_flexible_nonempty_list(SEMICOLON, simpleDef)
-      { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 2) Expr }
+      { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr }
 
 simpleDef:
   | e=separated_pair(qlident, EQUALS, simpleTerm) { e }
 
 appTerm:
-  | head=indexingTerm args=list(pair(maybeHash, indexingTerm))
+  | head=indexingTerm args=list(argTerm)
       { mkApp head (map (fun (x,y) -> (y,x)) args) (rhs2 parseState 1 2) }
+
+argTerm:
+  | x=pair(maybeHash, indexingTerm) { x }
+  | u=universe { u }
+  | u=univar { UnivApp, u }
 
 %inline maybeHash:
   |      { Nothing }
@@ -828,7 +835,7 @@ atomicTermQUident:
     {
         let t = Name id in
         let e = mk_term t (rhs parseState 1) Un in
-	e
+	      e
     }
   | id=quident DOT_LPAREN t=term RPAREN
     {
@@ -856,7 +863,7 @@ atomicTermNotQUident:
 (* Tm: atomicTermQUident or atomicTermNotQUident *)
 opPrefixTerm(Tm):
   | op=OPPREFIX e=Tm
-      { mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr }
+      { mk_term (Op(op, [e])) (rhs2 parseState 1 2) Expr }
 
 fsTypeArgs:
   | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER
@@ -909,7 +916,7 @@ projectionLHS:
   | lid=quident QMARK
       {
 	let t = Discrim lid in
-        let e = mk_term t (rhs parseState 1) Un in
+        let e = mk_term t (rhs2 parseState 1 2) Un in
 	e
       }
 
@@ -965,6 +972,52 @@ constant:
         Const_int (fst n, Some (Signed, Int64))
       }
   | REIFY   { Const_reify }
+
+
+universe:
+  | UNIV_HASH ua=atomicUniverse { (UnivApp, ua) }
+
+universeFrom:
+  | ua=atomicUniverse { ua }
+  | u1=universeFrom op_plus=OPINFIX2 u2=universeFrom
+       {
+         if op_plus <> "+"
+         then errorR(Error("The operator " ^ op_plus ^ " was found in universe context."
+                           ^ "The only allowed operator in that context is +.",
+                           rhs parseState 2)) ;
+         mk_term (Op(op_plus, [u1 ; u2])) (rhs2 parseState 1 3) Expr
+       }
+  | max=ident us=list(atomicUniverse)
+      {
+        if text_of_id max <> "max"
+        then errorR(Error("A lower case ident " ^ text_of_id max ^
+                          " was found in a universe context. " ^
+                          "It should be either max or a universe variable 'usomething.",
+                          rhs parseState 1)) ;
+        let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in
+        mkApp max (map (fun u -> u, Nothing) us) (rhs2 parseState 1 2)
+      }
+
+atomicUniverse:
+  | UNDERSCORE
+      { mk_term Wild (rhs parseState 1) Expr }
+  | n=INT
+      {
+        if snd n then
+          errorR(Error("This number is outside the allowable range for representable integer constants",
+                       lhs(parseState)));
+        mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
+      }
+  | u=univar { u }
+  | LPAREN u=universeFrom RPAREN
+      { mk_term (Paren u) (rhs2 parseState 1 3) Expr }
+
+univar:
+  | id=UNIVAR
+      {
+        let pos = rhs parseState 1 in
+        mk_term (Uvar (mk_ident (id, pos))) pos Expr
+      }
 
 /******************************************************************************/
 /*                       Miscellanous, tools                                   */

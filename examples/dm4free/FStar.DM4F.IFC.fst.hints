@@ -1,5 +1,5 @@
 [
-  "¶»æb;5IðÑH'ç*\"bm",
+  "¥{\t\u000bS,Oz\u001f&\u0014¢Ä€\u0007¼",
   [
     [ "FStar.DM4F.IFC.return_ifc", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -10,10 +10,12 @@
       [
         "@query", "bool_inversion",
         "data_typing_intro_FStar.DM4F.IFC.High@tok",
-        "disc_equation_Prims.None", "kinding_FStar.DM4F.IFC.label@tok",
-        "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "fuel_guarded_inversion_Prims.option",
+        "kinding_FStar.DM4F.IFC.label@tok", "kinding_Prims.tuple2@tok",
+        "lemma_Prims.invertOption",
         "pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.is_Some"
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_None"
       ],
       0
     ],
@@ -78,7 +80,7 @@
       0
     ],
     [
-      "FStar.DM4F.IFC.IFC_read_elab",
+      "FStar.DM4F.IFC.IFC___proj__IFC__item__read_elab",
       1,
       2,
       1,
@@ -90,7 +92,7 @@
       0
     ],
     [
-      "FStar.DM4F.IFC.IFC_read_complete_type",
+      "FStar.DM4F.IFC.IFC___proj__IFC__item__read_complete_type",
       1,
       2,
       1,
@@ -102,7 +104,7 @@
       0
     ],
     [
-      "FStar.DM4F.IFC.IFC_write_elab",
+      "FStar.DM4F.IFC.IFC___proj__IFC__item__write_elab",
       1,
       2,
       1,
@@ -110,7 +112,7 @@
       0
     ],
     [
-      "FStar.DM4F.IFC.IFC_write_complete_type",
+      "FStar.DM4F.IFC.IFC___proj__IFC__item__write_complete_type",
       1,
       2,
       1,

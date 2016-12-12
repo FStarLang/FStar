@@ -14,7 +14,7 @@
       ],
       0
     ],
-    [ "FStar.Char.Char._0", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Char.__proj__Char__item___0", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Char.char_of_int",
       1,

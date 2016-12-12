@@ -86,7 +86,7 @@ type stack_elt =
  | UnivArgs of list<universe> * Range.range
  | MemoLazy of memo<(env * term)>
  | Match    of env * branches * Range.range
- | Abs      of env * binders * env * option<either<lcomp,Ident.lident>> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
+ | Abs      of env * binders * env * option<either<lcomp,residual_comp>> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of term * aqual * Range.range
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
@@ -406,14 +406,18 @@ and close_comp cfg env c =
                                result_typ=rt;
                                effect_args=args;
                                flags=flags})
+and filter_out_lcomp_cflags lc =
+    (* TODO : lc.comp might have more cflags than lcomp.cflags *)
+    lc.cflags |> List.filter (function DECREASES _ -> false | _ -> true)
 
 and close_lcomp_opt cfg env lopt = match lopt with
     | Some (Inl lc) -> //NS: Too expensive to close potentially huge VCs that are hardly read
+      let flags = filter_out_lcomp_cflags lc in
       if Util.is_total_lcomp lc
-      then Some (Inr Const.effect_Tot_lid)
+      then Some (Inr (Const.effect_Tot_lid, flags))
       else if Util.is_tot_or_gtot_lcomp lc
-      then Some (Inr Const.effect_GTot_lid)
-      else Some (Inr lc.eff_name) //retaining the effect name is sufficient
+      then Some (Inr (Const.effect_GTot_lid, flags))
+      else Some (Inr (lc.eff_name, flags)) //retaining the effect name and flags is sufficient
     | _ -> lopt
 
 (*******************************************************************)
@@ -736,9 +740,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                               log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
                               norm cfg (c :: env) stack_rest body
 
-                            | Some (Inr l)
+                            | Some (Inr (l, cflags))
+                            (* TODO (KM) : wouldn't it be better to check the TOTAL cflag ? *)
                                 when (Ident.lid_equals l Const.effect_Tot_lid
-                                      || Ident.lid_equals l Const.effect_GTot_lid) ->
+                                      || Ident.lid_equals l Const.effect_GTot_lid
+                                      || cflags |> Util.for_some (function TOTAL -> true | _ -> false)) ->
                               log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
                               norm cfg (c :: env) stack_rest body
 
@@ -980,16 +986,17 @@ and norm_binders : cfg -> env -> binders -> binders =
             bs in
         List.rev nbs
 
-and norm_lcomp_opt : cfg -> env -> option<either<lcomp, Ident.lident>> -> option<either<lcomp, Ident.lident>> =
+and norm_lcomp_opt : cfg -> env -> option<either<lcomp, residual_comp>> -> option<either<lcomp, residual_comp>> =
     fun cfg env lopt ->
         match lopt with
         | Some (Inl lc) ->
+          let flags = filter_out_lcomp_cflags lc in
           if Util.is_tot_or_gtot_lcomp lc
           then let t = norm cfg env [] lc.res_typ in
                if Util.is_total_lcomp lc
-               then Some (Inl (Util.lcomp_of_comp (S.mk_Total t)))
-               else Some (Inl (Util.lcomp_of_comp (S.mk_GTotal t)))
-          else Some (Inr lc.eff_name)
+               then Some (Inl (Util.lcomp_of_comp (comp_set_flags (S.mk_Total t) flags)))
+               else Some (Inl (Util.lcomp_of_comp (comp_set_flags (S.mk_GTotal t) flags)))
+          else Some (Inr (lc.eff_name, flags))
        | _ -> lopt
 
 
