@@ -42,6 +42,7 @@ cache/
 examples/*/*.ml
 examples/crypto/CntProtocol.exe
 examples/wysteria/ocaml-output/*
+examples/incl/*.neg/error.log
 
 _build/
 
