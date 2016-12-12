@@ -3366,9 +3366,12 @@ let projectors_ses = (let _151_1219 = (FStar_All.pipe_right fields (FStar_List.m
 | (x, _56_1943) -> begin
 (
 
-let _56_1948 = (FStar_Syntax_Util.mk_field_projector_name lid x i)
-in (match (_56_1948) with
-| (field_name, _56_1947) -> begin
+let p = (FStar_Syntax_Syntax.range_of_bv x)
+in (
+
+let _56_1949 = (FStar_Syntax_Util.mk_field_projector_name lid x i)
+in (match (_56_1949) with
+| (field_name, _56_1948) -> begin
 (
 
 let t = (let _151_1181 = (let _151_1180 = (let _151_1179 = (FStar_Syntax_Subst.subst subst x.FStar_Syntax_Syntax.sort)
@@ -3391,7 +3394,7 @@ let quals = (fun q -> if only_decl then begin
 | FStar_Syntax_Syntax.Abstract -> begin
 false
 end
-| _56_1957 -> begin
+| _56_1958 -> begin
 true
 end)) q)
 in (FStar_Syntax_Syntax.Assumption)::_151_1188)
@@ -3406,7 +3409,7 @@ let iquals = (FStar_All.pipe_right iquals (FStar_List.filter (fun _56_18 -> (mat
 | (FStar_Syntax_Syntax.Abstract) | (FStar_Syntax_Syntax.Private) -> begin
 true
 end
-| _56_1962 -> begin
+| _56_1963 -> begin
 false
 end))))
 in (quals ((FStar_Syntax_Syntax.Projector (((lid), (x.FStar_Syntax_Syntax.ppname))))::iquals)))
@@ -3415,7 +3418,7 @@ in (
 let decl = FStar_Syntax_Syntax.Sig_declare_typ (((field_name), (uvs), (t), (quals), ((FStar_Ident.range_of_lid field_name))))
 in (
 
-let _56_1966 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("LogTypes"))) then begin
+let _56_1967 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("LogTypes"))) then begin
 (let _151_1190 = (FStar_Syntax_Print.sigelt_to_string decl)
 in (FStar_Util.print1 "Declaration of a projector %s\n" _151_1190))
 end else begin
@@ -3429,7 +3432,7 @@ end else begin
 let projection = (FStar_Syntax_Syntax.gen_bv x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText None FStar_Syntax_Syntax.tun)
 in (
 
-let arg_pats = (FStar_All.pipe_right all_params (FStar_List.mapi (fun j _56_1972 -> (match (_56_1972) with
+let arg_pats = (FStar_All.pipe_right all_params (FStar_List.mapi (fun j _56_1973 -> (match (_56_1973) with
 | (x, imp) -> begin
 (
 
@@ -3496,7 +3499,7 @@ in ((((false), ((lb)::[]))), (p), (_151_1216), (quals)))
 in FStar_Syntax_Syntax.Sig_let (_151_1217))
 in (
 
-let _56_1982 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("LogTypes"))) then begin
+let _56_1983 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("LogTypes"))) then begin
 (let _151_1218 = (FStar_Syntax_Print.sigelt_to_string impl)
 in (FStar_Util.print1 "Implementation of a projector %s\n" _151_1218))
 end else begin
@@ -3508,42 +3511,42 @@ end else begin
 (decl)::(impl)::[]
 end)))))))))
 end)))))))
-end))
+end)))
 end))))
 in (FStar_All.pipe_right _151_1219 FStar_List.flatten))
 in (FStar_List.append discriminator_ses projectors_ses)))))))))))))))))))
 
 
 let mk_data_operations : FStar_Syntax_Syntax.qualifier Prims.list  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.sigelt Prims.list  ->  FStar_Syntax_Syntax.sigelt  ->  FStar_Syntax_Syntax.sigelt Prims.list = (fun iquals env tcs se -> (match (se) with
-| FStar_Syntax_Syntax.Sig_datacon (constr_lid, uvs, t, typ_lid, n_typars, quals, _56_1996, r) when (not ((FStar_Ident.lid_equals constr_lid FStar_Syntax_Const.lexcons_lid))) -> begin
+| FStar_Syntax_Syntax.Sig_datacon (constr_lid, uvs, t, typ_lid, n_typars, quals, _56_1997, r) when (not ((FStar_Ident.lid_equals constr_lid FStar_Syntax_Const.lexcons_lid))) -> begin
 (
 
-let _56_2002 = (FStar_Syntax_Subst.univ_var_opening uvs)
-in (match (_56_2002) with
+let _56_2003 = (FStar_Syntax_Subst.univ_var_opening uvs)
+in (match (_56_2003) with
 | (univ_opening, uvs) -> begin
 (
 
 let t = (FStar_Syntax_Subst.subst univ_opening t)
 in (
 
-let _56_2007 = (FStar_Syntax_Util.arrow_formals t)
-in (match (_56_2007) with
-| (formals, _56_2006) -> begin
+let _56_2008 = (FStar_Syntax_Util.arrow_formals t)
+in (match (_56_2008) with
+| (formals, _56_2007) -> begin
 (
 
-let _56_2034 = (
+let _56_2035 = (
 
 let tps_opt = (FStar_Util.find_map tcs (fun se -> if (let _151_1230 = (let _151_1229 = (FStar_Syntax_Util.lid_of_sigelt se)
 in (FStar_Util.must _151_1229))
 in (FStar_Ident.lid_equals typ_lid _151_1230)) then begin
 (match (se) with
-| FStar_Syntax_Syntax.Sig_inductive_typ (_56_2010, uvs', tps, typ0, _56_2015, constrs, _56_2018, _56_2020) -> begin
+| FStar_Syntax_Syntax.Sig_inductive_typ (_56_2011, uvs', tps, typ0, _56_2016, constrs, _56_2019, _56_2021) -> begin
 (
 
-let _56_2023 = ()
+let _56_2024 = ()
 in Some (((tps), (typ0), (((FStar_List.length constrs) > (Prims.parse_int "1"))))))
 end
-| _56_2026 -> begin
+| _56_2027 -> begin
 (FStar_All.failwith "Impossible")
 end)
 end else begin
@@ -3560,7 +3563,7 @@ end else begin
 (Prims.raise (FStar_Syntax_Syntax.Error ((("Unexpected data constructor"), (r)))))
 end
 end))
-in (match (_56_2034) with
+in (match (_56_2035) with
 | (inductive_tps, typ0, should_refine) -> begin
 (
 
@@ -3570,16 +3573,16 @@ in (
 let typ0 = (FStar_Syntax_Subst.subst univ_opening typ0)
 in (
 
-let _56_2040 = (FStar_Syntax_Util.arrow_formals typ0)
-in (match (_56_2040) with
-| (indices, _56_2039) -> begin
+let _56_2041 = (FStar_Syntax_Util.arrow_formals typ0)
+in (match (_56_2041) with
+| (indices, _56_2040) -> begin
 (
 
 let refine_domain = if (FStar_All.pipe_right quals (FStar_Util.for_some (fun _56_19 -> (match (_56_19) with
-| FStar_Syntax_Syntax.RecordConstructor (_56_2043) -> begin
+| FStar_Syntax_Syntax.RecordConstructor (_56_2044) -> begin
 true
 end
-| _56_2046 -> begin
+| _56_2047 -> begin
 false
 end)))) then begin
 false
@@ -3591,10 +3594,10 @@ in (
 let fv_qual = (
 
 let filter_records = (fun _56_20 -> (match (_56_20) with
-| FStar_Syntax_Syntax.RecordConstructor (_56_2050, fns) -> begin
+| FStar_Syntax_Syntax.RecordConstructor (_56_2051, fns) -> begin
 Some (FStar_Syntax_Syntax.Record_ctor (((constr_lid), (fns))))
 end
-| _56_2055 -> begin
+| _56_2056 -> begin
 None
 end))
 in (match ((FStar_Util.find_map quals filter_records)) with
@@ -3615,13 +3618,13 @@ in (
 
 let fields = (
 
-let _56_2064 = (FStar_Util.first_N n_typars formals)
-in (match (_56_2064) with
+let _56_2065 = (FStar_Util.first_N n_typars formals)
+in (match (_56_2065) with
 | (imp_tps, fields) -> begin
 (
 
-let rename = (FStar_List.map2 (fun _56_2068 _56_2072 -> (match (((_56_2068), (_56_2072))) with
-| ((x, _56_2067), (x', _56_2071)) -> begin
+let rename = (FStar_List.map2 (fun _56_2069 _56_2073 -> (match (((_56_2069), (_56_2073))) with
+| ((x, _56_2068), (x', _56_2072)) -> begin
 (let _151_1237 = (let _151_1236 = (FStar_Syntax_Syntax.bv_to_name x')
 in ((x), (_151_1236)))
 in FStar_Syntax_Syntax.NT (_151_1237))
@@ -3634,7 +3637,7 @@ end))
 end)))
 end))
 end
-| _56_2076 -> begin
+| _56_2077 -> begin
 []
 end))
 

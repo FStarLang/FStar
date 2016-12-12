@@ -8,7 +8,7 @@ type ident = {idText:string;
 type lident = {ns:list<ident>; //["FStar"; "Basic"]
                ident:ident;    //"lident"
                nsstr:string; // JP: ???
-               str:string} // JP: ??? is this for debugging only ???
+               str:string} // Cached version of string_of_lid
 
 type lid = lident
 

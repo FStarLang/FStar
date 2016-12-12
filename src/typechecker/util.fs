@@ -1518,6 +1518,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let projectors_ses =
       fields |> List.mapi (fun i (x, _) ->
+          let p = S.range_of_bv x in
           let field_name, _ = Util.mk_field_projector_name lid x i in
           let t = SS.close_univ_vars uvs <| U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
           let only_decl =
