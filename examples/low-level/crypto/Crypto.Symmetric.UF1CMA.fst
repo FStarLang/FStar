@@ -164,7 +164,7 @@ let genPost (i:id) (region:erid) m0 (st:state i) m1 =
       RR.m_contains (ilog st.log) m1 /\
       RR.m_sel m1 (ilog st.log) == None)
 
-#set-options "--z3rlimit 60 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 val alloc: region:erid -> i:id
   -> ak:akey region (fst i)
@@ -173,7 +173,6 @@ val alloc: region:erid -> i:id
   -> ST (state i)
   (requires (fun m0 -> live m0 k /\ live_ak m0 ak))
   (ensures  (fun m0 st m1 -> genPost i region m0 st m1 /\ modifies_one region m0 m1))
-#reset-options "--z3rlimit 100"
 let alloc region i ak k =
   let r = MAC.rcreate region i in
   let s = FStar.Buffer.rcreate region 0uy 16ul in
@@ -248,7 +247,7 @@ let alog (#i:id) (acc:accBuffer i{mac_log}) : HS.reference text =
 noextract val abuf: #i:id -> acc:accBuffer i -> GTot (MAC.elemB i)
 noextract let abuf #i acc = acc.a
 
-let acc_inv (#i:id) (st:state i) (acc:accBuffer i) h =
+let acc_inv (#i:id) (st:state i) (acc:accBuffer i) h : Type0 =
   MAC.norm h st.r /\ MAC.norm h acc.a /\
   disjoint (MAC.as_buffer st.r) (MAC.as_buffer acc.a) /\
   (mac_log ==> (
@@ -262,24 +261,20 @@ let acc_inv (#i:id) (st:state i) (acc:accBuffer i) h =
 
 val frame_acc_inv: #i:id -> st:state i -> acc:accBuffer i -> h0:mem -> h1:mem -> Lemma
   (requires
-     (acc_inv st acc h0 /\ MAC.live h1 acc.a /\ MAC.live h1 st.r /\
+     (acc_inv st acc h0 /\
+      MAC.live h1 acc.a /\ MAC.live h1 st.r /\
       (mac_log ==>
         HS.contains h1 (alog acc) /\
         HS.sel h0 (alog acc) == HS.sel h1 (alog acc)) /\
         as_seq h0 (MAC.as_buffer acc.a) == as_seq h1 (MAC.as_buffer acc.a) /\
-        as_seq h0 (MAC.as_buffer st.r) == as_seq h1 (MAC.as_buffer st.r)))
+        as_seq h0 (MAC.as_buffer st.r)  == as_seq h1 (MAC.as_buffer st.r)))
   (ensures (acc_inv st acc h1))
 let frame_acc_inv #i st acc h0 h1 =
-  match MAC.reveal_elemB st.r, MAC.reveal_elemB acc.a with
-  | MAC.B_POLY1305 r, MAC.B_POLY1305 a ->
-    Poly1305.Bigint.norm_eq_lemma h0 h1 a a;
-    Poly1305.Bigint.norm_eq_lemma h0 h1 r r;
-    MAC.frame_sel_elem h0 h1 acc.a;
-    MAC.frame_sel_elem h0 h1 st.r
-  | _, _ -> ()
+  MAC.frame_norm h0 h1 acc.a;
+  MAC.frame_norm h0 h1 st.r;
+  MAC.frame_sel_elem h0 h1 acc.a;
+  MAC.frame_sel_elem h0 h1 st.r
 
-
-#set-options "--z3rlimit 100"
 
 // not framed, as we allocate private state on the caller stack
 val start: #i:id -> st:state i -> StackInline (accBuffer i)
@@ -363,108 +358,179 @@ let update #i st acc w =
   MAC.frame_sel_elem h1 h2 st.r
 
 
-#set-options "--lax"
+let modifies_bufs_and_ref (#a:Type) (#b:Type) (#c:Type)
+  (buf1:Buffer.buffer a) (buf2:Buffer.buffer b) (ref:reference c) h h' : GTot Type0 =
+  (forall rid. Set.mem rid (Map.domain h.h) ==>
+    HH.modifies_rref rid !{Buffer.as_ref buf1, Buffer.as_ref buf2, HS.as_ref ref} h.h h'.h
+    /\ (forall (#a:Type) (b:Buffer.buffer a).
+      (frameOf b == rid /\ live h b /\ disjoint_2 b buf1 buf2
+      /\ disjoint_ref_1 b (HS.as_aref ref)) ==> equal h b h' b))
 
-val mac: 
+(** Auxiliary lemma to prove modifies clause of `mac` *)
+private val modifies_mac_aux: #a:Type -> #b:Type -> #c:Type ->
+  buf1:Buffer.buffer a -> buf2:Buffer.buffer b -> ref:reference c -> v:c ->
+  h0:mem -> h1:mem -> h2:mem -> Lemma
+  (requires (modifies_2 buf1 buf2 h0 h1 /\
+             h1 `HS.contains` ref /\ h2 == HS.upd h1 ref v))
+  (ensures (modifies_bufs_and_ref buf1 buf2 ref h0 h2))
+let modifies_mac_aux #a #b #c buf1 buf2 ref v h0 h1 h2 =
+  lemma_reveal_modifies_2 buf1 buf2 h0 h1
+
+let mac_ensures
+  (i:id) (st:state i) (acc:accBuffer i) (tag:MAC.tagB) (h0:mem) (h1:mem) =
+  Buffer.live h1 st.s /\
+  MAC.live h1 st.r /\
+  Buffer.live h1 tag /\
+  acc_inv st acc h0 /\ (
+  if mac_log then
+    let vs = HS.sel h1 (alog acc) in
+    let r = MAC.sel_elem h1 st.r in
+    let s = Buffer.as_seq h1 st.s in
+    let t = MAC.mac vs r s in
+    let log = ilog st.log in
+    let buf = MAC.as_buffer (abuf acc) in
+    Buffer.as_seq h1 tag == t /\ (
+    if authId i then
+      RR.m_sel h1 log == Some (vs, t) /\
+      modifies_bufs_and_ref buf tag (RR.as_hsref log) h0 h1
+    else
+      Buffer.modifies_2 (MAC.as_buffer (abuf acc)) tag h0 h1)
+  else
+    Buffer.modifies_2 (MAC.as_buffer (abuf acc)) tag h0 h1)
+
+val mac:
   #i:id ->
   st:state i ->
   acc:accBuffer i ->
-  tag:lbuffer 16 -> ST unit
+  tag:lbuffer 16 ->
+  Stack unit
   (requires (fun h0 ->
-    live h0 tag /\ live h0 st.s /\
-    disjoint_2 (MAC.as_buffer acc.a) st.s tag /\ 
-    disjoint_2 (MAC.as_buffer st.r) st.s tag /\
-    disjoint st.s tag /\ 
     acc_inv st acc h0 /\
-    (mac_log ==> RR.m_contains (ilog st.log) h0) /\
-    (mac_log /\ authId i ==> RR.m_sel h0 (ilog st.log) == None)))
-  (ensures (fun h0 _ h1 ->
-    live h0 st.s /\ 
-    live h0 (MAC.as_buffer st.r) /\ 
-    live h1 tag /\
-    acc_inv st acc h0 /\ (
-    if mac_log then 
-      mods [Ref (RR.as_hsref (ilog st.log)); Ref (Buffer.content tag)] h0 h1 /\
-      Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1 /\
-      RR.m_contains (ilog st.log) h1 /\ (
-      let log = FStar.HyperStack.sel h1 (alog acc) in
-      let a = MAC.sel_elem h1 acc.a in
-      let r = MAC.sel_elem h1 st.r in
-      let s = Buffer.as_seq h1 st.s in
-      let t = MAC.mac log r s in
-      sel_word h1 tag === t /\
-      RR.m_sel h1 (ilog st.log) == Some(log,t))
-    else
-      Buffer.modifies_1 tag h0 h1)))
+    Buffer.live h0 tag /\
+    Buffer.live h0 st.s /\
+    Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) st.s tag /\
+    Buffer.disjoint_2 (MAC.as_buffer st.r) st.s tag /\
+    Buffer.disjoint st.s tag /\
+    (mac_log ==> frameOf tag <> (alog acc).id \/
+                 Buffer.disjoint_ref_1 tag (HS.as_aref (alog acc))) /\
+    (authId i ==> RR.m_sel h0 (ilog st.log) == None) ))
+  (ensures (fun h0 _ h1 -> mac_ensures i st acc tag h0 h1))
 
 let mac #i st acc tag =
   let h0 = ST.get () in
-  assert(MAC.live h0 acc.a);
-  assert(MAC.norm h0 acc.a);
   MAC.finish st.s acc.a tag;
   let h1 = ST.get () in
   if mac_log then
     begin
-      //assume (mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) == little_endian (sel_word h1 tag));
-      let t = load_bytes 16ul tag in
-      let l = !(alog acc) in
-      RR.m_recall #st.region #log #log_cmp (ilog st.log);
-      assume (RR.m_sel h1 (ilog st.log) == RR.m_sel h0 (ilog st.log));
-      RR.m_write #st.region #log #log_cmp (ilog st.log) (Some (l, t))
+    let t = read_word 16ul tag in // load_bytes 16ul tag in
+    let vs = !(alog acc) in
+    lemma_reveal_modifies_2 (MAC.as_buffer acc.a) tag h0 h1;
+    RR.m_recall #st.region #log #log_cmp (ilog st.log);
+    if authId i then
+      RR.m_write #st.region #log #log_cmp (ilog st.log) (Some (vs, t));
+    let h2 = ST.get () in
+    MAC.frame_sel_elem h0 h1 st.r;
+    MAC.frame_sel_elem h1 h2 st.r;
+    MAC.frame_sel_elem h1 h2 acc.a;
+    let vs = HS.sel h2 (alog acc) in
+    let r = MAC.sel_elem h2 st.r in
+    let s = Buffer.as_seq h2 st.s in
+    let t = MAC.mac vs r s in
+    assert (Seq.equal (Buffer.as_seq h2 tag) t);
+    if authId i then
+      modifies_mac_aux (MAC.as_buffer acc.a) tag (RR.as_hsref (ilog st.log))
+        (Some (vs,t)) h0 h1 h2
     end
 
 
-val verify: 
+let verify_liveness (#i:id) (st:state i) (tag:MAC.tagB) (h:mem) =
+  Buffer.live h st.s /\
+  MAC.live h st.r /\
+  Buffer.live h tag
+
+let verify_ok (#i:id) (st:state i) (acc:accBuffer i) (tag:MAC.tagB)
+  (h0:mem) (b:bool) =
+  verify_liveness st tag h0 /\
+  (if mac_log then
+    let vs = HS.sel h0 (alog acc) in
+    let r = MAC.sel_elem h0 st.r in
+    let s = Buffer.as_seq h0 st.s in
+    let t = MAC.mac vs r s in
+    let verified = Seq.eq t (MAC.sel_word h0 tag) in
+    if authId i then
+      match RR.m_sel h0 (ilog st.log) with
+      | Some (vs',t') ->
+        let correct = t = t' && Seq.eq vs vs' in
+        b == (verified && correct)
+      | None -> True
+    else b == verified
+  else True)
+
+let verify_ensures (#i:id) (st:state i) (acc:accBuffer i) (tag:MAC.tagB)
+  (h0:mem) (b:bool) (h1:mem) =
+  Buffer.modifies_1 (MAC.as_buffer acc.a) h0 h1 /\
+  verify_liveness st tag h1 /\
+  verify_ok st acc tag h0 b
+
+
+val verify:
   #i:id ->
   st:state i ->
   acc:accBuffer i ->
-  tag:lbuffer 16 -> Stack bool
-  (requires (fun h0 -> 
-    live h0 tag /\ live h0 st.s /\
-    disjoint_2 (MAC.as_buffer acc.a) st.s tag /\ 
-    disjoint_2 (MAC.as_buffer st.r) st.s tag /\
+  tag:MAC.tagB ->
+  Stack bool
+  (requires (fun h0 ->
     acc_inv st acc h0 /\
-    (mac_log ==> RR.m_contains (ilog st.log) h0) /\
-    (mac_log /\ authId i ==> Some? (RR.m_sel h0 (ilog st.log)))))
-  (ensures (fun h0 b h1 ->
-    Buffer.modifies_0 h0 h1 /\
-    live h0 st.s /\ 
-    live h0 (MAC.as_buffer st.r) /\ 
-    live h1 tag /\
-    acc_inv st acc h0 /\ (
-    if mac_log then 
-      let log = FStar.HyperStack.sel h1 (alog acc) in
-      let r = MAC.sel_elem h1 st.r in
-      let s = Buffer.as_seq h1 st.s in
-      let m = MAC.mac log r s in
-      let verified = Seq.eq m (sel_word h1 tag) in
-      b = 
-      (if authId i then
-          let correct = 
-          (match RR.m_sel h0 (ilog st.log) with
-           | Some(l',m') -> m = m' && Seq.eq log l'
-           | None -> false) in
-          verified && correct
-        else verified)
-    else true)))
+    verify_liveness st tag h0 /\
+    Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) st.s tag /\
+    (authId i ==> Some? (RR.m_sel h0 (ilog st.log)))))
+  (ensures (fun h0 b h1 -> verify_ensures st acc tag h0 b h1))
 
-let verify #i st acc received =
-  assume false; //16-10-30 
-  push_frame();
-  let tag = Buffer.create 0uy 16ul in
-  MAC.finish st.s acc.a tag;
-  let verified = Buffer.eqb tag received 16ul in
+// for RR.witness below
+#set-options "--initial_ifuel 1 --max_ifuel 1"
+
+let verify #i st acc tag =
+  let h0 = ST.get () in
+  if authId i then
+    // Overkill, but easy way to propagate through MAC.finish
+    RR.witness #st.region #log #log_cmp
+     (ilog st.log) (fun h -> RR.m_sel h (ilog st.log) == RR.m_sel h0 (ilog st.log));
+  push_frame ();
+  let h1 = ST.get () in
+  let computed = Buffer.create 0uy 16ul in
+  let h2 = ST.get () in
+  MAC.finish st.s acc.a computed;
+  let h3 = ST.get () in
+  // TODO: should use constant-time comparison
+  let verified = Buffer.eqb computed tag 16ul in
   let b =
-  if mac_log && authId i then
-    let st = !st.log in
-    let t = load_bytes 16ul tag in
-    let l = !(alog acc) in
-    let correct = 
-      match st with 
-      | Some(l',t') -> t' = t && Seq.eq l l' 
-      | None -> false in
-    verified && correct
-  else
-    verified in
-  pop_frame();
+    if mac_log then
+      begin
+      MAC.frame_sel_elem h0 h2 st.r;
+      MAC.frame_sel_elem h2 h3 st.r;
+      MAC.frame_sel_elem h0 h2 acc.a;
+      lemma_reveal_modifies_0 h1 h2;
+      lemma_reveal_modifies_2 (MAC.as_buffer acc.a) computed h2 h3; // for (alog acc)
+      let t = read_word 16ul computed in
+      let vs = !(alog acc) in
+      //assert (
+      //  let r = MAC.sel_elem h2 st.r in
+      //  let s = Buffer.as_seq h2 st.s in
+      //  let t' = MAC.mac vs r s in
+      //  vs == HS.sel h2 (alog acc) /\
+      //  verified == Seq.eq t' t );
+      if authId i then
+        begin
+        RR.testify (fun h -> RR.m_sel h (ilog st.log) == RR.m_sel h0 (ilog st.log));
+        let log = RR.m_read (ilog st.log) in // Don't inline it below; doesn't work
+        match log with
+        | Some (vs',t') ->
+          let correct = t = t' && Seq.eq vs vs' in
+          verified && correct
+        end
+      else verified
+      end
+    else verified
+  in
+  pop_frame ();
   b
