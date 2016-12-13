@@ -26,15 +26,18 @@ open FStar.Ident
 (* The interface expected to be provided by a type-checker to run in the interactive loop *)
 (******************************************************************************************)
 type interactive_tc<'env,'modul> = {
-    pop:         'env -> string -> unit;
+    popA:         'env -> string -> unit;
     push:        'env -> bool -> string -> 'env;
+    solverstsize:'env -> int;
     mark:        'env -> 'env;
     reset_mark:  'env -> 'env;
     commit_mark: 'env -> 'env;
     check_frag:  'env -> 'modul -> FStar.Parser.ParseIt.input_frag -> option<('modul * 'env * int)>;
     report_fail:  unit -> unit;
     tc_prims:     unit -> 'env;
-    tc_one_file:  list<string> -> 'env -> (option<string> * string) * 'env * 'modul * list<string>
+    tc_one_file:  list<string> -> 'env -> (option<string> * string) * 'env * 'modul * list<string>;
+    //print_mods:  'env -> string;
+    popsolver:   'env -> unit
 }
 
 (****************************************************************************************)
@@ -205,26 +208,24 @@ open FStar.Parser.ParseIt
 type m_timestamps = list<(option<string> * string * time)>
 
 let interactive_mode (filename:option<string>) (filenames:list<string>) (initial_mod:'modul) (tc:interactive_tc<'env,'modul>) =
-    Util.print1 "Interactive mode called with: %s\n" (List.fold_left (fun s f -> s ^ f) "" filenames);
-
     if Option.isSome (Options.codegen()) 
     then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
 
-    let rec tc_deps (stack:stack<'env,'modul>) (env:'env) (remaining:list<string>) (ts:m_timestamps) = //:stack<'env,'modul> * 'env * m_timestamps =
+    let rec tc_deps (m:'modul) (stack:stack<'env,'modul>) (env:'env) (remaining:list<string>) (ts:m_timestamps) = //:stack<'env,'modul> * 'env * m_timestamps =
       match remaining with
         | [] -> stack, env, ts
         | _  ->
           //invariant: length stack = length ts
+          let stack = (env, m)::stack in
+          let env = tc.push env (Options.lax ()) "typecheck_modul" in  //AR: TODO: Here choosing lax to be true, more configurable?
+          //Util.print4 "\nSolver st size before checking %s is %s, stack size is %s, and ts size is %s\n" (List.hd remaining) (string_of_int (tc.solverstsize env)) (string_of_int (List.length stack)) (string_of_int ((List.length ts) + 1));
           let (intf, impl), env, modl, remaining = tc.tc_one_file remaining env in
-          let stack = (env, modl)::stack in
-          Util.print_string "\nCalling push\n";
-          let env = tc.push env true "tc modul" in  //AR: TODO: Here choosing lax to be true, more configurable?
-          tc_deps stack env remaining (ts@[intf, impl, now()])
+          //let _ = Util.print1 "\nEncoded: %s\n" impl in
+          tc_deps m stack env remaining (ts@[intf, impl, now()])
     in 
     
     //AR: TODO: make this code f#/ocaml independent by adding a utility in basic/util.fs and basic/ml/FStar_Util.ml
-    let update_deps (stk:stack<'env, 'modul>) (env:'env) (ts:m_timestamps) = //:(stack<'env, 'modul> * 'env * m_timestamps) =
-      Util.print_string "Update deps called";
+    let update_deps (m:'modul) (stk:stack<'env, 'modul>) (env:'env) (ts:m_timestamps) = //:(stack<'env, 'modul> * 'env * m_timestamps) =
       //invariant: length stack = length ts
       let is_stale (intf:option<string>) (impl:string) (t:time) :bool =
         (is_file_modified_after impl t ||
@@ -233,24 +234,32 @@ let interactive_mode (filename:option<string>) (filenames:list<string>) (initial
             | None   -> false))
       in
 
-      let rec iterate (good_stack:stack<'env, 'modul>) (good_ts:m_timestamps) (stack:stack<'env, 'modul>) (env:'env) (ts:m_timestamps) = //:(stack<'env, 'modul> * 'env * m_timestamps) =
+      let rec iterate (good_stack:stack<'env, 'modul>) (good_ts:m_timestamps) (stack:stack<'env, 'modul>) (env':'env) (ts:m_timestamps) = //:(stack<'env, 'modul> * 'env * m_timestamps) =
         //invariant length good_stack = length good_ts, and same for stack and ts
         match stack, ts with
-            | (env, modl)::stack, (intf, impl, t)::ts' ->
+            | (env, modl)::stack', (intf, impl, t)::ts' ->
               if is_stale intf impl t then
                 //collect all the file names
-                let filenames = List.fold_left (fun acc (intf, impl, _) ->
-                  Util.print_string "\nCalling pop\n";
-                  tc.pop env "";
-                  match intf with
-                    | Some f -> acc @ [f; impl]
-                    | None   -> acc @ [impl]
-                ) [] ts in
-                tc_deps (List.rev good_stack) env filenames good_ts
-              else iterate (good_stack@[env, modl]) (good_ts@[intf, impl, t]) stack env ts'
+                let rec collect_file_names_and_pop env stack ts filenames =
+                  match ts with
+                    | []                  ->
+                      //Util.print3 "\nReturning from collect file name, solver st size is %s, stack size is %s, and ts size is %s\n" (string_of_int (tc.solverstsize env)) (string_of_int (List.length stack)) (string_of_int ((List.length ts) + 0));
+                      filenames, env
+                    | (intf, impl, _)::ts ->
+                      tc.popA env "";
+                      let filenames = match intf with
+                        | Some f -> filenames @ [f; impl]
+                        | None   -> filenames @ [impl]
+                      in
+                      let (env, _)::stack = stack in
+                      collect_file_names_and_pop env stack ts filenames
+                in
+                let filenames, env = collect_file_names_and_pop env' (List.rev stack) ts [] in
+                tc_deps m (List.rev good_stack) env filenames good_ts
+              else iterate (good_stack@[env, modl]) (good_ts@[intf, impl, t]) stack' env' ts'
             | [], [] ->
               Util.print_string "No file was found stale\n";
-              List.rev good_stack, env, good_ts
+              List.rev good_stack, env', good_ts
             | _, _   -> failwith "Impossible"
       in
 
@@ -260,16 +269,18 @@ let interactive_mode (filename:option<string>) (filenames:list<string>) (initial
     let rec go line_col (stack:stack<'env,'modul>) (curmod:'modul) (env:'env) (ts:m_timestamps) = begin
       match shift_chunk () with
       | Pop msg ->
-          tc.pop env msg;
+          //Util.print3 "\nExecuting a pop, solver st size is %s, stack size is %s, and ts size is %s\n" (string_of_int (tc.solverstsize env)) (string_of_int (List.length stack)) (string_of_int ((List.length ts) + 0));
+          tc.popA env msg;
           let (env, curmod), stack =
             match stack with
             | [] -> Util.print_error "too many pops"; exit 1
             | hd::tl -> hd, tl
           in
+          let _ = if List.length stack = List.length ts then tc.popsolver env else () in
           go line_col stack curmod env ts
 
       | Push (lax, l, c) ->
-          let stack, env, ts = if List.length stack = List.length ts then update_deps stack env ts else stack, env, ts in
+          let stack, env, ts = if List.length stack = List.length ts then update_deps curmod stack env ts else stack, env, ts in
           let stack = (env, curmod)::stack in
           let env = tc.push env lax "#push" in
 //          Util.print2 "Got push (%s, %s)" (Util.string_of_int <| fst lc) (Util.string_of_int <| snd lc);
@@ -303,7 +314,8 @@ let interactive_mode (filename:option<string>) (filenames:list<string>) (initial
     end in
 
     let env = tc.tc_prims () in
-    let stack, env, ts = tc_deps [] env filenames [] in 
+    //Util.print1 "\nSolver st size after prims is: %s" (string_of_int (tc.solverstsize env));
+    let stack, env, ts = tc_deps initial_mod [] env filenames [] in 
 
     if Options.universes()
     && (FStar.Options.record_hints() //and if we're recording or using hints

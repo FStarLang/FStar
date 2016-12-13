@@ -185,12 +185,15 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
           (None, file), (dsenv, env), None, remaining
         | [] -> failwith "Impossible" in
         
-    { pop = pop; 
+    { popA = pop; 
       push = push;
       mark = mark;
+      solverstsize = (fun _ -> 0);
       reset_mark = reset_mark;
       commit_mark = commit_mark;
       check_frag = check_frag;
       report_fail = report_fail;
       tc_prims = tc_prims_interactive;
-      tc_one_file = tc_one_file_interactive}
+      tc_one_file = tc_one_file_interactive;
+      //print_mods = (fun _ -> "");
+      popsolver = (fun _ -> ())}

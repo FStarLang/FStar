@@ -68,15 +68,11 @@ let as_option as_t = function
 let fstar_options : ref<list<Util.smap<option_val>> > = Util.mk_ref []
 let peek () = List.hd !fstar_options
 let pop  () =
-    Util.print1 "\nLength of options before pop: %s\n" (string_of_int (List.length !fstar_options));
     match !fstar_options with
     | []
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
-let push () =
-    Util.print1 "\nLength of options before push: %s\n" (string_of_int (List.length !fstar_options));
-    fstar_options := Util.smap_copy (peek()) :: !fstar_options;
-    Util.print1 "\nLength of options after push: %s\n" (string_of_int (List.length !fstar_options))
+let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
 

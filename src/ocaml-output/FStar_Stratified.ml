@@ -318,7 +318,7 @@ end
 | [] -> begin
 (FStar_All.failwith "Impossible")
 end))
-in {FStar_Interactive.pop = pop; FStar_Interactive.push = push; FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail; FStar_Interactive.tc_prims = tc_prims_interactive; FStar_Interactive.tc_one_file = tc_one_file_interactive})))))))))
+in {FStar_Interactive.popA = pop; FStar_Interactive.push = push; FStar_Interactive.solverstsize = (fun _92_192 -> (Prims.parse_int "0")); FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail; FStar_Interactive.tc_prims = tc_prims_interactive; FStar_Interactive.tc_one_file = tc_one_file_interactive; FStar_Interactive.popsolver = (fun _92_194 -> ())})))))))))
 
 
 

@@ -83,6 +83,7 @@ and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
+    stsize       :unit -> int;
     mark         :string -> unit;
     reset_mark   :string -> unit;
     commit_mark  :string -> unit;
@@ -977,6 +978,7 @@ let dummy_solver = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
+    stsize=(fun _ -> 0);
     mark=(fun _ -> ());
     reset_mark=(fun _ -> ());
     commit_mark=(fun _ -> ());

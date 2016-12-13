@@ -469,7 +469,16 @@ in ((dsenv), (env)))))
 end))
 in (
 
-let commit_mark = (fun _93_298 -> (match (_93_298) with
+let solverstsize = (fun _93_299 -> (match (_93_299) with
+| (_93_297, env) -> begin
+(env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.stsize ())
+end))
+in (
+
+let pop_solver = (fun en -> ((Prims.snd en).FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.pop ""))
+in (
+
+let commit_mark = (fun _93_305 -> (match (_93_305) with
 | (dsenv, env) -> begin
 (
 
@@ -481,18 +490,18 @@ in ((dsenv), (env))))
 end))
 in (
 
-let check_frag = (fun _93_304 curmod text -> (match (_93_304) with
+let check_frag = (fun _93_311 curmod text -> (match (_93_311) with
 | (dsenv, env) -> begin
 try
 (match (()) with
 | () -> begin
 (match ((tc_one_fragment curmod dsenv env text)) with
 | Some (m, dsenv, env) -> begin
-(let _188_110 = (let _188_109 = (FStar_TypeChecker_Errors.get_err_count ())
-in ((m), (((dsenv), (env))), (_188_109)))
-in Some (_188_110))
+(let _188_114 = (let _188_113 = (FStar_TypeChecker_Errors.get_err_count ())
+in ((m), (((dsenv), (env))), (_188_113)))
+in Some (_188_114))
 end
-| _93_328 -> begin
+| _93_335 -> begin
 None
 end)
 end)
@@ -500,30 +509,30 @@ with
 | FStar_Syntax_Syntax.Error (msg, r) when (not ((FStar_Options.trace_error ()))) -> begin
 (
 
-let _93_314 = (FStar_TypeChecker_Errors.add_errors env ((((msg), (r)))::[]))
+let _93_321 = (FStar_TypeChecker_Errors.add_errors env ((((msg), (r)))::[]))
 in None)
 end
 | FStar_Syntax_Syntax.Err (msg) when (not ((FStar_Options.trace_error ()))) -> begin
 (
 
-let _93_318 = (let _188_114 = (let _188_113 = (let _188_112 = (FStar_TypeChecker_Env.get_range env)
-in ((msg), (_188_112)))
-in (_188_113)::[])
-in (FStar_TypeChecker_Errors.add_errors env _188_114))
+let _93_325 = (let _188_118 = (let _188_117 = (let _188_116 = (FStar_TypeChecker_Env.get_range env)
+in ((msg), (_188_116)))
+in (_188_117)::[])
+in (FStar_TypeChecker_Errors.add_errors env _188_118))
 in None)
 end
 end))
 in (
 
-let report_fail = (fun _93_330 -> (match (()) with
+let report_fail = (fun _93_337 -> (match (()) with
 | () -> begin
 (
 
-let _93_331 = (let _188_117 = (FStar_TypeChecker_Errors.report_all ())
-in (FStar_All.pipe_right _188_117 Prims.ignore))
+let _93_338 = (let _188_121 = (FStar_TypeChecker_Errors.report_all ())
+in (FStar_All.pipe_right _188_121 Prims.ignore))
 in (FStar_ST.op_Colon_Equals FStar_TypeChecker_Errors.num_errs (Prims.parse_int "0")))
 end))
-in {FStar_Interactive.pop = pop; FStar_Interactive.push = push; FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail; FStar_Interactive.tc_prims = tc_prims_interactive; FStar_Interactive.tc_one_file = tc_one_file_interactive})))))))
+in {FStar_Interactive.popA = pop; FStar_Interactive.push = push; FStar_Interactive.solverstsize = solverstsize; FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail; FStar_Interactive.tc_prims = tc_prims_interactive; FStar_Interactive.tc_one_file = tc_one_file_interactive; FStar_Interactive.popsolver = pop_solver})))))))))
 
 
 

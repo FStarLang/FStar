@@ -75,6 +75,7 @@ and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
+    stsize       :unit -> int;
     mark         :string -> unit;
     reset_mark   :string -> unit;
     commit_mark  :string -> unit;

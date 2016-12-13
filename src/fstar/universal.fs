@@ -294,6 +294,10 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
         Options.pop();
         dsenv, env in
 
+    let solverstsize (_, env) = env.solver.stsize () in
+
+    let pop_solver (en:DsEnv.env * TcEnv.env) = (snd en).solver.pop "" in
+
     let commit_mark (dsenv, env) =
         let dsenv = DsEnv.commit_mark dsenv in
         let env = TcEnv.commit_mark env in
@@ -318,12 +322,16 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
         TypeChecker.Errors.report_all() |> ignore;
         TypeChecker.Errors.num_errs := 0 in
 
-    { pop = pop; 
+
+    { popA = pop; 
       push = push;
+      solverstsize=solverstsize;
       mark = mark;
       reset_mark = reset_mark;
       commit_mark = commit_mark;
       check_frag = check_frag;
       report_fail = report_fail;
       tc_prims = tc_prims_interactive;
-      tc_one_file = tc_one_file_interactive}
+      tc_one_file = tc_one_file_interactive;
+      //print_mods = (fun (_, env) -> List.fold_left (fun s m -> s ^ " " ^ m.name.str) "" env.modules);
+      popsolver = pop_solver }
