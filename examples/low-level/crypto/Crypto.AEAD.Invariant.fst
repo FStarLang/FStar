@@ -37,7 +37,6 @@ let prf_table (r:rgn) (i:id) = Seq.seq (PRF.entry r i)
 (* An idealization flag controlling per-id authentication alone *)
 let safeMac (i:id) = safeHS i && mac1 i
 
-
 (*+ maybe_plain:
       counter_dexor takes a conditionally ideal argument, 
 	maybe_plain i l
@@ -384,6 +383,24 @@ let enc_dec_liveness (#i:id) (#rw:rw) (st:aead_state i rw)
     Plain.live h plain /\
     st.log_region `is_in` h.h
 
+(*+ found_matching_entry: 
+      the entry in the aead table corresponding to nonce n
+      contains the expected aad, plain and cipher text
+ **)
+let found_matching_entry (#i:id) (n:Cipher.iv (Cipher.algi i)) 
+                (aead_entries:aead_entries i)
+		(#aadlen:aadlen) (aad:lbytes (v aadlen))
+	        (#plainlen:txtlen_32) (plain:plain i (v plainlen))
+		(cipher_tagged:lbytes (v plainlen + v MAC.taglen)) =
+     match find_aead_entry n aead_entries with
+     | None -> False
+     | Some (AEADEntry nonce ad l p c) ->
+         nonce == n /\
+	 ad == aad /\
+	 l  == v plainlen /\
+	 c  == cipher_tagged /\
+	 p  == plain
+
 (*** SOME BASIC LEMMAS USED 
      THROUGHOUT Crypto.AEAD.* ***)
 let incr_remaining_len_ok (#i:id) (x:PRF.domain i) (len:u32) (remaining_len:u32)
@@ -433,6 +450,14 @@ let frame_refines (i:id{safeMac i}) (mac_rgn:region)
    = let open FStar.Classical in
      forall_intro (move_requires (frame_unused_aead_iv_for_prf h h' blocks));
      if safeId i then forall_intro (move_requires (frame_refines_one_entry h h' blocks))
+
+let frame_inv_modifies_0 (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) (h1:mem)
+   : Lemma (requires (inv st h /\ 
+		      Buffer.modifies_0 h h1))
+	   (ensures  (inv st h1))
+   = Buffer.lemma_reveal_modifies_0 h h1;
+     if safeMac i
+     then frame_refines i st.prf.mac_rgn (HS.sel h (PRF.itable i st.prf)) (HS.sel h st.log) h h1
 
 let frame_inv_push (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) (h1:mem)
    : Lemma (requires (inv st h /\ 

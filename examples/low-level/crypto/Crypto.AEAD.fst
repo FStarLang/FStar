@@ -317,11 +317,12 @@ let frame_acc #i st #aalen aad #txtlent cipher h0 a h1 h2 =
   else ()
 
 val decrypt:
-  i:id -> st:state i Reader ->
+  i:id -> 
+  st:state i Reader ->
   n:Cipher.iv (alg i) ->
-  aadlen:UInt32.t {aadlen <=^ aadmax} ->
+  aadlen:aadlen ->
   aad:lbuffer (v aadlen) ->
-  plainlen:UInt32.t {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
+  plainlen:txtlen_32 {plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)} ->
   plain:plainBuffer i (v plainlen) ->
   cipher_tagged:lbuffer (v plainlen + v MAC.taglen) ->
   ST bool

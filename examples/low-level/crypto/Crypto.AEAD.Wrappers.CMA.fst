@@ -22,6 +22,7 @@ module HS = FStar.HyperStack
 module CMA = Crypto.Symmetric.UF1CMA
 module SeqProperties = FStar.SeqProperties
 module MAC = Crypto.Symmetric.MAC
+module EncodingWrapper = Crypto.AEAD.Wrappers.Encoding
 
 (*** UF1CMA.mac ***)
 #reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
@@ -78,14 +79,14 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
     if verify returns true for a particular encoded AD+cipher, 
     then in the ideal case, we can also return the plain text
     expected for the result of decryption **)
-    
+
 (*+ found_entry: 
       the entry in the aead table corresponding to nonce n
       contains the expected aad, plain and cipher text
  **)
 let found_entry (#i:id) (n:Cipher.iv (Cipher.algi i)) (st:aead_state i Reader)
 		(#aadlen:aadlen) (aad:lbuffer (v aadlen)) 
-	        (#plainlen:txtlen_32 {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)})
+	        (#plainlen:txtlen_32)
 		(cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
 		(q:maybe_plain i (v plainlen))
 		(h:mem) =
@@ -93,14 +94,10 @@ let found_entry (#i:id) (n:Cipher.iv (Cipher.algi i)) (st:aead_state i Reader)
      Buffer.live h aad /\
      safeId i) ==> 		
     (let entries = HS.sel h st.log in 		
-     match find_aead_entry n entries with
-     | None -> False
-     | Some (AEADEntry nonce ad l p c) ->
-         nonce == n /\
-	 ad == Buffer.as_seq h aad /\
-	 l  == v plainlen /\
-	 c  == Buffer.as_seq h cipher_tagged /\ 
-	 p  == as_plain q )
+     found_matching_entry n entries #aadlen
+	 (Buffer.as_seq h aad)
+	 (as_plain q)
+	 (Buffer.as_seq h cipher_tagged))
 
 (*+ verify_liveness: 
 	liveness pre-condition for calling UF1CMA.verify **)
@@ -220,7 +217,7 @@ let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged
  **)
 val get_verified_plain : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader ->
  			 #aadlen:aadlen -> (aad:lbuffer (v aadlen)) ->
-			 #plainlen:txtlen_32 {plainlen <> 0ul /\ safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
+			 #plainlen:txtlen_32 {safelen i (v plainlen) (otp_offset i)} ->
 			 plain:Plain.plainBuffer i (v plainlen) ->
 			 cipher_tagged:lbuffer (v plainlen + v MAC.taglen) ->
 		         ak:CMA.state (i,n) ->
@@ -244,7 +241,9 @@ val get_verified_plain : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader
 		    h0 == h1 /\
     		    enc_dec_liveness st aad plain cipher_tagged h1 /\ 
 		    (if verified && safeId i
-		     then prf_contains_all_otp_blocks x1 0 (as_plain p) (Buffer.as_seq h1 cipher) (HS.sel h1 (PRF.itable i st.prf)) /\
+		     then prf_contains_all_otp_blocks x1 0 (as_plain p) 
+							   (Buffer.as_seq h1 cipher) 
+							   (HS.sel h1 (PRF.itable i st.prf)) /\
 		          found_entry n st aad cipher_tagged p h1
 		     else True)))
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
@@ -264,3 +263,92 @@ let get_verified_plain #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc
      Plain.load plainlen plain
   else ()
 
+let verify_separation (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) =
+    let open Crypto.Symmetric.UF1CMA in
+    Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) st.s tag /\
+    Buffer.disjoint_2 (MAC.as_buffer st.r) st.s tag
+
+let verify_requires (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) (h0:mem) = 
+    let open Crypto.Symmetric.UF1CMA in
+    verify_separation st acc tag /\
+    verify_liveness st tag h0 /\
+    acc_inv st acc h0 /\
+    (mac_log ==> m_contains (ilog st.log) h0)(*  /\ *)
+    (* (authId i ==> Some? (m_sel h0 (ilog st.log))) *)
+
+let verify_ensures (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
+		   (h0:mem) (b:bool) (h1:mem) = 
+    Buffer.modifies_0 h0 h1 /\
+    verify_liveness st tag h1 /\
+    verify_ok st acc tag h1 b
+
+val verify_wrapper: 
+  #i:CMA.id -> 
+  st:CMA.state i -> 
+  acc:CMA.accBuffer i -> 
+  tag:lbuffer 16 -> Stack bool
+  (requires (fun h0 -> verify_requires st acc tag h0))
+  (ensures (fun h0 b h1 -> verify_ensures st acc tag h0 b h1))
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
+let verify_wrapper #i st acc tag = 
+  let h0 = get () in 
+  assume (CMA.authId i ==> Some? (m_sel h0 (CMA.(ilog st.log)))); //TODO: can't prove this in Plan A
+  let b = CMA.verify #i st acc tag in
+  let h1 = get() in
+  Buffer.lemma_reveal_modifies_0 h0 h1;
+  assert (mac_log ==> m_sel h0 (CMA.(ilog st.log)) == m_sel h1 (CMA.(ilog st.log)));
+  b
+
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
+val verify : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader ->
+	     #aadlen:aadlen -> (aad:lbuffer (v aadlen)) ->
+ 	     #plainlen:txtlen_32 {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
+	     plain:Plain.plainBuffer i (v plainlen) ->
+	     cipher_tagged:lbuffer (v plainlen + v MAC.taglen) ->
+	     ak:CMA.state (i,n) ->
+	     acc:CMA.accBuffer (i, n) -> h_init:mem ->
+      Stack (option (maybe_plain i (v plainlen)))
+            (requires (fun h -> 
+		    let cipher = Buffer.sub cipher_tagged 0ul plainlen in
+		    let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in 
+		    enc_dec_liveness st aad plain cipher_tagged h /\ 
+		    verify_separation ak acc tag /\
+		    verify_liveness ak tag h /\
+		    EncodingWrapper.accumulate_ensures ak aad #plainlen cipher h_init acc h /\
+		    inv st h /\
+		    (safeId i ==> is_mac_for_iv st ak h)))
+            (ensures (fun h0 popt h1 -> 
+		    let cipher = Buffer.sub cipher_tagged 0ul plainlen in
+		    let x1 = {iv=n; ctr=otp_offset i} in
+	            Buffer.modifies_0 h0 h1 /\
+    		    enc_dec_liveness st aad plain cipher_tagged h1 /\
+    		    EncodingWrapper.accumulate_ensures ak aad #plainlen cipher h_init acc h1 /\
+		    (safeId i ==> 
+			(match popt with 
+			 | None -> True
+			 | Some p ->
+			   prf_contains_all_otp_blocks x1 0 
+						    (as_plain p)
+						    (Buffer.as_seq h1 cipher) 
+						    (HS.sel h1 (PRF.itable i st.prf)) /\
+  		           found_entry n st aad cipher_tagged p h1))))
+#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let verify #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc h_init = 
+  let open CMA in
+  let cipher = Buffer.sub cipher_tagged 0ul plainlen in
+  let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in 
+  (* assume (Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) ak.s tag /\ *)
+  (* 	  Buffer.disjoint_2 (MAC.as_buffer ak.r) ak.s tag); *)
+  if mac_log 
+  then m_recall CMA.(ilog ak.log);
+  let h0 = get () in
+  let b = verify_wrapper ak acc tag in
+  let h1 = get () in
+  EncodingWrapper.frame_accumulate_ensures ak aad #plainlen cipher h_init acc h0 h1;
+  frame_inv_modifies_0 st h0 h1;
+  Buffer.lemma_reveal_modifies_0 h0 h1;
+  if b 
+  then let p = get_verified_plain st aad plain cipher_tagged ak acc true in
+       Some p
+  else None
