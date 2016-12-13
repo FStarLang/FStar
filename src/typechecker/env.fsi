@@ -26,7 +26,7 @@ type binding =
   | Binding_univ     of univ_name
   | Binding_sig_inst of list<lident> * sigelt * universes //the first component should always be a Sig_inductive
 
-type delta_level = 
+type delta_level =
   | NoDelta
   | Inlining
   | Eager_unfolding_only

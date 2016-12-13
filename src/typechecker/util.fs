@@ -1443,65 +1443,71 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let imp_binders = tps @ indices |> List.map (fun (x, _) -> x, Some S.imp_tag) in
 
     let discriminator_ses =
-        let discriminator_name = Util.mk_discriminator lid in
-        let no_decl = false in
-        let only_decl =
-              lid_equals C.prims_lid  (Env.current_module env)
-              || fvq<>Data_ctor
-              || Options.dont_gen_projectors (Env.current_module env).str
-        in
-        let quals =
-            (* KM : What about Logic ? should it still be there even with an implementation *)
-            S.Discriminator lid ::
-            (if only_decl then [S.Logic] else []) @
-            (if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
-            List.filter (function S.Abstract -> not only_decl | S.Private -> true | _ -> false ) iquals
-        in
-
-        (* Type of the discriminator *)
-        let binders = imp_binders@[unrefined_arg_binder] in
-        let t =
-            let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
-            SS.close_univ_vars uvs <| U.arrow binders bool_typ
-        in
-        let decl = Sig_declare_typ(discriminator_name, uvs, t, quals, range_of_lid discriminator_name) in
-        if Env.debug env (Options.Other "LogTypes")
-        then Util.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
-
-        if only_decl
-        then [decl]
+        if fvq <> Data_ctor
+        then [] // We do not generate discriminators for record types
         else
-            (* Term of the discriminator *)
-            let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
-                let b = S.is_implicit imp in
-                if b && j < ntps
-                then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
-                else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
+            let discriminator_name = Util.mk_discriminator lid in
+            let no_decl = false in
+            let only_decl =
+                  lid_equals C.prims_lid  (Env.current_module env)
+                  || Options.dont_gen_projectors (Env.current_module env).str
             in
-            let pat_true = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, C.exp_true_bool in
-            let pat_false = pos (Pat_wild (S.new_bv None tun)), None, C.exp_false_bool in
-            let arg_exp = S.bv_to_name (fst unrefined_arg_binder) in
-            let body = mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) None p in
+            let quals =
+                (* KM : What about Logic ? should it still be there even with an implementation *)
+                S.Discriminator lid ::
+                (if only_decl then [S.Logic] else []) @
+                (if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
+                List.filter (function S.Abstract -> not only_decl | S.Private -> true | _ -> false ) iquals
+            in
 
-            let dd =
-                if quals |> List.contains S.Abstract
-                then Delta_abstract Delta_equational
-                else Delta_equational
+            (* Type of the discriminator *)
+            let binders = imp_binders@[unrefined_arg_binder] in
+            let t =
+                let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
+                SS.close_univ_vars uvs <| U.arrow binders bool_typ
             in
-            let imp = U.abs binders body None in
-            let lb = {
-                lbname=Inr (S.lid_as_fv discriminator_name dd None);
-                lbunivs=uvs;
-                lbtyp=if no_decl then t else tun;
-                lbeff=C.effect_Tot_lid;
-                lbdef=SS.close_univ_vars uvs imp
-            } in
-            let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
+            let decl = Sig_declare_typ(discriminator_name, uvs, t, quals, range_of_lid discriminator_name) in
             if Env.debug env (Options.Other "LogTypes")
-            then Util.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
-            (* TODO : Are there some cases where we don't want one of these ? *)
-            (* If not the declaration is useless, isn't it ?*)
-            [decl ; impl]
+            then Util.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
+
+            if only_decl
+            then [decl]
+            else
+                (* Term of the discriminator *)
+                let body =
+                    if not refine_domain
+                    then C.exp_true_bool   // If we have at most one constructor
+                    else
+                        let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
+                            let b = S.is_implicit imp in
+                            if b && j < ntps
+                            then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
+                            else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
+                        in
+                        let pat_true = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, C.exp_true_bool in
+                        let pat_false = pos (Pat_wild (S.new_bv None tun)), None, C.exp_false_bool in
+                        let arg_exp = S.bv_to_name (fst unrefined_arg_binder) in
+                        mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) None p
+                in
+                let dd =
+                    if quals |> List.contains S.Abstract
+                    then Delta_abstract Delta_equational
+                    else Delta_equational
+                in
+                let imp = U.abs binders body None in
+                let lb = {
+                    lbname=Inr (S.lid_as_fv discriminator_name dd None);
+                    lbunivs=uvs;
+                    lbtyp=if no_decl then t else tun;
+                    lbeff=C.effect_Tot_lid;
+                    lbdef=SS.close_univ_vars uvs imp
+                } in
+                let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
+                if Env.debug env (Options.Other "LogTypes")
+                then Util.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
+                (* TODO : Are there some cases where we don't want one of these ? *)
+                (* If not the declaration is useless, isn't it ?*)
+                [decl ; impl]
     in
 
 

@@ -3188,7 +3188,10 @@ let imp_binders = (FStar_All.pipe_right (FStar_List.append tps indices) (FStar_L
 end))))
 in (
 
-let discriminator_ses = (
+let discriminator_ses = if (fvq <> FStar_Syntax_Syntax.Data_ctor) then begin
+[]
+end else begin
+(
 
 let discriminator_name = (FStar_Syntax_Util.mk_discriminator lid)
 in (
@@ -3196,8 +3199,8 @@ in (
 let no_decl = false
 in (
 
-let only_decl = (((let _151_1131 = (FStar_TypeChecker_Env.current_module env)
-in (FStar_Ident.lid_equals FStar_Syntax_Const.prims_lid _151_1131)) || (fvq <> FStar_Syntax_Syntax.Data_ctor)) || (let _151_1133 = (let _151_1132 = (FStar_TypeChecker_Env.current_module env)
+let only_decl = ((let _151_1131 = (FStar_TypeChecker_Env.current_module env)
+in (FStar_Ident.lid_equals FStar_Syntax_Const.prims_lid _151_1131)) || (let _151_1133 = (let _151_1132 = (FStar_TypeChecker_Env.current_module env)
 in _151_1132.FStar_Ident.str)
 in (FStar_Options.dont_gen_projectors _151_1133)))
 in (
@@ -3251,6 +3254,11 @@ in if only_decl then begin
 end else begin
 (
 
+let body = if (not (refine_domain)) then begin
+FStar_Syntax_Const.exp_true_bool
+end else begin
+(
+
 let arg_pats = (FStar_All.pipe_right all_params (FStar_List.mapi (fun j _56_1910 -> (match (_56_1910) with
 | (x, imp) -> begin
 (
@@ -3285,15 +3293,14 @@ in ((_151_1157), (None), (FStar_Syntax_Const.exp_false_bool)))
 in (
 
 let arg_exp = (FStar_Syntax_Syntax.bv_to_name (Prims.fst unrefined_arg_binder))
-in (
-
-let body = (let _151_1163 = (let _151_1162 = (let _151_1161 = (let _151_1160 = (FStar_Syntax_Util.branch pat_true)
+in (let _151_1163 = (let _151_1162 = (let _151_1161 = (let _151_1160 = (FStar_Syntax_Util.branch pat_true)
 in (let _151_1159 = (let _151_1158 = (FStar_Syntax_Util.branch pat_false)
 in (_151_1158)::[])
 in (_151_1160)::_151_1159))
 in ((arg_exp), (_151_1161)))
 in FStar_Syntax_Syntax.Tm_match (_151_1162))
-in (FStar_Syntax_Syntax.mk _151_1163 None p))
+in (FStar_Syntax_Syntax.mk _151_1163 None p))))))
+end
 in (
 
 let dd = if (FStar_All.pipe_right quals (FStar_List.contains FStar_Syntax_Syntax.Abstract)) then begin
@@ -3329,8 +3336,9 @@ in (FStar_Util.print1 "Implementation of a discriminator %s\n" _151_1172))
 end else begin
 ()
 end
-in (decl)::(impl)::[]))))))))))
+in (decl)::(impl)::[]))))))
 end))))))))
+end
 in (
 
 let arg_exp = (FStar_Syntax_Syntax.bv_to_name (Prims.fst arg_binder))
