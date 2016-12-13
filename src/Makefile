@@ -188,7 +188,7 @@ ocaml:
 	+make extract_ocaml
 
 boot-ocaml:
-	+make -C ocaml-output clean
+	# +make -C ocaml-output clean
 	+make -C ocaml-output all
 
 # --------------------------------------------------------------------
