@@ -495,7 +495,7 @@ let frame_refines_one_entry_append
   : Lemma
       (requires (refines_one_entry table aead_ent h))
       (ensures  (refines_one_entry (Seq.append table blocks) aead_ent h))
-  = lemma_prf_find_append_some_forall table blocks; admit() //NS: doesn't go through
+  = lemma_prf_find_append_some_forall table blocks
 
 (*
  * aead_entries_are_refined framing lemma for append to the PRF blocks
@@ -673,7 +673,7 @@ let rec counterblocks_slice #i rgn x len from_pos to_pos plain cipher =
 val counterblocks_len: #i:id ->
 		       rgn:region -> 
 		       x:domain i{ctr_0 i <^ x.ctr} ->
-		       len:nat{len <> 0} ->
+		       len:nat ->
 		       from_pos:nat{from_pos <= len /\ safelen i (len - from_pos) x.ctr} ->
 		       plain:Plain.plain i len ->
 		       cipher:lbytes len{safeId i} -> Lemma
@@ -689,6 +689,72 @@ let rec counterblocks_len #i rgn x len from_pos plain cipher =
        let l0 = minNat remaining blockl in
        counterblocks_len #i rgn (PRF.incr i x) len (from_pos + l0) plain cipher
 
+let rec counterblocks_domains_increasing 
+			   (i:id{safeId i})
+			   (r:rid)
+			   (x_init:PRF.domain i{PRF.(ctr_0 i <^ x_init.ctr)})
+  			   (x:PRF.domain i{PRF.(x_init.ctr <^ x.ctr)})
+			   (l:nat)
+			   (from_pos:nat{from_pos <= l /\ safelen i (l - from_pos) PRF.(x.ctr)})
+			   (plain:Crypto.Plain.plain i l)
+			   (cipher:lbytes l)
+			   (e:PRF.entry r i)
+   : Lemma (requires (let cb = counterblocks i r x l from_pos l plain cipher in
+		      cb `SeqProperties.contains` e))
+           (ensures  (let open PRF in
+		      x_init.ctr <^ e.x.ctr))
+           (decreases (l - from_pos)) 
+   =
+   let open FStar.SeqProperties in
+   let cb = counterblocks i r x l from_pos l plain cipher in
+   contains_elim cb e;
+   if from_pos = l
+   then ()
+   else if FStar.StrongExcludedMiddle.strong_excluded_middle (head cb == e)
+	then ()
+	else begin
+	   invert_contains_cons (head cb) (tail cb) e;
+	   let blockl = v (Cipher.(blocklen (cipherAlg_of_id i))) in
+           let remaining = l - from_pos in
+	   let l0 = minNat remaining blockl in
+	   assert (Seq.equal (tail cb) (counterblocks i r (PRF.incr i x) l (from_pos + l0) l plain cipher));
+	   counterblocks_domains_increasing i r x_init (PRF.incr i x) l (from_pos + l0) plain cipher e
+	end
+
+let rec counterblocks_is_a_map (i:id{safeId i})
+			   (r:rid)
+			   (x:PRF.domain i{PRF.ctr_0 i <^ PRF.(x.ctr)})
+			   (l:nat)
+			   (from_pos:nat{from_pos <= l /\ safelen i (l - from_pos) PRF.(x.ctr)})
+			   (plain:Crypto.Plain.plain i l)
+			   (cipher:lbytes l)
+			   (e:PRF.entry r i)
+    : Lemma (requires (let open FStar.SeqProperties in
+	               let cb = counterblocks i r x l from_pos l plain cipher in
+		       cb `contains` e))
+            (ensures (let cb = counterblocks i r x l from_pos l plain cipher in
+		      PRF.find cb e.x == Some e.range))
+            (decreases (l - from_pos))
+    = 
+    let open FStar.SeqProperties in
+    let cb = counterblocks i r x l from_pos l plain cipher in
+    contains_elim cb e;
+    if from_pos = l
+    then ()
+    else if FStar.StrongExcludedMiddle.strong_excluded_middle (head cb == e)
+	 then ()
+	 else begin
+	   invert_contains_cons (head cb) (tail cb) e;
+	   let blockl = v (Cipher.(blocklen (cipherAlg_of_id i))) in
+           let remaining = l - from_pos in
+	   let l0 = minNat remaining blockl in
+	   assert (Seq.equal (tail cb) (counterblocks i r (PRF.incr i x) l (from_pos + l0) l plain cipher));
+	   counterblocks_is_a_map i r (PRF.incr i x) l (from_pos + l0) plain cipher e;
+	   counterblocks_domains_increasing i r x (PRF.incr i x) l (from_pos + l0) plain cipher e;
+	   find_singleton (head cb) e.x;
+	   find_append e.x (Seq.create 1 (head cb)) (tail cb)
+	 end
+	 
 let counterblocks_contains_all_otp_blocks
   (i:id{safeId i})
   (r:rid)
@@ -703,17 +769,17 @@ let counterblocks_contains_all_otp_blocks
 	     let all_blocks = counterblocks i r x (v len) from_pos (v len) plain cipher in
 	     prf_contains_all_otp_blocks x from_pos plain cipher all_blocks))
   = 
+  assert (PRF.ctr_0 i <^ x.ctr);
+  assert (safelen i (v remaining_len) PRF.(x.ctr));
   let open FStar.SeqProperties in
   let from_pos = v (len -^ remaining_len) in
   let all_blocks = counterblocks i r x (v len) from_pos (v len) plain cipher in
-  if safeId i 
-  then let aux (e:PRF.entry r i)
-	   : Lemma (requires (all_blocks `contains` e))
-		   (ensures (PRF.find all_blocks e.x == Some e.range))
-           = admit() in
-       FStar.Classical.forall_intro (FStar.Classical.move_requires aux)
-  else ()
-	     
+  let aux (e:PRF.entry r i)
+      : Lemma (requires (all_blocks `contains` e))
+	      (ensures (PRF.find all_blocks e.x == Some e.range))
+      = counterblocks_is_a_map i r x (v len) from_pos plain cipher e in
+  FStar.Classical.forall_intro (FStar.Classical.move_requires aux)
+
 val prf_contains_all_otp_blocks_tail
     (#i:id) 
     (#r:rid)
