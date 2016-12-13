@@ -234,8 +234,10 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | None ->
         raise (Err (Util.format1 "module not found in search path: %s\n" alias))
   in
-  let record_lid is_constructor lid =
-    if lid.ident.idText <> "reflect" then
+  let record_lid lid =
+    (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
+       module name itself, so only its namespace part is to be
+       recorded as a module dependency.  *)
       let try_key key =
         begin match smap_try_find working_map key with
         | Some pair ->
@@ -247,9 +249,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
       in
       // Option.Some x
       try_key (lowercase_join_longident lid false);
-      // FStar.List (flatten (map (...)))
-      if is_constructor then
-        try_key (lowercase_join_longident lid true)
+      ()
   in
 
 
@@ -403,10 +403,10 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | AST.Projector (lid, _)
     | AST.Discrim lid
     | Name lid ->
-        record_lid false lid
+        record_lid lid
     | Construct (lid, termimps) ->
         if List.length termimps = 1 && Options.universes () then
-          record_lid true lid;
+          record_lid lid;
         List.iter (fun (t, _) -> collect_term t) termimps
     | Abs (pats, t) ->
         collect_patterns pats;
