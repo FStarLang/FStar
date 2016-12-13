@@ -635,7 +635,7 @@ let rec lemma_find_l_contains (#a:Type) (f:a -> Tot bool) (l:seq a)
     else if f (head l) then ()
     else lemma_find_l_contains f (tail l)
 
-let invert_contains_cons (#a:Type) (hd:a) (tl:Seq.seq a) (x:a)
+let contains_cons (#a:Type) (hd:a) (tl:Seq.seq a) (x:a)
   : Lemma ((cons hd tl) `contains` x
 	   <==>
 	   (x==hd \/ tl `contains` x))

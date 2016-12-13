@@ -92,60 +92,6 @@ let accumulate (#i: MAC.id) (st: CMA.state i) (#aadlen:aadlen_32) (aad:lbuffer (
 //end AEAD.Encoding.accumulate wrapper
 ////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
-//UF1CMA.mac wrapper
-////////////////////////////////////////////////////////////////////////////////
-#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
-		(h0:mem) (h1:mem) = 
-    let open FStar.Buffer in
-    let open Crypto.Symmetric.Bytes in
-    let open Crypto.Symmetric.Poly1305 in
-    let open Crypto.Symmetric.UF1CMA in
-    Buffer.live h0 st.s /\ 
-    MAC.live h0 st.r /\ 
-    Buffer.live h1 tag /\
-    CMA.acc_inv st acc h0 /\ (
-    if mac_log then
-      HS.modifies (Set.as_set [st.region; Buffer.frameOf tag]) h0 h1 /\
-      Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1 /\
-      HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1 /\
-      m_contains (ilog st.log) h1 /\ (
-      let log = FStar.HyperStack.sel h1 (alog acc) in
-      let a = MAC.sel_elem h1 (abuf acc) in
-      let r = MAC.sel_elem h1 st.r in
-      let s = Buffer.as_seq h1 st.s in
-      let t = MAC.mac log r s in
-      sel_word h1 tag === t /\
-      m_sel h1 (ilog st.log) == Some(log,t))
-    else Buffer.modifies_1 tag h0 h1)
-
-let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
-  : ST unit
-  (requires (fun h0 ->
-    let open Crypto.Symmetric.UF1CMA in
-    Buffer.live h0 tag /\ 
-    Buffer.live h0 st.s /\
-    Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) st.s tag /\
-    Buffer.disjoint (MAC.as_buffer st.r) tag /\
-    Buffer.disjoint st.s tag /\ 
-    acc_inv st acc h0 /\
-    (mac_log ==> m_contains (ilog st.log) h0) /\
-    (mac_log /\ authId i ==> m_sel h0 (ilog st.log) == None)))
-  (ensures (fun h0 _ h1 -> mac_ensures i st acc tag h0 h1))
-  = let open Crypto.Symmetric.UF1CMA in
-    let h0 = get () in
-    CMA.mac #i st acc tag;
-    let h1 = get () in 
-    if mac_log then begin
-      (* Need to update UF1CMA to prove this (problem with the mods clause not working fully) *)
-      assume (HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1) //NS: this goes away when UF1CMA is done
-    end
-////////////////////////////////////////////////////////////////////////////////
-//end UF1CMA.mac wrapper
-////////////////////////////////////////////////////////////////////////////////
-
-
 
 //16-11-04 disjoint st.r st.s comes from the UF1CMA state
 //16-11-04 BTW Buffer.disjoint_2 should be strengthened to imply 3 disjoints
