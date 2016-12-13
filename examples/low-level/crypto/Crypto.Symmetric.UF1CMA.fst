@@ -124,29 +124,29 @@ unfold let authId (i:id) = // inline_for_extraction?
 type text = Seq.seq (lbytes 16)
 
 (** One-time MAC log, None or Some (m, MAC(m)) *)
-type log (i:id) = (n:UInt128.t{n == snd i}) * option (text * tag)
+type log = option (text * tag) 
 
-let log_cmp (#i:id) (a:log i) (b:log i) =
-  match snd a, snd b with
-  | Some (l,t), Some (l',t') -> l == l' /\ t == t' // avoid inversion
-  | None, _ -> True
-  | _       -> False
+let log_cmp (a:log) (b:log) =
+  match a,b with
+  | Some (l,t) , Some (l',t') -> l == l' /\ t == t' // avoid inversion
+  | None, _                   -> True
+  | _                         -> False
 
-val log_cmp_monotonic: i:id -> Lemma (RR.monotonic (log i) (log_cmp #i))
-let log_cmp_monotonic i = ()
- 
-let ideal_log (r:erid) (i:id) = RR.m_rref r (log i) log_cmp
+val log_cmp_monotonic: unit -> Lemma (RR.monotonic log log_cmp)
+let log_cmp_monotonic _ = ()
 
-let log_ref (r:erid) (i:id) = if mac_log then ideal_log r i else unit
+let ideal_log (r:erid) = RR.m_rref r log log_cmp
 
-let ilog (#r:erid) (#i:id) (l:log_ref r i{mac_log}) : Tot (ideal_log r i) = l
+let log_ref (r:erid) = if mac_log then ideal_log r else unit
+
+let ilog (#r:erid) (l:log_ref r{mac_log}) : Tot (ideal_log r) = l
 
 noeq type state (i:id) =
   | State:
     #region: erid ->
     r: MAC.elemB i{Buffer.frameOf (MAC.as_buffer r) == region} ->
     s: wordB_16{frameOf s == region /\ disjoint (MAC.as_buffer r) s} ->
-    log: log_ref region i ->
+    log: log_ref region ->
     state i
 
 let live_ak #r (#i:id) m (ak:akey r (fst i)) = 
@@ -162,7 +162,7 @@ let genPost (i:id) (region:erid) m0 (st:state i) m1 =
    (mac_log ==>
       ~(RR.m_contains (ilog st.log) m0) /\
       RR.m_contains (ilog st.log) m1 /\
-      RR.m_sel m1 (ilog st.log) == (snd i, None))
+      RR.m_sel m1 (ilog st.log) == None)
 
 #set-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
@@ -191,8 +191,8 @@ let alloc region i ak k =
   lemma_reveal_modifies_1 s h2 h3;
   if mac_log then
     begin
-    log_cmp_monotonic i;
-    let log = RR.m_alloc #(log i) #log_cmp region (snd i, None) in
+    log_cmp_monotonic ();
+    let log = RR.m_alloc #log #log_cmp region None in
     State #i #region r s log
     end
   else
@@ -391,7 +391,7 @@ let mac_ensures
     let buf = MAC.as_buffer (abuf acc) in
     Buffer.as_seq h1 tag == t /\ (
     if authId i then
-      RR.m_sel h1 log == (snd i, Some (vs, t)) /\
+      RR.m_sel h1 log == Some (vs, t) /\
       modifies_bufs_and_ref buf tag (RR.as_hsref log) h0 h1
     else
       Buffer.modifies_2 (MAC.as_buffer (abuf acc)) tag h0 h1)
@@ -413,7 +413,7 @@ val mac:
     Buffer.disjoint st.s tag /\
     (mac_log ==> frameOf tag <> (alog acc).id \/
                  Buffer.disjoint_ref_1 tag (HS.as_aref (alog acc))) /\
-    (authId i ==> snd (RR.m_sel h0 (ilog st.log)) == None) ))
+    (authId i ==> RR.m_sel h0 (ilog st.log) == None) ))
   (ensures (fun h0 _ h1 -> mac_ensures i st acc tag h0 h1))
 
 let mac #i st acc tag =
@@ -425,9 +425,9 @@ let mac #i st acc tag =
     let t = read_word 16ul tag in // load_bytes 16ul tag in
     let vs = !(alog acc) in
     lemma_reveal_modifies_2 (MAC.as_buffer acc.a) tag h0 h1;
-    RR.m_recall #st.region #(log i) #log_cmp (ilog st.log);
+    RR.m_recall #st.region #log #log_cmp (ilog st.log);
     if authId i then
-      RR.m_write #st.region #(log i) #log_cmp (ilog st.log) (snd i, Some (vs, t));
+      RR.m_write #st.region #log #log_cmp (ilog st.log) (Some (vs, t));
     let h2 = ST.get () in
     MAC.frame_sel_elem h0 h1 st.r;
     MAC.frame_sel_elem h1 h2 st.r;
@@ -439,7 +439,7 @@ let mac #i st acc tag =
     assert (Seq.equal (Buffer.as_seq h2 tag) t);
     if authId i then
       modifies_mac_aux (MAC.as_buffer acc.a) tag (RR.as_hsref (ilog st.log))
-        (snd i, Some (vs,t)) h0 h1 h2
+        (Some (vs,t)) h0 h1 h2
     end
 
 
@@ -458,7 +458,7 @@ let verify_ok (#i:id) (st:state i) (acc:accBuffer i) (tag:MAC.tagB)
     let t = MAC.mac vs r s in
     let verified = Seq.eq t (MAC.sel_word h0 tag) in
     if authId i then
-      match snd (RR.m_sel h0 (ilog st.log)) with
+      match RR.m_sel h0 (ilog st.log) with
       | Some (vs',t') ->
         let correct = t = t' && Seq.eq vs vs' in
         b == (verified && correct)
@@ -483,7 +483,7 @@ val verify:
     acc_inv st acc h0 /\
     verify_liveness st tag h0 /\
     Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) st.s tag /\
-    (authId i ==> Some? (snd (RR.m_sel h0 (ilog st.log)))) ))
+    (authId i ==> Some? (RR.m_sel h0 (ilog st.log)))))
   (ensures (fun h0 b h1 -> verify_ensures st acc tag h0 b h1))
 
 // for RR.witness below
@@ -493,7 +493,7 @@ let verify #i st acc tag =
   let h0 = ST.get () in
   if authId i then
     // Overkill, but easy way to propagate through MAC.finish
-    RR.witness #st.region #(log i) #log_cmp
+    RR.witness #st.region #log #log_cmp
      (ilog st.log) (fun h -> RR.m_sel h (ilog st.log) == RR.m_sel h0 (ilog st.log));
   push_frame ();
   let h1 = ST.get () in
@@ -513,11 +513,17 @@ let verify #i st acc tag =
       lemma_reveal_modifies_2 (MAC.as_buffer acc.a) computed h2 h3; // for (alog acc)
       let t = read_word 16ul computed in
       let vs = !(alog acc) in
+      //assert (
+      //  let r = MAC.sel_elem h2 st.r in
+      //  let s = Buffer.as_seq h2 st.s in
+      //  let t' = MAC.mac vs r s in
+      //  vs == HS.sel h2 (alog acc) /\
+      //  verified == Seq.eq t' t );
       if authId i then
         begin
         RR.testify (fun h -> RR.m_sel h (ilog st.log) == RR.m_sel h0 (ilog st.log));
         let log = RR.m_read (ilog st.log) in // Don't inline it below; doesn't work
-        match snd log with
+        match log with
         | Some (vs',t') ->
           let correct = t = t' && Seq.eq vs vs' in
           verified && correct
