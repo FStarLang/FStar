@@ -546,7 +546,6 @@ let mac_is_used (#rgn:region) (#i:id)
      | None -> False
      | Some mac_range ->
        let mac_st = CMA.ilog (CMA.State?.log mac_range) in
-       m_contains mac_st h /\ 
        Some? (m_sel h mac_st)))
 
 let find_refined_aead_entry
