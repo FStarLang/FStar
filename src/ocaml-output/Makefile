@@ -9,9 +9,12 @@ MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
 OCAMLBUILD=cd ../../ && ocamlbuild -I src/ocaml-output -I src/basic/ml \
   -I src/parser/ml -I src/fstar/ml -j 24 -build-dir src/ocaml-output/_build \
+  -I src/prettyprint/ml \
   -I lib/ml -use-ocamlfind
-GENERATED_FILES=main.ml parse.mly parse.ml FStar_Parser_Parse.ml \
-  FStar_Version.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml
+COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
+PARSER_ML_LIB=FStar_Parser_Util.cmx
+PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
+GENERATED_FILES=main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml 
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
