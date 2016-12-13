@@ -1,6 +1,10 @@
 .text
-.global KeyExpansionStdcall
-KeyExpansionStdcall:
+.global _KeyExpansionStdcall
+_KeyExpansionStdcall:
+  mov %rcx, %r9
+  mov %rdx, %r8
+  mov %rsi, %rdx
+  mov %rdi, %rcx
   movdqu 0 (%rcx), %xmm1
   movdqu %xmm1, 0 (%rdx)
   aeskeygenassist $1, %xmm1, %xmm2
@@ -109,8 +113,12 @@ KeyExpansionStdcall:
   sub $0, %rsp
   ret 
 
-.global KeyExpansionAndInversionStdcall
-KeyExpansionAndInversionStdcall:
+.global _KeyExpansionAndInversionStdcall
+_KeyExpansionAndInversionStdcall:
+  mov %rcx, %r9
+  mov %rdx, %r8
+  mov %rsi, %rdx
+  mov %rdi, %rcx
   movdqu 0 (%rcx), %xmm1
   movdqu %xmm1, 0 (%rdx)
   aeskeygenassist $1, %xmm1, %xmm2
@@ -246,8 +254,12 @@ KeyExpansionAndInversionStdcall:
   sub $0, %rsp
   ret 
 
-.global AES128EncryptOneBlockStdcall
-AES128EncryptOneBlockStdcall:
+.global _AES128EncryptOneBlockStdcall
+_AES128EncryptOneBlockStdcall:
+  mov %rcx, %r9
+  mov %rdx, %r8
+  mov %rsi, %rdx
+  mov %rdi, %rcx
   movdqu 0 (%rdx), %xmm0
   movdqu 0 (%r8), %xmm2
   pxor %xmm2, %xmm0

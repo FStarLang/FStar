@@ -53,7 +53,8 @@ all: nuget-restore
 	chmod a+x $(BIN)/tests.exe
 	chmod a+x $(BIN)/fstar.exe
 
-clean:
+# SAD! Can't make clean if fslex and fsyacc haven't be restored... what...
+clean: nuget-restore
 	$(MSBUILD) /t:clean VS/FStar.sln
 
 # --------------------------------------------------------------------

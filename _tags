@@ -1,0 +1,6 @@
+true: annot, bin_annot, warn(-8-11-21-26-28), package(batteries), \
+  package(zarith), package(yojson), thread
+<bin>: -traverse
+<.old>: -traverse
+<**/obj>: -traverse
+<src/VS/packages>: -traverse
