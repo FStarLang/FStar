@@ -32,7 +32,9 @@ type interactive_tc<'env,'modul> = {
     reset_mark:  'env -> 'env;
     commit_mark: 'env -> 'env;
     check_frag:  'env -> 'modul -> FStar.Parser.ParseIt.input_frag -> option<('modul * 'env * int)>;
-    report_fail:  unit -> unit
+    report_fail:  unit -> unit;
+    tc_prims:     unit -> 'env;
+    tc_one_file:  list<string> -> 'env -> (option<string> * string) * 'env * 'modul * list<string>
 }
 
 (****************************************************************************************)
@@ -199,10 +201,63 @@ let detect_dependencies_with_first_interactive_chunk () : string         //the f
 (* The main interactive loop *)
 (******************************************************************************************)
 open FStar.Parser.ParseIt
-let interactive_mode filename (env:'env) (initial_mod:'modul) (tc:interactive_tc<'env,'modul>) =
+
+type m_timestamps = list<(option<string> * string * time)>
+
+let interactive_mode (filename:option<string>) (filenames:list<string>) (initial_mod:'modul) (tc:interactive_tc<'env,'modul>) =
+    Util.print1 "Interactive mode called with: %s\n" (List.fold_left (fun s f -> s ^ f) "" filenames);
+
     if Option.isSome (Options.codegen()) 
     then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
-    let rec go line_col (stack:stack<'env,'modul>) (curmod:'modul) (env:'env) = begin
+
+    let rec tc_deps (stack:stack<'env,'modul>) (env:'env) (remaining:list<string>) (ts:m_timestamps) = //:stack<'env,'modul> * 'env * m_timestamps =
+      match remaining with
+        | [] -> stack, env, ts
+        | _  ->
+          //invariant: length stack = length ts
+          let (intf, impl), env, modl, remaining = tc.tc_one_file remaining env in
+          let stack = (env, modl)::stack in
+          Util.print_string "\nCalling push\n";
+          let env = tc.push env true "tc modul" in  //AR: TODO: Here choosing lax to be true, more configurable?
+          tc_deps stack env remaining (ts@[intf, impl, now()])
+    in 
+    
+    //AR: TODO: make this code f#/ocaml independent by adding a utility in basic/util.fs and basic/ml/FStar_Util.ml
+    let update_deps (stk:stack<'env, 'modul>) (env:'env) (ts:m_timestamps) = //:(stack<'env, 'modul> * 'env * m_timestamps) =
+      Util.print_string "Update deps called";
+      //invariant: length stack = length ts
+      let is_stale (intf:option<string>) (impl:string) (t:time) :bool =
+        (is_file_modified_after impl t ||
+         (match intf with
+            | Some f -> is_file_modified_after f t
+            | None   -> false))
+      in
+
+      let rec iterate (good_stack:stack<'env, 'modul>) (good_ts:m_timestamps) (stack:stack<'env, 'modul>) (env:'env) (ts:m_timestamps) = //:(stack<'env, 'modul> * 'env * m_timestamps) =
+        //invariant length good_stack = length good_ts, and same for stack and ts
+        match stack, ts with
+            | (env, modl)::stack, (intf, impl, t)::ts' ->
+              if is_stale intf impl t then
+                //collect all the file names
+                let filenames = List.fold_left (fun acc (intf, impl, _) ->
+                  Util.print_string "\nCalling pop\n";
+                  tc.pop env "";
+                  match intf with
+                    | Some f -> acc @ [f; impl]
+                    | None   -> acc @ [impl]
+                ) [] ts in
+                tc_deps (List.rev good_stack) env filenames good_ts
+              else iterate (good_stack@[env, modl]) (good_ts@[intf, impl, t]) stack env ts'
+            | [], [] ->
+              Util.print_string "No file was found stale\n";
+              List.rev good_stack, env, good_ts
+            | _, _   -> failwith "Impossible"
+      in
+
+      iterate [] [] (List.rev stk) env ts
+    in
+
+    let rec go line_col (stack:stack<'env,'modul>) (curmod:'modul) (env:'env) (ts:m_timestamps) = begin
       match shift_chunk () with
       | Pop msg ->
           tc.pop env msg;
@@ -211,20 +266,21 @@ let interactive_mode filename (env:'env) (initial_mod:'modul) (tc:interactive_tc
             | [] -> Util.print_error "too many pops"; exit 1
             | hd::tl -> hd, tl
           in
-          go line_col stack curmod env
+          go line_col stack curmod env ts
 
       | Push (lax, l, c) ->
+          let stack, env, ts = if List.length stack = List.length ts then update_deps stack env ts else stack, env, ts in
           let stack = (env, curmod)::stack in
           let env = tc.push env lax "#push" in
 //          Util.print2 "Got push (%s, %s)" (Util.string_of_int <| fst lc) (Util.string_of_int <| snd lc);
-          go (l, c) stack curmod env
+          go (l, c) stack curmod env ts
 
       | Code (text, (ok, fail)) ->
           let fail curmod env_mark =
             tc.report_fail();
             Util.print1 "%s\n" fail;
             let env = tc.reset_mark env_mark in
-            go line_col stack curmod env in
+            go line_col stack curmod env ts in
 
           let env_mark = tc.mark env in
           let frag = {frag_text=text;
@@ -239,15 +295,19 @@ let interactive_mode filename (env:'env) (initial_mod:'modul) (tc:interactive_tc
                 if n_errs=0 then begin
                   Util.print1 "\n%s\n" ok;
                   let env = tc.commit_mark env in
-                  go line_col stack curmod env
+                  go line_col stack curmod env ts
                   end
                 else fail curmod env_mark
             | _ -> fail curmod env_mark
             end
     end in
+
+    let env = tc.tc_prims () in
+    let stack, env, ts = tc_deps [] env filenames [] in 
+
     if Options.universes()
     && (FStar.Options.record_hints() //and if we're recording or using hints
     || FStar.Options.use_hints())
     && Option.isSome filename
-    then FStar.SMTEncoding.Solver.with_hints_db (Option.get filename) (fun () -> go (1, 0) [] initial_mod env)
-    else go (1, 0) [] initial_mod env
+    then FStar.SMTEncoding.Solver.with_hints_db (Option.get filename) (fun () -> go (1, 0) stack initial_mod env ts)
+    else go (1, 0) stack initial_mod env ts

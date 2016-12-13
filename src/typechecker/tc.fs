@@ -1763,7 +1763,7 @@ let finish_partial_modul env modul exports =
   env.solver.pop ("Ending modul " ^ modul.name.str);
   env.solver.encode_modul env modul;
   env.solver.refresh();
-  Options.restore_cmd_line_options true |> ignore;
+  let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
   modul, env
 
 let tc_modul env modul =

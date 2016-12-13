@@ -174,10 +174,23 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
         Tc.Errors.report_all() |> ignore;
         Tc.Errors.num_errs := 0 in
 
+    let tc_prims_interactive () =
+      let _, dsenv, env = tc_prims () in
+      (dsenv, env) in
+
+   let tc_one_file_interactive (remaining:list<string>) (uenv:Parser.DesugarEnv.env * env) = //:((option<string> * string) * (Parser.DesugarEnv.env * env) * modul option * string list) =
+     match remaining with
+        | file::remaining ->
+          let _, dsenv, env = tc_one_file (fst uenv) (snd uenv) file in
+          (None, file), (dsenv, env), None, remaining
+        | [] -> failwith "Impossible" in
+        
     { pop = pop; 
       push = push;
       mark = mark;
       reset_mark = reset_mark;
       commit_mark = commit_mark;
       check_frag = check_frag;
-      report_fail = report_fail}
+      report_fail = report_fail;
+      tc_prims = tc_prims_interactive;
+      tc_one_file = tc_one_file_interactive}

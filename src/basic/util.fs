@@ -36,6 +36,8 @@ let record_time f =
     let res = f () in 
     let _, elapsed = time_diff start (now()) in
     res, elapsed
+let is_file_modified_after f t = System.DateTime.Compare (t, (System.IO.File.GetLastWriteTime f)) < 0
+
 
 exception Impos
 exception NYI of string
