@@ -283,7 +283,8 @@ val start: #i:id -> st:state i -> StackInline (accBuffer i)
   (requires (fun h -> MAC.norm h st.r))
   (ensures  (fun h0 a h1 ->
     Buffer.frameOf (MAC.as_buffer a.a) == h1.tip /\
-    ~(h0 `Buffer.contains` (MAC.as_buffer a.a)) /\
+    ~(h0 `Buffer.contains` (MAC.as_buffer (abuf a))) /\
+    (mac_log ==> ~(h0 `HS.contains` (alog a))) /\
     acc_inv st a h1 /\
     modifies_0 h0 h1))
 
