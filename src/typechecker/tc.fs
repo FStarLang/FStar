@@ -1679,6 +1679,9 @@ let tc_partial_modul env modul =
   let msg = "Internals for " ^name in
   let env = {env with Env.is_iface=modul.is_interface;
                       admit=not (Options.should_verify modul.name.str)} in
+  //AR: the interactive mode calls this function, because of which there is an extra solver push.
+  //    the interactive mode does not call finish_partial_modul, so this push is not popped.
+  //    currently, there is a cleanup function in the interactive mode tc, that does this extra pop.
   env.solver.push msg;
   let env = Env.set_current_module env modul.name in
   let ses, exports, env = tc_decls env modul.declarations in
@@ -1763,6 +1766,7 @@ let finish_partial_modul env modul exports =
   env.solver.pop ("Ending modul " ^ modul.name.str);
   env.solver.encode_modul env modul;
   env.solver.refresh();
+  //interactive mode manages it itself
   let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
   modul, env
 

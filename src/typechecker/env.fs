@@ -83,7 +83,6 @@ and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
-    stsize       :unit -> int;
     mark         :string -> unit;
     reset_mark   :string -> unit;
     commit_mark  :string -> unit;
@@ -216,6 +215,7 @@ let stack_ops =
         pop_query_indices();
         pop_stack env
     in
+
     let incr_query_index env =
         let qix = peek_query_indices () in
         match env.qname_and_index with
@@ -255,6 +255,7 @@ let reset_mark env =
 let pop env msg =
     env.solver.pop msg;
     stack_ops.es_pop env
+let cleanup_interactive env = env.solver.pop ""
 let incr_query_index env =
     stack_ops.es_incr_query_index env
 ////////////////////////////////////////////////////////////

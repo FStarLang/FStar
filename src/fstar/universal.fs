@@ -238,7 +238,7 @@ let batch_mode_tc_no_prims dsenv env filenames =
   else env.solver.finish();
   all_mods, dsenv, env
 
-let batch_mode_tc verify_mode filenames =
+let batch_mode_tc filenames =
   let prims_mod, dsenv, env = tc_prims () in
   if not (Options.explicit_deps ()) && Options.debug_any () then begin
     FStar.Util.print_endline "Auto-deps kicked in; here's some info.";
@@ -276,10 +276,11 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
           pop_context (dsenv, env) msg;
           Options.pop() in
 
-    let push (dsenv, env) lax msg =
+    let push (dsenv, env) lax restore_cmd_line_options msg =
           let env = { env with lax = lax } in
           let res = push_context (dsenv, env) msg in
           Options.push();
+          if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
           res in
 
     let mark (dsenv, env) =
@@ -294,9 +295,7 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
         Options.pop();
         dsenv, env in
 
-    let solverstsize (_, env) = env.solver.stsize () in
-
-    let pop_solver (en:DsEnv.env * TcEnv.env) = (snd en).solver.pop "" in
+    let cleanup (dsenv, env) = TcEnv.cleanup_interactive env in
 
     let commit_mark (dsenv, env) =
         let dsenv = DsEnv.commit_mark dsenv in
@@ -323,9 +322,8 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
         TypeChecker.Errors.num_errs := 0 in
 
 
-    { popA = pop; 
+    { pop = pop; 
       push = push;
-      solverstsize=solverstsize;
       mark = mark;
       reset_mark = reset_mark;
       commit_mark = commit_mark;
@@ -333,5 +331,4 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
       report_fail = report_fail;
       tc_prims = tc_prims_interactive;
       tc_one_file = tc_one_file_interactive;
-      //print_mods = (fun (_, env) -> List.fold_left (fun s m -> s ^ " " ^ m.name.str) "" env.modules);
-      popsolver = pop_solver }
+      cleanup = cleanup }

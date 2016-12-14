@@ -114,12 +114,9 @@ let go _ =
               end
           in
           if Options.universes()
-          then //let verify_mode = Parser.Dep.VerifyUserList in
-               let filenames = FStar.Dependences.find_deps_if_needed Parser.Dep.VerifyUserList filenames in
-               //let fmods, dsenv, env = Universal.batch_mode_tc verify_mode filenames in //check all the dependences in batch mode
-               interactive_mode main_buffer_filename_opt filenames None Universal.interactive_tc //and then start checking chunks from the current buffer
-          else //let fmods, dsenv, env = Stratified.batch_mode_tc Parser.Dep.VerifyUserList filenames in //check all the dependences in batch mode
-               let filenames = FStar.Dependences.find_deps_if_needed Parser.Dep.VerifyUserList filenames in
+          then let filenames = FStar.Dependences.find_deps_if_needed Parser.Dep.VerifyUserList filenames in //find all the dependencies
+               interactive_mode main_buffer_filename_opt filenames None Universal.interactive_tc //and then call interactive mode
+          else let filenames = FStar.Dependences.find_deps_if_needed Parser.Dep.VerifyUserList filenames in  //AR: WARNING: Stratified might be completely broken now.
                interactive_mode None filenames None Stratified.interactive_tc //and then start checking chunks from the current buffer
         else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
@@ -137,7 +134,8 @@ let go _ =
               Parser.Dep.VerifyFigureItOut
           in
           if Options.universes() then
-            let fmods, dsenv, env = Universal.batch_mode_tc verify_mode filenames in
+            let filenames = FStar.Dependences.find_deps_if_needed verify_mode filenames in
+            let fmods, dsenv, env = Universal.batch_mode_tc filenames in
             let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
             report_errors module_names_and_times;
             codegen (Inr (fmods |> List.map fst, env));

@@ -2062,7 +2062,6 @@ let push_env () = match !last_env with
       let refs = Util.smap_copy hd.cache  in
       let top = {hd with cache=refs} in
       last_env := top::hd::tl
-let stsize () = List.length (!last_env)
 let pop_env () = match !last_env with
     | [] -> failwith "Popping an empty stack"
     | _::tl -> last_env := tl

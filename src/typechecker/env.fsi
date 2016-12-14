@@ -75,7 +75,6 @@ and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
-    stsize       :unit -> int;
     mark         :string -> unit;
     reset_mark   :string -> unit;
     commit_mark  :string -> unit;
@@ -102,11 +101,12 @@ val should_verify   : env -> bool
 val incr_query_index: env -> env
 
 (* Marking and resetting the environment, for the interactive mode *)
-val push        : env -> string -> env
-val pop         : env -> string -> env
-val mark        : env -> env
-val reset_mark  : env -> env
-val commit_mark : env -> env
+val push               : env -> string -> env
+val pop                : env -> string -> env
+val mark               : env -> env
+val reset_mark         : env -> env
+val commit_mark        : env -> env
+val cleanup_interactive: env -> unit
 
 (* Checking the per-module debug level and position info *)
 val debug          : env -> Options.debug_level_t -> bool
