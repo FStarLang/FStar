@@ -3551,8 +3551,12 @@ in (
 let _60_2256 = (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())
 in (
 
-let _60_2258 = (let _157_960 = (FStar_Options.restore_cmd_line_options true)
+let _60_2258 = if (not ((FStar_Options.interactive ()))) then begin
+(let _157_960 = (FStar_Options.restore_cmd_line_options true)
 in (FStar_All.pipe_right _157_960 Prims.ignore))
+end else begin
+()
+end
 in ((modul), (env))))))))))
 
 
