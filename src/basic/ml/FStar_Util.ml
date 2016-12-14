@@ -34,7 +34,7 @@ let is_punctuation c = (
 let return_all x = x
 
 type time = float
-let now () = Unix.gettimeofday ()
+let now () = BatUnix.gettimeofday ()
 let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
   n, 
@@ -44,10 +44,10 @@ let record_time f =
     let res = f () in 
     let _, elapsed = time_diff start (now()) in
     res, elapsed
-let is_file_modified_after (f:string) (t:time) =
-  let stats = Unix.stat f in
-  stats.st_mtime > t
-           
+let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
+let is_before t1 t2 = compare t1 t2 < 0
+let string_of_time = string_of_float
+  
 exception Impos
 exception NYI of string
 exception Failure of string

@@ -212,7 +212,7 @@ in (FStar_Options.pop ()))))
 end))
 in (
 
-let push = (fun _92_127 lax msg -> (match (_92_127) with
+let push = (fun _92_127 lax restore_cmd_line_options msg -> (match (_92_127) with
 | (dsenv, env) -> begin
 (
 
@@ -222,12 +222,12 @@ in (
 let env = (FStar_Tc_Env.push env msg)
 in (
 
-let _92_132 = (FStar_Options.push ())
+let _92_133 = (FStar_Options.push ())
 in ((dsenv), (env)))))
 end))
 in (
 
-let mark = (fun _92_137 -> (match (_92_137) with
+let mark = (fun _92_138 -> (match (_92_138) with
 | (dsenv, env) -> begin
 (
 
@@ -237,12 +237,12 @@ in (
 let env = (FStar_Tc_Env.mark env)
 in (
 
-let _92_140 = (FStar_Options.push ())
+let _92_141 = (FStar_Options.push ())
 in ((dsenv), (env)))))
 end))
 in (
 
-let reset_mark = (fun _92_145 -> (match (_92_145) with
+let reset_mark = (fun _92_146 -> (match (_92_146) with
 | (dsenv, env) -> begin
 (
 
@@ -252,12 +252,12 @@ in (
 let env = (FStar_Tc_Env.reset_mark env)
 in (
 
-let _92_148 = (FStar_Options.pop ())
+let _92_149 = (FStar_Options.pop ())
 in ((dsenv), (env)))))
 end))
 in (
 
-let commit_mark = (fun _92_153 -> (match (_92_153) with
+let commit_mark = (fun _92_154 -> (match (_92_154) with
 | (dsenv, env) -> begin
 (
 
@@ -269,37 +269,37 @@ in ((dsenv), (env))))
 end))
 in (
 
-let check_frag = (fun _92_159 curmod frag -> (match (_92_159) with
+let check_frag = (fun _92_160 curmod frag -> (match (_92_160) with
 | (dsenv, env) -> begin
 (match ((tc_one_fragment curmod dsenv env frag)) with
 | Some (m, dsenv, env) -> begin
-(let _187_67 = (let _187_66 = (FStar_Tc_Errors.get_err_count ())
-in ((m), (((dsenv), (env))), (_187_66)))
-in Some (_187_67))
+(let _187_69 = (let _187_68 = (FStar_Tc_Errors.get_err_count ())
+in ((m), (((dsenv), (env))), (_187_68)))
+in Some (_187_69))
 end
-| _92_168 -> begin
+| _92_169 -> begin
 None
 end)
 end))
 in (
 
-let report_fail = (fun _92_170 -> (match (()) with
+let report_fail = (fun _92_171 -> (match (()) with
 | () -> begin
 (
 
-let _92_171 = (let _187_70 = (FStar_Tc_Errors.report_all ())
-in (FStar_All.pipe_right _187_70 Prims.ignore))
+let _92_172 = (let _187_72 = (FStar_Tc_Errors.report_all ())
+in (FStar_All.pipe_right _187_72 Prims.ignore))
 in (FStar_ST.op_Colon_Equals FStar_Tc_Errors.num_errs (Prims.parse_int "0")))
 end))
 in (
 
-let tc_prims_interactive = (fun _92_174 -> (match (()) with
+let tc_prims_interactive = (fun _92_175 -> (match (()) with
 | () -> begin
 (
 
-let _92_179 = (tc_prims ())
-in (match (_92_179) with
-| (_92_176, dsenv, env) -> begin
+let _92_180 = (tc_prims ())
+in (match (_92_180) with
+| (_92_177, dsenv, env) -> begin
 ((dsenv), (env))
 end))
 end))
@@ -309,16 +309,16 @@ let tc_one_file_interactive = (fun remaining uenv -> (match (remaining) with
 | (file)::remaining -> begin
 (
 
-let _92_190 = (tc_one_file (Prims.fst uenv) (Prims.snd uenv) file)
-in (match (_92_190) with
-| (_92_187, dsenv, env) -> begin
+let _92_191 = (tc_one_file (Prims.fst uenv) (Prims.snd uenv) file)
+in (match (_92_191) with
+| (_92_188, dsenv, env) -> begin
 ((((None), (file))), (((dsenv), (env))), (None), (remaining))
 end))
 end
 | [] -> begin
 (FStar_All.failwith "Impossible")
 end))
-in {FStar_Interactive.popA = pop; FStar_Interactive.push = push; FStar_Interactive.solverstsize = (fun _92_192 -> (Prims.parse_int "0")); FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail; FStar_Interactive.tc_prims = tc_prims_interactive; FStar_Interactive.tc_one_file = tc_one_file_interactive; FStar_Interactive.popsolver = (fun _92_194 -> ())})))))))))
+in {FStar_Interactive.pop = pop; FStar_Interactive.push = push; FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail; FStar_Interactive.tc_prims = tc_prims_interactive; FStar_Interactive.tc_one_file = tc_one_file_interactive; FStar_Interactive.cleanup = (fun _92_193 -> ())})))))))))
 
 
 
