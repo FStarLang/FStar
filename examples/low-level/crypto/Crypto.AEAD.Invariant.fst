@@ -211,7 +211,7 @@ let mac_is_set (#rgn:region) (#i:id)
      | Some mac_range ->
        let mac_st = CMA.ilog (CMA.State?.log mac_range) in
        m_contains mac_st h /\ (
-       match m_sel h mac_st with
+       match snd (m_sel h mac_st) with
        | None           -> False
        | Some (msg,tag') ->
 	 safelen i l (PRF.ctr_0 i +^ 1ul) /\
@@ -583,7 +583,6 @@ let frame_refines_entries_prf_append
     if safeId i 
     then forall_intro (move_requires (frame_refines_one_entry_append table h blocks))
 
-
 (*
  * aead_entries_are_refined framing lemma for no changes to heap in the mac_rgn
  *)
@@ -603,7 +602,11 @@ let frame_refines_entries_h (i:id{safeMac i}) (mac_rgn:region)
 (*+ mac_is_used prf_table iv: 
 	the mac entry for iv is present
 	and the corresponding one-time mac has been used already
- **)	
+ **)
+
+(*
+ * AR: TODO: rewrite mac_is_set in terms of mac_is_used
+ *)
 let mac_is_used (#rgn:region) (#i:id)
 	        (prf_table:prf_table rgn i) //the entire prf table
  	        (iv:Cipher.iv (alg i))
@@ -615,7 +618,7 @@ let mac_is_used (#rgn:region) (#i:id)
      | None -> False
      | Some mac_range ->
        let mac_st = CMA.ilog (CMA.State?.log mac_range) in
-       Some? (m_sel h mac_st)))
+       Some? (snd (m_sel h mac_st))))
 
 let find_refined_aead_entry
     (#i:id) (#r:rid)

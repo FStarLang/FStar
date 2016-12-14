@@ -425,6 +425,21 @@ val lemma_propagate_inv_accumulate
 	                                    (Plain.sel_plain h1 plainlen plain)
 	                                    (Buffer.as_seq h1 cipher) table_1))))
 
+
+val lemma_mac_log_framing
+  (#i:id)
+  (nonce_1:Cipher.iv (alg i){safeId i})
+  (nonce_2:Cipher.iv (alg i){nonce_1 <> nonce_2})
+  (mac_st_1:CMA.state (i, nonce_1))
+  (mac_st_2:CMA.state (i, nonce_2){CMA.(mac_st_2.region) = CMA.(mac_st_1.region)})
+  (h0 h1:mem) : Lemma
+  (requires (m_contains (CMA.(ilog mac_st_1.log)) h0  /\ 
+             m_contains (CMA.(ilog mac_st_2.log)) h0  /\
+	     HS.modifies (Set.as_set [CMA.(mac_st_1.region)]) h0 h1 /\
+             HS.modifies_ref (CMA.(mac_st_1.region)) !{HS.as_ref (as_hsref (CMA.(ilog mac_st_1.log)))} h0 h1))
+  (ensures  (m_sel h0 (CMA.(ilog mac_st_2.log)) = m_sel h1 (CMA.(ilog mac_st_2.log))))
+let lemma_mac_log_framing #i nonce_1 nonce_2 mac_st_1 mac_st_2 h0 h1 = ()
+
 val lemma_propagate_mac_wrapper
   (#i:id)
   (#rw:rw)
