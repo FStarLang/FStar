@@ -1,0 +1,2 @@
+true: annot, bin_annot, warn(-8-11-21-26-28), package(batteries), \
+  package(zarith), package(yojson), thread, -traverse

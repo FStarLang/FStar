@@ -36,6 +36,6 @@ effect ML (a:Type) =
 
 assume val pipe_right: 'a -> ('a -> 'b) -> 'b
 assume val pipe_left: ('a -> 'b) -> 'a -> 'b
-assume val failwith: string -> All 'a (fun h -> True) (fun h a h' -> is_Err a /\ h==h')
+assume val failwith: string -> All 'a (fun h -> True) (fun h a h' -> Err? a /\ h==h')
 assume val exit: int -> 'a
 assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a

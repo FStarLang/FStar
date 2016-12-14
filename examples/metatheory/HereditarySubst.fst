@@ -148,7 +148,7 @@ type EqV =
   | Same : s:Ty -> EqV
   | Diff : y:Var -> EqV
 
-val eq : g:Con -> s:Ty -> t:Ty -> x:Var{typing_var x g s} -> y:Var{typing_var y g t} -> Tot (r:EqV{(is_Diff r ==> typing_var (Diff.y r) (rmv g s x) t /\ y = wkv g s t x (Diff.y r)) /\ (is_Same r ==> (Same.s r = s) /\ (Same.s r = t) /\ (x = y))})
+val eq : g:Con -> s:Ty -> t:Ty -> x:Var{typing_var x g s} -> y:Var{typing_var y g t} -> Tot (r:EqV{(Diff? r ==> typing_var (Diff.y r) (rmv g s x) t /\ y = wkv g s t x (Diff.y r)) /\ (Same? r ==> (Same.s r = s) /\ (Same.s r = t) /\ (x = y))})
 let rec eq g s t x y =
   match g with
     | a::g ->

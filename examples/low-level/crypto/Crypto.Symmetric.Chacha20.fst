@@ -23,9 +23,9 @@ type u64 = FStar.UInt64.t
 
 (*** Chacha 20 ***)
 
-let keylen   = 32ul
-let blocklen = 64ul 
-let ivlen    = 12ul
+inline_for_extraction let keylen   = 32ul
+inline_for_extraction let blocklen = 64ul 
+inline_for_extraction let ivlen    = 12ul
 
 type lbytes l = b:bytes {length b = l}
 type key   = lbytes (v keylen)
@@ -223,7 +223,7 @@ val counter_mode:
     (requires (fun h -> live h ciphertext /\ live h k /\ live h n /\ live h plaintext))
     (ensures (fun h0 _ h1 -> live h1 ciphertext /\ modifies_1 ciphertext h0 h1))
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 // a bit slow, e.g. on the len precondition
 
 let rec counter_mode key iv counter len plaintext ciphertext =

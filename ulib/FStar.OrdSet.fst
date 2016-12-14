@@ -35,23 +35,23 @@ abstract val singleton : #a:eqtype -> #f:cmp a -> a -> Tot (ordset a f)
 let mem (#a:eqtype) #f x s = List.Tot.mem x s
 
 private val set_props:
-  #a:eqtype -> #f:cmp a -> s:ordset a f{is_Cons s}
+  #a:eqtype -> #f:cmp a -> s:ordset a f{Cons? s}
   -> Lemma (requires (True))
-          (ensures (forall x. mem #a #f x (Cons.tl s) ==> (f (Cons.hd s) x /\ Cons.hd s =!= x)))
+          (ensures (forall x. mem #a #f x (Cons?.tl s) ==> (f (Cons?.hd s) x /\ Cons?.hd s =!= x)))
 let rec set_props (#a:eqtype) #f s = match s with
   | x::tl -> if tl = [] then () else set_props #a #f tl
 
-private val hd_unique: #a:eqtype -> #f:cmp a -> s:ordset a f{is_Cons s}
-               -> Lemma (requires (is_Cons s))
-                       (ensures (not (mem #a #f (Cons.hd s) (Cons.tl s))))
+private val hd_unique: #a:eqtype -> #f:cmp a -> s:ordset a f{Cons? s}
+               -> Lemma (requires (Cons? s))
+                       (ensures (not (mem #a #f (Cons?.hd s) (Cons?.tl s))))
 let hd_unique (#a:eqtype) #f s = set_props #a #f s
 
 let empty (#a:eqtype) #f = []
 
 private val insert': #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
-             -> Tot (l:(ordset a f){is_Cons l /\
-                                    (Cons.hd l = x \/
-                                    (is_Cons s /\ Cons.hd l = Cons.hd s))})
+             -> Tot (l:(ordset a f){Cons? l /\
+                                    (Cons?.hd l = x \/
+                                    (Cons? s /\ Cons?.hd l = Cons?.hd s))})
 let rec insert' (#a:eqtype) #f x s = match s with
   | []     -> [x]
   | hd::tl ->
@@ -76,9 +76,9 @@ let choose (#a:eqtype) #f s = match s with
   | x::_ -> Some x
 
 private val remove': #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
-             -> Tot (l:(ordset a f){(is_Nil s ==> is_Nil l) /\
-                                    (is_Cons s ==> Cons.hd s = x ==> l = Cons.tl s) /\
-                                    (is_Cons s ==> Cons.hd s =!= x ==> (is_Cons l /\ Cons.hd l = Cons.hd s))})
+             -> Tot (l:(ordset a f){(Nil? s ==> Nil? l) /\
+                                    (Cons? s ==> Cons?.hd s = x ==> l = Cons?.tl s) /\
+                                    (Cons? s ==> Cons?.hd s =!= x ==> (Cons? l /\ Cons?.hd l = Cons?.hd s))})
 let rec remove' (#a:eqtype) #f x s = match s with
   | []     -> []
   | hd::tl ->
@@ -135,15 +135,15 @@ val mem_subset: #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
                    [SMTPat (subset #a #f s1 s2)]
 
 val choose_empty: #a:eqtype -> #f:cmp a
-                  -> Lemma (requires True) (ensures (is_None (choose #a #f (empty #a #f))))
+                  -> Lemma (requires True) (ensures (None? (choose #a #f (empty #a #f))))
                      [SMTPat (choose #a #f (empty #a #f))]
 
 (* TODO: FIXME: Pattern does not contain all quantified vars *)
 val choose_s: #a:eqtype -> #f:cmp a -> s:ordset a f
               -> Lemma (requires (not (s = (empty #a #f))))
-                       (ensures (is_Some (choose #a #f s) /\
-                                 s = union #a #f (singleton #a #f (Some.v (choose #a #f s)))
-                                                 (remove #a #f (Some.v (choose #a #f s)) s)))
+                       (ensures (Some? (choose #a #f s) /\
+                                 s = union #a #f (singleton #a #f (Some?.v (choose #a #f s)))
+                                                 (remove #a #f (Some?.v (choose #a #f s)) s)))
                  [SMTPat (choose #a #f s)]
 
 val mem_remove: #a:eqtype -> #f:cmp a -> x:a -> y:a -> s:ordset a f
@@ -171,7 +171,7 @@ val size_singleton: #a:eqtype -> #f:cmp a -> x:a
                        [SMTPat (size #a #f (singleton #a #f x))]
                        
 private val eq_helper: #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
-               -> Lemma (requires (is_Cons s /\ f x (Cons.hd s) /\ x =!= Cons.hd s))
+               -> Lemma (requires (Cons? s /\ f x (Cons?.hd s) /\ x =!= Cons?.hd s))
                        (ensures (not (mem #a #f x s)))
 let eq_helper (#a:eqtype) #f x s = set_props #a #f s
 

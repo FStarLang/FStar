@@ -35,7 +35,7 @@ let enc k p =
 type Let (#a:Type) (x:a) (body: a -> Type) = body x
 
 assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
-            -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
+            -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { None? o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
 
 val dec: key -> c:cipher -> ST (option plain)
   (requires (fun h -> Heap.contains h basicLog))
@@ -43,8 +43,8 @@ val dec: key -> c:cipher -> ST (option plain)
               modifies Set.empty h0 h1
               /\ (Let (Heap.sel h0 basicLog)
                       (fun log ->
-                          is_None p ==> (forall (i:nat{i < Seq.length log}). Entry.c (Seq.index log i) <> c)
-                          /\ is_Some p ==> (exists (i:nat{i < Seq.length log}). Seq.index log i = Entry (Some.v p) c)))))
+                          None? p ==> (forall (i:nat{i < Seq.length log}). Entry.c (Seq.index log i) <> c)
+                          /\ Some? p ==> (exists (i:nat{i < Seq.length log}). Seq.index log i = Entry (Some.v p) c)))))
 let dec key c =
   let s = !basicLog in
   match find_seq (function Entry p c' -> c=c') s with

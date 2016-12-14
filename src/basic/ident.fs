@@ -36,6 +36,7 @@ let lid_of_path path pos =
     lid_of_ids ids
 let text_of_lid lid = lid.str
 let lid_equals l1 l2 = l1.str = l2.str
+let ident_equals id1 id2 = id1.idText = id2.idText
 let range_of_lid (lid:lid) = lid.ident.idRange
 let set_lid_range l r = {l with ident={l.ident with idRange=r}}
 let lid_add_suffix l s = 

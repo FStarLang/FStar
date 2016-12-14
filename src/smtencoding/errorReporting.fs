@@ -200,7 +200,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | Quant(Exists, _, _, _, _)
         | App(Iff, _)
         | App(Or, _) -> //non-atomic, but can't case split 
-          let lab, t = fresh_label default_msg ropt q.rng q in
+          let lab, q = fresh_label default_msg ropt q.rng q in
           lab::labels, q
 
         | App (Var _, _) when is_a_post_condition post_name_opt q ->
@@ -289,7 +289,7 @@ let detail_errors env
               else linear_check eliminated (hd::errors) tl in
 
     print_banner ();
-    Options.set_option "z3timeout" (Options.Int 5);
+    Options.set_option "z3rlimit" (Options.Int 5);
     let res = linear_check [] [] all_labels in
     res |> List.iter print_result;
     []

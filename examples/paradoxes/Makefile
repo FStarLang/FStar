@@ -19,3 +19,8 @@ value-restriction: value-restriction.fst
 
 propext:
 	$(FSTAR) PropositionalExtensionalityInconsistent.fst
+
+%.fst-in: 
+	@echo $(OPTIONS) \
+	--__temp_no_proj InjectiveTypeFormers \
+	--verify_module $(basename $(notdir $@))

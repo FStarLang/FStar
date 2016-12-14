@@ -27,12 +27,12 @@ let rec rest_trace t1 t2 = match t2 with
       | hd'::tl' ->
         if hd = hd' then rest_trace tl' tl else None
 
-val last_elt: t:trace{is_Cons t} -> Tot telt
+val last_elt: t:trace{Cons? t} -> Tot telt
 let rec last_elt (Cons hd tl) = match tl with
   | [] -> hd
   | _  -> last_elt tl
 
-val all_but_last: t:trace{is_Cons t} -> Tot trace
+val all_but_last: t:trace{Cons? t} -> Tot trace
 let rec all_but_last (Cons hd tl) = match tl with
   | []       -> []
   | hd'::tl' -> hd::(all_but_last tl)
@@ -60,7 +60,7 @@ let rec rest_equal_trace_lemma t1 t2 = match t2 with
 
 val append_rest_lemma: t1:trace -> t2:trace -> t3:trace
                        -> Lemma (requires (append t1 t2 = t3))
-                                (ensures (is_Some (rest_trace t3 t1) /\ Some.v (rest_trace t3 t1) = t2))
+                                (ensures (Some? (rest_trace t3 t1) /\ Some.v (rest_trace t3 t1) = t2))
                           [SMTPat (rest_trace t3 t1); SMTPat (append t1 t2)]
 let rec append_rest_lemma t1 t2 t3 = match t1 with
   | []     -> ()
@@ -69,7 +69,7 @@ let rec append_rest_lemma t1 t2 t3 = match t1 with
       | _::tl' -> append_rest_lemma tl t2 tl'
 
 val rest_append_lemma: t1:trace -> t2:trace -> t3:trace
-                       -> Lemma (requires (is_Some (rest_trace t3 t1) /\ Some.v (rest_trace t3 t1) = t2))
+                       -> Lemma (requires (Some? (rest_trace t3 t1) /\ Some.v (rest_trace t3 t1) = t2))
                                 (ensures (append t1 t2 = t3))
                           [SMTPat (rest_trace t3 t1); SMTPat (append t1 t2)]
 let rec rest_append_lemma t1 t2 t3 = match t1 with
@@ -79,8 +79,8 @@ let rec rest_append_lemma t1 t2 t3 = match t1 with
       | _::tl' -> rest_append_lemma tl t2 tl'
 
 val trace_assoc: t1:trace -> t2:trace -> t3:trace
-                 -> Lemma (requires (is_Some (rest_trace t2 t1) /\ is_Some (rest_trace t3 t2)))
-                          (ensures (is_Some (rest_trace t2 t1) /\ is_Some (rest_trace t3 t2) /\ is_Some (rest_trace t3 t1) /\
+                 -> Lemma (requires (Some? (rest_trace t2 t1) /\ Some? (rest_trace t3 t2)))
+                          (ensures (Some? (rest_trace t2 t1) /\ Some? (rest_trace t3 t2) /\ Some? (rest_trace t3 t1) /\
                                     Some.v (rest_trace t3 t1) = append (Some.v (rest_trace t2 t1))
                                                                        (Some.v (rest_trace t3 t2))))
                     [SMTPat (rest_trace t2 t1); SMTPat (rest_trace t3 t2)]
@@ -92,7 +92,7 @@ let rec trace_assoc t1 t2 t3 = match t1 with
         match t3 with
           | _::tl'' -> trace_assoc tl tl' tl''
 
-val last_elt_singleton_lemma: t:trace{is_Cons t}
+val last_elt_singleton_lemma: t:trace{Cons? t}
                               -> Lemma (requires (all_but_last t = []))
                                        (ensures (t = [last_elt t]))
                                  [SMTPat (last_elt t); SMTPat (all_but_last t)]
@@ -114,7 +114,7 @@ let rec snoc_all_but_last_lemma elt t = match t with
   | []     -> ()
   | hd::tl -> snoc_all_but_last_lemma elt tl
 
-val all_but_last_append_lemma: t:trace{is_Cons t} ->
+val all_but_last_append_lemma: t:trace{Cons? t} ->
                                Lemma (requires (True))
                                      (ensures (append (all_but_last t) ([last_elt t]) = t))
                                [SMTPat (append (all_but_last t) ([last_elt t]))]
@@ -131,7 +131,7 @@ kind Ensures (a:Type) = mode -> a -> trace -> Type
 
 type wys_encoding (a:Type) (req:Requires) (ens:Ensures a) (p:a -> heap -> Type) (h0:heap) =
   req (sel h0 moderef) /\
-  (forall x h1. (sel h1 moderef = sel h0 moderef /\ is_Some (rest_trace (sel h1 traceref) (sel h0 traceref)) /\
+  (forall x h1. (sel h1 moderef = sel h0 moderef /\ Some? (rest_trace (sel h1 traceref) (sel h0 traceref)) /\
                  ens (sel h0 moderef) x (Some.v (rest_trace (sel h1 traceref) (sel h0 traceref)))) ==> p x h1)
 
 effect Wys (a:Type) (req:Requires) (ens:Ensures a) =
@@ -148,8 +148,8 @@ type wys2_encoding (a:Type) (req:Requires2) (ens:Ensures2 a) (p:a -> heap2 -> Ty
   req (R (sel (R.l h0) moderef) (sel (R.r h0) moderef)) /\
   (forall x h1. (sel (R.l h1) moderef = sel (R.l h0) moderef /\
                  sel (R.r h1) moderef = sel (R.r h0) moderef /\
-                 is_Some (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref)) /\
-                 is_Some (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref)) /\
+                 Some? (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref)) /\
+                 Some? (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref)) /\
                  ens (R (sel (R.l h0) moderef) (sel (R.r h0) moderef)) x
                      (R (Some.v (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref)))
                         (Some.v (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref))))) ==> p x h1)
@@ -303,8 +303,8 @@ abstract val as_par: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> tr
             -> Wys (Box a ps) (fun m0     -> req_f (Mode Par ps) /\
                                              DelPar m0 ps        /\
                                              can_box a ps)
-                              (fun m0 r t -> is_Cons t /\ Cons.tl t = [] /\
-                                             is_TScope (Cons.hd t)       /\
+                              (fun m0 r t -> Cons? t /\ Cons.tl t = [] /\
+                                             TScope? (Cons.hd t)       /\
                                              TScope.ps (Cons.hd t) = ps  /\
                                              ens_f (Mode Par ps) (v_of_box r) (TScope.t (Cons.hd t)))
 let as_par ps f =
@@ -326,7 +326,7 @@ val as_sec: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Ty
             -> ps:prins
             -> =f:(unit -> Wys a req_f ens_f)
             -> Wys a (fun m0     -> req_f (Mode Sec ps) /\ DelSec m0 ps)
-                     (fun m0 r t -> is_Cons t /\ last_elt t = TMsg #a r /\
+                     (fun m0 r t -> Cons? t /\ last_elt t = TMsg #a r /\
                                     ens_f (Mode Sec ps) r (all_but_last t))
 let as_sec ps f =
   let m0 = ST.read moderef in
@@ -434,7 +434,7 @@ val main: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Type
           -> ps:prins
           -> =f:(unit -> Wys a req_f ens_f)
           -> All a (fun h0      -> req_f (Mode Par ps))
-                   (fun h0 r h1 -> is_V r /\ ens_f (Mode Par ps) (V.v r) (sel h1 traceref))
+                   (fun h0 r h1 -> V? r /\ ens_f (Mode Par ps) (V.v r) (sel h1 traceref))
 
 let main ps f =
   ST.write moderef (Mode Par ps);

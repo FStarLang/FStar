@@ -39,8 +39,8 @@ type _option4 (a:Type) =
   | None4_
   | Some4_: v:a -> _option4 a
 type option4 (a:Type) =
-  | None4: t:tag -> v:ptr (_option4 a){is_None4_ (Ptr.v v)} -> option4 a
-  | Some4: t:tag -> v:(ptr (_option4 a)){is_Some4_ (Ptr.v v)} -> option4 a
+  | None4: t:tag -> v:ptr (_option4 a){None4_? (Ptr.v v)} -> option4 a
+  | Some4: t:tag -> v:(ptr (_option4 a)){Some4_? (Ptr.v v)} -> option4 a
 
 (* Because the 2 constructors above are not convenient *)
 type Is_None (t:tag) = b2t(t = 0uy)
@@ -51,8 +51,8 @@ type _option5 (a:Type) =
 type option5 (a:Type) =
   | Option5: 
      t:tag{Is_Some t \/ Is_None t}  -> 
-     v:ptr (_option5 a){(Is_Some t ==> is_Some5_ (Ptr.v v))
-			 /\ (Is_None t ==> is_None5_ (Ptr.v v))} -> 
+     v:ptr (_option5 a){(Is_Some t ==> Some5_? (Ptr.v v))
+			 /\ (Is_None t ==> None5_? (Ptr.v v))} -> 
      option5 a
 
 (* Lists *)
@@ -84,13 +84,13 @@ type _list4 (a:Type) =
   | Cons4_: hd:a -> tl:list44 a -> _list4 a
 and list44 (a:Type) =
   | List4: t:tag{Is_Nil t \/ Is_Cons t} -> 
-           v:ptr (_list4 a) {(* (Is_Nil t <==> is_Nil4_ (Ptr.v v))
-                            /\ (Is_Cons t <==> is_Cons4_ (Ptr.v v))*) True } ->
+           v:ptr (_list4 a) {(* (Is_Nil t <==> Nil4_? (Ptr.v v))
+                            /\ (Is_Cons t <==> Cons4_? (Ptr.v v))*) True } ->
            list44 a
 
-type list (a:Type) = l:list44 a{ (List4.t l = 0uy ==> is_Nil4_ (Ptr.v (List4.v l)))
+type list (a:Type) = l:list44 a{ (List4.t l = 0uy ==> Nil4_? (Ptr.v (List4.v l)))
 				       /\ (List4.t l = 1uy ==> 
-					   (is_Cons4_ (Ptr.v (List4.v l)))) }
+					   (Cons4_? (Ptr.v (List4.v l)))) }
 				       
 
 (* Array with immutable length (check how to works out) *)
@@ -111,17 +111,17 @@ type t1 = ptr _t
 type t2 =
   | A: t:tag -> ptr _t -> t2
   | B: t:tag -> ptr _t -> t2
-  | C: t:tag -> v:ptr _t{is_C_ (Ptr.v v)} -> t2
-  | D: t:tag -> v:ptr _t{is_D_ (Ptr.v v)} -> t2
+  | C: t:tag -> v:ptr _t{C_? (Ptr.v v)} -> t2
+  | D: t:tag -> v:ptr _t{D_? (Ptr.v v)} -> t2
 
 (* Third option *)
 type t3 = 
   | T: t:tag{ t = 0uy \/ t = 1uy \/ t = 2uy \/ t = 3uy }
     -> v:(ptr _t){
-      (t=0uy ==> is_A_ (Ptr.v v))
-      /\ (t=1uy ==> is_B_ (Ptr.v v))
-      /\ (t=2uy ==> is_C_ (Ptr.v v))
-      /\ (t=3uy ==> is_D_ (Ptr.v v)) }
+      (t=0uy ==> A_? (Ptr.v v))
+      /\ (t=1uy ==> B_? (Ptr.v v))
+      /\ (t=2uy ==> C_? (Ptr.v v))
+      /\ (t=3uy ==> D_? (Ptr.v v)) }
      -> t3
    
 
@@ -135,9 +135,9 @@ let fst p =
   let res = Ptr f in
   res
 
-val _proj1: #a:Type -> o:_option1 a{ is_Some1_ o} -> Tot a
+val _proj1: #a:Type -> o:_option1 a{ Some1_? o} -> Tot a
 let _proj1 o = Some1_.v o
-val proj1 : #a:Type -> o:option1 a{is_Some1_ (Ptr.v (Option1.ptr o))} -> Tot (ptr a)
+val proj1 : #a:Type -> o:option1 a{Some1_? (Ptr.v (Option1.ptr o))} -> Tot (ptr a)
 let proj1 (Option1 ptr) = 
   let obj = Ptr.v ptr in
   let p = _proj1 obj in
@@ -146,7 +146,7 @@ let proj1 (Option1 ptr) =
 
 val _proj2: #a:Type -> o:_option2 a -> Tot a
 let _proj2 o = Some2_.v o
-val proj2: #a:Type -> o:option2 a{is_Some2 o} -> Tot (ptr a)
+val proj2: #a:Type -> o:option2 a{Some2? o} -> Tot (ptr a)
 let proj2 (Some2 ptr) =
   let obj = Ptr.v ptr in
   let p = _proj2 obj in
@@ -155,23 +155,23 @@ let proj2 (Some2 ptr) =
 
 val _proj3: #a:Type -> o:_option3 a -> Tot a
 let _proj3 o = Some3_.v o
-val proj3: #a:Type -> o:option3 a{is_Some3 o} -> Tot (ptr a)
+val proj3: #a:Type -> o:option3 a{Some3? o} -> Tot (ptr a)
 let proj3 (Some3 _ ptr) = 
   let obj = Ptr.v ptr in
   let p = _proj3 obj in
   let res = Ptr p in
   res
 
-val _proj4: #a:Type -> o:_option4 a{is_Some4_ o} -> Tot a
+val _proj4: #a:Type -> o:_option4 a{Some4_? o} -> Tot a
 let _proj4 o = Some4_.v o
-val proj4: #a:Type -> o:option4 a{is_Some4 o} -> Tot (ptr a)
+val proj4: #a:Type -> o:option4 a{Some4? o} -> Tot (ptr a)
 let proj4 (Some4 _ ptr) =
   let obj = Ptr.v ptr in
   let p = _proj4 obj in
   let res = Ptr p in
   res
 
-val _proj5: #a:Type -> o:_option5 a{is_Some5_ o} -> Tot a
+val _proj5: #a:Type -> o:_option5 a{Some5_? o} -> Tot a
 let _proj5 o = Some5_.v o
 val proj5: #a:Type -> o:option5 a{Is_Some (Option5.t o)} -> Tot (ptr a)
 let proj5 (Option5 _ ptr) =
@@ -180,7 +180,7 @@ let proj5 (Option5 _ ptr) =
   let res = Ptr p in
   res  
 
-val _proj_int: o:_option5 int{ is_Some5_ o } -> Tot int
+val _proj_int: o:_option5 int{ Some5_? o } -> Tot int
 let _proj_int o = 
   Some5_.v o
 val proj_int: o:option5 int{Option5.t o = 1uy} -> Tot (ptr int)
@@ -214,7 +214,7 @@ let head2 l =
   | 1uy -> 
      let ptr = List4.v l in (* Assumed free *)
      let obj = Ptr.v ptr in     
-     let hd = _head obj in (* Be smart and use that we know that is_Some4_ obj here *)
+     let hd = _head obj in (* Be smart and use that we know that Some4_? obj here *)
      let ptr_res = Ptr hd in
      let res = Option5 1uy ptr_res in
      res

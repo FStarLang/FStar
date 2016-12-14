@@ -55,7 +55,7 @@ val row:
   -> matrix:list bool{length matrix = (length la * lenb) - bindex}
   -> Tot (list int) (decreases matrix)
 let rec row la lenb bindex matrix =
-  if is_Nil matrix then mk_nil ()
+  if Nil? matrix then mk_nil ()
   else
     let b = hd_of_cons matrix in
     let tl = tl_of_cons matrix in
@@ -72,18 +72,18 @@ let rec row la lenb bindex matrix =
 
 (* col function, bob will use it to compute intersection *)
 val col:
-  lb:list int{is_Cons lb} -> lbc:list int{is_Cons lbc}
+  lb:list int{Cons? lb} -> lbc:list int{Cons? lbc}
   -> matrix:list bool
   -> Tot (list int) (decreases matrix)
 let rec col lb lbc matrix =
-  if is_Nil matrix then mk_nil ()
+  if Nil? matrix then mk_nil ()
   else
     let b = hd_of_cons matrix in
     let tl = tl_of_cons matrix in
     let lbc_hd = hd_of_cons lbc in
     let lbc_tl = tl_of_cons lbc in
     let rest =
-      if is_Nil lbc_tl then
+      if Nil? lbc_tl then
 	col lb lb tl
 	else col lb lbc_tl tl
     in
@@ -119,21 +119,21 @@ val row_opt:
   -> s:list nat
   -> Dv (list int) (decreases matrix)
 let rec row_opt la lenb bindex matrix s =
-  if is_Nil matrix then mk_nil ()
+  if Nil? matrix then mk_nil ()
   else
     if not (lmem bindex s) then
       (* the bindex has not been skipped *)
       let b = hd_of_cons matrix in
       let tl = tl_of_cons matrix in
       if b then (* matched *)
-	let _ = admitP (b2t (is_Cons la)) in
+	let _ = admitP (b2t (Cons? la)) in
 	let rest = row_opt (tl_of_cons la) lenb 0 tl (mk_cons bindex s) in
 	mk_cons (hd_of_cons la) rest
       else
 	(* no match *)
 	let bindex' = bindex + 1 in
 	if bindex' = lenb then
-	  let _ = admitP (b2t (is_Cons la)) in
+	  let _ = admitP (b2t (Cons? la)) in
 	  row_opt (tl_of_cons la) lenb 0 tl s
 	else	
 	  row_opt la lenb bindex' tl s
@@ -141,7 +141,7 @@ let rec row_opt la lenb bindex matrix s =
       (* bindex was skipped *)
       let bindex' = bindex + 1 in
       if bindex' = lenb then
-	let _ = admitP (b2t (is_Cons la)) in
+	let _ = admitP (b2t (Cons? la)) in
 	row_opt (tl_of_cons la) lenb 0 matrix s
       else	
 	row_opt la lenb bindex' matrix s
@@ -150,13 +150,13 @@ val col_opt:
   lb:list int -> lbc:list int -> matrix:list bool -> matched:list int
   -> Dv (list int)
 let rec col_opt lb lbc matrix matched =
-  if is_Nil matrix then mk_nil ()
+  if Nil? matrix then mk_nil ()
   else
-    let _ = admitP (b2t (is_Cons lbc)) in
+    let _ = admitP (b2t (Cons? lbc)) in
     (* this element is being skipped in the matrix *)
     if lmem (hd_of_cons lbc) matched then
       let lbc_tl = tl_of_cons lbc in
-      if is_Nil lbc_tl then
+      if Nil? lbc_tl then
 	col_opt lb lb matrix matched
       else
 	col_opt lb lbc_tl matrix matched
@@ -169,7 +169,7 @@ let rec col_opt lb lbc matrix matched =
 	mk_cons (hd_of_cons lbc) rest
       else
 	let lbc_tl = tl_of_cons lbc in
-	if is_Nil lbc_tl then
+	if Nil? lbc_tl then
 	  col_opt lb lb tl matched
 	else
 	  col_opt lb lbc_tl tl matched

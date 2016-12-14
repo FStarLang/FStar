@@ -300,7 +300,7 @@ let inst_tscheme : tscheme -> universes * term = function
       inst_tscheme_with (us, t) us'
 
 let inst_tscheme_with_range (r:range) (t:tscheme) =
-    let us, t = inst_tscheme t in 
+    let us, t = inst_tscheme t in
     us, Subst.set_use_range r t
 
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
@@ -372,7 +372,7 @@ let rec add_sigelt env se = match se with
     match se with
     | Sig_new_effect(ne, _) ->
       ne.actions |> List.iter (fun a ->
-          let se_let = Util.action_as_lb a in
+          let se_let = Util.action_as_lb ne.mname a in
           Util.smap_add (sigtab env) a.action_name.str se_let)
     | _ -> ()
 
@@ -388,8 +388,8 @@ let try_lookup_bv env (bv:bv) =
       Some id.sort
     | _ -> None)
 
-let lookup_type_of_let se lid = match se with 
-    | Sig_let((_, [lb]), _, _, _) -> 
+let lookup_type_of_let se lid = match se with
+    | Sig_let((_, [lb]), _, _, _) ->
       Some (inst_tscheme (lb.lbunivs, lb.lbtyp))
 
     | Sig_let((_, lbs), _, _, _) ->
@@ -402,12 +402,12 @@ let lookup_type_of_let se lid = match se with
 
     | _ -> None
 
-let effect_signature se = 
+let effect_signature se =
     match se with
     | Sig_new_effect(ne, _) ->
         Some (inst_tscheme (ne.univs, Util.arrow ne.binders (mk_Total ne.signature)))
 
-    | Sig_effect_abbrev (lid, us, binders, _, _, _) ->
+    | Sig_effect_abbrev (lid, us, binders, _, _, _, _) ->
         Some (inst_tscheme (us, Util.arrow binders (mk_Total teff)))
 
     | _ -> None
@@ -480,30 +480,31 @@ let try_lookup_lid_aux env lid =
 //the range information on the term with the currrent use-site
 ////////////////////////////////////////////////////////////////
 
-let lid_exists env l = 
-    match lookup_qname env l with 
+let lid_exists env l =
+    match lookup_qname env l with
     | None -> false
     | Some _ -> true
 
-let lookup_bv env bv = 
-    match try_lookup_bv env bv with 
+let lookup_bv env bv =
+    match try_lookup_bv env bv with
     | None -> raise (Error(variable_not_found bv, range_of_bv bv))
     | Some t -> Subst.set_use_range (range_of_bv bv) t
 
-let try_lookup_lid env l = 
-    match try_lookup_lid_aux env l with 
+let try_lookup_lid env l =
+    match try_lookup_lid_aux env l with
     | None -> None
-    | Some (us, t) -> 
+    | Some (us, t) ->
       Some (us, Subst.set_use_range (range_of_lid l) t)
 
-let lookup_lid env l =  
-    match try_lookup_lid env l with 
+let lookup_lid env l =
+    match try_lookup_lid env l with
     | None -> raise (Error(name_not_found l, range_of_lid l))
     | Some (us, t) -> (us, t)
 
-let lookup_univ env x = 
+let lookup_univ env x =
     List.find (function
         | Binding_univ y -> x.idText=y.idText
+//      | Binding_var({sort=t}) -> Util.set_mem x (Free.univnames t)
         | _ -> false) env.gamma
     |> Option.isSome
 
@@ -522,16 +523,16 @@ let lookup_val_decl env lid =
 
 let lookup_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _, _), None)) -> 
-      inst_tscheme_with_range (range_of_lid lid) (uvs, t) 
+    | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _, _), None)) ->
+      inst_tscheme_with_range (range_of_lid lid) (uvs, t)
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
-let datacons_of_typ env lid = 
+let datacons_of_typ env lid =
   match lookup_qname env lid with
     | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _), _)) -> dcs
     | _ -> []
 
-let typ_of_datacon env lid = 
+let typ_of_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr (Sig_datacon (_, _, _, l, _, _, _, _), _)) -> l
     | _ -> failwith (Util.format1 "Not a datacon: %s" (Print.lid_to_string lid))
@@ -547,7 +548,7 @@ let lookup_definition delta_levels env lid =
         | Sig_let((_, lbs), _, _, quals) when visible quals ->
             Util.find_map lbs (fun lb ->
                 let fv = right lb.lbname in
-                if fv_eq_lid fv lid 
+                if fv_eq_lid fv lid
                 then Some (lb.lbunivs, Subst.set_use_range (range_of_lid lid) (Util.unascribe lb.lbdef))
                 else None)
         | _ -> None
@@ -556,8 +557,8 @@ let lookup_definition delta_levels env lid =
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
-    | Some (Inr (se, None)) -> 
-      begin match effect_signature se with 
+    | Some (Inr (se, None)) ->
+      begin match effect_signature se with
         | None -> None
         | Some (_, t) -> Some (Subst.set_use_range (range_of_lid ftv) t)
       end
@@ -570,7 +571,7 @@ let lookup_effect_lid env (ftv:lident) : typ =
 
 let lookup_effect_abbrev env (univ_insts:universes) lid0 =
   match lookup_qname env lid0 with
-    | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _), None)) ->
+    | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _, _), None)) ->
       let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Ident.range_of_lid lid0)) in
       if quals |> Util.for_some (function Irreducible -> true | _ -> false)
       then None
@@ -588,10 +589,10 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
              | _, _::_::_ when not (Ident.lid_equals lid Const.effect_Lemma_lid) ->
                 failwith (Util.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
                            (Print.lid_to_string lid) (string_of_int <| List.length univs))
-             | _ -> let _, t = inst_tscheme_with (univs, Util.arrow binders c) insts in 
+             | _ -> let _, t = inst_tscheme_with (univs, Util.arrow binders c) insts in
                     let t = Subst.set_use_range (range_of_lid lid) t in
-                    begin match (Subst.compress t).n with 
-                        | Tm_arrow(binders, c) -> 
+                    begin match (Subst.compress t).n with
+                        | Tm_arrow(binders, c) ->
                           Some (binders, c)
                         | _ -> failwith "Impossible"
                     end
@@ -654,36 +655,43 @@ let is_record env lid =
         Util.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) tags
     | _ -> false
 
-let is_interpreted = 
-    let interpreted_symbols = 
-       [Const.op_Eq; 
+let is_action env lid =
+    match lookup_qname env lid with
+        | Some (Inr (Sig_let(_, _, _, tags), _)) ->
+            Util.for_some (function Action _ -> true | _ -> false) tags
+        | _ -> false
+
+
+let is_interpreted =
+    let interpreted_symbols =
+       [Const.op_Eq;
         Const.op_notEq;
-        Const.op_LT;   
-        Const.op_LTE;  
-        Const.op_GT;   
-        Const.op_GTE;  
-        Const.op_Subtraction; 
-        Const.op_Minus;       
-        Const.op_Addition;    
-        Const.op_Multiply;    
-        Const.op_Division;    
-        Const.op_Modulus;     
-        Const.op_And;         
-        Const.op_Or;          
+        Const.op_LT;
+        Const.op_LTE;
+        Const.op_GT;
+        Const.op_GTE;
+        Const.op_Subtraction;
+        Const.op_Minus;
+        Const.op_Addition;
+        Const.op_Multiply;
+        Const.op_Division;
+        Const.op_Modulus;
+        Const.op_And;
+        Const.op_Or;
         Const.op_Negation] in
-    fun (env:env) head -> 
-        match (Util.un_uinst head).n with 
-        | Tm_fvar fv -> 
+    fun (env:env) head ->
+        match (Util.un_uinst head).n with
+        | Tm_fvar fv ->
             fv.fv_delta=Delta_equational
             //Util.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
         | _ -> false
 
-let is_type_constructor env lid = 
+let is_type_constructor env lid =
     let mapper = function
         | Inl _ -> Some false
-        | Inr (se, _) -> 
-           begin match se with 
-            | Sig_declare_typ (_, _, _, qs, _) -> 
+        | Inr (se, _) ->
+           begin match se with
+            | Sig_declare_typ (_, _, _, qs, _) ->
               Some (List.contains New qs)
             | Sig_inductive_typ _ ->
               Some true
@@ -935,6 +943,18 @@ let univ_vars env =
       | Binding_var({sort=t})::tl -> aux (ext out (Free.univs t)) tl
       | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more uvars beyond this *)
     aux no_univs env.gamma
+
+let univnames env =
+    let no_univ_names = Syntax.no_universe_names in
+    let ext out uvs = Util.set_union out uvs in
+    let rec aux out g = match g with
+        | [] -> out
+        | Binding_sig_inst _::tl -> aux out tl
+        | Binding_univ uname :: tl -> aux (Util.set_add uname out) tl
+        | Binding_lid(_, (_, t))::tl
+        | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
+        | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more universe names beyond this *)
+    aux no_univ_names env.gamma
 
 let bound_vars_of_bindings bs =
   bs |> List.collect (function

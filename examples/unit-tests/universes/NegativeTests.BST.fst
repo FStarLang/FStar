@@ -9,8 +9,8 @@ type tree: int -> Type =
         -> #r   :int
         -> right:option (tree r){l <= n
                                  /\ n <= r
-                                 /\ (is_None right <==> n=r)
-                                 /\ (is_None left <==> n=l)}
+                                 /\ (None? right <==> n=r)
+                                 /\ (None? left <==> n=l)}
         -> tree r
 
 

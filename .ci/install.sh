@@ -12,7 +12,7 @@ fi
 export OPAMYES=true
 opam init
 eval $(opam config env)
-opam install batteries sqlite3 fileutils stdint zarith yojson
+opam install batteries sqlite3 fileutils stdint zarith yojson pprint
 
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
   export Z3=z3-4.4.1-x64-ubuntu-14.04;

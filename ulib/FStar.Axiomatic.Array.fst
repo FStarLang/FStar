@@ -90,5 +90,5 @@ assume EmpConst:     forall (a:Type) (s:seq a).{:pattern (length s)}
                      length s == 0 
                      ==> s==emp a
 
-type is_Some_All (a:Type) (s:seq (option a)) = (forall (i:int). (0 <= i /\ i < length s) ==> is_Some (index s i))
+type is_Some_All (a:Type) (s:seq (option a)) = (forall (i:int). (0 <= i /\ i < length s) ==> Some? (index s i))
 

@@ -139,7 +139,7 @@ let slice_option f p = function
   | None   -> None
   | Some x -> Some (f p x)
 
-val compose_options: ('a -> 'a -> Tot 'a) -> x:option 'a -> y:option 'a{is_Some x <==> is_Some y} -> Tot (option 'a)
+val compose_options: ('a -> 'a -> Tot 'a) -> x:option 'a -> y:option 'a{Some? x <==> Some? y} -> Tot (option 'a)
 let compose_options f x y = match x, y with
   | None, None       -> None
   | Some x', Some y' -> Some (f x' y')
@@ -170,11 +170,11 @@ let rec compose_lists f l1 l2 = match l1, l2 with
 val slice_list_sps: (prins -> 'a -> Tot 'a) -> prins -> list 'a -> Tot (list 'a)
 let slice_list_sps f ps l = FStar.List.Tot.map (f ps) l
 
-val hd_of_cons: l:list 'a{is_Cons l} -> Tot 'a
+val hd_of_cons: l:list 'a{Cons? l} -> Tot 'a
 let hd_of_cons = function
   | hd::_ -> hd
 
-val tl_of_cons: l:list 'a{is_Cons l} -> Tot (list 'a)
+val tl_of_cons: l:list 'a{Cons? l} -> Tot (list 'a)
 let tl_of_cons = function
   | _::tl -> tl
 

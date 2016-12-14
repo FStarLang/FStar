@@ -35,6 +35,7 @@ type level = | Un | Expr | Type | Kind | Formula
 type imp =
     | FsTypApp
     | Hash
+    | UnivApp
     | Nothing
 type arg_qualifier =
     | Implicit
@@ -52,8 +53,13 @@ type term' =
   | Const     of sconst
   | Op        of string * list<term>
   | Tvar      of ident
+  | Uvar      of ident                                (* universe variable *)
   | Var       of lid // a qualified identifier that starts with a lowercase (Foo.Bar.baz)
   | Name      of lid // a qualified identifier that starts with an uppercase (Foo.Bar.Baz)
+  | Projector of lid * ident (* a data constructor followed by one of
+                                its formal parameters, or an effect
+                                followed by one  of its actions or
+                                "fields" *)
   | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
@@ -66,8 +72,8 @@ type term' =
   | Ascribed  of term * term
   | Record    of option<term> * list<(lid * term)>
   | Project   of term * lid
-  | Product   of list<binder> * term (* function space *)
-  | Sum       of list<binder> * term (* dependent tuple *)
+  | Product   of list<binder> * term                 (* function space *)
+  | Sum       of list<binder> * term                 (* dependent tuple *)
   | QForall   of list<binder> * list<list<term>> * term
   | QExists   of list<binder> * list<list<term>> * term
   | Refine    of binder * term
@@ -77,6 +83,8 @@ type term' =
   | Ensures   of term * option<string>
   | Labeled   of term * string * bool
   | Assign    of ident * term
+  | Discrim   of lid   (* Some?  (formerly is_Some) *)
+  | Attributes of list<term>   (* attributes decorating a term *)
 
 and term = {tm:term'; range:range; level:level}
 
@@ -136,6 +144,7 @@ type qualifier =
   | Unfold_for_unification_and_vcgen       //a definition that will be unfolded by the normalizer, during unification and for SMT queries
   | Inline_for_extraction                  //a definition that will be inlined only during compilation
   | Irreducible                            //a definition that can never be unfolded by the normalizer
+  | NoExtract                              // a definition whose contents won't be extracted (currently, by KreMLin only)
   | Reifiable
   | Reflectable
   //old qualifiers
@@ -381,7 +390,8 @@ let rec term_to_string (x:term) = match x.tm with
   | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
   | Const c -> P.const_to_string c
   | Op(s, xs) -> Util.format2 "%s(%s)" s (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
-  | Tvar id -> id.idText
+  | Tvar id
+  | Uvar id -> id.idText
   | Var l
   | Name l -> l.str
   | Construct (l, args) ->

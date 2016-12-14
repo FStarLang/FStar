@@ -134,12 +134,13 @@ val lookup_projector       : env -> lident -> int -> lident
 val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
+val is_action              : env -> lident -> bool
 val is_interpreted         : (env -> term -> bool)
 val is_type_constructor    : env -> lident -> bool
 
 (* Universe instantiation *)
 val new_u_univ             : unit -> universe
-val inst_tscheme           : tscheme -> universes * term 
+val inst_tscheme           : tscheme -> universes * term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 
 (* Introducing identifiers and updating the environment *)
@@ -162,6 +163,7 @@ val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
 val univ_vars    : env -> Util.set<universe_uvar>
+val univnames   : env -> Util.set<univ_name>
 val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 

@@ -33,7 +33,7 @@ Ex12g.TMAC2.fst
 VERFILES_HH=Ex11a.fst
 
 FSTAR_HOME=../../../../
-HINTS_ENABLED=--use_hints  # CH: seems like overkill to me
+HINTS_ENABLED?=--use_hints
 include ../Makefile.include
 
 HYPERHEAP=$(FSTAR_HOME)/ulib/hyperheap

@@ -42,10 +42,7 @@ let fail_exp (lid:lident) (t:typ) =
         Range.dummyRange
 
 let mangle_projector_lid (x: lident) : lident =
-    let projecteeName = x.ident in
-    let prefix, constrName = Util.prefix x.ns in
-    let mangledName = Ident.id_of_text ("___"^constrName.idText^"___"^projecteeName.idText) in
-    lid_of_ids (prefix@[mangledName])
+    x
 
 let lident_as_mlsymbol (id : lident) : mlsymbol = id.ident.idText
 
@@ -149,10 +146,10 @@ let extract_bundle env se =
        let indices, _ = U.arrow_formals ind.ityp in
        let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ Util.string_of_int i, 0)) in
        let tbody = match Util.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
-            | Some (RecordType ids) ->
+            | Some (RecordType (ns, ids)) ->
               let _, c_ty = List.hd ctors in
               assert (List.length ids = List.length c_ty);
-              let fields = List.map2 (fun lid ty -> lident_as_mlsymbol lid, ty) ids c_ty in
+              let fields = List.map2 (fun id ty -> let lid = lid_of_ids (ns @ [id]) in (lident_as_mlsymbol lid), ty) ids c_ty in
               MLTD_Record fields
 
             | _ -> MLTD_DType ctors in
@@ -277,17 +274,12 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                     else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                  g, ml_lb::ml_lbs)
               (g, []) bindings (snd lbs) in
-              let flags =
-                (if Util.for_some (function Assumption -> true | _ -> false) quals then
-                  [ Assumed ]
-                else
-                  [])
-                @
-                (if Util.for_some (function Syntax.Private -> true | _ -> false) quals then
-                  [ Private ]
-                else
-                  [])
-              in
+              let flags = List.choose (function
+                | Assumption -> Some Assumed
+                | Syntax.Private -> Some Private
+                | Syntax.NoExtract -> Some NoExtract
+                | _ -> None
+              ) quals in
               g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (flavor, flags, List.rev ml_lbs')]
 
             | _ -> 

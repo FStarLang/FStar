@@ -51,7 +51,7 @@ type fac_cache = list (nat * nat)
 assume val cache : ref fac_cache
 
 (* An invariant on the correctness of the cache *)
-type fac_cache_correct (c:fac_cache) = (forall x. is_Some (assoc x c) ==> (Some.v (assoc x c) = fac x))
+type fac_cache_correct (c:fac_cache) = (forall x. Some? (assoc x c) ==> (Some.v (assoc x c) = fac x))
 
 (* A cached version of the factorial computation *)
 val fac_cached : x:nat -> ST nat (requires (fun h -> fac_cache_correct (sel h cache)
@@ -62,7 +62,7 @@ val fac_cached : x:nat -> ST nat (requires (fun h -> fac_cache_correct (sel h ca
 let fac_cached x =
   let c = !cache in
   let l = assoc x c in
-  if is_Some l then
+  if Some? l then
     Some.v l
   else(
     let v = fac x in

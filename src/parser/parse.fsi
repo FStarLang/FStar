@@ -6,6 +6,8 @@ type token =
   | WHEN
   | VAL
   | UNOPTEQUALITY
+  | UNIV_HASH
+  | UNIVAR of (string)
   | UNFOLDABLE
   | UNFOLD
   | UNDERSCORE
@@ -38,6 +40,8 @@ type token =
   | RBRACK
   | RBRACE
   | RARROW
+  | QMARK_DOT
+  | QMARK
   | PRIVATE
   | PRAGMA_SET_OPTIONS
   | PRAGMA_RESET_OPTIONS
@@ -56,6 +60,7 @@ type token =
   | OPEN
   | OPAQUE
   | OF
+  | NOEXTRACT
   | NOEQUALITY
   | NEW_EFFECT_FOR_FREE
   | NEW_EFFECT
@@ -126,6 +131,7 @@ type token =
   | BAR
   | BANG_LBRACE
   | BACKTICK
+  | ATTRIBUTES
   | ASSUME
   | ASSERT
   | AND
@@ -137,6 +143,8 @@ type tokenId =
     | TOKEN_WHEN
     | TOKEN_VAL
     | TOKEN_UNOPTEQUALITY
+    | TOKEN_UNIV_HASH
+    | TOKEN_UNIVAR
     | TOKEN_UNFOLDABLE
     | TOKEN_UNFOLD
     | TOKEN_UNDERSCORE
@@ -169,6 +177,8 @@ type tokenId =
     | TOKEN_RBRACK
     | TOKEN_RBRACE
     | TOKEN_RARROW
+    | TOKEN_QMARK_DOT
+    | TOKEN_QMARK
     | TOKEN_PRIVATE
     | TOKEN_PRAGMA_SET_OPTIONS
     | TOKEN_PRAGMA_RESET_OPTIONS
@@ -187,6 +197,7 @@ type tokenId =
     | TOKEN_OPEN
     | TOKEN_OPAQUE
     | TOKEN_OF
+    | TOKEN_NOEXTRACT
     | TOKEN_NOEQUALITY
     | TOKEN_NEW_EFFECT_FOR_FREE
     | TOKEN_NEW_EFFECT
@@ -257,6 +268,7 @@ type tokenId =
     | TOKEN_BAR
     | TOKEN_BANG_LBRACE
     | TOKEN_BACKTICK
+    | TOKEN_ATTRIBUTES
     | TOKEN_ASSUME
     | TOKEN_ASSERT
     | TOKEN_AND
@@ -273,9 +285,9 @@ type nonTerminalId =
     | NONTERM_option___anonymous_1_
     | NONTERM_option___anonymous_2_
     | NONTERM_option___anonymous_6_
-    | NONTERM_option___anonymous_8_
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
+    | NONTERM_option_fsTypeArgs_
     | NONTERM_option_mainDecl_
     | NONTERM_option_pair_hasSort_simpleTerm__
     | NONTERM_option_string_
@@ -286,15 +298,17 @@ type nonTerminalId =
     | NONTERM_list___anonymous_4_
     | NONTERM_list___anonymous_5_
     | NONTERM_list___anonymous_7_
+    | NONTERM_list_argTerm_
+    | NONTERM_list_atomicUniverse_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
-    | NONTERM_list_dotOperator_
     | NONTERM_list_multiBinder_
-    | NONTERM_list_pair_maybeHash_indexingTerm__
     | NONTERM_list_qualifier_
     | NONTERM_nonempty_list_aqualified_lident__
     | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
     | NONTERM_nonempty_list_atomicPattern_
+    | NONTERM_nonempty_list_atomicTerm_
+    | NONTERM_nonempty_list_dotOperator_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_
     | NONTERM_separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
@@ -346,8 +360,6 @@ type nonTerminalId =
     | NONTERM_aqualified_lidentOrUnderscore_
     | NONTERM_qlident
     | NONTERM_quident
-    | NONTERM_qident
-    | NONTERM_path_ident_
     | NONTERM_path_lident_
     | NONTERM_path_uident_
     | NONTERM_ident
@@ -381,11 +393,24 @@ type nonTerminalId =
     | NONTERM_recordExp
     | NONTERM_simpleDef
     | NONTERM_appTerm
+    | NONTERM_argTerm
     | NONTERM_indexingTerm
     | NONTERM_atomicTerm
+    | NONTERM_atomicTermQUident
+    | NONTERM_atomicTermNotQUident
+    | NONTERM_opPrefixTerm_atomicTermNotQUident_
+    | NONTERM_opPrefixTerm_atomicTermQUident_
+    | NONTERM_fsTypeArgs
+    | NONTERM_someFsTypeArgs
+    | NONTERM_qidentWithTypeArgs_qlident_option_fsTypeArgs__
+    | NONTERM_qidentWithTypeArgs_quident_someFsTypeArgs_
     | NONTERM_projectionLHS
     | NONTERM_hasSort
     | NONTERM_constant
+    | NONTERM_universe
+    | NONTERM_universeFrom
+    | NONTERM_atomicUniverse
+    | NONTERM_univar
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_
     | NONTERM_right_flexible_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_list_SEMICOLON_simpleDef_

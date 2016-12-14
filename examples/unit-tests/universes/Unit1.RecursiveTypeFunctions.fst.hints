@@ -15,50 +15,50 @@
       0
     ],
     [
-      "Unit1.RecursiveTypeFunctions.T._0",
+      "Unit1.RecursiveTypeFunctions.__proj__T__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_Unit1.RecursiveTypeFunctions.T",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_e0013dad7248bd4fbceaeec6b078994e"
+        "refinement_interpretation_Tm_refine_dcce9542b98cdc0b1ce1526881708dd3"
       ],
       0
     ],
     [
-      "Unit1.RecursiveTypeFunctions.TofS._0",
+      "Unit1.RecursiveTypeFunctions.__proj__TofS__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_Unit1.RecursiveTypeFunctions.TofS",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_28a606895f183edd7120b782ac1954a0"
+        "refinement_interpretation_Tm_refine_e6a5d49e9de9d9d32d37d5b69a69eb80"
       ],
       0
     ],
     [
-      "Unit1.RecursiveTypeFunctions.S._0",
+      "Unit1.RecursiveTypeFunctions.__proj__S__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_Unit1.RecursiveTypeFunctions.S",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_a6c1513ecebdb60bbcf9969ebc33d012"
+        "refinement_interpretation_Tm_refine_463ab24589f7b97a63a32a93a8999adc"
       ],
       0
     ],
     [
-      "Unit1.RecursiveTypeFunctions.SofT._0",
+      "Unit1.RecursiveTypeFunctions.__proj__SofT__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_Unit1.RecursiveTypeFunctions.SofT",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_cada01b693374e97565dca17065ae55c"
+        "refinement_interpretation_Tm_refine_6c51bbe51c5c443619d248c8823721da"
       ],
       0
     ],
