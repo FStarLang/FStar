@@ -11,39 +11,13 @@ FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperstack --include hacl
 # Files that should fully typecheck
 # Files commented out are broken, uncomment once fixed
 VERIFY= \
-  Buffer.Utils \
-  Crypto.Symmetric.Bytes \
-  Crypto.Symmetric.Poly1305.Bigint \
-  Crypto.Symmetric.Poly1305.Parameters \
-  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1 \
-  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2 \
-  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3 \
-  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4 \
-  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5 \
-  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part6 \
-  Crypto.Symmetric.Poly1305.Bignum \
-  Crypto.Symmetric.Poly1305.Lemmas \
-  Crypto.Symmetric.Poly1305.Spec \
-  Crypto.Symmetric.GF128 \
-  Crypto.Symmetric.GCM \
-  Crypto.Symmetric.MAC \
-  Crypto.Symmetric.UF1CMA \
-  Crypto.Symmetric.AES \
-  Crypto.Symmetric.AES128 \
-  Crypto.Symmetric.Chacha20 \
-  Crypto.Symmetric.Cipher \
-  Crypto.Symmetric.PRF \
-  Crypto.AEAD.AES256GCM \
-  Crypto.AEAD.Encoding \
   Crypto.AEAD.Invariant \
   Crypto.AEAD.BufferUtils \
-  Crypto.AEAD.Lemmas \
-  Crypto.AEAD.Lemmas.Part2 \
-  Crypto.AEAD.Lemmas.Part3 \
-  Crypto.AEAD.Wrappers \
-  Crypto.Plain \
-  Crypto.Test \
-  TestMonotonic
+  Crypto.AEAD.EnxorDexor \
+  Crypto.AEAD.PRF_MAC \
+  Crypto.AEAD.Wrappers.CMA \
+  Crypto.AEAD.Wrappers.Encoding \
+  Crypto.AEAD.Decrypt
 
 EXTRA= \
   Crypto.Symmetric.Poly1305 \
@@ -61,9 +35,11 @@ SLOW= \
 # Files not yet fully typechecking -- possibly due to timeouts.
 # Please move files that you know fully typecheck to VERIFY
 # Files commented out are broken, uncomment once fixed
-LAX= \
-  Crypto.Symmetric.Poly1305 \
-  Crypto.AEAD #NS: both of these verify, but each takes 20+ mins to verify
+LAX=
+
+# \
+#   Crypto.Symmetric.Poly1305 \
+#   Crypto.AEAD #NS: both of these verify, but each takes 20+ mins to verify
 
 
 #16-10-09  Not sure how to verify Flag.fsti and Flag.fst

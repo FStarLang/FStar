@@ -311,6 +311,12 @@ let prf_mac_wrapper #i #rw aead_st k_0 x =
   in
   mac
 
+let ak_live (#i:CMA.id) (r:rid) (ak:CMA.state i) (h:mem) = 
+    let open CMA in 
+    ak.region = r /\
+    Buffer.live h ak.s /\
+    MAC.norm h ak.r
+
 val prf_mac_dec
   (#i:id)
   (#rw:rw)
@@ -319,9 +325,10 @@ val prf_mac_dec
   (x:PRF.domain_mac i)
   : ST (CMA.state (i,x.iv))
        (requires (fun h0 -> inv aead_st h0))
-       (ensures (fun h0 ak h1 -> prf_mac_ensures i aead_st.prf k_0 x h0 ak h1 /\
-			       CMA.(MAC.norm h1 ak.r) /\
-			       inv aead_st h1))
+       (ensures (fun h0 ak h1 -> 
+		   prf_mac_ensures i aead_st.prf k_0 x h0 ak h1 /\
+		   ak_live PRF.(aead_st.prf.mac_rgn) ak h1 /\
+		   inv aead_st h1))
 let prf_mac_dec #i #rw aead_st k_0 x =
   let h0 = get () in
   let mac = PRF.prf_mac i aead_st.prf k_0 x in
