@@ -30,34 +30,138 @@ open FStar.Pprint
 let str s = document_of_string s
 
 // lib
-let doc_of_option n f x = 
-    match x with 
-    | None -> n
-    | Some x' -> f x'
+let default_or_map n f x = 
+  match x with 
+  | None -> n
+  | Some x' -> f x'
 
+let jump2 body =
+  jump 2 1 body
 
-// doc_of_* begins
+let break1 =
+  break 1
+
+let parens_with_nesting contents =
+  surround 2 0 lparen contents rparen
+
+let braces_with_nesting contents =
+  surround 2 1 lbrace contents rbrace
+
+let brackets_with_nesting contents =
+  surround 2 1 lbracket contents rbracket
+
 let doc_of_fsdoc (comment,keywords) = 
-    group (concat [(str comment); space; 
-                   (separate_map (str ",") 
-                        (fun (k,v) -> (concat [(str k); (str "->"); (str v)])) keywords)])
+  group (concat [
+    str comment; space;
+    separate_map comma (fun (k,v) ->
+      concat [str k; rarrow; str v]
+    ) keywords
+  ])
 
 let doc_of_let_qualifier = function
   | NoLetQualifier -> empty
-  | Rec -> (str "rec")
-  | Mutable -> (str "mutable")
+  | Rec -> str "rec"
+  | Mutable -> str "mutable"
 
-let to_string_l sep f l =
-  String.concat sep (List.map f l)
-
+(* TODO: we should take into account FsTypApp to be able to beautify the source
+ * of the compiler itself *)
 let doc_of_imp = function
-    | Hash -> str "#"
-    | _ -> empty 
+  | Hash -> str "#"
+  | UnivApp -> str "u#"
+  | Nothing | FsTypApp -> empty 
+
+let rec p_term = function
+  | Seq (e1, e2) -> 
+      group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
+  | e ->
+      group (p_noSeqTerm e)
+
+and p_noSeqTerm = function
+  | Ascribed (e, t) ->
+      group (p_tmIff e ^/^ str "<:" ^/^ p_typ t)
+  | Op (op, [ e1; e2; e3 ]) when op = ".()<-" ->
+      group (
+        group (p_atomicTermNotQUident e1 ^^ dot ^^ parens_with_nesting (p_term e2)
+          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTerm e3))
+  | Op (op, [ e1; e2; e3 ]) when op = ".[]<-" ->
+      group (
+        group (p_atomicTermNotQUident e1 ^^ dot ^^ brackets_with_nesting (p_term e2)
+          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTerm e3))
+  | Requires (e, wtf) ->
+      assert (wtf = None);
+      group (str "requires" ^/^ p_typ e)
+  | Ensures (e, wtf) ->
+      assert (wtf = None);
+      group (str "ensures" ^/^ p_typ e)
+  | Attributes es ->
+      group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
+  | _ ->
+      failwith "TODO"
+
+and p_typ = function
+  | _ ->
+      failwith "TODO"
+
+and ... = function
+  | e ->
+      p_tmEq
+
+and paren_if curr mine doc =
+  if mine <= curr then
+    doc
+  else
+    group (lparen ^^ doc ^^ rparen)
+
+and p_tmEq e =
+  p_tmEq' 6 e
+
+and levels op =
+  (* Note: it might seem surprising that we're not special-casing, say, '*' to
+   * be 6, 6, 6; the user, however, may shadow the ( * ) operator with a custom
+   * operator that is not associative; so, we adopt a strict (correct) behavior
+   * which will result in [1*(2*3)] printed back the same way. *)
+  match op.[0] with
+  | '*' | '/' | '%' ->
+      6, 6, 5
+  | '+' | '-' ->
+      5, 5, 4
+  | '@' | '^' ->
+      3, 4, 4
+  | _ when op = "|>" ->
+      3, 3, 2
+  | '$' ->
+      2, 2, 1
+  | '=' | '<' | '>' ->
+      1, 1, 0
+  | '&' ->
+      0, 0, -1
+  | '|' ->
+      -1, -1, -2
+  | _ ->
+      failwith ("invalid first character for infix operator " ^ op)
+
+and p_tmEq' curr = function
+  | Op (op, [ e1; e2]) when is_operatorInfix0ad12 op ->
+      let left, mine, right = levels op in
+      paren_if curr mine (p_tmEq' left e1 ^/^ str op ^/^ p_tmEq' right e2)
+  | Op (":=", [ e1; e2 ]) ->
+      group (p_tmEq e1 ^^ space ^^ equals ^^ jump2 (p_tmEq e2))
+  | _ ->
+      ...
+
+and p_projectionLHS = function
+  | ... ->
+      ...
+  | (Requires _ | Ensures _ | ...) as e ->
+      parens_with_nesting (p_term e)
+
+
+(* JP, KM: tweaked up to here *)
 
 let doc_of_const x = match x with
   | Const_effect -> str "eff"
   | Const_unit -> str "()"
-  | Const_bool b -> str (if b then "true" else "false")
+  | Const_bool b -> doc_of_bool b
   | Const_float x ->  str (Util.string_of_float x)
   | Const_char x ->   squotes (document_of_char x )
   | Const_string(bytes, _) -> dquotes (str (Util.string_of_bytes bytes))
@@ -238,15 +342,15 @@ let doc_of_tycon = function
   | TyconAbstract(i, bb, k) ->
         group (concat [str "abstract"; space;
                        (separate_map space doc_of_binder bb); space;
-                       doc_of_option empty doc_of_term k; space;
+                       default_or_map empty doc_of_term k; space;
                        hardline
                        ])
-// TODO bb, k, t, flds, vars
+  // TODO bb, k, t, flds, vars
   | TyconAbbrev(i, bb, k, t) -> group (str i.idText)
   | TyconRecord(i, bb, k, flds) -> 
         group (concat [str i.idText; space; equals; space;
                        (separate_map space doc_of_binder bb); space;
-                       doc_of_option empty doc_of_term k; space; 
+                       default_or_map empty doc_of_term k; space; 
                        braces ((separate_map (concat [space; semi; space])
                                     (fun (i,t,d) -> concat [str i.idText; space; colon; space; doc_of_term t])
                                     flds))])
@@ -254,11 +358,11 @@ let doc_of_tycon = function
 
 let doc_of_decl (d:decl) = match d.d with
   | TopLevelModule l -> 
-        group (concat [(str "module"); space; (str l.str); hardline])
+      group (str "module" ^/^ str l.str)
   | Open l -> 
-        group (concat [(str "open"); space; equals; space; (str l.str); hardline])
+      group (str "open" ^/^ str l.str)
   | ModuleAbbrev (i, l) ->         
-        group (concat [(str "module"); space; (str i.idText);space; equals; space; (str l.str); hardline] )
+      group (str "module" ^/^ str i.idText ^/^ equals ^/^ str l.str)
   | KindAbbrev(i, bb, k) -> 
         group (concat [(str "kind"); space; (str i.idText);
                         (separate_map space
@@ -296,12 +400,8 @@ let doc_of_decl (d:decl) = match d.d with
   | Fsdoc d -> group (concat [doc_of_fsdoc d; hardline]) 
 
 // SI: go straight to decls (might have to change if TopLevel is not the first decl). 
-let doc_of_modul (m:modul) = match m with
-    | Module (_, decls) 
-    | Interface (_, decls, _) ->
-      decls |> List.map doc_of_decl |> concat
-
-//
-let term_to_document t = doc_of_term t
-let decl_to_document d = doc_of_decl d
-let modul_to_document m = doc_of_modul m
+let doc_of_modul (m:modul) =
+  match m with
+  | Module (_, decls) 
+  | Interface (_, decls, _) ->
+      decls |> List.map doc_of_decl |> separate hardline

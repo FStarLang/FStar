@@ -16,13 +16,11 @@
 
 (*  prettyprint.fsti's OCaml implementation is just a thin wrapper around
     Francois Pottier's pprint package. *)
-type document = PPrint.document
+include PPrint
 
-let empty = PPrint.empty 
-
-let document_of_char = PPrint.char 
-
-let document_of_string = PPrint.string 
+let doc_of_char = PPrint.char 
+let doc_of_string = PPrint.string 
+let doc_of_bool b = PPrint.string (string_of_bool b)
 
 let substring s ofs len = 
     PPrint.substring s (Z.to_int ofs) (Z.to_int len)
@@ -33,100 +31,19 @@ let fancystring s apparent_length =
 let fancysubstring s ofs len apparent_length = 
     PPrint.fancysubstring  s (Z.to_int ofs) (Z.to_int len) (Z.to_int apparent_length)
 
-let utf8string = PPrint.utf8string 
-
-let hardline = PPrint.hardline 
-
 let blank n = PPrint.blank (Z.to_int n)
 
 let break_ n = PPrint.break (Z.to_int n)
 
 let op_Hat_Hat = PPrint.(^^) 
+let op_Hat_Slash_Hat = PPrint.(^/^) 
 
 let nest j doc = PPrint.nest (Z.to_int j) doc 
 
-let group = PPrint.group 
-
-let ifflat = PPrint.ifflat 
-
-let align = PPrint.align 
-
-let lparen = PPrint.lparen
-let rparen = PPrint.rparen
-let langle = PPrint.langle
-let rangle = PPrint.rangle
-let lbrace = PPrint.lbrace
-let rbrace = PPrint.rbrace
-let lbracket = PPrint.lbracket
-let rbracket = PPrint.rbracket
-let squote = PPrint.squote
-let dquote = PPrint.dquote
-let bquote = PPrint.bquote
-let semi = PPrint.semi
-let colon = PPrint.colon
-let comma = PPrint.comma
-let space = PPrint.space
-let dot = PPrint.dot
-let sharp = PPrint.sharp
-let slash = PPrint.slash
-let backslash = PPrint.backslash
-let equals = PPrint.equals
-let qmark = PPrint.qmark
-let tilde = PPrint.tilde
-let at = PPrint.at
-let percent = PPrint.percent
-let dollar = PPrint.dollar
-let caret  = PPrint.caret
-let ampersand = PPrint.ampersand
-let star = PPrint.star
-let plus = PPrint.plus
-let minus = PPrint.minus
-let underscore = PPrint.underscore
-let bang = PPrint.bang
-let bar = PPrint.bar
-
-let precede = PPrint.precede
-let terminate = PPrint.terminate 
-
-let enclose = PPrint.enclose 
-
-let squotes = PPrint.squotes
-let dquotes = PPrint.dquotes
-let bquotes = PPrint.bquotes
-let braces  = PPrint.braces
-let parens  = PPrint.parens
-let angles  = PPrint.angles
-let brackets= PPrint.brackets
-
-let twice = PPrint.twice 
+let larrow = PPrint.string "<-"
+let rarrow = PPrint.string "->"
 
 let repeat n doc = PPrint.repeat (Z.to_int n) doc
-
-let concat = PPrint.concat 
-
-let separate = PPrint.separate 
-
-let concat_map = PPrint.concat_map 
-
-let separate_map = PPrint.separate_map 
-
-let separate2 = PPrint.separate2 
-
-let optional = PPrint.optional 
-
-let lines = PPrint.lines
-
-let arbitrary_string = PPrint.arbitrary_string 
-
-let words = PPrint.words 
-
-let split = PPrint.split 
-
-let flow = PPrint.flow 
-
-let flow_map = PPrint.flow_map 
-
-let url = PPrint.url 
 
 let hang n doc = PPrint.hang (Z.to_int n) doc
 

@@ -19,7 +19,7 @@ module FStar.Pprint
 
 open FSharp.PPrint
 
-type document = Doc of FSharp.PPrint.Engine.document
+type document = unit
 //
 //  | Empty
 //  | Char of char
@@ -37,9 +37,9 @@ let not_impl_msg = "F# prettyprinter not yet implemented."
 
 let empty : document = failwith not_impl_msg
 
-let document_of_char (c:char) : document = failwith not_impl_msg
-
-let document_of_string (s:string) : document = failwith not_impl_msg
+let doc_of_char (c:char) : document = failwith not_impl_msg
+let doc_of_string (s:string) : document = failwith not_impl_msg
+let doc_of_bool (b:bool) : document = failwith not_impl_msg
 
 let substring (s:string) (sofs:int) (len:int) : document = failwith not_impl_msg
 
@@ -56,6 +56,7 @@ let blank (n:int) : document = failwith not_impl_msg
 let break_ (n:int) : document = failwith not_impl_msg
 
 let op_Hat_Hat (doc1:document) (doc2:document) : document = failwith not_impl_msg
+let op_Hat_Slash_Hat (doc1:document) (doc2:document) : document = failwith not_impl_msg
 
 let nest (j:int) (doc:document) : document = failwith not_impl_msg
 
@@ -69,39 +70,41 @@ let ifflat (doc1:document) (doc2:document) : document = failwith not_impl_msg
 
 let align (doc:document) : document = failwith not_impl_msg
 
-let lparen: document = failwith not_impl_msg
-let rparen: document = failwith not_impl_msg
-let langle: document = failwith not_impl_msg
-let rangle: document = failwith not_impl_msg
-let lbrace: document = failwith not_impl_msg
-let rbrace: document = failwith not_impl_msg
-let lbracket: document = failwith not_impl_msg
-let rbracket: document = failwith not_impl_msg
-let squote: document = failwith not_impl_msg
-let dquote: document = failwith not_impl_msg
-let bquote: document = failwith not_impl_msg
-let semi: document = failwith not_impl_msg
-let colon: document = failwith not_impl_msg
-let comma: document = failwith not_impl_msg
-let space: document = failwith not_impl_msg
-let dot: document = failwith not_impl_msg
-let sharp: document = failwith not_impl_msg
-let slash: document = failwith not_impl_msg
-let backslash: document = failwith not_impl_msg
-let equals: document = failwith not_impl_msg
-let qmark: document = failwith not_impl_msg
-let tilde: document = failwith not_impl_msg
-let at: document = failwith not_impl_msg
-let percent: document = failwith not_impl_msg
-let dollar: document = failwith not_impl_msg
-let caret: document = failwith not_impl_msg
-let ampersand: document = failwith not_impl_msg
-let star: document = failwith not_impl_msg
-let plus: document = failwith not_impl_msg
-let minus: document = failwith not_impl_msg
-let underscore: document = failwith not_impl_msg
-let bang: document = failwith not_impl_msg
-let bar: document = failwith not_impl_msg
+let lparen: document = ()
+let rparen: document = ()
+let langle: document = ()
+let rangle: document = ()
+let lbrace: document = ()
+let rbrace: document = ()
+let lbracket: document = ()
+let rbracket: document = ()
+let squote: document = ()
+let dquote: document = ()
+let bquote: document = ()
+let semi: document = ()
+let colon: document = ()
+let comma: document = ()
+let space: document = ()
+let dot: document = ()
+let sharp: document = ()
+let slash: document = ()
+let backslash: document = ()
+let equals: document = ()
+let qmark: document = ()
+let tilde: document = ()
+let at: document = ()
+let percent: document = ()
+let dollar: document = ()
+let caret: document = ()
+let ampersand: document = ()
+let star: document = ()
+let plus: document = ()
+let minus: document = ()
+let underscore: document = ()
+let bang: document = ()
+let bar: document = ()
+let larrow: document = ()
+let rarrow: document = ()
 
 let precede (l:document) (x:document) : document = failwith not_impl_msg
 

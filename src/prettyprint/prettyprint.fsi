@@ -81,6 +81,10 @@ val break_: int -> document
 (** [doc1 ^^ doc2] is the concatenation of the documents [doc1] and [doc2]. *)
 val op_Hat_Hat: document -> document -> document
 
+(** [x ^/^ y] separates x and y with a breakable space. It is a short-hand for
+    [x ^^ break 1 ^^ y] *)
+val op_Hat_Slash_Hat: document -> document -> document
+
 (** [nest j doc] is the document [doc], in which the indentation level has
     been increased by [j], that is, in which [j] blanks have been inserted
     after every newline character. Read this again: indentation is inserted
@@ -178,6 +182,8 @@ val minus: document
 val underscore: document
 val bang: document
 val bar: document
+val rarrow: document
+val larrow: document
 
 (** {1 Delimiters} *)
 
