@@ -1,5 +1,11 @@
 module FStar.DM4F.Io
 
+(********************************************************************************)
+(* Tentative version of the IO monad using DM4F                                 *)
+(* This construction would need DM4F to be extended with                        *)
+(* support ADTs and recursion.                                                  *)
+(********************************************************************************)
+
 let product a b = a * b
 
 (* List of types, not of any use since we don't have universe cumulativity and polymorphism *)
