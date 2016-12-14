@@ -14,6 +14,8 @@
    limitations under the License.
 *)
 module FStar.Char
+type char' = char
+type char = char'
 let lowercase c = Char.lowercase c
 let uppercase c = Char.uppercase c
 let int_of_char c = Char.code c
