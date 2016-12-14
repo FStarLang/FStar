@@ -75,32 +75,6 @@ unfold let accumulate_ensures' (#i: MAC.id) (st: CMA.state i)
     fresh_sref h0 h1 (CMA.alog a) /\
     HS.sel h1 (CMA.alog a) == encode_both (fst i) aadlen (Buffer.as_seq h1 aad) txtlen (Buffer.as_seq h1 cipher))
 
-val frame_accumulate_ensures: #i: MAC.id -> st: CMA.state i -> #aadlen:aadlen_32 -> aad:lbuffer (v aadlen) ->
-	       #txtlen:txtlen_32 -> cipher:lbuffer (v txtlen) -> 
-	       (h0:mem) -> (a:CMA.accBuffer i) -> (h1:mem) -> h2:mem -> 
-    Lemma (requires (accumulate_ensures st aad cipher h0 a h1 /\
-		     Buffer.modifies_1 (MAC.as_buffer (CMA.abuf a)) h1 h2 /\
-		     MAC.norm h2 (CMA.abuf a)))
-          (ensures (accumulate_ensures' st aad cipher h0 a h2))
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let frame_accumulate_ensures #i st #aalen aad #txtlent cipher h0 a h1 h2 = 
-  FStar.Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.abuf a)) h1 h2;
-  assert (HS.(h1.tip == h2.tip));
-  assert (h1 `HS.contains` (Buffer.content (MAC.as_buffer (CMA.abuf a))));
-  assert (h2 `HS.contains` (Buffer.content (MAC.as_buffer (CMA.abuf a))));
-  assert (fresh_sref h0 h2 (Buffer.content (MAC.as_buffer (CMA.abuf a))));
-  if mac_log 
-  then (assert (h1  `HS.contains` CMA.alog a);
-        assert (HS.sel h2 (CMA.alog a) == HS.sel h1 (CMA.alog a));
-	assert (Buffer.as_seq h2 (MAC.as_buffer (CMA.(st.r))) ==
-	        Buffer.as_seq h1 (MAC.as_buffer (CMA.(st.r))));
-        (* assert (Buffer.as_seq h2 (MAC.as_buffer (CMA.(abuf a))) == *)
-        (*         Buffer.as_seq h1 (MAC.as_buffer (CMA.(abuf a)))); *)
-        MAC.frame_sel_elem h1 h2 (CMA.(st.r)))
-        (* MAC.frame_sel_elem h1 h2 (CMA.(abuf a))) *)
-  else ()
-
-
 let ak_acc_tag_separate (#i:CMA.id) (ak:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) =
     let open Crypto.Symmetric.UF1CMA in
     Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) ak.s tag /\

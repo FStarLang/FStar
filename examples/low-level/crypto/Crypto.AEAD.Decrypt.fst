@@ -58,17 +58,13 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   push_frame();
   let h0 = get () in
   frame_inv_push st h_init h0;
-  (* let cipher : lbuffer (v plainlen) = Buffer.sub cipher_tagged 0ul plainlen in *)
   let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
   let x_0 = PRF.({iv = iv; ctr = ctr_0 i}) in // PRF index to the first block
-  let ak = PRF_MAC.prf_mac_dec st st.ak x_0 in   // used for keying the one-time MAC
+  let ak = PRF_MAC.prf_mac_dec st aad plain cipher_tagged st.ak x_0 in   // used for keying the one-time MAC
   let h1 = get() in
-  assume(enc_dec_liveness st aad plain cipher_tagged h1);
   // First recompute and check the MAC
   let acc = EncodingWrapper.accumulate st ak aad plain cipher_tagged in
   let h2 = get () in
-  assume (CMAWrapper.verify_separation ak acc tag); //about 20s
-  assume (CMAWrapper.verify_liveness ak tag h2); //about 20s
   let popt = CMAWrapper.verify st aad plain cipher_tagged ak acc h1 in
   let h3 = get () in
   let verified : bool = 
