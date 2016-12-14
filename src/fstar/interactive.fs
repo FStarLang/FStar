@@ -255,6 +255,7 @@ let interactive_mode (filename:option<string>) (filenames:list<string>) (initial
                       collect_file_names_and_pop env stack ts filenames
                 in
                 let filenames, env = collect_file_names_and_pop env' (List.rev stack) ts [] in
+                Util.print1 "\nChecking dependencies:%s\n" (List.fold_left (fun s f -> s ^ " " ^ f) "" filenames);
                 tc_deps m (List.rev good_stack) env filenames good_ts
               else iterate (good_stack@[env, modl]) (good_ts@[intf, impl, t]) stack' env' ts'
             | [], [] ->

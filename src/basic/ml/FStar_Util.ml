@@ -44,8 +44,9 @@ let record_time f =
     let res = f () in 
     let _, elapsed = time_diff start (now()) in
     res, elapsed
-(* AR: TODO: fill it up *)
-let is_file_modified_after (f:string) (t:time) = true
+let is_file_modified_after (f:string) (t:time) =
+  let stats = Unix.stat f in
+  stats.st_mtime > t
            
 exception Impos
 exception NYI of string

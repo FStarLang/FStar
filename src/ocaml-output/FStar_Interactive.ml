@@ -454,7 +454,11 @@ in (
 let _91_274 = (collect_file_names_and_pop env' (FStar_List.rev stack) ts [])
 in (match (_91_274) with
 | (filenames, env) -> begin
-(tc_deps m (FStar_List.rev good_stack) env filenames good_ts)
+(
+
+let _91_277 = (let _186_296 = (FStar_List.fold_left (fun s f -> (Prims.strcat s (Prims.strcat " " f))) "" filenames)
+in (FStar_Util.print1 "\nChecking dependencies:%s\n" _186_296))
+in (tc_deps m (FStar_List.rev good_stack) env filenames good_ts))
 end)))
 end else begin
 (iterate (FStar_List.append good_stack ((((env), (modl)))::[])) (FStar_List.append good_ts ((((intf), (impl), (t)))::[])) stack' env' ts')
@@ -463,10 +467,10 @@ end
 | ([], []) -> begin
 (
 
-let _91_278 = (FStar_Util.print_string "No file was found stale\n")
+let _91_282 = (FStar_Util.print_string "No file was found stale\n")
 in (((FStar_List.rev good_stack)), (env'), (good_ts)))
 end
-| (_91_281, _91_283) -> begin
+| (_91_285, _91_287) -> begin
 (FStar_All.failwith "Impossible")
 end))
 in (iterate [] [] (FStar_List.rev stk) env ts))))
@@ -476,24 +480,24 @@ let rec go = (fun line_col stack curmod env ts -> (match ((shift_chunk ())) with
 | Pop (msg) -> begin
 (
 
-let _91_293 = (tc.popA env msg)
+let _91_297 = (tc.popA env msg)
 in (
 
-let _91_305 = (match (stack) with
+let _91_309 = (match (stack) with
 | [] -> begin
 (
 
-let _91_296 = (FStar_Util.print_error "too many pops")
+let _91_300 = (FStar_Util.print_error "too many pops")
 in (FStar_All.exit (Prims.parse_int "1")))
 end
 | (hd)::tl -> begin
 ((hd), (tl))
 end)
-in (match (_91_305) with
+in (match (_91_309) with
 | ((env, curmod), stack) -> begin
 (
 
-let _91_306 = if ((FStar_List.length stack) = (FStar_List.length ts)) then begin
+let _91_310 = if ((FStar_List.length stack) = (FStar_List.length ts)) then begin
 (tc.popsolver env)
 end else begin
 ()
@@ -504,12 +508,12 @@ end
 | Push (lax, l, c) -> begin
 (
 
-let _91_316 = if ((FStar_List.length stack) = (FStar_List.length ts)) then begin
+let _91_320 = if ((FStar_List.length stack) = (FStar_List.length ts)) then begin
 (update_deps curmod stack env ts)
 end else begin
 ((stack), (env), (ts))
 end
-in (match (_91_316) with
+in (match (_91_320) with
 | (stack, env, ts) -> begin
 (
 
@@ -525,10 +529,10 @@ end
 
 let fail = (fun curmod env_mark -> (
 
-let _91_328 = (tc.report_fail ())
+let _91_332 = (tc.report_fail ())
 in (
 
-let _91_330 = (FStar_Util.print1 "%s\n" fail)
+let _91_334 = (FStar_Util.print1 "%s\n" fail)
 in (
 
 let env = (tc.reset_mark env_mark)
@@ -547,7 +551,7 @@ in (match (res) with
 if (n_errs = (Prims.parse_int "0")) then begin
 (
 
-let _91_341 = (FStar_Util.print1 "\n%s\n" ok)
+let _91_345 = (FStar_Util.print1 "\n%s\n" ok)
 in (
 
 let env = (tc.commit_mark env)
@@ -556,7 +560,7 @@ end else begin
 (fail curmod env_mark)
 end
 end
-| _91_345 -> begin
+| _91_349 -> begin
 (fail curmod env_mark)
 end)))))
 end))
@@ -565,12 +569,12 @@ in (
 let env = (tc.tc_prims ())
 in (
 
-let _91_350 = (tc_deps initial_mod [] env filenames [])
-in (match (_91_350) with
+let _91_354 = (tc_deps initial_mod [] env filenames [])
+in (match (_91_354) with
 | (stack, env, ts) -> begin
 if (((FStar_Options.universes ()) && ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))) && (FStar_Option.isSome filename)) then begin
-(let _186_309 = (FStar_Option.get filename)
-in (FStar_SMTEncoding_Solver.with_hints_db _186_309 (fun _91_351 -> (match (()) with
+(let _186_312 = (FStar_Option.get filename)
+in (FStar_SMTEncoding_Solver.with_hints_db _186_312 (fun _91_355 -> (match (()) with
 | () -> begin
 (go (((Prims.parse_int "1")), ((Prims.parse_int "0"))) stack initial_mod env ts)
 end))))
