@@ -350,7 +350,6 @@ val verify_wrapper:
 #reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let verify_wrapper #i ak acc tag = 
   let h0 = get () in 
-  assume (CMA.authId i ==> Some? (snd (m_sel h0 (CMA.(ilog ak.log))))); //TODO: can't prove this in Plan A
   let b = CMA.verify #i ak acc tag in
   let h1 = get() in
   Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.abuf acc)) h0 h1;
