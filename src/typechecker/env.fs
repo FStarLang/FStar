@@ -979,7 +979,6 @@ let dummy_solver = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
-    stsize=(fun _ -> 0);
     mark=(fun _ -> ());
     reset_mark=(fun _ -> ());
     commit_mark=(fun _ -> ());
