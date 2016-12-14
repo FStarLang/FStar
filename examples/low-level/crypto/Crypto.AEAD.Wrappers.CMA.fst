@@ -130,17 +130,6 @@ let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16
       else b==verified
     else True
 
-(*+ is_mac_for_iv:
-	ak being indexed for (i, n)
-
-	really corresponds to the ak being the stored mac in the prf table for n
- **)
-let is_mac_for_iv (#i:id) (#n:Cipher.iv (alg i)) (st:aead_state i Reader{safeId i}) (ak:CMA.state (i, n)) (h:mem) = 
-  let x0 = {iv=n; ctr=ctr_0 i} in 
-  match find_mac (HS.sel h (itable i st.prf)) x0 with 
-  | Some mac -> ak == mac
-  | _ -> False
-
 (*+ accumulate_encoded:
       the post-condition of accumulate ... 
       just a wrapper around encode_both
@@ -300,7 +289,6 @@ let verify_wrapper #i st acc tag =
   b
 
 #reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-
 val verify : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader ->
 	     #aadlen:aadlen -> (aad:lbuffer (v aadlen)) ->
  	     #plainlen:txtlen_32 {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
@@ -323,6 +311,7 @@ val verify : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader ->
 		    let x1 = {iv=n; ctr=otp_offset i} in
 	            Buffer.modifies_0 h0 h1 /\
     		    enc_dec_liveness st aad plain cipher_tagged h1 /\
+    		    inv st h1 /\
     		    EncodingWrapper.accumulate_ensures ak aad #plainlen cipher h_init acc h1 /\
 		    (safeId i ==> 
 			(match popt with 

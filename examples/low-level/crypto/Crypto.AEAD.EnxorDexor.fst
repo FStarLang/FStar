@@ -19,6 +19,7 @@ module Invariant = Crypto.AEAD.Invariant
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module CMA = Crypto.Symmetric.UF1CMA
+module MAC = Crypto.Symmetric.MAC
 module SeqProperties = FStar.SeqProperties
 
 (*** First, some predicates and lemmas
@@ -571,8 +572,11 @@ let prf_contains_all_otp_blocks_st (#i:id)
 			   (t:PRF.state i)
 			   (h:mem)
    = let from_pos = len - remaining_len in
-     safeId i /\ Buffer.live h cipher ==> 				
-     prf_contains_all_otp_blocks x from_pos (as_plain plain) (Buffer.as_seq h cipher) (HS.sel h (PRF.itable i t))
+     safeId i /\ Buffer.live h cipher ==>				
+     prf_contains_all_otp_blocks x from_pos
+	 (as_plain plain)
+	 (Buffer.as_seq h cipher)
+	 (HS.sel h (PRF.itable i t))
 
 (*+ frame_prf_contains_all_otp_blocks_st:
 	if we have prf_contains_all_otp_blocks_st,
@@ -762,29 +766,84 @@ let rec counter_dexor i t x len remaining_len plain cipher p =
     end
    else dexor_modifies_refl t x plain h0
 
-val dexor: 
-  #i:id -> 
-  t:PRF.state i ->
+let decrypt_ok (#i:id) (n:Cipher.iv (Cipher.algi i)) (st:aead_state i Reader) 
+	       (#aadlen:aadlen) (aad:lbuffer (v aadlen))
+	       (#plainlen:Encoding.txtlen_32)
+	       (plain:plainBuffer i (v plainlen))
+	       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+	       (h1:mem) =
+  (enc_dec_liveness st aad plain cipher_tagged h1 /\
+   safeId i) ==> (
+   let aead_entries = HS.sel h1 st.log in 
+   let aad = Buffer.as_seq h1 aad in
+   let plain = Plain.sel_plain h1 plainlen plain in
+   let cipher_tagged = Buffer.as_seq h1 cipher_tagged in 
+   found_matching_entry n aead_entries #aadlen aad plain cipher_tagged)
+
+(*+ found_entry: 
+      the entry in the aead table corresponding to nonce n
+      contains the expected aad, plain and cipher text
+ **)
+let found_entry (#i:id) (n:Cipher.iv (Cipher.algi i)) (st:aead_state i Reader)
+		(#aadlen:aadlen) (aad:lbuffer (v aadlen)) 
+	        (#plainlen:Encoding.txtlen_32)
+		(cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+		(q:maybe_plain i (v plainlen))
+		(h:mem) =
+    (Buffer.live h cipher_tagged /\
+     Buffer.live h aad /\
+     safeId i) ==> 		
+    (let entries = HS.sel h st.log in 		
+     found_matching_entry n entries #aadlen
+	 (Buffer.as_seq h aad)
+	 (as_plain q)
+	 (Buffer.as_seq h cipher_tagged))
+
+val dexor:
+  #i:id ->
+  st:aead_state i Reader ->
   iv:Cipher.iv (Cipher.algi i) ->
-  #len:u32 ->
+  #aadlen:aadlen -> aad:lbuffer (v aadlen) ->
+  #len:Encoding.txtlen_32 ->
   plain:plainBuffer i (v len) ->
-  cipher:lbuffer (v len) ->
+  cipher_tagged:lbuffer (v len + v MAC.taglen) ->
   p:maybe_plain i (v len) ->
-  ST unit 
-  (requires (fun h -> 
+  ST unit
+  (requires (fun h ->
 	    let x_1 = {iv=iv; ctr=otp_offset i} in
-	    separation t plain cipher /\
-	    liveness t plain cipher h /\
+	    let t = st.prf in
+	    let cipher : lbuffer (v len) = Buffer.sub cipher_tagged 0ul len in
+	    enc_dec_separation st aad plain cipher_tagged /\
+	    enc_dec_liveness st aad plain cipher_tagged h /\
+	    inv st h /\
             len <> 0ul /\
 	    safelen i (v len) (otp_offset i) /\
-            prf_contains_all_otp_blocks_st x_1 (v len) p cipher t h))
-  (ensures (fun h0 _ h1 -> 	    
+            prf_contains_all_otp_blocks_st x_1 (v len) p cipher t h /\
+	    found_entry iv st aad cipher_tagged p h))
+  (ensures (fun h0 _ h1 ->
   	    let x_1 = {iv=iv; ctr=otp_offset i} in
-	    liveness t plain cipher h1 /\
-	    dexor_modifies t x_1 plain h0 h1 /\
-	    (safeId i ==> Plain.sel_plain h1 len plain == as_plain p)))
-let dexor #i t iv #len plain cipher p = 
+	    enc_dec_liveness st aad plain cipher_tagged h1 /\
+	    dexor_modifies st.prf x_1 plain h0 h1 /\
+	    inv st h1 /\
+	    decrypt_ok iv st aad plain cipher_tagged h1))
+#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let dexor #i st iv #aadlen aad #len plain cipher_tagged p =
   let x_1 = {iv=iv; ctr=otp_offset i} in
+  let t = st.prf in
+  let cipher : lbuffer (v len) = Buffer.sub cipher_tagged 0ul len in
+  let h0 = get () in
   counter_dexor i t x_1 len len plain cipher p;
   let h1 = get () in
-  decrypted_up_to_end plain p h1
+  decrypted_up_to_end plain p h1;
+  if not (prf i) || safeId i
+  then begin
+    FStar.Buffer.lemma_reveal_modifies_1 (as_buffer plain) h0 h1;
+    frame_inv_modifies_1 (as_buffer plain) st h0 h1
+  end 
+  else if safeMac i 
+  then let _ : unit = 
+	   let aead_entries = HS.sel h1 st.log in 
+	   let prf_entries = HS.sel h1 (PRF.itable i st.prf) in
+	   assume (fresh_nonces_are_unused prf_entries aead_entries h1) in //NS: this is provable with a bit of work; basically, we know the mac is already used since verify succeeded and we only modified entries for that nonce, so we didn't impact any fresh nonces
+       ()	   
+  else ()

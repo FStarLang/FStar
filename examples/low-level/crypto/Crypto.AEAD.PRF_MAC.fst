@@ -20,7 +20,6 @@ module PRF = Crypto.Symmetric.PRF
 module CMA = Crypto.Symmetric.UF1CMA
 module Cipher = Crypto.Symmetric.Cipher
 
-
 ///////////////////////////////////////////////////////////////////
 // AEAD functions and lemmas related to the invariant and prf_mac
 //////////////////////////////////////////////////////////////////
@@ -320,7 +319,8 @@ val prf_mac_dec
   (x:PRF.domain_mac i)
   : ST (CMA.state (i,x.iv))
        (requires (fun h0 -> inv aead_st h0))
-       (ensures (fun h0 mac h1 -> prf_mac_ensures i aead_st.prf k_0 x h0 mac h1 /\
+       (ensures (fun h0 ak h1 -> prf_mac_ensures i aead_st.prf k_0 x h0 ak h1 /\
+			       CMA.(MAC.norm h1 ak.r) /\
 			       inv aead_st h1))
 let prf_mac_dec #i #rw aead_st k_0 x =
   let h0 = get () in

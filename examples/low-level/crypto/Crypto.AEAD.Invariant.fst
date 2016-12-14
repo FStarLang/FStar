@@ -401,6 +401,17 @@ let found_matching_entry (#i:id) (n:Cipher.iv (Cipher.algi i))
 	 c  == cipher_tagged /\
 	 p  == plain
 
+(*+ is_mac_for_iv:
+	ak being indexed for (i, n)
+
+	really corresponds to the ak being the stored mac in the prf table for n
+ **)
+let is_mac_for_iv (#i:id) (#rw:rw) (#n:Cipher.iv (alg i)) (st:aead_state i rw{safeMac i}) (ak:CMA.state (i, n)) (h:mem) = 
+  let x0 = {iv=n; ctr=ctr_0 i} in 
+  match find_mac (HS.sel h (itable i st.prf)) x0 with 
+  | Some mac -> ak == mac
+  | _ -> False
+
 (*** SOME BASIC LEMMAS USED 
      THROUGHOUT Crypto.AEAD.* ***)
 let incr_remaining_len_ok (#i:id) (x:PRF.domain i) (len:u32) (remaining_len:u32)
@@ -457,6 +468,25 @@ let frame_inv_modifies_0 (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) (h1:mem)
 	   (ensures  (inv st h1))
    = Buffer.lemma_reveal_modifies_0 h h1;
      if safeMac i
+     then frame_refines i st.prf.mac_rgn (HS.sel h (PRF.itable i st.prf)) (HS.sel h st.log) h h1
+
+let frame_inv_modifies_1 (#i:id) (#rw:rw) (#a:Type) (b:FStar.Buffer.buffer a) 
+			(st:aead_state i rw) (h:mem) (h1:mem)
+   : Lemma (requires (inv st h /\ 
+		      Buffer.modifies_1 b h h1 /\
+		      HH.disjoint st.log_region (Buffer.frameOf b)))
+	   (ensures  (inv st h1))
+   = Buffer.lemma_reveal_modifies_1 b h h1;
+     if safeMac i
+     then frame_refines i st.prf.mac_rgn (HS.sel h (PRF.itable i st.prf)) (HS.sel h st.log) h h1
+
+let frame_inv_modifies_tip (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) (h1:mem)
+   : Lemma (requires (let open HS in 
+		      inv st h /\ 
+		      is_stack_region h.tip /\
+		      modifies_one h.tip h h1))
+	   (ensures  (inv st h1))
+   = if safeMac i
      then frame_refines i st.prf.mac_rgn (HS.sel h (PRF.itable i st.prf)) (HS.sel h st.log) h h1
 
 let frame_inv_push (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) (h1:mem)

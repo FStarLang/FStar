@@ -33,21 +33,6 @@ module PRF_MAC    = Crypto.AEAD.PRF_MAC
 let decrypt_modifies (#i:id) (#len:u32) (st:aead_state i Reader) (pb:plainBuffer i (v len)) (h0:mem) (h1:mem) =
    Crypto.AEAD.BufferUtils.decrypt_modifies (safeId i) st.log_region (as_buffer pb) h0 h1
 
-let decrypt_ok (#i:id) (n:Cipher.iv (alg i)) (st:aead_state i Reader) 
-	       (#aadlen:aadlen) (aad:lbuffer (v aadlen))
-	       (#plainlen:txtlen_32)
-	       (plain:plainBuffer i (v plainlen))
-	       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
-	       (verified:bool) (h1:mem) = 
-  (enc_dec_liveness st aad plain cipher_tagged h1 /\
-   verified /\ 
-   safeId i) ==> (
-   let aead_entries = HS.sel h1 st.log in 
-   let aad = Buffer.as_seq h1 aad in
-   let plain = Plain.sel_plain h1 plainlen plain in
-   let cipher_tagged = Buffer.as_seq h1 cipher_tagged in 
-   found_matching_entry n aead_entries #aadlen aad plain cipher_tagged)
-
 val decrypt:
   i:id -> 
   st:aead_state i Reader ->
@@ -66,28 +51,37 @@ val decrypt:
     enc_dec_liveness st aad plain cipher_tagged h1 /\
     inv st h1 /\
     decrypt_modifies st plain h0 h1 /\
-    decrypt_ok n st aad plain cipher_tagged verified h1))
+    (verified ==> Dexor.decrypt_ok n st aad plain cipher_tagged h1)))
 #reset-options "--z3rlimit 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let h_init = get() in
   push_frame();
   let h0 = get () in
   frame_inv_push st h_init h0;
-  let cipher : lbuffer (v plainlen) = Buffer.sub cipher_tagged 0ul plainlen in
+  (* let cipher : lbuffer (v plainlen) = Buffer.sub cipher_tagged 0ul plainlen in *)
   let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
   let x_0 = PRF.({iv = iv; ctr = ctr_0 i}) in // PRF index to the first block
   let ak = PRF_MAC.prf_mac_dec st st.ak x_0 in   // used for keying the one-time MAC
   let h1 = get() in
-(*   assert (prf_mac_modifies i st.prf h0 h1); *)
-  assert(CMA.(MAC.norm h1 ak.r));
-(* // First recompute and check the MAC *)
-  let acc = EncodingWrapper.accumulate ak aad cipher in
+  assume(enc_dec_liveness st aad plain cipher_tagged h1);
+  // First recompute and check the MAC
+  let acc = EncodingWrapper.accumulate st ak aad plain cipher_tagged in
   let h2 = get () in
-  assert (safeId i ==> CMAWrapper.is_mac_for_iv st ak h2);
-  admit()
-  
-  assume (inv st h2);
+  assume (CMAWrapper.verify_separation ak acc tag); //about 20s
+  assume (CMAWrapper.verify_liveness ak tag h2); //about 20s
   let popt = CMAWrapper.verify st aad plain cipher_tagged ak acc h1 in
+  let h3 = get () in
+  let verified : bool = 
+    match popt with 
+    | None -> false
+    | Some p -> 
+      assume (plainlen <> 0ul); 
+      Dexor.dexor st iv aad plain cipher_tagged p;
+      true in 
+  let h4 = get () in     
+  assert (verified ==> Dexor.decrypt_ok iv st aad plain cipher_tagged h4);
+  assert (inv st h4);
+  assert (enc_dec_liveness st aad plain cipher_tagged h4);
   admit()
   
 (*   let h2 = ST.get() in *)
