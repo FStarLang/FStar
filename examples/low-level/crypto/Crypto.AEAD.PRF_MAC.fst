@@ -19,6 +19,7 @@ module MAC = Crypto.Symmetric.MAC
 module PRF = Crypto.Symmetric.PRF
 module CMA = Crypto.Symmetric.UF1CMA
 module Cipher = Crypto.Symmetric.Cipher
+module BufferUtils = Crypto.AEAD.BufferUtils
 
 ///////////////////////////////////////////////////////////////////
 // AEAD functions and lemmas related to the invariant and prf_mac
@@ -311,24 +312,42 @@ let prf_mac_wrapper #i #rw aead_st k_0 x =
   in
   mac
 
+let ak_live (#i:CMA.id) (r:rid) (ak:CMA.state i) (h:mem) = 
+    let open CMA in 
+    ak.region = r /\
+    Buffer.live h ak.s /\
+    MAC.norm h ak.r
+
 val prf_mac_dec
   (#i:id)
   (#rw:rw)
   (aead_st:aead_state i rw)
+  (#aadlen:aadlen) (aad:lbuffer (v aadlen))
+  (#len:txtlen_32) (plain:plainBuffer i (v len)) (cipher_tagged:lbuffer (v len + v MAC.taglen))
   (k_0:CMA.akey aead_st.prf.mac_rgn i)
   (x:PRF.domain_mac i)
   : ST (CMA.state (i,x.iv))
-       (requires (fun h0 -> inv aead_st h0))
-       (ensures (fun h0 ak h1 -> prf_mac_ensures i aead_st.prf k_0 x h0 ak h1 /\
-			       CMA.(MAC.norm h1 ak.r) /\
-			       inv aead_st h1))
-let prf_mac_dec #i #rw aead_st k_0 x =
+       (requires (fun h0 -> 
+		   enc_dec_separation aead_st aad plain cipher_tagged /\
+		   enc_dec_liveness aead_st aad plain cipher_tagged h0 /\
+		   inv aead_st h0))
+       (ensures (fun h0 ak h1 -> 
+       		   enc_dec_liveness aead_st aad plain cipher_tagged h1 /\
+		   prf_mac_ensures i aead_st.prf k_0 x h0 ak h1 /\
+		   BufferUtils.prf_mac_modifies aead_st.log_region aead_st.prf.mac_rgn h0 h1 /\
+		   ak_live PRF.(aead_st.prf.mac_rgn) ak h1 /\
+		   inv aead_st h1))
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let prf_mac_dec #i #rw aead_st #aadlen aad #len plain cipher_tagged k_0 x =
   let h0 = get () in
   let mac = PRF.prf_mac i aead_st.prf k_0 x in
   let h1 = get () in
   frame_inv_prf_mac aead_st k_0 x h0 h1 mac;
+  BufferUtils.intro_prf_mac_modifies aead_st.log_region aead_st.prf.mac_rgn h0 h1;
   mac
 
+
+#reset-options
 let post_prf_mac
   (#i:id)
   (#rw:rw)
@@ -425,7 +444,6 @@ val lemma_propagate_inv_accumulate
 	                                    (Plain.sel_plain h1 plainlen plain)
 	                                    (Buffer.as_seq h1 cipher) table_1))))
 
-
 val lemma_mac_log_framing
   (#i:id)
   (nonce_1:Cipher.iv (alg i){safeId i})
@@ -449,6 +467,8 @@ val lemma_propagate_mac_wrapper
   (plain:plainBuffer i (v plainlen))
   (cipher:lbuffer (v plainlen))
   (mac_st:CMA.state (i, nonce))
+  (ad:adata)
+  (tag:MAC.tag)
   (h0 h1:mem) : Lemma
   (requires (Plain.live h0 plain /\
              Buffer.live h0 cipher /\
@@ -466,5 +486,18 @@ val lemma_propagate_mac_wrapper
 	        prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
 	                                    (Plain.sel_plain h0 plainlen plain)
 	                                    (Buffer.as_seq h0 cipher) table_0))))
-  (ensures (True))
+  (ensures (Plain.live h1 plain /\
+            Buffer.live h1 cipher /\
+	    (safeId i ==>
+	      (let aead_entries_1 = HS.sel #(aead_entries i) h1 aead_st.log in
+	       let table_1 = HS.sel h1 (itable i aead_st.prf) in
+	       let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
+	       aead_entries_are_refined table_1 aead_entries_1 h1 /\
+	       (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_1 /\ nonce' <> nonce) ==>
+	                                       unused_aead_iv_for_prf table_1 nonce' h1) /\
+	       mac_is_set table_1 nonce ad (v plainlen) (Buffer.as_seq h1 cipher) tag h1 /\
+	       prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
+	                                   (Plain.sel_plain h1 plainlen plain)
+	                                   (Buffer.as_seq h1 cipher) table_1))))
+	      
 

@@ -242,11 +242,8 @@ test:
 	make regressions
 
 utest:
-	make all
-	make fsharp-regressions
 	+make -C ocaml-output
-	+make fstar-ocaml
-	+make uregressions
+	+make -C ../examples/low-level/crypto
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
