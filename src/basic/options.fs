@@ -435,7 +435,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "log_queries",
         ZeroArgs (fun () -> Bool true),
-        "Log the Z3 queries in queries.smt2");
+        "Log the Z3 queries in several queries-*.smt2 files, as we go");
 
        ( noshort,
         "max_fuel",

@@ -137,7 +137,7 @@ all_boot_fsts:
 	./tools/make_all_boot_fsts "$(BOOT_ALL)"
 
 # SI: does it have to go prettyprint.fsti->FStar.Pprint.fsti? 
-boot_fstis/FStar.Pprint.fsti: prettyprint/prettyprint.fsti
+boot_fstis/FStar.Pprint.fsti: prettyprint/prettyprint.fsi
 	cp $^ $@
 
 boot_fstis/%.fsti: basic/%.fsi
