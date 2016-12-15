@@ -19,6 +19,7 @@ module MAC = Crypto.Symmetric.MAC
 module PRF = Crypto.Symmetric.PRF
 module CMA = Crypto.Symmetric.UF1CMA
 module Cipher = Crypto.Symmetric.Cipher
+module BufferUtils = Crypto.AEAD.BufferUtils
 
 ///////////////////////////////////////////////////////////////////
 // AEAD functions and lemmas related to the invariant and prf_mac
@@ -333,6 +334,7 @@ val prf_mac_dec
        (ensures (fun h0 ak h1 -> 
        		   enc_dec_liveness aead_st aad plain cipher_tagged h1 /\
 		   prf_mac_ensures i aead_st.prf k_0 x h0 ak h1 /\
+		   BufferUtils.prf_mac_modifies aead_st.log_region aead_st.prf.mac_rgn h0 h1 /\
 		   ak_live PRF.(aead_st.prf.mac_rgn) ak h1 /\
 		   inv aead_st h1))
 #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
@@ -341,7 +343,9 @@ let prf_mac_dec #i #rw aead_st #aadlen aad #len plain cipher_tagged k_0 x =
   let mac = PRF.prf_mac i aead_st.prf k_0 x in
   let h1 = get () in
   frame_inv_prf_mac aead_st k_0 x h0 h1 mac;
+  BufferUtils.intro_prf_mac_modifies aead_st.log_region aead_st.prf.mac_rgn h0 h1;
   mac
+
 
 #reset-options
 let post_prf_mac
