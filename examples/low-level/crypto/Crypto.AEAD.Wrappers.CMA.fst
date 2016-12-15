@@ -72,7 +72,7 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
     if mac_log then begin
       (* Need to update UF1CMA to prove this (problem with the mods clause not working fully) *)
       assume (HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1) //NS: this goes away when UF1CMA is done
-    end; 
+    end
 
 (*** UF1CMA.verify ***)
 
