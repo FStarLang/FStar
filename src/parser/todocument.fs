@@ -139,17 +139,74 @@ and p_noSeqTerm e = match e.tm with
       str "function" ^/+^ (concat_map p_patternBranch branches)
   | Assign (id, e) ->
       group (p_lident id ^/^ larrow ^/^ p_noSeqTerm e)
-  | _ ->
-      failwith "TODO"
   | e -> p_typ e
 
-and p_typ = function
-  | _ ->
-      failwith "TODO"
+and p_typ e = match e.tm with
+  | QForall (bs, trigger, e1)
+  | QExists (bs, trigger, e1) ->
+      group (
+          group (p_quantifier e ^/^ binders ^^ dot ^/^ p_trigger trigger) ^/^
+          p_noSeqTerm e1)
+  | e -> p_simpleTerm e
 
-and ... = function
-  | e ->
-      p_tmEq
+and p_quantifier e = match e.tm with
+    | QForall _ -> str "forall"
+    | QExists _ -> str "exists"
+
+and p_trigger pats =
+    lbrace ^^ colon ^/^ jump2 (p_disjunctivePats pats) ^/^ rbrace
+
+and p_disjunctivePats pats =
+    separate_map (str "\\/") p_conjunctivePats pats
+
+and p_conjunctivePats pats =
+    group (separate_map semicolon p_appTerm pats)
+
+and p_simpleTerm e = match e.tm with
+    | Abs(pats, e) ->
+        (str "fun" ^/+^ concat_map p_patternOrMultibinder pats ^/^ rarrow) ^/+^ p_term e
+    | e -> p_tmIff e
+
+and p_maybeFocusArrow b =
+    if b then str "~>" else rarrow
+
+(* slight modification here : a patternBranch always begins with a `|` *)
+and p_patternBranch (focus, (pat, when_opt, e)) =
+    pipe ^^ space ^^ p_disjunctivePattern pat ^/^ p_maybeWhen when_opt ^^ p_maybeFocusArrow ^/^ p_term e
+
+and p_maybeWhen = function
+    | None -> empty
+    | Some e -> str "when" ^/+^ p_tmFormula e ^^ space  (*always immediately followed by an arrow*)
+
+and p_tmIff e = match e.tm with
+    | Op("<==>", [e1;e2]) -> group (p_tmImplies e1 ^/^ str "<==>" ^/^ p_tmIff e2)
+    | e -> p_tmImplies e
+
+and p_tmImplies e = match e.tm with
+    | Op("==>", [e1;e2]) -> group (p_tmArrow p_tmFormula e1 ^/^ str "==>" ^/^ p_tmImplies e2)
+    | e -> p_tmArrow p_tmFormula e1
+
+and p_tmArrow p_Tm e = match e with
+  | Product(bs, tgt) ->
+      (* TODO : Not finished yet ! how do we print the binders bs ? *)
+      group (p_tmArrowDomain p_Tm   ^^ space ^^ rarrow ^/^ p_tmArrow p_Tm tgt)
+  | e -> p_Tm e
+
+and p_tmFormula e = match e.tm with
+  | Op("\\/", [e1;e2]) ->
+      group (p_tmFormula e1 ^/^ str "\\/" ^/^ p_tmConjunction e2)
+  | e -> p_tmConjunction e
+
+and p_tmConjunction e = match e with
+  | Op("/\\", [e1;e2]) ->
+      group (p_tmConjunction e1 ^/^ str "/\\" p_tmTuple e2)
+  | e -> p_tmTuple e
+
+and p_tmTuple e = match e with
+  (* TODO : check if this should be Construct or App *)
+  | Construct (lid, args) when is_tuple_constructor lid ->
+      separate_map comma p_tmEq (* args *)
+  | e -> p_tmEq e
 
 and paren_if curr mine doc =
   if mine <= curr then
@@ -182,17 +239,32 @@ and levels op =
       0, 0, -1
   | '|' ->
       -1, -1, -2
+  | _ when op = "&" ->
+      -2, -2, -1
+  | _ when op = "::" ->
+      -3, -3, -2
   | _ ->
       failwith ("invalid first character for infix operator " ^ op)
 
-and p_tmEq' curr = function
-  | Op (op, [ e1; e2]) when is_operatorInfix0ad12 op ->
+and p_tmEq' curr e = match e.tm with
+    (* We don't have any information to print `infix` aplication *)
+  | Op (op, [ e1; e2]) when is_operatorInfix0ad12 op || op = "=" || op = "|>" ->
       let left, mine, right = levels op in
       paren_if curr mine (p_tmEq' left e1 ^/^ str op ^/^ p_tmEq' right e2)
   | Op (":=", [ e1; e2 ]) ->
       group (p_tmEq e1 ^^ space ^^ equals ^^ jump2 (p_tmEq e2))
-  | _ ->
+  | e -> p_tmNoEq e
+
+and p_tmNoEq e = p
+
+and p_tmNoEq' curr e = match e.tm with
+  | Op (op, [ e1; e2]) when op = "::" || op = "|>" ->
+        let left, mine, right = levels op in
+      paren_if curr mine (p_tmEq' left e1 ^/^ str op ^/^ p_tmEq' right e2)
+  | 
       ...
+      | _ ->
+          failwith "TODO"
 
 and p_projectionLHS = function
   | ... ->
