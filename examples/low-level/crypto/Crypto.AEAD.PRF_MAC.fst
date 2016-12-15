@@ -439,7 +439,7 @@ let frame_aead_entries_enxor #i #rw #aadlen #plainlan aead_st nonce aad plain ci
             (itable i aead_st.prf) (st_ilog aead_st) h0 h1
 
 (*
- * AR: this is also from the above category.
+ * AR: this is also of the above category.
  *)
 val frame_mac_region_enxor
   (#i:id)
@@ -519,38 +519,52 @@ let lemma_propagate_inv_enxor #i #rw #aadlen #plainlen aead_st nonce aad plain c
     admit ()
   end
 
+let accumulate_h0_h1
+  (#i:id)
+  (#rw:rw)
+  (#aadlen:aadlen_32)
+  (#plainlen:txtlen_32{plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
+  (aead_st:aead_state i rw)
+  (nonce:Cipher.iv (alg i))
+  (aad:lbuffer (v aadlen))
+  (plain:plainBuffer i (v plainlen))
+  (cipher:lbuffer (v plainlen))
+  (h0 h1:mem) =
+  enc_dec_liveness_and_separation aead_st aad plain cipher h0 /\
+  enc_dec_liveness_and_separation aead_st aad plain cipher h1 /\
+  Buffer.modifies_0 h0 h1 /\
+  (safeId i ==>
+    (let aead_entries_0 = HS.sel #(aead_entries i) h0 (st_ilog aead_st) in
+     let table_0 = HS.sel h0 (itable i aead_st.prf) in
+     let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
+     fresh_nonce_st nonce aead_st h0 /\
+     aead_entries_are_refined table_0 aead_entries_0 h0 /\
+     (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_0 /\ nonce' <> nonce) ==>
+	                             unused_aead_iv_for_prf table_0 nonce' h0) /\
+     unused_mac_exists aead_st.prf dom_0 h0 /\
+     prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
+	                         (Plain.sel_plain h0 plainlen plain)
+	                         (Buffer.as_seq h0 cipher) table_0))
+
 val lemma_propagate_inv_accumulate
   (#i:id)
   (#rw:rw)
+  (#aadlen:aadlen_32)
+  (#plainlen:txtlen_32{plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
   (aead_st:aead_state i rw)
   (nonce:Cipher.iv (alg i))
-  (plainlen:txtlen_32 {plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
+  (aad:lbuffer (v aadlen))
   (plain:plainBuffer i (v plainlen))
   (cipher:lbuffer (v plainlen))
   (h0 h1:mem) : Lemma
-  (requires (Buffer.modifies_0 h0 h1 /\
-             Plain.live h0 plain /\
-             Buffer.live h0 cipher /\
+  (requires (accumulate_h0_h1 aead_st nonce aad plain cipher h0 h1))
+  (ensures  (enc_dec_liveness_and_separation aead_st aad plain cipher h1 /\
              (safeId i ==>
-               (let aead_entries_0 = HS.sel #(aead_entries i) h0 aead_st.log in
-	        let table_0 = HS.sel h0 (itable i aead_st.prf) in
-	        let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
-	        aead_entries_are_refined table_0 aead_entries_0 h1 /\
-		fresh_nonce_st nonce aead_st h0 /\
-	        (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_0 /\ nonce' <> nonce) ==>
-	                                       unused_aead_iv_for_prf table_0 nonce' h0) /\
-	        unused_mac_exists aead_st.prf dom_0 h0 /\
-	        prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
-	                                    (Plain.sel_plain h0 plainlen plain)
-	                                    (Buffer.as_seq h0 cipher) table_0))))
-  (ensures  (Plain.live h1 plain /\
-             Buffer.live h1 cipher /\
-             (safeId i ==>
-               (let aead_entries_1 = HS.sel #(aead_entries i) h1 aead_st.log in
+               (let aead_entries_1 = HS.sel #(aead_entries i) h1 (st_ilog aead_st) in
 	        let table_1 = HS.sel h1 (itable i aead_st.prf) in
 	        let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
+	        fresh_nonce_st nonce aead_st h1 /\
 	        aead_entries_are_refined table_1 aead_entries_1 h1 /\
-		fresh_nonce_st nonce aead_st h1 /\
 	        (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_1 /\ nonce' <> nonce) ==>
 	                                       unused_aead_iv_for_prf table_1 nonce' h1) /\
 	        unused_mac_exists aead_st.prf dom_0 h1 /\
@@ -572,80 +586,109 @@ val lemma_mac_log_framing
   (ensures  (m_sel h0 (CMA.(ilog mac_st_2.log)) = m_sel h1 (CMA.(ilog mac_st_2.log))))
 let lemma_mac_log_framing #i nonce_1 nonce_2 mac_st_1 mac_st_2 h0 h1 = ()
 
-val lemma_propagate_mac_wrapper
+let mac_wrapper_h0_h1
   (#i:id)
   (#rw:rw)
+  (#aadlen:aadlen_32)
+  (#plainlen:txtlen_32{plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
   (aead_st:aead_state i rw)
   (nonce:Cipher.iv (alg i))
-  (plainlen:txtlen_32 {plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
+  (aad:lbuffer (v aadlen))
   (plain:plainBuffer i (v plainlen))
   (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
   (mac_st:CMA.state (i, nonce))
-  (ad:adata)
+  (h0 h1:mem) =
+  let cipher, tag = Buffer.split cipher_tagged plainlen in
+  enc_dec_liveness_and_separation #i #rw aead_st #(v aadlen) aad #(v plainlen) plain #(v plainlen) cipher h0 /\
+  enc_dec_liveness_and_separation #i #rw aead_st #(v aadlen) aad #(v plainlen) plain #(v plainlen) cipher h1 /\
+  (safeId i ==>
+    HS.modifies (Set.as_set [aead_st.prf.mac_rgn; Buffer.frameOf cipher_tagged]) h0 h1 /\
+    HS.modifies_ref aead_st.prf.mac_rgn !{HS.as_ref (as_hsref (CMA.(ilog mac_st.log)))} h0 h1 /\
+    (let aead_entries_0 = HS.sel #(aead_entries i) h0 aead_st.log in
+     let table_0 = HS.sel h0 (itable i aead_st.prf) in
+     let table_1 = HS.sel h1 (itable i aead_st.prf) in
+     let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
+     aead_entries_are_refined table_0 aead_entries_0 h0 /\
+     fresh_nonce_st nonce aead_st h0 /\
+     (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_0 /\ nonce' <> nonce) ==>
+	                            unused_aead_iv_for_prf table_0 nonce' h0) /\
+     mac_is_set table_1 nonce (Buffer.as_seq h1 aad) (v plainlen) (Buffer.as_seq h1 cipher) (Buffer.as_seq h1 tag) h1 /\
+     prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
+	                         (Plain.sel_plain h0 plainlen plain)
+	                         (Buffer.as_seq h0 cipher) table_0))
+
+val lemma_propagate_inv_mac_wrapper
+  (#i:id)
+  (#rw:rw)
+  (#aadlen:aadlen_32)
+  (#plainlen:txtlen_32{plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
+  (aead_st:aead_state i rw)
+  (nonce:Cipher.iv (alg i))
+  (aad:lbuffer (v aadlen))
+  (plain:plainBuffer i (v plainlen))
+  (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+  (mac_st:CMA.state (i, nonce))
   (h0 h1:mem) : Lemma
-  (requires (Plain.live h0 plain /\
-             Buffer.live h0 cipher_tagged /\
+  (requires (mac_wrapper_h0_h1 aead_st nonce aad plain cipher_tagged mac_st h0 h1))
+  (ensures  (let cipher, tag = Buffer.split cipher_tagged plainlen in
+             enc_dec_liveness_and_separation #i #rw aead_st #(v aadlen) aad
+                                             #(v plainlen) plain #(v plainlen) cipher h1 /\
              (safeId i ==>
-	       HS.modifies (Set.as_set [aead_st.prf.mac_rgn; Buffer.frameOf cipher_tagged]) h0 h1 /\
-	       HS.modifies_ref aead_st.prf.mac_rgn !{HS.as_ref (as_hsref (CMA.(ilog mac_st.log)))} h0 h1 /\
-               Buffer.frameOf cipher_tagged <> aead_st.prf.rgn /\
-               (let aead_entries_0 = HS.sel #(aead_entries i) h0 aead_st.log in
-	        let table_0 = HS.sel h0 (itable i aead_st.prf) in
+	       (let aead_entries_1 = HS.sel #(aead_entries i) h1 aead_st.log in
+	        let table_1 = HS.sel h1 (itable i aead_st.prf) in
 	        let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
-		let cipher = Buffer.sub cipher_tagged 0ul plainlen in
-	        aead_entries_are_refined table_0 aead_entries_0 h0 /\
-		fresh_nonce_st nonce aead_st h0 /\
-	        (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_0 /\ nonce' <> nonce) ==>
-	                                       unused_aead_iv_for_prf table_0 nonce' h0) /\
-	        unused_mac_exists aead_st.prf dom_0 h0 /\
+	        let cipher, tag = Buffer.split cipher_tagged plainlen in
+	        aead_entries_are_refined table_1 aead_entries_1 h1 /\
+	        fresh_nonce_st nonce aead_st h1 /\
+	        (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_1 /\ nonce' <> nonce) ==>
+	                                        unused_aead_iv_for_prf table_1 nonce' h1) /\
+	        mac_is_set table_1 nonce (Buffer.as_seq h1 aad) (v plainlen) (Buffer.as_seq h1 cipher) (Buffer.as_seq h1 tag) h1 /\
 	        prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
-	                                    (Plain.sel_plain h0 plainlen plain)
-	                                    (Buffer.as_seq h0 cipher) table_0))))
-  (ensures (Plain.live h1 plain /\
-            Buffer.live h1 cipher_tagged /\
-	    (safeId i ==>
-	      (let aead_entries_1 = HS.sel #(aead_entries i) h1 aead_st.log in
-	       let table_1 = HS.sel h1 (itable i aead_st.prf) in
-	       let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
-	       let cipher, tag = Buffer.split cipher_tagged plainlen in
-	       aead_entries_are_refined table_1 aead_entries_1 h1 /\
-	       fresh_nonce_st nonce aead_st h1 /\
-	       (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_1 /\ nonce' <> nonce) ==>
-	                                       unused_aead_iv_for_prf table_1 nonce' h1) /\
-	       mac_is_set table_1 nonce ad (v plainlen) (Buffer.as_seq h1 cipher) (Buffer.as_seq h1 tag) h1 /\
-	       prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
-	                                   (Plain.sel_plain h1 plainlen plain)
-	                                   (Buffer.as_seq h1 cipher) table_1))))
+	                                    (Plain.sel_plain h1 plainlen plain)
+	                                    (Buffer.as_seq h1 cipher) table_1))))
+
+let final_h0_h1
+  (#i:id)
+  (#rw:rw)
+  (#aadlen:aadlen_32)
+  (#plainlen:txtlen_32{plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
+  (aead_st:aead_state i rw)
+  (nonce:Cipher.iv (alg i))
+  (aad:lbuffer (v aadlen))
+  (plain:plainBuffer i (v plainlen))
+  (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+  (h0 h1:mem) =
+  let cipher, tag = Buffer.split cipher_tagged plainlen in
+  enc_dec_liveness_and_separation #i #rw aead_st #(v aadlen) aad #(v plainlen) plain #(v plainlen) cipher h0 /\
+  enc_dec_liveness_and_separation #i #rw aead_st #(v aadlen) aad #(v plainlen) plain #(v plainlen) cipher h1 /\
+  (safeId i ==>
+    HS.modifies (Set.singleton aead_st.log_region) h0 h1 /\
+    HS.modifies_ref aead_st.log_region (TSet.singleton (FStar.Heap.Ref (HS.as_ref (aead_log_as_ref aead_st.log)))) h0 h1 /\
+    (let aead_entries_0 = HS.sel #(aead_entries i) h0 aead_st.log in
+     let aead_entries_1 = HS.sel #(aead_entries i) h1 aead_st.log in
+     let table_0 = HS.sel h0 (itable i aead_st.prf) in
+     let table_1 = HS.sel h1 (itable i aead_st.prf) in
+     let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
+     aead_entries_are_refined table_0 aead_entries_0 h0 /\
+     fresh_nonce_st nonce aead_st h0 /\
+     (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_0 /\ nonce' <> nonce) ==>
+	                            unused_aead_iv_for_prf table_0 nonce' h0) /\
+     mac_is_set table_0 nonce (Buffer.as_seq h0 aad) (v plainlen) (Buffer.as_seq h0 cipher) (Buffer.as_seq h0 tag) h0 /\
+     prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
+	                         (Plain.sel_plain h0 plainlen plain)
+	                         (Buffer.as_seq h0 cipher) table_0 /\
+     aead_entries_1 == SeqProperties.snoc aead_entries_0 (AEADEntry nonce (Buffer.as_seq h0 aad) (v plainlen) (Plain.sel_plain h0 plainlen plain) (Buffer.as_seq h0 cipher_tagged))))
 
 val lemma_establish_final_inv
   (#i:id)
   (#rw:rw)
+  (#aadlen:aadlen_32)
+  (#plainlen:txtlen_32{plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
   (aead_st:aead_state i rw)
   (nonce:Cipher.iv (alg i))
-  (plainlen:txtlen_32 {plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
+  (aad:lbuffer (v aadlen))
   (plain:plainBuffer i (v plainlen))
   (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
-  (ad:adata)
   (h0 h1:mem) : Lemma
-  (requires (Plain.live h0 plain /\
-             Buffer.live h0 cipher_tagged /\
-	     (safeId i ==>
-	       (let aead_entries_0 = HS.sel #(aead_entries i) h0 aead_st.log in
-	        let aead_entries_1 = HS.sel #(aead_entries i) h1 aead_st.log in
-	        let table_0 = HS.sel h0 (itable i aead_st.prf) in
-	        let table_1 = HS.sel h1 (itable i aead_st.prf) in
-	        let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
-	        let cipher, tag = Buffer.split cipher_tagged plainlen in
-	        aead_entries_are_refined table_0 aead_entries_0 h0 /\
-	        fresh_nonce_st nonce aead_st h0 /\
-	        (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_0 /\ nonce' <> nonce) ==>
-	                                       unused_aead_iv_for_prf table_0 nonce' h0) /\
-	       mac_is_set table_0 nonce ad (v plainlen) (Buffer.as_seq h0 cipher) (Buffer.as_seq h0 tag) h0 /\
-	       prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
-	                                   (Plain.sel_plain h0 plainlen plain)
-	                                   (Buffer.as_seq h0 cipher) table_0 /\
-	       HS.modifies (Set.singleton aead_st.log_region) h0 h1 /\
-	       HS.modifies_ref aead_st.log_region (TSet.singleton (FStar.Heap.Ref (HS.as_ref (aead_log_as_ref aead_st.log)))) h0 h1 /\
-	       aead_entries_1 == SeqProperties.snoc aead_entries_0 (AEADEntry nonce ad (v plainlen) (Plain.sel_plain h0 plainlen plain) (Buffer.as_seq h0 cipher_tagged))))))
+  (requires (final_h0_h1 aead_st nonce aad plain cipher_tagged h0 h1))
   (ensures (inv aead_st h1))
-	       
