@@ -124,7 +124,6 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
       Dexor.dexor st iv aad plain cipher_tagged p;
       true in 
   let h4 = get () in
-  (*  *)
   chain_mods st aad plain cipher_tagged acc h_init h0 h1 h2 h3 h4;
   post_pop iv st aad plain cipher_tagged verified h4;
   pop_frame();
@@ -132,10 +131,10 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
 
 
 
-  assert (verified ==> Dexor.decrypt_ok iv st aad plain cipher_tagged h4);
-  assert (inv st h4);
-  assert (enc_dec_liveness st aad plain cipher_tagged h4);
-  admit()
+  (* assert (verified ==> Dexor.decrypt_ok iv st aad plain cipher_tagged h4); *)
+  (* assert (inv st h4); *)
+  (* assert (enc_dec_liveness st aad plain cipher_tagged h4); *)
+  (* admit() *)
   
 (*   let h2 = ST.get() in *)
 (*   assert (safeId i ==> accumulate_encoded aad #plainlen cipher acc h2); *)
