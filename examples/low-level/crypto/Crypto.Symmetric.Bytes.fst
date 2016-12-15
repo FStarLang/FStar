@@ -531,3 +531,14 @@ let rec lemma_little_endian_is_injective b b' len =
     lemma_little_endian_is_injective b b' (len - 1);
     lemma_little_endian_is_injective_3 b b' len
     end
+
+//16-12-15 todo: polish this file.
+val lemma_little_endian_inj: b:word -> b':word 
+  {Seq.length b = Seq.length b'} -> Lemma
+  (requires (little_endian b = little_endian b'))
+  (ensures (b == b'))
+let lemma_little_endian_inj b b' =
+   let len = Seq.length b in 
+   Seq.lemma_eq_intro b (Seq.slice b 0  len);
+   Seq.lemma_eq_intro b' (Seq.slice b' 0  len);
+   lemma_little_endian_is_injective b b' len
