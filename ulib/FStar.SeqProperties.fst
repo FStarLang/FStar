@@ -53,6 +53,14 @@ let head #a s = index s 0
 val tail: #a:Type -> s:seq a{length s > 0} -> Tot (seq a)
 let tail #a s = slice s 1 (length s)
 
+val lemma_head_append: #a:Type -> s1:seq a{length s1 > 0} -> s2:seq a -> Lemma
+  (head (append s1 s2) == head s1)
+let lemma_head_append #a s1 s2 = ()
+
+val lemma_tail_append: #a:Type -> s1:seq a{length s1 > 0} -> s2:seq a -> Lemma
+  (tail (append s1 s2) == append (tail s1) s2)
+let lemma_tail_append #a s1 s2 = cut (equal (tail (append s1 s2)) (append (tail s1) s2))
+
 val last: #a:Type -> s:seq a{length s > 0} -> Tot a
 let last #a s = index s (length s - 1)
 
@@ -483,6 +491,18 @@ let rec find_append_none #a s1 s2 f =
   else
     let _ = cut (equal (tail (append s1 s2)) (append (tail s1) s2)) in
     find_append_none (tail s1) s2 f
+
+val find_append_none_s2: #a:Type -> s1:seq a -> s2:seq a -> f:(a -> Tot bool) -> Lemma
+  (requires (None? (find_l f s2)))
+  (ensures  (find_l f (append s1 s2) == find_l f s1))
+  (decreases (length s1))
+let rec find_append_none_s2 #a s1 s2 f =
+  if Seq.length s1 = 0 then cut (equal (append s1 s2) s2)
+  else if f (head s1) then ()
+  else begin
+    find_append_none_s2 (tail s1) s2 f;
+    cut (equal (tail (append s1 s2)) (append (tail s1) s2))
+  end
 
 val find_snoc: #a:Type -> s:Seq.seq a -> x:a -> f:(a -> Tot bool)
                -> Lemma (ensures (let res = find_l f (snoc s x) in
