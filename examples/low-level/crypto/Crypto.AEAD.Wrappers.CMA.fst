@@ -65,6 +65,7 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
     (mac_log /\ authId i ==> snd (m_sel h0 (ilog st.log)) == None)))
   (ensures (fun h0 _ h1 -> mac_ensures i st acc tag h0 h1))
   = let open Crypto.Symmetric.UF1CMA in
+    assume false; //TODO: this is out of date
     let h0 = get () in
     CMA.mac #i st acc tag;
     let h1 = get () in 
@@ -72,7 +73,6 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
       (* Need to update UF1CMA to prove this (problem with the mods clause not working fully) *)
       assume (HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1) //NS: this goes away when UF1CMA is done
     end; 
-    admit() //TODO: this is out of date
 
 (*** UF1CMA.verify ***)
 
