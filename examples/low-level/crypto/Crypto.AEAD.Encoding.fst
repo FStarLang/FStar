@@ -217,19 +217,10 @@ private let lemma_encode_loop (b:_ { Seq.length b >= 16 }) : Lemma
       (encode_bytes (Seq.slice b 16 (Seq.length b))) 
       (Seq.slice b 0 16)) 
   =  ()
- 
-#reset-options "--z3rlimit 200"
-private let lemma_encode_final (b:_ { 0 <> Seq.length b /\ Seq.length b < 16 }) : Lemma
-  ( encode_bytes b == Seq.create 1 (pad_0 b (16 - Seq.length b))) = 
-  let e = encode_bytes b in
-  let w = pad_0 b (16 - Seq.length b) in 
-  //assert(SeqProperties.head e == w);
-  Seq.lemma_eq_intro e (Seq.create 1 w);
-  Seq.lemma_eq_elim e (Seq.create 1 w);
-  //assert(e == Seq.create 1 w);
-  assert(encode_bytes b == Seq.create 1 (pad_0 b (16 - Seq.length b)));
-  //16-12-15 what am I missing?!? 
-  assume false
+
+val lemma_encode_final: b:Seq.seq UInt8.t{0 <> Seq.length b /\ Seq.length b < 16} ->
+  Lemma (Seq.equal (encode_bytes b) (Seq.create 1 (pad_0 b (16 - Seq.length b))))
+let lemma_encode_final b = ()
 
 
 #reset-options "--z3rlimit 140 --initial_fuel 0 --max_fuel 0"
@@ -253,8 +244,7 @@ let rec add_bytes #i st acc len txt =
         CMA.frame_acc_inv st acc h1 h3;
         CMA.update st acc w;
         let h4 = ST.get() in 
-        
-        if mac_log then 
+        if mac_log then
           begin // showing log := padded w :: log 
             let txt0 = Buffer.as_seq h0 txt in 
             let x = Buffer.as_seq h3 w in
@@ -265,8 +255,7 @@ let rec add_bytes #i st acc len txt =
             let l4 = HS.sel h4 log in
             assert(Seq.equal x (pad_0 txt0 (16 - v len)));
             assert(Seq.equal l4 (SeqProperties.cons x l0));
-            //lemma_encode_final txt0; //16-12-15 not good enough? 
-            assume(encode_bytes txt0 == Seq.create 1 x);
+            lemma_encode_final txt0;
             assert(Seq.equal l4 (Seq.append (encode_bytes txt0) l0))
           end
         else Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.abuf acc))  h3 h4
@@ -278,8 +267,7 @@ let rec add_bytes #i st acc len txt =
         CMA.update st acc w;
         let h2 = ST.get() in 
         add_bytes st acc (len -^ 16ul) txt';
-        let h3 = ST.get() in 
-
+        let h3 = ST.get() in
         if mac_log 
         then begin // showing log := encode_bytes txt' @ [w] @ log 
           let txt0 = Buffer.as_seq h0 txt in 
@@ -298,13 +286,13 @@ let rec add_bytes #i st acc len txt =
         end
         else Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.abuf acc)) h1 h3
       end;
-      
   let h5 = ST.get() in
   pop_frame();
   let h6 = ST.get() in
   CMA.frame_acc_inv st acc h5 h6;
   MAC.frame_sel_elem h5 h6 (CMA.abuf acc);
-  if not mac_log then Buffer.lemma_intro_modifies_1 (MAC.as_buffer (CMA.abuf acc)) h0 h6
+  if not mac_log then
+    Buffer.lemma_intro_modifies_1 (MAC.as_buffer (CMA.abuf acc)) h0 h6
 
 
 
