@@ -342,7 +342,7 @@ let rec load_uint128 len buf =
 // check efficient compilation for all back-ends
 val store_uint32: 
   len:UInt32.t {v len <= 4} -> buf:lbuffer (v len) -> 
-  n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> ST unit
+  n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> StackInline unit
   (requires (fun h0 -> Buffer.live h0 buf))
   (ensures (fun h0 r h1 -> 
     Buffer.live h1 buf /\ Buffer.modifies_1 buf h0 h1 /\
@@ -362,7 +362,7 @@ let rec store_uint32 len buf n =
 
 val store_big32: 
   len:UInt32.t {v len <= 4} -> buf:lbuffer (v len) -> 
-  n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> ST unit
+  n:UInt32.t {UInt32.v n < pow2 (8 * v len)} -> StackInline unit
   (requires (fun h0 -> Buffer.live h0 buf))
   (ensures (fun h0 r h1 -> 
     Buffer.live h1 buf /\ Buffer.modifies_1 buf h0 h1 /\

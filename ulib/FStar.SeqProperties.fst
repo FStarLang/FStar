@@ -443,6 +443,15 @@ val lemma_tail_snoc: #a:Type -> s:Seq.seq a{Seq.length s > 0} -> x:a
                      -> Lemma (ensures (tail (snoc s x) == snoc (tail s) x))
 let lemma_tail_snoc #a s x = lemma_slice_first_in_append s (Seq.create 1 x) 1
 
+val lemma_snoc_inj: #a:Type -> s1:seq a -> s2:seq a -> v1:a -> v2:a
+  -> Lemma (requires (equal (snoc s1 v1) (snoc s2 v2)))
+          (ensures (v1 == v2 /\ equal s1 s2))
+let lemma_snoc_inj #a s1 s2 v1 v2 =
+  let t1 = create 1 v1 in 
+  let t2 = create 1 v2 in 
+  lemma_append_inj s1 t1 s2 t2;
+  assert(head t1  == head t2)
+
 #set-options "--initial_fuel 2 --max_fuel 2"
 val lemma_mem_snoc : #a:eqtype -> s:FStar.Seq.seq a -> x:a ->
    Lemma (ensures (forall y. mem y (snoc s x) <==> mem y s \/ x=y))
