@@ -179,6 +179,13 @@ let modifies_buf_and_ref (#a:Type) (#b:Type) (buf:Buffer.buffer a) (ref:referenc
       (Buffer.frameOf b == rid /\ Buffer.live h b /\ Buffer.disjoint b buf
       /\ Buffer.disjoint_ref_1 b (HS.as_aref ref)) ==> Buffer.equal h b h' b))
 
+let modifies_nothing (h:mem) (h':mem) : GTot Type0 =
+  (forall rid. Set.mem rid (Map.domain h.h) ==>
+    HH.modifies_rref rid !{} h.h h'.h
+    /\ (forall (#a:Type) (b:Buffer.buffer a). 
+      (Buffer.frameOf b == rid /\ Buffer.live h b ==> Buffer.equal h b h' b)))
+
+
 // add variable-length bytes to a MAC accumulator, one 16-byte word at a time
 private val add_bytes:
   #i: MAC.id ->
@@ -191,7 +198,7 @@ private val add_bytes:
     CMA.acc_inv st acc h0 /\
     Buffer.disjoint (MAC.as_buffer (CMA.abuf acc)) txt /\
     Buffer.disjoint CMA.(MAC.as_buffer st.r) txt /\
-    (mac_log ==> Buffer.disjoint_ref_1 txt CMA.(HS.as_aref (alog acc))) ))
+    (mac_log ==> Buffer.frameOf txt <> (CMA.alog acc).id  \/  Buffer.disjoint_ref_1 txt CMA.(HS.as_aref (alog acc))) ))
   (ensures (fun h0 () h1 -> 
     let b = CMA.(MAC.as_buffer (CMA.abuf acc)) in
     Buffer.live h1 txt /\ 
@@ -408,15 +415,18 @@ val accumulate:
     Buffer.live h0 cipher /\ 
     Buffer.disjoint_2 CMA.(MAC.as_buffer st.r) aad cipher))
   (ensures (fun h0 a h1 -> 
-    Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the caller stack
+    Buffer.modifies_0 h0 h1 /\ // modifies only fresh buffers on the current stack
     ~ (h0 `Buffer.contains` CMA.(MAC.as_buffer (abuf a))) /\
     Buffer.live h1 aad /\ 
     Buffer.live h1 cipher /\
     Buffer.frameOf CMA.(MAC.as_buffer (abuf a)) = h1.tip /\
     CMA.acc_inv st a h1 /\
-    (mac_log ==> 
-      FStar.HyperStack.sel h1 (CMA.alog a) ==
-      encode_both (fst i) aadlen (Buffer.as_seq h1 aad) txtlen (Buffer.as_seq h1 cipher))))
+    (if mac_log then
+        let log = CMA.alog a in
+        //16-12-15 settle for a weaker property? modifies_nothing h0 h1 /\ 
+        FStar.HyperStack.sel h1 log == encode_both (fst i) aadlen (Buffer.as_seq h1 aad) txtlen (Buffer.as_seq h1 cipher)
+      else
+        Buffer.modifies_0 h0 h1)))
 
  
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 200"
@@ -424,14 +434,9 @@ let accumulate #i st aadlen aad txtlen cipher  =
   let h = ST.get() in 
   let acc = CMA.start st in
   let h0 = ST.get() in
-  assert(mac_log ==> h0 `contains` (CMA.alog acc));
+  //assert(mac_log ==> h0 `contains` (CMA.alog acc));
   Buffer.lemma_reveal_modifies_0 h h0;
-
-  assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.(abuf acc))) aad cipher);
-  //16-10-16 should follow from new CMA.start post?
-  assume(mac_log ==> Buffer.disjoint_ref_1 aad (HS.as_aref (CMA.alog acc)));
-  assume(mac_log ==> Buffer.disjoint_ref_1 cipher (HS.as_aref (CMA.alog acc)));
-
+  //assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.(abuf acc))) aad cipher);
   add_bytes st acc aadlen aad;
   let h1 = ST.get() in 
   add_bytes st acc txtlen cipher;
@@ -463,15 +468,23 @@ let accumulate #i st aadlen aad txtlen cipher  =
       assert(equal (HS.sel h1 al) (encode_bytes abytes));
       assert(equal (HS.sel h2 al) (encode_bytes cbytes @| encode_bytes abytes));
       assert(equal (HS.sel h5 al) (SeqProperties.cons lbytes (encode_bytes cbytes @| encode_bytes abytes)));
-      assert(equal (HS.sel h5 al) (encode_both (fst i) aadlen abytes txtlen cbytes))
+      assert(equal (HS.sel h5 al) (encode_both (fst i) aadlen abytes txtlen cbytes));
+
+      //16-12-15 can't prove Buffer.modifies_0 from modifies_buf_and_ref ?!
+      assert(HS.modifies_one h.tip h h0);
+      assume(HS.modifies_one h.tip h0 h2);
+      assert(HS.modifies_one h.tip h2 h3);
+      assert(HS.modifies_one h.tip h3 h4);
+      assume(HS.modifies_one h.tip h4 h5);
+      assert(HS.modifies_one h.tip h h5);
+      assert(Buffer.modifies_buf_0 h.tip h h5);
+      Buffer.lemma_intro_modifies_0 h h5
     end
   else 
     begin
       Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.(abuf acc))) h0 h2;
       Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.abuf acc))  h4 h5
     end;
-  //assert(Buffer.modifies_buf_0 h0.tip h0 h1);
-  //Buffer.lemma_intro_modifies_0 h h5;
-  assume(Buffer.modifies_0 h h5); 
   acc
 
+ 
