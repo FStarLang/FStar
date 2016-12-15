@@ -19,6 +19,7 @@
 module FStar.Parser.ToDocument
 
 open FStar
+open FStar.Util
 open FStar.Parser.AST
 open FStar.Ident
 open FStar.Const
@@ -73,6 +74,106 @@ let matches_var t x =
     match t.tm with
         | Var y -> Ident.lid_equals x y
         | _ -> false
+
+(* This does not have anything to do here *)
+(* It must be moved asa the situation wrt F#/ocaml implementation file is cleaned up *)
+exception Different
+let is_prefix s s' =
+    let n = FStar.String.strlen s in
+    let n' = FStar.String.strlen s' in
+    if n > n' then false
+    else
+        try for i = 0 to n-1 do
+            if s.[i] <> s'.[i] then raise Different
+            done ;
+            true
+        with Different -> false
+
+let is_tuple_constructor lid =
+    let tuple_prefix = "Mktuple" in
+    is_prefix tuple_prefix (text_of_lid lid)
+
+(* Automatic level assignment *)
+(* would be perfect with a little of staging... *)
+
+type associativity =
+    | Left
+    | Right
+    | NonAssoc
+
+(* A token is either a character c representing any string beginning with c or a complete string *)
+type token = either<FStar.Char.char, string>
+
+type associativity_level = associativity * list<token>
+
+let matches_token (s:string) = function
+    | Inl c -> s.[0] = c
+    | Inr s' -> s = s'
+
+let matches_level s (assoc_levels, tokens) =
+    List.existsb (matches_token s) tokens
+
+let assign_levels (token_associativity_spec : list<associativity_level>) : string -> int * int * int =
+    in
+    function s ->
+        match List.find (matches_level s) level_table with
+            | Some (assoc_levels, _) -> assoc_levels
+            | _ -> failwith ("Unrecognized operator " ^ s)
+
+(* Precedence and associativity levels, taken from ../src/parse.mly *)
+let opinfix4 = Right, [Inr "**"]
+// level backtick won't be used here
+let opinfix3 = Left,  [Inl '*' ; Inl '/' ; Inl '%']
+let opinfix2 = Left,  [Inl '+' ; Inl '-' ]
+let minus = Left, [Inr "-"] // Sublevel of opinfix2, not a level on its own !!!
+let opinfix1 = Right, [Inl '@' ; Inl '^']
+let pipe_right = Left,  [Inr "|>"]
+let opinfix0d = Left,  [Inl '$']
+let opinfix0c = Left,  [Inl '=' ; Inl '<' ; Inl '>']
+let equal = Left, [Inr "="] // Sublevel of opinfix0c, not a level on its own !!!
+let opinfix0b = Left,  [Inl '&']
+let opinfix0a = Left,  [Inl '|']
+let colon_equals = NonAssoc, [Inr ":="]
+let amp = Right, [Inr "&"]
+let colon_colon = Right, [Inr "::"]
+
+(* The latter the element, the tighter it binds *)
+let level_associativity_spec =
+  [
+    colon_colon ;
+    amp ;
+    colon_equals ;
+    opinfix0a ;
+    opinfix0b ;
+    opinfix0c ;
+    opinfix0d ;
+    pipe_right ;
+    opinfix1 ;
+    opinfix2 ;
+    opinfix3 ;
+    opinfix4
+  ]
+
+let level_table =
+  let levels_from_associativity (l:int) = function
+    | Left -> l, l, l-1
+    | Right -> l-1, l, l
+    | NonAssoc -> l, l, l
+  in
+  List.mapi (fun i (assoc, tokens) -> (levels_from_associativity i assoc, tokens)) level_associativity_spec
+
+let max_level l =
+  let find_level_and_max n level =
+    match List.find (fun (_, tokens) -> tokens = snd level) level_table with
+      | Some ((_,l,_), _) -> max n l
+      | None -> failwith "Undefined associativity level"
+  in List.fold_left find_level_and_max 0 l
+
+let level_of_operator = assign_levels spec
+
+let is_operatorInfix0ad12 =
+    let opinfix0ad12 = [opinfix0a ; opinfix0b ; opinfix0c ; opinfix0d ; opinfix1 ; opinfix2 ] in
+    fun op -> List.existsb (matches_level op) opinfix0ad12
 
 
 // printer really begins here
@@ -203,9 +304,8 @@ and p_tmConjunction e = match e with
   | e -> p_tmTuple e
 
 and p_tmTuple e = match e with
-  (* TODO : check if this should be Construct or App *)
   | Construct (lid, args) when is_tuple_constructor lid ->
-      separate_map comma p_tmEq (* args *)
+      separate_map comma p_tmEq args
   | e -> p_tmEq e
 
 and paren_if curr mine doc =
@@ -214,8 +314,9 @@ and paren_if curr mine doc =
   else
     group (lparen ^^ doc ^^ rparen)
 
-and p_tmEq e =
-  p_tmEq' 6 e
+and p_tmEq =
+  let n = 6 in
+  fun e -> p_tmEq' n e
 
 and levels op =
   (* Note: it might seem surprising that we're not special-casing, say, '*' to
@@ -239,10 +340,6 @@ and levels op =
       0, 0, -1
   | '|' ->
       -1, -1, -2
-  | _ when op = "&" ->
-      -2, -2, -1
-  | _ when op = "::" ->
-      -3, -3, -2
   | _ ->
       failwith ("invalid first character for infix operator " ^ op)
 
@@ -255,15 +352,69 @@ and p_tmEq' curr e = match e.tm with
       group (p_tmEq e1 ^^ space ^^ equals ^^ jump2 (p_tmEq e2))
   | e -> p_tmNoEq e
 
-and p_tmNoEq e = p
+and p_tmNoEq =
+  let n = max_level [colon_colon ; amp ; minus ; opinfix3 ; opinfix4] in
+  fun e -> p_tmNoEq' n e
 
 and p_tmNoEq' curr e = match e.tm with
-  | Op (op, [ e1; e2]) when op = "::" || op = "|>" ->
-        let left, mine, right = levels op in
-      paren_if curr mine (p_tmEq' left e1 ^/^ str op ^/^ p_tmEq' right e2)
-  | 
-      ...
-      | _ ->
+  | Construct (lid, [e1 ; e2]) when is_cons_lid lid ->
+      let op = "::" in
+      let left, mine, right = levels op in
+      paren_if curr mine (p_tmNoEq' left e1 ^/^ str op ^/^ p_tmNoEq' right e2)
+  | Sum(binders, res) ->
+      let op = "&" in
+      let left, mine, right = levels op in
+      let p_dsumfst b = (* TODO : how to print the binder ? *) p_binder b ^^ space ^^ str "&" in
+      paren_if curr mine (concat_map p_dsumfst binders ^/^ p_tmNoEq' right e2)
+  | Op (op, [ e1; e2]) when is_opinfx34 op -> // also takes care of infix '-'
+      let left, mine, right = levels op in
+      paren_if curr mine (p_tmNoEq' left e1 ^/^ str op ^/^ p_tmNoEq' right e2)
+  | Op("-", [e]) ->
+      let left, mine, right = levels "-" in
+      minus ^/^ p_tmNoEq' mine e
+  | NamedTyp(lid, e) ->
+      group (p_lidentOrUnderscore lid ^/^ colon ^/^ p_appTerm e)
+  | Refine(b, phi) ->
+      (* TODO : how to print refined binder ? *)
+      p_refinedBinder b phi
+  | Record(with_opt, record_fields) ->
+      braces_with_nesting ( default_or_map empty p_with_clause with_opt ^/^
+                            separate_map semicolon p_simpleDef record_fields )
+  | Op("~", [e]) ->
+      group (str "~" ^/^ p_atomicTerm e)
+  | e -> p_appTerm e
+
+and p_refinedBinder b phi =
+
+and p_simpleDef (lid, e) =
+    group (p_qlident lid ^/^ equals ^/^ p_simpleTerm e)
+
+and p_appTerm e =
+    | App (head, arg, imp) ->
+        p_appTerm head ^/^ p_argTerm (arg, imp)
+    | Construct (head, args) ->
+        p_indexingTerm head ^/^ separate_map space p_argTerm args
+    | e ->
+        p_indexingTerm e
+
+and p_argTerm arg_imp = match arg_imp with
+    | (Uvar id, UnivApp) -> p_univar id
+    | (u, UnivApp) -> str "u#" ^^ p_universe u
+    | (e, FsTypApp) -> surround 2 1 (str "<") p_indexingTerm e (str ">")
+    | (e, Hash) -> str "#" ^^ p_indexingTerm e
+    | (e, Nothing) -> p_indexingTerm e
+
+and indexingTerm e = match e.tm with
+    | Op(".()", [e1 ; e2]) ->
+          group (p_indexingTerm e1 ^^ dot ^^ parens_with_nesting (p_term e2))
+    | Op(".[]", [e1; e2]) ->
+          group (p_indexingTerm e1 ^^ dot ^^ brackets_with_nesting (p_term e2))
+    | e ->
+        p_atomicTerm e
+
+and p_atomicTerm e = match e with
+    | LetOpen (id, t) ->
+    | _ ->
           failwith "TODO"
 
 and p_projectionLHS = function
@@ -524,47 +675,3 @@ let doc_of_modul (m:modul) =
       decls |> List.map doc_of_decl |> separate hardline
 
 
-(* Automatic level assignment *)
-(* would be perfect with a little of staging... *)
-
-type associativity =
-    | Left
-    | Right
-    | NonAssoc
-
-type token = either<FStar.Char.char, string>
-type associativity_level = associativity * list<token>
-
-let assign_levels (token_associativity_spec : list<associativity_level>) : string -> int * int * int =
-    let levels_from_associativity (l:int) = function
-        | Left -> l, l, l-1
-        | Right -> l-1, l, l
-        | NonAssoc -> l, l, l
-    in
-    let level_table =
-        List.mapi (fun i (assoc, tokens) -> (levels_from_associativity i assoc, tokens)) token_associativity_spec
-    in
-    let matches_token s = function
-        | Inl c -> s.[0] = c
-        | Inl s' -> s = s'
-    in
-    let matches_level s (assoc_levels, tokens) =
-        List.existsb (matches_token s) tokens
-    in
-    function s ->
-        match List.find (matches_level s) with
-            | Some assoc_levels -> assoc_levels
-            | _ -> failwith ("Unrecognized operator " ^ s)
-
-let level_of_operator =
-    let spec = [
-        Left,  [Inl '*' ; Inl '/' ; Inl '%'];
-        Left,  [Inl '+' ; Inl '-' ];
-        Right, [Inl '@' Inl '^'] ;
-        Left,  [Inr "|>"] ;
-        Left,  [Inl '$'] ;
-        Left,  [Inl '=' ; Inl '<' ; Inl '>'] ;
-        Left,  [Inl '&'] ;
-        Left,  [Inl '|']
-        ]
-    in assign_levels spec
