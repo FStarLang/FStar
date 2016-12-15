@@ -1777,4 +1777,13 @@ let check_module env m =
     let m, env = tc_modul env m in
     if Options.dump_module m.name.str
     then Util.print1 "%s\n" (Print.modul_to_string m);
+    if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
+    then Util.print1 "%s\n" (Print.modul_to_string ({
+        m with declarations = List.map (function
+                                        | Sig_let ((b, lbs), r, ids, qs) ->
+                                        let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant] env in
+                                        Sig_let ((b, List.map (fun lb -> {lb with lbdef = n lb.lbdef}) lbs), r, ids, qs)
+                                        | se -> se
+                                        ) m.declarations
+        }));
     m, env

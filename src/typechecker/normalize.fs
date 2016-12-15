@@ -637,12 +637,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
               //reify (reflect e) ~> e
               norm cfg env stack (fst a)
 
-            | Tm_match(e, branches) ->
-              //reify (match e with p -> e') ~> match (reify e) with p -> reify e'
-              let e = Util.mk_reify e in
-              let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, Util.mk_reify tm) in
-              let tm = mk (Tm_match(e, branches)) t.pos in
-              norm cfg env stack tm
+            // | Tm_match(e, branches) ->
+            //   //reify (match e with p -> e') ~> match (reify e) with p -> reify e'
+            //   let e = Util.mk_reify e in
+            //   let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, Util.mk_reify tm) in
+            //   let tm = mk (Tm_match(e, branches)) t.pos in
+            //   norm cfg env stack tm
 
             | _ ->
               let stack = App(reify_head, None, t.pos)::stack in
@@ -907,23 +907,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
                     else
-                        let reify_lift e msrc mtgt t =
-                            // check if the lift is concrete, if so replace by its definition on terms
-                            // if msrc is PURE or Tot we can use mtgt.return
-                            if Syntax.Util.is_pure_effect msrc
-                            then
-                                let ed = Env.get_effect_decl cfg.tcenv mtgt in
-                                let _, return_repr = ed.return_repr in
-                                let return_inst = match (SS.compress return_repr).n with
-                                    | Tm_uinst(return_tm, [_]) ->
-                                        S.mk (Tm_uinst (return_tm, [ cfg.tcenv.universe_of cfg.tcenv t ])) None e.pos
-                                    | _ -> failwith "NIY : Reification of indexed effects"
-                                in
-                                S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
-                            else
-                                failwith "NYI: monadic lift normalisation"
-                        in
-
                         begin match (SS.compress head).n with
                             | Tm_let((false, [lb]), body) ->
                                 //this is M.bind
@@ -1023,7 +1006,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                                     let x = S.gen_bv "monadic_app_var" None t' in
                                                     let body = bind_on_lift es ((S.bv_to_name x, q)::acc) in
                                                     (* bind t' t _ (lift e) _ (fun x -> body) *)
-                                                    let lifted_e0 = reify_lift e0 m1 m2 t' in
+                                                    let lifted_e0 = reify_lift cfg.tcenv e0 m1 m2 t' in
                                                     (* TODO : what about qualifiers !!! (should they be brought by the meta annotation ?)*)
                                                     let continuation = U.abs [x,None] body (Some (Inr (m2, []))) in
                                                     let bind_inst = match (SS.compress bind_repr).n with
@@ -1046,7 +1029,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                 Util.print1_warning "BEFORE NORMALIZING MONADIC APP : %s\n" (Print.term_to_string binded_head);
                                 norm cfg env (List.tl stack) binded_head
                             | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
-                                let lifted = reify_lift e msrc mtgt t' in
+                                let lifted = reify_lift cfg.tcenv e msrc mtgt t' in
                                 norm cfg env stack lifted
                             | _ ->
                                 (* TODO : that seems a little fishy *)
@@ -1055,18 +1038,34 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
 
                  | Meta_monadic_lift (m, m', t) ->
+                    (* KM : This code is a partial duplicate of what can be found in Meta_monadic *)
+                    (* KM : Not exactly sure which case should be eliminated *)
+                    let should_reify = match stack with
+                        | App ({n=Tm_constant Const.Const_reify}, _, _) :: _ ->
+                            Util.print1 "Found a reify on the stack. %s" "" ;
+                            cfg.steps |> List.contains Reify
+                        | _ -> false
+                    in
+
+                    if should_reify
+                    then
+                        norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' t)
+                    else
                     (* TODO : don't we need to normalize t here ? *)
                     // let t = norm cfg env stack t in
                     if (Util.is_pure_effect m
                     || Util.is_ghost_effect m)
                     && cfg.steps |> List.contains PureSubtermsWithinComputations
                     then let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                            let cfg = {cfg with steps=[PureSubtermsWithinComputations;
-                                                       Primops;
-                                                       AllowUnboundUniverses;
-                                                       EraseUniverses;
-                                                       Exclude Zeta];
-                                                delta_level=[Env.Inlining; Env.Eager_unfolding_only]} in
+                            let cfg = { cfg with
+                                        steps=[PureSubtermsWithinComputations;
+                                               Primops;
+                                               AllowUnboundUniverses;
+                                               EraseUniverses;
+                                               Exclude Zeta];
+                                        delta_level=[Env.Inlining; Env.Eager_unfolding_only]
+                                       }
+                            in
                             norm cfg env (Meta(Meta_monadic_lift(m, m', t), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
                     else norm cfg env (Meta(Meta_monadic_lift(m, m', t), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
@@ -1095,6 +1094,25 @@ let rec norm : cfg -> env -> stack -> term -> term =
                             rebuild cfg env stack t
                    end
             end
+
+(* Reifies the lifting of the term [e] of type [t] from computational  *)
+(* effect [m] to computational effect [m'] using lifting data in [env] *)
+and reify_lift (env : Env.env) e msrc mtgt t =
+    (* Might not be the best place to put this function *)
+    // check if the lift is concrete, if so replace by its definition on terms
+    // if msrc is PURE or Tot we can use mtgt.return
+    if Syntax.Util.is_pure_effect msrc
+    then
+        let ed = Env.get_effect_decl env mtgt in
+        let _, return_repr = ed.return_repr in
+        let return_inst = match (SS.compress return_repr).n with
+            | Tm_uinst(return_tm, [_]) ->
+                S.mk (Tm_uinst (return_tm, [env.universe_of env t])) None e.pos
+            | _ -> failwith "NIY : Reification of indexed effects"
+        in
+        S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
+    else
+        failwith "NYI: non pure monadic lift normalisation"
 
 and norm_pattern_args cfg env args =
     (* Drop stack *)
