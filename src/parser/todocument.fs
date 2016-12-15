@@ -26,20 +26,24 @@ open FStar.Pprint
 
 // VALS_HACK_HERE
 
-// abbrev 
+// abbrev
 let str s = document_of_string s
 
 // lib
-let default_or_map n f x = 
-  match x with 
+let default_or_map n f x =
+  match x with
   | None -> n
   | Some x' -> f x'
+
+(* changing PPrint's ^//^ to ^/+^ since '//' wouldn't work in F# *)
+let (^/+^) prefix_ body =
+  prefix 2 1 prefix_ body
 
 let jump2 body =
   jump 2 1 body
 
 let break1 =
-  break 1
+  break_ 1
 
 let parens_with_nesting contents =
   surround 2 0 lparen contents rparen
@@ -50,13 +54,28 @@ let braces_with_nesting contents =
 let brackets_with_nesting contents =
   surround 2 1 lbracket contents rbracket
 
-let doc_of_fsdoc (comment,keywords) = 
+let doc_of_fsdoc (comment,keywords) =
   group (concat [
     str comment; space;
     separate_map comma (fun (k,v) ->
       concat [str k; rarrow; str v]
     ) keywords
   ])
+
+
+// Really specific functions to retro-engineer the desugaring
+let is_unit e =
+    match e.tm with
+        | Const Const_unit -> true
+        | _ -> false
+
+let matches_var t x =
+    match t.tm with
+        | Var y -> Ident.lid_equals x y
+        | _ -> false
+
+
+// printer really begins here
 
 let doc_of_let_qualifier = function
   | NoLetQualifier -> empty
@@ -68,15 +87,15 @@ let doc_of_let_qualifier = function
 let doc_of_imp = function
   | Hash -> str "#"
   | UnivApp -> str "u#"
-  | Nothing | FsTypApp -> empty 
+  | Nothing | FsTypApp -> empty
 
-let rec p_term = function
-  | Seq (e1, e2) -> 
+let rec p_term e = match e.tm with
+  | Seq (e1, e2) ->
       group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
   | e ->
       group (p_noSeqTerm e)
 
-and p_noSeqTerm = function
+and p_noSeqTerm e = match e.tm with
   | Ascribed (e, t) ->
       group (p_tmIff e ^/^ str "<:" ^/^ p_typ t)
   | Op (op, [ e1; e2; e3 ]) when op = ".()<-" ->
@@ -95,8 +114,34 @@ and p_noSeqTerm = function
       group (str "ensures" ^/^ p_typ e)
   | Attributes es ->
       group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
+  | If (e1, e2, e3) ->
+      if is_unit e3
+      then group ((str "if" ^/+^ p_noSeqTerm e1) ^/^ (str "then" ^/+^ p_noSeqTerm e2))
+      else
+          let e2_doc =
+              match e2.tm with
+                  | If (_,_,e3) when is_unit e3 ->
+                      parens_with_nesting (p_noSeqTerm e2)
+                  | _ -> p_noSeqTerm e2
+           in group (
+               (str "if" ^/+^ p_noSeqTerm e1) ^/^
+               (str "then" ^/+^ e2_doc) ^/^
+               (str "else" ^/+^ p_noSeqTerm e3))
+  | TryWith(e, branches) ->
+      group (prefix2 (str "try") (p_noSeqTerm e) ^/^ str "with" ^/^ jump2 (concat_map p_patternBranch branches))
+  | Match (e, branches) ->
+      group (prefix2 (str "match") (p_noSeqTerm e) ^/^ str "with" ^/^ jump2 (concat_map p_patternBranch branches))
+  | LetOpen (uid, e) ->
+      group (str "let open" ^/^ doc_of_lid uid ^/^ str "in")
+  | Let(q, hd::tl, e) ->
+      group (p_letbinding (str "let" ^^ p_letqualifier q) hd ^/^ concat_map (p_letbinding (str "and")) tl)
+  | Abs([{tm=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
+      str "function" ^/+^ (concat_map p_patternBranch branches)
+  | Assign (id, e) ->
+      group (p_lident id ^/^ larrow ^/^ p_noSeqTerm e)
   | _ ->
       failwith "TODO"
+  | e -> p_typ e
 
 and p_typ = function
   | _ ->
@@ -171,32 +216,32 @@ let doc_of_const x = match x with
   | Const_reify
   | Const_reflect _ -> str "unsupported constant"
 
-// SI: maybe do nesting for terms with args? 
+// SI: maybe do nesting for terms with args?
 let rec doc_of_term (x:term) = match x.tm with
-  | Wild -> underscore 
-  | Requires (t, _) -> 
+  | Wild -> underscore
+  | Requires (t, _) ->
         group (brackets (concat [(str "requires"); space; (doc_of_term t)]))
-  | Ensures (t, _) ->          
+  | Ensures (t, _) ->
         group (brackets (concat [(str "ensures"); space; (doc_of_term t)]))
-  | Labeled (t, l, _) -> 
+  | Labeled (t, l, _) ->
         group (brackets (concat [(str "labeled"); space; (str l); (doc_of_term t)]))
   | Const c -> group (doc_of_const c)
-  | Op(s, xs) -> 
+  | Op(s, xs) ->
         group (concat [(str s); (brackets (separate_map (str ", ") doc_of_term xs))])
   | Tvar id -> group (str id.idText)
   | Var l
   | Name l -> group (str l.str)
   | Construct (l, args) ->
         group (brackets (
-                concat [(str l.str); space; 
+                concat [(str l.str); space;
                         (separate_map space (fun (a,imp) -> concat [(doc_of_imp imp); (doc_of_term a)]) args)]))
   | Abs(pats, t) ->
         group (brackets (
-                concat [(str "fun"); space; 
+                concat [(str "fun"); space;
                         (separate_map space doc_of_pat pats);
-                        space; (str "->"); space; 
+                        space; (str "->"); space;
                         (doc_of_term t)]))
-  | App(t1, t2, imp) -> 
+  | App(t1, t2, imp) ->
         group (concat [
                     (doc_of_term t1); space;
                     (doc_of_imp imp); (doc_of_term t2)])
@@ -210,22 +255,22 @@ let rec doc_of_term (x:term) = match x.tm with
                        (doc_of_let_qualifier q); space;
                        (doc_of_pat pat); space;
                        equals; space;
-                       (doc_of_term tm); 
+                       (doc_of_term tm);
                        space; (str "in"); space;
                        (doc_of_term body)])
   | Seq(t1, t2) ->
         group (concat [doc_of_term t1; semi; space; doc_of_term t2])
   | If(t1, t2, t3) ->
-        group (concat [(str "if"); space; (doc_of_term t1); space; (str "then"); space; 
-                       (nest 2 (doc_of_term t2)); 
+        group (concat [(str "if"); space; (doc_of_term t1); space; (str "then"); space;
+                       (nest 2 (doc_of_term t2));
                        (str "else"); space;
                        (nest 2 (doc_of_term t3))])
   | Match(t, branches) ->
-       group (concat 
+       group (concat
                 [(str "match"); space; (doc_of_term t); space; (str "with"); space;
-                 (separate_map hardline 
+                 (separate_map hardline
                      (fun (p,w,e) -> concat [(str " | ");
-                                             (doc_of_pat p); space; 
+                                             (doc_of_pat p); space;
                                              (match w with | None -> empty | Some e -> concat [str "when "; (doc_of_term e)]);
                                              space; (str "->"); space;
                                              (doc_of_term e)])
@@ -235,13 +280,13 @@ let rec doc_of_term (x:term) = match x.tm with
   | Record(Some e, fields) ->
         group (concat [
                     lbrace; (doc_of_term e); space; str "with"; space;
-                    separate_map space 
+                    separate_map space
                         (fun (l,e) -> concat [str l.str; equals; doc_of_term e])
                         fields;
                     rbrace])
   | Record(None, fields) ->
         group (concat [
-                    lbrace; 
+                    lbrace;
                     separate_map space
                         (fun (l,e) -> concat [(str l.str); equals; (doc_of_term e)])
                         fields;
@@ -264,16 +309,16 @@ let rec doc_of_term (x:term) = match x.tm with
   | QForall(bs, pats, t) ->
         group (concat [
                     str "forall"; space;
-                    separate_map space doc_of_binder bs; 
+                    separate_map space doc_of_binder bs;
                     dot; lbrace; colon; str "pattern"; space;
-                    // TODO: should the separator be /\ here? 
+                    // TODO: should the separator be /\ here?
                     separate_map (str " \/ ") (separate_map (concat [semi; space]) doc_of_term) pats;
                     rbrace; space;
                     doc_of_term t])
   | QExists(bs, pats, t) ->
         group (concat [
                     str "exists"; space;
-                    separate_map space doc_of_binder bs; 
+                    separate_map space doc_of_binder bs;
                     dot; lbrace; colon; str "pattern"; space;
                     separate_map (str " \/ ") (separate_map (concat [semi; space]) doc_of_term) pats;
                     rbrace; space;
@@ -291,15 +336,15 @@ let rec doc_of_term (x:term) = match x.tm with
   | Product(bs, t) ->
         group (concat [
                     str "Unidentified product: [";
-                    separate_map comma doc_of_binder bs; 
+                    separate_map comma doc_of_binder bs;
                     str "]"; space;
                     doc_of_term t])
-  | t -> underscore 
+  | t -> underscore
 
 and doc_of_binder x =
   let s = match x.b with
   | Variable i -> str i.idText
-  | TVariable i -> concat [str i.idText; colon; underscore] 
+  | TVariable i -> concat [str i.idText; colon; underscore]
   | TAnnotated(i,t)
   | Annotated(i,t) -> concat [str i.idText; colon; doc_of_term t]
   | NoName t -> doc_of_term t in
@@ -308,21 +353,21 @@ and doc_of_binder x =
 and doc_of_aqual = function
    | Some Equality -> str "$"
    | Some Implicit -> str "#"
-   | _ -> empty 
+   | _ -> empty
 
 and doc_of_pat x = match x.pat with
-  | PatWild -> underscore 
+  | PatWild -> underscore
   | PatConst c -> doc_of_const c
   | PatApp(p, ps) ->
         group (parens (concat [(doc_of_pat p); space; (separate_map space doc_of_pat ps)]))
   | PatTvar (i, aq)
-  | PatVar (i,  aq) -> 
+  | PatVar (i,  aq) ->
         group (concat [(doc_of_aqual aq); (str i.idText)])
   | PatName l -> str l.str
   | PatList l -> group (brackets (separate_map (concat [semi; space]) doc_of_pat l))
   | PatTuple (l, false) -> group (parens (separate_map (concat [semi; space]) doc_of_pat l))
   | PatTuple (l, true) -> group (parens (concat [bar; (separate_map (concat [comma; space]) doc_of_pat l); bar]))
-  | PatRecord l -> 
+  | PatRecord l ->
         group (braces (separate_map (concat [semi; space]) (fun (f,e) -> concat [(str f.str); equals; (doc_of_pat e)]) l))
   | PatOr l ->  separate_map (concat [bar; hardline; space]) doc_of_pat l
   | PatOp op ->  parens (str op)
@@ -347,43 +392,43 @@ let doc_of_tycon = function
                        ])
   // TODO bb, k, t, flds, vars
   | TyconAbbrev(i, bb, k, t) -> group (str i.idText)
-  | TyconRecord(i, bb, k, flds) -> 
+  | TyconRecord(i, bb, k, flds) ->
         group (concat [str i.idText; space; equals; space;
                        (separate_map space doc_of_binder bb); space;
-                       default_or_map empty doc_of_term k; space; 
+                       default_or_map empty doc_of_term k; space;
                        braces ((separate_map (concat [space; semi; space])
                                     (fun (i,t,d) -> concat [str i.idText; space; colon; space; doc_of_term t])
                                     flds))])
   | TyconVariant(i, bb, k, vars) -> group (str i.idText)
 
 let doc_of_decl (d:decl) = match d.d with
-  | TopLevelModule l -> 
+  | TopLevelModule l ->
       group (str "module" ^/^ str l.str)
-  | Open l -> 
+  | Open l ->
       group (str "open" ^/^ str l.str)
-  | ModuleAbbrev (i, l) ->         
+  | ModuleAbbrev (i, l) ->
       group (str "module" ^/^ str i.idText ^/^ equals ^/^ str l.str)
-  | KindAbbrev(i, bb, k) -> 
+  | KindAbbrev(i, bb, k) ->
         group (concat [(str "kind"); space; (str i.idText);
                         (separate_map space
                             (fun b -> doc_of_binder b)
                             bb);
                         space; equals; space; (doc_of_term k);  hardline])
-  | TopLevelLet(qq, lq, pats_terms) ->  
-        // TODO: qq, lq. 
-        let head_ids = List.collect (fun (p,_) -> head_id_of_pat p) pats_terms in 
+  | TopLevelLet(qq, lq, pats_terms) ->
+        // TODO: qq, lq.
+        let head_ids = List.collect (fun (p,_) -> head_id_of_pat p) pats_terms in
         group (concat [(str "let"); space;
                        (separate_map (str ", ")
                             (fun l -> str l.str)
-                            head_ids); 
+                            head_ids);
                        hardline] )
   | Main e -> group (concat [str "main"; space; doc_of_term e])
-  | Assume(q, i, t) -> 
+  | Assume(q, i, t) ->
     // TODO: q, i.
         group (concat [ (str "assume"); space; (str i.idText); hardline])
-  | Tycon(q, tys) -> 
+  | Tycon(q, tys) ->
     // TODO: q. Also, print "type" here, or in doc_of_tycon?
-        group (concat [(str "type"); space; 
+        group (concat [(str "type"); space;
                         (separate_map (str ", ")
                             // TODO: d
                             (fun (x,d) -> doc_of_tycon x)
@@ -397,11 +442,57 @@ let doc_of_decl (d:decl) = match d.d with
   | NewEffectForFree(_, RedefineEffect(i, _, _)) -> concat [(str "new_effect_for_free "); (str i.idText); hardline]
   | SubEffect l -> str "sub_effect"
   | Pragma p -> str "pragma"
-  | Fsdoc d -> group (concat [doc_of_fsdoc d; hardline]) 
+  | Fsdoc d -> group (concat [doc_of_fsdoc d; hardline])
 
-// SI: go straight to decls (might have to change if TopLevel is not the first decl). 
+// SI: go straight to decls (might have to change if TopLevel is not the first decl).
 let doc_of_modul (m:modul) =
   match m with
-  | Module (_, decls) 
+  | Module (_, decls)
   | Interface (_, decls, _) ->
       decls |> List.map doc_of_decl |> separate hardline
+
+
+(* Automatic level assignment *)
+(* would be perfect with a little of staging... *)
+
+type associativity =
+    | Left
+    | Right
+    | NonAssoc
+
+type token = either<FStar.Char.char, string>
+type associativity_level = associativity * list<token>
+
+let assign_levels (token_associativity_spec : list<associativity_level>) : string -> int * int * int =
+    let levels_from_associativity (l:int) = function
+        | Left -> l, l, l-1
+        | Right -> l-1, l, l
+        | NonAssoc -> l, l, l
+    in
+    let level_table =
+        List.mapi (fun i (assoc, tokens) -> (levels_from_associativity i assoc, tokens)) token_associativity_spec
+    in
+    let matches_token s = function
+        | Inl c -> s.[0] = c
+        | Inl s' -> s = s'
+    in
+    let matches_level s (assoc_levels, tokens) =
+        List.existsb (matches_token s) tokens
+    in
+    function s ->
+        match List.find (matches_level s) with
+            | Some assoc_levels -> assoc_levels
+            | _ -> failwith ("Unrecognized operator " ^ s)
+
+let level_of_operator =
+    let spec = [
+        Left,  [Inl '*' ; Inl '/' ; Inl '%'];
+        Left,  [Inl '+' ; Inl '-' ];
+        Right, [Inl '@' Inl '^'] ;
+        Left,  [Inr "|>"] ;
+        Left,  [Inl '$'] ;
+        Left,  [Inl '=' ; Inl '<' ; Inl '>'] ;
+        Left,  [Inl '&'] ;
+        Left,  [Inl '|']
+        ]
+    in assign_levels spec
