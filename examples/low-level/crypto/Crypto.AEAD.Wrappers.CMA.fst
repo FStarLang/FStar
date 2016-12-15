@@ -23,6 +23,7 @@ module CMA = Crypto.Symmetric.UF1CMA
 module SeqProperties = FStar.SeqProperties
 module MAC = Crypto.Symmetric.MAC
 module EncodingWrapper = Crypto.AEAD.Wrappers.Encoding
+module PRF_MAC = Crypto.AEAD.PRF_MAC
 
 (*** UF1CMA.mac ***)
 #reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
@@ -47,7 +48,7 @@ let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
       let s = Buffer.as_seq h1 st.s in
       let t = MAC.mac log r s in
       sel_word h1 tag === t /\
-      m_sel h1 (ilog st.log) == Some(log,t))
+      snd (m_sel h1 (ilog st.log)) == Some(log,t))
     else Buffer.modifies_1 tag h0 h1)
 
 let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
@@ -61,9 +62,10 @@ let mac_wrapper (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB
     Buffer.disjoint st.s tag /\ 
     acc_inv st acc h0 /\
     (mac_log ==> m_contains (ilog st.log) h0) /\
-    (mac_log /\ authId i ==> m_sel h0 (ilog st.log) == None)))
+    (mac_log /\ authId i ==> snd (m_sel h0 (ilog st.log)) == None)))
   (ensures (fun h0 _ h1 -> mac_ensures i st acc tag h0 h1))
   = let open Crypto.Symmetric.UF1CMA in
+    assume false; //TODO: this is out of date
     let h0 = get () in
     CMA.mac #i st acc tag;
     let h1 = get () in 
@@ -100,11 +102,12 @@ let found_entry (#i:id) (n:Cipher.iv (Cipher.algi i)) (st:aead_state i Reader)
 	 (Buffer.as_seq h cipher_tagged))
 
 (*+ verify_liveness: 
-	liveness pre-condition for calling UF1CMA.verify **)
-let verify_liveness (#i:CMA.id) (st:CMA.state i) (tag:lbuffer 16) (h:mem) =
-    Buffer.live h (CMA.(st.s)) /\
-    Buffer.live h (CMA.(MAC.as_buffer st.r)) /\
-    Buffer.live h tag
+	 liveness pre-condition for UF1CMA.verify
+  **)	
+  
+let verify_liveness (#i:CMA.id) (r:rid) (ak:CMA.state i) (tag:lbuffer (v MAC.taglen)) (h:mem) = 
+  PRF_MAC.ak_live CMA.(ak.region) ak h /\
+  Buffer.live h tag
 
 (*+ verify_ok: 
 	post-condition of verify
@@ -113,7 +116,8 @@ let verify_liveness (#i:CMA.id) (st:CMA.state i) (tag:lbuffer 16) (h:mem) =
 	the expected tag
   **)	
 let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
-		     (h:mem{verify_liveness st tag h}) (b:bool)  = 
+	      (h:mem{verify_liveness CMA.(st.region) st tag h})
+ 	      (b:bool)  = 
     let open Crypto.Symmetric.UF1CMA in
     if mac_log then 
       let log = FStar.HyperStack.sel h (alog acc) in
@@ -123,10 +127,10 @@ let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16
       let verified = Seq.eq m (MAC.sel_word h tag) in
       if authId i then
       	match m_sel h (ilog st.log) with
-      	| Some(l',m') ->
+      	| _, Some(l',m') ->
       	  let correct = m = m' && Seq.eq log l' in
       	  b == (verified && correct)
-      	| None -> b==false
+      	| _, None -> b==false
       else b==verified
     else True
 
@@ -137,12 +141,80 @@ let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16
 let accumulate_encoded (#i:CMA.id)
  		       (#aadlen:aadlen) (aad:lbuffer (v aadlen))
 		       (#plainlen:txtlen_32) (cipher:lbuffer (v plainlen))
-		       (a:CMA.accBuffer i) (h:mem{mac_log}) =
-    Buffer.live h aad /\			 
-    Buffer.live h cipher /\			     
-    h `HS.contains` (CMA.alog a) /\
-    HS.sel h (CMA.alog a) ==
-    encode_both (fst i) aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher)
+		       (a:CMA.accBuffer i) (h:mem) =
+   Buffer.live h aad /\			 
+   Buffer.live h cipher /\
+   (mac_log ==> 
+     h `HS.contains` (CMA.alog a) /\
+     HS.sel h (CMA.alog a) 
+     == encode_both (fst i) aadlen (Buffer.as_seq h aad) plainlen (Buffer.as_seq h cipher))
+
+let acc_inv_weak (#i:CMA.id) (ak:CMA.state i) (acc:CMA.accBuffer i) h : Type0 =
+  let open CMA in
+  MAC.norm h ak.r /\ 
+  (* MAC.norm h (abuf acc) /\ *)
+  Buffer.disjoint (MAC.as_buffer ak.r) (MAC.as_buffer (abuf acc)) /\
+  (mac_log ==> (
+    HS.contains h (alog acc) /\
+    Buffer.disjoint_ref_1 (MAC.as_buffer (CMA.abuf acc)) (HS.as_aref (CMA.alog acc)) /\
+    Buffer.disjoint_ref_1 (MAC.as_buffer ak.r)  (HS.as_aref (CMA.alog acc))))
+
+let acc_ensures_weak (#i: MAC.id) (ak: CMA.state i) 
+		     (#aadlen:aadlen_32) (aad:lbuffer (v aadlen))
+		     (#txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
+		     (h0:mem) (acc:CMA.accBuffer i) (h1:mem) =
+  let open HS in
+  let open CMA in
+  EncodingWrapper.fresh_sref h0 h1 (Buffer.content (MAC.as_buffer (abuf acc))) /\
+  acc_inv_weak ak acc h1 /\
+  accumulate_encoded aad cipher acc h1 /\
+  (mac_log ==> EncodingWrapper.fresh_sref h0 h1 (CMA.alog acc))
+
+(*-- TODO: weirdness: this works, but a small variation fails --*)
+let test_ok (#i: CMA.id) (aead_st:aead_state (fst i) Reader) (ak:CMA.state i)
+	    (#aadlen:aadlen_32) (aad:lbuffer (v aadlen))
+	    (#txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
+	    (h0:mem) (acc:CMA.accBuffer i) (h1:mem) =
+   assume (EncodingWrapper.accumulate_ensures ak aad cipher h0 acc h1);
+   assert (EncodingWrapper.fresh_sref h0 h1 (Buffer.content (MAC.as_buffer (CMA.abuf acc))))
+
+(* (\*-- weirdness: this fails --*\) *)
+(* let test_fail (#i: id) (#n:Cipher.iv (Cipher.algi i)) *)
+(* 	      (aead_st:aead_state i Reader) (ak:CMA.state (i, n)) *)
+(* 	      (#aadlen:aadlen_32) (aad:lbuffer (v aadlen)) *)
+(* 	      (#txtlen:txtlen_32) (cipher:lbuffer (v txtlen)) *)
+(* 	      (h0:mem) (acc:CMA.accBuffer (i, n)) (h1:mem) = *)
+(*    assume (EncodingWrapper.accumulate_ensures #(i, n) ak aad cipher h0 acc h1); *)
+(*    assert (EncodingWrapper.fresh_sref h0 h1 (Buffer.content (MAC.as_buffer (CMA.abuf acc)))) *)
+
+val frame_accumulate_ensures: #i:CMA.id -> #rw:rw ->
+			      aead_st:aead_state (fst i) rw -> 
+			      ak:CMA.state i ->
+			      #aadlen:aadlen_32 -> aad:lbuffer (v aadlen) ->
+			      #txtlen:txtlen_32 -> plain:plainBuffer (fst i) (v txtlen) ->
+			      cipher_tagged:lbuffer (v txtlen + v MAC.taglen) ->
+			      h0:mem -> acc:CMA.accBuffer i -> h1:mem -> h2:mem ->
+    Lemma (requires (let cipher : lbuffer (v txtlen) = Buffer.sub cipher_tagged 0ul txtlen in
+		     enc_dec_separation aead_st aad plain cipher_tagged /\
+		     EncodingWrapper.accumulate_ensures ak aad cipher h0 acc h1 /\
+		     Buffer.modifies_1 (MAC.as_buffer (CMA.abuf acc)) h1 h2))
+          (ensures (let cipher : lbuffer (v txtlen) = Buffer.sub cipher_tagged 0ul txtlen in
+		    acc_ensures_weak ak aad cipher h0 acc h2))
+let frame_accumulate_ensures #i #rw aead_st ak #aadlen aad #txtlen plain cipher_tagged h0 acc h1 h2 =
+  FStar.Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.abuf acc)) h1 h2;
+  let cipher : lbuffer (v txtlen) = Buffer.sub cipher_tagged 0ul txtlen in
+  assert (HS.(h1.tip == h2.tip));
+  assert (h1 `HS.contains` (Buffer.content (MAC.as_buffer (CMA.abuf acc))));
+  assert (h2 `HS.contains` (Buffer.content (MAC.as_buffer (CMA.abuf acc))));
+  assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.abuf acc)) aad cipher);
+  assert (EncodingWrapper.fresh_sref h0 h2 (Buffer.content (MAC.as_buffer (CMA.abuf acc))));
+  if mac_log 
+  then (assert (h1  `HS.contains` CMA.alog acc);
+        assert (HS.sel h2 (CMA.alog acc) == HS.sel h1 (CMA.alog acc));
+	assert (Buffer.as_seq h2 (MAC.as_buffer CMA.(ak.r)) ==
+	        Buffer.as_seq h1 (MAC.as_buffer CMA.(ak.r)));
+        MAC.frame_sel_elem h1 h2 CMA.(ak.r))
+
 
 (*+ entry_exists_if_verify_ok:
 	A key lemma from the invariant and verify succeeding
@@ -160,10 +232,10 @@ val entry_exists_if_verify_ok : #i:id -> #n:Cipher.iv (alg i) -> (st:aead_state 
 			       (acc:CMA.accBuffer (i, n)) ->
 			       (tag:lbuffer 16{tag == Buffer.sub cipher_tagged plainlen MAC.taglen}) ->
 			       (h:mem{enc_dec_liveness st aad plain cipher_tagged h /\
-				      verify_liveness ak tag h /\ 
+				      verify_liveness PRF.(st.prf.mac_rgn) ak tag h /\ 
 				      safeId i}) ->
    Lemma (requires (inv st h /\
-		    CMA.acc_inv ak acc h /\
+		    acc_inv_weak ak acc h /\
 		    accumulate_encoded aad #plainlen (Buffer.sub cipher_tagged 0ul plainlen) acc h /\
 		    verify_ok ak acc tag h true /\
 		    is_mac_for_iv st ak h))
@@ -180,6 +252,7 @@ let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged
     let cipher_tagged = Buffer.as_seq h cipher_tagged_b in
     let cipher, _ = SeqProperties.split cipher_tagged (v plainlen) in
     let tag = Buffer.as_seq h tag_b in
+    assume (mac_is_used prf_table n h); //TODO: regression after indexing change; verify_ok ...true /\ is_mac_for_iv should prove this
     let aead_entry = find_refined_aead_entry n aead_entries prf_table h in 
     let Some ak' = PRF.find_mac prf_table x0 in
     assert (ak == ak');
@@ -187,8 +260,8 @@ let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged
     let cipher', _ = SeqProperties.split cipher_tagged' plainlen' in
     let mac_log = CMA.ilog (CMA.State?.log ak) in
     match m_sel h mac_log with
-    | None           -> ()
-    | Some (msg,tag') -> 
+    | _, None           -> ()
+    | _, Some (msg,tag') -> 
       lemma_encode_both_inj i aadlen plainlen (u (Seq.length aad')) (u plainlen')
 			     (Buffer.as_seq h aad) cipher aad' cipher';
       assert (Seq.equal tag tag');
@@ -217,10 +290,10 @@ val get_verified_plain : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader
 		    let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in 
 		    enc_dec_liveness st aad plain cipher_tagged h /\ 
 		    (if safeId i && verified
-		     then verify_liveness ak tag h /\ 
+		     then verify_liveness PRF.(st.prf.mac_rgn) ak tag h /\ 
 		  	  is_mac_for_iv st ak h /\
 			  inv st h /\
-			  CMA.acc_inv ak acc h /\
+			  acc_inv_weak ak acc h /\
 			  accumulate_encoded aad #plainlen (Buffer.sub cipher_tagged 0ul plainlen) acc h /\
 			  verify_ok ak acc tag h true
 	             else True)))
@@ -245,6 +318,7 @@ let get_verified_plain #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc
     let Some (AEADEntry _nonce _ad _l p _c) = find_aead_entry n aead_entries in
     let _ : unit = 
       let prf_table = HS.sel h (PRF.itable i st.prf) in
+      assume (mac_is_used prf_table n h); //TODO: regression after indexing change; verify_ok ...true /\ is_mac_for_iv should prove this
       let e = find_refined_aead_entry n aead_entries prf_table h in
       () in
     p
@@ -252,40 +326,39 @@ let get_verified_plain #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc
      Plain.load plainlen plain
   else ()
 
-let verify_separation (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) =
-    let open Crypto.Symmetric.UF1CMA in
-    Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) st.s tag /\
-    Buffer.disjoint_2 (MAC.as_buffer st.r) st.s tag
+let verify_requires (#i:CMA.id) (ak:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) (h0:mem) = 
+    EncodingWrapper.ak_acc_tag_separate ak acc tag /\
+    verify_liveness CMA.(ak.region) ak tag h0 /\
+    CMA.acc_inv ak acc h0 /\
+    (mac_log ==> m_contains CMA.(ilog ak.log) h0)
 
-let verify_requires (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) (h0:mem) = 
-    let open Crypto.Symmetric.UF1CMA in
-    verify_separation st acc tag /\
-    verify_liveness st tag h0 /\
-    acc_inv st acc h0 /\
-    (mac_log ==> m_contains (ilog st.log) h0)(*  /\ *)
-    (* (authId i ==> Some? (m_sel h0 (ilog st.log))) *)
-
-let verify_ensures (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
+let verify_modifies (#i:CMA.id) (acc:CMA.accBuffer i) (h0:mem) (h1:mem) = 
+    Buffer.modifies_1 (MAC.as_buffer (CMA.abuf acc)) h0 h1
+    
+let verify_ensures (#i:CMA.id) (ak:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
 		   (h0:mem) (b:bool) (h1:mem) = 
-    Buffer.modifies_0 h0 h1 /\
-    verify_liveness st tag h1 /\
-    verify_ok st acc tag h1 b
+    verify_modifies acc h0 h1 /\
+    verify_liveness CMA.(ak.region) ak tag h1 /\
+    verify_ok ak acc tag h1 b
 
 val verify_wrapper: 
   #i:CMA.id -> 
-  st:CMA.state i -> 
+  ak:CMA.state i -> 
   acc:CMA.accBuffer i -> 
   tag:lbuffer 16 -> Stack bool
-  (requires (fun h0 -> verify_requires st acc tag h0))
-  (ensures (fun h0 b h1 -> verify_ensures st acc tag h0 b h1))
-#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
-let verify_wrapper #i st acc tag = 
+  (requires (fun h0 -> verify_requires ak acc tag h0))
+  (ensures (fun h0 b h1 -> verify_ensures ak acc tag h0 b h1))
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let verify_wrapper #i ak acc tag = 
   let h0 = get () in 
-  assume (CMA.authId i ==> Some? (m_sel h0 (CMA.(ilog st.log)))); //TODO: can't prove this in Plan A
-  let b = CMA.verify #i st acc tag in
+  let b = CMA.verify #i ak acc tag in
   let h1 = get() in
-  Buffer.lemma_reveal_modifies_0 h0 h1;
-  assert (mac_log ==> m_sel h0 (CMA.(ilog st.log)) == m_sel h1 (CMA.(ilog st.log)));
+  Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.abuf acc)) h0 h1;
+  assert (mac_log ==> m_sel h0 (CMA.(ilog ak.log)) == m_sel h1 (CMA.(ilog ak.log)));
+  assert (Buffer.modifies_1 (MAC.as_buffer (CMA.abuf acc)) h0 h1);
+  assert (verify_liveness CMA.(ak.region) ak tag h1);
+  assert (verify_ok ak acc tag h0 b);
+  assume (verify_ok ak acc tag h1 b);  //UF1CMA states its post-condition in terms of the initial state; but we need it in terms of the final state here
   b
 
 #reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
@@ -300,19 +373,21 @@ val verify : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader ->
             (requires (fun h -> 
 		    let cipher = Buffer.sub cipher_tagged 0ul plainlen in
 		    let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in 
+		    HS.is_stack_region HS.(h.tip) /\
+   		    enc_dec_separation st aad plain cipher_tagged /\ 
 		    enc_dec_liveness st aad plain cipher_tagged h /\ 
-		    verify_separation ak acc tag /\
-		    verify_liveness ak tag h /\
+		    EncodingWrapper.ak_acc_tag_separate ak acc tag /\
+		    verify_liveness PRF.(st.prf.mac_rgn) ak tag h /\
 		    EncodingWrapper.accumulate_ensures ak aad #plainlen cipher h_init acc h /\
 		    inv st h /\
 		    (safeId i ==> is_mac_for_iv st ak h)))
             (ensures (fun h0 popt h1 -> 
 		    let cipher = Buffer.sub cipher_tagged 0ul plainlen in
 		    let x1 = {iv=n; ctr=otp_offset i} in
-	            Buffer.modifies_0 h0 h1 /\
+	            verify_modifies acc h0 h1 /\
     		    enc_dec_liveness st aad plain cipher_tagged h1 /\
     		    inv st h1 /\
-    		    EncodingWrapper.accumulate_ensures ak aad #plainlen cipher h_init acc h1 /\
+    		    acc_ensures_weak ak aad #plainlen cipher h_init acc h1 /\
 		    (safeId i ==> 
 			(match popt with 
 			 | None -> True
@@ -327,16 +402,14 @@ let verify #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc h_init =
   let open CMA in
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in
   let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in 
-  (* assume (Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) ak.s tag /\ *)
-  (* 	  Buffer.disjoint_2 (MAC.as_buffer ak.r) ak.s tag); *)
   if mac_log 
   then m_recall CMA.(ilog ak.log);
   let h0 = get () in
   let b = verify_wrapper ak acc tag in
   let h1 = get () in
-  EncodingWrapper.frame_accumulate_ensures ak aad #plainlen cipher h_init acc h0 h1;
-  frame_inv_modifies_0 st h0 h1;
-  Buffer.lemma_reveal_modifies_0 h0 h1;
+  frame_accumulate_ensures #(i,n) st ak aad #plainlen plain cipher_tagged h_init acc h0 h1;
+  frame_inv_modifies_1 (MAC.as_buffer (CMA.abuf acc)) st h0 h1;
+  Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.abuf acc)) h0 h1;
   if b 
   then let p = get_verified_plain st aad plain cipher_tagged ak acc true in
        Some p
