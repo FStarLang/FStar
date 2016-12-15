@@ -334,7 +334,6 @@ let aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
   (safeMac i ==> h `HS.contains` (st_ilog st)) /\  //contains the aead log
   (prf i ==> h `HS.contains` (itable i st.prf))   //contains the prf table
 
-
 (*** inv st h:
        The final stateful invariant,
        refines and aead_state_live ***)
@@ -439,7 +438,7 @@ let frame_refines_one_entry (#i:id) (#mac_rgn:region)
 	   (ensures  refines_one_entry blocks e h')
    = ()
 
-let frame_unused_aead_iv_for_prf (#mac_rgn:region) (#i:id) (h0:mem{safeMac i}) (h1:mem)
+let frame_unused_aead_iv_for_prf_h (#mac_rgn:region) (#i:id) (h0:mem{safeMac i}) (h1:mem)
 				 (prf_table:prf_table mac_rgn i)
 				 (iv:Cipher.iv (alg i))
   : Lemma (requires (let open HS in
@@ -459,7 +458,7 @@ let frame_refines (i:id{safeMac i}) (mac_rgn:region)
 		      HS.live_region h' mac_rgn))
 	   (ensures  refines blocks entries h')
    = let open FStar.Classical in
-     forall_intro (move_requires (frame_unused_aead_iv_for_prf h h' blocks));
+     forall_intro (move_requires (frame_unused_aead_iv_for_prf_h h h' blocks));
      if safeId i then forall_intro (move_requires (frame_refines_one_entry h h' blocks))
 
 let frame_inv_modifies_0 (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) (h1:mem)
@@ -551,6 +550,17 @@ let lemma_prf_find_append_some_forall
  = let open FStar.Classical in
    forall_intro (move_requires (lemma_prf_find_append_some #r #i table blocks))
 
+let lemma_prf_find_append_none
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (blocks:prf_table r i)
+  (x:PRF.domain i) 
+  : Lemma
+    (requires (None? (PRF.find blocks x)))
+    (ensures  (PRF.find (Seq.append table blocks) x == PRF.find table x))
+  = SeqProperties.find_append_none_s2 table blocks (is_entry_domain x)
+
 (*
  * refines_one_entry framing lemma for append to the PRF blocks
  *)
@@ -596,7 +606,7 @@ let frame_refines_entries_h (i:id{safeMac i}) (mac_rgn:region)
 		      HS.live_region h' mac_rgn))
 	   (ensures  aead_entries_are_refined blocks entries h')
    = let open FStar.Classical in
-     forall_intro (move_requires (frame_unused_aead_iv_for_prf h h' blocks));
+     forall_intro (move_requires (frame_unused_aead_iv_for_prf_h h h' blocks));
      if safeId i then forall_intro (move_requires (frame_refines_one_entry h h' blocks))
 
 (*+ mac_is_used prf_table iv: 
@@ -640,6 +650,20 @@ let find_refined_aead_entry
     | Some e -> 
       SeqProperties.lemma_find_l_contains (is_aead_entry_nonce n) aead_entries;
       e
+
+val frame_unused_aead_iv_for_prf_append
+  (#mac_rgn:region)
+  (#i:id)
+  (table:prf_table mac_rgn i)
+  (blocks:prf_table mac_rgn i)
+  (h:mem{safeMac i})
+  (nonce:Cipher.iv (alg i)) : Lemma
+  (requires (unused_aead_iv_for_prf table nonce h /\
+             (forall (y:PRF.domain i{y.iv = nonce}). PRF.find blocks y == None)))
+  (ensures  (unused_aead_iv_for_prf (Seq.append table blocks) nonce h))
+let frame_unused_aead_iv_for_prf_append #mac_rgn #i table blocks h nonce =
+  let open FStar.Classical in
+  forall_intro (move_requires (lemma_prf_find_append_none table blocks))
 
 (*** LEMMAS ABOUT counterblocks
 	      AND prf_contains_all_otp_blocks ***)
@@ -908,3 +932,18 @@ let invert_prf_contains_all_otp_blocks #i #r x #len from_pos plain cipher blocks
 	  let aux (e:PRF.entry r i) : Lemma (otp_blocks_tl `contains` e ==> otp_blocks `contains` e) = 
 	    contains_cons otp_blocks_hd otp_blocks_tl e in
 	  FStar.Classical.forall_intro aux
+
+val lemma_counterblocks_find_other_iv_is_none
+  (i:id{safeId i})
+  (r:rid)
+  (x:PRF.domain i{PRF.ctr_0 i <^ PRF.(x.ctr)})
+  (l:nat)
+  (from_pos:nat)
+  (to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) PRF.(x.ctr)})
+  (plain:plain i l)
+  (cipher:lbytes l) : Lemma
+  (requires  True)
+  (ensures   (let otp_entries = counterblocks i r x l from_pos to_pos plain cipher in
+	     (forall (y:PRF.domain i{y.iv <> x.iv}). PRF.find otp_entries y == None)))
+  (decreases (to_pos - from_pos))
+let rec lemma_counterblocks_find_other_iv_is_none i r x l from_pos to_pos plain cipher = admit ()
