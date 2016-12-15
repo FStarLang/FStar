@@ -284,7 +284,9 @@ val start: #i:id -> st:state i -> StackInline (accBuffer i)
   (ensures  (fun h0 a h1 ->
     Buffer.frameOf (MAC.as_buffer a.a) == h1.tip /\
     ~(h0 `Buffer.contains` (MAC.as_buffer (abuf a))) /\
-    (mac_log ==> ~(h0 `HS.contains` (alog a))) /\
+    (mac_log ==> 
+      HS.sel h1 (alog a) = Seq.createEmpty /\
+      ~(h0 `HS.contains` (alog a))) /\
     acc_inv st a h1 /\
     modifies_0 h0 h1))
 
