@@ -440,10 +440,10 @@ let accumulate #i st aadlen aad txtlen cipher  =
   let h3 = ST.get() in
   Buffer.lemma_reveal_modifies_0 h2 h3;
   //assert(mac_log ==> h3 `contains` (CMA.alog acc)); 
-  let id, _ = i in // JP: removed a call to Prims.fst
-  match macAlg_of_id id with 
-  | POLY1305 -> store_lengths_poly1305 aadlen txtlen final_word
-  | GHASH -> store_lengths_ghash aadlen txtlen final_word;
+  let id, _ = i in  // JP: removed a call to Prims.fst
+  ( match macAlg_of_id id with 
+    | POLY1305 -> store_lengths_poly1305 aadlen txtlen final_word
+    | GHASH -> store_lengths_ghash aadlen txtlen final_word );
   let h4 = ST.get() in 
   Buffer.lemma_reveal_modifies_1 final_word h3 h4;
   CMA.frame_acc_inv st acc h2 h3;
@@ -463,7 +463,7 @@ let accumulate #i st aadlen aad txtlen cipher  =
       assert(equal (HS.sel h1 al) (encode_bytes abytes));
       assert(equal (HS.sel h2 al) (encode_bytes cbytes @| encode_bytes abytes));
       assert(equal (HS.sel h5 al) (SeqProperties.cons lbytes (encode_bytes cbytes @| encode_bytes abytes)));
-      assert(equal (HS.sel h5 al) (encode_both id aadlen abytes txtlen cbytes))
+      assert(equal (HS.sel h5 al) (encode_both (fst i) aadlen abytes txtlen cbytes))
     end
   else 
     begin
