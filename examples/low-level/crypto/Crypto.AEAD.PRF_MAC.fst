@@ -575,7 +575,7 @@ let accumulate_h0_h1
      aead_entries_are_refined table_0 aead_entries_0 h0 /\
      (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_0 /\ nonce' <> nonce) ==>
 	                             unused_aead_iv_for_prf table_0 nonce' h0) /\
-     unused_mac_exists aead_st.prf dom_0 h0 /\
+     unused_mac_exists table_0 dom_0 h0 /\
      prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
 	                         (Plain.sel_plain h0 plainlen plain)
 	                         (Buffer.as_seq h0 cipher) table_0))
@@ -601,7 +601,7 @@ val lemma_propagate_inv_accumulate
 	        aead_entries_are_refined table_1 aead_entries_1 h1 /\
 	        (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_1 /\ nonce' <> nonce) ==>
 	                                       unused_aead_iv_for_prf table_1 nonce' h1) /\
-	        unused_mac_exists aead_st.prf dom_0 h1 /\
+	        unused_mac_exists table_1 dom_0 h1 /\
 	        prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
 	                                    (Plain.sel_plain h1 plainlen plain)
 	                                    (Buffer.as_seq h1 cipher) table_1))))
