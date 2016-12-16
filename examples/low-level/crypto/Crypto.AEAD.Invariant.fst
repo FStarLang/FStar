@@ -389,7 +389,8 @@ let enc_dec_liveness (#i:id) (#rw:rw) (st:aead_state i rw)
     Buffer.live h aad /\
     Buffer.live h cipher /\
     Plain.live h plain /\
-    st.log_region `is_in` h.h
+    st.log_region `is_in` h.h /\
+    st.prf.mac_rgn `is_in` h.h
 
 (*+ found_matching_entry: 
       the entry in the aead table corresponding to nonce n
