@@ -395,6 +395,26 @@ let enc_dec_liveness_and_separation (#i:id) (#rw:rw) (aead_st:aead_state i rw)
     enc_dec_separation aead_st aad plain cipher /\
     aead_liveness aead_st h
 
+let enxor_pre
+  (#i:id)
+  (#rw:rw)
+  (#aadlen:aadlen_32)
+  (#plainlen:txtlen_32{plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
+  (aead_st:aead_state i rw)
+  (nonce:Cipher.iv (alg i))
+  (aad:lbuffer (v aadlen))
+  (plain:plainBuffer i (v plainlen))
+  (cipher:lbuffer (v plainlen))
+  (h0:mem) =
+  let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
+  inv aead_st h0                                              /\
+  enc_dec_liveness_and_separation aead_st aad plain cipher h0 /\
+  (safeId i ==>
+    (let prf = itable i aead_st.prf in
+     let table_0 = HS.sel h0 prf in
+     fresh_nonce_st nonce aead_st h0  /\
+     unused_mac_exists table_0 dom_0 h0))
+
 let enxor_h0_h1
   (#i:id)
   (#rw:rw)
@@ -407,16 +427,13 @@ let enxor_h0_h1
   (cipher:lbuffer (v plainlen))
   (h0 h1:mem) =
   let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
-  inv aead_st h0                                              /\
-  enc_dec_liveness_and_separation aead_st aad plain cipher h0 /\
+  enxor_pre aead_st nonce aad plain cipher h0                 /\
   enc_dec_liveness_and_separation aead_st aad plain cipher h1 /\
   (safeId i ==>
     (let rgns = Set.as_set [aead_st.prf.rgn; Buffer.frameOf cipher] in
      let prf = itable i aead_st.prf in
      let table_0 = HS.sel h0 prf in
      let table_1 = HS.sel h1 prf in
-     fresh_nonce_st nonce aead_st h0       /\
-     unused_mac_exists table_0 dom_0 h0       /\
      HS.modifies rgns h0 h1                                                            /\
      HS.modifies_ref aead_st.prf.rgn (TSet.singleton (Heap.Ref (HS.as_ref prf))) h0 h1 /\
      Seq.equal table_1 (Seq.append table_0
@@ -494,7 +511,32 @@ let frame_unused_mac_exists_enxor #i #rw #aadlen #plainlen aead_st nonce aad pla
     					        (Buffer.as_seq h1 cipher);
     frame_unused_mac_exists_append table_0 dom_0 otp_entries h1
   end
-  
+
+let enxor_post
+  (#i:id)
+  (#rw:rw)
+  (#aadlen:aadlen_32)
+  (#plainlen:txtlen_32{plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
+  (aead_st:aead_state i rw)
+  (nonce:Cipher.iv (alg i))
+  (aad:lbuffer (v aadlen))
+  (plain:plainBuffer i (v plainlen))
+  (cipher:lbuffer (v plainlen))
+  (h1:mem) =
+  enc_dec_liveness_and_separation aead_st aad plain cipher h1 /\
+  (safeId i ==>
+   (let aead_entries_1 = HS.sel #(aead_entries i) h1 (st_ilog aead_st) in
+    let table_1 = HS.sel h1 (itable i aead_st.prf) in
+    let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
+    fresh_nonce_st nonce aead_st h1 /\
+    aead_entries_are_refined table_1 aead_entries_1 h1 /\
+    (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_1 /\ nonce' <> nonce) ==>
+	                            unused_aead_iv_for_prf table_1 nonce' h1) /\
+    unused_mac_exists table_1 dom_0 h1 /\
+    prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
+	                        (Plain.sel_plain h1 plainlen plain)
+	                        (Buffer.as_seq h1 cipher) table_1))
+
 val lemma_propagate_inv_enxor
   (#i:id)
   (#rw:rw)
@@ -507,19 +549,7 @@ val lemma_propagate_inv_enxor
   (cipher:lbuffer (v plainlen))
   (h0 h1:mem) : Lemma
   (requires (enxor_h0_h1 aead_st nonce aad plain cipher h0 h1))
-  (ensures  (enc_dec_liveness_and_separation aead_st aad plain cipher h1 /\
-             (safeId i ==>
-               (let aead_entries_1 = HS.sel #(aead_entries i) h1 (st_ilog aead_st) in
-	        let table_1 = HS.sel h1 (itable i aead_st.prf) in
-	        let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
-	        fresh_nonce_st nonce aead_st h1 /\
-	        aead_entries_are_refined table_1 aead_entries_1 h1 /\
-	        (forall (nonce':Cipher.iv (alg i)). (fresh_nonce nonce' aead_entries_1 /\ nonce' <> nonce) ==>
-	                                       unused_aead_iv_for_prf table_1 nonce' h1) /\
-	        unused_mac_exists table_1 dom_0 h1 /\
-	        prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
-	                                    (Plain.sel_plain h1 plainlen plain)
-	                                    (Buffer.as_seq h1 cipher) table_1))))
+  (ensures  (enxor_post aead_st nonce aad plain cipher h1))
 let lemma_propagate_inv_enxor #i #rw #aadlen #plainlen aead_st nonce aad plain cipher h0 h1 =
   let open FStar.Classical in
   if safeId i then begin
