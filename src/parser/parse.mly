@@ -234,7 +234,7 @@ decl2:
   | qs=qualifiers TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
       { Tycon (qs, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
   | qs=qualifiers EFFECT uid=uident tparams=typars EQUALS t=typ
-      { Tycon(Effect::qs, [(TyconAbbrev(uid, tparams, None, t), None)]) }
+      { Tycon(Effect::qs, [TyconAbbrev(uid, tparams, None, t), None]) }
   (* change to menhir : let ~> rec changed to let rec ~> *)
   | qs=qualifiers LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {

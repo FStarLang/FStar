@@ -226,8 +226,35 @@ let doc_of_imp = function
   | Nothing | FsTypApp -> empty
 
 
+(******************************************************************************)
+(*                                                                            *)
+(*                        Printing declarations                               *)
+(*                                                                            *)
+(******************************************************************************)
+
+let rec p_decl d =
+    optional p_fsdoc d.doc ^^ p_decl2 d
+
+and p_decl2 d = match d.d with
+    | Open uid ->
+        group (str "open" ^/^ p_quident uid)
+    | ModuleAbbrev (uid1, uid2) ->
+        (str "module" ^^ space ^^ p_quident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2
+    | TopLevelModule uid ->
+        group(str "module" ^^ space ^^ p_quident uid)
+    (* skipping kind abbreviation *)
+    | Tycon(qs, [TyconAbbrev(uid, tpars, None, t), None]) when List.contains Effect qs ->
+        (str "Effect" ^^ space ^^ p_uident uid
+         ^^ space ^^ equals) ^/+^
 
 
+
+
+(******************************************************************************)
+(*                                                                            *)
+(*                     Printing terms and types                               *)
+(*                                                                            *)
+(******************************************************************************)
 
 let rec p_term e = match e.tm with
   | Seq (e1, e2) ->
