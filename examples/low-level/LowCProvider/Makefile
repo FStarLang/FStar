@@ -42,7 +42,13 @@ endif
 
 .PHONY: test dep
 
-all: LowCProvider.cmxa
+all: ../krml-test.exe ../spartan_aes/aes.o LowCProvider.cmxa
+
+../spartan_aes/aes.o:
+	$(MAKE) -C ../spartan_aes
+
+../krml-test.exe: $(wildcard ../crypto/*.fst)
+	$(MAKE) -C .. krml-test.exe
 
 %.cmi: %.mli
 	$(OCAMLC) -c $<
@@ -62,9 +68,6 @@ libllcrypto.a: ../krml-test.exe
 
 lowc_stub.o: libllcrypto.a
 	$(OCAMLOPT) $(CCOPTS) $(EXTRA_OPTS) $(KRML_INCLUDES) -c lowc_stub.c
-
-../krml-test.exe:
-	make -C .. krml-test.exe
 
 LowCProvider.cmxa: $(CORECRYPTO)/CoreCrypto.cmx libllcrypto.a lowc_stub.o LowCProvider.cmx
 	$(OCAMLMKLIB) $(EXTRA_LIBS) $(CCLIBS) -o LowCProvider $^
