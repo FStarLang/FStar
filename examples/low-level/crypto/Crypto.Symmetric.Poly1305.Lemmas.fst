@@ -1153,7 +1153,7 @@ let lemma_add_word_1 ha a a0 a4 a8 a12 =
 
 let eval_4 a0 a1 a2 a3 : GTot nat = v a0 + pow2 32 * v a1 + pow2 64 * v a2 + pow2 96 * v a3
 
-#reset-options
+#reset-options "--z3rlimit 10"
 
 val lemma_add_word_2_2:
   a0:u64_32 -> a4:u64_32 -> a8:u64_32 -> a12:u64_32 ->
@@ -1186,6 +1186,7 @@ let lemma_add_word_2_2 a0 a1 a2 a3 b0 b1 b2 b3 =
                              (pow2 96 * (z3 % pow2 32)) 96 128;
   Math.Lemmas.modulo_lemma r (pow2 128)
 
+#reset-options
 
 val lemma_add_word_2_1:
   a0:u64_32 -> a4:u64_32 -> a8:u64_32 -> a12:u64_32 ->

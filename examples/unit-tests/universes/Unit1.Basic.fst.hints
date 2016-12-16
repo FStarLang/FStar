@@ -1,6 +1,8 @@
 [
   "võ\u0012á~èá–·ó˚5Ìë[\u001c",
   [
+    [ "Unit1.Basic.uu___is_A", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit1.Basic.uu___is_B", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.Basic.comp", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.Basic.foo", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.Basic.assert_0_eq_0", 1, 2, 1, [ "@query" ], 0 ],
@@ -303,6 +305,8 @@
       0
     ],
     [ "Unit1.Basic.inat", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit1.Basic.uu___is_O", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit1.Basic.uu___is_S", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.__proj__S__item___0",
       1,
@@ -447,6 +451,8 @@
       ],
       0
     ],
+    [ "Unit1.Basic.uu___is_N", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit1.Basic.uu___is_C", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.__proj__C__item___0",
       1,

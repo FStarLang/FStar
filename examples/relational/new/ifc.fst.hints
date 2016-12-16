@@ -1,6 +1,8 @@
 [
   "\f\u0007ö\u000eç\u0006æÔX\f˝ëª#+V",
   [
+    [ "Ifc.uu___is_Low", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ifc.uu___is_High", 1, 2, 1, [ "@query" ], 0 ],
     [ "Ifc.op_Less", 1, 2, 1, [ "@query" ], 0 ],
     [ "Ifc.op_Less_Equals", 1, 2, 1, [ "@query" ], 0 ],
     [

@@ -1,6 +1,7 @@
 [
   "z\u0001“öxÓ–ÌYMöä¢æD3",
   [
+    [ "ArrayRealized.uu___is_Const", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ArrayRealized.__proj__Const__item__v",
       1,
@@ -13,6 +14,7 @@
       ],
       0
     ],
+    [ "ArrayRealized.uu___is_Upd", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ArrayRealized.__proj__Upd__item__ix",
       1,
@@ -49,6 +51,7 @@
       ],
       0
     ],
+    [ "ArrayRealized.uu___is_Append", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ArrayRealized.__proj__Append__item__s1",
       1,
