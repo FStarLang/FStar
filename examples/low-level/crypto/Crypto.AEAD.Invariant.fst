@@ -78,6 +78,11 @@ let safelen (i:id)
    (remaining_len + len_all_blocks_so_far <= maxplain i &&
     remaining_len <= max_len_for_remaining_blocks))
 
+type ok_len (i:id) = plainlen:nat{safelen i plainlen (otp_offset i)}
+type nz_ok_len (i:id) = plainlen:ok_len i{plainlen <> 0}
+type ok_len_32 (i:id) = plainlen:txtlen_32{safelen i (v plainlen) (otp_offset i)}
+type nz_ok_len_32 (i:id) = plainlen:ok_len_32 i{plainlen <> 0ul}  //TODO: remove this clause; TLS can encrypt empty messages
+
 (*+ remaining_len_ok: 
       Given a plaintext of length len, with remaining_len left to encrypt,
       the current_block_index accurately characterizes the number of blocks 
@@ -156,7 +161,7 @@ let num_blocks_for_entry (#i:id) (e:aead_entry i) : Tot nat =
   let AEADEntry nonce ad l plain cipher_tagged = e in
   num_blocks_for_len i l
 
-let encode_ad_cipher (i:id) (ad:adata) (l:plainLen{safelen i l (PRF.ctr_0 i +^ 1ul)}) (cipher:lbytes l) =
+let encode_ad_cipher (i:id) (ad:adata) (l:ok_len i) (cipher:lbytes l) =
   encode_both i (FStar.UInt32.uint_to_t (Seq.length ad)) ad (FStar.UInt32.uint_to_t l) cipher
 
 (*+ counterblocks:
@@ -430,8 +435,7 @@ let incr_remaining_len_ok (#i:id) (x:PRF.domain i) (len:u32) (remaining_len:u32)
 	     remaining_len_ok (PRF.incr i x) len (remaining_len -^ l))
     = ()
 
-let init_remaining_len_ok (#i:id) (x:PRF.domain i{PRF.ctr_0 i +^ 1ul = x.ctr})
-			  (len:u32{len <> 0ul /\ safelen i (v len) x.ctr})
+let init_remaining_len_ok (#i:id) (x:PRF.domain i{PRF.ctr_0 i +^ 1ul = x.ctr}) (len:nz_ok_len_32 i)
     : Lemma (remaining_len_ok x len len)
     = ()
 
@@ -684,7 +688,7 @@ let frame_unused_aead_iv_for_prf_append #mac_rgn #i table blocks h nonce =
         Each recursive invocation effectively snoc's a PRF block **)
 #reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 val counterblocks_snoc: #i:id{safeId i} -> (rgn:region) -> (x:domain i{ctr_0 i <^ x.ctr}) -> (k:nat{v x.ctr <= k}) ->
-			 (len:nat{len <> 0 /\ safelen i len (ctr_0 i +^ 1ul)})  ->
+			 (len:nz_ok_len i) ->
 			 (next:nat{0 < next /\ next <= v (PRF.blocklen i)}) ->
 			 (completed_len:nat{ completed_len + next <= len /\ 
 					   FStar.Mul.((k - v (otp_offset i)) * v (PRF.blocklen i) = completed_len)}) ->
@@ -1027,22 +1031,21 @@ let lemma_prf_find_append_none_table
     (ensures  (PRF.find (Seq.append table blocks) x == PRF.find blocks x))
   = SeqProperties.find_append_none table blocks (is_entry_domain x)
 
+#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let frame_prf_contains_all_otp_blocks_prefix
   (#i:id)
   (#mac_rgn:rid)
-  (#len:u32)
-  (x:PRF.domain i{safeId i /\ PRF.ctr_0 i <^ x.ctr})
-  (from_pos:u32{((v from_pos) <= (v len)) /\ safelen i ((v len) - (v from_pos)) PRF.(x.ctr)})
+  (#len:nz_ok_len_32 i)
+  (x:PRF.domain i{safeId i /\ x.ctr = otp_offset i})
   (plain:plain i (v len))
   (cipher:lbytes (v len))
   (table:prf_table mac_rgn i) : Lemma
   (requires (none_above x table))
-  (ensures  (let blocks = counterblocks i mac_rgn x (v len) (v from_pos) (v len) plain cipher in
-             prf_contains_all_otp_blocks x (v from_pos) plain cipher (Seq.append table blocks)))
+  (ensures  (let blocks = counterblocks i mac_rgn x (v len) 0 (v len) plain cipher in
+             prf_contains_all_otp_blocks x 0 plain cipher (Seq.append table blocks)))
   = let open FStar.Classical in
-    let blocks = counterblocks i mac_rgn x (v len) (v from_pos) (v len) plain cipher in
-    (* AR: Need to figure out why this is not true, counterblocks_contains_all_otp_blocks is written in terms of remaining *)
-    assume (remaining_len_ok x len (len -^ from_pos));
-    counterblocks_contains_all_otp_blocks i mac_rgn x len (len -^ from_pos) plain cipher;
-    forall_intro (move_requires (lemma_counterblocks_all_entries_are_above_x i mac_rgn x (v len) (v from_pos) (v len) plain cipher));
+    let blocks = counterblocks i mac_rgn x (v len) 0 (v len) plain cipher in
+    init_remaining_len_ok x len;
+    counterblocks_contains_all_otp_blocks i mac_rgn x len len plain cipher;
+    forall_intro (move_requires (lemma_counterblocks_all_entries_are_above_x i mac_rgn x (v len) 0 (v len) plain cipher));
     forall_intro (move_requires (lemma_prf_find_append_none_table table blocks))

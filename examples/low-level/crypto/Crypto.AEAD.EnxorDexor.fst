@@ -442,7 +442,7 @@ val enxor  :
     aead_st:aead_state i Writer ->
     #aadlen:aadlen -> 
         aad:lbuffer (v aadlen) ->
-       #len:Encoding.txtlen_32 -> 
+       #len:nz_ok_len_32 i ->
       plain:plainBuffer i (v len) ->
  cipher_tag:lbuffer (v len + v MAC.taglen) ->
          ak:CMA.state (i, iv) -> 
@@ -453,10 +453,10 @@ val enxor  :
 	     enc_dec_separation aead_st aad plain cipher_tag /\
 	     enc_dec_liveness aead_st aad plain cipher_tag h /\
 	     inv aead_st h /\
-	     len <> 0ul /\
-	     safelen i (v len) (otp_offset i) /\
              PRF_MAC.ak_live aead_st.prf.mac_rgn ak h /\
 	     (safeMac i ==> 
+       	         is_mac_for_iv aead_st ak h /\
+		 fresh_nonce_st iv aead_st h /\
 	         CMA.mac_is_unset (i, iv) aead_st.prf.mac_rgn ak h /\
 		 none_above_prf_st x t h)))    // if ciphertexts are authenticated, then fresh blocks are available
    (ensures (fun h0 _ h1 ->
@@ -467,8 +467,9 @@ val enxor  :
 	     modifies_table_above_x_and_buffer t x cipher h0 h1 /\
 	     enxor_invariant t x len 0ul plain cipher h0 h1 /\
              PRF_MAC.ak_live aead_st.prf.mac_rgn ak h1 /\	    
-	     (safeMac i ==> 
-	         CMA.mac_is_unset (i, iv) aead_st.prf.mac_rgn ak h1)))
+	     (safeMac i ==>
+	         CMA.mac_is_unset (i, iv) aead_st.prf.mac_rgn ak h1) /\
+	     PRF_MAC.enxor_h0_h1 aead_st iv aad plain cipher h0 h1))
 let enxor #i iv aead_st #aadlen aad #len plain_b cipher_tag ak =
   let h_init = ST.get () in
   let x = {iv=iv; ctr=otp_offset i} in

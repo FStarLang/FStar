@@ -75,6 +75,43 @@ let do_ideal #i st n #aadlen aad #plainlen plain cipher_tag =
     FStar.ST.recall (st_ilog st);
     st_ilog st := SeqProperties.snoc !(st_ilog st) entry
 
+assume val encrypt_write_effect : 
+          i: id -> 
+         st: aead_state i Writer ->
+          n: Cipher.iv (alg i) ->
+    #aadlen: aadlen_32 ->
+        aad: lbuffer (v aadlen) ->
+  #plainlen: nz_ok_len_32 i ->
+      plain: plainBuffer i (v plainlen) ->
+ cipher_tag: lbuffer (v plainlen + v MAC.taglen) ->
+         ak: CMA.state (i, n) -> 
+        acc: CMA.accBuffer (i, n) ->
+     h_init: mem ->
+     h_push: mem ->
+      h_prf: mem ->
+      h_enx: mem ->
+      h_acc: mem ->
+      h_mac: mem ->
+    h_ideal: mem ->
+      Lemma  
+  (requires  (let tag : lbuffer (v MAC.taglen) = Buffer.sub cipher_tag plainlen MAC.taglen in
+	      CMA.(ak.region) = PRF.(st.prf.mac_rgn) /\	      
+	      enc_dec_separation st aad plain cipher_tag  /\
+              enc_dec_liveness st aad plain cipher_tag h_init /\
+	      HS.fresh_frame h_init h_push /\
+	      BufferUtils.prf_mac_modifies st.log_region st.prf.mac_rgn h_push h_prf /\
+	      HS.modifies_transitively (Set.as_set [st.log_region; Buffer.frameOf cipher_tag]) h_prf h_enx /\
+	      EncodingWrapper.accumulate_modifies_nothing h_enx h_acc /\
+	      CMAWrapper.mac_modifies i n tag ak acc h_acc h_mac /\
+	      Buffer.frameOf (MAC.as_buffer (CMA.abuf acc)) = HS.(h_acc.tip) /\
+	      (if not (safeMac i)
+ 	       then h_mac == h_ideal 
+	       else (HS.modifies (Set.as_set [st.log_region]) h_mac h_ideal /\
+		     HS.modifies_ref st.log_region (TSet.singleton (HS.as_aref (st_ilog st))) h_mac h_ideal))))
+   (ensures  (HS.poppable h_ideal /\ (
+	      let h_final = HS.pop h_ideal in
+   	      HS.modifies_transitively (Set.as_set [st.log_region; Buffer.frameOf cipher_tag]) h_init h_final /\
+	      Buffer.modifies_buf_1 (Buffer.frameOf cipher_tag) cipher_tag h_init h_final)))
 
 assume val reestablish_inv:
           i: id -> 
@@ -82,7 +119,7 @@ assume val reestablish_inv:
           n: Cipher.iv (alg i) ->
     #aadlen: aadlen_32 ->
         aad: lbuffer (v aadlen) ->
-  #plainlen: txtlen_32 {safelen i (v plainlen) (otp_offset i)} ->
+  #plainlen: nz_ok_len_32 i ->
       plain: plainBuffer i (v plainlen) ->
  cipher_tag: lbuffer (v plainlen + v MAC.taglen) ->
          ak: CMA.state (i, n) -> 
@@ -135,7 +172,7 @@ val encrypt:
           n: Cipher.iv (alg i) ->
      aadlen: aadlen_32 ->
         aad: lbuffer (v aadlen) ->
-   plainlen: txtlen_32 {safelen i (v plainlen) (otp_offset i)} ->
+   plainlen: nz_ok_len_32 i ->
       plain: plainBuffer i (v plainlen) ->
  cipher_tag: lbuffer (v plainlen + v MAC.taglen) ->
          ST  unit
@@ -151,7 +188,6 @@ val encrypt:
 	     HS.modifies_transitively (Set.as_set [st.log_region; Buffer.frameOf cipher_tag]) h0 h1))
 
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
-  assume (plainlen <> 0ul); //TODO: remove this; currently cannot encrypt empty plain texts
   let h_init = get() in
   push_frame(); 
   let h00 = get () in
@@ -165,7 +201,7 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let ak = PRF_MAC.prf_mac_enc st aad plain cipher_tagged st.ak x_0 in  // used for keying the one-time MAC
   let h0 = get () in
   let open CMA in 
-  
+
   //call enxor: fragment the plaintext, call the prf, and fill in the cipher text
   Enxor.enxor n st aad plain cipher_tagged ak;
   let h1 = get () in
@@ -182,10 +218,12 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   //call mac: filling in the tag component of the out buffer
   CMAWrapper.mac #(i,n) st aad plain cipher_tagged ak acc h1;
   let h3 = get () in 
+  assert (fresh_nonce_st n st h3);
   
   if safeMac i 
   then do_ideal st n aad plain cipher_tagged;
   let h4 = get () in
   let x_1 = PRF.incr i x_0 in
+
   reestablish_inv i st n aad plain cipher_tagged ak acc h0 h1 h2 h3 h4;
   admit()
