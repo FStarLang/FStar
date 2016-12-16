@@ -392,7 +392,8 @@ let enc_dec_liveness_and_separation (#i:id) (#rw:rw) (aead_st:aead_state i rw)
 				    (#cipherlen:nat) (cipher:lbuffer cipherlen)
                                     (h:mem)
   = enc_dec_liveness aead_st aad plain cipher h /\
-    enc_dec_separation aead_st aad plain cipher
+    enc_dec_separation aead_st aad plain cipher /\
+    aead_liveness aead_st h
 
 let enxor_h0_h1
   (#i:id)
@@ -848,6 +849,25 @@ let final_h0_h1
 	                         (Plain.sel_plain h0 plainlen plain)
 	                         (Buffer.as_seq h0 cipher) table_0 /\
      aead_entries_1 == SeqProperties.snoc aead_entries_0 (AEADEntry nonce (Buffer.as_seq h0 aad) (v plainlen) (Plain.sel_plain h0 plainlen plain) (Buffer.as_seq h0 cipher_tagged))))
+
+val frame_final
+  (#i:id)
+  (#rw:rw)
+  (#aadlen:aadlen_32)
+  (#plainlen:txtlen_32{plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
+  (aead_st:aead_state i rw)
+  (nonce:Cipher.iv (alg i))
+  (aad:lbuffer (v aadlen))
+  (plain:plainBuffer i (v plainlen))
+  (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+  (h0 h1:mem) : Lemma
+  (requires (final_h0_h1 aead_st nonce aad plain cipher_tagged h0 h1))
+  (ensures  (safeId i ==>
+             (let table_0 = HS.sel h0 (itable i aead_st.prf) in
+	      let table_1 = HS.sel h1 (itable i aead_st.prf) in
+	      table_0 == table_1)))
+#reset-options "--z3rlimit 50 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let frame_final #i #rw #aadlen #plainlen aead_st nonce aad plain cipher_tagged h0 h1 = ()
 
 val lemma_establish_final_inv
   (#i:id)
