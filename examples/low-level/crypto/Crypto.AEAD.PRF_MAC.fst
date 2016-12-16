@@ -308,6 +308,7 @@ let ak_live (#i:CMA.id) (r:rid) (ak:CMA.state i) (h:mem) =
     Buffer.live h ak.s /\
     MAC.norm h ak.r
 
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val prf_mac_enc
   (#i:id)
   (#rw:rw)
@@ -331,9 +332,9 @@ val prf_mac_enc
                    (safeMac i ==>
 		    (let table_1 = HS.sel h1 (itable i aead_st.prf) in
 		     fresh_nonce_st x.iv aead_st h1 /\
+		     is_mac_for_iv aead_st ak h1 /\
 		     unused_mac_exists table_1 x h1 /\
 		     none_above (PRF.incr i x) table_1))))
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let prf_mac_enc #i #rw aead_st #aadlen aad #len plain cipher_tagged k_0 x = 
  let h0 = get () in
  let ak = prf_mac_wrapper aead_st k_0 x in

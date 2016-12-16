@@ -36,44 +36,19 @@ let mac_requires (#i:CMA.id) (ak:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tag
   verify_liveness ak tag h /\
   acc_inv ak acc h /\
   (mac_log ==> Buffer.frameOf tag <> (alog acc).id) /\
-  (authId i ==> RR.m_sel h (ilog ak.log) == (snd i, None))
-
-(* let mac_ensures (i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB) *)
-(* 		(h0:mem) (h1:mem) =  *)
-(*     let open FStar.Buffer in *)
-(*     let open Crypto.Symmetric.Bytes in *)
-(*     let open Crypto.Symmetric.Poly1305 in *)
-(*     let open Crypto.Symmetric.UF1CMA in *)
-(*     verify_liveness ak tag h1 /\ *)
-(*     acc_inv st acc h0 /\ ( *)
-(*     if mac_log then *)
-(*       HS.modifies (Set.as_set [st.region; Buffer.frameOf tag]) h0 h1 /\ *)
-(*       Buffer.modifies_buf_1 (Buffer.frameOf tag) tag h0 h1 /\ *)
-(*       HS.modifies_ref st.region !{HS.as_ref (as_hsref (ilog st.log))} h0 h1 /\ *)
-(*       m_contains (ilog st.log) h1 /\ ( *)
-(*       let log = FStar.HyperStack.sel h1 (alog acc) in *)
-(*       let a = MAC.sel_elem h1 (abuf acc) in *)
-(*       let r = MAC.sel_elem h1 st.r in *)
-(*       let s = Buffer.as_seq h1 st.s in *)
-(*       let t = MAC.mac log r s in *)
-(*       sel_word h1 tag === t /\ *)
-(*       snd (m_sel h1 (ilog st.log)) == Some(log,t)) *)
-(*     else Buffer.modifies_2 tag h0 h1) *)
-
+  (authId i ==> CMA.mac_is_unset i ak.region ak h)
 
 let modifies_bufs_and_ref (#a:Type) (#b:Type) (#c:Type)
     (buf1:Buffer.buffer a)
-    (buf2:Buffer.buffer b{Buffer.frameOf buf1 = Buffer.frameOf buf2})   //this is true from CMA.state
-    (reff:HS.reference c{HH.disjoint HS.(reff.id) (Buffer.frameOf buf1)})  //this is stronger than you have currently ...
-    		   		 		 	  // ... but is true in the caller's context
-    h0 h1 : GTot Type0 =
+    (buf2:Buffer.buffer b{Buffer.frameOf buf1 = Buffer.frameOf buf2})
+    (reff:HS.reference c{HH.disjoint HS.(reff.id) (Buffer.frameOf buf1)})
+    (h0 h1:mem) : GTot Type0 =
  let open FStar.HyperStack in
  let open FStar.Buffer in
  HS.modifies (Set.as_set [frameOf buf1; reff.id]) h0 h1 /\
  HS.modifies_ref reff.id !{HS.as_ref reff} h0 h1 /\
- HS.modifies_ref (frameOf buf1) !{HS.as_ref (Buffer.content buf1),
-				  HS.as_ref (Buffer.content buf2)} h0 h1
-
+ Buffer.modifies_buf_2 (frameOf buf1) buf1 buf2 h0 h1
+ 
 let mac_modifies 
         (i:id) (iv:Cipher.iv (Cipher.algi i))
 	(tbuf:lbuffer (v MAC.taglen))
@@ -88,6 +63,7 @@ let mac_modifies
        modifies_bufs_and_ref abuf tbuf log h0 h1
   else Buffer.modifies_2 abuf tbuf h0 h1
 
+#set-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 let mac_wrapper (#i:EncodingWrapper.mac_id) (ak:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
   : ST unit
   (requires (fun h0 -> mac_requires ak acc tag h0))
@@ -97,75 +73,62 @@ let mac_wrapper (#i:EncodingWrapper.mac_id) (ak:CMA.state i) (acc:CMA.accBuffer 
     CMA.mac #i ak acc tag; 
     admit()
 
-(* let mac_ensures  *)
-(*         (i:id)  *)
-(*         (iv:Cipher.iv (Cipher.algi i)) *)
-(* 	(st:aead_state i Writer) *)
-(* 	(#aadlen:aadlen) (aad:lbuffer (v aadlen)) *)
-(* 	(#txtlen:txtlen_32) (plain:plainBuffer i (v txtlen)) *)
-(* 	(cipher_tagged:lbuffer (v txtlen + v MAC.taglen)) *)
-(* 	(ak:CMA.state (i, iv))  *)
-(* 	(acc:CMA.accBuffer (i, iv)) *)
-(* 	(h0 h1:mem) =  *)
-(*   enc_dec_liveness st aad plain cipher_tagged h1 /\ *)
-(*   mac_modifies i iv cipher_tagged ak acc h0 h1 /\  *)
-(*   (safeMac i ==> *)
-(*      h1 `HS.contains` (PRF.itable i st.prf) /\ ( *)
-(*      let prf_table = HS.sel h1 (PRF.itable i st.prf) in *)
-(*      let ad = Buffer.as_seq h1 aad in *)
-(*      let cbuf = Buffer.sub cipher_tagged 0ul txtlen in *)
-(*      let tbuf = Buffer.sub cipher_tagged txtlen MAC.taglen in *)
-(*      let cipher : lbytes (v txtlen) = Buffer.as_seq h1 cbuf in  *)
-(*      let tag : MAC.tag = Buffer.as_seq h1 tbuf in *)
-(*      mac_is_set prf_table iv ad (v txtlen) cipher tag h1)) *)
+#set-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let mac_ensures
+        (i:id)
+        (iv:Cipher.iv (Cipher.algi i))
+	(st:aead_state i Writer)
+	(#aadlen:aadlen) (aad:lbuffer (v aadlen))
+	(#txtlen:txtlen_32) (plain:plainBuffer i (v txtlen))
+	(cipher_tagged:lbuffer (v txtlen + v MAC.taglen))
+	(ak:CMA.state (i, iv))
+	(acc:CMA.accBuffer (i, iv))
+	(h0 h1:mem) =
+  let tag = Buffer.sub cipher_tagged txtlen MAC.taglen in	
+  enc_dec_liveness st aad plain cipher_tagged h1 /\
+  mac_modifies i iv tag ak acc h0 h1 /\
+  (safeMac i ==>
+     h1 `HS.contains` (PRF.itable i st.prf) /\ (
+     let prf_table = HS.sel h1 (PRF.itable i st.prf) in
+     let ad = Buffer.as_seq h1 aad in
+     let cbuf = Buffer.sub cipher_tagged 0ul txtlen in
+     let tbuf = Buffer.sub cipher_tagged txtlen MAC.taglen in
+     let cipher : lbytes (v txtlen) = Buffer.as_seq h1 cbuf in
+     let tag : MAC.tag = Buffer.as_seq h1 tbuf in
+     mac_is_set prf_table iv ad (v txtlen) cipher tag h1))
      
-(* val mac (#i:EncodingWrapper.mac_id)  *)
-(* 	(st:aead_state (fst i) Writer) *)
-(* 	(#aadlen:aadlen) (aad:lbuffer (v aadlen)) *)
-(* 	(#txtlen:txtlen_32) (plain:plainBuffer (fst i) (v txtlen)) *)
-(* 	(cipher_tagged:lbuffer (v txtlen + v MAC.taglen)) *)
-(* 	(ak:CMA.state i)  *)
-(* 	(acc:CMA.accBuffer i) *)
-(* 	(h_init:mem) *)
-(*    : ST unit *)
-(*    (requires (fun h0 ->  *)
-(*      let open CMA in *)
-(*      let cipher : lbuffer (v txtlen) = Buffer.sub cipher_tagged 0ul txtlen in *)
-(*      let tag = Buffer.sub cipher_tagged txtlen MAC.taglen in *)
-(*      HS.is_stack_region HS.(h0.tip) /\ *)
-(*      enc_dec_separation st aad plain cipher_tagged /\ *)
-(*      enc_dec_liveness st aad plain cipher_tagged h0 /\ *)
-(*      EncodingWrapper.ak_acc_tag_separate ak acc tag /\ *)
-(*      EncodingWrapper.accumulate_ensures ak aad cipher h_init acc h0 /\ *)
-(*      verify_liveness ak tag h0 /\ *)
-(*      acc_inv ak acc h0 /\ *)
-(*      (authId i ==> RR.m_sel h0 (ilog ak.log) == (snd i, None)))) *)
-(*    (ensures (fun h0 _ h1 ->  *)
-(*       mac_ensures (fst i) (snd i) st aad plain cipher_tagged ak acc h0 h1)) *)
-(* #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
-(* open FStar.HyperStack *)
-(* open FStar.Buffer *)
-				  
- 
- 
-(*  		 	  		    (TSet.singleton (Buff buf2))) h0 h1 *)
-
-(* let mac #i st #aadlen aad #txtlen plain cipher_tagged ak acc h_init =       *)
-(*    let tag = Buffer.sub cipher_tagged txtlen MAC.taglen in *)
-(*    let h0 = get () in *)
-(*    mac_wrapper ak acc tag; *)
-(*    let h1 = get () in *)
-(*    assert (mac_modifies (fst i) (snd i) cipher_tagged ak acc h0 h1); *)
-(*    let abuf = MAC.as_buffer (CMA.abuf acc) in *)
-(*    FStar.Classical.move_requires (FStar.Buffer.lemma_reveal_modifies_2 abuf tag h0) h1; *)
-(*    assert (enc_dec_liveness st aad plain cipher_tagged h1); *)
-(*    admit() *)
-   
-
-(*    admit() *)
-
-    
-     
+val mac (#i:EncodingWrapper.mac_id)
+	(st:aead_state (fst i) Writer)
+	(#aadlen:aadlen) (aad:lbuffer (v aadlen))
+	(#txtlen:txtlen_32) (plain:plainBuffer (fst i) (v txtlen))
+	(cipher_tagged:lbuffer (v txtlen + v MAC.taglen))
+	(ak:CMA.state i)
+	(acc:CMA.accBuffer i)
+	(h_init:mem)
+   : ST unit
+   (requires (fun h0 ->
+     let open CMA in
+     let cipher : lbuffer (v txtlen) = Buffer.sub cipher_tagged 0ul txtlen in
+     let tag = Buffer.sub cipher_tagged txtlen MAC.taglen in
+     HS.is_stack_region HS.(h0.tip) /\
+     enc_dec_separation st aad plain cipher_tagged /\
+     enc_dec_liveness st aad plain cipher_tagged h0 /\
+     EncodingWrapper.ak_acc_tag_separate ak acc tag /\
+     EncodingWrapper.accumulate_ensures ak aad cipher h_init acc h0 /\
+     verify_liveness ak tag h0 /\
+     acc_inv ak acc h0 /\
+     (authId i ==> CMA.mac_is_unset i ak.region ak h0)))
+   (ensures (fun h0 _ h1 ->
+      mac_ensures (fst i) (snd i) st aad plain cipher_tagged ak acc h0 h1))
+#set-options "--z3rlimit 100"
+let mac #i st #aadlen aad #txtlen plain cipher_tagged ak acc h_init =   
+   let tag = Buffer.sub cipher_tagged txtlen MAC.taglen in
+   let h0 = get () in
+   mac_wrapper ak acc tag;
+   let h1 = get () in
+   if not (safeMac (fst i))
+   then let abuf = MAC.as_buffer (CMA.abuf acc) in
+        FStar.Buffer.lemma_reveal_modifies_2 abuf tag h0 h1
 	
 (*** UF1CMA.verify ***)
 

@@ -12,16 +12,16 @@ open Flag
 open Crypto.Symmetric.PRF
 open Crypto.AEAD.Invariant
 
-module Cipher = Crypto.Symmetric.Cipher
-module PRF = Crypto.Symmetric.PRF
-module Plain = Crypto.Plain
-module Invariant = Crypto.AEAD.Invariant
-module HH = FStar.HyperHeap
-module HS = FStar.HyperStack
-module CMA = Crypto.Symmetric.UF1CMA
-module MAC = Crypto.Symmetric.MAC
+module Cipher        = Crypto.Symmetric.Cipher
+module PRF           = Crypto.Symmetric.PRF
+module Plain         = Crypto.Plain
+module Invariant     = Crypto.AEAD.Invariant
+module HH            = FStar.HyperHeap
+module HS            = FStar.HyperStack
+module CMA           = Crypto.Symmetric.UF1CMA
+module MAC           = Crypto.Symmetric.MAC
 module SeqProperties = FStar.SeqProperties
-
+module PRF_MAC       = Crypto.AEAD.PRF_MAC
 (*** First, some predicates and lemmas
      shared between enxor and dexor **)
 
@@ -436,31 +436,40 @@ let rec counter_enxor #i t x len remaining_len plain cipher h_init =
   else refl_modifies_table_above_x_and_buffer t x cipher h0
 
 (*+ enxor: The main function exposed to clients for encryption **)
-val enxor:
-  #i:id ->
-  iv:Cipher.iv (Cipher.algi i) ->
-  aead_st:aead_state i Writer ->
-  #aadlen:aadlen -> aad:lbuffer (v aadlen) ->
-  #len:Encoding.txtlen_32 -> plain:plainBuffer i (v len) ->
-  cipher_tag:lbuffer (v len + v MAC.taglen) ->
-  ST unit
+val enxor  :
+         #i:id ->
+         iv:Cipher.iv (Cipher.algi i) ->
+    aead_st:aead_state i Writer ->
+    #aadlen:aadlen -> 
+        aad:lbuffer (v aadlen) ->
+       #len:Encoding.txtlen_32 -> 
+      plain:plainBuffer i (v len) ->
+ cipher_tag:lbuffer (v len + v MAC.taglen) ->
+         ak:CMA.state (i, iv) -> 
+	 ST unit
   (requires (fun h ->
-    let x = {iv=iv; ctr=otp_offset i} in
-    let t = aead_st.prf in
-    enc_dec_separation aead_st aad plain cipher_tag /\
-    enc_dec_liveness aead_st aad plain cipher_tag h /\
-    inv aead_st h /\
-    len <> 0ul /\
-    safelen i (v len) (otp_offset i) /\
-    (safeMac i ==> none_above_prf_st x t h)))    // if ciphertexts are authenticated, then fresh blocks are available
-  (ensures (fun h0 _ h1 ->
-    let x = {iv=iv; ctr=otp_offset i} in
-    let t = aead_st.prf in
-    let cipher : lbuffer (v len) = Buffer.sub cipher_tag 0ul len in
-    enc_dec_liveness aead_st aad plain cipher_tag h1 /\
-    modifies_table_above_x_and_buffer t x cipher h0 h1 /\
-    enxor_invariant t x len 0ul plain cipher h0 h1))
-let enxor #i iv aead_st #aadlen aad #len plain_b cipher_tag =
+	     let x = {iv=iv; ctr=otp_offset i} in
+	     let t = aead_st.prf in
+	     enc_dec_separation aead_st aad plain cipher_tag /\
+	     enc_dec_liveness aead_st aad plain cipher_tag h /\
+	     inv aead_st h /\
+	     len <> 0ul /\
+	     safelen i (v len) (otp_offset i) /\
+             PRF_MAC.ak_live aead_st.prf.mac_rgn ak h /\
+	     (safeMac i ==> 
+	         CMA.mac_is_unset (i, iv) aead_st.prf.mac_rgn ak h /\
+		 none_above_prf_st x t h)))    // if ciphertexts are authenticated, then fresh blocks are available
+   (ensures (fun h0 _ h1 ->
+ 	     let x = {iv=iv; ctr=otp_offset i} in
+	     let t = aead_st.prf in
+	     let cipher : lbuffer (v len) = Buffer.sub cipher_tag 0ul len in
+	     enc_dec_liveness aead_st aad plain cipher_tag h1 /\
+	     modifies_table_above_x_and_buffer t x cipher h0 h1 /\
+	     enxor_invariant t x len 0ul plain cipher h0 h1 /\
+             PRF_MAC.ak_live aead_st.prf.mac_rgn ak h1 /\	    
+	     (safeMac i ==> 
+	         CMA.mac_is_unset (i, iv) aead_st.prf.mac_rgn ak h1)))
+let enxor #i iv aead_st #aadlen aad #len plain_b cipher_tag ak =
   let h_init = ST.get () in
   let x = {iv=iv; ctr=otp_offset i} in
   let t = aead_st.prf in

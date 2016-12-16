@@ -226,23 +226,6 @@ let establish_post_condition #i #n st #aadlen aad #plainlen plain cipher_tagged 
 	end)
   else FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_1 (Plain.as_buffer plain) h3) h4
 
-let frame_myinv_pop (#i:id) (#r:rw) (st:state i r) (h:mem{HS.poppable h})
-   : Lemma (requires (my_inv st h))
-	   (ensures (my_inv st (HS.pop h)))
-   = if safeId i
-     then frame_refines i st.prf.mac_rgn (HS.sel h st.log) (HS.sel h (PRF.itable i st.prf)) h (HS.pop h)
-
-let frame_decrypt_ok (#i:id) (n:Cipher.iv (alg i)) (st:state i Reader) 
-	       (#aadlen:UInt32.t {aadlen <=^ aadmax}) (aad:lbuffer (v aadlen))
-	       (#plainlen:UInt32.t {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)}) 
-	       (plain:plainBuffer i (v plainlen))
-	       (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
-	       (verified:bool) (h:mem{HS.poppable h})
-   : Lemma (requires (decrypt_requires_sep st aad plain cipher_tagged /\
-		      decrypt_requires_live st aad plain cipher_tagged h /\
-		      decrypt_ok n st aad plain cipher_tagged verified h))
-	   (ensures (decrypt_ok n st aad plain cipher_tagged verified (HS.pop h)))
-   = ()	   
 
 #reset-options "--z3rlimit 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let prf_mac_modifies (i:id) (t:PRF.state i) (h0:mem) (h1:mem) = 
