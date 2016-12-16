@@ -25,7 +25,12 @@ open FStar.Ident
 open FStar.Const
 open FStar.Pprint
 
+module C = FStar.Syntax.Const
+
 // VALS_HACK_HERE
+
+
+(* TODO : everything is printed under the assumption of the universe option *)
 
 // abbrev
 let str s = document_of_string s
@@ -75,23 +80,41 @@ let matches_var t x =
         | Var y -> Ident.lid_equals x y
         | _ -> false
 
-(* This does not have anything to do here *)
-(* It must be moved asa the situation wrt F#/ocaml implementation file is cleaned up *)
-exception Different
-let is_prefix s s' =
-    let n = FStar.String.strlen s in
-    let n' = FStar.String.strlen s' in
-    if n > n' then false
-    else
-        try for i = 0 to n-1 do
-            if s.[i] <> s'.[i] then raise Different
-            done ;
-            true
-        with Different -> false
+let is_tuple_constructor = FStar.Syntax.is_tuple_data_lid'
+let is_dtuple_constructor = FStar.Syntax.is_dtuple_data_lid'
 
-let is_tuple_constructor lid =
-    let tuple_prefix = "Mktuple" in
-    is_prefix tuple_prefix (text_of_lid lid)
+let is_list_structure cons_lid nil_lid =
+  let rec aux e = match e.tm with
+    | Construct (lid, []) -> lid_equals lid nil_lid
+    | Construct (lid, [ _ ; e2]) -> lid_equals lid cons_lid && is_list e2
+    | _ -> false
+  in aux
+
+let is_list = is_list_structure C.cons_lid C.nil_lid
+let is_lex_list = is_list_structure C.lexcons_lid C.lextop_lid
+
+(* [extract_from_list e] assumes that [is_list_structure xxx yyy e] holds and returns the list of terms contained in the list *)
+let rec extract_from_list e = match e.tm with
+  | Construct (_, []) -> []
+  | Construct (_, [e1 ; e2]) -> e1 :: extract_from_list e2
+  | _ -> failwith "Not a list"
+
+let rec is_ref_set e = match e.tm with
+    | Var maybe_empty_lid -> lid_equals maybe_empty_lid C.tset_empty
+    | App ({tm=Var maybe_singleton_lid}, {tm=App(Var maybe_ref_lid, e, Nothing)}, Nothing) ->
+        lid_equals maybe_singleton_lid C.tset_singleton && lid_equals maybe_ref_lid C.heap_ref
+    | App({tm=App({tm=Var maybe_union_lid}, e1, Nothing)}, e2, Nothing) ->
+        lid_equals maybe_union_lid C.tset_union && is_ref_set e1 && is_ref_set e2
+    | _ -> false
+
+(* [extract_from_ref_set e] assumes that [is_ref_set e] holds and returns the list of terms contained in the set *)
+let rec extract_from_ref_set e = match e.tm with
+  | Var _ -> []
+  | App ({tm=Var _}, {tm=App(Var _, e, Nothing)}, Nothing) -> [e]
+  | App({tm = App({tm=Var _}, e1, Nothing)}, e2, Nothing) ->
+      extract_ref_set e1 @ extract_ref_set e2
+  | _ -> failwith "Not a ref set"
+
 
 (* Automatic level assignment *)
 (* would be perfect with a little of staging... *)
@@ -357,7 +380,7 @@ and p_tmNoEq =
   fun e -> p_tmNoEq' n e
 
 and p_tmNoEq' curr e = match e.tm with
-  | Construct (lid, [e1 ; e2]) when is_cons_lid lid ->
+  | Construct (lid, [e1 ; e2]) when lid_equals lid C.cons_lid ->
       let op = "::" in
       let left, mine, right = levels op in
       paren_if curr mine (p_tmNoEq' left e1 ^/^ str op ^/^ p_tmNoEq' right e2)
@@ -385,44 +408,148 @@ and p_tmNoEq' curr e = match e.tm with
   | e -> p_appTerm e
 
 and p_refinedBinder b phi =
+    (* TODO : complete-me !!! *)
 
 and p_simpleDef (lid, e) =
-    group (p_qlident lid ^/^ equals ^/^ p_simpleTerm e)
+  group (p_qlident lid ^/^ equals ^/^ p_simpleTerm e)
 
 and p_appTerm e =
-    | App (head, arg, imp) ->
-        p_appTerm head ^/^ p_argTerm (arg, imp)
-    | Construct (head, args) ->
-        p_indexingTerm head ^/^ separate_map space p_argTerm args
-    | e ->
-        p_indexingTerm e
+  | App (head, arg, imp) ->
+      p_appTerm head ^/^ p_argTerm (arg, imp)
+  | Construct (lid, args) when not (is_dtuple_constructor lid) -> (* dependent tuples are handled below *)
+      p_quident lid ^/^ separate_map space p_argTerm args
+  | e ->
+      p_indexingTerm e
 
 and p_argTerm arg_imp = match arg_imp with
-    | (Uvar id, UnivApp) -> p_univar id
-    | (u, UnivApp) -> str "u#" ^^ p_universe u
-    | (e, FsTypApp) -> surround 2 1 (str "<") p_indexingTerm e (str ">")
-    | (e, Hash) -> str "#" ^^ p_indexingTerm e
-    | (e, Nothing) -> p_indexingTerm e
+  | (Uvar id, UnivApp) -> p_univar id
+  | (u, UnivApp) -> str "u#" ^^ p_universe u
+  | (e, FsTypApp) -> surround 2 1 (str "<") p_indexingTerm e (str ">")
+  | (e, Hash) -> str "#" ^^ p_indexingTerm e
+  | (e, Nothing) -> p_indexingTerm e
 
-and indexingTerm e = match e.tm with
-    | Op(".()", [e1 ; e2]) ->
-          group (p_indexingTerm e1 ^^ dot ^^ parens_with_nesting (p_term e2))
-    | Op(".[]", [e1; e2]) ->
-          group (p_indexingTerm e1 ^^ dot ^^ brackets_with_nesting (p_term e2))
-    | e ->
-        p_atomicTerm e
+and indexingTerm_aux exit e = match e.tm with
+  | Op(".()", [e1 ; e2]) ->
+        group (p_indexingTerm p_atomicTermNotQUident e1 ^^ dot ^^ parens_with_nesting (p_term e2))
+  | Op(".[]", [e1; e2]) ->
+        group (p_indexingTerm p_atomicTermNotQUident ^^ dot ^^ brackets_with_nesting (p_term e2))
+  | e ->
+      exit e
+and indexingTerm = indexingTerm p_atomicTerm
 
+(* p_atomicTermQUident is merged with p_atomicTerm *)
 and p_atomicTerm e = match e with
-    | LetOpen (id, t) ->
-    | _ ->
-          failwith "TODO"
+  (* already handled higher in the hierarchy *)
+  | LetOpen (lid, e) ->
+      p_quident lid ^^ dot ^^ parens_with_nesting (p_term e)
+  | Name lid ->
+      p_quident lid
+  | Op(op, [e]) ->
+      str op ^^ p_atomicTerm e
+  | e -> p_atomicTermNotQUident
 
-and p_projectionLHS = function
-  | ... ->
-      ...
-  | (Requires _ | Ensures _ | ...) as e ->
+and p_atomicTermNotQUident e = match e.tm with
+  | Wild -> underscore
+  | Var lid when text_of_lid lid = "assert" ->
+      str "assert"
+  | TVar tv -> p_tvar tv
+  | Const c -> p_constant c
+  | Name lid when text_of_lid lid = "True" ->
+      str "True"
+  | Name lid when text_of_lid lid = "False" ->
+      str "False"
+  | Op(op, [e]) ->
+    str op ^^ p_atomicTermNotQUident e
+  | Op(op, []) ->
+      lparen ^^ space ^^ str op ^^ space ^^ rparen
+  | Construct (lid, args) when is_dependent_tuple_constructor lid ->
+      surround 2 1 (lparen ^^ pipe) (separate_map comma p_tmEq args) (pipe ^^ rparen)
+  | Project (e, lid) ->
+      group (p_atomicTermNotQUident e ^/^ dot ^^ p_qlident lid)
+  | e ->
+      p_projectionLHS e
+  (* BEGIN e END skipped *)
+
+and p_projectionLHS e = match e.tm with
+  | Var lid ->
+      p_qlident lid
+    (* fsType application skipped *)
+  | Projector (constr_lid, field_lid) ->
+      p_quident constr_lid ^^ dot ^^ str "?" ^^ p_lident field_lid
+  | Discrim constr_lid ->
+      p_quident constr_lid ^^ str "?"
+  (* Should we drop this constructor ? *)
+  | Paren e ->
       parens_with_nesting (p_term e)
+   (* TODO : these case should not be captured above *)
+  | App (Var lid, [l]) when lid_equals lid C.array_mk_array_lid && is_list l ->
+      let es = extract_from_list l in
+      surround 2 1 (lbracket ^^ pipe) (separate_map semicolon p_noSeqTerm es) (pipe ^^ rbracket)
+  | l when is_list l ->
+      brackets_with_nesting (separate_map semicolon p_noSeqTerm (extract_from_list l))
+  | l when is_lex_list l ->
+      surround 2 1 (percent ^^ lbracket) (separate_map semicolon p_noSeqTerm (extract_from_list l)) rbracket
+  | e when is_ref_set e ->
+      let es = extract_from_ref_set e in
+      surrond 2 1 (bang ^^ lbrace) (separate_map comma p_appTerm es) rbrace
+  (* All the cases are explicitly listed below so that a modification of the ast doesn't lead to a loop *)
+  (* We must also make sure that all the constructors listed below are handled somewhere *)
+  | Wild        (* p_atomicTermNotQUident *)
+  | Const _     (* p_atomicTermNotQUident *)
+  | Op _        (* what about 3+ args ? are all possible labels caught somewhere ? *)
+  | Tvar _
+  | Uvar _      (* p_arg *)
+  | Var _       (* p_projectionLHS *)
+  | Name _      (* p_atomicTerm *)
+  | Construct _ (* p_appTerm *)
+  | Abs _       (* p_simpleTerm *)
+  | App _       (* p_appTerm *)
+  | Let _       (* p_noSeqTerm *)
+  | LetOpen _   (* p_noSeqTerm *)
+  | Seq _       (* p_term *)
+  | If _        (* p_noSeqTerm *)
+  | Match _     (* p_noSeqTerm *)
+  | TryWith _   (* p_noSeqTerm *)
+  | Ascribed _  (* p_noSeqTerm *)
+  | Record _    (* p_termNoEq *)
+  | Project _   (* p_atomicTermNotQUident *)
+  | Product _   (* p_tmArrow *)
+  | Sum _       (* p_tmNoEq *)
+  | QForall _   (* p_typ *)
+  | QExists _   (* p_typ *)
+  | Refine _    (* p_tmNoEq *)
+  | NamedTyp _  (* p_tmNoEq *)
+  | Requires _  (* p_noSeqTerm *)
+  | Ensures _   (* p_noSeqTerm *)
+  | Labeled _   (* TODO : Not handled anywhere, only used in desugar.fs *)
+  | Assign _    (* p_noSeqTerm *)
+  | Attributes _(* p_noSeqTerm *)
+    -> parens_with_nesting (p_term e)
 
+and p_constant = function
+  | Const_effect -> str "Effect"
+  | Const_unit -> str "()"
+  | Const_bool b -> doc_of_bool b
+  | Const_float x -> str (Util.string_of_float x)
+  | Const_char x -> squotes (document_of_char x )
+  | Const_string(bytes, _) -> dquotes (str (Util.string_of_bytes bytes))
+  | Const_bytearray(bytes,_) -> dquotes (str (Util.string_of_bytes bytes)) ^^ str "B"
+  | Const_int (repr, sign_width_opt) ->
+      let signedness = function
+          | Unsigned -> str "u"
+          | Signed -> empty
+      in
+      let width = function
+          | Int8 -> str "y"
+          | Int16 -> str "s"
+          | Int32 -> str "l"
+          | Int64 -> str "L"
+      in
+      let ending = default_or_map empty (fun (s, w) -> signedness ^^ width w) in
+      str repr ^^ ending
+  | Const_range r -> str (Range.string_of_range r)
+  | Const_reify -> str "reify"
+  | Const_reflect lid -> p_quident lid ^^ str "?." ^^ str "reflect"
 
 (* JP, KM: tweaked up to here *)
 

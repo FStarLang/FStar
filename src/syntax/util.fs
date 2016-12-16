@@ -687,8 +687,17 @@ let mk_tuple_data_lid n r =
 let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)
 
+let is_tuple_data_lid' f n =
+    Util.starts_with (Ident.text_of_lid f) "Mktuple"
+
+let is_tuple_constructor_lid lid =
+    Util.starts_with (Ident.text_of_lid lid) "Prims.tuple"
+
+let is_dtuple_constructor_lid lid =
+  Util.starts_with (Ident.text_of_lid lid) "Prims.dtuple"
+
 let is_dtuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> Util.starts_with fv.fv_name.v.str "Prims.dtuple"
+  | Tm_fvar fv -> is_dtuple_constructor_lid fv.fvname
   | _ -> false
 
 let mk_dtuple_lid n r =
@@ -698,6 +707,9 @@ let mk_dtuple_lid n r =
 let mk_dtuple_data_lid n r =
   let t = Util.format1 "Mkdtuple%s" (Util.string_of_int n) in
   set_lid_range (Const.pconst t) r
+
+let is_dtuple_data_lid' f n =
+    Util.starts_with (Ident.text_of_lid f) "Mkdtuple"
 
 let is_lid_equality x = lid_equals x Const.eq2_lid
 

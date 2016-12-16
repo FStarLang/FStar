@@ -37,6 +37,7 @@ open FStar_List
 open FStar_Util
 open FStar_Range
 open FStar_Options
+(* TODO : these files should be deprecated and removed *)
 open FStar_Absyn_Syntax
 open FStar_Absyn_Const
 open FStar_Absyn_Util
@@ -862,30 +863,11 @@ opPrefixTerm(Tm):
   | op=OPPREFIX e=Tm
       { mk_term (Op(op, [e])) (rhs2 parseState 1 2) Expr }
 
-fsTypeArgs:
-  | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER
-    {targs}
-
-someFsTypeArgs:
-  | targs=fsTypeArgs
-    { Some targs }
-
-(* Qid : quident or qlident.
-   TypeArgs : option(fsTypeArgs) or someFsTypeArgs. *)
-qidentWithTypeArgs(Qid,TypeArgs):
-  | id=Qid targs_opt=TypeArgs
-      {
-        let t = if is_name id then Name id else Var id in
-        let e = mk_term t (rhs parseState 1) Un in
-        match targs_opt with
-        | None -> e
-        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
-      }
 
 projectionLHS:
-  | e=qidentWithTypeArgs(qlident,option(fsTypeArgs))
+  | e=qidentWithTypeArgs(qlident, option(targs=fsTypeArgs {Some targs}))
       { e }
-  | e=qidentWithTypeArgs(quident,someFsTypeArgs)
+  | e=qidentWithTypeArgs(quident, someFsTypeArgs)
       { e }
   | LPAREN e=term sort_opt=option(pair(hasSort, simpleTerm)) RPAREN
       {
@@ -907,14 +889,24 @@ projectionLHS:
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
       { mkRefSet (rhs2 parseState 1 3) es }
   | ns=quident QMARK_DOT id=lident
-      {
-        mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr
-      }
+      { mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr }
   | lid=quident QMARK
+      { mk_term (Discrim lid) (rhs2 parseState 1 2) Un }
+
+fsTypeArgs:
+  | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER
+    {targs}
+
+(* Qid : quident or qlident.
+   TypeArgs : option(fsTypeArgs) or someFsTypeArgs. *)
+qidentWithTypeArgs(Qid,TypeArgs):
+  | id=Qid targs_opt=TypeArgs
       {
-	let t = Discrim lid in
-        let e = mk_term t (rhs2 parseState 1 2) Un in
-	e
+        let t = if is_name id then Name id else Var id in
+        let e = mk_term t (rhs parseState 1) Un in
+        match targs_opt with
+        | None -> e
+        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
       }
 
 hasSort:
@@ -968,6 +960,7 @@ constant:
           errorR(Error("This number is outside the allowable range for 64-bit signed integers", lhs(parseState)));
         Const_int (fst n, Some (Signed, Int64))
       }
+  (* TODO : What about reflect ? There is also a constant representing it *)
   | REIFY   { Const_reify }
 
 
