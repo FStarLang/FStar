@@ -998,4 +998,4 @@ let frame_unused_mac_exists_append
              None? (PRF.find_mac blocks x)))
   (ensures  (unused_mac_exists (Seq.append table blocks) x h))
   = lemma_prf_find_append_none table blocks x
- 
+  
