@@ -424,9 +424,6 @@ let enxor_h0_h1
 					         (Plain.sel_plain h1 plainlen plain)
 					         (Buffer.as_seq h1 cipher)))))
 
-(*
- * AR: this is strange, it does not go through without the inner lemma.
- *)
 val frame_aead_entries_enxor
   (#i:id)
   (#rw:rw)
@@ -582,6 +579,27 @@ let accumulate_h0_h1
 	                         (Plain.sel_plain h0 plainlen plain)
 	                         (Buffer.as_seq h0 cipher) table_0))
 
+val frame_accumulate
+  (#i:id)
+  (#rw:rw)
+  (#aadlen:aadlen_32)
+  (#plainlen:txtlen_32{plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
+  (aead_st:aead_state i rw{safeId i})
+  (nonce:Cipher.iv (alg i))
+  (aad:lbuffer (v aadlen))
+  (plain:plainBuffer i (v plainlen))
+  (cipher:lbuffer (v plainlen))
+  (h0 h1:mem) : Lemma
+  (requires (accumulate_h0_h1 aead_st nonce aad plain cipher h0 h1))
+  (ensures  (let entries_0 = HS.sel #(aead_entries i) h0 (st_ilog aead_st) in
+             let entries_1 = HS.sel #(aead_entries i) h1 (st_ilog aead_st) in
+	     let table_0   = HS.sel h0 (itable i aead_st.prf) in
+	     let table_1   = HS.sel h1 (itable i aead_st.prf) in
+	     entries_0 == entries_1 /\ table_0 == table_1 /\ HS.modifies_ref aead_st.prf.mac_rgn TSet.empty h0 h1))
+#reset-options "--z3rlimit 50 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let frame_accumulate #i #rw #aadlen #plainlan aead_st nonce aad plain cipher h0 h1 = Buffer.lemma_reveal_modifies_0 h0 h1
+#reset-options
+
 val lemma_propagate_inv_accumulate
   (#i:id)
   (#rw:rw)
@@ -607,6 +625,26 @@ val lemma_propagate_inv_accumulate
 	        prf_contains_all_otp_blocks (PRF.incr i dom_0) 0
 	                                    (Plain.sel_plain h1 plainlen plain)
 	                                    (Buffer.as_seq h1 cipher) table_1))))
+let lemma_propagate_inv_accumulate #i #rw #aadlen #plainlen aead_st nonce aad plain cipher h0 h1 =
+  let open FStar.Classical in
+  if safeId i then begin
+    let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
+    let entries_0   = HS.sel #(aead_entries i) h0 (st_ilog aead_st) in
+    let table_0     = HS.sel h0 (itable i aead_st.prf) in
+    let otp_blocks = counterblocks i aead_st.prf.mac_rgn (PRF.incr i dom_0)
+    		                   (v plainlen) 0 (v plainlen)
+    			           (Plain.sel_plain h1 plainlen plain)
+    			           (Buffer.as_seq h1 cipher) in
+
+    frame_accumulate aead_st nonce aad plain cipher h0 h1;
+
+    frame_refines_entries_h i aead_st.prf.mac_rgn table_0 entries_0 h0 h1;
+
+    let h0':(m:mem{safeMac i}) = h0 in
+    forall_intro (move_requires (frame_unused_aead_iv_for_prf_h h0' h1 table_0));
+
+    frame_unused_mac_exists_h table_0 dom_0 h0 h1
+  end
 
 val lemma_mac_log_framing
   (#i:id)
