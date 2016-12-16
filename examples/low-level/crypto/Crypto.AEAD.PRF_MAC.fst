@@ -551,7 +551,8 @@ let lemma_propagate_inv_enxor #i #rw #aadlen #plainlen aead_st nonce aad plain c
 
     frame_unused_mac_exists_enxor aead_st nonce aad plain cipher h0 h1;
 
-    admit ()
+    frame_prf_contains_all_otp_blocks_prefix (PRF.incr i dom_0) 0ul (Plain.sel_plain h1 plainlen plain)
+    	                                     (Buffer.as_seq h1 cipher) table_0
   end
 
 let accumulate_h0_h1
@@ -727,3 +728,4 @@ val lemma_establish_final_inv
   (h0 h1:mem) : Lemma
   (requires (final_h0_h1 aead_st nonce aad plain cipher_tagged h0 h1))
   (ensures (inv aead_st h1))
+

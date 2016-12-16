@@ -973,6 +973,22 @@ val lemma_counterblocks_find_domain_mac_is_none
   (decreases (to_pos - from_pos))
 let rec lemma_counterblocks_find_domain_mac_is_none i r x l from_pos to_pos plain cipher = admit ()
 
+val lemma_counterblocks_all_entries_are_above_x
+  (i:id{safeId i})
+  (r:rid)
+  (x:PRF.domain i{PRF.ctr_0 i <^ PRF.(x.ctr)})
+  (l:nat)
+  (from_pos:nat)
+  (to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) PRF.(x.ctr)})
+  (plain:plain i l)
+  (cipher:lbytes l)
+  (e:PRF.entry r i) : Lemma
+  (requires  (let otp_entries = counterblocks i r x l from_pos to_pos plain cipher in
+              otp_entries `SeqProperties.contains` e))
+  (ensures   (e.x `PRF.above` x))
+  (decreases (to_pos - from_pos))
+let rec lemma_counterblocks_all_entries_are_above_x i r x l from_pos to_pos plain cipher e = admit ()
+
 (*****)
 
 let frame_unused_mac_exists_h
@@ -999,4 +1015,34 @@ let frame_unused_mac_exists_append
              None? (PRF.find_mac blocks x)))
   (ensures  (unused_mac_exists (Seq.append table blocks) x h))
   = lemma_prf_find_append_none table blocks x
-  
+
+let lemma_prf_find_append_none_table
+  (#r:region)
+  (#i:id)
+  (table:prf_table r i)
+  (blocks:prf_table r i)
+  (x:PRF.domain i) 
+  : Lemma
+    (requires (None? (PRF.find table x)))
+    (ensures  (PRF.find (Seq.append table blocks) x == PRF.find blocks x))
+  = SeqProperties.find_append_none table blocks (is_entry_domain x)
+
+let frame_prf_contains_all_otp_blocks_prefix
+  (#i:id)
+  (#mac_rgn:rid)
+  (#len:u32)
+  (x:PRF.domain i{safeId i /\ PRF.ctr_0 i <^ x.ctr})
+  (from_pos:u32{((v from_pos) <= (v len)) /\ safelen i ((v len) - (v from_pos)) PRF.(x.ctr)})
+  (plain:plain i (v len))
+  (cipher:lbytes (v len))
+  (table:prf_table mac_rgn i) : Lemma
+  (requires (none_above x table))
+  (ensures  (let blocks = counterblocks i mac_rgn x (v len) (v from_pos) (v len) plain cipher in
+             prf_contains_all_otp_blocks x (v from_pos) plain cipher (Seq.append table blocks)))
+  = let open FStar.Classical in
+    let blocks = counterblocks i mac_rgn x (v len) (v from_pos) (v len) plain cipher in
+    (* AR: Need to figure out why this is not true, counterblocks_contains_all_otp_blocks is written in terms of remaining *)
+    assume (remaining_len_ok x len (len -^ from_pos));
+    counterblocks_contains_all_otp_blocks i mac_rgn x len (len -^ from_pos) plain cipher;
+    forall_intro (move_requires (lemma_counterblocks_all_entries_are_above_x i mac_rgn x (v len) (v from_pos) (v len) plain cipher));
+    forall_intro (move_requires (lemma_prf_find_append_none_table table blocks))
