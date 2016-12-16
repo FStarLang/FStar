@@ -21,7 +21,7 @@ module PL = Crypto.Symmetric.Poly1305
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-type id = id * UInt128.t
+type id = id * UInt128.t //NS: why not this definition : i:id & iv (alg i)
 let alg (i:id) = macAlg_of_id (fst i) 
 
 type text = Seq.seq (lbytes 16) // Used to be seq elem, then seq (lbytes 16)

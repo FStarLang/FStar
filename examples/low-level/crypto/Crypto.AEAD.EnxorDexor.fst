@@ -438,28 +438,33 @@ let rec counter_enxor #i t x len remaining_len plain cipher h_init =
 (*+ enxor: The main function exposed to clients for encryption **)
 val enxor:
   #i:id ->
-  t:PRF.state i ->
   iv:Cipher.iv (Cipher.algi i) ->
-  #len:u32 ->
-  plain:plainBuffer i (v len) ->
-  cipher:lbuffer (v len) ->
-  // not Stack effect, as we don't care where the buffers are
+  aead_st:aead_state i Writer ->
+  #aadlen:aadlen -> aad:lbuffer (v aadlen) ->
+  #len:Encoding.txtlen_32 -> plain:plainBuffer i (v len) ->
+  cipher_tag:lbuffer (v len + v MAC.taglen) ->
   ST unit
   (requires (fun h ->
     let x = {iv=iv; ctr=otp_offset i} in
-    separation t plain cipher /\
-    liveness t plain cipher h /\
+    let t = aead_st.prf in
+    enc_dec_separation aead_st aad plain cipher_tag /\
+    enc_dec_liveness aead_st aad plain cipher_tag h /\
+    inv aead_st h /\
     len <> 0ul /\
     safelen i (v len) (otp_offset i) /\
     (safeMac i ==> none_above_prf_st x t h)))    // if ciphertexts are authenticated, then fresh blocks are available
   (ensures (fun h0 _ h1 ->
     let x = {iv=iv; ctr=otp_offset i} in
-    liveness t plain cipher h1 /\
+    let t = aead_st.prf in
+    let cipher : lbuffer (v len) = Buffer.sub cipher_tag 0ul len in
+    enc_dec_liveness aead_st aad plain cipher_tag h1 /\
     modifies_table_above_x_and_buffer t x cipher h0 h1 /\
     enxor_invariant t x len 0ul plain cipher h0 h1))
-let enxor #i t iv #len plain_b cipher_b = 
+let enxor #i iv aead_st #aadlen aad #len plain_b cipher_tag =
   let h_init = ST.get () in
   let x = {iv=iv; ctr=otp_offset i} in
+  let t = aead_st.prf in
+  let cipher_b : lbuffer (v len) = Buffer.sub cipher_tag 0ul len in
   let _ = 
     let plain = Plain.sel_plain h_init len plain_b in
     let cipher = Buffer.as_seq h_init cipher_b in
