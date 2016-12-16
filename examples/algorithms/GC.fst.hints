@@ -1,6 +1,12 @@
 [
   "πL\u0018ôÜ•\u0003óøÂ{ˇ≠ëÅL",
   [
+    [ "GC.uu___is_Unalloc", 1, 2, 1, [ "@query" ], 0 ],
+    [ "GC.uu___is_White", 1, 2, 1, [ "@query" ], 0 ],
+    [ "GC.uu___is_Gray", 1, 2, 1, [ "@query" ], 0 ],
+    [ "GC.uu___is_Black", 1, 2, 1, [ "@query" ], 0 ],
+    [ "GC.uu___is_F1", 1, 2, 1, [ "@query" ], 0 ],
+    [ "GC.uu___is_F2", 1, 2, 1, [ "@query" ], 0 ],
     [ "GC.valid", 1, 2, 1, [ "@query" ], 0 ],
     [
       "GC.to_abs_inj",

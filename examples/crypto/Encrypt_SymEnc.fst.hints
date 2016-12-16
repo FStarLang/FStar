@@ -1,6 +1,7 @@
 [
   "bÍaÄπµáÃM ˇì∏=Å\u001b",
   [
+    [ "Encrypt_SymEnc.uu___is_Ideal", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Encrypt_SymEnc.__proj__Ideal__item__plain",
       1,
@@ -49,6 +50,7 @@
       ],
       0
     ],
+    [ "Encrypt_SymEnc.uu___is_Concrete", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Encrypt_SymEnc.__proj__Concrete__item__plain",
       1,
