@@ -836,7 +836,7 @@ let final_h0_h1
   let cipher, tag = Buffer.split cipher_tagged plainlen in
   enc_dec_liveness_and_separation #i #rw aead_st #(v aadlen) aad #(v plainlen) plain #(v plainlen) cipher h0 /\
   enc_dec_liveness_and_separation #i #rw aead_st #(v aadlen) aad #(v plainlen) plain #(v plainlen) cipher h1 /\
-  (safeId i ==>
+  (safeMac i ==>
     HS.modifies (Set.singleton aead_st.log_region) h0 h1 /\
     HS.modifies_ref aead_st.log_region (TSet.singleton (FStar.Heap.Ref (HS.as_ref (aead_log_as_ref aead_st.log)))) h0 h1 /\
     (let aead_entries_0 = HS.sel #(aead_entries i) h0 aead_st.log in
@@ -866,12 +866,21 @@ val frame_final
   (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
   (h0 h1:mem) : Lemma
   (requires (final_h0_h1 aead_st nonce aad plain cipher_tagged h0 h1))
-  (ensures  (safeId i ==>
-             (let table_0 = HS.sel h0 (itable i aead_st.prf) in
-	      let table_1 = HS.sel h1 (itable i aead_st.prf) in
-	      table_0 == table_1)))
+  (ensures  (let cipher, tag = Buffer.split cipher_tagged plainlen in
+             enc_dec_liveness_and_separation #i #rw aead_st #(v aadlen) aad #(v plainlen) plain #(v plainlen) cipher h0 /\
+             enc_dec_liveness_and_separation #i #rw aead_st #(v aadlen) aad #(v plainlen) plain #(v plainlen) cipher h1 /\
+
+             (safeMac i ==>
+              (let table_0 = HS.sel h0 (itable i aead_st.prf) in
+	       let table_1 = HS.sel h1 (itable i aead_st.prf) in
+	       table_0 == table_1 /\
+	       Plain.sel_plain h0 plainlen plain == Plain.sel_plain h1 plainlen plain /\
+	       Buffer.as_seq h0 cipher_tagged == Buffer.as_seq h1 cipher_tagged       /\
+	       Buffer.as_seq h0 aad == Buffer.as_seq h1 aad                           /\
+	       HS.modifies_ref aead_st.prf.mac_rgn TSet.empty h0 h1))))
 #reset-options "--z3rlimit 50 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let frame_final #i #rw #aadlen #plainlen aead_st nonce aad plain cipher_tagged h0 h1 = ()
+#reset-options
 
 val lemma_establish_final_inv
   (#i:id)
@@ -886,4 +895,37 @@ val lemma_establish_final_inv
   (h0 h1:mem) : Lemma
   (requires (final_h0_h1 aead_st nonce aad plain cipher_tagged h0 h1))
   (ensures (inv aead_st h1))
+let lemma_establish_final_inv #i #rw #aadlen #plainlen aead_st nonce aad plain cipher_tagged h0 h1 = admit ()
+  (* frame_final aead_st nonce aad plain cipher_tagged h0 h1; *)
+  (* let cipher, tag = Buffer.split cipher_tagged plainlen in  *)
+  (* if safeMac i then begin *)
+  (*   let entries_0 = HS.sel #(aead_entries i) h0 (st_ilog aead_st) in *)
+  (*   let table_0 = HS.sel h0 (itable i aead_st.prf) in *)
+  (*   frame_refines_entries_h i aead_st.prf.mac_rgn table_0 entries_0 h0 h1; *)
+
+  (*   let _ = assert (aead_entries_are_refined table_0 entries_0 h1) in *)
+
+  (*   let _ = *)
+  (*     if safeId i then begin *)
+  (*       let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in *)
+  (* 	let _ = assume (Buffer.as_seq h0 cipher == Buffer.as_seq h1 cipher) in *)
+  (* 	let _ = assume (Buffer.as_seq h0 tag == Buffer.as_seq h1 tag) in *)
+  (* 	let entry = AEADEntry nonce (Buffer.as_seq h1 aad) (v plainlen) (Plain.sel_plain h1 plainlen plain) *)
+  (*                                   (Buffer.as_seq h1 cipher_tagged) in *)
+  (* 	let _ = frame_mac_is_set_h table_0 nonce (Buffer.as_seq h0 aad) (v plainlen) (Buffer.as_seq h0 cipher) *)
+  (* 	                           (Buffer.as_seq h0 tag) h0 h1 in *)
+  (* 	let _ = assert (mac_is_set table_0 nonce (Buffer.as_seq h1 aad) (v plainlen) (Buffer.as_seq h1 cipher) *)
+  (* 	                           (Buffer.as_seq h1 tag) h1) in *)
+  (* 	let _ = assert (prf_contains_all_otp_blocks (PRF.incr i dom_0) 0 (Plain.sel_plain h1 plainlen plain) *)
+  (* 	                                            (Buffer.as_seq h1 cipher) table_0) in *)
+  (* 	let _ = assert (safelen i (v plainlen) (PRF.incr i dom_0).ctr) in *)
+  (* 	(\* let h1':(h:mem{safeId i}) = h1 in *\) *)
+  (*       let _ = assert (refines_one_entry table_0 entry h1) in *)
+  (*       () *)
+  (*     end *)
+  (*     else () *)
+  (*   in *)
+
+  (*   admit () *)
+  (* end *)
 

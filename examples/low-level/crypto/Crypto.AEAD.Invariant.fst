@@ -1049,3 +1049,19 @@ let frame_prf_contains_all_otp_blocks_prefix
     counterblocks_contains_all_otp_blocks i mac_rgn x len len plain cipher;
     forall_intro (move_requires (lemma_counterblocks_all_entries_are_above_x i mac_rgn x (v len) 0 (v len) plain cipher));
     forall_intro (move_requires (lemma_prf_find_append_none_table table blocks))
+
+let frame_mac_is_set_h
+  (#mac_rgn:region)
+  (#i:id)
+  (table:prf_table mac_rgn i{mac_log})
+  (nonce:Cipher.iv (alg i))
+  (ad:adata)
+  (l:plainLen)
+  (cipher:lbytes l)
+  (tag:MAC.tag)
+  (h0 h1:mem) : Lemma
+  (requires (mac_is_set table nonce ad l cipher tag h0 /\
+             HS.modifies_ref mac_rgn TSet.empty h0 h1  /\
+	     HS.live_region h1 mac_rgn))
+  (ensures  (mac_is_set table nonce ad l cipher tag h1))
+  = ()
