@@ -979,7 +979,7 @@ universeFrom:
        }
   | max=ident us=list(atomicUniverse)
       {
-        if text_of_id max <> "max"
+        if text_of_id max <> C.max_lid
         then errorR(Error("A lower case ident " ^ text_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.",

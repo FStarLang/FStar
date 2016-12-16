@@ -83,6 +83,9 @@ let matches_var t x =
 let is_tuple_constructor = FStar.Syntax.is_tuple_data_lid'
 let is_dtuple_constructor = FStar.Syntax.is_dtuple_data_lid'
 
+let is_array e = match e.tm with
+    | App (Var lid, [l]) when lid_equals lid C.array_mk_array_lid && is_list l ->
+
 let is_list_structure cons_lid nil_lid =
   let rec aux e = match e.tm with
     | Construct (lid, []) -> lid_equals lid nil_lid
@@ -115,6 +118,15 @@ let rec extract_from_ref_set e = match e.tm with
       extract_ref_set e1 @ extract_ref_set e2
   | _ -> failwith "Not a ref set"
 
+let is_general_application e =
+  not (is_array e || is_list e || is_lex_list e || is_ref_set e)
+
+(* might already exist somewhere *)
+let head_and_args e =
+  let rec aux e acc = match e.tm with
+  | App (head, arg, imp) -> aux head ((arg,imp)::acc)
+  | _ -> e, acc
+  in aux e []
 
 (* Automatic level assignment *)
 (* would be perfect with a little of staging... *)
@@ -213,6 +225,10 @@ let doc_of_imp = function
   | UnivApp -> str "u#"
   | Nothing | FsTypApp -> empty
 
+
+
+
+
 let rec p_term e = match e.tm with
   | Seq (e1, e2) ->
       group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
@@ -221,7 +237,7 @@ let rec p_term e = match e.tm with
 
 and p_noSeqTerm e = match e.tm with
   | Ascribed (e, t) ->
-      group (p_tmIff e ^/^ str "<:" ^/^ p_typ t)
+      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t)
   | Op (op, [ e1; e2; e3 ]) when op = ".()<-" ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ parens_with_nesting (p_term e2)
@@ -303,11 +319,11 @@ and p_maybeWhen = function
     | Some e -> str "when" ^/+^ p_tmFormula e ^^ space  (*always immediately followed by an arrow*)
 
 and p_tmIff e = match e.tm with
-    | Op("<==>", [e1;e2]) -> group (p_tmImplies e1 ^/^ str "<==>" ^/^ p_tmIff e2)
+    | Op("<==>", [e1;e2]) -> infix (p_tmImplies e1) (str "<==>") (p_tmIff e2)
     | e -> p_tmImplies e
 
 and p_tmImplies e = match e.tm with
-    | Op("==>", [e1;e2]) -> group (p_tmArrow p_tmFormula e1 ^/^ str "==>" ^/^ p_tmImplies e2)
+    | Op("==>", [e1;e2]) -> infix (p_tmArrow p_tmFormula e1) (str "==>") (p_tmImplies e2)
     | e -> p_tmArrow p_tmFormula e1
 
 and p_tmArrow p_Tm e = match e with
@@ -318,12 +334,12 @@ and p_tmArrow p_Tm e = match e with
 
 and p_tmFormula e = match e.tm with
   | Op("\\/", [e1;e2]) ->
-      group (p_tmFormula e1 ^/^ str "\\/" ^/^ p_tmConjunction e2)
+      infix (p_tmFormula e1) (str "\\/") (p_tmConjunction e2)
   | e -> p_tmConjunction e
 
 and p_tmConjunction e = match e with
   | Op("/\\", [e1;e2]) ->
-      group (p_tmConjunction e1 ^/^ str "/\\" p_tmTuple e2)
+      infix (p_tmConjunction e1) (str "/\\") (p_tmTuple e2)
   | e -> p_tmTuple e
 
 and p_tmTuple e = match e with
@@ -370,9 +386,9 @@ and p_tmEq' curr e = match e.tm with
     (* We don't have any information to print `infix` aplication *)
   | Op (op, [ e1; e2]) when is_operatorInfix0ad12 op || op = "=" || op = "|>" ->
       let left, mine, right = levels op in
-      paren_if curr mine (p_tmEq' left e1 ^/^ str op ^/^ p_tmEq' right e2)
+      paren_if curr mine (infix (p_tmEq' left e1) (str op) (p_tmEq' right e2))
   | Op (":=", [ e1; e2 ]) ->
-      group (p_tmEq e1 ^^ space ^^ equals ^^ jump2 (p_tmEq e2))
+      group (p_tmEq e1 ^^ space ^^ equals ^/+^ p_tmEq e2)
   | e -> p_tmNoEq e
 
 and p_tmNoEq =
@@ -383,7 +399,7 @@ and p_tmNoEq' curr e = match e.tm with
   | Construct (lid, [e1 ; e2]) when lid_equals lid C.cons_lid ->
       let op = "::" in
       let left, mine, right = levels op in
-      paren_if curr mine (p_tmNoEq' left e1 ^/^ str op ^/^ p_tmNoEq' right e2)
+      paren_if curr mine (infix (p_tmNoEq' left e1) (str op) (p_tmNoEq' right e2))
   | Sum(binders, res) ->
       let op = "&" in
       let left, mine, right = levels op in
@@ -391,7 +407,7 @@ and p_tmNoEq' curr e = match e.tm with
       paren_if curr mine (concat_map p_dsumfst binders ^/^ p_tmNoEq' right e2)
   | Op (op, [ e1; e2]) when is_opinfx34 op -> // also takes care of infix '-'
       let left, mine, right = levels op in
-      paren_if curr mine (p_tmNoEq' left e1 ^/^ str op ^/^ p_tmNoEq' right e2)
+      paren_if curr mine (infix (p_tmNoEq' left e1) (str op) (p_tmNoEq' right e2))
   | Op("-", [e]) ->
       let left, mine, right = levels "-" in
       minus ^/^ p_tmNoEq' mine e
@@ -414,17 +430,19 @@ and p_simpleDef (lid, e) =
   group (p_qlident lid ^/^ equals ^/^ p_simpleTerm e)
 
 and p_appTerm e =
-  | App (head, arg, imp) ->
+  | App _ when is_general_application e ->
+      let head, args = head_and_args e in
+      p_indexingTerm head ^/+^ separate_map space p_argTerm args
       p_appTerm head ^/^ p_argTerm (arg, imp)
   | Construct (lid, args) when not (is_dtuple_constructor lid) -> (* dependent tuples are handled below *)
-      p_quident lid ^/^ separate_map space p_argTerm args
+      p_quident lid ^/+^ separate_map space p_argTerm args
   | e ->
       p_indexingTerm e
 
 and p_argTerm arg_imp = match arg_imp with
   | (Uvar id, UnivApp) -> p_univar id
-  | (u, UnivApp) -> str "u#" ^^ p_universe u
-  | (e, FsTypApp) -> surround 2 1 (str "<") p_indexingTerm e (str ">")
+  | (u, UnivApp) -> p_universe u
+  | (e, FsTypApp) -> surround 2 1 langle (p_indexingTerm e) rangles
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
   | (e, Nothing) -> p_indexingTerm e
 
@@ -475,9 +493,9 @@ and p_projectionLHS e = match e.tm with
       p_qlident lid
     (* fsType application skipped *)
   | Projector (constr_lid, field_lid) ->
-      p_quident constr_lid ^^ dot ^^ str "?" ^^ p_lident field_lid
+      p_quident constr_lid ^^ dot ^^ qmark ^^ p_lident field_lid
   | Discrim constr_lid ->
-      p_quident constr_lid ^^ str "?"
+      p_quident constr_lid ^^ qmark
   (* Should we drop this constructor ? *)
   | Paren e ->
       parens_with_nesting (p_term e)
@@ -549,7 +567,34 @@ and p_constant = function
       str repr ^^ ending
   | Const_range r -> str (Range.string_of_range r)
   | Const_reify -> str "reify"
-  | Const_reflect lid -> p_quident lid ^^ str "?." ^^ str "reflect"
+  | Const_reflect lid -> p_quident lid ^^ qmark ^^ dot ^^ str "reflect"
+
+and p_universe u = str "u#" ^^ p_atomicUniverse u
+
+and p_universeFrom u = match u.tm with
+  | Op("+", [u1 ; u2]) ->
+    group (p_universeFrom u1 ^/^ plus ^/^ p_universeFrom u2)
+  | App _ ->
+    let head, args = head_and_args e in
+    begin match head with
+      | Var maybe_max_lid when lid_equals maybe_max_lid C.max_lid ->
+        group (doc_of_lid C.max_lid /^+/
+               separate_map space (fun (u,_) -> p_atomicUniverse u) args)
+      | _ ->
+        failwith ("Invalid identifier in universe context : " ^ text_of_lid maybe_max_lid)
+    end
+  | u -> p_atomicUniverse u
+
+and p_atomicUniverse u = match u.tm with
+    | Wild -> underscore
+    | Const (Const_int n) -> p_constant (Const_int n)
+    | Uvar _ -> p_univar u
+    | Paren u -> parens_with_nesting (p_universeFrom u)
+    | _ -> parens_with_nesting u
+
+and p_univar u = match u.tm with
+    | Uvar id -> str (text_of_id id)
+    | _ -> failwith "Not a universe variable"
 
 (* JP, KM: tweaked up to here *)
 
