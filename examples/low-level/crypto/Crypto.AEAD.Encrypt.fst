@@ -26,45 +26,6 @@ module Encoding    = Crypto.AEAD.Encoding
 module EncodingWrapper = Crypto.AEAD.Wrappers.Encoding
 module CMAWrapper = Crypto.AEAD.Wrappers.CMA
 
-////////////////////////////////////////////////////////////////////////////////
-#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let encrypt_ensures  (#i:id) (st:aead_state i Writer)
-		     (n: Cipher.iv (alg i))
-		     (#aadlen:aadlen)
-		     (aad: lbuffer (v aadlen))
-		     (#plainlen: UInt32.t)
-		     (plain: plainBuffer i (v plainlen))
-		     (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
-		     (h0:mem) (h1:mem) = 
-    enc_dec_liveness st aad plain cipher_tagged h1 /\
-    (safeMac i ==>  (
-       let aad = Buffer.as_seq h1 aad in
-       let p = Plain.sel_plain h1 plainlen plain in
-       let c = Buffer.as_seq h1 cipher_tagged in
-       HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (AEADEntry n aad (v plainlen) p c)))
-       
-val encrypt:
-          i: id -> 
- 	 st: aead_state i Writer ->
-          n: Cipher.iv (alg i) ->
-     aadlen: aadlen_32 ->
-        aad: lbuffer (v aadlen) ->
-   plainlen: txtlen_32 {safelen i (v plainlen) (otp_offset i)} ->
-      plain: plainBuffer i (v plainlen) ->
- cipher_tag: lbuffer (v plainlen + v MAC.taglen) ->
-         ST  unit
-  (requires (fun h ->
-	     enc_dec_separation st aad plain cipher_tag /\
-	     enc_dec_liveness st aad plain cipher_tag h /\
-	     fresh_nonce_st n st h /\
-	     inv st h))
-   (ensures (fun h0 _ h1 ->
-	     enc_dec_liveness st aad plain cipher_tag h1 /\
-	     inv st h1 /\
-	     encrypt_ensures st n aad plain cipher_tag h0 h1 /\
-	     HS.modifies_transitively (Set.as_set [st.log_region; Buffer.frameOf cipher_tag]) h0 h1))
-
-
 assume //NS: boring, this should be in the buffer library
 val to_seq_temp: #a:Type -> b:Buffer.buffer a -> l:UInt32.t{v l <= Buffer.length b} -> ST (Seq.seq a)
   (requires (fun h -> Buffer.live h b))
@@ -91,6 +52,29 @@ let ideal_ensures
 			    (Buffer.as_seq h0 cipher_tag) in
     let log = st_ilog st in 				      
     HS.sel h1 log == SeqProperties.snoc (HS.sel h0 log) entry)
+
+val do_ideal:
+	 #i: id -> 
+ 	 st: aead_state i Writer ->
+          n: Cipher.iv (alg i) ->
+    #aadlen: aadlen_32 ->
+        aad: lbuffer (v aadlen) ->
+  #plainlen: txtlen_32 ->
+      plain: plainBuffer i (v plainlen) ->
+ cipher_tag: lbuffer (v plainlen + v MAC.taglen){safeMac i} ->
+         ST  unit
+ (requires (fun h -> 
+	    enc_dec_liveness st aad plain cipher_tag h))
+ (ensures  (fun h0 _ h1 ->
+	    ideal_ensures st n aad plain cipher_tag h0 h1))
+let do_ideal #i st n #aadlen aad #plainlen plain cipher_tag =
+    let ad = to_seq_temp aad aadlen in
+    let p = Plain.load plainlen plain in 
+    let c_tagged = to_seq_temp cipher_tag plainlen in
+    let entry = AEADEntry n ad (v plainlen) p c_tagged in
+    FStar.ST.recall (st_ilog st);
+    st_ilog st := SeqProperties.snoc !(st_ilog st) entry
+
 
 assume val reestablish_inv:
           i: id -> 
@@ -128,27 +112,43 @@ assume val reestablish_inv:
               else h3 == h4)))
   (ensures    (inv st h4))
 
-val do_ideal:
-	 #i: id -> 
+////////////////////////////////////////////////////////////////////////////////
+#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let encrypt_ensures  (#i:id) (st:aead_state i Writer)
+		     (n: Cipher.iv (alg i))
+		     (#aadlen:aadlen)
+		     (aad: lbuffer (v aadlen))
+		     (#plainlen: UInt32.t)
+		     (plain: plainBuffer i (v plainlen))
+		     (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+		     (h0:mem) (h1:mem) = 
+    enc_dec_liveness st aad plain cipher_tagged h1 /\
+    (safeMac i ==>  (
+       let aad = Buffer.as_seq h1 aad in
+       let p = Plain.sel_plain h1 plainlen plain in
+       let c = Buffer.as_seq h1 cipher_tagged in
+       HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (AEADEntry n aad (v plainlen) p c)))
+       
+val encrypt:
+          i: id -> 
  	 st: aead_state i Writer ->
           n: Cipher.iv (alg i) ->
-    #aadlen: aadlen_32 ->
+     aadlen: aadlen_32 ->
         aad: lbuffer (v aadlen) ->
-  #plainlen: txtlen_32 ->
+   plainlen: txtlen_32 {safelen i (v plainlen) (otp_offset i)} ->
       plain: plainBuffer i (v plainlen) ->
- cipher_tag: lbuffer (v plainlen + v MAC.taglen){safeMac i} ->
+ cipher_tag: lbuffer (v plainlen + v MAC.taglen) ->
          ST  unit
- (requires (fun h -> 
-	    enc_dec_liveness st aad plain cipher_tag h))
- (ensures  (fun h0 _ h1 ->
-	    ideal_ensures st n aad plain cipher_tag h0 h1))
-let do_ideal #i st n #aadlen aad #plainlen plain cipher_tag =
-    let ad = to_seq_temp aad aadlen in
-    let p = Plain.load plainlen plain in 
-    let c_tagged = to_seq_temp cipher_tag plainlen in
-    let entry = AEADEntry n ad (v plainlen) p c_tagged in
-    FStar.ST.recall (st_ilog st);
-    st_ilog st := SeqProperties.snoc !(st_ilog st) entry
+  (requires (fun h ->
+	     enc_dec_separation st aad plain cipher_tag /\
+	     enc_dec_liveness st aad plain cipher_tag h /\
+	     fresh_nonce_st n st h /\
+	     inv st h))
+   (ensures (fun h0 _ h1 ->
+	     enc_dec_liveness st aad plain cipher_tag h1 /\
+	     inv st h1 /\
+	     encrypt_ensures st n aad plain cipher_tag h0 h1 /\
+	     HS.modifies_transitively (Set.as_set [st.log_region; Buffer.frameOf cipher_tag]) h0 h1))
 
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   assume (plainlen <> 0ul); //TODO: remove this; currently cannot encrypt empty plain texts
