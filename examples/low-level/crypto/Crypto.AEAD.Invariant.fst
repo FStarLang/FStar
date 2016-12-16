@@ -284,6 +284,15 @@ let all_above (#rgn:region) (#i:id) (x:PRF.domain i) (s:prf_table rgn i) =
   (forall (e:PRF.entry rgn i).{:pattern (s `SeqProperties.contains` e)}
      s `SeqProperties.contains` e ==> e.x `PRF.above` x)
 
+(*
+ * For x.iv, the PRF table contains a mac entry but the underlying mac is unset
+ *)
+let unused_mac_exists (#i:id) (#mac_rgn:region) (table:prf_table mac_rgn i) (x:PRF.domain_mac i) (h:HS.mem) =
+  prf i ==>
+    (match PRF.find_mac table x with
+     | None     -> False                                            //the mac entry definitely exsits in the PRF log
+     | Some mac -> CMA.mac_is_unset (i, x.iv) mac_rgn mac h)  //it is unset
+
 (*+ unused_aead_iv_for_prf prf_table iv:
 	the iv is either fresh, i.e., doesn't appear anywhere in the prf_table
 	Or, it occurs there with an unused mac (e.g., decrypt allocated one early)
@@ -944,6 +953,49 @@ val lemma_counterblocks_find_other_iv_is_none
   (cipher:lbytes l) : Lemma
   (requires  True)
   (ensures   (let otp_entries = counterblocks i r x l from_pos to_pos plain cipher in
-	     (forall (y:PRF.domain i{y.iv <> x.iv}). PRF.find otp_entries y == None)))
+	     (forall (y:PRF.domain i{y.iv <> x.iv}).{:pattern (PRF.find otp_entries y)} PRF.find otp_entries y == None)))
   (decreases (to_pos - from_pos))
 let rec lemma_counterblocks_find_other_iv_is_none i r x l from_pos to_pos plain cipher = admit ()
+
+val lemma_counterblocks_find_domain_mac_is_none
+  (i:id{safeId i})
+  (r:rid)
+  (x:PRF.domain i{PRF.ctr_0 i <^ PRF.(x.ctr)})
+  (l:nat)
+  (from_pos:nat)
+  (to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) PRF.(x.ctr)})
+  (plain:plain i l)
+  (cipher:lbytes l) : Lemma
+  (requires  True)
+  (ensures   (let otp_entries = counterblocks i r x l from_pos to_pos plain cipher in
+	     (forall (y:PRF.domain_mac i).{:pattern (PRF.find otp_entries y)}  PRF.find otp_entries y == None)))
+  (decreases (to_pos - from_pos))
+let rec lemma_counterblocks_find_domain_mac_is_none i r x l from_pos to_pos plain cipher = admit ()
+
+(*****)
+
+let frame_unused_mac_exists_h
+  (#i:id)
+  (#mac_rgn:region)
+  (table:prf_table mac_rgn i)
+  (x:PRF.domain_mac i)
+  (h0 h1:mem) : Lemma
+  (requires (let open HS in
+             unused_mac_exists table x h0                  /\
+	     HH.modifies_rref mac_rgn TSet.empty h0.h h1.h /\
+	     live_region h1 mac_rgn))
+  (ensures  (unused_mac_exists table x h1))
+ = ()
+
+let frame_unused_mac_exists_append
+  (#i:id)
+  (#mac_rgn:region)
+  (table:prf_table mac_rgn i)
+  (x:PRF.domain_mac i)
+  (blocks:prf_table mac_rgn i)
+  (h:mem) : Lemma
+  (requires (unused_mac_exists table x h /\
+             None? (PRF.find_mac blocks x)))
+  (ensures  (unused_mac_exists (Seq.append table blocks) x h))
+  = lemma_prf_find_append_none table blocks x
+ 
