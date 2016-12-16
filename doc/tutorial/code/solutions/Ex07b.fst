@@ -219,7 +219,7 @@ let rec context_invariance e g g' =
   | EPair e1 e2 ->
      context_invariance e1 g g';
      context_invariance e2 g g'
- 
+
   | EFst e1
   | ESnd e1 -> context_invariance e1 g g'
 
@@ -231,7 +231,7 @@ val typing_extensional : g:env -> g':env -> e:exp
                            (ensures (typing g e == typing g' e))
 let typing_extensional g g' e = context_invariance e g g'
 
-#reset-options "--z3rlimit 10"
+#reset-options "--z3rlimit 10 --initial_fuel 4 --initial_ifuel 2"
 
 val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
       g:env{Some? (typing empty v) &&
