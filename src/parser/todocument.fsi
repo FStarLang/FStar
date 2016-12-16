@@ -1,5 +1,5 @@
-(*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+﻿(*
+   Copyright 2016 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,10 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Char
-type char' = char
-type char = char'
-let lowercase c = Char.lowercase c
-let uppercase c = Char.uppercase c
-let int_of_char c = Char.code c
-let char_of_int i = Char.chr i
+#light "off"
+
+(** Convert Parser.Ast to Pprint.document for prettyprinting. *)
+module FStar.Parser.ToDocument
+
+val term_to_document : FStar.Parser.AST.term -> FStar.Pprint.document
+val decl_to_document   : FStar.Parser.AST.decl -> FStar.Pprint.document
+val modul_to_document  : FStar.Parser.AST.modul -> FStar.Pprint.document
+
