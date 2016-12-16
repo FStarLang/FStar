@@ -17,7 +17,8 @@ VERIFY= \
   Crypto.AEAD.PRF_MAC \
   Crypto.AEAD.Wrappers.CMA \
   Crypto.AEAD.Wrappers.Encoding \
-  Crypto.AEAD.Decrypt
+  Crypto.AEAD.Decrypt \
+  Crypto.AEAD.Encrypt
 
 EXTRA= \
   Crypto.Symmetric.Poly1305 \

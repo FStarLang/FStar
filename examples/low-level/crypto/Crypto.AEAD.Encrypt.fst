@@ -116,7 +116,9 @@ assume val reestablish_inv:
               enc_dec_liveness st aad plain cipher_tag h1 /\
               enc_dec_liveness st aad plain cipher_tag h2 /\
               enc_dec_liveness st aad plain cipher_tag h3 /\
+	      HS.(is_stack_region h0.tip) /\ //TODO: need to add that the buffers of acc live in h0.tip
               inv st h0 /\
+	      (safeMac i ==> is_mac_for_iv st ak h0) /\
               Enxor.enxor_invariant st.prf x_1 plainlen plainlen plain cipher h0 h1 /\
               Enxor.modifies_table_above_x_and_buffer st.prf x_1 cipher h0 h1 /\
               EncodingWrapper.accumulate_modifies_nothing h1 h2 /\
