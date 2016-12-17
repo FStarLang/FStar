@@ -622,8 +622,14 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
 
   List.iter (fun (m, r) ->
     if not !r && not (Options.interactive ()) then
-      raise (Err (Util.format2 "You passed --verify_module %s but I found no \
-        file that contains [module %s] in the dependency graph\n" m m))
+      let maybe_fst =
+        let k = strlen m in
+        if k > 4 && substring m (k-4) 4 = ".fst"
+        then Util.format1 " Did you mean %s ?" (substring m 0 (k-4))
+        else ""
+      in
+      raise (Err (Util.format3 "You passed --verify_module %s but I found no \
+        file that contains [module %s] in the dependency graph.%s\n" m m maybe_fst))
   ) verify_flags;
 
   (* At this stage the list is kept in reverse to make sure the caller in

@@ -248,8 +248,8 @@ decl2:
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 4 6) Type
         in Val(qs, lid, t)
       }
-  | tag=assumeTag lid=uident COLON phi=formula (* TODO : Remove with stratify *)
-      { Assume(tag, lid, phi) }
+  | ASSUME lid=uident COLON phi=formula (* TODO : Remove with stratify *)
+      { Assume([Assumption], lid, phi) }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
   | qs=qualifiers NEW_EFFECT ne=newEffect
@@ -346,7 +346,7 @@ actionDecls:
 
 effectDecl:
   | lid=lident EQUALS t=simpleTerm
-     { mk_decl (Tycon ([], [(TyconAbbrev(lid, [], None, t), None)])) (rhs2 parseState 1 3) None }
+     { mk_decl (Tycon ([], [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) None }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
@@ -413,10 +413,6 @@ qualifier:
 
 %inline qualifiers:
   | qs=list(qualifier) { qs }
-
-(* Remove with stratify *)
-assumeTag:
-  | ASSUME { [Assumption] }
 
 maybeFocus:
   | b=boption(SQUIGGLY_RARROW) { b }

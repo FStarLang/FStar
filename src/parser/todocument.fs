@@ -51,6 +51,31 @@ let jump2 body =
 let break1 =
   break_ 1
 
+(* [separate_break_map sep f l] has the following
+  [(f l[0]) sep (f l[1]) ... sep (f l[n])]
+  and the following non flat layout
+  [(f l[0]) sep
+   (f l[1]) sep
+   ...
+   (f l[n])]
+*)
+let separate_break_map sep f l =
+    group (separate_map (space ^^ sep ^^ break1) f l)
+
+(* [precede_break_separate_map prec sep f l] has the flat layout
+
+   [prec (f l[0]) sep (f l[1]) ... sep (f l[n])]
+
+   and the following non flat layout
+
+   [prec (f l[0])
+    sep (f l[1])
+    ...
+    sep (f l[n])]
+*)
+let precede_break_separate_map prec sep f l =
+    precede (prec ^^ space) (List.hd l |> f)  ^^ concat_map (fun x -> break1 ^^ sep ^^ space ^^ f x) (List.tl l)
+
 let parens_with_nesting contents =
   surround 2 0 lparen contents rparen
 
@@ -236,19 +261,262 @@ let rec p_decl d =
     optional p_fsdoc d.doc ^^ p_decl2 d
 
 and p_decl2 d = match d.d with
-    | Open uid ->
-        group (str "open" ^/^ p_quident uid)
-    | ModuleAbbrev (uid1, uid2) ->
-        (str "module" ^^ space ^^ p_quident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2
-    | TopLevelModule uid ->
-        group(str "module" ^^ space ^^ p_quident uid)
-    (* skipping kind abbreviation *)
-    | Tycon(qs, [TyconAbbrev(uid, tpars, None, t), None]) when List.contains Effect qs ->
-        (str "Effect" ^^ space ^^ p_uident uid
-         ^^ space ^^ equals) ^/+^
+  | Open uid ->
+    group (str "open" ^/^ p_quident uid)
+  | ModuleAbbrev (uid1, uid2) ->
+    (str "module" ^^ space ^^ p_quident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2
+  | TopLevelModule uid ->
+    group(str "module" ^^ space ^^ p_quident uid)
+  (* skipping kind abbreviation *)
+  | KindAbbrev _ -> failwith "Deprecated, please stop throwing your old stuff at me !"
+  | Tycon(qs, [TyconAbbrev(uid, tpars, None, t), None]) when List.contains Effect qs ->
+    prefix2 (str "Effect" ^^ space ^^ p_uident uid ^^ p_typars tpars ^^ space ^^ equals)
+            (p_typ t)
+  | Tycon(qs, tcdefs) ->
+      precede_break_separate_map (str "type") (str "and") p_fsdocTypeDeclPairs tcdefs
+  | TopLevelLet(qs, q, lbs) ->
+    let let_doc = p_qualifiers ^^ str "let" ^^ p_letqualifier in
+    precede_break_separate_map let_doc (str "and") p_letbinding lbs
+  | Val(qs, lid, t) ->
+    prefix2 (p_qualifiers qs ^^ str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon)
+            p_typ t
+    (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
+  | Assume(qs, lid, t) ->
+    let decl_keyword =
+      if char_at lid.ident.idText 0 |> is_upper
+      then empty
+      else str "val" ^^ space
+    in
+    prefix2 (p_qualifiers qs ^^ decl_keyword ^^ p_qlid lid ^^ space ^^ colon)
+            p_typ t
+  | Exception(uid, t_opt) ->
+    str "exception" ^^ space ^^ p_uident ^^ optional (fun t -> str "of" ^/+^ p_typ t) t_opt
+  | NewEffect(qs, ne) ->
+    p_qualifiers ^^ str "new_effect" ^^ space ^^ p_newEffect ne
+  | SubEffect(se) ->
+    str "sub_effect" ^^ space ^^ p_subEffect se
+  | NewEffectForFree (qs, ne) ->
+    p_qualifiers ^^ str "new_effect_for_free" ^^ space ^^ p_newEffectForFree ne
+  | Pragma p ->
+    p_pragma p
+  | Fsdoc doc ->
+    p_fsdoc doc ^^ hardline (* needed so that the comment is treated as standalone *)
+  | Main _ ->
+    failwith "*Main declaration* : Is that really still in use ??"
+
+(* TODO : needs to take the F# specific type instantiation *)
+and p_typars = p_binders
+
+and p_fsdocTypeDeclPairs (fsdoc_opt, typedecl) =
+  optional p_fsdoc ^^ p_typeDecl typedecl
+
+and p_typeDecl = function
+  | TyconAbstract (lid, bs, typ_opt) ->
+    p_typeDeclPrefix lid bs typ_opt
+  | TyconAbbrev (lid, bs, typ_opt, t)
+    p_typeDeclPrefix lid bs typ_opt ^/^ prefix2 equals p_typ t
+  | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
+    p_typeDeclPrefix lid bs typ_opt ^/^
+    equals ^^ braces_with_nesting (separate_break_map semicolon p_recordFieldDecl record_field_decls)
+  | TyconVariant (lid, bs, typ_opt, ct_decls) ->
+    p_typeDeclPrefix lid bs typ_opt ^/^
+    prefix2 equals (concat_map (break1 ^^ pipe ^^ space) p_constructorDecl ct_decls)
+
+and p_typeDeclPrefix lid bs typ_opt =
+  p_ident lid ^/+^ (p_typars bs ^^ optional (fun t -> colon ^^ space ^^ p_typ t) typ_opt)
+
+and p_recordFieldDecl (lid, t, doc_opt) =
+    optional p_fsdoc doc_opt ^/^ p_lident lid ^^ colon ^^ p_typ t
+
+and p_constructorDecl (uid, t_opt, doc_opt, use_of) =
+    let sep = if use_of then str "of" else colon in
+    let uid_doc = p_uident uid in
+    optional p_fsdoc doc_opt ^/^ default_or_map uid_doc (fun t -> prefix2 (uid_doc ^^ space ^^ sep) (p_typ t))
+
+and p_letbinding (pat, e) =
+    (* TODO : this should be refined when head is an applicative pattern (function definition) *)
+    p_pattern pat ^/^ prefix2 equals p_term e
+
+(******************************************************************************)
+(*                                                                            *)
+(*                          Printing effects                                  *)
+(*                                                                            *)
+(******************************************************************************)
+
+and p_newEffect = function
+  | RedefineEffect (lid, bs, t) ->
+    p_effectRedefinition lid bs t
+  | DefineEffect (lid, bs, t, eff_decls, action_decls) ->
+    p_effectDefinition lid bs t eff_decls action_decls
+
+and p_effectRedefinition uid bs t =
+  prefix2 (p_uident uid) (p_binders bs) ^/^ prefix2 equals (p_simpleTerm t)
+
+and p_effectDefinition uid bs t eff_decls action_decls =
+  braces_with_nesting (
+    prefix2 (p_uident uid) (p_binders) ^/^
+    prefix2 colon (p_typ t) ^/^
+    prefix2 (str "with") (separate_break_map semicolon p_effectDecl) ^^
+    p_actionDecls action_decls
+    )
+
+and p_actionDecls = function
+  | [] -> empty
+  | l -> break1 ^^ prefix2 (str "and actions") (separate_break_map semicolon p_effectDecl)
+
+and p_effectDecl d = match d.d with
+    | Tycon([], [TyconAbbrev(lid, [], None, e), None]) ->
+        prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm e)
+    | _ ->
+        failwith "Not a declaration of an effect member... or at least I hope so."
+
+and p_subEffect lift =
+    let lift_op_doc =
+      let lifts =
+        match lift.op with
+          | NonReifiableLift t -> ["lift_wp", t]
+          | ReifiableLift (t1, t2) -> ["lif_wp", t1 ; "lift", t2]
+          | LiftForFree t -> ["lift", t]
+      in
+      let p_lift kwd t = prefix2 (str kwd ^^ space ^^ equals) (p_simpleTerm t) in
+      separate_break_map semicolon p_lift lifts
+    in
+    prefix2 (p_quident lift.msource ^^ str "~>") ^/^
+    p_quident lift.mdest ^^ space ^^ equals ^^
+    braces_with_nesting lift_op_doc
 
 
+(******************************************************************************)
+(*                                                                            *)
+(*                     Printing qualifiers, tags                              *)
+(*                                                                            *)
+(******************************************************************************)
 
+and p_qualifier = function
+  | Private -> str "private"
+  | Abstract -> str "abstract"
+  | Noeq -> str "noeq"
+  | Unopteq -> str "unopteq"
+  | Assumption -> str "assume"
+  | DefaultEffect -> str "default"
+  | TotalEffect -> "total"
+  | Effect -> empty
+  | New -> str "new"
+  | Inline -> str "inline"
+  | Visible -> empty
+  | Unfold_for_unification_and_vcgen -> "unfold"
+  | Inline_for_extraction -> "inline_for_extraction"
+  | Irreducible -> "irreducible"
+  | NoExtract -> "noextract"
+  | Reifiable -> "reifiable"
+  | Reflectable -> "reflectable"
+  | Opaque -> "opaque"
+  | Logic -> "logic"
+
+and p_qualifiers qs =
+  separate2 space break1 p_qualifiers qs
+
+(* Skipping focus since it cannot be recoverred at printing *)
+
+and p_letqualifier = function
+  | Rec -> str "rec" ^^ space
+  | Mutable -> str "mutable" ^^ space
+  | NoLetQualifier -> empty
+
+and p_aqual = function
+  | Implicit -> str "#"
+  | Equality -> str "$"
+
+(******************************************************************************)
+(*                                                                            *)
+(*                     Printing patterns and binders                          *)
+(*                                                                            *)
+(******************************************************************************)
+
+and p_disjunctivePattern p = match p.pat with
+  | PatOr pats ->
+    group (separate_map (break1 ^^ pipe ^^ space) p_tuplePattern pats)
+
+and p_tuplePattern p = match p.pat with
+  | PatTuple (pats, false) ->
+      group (separate_break_map comma p_constructorPattern pats)
+  | p ->
+      p_constructorPattern p
+
+and p_constructorPattern p = match p.pat with
+  | PatApp({pat=PatName maybe_cons_lid}, [hd ; tl]) when lid_equals maybe_cons_lid C.cons_lid ->
+      infix (conlon ^^ colon) (p_constructorPattern hd) (p_constructorPattern tl)
+  | PatApp ({pat=PatName uid}, pats) ->
+      prefix2 (p_quident) (separate_map break1 p_atomicPattern pats)
+  | p ->
+      p_atomicPattern p
+
+and p_atomicPattern p = match p.pat with
+  | PatAscribed (pat, t) ->
+      parens_with_nesting (infix colon (p_tuplePattern pat) (p_typ t))
+  | PatList pats ->
+    brackets_with_nesting (separate_break_map semicolon p_tuplePattern pats)
+  | PatRecord pats ->
+    let p_recordFieldPat (lid, pat) = infix equals (p_qlident lid) (p_tuplePattern pat) in
+    braces_with_nesting (separate_break_map semicolon p_recordFieldPat pats)
+  | PatTuple(pats, true) ->
+    surround 2 1 (lparen ^^ pipe) (separate_break_map (str "&") p_constructorPattern pats) (pipe ^^ rparen)
+  | PatTvar (tv, arg_qualifier_opt) ->
+    assert (arg_qualifier_opt = None) ;
+    p_tvar tv
+  | PatOp op ->
+    lparen ^^ space ^^ str op ^^ space ^^ rparen
+  | PatWild ->
+    underscore
+  | PatConst c ->
+    p_constant c
+  | PatVar (lid, aqual) ->
+    p_aqual aqual ^^ p_lident lid
+  | PatName uid ->
+      p_quident uid
+  | PatOr _ -> failwith "Inner or pattern !"
+  | PatApp _
+  | PatTuple (_, false) ->
+      parens_with_nesting (p_tuplePattern p)
+
+(* Skipping patternOrMultibinder since it would need retro-engineering the flattening of binders *)
+
+and p_binder b = = match b.b with
+    | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid
+    | TVariable lid -> p_lident lid
+    | Annotated (lid, t) -> lapren ^^ p_lident ^^ colon ^^ p_typ t ^^ rparen
+    | TAnnotated _ -> failwith "Is this still used ?"
+    | NoName -> underscore
+
+(* TODO : we may prefer to flow if there are more than 15 binders *)
+and p_binders bs = separate_map break1 p_binder bs
+
+
+(******************************************************************************)
+(*                                                                            *)
+(*                Printing identifiers and module paths                       *)
+(*                                                                            *)
+(******************************************************************************)
+
+(* TODO : should add some defensive checks *)
+
+and p_qlident lid =
+  str (text_of_lid lid)
+
+and p_quident lid =
+  str (text_of_lid lid)
+
+and p_ident lid =
+  str (text_of_id lid)
+
+and p_lident lid =
+  str (text_of_id lid)
+
+and p_uident lid =
+  str (text_of_id lid)
+
+and p_tvar lid =
+  str (text_of_id lid)
 
 (******************************************************************************)
 (*                                                                            *)
@@ -256,7 +524,7 @@ and p_decl2 d = match d.d with
 (*                                                                            *)
 (******************************************************************************)
 
-let rec p_term e = match e.tm with
+and p_term e = match e.tm with
   | Seq (e1, e2) ->
       group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
   | e ->
