@@ -150,7 +150,7 @@ val lemma_toField_2_2: x:nat{x < pow2 32} -> Lemma
 let lemma_toField_2_2 x =
   Math.Lemmas.pow2_plus 52 12;
   Math.Lemmas.pow2_multiplication_modulo_lemma_2 x 26 12;
-  cut ((x * pow2 12) % pow2 26 = pow2 12 * (x % (pow2 14)));
+  assert ((x * pow2 12) % pow2 26 = pow2 12 * (x % (pow2 14)));
   Math.Lemmas.pow2_plus 64 14;
   Math.Lemmas.lemma_div_mod x (pow2 14);
   Math.Lemmas.distributivity_add_right (pow2 64) (x % pow2 14) (pow2 14 * (x / pow2 14))

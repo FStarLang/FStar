@@ -1,5 +1,5 @@
 [
-  "“Oìe$Ù#Ì“x\bûª¥5&",
+  "¹\u0005Û\f\u0005&3áa\u0004<ræCÕc",
   [
     [
       "Crypto.Symmetric.Poly1305.Lemmas.pow2_8_lemma",
@@ -586,10 +586,9 @@
       "Crypto.Symmetric.Poly1305.Lemmas.lemma_toField_2_2",
       3,
       0,
-      1,
+      2,
       [
-        "@query", "equation_FStar.Mul.op_Star",
-        "equation_FStar.UInt.max_int", "equation_FStar.UInt32.n",
+        "@query", "equation_FStar.Mul.op_Star", "equation_FStar.UInt32.n",
         "equation_FStar.UInt64.n", "equation_Prims.nat",
         "equation_Prims.pos",
         "fuel_correspondence_Prims.pow2.fuel_instrumented",
