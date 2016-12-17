@@ -38,6 +38,59 @@ let accumulate_modifies_nothing h0 h1 =
   /\ Buffer.modifies_buf_0 h0.tip h0 h1
   /\ h0.tip=h1.tip
 
+let mac_modifies (#a:Type) 
+		 (mac_region:rid)
+		 (acc:FStar.Buffer.buffer a)
+		 (cipher:buffer)
+		 (h0 h1 :mem) : GTot Type0 =
+  HS.modifies (Set.as_set [h0.tip; mac_region; frameOf cipher]) h0 h1 /\
+  Buffer.modifies_buf_1 (frameOf cipher) cipher h0 h1
+
+let enxor_modifies (log_region:rid) (cipher:buffer) (h0 h1:mem) : GTot Type0 = 
+    modifies_transitively (Set.as_set [log_region; frameOf cipher]) h0 h1 /\
+    modifies_buf_1 (frameOf cipher) cipher h0 h1
+
+val chain_mods_enc: #a:Type ->
+		    acc:FStar.Buffer.buffer a ->
+		    cond:bool -> 
+		    prf_region:rid -> 
+		    mac_region:rid -> 
+		    cipher:buffer ->
+		    h_init:mem -> 
+		    h_push:mem ->
+		    h_prf: mem ->
+		    h_enx: mem ->
+		    h_acc: mem ->
+		    h_mac: mem ->
+		    h_ideal: mem ->
+     Lemma (requires 
+	      Buffer.live h_init cipher /\
+	      prf_region `is_in` h_init.h /\
+	      mac_region `is_in` h_init.h /\
+	      is_eternal_region prf_region /\
+	      is_eternal_region (frameOf cipher) /\
+	      prf_region `HH.includes` mac_region /\
+	      prf_region <> mac_region /\
+	      HH.disjoint (frameOf cipher) prf_region /\
+	      HS.fresh_frame h_init h_push /\
+	      prf_mac_modifies prf_region mac_region h_push h_prf /\
+	      enxor_modifies prf_region cipher h_prf h_enx /\
+	      accumulate_modifies_nothing h_enx h_acc /\
+	      Buffer.frameOf acc = h_acc.tip /\
+	      mac_modifies mac_region acc cipher h_acc h_mac /\
+	      h_mac.tip = h_ideal.tip /\
+	      (if cond
+ 	       then h_mac == h_ideal 
+	       else HS.modifies (Set.as_set [prf_region]) h_mac h_ideal))
+	   (ensures (poppable h_ideal /\ (
+   		     let h_final = HS.pop h_ideal in
+   		     HS.modifies_transitively (Set.as_set [prf_region; frameOf cipher]) h_init h_final /\
+		     Buffer.modifies_buf_1 (frameOf cipher) cipher h_init h_final)))
+#reset-options "--initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 0 --z3rlimit 200"
+let chain_mods_enc #a acc cond prf_region mac_region cipher h_init h_push h_prf h_enx h_acc h_mac h_ideal =
+    FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_2 acc cipher h_acc) h_mac;
+    modifies_drop_tip h_init h_push h_ideal (Set.as_set [prf_region; frameOf cipher])
+
 val chain_modification: #a:Type -> 
 			acc:FStar.Buffer.buffer a ->
 			cond:bool -> 

@@ -105,7 +105,9 @@ val accumulate_enc
 	  enc_dec_liveness aead_st aad plain cipher_tagged h0 /\ 
 	  ak_aad_cipher_separate ak aad cipher_tagged /\
 	  PRF_MAC.ak_live PRF.(aead_st.prf.mac_rgn) ak h0 /\
-	  (CMA.authId i ==> CMA.mac_is_unset i PRF.(aead_st.prf.mac_rgn) ak h0)))
+	  (CMA.authId i ==> 
+	    fresh_nonce_st (snd i) aead_st h0 /\
+	    CMA.mac_is_unset i PRF.(aead_st.prf.mac_rgn) ak h0)))
 	  (* is_ak_for_iv aead_st ak h0)) *)
       (ensures (fun h0 acc h1 ->  
 	  let tag : lbuffer (v MAC.taglen) = Buffer.sub cipher_tagged txtlen MAC.taglen in
@@ -113,7 +115,9 @@ val accumulate_enc
       	  ak_acc_tag_separate ak acc tag /\
 	  enc_dec_liveness aead_st aad plain cipher_tagged h1 /\ 
 	  PRF_MAC.ak_live PRF.(aead_st.prf.mac_rgn) ak h1 /\
-  	  (CMA.authId i ==> CMA.mac_is_unset i PRF.(aead_st.prf.mac_rgn) ak h1) /\
+  	  (CMA.authId i ==> 
+	      fresh_nonce_st (snd i) aead_st h1 /\	  
+	      CMA.mac_is_unset i PRF.(aead_st.prf.mac_rgn) ak h1) /\
 	  (* is_ak_for_iv aead_st ak h1 /\	   *)
 	  accumulate_modifies_nothing h0 h1 /\
 	  accumulate_ensures ak aad cipher h0 acc h1))

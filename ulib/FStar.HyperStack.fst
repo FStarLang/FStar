@@ -186,6 +186,12 @@ let fresh_frame (m0:mem) (m1:mem) =
   /\ HH.parent m1.tip = m0.tip
   /\ m1.h == Map.upd m0.h m1.tip Heap.emp
 
+let modifies_drop_tip (m0:mem) (m1:mem) (m2:mem) (s:Set.set rid)
+    : Lemma (fresh_frame m0 m1 /\
+	     modifies_transitively (Set.union s (Set.singleton m1.tip)) m1 m2 ==> 
+	     modifies_transitively s m0 (pop m2))
+    = ()
+
 let lemma_pop_is_popped (m0:mem{poppable m0})
   : Lemma (popped m0 (pop m0))
   = let m1 = pop m0 in

@@ -22,6 +22,8 @@ module CMA           = Crypto.Symmetric.UF1CMA
 module MAC           = Crypto.Symmetric.MAC
 module SeqProperties = FStar.SeqProperties
 module PRF_MAC       = Crypto.AEAD.PRF_MAC
+module BufferUtils   = Crypto.AEAD.BufferUtils
+
 (*** First, some predicates and lemmas
      shared between enxor and dexor **)
 
@@ -86,7 +88,15 @@ let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
     (let rid = Buffer.frameOf b in
      HS.modifies_one rid h0 h1 /\ 
      Buffer.modifies_buf_1 rid b h0 h1))
-    
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
+let weaken_modifies (#i:id) (#l:nat) (t:PRF.state i)
+		    (x:PRF.domain i) (b:lbuffer l)
+		    (h0:HS.mem) (h1:HS.mem)
+    : Lemma (requires (modifies_table_above_x_and_buffer t x b h0 h1))
+	    (ensures (BufferUtils.enxor_modifies PRF.(t.rgn) b h0 h1))
+    = ()
+
 (*+ modifies_table_above_x_and_buffer is a pre-order, 
 	as proven by the reflexivity and transitivity lemmas below *)
 let refl_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
@@ -103,7 +113,6 @@ let refl_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
 	FStar.Classical.forall_intro (SeqProperties.contains_elim emp)
       else ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 let trans_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
 			     (x_0:PRF.domain i{x_0.ctr <> 0ul}) (x_1:PRF.domain i{x_1 `above` x_0})
 			     (c:lbuffer l)
@@ -468,6 +477,7 @@ val enxor  :
 	     enxor_invariant t x len 0ul plain cipher h0 h1 /\
              PRF_MAC.ak_live aead_st.prf.mac_rgn ak h1 /\	    
 	     (safeMac i ==>
+		 fresh_nonce_st iv aead_st h1 /\
 	         CMA.mac_is_unset (i, iv) aead_st.prf.mac_rgn ak h1) /\
 	     PRF_MAC.enxor_h0_h1 aead_st iv aad plain cipher h0 h1))
 let enxor #i iv aead_st #aadlen aad #len plain_b cipher_tag ak =

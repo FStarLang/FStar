@@ -44,6 +44,7 @@ let ideal_ensures
        (h0 h1: mem) = 
     enc_dec_liveness st aad plain cipher_tag h0 /\
     enc_dec_liveness st aad plain cipher_tag h1 /\
+    HS.(h0.tip = h1.tip) /\
     HS.modifies (Set.as_set [st.log_region]) h0 h1 /\
     HS.modifies_ref st.log_region (TSet.singleton (HS.as_aref (st_ilog st))) h0 h1 /\ (
     let entry = AEADEntry n (Buffer.as_seq h0 aad) 
@@ -75,7 +76,30 @@ let do_ideal #i st n #aadlen aad #plainlen plain cipher_tag =
     FStar.ST.recall (st_ilog st);
     st_ilog st := SeqProperties.snoc !(st_ilog st) entry
 
-assume val encrypt_write_effect : 
+#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let encrypt_ensures  (#i:id) (st:aead_state i Writer)
+		     (n: Cipher.iv (alg i))
+		     (#aadlen:aadlen)
+		     (aad: lbuffer (v aadlen))
+		     (#plainlen: UInt32.t)
+		     (plain: plainBuffer i (v plainlen))
+		     (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+		     (h0:mem) (h1:mem) = 
+    enc_dec_liveness st aad plain cipher_tagged h1 /\
+    (safeMac i ==>  (
+       let aad = Buffer.as_seq h1 aad in
+       let p = Plain.sel_plain h1 plainlen plain in
+       let c = Buffer.as_seq h1 cipher_tagged in
+       HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (AEADEntry n aad (v plainlen) p c)))
+
+let encrypt_modifies (#i:id) (st:aead_state i Writer)
+		     (#plainlen: UInt32.t)
+		     (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
+		     (h0:mem) (h1:mem) : GTot Type0 = 
+  HS.modifies_transitively (Set.as_set [st.log_region; Buffer.frameOf cipher_tagged]) h0 h1 /\
+  Buffer.modifies_buf_1 (Buffer.frameOf cipher_tagged) cipher_tagged h0 h1
+
+val encrypt_write_effect : 
           i: id -> 
          st: aead_state i Writer ->
           n: Cipher.iv (alg i) ->
@@ -94,24 +118,50 @@ assume val encrypt_write_effect :
       h_mac: mem ->
     h_ideal: mem ->
       Lemma  
-  (requires  (let tag : lbuffer (v MAC.taglen) = Buffer.sub cipher_tag plainlen MAC.taglen in
+  (requires  (let open HS in
+	      let cipher : lbuffer (v plainlen) = Buffer.sub cipher_tag 0ul plainlen in
+ 	      let tag : lbuffer (v MAC.taglen) = Buffer.sub cipher_tag plainlen MAC.taglen in
+	      let x_1 = {iv=n; ctr=otp_offset i} in
 	      CMA.(ak.region) = PRF.(st.prf.mac_rgn) /\	      
 	      enc_dec_separation st aad plain cipher_tag  /\
               enc_dec_liveness st aad plain cipher_tag h_init /\
-	      HS.fresh_frame h_init h_push /\
+              enc_dec_liveness st aad plain cipher_tag h_push /\
+              enc_dec_liveness st aad plain cipher_tag h_prf /\
+              enc_dec_liveness st aad plain cipher_tag h_enx /\
+              enc_dec_liveness st aad plain cipher_tag h_acc /\
+              enc_dec_liveness st aad plain cipher_tag h_mac /\	      
+              enc_dec_liveness st aad plain cipher_tag h_ideal /\
+	      fresh_frame h_init h_push /\
 	      BufferUtils.prf_mac_modifies st.log_region st.prf.mac_rgn h_push h_prf /\
-	      HS.modifies_transitively (Set.as_set [st.log_region; Buffer.frameOf cipher_tag]) h_prf h_enx /\
+	      Enxor.modifies_table_above_x_and_buffer st.prf x_1 cipher h_prf h_enx /\
 	      EncodingWrapper.accumulate_modifies_nothing h_enx h_acc /\
+	      Buffer.frameOf (MAC.as_buffer (CMA.abuf acc)) = h_acc.tip /\
 	      CMAWrapper.mac_modifies i n tag ak acc h_acc h_mac /\
-	      Buffer.frameOf (MAC.as_buffer (CMA.abuf acc)) = HS.(h_acc.tip) /\
+	      h_acc.tip = h_mac.tip /\
+	      h_mac.tip = h_ideal.tip /\
 	      (if not (safeMac i)
  	       then h_mac == h_ideal 
-	       else (HS.modifies (Set.as_set [st.log_region]) h_mac h_ideal /\
-		     HS.modifies_ref st.log_region (TSet.singleton (HS.as_aref (st_ilog st))) h_mac h_ideal))))
+	       else ideal_ensures st n aad plain cipher_tag h_mac h_ideal)))
    (ensures  (HS.poppable h_ideal /\ (
 	      let h_final = HS.pop h_ideal in
-   	      HS.modifies_transitively (Set.as_set [st.log_region; Buffer.frameOf cipher_tag]) h_init h_final /\
-	      Buffer.modifies_buf_1 (Buffer.frameOf cipher_tag) cipher_tag h_init h_final)))
+	      encrypt_ensures st n aad plain cipher_tag h_init h_final /\
+	      encrypt_modifies st cipher_tag h_init h_final)))
+#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let encrypt_write_effect i st n #aadlen aad #plainlen plain cipher_tag ak acc
+			 h_init h_push h_prf h_enx h_acc h_mac h_ideal =
+			 
+  let open HS in			 
+  let abuf = MAC.as_buffer (CMA.abuf acc) in
+  let cipher : lbuffer (v plainlen) = Buffer.sub cipher_tag 0ul plainlen in
+  let tag : lbuffer (v MAC.taglen) = Buffer.sub cipher_tag plainlen MAC.taglen in
+  let x_1 = {iv=n; ctr=otp_offset i} in
+  let mac_region = PRF.(st.prf.mac_rgn) in
+  assume (safeMac i ==>  (
+    HS.sel h_init (st_ilog st) == HS.sel h_mac (st_ilog st)));
+  Enxor.weaken_modifies st.prf x_1 cipher h_prf h_enx;
+  CMAWrapper.weaken_mac_modifies i n tag ak acc h_acc h_mac;
+  BufferUtils.chain_mods_enc abuf (not (safeMac i)) st.log_region PRF.(st.prf.mac_rgn) cipher_tag
+			     h_init h_push h_prf h_enx h_acc h_mac h_ideal
 
 assume val reestablish_inv:
           i: id -> 
@@ -134,13 +184,13 @@ assume val reestablish_inv:
               let x_1 = {iv=n; ctr=otp_offset i} in
               enc_dec_separation st aad plain cipher_tag  /\
               enc_dec_liveness st aad plain cipher_tag h0 /\
-              enc_dec_liveness st aad plain cipher_tag h1 /\
-              enc_dec_liveness st aad plain cipher_tag h2 /\
-              enc_dec_liveness st aad plain cipher_tag h3 /\
+              (* enc_dec_liveness st aad plain cipher_tag h1 /\ *)
+              (* enc_dec_liveness st aad plain cipher_tag h2 /\ *)
+              (* enc_dec_liveness st aad plain cipher_tag h3 /\ *)
 	      HS.(is_stack_region h0.tip) /\ //TODO: need to add that the buffers of acc live in h0.tip
               inv st h0 /\
 	      (safeMac i ==> is_mac_for_iv st ak h0) /\
-              Enxor.enxor_invariant st.prf x_1 plainlen plainlen plain cipher h0 h1 /\
+              Enxor.enxor_invariant st.prf x_1 plainlen 0ul plain cipher h0 h1 /\
               Enxor.modifies_table_above_x_and_buffer st.prf x_1 cipher h0 h1 /\
               EncodingWrapper.accumulate_modifies_nothing h1 h2 /\
               CMAWrapper.mac_ensures i n st aad plain cipher_tag ak acc h2 h3 /\ (
@@ -150,21 +200,6 @@ assume val reestablish_inv:
   (ensures    (inv st h4))
 
 ////////////////////////////////////////////////////////////////////////////////
-#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-let encrypt_ensures  (#i:id) (st:aead_state i Writer)
-		     (n: Cipher.iv (alg i))
-		     (#aadlen:aadlen)
-		     (aad: lbuffer (v aadlen))
-		     (#plainlen: UInt32.t)
-		     (plain: plainBuffer i (v plainlen))
-		     (cipher_tagged:lbuffer (v plainlen + v MAC.taglen))
-		     (h0:mem) (h1:mem) = 
-    enc_dec_liveness st aad plain cipher_tagged h1 /\
-    (safeMac i ==>  (
-       let aad = Buffer.as_seq h1 aad in
-       let p = Plain.sel_plain h1 plainlen plain in
-       let c = Buffer.as_seq h1 cipher_tagged in
-       HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (AEADEntry n aad (v plainlen) p c)))
        
 val encrypt:
           i: id -> 
@@ -179,19 +214,25 @@ val encrypt:
   (requires (fun h ->
 	     enc_dec_separation st aad plain cipher_tag /\
 	     enc_dec_liveness st aad plain cipher_tag h /\
-	     fresh_nonce_st n st h /\
+	     (safeMac i ==> fresh_nonce_st n st h) /\
 	     inv st h))
    (ensures (fun h0 _ h1 ->
-	     enc_dec_liveness st aad plain cipher_tag h1 /\
-	     inv st h1 /\
-	     encrypt_ensures st n aad plain cipher_tag h0 h1 /\
-	     HS.modifies_transitively (Set.as_set [st.log_region; Buffer.frameOf cipher_tag]) h0 h1))
+	      encrypt_ensures st n aad plain cipher_tag h0 h1 /\
+	      encrypt_modifies st cipher_tag h0 h1 /\
+ 	      inv st h1))
+
+assume val frame_inv_pop (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem)
+   : Lemma (inv st h /\ 
+	    HS.poppable h ==> inv st (HS.pop h))
+	    
+   (* = if safeMac i *)
+   (*   then frame_refines i st.prf.mac_rgn (HS.sel h (PRF.itable i st.prf)) (HS.sel h st.log) h h1 *)
 
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   let h_init = get() in
   push_frame(); 
-  let h00 = get () in
-  frame_inv_push st h_init h00; //inv st h0
+  let h_push = get () in
+  frame_inv_push st h_init h_push; //inv st h0
 
   let cipher : lbuffer (v plainlen) = Buffer.sub cipher_tagged 0ul plainlen in
   let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in
@@ -199,31 +240,31 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
 
   //call prf_mac: get a mac key, ak
   let ak = PRF_MAC.prf_mac_enc st aad plain cipher_tagged st.ak x_0 in  // used for keying the one-time MAC
-  let h0 = get () in
+  let h_prf = get () in
   let open CMA in 
 
   //call enxor: fragment the plaintext, call the prf, and fill in the cipher text
   Enxor.enxor n st aad plain cipher_tagged ak;
-  let h1 = get () in
-
+  let h_enxor = get () in
+  
   (* assume (EncodingWrapper.ak_aad_cipher_separate ak aad cipher_tagged); //slow *)
 
   //call accumulate: encode the ciphertext and additional data for mac'ing
   let acc = EncodingWrapper.accumulate_enc #(i, n) st ak aad plain cipher_tagged in
-  
-  let h2 = get () in
+  let h_acc = get () in
 
-  (* assume(verify_liveness ak tag h2); //slow *)
+  (* assume(verify_liveness ak tag h_acc); //slow *)
 
   //call mac: filling in the tag component of the out buffer
-  CMAWrapper.mac #(i,n) st aad plain cipher_tagged ak acc h1;
-  let h3 = get () in 
-  assert (fresh_nonce_st n st h3);
-  
-  if safeMac i 
-  then do_ideal st n aad plain cipher_tagged;
-  let h4 = get () in
-  let x_1 = PRF.incr i x_0 in
+  CMAWrapper.mac #(i,n) st aad plain cipher_tagged ak acc h_enxor;
+  let h_mac = get () in
 
-  reestablish_inv i st n aad plain cipher_tagged ak acc h0 h1 h2 h3 h4;
-  admit()
+  (* assert (safeMac i ==> fresh_nonce_st n st h_mac); *)
+
+  if safeMac i
+  then do_ideal st n aad plain cipher_tagged;
+  let h_ideal = get () in
+  reestablish_inv i st n aad plain cipher_tagged ak acc h_prf h_enxor h_acc h_mac h_ideal;
+  encrypt_write_effect i st n aad plain cipher_tagged ak acc h_init h_push h_prf h_enxor h_acc h_mac h_ideal;
+  frame_inv_pop st h_ideal;
+  pop_frame()

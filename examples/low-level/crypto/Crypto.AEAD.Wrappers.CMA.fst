@@ -25,6 +25,7 @@ module MAC = Crypto.Symmetric.MAC
 module EncodingWrapper = Crypto.AEAD.Wrappers.Encoding
 module PRF_MAC = Crypto.AEAD.PRF_MAC
 module RR = FStar.Monotonic.RRef
+module BufferUtils = Crypto.AEAD.BufferUtils
 
 (*** UF1CMA.mac ***)
 #reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
@@ -38,16 +39,20 @@ let mac_requires (#i:CMA.id) (ak:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tag
   (mac_log ==> Buffer.frameOf tag <> (alog acc).id) /\
   (authId i ==> CMA.mac_is_unset i ak.region ak h)
 
+let pairwise_distinct (r1:HH.rid) (r2:HH.rid) (r3:HH.rid) = 
+  r1 <> r2 /\ r2 <> r3 /\ r3 <> r1
+  
 let modifies_bufs_and_ref (#a:Type) (#b:Type) (#c:Type)
     (buf1:Buffer.buffer a)
-    (buf2:Buffer.buffer b{Buffer.frameOf buf1 = Buffer.frameOf buf2})
-    (reff:HS.reference c{HH.disjoint HS.(reff.id) (Buffer.frameOf buf1)})
+    (buf2:Buffer.buffer b)
+    (reff:HS.reference c{pairwise_distinct (Buffer.frameOf buf1) (Buffer.frameOf buf2) HS.(reff.id)})
     (h0 h1:mem) : GTot Type0 =
  let open FStar.HyperStack in
  let open FStar.Buffer in
- HS.modifies (Set.as_set [frameOf buf1; reff.id]) h0 h1 /\
+ HS.modifies (Set.as_set [frameOf buf1; frameOf buf2; reff.id]) h0 h1 /\
  HS.modifies_ref reff.id !{HS.as_ref reff} h0 h1 /\
- Buffer.modifies_buf_2 (frameOf buf1) buf1 buf2 h0 h1
+ Buffer.modifies_buf_1 (frameOf buf1) buf1 h0 h1 /\
+ Buffer.modifies_buf_1 (frameOf buf2) buf2 h0 h1
  
 let mac_modifies 
         (i:id) (iv:Cipher.iv (Cipher.algi i))
@@ -55,13 +60,28 @@ let mac_modifies
 	(ak:CMA.state (i, iv))
 	(acc:CMA.accBuffer (i, iv)) 
 	(h0 h1:mem) = 
+  let open FStar.Buffer in	  
   let abuf = MAC.as_buffer (CMA.abuf acc) in
   if safeMac i 
   then let log = RR.as_hsref CMA.(ilog ak.log) in
-       Buffer.frameOf abuf = Buffer.frameOf tbuf /\
-       HH.disjoint (Buffer.frameOf abuf) HS.(log.id) /\
+       pairwise_distinct (frameOf abuf) (frameOf tbuf) HS.(log.id) /\
        modifies_bufs_and_ref abuf tbuf log h0 h1
-  else Buffer.modifies_2 abuf tbuf h0 h1
+  else frameOf abuf <> frameOf tbuf /\
+       HS.modifies (Set.as_set [frameOf abuf; frameOf tbuf]) h0 h1 /\
+       modifies_buf_1 (frameOf abuf) abuf h0 h1 /\
+       modifies_buf_1 (frameOf tbuf) tbuf h0 h1
+       
+let weaken_mac_modifies         
+        (i:id) (iv:Cipher.iv (Cipher.algi i))
+	(tbuf:lbuffer (v MAC.taglen))
+	(ak:CMA.state (i, iv))
+	(acc:CMA.accBuffer (i, iv)) 
+	(h0 h1:mem)
+   : Lemma (let abuf = MAC.as_buffer (CMA.abuf acc) in
+	    Buffer.frameOf abuf = HS.(h0.tip) /\
+	    mac_modifies i iv tbuf ak acc h0 h1 ==>
+	    BufferUtils.mac_modifies CMA.(ak.region) abuf tbuf h0 h1)
+   = ()	    
 
 #set-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 let mac_wrapper (#i:EncodingWrapper.mac_id) (ak:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB)
@@ -71,9 +91,29 @@ let mac_wrapper (#i:EncodingWrapper.mac_id) (ak:CMA.state i) (acc:CMA.accBuffer 
 		        mac_modifies (fst i) (snd i) tag ak acc h0 h1))
   = let h0 = get () in
     CMA.mac #i ak acc tag; 
-    admit()
+    let h1 = get () in
+    assume (mac_modifies (fst i) (snd i) tag ak acc h0 h1) //NS: need to revise the write effect of UF1CMA.mac
 
 #set-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let mac_is_set_st 
+        (#i:id)
+        (iv:Cipher.iv (Cipher.algi i))
+	(st:aead_state i Writer)
+	(#aadlen:aadlen) (aad:lbuffer (v aadlen))
+	(#txtlen:txtlen_32) (cipher_tagged:lbuffer (v txtlen + v MAC.taglen))
+	(h:mem) =
+  Buffer.live h cipher_tagged /\
+  Buffer.live h aad /\
+  (safeMac i ==> (
+     h `HS.contains` (PRF.itable i st.prf) /\ (
+     let prf_table = HS.sel h (PRF.itable i st.prf) in
+     let ad = Buffer.as_seq h aad in
+     let cbuf = Buffer.sub cipher_tagged 0ul txtlen in
+     let tbuf = Buffer.sub cipher_tagged txtlen MAC.taglen in
+     let cipher : lbytes (v txtlen) = Buffer.as_seq h cbuf in
+     let tag : MAC.tag = Buffer.as_seq h tbuf in
+     mac_is_set prf_table iv ad (v txtlen) cipher tag h)))
+
 let mac_ensures
         (i:id)
         (iv:Cipher.iv (Cipher.algi i))
@@ -87,16 +127,8 @@ let mac_ensures
   let tag = Buffer.sub cipher_tagged txtlen MAC.taglen in	
   enc_dec_liveness st aad plain cipher_tagged h1 /\
   mac_modifies i iv tag ak acc h0 h1 /\
-  (safeMac i ==>
-     h1 `HS.contains` (PRF.itable i st.prf) /\ (
-     let prf_table = HS.sel h1 (PRF.itable i st.prf) in
-     let ad = Buffer.as_seq h1 aad in
-     let cbuf = Buffer.sub cipher_tagged 0ul txtlen in
-     let tbuf = Buffer.sub cipher_tagged txtlen MAC.taglen in
-     let cipher : lbytes (v txtlen) = Buffer.as_seq h1 cbuf in
-     let tag : MAC.tag = Buffer.as_seq h1 tbuf in
-     mac_is_set prf_table iv ad (v txtlen) cipher tag h1))
-     
+  mac_is_set_st iv st aad cipher_tagged h1
+       
 val mac (#i:EncodingWrapper.mac_id)
 	(st:aead_state (fst i) Writer)
 	(#aadlen:aadlen) (aad:lbuffer (v aadlen))
@@ -117,19 +149,20 @@ val mac (#i:EncodingWrapper.mac_id)
      EncodingWrapper.accumulate_ensures ak aad cipher h_init acc h0 /\
      verify_liveness ak tag h0 /\
      acc_inv ak acc h0 /\
-     (authId i ==> CMA.mac_is_unset i ak.region ak h0)))
+     (* PRF_MAC.ak_live PRF.(st.prf.mac_rgn) ak h0 /\ *)
+     (CMA.authId i ==> 
+       fresh_nonce_st (snd i) st h0 /\
+       CMA.mac_is_unset i PRF.(st.prf.mac_rgn) ak h0)))
    (ensures (fun h0 _ h1 ->
+      (CMA.authId i ==> fresh_nonce_st (snd i) st h1) /\
       mac_ensures (fst i) (snd i) st aad plain cipher_tagged ak acc h0 h1))
-#set-options "--z3rlimit 100"
+#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let mac #i st #aadlen aad #txtlen plain cipher_tagged ak acc h_init =   
    let tag = Buffer.sub cipher_tagged txtlen MAC.taglen in
-   let h0 = get () in
-   mac_wrapper ak acc tag;
+   mac_wrapper ak acc tag; 
    let h1 = get () in
-   if not (safeMac (fst i))
-   then let abuf = MAC.as_buffer (CMA.abuf acc) in
-        FStar.Buffer.lemma_reveal_modifies_2 abuf tag h0 h1
-	
+   assume (mac_is_set_st (snd i) st aad cipher_tagged h1) //NS, TODO: need another lemma
+
 (*** UF1CMA.verify ***)
 
 (*+ The main work of wrapping UF1CMA.verify is to 
