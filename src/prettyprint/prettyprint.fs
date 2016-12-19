@@ -61,6 +61,10 @@ let nest (j:int) (doc:document) : document = failwith not_impl_msg
 
 let group (doc:document) : document = failwith not_impl_msg
 
+let column (_: int -> document): document = failwith not_impl_msg
+let nesting (_: int -> document): document = failwith not_impl_msg
+let position (_: int -> int -> int -> document): document = failwith not_impl_msg
+
 let ifflat (doc1:document) (doc2:document) : document = failwith not_impl_msg
 
 let align (doc:document) : document = failwith not_impl_msg

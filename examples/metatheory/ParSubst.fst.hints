@@ -17,6 +17,7 @@
       ],
       0
     ],
+    [ "ParSubst.uu___is_EVar", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ParSubst.__proj__EVar__item___0",
       1,
@@ -29,6 +30,7 @@
       ],
       0
     ],
+    [ "ParSubst.uu___is_EApp", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ParSubst.__proj__EApp__item___0",
       1,
@@ -53,6 +55,7 @@
       ],
       0
     ],
+    [ "ParSubst.uu___is_EAbs", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ParSubst.__proj__EAbs__item___0",
       1,

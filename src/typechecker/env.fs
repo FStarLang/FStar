@@ -661,7 +661,6 @@ let is_action env lid =
             Util.for_some (function Action _ -> true | _ -> false) tags
         | _ -> false
 
-
 let is_interpreted =
     let interpreted_symbols =
        [Const.op_Eq;

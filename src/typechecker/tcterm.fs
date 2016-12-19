@@ -1350,10 +1350,15 @@ and tc_eqn scrutinee env branch
         let discriminate scrutinee_tm f =
             if List.length (Env.datacons_of_typ env (Env.typ_of_datacon env f.v)) > 1
             then
-                let disc = S.fvar (Util.mk_discriminator f.v) Delta_equational None in
-                let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
-                [Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool]
-            else [] in
+                let discriminator = Util.mk_discriminator f.v in
+                match Env.try_lookup_lid env discriminator with
+                    | None -> []  // We don't use the discriminator if we are typechecking it
+                    | _ ->
+                        let disc = S.fvar discriminator Delta_equational None in
+                        let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
+                        [Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool]
+            else []
+        in
 
         let fail () =
             failwith (Util.format3 "tc_eqn: Impossible (%s) %s (%s)"
@@ -1435,25 +1440,28 @@ and check_top_level_let env e =
          (* Maybe generalize its type *)
          let g1, e1, univ_vars, c1 =
             if annotated && not env.generalize
-            (* TODO : Should we gather the fre univnames ? e.g. (TcUtil.gather_free_univnames env e1)@univ_vars *)
             then g1, e1, univ_vars, c1
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
+                 assert (univ_vars = []) ;
                  let _, univs, e1, c1 = List.hd (TcUtil.generalize env [lb.lbname, e1, c1.comp()]) in
-                 g1, e1, univs, Util.lcomp_of_comp c1 in
+                 g1, e1, univs, Util.lcomp_of_comp c1
+         in
 
          (* Check that it doesn't have a top-level effect; warn if it does *)
          let e2, c1 =
             if Env.should_verify env
-            then let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
-                 if ok
-                 then e2, c1
-                 else (if (Options.warn_top_level_effects()) //otherwise warn
-                       then Errors.warn (Env.get_range env) Errors.top_level_effect;
-                       mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
+            then
+                let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
+                if ok
+                then e2, c1
+                else (if (Options.warn_top_level_effects()) //otherwise warn
+                      then Errors.warn (Env.get_range env) Errors.top_level_effect;
+                      mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
             else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
                  (Rel.force_trivial_guard env g1;
                   let c = c1.comp () |> N.normalize_comp [N.Beta] env in
-                  e2, c) in
+                  e2, c)
+         in
 
 
          (* the result always has type ML unit *)
@@ -1467,7 +1475,7 @@ and check_top_level_let env e =
          cres,
          Rel.trivial_guard
 
-       | _ -> failwith "Impossible"
+     | _ -> failwith "Impossible"
 
 (******************************************************************************)
 (* Checking an inner non-recursive let-binding:                               *)
@@ -1653,12 +1661,15 @@ and check_let_bound_def top_level env lb
     let e1 = lb.lbdef in
 
     (* 1. extract the annotation of the let-bound term, e1, if any *)
-    let topt, wf_annot, univ_vars, env1 = check_lbtyp top_level env lb in
+    let topt, wf_annot, univ_vars, univ_opening, env1 = check_lbtyp top_level env lb in
 
     if not top_level && univ_vars <> []
     then raise (Error("Inner let-bound definitions cannot be universe polymorphic", e1.pos));
 
     (* 2. type-check e1 *)
+    (* Only toplevel terms should have universe openings *)
+    assert ( top_level || List.length univ_opening = 0 );
+    let e1 = subst univ_opening e1 in
     let e1, c1, g1 = tc_maybe_toplevel_term ({env1 with top_level=top_level}) e1 in
 
     (* and strengthen its VC with and well-formedness condition on its annotated type *)
@@ -1680,22 +1691,24 @@ and check_let_bound_def top_level env lb
 and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, if it was not Tm_unknown *)
                                  * guard_t      (* well-formedness condition for that type               *)
                                  * univ_names   (* explicit universe variables, if any                   *)
+                                 * list<subst_elt> (* subtistution of the opened universes               *)
                                  * Env.env      (* env extended with univ_vars                           *)
                                  =
     let t = SS.compress lb.lbtyp in
     match t.n with
         | Tm_unknown ->
           if lb.lbunivs <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
-          None, Rel.trivial_guard, [], env
+          None, Rel.trivial_guard, [], [], env
 
         | _ ->
-          let univ_vars, t = open_univ_vars lb.lbunivs t in
+          let univ_opening, univ_vars = univ_var_opening lb.lbunivs in
+          let t = subst univ_opening t in
           let env1 = Env.push_univ_vars env univ_vars in
           if top_level
           && not (env.generalize) //clearly, x has an annotated type ... could env.generalize ever be true here?
                                   //yes. x may not have a val declaration, only an inline annotation
                                   //so, not (env.generalize) signals that x has been declared as val x : t, and t has already been checked
-          then Some t, Rel.trivial_guard, univ_vars, Env.set_expected_typ env1 t //t has already been kind-checked
+          then Some t, Rel.trivial_guard, univ_vars, univ_opening, Env.set_expected_typ env1 t //t has already been kind-checked
           else //we have an inline annotation
                let k, _ = U.type_u () in
                let t, _, g = tc_check_tot_or_gtot_term env1 t k in
@@ -1704,7 +1717,7 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
                         (Range.string_of_range (range_of_lbname lb.lbname))
                         (Print.term_to_string t);
                let t = norm env1 t in
-               Some t, g, univ_vars, Env.set_expected_typ env1 t
+               Some t, g, univ_vars, univ_opening, Env.set_expected_typ env1 t
 
 
 and tc_binder env (x, imp) =

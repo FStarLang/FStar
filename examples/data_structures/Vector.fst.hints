@@ -27,6 +27,8 @@
       ],
       0
     ],
+    [ "Vector.uu___is_VNil", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Vector.uu___is_VCons", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Vector.__proj__VCons__item__hd",
       1,

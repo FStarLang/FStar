@@ -1,10 +1,11 @@
 [
-  "\u007fÙ¿æ­`Ù8Pq¦\u0001‹î%á",
+  "r[ø\u001dCFZ:œÜïÚqçz",
   [
     [ "FStar.Constructive.cand", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Constructive.__proj__Conj__item__h1", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Constructive.__proj__Conj__item__h2", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Constructive.cor", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Constructive.uu___is_IntroL", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.__proj__IntroL__item__h",
       1,
@@ -17,6 +18,7 @@
       ],
       0
     ],
+    [ "FStar.Constructive.uu___is_IntroR", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.__proj__IntroR__item__h",
       1,

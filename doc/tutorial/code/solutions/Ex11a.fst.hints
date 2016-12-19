@@ -183,30 +183,6 @@
       2,
       1,
       [
-        "@query", "function_token_typing_Prims.int",
-        "lemma_FStar.HyperHeap.has_eq_rref",
-        "typing_Ex11a.__proj__Point__item__r"
-      ],
-      0
-    ],
-    [
-      "Ex11a.__proj__Point__item__z",
-      3,
-      2,
-      1,
-      [
-        "@query", "function_token_typing_Prims.int",
-        "lemma_FStar.HyperHeap.has_eq_rref",
-        "typing_Ex11a.__proj__Point__item__r"
-      ],
-      0
-    ],
-    [
-      "Ex11a.__proj__Point__item__z",
-      4,
-      2,
-      1,
-      [
         "@query", "fuel_guarded_inversion_Ex11a.point",
         "proj_equation_Ex11a.Point_r", "proj_equation_Ex11a.Point_x",
         "proj_equation_Ex11a.Point_y", "projection_inverse_Ex11a.Point_r",
@@ -1024,6 +1000,14 @@
       0
     ],
     [
+      "Ex11a.uu___is_Nil",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [
       "Ex11a.uu___is_Cons",
       1,
       2,
@@ -1032,6 +1016,14 @@
       0
     ],
     [
+      "Ex11a.uu___is_Cons",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [
       "Ex11a.__proj__Cons__item__rs",
       1,
       2,
@@ -1042,19 +1034,11 @@
     [
       "Ex11a.__proj__Cons__item__rs",
       2,
-      2,
-      1,
-      [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
-      0
-    ],
-    [
-      "Ex11a.__proj__Cons__item__rs",
-      3,
       2,
       1,
       [
-        "@query", "disc_equation_Ex11a.Cons",
-        "projection_inverse_BoxBool_proj_0",
+        "@query", "assumption_FStar.HyperHeap.HasEq_rid",
+        "disc_equation_Ex11a.Cons", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_6e3b5e4a302a91e61c641496e8f8a191"
       ],
       0
@@ -1067,14 +1051,14 @@
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
       0
     ],
-    [ "Ex11a.__proj__Cons__item__hd", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex11a.__proj__Cons__item__hd",
-      3,
+      2,
       2,
       1,
       [
-        "@query", "disc_equation_Ex11a.Cons", "proj_equation_Ex11a.Cons_rs",
+        "@query", "assumption_FStar.HyperHeap.HasEq_rid",
+        "disc_equation_Ex11a.Cons", "proj_equation_Ex11a.Cons_rs",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Ex11a.Cons_rs",
         "refinement_interpretation_Tm_refine_4efe13829b491a3f7fb86203b96ea2c7",
@@ -1090,14 +1074,14 @@
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
       0
     ],
-    [ "Ex11a.__proj__Cons__item__tl", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex11a.__proj__Cons__item__tl",
-      3,
+      2,
       2,
       1,
       [
-        "@query", "disc_equation_Ex11a.Cons", "proj_equation_Ex11a.Cons_rs",
+        "@query", "assumption_FStar.HyperHeap.HasEq_rid",
+        "disc_equation_Ex11a.Cons", "proj_equation_Ex11a.Cons_rs",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Ex11a.Cons_rs",
         "refinement_interpretation_Tm_refine_6e3b5e4a302a91e61c641496e8f8a191"

@@ -1,7 +1,6 @@
 [
   "¯§@À¨gÍó=\u0011¯}×Ê\u000fÉ",
   [
-    [ "FStar.DM4F.StExn.return", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.StExn.bind",
       1,
@@ -10,16 +9,16 @@
       [
         "@query", "bool_inversion", "bool_typing",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "function_token_typing_Prims.int", "kinding_Prims.option@tok",
-        "lemma_Prims.invertOption",
+        "equation_FStar.DM4F.StExn.stexn", "function_token_typing_Prims.int",
+        "int_inversion",
+        "interpretation_Tm_arrow_d31be72f7ffa26a6c694331da23e23e2",
+        "kinding_Prims.option@tok", "lemma_Prims.invertOption",
         "pretyping_ae567c2fb75be05905677af440075565",
+        "proj_equation_Prims.Mktuple2__1",
         "typing_Prims.__proj__Mktuple2__item___1"
       ],
       0
     ],
-    [ "FStar.DM4F.StExn.get", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExn.put", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExn.raise", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.StExn.STEXN_bind_wp",
       1,

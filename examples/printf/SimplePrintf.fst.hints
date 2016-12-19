@@ -1,6 +1,10 @@
 [
   "·∞wKıÊ\u0002~JıÓv{\u0012\u0018ê",
   [
+    [ "SimplePrintf.uu___is_Bool", 1, 2, 1, [ "@query" ], 0 ],
+    [ "SimplePrintf.uu___is_Int", 1, 2, 1, [ "@query" ], 0 ],
+    [ "SimplePrintf.uu___is_Char", 1, 2, 1, [ "@query" ], 0 ],
+    [ "SimplePrintf.uu___is_String", 1, 2, 1, [ "@query" ], 0 ],
     [
       "SimplePrintf.dir",
       1,
@@ -13,6 +17,7 @@
       ],
       0
     ],
+    [ "SimplePrintf.uu___is_Lit", 1, 2, 1, [ "@query" ], 0 ],
     [
       "SimplePrintf.__proj__Lit__item___0",
       1,
@@ -25,6 +30,7 @@
       ],
       0
     ],
+    [ "SimplePrintf.uu___is_Arg", 1, 2, 1, [ "@query" ], 0 ],
     [
       "SimplePrintf.__proj__Arg__item___0",
       1,
@@ -132,6 +138,7 @@
       ],
       0
     ],
+    [ "SimplePrintf.uu___is_InvalidFormatString", 1, 2, 1, [ "@query" ], 0 ],
     [
       "SimplePrintf.parse_format",
       1,

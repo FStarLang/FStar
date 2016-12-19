@@ -691,7 +691,7 @@ let z3_options : Prims.unit  ->  Prims.string = (fun _87_310 -> (match (()) with
 | () -> begin
 (let _184_322 = (let _184_321 = (FStar_Options.z3_seed ())
 in (FStar_Util.string_of_int _184_321))
-in (FStar_Util.format1 "(set-option :global-decls false)(set-option :smt.mbqi false)(set-option :produce-unsat-cores true)(set-option :smt.random_seed %s)\n" _184_322))
+in (FStar_Util.format1 "(set-option :global-decls false)(set-option :smt.mbqi false)(set-option :auto_config false)(set-option :produce-unsat-cores true)(set-option :smt.random_seed %s)\n" _184_322))
 end))
 
 

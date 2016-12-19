@@ -53,7 +53,7 @@ let set_hint_correlator env se =
             | l::_ -> l in
       {env with qname_and_index=Some (lid, 0)}
 
-let log env = (Options.log_types()) && not(lid_equals Const.prims_lid (Env.current_module env))
+let log env = (Options.log_types()) &&  not(lid_equals Const.prims_lid (Env.current_module env))
 
 (*****************Type-checking the signature of a module*****************************)
 
@@ -945,12 +945,15 @@ and tc_inductive env ses quals lids =
                   let tps, rest = Util.first_N (List.length tps) binders in
                   let t = match rest with
                     | [] -> Util.comp_result c
-                    | _ -> mk (Tm_arrow(rest, c)) !x.sort.tk x.sort.pos in
+                    | _ -> mk (Tm_arrow(rest, c)) !x.sort.tk x.sort.pos
+                  in
                   tps, t
-                | _ -> [], ty in
-               Sig_inductive_typ(tc, uvs, tps, t, mutuals, datas, quals, r)
+                | _ -> [], ty
+              in
+              Sig_inductive_typ(tc, uvs, tps, t, mutuals, datas, quals, r)
             | _ -> failwith "Impossible")
-            tc_types tcs in
+            tc_types tcs
+        in
 
         //4. Instantiate the inductives in each datacon with the generalized universes
         let datas = match uvs with
@@ -964,8 +967,10 @@ and tc_inductive env ses quals lids =
                         let ty = InstFV.instantiate tc_insts t.sort |> SS.close_univ_vars uvs in
                         Sig_datacon(l, uvs, ty, tc, ntps, quals, mutuals, r)
                     | _ -> failwith "Impossible")
-             data_types datas in
-        tcs, datas in
+             data_types datas
+        in
+        tcs, datas
+    in
 
     let tys, datas = ses |> List.partition (function Sig_inductive_typ _ -> true | _ -> false) in
     if datas |> Util.for_some (function Sig_datacon _ -> false | _ -> true)
@@ -980,17 +985,23 @@ and tc_inductive env ses quals lids =
             then Util.print1 "Checked inductive: %s\n" (Print.sigelt_to_string tc);
             env, (tc, tc_u)::all_tcs, Rel.conj_guard g (Rel.conj_guard guard g'))
         tys
-        (env, [], Rel.trivial_guard) in
+        (env, [], Rel.trivial_guard)
+    in
 
     (* Check each datacon *)
     let datas, g = List.fold_right (fun se (datas, g) ->
             let data, g' = tc_data env tcs se in
             data::datas, Rel.conj_guard g g')
         datas
-        ([], g) in
+        ([], g)
+    in
 
     let tcs, datas = generalize_and_inst_within env0 g (List.map fst tcs) datas in
     let sig_bndle = Sig_bundle(tcs@datas, quals, lids, Env.get_range env0) in
+
+
+    (* Once the datacons are generalized we can construct the projectors with the right types *)
+    let data_ops_ses = List.map (TcUtil.mk_data_operations quals env tcs) datas |> List.flatten in
 
     //generate hasEq predicate for this inductive
 
@@ -1312,13 +1323,14 @@ and tc_inductive env ses quals lids =
 
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
-    if ((List.length tcs = 0) || ((lid_equals env.curmodule Const.prims_lid) && skip_prims_type ()) || is_noeq) then [sig_bndle]
+    if ((List.length tcs = 0) || ((lid_equals env.curmodule Const.prims_lid) && skip_prims_type ()) || is_noeq)
+    then [sig_bndle], data_ops_ses
     else
         let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
         let ses = if is_unopteq then unoptimized_haseq_scheme () else optimized_haseq_scheme () in
-        (Sig_bundle(tcs@datas, quals, lids, Env.get_range env0))::ses
+        (Sig_bundle(tcs@datas, quals, lids, Env.get_range env0))::ses, data_ops_ses
 
-and tc_decl env se: list<sigelt> * _ =
+and tc_decl env se: list<sigelt> * _ * list<sigelt> =
     let env = set_hint_correlator env se in
     TcUtil.check_sigelt_quals env se;
     match se with
@@ -1336,30 +1348,31 @@ and tc_decl env se: list<sigelt> * _ =
       *)
       let env = Env.set_range env r in
       let se = tc_lex_t env ses quals lids  in
-      [se], Env.push_sigelt env se
+      [se], Env.push_sigelt env se, []
 
     | Sig_bundle(ses, quals, lids, r) ->
       let env = Env.set_range env r in
-      let ses = tc_inductive env ses quals lids  in
+      let ses,projectors_ses = tc_inductive env ses quals lids  in
       let env = List.fold_left (fun env' se -> Env.push_sigelt env' se) env ses in
-      ses, env
+      ses, env, projectors_ses
 
     | Sig_pragma(p, r) ->
        let set_options t s = match Options.set_options t s with
             | Getopt.Success -> ()
             | Getopt.Help  -> raise (Error ("Failed to process pragma: use 'fstar --help' to see which options are available", r))
-            | Getopt.Error s -> raise (Error ("Failed to process pragma: " ^s, r)) in
+            | Getopt.Error s -> raise (Error ("Failed to process pragma: " ^s, r))
+        in
         begin match p with
             | SetOptions o ->
                 set_options Options.Set o;
-                [se], env
+                [se], env, []
             | ResetOptions sopt ->
                 Options.restore_cmd_line_options false |> ignore;
                 let _ = match sopt with
                     | None -> ()
                     | Some s -> set_options Options.Reset s in
                 env.solver.refresh();
-                [se], env
+                [se], env, []
         end
 
 
@@ -1374,7 +1387,7 @@ and tc_decl env se: list<sigelt> * _ =
       let env, ses = ne.actions |> List.fold_left (fun (env, ses) a ->
           let se_let = Util.action_as_lb ne.mname a in
           Env.push_sigelt env se_let, se_let::ses) (env, [se]) in
-      [se], env
+      [se], env, []
 
     | Sig_sub_effect(sub, r) ->
       let ed_src = Env.get_effect_decl env sub.source in
@@ -1392,7 +1405,8 @@ and tc_decl env se: list<sigelt> * _ =
             if not (ed.qualifiers |> List.contains Reifiable) then
               no_reify eff_name
             else
-              mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env) in
+              mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
+      in
       let lift, lift_wp =
         match sub.lift, sub.lift_wp with
         | None, None ->
@@ -1430,13 +1444,14 @@ and tc_decl env se: list<sigelt> * _ =
 //          printfn "LIFT: Checking %s against expected type %s\n" (Print.term_to_string lift) (Print.term_to_string expected_k);
           let lift = check_and_gen env lift expected_k in
 //          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
-          Some lift in
+          Some lift
+      in
       // Restore the proper lax flag!
       let env = { env with lax = lax } in
       let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
       let se = Sig_sub_effect(sub, r) in
       let env = Env.push_sigelt env se in
-      [se], env
+      [se], env, []
 
     | Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) ->
       assert (uvs = []);
@@ -1462,20 +1477,32 @@ and tc_decl env se: list<sigelt> * _ =
                                     (Print.term_to_string t), r)));
       let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) in
       let env = Env.push_sigelt env0 se in
-      [se], env
+      [se], env, []
+
+    | Sig_declare_typ (_, _, _, quals, _)
+    | Sig_let (_, _, _, quals)
+        when quals |> Util.for_some (function OnlyName -> true | _ -> false) ->
+        (* Dummy declaration which must be erased since it has been elaborated somewhere else *)
+        [], env, []
 
     | Sig_declare_typ(lid, uvs, t, quals, r) -> //NS: No checks on the qualifiers?
       let env = Env.set_range env r in
-      assert (uvs = []);
-      let uvs, t = check_and_gen env t (fst (U.type_u())) in
+      //assert (uvs = []);
+      let uvs, t =
+          if uvs = []
+          then check_and_gen env t (fst (U.type_u()))
+          else
+              let uvs, t = SS.open_univ_vars uvs t in
+              uvs, SS.close_univ_vars uvs  <| tc_check_trivial_guard env t (fst (U.type_u()))
+      in
       let se = Sig_declare_typ(lid, uvs, t, quals, r) in
       let env = Env.push_sigelt env se in
-      [se], env
+      [se], env, []
 
     | Sig_assume(lid, phi, quals, r) ->
       let se = tc_assume env lid phi quals r in
       let env = Env.push_sigelt env se in
-      [se], env
+      [se], env, []
 
     | Sig_main(e, r) ->
       let env = Env.set_range env r in
@@ -1485,7 +1512,7 @@ and tc_decl env se: list<sigelt> * _ =
       Rel.force_trivial_guard env (Rel.conj_guard g1 g);
       let se = Sig_main(e, r) in
       let env = Env.push_sigelt env se in
-      [se], env
+      [se], env, []
 
     | Sig_let(lbs, r, lids, quals) ->
       let env = Env.set_range env r in
@@ -1498,7 +1525,8 @@ and tc_decl env se: list<sigelt> * _ =
           else raise (Error(Util.format3 "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
                                 (Print.lid_to_string l)
                                 (Print.quals_to_string q)
-                                (Print.quals_to_string q'), r)) in
+                                (Print.quals_to_string q'), r))
+      in
 
       (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
             (b) Generalize the type of lb only if none of the lbs have val decls
@@ -1506,25 +1534,34 @@ and tc_decl env se: list<sigelt> * _ =
       let should_generalize, lbs', quals_opt = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
             let lbname = right lb.lbname in //this is definitely not a local let binding
             let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
-              | None -> gen, lb, quals_opt //no annotation found; use whatever was in the let binding
+              | None ->
+                  if lb.lbunivs <> []
+                  then false, lb, quals_opt // we already have generalized universes (e.g. elaborated term)
+                  else gen, lb, quals_opt //no annotation found; use whatever was in the let binding
 
               | Some ((uvs,tval), quals) ->
                 let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
                 let _ = match lb.lbtyp.n with
                   | Tm_unknown -> ()
-                  | _ -> Errors.warn r "Annotation from val declaration overrides inline type annotation" in
+                  | _ -> Errors.warn r "Annotation from val declaration overrides inline type annotation"
+                in
+                if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
+                then raise (Error ("Inline universes are incoherent with annotation from val declaration", r));
                 false, //explicit annotation provided; do not generalize
                 mk_lb (Inr lbname, uvs, Const.effect_ALL_lid, tval, lb.lbdef),
-                quals_opt  in
-
-             gen, lb::lbs, quals_opt) (true, [], (if quals=[] then None else Some quals)) in
+                quals_opt
+            in
+            gen, lb::lbs, quals_opt)
+            (true, [], (if quals=[] then None else Some quals))
+      in
 
       let quals = match quals_opt with
         | None -> [Visible_default]
         | Some q ->
           if q |> Util.for_some (function Irreducible | Visible_default | Unfold_for_unification_and_vcgen -> true | _ -> false)
           then q
-          else Visible_default::q in //the default visibility for a let binding is Unfoldable
+          else Visible_default::q //the default visibility for a let binding is Unfoldable
+      in
 
       let lbs' = List.rev lbs' in
 
@@ -1537,9 +1574,11 @@ and tc_decl env se: list<sigelt> * _ =
             //propagate the MaskedEffect tag to the qualifiers
             let quals = match e.n with
                 | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
-                | _ -> quals in
+                | _ -> quals
+            in
             Sig_let(lbs, r, lids, quals), lbs
-        | _ -> failwith "impossible" in
+        | _ -> failwith "impossible"
+      in
 
       (* 4. Print the type of top-level lets, if requested *)
       if log env
@@ -1552,7 +1591,7 @@ and tc_decl env se: list<sigelt> * _ =
             else "") |> String.concat "\n");
 
       let env = Env.push_sigelt env se in
-      [se], env
+      [se], env, []
 
 
 let for_export hidden se : list<sigelt> * list<lident> =
@@ -1642,11 +1681,11 @@ let for_export hidden se : list<sigelt> * list<lident> =
       else [se], hidden
 
 let tc_decls env ses =
-  let process_one_decl (ses, exports, env, hidden) se =
+  let rec process_one_decl (ses, exports, env, hidden) se =
     if Env.debug env Options.Low
     then Util.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
 
-    let ses', env = tc_decl env se  in
+    let ses', env, ses_elaborated = tc_decl env se  in
 
     if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
     then Util.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ (Print.sigelt_to_string se) ^ "\n") "" ses');
@@ -1654,7 +1693,7 @@ let tc_decls env ses =
     List.iter (fun se -> env.solver.encode_sig env se) ses';
 
     let exported, hidden = List.fold_left (fun (le, lh) se -> let tup = for_export hidden se in List.rev_append (fst tup) le, List.rev_append (snd tup) lh) ([], []) ses' in
-    List.rev_append ses' ses, (List.rev_append exported [])::exports, env, hidden
+    List.fold_left process_one_decl (List.rev_append ses' ses, (List.rev_append exported [])::exports, env, hidden) ses_elaborated
   in
   let ses, exports, env, _ =
     List.fold_left (fun acc se ->
