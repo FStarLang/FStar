@@ -885,7 +885,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                     let should_reify = match stack with
                         | App ({n=Tm_constant Const.Const_reify}, _, _) :: _ ->
-                            Util.print1 "Found a reify on the stack. %s" "" ;
+                            // Util.print1 "Found a reify on the stack. %s" "" ;
                             cfg.steps |> List.contains Reify
                         | _ -> false
                     in
@@ -1056,7 +1056,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     (* KM : Not exactly sure which case should be eliminated *)
                     let should_reify = match stack with
                         | App ({n=Tm_constant Const.Const_reify}, _, _) :: _ ->
-                            Util.print1 "Found a reify on the stack. %s" "" ;
+                            // Util.print1 "Found a reify on the stack. %s" "" ;
                             cfg.steps |> List.contains Reify
                         | _ -> false
                     in
