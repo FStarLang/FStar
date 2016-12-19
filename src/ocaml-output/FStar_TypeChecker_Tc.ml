@@ -3631,30 +3631,35 @@ end else begin
 end
 in (
 
-let _60_2323 = if ((FStar_Options.dump_module m.FStar_Syntax_Syntax.name.FStar_Ident.str) && (FStar_Options.debug_at_level m.FStar_Syntax_Syntax.name.FStar_Ident.str (FStar_Options.Other ("Normalize")))) then begin
-(let _157_987 = (let _157_986 = (
+let _60_2325 = if ((FStar_Options.dump_module m.FStar_Syntax_Syntax.name.FStar_Ident.str) && (FStar_Options.debug_at_level m.FStar_Syntax_Syntax.name.FStar_Ident.str (FStar_Options.Other ("Normalize")))) then begin
+(
 
-let _60_2307 = m
-in (let _157_985 = (FStar_List.map (fun _60_13 -> (match (_60_13) with
+let normalize_toplevel_lets = (fun _60_13 -> (match (_60_13) with
 | FStar_Syntax_Syntax.Sig_let ((b, lbs), r, ids, qs) -> begin
 (
 
 let n = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Reify)::(FStar_TypeChecker_Normalize.Inlining)::(FStar_TypeChecker_Normalize.Primops)::(FStar_TypeChecker_Normalize.UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::[]) env)
-in (let _157_984 = (let _157_983 = (let _157_982 = (FStar_List.map (fun lb -> (
+in (let _157_985 = (let _157_984 = (let _157_983 = (FStar_List.map (fun lb -> (
 
-let _60_2320 = lb
-in (let _157_981 = (n lb.FStar_Syntax_Syntax.lbdef)
-in {FStar_Syntax_Syntax.lbname = _60_2320.FStar_Syntax_Syntax.lbname; FStar_Syntax_Syntax.lbunivs = _60_2320.FStar_Syntax_Syntax.lbunivs; FStar_Syntax_Syntax.lbtyp = _60_2320.FStar_Syntax_Syntax.lbtyp; FStar_Syntax_Syntax.lbeff = _60_2320.FStar_Syntax_Syntax.lbeff; FStar_Syntax_Syntax.lbdef = _157_981}))) lbs)
-in ((b), (_157_982)))
-in ((_157_983), (r), (ids), (qs)))
-in FStar_Syntax_Syntax.Sig_let (_157_984)))
+let _60_2318 = lb
+in (let _157_982 = (n lb.FStar_Syntax_Syntax.lbdef)
+in {FStar_Syntax_Syntax.lbname = _60_2318.FStar_Syntax_Syntax.lbname; FStar_Syntax_Syntax.lbunivs = _60_2318.FStar_Syntax_Syntax.lbunivs; FStar_Syntax_Syntax.lbtyp = _60_2318.FStar_Syntax_Syntax.lbtyp; FStar_Syntax_Syntax.lbeff = _60_2318.FStar_Syntax_Syntax.lbeff; FStar_Syntax_Syntax.lbdef = _157_982}))) lbs)
+in ((b), (_157_983)))
+in ((_157_984), (r), (ids), (qs)))
+in FStar_Syntax_Syntax.Sig_let (_157_985)))
 end
 | se -> begin
 se
-end)) m.FStar_Syntax_Syntax.declarations)
-in {FStar_Syntax_Syntax.name = _60_2307.FStar_Syntax_Syntax.name; FStar_Syntax_Syntax.declarations = _157_985; FStar_Syntax_Syntax.exports = _60_2307.FStar_Syntax_Syntax.exports; FStar_Syntax_Syntax.is_interface = _60_2307.FStar_Syntax_Syntax.is_interface}))
-in (FStar_Syntax_Print.modul_to_string _157_986))
-in (FStar_Util.print1 "%s\n" _157_987))
+end))
+in (
+
+let normalized_module = (
+
+let _60_2322 = m
+in (let _157_986 = (FStar_List.map normalize_toplevel_lets m.FStar_Syntax_Syntax.declarations)
+in {FStar_Syntax_Syntax.name = _60_2322.FStar_Syntax_Syntax.name; FStar_Syntax_Syntax.declarations = _157_986; FStar_Syntax_Syntax.exports = _60_2322.FStar_Syntax_Syntax.exports; FStar_Syntax_Syntax.is_interface = _60_2322.FStar_Syntax_Syntax.is_interface}))
+in (let _157_987 = (FStar_Syntax_Print.modul_to_string normalized_module)
+in (FStar_Util.print1 "%s\n" _157_987))))
 end else begin
 ()
 end
