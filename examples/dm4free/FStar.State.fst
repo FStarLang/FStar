@@ -61,3 +61,9 @@ let unit_right (s a:Type) (x: state s a) =
   admit () ; assert_norm (bind x return == x)
 let assoc (s a b c : Type) (x: state s a) (f : a -> state s b) (g : b -> state s c)
 = admit() ; assert (bind x (fun x0 -> bind (f x0) g) == bind (bind x f) g)
+
+
+(** Finally we can re-introduce each operations easily **)
+
+let read : unit -> state s s = fun () -> normalize (Read (fun s -> Return s))
+let write : (x:s) -> state unit s = fun x -> normalize (Write x (Return ()))
