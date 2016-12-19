@@ -299,7 +299,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         collect_decls decls
 
   and collect_decls decls =
-    List.iter (fun x -> collect_decl x.d) decls
+    List.iter (fun x -> collect_decl x.d; List.iter collect_term x.attrs) decls
 
   and collect_decl = function
     | Open lid ->
@@ -307,7 +307,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | ModuleAbbrev (ident, lid) ->
         add_dep (lowercase_join_longident lid true);
         record_module_alias ident lid
-    | TopLevelLet (_, _, patterms) ->
+    | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | KindAbbrev (_, binders, t) ->
         collect_term t;
@@ -316,7 +316,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | Assume (_, _, t)
     | SubEffect { lift_op = NonReifiableLift t }
     | SubEffect { lift_op = LiftForFree t }
-    | Val (_, _, t) ->
+    | Val (_, t) ->
         collect_term t
     | SubEffect { lift_op = ReifiableLift (t0, t1) } ->
         collect_term t0;
@@ -326,8 +326,8 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
-    | NewEffectForFree (_, ed)
-    | NewEffect (_, ed) ->
+    | NewEffectForFree ed
+    | NewEffect ed ->
         collect_effect_decl ed
     | Fsdoc _
     | Pragma _ ->

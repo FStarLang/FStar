@@ -1269,7 +1269,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
      lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
   }] in
   // [Inline] triggers a "Impossible: locally nameless" error
-  let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], [ Unfold_for_unification_and_vcgen ]) in
+  let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], [ Unfold_for_unification_and_vcgen ], []) in
   sig_ctx, mk (Tm_fvar fv) None Range.dummyRange
 
 
@@ -1355,7 +1355,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       if not (quals |> List.for_all (quals_combo_ok quals))
       then err "ill-formed combination";
       match se with
-      | Sig_let((is_rec, _), _, _, _) -> //let rec
+      | Sig_let((is_rec, _), _, _, _, _) -> //let rec
         if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
         then err "recursive definitions cannot be marked inline";
         if quals |> Util.for_some (fun x -> assumption x || has_eq x)
@@ -1502,7 +1502,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                     lbeff=C.effect_Tot_lid;
                     lbdef=SS.close_univ_vars uvs imp
                 } in
-                let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
+                let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []) in
                 if Env.debug env (Options.Other "LogTypes")
                 then Util.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
                 (* TODO : Are there some cases where we don't want one of these ? *)
@@ -1577,7 +1577,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbeff=C.effect_Tot_lid;
                   lbdef=SS.close_univ_vars uvs imp
               } in
-              let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
+              let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []) in
               if Env.debug env (Options.Other "LogTypes")
               then Util.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten

@@ -265,7 +265,7 @@ let doc_of_decl (d:decl) = match d.d with
                             (fun b -> doc_of_binder b)
                             bb);
                         space; equals; space; (doc_of_term k);  hardline])
-  | TopLevelLet(qq, lq, pats_terms) ->  
+  | TopLevelLet(lq, pats_terms) ->  
         // TODO: qq, lq. 
         let head_ids = List.collect (fun (p,_) -> head_id_of_pat p) pats_terms in 
         group (concat [(str "let"); space;
@@ -285,12 +285,12 @@ let doc_of_decl (d:decl) = match d.d with
                             (fun (x,d) -> doc_of_tycon x)
                             tys);
                         hardline ])
-  | Val(_, i, _) -> concat [(str "val "); (str i.idText); hardline]
+  | Val(i, _) -> concat [(str "val "); (str i.idText); hardline]
   | Exception(i, _) -> concat [(str "exception "); (str i.idText); hardline]
-  | NewEffect(_, DefineEffect(i, _, _, _, _))
-  | NewEffect(_, RedefineEffect(i, _, _)) -> concat [(str "new_effect) "); (str i.idText); hardline]
-  | NewEffectForFree(_, DefineEffect(i, _, _, _, _))
-  | NewEffectForFree(_, RedefineEffect(i, _, _)) -> concat [(str "new_effect_for_free "); (str i.idText); hardline]
+  | NewEffect(DefineEffect(i, _, _, _, _))
+  | NewEffect(RedefineEffect(i, _, _)) -> concat [(str "new_effect) "); (str i.idText); hardline]
+  | NewEffectForFree(DefineEffect(i, _, _, _, _))
+  | NewEffectForFree(RedefineEffect(i, _, _)) -> concat [(str "new_effect_for_free "); (str i.idText); hardline]
   | SubEffect l -> str "sub_effect"
   | Pragma p -> str "pragma"
   | Fsdoc d -> group (concat [doc_of_fsdoc d; hardline]) 

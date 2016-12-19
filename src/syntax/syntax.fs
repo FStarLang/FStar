@@ -230,6 +230,8 @@ type qualifier =
   | OnlyName                               //qualifier internal to the compiler indicating a dummy declaration which
                                            //is present only for name resolution and will be elaborated at typechecking
 
+type attribute = term
+
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {
   mabbrev:lident;
@@ -311,6 +313,7 @@ and sigelt =
                        * Range.range
                        * list<lident>               //mutually defined
                        * list<qualifier>
+                       * list<attribute>
   | Sig_main           of term
                        * Range.range
   | Sig_assume         of lident
@@ -329,6 +332,7 @@ and sigelt =
                        * list<cflags>
                        * Range.range
   | Sig_pragma         of pragma * Range.range
+
 type sigelts = list<sigelt>
 
 type modul = {

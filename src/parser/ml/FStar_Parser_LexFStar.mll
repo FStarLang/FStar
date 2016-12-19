@@ -347,6 +347,7 @@ rule token = parse
  | "!{"        { BANG_LBRACE }
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
+ | "[@"        { LBRACK_AT }
  | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else OPINFIX0c("<")  }
  | ">"         { if is_typ_app_gt () then TYP_APP_GREATER else symbolchar_parser lexbuf }
  | "|>"        { PIPE_RIGHT }

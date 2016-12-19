@@ -103,37 +103,6 @@ let rec is_comp_type env t =
 
 let unit_ty = mk_term (Name FStar.Syntax.Const.unit_lid) Range.dummyRange Type
 
-let compile_op arity s =
-    let name_of_char = function
-            |'&' -> "Amp"
-            |'@'  -> "At"
-            |'+' -> "Plus"
-            |'-' when (arity=1) -> "Minus"
-            |'-' -> "Subtraction"
-            |'/' -> "Slash"
-            |'<' -> "Less"
-            |'=' -> "Equals"
-            |'>' -> "Greater"
-            |'_' -> "Underscore"
-            |'|' -> "Bar"
-            |'!' -> "Bang"
-            |'^' -> "Hat"
-            |'%' -> "Percent"
-            |'*' -> "Star"
-            |'?' -> "Question"
-            |':' -> "Colon"
-            | _ -> "UNKNOWN" in
-    let rec aux i =
-        if i = String.length s
-        then []
-        else name_of_char (Util.char_at s i) :: aux (i + 1) in
-    match s with
-    | ".[]<-" -> "op_String_Assignment"
-    | ".()<-" -> "op_Array_Assignment"
-    | ".[]" -> "op_String_Access"
-    | ".()" -> "op_Array_Access"
-    | _ -> "op_"^ (String.concat "_" (aux 0))
-
 let compile_op_lid n s r = [mk_ident(compile_op n s, r)] |> lid_of_ids
 
 let op_as_term env arity rng s : option<S.term> =
@@ -1294,7 +1263,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
                 lbeff=C.effect_Tot_lid;
                 lbdef=tun
             } in
-            let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
+            let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []) in
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
 let mk_data_projector_names iquals env (inductive_tps, se) = match se with
@@ -1334,7 +1303,7 @@ let mk_typ_abbrev lid uvs typars k t lids quals rng =
         lbtyp=U.arrow typars (S.mk_Total k);
         lbeff=C.effect_Tot_lid;
     } in
-    Sig_let((false, [lb]), rng, lids, quals)
+    Sig_let((false, [lb]), rng, lids, quals, [])
 
 let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
   let tycon_id = function
@@ -1737,11 +1706,15 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
   | ModuleAbbrev(x, l) ->
     Env.push_module_abbrev env x l, []
 
-  | Tycon(qual, tcs) ->
+  | Tycon(is_effect, tcs) ->
+    let quals = if is_effect then Effect :: d.quals else d.quals in
     let tcs = List.map (fun (x,_) -> x) tcs in
-    desugar_tycon env d.drange (List.map (trans_qual None) qual) tcs
+    desugar_tycon env d.drange (List.map (trans_qual None) quals) tcs
 
-  | TopLevelLet(quals, isrec, lets) ->
+  | TopLevelLet(isrec, lets) ->
+    let quals = d.quals in
+    let attrs = d.attrs in
+    let attrs = List.map (desugar_term env) attrs in
     begin match (Subst.compress <| desugar_term_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
         | Tm_let(lbs, _) ->
           let fvs = snd lbs |> List.map (fun lb -> right lb.lbname) in
@@ -1759,7 +1732,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
                             let fv = right lb.lbname in
                             {lb with lbname=Inr ({fv with fv_delta=Delta_abstract fv.fv_delta})})
                     else lbs in
-          let s = Sig_let(lbs, d.drange, fvs |> List.map (fun fv -> fv.fv_name.v), quals) in
+          let s = Sig_let(lbs, d.drange, fvs |> List.map (fun fv -> fv.fv_name.v), quals, attrs) in
           let env = push_sigelt env s in
           env, [s]
         | _ -> failwith "Desugaring a let did not produce a let"
@@ -1774,7 +1747,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let f = desugar_formula env t in
     env, [Sig_assume(qualify env id, f, [S.Assumption], d.drange)]
 
-  | Val(quals, id, t) ->
+  | Val(id, t) ->
+    let quals = d.quals in
     let t = desugar_term env (close_fun env t) in
     let quals = if env.iface && env.admitted_iface then Assumption::quals else quals in
     let se = Sig_declare_typ(qualify env id, [], t, List.map (trans_qual None) quals, d.drange) in
@@ -1812,16 +1786,20 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let env = push_sigelt env se in
     env, [se]
 
-  | NewEffect (quals, RedefineEffect(eff_name, eff_binders, defn)) ->
+  | NewEffect (RedefineEffect(eff_name, eff_binders, defn)) ->
+    let quals = d.quals in
     desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (fun ed range -> Sig_new_effect(ed, range))
 
-  | NewEffectForFree (quals, RedefineEffect(eff_name, eff_binders, defn)) ->
+  | NewEffectForFree (RedefineEffect(eff_name, eff_binders, defn)) ->
+    let quals = d.quals in
     desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (fun ed range -> Sig_new_effect_for_free(ed, range))
 
-  | NewEffectForFree (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
+  | NewEffectForFree (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
+    let quals = d.quals in
     desugar_effect env d quals eff_name eff_binders eff_kind eff_decls actions true
 
-  | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
+  | NewEffect (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
+    let quals = d.quals in
     desugar_effect env d quals eff_name eff_binders eff_kind eff_decls actions false
 
   | SubEffect l ->

@@ -79,6 +79,7 @@ type token =
   | LENS_PAREN_RIGHT
   | LENS_PAREN_LEFT
   | LBRACK_BAR
+  | LBRACK_AT
   | LBRACK
   | LBRACE_COLON_PATTERN
   | LBRACE
@@ -216,6 +217,7 @@ type tokenId =
     | TOKEN_LENS_PAREN_RIGHT
     | TOKEN_LENS_PAREN_LEFT
     | TOKEN_LBRACK_BAR
+    | TOKEN_LBRACK_AT
     | TOKEN_LBRACK
     | TOKEN_LBRACE_COLON_PATTERN
     | TOKEN_LBRACE
@@ -299,11 +301,12 @@ type nonTerminalId =
     | NONTERM_list___anonymous_5_
     | NONTERM_list___anonymous_7_
     | NONTERM_list_argTerm_
+    | NONTERM_list_atomicTerm_
     | NONTERM_list_atomicUniverse_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
+    | NONTERM_list_decoration_
     | NONTERM_list_multiBinder_
-    | NONTERM_list_qualifier_
     | NONTERM_nonempty_list_aqualified_lident__
     | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
     | NONTERM_nonempty_list_atomicPattern_
@@ -327,14 +330,13 @@ type nonTerminalId =
     | NONTERM_mainDecl
     | NONTERM_pragma
     | NONTERM_decl
-    | NONTERM_decl2
+    | NONTERM_raw_decl
     | NONTERM_typeDecl
     | NONTERM_typars
     | NONTERM_tvarinsts
     | NONTERM_typeDefinition
     | NONTERM_recordFieldDecl
     | NONTERM_constructorDecl
-    | NONTERM_kind_abbrev
     | NONTERM_letbinding
     | NONTERM_newEffect
     | NONTERM_effectRedefinition
@@ -343,7 +345,6 @@ type nonTerminalId =
     | NONTERM_effectDecl
     | NONTERM_subEffect
     | NONTERM_qualifier
-    | NONTERM_assumeTag
     | NONTERM_maybeFocus
     | NONTERM_letqualifier
     | NONTERM_aqual

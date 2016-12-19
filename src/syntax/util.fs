@@ -418,8 +418,8 @@ let destruct typ lid =
     | Tm_fvar tc when fv_eq_lid tc lid -> Some []
     | _ -> None
 
-let rec lids_of_sigelt se = match se with
-  | Sig_let(_, _, lids, _)
+let lids_of_sigelt se = match se with
+  | Sig_let(_, _, lids, _, _)
   | Sig_bundle(_, _, lids, _) -> lids
   | Sig_inductive_typ (lid, _, _,  _, _, _, _, _)
   | Sig_effect_abbrev(lid, _, _, _,  _, _, _)
@@ -443,7 +443,7 @@ let quals_of_sigelt x = match x with
   | Sig_datacon (_, _, _, _, _, quals, _, _)
   | Sig_declare_typ (_, _, _, quals, _)
   | Sig_assume (_, _, quals, _)
-  | Sig_let(_, _, _, quals)
+  | Sig_let(_, _, _, quals, _)
   | Sig_new_effect({qualifiers=quals}, _)
   | Sig_new_effect_for_free({qualifiers=quals}, _) ->
     quals
@@ -458,7 +458,7 @@ let range_of_sigelt x = match x with
   | Sig_datacon (_, _, _, _, _, _, _, r)
   | Sig_declare_typ (_, _, _, _, r)
   | Sig_assume (_, _, _, r)
-  | Sig_let(_, r, _, _)
+  | Sig_let(_, r, _, _, _)
   | Sig_main(_, r)
   | Sig_pragma(_, r)
   | Sig_new_effect(_, r)
@@ -931,7 +931,7 @@ let destruct_typ_as_formula f : option<connective> =
                 a.action_typ
                 Const.effect_Tot_lid
                 a.action_defn in
-    Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [])
+    Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [], [])
 
 (* Some reification utilities *)
 let mk_reify t =

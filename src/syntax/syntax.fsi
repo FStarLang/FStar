@@ -28,6 +28,10 @@ exception Err of string
 exception Error of string * Range.range
 exception Warning of string * Range.range
 
+// JP: all these types are defined twice and every change has to be performed
+// twice (because of the .fs). TODO: move the type definitions into a standalone
+// fs without fsi, and move the helpers into syntaxhelpers.fs / syntaxhelpers.fsi
+
 (* Objects with metadata *)
 type withinfo_t<'a,'t> = {
   v: 'a;
@@ -235,6 +239,8 @@ type qualifier =
   | OnlyName                               //qualifier internal to the compiler indicating a dummy declaration which
                                            //is present only for name resolution and will be elaborated at typechecking
 
+type attribute = term
+
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {
   mabbrev:lident;
@@ -287,6 +293,21 @@ type eff_decl = {
     //actions for the effect
     actions     :list<action>
 }
+
+// JP: there are several issues with these type definition (TODO).
+// 1) Every single constructor has a range. This ought to be:
+//      type sigelt = { elt: sigelt'; range: Range.range } and sigelt' = ...
+//    See for instance the slightly suboptimal implementation of range_of_sigelt
+//    in syntax/util.fs
+// 2) octuples hinder readability, make it difficult to maintain code (see
+//    lids_of_sigelt in syntax/util.fs) and do not help being familiar with the
+//    code. We should use a record beneath Sig_datacons and others.
+// 3) In particular, because of tuples, everytime one needs to extend a Sig_*,
+//    one needs to modify > 30 different places in the code that pattern-match
+//    on a fixed-length tuple. Records would solve this.
+// JP: because 1) isn't fixed I'm only adding attributes to Sig_toplevel_let,
+// but once 1) is fixed attributes should be attached to the outer record type,
+// just like range.
 and sigelt =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
                        * univ_names                //u1..un
@@ -323,6 +344,7 @@ and sigelt =
                        * Range.range
                        * list<lident>               //mutually defined
                        * list<qualifier>
+                       * list<attribute>
   | Sig_main           of term
                        * Range.range
   | Sig_assume         of lident
