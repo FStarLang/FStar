@@ -93,7 +93,8 @@ let compile_op arity s =
             |'*' -> "Star"
             |'?' -> "Question"
             |':' -> "Colon"
-            | _ -> "UNKNOWN" in
+            | _ -> "UNKNOWN"
+    in
     match s with
     | ".[]<-" -> "op_String_Assignment"
     | ".()<-" -> "op_Array_Assignment"

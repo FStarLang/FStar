@@ -697,7 +697,7 @@ let is_dtuple_constructor_lid lid =
   Util.starts_with (Ident.text_of_lid lid) "Prims.dtuple"
 
 let is_dtuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> is_dtuple_constructor_lid fv.fvname
+  | Tm_fvar fv -> is_dtuple_constructor_lid fv.fv_name
   | _ -> false
 
 let mk_dtuple_lid n r =
