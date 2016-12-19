@@ -190,7 +190,8 @@ type decl' =
   | Pragma of pragma
   | Fsdoc of fsdoc
 
-  (* TODO remove these two when we drop stratified *)
+  (* TODO remove these two when we drop stratified -- they don't even parse
+   * anymore! But I don't want to even touch the stratified code to remove them. *)
   | KindAbbrev of ident * list<binder> * knd
   | Assume of qualifiers * ident * term
 

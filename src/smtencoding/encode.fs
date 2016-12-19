@@ -1702,12 +1702,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              @ primitive_type_axioms env.tcenv lid tname tsym,
              env
 
-     | Sig_assume(l, f, _, _) ->
-        let f, decls = encode_formula f env in
-        let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.lid_to_string l)), Some (varops.mk_unique ("assumption_"^l.str)))] in
-        decls@g, env
+     | Sig_let((_, [{ lbtyp = f }]), _, [ l ], quals, attrs)
+       when S.has_simple_attribute attrs "axiom" && List.mem Assumption quals ->
+         (* [@ "axiom" ] assume val x: t *)
+         let f, decls = encode_formula f env in
+         let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.lid_to_string l)), Some (varops.mk_unique ("assumption_"^l.str)))] in
+         decls@g, env
 
-     | Sig_let(lbs, r, _, quals) when (quals |> List.contains S.Irreducible) ->
+     | Sig_let(lbs, r, _, quals, _) when (quals |> List.contains S.Irreducible) ->
        let env, decls = Util.fold_map (fun env lb ->
         let lid = (right lb.lbname).fv_name.v in
         if Option.isNone <| Env.try_lookup_val_decl env.tcenv lid
@@ -1717,7 +1719,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         else env, []) env (snd lbs) in
        List.flatten decls, env
 
-     | Sig_let((_, [{lbname=Inr b2t}]), _, _, _) when S.fv_eq_lid b2t Const.b2t_lid ->
+     | Sig_let((_, [{lbname=Inr b2t}]), _, _, _, _) when S.fv_eq_lid b2t Const.b2t_lid ->
        let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v in
        let xx = ("x", Term_sort) in
        let x = mkFreeV xx in
@@ -1729,16 +1731,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 Some "b2t_def")] in
        decls, env
 
-    | Sig_let(_, _, _, quals) when (quals |> Util.for_some (function Discriminator _ -> true | _ -> false)) ->
+    | Sig_let(_, _, _, quals, _) when (quals |> Util.for_some (function Discriminator _ -> true | _ -> false)) ->
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
       [], env
 
-    | Sig_let(_, _, lids, quals) when (lids |> Util.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
+    | Sig_let(_, _, lids, quals, _) when (lids |> Util.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
                                     && quals |> Util.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       [], env
 
-    | Sig_let((false, [lb]), _, _, quals) when (quals |> Util.for_some (function Projector _ -> true | _ -> false)) ->
+    | Sig_let((false, [lb]), _, _, quals, _) when (quals |> Util.for_some (function Projector _ -> true | _ -> false)) ->
      //Projectors are also are encoded directly via (our encoding of) theory of datatypes
      //Except in some cases where the front-end does not emit a declare_typ for some projector, because it doesn't know how to compute it
      let fv = right lb.lbname in
@@ -1751,7 +1753,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           encode_sigelt env se
      end
 
-    | Sig_let((false, [lb]), _, _, quals) when (quals |> List.contains Reifiable) ->
+    | Sig_let((false, [lb]), _, _, quals, _) when (quals |> List.contains Reifiable) ->
       begin match (SS.compress lb.lbdef).n with
         | Tm_abs(bs, body, _) ->
           let body = Util.mk_reify body in
@@ -1770,7 +1772,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | _ -> [], env
       end
 
-    | Sig_let((is_rec, bindings), _, _, quals) ->
+    | Sig_let((is_rec, bindings), _, _, quals, _) ->
       encode_top_level_let env (is_rec, bindings) quals
 
     | Sig_bundle(ses, _, _, _) ->

@@ -316,10 +316,6 @@ and sigelt =
                        * list<attribute>
   | Sig_main           of term
                        * Range.range
-  | Sig_assume         of lident
-                       * formula
-                       * list<qualifier>
-                       * Range.range
   | Sig_new_effect     of eff_decl * Range.range
   | Sig_new_effect_for_free of eff_decl * Range.range // in this case, most fields have a dummy value
                                                       // and are reconstructed using the DMFF theory
@@ -518,3 +514,11 @@ let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid fv.fv_name.v)
 let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
+
+let has_simple_attribute (l: list<term>) s =
+  List.exists (function
+    | { n = Tm_constant (Const_string (data, _)) } when string_of_unicode data = s ->
+        true
+    | _ ->
+        false
+  ) l

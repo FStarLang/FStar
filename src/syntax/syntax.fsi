@@ -347,10 +347,6 @@ and sigelt =
                        * list<attribute>
   | Sig_main           of term
                        * Range.range
-  | Sig_assume         of lident
-                       * formula
-                       * list<qualifier>
-                       * Range.range
   | Sig_new_effect     of eff_decl * Range.range
   | Sig_new_effect_for_free of eff_decl * Range.range
   | Sig_sub_effect     of sub_eff  * Range.range
@@ -448,4 +444,5 @@ val fv_eq_lid:      fv -> lident -> bool
 val range_of_fv:    fv -> range
 val lid_of_fv:      fv -> lid
 
-
+(* attributes *)
+val has_simple_attribute: list<term> -> string -> bool
