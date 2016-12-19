@@ -46,17 +46,17 @@ open FStar_Const
 open FStar_Ident
 open FStar_String
 
-// JP: what does this function do? A comment would be welcome, or at the very
-// least a type annotation...
-// JP: ok, here's my understanding.
-// This function peeks at the first top-level declaration;
-// - if this is NOT a TopLevelModule, then we're in interactive mode and return
-//   [Inr list-of-declarations]
-// - if this IS a TopLevelModule, then we do a forward search and group
-//   declarations together with the preceding [TopLevelModule] and return a [Inl
-//   list-of-modules] where each "module" [Module (lid, list-of-declarations)], with the
-//   unspecified invariant that the first declaration is a [TopLevelModule]
-// JP: TODO actually forbid multiple modules and remove all of this.
+(* JP: what does this function do? A comment would be welcome, or at the very
+   least a type annotation...
+   JP: ok, here's my understanding.
+   This function peeks at the first top-level declaration;
+   - if this is NOT a TopLevelModule, then we're in interactive mode and return
+     [Inr list-of-declarations]
+   - if this IS a TopLevelModule, then we do a forward search and group
+     declarations together with the preceding [TopLevelModule] and return a [Inl
+     list-of-modules] where each "module" [Module (lid, list-of-declarations)], with the
+     unspecified invariant that the first declaration is a [TopLevelModule]
+   JP: TODO actually forbid multiple modules and remove all of this. *)
 let as_frag d ds =
   let rec as_mlist out ((m_name, m_decl), cur) ds =
     match ds with
@@ -260,6 +260,16 @@ raw_decl:
       { NewEffectForFree ne }
   | doc=FSDOC_STANDALONE
       { Fsdoc doc }
+  (* stratified only *)
+  | k=kind_abbrev
+      { k }
+
+kind_abbrev:
+  (* stratified only *)
+  KIND ident binders EQUALS kind
+    {let (_1, lid, bs, _4, k) = ((), $2, $3, (), $5) in
+      ( KindAbbrev(lid, bs, k) )}
+
 
 typeDecl:
   (* TODO : change to lident with stratify *)
