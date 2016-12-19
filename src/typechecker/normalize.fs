@@ -583,21 +583,13 @@ let get_norm_request args =
     | [(tm, _)] -> tm
     | _ -> failwith "Impossible"
 
-let rec nth_prefix n l =
-    if n = 0
-    then []
-    else
-        match l with
-            | [] -> []
-            | x :: xs -> x :: (nth_prefix (n-1) xs)
-
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t = compress t in
         log cfg  (fun () -> Util.print3 ">>> %s\nNorm %s with top of the stack %s \n"
                                         (Print.tag_of_term t)
                                         (Print.term_to_string t)
-                                        (stack_to_string (nth_prefix 4 stack)));
+                                        (stack_to_string (fst <| first_N 4 stack)));
         match t.n with
           | Tm_delayed _ ->
             failwith "Impossible"
@@ -609,7 +601,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_fvar( {fv_delta=Delta_constant} )
           | Tm_fvar( {fv_qual=Some Data_ctor } )
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
-            (log cfg (fun () -> Util.print "Tm_fvar case 0\n" []) ; rebuild cfg env stack t)
+            //log cfg (fun () -> Util.print "Tm_fvar case 0\n" []) ;
+            rebuild cfg env stack t
 
           | Tm_app(hd, args)
             when not (cfg.steps |> List.contains NoFullNorm)
@@ -632,26 +625,25 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let reify_head, _ = Util.head_and_args t in
             let a = SS.compress (Util.unascribe <| fst a) in
             //Util.print2_warning "TRYING NORMALIZATION OF REIFY: %s ... %s\n" (Print.tag_of_term a) (Print.term_to_string a);
-            let normalization_reify_result = begin match a.n with
-            | Tm_app({n=Tm_constant (Const.Const_reflect _)}, [a]) ->
-              //reify (reflect e) ~> e
-              norm cfg env stack (fst a)
+            begin match a.n with
+              (* KM : This assumes that reflect is never tagged by a Meta_monadic flag *)
+              (* Is that really the case ? *)
+              | Tm_app({n=Tm_constant (Const.Const_reflect _)}, [a]) ->
+                //reify (reflect e) ~> e
+                norm cfg env stack (fst a)
 
-            // | Tm_match(e, branches) ->
-            //   //reify (match e with p -> e') ~> match (reify e) with p -> reify e'
-            //   let e = Util.mk_reify e in
-            //   let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, Util.mk_reify tm) in
-            //   let tm = mk (Tm_match(e, branches)) t.pos in
-            //   norm cfg env stack tm
+              (* KM : This case reall y does not make any sense to me *)
+              // | Tm_match(e, branches) ->
+              //   //reify (match e with p -> e') ~> match (reify e) with p -> reify e'
+              //   let e = Util.mk_reify e in
+              //   let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, Util.mk_reify tm) in
+              //   let tm = mk (Tm_match(e, branches)) t.pos in
+              //   norm cfg env stack tm
 
-            | _ ->
-              let stack = App(reify_head, None, t.pos)::stack in
-              norm cfg env stack a
+              | _ ->
+                let stack = App(reify_head, None, t.pos)::stack in
+                norm cfg env stack a
             end
-            in
-            Util.print2_warning "RESULT OF NORMALIZATION : before %s    after %s\n" (Print.term_to_string a) (Print.term_to_string normalization_reify_result) ;
-            normalization_reify_result
-
 
           | Tm_type u ->
             let u = norm_universe cfg env u in
@@ -674,10 +666,16 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Unfold l -> Common.delta_depth_greater_than f.fv_delta l) in
 
             if not should_delta
-            then (log cfg (fun () -> Util.print "Tm_fvar case 1\n" []) ; rebuild cfg env stack t)
+            then begin
+             //log cfg (fun () -> Util.print "Tm_fvar case 1\n" []) ;
+              rebuild cfg env stack t
+            end
             else let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in //preserve the range info on the returned def
                  begin match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with
-                    | None -> (log cfg (fun () -> Util.print "Tm_fvar case 2\n" []) ; rebuild cfg env stack t)
+                    | None -> begin
+                        log cfg (fun () -> Util.print "Tm_fvar case 2\n" []) ;
+                        rebuild cfg env stack t
+                      end
                     | Some (us, t) ->
                       log cfg (fun () -> Util.print2 ">>> Unfolded %s to %s\n"
                                     (Print.term_to_string t0) (Print.term_to_string t));
@@ -751,7 +749,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                               log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
                               norm cfg (c :: env) stack_rest body
 
-
                             | _ when (cfg.steps |> List.contains Reify) ->
                               norm cfg (c :: env) stack_rest body
 
@@ -822,12 +819,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_ascribed(t1, tc, l) ->
             begin match stack with
-                | Match _ :: _
-                | Arg _ :: _
-                | App ({n=Tm_constant Const.Const_reify}, _, _) :: _
-                | MemoLazy _ :: _ -> norm cfg env stack t1 //ascriptions should not block reduction
-                | _ ->
-                    (* Drop stack *)
+              | Match _ :: _
+              | Arg _ :: _
+              | App ({n=Tm_constant Const.Const_reify}, _, _) :: _
+              | MemoLazy _ :: _ -> norm cfg env stack t1 //ascriptions should not block reduction
+              | _ ->
+                (* Drops stack *)
                 let t1 = norm cfg env [] t1 in
                 log cfg  (fun () -> Util.print_string "+++ Normalizing ascription \n");
                 let tc = match tc with
@@ -853,7 +850,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             else let bs, body = Subst.open_term [lb.lbname |> Util.left |> S.mk_binder] body in
                  let lb = {lb with lbname=List.hd bs |> fst |> Inl;
                                    lbtyp=norm cfg env [] lb.lbtyp;
-                    (* Drop stack *)
                                    lbdef=norm cfg env [] lb.lbdef} in
                  let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
@@ -894,12 +890,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | _ -> false
                     in
 
-                    Util.print2 "Will %sreify : %s \n" (if should_reify then "" else "not ") (stack_to_string stack);
+                    // Util.print2 "Will %sreify : %s \n" (if should_reify then "" else "not ") (stack_to_string stack);
 
                     if not should_reify
                     then
                         (* TODO : why is t normalized with an empty stack  ??? *)
-                        (* Drop stack *)
+                        (* Drops stack *)
                         let t = norm cfg env [] t in
                         let stack = Steps(cfg.steps, cfg.delta_level)::stack in
                         let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
@@ -935,8 +931,20 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                     | Inr _ -> failwith "Cannot reify a top-level let binding"
                                 end
                             | Tm_app (head, args) ->
-                                // Turn it into let x0 = head in let x1 = arg0 in ... let xn = argn in x0 x1 ... xn
-                                //monadic application
+                                (******************************************************************************)
+                                (* monadic application                                                        *)
+                                (*                                                                            *)
+                                (* Turn it into                                                               *)
+                                (*    let x0 = head in let x1 = arg0 in ... let xn = argn in x0 x1 ... xn     *)
+                                (* i.e. bind (reify head) (fun x0 ->                                          *)
+                                (*            bind (reify arg0) (fun x1 -> ... (fun xn -> x0 x1 .. xn) ))     *)
+                                (*                                                                            *)
+                                (* If head or some arg is a lift from pure then it optimizes away the bind    *)
+                                (* Moreover, if head is an action then it is unfolded otherwise the resulting *)
+                                (* application is reified again                                               *)
+                                (******************************************************************************)
+
+
                                 //Do we need to check that head is reifiable ?
                                 // let head_reifiable =
                                 //     match (SS.compress head).n with
@@ -974,7 +982,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                                     mk_Tm_uinst t0 univs, Some true
 
                                                 (* Re-reifying here would end up looping... *)
-                                                | None -> (Util.print "Case 0" [] ; head, Some false)
+                                                | None -> begin
+                                                    // Util.print "Case 0" [] ;
+                                                    head, Some false
+                                                  end
 
                                                 | Some (univs0, _) -> failwith (Util.format3 "Invalid universe instantiation \
                                                                                    (%s universe variables needed, %s \
@@ -983,7 +994,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                                                                    (string_of_int (List.length univs0))
                                                                                    (Print.term_to_string head))
                                             end
-                                        | _ -> (Util.print "Case 1" [] ; head, None)
+                                        | _ -> begin
+                                            //Util.print "Case 1" [] ;
+                                            head, None
+                                          end
                                 in
 
                                 let rec bind_on_lift args acc =
@@ -1026,7 +1040,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                             end
                                 in
                                 let binded_head = bind_on_lift ((as_arg head)::args) [] in
-                                Util.print1_warning "BEFORE NORMALIZING MONADIC APP : %s\n" (Print.term_to_string binded_head);
+                                // Util.print1_warning "BEFORE NORMALIZING MONADIC APP : %s\n" (Print.term_to_string binded_head);
                                 norm cfg env (List.tl stack) binded_head
                             | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
                                 let lifted = reify_lift cfg.tcenv e msrc mtgt t' in
@@ -1084,7 +1098,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                     norm cfg env stack head //meta doesn't block reduction
                            end
                          | _ ->
-                             (* Drop stack *)
+                            (* Drops stack *)
                             let head = norm cfg env [] head in
                             let m = match m with
                                 | Meta_pattern args ->
@@ -1115,7 +1129,7 @@ and reify_lift (env : Env.env) e msrc mtgt t =
         failwith "NYI: non pure monadic lift normalisation"
 
 and norm_pattern_args cfg env args =
-    (* Drop stack *)
+    (* Drops stack *)
     args |> List.map (List.map (fun (a, imp) -> norm cfg env [] a, imp))
 
 and norm_comp : cfg -> env -> comp -> comp =
@@ -1251,20 +1265,6 @@ and rebuild : cfg -> env -> stack -> term -> term =
                   let t = S.extend_app t (a,aq) None r in
                   rebuild cfg env stack t
               end
-
-            // | App ({n=Tm_constant Const.Const_reify}, _, _) :: stack' ->
-            //     begin match (SS.compress t).n with
-            //         (* Reification was stuck at some point *)
-            //         | Tm_meta(_, Meta_monadic _) ->
-            //             let head, aq, r = match List.hd stack with
-            //                 | App (head, aq, r) -> head, aq, r
-            //                 | _ -> failwith "Impossible"
-            //             in
-            //             let t = S.extend_app head (t,aq) None r in
-            //             rebuild cfg env stack' (maybe_simplify cfg.steps t)
-            //         (* Otherwise reification is total and we can erase it *)
-            //         | _ -> norm cfg env stack' t
-            //     end
 
             | App(head, aq, r)::stack ->
               let t = S.extend_app head (t,aq) None r in

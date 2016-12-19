@@ -1817,12 +1817,13 @@ let check_module env m =
     if Options.dump_module m.name.str
     then Util.print1 "%s\n" (Print.modul_to_string m);
     if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
-    then Util.print1 "%s\n" (Print.modul_to_string ({
-        m with declarations = List.map (function
-                                        | Sig_let ((b, lbs), r, ids, qs) ->
-                                        let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant] env in
-                                        Sig_let ((b, List.map (fun lb -> {lb with lbdef = n lb.lbdef}) lbs), r, ids, qs)
-                                        | se -> se
-                                        ) m.declarations
-        }));
+    then
+        let normalize_toplevel_lets = function
+            | Sig_let ((b, lbs), r, ids, qs) ->
+                let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant] env in
+                Sig_let ((b, List.map (fun lb -> {lb with lbdef = n lb.lbdef}) lbs), r, ids, qs)
+            | se -> se
+        in
+        let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
+        Util.print1 "%s\n" (Print.modul_to_string normalized_module);
     m, env

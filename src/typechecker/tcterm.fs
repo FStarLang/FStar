@@ -1008,7 +1008,6 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         let args, comp, monadic = List.fold_left (fun (args, out_c, monadic) ((e, q), x, c) ->
                     match c with
                     | Inl (eff_name, arg_typ) ->
-                      (* TODO : we need some way to say at which type we are lifting *)
                       (TcUtil.maybe_lift env e eff_name out_c.eff_name arg_typ, q)::args, out_c, monadic
 
                     | Inr c ->
