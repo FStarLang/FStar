@@ -33,6 +33,10 @@ let rec interpret_exp h e =
     let b = interpret_exp h e2 in 
     interpret_binop o a b
 
+(* CH: This is a termination metric (natural number expression) for
+       showing termination of while.  (Why not call it that?)
+       Decreasingness and positivity of this termination metric
+       _dynamically_ checked. *)
 type variant = exp
 //type variant = e:exp{forall h. 0 <= interpret_exp h e}
 
@@ -46,8 +50,8 @@ type com =
 
 
 (* function used for the decreases clause *)
-val decr : heap -> com -> GTot int 
-let decr h c = 
+val decr_while : heap -> com -> GTot int
+let decr_while h c =
   match c with 
   | While c b v ->
     let tmp = interpret_exp h v in 
@@ -55,10 +59,13 @@ let decr h c =
   | _ ->   0
 
 (* Returns Some heap if the variant is correct *)
-val interpret_while : h:heap -> c:com{While? c}
-  -> GTot (option heap) (decreases %[c; decr h c; 0])
 
-val interpret_com : h:heap -> c:com -> GTot (option heap) (decreases %[c; decr h c; 1])
+(* CH: This is ghost because it uses functions like upd to work on heaps *)
+
+val interpret_while : h:heap -> c:com{While? c}
+  -> GTot (option heap) (decreases %[c; decr_while h c; 0])
+
+val interpret_com : h:heap -> c:com -> GTot (option heap) (decreases %[c; decr_while h c; 1])
 
 let rec interpret_while h (While e body v) =
   if interpret_exp h e = 0 then
@@ -104,9 +111,9 @@ let rec interpret_exp_st e =
 
 val interpret_com_st : c:com -> ST unit 
   (requires (fun _ -> True))
-  (ensures  (fun h _ h' -> 
-    (fun o -> Some? o ==> equal h' (Some?.v o)) 
-      (interpret_com h c) ))
+  (ensures  (fun h _ h' ->
+    let o = interpret_com h c in
+    Some? o ==> equal h' (Some?.v o)))
 let rec interpret_com_st c = 
   match c with
   | Skip -> ()
@@ -129,3 +136,11 @@ let rec interpret_com_st c =
         interpret_com_st body;
         interpret_com_st c
       end
+
+(* CH: If interpret_com_st were made+proved terminating, then
+       interpret_com would simply be its reification.
+
+   (Our reification will anyway be forced to be ghost because state
+   implemented primitively, so things like sel being ghost shouldn't
+   make a difference.)
+*)
