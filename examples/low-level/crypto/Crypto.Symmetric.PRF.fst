@@ -97,11 +97,12 @@ noextract let blkRange rgn (i:id) (x:domain_blk i) (z:range rgn i x) : block i =
 
 noeq type entry (rgn:region) (i:id) =
   | Entry: x:domain i -> range:range rgn i x -> entry rgn i
+type table (rgn:region) (i:id) = Seq.seq (entry rgn i)
 
 // Doesn't extract because: polymorphic comparison
 noextract let is_entry_domain (#i:id) (#rgn:rid) (x:domain i) (e:entry rgn i) : Tot bool = e.x = x
 
-noextract let find (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain i) : option (range rgn i x) =
+noextract let find (#rgn:region) (#i:id) (s:table rgn i) (x:domain i) : option (range rgn i x) =
   match SeqProperties.find_l (is_entry_domain x) s with
   | Some e -> Some e.range
   | None   -> None
@@ -122,6 +123,44 @@ let find_blk #rgn (#i:id) s (x:domain_blk i) =
   match find s x with
   | Some v -> Some (blkRange rgn i x v)
   | None   -> None
+
+//16-12-19 imported from Crypto.AEAD.Invariant
+
+let lemma_find_append_some
+  (#r:region)
+  (#i:id)
+  (table0:table r i)
+  (table1:table r i)
+  (x:domain i) 
+  : Lemma
+    (requires (Some? (find table0 x)))
+    (ensures  (find (Seq.append table0 table1) x == find table0 x))
+  = SeqProperties.find_append_some table0 table1 (is_entry_domain x)
+
+let lemma_find_append_some_forall
+  (#r:region)
+  (#i:id)
+  (table0:table r i)
+  (table1:table r i) : 
+  Lemma 
+    (ensures 
+	(forall (x:domain i).{:pattern (find (Seq.append table0 table1) x) }
+	   Some? (find table0 x) ==>
+	   find (Seq.append table0 table1) x == find table0 x))
+ = let open FStar.Classical in
+   forall_intro (move_requires (lemma_find_append_some #r #i table0 table1))
+
+let lemma_find_append_none
+  (#r:region)
+  (#i:id)
+  (table0:table r i)
+  (table1:table r i)
+  (x:PRF.domain i) 
+  : Lemma
+    (requires (None? (find table1 x)))
+    (ensures  (find (Seq.append table0 table1) x == find table0 x))
+  = SeqProperties.find_append_none_s2 table0 table1 (is_entry_domain x)
+
 
 
 // The table exists only for idealization
@@ -221,41 +260,42 @@ let getBlock #i t x len output =
 val prf_mac: 
   i:id -> t:state i -> k_0: CMA.akey t.mac_rgn i -> x:domain_mac i -> ST (CMA.state (i,x.iv))
   (requires (fun h0 -> True))
-  (ensures (fun h0 mac h1 ->
+  (ensures (fun h0 mc h1 -> (* beware: mac shadowed by CMA.mac *)
     if prf i then
       let r = itable i t in
       let t0 = HS.sel h0 r in
       let t1 = HS.sel h1 r in
       (forall (y:domain i). y <> x ==> find t0 y == find t1 y)  /\ //at most modifies t at x
       (match find_mac (HS.sel h0 r) x with // already in the table? 
-       | Some mac' -> 
-	 h0 == h1 /\ // when decrypting
-	 mac == mac' /\ 
-	 CMA.(MAC.norm h1 mac'.r) /\ (* mac shadowed by CMA.mac *)
-	 CMA.(Buffer.live h1 mac'.s) /\ (* mac shadowed by CMA.mac *)
-	 CMA.(mac_log ==> m_contains (ilog mac'.log) h1) (* mac shadowed by CMA.mac *)
+       | Some mc' -> 
+           h0 == h1 /\ // when decrypting
+           mc == mc' /\ 
+           CMA.(MAC.norm h1 mc.r) /\ 
+           CMA.(Buffer.live h1 mc.s) /\ 
+           CMA.(mac_log ==> m_contains (ilog mc.log) h1) 
        | None ->  // when encrypting, we get the stateful post of MAC.create             
          (match find_mac (HS.sel h1 r) x with 
-          | Some mac' -> 
-	    mac == mac' /\ 
-	    t1 == SeqProperties.snoc t0 (Entry x mac) /\
-	    CMA.genPost (i,x.iv) t.mac_rgn h0 mac h1 /\
-            HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
-            HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
-	    HS.modifies_ref t.mac_rgn TSet.empty h0 h1
-           //16-10-11 we miss a more precise clause capturing the table update   
+          | Some mc' -> 
+              mc == mc' /\ 
+              t1 == SeqProperties.snoc t0 (Entry x mc) /\
+              CMA.genPost (i,x.iv) t.mac_rgn h0 mc h1 /\
+              HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
+              HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
+	 HS.modifies_ref t.mac_rgn TSet.empty h0 h1
+              //16-10-11 we miss a more precise clause capturing the table update   
           | None -> False ))
     else (
-      CMA.genPost (i,x.iv) t.mac_rgn h0 mac h1 /\
-      HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\ //allocates in t.rgn
-      HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
+      CMA.genPost (i,x.iv) t.mac_rgn h0 mc h1 /\
+      HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\ //allocates in t.rgn and t.mac_rgn
+      HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but modifies nothing in them
       HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
+
 
 #reset-options "--z3rlimit 100"
 
 let prf_mac i t k_0 x =
-  assume false;//16-10-30 new problem with sk0?
   let h0 = get () in
+  assume(CMA.skeyed i ==> Buffer.live h0 (CMA.get_skey #t.mac_rgn #i k_0));// TODO move to precondition
   Buffer.recall t.key;
   recall_region t.mac_rgn;
   let macId = (i,x.iv) in
@@ -265,29 +305,36 @@ let prf_mac i t k_0 x =
     recall r;
     let contents = !r in
     match find_mac contents x with
-    | Some mac -> 
-      let mac0 = mac in (* mac shadowed by CMA.mac *)
-      assume (CMA.(MAC.norm h0 mac0.r)); //TODO: replace this using monotonicity
-      assume (HS.(Buffer.(CMA.(not ((Buffer.content mac0.s).mm))))); //TODO: mark this as not manually managed
-      Buffer.recall (CMA.(mac0.s));
-      mac
+    | Some mc ->  (* beware: mac shadowed by CMA.mac *)
+        assume false;
+        (* 
+        assume (CMA.(MAC.norm h0 mc.r)); //TODO: replace this using monotonicity
+        assume (HS.(Buffer.(CMA.(not ((Buffer.content mc.s).mm))))); //TODO: mark this as not manually managed
+        Buffer.recall (CMA.(mc.s));
+        mc
+        *)
+        mc
     | None ->
-      let mac = CMA.gen t.mac_rgn macId k_0 in
-      r := SeqProperties.snoc contents (Entry x mac);
-      assume false; 
-      //16-10-16 framing after change to genPost?
-      //let h = ST.get() in assume(MAC.(norm h mac.r));
-      mac
+        let mc = CMA.gen t.mac_rgn macId k_0 in
+        r := SeqProperties.snoc contents (Entry x mc);
+        let h1 = ST.get() in 
+        assume(
+          let t0 = HS.sel h0 r in
+          let t1 = HS.sel h1 r in
+          find_mac t1 x == Some mc /\
+          (forall (y:domain i). y <> x ==> find t0 y == find t1 y));
+        mc
     end
   else
     let keyBuffer = Buffer.rcreate t.mac_rgn 0uy (CMA.keylen i) in
     let h1 = ST.get() in
     getBlock t x (CMA.keylen i) keyBuffer;
-    let h2 = ST.get() in
-    Buffer.lemma_reveal_modifies_1 keyBuffer h1 h2;
-    CMA.coerce t.mac_rgn macId k_0 keyBuffer
+    let mc = CMA.coerce t.mac_rgn macId k_0 keyBuffer in
+    let h3 = ST.get() in 
+    Buffer.lemma_reveal_modifies_1 keyBuffer h1 h3;
+    mc
 
- 
+
 val prf_sk0: 
   #i:id{ CMA.skeyed i } -> t:state i -> ST (CMA.skey t.mac_rgn i)
   (requires (fun h0 -> True))
@@ -341,6 +388,7 @@ let prf_sk0 #i t =
     let h2 = ST.get() in
     Buffer.lemma_reveal_modifies_1 keyBuffer h1 h2;
     keyBuffer
+
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
