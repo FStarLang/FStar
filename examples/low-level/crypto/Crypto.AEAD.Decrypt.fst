@@ -79,7 +79,6 @@ val chain_mods (#i:id) (#n:Cipher.iv (alg i))
 let chain_mods #i #n st #aadlen aad #plainlen plain cipher_tagged acc h_init h0 h1 h2 h3 h4
      = let abuf = MAC.as_buffer (CMA.abuf acc) in 
        let cond = not (prf i) || safeId i in 
-       assume HS.(st.prf.mac_rgn `is_in` h_init.h);
        BufferUtils.chain_modification abuf cond st.log_region st.prf.mac_rgn (Plain.as_buffer plain) h_init h0 h1 h2 h3 h4
 
 val decrypt:
@@ -128,42 +127,3 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   post_pop iv st aad plain cipher_tagged verified h4;
   pop_frame();
   verified
-
-
-
-  (* assert (verified ==> Dexor.decrypt_ok iv st aad plain cipher_tagged h4); *)
-  (* assert (inv st h4); *)
-  (* assert (enc_dec_liveness st aad plain cipher_tagged h4); *)
-  (* admit() *)
-  
-(*   let h2 = ST.get() in *)
-(*   assert (safeId i ==> accumulate_encoded aad #plainlen cipher acc h2); *)
-(*   Buffer.lemma_reveal_modifies_0 h1 h2; *)
-(*   let verified = verify_wrapper ak acc tag in *)
-(*   let h3 = ST.get() in *)
-(*   Buffer.lemma_reveal_modifies_0 h2 h3; *)
-(*   frame_my_inv i st h0 h1 h2 h3; //my_inv st h3 *)
-(*   frame_acc #(i, iv) ak #aadlen aad #plainlen cipher h1 acc h2 h3; *)
-(*   // then, safeID i /\ stateful invariant ==> *)
-(*   //    not verified ==> no entry in the AEAD table *)
-(*   //    verified ==> exists Entry(iv ad l p c) in AEAD.log *)
-(*   //                 and correct entries above x in the PRF table *)
-(*   //                 with matching aad, cipher, and plain *)
-(*   // *)
-(*   // not sure what we need to prove for 1st level of PRF idealization *)
-(*   // possibly that the PRF table with ctr=0 matches the Entry table. *)
-(*   // (PRF[iv,ctr=0].MAC.log =  Some(l,t) iff Entry(iv,___)) *)
-(*   let p = get_verified_plain st aad plain cipher_tagged ak acc verified in  *)
-(*   if verified  *)
-(*   then begin *)
-(*     let y = PRF.incr i x in	    *)
-(*     counter_dexor i st.prf y plainlen plainlen plain cipher p *)
-(*   end; *)
-(*   let h4 = get() in *)
-(*   establish_post_condition st aad plain cipher_tagged p ak acc verified h2 h3 h4; *)
-(*   pop_frame(); *)
-(*   frame_myinv_pop st h4; *)
-(*   frame_decrypt_ok iv st aad plain cipher_tagged verified h4; *)
-(*   chain_modification i iv st aad plain cipher_tagged h_init h0 h1 h2 h3 h4; *)
-(*   verified *)
-
