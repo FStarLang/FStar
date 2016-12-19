@@ -23,6 +23,9 @@ module RR = FStar.Monotonic.RRef
 module MAC = Crypto.Symmetric.MAC
 
 
+//16-12-19 should go to HyperStack? 
+
+
 // should go elsewhere
 let erid = r:rid{is_eternal_region r}
 
@@ -176,8 +179,11 @@ val alloc: region:erid -> i:id
   -> k:lbuffer (UInt32.v (keylen (fst i))){frameOf k == region}
   -> ST (state i)
   (requires (fun m0 -> live m0 k /\ live_ak m0 ak))
-  (ensures  (fun m0 st m1 -> genPost i region m0 st m1 /\ modifies_one region m0 m1))
+  (ensures  (fun m0 st m1 -> 
+    genPost i region m0 st m1 /\ 
+    Buffer.modifies_1 k m0 m1 ))
 let alloc region i ak k =
+  let h0 = ST.get () in
   let r = MAC.rcreate region i in
   let s = FStar.Buffer.rcreate region 0uy 16ul in
   let h1 = ST.get () in
@@ -187,42 +193,59 @@ let alloc region i ak k =
     else
       sub k 0ul 16ul, sub k 16ul 16ul
   in
+  let hz = ST.get () in
+  assert(modifies_ref region TSet.empty h0 hz);
   MAC.encode_r r rb;
   let h2 = ST.get () in
-  lemma_reveal_modifies_2 (MAC.as_buffer r) rb h1 h2;
+  if skeyed (fst i) 
+  then lemma_reveal_modifies_1 (MAC.as_buffer r) h1 h2
+  else  lemma_reveal_modifies_2 (MAC.as_buffer r) rb h1 h2;
+  lemma_intro_modifies_1 k h0 h2;
   Buffer.blit sb 0ul s 0ul 16ul;
   let h3 = ST.get () in
   lemma_reveal_modifies_1 s h2 h3;
+  lemma_intro_modifies_1 k h0 h3;
   if mac_log then
     begin
     log_cmp_monotonic i;
     let log = RR.m_alloc #(log i) #log_cmp region (snd i, None) in
+    let h4 = ST.get() in 
+    lemma_intro_modifies_1 k h0 h4;
     State #i #region r s log
     end
   else
+    let h4 = ST.get() in 
+    lemma_intro_modifies_1 k h0 h4;
     State #i #region r s ()
+
 
 val gen: region:erid -> i:id -> ak:akey region (fst i) -> ST (state i)
   (requires (fun m0 -> live_ak m0 ak))
-  (ensures (fun m0 st m1 -> genPost i region m0 st m1 /\ modifies_one region m0 m1))
+  (ensures (fun m0 st m1 -> 
+    genPost i region m0 st m1 /\ 
+    modifies_one region m0 m1 /\ 
+    modifies_ref region TSet.empty m0 m1 ))
 let gen region i ak =
   let len = keylen (fst i) in
   let k = FStar.Buffer.rcreate region 0uy len in
-  let h0 = ST.get() in
+  let h1 = ST.get() in
   random (UInt32.v len) k;
-  let h1 = ST.get () in
-  lemma_reveal_modifies_1 k h0 h1;
-  alloc region i ak k
+  let st =  alloc region i ak k in
+  let h3 = ST.get() in 
+  lemma_reveal_modifies_1 k h1 h3;
+  st
 
 val coerce: region:erid -> i:id{~(authId i)}
   -> ak:akey region (fst i)
   -> k:lbuffer (UInt32.v (keylen (fst i))){frameOf k == region}
   -> ST (state i)
   (requires (fun m0 -> live m0 k /\ live_ak m0 ak))
-  (ensures (fun m0 st m1 -> genPost i region m0 st m1 /\ modifies_one region m0 m1))
+  (ensures (fun m0 st m1 -> 
+    genPost i region m0 st m1 /\ 
+    modifies_1 k m0 m1))
 let coerce region i ak k =
-  alloc region i ak k
-
+  alloc region i ak k 
+  
 
 (** Hash accumulators (several per instance)
 

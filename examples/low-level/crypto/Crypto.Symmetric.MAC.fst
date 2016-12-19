@@ -197,15 +197,17 @@ val encode_r: #i:id -> b:elemB i -> raw:lbuffer 16{Buffer.disjoint (as_buffer b)
   (ensures  (fun h0 _ h1 -> 
     norm h1 b /\ 
     Buffer.live h1 raw /\ 
-    Buffer.modifies_2 (as_buffer b) raw h0 h1))
+    (match alg i with 
+      | POLY1305 -> Buffer.modifies_2 (as_buffer b) raw h0 h1
+      | GHASH -> Buffer.modifies_1 (as_buffer b) h0 h1)))
 let encode_r #i b raw =
   match b with 
   | B_POLY1305 b -> 
       PL.clamp raw; 
       PL.toField b raw
   | B_GHASH    b -> 
-      let h0 = ST.get () in
-      assert (Buffer.modifies_1 raw h0 h0); // Necessary for triggering right lemmas
+      //let h0 = ST.get () in
+      //assert (Buffer.modifies_1 raw h0 h0); // Necessary for triggering right lemmas
       Buffer.blit raw 0ul b 0ul 16ul
 
 // TODO: generalize to word
