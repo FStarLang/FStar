@@ -575,6 +575,23 @@ let verify_wrapper #i ak acc tag =
   frame_verify_ok ak acc tag h0 h1 b;
   b
 
+val verify_ok_nonce_is_used: 
+             #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader ->
+	     #aadlen:aadlen -> (aad:lbuffer (v aadlen)) ->
+ 	     #plainlen:txtlen_32 {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
+	     plain:Plain.plainBuffer i (v plainlen) ->
+	     cipher_tagged:PRF_MAC.ctagbuf plainlen ->
+	     ak:CMA.state (i,n) ->
+	     acc:CMA.accBuffer (i, n) ->
+	     h:mem{safeMac i} -> 
+	Lemma (requires (let tag = PRF_MAC.ctag cipher_tagged in
+			 is_mac_for_iv st ak h /\
+			 inv st h /\
+			 verify_liveness PRF.(st.prf.mac_rgn) ak tag h /\
+			 verify_ok ak acc tag h true))
+	      (ensures (~(fresh_nonce n (HS.sel h (st_ilog st)))))
+let verify_ok_nonce_is_used #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc h = ()
+        
 #reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val verify : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader ->
 	     #aadlen:aadlen -> (aad:lbuffer (v aadlen)) ->
@@ -629,6 +646,7 @@ let verify #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc h_init =
   Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.abuf acc)) h0 h1;
   if b 
   then let p = get_verified_plain st aad plain cipher_tagged ak acc true in
-       assume (safeMac i ==> ~ (fresh_nonce n (HS.sel h1 (st_ilog st))));
+       if safeMac i 
+       then verify_ok_nonce_is_used st aad plain cipher_tagged ak acc h1;
        Some p
   else None
