@@ -383,6 +383,26 @@ let frame_accumulate_ensures #i #rw aead_st ak #aadlen aad #txtlen plain cipher_
 	        Buffer.as_seq h1 (MAC.as_buffer CMA.(ak.r)));
         MAC.frame_sel_elem h1 h2 CMA.(ak.r))
 
+(*+ intro_mac_is_used: 
+	if verify returns successfully, then the mac is certainly used
+ **)  
+val intro_mac_is_used :  #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader ->
+ 			 #aadlen:aadlen -> aad:lbuffer (v aadlen) ->
+			 #plainlen:ok_len_32 i ->
+			 plain:Plain.plainBuffer i (v plainlen) ->
+			 cipher_tagged:lbuffer (v plainlen + v MAC.taglen) ->
+		         ak:CMA.state (i,n) ->
+			 acc:CMA.accBuffer (i, n) ->
+			 h:mem{safeId i} ->
+			 Lemma (requires (let tag = Buffer.sub cipher_tagged plainlen MAC.taglen in 
+					  verify_liveness PRF.(st.prf.mac_rgn) ak tag h /\ 
+					  is_mac_for_iv st ak h /\
+				          verify_ok ak acc tag h true))
+			       (ensures (let prf_table = HS.sel h (PRF.itable i st.prf) in
+					 mac_is_used prf_table n h))
+#set-options "--initial_ifuel 1 --max_ifuel 1"
+let intro_mac_is_used #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc h = ()
+#set-options "--initial_ifuel 0 --max_ifuel 0"
 
 (*+ entry_exists_if_verify_ok:
 	A key lemma from the invariant and verify succeeding
@@ -420,7 +440,7 @@ let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged
     let cipher_tagged = Buffer.as_seq h cipher_tagged_b in
     let cipher, _ = SeqProperties.split cipher_tagged (v plainlen) in
     let tag = Buffer.as_seq h tag_b in
-    assume (mac_is_used prf_table n h); //TODO: regression after indexing change; verify_ok ...true /\ is_mac_for_iv should prove this
+    intro_mac_is_used st aad plain cipher_tagged_b ak acc h;
     let aead_entry = find_refined_aead_entry n aead_entries prf_table h in 
     let Some ak' = PRF.find_mac prf_table x0 in
     assert (ak == ak');
@@ -486,7 +506,7 @@ let get_verified_plain #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc
     let Some (AEADEntry _nonce _ad _l p _c) = find_aead_entry n aead_entries in
     let _ : unit = 
       let prf_table = HS.sel h (PRF.itable i st.prf) in
-      assume (mac_is_used prf_table n h); //TODO: regression after indexing change; verify_ok ...true /\ is_mac_for_iv should prove this
+      intro_mac_is_used st aad plain cipher_tagged ak acc h;
       let e = find_refined_aead_entry n aead_entries prf_table h in
       () in
     p
