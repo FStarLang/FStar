@@ -55,7 +55,7 @@ let skeyed (i:id) =
   | CHACHA20_POLY1305 -> false
 
 type skey (rgn:rid) (i:id) =
-  b:lbuffer (UInt32.v (skeylen i)){Buffer.frameOf b == rgn}
+  b:lbuffer (UInt32.v (skeylen i)){Buffer.frameOf b == rgn /\ ~HS.((Buffer.content b).mm)}
 
 //16-10-16 can't make it abstract?
 (** Conditionally-allocated abstract key (accessed only in this module) *)
@@ -146,8 +146,9 @@ let ilog (#i:id) (#r:erid) (l:log_ref i r{mac_log}) : Tot (ideal_log i r) = l
 noeq type state (i:id) =
   | State:
     #region: erid ->
-    r: MAC.elemB i{Buffer.frameOf (MAC.as_buffer r) == region} ->
-    s: wordB_16{frameOf s == region /\ disjoint (MAC.as_buffer r) s} ->
+    r: MAC.elemB i{
+      let b = MAC.as_buffer r in Buffer.frameOf b == region /\ ~HS.((Buffer.content b).mm)} ->
+    s: wordB_16{frameOf s == region /\ disjoint (MAC.as_buffer r) s /\ ~ HS.((Buffer.content s).mm)} ->
     log: log_ref i region ->
     state i
 
@@ -445,6 +446,7 @@ val mac:
     (authId i ==> RR.m_sel h0 (ilog st.log) == (snd i, None)) ))
   (ensures (fun h0 _ h1 -> mac_ensures i st acc tag h0 h1))
 
+#reset-options "--z3rlimit 100"
 let mac #i st acc tag =
   let h0 = ST.get () in
   MAC.finish st.s acc.a tag;
@@ -471,7 +473,7 @@ let mac #i st acc tag =
       modifies_mac_aux (MAC.as_buffer acc.a) tag (RR.as_hsref (ilog st.log))
         (snd i, Some (vs,t)) h0 h1 h2
     end
-
+#reset-options
 
 let verify_liveness (#i:id) (st:state i) (tag:MAC.tagB) (h:mem) =
   Buffer.live h st.s /\

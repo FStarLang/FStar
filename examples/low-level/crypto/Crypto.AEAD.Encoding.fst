@@ -470,7 +470,7 @@ let accumulate #i st aadlen aad txtlen cipher  =
       assert(equal (HS.sel h5 al) (SeqProperties.cons lbytes (encode_bytes cbytes @| encode_bytes abytes)));
       assert(equal (HS.sel h5 al) (encode_both (fst i) aadlen abytes txtlen cbytes));
 
-      //16-12-15 can't prove Buffer.modifies_0 from modifies_buf_and_ref ?!
+      //16-12-15 can't prove Buffer.modifies_0 from current CMA posts?
       assert(HS.modifies_one h.tip h h0);
       assume(HS.modifies_one h.tip h0 h2);
       assert(HS.modifies_one h.tip h2 h3);
