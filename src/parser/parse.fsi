@@ -329,9 +329,9 @@ type nonTerminalId =
     | NONTERM_inputFragment
     | NONTERM_mainDecl
     | NONTERM_pragma
+    | NONTERM_decoration
     | NONTERM_decl
     | NONTERM_raw_decl
-    | NONTERM_kind_abbrev
     | NONTERM_typeDecl
     | NONTERM_typars
     | NONTERM_tvarinsts

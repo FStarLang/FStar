@@ -274,7 +274,7 @@ let doc_of_decl (d:decl) = match d.d with
                             head_ids); 
                        hardline] )
   | Main e -> group (concat [str "main"; space; doc_of_term e])
-  | Assume(q, i, t) -> 
+  | Assume(i, t) -> 
     // TODO: q, i.
         group (concat [ (str "assume"); space; (str i.idText); hardline])
   | Tycon(q, tys) -> 

@@ -426,28 +426,8 @@ list_decl_:
 list_decoration_:
   
     {    ( [] )}
-| FSDOC list_decoration_
-    {let (x0, xs) = ($1, $2) in
-let x =
-  let x = x0 in
-        ( Doc x )
-in
-    ( x :: xs )}
-| LBRACK_AT list_atomicTerm_ RBRACK list_decoration_
-    {let (_10, x0, _30, xs) = ((), $2, (), $4) in
-let x =
-  let _3 = _30 in
-  let x = x0 in
-  let _1 = _10 in
-        ( DeclAttributes x )
-in
-    ( x :: xs )}
-| qualifier list_decoration_
-    {let (x0, xs) = ($1, $2) in
-let x =
-  let x = x0 in
-        ( Qualifier x )
-in
+| decoration list_decoration_
+    {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
 list_multiBinder_:
@@ -692,10 +672,31 @@ in
     {let (_1, s_opt) = ((), $2) in
       ( ResetOptions s_opt )}
 
+decoration:
+  FSDOC
+    {let x = $1 in
+      ( Doc x )}
+| LBRACK_AT list_atomicTerm_ RBRACK
+    {let (_1, x, _3) = ((), $2, ()) in
+      ( DeclAttributes x )}
+| qualifier
+    {let x = $1 in
+      ( Qualifier x )}
+
 decl:
-  list_decoration_ raw_decl
-    {let (ds, decl) = ($1, $2) in
-      ( mk_decl decl (rhs parseState 2) ds )}
+  ASSUME uident COLON noSeqTerm
+    {let (_1, lid, _3, e0) = ((), $2, (), $4) in
+let phi =
+  let e = e0 in
+                  ( {e with level=Formula} )
+in
+      ( mk_decl (Assume(lid, phi)) (rhs parseState 2) [ Qualifier Assumption ] )}
+| decoration list_decoration_ raw_decl
+    {let (d, ds, decl) = ($1, $2, $3) in
+      ( mk_decl decl (rhs parseState 2) (d :: ds) )}
+| raw_decl
+    {let decl = $1 in
+      ( mk_decl decl (rhs parseState 2) [] )}
 
 raw_decl:
   pragma
@@ -745,15 +746,9 @@ raw_decl:
 | FSDOC_STANDALONE
     {let doc = $1 in
       ( Fsdoc doc )}
-| kind_abbrev
-    {let k = $1 in
-      ( k )}
-
-kind_abbrev:
-  KIND ident binders EQUALS kind
-    {let (_1, _2, _3, _4, _5) = ((), $2, $3, (), $5) in
-    (let (_1, lid, bs, _4, k) = ((), _2, _3, (), _5) in
-      ( KindAbbrev(lid, bs, k) ))}
+| KIND ident binders EQUALS kind
+    {let (_1, lid, bs, _4, k) = ((), $2, $3, (), $5) in
+      ( KindAbbrev(lid, bs, k) )}
 
 typeDecl:
   ident typars option_ascribeKind_ typeDefinition

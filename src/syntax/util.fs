@@ -424,7 +424,8 @@ let lids_of_sigelt se = match se with
   | Sig_inductive_typ (lid, _, _,  _, _, _, _, _)
   | Sig_effect_abbrev(lid, _, _, _,  _, _, _)
   | Sig_datacon (lid, _, _, _, _, _, _, _)
-  | Sig_declare_typ (lid, _, _, _, _) -> [lid]
+  | Sig_declare_typ (lid, _, _, _, _)
+  | Sig_assume (lid, _, _, _) -> [lid]
   | Sig_new_effect_for_free(n, _)
   | Sig_new_effect(n, _) -> [n.mname]
   | Sig_sub_effect _
@@ -441,6 +442,7 @@ let quals_of_sigelt x = match x with
   | Sig_effect_abbrev  (_, _, _, _, quals, _, _)
   | Sig_datacon (_, _, _, _, _, quals, _, _)
   | Sig_declare_typ (_, _, _, quals, _)
+  | Sig_assume (_, _, quals, _)
   | Sig_let(_, _, _, quals, _)
   | Sig_new_effect({qualifiers=quals}, _)
   | Sig_new_effect_for_free({qualifiers=quals}, _) ->
@@ -455,6 +457,7 @@ let range_of_sigelt x = match x with
   | Sig_effect_abbrev  (_, _, _, _, _, _, r)
   | Sig_datacon (_, _, _, _, _, _, _, r)
   | Sig_declare_typ (_, _, _, _, r)
+  | Sig_assume (_, _, _, r)
   | Sig_let(_, r, _, _, _)
   | Sig_main(_, r)
   | Sig_pragma(_, r)
@@ -979,16 +982,3 @@ let rec list_elements (e:term) : option<list<term>> =
       Some (hd::must (list_elements tl))
   | _ ->
       None
-
-let mk_assume lid formula range =
-  Sig_let ((false,
-    [{
-      lbname = Inr (Syntax.lid_as_fv lid (Delta_defined_at_level 1) None);
-      lbunivs = [];
-      lbtyp = formula;
-      lbdef = tun;
-      lbeff = Const.effect_Tot_lid }]),
-    range,
-    [ lid ],
-    [ Assumption ],
-    [ mk (Tm_constant (Const_string (unicode_of_string "axiom", range))) None range ])

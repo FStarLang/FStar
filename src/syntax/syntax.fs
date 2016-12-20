@@ -316,6 +316,10 @@ and sigelt =
                        * list<attribute>
   | Sig_main           of term
                        * Range.range
+  | Sig_assume         of lident
+                       * formula
+                       * list<qualifier>
+                       * Range.range
   | Sig_new_effect     of eff_decl * Range.range
   | Sig_new_effect_for_free of eff_decl * Range.range // in this case, most fields have a dummy value
                                                       // and are reconstructed using the DMFF theory

@@ -1702,12 +1702,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              @ primitive_type_axioms env.tcenv lid tname tsym,
              env
 
-     | Sig_let((_, [{ lbtyp = f }]), _, [ l ], quals, attrs)
-       when S.has_simple_attribute attrs "axiom" && List.mem Assumption quals ->
-         (* [@ "axiom" ] assume val x: t *)
-         let f, decls = encode_formula f env in
-         let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.lid_to_string l)), Some (varops.mk_unique ("assumption_"^l.str)))] in
-         decls@g, env
+     | Sig_assume(l, f, _, _) ->
+        let f, decls = encode_formula f env in
+        let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.lid_to_string l)), Some (varops.mk_unique ("assumption_"^l.str)))] in
+        decls@g, env
 
      | Sig_let(lbs, r, _, quals, _) when (quals |> List.contains S.Irreducible) ->
        let env, decls = Util.fold_map (fun env lb ->

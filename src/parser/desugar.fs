@@ -1575,7 +1575,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     let se = Sig_main(e, d.drange) in
     env, [se]
 
-  | Assume(atag, id, t) ->
+  | Assume(id, t) ->
     let f = desugar_formula env t in
     env, [Sig_assume(qualify env id, f, [Assumption], d.drange)]
 

@@ -747,6 +747,13 @@ and tc_lex_t env ses quals lids =
         failwith (Util.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (Sig_bundle(ses, [], lids, Range.dummyRange))))
     end
 
+and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
+    let env = Env.set_range env r in
+    let k, _ = U.type_u() in
+    let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
+    TcUtil.check_uvars r phi;
+    Sig_assume(lid, phi, quals, r)
+
 and tc_inductive env ses quals lids =
     (*  Consider this illustrative example:
 
@@ -1154,10 +1161,10 @@ and tc_inductive env ses quals lids =
 
         //create Sig_assume for the axioms
         let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
-          // mk_assume ... has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
-          mk_assume lid fml dr :: l
+            let se = tc_assume env lid fml [] dr in
+            //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
+            l @ [se]
         ) [] axioms in
-        let ses = List.rev ses in
 
         env.solver.pop "haseq";
         ses
@@ -1295,7 +1302,7 @@ and tc_inductive env ses quals lids =
 
         env.solver.encode_sig env sig_bndle;
         let env = Env.push_univ_vars env us in
-        let se = mk_assume (lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))])) fml dr in
+        let se = tc_assume env (lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))])) fml [] dr in
 
         env.solver.pop "haseq";
         [se]
@@ -1492,6 +1499,11 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
       let env = Env.push_sigelt env se in
       [se], env, []
 
+    | Sig_assume(lid, phi, quals, r) ->
+      let se = tc_assume env lid phi quals r in
+      let env = Env.push_sigelt env se in
+      [se], env, []
+
     | Sig_main(e, r) ->
       let env = Env.set_range env r in
       let env = Env.set_expected_typ env Common.t_unit in
@@ -1628,6 +1640,11 @@ let for_export hidden se : list<sigelt> * list<lident> =
               dec::out, l::hidden
             | _ ->
               out, hidden) ses ([], hidden)
+      else [se], hidden
+
+    | Sig_assume(_, _, quals, _) ->
+      if is_abstract quals
+      then [], hidden
       else [se], hidden
 
     | Sig_declare_typ(l, us, t, quals, r) ->
@@ -1768,6 +1785,7 @@ let check_exports env (modul:modul) exports =
           then let arrow = S.mk (Tm_arrow(binders, comp)) None r in
                check_term l univs arrow
         | Sig_main _
+        | Sig_assume _
         | Sig_new_effect _
         | Sig_new_effect_for_free _
         | Sig_sub_effect _

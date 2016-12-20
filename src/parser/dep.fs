@@ -313,7 +313,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         collect_term t;
         collect_binders binders
     | Main t
-    | Assume (_, _, t)
+    | Assume (_, t)
     | SubEffect { lift_op = NonReifiableLift t }
     | SubEffect { lift_op = LiftForFree t }
     | Val (_, t) ->

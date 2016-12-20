@@ -1370,6 +1370,9 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       | Sig_declare_typ _ ->
         if quals |> Util.for_some has_eq
         then err' ()
+      | Sig_assume _ ->
+        if not (quals |> Util.for_all (fun x -> visibility x || x=Assumption))
+        then err' ()
       | Sig_new_effect _ ->
         if not (quals |> Util.for_all (fun x ->
               x=TotalEffect

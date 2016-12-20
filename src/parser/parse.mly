@@ -170,7 +170,7 @@ pragma:
   | PRAGMA_RESET_OPTIONS s_opt=string?
       { ResetOptions s_opt }
 
-%inline decoration:
+decoration:
   | x=FSDOC
       { Doc x }
   | LBRACK_AT x = list(atomicTerm) RBRACK
@@ -179,8 +179,14 @@ pragma:
       { Qualifier x }
 
 decl:
-  | ds=list(decoration) decl=raw_decl
-      { mk_decl decl (rhs parseState 2) ds }
+  | ASSUME lid=uident COLON phi=formula
+      { mk_decl (Assume(lid, phi)) (rhs parseState 2) [ Qualifier Assumption ] }
+
+  | d=decoration ds=list(decoration) decl=raw_decl
+      { mk_decl decl (rhs parseState 2) (d :: ds) }
+
+  | decl=raw_decl
+      { mk_decl decl (rhs parseState 2) [] }
 
 raw_decl:
   | p=pragma
@@ -217,15 +223,10 @@ raw_decl:
       { NewEffectForFree ne }
   | doc=FSDOC_STANDALONE
       { Fsdoc doc }
-  (* stratified only *)
-  | k=kind_abbrev
-      { k }
 
-kind_abbrev:
   (* stratified only *)
-  KIND ident binders EQUALS kind
-    {let (_1, lid, bs, _4, k) = ((), $2, $3, (), $5) in
-      ( KindAbbrev(lid, bs, k) )}
+  | KIND lid=ident bs=binders EQUALS k=kind
+      { KindAbbrev(lid, bs, k) }
 
 
 typeDecl:
