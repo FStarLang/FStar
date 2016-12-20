@@ -962,13 +962,14 @@ let find_mac_all_above_1 (#i:id) (#r:rgn) (t:prf_table r i) (iv:Cipher.iv (alg i
   : Lemma (let x_0 = {iv=iv; ctr=PRF.ctr_0 i} in
 	   let x_1 = PRF.incr i x_0 in
 	   all_above x_1 t ==> None? (PRF.find_mac t x_0))
-  = admit() //NS: easy
+  = let x_0 = {iv=iv; ctr=PRF.ctr_0 i} in
+    SeqProperties.lemma_find_l_contains (PRF.is_entry_domain x_0) t
 
 let find_other_iv_all_above (#i:id) (#r:rgn) (t:prf_table r i) 
 			    (x:PRF.domain i) (y:domain i)
   : Lemma (requires (all_above x t /\ x.iv <> y.iv))
 	  (ensures (PRF.find t y == None))
-  = admit() //NS: easy
+  = SeqProperties.lemma_find_l_contains (PRF.is_entry_domain y) t
 
 val lemma_counterblocks_find_other_iv_is_none
   (i:id{safeId i})
