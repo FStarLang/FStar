@@ -362,18 +362,6 @@ let x =
 in
     ( x :: xs )}
 
-list___anonymous_5_:
-  
-    {    ( [] )}
-| BAR patternBranch list___anonymous_5_
-    {let (_10, pb0, xs) = ((), $2, $3) in
-let x =
-  let pb = pb0 in
-  let _1 = _10 in
-                                                      (pb)
-in
-    ( x :: xs )}
-
 list___anonymous_7_:
   
     {    ( [] )}
@@ -1503,8 +1491,12 @@ in
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       )}
-| MATCH term WITH list___anonymous_5_
-    {let (_1, e, _3, pbs) = ((), $2, (), $4) in
+| MATCH term WITH reverse_left_flexible_list_BAR___anonymous_5_
+    {let (_1, e, _3, xs0) = ((), $2, (), $4) in
+let pbs =
+  let xs = xs0 in
+     ( List.rev xs )
+in
       (
         let branches = focusBranches pbs (rhs2 parseState 1 4) in
         mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
@@ -2383,6 +2375,24 @@ right_flexible_nonempty_list_SEMICOLON_simpleDef_:
 | simpleDef SEMICOLON right_flexible_list_SEMICOLON_simpleDef_
     {let (x, _2, xs) = ($1, (), $3) in
                                            ( x :: xs )}
+
+reverse_left_flexible_list_BAR___anonymous_5_:
+  
+    {   ( [] )}
+| patternBranch
+    {let pb0 = $1 in
+let x =
+  let pb = pb0 in
+                                                                     (pb)
+in
+   ( [x] )}
+| reverse_left_flexible_list_BAR___anonymous_5_ BAR patternBranch
+    {let (xs, _2, pb0) = ($1, (), $3) in
+let x =
+  let pb = pb0 in
+                                                                     (pb)
+in
+   ( x :: xs )}
 
 reverse_left_flexible_nonempty_list_BAR_patternBranch_:
   patternBranch
