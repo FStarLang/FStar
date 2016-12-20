@@ -26,11 +26,6 @@ module Encoding    = Crypto.AEAD.Encoding
 module EncodingWrapper = Crypto.AEAD.Wrappers.Encoding
 module CMAWrapper = Crypto.AEAD.Wrappers.CMA
 
-assume //NS: boring, this should be in the buffer library
-val to_seq_temp: #a:Type -> b:Buffer.buffer a -> l:UInt32.t{v l <= Buffer.length b} -> ST (Seq.seq a)
-  (requires (fun h -> Buffer.live h b))
-  (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h1 b /\ r == Buffer.as_seq h1 b))
-
 #reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let ideal_ensures
 	 (#i: id)
@@ -69,9 +64,9 @@ val do_ideal:
  (ensures  (fun h0 _ h1 ->
 	    ideal_ensures st n aad plain cipher_tag h0 h1))
 let do_ideal #i st n #aadlen aad #plainlen plain cipher_tag =
-    let ad = to_seq_temp aad aadlen in
+    let ad = Buffer.to_seq_full aad in
     let p = Plain.load plainlen plain in 
-    let c_tagged = to_seq_temp cipher_tag plainlen in
+    let c_tagged = Buffer.to_seq_full cipher_tag in
     let entry = AEADEntry n ad (v plainlen) p c_tagged in
     FStar.ST.recall (st_ilog st);
     st_ilog st := SeqProperties.snoc !(st_ilog st) entry
