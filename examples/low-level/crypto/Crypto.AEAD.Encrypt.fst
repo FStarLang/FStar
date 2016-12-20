@@ -164,11 +164,6 @@ val encrypt_write_effect :
 	      enc_dec_separation st aad plain cipher_tag  /\
 	      aead_liveness st h_init /\
               enc_dec_liveness st aad plain cipher_tag h_init /\
-              (* enc_dec_liveness st aad plain cipher_tag h_push /\ *)
-              (* enc_dec_liveness st aad plain cipher_tag h_prf /\ *)
-              (* enc_dec_liveness st aad plain cipher_tag h_enx /\ *)
-              (* enc_dec_liveness st aad plain cipher_tag h_acc /\ *)
-              (* enc_dec_liveness st aad plain cipher_tag h_mac /\	       *)
               enc_dec_liveness st aad plain cipher_tag h_ideal /\
 	      fresh_frame h_init h_push /\
 	      PRF_MAC.prf_mac_ensures i st.prf k_0 x_0 h_push ak h_prf /\
@@ -219,19 +214,13 @@ val reestablish_inv:
          h4: mem ->               
       Lemma 
   (requires  (let cipher : lbuffer (v plainlen) = Buffer.sub cipher_tag 0ul plainlen in
-              (* let x_1 = {iv=n; ctr=otp_offset i} in *)
               enc_dec_separation st aad plain cipher_tag  /\
               enc_dec_liveness st aad plain cipher_tag h0 /\
-              (* enc_dec_liveness st aad plain cipher_tag h1 /\ *)
-              (* enc_dec_liveness st aad plain cipher_tag h2 /\ *)
-              (* enc_dec_liveness st aad plain cipher_tag h3 /\ *)
-	      HS.(is_stack_region h0.tip) /\ //TODO: need to add that the buffers of acc live in h0.tip
+	      HS.(is_stack_region h0.tip) /\
      	      Buffer.frameOf (MAC.as_buffer (CMA.abuf acc)) = HS.(h0.tip) /\
               inv st h0 /\
 	      (safeMac i ==> is_mac_for_iv st ak h0) /\
               PRF_MAC.enxor_h0_h1 st n aad plain cipher_tag h0 h1 /\
-              (* Enxor.enxor_invariant st.prf x_1 plainlen 0ul plain cipher h0 h1 /\ *)
-              (* Enxor.modifies_table_above_x_and_buffer st.prf x_1 cipher h0 h1 /\ *)
               EncodingWrapper.accumulate_modifies_nothing h1 h2 /\
               CMA.(ak.region = PRF.(st.prf.mac_rgn)) /\
               CMAWrapper.mac_ensures i n st aad plain cipher_tag ak acc h2 h3 /\ (
@@ -242,9 +231,7 @@ val reestablish_inv:
 let reestablish_inv i st n #aadlen aad #plainlen plain cipher_tag ak acc h0 h1 h2 h3 h4 =
   let cipher : lbuffer (v plainlen) = Buffer.sub cipher_tag 0ul plainlen in
   PRF_MAC.lemma_propagate_inv_enxor st n aad plain cipher_tag h0 h1;
-  (* assert (PRF_MAC.enxor_post st n aad plain cipher h1); *)
   FStar.Buffer.lemma_intro_modifies_0 h1 h2;
-  (* assert (PRF_MAC.accumulate_h0_h1 st n aad plain cipher h1 h2); *)
   PRF_MAC.lemma_propagate_inv_accumulate false st n aad plain cipher_tag h1 h2;
   PRF_MAC.lemma_propagate_inv_mac_wrapper st n aad plain cipher_tag ak h2 h3;
   PRF_MAC.reestablish_inv st n aad plain cipher_tag h3 h4 //needs some optimization
@@ -303,6 +290,6 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   then do_ideal st n aad plain cipher_tagged;
   let h_ideal = get () in
   reestablish_inv i st n aad plain cipher_tagged ak acc h_prf h_enxor h_acc h_mac h_ideal;
-  encrypt_write_effect i st n aad plain cipher_tagged ak acc h_init h_push h_prf h_enxor h_acc h_mac h_ideal;
+  encrypt_write_effect i st n aad plain cipher_tagged st.ak ak acc h_init h_push h_prf h_enxor h_acc h_mac h_ideal;
   frame_inv_pop st h_ideal;
   pop_frame()
