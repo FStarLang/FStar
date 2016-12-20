@@ -782,7 +782,7 @@ in (_164_493)::_164_492))
 in (FStar_Pprint.concat _164_494))
 in (FStar_Pprint.group _164_495))
 end
-| FStar_Parser_AST.Assume (q, i, t) -> begin
+| FStar_Parser_AST.Assume (i, t) -> begin
 (let _164_501 = (let _164_500 = (let _164_499 = (str "assume")
 in (let _164_498 = (let _164_497 = (let _164_496 = (str i.FStar_Ident.idText)
 in (_164_496)::(FStar_Pprint.hardline)::[])
@@ -794,7 +794,7 @@ end
 | FStar_Parser_AST.Tycon (q, tys) -> begin
 (let _164_509 = (let _164_508 = (let _164_507 = (str "type")
 in (let _164_506 = (let _164_505 = (let _164_504 = (let _164_503 = (str ", ")
-in (FStar_Pprint.separate_map _164_503 (fun _67_363 -> (match (_67_363) with
+in (FStar_Pprint.separate_map _164_503 (fun _67_362 -> (match (_67_362) with
 | (x, d) -> begin
 (doc_of_tycon x)
 end)) tys))
@@ -804,14 +804,14 @@ in (_164_507)::_164_506))
 in (FStar_Pprint.concat _164_508))
 in (FStar_Pprint.group _164_509))
 end
-| FStar_Parser_AST.Val (i, _67_366) -> begin
+| FStar_Parser_AST.Val (i, _67_365) -> begin
 (let _164_513 = (let _164_512 = (str "val ")
 in (let _164_511 = (let _164_510 = (str i.FStar_Ident.idText)
 in (_164_510)::(FStar_Pprint.hardline)::[])
 in (_164_512)::_164_511))
 in (FStar_Pprint.concat _164_513))
 end
-| FStar_Parser_AST.Exception (i, _67_371) -> begin
+| FStar_Parser_AST.Exception (i, _67_370) -> begin
 (let _164_517 = (let _164_516 = (str "exception ")
 in (let _164_515 = (let _164_514 = (str i.FStar_Ident.idText)
 in (_164_514)::(FStar_Pprint.hardline)::[])

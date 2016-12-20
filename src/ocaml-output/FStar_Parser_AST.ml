@@ -1410,7 +1410,7 @@ type decl' =
 | Pragma of pragma
 | Fsdoc of fsdoc
 | KindAbbrev of (FStar_Ident.ident * binder Prims.list * knd)
-| Assume of (qualifiers * FStar_Ident.ident * term) 
+| Assume of (FStar_Ident.ident * term) 
  and decl =
 {d : decl'; drange : FStar_Range.range; doc : fsdoc Prims.option; quals : qualifiers; attrs : attributes_} 
  and effect_decl =
@@ -2588,21 +2588,21 @@ end
 | Main (_61_899) -> begin
 "main ..."
 end
-| Assume (_61_902, i, _61_905) -> begin
+| Assume (i, _61_903) -> begin
 (Prims.strcat "assume " i.FStar_Ident.idText)
 end
-| Tycon (_61_909, tys) -> begin
-(let _158_1529 = (let _158_1528 = (FStar_All.pipe_right tys (FStar_List.map (fun _61_916 -> (match (_61_916) with
-| (x, _61_915) -> begin
+| Tycon (_61_907, tys) -> begin
+(let _158_1529 = (let _158_1528 = (FStar_All.pipe_right tys (FStar_List.map (fun _61_914 -> (match (_61_914) with
+| (x, _61_913) -> begin
 (id_of_tycon x)
 end))))
 in (FStar_All.pipe_right _158_1528 (FStar_String.concat ", ")))
 in (Prims.strcat "type " _158_1529))
 end
-| Val (i, _61_919) -> begin
+| Val (i, _61_917) -> begin
 (Prims.strcat "val " i.FStar_Ident.idText)
 end
-| Exception (i, _61_924) -> begin
+| Exception (i, _61_922) -> begin
 (Prims.strcat "exception " i.FStar_Ident.idText)
 end
 | (NewEffect (DefineEffect (i, _, _, _, _))) | (NewEffect (RedefineEffect (i, _, _))) -> begin
@@ -2611,13 +2611,13 @@ end
 | (NewEffectForFree (DefineEffect (i, _, _, _, _))) | (NewEffectForFree (RedefineEffect (i, _, _))) -> begin
 (Prims.strcat "new_effect_for_free " i.FStar_Ident.idText)
 end
-| SubEffect (_61_966) -> begin
+| SubEffect (_61_964) -> begin
 "sub_effect"
 end
-| Pragma (_61_969) -> begin
+| Pragma (_61_967) -> begin
 "pragma"
 end
-| Fsdoc (_61_972) -> begin
+| Fsdoc (_61_970) -> begin
 "fsdoc"
 end))
 
