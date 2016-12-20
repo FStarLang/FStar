@@ -221,14 +221,14 @@ let check_id id =
          else raise (FStar.Syntax.Syntax.Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
     else ()
 
+let at_most_one s r l = match l with
+  | [ x ] -> Some x
+  | [] -> None
+  | _ -> raise (FStar.Syntax.Syntax.Error (Util.format1 "At most one %s is allowed on declarations" s, r))
+
 let mk_decl d r decorations =
-  let at_most_one (s: string) (l: 'a list) = match l with
-    | [ x ] -> Some x
-    | [] -> None
-    | _ -> raise (FStar.Syntax.Syntax.Error (Util.format1 "At most one %s is allowed on declarations" s, r))
-  in
-  let doc = at_most_one "fsdoc" (List.choose (function Doc d -> Some d | _ -> None) decorations) in
-  let attributes_ = at_most_one "attribute set" (
+  let doc = at_most_one "fsdoc" r (List.choose (function Doc d -> Some d | _ -> None) decorations) in
+  let attributes_ = at_most_one "attribute set" r (
     List.choose (function DeclAttributes a -> Some a | _ -> None) decorations
   ) in
   let attributes_ = Util.dflt [] attributes_ in
