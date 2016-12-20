@@ -838,6 +838,23 @@ let found_entry (#i:id) (n:Cipher.iv (Cipher.algi i)) (st:aead_state i Reader)
 	 (as_plain q)
 	 (Buffer.as_seq h cipher_tagged))
 
+
+let find_fresh_iv_none (#i:id) (#r:rid)
+		       (st:aead_state i Reader)
+		       (iv:Cipher.iv (Cipher.algi i))
+		       (blocks:prf_table r i)
+		       (h:mem{safeMac i /\ (
+			      let aead_entries = HS.sel h (st_ilog st) in
+			      let x_1 = {iv=iv; ctr=otp_offset i} in
+			      ~(fresh_nonce iv aead_entries) /\
+			      all_above x_1 blocks)})
+		       (y:PRF.domain i)
+  : Lemma (requires (fresh_nonce y.iv (HS.sel h (st_ilog st))))
+          (ensures (PRF.find blocks y == None))
+  = assert (y.iv <> iv);
+    let x_1 = {iv=iv; ctr=otp_offset i} in
+    find_other_iv_all_above blocks x_1 y
+
 val dexor:
   #i:id ->
   st:aead_state i Reader ->
@@ -858,6 +875,7 @@ val dexor:
             len <> 0ul /\
 	    safelen i (v len) (otp_offset i) /\
             prf_contains_all_otp_blocks_st x_1 (v len) p cipher t h /\
+	    (safeMac i ==> ~(fresh_nonce iv (HS.sel h (st_ilog st)))) /\
 	    found_entry iv st aad cipher_tagged p h))
   (ensures (fun h0 _ h1 ->
   	    let x_1 = {iv=iv; ctr=otp_offset i} in
@@ -881,28 +899,25 @@ let dexor #i st iv #aadlen aad #len plain cipher_tagged p =
     frame_inv_modifies_1 (as_buffer plain) st h0 h1
   end
   else if safeMac i
-  then let _ : unit = 
-	   let aead_entries_0 = HS.sel #(aead_entries i) h0 st.log in
-	   let aead_entries_1 = HS.sel #(aead_entries i) h1 st.log in
-	   let prf_entries_1 = HS.sel h1 (PRF.itable i st.prf) in
-	   let prf_entries_0 = HS.sel h0 (PRF.itable i st.prf) in
-	   assert (aead_entries_1 == aead_entries_0);
-	   assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h1);
-	   assert (fresh_nonces_are_unused prf_entries_0 aead_entries_1 h0);
-	   let open FStar.Classical in
-	   let h0':(h:mem{safeMac i}) = h0 in
-	   let h1':(h:mem{safeMac i}) = h1 in
-	   forall_intro (move_requires (frame_unused_aead_iv_for_prf_h h0' h1 prf_entries_0));
-	   assert (forall (iv:Cipher.iv (alg i)).{:pattern (fresh_nonce iv aead_entries_1)}
-                     fresh_nonce iv aead_entries_1 ==>
-                     unused_aead_iv_for_prf prf_entries_0 iv h1);
-	   let blocks = Seq.slice prf_entries_1 (Seq.length prf_entries_0) (Seq.length prf_entries_1) in
-	   assume (prf_entries_1 == Seq.append prf_entries_0 blocks); //AR: this is a simpler Seq proof
-	   assume (forall (y:PRF.domain i). fresh_nonce y.iv aead_entries_1 ==> PRF.find blocks y == None); //AR: we should be able to prove this. We know that iv for all entries in the blocks is iv, and iv is not fresh in the table (found is a precondition).
-	   forall_intro (move_requires (frame_unused_aead_iv_for_prf_append prf_entries_0 blocks h1'));
-	   assert (fresh_nonces_are_unused prf_entries_1 aead_entries_1 h1)
-       in 
-       ()
-  else ()
-
-//NS: this is provable with a bit of work; basically, we know the mac is already used since verify succeeded and we only modified entries for that nonce, so we didn't impact any fresh nonces
+  then //re-establishing the invariant takes a bit of work;
+       //basically, we know the iv is not fresh since verify succeeded
+       //and we only modified entries for that iv, so we didn't impact any fresh nonces
+       let aead_entries_0 = HS.sel #(aead_entries i) h0 st.log in
+       let aead_entries_1 = HS.sel #(aead_entries i) h1 st.log in
+       let prf_entries_1 = HS.sel h1 (PRF.itable i st.prf) in
+       let prf_entries_0 = HS.sel h0 (PRF.itable i st.prf) in
+       assert (aead_entries_1 == aead_entries_0);
+       assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h1);
+       assert (fresh_nonces_are_unused prf_entries_0 aead_entries_1 h0);
+       let open FStar.Classical in
+       let h0':(h:mem{safeMac i}) = h0 in
+       let h1':(h:mem{safeMac i}) = h1 in
+       forall_intro (move_requires (frame_unused_aead_iv_for_prf_h h0' h1 prf_entries_0));
+       assert (forall (iv:Cipher.iv (alg i)).{:pattern (fresh_nonce iv aead_entries_1)}
+               fresh_nonce iv aead_entries_1 ==>
+               unused_aead_iv_for_prf prf_entries_0 iv h1);
+       let blocks = Seq.slice prf_entries_1 (Seq.length prf_entries_0) (Seq.length prf_entries_1) in
+       assert (Seq.equal prf_entries_1 (Seq.append prf_entries_0 blocks)); //AR: this is a simpler Seq proof
+       forall_intro (move_requires (find_fresh_iv_none st iv blocks h1));
+       forall_intro (move_requires (frame_unused_aead_iv_for_prf_append prf_entries_0 blocks h1'));
+       assert (fresh_nonces_are_unused prf_entries_1 aead_entries_1 h1)

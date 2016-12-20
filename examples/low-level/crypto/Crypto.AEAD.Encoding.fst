@@ -45,11 +45,10 @@ type txtlen_32 = l:UInt32.t {l <=^ txtmax}
 //16-09-18 where is it in the libraries?
 private let min (a:nat) (b:nat) : nat = if a <= b then a else b
 
-//16-10-16 TODO in SeqProperties
-assume val lemma_append_cons_snoc: #a:Type -> u: Seq.seq a -> x:a -> v:Seq.seq a -> Lemma
+assume val lemma_append_cons_snoc: #a:Type -> u: Seq.seq a -> x:a -> v:Seq.seq a -> Lemma //16-10-16 TODO in SeqProperties
   (Seq.append u (SeqProperties.cons x v) == Seq.append (SeqProperties.snoc u x) v)
 
-assume val lemma_append_slices: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> Lemma
+assume val lemma_append_slices: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> Lemma //16-10-16 TODO in SeqProperties
   ( s1 == Seq.slice (Seq.append s1 s2) 0 (Seq.length s1) /\
     s2 == Seq.slice (Seq.append s1 s2) (Seq.length s1) (Seq.length s1 + Seq.length s2) /\
     (forall (i:nat) (j:nat).
@@ -59,8 +58,7 @@ assume val lemma_append_slices: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> Lemma
 val lemma_append_nil: #a:_ -> s:Seq.seq a -> Lemma (s == Seq.append s Seq.createEmpty)
 let lemma_append_nil #a s = assert (Seq.equal s (Seq.append s Seq.createEmpty))
 
-//16-12-15 TODO in libraries
-assume val lemma_big_endian_inj: b:word -> b':word 
+assume val lemma_big_endian_inj: b:word -> b':word  //16-12-15 TODO in libraries
   {Seq.length b = Seq.length b'} -> Lemma
   (requires (big_endian b = big_endian b'))
   (ensures (b == b'))
@@ -472,10 +470,10 @@ let accumulate #i st aadlen aad txtlen cipher  =
 
       //16-12-15 can't prove Buffer.modifies_0 from current CMA posts?
       assert(HS.modifies_one h.tip h h0);
-      assume(HS.modifies_one h.tip h0 h2);
+      assume(HS.modifies_one h.tip h0 h2); //NS: cf. issue #788
       assert(HS.modifies_one h.tip h2 h3);
       assert(HS.modifies_one h.tip h3 h4);
-      assume(HS.modifies_one h.tip h4 h5);
+      assume(HS.modifies_one h.tip h4 h5); //NS: cf. issue #788
       assert(HS.modifies_one h.tip h h5);
       assert(Buffer.modifies_buf_0 h.tip h h5);
       Buffer.lemma_intro_modifies_0 h h5

@@ -594,7 +594,7 @@ val verify : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader ->
 		    verify_liveness PRF.(st.prf.mac_rgn) ak tag h /\
 		    EncodingWrapper.accumulate_ensures ak aad #plainlen cipher h_init acc h /\
 		    inv st h /\
-		    (safeId i ==> is_mac_for_iv st ak h)))
+		    (safeMac i ==> is_mac_for_iv st ak h)))
             (ensures (fun h0 popt h1 -> 
 		    let cipher = Buffer.sub cipher_tagged 0ul plainlen in
 		    let x1 = {iv=n; ctr=otp_offset i} in
@@ -602,15 +602,18 @@ val verify : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader ->
     		    enc_dec_liveness st aad plain cipher_tagged h1 /\
     		    inv st h1 /\
     		    acc_ensures_weak ak aad #plainlen cipher h_init acc h1 /\
-		    (safeId i ==> 
+		    (safeMac i ==> 
 			(match popt with 
 			 | None -> True
 			 | Some p ->
-			   prf_contains_all_otp_blocks x1 0 
+			   let aead_entries = HS.sel h1 (st_ilog st) in
+			  ~ (fresh_nonce n aead_entries) /\
+                            (safeId i ==> 
+			       prf_contains_all_otp_blocks x1 0 
 						    (as_plain p)
 						    (Buffer.as_seq h1 cipher) 
 						    (HS.sel h1 (PRF.itable i st.prf)) /\
-  		           found_entry n st aad cipher_tagged p h1))))
+  			       found_entry n st aad cipher_tagged p h1)))))
 #reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let verify #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc h_init = 
   let open CMA in
@@ -626,5 +629,6 @@ let verify #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc h_init =
   Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.abuf acc)) h0 h1;
   if b 
   then let p = get_verified_plain st aad plain cipher_tagged ak acc true in
+       assume (safeMac i ==> ~ (fresh_nonce n (HS.sel h1 (st_ilog st))));
        Some p
   else None
