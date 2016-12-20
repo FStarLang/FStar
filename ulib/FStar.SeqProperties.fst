@@ -680,3 +680,18 @@ let append_slices (#a:Type) (s1:Seq.seq a) (s2:Seq.seq a)
 		Seq.equal (Seq.slice s2 i j) 
 			  (Seq.slice (Seq.append s1 s2) (Seq.length s1 + i) (Seq.length s1 + j))))
    = ()       
+
+
+val find_l_none_no_index (#a:Type) (s:Seq.seq a) (f:(a -> Tot bool)) :
+  Lemma (requires (None? (find_l f s)))
+        (ensures (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i))))
+	(decreases (Seq.length s))
+#reset-options
+let rec find_l_none_no_index #a s f =
+  if Seq.length s = 0
+  then ()
+  else (assert (not (f (head s)));
+        assert (None? (find_l f (tail s)));
+        find_l_none_no_index (tail s) f;
+	assert (Seq.equal s (cons (head s) (tail s)));
+	find_append_none (create 1 (head s)) (tail s) f)

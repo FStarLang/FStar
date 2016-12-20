@@ -756,13 +756,6 @@ val lemma_mac_log_framing
 let lemma_mac_log_framing #i nonce_1 mac_st_1 h0 h1 nonce_2 mac_st_2 = ()
 #set-options "--initial_ifuel 0 --max_ifuel 0"
 
-let lemma_find_l_exists_index
-  (#a:Type)
-  (s:Seq.seq a)
-  (f:(a -> Tot bool)) : Lemma
-  (None? (SeqProperties.find_l f s) ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i))))
-  = admit () //NS: generic sequence lemma needs proving
-
 let lemma_fresh_nonce_implies_all_entries_nonces_are_different
   (#i:id)
   (aead_entries:aead_entries i)
@@ -771,10 +764,9 @@ let lemma_fresh_nonce_implies_all_entries_nonces_are_different
   (ensures  (forall (e:aead_entry i).{:pattern (aead_entries `SeqProperties.contains` e)}
 	        aead_entries `SeqProperties.contains` e ==> e.nonce <> nonce))
   = let open FStar.Classical in
-    lemma_find_l_exists_index aead_entries (is_aead_entry_nonce nonce);
+    move_requires (SeqProperties.find_l_none_no_index aead_entries) (is_aead_entry_nonce nonce);
     forall_intro (SeqProperties.contains_elim aead_entries)
 
-(*  *)
 let mac_wrapper_h0_h1
   (#i:id)
   (#rw:rw)
