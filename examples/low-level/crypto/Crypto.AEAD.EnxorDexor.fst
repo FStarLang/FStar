@@ -866,6 +866,7 @@ val dexor:
 	    inv st h1 /\
 	    decrypt_ok iv st aad plain cipher_tagged h1))
 #reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+open Crypto.AEAD.Encoding 
 let dexor #i st iv #aadlen aad #len plain cipher_tagged p =
   let x_1 = {iv=iv; ctr=otp_offset i} in
   let t = st.prf in
@@ -878,11 +879,30 @@ let dexor #i st iv #aadlen aad #len plain cipher_tagged p =
   then begin
     FStar.Buffer.lemma_reveal_modifies_1 (as_buffer plain) h0 h1;
     frame_inv_modifies_1 (as_buffer plain) st h0 h1
-  end 
-  else if safeMac i 
+  end
+  else if safeMac i
   then let _ : unit = 
-	   let aead_entries = HS.sel h1 st.log in 
-	   let prf_entries = HS.sel h1 (PRF.itable i st.prf) in
-	   assume (fresh_nonces_are_unused prf_entries aead_entries h1) in //NS: this is provable with a bit of work; basically, we know the mac is already used since verify succeeded and we only modified entries for that nonce, so we didn't impact any fresh nonces
-       ()	   
+	   let aead_entries_0 = HS.sel #(aead_entries i) h0 st.log in
+	   let aead_entries_1 = HS.sel #(aead_entries i) h1 st.log in
+	   let prf_entries_1 = HS.sel h1 (PRF.itable i st.prf) in
+	   let prf_entries_0 = HS.sel h0 (PRF.itable i st.prf) in
+	   assert (aead_entries_1 == aead_entries_0);
+	   assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h1);
+	   assert (fresh_nonces_are_unused prf_entries_0 aead_entries_1 h0);
+	   let open FStar.Classical in
+	   let h0':(h:mem{safeMac i}) = h0 in
+	   let h1':(h:mem{safeMac i}) = h1 in
+	   forall_intro (move_requires (frame_unused_aead_iv_for_prf_h h0' h1 prf_entries_0));
+	   assert (forall (iv:Cipher.iv (alg i)).{:pattern (fresh_nonce iv aead_entries_1)}
+                     fresh_nonce iv aead_entries_1 ==>
+                     unused_aead_iv_for_prf prf_entries_0 iv h1);
+	   let blocks = Seq.slice prf_entries_1 (Seq.length prf_entries_0) (Seq.length prf_entries_1) in
+	   assume (prf_entries_1 == Seq.append prf_entries_0 blocks); //AR: this is a simpler Seq proof
+	   assume (forall (y:PRF.domain i). fresh_nonce y.iv aead_entries_1 ==> PRF.find blocks y == None); //AR: we should be able to prove this. We know that iv for all entries in the blocks is iv, and iv is not fresh in the table (found is a precondition).
+	   forall_intro (move_requires (frame_unused_aead_iv_for_prf_append prf_entries_0 blocks h1'));
+	   assert (fresh_nonces_are_unused prf_entries_1 aead_entries_1 h1)
+       in 
+       ()
   else ()
+
+//NS: this is provable with a bit of work; basically, we know the mac is already used since verify succeeded and we only modified entries for that nonce, so we didn't impact any fresh nonces

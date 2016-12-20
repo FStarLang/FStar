@@ -156,7 +156,7 @@ let encrypt_write_effect i st n #aadlen aad #plainlen plain cipher_tag ak acc
   let tag : lbuffer (v MAC.taglen) = Buffer.sub cipher_tag plainlen MAC.taglen in
   let x_1 = {iv=n; ctr=otp_offset i} in
   let mac_region = PRF.(st.prf.mac_rgn) in
-  assume (safeMac i ==>  (
+  assume (safeMac i ==>  (                                 //NS, TODO: need some framing on the aead log, should be easy
     HS.sel h_init (st_ilog st) == HS.sel h_mac (st_ilog st)));
   Enxor.weaken_modifies st.prf x_1 cipher h_prf h_enx;
   CMAWrapper.weaken_mac_modifies i n tag ak acc h_acc h_mac;
@@ -252,19 +252,13 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   Enxor.enxor n st aad plain cipher_tagged ak;
   let h_enxor = get () in
   
-  (* assume (EncodingWrapper.ak_aad_cipher_separate ak aad cipher_tagged); //slow *)
-
   //call accumulate: encode the ciphertext and additional data for mac'ing
   let acc = EncodingWrapper.accumulate_enc #(i, n) st ak aad plain cipher_tagged in
   let h_acc = get () in
 
-  (* assume(verify_liveness ak tag h_acc); //slow *)
-
   //call mac: filling in the tag component of the out buffer
   CMAWrapper.mac #(i,n) st aad plain cipher_tagged ak acc h_enxor;
   let h_mac = get () in
-
-  (* assert (safeMac i ==> fresh_nonce_st n st h_mac); *)
 
   if safeMac i
   then do_ideal st n aad plain cipher_tagged;

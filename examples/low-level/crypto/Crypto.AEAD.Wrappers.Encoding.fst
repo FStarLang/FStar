@@ -132,15 +132,16 @@ let accumulate_enc #i #rw aead_st ak #aadlen aad #txtlen plain cipher_tagged =
     FStar.Buffer.lemma_reveal_modifies_0 h0 h1;
     acc
 
-let accumulate (#i: id) (#rw:rw) (#n:Cipher.iv (Cipher.algi i)) (aead_st:aead_state i rw)
-	       (ak: CMA.state (i, n)) (#aadlen:aadlen_32) (aad:lbuffer (v aadlen))
-	       (#txtlen:txtlen_32) (plain:plainBuffer i (v txtlen)) (cipher_tagged:lbuffer (v txtlen + v MAC.taglen))
-   : StackInline (CMA.accBuffer (i, n))
+val accumulate (#i: mac_id) (#rw:rw) (aead_st:aead_state (fst i) rw)
+	       (ak: CMA.state i) (#aadlen:aadlen_32) (aad:lbuffer (v aadlen))
+	       (#txtlen:txtlen_32) (plain:plainBuffer (fst i) (v txtlen)) 
+	       (cipher_tagged:lbuffer (v txtlen + v MAC.taglen))
+   : StackInline (CMA.accBuffer i)
       (requires (fun h0 -> 
 	  enc_dec_separation aead_st aad plain cipher_tagged /\
 	  enc_dec_liveness aead_st aad plain cipher_tagged h0 /\ 
 	  PRF_MAC.ak_live PRF.(aead_st.prf.mac_rgn) ak h0 /\
-	  (safeId i ==> is_mac_for_iv aead_st ak h0) /\
+	  (CMA.authId i ==> is_mac_for_iv #(fst i) #rw #(snd i) aead_st ak h0) /\
 	  inv aead_st h0))
       (ensures (fun h0 acc h1 ->  
 	  let tag : lbuffer (v MAC.taglen) = Buffer.sub cipher_tagged txtlen MAC.taglen in
@@ -148,21 +149,20 @@ let accumulate (#i: id) (#rw:rw) (#n:Cipher.iv (Cipher.algi i)) (aead_st:aead_st
       	  ak_acc_tag_separate ak acc tag /\
 	  enc_dec_liveness aead_st aad plain cipher_tagged h1 /\ 
 	  PRF_MAC.ak_live PRF.(aead_st.prf.mac_rgn) ak h1 /\
-  	  (safeId i ==> is_mac_for_iv aead_st ak h1) /\
+  	  (CMA.authId i ==> is_mac_for_iv #(fst i) #rw #(snd i) aead_st ak h1) /\
           inv aead_st h1 /\
 	  accumulate_modifies_nothing h0 h1 /\
 	  accumulate_ensures ak aad cipher h0 acc h1))
-  = let h0 = get () in
+let accumulate #i #rw aead_st ak #aadlen aad #txtlen plain cipher_tagged =
+    let h0 = get () in
     let cipher : lbuffer (v txtlen) = Buffer.sub cipher_tagged 0ul txtlen in
-    let acc = accumulate #(i, n) ak aadlen aad txtlen cipher in
+    let acc = accumulate ak aadlen aad txtlen cipher in
     let h1 = get () in
     assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.abuf acc)) (CMA.(ak.s)) cipher);
     assume (mac_log ==> fresh_sref h0 h1 (CMA.alog acc)); //NS: this goes away when Encoding.accumulate is restored
     assume (fresh_sref h0 h1 (Buffer.content (MAC.as_buffer (CMA.abuf acc))));
     FStar.Buffer.lemma_reveal_modifies_0 h0 h1;
     frame_inv_modifies_tip aead_st h0 h1;
-    assert (accumulate_ensures' ak aad cipher h0 acc h1);
-    assume (accumulate_ensures ak aad cipher h0 acc h1); //NS:weirdness, can prove something equivalent up to unfolding
-    admit(); //TODO: need to sort this out once Encoding stabilizes
+    assert (accumulate_ensures ak aad cipher h0 acc h1);
     acc
 

@@ -111,7 +111,7 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let ak = PRF_MAC.prf_mac_dec st aad plain cipher_tagged st.ak x_0 in   // used for keying the one-time MAC
   let h1 = get() in
   // First recompute and check the MAC
-  let acc = EncodingWrapper.accumulate st ak aad plain cipher_tagged in
+  let acc = EncodingWrapper.accumulate #(i,iv) st ak aad plain cipher_tagged in
   let h2 = get () in
   let popt = CMAWrapper.verify st aad plain cipher_tagged ak acc h1 in
   let h3 = get () in
