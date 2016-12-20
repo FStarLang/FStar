@@ -54,6 +54,7 @@ and flag =
   | Private
   | NoExtract
   | CInline
+  | Substitute
 
 and lifetime =
   | Eternal
@@ -324,6 +325,7 @@ and translate_flags flags =
     | Syntax.Private -> Some Private
     | Syntax.NoExtract -> Some NoExtract
     | Syntax.Attribute "c_inline" -> Some CInline
+    | Syntax.Attribute "substitute" -> Some Substitute
     | Syntax.Attribute a ->
         print1_warning "Warning: unrecognized attribute %s" a;
         None
