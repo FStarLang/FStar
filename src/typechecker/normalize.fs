@@ -893,17 +893,16 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     // Util.print2 "Will %sreify : %s \n" (if should_reify then "" else "not ") (stack_to_string stack);
 
                     if not should_reify
-                    then (*  We have an impure computation, and we aim to perform any pure steps within that computation.
-                             
-                             This scenario arises primarily as we extract (impure) programs and partially evaluate them
-                             before extraction, as an optimization.
-
-                             First, we reduce **the type annotation** t with an empty stack
-                             
-                             Then, we reduce the monadic computation `head`, in a stack marked with a Meta_monadic,
-                             indicating that this reduction should not consume any arguments on the stack. `rebuild`
-                             will notice the Meta_monadic marker and reconstruct the computation after normalization.
-                         *)
+                    then (*  We have an impure computation, and we aim to perform any pure steps within that computation.   *
+                          *                                                                                                 *
+                          *  This scenario arises primarily as we extract (impure) programs and partially evaluate them     *
+                          *  before extraction, as an optimization.                                                         *
+                          *                                                                                                 *
+                          *  First, we reduce **the type annotation** t with an empty stack                                 *
+                          *                                                                                                 *
+                          *  Then, we reduce the monadic computation `head`, in a stack marked with a Meta_monadic,         *
+                          *  indicating that this reduction should not consume any arguments on the stack. `rebuild`        *
+                          *  will notice the Meta_monadic marker and reconstruct the computation after normalization.       *)
                         let t = norm cfg env [] t in
                         let stack = Steps(cfg.steps, cfg.delta_level)::stack in
                         let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
@@ -913,8 +912,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     else
                         begin match (SS.compress head).n with
                             | Tm_let((false, [lb]), body) ->
-                                //this is M.bind
-                                //reify (M.bind e1 \x.e2) ~> M.bind_repr (reify e1) (\x. (reify e2))
+                                (******************************************************************************)
+                                (* Monadic binding                                                            *)
+                                (*                                                                            *)
+                                (* This is reify (M.bind e1 (fun x -> e2)) which is elaborated to             *)
+                                (*                                                                            *)
+                                (*        M.bind_repr (reify e1) (fun x -> reify e2)                          *)
+                                (*                                                                            *)
+                                (******************************************************************************)
                                 let ed = Env.get_effect_decl cfg.tcenv m in
                                 let _, bind_repr = ed.bind_repr in
                                 begin match lb.lbname with
@@ -940,7 +945,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                 end
                             | Tm_app (head, args) ->
                                 (******************************************************************************)
-                                (* monadic application                                                        *)
+                                (* Monadic application                                                        *)
                                 (*                                                                            *)
                                 (* Turn it into                                                               *)
                                 (*    let x0 = head in let x1 = arg0 in ... let xn = argn in x0 x1 ... xn     *)
@@ -956,34 +961,21 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                 let ed = Env.get_effect_decl cfg.tcenv m in
                                 let _, bind_repr = ed.bind_repr in
 
-                                //TODO: Maybe replace this with a recursive call to norm with delta_level = Delta_constant, in the case of an action, 
-                                //      and setting the stack to []
-                                //      Notice that this is not a tail call, but it's a bounded (small) number of recursive steps
                                 let maybe_unfold_action head =
-                                    let t, univs = match (SS.compress head).n with
-                                        | Tm_uinst (t, univs) -> t, univs
-                                        | _ -> head, []
+                                    let maybe_extract_fv t =
+                                        let t = match (SS.compress t).n with
+                                            | Tm_uinst (t, _) -> t
+                                            | _ -> head
+                                        in match (SS.compress t).n with
+                                            | Tm_fvar x -> Some x
+                                            | _ -> None
                                     in
-                                    match (SS.compress t).n with
-                                        | Tm_fvar x when Env.is_action cfg.tcenv (S.lid_of_fv x) ->
-                                            let r_env = Env.set_range cfg.tcenv (S.range_of_fv x) in //preserve the range info on the returned def
-                                            begin match Env.lookup_definition cfg.delta_level r_env (S.lid_of_fv x) with
-                                                | Some (univs0, t0) when List.length univs0 = List.length univs ->
-                                                    mk_Tm_uinst t0 univs, Some true
-
-                                                (* Re-reifying here would end up looping... *)
-                                                | None -> begin
-                                                    // Util.print "Case 0" [] ;
-                                                    head, Some false
-                                                  end
-
-                                                | Some (univs0, _) -> failwith (Util.format3 "Invalid universe instantiation \
-                                                                                   (%s universe variables needed, %s \
-                                                                                   provided, in term %s)"
-                                                                                   (string_of_int (List.length univs0))
-                                                                                   (string_of_int (List.length univs0))
-                                                                                   (Print.term_to_string head))
-                                            end
+                                    match maybe_extract_fv head with
+                                        | Some x when Env.is_action cfg.tcenv (S.lid_of_fv x) ->
+                                            // Notice that this is not a tail call, but it's a bounded (small) number of recursive steps
+                                            let head = norm cfg env [] head in
+                                            let action_unfolded = match maybe_extract_fv head with | Some _ -> Some true | _ -> Some false in
+                                            head, action_unfolded
                                         | _ -> begin
                                             //Util.print "Case 1" [] ;
                                             head, None
