@@ -534,7 +534,7 @@ val verify:
     verify_liveness st tag h0 /\
     Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) st.s tag))
   (ensures (fun h0 b h1 -> verify_ensures st acc tag h0 b h1))
-
+#reset-options "--z3rlimit 100"
 let verify #i st acc tag =
   if authId i then RR.m_recall #st.region #(log i) #(log_cmp #i) (ilog st.log);
   let h0 = ST.get () in

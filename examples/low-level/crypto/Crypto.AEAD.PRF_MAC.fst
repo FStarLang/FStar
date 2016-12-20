@@ -272,34 +272,50 @@ let frame_inv_prf_mac #i #rw aead_st k_0 x h0 h1 mac =
     frame_fresh_nonces_are_unused_prf_mac aead_st k_0 x h0 h1 mac
   end
 
-val prf_mac_wrapper
+val prf_mac_find_unchanged (#i:id) (#rw:rw) (aead_st:aead_state i rw)
+			   (k_0:CMA.akey aead_st.prf.mac_rgn i)
+			   (x:PRF.domain_mac i)
+			   (h0:mem) (h1:mem) (e:PRF.entry aead_st.prf.mac_rgn i)
+   : Lemma (requires (let open PRF in
+		      prf i /\ (
+		      let t0 = HS.sel h0 (itable i aead_st.prf) in
+		      let t1 = HS.sel h1 (itable i aead_st.prf) in
+		      e.x == x /\
+		      t1 == SeqProperties.snoc t0 e)))
+           (ensures (let open PRF in
+		     prf i /\ (
+		     let t0 = HS.sel h0 (itable i aead_st.prf) in
+		     let t1 = HS.sel h1 (itable i aead_st.prf) in
+		     forall (y:domain i). y <> x ==> PRF.find t0 y == PRF.find t1 y)))
+let prf_mac_find_unchanged #i #rw aead_st k_0 x h0 h1 e =
+  let t0 = HS.sel h0 (itable i aead_st.prf) in
+  let t1 = HS.sel h1 (itable i aead_st.prf) in  
+  let aux (y:domain i) : Lemma (y <> x ==> PRF.find t0 y == PRF.find t1 y) =
+    FStar.SeqProperties.find_snoc t0 e (is_entry_domain y) 
+  in
+  FStar.Classical.forall_intro aux
+
+(*+ prf_mac_0: 
+      Strengthening the spec of PRF.prf_mac to show that 
+      it leaves the table unchanged except at one location
+ *)      
+val prf_mac_0
   (#i:id)
   (#rw:rw)
   (aead_st:aead_state i rw)
   (k_0:CMA.akey aead_st.prf.mac_rgn i)
   (x:PRF.domain_mac i)
   : ST (CMA.state (i,x.iv))
-       (requires (fun h0 -> inv aead_st h0 /\
-                         (safeMac i ==> fresh_nonce_st x.iv aead_st h0)))
-       (ensures (fun h0 mac h1 -> prf_mac_ensures i aead_st.prf k_0 x h0 mac h1 /\
-			       inv aead_st h1 /\
-                               (safeMac i ==>
-			         (let table_1 = HS.sel h1 (itable i aead_st.prf) in
-				  fresh_nonce_st x.iv aead_st h1 /\
-				  unused_mac_exists table_1 x h1 /\
-				  none_above (PRF.incr i x) table_1)))) //adding this none_above clause to match the precondition of the next step in the encrypt function, it's easily provable from inv h1 and fresh_nonce x.iv h1
-let prf_mac_wrapper #i #rw aead_st k_0 x =
+       (requires (fun h0 -> True))
+       (ensures (fun h0 mac h1 -> prf_mac_ensures i aead_st.prf k_0 x h0 mac h1))
+let prf_mac_0 #i #rw aead_st k_0 x =
   let h0 = get () in
-  
   let mac = PRF.prf_mac i aead_st.prf k_0 x in
-
   let h1 = get () in
-  lemma_unused_mac_exists_after_prf_mac aead_st k_0 x mac h0 h1;
-  frame_inv_prf_mac aead_st k_0 x h0 h1 mac;
-  let _ =
-    if safeMac i then frame_fresh_nonce_st_prf_mac aead_st k_0 x h0 h1 mac x.iv
-    else ()
-  in
+  if prf i then begin
+     let open FStar.Classical in 
+     forall_intro (move_requires (prf_mac_find_unchanged aead_st k_0 x h0 h1))
+  end;
   mac
 
 let ak_live (#i:CMA.id) (r:rid) (ak:CMA.state i) (h:mem) = 
@@ -308,6 +324,9 @@ let ak_live (#i:CMA.id) (r:rid) (ak:CMA.state i) (h:mem) =
     Buffer.live h ak.s /\
     MAC.norm h ak.r
 
+(*+ prf_mac_enc:
+      A wrapper for PRF.prf_mac, specialized for its use in AEAD.Encrypt.encrypt
+**)      
 #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val prf_mac_enc
   (#i:id)
@@ -337,11 +356,17 @@ val prf_mac_enc
 		     none_above (PRF.incr i x) table_1))))
 let prf_mac_enc #i #rw aead_st #aadlen aad #len plain cipher_tagged k_0 x = 
  let h0 = get () in
- let ak = prf_mac_wrapper aead_st k_0 x in
- let h1 = get () in 
+ let ak = prf_mac_0 aead_st k_0 x in
+ let h1 = get () in
+ lemma_unused_mac_exists_after_prf_mac aead_st k_0 x ak h0 h1;
+ frame_inv_prf_mac aead_st k_0 x h0 h1 ak;
+ if safeMac i then frame_fresh_nonce_st_prf_mac aead_st k_0 x h0 h1 ak x.iv;
  BufferUtils.intro_prf_mac_modifies aead_st.log_region aead_st.prf.mac_rgn h0 h1;
  ak
 
+(*+ prf_mac_dec:
+      A wrapper for PRF.prf_mac, specialized for its use in AEAD.Decrypt.decrypt
+**)      
 val prf_mac_dec
   (#i:id)
   (#rw:rw)
@@ -363,11 +388,11 @@ val prf_mac_dec
 		   inv aead_st h1))
 let prf_mac_dec #i #rw aead_st #aadlen aad #len plain cipher_tagged k_0 x =
   let h0 = get () in
-  let mac = PRF.prf_mac i aead_st.prf k_0 x in
+  let ak = prf_mac_0 aead_st k_0 x in
   let h1 = get () in
-  frame_inv_prf_mac aead_st k_0 x h0 h1 mac;
+  frame_inv_prf_mac aead_st k_0 x h0 h1 ak;
   BufferUtils.intro_prf_mac_modifies aead_st.log_region aead_st.prf.mac_rgn h0 h1;
-  mac
+  ak
 
 #reset-options
 let post_prf_mac
