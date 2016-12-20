@@ -222,7 +222,7 @@ let check_id id =
     else ()
 
 let mk_decl d r decorations =
-  let at_most_one s = function
+  let at_most_one (s: string) (l: 'a list) = match l with
     | [ x ] -> Some x
     | [] -> None
     | _ -> raise (FStar.Syntax.Syntax.Error (Util.format1 "At most one %s is allowed on declarations" s, r))
