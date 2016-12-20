@@ -724,7 +724,7 @@ val lemma_mac_log_framing
   (mac_st_2:CMA.state (i, nonce_2){CMA.(mac_st_2.region) = CMA.(mac_st_1.region)}) : Lemma
   (requires (nonce_1 <> nonce_2                                       /\
              m_contains (CMA.(ilog mac_st_2.log)) h0                /\
-	     HS.modifies (Set.as_set [CMA.(mac_st_1.region)]) h0 h1 /\
+	     HS.(h1.h `Map.contains` CMA.(mac_st_2.region))          /\
              HS.modifies_ref (CMA.(mac_st_1.region)) !{HS.as_ref (as_hsref (CMA.(ilog mac_st_1.log)))} h0 h1))
   (ensures  (m_sel h0 (CMA.(ilog mac_st_2.log)) = m_sel h1 (CMA.(ilog mac_st_2.log))))
 #set-options "--initial_ifuel 1 --max_ifuel 1"
@@ -749,7 +749,7 @@ let lemma_fresh_nonce_implies_all_entries_nonces_are_different
     lemma_find_l_exists_index aead_entries (is_aead_entry_nonce nonce);
     forall_intro (SeqProperties.contains_elim aead_entries)
 
-(* #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
+(*  *)
 let mac_wrapper_h0_h1
   (#i:id)
   (#rw:rw)
@@ -768,6 +768,7 @@ let mac_wrapper_h0_h1
   HS.(is_stack_region h1.tip) /\  
   enxor_and_maybe_mac false aead_st nonce aad plain ct h0 /\
   enc_dec_liveness_and_separation aead_st aad plain ct h1 /\
+  CMA.(mac_st.region = aead_st.prf.mac_rgn) /\
   (safeMac i ==>  (
     let prf_table_1 = HS.sel h1 (itable i aead_st.prf) in
     HS.modifies (Set.as_set [h0.tip; aead_st.prf.mac_rgn; Buffer.frameOf ct]) h0 h1 /\
@@ -810,7 +811,7 @@ let frame_aead_entries_are_refined_mac_wrapper #i #rw #aadlen #plainlen aead_st 
     let h1: (h:HS.mem{safeId i}) = h1 in
     let aux (e:aead_entry i) : Lemma
     	(requires (entries_1 `contains` e))
-	(ensures (refines_one_entry table_1 e h1)) =  //This proof is rather indirect; could be spelled out more
+	(ensures (refines_one_entry table_1 e h1)) =  //TODO: This proof is rather indirect; could be spelled out more
 	lemma_fresh_nonce_implies_all_entries_nonces_are_different entries_1 nonce in
     FStar.Classical.(forall_intro (move_requires aux))
   end
@@ -834,7 +835,7 @@ val frame_unused_aead_id_for_prf_mac_wrapper
 	     nonce <> nonce'))
   (ensures  (let table_0 = HS.sel h0 (itable i aead_st.prf) in
              unused_aead_iv_for_prf table_0 nonce' h1))
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let frame_unused_aead_id_for_prf_mac_wrapper #i #rw #aadlen #plainlen aead_st nonce aad plain ct mac_st h0 h1 nonce' =
    let dom_0 = {iv=nonce'; ctr=PRF.ctr_0 i} in
    let prf_table = HS.sel h0 (itable i aead_st.prf) in
@@ -843,8 +844,8 @@ let frame_unused_aead_id_for_prf_mac_wrapper #i #rw #aadlen #plainlen aead_st no
     | None           -> ()
     | Some mac_range -> 
       assert (CMA.mac_is_unset (i, nonce') aead_st.prf.mac_rgn mac_range h0);
-      assume (CMA.(mac_st.region) == aead_st.prf.mac_rgn);
-      assume (CMA.mac_is_unset (i, nonce') aead_st.prf.mac_rgn mac_range h1))//NS:TODO make use of the nonce indexing here
+      MAC.frame_norm h0 h1 CMA.(mac_range.r);
+      lemma_mac_log_framing nonce mac_st h0 h1 nonce' mac_range)
 
 #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"      
 val frame_unused_aead_id_for_prf_mac_wrapper_forall
@@ -957,20 +958,6 @@ let safeMac_ideal_writes
 				 (Plain.sel_plain h0 plainlen plain) 
 				 (Buffer.as_seq h0 ct))
    else h0 == h1)
-
-(* let final_h0_h1 *)
-(*   (#i:id) *)
-(*   (#rw:rw) *)
-(*   (#aadlen:aadlen_32) *)
-(*   (#plainlen:txtlen_32{plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)}) *)
-(*   (aead_st:aead_state i rw) *)
-(*   (nonce:Cipher.iv (alg i)) *)
-(*   (aad:lbuffer (v aadlen)) *)
-(*   (plain:plainBuffer i (v plainlen)) *)
-(*   (ct:ctagbuf plainlen) *)
-(*   (h0 h1:mem) = *)
-(*   enxor_and_maybe_mac true aead_st nonce aad plain ct h0 /\ *)
-(*   safeMac_ideal_writes aead_st nonce aad plain ct h0 h1 *)
 
 val frame_ideal_writes
   (#i:id)
