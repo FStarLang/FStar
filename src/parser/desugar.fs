@@ -1547,8 +1547,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
   | ModuleAbbrev(x, l) -> 
     DesugarEnv.push_module_abbrev env x l, []
 
-  | Tycon(quals, tcs) ->
-    let quals = d.quals in
+  | Tycon(is_effect, tcs) ->
+    let quals = if is_effect then AST.Effect :: d.quals else d.quals in
     let tcs = List.map (fun (x,_) -> x) tcs in
     desugar_tycon env d.drange (trans_quals quals) tcs
 

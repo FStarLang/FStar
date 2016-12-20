@@ -516,7 +516,7 @@ let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
 
 let has_simple_attribute (l: list<term>) s =
-  List.exists (function
+  List.existsb (function
     | { n = Tm_constant (Const_string (data, _)) } when string_of_unicode data = s ->
         true
     | _ ->

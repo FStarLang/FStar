@@ -153,7 +153,7 @@ type qualifier =
 
 type qualifiers = list<qualifier>
 
-type attributes = list<term>
+type attributes_ = list<term>
 type decoration =
   | Qualifier of qualifier
   | DeclAttributes of list<term>
@@ -200,7 +200,7 @@ and decl = {
   drange:range;
   doc:option<fsdoc>;
   quals: qualifiers;
-  attrs: attributes
+  attrs: attributes_
 }
 and effect_decl =
   | DefineEffect   of ident * list<binder> * term * list<decl> * list<decl>
@@ -228,12 +228,12 @@ let mk_decl d r decorations =
     | _ -> raise (FStar.Syntax.Syntax.Error (Util.format1 "At most one %s is allowed on declarations" s, r))
   in
   let doc = at_most_one "fsdoc" (List.choose (function Doc d -> Some d | _ -> None) decorations) in
-  let attributes = at_most_one "attribute set" (
+  let attributes_ = at_most_one "attribute set" (
     List.choose (function DeclAttributes a -> Some a | _ -> None) decorations
   ) in
-  let attributes = Util.dflt [] attributes in
+  let attributes_ = Util.dflt [] attributes_ in
   let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
-  { d=d; drange=r; doc=doc; quals=qualifiers; attrs=attributes }
+  { d=d; drange=r; doc=doc; quals=qualifiers; attrs=attributes_ }
 
 let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
 let mk_term t r l = {tm=t; range=r; level=l}
