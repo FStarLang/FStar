@@ -237,6 +237,12 @@ let lemma_mod_plus a b p =
   let y = a - p * (a / p) in
   lemma_eq_trans_2 w x y z
 
+val lemma_mod_sub_0: a:pos -> Lemma ((-1) % a = a - 1)
+let lemma_mod_sub_0 a = ()
+val lemma_mod_sub_1: a:pos -> b:pos{a < b} -> Lemma ((-a) % b = b - (a%b))
+let lemma_mod_sub_1 a b = ()
+
+
 private let lemma_mod_mul_distr_l_0 (a:nat) (b:nat) (p:pos) : Lemma
   ((((a % p) + (a / p) * p) * b) % p = ((a % p) * b + ((a / p) * b) * p) % p)
   = ()
