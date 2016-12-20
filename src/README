@@ -25,3 +25,16 @@ implement a new function for the [List] module.
 - ../ulib/list.fsti (be a good F* citizen)
 - ../ulib/ml/FStar_List.ml (same)
 - ../ulib/FStar.List.fst (same)
+
+Another example, this time from the [Pprint] library. This is a different 
+situation from [List] above, in that the F* file is just declaring types 
+and function, we don't want to prove anything about the F* code, and the 
+main implementations are the OCaml and F# ones: 
+- prettyprint/prettyprint.fsti (F* interface file declaring types and functions);
+- prettyprint/prettyprint.{fs,fsi} (F# implementation of the fsti interface);
+- prettyprint/ml/FStar.Pprint.ml (OCaml implementation, has same module name as F* one)
+To build this:
+- Add the fsti file to src/Makefile's ALL_INTERFACES;
+- Build the {fs,fsi} files as part of the VS solution;
+- Add FStar_Pprint.cmx to src/ocaml-output/Makefile's FSTAR_OBJS. 
+

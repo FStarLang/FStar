@@ -232,6 +232,8 @@ type qualifier =
   | ExceptionConstructor                   //a constructor of Prims.exn
   | HasMaskedEffect                        //a let binding that may have a top-level effect
   | Effect                                 //qualifier on a name that corresponds to an effect constructor
+  | OnlyName                               //qualifier internal to the compiler indicating a dummy declaration which
+                                           //is present only for name resolution and will be elaborated at typechecking
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {
@@ -291,7 +293,7 @@ and sigelt =
                        * binders                   //(x1:t1) ... (xn:tn)
                        * typ                       //t
                        * list<lident>              //mutually defined types
-                       * list<lident>              //data constructors for ths type
+                       * list<lident>              //data constructors for this type
                        * list<qualifier>
                        * Range.range
 // JP: the comment below seems out of date -- Sig_tycons is gone?!

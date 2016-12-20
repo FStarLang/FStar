@@ -2,7 +2,11 @@ module Bijection
 
 (* Definition of the bijection properties *)
 type injection (#a:Type) (#b:Type) (f:a -> Tot b) = 
-  (forall (x:a) (y:a).{:pattern ((f x);(f y))} f x == f y ==> x == y)
+  (forall (x:a) (y:a). f x == f y ==> x == y)
+  (* (forall (x:a) (y:a).{:pattern (f x);(f y)} f x == f y ==> x == y) *)
+  (* CH: this pattern seems dangerous (used to have parenthesis around
+         "(f x);(f y)", but that caused warning -- probably not parsed well)*)
+
 irreducible type trigger (#a: Type) (x:a) = True
 type surjection (#a:Type)(#b:Type) (f:a -> Tot b) = 
   (forall (y:b). {:pattern (trigger y)} (exists (x:a). f x == y))

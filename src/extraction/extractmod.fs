@@ -78,7 +78,9 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
               let g, mlm = extract_sig g se in
               let is_record = Util.for_some (function RecordType _ -> true | _ -> false) quals in
               match Util.find_map quals (function Discriminator l -> Some l |  _ -> None) with
-                  | Some l when (not is_record) -> g, [MLM_Loc (Util.mlloc_of_range r); ExtractExp.ind_discriminator_body g lid l] //records are single constructor types; there should be no discriminators for them
+                  | Some l when (not is_record) ->
+                      //records are single constructor types; there should be no discriminators for them
+                      g, [MLM_Loc (Util.mlloc_of_range r); ExtractExp.ind_discriminator_body g lid l]
                   | _ ->
                     begin match Util.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
                         | Some _ -> g, [] //records are extracted as ML records; no projectors for them

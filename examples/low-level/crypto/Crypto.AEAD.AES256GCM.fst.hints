@@ -102,7 +102,6 @@
         "primitive_Prims.op_Subtraction", "primitive_Prims.op_disEquality",
         "proj_equation_FStar.Buffer.MkBuffer_content",
         "proj_equation_FStar.Buffer.MkBuffer_idx",
-        "proj_equation_FStar.Buffer.MkBuffer_max_length",
         "proj_equation_FStar.HyperStack.HS_h",
         "proj_equation_FStar.HyperStack.HS_tip",
         "proj_equation_FStar.UInt32.Mk_v",

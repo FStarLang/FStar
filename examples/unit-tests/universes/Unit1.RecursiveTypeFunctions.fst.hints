@@ -14,6 +14,7 @@
       ],
       0
     ],
+    [ "Unit1.RecursiveTypeFunctions.uu___is_T", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.RecursiveTypeFunctions.__proj__T__item___0",
       1,
@@ -26,6 +27,7 @@
       ],
       0
     ],
+    [ "Unit1.RecursiveTypeFunctions.uu___is_TofS", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.RecursiveTypeFunctions.__proj__TofS__item___0",
       1,
@@ -38,6 +40,7 @@
       ],
       0
     ],
+    [ "Unit1.RecursiveTypeFunctions.uu___is_S", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.RecursiveTypeFunctions.__proj__S__item___0",
       1,
@@ -50,6 +53,7 @@
       ],
       0
     ],
+    [ "Unit1.RecursiveTypeFunctions.uu___is_SofT", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.RecursiveTypeFunctions.__proj__SofT__item___0",
       1,

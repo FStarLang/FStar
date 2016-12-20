@@ -1966,7 +1966,7 @@ recordExp:
       ( mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr )}
 
 simpleDef:
-  qlident EQUALS simpleTerm
+  qlident EQUALS noSeqTerm
     {let (x0, _20, y0) = ($1, (), $3) in
 let e =
   let y = y0 in
@@ -1974,7 +1974,7 @@ let e =
   let x = x0 in
       ( (x, y) )
 in
-                                                  ( e )}
+                                                 ( e )}
 
 appTerm:
   indexingTerm list_argTerm_

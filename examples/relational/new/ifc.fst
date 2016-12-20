@@ -3,9 +3,11 @@ module Ifc
 open Rel
 open WhileLanguage
 open FStar.Heap
+open FStar.Classical
 
 (****************************** Preliminaries ******************************)
 
+(* CH: Everything specialized to 2-point lattice *)
 type label =
 | Low
 | High
@@ -22,6 +24,12 @@ let op_Less_Equals l1 l2 =
   | High,Low -> false
   | _, _ -> true
 
+val join : label -> label -> Tot label
+let join l1 l2 =
+  match l1, l2 with
+  | Low,Low -> Low
+  | _, _ -> High
+
 type label_fun = ref int -> Tot label
 
 type low_equiv (env:label_fun) (h1:rel heap) = 
@@ -37,7 +45,7 @@ type low_equiv (env:label_fun) (h1:rel heap) =
 *)
 
 type ni_exp (env:label_fun) (e:exp) (l:label) = 
-  forall (h: (rel heap)).
+  forall (h: rel heap).
    (low_equiv env h /\ Low? l) ==> 
      (interpret_exp (R?.r h) e = interpret_exp (R?.l h) e)
 
@@ -46,41 +54,36 @@ type ni_exp (env:label_fun) (e:exp) (l:label) =
    - Total correctness
    - Low equivalent input heaps ==> Low equivalet output heaps 
 *)
-type ni_com' (env:label_fun) (c:com) (l:label) (h0:(rel (option heap))) = 
+type ni_com' (env:label_fun) (c:com) (l:label) (h0: rel (option heap)) = 
     (Some? (R?.l h0) /\ Some? (R?.r h0) ==>
-      (fun h0 -> 
-      (fun o_l -> 
-      (fun o_r -> 
-       ((Some? o_l /\ Some? o_r) 
-        ==> (low_equiv env h0 
+     (let h0 = R (Some?.v (R?.l h0)) (Some?.v (R?.r h0)) in
+      let o_l = interpret_com (R?.l h0) c in
+      let o_r = interpret_com (R?.r h0) c in
+       ((Some? o_l /\ Some? o_r /\ low_equiv env h0)
           ==> low_equiv env (R (Some?.v o_l) (Some?.v o_r)))))
-        (interpret_com (R?.r h0) c))
-        (interpret_com (R?.l h0) c))
-        (R (Some?.v (R?.l h0)) (Some?.v (R?.r h0))))
     /\
     (Some? (R?.l h0) ==>
-      (fun hl -> 
-      (fun o_l -> 
-        (forall r. (env r < l) 
-        ==> (Some? o_l 
-          ==> b2t (sel hl r = sel (Some?.v o_l) r))))
-        (interpret_com hl c))
-        ((Some?.v (R?.l h0))))
+     (let hl = Some?.v (R?.l h0) in
+      let o_l = interpret_com hl c in
+        (forall r. (env r < l /\ Some? o_l)
+          ==> sel hl r = sel (Some?.v o_l) r)))
     /\
     (Some? (R?.r h0) ==>
-      (fun hr -> 
-      (fun o_r -> 
-        (forall r. (env r < l) 
-        ==> (Some? o_r 
-          ==> b2t (sel hr r = sel (Some?.v o_r) r))))
-        (interpret_com hr c))
-        ((Some?.v (R?.r h0))))
+     (let hr = Some?.v (R?.r h0) in
+      let o_r = interpret_com hr c in
+        (forall r. (env r < l /\ Some? o_r)
+          ==> sel hr r = sel (Some?.v o_r) r)))
 
 type ni_com (env:label_fun) (c:com) (l:label) = 
-    forall (h0:(rel (option heap))). ni_com' env c l h0
+    forall (h0: rel (option heap)). ni_com' env c l h0
 
 
 (*********************** Typing Rules for Expressions **********************)
+
+(* CH: The way we derive these rules looks more like a
+       semantically-justified program logic than a syntactic type
+       system. Any connection to Dave Naumann and Anindya Banerjee's
+       "relational logic"? (e.g. https://arxiv.org/abs/1611.08992) *)
 
 (* Subtyping rule for expression labels
 
@@ -98,9 +101,8 @@ let sub_exp _ _ _ _ = ()
 
 (* Typing rule for dereferencing
 
-         label_fun(r) = l
          ----------------
-             r : l
+          E | - r : E(r)
 *)
 
 val avar_exp : env:label_fun -> r:id -> 
@@ -151,9 +153,12 @@ let sub_com _ _ _ _ = ()
 
 (* Typing rule for assignment
 
-         env |- e : env(r)    l <= env(r)
-         --------------------------------
-                  l |- r := e
+         env |- e : env(r)
+         ------------------------
+         env, pc:env(r) |- r := e
+
+    - label of expression and context label have to be below label of r
+      (first one to prevent explicit, second to prevent implicit flows)
 *)
 val assign_com : env:label_fun -> e:exp -> r:id -> 
   Lemma (requires (ni_exp env e (env r)))
@@ -167,12 +172,11 @@ let assign_com _ _ _ = ()
                env,pc:l |- c1; c2
 *)
 
-val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0:(rel (option heap)) ->
+val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel (option heap) ->
   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
-        (ensures  (ni_com' env (Seq c1 c2) l h0)) 
-        (* Probably not the best solution... *)
-        [SMTPat (true)]
-let seq_com' env c1 c2 l h0 = match h0 with 
+        (ensures  (ni_com' env (Seq c1 c2) l h0))
+let seq_com' env c1 c2 l h0 =
+  match h0 with
   | R None None -> ()
   | R (Some hl) None -> cut (ni_com' env c2 l (R (interpret_com hl c1) None))
   | R None (Some hr) -> cut (ni_com' env c2 l (R None (interpret_com hr c1)))
@@ -181,9 +185,11 @@ let seq_com' env c1 c2 l h0 = match h0 with
 val seq_com : env:label_fun -> c1:com -> c2:com -> l:label -> 
   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
         (ensures  (ni_com env (Seq c1 c2) l)) 
-let seq_com env c1 c2 l = ()
+let seq_com env c1 c2 l = forall_intro
+     (fun (h0:rel (option heap)) ->
+       seq_com' env c1 c2 l h0 <: Lemma (ni_com' env (Seq c1 c2) l h0))
 
-(* Conditional rule for commands
+(* Typing rule for conditional commands
 
          env |- e : l   env,pc:l |- ct   env,pc:l |- cf
          ----------------------------------------------
@@ -213,23 +219,21 @@ let skip_com _ = ()
           env,pc:l |- while (e <> 0) do c
 *)
 
+(* slight variant taking option heap *)
 val decr_while : h:(option heap) -> v:variant -> GTot nat
-let decr_while h v = match h with 
+let decr_while h v = match h with
   | None -> 0
-  | Some h0 -> 
+  | Some h0 ->
     let tmp = interpret_exp h0 v in
     if 0 > tmp then 0 else tmp
 
-
 #reset-options "--z3rlimit 30"
 
-val loop_com' : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> h:(rel (option heap)) -> 
+val while_com' : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> h:rel (option heap) -> 
   Lemma (requires (ni_exp env e l /\ ni_com env c l))
         (ensures  (ni_com' env (While e c v) l h)) 
         (decreases (decr_while (R?.l h) v + decr_while (R?.r h) v))
-        (* Probably not the best solution... *)
-        [SMTPat (true)]
-let rec loop_com' env e c v l h = 
+let rec while_com' env e c v l h = 
   // Interpret the body
   match h with
   | R None None -> ()
@@ -239,7 +243,7 @@ let rec loop_com' env e c v l h =
     match o_l with
     | Some hl -> 
       if (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 then
-        loop_com' env e c v l (R o_l None)
+        while_com' env e c v l (R o_l None)
       else
         ()
     | None  -> ()
@@ -250,7 +254,7 @@ let rec loop_com' env e c v l h =
     match o_r with
     | Some hr -> 
       if (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 then
-        loop_com' env e c v l (R None o_r)
+        while_com' env e c v l (R None o_r)
       else
         ()
     | None  -> ()
@@ -267,23 +271,25 @@ let rec loop_com' env e c v l h =
         // case analysis on decreasing of variant
         match (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 , 
           (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 with
-        | true , true  -> loop_com' env e c v l (R o_l o_r)
-        | true , false -> loop_com' env e c v l (R o_l (Some h_r))
-        | false , true -> loop_com' env e c v l (R (Some h_l) o_r )
+        | true , true  -> while_com' env e c v l (R o_l o_r)
+        | true , false -> while_com' env e c v l (R o_l (Some h_r))
+        | false , true -> while_com' env e c v l (R (Some h_l) o_r )
         | false, false -> ()
       end
     | Some hl , None -> 
       if (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 then
-        loop_com' env e c v l (R o_l (Some h_r))
+        while_com' env e c v l (R o_l (Some h_r))
     | None , Some hr  -> 
       if (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 then
-        loop_com' env e c v l (R (Some h_l) o_r)
+        while_com' env e c v l (R (Some h_l) o_r)
     | None, None -> ()
   end
 
 #reset-options
 
-val loop_com : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> 
+val while_com : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> 
   Lemma (requires (ni_exp env e l /\ ni_com env c l))
         (ensures  (ni_com env (While e c v) l)) 
-let loop_com env e c v l = ()
+let while_com env e c v l = forall_intro
+  (fun (h:rel (option heap)) -> while_com' env e c v l h
+    <: Lemma (ensures  (ni_com' env (While e c v) l h)))
