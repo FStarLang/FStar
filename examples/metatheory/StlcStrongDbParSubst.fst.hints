@@ -2,6 +2,7 @@
   "¯\u0005g±ç ¡}²ÖÝ½+F\u0003å",
   [
     [ "StlcStrongDbParSubst.typ", 1, 2, 1, [ "@query" ], 0 ],
+    [ "StlcStrongDbParSubst.uu___is_TArr", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.__proj__TArr__item___0",
       1,
@@ -26,6 +27,7 @@
       ],
       0
     ],
+    [ "StlcStrongDbParSubst.uu___is_TUnit", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.exp",
       1,
@@ -39,6 +41,7 @@
       ],
       0
     ],
+    [ "StlcStrongDbParSubst.uu___is_EVar", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.__proj__EVar__item___0",
       1,
@@ -51,6 +54,7 @@
       ],
       0
     ],
+    [ "StlcStrongDbParSubst.uu___is_EApp", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.__proj__EApp__item___0",
       1,
@@ -75,6 +79,7 @@
       ],
       0
     ],
+    [ "StlcStrongDbParSubst.uu___is_ELam", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.__proj__ELam__item___0",
       1,
@@ -99,6 +104,7 @@
       ],
       0
     ],
+    [ "StlcStrongDbParSubst.uu___is_EUnit", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.is_renaming",
       1,
@@ -275,6 +281,7 @@
       ],
       0
     ],
+    [ "StlcStrongDbParSubst.uu___is_SBeta", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.__proj__SBeta__item__t",
       1,
@@ -311,6 +318,7 @@
       ],
       0
     ],
+    [ "StlcStrongDbParSubst.uu___is_SApp1", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.__proj__SApp1__item__e1",
       1,
@@ -371,6 +379,7 @@
       ],
       0
     ],
+    [ "StlcStrongDbParSubst.uu___is_SApp2", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.__proj__SApp2__item__e1",
       1,
@@ -463,6 +472,7 @@
       ],
       0
     ],
+    [ "StlcStrongDbParSubst.uu___is_TyVar", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.__proj__TyVar__item__g",
       1,
@@ -503,6 +513,7 @@
       ],
       0
     ],
+    [ "StlcStrongDbParSubst.uu___is_TyLam", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.__proj__TyLam__item__g",
       1,
@@ -579,6 +590,7 @@
       ],
       0
     ],
+    [ "StlcStrongDbParSubst.uu___is_TyApp", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.__proj__TyApp__item__g",
       1,
@@ -693,6 +705,7 @@
       ],
       0
     ],
+    [ "StlcStrongDbParSubst.uu___is_TyUnit", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcStrongDbParSubst.__proj__TyUnit__item__g",
       1,

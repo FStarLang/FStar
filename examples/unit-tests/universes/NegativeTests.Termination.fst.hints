@@ -55,6 +55,8 @@
       0
     ],
     [ "NegativeTests.Termination.snat", 1, 2, 1, [ "@query" ], 0 ],
+    [ "NegativeTests.Termination.uu___is_O", 1, 2, 1, [ "@query" ], 0 ],
+    [ "NegativeTests.Termination.uu___is_S", 1, 2, 1, [ "@query" ], 0 ],
     [
       "NegativeTests.Termination.__proj__S__item___0",
       1,

@@ -1,20 +1,22 @@
 [
   "åéÅ\u0003Ø¶Ø\u0005î‚©’~\\×ª",
   [
-    [ "FStar.DM4F.Exceptions.return_ex", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Exceptions.bind_ex",
       1,
       2,
       1,
       [
-        "@query", "bool_inversion", "disc_equation_Prims.Some",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.uu___is_None"
+        "@query", "bool_inversion", "disc_equation_Prims.None",
+        "disc_equation_Prims.Some", "equation_FStar.DM4F.Exceptions.ex",
+        "interpretation_Tm_arrow_7c94c96dc293d3467019c1d15bb27fe9",
+        "lemma_Prims.invertOption",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_Some",
+        "unit_typing"
       ],
       0
     ],
-    [ "FStar.DM4F.Exceptions.raise", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Exceptions.EXN_bind_wp",
       1,

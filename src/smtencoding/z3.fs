@@ -255,6 +255,7 @@ let doZ3Exe =
 let z3_options () =
     Util.format1 "(set-option :global-decls false)\
      (set-option :smt.mbqi false)\
+     (set-option :auto_config false)\
      (set-option :produce-unsat-cores true)\
      (set-option :smt.random_seed %s)\n" (string_of_int (Options.z3_seed()))
 

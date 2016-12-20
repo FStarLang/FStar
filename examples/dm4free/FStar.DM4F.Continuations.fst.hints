@@ -1,9 +1,8 @@
 [
-  "8%⁄U˝Ó\u0018\u0011,ò|%™°T\u0015",
+  "\"÷@Å÷ÁæzÌÕ\rÑ?=U∫",
   [
     [ "FStar.DM4F.Continuations.cont", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Continuations.return", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Continuations.bind", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.Continuations.uu___is_L", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Continuations.__proj__L__item__a",
       1,
@@ -50,6 +49,7 @@
       ],
       0
     ],
+    [ "FStar.DM4F.Continuations.uu___is_R", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Continuations.__proj__R__item__a",
       1,
@@ -97,9 +97,6 @@
       0
     ],
     [ "FStar.DM4F.Continuations.em", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Continuations.callcc", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Continuations.shift", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Continuations.reset", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Continuations.CONT_wp_if_then_else",
       1,

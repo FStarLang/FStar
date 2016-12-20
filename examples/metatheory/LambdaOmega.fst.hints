@@ -2,6 +2,8 @@
   "Â<Æ2\u0017\u0018ÂþàwÜ5ËŽLL",
   [
     [ "LambdaOmega.knd", 1, 1, 1, [ "@query" ], 0 ],
+    [ "LambdaOmega.uu___is_KTyp", 1, 1, 1, [ "@query" ], 0 ],
+    [ "LambdaOmega.uu___is_KArr", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__KArr__item___0",
       1,
@@ -39,6 +41,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TVar", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TVar__item___0",
       1,
@@ -51,6 +54,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TLam", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TLam__item___0",
       1,
@@ -75,6 +79,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TApp", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TApp__item___0",
       1,
@@ -99,6 +104,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TArr", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TArr__item___0",
       1,
@@ -136,6 +142,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_EVar", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EVar__item___0",
       1,
@@ -148,6 +155,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_EApp", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EApp__item___0",
       1,
@@ -172,6 +180,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_ELam", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__ELam__item___0",
       1,
@@ -882,6 +891,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_SBeta", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__SBeta__item__t",
       1,
@@ -918,6 +928,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_SApp1", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__SApp1__item__e1",
       1,
@@ -971,6 +982,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_SApp2", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__SApp2__item__e1",
       1,
@@ -1094,6 +1106,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_KiVar", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__KiVar__item__g",
       1,
@@ -1128,6 +1141,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_KiLam", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__KiLam__item__g",
       1,
@@ -1202,6 +1216,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_KiApp", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__KiApp__item__g",
       1,
@@ -1309,6 +1324,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_KiArr", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__KiArr__item__g",
       1,
@@ -1395,6 +1411,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_EqRefl", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqRefl__item__t",
       1,
@@ -1407,6 +1424,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_EqSymm", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqSymm__item__t1",
       1,
@@ -1448,6 +1466,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_EqTran", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqTran__item__t1",
       1,
@@ -1518,6 +1537,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_EqLam", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqLam__item__t",
       1,
@@ -1571,6 +1591,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_EqApp", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqApp__item__t1",
       1,
@@ -1653,6 +1674,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_EqBeta", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqBeta__item__k",
       1,
@@ -1689,6 +1711,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_EqArr", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqArr__item__t1",
       1,
@@ -1794,6 +1817,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TyVar", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TyVar__item__g",
       1,
@@ -1856,6 +1880,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TyLam", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TyLam__item__g",
       1,
@@ -1948,6 +1973,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TyApp", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TyApp__item__g",
       1,
@@ -2055,6 +2081,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TyEqu", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TyEqu__item__g",
       1,
@@ -3516,6 +3543,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TrRefl", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TrRefl__item__t",
       1,
@@ -3528,6 +3556,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TrArr", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TrArr__item__t1",
       1,
@@ -3610,6 +3639,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TrLam", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TrLam__item__t1",
       1,
@@ -3663,6 +3693,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TrApp", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TrApp__item__t1",
       1,
@@ -3745,6 +3776,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TrBeta", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TrBeta__item__t1",
       1,
@@ -4556,6 +4588,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TsRefl", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TsRefl__item__t",
       1,
@@ -4568,6 +4601,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TsStep", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TsStep__item__t1",
       1,
@@ -4699,6 +4733,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TssBase", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TssBase__item__t1",
       1,
@@ -4740,6 +4775,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TssSym", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TssSym__item__t1",
       1,
@@ -4781,6 +4817,7 @@
       ],
       0
     ],
+    [ "LambdaOmega.uu___is_TssTran", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TssTran__item__t1",
       1,
@@ -5206,7 +5243,6 @@
         "constructor_distinct_LambdaOmega.EApp",
         "constructor_distinct_LambdaOmega.ELam",
         "constructor_distinct_LambdaOmega.EVar",
-        "constructor_distinct_LambdaOmega.TyEqu",
         "data_elim_FStar.Constructive.ExIntro",
         "data_elim_LambdaOmega.TyEqu", "data_elim_LambdaOmega.TyLam",
         "disc_equation_LambdaOmega.TyEqu", "disc_equation_LambdaOmega.TyLam",
@@ -5221,18 +5257,10 @@
         "projection_inverse_LambdaOmega.ELam__1",
         "projection_inverse_LambdaOmega.TArr__0",
         "projection_inverse_LambdaOmega.TArr__1",
-        "projection_inverse_LambdaOmega.TyEqu_e",
-        "projection_inverse_LambdaOmega.TyEqu_g",
-        "projection_inverse_LambdaOmega.TyEqu_ht",
-        "projection_inverse_LambdaOmega.TyEqu_t2",
-        "projection_inverse_LambdaOmega.TyLam_e1",
-        "projection_inverse_LambdaOmega.TyLam_g",
-        "projection_inverse_LambdaOmega.TyLam_t",
-        "projection_inverse_LambdaOmega.TyLam_t_",
         "refinement_interpretation_Tm_refine_15e392800371bb1855efe2e2549fb2a3",
         "refinement_interpretation_Tm_refine_6f5b74c7ab5b48f722e3d46e70a0b082",
         "subterm_ordering_LambdaOmega.TyEqu",
-        "typing_LambdaOmega.tred_tarr_preserved__7122"
+        "typing_LambdaOmega.tred_tarr_preserved__7402"
       ],
       0
     ],

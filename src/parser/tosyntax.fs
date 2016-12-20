@@ -840,7 +840,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
        in aux [] top
     | App _ ->
       let rec aux args e = match (unparen e).tm with
-        | App(e, t, imp) ->
+        | App(e, t, imp) when imp <> UnivApp ->
           let arg = arg_withimp_e imp <| desugar_term env t in
           aux (arg::args) e
         | _ ->
@@ -1244,125 +1244,82 @@ let mk_data_discriminators quals env t tps k datas =
     let quals = quals |> List.filter (function
         | S.Abstract
         | S.Private -> true
-        | _ -> false) in
+        | _ -> false)
+    in
     let quals q = if not <| env.iface || env.admitted_iface
                   then S.Assumption::q@quals
-                  else q@quals in
-    let binders = tps @ fst (U.arrow_formals k) in
-    let p = range_of_lid t in
-    let binders, args = Util.args_of_binders binders in
-    let imp_binders = binders |> List.map (fun (x, _) -> x, Some S.imp_tag) in
-    let binders = imp_binders@[S.null_binder <| (S.mk_Tm_app(S.fv_to_tm (S.lid_as_fv t Delta_constant None)) args None p)] in
-    let disc_type = U.arrow binders (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
+                  else q@quals
+    in
     datas |> List.map (fun d ->
         let disc_name = Util.mk_discriminator d in
-        Sig_declare_typ(disc_name, [], disc_type, quals [S.Logic; S.Discriminator d], range_of_lid disc_name))
+        Sig_declare_typ(disc_name, [], Syntax.tun, quals [(* S.Logic ; *) S.OnlyName ; S.Discriminator d], range_of_lid disc_name))
 
-let mk_indexed_projectors iquals fvq refine_domain env tc lid (inductive_tps:binders) imp_tps (fields:list<S.binder>) t =
+let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
     let p = range_of_lid lid in
-    let pos q = Syntax.withinfo q tun.n p in
-    let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
-    let tps = List.map2 (fun (_, imp) (x, _) -> (x, imp)) inductive_tps imp_tps in
-    let arg_binder, indices =
-        let head, args0 = Util.head_and_args t in
-        let args =
-            let rec arguments tps args = match tps, args with
-                | [], _ -> args
-                | _, [] -> raise (Error("Not enough arguments to type", Ident.range_of_lid lid))
-                | (_, Some (S.Implicit _))::tps', (_, Some (S.Implicit _))::args' -> arguments tps' args'
-                | (_, Some (S.Implicit _))::tps', (_, _)::_ -> arguments tps' args
-                | (_, _)::_, (a, Some (S.Implicit _))::_ ->
-                  raise (Error("Unexpected implicit annotation on argument", a.pos))
-                | (_, _)::tps', (_, _)::args' -> arguments tps' args' in
-            arguments inductive_tps args0 in
-        let indices = args |> List.map (fun _ -> S.new_bv (Some p) tun |> S.mk_binder) in
-        let arg_typ = S.mk_Tm_app (S.fv_to_tm (S.lid_as_fv tc Delta_constant None))
-                                  (tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp)) None p in
-        let arg_binder =
-            if not refine_domain
-            then S.mk_binder (projectee arg_typ) //records have only one constructor; no point refining the domain
-            else let disc_name = Util.mk_discriminator lid in
-                 let x = S.new_bv (Some p) arg_typ in
-                 S.mk_binder ({projectee arg_typ with sort=refine x (Util.b2t(S.mk_Tm_app (S.fvar (Ident.set_lid_range disc_name p) Delta_equational None)
-                                                                                          [as_arg <| S.bv_to_name x] None p))}) in
-        arg_binder, indices in
-
-    let arg_exp = S.bv_to_name (fst arg_binder) in
-    let imp_binders = imp_tps @ (indices |> List.map (fun (x, _) -> x, Some S.imp_tag)) in
-    let binders = imp_binders@[arg_binder] in
-
-    let arg = Util.arg_of_non_null_binder arg_binder in
-
-    let subst = fields |> List.mapi (fun i (a, _) ->
-            let field_name, _ = Util.mk_field_projector_name lid a i in
-            let proj = mk_Tm_app (S.fv_to_tm (S.lid_as_fv field_name Delta_equational None)) [arg] None p in
-            NT(a, proj)) in
-
-    let ntps = List.length tps in
-    let all_params = imp_tps@fields in
 
     fields |> List.mapi (fun i (x, _) ->
         let field_name, _ = Util.mk_field_projector_name lid x i in
-        let t = U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
         let only_decl =
             lid_equals C.prims_lid  (Env.current_module env)
             || fvq<>Data_ctor
-            || Options.dont_gen_projectors (Env.current_module env).str in
+            || Options.dont_gen_projectors (Env.current_module env).str
+        in
         let no_decl = Syntax.is_type x.sort in
-        let quals q = if only_decl then S.Assumption::List.filter (function S.Abstract -> false | _ -> true) q else q in
+        let quals q =
+            if only_decl
+            then S.Assumption::List.filter (function S.Abstract -> false | _ -> true) q
+            else q
+        in
         let quals =
             let iquals = iquals |> List.filter (function
                 | S.Abstract
                 | S.Private -> true
-                | _ -> false) in
-            quals (S.Projector(lid, x.ppname)::iquals) in
-        let decl = Sig_declare_typ(field_name, [], t, quals, range_of_lid field_name) in
+                | _ -> false)
+            in
+            quals (OnlyName :: S.Projector(lid, x.ppname) :: iquals)
+        in
+        let decl = Sig_declare_typ(field_name, [], Syntax.tun, quals, range_of_lid field_name) in
         if only_decl
         then [decl] //only the signature
-        else let projection = S.gen_bv x.ppname.idText None tun in
-                let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
-                    let b = S.is_implicit imp in
-                    if i+ntps=j  //this is the one to project
-                    then pos (Pat_var projection), b
-                    else if b && j < ntps
-                         then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
-                         else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b) in
-            let pat = (S.Pat_cons(S.lid_as_fv lid Delta_constant (Some fvq), arg_pats) |> pos, None, S.bv_to_name projection) in
-            let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
-            let imp = no_annot_abs binders body in
-            let dd = if quals |> List.contains S.Abstract
-                     then Delta_abstract Delta_equational
-                     else Delta_equational in
-            let lb = {  lbname=Inr (S.lid_as_fv field_name dd None);
-                        lbunivs=[];
-                        lbtyp=tun;
-                        lbeff=C.effect_Tot_lid;
-                        lbdef=imp } in
+        else
+            let dd =
+                if quals |> List.contains S.Abstract
+                then Delta_abstract Delta_equational
+                else Delta_equational
+            in
+            let lb = {
+                lbname=Inr (S.lid_as_fv field_name dd None);
+                lbunivs=[];
+                lbtyp=tun;
+                lbeff=C.effect_Tot_lid;
+                lbdef=tun
+            } in
             let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
-let mk_data_projectors iquals env (inductive_tps, se) = match se with
-  | Sig_datacon(lid, _, t, l, n, quals, _, _) when (//(not env.iface || env.admitted_iface) &&
+let mk_data_projector_names iquals env (inductive_tps, se) = match se with
+  | Sig_datacon(lid, _, t, _, n, quals, _, _) when (//(not env.iface || env.admitted_iface) &&
                                                 not (lid_equals lid C.lexcons_lid)) ->
-    let refine_domain =
-        if (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false))
-        then false
-        else match Env.find_all_datacons env l with
-                | Some l -> List.length l > 1
-                | _ -> true in
-        let formals, cod = U.arrow_formals t in
-        begin match formals with
-            | [] -> [] //no fields to project
-            | _ ->
-              let fv_qual = match Util.find_map quals (function RecordConstructor (_, fns) -> Some (Record_ctor(lid, fns)) | _ -> None) with
+    let formals, _ = U.arrow_formals t in
+    begin match formals with
+        | [] -> [] //no fields to project
+        | _ ->
+            let filter_records = function
+                | RecordConstructor (_, fns) -> Some (Record_ctor(lid, fns))
+                | _ -> None
+            in
+            let fv_qual = match Util.find_map quals filter_records with
                 | None -> Data_ctor
-                | Some q -> q in
-              let iquals = if List.contains S.Abstract iquals
-                           then S.Private::iquals
-                           else iquals in
-              let tps, rest = Util.first_N n formals in
-              mk_indexed_projectors iquals fv_qual refine_domain env l lid inductive_tps tps rest cod
-        end
+                | Some q -> q
+            in
+            let iquals =
+                if List.contains S.Abstract iquals
+                then S.Private::iquals
+                else iquals
+            in
+            let _, rest = Util.first_N n formals in
+            mk_indexed_projector_names iquals fv_qual env lid rest
+    end
 
   | _ -> []
 
@@ -1548,13 +1505,15 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                     | _ -> []) in
                 let ntps = List.length data_tpars in
                 (name, (tps, Sig_datacon(name, univs, Util.arrow data_tpars (mk_Total (t |> Util.name_function_binders)),
-                                         tname, ntps, quals, mutuals, rng))))) in
-              ([], Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames, tags, rng))::constrs
-        | _ -> failwith "impossible") in
+                                         tname, ntps, quals, mutuals, rng)))))
+          in
+          ([], Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames, tags, rng))::constrs
+        | _ -> failwith "impossible")
+      in
       let sigelts = tps_sigelts |> List.map snd in
       let bundle = Sig_bundle(sigelts, quals, List.collect Util.lids_of_sigelt sigelts, rng) in
       let env = push_sigelt env0 bundle in
-      let data_ops = tps_sigelts |> List.collect (mk_data_projectors quals env) in
+      let data_ops = tps_sigelts |> List.collect (mk_data_projector_names quals env) in
       let discs = sigelts |> List.collect (function
         | Sig_inductive_typ(tname, _, tps, k, _, constrs, quals, _) when (List.length constrs > 1)->
           let quals = if List.contains S.Abstract quals
@@ -1828,7 +1787,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
     let env = push_sigelt env se' in
-    let data_ops = mk_data_projectors [] env ([], se) in
+    let data_ops = mk_data_projector_names [] env ([], se) in
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
@@ -1840,7 +1799,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
     let env = push_sigelt env se' in
-    let data_ops = mk_data_projectors [] env ([], se) in
+    let data_ops = mk_data_projector_names [] env ([], se) in
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops

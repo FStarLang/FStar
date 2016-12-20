@@ -124,6 +124,16 @@ let sel_elem h #i b =
   | B_POLY1305 b -> PL.sel_elem h b
   | B_GHASH    b -> Buffer.as_seq h b
 
+val frame_norm: h0:mem -> h1:mem -> #i:id -> b:elemB i{live h1 b} -> Lemma
+  (requires (norm h0 b /\
+    Buffer.as_seq h0 (as_buffer b) == Buffer.as_seq h1 (as_buffer b)))
+  (ensures  (norm h1 b))
+let frame_norm h0 h1 #i b =
+  match alg i with
+  | POLY1305 ->
+    Crypto.Symmetric.Poly1305.Bigint.norm_eq_lemma h0 h1 (as_buffer b) (as_buffer b)
+  | _ -> ()
+
 val eq_sel_elem: h:mem -> #i:id -> b1:elemB i{live h b1} -> b2:elemB i{live h b2} -> Lemma
  (requires (Buffer.as_seq h (as_buffer b1) == Buffer.as_seq h (as_buffer b2)))
  (ensures  (sel_elem h b1 == sel_elem h b2))
