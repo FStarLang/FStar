@@ -880,7 +880,6 @@ hasSort:
 %inline semiColonTermList:
   | l=right_flexible_list(SEMICOLON, noSeqTerm) { l }
 
-
 constant:
   | LPAREN_RPAREN { Const_unit }
   | n=INT
