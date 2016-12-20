@@ -92,7 +92,7 @@ let mac_wrapper (#i:EncodingWrapper.mac_id) (ak:CMA.state i) (acc:CMA.accBuffer 
   = let h0 = get () in
     CMA.mac #i ak acc tag; 
     let h1 = get () in
-    assume (mac_modifies (fst i) (snd i) tag ak acc h0 h1) //NS: need to revise the write effect of UF1CMA.mac
+    assume (mac_modifies (fst i) (snd i) tag ak acc h0 h1) //NS: need to revise the write effect of UF1CMA.mac, which is currently in an unusable style; see discussion in issue #788 in FStar
 
 #set-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let mac_is_set_st 
@@ -354,23 +354,6 @@ let acc_ensures_weak (#i: MAC.id) (ak: CMA.state i)
   acc_inv_weak ak acc h1 /\
   accumulate_encoded aad cipher acc h1 /\
   (mac_log ==> EncodingWrapper.fresh_sref h0 h1 (CMA.alog acc))
-
-(*-- TODO: weirdness: this works, but a small variation fails --*)
-let test_ok (#i: CMA.id) (aead_st:aead_state (fst i) Reader) (ak:CMA.state i)
-	    (#aadlen:aadlen_32) (aad:lbuffer (v aadlen))
-	    (#txtlen:txtlen_32) (cipher:lbuffer (v txtlen))
-	    (h0:mem) (acc:CMA.accBuffer i) (h1:mem) =
-   assume (EncodingWrapper.accumulate_ensures ak aad cipher h0 acc h1);
-   assert (EncodingWrapper.fresh_sref h0 h1 (Buffer.content (MAC.as_buffer (CMA.abuf acc))))
-
-(* (\*-- weirdness: this fails --*\) *)
-(* let test_fail (#i: id) (#n:Cipher.iv (Cipher.algi i)) *)
-(* 	      (aead_st:aead_state i Reader) (ak:CMA.state (i, n)) *)
-(* 	      (#aadlen:aadlen_32) (aad:lbuffer (v aadlen)) *)
-(* 	      (#txtlen:txtlen_32) (cipher:lbuffer (v txtlen)) *)
-(* 	      (h0:mem) (acc:CMA.accBuffer (i, n)) (h1:mem) = *)
-(*    assume (EncodingWrapper.accumulate_ensures #(i, n) ak aad cipher h0 acc h1); *)
-(*    assert (EncodingWrapper.fresh_sref h0 h1 (Buffer.content (MAC.as_buffer (CMA.abuf acc)))) *)
 
 val frame_accumulate_ensures: #i:CMA.id -> #rw:rw ->
 			      aead_st:aead_state (fst i) rw -> 
