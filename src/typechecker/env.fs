@@ -372,7 +372,7 @@ let rec add_sigelt env se = match se with
     match se with
     | Sig_new_effect(ne, _) ->
       ne.actions |> List.iter (fun a ->
-          let se_let = Util.action_as_lb a in
+          let se_let = Util.action_as_lb ne.mname a in
           Util.smap_add (sigtab env) a.action_name.str se_let)
     | _ -> ()
 
@@ -654,6 +654,12 @@ let is_record env lid =
     | Some (Inr (Sig_inductive_typ(_, _, _, _, _, _, tags, _), _)) ->
         Util.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) tags
     | _ -> false
+
+let is_action env lid =
+    match lookup_qname env lid with
+        | Some (Inr (Sig_let(_, _, _, tags), _)) ->
+            Util.for_some (function Action _ -> true | _ -> false) tags
+        | _ -> false
 
 let is_interpreted =
     let interpreted_symbols =

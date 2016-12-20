@@ -212,11 +212,12 @@ let qual_to_string = function
   | Projector (l, x)      -> Util.format2 "(Projector %s %s)" (lid_to_string l) x.idText
   | RecordType (ns, fns)  -> Util.format2 "(RecordType %s %s)" (text_of_path (path_of_ns ns)) (fns |> List.map text_of_id |> String.concat ", ")
   | RecordConstructor (ns, fns) -> Util.format2 "(RecordConstructor %s %s)" (text_of_path (path_of_ns ns))  (fns |> List.map text_of_id |> String.concat ", ")
+  | Action eff_lid        -> Util.format1 "(Action %s)" (lid_to_string eff_lid)
   | ExceptionConstructor  -> "ExceptionConstructor"
   | HasMaskedEffect       -> "HasMaskedEffect"
   | Effect                -> "Effect"
-  | Reifiable                 -> "reify"
-  | Reflectable l               -> Util.format1 "(reflect %s)" l.str
+  | Reifiable             -> "reify"
+  | Reflectable l         -> Util.format1 "(reflect %s)" l.str
   | OnlyName              -> "OnlyName"
 
 let quals_to_string quals =
@@ -244,8 +245,8 @@ let rec term_to_string x =
     let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
     Util.format2 "{:pattern %s} %s" pats (term_to_string t)
 
-  | Tm_meta(t, Meta_monadic (m, t')) -> Util.format4 ("(Monadic-%s{%s %s} %s )") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
-  | Tm_meta(t, Meta_monadic_lift(m0, m1)) -> Util.format4 ("(MonadicLift-%s{%s} %s -> %s)") (tag_of_term t) (term_to_string t) (sli m0) (sli m1)
+  | Tm_meta(t, Meta_monadic (m, t')) -> Util.format4 ("(Monadic-%s{%s %s} %s)") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
+  | Tm_meta(t, Meta_monadic_lift(m0, m1, t')) -> Util.format5 ("(MonadicLift-%s{%s : %s -> %s} %s)") (tag_of_term t) (term_to_string t') (sli m0) (sli m1) (term_to_string t)
   | Tm_meta(t, Meta_labeled(l,r,b)) when Options.print_implicits() ->
     Util.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)
   | Tm_meta(t, _) ->    term_to_string t

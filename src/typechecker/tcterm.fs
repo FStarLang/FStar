@@ -180,7 +180,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
        let e, _, g = TcUtil.check_comp env e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
        if debug env Options.Low then Util.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
-       let e = TypeChecker.Util.maybe_lift env e (Util.comp_effect_name c) (Util.comp_effect_name expected_c) in
+       let e = TypeChecker.Util.maybe_lift env e (Util.comp_effect_name c) (Util.comp_effect_name expected_c) (U.comp_result c) in
        e, expected_c, g
 
 let no_logical_guard env (te, kt, f) =
@@ -473,9 +473,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some guard_x, c_branches) in
     let e =
         let mk_match scrutinee =
-            let scrutinee = TypeChecker.Util.maybe_lift env scrutinee c1.eff_name cres.eff_name in
+            let scrutinee = TypeChecker.Util.maybe_lift env scrutinee c1.eff_name cres.eff_name c1.res_typ in
             let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, lc, _) ->
-                 (pat, wopt, TypeChecker.Util.maybe_lift env br lc.eff_name cres.eff_name)) in
+                 (pat, wopt, TypeChecker.Util.maybe_lift env br lc.eff_name cres.eff_name lc.res_typ )) in
             let e = mk (Tm_match(scrutinee, branches)) (Some cres.res_typ.n) top.pos in
              //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
             mk (Tm_ascribed(e, Inl cres.res_typ, Some cres.eff_name)) None e.pos in
@@ -956,7 +956,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
     *)
     let monadic_application (head, chead, ghead, cres)
                             subst
-                            (arg_comps_rev:list<(arg * option<bv> * either<lident,lcomp>)>) arg_rets guard fvs bs
+                            (arg_comps_rev:list<(arg * option<bv> * either<(lident * typ),lcomp>)>) arg_rets guard fvs bs
         : term   //application of head to args
         * lcomp  //its computation type
         * guard_t //and whatever guard remains
@@ -1007,8 +1007,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         //We build bind chead (bind c1 (bind c2 (bind c3 cres)))
         let args, comp, monadic = List.fold_left (fun (args, out_c, monadic) ((e, q), x, c) ->
                     match c with
-                    | Inl eff_name ->
-                      (TcUtil.maybe_lift env e eff_name out_c.eff_name, q)::args, out_c, monadic
+                    | Inl (eff_name, arg_typ) ->
+                      (TcUtil.maybe_lift env e eff_name out_c.eff_name arg_typ, q)::args, out_c, monadic
 
                     | Inr c ->
                         let monadic = monadic || not (Util.is_pure_or_ghost_lcomp c) in
@@ -1016,11 +1016,11 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             TcUtil.bind e.pos env None  //proving (Some e) here instead of None causes significant Z3 overhead
                                         c (x, out_c) in
                         let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in
-                        let e = TcUtil.maybe_lift env e c.eff_name out_c.eff_name in
+                        let e = TcUtil.maybe_lift env e c.eff_name out_c.eff_name c.res_typ in
                         (e, q)::args, out_c, monadic) ([], cres, false) arg_comps_rev in
         let comp = TcUtil.bind head.pos env None chead (None, comp) in
         let app =  mk_Tm_app head args (Some comp.res_typ.n) r in
-        let app = if monadic then TypeChecker.Util.maybe_monadic env app comp.eff_name comp.res_typ else app in
+        let app = if monadic || not (Util.is_pure_or_ghost_lcomp comp) then TypeChecker.Util.maybe_monadic env app comp.eff_name comp.res_typ else app in
         let comp, g = TcUtil.strengthen_precondition None env app comp guard in //Each conjunct in g is already labeled
         app, comp, g
     in
@@ -1040,7 +1040,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" head.pos env t in //new_uvar env t in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
-            tc_args head_info (subst, (arg, None, Inl Const.effect_Tot_lid)::outargs, arg::arg_rets, Rel.conj_guard implicits g, fvs) rest args
+            tc_args head_info (subst, (arg, None, Inl (Const.effect_Tot_lid, t))::outargs, arg::arg_rets, Rel.conj_guard implicits g, fvs) rest args
 
         | (x, aqual)::rest, (e, aq)::rest' -> (* a concrete argument *)
             let _ =
@@ -1062,7 +1062,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let arg = e, aq in
             if Util.is_tot_or_gtot_lcomp c //e is Tot or GTot; we can just substitute it
             then let subst = maybe_extend_subst subst (List.hd bs) e in
-                    tc_args head_info (subst, (arg, None, Inl c.eff_name)::outargs, arg::arg_rets, g, fvs) rest rest'
+                    tc_args head_info (subst, (arg, None, Inl (c.eff_name, c.res_typ))::outargs, arg::arg_rets, g, fvs) rest rest'
             else if TcUtil.is_pure_or_ghost_effect env c.eff_name //its conditionally pure; can substitute, but must check its WP
             then let subst = maybe_extend_subst subst (List.hd bs) e in
                     tc_args head_info (subst, (arg, Some x, Inr c)::outargs, arg::arg_rets, g, fvs) rest rest'
@@ -1495,8 +1495,8 @@ and check_inner_let env e =
        let x = fst xbinder in
        let e2, c2, g2 = tc_term (Env.push_bv env x) e2 in
        let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some x, c2) in
-       let e1 = TypeChecker.Util.maybe_lift env e1 c1.eff_name cres.eff_name in
-       let e2 = TypeChecker.Util.maybe_lift env e2 c2.eff_name cres.eff_name in
+       let e1 = TypeChecker.Util.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
+       let e2 = TypeChecker.Util.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
        let lb = Util.mk_letbinding (Inl x) [] c1.res_typ c1.eff_name e1 in
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) (Some cres.res_typ.n) e.pos in
        let e = TypeChecker.Util.maybe_monadic env e cres.eff_name cres.res_typ in

@@ -30,6 +30,7 @@
       ],
       0
     ],
+    [ "Unit2.uu___is_Int", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit2.__proj__Int__item__i",
       1,
@@ -42,6 +43,7 @@
       ],
       0
     ],
+    [ "Unit2.uu___is_Bool", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit2.__proj__Bool__item__b",
       1,

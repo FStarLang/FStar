@@ -1070,7 +1070,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           | None -> ()
           | Some (x,_) ->
             let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
-            Errors.warn pos (Util.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x))
+            Errors.warn pos (Util.format1 "SMT pattern misses at least one bound variable: %s" (Print.bv_to_string x))
         end
     in
     match Util.destruct_typ_as_formula phi with

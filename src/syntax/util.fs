@@ -923,15 +923,16 @@ let destruct_typ_as_formula f : option<connective> =
         | None -> destruct_q_conn phi
 
 
-  let action_as_lb a =
+  let action_as_lb eff_lid a =
     let lb = close_univs_and_mk_letbinding
                 None
+                (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
                 (Inr (lid_as_fv a.action_name Delta_equational None))
                 a.action_univs
                 a.action_typ
                 Const.effect_Tot_lid
                 a.action_defn in
-    Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [], [])
+    Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [Visible_default ; Action eff_lid], [])
 
 (* Some reification utilities *)
 let mk_reify t =

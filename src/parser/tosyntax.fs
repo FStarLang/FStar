@@ -1604,7 +1604,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
     let env = push_sigelt env0 se in
     let env = actions |> List.fold_left (fun env a ->
         //printfn "Pushing action %s\n" a.action_name.str;
-        push_sigelt env (Util.action_as_lb a)) env in
+        push_sigelt env (Util.action_as_lb mname a)) env in
     let env =
         if quals |> List.contains Reflectable
         then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
@@ -1678,7 +1678,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn bui
     let monad_env = env in
     let env = push_sigelt env0 se in
     let env = ed.actions |> List.fold_left (fun env a ->
-        push_sigelt env (Util.action_as_lb a)
+        push_sigelt env (Util.action_as_lb mname a)
     ) env in
     let env =
         if quals |> List.contains Reflectable

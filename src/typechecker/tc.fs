@@ -1383,10 +1383,10 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
       let ne = tc_eff_decl env ne in
       let se = Sig_new_effect(ne, r) in
       let env = Env.push_sigelt env se in
+      (* KM : What's the point of collecting actions sig_let if they are not returned ??*)
       let env, ses = ne.actions |> List.fold_left (fun (env, ses) a ->
-          let se_let = Util.action_as_lb a in
-          Env.push_sigelt env se_let, se_let::ses) (env, [se])
-      in
+          let se_let = Util.action_as_lb ne.mname a in
+          Env.push_sigelt env se_let, se_let::ses) (env, [se]) in
       [se], env, []
 
     | Sig_sub_effect(sub, r) ->
@@ -1816,4 +1816,15 @@ let check_module env m =
     let m, env = tc_modul env m in
     if Options.dump_module m.name.str
     then Util.print1 "%s\n" (Print.modul_to_string m);
+    if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
+    then begin
+      let normalize_toplevel_lets = function
+          | Sig_let ((b, lbs), r, ids, qs) ->
+              let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant] env in
+              Sig_let ((b, List.map (fun lb -> {lb with lbdef = n lb.lbdef}) lbs), r, ids, qs)
+          | se -> se
+      in
+      let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
+      Util.print1 "%s\n" (Print.modul_to_string normalized_module)
+    end;
     m, env

@@ -357,7 +357,8 @@ let mkRefinedBinder id t should_bind_var refopt m implicit =
         if should_bind_var
         then mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type)) m Type implicit
         else
-            let b = mk_binder (NoName t) m Type implicit in
+            let x = gen t.range in
+            let b = mk_binder (Annotated (x, t)) m Type implicit in
             mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type)) m Type implicit
 
 let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
@@ -384,7 +385,8 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                     mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type None, phi)) range Type
                 end
             else
-                mk_term (Refine(mk_binder (NoName t) t_range Type None, phi)) range Type
+                let x = gen t.range in
+                mk_term (Refine(mk_binder (Annotated (x, t)) t_range Type None, phi)) range Type
      in
      mk_pattern (PatAscribed(pat, t)) range
 
