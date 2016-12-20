@@ -11,6 +11,10 @@ FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperstack --include hacl
 # Files that should fully typecheck
 # Files commented out are broken, uncomment once fixed
 VERIFY= \
+  Crypto.Symmetric.MAC \
+  Crypto.Symmetric.UF1CMA \
+  Crypto.Symmetric.PRF \
+  Crypto.AEAD.Encoding \
   Crypto.AEAD.Invariant \
   Crypto.AEAD.BufferUtils \
   Crypto.AEAD.EnxorDexor \

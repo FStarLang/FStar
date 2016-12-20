@@ -160,9 +160,9 @@ val rcreate: rgn:HH.rid{HS.is_eternal_region rgn} -> i:id -> ST (elemB i)
   (ensures  (fun h0 r h1 ->
     HS.modifies (Set.singleton rgn) h0 h1 /\
     HS.modifies_ref rgn TSet.empty h0 h1 /\
+    ~(HS.((Buffer.content (as_buffer r)).mm)) /\
     Buffer.frameOf (as_buffer r) == rgn /\
-    ~(live h0 r) /\
-    live h1 r))
+    ~(live h0 r) /\live h1 r))
 let rcreate rgn i =
   match alg i with
   | POLY1305 -> B_POLY1305 (FStar.Buffer.rcreate rgn 0UL  5ul)
