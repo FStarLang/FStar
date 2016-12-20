@@ -188,12 +188,14 @@ val reestablish_inv:
               (* enc_dec_liveness st aad plain cipher_tag h2 /\ *)
               (* enc_dec_liveness st aad plain cipher_tag h3 /\ *)
 	      HS.(is_stack_region h0.tip) /\ //TODO: need to add that the buffers of acc live in h0.tip
+     	      Buffer.frameOf (MAC.as_buffer (CMA.abuf acc)) = HS.(h0.tip) /\
               inv st h0 /\
 	      (safeMac i ==> is_mac_for_iv st ak h0) /\
               PRF_MAC.enxor_h0_h1 st n aad plain cipher_tag h0 h1 /\
               (* Enxor.enxor_invariant st.prf x_1 plainlen 0ul plain cipher h0 h1 /\ *)
               (* Enxor.modifies_table_above_x_and_buffer st.prf x_1 cipher h0 h1 /\ *)
               EncodingWrapper.accumulate_modifies_nothing h1 h2 /\
+              CMA.(ak.region = PRF.(st.prf.mac_rgn)) /\
               CMAWrapper.mac_ensures i n st aad plain cipher_tag ak acc h2 h3 /\ (
               if safeMac i
               then ideal_ensures st n aad plain cipher_tag h3 h4
@@ -206,7 +208,8 @@ let reestablish_inv i st n #aadlen aad #plainlen plain cipher_tag ak acc h0 h1 h
   FStar.Buffer.lemma_intro_modifies_0 h1 h2;
   (* assert (PRF_MAC.accumulate_h0_h1 st n aad plain cipher h1 h2); *)
   PRF_MAC.lemma_propagate_inv_accumulate false st n aad plain cipher_tag h1 h2;
-  admit()
+  PRF_MAC.lemma_propagate_inv_mac_wrapper st n aad plain cipher_tag ak h2 h3;
+  PRF_MAC.reestablish_inv st n aad plain cipher_tag h3 h4 //needs some optimization
 
 ////////////////////////////////////////////////////////////////////////////////
        
