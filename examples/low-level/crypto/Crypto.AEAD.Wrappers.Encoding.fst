@@ -108,7 +108,6 @@ val accumulate_enc
 	  (CMA.authId i ==> 
 	    fresh_nonce_st (snd i) aead_st h0 /\
 	    CMA.mac_is_unset i PRF.(aead_st.prf.mac_rgn) ak h0)))
-	  (* is_ak_for_iv aead_st ak h0)) *)
       (ensures (fun h0 acc h1 ->  
 	  let tag : lbuffer (v MAC.taglen) = Buffer.sub cipher_tagged txtlen MAC.taglen in
 	  let cipher : lbuffer (v txtlen) = Buffer.sub cipher_tagged 0ul txtlen in
@@ -118,17 +117,19 @@ val accumulate_enc
   	  (CMA.authId i ==> 
 	      fresh_nonce_st (snd i) aead_st h1 /\	  
 	      CMA.mac_is_unset i PRF.(aead_st.prf.mac_rgn) ak h1) /\
-	  (* is_ak_for_iv aead_st ak h1 /\	   *)
 	  accumulate_modifies_nothing h0 h1 /\
 	  accumulate_ensures ak aad cipher h0 acc h1))
 #reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let accumulate_freshness (#i:mac_id) (acc:CMA.accBuffer i) (h0:mem) (h1:mem) = 
+    (mac_log ==> fresh_sref h0 h1 (CMA.alog acc)) /\
+    (fresh_sref h0 h1 (Buffer.content (MAC.as_buffer (CMA.abuf acc))))
+
 let accumulate_enc #i #rw aead_st ak #aadlen aad #txtlen plain cipher_tagged =	  
     let h0 = get () in
     let cipher : lbuffer (v txtlen) = Buffer.sub cipher_tagged 0ul txtlen in
     let acc = accumulate ak aadlen aad txtlen cipher in
     let h1 = get () in
-    assume (mac_log ==> fresh_sref h0 h1 (CMA.alog acc));
-    assume (fresh_sref h0 h1 (Buffer.content (MAC.as_buffer (CMA.abuf acc))));
+    assume (accumulate_freshness acc h0 h1); //NS: this will go once Encoding.accumulate can provide freshness for its allocation
     FStar.Buffer.lemma_reveal_modifies_0 h0 h1;
     acc
 
@@ -159,8 +160,7 @@ let accumulate #i #rw aead_st ak #aadlen aad #txtlen plain cipher_tagged =
     let acc = accumulate ak aadlen aad txtlen cipher in
     let h1 = get () in
     assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.abuf acc)) (CMA.(ak.s)) cipher);
-    assume (mac_log ==> fresh_sref h0 h1 (CMA.alog acc)); //NS: this goes away when Encoding.accumulate is restored
-    assume (fresh_sref h0 h1 (Buffer.content (MAC.as_buffer (CMA.abuf acc))));
+    assume (accumulate_freshness acc h0 h1); //NS: this will go once Encoding.accumulate can provide freshness for its alloc    
     FStar.Buffer.lemma_reveal_modifies_0 h0 h1;
     frame_inv_modifies_tip aead_st h0 h1;
     assert (accumulate_ensures ak aad cipher h0 acc h1);
