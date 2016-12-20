@@ -395,6 +395,51 @@ let rec extract_named_refinement t1  =
     | Paren t -> extract_named_refinement t
         | _ -> None
 
+(* Some helpers that parse.mly and parse.fsy will want too *)
+
+(* JP: what does this function do? A comment would be welcome, or at the very
+   least a type annotation...
+   JP: ok, here's my understanding.
+   This function peeks at the first top-level declaration;
+   - if this is NOT a TopLevelModule, then we're in interactive mode and return
+     [Inr list-of-declarations]
+   - if this IS a TopLevelModule, then we do a forward search and group
+     declarations together with the preceding [TopLevelModule] and return a [Inl
+     list-of-modules] where each "module" [Module (lid, list-of-declarations)], with the
+     unspecified invariant that the first declaration is a [TopLevelModule]
+   JP: TODO actually forbid multiple modules and remove all of this. *)
+let as_frag d ds =
+  let rec as_mlist out ((m_name, m_decl), cur) ds =
+    match ds with
+    | [] -> List.rev (Module(m_name, m_decl :: List.rev cur)::out)
+    | d :: ds ->
+      begin match d.d with
+        | TopLevelModule m' ->
+            as_mlist (Module(m_name, m_decl :: List.rev cur)::out) ((m', d), []) ds
+        | _ ->
+            as_mlist out ((m_name, m_decl), d::cur) ds
+      end
+  in
+  match d.d with
+  | TopLevelModule m ->
+      let ms = as_mlist [] ((m,d), []) ds in
+      begin match List.tl ms with
+      | Module (m', _) :: _ ->
+          (* This check is coded to hard-fail in dep.num_of_toplevelmods. *)
+          let msg = "Support for more than one module in a file is deprecated" in
+          print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid m')) msg
+      | _ ->
+          ()
+      end;
+      Inl ms
+  | _ ->
+      let ds = d::ds in
+      List.iter (function
+        | {d=TopLevelModule _; drange=r} -> raise (S.Error("Unexpected module declaration", r))
+        | _ -> ()
+      ) ds;
+      Inr ds
+
 let compile_op arity s =
     let name_of_char = function
       |'&' -> "Amp"
@@ -421,6 +466,9 @@ let compile_op arity s =
     | ".[]" -> "op_String_Access"
     | ".()" -> "op_Array_Access"
     | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
+
+let compile_op' s =
+  compile_op (-1) s
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging
