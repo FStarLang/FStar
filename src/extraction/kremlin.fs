@@ -53,6 +53,7 @@ and branches_t =
 and flag =
   | Private
   | NoExtract
+  | CInline
 
 and lifetime =
   | Eternal
@@ -322,6 +323,10 @@ and translate_flags flags =
   List.choose (function
     | Syntax.Private -> Some Private
     | Syntax.NoExtract -> Some NoExtract
+    | Syntax.Attribute "c_inline" -> Some CInline
+    | Syntax.Attribute a ->
+        print1_warning "Warning: unrecognized attribute %s" a;
+        None
     | _ -> None
   ) flags
 

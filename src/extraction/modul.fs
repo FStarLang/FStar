@@ -258,7 +258,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let((false, [lb]), _, _, quals, _) when (Term.level g lb.lbtyp = Term.Kind_level) ->
           extract_typ_abbrev g (right lb.lbname) quals lb.lbdef
 
-        | Sig_let (lbs, r, _, quals, _) ->
+        | Sig_let (lbs, r, _, quals, attrs) ->
           let elet = mk (Tm_let(lbs, Const.exp_false_bool)) None r in
           let ml_let, _, _ = Term.term_as_mlexpr g elet in
           begin match ml_let.expr with
@@ -280,7 +280,14 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 | Syntax.NoExtract -> Some NoExtract
                 | _ -> None
               ) quals in
-              g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (flavor, flags, List.rev ml_lbs')]
+              let flags' = List.choose (function
+                | { n = Tm_constant (Const_string (data, _)) } ->
+                    Some (Attribute (string_of_unicode data))
+                | _ ->
+                    print_warning "Warning: unrecognized, non-string attribute, bother protz for a better error message";
+                    None
+              ) attrs in
+              g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')]
 
             | _ ->
               failwith (Util.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
