@@ -459,6 +459,7 @@ val enxor  :
   (requires (fun h ->
 	     let x = {iv=iv; ctr=otp_offset i} in
 	     let t = aead_st.prf in
+	     HS.(is_stack_region h.tip) /\
 	     enc_dec_separation aead_st aad plain cipher_tag /\
 	     enc_dec_liveness aead_st aad plain cipher_tag h /\
 	     inv aead_st h /\
@@ -478,6 +479,7 @@ val enxor  :
              PRF_MAC.ak_live aead_st.prf.mac_rgn ak h1 /\	    
 	     (safeMac i ==>
 		 fresh_nonce_st iv aead_st h1 /\
+      	         is_mac_for_iv aead_st ak h1 /\
 	         CMA.mac_is_unset (i, iv) aead_st.prf.mac_rgn ak h1) /\
 	     PRF_MAC.enxor_h0_h1 aead_st iv aad plain cipher_tag h0 h1))
 let enxor #i iv aead_st #aadlen aad #len plain_b cipher_tag ak =
@@ -492,7 +494,19 @@ let enxor #i iv aead_st #aadlen aad #len plain_b cipher_tag ak =
     assert (safeId i ==> Seq.equal (HS.sel h_init (itable i t))
 				   (Seq.append (HS.sel h_init (itable i t))
 				 	        Seq.createEmpty)) in
-  counter_enxor t x len len plain_b cipher_b h_init
+  let h0 = get () in 						
+  counter_enxor t x len len plain_b cipher_b h_init;
+  let h1 = get () in 
+  if safeMac i then begin
+    let prf = PRF.itable i aead_st.prf in 
+    let tab_0 = HS.sel h0 prf in
+    let tab_1 = HS.sel h1 prf in
+    let suffix = Seq.slice tab_1 (Seq.length tab_0) (Seq.length tab_1) in
+    assert (Seq.equal tab_1 (Seq.append tab_0 suffix));
+    let x0 = {iv=iv; ctr=PRF.ctr_0 i} in
+    lemma_prf_find_append_some tab_0 suffix x0
+  end
+  
 
 (*** Dexor specifics ***)
 

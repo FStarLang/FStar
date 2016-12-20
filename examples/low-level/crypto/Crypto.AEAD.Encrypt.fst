@@ -156,7 +156,7 @@ let encrypt_write_effect i st n #aadlen aad #plainlen plain cipher_tag ak acc
   let tag : lbuffer (v MAC.taglen) = Buffer.sub cipher_tag plainlen MAC.taglen in
   let x_1 = {iv=n; ctr=otp_offset i} in
   let mac_region = PRF.(st.prf.mac_rgn) in
-  assume (safeMac i ==>  (
+  assume (safeMac i ==>  (                                 //NS, TODO: need some framing on the aead log, should be easy
     HS.sel h_init (st_ilog st) == HS.sel h_mac (st_ilog st)));
   Enxor.weaken_modifies st.prf x_1 cipher h_prf h_enx;
   CMAWrapper.weaken_mac_modifies i n tag ak acc h_acc h_mac;
@@ -188,12 +188,14 @@ val reestablish_inv:
               (* enc_dec_liveness st aad plain cipher_tag h2 /\ *)
               (* enc_dec_liveness st aad plain cipher_tag h3 /\ *)
 	      HS.(is_stack_region h0.tip) /\ //TODO: need to add that the buffers of acc live in h0.tip
+     	      Buffer.frameOf (MAC.as_buffer (CMA.abuf acc)) = HS.(h0.tip) /\
               inv st h0 /\
 	      (safeMac i ==> is_mac_for_iv st ak h0) /\
               PRF_MAC.enxor_h0_h1 st n aad plain cipher_tag h0 h1 /\
               (* Enxor.enxor_invariant st.prf x_1 plainlen 0ul plain cipher h0 h1 /\ *)
               (* Enxor.modifies_table_above_x_and_buffer st.prf x_1 cipher h0 h1 /\ *)
               EncodingWrapper.accumulate_modifies_nothing h1 h2 /\
+              CMA.(ak.region = PRF.(st.prf.mac_rgn)) /\
               CMAWrapper.mac_ensures i n st aad plain cipher_tag ak acc h2 h3 /\ (
               if safeMac i
               then ideal_ensures st n aad plain cipher_tag h3 h4
@@ -206,7 +208,8 @@ let reestablish_inv i st n #aadlen aad #plainlen plain cipher_tag ak acc h0 h1 h
   FStar.Buffer.lemma_intro_modifies_0 h1 h2;
   (* assert (PRF_MAC.accumulate_h0_h1 st n aad plain cipher h1 h2); *)
   PRF_MAC.lemma_propagate_inv_accumulate false st n aad plain cipher_tag h1 h2;
-  admit()
+  PRF_MAC.lemma_propagate_inv_mac_wrapper st n aad plain cipher_tag ak h2 h3;
+  PRF_MAC.reestablish_inv st n aad plain cipher_tag h3 h4 //needs some optimization
 
 ////////////////////////////////////////////////////////////////////////////////
        
@@ -249,19 +252,13 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   Enxor.enxor n st aad plain cipher_tagged ak;
   let h_enxor = get () in
   
-  (* assume (EncodingWrapper.ak_aad_cipher_separate ak aad cipher_tagged); //slow *)
-
   //call accumulate: encode the ciphertext and additional data for mac'ing
   let acc = EncodingWrapper.accumulate_enc #(i, n) st ak aad plain cipher_tagged in
   let h_acc = get () in
 
-  (* assume(verify_liveness ak tag h_acc); //slow *)
-
   //call mac: filling in the tag component of the out buffer
   CMAWrapper.mac #(i,n) st aad plain cipher_tagged ak acc h_enxor;
   let h_mac = get () in
-
-  (* assert (safeMac i ==> fresh_nonce_st n st h_mac); *)
 
   if safeMac i
   then do_ideal st n aad plain cipher_tagged;

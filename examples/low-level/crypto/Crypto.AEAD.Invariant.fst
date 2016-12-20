@@ -363,6 +363,18 @@ let inv (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
      REQUIREMENTS OF THE INTERFACE ***)
 
 module Plain = Crypto.Plain
+
+let recall_aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw) 
+  : ST unit (requires (fun h -> True))
+	    (ensures (fun h0 _ h1 -> 
+			h0 == h1 /\
+			aead_liveness st h1))
+  = recall_region PRF.(st.prf.mac_rgn);
+    if prf i
+    then recall (PRF.itable i st.prf);
+    if safeMac i
+    then recall (st_ilog st)
+
 (*+ enc_dec_separation:
 	Calling AEAD.encrypt/decrypt requires this separation **)
 let enc_dec_separation (#i:id) (#rw:rw) (st:aead_state i rw)
