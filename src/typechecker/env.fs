@@ -657,7 +657,7 @@ let is_record env lid =
 
 let is_action env lid =
     match lookup_qname env lid with
-        | Some (Inr (Sig_let(_, _, _, tags), _)) ->
+        | Some (Inr (Sig_let(_, _, _, tags, _), _)) ->
             Util.for_some (function Action _ -> true | _ -> false) tags
         | _ -> false
 

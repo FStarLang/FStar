@@ -3593,7 +3593,7 @@ in (
 let env = (FStar_Parser_Env.push_sigelt env0 se)
 in (
 
-let env = (FStar_All.pipe_right actions (FStar_List.fold_left (fun env a -> (let _163_1012 = (FStar_Syntax_Util.action_as_lb a)
+let env = (FStar_All.pipe_right actions (FStar_List.fold_left (fun env a -> (let _163_1012 = (FStar_Syntax_Util.action_as_lb mname a)
 in (FStar_Parser_Env.push_sigelt env _163_1012))) env))
 in (
 
@@ -3736,7 +3736,7 @@ in (
 let env = (FStar_Parser_Env.push_sigelt env0 se)
 in (
 
-let env = (FStar_All.pipe_right ed.FStar_Syntax_Syntax.actions (FStar_List.fold_left (fun env a -> (let _163_1074 = (FStar_Syntax_Util.action_as_lb a)
+let env = (FStar_All.pipe_right ed.FStar_Syntax_Syntax.actions (FStar_List.fold_left (fun env a -> (let _163_1074 = (FStar_Syntax_Util.action_as_lb mname a)
 in (FStar_Parser_Env.push_sigelt env _163_1074))) env))
 in (
 

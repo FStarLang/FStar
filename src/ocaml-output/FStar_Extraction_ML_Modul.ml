@@ -638,7 +638,7 @@ end
 | FStar_Syntax_Syntax.Sig_new_effect_for_free (_82_498) -> begin
 (FStar_All.failwith "impossible -- removed by tc.fs")
 end
-| (FStar_Syntax_Syntax.Sig_sub_effect (_)) | (FStar_Syntax_Syntax.Sig_effect_abbrev (_)) | (FStar_Syntax_Syntax.Sig_pragma (_)) -> begin
+| (FStar_Syntax_Syntax.Sig_assume (_)) | (FStar_Syntax_Syntax.Sig_sub_effect (_)) | (FStar_Syntax_Syntax.Sig_effect_abbrev (_)) | (FStar_Syntax_Syntax.Sig_pragma (_)) -> begin
 ((g), ([]))
 end)))
 
@@ -649,7 +649,7 @@ in (FStar_All.pipe_right _179_204 Prims.fst)))
 
 let rec extract : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.modul  ->  (FStar_Extraction_ML_UEnv.env * FStar_Extraction_ML_Syntax.mllib Prims.list) = (fun g m -> (
 
-let _82_513 = (FStar_Syntax_Syntax.reset_gensym ())
+let _82_516 = (FStar_Syntax_Syntax.reset_gensym ())
 in (
 
 let name = (FStar_Extraction_ML_Syntax.mlpath_of_lident m.FStar_Syntax_Syntax.name)
@@ -657,8 +657,8 @@ in (
 
 let g = (
 
-let _82_516 = g
-in {FStar_Extraction_ML_UEnv.tcenv = _82_516.FStar_Extraction_ML_UEnv.tcenv; FStar_Extraction_ML_UEnv.gamma = _82_516.FStar_Extraction_ML_UEnv.gamma; FStar_Extraction_ML_UEnv.tydefs = _82_516.FStar_Extraction_ML_UEnv.tydefs; FStar_Extraction_ML_UEnv.currentModule = name})
+let _82_519 = g
+in {FStar_Extraction_ML_UEnv.tcenv = _82_519.FStar_Extraction_ML_UEnv.tcenv; FStar_Extraction_ML_UEnv.gamma = _82_519.FStar_Extraction_ML_UEnv.gamma; FStar_Extraction_ML_UEnv.tydefs = _82_519.FStar_Extraction_ML_UEnv.tydefs; FStar_Extraction_ML_UEnv.currentModule = name})
 in if (((m.FStar_Syntax_Syntax.name.FStar_Ident.str = "Prims") || m.FStar_Syntax_Syntax.is_interface) || (FStar_Options.no_extract m.FStar_Syntax_Syntax.name.FStar_Ident.str)) then begin
 (
 
@@ -667,12 +667,12 @@ in ((g), ([])))
 end else begin
 (
 
-let _82_520 = (let _179_209 = (FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name)
+let _82_523 = (let _179_209 = (FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name)
 in (FStar_Util.print1 "Extracting module %s\n" _179_209))
 in (
 
-let _82_524 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
-in (match (_82_524) with
+let _82_527 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
+in (match (_82_527) with
 | (g, sigs) -> begin
 (
 

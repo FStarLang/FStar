@@ -319,6 +319,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_new_effect_for_free _ ->
            failwith "impossible -- removed by tc.fs"
 
+       | Sig_assume _ //not needed; purely logical
        | Sig_sub_effect  _
        | Sig_effect_abbrev _  //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
        | Sig_pragma _ -> //pragmas are currently not relevant for codegen; they may be in the future

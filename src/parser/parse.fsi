@@ -298,7 +298,6 @@ type nonTerminalId =
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_effectDecl__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
     | NONTERM_list___anonymous_4_
-    | NONTERM_list___anonymous_5_
     | NONTERM_list___anonymous_7_
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
@@ -418,6 +417,7 @@ type nonTerminalId =
     | NONTERM_right_flexible_list_SEMICOLON_simpleDef_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_simpleDef_
+    | NONTERM_reverse_left_flexible_list_BAR___anonymous_5_
     | NONTERM_reverse_left_flexible_nonempty_list_BAR_patternBranch_
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int

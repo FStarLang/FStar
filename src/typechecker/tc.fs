@@ -1819,9 +1819,9 @@ let check_module env m =
     if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
     then begin
       let normalize_toplevel_lets = function
-          | Sig_let ((b, lbs), r, ids, qs) ->
+          | Sig_let ((b, lbs), r, ids, qs, attrs) ->
               let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant] env in
-              Sig_let ((b, List.map (fun lb -> {lb with lbdef = n lb.lbdef}) lbs), r, ids, qs)
+              Sig_let ((b, List.map (fun lb -> {lb with lbdef = n lb.lbdef}) lbs), r, ids, qs, attrs)
           | se -> se
       in
       let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
