@@ -1,6 +1,8 @@
 [
-  "Ω‚,„†B8“É÷ƒ\u0019f…‚ü",
+  "%ÌÍçrøì∑·DTz\u0005ﬁ â",
   [
+    [ "RBTree.uu___is_R", 1, 2, 1, [ "@query" ], 0 ],
+    [ "RBTree.uu___is_B", 1, 2, 1, [ "@query" ], 0 ],
     [
       "RBTree.rbtree'",
       1,
@@ -13,6 +15,8 @@
       ],
       0
     ],
+    [ "RBTree.uu___is_E", 1, 2, 1, [ "@query" ], 0 ],
+    [ "RBTree.uu___is_T", 1, 2, 1, [ "@query" ], 0 ],
     [
       "RBTree.__proj__T__item__col",
       1,

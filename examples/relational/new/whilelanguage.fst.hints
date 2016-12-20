@@ -1,5 +1,5 @@
 [
-  "üïzÌñ&+·Â$ÕÅ­ÿ´<",
+  "Dî·Ðq@EÅ\u0002ê>°e[}z",
   [
     [ "WhileLanguage.uu___is_Plus", 1, 2, 1, [ "@query" ], 0 ],
     [ "WhileLanguage.uu___is_Minus", 1, 2, 1, [ "@query" ], 0 ],
@@ -248,7 +248,7 @@
       ],
       0
     ],
-    [ "WhileLanguage.decr", 1, 2, 1, [ "@query" ], 0 ],
+    [ "WhileLanguage.decr_while", 1, 2, 1, [ "@query" ], 0 ],
     [
       "WhileLanguage.interpret_while",
       1,
@@ -258,7 +258,8 @@
         "@query", "binder_x_09ed0269ff54a508b9c2db04a15ad694_1",
         "binder_x_6d2d986ae2193e10b7b088fdfea59c2f_0", "bool_inversion",
         "disc_equation_WhileLanguage.While", "equality_tok_Prims.LexTop@tok",
-        "equation_WhileLanguage.decr",
+        "equation_WhileLanguage.decr_while",
+        "equation_WhileLanguage.variant",
         "fuel_correspondence_WhileLanguage.interpret_exp.fuel_instrumented",
         "function_token_typing_FStar.Heap.heap", "lemma_Prims.invertOption",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_GreaterThanOrEqual",
@@ -269,8 +270,8 @@
         "projection_inverse_WhileLanguage.While_variant",
         "refinement_interpretation_Tm_refine_25fc26271a1d51c4d8e979c06f18d4ab",
         "subterm_ordering_WhileLanguage.While", "typing_Prims.uu___is_None",
-        "typing_Prims.uu___is_Some", "typing_WhileLanguage.decr",
-        "well-founded-ordering-on-nat"
+        "typing_Prims.uu___is_Some", "typing_WhileLanguage.decr_while",
+        "typing_WhileLanguage.interpret_exp", "well-founded-ordering-on-nat"
       ],
       0
     ],
