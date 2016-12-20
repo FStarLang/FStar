@@ -845,7 +845,8 @@ let frame_unused_aead_id_for_prf_mac_wrapper #i #rw #aadlen #plainlen aead_st no
       assert (CMA.mac_is_unset (i, nonce') aead_st.prf.mac_rgn mac_range h0);
       assume (CMA.(mac_st.region) == aead_st.prf.mac_rgn);
       assume (CMA.mac_is_unset (i, nonce') aead_st.prf.mac_rgn mac_range h1))//NS:TODO make use of the nonce indexing here
-      
+
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"      
 val frame_unused_aead_id_for_prf_mac_wrapper_forall
   (#i:id)
   (#rw:rw)
