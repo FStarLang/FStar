@@ -893,9 +893,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     // Util.print2 "Will %sreify : %s \n" (if should_reify then "" else "not ") (stack_to_string stack);
 
                     if not should_reify
-                    then
-                        (* TODO : why is t normalized with an empty stack  ??? *)
-                        (* Drops stack *)
+                    then (*  We have an impure computation, and we aim to perform any pure steps within that computation.
+                             
+                             This scenario arises primarily as we extract (impure) programs and partially evaluate them
+                             before extraction, as an optimization.
+
+                             First, we reduce **the type annotation** t with an empty stack
+                             
+                             Then, we reduce the monadic computation `head`, in a stack marked with a Meta_monadic,
+                             indicating that this reduction should not consume any arguments on the stack. `rebuild`
+                             will notice the Meta_monadic marker and reconstruct the computation after normalization.
+                         *)
                         let t = norm cfg env [] t in
                         let stack = Steps(cfg.steps, cfg.delta_level)::stack in
                         let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
@@ -945,30 +953,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                 (******************************************************************************)
 
 
-                                //Do we need to check that head is reifiable ?
-                                // let head_reifiable =
-                                //     match (SS.compress head).n with
-                                //         | Tm_fvar head_lid ->
-                                //             let ed = Env.get_effect_decl cfg.tcenv m in
-                                //             let b =
-                                //                 let find f = List.fold_left (fun b x -> b || f x) false in
-                                //                 find (fun action -> S.fv_eq_lid head_lid action.action_name) ed.actions
-                                //             in
-                                //             if b
-                                //             then true
-                                //             else
-                                //                 begin match S.lid_of_fv head_lid |> Env.try_lookup_val_decl cfg.tcenv with
-                                //                     | Some (_, quals) -> List.contains Reifiable quals
-                                //                     | _ -> false
-                                //                 end
-                                //         |  _ -> false
-                                // in
-                                // Util.print1_warning "head is %sreifiable !\n" (if head_reifiable then "" else "non ") ;
-                                // if head_reifiable
-                                // then
                                 let ed = Env.get_effect_decl cfg.tcenv m in
                                 let _, bind_repr = ed.bind_repr in
 
+                                //TODO: Maybe replace this with a recursive call to norm with delta_level = Delta_constant, in the case of an action, 
+                                //      and setting the stack to []
+                                //      Notice that this is not a tail call, but it's a bounded (small) number of recursive steps
                                 let maybe_unfold_action head =
                                     let t, univs = match (SS.compress head).n with
                                         | Tm_uinst (t, univs) -> t, univs
