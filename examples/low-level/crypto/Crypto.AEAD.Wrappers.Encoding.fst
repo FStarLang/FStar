@@ -130,7 +130,7 @@ let accumulate_enc #i #rw aead_st ak #aadlen aad #txtlen plain cipher_tagged =
     let cipher : lbuffer (v txtlen) = Buffer.sub cipher_tagged 0ul txtlen in
     let acc = accumulate ak aadlen aad txtlen cipher in
     let h1 = get () in
-    assume (accumulate_freshness acc h0 h1); //NS: this will go once Encoding.accumulate can provide freshness for its allocation
+    assume (accumulate_freshness acc h0 h1); //NS: this will go once Encoding.accumulate can provide freshness for its allocation (known limitation)
     FStar.Buffer.lemma_reveal_modifies_0 h0 h1;
     acc
 
@@ -161,7 +161,7 @@ let accumulate #i #rw aead_st ak #aadlen aad #txtlen plain cipher_tagged =
     let acc = accumulate ak aadlen aad txtlen cipher in
     let h1 = get () in
     assert (Buffer.disjoint_2 (MAC.as_buffer (CMA.abuf acc)) (CMA.(ak.s)) cipher);
-    assume (accumulate_freshness acc h0 h1); //NS: this will go once Encoding.accumulate can provide freshness for its alloc    
+    assume (accumulate_freshness acc h0 h1); //NS: this will go once Encoding.accumulate can provide freshness for its alloc (known limitation) 
     FStar.Buffer.lemma_reveal_modifies_0 h0 h1;
     frame_inv_modifies_tip aead_st h0 h1;
     acc

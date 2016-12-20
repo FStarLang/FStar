@@ -87,7 +87,7 @@ val decrypt:
   n:Cipher.iv (alg i) ->
   aadlen:aadlen ->
   aad:lbuffer (v aadlen) ->
-  plainlen:txtlen_32 {safelen i (v plainlen) (otp_offset i)} ->
+  plainlen:nz_ok_len_32 i ->
   plain:plainBuffer i (v plainlen) ->
   cipher_tagged:lbuffer (v plainlen + v MAC.taglen) ->
   ST bool
@@ -119,7 +119,6 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
     match popt with 
     | None -> false
     | Some p -> 
-      assume (plainlen <> 0ul); 
       Dexor.dexor st iv aad plain cipher_tagged p;
       true in 
   let h4 = get () in

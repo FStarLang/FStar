@@ -830,8 +830,8 @@ let rec counterblocks_len #i rgn x len from_pos plain cipher =
 let rec counterblocks_domains_increasing 
 			   (i:id{safeId i})
 			   (r:rid)
-			   (x_init:PRF.domain i{PRF.(ctr_0 i <^ x_init.ctr)})
-  			   (x:PRF.domain i{PRF.(x_init.ctr <^ x.ctr)})
+			   (x_init:PRF.domain i{PRF.(ctr_0 i <=^ x_init.ctr)})
+  			   (x:PRF.domain i{PRF.(x_init.ctr <^ x.ctr) /\ x.iv = x_init.iv})
 			   (l:nat)
 			   (from_pos:nat{from_pos <= l /\ safelen i (l - from_pos) PRF.(x.ctr)})
 			   (plain:Crypto.Plain.plain i l)
@@ -840,7 +840,7 @@ let rec counterblocks_domains_increasing
    : Lemma (requires (let cb = counterblocks i r x l from_pos l plain cipher in
 		      cb `SeqProperties.contains` e))
            (ensures  (let open PRF in
-		      x_init.ctr <^ e.x.ctr))
+		      x_init.ctr <^ e.x.ctr /\ e.x.iv = x_init.iv))
            (decreases (l - from_pos)) 
    =
    let open FStar.SeqProperties in
@@ -983,51 +983,21 @@ let find_other_iv_all_above (#i:id) (#r:rgn) (t:prf_table r i)
 	  (ensures (PRF.find t y == None))
   = SeqProperties.lemma_find_l_contains (PRF.is_entry_domain y) t
 
-val lemma_counterblocks_find_other_iv_is_none
-  (i:id{safeId i})
-  (r:rid)
-  (x:PRF.domain i{PRF.ctr_0 i <^ PRF.(x.ctr)})
-  (l:nat)
-  (from_pos:nat)
-  (to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) PRF.(x.ctr)})
-  (plain:plain i l)
-  (cipher:lbytes l) : Lemma
-  (requires  True)
-  (ensures   (let otp_entries = counterblocks i r x l from_pos to_pos plain cipher in
-	     (forall (y:PRF.domain i{y.iv <> x.iv}).{:pattern (PRF.find otp_entries y)} PRF.find otp_entries y == None)))
-  (decreases (to_pos - from_pos))
-let rec lemma_counterblocks_find_other_iv_is_none i r x l from_pos to_pos plain cipher = admit ()
-
-val lemma_counterblocks_find_domain_mac_is_none
-  (i:id{safeId i})
-  (r:rid)
-  (x:PRF.domain i{PRF.ctr_0 i <^ PRF.(x.ctr)})
-  (l:nat)
-  (from_pos:nat)
-  (to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) PRF.(x.ctr)})
-  (plain:plain i l)
-  (cipher:lbytes l) : Lemma
-  (requires  True)
-  (ensures   (let otp_entries = counterblocks i r x l from_pos to_pos plain cipher in
-	     (forall (y:PRF.domain_mac i).{:pattern (PRF.find otp_entries y)}  PRF.find otp_entries y == None)))
-  (decreases (to_pos - from_pos))
-let rec lemma_counterblocks_find_domain_mac_is_none i r x l from_pos to_pos plain cipher = admit ()
-
 val lemma_counterblocks_all_entries_are_above_x
   (i:id{safeId i})
   (r:rid)
   (x:PRF.domain i{PRF.ctr_0 i <^ PRF.(x.ctr)})
   (l:nat)
-  (from_pos:nat)
-  (to_pos:nat{from_pos <= to_pos /\ to_pos <= l /\ safelen i (to_pos - from_pos) PRF.(x.ctr)})
+  (from_pos:nat{from_pos <= l /\ safelen i (l - from_pos) PRF.(x.ctr)})
   (plain:plain i l)
   (cipher:lbytes l)
   (e:PRF.entry r i) : Lemma
-  (requires  (let otp_entries = counterblocks i r x l from_pos to_pos plain cipher in
+  (requires  (let otp_entries = counterblocks i r x l from_pos l plain cipher in
               otp_entries `SeqProperties.contains` e))
   (ensures   (e.x `PRF.above` x))
-  (decreases (to_pos - from_pos))
-let rec lemma_counterblocks_all_entries_are_above_x i r x l from_pos to_pos plain cipher e = admit ()
+let lemma_counterblocks_all_entries_are_above_x i r x l from_pos plain cipher e = 
+  let x_prev = {x with ctr=x.ctr -^ 1ul} in
+  counterblocks_domains_increasing i r x_prev x l from_pos plain cipher e
 
 (*****)
 
@@ -1083,7 +1053,7 @@ let frame_prf_contains_all_otp_blocks_prefix
     let blocks = counterblocks i mac_rgn x (v len) 0 (v len) plain cipher in
     init_remaining_len_ok x len;
     counterblocks_contains_all_otp_blocks i mac_rgn x len len plain cipher;
-    forall_intro (move_requires (lemma_counterblocks_all_entries_are_above_x i mac_rgn x (v len) 0 (v len) plain cipher));
+    forall_intro (move_requires (lemma_counterblocks_all_entries_are_above_x i mac_rgn x (v len) 0 plain cipher));
     forall_intro (move_requires (lemma_prf_find_append_none_table table blocks))
 
 let frame_mac_is_set_h

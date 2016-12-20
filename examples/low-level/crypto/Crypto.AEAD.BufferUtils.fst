@@ -20,6 +20,13 @@ let intro_prf_mac_modifies (prf_region:rid) (mac_region:rid) (h0:mem) (h1:mem)
           (ensures (prf_mac_modifies prf_region mac_region h0 h1))
   = ()
 
+let reveal_prf_mac_modifies (prf_region:rid) (mac_region:rid) (h0:mem) (h1:mem)
+  : Lemma (requires (prf_mac_modifies prf_region mac_region h0 h1))
+          (ensures  (h0 == h1  \/
+		     (HS.modifies_transitively (as_set [prf_region]) h0 h1 /\ 
+		      HS.modifies_ref mac_region TSet.empty h0 h1)))
+  = ()
+
 let dexor_modifies (c:bool) (prf_region:rid) (plain:buffer) (h0:mem) (h1:mem) =
    if c
    then Buffer.modifies_1 plain h0 h1

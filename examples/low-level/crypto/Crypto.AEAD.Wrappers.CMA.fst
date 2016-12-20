@@ -92,7 +92,7 @@ let mac_wrapper (#i:EncodingWrapper.mac_id) (ak:CMA.state i) (acc:CMA.accBuffer 
   = let h0 = get () in
     CMA.mac #i ak acc tag; 
     let h1 = get () in
-    assume (mac_modifies (fst i) (snd i) tag ak acc h0 h1) //NS: need to revise the write effect of UF1CMA.mac, which is currently in an unusable style; see discussion in issue #788 in FStar
+    assume (mac_modifies (fst i) (snd i) tag ak acc h0 h1) //NS: need to revise the write effect of UF1CMA.mac, which is currently in an unusable style; see discussion in issue #788 in FStar (known limitation)
 
 #set-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let mac_is_set_st 

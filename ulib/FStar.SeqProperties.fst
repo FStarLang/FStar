@@ -666,3 +666,17 @@ let contains_cons (#a:Type) (hd:a) (tl:Seq.seq a) (x:a)
 	   <==>
 	   (x==hd \/ tl `contains` x))
   = append_contains_equiv (Seq.create 1 hd) tl x
+
+let append_cons_snoc (#a:Type) (u: Seq.seq a) (x:a) (v:Seq.seq a)
+    : Lemma (Seq.equal (Seq.append u (cons x v))
+		       (Seq.append (snoc u x) v))
+    = ()		       
+    
+let append_slices (#a:Type) (s1:Seq.seq a) (s2:Seq.seq a)
+   : Lemma ( Seq.equal s1 (Seq.slice (Seq.append s1 s2) 0 (Seq.length s1)) /\
+	     Seq.equal s2 (Seq.slice (Seq.append s1 s2) (Seq.length s1) (Seq.length s1 + Seq.length s2)) /\
+	     (forall (i:nat) (j:nat).
+		i <= j /\ j <= Seq.length s2 ==>
+		Seq.equal (Seq.slice s2 i j) 
+			  (Seq.slice (Seq.append s1 s2) (Seq.length s1 + i) (Seq.length s1 + j))))
+   = ()       

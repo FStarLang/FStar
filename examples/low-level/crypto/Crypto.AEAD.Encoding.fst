@@ -45,20 +45,10 @@ type txtlen_32 = l:UInt32.t {l <=^ txtmax}
 //16-09-18 where is it in the libraries?
 private let min (a:nat) (b:nat) : nat = if a <= b then a else b
 
-assume val lemma_append_cons_snoc: #a:Type -> u: Seq.seq a -> x:a -> v:Seq.seq a -> Lemma //16-10-16 TODO in SeqProperties
-  (Seq.append u (SeqProperties.cons x v) == Seq.append (SeqProperties.snoc u x) v)
-
-assume val lemma_append_slices: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> Lemma //16-10-16 TODO in SeqProperties
-  ( s1 == Seq.slice (Seq.append s1 s2) 0 (Seq.length s1) /\
-    s2 == Seq.slice (Seq.append s1 s2) (Seq.length s1) (Seq.length s1 + Seq.length s2) /\
-    (forall (i:nat) (j:nat).
-      i <= j /\ j <= Seq.length s2 ==>
-      Seq.slice s2 i j == Seq.slice (Seq.append s1 s2) (Seq.length s1 + i) (Seq.length s1 + j)))
-
 val lemma_append_nil: #a:_ -> s:Seq.seq a -> Lemma (s == Seq.append s Seq.createEmpty)
 let lemma_append_nil #a s = assert (Seq.equal s (Seq.append s Seq.createEmpty))
 
-assume val lemma_big_endian_inj: b:word -> b':word  //16-12-15 TODO in libraries
+assume val lemma_big_endian_inj: b:word -> b':word  //16-12-15 TODO in libraries (NS: known limitation)
   {Seq.length b = Seq.length b'} -> Lemma
   (requires (big_endian b = big_endian b'))
   (ensures (b == b'))
@@ -282,7 +272,7 @@ let rec add_bytes #i st acc len txt =
           lemma_encode_loop txt0;
           assert(Seq.equal l2 (SeqProperties.cons x l1));
           assert(Seq.equal l3 (Seq.append (encode_bytes txt1) l2));
-          lemma_append_cons_snoc (encode_bytes txt1) x l3;
+          SeqProperties.append_cons_snoc (encode_bytes txt1) x l3;
           assert(Seq.equal l3 (Seq.append (encode_bytes txt0) l1))
         end
         else Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.abuf acc)) h1 h3
@@ -304,9 +294,9 @@ private let encode_lengths_poly1305 (aadlen:UInt32.t) (plainlen:UInt32.t) : b:lb
   let bp = uint32_bytes 4ul plainlen in 
   let open FStar.Seq in 
   let b = ba @| b0 @| bp @| b0 in
-  lemma_append_slices ba (b0 @| bp @| b0);
-  lemma_append_slices b0 (bp @| b0);
-  lemma_append_slices bp b0;
+  SeqProperties.append_slices ba (b0 @| bp @| b0);
+  SeqProperties.append_slices b0 (bp @| b0);
+  SeqProperties.append_slices bp b0;
   b
 //16-11-01 unclear why verification is slow above, fast below
 #reset-options
@@ -340,9 +330,9 @@ private let encode_lengths_ghash (aadlen:aadlen_32) (txtlen:txtlen_32) : b:lbyte
   let ba = uint32_be 4ul (8ul *^ aadlen) in
   let bp = uint32_be 4ul (8ul *^ txtlen) in 
   let b = b0 @| ba @| b0 @| bp in
-  lemma_append_slices b0 (ba @| b0 @| bp);
-  lemma_append_slices ba (b0 @| bp);
-  lemma_append_slices b0 bp;
+  SeqProperties.append_slices b0 (ba @| b0 @| bp);
+  SeqProperties.append_slices ba (b0 @| bp);
+  SeqProperties.append_slices b0 bp;
   b
 
 private val store_lengths_ghash: aadlen:aadlen_32 ->  txtlen:txtlen_32  -> w:lbuffer 16 ->
@@ -470,10 +460,10 @@ let accumulate #i st aadlen aad txtlen cipher  =
 
       //16-12-15 can't prove Buffer.modifies_0 from current CMA posts?
       assert(HS.modifies_one h.tip h h0);
-      assume(HS.modifies_one h.tip h0 h2); //NS: cf. issue #788
+      assume(HS.modifies_one h.tip h0 h2); //NS: cf. issue #788 (known limitation)
       assert(HS.modifies_one h.tip h2 h3);
       assert(HS.modifies_one h.tip h3 h4);
-      assume(HS.modifies_one h.tip h4 h5); //NS: cf. issue #788
+      assume(HS.modifies_one h.tip h4 h5); //NS: cf. issue #788 (known limitation)
       assert(HS.modifies_one h.tip h h5);
       assert(Buffer.modifies_buf_0 h.tip h h5);
       Buffer.lemma_intro_modifies_0 h h5
