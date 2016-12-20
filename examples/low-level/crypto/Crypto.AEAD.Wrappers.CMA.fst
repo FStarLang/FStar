@@ -319,6 +319,34 @@ let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16
       else b==verified
     else True
 
+#set-options "--initial_ifuel 0 --max_ifuel 0"
+let frame_verify_ok (#i:CMA.id) (ak:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
+		    (h0:mem{verify_liveness CMA.(ak.region) ak tag h0})
+		    (h1:mem{verify_liveness CMA.(ak.region) ak tag h1})
+ 		    (b:bool)
+   : Lemma (requires (let open CMA in 
+		      verify_ok ak acc tag h0 b /\
+		      HS.is_eternal_region ak.region /\
+		      HS.is_stack_region (Buffer.frameOf (MAC.as_buffer (abuf acc))) /\
+		      CMA.acc_inv ak acc h0 /\
+    		      EncodingWrapper.ak_acc_tag_separate ak acc tag /\
+		      Buffer.modifies_1 (MAC.as_buffer (abuf acc)) h0 h1))
+	   (ensures (verify_ok ak acc tag h1 b))
+   = let open CMA in
+     FStar.Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (abuf acc)) h0 h1;
+     if mac_log then begin
+      let log_0 = FStar.HyperStack.sel h0 (alog acc) in
+      let log_1 = FStar.HyperStack.sel h1 (alog acc) in      
+      assert (log_0 == log_1);
+      let r0 = MAC.sel_elem h0 ak.r in
+      let r1 = MAC.sel_elem h1 ak.r in      
+      assert (MAC.live h0 ak.r);
+      assert (Buffer.frameOf (MAC.as_buffer ak.r) == ak.region);
+      MAC.frame_sel_elem h0 h1 ak.r;
+      assert (r0 == r1)
+     end
+		 
+
 (*+ accumulate_encoded:
       the post-condition of accumulate ... 
       just a wrapper around encode_both
@@ -536,7 +564,6 @@ val verify_wrapper:
   tag:lbuffer 16 -> Stack bool
   (requires (fun h0 -> verify_requires ak acc tag h0))
   (ensures (fun h0 b h1 -> verify_ensures ak acc tag h0 b h1))
-#reset-options "--z3rlimit 200" //--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let verify_wrapper #i ak acc tag = 
   let h0 = get () in 
   let b = CMA.verify #i ak acc tag in
@@ -545,8 +572,7 @@ let verify_wrapper #i ak acc tag =
   assert (mac_log ==> m_sel h0 (CMA.(ilog ak.log)) == m_sel h1 (CMA.(ilog ak.log)));
   assert (Buffer.modifies_1 (MAC.as_buffer (CMA.abuf acc)) h0 h1);
   assert (verify_liveness CMA.(ak.region) ak tag h1);
-  assert (verify_ok ak acc tag h0 b);
-  assume (verify_ok ak acc tag h1 b);  //UF1CMA states its post-condition in terms of the initial state; but we need it in terms of the final state here
+  frame_verify_ok ak acc tag h0 h1 b;
   b
 
 #reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"

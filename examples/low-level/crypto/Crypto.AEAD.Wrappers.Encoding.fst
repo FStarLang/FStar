@@ -77,6 +77,7 @@ unfold let accumulate_ensures' (#i: MAC.id) (st: CMA.state i)
 
 let ak_acc_tag_separate (#i:CMA.id) (ak:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) =
     let open Crypto.Symmetric.UF1CMA in
+    HS.(is_stack_region (Buffer.frameOf (MAC.as_buffer (abuf acc)))) /\
     Buffer.disjoint_2 (MAC.as_buffer (abuf acc)) ak.s tag /\
     Buffer.disjoint_2 (MAC.as_buffer ak.r) ak.s tag /\
     Buffer.disjoint ak.s tag
@@ -163,6 +164,5 @@ let accumulate #i #rw aead_st ak #aadlen aad #txtlen plain cipher_tagged =
     assume (accumulate_freshness acc h0 h1); //NS: this will go once Encoding.accumulate can provide freshness for its alloc    
     FStar.Buffer.lemma_reveal_modifies_0 h0 h1;
     frame_inv_modifies_tip aead_st h0 h1;
-    assert (accumulate_ensures ak aad cipher h0 acc h1);
     acc
 
