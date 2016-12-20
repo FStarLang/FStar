@@ -1514,7 +1514,7 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
       let env = Env.push_sigelt env se in
       [se], env, []
 
-    | Sig_let(lbs, r, lids, quals, _) ->
+    | Sig_let(lbs, r, lids, quals, attrs) ->
       let env = Env.set_range env r in
       let check_quals_eq l qopt q = match qopt with
         | None -> Some q
@@ -1576,7 +1576,7 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
                 | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
                 | _ -> quals
             in
-            Sig_let(lbs, r, lids, quals, []), lbs
+            Sig_let(lbs, r, lids, quals, attrs), lbs
         | _ -> failwith "impossible"
       in
 
