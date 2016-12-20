@@ -890,11 +890,12 @@ val frame_entries_and_table_mac_wrapper
 let frame_entries_and_table_mac_wrapper #i #rw #aadlen #plainlen aead_st nonce aad plain cipher_tagged mac_st h0 h1 = 
   frame_aead_entries_are_refined_mac_wrapper aead_st nonce aad plain cipher_tagged mac_st h0 h1
 
+#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"      
 let frame_plain_and_cipher
   (#i:id)
   (#rw:rw)
   (#aadlen:aadlen_32)
-  (#plainlen:txtlen_32{plainlen <> 0ul /\ safelen i (v plainlen) (otp_offset i)})
+  (#plainlen:nz_ok_len_32 i)
   (aead_st:aead_state i rw)
   (nonce:Cipher.iv (alg i))
   (aad:lbuffer (v aadlen))
