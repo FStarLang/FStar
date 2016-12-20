@@ -953,6 +953,23 @@ let invert_prf_contains_all_otp_blocks #i #r x #len from_pos plain cipher blocks
 	    contains_cons otp_blocks_hd otp_blocks_tl e in
 	  FStar.Classical.forall_intro aux
 
+let table_differs_only_above_x (#i:id) (#r:rgn) (x:PRF.domain i) (t_0 t_1:prf_table r i) =
+  Seq.length t_0 <= Seq.length t_1 /\
+  Seq.equal (Seq.slice t_1 0 (Seq.length t_0)) t_0 /\
+  all_above x (Seq.slice t_1 (Seq.length t_0) (Seq.length t_1))
+
+let find_mac_all_above_1 (#i:id) (#r:rgn) (t:prf_table r i) (iv:Cipher.iv (alg i))
+  : Lemma (let x_0 = {iv=iv; ctr=PRF.ctr_0 i} in
+	   let x_1 = PRF.incr i x_0 in
+	   all_above x_1 t ==> None? (PRF.find_mac t x_0))
+  = admit() //NS: easy
+
+let find_other_iv_all_above (#i:id) (#r:rgn) (t:prf_table r i) 
+			    (x:PRF.domain i) (y:domain i)
+  : Lemma (requires (all_above x t /\ x.iv <> y.iv))
+	  (ensures (PRF.find t y == None))
+  = admit() //NS: easy
+
 val lemma_counterblocks_find_other_iv_is_none
   (i:id{safeId i})
   (r:rid)
