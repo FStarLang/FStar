@@ -386,7 +386,7 @@ let update #i st acc w =
   MAC.frame_sel_elem h1 h2 st.r
 
 
-let modifies_bufs_and_ref (#a:Type) (#b:Type) (#c:Type)
+abstract let modifies_bufs_and_ref (#a:Type) (#b:Type) (#c:Type)
   (buf1:Buffer.buffer a) (buf2:Buffer.buffer b) (ref:reference c) h h' : GTot Type0 =
   (forall rid. Set.mem rid (Map.domain h.h) ==>
     HH.modifies_rref rid !{Buffer.as_ref buf1, Buffer.as_ref buf2, HS.as_ref ref} h.h h'.h
@@ -419,6 +419,7 @@ let mac_ensures
     let buf = MAC.as_buffer (abuf acc) in
     Buffer.as_seq h1 tag == t /\ (
     if authId i then
+      RR.m_contains log h1 /\
       RR.m_sel h1 log == (snd i, Some (vs, t)) /\
       modifies_bufs_and_ref buf tag (RR.as_hsref log) h0 h1
     else
