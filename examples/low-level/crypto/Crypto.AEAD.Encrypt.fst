@@ -15,6 +15,7 @@ open Crypto.AEAD.Invariant
 open Crypto.AEAD.Encrypt.Invariant
 open Crypto.AEAD.Enxor.Invariant
 open Crypto.AEAD.MAC_Wrapper.Invariant
+open Crypto.AEAD.Encrypt.Ideal.Invariant
 
 module HH       = FStar.HyperHeap
 module HS       = FStar.HyperStack
@@ -237,7 +238,7 @@ let reestablish_inv i st n #aadlen aad #plainlen plain cipher_tag ak acc h0 h1 h
   FStar.Buffer.lemma_intro_modifies_0 h1 h2;
   lemma_propagate_inv_accumulate false st n aad plain cipher_tag h1 h2;
   lemma_propagate_inv_mac_wrapper st n aad plain cipher_tag ak h2 h3;
-  PRF_MAC.reestablish_inv st n aad plain cipher_tag h3 h4 //needs some optimization
+  reestablish_inv st n aad plain cipher_tag h3 h4 //needs some optimization
 
 ////////////////////////////////////////////////////////////////////////////////
        

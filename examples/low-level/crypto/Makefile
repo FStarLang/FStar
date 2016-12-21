@@ -25,6 +25,7 @@ VERIFY= \
   Crypto.AEAD.Wrappers.Encoding \
   Crypto.AEAD.Decrypt \
   Crypto.AEAD.MAC_Wrapper.Invariant \
+  Crypto.AEAD.Encrypt.Ideal.Invariant \
   Crypto.AEAD.Encrypt \
   Crypto.AEAD \
   Crypto.Test

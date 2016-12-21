@@ -1,5 +1,5 @@
 [
-  "!∏\u001cf=\u0000\u001e9Ô\u0003h˜¨á\nè",
+  "¡%8Ä6ÎÌL÷á∫\u0010C\u001bae",
   [
     [
       "Crypto.AEAD.Invariant.min",
@@ -7892,6 +7892,24 @@
       0,
       0,
       [ "@query" ],
+      0
+    ],
+    [
+      "Crypto.AEAD.Invariant.aead_entries_are_refined_snoc",
+      1,
+      0,
+      0,
+      [
+        "@query", "b2t_def",
+        "equation_Crypto.AEAD.Invariant.aead_entries_are_refined",
+        "equation_Crypto.AEAD.Invariant.refines_one_entry",
+        "equation_Crypto.Symmetric.Bytes.mem",
+        "equation_FStar.SeqProperties.snoc", "forall-interp",
+        "fuel_guarded_inversion_Crypto.AEAD.Invariant.aead_entry",
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
+        "interpretation_Tm_abs_422c644116b1904ea8aa6496143c61f1",
+        "l_imp-interp", "pretyping_c022440c4a3169186a2065b332545e43"
+      ],
       0
     ]
   ]

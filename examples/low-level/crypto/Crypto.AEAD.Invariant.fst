@@ -1137,3 +1137,14 @@ let lemma_fresh_nonce_implies_all_entries_nonces_are_different
     move_requires (SeqProperties.find_l_none_no_index aead_entries) (is_aead_entry_nonce nonce);
     forall_intro (SeqProperties.contains_elim aead_entries)
 
+let aead_entries_are_refined_snoc 
+    (#r:region) 
+    (#i:id) 
+    (prf_table: prf_table r i)
+    (aead_entries:Seq.seq (aead_entry i))
+    (e:aead_entry i)
+    (h:mem)
+    : Lemma (requires (aead_entries_are_refined prf_table aead_entries h /\
+		       (safeId i ==> refines_one_entry prf_table e h)))
+            (ensures (aead_entries_are_refined prf_table (SeqProperties.snoc aead_entries e) h))
+    = FStar.SeqProperties.contains_snoc aead_entries e
