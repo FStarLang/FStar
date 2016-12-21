@@ -15,6 +15,8 @@
 *)
 module FStar.Pprint
 
+open FStar.BaseTypes
+
 (** A pretty-printing engine and a set of basic document combinators. *)
 
 (** {1 Building documents} *)
@@ -377,5 +379,5 @@ val surround_separate_map: int -> int -> document -> document -> document -> doc
 // Expose underlying Renderer.pretty implementations (avoid inner modules).
 // [pretty_string] uses ToBuffer:RENDERER implementation;
 // [print_out_channel] uses the ToChannel:RENDERER one.
-val pretty_string : FStar.BaseTypes.float -> int -> document -> string
-val pretty_out_channel : FStar.BaseTypes.float -> int -> document -> FStar.Util.out_channel -> unit
+val pretty_string : float -> int -> document -> string
+val pretty_out_channel : float -> int -> document -> FStar.Util.out_channel -> unit

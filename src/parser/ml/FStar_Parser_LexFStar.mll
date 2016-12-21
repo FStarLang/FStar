@@ -263,7 +263,7 @@ rule token = parse
          failwith "Out-of-range character literal";
        x
        )) }
- | int8 as x  
+ | int8 as x
      { INT8 (clean_number x, false) }
  | uint16 as x
      { UINT16 (clean_number x) }

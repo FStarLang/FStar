@@ -162,6 +162,8 @@ let head_and_args e =
 
 (* Automatic level assignment *)
 (* would be perfect with a little of staging... *)
+(* TODO : see if we can plug in the menhir inspection API so that *)
+(* the level_associativity_spec table below is produced by the parser *)
 
 type associativity =
     | Left

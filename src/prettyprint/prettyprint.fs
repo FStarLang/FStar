@@ -18,6 +18,7 @@
 module FStar.Pprint
 
 open FSharp.PPrint
+open FStar.BaseTypes
 
 type document = Doc of unit
 //
@@ -174,5 +175,5 @@ let ( ^/^ ) (x:document) (y:document) : document = failwith not_impl_msg
 
 // let ( ^//^ ) (x:document) (y:document) : document = failwith not_impl_msg
 
-let pretty_string (rfrac:FStar.BaseTypes.float) (width:int) (doc:document) : string = failwith not_impl_msg
-let pretty_out_channel (rfrac:FStar.BaseTypes.float) (width:int) (doc:document) (channel:FStar.Util.out_channel) : unit = failwith not_impl_msg
+let pretty_string (rfrac:float) (width:int) (doc:document) : string = failwith not_impl_msg
+let pretty_out_channel (rfrac:float) (width:int) (doc:document) (channel:FStar.Util.out_channel) : unit = failwith not_impl_msg
