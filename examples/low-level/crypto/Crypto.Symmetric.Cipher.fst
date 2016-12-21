@@ -103,7 +103,7 @@ val compute:
     (ensures (fun h0 _ h1 -> live h1 output /\ modifies_1 output h0 h1
       ))
 
-#reset-options "--z3rlimit 10000" 
+#reset-options "--z3rlimit 50" 
 
 let compute i output st n counter len = 
   let a = algi i in
@@ -125,9 +125,9 @@ let compute i output st n counter len =
       store_uint128 (ivlen AES128) (Buffer.sub ctr_block 0ul (ivlen AES128)) n;
       aes_store_counter ctr_block counter;
       let output_block = Buffer.create 0uy (blocklen' AES128) in
-      let () = match aesImpl_of_id i with
+      let () = ( match aesImpl_of_id i with
         | HaclAES -> cipher output_block ctr_block w sbox
-        | SpartanAES -> Spartan.cipher output_block ctr_block w sbox in
+        | SpartanAES -> Spartan.cipher output_block ctr_block w sbox ) in
       blit output_block 0ul output 0ul len // too much copying!
 
   | AES256 -> 
