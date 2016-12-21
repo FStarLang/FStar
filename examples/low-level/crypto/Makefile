@@ -40,7 +40,7 @@ VERIFY= \
   Crypto.AEAD.Encrypt.Invariant \
   Crypto.AEAD.Enxor.Invariant \
   Crypto.AEAD.EnxorDexor \
-  Crypto.AEAD.PRF_MAC \
+  Crypto.AEAD.Wrappers.PRF \
   Crypto.AEAD.Wrappers.CMA \
   Crypto.AEAD.Wrappers.Encoding \
   Crypto.AEAD.Decrypt \
