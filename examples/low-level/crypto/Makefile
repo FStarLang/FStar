@@ -22,7 +22,9 @@ VERIFY= \
   Crypto.AEAD.Wrappers.CMA \
   Crypto.AEAD.Wrappers.Encoding \
   Crypto.AEAD.Decrypt \
-  Crypto.AEAD.Encrypt
+  Crypto.AEAD.Encrypt \
+  Crypto.AEAD \
+  Crypto.Test
 
 EXTRA= \
   Crypto.Symmetric.Poly1305 \
