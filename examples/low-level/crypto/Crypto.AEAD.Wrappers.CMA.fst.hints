@@ -2491,7 +2491,7 @@
         "disc_equation_Crypto.Symmetric.MAC.B_GHASH", "eq2-interp",
         "equality_tok_Crypto.Indexing.GHASH@tok",
         "equality_tok_Crypto.Indexing.POLY1305@tok",
-        "equation_Crypto.AEAD.PRF_MAC.ak_live",
+        "equation_Crypto.AEAD.Wrappers.PRF.ak_live",
         "equation_Crypto.AEAD.Wrappers.CMA.verify_liveness",
         "equation_Crypto.AEAD.Wrappers.CMA.verify_ok",
         "equation_Crypto.AEAD.Wrappers.Encoding.ak_acc_tag_separate",

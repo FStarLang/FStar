@@ -27,12 +27,11 @@ VERIFY= \
   Crypto.AEAD.MAC_Wrapper.Invariant \
   Crypto.AEAD.Encrypt.Ideal.Invariant \
   Crypto.AEAD.Encrypt \
-  Crypto.AEAD \
-  Crypto.Test
+  Crypto.AEAD
 
 EXTRA= \
   Crypto.Symmetric.Poly1305 \
-  Crypto.AEAD
+  Crypto.Test
 
 #16-10-30 removed files specific to Poly1305:
 #  Crypto.Symmetric.Poly1305.MAC 

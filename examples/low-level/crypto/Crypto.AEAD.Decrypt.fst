@@ -24,7 +24,7 @@ module Dexor       = Crypto.AEAD.EnxorDexor
 module Encoding    = Crypto.AEAD.Encoding   
 module EncodingWrapper = Crypto.AEAD.Wrappers.Encoding
 module CMAWrapper = Crypto.AEAD.Wrappers.CMA
-module PRF_MAC    = Crypto.AEAD.PRF_MAC
+module PRF_MAC    = Crypto.AEAD.Wrappers.PRF
 
 ////////////////////////////////////////////////////////////////////////////////
 //decrypt
