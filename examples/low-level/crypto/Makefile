@@ -22,7 +22,6 @@ VERIFY= \
   Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5 \
   Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part6 \
   Crypto.Symmetric.Poly1305.Bignum \
-  Crypto.Symmetric.Poly1305.Lemmas \
   Crypto.Symmetric.Poly1305.Spec \
   Crypto.Symmetric.GF128 \
   Crypto.Symmetric.GCM \
@@ -49,11 +48,11 @@ VERIFY= \
   Crypto.AEAD.Encrypt \
   Crypto.AEAD \
   Crypto.Plain \
-  Crypto.Test \
   TestMonotonic
 
 EXTRA= \
   Crypto.Symmetric.Poly1305 \
+  Crypto.Symmetric.Poly1305.Lemmas \
   Crypto.Test
 
 #16-10-30 removed files specific to Poly1305:
