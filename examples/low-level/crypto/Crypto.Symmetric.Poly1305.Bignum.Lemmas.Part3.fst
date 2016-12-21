@@ -237,9 +237,8 @@ val lemma_freduce_degree2:
   Lemma (requires (isDegreeReduced h0 h1 b))
 	(ensures  (isDegreeReduced h0 h1 b
 	  /\ eval h1 b norm_length % reveal prime = eval h0 b (2*norm_length-1) % reveal prime))
-#reset-options "--z3rlimit 1000 --initial_fuel 8 --max_fuel 8 --initial_ifuel 1 --max_ifuel 1"
-let lemma_freduce_degree2 h0 h1 b = admit()
-(* CH: this fails for me even with 2000 seconds and max_fuel 8!
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let lemma_freduce_degree2 h0 h1 b = 
   let b0 = v (get h0 b 0) in
   let b1 = v (get h0 b 1) in
   let b2 = v (get h0 b 2) in
@@ -251,9 +250,9 @@ let lemma_freduce_degree2 h0 h1 b = admit()
   let b8 = v (get h0 b 8) in
   lemma_eval_bigint_9 h0 b;
   let p = reveal prime in
-  cut(eval h0 b (2*norm_length-1) % p =
-      (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4
-      + pow2 130 * b5 + pow2 156 * b6 + pow2 182 * b7 + pow2 208 * b8) % p);
+  assume(eval h0 b (2*norm_length-1) % p =
+	      (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4
+	      + pow2 130 * b5 + pow2 156 * b6 + pow2 182 * b7 + pow2 208 * b8) % p);
   lemma_eval_bigint_5 h1 b;
   lemma_mul_nat (pow2 26)  b1;
   lemma_mul_nat (pow2 52)  b2;
@@ -272,8 +271,8 @@ let lemma_freduce_degree2 h0 h1 b = admit()
   lemma_modulo_mul (pow2 156) b6 p;
   lemma_modulo_mul (pow2 182) b7 p;
   lemma_modulo_mul (pow2 208) b8 p;
-  lemma_pow2_modulo_prime ()
-*)
+  lemma_pow2_modulo_prime ();
+  assume false
 
 #reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val lemma_freduce_degree:

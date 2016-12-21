@@ -1,5 +1,5 @@
 [
-  "C,-'\u0001B¶`:tì?Á¨*_",
+  "\u001fðm1Æ:Î}?\u0003;“>¹üƒ",
   [
     [
       "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_div_def",
@@ -882,6 +882,49 @@
         "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2",
+      3,
+      0,
+      0,
+      [
+        "@query", "b2t_def",
+        "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",
+        "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
+        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.isDegreeReduced",
+        "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
+        "equation_Crypto.Symmetric.Poly1305.Spec.elem",
+        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero",
+        "equation_FStar.Mul.op_Star", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt64.n",
+        "equation_FStar.UInt64.t", "equation_FStar.UInt64.v",
+        "equation_Prims.nat", "equation_Prims.pos",
+        "fuel_correspondence_Prims.pow2.fuel_instrumented",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_033585b16f9282fb8c7c71161354496f",
+        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
+        "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2",
+      4,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
     [

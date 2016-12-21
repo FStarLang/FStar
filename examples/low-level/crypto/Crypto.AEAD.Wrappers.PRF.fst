@@ -1,4 +1,4 @@
-module Crypto.AEAD.PRF_MAC
+module Crypto.AEAD.Wrappers.PRF
 open FStar.UInt32
 open FStar.HyperStack
 open FStar.Monotonic.RRef
