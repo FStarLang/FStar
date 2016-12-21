@@ -443,7 +443,7 @@ let rec little_bytes len n =
 // check efficient compilation for all back-ends
 val store_uint128: 
   len:UInt32.t {v len <= 16} -> buf:lbuffer (v len) -> 
-  n:UInt128.t {UInt128.v n < pow2 (8 * v len)} -> ST unit
+  n:UInt128.t {UInt128.v n < pow2 (8 * v len)} -> Stack unit
   (requires (fun h0 -> Buffer.live h0 buf))
   (ensures (fun h0 r h1 -> 
     Buffer.live h1 buf /\ Buffer.modifies_1 buf h0 h1 /\
