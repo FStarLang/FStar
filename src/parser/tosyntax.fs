@@ -1474,14 +1474,19 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
             env, Inl(se, constructors, tconstr, quals)::tcs
           | TyconAbbrev(id, binders, kopt, t) ->
             let env, _, se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
-            env, Inr(se, t, quals)::tcs
+            env, Inr(se, binders, t, quals)::tcs
           | _ -> failwith "Unrecognized mutual type definition" in
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
       let tps_sigelts = tcs |> List.collect (function
-        | Inr(Sig_inductive_typ(id, uvs, tpars, k, _, _, _, _), t, quals) -> //should be impossible
-          let env_tps, _ = push_tparams env tpars in
-          let t = desugar_term env_tps t in
+        | Inr(Sig_inductive_typ(id, uvs, tpars, k, _, _, _, _), binders, t, quals) -> //type abbrevs in mutual type definitions
+	    let t =
+	      let env, tpars = typars_of_binders env binders in
+	      let env_tps, tpars = push_tparams env tpars in
+	      let t = desugar_typ env_tps t in
+	      let tpars = Subst.close_binders tpars in
+	      Subst.close tpars t
+            in
           [[], mk_typ_abbrev id uvs tpars k t [id] quals rng]
 
         | Inl (Sig_inductive_typ(tname, univs, tpars, k, mutuals, _, tags, _), constrs, tconstr, quals) ->
