@@ -800,6 +800,7 @@ val to_seq_full: #a:Type -> b:buffer a -> ST (seq a)
 			 r == as_seq #a h1 b ))
 let to_seq_full #a b =
   let s = !b.content in
+  let i = v b.idx in
   Seq.slice s i (i + v b.length)
 
 val index: #a:Type -> b:buffer a -> n:UInt32.t{v n < length b} -> Stack a
