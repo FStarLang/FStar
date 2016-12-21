@@ -186,7 +186,7 @@ let level_of_sigelt g se =
         | Sig_declare_typ(lid, _, t, quals, _) ->
           Util.print2 "\t\t%s @ %s\n" (Print.lid_to_string lid) (l (Term.predecessor t <| Term.level g t))
 
-        | Sig_let((_, lb::_), _, _, _) ->
+        | Sig_let((_, lb::_), _, _, _, _) ->
           Util.print3 "\t\t%s : %s @ %s\n" ((right lb.lbname).fv_name.v |> Print.lid_to_string)
                                          (Print.term_to_string lb.lbtyp)
                                          (l (Term.predecessor lb.lbtyp <| Term.level g lb.lbtyp))
@@ -255,10 +255,10 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                let fv = S.lid_as_fv lid Delta_constant None in
                extract_typ_abbrev g fv quals (U.abs bs TypeChecker.Common.t_unit None)
 
-        | Sig_let((false, [lb]), _, _, quals) when (Term.level g lb.lbtyp = Term.Kind_level) ->
+        | Sig_let((false, [lb]), _, _, quals, _) when (Term.level g lb.lbtyp = Term.Kind_level) ->
           extract_typ_abbrev g (right lb.lbname) quals lb.lbdef
 
-        | Sig_let (lbs, r, _, quals) ->
+        | Sig_let (lbs, r, _, quals, attrs) ->
           let elet = mk (Tm_let(lbs, Const.exp_false_bool)) None r in
           let ml_let, _, _ = Term.term_as_mlexpr g elet in
           begin match ml_let.expr with
@@ -280,7 +280,14 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 | Syntax.NoExtract -> Some NoExtract
                 | _ -> None
               ) quals in
-              g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (flavor, flags, List.rev ml_lbs')]
+              let flags' = List.choose (function
+                | { n = Tm_constant (Const_string (data, _)) } ->
+                    Some (Attribute (string_of_unicode data))
+                | _ ->
+                    print_warning "Warning: unrecognized, non-string attribute, bother protz for a better error message";
+                    None
+              ) attrs in
+              g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')]
 
             | _ ->
               failwith (Util.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
@@ -296,7 +303,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                                     lbunivs=[];
                                     lbtyp=t;
                                     lbeff=Const.effect_ML_lid;
-                                    lbdef=imp}]), r, [], quals) in
+                                    lbdef=imp}]), r, [], quals, []) in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match Util.find_map quals (function Discriminator l -> Some l |  _ -> None) with
                   | Some l -> //if it's a discriminator, generate real code for it, rather than mlm

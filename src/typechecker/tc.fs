@@ -1383,10 +1383,10 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
       let ne = tc_eff_decl env ne in
       let se = Sig_new_effect(ne, r) in
       let env = Env.push_sigelt env se in
+      (* KM : What's the point of collecting actions sig_let if they are not returned ??*)
       let env, ses = ne.actions |> List.fold_left (fun (env, ses) a ->
-          let se_let = Util.action_as_lb a in
-          Env.push_sigelt env se_let, se_let::ses) (env, [se])
-      in
+          let se_let = Util.action_as_lb ne.mname a in
+          Env.push_sigelt env se_let, se_let::ses) (env, [se]) in
       [se], env, []
 
     | Sig_sub_effect(sub, r) ->
@@ -1480,7 +1480,7 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
       [se], env, []
 
     | Sig_declare_typ (_, _, _, quals, _)
-    | Sig_let (_, _, _, quals)
+    | Sig_let (_, _, _, quals, _)
         when quals |> Util.for_some (function OnlyName -> true | _ -> false) ->
         (* Dummy declaration which must be erased since it has been elaborated somewhere else *)
         [], env, []
@@ -1514,7 +1514,7 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
       let env = Env.push_sigelt env se in
       [se], env, []
 
-    | Sig_let(lbs, r, lids, quals) ->
+    | Sig_let(lbs, r, lids, quals, attrs) ->
       let env = Env.set_range env r in
       let check_quals_eq l qopt q = match qopt with
         | None -> Some q
@@ -1576,7 +1576,7 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
                 | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
                 | _ -> quals
             in
-            Sig_let(lbs, r, lids, quals), lbs
+            Sig_let(lbs, r, lids, quals, attrs), lbs
         | _ -> failwith "impossible"
       in
 
@@ -1666,7 +1666,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
     | Sig_sub_effect     _
     | Sig_effect_abbrev  _ -> [se], hidden
 
-    | Sig_let((false, [lb]), _, _, quals) when (quals |> Util.for_some is_hidden_proj_or_disc) ->
+    | Sig_let((false, [lb]), _, _, quals, _) when (quals |> Util.for_some is_hidden_proj_or_disc) ->
       let fv = right lb.lbname in
       let lid = fv.fv_name.v in
       if hidden |> Util.for_some (S.fv_eq_lid fv)
@@ -1674,7 +1674,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
       else let dec = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption], Ident.range_of_lid lid) in
            [dec], lid::hidden
 
-    | Sig_let(lbs, r, l, quals) ->
+    | Sig_let(lbs, r, l, quals, _) ->
       if is_abstract quals
       then snd lbs |> List.map (fun lb ->
            Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
@@ -1775,7 +1775,7 @@ let check_exports env (modul:modul) exports =
         | Sig_declare_typ(l, univs, t, quals, _) ->
           if not (quals |> List.contains Private)
           then check_term l univs t
-        | Sig_let((_, lbs), _, _, quals) ->
+        | Sig_let((_, lbs), _, _, quals, _) ->
           if not (quals |> List.contains Private)
           then lbs |> List.iter (fun lb ->
                let fv = right lb.lbname in
@@ -1816,4 +1816,15 @@ let check_module env m =
     let m, env = tc_modul env m in
     if Options.dump_module m.name.str
     then Util.print1 "%s\n" (Print.modul_to_string m);
+    if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
+    then begin
+      let normalize_toplevel_lets = function
+          | Sig_let ((b, lbs), r, ids, qs, attrs) ->
+              let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant] env in
+              Sig_let ((b, List.map (fun lb -> {lb with lbdef = n lb.lbdef}) lbs), r, ids, qs, attrs)
+          | se -> se
+      in
+      let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
+      Util.print1 "%s\n" (Print.modul_to_string normalized_module)
+    end;
     m, env
