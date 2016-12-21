@@ -27,6 +27,13 @@ open Crypto.AEAD.Encrypt.Invariant
 
 #set-options "--initial_ifuel 0 --max_ifuel 0"
 
+(*
+ * framing of aead_entries_are_refined by mac_wrapper
+ * the proof relies on nonce being different from all the nonces in the aead table, and hence,
+ * the mac still being set (mac_wrapper only modifies the mac log for nonce)
+ * as the comment says below, this could be spelled out more
+ * otp entries are trivial, since table0 = table1
+ *)
 private val frame_aead_entries_are_refined_mac_wrapper
   (#i:id)
   (#rw:rw)
@@ -67,6 +74,12 @@ let frame_aead_entries_are_refined_mac_wrapper #i #rw #aadlen #plainlen aead_st 
     FStar.Classical.(forall_intro (move_requires aux))
   end
 
+(*
+ * framing of unused_aead_id_for_prf by mac_wrapper for nonce' <> nonce
+ * since table0 = table1, none_above is straightforward
+ * if mac entry does not exist in the prf table, then we are done
+ * else we rely on lemma_mac_log_framing to establish that mac log for nonce' is not modified by mac_wrapper
+ *)
 private val frame_unused_aead_id_for_prf_mac_wrapper
   (#i:id)
   (#rw:rw)
@@ -119,6 +132,9 @@ let frame_unused_aead_id_for_prf_mac_wrapper_forall #i #rw #aadlen #plainlen aea
   let open FStar.Classical in
   forall_intro (move_requires (frame_unused_aead_id_for_prf_mac_wrapper aead_st nonce aad plain cipher_tagged mac_st h0 h1))
 
+(*
+ * mac_wrapper does not modify the aead log and the prf table
+ *)
 private val frame_entries_and_table_mac_wrapper
   (#i:id)
   (#rw:rw)
@@ -142,6 +158,9 @@ let frame_entries_and_table_mac_wrapper #i #rw #aadlen #plainlen aead_st nonce a
   frame_aead_entries_are_refined_mac_wrapper aead_st nonce aad plain cipher_tagged mac_st h0 h1
 
 #reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"      
+(*
+ * mac_wrapper does not modify the plain text buffer and the ciphertext part of the ciphertext buffer
+ *)
 private let frame_plain_and_cipher
   (#i:id)
   (#rw:rw)
@@ -159,7 +178,10 @@ private let frame_plain_and_cipher
 	   (safeMac i ==> 
 	       Plain.sel_plain h0 plainlen plain == Plain.sel_plain h1 plainlen plain /\
 	       Buffer.as_seq h0 (cbuf ct) == Buffer.as_seq h1 (cbuf ct)))) = ()
-	       
+
+(*
+ * propagating the invariant across mac_wrapper
+ *)
 val lemma_propagate_inv_mac_wrapper
   (#i:id)
   (#rw:rw)
