@@ -20,3 +20,6 @@ random_tapes:
 
 recursive:
 	$(FSTAR) recursive.fst
+
+WhileReify:
+	$(FSTAR) --include ../../dm4free WhileReify.fst

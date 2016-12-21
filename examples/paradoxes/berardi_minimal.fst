@@ -9,6 +9,7 @@ open FStar.Classical
 *)
 
 (* Ingredient #1: impredicative polymorphism in Type, as in *)
+#set-options "--print_universes"
 type t = a:Type -> Tot a
 val foo : t -> Tot t
 let foo f = f t
@@ -20,9 +21,9 @@ let foo f = f t
 
 assume val get_proof : p:Type -> Pure p (requires p) (ensures (fun _ -> True))
 
-val bool_of_or : #p:Type -> #q:Type -> (p \/ q) -> 
+val bool_of_or : #p:Type -> #q:Type -> (p \/ q) ->
   Tot (b:bool{(b ==> p) /\ (not(b) ==> q)})
-let bool_of_or (p:Type) (q:Type) (t:p \/ q) = 
+let bool_of_or (p:Type) (q:Type) (t:p \/ q) =
   match t with
   | Left  _ -> true
   | Right _ -> false
@@ -35,7 +36,7 @@ let cem (p:Type) =
   if excluded_middle p then
     IntroL (get_proof p)
   else
-    IntroR (fun (h:p) -> give_proof h; false_elim ())
+    IntroR (fun (h:p) -> give_witness h; false_elim ())
 
 (* Conditional on any Type -- unused below *)
 val ifProp: #p:Type -> b:Type -> (e1:p) -> (e2:p) -> Tot p

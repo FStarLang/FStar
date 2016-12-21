@@ -97,7 +97,6 @@
       [
         "@query", "b2t_def", "bool_inversion", "bool_typing",
         "constructor_distinct_Crypto.Indexing.AES128",
-        "constructor_distinct_Crypto.Indexing.AES256",
         "constructor_distinct_Crypto.Indexing.CHACHA20",
         "data_elim_FStar.UInt32.Mk", "disc_equation_Crypto.Indexing.AES128",
         "disc_equation_Crypto.Indexing.AES256",

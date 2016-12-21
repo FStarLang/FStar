@@ -105,3 +105,41 @@ let reflect_on_the_fly u =
   let n1 = STINT?.get () in
   assert (n0 + 2 = n1);
   n1
+
+
+
+(* Refining the specification of a refiable impure function using reify/reflect *)
+(* Note that unless we internalize monotonicity for wps we need to define
+   refine_st using pre/post condition                                           *)
+let refine_st (#a:Type)
+              (#b:Type)
+              (#pre : a -> Tot STINT?.pre)
+              (#post : a -> Tot (int -> b -> int -> Tot Type0))
+              ($f :(x:a -> StInt b (pre x) (post x)))
+              (x:a)
+  : StInt b (pre x) (fun h0 z h1 -> pre x h0 /\
+                                 reify (f x) h0 == (z, h1) /\
+                                 post x h0 z h1)
+  = let g (h0:int)
+      : Pure (b * int)
+             (pre x h0)
+             (fun (z,h1) -> pre x h0 /\
+                       reify (f x) h0 == (z, h1) /\
+                       post x h0 z h1)
+      = reify (f x) h0
+    in
+    STINT?.reflect g
+
+(* This is a little annoying but we need an explicit pre/post effect *)
+reifiable val incr_pre_post : unit ->
+  StInt unit (requires (fun _ -> True))
+             (ensures (fun _ _ _ -> True))
+let incr_pre_post u =
+  let n = STINT?.get() in
+  STINT?.put (n + 1)
+
+let refine_st_incr_test (_:unit) : StNull unit =
+  let n0 = STINT?.get() in
+  refine_st incr_pre_post ();
+  let n1 = STINT?.get() in
+  assert(n1 == n0 + 1)

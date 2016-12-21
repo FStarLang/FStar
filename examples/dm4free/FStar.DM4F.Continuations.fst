@@ -12,9 +12,9 @@ let bind (ans:Type) (a:Type) (b:Type) (m : cont ans a) (f : a -> Tot (cont ans b
 (* let bind1 a b m f : Tot (cont b) = fun k -> bind a b m f k *)
 
 (* Sum type with explicit type anotations to bypass current lack of implicit arguments *)
-noeq type either : Type -> Type -> Type =
-| L : (a:Type) -> (b:Type) -> a -> either a b
-| R : (a:Type) -> (b:Type) -> b -> either a b
+noeq type either : Type 'ua -> Type 'ub -> Type u#(1 + max 'ua 'ub) =
+| L : (a:Type 'ua) -> (b:Type 'ub) -> a -> either a b
+| R : (a:Type 'ua) -> (b:Type 'ub) -> b -> either a b
 
 // Excluded-middle relative to ans : cont (either a (a -> M ans))
 // This could eventually be an action for CONT

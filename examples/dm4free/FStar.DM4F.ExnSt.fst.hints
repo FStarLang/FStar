@@ -1,20 +1,23 @@
 [
   "D^D‡=fé„<Ži¤Èz '",
   [
-    [ "FStar.DM4F.ExnSt.return", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.ExnSt.bind",
       1,
       2,
       1,
       [
-        "@query", "bool_inversion", "function_token_typing_Prims.int",
+        "@query", "bool_inversion", "bool_typing",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "equation_FStar.DM4F.ExnSt.exnst", "function_token_typing_Prims.int",
+        "int_inversion",
+        "interpretation_Tm_arrow_ca7e547ed2b53916b2c83e4b3beeeac9",
         "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption",
-        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some"
+        "pretyping_ae567c2fb75be05905677af440075565",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0
     ],
-    [ "FStar.DM4F.ExnSt.raise", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.ExnSt.EXNST_bind_wp",
       1,

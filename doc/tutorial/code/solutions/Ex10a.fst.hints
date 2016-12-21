@@ -9,6 +9,7 @@
       [ "@query", "assumption_Prims.HasEq_string" ],
       0
     ],
+    [ "Ex10a.uu___is_Readable", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex10a.__proj__Readable__item___0",
       1,
@@ -21,6 +22,7 @@
       ],
       0
     ],
+    [ "Ex10a.uu___is_Writable", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex10a.__proj__Writable__item___0",
       1,

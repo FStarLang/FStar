@@ -26,6 +26,11 @@ assume type hasEq: Type -> GTot Type0
 
 type eqtype = a:Type{hasEq a}
 
+(* bool is a two element type with elements {'true', 'false'}
+    we assume it is primitive, for convenient interop with other languages *)
+assume new type bool : Type0
+assume HasEq_bool: hasEq bool
+
 (* False is the empty inductive type *)
 type c_False =
 
@@ -56,27 +61,22 @@ let inversion (a:Type) = True
 (* The usual equality deifned as an inductive type *)
 type equals (#a:Type) (x:a) : a -> Type =
   | Refl : equals x x
-  
+
 (* infix binary '==';
    proof irrelevant, heterogeneous equality in Type#0
-*)   
-//TODO: instead of hard-wiring the == syntax, 
+*)
+//TODO: instead of hard-wiring the == syntax,
 //       we should just rename eq2 to op_Equals_Equals
 type eq2 (#a:Type) (x:a) (y:a) = squash (equals x y)
 
 (* Heterogeneous equality *)
-type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type = 
+type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type =
   | HRefl : h_equals x x
 
 (* A proof-irrelevant version of h_equals *)
 type eq3 (#a:Type) (#b:Type) (x:a) (y:b) = squash (h_equals x y)
 
 unfold let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
-
-(* bool is a two element type with elements {'true', 'false'}
-   we assume it is primitive, for convenient interop with other languages *)
-assume new type bool : Type0
-assume HasEq_bool: hasEq bool
 
 (* bool-to-type coercion *)
 type b2t (b:bool) = (b == true)
