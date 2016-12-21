@@ -22,7 +22,7 @@ module CMA = Crypto.Symmetric.UF1CMA
 module Cipher = Crypto.Symmetric.Cipher
 module BufferUtils = Crypto.AEAD.BufferUtils
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"      
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"      
 let safeMac_ideal_writes 
   (#i:id)
   (#rw:rw)
