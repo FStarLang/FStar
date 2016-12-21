@@ -23,7 +23,6 @@ module CMA = Crypto.Symmetric.UF1CMA
 module SeqProperties = FStar.SeqProperties
 module MAC = Crypto.Symmetric.MAC
 module EncodingWrapper = Crypto.AEAD.Wrappers.Encoding
-module PRF_MAC = Crypto.AEAD.PRF_MAC
 module RR = FStar.Monotonic.RRef
 module BufferUtils = Crypto.AEAD.BufferUtils
 
@@ -291,7 +290,7 @@ let found_entry (#i:id) (n:Cipher.iv (Cipher.algi i)) (st:aead_state i Reader)
   **)	
   
 let verify_liveness (#i:CMA.id) (r:rid) (ak:CMA.state i) (tag:lbuffer (v MAC.taglen)) (h:mem) = 
-  PRF_MAC.ak_live CMA.(ak.region) ak h /\
+  ak_live CMA.(ak.region) ak h /\
   Buffer.live h tag
 
 (*+ verify_ok: 
@@ -580,11 +579,11 @@ val verify_ok_nonce_is_used:
 	     #aadlen:aadlen -> (aad:lbuffer (v aadlen)) ->
  	     #plainlen:txtlen_32 {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
 	     plain:Plain.plainBuffer i (v plainlen) ->
-	     cipher_tagged:PRF_MAC.ctagbuf plainlen ->
+	     cipher_tagged:ctagbuf plainlen ->
 	     ak:CMA.state (i,n) ->
 	     acc:CMA.accBuffer (i, n) ->
 	     h:mem{safeMac i} -> 
-	Lemma (requires (let tag = PRF_MAC.ctag cipher_tagged in
+	Lemma (requires (let tag = ctag cipher_tagged in
 			 is_mac_for_iv st ak h /\
 			 inv st h /\
 			 verify_liveness PRF.(st.prf.mac_rgn) ak tag h /\

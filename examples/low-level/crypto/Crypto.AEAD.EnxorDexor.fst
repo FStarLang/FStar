@@ -11,6 +11,7 @@ open Flag
 
 open Crypto.Symmetric.PRF
 open Crypto.AEAD.Invariant
+open Crypto.AEAD.Encrypt.Invariant
 
 module Cipher        = Crypto.Symmetric.Cipher
 module PRF           = Crypto.Symmetric.PRF
@@ -21,7 +22,6 @@ module HS            = FStar.HyperStack
 module CMA           = Crypto.Symmetric.UF1CMA
 module MAC           = Crypto.Symmetric.MAC
 module SeqProperties = FStar.SeqProperties
-module PRF_MAC       = Crypto.AEAD.PRF_MAC
 module BufferUtils   = Crypto.AEAD.BufferUtils
 
 (*** First, some predicates and lemmas
@@ -463,7 +463,7 @@ val enxor  :
 	     enc_dec_separation aead_st aad plain cipher_tag /\
 	     enc_dec_liveness aead_st aad plain cipher_tag h /\
 	     inv aead_st h /\
-             PRF_MAC.ak_live aead_st.prf.mac_rgn ak h /\
+             ak_live aead_st.prf.mac_rgn ak h /\
 	     (safeMac i ==> 
        	         is_mac_for_iv aead_st ak h /\
 		 fresh_nonce_st iv aead_st h /\
@@ -476,12 +476,12 @@ val enxor  :
 	     enc_dec_liveness aead_st aad plain cipher_tag h1 /\
 	     modifies_table_above_x_and_buffer t x cipher h0 h1 /\
 	     enxor_invariant t x len 0ul plain cipher h0 h1 /\
-             PRF_MAC.ak_live aead_st.prf.mac_rgn ak h1 /\	    
+             ak_live aead_st.prf.mac_rgn ak h1 /\	    
 	     (safeMac i ==>
 		 fresh_nonce_st iv aead_st h1 /\
       	         is_mac_for_iv aead_st ak h1 /\
 	         CMA.mac_is_unset (i, iv) aead_st.prf.mac_rgn ak h1) /\
-	     PRF_MAC.enxor_h0_h1 aead_st iv aad plain cipher_tag h0 h1))
+	         enxor_h0_h1 aead_st iv aad plain cipher_tag h0 h1))
 let enxor #i iv aead_st #aadlen aad #len plain_b cipher_tag ak =
   let h_init = ST.get () in
   let x = {iv=iv; ctr=otp_offset i} in

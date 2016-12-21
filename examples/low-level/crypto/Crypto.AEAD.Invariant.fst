@@ -341,39 +341,13 @@ let refines (#rgn:region) (#i:id)
   aead_entries_are_refined prf_table aead_entries h /\
   fresh_nonces_are_unused  prf_table aead_entries h
 
+
 (*+ aead_liveness:
 	The aead_state and its regions etc. are live **)
 let aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
   HS.(h.h `Map.contains` st.prf.mac_rgn) /\        //contains the mac region
   (safeMac i ==> h `HS.contains` (st_ilog st)) /\  //contains the aead log
   (prf i ==> h `HS.contains` (itable i st.prf))   //contains the prf table
-
-(*** inv st h:
-       The final stateful invariant,
-       refines and aead_state_live ***)
-let inv (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
-  aead_liveness st h /\
-  (safeMac i ==>
-     (let prf_table = HS.sel h (itable i st.prf) in
-      let aead_entries = HS.sel h st.log in
-      refines prf_table aead_entries h))
-
-
-(*** SEPARATION AND LIVENESS
-     REQUIREMENTS OF THE INTERFACE ***)
-
-module Plain = Crypto.Plain
-
-let recall_aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw) 
-  : ST unit (requires (fun h -> True))
-	    (ensures (fun h0 _ h1 -> 
-			h0 == h1 /\
-			aead_liveness st h1))
-  = recall_region PRF.(st.prf.mac_rgn);
-    if prf i
-    then recall (PRF.itable i st.prf);
-    if safeMac i
-    then recall (st_ilog st)
 
 (*+ enc_dec_separation:
 	Calling AEAD.encrypt/decrypt requires this separation **)
@@ -408,6 +382,58 @@ let enc_dec_liveness (#i:id) (#rw:rw) (st:aead_state i rw)
     Plain.live h plain /\
     st.log_region `is_in` h.h /\
     st.prf.mac_rgn `is_in` h.h
+
+let ak_live (#i:CMA.id) (r:rid) (ak:CMA.state i) (h:mem) = 
+    let open CMA in 
+    ak.region = r /\
+    Buffer.live h ak.s /\
+    MAC.norm h ak.r
+
+let enc_dec_liveness_and_separation (#i:id) (#rw:rw) (aead_st:aead_state i rw)
+                                    (#aadlen:nat) (aad:lbuffer aadlen)
+				    (#plainlen:nat) (plain: plainBuffer i plainlen)
+				    (#cipherlen:nat) (cipher:lbuffer cipherlen)
+                                    (h:mem)
+  = enc_dec_liveness aead_st aad plain cipher h /\
+    enc_dec_separation aead_st aad plain cipher /\
+    aead_liveness aead_st h
+
+(*** inv st h:
+       The final stateful invariant,
+       refines and aead_state_live ***)
+let inv (#i:id) (#rw:rw) (st:aead_state i rw) (h:mem) : Type0 =
+  aead_liveness st h /\
+  (safeMac i ==>
+     (let prf_table = HS.sel h (itable i st.prf) in
+      let aead_entries = HS.sel h st.log in
+      refines prf_table aead_entries h))
+
+(*** SEPARATION AND LIVENESS
+     REQUIREMENTS OF THE INTERFACE ***)
+
+module Plain = Crypto.Plain
+
+let recall_aead_liveness (#i:id) (#rw:rw) (st:aead_state i rw) 
+  : ST unit (requires (fun h -> True))
+	    (ensures (fun h0 _ h1 -> 
+			h0 == h1 /\
+			aead_liveness st h1))
+  = recall_region PRF.(st.prf.mac_rgn);
+    if prf i
+    then recall (PRF.itable i st.prf);
+    if safeMac i
+    then recall (st_ilog st)
+
+
+module Plain = Crypto.Plain
+
+let ctagbuf (plainlen:txtlen_32) = lbuffer (v plainlen + v MAC.taglen)
+
+let cbuf (#plainlen:txtlen_32) (ct:ctagbuf plainlen) : lbuffer (v plainlen) = 
+  Buffer.sub ct 0ul plainlen
+
+let ctag (#plainlen:txtlen_32) (ct:ctagbuf plainlen) : MAC.tagB =
+  Buffer.sub ct plainlen MAC.taglen
 
 (*+ found_matching_entry: 
       the entry in the aead table corresponding to nonce n
@@ -1071,3 +1097,54 @@ let frame_mac_is_set_h
 	     HS.live_region h1 mac_rgn))
   (ensures  (mac_is_set table nonce ad l cipher tag h1))
   = ()
+
+val frame_cma_mac_is_unset_h
+  (i:CMA.id)
+  (r:rid{HS.is_eternal_region r})
+  (r':rid{r' `HS.is_above` r})
+  (mac_st:CMA.state i)
+  (h0 h1:mem) : Lemma
+  (requires (CMA.mac_is_unset i r mac_st h0 /\
+             HS.modifies_transitively (Set.singleton r') h0 h1 /\
+             HS.modifies_ref r TSet.empty h0 h1))
+  (ensures  (CMA.mac_is_unset i r mac_st h1))
+let frame_cma_mac_is_unset_h i r r' mac_st h0 h1 = ()
+
+val lemma_mac_log_framing
+  (#i:id)
+  (nonce_1:Cipher.iv (alg i){safeMac i})
+  (mac_st_1:CMA.state (i, nonce_1))
+  (h0 h1:mem)
+  (nonce_2:Cipher.iv (alg i))
+  (mac_st_2:CMA.state (i, nonce_2){CMA.(mac_st_2.region) = CMA.(mac_st_1.region)}) : Lemma
+  (requires (nonce_1 <> nonce_2                                        /\
+             m_contains (CMA.(ilog mac_st_2.log)) h0                 /\
+	     HS.(h1.h `Map.contains` CMA.(mac_st_2.region))          /\
+             HS.modifies_ref (CMA.(mac_st_1.region)) !{HS.as_ref (as_hsref (CMA.(ilog mac_st_1.log)))} h0 h1))
+  (ensures  (m_sel h0 (CMA.(ilog mac_st_2.log)) = m_sel h1 (CMA.(ilog mac_st_2.log))))
+#set-options "--initial_ifuel 1 --max_ifuel 1"
+let lemma_mac_log_framing #i nonce_1 mac_st_1 h0 h1 nonce_2 mac_st_2 = ()
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let lemma_fresh_nonce_implies_all_entries_nonces_are_different
+  (#i:id)
+  (aead_entries:aead_entries i)
+  (nonce:Cipher.iv (alg i)) : Lemma
+  (requires (fresh_nonce nonce aead_entries))
+  (ensures  (forall (e:aead_entry i).{:pattern (aead_entries `SeqProperties.contains` e)}
+	        aead_entries `SeqProperties.contains` e ==> e.nonce <> nonce))
+  = let open FStar.Classical in
+    move_requires (SeqProperties.find_l_none_no_index aead_entries) (is_aead_entry_nonce nonce);
+    forall_intro (SeqProperties.contains_elim aead_entries)
+
+let aead_entries_are_refined_snoc 
+    (#r:region) 
+    (#i:id) 
+    (prf_table: prf_table r i)
+    (aead_entries:Seq.seq (aead_entry i))
+    (e:aead_entry i)
+    (h:mem)
+    : Lemma (requires (aead_entries_are_refined prf_table aead_entries h /\
+		       (safeId i ==> refines_one_entry prf_table e h)))
+            (ensures (aead_entries_are_refined prf_table (SeqProperties.snoc aead_entries e) h))
+    = FStar.SeqProperties.contains_snoc aead_entries e

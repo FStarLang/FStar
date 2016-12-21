@@ -23,7 +23,6 @@ module CMA = Crypto.Symmetric.UF1CMA
 
 module Cipher   = Crypto.Symmetric.Cipher
 module PRF      = Crypto.Symmetric.PRF
-module PRF_MAC  = Crypto.AEAD.PRF_MAC
 open Crypto.AEAD.Encoding
 open Crypto.AEAD.Invariant
 
@@ -105,7 +104,7 @@ val accumulate_enc
 	  enc_dec_separation aead_st aad plain cipher_tagged /\
 	  enc_dec_liveness aead_st aad plain cipher_tagged h0 /\ 
 	  ak_aad_cipher_separate ak aad cipher_tagged /\
-	  PRF_MAC.ak_live PRF.(aead_st.prf.mac_rgn) ak h0 /\
+	  ak_live PRF.(aead_st.prf.mac_rgn) ak h0 /\
 	  (CMA.authId i ==> 
 	    fresh_nonce_st (snd i) aead_st h0 /\
 	    CMA.mac_is_unset i PRF.(aead_st.prf.mac_rgn) ak h0)))
@@ -114,7 +113,7 @@ val accumulate_enc
 	  let cipher : lbuffer (v txtlen) = Buffer.sub cipher_tagged 0ul txtlen in
       	  ak_acc_tag_separate ak acc tag /\
 	  enc_dec_liveness aead_st aad plain cipher_tagged h1 /\ 
-	  PRF_MAC.ak_live PRF.(aead_st.prf.mac_rgn) ak h1 /\
+	  ak_live PRF.(aead_st.prf.mac_rgn) ak h1 /\
   	  (CMA.authId i ==> 
 	      fresh_nonce_st (snd i) aead_st h1 /\	  
 	      CMA.mac_is_unset i PRF.(aead_st.prf.mac_rgn) ak h1) /\
@@ -142,7 +141,7 @@ val accumulate (#i: mac_id) (#rw:rw) (aead_st:aead_state (fst i) rw)
       (requires (fun h0 -> 
 	  enc_dec_separation aead_st aad plain cipher_tagged /\
 	  enc_dec_liveness aead_st aad plain cipher_tagged h0 /\ 
-	  PRF_MAC.ak_live PRF.(aead_st.prf.mac_rgn) ak h0 /\
+	  ak_live PRF.(aead_st.prf.mac_rgn) ak h0 /\
 	  (CMA.authId i ==> is_mac_for_iv #(fst i) #rw #(snd i) aead_st ak h0) /\
 	  inv aead_st h0))
       (ensures (fun h0 acc h1 ->  
@@ -150,7 +149,7 @@ val accumulate (#i: mac_id) (#rw:rw) (aead_st:aead_state (fst i) rw)
 	  let cipher : lbuffer (v txtlen) = Buffer.sub cipher_tagged 0ul txtlen in
       	  ak_acc_tag_separate ak acc tag /\
 	  enc_dec_liveness aead_st aad plain cipher_tagged h1 /\ 
-	  PRF_MAC.ak_live PRF.(aead_st.prf.mac_rgn) ak h1 /\
+	  ak_live PRF.(aead_st.prf.mac_rgn) ak h1 /\
   	  (CMA.authId i ==> is_mac_for_iv #(fst i) #rw #(snd i) aead_st ak h1) /\
           inv aead_st h1 /\
 	  accumulate_modifies_nothing h0 h1 /\
