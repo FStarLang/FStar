@@ -28,6 +28,7 @@ open FStar.Parser.AST
 open FStar.Parser.Parse
 open FStar.Util
 open FStar.Const
+open FStar.String
 
 open FStar.Absyn
 open FStar.Absyn.Syntax
@@ -623,9 +624,9 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
   List.iter (fun (m, r) ->
     if not !r && not (Options.interactive ()) then
       let maybe_fst =
-        let k = strlen m in
-        if k > 4 && substring m (k-4) 4 = ".fst"
-        then Util.format1 " Did you mean %s ?" (substring m 0 (k-4))
+        let k = String.length m in
+        if k > 4 && String.substring m (k-4) 4 = ".fst"
+        then Util.format1 " Did you mean %s ?" (String.substring m 0 (k-4))
         else ""
       in
       raise (Err (Util.format3 "You passed --verify_module %s but I found no \

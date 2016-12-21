@@ -862,9 +862,9 @@ opPrefixTerm(Tm):
 
 
 projectionLHS:
-  | e=qidentWithTypeArgs(qlident, option(targs=fsTypeArgs {Some targs}))
+  | e=qidentWithTypeArgs(qlident, option(fsTypeArgs))
       { e }
-  | e=qidentWithTypeArgs(quident, someFsTypeArgs)
+  | e=qidentWithTypeArgs(quident, some(fsTypeArgs))
       { e }
   | LPAREN e=term sort_opt=option(pair(hasSort, simpleTerm)) RPAREN
       {
@@ -976,7 +976,7 @@ universeFrom:
        }
   | max=ident us=list(atomicUniverse)
       {
-        if text_of_id max <> C.max_lid
+        if text_of_id max <> text_of_lid max_lid
         then errorR(Error("A lower case ident " ^ text_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.",
@@ -1033,6 +1033,9 @@ univar:
 %inline dotOperator:
   | DOT_LPAREN e=term RPAREN { ".()", e, rhs2 parseState 1 3 }
   | DOT_LBRACK e=term RBRACK { ".[]", e, rhs2 parseState 1 3 }
+
+some(X):
+  | x=X { Some x }
 
 right_flexible_list(SEP, X):
   |     { [] }

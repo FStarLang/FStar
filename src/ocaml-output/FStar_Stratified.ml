@@ -30,14 +30,14 @@ in (
 let p = (FStar_Options.prims ())
 in (
 
-let _94_13 = (let _191_9 = (FStar_Parser_DesugarEnv.empty_env ())
-in (parse _191_9 p))
+let _94_13 = (let _192_9 = (FStar_Parser_DesugarEnv.empty_env ())
+in (parse _192_9 p))
 in (match (_94_13) with
 | (dsenv, prims_mod) -> begin
 (
 
-let _94_16 = (let _191_10 = (FStar_List.hd prims_mod)
-in (FStar_Tc_Tc.check_module env _191_10))
+let _94_16 = (let _192_10 = (FStar_List.hd prims_mod)
+in (FStar_Tc_Tc.check_module env _192_10))
 in (match (_94_16) with
 | (prims_mod, env) -> begin
 ((prims_mod), (dsenv), (env))
@@ -199,12 +199,12 @@ let pop = (fun _94_116 msg -> (match (_94_116) with
 | (dsenv, env) -> begin
 (
 
-let _94_118 = (let _191_46 = (FStar_Parser_DesugarEnv.pop dsenv)
-in (FStar_All.pipe_right _191_46 Prims.ignore))
+let _94_118 = (let _192_46 = (FStar_Parser_DesugarEnv.pop dsenv)
+in (FStar_All.pipe_right _192_46 Prims.ignore))
 in (
 
-let _94_120 = (let _191_47 = (FStar_Tc_Env.pop env msg)
-in (FStar_All.pipe_right _191_47 Prims.ignore))
+let _94_120 = (let _192_47 = (FStar_Tc_Env.pop env msg)
+in (FStar_All.pipe_right _192_47 Prims.ignore))
 in (
 
 let _94_122 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
@@ -273,9 +273,9 @@ let check_frag = (fun _94_158 curmod frag -> (match (_94_158) with
 | (dsenv, env) -> begin
 (match ((tc_one_fragment curmod dsenv env frag)) with
 | Some (m, dsenv, env) -> begin
-(let _191_65 = (let _191_64 = (FStar_Tc_Errors.get_err_count ())
-in ((m), (((dsenv), (env))), (_191_64)))
-in Some (_191_65))
+(let _192_65 = (let _192_64 = (FStar_Tc_Errors.get_err_count ())
+in ((m), (((dsenv), (env))), (_192_64)))
+in Some (_192_65))
 end
 | _94_167 -> begin
 None
@@ -287,8 +287,8 @@ let report_fail = (fun _94_169 -> (match (()) with
 | () -> begin
 (
 
-let _94_170 = (let _191_68 = (FStar_Tc_Errors.report_all ())
-in (FStar_All.pipe_right _191_68 Prims.ignore))
+let _94_170 = (let _192_68 = (FStar_Tc_Errors.report_all ())
+in (FStar_All.pipe_right _192_68 Prims.ignore))
 in (FStar_ST.op_Colon_Equals FStar_Tc_Errors.num_errs (Prims.parse_int "0")))
 end))
 in {FStar_Interactive.pop = pop; FStar_Interactive.push = push; FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail})))))))

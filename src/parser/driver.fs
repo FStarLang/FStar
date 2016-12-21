@@ -42,7 +42,7 @@ let parse_fragment frag : fragment =
       Modul modul
 
     | Inl (Inr decls) -> //interactive mode: more decls
-      Decls decls 
+      Decls decls
 
     | Inl (Inl _) ->
       if (Options.universes())

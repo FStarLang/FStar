@@ -19,7 +19,7 @@ module FStar.Pprint
 
 open FSharp.PPrint
 
-type document = unit
+type document = Doc of unit
 //
 //  | Empty
 //  | Char of char
@@ -32,8 +32,8 @@ type document = unit
 //  | Nest of int * document
 //  | Group of document
 //  //| Probe of (indentation:int -> bol:int -> line:int -> column:int -> document)
-  
-let not_impl_msg = "F# prettyprinter not yet implemented." 
+
+let not_impl_msg = "F# prettyprinter not yet implemented."
 
 let empty : document = failwith not_impl_msg
 
@@ -70,41 +70,41 @@ let ifflat (doc1:document) (doc2:document) : document = failwith not_impl_msg
 
 let align (doc:document) : document = failwith not_impl_msg
 
-let lparen: document = ()
-let rparen: document = ()
-let langle: document = ()
-let rangle: document = ()
-let lbrace: document = ()
-let rbrace: document = ()
-let lbracket: document = ()
-let rbracket: document = ()
-let squote: document = ()
-let dquote: document = ()
-let bquote: document = ()
-let semi: document = ()
-let colon: document = ()
-let comma: document = ()
-let space: document = ()
-let dot: document = ()
-let sharp: document = ()
-let slash: document = ()
-let backslash: document = ()
-let equals: document = ()
-let qmark: document = ()
-let tilde: document = ()
-let at: document = ()
-let percent: document = ()
-let dollar: document = ()
-let caret: document = ()
-let ampersand: document = ()
-let star: document = ()
-let plus: document = ()
-let minus: document = ()
-let underscore: document = ()
-let bang: document = ()
-let bar: document = ()
-let larrow: document = ()
-let rarrow: document = ()
+let lparen: document = Doc ()
+let rparen: document = Doc ()
+let langle: document = Doc ()
+let rangle: document = Doc ()
+let lbrace: document = Doc ()
+let rbrace: document = Doc ()
+let lbracket: document = Doc ()
+let rbracket: document = Doc ()
+let squote: document = Doc ()
+let dquote: document = Doc ()
+let bquote: document = Doc ()
+let semi: document = Doc ()
+let colon: document = Doc ()
+let comma: document = Doc ()
+let space: document = Doc ()
+let dot: document = Doc ()
+let sharp: document = Doc ()
+let slash: document = Doc ()
+let backslash: document = Doc ()
+let equals: document = Doc ()
+let qmark: document = Doc ()
+let tilde: document = Doc ()
+let at: document = Doc ()
+let percent: document = Doc ()
+let dollar: document = Doc ()
+let caret: document = Doc ()
+let ampersand: document = Doc ()
+let star: document = Doc ()
+let plus: document = Doc ()
+let minus: document = Doc ()
+let underscore: document = Doc ()
+let bang: document = Doc ()
+let bar: document = Doc ()
+let larrow: document = Doc ()
+let rarrow: document = Doc ()
 
 let precede (l:document) (x:document) : document = failwith not_impl_msg
 
@@ -166,11 +166,13 @@ let surround_separate (n:int) (b:int) (v:document) (opening:document) (sep:docum
 
 let surround_separate_map (n:int) (b:int) (v:document) (opening:document) (sep:document) (closing:document) (f:('a -> document)) (docs:'a list) : document = failwith not_impl_msg
 
+let ( ^^ ) (x:document) (y:document) : document = failwith not_impl_msg
+
 // let ( !^ ) (s:string) : document = failwith not_impl_msg
-// 
-// let ( ^/^ ) (x:document) (y:document) : document = failwith not_impl_msg
-// 
+
+let ( ^/^ ) (x:document) (y:document) : document = failwith not_impl_msg
+
 // let ( ^//^ ) (x:document) (y:document) : document = failwith not_impl_msg
 
-let pretty_string (width:int) (doc:document) : string = failwith not_impl_msg 
-let pretty_out_channel (width:int) (doc:document) (channel:FStar.Util.out_channel) : unit = failwith not_impl_msg 
+let pretty_string (rfrac:FStar.BaseTypes.float) (width:int) (doc:document) : string = failwith not_impl_msg
+let pretty_out_channel (rfrac:FStar.BaseTypes.float) (width:int) (doc:document) (channel:FStar.Util.out_channel) : unit = failwith not_impl_msg

@@ -19,10 +19,10 @@ end
 let pre_ast = (FStar_Parser_Driver.parse_file pre_fn)
 in (match (((pre_ast), (ast))) with
 | ((FStar_Parser_AST.Interface (lid1, decls1, _95_13))::[], (FStar_Parser_AST.Module (lid2, decls2))::[]) when (FStar_Ident.lid_equals lid1 lid2) -> begin
-(let _192_11 = (let _192_10 = (let _192_9 = (FStar_Parser_Interleave.interleave decls1 decls2)
-in ((lid1), (_192_9)))
-in FStar_Parser_AST.Module (_192_10))
-in (_192_11)::[])
+(let _193_11 = (let _193_10 = (let _193_9 = (FStar_Parser_Interleave.interleave decls1 decls2)
+in ((lid1), (_193_9)))
+in FStar_Parser_AST.Module (_193_10))
+in (_193_11)::[])
 end
 | _95_24 -> begin
 (Prims.raise (FStar_Syntax_Syntax.Err ("mismatch between pre-module and module\n")))
@@ -51,16 +51,16 @@ in (
 let prims_filename = (FStar_Options.prims ())
 in (
 
-let _95_34 = (let _192_14 = (FStar_Parser_Env.empty_env ())
-in (parse _192_14 None prims_filename))
+let _95_34 = (let _193_14 = (FStar_Parser_Env.empty_env ())
+in (parse _193_14 None prims_filename))
 in (match (_95_34) with
 | (dsenv, prims_mod) -> begin
 (
 
 let _95_40 = (FStar_Util.record_time (fun _95_35 -> (match (()) with
 | () -> begin
-(let _192_16 = (FStar_List.hd prims_mod)
-in (FStar_TypeChecker_Tc.check_module env _192_16))
+(let _193_16 = (FStar_List.hd prims_mod)
+in (FStar_TypeChecker_Tc.check_module env _193_16))
 end)))
 in (match (_95_40) with
 | ((prims_mod, env), elapsed_time) -> begin
@@ -148,12 +148,12 @@ let pop_context : (FStar_Parser_Env.env * FStar_TypeChecker_Env.env)  ->  Prims.
 | (dsenv, env) -> begin
 (
 
-let _95_96 = (let _192_31 = (FStar_Parser_Env.pop dsenv)
-in (FStar_All.pipe_right _192_31 Prims.ignore))
+let _95_96 = (let _193_31 = (FStar_Parser_Env.pop dsenv)
+in (FStar_All.pipe_right _193_31 Prims.ignore))
 in (
 
-let _95_98 = (let _192_32 = (FStar_TypeChecker_Env.pop env msg)
-in (FStar_All.pipe_right _192_32 Prims.ignore))
+let _95_98 = (let _193_32 = (FStar_TypeChecker_Env.pop env msg)
+in (FStar_All.pipe_right _193_32 Prims.ignore))
 in (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())))
 end))
 
@@ -242,9 +242,9 @@ try
 | () -> begin
 (match ((tc_one_fragment curmod dsenv env text)) with
 | Some (m, dsenv, env) -> begin
-(let _192_59 = (let _192_58 = (FStar_TypeChecker_Errors.get_err_count ())
-in ((m), (((dsenv), (env))), (_192_58)))
-in Some (_192_59))
+(let _193_59 = (let _193_58 = (FStar_TypeChecker_Errors.get_err_count ())
+in ((m), (((dsenv), (env))), (_193_58)))
+in Some (_193_59))
 end
 | _95_170 -> begin
 None
@@ -260,10 +260,10 @@ end
 | FStar_Syntax_Syntax.Err (msg) when (not ((FStar_Options.trace_error ()))) -> begin
 (
 
-let _95_160 = (let _192_63 = (let _192_62 = (let _192_61 = (FStar_TypeChecker_Env.get_range env)
-in ((msg), (_192_61)))
-in (_192_62)::[])
-in (FStar_TypeChecker_Errors.add_errors env _192_63))
+let _95_160 = (let _193_63 = (let _193_62 = (let _193_61 = (FStar_TypeChecker_Env.get_range env)
+in ((msg), (_193_61)))
+in (_193_62)::[])
+in (FStar_TypeChecker_Errors.add_errors env _193_63))
 in None)
 end
 end))
@@ -273,8 +273,8 @@ let report_fail = (fun _95_172 -> (match (()) with
 | () -> begin
 (
 
-let _95_173 = (let _192_66 = (FStar_TypeChecker_Errors.report_all ())
-in (FStar_All.pipe_right _192_66 Prims.ignore))
+let _95_173 = (let _193_66 = (FStar_TypeChecker_Errors.report_all ())
+in (FStar_All.pipe_right _193_66 Prims.ignore))
 in (FStar_ST.op_Colon_Equals FStar_TypeChecker_Errors.num_errs (Prims.parse_int "0")))
 end))
 in {FStar_Interactive.pop = pop; FStar_Interactive.push = push; FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail})))))))
@@ -435,9 +435,9 @@ let _95_268 = (FStar_Util.print_endline "Auto-deps kicked in; here\'s some info.
 in (
 
 let _95_270 = (FStar_Util.print1 "Here\'s the list of filenames we will process: %s\n" (FStar_String.concat " " filenames))
-in (let _192_105 = (let _192_104 = (FStar_Options.verify_module ())
-in (FStar_String.concat " " _192_104))
-in (FStar_Util.print1 "Here\'s the list of modules we will verify: %s\n" _192_105))))
+in (let _193_105 = (let _193_104 = (FStar_Options.verify_module ())
+in (FStar_String.concat " " _193_104))
+in (FStar_Util.print1 "Here\'s the list of modules we will verify: %s\n" _193_105))))
 end else begin
 ()
 end

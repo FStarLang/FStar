@@ -4,3 +4,6 @@ module FStar.BaseTypes
  * get types such as int8 or int32. When reading the F* sources as an F#
  * program, you don't need to do this because these types already defined by F#.
  * *)
+
+type float' = float
+type float = float'

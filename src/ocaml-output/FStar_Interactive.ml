@@ -70,11 +70,11 @@ type interactive_state =
 let is_Mkinteractive_state : interactive_state  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkinteractive_state"))))
 
 
-let the_interactive_state : interactive_state = (let _190_149 = (FStar_Util.new_string_builder ())
-in (let _190_148 = (FStar_ST.alloc None)
-in (let _190_147 = (FStar_ST.alloc [])
-in (let _190_146 = (FStar_ST.alloc None)
-in {chunk = _190_149; stdin = _190_148; buffer = _190_147; log = _190_146}))))
+let the_interactive_state : interactive_state = (let _191_149 = (FStar_Util.new_string_builder ())
+in (let _191_148 = (FStar_ST.alloc None)
+in (let _191_147 = (FStar_ST.alloc [])
+in (let _191_146 = (FStar_ST.alloc None)
+in {chunk = _191_149; stdin = _191_148; buffer = _191_147; log = _191_146}))))
 
 
 let rec read_chunk : Prims.unit  ->  input_chunks = (fun _93_27 -> (match (()) with
@@ -178,9 +178,9 @@ in (
 
 let lc = (match (lcs) with
 | (l)::(c)::[] -> begin
-(let _190_158 = (FStar_Util.int_of_string l)
-in (let _190_157 = (FStar_Util.int_of_string c)
-in ((_190_158), (_190_157))))
+(let _191_158 = (FStar_Util.int_of_string l)
+in (let _191_157 = (FStar_Util.int_of_string c)
+in ((_191_158), (_191_157))))
 end
 | _93_78 -> begin
 (((Prims.parse_int "1")), ((Prims.parse_int "0")))
@@ -227,11 +227,11 @@ let fill_buffer : Prims.unit  ->  Prims.unit = (fun _93_92 -> (match (()) with
 (
 
 let s = the_interactive_state
-in (let _190_166 = (let _190_165 = (FStar_ST.read s.buffer)
-in (let _190_164 = (let _190_163 = (read_chunk ())
-in (_190_163)::[])
-in (FStar_List.append _190_165 _190_164)))
-in (FStar_ST.op_Colon_Equals s.buffer _190_166)))
+in (let _191_166 = (let _191_165 = (FStar_ST.read s.buffer)
+in (let _191_164 = (let _191_163 = (read_chunk ())
+in (_191_163)::[])
+in (FStar_List.append _191_165 _191_164)))
+in (FStar_ST.op_Colon_Equals s.buffer _191_166)))
 end))
 
 
@@ -329,8 +329,8 @@ in (
 let filename = (FStar_Util.smap_try_find file_of_module_name (FStar_String.lowercase module_name))
 in (match (filename) with
 | None -> begin
-(let _190_186 = (FStar_Util.format2 "I found a \"module %s\" directive, but there is no %s.fst\n" module_name module_name)
-in (fail _190_186))
+(let _191_186 = (FStar_Util.format2 "I found a \"module %s\" directive, but there is no %s.fst\n" module_name module_name)
+in (fail _191_186))
 end
 | (Some (None, Some (filename))) | (Some (Some (filename), None)) -> begin
 (
@@ -341,14 +341,14 @@ in (
 let _93_170 = (FStar_Parser_Dep.collect FStar_Parser_Dep.VerifyUserList ((filename)::[]))
 in (match (_93_170) with
 | (_93_166, all_filenames, _93_169) -> begin
-(let _190_188 = (let _190_187 = (FStar_List.tl all_filenames)
-in (FStar_List.rev _190_187))
-in ((filename), (_190_188)))
+(let _191_188 = (let _191_187 = (FStar_List.tl all_filenames)
+in (FStar_List.rev _191_187))
+in ((filename), (_191_188)))
 end)))
 end
 | Some (Some (_93_172), Some (_93_175)) -> begin
-(let _190_189 = (FStar_Util.format1 "The combination of split interfaces and interactive verification is not supported for: %s\n" module_name)
-in (fail _190_189))
+(let _191_189 = (FStar_Util.format1 "The combination of split interfaces and interactive verification is not supported for: %s\n" module_name)
+in (fail _191_189))
 end
 | Some (None, None) -> begin
 (FStar_All.failwith "impossible")
@@ -367,8 +367,8 @@ end))
 
 let interactive_mode = (fun filename env initial_mod tc -> (
 
-let _93_189 = if (let _190_195 = (FStar_Options.codegen ())
-in (FStar_Option.isSome _190_195)) then begin
+let _93_189 = if (let _191_195 = (FStar_Options.codegen ())
+in (FStar_Option.isSome _191_195)) then begin
 (FStar_Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag")
 end else begin
 ()
@@ -447,8 +447,8 @@ end
 end)))))
 end))
 in if (((FStar_Options.universes ()) && ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))) && (FStar_Option.isSome filename)) then begin
-(let _190_209 = (FStar_Option.get filename)
-in (FStar_SMTEncoding_Solver.with_hints_db _190_209 (fun _93_242 -> (match (()) with
+(let _191_209 = (FStar_Option.get filename)
+in (FStar_SMTEncoding_Solver.with_hints_db _191_209 (fun _93_242 -> (match (()) with
 | () -> begin
 (go (((Prims.parse_int "1")), ((Prims.parse_int "0"))) [] initial_mod env)
 end))))
