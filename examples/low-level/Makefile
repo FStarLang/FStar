@@ -31,7 +31,10 @@ CHACHA_AEAD_EXTRACTED=Spartan.ml FStar_List_Tot.ml FStar_Seq.ml FStar_SeqPropert
 .PHONY: lib-ver chacha-ver chacha-ml ulib
 
 #16-09-18 lib-ver works but is too slow/brittle? 
-all: uall sall
+all:
+	+make -C crypto all
+
+full: uall sall
 
 uall:
 	make clean
