@@ -688,13 +688,13 @@ let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)
 
 let is_tuple_data_lid' f =
-    Util.starts_with (Ident.text_of_lid f) "Mktuple"
+    f.nsstr = "Prims" && Util.starts_with f.ident.idText "Mktuple"
 
 let is_tuple_constructor_lid lid =
     Util.starts_with (Ident.text_of_lid lid) "Prims.tuple"
 
 let is_dtuple_constructor_lid lid =
-  Util.starts_with (Ident.text_of_lid lid) "Prims.dtuple"
+  lid.nsstr = "Prims" && Util.starts_with lid.ident.idText "Prims.dtuple"
 
 let is_dtuple_constructor (t:typ) = match t.n with
   | Tm_fvar fv -> is_dtuple_constructor_lid fv.fv_name.v

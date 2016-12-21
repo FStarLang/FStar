@@ -140,6 +140,9 @@
     if n > 0 then (L.new_line lexbuf; incr lc; mknewline (n-1) lexbuf)
 
  let clean_number x = String.strip ~chars:"uzyslLUnIN" x
+
+ let comments : string (* * pos *) list ref = ref []
+ let comment_buffer = Buffer.create 1024
 }
 
 (* -------------------------------------------------------------------- *)
