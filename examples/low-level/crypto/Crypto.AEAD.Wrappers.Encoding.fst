@@ -87,7 +87,7 @@ let ak_aad_cipher_separate (#i:CMA.id) (ak:CMA.state i)
     let open Crypto.Symmetric.UF1CMA in
     Buffer.disjoint_2 (MAC.as_buffer ak.r) aad cipher
 
-let is_iv n (i:id) = UInt128.v n < pow2 (v (8ul *^ Cipher.ivlen (Cipher.algi i)))
+noextract let is_iv n (i:id) = UInt128.v n < pow2 (v (8ul *^ Cipher.ivlen (Cipher.algi i)))
 let mac_id = i:MAC.id{is_iv (snd i) (fst i)}
 let is_ak_for_iv (#i: mac_id) (#rw:rw) (aead_st:aead_state (fst i) rw) (ak:CMA.state i) (h:mem) =
     let j = fst i in
