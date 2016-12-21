@@ -279,8 +279,9 @@ let rec p_decl d =
     optional p_fsdoc d.doc ^^ p_decl2 d
 
 and p_fsdoc (doc, kwd_args) =
-  hardline ^^ str doc ^^ hardline ^^
+  hardline ^^ lparen ^^ star ^^ star ^^ str doc ^^ hardline ^^
   concat_map (fun (kwd, arg) -> str "@" ^^ str kwd ^^ space ^^ str arg ^^ hardline) kwd_args
+  ^^ star ^^ star ^^ rparen ^^ hardline
 
 and p_decl2 d = match d.d with
   | Open uid ->
@@ -353,7 +354,7 @@ and p_typeDeclPrefix lid bs typ_opt =
   p_ident lid ^/+^ (p_typars bs ^^ optional (fun t -> colon ^^ space ^^ p_typ t) typ_opt)
 
 and p_recordFieldDecl (lid, t, doc_opt) =
-    optional p_fsdoc doc_opt ^/^ p_lident lid ^^ colon ^^ p_typ t
+    optional p_fsdoc doc_opt ^^ p_lident lid ^^ colon ^^ p_typ t
 
 and p_constructorDecl (uid, t_opt, doc_opt, use_of) =
     let sep = if use_of then str "of" else colon in
@@ -370,7 +371,7 @@ and p_letbinding (pat, e) =
       in
       match pat.pat with
         | PatApp ({pat=PatVar (x, _)}, pats) ->
-            prefix2 (p_lident x)  (separate_map break1 p_tuplePattern pats ^^ ascr_doc)
+            prefix2 (p_lident x)  (separate_map break1 p_atomicPattern pats ^^ ascr_doc)
         | _ -> p_tuplePattern pat ^^ ascr_doc
     in
     group (pat_doc ^/^ prefix2 equals (p_term e))
@@ -498,7 +499,7 @@ and p_atomicPattern p = match p.pat with
     let p_recordFieldPat (lid, pat) = infix2 equals (p_qlident lid) (p_tuplePattern pat) in
     braces_with_nesting (separate_break_map semi p_recordFieldPat pats)
   | PatTuple(pats, true) ->
-    surround 2 1 (lparen ^^ bar) (separate_break_map (str "&") p_constructorPattern pats) (bar ^^ rparen)
+    surround 2 1 (lparen ^^ bar) (separate_break_map comma p_constructorPattern pats) (bar ^^ rparen)
   | PatTvar (tv, arg_qualifier_opt) ->
     assert (arg_qualifier_opt = None) ;
     p_tvar tv
@@ -611,10 +612,11 @@ and p_noSeqTerm e = match e.tm with
   | Match (e, branches) ->
       group (prefix2 (str "match") (p_noSeqTerm e) ^/^ str "with" ^/^ jump2 (concat_map p_patternBranch branches))
   | LetOpen (uid, e) ->
-      group (str "let open" ^/^ p_quident uid ^/^ str "in")
+      group (surround 2 1 (str "let open") (p_quident uid) (str "in") ^/^ p_term e)
   | Let(q, lbs, e) ->
     let let_doc = str "let" ^^ p_letqualifier q in
-    precede_break_separate_map let_doc (str "and") p_letbinding lbs ^/^ str "in"
+    precede_break_separate_map let_doc (str "and") p_letbinding lbs ^/^
+    prefix2 (str "in") (p_term e)
   | Abs([{pat=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
       str "function" ^/+^ (concat_map p_patternBranch branches)
   | Assign (id, e) ->
@@ -731,7 +733,7 @@ and p_tmEq' curr e = match e.tm with
       let left, mine, right = levels op in
       paren_if curr mine (infix2 (str op) (p_tmEq' left e1) (p_tmEq' right e2))
   | Op (":=", [ e1; e2 ]) ->
-      group (p_tmEq e1 ^^ space ^^ equals ^/+^ p_tmEq e2)
+      group (p_tmEq e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEq e2)
   | _ -> p_tmNoEq e
 
 and p_tmNoEq e =
