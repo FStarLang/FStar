@@ -17,11 +17,14 @@ VERIFY= \
   Crypto.AEAD.Encoding \
   Crypto.AEAD.Invariant \
   Crypto.AEAD.BufferUtils \
+  Crypto.AEAD.Encrypt.Invariant \
+  Crypto.AEAD.Enxor.Invariant \
   Crypto.AEAD.EnxorDexor \
   Crypto.AEAD.PRF_MAC \
   Crypto.AEAD.Wrappers.CMA \
   Crypto.AEAD.Wrappers.Encoding \
   Crypto.AEAD.Decrypt \
+  Crypto.AEAD.MAC_Wrapper.Invariant \
   Crypto.AEAD.Encrypt \
   Crypto.AEAD \
   Crypto.Test

@@ -12,6 +12,9 @@ open Flag
 open Crypto.Symmetric.PRF
 open Crypto.AEAD.Encoding 
 open Crypto.AEAD.Invariant
+open Crypto.AEAD.Encrypt.Invariant
+open Crypto.AEAD.Enxor.Invariant
+open Crypto.AEAD.MAC_Wrapper.Invariant
 
 module HH       = FStar.HyperHeap
 module HS       = FStar.HyperStack
@@ -220,7 +223,7 @@ val reestablish_inv:
      	      Buffer.frameOf (MAC.as_buffer (CMA.abuf acc)) = HS.(h0.tip) /\
               inv st h0 /\
 	      (safeMac i ==> is_mac_for_iv st ak h0) /\
-              PRF_MAC.enxor_h0_h1 st n aad plain cipher_tag h0 h1 /\
+              enxor_h0_h1 st n aad plain cipher_tag h0 h1 /\
               EncodingWrapper.accumulate_modifies_nothing h1 h2 /\
               CMA.(ak.region = PRF.(st.prf.mac_rgn)) /\
               CMAWrapper.mac_ensures i n st aad plain cipher_tag ak acc h2 h3 /\ (
@@ -230,10 +233,10 @@ val reestablish_inv:
   (ensures    (inv st h4))
 let reestablish_inv i st n #aadlen aad #plainlen plain cipher_tag ak acc h0 h1 h2 h3 h4 =
   let cipher : lbuffer (v plainlen) = Buffer.sub cipher_tag 0ul plainlen in
-  PRF_MAC.lemma_propagate_inv_enxor st n aad plain cipher_tag h0 h1;
+  lemma_propagate_inv_enxor st n aad plain cipher_tag h0 h1;
   FStar.Buffer.lemma_intro_modifies_0 h1 h2;
-  PRF_MAC.lemma_propagate_inv_accumulate false st n aad plain cipher_tag h1 h2;
-  PRF_MAC.lemma_propagate_inv_mac_wrapper st n aad plain cipher_tag ak h2 h3;
+  lemma_propagate_inv_accumulate false st n aad plain cipher_tag h1 h2;
+  lemma_propagate_inv_mac_wrapper st n aad plain cipher_tag ak h2 h3;
   PRF_MAC.reestablish_inv st n aad plain cipher_tag h3 h4 //needs some optimization
 
 ////////////////////////////////////////////////////////////////////////////////

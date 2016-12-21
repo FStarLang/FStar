@@ -21,7 +21,6 @@ module Plain    = Crypto.Plain
 module Cipher   = Crypto.Symmetric.Cipher
 module PRF      = Crypto.Symmetric.PRF
 module Dexor       = Crypto.AEAD.EnxorDexor
-module PRF_MAC     = Crypto.AEAD.PRF_MAC
 module Encoding    = Crypto.AEAD.Encoding   
 module EncodingWrapper = Crypto.AEAD.Wrappers.Encoding
 module CMAWrapper = Crypto.AEAD.Wrappers.CMA
