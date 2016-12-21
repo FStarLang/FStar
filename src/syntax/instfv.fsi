@@ -20,3 +20,5 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 type inst_t = list<(lident * universes)>
 val instantiate: inst_t -> term -> term
+
+val disentangle_abbrevs_from_bundle: list<sigelt> -> list<qualifier> -> list<lident> -> FStar.Range.range -> sigelt * list<sigelt>

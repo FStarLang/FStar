@@ -2476,7 +2476,7 @@ end
 
 let pos = (FStar_List.fold_left (fun out t -> (FStar_Range.union_ranges out t.FStar_Syntax_Syntax.pos)) hd.FStar_Syntax_Syntax.pos tl)
 in (let _187_1097 = (let _187_1096 = (FStar_Syntax_Print.bv_to_string x)
-in (FStar_Util.format1 "Pattern misses at least one bound variable: %s" _187_1096))
+in (FStar_Util.format1 "SMT pattern misses at least one bound variable: %s" _187_1096))
 in (FStar_TypeChecker_Errors.warn pos _187_1097)))
 end))
 end)))

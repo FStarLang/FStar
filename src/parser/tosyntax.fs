@@ -1511,8 +1511,10 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         | _ -> failwith "impossible")
       in
       let sigelts = tps_sigelts |> List.map snd in
-      let bundle = Sig_bundle(sigelts, quals, List.collect Util.lids_of_sigelt sigelts, rng) in
+      let bundle, abbrevs = FStar.Syntax.InstFV.disentangle_abbrevs_from_bundle sigelts quals (List.collect Util.lids_of_sigelt sigelts) rng in
       let env = push_sigelt env0 bundle in
+      let env = List.fold_left push_sigelt env abbrevs in
+      (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
       let data_ops = tps_sigelts |> List.collect (mk_data_projector_names quals env) in
       let discs = sigelts |> List.collect (function
         | Sig_inductive_typ(tname, _, tps, k, _, constrs, quals, _) when (List.length constrs > 1)->
@@ -1523,7 +1525,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         | _ -> []) in
       let ops = discs@data_ops in
       let env = List.fold_left push_sigelt env ops in
-      env, [bundle]@ops
+      env, [bundle]@abbrevs@ops
 
     | [] -> failwith "impossible"
 
