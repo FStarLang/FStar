@@ -53,3 +53,6 @@ let op_Array_Access b n = index b n
 let op_Array_Assignment b n v = upd b n v
 
 let recall = fun b -> ()
+
+(* AR: revisit. This is used in the idealization code of AEAD encrypt *)
+let to_seq_full b = Obj.magic ()
