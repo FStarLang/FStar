@@ -440,12 +440,19 @@ let is_pure_or_ghost_effect env l =
   lid_equals l Const.effect_PURE_lid
   || lid_equals l Const.effect_GHOST_lid
 
-let mk_comp md u_result result wp flags =
+let mk_comp_l mname u_result result wp flags =
   mk_Comp ({ comp_univs=[u_result];
-             effect_name=md.mname;
+             effect_name=mname;
              result_typ=result;
              effect_args=[S.as_arg wp];
              flags=flags})
+
+let mk_comp md = mk_comp_l md.mname 
+
+let lax_mk_tot_or_comp_l mname u_result result flags = 
+    if Ident.lid_equals mname Const.effect_Tot_lid
+    then S.mk_Total' result (Some u_result)
+    else mk_comp_l mname u_result result S.tun flags
 
 let subst_lcomp subst lc =
     {lc with res_typ=SS.subst subst lc.res_typ;
@@ -487,9 +494,8 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
         (Print.lcomp_to_string lc1) bstr (Print.lcomp_to_string lc2));
   let bind_it () =
       if env.lax then 
-         let m = must (Env.effect_decl_opt env joined_eff) in
          let u_t = env.universe_of env lc2.res_typ in
-         mk_comp m u_t lc2.res_typ S.tun []
+         lax_mk_tot_or_comp_l joined_eff u_t lc2.res_typ []
       else begin
           let c1 = lc1.comp () in
           let c2 = lc2.comp () in
@@ -555,13 +561,6 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       (* TODO : these cflags might be inconsistent with the one returned by bind_it  !!! *)
       cflags=[];
       comp=bind_it}
-
-let lift_formula env t mk_wp f =
-  let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in
-  let a, kwp = Env.wp_signature env md_pure.mname in
-  let k = SS.subst [NT(a, t)] kwp in
-  let wp = mk_Tm_app mk_wp   [S.as_arg t; S.as_arg f] (Some k.n) f.pos in
-  mk_comp md_pure U_zero Common.t_unit wp []
 
 let label reason r f : term =
     mk (Tm_meta(f, Meta_labeled(reason, r, false))) None f.pos
@@ -672,9 +671,8 @@ let ite env (guard:formula) lcomp_then lcomp_else =
   let joined_eff = join_lcomp env lcomp_then lcomp_else in
   let comp () =
       if env.lax then 
-         let m = must (Env.effect_decl_opt env joined_eff) in
          let u_t = env.universe_of env lcomp_then.res_typ in
-         mk_comp m u_t lcomp_then.res_typ S.tun []
+         lax_mk_tot_or_comp_l joined_eff u_t lcomp_then.res_typ []
       else begin
           let (md, _, _), (u_res_t, res_t, wp_then), (_, _, wp_else) = lift_and_destruct env (lcomp_then.comp()) (lcomp_else.comp()) in
           let ifthenelse md res_t g wp_t wp_e = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
@@ -698,8 +696,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
     let bind_cases () =
         let u_res_t = env.universe_of env res_t in
         if env.lax then
-             let m = must (Env.effect_decl_opt env eff) in
-             mk_comp m u_res_t res_t S.tun []
+             lax_mk_tot_or_comp_l eff u_res_t res_t []
         else begin
             let ifthenelse md res_t g wp_t wp_e =
                 mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
@@ -897,7 +894,7 @@ let pure_or_ghost_pre_and_post env comp =
                       | (req, _)::(ens, _)::_ ->
                          Some (norm req), (norm <| mk_post_type ct.result_typ ens)
                       | _ ->
-                        raise (Error ("Effect constructor is not fully applied", comp.pos))
+                        raise (Error (Util.format1 "Effect constructor is not fully applied; got %s" (Print.comp_to_string comp), comp.pos))
                    end
               else let ct = Normalize.unfold_effect_abbrev env comp in
                    begin match ct.effect_args with

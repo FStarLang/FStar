@@ -1280,8 +1280,9 @@ and tc_eqn scrutinee env branch
 
     (* (a) eqs are equalities between the scrutinee and the pattern *)
     let eqs =
-        if not (Env.should_verify env) then None else
-          disj_exps |> List.fold_left (fun fopt e ->
+        if not (Env.should_verify env) 
+        then None 
+        else disj_exps |> List.fold_left (fun fopt e ->
                 let e = SS.compress e in
                 match e.n with
                     | Tm_uvar _
@@ -1343,78 +1344,81 @@ and tc_eqn scrutinee env branch
   (*                                                                                                    *)
   (* (d) Strengthen 6 (c) with the when condition, if there is one                                      *)
   let branch_guard =
-      if not (Env.should_verify env) then Util.t_true else
-      (* 6 (a) *)
-      let rec build_branch_guard scrutinee_tm pat_exp : list<typ> =
-        let discriminate scrutinee_tm f =
-            if List.length (Env.datacons_of_typ env (Env.typ_of_datacon env f.v)) > 1
-            then
-                let discriminator = Util.mk_discriminator f.v in
-                match Env.try_lookup_lid env discriminator with
-                    | None -> []  // We don't use the discriminator if we are typechecking it
-                    | _ ->
-                        let disc = S.fvar discriminator Delta_equational None in
-                        let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
-                        [Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool]
-            else []
-        in
+      if not (Env.should_verify env) 
+      then Util.t_true 
+      else (* 6 (a) *)
+          let rec build_branch_guard scrutinee_tm pat_exp : list<typ> =
+            let discriminate scrutinee_tm f =
+                if List.length (Env.datacons_of_typ env (Env.typ_of_datacon env f.v)) > 1
+                then
+                    let discriminator = Util.mk_discriminator f.v in
+                    match Env.try_lookup_lid env discriminator with
+                        | None -> []  // We don't use the discriminator if we are typechecking it
+                        | _ ->
+                            let disc = S.fvar discriminator Delta_equational None in
+                            let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
+                            [Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool]
+                else []
+            in
 
-        let fail () =
-            failwith (Util.format3 "tc_eqn: Impossible (%s) %s (%s)"
-                                        (Range.string_of_range pat_exp.pos)
-                                        (Print.term_to_string pat_exp)
-                                        (Print.tag_of_term pat_exp))  in
+            let fail () =
+                failwith (Util.format3 "tc_eqn: Impossible (%s) %s (%s)"
+                                            (Range.string_of_range pat_exp.pos)
+                                            (Print.term_to_string pat_exp)
+                                            (Print.tag_of_term pat_exp))  in
 
-        let rec head_constructor t = match t.n with
-            | Tm_fvar fv -> fv.fv_name
-            | Tm_uinst(t, _) -> head_constructor t
-            | _ -> fail () in
+            let rec head_constructor t = match t.n with
+                | Tm_fvar fv -> fv.fv_name
+                | Tm_uinst(t, _) -> head_constructor t
+                | _ -> fail () in
 
-        let pat_exp = SS.compress pat_exp |> Util.unmeta in
-        match pat_exp.n with
-            | Tm_uvar _
-            | Tm_app({n=Tm_uvar _}, _)
-            | Tm_name _
-            | Tm_constant Const_unit -> []
-            | Tm_constant _ -> [mk_Tm_app Util.teq [as_arg scrutinee_tm; as_arg pat_exp] None scrutinee_tm.pos]
-            | Tm_uinst _
-            | Tm_fvar _ ->
-              let f = head_constructor pat_exp in
-              if not (Env.is_datacon env f.v)
-              then [] //A non-pattern sub-term, typically a type constructor unified via a dot-pattern
-              else discriminate scrutinee_tm (head_constructor pat_exp)
-            | Tm_app(head, args) ->
-                let f = head_constructor head in
-                if not (Env.is_datacon env f.v) //A non-pattern sub-term of pat_exp
-                then []
-                else let sub_term_guards = args |> List.mapi (fun i (ei, _) ->
-                        let projector = Env.lookup_projector env f.v i in //NS: TODO ... should this be a marked as a record projector? But it doesn't matter for extraction
-                        match Env.try_lookup_lid env projector with
-                         | None -> []
-                         | _ ->
-                            let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) Delta_equational None) [as_arg scrutinee_tm] None f.p in
-                            build_branch_guard sub_term ei) |> List.flatten in
-                     discriminate scrutinee_tm f @ sub_term_guards
-            | _ -> [] in //a non-pattern sub-term: must be from a dot pattern
+            let pat_exp = SS.compress pat_exp |> Util.unmeta in
+            match pat_exp.n with
+                | Tm_uvar _
+                | Tm_app({n=Tm_uvar _}, _)
+                | Tm_name _
+                | Tm_constant Const_unit -> []
+                | Tm_constant _ -> [mk_Tm_app Util.teq [as_arg scrutinee_tm; as_arg pat_exp] None scrutinee_tm.pos]
+                | Tm_uinst _
+                | Tm_fvar _ ->
+                  let f = head_constructor pat_exp in
+                  if not (Env.is_datacon env f.v)
+                  then [] //A non-pattern sub-term, typically a type constructor unified via a dot-pattern
+                  else discriminate scrutinee_tm (head_constructor pat_exp)
+                | Tm_app(head, args) ->
+                    let f = head_constructor head in
+                    if not (Env.is_datacon env f.v) //A non-pattern sub-term of pat_exp
+                    then []
+                    else let sub_term_guards = args |> List.mapi (fun i (ei, _) ->
+                            let projector = Env.lookup_projector env f.v i in //NS: TODO ... should this be a marked as a record projector? But it doesn't matter for extraction
+                            match Env.try_lookup_lid env projector with
+                             | None -> []
+                             | _ ->
+                                let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) Delta_equational None) [as_arg scrutinee_tm] None f.p in
+                                build_branch_guard sub_term ei) |> List.flatten in
+                         discriminate scrutinee_tm f @ sub_term_guards
+                | _ -> [] //a non-pattern sub-term: must be from a dot pattern
+          in 
 
-      (* 6 (b) *)
-      let build_and_check_branch_guard scrutinee_tm pat =
-         if not (Env.should_verify env)
-         then TcUtil.fvar_const env Const.true_lid //if we're not verifying, then don't even bother building it
-         else let t = Util.mk_conj_l <| build_branch_guard scrutinee_tm pat in
-              let k, _ = U.type_u() in
-              let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k in
-              t in
+          (* 6 (b) *)
+          let build_and_check_branch_guard scrutinee_tm pat =
+             if not (Env.should_verify env)
+             then TcUtil.fvar_const env Const.true_lid //if we're not verifying, then don't even bother building it
+             else let t = Util.mk_conj_l <| build_branch_guard scrutinee_tm pat in
+                  let k, _ = U.type_u() in
+                  let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k in
+                  t in
 
-      (* 6 (c) *)
-     let branch_guard = norm_disj_exps |> List.map (build_and_check_branch_guard scrutinee_tm) |> Util.mk_disj_l  in
+          (* 6 (c) *)
+         let branch_guard = norm_disj_exps |> List.map (build_and_check_branch_guard scrutinee_tm) |> Util.mk_disj_l  in
 
-      (* 6 (d) *)
-      let branch_guard = match when_condition with
-        | None -> branch_guard
-        | Some w -> Util.mk_conj branch_guard w in
+          (* 6 (d) *)
+         let branch_guard = match when_condition with
+            | None -> branch_guard
+            | Some w -> Util.mk_conj branch_guard w in
 
-      branch_guard in
+          branch_guard 
+  in
 
   let guard = Rel.conj_guard g_when g_branch in
 
