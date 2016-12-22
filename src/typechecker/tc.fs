@@ -822,11 +822,13 @@ and tc_inductive env ses quals lids =
     let env0 = env in
 
     (* 1. Checking each tycon *)
-    let tc_tycon env (s:sigelt) : env_t          (* environment extended with a refined type for the type-constructor *)
-                                * sigelt         (* the typed version of s, with universe variables still TBD *)
-                                * universe       (* universe of the constructed type *)
-                                * guard_t        (* constraints on implicit variables *)
-                                = match s with
+    let tc_tycon (env:env_t)     (* environment that contains all mutually defined type constructors *)
+                 (s:sigelt)      (* a Sig_inductive_type (aka tc) that needs to be type-checked *)
+       : env_t          (* environment extended with a refined type for the type-constructor *)
+       * sigelt         (* the typed version of s, with universe variables still TBD *)
+       * universe       (* universe of the constructed type *)
+       * guard_t        (* constraints on implicit variables *)
+     = match s with
        | Sig_inductive_typ (tc, uvs, tps, k, mutuals, data, quals, r) -> //the only valid qual is Private
          assert (uvs = []);
          warn_positivity tc r;
@@ -845,7 +847,7 @@ and tc_inductive env ses quals lids =
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
          let fv_tc = S.lid_as_fv tc Delta_constant None in
-         Env.push_let_binding env_tps (Inr fv_tc) ([], t_tc),
+         Env.push_let_binding env (Inr fv_tc) ([], t_tc),
          Sig_inductive_typ(tc, [], tps, k, mutuals, data, quals, r),
          u,
          guard
@@ -855,24 +857,25 @@ and tc_inductive env ses quals lids =
     let positive_if_pure (_:term) (l:lid) = () in
 
     (* 2. Checking each datacon *)
-    let tc_data env tcs = function
+    let tc_data env (tcs : list<(sigelt * universe)>) = function
        | Sig_datacon(c, _uvs, t, tc_lid, ntps, quals, _mutual_tcs, r) ->
          assert (_uvs = []);
 
-         let (tps, u_tc) = //u_tc is the universe of the inductive that c constructs
+         let (env, tps, u_tc) = //u_tc is the universe of the inductive that c constructs
             let tps_u_opt = Util.find_map tcs (fun (se, u_tc) ->
                 if lid_equals tc_lid (must (Util.lid_of_sigelt se))
-                then let tps = match se with
-                        | Sig_inductive_typ(_, _, tps, _, _, _, _, _) ->
-                          tps |> List.map (fun (x, _) -> (x, Some S.imp_tag))
-                        | _ -> failwith "Impossible" in
-                     Some (tps, u_tc)
+                then match se with
+                     | Sig_inductive_typ(_, _, tps, _, _, _, _, _) ->
+                        let tps = tps |> List.map (fun (x, _) -> (x, Some S.imp_tag)) in
+                        let tps = Subst.open_binders tps in
+                        Some (Env.push_binders env tps, tps, u_tc)
+                     | _ -> failwith "Impossible"
                 else None) in
            match tps_u_opt with
             | Some x -> x
             | None ->
               if lid_equals tc_lid Const.exn_lid
-              then [], U_zero
+              then env, [], U_zero
               else raise (Error("Unexpected data constructor", r)) in
 
          let arguments, result =
@@ -894,11 +897,12 @@ and tc_inductive env ses quals lids =
 
          let arguments, env', us = tc_tparams env arguments in
          let result, res_lcomp = tc_trivial_guard env' result in
-         (match (SS.compress res_lcomp.res_typ).n with
-         | Tm_type _ -> ()
-         | ty -> raise (Error(Util.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
-                                        (Print.term_to_string result)
-                                        (Print.term_to_string (res_lcomp.res_typ)), r)));
+         begin match (SS.compress res_lcomp.res_typ).n with
+               | Tm_type _ -> ()
+               | ty -> raise (Error(Util.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
+                                                (Print.term_to_string result)
+                                                (Print.term_to_string (res_lcomp.res_typ)), r))
+         end;
          let head, _ = Util.head_and_args result in
          let _ = match (SS.compress head).n with
             | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> ()
@@ -922,6 +926,11 @@ and tc_inductive env ses quals lids =
     (* 3. Generalizing universes and 4. instantiate inductives within the datacons *)
     let generalize_and_inst_within env g tcs datas =
         Rel.force_trivial_guard env g;
+        //We build a single arrow term of the form
+        //   tc_1 -> .. -> tc_n -> dt_1 -> .. dt_n -> Tot unit
+        //for each type constructor tc_i
+        //and each data constructor type dt_i
+        //and generalize their universes together
         let binders = tcs |> List.map (function
             | Sig_inductive_typ(_, _, tps, k, _, _, _, _) -> S.null_binder (Util.arrow tps <| mk_Total k)
             | _ -> failwith "Impossible")  in
@@ -934,6 +943,9 @@ and tc_inductive env ses quals lids =
         if Env.debug env Options.Low then Util.print2 "@@@@@@Generalized to (%s, %s)\n"
                                 (uvs |> List.map (fun u -> u.idText) |> String.concat ", ")
                                 (Print.term_to_string t);
+        //Now, (uvs, t) is the generalized type scheme for all the inductives and their data constuctors
+        //we have to destruct t, knowing its shape above, 
+        //and rebuild the Sig_inductive_typ, Sig_datacon etc
         let uvs, t = SS.open_univ_vars uvs t in
         let args, _ = Util.arrow_formals t in
         let tc_types, data_types = Util.first_N (List.length binders) args in
@@ -1719,6 +1731,9 @@ let tc_partial_modul env modul =
   let msg = "Internals for " ^name in
   let env = {env with Env.is_iface=modul.is_interface;
                       admit=not (Options.should_verify modul.name.str)} in
+  //AR: the interactive mode calls this function, because of which there is an extra solver push.
+  //    the interactive mode does not call finish_partial_modul, so this push is not popped.
+  //    currently, there is a cleanup function in the interactive mode tc, that does this extra pop.
   env.solver.push msg;
   let env = Env.set_current_module env modul.name in
   let ses, exports, env = tc_decls env modul.declarations in
@@ -1803,7 +1818,8 @@ let finish_partial_modul env modul exports =
   env.solver.pop ("Ending modul " ^ modul.name.str);
   env.solver.encode_modul env modul;
   env.solver.refresh();
-  Options.restore_cmd_line_options true |> ignore;
+  //interactive mode manages it itself
+  let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
   modul, env
 
 let tc_modul env modul =

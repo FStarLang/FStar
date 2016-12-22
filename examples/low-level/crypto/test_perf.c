@@ -156,13 +156,13 @@ void test_kremlin_aead(void *plain, void*cipher, int alg){
   }
   else
     ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None, { .case_None = {  } } };
-  Crypto_AEAD_Invariant_state_______
+  Crypto_AEAD_Invariant_aead_state_______
   st0 = { .x00 = FStar_HyperHeap_root, .x01 = log, .x02 = prf, .x03 = ak };
 
   c1 = clock();
   a = rdtsc();
   int rounds = alg == AES_GCM ? 10 : ROUNDS;
-  for (int j = 0; j < rounds; j++) Crypto_AEAD_encrypt(i, st0, iv, AADLEN, aad, PLAINLEN, plain, cipher);
+  for (int j = 0; j < rounds; j++) Crypto_AEAD_Encrypt_encrypt(i, st0, iv, AADLEN, aad, PLAINLEN, plain, cipher);
   b = rdtsc();
   c2 = clock();
   d1 = b - a;
@@ -203,15 +203,15 @@ void test_kremlin_prf(void *plain, void*cipher, int alg){
   }
   else
     ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None, { .case_None = {  } } };
-  Crypto_AEAD_Invariant_state_______
+  Crypto_AEAD_Invariant_aead_state_______
   st0 = { .x00 = FStar_HyperHeap_root, .x01 = log, .x02 = prf, .x03 = ak };
   FStar_HyperStack_mem h1 = (void *)(uint8_t )0;
   Crypto_Symmetric_PRF_domain____ x = { .iv = Crypto_Symmetric_PRF_iv_0, .ctr = (uint32_t )0 };
   c1 = clock();
   a = rdtsc();
   int rounds = alg == AES_GCM ? AES_ROUNDS : ROUNDS;
-  for (int j = 0; j < rounds; j++) Crypto_AEAD_counter_enxor(i,
-                                                             Crypto_AEAD_Invariant____State___prf(i, Crypto_Indexing_rw_Writer, st0),
+  for (int j = 0; j < rounds; j++) Crypto_AEAD_EnxorDexor_counter_enxor(i,
+                                                             Crypto_AEAD_Invariant___proj__AEADState__item__prf(i, Crypto_Indexing_rw_Writer, st0),
                                                              x,
                                                              PLAINLEN,
                                                              PLAINLEN,
@@ -260,7 +260,7 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
   }
   else
     ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None, { .case_None = {  } } };
-  Crypto_AEAD_Invariant_state_______
+  Crypto_AEAD_Invariant_aead_state_______
   st0 = { .x00 = FStar_HyperHeap_root, .x01 = log, .x02 = prf, .x03 = ak };
   FStar_HyperStack_mem h1 = (void *)(uint8_t )0;
   Crypto_Symmetric_PRF_domain____ x = { .iv = Crypto_Symmetric_PRF_iv_0, .ctr = (uint32_t )0 };
@@ -311,10 +311,10 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
       (K___uint8_t__uint8_t_ ){
         .fst
         =
-        Crypto_Symmetric_UF1CMA_get_skey(Crypto_Symmetric_PRF____State___mac_rgn(i,
-            Crypto_AEAD_Invariant____State___prf(i, Crypto_Indexing_rw_Writer, st0)),
+        Crypto_Symmetric_UF1CMA_get_skey(Crypto_Symmetric_PRF___proj__State__item__mac_rgn(i,
+            Crypto_AEAD_Invariant___proj__AEADState__item__prf(i, Crypto_Indexing_rw_Writer, st0)),
           Prims_fst(macId),
-          Crypto_AEAD_Invariant____State___ak(i, Crypto_Indexing_rw_Writer, st0)),
+          Crypto_AEAD_Invariant___proj__AEADState__item__ak(i, Crypto_Indexing_rw_Writer, st0)),
         .snd = keyBuffer
       };
   else
@@ -334,8 +334,8 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
     {
       .x00
       =
-      Crypto_Symmetric_PRF____State___mac_rgn(i,
-        Crypto_AEAD_Invariant____State___prf(i, Crypto_Indexing_rw_Writer, st0)),
+      Crypto_Symmetric_PRF___proj__State__item__mac_rgn(i,
+        Crypto_AEAD_Invariant___proj__AEADState__item__prf(i, Crypto_Indexing_rw_Writer, st0)),
       .x01 = r,
       .x02 = s,
       .x03 = (uint8_t )0
@@ -428,7 +428,7 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
     Crypto_Symmetric_UF1CMA_accBuffer____ acc0 = acc;
     Crypto_Symmetric_UF1CMA_accBuffer____ acc1 = acc0;
     FStar_HyperStack_mem h3 = (void *)(uint8_t )0;
-    Crypto_AEAD_mac_wrapper((K___Crypto_Indexing_id_FStar_UInt128_t ){ .fst = i, .snd = x.iv },
+    Crypto_AEAD_Wrappers_CMA_mac_wrapper((K___Crypto_Indexing_id_FStar_UInt128_t ){ .fst = i, .snd = x.iv },
                             ak2,
                             acc1,
                             tag);

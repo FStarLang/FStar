@@ -1533,10 +1533,11 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                     else Delta_equational
                 in
                 let imp = U.abs binders body None in
+                let lbtyp = if no_decl then t else tun in
                 let lb = {
                     lbname=Inr (S.lid_as_fv discriminator_name dd None);
                     lbunivs=uvs;
-                    lbtyp=if no_decl then t else tun;
+                    lbtyp=lbtyp;
                     lbeff=C.effect_Tot_lid;
                     lbdef=SS.close_univ_vars uvs imp
                 } in
@@ -1608,10 +1609,11 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   then Delta_abstract Delta_equational
                   else Delta_equational
               in
+              let lbtyp = if no_decl then t else tun in
               let lb = {
                   lbname=Inr (S.lid_as_fv field_name dd None);
                   lbunivs=uvs;
-                  lbtyp=if no_decl then t else tun;
+                  lbtyp=lbtyp;
                   lbeff=C.effect_Tot_lid;
                   lbdef=SS.close_univ_vars uvs imp
               } in
