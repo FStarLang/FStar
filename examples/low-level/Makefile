@@ -1,6 +1,7 @@
 FSTAR_HOME=../..
 
 # using the hyperstack memory model, ulib/ml/Makefile.include used this variable to use appropriate ST files
+
 MEM=HST
 
 include $(FSTAR_HOME)/src/gmake/fstar.mk
@@ -301,14 +302,14 @@ ocaml-test.exe: ocaml-test-extract
 	$(OCAMLOPT) -I tmp -I crypto/ml -I $(AEAD_ODIR) $(OCAML_FILES) -o ocaml-test.exe
 	./ocaml-test.exe
 
-OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
-#OPENSSL_HOME=/usr/local/Cellar/openssl\@1.1/1.1.0c
-#CC=gcc-6 
+#OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
+OPENSSL_HOME=/usr/local/Cellar/openssl\@1.1/1.1.0c
+CC=gcc-6 
 
 test-perf.exe: krml-test.exe crypto/test_perf.c
-	$(CC) -Ofast -m64 -march=native -mtune=native -flto -funroll-loops -fomit-frame-pointer \
+	$(CC) -Ofast -m32 -march=native -mtune=native -flto -funroll-loops -fomit-frame-pointer \
 	 -o test-perf.exe tmp/FStar.c tmp/Crypto_AEAD*.c tmp/Crypto_Symmetric*.c tmp/Crypto_Indexing*.c tmp/Buffer_Utils*.c tmp/Crypto_Plain*.c $(KREMLIN_HOME)/kremlib/kremlib.c \
-		$(KREMLIN_HOME)/test/testlib.c crypto/test_perf.c crypto/spartan_stub.c spartan_aes/*.o crypto/test_hacks.c -I tmp -L tmp \
+		$(KREMLIN_HOME)/test/testlib.c crypto/test_perf.c crypto/spartan_dummy.c crypto/test_hacks.c -I tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
 		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME)/lib -L $(OPENSSL_HOME) -lcrypto $(CFLAGS)
 	PATH=$(OPENSSL_HOME):$(PATH) LD_LIBRARY_PATH=$(OPENSSL_HOME):$(LD_LIBRARY_PATH) DYLD_LIBRARY_PATH=$(OPENSSL_HOME):$(DYLD_LIBRARY_PATH) ./test-perf.exe
