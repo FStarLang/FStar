@@ -167,7 +167,7 @@ end else begin
 if (FStar_Options.interactive ()) then begin
 (
 
-let _96_73 = if (FStar_Options.explicit_deps ()) then begin
+let _96_75 = if (FStar_Options.explicit_deps ()) then begin
 (
 
 let _96_64 = if ((FStar_List.length filenames) = (Prims.parse_int "0")) then begin
@@ -175,7 +175,7 @@ let _96_64 = if ((FStar_List.length filenames) = (Prims.parse_int "0")) then beg
 end else begin
 ()
 end
-in ((None), (filenames)))
+in ((None), (None), (filenames)))
 end else begin
 (
 
@@ -186,24 +186,18 @@ end else begin
 end
 in (
 
-let _96_70 = (FStar_Interactive.detect_dependencies_with_first_interactive_chunk ())
-in (match (_96_70) with
-| (fn, deps) -> begin
-((Some (fn)), (deps))
+let _96_71 = (FStar_Interactive.detect_dependencies_with_first_interactive_chunk ())
+in (match (_96_71) with
+| (fn, mn, deps) -> begin
+((Some (fn)), (Some (mn)), (deps))
 end)))
 end
-in (match (_96_73) with
-| (main_buffer_filename_opt, filenames) -> begin
+in (match (_96_75) with
+| (main_buffer_filename_opt, main_buffer_mod_name_opt, filenames) -> begin
 if (FStar_Options.universes ()) then begin
-(
-
-let filenames = (FStar_Dependences.find_deps_if_needed FStar_Parser_Dep.VerifyUserList filenames)
-in (FStar_Interactive.interactive_mode main_buffer_filename_opt filenames None FStar_Universal.interactive_tc))
+(FStar_Interactive.interactive_mode main_buffer_filename_opt main_buffer_mod_name_opt FStar_Parser_Dep.VerifyUserList filenames None FStar_Universal.interactive_tc)
 end else begin
-(
-
-let filenames = (FStar_Dependences.find_deps_if_needed FStar_Parser_Dep.VerifyUserList filenames)
-in (FStar_Interactive.interactive_mode None filenames None FStar_Stratified.interactive_tc))
+(FStar_Interactive.interactive_mode None None FStar_Parser_Dep.VerifyUserList filenames None FStar_Stratified.interactive_tc)
 end
 end))
 end else begin

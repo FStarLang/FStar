@@ -159,8 +159,10 @@ let find_initial_module_name () =
 
 module U_Syntax = FStar.Syntax.Syntax
 module F_Syntax = FStar.Absyn.Syntax
-let detect_dependencies_with_first_interactive_chunk () : string         //the filename of the buffer being checked, if any
-                                                        * list<string>   //all its dependences 
+
+let detect_dependencies_for_module (mname:option<string>) : string         //the filename of the buffer being checked, if any
+                                                          * string         //the module name of the buffer being checked
+                                                          * list<string>   //all its dependences
   =
   let failr msg r =
     if Options.universes()
@@ -171,7 +173,7 @@ let detect_dependencies_with_first_interactive_chunk () : string         //the f
   let fail msg = failr msg Range.dummyRange in
   let parse_msg = "Dependency analysis may not be correct because the file failed to parse: " in
   try
-      match find_initial_module_name () with
+      match mname with
       | None ->
         fail "No initial module directive found\n"
       | Some module_name ->
@@ -185,7 +187,7 @@ let detect_dependencies_with_first_interactive_chunk () : string         //the f
           | Some (Some filename, None) ->
               Options.add_verify_module module_name;
               let _, all_filenames, _ = Parser.Dep.collect Parser.Dep.VerifyUserList [ filename ] in
-              filename, List.rev (List.tl all_filenames)
+              filename, module_name, List.rev (List.tl all_filenames)
           | Some (Some _, Some _) ->
              fail (Util.format1 "The combination of split interfaces and \
                interactive verification is not supported for: %s\n" module_name)
@@ -200,6 +202,10 @@ let detect_dependencies_with_first_interactive_chunk () : string         //the f
   | F_Syntax.Err msg ->
       fail (parse_msg ^ msg)
 
+let detect_dependencies_with_first_interactive_chunk () : string         //the filename of the buffer being checked, if any
+                                                        * string         //the module name of the buffer being checked
+                                                        * list<string>   //all its dependences 
+  = detect_dependencies_for_module (find_initial_module_name ())
 
 (******************************************************************************************)
 (* The main interactive loop *)
@@ -210,7 +216,12 @@ open FStar.Parser.ParseIt
 type m_timestamps = list<(option<string> * string * option<time> * time)>
 
 //filenames are the dependencies
-let interactive_mode (filename:option<string>) (filenames:list<string>) (initial_mod:'modul) (tc:interactive_tc<'env,'modul>) =
+let interactive_mode (filename:option<string>)
+                     (modname:option<string>)
+                     (verify_mode:Parser.Dep.verify_mode)
+                     (filenames:list<string>)
+                     (initial_mod:'modul)
+                     (tc:interactive_tc<'env,'modul>) =
     if Option.isSome (Options.codegen()) 
     then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
 
@@ -273,41 +284,81 @@ let interactive_mode (filename:option<string>) (filenames:list<string>) (initial
        * during recursive calls, the good_stack and good_ts grow "last dependency first" order.
        * returns the new stack, environment, and timestamps
        *)
-      let rec iterate (st:stack<'env, 'modul>) (env':'env) (ts:m_timestamps) (good_stack:stack<'env, 'modul>) (good_ts:m_timestamps) = //:(stack<'env, 'modul> * 'env * m_timestamps) =
+      let rec iterate (depnames:list<string>) (st:stack<'env, 'modul>) (env':'env) (ts:m_timestamps) (good_stack:stack<'env, 'modul>) (good_ts:m_timestamps) = //:(stack<'env, 'modul> * 'env * m_timestamps) =
         //invariant length good_stack = length good_ts, and same for stack and ts
-        match st, ts with
-            | stack_elt::stack', ts_elt::ts' ->
-              let env, _ = stack_elt in
-              let intf, impl, intf_t, impl_t = ts_elt in
-              if is_stale intf impl intf_t impl_t then
+        
+        let match_dep (depnames:list<string>) (intf:option<string>) (impl:string) : (bool * list<string>) =
+          match intf with
+            | None      ->
+              (match depnames with
+                 | dep::depnames' -> if dep = impl then true, depnames' else false, depnames
+                 | _              -> false, depnames)
+            | Some intf ->
+              (match depnames with
+                 | depintf::dep::depnames' -> if depintf = intf && dep = impl then true, depnames' else false, depnames
+                 | _                       -> false, depnames)
+        in
 
-                //this function goes through ts (including the ts_elt) and collects all the filenames that need to be type checked again
-                //along side, is also pops the stack, calling pop on tc along the way.
-                //maintains the filenames in the reverse order during recursive calls, reverses when returns finally
-                let rec collect_file_names_and_pop env stack ts filenames =
-                  match ts with
-                    | []                     -> List.rev_append filenames [], env
-                    | (intf, impl, _, _)::ts ->
-                      //pop
-                      tc.pop env "";
-                      let filenames = match intf with
-                        | Some f -> impl::f::filenames
-                        | None   -> impl::filenames
-                      in
-                      let (env, _), stack = List.hd stack, List.tl stack in
-                      collect_file_names_and_pop env stack ts filenames
-                in
+        let rec pop_tc_and_stack env stack ts =
+          match ts with
+            | []    -> env
+            | _::ts ->
+              //pop
+              tc.pop env "";
+              let (env, _), stack = List.hd stack, List.tl stack in
+              pop_tc_and_stack env stack ts
+        in
 
-                //recall stack is in "first dependency first order", but we want to pop it in the "last dependency first order" and return the appropriate env.
-                //so, calling rev on stack
-                let filenames, env = collect_file_names_and_pop env' (List.rev_append st []) ts [] in
-                tc_deps m good_stack env filenames good_ts
-              else iterate stack' env' ts' (stack_elt::good_stack) (ts_elt::good_ts)
-            | [], [] -> good_stack, env', good_ts
-            | _, _   -> failwith "Impossible, the stack size and ts size must be same for dependencies"
+        match ts with
+          | ts_elt::ts' ->
+            let intf, impl, intf_t, impl_t = ts_elt in
+            let b, depnames' = match_dep depnames intf impl in
+            if not b || (is_stale intf impl intf_t impl_t) then
+              let env = pop_tc_and_stack env' (List.rev_append st []) ts in
+              tc_deps m good_stack env depnames good_ts
+            else
+              let stack_elt, st' = List.hd st, List.tl st in
+              iterate depnames' st' env' ts' (stack_elt::good_stack) (ts_elt::good_ts)
+         | []           -> tc_deps m good_stack env' depnames good_ts
       in
-
-      iterate (List.rev_append stk []) env (List.rev_append ts []) [] []
+//
+//
+//        match ts with
+//            | ts_elt::ts' ->
+//              let stack_elt, stack' = List.hd st, List.tl st in
+//              let env, _ = stack_elt in
+//              let intf, impl, intf_t, impl_t = ts_elt in
+//              if is_stale intf impl intf_t impl_t then
+//
+//                //this function goes through ts (including the ts_elt) and collects all the filenames that need to be type checked again
+//                //along side, is also pops the stack, calling pop on tc along the way.
+//                //maintains the filenames in the reverse order during recursive calls, reverses when returns finally
+//                let rec collect_file_names_and_pop env stack ts filenames =
+//                  match ts with
+//                    | []                     -> List.rev_append filenames [], env
+//                    | (intf, impl, _, _)::ts ->
+//                      //pop
+//                      tc.pop env "";
+//                      let filenames = match intf with
+//                        | Some f -> impl::f::filenames
+//                        | None   -> impl::filenames
+//                      in
+//                      let (env, _), stack = List.hd stack, List.tl stack in
+//                      collect_file_names_and_pop env stack ts filenames
+//                in
+//
+//                //recall stack is in "first dependency first order", but we want to pop it in the "last dependency first order" and return the appropriate env.
+//                //so, calling rev on stack
+//                let filenames, env = collect_file_names_and_pop env' (List.rev_append st []) ts [] in
+//                tc_deps m good_stack env filenames good_ts
+//              else iterate stack' env' ts' (stack_elt::good_stack) (ts_elt::good_ts)
+//            | [], [] -> good_stack, env', good_ts
+//            | _, _   -> failwith "Impossible, the stack size and ts size must be same for dependencies"
+//      in
+//
+      let _, _, filenames = detect_dependencies_for_module modname in
+      let filenames = FStar.Dependences.find_deps_if_needed verify_mode filenames in
+      iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
     in
 
     let rec go line_col (stack:stack<'env,'modul>) (curmod:'modul) (env:'env) (ts:m_timestamps) = begin
@@ -362,6 +413,7 @@ let interactive_mode (filename:option<string>) (filenames:list<string>) (initial
     end in
 
     //type check prims and the dependencies
+    let filenames = FStar.Dependences.find_deps_if_needed verify_mode filenames in
     let env = tc.tc_prims () in
     let stack, env, ts = tc_deps initial_mod [] env filenames [] in 
 
