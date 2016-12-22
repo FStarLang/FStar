@@ -499,9 +499,12 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
     Util.print4 "Before lift: Making bind (e1=%s)@c1=%s\nb=%s\t\tc2=%s\n" 
         (match e1opt with | None -> "None" | Some e -> Print.term_to_string e)
         (Print.lcomp_to_string lc1) bstr (Print.lcomp_to_string lc2));
+  let lc1, lc2 = join_lcomp env lc1 lc2 in 
+  //at this point, lc1 and lc2 have the same label, universes and indices
   let bind_it () =
       let c1 = lc1.lcomp_as_comp () in
       let c2 = lc2.lcomp_as_comp () in
+      //at this point, we know that c1 and c2 also have the same effect label, universes and indices 
       if debug env Options.Extreme
       then Util.print5 "b=%s,Evaluated %s to %s\n And %s to %s\n"
             (match b with
@@ -544,7 +547,8 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       | Some (c, reason) ->
         c
       | None ->
-        let nct1, nct2 = lift_and_destruct env c1 c2 in
+        let nct1 = Env.comp_as_normal_comp_typ env c1 in
+        let nct2 = Env.comp_as_normal_comp_typ env c2 in
         let md = Env.get_effect_decl env nct1.comp_name in
         let t1 = fst nct1.comp_result in
         let t2 = fst nct2.comp_result in
@@ -565,7 +569,6 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
         let nct = {nct2 with comp_wp=S.as_arg wp} in
         Env.normal_comp_typ_as_comp env nct
   in //bind_it
-  let _, lc2 = join_lcomp env lc1 lc2 in
   {lc2 with lcomp_as_comp=bind_it}
 
 let lift_formula env t mk_wp f =
@@ -686,8 +689,9 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     lc.lcomp_as_comp()
 
 let ite env (guard:formula) lcomp_then lcomp_else =
+  let lcomp_then, lcomp_else = join_lcomp env lcomp_then lcomp_else in
   let ite_comp () =
-      let nct1, nct2 = lift_and_destruct env (lcomp_then.lcomp_as_comp()) (lcomp_else.lcomp_as_comp()) in
+      let nct1, nct2 = lift_and_destruct env (lcomp_then.lcomp_as_comp()) (lcomp_else.lcomp_as_comp()) in //TODO: these should be identity lifts, so could be skipped
       let md = Env.get_effect_decl env nct1.comp_name in
       let res_t, wp_then, wp_else = nct1.comp_result, nct1.comp_wp, nct2.comp_wp in
       let if_then_else_wp = 
@@ -705,12 +709,20 @@ let ite env (guard:formula) lcomp_then lcomp_else =
                     None if_then_else_wp.pos in
            mk_comp md nct1.comp_univs nct1.comp_indices (fst res_t) share_post_wp [] 
   in
-  let lc_then, _ = join_lcomp env lcomp_then lcomp_else in
-  {lc_then with lcomp_as_comp=ite_comp}
+  {lcomp_then with lcomp_as_comp=ite_comp}
 
 let fvar_const env lid = S.fvar (Ident.set_lid_range lid (Env.get_range env)) Delta_constant None
 
 let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
+   let lc, lcases = 
+        List.fold_right 
+            (fun (formula, lc) (out, lcases) -> 
+                let lc, _out = join_lcomp env lc out in
+                //we know that lc and _out have the same label, universes, indices and **result type = res_t
+                //i.e., they are identical, so no loss of symmetry here
+                (lc, (formula, lc)::lcases))
+            lcases 
+            (Env.lcomp_of_comp env (S.mk_Total res_t), []) in
     let bind_cases () =
         let if_then_else guard (cthen:comp) (celse:comp) =
             let nct_then, nct_else = lift_and_destruct env cthen celse in
@@ -749,12 +761,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
                     None (fst nct.comp_wp).pos in
              mk_comp md nct.comp_univs nct.comp_indices (fst nct.comp_result) share_post_wp []
   in //bind_cases
-  let lc = 
-    List.fold_right 
-        (fun (_, lc) out -> fst (join_lcomp env lc out))
-        lcases
-        (Env.lcomp_of_comp env (S.mk_Total res_t)) in
-   {lc with lcomp_as_comp=bind_cases}
+  {lc with lcomp_as_comp=bind_cases}
 
 let close_comp env bvs (lc:lcomp) =
   let close () =
