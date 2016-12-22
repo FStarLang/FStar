@@ -95,7 +95,7 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
     let id_eq_lid i (l:lident) = i.idText = l.ident.idText in
 
     let is_val x d = match d.d with 
-        | Val(_, y, _) -> x.idText = y.idText
+        | Val(y, _) -> x.idText = y.idText
         | _ -> false in
 
     let is_type x d = match d.d with 
@@ -105,7 +105,7 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
 
     //is d of of the form 'let x = ...' or 'type x = ...'
     let is_let x d = match d.d with 
-        | TopLevelLet(_, _, defs) -> 
+        | TopLevelLet(_, defs) -> 
           lids_of_let defs |> Util.for_some (id_eq_lid x)
         | Tycon(_, tys) ->
           tys |> List.map (fun (x,_) -> x)
@@ -125,7 +125,7 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
                 | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) -> 
                   raise (Error("Interface contains an abstract 'type' declaration; use 'val' instead", d.drange))
 
-                | Val(qs, x, t) ->  //we have a 'val x' in the interface
+                | Val(x, t) ->  //we have a 'val x' in the interface
                   let _ = match impl |> List.tryFind (fun d -> is_val x d || is_type x d) with 
                     | None -> ()
                     | Some ({d=Val _; drange=r}) -> raise (Error(Util.format1 "%s is repeated in the implementation" (decl_to_string d), r))
@@ -136,28 +136,28 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
                       let lopt = prefix_until_let x impl in
                       begin match lopt with 
                         | None -> 
-                          if qs |> List.contains Assumption
+                          if d.quals |> List.contains Assumption
                           then aux ([d]::out) ds impl
                           else raise (Error("No definition found for " ^x.idText, d.drange))
 
                         | Some (prefix, let_x, rest_impl) ->
-                          if qs |> List.contains Assumption
+                          if d.quals |> List.contains Assumption
                           then raise (Error(Util.format2 "Assumed declaration %s is defined at %s" 
                                                          x.idText (Range.string_of_range let_x.drange), 
                                             d.drange))
                           else let remaining_iface_vals = 
                                     ds |> List.collect (fun d -> match d.d with
-                                       | Val(_, x, _) -> [x]
+                                       | Val(x, _) -> [x]
                                        | _ -> []) in
                                 begin match prefix |> List.tryFind (fun d -> remaining_iface_vals |> Util.for_some (fun x -> is_let x d)) with 
                                     | Some d -> raise (Error (Util.format2 "%s is out of order with %s" (decl_to_string d) (decl_to_string let_x), d.drange))
                                     | _ ->
                                       begin match let_x.d with 
-                                         | TopLevelLet(_, _, defs) ->
+                                         | TopLevelLet(_, defs) ->
                                            let def_lids = lids_of_let defs in //let rec x and y, etc.
                                            let iface_prefix_opt = iface |> FStar.Util.prefix_until (fun d -> 
                                             match d.d with 
-                                                | Val(_, y, _) -> 
+                                                | Val(y, _) -> 
                                                   not (def_lids |> Util.for_some (id_eq_lid y))
 
                                                 | _ -> true) in

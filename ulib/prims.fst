@@ -58,7 +58,7 @@ type l_False = squash c_False
  *)
 let inversion (a:Type) = True
 
-(* The usual equality deifned as an inductive type *)
+(* The usual equality defined as an inductive type *)
 type equals (#a:Type) (x:a) : a -> Type =
   | Refl : equals x x
 
@@ -685,3 +685,6 @@ abstract let normalize (a:Type0) = a
 
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
+
+val false_elim : #a:Type -> u:unit{false} -> Tot a
+let rec false_elim #a u = false_elim ()

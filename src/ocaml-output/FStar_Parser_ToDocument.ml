@@ -757,11 +757,11 @@ in (_164_478)::_164_477))
 in (FStar_Pprint.concat _164_479))
 in (FStar_Pprint.group _164_480))
 end
-| FStar_Parser_AST.TopLevelLet (qq, lq, pats_terms) -> begin
+| FStar_Parser_AST.TopLevelLet (lq, pats_terms) -> begin
 (
 
-let head_ids = (FStar_List.collect (fun _67_348 -> (match (_67_348) with
-| (p, _67_347) -> begin
+let head_ids = (FStar_List.collect (fun _67_347 -> (match (_67_347) with
+| (p, _67_346) -> begin
 (head_id_of_pat p)
 end)) pats_terms)
 in (let _164_489 = (let _164_488 = (let _164_487 = (str "let")
@@ -782,7 +782,7 @@ in (_164_493)::_164_492))
 in (FStar_Pprint.concat _164_494))
 in (FStar_Pprint.group _164_495))
 end
-| FStar_Parser_AST.Assume (q, i, t) -> begin
+| FStar_Parser_AST.Assume (i, t) -> begin
 (let _164_501 = (let _164_500 = (let _164_499 = (str "assume")
 in (let _164_498 = (let _164_497 = (let _164_496 = (str i.FStar_Ident.idText)
 in (_164_496)::(FStar_Pprint.hardline)::[])
@@ -794,7 +794,7 @@ end
 | FStar_Parser_AST.Tycon (q, tys) -> begin
 (let _164_509 = (let _164_508 = (let _164_507 = (str "type")
 in (let _164_506 = (let _164_505 = (let _164_504 = (let _164_503 = (str ", ")
-in (FStar_Pprint.separate_map _164_503 (fun _67_364 -> (match (_67_364) with
+in (FStar_Pprint.separate_map _164_503 (fun _67_362 -> (match (_67_362) with
 | (x, d) -> begin
 (doc_of_tycon x)
 end)) tys))
@@ -804,28 +804,28 @@ in (_164_507)::_164_506))
 in (FStar_Pprint.concat _164_508))
 in (FStar_Pprint.group _164_509))
 end
-| FStar_Parser_AST.Val (_67_366, i, _67_369) -> begin
+| FStar_Parser_AST.Val (i, _67_365) -> begin
 (let _164_513 = (let _164_512 = (str "val ")
 in (let _164_511 = (let _164_510 = (str i.FStar_Ident.idText)
 in (_164_510)::(FStar_Pprint.hardline)::[])
 in (_164_512)::_164_511))
 in (FStar_Pprint.concat _164_513))
 end
-| FStar_Parser_AST.Exception (i, _67_374) -> begin
+| FStar_Parser_AST.Exception (i, _67_370) -> begin
 (let _164_517 = (let _164_516 = (str "exception ")
 in (let _164_515 = (let _164_514 = (str i.FStar_Ident.idText)
 in (_164_514)::(FStar_Pprint.hardline)::[])
 in (_164_516)::_164_515))
 in (FStar_Pprint.concat _164_517))
 end
-| (FStar_Parser_AST.NewEffect (_, FStar_Parser_AST.DefineEffect (i, _, _, _, _))) | (FStar_Parser_AST.NewEffect (_, FStar_Parser_AST.RedefineEffect (i, _, _))) -> begin
+| (FStar_Parser_AST.NewEffect (FStar_Parser_AST.DefineEffect (i, _, _, _, _))) | (FStar_Parser_AST.NewEffect (FStar_Parser_AST.RedefineEffect (i, _, _))) -> begin
 (let _164_521 = (let _164_520 = (str "new_effect) ")
 in (let _164_519 = (let _164_518 = (str i.FStar_Ident.idText)
 in (_164_518)::(FStar_Pprint.hardline)::[])
 in (_164_520)::_164_519))
 in (FStar_Pprint.concat _164_521))
 end
-| (FStar_Parser_AST.NewEffectForFree (_, FStar_Parser_AST.DefineEffect (i, _, _, _, _))) | (FStar_Parser_AST.NewEffectForFree (_, FStar_Parser_AST.RedefineEffect (i, _, _))) -> begin
+| (FStar_Parser_AST.NewEffectForFree (FStar_Parser_AST.DefineEffect (i, _, _, _, _))) | (FStar_Parser_AST.NewEffectForFree (FStar_Parser_AST.RedefineEffect (i, _, _))) -> begin
 (let _164_525 = (let _164_524 = (str "new_effect_for_free ")
 in (let _164_523 = (let _164_522 = (str i.FStar_Ident.idText)
 in (_164_522)::(FStar_Pprint.hardline)::[])

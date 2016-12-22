@@ -101,11 +101,12 @@ val should_verify   : env -> bool
 val incr_query_index: env -> env
 
 (* Marking and resetting the environment, for the interactive mode *)
-val push        : env -> string -> env
-val pop         : env -> string -> env
-val mark        : env -> env
-val reset_mark  : env -> env
-val commit_mark : env -> env
+val push               : env -> string -> env
+val pop                : env -> string -> env
+val mark               : env -> env
+val reset_mark         : env -> env
+val commit_mark        : env -> env
+val cleanup_interactive: env -> unit
 
 (* Checking the per-module debug level and position info *)
 val debug          : env -> Options.debug_level_t -> bool
@@ -134,6 +135,7 @@ val lookup_projector       : env -> lident -> int -> lident
 val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
+val is_action              : env -> lident -> bool
 val is_interpreted         : (env -> term -> bool)
 val is_type_constructor    : env -> lident -> bool
 

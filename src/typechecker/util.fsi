@@ -81,7 +81,7 @@ val fvar_const: env -> lident -> term
 val mk_toplevel_definition: env -> lident -> term -> sigelt * term
 
 //decorating terms with monadic operators
-val maybe_lift: env -> term -> lident -> lident -> term
+val maybe_lift: env -> term -> lident -> lident -> typ -> term
 val maybe_monadic: env -> term -> lident -> typ -> term
 
 //reification

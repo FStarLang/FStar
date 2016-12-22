@@ -162,6 +162,7 @@ and c_flag = // C backend only
   | Assumed
   | Private
   | NoExtract
+  | Attribute of string
 
 and mlletflavor =
   | Rec

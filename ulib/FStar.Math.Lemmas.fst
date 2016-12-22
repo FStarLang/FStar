@@ -192,6 +192,15 @@ let lemma_div_mod a p = ()
 val lemma_mod_lt: a:int -> p:pos -> Lemma (0 <= a % p /\ a % p < p)
 let lemma_mod_lt a p = ()
 
+val lemma_div_lt: a:nat -> n:nat -> m:nat{m <= n} ->
+  Lemma (requires (a < pow2 n))
+	(ensures  (a / pow2 m < pow2 (n-m)))
+let lemma_div_lt a n m =
+  lemma_div_mod a (pow2 m);
+  assert(a = pow2 m * (a / pow2 m) + a % pow2 m);
+  pow2_plus m (n-m);
+  assert(pow2 n = pow2 m * pow2 (n - m))
+
 val lemma_eq_trans_2: w:int -> x:int -> y:int -> z:int -> Lemma
   (requires (w = x /\ x = y /\ y = z))
   (ensures  (x = z))
@@ -228,6 +237,12 @@ let lemma_mod_plus a b p =
   let y = a - p * (a / p) in
   lemma_eq_trans_2 w x y z
 
+val lemma_mod_sub_0: a:pos -> Lemma ((-1) % a = a - 1)
+let lemma_mod_sub_0 a = ()
+val lemma_mod_sub_1: a:pos -> b:pos{a < b} -> Lemma ((-a) % b = b - (a%b))
+let lemma_mod_sub_1 a b = ()
+
+
 private let lemma_mod_mul_distr_l_0 (a:nat) (b:nat) (p:pos) : Lemma
   ((((a % p) + (a / p) * p) * b) % p = ((a % p) * b + ((a / p) * b) * p) % p)
   = ()
@@ -258,7 +273,7 @@ val div_exact_r: a:nat -> p:pos -> Lemma
   (ensures  (a = (a / p) * p))
 let div_exact_r a p = ()
 
-#set-options "--z3rlimit 10"
+#set-options "--z3rlimit 20"
 
 val lemma_mod_spec: a:nat -> p:pos -> Lemma
   (a / p = (a - (a % p)) / p)
