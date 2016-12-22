@@ -58,7 +58,7 @@ type l_False = squash c_False
  *)
 let inversion (a:Type) = True
 
-(* The usual equality deifned as an inductive type *)
+(* The usual equality defined as an inductive type *)
 type equals (#a:Type) (x:a) : a -> Type =
   | Refl : equals x x
 
