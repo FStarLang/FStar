@@ -142,8 +142,8 @@ let disentangle_abbrevs_from_bundle
 
     (* Gather the list of type abbrevs *)
    let type_abbrev_sigelts = sigelts |> List.collect begin fun x -> match x with
-       | Sig_let ((false, [ { lbname= Inr _ } ]), _, _, _) -> [x]
-       | Sig_let (_, _, _, _) ->
+       | Sig_let ((false, [ { lbname= Inr _ } ]), _, _, _, _) -> [x]
+       | Sig_let (_, _, _, _, _) ->
          failwith "instfv: disentangle_abbrevs_from_bundle: type_abbrev_sigelts: impossible"
        | _ -> []
    end
@@ -156,7 +156,7 @@ let disentangle_abbrevs_from_bundle
    | _ ->
 
     let type_abbrevs = type_abbrev_sigelts |> List.map begin function
-        | Sig_let ((_, [ { lbname = Inr fv } ] ) , _, _, _) -> fv.fv_name.v
+        | Sig_let ((_, [ { lbname = Inr fv } ] ) , _, _, _, _) -> fv.fv_name.v
         | _ -> failwith "instfv: disentangle_abbrevs_from_bundle: type_abbrevs: impossible"
     end
     in
@@ -182,7 +182,7 @@ let disentangle_abbrevs_from_bundle
 
         let remove_not_unfolded lid =
             not_unfolded_yet := !not_unfolded_yet |> List.filter begin function
-                | Sig_let ((_, [ { lbname = Inr fv } ] ) , _, _, _) ->
+                | Sig_let ((_, [ { lbname = Inr fv } ] ) , _, _, _, _) ->
                   not (lid_equals lid fv.fv_name.v)
                 | _ -> true
             end
@@ -192,13 +192,13 @@ let disentangle_abbrevs_from_bundle
         abbreviation, with memoization. *)
         let rec unfold_abbrev_fv (t: term) (fv : S.fv) : term =
             let replacee x = match x with
-                | Sig_let ((_, [ { lbname = Inr fv' } ] ) , _, _, _)
+                | Sig_let ((_, [ { lbname = Inr fv' } ] ) , _, _, _, _)
                   when lid_equals fv'.fv_name.v fv.fv_name.v ->
                   Some x
                 | _ -> None
             in
             let replacee_term x = match replacee x with
-                | Some (Sig_let ((_, [ { lbdef = tm } ] ) , _, _, _)) -> Some tm
+                | Some (Sig_let ((_, [ { lbdef = tm } ] ) , _, _, _, _)) -> Some tm
                 | _ -> None
             in
             match U.find_map !rev_unfolded_type_abbrevs replacee_term with
@@ -215,7 +215,7 @@ let disentangle_abbrevs_from_bundle
 
         (* Start unfolding in a type abbreviation that has not occurred before. *)
         and unfold_abbrev = function
-            | Sig_let ((false, [lb]) , rng, _, quals) ->
+            | Sig_let ((false, [lb]) , rng, _, quals, attr) ->
                 let lid = match lb.lbname with
                     | Inr fv -> fv.fv_name.v
                     | _ -> failwith "instfv: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible"
@@ -225,7 +225,7 @@ let disentangle_abbrevs_from_bundle
                 let ty' = inst unfold_abbrev_fv lb.lbtyp in
                 let tm' = inst unfold_abbrev_fv lb.lbdef in
                 let lb' = { lb with lbtyp = ty' ; lbdef = tm' } in
-                let sigelt' = Sig_let ((false, [lb']), rng, [lid], quals) in
+                let sigelt' = Sig_let ((false, [lb']), rng, [lid], quals, attr) in
                 let () = rev_unfolded_type_abbrevs := sigelt' :: !rev_unfolded_type_abbrevs in
                 let () = in_progress := List.tl !in_progress in (* pop *)
                 ty'
@@ -250,7 +250,7 @@ let disentangle_abbrevs_from_bundle
       let inductives_with_abbrevs_unfolded =
 
           let find_in_unfolded fv = U.find_map unfolded_type_abbrevs begin fun x -> match x with
-              | Sig_let ((_, [ { lbname = Inr fv' ; lbdef = tm } ] ), _, _, _) when (lid_equals fv'.fv_name.v fv.fv_name.v) ->
+              | Sig_let ((_, [ { lbname = Inr fv' ; lbdef = tm } ] ), _, _, _, _) when (lid_equals fv'.fv_name.v fv.fv_name.v) ->
                 Some tm
               | _ -> None
           end
@@ -273,7 +273,7 @@ let disentangle_abbrevs_from_bundle
                 let mut' = filter_out_type_abbrevs mut in
                 [Sig_datacon (lid, univs, ty', res, npars, quals, mut', rng)]
 
-              | Sig_let (_, _, _, _) ->
+              | Sig_let (_, _, _, _, _) ->
                 []
 
               | _ -> failwith "instfv: inductives_with_abbrevs_unfolded: unfold_in_sig: impossible"
