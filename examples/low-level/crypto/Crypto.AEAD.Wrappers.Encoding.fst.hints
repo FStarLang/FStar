@@ -841,7 +841,7 @@
         "equation_Crypto.AEAD.Invariant.enc_dec_liveness",
         "equation_Crypto.AEAD.Invariant.enc_dec_separation",
         "equation_Crypto.AEAD.Invariant.safeMac",
-        "equation_Crypto.AEAD.PRF_MAC.ak_live",
+        "equation_Crypto.AEAD.Wrappers.PRF.ak_live",
         "equation_Crypto.AEAD.Wrappers.Encoding.accumulate_liveness",
         "equation_Crypto.Indexing.cipherAlg_of_id",
         "equation_Crypto.Indexing.macAlg_of_id",

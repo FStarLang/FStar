@@ -31,6 +31,7 @@
       ],
       0
     ],
+    [ "StlcCbvDbPntSubstNoLists.uu___is_EVar", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.__proj__EVar__item___0",
       1,
@@ -43,6 +44,7 @@
       ],
       0
     ],
+    [ "StlcCbvDbPntSubstNoLists.uu___is_EApp", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.__proj__EApp__item___0",
       1,
@@ -67,6 +69,7 @@
       ],
       0
     ],
+    [ "StlcCbvDbPntSubstNoLists.uu___is_EAbs", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.__proj__EAbs__item___0",
       1,
@@ -183,6 +186,7 @@
       ],
       0
     ],
+    [ "StlcCbvDbPntSubstNoLists.uu___is_TyVar", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.__proj__TyVar__item__g",
       1,
@@ -225,6 +229,7 @@
       ],
       0
     ],
+    [ "StlcCbvDbPntSubstNoLists.uu___is_TyAbs", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.__proj__TyAbs__item__g",
       1,
@@ -306,6 +311,7 @@
       ],
       0
     ],
+    [ "StlcCbvDbPntSubstNoLists.uu___is_TyApp", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StlcCbvDbPntSubstNoLists.__proj__TyApp__item__g",
       1,

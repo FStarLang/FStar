@@ -1,5 +1,5 @@
 [
-  "‹’;≠^àXÜ4wØtAÀ8A",
+  "tå5£˘“åK6ç\u000bx≥®ﬂR",
   [
     [
       "Crypto.AEAD.Encrypt.ideal_ensures",
@@ -823,9 +823,9 @@
         "equation_Crypto.AEAD.Invariant.safeMac",
         "equation_Crypto.AEAD.Invariant.safelen",
         "equation_Crypto.AEAD.Invariant.st_ilog",
-        "equation_Crypto.AEAD.PRF_MAC.prf_mac_added",
-        "equation_Crypto.AEAD.PRF_MAC.prf_mac_ensures",
-        "equation_Crypto.AEAD.PRF_MAC.prf_mac_existed",
+        "equation_Crypto.AEAD.Wrappers.PRF.prf_mac_added",
+        "equation_Crypto.AEAD.Wrappers.PRF.prf_mac_ensures",
+        "equation_Crypto.AEAD.Wrappers.PRF.prf_mac_existed",
         "equation_Crypto.AEAD.Wrappers.CMA.mac_modifies",
         "equation_Crypto.AEAD.Wrappers.CMA.modifies_bufs_and_ref",
         "equation_Crypto.AEAD.Wrappers.CMA.pairwise_distinct",
@@ -1440,9 +1440,9 @@
         "equation_Crypto.AEAD.Invariant.safeMac",
         "equation_Crypto.AEAD.Invariant.safelen",
         "equation_Crypto.AEAD.Invariant.st_ilog",
-        "equation_Crypto.AEAD.PRF_MAC.prf_mac_added",
-        "equation_Crypto.AEAD.PRF_MAC.prf_mac_ensures",
-        "equation_Crypto.AEAD.PRF_MAC.prf_mac_existed",
+        "equation_Crypto.AEAD.Wrappers.PRF.prf_mac_added",
+        "equation_Crypto.AEAD.Wrappers.PRF.prf_mac_ensures",
+        "equation_Crypto.AEAD.Wrappers.PRF.prf_mac_existed",
         "equation_Crypto.AEAD.Wrappers.Encoding.accumulate_modifies_nothing",
         "equation_Crypto.Indexing.aeadAlg_of_id",
         "equation_Crypto.Indexing.macAlg_of_id",

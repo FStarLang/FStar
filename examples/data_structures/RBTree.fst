@@ -230,7 +230,7 @@ let balance c lt ky rt =
     | (B, a, x, (T R b y (T R c z d))) -> T R (T B a x b) y (T B c z d)
     | _ -> T c lt ky rt
 
-#reset-options "--z3rlimit 5"
+#reset-options "--z3rlimit 10"
 
 (*
  * a helper function that inserts a red node with new key, and calls

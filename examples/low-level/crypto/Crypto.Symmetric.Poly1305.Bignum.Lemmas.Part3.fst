@@ -38,95 +38,6 @@ let lemma_modulo_add a b p =
   lemma_mod_plus_distr_l a b p
 
 
-#reset-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
-
-(* val lemma_modulo_9_0: f:nat -> g:nat -> h:nat -> i:nat -> Lemma *)
-(*   (let p = reveal prime in *)
-(*     (pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i) % p *)
-(* 	   =  ((pow2 130 * f + pow2 156 * g) % p + (pow2 182 * h + pow2 208 * i) % p) % p) *)
-(* let lemma_modulo_9_0 f g h i = *)
-(*   let p = reveal prime in *)
-(*   lemma_modulo_add (pow2 130 * f + pow2 156 * g)  (pow2 182 * h + pow2 208 * i) p; *)
-(*   lemma_modulo_add (pow2 182 * h + pow2 208 * i)  ((pow2 130 * f + pow2 156 * g) % p) p *)
-
-(* val lemma_modulo_9_1: f:nat -> g:nat -> h:nat -> i:nat -> Lemma *)
-(*   (let p = reveal prime in *)
-(* 	 ((pow2 130 * f + pow2 156 * g) % p = ((pow2 130 * f) % p + (pow2 156 * g) % p) % p *)
-(* 	 /\  (pow2 182 * h + pow2 208 * i) % p =  ((pow2 182 * h) % p + (pow2 208 * i) % p) % p)) *)
-(* let lemma_modulo_9_1 f g h i = *)
-(*   let p = reveal prime in *)
-(*   lemma_modulo_add (pow2 130 * f)  (pow2 156 * g) p; *)
-(*   lemma_modulo_add (pow2 156 * g)  ((pow2 130 * f)%p) p; *)
-(*   lemma_modulo_add (pow2 182 * h)  (pow2 208 * i) p; *)
-(*   lemma_modulo_add (pow2 208 * i)  ((pow2 182 * h)%p) p *)
-
-
-(* #reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0" *)
-
-(* val lemma_modulo_9_2: f:nat -> g:nat -> h:nat -> i:nat -> Lemma *)
-(*   (let p = reveal prime in *)
-(* 	 ((pow2 130 * f + pow2 156 * g) % p = ((pow2 130 % p) * f + (pow2 156 % p) * g) % p *)
-(* 	 /\  (pow2 182 * h + pow2 208 * i) % p =  ((pow2 182 % p) * h + (pow2 208 % p) * i) % p)) *)
-(* let lemma_modulo_9_2 f g h i = *)
-(*   let p = reveal prime in *)
-(*   lemma_modulo_9_1 f g h i; *)
-(*   lemma_modulo_mul (pow2 130)  f p; *)
-(*   lemma_modulo_mul (pow2 156)  g p; *)
-(*   lemma_modulo_mul (pow2 182)  h p; *)
-(*   lemma_modulo_mul (pow2 208)  i p; *)
-(*   lemma_modulo_add ((pow2 130 % p) * f)  ((pow2 156 % p) * g) p; *)
-(*   lemma_modulo_add ((pow2 156 % p) * g)  (((pow2 130 % p) * f)%p) p; *)
-(*   lemma_modulo_add ((pow2 182%p) * h)  ((pow2 208%p) * i) p; *)
-(*   lemma_modulo_add ((pow2 208%p) * i)  (((pow2 182%p) * h)%p) p *)
-
-
-(* #reset-options "--z3rlimit 80 --initial_fuel 0 --max_fuel 0" *)
-
-(* val lemma_modulo_9_3: f:nat -> g:nat -> h:nat -> i:nat -> Lemma *)
-(*   (let p = reveal prime in *)
-(*     (pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i) % p *)
-(* 	   =  ((pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i) % p) *)
-(* let lemma_modulo_9_3 f g h i = *)
-(*   let p = reveal prime in *)
-(*   lemma_modulo_9_0 f g h i; *)
-(*   lemma_modulo_9_2 f g h i; *)
-(*   lemma_modulo_add ((pow2 130 %p) * f + (pow2 156 % p) * g)  ((pow2 182 % p) * h + (pow2 208 % p) * i) p; *)
-(*   lemma_modulo_add ((pow2 182 % p) * h + (pow2 208 % p) * i)  (((pow2 130 % p) * f + (pow2 156%p) * g) % p) p *)
-
-
-(* #reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0" *)
-
-(* val lemma_modulo_9: a:nat -> b:nat -> c:nat -> d:nat -> e:nat -> f:nat -> g:nat -> h:nat -> i:nat -> *)
-(*   Lemma (requires (True)) *)
-(* 	(ensures  (let p = reveal prime in *)
-(* 	  (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e *)
-(* 	   + pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i ) % p *)
-(* 	  = (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e *)
-(* 	     + (pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i) % p)) *)
-(* let lemma_modulo_9 a b c d e f g h i = *)
-(*   let p = reveal prime in *)
-(*   nat_times_nat_is_nat (pow2 26)  b; *)
-(*   nat_times_nat_is_nat (pow2 52)  c; *)
-(*   nat_times_nat_is_nat (pow2 78)  d; *)
-(*   nat_times_nat_is_nat (pow2 104) e; *)
-(*   nat_times_nat_is_nat (pow2 130) f; *)
-(*   nat_times_nat_is_nat (pow2 156) g; *)
-(*   nat_times_nat_is_nat (pow2 182) h; *)
-(*   nat_times_nat_is_nat (pow2 208) i; *)
-(*   let m0 = (pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i) in *)
-(*   let m1 = (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e) in *)
-(*   lemma_modulo_add m0 m1 p; *)
-(*   cut( (m1 +m0) % p = (m1 + (m0%p)) % p); *)
-(*   lemma_modulo_9_3 f g h i; *)
-(*   nat_times_nat_is_nat (pow2 130 % p) f; *)
-(*   nat_times_nat_is_nat (pow2 156 % p) g; *)
-(*   nat_times_nat_is_nat (pow2 182 % p) h; *)
-(*   nat_times_nat_is_nat (pow2 204 % p) i; *)
-(*   let m2 = (pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i in *)
-(*   cut (m0 % p = m2 % p); *)
-(*   cut (m0 % p = ((pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i) % p); *)
-(*   lemma_modulo_add m2 m1 p *)
-
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 val lemma_2_130_modulo_prime: unit -> Lemma (pow2 130 % (pow2 130 - 5) = 5)
@@ -249,13 +160,14 @@ private let lemma_freduce_degree2_1 a b n =
   assert_norm(pow2 130 % (pow2 130 - 5) = 5);
   Math.Lemmas.lemma_mod_plus_distr_l (5 * pow2 (n-130) * a) b p
 
+
 private val lemma_freduce_degree2_2:
   a:nat -> b:nat -> n:nat{n >= 130} ->
   Lemma ((pow2 n * a + b) % reveal prime = (5 * pow2 (n - 130) * a + b) % reveal prime)
 private let lemma_freduce_degree2_2 a b n =
   lemma_freduce_degree2_0 a b n; lemma_freduce_degree2_1 a b n
 
-#reset-options "--z3rlimit 10 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
 
 val lemma_freduce_degree2_3:
   b0:nat -> b1:nat -> b2:nat -> b3:nat -> b4:nat -> b5:nat -> b6:nat -> b7:nat -> b8:nat ->
@@ -304,13 +216,9 @@ let lemma_freduce_degree2 h0 h1 b =
   let b8 = v (get h0 b 8) in
   lemma_eval_bigint_9 h0 b;
   let p = reveal prime in
-  cut(eval h0 b (2*norm_length-1) % p =
-      (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4
-      + pow2 130 * b5 + pow2 156 * b6 + pow2 182 * b7 + pow2 208 * b8) % p);
   lemma_eval_bigint_5 h1 b;
   lemma_freduce_degree2_3 b0 b1 b2 b3 b4 b5 b6 b7 b8;
   lemma_freduce_degree2_4 b0 b1 b2 b3 b4 b5 b6 b7 b8
-
 
 #reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val lemma_freduce_degree:

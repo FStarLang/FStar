@@ -151,7 +151,9 @@ noextract let find_aead_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (ae
   = SeqProperties.find_l (is_aead_entry_nonce n) entries
 
 let fresh_nonce (#i:id) (n:Cipher.iv (alg i)) (entries:aead_entries i) =
-    None? (find_aead_entry n entries)
+  match find_aead_entry n entries with
+  | None -> true
+  | Some _ -> false
 
 let fresh_nonce_st (#i:id) (#rw:rw) (n:Cipher.iv (alg i)) (aead_st:aead_state i rw) (h:mem) = 
   safeMac i ==> 
@@ -688,7 +690,11 @@ let mac_is_used (#rgn:region) (#i:id)
        let mac_st = CMA.ilog (CMA.State?.log mac_range) in
        Some? (snd (m_sel h mac_st))))
 
-let find_refined_aead_entry
+(* JP: not extracting because the use of false_elim means that the None branch
+ * is not eliminated from the match, which means that KreMLin would have to
+ * implement false_elim as a function that always returns a value of the right
+ * type (impossible in C). *)
+noextract let find_refined_aead_entry
     (#i:id) (#r:rid)
     (n:Cipher.iv (alg i){safeId i})
     (aead_entries:aead_entries i)

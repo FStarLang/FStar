@@ -2,6 +2,8 @@
   "cD¥ù∑S¡∏«z$\u0000û™◊ ",
   [
     [ "Ex07a.ty", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex07a.uu___is_TBool", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex07a.uu___is_TArrow", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07a.__proj__TArrow__item___0",
       1,
@@ -34,6 +36,7 @@
       [ "@query", "assumption_Ex07a.ty_haseq", "assumption_Prims.HasEq_int" ],
       0
     ],
+    [ "Ex07a.uu___is_EVar", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07a.__proj__EVar__item___0",
       1,
@@ -46,6 +49,7 @@
       ],
       0
     ],
+    [ "Ex07a.uu___is_EApp", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07a.__proj__EApp__item___0",
       1,
@@ -70,6 +74,7 @@
       ],
       0
     ],
+    [ "Ex07a.uu___is_EAbs", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07a.__proj__EAbs__item___0",
       1,
@@ -106,6 +111,9 @@
       ],
       0
     ],
+    [ "Ex07a.uu___is_ETrue", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex07a.uu___is_EFalse", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex07a.uu___is_EIf", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07a.__proj__EIf__item___0",
       1,
@@ -489,24 +497,23 @@
         "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
         "binder_x_896e04207a09217ae90a78b1619cef5a_1",
         "binder_x_896e04207a09217ae90a78b1619cef5a_2", "bool_inversion",
-        "bool_typing", "constructor_distinct_Ex07a.EAbs",
-        "constructor_distinct_Ex07a.EApp",
+        "constructor_distinct_Ex07a.EAbs", "constructor_distinct_Ex07a.EApp",
         "constructor_distinct_Ex07a.EFalse",
         "constructor_distinct_Ex07a.EIf", "constructor_distinct_Ex07a.ETrue",
         "constructor_distinct_Ex07a.EVar",
         "constructor_distinct_Ex07a.TBool",
-        "constructor_distinct_Prims.Mktuple3",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
         "constructor_distinct_Prims.option",
         "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
-        "data_elim_Prims.Some", "disc_equation_Ex07a.EAbs",
-        "disc_equation_Ex07a.EApp", "disc_equation_Ex07a.EFalse",
-        "disc_equation_Ex07a.EIf", "disc_equation_Ex07a.ETrue",
-        "disc_equation_Ex07a.EVar", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "equality_tok_Ex07a.EFalse@tok",
-        "equality_tok_Ex07a.ETrue@tok", "equality_tok_Ex07a.TBool@tok",
-        "equation_Ex07a.env", "equation_Ex07a.equal",
-        "equation_Ex07a.equalE", "equation_Ex07a.extend",
+        "data_elim_Ex07a.EAbs", "data_elim_Prims.Some",
+        "disc_equation_Ex07a.EAbs", "disc_equation_Ex07a.EApp",
+        "disc_equation_Ex07a.EFalse", "disc_equation_Ex07a.EIf",
+        "disc_equation_Ex07a.ETrue", "disc_equation_Ex07a.EVar",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "equality_tok_Ex07a.EFalse@tok", "equality_tok_Ex07a.ETrue@tok",
+        "equality_tok_Ex07a.TBool@tok", "equation_Ex07a.env",
+        "equation_Ex07a.equal", "equation_Ex07a.equalE",
+        "equation_Ex07a.extend",
         "equation_with_fuel_Ex07a.appears_free_in.fuel_instrumented",
         "equation_with_fuel_Ex07a.subst.fuel_instrumented",
         "equation_with_fuel_Ex07a.typing.fuel_instrumented",
@@ -540,17 +547,14 @@
         "projection_inverse_Prims.Mktuple3__1",
         "projection_inverse_Prims.Mktuple3__2",
         "projection_inverse_Prims.Mktuple3__3",
-        "projection_inverse_Prims.Mktuple3__a",
-        "projection_inverse_Prims.Mktuple3__b",
-        "projection_inverse_Prims.Mktuple3__c",
         "projection_inverse_Prims.Some_v", "subterm_ordering_Ex07a.EAbs",
         "subterm_ordering_Ex07a.EApp", "subterm_ordering_Ex07a.EIf",
+        "token_correspondence_Ex07a.typing.fuel_instrumented",
         "typing_Ex07a.appears_free_in", "typing_Ex07a.extend",
         "typing_Ex07a.subst", "typing_Ex07a.typing",
-        "typing_Prims.uu___is_Some",
         "typing_Tm_abs_3ec6e4438fd620bf2d72522edf224eab",
-        "typing_tok_Ex07a.EFalse@tok", "typing_tok_Ex07a.ETrue@tok",
-        "typing_tok_Ex07a.TBool@tok", "unit_inversion", "unit_typing"
+        "typing_tok_Ex07a.ETrue@tok", "typing_tok_Ex07a.TBool@tok",
+        "unit_inversion", "unit_typing"
       ],
       0
     ],

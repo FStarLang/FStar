@@ -172,12 +172,21 @@ let tag_of_term (t:term) = match t.n with
 
 let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int)
 
+let rec int_of_univ n u = match Subst.compress_univ u with
+    | U_zero -> n, None
+    | U_succ u -> int_of_univ (n+1) u
+    | _ -> n, Some u
+
 let rec univ_to_string u = match Subst.compress_univ u with
     | U_unif u -> uvar_to_string u
-    | U_name x -> "n"^x.idText
+    | U_name x -> x.idText
     | U_bvar x -> "@"^string_of_int x
     | U_zero   -> "0"
-    | U_succ u -> Util.format1 "(S %s)" (univ_to_string u)
+    | U_succ u ->
+        begin match int_of_univ 1 u with
+            | n, None -> string_of_int n
+            | n, Some u -> Util.format2 "(%s + %s)" (univ_to_string u) (string_of_int n)
+        end
     | U_max us -> Util.format1 "(max %s)" (List.map univ_to_string us |> String.concat ", ")
     | U_unknown -> "unknown"
 
@@ -203,11 +212,13 @@ let qual_to_string = function
   | Projector (l, x)      -> Util.format2 "(Projector %s %s)" (lid_to_string l) x.idText
   | RecordType (ns, fns)  -> Util.format2 "(RecordType %s %s)" (text_of_path (path_of_ns ns)) (fns |> List.map text_of_id |> String.concat ", ")
   | RecordConstructor (ns, fns) -> Util.format2 "(RecordConstructor %s %s)" (text_of_path (path_of_ns ns))  (fns |> List.map text_of_id |> String.concat ", ")
+  | Action eff_lid        -> Util.format1 "(Action %s)" (lid_to_string eff_lid)
   | ExceptionConstructor  -> "ExceptionConstructor"
   | HasMaskedEffect       -> "HasMaskedEffect"
   | Effect                -> "Effect"
-  | Reifiable                 -> "reify"
-  | Reflectable l               -> Util.format1 "(reflect %s)" l.str
+  | Reifiable             -> "reify"
+  | Reflectable l         -> Util.format1 "(reflect %s)" l.str
+  | OnlyName              -> "OnlyName"
 
 let quals_to_string quals =
     match quals with
@@ -234,8 +245,8 @@ let rec term_to_string x =
     let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
     Util.format2 "{:pattern %s} %s" pats (term_to_string t)
 
-  | Tm_meta(t, Meta_monadic (m, t')) -> Util.format4 ("(Monadic-%s{%s %s} %s )") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
-  | Tm_meta(t, Meta_monadic_lift(m0, m1)) -> Util.format4 ("(MonadicLift-%s{%s} %s -> %s)") (tag_of_term t) (term_to_string t) (sli m0) (sli m1)
+  | Tm_meta(t, Meta_monadic (m, t')) -> Util.format4 ("(Monadic-%s{%s %s} %s)") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
+  | Tm_meta(t, Meta_monadic_lift(m0, m1, t')) -> Util.format5 ("(MonadicLift-%s{%s : %s -> %s} %s)") (tag_of_term t) (term_to_string t') (sli m0) (sli m1) (term_to_string t)
   | Tm_meta(t, Meta_labeled(l,r,b)) when Options.print_implicits() ->
     Util.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)
   | Tm_meta(t, _) ->    term_to_string t
@@ -493,7 +504,7 @@ let rec sigelt_to_string x = match x with
          else "")
         (term_to_string t)
   | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (term_to_string f)
-  | Sig_let(lbs, _, _, qs) -> lbs_to_string qs lbs
+  | Sig_let(lbs, _, _, qs, _) -> lbs_to_string qs lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (term_to_string e)
   | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
   | Sig_new_effect(ed, _) -> eff_decl_to_string false ed
@@ -525,7 +536,7 @@ let rec sigelt_to_string x = match x with
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
 let rec sigelt_to_string_short x = match x with
-  | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _, _) -> Util.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
+  | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _, _, _) -> Util.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =

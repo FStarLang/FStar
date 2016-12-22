@@ -30,13 +30,14 @@ CHACHA_AEAD_EXTRACTED=Spartan.ml FStar_List_Tot.ml FStar_Seq.ml FStar_SeqPropert
 
 .PHONY: lib-ver chacha-ver chacha-ml ulib
 
-#16-09-18 lib-ver works but is too slow/brittle? 
-all: uall sall
-
+#NS: 12/21, we decided to only check verification on each commit; a full test happens nightly using the extra target
 uall:
+	+make -C crypto all
+
+extra:
 	make clean
 	+make chacha-test aes-test aesgcm-test chacha-aead-test
-	+make -C crypto all
+	+make -C crypto all extra
 # removed tests poly-test and aead-test, relying on older code.
 
 sall:

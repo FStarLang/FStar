@@ -1,5 +1,5 @@
 [
-  "Î€≤É9Õgt∞DÚ\nùÄ\rb",
+  "NŸÖ\u0005bæc+»«¨\u0014OÁ≈4",
   [
     [
       "Crypto.AEAD.Decrypt.decrypt_modifies",
@@ -1272,9 +1272,9 @@
         "equation_Crypto.AEAD.Invariant.prf_contains_all_otp_blocks",
         "equation_Crypto.AEAD.Invariant.safeMac",
         "equation_Crypto.AEAD.Invariant.safelen",
-        "equation_Crypto.AEAD.PRF_MAC.prf_mac_added",
-        "equation_Crypto.AEAD.PRF_MAC.prf_mac_ensures",
-        "equation_Crypto.AEAD.PRF_MAC.prf_mac_existed",
+        "equation_Crypto.AEAD.Wrappers.PRF.prf_mac_added",
+        "equation_Crypto.AEAD.Wrappers.PRF.prf_mac_ensures",
+        "equation_Crypto.AEAD.Wrappers.PRF.prf_mac_existed",
         "equation_Crypto.AEAD.Wrappers.CMA.acc_ensures_weak",
         "equation_Crypto.AEAD.Wrappers.CMA.found_entry",
         "equation_Crypto.AEAD.Wrappers.CMA.verify_liveness",

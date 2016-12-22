@@ -48,11 +48,6 @@ private let min (a:nat) (b:nat) : nat = if a <= b then a else b
 val lemma_append_nil: #a:_ -> s:Seq.seq a -> Lemma (s == Seq.append s Seq.createEmpty)
 let lemma_append_nil #a s = assert (Seq.equal s (Seq.append s Seq.createEmpty))
 
-assume val lemma_big_endian_inj: b:word -> b':word  //16-12-15 TODO in libraries (NS: known limitation)
-  {Seq.length b = Seq.length b'} -> Lemma
-  (requires (big_endian b = big_endian b'))
-  (ensures (b == b'))
-
 
 (* * *********************************************)
 (* *            Encoding                         *)

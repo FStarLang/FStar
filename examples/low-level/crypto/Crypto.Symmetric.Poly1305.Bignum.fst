@@ -144,25 +144,25 @@ let multiplication_0 c a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 =
   let ab43 = a4 *^ b3 in
   let ab44 = a4 *^ b4 in
   let c0 = ab00 in
-  cut (v c0 = v a0 * v b0);
+  assert (v c0 = v a0 * v b0);
   let c1 = ab01 +^ ab10 in
-  cut (v c1 = v a0 * v b1 + v a1 * v b0);
+  assert (v c1 = v a0 * v b1 + v a1 * v b0);
   let c2 = ab02 +^ ab11 +^ ab20 in
-  cut( v c2 = v a0 * v b2 + v a1 * v b1 + v a2 * v b0);
+  assert( v c2 = v a0 * v b2 + v a1 * v b1 + v a2 * v b0);
   let c3 = ab03 +^ ab12 +^ ab21 +^ ab30 in
-  cut( v c3 = v a0 * v b3 + v a1 * v b2 + v a2 * v b1 + v a3 * v b0);
+  assert( v c3 = v a0 * v b3 + v a1 * v b2 + v a2 * v b1 + v a3 * v b0);
   let c4 = ab04 +^ ab13 +^ ab22 +^ ab31 +^ ab40 in
-  cut( v c4 = v a0 * v b4 + v a1 * v b3 + v a2 * v b2 + v a3 * v b1 + v a4 * v b0);
+  assert( v c4 = v a0 * v b4 + v a1 * v b3 + v a2 * v b2 + v a3 * v b1 + v a4 * v b0);
   let c5 = ab14 +^ ab23 +^ ab32 +^ ab41 in
-  cut( v c5 = v a1 * v b4 + v a2 * v b3 + v a3 * v b2 + v a4 * v b1);
+  assert( v c5 = v a1 * v b4 + v a2 * v b3 + v a3 * v b2 + v a4 * v b1);
   let c6 = ab24 +^ ab33 +^ ab42 in
-  cut( v c6 = v a2 * v b4 + v a3 * v b3 + v a4 * v b2);
+  assert( v c6 = v a2 * v b4 + v a3 * v b3 + v a4 * v b2);
   let c7 = ab34 +^ ab43 in
-  cut( v c7 = v a3 * v b4 + v a4 * v b3);
+  assert( v c7 = v a3 * v b4 + v a4 * v b3);
   let c8 = ab44 in
-  cut( v c8 = v a4 * v b4 );
-  update_9 c c0 c1 c2 c3 c4 c5 c6 c7 c8;
-  admit() //NS: adding an admit to workaround Z3 flakiness; this verifies if the error instrumentation code is removed
+  assert( v c8 = v a4 * v b4 );
+  update_9 c c0 c1 c2 c3 c4 c5 c6 c7 c8
+  (* admit() //NS: adding an admit to workaround Z3 flakiness; this verifies if the error instrumentation code is removed *)
 
 private val multiplication_:
   c:bigint{length c >= 2 * norm_length - 1} ->

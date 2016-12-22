@@ -2,6 +2,8 @@
   "\u00023\u0006Ÿð”\r„\u000eW;ˆ\u0019»š\u0014",
   [
     [ "Ex07d.ty", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex07d.uu___is_TBool", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex07d.uu___is_TArrow", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07d.__proj__TArrow__item___0",
       1,
@@ -34,6 +36,7 @@
       [ "@query", "assumption_Ex07d.ty_haseq", "assumption_Prims.HasEq_int" ],
       0
     ],
+    [ "Ex07d.uu___is_EVar", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07d.__proj__EVar__item___0",
       1,
@@ -46,6 +49,7 @@
       ],
       0
     ],
+    [ "Ex07d.uu___is_EApp", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07d.__proj__EApp__item___0",
       1,
@@ -70,6 +74,7 @@
       ],
       0
     ],
+    [ "Ex07d.uu___is_EAbs", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07d.__proj__EAbs__item___0",
       1,
@@ -106,6 +111,9 @@
       ],
       0
     ],
+    [ "Ex07d.uu___is_ETrue", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex07d.uu___is_EFalse", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex07d.uu___is_EIf", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex07d.__proj__EIf__item___0",
       1,
@@ -500,13 +508,16 @@
         "constructor_distinct_Ex07d.EIf", "constructor_distinct_Ex07d.ETrue",
         "constructor_distinct_Ex07d.EVar",
         "constructor_distinct_Ex07d.TBool",
+        "constructor_distinct_Prims.Mktuple2",
+        "constructor_distinct_Prims.Mktuple3",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
         "constructor_distinct_Prims.option",
         "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
-        "data_elim_Prims.Some", "disc_equation_Ex07d.EAbs",
-        "disc_equation_Ex07d.EApp", "disc_equation_Ex07d.EFalse",
-        "disc_equation_Ex07d.EIf", "disc_equation_Ex07d.ETrue",
-        "disc_equation_Ex07d.EVar", "disc_equation_Prims.Some",
+        "data_elim_Prims.None", "data_elim_Prims.Some",
+        "disc_equation_Ex07d.EAbs", "disc_equation_Ex07d.EApp",
+        "disc_equation_Ex07d.EFalse", "disc_equation_Ex07d.EIf",
+        "disc_equation_Ex07d.ETrue", "disc_equation_Ex07d.EVar",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "equality_tok_Ex07d.EFalse@tok", "equality_tok_Ex07d.ETrue@tok",
         "equality_tok_Ex07d.TBool@tok", "equation_Ex07d.env",
         "equation_Ex07d.equal", "equation_Ex07d.equalE",
@@ -523,7 +534,8 @@
         "fuel_irrelevance_Ex07d.typing.fuel_instrumented",
         "function_token_typing_Ex07d.empty", "int_inversion",
         "interpretation_Tm_abs_419a0019d99148f1b18160949ce1b2bb",
-        "lemma_Ex07d.typable_empty_closed",
+        "kinding_Ex07d.ty@tok", "lemma_Ex07d.typable_empty_closed",
+        "lemma_Prims.invertOption",
         "pretyping_0cffc68c411d6405f301f9f7bc8e1f6c",
         "pretyping_779086306c29597e3dd1127d16405da1",
         "pretyping_ae567c2fb75be05905677af440075565",
@@ -540,12 +552,16 @@
         "projection_inverse_Ex07d.EVar__0",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Mktuple2__a",
+        "projection_inverse_Prims.Mktuple2__b",
         "projection_inverse_Prims.Mktuple3__1",
         "projection_inverse_Prims.Mktuple3__2",
         "projection_inverse_Prims.Mktuple3__3",
+        "projection_inverse_Prims.Mktuple3__a",
+        "projection_inverse_Prims.Mktuple3__b",
+        "projection_inverse_Prims.Mktuple3__c",
         "projection_inverse_Prims.Some_v",
         "refinement_interpretation_Tm_refine_13a223bee4ac2ef6c02dedcc34b58c59",
-        "refinement_interpretation_Tm_refine_1e65c918e9a3bb36eecf32cb38fd0c90",
         "refinement_interpretation_Tm_refine_91ef73ae1db9a724a12da5e1996157a4",
         "subterm_ordering_Ex07d.EAbs", "subterm_ordering_Ex07d.EApp",
         "subterm_ordering_Ex07d.EIf",
