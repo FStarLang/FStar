@@ -311,7 +311,7 @@ test-perf.exe: krml-test.exe crypto/test_perf.c
 		$(KREMLIN_HOME)/test/testlib.c crypto/test_perf.c crypto/spartan_stub.c spartan_aes/*.o crypto/test_hacks.c -I tmp -L tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
 		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME)/lib -L $(OPENSSL_HOME) -lcrypto $(CFLAGS)
-	LD_LIBRARY_PATH=$(OPENSSL_HOME) DYLD_LIBRARY_PATH=$(OPENSSL_HOME) ./test-perf.exe
+	PATH=$(OPENSSL_HOME):$(PATH) LD_LIBRARY_PATH=$(OPENSSL_HOME):$(LD_LIBRARY_PATH) DYLD_LIBRARY_PATH=$(OPENSSL_HOME):$(DYLD_LIBRARY_PATH) ./test-perf.exe
 
 # Cleaning
 clean:
