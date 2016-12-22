@@ -53,6 +53,14 @@ let head #a s = index s 0
 val tail: #a:Type -> s:seq a{length s > 0} -> Tot (seq a)
 let tail #a s = slice s 1 (length s)
 
+val lemma_head_append: #a:Type -> s1:seq a{length s1 > 0} -> s2:seq a -> Lemma
+  (head (append s1 s2) == head s1)
+let lemma_head_append #a s1 s2 = ()
+
+val lemma_tail_append: #a:Type -> s1:seq a{length s1 > 0} -> s2:seq a -> Lemma
+  (tail (append s1 s2) == append (tail s1) s2)
+let lemma_tail_append #a s1 s2 = cut (equal (tail (append s1 s2)) (append (tail s1) s2))
+
 val last: #a:Type -> s:seq a{length s > 0} -> Tot a
 let last #a s = index s (length s - 1)
 
@@ -101,6 +109,13 @@ let swap #a s i j = upd (upd s j (index s i)) i (index s j)
 val lemma_slice_append: #a:Type -> s1:seq a{length s1 >= 1} -> s2:seq a -> Lemma
   (ensures (equal (append s1 s2) (append (slice s1 0 1) (append (slice s1 1 (length s1)) s2))))
 let lemma_slice_append #a s1 s2 = ()
+
+val lemma_slice_first_in_append: #a:Type -> s1:seq a -> s2:seq a -> i:nat{i <= length s1} -> Lemma
+  (ensures (equal (slice (append s1 s2) i (length (append s1 s2))) (append (slice s1 i (length s1)) s2)))
+  (decreases (length s1))
+let rec lemma_slice_first_in_append #a s1 s2 i =
+  if i = 0 then ()
+  else lemma_slice_first_in_append #a (tail s1) s2 (i - 1)
 
 val slice_upd: #a:Type -> s:seq a -> i:nat -> j:nat{i <= j /\ j <= length s}
   -> k:nat{k < length s} -> v:a -> Lemma
@@ -426,6 +441,25 @@ let lemma_trans_perm #a s1 s2 s3 i j = ()
 val snoc : #a:Type -> seq a -> a -> Tot (seq a)
 let snoc #a s x = Seq.append s (Seq.create 1 x)
 
+let lemma_cons_snoc (#a:Type) (hd:a) (s:Seq.seq a) (tl:a)
+  : Lemma (requires True)
+	  (ensures (Seq.equal (cons hd (snoc s tl))
+		 	      (snoc (cons hd s) tl)))
+  = ()	  
+
+val lemma_tail_snoc: #a:Type -> s:Seq.seq a{Seq.length s > 0} -> x:a
+                     -> Lemma (ensures (tail (snoc s x) == snoc (tail s) x))
+let lemma_tail_snoc #a s x = lemma_slice_first_in_append s (Seq.create 1 x) 1
+
+val lemma_snoc_inj: #a:Type -> s1:seq a -> s2:seq a -> v1:a -> v2:a
+  -> Lemma (requires (equal (snoc s1 v1) (snoc s2 v2)))
+          (ensures (v1 == v2 /\ equal s1 s2))
+let lemma_snoc_inj #a s1 s2 v1 v2 =
+  let t1 = create 1 v1 in 
+  let t2 = create 1 v2 in 
+  lemma_append_inj s1 t1 s2 t2;
+  assert(head t1  == head t2)
+
 #set-options "--initial_fuel 2 --max_fuel 2"
 val lemma_mem_snoc : #a:eqtype -> s:FStar.Seq.seq a -> x:a ->
    Lemma (ensures (forall y. mem y (snoc s x) <==> mem y s \/ x=y))
@@ -437,6 +471,48 @@ let rec find_l #a f l =
   if Seq.length l = 0 then None
   else if f (head l) then Some (head l)
   else find_l f (tail l)
+
+val find_append_some: #a:Type -> s1:seq a -> s2:seq a -> f:(a -> Tot bool) -> Lemma
+  (requires (Some? (find_l f s1)))
+  (ensures (find_l f (append s1 s2) == find_l f s1))
+  (decreases (length s1))
+let rec find_append_some #a s1 s2 f =
+  if f (head s1) then ()
+  else
+    let _ = cut (equal (tail (append s1 s2)) (append (tail s1) s2)) in
+    find_append_some (tail s1) s2 f
+
+val find_append_none: #a:Type -> s1:seq a -> s2:seq a -> f:(a -> Tot bool) -> Lemma
+  (requires (None? (find_l f s1)))
+  (ensures (find_l f (append s1 s2) == find_l f s2))
+  (decreases (length s1))
+let rec find_append_none #a s1 s2 f =
+  if Seq.length s1 = 0 then cut (equal (append s1 s2) s2)
+  else
+    let _ = cut (equal (tail (append s1 s2)) (append (tail s1) s2)) in
+    find_append_none (tail s1) s2 f
+
+val find_append_none_s2: #a:Type -> s1:seq a -> s2:seq a -> f:(a -> Tot bool) -> Lemma
+  (requires (None? (find_l f s2)))
+  (ensures  (find_l f (append s1 s2) == find_l f s1))
+  (decreases (length s1))
+let rec find_append_none_s2 #a s1 s2 f =
+  if Seq.length s1 = 0 then cut (equal (append s1 s2) s2)
+  else if f (head s1) then ()
+  else begin
+    find_append_none_s2 (tail s1) s2 f;
+    cut (equal (tail (append s1 s2)) (append (tail s1) s2))
+  end
+
+val find_snoc: #a:Type -> s:Seq.seq a -> x:a -> f:(a -> Tot bool)
+               -> Lemma (ensures (let res = find_l f (snoc s x) in
+	                         match res with 
+	                         | None -> find_l f s == None /\ not (f x)
+	                         | Some y -> res == find_l f s \/ (f x /\ x==y)))
+                 (decreases (Seq.length s))
+let find_snoc #a s x f =
+  if Some? (find_l f s) then find_append_some s (Seq.create 1 x) f
+  else find_append_none s (Seq.create 1 x) f
 
 let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (seq a * a) =
   let s, a = split s (length s - 1) in
@@ -551,6 +627,10 @@ let contains_elim (#a:Type) (s:seq a) (x:a)
 	  (exists (k:nat). k < Seq.length s /\ Seq.index s k == x))
   = ()
 
+let lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.createEmpty x)) = ()
+
+let lemma_contains_singleton (#a:Type) (x:a) : Lemma (forall (y:a). contains (create 1 x) y ==> y == x) = ()
+
 private let intro_append_contains_from_disjunction (#a:Type) (s1:seq a) (s2:seq a) (x:a)
     : Lemma (requires s1 `contains` x \/ s2 `contains` x)
    	    (ensures (append s1 s2) `contains` x)
@@ -573,3 +653,45 @@ val contains_snoc : #a:Type -> s:FStar.Seq.seq a -> x:a ->
    Lemma (ensures (forall y. (snoc s x) `contains` y  <==> s `contains` y \/ x==y))
 let contains_snoc #a s x =
   FStar.Classical.forall_intro (append_contains_equiv s (Seq.create 1 x))
+
+let rec lemma_find_l_contains (#a:Type) (f:a -> Tot bool) (l:seq a)
+  : Lemma (requires True) (ensures Some? (find_l f l) ==> l `contains` (Some?.v (find_l f l)))
+          (decreases (Seq.length l))
+  = if length l = 0 then ()
+    else if f (head l) then ()
+    else lemma_find_l_contains f (tail l)
+
+let contains_cons (#a:Type) (hd:a) (tl:Seq.seq a) (x:a)
+  : Lemma ((cons hd tl) `contains` x
+	   <==>
+	   (x==hd \/ tl `contains` x))
+  = append_contains_equiv (Seq.create 1 hd) tl x
+
+let append_cons_snoc (#a:Type) (u: Seq.seq a) (x:a) (v:Seq.seq a)
+    : Lemma (Seq.equal (Seq.append u (cons x v))
+		       (Seq.append (snoc u x) v))
+    = ()		       
+    
+let append_slices (#a:Type) (s1:Seq.seq a) (s2:Seq.seq a)
+   : Lemma ( Seq.equal s1 (Seq.slice (Seq.append s1 s2) 0 (Seq.length s1)) /\
+	     Seq.equal s2 (Seq.slice (Seq.append s1 s2) (Seq.length s1) (Seq.length s1 + Seq.length s2)) /\
+	     (forall (i:nat) (j:nat).
+		i <= j /\ j <= Seq.length s2 ==>
+		Seq.equal (Seq.slice s2 i j) 
+			  (Seq.slice (Seq.append s1 s2) (Seq.length s1 + i) (Seq.length s1 + j))))
+   = ()       
+
+
+val find_l_none_no_index (#a:Type) (s:Seq.seq a) (f:(a -> Tot bool)) :
+  Lemma (requires (None? (find_l f s)))
+        (ensures (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i))))
+	(decreases (Seq.length s))
+#reset-options
+let rec find_l_none_no_index #a s f =
+  if Seq.length s = 0
+  then ()
+  else (assert (not (f (head s)));
+        assert (None? (find_l f (tail s)));
+        find_l_none_no_index (tail s) f;
+	assert (Seq.equal s (cons (head s) (tail s)));
+	find_append_none (create 1 (head s)) (tail s) f)

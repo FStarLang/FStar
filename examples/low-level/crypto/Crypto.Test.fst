@@ -19,6 +19,9 @@ module PRF = Crypto.Symmetric.PRF
 module AE = Crypto.AEAD
 module AETypes = Crypto.AEAD.Invariant
 
+module AEEncrypt = Crypto.AEAD.Encrypt
+module AEDecrypt = Crypto.AEAD.Decrypt
+
 module L = FStar.List.Tot
 
 // Some helpers for our test routines
@@ -236,23 +239,23 @@ let test () =
     HS.is_eternal_region (Buffer.frameOf cipher) /\
     HS.is_eternal_region (Buffer.frameOf (Plain.as_buffer plain)) /\
     HS.is_eternal_region (Buffer.frameOf aad));
-  AE.encrypt i st iv aadlen aad plainlen plain cipher;
+  AEEncrypt.encrypt i st iv aadlen aad plainlen plain cipher;
   let ok_0 = diff "cipher" cipherlen expected_cipher cipher in
 
   let decrypted = Crypto.Plain.create i 0uy plainlen in
   let st = AE.genReader st in
-  let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
+  let ok_1 = AEDecrypt.decrypt i st iv aadlen aad plainlen decrypted cipher in
   let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in
 
   // testing that decryption fails when truncating aad or tweaking the ciphertext.
-  let fail_0 = AE.decrypt i st iv (aadlen -^ 1ul) (Buffer.sub aad 0ul (aadlen -^ 1ul)) plainlen decrypted cipher in
+  let fail_0 = AEDecrypt.decrypt i st iv (aadlen -^ 1ul) (Buffer.sub aad 0ul (aadlen -^ 1ul)) plainlen decrypted cipher in
 
   tweak 3ul cipher;
-  let fail_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
+  let fail_1 = AEDecrypt.decrypt i st iv aadlen aad plainlen decrypted cipher in
   tweak 3ul cipher;
 
   tweak plainlen cipher;
-  let fail_2 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
+  let fail_2 = AEDecrypt.decrypt i st iv aadlen aad plainlen decrypted cipher in
   tweak plainlen cipher;
   
   pop_frame ();
@@ -319,12 +322,12 @@ let test_aes_gcm i tn key ivBuffer aadlen aad plainlen plainrepr expected_cipher
   let cipherlen = plainlen +^ 16ul in
   let cipher = Buffer.create 2uy cipherlen in
   assume False; // TODO: Satisfy requirements of AE.encrypt
-  AE.encrypt i st iv aadlen aad plainlen plain cipher;
+  AEEncrypt.encrypt i st iv aadlen aad plainlen plain cipher;
   let ok_0 = diff "cipher" cipherlen expected_cipher cipher in
 
   let st = AE.genReader st in
   let decrypted = Crypto.Plain.create i 3uy plainlen in
-  let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
+  let ok_1 = AEDecrypt.decrypt i st iv aadlen aad plainlen decrypted cipher in
   let ok_2 = diff "decryption" plainlen (bufferRepr #i plain) (bufferRepr #i decrypted) in
 
   pop_frame();
