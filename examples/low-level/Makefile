@@ -310,7 +310,7 @@ test-perf.exe: krml-test.exe crypto/test_perf.c
 	 -o test-perf.exe tmp/FStar.c tmp/Crypto_AEAD*.c tmp/Crypto_Symmetric*.c tmp/Crypto_Indexing*.c tmp/Buffer_Utils*.c tmp/Crypto_Plain*.c $(KREMLIN_HOME)/kremlib/kremlib.c \
 		$(KREMLIN_HOME)/test/testlib.c crypto/test_perf.c crypto/spartan_stub.c spartan_aes/*.o crypto/test_hacks.c -I tmp -L tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
-		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME)/lib -lcrypto $(CFLAGS)
+		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME)/lib -L $(OPENSSL_HOME) -lcrypto $(CFLAGS)
 	DYLD_LIBRARY_PATH=$(OPENSSL_HOME) ./test-perf.exe
 
 # Cleaning
