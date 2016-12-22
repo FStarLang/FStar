@@ -512,18 +512,14 @@ if ((not (b)) || (is_stale intf impl intf_t impl_t)) then begin
 (
 
 let env = (pop_tc_and_stack env' (FStar_List.rev_append st []) ts)
-in (
-
-let _93_309 = (let _190_305 = (FStar_List.fold_left (fun s f -> (Prims.strcat s (Prims.strcat "; " f))) "" depnames)
-in (FStar_Util.print1 "\nCalling tc_deps with: %s, because either the deps changed, or stale files\n" _190_305))
-in (tc_deps m good_stack env depnames good_ts)))
+in (tc_deps m good_stack env depnames good_ts))
 end else begin
 (
 
-let _93_313 = (let _190_307 = (FStar_List.hd st)
-in (let _190_306 = (FStar_List.tl st)
-in ((_190_307), (_190_306))))
-in (match (_93_313) with
+let _93_309 = (let _190_304 = (FStar_List.hd st)
+in (let _190_303 = (FStar_List.tl st)
+in ((_190_304), (_190_303))))
+in (match (_93_309) with
 | (stack_elt, st') -> begin
 (iterate depnames' st' env' ts' ((stack_elt)::good_stack) ((ts_elt)::good_ts))
 end))
@@ -532,17 +528,13 @@ end))
 end))
 end
 | [] -> begin
-(
-
-let _93_317 = (let _190_310 = (FStar_List.fold_left (fun s f -> (Prims.strcat s (Prims.strcat "; " f))) "" depnames)
-in (FStar_Util.print1 "\nCalling tc_deps with: %s, for any leftover deps\n" _190_310))
-in (tc_deps m good_stack env' depnames good_ts))
+(tc_deps m good_stack env' depnames good_ts)
 end))))
 in (
 
-let _93_324 = (detect_dependencies_for_module modname)
-in (match (_93_324) with
-| (_93_320, _93_322, filenames) -> begin
+let _93_316 = (detect_dependencies_for_module modname)
+in (match (_93_316) with
+| (_93_312, _93_314, filenames) -> begin
 (
 
 let filenames = (FStar_Dependences.find_deps_if_needed verify_mode filenames)
@@ -554,24 +546,24 @@ let rec go = (fun line_col stack curmod env ts -> (match ((shift_chunk ())) with
 | Pop (msg) -> begin
 (
 
-let _93_334 = (tc.pop env msg)
+let _93_326 = (tc.pop env msg)
 in (
 
-let _93_346 = (match (stack) with
+let _93_338 = (match (stack) with
 | [] -> begin
 (
 
-let _93_337 = (FStar_Util.print_error "too many pops")
+let _93_329 = (FStar_Util.print_error "too many pops")
 in (FStar_All.exit (Prims.parse_int "1")))
 end
 | (hd)::tl -> begin
 ((hd), (tl))
 end)
-in (match (_93_346) with
+in (match (_93_338) with
 | ((env, curmod), stack) -> begin
 (
 
-let _93_347 = if ((FStar_List.length stack) = (FStar_List.length ts)) then begin
+let _93_339 = if ((FStar_List.length stack) = (FStar_List.length ts)) then begin
 (tc.cleanup env)
 end else begin
 ()
@@ -582,13 +574,13 @@ end
 | Push (lax, l, c) -> begin
 (
 
-let _93_359 = if ((FStar_List.length stack) = (FStar_List.length ts)) then begin
-(let _190_321 = (update_deps curmod stack env ts)
-in ((true), (_190_321)))
+let _93_351 = if ((FStar_List.length stack) = (FStar_List.length ts)) then begin
+(let _190_315 = (update_deps curmod stack env ts)
+in ((true), (_190_315)))
 end else begin
 ((false), (((stack), (env), (ts))))
 end
-in (match (_93_359) with
+in (match (_93_351) with
 | (restore_cmd_line_options, (stack, env, ts)) -> begin
 (
 
@@ -604,10 +596,10 @@ end
 
 let fail = (fun curmod env_mark -> (
 
-let _93_371 = (tc.report_fail ())
+let _93_363 = (tc.report_fail ())
 in (
 
-let _93_373 = (FStar_Util.print1 "%s\n" fail)
+let _93_365 = (FStar_Util.print1 "%s\n" fail)
 in (
 
 let env = (tc.reset_mark env_mark)
@@ -626,7 +618,7 @@ in (match (res) with
 if (n_errs = (Prims.parse_int "0")) then begin
 (
 
-let _93_384 = (FStar_Util.print1 "\n%s\n" ok)
+let _93_376 = (FStar_Util.print1 "\n%s\n" ok)
 in (
 
 let env = (tc.commit_mark env)
@@ -635,7 +627,7 @@ end else begin
 (fail curmod env_mark)
 end
 end
-| _93_388 -> begin
+| _93_380 -> begin
 (fail curmod env_mark)
 end)))))
 end))
@@ -647,23 +639,19 @@ in (
 let env = (tc.tc_prims ())
 in (
 
-let _93_393 = (let _190_328 = (FStar_List.fold_left (fun s f -> (Prims.strcat s (Prims.strcat "; " f))) "" filenames)
-in (FStar_Util.print1 "\nCalling tc_deps with: %s, originally\n" _190_328))
-in (
-
-let _93_398 = (tc_deps initial_mod [] env filenames [])
-in (match (_93_398) with
+let _93_386 = (tc_deps initial_mod [] env filenames [])
+in (match (_93_386) with
 | (stack, env, ts) -> begin
 if (((FStar_Options.universes ()) && ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))) && (FStar_Option.isSome filename)) then begin
-(let _190_330 = (FStar_Option.get filename)
-in (FStar_SMTEncoding_Solver.with_hints_db _190_330 (fun _93_399 -> (match (()) with
+(let _190_321 = (FStar_Option.get filename)
+in (FStar_SMTEncoding_Solver.with_hints_db _190_321 (fun _93_387 -> (match (()) with
 | () -> begin
 (go (((Prims.parse_int "1")), ((Prims.parse_int "0"))) stack initial_mod env ts)
 end))))
 end else begin
 (go (((Prims.parse_int "1")), ((Prims.parse_int "0"))) stack initial_mod env ts)
 end
-end))))))))))
+end)))))))))
 
 
 
