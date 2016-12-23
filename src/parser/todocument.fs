@@ -1021,6 +1021,9 @@ let modul_with_comments_to_document (m:modul) comments =
     let preceding_comments, comments =
       take (function (_, range) -> range_contains_range inbetween_range range) comments
     in
+    let inner_comments, comments =
+      take (function (_, range) -> range_contains_range current_range range) comments
+    in
     let range_line_diff range =
       line_of_pos (end_of_range range) - line_of_pos (start_of_range range)
     in
@@ -1034,10 +1037,14 @@ let modul_with_comments_to_document (m:modul) comments =
     //             (string_of_int line_count)
     //             (string_of_int (List.length preceding_comments))
     //             (string_of_int (List.length comments));
+    let inner_comments_doc =
+      if inner_comments = [] then empty
+      else hardline ^^ comments_to_document inner_comments
+    in
     let doc =
       doc ^^ repeat line_count hardline ^^
       comments_to_document preceding_comments ^^ hardline ^^
-      decl_to_document decl
+      decl_to_document decl ^^ inner_comments_doc
     in
     (current_range, comments,  doc)
   in
