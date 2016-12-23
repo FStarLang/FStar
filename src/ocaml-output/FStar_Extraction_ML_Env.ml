@@ -66,7 +66,7 @@ end else begin
 end)
 
 
-let mkFvvar : FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ  ->  (FStar_Ident.lident, FStar_Absyn_Syntax.typ) FStar_Absyn_Syntax.withinfo_t = (fun l t -> (let _172_69 = (FStar_Range.mk_range "" (Prims.parse_int "0") (Prims.parse_int "0"))
+let mkFvvar : FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ  ->  (FStar_Ident.lident, FStar_Absyn_Syntax.typ) FStar_Absyn_Syntax.withinfo_t = (fun l t -> (let _172_69 = (FStar_Range.mk_range "" FStar_Range.zeroPos FStar_Range.zeroPos)
 in {FStar_Absyn_Syntax.v = l; FStar_Absyn_Syntax.sort = t; FStar_Absyn_Syntax.p = _172_69}))
 
 

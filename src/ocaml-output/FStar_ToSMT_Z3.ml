@@ -487,7 +487,7 @@ let job_queue : z3job Prims.list FStar_ST.ref = (
 
 let x = (FStar_Util.mk_ref (({job = (fun _49_185 -> (match (()) with
 | () -> begin
-(let _147_162 = (let _147_161 = (let _147_160 = (FStar_Range.mk_range "" (Prims.parse_int "0") (Prims.parse_int "0"))
+(let _147_162 = (let _147_161 = (let _147_160 = (FStar_Range.mk_range "" FStar_Range.zeroPos FStar_Range.zeroPos)
 in ((""), (_147_160)))
 in (_147_161)::[])
 in ((false), (_147_162)))

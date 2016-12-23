@@ -24,6 +24,7 @@ open FStar.Parser.AST
 open FStar.Ident
 open FStar.Const
 open FStar.Pprint
+open FStar.Range
 
 module C = FStar.Syntax.Const
 
@@ -348,7 +349,7 @@ and p_pragma = function
     | ResetOptions s_opt -> str "#reset-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
 
 (* TODO : needs to take the F# specific type instantiation *)
-and p_typars bs = p_binders bs
+and p_typars bs = p_binders true bs
 
 and p_fsdocTypeDeclPairs (typedecl, fsdoc_opt) =
   optional p_fsdoc fsdoc_opt ^^ p_typeDecl typedecl
@@ -360,20 +361,26 @@ and p_typeDecl = function
     p_typeDeclPrefix lid bs typ_opt (prefix2 equals (p_typ t))
   | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
     p_typeDeclPrefix lid bs typ_opt
-    (equals ^^ space ^^ braces_with_nesting (separate_break_map semi p_recordFieldDecl record_field_decls))
+    (equals ^^ space ^^ braces_with_nesting (separate_map (semi ^^ break1) p_recordFieldDecl record_field_decls))
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
     let datacon_doc =
-      match ct_decls with
-        | [datacon] -> p_constructorDecl datacon
-        | datacons -> group (separate_map break1 (fun decl -> group (bar ^^ space ^^ p_constructorDecl decl)) datacons)
+      // match ct_decls with
+      //   | [ct_decl] -> p_constructorDecl ct_decl
+      //   | ct_decls ->
+      group (separate_map break1 (fun decl -> group (bar ^^ space ^^ p_constructorDecl decl)) ct_decls)
     in
     p_typeDeclPrefix lid bs typ_opt (prefix2 equals datacon_doc)
 
 and p_typeDeclPrefix lid bs typ_opt cont =
-  surround 2 1 (p_ident lid) (p_typars bs ^/^ optional (fun t -> colon ^^ space ^^ p_typ t) typ_opt) cont
+    if bs = [] && typ_opt = None
+    then p_ident lid ^^ space ^^ cont
+    else
+        let binders_doc =
+          p_typars bs ^^ optional (fun t -> break1 ^^ colon ^^ space ^^ p_typ t) typ_opt
+        in surround 2 1 (p_ident lid) binders_doc cont
 
 and p_recordFieldDecl (lid, t, doc_opt) =
-    optional p_fsdoc doc_opt ^^ p_lident lid ^^ colon ^^ p_typ t
+    group (optional p_fsdoc doc_opt ^^ p_lident lid ^^ colon ^^ p_typ t)
 
 and p_constructorDecl (uid, t_opt, doc_opt, use_of) =
     let sep = if use_of then str "of" else colon in
@@ -410,11 +417,11 @@ and p_newEffect = function
     p_effectDefinition lid bs t eff_decls action_decls
 
 and p_effectRedefinition uid bs t =
-    surround 2 1 (p_uident uid) (p_binders bs) (prefix2 equals (p_simpleTerm t))
+    surround 2 1 (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm t))
 
 and p_effectDefinition uid bs t eff_decls action_decls =
   braces_with_nesting (
-    group (surround 2 1 (p_uident uid) (p_binders bs)  (prefix2 colon (p_typ t))) ^/^
+    group (surround 2 1 (p_uident uid) (p_binders true bs)  (prefix2 colon (p_typ t))) ^/^
     prefix2 (str "with") (separate_break_map semi p_effectDecl eff_decls) ^^
     p_actionDecls action_decls
     )
@@ -542,15 +549,23 @@ and p_atomicPattern p = match p.pat with
 
 (* Skipping patternOrMultibinder since it would need retro-engineering the flattening of binders *)
 
-and p_binder b = match b.b with
+(* is_atomic is true if the binder must be parsed atomically *)
+and p_binder is_atomic b = match b.b with
     | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid
     | TVariable lid -> p_lident lid
-    | Annotated (lid, t) -> lparen ^^ optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^^ p_typ t ^^ rparen
+    | Annotated (lid, t) ->
+        let doc = optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^^ p_typ t in
+        if is_atomic
+        then group (lparen ^^ doc ^^ rparen)
+        else group doc
     | TAnnotated _ -> failwith "Is this still used ?"
-    | NoName t -> p_atomicTerm t (* t is a type but it might need some parenthesis *)
+    | NoName t ->
+        if is_atomic
+        then p_atomicTerm t (* t is a type but it might need some parenthesis *)
+        else p_appTerm t (* This choice seems valid (used in p_tmNoEq') *)
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
-and p_binders bs = separate_map break1 p_binder bs
+and p_binders is_atomic bs = separate_map break1 (p_binder is_atomic) bs
 
 
 (******************************************************************************)
@@ -629,9 +644,9 @@ and p_noSeqTerm e = match e.tm with
                (str "then" ^/+^ e2_doc) ^/^
                (str "else" ^/+^ p_noSeqTerm e3))
   | TryWith(e, branches) ->
-      group (prefix2 (str "try") (p_noSeqTerm e) ^/^ str "with" ^^ jump2 (separate_map hardline p_patternBranch branches))
+      group (prefix2 (str "try") (p_noSeqTerm e) ^/^ str "with" ^/^ separate_map hardline p_patternBranch branches)
   | Match (e, branches) ->
-      group (surround 2 1 (str "match") (p_noSeqTerm e) (str "with") ^^ jump2 (separate_map hardline p_patternBranch branches))
+      group (surround 2 1 (str "match") (p_noSeqTerm e) (str "with") ^/^ separate_map hardline p_patternBranch branches)
   | LetOpen (uid, e) ->
       group (surround 2 1 (str "let open") (p_quident uid) (str "in") ^/^ p_term e)
   | Let(q, lbs, e) ->
@@ -639,7 +654,7 @@ and p_noSeqTerm e = match e.tm with
     precede_break_separate_map let_doc (str "and") p_letbinding lbs ^/^
     prefix2 (str "in") (p_term e)
   | Abs([{pat=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
-      str "function" ^/+^ (separate_map hardline p_patternBranch branches)
+     group (str "function" ^/^ separate_map hardline p_patternBranch branches)
   | Assign (id, e) ->
       group (p_lident id ^/^ larrow ^/^ p_noSeqTerm e)
   | _ -> p_typ e
@@ -648,8 +663,8 @@ and p_typ e = match e.tm with
   | QForall (bs, trigger, e1)
   | QExists (bs, trigger, e1) ->
       prefix2
-        (surround 2 1 (p_quantifier e) (p_binders bs) dot)
-        (p_trigger trigger ^/^ p_noSeqTerm e1)
+        (soft_surround 2 0 (p_quantifier e ^^ space) (p_binders true bs) dot)
+        (p_trigger trigger ^^ p_noSeqTerm e1)
   | _ -> p_simpleTerm e
 
 and p_quantifier e = match e.tm with
@@ -659,7 +674,8 @@ and p_quantifier e = match e.tm with
 
 and p_trigger = function
     | [] -> empty
-    | pats -> lbrace ^^ colon ^^ str "pattern" ^/^ jump2 (p_disjunctivePats pats) ^/^ rbrace
+    | pats ->
+        lbrace ^^ colon ^^ str "pattern" ^/^ jump2 (p_disjunctivePats pats) ^/^ rbrace ^^ break1
 
 and p_disjunctivePats pats =
     separate_map (str "\\/") p_conjunctivePats pats
@@ -696,7 +712,7 @@ and p_tmImplies e = match e.tm with
 
 and p_tmArrow p_Tm e = match e.tm with
   | Product(bs, tgt) ->
-      group (concat_map (fun b -> p_binder b ^^ space ^^ rarrow ^^ break1) bs ^^ p_tmArrow p_Tm tgt)
+      group (concat_map (fun b -> p_binder false b ^^ space ^^ rarrow ^^ break1) bs ^^ p_tmArrow p_Tm tgt)
   | _ -> p_Tm e
 
 and p_tmFormula e = match e.tm with
@@ -772,7 +788,7 @@ and p_tmNoEq' curr e = match e.tm with
   | Sum(binders, res) ->
       let op = "&" in
       let left, mine, right = levels op in
-      let p_dsumfst b = p_binder b ^^ space ^^ str "&" ^^ break1 in
+      let p_dsumfst b = p_binder false b ^^ space ^^ str "&" ^^ break1 in
       paren_if curr mine (concat_map p_dsumfst binders ^^ p_tmNoEq' right res)
   | Op (op, [ e1; e2]) when is_operatorInfix34 op -> // also takes care of infix '-'
       let left, mine, right = levels op in
@@ -786,7 +802,7 @@ and p_tmNoEq' curr e = match e.tm with
       p_refinedBinder b phi
   | Record(with_opt, record_fields) ->
       braces_with_nesting ( default_or_map empty p_with_clause with_opt ^^
-                            separate_map semi p_simpleDef record_fields )
+                            separate_map (semi ^^ break1) p_simpleDef record_fields )
   | Op("~", [e]) ->
       group (str "~" ^^ p_atomicTerm e)
   | _ -> p_appTerm e
@@ -987,5 +1003,55 @@ let modul_to_document (m:modul) =
   | Module (_, decls)
   | Interface (_, decls, _) ->
       decls |> List.map decl_to_document |> separate hardline
+
+let comments_to_document (comments : list<(string * FStar.Range.range)>) =
+    separate_map hardline (fun (comment, range) -> str comment) comments
+
+let modul_with_comments_to_document (m:modul) comments =
+  let rec aux (previous_range, comments, doc) decl =
+    let current_range = decl.drange in
+    // Util.print1 "Current range : %s\n" (string_of_range current_range);
+    let inbetween_range =
+      if (file_of_range previous_range <> file_of_range current_range)
+      then failwith (Util.format2 "Given coments from different source files %s - %s" (file_of_range previous_range) (file_of_range current_range));
+      Range.mk_range (file_of_range current_range)
+               (end_of_range previous_range)
+               (start_of_range current_range)
+    in
+    let preceding_comments, comments =
+      take (function (_, range) -> range_contains_range inbetween_range range) comments
+    in
+    let range_line_diff range =
+      line_of_pos (end_of_range range) - line_of_pos (start_of_range range)
+    in
+    let max x y = if x < y then y else x in
+    let line_count =
+      range_line_diff inbetween_range - 1 -
+      List.fold_left (fun n (_, r) -> n + max (range_line_diff r) 1) 0 preceding_comments
+    in
+    let line_count = max line_count (if preceding_comments = [] then 0 else 1) in
+    // Util.print3 "Finished splitting comments (line_count : %s, comments : %s, leftover comments : %s)\n\n"
+    //             (string_of_int line_count)
+    //             (string_of_int (List.length preceding_comments))
+    //             (string_of_int (List.length comments));
+    let doc =
+      doc ^^ repeat line_count hardline ^^
+      comments_to_document preceding_comments ^^ hardline ^^
+      decl_to_document decl
+    in
+    (current_range, comments,  doc)
+  in
+  let decls = match m with
+    | Module (_, decls)
+    | Interface (_, decls, _) -> decls
+  in
+  match decls with
+    | [] -> empty, comments
+    | d :: _ ->
+      let initial_range = Range.mk_range (file_of_range d.drange) Range.zeroPos Range.zeroPos in
+      let (_, comments, doc) =
+        List.fold_left aux (initial_range, comments, empty) decls
+      in
+      (doc, comments)
 
 

@@ -43,7 +43,7 @@ let module_or_interface_name m = m.is_interface, m.name
 (***********************************************************************)
 let parse (env:DsEnv.env) (fn:string) : DsEnv.env  
                                       * list<Syntax.modul> =
-  let ast = Parser.Driver.parse_file fn in
+  let ast, _ = Parser.Driver.parse_file fn in
   Desugar.desugar_file env ast
 
 (***********************************************************************)

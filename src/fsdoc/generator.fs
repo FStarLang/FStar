@@ -234,7 +234,7 @@ let document_module (m:modul) =
 ///////////////////////////////////////////////////////////////////////////////
 let generate (files:list<string>) =
   // fsdoc each module into it's own module.md.
-  let modules = List.collect (fun fn -> P.parse_file fn) files in
+  let modules = List.collect (fun fn -> fst (P.parse_file fn)) files in
   let mods = List.map document_module modules in
   // write mod_names into index.md
   let on = O.prepend_output_dir "index.md" in

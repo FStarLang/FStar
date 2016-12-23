@@ -258,6 +258,7 @@ let int_of_uint8 = int_of_char
 let uint16_of_int i = Z.to_int i
 let byte_of_char (c:char) = Char.code c
 
+let float_of_string s = float_of_string s
 let float_of_byte b = float_of_int (Char.code b)
 let float_of_int32 = float_of_int
 let float_of_int64 = BatInt64.to_float
@@ -470,6 +471,12 @@ let forall_exists rel l1 l2 =
   for_all (fun x -> for_some (rel x) l2) l1
 let multiset_equiv rel l1 l2 =
   BatList.length l1 = BatList.length l2 && forall_exists rel l1 l2
+let take p l =
+    let rec take_aux acc = function
+        | [] -> l, []
+        | x::xs when p x -> take_aux (x::acc) xs
+        | x::xs -> List.rev acc, x::xs
+    in take_aux [] l
 
 let add_unique f x l =
   if for_some (f x) l then

@@ -502,7 +502,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     collect_term t2
 
   in
-  let ast = Driver.parse_file filename in
+  let ast, _ = Driver.parse_file filename in
   collect_file ast;
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps

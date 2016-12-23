@@ -716,36 +716,36 @@ in
 
 decl:
   option_FSDOC_ decl2
-    {let (fsdoc_opt, decl) = ($1, $2) in
-                                ( mk_decl decl (rhs parseState 2) fsdoc_opt )}
+    {let (fsdoc_opt, decl_range) = ($1, $2) in
+                                      ( let (decl, range) = decl_range in mk_decl decl range fsdoc_opt )}
 
 decl2:
   OPEN quident
     {let (_1, uid) = ((), $2) in
-      ( Open uid )}
+      ( Open uid, rhs2 parseState 1 2 )}
 | MODULE uident EQUALS quident
     {let (_1, uid1, _3, uid2) = ((), $2, (), $4) in
-      (  ModuleAbbrev(uid1, uid2) )}
+      (  ModuleAbbrev(uid1, uid2), rhs2 parseState 1 4 )}
 | MODULE quident
     {let (_1, uid) = ((), $2) in
-      (  TopLevelModule uid )}
+      (  TopLevelModule uid, rhs2 parseState 1 2 )}
 | kind_abbrev
     {let k = $1 in
-      ( k )}
+      ( k, rhs parseState 1 )}
 | list_qualifier_ TYPE separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
     {let (qs0, _2, tcdefs) = ($1, (), $3) in
 let qs =
   let qs = qs0 in
                          ( qs )
 in
-      ( Tycon (qs, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
+      ( Tycon (qs, List.map (fun (doc, f) -> (f, doc)) tcdefs), rhs2 parseState (if qs = [] then 2 else 1) 3 )}
 | list_qualifier_ EFFECT uident typars EQUALS typ
     {let (qs0, _2, uid, tparams, _5, t) = ($1, (), $3, $4, (), $6) in
 let qs =
   let qs = qs0 in
                          ( qs )
 in
-      ( Tycon(Effect::qs, [TyconAbbrev(uid, tparams, None, t), None]) )}
+      ( Tycon(Effect::qs, [TyconAbbrev(uid, tparams, None, t), None]), rhs2 parseState (if qs = [] then 2 else 1) 6 )}
 | list_qualifier_ LET letqualifier separated_nonempty_list_AND_letbinding_
     {let (qs0, _2, q, lbs) = ($1, $2, $3, $4) in
 let qs =
@@ -754,7 +754,7 @@ let qs =
 in
       (
         let lbs = focusLetBindings lbs (rhs2 parseState 1 4) in
-        TopLevelLet(qs, q, lbs)
+        TopLevelLet(qs, q, lbs), rhs2 parseState (if qs = [] then 2 else 1) 4
       )}
 | list_qualifier_ VAL lidentOrOperator list_multiBinder_ COLON typ
     {let (qs0, _2, lid, bss, _5, t) = ($1, (), $3, $4, (), $6) in
@@ -766,7 +766,7 @@ in
         let t = match flatten bss with
           | [] -> t
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 4 6) Type
-        in Val(qs, lid, t)
+        in Val(qs, lid, t), rhs2 parseState (if qs = [] then 2 else 1) 6
       )}
 | ASSUME uident COLON noSeqTerm
     {let (_1, lid, _3, e0) = ((), $2, (), $4) in
@@ -774,37 +774,37 @@ let phi =
   let e = e0 in
                   ( {e with level=Formula} )
 in
-      ( Assume([Assumption], lid, phi) )}
+      ( Assume([Assumption], lid, phi), rhs2 parseState 1 4 )}
 | EXCEPTION uident option___anonymous_1_
     {let (_1, lid, t_opt) = ((), $2, $3) in
-      ( Exception(lid, t_opt) )}
+      ( Exception(lid, t_opt), rhs2 parseState 1 3 )}
 | list_qualifier_ NEW_EFFECT newEffect
     {let (qs0, _2, ne) = ($1, (), $3) in
 let qs =
   let qs = qs0 in
                          ( qs )
 in
-      ( NewEffect (qs, ne) )}
+      ( NewEffect (qs, ne), rhs2 parseState (if qs = [] then 2 else 1) 3 )}
 | list_qualifier_ SUB_EFFECT subEffect
     {let (qs0, _2, se) = ($1, (), $3) in
 let qs =
   let qs = qs0 in
                          ( qs )
 in
-      ( SubEffect se )}
+      ( SubEffect se, rhs2 parseState 2 3 )}
 | list_qualifier_ NEW_EFFECT_FOR_FREE newEffect
     {let (qs0, _2, ne) = ($1, (), $3) in
 let qs =
   let qs = qs0 in
                          ( qs )
 in
-      ( NewEffectForFree (qs, ne) )}
+      ( NewEffectForFree (qs, ne), rhs2 parseState (if qs = [] then 2 else 1) 3 )}
 | pragma
     {let p = $1 in
-      ( Pragma p )}
+      ( Pragma p, rhs parseState 1 )}
 | FSDOC_STANDALONE
     {let doc = $1 in
-      ( Fsdoc doc )}
+      ( Fsdoc doc, rhs parseState 1 )}
 
 typeDecl:
   ident typars option_ascribeKind_ typeDefinition

@@ -221,48 +221,48 @@ pragma:
       { ResetOptions s_opt }
 
 decl:
-  | fsdoc_opt=FSDOC? decl=decl2 { mk_decl decl (rhs parseState 2) fsdoc_opt }
+  | fsdoc_opt=FSDOC? decl_range=decl2 { let (decl, range) = decl_range in mk_decl decl range fsdoc_opt }
 
 decl2:
   | OPEN uid=quident
-      { Open uid }
+      { Open uid, rhs2 parseState 1 2 }
   | MODULE uid1=uident EQUALS uid2=quident
-      {  ModuleAbbrev(uid1, uid2) }
+      {  ModuleAbbrev(uid1, uid2), rhs2 parseState 1 4 }
   | MODULE uid=quident
-      {  TopLevelModule uid }
+      {  TopLevelModule uid, rhs2 parseState 1 2 }
   | k=kind_abbrev  (* TODO : Remove with stratify *)
-      { k }
+      { k, rhs parseState 1 }
   | qs=qualifiers TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
-      { Tycon (qs, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
+      { Tycon (qs, List.map (fun (doc, f) -> (f, doc)) tcdefs), rhs2 parseState (if qs = [] then 2 else 1) 3 }
   | qs=qualifiers EFFECT uid=uident tparams=typars EQUALS t=typ
-      { Tycon(Effect::qs, [TyconAbbrev(uid, tparams, None, t), None]) }
+      { Tycon(Effect::qs, [TyconAbbrev(uid, tparams, None, t), None]), rhs2 parseState (if qs = [] then 2 else 1) 6 }
   (* change to menhir : let ~> rec changed to let rec ~> *)
   | qs=qualifiers LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
         let lbs = focusLetBindings lbs (rhs2 parseState 1 4) in
-        TopLevelLet(qs, q, lbs)
+        TopLevelLet(qs, q, lbs), rhs2 parseState (if qs = [] then 2 else 1) 4
       }
   | qs=qualifiers VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
       {
         let t = match flatten bss with
           | [] -> t
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 4 6) Type
-        in Val(qs, lid, t)
+        in Val(qs, lid, t), rhs2 parseState (if qs = [] then 2 else 1) 6
       }
   | ASSUME lid=uident COLON phi=formula (* TODO : Remove with stratify *)
-      { Assume([Assumption], lid, phi) }
+      { Assume([Assumption], lid, phi), rhs2 parseState 1 4 }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
-      { Exception(lid, t_opt) }
+      { Exception(lid, t_opt), rhs2 parseState 1 3 }
   | qs=qualifiers NEW_EFFECT ne=newEffect
-      { NewEffect (qs, ne) }
+      { NewEffect (qs, ne), rhs2 parseState (if qs = [] then 2 else 1) 3 }
   | qs=qualifiers SUB_EFFECT se=subEffect
-      { SubEffect se } (* TODO (KM) : Why are we dropping the qualifiers here ? Does that mean we should not accept them ? *)
+      { SubEffect se, rhs2 parseState 2 3 } (* TODO (KM) : Why are we dropping the qualifiers here ? Does that mean we should not accept them ? *)
   | qs=qualifiers NEW_EFFECT_FOR_FREE ne=newEffect
-      { NewEffectForFree (qs, ne) }
+      { NewEffectForFree (qs, ne), rhs2 parseState (if qs = [] then 2 else 1) 3 }
   | p=pragma
-      { Pragma p }
+      { Pragma p, rhs parseState 1 }
   | doc=FSDOC_STANDALONE
-      { Fsdoc doc }
+      { Fsdoc doc, rhs parseState 1 }
 
 typeDecl:
   (* TODO : change to lident with stratify *)

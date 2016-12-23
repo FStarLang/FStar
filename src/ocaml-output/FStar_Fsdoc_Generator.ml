@@ -367,7 +367,8 @@ end)))
 
 let generate : Prims.string Prims.list  ->  Prims.unit = (fun files -> (
 
-let modules = (FStar_List.collect (fun fn -> (FStar_Parser_Driver.parse_file fn)) files)
+let modules = (FStar_List.collect (fun fn -> (let _182_118 = (FStar_Parser_Driver.parse_file fn)
+in (Prims.fst _182_118))) files)
 in (
 
 let mods = (FStar_List.map document_module modules)
@@ -379,8 +380,8 @@ in (
 let fd = (FStar_Util.open_file_for_writing on)
 in (
 
-let _84_327 = (FStar_List.iter (fun m -> (let _182_119 = (FStar_Util.format "%s\n" ((m.FStar_Ident.str)::[]))
-in (FStar_Util.append_to_file fd _182_119))) mods)
+let _84_327 = (FStar_List.iter (fun m -> (let _182_120 = (FStar_Util.format "%s\n" ((m.FStar_Ident.str)::[]))
+in (FStar_Util.append_to_file fd _182_120))) mods)
 in (FStar_Util.close_file fd)))))))
 
 

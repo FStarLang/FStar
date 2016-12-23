@@ -775,11 +775,14 @@ in (collect_term t2)))
 end))
 in (
 
-let ast = (FStar_Parser_Driver.parse_file filename)
-in (
+let _72_655 = (FStar_Parser_Driver.parse_file filename)
+in (match (_72_655) with
+| (ast, _72_654) -> begin
+(
 
-let _72_653 = (collect_file ast)
-in (FStar_ST.read deps))))))))))))))
+let _72_656 = (collect_file ast)
+in (FStar_ST.read deps))
+end)))))))))))))
 
 
 type color =
@@ -817,13 +820,13 @@ end))
 
 let print_graph = (fun graph -> (
 
-let _72_656 = (FStar_Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph")
+let _72_659 = (FStar_Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph")
 in (
 
-let _72_658 = (FStar_Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph")
+let _72_661 = (FStar_Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph")
 in (
 
-let _72_660 = (FStar_Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims")
+let _72_663 = (FStar_Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims")
 in (let _170_189 = (let _170_188 = (let _170_187 = (let _170_186 = (let _170_185 = (let _170_184 = (FStar_Util.smap_keys graph)
 in (FStar_List.unique _170_184))
 in (FStar_List.collect (fun k -> (
@@ -860,9 +863,9 @@ in (
 let rec discover_one = (fun is_user_provided_filename key -> if ((FStar_Util.smap_try_find graph key) = None) then begin
 (
 
-let _72_679 = (let _170_204 = (FStar_Util.smap_try_find m key)
+let _72_682 = (let _170_204 = (FStar_Util.smap_try_find m key)
 in (FStar_Util.must _170_204))
-in (match (_72_679) with
+in (match (_72_682) with
 | (intf, impl) -> begin
 (
 
@@ -887,7 +890,7 @@ in (
 let deps = (FStar_List.unique (FStar_List.append impl_deps intf_deps))
 in (
 
-let _72_689 = (FStar_Util.smap_add graph key ((deps), (White)))
+let _72_692 = (FStar_Util.smap_add graph key ((deps), (White)))
 in (FStar_List.iter (discover_one false) deps)))))
 end))
 end else begin
@@ -895,7 +898,7 @@ end else begin
 end)
 in (
 
-let _72_691 = (let _170_205 = (FStar_List.map lowercase_module_name filenames)
+let _72_694 = (let _170_205 = (FStar_List.map lowercase_module_name filenames)
 in (FStar_List.iter (discover_one true) _170_205))
 in (
 
@@ -907,24 +910,24 @@ in (
 
 let rec discover = (fun cycle key -> (
 
-let _72_700 = (let _170_210 = (FStar_Util.smap_try_find graph key)
+let _72_703 = (let _170_210 = (FStar_Util.smap_try_find graph key)
 in (FStar_Util.must _170_210))
-in (match (_72_700) with
+in (match (_72_703) with
 | (direct_deps, color) -> begin
 (match (color) with
 | Gray -> begin
 (
 
-let _72_702 = (FStar_Util.print1 "Warning: recursive dependency on module %s\n" key)
+let _72_705 = (FStar_Util.print1 "Warning: recursive dependency on module %s\n" key)
 in (
 
-let _72_704 = (FStar_Util.print1 "The cycle is: %s \n" (FStar_String.concat " -> " cycle))
+let _72_707 = (FStar_Util.print1 "The cycle is: %s \n" (FStar_String.concat " -> " cycle))
 in (
 
-let _72_706 = (print_graph immediate_graph)
+let _72_709 = (print_graph immediate_graph)
 in (
 
-let _72_708 = (FStar_Util.print_string "\n")
+let _72_711 = (FStar_Util.print_string "\n")
 in (FStar_All.exit (Prims.parse_int "1"))))))
 end
 | Black -> begin
@@ -933,7 +936,7 @@ end
 | White -> begin
 (
 
-let _72_712 = (FStar_Util.smap_add graph key ((direct_deps), (Gray)))
+let _72_715 = (FStar_Util.smap_add graph key ((direct_deps), (Gray)))
 in (
 
 let all_deps = (let _170_214 = (let _170_213 = (FStar_List.map (fun dep -> (let _170_212 = (discover ((key)::cycle) dep)
@@ -942,10 +945,10 @@ in (FStar_List.flatten _170_213))
 in (FStar_List.unique _170_214))
 in (
 
-let _72_716 = (FStar_Util.smap_add graph key ((all_deps), (Black)))
+let _72_719 = (FStar_Util.smap_add graph key ((all_deps), (Black)))
 in (
 
-let _72_718 = (let _170_216 = (let _170_215 = (FStar_ST.read topologically_sorted)
+let _72_721 = (let _170_216 = (let _170_215 = (FStar_ST.read topologically_sorted)
 in (key)::_170_215)
 in (FStar_ST.op_Colon_Equals topologically_sorted _170_216))
 in all_deps))))
@@ -998,7 +1001,7 @@ let topologically_sorted = (let _170_227 = (FStar_ST.read topologically_sorted)
 in (FStar_List.collect must_find_r _170_227))
 in (
 
-let _72_740 = (FStar_List.iter (fun _72_737 -> (match (_72_737) with
+let _72_743 = (FStar_List.iter (fun _72_740 -> (match (_72_740) with
 | (m, r) -> begin
 if ((not ((FStar_ST.read r))) && (not ((FStar_Options.interactive ())))) then begin
 (
@@ -1022,7 +1025,7 @@ end)) verify_flags)
 in ((by_target), (topologically_sorted), (immediate_graph))))))))))))))))))
 
 
-let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.unit = (fun deps -> (FStar_List.iter (fun _72_745 -> (match (_72_745) with
+let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.unit = (fun deps -> (FStar_List.iter (fun _72_748 -> (match (_72_748) with
 | (f, deps) -> begin
 (
 
@@ -1031,8 +1034,8 @@ in (FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps)))
 end)) deps))
 
 
-let print = (fun _72_752 -> (match (_72_752) with
-| (make_deps, _72_750, graph) -> begin
+let print = (fun _72_755 -> (match (_72_755) with
+| (make_deps, _72_753, graph) -> begin
 (match ((FStar_Options.dep ())) with
 | Some ("make") -> begin
 (print_make make_deps)
@@ -1040,7 +1043,7 @@ end
 | Some ("graph") -> begin
 (print_graph graph)
 end
-| Some (_72_758) -> begin
+| Some (_72_761) -> begin
 (Prims.raise (FStar_Absyn_Syntax.Err ("unknown tool for --dep\n")))
 end
 | None -> begin

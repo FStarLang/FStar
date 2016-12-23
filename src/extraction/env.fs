@@ -45,7 +45,7 @@ let debug (g:env) f =
 let mkFvvar (l: lident) (t:typ) : fvvar =
 { v= l;
   sort= t;
-  p=Range.mk_range "" 0 0;
+  p=Range.mk_range "" Range.zeroPos Range.zeroPos;
 }
 
 (* MLTY_Tuple [] extracts to (), and is an alternate choice.

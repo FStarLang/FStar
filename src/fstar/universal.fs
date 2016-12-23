@@ -45,12 +45,12 @@ let module_or_interface_name m = m.is_interface, m.name
 let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
   : DsEnv.env
   * list<Syntax.modul> =
-  let ast = Parser.Driver.parse_file fn in
+  let ast, _ = Parser.Driver.parse_file fn in
   let ast = match pre_fn with
     | None ->
         ast
     | Some pre_fn ->
-        let pre_ast = Parser.Driver.parse_file pre_fn in
+        let pre_ast, _ = Parser.Driver.parse_file pre_fn in
         match pre_ast, ast with
         | [ Parser.AST.Interface (lid1, decls1, _) ], [ Parser.AST.Module (lid2, decls2) ]
           when Ident.lid_equals lid1 lid2 ->
