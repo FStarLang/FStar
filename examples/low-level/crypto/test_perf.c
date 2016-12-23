@@ -54,10 +54,11 @@ uint8_t ivBuffer[IVLEN] = {
 };
 
 #define ROUNDS 1000
-#define AES_ROUNDS 1
+#define AES_ROUNDS 100
 
-#define AES_GCM 0
-#define CHACHA_POLY 1
+#define AES_128_GCM 0
+#define AES_256_GCM 1
+#define CHACHA_POLY 2
 
 void print_results(char *txt, double t1, unsigned long long d1, int rounds, int plainlen){
   printf("Testing: %s\n", txt);
@@ -74,8 +75,12 @@ int openssl_aead_encrypt(unsigned char *plaintext, int plaintext_len, unsigned c
   /* Create and initialise the context */
   if(!(ctx = EVP_CIPHER_CTX_new())) return EXIT_FAILURE;
   /* Initialise the encryption operation. */
-  if (cipher == AES_GCM) {
+  if (cipher == AES_256_GCM) {
     if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL))
+      return EXIT_FAILURE;
+  } else 
+  if (cipher == AES_128_GCM) {
+    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL))
       return EXIT_FAILURE;
   } else {
     if(1 != EVP_EncryptInit_ex(ctx, EVP_chacha20_poly1305(), NULL, NULL, NULL))
@@ -117,7 +122,7 @@ int openssl_aead_encrypt(unsigned char *plaintext, int plaintext_len, unsigned c
   c2 = clock();
   d1 = b - a;
   t1 = ((double)c2 - c1)/CLOCKS_PER_SEC;
-  print_results(cipher == AES_GCM ? "openssl-aes-256-gcm" : "openssl-chacha20-poly1305", t1, d1, ROUNDS, PLAINLEN);
+  print_results(cipher == AES_128_GCM ? "openssl-aes-128-gcm" : (cipher == AES_256_GCM? "openssl-aes-256-gcm" : "openssl-chacha20-poly1305"), t1, d1, ROUNDS, PLAINLEN);
   EVP_CIPHER_CTX_free(ctx);
   return ciphertext_len;
 }
@@ -128,7 +133,7 @@ void test_kremlin_aead(void *plain, void*cipher, int alg){
   double t1, t2;
 
   FStar_UInt128_t iv = Crypto_Symmetric_Bytes_load_uint128((uint32_t )12, ivBuffer);
-  Crypto_Indexing_id i = alg == AES_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_256_GCM) : Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305);
+  Crypto_Indexing_id i = alg == AES_256_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_256_GCM) : (alg == AES_128_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_128_GCM) : Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305));
   unsigned long long a,b,d1,d2;
   FStar_HyperHeap_rid mac_rgn = FStar_ST_new_region(FStar_HyperHeap_root);
   uint8_t *key_p = calloc(Crypto_Symmetric_PRF_keylen(i), sizeof (uint8_t ));
@@ -161,13 +166,13 @@ void test_kremlin_aead(void *plain, void*cipher, int alg){
 
   c1 = clock();
   a = rdtsc();
-  int rounds = alg == AES_GCM ? 10 : ROUNDS;
+  int rounds = alg == CHACHA_POLY? ROUNDS : AES_ROUNDS;
   for (int j = 0; j < rounds; j++) Crypto_AEAD_Encrypt_encrypt(i, st0, iv, AADLEN, aad, PLAINLEN, plain, cipher);
   b = rdtsc();
   c2 = clock();
   d1 = b - a;
   t1 = ((double)c2 - c1)/CLOCKS_PER_SEC;
-  print_results(alg == AES_GCM ? "Kremlin-C-aes256-gcm" : "Kremlin-C-chacha20-poly1305", t1, d1, rounds, PLAINLEN);
+  print_results(alg == AES_256_GCM ? "Kremlin-C-aes256-gcm" : (alg == AES_128_GCM? "Kremlin-C-aes128-gcm" : "Kremlin-C-chacha20-poly1305"), t1, d1, rounds, PLAINLEN);
 }
 
 void test_kremlin_prf(void *plain, void*cipher, int alg){
@@ -175,7 +180,7 @@ void test_kremlin_prf(void *plain, void*cipher, int alg){
   double t1, t2;
 
   FStar_UInt128_t iv = Crypto_Symmetric_Bytes_load_uint128((uint32_t )12, ivBuffer);
-  Crypto_Indexing_id i = alg == AES_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_256_GCM) : Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305);
+  Crypto_Indexing_id i = alg == AES_256_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_256_GCM) : (alg == AES_128_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_128_GCM) : Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305));
   unsigned long long a,b,d1,d2;
   FStar_HyperHeap_rid mac_rgn = FStar_ST_new_region(FStar_HyperHeap_root);
   uint8_t *key_p = calloc(Crypto_Symmetric_PRF_keylen(i), sizeof (uint8_t ));
@@ -209,7 +214,7 @@ void test_kremlin_prf(void *plain, void*cipher, int alg){
   Crypto_Symmetric_PRF_domain____ x = { .iv = Crypto_Symmetric_PRF_iv_0, .ctr = (uint32_t )0 };
   c1 = clock();
   a = rdtsc();
-  int rounds = alg == AES_GCM ? AES_ROUNDS : ROUNDS;
+  int rounds = alg == CHACHA_POLY ? ROUNDS : AES_ROUNDS;
   for (int j = 0; j < rounds; j++) Crypto_AEAD_EnxorDexor_counter_enxor(i,
                                                              Crypto_AEAD_Invariant___proj__AEADState__item__prf(i, Crypto_Indexing_rw_Writer, st0),
                                                              x,
@@ -222,7 +227,7 @@ void test_kremlin_prf(void *plain, void*cipher, int alg){
   c2 = clock();
   d1 = b - a;
   t1 = ((double)c2 - c1)/CLOCKS_PER_SEC;
-  print_results(alg == AES_GCM ? "Kremlin-C-aes256" : "Kremlin-C-chacha20", t1, d1, rounds, PLAINLEN);
+  print_results(alg == AES_256_GCM ? "Kremlin-C-aes256" : (alg == AES_128_GCM? "Kremlin-C-aes128" : "Kremlin-C-chacha20"), t1, d1, rounds, PLAINLEN);
 }
 
 
@@ -232,7 +237,7 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
   uint8_t tag[16];
 
   FStar_UInt128_t iv = Crypto_Symmetric_Bytes_load_uint128((uint32_t )12, ivBuffer);
-  Crypto_Indexing_id i = alg == AES_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_256_GCM) : Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305);
+  Crypto_Indexing_id i = alg == AES_256_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_256_GCM) : (alg == AES_128_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_128_GCM) : Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305));
   unsigned long long a,b,d1,d2;
   FStar_HyperHeap_rid mac_rgn = FStar_ST_new_region(FStar_HyperHeap_root);
   uint8_t *key_p = calloc(Crypto_Symmetric_PRF_keylen(i), sizeof (uint8_t ));
@@ -266,7 +271,7 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
   Crypto_Symmetric_PRF_domain____ x = { .iv = Crypto_Symmetric_PRF_iv_0, .ctr = (uint32_t )0 };
   c1 = clock();
   a = rdtsc();
-  int rounds = alg == AES_GCM ? AES_ROUNDS : ROUNDS;
+  int rounds = alg == CHACHA_POLY? ROUNDS: AES_ROUNDS;
 
   uint64_t buf0[5], buf00[5];
   uint8_t buf[16], buff[16];
@@ -438,20 +443,22 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
   c2 = clock();
   d1 = b - a;
   t1 = ((double)c2 - c1)/CLOCKS_PER_SEC;
-  print_results(alg == AES_GCM ? "Kremlin-C-gcm" : "Kremlin-C-poly1305", t1, d1, rounds, PLAINLEN);
+  print_results(alg == AES_256_GCM ? "Kremlin-C-aes256" : (alg == AES_128_GCM? "Kremlin-C-aes128" : "Kremlin-C-poly1305"), t1, d1, rounds, PLAINLEN);
 }
 
 void test_crypto_aead(){
   void *plain = malloc(PLAINLEN), *cipher = malloc(PLAINLEN+16);
   uint8_t mac[16];
-  test_kremlin_aead(plain, cipher, AES_GCM);
+  test_kremlin_aead(plain, cipher, AES_128_GCM);
+  openssl_aead_encrypt(plain, PLAINLEN, aad, AADLEN, key, ivBuffer, cipher, mac, AES_128_GCM);
+  test_kremlin_aead(plain, cipher, AES_256_GCM);
+  openssl_aead_encrypt(plain, PLAINLEN, aad, AADLEN, key, ivBuffer, cipher, mac, AES_256_GCM);
   test_kremlin_aead(plain, cipher, CHACHA_POLY);
-  openssl_aead_encrypt(plain, PLAINLEN, aad, AADLEN, key, ivBuffer, cipher, mac, AES_GCM);
   openssl_aead_encrypt(plain, PLAINLEN, aad, AADLEN, key, ivBuffer, cipher, mac, CHACHA_POLY);
-  test_kremlin_prf(plain, cipher, AES_GCM);
-  test_kremlin_prf(plain, cipher, CHACHA_POLY);
-  test_kremlin_mac(plain, cipher, AES_GCM);
-  test_kremlin_mac(plain, cipher, CHACHA_POLY);
+  //  test_kremlin_prf(plain, cipher, AES_GCM);
+  //test_kremlin_prf(plain, cipher, CHACHA_POLY);
+  //test_kremlin_mac(plain, cipher, AES_GCM);
+  //test_kremlin_mac(plain, cipher, CHACHA_POLY);
 }
 
 
