@@ -342,8 +342,7 @@ let rec extract (g:env) (m:modul) : env * list<mllib> =
     || Options.no_extract m.name.str
     then let g = extract_iface g m in
          g, [] //MLLib([Util.flatten_mlpath name, None, MLLib []])
-    else (Util.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
-         let g, sigs = Util.fold_map extract_sig g m.declarations in
+    else (let g, sigs = Util.fold_map extract_sig g m.declarations in
          let mlm : mlmodule = List.flatten sigs in
          g, [MLLib ([name, Some ([], mlm), (MLLib [])])])
 

@@ -640,8 +640,7 @@ in ((g), ([])))
 end else begin
 (
 
-let _82_497 = (let _179_192 = (FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name)
-in (FStar_Util.print1 "Extracting module %s\n" _179_192))
+let _82_497 = ()
 in (
 
 let _82_501 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
