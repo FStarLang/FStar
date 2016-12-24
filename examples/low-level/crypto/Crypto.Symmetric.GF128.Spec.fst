@@ -2,15 +2,17 @@ module Crypto.Symmetric.GF128.Spec
 
 open Crypto.Symmetric.Bytes 
 
+module U128 = FStar.UInt128
+
 type text = Seq.seq (lbytes 16)
-type elem = lbytes 16 (* use instead a bit vector? *) 
+type elem = U128.t
 
 assume val op_Plus_At: elem -> elem -> Tot elem
 assume val op_Star_At: elem -> elem -> Tot elem
 
 assume val add_comm: a:elem -> b:elem -> Lemma (a +@ b == b +@ a)
 
-let zero = Seq.create 16 0uy 
+assume val zero: elem
 
 (*
 val add_loop: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
@@ -31,7 +33,8 @@ open FStar.SeqProperties
 
 let seq_head (vs:seq 'a {Seq.length vs > 0}) = Seq.slice vs 0 (Seq.length vs - 1)
 
-let encode (x:lbytes 16): elem = x
+assume val encode:lbytes 16 -> Tot elem
+assume val decode:elem -> Tot (lbytes 16)
 
 val poly: vs:text -> r:elem -> Tot (a:elem) (decreases (Seq.length vs))
 let rec poly vs r =
@@ -40,9 +43,9 @@ let rec poly vs r =
     let v = SeqProperties.head vs in 
     (encode v +@ poly (SeqProperties.tail vs) r ) *@ r
 
-let finish a s = a +@ s 
+let finish a s = decode (a +@ (encode s))
 
-let mac vs r s = finish (poly vs r) s
+let mac vs r s = (finish (poly vs r) s)
 
 
 val poly_cons: x:lbytes 16 -> xs:text -> r:elem ->

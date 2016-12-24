@@ -12,6 +12,7 @@ module Crypto.Symmetric.MAC
 open Crypto.Symmetric.Bytes
 open Crypto.Indexing
 open Flag
+open FStar.Buffer
 
 module GS = Crypto.Symmetric.GF128.Spec
 module GF = Crypto.Symmetric.GF128
@@ -60,12 +61,12 @@ let zero i : elem i =
 unfold inline_for_extraction 
 let limb = function
   | POLY1305 -> UInt64.t
-  | GHASH    -> UInt8.t
+  | GHASH    -> UInt128.t
 
 unfold inline_for_extraction
 let limb_length = function
   | POLY1305 ->  5
-  | GHASH    -> 16
+  | GHASH    -> 1
 
 inline_for_extraction unfold
 type buffer_of a = b:Buffer.buffer (limb a){Buffer.length b == limb_length a}
@@ -333,7 +334,10 @@ let update #i r a w =
       let h3 = ST.get () in
       Crypto.Symmetric.Poly1305.Bigint.eval_eq_lemma h2 h3 a a 5
     end
-  | B_GHASH r, B_GHASH a -> GF.add_and_multiply a w r
+  | B_GHASH r, B_GHASH a -> 
+      let e = Buffer.create GF.zero_128 1ul in
+      e.(0ul) <- GF.load128_le w;
+      GF.add_and_multiply a e r
 
 
 let taglen = 16ul
@@ -373,7 +377,7 @@ let finish #i s a t =
   | B_GHASH    a ->
     begin
     GF.finish a s;
-    Buffer.blit a 0ul t 0ul 16ul;
+    t.(0ul) <- a.(0ul);
     let h1 = ST.get() in
     Seq.lemma_eq_intro (Buffer.as_seq h1 t) (Seq.slice (Buffer.as_seq h1 t) 0 16)
     end
