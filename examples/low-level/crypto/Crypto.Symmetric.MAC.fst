@@ -335,9 +335,11 @@ let update #i r a w =
       Crypto.Symmetric.Poly1305.Bigint.eval_eq_lemma h2 h3 a a 5
     end
   | B_GHASH r, B_GHASH a -> 
+      push_frame();
       let e = Buffer.create GF.zero_128 1ul in
       e.(0ul) <- GF.load128_le w;
-      GF.add_and_multiply a e r
+      GF.add_and_multiply a e r;
+      pop_frame()
 
 
 let taglen = 16ul
