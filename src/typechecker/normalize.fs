@@ -154,7 +154,11 @@ let rec unfold_effect_abbrev env comp =
     | Some (binders, cdef) ->
       let binders, cdef = SS.open_comp binders cdef in
       if List.length binders <> List.length c.effect_args + 1
-      then raise (Error ("Effect constructor is not fully applied", comp.pos));
+      then raise (Error (Util.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s" 
+                                (Util.string_of_int (List.length binders))
+                                (Util.string_of_int (List.length c.effect_args + 1))
+                                (Print.comp_to_string (S.mk_Comp c))
+                            , comp.pos));
       let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
       let c1 = SS.subst_comp inst cdef in
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in

@@ -2170,7 +2170,9 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
              else let c2_decl = Env.get_effect_decl env c2.effect_name in
                   let g =
-                     if is_null_wp_2
+                     if env.lax then
+                        Util.t_true
+                     else if is_null_wp_2
                      then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
                           mk (Tm_app(inst_effect_fun_with [env.universe_of env c1.result_typ] env c2_decl c2_decl.trivial,
                                     [as_arg c1.result_typ; as_arg <| edge.mlift c1.result_typ wpc1]))

@@ -4294,7 +4294,10 @@ end else begin
 let c2_decl = (FStar_TypeChecker_Env.get_effect_decl env c2.FStar_Syntax_Syntax.effect_name)
 in (
 
-let g = if is_null_wp_2 then begin
+let g = if env.FStar_TypeChecker_Env.lax then begin
+FStar_Syntax_Util.t_true
+end else begin
+if is_null_wp_2 then begin
 (
 
 let _56_3259 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
@@ -4327,6 +4330,7 @@ in (_153_1576)::_153_1575))
 in ((_153_1578), (_153_1577))))
 in FStar_Syntax_Syntax.Tm_app (_153_1579))
 in (FStar_Syntax_Syntax.mk _153_1580 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) r))
+end
 end
 in (
 

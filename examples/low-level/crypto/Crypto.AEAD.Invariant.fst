@@ -1118,10 +1118,10 @@ let frame_cma_mac_is_unset_h i r r' mac_st h0 h1 = ()
 
 val lemma_mac_log_framing
   (#i:id)
-  (nonce_1:Cipher.iv (alg i){safeMac i})
-  (mac_st_1:CMA.state (i, nonce_1))
+  (#nonce_1:Cipher.iv (alg i))
+  (#nonce_2:Cipher.iv (alg i))
+  (mac_st_1:CMA.state (i, nonce_1){safeMac i})
   (h0 h1:mem)
-  (nonce_2:Cipher.iv (alg i))
   (mac_st_2:CMA.state (i, nonce_2){CMA.(mac_st_2.region) = CMA.(mac_st_1.region)}) : Lemma
   (requires (nonce_1 <> nonce_2                                        /\
              m_contains (CMA.(ilog mac_st_2.log)) h0                 /\
@@ -1129,7 +1129,7 @@ val lemma_mac_log_framing
              HS.modifies_ref (CMA.(mac_st_1.region)) !{HS.as_ref (as_hsref (CMA.(ilog mac_st_1.log)))} h0 h1))
   (ensures  (m_sel h0 (CMA.(ilog mac_st_2.log)) = m_sel h1 (CMA.(ilog mac_st_2.log))))
 #set-options "--initial_ifuel 1 --max_ifuel 1"
-let lemma_mac_log_framing #i nonce_1 mac_st_1 h0 h1 nonce_2 mac_st_2 = ()
+let lemma_mac_log_framing #i #nonce_1 #nonce_2 mac_st_1 h0 h1 mac_st_2 = ()
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let lemma_fresh_nonce_implies_all_entries_nonces_are_different
