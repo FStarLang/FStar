@@ -377,7 +377,7 @@ let finish #i s a t =
   | B_GHASH    a ->
     begin
     GF.finish a s;
-    t.(0ul) <- a.(0ul);
+    GF.store128_le t a.(0ul);
     let h1 = ST.get() in
     Seq.lemma_eq_intro (Buffer.as_seq h1 t) (Seq.slice (Buffer.as_seq h1 t) 0 16)
     end
