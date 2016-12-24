@@ -209,7 +209,8 @@ let encode_r #i b raw =
   | B_GHASH    b -> 
       //let h0 = ST.get () in
       //assert (Buffer.modifies_1 raw h0 h0); // Necessary for triggering right lemmas
-      Buffer.blit raw 0ul b 0ul 16ul
+      let i = GF.load128_le raw in
+      b.(0ul) <- i
 
 // TODO: generalize to word
 (** Encode a word of a message as a field element *)
