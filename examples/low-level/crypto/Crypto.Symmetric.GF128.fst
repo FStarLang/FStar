@@ -149,9 +149,8 @@ let finish a s =
   //let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
   //let _ = IO.debug_print_string "finish s=" in 
   //let _ = Crypto.Symmetric.Bytes.print_buffer s 0ul 16ul in
-  let sb = create zero_128 1ul in
-  sb.(0ul) <- load128_le s;
-  gf128_add a sb
+  let sf = load128_le s in
+  a.(0ul) <- U128.(a.(0ul) ^^ sf)
   //let _ = IO.debug_print_string "finish a=" in 
   //let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
 
@@ -171,12 +170,9 @@ private val ghash_loop_:
   (requires (fun h -> U32.v len - U32.v dep <= 16 /\ live h tag /\ live h auth_key /\ live h str))
   (ensures (fun h0 _ h1 -> live h1 tag /\ live h1 auth_key /\ live h1 str /\ modifies_1 tag h0 h1))
 let ghash_loop_ tag auth_key str tmp len dep =
-  push_frame();
-  let t = create 0uy 16ul in
-  blit str dep t 0ul (U32.(len -^ dep));
+  let t = sub str dep (U32.(len -^ dep)) in
   tmp.(0ul) <- load128_le t;
-  add_and_multiply tag tmp auth_key;
-  pop_frame()
+  add_and_multiply tag tmp auth_key
 
 (* WARNING: may have issues with constant time. *)
 private val ghash_loop: 
