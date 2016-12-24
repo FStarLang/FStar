@@ -153,7 +153,7 @@ let rec aux = (fun default_msg ropt post_name_opt labels q -> (match (q.FStar_SM
 ((labels), (q))
 end
 | FStar_SMTEncoding_Term.LblPos (_89_161) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_SMTEncoding_Term.Labeled (arg, "could not prove post-condition", _89_166) -> begin
 (
@@ -394,10 +394,10 @@ in (match (_89_438) with
 end))
 end
 | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Add, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Sub, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Div, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Mul, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Minus, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Mod, _)) -> begin
-(FStar_All.failwith "Impossible: non-propositional term")
+(failwith "Impossible: non-propositional term")
 end
 | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.ITE, _)) | (FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Imp, _)) -> begin
-(FStar_All.failwith "Impossible: arity mismatch")
+(failwith "Impossible: arity mismatch")
 end
 | FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, pats, iopt, sorts, body) -> begin
 (

@@ -159,15 +159,14 @@ let rec is_arity env t =
         | _ -> false
       end
 
-//level t:
-//     Determines the level of a term from its
+//is_type_aux env t:
+//     Determines whether or not t is a type
 //     syntactic structure and type annotations
 let rec is_type_aux env t =
     let t = SS.compress t in
-    //    printfn "%s\n" (Print.term_to_string t);
     match t.n with
     | Tm_delayed _
-    | Tm_unknown -> //usually a placeholder for Type TODO: FIXME!
+    | Tm_unknown ->
         failwith (Util.format1 "Impossible: %s" (Print.tag_of_term t))
 
     | Tm_constant _ ->

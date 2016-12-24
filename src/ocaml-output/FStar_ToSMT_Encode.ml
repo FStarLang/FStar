@@ -51,7 +51,7 @@ let fail = (fun _51_62 -> (match (()) with
 | () -> begin
 (let _148_30 = (let _148_29 = (FStar_Util.string_of_int i)
 in (FStar_Util.format2 "Projector %s on data constructor %s not found" _148_29 lid.FStar_Ident.str))
-in (FStar_All.failwith _148_30))
+in (failwith _148_30))
 end))
 in (
 
@@ -106,7 +106,7 @@ type varops_t =
 {push : Prims.unit  ->  Prims.unit; pop : Prims.unit  ->  Prims.unit; mark : Prims.unit  ->  Prims.unit; reset_mark : Prims.unit  ->  Prims.unit; commit_mark : Prims.unit  ->  Prims.unit; new_var : FStar_Ident.ident  ->  FStar_Ident.ident  ->  Prims.string; new_fvar : FStar_Ident.lident  ->  Prims.string; fresh : Prims.string  ->  Prims.string; string_const : Prims.string  ->  FStar_ToSMT_Term.term; next_id : Prims.unit  ->  Prims.int}
 
 
-let is_Mkvarops_t : varops_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkvarops_t"))))
+let is_Mkvarops_t : varops_t  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkvarops_t"))))
 
 
 let varops : varops_t = (
@@ -253,7 +253,7 @@ let _51_172 = (FStar_Util.smap_fold hd2 (fun key value v -> (FStar_Util.smap_add
 in (FStar_ST.op_Colon_Equals scopes ((((next1), (next2)))::tl))))
 end
 | _51_175 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end))
 in {push = push; pop = pop; mark = mark; reset_mark = reset_mark; commit_mark = commit_mark; new_var = new_var; new_fvar = new_fvar; fresh = fresh; string_const = string_const; next_id = next_id})))))))))))))))
@@ -339,7 +339,7 @@ type env_t =
 {bindings : binding Prims.list; depth : Prims.int; tcenv : FStar_Tc_Env.env; warn : Prims.bool; cache : (Prims.string * FStar_ToSMT_Term.sort Prims.list * FStar_ToSMT_Term.decl Prims.list) FStar_Util.smap; nolabels : Prims.bool; use_zfuel_name : Prims.bool; encode_non_total_function_typ : Prims.bool}
 
 
-let is_Mkenv_t : env_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv_t"))))
+let is_Mkenv_t : env_t  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv_t"))))
 
 
 let print_env : env_t  ->  Prims.string = (fun e -> (let _148_300 = (FStar_All.pipe_right e.bindings (FStar_List.map (fun _51_2 -> (match (_51_2) with
@@ -417,7 +417,7 @@ end)))) with
 | None -> begin
 (let _148_335 = (let _148_334 = (FStar_Absyn_Print.strBvd a.FStar_Absyn_Syntax.v)
 in (FStar_Util.format1 "Bound term variable not found: %s" _148_334))
-in (FStar_All.failwith _148_335))
+in (failwith _148_335))
 end
 | Some (b, t) -> begin
 t
@@ -465,7 +465,7 @@ end)))) with
 | None -> begin
 (let _148_355 = (let _148_354 = (FStar_Absyn_Print.strBvd a.FStar_Absyn_Syntax.v)
 in (FStar_Util.format1 "Bound type variable not found: %s" _148_354))
-in (FStar_All.failwith _148_355))
+in (failwith _148_355))
 end
 | Some (b, t) -> begin
 t
@@ -503,7 +503,7 @@ let lookup_lid : env_t  ->  FStar_Ident.lident  ->  (Prims.string * FStar_ToSMT_
 | None -> begin
 (let _148_377 = (let _148_376 = (FStar_Absyn_Print.sli a)
 in (FStar_Util.format1 "Name not found: %s" _148_376))
-in (FStar_All.failwith _148_377))
+in (failwith _148_377))
 end
 | Some (s) -> begin
 s
@@ -564,7 +564,7 @@ end
 | _51_351 -> begin
 (let _148_401 = (let _148_400 = (FStar_Absyn_Print.sli a.FStar_Absyn_Syntax.v)
 in (FStar_Util.format1 "Name not found: %s" _148_400))
-in (FStar_All.failwith _148_401))
+in (failwith _148_401))
 end)
 end)
 end)))
@@ -634,7 +634,7 @@ end)))) with
 | None -> begin
 (let _148_423 = (let _148_422 = (FStar_Absyn_Print.sli a)
 in (FStar_Util.format1 "Type name not found: %s" _148_422))
-in (FStar_All.failwith _148_423))
+in (failwith _148_423))
 end
 | Some (s) -> begin
 s
@@ -652,7 +652,7 @@ in (FStar_All.pipe_right _148_434 Prims.snd))) with
 | None -> begin
 (let _148_436 = (let _148_435 = (FStar_Absyn_Print.sli a.FStar_Absyn_Syntax.v)
 in (FStar_Util.format1 "Type name not found: %s" _148_435))
-in (FStar_All.failwith _148_436))
+in (failwith _148_436))
 end
 | Some (t) -> begin
 t
@@ -871,7 +871,7 @@ type pattern =
 {pat_vars : (FStar_Absyn_Syntax.either_var * FStar_ToSMT_Term.fv) Prims.list; pat_term : Prims.unit  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decls_t); guard : FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term; projections : FStar_ToSMT_Term.term  ->  (FStar_Absyn_Syntax.either_var * FStar_ToSMT_Term.term) Prims.list}
 
 
-let is_Mkpattern : pattern  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkpattern"))))
+let is_Mkpattern : pattern  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkpattern"))))
 
 
 exception Let_rec_unencodeable
@@ -960,7 +960,7 @@ end
 | c -> begin
 (let _148_574 = (let _148_573 = (FStar_Absyn_Print.const_to_string c)
 in (FStar_Util.format1 "Unhandled constant: %s\n" _148_573))
-in (FStar_All.failwith _148_574))
+in (failwith _148_574))
 end))
 
 
@@ -985,7 +985,7 @@ end else begin
 (let _148_587 = (let _148_586 = (FStar_Range.string_of_range t0.FStar_Absyn_Syntax.pos)
 in (let _148_585 = (FStar_Absyn_Print.typ_to_string t0)
 in (FStar_Util.format2 "(%s) Expected a function typ; got %s" _148_586 _148_585)))
-in (FStar_All.failwith _148_587))
+in (failwith _148_587))
 end
 end)))
 in (aux true t0)))
@@ -1064,7 +1064,7 @@ in ((((app)::[])::[]), ((x)::[]), (_148_639)))
 in (FStar_ToSMT_Term.mkForall _148_640)))))
 end
 | _51_726 -> begin
-(FStar_All.failwith "Impossible: vars and guards are in 1-1 correspondence")
+(failwith "Impossible: vars and guards are in 1-1 correspondence")
 end))
 in (
 
@@ -1138,7 +1138,7 @@ end
 | _51_752 -> begin
 (let _148_659 = (let _148_658 = (FStar_Absyn_Print.kind_to_string k)
 in (FStar_Util.format1 "Unknown kind: %s" _148_658))
-in (FStar_All.failwith _148_659))
+in (failwith _148_659))
 end))
 and encode_knd : FStar_Absyn_Syntax.knd  ->  env_t  ->  FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decl Prims.list) = (fun k env t -> (
 
@@ -1438,7 +1438,7 @@ let _51_924 = (match ((FStar_Tc_Normalize.normalize_refinement [] env.tcenv t0))
 ((x), (f))
 end
 | _51_921 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (match (_51_924) with
 | (x, f) -> begin
@@ -1748,7 +1748,7 @@ in (let _148_773 = (FStar_Absyn_Print.tag_of_typ t0)
 in (let _148_772 = (FStar_Absyn_Print.typ_to_string t0)
 in (let _148_771 = (FStar_Absyn_Print.typ_to_string t)
 in (FStar_Util.format4 "(%s) Impossible: %s\n%s\n%s\n" _148_774 _148_773 _148_772 _148_771)))))
-in (FStar_All.failwith _148_775))
+in (failwith _148_775))
 end)))
 and encode_exp : FStar_Absyn_Syntax.exp  ->  env_t  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decls_t) = (fun e env -> (
 
@@ -1838,7 +1838,7 @@ let res_t = (match ((FStar_Absyn_Util.mk_subst_binder bs0 bs')) with
 (FStar_Absyn_Util.subst_typ s (FStar_Absyn_Util.comp_result c))
 end
 | _51_1134 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in (
 
@@ -1936,7 +1936,7 @@ end))
 end)
 end
 | _51_1175 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 end
 end))
@@ -2064,7 +2064,7 @@ in (match ((FStar_Absyn_Util.function_formals head_type)) with
 in (let _148_828 = (FStar_Absyn_Print.exp_to_string e0)
 in (let _148_827 = (FStar_Absyn_Print.typ_to_string head_type)
 in (FStar_Util.format3 "(%s) term is %s; head type is %s\n" _148_829 _148_828 _148_827))))
-in (FStar_All.failwith _148_830))
+in (failwith _148_830))
 end
 | Some (formals, c) -> begin
 (match (head.FStar_Absyn_Syntax.n) with
@@ -2082,7 +2082,7 @@ end)))))))
 end))
 end
 | FStar_Absyn_Syntax.Exp_let ((false, ({FStar_Absyn_Syntax.lbname = FStar_Util.Inr (_51_1295); FStar_Absyn_Syntax.lbtyp = _51_1293; FStar_Absyn_Syntax.lbeff = _51_1291; FStar_Absyn_Syntax.lbdef = _51_1289})::[]), _51_1301) -> begin
-(FStar_All.failwith "Impossible: already handled by encoding of Sig_let")
+(failwith "Impossible: already handled by encoding of Sig_let")
 end
 | FStar_Absyn_Syntax.Exp_let ((false, ({FStar_Absyn_Syntax.lbname = FStar_Util.Inl (x); FStar_Absyn_Syntax.lbtyp = t1; FStar_Absyn_Syntax.lbeff = _51_1307; FStar_Absyn_Syntax.lbdef = e1})::[]), e2) -> begin
 (
@@ -2191,7 +2191,7 @@ end
 (let _148_846 = (let _148_845 = (FStar_Range.string_of_range e.FStar_Absyn_Syntax.pos)
 in (let _148_844 = (FStar_Absyn_Print.exp_to_string e)
 in (FStar_Util.format2 "(%s): Impossible: encode_exp got %s" _148_845 _148_844)))
-in (FStar_All.failwith _148_846))
+in (failwith _148_846))
 end))))
 and encode_pat : env_t  ->  FStar_Absyn_Syntax.pat  ->  (env_t * pattern) Prims.list = (fun env pat -> (match (pat.FStar_Absyn_Syntax.v) with
 | FStar_Absyn_Syntax.Pat_disj (ps) -> begin
@@ -2244,7 +2244,7 @@ in (match (_51_1414) with
 
 let rec mk_guard = (fun pat scrutinee -> (match (pat.FStar_Absyn_Syntax.v) with
 | FStar_Absyn_Syntax.Pat_disj (_51_1419) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Absyn_Syntax.Pat_var (_)) | (FStar_Absyn_Syntax.Pat_wild (_)) | (FStar_Absyn_Syntax.Pat_tvar (_)) | (FStar_Absyn_Syntax.Pat_twild (_)) | (FStar_Absyn_Syntax.Pat_dot_term (_)) | (FStar_Absyn_Syntax.Pat_dot_typ (_)) -> begin
 FStar_ToSMT_Term.mkTrue
@@ -2274,7 +2274,7 @@ in (
 
 let rec mk_projections = (fun pat scrutinee -> (match (pat.FStar_Absyn_Syntax.v) with
 | FStar_Absyn_Syntax.Pat_disj (_51_1459) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Absyn_Syntax.Pat_dot_term (x, _)) | (FStar_Absyn_Syntax.Pat_var (x)) | (FStar_Absyn_Syntax.Pat_wild (x)) -> begin
 (((FStar_Util.Inr (x)), (scrutinee)))::[]
@@ -2352,7 +2352,7 @@ in (match (_51_1527) with
 ((t), (decls))
 end
 | _51_1530 -> begin
-(FStar_All.failwith "Unexpected labels in formula")
+(failwith "Unexpected labels in formula")
 end)
 end)))
 and encode_function_type_as_formula : FStar_ToSMT_Term.term Prims.option  ->  FStar_Absyn_Syntax.exp Prims.option  ->  FStar_Absyn_Syntax.typ  ->  env_t  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decls_t) = (fun induction_on new_pats t env -> (
@@ -2383,7 +2383,7 @@ end
 (FStar_Absyn_Syntax.targ t)
 end
 | _51_1641 -> begin
-(FStar_All.failwith "Unexpected pattern term")
+(failwith "Unexpected pattern term")
 end))
 in (
 
@@ -2420,11 +2420,11 @@ in (let _148_898 = (lemma_pats pats')
 in ((binders), (pre), (post), (_148_898))))
 end
 | _51_1715 -> begin
-(FStar_All.failwith "impos")
+(failwith "impos")
 end)
 end
 | _51_1717 -> begin
-(FStar_All.failwith "Impos")
+(failwith "Impos")
 end)
 in (match (_51_1722) with
 | (binders, pre, post, patterns) -> begin
@@ -2571,7 +2571,7 @@ in (match (_51_1816) with
 end))
 end
 | _51_1818 -> begin
-(FStar_All.failwith "Expected a formula")
+(failwith "Expected a formula")
 end)
 end)) l (([]), ([]), ([])))
 in (match (_51_1822) with
@@ -2593,7 +2593,7 @@ let bin_op = (fun f _51_14 -> (match (_51_14) with
 (f ((t1), (t2)))
 end
 | _51_1836 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 in (
 
@@ -2630,7 +2630,7 @@ end)
 end))
 end
 | _51_1876 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (
 
@@ -2660,7 +2660,7 @@ end))
 end))
 end
 | _51_1909 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (
 
@@ -2869,7 +2869,7 @@ type prims_t =
 {mk : FStar_Ident.lident  ->  Prims.string  ->  FStar_ToSMT_Term.decl Prims.list; is : FStar_Ident.lident  ->  Prims.bool}
 
 
-let is_Mkprims_t : prims_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkprims_t"))))
+let is_Mkprims_t : prims_t  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkprims_t"))))
 
 
 let prims : prims_t = (
@@ -4047,7 +4047,7 @@ in (match (_51_2556) with
 (
 
 let _51_2557 = if ((FStar_List.length indices) <> (FStar_List.length vars)) then begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end else begin
 ()
 end
@@ -4156,7 +4156,7 @@ let _51_2629 = (match ((FStar_Util.first_N projectee_pos vars)) with
 ((xx), (suffix))
 end
 | _51_2626 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (match (_51_2629) with
 | (xx, suffix) -> begin
@@ -4542,7 +4542,7 @@ in (FStar_ToSMT_Term.mk_Precedes _148_2062 dapp))
 in (_148_2063)::[])
 end
 | _51_2810 -> begin
-(FStar_All.failwith "unexpected sort")
+(failwith "unexpected sort")
 end))))
 in (let _148_2070 = (let _148_2069 = (let _148_2068 = (let _148_2067 = (add_fuel ((fuel_var), (FStar_ToSMT_Term.Fuel_sort)) (FStar_List.append vars arg_binders))
 in (let _148_2066 = (let _148_2065 = (let _148_2064 = (FStar_ToSMT_Term.mk_and_l prec)
@@ -4680,7 +4680,7 @@ in ((x.FStar_Absyn_Syntax.v), (_148_2116)))
 in FStar_Util.Inr (_148_2117))
 end
 | _51_2904 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)) formals binders)
 in (
 
@@ -4724,7 +4724,7 @@ let tres = (match ((FStar_Absyn_Util.mk_subst_binder bs0 formals)) with
 (FStar_Absyn_Util.subst_typ s tres)
 end
 | _51_2946 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (
 
@@ -4749,7 +4749,7 @@ end
 (let _148_2133 = (let _148_2132 = (FStar_Absyn_Print.exp_to_string e)
 in (let _148_2131 = (FStar_Absyn_Print.typ_to_string t_norm)
 in (FStar_Util.format3 "Impossible! let-bound lambda %s = %s has a type that\'s not a function: %s\n" flid.FStar_Ident.str _148_2132 _148_2131)))
-in (FStar_All.failwith _148_2133))
+in (failwith _148_2133))
 end)
 end
 | _51_2955 -> begin
@@ -4877,7 +4877,7 @@ end))
 end))
 end
 | _51_3045 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end else begin
 (
@@ -5521,7 +5521,7 @@ in (FStar_ST.op_Colon_Equals last_env _148_2324)))
 
 let get_env : FStar_Tc_Env.env  ->  env_t = (fun tcenv -> (match ((FStar_ST.read last_env)) with
 | [] -> begin
-(FStar_All.failwith "No env; call init first!")
+(failwith "No env; call init first!")
 end
 | (e)::_51_3410 -> begin
 (
@@ -5533,7 +5533,7 @@ end))
 
 let set_env : env_t  ->  Prims.unit = (fun env -> (match ((FStar_ST.read last_env)) with
 | [] -> begin
-(FStar_All.failwith "Empty env stack")
+(failwith "Empty env stack")
 end
 | (_51_3419)::tl -> begin
 (FStar_ST.op_Colon_Equals last_env ((env)::tl))
@@ -5544,7 +5544,7 @@ let push_env : Prims.unit  ->  Prims.unit = (fun _51_3421 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read last_env)) with
 | [] -> begin
-(FStar_All.failwith "Empty env stack")
+(failwith "Empty env stack")
 end
 | (hd)::tl -> begin
 (
@@ -5565,7 +5565,7 @@ let pop_env : Prims.unit  ->  Prims.unit = (fun _51_3430 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read last_env)) with
 | [] -> begin
-(FStar_All.failwith "Popping an empty stack")
+(failwith "Popping an empty stack")
 end
 | (_51_3434)::tl -> begin
 (FStar_ST.op_Colon_Equals last_env tl)
@@ -5592,7 +5592,7 @@ let commit_mark_env : Prims.unit  ->  Prims.unit = (fun _51_3438 -> (match (()) 
 (FStar_ST.op_Colon_Equals last_env ((hd)::tl))
 end
 | _51_3446 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end))
 

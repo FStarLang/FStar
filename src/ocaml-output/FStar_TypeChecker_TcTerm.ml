@@ -409,7 +409,7 @@ in (FStar_TypeChecker_Errors.warn t.FStar_Syntax_Syntax.pos _156_142))
 end))
 end
 | _59_204 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end else begin
 ()
@@ -600,7 +600,7 @@ in (
 let top = (FStar_Syntax_Subst.compress e)
 in (match (top.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_59_303) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Syntax_Syntax.Tm_uinst (_)) | (FStar_Syntax_Syntax.Tm_uvar (_)) | (FStar_Syntax_Syntax.Tm_bvar (_)) | (FStar_Syntax_Syntax.Tm_name (_)) | (FStar_Syntax_Syntax.Tm_fvar (_)) | (FStar_Syntax_Syntax.Tm_constant (_)) | (FStar_Syntax_Syntax.Tm_abs (_)) | (FStar_Syntax_Syntax.Tm_arrow (_)) | (FStar_Syntax_Syntax.Tm_refine (_)) | (FStar_Syntax_Syntax.Tm_type (_)) | (FStar_Syntax_Syntax.Tm_unknown) -> begin
 (tc_value env e)
@@ -864,7 +864,7 @@ in _156_273.FStar_Syntax_Syntax.n)) with
 u
 end
 | _59_559 -> begin
-(FStar_All.failwith "Unexpected result type of computation")
+(failwith "Unexpected result type of computation")
 end)
 end))
 in (
@@ -953,7 +953,7 @@ in _156_289.FStar_Syntax_Syntax.n)) with
 ((t), (res), (wp), (g))
 end
 | _59_620 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end)))))
 in (match (_59_625) with
@@ -1306,7 +1306,7 @@ in (match (top.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_bvar (x) -> begin
 (let _156_361 = (let _156_360 = (FStar_Syntax_Print.term_to_string top)
 in (FStar_Util.format1 "Impossible: Violation of locally nameless convention: %s" _156_360))
-in (FStar_All.failwith _156_361))
+in (failwith _156_361))
 end
 | FStar_Syntax_Syntax.Tm_uvar (u, t1) -> begin
 (
@@ -1413,7 +1413,7 @@ end else begin
 (FStar_Unionfind.change u'' (Some (u)))
 end
 | _59_897 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)) us' us)
 end
 in (
@@ -1630,7 +1630,7 @@ end
 (let _156_396 = (let _156_395 = (FStar_Syntax_Print.term_to_string top)
 in (let _156_394 = (FStar_Syntax_Print.tag_of_term top)
 in (FStar_Util.format2 "Unexpected value: %s (%s)" _156_395 _156_394)))
-in (FStar_All.failwith _156_396))
+in (failwith _156_396))
 end)))))
 and tc_constant : FStar_Range.range  ->  FStar_Const.sconst  ->  FStar_Syntax_Syntax.typ = (fun r c -> (match (c) with
 | FStar_Const.Const_unit -> begin
@@ -1643,7 +1643,7 @@ end
 FStar_TypeChecker_Common.t_int
 end
 | FStar_Const.Const_int (_59_1018, Some (_59_1020)) -> begin
-(FStar_All.failwith "machine integers should be desugared")
+(failwith "machine integers should be desugared")
 end
 | FStar_Const.Const_string (_59_1025) -> begin
 FStar_TypeChecker_Common.t_string
@@ -1806,10 +1806,10 @@ let rec aux = (fun u -> (
 let u = (FStar_Syntax_Subst.compress_univ u)
 in (match (u) with
 | FStar_Syntax_Syntax.U_bvar (_59_1128) -> begin
-(FStar_All.failwith "Impossible: locally nameless")
+(failwith "Impossible: locally nameless")
 end
 | FStar_Syntax_Syntax.U_unknown -> begin
-(FStar_All.failwith "Unknown universe")
+(failwith "Unknown universe")
 end
 | (FStar_Syntax_Syntax.U_unif (_)) | (FStar_Syntax_Syntax.U_zero) -> begin
 u
@@ -1943,7 +1943,7 @@ let _59_1231 = (match (env.FStar_TypeChecker_Env.letrecs) with
 ()
 end
 | _59_1230 -> begin
-(FStar_All.failwith "Impossible: Can\'t have a let rec annotation but no expected type")
+(failwith "Impossible: Can\'t have a let rec annotation but no expected type")
 end)
 in (
 
@@ -1989,7 +1989,7 @@ let _59_1283 = (match (env.FStar_TypeChecker_Env.letrecs) with
 ()
 end
 | _59_1282 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in (
 
@@ -3124,7 +3124,7 @@ let fail = (fun _59_1959 -> (match (()) with
 in (let _156_715 = (FStar_Syntax_Print.term_to_string pat_exp)
 in (let _156_714 = (FStar_Syntax_Print.tag_of_term pat_exp)
 in (FStar_Util.format3 "tc_eqn: Impossible (%s) %s (%s)" _156_716 _156_715 _156_714))))
-in (FStar_All.failwith _156_717))
+in (failwith _156_717))
 end))
 in (
 
@@ -3347,7 +3347,7 @@ end))
 end))
 end
 | _59_2091 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)))
 and check_inner_let : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp * FStar_TypeChecker_Env.guard_t) = (fun env e -> (
 
@@ -3465,7 +3465,7 @@ end)))
 end)))
 end
 | _59_2142 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)))
 and check_top_level_let_rec : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp * FStar_TypeChecker_Env.guard_t) = (fun env top -> (
 
@@ -3541,7 +3541,7 @@ end))
 end))
 end
 | _59_2183 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)))
 and check_inner_let_rec : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp * FStar_TypeChecker_Env.guard_t) = (fun env top -> (
 
@@ -3644,7 +3644,7 @@ end))
 end))
 end
 | _59_2242 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)))
 and build_let_rec_env : Prims.bool  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.letbinding Prims.list  ->  (FStar_Syntax_Syntax.letbinding Prims.list * FStar_TypeChecker_Env.env_t) = (fun top_level env lbs -> (
 
@@ -3822,7 +3822,7 @@ in (match (t.FStar_Syntax_Syntax.n) with
 (
 
 let _59_2334 = if (lb.FStar_Syntax_Syntax.lbunivs <> []) then begin
-(FStar_All.failwith "Impossible: non-empty universe variables but the type is unknown")
+(failwith "Impossible: non-empty universe variables but the type is unknown")
 end else begin
 ()
 end

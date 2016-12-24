@@ -234,7 +234,7 @@ type bgproc =
 {grab : Prims.unit  ->  FStar_Util.proc; release : Prims.unit  ->  Prims.unit; refresh : Prims.unit  ->  Prims.unit}
 
 
-let is_Mkbgproc : bgproc  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbgproc"))))
+let is_Mkbgproc : bgproc  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkbgproc"))))
 
 
 let queries_dot_smt2 : FStar_Util.file_handle Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
@@ -413,7 +413,7 @@ end
 (let _146_128 = (let _146_127 = (let _146_126 = (FStar_List.map (fun l -> (FStar_Util.format1 "<%s>" (FStar_Util.trim_string l))) lines)
 in (FStar_String.concat "\n" _146_126))
 in (FStar_Util.format1 "Got output lines: %s\n" _146_127))
-in (FStar_All.pipe_left FStar_All.failwith _146_128))
+in (FStar_All.pipe_left failwith _146_128))
 end))
 in (result lines)))))
 in (
@@ -476,7 +476,7 @@ type 'a job =
 {job : Prims.unit  ->  'a; callback : 'a  ->  Prims.unit}
 
 
-let is_Mkjob = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkjob"))))
+let is_Mkjob = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkjob"))))
 
 
 type z3job =
@@ -560,7 +560,7 @@ let rec dequeue' : Prims.unit  ->  Prims.unit = (fun _49_225 -> (match (()) with
 
 let j = (match ((FStar_ST.read job_queue)) with
 | [] -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (hd)::tl -> begin
 (
@@ -729,7 +729,7 @@ let _49_295 = (match ((FStar_ST.read fresh_scope)) with
 (FStar_ST.op_Colon_Equals fresh_scope (((FStar_List.append hd decls))::tl))
 end
 | _49_294 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in (let _146_220 = (let _146_219 = (FStar_ST.read bg_scope)
 in (FStar_List.append (FStar_List.rev decls) _146_219))
@@ -777,7 +777,7 @@ let commit_mark = (fun msg -> (match ((FStar_ST.read fresh_scope)) with
 (FStar_ST.op_Colon_Equals fresh_scope (((FStar_List.append hd s))::tl))
 end
 | _49_316 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 
 

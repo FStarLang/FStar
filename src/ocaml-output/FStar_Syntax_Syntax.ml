@@ -59,7 +59,7 @@ type ('a, 't) withinfo_t =
 {v : 'a; ty : 't; p : FStar_Range.range}
 
 
-let is_Mkwithinfo_t = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkwithinfo_t"))))
+let is_Mkwithinfo_t = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkwithinfo_t"))))
 
 
 type 't var =
@@ -639,10 +639,10 @@ false
 end))
 
 
-let is_Mkletbinding : letbinding  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkletbinding"))))
+let is_Mkletbinding : letbinding  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkletbinding"))))
 
 
-let is_Mkcomp_typ : comp_typ  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkcomp_typ"))))
+let is_Mkcomp_typ : comp_typ  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkcomp_typ"))))
 
 
 let is_Total = (fun _discr_ -> (match (_discr_) with
@@ -951,19 +951,19 @@ false
 end))
 
 
-let is_Mksyntax = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksyntax"))))
+let is_Mksyntax = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mksyntax"))))
 
 
-let is_Mkbv : bv  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbv"))))
+let is_Mkbv : bv  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkbv"))))
 
 
-let is_Mkfv : fv  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfv"))))
+let is_Mkfv : fv  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkfv"))))
 
 
-let is_Mkfree_vars : free_vars  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfree_vars"))))
+let is_Mkfree_vars : free_vars  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkfree_vars"))))
 
 
-let is_Mklcomp : lcomp  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklcomp"))))
+let is_Mklcomp : lcomp  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mklcomp"))))
 
 
 let ___Tm_bvar____0 = (fun projectee -> (match (projectee) with
@@ -1513,21 +1513,21 @@ type monad_abbrev =
 {mabbrev : FStar_Ident.lident; parms : binders; def : typ}
 
 
-let is_Mkmonad_abbrev : monad_abbrev  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmonad_abbrev"))))
+let is_Mkmonad_abbrev : monad_abbrev  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkmonad_abbrev"))))
 
 
 type sub_eff =
 {source : FStar_Ident.lident; target : FStar_Ident.lident; lift_wp : tscheme Prims.option; lift : tscheme Prims.option}
 
 
-let is_Mksub_eff : sub_eff  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksub_eff"))))
+let is_Mksub_eff : sub_eff  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mksub_eff"))))
 
 
 type action =
 {action_name : FStar_Ident.lident; action_unqualified_name : FStar_Ident.ident; action_univs : univ_names; action_defn : term; action_typ : typ}
 
 
-let is_Mkaction : action  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkaction"))))
+let is_Mkaction : action  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkaction"))))
 
 
 type eff_decl =
@@ -1547,7 +1547,7 @@ type eff_decl =
 | Sig_pragma of (pragma * FStar_Range.range)
 
 
-let is_Mkeff_decl : eff_decl  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkeff_decl"))))
+let is_Mkeff_decl : eff_decl  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkeff_decl"))))
 
 
 let is_Sig_inductive_typ = (fun _discr_ -> (match (_discr_) with
@@ -1738,7 +1738,7 @@ type modul =
 {name : FStar_Ident.lident; declarations : sigelts; exports : sigelts; is_interface : Prims.bool}
 
 
-let is_Mkmodul : modul  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmodul"))))
+let is_Mkmodul : modul  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkmodul"))))
 
 
 type path =
@@ -1907,7 +1907,7 @@ end
 (mk (Tm_uinst (((t), (us)))) None t.pos)
 end
 | _34_392 -> begin
-(FStar_All.failwith "Unexpected universe instantiation")
+(failwith "Unexpected universe instantiation")
 end)
 end))
 
@@ -2071,7 +2071,7 @@ end
 (aux b p)
 end
 | Pat_disj ([]) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (let _131_1432 = (aux [] p)
 in (FStar_All.pipe_left FStar_List.rev _131_1432))))

@@ -251,7 +251,7 @@ type cfg =
 {steps : steps; tcenv : FStar_TypeChecker_Env.env; delta_level : FStar_TypeChecker_Env.delta_level Prims.list}
 
 
-let is_Mkcfg : cfg  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkcfg"))))
+let is_Mkcfg : cfg  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkcfg"))))
 
 
 type branches =
@@ -434,7 +434,7 @@ let mk = (fun t r -> (FStar_Syntax_Syntax.mk t None r))
 
 let set_memo = (fun r t -> (match ((FStar_ST.read r)) with
 | Some (_54_76) -> begin
-(FStar_All.failwith "Unexpected set_memo: thunk already evaluated")
+(failwith "Unexpected set_memo: thunk already evaluated")
 end
 | None -> begin
 (FStar_ST.op_Colon_Equals r (Some (t)))
@@ -511,7 +511,7 @@ with
 | _54_143 -> begin
 (let _151_256 = (let _151_255 = (FStar_Syntax_Print.db_to_string x)
 in (FStar_Util.format1 "Failed to find %s\n" _151_255))
-in (FStar_All.failwith _151_256))
+in (failwith _151_256))
 end)
 
 
@@ -644,7 +644,7 @@ end
 (u)::[]
 end
 | _54_223 -> begin
-(FStar_All.failwith "Impossible: universe variable bound to a term")
+(failwith "Impossible: universe variable bound to a term")
 end)
 end)
 with
@@ -652,7 +652,7 @@ with
 if (FStar_All.pipe_right cfg.steps (FStar_List.contains AllowUnboundUniverses)) then begin
 (FStar_Syntax_Syntax.U_unknown)::[]
 end else begin
-(FStar_All.failwith "Universe variable not found")
+(failwith "Universe variable not found")
 end
 end
 end
@@ -738,7 +738,7 @@ end
 let t = (FStar_Syntax_Subst.compress t)
 in (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_54_280) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Syntax_Syntax.Tm_unknown) | (FStar_Syntax_Syntax.Tm_constant (_)) | (FStar_Syntax_Syntax.Tm_name (_)) | (FStar_Syntax_Syntax.Tm_fvar (_)) -> begin
 t
@@ -758,7 +758,7 @@ end
 | FStar_Syntax_Syntax.Tm_bvar (x) -> begin
 (match ((lookup_bvar env x)) with
 | Univ (_54_304) -> begin
-(FStar_All.failwith "Impossible: term variable is bound to a universe")
+(failwith "Impossible: term variable is bound to a universe")
 end
 | Dummy -> begin
 t
@@ -944,7 +944,7 @@ let rec norm_pat = (fun env p -> (match (p.FStar_Syntax_Syntax.v) with
 ((p), (env))
 end
 | FStar_Syntax_Syntax.Pat_disj ([]) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Syntax_Syntax.Pat_disj ((hd)::tl) -> begin
 (
@@ -1436,7 +1436,7 @@ let get_norm_request = (fun args -> (match (args) with
 tm
 end
 | _54_975 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 
 
@@ -1456,7 +1456,7 @@ in (FStar_Util.print3 ">>> %s\nNorm %s with top of the stack %s \n" _151_776 _15
 end)))
 in (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_54_985) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Syntax_Syntax.Tm_unknown) | (FStar_Syntax_Syntax.Tm_uvar (_)) | (FStar_Syntax_Syntax.Tm_constant (_)) | (FStar_Syntax_Syntax.Tm_name (_)) | (FStar_Syntax_Syntax.Tm_fvar ({FStar_Syntax_Syntax.fv_name = _; FStar_Syntax_Syntax.fv_delta = FStar_Syntax_Syntax.Delta_constant; FStar_Syntax_Syntax.fv_qual = _})) | (FStar_Syntax_Syntax.Tm_fvar ({FStar_Syntax_Syntax.fv_name = _; FStar_Syntax_Syntax.fv_delta = _; FStar_Syntax_Syntax.fv_qual = Some (FStar_Syntax_Syntax.Data_ctor)})) | (FStar_Syntax_Syntax.Tm_fvar ({FStar_Syntax_Syntax.fv_name = _; FStar_Syntax_Syntax.fv_delta = _; FStar_Syntax_Syntax.fv_qual = Some (FStar_Syntax_Syntax.Record_ctor (_))})) -> begin
 (rebuild cfg env stack t)
@@ -1597,7 +1597,7 @@ end
 | _54_1135 -> begin
 (let _151_793 = (let _151_792 = (FStar_Syntax_Print.lid_to_string f.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
 in (FStar_Util.format1 "Impossible: missing universe instantiation on %s" _151_792))
-in (FStar_All.failwith _151_793))
+in (failwith _151_793))
 end)
 end else begin
 (norm cfg env stack t)
@@ -1608,10 +1608,10 @@ end
 | FStar_Syntax_Syntax.Tm_bvar (x) -> begin
 (match ((lookup_bvar env x)) with
 | Univ (_54_1139) -> begin
-(FStar_All.failwith "Impossible: term variable is bound to a universe")
+(failwith "Impossible: term variable is bound to a universe")
 end
 | Dummy -> begin
-(FStar_All.failwith "Term variable not found")
+(failwith "Term variable not found")
 end
 | Clos (env, t0, r, fix) -> begin
 if ((not (fix)) || (not ((FStar_List.contains (Exclude (Zeta)) cfg.steps)))) then begin
@@ -1645,10 +1645,10 @@ end
 | FStar_Syntax_Syntax.Tm_abs (bs, body, lopt) -> begin
 (match (stack) with
 | (UnivArgs (_54_1169))::_54_1167 -> begin
-(FStar_All.failwith "Ill-typed term: universes cannot be applied to term abstraction")
+(failwith "Ill-typed term: universes cannot be applied to term abstraction")
 end
 | (Match (_54_1175))::_54_1173 -> begin
-(FStar_All.failwith "Ill-typed term: cannot pattern match an abstraction")
+(failwith "Ill-typed term: cannot pattern match an abstraction")
 end
 | (Arg (c, _54_1181, _54_1183))::stack_rest -> begin
 (match (c) with
@@ -1658,7 +1658,7 @@ end
 | _54_1191 -> begin
 (match (bs) with
 | [] -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (_54_1194)::[] -> begin
 (match (lopt) with
@@ -2057,7 +2057,7 @@ in FStar_Syntax_Syntax.Tm_uinst (_151_878))
 in (FStar_Syntax_Syntax.mk _151_879 None t.FStar_Syntax_Syntax.pos))
 end
 | _54_1532 -> begin
-(FStar_All.failwith "NIY : Reification of indexed effects")
+(failwith "NIY : Reification of indexed effects")
 end)
 in (
 
@@ -2080,7 +2080,7 @@ in (let _151_894 = (FStar_List.tl stack)
 in (norm cfg env _151_894 reified)))))))
 end
 | FStar_Util.Inr (_54_1536) -> begin
-(FStar_All.failwith "Cannot reify a top-level let binding")
+(failwith "Cannot reify a top-level let binding")
 end)
 end)))
 end
@@ -2141,7 +2141,7 @@ let rec bind_on_lift = (fun args acc -> (match (args) with
 | [] -> begin
 (match ((FStar_List.rev acc)) with
 | [] -> begin
-(FStar_All.failwith "bind_on_lift should be always called with a non-empty list")
+(failwith "bind_on_lift should be always called with a non-empty list")
 end
 | ((head, _54_1582))::args -> begin
 (
@@ -2201,7 +2201,7 @@ in FStar_Syntax_Syntax.Tm_uinst (_151_917))
 in (FStar_Syntax_Syntax.mk _151_918 None e0.FStar_Syntax_Syntax.pos))
 end
 | _54_1622 -> begin
-(FStar_All.failwith "NIY : Reification of indexed effects")
+(failwith "NIY : Reification of indexed effects")
 end)
 in (let _151_932 = (let _151_931 = (let _151_930 = (let _151_929 = (FStar_Syntax_Syntax.as_arg t')
 in (let _151_928 = (let _151_927 = (FStar_Syntax_Syntax.as_arg t)
@@ -2336,7 +2336,7 @@ in FStar_Syntax_Syntax.Tm_uinst (_151_947))
 in (FStar_Syntax_Syntax.mk _151_948 None e.FStar_Syntax_Syntax.pos))
 end
 | _54_1718 -> begin
-(FStar_All.failwith "NIY : Reification of indexed effects")
+(failwith "NIY : Reification of indexed effects")
 end)
 in (let _151_954 = (let _151_953 = (let _151_952 = (let _151_951 = (FStar_Syntax_Syntax.as_arg t)
 in (let _151_950 = (let _151_949 = (FStar_Syntax_Syntax.as_arg e)
@@ -2347,7 +2347,7 @@ in FStar_Syntax_Syntax.Tm_app (_151_953))
 in (FStar_Syntax_Syntax.mk _151_954 None e.FStar_Syntax_Syntax.pos)))
 end)))
 end else begin
-(FStar_All.failwith "NYI: non pure monadic lift normalisation")
+(failwith "NYI: non pure monadic lift normalisation")
 end)
 and norm_pattern_args : cfg  ->  env  ->  FStar_Syntax_Syntax.args Prims.list  ->  FStar_Syntax_Syntax.args Prims.list = (fun cfg env args -> (FStar_All.pipe_right args (FStar_List.map (FStar_List.map (fun _54_1725 -> (match (_54_1725) with
 | (a, imp) -> begin
@@ -2578,7 +2578,7 @@ in {FStar_Syntax_Syntax.n = _54_1877.FStar_Syntax_Syntax.n; FStar_Syntax_Syntax.
 in (rebuild cfg env stack _151_1019))))
 end
 | ((Arg (Univ (_), _, _))::_) | ((Arg (Dummy, _, _))::_) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (UnivArgs (us, r))::stack -> begin
 (
@@ -2696,7 +2696,7 @@ let rec norm_pat = (fun env p -> (match (p.FStar_Syntax_Syntax.v) with
 ((p), (env))
 end
 | FStar_Syntax_Syntax.Pat_disj ([]) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Syntax_Syntax.Pat_disj ((hd)::tl) -> begin
 (

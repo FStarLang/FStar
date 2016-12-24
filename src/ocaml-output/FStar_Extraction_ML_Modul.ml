@@ -127,14 +127,14 @@ type data_constructor =
 {dname : FStar_Ident.lident; dtyp : FStar_Syntax_Syntax.typ}
 
 
-let is_Mkdata_constructor : data_constructor  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkdata_constructor"))))
+let is_Mkdata_constructor : data_constructor  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkdata_constructor"))))
 
 
 type inductive_family =
 {iname : FStar_Ident.lident; iparams : FStar_Syntax_Syntax.binders; ityp : FStar_Syntax_Syntax.term; idatas : data_constructor Prims.list; iquals : FStar_Syntax_Syntax.qualifier Prims.list}
 
 
-let is_Mkinductive_family : inductive_family  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkinductive_family"))))
+let is_Mkinductive_family : inductive_family  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkinductive_family"))))
 
 
 let print_ifamily : inductive_family  ->  Prims.unit = (fun i -> (let _179_79 = (FStar_Syntax_Print.lid_to_string i.iname)
@@ -297,7 +297,7 @@ in (match (_82_223) with
 end)))
 end
 | _82_225 -> begin
-(FStar_All.failwith "Unexpected signature element")
+(failwith "Unexpected signature element")
 end))))
 
 
@@ -345,7 +345,7 @@ in ((_179_138), (tysc)))
 end)))
 end
 | _82_271 -> begin
-(FStar_All.failwith "Not an fv")
+(failwith "Not an fv")
 end))
 in (
 
@@ -527,7 +527,7 @@ end
 | _82_417 -> begin
 (let _179_164 = (let _179_163 = (FStar_Extraction_ML_Code.string_of_mlexpr g.FStar_Extraction_ML_UEnv.currentModule ml_let)
 in (FStar_Util.format1 "Impossible: Translated a let to a non-let: %s" _179_163))
-in (FStar_All.failwith _179_164))
+in (failwith _179_164))
 end)
 end)))
 end
@@ -605,7 +605,7 @@ in ((g), (_179_181)))
 end))
 end
 | FStar_Syntax_Syntax.Sig_new_effect_for_free (_82_470) -> begin
-(FStar_All.failwith "impossible -- removed by tc.fs")
+(failwith "impossible -- removed by tc.fs")
 end
 | (FStar_Syntax_Syntax.Sig_assume (_)) | (FStar_Syntax_Syntax.Sig_sub_effect (_)) | (FStar_Syntax_Syntax.Sig_effect_abbrev (_)) | (FStar_Syntax_Syntax.Sig_pragma (_)) -> begin
 ((g), ([]))
@@ -640,17 +640,14 @@ in ((g), ([])))
 end else begin
 (
 
-let _82_497 = ()
-in (
-
-let _82_501 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
-in (match (_82_501) with
+let _82_499 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
+in (match (_82_499) with
 | (g, sigs) -> begin
 (
 
 let mlm = (FStar_List.flatten sigs)
 in ((g), ((FStar_Extraction_ML_Syntax.MLLib ((((name), (Some ((([]), (mlm)))), (FStar_Extraction_ML_Syntax.MLLib ([]))))::[]))::[])))
-end)))
+end))
 end)))))
 
 

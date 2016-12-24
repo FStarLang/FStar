@@ -5,14 +5,14 @@ type ident =
 {idText : Prims.string; idRange : FStar_Range.range}
 
 
-let is_Mkident : ident  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkident"))))
+let is_Mkident : ident  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkident"))))
 
 
 type lident =
 {ns : ident Prims.list; ident : ident; nsstr : Prims.string; str : Prims.string}
 
 
-let is_Mklident : lident  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklident"))))
+let is_Mklident : lident  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mklident"))))
 
 
 type lid =

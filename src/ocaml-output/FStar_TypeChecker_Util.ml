@@ -48,7 +48,7 @@ let as_uvar : FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.uvar = (fun _57_1
 uv
 end
 | _57_53 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 
 
@@ -119,7 +119,7 @@ let force_sort' : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_S
 (let _154_54 = (let _154_53 = (FStar_Range.string_of_range s.FStar_Syntax_Syntax.pos)
 in (let _154_52 = (FStar_Syntax_Print.term_to_string s)
 in (FStar_Util.format2 "(%s) Impossible: Forced tk not present on %s" _154_53 _154_52)))
-in (FStar_All.failwith _154_54))
+in (failwith _154_54))
 end
 | Some (tk) -> begin
 tk
@@ -143,7 +143,7 @@ in (match (t.FStar_Syntax_Syntax.n) with
 (
 
 let _57_108 = if (univ_vars <> []) then begin
-(FStar_All.failwith "Impossible: non-empty universe variables but the type is unknown")
+(failwith "Impossible: non-empty universe variables but the type is unknown")
 end else begin
 ()
 end
@@ -407,7 +407,7 @@ in {FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_cons (((fv), ((FStar_List.re
 end))
 end
 | FStar_Syntax_Syntax.Pat_disj (_57_272) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (
 
@@ -532,7 +532,7 @@ in (
 
 let top_level_pat_as_args = (fun env p -> (match (p.FStar_Syntax_Syntax.v) with
 | FStar_Syntax_Syntax.Pat_disj ([]) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | FStar_Syntax_Syntax.Pat_disj ((q)::pats) -> begin
 (
@@ -622,7 +622,7 @@ let _57_454 = if (not ((FStar_Syntax_Syntax.bv_eq x y))) then begin
 (let _154_182 = (let _154_181 = (FStar_Syntax_Print.bv_to_string x)
 in (let _154_180 = (FStar_Syntax_Print.bv_to_string y)
 in (FStar_Util.format2 "Expected pattern variable %s; got %s" _154_181 _154_180)))
-in (FStar_All.failwith _154_182))
+in (failwith _154_182))
 end else begin
 ()
 end
@@ -653,7 +653,7 @@ let _57_467 = if (FStar_All.pipe_right (FStar_Syntax_Syntax.bv_eq x y) Prims.op_
 (let _154_187 = (let _154_186 = (FStar_Syntax_Print.bv_to_string x)
 in (let _154_185 = (FStar_Syntax_Print.bv_to_string y)
 in (FStar_Util.format2 "Expected pattern variable %s; got %s" _154_186 _154_185)))
-in (FStar_All.failwith _154_187))
+in (failwith _154_187))
 end else begin
 ()
 end
@@ -685,7 +685,7 @@ end
 
 let _57_492 = if (not ((FStar_Syntax_Syntax.fv_eq fv fv'))) then begin
 (let _154_188 = (FStar_Util.format2 "Expected pattern constructor %s; got %s" fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str fv'.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str)
-in (FStar_All.failwith _154_188))
+in (failwith _154_188))
 end else begin
 ()
 end
@@ -698,7 +698,7 @@ end
 let _57_535 = if (let _154_190 = (FStar_Syntax_Syntax.fv_eq fv fv')
 in (FStar_All.pipe_right _154_190 Prims.op_Negation)) then begin
 (let _154_191 = (FStar_Util.format2 "Expected pattern constructor %s; got %s" fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str fv'.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str)
-in (FStar_All.failwith _154_191))
+in (failwith _154_191))
 end else begin
 ()
 end
@@ -737,7 +737,7 @@ end
 (let _154_204 = (let _154_203 = (FStar_Syntax_Print.pat_to_string p)
 in (let _154_202 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format2 "Unexpected number of pattern arguments: \n\t%s\n\t%s\n" _154_203 _154_202)))
-in (FStar_All.failwith _154_204))
+in (failwith _154_204))
 end))
 in (match_args [] args argpats))))
 end
@@ -747,7 +747,7 @@ in (let _154_207 = (FStar_Syntax_Print.pat_to_string qq)
 in (let _154_206 = (let _154_205 = (FStar_All.pipe_right exps (FStar_List.map FStar_Syntax_Print.term_to_string))
 in (FStar_All.pipe_right _154_205 (FStar_String.concat "\n\t")))
 in (FStar_Util.format3 "(%s) Impossible: pattern to decorate is %s; expression is %s\n" _154_208 _154_207 _154_206))))
-in (FStar_All.failwith _154_209))
+in (failwith _154_209))
 end))))
 in (match (((p.FStar_Syntax_Syntax.v), (exps))) with
 | (FStar_Syntax_Syntax.Pat_disj (ps), _57_580) when ((FStar_List.length ps) = (FStar_List.length exps)) -> begin
@@ -760,7 +760,7 @@ end
 (aux p e)
 end
 | _57_589 -> begin
-(FStar_All.failwith "Unexpected number of patterns")
+(failwith "Unexpected number of patterns")
 end))))
 
 
@@ -786,7 +786,7 @@ end))
 end))
 in (match (pat.FStar_Syntax_Syntax.v) with
 | FStar_Syntax_Syntax.Pat_disj (_57_602) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Syntax_Syntax.Pat_constant (c) -> begin
 (let _154_218 = (mk (FStar_Syntax_Syntax.Tm_constant (c)))
@@ -831,7 +831,7 @@ end
 end)) c.FStar_Syntax_Syntax.effect_args)
 in (FStar_All.pipe_right _154_228 (FStar_String.concat ", ")))
 in (FStar_Util.format2 "Impossible: Got a computation %s with effect args [%s]" c.FStar_Syntax_Syntax.effect_name.FStar_Ident.str _154_229))
-in (FStar_All.failwith _154_230))
+in (failwith _154_230))
 end)
 in (let _154_231 = (FStar_List.hd c.FStar_Syntax_Syntax.comp_univs)
 in ((_154_231), (c.FStar_Syntax_Syntax.result_typ), (wp)))))
@@ -1712,7 +1712,7 @@ if ((FStar_Syntax_Util.is_tot_or_gtot_comp c) && (not ((FStar_TypeChecker_Env.li
 (let _154_652 = (let _154_651 = (FStar_Range.string_of_range e.FStar_Syntax_Syntax.pos)
 in (let _154_650 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format2 "%s: %s\n" _154_651 _154_650)))
-in (FStar_All.failwith _154_652))
+in (failwith _154_652))
 end else begin
 (
 
@@ -2014,7 +2014,7 @@ in if (FStar_Syntax_Util.is_tot_or_gtot_comp comp) then begin
 end else begin
 (match (comp.FStar_Syntax_Syntax.n) with
 | (FStar_Syntax_Syntax.GTotal (_)) | (FStar_Syntax_Syntax.Total (_)) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Syntax_Syntax.Comp (ct) -> begin
 if ((FStar_Ident.lid_equals ct.FStar_Syntax_Syntax.effect_name FStar_Syntax_Const.effect_Pure_lid) || (FStar_Ident.lid_equals ct.FStar_Syntax_Syntax.effect_name FStar_Syntax_Const.effect_Ghost_lid)) then begin
@@ -2081,7 +2081,7 @@ end))
 end))
 end
 | _57_1198 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 end
 end)
@@ -2397,7 +2397,7 @@ let tvars = (FStar_All.pipe_right uvs (FStar_List.map (fun _57_1349 -> (match (_
 ((a), (Some (FStar_Syntax_Syntax.imp_tag)))
 end
 | FStar_Syntax_Syntax.Fixed (_57_1383) -> begin
-(FStar_All.failwith "Unexpected instantiation of mutually recursive uvar")
+(failwith "Unexpected instantiation of mutually recursive uvar")
 end
 | _57_1386 -> begin
 (
@@ -2690,7 +2690,7 @@ end
 (f fst)
 end
 | _57_1544 -> begin
-(FStar_All.failwith "Unexpexted args to binary operator")
+(failwith "Unexpexted args to binary operator")
 end))
 in (
 
@@ -2725,7 +2725,7 @@ end
 in (FStar_All.pipe_right _154_951 (fun _154_950 -> FStar_TypeChecker_Common.NonTrivial (_154_950))))
 end
 | _57_1569 -> begin
-(FStar_All.failwith "Unexpected args to ITE")
+(failwith "Unexpected args to ITE")
 end))
 in (
 
@@ -3595,7 +3595,7 @@ let _57_2028 = ()
 in Some (((tps), (typ0), (((FStar_List.length constrs) > (Prims.parse_int "1"))))))
 end
 | _57_2031 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end else begin
 None

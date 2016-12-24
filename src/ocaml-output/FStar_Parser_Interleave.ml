@@ -168,7 +168,7 @@ in (aux ((hoist)::out) rest_iface rest_impl))
 end))))
 end
 | _65_162 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end))
 end

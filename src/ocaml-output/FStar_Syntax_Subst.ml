@@ -288,7 +288,7 @@ end
 (FStar_Syntax_Syntax.mk_Tm_delayed (FStar_Util.Inl (((t'), ((compose_subst s' s))))) t.FStar_Syntax_Syntax.pos)
 end
 | FStar_Syntax_Syntax.Tm_delayed (FStar_Util.Inr (_36_220), _36_223) -> begin
-(FStar_All.failwith "Impossible: force_delayed_thunk removes lazy delayed nodes")
+(failwith "Impossible: force_delayed_thunk removes lazy delayed nodes")
 end
 | FStar_Syntax_Syntax.Tm_bvar (a) -> begin
 (apply_until_some_then_map (subst_bv a) (Prims.fst s) subst_tail t0)
@@ -418,7 +418,7 @@ let subst_pat' : (FStar_Syntax_Syntax.subst_t Prims.list * FStar_Range.range Pri
 
 let rec aux = (fun n p -> (match (p.FStar_Syntax_Syntax.v) with
 | FStar_Syntax_Syntax.Pat_disj ([]) -> begin
-(FStar_All.failwith "Impossible: empty disjunction")
+(failwith "Impossible: empty disjunction")
 end
 | FStar_Syntax_Syntax.Pat_constant (_36_327) -> begin
 ((p), (n))
@@ -539,7 +539,7 @@ let mk = (fun t' -> (let _133_196 = (mk_range t.FStar_Syntax_Syntax.pos s)
 in (FStar_Syntax_Syntax.mk t' None _133_196)))
 in (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_36_403) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Syntax_Syntax.Tm_constant (_)) | (FStar_Syntax_Syntax.Tm_fvar (_)) | (FStar_Syntax_Syntax.Tm_unknown) | (FStar_Syntax_Syntax.Tm_uvar (_)) -> begin
 (tag_with_range t s)
@@ -843,7 +843,7 @@ let open_pat : FStar_Syntax_Syntax.pat  ->  (FStar_Syntax_Syntax.pat * FStar_Syn
 
 let rec aux_disj = (fun sub renaming p -> (match (p.FStar_Syntax_Syntax.v) with
 | FStar_Syntax_Syntax.Pat_disj (_36_611) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | FStar_Syntax_Syntax.Pat_constant (_36_614) -> begin
 p
@@ -922,7 +922,7 @@ in (
 
 let rec aux = (fun sub renaming p -> (match (p.FStar_Syntax_Syntax.v) with
 | FStar_Syntax_Syntax.Pat_disj ([]) -> begin
-(FStar_All.failwith "Impossible: empty disjunction")
+(failwith "Impossible: empty disjunction")
 end
 | FStar_Syntax_Syntax.Pat_constant (_36_666) -> begin
 ((p), (sub), (renaming))
@@ -1097,7 +1097,7 @@ let close_pat : (FStar_Syntax_Syntax.pat', FStar_Syntax_Syntax.term') FStar_Synt
 
 let rec aux = (fun sub p -> (match (p.FStar_Syntax_Syntax.v) with
 | FStar_Syntax_Syntax.Pat_disj ([]) -> begin
-(FStar_All.failwith "Impossible: empty disjunction")
+(failwith "Impossible: empty disjunction")
 end
 | FStar_Syntax_Syntax.Pat_constant (_36_774) -> begin
 ((p), (sub))

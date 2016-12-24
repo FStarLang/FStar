@@ -112,7 +112,7 @@ end
 ".krml"
 end
 | _96_37 -> begin
-(FStar_All.failwith "Unrecognized option")
+(failwith "Unrecognized option")
 end)
 in (match (opt) with
 | (Some ("FSharp")) | (Some ("OCaml")) -> begin
@@ -138,7 +138,7 @@ in (let _193_30 = (FStar_Options.prepend_output_dir "out.krml")
 in (FStar_Util.save_value_to_file _193_30 bin))))
 end
 | _96_52 -> begin
-(FStar_All.failwith "Unrecognized option")
+(failwith "Unrecognized option")
 end))))
 end else begin
 ()

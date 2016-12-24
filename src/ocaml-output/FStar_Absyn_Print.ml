@@ -36,7 +36,7 @@ let get_lid = (fun f -> (match (f.FStar_Absyn_Syntax.n) with
 fv.FStar_Absyn_Syntax.v
 end
 | _33_40 -> begin
-(FStar_All.failwith "get_lid")
+(failwith "get_lid")
 end))
 
 
@@ -45,7 +45,7 @@ let get_type_lid = (fun t -> (match (t.FStar_Absyn_Syntax.n) with
 ftv.FStar_Absyn_Syntax.v
 end
 | _33_45 -> begin
-(FStar_All.failwith "get_type_lid")
+(failwith "get_type_lid")
 end))
 
 
@@ -104,7 +104,7 @@ in (
 
 let exps = (FStar_List.map (fun _33_2 -> (match (_33_2) with
 | (FStar_Util.Inl (_33_87), _33_90) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | (FStar_Util.Inr (x), _33_95) -> begin
 x
@@ -135,7 +135,7 @@ end))
 
 let rec find = (fun f l -> (match (l) with
 | [] -> begin
-(FStar_All.failwith "blah")
+(failwith "blah")
 end
 | (hd)::tl -> begin
 if (f hd) then begin
@@ -350,7 +350,7 @@ and typ_to_string : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.un
 let x = (FStar_Absyn_Util.compress_typ x)
 in (match (x.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_delayed (_33_263) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_named (_33_266, l)) -> begin
 (sli l)
@@ -377,7 +377,7 @@ in (let _130_116 = (FStar_All.pipe_right f formula_to_string)
 in (FStar_Util.format3 "%s:%s{%s}" _130_118 _130_117 _130_116))))
 end
 | FStar_Absyn_Syntax.Typ_app (_33_286, []) -> begin
-(FStar_All.failwith "Empty args!")
+(failwith "Empty args!")
 end
 | FStar_Absyn_Syntax.Typ_app (t, args) -> begin
 (
@@ -665,7 +665,7 @@ let un_op = (fun f _33_10 -> (match (_33_10) with
 in (FStar_Util.format2 "%s %s" f _130_224))
 end
 | _33_427 -> begin
-(FStar_All.failwith "impos")
+(failwith "impos")
 end))
 in (
 
@@ -676,7 +676,7 @@ in (let _130_229 = (formula_to_string t2)
 in (FStar_Util.format3 "%s %s %s" _130_230 f _130_229)))
 end
 | _33_443 -> begin
-(FStar_All.failwith "Impos")
+(failwith "Impos")
 end))
 in (
 
@@ -687,7 +687,7 @@ in (let _130_235 = (exp_to_string e2)
 in (FStar_Util.format3 "%s %s %s" _130_236 f _130_235)))
 end
 | _33_459 -> begin
-(FStar_All.failwith "impos")
+(failwith "impos")
 end))
 in (
 
@@ -699,7 +699,7 @@ in (let _130_239 = (formula_to_string t3)
 in (FStar_Util.format3 "if %s then %s else %s" _130_241 _130_240 _130_239))))
 end
 | _33_478 -> begin
-(FStar_All.failwith "impos")
+(failwith "impos")
 end))
 in (
 
@@ -723,7 +723,7 @@ in (let _130_250 = (exp_to_string e2)
 in (FStar_Util.format2 "%s == %s" _130_251 _130_250)))
 end
 | _33_514 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 in (
 
@@ -768,7 +768,7 @@ end))))))))))
 and exp_to_string : (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  Prims.string = (fun x -> (match ((let _130_312 = (FStar_Absyn_Util.compress_exp x)
 in _130_312.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Exp_delayed (_33_557) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Absyn_Syntax.Exp_meta (FStar_Absyn_Syntax.Meta_desugared (e, _33_561)) -> begin
 (exp_to_string e)
@@ -930,10 +930,10 @@ in (FStar_All.pipe_right _130_367 (FStar_String.concat " \\/ "))))
 and kind_to_string : FStar_Absyn_Syntax.knd  ->  Prims.string = (fun x -> (match ((let _130_369 = (FStar_Absyn_Util.compress_kind x)
 in _130_369.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Kind_lam (_33_674) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Absyn_Syntax.Kind_delayed (_33_677) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Absyn_Syntax.Kind_uvar (uv, args) -> begin
 (uvar_k_to_string' ((uv), (args)))
