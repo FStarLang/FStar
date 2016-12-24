@@ -1812,20 +1812,19 @@ let type_of_tot_term env e =
  *
  *  Another involves reading t's universe from its memoized type in the .tk field
  *)
-let universe_of env e =
+let universe_or_type_of env e =
     let _ = if Env.debug env Options.Extreme
             then Util.print1 "<start> universe_of %s\n" (Print.term_to_string e) in
     let env, _ = Env.clear_expected_typ env in
     let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
-    let fail e t =
-        raise (Error(Util.format2 "Expected a term of type 'Type'; got %s : %s" (Print.term_to_string e) (Print.term_to_string t), Env.get_range env)) in
+    let fail e t = Inl t in
     let ok u =
         let _ = if Env.debug env Options.Extreme
                 then Util.print3 "<end> universe_of (%s) %s is %s\n"
                             (Print.tag_of_term e)
                             (Print.term_to_string e)
                             (Print.univ_to_string u) in
-        u
+        Inr u
     in
     let universe_of_type e t =
         match (Util.unrefine t).n with
@@ -1852,3 +1851,12 @@ let universe_of env e =
 	    | Some t ->
           S.mk t None e.pos in
       universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
+
+let universe_of env e = 
+   match universe_or_type_of env e with 
+   | Inl t -> 
+     raise (Error(Util.format2 "Expected a term of type 'Type'; got %s : %s" 
+                        (Print.term_to_string e) 
+                        (Print.term_to_string t), 
+                  Env.get_range env))
+   | Inr u -> u
