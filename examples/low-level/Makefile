@@ -9,7 +9,7 @@ include $(FSTAR_HOME)/ulib/ml/Makefile.include
 FSTAR_ARGS=$(OTHERFLAGS)
 CODEGEN_ARGS=--lax --codegen OCaml --no_location_info $(FSTAR_DEFAULT_ARGS)
 
-KREMLIN_HOME=../../../../everest/kremlin
+KREMLIN_HOME=../../../kremlin
 KREMLIN=$(KREMLIN_HOME)/Kremlin.native
 KREMLIN_ARGS=-tmpdir kremlin -verbose -cc clang -ccopt -Wno-error=pointer-sign -ccopt -Wno-error=non-literal-null-conversion
 
