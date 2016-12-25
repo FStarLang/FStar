@@ -81,7 +81,7 @@ let ith_bit_mask num i =
 
 private val zero_bit_mask: num:U128.t -> Tot U128.t
 let zero_bit_mask num =
-  let proj = U128.(one_128) in
+  let proj = U128.(one_128 <<^ 127ul) in
   let res = U128.(num &^ proj) in
   U128.(eq_mask res proj)
 
@@ -209,9 +209,39 @@ private val mk_len_info: len_info:elemB ->
 let mk_len_info len_info len_1 len_2 =
   let l1 = uint64_to_uint128(uint32_to_uint64 len_1) in
   let l2 = uint64_to_uint128(uint32_to_uint64 len_2) in
-  let u = U128.((l1 <<^ 64ul) +^ l2) in
+  let u = U128.((l1 <<^ 67ul) +^ (l2 <<^ 3ul)) in
   len_info.(0ul) <- u
 
+
+(*
+let mk_len_info len_info len_1 len_2 =
+  push_frame();
+  let tmp = create 0uy 16ul in
+  let last = shift_left (uint32_to_uint8 len_1) 3ul in
+  let open FStar.UInt32 in
+  upd tmp 7ul last;
+  let len_1 = len_1 >>^ 5ul in
+  upd tmp 6ul (uint32_to_uint8 len_1);
+  let len_1 = len_1 >>^ 8ul in
+  upd tmp 5ul (uint32_to_uint8 len_1);
+  let len_1 = len_1 >>^ 8ul in
+  upd tmp 4ul (uint32_to_uint8 len_1);
+  let len_1 = len_1 >>^ 8ul in
+  upd tmp 3ul (uint32_to_uint8 len_1);
+  let last = FStar.UInt8.(uint32_to_uint8 len_2 <<^ 3ul) in
+  upd tmp 15ul last;
+  let len_2 = len_2 >>^ 5ul in
+  upd tmp 14ul (uint32_to_uint8 len_2);
+  let len_2 = len_2 >>^ 8ul in
+  upd tmp 13ul (uint32_to_uint8 len_2);
+  let len_2 = len_2 >>^ 8ul in
+  upd tmp 12ul (uint32_to_uint8 len_2);
+  let len_2 = len_2 >>^ 8ul in
+  upd tmp 11ul (uint32_to_uint8 len_2);
+  let i = load128_le tmp in
+  len_info.(0ul) <- i;
+  pop_frame()
+*)
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 (* A hash function used in authentication. It will authenticate additional data first, *)
