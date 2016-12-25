@@ -33,7 +33,7 @@ let fail = (fun r msg -> (
 let _81_22 = (let _178_33 = (let _178_32 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "%s: %s\n" _178_32 msg))
 in (FStar_All.pipe_left FStar_Util.print_string _178_33))
-in (FStar_All.failwith msg)))
+in (failwith msg)))
 
 
 let err_uninst = (fun env t _81_28 -> (match (_81_28) with
@@ -113,7 +113,7 @@ let t = (FStar_Syntax_Util.unmeta t)
 in (match ((let _178_73 = (FStar_Syntax_Subst.compress t)
 in _178_73.FStar_Syntax_Syntax.n)) with
 | (FStar_Syntax_Syntax.Tm_unknown) | (FStar_Syntax_Syntax.Tm_delayed (_)) | (FStar_Syntax_Syntax.Tm_ascribed (_)) | (FStar_Syntax_Syntax.Tm_meta (_)) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Syntax_Syntax.Tm_uvar (_)) | (FStar_Syntax_Syntax.Tm_constant (_)) | (FStar_Syntax_Syntax.Tm_name (_)) | (FStar_Syntax_Syntax.Tm_bvar (_)) -> begin
 false
@@ -173,7 +173,7 @@ in (match (t.FStar_Syntax_Syntax.n) with
 | (FStar_Syntax_Syntax.Tm_delayed (_)) | (FStar_Syntax_Syntax.Tm_unknown) -> begin
 (let _178_80 = (let _178_79 = (FStar_Syntax_Print.tag_of_term t)
 in (FStar_Util.format1 "Impossible: %s" _178_79))
-in (FStar_All.failwith _178_80))
+in (failwith _178_80))
 end
 | FStar_Syntax_Syntax.Tm_constant (_81_154) -> begin
 false
@@ -218,7 +218,7 @@ end
 (is_type_aux env e)
 end
 | _81_229 -> begin
-(FStar_All.failwith "Empty branches")
+(failwith "Empty branches")
 end)
 end
 | FStar_Syntax_Syntax.Tm_meta (t, _81_232) -> begin
@@ -447,7 +447,7 @@ in (match (t.FStar_Syntax_Syntax.n) with
 | (FStar_Syntax_Syntax.Tm_bvar (_)) | (FStar_Syntax_Syntax.Tm_delayed (_)) | (FStar_Syntax_Syntax.Tm_unknown) -> begin
 (let _178_166 = (let _178_165 = (FStar_Syntax_Print.term_to_string t)
 in (FStar_Util.format1 "Impossible: Unexpected term %s" _178_165))
-in (FStar_All.failwith _178_166))
+in (failwith _178_166))
 end
 | FStar_Syntax_Syntax.Tm_constant (_81_438) -> begin
 FStar_Extraction_ML_UEnv.unknownType
@@ -726,7 +726,7 @@ in ok))
 end))
 in (match (p.FStar_Syntax_Syntax.v) with
 | FStar_Syntax_Syntax.Pat_disj (_81_656) -> begin
-(FStar_All.failwith "Impossible: Nested disjunctive pattern")
+(failwith "Impossible: Nested disjunctive pattern")
 end
 | FStar_Syntax_Syntax.Pat_constant (FStar_Const.Const_int (c, None)) -> begin
 (
@@ -813,7 +813,7 @@ let _81_703 = (match ((FStar_Extraction_ML_UEnv.lookup_fv g f)) with
 ((n), (ttys))
 end
 | _81_700 -> begin
-(FStar_All.failwith "Expected a constructor")
+(failwith "Expected a constructor")
 end)
 in (match (_81_703) with
 | (d, tys) -> begin
@@ -935,7 +935,7 @@ let extract_one_pat = (fun disj g p expected_t -> (match ((extract_one_pat disj 
 ((g), (((x), (v))), (b))
 end
 | _81_799 -> begin
-(FStar_All.failwith "Impossible: Unable to translate pattern")
+(failwith "Impossible: Unable to translate pattern")
 end))
 in (
 
@@ -949,7 +949,7 @@ in Some (_178_270))
 end))
 in (match (p.FStar_Syntax_Syntax.v) with
 | FStar_Syntax_Syntax.Pat_disj ([]) -> begin
-(FStar_All.failwith "Impossible: Empty disjunctive pattern")
+(failwith "Impossible: Empty disjunctive pattern")
 end
 | FStar_Syntax_Syntax.Pat_disj ((p)::pats) -> begin
 (
@@ -1037,7 +1037,7 @@ end
 (((FStar_List.rev more_args)), (t))
 end
 | _81_878 -> begin
-(FStar_All.failwith "Impossible: Head type is not an arrow")
+(failwith "Impossible: Head type is not an arrow")
 end))
 in (
 
@@ -1082,7 +1082,7 @@ in (FStar_All.pipe_left FStar_Extraction_ML_Util.resugar_exp _178_305))
 in (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty e.FStar_Extraction_ML_Syntax.mlty) (FStar_Extraction_ML_Syntax.MLE_Fun (((binders), (body))))))
 end
 | _81_915 -> begin
-(FStar_All.failwith "Impossible: Not a constructor")
+(failwith "Impossible: Not a constructor")
 end)
 end))
 end)
@@ -1193,7 +1193,7 @@ in (match (t.FStar_Syntax_Syntax.n) with
 | (FStar_Syntax_Syntax.Tm_unknown) | (FStar_Syntax_Syntax.Tm_delayed (_)) | (FStar_Syntax_Syntax.Tm_uvar (_)) | (FStar_Syntax_Syntax.Tm_bvar (_)) -> begin
 (let _178_352 = (let _178_351 = (FStar_Syntax_Print.tag_of_term t)
 in (FStar_Util.format1 "Impossible: Unexpected term: %s" _178_351))
-in (FStar_All.failwith _178_352))
+in (failwith _178_352))
 end
 | (FStar_Syntax_Syntax.Tm_type (_)) | (FStar_Syntax_Syntax.Tm_refine (_)) | (FStar_Syntax_Syntax.Tm_arrow (_)) -> begin
 ((FStar_Extraction_ML_Syntax.ml_unit), (FStar_Extraction_ML_Syntax.E_PURE), (FStar_Extraction_ML_Syntax.ml_unit_ty))
@@ -1204,7 +1204,7 @@ end
 (({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Let (((((FStar_Extraction_ML_Syntax.NonRec), ((FStar_Extraction_ML_Syntax.Mutable)::flags), (bodies))), (continuation))); FStar_Extraction_ML_Syntax.mlty = mlty; FStar_Extraction_ML_Syntax.loc = loc}), (tag), (typ))
 end
 | _81_1062 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 end
 | FStar_Syntax_Syntax.Tm_meta (t, FStar_Syntax_Syntax.Meta_monadic (m, _81_1066)) -> begin
@@ -1248,7 +1248,7 @@ let m_2 = (match (t_k) with
 m_2
 end
 | _81_1101 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in ((ml_k), (m_2)))
 end)))
@@ -1453,7 +1453,7 @@ in (let _178_394 = (FStar_Syntax_Print.term_to_string arg)
 in (let _178_393 = (FStar_Syntax_Print.tag_of_term arg)
 in (let _178_392 = (FStar_Extraction_ML_Code.string_of_mlty g.FStar_Extraction_ML_UEnv.currentModule formal_t)
 in (FStar_Util.format4 "Impossible: ill-typed application:\n\thead=%s, arg=%s, tag=%s\n\texpected type unit, got %s" _178_395 _178_394 _178_393 _178_392)))))
-in (FStar_All.failwith _178_396))
+in (failwith _178_396))
 end
 end
 | (((e0, _81_1311))::rest, FStar_Extraction_ML_Syntax.MLTY_Fun (tExpected, f', t)) -> begin
@@ -1526,7 +1526,7 @@ let _81_1386 = (match ((FStar_Extraction_ML_UEnv.lookup_term g head)) with
 ((u), (q))
 end
 | _81_1378 -> begin
-(FStar_All.failwith "FIXME Ty")
+(failwith "FIXME Ty")
 end)
 in (match (_81_1386) with
 | ((head_ml, (vars, t), inst_ok), qual) -> begin
@@ -1580,7 +1580,7 @@ let _81_1433 = head
 in {FStar_Extraction_ML_Syntax.expr = _81_1433.FStar_Extraction_ML_Syntax.expr; FStar_Extraction_ML_Syntax.mlty = FStar_Extraction_ML_Syntax.MLTY_Fun (((FStar_Extraction_ML_Syntax.ml_unit_ty), (FStar_Extraction_ML_Syntax.E_PURE), (t))); FStar_Extraction_ML_Syntax.loc = _81_1433.FStar_Extraction_ML_Syntax.loc})), ((FStar_Extraction_ML_Syntax.ml_unit)::[])))) (FStar_Extraction_ML_Syntax.with_ty t))
 end
 | _81_1436 -> begin
-(FStar_All.failwith "Impossible: Unexpected head term")
+(failwith "Impossible: Unexpected head term")
 end)
 in ((head), (t), (rest)))))
 end))
@@ -1627,7 +1627,7 @@ in (
 
 let f = (match (f) with
 | None -> begin
-(FStar_All.failwith "Ascription node with an empty effect label")
+(failwith "Ascription node with an empty effect label")
 end
 | Some (l) -> begin
 (effect_as_etag g l)
@@ -1794,7 +1794,7 @@ end)
 in ((lbname_), (f_e), (((t), (((targs), (polytype))))), (add_unit), (body)))))))))
 end))
 end else begin
-(FStar_All.failwith "Not enough type binders")
+(failwith "Not enough type binders")
 end
 end))
 end
@@ -1984,7 +1984,7 @@ end))
 end))
 end
 | _81_1685 -> begin
-(FStar_All.failwith "ITE pats matched but then and else expressions not found?")
+(failwith "ITE pats matched but then and else expressions not found?")
 end)
 end else begin
 (
@@ -2165,7 +2165,7 @@ in (FStar_All.pipe_right _178_515 (FStar_List.map (fun _81_1811 -> (let _178_514
 in ((_178_514), (FStar_Extraction_ML_Syntax.MLTY_Top)))))))
 end
 | _81_1814 -> begin
-(FStar_All.failwith "Discriminator must be a function")
+(failwith "Discriminator must be a function")
 end)
 in (
 

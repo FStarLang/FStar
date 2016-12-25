@@ -101,7 +101,7 @@ let mk_subst = (fun s -> (s)::[])
 let subst_of_list : FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.args  ->  FStar_Syntax_Syntax.subst_t = (fun formals actuals -> if ((FStar_List.length formals) = (FStar_List.length actuals)) then begin
 (FStar_List.fold_right2 (fun f a out -> (FStar_Syntax_Syntax.NT ((((Prims.fst f)), ((Prims.fst a)))))::out) formals actuals [])
 end else begin
-(FStar_All.failwith "Ill-formed substitution")
+(failwith "Ill-formed substitution")
 end)
 
 
@@ -113,7 +113,7 @@ in ((x), (_136_59)))
 in FStar_Syntax_Syntax.NT (_136_60))
 end)) replace_xs with_ys)
 end else begin
-(FStar_All.failwith "Ill-formed substitution")
+(failwith "Ill-formed substitution")
 end)
 
 
@@ -143,10 +143,10 @@ in (match (_39_92) with
 end))
 end
 | FStar_Syntax_Syntax.U_max (_39_94) -> begin
-(FStar_All.failwith "Imposible: univ_kernel (U_max _)")
+(failwith "Imposible: univ_kernel (U_max _)")
 end
 | FStar_Syntax_Syntax.U_bvar (_39_97) -> begin
-(FStar_All.failwith "Imposible: univ_kernel (U_bvar _)")
+(failwith "Imposible: univ_kernel (U_bvar _)")
 end))
 
 
@@ -156,7 +156,7 @@ in (Prims.snd _136_67)))
 
 let rec compare_univs : FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe  ->  Prims.int = (fun u1 u2 -> (match (((u1), (u2))) with
 | ((FStar_Syntax_Syntax.U_bvar (_), _)) | ((_, FStar_Syntax_Syntax.U_bvar (_))) -> begin
-(FStar_All.failwith "Impossible: compare_univs")
+(failwith "Impossible: compare_univs")
 end
 | (FStar_Syntax_Syntax.U_unknown, FStar_Syntax_Syntax.U_unknown) -> begin
 (Prims.parse_int "0")
@@ -311,7 +311,7 @@ end
 {FStar_Syntax_Syntax.comp_univs = (u)::[]; FStar_Syntax_Syntax.effect_name = (comp_effect_name c); FStar_Syntax_Syntax.result_typ = t; FStar_Syntax_Syntax.effect_args = []; FStar_Syntax_Syntax.flags = (comp_flags c)}
 end
 | _39_247 -> begin
-(FStar_All.failwith "Assertion failed: Computation type without universe")
+(failwith "Assertion failed: Computation type without universe")
 end))
 
 
@@ -844,7 +844,7 @@ let set_uvar = (fun uv t -> (match ((FStar_Unionfind.find uv)) with
 (let _136_226 = (let _136_225 = (let _136_224 = (FStar_Unionfind.uvar_id uv)
 in (FStar_All.pipe_left FStar_Util.string_of_int _136_224))
 in (FStar_Util.format1 "Changing a fixed uvar! ?%s\n" _136_225))
-in (FStar_All.failwith _136_226))
+in (failwith _136_226))
 end
 | _39_999 -> begin
 (FStar_Unionfind.change uv (FStar_Syntax_Syntax.Fixed (t)))
@@ -1085,7 +1085,7 @@ in _136_327.FStar_Syntax_Syntax.n)) with
 ((uvs), (binders), (c))
 end
 | _39_1180 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end)))
 end))
@@ -1664,7 +1664,7 @@ let rec delta_qualifier : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.delt
 let t = (FStar_Syntax_Subst.compress t)
 in (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_39_1540) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Syntax_Syntax.Tm_fvar (fv) -> begin
 fv.FStar_Syntax_Syntax.fv_delta

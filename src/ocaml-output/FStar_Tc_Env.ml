@@ -144,14 +144,14 @@ type edge =
 {msource : FStar_Ident.lident; mtarget : FStar_Ident.lident; mlift : mlift}
 
 
-let is_Mkedge : edge  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkedge"))))
+let is_Mkedge : edge  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkedge"))))
 
 
 type effects =
 {decls : FStar_Absyn_Syntax.eff_decl Prims.list; order : edge Prims.list; joins : (FStar_Ident.lident * FStar_Ident.lident * FStar_Ident.lident * mlift * mlift) Prims.list}
 
 
-let is_Mkeffects : effects  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkeffects"))))
+let is_Mkeffects : effects  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkeffects"))))
 
 
 type env =
@@ -160,10 +160,10 @@ type env =
 {init : env  ->  Prims.unit; push : Prims.string  ->  Prims.unit; pop : Prims.string  ->  Prims.unit; mark : Prims.string  ->  Prims.unit; reset_mark : Prims.string  ->  Prims.unit; commit_mark : Prims.string  ->  Prims.unit; encode_modul : env  ->  FStar_Absyn_Syntax.modul  ->  Prims.unit; encode_sig : env  ->  FStar_Absyn_Syntax.sigelt  ->  Prims.unit; solve : env  ->  FStar_Absyn_Syntax.typ  ->  Prims.unit; is_trivial : env  ->  FStar_Absyn_Syntax.typ  ->  Prims.bool; finish : Prims.unit  ->  Prims.unit; refresh : Prims.unit  ->  Prims.unit}
 
 
-let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv"))))
+let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv"))))
 
 
-let is_Mksolver_t : solver_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksolver_t"))))
+let is_Mksolver_t : solver_t  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mksolver_t"))))
 
 
 let bound_vars : env  ->  (FStar_Absyn_Syntax.btvar, FStar_Absyn_Syntax.bvvar) FStar_Util.either Prims.list = (fun env -> (FStar_All.pipe_right env.gamma (FStar_List.collect (fun _41_1 -> (match (_41_1) with
@@ -232,7 +232,7 @@ let sigtab = (match (env.sigtab) with
 (hd)::tl
 end
 | _41_129 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in (
 
@@ -252,7 +252,7 @@ in {solver = _41_136.solver; range = _41_136.range; curmodule = _41_136.curmodul
 
 let pop : env  ->  Prims.string  ->  env = (fun env msg -> (match (env.sigtab) with
 | ([]) | ((_)::[]) -> begin
-(FStar_All.failwith "Too many pops")
+(failwith "Too many pops")
 end
 | (_41_146)::tl -> begin
 (
@@ -323,7 +323,7 @@ end)
 let wp_sig_aux : FStar_Absyn_Syntax.eff_decl Prims.list  ->  FStar_Ident.lident  ->  (((FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef, (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.withinfo_t * (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) = (fun decls m -> (match ((FStar_All.pipe_right decls (FStar_Util.find_opt (fun d -> (FStar_Ident.lid_equals d.FStar_Absyn_Syntax.mname m))))) with
 | None -> begin
 (let _138_419 = (FStar_Util.format1 "Impossible: declaration for monad %s not found" m.FStar_Ident.str)
-in (FStar_All.failwith _138_419))
+in (failwith _138_419))
 end
 | Some (md) -> begin
 (match (md.FStar_Absyn_Syntax.signature.FStar_Absyn_Syntax.n) with
@@ -331,7 +331,7 @@ end
 ((a), (wp.FStar_Absyn_Syntax.sort))
 end
 | _41_231 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end))
 
@@ -723,7 +723,7 @@ let fail = (fun _41_509 -> (match (()) with
 (let _138_592 = (let _138_591 = (FStar_Util.string_of_int i)
 in (let _138_590 = (FStar_Absyn_Print.sli lid)
 in (FStar_Util.format2 "Impossible: projecting field #%s from constructor %s is undefined" _138_591 _138_590)))
-in (FStar_All.failwith _138_592))
+in (failwith _138_592))
 end))
 in (
 
@@ -814,7 +814,7 @@ end
 | FStar_Util.Inr (FStar_Absyn_Syntax.Sig_let ((_41_611, lbs), _41_615, _41_617, _41_619)) -> begin
 (FStar_Util.find_map lbs (fun lb -> (match (lb.FStar_Absyn_Syntax.lbname) with
 | FStar_Util.Inl (_41_625) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | FStar_Util.Inr (lid') -> begin
 if (FStar_Ident.lid_equals lid lid') then begin
@@ -1082,7 +1082,7 @@ let set_expected_typ : env  ->  FStar_Absyn_Syntax.typ  ->  env = (fun env t -> 
 | {FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Typ_const ({FStar_Absyn_Syntax.v = _41_962; FStar_Absyn_Syntax.sort = {FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Kind_unknown; FStar_Absyn_Syntax.tk = _41_958; FStar_Absyn_Syntax.pos = _41_956; FStar_Absyn_Syntax.fvs = _41_954; FStar_Absyn_Syntax.uvs = _41_952}; FStar_Absyn_Syntax.p = _41_950}); FStar_Absyn_Syntax.tk = _41_948; FStar_Absyn_Syntax.pos = _41_946; FStar_Absyn_Syntax.fvs = _41_944; FStar_Absyn_Syntax.uvs = _41_942} -> begin
 (let _138_737 = (let _138_736 = (FStar_Absyn_Print.typ_to_string t)
 in (FStar_Util.format1 "Setting expected type to %s with kind unknown" _138_736))
-in (FStar_All.failwith _138_737))
+in (failwith _138_737))
 end
 | _41_967 -> begin
 (

@@ -51,7 +51,7 @@ let get_lid = (fun f -> (match (f.FStar_Syntax_Syntax.n) with
 fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v
 end
 | _40_30 -> begin
-(FStar_All.failwith "get_lid")
+(failwith "get_lid")
 end))
 
 
@@ -136,7 +136,7 @@ end))
 
 let rec find = (fun f l -> (match (l) with
 | [] -> begin
-(FStar_All.failwith "blah")
+(failwith "blah")
 end
 | (hd)::tl -> begin
 if (f hd) then begin
@@ -451,10 +451,10 @@ let rec term_to_string : FStar_Syntax_Syntax.term  ->  Prims.string = (fun x -> 
 let x = (FStar_Syntax_Subst.compress x)
 in (match (x.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_40_245) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | FStar_Syntax_Syntax.Tm_app (_40_248, []) -> begin
-(FStar_All.failwith "Empty args!")
+(failwith "Empty args!")
 end
 | FStar_Syntax_Syntax.Tm_meta (t, FStar_Syntax_Syntax.Meta_pattern (ps)) -> begin
 (
@@ -666,7 +666,7 @@ in _137_203.FStar_Syntax_Syntax.n)) with
 ((t), (d))
 end
 | _40_409 -> begin
-(FStar_All.failwith "Impossibe")
+(failwith "Impossibe")
 end)
 in (match (_40_412) with
 | (t, d) -> begin
@@ -1022,7 +1022,7 @@ end
 
 let lift_wp = (match (((se.FStar_Syntax_Syntax.lift_wp), (se.FStar_Syntax_Syntax.lift))) with
 | (None, None) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | (Some (lift_wp), _40_619) -> begin
 lift_wp
@@ -1058,7 +1058,7 @@ in _137_340.FStar_Syntax_Syntax.n)) with
 ((bs), (c))
 end
 | _40_649 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (match (_40_652) with
 | (tps, c) -> begin

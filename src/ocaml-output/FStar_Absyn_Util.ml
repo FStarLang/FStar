@@ -44,7 +44,7 @@ type gensym_t =
 {gensym : Prims.unit  ->  Prims.string; reset : Prims.unit  ->  Prims.unit}
 
 
-let is_Mkgensym_t : gensym_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkgensym_t"))))
+let is_Mkgensym_t : gensym_t  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkgensym_t"))))
 
 
 let gs : gensym_t = (
@@ -642,7 +642,7 @@ end
 FStar_Util.Inr (((x.FStar_Absyn_Syntax.v), (v)))
 end
 | _32_476 -> begin
-(FStar_All.failwith "Ill-formed substitution")
+(failwith "Ill-formed substitution")
 end))
 
 
@@ -696,7 +696,7 @@ in (aux [] bs1 bs2)))
 let subst_of_list : FStar_Absyn_Syntax.binders  ->  FStar_Absyn_Syntax.args  ->  FStar_Absyn_Syntax.subst = (fun formals actuals -> if ((FStar_List.length formals) = (FStar_List.length actuals)) then begin
 (FStar_List.map2 subst_formal formals actuals)
 end else begin
-(FStar_All.failwith "Ill-formed substitution")
+(failwith "Ill-formed substitution")
 end)
 
 
@@ -704,7 +704,7 @@ type red_ctrl =
 {stop_if_empty_subst : Prims.bool; descend : Prims.bool}
 
 
-let is_Mkred_ctrl : red_ctrl  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkred_ctrl"))))
+let is_Mkred_ctrl : red_ctrl  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkred_ctrl"))))
 
 
 let alpha_ctrl : red_ctrl = {stop_if_empty_subst = false; descend = true}
@@ -822,7 +822,7 @@ end
 if ((FStar_List.length actuals) = (Prims.parse_int "0")) then begin
 k
 end else begin
-(FStar_All.failwith "Wrong arity for kind unifier")
+(failwith "Wrong arity for kind unifier")
 end
 end)
 end
@@ -970,7 +970,7 @@ end
 in ((_129_572), (ctrl)))
 end
 | _32_698 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end
 | FStar_Absyn_Syntax.Typ_refine (x, t) -> begin
@@ -980,7 +980,7 @@ end
 in ((_129_573), (ctrl)))
 end
 | _32_713 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end
 | FStar_Absyn_Syntax.Typ_lam (bs, t) -> begin
@@ -990,7 +990,7 @@ end
 in ((_129_574), (ctrl)))
 end
 | _32_723 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end
 | _32_725 -> begin
@@ -1037,7 +1037,7 @@ and compress_typ : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.uni
 let t = (compress_typ' t)
 in (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_delayed (_32_756) -> begin
-(FStar_All.failwith "Impossible: compress returned a delayed type")
+(failwith "Impossible: compress returned a delayed type")
 end
 | _32_759 -> begin
 t
@@ -1136,7 +1136,7 @@ end
 FStar_Util.Inr (((x.FStar_Absyn_Syntax.v), (y)))
 end
 | _32_843 -> begin
-(FStar_All.failwith "Ill-typed substitution")
+(failwith "Ill-typed substitution")
 end)) formals actuals))
 
 
@@ -1632,7 +1632,7 @@ let unchecked_unify = (fun uv t -> (match ((FStar_Unionfind.find uv)) with
 (let _129_867 = (let _129_866 = (let _129_865 = (FStar_Unionfind.uvar_id uv)
 in (FStar_All.pipe_left FStar_Util.string_of_int _129_865))
 in (FStar_Util.format1 "Changing a fixed uvar! U%s\n" _129_866))
-in (FStar_All.failwith _129_867))
+in (failwith _129_867))
 end
 | _32_1416 -> begin
 (FStar_Unionfind.change uv (FStar_Absyn_Syntax.Fixed (t)))
@@ -1740,7 +1740,7 @@ let rec vs_typ' = (fun t uvonly cont -> (
 let t = (compress_typ t)
 in (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_delayed (_32_1491) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Absyn_Syntax.Typ_btvar (a) -> begin
 if uvonly then begin
@@ -1845,7 +1845,7 @@ and vs_typ = (fun t uvonly cont -> (match ((let _129_1069 = (FStar_ST.read t.FSt
 in (let _129_1068 = (FStar_ST.read t.FStar_Absyn_Syntax.uvs)
 in ((_129_1069), (_129_1068))))) with
 | (Some (_32_1637), None) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (None, None) -> begin
 (vs_typ' t uvonly (fun fvs -> (
@@ -1873,10 +1873,10 @@ in (match (k.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Kind_lam (_32_1665, k) -> begin
 (let _129_1074 = (let _129_1073 = (FStar_Range.string_of_range k.FStar_Absyn_Syntax.pos)
 in (FStar_Util.format1 "%s: Impossible ... found a Kind_lam bare" _129_1073))
-in (FStar_All.failwith _129_1074))
+in (failwith _129_1074))
 end
 | FStar_Absyn_Syntax.Kind_delayed (_32_1670) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Absyn_Syntax.Kind_unknown) | (FStar_Absyn_Syntax.Kind_type) | (FStar_Absyn_Syntax.Kind_effect) -> begin
 (cont ((FStar_Absyn_Syntax.no_fvs), (FStar_Absyn_Syntax.no_uvs)))
@@ -1908,7 +1908,7 @@ and vs_kind = (fun k uvonly cont -> (match ((let _129_1085 = (FStar_ST.read k.FS
 in (let _129_1084 = (FStar_ST.read k.FStar_Absyn_Syntax.uvs)
 in ((_129_1085), (_129_1084))))) with
 | (Some (_32_1702), None) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (None, None) -> begin
 (vs_kind' k uvonly (fun fvs -> (
@@ -1934,7 +1934,7 @@ and vs_exp' = (fun e uvonly cont -> (
 let e = (compress_exp e)
 in (match (e.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Exp_delayed (_32_1730) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | (FStar_Absyn_Syntax.Exp_fvar (_)) | (FStar_Absyn_Syntax.Exp_constant (_)) -> begin
 (cont ((FStar_Absyn_Syntax.no_fvs), (FStar_Absyn_Syntax.no_uvs)))
@@ -1986,7 +1986,7 @@ and vs_exp = (fun e uvonly cont -> (match ((let _129_1104 = (FStar_ST.read e.FSt
 in (let _129_1103 = (FStar_ST.read e.FStar_Absyn_Syntax.uvs)
 in ((_129_1104), (_129_1103))))) with
 | (Some (_32_1786), None) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (None, None) -> begin
 (vs_exp' e uvonly (fun fvs -> (
@@ -2023,7 +2023,7 @@ and vs_comp = (fun c uvonly cont -> (match ((let _129_1113 = (FStar_ST.read c.FS
 in (let _129_1112 = (FStar_ST.read c.FStar_Absyn_Syntax.uvs)
 in ((_129_1113), (_129_1112))))) with
 | (Some (_32_1823), None) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (None, None) -> begin
 (vs_comp' c uvonly (fun fvs -> (
@@ -2269,7 +2269,7 @@ let rec kind_formals : (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.
 let k = (compress_kind k)
 in (match (k.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Kind_lam (_32_1977) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Absyn_Syntax.Kind_unknown) | (FStar_Absyn_Syntax.Kind_type) | (FStar_Absyn_Syntax.Kind_effect) | (FStar_Absyn_Syntax.Kind_uvar (_)) -> begin
 (([]), (k))
@@ -2287,7 +2287,7 @@ end
 (kind_formals k)
 end
 | FStar_Absyn_Syntax.Kind_delayed (_32_1998) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)))
 
 
@@ -2652,7 +2652,7 @@ let teq : FStar_Absyn_Syntax.typ = (ftv FStar_Absyn_Const.eq2_lid eq_k)
 
 let mk_eq : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  FStar_Absyn_Syntax.exp  ->  FStar_Absyn_Syntax.exp  ->  FStar_Absyn_Syntax.typ = (fun t1 t2 e1 e2 -> (match (((t1.FStar_Absyn_Syntax.n), (t2.FStar_Absyn_Syntax.n))) with
 | ((FStar_Absyn_Syntax.Typ_unknown, _)) | ((_, FStar_Absyn_Syntax.Typ_unknown)) -> begin
-(FStar_All.failwith "DIE! mk_eq with tun")
+(failwith "DIE! mk_eq with tun")
 end
 | _32_2217 -> begin
 (let _129_1410 = (let _129_1408 = (let _129_1407 = (FStar_Absyn_Syntax.itarg t1)

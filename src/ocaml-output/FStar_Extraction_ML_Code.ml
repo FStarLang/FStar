@@ -489,7 +489,7 @@ in (Prims.strcat _174_104 "\""))
 in (Prims.strcat "\"" _174_105))
 end
 | _77_203 -> begin
-(FStar_All.failwith "TODO: extract integer constants properly into OCaml")
+(failwith "TODO: extract integer constants properly into OCaml")
 end))
 
 

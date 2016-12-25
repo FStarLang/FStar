@@ -517,7 +517,7 @@ false
 end))
 
 
-let is_Mkterm : term  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm"))))
+let is_Mkterm : term  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkterm"))))
 
 
 let is_Variable = (fun _discr_ -> (match (_discr_) with
@@ -565,7 +565,7 @@ false
 end))
 
 
-let is_Mkbinder : binder  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbinder"))))
+let is_Mkbinder : binder  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkbinder"))))
 
 
 let is_PatWild = (fun _discr_ -> (match (_discr_) with
@@ -676,7 +676,7 @@ false
 end))
 
 
-let is_Mkpattern : pattern  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkpattern"))))
+let is_Mkpattern : pattern  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkpattern"))))
 
 
 let ___Const____0 = (fun projectee -> (match (projectee) with
@@ -1357,7 +1357,7 @@ type lift =
 {msource : FStar_Ident.lid; mdest : FStar_Ident.lid; lift_op : lift_op}
 
 
-let is_Mklift : lift  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklift"))))
+let is_Mklift : lift  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mklift"))))
 
 
 type pragma =
@@ -1553,7 +1553,7 @@ false
 end))
 
 
-let is_Mkdecl : decl  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkdecl"))))
+let is_Mkdecl : decl  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkdecl"))))
 
 
 let is_DefineEffect = (fun _discr_ -> (match (_discr_) with

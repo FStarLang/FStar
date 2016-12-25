@@ -66,7 +66,7 @@ type worklist =
 {attempting : FStar_TypeChecker_Common.probs; wl_deferred : (Prims.int * Prims.string * FStar_TypeChecker_Common.prob) Prims.list; ctr : Prims.int; defer_ok : Prims.bool; smt_ok : Prims.bool; tcenv : FStar_TypeChecker_Env.env}
 
 
-let is_Mkworklist : worklist  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkworklist"))))
+let is_Mkworklist : worklist  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkworklist"))))
 
 
 type solution =
@@ -459,7 +459,7 @@ end
 "a subtype of"
 end
 | _56_235 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (
 
@@ -585,7 +585,7 @@ end
 (let _153_299 = (let _153_298 = (FStar_Syntax_Print.term_to_string tt)
 in (let _153_297 = (FStar_Syntax_Print.tag_of_term tt)
 in (FStar_Util.format2 "impossible: Got %s ... %s\n" _153_298 _153_297)))
-in (FStar_All.failwith _153_299))
+in (failwith _153_299))
 end)
 end
 end
@@ -613,7 +613,7 @@ end
 (let _153_303 = (let _153_302 = (FStar_Syntax_Print.term_to_string t1)
 in (let _153_301 = (FStar_Syntax_Print.tag_of_term t1)
 in (FStar_Util.format2 "impossible (outer): Got %s ... %s\n" _153_302 _153_301)))
-in (FStar_All.failwith _153_303))
+in (failwith _153_303))
 end))
 in (let _153_304 = (whnf env t1)
 in (aux false _153_304))))
@@ -765,7 +765,7 @@ in (FStar_Syntax_Util.set_uvar uvar phi))))
 end
 | _56_467 -> begin
 if (not (resolve_ok)) then begin
-(FStar_All.failwith "Impossible: this instance has already been assigned a solution")
+(failwith "Impossible: this instance has already been assigned a solution")
 end else begin
 ()
 end
@@ -959,7 +959,7 @@ end
 ((t), (uv), (k), (args))
 end
 | _56_620 -> begin
-(FStar_All.failwith "Not a flex-uvar")
+(failwith "Not a flex-uvar")
 end))
 
 
@@ -1044,7 +1044,7 @@ let rec delta_depth_of_term : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax
 let t = (FStar_Syntax_Util.unmeta t)
 in (match (t.FStar_Syntax_Syntax.n) with
 | (FStar_Syntax_Syntax.Tm_meta (_)) | (FStar_Syntax_Syntax.Tm_delayed (_)) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Syntax_Syntax.Tm_unknown) | (FStar_Syntax_Syntax.Tm_bvar (_)) | (FStar_Syntax_Syntax.Tm_name (_)) | (FStar_Syntax_Syntax.Tm_uvar (_)) | (FStar_Syntax_Syntax.Tm_let (_)) | (FStar_Syntax_Syntax.Tm_match (_)) -> begin
 None
@@ -1316,7 +1316,7 @@ let args = (FStar_List.map2 (fun x y -> (match (((x), (y))) with
 ((t), (imp))
 end
 | _56_948 -> begin
-(FStar_All.failwith "Bad reconstruction")
+(failwith "Bad reconstruction")
 end)) args args')
 in (FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_app (((hd), (args)))) None t.FStar_Syntax_Syntax.pos)))
 in (
@@ -1332,7 +1332,7 @@ end
 
 let fail = (fun _56_960 -> (match (()) with
 | () -> begin
-(FStar_All.failwith "Bad reconstruction")
+(failwith "Bad reconstruction")
 end))
 in (
 
@@ -1354,7 +1354,7 @@ end
 (FStar_Syntax_Util.arrow (FStar_List.rev out) c)
 end
 | _56_991 -> begin
-(FStar_All.failwith "Bad reconstruction")
+(failwith "Bad reconstruction")
 end))
 in (aux [] bs tcs)))
 in (
@@ -1378,7 +1378,7 @@ let rebuild = (fun _56_20 -> (match (_56_20) with
 t
 end
 | _56_1004 -> begin
-(FStar_All.failwith "Bad reconstruction")
+(failwith "Bad reconstruction")
 end))
 in ((rebuild), ((fun t -> true)), ([])))
 end))))
@@ -1389,7 +1389,7 @@ let un_T : tc  ->  FStar_Syntax_Syntax.term = (fun _56_21 -> (match (_56_21) wit
 t
 end
 | _56_1014 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 
 
@@ -1398,7 +1398,7 @@ let arg_of_tc : tc  ->  FStar_Syntax_Syntax.arg = (fun _56_22 -> (match (_56_22)
 (FStar_Syntax_Syntax.as_arg t)
 end
 | _56_1022 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 
 
@@ -1435,7 +1435,7 @@ in ((T (((gi_xs), (mk_kind)))), (_153_686))))
 end)))
 end
 | (_56_1051, _56_1053, C (_56_1055)) -> begin
-(FStar_All.failwith "impos")
+(failwith "impos")
 end))
 in (
 
@@ -1455,7 +1455,7 @@ in (FStar_All.pipe_left (fun _153_697 -> C (_153_697)) _153_698))
 in ((_153_699), ((prob)::[])))
 end
 | _56_1089 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 end
 | (bopt, variance, C ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.GTotal (ti, uopt); FStar_Syntax_Syntax.tk = _56_1097; FStar_Syntax_Syntax.pos = _56_1095; FStar_Syntax_Syntax.vars = _56_1093})) -> begin
@@ -1466,7 +1466,7 @@ in (FStar_All.pipe_left (fun _153_704 -> C (_153_704)) _153_705))
 in ((_153_706), ((prob)::[])))
 end
 | _56_1113 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 end
 | (_56_1115, _56_1117, C ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Comp (c); FStar_Syntax_Syntax.tk = _56_1123; FStar_Syntax_Syntax.pos = _56_1121; FStar_Syntax_Syntax.vars = _56_1119})) -> begin
@@ -1902,7 +1902,7 @@ in (match (((u1), (u2))) with
 (let _153_857 = (let _153_856 = (FStar_Syntax_Print.univ_to_string u1)
 in (let _153_855 = (FStar_Syntax_Print.univ_to_string u2)
 in (FStar_Util.format2 "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s" _153_856 _153_855)))
-in (FStar_All.failwith _153_857))
+in (failwith _153_857))
 end
 | (FStar_Syntax_Syntax.U_name (x), FStar_Syntax_Syntax.U_name (y)) -> begin
 if (x.FStar_Ident.idText = y.FStar_Ident.idText) then begin
@@ -2096,7 +2096,7 @@ let _56_1617 = ()
 in (aux wl us1 us2)))
 end
 | ((FStar_Syntax_Syntax.Tm_uinst (_), _)) | ((_, FStar_Syntax_Syntax.Tm_uinst (_))) -> begin
-(FStar_All.failwith "Impossible: expect head symbols to match")
+(failwith "Impossible: expect head symbols to match")
 end
 | _56_1632 -> begin
 USolved (wl)
@@ -2336,7 +2336,7 @@ end))
 end))
 end
 | _56_1793 -> begin
-(FStar_All.failwith "Impossible: Not a rigid-flex")
+(failwith "Impossible: Not a rigid-flex")
 end)))
 end))))
 and solve_flex_rigid_join : FStar_TypeChecker_Env.env  ->  (FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.term) FStar_TypeChecker_Common.problem  ->  worklist  ->  worklist Prims.option = (fun env tp wl -> (
@@ -2590,7 +2590,7 @@ end))
 end))
 end
 | _56_1958 -> begin
-(FStar_All.failwith "Impossible: Not a flex-rigid")
+(failwith "Impossible: Not a flex-rigid")
 end)))))
 end))
 end))))
@@ -3151,7 +3151,7 @@ end
 in (let _153_1240 = (FStar_Syntax_Print.term_to_string k)
 in (let _153_1239 = (FStar_Syntax_Print.term_to_string k_uv)
 in (FStar_Util.format3 "Impossible: ill-typed application %s : %s\n\t%s" _153_1241 _153_1240 _153_1239))))
-in (FStar_All.failwith _153_1242))
+in (failwith _153_1242))
 end))
 in (let _153_1280 = (elim k_uv ps)
 in (FStar_Util.bind_opt _153_1280 (fun _56_2311 -> (match (_56_2311) with
@@ -3447,7 +3447,7 @@ end)
 end)
 end
 | _56_2448 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 in (let _153_1337 = (FStar_Syntax_Syntax.new_bv_set ())
 in (aux [] [] _153_1337 all_formals args))))
@@ -3497,7 +3497,7 @@ end else begin
 in (let _153_1359 = (FStar_Syntax_Print.binders_to_string ", " xs)
 in (let _153_1358 = (FStar_Syntax_Print.args_to_string args)
 in (FStar_Util.format3 "k=%s\nxs=%s\nargs=%s\nIll-formed substitutution" _153_1360 _153_1359 _153_1358))))
-in (FStar_All.failwith _153_1361))
+in (failwith _153_1361))
 end)))
 in (
 
@@ -3837,7 +3837,7 @@ end)))
 end))
 in (match (((t1.FStar_Syntax_Syntax.n), (t2.FStar_Syntax_Syntax.n))) with
 | ((FStar_Syntax_Syntax.Tm_bvar (_), _)) | ((_, FStar_Syntax_Syntax.Tm_bvar (_))) -> begin
-(FStar_All.failwith "Only locally nameless! We should never see a de Bruijn variable")
+(failwith "Only locally nameless! We should never see a de Bruijn variable")
 end
 | (FStar_Syntax_Syntax.Tm_type (u1), FStar_Syntax_Syntax.Tm_type (u2)) -> begin
 (solve_one_universe_eq env orig u1 u2 wl)
@@ -3938,7 +3938,7 @@ end else begin
 end
 end
 | _56_2745 -> begin
-(FStar_All.failwith "Impossible: at least one side is an abstraction")
+(failwith "Impossible: at least one side is an abstraction")
 end)))
 end
 | (FStar_Syntax_Syntax.Tm_refine (_56_2747), FStar_Syntax_Syntax.Tm_refine (_56_2750)) -> begin
@@ -4194,7 +4194,7 @@ end
 (let _153_1525 = (let _153_1524 = (FStar_Syntax_Print.tag_of_term t1)
 in (let _153_1523 = (FStar_Syntax_Print.tag_of_term t2)
 in (FStar_Util.format2 "Impossible: %s and %s" _153_1524 _153_1523)))
-in (FStar_All.failwith _153_1525))
+in (failwith _153_1525))
 end
 | _56_3186 -> begin
 (giveup env "head tag mismatch" orig)
@@ -4252,7 +4252,7 @@ end
 | _56_3228 -> begin
 (let _153_1550 = (let _153_1549 = (FStar_Range.string_of_range (FStar_Ident.range_of_lid c1.FStar_Syntax_Syntax.effect_name))
 in (FStar_Util.format1 "Unexpected number of indices on a normalized effect (%s)" _153_1549))
-in (FStar_All.failwith _153_1550))
+in (failwith _153_1550))
 end)
 in (
 
@@ -4281,7 +4281,7 @@ end
 (let _153_1557 = (let _153_1556 = (FStar_Syntax_Print.lid_to_string c1.FStar_Syntax_Syntax.effect_name)
 in (let _153_1555 = (FStar_Syntax_Print.lid_to_string c2.FStar_Syntax_Syntax.effect_name)
 in (FStar_Util.format2 "Got effects %s and %s, expected normalized effects" _153_1556 _153_1555)))
-in (FStar_All.failwith _153_1557))
+in (failwith _153_1557))
 end)
 in (match (_56_3257) with
 | (wpc1, wpc2) -> begin
@@ -4517,7 +4517,7 @@ let f = (match (g.FStar_TypeChecker_Env.guard_f) with
 f
 end
 | _56_3426 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (let _153_1637 = (
 
@@ -4558,7 +4558,7 @@ let trivial : FStar_TypeChecker_Common.guard_formula  ->  Prims.unit = (fun t ->
 ()
 end
 | FStar_TypeChecker_Common.NonTrivial (_56_3440) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 
 
@@ -5074,7 +5074,7 @@ let _56_3713 = g
 in {FStar_TypeChecker_Env.guard_f = _56_3713.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = []; FStar_TypeChecker_Env.univ_ineqs = _56_3713.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _56_3713.FStar_TypeChecker_Env.implicits})
 end
 | _56_3716 -> begin
-(FStar_All.failwith "impossible: Unexpected deferred constraints remain")
+(failwith "impossible: Unexpected deferred constraints remain")
 end)
 in (
 

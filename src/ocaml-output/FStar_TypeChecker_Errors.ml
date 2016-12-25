@@ -38,7 +38,7 @@ type error_message_prefix =
 {set_prefix : Prims.string  ->  Prims.unit; append_prefix : Prims.string  ->  Prims.string; clear_prefix : Prims.unit  ->  Prims.unit}
 
 
-let is_Mkerror_message_prefix : error_message_prefix  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkerror_message_prefix"))))
+let is_Mkerror_message_prefix : error_message_prefix  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkerror_message_prefix"))))
 
 
 let message_prefix : error_message_prefix = (

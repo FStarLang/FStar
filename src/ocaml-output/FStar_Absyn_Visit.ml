@@ -127,7 +127,7 @@ let left = (fun ext benv btv -> (match ((ext benv (FStar_Util.Inl (btv)))) with
 ((benv), (bvd))
 end
 | _31_139 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 
 
@@ -136,7 +136,7 @@ let right = (fun ext benv bvv -> (match ((ext benv (FStar_Util.Inr (bvv)))) with
 ((benv), (bvd))
 end
 | _31_148 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 
 
@@ -228,7 +228,7 @@ in (
 
 let _31_236 = (match (k.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Kind_delayed (_31_197) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Absyn_Syntax.Kind_lam (_)) | (FStar_Absyn_Syntax.Kind_type) | (FStar_Absyn_Syntax.Kind_effect) | (FStar_Absyn_Syntax.Kind_unknown) -> begin
 (((leaf_k ())), (env))
@@ -397,7 +397,7 @@ and visit_typ = (fun env binders t -> (
 let _31_507 = (match ((let _128_299 = (compress_typ t)
 in _128_299.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Typ_delayed (_31_350) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Absyn_Syntax.Typ_unknown) | (FStar_Absyn_Syntax.Typ_btvar (_)) | (FStar_Absyn_Syntax.Typ_const (_)) -> begin
 (
@@ -622,7 +622,7 @@ in (
 
 let _31_746 = (match (e.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Exp_delayed (_31_574) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | FStar_Absyn_Syntax.Exp_meta (FStar_Absyn_Syntax.Meta_desugared (e, _31_578)) -> begin
 (
@@ -698,7 +698,7 @@ end
 (pat_binders b p)
 end
 | FStar_Absyn_Syntax.Pat_disj ([]) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (
 
@@ -805,7 +805,7 @@ end))))
 end))))
 end
 | FStar_Absyn_Syntax.Exp_let (_31_742) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (match (_31_746) with
 | (components, env) -> begin
@@ -830,7 +830,7 @@ end
 (FStar_Absyn_Syntax.mk_Kind_arrow ((bs), (k')))
 end
 | _31_813 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (let _128_388 = (k' k.FStar_Absyn_Syntax.pos)
 in ((_128_388), (env)))))
@@ -886,7 +886,7 @@ in (FStar_Absyn_Syntax.mk_Typ_meta' _128_428))
 in (FStar_All.pipe_left w _128_429))
 end
 | _31_1026 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in ((t'), (env))))))
 
@@ -934,7 +934,7 @@ end
 []
 end
 | _31_1183 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (let _128_465 = (let _128_464 = (let _128_463 = (mk_eqns eqns el)
 in ((e1), (_128_463)))
@@ -953,11 +953,11 @@ in {FStar_Absyn_Syntax.lbname = _31_1208.FStar_Absyn_Syntax.lbname; FStar_Absyn_
 in (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Exp_let ((((is_rec), (lbs'))), (e')))))
 end
 | _31_1212 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 end
 | _31_1214 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in ((e'), (env))))))
 

@@ -636,7 +636,7 @@ end
 ((FStar_Util.Inl (id)), (args), (None))
 end
 | _63_718 -> begin
-(FStar_All.failwith "Not an app pattern")
+(failwith "Not an app pattern")
 end))
 
 
@@ -699,7 +699,7 @@ end
 ((FStar_Util.Inr ((FStar_Absyn_Util.bvd_to_bvar_s x t))), (aq))
 end
 | _63_740 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 
 
@@ -859,10 +859,10 @@ in (
 let pos_r = (fun r q -> (FStar_Absyn_Syntax.withinfo q None r))
 in (match (p.FStar_Parser_AST.pat) with
 | FStar_Parser_AST.PatOp (_63_857) -> begin
-(FStar_All.failwith "let op not supported in stratified")
+(failwith "let op not supported in stratified")
 end
 | FStar_Parser_AST.PatOr ([]) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | FStar_Parser_AST.PatOr ((p)::ps) -> begin
 (
@@ -924,7 +924,7 @@ in (match (_63_913) with
 
 let binder = (match (binder) with
 | LetBinder (_63_915) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | TBinder (x, _63_919, aq) -> begin
 (let _160_309 = (let _160_308 = (desugar_kind env t)
@@ -1102,7 +1102,7 @@ let l = (match (constr.FStar_Absyn_Syntax.n) with
 v
 end
 | _63_1045 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (
 
@@ -1375,7 +1375,7 @@ in (match (_63_1258) with
 
 let _63_1318 = (match (b) with
 | LetBinder (_63_1260) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | TBinder (a, k, aq) -> begin
 (let _160_423 = (binder_of_bnd b)
@@ -1438,7 +1438,7 @@ in (FStar_Absyn_Util.withinfo (FStar_Absyn_Syntax.Pat_cons ((((FStar_Absyn_Util.
 in Some (((sc), (p))))))
 end
 | _63_1314 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end)
 in ((((FStar_Util.Inr (b)), (aq))), (sc_pat_opt))))
@@ -1494,7 +1494,7 @@ in (FStar_Absyn_Syntax.mk_Exp_meta _160_461))
 in (FStar_All.pipe_left setpos _160_462))
 end
 | FStar_Parser_AST.LetOpen (_63_1352) -> begin
-(FStar_All.failwith "let open in universes")
+(failwith "let open in universes")
 end
 | FStar_Parser_AST.Let (is_rec, ((pat, _snd))::_tl, body) -> begin
 (
@@ -1631,7 +1631,7 @@ in (match (_63_1450) with
 | (env, binder, pat) -> begin
 (match (binder) with
 | TBinder (_63_1452) -> begin
-(FStar_All.failwith "Unexpected type binder in let")
+(failwith "Unexpected type binder in let")
 end
 | LetBinder (l, t) -> begin
 (
@@ -2083,7 +2083,7 @@ end))
 in (aux [] top))
 end
 | FStar_Parser_AST.Product ([], t) -> begin
-(FStar_All.failwith "Impossible: product with no binders")
+(failwith "Impossible: product with no binders")
 end
 | FStar_Parser_AST.Product (binders, t) -> begin
 (
@@ -2121,7 +2121,7 @@ end
 | FStar_Parser_AST.Refine (b, f) -> begin
 (match ((desugar_exp_binder env b)) with
 | (None, _63_1785) -> begin
-(FStar_All.failwith "Missing binder in refinement")
+(failwith "Missing binder in refinement")
 end
 | b -> begin
 (
@@ -2131,7 +2131,7 @@ let _63_1799 = (match ((as_binder env None (FStar_Util.Inr (b)))) with
 ((x), (env))
 end
 | _63_1796 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (match (_63_1799) with
 | (b, env) -> begin
@@ -2197,7 +2197,7 @@ in (FStar_All.pipe_left wpos (FStar_Absyn_Syntax.mk_Typ_app ((tup), (targs)))))
 end))
 end
 | FStar_Parser_AST.Record (_63_1836) -> begin
-(FStar_All.failwith "Unexpected record type")
+(failwith "Unexpected record type")
 end
 | FStar_Parser_AST.Let (FStar_Parser_AST.NoLetQualifier, ((x, v))::[], t) -> begin
 (
@@ -2328,11 +2328,11 @@ let decreases_clause = (FStar_All.pipe_right dec (FStar_List.map (fun _63_12 -> 
 FStar_Absyn_Syntax.DECREASES (arg)
 end
 | _63_1981 -> begin
-(FStar_All.failwith "impos")
+(failwith "impos")
 end)
 end
 | _63_1983 -> begin
-(FStar_All.failwith "impos")
+(failwith "impos")
 end))))
 in if ((FStar_Parser_DesugarEnv.is_effect_name env eff.FStar_Absyn_Syntax.v) || (FStar_Ident.lid_equals eff.FStar_Absyn_Syntax.v FStar_Absyn_Const.effect_Tot_lid)) then begin
 if ((FStar_Ident.lid_equals eff.FStar_Absyn_Syntax.v FStar_Absyn_Const.effect_Tot_lid) && ((FStar_List.length decreases_clause) = (Prims.parse_int "0"))) then begin
@@ -2596,7 +2596,7 @@ in (FStar_All.pipe_left setpos _160_768))))))
 end))
 end
 | _63_2126 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))))
 in (
 
@@ -2614,7 +2614,7 @@ in (let _160_784 = (q (((b)::[]), ([]), (body)))
 in (FStar_Parser_AST.mk_term _160_784 f.FStar_Parser_AST.range FStar_Parser_AST.Formula))))
 end
 | _63_2140 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (match ((let _160_785 = (unparen f)
 in _160_785.FStar_Parser_AST.tm)) with
@@ -2671,7 +2671,7 @@ end)) ((f1)::(f2)::(f3)::[]))
 in (FStar_Absyn_Util.mk_typ_app _160_796 _160_795)))
 end
 | (FStar_Parser_AST.QForall ([], _, _)) | (FStar_Parser_AST.QExists ([], _, _)) -> begin
-(FStar_All.failwith "Impossible: Quantifier without binders")
+(failwith "Impossible: Quantifier without binders")
 end
 | FStar_Parser_AST.QForall ((_1)::(_2)::_3, pats, body) -> begin
 (
@@ -3197,7 +3197,7 @@ end))))
 in ((FStar_Parser_AST.TyconVariant (((id), (parms), (kopt), ((((constrName), (Some (constrTyp)), (None), (false)))::[])))), (_160_963)))))))
 end
 | _63_2570 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (
 
@@ -3239,7 +3239,7 @@ in ((_env), (_env2), (se), (tconstr))))))))
 end))
 end
 | _63_2595 -> begin
-(FStar_All.failwith "Unexpected tycon")
+(failwith "Unexpected tycon")
 end))
 in (
 
@@ -3416,7 +3416,7 @@ in (match (_63_2712) with
 end))
 end
 | _63_2714 -> begin
-(FStar_All.failwith "Unrecognized mutual type definition")
+(failwith "Unrecognized mutual type definition")
 end)
 end)))
 in (
@@ -3463,7 +3463,7 @@ end)
 end else begin
 (match (topt) with
 | None -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | Some (t) -> begin
 t
@@ -3498,7 +3498,7 @@ in (match (_63_2780) with
 end))))
 end
 | _63_2782 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))))
 in (
 
@@ -3530,7 +3530,7 @@ in ((env), ((FStar_List.append ((bundle)::[]) ops)))))))))))
 end)))))
 end
 | [] -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)))))))))))
 
 
@@ -3677,7 +3677,7 @@ let lids = (FStar_All.pipe_right (Prims.snd lbs) (FStar_List.map (fun lb -> (mat
 l
 end
 | _63_2901 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))))
 in (
 
@@ -3703,7 +3703,7 @@ let env = (FStar_Parser_DesugarEnv.push_sigelt env s)
 in ((env), ((s)::[]))))))
 end
 | _63_2934 -> begin
-(FStar_All.failwith "Desugaring a let did not produce a let")
+(failwith "Desugaring a let did not produce a let")
 end))
 end
 | FStar_Parser_AST.Main (t) -> begin
@@ -3835,7 +3835,7 @@ in ((env), ((se)::[]))))))
 end))
 end
 | FStar_Parser_AST.NewEffectForFree (_63_2992) -> begin
-(FStar_All.failwith "effects for free only supported in conjunction with --universes")
+(failwith "effects for free only supported in conjunction with --universes")
 end
 | FStar_Parser_AST.NewEffect (FStar_Parser_AST.RedefineEffect (eff_name, eff_binders, defn)) -> begin
 (
@@ -4106,7 +4106,7 @@ let m = if (FStar_Options.interactive_fsi ()) then begin
 FStar_Parser_AST.Interface (((mname), (decls), (true)))
 end
 | FStar_Parser_AST.Interface (mname, _63_3121, _63_3123) -> begin
-(FStar_All.failwith (Prims.strcat "Impossible: " mname.FStar_Ident.ident.FStar_Ident.idText))
+(failwith (Prims.strcat "Impossible: " mname.FStar_Ident.ident.FStar_Ident.idText))
 end)
 end else begin
 m
