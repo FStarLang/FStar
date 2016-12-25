@@ -14,27 +14,41 @@ open Spec
 
 let len = 16ul // length of GF128 in bytes
 
-type elem = Spec.elem 
+type elem = Spec.elem
 type elemB = b:buffer U128.t{length b = 1}
+
+let as_elem h (b:elemB{live h b}): GTot elem = Seq.index (as_seq h b) 0
+
+assume val load64_le:
+  b:buffer FStar.UInt8.t {length b >= 8} ->
+  Stack FStar.UInt64.t
+    (requires (fun h -> live h b))
+    (ensures  (fun h0 _ h1 -> h0 == h1))
 
 let load128_le b = 
     let b1 = sub b 0ul 8ul in
     let b2 = sub b 8ul 8ul in
-    let l1 = C.load64_le b1 in
+    let l1 = load64_le b1 in
     let i1 = uint64_to_uint128 l1 in
-    let l2 = C.load64_le b2 in
+	let l2 = load64_le b2 in
     let i2 = uint64_to_uint128 l2 in
     let b = U128.(i2 <<^ 64ul) in
     U128.(b +^ i1)
 
-
+assume val store64_le:
+  b:buffer FStar.UInt8.t {length b >= 8} ->
+  z:FStar.UInt64.t ->
+  Stack unit
+    (requires (fun h -> live h b))
+    (ensures  (fun h0 _ h1 -> modifies_1 b h0 h1 /\ live h1 b))
+    
 let store128_le b i = 
     let b1 = sub b 0ul 8ul in
     let b2 = sub b 8ul 8ul in
     let i1 = uint128_to_uint64 (U128.(i >>^ 64ul)) in
     let i2 = uint128_to_uint64 i in
-    C.store64_le b1 i2;
-    C.store64_le b2 i1
+    store64_le b1 i2;
+    store64_le b2 i1
 
 
 (* * Every block of message is regarded as an element in Galois field GF(2^128), **)
@@ -50,17 +64,19 @@ let store128_le b i =
 val gf128_add: a:elemB -> b:elemB {disjoint a b} -> Stack unit
   (requires (fun h -> live h a /\ live h b))
   (ensures (fun h0 _ h1 -> 
-    live h0 a /\ live h0 b /\ live h1 a /\ modifies_1 a h0 h1))
+    live h0 a /\ live h0 b /\ live h1 a /\ modifies_1 a h0 h1 /\
+    as_elem h1 a = as_elem h0 a +@ as_elem h0 b))
 let gf128_add a b = 
   let av = a.(0ul) in
   let bv = b.(0ul) in
   let r = U128.(av ^^ bv) in
-  a.(0ul) <- r 
+  a.(0ul) <- r
 
 (* In place shift. Calculate "a >> 1" and store the result in a. *)
 private val gf128_shift_right: a:elemB -> Stack unit
   (requires (fun h -> live h a))
-  (ensures (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1))
+  (ensures (fun h0 _ h1 -> live h0 a /\ live h1 a /\ modifies_1 a h0 h1 /\
+    as_elem h1 a = Spec.shift_right (as_elem h0 a)))
 let gf128_shift_right a = 
   let av = a.(0ul) in
   let a' = U128.(av >>^ 1ul) in
@@ -72,8 +88,9 @@ let zero_128 = uint64_to_uint128(0uL)
 private let r_mul = U128.(uint64_to_uint128(225uL) <<^ 120ul)
 
 (* Generate mask. If the i-th bit of num is 1 then return 11111111, otherwise return 00000000. *)
-private val ith_bit_mask: num:U128.t -> i:U32.t{U32.v i < 128} -> Tot U128.t
+private val ith_bit_mask: num:U128.t -> i:U32.t{U32.v i < 128} -> Tot (r:U128.t{r = Spec.ith_bit_mask num (U32.v i)})
 let ith_bit_mask num i =
+  admit();
   let mi = U32.(127ul -^ i) in
   let proj = U128.(one_128 <<^ mi) in
   let res = U128.(num &^ proj) in
@@ -81,9 +98,9 @@ let ith_bit_mask num i =
 
 private val zero_bit_mask: num:U128.t -> Tot U128.t
 let zero_bit_mask num =
-  let proj = U128.(one_128 <<^ 127ul) in
-  let res = U128.(num &^ proj) in
-  U128.(eq_mask res proj)
+  ith_bit_mask num 127ul
+
+#set-options "--z3rlimit 15 --max_fuel 1 --initial_fuel 1"
 
 val gf128_mul_loop: 
   x:elemB -> 
@@ -92,7 +109,9 @@ val gf128_mul_loop:
   ctr:U32.t{U32.v ctr <= 128} -> 
   Stack unit
   (requires (fun h -> live h x /\ live h v /\ live h z))
-  (ensures (fun h0 _ h1 -> live h1 x /\ live h1 v /\ live h1 z /\ modifies_2 v z h0 h1))
+  (ensures (fun h0 _ h1 -> live h0 x /\ live h0 v /\ live h0 z /\
+    live h1 x /\ live h1 v /\ live h1 z /\ modifies_2 v z h0 h1 /\
+    as_elem h1 z = Spec.mul_loop (as_elem h0 v) (as_elem h0 x) (as_elem h0 z) (U32.v ctr)))
 let rec gf128_mul_loop x v z ctr =
   if ctr <> 128ul then 
   begin
@@ -103,12 +122,13 @@ let rec gf128_mul_loop x v z ctr =
     let mski = ith_bit_mask xv ctr in     
     let msk_v = U128.(vv &^ mski) in
     z.(0ul) <- U128.(zv ^^ msk_v);
-
+    
     let msk0 = zero_bit_mask vv in
     let msk_r_mul = U128.(r_mul &^ msk0) in
     gf128_shift_right v;
     let vv = v.(0ul) in
     v.(0ul) <- U128.(vv ^^ msk_r_mul);
+
     gf128_mul_loop x v z (U32.(ctr +^ 1ul))
   end
 
@@ -116,10 +136,9 @@ let rec gf128_mul_loop x v z ctr =
 (* WARNING: may have issues with constant time. *)
 val gf128_mul: x:elemB -> y:elemB {disjoint x y} -> Stack unit
   (requires (fun h -> live h x /\ live h y))
-  (ensures (fun h0 _ h1 -> 
-    live h1 x /\ live h1 y /\ modifies_1 x h0 h1))
+  (ensures (fun h0 _ h1 -> live h0 x /\ live h0 y /\ live h1 x /\ live h1 y /\ modifies_1 x h0 h1 /\
+    as_elem h1 x = as_elem h0 x *@ as_elem h0 y))
 let gf128_mul x y =
-  let h0 = ST.get() in
   push_frame();
   let z = create zero_128 1ul in
   gf128_mul_loop y x z 0ul;
@@ -133,17 +152,17 @@ val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block}
   (ensures (fun h0 _ h1 -> live h0 acc /\ live h0 block /\ live h0 k
     /\ live h1 acc /\ live h1 k
     /\ modifies_1 acc h0 h1
-    /\ get h1 acc 0 == (get h0 acc 0) +@ (get h0 block 0) *@ (get h0 k 0)))
+    /\ as_elem h1 acc = (as_elem h0 acc +@ as_elem h0 block) *@ as_elem h0 k))
 let add_and_multiply acc block k =
   gf128_add acc block;
   gf128_mul acc k
 
-
+(*
 val finish: acc:elemB -> s:buffer UInt8.t{length s = 16} -> Stack unit
   (requires (fun h -> live h acc /\ live h s /\ disjoint acc s))
   (ensures  (fun h0 _ h1 -> live h0 acc /\ live h0 s
     /\ modifies_1 acc h0 h1 /\ live h1 acc
-    /\ decode (get h1 acc 0) == finish (get h0 acc 0) (as_seq h0 s)))
+    /\ decode (as_elem h1 acc) = finish (as_elem h0 acc) (as_seq h0 s)))
 let finish a s = 
   //let _ = IO.debug_print_string "finish a=" in 
   //let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
@@ -153,7 +172,7 @@ let finish a s =
   a.(0ul) <- U128.(a.(0ul) ^^ sf)
   //let _ = IO.debug_print_string "finish a=" in 
   //let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
-
+*)
 
 //16-09-23 Instead of the code below, we should re-use existing AEAD encodings
 //16-09-23 and share their injectivity proofs and crypto model.
@@ -209,39 +228,9 @@ private val mk_len_info: len_info:elemB ->
 let mk_len_info len_info len_1 len_2 =
   let l1 = uint64_to_uint128(uint32_to_uint64 len_1) in
   let l2 = uint64_to_uint128(uint32_to_uint64 len_2) in
-  let u = U128.((l1 <<^ 67ul) +^ (l2 <<^ 3ul)) in
+  let u = U128.((l1 <<^ 64ul) +^ l2) in
   len_info.(0ul) <- u
 
-
-(*
-let mk_len_info len_info len_1 len_2 =
-  push_frame();
-  let tmp = create 0uy 16ul in
-  let last = shift_left (uint32_to_uint8 len_1) 3ul in
-  let open FStar.UInt32 in
-  upd tmp 7ul last;
-  let len_1 = len_1 >>^ 5ul in
-  upd tmp 6ul (uint32_to_uint8 len_1);
-  let len_1 = len_1 >>^ 8ul in
-  upd tmp 5ul (uint32_to_uint8 len_1);
-  let len_1 = len_1 >>^ 8ul in
-  upd tmp 4ul (uint32_to_uint8 len_1);
-  let len_1 = len_1 >>^ 8ul in
-  upd tmp 3ul (uint32_to_uint8 len_1);
-  let last = FStar.UInt8.(uint32_to_uint8 len_2 <<^ 3ul) in
-  upd tmp 15ul last;
-  let len_2 = len_2 >>^ 5ul in
-  upd tmp 14ul (uint32_to_uint8 len_2);
-  let len_2 = len_2 >>^ 8ul in
-  upd tmp 13ul (uint32_to_uint8 len_2);
-  let len_2 = len_2 >>^ 8ul in
-  upd tmp 12ul (uint32_to_uint8 len_2);
-  let len_2 = len_2 >>^ 8ul in
-  upd tmp 11ul (uint32_to_uint8 len_2);
-  let i = load128_le tmp in
-  len_info.(0ul) <- i;
-  pop_frame()
-*)
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 (* A hash function used in authentication. It will authenticate additional data first, *)
