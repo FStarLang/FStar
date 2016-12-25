@@ -19,36 +19,23 @@ type elemB = b:buffer U128.t{length b = 1}
 
 let as_elem h (b:elemB{live h b}): GTot elem = Seq.index (as_seq h b) 0
 
-assume val load64_le:
-  b:buffer FStar.UInt8.t {length b >= 8} ->
-  Stack FStar.UInt64.t
-    (requires (fun h -> live h b))
-    (ensures  (fun h0 _ h1 -> h0 == h1))
-
 let load128_le b = 
     let b1 = sub b 0ul 8ul in
     let b2 = sub b 8ul 8ul in
-    let l1 = load64_le b1 in
-    let i1 = uint64_to_uint128 l1 in
+    let l1 = C.load64_le b1 in
+    let i1 = C.uint64_to_uint128 l1 in
 	let l2 = load64_le b2 in
     let i2 = uint64_to_uint128 l2 in
     let b = U128.(i2 <<^ 64ul) in
     U128.(b +^ i1)
-
-assume val store64_le:
-  b:buffer FStar.UInt8.t {length b >= 8} ->
-  z:FStar.UInt64.t ->
-  Stack unit
-    (requires (fun h -> live h b))
-    (ensures  (fun h0 _ h1 -> modifies_1 b h0 h1 /\ live h1 b))
     
 let store128_le b i = 
     let b1 = sub b 0ul 8ul in
     let b2 = sub b 8ul 8ul in
     let i1 = uint128_to_uint64 (U128.(i >>^ 64ul)) in
     let i2 = uint128_to_uint64 i in
-    store64_le b1 i2;
-    store64_le b2 i1
+    C.store64_le b1 i2;
+    C.store64_le b2 i1
 
 
 (* * Every block of message is regarded as an element in Galois field GF(2^128), **)
@@ -157,7 +144,7 @@ let add_and_multiply acc block k =
   gf128_add acc block;
   gf128_mul acc k
 
-(*
+
 val finish: acc:elemB -> s:buffer UInt8.t{length s = 16} -> Stack unit
   (requires (fun h -> live h acc /\ live h s /\ disjoint acc s))
   (ensures  (fun h0 _ h1 -> live h0 acc /\ live h0 s
@@ -172,7 +159,7 @@ let finish a s =
   a.(0ul) <- U128.(a.(0ul) ^^ sf)
   //let _ = IO.debug_print_string "finish a=" in 
   //let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
-*)
+
 
 //16-09-23 Instead of the code below, we should re-use existing AEAD encodings
 //16-09-23 and share their injectivity proofs and crypto model.
