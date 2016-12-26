@@ -16,13 +16,16 @@ cache/
 /src/parser/lex.fs
 /src/parser/parse.ml
 /src/parser/parse.mli
-/src/parser/parse.mly
+
 /src/boot_fstis
 /src/boot_fsts
 /src/format/formatml.fsi
+
 /lib/FStar.Util.fsti
 /lib/FStar.GetOpt.fsti
 /lib/FStar.Unionfind.fsti
+
+/ulib/ml/extracted
 
 /bin/*.dll
 /bin/*.pdb

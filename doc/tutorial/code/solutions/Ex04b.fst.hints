@@ -37,10 +37,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Ex04b.append_len", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex04b.append_len",
-      3,
+      2,
       2,
       1,
       [
@@ -57,8 +56,9 @@
         "fuel_guarded_inversion_Prims.list",
         "fuel_irrelevance_Ex04b.append.fuel_instrumented",
         "fuel_irrelevance_Ex04b.length.fuel_instrumented", "int_inversion",
-        "pretyping_ae567c2fb75be05905677af440075565",
+        "int_typing", "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "subterm_ordering_Prims.Cons", "typing_Ex04b.append",

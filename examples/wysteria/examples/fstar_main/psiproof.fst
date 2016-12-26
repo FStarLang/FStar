@@ -17,11 +17,11 @@ type post (#a:Type) = fun (m:mode) (x:a) (t:trace) -> True
 type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
 (* this is saying that the trace only consists of TMsg (no scopes) and all boolean values *)
-type btrace_t (t:trace) = forall x. List.mem x t ==> (is_TMsg x /\ TMsg.a x == bool)
+type btrace_t (t:trace) = forall x. List.mem x t ==> (TMsg? x /\ TMsg.a x == bool)
 
 type btrace = t:trace{btrace_t t}
 
-val tl_btrace: b:btrace -> Lemma (requires (is_Cons b)) (ensures (is_Cons b /\ btrace_t (Cons.tl b)))
+val tl_btrace: b:btrace -> Lemma (requires (Cons? b)) (ensures (Cons? b /\ btrace_t (Cons.tl b)))
 let tl_btrace b = ()
 
 val append_btrace_lemma: b1:btrace -> b2:btrace -> Lemma (requires (true)) (ensures (btrace_t (append b1 b2)))

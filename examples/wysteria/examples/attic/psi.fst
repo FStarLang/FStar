@@ -131,14 +131,14 @@ let psi ps w =
 
 val regmem: int -> list int -> Tot bool
 let rec regmem x l =
-  if is_Nil l then false
+  if Nil? l then false
   else
     if hd_of_cons l = x then true
     else regmem x (tl_of_cons l)
 
 val intersect: l1:list int -> l2:list int -> Tot (list int)
 let rec intersect l1 l2 = 
-  if is_Nil l1 then mk_nil ()
+  if Nil? l1 then mk_nil ()
   else
     if regmem (hd_of_cons l1) l2 then mk_cons (hd_of_cons l1) (intersect (tl_of_cons l1) l2)
     else intersect (tl_of_cons l1) l2

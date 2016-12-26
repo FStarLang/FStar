@@ -40,8 +40,8 @@ type tpre_assec (#ps':prins) (pi:protocol ps') (ps:prins) (x:varname) (e:exp) =
   (forall p. mem p ps ==> (contains p (fst pi) /\
                            Let (Some.v (select p (fst pi)))
                              (fun c ->
-                               is_T_red (Conf.t c) /\
-                               is_R_assec (T_red.r (Conf.t c)) /\
+                               T_red? (Conf.t c) /\
+                               R_assec? (T_red.r (Conf.t c)) /\
                                R_assec.ps (T_red.r (Conf.t c)) = ps /\
                                is_clos (R_assec.v (T_red.r (Conf.t c))) /\
                                MkTuple3._2 (get_en_b (R_assec.v (T_red.r (Conf.t c)))) = x /\
@@ -51,8 +51,8 @@ opaque val get_env_m:
   #ps':prins -> pi:protocol ps' -> ps:prins{forall p. (mem p ps ==>
                                                        contains p (fst pi) /\
                                                        Let (Some.v (select p (fst pi)))
-                                                       (fun c -> is_T_red (Conf.t c) /\
-                                                                 is_R_assec (T_red.r (Conf.t c)) /\
+                                                       (fun c -> T_red? (Conf.t c) /\
+                                                                 R_assec? (T_red.r (Conf.t c)) /\
                                                                  is_clos (R_assec.v (T_red.r (Conf.t c)))))}
   -> Tot (m:env_map ps{(forall p. (mem p ps ==>
                                    select p m = Some (
@@ -100,9 +100,9 @@ let tstep_assec #ps' pi ps x e =
   (step_ps_to_wait #ps' (fst pi) ps, update ps tsec (snd pi))
 
 type waiting_config (c:tconfig) =
-  is_T_sec_wait (Conf.t c) /\
-  is_Cons (Conf.s c) /\
-  is_F_assec_ret (Frame.f (Cons.hd (Conf.s c)))
+  T_sec_wait? (Conf.t c) /\
+  Cons? (Conf.s c) /\
+  F_assec_ret? (Frame.f (Cons.hd (Conf.s c)))
 
 type ps_sec_waiting (#ps':prins) (pi:protocol ps') (ps:prins) =
   (forall p. mem p ps ==> (contains p (fst pi) /\ waiting_config (Some.v (select p (fst pi)))))

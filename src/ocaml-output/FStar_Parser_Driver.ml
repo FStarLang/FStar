@@ -38,18 +38,18 @@ end))
 
 
 let ___Modul____0 = (fun projectee -> (match (projectee) with
-| Modul (_69_4) -> begin
-_69_4
+| Modul (_71_4) -> begin
+_71_4
 end))
 
 
 let ___Decls____0 = (fun projectee -> (match (projectee) with
-| Decls (_69_7) -> begin
-_69_7
+| Decls (_71_7) -> begin
+_71_7
 end))
 
 
-let parse_fragment : Prims.string  ->  fragment = (fun frag -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inr (frag)))) with
+let parse_fragment : FStar_Parser_ParseIt.input_frag  ->  fragment = (fun frag -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inr (frag)))) with
 | FStar_Util.Inl (FStar_Util.Inl ([])) -> begin
 Empty
 end
@@ -59,7 +59,7 @@ end
 | FStar_Util.Inl (FStar_Util.Inr (decls)) -> begin
 Decls (decls)
 end
-| FStar_Util.Inl (FStar_Util.Inl (_69_20)) -> begin
+| FStar_Util.Inl (FStar_Util.Inl (_71_20)) -> begin
 if (FStar_Options.universes ()) then begin
 (Prims.raise (FStar_Syntax_Syntax.Err ("Refusing to check more than one module at a time incrementally")))
 end else begin
@@ -75,11 +75,11 @@ end
 end))
 
 
-let parse_file : Prims.string  ->  FStar_Parser_AST.modul Prims.list = (fun fn -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inl (fn)))) with
+let parse_file : FStar_Parser_ParseIt.filename  ->  FStar_Parser_AST.modul Prims.list = (fun fn -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inl (fn)))) with
 | FStar_Util.Inl (FStar_Util.Inl (ast)) -> begin
 ast
 end
-| FStar_Util.Inl (FStar_Util.Inr (_69_32)) -> begin
+| FStar_Util.Inl (FStar_Util.Inr (_71_32)) -> begin
 (
 
 let msg = (FStar_Util.format1 "%s: expected a module\n" fn)

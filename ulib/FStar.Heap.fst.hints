@@ -1,11 +1,11 @@
 [
-  "ÅN„≥Òôé78?\u0006 ∆_õ∞",
+  "«r\u0002¶_…uMÂ ˙?m0\"Ç",
   [
     [ "FStar.Heap.ref", 1, 0, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.MkRef._0", 1, 0, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.Ref.a", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Heap.__proj__MkRef__item___0", 1, 0, 1, [ "@query" ], 0 ],
+    [ "FStar.Heap.__proj__Ref__item__a", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.Heap.Ref.r",
+      "FStar.Heap.__proj__Ref__item__r",
       1,
       2,
       1,
@@ -15,21 +15,7 @@
       ],
       0
     ],
-    [ "FStar.Heap.SelUpd1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.SelUpd2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.InDomEmp", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.Extensional", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.Equals", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.RestrictSel", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Heap.SelConcat", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.DomUpd", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.DomRestrict", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.DomConcat", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.DomEmp", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.DomContains", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.on", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.fresh", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.modifies", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Heap.lemma_modifies_trans",
       1,
@@ -54,10 +40,6 @@
         "typing_FStar.TSet.union", "unit_typing"
       ],
       0
-    ],
-    [ "FStar.Heap.only", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.op_Hat_Plus_Plus", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.op_Plus_Plus_Hat", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.op_Hat_Plus_Hat", 1, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

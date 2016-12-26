@@ -72,7 +72,9 @@ let rec gensyms x = match x with
 
 (* -------------------------------------------------------------------- *)
 let mlpath_of_lident (x : lident) : mlpath =
-    (List.map (fun x -> x.idText) x.ns, x.ident.idText)
+    if Ident.lid_equals x FStar.Syntax.Const.failwith_lid
+    then ([], x.ident.idText)
+    else (List.map (fun x -> x.idText) x.ns, x.ident.idText)
 
 let as_mlident (x:bvdef<'a>) = x.ppname.idText, 0
 
@@ -161,6 +163,8 @@ and c_flag = // C backend only
   | Mutable
   | Assumed
   | Private
+  | NoExtract
+  | Attribute of string
 
 and mlletflavor =
   | Rec
@@ -175,7 +179,8 @@ type mltybody =
      *)
 
 // bool: this was assumed (C backend)
-type mltydecl = list<(bool * mlsymbol * mlidents * option<mltybody>)> // each element of this list is one among a collection of mutually defined types
+type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * option<mltybody>
+type mltydecl = list<one_mltydecl> // each element of this list is one among a collection of mutually defined types
 
 type mlmodule1 =
 | MLM_Ty  of mltydecl

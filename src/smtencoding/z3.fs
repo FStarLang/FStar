@@ -71,13 +71,14 @@ let get_z3version () =
 let ini_params () =
   let z3_v = get_z3version () in
   begin if z3v_le (get_z3version ()) (4, 4, 0)
-  then raise <| Util.Failure (Util.format1 "Z3 v4.4.1 is required; got %s\n" (z3version_as_string z3_v))
+  then raise <| Util.Failure (Util.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
   else ()
   end;
-  "-smt2 -in \
+  Util.format1 "-smt2 -in \
     AUTO_CONFIG=false \
     MODEL=true \
-    SMT.RELEVANCY=2"
+    SMT.RELEVANCY=2 \
+    SMT.RANDOM_SEED=%s" (string_of_int (Options.z3_seed()))
 
 type label = string
 type unsat_core = option<list<string>>
@@ -86,12 +87,14 @@ type z3status =
     | SAT     of list<label>          //error labels
     | UNKNOWN of list<label>          //error labels
     | TIMEOUT of list<label>          //error labels
+    | KILLED
 
 let status_to_string = function
     | SAT  _ -> "sat"
     | UNSAT _ -> "unsat"
     | UNKNOWN _ -> "unknown"
     | TIMEOUT _ -> "timeout"
+    | KILLED -> "killed"
 
 let tid () = Util.current_tid() |> Util.string_of_int
 let new_z3proc id =
@@ -105,6 +108,7 @@ type bgproc = {
     grab:unit -> proc;
     release:unit -> unit;
     refresh:unit -> unit;
+    restart:unit -> unit
 }
 
 type query_log = {
@@ -175,13 +179,36 @@ let bg_z3_proc =
         the_z3proc := Some (new_proc ());
         query_logging.close_log();
         release() in
+    let restart () =
+        Util.monitor_enter(); 
+        query_logging.close_log();
+        the_z3proc := None;
+        the_z3proc := Some (new_proc ());
+        Util.monitor_exit() in
     {grab=grab;
      release=release;
-     refresh=refresh}
+     refresh=refresh;
+     restart=restart}
+
+let at_log_file () =
+  if Options.log_queries()
+  then "@" ^ (query_logging.log_file_name())
+  else ""
 
 let doZ3Exe' (input:string) (z3proc:proc) =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map Util.trim_string in
+    let print_stats (lines:list<string>) =
+       let starts_with c s = String.length s >= 1 && String.get s 0 = c in
+       let ends_with c s = String.length s >= 1 && String.get s (String.length s - 1) = c in
+       let last l = List.nth l (List.length l - 1) in
+       if Options.print_z3_statistics() then
+         if List.length lines >= 2 && starts_with '(' (List.hd lines) && ends_with ')' (last lines) then
+          (Util.print_string (Util.format1 "BEGIN-STATS %s\n" (query_logging.get_module_name()) ^ at_log_file ());
+           List.iter (fun s -> Util.print_string (Util.format1 "%s\n" s)) lines;
+           Util.print_string "END-STATS\n")
+         else failwith "Unexpected output from Z3: could not find statistics\n" //-- only works if rest doesn't include labels
+    in
     let unsat_core lines = 
         let parse_core s =
             let s = Util.trim_string s in
@@ -193,24 +220,26 @@ let doZ3Exe' (input:string) (z3proc:proc) =
         | "<unsat-core>"::core::"</unsat-core>"::rest -> 
           parse_core core, lines 
         | _ -> None, lines in
-    let rec lblnegs lines = match lines with
-      | lname::"false"::rest -> lname::lblnegs rest
-      | lname::_::rest -> lblnegs rest
-      | _ -> [] in
-    let rec unsat_core_and_lblnegs lines = 
+    let rec lblnegs lines succeeded = match lines with
+      | lname::"false"::rest when Util.starts_with lname "label_" -> lname::lblnegs rest succeeded
+      | lname::_::rest when Util.starts_with lname "label_" -> lblnegs rest succeeded
+      | _ -> if succeeded then print_stats lines; [] in
+    let unsat_core_and_lblnegs lines succeeded =
        let core_opt, rest = unsat_core lines in
-       core_opt, lblnegs rest in
+       core_opt, lblnegs rest succeeded in
+
     let rec result x = match x with
       | "timeout"::tl -> TIMEOUT []
-      | "unknown"::tl -> UNKNOWN (snd (unsat_core_and_lblnegs tl))
-      | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl))
-      | "unsat"::tl   -> UNSAT   (fst (unsat_core tl))
+      | "unknown"::tl -> UNKNOWN (snd (unsat_core_and_lblnegs tl false))
+      | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl false))
+      | "unsat"::tl   -> UNSAT   (fst (unsat_core_and_lblnegs tl true))
+      | "killed"::tl  -> bg_z3_proc.restart(); KILLED
       | hd::tl -> 
         TypeChecker.Errors.warn Range.dummyRange (Util.format2 "%s: Unexpected output from Z3: %s\n" (query_logging.get_module_name()) hd);
         result tl
       | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n" 
                             (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
-      result lines in
+    result lines in
   let stdout = Util.ask_process z3proc input in
   parse (Util.trim_string stdout)
 
@@ -224,15 +253,21 @@ let doZ3Exe =
         res
 
 let z3_options () =
-    "(set-option :global-decls false)\
+    Util.format1 "(set-option :global-decls false)\
      (set-option :smt.mbqi false)\
-     (set-option :produce-unsat-cores true)\n"
+     (set-option :auto_config false)\
+     (set-option :produce-unsat-cores true)\
+     (set-option :smt.random_seed %s)\n" (string_of_int (Options.z3_seed()))
 
 type job<'a> = {
     job:unit -> 'a;
     callback: 'a -> unit
 }
-type z3job = job<(either<unsat_core, (error_labels * bool)> * int)>
+type error_kind = 
+    | Timeout
+    | Kill
+    | Default
+type z3job = job<(either<unsat_core, (error_labels * error_kind)> * int)>
 
 let job_queue : ref<list<z3job>> = Util.mk_ref []
 
@@ -243,15 +278,19 @@ let with_monitor m f =
     Util.monitor_exit(m);
     res
 
-let z3_job fresh label_messages input () : either<unsat_core, (error_labels * bool)> * int =
-  let is_timeout = function
-    | TIMEOUT _ -> true
-    | _ -> false in
+let z3_job fresh label_messages input () : either<unsat_core, (error_labels * error_kind)> * int =
+  let ekind = function
+    | TIMEOUT _ -> Timeout
+    | SAT _
+    | UNKNOWN _ -> Default
+    | KILLED -> Kill 
+    | _ -> failwith "Impossible" in
   let start = Util.now() in
   let status = doZ3Exe fresh input in
   let _, elapsed_time = Util.time_diff start (Util.now()) in
   let result = match status with
     | UNSAT core -> Inl core, elapsed_time
+    | KILLED -> Inr ([], Kill), elapsed_time
     | TIMEOUT lblnegs
     | SAT lblnegs
     | UNKNOWN lblnegs ->
@@ -260,7 +299,7 @@ let z3_job fresh label_messages input () : either<unsat_core, (error_labels * bo
         match label_messages |> List.tryFind (fun (m, _, _) -> fst m = l) with
             | None -> []
             | Some (lbl, msg, r) -> [(lbl, msg, r)]) in
-        Inr (failing_assertions, is_timeout status), elapsed_time in
+        Inr (failing_assertions, ekind status), elapsed_time in
     result
 
 let rec dequeue' () =
@@ -377,7 +416,7 @@ let commit_mark msg =
         | _ -> failwith "Impossible"
     end
 
-let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_labels*bool)> * int) -> unit) =
+let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
   let filter_assertions theory = match core with 
     | None -> theory, false
     | Some core ->
@@ -419,7 +458,7 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
     if used_unsat_core
     then match uc_errs with 
          | Inl _ -> cb (uc_errs, time)
-         | Inr _ -> cb (Inr ([],false), time) //if we filtered the theory, then the error message is unreliable
+         | Inr (_, ek) -> cb (Inr ([],ek), time) //if we filtered the theory, then the error message is unreliable
     else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
   if Options.log_queries() then query_logging.append_to_log input;

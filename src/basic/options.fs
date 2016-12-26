@@ -67,7 +67,8 @@ let as_option as_t = function
 
 let fstar_options : ref<list<Util.smap<option_val>> > = Util.mk_ref []
 let peek () = List.hd !fstar_options
-let pop  () = match !fstar_options with
+let pop  () =
+    match !fstar_options with
     | []
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
@@ -126,6 +127,7 @@ let init () =
         ("print_fuels"                  , Bool false);
         ("print_implicits"              , Bool false);
         ("print_universes"              , Bool false);
+        ("print_z3_statistics"          , Bool false);
         ("prn"                          , Bool false);
         ("record_hints"                 , Bool false);
         ("reuse_hint_for"               , Unset);
@@ -142,7 +144,10 @@ let init () =
         ("verify"                       , Bool true);
         ("verify_all"                   , Bool false);
         ("verify_module"                , List []);
-        ("warn_top_level_effects"       , Bool false);
+        ("no_warn_top_level_effects"    , Bool true);
+        ("z3refresh"                    , Bool false);
+        ("z3rlimit"                     , Int 5);
+        ("z3seed"                       , Int 0);
         ("z3timeout"                    , Int 5)] in
    let o = peek () in
    Util.smap_clear o;
@@ -202,6 +207,7 @@ let get_print_effect_args       ()      = lookup_opt "print_effect_args"        
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
+let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
@@ -219,7 +225,10 @@ let get_verify_all              ()      = lookup_opt "verify_all"               
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
-let get_warn_top_level_effects  ()      = lookup_opt "warn_top_level_effects"   as_bool
+let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects"   as_bool
+let get_z3refresh               ()      = lookup_opt "z3refresh"                as_bool
+let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
+let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
 let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
 
 let dlevel = function
@@ -426,7 +435,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "log_queries",
         ZeroArgs (fun () -> Bool true),
-        "Log the Z3 queries in queries.smt2");
+        "Log the Z3 queries in several queries-*.smt2 files, as we go");
 
        ( noshort,
         "max_fuel",
@@ -514,6 +523,11 @@ let rec specs () : list<Getopt.opt> =
         "print_universes",
         ZeroArgs(fun () -> Bool true),
         "Print universes");
+
+       ( noshort,
+        "print_z3_statistics",
+        ZeroArgs(fun () -> Bool true),
+        "Print Z3 statistics for each SMT query");
 
        ( noshort,
         "prn",
@@ -606,15 +620,33 @@ let rec specs () : list<Getopt.opt> =
          "Display version number");
 
        ( noshort,
-        "warn_top_level_effects",
-        ZeroArgs (fun () -> Bool true),
-        "Top-level effects are ignored by default; turn this flag on to be warned when this happens");
+        "no_warn_top_level_effects",
+        ZeroArgs (fun () -> Bool false),
+        "Top-level effects are checked by default; turn this flag on to prevent warning when this happens");
+
+       ( noshort,
+        "z3refresh",
+        ZeroArgs (fun () -> Bool false),
+        "Restart Z3 after each query; useful for ensuring proof robustness");
+
+       ( noshort,
+        "z3rlimit",
+         OneArg ((fun s -> Int (int_of_string s)),
+                  "[positive integer]"),
+        "Set the Z3 per-query resource limit (default 5 units, taking roughtly 5s)");
+
+       ( noshort,
+        "z3seed",
+         OneArg ((fun s -> Int (int_of_string s)),
+                  "[positive integer]"),
+        "Set the Z3 random seed (default 0)");
 
        ( noshort,
         "z3timeout",
-         OneArg ((fun s -> Int (int_of_string s)),
+         OneArg ((fun s -> Util.print_string "Warning: z3timeout ignored with universes; use z3rlimit instead\n"; Int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
+
   ] in
      ( 'h',
         "help",
@@ -670,6 +702,7 @@ let settable = function
     | "print_fuels"
     | "print_implicits"
     | "print_universes"
+    | "print_z3_statistics"
     | "prn"
     | "show_signatures"
     | "silent"
@@ -679,11 +712,12 @@ let settable = function
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
     | "__temp_no_proj"
-    | "warn_top_level_effects"
-    | "reuse_hint_for" -> true
+    | "no_warn_top_level_effects"
+    | "reuse_hint_for"
+    | "z3refresh" -> true
     | _ -> false
 
-let resettable s = settable s || s="z3timeout"
+let resettable s = settable s || s="z3timeout" || s="z3rlimit" || s="z3seed"
 let all_specs = specs ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
@@ -822,6 +856,7 @@ let print_fuels                  () = get_print_fuels                 ()
 let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn                         ()
 let print_universes              () = get_print_universes             ()
+let print_z3_statistics          () = get_print_z3_statistics         ()
 let record_hints                 () = get_record_hints                ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()
@@ -839,4 +874,7 @@ let warn_top_level_effects       () = get_warn_top_level_effects      ()
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
+let z3_refresh                   () = get_z3refresh                   ()
+let z3_rlimit                    () = get_z3rlimit                    ()
+let z3_seed                      () = get_z3seed                      ()
 let z3_timeout                   () = get_z3timeout                   ()

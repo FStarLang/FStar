@@ -192,7 +192,7 @@ and translate_decl d: option<source_t> =
 
   | MLM_Loc _ -> None (*only for OCaml backend*)
 
-  | MLM_Ty [(_, name, tparams, body)] ->
+  | MLM_Ty [(_, name, _, tparams, body)] ->
       let tparams =
         match tparams with
         | [] -> None

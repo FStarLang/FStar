@@ -5,6 +5,7 @@ open WhileLanguage
 open Ifc
 open FStar.Heap
 
+(* (Warning) Top-level let-bindings must be total; this term may have effects *)
 
 let x = alloc 0
 let y = alloc 1
@@ -31,16 +32,16 @@ let c1_6 = Seq c1_1 (Seq c1_2 (Seq c1_3 (Seq c1_4 c1_5)))
 let c1 = c1_0 c1_6
 
 val c1_1_ni : unit -> Lemma (ni_com env c1_1 Low)
-let c1_1_ni _ = ()
+let c1_1_ni () = ()
 
 val c1_2_ni : unit -> Lemma (ni_com env c1_2 Low)
-let c1_2_ni _ = ()
+let c1_2_ni () = ()
 
 val c1_3_ni : unit -> Lemma (ni_com env c1_3 Low)
-let c1_3_ni _ = ()
+let c1_3_ni () = ()
 
 val c1_3_4_ni : unit -> Lemma (ni_com env (Seq c1_3 c1_4) Low)
-let c1_3_4_ni _ = ()
+let c1_3_4_ni () = ()
 
 val c1_ni : unit -> Lemma (ni_com env c1 Low)
-let c1_ni _ = loop_com env (AVar c) c1_6 (AVar c) Low
+let c1_ni () = while_com env (AVar c) c1_6 (AVar c) Low

@@ -5,6 +5,7 @@ open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
 open Crypto.Symmetric.Chacha20
+open Crypto.Indexing
 
 //16-10-02 THIS FILE IS USED ONLY BY AEAD-TEST; use Crypto.AEAD instead.
 
@@ -139,7 +140,7 @@ val chacha20_aead_decrypt:
     modifies_1 plaintext h0 h1 /\ 
     live h1 plaintext))
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3rlimit 100"
 // still failing below 
 
 let chacha20_aead_encrypt key n aadlen aadtext plainlen plaintext ciphertext tag =

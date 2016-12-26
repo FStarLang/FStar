@@ -60,6 +60,7 @@ let message_prefix =
     {set_prefix=set_prefix;
      clear_prefix=clear_prefix;
      append_prefix=append_prefix}
+open Range
 let add_errors env errs =
     let errs = errs |> List.map (fun (msg, r) -> 
         let r = if r=dummyRange then Env.get_range env else r in 
@@ -68,12 +69,17 @@ let add_errors env errs =
     atomically (fun () ->
         verification_errs := errs@ (!verification_errs);
         num_errs := !num_errs + n_errs)
+
+let mk_error msg r = 
+    if r.use_range <> r.def_range
+    then Util.format3 "%s: (Error) %s (see %s)\n" (Range.string_of_use_range r) msg (Range.string_of_range r)
+    else Util.format2 "%s: (Error) %s\n" (Range.string_of_range r) msg
+
 let report_all () =
     let all_errs = atomically (fun () -> let x = !verification_errs in verification_errs := []; x) in
-    let all_errs = List.sortWith (fun (r1, _) (r2, _) -> Range.compare r1 r2) all_errs in
-    all_errs |> List.iter (fun (r, msg) -> Util.print2_error "%s: (Error) %s\n" (Range.string_of_range r) msg);
+    let all_errs = List.sortWith (fun (r1, _) (r2, _) -> Range.compare_use_range r1 r2) all_errs in
+    all_errs |> List.iter (fun (r, msg) -> Util.print_error (mk_error msg r));
     List.length all_errs
-
 
 let handle_err warning e =
   match e with
@@ -97,7 +103,7 @@ let handleable = function
 let report r msg =
   incr num_errs;
   let msg = message_prefix.append_prefix msg in
-  Util.print2_error "%s: (Error) %s\n" (Range.string_of_range r) msg
+  Util.print_error (mk_error msg r)
 
 let get_err_count () = !num_errs
 

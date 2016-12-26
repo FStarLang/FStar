@@ -48,7 +48,7 @@
       0
     ],
     [
-      "FStar.UInt128.Mk.v",
+      "FStar.UInt128.__proj__Mk__item__v",
       1,
       2,
       1,
@@ -58,7 +58,7 @@
       ],
       0
     ],
-    [ "FStar.UInt128.Mk.v", 2, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.UInt128.__proj__Mk__item__v", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.UInt128.v",
       1,
@@ -1016,10 +1016,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.UInt128.mul_wide", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.UInt128.mul_wide",
-      3,
+      2,
       2,
       1,
       [

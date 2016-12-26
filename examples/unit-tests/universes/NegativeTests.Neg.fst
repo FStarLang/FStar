@@ -22,10 +22,10 @@ val test_postcondition_label: x:int -> Pure int (requires True) (ensures (fun y 
 let test_postcondition_label x = x //should fail
 
 val bad_projector: option 'a -> 'a
-let bad_projector x = Some.v x (* should fail *)
+let bad_projector x = Some?.v x (* should fail *)
 
 assume type t_pred : (result int -> Type) -> Type
-assume TEST: t_pred (fun ri -> b2t (V.v ri = 0))//should fail: not (is_V ri)
+assume TEST: t_pred (fun ri -> b2t (V?.v ri = 0))//should fail: not (V? ri)
 
 assume val f1: (x:int -> Tot unit) -> Tot unit
 assume val g1: nat -> Tot unit

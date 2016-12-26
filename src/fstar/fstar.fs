@@ -110,24 +110,22 @@ let go _ =
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
         else if Options.interactive() then //--in
-          let main_buffer_filename_opt, filenames =
+          let main_buffer_filename_opt, main_buffer_mod_name_opt, filenames =
             if Options.explicit_deps() then begin
               if List.length filenames = 0 then
                 Util.print_error "--explicit_deps was provided without a file list!\n";
-                None, filenames
+                None, None, filenames
               end
             else begin
               if List.length filenames > 0 then
                 Util.print_warning "ignoring the file list (no --explicit_deps)\n";
-                let fn, deps = detect_dependencies_with_first_interactive_chunk () in
-                Some fn, deps
+                let fn, mn, deps = detect_dependencies_with_first_interactive_chunk () in
+                Some fn, Some mn, deps
               end
           in
           if Options.universes()
-          then let fmods, dsenv, env = Universal.batch_mode_tc Parser.Dep.VerifyUserList filenames in //check all the dependences in batch mode
-               interactive_mode main_buffer_filename_opt (dsenv, env) None Universal.interactive_tc //and then start checking chunks from the current buffer
-          else let fmods, dsenv, env = Stratified.batch_mode_tc Parser.Dep.VerifyUserList filenames in //check all the dependences in batch mode
-               interactive_mode None (dsenv, env) None Stratified.interactive_tc //and then start checking chunks from the current buffer
+          then interactive_mode main_buffer_filename_opt main_buffer_mod_name_opt Parser.Dep.VerifyUserList filenames None Universal.interactive_tc //and then call interactive mode
+          else interactive_mode None None Parser.Dep.VerifyUserList filenames None Stratified.interactive_tc //and then start checking chunks from the current buffer
         else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if List.length filenames >= 1 then begin //normal batch mode
@@ -144,7 +142,8 @@ let go _ =
               Parser.Dep.VerifyFigureItOut
           in
           if Options.universes() then
-            let fmods, dsenv, env = Universal.batch_mode_tc verify_mode filenames in
+            let filenames = FStar.Dependences.find_deps_if_needed verify_mode filenames in
+            let fmods, dsenv, env = Universal.batch_mode_tc filenames in
             let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
             report_errors module_names_and_times;
             codegen (Inr (fmods |> List.map fst, env));

@@ -1,7 +1,6 @@
 [
   "\u001f ¨|ì Mÿ\f?Yu‹y»\t",
   [
-    [ "FStar.DM4F.MonadLaws.return_st", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.MonadLaws.bind_st", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.MonadLaws.right_unit_st",
@@ -61,7 +60,8 @@
       ],
       0
     ],
-    [ "FStar.DM4F.MonadLaws.return_ifc", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.MonadLaws.uu___is_Low", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.MonadLaws.uu___is_High", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.MonadLaws.bind_ifc",
       1,
@@ -80,16 +80,14 @@
       ],
       0
     ],
-    [ "FStar.DM4F.MonadLaws.left_unit", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.MonadLaws.left_unit",
-      2,
+      1,
       2,
       1,
       [
         "@query", "constructor_distinct_Prims.Mktuple2",
-        "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
-        "constructor_distinct_Tm_unit", "data_elim_Prims.Some",
+        "constructor_distinct_Prims.Some", "data_elim_Prims.Some",
         "data_typing_intro_FStar.DM4F.MonadLaws.High@tok",
         "equation_FStar.DM4F.MonadLaws.bind_ifc",
         "equation_FStar.DM4F.MonadLaws.ifc",
@@ -107,22 +105,18 @@
         "projection_inverse_Prims.Mktuple2__a",
         "projection_inverse_Prims.Mktuple2__b",
         "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "typing_Tm_abs_2ae17c74ea840ddc21965cf097a62af9", "unit_typing"
+        "unit_typing"
       ],
       0
     ],
-    [ "FStar.DM4F.MonadLaws.right_unit", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.MonadLaws.right_unit",
-      2,
+      1,
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
-        "constructor_distinct_Tm_unit", "data_elim_Prims.None",
-        "data_elim_Prims.Some",
+        "@query", "data_elim_Prims.Some",
         "data_typing_intro_FStar.DM4F.MonadLaws.High@tok",
-        "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "equation_FStar.DM4F.MonadLaws.bind_ifc",
         "equation_FStar.DM4F.MonadLaws.ifc",
         "equation_FStar.DM4F.MonadLaws.return_ifc",
@@ -132,24 +126,21 @@
         "interpretation_Tm_abs_2ae17c74ea840ddc21965cf097a62af9",
         "interpretation_Tm_abs_67131c4d7bf916dcb4098ab08ec03bd8",
         "interpretation_Tm_arrow_725b948e28332f20a93371f8c91440bb",
-        "kinding_FStar.DM4F.MonadLaws.label@tok", "kinding_Prims.tuple2@tok",
-        "lemma_Prims.invertOption",
         "pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
-        "projection_inverse_BoxBool_proj_0",
-        "token_correspondence_FStar.DM4F.MonadLaws.return_ifc",
-        "typing_Tm_abs_2ae17c74ea840ddc21965cf097a62af9", "unit_typing"
+        "token_correspondence_FStar.DM4F.MonadLaws.return_ifc", "unit_typing"
       ],
       0
     ],
-    [ "FStar.DM4F.MonadLaws.associativity", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.MonadLaws.associativity",
-      2,
+      1,
       2,
       1,
       [
         "@query", "constructor_distinct_Prims.None",
-        "constructor_distinct_Prims.Some", "constructor_distinct_Tm_unit",
+        "constructor_distinct_Prims.Some",
+        "constructor_distinct_Prims.option",
+        "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
         "data_elim_Prims.Some",
         "data_typing_intro_FStar.DM4F.MonadLaws.High@tok",
         "equation_FStar.DM4F.MonadLaws.bind_ifc",
@@ -160,11 +151,11 @@
         "interpretation_Tm_abs_09ff75ce812d6dd419c79ba5694b4445",
         "interpretation_Tm_abs_2ae17c74ea840ddc21965cf097a62af9",
         "interpretation_Tm_arrow_725b948e28332f20a93371f8c91440bb",
+        "pretyping_779086306c29597e3dd1127d16405da1",
         "pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
-        "projection_inverse_Prims.Mktuple2__a",
-        "projection_inverse_Prims.Mktuple2__b",
         "projection_inverse_Prims.Some_v",
         "typing_Tm_abs_2ae17c74ea840ddc21965cf097a62af9", "unit_typing"
       ],

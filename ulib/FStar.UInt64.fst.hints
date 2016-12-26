@@ -48,7 +48,7 @@
       0
     ],
     [
-      "FStar.UInt64.Mk.v",
+      "FStar.UInt64.__proj__Mk__item__v",
       1,
       2,
       1,
@@ -58,7 +58,7 @@
       ],
       0
     ],
-    [ "FStar.UInt64.Mk.v", 2, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.UInt64.__proj__Mk__item__v", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.UInt64.v",
       1,

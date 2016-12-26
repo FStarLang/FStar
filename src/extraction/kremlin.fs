@@ -35,9 +35,9 @@ and decl =
   | DGlobal of list<flag> * lident * typ * expr
   | DFunction of option<cc> * list<flag> * typ * lident * list<binder> * expr
   | DTypeAlias of lident * int * typ
-  | DTypeFlat of lident * fields_t
+  | DTypeFlat of lident * int * fields_t
   | DExternal of option<cc> * lident * typ
-  | DTypeVariant of (lident * branches_t)
+  | DTypeVariant of lident * int * branches_t
 
 and cc =
   | StdCall
@@ -52,6 +52,13 @@ and branches_t =
 
 and flag =
   | Private
+  | NoExtract
+  | CInline
+  | Substitute
+
+and lifetime =
+  | Eternal
+  | Stack
 
 and expr =
   | EBound of var
@@ -64,7 +71,7 @@ and expr =
   | ESequence of list<expr>
   | EAssign of expr * expr
   | (** left expression can only be a EBound of EOpen *)
-    EBufCreate of expr * expr
+    EBufCreate of lifetime * expr * expr
   | EBufRead of expr * expr
   | EBufWrite of expr * expr * expr
   | EBufSub of expr * expr
@@ -78,12 +85,13 @@ and expr =
   | EAny
   | EAbort
   | EReturn of expr
-  | EFlat of lident * list<(ident * expr)>
-  | EField of lident * expr * ident
+  | EFlat of typ * list<(ident * expr)>
+  | EField of typ * expr * ident
   | EWhile of expr * expr
-  | EBufCreateL of list<expr>
+  | EBufCreateL of lifetime * list<expr>
   | ETuple of list<expr>
-  | ECons of (lident * ident * list<expr>)
+  | ECons of typ * ident * list<expr>
+  | EBufFill of expr * expr * expr
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -144,7 +152,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 17
+let current_version: version = 19
 
 type file = string * program
 type binary_format = version * list<file>
@@ -312,6 +320,18 @@ and translate_module (module_name, modul, _): file =
   in
   (String.concat "_" module_name), program
 
+and translate_flags flags =
+  List.choose (function
+    | Syntax.Private -> Some Private
+    | Syntax.NoExtract -> Some NoExtract
+    | Syntax.Attribute "c_inline" -> Some CInline
+    | Syntax.Attribute "substitute" -> Some Substitute
+    | Syntax.Attribute a ->
+        print1_warning "Warning: unrecognized attribute %s" a;
+        None
+    | _ -> None
+  ) flags
+
 and translate_decl env d: option<decl> =
   match d with
   | MLM_Let (flavor, flags, [ {
@@ -325,12 +345,6 @@ and translate_decl env d: option<decl> =
       mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
     } ]) ->
       let assumed = Util.for_some (function Syntax.Assumed -> true | _ -> false) flags in
-      let flags =
-        if Util.for_some (function Syntax.Private -> true | _ -> false) flags then
-          [ Private ]
-        else
-          []
-      in
       let env = if flavor = Rec then extend env name false else env in
       let rec find_return_type = function
         | MLTY_Fun (_, _, t) ->
@@ -342,6 +356,7 @@ and translate_decl env d: option<decl> =
       let binders = translate_binders env args in
       let env = add_binders env args in
       let name = env.module_name, name in
+      let flags = translate_flags flags in
       if assumed then
         Some (DExternal (None, name, translate_type env t0))
       else begin
@@ -358,12 +373,7 @@ and translate_decl env d: option<decl> =
       mllb_tysc = Some ([], t);
       mllb_def = expr
     } ]) ->
-      let flags =
-        if Util.for_some (function Syntax.Private -> true | _ -> false) flags then
-          [ Private ]
-        else
-          []
-      in
+      let flags = translate_flags flags in
       let t = translate_type env t in
       let name = env.module_name, name in
       begin try
@@ -395,7 +405,7 @@ and translate_decl env d: option<decl> =
   | MLM_Loc _ ->
       None
 
-  | MLM_Ty [ (assumed, name, args, Some (MLTD_Abbrev t)) ] ->
+  | MLM_Ty [ (assumed, name, _mangled_name, args, Some (MLTD_Abbrev t)) ] ->
       let name = env.module_name, name in
       let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
       if assumed then
@@ -403,21 +413,23 @@ and translate_decl env d: option<decl> =
       else
         Some (DTypeAlias (name, List.length args, translate_type env t))
 
-  | MLM_Ty [ (_, name, [], Some (MLTD_Record fields)) ] ->
+  | MLM_Ty [ (_, name, _mangled_name, args, Some (MLTD_Record fields)) ] ->
       let name = env.module_name, name in
-      Some (DTypeFlat (name, List.map (fun (f, t) ->
+      let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
+      Some (DTypeFlat (name, List.length args, List.map (fun (f, t) ->
         f, (translate_type env t, false)) fields))
 
-  | MLM_Ty [ (_, name, [], Some (MLTD_DType branches)) ] ->
+  | MLM_Ty [ (_, name, _mangled_name, args, Some (MLTD_DType branches)) ] ->
       let name = env.module_name, name in
-      Some (DTypeVariant (name, List.map (fun (cons, ts) ->
-        cons, List.mapi (fun i t ->
+      let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
+      Some (DTypeVariant (name, List.length args, List.mapi (fun i (cons, ts) ->
+        cons, List.mapi (fun j t ->
           // TODO: carry the right names
-          Util.format1 "x%s" (string_of_int i), (translate_type env t, false)
+          Util.format2 "x%s%s" (string_of_int i) (string_of_int j), (translate_type env t, false)
         ) ts
       ) branches))
 
-  | MLM_Ty ((_, name, _, _) :: _) ->
+  | MLM_Ty ((_, name, _mangled_name, _, _) :: _) ->
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
       None
 
@@ -444,22 +456,10 @@ and translate_type env t: typ =
       TUnit
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
       TBool
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt8.t") ->
-      TInt UInt8
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt16.t") ->
-      TInt UInt16
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt32.t") ->
-      TInt UInt32
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt64.t") ->
-      TInt UInt64
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Int8.t") ->
-      TInt Int8
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Int16.t") ->
-      TInt Int16
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Int32.t") ->
-      TInt Int32
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Int64.t") ->
-      TInt Int64
+  | MLTY_Named ([], ([ "FStar"; m ], "t")) when is_machine_int m ->
+      TInt (must (mk_width m))
+  | MLTY_Named ([], ([ "FStar"; m ], "t'")) when is_machine_int m ->
+      TInt (must (mk_width m))
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Buffer.buffer") ->
       TBuf (translate_type env arg)
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
@@ -469,8 +469,11 @@ and translate_type env t: typ =
       TQualified (path, type_name)
   | MLTY_Named (args, ([ "Prims" ], t)) when Util.starts_with t "tuple" ->
       TTuple (List.map (translate_type env) args)
-  | MLTY_Named (args, (path, type_name)) ->
-      TApp ((path, type_name), List.map (translate_type env) args)
+  | MLTY_Named (args, lid) ->
+      if List.length args > 0 then
+        TApp (lid, List.map (translate_type env) args)
+      else
+        TQualified lid
   | MLTY_Tuple ts ->
       TTuple (List.map (translate_type env) ts)
 
@@ -541,7 +544,9 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
-      EBufCreate (translate_expr env e1, translate_expr env e2)
+      EBufCreate (Stack, translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_Name p }, [ _e0; e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.rcreate") ->
+      EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.createL") ->
       let rec list_elements acc e2 =
         match e2.expr with
@@ -553,9 +558,11 @@ and translate_expr env e: expr =
             failwith "Argument of FStar.Buffer.createL is not a string literal!"
       in
       let list_elements = list_elements [] in
-      EBufCreateL (List.map (translate_expr env) (list_elements e2))
+      EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.join") ->
+      (translate_expr env e1)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ])
@@ -567,6 +574,8 @@ and translate_expr env e: expr =
       EPopFrame
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3; e4; e5 ]) when (string_of_mlpath p = "FStar.Buffer.blit") ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.fill") ->
+      EBufFill (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when string_of_mlpath p = "FStar.ST.get" ->
       // We need to reveal to Kremlin that FStar.HST.get is equivalent to
       // (void*)0 so that it can get rid of ghost calls to HST.get at the
@@ -622,11 +631,11 @@ and translate_expr env e: expr =
       ECast (translate_expr env e, translate_type env t_to)
 
   | MLE_Record (_, fields) ->
-      EFlat (assert_lid e.mlty, List.map (fun (field, expr) ->
+      EFlat (assert_lid env e.mlty, List.map (fun (field, expr) ->
         field, translate_expr env expr) fields)
 
   | MLE_Proj (e, path) ->
-      EField (assert_lid e.mlty, translate_expr env e, snd path)
+      EField (assert_lid env e.mlty, translate_expr env e, snd path)
 
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
@@ -641,12 +650,14 @@ and translate_expr env e: expr =
       ETuple (List.map (translate_expr env) es)
 
   | MLE_CTor ((_, cons), es) ->
-      ECons (assert_lid e.mlty, cons, List.map (translate_expr env) es)
+      ECons (assert_lid env e.mlty, cons, List.map (translate_expr env) es)
 
   | MLE_Fun _ ->
       failwith "todo: translate_expr [MLE_Fun]"
-  | MLE_If _ ->
-      failwith "todo: translate_expr [MLE_If]"
+  | MLE_If (e1, e2, e3) ->
+      EIfThenElse (translate_expr env e1, translate_expr env e2, (match e3 with
+        | None -> EUnit
+        | Some e3 -> translate_expr env e3))
   | MLE_Raise _ ->
       failwith "todo: translate_expr [MLE_Raise]"
   | MLE_Try _ ->
@@ -654,9 +665,13 @@ and translate_expr env e: expr =
   | MLE_Coerce _ ->
       failwith "todo: translate_expr [MLE_Coerce]"
 
-and assert_lid t =
+and assert_lid env t =
   match t with
-  | MLTY_Named ([], lid) -> lid
+  | MLTY_Named (ts, lid) ->
+      if List.length ts > 0 then
+        TApp (lid, List.map (translate_type env) ts)
+      else
+        TQualified lid
   | _ -> failwith "invalid argument: assert_lid"
 
 and translate_branches env branches =

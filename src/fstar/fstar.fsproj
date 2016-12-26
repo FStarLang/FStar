@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>FStar.DM4F.StExnC.fst --explicit_deps --trace_error --prn --print_implicits --print_universes --debug yes</StartArguments>
+    <StartArguments>FStar.List.Tot.fst --codegen OCaml --odir out</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\FStar\examples\dm4free</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\ulib\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

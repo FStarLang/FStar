@@ -7,15 +7,15 @@ type ident = {idText:string;
 
 type lident = {ns:list<ident>; //["FStar"; "Basic"]
                ident:ident;    //"lident"
-               nsstr:string; // JP: ???
-               str:string} // JP: ??? is this for debugging only ???
+               nsstr:string; // Cached version of the namespace
+               str:string} // Cached version of string_of_lid
 
 type lid = lident
 
 let mk_ident (text,range) = {idText=text; idRange=range}
 let reserved_prefix = "uu___"
-let gen = 
-    let x = Util.mk_ref 0 in 
+let gen =
+    let x = Util.mk_ref 0 in
     fun r -> x := !x + 1; mk_ident (reserved_prefix ^ string_of_int !x, r)
 let id_of_text str = mk_ident(str, dummyRange)
 let text_of_id (id:ident) = id.idText
@@ -36,14 +36,10 @@ let lid_of_path path pos =
     lid_of_ids ids
 let text_of_lid lid = lid.str
 let lid_equals l1 l2 = l1.str = l2.str
-let lid_with_range (lid:lid) (r:Range.range) =
-    let id = {lid.ident with idRange=r} in
-    {lid with ident=id}
+let ident_equals id1 id2 = id1.idText = id2.idText
 let range_of_lid (lid:lid) = lid.ident.idRange
-let set_lid_range l r =
-  let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
-  lid_of_ids ids
-let lid_add_suffix l s = 
+let set_lid_range l r = {l with ident={l.ident with idRange=r}}
+let lid_add_suffix l s =
     let path = path_of_lid l in
     lid_of_path (path@[s]) (range_of_lid l)
 

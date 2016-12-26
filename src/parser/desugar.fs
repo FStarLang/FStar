@@ -248,7 +248,10 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Wild
   | Const _
+  | AST.Uvar _
   | Var  _
+  | AST.Projector _
+  | AST.Discrim _
   | Name _  -> []
 
   | Requires (t, _)
@@ -276,6 +279,10 @@ and free_type_vars env t = match (unparen t).tm with
     free@free_type_vars env body
 
   | Project(t, _) -> free_type_vars env t
+
+  | Attributes cattributes ->
+      (* attributes should be closed but better safe than sorry *)
+      List.collect (free_type_vars env) cattributes
 
 
   | Abs _  (* not closing implicitly over free vars in type-level functions *)
@@ -550,6 +557,15 @@ and desugar_typ_or_exp (env:env_t) (t:term) : either<typ,exp> =
 
 and desugar_exp env e = desugar_exp_maybe_top false env e
 
+and desugar_name setpos env l =
+      if l.str = "ref"
+      then begin match DesugarEnv.try_lookup_lid env Const.alloc_lid with
+            | None -> raise (Error ("Identifier 'ref' not found; include lib/FStar.ST.fst in your path", range_of_lid l))
+            | Some e -> setpos e
+           end
+      else setpos <| fail_or env (DesugarEnv.try_lookup_lid env) l
+
+
 and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
   let pos e = e None top.range in
   let setpos e = {e with pos=top.range} in
@@ -568,12 +584,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
 
     | Var l
     | Name l ->
-      if l.str = "ref"
-      then begin match DesugarEnv.try_lookup_lid env Const.alloc_lid with
-            | None -> raise (Error ("Identifier 'ref' not found; include lib/FStar.ST.fst in your path", range_of_lid l))
-            | Some e -> setpos e
-           end
-      else setpos <| fail_or env (DesugarEnv.try_lookup_lid env) l
+      desugar_name setpos env l
 
     | Construct(l, args) ->
       let dt = pos <| mk_Exp_fvar(fail_or env (DesugarEnv.try_lookup_datacon env) l, Some Data_ctor) in
@@ -803,6 +814,17 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
 
     | Paren e ->
       desugar_exp env e
+
+    | AST.Projector (ns, id) ->
+      (* translating ".." back into "." -- support needed by 'make -C
+         src test', namely 'make -C examples/unit-tests sall', more
+         precisely examples/unit_tests/Unit1.Basic.fst *)
+      let l = qual ns id in
+      desugar_name setpos env l
+
+    | Discrim lid ->
+      let lid' = Util.mk_discriminator lid in
+      desugar_name setpos env lid'
 
     | _ ->
       error "Unexpected term" top top.range
@@ -1499,6 +1521,7 @@ let trans_qual r = function
   | AST.Unopteq
   | AST.Visible
   | AST.Unfold_for_unification_and_vcgen
+  | AST.NoExtract -> raise (Error("The noextract qualifier is supported only with the --universes option", r))
   | AST.Inline_for_extraction -> raise (Error("This qualifier is supported only with the --universes option", r))
 
 let trans_pragma = function
@@ -1524,11 +1547,13 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
   | ModuleAbbrev(x, l) -> 
     DesugarEnv.push_module_abbrev env x l, []
 
-  | Tycon(qual, tcs) ->
+  | Tycon(is_effect, tcs) ->
+    let quals = if is_effect then AST.Effect :: d.quals else d.quals in
     let tcs = List.map (fun (x,_) -> x) tcs in
-    desugar_tycon env d.drange (trans_quals qual) tcs
+    desugar_tycon env d.drange (trans_quals quals) tcs
 
-  | ToplevelLet(quals, isrec, lets) ->
+  | TopLevelLet(isrec, lets) ->
+    let quals = d.quals in
     begin match (compress_exp <| desugar_exp_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
         | Exp_let(lbs, _) ->
           let lids = snd lbs |> List.map (fun lb -> match lb.lbname with
@@ -1550,11 +1575,12 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     let se = Sig_main(e, d.drange) in
     env, [se]
 
-  | Assume(atag, id, t) ->
+  | Assume(id, t) ->
     let f = desugar_formula env t in
     env, [Sig_assume(qualify env id, f, [Assumption], d.drange)]
 
-  | Val(quals, id, t) ->
+  | Val(id, t) ->
+    let quals = d.quals in
     let t = desugar_typ env (close_fun env t) in
     let quals = if env.iface && env.admitted_iface then Assumption::trans_quals quals else trans_quals quals in
     let se = Sig_val_decl(qualify env id, t, quals, d.drange) in
@@ -1595,7 +1621,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
   | NewEffectForFree _ ->
       failwith "effects for free only supported in conjunction with --universes"
 
-  | NewEffect (quals, RedefineEffect(eff_name, eff_binders, defn)) ->
+  | NewEffect (RedefineEffect(eff_name, eff_binders, defn)) ->
+    let quals = d.quals in
     let env0 = env in
     let env, binders = desugar_binders env eff_binders in
     let defn = desugar_typ env defn in
@@ -1634,7 +1661,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     | _ -> raise (Error((Print.typ_to_string head) ^ " is not an effect", d.drange))
     end
 
-  | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, _actions)) ->
+  | NewEffect (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, _actions)) ->
+    let quals = d.quals in
     let env0 = env in
     let env = DesugarEnv.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in
@@ -1698,7 +1726,7 @@ let open_prims_all =
 let desugar_modul_common (curmod:option<modul>) env (m:AST.modul) : env_t * Syntax.modul * bool =
   let open_ns (mname:lident) (d:list<decl>) =
     let d = if List.length mname.ns <> 0
-            then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname) None) :: d
+            then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname) []) :: d
             else d in
     d in
   let env = match curmod with

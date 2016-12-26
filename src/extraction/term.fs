@@ -56,6 +56,15 @@ let eraseTypeDeep g t = Util.eraseTypeDeep (Util.udelta_unfold g) t
 
 module Print = FStar.Syntax.Print
 
+
+(* taramana 2016-10-31: we redefine
+FStar.Extraction.ML.Util.record_fields here because the desugaring
+of field names has changed, but we cannot change the definition in
+FStar.Extraction.ML.Util for now because it is used by legacy
+extraction, which is still used in the bootstrapping process *)
+
+let record_fields fs vs = List.map2 (fun (f:ident) e -> f.idText, e) fs vs
+
 (********************************************************************************************)
 (* Some basic error reporting; all are fatal errors at this stage                           *)
 (********************************************************************************************)
@@ -108,100 +117,113 @@ let effect_as_etag =
 (* Basic syntactic operations on a term                                                     *)
 (********************************************************************************************)
 
-(* Deciding which stratum a term belongs to, i.e., is it going to be an ML expression or type? *)
-type level_t =
-    | Term_level
-    | Type_level
-    | Kind_level
+(* is_arity t: 
+         t is a sort s, i.e., Type i
+     or, t = x1:t1 -> ... -> xn:tn -> C
+             where C.result_type is an arity
 
-let predecessor t = function
-    | Term_level -> Term_level
-    | Type_level -> Term_level
-    | Kind_level -> Type_level
+ *)
+let rec is_arity env t =
+    let t = U.unmeta t in 
+    match (SS.compress t).n with
+    | Tm_unknown
+    | Tm_delayed _
+    | Tm_ascribed _
+    | Tm_meta _ -> failwith "Impossible"
+    | Tm_uvar _
+    | Tm_constant _
+    | Tm_name _ 
+    | Tm_bvar _ -> false
+    | Tm_type _ -> true
+    | Tm_arrow(_, c) -> 
+      is_arity env (FStar.Syntax.Util.comp_result c)
+    | Tm_fvar _ -> 
+      let t = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.UnfoldUntil Delta_constant] env.tcenv t in
+      begin match (SS.compress t).n with 
+        | Tm_fvar _ -> false
+        | _ -> is_arity env t
+      end
+    | Tm_app _ -> 
+      let head, _ = U.head_and_args t in
+      is_arity env head
+    | Tm_uinst(head, _) ->
+      is_arity env head
+    | Tm_refine(x, _) -> 
+      is_arity env x.sort
+    | Tm_abs(_, body, _)
+    | Tm_let(_, body) -> 
+      is_arity env body
+    | Tm_match(_, branches) ->
+      begin match branches with
+        | (_, _, e)::_ -> is_arity env e
+        | _ -> false
+      end
 
-//level t:
-//     Determines the level of a term from its
+//is_type_aux env t:
+//     Determines whether or not t is a type
 //     syntactic structure and type annotations
-let rec level env t =
-    let predecessor l = predecessor t l in
+let rec is_type_aux env t =
     let t = SS.compress t in
-    debug env (fun _ -> Util.print2 "level %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
-//    printfn "%s\n" (Print.term_to_string t);
     match t.n with
-    | Tm_delayed _ ->
+    | Tm_delayed _
+    | Tm_unknown ->
         failwith (Util.format1 "Impossible: %s" (Print.tag_of_term t))
 
-    | Tm_unknown -> //usually a placeholder for Type TODO: FIXME!
-        Kind_level
-
     | Tm_constant _ ->
-        Term_level
+      false
 
-    | Tm_fvar ({fv_delta=Delta_defined_at_level _}) ->
-      let t' = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses; N.Exclude N.Zeta; N.Exclude N.Iota] env.tcenv t in
-      debug env (fun () -> Util.print2 "Normalized %s to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
-      level env t'
+    | Tm_type _
+    | Tm_refine _
+    | Tm_arrow _ -> 
+      true
 
+    | Tm_fvar fv when S.fv_eq_lid fv FStar.Syntax.Const.failwith_lid -> 
+      false //special case this, since we emit it during extraction even in prims, before it is in the F* scope
+    
     | Tm_fvar fv ->
       if TypeChecker.Env.is_type_constructor env.tcenv fv.fv_name.v
-      then Type_level
-      else predecessor <| level env fv.fv_name.ty //lose precision
+      then true
+      else let (_, t) = FStar.TypeChecker.Env.lookup_lid env.tcenv fv.fv_name.v in
+           is_arity env t
 
     | Tm_uvar (_, t)
     | Tm_bvar ({sort=t})
-    | Tm_name ({sort=t}) -> //lose precision
-        predecessor <| level env t
-
+    | Tm_name ({sort=t}) ->
+      is_arity env t
+        
     | Tm_ascribed(t, _, _) ->
-        level env t
-
-    | Tm_type _ ->
-        Kind_level
+      is_type_aux env t
 
     | Tm_uinst(t, _) ->
-        level env t
+      is_type_aux env t
 
-    | Tm_refine(x, _) ->
-        begin match level env x.sort with
-            | Term_level -> Type_level
-            | l -> l
-        end
-
-    | Tm_arrow(bs, c) ->
-        begin match level env (U.comp_result c) with
-            | Term_level -> Type_level
-            | l -> l
-        end
-
-    | Tm_abs(bs, body, _) ->
-        level env body
+    | Tm_abs(_, body, _) ->
+      is_type_aux env body
 
     | Tm_let(_, body) ->
-        level env body
+      is_type_aux env body
 
     | Tm_match(_, branches) ->
-        begin match branches with
-        | (_, _, e)::_ -> level env e
+      begin match branches with
+        | (_, _, e)::_ -> is_type_aux env e
         | _ -> failwith "Empty branches"
-        end
+      end
 
     | Tm_meta(t, _) ->
-        level env t
+      is_type_aux env t
 
     | Tm_app(head, _) ->
-        level env head
+      is_type_aux env head
 
-//is_type env t:
-//   The main predicate to determine the stratum
-let is_type env t = match level env t with
-    | Term_level -> false
-    | _ -> true
+let is_type env t = 
+    let b = is_type_aux env t in
+    debug env (fun _ -> 
+        if b 
+        then Util.print2 "is_type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t)
+        else Util.print2 "not a type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
+    b
 
-let is_type_binder env x =
-    match level env (fst x).sort with
-    | Term_level -> failwith "Impossible: Binder is a term"
-    | Type_level -> false
-    | Kind_level -> true
+let is_type_binder env x = is_arity env (fst x).sort
 
 let is_constructor t = match (SS.compress t).n with
     | Tm_fvar ({fv_qual=Some Data_ctor})
@@ -442,7 +464,7 @@ and term_as_mlty' env t =
       | Tm_match _ -> unknownType
 
 and arg_as_mlty (g:env) (a, _) : mlty =
-    if is_type g a
+    if is_type g a //This is just an optimization; we could in principle always emit erasedContent, at the expense of more magics
     then term_as_mlty' g a
     else erasedContent
 
@@ -455,7 +477,12 @@ and fv_app_as_mlty (g:env) (fv:fv) (args : args) : mlty =
         then let _, rest = Util.first_N n_args formals in
              mlargs @ (List.map (fun _ -> erasedContent) rest)
         else mlargs in
-    MLTY_Named (mlargs, mlpath_of_lident fv.fv_name.v)
+    let nm = match maybe_mangle_type_projector g fv with 
+             | Some p -> 
+               p
+             | None -> 
+               mlpath_of_lident fv.fv_name.v in
+    MLTY_Named (mlargs, nm)
 
 and binders_as_ml_binders (g:env) (bs:binders) : list<(mlident * mlty)> * env =
     let ml_bs, env = bs |> List.fold_left (fun (ml_bs, env) b ->
@@ -515,10 +542,10 @@ let resugar_pat q p = match p with
         | Some n -> MLP_Tuple(pats)
         | _ ->
           match q with
-            | Some (Record_ctor (_, fns)) ->
-              let p = record_field_path fns in
+              | Some (Record_ctor (ty, fns)) ->
+              let path = List.map text_of_id ty.ns in
               let fs = record_fields fns pats in
-              MLP_Record(p, fs)
+              MLP_Record(path, fs)
             | _ -> p
       end
     | _ -> p
@@ -668,9 +695,9 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
 
    let as_record qual e =
         match e.expr, qual with
-            | MLE_CTor(_, args), Some (Record_ctor(_, fields)) ->
-               let path = Util.record_field_path fields in
-               let fields = Util.record_fields fields args in
+            | MLE_CTor(_, args), Some (Record_ctor(tyname, fields)) ->
+               let path = List.map text_of_id tyname.ns in
+               let fields = record_fields fields args in
                with_ty e.mlty <| MLE_Record(path, fields)
             | _ -> e in
 
@@ -689,7 +716,8 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
     match mlAppExpr.expr, qual with
         | _, None -> mlAppExpr
 
-        | MLE_App({expr=MLE_Name mlp}, mle::args), Some (Record_projector f) ->
+        | MLE_App({expr=MLE_Name mlp}, mle::args), Some (Record_projector (constrname, f)) ->
+          let f = lid_of_ids (constrname.ns @ [f]) in
           let fn = Util.mlpath_of_lid f in
           let proj = MLE_Proj(mle, fn) in
           let e = match args with
@@ -792,8 +820,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             | _ -> term_as_mlexpr' g t
          end
 
-
-
         | Tm_meta(t, _) //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->
           term_as_mlexpr' g t
@@ -805,7 +831,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_name _
         | Tm_fvar _ -> //lookup in g; decide if its in left or right; tag is Pure because it's just a variable
-          if is_type g t
+          if is_type g t //Here, we really need to be certain that g is a type; unclear if level ensures it
           then ml_unit, E_PURE, ml_unit_ty //Erase type argument
           else begin match lookup_term g t with
                 | Inl _, _ ->
@@ -840,7 +866,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_app(head, args) ->
           let is_total = function
             | Inl l -> FStar.Syntax.Util.is_total_lcomp l
-            | Inr l -> Ident.lid_equals l FStar.Syntax.Const.effect_Tot_lid in
+            | Inr (l, flags) -> Ident.lid_equals l FStar.Syntax.Const.effect_Tot_lid
+                             || flags |> List.existsb (function TOTAL -> true | _ -> false)
+          in
           begin match head.n, (SS.compress head).n with
             | Tm_uvar _, _ -> //This should be a resolved uvar --- so reduce it before extraction
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
@@ -924,10 +952,13 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               then ml_unit, E_PURE, ml_unit_ty //Erase type argument: TODO: FIXME, this could be effectful
               else let head = U.un_uinst head in
                    begin match head.n with
-                    | Tm_bvar _
                     | Tm_fvar _ ->
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
-                      let (head_ml, (vars, t), inst_ok), qual = match lookup_term g head with | Inr (u), q -> u, q | _ -> failwith "FIXME Ty" in
+                      let (head_ml, (vars, t), inst_ok), qual = 
+                        match lookup_term g head with 
+                        | Inr (u), q -> u, q 
+                        | _ -> failwith "FIXME Ty" in
+
                       let has_typ_apps = match args with
                         | (a, _)::_ -> is_type g a
                         | _ -> false in

@@ -1,15 +1,10 @@
 [
   "∂#¡3íVsgè’ˆv—Ne ",
   [
-    [ "Unit1.WPsAndTriples_ST.as_ensures", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.WPsAndTriples_ST.h", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples_ST.g", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples_ST.g", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples_ST.g", 3, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples_ST.g", 4, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.WPsAndTriples_ST.g",
-      5,
+      1,
       2,
       1,
       [

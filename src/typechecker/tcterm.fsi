@@ -18,6 +18,7 @@ val tc_term: env -> term -> term * lcomp * guard_t
 val tc_maybe_toplevel_term: env -> term -> term * lcomp * guard_t
 val tc_comp: env -> comp -> comp * universe * guard_t
 val type_of_tot_term: env -> term -> term * typ * guard_t
+val universe_or_type_of: env -> term -> either<typ,universe>
 val universe_of: env -> term -> universe
 
 val tc_tot_or_gtot_term: env -> term -> term * lcomp * guard_t

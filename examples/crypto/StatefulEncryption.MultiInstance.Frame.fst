@@ -19,13 +19,13 @@ assume Length_emp: forall (a:Type).{:pattern (Seq.length (emp #a))} Seq.length (
 
 // we'll need variants passing i to f, and showing forall j. j < i ==> not f(Seq.index s j)
 assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
-            -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
+            -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { None? o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
 
 (* TODO not quite typing...
 // i is the next index to try
 val find_seq' : #a:Type -> f:(a -> Tot bool) -> s:seq a ->
   i:nat { i <= Seq.length s /\ (forall (j:nat{j<i}). not (f (Seq.index s j))) } ->
-  Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)} /\ (forall (j:nat{j<i}). not (f (Seq.index s j)))) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
+  Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)} /\ (forall (j:nat{j<i}). not (f (Seq.index s j)))) { None? o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
 let rec find_seq' a f s i =
   if i = Seq.length s then None
   else if f (Seq.index s i) then Some i
@@ -158,8 +158,8 @@ val dec: d:decryptor -> a:ad -> c:cipher -> ST (option plain)
               /\ dec_in_basic_fp d h1
               /\ (Let (Heap.sel h0 (Dec.log d))
                       (fun log ->
-                          (is_None o <==> (forall (i:nat{i < Seq.length log}).{:pattern (trigger i)} trigger i /\ ~(basicMatch a c (Seq.index log i))))
-                          /\ (is_Some o ==> (exists (i:nat{i < Seq.length log}).{:pattern (trigger i)} trigger i /\ basicMatch a c (Seq.index log i) /\ Entry.p (Seq.index log i) = Some.v o))))))
+                          (None? o <==> (forall (i:nat{i < Seq.length log}).{:pattern (trigger i)} trigger i /\ ~(basicMatch a c (Seq.index log i))))
+                          /\ (Some? o ==> (exists (i:nat{i < Seq.length log}).{:pattern (trigger i)} trigger i /\ basicMatch a c (Seq.index log i) /\ Entry.p (Seq.index log i) = Some.v o))))))
 let dec d a c =
   let s = !(Dec.log d) in
   match find_seq (basicMatch a c) s with
@@ -327,10 +327,10 @@ val stateful_dec: d:st_decryptor -> c:cipher -> ST (option plain)
                 /\ modifies !{StDec.ctr d} h0 h1
                 /\ Let (Heap.sel h0 (StDec.ctr d)) (fun (r:nat{r=Heap.sel h0 (StDec.ctr d)}) ->
                    Let (Heap.sel h0 (StDec.log d)) (fun (log:seq statefulEntry{log=Heap.sel h0 (StDec.log d)}) ->
-                    (is_None p ==> (r = Seq.length log                     //nothing encrypted yet
+                    (None? p ==> (r = Seq.length log                     //nothing encrypted yet
                                     || StEntry.c (Seq.index log r) <> c    //wrong cipher
                                     ) /\ Heap.sel h1 (StDec.ctr d) = r)
-                   /\ (is_Some p ==>
+                   /\ (Some? p ==>
                           ((Heap.sel h1 (StDec.ctr d) = r + 1)
                            /\ StEntry.p (Seq.index log r) = Some.v p))))))
 #reset-options

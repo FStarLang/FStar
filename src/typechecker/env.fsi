@@ -26,7 +26,7 @@ type binding =
   | Binding_univ     of univ_name
   | Binding_sig_inst of list<lident> * sigelt * universes //the first component should always be a Sig_inductive
 
-type delta_level = 
+type delta_level =
   | NoDelta
   | Inlining
   | Eager_unfolding_only
@@ -101,46 +101,47 @@ val should_verify   : env -> bool
 val incr_query_index: env -> env
 
 (* Marking and resetting the environment, for the interactive mode *)
-val push        : env -> string -> env
-val pop         : env -> string -> env
-val mark        : env -> env
-val reset_mark  : env -> env
-val commit_mark : env -> env
+val push               : env -> string -> env
+val pop                : env -> string -> env
+val mark               : env -> env
+val reset_mark         : env -> env
+val commit_mark        : env -> env
+val cleanup_interactive: env -> unit
 
 (* Checking the per-module debug level and position info *)
-val debug     : env -> Options.debug_level_t -> bool
-val set_range : env -> Range.range -> env
-val get_range : env -> Range.range
+val debug          : env -> Options.debug_level_t -> bool
+val current_module : env -> lident
+val set_range      : env -> Range.range -> env
+val get_range      : env -> Range.range
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
 val lookup_bv              : env -> bv -> typ
+val try_lookup_lid         : env -> lident -> option<(universes * typ)>
 val lookup_lid             : env -> lident -> (universes * typ)
 val lookup_univ            : env -> univ_name -> bool
-val try_lookup_lid         : env -> lident -> option<(universes * typ)>
 val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
 val lookup_val_decl        : env -> lident -> (universes * typ)
 val lookup_datacon         : env -> lident -> universes * typ
 val datacons_of_typ        : env -> lident -> list<lident>
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
-
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
-val lookup_effect_quals    : env -> lident -> list<qualifier>
 val norm_eff_name          : (env -> lident -> lident)
+val lookup_effect_quals    : env -> lident -> list<qualifier>
 val lookup_projector       : env -> lident -> int -> lident
-val current_module         : env -> lident
 val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
-val is_interpreted         : env -> term -> bool
+val is_action              : env -> lident -> bool
+val is_interpreted         : (env -> term -> bool)
 val is_type_constructor    : env -> lident -> bool
 
 (* Universe instantiation *)
 val new_u_univ             : unit -> universe
-val inst_tscheme           : tscheme -> universes * term 
+val inst_tscheme           : tscheme -> universes * term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 
 (* Introducing identifiers and updating the environment *)
@@ -163,6 +164,7 @@ val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
 val univ_vars    : env -> Util.set<universe_uvar>
+val univnames   : env -> Util.set<univ_name>
 val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 

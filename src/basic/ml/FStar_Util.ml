@@ -34,7 +34,7 @@ let is_punctuation c = (
 let return_all x = x
 
 type time = float
-let now () = Unix.gettimeofday ()
+let now () = BatUnix.gettimeofday ()
 let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
   n, 
@@ -44,7 +44,10 @@ let record_time f =
     let res = f () in 
     let _, elapsed = time_diff start (now()) in
     res, elapsed
-
+let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
+let is_before t1 t2 = compare t1 t2 < 0
+let string_of_time = string_of_float
+  
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -86,10 +89,11 @@ let ask_process (p:proc) (stdin:string) : string =
   let out = Buffer.create 16 in
 
   let rec read_out _ =
-    let s = BatString.trim (input_line p.inc) in
-    if s = "Done!" then ()
-    else
-      (Buffer.add_string out (s ^ "\n"); read_out ())
+    try
+      let s = BatString.trim (input_line p.inc) in
+      if s = "Done!" then ()
+      else (Buffer.add_string out (s ^ "\n"); read_out ())
+    with End_of_file -> Buffer.add_string out ("\nkilled\n")
   in
 
   let child_thread = Thread.create (fun _ -> read_out ()) () in
@@ -187,6 +191,34 @@ let set_is_subset_of ((s1, eq):'a set) ((s2, _):'a set) =
   BatList.for_all (fun y -> BatList.exists (eq y) s2) s1
 let set_count ((s1, _):'a set) = Z.of_int (BatList.length s1)
 let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
+  (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
+
+type 'a fifo_set = ('a list) * ('a -> 'a -> bool)
+
+let fifo_set_is_empty ((s, _):'a fifo_set) =
+  match s with
+  | [] -> true
+  | _ -> false
+
+let new_fifo_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a fifo_set =
+  ([], fun x y -> cmp x y = Z.zero)
+
+let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
+  let rec aux out = function
+    | [] -> out
+    | hd::tl ->
+       if BatList.exists (eq hd) out then
+         aux out tl
+       else
+         aux (hd::out) tl in
+  aux [] s1
+let fifo_set_add a ((s, b):'a fifo_set) = (a::s, b)
+let fifo_set_remove x ((s1, eq):'a fifo_set) =
+  (BatList.filter (fun y -> not (eq x y)) s1, eq)
+let fifo_set_mem a ((s, b):'a fifo_set) = BatList.exists (b a) s
+let fifo_set_union ((s1, b):'a fifo_set) ((s2, _):'a fifo_set) = (s1@s2, b)
+let fifo_set_count ((s1, _):'a fifo_set) = Z.of_int (BatList.length s1)
+let fifo_set_difference ((s1, eq):'a fifo_set) ((s2, _):'a fifo_set) : 'a fifo_set =
   (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
 
 type 'value smap = (string, 'value) BatHashtbl.t

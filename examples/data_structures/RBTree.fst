@@ -50,13 +50,13 @@ let rec black_height t = match t with
       | _, _ -> None
 
 (* returns the minimum element in a T tree (E tree has no element) *)
-val min_elt: t:rbtree' -> Pure nat (requires (b2t (is_T t))) (ensures (fun r -> True))
+val min_elt: t:rbtree' -> Pure nat (requires (b2t (T? t))) (ensures (fun r -> True))
 let rec min_elt (T _ a x _) = match a with
   | E -> x
   | _ -> min_elt a
 
 (* returns the maximum element in a T tree *)
-val max_elt: t:rbtree' -> Pure nat (requires (b2t (is_T t))) (ensures (fun r -> True))
+val max_elt: t:rbtree' -> Pure nat (requires (b2t (T? t))) (ensures (fun r -> True))
 let rec max_elt (T _ _ x b) = match b with
   | E -> x
   | _ -> max_elt b
@@ -80,7 +80,7 @@ let rec c_inv t = match t with
  * in a red black tree, black height of every leaf must be same
  *)
 val h_inv: t:rbtree' -> Tot bool
-let h_inv t = is_Some (black_height t)
+let h_inv t = Some? (black_height t)
 
 (*
  * finally, this is the binary search tree invariant
@@ -123,15 +123,15 @@ let rec in_tree t k = match t with
  * may have a red child either on left branch or right branch.
  *)
 type not_c_inv (t:rbtree') =
-    (is_T t) /\ (T.col t = R) /\ (((is_T (T.left t) /\ T.col (T.left t) = R)) \/
-                                  ((is_T (T.right t) /\ T.col (T.right t) = R)))
+    (T? t) /\ (T?.col t = R) /\ (((T? (T?.left t) /\ T?.col (T?.left t) = R)) \/
+                                  ((T? (T?.right t) /\ T?.col (T?.right t) = R)))
 
 (*
  * in Okasaki's algorithm the re-establishment of invariants takes place
  * bottom up, meaning although the invariants may be violated at top,
  * the subtrees still satisfy c_inv.
  *)
-type lr_c_inv (t:rbtree') = is_T t /\ c_inv (T.left t) /\ c_inv (T.right t)
+type lr_c_inv (t:rbtree') = T? t /\ c_inv (T?.left t) /\ c_inv (T?.right t)
 
 (*
  * this is the predicate satisfied by a tree before call to balance
@@ -143,8 +143,8 @@ type pre_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') =
      *)
     (
     k_inv lt /\ k_inv rt /\
-    (is_E lt \/ (is_T lt /\ ky > (max_elt lt))) /\
-    (is_E rt \/ (is_T rt /\ (min_elt rt) > ky))
+    (E? lt \/ (T? lt /\ ky > (max_elt lt))) /\
+    (E? rt \/ (T? rt /\ (min_elt rt) > ky))
     )
 
     /\
@@ -154,7 +154,7 @@ type pre_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') =
      * the second condition ensures that if resulting tree has (lt k rt), it
      * satisfies h_inv
      *)
-    (h_inv lt /\ h_inv rt /\ Some.v (black_height lt) = Some.v (black_height rt))
+    (h_inv lt /\ h_inv rt /\ Some?.v (black_height lt) = Some?.v (black_height rt))
 
     /\
 
@@ -173,10 +173,10 @@ type pre_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') =
 
 type post_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') (r:rbtree') =
 	      (* TODO: this should come from requires *)
-	      is_Some (black_height lt) /\
+	      Some? (black_height lt) /\
               
 	      (* returned tree is a T tree *)
-	      (is_T r) /\
+	      (T? r) /\
 	       
 	      (*
 	       * returned tree satisfies k_inv
@@ -185,8 +185,8 @@ type post_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') (r:rbtree') =
 	       * (resp. for max elt and rt)
 	       *)
 	      (k_inv r /\
-	      ((is_E lt /\ min_elt r = ky) \/ (is_T lt /\ min_elt r = min_elt lt)) /\
-              ((is_E rt /\ max_elt r = ky) \/ (is_T rt /\ max_elt r = max_elt rt))) /\
+	      ((E? lt /\ min_elt r = ky) \/ (T? lt /\ min_elt r = min_elt lt)) /\
+              ((E? rt /\ max_elt r = ky) \/ (T? rt /\ max_elt r = max_elt rt))) /\
 
 	      (*
 	       * returned tree satisfies h_inv
@@ -195,15 +195,15 @@ type post_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') (r:rbtree') =
 	       *)
 		 
               ((h_inv r) /\
-	      ((c = B /\ Some.v(black_height r) = Some.v(black_height lt) + 1) \/
-               (c = R /\ Some.v(black_height r) = Some.v(black_height lt)))) /\
+	      ((c = B /\ Some?.v(black_height r) = Some?.v(black_height lt) + 1) \/
+               (c = R /\ Some?.v(black_height r) = Some?.v(black_height lt)))) /\
 
               (*
 	       * returned tree either satisfies c_inv OR
-	       * if it doesn't, it must be the case that c (and hence T.col r) = R
+	       * if it doesn't, it must be the case that c (and hence T?.col r) = R
 	       *)
 	      (c_inv r  \/
-	      (T.col r = R /\ c = R /\ not_c_inv r /\ lr_c_inv r)) /\
+	      (T?.col r = R /\ c = R /\ not_c_inv r /\ lr_c_inv r)) /\
 	      
               (*
 	       * resulting tree contains all elements from lt, ly, and rt, and
@@ -220,7 +220,7 @@ val balance: c:color -> lt:rbtree' -> ky:nat -> rt:rbtree' ->
              Pure rbtree'
              (requires (pre_balance c lt ky rt))
 	     (ensures (fun r -> post_balance c lt ky rt r))
-#set-options "--z3timeout 10" //longer timeout is more robust
+#reset-options "--z3rlimit 10"
 (* it's pretty cool that the spec is proved easily without any hints ! *)
 let balance c lt ky rt =
   match (c, lt, ky, rt) with
@@ -229,7 +229,8 @@ let balance c lt ky rt =
     | (B, a, x, (T R (T R b y c) z d)) 
     | (B, a, x, (T R b y (T R c z d))) -> T R (T B a x b) y (T B c z d)
     | _ -> T c lt ky rt
-#set-options "--z3timeout 5"
+
+#reset-options "--z3rlimit 10"
 
 (*
  * a helper function that inserts a red node with new key, and calls
@@ -241,7 +242,7 @@ val ins: t:rbtree' -> k:nat ->
 	 (ensures (fun r ->
 	          
           (* returned tree is a T *)
-	  (is_T r) /\
+	  (T? r) /\
 
 	  (*
 	   * returned tree satisfies k_inv
@@ -251,8 +252,8 @@ val ins: t:rbtree' -> k:nat ->
 	   *)
 	     
 	  (k_inv r /\
-	  (min_elt r = k \/ (is_T t /\ min_elt r = min_elt t)) /\
-	  (max_elt r = k \/ (is_T t /\ max_elt r = max_elt t))) /\
+	  (min_elt r = k \/ (T? t /\ min_elt r = min_elt t)) /\
+	  (max_elt r = k \/ (T? t /\ max_elt r = max_elt t))) /\
 
           (*
 	   * returned tree satisfies h_inv
@@ -265,7 +266,7 @@ val ins: t:rbtree' -> k:nat ->
 	   * these are copied from post condition of balance
 	   *)
 	  (c_inv r \/
-	  (is_T t /\ T.col r = R /\ T.col t = R /\ not_c_inv r /\ lr_c_inv r)) /\
+	  (T? t /\ T?.col r = R /\ T?.col t = R /\ not_c_inv r /\ lr_c_inv r)) /\
 	  
           (*
            * returned tree has all the elements of t and k and nothing else
@@ -300,7 +301,7 @@ type balanced_rbtree' (t:rbtree') = r_inv t /\ h_inv t /\ c_inv t /\ k_inv t
  * make black blackens the root of a tree
  *)
 val make_black: t:rbtree' -> Pure rbtree'
-                            (requires (is_T t /\ c_inv t /\ h_inv t /\ k_inv t))
+                            (requires (T? t /\ c_inv t /\ h_inv t /\ k_inv t))
                             (ensures (fun r -> balanced_rbtree' r
                             /\ (forall k. in_tree t k <==> in_tree r k)))
 let make_black (T _ a x b) = T B a x b
@@ -327,4 +328,4 @@ noeq type rbtree =
   | Mk: tr:rbtree'{balanced_rbtree' tr} -> rbtree
 
 val proj: rbtree -> Pure rbtree' (requires True) (ensures (fun r -> balanced_rbtree' r))
-let proj tr = Mk.tr tr
+let proj tr = Mk?.tr tr

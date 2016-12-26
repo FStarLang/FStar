@@ -2,7 +2,6 @@
   "Å-IkÇ-‘€¨‹\u001f¿ˆ\fñ‘",
   [
     [ "Unit2.test1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit2.test1", 2, 2, 1, [ "@query" ], 0 ],
     [ "Unit2.test2", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit2.test3", 1, 2, 1, [ "@query", "equation_Prims.nat" ], 0 ],
     [
@@ -31,27 +30,29 @@
       ],
       0
     ],
+    [ "Unit2.uu___is_Int", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Unit2.Int.i",
+      "Unit2.__proj__Int__item__i",
       1,
       2,
       1,
       [
         "@query", "disc_equation_Unit2.Int",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3e7adc4cc6fc6abd3c373ce468e1d7a8"
+        "refinement_interpretation_Tm_refine_a80b1732c37b674c773643729bebf97c"
       ],
       0
     ],
+    [ "Unit2.uu___is_Bool", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Unit2.Bool.b",
+      "Unit2.__proj__Bool__item__b",
       1,
       2,
       1,
       [
         "@query", "disc_equation_Unit2.Bool",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_669c4930731d237bd9d76805131af713"
+        "refinement_interpretation_Tm_refine_51f253259fbb75b1f44c4d01d8397ea7"
       ],
       0
     ],
@@ -69,8 +70,7 @@
       0
     ],
     [ "Unit2.f1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit2.f2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit2.f2", 2, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
+    [ "Unit2.f2", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [
       "Unit2.f3",
       1,
@@ -79,7 +79,6 @@
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0
     ],
-    [ "Unit2.eta_f4", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit2.eta_f4'",
       1,

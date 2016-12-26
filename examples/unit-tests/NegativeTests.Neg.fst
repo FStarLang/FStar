@@ -29,7 +29,7 @@ val bad_projector: option 'a -> 'a
 let bad_projector x = Some.v x (* should fail *)
 
 assume type T : (result int -> Type) -> Type
-assume TEST: T (fun ri -> b2t (V.v ri = 0))//should fail: not (is_V ri)
+assume TEST: T (fun ri -> b2t (V.v ri = 0))//should fail: not (V? ri)
 
 assume val f1: (x:int -> Tot unit) -> Tot unit
 assume val g1: nat -> Tot unit

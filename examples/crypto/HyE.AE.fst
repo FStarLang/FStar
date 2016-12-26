@@ -74,14 +74,14 @@ let encrypt k m : cipher =
 
 (* this doesn't really belong here *)
 val mem : #a:eqtype -> x:a -> xs:Seq.seq a -> Tot bool
-let mem (#a:eqtype) x xs = is_Some (SeqProperties.seq_find (fun y -> y = x) xs)
+let mem (#a:eqtype) x xs = Some? (SeqProperties.seq_find (fun y -> y = x) xs)
 
 val decrypt: k:key -> c:cipher -> ST (option msg)
   (requires (fun h0 -> True (* Could require Map.contains h0 k.region *)
     ))
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
-    ( (b2t int_ctxt /\ is_Some res) ==> mem (Some.v res,c) (m_sel h0 k.log)
+    ( (b2t int_ctxt /\ Some? res) ==> mem (Some?.v res,c) (m_sel h0 k.log)
     )
   )
   )
@@ -97,7 +97,7 @@ let decrypt k c =
     let iv,c' = split c ivsize in
     assume( B.length c' >= aeadTagSize AES_128_GCM);
     let poption = (CoreCrypto.aead_decrypt AES_128_GCM k.raw iv empty_bytes c') in
-    if is_Some poption then
-      Some (coerce (Some.v poption))
+    if Some? poption then
+      Some (coerce (Some?.v poption))
     else
       None

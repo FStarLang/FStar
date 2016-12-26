@@ -110,73 +110,6 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
           None
       | e when not ((Options.trace_error())) -> raise e
 
-(******************************************************************************)
-(* Building an instance of the type-checker to be run in the interactive loop *)
-(******************************************************************************)
-let pop_context (dsenv, env) msg =
-    DsEnv.pop dsenv |> ignore;
-    TcEnv.pop env msg |> ignore;
-    env.solver.refresh()
-
-let push_context (dsenv, env) msg =
-    let dsenv = DsEnv.push dsenv in
-    let env = TcEnv.push env msg in
-    (dsenv, env)
-        
-let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul>> = 
-    let pop (dsenv, env) msg = 
-          pop_context (dsenv, env) msg;
-          Options.pop() in
-
-    let push (dsenv, env) msg = 
-          let res = push_context (dsenv, env) msg in
-          Options.push();
-          res in
-
-    let mark (dsenv, env) =
-        let dsenv = DsEnv.mark dsenv in
-        let env = TcEnv.mark env in
-        Options.push();
-        dsenv, env in
-
-    let reset_mark (dsenv, env) =
-        let dsenv = DsEnv.reset_mark dsenv in
-        let env = TcEnv.reset_mark env in
-        Options.pop();
-        dsenv, env in
-
-    let commit_mark (dsenv, env) =
-        let dsenv = DsEnv.commit_mark dsenv in
-        let env = TcEnv.commit_mark env in
-        dsenv, env in
-
-    let check_frag (dsenv, (env:TcEnv.env)) curmod text =  
-        try 
-            match tc_one_fragment curmod dsenv env text with 
-                | Some (m, dsenv, env) -> 
-                  Some (m, (dsenv, env), FStar.TypeChecker.Errors.get_err_count())
-                | _ -> None
-        with 
-            | FStar.Syntax.Syntax.Error(msg, r) when not ((Options.trace_error())) ->
-              FStar.TypeChecker.Errors.add_errors env [(msg, r)];
-              None
-              
-            | FStar.Syntax.Syntax.Err msg when not ((Options.trace_error())) ->
-              FStar.TypeChecker.Errors.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
-              None in
-
-    let report_fail () = 
-        TypeChecker.Errors.report_all() |> ignore;
-        TypeChecker.Errors.num_errs := 0 in
-
-    { pop = pop; 
-      push = push;
-      mark = mark;
-      reset_mark = reset_mark;
-      commit_mark = commit_mark;
-      check_frag = check_frag;
-      report_fail = report_fail}
-
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
@@ -208,54 +141,105 @@ let needs_interleaving intf impl =
   m1 = m2 &&
   FStar.Util.get_file_extension intf = "fsti" && FStar.Util.get_file_extension impl = "fst"
 
-let rec tc_fold_interleave acc remaining =
-  let move intf impl remaining =
-    Syntax.reset_gensym ();
-    let all_mods, dsenv, env = acc in
-    let ms, dsenv, env = match intf with 
-        | None -> //no interface; easy
-          tc_one_file dsenv env None impl 
+let pop_context (dsenv, env) msg =
+    DsEnv.pop dsenv |> ignore;
+    TcEnv.pop env msg |> ignore;
+    env.solver.refresh()
 
-        | Some _ when ((Options.codegen()) <> None) -> 
-          if not (Options.lax())
-          then raise (Err "Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately");
-          tc_one_file dsenv env intf impl
+let push_context (dsenv, env) msg =
+    let dsenv = DsEnv.push dsenv in
+    let env = TcEnv.push env msg in
+    (dsenv, env)
 
-        | Some iname -> 
-          if Options.debug_any () then
-            FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
-          let caption = "interface: " ^ iname in
-          //push a new solving context, so that we can blow away implementation details below
-          let dsenv', env' = push_context (dsenv, env) caption in
-          let _, dsenv', env' = tc_one_file dsenv' env' intf impl in //check the impl and interface together, if any
-          //discard the impl and check the interface alone for the rest of the program
-          let _ = pop_context (dsenv', env') caption in
-          tc_one_file dsenv env None iname in //check the interface alone
-    let acc = all_mods @ ms, dsenv, env in
-    tc_fold_interleave acc remaining
+let tc_one_file_and_intf (intf:option<string>) (impl:string) (dsenv:Parser.Env.env) (env:env) = //:(modul * int) list * Parser.Env.env * env =
+  Syntax.reset_gensym ();
+  match intf with
+    | None -> //no interface; easy
+      tc_one_file dsenv env None impl 
+    | Some _ when ((Options.codegen()) <> None) -> 
+        if not (Options.lax())
+        then raise (Err "Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately");
+        tc_one_file dsenv env intf impl
+    | Some iname -> 
+        if Options.debug_any () then
+        FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
+        let caption = "interface: " ^ iname in
+        //push a new solving context, so that we can blow away implementation details below
+        let dsenv', env' = push_context (dsenv, env) caption in
+        let _, dsenv', env' = tc_one_file dsenv' env' intf impl in //check the impl and interface together, if any
+        //discard the impl and check the interface alone for the rest of the program
+        let _ = pop_context (dsenv', env') caption in
+        tc_one_file dsenv env None iname //check the interface alone
+
+type uenv = Parser.Env.env * env
+
+let tc_one_file_from_remaining (remaining:list<string>) (uenv:uenv) = //:(string list * (modul* int) list * uenv) =
+  let dsenv, env = uenv in
+  let remaining, (nmods, dsenv, env) =
+    match remaining with
+        | intf :: impl :: remaining when needs_interleaving intf impl ->
+          remaining, tc_one_file_and_intf (Some intf) impl dsenv env
+        | intf_or_impl :: remaining ->
+          remaining, tc_one_file_and_intf None intf_or_impl dsenv env
+        | [] -> [], ([], dsenv, env)
   in
+  remaining, nmods, (dsenv, env)
 
+let rec tc_fold_interleave (acc:list<(modul * int)> * uenv) (remaining:list<string>) =
   match remaining with
-  | intf :: impl :: remaining when needs_interleaving intf impl ->
-      move (Some intf) impl remaining
-  | intf_or_impl :: remaining ->
-      move None intf_or_impl remaining
-  | [] ->
-      acc
+    | [] -> acc
+    | _  ->
+      let mods, uenv = acc in
+      let remaining, nmods, (dsenv, env) = tc_one_file_from_remaining remaining uenv in
+      tc_fold_interleave (mods@nmods, (dsenv, env)) remaining
+
+//let rec tc_fold_interleave acc remaining =
+//  let move intf impl remaining =
+//    Syntax.reset_gensym ();
+//    let all_mods, dsenv, env = acc in
+//    let ms, dsenv, env = match intf with 
+//        | None -> //no interface; easy
+//          tc_one_file dsenv env None impl 
+//
+//        | Some _ when ((Options.codegen()) <> None) -> 
+//          if not (Options.lax())
+//          then raise (Err "Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately");
+//          tc_one_file dsenv env intf impl
+//
+//        | Some iname -> 
+//          if Options.debug_any () then
+//            FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
+//          let caption = "interface: " ^ iname in
+//          //push a new solving context, so that we can blow away implementation details below
+//          let dsenv', env' = push_context (dsenv, env) caption in
+//          let _, dsenv', env' = tc_one_file dsenv' env' intf impl in //check the impl and interface together, if any
+//          //discard the impl and check the interface alone for the rest of the program
+//          let _ = pop_context (dsenv', env') caption in
+//          tc_one_file dsenv env None iname in //check the interface alone
+//    let acc = all_mods @ ms, dsenv, env in
+//    tc_fold_interleave acc remaining
+//  in
+//
+//  match remaining with
+//  | intf :: impl :: remaining when needs_interleaving intf impl ->
+//      move (Some intf) impl remaining
+//  | intf_or_impl :: remaining ->
+//      move None intf_or_impl remaining
+//  | [] ->
+//      acc
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
 (***********************************************************************)
 let batch_mode_tc_no_prims dsenv env filenames =
-  let all_mods, dsenv, env = tc_fold_interleave ([], dsenv, env) filenames in
+  let all_mods, (dsenv, env) = tc_fold_interleave ([], (dsenv, env)) filenames in
   if (Options.interactive()) && FStar.TypeChecker.Errors.get_err_count () = 0
   then env.solver.refresh()
   else env.solver.finish();
   all_mods, dsenv, env
 
-let batch_mode_tc verify_mode filenames =
+let batch_mode_tc filenames =
   let prims_mod, dsenv, env = tc_prims () in
-  let filenames = find_deps_if_needed verify_mode filenames in
   if not (Options.explicit_deps ()) && Options.debug_any () then begin
     FStar.Util.print_endline "Auto-deps kicked in; here's some info.";
     FStar.Util.print1 "Here's the list of filenames we will process: %s\n"
@@ -266,3 +250,85 @@ let batch_mode_tc verify_mode filenames =
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
   prims_mod :: all_mods, dsenv, env
 
+(******************************************************************************)
+(* Building an instance of the type-checker to be run in the interactive loop *)
+(******************************************************************************)
+let tc_prims_interactive () = //:uenv =
+  let _, dsenv, env = tc_prims () in
+  (dsenv, env)
+
+let tc_one_file_interactive (remaining:list<string>) (uenv:uenv) = //:((string option * string) * uenv * modul option * string list) =
+  let dsenv, env = uenv in
+  let (intf, impl), dsenv, env, remaining =
+    match remaining with
+        | intf :: impl :: remaining when needs_interleaving intf impl ->
+          let _, dsenv, env = tc_one_file_and_intf (Some intf) impl dsenv env in
+          (Some intf, impl), dsenv, env, remaining
+        | intf_or_impl :: remaining ->
+          let _, dsenv, env = tc_one_file_and_intf None intf_or_impl dsenv env in 
+          (None, intf_or_impl), dsenv, env, remaining
+        | [] -> failwith "Impossible"
+  in
+  (intf, impl), (dsenv, env), None, remaining
+
+let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul>> = 
+    let pop (dsenv, env) msg = 
+          pop_context (dsenv, env) msg;
+          Options.pop() in
+
+    let push (dsenv, env) lax restore_cmd_line_options msg =
+          let env = { env with lax = lax } in
+          let res = push_context (dsenv, env) msg in
+          Options.push();
+          if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
+          res in
+
+    let mark (dsenv, env) =
+        let dsenv = DsEnv.mark dsenv in
+        let env = TcEnv.mark env in
+        Options.push();
+        dsenv, env in
+
+    let reset_mark (dsenv, env) =
+        let dsenv = DsEnv.reset_mark dsenv in
+        let env = TcEnv.reset_mark env in
+        Options.pop();
+        dsenv, env in
+
+    let cleanup (dsenv, env) = TcEnv.cleanup_interactive env in
+
+    let commit_mark (dsenv, env) =
+        let dsenv = DsEnv.commit_mark dsenv in
+        let env = TcEnv.commit_mark env in
+        dsenv, env in
+
+    let check_frag (dsenv, (env:TcEnv.env)) curmod text =  
+        try 
+            match tc_one_fragment curmod dsenv env text with 
+                | Some (m, dsenv, env) -> 
+                  Some (m, (dsenv, env), FStar.TypeChecker.Errors.get_err_count())
+                | _ -> None
+        with 
+            | FStar.Syntax.Syntax.Error(msg, r) when not ((Options.trace_error())) ->
+              FStar.TypeChecker.Errors.add_errors env [(msg, r)];
+              None
+              
+            | FStar.Syntax.Syntax.Err msg when not ((Options.trace_error())) ->
+              FStar.TypeChecker.Errors.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
+              None in
+
+    let report_fail () = 
+        TypeChecker.Errors.report_all() |> ignore;
+        TypeChecker.Errors.num_errs := 0 in
+
+
+    { pop = pop; 
+      push = push;
+      mark = mark;
+      reset_mark = reset_mark;
+      commit_mark = commit_mark;
+      check_frag = check_frag;
+      report_fail = report_fail;
+      tc_prims = tc_prims_interactive;
+      tc_one_file = tc_one_file_interactive;
+      cleanup = cleanup }

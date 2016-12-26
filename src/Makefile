@@ -53,7 +53,8 @@ all: nuget-restore
 	chmod a+x $(BIN)/tests.exe
 	chmod a+x $(BIN)/fstar.exe
 
-clean:
+# SAD! Can't make clean if fslex and fsyacc haven't be restored... what...
+clean: nuget-restore
 	$(MSBUILD) /t:clean VS/FStar.sln
 
 # --------------------------------------------------------------------
@@ -84,6 +85,7 @@ STDLIB=$(addprefix $(LIB)/, allboot.fsti stboot.fsti list.fsti option.fsti \
   FStar.Float.fsti FStar.Char.fsti $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti \
   FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
 BOOT_BASIC_FSTI=$(addprefix boot_fstis/, string.fsti bytes.fsti platform.fsti version.fsti range.fsti)
+BOOT_PRETTYPRINT_FSTI=$(addprefix boot_fstis/, FStar.Pprint.fsti)
 
 # All the .fs and .fsi files that need to be pre-processed into valid .fst files.
 BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
@@ -96,14 +98,14 @@ TC=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi re
 TC_SRC=$(addprefix tc/, $(TC))
 TOSMT=term.fsi term.fs z3.fs splitcases.fs encode.fs
 TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
-BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs interleave.fs tosyntax.fs lexhelp.fs parseit.fsi driver.fs dep.fs)
+BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs interleave.fs tosyntax.fs lexhelp.fs parseit.fsi driver.fs dep.fs todocument.fs)
 TYPECHECKER=common.fs env.fsi env.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs util.fsi util.fs dmff.fs tcterm.fsi tcterm.fs tc.fsi tc.fs
 TYPECHECKER_SRC=$(addprefix typechecker/, $(TYPECHECKER))
 EXTRACTION=ml-syntax.fs env.fs uenv.fs util.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs term.fs modul.fs js-ast.fs js-translate.fs js-printast.fs kremlin.fs
 EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
 FSDOC=generator.fs
 FSDOC_SRC=$(addprefix fsdoc/, $(FSDOC))
-SMTENCODING=term.fsi term.fs z3.fs splitcases.fs errorReporting.fs encode.fs solver.fs
+SMTENCODING=term.fsi term.fs util.fs z3.fs splitcases.fs errorReporting.fs encode.fs solver.fs
 SMTENCODING_SRC=$(addprefix smtencoding/, $(SMTENCODING))
 TOPLEVEL=dependences.fs interactive.fs stratified.fs universal.fs fstar.fs
 TOPLEVEL_SRC=$(addprefix fstar/, $(TOPLEVEL))
@@ -111,7 +113,7 @@ TOPLEVEL_SRC=$(addprefix fstar/, $(TOPLEVEL))
 BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) \
   $(TOSMT_SRC) $(BOOT_PARSER) $(TYPECHECKER_SRC) $(EXTRACTION_SRC) $(FSDOC_SRC) $(SMTENCODING_SRC) $(TOPLEVEL_SRC)
 
-ALL_INTERFACES=$(STDLIB) $(BOOT_BASIC_FSTI)
+ALL_INTERFACES=$(STDLIB) $(BOOT_BASIC_FSTI) $(BOOT_PRETTYPRINT_FSTI)
 # In the dependency order... eventually we want to use auto-deps
 ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 	        FStar.Format.fst \
@@ -120,19 +122,23 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 	    	FStar.Tc.Env.fst FStar.Tc.Recheck.fst FStar.Tc.Normalize.fst FStar.Tc.Errors.fst FStar.Tc.Rel.fst FStar.Tc.Util.fst FStar.Tc.Tc.fst \
 	    	FStar.ToSMT.Term.fst FStar.ToSMT.Z3.fst FStar.ToSMT.SplitQueryCases.fst FStar.ToSMT.Encode.fst \
 	    	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Errors.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst \
-		FStar.Parser.AST.fst FStar.Parser.DesugarEnv.fst FStar.Parser.Desugar.fst FStar.Parser.Env.fst FStar.Parser.Interleave.fst FStar.Parser.ToSyntax.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst \
+		FStar.Parser.AST.fst FStar.Parser.DesugarEnv.fst FStar.Parser.Desugar.fst FStar.Parser.Env.fst FStar.Parser.Interleave.fst FStar.Parser.ToSyntax.fst FStar.Parser.ToDocument.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst \
 		FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.Env.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.ExtractTyp.fst FStar.Extraction.ML.ExtractExp.fst FStar.Extraction.ML.ExtractMod.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst FStar.Extraction.JavaScript.Ast.fst FStar.Extraction.JavaScript.Translate.fst FStar.Extraction.JavaScript.PrintAst.fst FStar.Extraction.Kremlin.fst \
 		FStar.Fsdoc.Generator.fst \
-	    	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
+	    	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
 	    	FStar.Dependences.fst FStar.Interactive.fst FStar.Stratified.fst FStar.Universal.fst FStar.FStar.fst
 
-ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse
+ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse FStar.Pprint
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 
 FSTAROPTS=
 
 all_boot_fsts:
 	./tools/make_all_boot_fsts "$(BOOT_ALL)"
+
+# SI: does it have to go prettyprint.fsti->FStar.Pprint.fsti? 
+boot_fstis/FStar.Pprint.fsti: prettyprint/prettyprint.fsi
+	cp $^ $@
 
 boot_fstis/%.fsti: basic/%.fsi
 	cp $^ $@
@@ -182,7 +188,7 @@ ocaml:
 	+make extract_ocaml
 
 boot-ocaml:
-	+make -C ocaml-output clean
+	# +make -C ocaml-output clean
 	+make -C ocaml-output all
 
 # --------------------------------------------------------------------
@@ -196,10 +202,12 @@ BOOT_FS_BASE=FStar.Options.fs
 BOOT_FS_SYNTAX=FStar.Absyn.Syntax.fs FStar.Absyn.Const.fs FStar.Absyn.Visit.fs FStar.Absyn.Util.fs FStar.Absyn.Print.fs
 BOOT_FS_TC=FStar.Tc.Env.fs FStar.Tc.Recheck.fs FStar.Tc.Normalize.fs FStar.Tc.Errors.fs FStar.Tc.Rel.fs FStar.Tc.Util.fs FStar.Tc.Tc.fs
 BOOT_FS_PARSER=FStar.Parser.AST.fs parseutil.fs parse.fs FStar.Parser.Lexhelp.fs lex.fs FStar.Parser.DesugarEnv.fs FStar.Parser.Desugar.fs parseit.fs FStar.Parser.Driver.fs
+BOOT_FS_FORMAT=FSharp.Format.fs # FSharp? you mean FStar?
+BOOT_FS_PRETTYPRINT=FSharp.PPrint.fs
 BOOT_FS_TOSMT=FStar.ToSMT.Term.fs FStar.ToSMT.Z3.fs FStar.ToSMT.SplitQueryCases.fs FStar.ToSMT.Encode.fs
 BOOT_FS_EXTRACTION=FStar.Extraction.ML.Syntax.fs FStar.Extraction.ML.Env.fs FStar.Extraction.ML.Util.fs FStar.Extraction.ML.Code.fs FStar.Extraction.ML.ExtractTyp.fs FStar.Extraction.ML.ExtractExp.fs FStar.Extraction.ML.ExtractMod.fs  FStar.Extraction.JavaScript.Ast.fs FStar.Extraction.JavaScript.Translate.fs FStar.Extraction.JavaScript.PrintAst.fs FStar.Extraction.Kremlin.fs
 BOOT_FS_FSDOC=FStar.Fsdoc.Generator.fs
-BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $(BOOT_FS_PARSER) $(BOOT_FS_TOSMT) $(BOOT_FS_EXTRACTION) $(BOOT_FS_FSDOC) FStar.FStar.fs
+BOOT_FS_FILES=$(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $(BOOT_FS_PARSER) $(BOOT_FS_FORMAT) $(BOOT_FS_PRETTYPRINT) $(BOOT_FS_TOSMT) $(BOOT_FS_EXTRACTION) $(BOOT_FS_FSDOC) FStar.FStar.fs
 
 boot-fsharp: fsharp-output fs plain-fs-files fsharp-output/fstar.exe
 
@@ -262,6 +270,13 @@ ulib:
 
 uexamples:
 	+make -C ../examples uall
+
+examples:
+	+make -C ../examples sall
+
+ulong:
+	+make utest
+	+make -C ../examples/low-level/crypto extra
 
 wc-boot:
 	wc -l $(BOOT_ALL)
