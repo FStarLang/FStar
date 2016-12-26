@@ -153,7 +153,7 @@ val bytes_of_uint32: output:bytes{length output >= 4} -> m:u32 -> STL unit
     /\ U8.v (get h1 output 1) = (U32.v m / pow2 8) % pow2 8
     /\ U8.v (get h1 output 2) = (U32.v m / pow2 16) % pow2 8
     /\ U8.v (get h1 output 3) = (U32.v m / pow2 24)  % pow2 8 ))
-let rec bytes_of_uint32 output x =
+let bytes_of_uint32 output x =
   let b0 = uint32_to_uint8 (x) in
   let b1 = uint32_to_uint8 ((x >>^ 8ul)) in
   let b2 = uint32_to_uint8 ((x >>^ 16ul)) in
@@ -164,7 +164,8 @@ let rec bytes_of_uint32 output x =
   output.(3ul) <- b3
 
 (* A form of memset, could go into some "Utils" functions module *)
-//16-10-03 added functional step; made pre-condition tighter (sufficient for use in AEAD)
+//16-1003 added functional step; made pre-condition tighter (sufficient for use in AEAD)
+//WARNING: not tail-recursive
 val memset: b:bytes -> z:u8 -> len:u32 -> STL unit
   (requires (fun h -> live h b /\ v len = length b))
   (ensures  (fun h0 _ h1 -> 

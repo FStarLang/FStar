@@ -37,6 +37,24 @@ let store128_le b i =
     C.store64_le b1 i2;
     C.store64_le b2 i1
 
+let load128_be b = 
+    let b1 = sub b 0ul 8ul in
+    let b2 = sub b 8ul 8ul in
+    let l1 = C.load64_le b1 in
+    let i1 = uint64_to_uint128 l1 in
+    let l2 = C.load64_le b2 in
+    let i2 = uint64_to_uint128 l2 in
+    let b = U128.(i1 <<^ 64ul) in
+    U128.(b +^ i2)
+    
+let store128_be b i = 
+    let b1 = sub b 0ul 8ul in
+    let b2 = sub b 8ul 8ul in
+    let i1 = uint128_to_uint64 (U128.(i >>^ 64ul)) in
+    let i2 = uint128_to_uint64 i in
+    C.store64_le b1 i1;
+    C.store64_le b2 i2
+
 
 (* * Every block of message is regarded as an element in Galois field GF(2^128), **)
 (* * it is represented as 16 bytes. The following several functions are basic    **)
