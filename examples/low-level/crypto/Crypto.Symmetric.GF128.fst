@@ -23,8 +23,8 @@ let load128_le b =
     let b1 = sub b 0ul 8ul in
     let b2 = sub b 8ul 8ul in
     let l1 = C.load64_le b1 in
-    let i1 = C.uint64_to_uint128 l1 in
-	let l2 = load64_le b2 in
+    let i1 = uint64_to_uint128 l1 in
+	let l2 = C.load64_le b2 in
     let i2 = uint64_to_uint128 l2 in
     let b = U128.(i2 <<^ 64ul) in
     U128.(b +^ i1)
