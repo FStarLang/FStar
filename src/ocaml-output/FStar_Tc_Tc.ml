@@ -217,7 +217,7 @@ in (_144_95)::s)
 end
 end
 | _47_114 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 end)
 
@@ -233,7 +233,7 @@ end
 (FStar_Util.Inr (((x.FStar_Absyn_Syntax.v), (e))))::s
 end
 | _47_129 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end)
 
@@ -458,7 +458,7 @@ in (
 let w = (fun f -> (f k.FStar_Absyn_Syntax.pos))
 in (match (k.FStar_Absyn_Syntax.n) with
 | (FStar_Absyn_Syntax.Kind_lam (_)) | (FStar_Absyn_Syntax.Kind_delayed (_)) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | (FStar_Absyn_Syntax.Kind_type) | (FStar_Absyn_Syntax.Kind_effect) -> begin
 ((k), (FStar_Tc_Rel.trivial_guard))
@@ -764,7 +764,7 @@ let _47_443 = (match (args) with
 ((res), (args))
 end
 | _47_440 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in (match (_47_443) with
 | (res, args) -> begin
@@ -968,7 +968,7 @@ in (FStar_Tc_Errors.warn t.FStar_Absyn_Syntax.pos _144_298))
 end))))
 end
 | _47_603 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end else begin
 ()
@@ -1446,7 +1446,7 @@ end
 | _47_972 -> begin
 (let _144_397 = (let _144_396 = (FStar_Absyn_Print.typ_to_string t)
 in (FStar_Util.format1 "Unexpected type : %s\n" _144_396))
-in (FStar_All.failwith _144_397))
+in (failwith _144_397))
 end))))))
 and tc_typ_check : FStar_Tc_Env.env  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  FStar_Absyn_Syntax.knd  ->  (FStar_Absyn_Syntax.typ * FStar_Tc_Rel.guard_t) = (fun env t k -> (
 
@@ -1578,7 +1578,7 @@ let _47_1045 = (match (env.FStar_Tc_Env.letrecs) with
 ()
 end
 | _47_1044 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in (
 
@@ -1604,7 +1604,7 @@ let _47_1079 = (match (env.FStar_Tc_Env.letrecs) with
 ()
 end
 | _47_1078 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in (
 
@@ -1868,7 +1868,7 @@ in ((formal.FStar_Absyn_Syntax.v), (_144_474)))
 in FStar_Util.Inr (_144_475))
 end
 | _47_1291 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)) bs' actuals)
 in (FStar_Absyn_Util.subst_exp subst dec))))
 end
@@ -1987,11 +1987,11 @@ in (match (_47_1350) with
 end)))))))))
 end
 | _47_1352 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end
 | _47_1354 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 end))))
 in (let _144_505 = (FStar_All.pipe_right letrecs (FStar_List.fold_left (fun env _47_1359 -> (match (_47_1359) with
@@ -2204,7 +2204,7 @@ end
 | _47_1462 -> begin
 (let _144_528 = (let _144_527 = (FStar_Absyn_Print.exp_to_string e)
 in (FStar_Util.format1 "Unexpected value: %s" _144_527))
-in (FStar_All.failwith _144_528))
+in (failwith _144_528))
 end))))
 and tc_exp : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.exp  ->  (FStar_Absyn_Syntax.exp * FStar_Absyn_Syntax.lcomp * FStar_Tc_Rel.guard_t) = (fun env e -> (
 
@@ -3270,7 +3270,7 @@ end))
 end))))))
 end
 | FStar_Absyn_Syntax.Exp_let ((false, _47_2073), _47_2076) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | FStar_Absyn_Syntax.Exp_let ((true, lbs), e1) -> begin
 (
@@ -3764,7 +3764,7 @@ end
 (let _144_910 = (let _144_909 = (FStar_Range.string_of_range pat_exp.FStar_Absyn_Syntax.pos)
 in (let _144_908 = (FStar_Absyn_Print.exp_to_string pat_exp)
 in (FStar_Util.format2 "tc_eqn: Impossible (%s) %s" _144_909 _144_908)))
-in (FStar_All.failwith _144_910))
+in (failwith _144_910))
 end)))
 in (
 
@@ -4702,7 +4702,7 @@ let _47_2946 = (FStar_All.pipe_right (Prims.snd lbs) (FStar_List.fold_left (fun 
 
 let _47_2943 = (match (lb) with
 | {FStar_Absyn_Syntax.lbname = FStar_Util.Inl (_47_2915); FStar_Absyn_Syntax.lbtyp = _47_2913; FStar_Absyn_Syntax.lbeff = _47_2911; FStar_Absyn_Syntax.lbdef = _47_2909} -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | {FStar_Absyn_Syntax.lbname = FStar_Util.Inr (l); FStar_Absyn_Syntax.lbtyp = t; FStar_Absyn_Syntax.lbeff = _47_2920; FStar_Absyn_Syntax.lbdef = e} -> begin
 (
@@ -4779,7 +4779,7 @@ end)
 in ((FStar_Absyn_Syntax.Sig_let (((lbs), (r), (lids), (quals)))), (lbs)))
 end
 | _47_2978 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (match (_47_2981) with
 | (se, lbs) -> begin
@@ -4896,7 +4896,7 @@ end)
 in ((FStar_Absyn_Syntax.Sig_tycon (((lid), (tps), (k), ([]), ([]), ([]), (r)))), (t)))
 end
 | _47_3049 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))))
 in (
 
@@ -4965,7 +4965,7 @@ end
 | _47_3096 -> begin
 (let _144_1222 = (let _144_1221 = (FStar_Range.string_of_range r)
 in (FStar_Util.format1 "(%s) Impossible" _144_1221))
-in (FStar_All.failwith _144_1222))
+in (failwith _144_1222))
 end)) recs abbrev_defs)
 in (
 
@@ -5063,7 +5063,7 @@ in (match (se) with
 (([]), (hidden))
 end
 | FStar_Absyn_Syntax.Sig_datacon (_47_3155) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Absyn_Syntax.Sig_kind_abbrev (_)) | (FStar_Absyn_Syntax.Sig_tycon (_)) -> begin
 (((se)::[]), (hidden))

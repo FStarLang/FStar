@@ -53,6 +53,8 @@ and branches_t =
 and flag =
   | Private
   | NoExtract
+  | CInline
+  | Substitute
 
 and lifetime =
   | Eternal
@@ -322,6 +324,11 @@ and translate_flags flags =
   List.choose (function
     | Syntax.Private -> Some Private
     | Syntax.NoExtract -> Some NoExtract
+    | Syntax.Attribute "c_inline" -> Some CInline
+    | Syntax.Attribute "substitute" -> Some Substitute
+    | Syntax.Attribute a ->
+        print1_warning "Warning: unrecognized attribute %s" a;
+        None
     | _ -> None
   ) flags
 
@@ -554,6 +561,8 @@ and translate_expr env e: expr =
       EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.join") ->
+      (translate_expr env e1)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ])

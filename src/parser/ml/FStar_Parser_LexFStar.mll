@@ -345,6 +345,7 @@ rule token = parse
  | "="         { EQUALS }
  | "%["        { PERCENT_LBRACK }
  | "!{"        { BANG_LBRACE }
+ | "[@"        { LBRACK_AT }
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
  | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else OPINFIX0c("<")  }

@@ -44,7 +44,7 @@ type env =
 {tcenv : FStar_TypeChecker_Env.env; gamma : binding Prims.list; tydefs : (FStar_Extraction_ML_Syntax.mlsymbol Prims.list * FStar_Extraction_ML_Syntax.mltydecl) Prims.list; currentModule : FStar_Extraction_ML_Syntax.mlpath}
 
 
-let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv"))))
+let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv"))))
 
 
 let debug : env  ->  (Prims.unit  ->  Prims.unit)  ->  Prims.unit = (fun g f -> (
@@ -124,7 +124,7 @@ end
 end
 | (Bv (b', FStar_Util.Inr (_75_56)))::tl -> begin
 if (FStar_Syntax_Syntax.bv_eq b b') then begin
-(FStar_All.failwith (Prims.strcat "Type/Expr clash: " b.FStar_Syntax_Syntax.ppname.FStar_Ident.idText))
+(failwith (Prims.strcat "Type/Expr clash: " b.FStar_Syntax_Syntax.ppname.FStar_Ident.idText))
 end else begin
 (lookup_ty_local tl b)
 end
@@ -133,7 +133,7 @@ end
 (lookup_ty_local tl b)
 end
 | [] -> begin
-(FStar_All.failwith (Prims.strcat "extraction: unbound type var " b.FStar_Syntax_Syntax.ppname.FStar_Ident.idText))
+(failwith (Prims.strcat "extraction: unbound type var " b.FStar_Syntax_Syntax.ppname.FStar_Ident.idText))
 end))
 
 
@@ -222,7 +222,7 @@ end)))
 in (match (x) with
 | None -> begin
 (let _172_99 = (FStar_Util.format1 "free Variable %s not found\n" lid.FStar_Ident.nsstr)
-in (FStar_All.failwith _172_99))
+in (failwith _172_99))
 end
 | Some (y) -> begin
 y
@@ -243,7 +243,7 @@ in (match (x) with
 (let _172_107 = (let _172_106 = (FStar_Range.string_of_range fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.p)
 in (let _172_105 = (FStar_Syntax_Print.lid_to_string fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
 in (FStar_Util.format2 "(%s) free Variable %s not found\n" _172_106 _172_105)))
-in (FStar_All.failwith _172_107))
+in (failwith _172_107))
 end
 | Some (y) -> begin
 y
@@ -264,7 +264,7 @@ in (match (x) with
 (let _172_115 = (let _172_114 = (FStar_Range.string_of_range bv.FStar_Syntax_Syntax.ppname.FStar_Ident.idRange)
 in (let _172_113 = (FStar_Syntax_Print.bv_to_string bv)
 in (FStar_Util.format2 "(%s) bound Variable %s not found\n" _172_114 _172_113)))
-in (FStar_All.failwith _172_115))
+in (failwith _172_115))
 end
 | Some (y) -> begin
 y
@@ -290,7 +290,7 @@ end
 (lookup g (FStar_Util.Inr (x)))
 end
 | _75_174 -> begin
-(FStar_All.failwith "Impossible: lookup_term for a non-name")
+(failwith "Impossible: lookup_term for a non-name")
 end))
 
 
@@ -422,7 +422,7 @@ in (
 let _75_245 = g
 in {tcenv = _75_245.tcenv; gamma = gamma; tydefs = _75_245.tydefs; currentModule = _75_245.currentModule})))))
 end else begin
-(FStar_All.failwith "freevars found")
+(failwith "freevars found")
 end)
 
 
@@ -477,7 +477,7 @@ in (extend_lb env _172_203 FStar_Syntax_Syntax.tun failwith_ty false false))
 in (FStar_All.pipe_right _172_204 Prims.fst))))))
 
 
-let monad_op_name : FStar_Syntax_Syntax.eff_decl  ->  Prims.string  ->  ((Prims.string Prims.list * Prims.string) * FStar_Ident.lident) = (fun ed nm -> (
+let monad_op_name : FStar_Syntax_Syntax.eff_decl  ->  Prims.string  ->  (FStar_Extraction_ML_Syntax.mlpath * FStar_Ident.lident) = (fun ed nm -> (
 
 let _75_280 = ((ed.FStar_Syntax_Syntax.mname.FStar_Ident.ns), (ed.FStar_Syntax_Syntax.mname.FStar_Ident.ident))
 in (match (_75_280) with
@@ -498,13 +498,13 @@ in ((ml_name), (lid))))))
 end)))
 
 
-let action_name : FStar_Syntax_Syntax.eff_decl  ->  FStar_Syntax_Syntax.action  ->  ((Prims.string Prims.list * Prims.string) * FStar_Ident.lident) = (fun ed a -> (monad_op_name ed a.FStar_Syntax_Syntax.action_name.FStar_Ident.ident.FStar_Ident.idText))
+let action_name : FStar_Syntax_Syntax.eff_decl  ->  FStar_Syntax_Syntax.action  ->  (FStar_Extraction_ML_Syntax.mlpath * FStar_Ident.lident) = (fun ed a -> (monad_op_name ed a.FStar_Syntax_Syntax.action_name.FStar_Ident.ident.FStar_Ident.idText))
 
 
-let bind_name : FStar_Syntax_Syntax.eff_decl  ->  ((Prims.string Prims.list * Prims.string) * FStar_Ident.lident) = (fun ed -> (monad_op_name ed "bind"))
+let bind_name : FStar_Syntax_Syntax.eff_decl  ->  (FStar_Extraction_ML_Syntax.mlpath * FStar_Ident.lident) = (fun ed -> (monad_op_name ed "bind"))
 
 
-let return_name : FStar_Syntax_Syntax.eff_decl  ->  ((Prims.string Prims.list * Prims.string) * FStar_Ident.lident) = (fun ed -> (monad_op_name ed "return"))
+let return_name : FStar_Syntax_Syntax.eff_decl  ->  (FStar_Extraction_ML_Syntax.mlpath * FStar_Ident.lident) = (fun ed -> (monad_op_name ed "return"))
 
 
 

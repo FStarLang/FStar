@@ -282,14 +282,14 @@ type bgproc =
 {grab : Prims.unit  ->  FStar_Util.proc; release : Prims.unit  ->  Prims.unit; refresh : Prims.unit  ->  Prims.unit; restart : Prims.unit  ->  Prims.unit}
 
 
-let is_Mkbgproc : bgproc  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbgproc"))))
+let is_Mkbgproc : bgproc  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkbgproc"))))
 
 
 type query_log =
 {get_module_name : Prims.unit  ->  Prims.string; set_module_name : Prims.string  ->  Prims.unit; append_to_log : Prims.string  ->  Prims.unit; close_log : Prims.unit  ->  Prims.unit; log_file_name : Prims.unit  ->  Prims.string}
 
 
-let is_Mkquery_log : query_log  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkquery_log"))))
+let is_Mkquery_log : query_log  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkquery_log"))))
 
 
 let query_logging : query_log = (
@@ -313,7 +313,7 @@ let get_module_name = (fun _87_128 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read current_module_name)) with
 | None -> begin
-(FStar_All.failwith "Module name not set")
+(failwith "Module name not set")
 end
 | Some (n) -> begin
 n
@@ -325,7 +325,7 @@ let new_log_file = (fun _87_133 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read current_module_name)) with
 | None -> begin
-(FStar_All.failwith "current module not set")
+(failwith "current module not set")
 end
 | Some (n) -> begin
 (
@@ -404,7 +404,7 @@ let log_file_name = (fun _87_173 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read current_file_name)) with
 | None -> begin
-(FStar_All.failwith "no log file")
+(failwith "no log file")
 end
 | Some (n) -> begin
 n
@@ -552,7 +552,7 @@ let _87_232 = (FStar_List.iter (fun s -> (let _184_281 = (FStar_Util.format1 "%s
 in (FStar_Util.print_string _184_281))) lines)
 in (FStar_Util.print_string "END-STATS\n")))
 end else begin
-(FStar_All.failwith "Unexpected output from Z3: could not find statistics\n")
+(failwith "Unexpected output from Z3: could not find statistics\n")
 end
 end else begin
 ()
@@ -650,7 +650,7 @@ end
 (let _184_312 = (let _184_311 = (let _184_310 = (FStar_List.map (fun l -> (FStar_Util.format1 "<%s>" (FStar_Util.trim_string l))) lines)
 in (FStar_String.concat "\n" _184_310))
 in (FStar_Util.format1 "Unexpected output from Z3: got output lines: %s\n" _184_311))
-in (FStar_All.pipe_left FStar_All.failwith _184_312))
+in (FStar_All.pipe_left failwith _184_312))
 end))
 in (result lines))))))))
 in (
@@ -699,7 +699,7 @@ type 'a job =
 {job : Prims.unit  ->  'a; callback : 'a  ->  Prims.unit}
 
 
-let is_Mkjob = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkjob"))))
+let is_Mkjob = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkjob"))))
 
 
 type error_kind =
@@ -772,7 +772,7 @@ end
 Kill
 end
 | _87_338 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 in (
 
@@ -832,7 +832,7 @@ let rec dequeue' : Prims.unit  ->  Prims.unit = (fun _87_370 -> (match (()) with
 
 let j = (match ((FStar_ST.read job_queue)) with
 | [] -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (hd)::tl -> begin
 (
@@ -998,7 +998,7 @@ let giveZ3 : FStar_SMTEncoding_Term.decl Prims.list  ->  Prims.unit = (fun decls
 
 let _87_440 = (FStar_All.pipe_right decls (FStar_List.iter (fun _87_4 -> (match (_87_4) with
 | (FStar_SMTEncoding_Term.Push) | (FStar_SMTEncoding_Term.Pop) -> begin
-(FStar_All.failwith "Unexpected push/pop")
+(failwith "Unexpected push/pop")
 end
 | _87_439 -> begin
 ()
@@ -1010,7 +1010,7 @@ let _87_447 = (match ((FStar_ST.read fresh_scope)) with
 (FStar_ST.op_Colon_Equals fresh_scope (((FStar_List.append hd decls))::tl))
 end
 | _87_446 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in (let _184_413 = (let _184_412 = (FStar_ST.read bg_scope)
 in (FStar_List.append (FStar_List.rev decls) _184_412))
@@ -1061,7 +1061,7 @@ let commit_mark = (fun msg -> (match ((FStar_ST.read fresh_scope)) with
 (FStar_ST.op_Colon_Equals fresh_scope (((FStar_List.append hd s))::tl))
 end
 | _87_470 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 
 

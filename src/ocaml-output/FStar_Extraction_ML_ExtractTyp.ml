@@ -15,13 +15,13 @@ in (let _175_8 = (argIsExp r typeName)
 in (FStar_List.append _175_9 _175_8)))
 end
 | FStar_Absyn_Syntax.Kind_delayed (k, _78_15, _78_17) -> begin
-(FStar_All.failwith "extraction.numIndices : expected a compressed argument")
+(failwith "extraction.numIndices : expected a compressed argument")
 end
 | FStar_Absyn_Syntax.Kind_abbrev (_78_21, k) -> begin
 (argIsExp k typeName)
 end
 | _78_26 -> begin
-(FStar_All.failwith (Prims.strcat "unexpected signature of inductive type" typeName))
+(failwith (Prims.strcat "unexpected signature of inductive type" typeName))
 end))
 
 
@@ -103,7 +103,7 @@ end
 (FStar_Extraction_ML_Env.extend_bv c bv (([]), (FStar_Extraction_ML_Env.erasedContent)) false false false)
 end
 | _78_74 -> begin
-(FStar_All.failwith "Impossible case")
+(failwith "Impossible case")
 end))
 
 
@@ -207,10 +207,10 @@ end
 FStar_Extraction_ML_Env.unknownType
 end
 | FStar_Absyn_Syntax.Typ_delayed (_78_149) -> begin
-(FStar_All.failwith "expected the argument to be compressed")
+(failwith "expected the argument to be compressed")
 end
 | _78_152 -> begin
-(FStar_All.failwith "NYI. replace this with unknownType if you know the consequences")
+(failwith "NYI. replace this with unknownType if you know the consequences")
 end)))
 and getTypeFromArg : context  ->  FStar_Absyn_Syntax.arg  ->  FStar_Extraction_ML_Syntax.mlty = (fun c a -> (match ((Prims.fst a)) with
 | FStar_Util.Inl (ty) -> begin
@@ -246,7 +246,7 @@ in (((FStar_List.append mlargs argCompletion)), (_175_97)))
 in FStar_Extraction_ML_Syntax.MLTY_Named (_175_98)))
 end)))))
 end else begin
-(FStar_All.failwith "this case was not anticipated")
+(failwith "this case was not anticipated")
 end)
 and extractBinderType : context  ->  FStar_Absyn_Syntax.binder  ->  (FStar_Extraction_ML_Syntax.mlty * context) = (fun c bn -> (match (bn) with
 | (FStar_Util.Inl (btv), _78_207) -> begin
@@ -312,21 +312,21 @@ type inductiveConstructor =
 {cname : FStar_Ident.lident; ctype : FStar_Absyn_Syntax.typ}
 
 
-let is_MkinductiveConstructor : inductiveConstructor  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_MkinductiveConstructor"))))
+let is_MkinductiveConstructor : inductiveConstructor  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_MkinductiveConstructor"))))
 
 
 type inductiveTypeFam =
 {tyName : FStar_Ident.lident; k : FStar_Absyn_Syntax.knd; tyBinders : FStar_Absyn_Syntax.binders; constructors : inductiveConstructor Prims.list; qualifiers : FStar_Absyn_Syntax.qualifier Prims.list}
 
 
-let is_MkinductiveTypeFam : inductiveTypeFam  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_MkinductiveTypeFam"))))
+let is_MkinductiveTypeFam : inductiveTypeFam  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_MkinductiveTypeFam"))))
 
 
 type typeAbbrev =
 {abTyName : FStar_Ident.lident; abTyBinders : FStar_Absyn_Syntax.binders; abBody : FStar_Absyn_Syntax.typ}
 
 
-let is_MktypeAbbrev : typeAbbrev  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_MktypeAbbrev"))))
+let is_MktypeAbbrev : typeAbbrev  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_MktypeAbbrev"))))
 
 
 let lookupDataConType : context  ->  FStar_Absyn_Syntax.sigelts  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun c sigb l -> (
@@ -398,7 +398,7 @@ end
 | (se)::tlsig -> begin
 (let _175_183 = (let _175_182 = (FStar_Absyn_Print.sigelt_to_string se)
 in (FStar_Util.format1 "unexpected content in a  sig bundle : %s\n" _175_182))
-in (FStar_All.failwith _175_183))
+in (failwith _175_183))
 end))
 
 
@@ -410,7 +410,7 @@ let totalType_of_comp : FStar_Absyn_Syntax.comp  ->  FStar_Absyn_Syntax.typ = (f
 ty
 end
 | _78_363 -> begin
-(FStar_All.failwith "expected a total type. constructors of inductive types were assumed to be total")
+(failwith "expected a total type. constructors of inductive types were assumed to be total")
 end))
 
 

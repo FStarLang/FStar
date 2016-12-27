@@ -76,7 +76,7 @@ type env =
 {curmodule : FStar_Ident.lident Prims.option; modules : (FStar_Ident.lident * FStar_Absyn_Syntax.modul) Prims.list; open_namespaces : FStar_Ident.lident Prims.list; modul_abbrevs : (FStar_Ident.ident * FStar_Ident.lident) Prims.list; sigaccum : FStar_Absyn_Syntax.sigelts; localbindings : ((FStar_Absyn_Syntax.btvdef, FStar_Absyn_Syntax.bvvdef) FStar_Util.either * binding) Prims.list; recbindings : binding Prims.list; phase : FStar_Parser_AST.level; sigmap : (FStar_Absyn_Syntax.sigelt * Prims.bool) FStar_Util.smap Prims.list; default_result_effect : FStar_Absyn_Syntax.typ  ->  FStar_Range.range  ->  FStar_Absyn_Syntax.comp; iface : Prims.bool; admitted_iface : Prims.bool}
 
 
-let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv"))))
+let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv"))))
 
 
 type occurrence =
@@ -210,7 +210,7 @@ type record_or_dc =
 {typename : FStar_Ident.lident; constrname : FStar_Ident.lident; parms : FStar_Absyn_Syntax.binders; fields : (FStar_Absyn_Syntax.fieldname * FStar_Absyn_Syntax.typ) Prims.list; is_record : Prims.bool}
 
 
-let is_Mkrecord_or_dc : record_or_dc  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkrecord_or_dc"))))
+let is_Mkrecord_or_dc : record_or_dc  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkrecord_or_dc"))))
 
 
 let open_modules : env  ->  (FStar_Ident.lident * FStar_Absyn_Syntax.modul) Prims.list = (fun e -> e.modules)
@@ -218,7 +218,7 @@ let open_modules : env  ->  (FStar_Ident.lident * FStar_Absyn_Syntax.modul) Prim
 
 let current_module : env  ->  FStar_Ident.lident = (fun env -> (match (env.curmodule) with
 | None -> begin
-(FStar_All.failwith "Unset current module")
+(failwith "Unset current module")
 end
 | Some (m) -> begin
 m
@@ -1008,7 +1008,7 @@ in (FStar_Absyn_Util.mkbvd _159_599))
 in FStar_Util.Inr (_159_600))
 end
 | _62_745 -> begin
-(FStar_All.failwith "Tried to generate a bound variable for a type constructor")
+(failwith "Tried to generate a bound variable for a type constructor")
 end))
 
 
@@ -1044,7 +1044,7 @@ let push_local_tbinding : env  ->  FStar_Ident.ident  ->  (env * FStar_Absyn_Syn
 ((env), (x))
 end
 | _62_768 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 
 
@@ -1053,7 +1053,7 @@ let push_local_vbinding : env  ->  FStar_Ident.ident  ->  (env * FStar_Absyn_Syn
 ((env), (x))
 end
 | _62_776 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 
 
@@ -1069,7 +1069,7 @@ end else begin
 end
 end
 | _62_785 -> begin
-(FStar_All.failwith "Unexpected rec_binding")
+(failwith "Unexpected rec_binding")
 end))
 
 
@@ -1296,7 +1296,7 @@ let _62_944 = env
 in {curmodule = _62_944.curmodule; modules = _62_944.modules; open_namespaces = _62_944.open_namespaces; modul_abbrevs = _62_944.modul_abbrevs; sigaccum = _62_944.sigaccum; localbindings = _62_944.localbindings; recbindings = _62_944.recbindings; phase = _62_944.phase; sigmap = (hd)::tl; default_result_effect = _62_944.default_result_effect; iface = _62_944.iface; admitted_iface = _62_944.admitted_iface})
 end
 | _62_947 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 
 
@@ -1311,7 +1311,7 @@ let _62_955 = env
 in {curmodule = _62_955.curmodule; modules = _62_955.modules; open_namespaces = _62_955.open_namespaces; modul_abbrevs = _62_955.modul_abbrevs; sigaccum = _62_955.sigaccum; localbindings = _62_955.localbindings; recbindings = _62_955.recbindings; phase = _62_955.phase; sigmap = maps; default_result_effect = _62_955.default_result_effect; iface = _62_955.iface; admitted_iface = _62_955.admitted_iface}))
 end
 | _62_958 -> begin
-(FStar_All.failwith "No more modules to pop")
+(failwith "No more modules to pop")
 end))
 
 

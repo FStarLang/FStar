@@ -111,7 +111,7 @@ in ((g), (_177_40)))
 end))
 end
 | _80_87 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 end)))
 end

@@ -37,7 +37,7 @@ module C  = FStar.Syntax.Const
 let fail_exp (lid:lident) (t:typ) =
     mk (Tm_app(S.fvar C.failwith_lid Delta_constant None,
                [ S.iarg t
-               ; S.iarg <| mk (Tm_constant (Const_string (Bytes.string_as_unicode_bytes ("Not yet implemented:"^(Print.lid_to_string lid)), Range.dummyRange))) None Range.dummyRange]))
+               ; S.as_arg <| mk (Tm_constant (Const_string (Bytes.string_as_unicode_bytes ("Not yet implemented:"^(Print.lid_to_string lid)), Range.dummyRange))) None Range.dummyRange]))
         None
         Range.dummyRange
 
@@ -173,32 +173,30 @@ let extract_bundle env se =
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
-let level_of_sigelt g se =
-    let l = function
-        | Term.Term_level -> "Term_level"
-        | Term.Type_level -> "Type_level"
-        | Term.Kind_level -> "Kind_level" in
-    match se with
-        | Sig_bundle _
-        | Sig_inductive_typ _
-        | Sig_datacon _ -> Util.print_string "\t\tInductive bundle"
-
-        | Sig_declare_typ(lid, _, t, quals, _) ->
-          Util.print2 "\t\t%s @ %s\n" (Print.lid_to_string lid) (l (Term.predecessor t <| Term.level g t))
-
-        | Sig_let((_, lb::_), _, _, _) ->
-          Util.print3 "\t\t%s : %s @ %s\n" ((right lb.lbname).fv_name.v |> Print.lid_to_string)
-                                         (Print.term_to_string lb.lbtyp)
-                                         (l (Term.predecessor lb.lbtyp <| Term.level g lb.lbtyp))
-
-
-        | _ -> Util.print_string "other\n"
-
+//let level_of_sigelt g se =
+//    let l = function
+//        | Term.false -> "false"
+//        | Term.true -> "true"
+//        | Term.Kind_level -> "Kind_level" in
+//    match se with
+//        | Sig_bundle _
+//        | Sig_inductive_typ _
+//        | Sig_datacon _ -> Util.print_string "\t\tInductive bundle"
+//
+//        | Sig_declare_typ(lid, _, t, quals, _) ->
+//          Util.print2 "\t\t%s @ %s\n" (Print.lid_to_string lid) (l (Term.predecessor t <| Term.level g t))
+//
+//        | Sig_let((_, lb::_), _, _, _, _) ->
+//          Util.print3 "\t\t%s : %s @ %s\n" ((right lb.lbname).fv_name.v |> Print.lid_to_string)
+//                                         (Print.term_to_string lb.lbtyp)
+//                                         (l (Term.predecessor lb.lbtyp <| Term.level g lb.lbtyp))
+//
+//
+//        | _ -> Util.print_string "other\n"
+//
 
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
-    debug g (fun u ->
-        Util.print_string (Util.format1 ">>>> extract_sig :  %s \n" (Print.sigelt_to_string se));
-        level_of_sigelt g se);
+     debug g (fun u -> Util.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
      match se with
         | Sig_bundle _
         | Sig_inductive_typ _
@@ -248,17 +246,17 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_new_effect _ ->
           g, []
 
-        | Sig_declare_typ(lid, _, t, quals, _)  when (Term.level g t = Term.Kind_level) -> //lid is a type
+        | Sig_declare_typ(lid, _, t, quals, _)  when Term.is_arity g t -> //lid is a type
           if quals |> Util.for_some (function Assumption -> true | _ -> false) |> not
           then g, []
           else let bs, _ = Util.arrow_formals t in
                let fv = S.lid_as_fv lid Delta_constant None in
                extract_typ_abbrev g fv quals (U.abs bs TypeChecker.Common.t_unit None)
 
-        | Sig_let((false, [lb]), _, _, quals) when (Term.level g lb.lbtyp = Term.Kind_level) ->
+        | Sig_let((false, [lb]), _, _, quals, _) when Term.is_arity g lb.lbtyp ->
           extract_typ_abbrev g (right lb.lbname) quals lb.lbdef
 
-        | Sig_let (lbs, r, _, quals) ->
+        | Sig_let (lbs, r, _, quals, attrs) ->
           let elet = mk (Tm_let(lbs, Const.exp_false_bool)) None r in
           let ml_let, _, _ = Term.term_as_mlexpr g elet in
           begin match ml_let.expr with
@@ -280,7 +278,14 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 | Syntax.NoExtract -> Some NoExtract
                 | _ -> None
               ) quals in
-              g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (flavor, flags, List.rev ml_lbs')]
+              let flags' = List.choose (function
+                | { n = Tm_constant (Const_string (data, _)) } ->
+                    Some (Attribute (string_of_unicode data))
+                | _ ->
+                    print_warning "Warning: unrecognized, non-string attribute, bother protz for a better error message";
+                    None
+              ) attrs in
+              g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')]
 
             | _ ->
               failwith (Util.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
@@ -296,7 +301,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                                     lbunivs=[];
                                     lbtyp=t;
                                     lbeff=Const.effect_ML_lid;
-                                    lbdef=imp}]), r, [], quals) in
+                                    lbdef=imp}]), r, [], quals, []) in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match Util.find_map quals (function Discriminator l -> Some l |  _ -> None) with
                   | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
@@ -329,6 +334,7 @@ let extract_iface (g:env) (m:modul) =  Util.fold_map extract_sig g m.declaration
 
 let rec extract (g:env) (m:modul) : env * list<mllib> =
     S.reset_gensym();
+    Util.print1 "Extracting module %s\n" (Print.lid_to_string m.name);         
     let name = MLS.mlpath_of_lident m.name in
     let g = {g with currentModule = name}  in
     if m.name.str = "Prims"
@@ -336,8 +342,7 @@ let rec extract (g:env) (m:modul) : env * list<mllib> =
     || Options.no_extract m.name.str
     then let g = extract_iface g m in
          g, [] //MLLib([Util.flatten_mlpath name, None, MLLib []])
-    else (Util.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
-         let g, sigs = Util.fold_map extract_sig g m.declarations in
+    else (let g, sigs = Util.fold_map extract_sig g m.declarations in
          let mlm : mlmodule = List.flatten sigs in
          g, [MLLib ([name, Some ([], mlm), (MLLib [])])])
 

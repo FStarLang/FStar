@@ -109,7 +109,7 @@ end
 | FStar_Absyn_Syntax.Kind_unknown -> begin
 (let _139_42 = (let _139_41 = (FStar_Absyn_Print.typ_to_string t)
 in (FStar_Util.format1 "UNKNOWN KIND FOR %s" _139_41))
-in (FStar_All.failwith _139_42))
+in (failwith _139_42))
 end
 | _42_99 -> begin
 tc.FStar_Absyn_Syntax.sort
@@ -173,7 +173,7 @@ in (let _139_55 = (FStar_Absyn_Print.tag_of_typ t)
 in (let _139_54 = (FStar_Absyn_Print.kind_to_string k)
 in (let _139_53 = (FStar_All.pipe_right (FStar_List.length args) FStar_Util.string_of_int)
 in (FStar_Util.format5 "(%s) HEAD KIND is %s\nToo many arguments in type %s; result kind is %s\nwith %s remaining args\n" _139_57 _139_56 _139_55 _139_54 _139_53))))))
-in (FStar_All.failwith _139_58))
+in (failwith _139_58))
 end))
 in (aux [] bs args))
 end)))
@@ -246,13 +246,13 @@ in (_139_74)::subst)
 in (aux subst bs args))
 end
 | _42_234 -> begin
-(FStar_All.failwith "Too many arguments")
+(failwith "Too many arguments")
 end))
 in (aux [] bs args))
 end))
 end
 | FStar_Absyn_Syntax.Exp_match (_42_236) -> begin
-(FStar_All.failwith "Expect match nodes to be annotated already")
+(failwith "Expect match nodes to be annotated already")
 end
 | FStar_Absyn_Syntax.Exp_ascribed (_42_239, t, _42_242) -> begin
 t

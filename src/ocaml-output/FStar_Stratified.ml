@@ -212,7 +212,7 @@ in (FStar_Options.pop ()))))
 end))
 in (
 
-let push = (fun _94_127 msg -> (match (_94_127) with
+let push = (fun _94_127 lax restore_cmd_line_options msg -> (match (_94_127) with
 | (dsenv, env) -> begin
 (
 
@@ -222,12 +222,12 @@ in (
 let env = (FStar_Tc_Env.push env msg)
 in (
 
-let _94_131 = (FStar_Options.push ())
+let _94_133 = (FStar_Options.push ())
 in ((dsenv), (env)))))
 end))
 in (
 
-let mark = (fun _94_136 -> (match (_94_136) with
+let mark = (fun _94_138 -> (match (_94_138) with
 | (dsenv, env) -> begin
 (
 
@@ -237,12 +237,12 @@ in (
 let env = (FStar_Tc_Env.mark env)
 in (
 
-let _94_139 = (FStar_Options.push ())
+let _94_141 = (FStar_Options.push ())
 in ((dsenv), (env)))))
 end))
 in (
 
-let reset_mark = (fun _94_144 -> (match (_94_144) with
+let reset_mark = (fun _94_146 -> (match (_94_146) with
 | (dsenv, env) -> begin
 (
 
@@ -252,12 +252,12 @@ in (
 let env = (FStar_Tc_Env.reset_mark env)
 in (
 
-let _94_147 = (FStar_Options.pop ())
+let _94_149 = (FStar_Options.pop ())
 in ((dsenv), (env)))))
 end))
 in (
 
-let commit_mark = (fun _94_152 -> (match (_94_152) with
+let commit_mark = (fun _94_154 -> (match (_94_154) with
 | (dsenv, env) -> begin
 (
 
@@ -269,29 +269,56 @@ in ((dsenv), (env))))
 end))
 in (
 
-let check_frag = (fun _94_158 curmod frag -> (match (_94_158) with
+let check_frag = (fun _94_160 curmod frag -> (match (_94_160) with
 | (dsenv, env) -> begin
 (match ((tc_one_fragment curmod dsenv env frag)) with
 | Some (m, dsenv, env) -> begin
-(let _191_65 = (let _191_64 = (FStar_Tc_Errors.get_err_count ())
-in ((m), (((dsenv), (env))), (_191_64)))
-in Some (_191_65))
+(let _191_69 = (let _191_68 = (FStar_Tc_Errors.get_err_count ())
+in ((m), (((dsenv), (env))), (_191_68)))
+in Some (_191_69))
 end
-| _94_167 -> begin
+| _94_169 -> begin
 None
 end)
 end))
 in (
 
-let report_fail = (fun _94_169 -> (match (()) with
+let report_fail = (fun _94_171 -> (match (()) with
 | () -> begin
 (
 
-let _94_170 = (let _191_68 = (FStar_Tc_Errors.report_all ())
-in (FStar_All.pipe_right _191_68 Prims.ignore))
+let _94_172 = (let _191_72 = (FStar_Tc_Errors.report_all ())
+in (FStar_All.pipe_right _191_72 Prims.ignore))
 in (FStar_ST.op_Colon_Equals FStar_Tc_Errors.num_errs (Prims.parse_int "0")))
 end))
-in {FStar_Interactive.pop = pop; FStar_Interactive.push = push; FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail})))))))
+in (
+
+let tc_prims_interactive = (fun _94_175 -> (match (()) with
+| () -> begin
+(
+
+let _94_180 = (tc_prims ())
+in (match (_94_180) with
+| (_94_177, dsenv, env) -> begin
+((dsenv), (env))
+end))
+end))
+in (
+
+let tc_one_file_interactive = (fun remaining uenv -> (match (remaining) with
+| (file)::remaining -> begin
+(
+
+let _94_191 = (tc_one_file (Prims.fst uenv) (Prims.snd uenv) file)
+in (match (_94_191) with
+| (_94_188, dsenv, env) -> begin
+((((None), (file))), (((dsenv), (env))), (None), (remaining))
+end))
+end
+| [] -> begin
+(failwith "Impossible")
+end))
+in {FStar_Interactive.pop = pop; FStar_Interactive.push = push; FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail; FStar_Interactive.tc_prims = tc_prims_interactive; FStar_Interactive.tc_one_file = tc_one_file_interactive; FStar_Interactive.cleanup = (fun _94_193 -> ())})))))))))
 
 
 

@@ -67,7 +67,7 @@ type ('a, 't) withinfo_t =
 {v : 'a; sort : 't; p : FStar_Range.range}
 
 
-let is_Mkwithinfo_t = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkwithinfo_t"))))
+let is_Mkwithinfo_t = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkwithinfo_t"))))
 
 
 type 't var =
@@ -82,7 +82,7 @@ type 'a bvdef =
 {ppname : ident; realname : ident}
 
 
-let is_Mkbvdef = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbvdef"))))
+let is_Mkbvdef = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkbvdef"))))
 
 
 type ('a, 't) bvar =
@@ -403,7 +403,7 @@ false
 end))
 
 
-let is_Mkcomp_typ : comp_typ  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkcomp_typ"))))
+let is_Mkcomp_typ : comp_typ  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkcomp_typ"))))
 
 
 let is_Total = (fun _discr_ -> (match (_discr_) with
@@ -883,16 +883,16 @@ false
 end))
 
 
-let is_Mkletbinding : letbinding  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkletbinding"))))
+let is_Mkletbinding : letbinding  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkletbinding"))))
 
 
-let is_Mkfreevars : freevars  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfreevars"))))
+let is_Mkfreevars : freevars  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkfreevars"))))
 
 
-let is_Mkuvars : uvars  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkuvars"))))
+let is_Mkuvars : uvars  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkuvars"))))
 
 
-let is_Mksyntax = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksyntax"))))
+let is_Mksyntax = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mksyntax"))))
 
 
 let ___Typ_btvar____0 = (fun projectee -> (match (projectee) with
@@ -1388,14 +1388,14 @@ type monad_abbrev =
 {mabbrev : lident; parms : binders; def : typ}
 
 
-let is_Mkmonad_abbrev : monad_abbrev  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmonad_abbrev"))))
+let is_Mkmonad_abbrev : monad_abbrev  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkmonad_abbrev"))))
 
 
 type sub_eff =
 {source : lident; target : lident; lift : typ}
 
 
-let is_Mksub_eff : sub_eff  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksub_eff"))))
+let is_Mksub_eff : sub_eff  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mksub_eff"))))
 
 
 type eff_decl =
@@ -1416,7 +1416,7 @@ type eff_decl =
 | Sig_pragma of (pragma * FStar_Range.range)
 
 
-let is_Mkeff_decl : eff_decl  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkeff_decl"))))
+let is_Mkeff_decl : eff_decl  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkeff_decl"))))
 
 
 let is_Sig_tycon = (fun _discr_ -> (match (_discr_) with
@@ -1622,7 +1622,7 @@ type modul =
 {name : lident; declarations : sigelts; exports : sigelts; is_interface : Prims.bool; is_deserialized : Prims.bool}
 
 
-let is_Mkmodul : modul  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmodul"))))
+let is_Mkmodul : modul  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkmodul"))))
 
 
 type ktec =
@@ -1696,7 +1696,7 @@ type lcomp =
 {eff_name : lident; res_typ : typ; cflags : cflags Prims.list; comp : Prims.unit  ->  comp}
 
 
-let is_Mklcomp : lcomp  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklcomp"))))
+let is_Mklcomp : lcomp  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mklcomp"))))
 
 
 type path =
@@ -2013,7 +2013,7 @@ in {n = Typ_const (x); tk = _126_1421; pos = p; fvs = memo_no_fvs; uvs = memo_no
 
 let rec check_fun = (fun bs c p -> (match (bs) with
 | [] -> begin
-(FStar_All.failwith "Empty binders")
+(failwith "Empty binders")
 end
 | _29_491 -> begin
 Typ_fun (((bs), (c)))
@@ -2146,7 +2146,7 @@ let mk_Typ_delayed : (typ * subst_t * typ memo)  ->  knd Prims.option  ->  FStar
 | (t, s, m) -> begin
 (let _126_1533 = (match (t.n) with
 | Typ_delayed (_29_600) -> begin
-(FStar_All.failwith "NESTED DELAYED TYPES!")
+(failwith "NESTED DELAYED TYPES!")
 end
 | _29_603 -> begin
 Typ_delayed (((FStar_Util.Inl (((t), (s)))), (m)))
@@ -2249,7 +2249,7 @@ let mk_Exp_abs' : (binders * exp)  ->  typ Prims.option  ->  FStar_Range.range  
 Exp_abs ((((FStar_List.append b ((b0)::bs))), (body)))
 end
 | ([], _29_652) -> begin
-(FStar_All.failwith "abstraction with no binders!")
+(failwith "abstraction with no binders!")
 end
 | _29_655 -> begin
 Exp_abs (((b), (e)))

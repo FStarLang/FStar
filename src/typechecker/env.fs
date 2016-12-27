@@ -215,6 +215,7 @@ let stack_ops =
         pop_query_indices();
         pop_stack env
     in
+
     let incr_query_index env =
         let qix = peek_query_indices () in
         match env.qname_and_index with
@@ -254,6 +255,7 @@ let reset_mark env =
 let pop env msg =
     env.solver.pop msg;
     stack_ops.es_pop env
+let cleanup_interactive env = env.solver.pop ""
 let incr_query_index env =
     stack_ops.es_incr_query_index env
 ////////////////////////////////////////////////////////////
@@ -372,7 +374,7 @@ let rec add_sigelt env se = match se with
     match se with
     | Sig_new_effect(ne, _) ->
       ne.actions |> List.iter (fun a ->
-          let se_let = Util.action_as_lb a in
+          let se_let = Util.action_as_lb ne.mname a in
           Util.smap_add (sigtab env) a.action_name.str se_let)
     | _ -> ()
 
@@ -389,10 +391,10 @@ let try_lookup_bv env (bv:bv) =
     | _ -> None)
 
 let lookup_type_of_let se lid = match se with
-    | Sig_let((_, [lb]), _, _, _) ->
+    | Sig_let((_, [lb]), _, _, _, _) ->
       Some (inst_tscheme (lb.lbunivs, lb.lbtyp))
 
-    | Sig_let((_, lbs), _, _, _) ->
+    | Sig_let((_, lbs), _, _, _, _) ->
         Util.find_map lbs (fun lb -> match lb.lbname with
           | Inl _ -> failwith "impossible"
           | Inr fv ->
@@ -545,7 +547,7 @@ let lookup_definition delta_levels env lid =
   match lookup_qname env lid with
     | Some (Inr (se, None)) ->
       begin match se with
-        | Sig_let((_, lbs), _, _, quals) when visible quals ->
+        | Sig_let((_, lbs), _, _, quals, _) when visible quals ->
             Util.find_map lbs (fun lb ->
                 let fv = right lb.lbname in
                 if fv_eq_lid fv lid
@@ -654,6 +656,12 @@ let is_record env lid =
     | Some (Inr (Sig_inductive_typ(_, _, _, _, _, _, tags, _), _)) ->
         Util.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) tags
     | _ -> false
+
+let is_action env lid =
+    match lookup_qname env lid with
+        | Some (Inr (Sig_let(_, _, _, tags, _), _)) ->
+            Util.for_some (function Action _ -> true | _ -> false) tags
+        | _ -> false
 
 let is_interpreted =
     let interpreted_symbols =
