@@ -96,7 +96,7 @@ private let r_mul = U128.(uint64_to_uint128(225uL) <<^ 120ul)
 private val ith_bit_mask: num:U128.t -> i:U32.t{U32.v i < 128} -> Tot (r:U128.t{r = Spec.ith_bit_mask num (U32.v i)})
 let ith_bit_mask num i =
   admit();
-  let mi = i in //USED TO BE: U32.(127ul -^ i) in
+  let mi = U32.(127ul -^ i) in
   let proj = U128.(one_128 <<^ mi) in
   let res = U128.(num &^ proj) in
   U128.(eq_mask res proj)
@@ -179,6 +179,8 @@ let finish a s =
   //let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
 
 
+
+(*
 //16-09-23 Instead of the code below, we should re-use existing AEAD encodings
 //16-09-23 and share their injectivity proofs and crypto model.
 
@@ -268,3 +270,4 @@ let ghash k ad adlen ciphertext len tag =
   let h2 = ST.get() in
   assert(modifies_1 tag h1 h2);
   pop_frame()
+*)
