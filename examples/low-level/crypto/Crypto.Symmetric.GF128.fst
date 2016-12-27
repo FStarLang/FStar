@@ -96,7 +96,7 @@ private let r_mul = U128.(uint64_to_uint128(225uL) <<^ 120ul)
 private val ith_bit_mask: num:U128.t -> i:U32.t{U32.v i < 128} -> Tot (r:U128.t{r = Spec.ith_bit_mask num (U32.v i)})
 let ith_bit_mask num i =
   admit();
-  let mi = U32.(127ul -^ i) in
+  let mi = i in //USED TO BE: U32.(127ul -^ i) in
   let proj = U128.(one_128 <<^ mi) in
   let res = U128.(num &^ proj) in
   U128.(eq_mask res proj)
@@ -173,7 +173,7 @@ let finish a s =
   //let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
   //let _ = IO.debug_print_string "finish s=" in 
   //let _ = Crypto.Symmetric.Bytes.print_buffer s 0ul 16ul in
-  let sf = load128_le s in
+  let sf = load128_be s in
   a.(0ul) <- U128.(a.(0ul) ^^ sf)
   //let _ = IO.debug_print_string "finish a=" in 
   //let _ = Crypto.Symmetric.Bytes.print_buffer a 0ul 16ul in
@@ -195,7 +195,7 @@ private val ghash_loop_:
   (ensures (fun h0 _ h1 -> live h1 tag /\ live h1 auth_key /\ live h1 str /\ modifies_1 tag h0 h1))
 let ghash_loop_ tag auth_key str tmp len dep =
   let t = sub str dep (U32.(len -^ dep)) in
-  tmp.(0ul) <- load128_le t;
+  tmp.(0ul) <- load128_be t;
   add_and_multiply tag tmp auth_key
 
 (* WARNING: may have issues with constant time. *)
@@ -217,7 +217,7 @@ let rec ghash_loop tag auth_key str tmp len dep =
   begin
     let next = U32.add dep 16ul in
     let si = sub str dep 16ul in
-    tmp.(0ul) <- load128_le si;
+    tmp.(0ul) <- load128_be si;
     add_and_multiply tag tmp auth_key;
     ghash_loop tag auth_key str tmp len next
   end

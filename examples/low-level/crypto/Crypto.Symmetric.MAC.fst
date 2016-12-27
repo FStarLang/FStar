@@ -209,7 +209,7 @@ let encode_r #i b raw =
   | B_GHASH    b -> 
       //let h0 = ST.get () in
       //assert (Buffer.modifies_1 raw h0 h0); // Necessary for triggering right lemmas
-      let i = GF.load128_le raw in
+      let i = GF.load128_be raw in
       b.(0ul) <- i
 
 // TODO: generalize to word
@@ -338,7 +338,7 @@ let update #i r a w =
   | B_GHASH r, B_GHASH a -> 
       push_frame();
       let e = Buffer.create GF.zero_128 1ul in
-      e.(0ul) <- GF.load128_le w;
+      e.(0ul) <- GF.load128_be w;
       GF.add_and_multiply a e r;
       pop_frame()
 
@@ -380,7 +380,7 @@ let finish #i s a t =
   | B_GHASH    a ->
     begin
     GF.finish a s;
-    GF.store128_le t a.(0ul);
+    GF.store128_be t a.(0ul);
     let h1 = ST.get() in
     Seq.lemma_eq_intro (Buffer.as_seq h1 t) (Seq.slice (Buffer.as_seq h1 t) 0 16)
     end
