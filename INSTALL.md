@@ -278,7 +278,14 @@ that's over there (it's optimized for F*).
    - If you're on Windows see https://github.com/protz/ocaml-installer/wiki
      for instructions on how to configure your environment for use with OPAM
 
-3. F* depends on a bunch of external OCaml packages which you can install using OPAM:
+3. Ensure that OPAM is using a recent enough version of OCaml
+
+   - Type `opam switch list`. The current OCaml version used by opam
+     is identified by the letter C. If it is not within the version
+     range required by F* (see above), type `opam switch ` and then
+     the version number you wish to switch opam to.
+
+4. F* depends on a bunch of external OCaml packages which you can install using OPAM:
 
   ```sh
   $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint
