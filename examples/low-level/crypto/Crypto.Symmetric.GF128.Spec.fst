@@ -14,11 +14,9 @@ let op_Plus_At x y = x ^^ y
 let ones_128 = uint_to_t (ones 128)
 let zero_128 = uint_to_t (zero 128)
 
-val ith_bit_mask: num:elem -> i:nat{i < 128} -> Pure elem
-  (requires True)
-  (ensures (fun r ->
+noextract val ith_bit_mask: num:elem -> i:nat{i < 128} -> Tot (r:elem{
     nth (v num) i = true ==> r = ones_128 /\
-    nth (v num) i = false ==> r = zero_128))
+    nth (v num) i = false ==> r = zero_128})
 let ith_bit_mask num i = if (nth (v num) i) then ones_128 else zero_128
 
 val shift_right: elem -> Tot elem
@@ -26,22 +24,17 @@ let shift_right a = a >>^ 1ul
 
 private let r_mul = uint64_to_uint128(225uL) <<^ 120ul
 
-val mask_add: a:elem -> b:elem -> r:elem -> dep:nat{dep < 128} -> Pure elem
-  (requires True)
-  (ensures (fun s -> 
+val mask_add: a:elem -> b:elem -> r:elem -> dep:nat{dep < 128} -> Tot (s:elem{
     nth (v b) dep = true ==> s = r +@ a /\
-    nth (v b) dep = false ==> s = r))
-  (decreases (128 - dep))
+    nth (v b) dep = false ==> s = r}) (decreases (128 - dep))
 let mask_add a b r dep =
   let msk = ith_bit_mask b dep in
   let m = a &^ msk in
   r +@ m
 
-val shift_right_modulo: a:elem -> Pure elem
-  (requires True)
-  (ensures (fun r ->
+val shift_right_modulo: a:elem -> Tot (r:elem{
     nth (v a) 127 = true ==> r = (shift_right a) +@ r_mul /\
-    nth (v a) 127 = false ==> r = shift_right a))
+    nth (v a) 127 = false ==> r = shift_right a})
 let shift_right_modulo a =
   let msk = ith_bit_mask a 127 in
   let m = r_mul &^ msk in
