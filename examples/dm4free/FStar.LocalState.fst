@@ -82,20 +82,62 @@ let rec mremove #n1 (#n2:nat) #a (v:mapping a n1 (n2+1)) (i:nat{i < n2+1}) : map
     | MCons hd tl -> let n2' : nat = n2 - 1 in MCons hd (mremove #_ #n2' tl i)
     | MAdd hd tl -> let n2' : nat = n2 - 1 in MAdd hd (mremove #n1 #n2' tl i)
 
-let rec mapping_to_vect_aux (#n1 #n2:nat) (#a:Type0) (v:mapping a n1 n2) (cont: n:nat -> vect a n -> (k:nat & vect a k)) : (k:nat & vect a k) =
+let rec mapping_to_vect0 (#n1 #n2:nat) (#a:Type0) (v:mapping a n1 n2)  : vect a n2 =
   match v with
-    | MNil -> cont 0 Nil
-    | MCons hd tl -> mapping_to_vect_aux tl (fun n tl' -> cont (n+1) (Cons hd tl'))
-    | MAdd hd tl -> mapping_to_vect_aux tl (fun n tl' -> cont (n+1) (Cons hd tl'))
-    | MRemove tl -> mapping_to_vect_aux tl cont
+    | MNil -> Nil
+    | MCons hd tl -> Cons hd (mapping_to_vect0 tl)
+    | MAdd hd tl -> Cons hd (mapping_to_vect0 tl)
+    | MRemove tl -> mapping_to_vect0 tl
 
-let rec mapping_to_vect (#n1 #n2 : nat) (#a:Type0) (v:mapping a n1 n2) : (k:nat & vect a k) =
-  mapping_to_vect_aux v Mkdtuple2
+
+(* let rec mapping_to_vect_aux (#n1 #n2:nat) (#a:Type0) (v:mapping a n1 n2) (cont: n:nat -> vect a n -> (k:nat & vect a k)) : (k:nat & vect a k) = *)
+(*   match v with *)
+(*     | MNil -> cont 0 Nil *)
+(*     | MCons hd tl -> mapping_to_vect_aux tl (fun n tl' -> cont (n+1) (Cons hd tl')) *)
+(*     | MAdd hd tl -> mapping_to_vect_aux tl (fun n tl' -> cont (n+1) (Cons hd tl')) *)
+(*     | MRemove tl -> mapping_to_vect_aux tl cont *)
+
+(* let rec mapping_to_vect (#n1 #n2 : nat) (#a:Type0) (v:mapping a n1 n2) : (k:nat & vect a k) = *)
+(*   mapping_to_vect_aux v Mkdtuple2 *)
 
 let rec vect_to_mapping (#n:nat) (#a:Type0) (v:vect a n) : mapping a n n =
   match v with
     | Nil -> MNil
     | Cons hd tl -> MCons hd (vect_to_mapping tl)
+
+let rec compose_mapping (#s:Type) (#n1 #n2 #n3:nat) (m1:mapping s n1 n2) (m2:mapping s n2 n3) : mapping s n1 n3
+= let m1_m2 : mapping s n1 n2 * mapping s n2 n3 = m1, m2 in
+  match m1_m2 with
+  | MNil, MNil ->
+    MNil
+  | MCons hd1 tl1, MCons hd2 tl2 -> (* hd1= hd2 in the case we are interested in *)
+    MCons hd1 (compose_mapping tl1 tl2)
+  | MCons _ tl1, MRemove tl2 ->
+    MRemove (compose_mapping tl1 tl2)
+  | _, MAdd hd tl ->
+    MAdd hd (compose_mapping m1 tl)
+  | MRemove tl1, _ ->
+    MRemove (compose_mapping tl1 m2)
+  | MAdd hd1 tl1, MCons hd2 tl2 -> (* hd1= hd2 in the case we are interested in *)
+    MAdd hd1 (compose_mapping tl1 tl2)
+  | MAdd hd1 tl1, MRemove tl2 ->
+    compose_mapping tl1 tl2
+
+(* *)
+
+type local_state0 (s:Type0) (a:nat -> Type0) (n:nat) =  v:vect s n -> k:nat & _:(a k) & mapping s n k
+
+let return #s #a #n (x:a n) : local_state0 s a n = fun (v:vect s n) -> (|n, x, vect_to_mapping v|)
+let bind #s #a #b #n (m:local_state0 s a n) (f: k:nat -> a k -> local_state0 s b k) : local_state0 s b n =
+  fun (v : vect s n) ->
+    let (| k, xk, mapk |) = m v in
+    let (| k', yk', mapk' |) = f k xk (mapping_to_vect0 mapk) in
+      (| k', yk', compose_mapping mapk mapk'|)
+
+
+
+
+(* Algebraic presentation *)
 
 noeq type free_local_state (s:Type0) (a:nat -> Type0) : nat -> Type0 =
   | Return : #n:nat -> a n -> free_local_state s a n
@@ -175,7 +217,7 @@ and is_normalized_output #s #a #n k (m:free_local_state s a m) : Tot Type0 (decr
 
 let is_normalized #s #a #n (m:free_local_state s a n) = is_normalized_input 0 m
 
-
+let local_state (s:Type) (a:nat -> Type) (n:nat) = m:(free_local_state s a n){is_normalized m}
 
 
 (* let rec is_normalized_alloc i n acc = function *)
