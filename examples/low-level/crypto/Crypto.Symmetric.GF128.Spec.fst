@@ -55,8 +55,8 @@ let rec mul_loop a b r dep =
 val op_Star_At: a:elem -> b:elem -> Tot elem
 let op_Star_At a b = mul_loop a b zero_128 0
 
-
-assume val add_comm: a:elem -> b:elem -> Lemma (a +@ b == b +@ a)
+val add_comm: a:elem -> b:elem -> Lemma (a +@ b == b +@ a)
+let add_comm a b = logxor_commutative (v a) (v b)
 
 val zero: elem
 let zero = FStar.Int.Cast.uint64_to_uint128(0uL)
@@ -71,7 +71,6 @@ open FStar.SeqProperties
 
 let seq_head (vs:seq 'a {Seq.length vs > 0}) = Seq.slice vs 0 (Seq.length vs - 1)
 
-
 val poly: vs:text -> r:elem -> Tot (a:elem) (decreases (Seq.length vs))
 let rec poly vs r =
   if Seq.length vs = 0 then zero
@@ -82,7 +81,6 @@ let rec poly vs r =
 let finish a s = decode (a +@ (encode s))
 
 let mac vs r s = (finish (poly vs r) s)
-
 
 val poly_cons: x:lbytes 16 -> xs:text -> r:elem ->
   Lemma (poly (SeqProperties.cons x xs) r == (encode x +@ poly xs r) *@ r)
