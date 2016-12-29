@@ -287,10 +287,21 @@ and translate_expr e var lstmt isDecl lDecl isMutableV: list<statement_t> =
   | MLE_Fun (args, body) ->
       let args = List.map (fun ((n,_), t) -> JGP_Identifier(n, Some (translate_type t))) args in
       let generic_t = (match !lp_generic with | [] -> None | _ -> Some !lp_generic) in
+      let is_failwith = 
+       (match body.expr with 
+        | MLE_App (expr, _) ->
+           (match expr.expr with
+            | MLE_Name p when string_of_mlpath p = "failwith" -> true
+            | _ -> false)
+        | _ -> false) in
       let body_t =
-        if is_pure_expr body var
-        then JS_BodyExpression(translate_expr_pure body)
-        else JS_BodyBlock([JSS_VariableDeclaration((JGP_Identifier("_res", None), None), JSV_Let)] @
+        if is_failwith
+        then 
+            JS_BodyBlock([JSS_Throw(JSE_Literal(JSV_String "Not yet implemented!", ""))])
+        else 
+            if is_pure_expr body var
+            then JS_BodyExpression(translate_expr_pure body)
+            else JS_BodyBlock([JSS_VariableDeclaration((JGP_Identifier("_res", None), None), JSV_Let)] @
                            translate_expr body ("_res", None) (Some([JSS_Return(Some(JSE_Identifier("_res", None)))])) true lDecl true) in
       let ret_t =
         (match (snd var) with
@@ -330,7 +341,7 @@ and translate_expr e var lstmt isDecl lDecl isMutableV: list<statement_t> =
       failwith "todo: translate_expr [MLE_Try]"
 
   | MLE_Coerce(in_e, t_from, t_to) ->
-      let var = (fst var, Some (translate_type in_e.mlty)) in
+      let var = (fst var, Some (JST_Any)) in
       translate_expr in_e var lstmt isDecl lDecl isMutableV
 
   | MLE_Match(e_in, lb) ->
@@ -608,9 +619,11 @@ and translate_type t: typ =
       JST_Generic (Unqualified(id, None), None)
   | MLTY_Tuple lt ->
       JST_Tuple (List.map translate_type lt)
-  | MLTY_Fun (t1, _, t2) ->
-      (*we want to save the source names of function parameters*)
-      JST_Function([(("_1", None), translate_type t1)], translate_type t2, None)
+  | MLTY_Fun (t1, e_tag, t2) ->
+      let t2 = 
+       (if e_tag = E_GHOST then JST_Null
+        else translate_type t2) in
+      JST_Function([(("_1", None), translate_type t1)], t2, None)
   | MLTY_Named(args, p) when string_of_mlpath p = "FStar.ST.ref" ->
        JST_Array(translate_type (List.nth args 0))
   | MLTY_Named(args, p) when string_of_mlpath p = "FStar.Buffer.buffer" ->
