@@ -164,6 +164,15 @@ let rec append_inv_tail l l1 l2 = match l1, l2 with
        (* Idem *)
        )
 
+(** Properties about flatten **)
+
+val flatten_cons_append:
+  (xs: list 'a)
+  -> (ys: list 'a)
+  -> (zzs: list (list 'a))
+  -> Lemma(ensures
+    (flatten (Cons (append xs ys) zzs) = append xs (append ys (flatten zzs))))
+let flatten_cons_append xs ys zzs = ()
 
 (** Properties mixing rev and append **)
 
