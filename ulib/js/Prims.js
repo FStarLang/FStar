@@ -7,6 +7,7 @@ export type nat    = number;
 export type pos    = number;
 export type b2t<T> = null;
 
+export type prop = any;
 /* for partially variants of the operators */
 export let op_Multiply = (x:number) => ((y:number) => x * y);
 export let op_Subtraction = (x:number) => ((y:number) => x - y);
@@ -46,3 +47,12 @@ export let mk_Cons = <T>(hd:T): ((tl:list<T>) => list<T>) => ((tl:list<T>) => [h
 export let mk_Nil = <T>():list<T> => [];
 
 export let ___Some___v = <T>(x:option<T>):T => get_Some(x);
+export let __proj__Cons__item__tl = <T>(x:list<T>):list<T> => {
+	if (x.length > 0){
+		return x.slice(1);	
+	} else {
+		throw "Impossible ";
+	}
+};
+
+export let pow2 = (x:number):number => Math.pow(2, x);
