@@ -12,14 +12,14 @@ module U128 = FStar.UInt128
 module Spec = Crypto.Symmetric.GF128.Spec
 open Spec
 
-let len = 16ul // length of GF128 in bytes
+private inline_for_extraction let len = 16ul // length of GF128 in bytes
 
 type elem = Spec.elem
 type elemB = b:buffer U128.t{length b = 1}
 
 let as_elem h (b:elemB{live h b}): GTot elem = Seq.index (as_seq h b) 0
 
-let load128_le b = 
+inline_for_extraction let load128_le b = 
     let b1 = sub b 0ul 8ul in
     let b2 = sub b 8ul 8ul in
     let l1 = C.load64_le b1 in
@@ -29,7 +29,7 @@ let load128_le b =
     let b = U128.(i2 <<^ 64ul) in
     U128.(b +^ i1)
     
-let store128_le b i = 
+inline_for_extraction let store128_le b i = 
     let b1 = sub b 0ul 8ul in
     let b2 = sub b 8ul 8ul in
     let i1 = uint128_to_uint64 (U128.(i >>^ 64ul)) in
@@ -37,7 +37,7 @@ let store128_le b i =
     C.store64_le b1 i2;
     C.store64_le b2 i1
 
-let load128_be b = 
+inline_for_extraction let load128_be b = 
     let b1 = sub b 0ul 8ul in
     let b2 = sub b 8ul 8ul in
     let l1 = C.load64_be b1 in
@@ -47,7 +47,7 @@ let load128_be b =
     let b = U128.(i1 <<^ 64ul) in
     U128.(b +^ i2)
     
-let store128_be b i = 
+inline_for_extraction let store128_be b i = 
     let b1 = sub b 0ul 8ul in
     let b2 = sub b 8ul 8ul in
     let i1 = uint128_to_uint64 (U128.(i >>^ 64ul)) in
@@ -88,8 +88,8 @@ let gf128_shift_right a =
   a.(0ul) <- a'
 
 
-let one_128 = uint64_to_uint128(1uL)
-let zero_128 = uint64_to_uint128(0uL)
+inline_for_extraction let one_128 = uint64_to_uint128(1uL)
+inline_for_extraction let zero_128 = uint64_to_uint128(0uL)
 private let r_mul = U128.(uint64_to_uint128(225uL) <<^ 120ul)
 
 (* Generate mask. If the i-th bit of num is 1 then return 11111111, otherwise return 00000000. *)
@@ -107,7 +107,7 @@ let zero_bit_mask num =
 
 #set-options "--z3rlimit 15 --max_fuel 1 --initial_fuel 1"
 
-val gf128_mul_loop: 
+private val gf128_mul_loop: 
   x:elemB -> 
   v:elemB {disjoint x v} -> 
   z:elemB {disjoint x z /\ disjoint v z} ->
