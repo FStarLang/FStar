@@ -31,7 +31,7 @@ let sel_elem h (b:elemB{live h b}): GTot elem = Seq.index (as_seq h b) 0
 inline_for_extraction val load128_be: b:buffer U8.t{length b = 16} -> Stack U128.t
   (requires (fun h -> live h b))
   (ensures (fun h0 _ h1 -> h0 == h1))
-let load128_be b = 
+let load128_be b = Crypto.Symmetric.Bytes.load_big128 len b (*
   let b1 = sub b 0ul 8ul in
   let b2 = sub b 8ul 8ul in
   let l1 = C.load64_be b1 in
@@ -39,18 +39,18 @@ let load128_be b =
   let l2 = C.load64_be b2 in
   let i2 = uint64_to_uint128 l2 in
   let b = U128.(i1 <<^ 64ul) in
-  U128.(b |^ i2)
+  U128.(b |^ i2) *)
 
 inline_for_extraction val store128_be: b:buffer U8.t{length b = 16} -> i:U128.t -> Stack unit
   (requires (fun h -> live h b))
   (ensures (fun h0 _ h1 -> modifies_1 b h0 h1))
-let store128_be b i = 
+let store128_be b i = Crypto.Symmetric.Bytes.store_big128 len b i (*
   let b1 = sub b 0ul 8ul in
   let b2 = sub b 8ul 8ul in
   let i1 = uint128_to_uint64 (U128.(i >>^ 64ul)) in
   let i2 = uint128_to_uint64 i in
   C.store64_be b1 i1;
-  C.store64_be b2 i2
+  C.store64_be b2 i2*)
 
 
 (* * Every block of message is regarded as an element in Galois field GF(2^128), **)
