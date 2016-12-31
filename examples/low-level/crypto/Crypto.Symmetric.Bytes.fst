@@ -360,7 +360,8 @@ let rec load_big128 len buf =
     assert (256 * UInt128.v n' == FStar.UInt128.(v (n' <<^ 8ul)));
     FStar.UInt128.(uint8_to_uint128 b +^ (n' <<^ 8ul))
 
-
+//HERE
+#reset-options "--z3rlimit 100 --max_fuel 1 --initial_fuel 1"
 (* stores a machine integer into a buffer of len bytes *)
 // 16-10-02 subsumes Buffer.Utils.bytes_of_uint32 ?
 // check efficient compilation for all back-ends
@@ -462,6 +463,25 @@ let rec little_bytes len n =
     let b' = little_bytes len n' in
     let b = cons byte b' in
     assert(Seq.equal b' (tail b));
+    b
+    
+// turns an integer into a bytestream, big-endian
+val big_bytes: 
+  len:UInt32.t -> n:nat{n < pow2 (8 * v len)} ->
+  Tot (b:lbytes (v len) {n == big_endian b}) (decreases (v len))
+let rec big_bytes len n = 
+  if len = 0ul then 
+    Seq.createEmpty 
+  else
+    let len = len -^ 1ul in 
+    let byte = UInt8.uint_to_t (n % 256) in
+    let n' = n / 256 in 
+    Math.Lemmas.pow2_plus 8 (8 * v len);
+    assert(n' < pow2 (8 * v len ));
+    let b' = big_bytes len n' in
+    let b'' = Seq.create 1 byte in
+    let b = Seq.append b' b'' in
+    assert(Seq.equal b' (Seq.slice b 0 (v len)));
     b
 
 // check efficient compilation for all back-ends

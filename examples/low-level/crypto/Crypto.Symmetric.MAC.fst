@@ -25,6 +25,8 @@ module HS = FStar.HyperStack
 type id = id * UInt128.t //NS: why not this definition : i:id & iv (alg i)
 let alg (i:id) = macAlg_of_id (fst i) 
 
+#set-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1"
+
 type text = Seq.seq (lbytes 16) // Used to be seq elem, then seq (lbytes 16)
 
 val text_to_PS_text: t:text -> Tot (t':PS.text{
@@ -123,7 +125,7 @@ val sel_elem: h:mem -> #i:id -> b:elemB i{live h b} -> GTot (elem i)
 let sel_elem h #i b = 
   match reveal_elemB b with
   | B_POLY1305 b -> PL.sel_elem h b
-  | B_GHASH    b -> Buffer.as_seq h b
+  | B_GHASH    b -> GF.sel_elem h b
 
 val frame_norm: h0:mem -> h1:mem -> #i:id -> b:elemB i{live h1 b} -> Lemma
   (requires (norm h0 b /\
@@ -166,8 +168,11 @@ val rcreate: rgn:HH.rid{HS.is_eternal_region rgn} -> i:id -> ST (elemB i)
     ~(live h0 r) /\live h1 r))
 let rcreate rgn i =
   match alg i with
-  | POLY1305 -> B_POLY1305 (FStar.Buffer.rcreate rgn 0UL  5ul)
-  | GHASH    -> B_GHASH    (FStar.Buffer.rcreate rgn 0uy wlen)
+  | POLY1305 -> B_POLY1305 (FStar.Buffer.rcreate rgn 0UL 5ul)
+  | GHASH    -> B_GHASH    (FStar.Buffer.rcreate rgn (FStar.Int.Cast.uint64_to_uint128 0UL) 1ul)
+
+
+#reset-options "--z3rlimit 30 --initial_fuel 1 --max_fuel 1"
 
 val create: i:id -> StackInline (elemB i)
   (requires (fun h0 -> True))
@@ -178,7 +183,7 @@ val create: i:id -> StackInline (elemB i)
      sel_elem h1 r = zero i /\
      Buffer.frameOf b = HS.(h0.tip) /\ // /\ Map.domain h1.h == Map.domain h0.h
      Buffer.modifies_0 h0 h1 ))
-
+     
 let create i =
   match alg i with
   | POLY1305 -> 
@@ -189,7 +194,7 @@ let create i =
       //assert(Crypto.Symmetric.Poly1305.Bigint.norm h1 b);
       B_POLY1305 b
   | GHASH -> 
-      B_GHASH (FStar.Buffer.create 0uy 16ul)
+      B_GHASH (FStar.Buffer.create (FStar.Int.Cast.uint64_to_uint128 0UL) 1ul)
 
 // TODO: generalize length, add functional spec
 (** Encode raw bytes of static key as a field element *)
@@ -218,7 +223,7 @@ val encode: i:id -> w:word_16 -> GTot (elem i)
 let encode i w =
   match alg i with 
   | POLY1305 -> PS.encode w
-  | GHASH    -> w //PS.pad_0 w (16 - Seq.length w)
+  | GHASH    -> GS.encode w
 
 (** Encode a word of a message as a field element in a buffer *)
 private val encodeB: i:id -> w:wordB_16 -> StackInline (elemB i)
@@ -234,12 +239,14 @@ let encodeB i w =
       PL.toField_plus_2_128 b w;
       B_POLY1305 b
   | GHASH ->
-      let b = Buffer.create 0uy 16ul in
-      let h0 = ST.get () in
-      Buffer.blit w 0ul b 0ul 16ul;
-      let h1 = ST.get () in
-      Seq.lemma_eq_intro (sel_word h0 w) (Seq.slice (Buffer.as_seq h0 w) 0 16);
-      Seq.lemma_eq_intro (Buffer.as_seq h1 b) (Seq.slice (Buffer.as_seq h1 b) 0 16);
+      //let buf = Buffer.create 0uy 16ul in
+      //let h0 = ST.get () in
+      //Buffer.blit w 0ul buf 0ul 16ul;
+      //let h1 = ST.get () in
+      //Seq.lemma_eq_intro (sel_word h0 w) (Seq.slice (Buffer.as_seq h0 w) 0 16);
+      //Seq.lemma_eq_intro (Buffer.as_seq h1 b) (Seq.slice (Buffer.as_seq h1 b) 0 16);
+      let v = GF.load128_be w in
+      let b = Buffer.create v 1ul in
       B_GHASH b
 
 (** Polynomial evaluation *)
@@ -380,7 +387,5 @@ let finish #i s a t =
   | B_GHASH    a ->
     begin
     GF.finish a s;
-    GF.store128_be t a.(0ul);
-    let h1 = ST.get() in
-    Seq.lemma_eq_intro (Buffer.as_seq h1 t) (Seq.slice (Buffer.as_seq h1 t) 0 16)
+    GF.store128_be t a.(0ul)
     end

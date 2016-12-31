@@ -30,7 +30,8 @@ let sel_elem h (b:elemB{live h b}): GTot elem = Seq.index (as_seq h b) 0
 
 inline_for_extraction val load128_be: b:buffer U8.t{length b = 16} -> Stack U128.t
   (requires (fun h -> live h b))
-  (ensures (fun h0 _ h1 -> h0 == h1))
+  (ensures (fun h0 n h1 -> h0 == h1 /\ live h1 b /\
+    n = encode (as_seq h1 b)))
 let load128_be b = Crypto.Symmetric.Bytes.load_big128 len b (*
   let b1 = sub b 0ul 8ul in
   let b2 = sub b 8ul 8ul in
@@ -43,8 +44,13 @@ let load128_be b = Crypto.Symmetric.Bytes.load_big128 len b (*
 
 inline_for_extraction val store128_be: b:buffer U8.t{length b = 16} -> i:U128.t -> Stack unit
   (requires (fun h -> live h b))
-  (ensures (fun h0 _ h1 -> modifies_1 b h0 h1))
-let store128_be b i = Crypto.Symmetric.Bytes.store_big128 len b i (*
+  (ensures (fun h0 _ h1 -> modifies_1 b h0 h1 /\ live h1 b /\
+    Seq.equal (decode i) (as_seq h1 b)))
+let store128_be b i = 
+  Crypto.Symmetric.Bytes.store_big128 len b i;
+  let h = ST.get() in
+  Crypto.Symmetric.Bytes.lemma_big_endian_inj (decode i) (as_seq h b)
+  (*
   let b1 = sub b 0ul 8ul in
   let b2 = sub b 8ul 8ul in
   let i1 = uint128_to_uint64 (U128.(i >>^ 64ul)) in
@@ -99,32 +105,32 @@ let ith_bit_mask num i =
 
 private val gf128_mul_loop: 
   x:elemB -> 
-  v:elemB {disjoint x v} -> 
-  z:elemB {disjoint x z /\ disjoint v z} ->
+  y:elemB {disjoint x y} -> 
+  z:elemB {disjoint x z /\ disjoint y z} ->
   ctr:U32.t{U32.v ctr <= 128} -> 
   Stack unit
-  (requires (fun h -> live h x /\ live h v /\ live h z))
-  (ensures (fun h0 _ h1 -> live h0 x /\ live h0 v /\ live h0 z /\
-    live h1 x /\ live h1 v /\ live h1 z /\ modifies_2 v z h0 h1 /\
-    sel_elem h1 z = Spec.mul_loop (sel_elem h0 v) (sel_elem h0 x) (sel_elem h0 z) (U32.v ctr)))
-let rec gf128_mul_loop x v z ctr =
+  (requires (fun h -> live h x /\ live h y /\ live h z))
+  (ensures (fun h0 _ h1 -> live h0 x /\ live h0 y /\ live h0 z /\
+    live h1 x /\ live h1 y /\ live h1 z /\ modifies_2 x z h0 h1 /\
+    sel_elem h1 z = Spec.mul_loop (sel_elem h0 x) (sel_elem h0 y) (sel_elem h0 z) (U32.v ctr)))
+let rec gf128_mul_loop x y z ctr =
   if ctr <> 128ul then 
   begin
     let xv = x.(0ul) in
-    let vv = v.(0ul) in
+    let yv = y.(0ul) in
     let zv = z.(0ul) in
 
-    let mski = ith_bit_mask xv ctr in     
-    let msk_v = U128.(vv &^ mski) in
-    z.(0ul) <- U128.(zv ^^ msk_v);
+    let mski = ith_bit_mask yv ctr in     
+    let msk_x = U128.(xv &^ mski) in
+    z.(0ul) <- U128.(zv ^^ msk_x);
     
-    let msk0 = ith_bit_mask vv 127ul in
+    let msk0 = ith_bit_mask xv 127ul in
     let msk_r_mul = U128.(r_mul &^ msk0) in
-    let vv = v.(0ul) in
-    let vv = U128.(vv >>^ 1ul) in
-    v.(0ul) <- U128.(vv ^^ msk_r_mul);
+    let xv = x.(0ul) in
+    let xv = U128.(xv >>^ 1ul) in
+    x.(0ul) <- U128.(xv ^^ msk_r_mul);
 
-    gf128_mul_loop x v z (U32.(ctr +^ 1ul))
+    gf128_mul_loop x y z (U32.(ctr +^ 1ul))
   end
 
 (* In place multiplication. Calculate "a * b" and store the result in a.    *)
@@ -136,7 +142,7 @@ val gf128_mul: x:elemB -> y:elemB {disjoint x y} -> Stack unit
 let gf128_mul x y =
   push_frame();
   let z = create zero_128 1ul in
-  gf128_mul_loop y x z 0ul;
+  gf128_mul_loop x y z 0ul;
   x.(0ul) <- z.(0ul);
   pop_frame()
 

@@ -61,10 +61,10 @@ let add_comm a b = logxor_commutative (v a) (v b)
 val zero: elem
 let zero = FStar.Int.Cast.uint64_to_uint128(0uL)
 
-val encode:lbytes 16 -> Tot elem
-let encode b = zero // FAKE IMPLEMENTATION TODO FIX
-val decode:elem -> Tot (lbytes 16)
-let decode e = Seq.create 16 0uy
+noextract val encode: lbytes 16 -> Tot elem
+let encode b = uint_to_t (big_endian b)
+noextract val decode: elem -> Tot (lbytes 16)
+let decode e = big_bytes 16ul (v e)
 
 open FStar.Seq
 open FStar.SeqProperties 
@@ -80,7 +80,7 @@ let rec poly vs r =
 
 let finish a s = decode (a +@ (encode s))
 
-let mac vs r s = (finish (poly vs r) s)
+let mac vs r s = finish (poly vs r) s
 
 val poly_cons: x:lbytes 16 -> xs:text -> r:elem ->
   Lemma (poly (SeqProperties.cons x xs) r == (encode x +@ poly xs r) *@ r)
