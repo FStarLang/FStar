@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--explicit_deps Test1.fst --log_queries --verify_module Test1</StartArguments>
+    <StartArguments>FStar.List.Tot.fst --codegen OCaml --odir out</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\error-reporting\</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\ulib\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
