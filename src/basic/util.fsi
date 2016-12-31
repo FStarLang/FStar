@@ -30,6 +30,9 @@ type time = System.DateTime
 val now : unit -> time
 val time_diff: time -> time -> float*int
 val record_time: (unit -> 'a) -> ('a * int)
+val is_before: time -> time -> bool
+val get_file_last_modification_time: string -> time
+val string_of_time: time -> string
 
 (* generic utils *)
 (* Functional sets *)

@@ -9,6 +9,8 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
+    [ "BinarySearchTree0.uu___is_Leaf", 1, 2, 1, [ "@query" ], 0 ],
+    [ "BinarySearchTree0.uu___is_Node", 1, 2, 1, [ "@query" ], 0 ],
     [
       "BinarySearchTree0.__proj__Node__item___0",
       1,

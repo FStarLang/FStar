@@ -147,3 +147,5 @@ let __proj__Cons__item__tl = function
   | _::tl -> tl
   | _     -> failwith "Impossible"
 
+
+let rec false_elim () = false_elim ()

@@ -285,7 +285,13 @@ let doc_of_imp = function
 (******************************************************************************)
 
 let rec p_decl d =
-    optional p_fsdoc d.doc ^^ p_decl2 d
+    optional p_fsdoc d.doc  ^^ p_attributes d.attrs ^^ p_qualifiers d.quals ^^
+    (if d.quals = [] then empty else break1) ^^ p_rawDecl d
+
+and p_attributes attrs =
+  surround_separate_map 0 2 empty
+                        (lbracket ^^ str "@") space (rbracket ^^ hardline)
+                        p_atomicTerm attrs
 
 and p_fsdoc (doc, kwd_args) =
   let kwd_args_doc =
@@ -300,7 +306,7 @@ and p_fsdoc (doc, kwd_args) =
   in
   hardline ^^ lparen ^^ star ^^ star ^^ str doc ^^ kwd_args_doc ^^ star ^^ rparen ^^ hardline
 
-and p_decl2 d = match d.d with
+and p_rawDecl d = match d.d with
   | Open uid ->
     group (str "open" ^/^ p_quident uid)
   | ModuleAbbrev (uid1, uid2) ->
@@ -309,40 +315,40 @@ and p_decl2 d = match d.d with
     group(str "module" ^^ space ^^ p_quident uid)
   (* skipping kind abbreviation *)
   | KindAbbrev _ -> failwith "Deprecated, please stop throwing your old stuff at me !"
-  | Tycon(qs, [TyconAbbrev(uid, tpars, None, t), None]) when List.contains Effect qs ->
-    let qs = List.filter (fun q -> q <> Effect) qs in
-    let effect_prefix_doc = p_qualifiers qs ^^str "effect" ^^ space ^^ p_uident uid in
+  | Tycon(true, [TyconAbbrev(uid, tpars, None, t), None]) ->
+    let effect_prefix_doc = str "effect" ^^ space ^^ p_uident uid in
     surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ t
-  | Tycon(qs, tcdefs) ->
-      let type_doc = p_qualifiers qs ^^ str "type" in
-      precede_break_separate_map type_doc (str "and") p_fsdocTypeDeclPairs tcdefs
-  | TopLevelLet(qs, q, lbs) ->
-    let let_doc = p_qualifiers qs ^^ str "let" ^^ p_letqualifier q in
+  | Tycon(false, tcdefs) ->
+    precede_break_separate_map (str "type") (str "and") p_fsdocTypeDeclPairs tcdefs
+  | TopLevelLet(q, lbs) ->
+    let let_doc = str "let" ^^ p_letqualifier q in
     precede_break_separate_map let_doc (str "and") p_letbinding lbs
-  | Val(qs, lid, t) ->
-    (p_qualifiers qs ^^ str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ t
+  | Val(lid, t) ->
+    (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ t
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
-  | Assume(qs, id, t) ->
+  | Assume(id, t) ->
     let decl_keyword =
       if char_at id.idText 0 |> is_upper
       then empty
       else str "val" ^^ space
     in
-    (p_qualifiers qs ^^ decl_keyword ^^ p_ident id ^^ space ^^ colon) ^/+^ p_typ t
+    (decl_keyword ^^ p_ident id ^^ space ^^ colon) ^/+^ p_typ t
   | Exception(uid, t_opt) ->
     str "exception" ^^ space ^^ p_uident uid ^^ optional (fun t -> str "of" ^/+^ p_typ t) t_opt
-  | NewEffect(qs, ne) ->
-    p_qualifiers qs ^^ str "new_effect" ^^ space ^^ p_newEffect ne
+  | NewEffect(ne) ->
+    str "new_effect" ^^ space ^^ p_newEffect ne
   | SubEffect(se) ->
     str "sub_effect" ^^ space ^^ p_subEffect se
-  | NewEffectForFree (qs, ne) ->
-    p_qualifiers qs ^^ str "new_effect_for_free" ^^ space ^^ p_newEffect ne
+  | NewEffectForFree (ne) ->
+    str "new_effect_for_free" ^^ space ^^ p_newEffect ne
   | Pragma p ->
     p_pragma p
   | Fsdoc doc ->
     p_fsdoc doc ^^ hardline (* needed so that the comment is treated as standalone *)
   | Main _ ->
     failwith "*Main declaration* : Is that really still in use ??"
+  | Tycon(true, _) ->
+    failwith "Effect abbreviation is expected to be defined by an abbreviation"
 
 and p_pragma = function
     | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
@@ -431,7 +437,7 @@ and p_actionDecls = function
   | l -> break1 ^^ prefix2 (str "and actions") (separate_break_map semi p_effectDecl l)
 
 and p_effectDecl d = match d.d with
-    | Tycon([], [TyconAbbrev(lid, [], None, e), None]) ->
+    | Tycon(false, [TyconAbbrev(lid, [], None, e), None]) ->
         prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm e)
     | _ ->
         failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
@@ -550,6 +556,7 @@ and p_atomicPattern p = match p.pat with
 (* Skipping patternOrMultibinder since it would need retro-engineering the flattening of binders *)
 
 (* is_atomic is true if the binder must be parsed atomically *)
+(* TODO : try to print refinement with the compact form if possible *)
 and p_binder is_atomic b = match b.b with
     | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid
     | TVariable lid -> p_lident lid
@@ -1008,14 +1015,12 @@ let comments_to_document (comments : list<(string * FStar.Range.range)>) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
 let modul_with_comments_to_document (m:modul) comments =
-  let rec aux (previous_range, comments, doc) decl =
+  let rec aux (previous_range_end, comments, doc) decl =
     let current_range = decl.drange in
     // Util.print1 "Current range : %s\n" (string_of_range current_range);
     let inbetween_range =
-      if (file_of_range previous_range <> file_of_range current_range)
-      then failwith (Util.format2 "Given coments from different source files %s - %s" (file_of_range previous_range) (file_of_range current_range));
       Range.mk_range (file_of_range current_range)
-               (end_of_range previous_range)
+               previous_range_end
                (start_of_range current_range)
     in
     let preceding_comments, comments =
@@ -1046,7 +1051,7 @@ let modul_with_comments_to_document (m:modul) comments =
       comments_to_document preceding_comments ^^ hardline ^^
       decl_to_document decl ^^ inner_comments_doc
     in
-    (current_range, comments,  doc)
+    (end_of_range current_range, comments,  doc)
   in
   let decls = match m with
     | Module (_, decls)
@@ -1055,9 +1060,8 @@ let modul_with_comments_to_document (m:modul) comments =
   match decls with
     | [] -> empty, comments
     | d :: _ ->
-      let initial_range = Range.mk_range (file_of_range d.drange) Range.zeroPos Range.zeroPos in
       let (_, comments, doc) =
-        List.fold_left aux (initial_range, comments, empty) decls
+        List.fold_left aux (Range.zeroPos, comments, empty) decls
       in
       (doc, comments)
 

@@ -46,61 +46,6 @@ open FStar_Parser_Util
 open FStar_Const
 open FStar_Ident
 open FStar_String
-
-let as_frag d ds =
-    let rec as_mlist out ((m,r,doc), cur) ds =
-    match ds with
-    | [] -> List.rev (Module(m, (mk_decl (TopLevelModule(m)) r doc) ::(List.rev cur))::out)
-    | d::ds ->
-      begin match d.d with
-        | TopLevelModule m' ->
-				as_mlist (Module(m, (mk_decl (TopLevelModule(m)) r doc) :: (List.rev cur))::out) ((m',d.drange,d.doc), []) ds
-        | _ -> as_mlist out ((m,r,doc), d::cur) ds
-      end in
-    match d.d with
-    | TopLevelModule m ->
-        let ms = as_mlist [] ((m,d.drange,d.doc), []) ds in
-        begin match ms with
-        | _::Module(n, _)::_ ->
-		(* This check is coded to hard-fail in dep.num_of_toplevelmods. *)
-        let msg = "Support for more than one module in a file is deprecated" in
-        print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid n)) msg
-        | _ -> ()
-        end;
-        Inl ms
-    | _ ->
-        let ds = d::ds in
-        iter (function {d=TopLevelModule _; drange=r} -> raise (Error("Unexpected module declaration", r))
-                       | _ -> ()) ds;
-        Inr ds
-
-let compile_op arity s =
-    let name_of_char = function
-            |'&' -> "Amp"
-            |'@'  -> "At"
-            |'+' -> "Plus"
-            |'-' when (arity=1) -> "Minus"
-            |'-' -> "Subtraction"
-            |'/' -> "Slash"
-            |'<' -> "Less"
-            |'=' -> "Equals"
-            |'>' -> "Greater"
-            |'_' -> "Underscore"
-            |'|' -> "Bar"
-            |'!' -> "Bang"
-            |'^' -> "Hat"
-            |'%' -> "Percent"
-            |'*' -> "Star"
-            |'?' -> "Question"
-            |':' -> "Colon"
-            | _ -> "UNKNOWN"
-    in
-    match s with
-    | ".[]<-" -> "op_String_Assignment"
-    | ".()<-" -> "op_Array_Assignment"
-    | ".[]" -> "op_String_Access"
-    | ".()" -> "op_Array_Access"
-    | _ -> "op_"^ (concat "_" (map name_of_char (list_of_string s)))
 %}
 
 %token <bytes> BYTEARRAY
@@ -133,6 +78,8 @@ let compile_op arity s =
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
 %token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
+/* TODO remove when dropping stratified */
+%token KIND
 %token AND ASSERT BEGIN ELSE END
 %token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
@@ -142,11 +89,11 @@ let compile_op arity s =
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK DOT_LBRACK DOT_LPAREN LBRACK LBRACK_BAR LBRACE BANG_LBRACE
+%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT DOT_LBRACK DOT_LPAREN LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT NEW_EFFECT_FOR_FREE SUB_EFFECT SQUIGGLY_RARROW TOTAL KIND
+%token NEW_EFFECT NEW_EFFECT_FOR_FREE SUB_EFFECT SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS
 %token BACKTICK UNIV_HASH
@@ -206,8 +153,12 @@ inputFragment:
 
 (* TODO : let's try to remove that *)
 mainDecl:
-  | SEMICOLON_SEMICOLON doc_opt=FSDOC? t=term
-      { mk_decl (Main t) (rhs2 parseState 1 3) doc_opt }
+  | SEMICOLON_SEMICOLON doc=FSDOC? t=term
+      { let decorations = match doc with
+        | Some d -> [ Doc d ]
+        | _ -> [] in
+        mk_decl (Main t) (rhs2 parseState 1 3) decorations
+      }
 
 
 /******************************************************************************/
@@ -220,49 +171,64 @@ pragma:
   | PRAGMA_RESET_OPTIONS s_opt=string?
       { ResetOptions s_opt }
 
-decl:
-  | fsdoc_opt=FSDOC? decl_range=decl2 { let (decl, range) = decl_range in mk_decl decl range fsdoc_opt }
+decoration:
+  | x=FSDOC
+      { Doc x }
+  | LBRACK_AT x = list(atomicTerm) RBRACK
+      { DeclAttributes x }
+  | x=qualifier
+      { Qualifier x }
 
-decl2:
+decl:
+  | ASSUME lid=uident COLON phi=formula
+      { mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] }
+
+  | d=decoration ds=list(decoration) decl=rawDecl
+      { mk_decl decl (rhs parseState 3) (d :: ds) }
+
+  | decl=rawDecl
+      { mk_decl decl (rhs parseState 1) [] }
+
+rawDecl:
+  | p=pragma
+      { Pragma p }
   | OPEN uid=quident
-      { Open uid, rhs2 parseState 1 2 }
+      { Open uid }
   | MODULE uid1=uident EQUALS uid2=quident
-      {  ModuleAbbrev(uid1, uid2), rhs2 parseState 1 4 }
+      { ModuleAbbrev(uid1, uid2) }
   | MODULE uid=quident
-      {  TopLevelModule uid, rhs2 parseState 1 2 }
-  | k=kind_abbrev  (* TODO : Remove with stratify *)
-      { k, rhs parseState 1 }
-  | qs=qualifiers TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
-      { Tycon (qs, List.map (fun (doc, f) -> (f, doc)) tcdefs), rhs2 parseState (if qs = [] then 2 else 1) 3 }
-  | qs=qualifiers EFFECT uid=uident tparams=typars EQUALS t=typ
-      { Tycon(Effect::qs, [TyconAbbrev(uid, tparams, None, t), None]), rhs2 parseState (if qs = [] then 2 else 1) 6 }
-  (* change to menhir : let ~> rec changed to let rec ~> *)
-  | qs=qualifiers LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
+      {  TopLevelModule uid }
+  | TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
+      { Tycon (false, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
+  | EFFECT uid=uident tparams=typars EQUALS t=typ
+      { Tycon(true, [(TyconAbbrev(uid, tparams, None, t), None)]) }
+  | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
-        let lbs = focusLetBindings lbs (rhs2 parseState 1 4) in
-        TopLevelLet(qs, q, lbs), rhs2 parseState (if qs = [] then 2 else 1) 4
+        let lbs = focusLetBindings lbs (rhs2 parseState 1 3) in
+        TopLevelLet(q, lbs)
       }
-  | qs=qualifiers VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
+  | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
       {
         let t = match flatten bss with
           | [] -> t
-          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 4 6) Type
-        in Val(qs, lid, t), rhs2 parseState (if qs = [] then 2 else 1) 6
+          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type
+        in Val(lid, t)
       }
-  | ASSUME lid=uident COLON phi=formula (* TODO : Remove with stratify *)
-      { Assume([Assumption], lid, phi), rhs2 parseState 1 4 }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
-      { Exception(lid, t_opt), rhs2 parseState 1 3 }
-  | qs=qualifiers NEW_EFFECT ne=newEffect
-      { NewEffect (qs, ne), rhs2 parseState (if qs = [] then 2 else 1) 3 }
-  | qs=qualifiers SUB_EFFECT se=subEffect
-      { SubEffect se, rhs2 parseState 2 3 } (* TODO (KM) : Why are we dropping the qualifiers here ? Does that mean we should not accept them ? *)
-  | qs=qualifiers NEW_EFFECT_FOR_FREE ne=newEffect
-      { NewEffectForFree (qs, ne), rhs2 parseState (if qs = [] then 2 else 1) 3 }
-  | p=pragma
-      { Pragma p, rhs parseState 1 }
+      { Exception(lid, t_opt) }
+  | NEW_EFFECT ne=newEffect
+      { NewEffect ne }
+  | SUB_EFFECT se=subEffect
+      { SubEffect se }
+  | NEW_EFFECT_FOR_FREE ne=newEffect
+      { NewEffectForFree ne }
   | doc=FSDOC_STANDALONE
-      { Fsdoc doc, rhs parseState 1 }
+      { Fsdoc doc }
+
+  (* stratified only *)
+  | KIND lid=ident bs=binders EQUALS k=kind
+      { KindAbbrev(lid, bs, k) }
+
 
 typeDecl:
   (* TODO : change to lident with stratify *)
@@ -297,11 +263,6 @@ recordFieldDecl:
 constructorDecl:
   | BAR doc_opt=FSDOC? uid=uident COLON t=typ                { (uid, Some t, doc_opt, false) }
   | BAR doc_opt=FSDOC? uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, doc_opt, true) }
-
-(* TODO : Remove with stratify *)
-kind_abbrev:
-  | KIND lid=ident bs=binders EQUALS k=kind
-      { KindAbbrev(lid, bs, k) }
 
 letbinding:
   | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
@@ -347,7 +308,7 @@ actionDecls:
 
 effectDecl:
   | lid=lident EQUALS t=simpleTerm
-     { mk_decl (Tycon ([], [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) None }
+     { mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
@@ -411,9 +372,6 @@ qualifier:
   | OPAQUE        { Opaque }
   | REIFIABLE     { Reifiable }
   | REFLECTABLE   { Reflectable }
-
-%inline qualifiers:
-  | qs=list(qualifier) { qs }
 
 maybeFocus:
   | b=boption(SQUIGGLY_RARROW) { b }
@@ -538,7 +496,7 @@ lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
   | LPAREN id=operator RPAREN
-    { mk_ident(compile_op (-1) id, rhs parseState 2) }
+    { mk_ident(compile_op' id, rhs parseState 2) }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -608,7 +566,7 @@ noSeqTerm:
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       }
-  | MATCH e=term WITH pbs=list(BAR pb=patternBranch {pb})
+  | MATCH e=term WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
       {
         let branches = focusBranches pbs (rhs2 parseState 1 4) in
         mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
@@ -792,7 +750,7 @@ recordExp:
       { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr }
 
 simpleDef:
-  | e=separated_pair(qlident, EQUALS, simpleTerm) { e }
+  | e=separated_pair(qlident, EQUALS, noSeqTerm) { e }
 
 appTerm:
   | head=indexingTerm args=list(argTerm)
@@ -913,7 +871,6 @@ hasSort:
   (* use flexible_list *)
 %inline semiColonTermList:
   | l=right_flexible_list(SEMICOLON, noSeqTerm) { l }
-
 
 constant:
   | LPAREN_RPAREN { Const_unit }

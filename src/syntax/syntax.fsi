@@ -28,6 +28,10 @@ exception Err of string
 exception Error of string * Range.range
 exception Warning of string * Range.range
 
+// JP: all these types are defined twice and every change has to be performed
+// twice (because of the .fs). TODO: move the type definitions into a standalone
+// fs without fsi, and move the helpers into syntaxhelpers.fs / syntaxhelpers.fsi
+
 (* Objects with metadata *)
 type withinfo_t<'a,'t> = {
   v: 'a;
@@ -138,7 +142,9 @@ and metadata =
   | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
   | Meta_monadic       of monad_name * typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
-  | Meta_monadic_lift  of monad_name * monad_name                (* Sub-effecting: a lift from m1 to m2 *)
+                                                                 (* Contains the name of the monadic effect and  the type of the subterm *)
+  | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
+                                                                 (* from the first monad_name m1 to the second monad name  m2 *)
 and uvar_basis<'a> =
   | Uvar
   | Fixed of 'a
@@ -229,9 +235,14 @@ type qualifier =
   | Projector of lident * ident            //projector for datacon l's argument x
   | RecordType of (list<ident> * list<ident>)          //record type whose namespace is fst and unmangled field names are snd
   | RecordConstructor of (list<ident> * list<ident>)   //record constructor whose namespace is fst and unmangled field names are snd
+  | Action of lident                       //action of some effect
   | ExceptionConstructor                   //a constructor of Prims.exn
   | HasMaskedEffect                        //a let binding that may have a top-level effect
   | Effect                                 //qualifier on a name that corresponds to an effect constructor
+  | OnlyName                               //qualifier internal to the compiler indicating a dummy declaration which
+                                           //is present only for name resolution and will be elaborated at typechecking
+
+type attribute = term
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {
@@ -285,13 +296,28 @@ type eff_decl = {
     //actions for the effect
     actions     :list<action>
 }
+
+// JP: there are several issues with these type definition (TODO).
+// 1) Every single constructor has a range. This ought to be:
+//      type sigelt = { elt: sigelt'; range: Range.range } and sigelt' = ...
+//    See for instance the slightly suboptimal implementation of range_of_sigelt
+//    in syntax/util.fs
+// 2) octuples hinder readability, make it difficult to maintain code (see
+//    lids_of_sigelt in syntax/util.fs) and do not help being familiar with the
+//    code. We should use a record beneath Sig_datacons and others.
+// 3) In particular, because of tuples, everytime one needs to extend a Sig_*,
+//    one needs to modify > 30 different places in the code that pattern-match
+//    on a fixed-length tuple. Records would solve this.
+// JP: because 1) isn't fixed I'm only adding attributes to Sig_toplevel_let,
+// but once 1) is fixed attributes should be attached to the outer record type,
+// just like range.
 and sigelt =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
                        * univ_names                //u1..un
                        * binders                   //(x1:t1) ... (xn:tn)
                        * typ                       //t
                        * list<lident>              //mutually defined types
-                       * list<lident>              //data constructors for ths type
+                       * list<lident>              //data constructors for this type
                        * list<qualifier>
                        * Range.range
 // JP: the comment below seems out of date -- Sig_tycons is gone?!
@@ -321,6 +347,7 @@ and sigelt =
                        * Range.range
                        * list<lident>               //mutually defined
                        * list<qualifier>
+                       * list<attribute>
   | Sig_main           of term
                        * Range.range
   | Sig_assume         of lident
@@ -424,4 +451,5 @@ val fv_eq_lid:      fv -> lident -> bool
 val range_of_fv:    fv -> range
 val lid_of_fv:      fv -> lid
 
-
+(* attributes *)
+val has_simple_attribute: list<term> -> string -> bool

@@ -119,22 +119,22 @@ let string_of_decl' d =
   | Open l -> "open " ^ l.str
   | ModuleAbbrev (i, l) -> "module " ^ i.idText ^ " = " ^ l.str
   | KindAbbrev(i, _, _) -> "kind " ^ i.idText
-  | TopLevelLet(_, _, pats) ->
+  | TopLevelLet(_, pats) ->
         let termty = List.map (fun (p,t) -> (pat_to_string p, term_to_string t)) pats in
         let termty' = List.map (fun (p,t) -> p ^ ":" ^ t) termty in
         "let " ^ (String.concat ", " termty')
   | Main _ -> "main ..."
-  | Assume(_, i, t) -> "assume " ^ i.idText ^ ":" ^ (term_to_string t)
+  | Assume(i, t) -> "assume " ^ i.idText ^ ":" ^ (term_to_string t)
   | Tycon(_, tys) ->
             "type " ^
              (tys |> List.map (fun (t,d)-> (string_of_tycon t) ^ " " ^ (string_of_fsdoco d))
                  |> String.concat " and ") (* SI: sep will be "," for Record but "and" for Variant *)
-  | Val(_, i, t) -> "val " ^ i.idText ^ ":" ^ (term_to_string t)
+  | Val(i, t) -> "val " ^ i.idText ^ ":" ^ (term_to_string t)
   | Exception(i, _) -> "exception " ^ i.idText
-  | NewEffect(_, DefineEffect(i, _, _, _, _))
-  | NewEffect(_, RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | NewEffectForFree(_, DefineEffect(i, _, _, _, _))
-  | NewEffectForFree(_, RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
+  | NewEffect(DefineEffect(i, _, _, _, _))
+  | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
+  | NewEffectForFree(DefineEffect(i, _, _, _, _))
+  | NewEffectForFree(RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc (comm,_) -> comm

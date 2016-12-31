@@ -1549,11 +1549,13 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
   | ModuleAbbrev(x, l) -> 
     DesugarEnv.push_module_abbrev env x l, []
 
-  | Tycon(qual, tcs) ->
+  | Tycon(is_effect, tcs) ->
+    let quals = if is_effect then AST.Effect :: d.quals else d.quals in
     let tcs = List.map (fun (x,_) -> x) tcs in
-    desugar_tycon env d.drange (trans_quals qual) tcs
+    desugar_tycon env d.drange (trans_quals quals) tcs
 
-  | TopLevelLet(quals, isrec, lets) ->
+  | TopLevelLet(isrec, lets) ->
+    let quals = d.quals in
     begin match (compress_exp <| desugar_exp_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
         | Exp_let(lbs, _) ->
           let lids = snd lbs |> List.map (fun lb -> match lb.lbname with
@@ -1575,11 +1577,12 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     let se = Sig_main(e, d.drange) in
     env, [se]
 
-  | Assume(atag, id, t) ->
+  | Assume(id, t) ->
     let f = desugar_formula env t in
     env, [Sig_assume(qualify env id, f, [Assumption], d.drange)]
 
-  | Val(quals, id, t) ->
+  | Val(id, t) ->
+    let quals = d.quals in
     let t = desugar_typ env (close_fun env t) in
     let quals = if env.iface && env.admitted_iface then Assumption::trans_quals quals else trans_quals quals in
     let se = Sig_val_decl(qualify env id, t, quals, d.drange) in
@@ -1620,7 +1623,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
   | NewEffectForFree _ ->
       failwith "effects for free only supported in conjunction with --universes"
 
-  | NewEffect (quals, RedefineEffect(eff_name, eff_binders, defn)) ->
+  | NewEffect (RedefineEffect(eff_name, eff_binders, defn)) ->
+    let quals = d.quals in
     let env0 = env in
     let env, binders = desugar_binders env eff_binders in
     let defn = desugar_typ env defn in
@@ -1659,7 +1663,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     | _ -> raise (Error((Print.typ_to_string head) ^ " is not an effect", d.drange))
     end
 
-  | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, _actions)) ->
+  | NewEffect (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, _actions)) ->
+    let quals = d.quals in
     let env0 = env in
     let env = DesugarEnv.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in
@@ -1723,7 +1728,7 @@ let open_prims_all =
 let desugar_modul_common (curmod:option<modul>) env (m:AST.modul) : env_t * Syntax.modul * bool =
   let open_ns (mname:lident) (d:list<decl>) =
     let d = if List.length mname.ns <> 0
-            then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname) None) :: d
+            then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname) []) :: d
             else d in
     d in
   let env = match curmod with

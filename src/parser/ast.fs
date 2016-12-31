@@ -152,9 +152,13 @@ type qualifier =
   | Opaque
   | Logic
 
-
-
 type qualifiers = list<qualifier>
+
+type attributes_ = list<term>
+type decoration =
+  | Qualifier of qualifier
+  | DeclAttributes of list<term>
+  | Doc of fsdoc
 
 type lift_op =
   | NonReifiableLift of term
@@ -175,19 +179,30 @@ type decl' =
   | TopLevelModule of lid
   | Open of lid
   | ModuleAbbrev of ident * lid
-  | KindAbbrev of ident * list<binder> * knd
-  | TopLevelLet of qualifiers * let_qualifier * list<(pattern * term)>
+  | TopLevelLet of let_qualifier * list<(pattern * term)>
   | Main of term
-  | Assume of qualifiers * ident * term
-  | Tycon of qualifiers * list<(tycon * option<fsdoc>)>
-  | Val of qualifiers * ident * term  (* bool is for logic val *)
+  | Tycon of bool * list<(tycon * option<fsdoc>)>
+    (* bool is for effect *)
+  | Val of ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
-  | NewEffect of qualifiers * effect_decl
-  | NewEffectForFree of qualifiers * effect_decl (* always a [DefineEffect] *)
+  | NewEffect of effect_decl
+  | NewEffectForFree of effect_decl (* always a [DefineEffect] *)
   | SubEffect of lift
   | Pragma of pragma
   | Fsdoc of fsdoc
-and decl = {d:decl'; drange:range; doc:option<fsdoc>;}
+
+  (* TODO remove these two when we drop stratified -- they don't even parse
+   * anymore! But I don't want to even touch the stratified code to remove them. *)
+  | KindAbbrev of ident * list<binder> * knd
+  | Assume of ident * term
+
+and decl = {
+  d:decl';
+  drange:range;
+  doc:option<fsdoc>;
+  quals: qualifiers;
+  attrs: attributes_
+}
 and effect_decl =
   (* KM : Is there really need of the genrality of decl here instead of e.g. lid * term ? *)
   | DefineEffect   of ident * list<binder> * term * list<decl> * list<decl>
@@ -208,7 +223,20 @@ let check_id id =
          else raise (FStar.Syntax.Syntax.Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
     else ()
 
-let mk_decl d r doc = {d=d; drange=r; doc=doc}
+let at_most_one s r l = match l with
+  | [ x ] -> Some x
+  | [] -> None
+  | _ -> raise (FStar.Syntax.Syntax.Error (Util.format1 "At most one %s is allowed on declarations" s, r))
+
+let mk_decl d r decorations =
+  let doc = at_most_one "fsdoc" r (List.choose (function Doc d -> Some d | _ -> None) decorations) in
+  let attributes_ = at_most_one "attribute set" r (
+    List.choose (function DeclAttributes a -> Some a | _ -> None) decorations
+  ) in
+  let attributes_ = Util.dflt [] attributes_ in
+  let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
+  { d=d; drange=r; doc=doc; quals=qualifiers; attrs=attributes_ }
+
 let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
 let mk_term t r l = {tm=t; range=r; level=l}
 let mk_uminus t r l =
@@ -332,7 +360,8 @@ let mkRefinedBinder id t should_bind_var refopt m implicit =
         if should_bind_var
         then mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type)) m Type implicit
         else
-            let b = mk_binder (NoName t) m Type implicit in
+            let x = gen t.range in
+            let b = mk_binder (Annotated (x, t)) m Type implicit in
             mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type)) m Type implicit
 
 let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
@@ -359,7 +388,8 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                     mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type None, phi)) range Type
                 end
             else
-                mk_term (Refine(mk_binder (NoName t) t_range Type None, phi)) range Type
+                let x = gen t.range in
+                mk_term (Refine(mk_binder (Annotated (x, t)) t_range Type None, phi)) range Type
      in
      mk_pattern (PatAscribed(pat, t)) range
 
@@ -369,6 +399,81 @@ let rec extract_named_refinement t1  =
         | Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
     | Paren t -> extract_named_refinement t
         | _ -> None
+
+(* Some helpers that parse.mly and parse.fsy will want too *)
+
+(* JP: what does this function do? A comment would be welcome, or at the very
+   least a type annotation...
+   JP: ok, here's my understanding.
+   This function peeks at the first top-level declaration;
+   - if this is NOT a TopLevelModule, then we're in interactive mode and return
+     [Inr list-of-declarations]
+   - if this IS a TopLevelModule, then we do a forward search and group
+     declarations together with the preceding [TopLevelModule] and return a [Inl
+     list-of-modules] where each "module" [Module (lid, list-of-declarations)], with the
+     unspecified invariant that the first declaration is a [TopLevelModule]
+   JP: TODO actually forbid multiple modules and remove all of this. *)
+let as_frag d ds =
+  let rec as_mlist out ((m_name, m_decl), cur) ds =
+    match ds with
+    | [] -> List.rev (Module(m_name, m_decl :: List.rev cur)::out)
+    | d :: ds ->
+      begin match d.d with
+        | TopLevelModule m' ->
+            as_mlist (Module(m_name, m_decl :: List.rev cur)::out) ((m', d), []) ds
+        | _ ->
+            as_mlist out ((m_name, m_decl), d::cur) ds
+      end
+  in
+  match d.d with
+  | TopLevelModule m ->
+      let ms = as_mlist [] ((m,d), []) ds in
+      begin match List.tl ms with
+      | Module (m', _) :: _ ->
+          (* This check is coded to hard-fail in dep.num_of_toplevelmods. *)
+          let msg = "Support for more than one module in a file is deprecated" in
+          print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid m')) msg
+      | _ ->
+          ()
+      end;
+      Inl ms
+  | _ ->
+      let ds = d::ds in
+      List.iter (function
+        | {d=TopLevelModule _; drange=r} -> raise (S.Error("Unexpected module declaration", r))
+        | _ -> ()
+      ) ds;
+      Inr ds
+
+let compile_op arity s =
+    let name_of_char = function
+      |'&' -> "Amp"
+      |'@'  -> "At"
+      |'+' -> "Plus"
+      |'-' when (arity=1) -> "Minus"
+      |'-' -> "Subtraction"
+      |'/' -> "Slash"
+      |'<' -> "Less"
+      |'=' -> "Equals"
+      |'>' -> "Greater"
+      |'_' -> "Underscore"
+      |'|' -> "Bar"
+      |'!' -> "Bang"
+      |'^' -> "Hat"
+      |'%' -> "Percent"
+      |'*' -> "Star"
+      |'?' -> "Question"
+      |':' -> "Colon"
+      | _ -> "UNKNOWN" in
+    match s with
+    | ".[]<-" -> "op_String_Assignment"
+    | ".()<-" -> "op_Array_Assignment"
+    | ".[]" -> "op_String_Access"
+    | ".()" -> "op_Array_Access"
+    | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
+
+let compile_op' s =
+  compile_op (-1) s
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging
@@ -504,16 +609,16 @@ let decl_to_string (d:decl) = match d.d with
   | Open l -> "open " ^ l.str
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
   | KindAbbrev(i, _, _) -> "kind " ^ i.idText
-  | TopLevelLet(_, _, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
+  | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
   | Main _ -> "main ..."
-  | Assume(_, i, _) -> "assume " ^ i.idText
+  | Assume(i, _) -> "assume " ^ i.idText
   | Tycon(_, tys) -> "type " ^ (tys |> List.map (fun (x,_)->id_of_tycon x) |> String.concat ", ")
-  | Val(_, i, _) -> "val " ^ i.idText
+  | Val(i, _) -> "val " ^ i.idText
   | Exception(i, _) -> "exception " ^ i.idText
-  | NewEffect(_, DefineEffect(i, _, _, _, _))
-  | NewEffect(_, RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | NewEffectForFree(_, DefineEffect(i, _, _, _, _))
-  | NewEffectForFree(_, RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
+  | NewEffect(DefineEffect(i, _, _, _, _))
+  | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
+  | NewEffectForFree(DefineEffect(i, _, _, _, _))
+  | NewEffectForFree(RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc _ -> "fsdoc"

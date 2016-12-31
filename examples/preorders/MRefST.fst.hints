@@ -1,10 +1,7 @@
 [
   "W(`ós\tô‹©öÜ†ö[W1",
   [
-    [ "MRefST.return_st", 1, 2, 1, [ "@query" ], 0 ],
     [ "MRefST.bind_st", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MRefST.get", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MRefST.put", 1, 2, 1, [ "@query" ], 0 ],
     [ "MRefST.ISTATE_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
     [
       "MRefST.ISTATE___proj__ISTATE__item__get_elab",
@@ -58,7 +55,7 @@
     [ "MRefST.heap_rel", 7, 2, 1, [ "@query" ], 0 ],
     [ "MRefST.heap_rel", 8, 2, 1, [ "@query" ], 0 ],
     [
-      "MRefST.416755",
+      "MRefST.417186",
       1,
       2,
       1,

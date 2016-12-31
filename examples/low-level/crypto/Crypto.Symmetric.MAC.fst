@@ -21,7 +21,7 @@ module PL = Crypto.Symmetric.Poly1305
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-type id = id * UInt128.t
+type id = id * UInt128.t //NS: why not this definition : i:id & iv (alg i)
 let alg (i:id) = macAlg_of_id (fst i) 
 
 type text = Seq.seq (lbytes 16) // Used to be seq elem, then seq (lbytes 16)
@@ -160,9 +160,9 @@ val rcreate: rgn:HH.rid{HS.is_eternal_region rgn} -> i:id -> ST (elemB i)
   (ensures  (fun h0 r h1 ->
     HS.modifies (Set.singleton rgn) h0 h1 /\
     HS.modifies_ref rgn TSet.empty h0 h1 /\
+    ~(HS.((Buffer.content (as_buffer r)).mm)) /\
     Buffer.frameOf (as_buffer r) == rgn /\
-    ~(live h0 r) /\
-    live h1 r))
+    ~(live h0 r) /\live h1 r))
 let rcreate rgn i =
   match alg i with
   | POLY1305 -> B_POLY1305 (FStar.Buffer.rcreate rgn 0UL  5ul)
@@ -197,15 +197,17 @@ val encode_r: #i:id -> b:elemB i -> raw:lbuffer 16{Buffer.disjoint (as_buffer b)
   (ensures  (fun h0 _ h1 -> 
     norm h1 b /\ 
     Buffer.live h1 raw /\ 
-    Buffer.modifies_2 (as_buffer b) raw h0 h1))
+    (match alg i with 
+      | POLY1305 -> Buffer.modifies_2 (as_buffer b) raw h0 h1
+      | GHASH -> Buffer.modifies_1 (as_buffer b) h0 h1)))
 let encode_r #i b raw =
   match b with 
   | B_POLY1305 b -> 
       PL.clamp raw; 
       PL.toField b raw
   | B_GHASH    b -> 
-      let h0 = ST.get () in
-      assert (Buffer.modifies_1 raw h0 h0); // Necessary for triggering right lemmas
+      //let h0 = ST.get () in
+      //assert (Buffer.modifies_1 raw h0 h0); // Necessary for triggering right lemmas
       Buffer.blit raw 0ul b 0ul 16ul
 
 // TODO: generalize to word
