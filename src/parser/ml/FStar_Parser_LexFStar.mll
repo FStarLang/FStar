@@ -99,35 +99,43 @@
   let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
   let n_typ_apps = FStar_Util.mk_ref 0
   let is_typ_app lexbuf =
-  if not (FStar_Options.fs_typ_app()) then false
-  else try
-   let char_ok = function
-     | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | '_' | ',' | '.' | ' ' | '\t' -> true
-     | c when c >= 'A' && c <= 'Z' -> true
-     | c when c >= 'a' && c <= 'z' -> true
-     | c when c >= '0' && c <= '9' -> true
-     | _ -> false in
-   let balanced (contents:string) pos =
-     if contents.[pos] <> '<' then
-      (failwith  "Unexpected position in is_typ_lapp");
-    let d = {angle=ref 1; paren=ref 0} in
-    let upd i = match contents.[i] with
-      | '(' -> incr d.paren | ')' -> decr d.paren
-      | '<' -> incr d.angle | '>' -> decr d.angle
-      | _ -> () in
-    let ok () = !(d.angle) >= 0 && !(d.paren) >= 0 in
-    let rec aux i =
-      if !(d.angle)=0 && !(d.paren)=0 then true
-      else if i >= String.length contents || not (ok ()) || (not (char_ok (contents.[i]))) || (FStar_Util.starts_with (FStar_Util.substring_from contents (Z.of_int i)) "then") then false
-      else (upd i; aux (i + 1)) in
-      aux (pos + 1) in
-   let rest = String.sub lexbuf.lex_buffer lexbuf.lex_last_pos (lexbuf.lex_buffer_len - lexbuf.lex_last_pos) in
-   if not (String.contains rest '\n') then (lexbuf.refill_buff lexbuf);
-   let lookahead = String.sub lexbuf.lex_buffer (lexbuf.lex_last_pos - 1) (lexbuf.lex_buffer_len - lexbuf.lex_last_pos + 1) in
-   let res = balanced lookahead 0 in
-   if res then incr n_typ_apps;
-   (*Printf.printf "TYP_APP %s: %s\n" lookahead (if res then "YES" else "NO");*)
-   res
+    if not (FStar_Options.fs_typ_app()) then false
+    else try
+      let char_ok = function
+        | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | '_' | ',' | '.' | ' ' | '\t' -> true
+        | c when c >= 'A' && c <= 'Z' -> true
+        | c when c >= 'a' && c <= 'z' -> true
+        | c when c >= '0' && c <= '9' -> true
+        | _ -> false
+      in
+      let balanced (contents:string) pos =
+      if contents.[pos] <> '<'
+      then (failwith  "Unexpected position in is_typ_lapp");
+      let d = {angle=ref 1; paren=ref 0} in
+      let upd i = match contents.[i] with
+        | '(' -> incr d.paren | ')' -> decr d.paren
+        | '<' -> incr d.angle | '>' -> decr d.angle
+        | _ -> ()
+      in
+      let ok () = !(d.angle) >= 0 && !(d.paren) >= 0 in
+      let rec aux i =
+        if !(d.angle)=0 && !(d.paren)=0 then true
+        else if i >= String.length contents || not (ok ()) || (not (char_ok (contents.[i]))) || (FStar_Util.starts_with (FStar_Util.substring_from contents (Z.of_int i)) "then") then false
+        else (upd i; aux (i + 1))
+      in
+      aux (pos + 1)
+    in
+    let rest = String.sub lexbuf.lex_buffer lexbuf.lex_last_pos (lexbuf.lex_buffer_len - lexbuf.lex_last_pos) in
+    if not (String.contains rest '\n') then (lexbuf.refill_buff lexbuf);
+    let lookahead =
+      String.sub lexbuf.lex_buffer
+                 (lexbuf.lex_last_pos - 1)
+                 (lexbuf.lex_buffer_len - lexbuf.lex_last_pos + 1)
+    in
+    let res = balanced lookahead 0 in
+    if res then incr n_typ_apps;
+    (*Printf.printf "TYP_APP %s: %s\n" lookahead (if res then "YES" else "NO");*)
+    res
   with e -> Printf.printf "Resolving typ_app<...> syntax failed.\n"; false
 
   let is_typ_app_gt () =
@@ -139,7 +147,31 @@
   let rec mknewline n lexbuf =
     if n > 0 then (L.new_line lexbuf; incr lc; mknewline (n-1) lexbuf)
 
- let clean_number x = String.strip ~chars:"uzyslLUnIN" x
+  let clean_number x = String.strip ~chars:"uzyslLUnIN" x
+
+  let comments : (string * FStar_Range.range) list ref = ref []
+
+  let flush_comments () =
+    let lexed_comments = !comments in
+    comments := [] ;
+    lexed_comments
+
+  let comment_buffer = Buffer.create 1024
+
+  let start_comment lexbuf =
+    Buffer.add_bytes comment_buffer "(*" ;
+    (false, comment_buffer, fst (L.range lexbuf))
+
+  let terminate_comment buffer startpos lexbuf =
+    let endpos = snd (L.range lexbuf) in
+    Buffer.add_bytes buffer "*)" ;
+    let comment = Buffer.contents buffer in
+    Buffer.clear buffer ;
+    comments := (comment, FStar_Parser_Util.mksyn_range startpos endpos) :: ! comments
+
+  let push_one_line_comment lexbuf =
+    let startpos, endpos = L.range lexbuf in
+    comments := (lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos) :: !comments
 }
 
 (* -------------------------------------------------------------------- *)
@@ -263,7 +295,7 @@ rule token = parse
          failwith "Out-of-range character literal";
        x
        )) }
- | int8 as x  
+ | int8 as x
      { INT8 (clean_number x, false) }
  | uint16 as x
      { UINT16 (clean_number x) }
@@ -289,10 +321,12 @@ rule token = parse
      { fsdoc (1,"",[]) lexbuf}
 
  | "(*"
-     { comment false lexbuf }
+     { let inner, buffer, startpos = start_comment lexbuf in
+       comment inner buffer startpos lexbuf }
 
  | "//"  [^'\n''\r']*
-     { token lexbuf }
+     { push_one_line_comment lexbuf ;
+       token lexbuf }
 
  | '"'
      { string (Buffer.create 0) lexbuf }
@@ -404,22 +438,29 @@ and string buffer = parse
  | eof
     { failwith "unterminated string" }
 
-and comment inner = parse
+and comment inner buffer startpos = parse
 
  | "(*"
-    { let close_eof = comment true lexbuf in comment inner lexbuf }
+    { Buffer.add_bytes buffer "(*" ;
+      let close_eof = comment true buffer startpos lexbuf in
+      comment inner buffer startpos lexbuf }
 
  | newline
-    { L.new_line lexbuf; comment inner lexbuf }
+    { Buffer.add_char buffer '\n' ;
+      L.new_line lexbuf;
+      comment inner buffer startpos lexbuf }
 
  | "*)"
-    { if inner then EOF else token lexbuf }
+    { terminate_comment buffer startpos lexbuf;
+      if inner then EOF else token lexbuf }
 
- | _
-    { comment inner lexbuf }
+ | _ as c
+    { Buffer.add_char buffer c ;
+      comment inner buffer startpos lexbuf }
 
  | eof
-     { lc := 1; EOF }
+     { terminate_comment buffer startpos lexbuf;
+       lc := 1; EOF }
 
 and fsdoc cargs = parse
  | '(' '*'

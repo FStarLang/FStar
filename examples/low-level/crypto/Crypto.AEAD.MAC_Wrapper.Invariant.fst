@@ -31,7 +31,6 @@ open Crypto.AEAD.Encrypt.Invariant
  * framing of aead_entries_are_refined by mac_wrapper
  * the proof relies on nonce being different from all the nonces in the aead table, and hence,
  * the mac still being set (mac_wrapper only modifies the mac log for nonce)
- * as the comment says below, this could be spelled out more
  * otp entries are trivial, since table0 = table1
  *)
 private val frame_aead_entries_are_refined_mac_wrapper
@@ -55,23 +54,33 @@ private val frame_aead_entries_are_refined_mac_wrapper
 	      entries_0 == entries_1 /\
 	      table_0 == table_1 /\
 	      aead_entries_are_refined table_0 entries_0 h1)))
-#set-options "--z3rlimit 200"
+#set-options "--z3rlimit 50"
 let frame_aead_entries_are_refined_mac_wrapper #i #rw #aadlen #plainlen aead_st nonce aad plain cipher_tagged mac_st h0 h1 =
   let open FStar.SeqProperties in
+  let open FStar.Classical in
   if safeId i then begin
     let entries_0 = HS.sel h0 (st_ilog aead_st) in
     let table_0 = HS.sel h0 (itable i aead_st.prf) in
     let entries_1 = HS.sel h1 (st_ilog aead_st) in
     let table_1 = HS.sel h1 (itable i aead_st.prf) in
     assert (entries_0 == entries_1);
-    assert (table_0 == table_1);    
+    assert (table_0 == table_1);
     assert (aead_entries_are_refined table_0 entries_0 h0);
+    assert (HS.modifies_ref aead_st.prf.mac_rgn !{HS.as_ref (as_hsref (CMA.(ilog mac_st.log)))} h0 h1);
     let h1: (h:HS.mem{safeId i}) = h1 in
     let aux (e:aead_entry i) : Lemma
     	(requires (entries_1 `contains` e))
-	(ensures (refines_one_entry table_1 e h1)) =  //TODO: This proof is rather indirect; could be spelled out more
-	lemma_fresh_nonce_implies_all_entries_nonces_are_different entries_1 nonce in
-    FStar.Classical.(forall_intro (move_requires aux))
+  	(ensures (refines_one_entry table_1 e h1)) =
+      let dom_0 = {iv=e.nonce; ctr=PRF.ctr_0 i} in
+      match PRF.find_mac table_1 dom_0 with
+      | Some mac_st_e ->
+        //nonce of all the aead entries is different from nonce
+  	lemma_fresh_nonce_implies_all_entries_nonces_are_different entries_1 nonce;
+	//and hence we can apply framing to get that the mac log for all the aead entries remains unchaged
+	lemma_mac_log_framing mac_st h0 h1 mac_st_e;
+	()
+    in
+    forall_intro (move_requires aux)
   end
 
 (*
@@ -109,7 +118,7 @@ let frame_unused_aead_id_for_prf_mac_wrapper #i #rw #aadlen #plainlen aead_st no
     | Some mac_range -> 
       assert (CMA.mac_is_unset (i, nonce') aead_st.prf.mac_rgn mac_range h0);
       MAC.frame_norm h0 h1 CMA.(mac_range.r);
-      lemma_mac_log_framing nonce mac_st h0 h1 nonce' mac_range)
+      lemma_mac_log_framing mac_st h0 h1 mac_range)
 
 #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"      
 private val frame_unused_aead_id_for_prf_mac_wrapper_forall

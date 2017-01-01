@@ -133,13 +133,23 @@ three steps:
 binary. This is further explained towards the end of this document.
 
 **Easier alternative:**  If you don't care about efficiency, about the .NET
-dependency and bugs ([#672](https://github.com/FStarLang/FStar/issues/672)) you can stop already after step 1.
+dependency and quite a few bugs ([#746](https://github.com/FStarLang/FStar/issues/746))
+you can stop already after step 1.
 
 **Easier alternative:**  If you don't want to use F#/.NET/Mono at all you can
 also build F\* directly from the generated OCaml sources.  Therefore, for
 convenience, we keep a (possibly a bit outdated) snapshot of the F\* sources
 extracted to OCaml (the result of step 2) in the repo.  This allows
 you to skip directly to step 3 and build F* with just an OCaml compiler.
+
+Some convenience Makefile targets are available for steps 2 and 3:
+
+- To run steps 2 and 3, do `make -j 15 fstar-ocaml`.
+- To run steps 3, 2 and 3 again, do: `make -j 15 ocaml-fstar-ocaml`.
+
+The latter step is not always guaranteed to work but almost always does,
+and is a tiny bit faster than extracting F* using the F# version.
+
 
 ### Step 1. Building F* from sources using the F# compiler ###
 
@@ -233,7 +243,7 @@ into your `~/.bashrc`.
 
 ### Prerequisite for steps 2 and 3: Working OCaml setup  ###
 
-Steps 2 and 3 below require a working OCaml (any version from 4.02.2 to 4.03.0) setup.
+Steps 2 and 3 below require a working OCaml (any version from 4.02.2 to 4.04.0) setup.
 
 #### Instructions for Windows ####
 
@@ -268,10 +278,17 @@ that's over there (it's optimized for F*).
    - If you're on Windows see https://github.com/protz/ocaml-installer/wiki
      for instructions on how to configure your environment for use with OPAM
 
-3. F* depends on a bunch of external OCaml packages which you can install using OPAM:
+3. Ensure that OPAM is using a recent enough version of OCaml
+
+   - Type `opam switch list`. The current OCaml version used by opam
+     is identified by the letter C. If it is not within the version
+     range required by F* (see above), type `opam switch ` and then
+     the version number you wish to switch opam to.
+
+4. F* depends on a bunch of external OCaml packages which you can install using OPAM:
 
   ```sh
-  $ opam install ocamlfind batteries stdint zarith yojson fileutils pprint
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint
   ```
   Some of the examples also require the `sqlite3` opam package, which depends
   on SQLite itself that you can install with `opam depext sqlite3` (at least on Linux)
@@ -307,13 +324,6 @@ This also means that when linking C libraries with OCaml compiled objects one
 needs to use the *correct* mingw libraries and *not* the Cygwin ones. OCaml uses
 special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 `examples/crypto` for examples.
-
-### Convenience Makefile targets
-
-- To run steps 2 and 3, do `make -j 15 fstar-ocaml`.
-- To run steps 3, 2 and 3 again, do: `make -j 15 ocaml-fstar-ocaml`.
-
-The latter step is not always guaranteed to work but almost always does, and is a tiny bit faster than extracting F* using the F# version.
 
 ## Runtime dependency: Z3 SMT solver ##
 

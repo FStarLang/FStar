@@ -22,7 +22,7 @@ let test_mod_ref = ref (Some ({name=test_lid;
 
 let parse_mod mod_name dsenv =
     match ParseIt.parse (Inl mod_name) with
-    | Inl (Inl [m]) -> 
+    | Inl (Inl [m], _) -> 
         let env',  m = Parser.ToSyntax.desugar_modul dsenv m in
         let env' , _ = FStar.Parser.Env.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) in
         dsenv_ref := Some env';

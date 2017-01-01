@@ -73,6 +73,7 @@ val hide_genident_nums          : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
 val include_path                : unit    -> list<string>
+val indent                      : unit    -> bool
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
 val inline_arith                : unit    -> bool

@@ -94,6 +94,7 @@ and binder' =
   | Annotated of ident * term
   | TAnnotated of ident * term
   | NoName of term
+
 and binder = {b:binder'; brange:range; blevel:level; aqual:aqual}
 
 and pattern' =
@@ -203,6 +204,7 @@ and decl = {
   attrs: attributes_
 }
 and effect_decl =
+  (* KM : Is there really need of the genrality of decl here instead of e.g. lid * term ? *)
   | DefineEffect   of ident * list<binder> * term * list<decl> * list<decl>
   | RedefineEffect of ident * list<binder> * term
 
@@ -335,6 +337,7 @@ let focusLetBindings lbs r =
 let mkFsTypApp t args r =
   mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
 
+  (* TODO : is this valid or should it use Construct ? *)
 let mkTuple args r =
   let cons =
     if Options.universes()

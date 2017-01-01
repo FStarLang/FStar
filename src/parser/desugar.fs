@@ -373,8 +373,10 @@ let label_conjuncts tag polarity label_opt f =
     let msg = match label_opt with
         | Some l -> l
         | _ ->
-          Util.format2 "%s at %s" tag (Range.string_of_range f.range) in
-    mk_term (Labeled(f, msg, polarity)) f.range f.level  in
+          Util.format2 "%s at %s" tag (Range.string_of_range f.range)
+    in
+    mk_term (Labeled(f, msg, polarity)) f.range f.level
+  in
 
   let rec aux f = match f.tm with
     | Paren g ->
