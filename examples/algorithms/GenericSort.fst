@@ -16,7 +16,7 @@ let rec sorted l key = match l with
     | x::y::xs -> (key x <= key y) && (sorted (y::xs) key)
 
 val test_sorted: x:'a -> l:list 'a -> key:('a -> Tot int) ->
-      Lemma ((sorted (x::l) key /\ is_Cons l) ==> key x <= key (Cons.hd l))
+      Lemma ((sorted (x::l) key /\ Cons? l) ==> key x <= key (Cons?.hd l))
 let test_sorted x l key = ()
 
 val test_sorted2: unit -> key:('a -> Tot int) -> Tot (m:list 'a{sorted m key})
@@ -31,23 +31,23 @@ val sorted_smaller: #a:eqtype
                 ->  l:list a
                 ->  key:(a -> Tot int)
                 ->  Lemma (requires (sorted (x::l) key /\ mem y l))
-                          (ensures (key x <= key y))
-                          [SMTPat (sorted (x::l) key); SMTPat (mem y l)]
+                         (ensures (key x <= key y))
+                         [SMTPat (sorted (x::l) key); SMTPat (mem y l)]
 let rec sorted_smaller #a x y l key = match l with
     | [] -> ()
     | z::zs -> if key z = key y then () else sorted_smaller x y zs key
 
-val sorted_tl: #a:eqtype -> l:list a{is_Cons l} -> k:(a -> Tot int) ->
-  Lemma(requires (sorted l k))
-  (ensures(sorted (Cons.tl l) k))
+val sorted_tl: #a:eqtype -> l:list a{Cons? l} -> k:(a -> Tot int) ->
+  Lemma (requires (sorted l k))
+        (ensures (sorted (Cons?.tl l) k))
 let rec sorted_tl #a l k =
   match l with
   | [_] -> ()
   | a::b::xs -> sorted_tl (b::xs) k
 
-val sorted_lt:  #a:eqtype -> l:list a{is_Cons l} -> k:(a -> Tot int) ->
-  Lemma(requires (sorted l k))
-  (ensures (forall x y. (x < k (hd l) /\ k y = x) ==> (mem y l = false)))
+val sorted_lt:  #a:eqtype -> l:list a{Cons? l} -> k:(a -> Tot int) ->
+  Lemma (requires (sorted l k))
+                  (ensures (forall x y. (x < k (hd l) /\ k y = x) ==> (mem y l = false)))
 let sorted_lt #a l k = ()
 
 type permutation (#a:Type{hasEq a}) (l1:list a) (l2:list a) =

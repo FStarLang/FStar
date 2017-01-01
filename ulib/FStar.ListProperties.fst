@@ -172,8 +172,6 @@ val flatten_cons_append: #a:eqtype
   -> Lemma(ensures
     (flatten (Cons (append xs ys) zzs) = append xs (append ys (flatten zzs))))
 let flatten_cons_append #a xs ys zzs =
-  append_l_nil xs;
-  append_l_nil ys;
   append_assoc xs ys (flatten zzs)
 
 (** Properties mixing rev and append **)
@@ -227,6 +225,7 @@ let rev_acc_append #t a b c =
   rev_acc_rev' a (append b c);
   append_assoc (rev' a) b c
 
+(* Seems a little unnatural *)
 val rev_cons: #a:eqtype -> (xs: list a) -> (r: list a) -> (x:a) ->
   Lemma(requires (xs = rev_acc r []))
     (ensures (append xs (Cons x []) = rev_acc (Cons x r) []))
