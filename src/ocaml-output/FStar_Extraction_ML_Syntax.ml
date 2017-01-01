@@ -35,7 +35,7 @@ type gensym_t =
 {gensym : Prims.unit  ->  mlident; reset : Prims.unit  ->  Prims.unit}
 
 
-let is_Mkgensym_t : gensym_t  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkgensym_t"))))
+let is_Mkgensym_t : gensym_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkgensym_t"))))
 
 
 let gs : gensym_t = (
@@ -46,17 +46,17 @@ in (
 let n_resets = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in {gensym = (fun _73_15 -> (match (()) with
 | () -> begin
-(let _170_34 = (let _170_33 = (let _170_32 = (let _170_28 = (FStar_ST.read n_resets)
-in (FStar_Util.string_of_int _170_28))
-in (let _170_31 = (let _170_30 = (let _170_29 = (
+(let _171_34 = (let _171_33 = (let _171_32 = (let _171_28 = (FStar_ST.read n_resets)
+in (FStar_Util.string_of_int _171_28))
+in (let _171_31 = (let _171_30 = (let _171_29 = (
 
 let _73_16 = (FStar_Util.incr ctr)
 in (FStar_ST.read ctr))
-in (FStar_Util.string_of_int _170_29))
-in (Prims.strcat "_" _170_30))
-in (Prims.strcat _170_32 _170_31)))
-in (Prims.strcat "_" _170_33))
-in ((_170_34), ((Prims.parse_int "0"))))
+in (FStar_Util.string_of_int _171_29))
+in (Prims.strcat "_" _171_30))
+in (Prims.strcat _171_32 _171_31)))
+in (Prims.strcat "_" _171_33))
+in ((_171_34), ((Prims.parse_int "0"))))
 end)); reset = (fun _73_18 -> (match (()) with
 | () -> begin
 (
@@ -79,21 +79,21 @@ end))
 
 
 let rec gensyms : Prims.int  ->  mlident Prims.list = (fun x -> (match (x) with
-| _170_42 when (_170_42 = (Prims.parse_int "0")) -> begin
+| _171_42 when (_171_42 = (Prims.parse_int "0")) -> begin
 []
 end
 | n -> begin
-(let _170_44 = (gensym ())
-in (let _170_43 = (gensyms (n - (Prims.parse_int "1")))
-in (_170_44)::_170_43))
+(let _171_44 = (gensym ())
+in (let _171_43 = (gensyms (n - (Prims.parse_int "1")))
+in (_171_44)::_171_43))
 end))
 
 
 let mlpath_of_lident : FStar_Ident.lident  ->  mlpath = (fun x -> if (FStar_Ident.lid_equals x FStar_Syntax_Const.failwith_lid) then begin
 (([]), (x.FStar_Ident.ident.FStar_Ident.idText))
 end else begin
-(let _170_48 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
-in ((_170_48), (x.FStar_Ident.ident.FStar_Ident.idText)))
+(let _171_48 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
+in ((_171_48), (x.FStar_Ident.ident.FStar_Ident.idText)))
 end)
 
 
@@ -629,10 +629,10 @@ false
 end))
 
 
-let is_Mkmlexpr : mlexpr  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkmlexpr"))))
+let is_Mkmlexpr : mlexpr  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmlexpr"))))
 
 
-let is_Mkmllb : mllb  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkmllb"))))
+let is_Mkmllb : mllb  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmllb"))))
 
 
 let is_Mutable = (fun _discr_ -> (match (_discr_) with
@@ -1072,10 +1072,10 @@ end)
 
 
 let bv_as_mlident : FStar_Syntax_Syntax.bv  ->  mlident = (fun x -> if (((FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText FStar_Ident.reserved_prefix) || (FStar_Syntax_Syntax.is_null_bv x)) || (is_reserved x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText)) then begin
-(let _170_744 = (let _170_743 = (let _170_742 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
-in (Prims.strcat "_" _170_742))
-in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _170_743))
-in ((_170_744), ((Prims.parse_int "0"))))
+(let _171_744 = (let _171_743 = (let _171_742 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
+in (Prims.strcat "_" _171_742))
+in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _171_743))
+in ((_171_744), ((Prims.parse_int "0"))))
 end else begin
 ((x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText), ((Prims.parse_int "0")))
 end)

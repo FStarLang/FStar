@@ -166,6 +166,7 @@ val uint16_of_int: int -> Tot<uint16>
 val float_of_byte: byte -> Tot<float>
 val float_of_int32: int32 -> Tot<float>
 val float_of_int64: int64 -> Tot<float>
+val float_of_string: string -> Tot<float>
 val int_of_int32: int32 -> Tot<int>
 val int32_of_int:   int -> int32 //potentially failing int32 coercion
 val string_of_int:   int -> string
@@ -214,6 +215,7 @@ val for_all: ('a -> bool) -> list<'a> -> bool
 val for_some: ('a -> bool) -> list<'a> -> bool
 val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 val multiset_equiv: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
+val take: ('a -> bool) -> list<'a> -> list<'a> * list<'a>
 
 val is_some: option<'a> -> Tot<bool>
 val must: option<'a> -> 'a

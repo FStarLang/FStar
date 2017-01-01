@@ -37,6 +37,7 @@ open FStar_List
 open FStar_Util
 open FStar_Range
 open FStar_Options
+(* TODO : these files should be deprecated and removed *)
 open FStar_Absyn_Syntax
 open FStar_Absyn_Const
 open FStar_Absyn_Util
@@ -676,15 +677,15 @@ let phi =
   let e = e0 in
                   ( {e with level=Formula} )
 in
-      ( mk_decl (Assume(lid, phi)) (rhs parseState 2) [ Qualifier Assumption ] )}
-| decoration list_decoration_ raw_decl
+      ( mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] )}
+| decoration list_decoration_ rawDecl
     {let (d, ds, decl) = ($1, $2, $3) in
-      ( mk_decl decl (rhs parseState 2) (d :: ds) )}
-| raw_decl
+      ( mk_decl decl (rhs parseState 3) (d :: ds) )}
+| rawDecl
     {let decl = $1 in
-      ( mk_decl decl (rhs parseState 2) [] )}
+      ( mk_decl decl (rhs parseState 1) [] )}
 
-raw_decl:
+rawDecl:
   pragma
     {let p = $1 in
       ( Pragma p )}
@@ -693,7 +694,7 @@ raw_decl:
       ( Open uid )}
 | MODULE uident EQUALS quident
     {let (_1, uid1, _3, uid2) = ((), $2, (), $4) in
-      (  ModuleAbbrev(uid1, uid2) )}
+      ( ModuleAbbrev(uid1, uid2) )}
 | MODULE quident
     {let (_1, uid) = ((), $2) in
       (  TopLevelModule uid )}
@@ -706,7 +707,7 @@ raw_decl:
 | LET letqualifier separated_nonempty_list_AND_letbinding_
     {let (_1, q, lbs) = ($1, $2, $3) in
       (
-        let lbs = focusLetBindings lbs (rhs2 parseState 1 4) in
+        let lbs = focusLetBindings lbs (rhs2 parseState 1 3) in
         TopLevelLet(q, lbs)
       )}
 | VAL lidentOrOperator list_multiBinder_ COLON typ
@@ -714,7 +715,7 @@ raw_decl:
       (
         let t = match flatten bss with
           | [] -> t
-          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 4 6) Type
+          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type
         in Val(lid, t)
       )}
 | EXCEPTION uident option___anonymous_1_
@@ -842,7 +843,7 @@ in
 effectDecl:
   lident EQUALS simpleTerm
     {let (lid, _2, t) = ($1, (), $3) in
-     ( mk_decl (Tycon (false, [(TyconAbbrev(lid, [], None, t), None)])) (rhs2 parseState 1 3) [] )}
+     ( mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
@@ -1517,7 +1518,7 @@ let pbs =
      ( List.rev xs )
 in
       (
-        let branches = focusBranches (pbs) (rhs2 parseState 1 2) in
+        let branches = focusBranches pbs (rhs2 parseState 1 2) in
         mk_function branches (lhs parseState) (rhs2 parseState 1 2)
       )}
 | ASSUME atomicTerm
@@ -2103,43 +2104,11 @@ opPrefixTerm_atomicTermQUident_:
     {let (op, e) = ($1, $2) in
       ( mk_term (Op(op, [e])) (rhs2 parseState 1 2) Expr )}
 
-fsTypeArgs:
-  TYP_APP_LESS separated_nonempty_list_COMMA_atomicTerm_ TYP_APP_GREATER
-    {let (_1, targs, _3) = ((), $2, ()) in
-    (targs)}
-
-someFsTypeArgs:
-  fsTypeArgs
-    {let targs = $1 in
-    ( Some targs )}
-
-qidentWithTypeArgs_qlident_option_fsTypeArgs__:
-  qlident option_fsTypeArgs_
-    {let (id, targs_opt) = ($1, $2) in
-      (
-        let t = if is_name id then Name id else Var id in
-        let e = mk_term t (rhs parseState 1) Un in
-        match targs_opt with
-        | None -> e
-        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
-      )}
-
-qidentWithTypeArgs_quident_someFsTypeArgs_:
-  quident someFsTypeArgs
-    {let (id, targs_opt) = ($1, $2) in
-      (
-        let t = if is_name id then Name id else Var id in
-        let e = mk_term t (rhs parseState 1) Un in
-        match targs_opt with
-        | None -> e
-        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
-      )}
-
 projectionLHS:
   qidentWithTypeArgs_qlident_option_fsTypeArgs__
     {let e = $1 in
       ( e )}
-| qidentWithTypeArgs_quident_someFsTypeArgs_
+| qidentWithTypeArgs_quident_some_fsTypeArgs__
     {let e = $1 in
       ( e )}
 | LPAREN term option_pair_hasSort_simpleTerm__ RPAREN
@@ -2184,15 +2153,36 @@ in
       ( mkRefSet (rhs2 parseState 1 3) es )}
 | quident QMARK_DOT lident
     {let (ns, _2, id) = ($1, (), $3) in
-      (
-        mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr
-      )}
+      ( mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr )}
 | quident QMARK
     {let (lid, _2) = ($1, ()) in
+      ( mk_term (Discrim lid) (rhs2 parseState 1 2) Un )}
+
+fsTypeArgs:
+  TYP_APP_LESS separated_nonempty_list_COMMA_atomicTerm_ TYP_APP_GREATER
+    {let (_1, targs, _3) = ((), $2, ()) in
+    (targs)}
+
+qidentWithTypeArgs_qlident_option_fsTypeArgs__:
+  qlident option_fsTypeArgs_
+    {let (id, targs_opt) = ($1, $2) in
       (
-	let t = Discrim lid in
-        let e = mk_term t (rhs2 parseState 1 2) Un in
-	e
+        let t = if is_name id then Name id else Var id in
+        let e = mk_term t (rhs parseState 1) Un in
+        match targs_opt with
+        | None -> e
+        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
+      )}
+
+qidentWithTypeArgs_quident_some_fsTypeArgs__:
+  quident some_fsTypeArgs_
+    {let (id, targs_opt) = ($1, $2) in
+      (
+        let t = if is_name id then Name id else Var id in
+        let e = mk_term t (rhs parseState 1) Un in
+        match targs_opt with
+        | None -> e
+        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
       )}
 
 hasSort:
@@ -2294,7 +2284,7 @@ universeFrom:
 | ident list_atomicUniverse_
     {let (max, us) = ($1, $2) in
       (
-        if text_of_id max <> "max"
+        if text_of_id max <> text_of_lid max_lid
         then errorR(Error("A lower case ident " ^ text_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.",
@@ -2329,6 +2319,11 @@ univar:
         let pos = rhs parseState 1 in
         mk_term (Uvar (mk_ident (id, pos))) pos Expr
       )}
+
+some_fsTypeArgs_:
+  fsTypeArgs
+    {let x = $1 in
+        ( Some x )}
 
 right_flexible_list_SEMICOLON_noSeqTerm_:
   

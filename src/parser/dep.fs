@@ -28,6 +28,7 @@ open FStar.Parser.AST
 open FStar.Parser.Parse
 open FStar.Util
 open FStar.Const
+open FStar.String
 
 open FStar.Absyn
 open FStar.Absyn.Syntax
@@ -501,7 +502,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     collect_term t2
 
   in
-  let ast = Driver.parse_file filename in
+  let ast, _ = Driver.parse_file filename in
   collect_file ast;
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps
@@ -622,8 +623,14 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
 
   List.iter (fun (m, r) ->
     if not !r && not (Options.interactive ()) then
-      raise (Err (Util.format2 "You passed --verify_module %s but I found no \
-        file that contains [module %s] in the dependency graph\n" m m))
+      let maybe_fst =
+        let k = String.length m in
+        if k > 4 && String.substring m (k-4) 4 = ".fst"
+        then Util.format1 " Did you mean %s ?" (String.substring m 0 (k-4))
+        else ""
+      in
+      raise (Err (Util.format3 "You passed --verify_module %s but I found no \
+        file that contains [module %s] in the dependency graph.%s\n" m m maybe_fst))
   ) verify_flags;
 
   (* At this stage the list is kept in reverse to make sure the caller in

@@ -118,6 +118,8 @@ let go _ =
           else interactive_mode None None Parser.Dep.VerifyUserList filenames None Stratified.interactive_tc //and then start checking chunks from the current buffer
         else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
+        else if Options.indent () then
+          FStar.Indent.generate filenames
         else if List.length filenames >= 1 then begin //normal batch mode
           let verify_mode =
             if Options.verify_all () then begin

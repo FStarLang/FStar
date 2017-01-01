@@ -61,6 +61,8 @@ let salloc_lid = p2l ["FStar"; "ST"; "salloc"]
 let swrite_lid = p2l ["FStar"; "ST"; "op_Colon_Equals"]
 let sread_lid = p2l ["FStar"; "ST"; "op_Bang"]
 
+let max_lid = p2l ["max"]
+
 let float_lid  = p2l ["FStar"; "Float"; "float"]
 
 let char_lid  = p2l ["FStar"; "Char"; "char"]
@@ -68,7 +70,7 @@ let char_lid  = p2l ["FStar"; "Char"; "char"]
 let heap_lid   = p2l ["FStar"; "Heap"; "heap"]
 
 (* Logical connectives and operators *)
-let kunary k k'              = mk (Tm_arrow([null_binder k], mk_Total k')) 
+let kunary k k'              = mk (Tm_arrow([null_binder k], mk_Total k'))
 let kbin k1 k2 k'            = mk (Tm_arrow([null_binder k1; null_binder k2], mk_Total k'))
 let ktern k1 k2 k3 k'        = mk (Tm_arrow([null_binder k1;
                                              null_binder k2;

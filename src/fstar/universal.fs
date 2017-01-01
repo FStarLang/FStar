@@ -27,7 +27,7 @@ open FStar.Dependences
 open FStar.Interactive
 
 (* Module abbreviations for the universal type-checker  *)
-module DsEnv   = FStar.Parser.Env 
+module DsEnv   = FStar.Parser.Env
 module TcEnv   = FStar.TypeChecker.Env
 module Syntax  = FStar.Syntax.Syntax
 module Util    = FStar.Syntax.Util
@@ -42,15 +42,15 @@ let module_or_interface_name m = m.is_interface, m.name
 (***********************************************************************)
 (* Parse and desugar a file                                            *)
 (***********************************************************************)
-let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string) 
+let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
   : DsEnv.env
   * list<Syntax.modul> =
-  let ast = Parser.Driver.parse_file fn in
+  let ast, _ = Parser.Driver.parse_file fn in
   let ast = match pre_fn with
     | None ->
         ast
     | Some pre_fn ->
-        let pre_ast = Parser.Driver.parse_file pre_fn in
+        let pre_ast, _ = Parser.Driver.parse_file pre_fn in
         match pre_ast, ast with
         | [ Parser.AST.Interface (lid1, decls1, _) ], [ Parser.AST.Module (lid2, decls2) ]
           when Ident.lid_equals lid1 lid2 ->
@@ -72,7 +72,7 @@ let tc_prims () : (Syntax.modul * int)
   env.solver.init env;
   let prims_filename = Options.prims () in
   let dsenv, prims_mod = parse (DsEnv.empty_env ()) None prims_filename in
-  let (prims_mod, env), elapsed_time = 
+  let (prims_mod, env), elapsed_time =
     record_time (fun () -> Tc.check_module env (List.hd prims_mod)) in
   (prims_mod, elapsed_time), dsenv, env
 
@@ -85,7 +85,7 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
     | Parser.Driver.Empty ->
       Some (curmod, dsenv, env)
 
-    | Parser.Driver.Modul ast_modul -> 
+    | Parser.Driver.Modul ast_modul ->
       let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
       let env = match curmod with
           | None -> env
@@ -93,13 +93,13 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
       let modul, _, env = Tc.tc_partial_modul env modul in
       Some (Some modul, dsenv, env)
 
-    | Parser.Driver.Decls ast_decls -> 
+    | Parser.Driver.Decls ast_decls ->
       let dsenv, decls = Desugar.desugar_decls dsenv ast_decls in
       match curmod with
         | None -> FStar.Util.print_error "fragment without an enclosing module"; exit 1
         | Some modul ->
             let modul, _, env  = Tc.tc_more_partial_modul env modul decls in
-            Some (Some modul, dsenv, env) 
+            Some (Some modul, dsenv, env)
 
     with
       | Syntax.Error(msg, r) when not ((Options.trace_error())) ->
@@ -117,15 +117,15 @@ let tc_one_file dsenv env pre_fn fn : list<(Syntax.modul * int)> //each module a
                                     * DsEnv.env
                                     * TcEnv.env  =
   let dsenv, fmods = parse dsenv pre_fn fn in
-  let check_mods () = 
+  let check_mods () =
       let env, all_mods =
           fmods |> List.fold_left (fun (env, all_mods) m ->
-                    let (m, env), elapsed_ms = 
+                    let (m, env), elapsed_ms =
                         FStar.Util.record_time (fun () -> Tc.check_module env m) in
                     env, (m, elapsed_ms)::all_mods) (env, []) in
-      List.rev all_mods, dsenv, env 
+      List.rev all_mods, dsenv, env
   in
-  match fmods with 
+  match fmods with
   | [m] when (Options.should_verify m.name.str //if we're verifying this module
               && (FStar.Options.record_hints() //and if we're recording or using hints
                   || FStar.Options.use_hints())) ->
@@ -155,12 +155,12 @@ let tc_one_file_and_intf (intf:option<string>) (impl:string) (dsenv:Parser.Env.e
   Syntax.reset_gensym ();
   match intf with
     | None -> //no interface; easy
-      tc_one_file dsenv env None impl 
-    | Some _ when ((Options.codegen()) <> None) -> 
+      tc_one_file dsenv env None impl
+    | Some _ when ((Options.codegen()) <> None) ->
         if not (Options.lax())
         then raise (Err "Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately");
         tc_one_file dsenv env intf impl
-    | Some iname -> 
+    | Some iname ->
         if Options.debug_any () then
         FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
         let caption = "interface: " ^ iname in
@@ -197,16 +197,16 @@ let rec tc_fold_interleave (acc:list<(modul * int)> * uenv) (remaining:list<stri
 //  let move intf impl remaining =
 //    Syntax.reset_gensym ();
 //    let all_mods, dsenv, env = acc in
-//    let ms, dsenv, env = match intf with 
+//    let ms, dsenv, env = match intf with
 //        | None -> //no interface; easy
-//          tc_one_file dsenv env None impl 
+//          tc_one_file dsenv env None impl
 //
-//        | Some _ when ((Options.codegen()) <> None) -> 
+//        | Some _ when ((Options.codegen()) <> None) ->
 //          if not (Options.lax())
 //          then raise (Err "Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately");
 //          tc_one_file dsenv env intf impl
 //
-//        | Some iname -> 
+//        | Some iname ->
 //          if Options.debug_any () then
 //            FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
 //          let caption = "interface: " ^ iname in
@@ -265,14 +265,14 @@ let tc_one_file_interactive (remaining:list<string>) (uenv:uenv) = //:((string o
           let _, dsenv, env = tc_one_file_and_intf (Some intf) impl dsenv env in
           (Some intf, impl), dsenv, env, remaining
         | intf_or_impl :: remaining ->
-          let _, dsenv, env = tc_one_file_and_intf None intf_or_impl dsenv env in 
+          let _, dsenv, env = tc_one_file_and_intf None intf_or_impl dsenv env in
           (None, intf_or_impl), dsenv, env, remaining
         | [] -> failwith "Impossible"
   in
   (intf, impl), (dsenv, env), None, remaining
 
-let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul>> = 
-    let pop (dsenv, env) msg = 
+let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul>> =
+    let pop (dsenv, env) msg =
           pop_context (dsenv, env) msg;
           Options.pop() in
 
@@ -302,27 +302,26 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
         let env = TcEnv.commit_mark env in
         dsenv, env in
 
-    let check_frag (dsenv, (env:TcEnv.env)) curmod text =  
-        try 
-            match tc_one_fragment curmod dsenv env text with 
-                | Some (m, dsenv, env) -> 
+    let check_frag (dsenv, (env:TcEnv.env)) curmod text =
+        try
+            match tc_one_fragment curmod dsenv env text with
+                | Some (m, dsenv, env) ->
                   Some (m, (dsenv, env), FStar.TypeChecker.Errors.get_err_count())
                 | _ -> None
-        with 
+        with
             | FStar.Syntax.Syntax.Error(msg, r) when not ((Options.trace_error())) ->
               FStar.TypeChecker.Errors.add_errors env [(msg, r)];
               None
-              
+
             | FStar.Syntax.Syntax.Err msg when not ((Options.trace_error())) ->
               FStar.TypeChecker.Errors.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
               None in
 
-    let report_fail () = 
+    let report_fail () =
         TypeChecker.Errors.report_all() |> ignore;
         TypeChecker.Errors.num_errs := 0 in
 
-
-    { pop = pop; 
+    { pop = pop;
       push = push;
       mark = mark;
       reset_mark = reset_mark;
