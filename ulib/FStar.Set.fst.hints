@@ -1,5 +1,5 @@
 [
-  "/·¢h_¬ﬁnÚ\u0003˙\u001a\rqS\u001f",
+  "˙◊ãÊ°r«á|M‘èˆ\u007f1f",
   [
     [
       "FStar.Set.singleton",
@@ -172,6 +172,27 @@
       0,
       [ "@query", "lemma_FStar.Set.lemma_equal_intro", "unit_typing" ],
       0
-    ]
+    ],
+    [ "FStar.Set.as_set'", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Set.as_set'",
+      2,
+      2,
+      1,
+      [
+        "@query", "binder_x_fab13fd67c8daa3709cd969786a732ec_1",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [ "FStar.Set.as_set'", 3, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Set.as_set'", 4, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Set.as_set'", 5, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Set.as_set", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Set.as_set", 2, 2, 1, [ "@query" ], 0 ]
   ]
 ]

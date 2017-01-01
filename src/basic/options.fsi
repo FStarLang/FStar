@@ -73,6 +73,7 @@ val hide_genident_nums          : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
 val include_path                : unit    -> list<string>
+val indent                      : unit    -> bool
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
 val inline_arith                : unit    -> bool
@@ -100,6 +101,7 @@ val print_fuels                 : unit    -> bool
 val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
+val print_z3_statistics         : unit    -> bool
 val push                        : unit    -> unit
 val record_hints                : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
@@ -120,4 +122,7 @@ val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool
 val warn_top_level_effects      : unit    -> bool
 val z3_exe                      : unit    -> string
+val z3_refresh                  : unit    -> bool
+val z3_rlimit                   : unit    -> int
+val z3_seed                     : unit    -> int
 val z3_timeout                  : unit    -> int

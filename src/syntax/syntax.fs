@@ -38,7 +38,6 @@ type withinfo_t<'a,'t> = {
 
 (* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
-type fieldname = lident
 (* Term language *)
 type sconst = FStar.Const.sconst
 
@@ -78,7 +77,7 @@ type term' =
   | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst
   | Tm_type       of universe
-  | Tm_abs        of binders*term*option<either<lcomp, lident>>  (* fun (xi:ti) -> t : (M t' wp | N) *)
+  | Tm_abs        of binders*term*option<either<lcomp, residual_comp>>  (* fun (xi:ti) -> t : (M t' wp | N) *)
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right; with monadic application in monad_name *)
@@ -131,6 +130,7 @@ and cflags =
   | PARTIAL_RETURN
   | SOMETRIVIAL
   | LEMMA
+  | CPS
   | DECREASES of term
 and uvar = Unionfind.uvar<uvar_basis<term>>
 and metadata =
@@ -139,7 +139,9 @@ and metadata =
   | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
   | Meta_monadic       of monad_name * typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
-  | Meta_monadic_lift  of monad_name * monad_name                (* Sub-effecting: a lift from m1 to m2 *)
+                                                                 (* Contains the name of the monadic effect and  the type of the subterm *)
+  | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
+                                                                 (* from the first monad_name m1 to the second monad name  m2 *)
 and uvar_basis<'a> =
   | Uvar
   | Fixed of 'a
@@ -153,8 +155,8 @@ and meta_source_info =
   | Mutable_rval
 and fv_qual =
   | Data_ctor
-  | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
-  | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
+  | Record_projector of (lident * ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
+  | Record_ctor of lident * list<ident>       (* the type of the record being constructed and its (unmangled) fields in order *)
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
@@ -187,6 +189,7 @@ and free_vars = {
     free_names:set<bv>;
     free_uvars:uvars;
     free_univs:set<universe_uvar>;
+    free_univ_names:fifo_set<univ_name>;
 }
 and lcomp = {
     eff_name: lident;
@@ -194,6 +197,8 @@ and lcomp = {
     cflags: list<cflags>;
     comp: unit -> comp //a lazy computation
 }
+
+and residual_comp = lident * list<cflags>
 
 type tscheme = list<univ_name> * typ
 
@@ -209,20 +214,26 @@ type qualifier =
   | Irreducible                            //a definition that can never be unfolded by the normalizer
   | Abstract                               //a symbol whose definition is only visible within the defining module
   | Inline_for_extraction                  //a symbol whose definition must be unfolded when compiling the program
+  | NoExtract                              // a definition whose contents won't be extracted (currently, by KreMLin only)
   | Noeq                                   //for this type, don't generate HasEq
   | Unopteq                                //for this type, use the unoptimized HasEq scheme
   | TotalEffect                            //an effect that forbis non-termination
   | Logic                                  //a symbol whose intended usage is in the refinement logic
   | Reifiable
-  | Reflectable
+  | Reflectable of lident                  // with fully qualified effect name
   //the remaining qualifiers are internal: the programmer cannot write them
   | Discriminator of lident                //discriminator for a datacon l
   | Projector of lident * ident            //projector for datacon l's argument x
-  | RecordType of list<fieldname>          //record type whose unmangled field names are ...
-  | RecordConstructor of list<fieldname>   //record constructor whose unmangled field names are ...
+  | RecordType of (list<ident> * list<ident>)          //record type whose namespace is fst and unmangled field names are snd
+  | RecordConstructor of (list<ident> * list<ident>)   //record constructor whose namespace is fst and unmangled field names are snd
+  | Action of lident                       //action of some effect
   | ExceptionConstructor                   //a constructor of Prims.exn
   | HasMaskedEffect                        //a let binding that may have a top-level effect
   | Effect                                 //qualifier on a name that corresponds to an effect constructor
+  | OnlyName                               //qualifier internal to the compiler indicating a dummy declaration which
+                                           //is present only for name resolution and will be elaborated at typechecking
+
+type attribute = term
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {
@@ -239,12 +250,14 @@ type sub_eff = {
 
 type action = {
     action_name:lident;
+    action_unqualified_name: ident; // necessary for effect redefinitions, this name shall not contain the name of the effect
     action_univs:univ_names;
     action_defn:term;
     action_typ: typ;
 }
 type eff_decl = {
     qualifiers  :list<qualifier>;
+    cattributes  :list<cflags>;
     mname       :lident;
     univs       :univ_names;
     binders     :binders;
@@ -303,6 +316,7 @@ and sigelt =
                        * Range.range
                        * list<lident>               //mutually defined
                        * list<qualifier>
+                       * list<attribute>
   | Sig_main           of term
                        * Range.range
   | Sig_assume         of lident
@@ -313,8 +327,15 @@ and sigelt =
   | Sig_new_effect_for_free of eff_decl * Range.range // in this case, most fields have a dummy value
                                                       // and are reconstructed using the DMFF theory
   | Sig_sub_effect     of sub_eff * Range.range
-  | Sig_effect_abbrev  of lident * univ_names * binders * comp * list<qualifier> * Range.range
+  | Sig_effect_abbrev  of lident
+                       * univ_names
+                       * binders
+                       * comp
+                       * list<qualifier>
+                       * list<cflags>
+                       * Range.range
   | Sig_pragma         of pragma * Range.range
+
 type sigelts = list<sigelt>
 
 type modul = {
@@ -329,6 +350,9 @@ type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
 type mk_t = mk_t_a<term',term'>
 
 // VALS_HACK_HERE
+
+let contains_reflectable (l: list<qualifier>): bool =
+    Util.for_some (function Reflectable _ -> true | _ -> false) l
 
 (*********************************************************************************)
 (* Identifiers to/from strings *)
@@ -363,13 +387,19 @@ let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_
 let new_universe_uvar_set () : set<universe_uvar> =
     Util.new_set (fun x y -> Unionfind.uvar_id x - Unionfind.uvar_id y)
                  (fun x -> Unionfind.uvar_id x)
+let new_universe_names_fifo_set () : fifo_set<univ_name> =
+    Util.new_fifo_set (fun  x y -> String.compare (Ident.text_of_id x) (Ident.text_of_id y))
+                 (fun x -> Util.hashcode (Ident.text_of_id x))
+
 let no_names  = new_bv_set()
 let no_uvs : uvars = new_uv_set()
 let no_universe_uvars = new_universe_uvar_set()
+let no_universe_names = new_universe_names_fifo_set ()
 let empty_free_vars = {
         free_names=no_names;
         free_uvars=no_uvs;
         free_univs=no_universe_uvars;
+        free_univ_names=no_universe_names;
     }
 let memo_no_uvs = Util.mk_ref (Some no_uvs)
 let memo_no_names = Util.mk_ref (Some no_names)
@@ -473,7 +503,7 @@ let freshen_bv bv =
     else {bv with index=next_id()}
 let new_univ_name ropt =
     let id = next_id() in
-    mk_ident (Util.string_of_int id, range_of_ropt ropt)
+    mk_ident ("'uu___" ^ Util.string_of_int id, range_of_ropt ropt)
 let mkbv x y t  = {ppname=x;index=y;sort=t}
 let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y
@@ -491,3 +521,11 @@ let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid fv.fv_name.v)
 let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
+
+let has_simple_attribute (l: list<term>) s =
+  List.existsb (function
+    | { n = Tm_constant (Const_string (data, _)) } when string_of_unicode data = s ->
+        true
+    | _ ->
+        false
+  ) l

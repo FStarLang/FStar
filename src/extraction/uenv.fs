@@ -116,7 +116,7 @@ let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
                       | None -> 
                         Some (m, n)
                       | Some mangled ->
-                        let modul, _ = Util.prefix m in
+                        let modul = m in
                         Some (modul, mangled)
                  else None
             else None))
@@ -151,8 +151,8 @@ let lookup_bv (g:env) (bv:bv) : ty_or_exp_b =
 
 let lookup  (g:env) (x:either<bv,fv>) : ty_or_exp_b * option<fv_qual> =
     match x with
-        | Inl x -> lookup_bv g x, None
-        | Inr x -> lookup_fv g x, x.fv_qual
+    | Inl x -> lookup_bv g x, None
+    | Inr x -> lookup_fv g x, x.fv_qual
 
 let lookup_term g (t:term) = match t.n with
     | Tm_name x -> lookup g (Inl x)

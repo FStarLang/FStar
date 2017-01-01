@@ -406,9 +406,9 @@ val seq_find_aux : #a:Type -> f:(a -> Tot bool) -> l:seq a
                    -> Pure (option a)
                       (requires (forall (i:nat{ i < Seq.length l /\ i >= ctr}).
                                         not (f (Seq.index l i) )))
-                      (ensures (fun o -> (is_None o ==> (forall (i:nat{i < Seq.length l}).
+                      (ensures (fun o -> (None? o ==> (forall (i:nat{i < Seq.length l}).
                                                          not (f (Seq.index l i))))
-                                      /\ (is_Some o ==> (f (Some.v o)
+                                      /\ (Some? o ==> (f (Some.v o)
                                                         /\ (exists (i:nat{i < Seq.length l}). //{:pattern (found i)}
                                                             o = Some (Seq.index l i))))))
 
@@ -425,8 +425,8 @@ let rec seq_find_aux f l ctr =
 val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
                      Pure (option a)
                           (requires True)
-                          (ensures (fun o -> (is_None o ==> (forall (i:nat{i < Seq.length l}). not (f (Seq.index l i))))
-                                          /\ (is_Some o
+                          (ensures (fun o -> (None? o ==> (forall (i:nat{i < Seq.length l}). not (f (Seq.index l i))))
+                                          /\ (Some? o
                                               ==> (f (Some.v o)
                                                    /\ (exists (i:nat{i < Seq.length l}).{:pattern (found i)}
                                                        found i /\ o = Some (Seq.index l i))))))

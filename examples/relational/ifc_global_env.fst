@@ -77,9 +77,9 @@ type ni_com (c:com) (l:label) =
                                               ==> sel (R.l h1) y = sel (R.l h2) y
                                                /\ sel (R.r h1) y = sel (R.r h2) y)
                                       /\ Let (interpret_com (R.l h1) c)
-                                             (fun o -> is_Some o ==> equal (R.l h2) (Some.v o))
+                                             (fun o -> Some? o ==> equal (R.l h2) (Some.v o))
                                       /\ Let (interpret_com (R.r h1) c)
-                                             (fun o -> is_Some o ==> equal (R.r h2) (Some.v o))
+                                             (fun o -> Some? o ==> equal (R.r h2) (Some.v o))
                                          /\ (a_equiv h1 ==> a_equiv h2)))
 
 (* We define noninterference for a program as noninterference for commands with
@@ -190,14 +190,14 @@ val loop_loop : ae:exp -> com:com ->v:variant -> l:label -> =e:(ni_exp ae l) -> 
                                                /\ sel (R.r h1) y = sel (R.r h2) y)
 
                                       /\ Let (interpret_com (R.l h1) com)
-                                             (fun o -> is_Some o ==> 
+                                             (fun o -> Some? o ==> 
                                        (Let (interpret_com (Some.v o)(While ae com v))
-                                            (fun o -> is_Some o ==> equal (R.l h2) (Some.v o))))
+                                            (fun o -> Some? o ==> equal (R.l h2) (Some.v o))))
 
                                       /\ Let (interpret_com (R.r h1) com)
-                                             (fun o -> is_Some o ==> 
+                                             (fun o -> Some? o ==> 
                                        (Let (interpret_com (Some.v o)(While ae com v))
-                                            (fun o -> is_Some o ==> equal (R.r h2) (Some.v o))))
+                                            (fun o -> Some? o ==> equal (R.r h2) (Some.v o))))
 
                                          /\ (a_equiv h1 ==> a_equiv h2)))
 
@@ -218,9 +218,9 @@ val loop_com : ae:exp -> com:com ->v:variant -> l:label -> =e:(ni_exp ae l) -> =
                                               ==> sel (R.l h1) y = sel (R.l h2) y
                                                /\ sel (R.r h1) y = sel (R.r h2) y)
                                       /\ Let (interpret_com (R.l h1) (While ae com v))
-                                             (fun o -> is_Some o ==> equal (R.l h2) (Some.v o))
+                                             (fun o -> Some? o ==> equal (R.l h2) (Some.v o))
                                       /\ Let (interpret_com (R.r h1) (While ae com v))
-                                             (fun o -> is_Some o ==> equal (R.r h2) (Some.v o))
+                                             (fun o -> Some? o ==> equal (R.r h2) (Some.v o))
                                          /\ (a_equiv h1 ==> a_equiv h2)))
 let rec loop_com ae com v l e c tu = 
                   match e tu with
@@ -273,7 +273,7 @@ let rec tc_com l c =
   | Seq c1 c2 ->
     let r1 = tc_com l c1 in   
     let r2 = tc_com l c2 in 
-    if is_None r1 || is_None r2 then
+    if None? r1 || None? r2 then
       None
     else
       Some (seq_com c1 c2 l (Some.v r1) (Some.v r2))
@@ -284,7 +284,7 @@ let rec tc_com l c =
     let r1 = sub_exp e l1' l1 r1' in
     let r2 = tc_com l1 ct in 
     let r3 = tc_com l1 cf in 
-    if is_None r2 || is_None r3 then
+    if None? r2 || None? r3 then
       None
     else
       let s = cond_com e ct cf  l1 r1 (Some.v r2) (Some.v r3) in 
@@ -295,7 +295,7 @@ let rec tc_com l c =
     let l1 = max l1' l in 
     let r1 = sub_exp e l1' l1 r1' in
     let r2 = tc_com l1 cb in 
-    if is_None r2 then 
+    if None? r2 then 
       None
     else
       let s = loop_com e cb v l1 r1 (Some.v r2) in 

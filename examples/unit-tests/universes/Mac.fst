@@ -75,7 +75,7 @@ let mac k t =
 
 let verify k text tag =
   let verified = sha1verify k text tag in
-  let found    = is_Some(List.Tot.find (function (Entry k' text' tag') -> eq k k' && eq text text' (*CTXT: && tag=tag' *) ) !log) in
+  let found    = Some?(List.Tot.find (function (Entry k' text' tag') -> eq k k' && eq text text' (*CTXT: && tag=tag' *) ) !log) in
 
   (* plain, concrete implementation (ignoring the log) *)
 //verified

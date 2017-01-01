@@ -1,0 +1,343 @@
+
+** Conflict (shift/reduce) in state 702.
+** Token involved: ASSUME
+** This state is reached from inputFragment after reading:
+
+option(__anonymous_0) decl list(decl) SEMICOLON_SEMICOLON 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+inputFragment 
+option(__anonymous_0) decl list(decl) option(mainDecl) EOF 
+                                      mainDecl 
+                                      (?)
+
+** In state 702, looking ahead at ASSUME, reducing production
+** list(decoration) -> 
+** is permitted because of the following sub-derivation:
+
+SEMICOLON_SEMICOLON list(decoration) term // lookahead token appears because term can begin with ASSUME
+                    . 
+
+** In state 702, looking ahead at ASSUME, shifting is permitted
+** because of the following sub-derivation:
+
+SEMICOLON_SEMICOLON list(decoration) term 
+                    qualifier list(decoration) 
+                    . ASSUME 
+
+** Conflict (shift/reduce) in state 540.
+** Token involved: ASSUME
+** This state is reached from inputFragment after reading:
+
+option(__anonymous_0) decl list(decl) SEMICOLON_SEMICOLON qualifier 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+inputFragment 
+option(__anonymous_0) decl list(decl) option(mainDecl) EOF 
+                                      mainDecl 
+                                      (?)
+
+** In state 540, looking ahead at ASSUME, reducing production
+** list(decoration) -> 
+** is permitted because of the following sub-derivation:
+
+SEMICOLON_SEMICOLON list(decoration) term // lookahead token appears because term can begin with ASSUME
+                    qualifier list(decoration) // lookahead token is inherited
+                              . 
+
+** In state 540, looking ahead at ASSUME, shifting is permitted
+** because of the following sub-derivation:
+
+SEMICOLON_SEMICOLON list(decoration) term 
+                    qualifier list(decoration) 
+                              qualifier list(decoration) 
+                              . ASSUME 
+
+** Conflict (shift/reduce) in state 536.
+** Token involved: ASSUME
+** This state is reached from inputFragment after reading:
+
+option(__anonymous_0) decl list(decl) SEMICOLON_SEMICOLON FSDOC 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+inputFragment 
+option(__anonymous_0) decl list(decl) option(mainDecl) EOF 
+                                      mainDecl 
+                                      (?)
+
+** In state 536, looking ahead at ASSUME, reducing production
+** list(decoration) -> 
+** is permitted because of the following sub-derivation:
+
+SEMICOLON_SEMICOLON list(decoration) term // lookahead token appears because term can begin with ASSUME
+                    FSDOC list(decoration) // lookahead token is inherited
+                          . 
+
+** In state 536, looking ahead at ASSUME, shifting is permitted
+** because of the following sub-derivation:
+
+SEMICOLON_SEMICOLON list(decoration) term 
+                    FSDOC list(decoration) 
+                          qualifier list(decoration) 
+                          . ASSUME 
+
+** Conflict (shift/reduce) in state 532.
+** Token involved: ASSUME
+** This state is reached from inputFragment after reading:
+
+option(__anonymous_0) decl list(decl) SEMICOLON_SEMICOLON LBRACK_AT list(atomicTerm) RBRACK 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+inputFragment 
+option(__anonymous_0) decl list(decl) option(mainDecl) EOF 
+                                      mainDecl 
+                                      (?)
+
+** In state 532, looking ahead at ASSUME, reducing production
+** list(decoration) -> 
+** is permitted because of the following sub-derivation:
+
+SEMICOLON_SEMICOLON list(decoration) term // lookahead token appears because term can begin with ASSUME
+                    LBRACK_AT list(atomicTerm) RBRACK list(decoration) // lookahead token is inherited
+                                                      . 
+
+** In state 532, looking ahead at ASSUME, shifting is permitted
+** because of the following sub-derivation:
+
+SEMICOLON_SEMICOLON list(decoration) term 
+                    LBRACK_AT list(atomicTerm) RBRACK list(decoration) 
+                                                      qualifier list(decoration) 
+                                                      . ASSUME 
+
+** Conflict (shift/reduce) in state 528.
+** Token involved: BAR
+** This state is reached from term after reading:
+
+FUNCTION disjunctivePattern maybeFocusArrow TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+term 
+noSeqTerm 
+FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+         (?)
+
+** In state 528, looking ahead at BAR, reducing production
+** noSeqTerm -> TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+** is permitted because of the following sub-derivation:
+
+reverse_left_flexible_nonempty_list(BAR,patternBranch) BAR patternBranch // lookahead token appears
+patternBranch // lookahead token is inherited
+disjunctivePattern maybeFocusArrow term // lookahead token is inherited
+                                   noSeqTerm // lookahead token is inherited
+                                   TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch) . 
+
+** In state 528, looking ahead at BAR, shifting is permitted
+** because of the following sub-derivation:
+
+patternBranch 
+disjunctivePattern maybeFocusArrow term 
+                                   noSeqTerm 
+                                   TRY term WITH reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+                                                 reverse_left_flexible_nonempty_list(BAR,patternBranch) . BAR patternBranch 
+
+** Conflict (shift/reduce) in state 513.
+** Token involved: BAR
+** This state is reached from term after reading:
+
+FUNCTION disjunctivePattern maybeFocusArrow MATCH term WITH BAR patternBranch 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+term 
+noSeqTerm 
+FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+         (?)
+
+** In state 513, looking ahead at BAR, reducing production
+** list(__anonymous_5) -> 
+** is permitted because of the following sub-derivation:
+
+reverse_left_flexible_nonempty_list(BAR,patternBranch) BAR patternBranch // lookahead token appears
+patternBranch // lookahead token is inherited
+disjunctivePattern maybeFocusArrow term // lookahead token is inherited
+                                   noSeqTerm // lookahead token is inherited
+                                   MATCH term WITH list(__anonymous_5) // lookahead token is inherited
+                                                   BAR patternBranch list(__anonymous_5) // lookahead token is inherited
+                                                                     . 
+
+** In state 513, looking ahead at BAR, shifting is permitted
+** because of the following sub-derivation:
+
+patternBranch 
+disjunctivePattern maybeFocusArrow term 
+                                   noSeqTerm 
+                                   MATCH term WITH list(__anonymous_5) 
+                                                   BAR patternBranch list(__anonymous_5) 
+                                                                     . BAR patternBranch list(__anonymous_5) 
+
+** Conflict (shift/reduce) in state 511.
+** Token involved: BAR
+** This state is reached from term after reading:
+
+FUNCTION disjunctivePattern maybeFocusArrow MATCH term WITH 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+term 
+noSeqTerm 
+FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+         (?)
+
+** In state 511, looking ahead at BAR, reducing production
+** list(__anonymous_5) -> 
+** is permitted because of the following sub-derivation:
+
+reverse_left_flexible_nonempty_list(BAR,patternBranch) BAR patternBranch // lookahead token appears
+patternBranch // lookahead token is inherited
+disjunctivePattern maybeFocusArrow term // lookahead token is inherited
+                                   noSeqTerm // lookahead token is inherited
+                                   MATCH term WITH list(__anonymous_5) // lookahead token is inherited
+                                                   . 
+
+** In state 511, looking ahead at BAR, shifting is permitted
+** because of the following sub-derivation:
+
+patternBranch 
+disjunctivePattern maybeFocusArrow term 
+                                   noSeqTerm 
+                                   MATCH term WITH list(__anonymous_5) 
+                                                   . BAR patternBranch list(__anonymous_5) 
+
+** Conflict (shift/reduce) in state 390.
+** Token involved: BAR
+** This state is reached from term after reading:
+
+FUNCTION disjunctivePattern maybeFocusArrow FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+term 
+noSeqTerm 
+FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+         (?)
+
+** In state 390, looking ahead at BAR, reducing production
+** noSeqTerm -> FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+** is permitted because of the following sub-derivation:
+
+reverse_left_flexible_nonempty_list(BAR,patternBranch) BAR patternBranch // lookahead token appears
+patternBranch // lookahead token is inherited
+disjunctivePattern maybeFocusArrow term // lookahead token is inherited
+                                   noSeqTerm // lookahead token is inherited
+                                   FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) . 
+
+** In state 390, looking ahead at BAR, shifting is permitted
+** because of the following sub-derivation:
+
+patternBranch 
+disjunctivePattern maybeFocusArrow term 
+                                   noSeqTerm 
+                                   FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+                                            reverse_left_flexible_nonempty_list(BAR,patternBranch) . BAR patternBranch 
+
+** Conflict (shift/reduce) in state 317.
+** Token involved: LBRACE
+** This state is reached from term after reading:
+
+FUNCTION LPAREN tuplePattern COLON lidentOrUnderscore COLON appTerm 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+term 
+noSeqTerm 
+FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+         patternBranch 
+         disjunctivePattern maybeFocusArrow term 
+         separated_nonempty_list(BAR,tuplePattern) 
+         tuplePattern 
+         separated_nonempty_list(COMMA,constructorPattern) 
+         constructorPattern 
+         atomicPattern 
+         (?)
+
+** In state 317, looking ahead at LBRACE, reducing production
+** option(__anonymous_6) -> 
+** is permitted because of the following sub-derivation:
+
+LPAREN tuplePattern COLON typ refineOpt RPAREN // lookahead token appears because refineOpt can begin with LBRACE
+                          simpleTerm // lookahead token is inherited
+                          tmIff // lookahead token is inherited
+                          tmImplies // lookahead token is inherited
+                          tmArrow(tmFormula) // lookahead token is inherited
+                          tmFormula // lookahead token is inherited
+                          tmConjunction // lookahead token is inherited
+                          tmTuple // lookahead token is inherited
+                          separated_nonempty_list(COMMA,tmEq) // lookahead token is inherited
+                          tmEq // lookahead token is inherited
+                          tmNoEq // lookahead token is inherited
+                          lidentOrUnderscore COLON appTerm refineOpt // lookahead token is inherited
+                                                           option(__anonymous_6) // lookahead token is inherited
+                                                           . 
+
+** In state 317, looking ahead at LBRACE, shifting is permitted
+** because of the following sub-derivation:
+
+LPAREN tuplePattern COLON typ refineOpt RPAREN 
+                          simpleTerm 
+                          tmIff 
+                          tmImplies IFF tmIff 
+                          tmArrow(tmFormula) IMPLIES tmImplies 
+                          tmFormula RARROW tmArrow(tmFormula) 
+                          tmConjunction 
+                          tmTuple 
+                          separated_nonempty_list(COMMA,tmEq) 
+                          tmEq 
+                          tmNoEq 
+                          lidentOrUnderscore COLON appTerm refineOpt 
+                                                           option(__anonymous_6) 
+                                                           . LBRACE noSeqTerm RBRACE 
+
+** Conflict (shift/reduce) in state 292.
+** Token involved: SEMICOLON
+** This state is reached from term after reading:
+
+FUNCTION disjunctivePattern maybeFocusArrow noSeqTerm 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+term 
+(?)
+
+** In state 292, looking ahead at SEMICOLON, reducing production
+** term -> noSeqTerm 
+** is permitted because of the following sub-derivation:
+
+noSeqTerm SEMICOLON term // lookahead token appears
+FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) // lookahead token is inherited
+         patternBranch // lookahead token is inherited
+         disjunctivePattern maybeFocusArrow term // lookahead token is inherited
+                                            noSeqTerm . 
+
+** In state 292, looking ahead at SEMICOLON, shifting is permitted
+** because of the following sub-derivation:
+
+noSeqTerm 
+FUNCTION reverse_left_flexible_nonempty_list(BAR,patternBranch) 
+         patternBranch 
+         disjunctivePattern maybeFocusArrow term 
+                                            noSeqTerm . SEMICOLON term 

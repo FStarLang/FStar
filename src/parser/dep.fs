@@ -28,6 +28,7 @@ open FStar.Parser.AST
 open FStar.Parser.Parse
 open FStar.Util
 open FStar.Const
+open FStar.String
 
 open FStar.Absyn
 open FStar.Absyn.Syntax
@@ -210,7 +211,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
 
   let record_open let_open lid =
     let key = lowercase_join_longident lid true in
-    begin match smap_try_find original_map key with
+    begin match smap_try_find working_map key with
     | Some pair ->
         List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
     | None ->
@@ -234,8 +235,10 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | None ->
         raise (Err (Util.format1 "module not found in search path: %s\n" alias))
   in
-  let record_lid is_constructor lid =
-    if lid.ident.idText <> "reflect" then
+  let record_lid lid =
+    (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
+       module name itself, so only its namespace part is to be
+       recorded as a module dependency.  *)
       let try_key key =
         begin match smap_try_find working_map key with
         | Some pair ->
@@ -247,9 +250,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
       in
       // Option.Some x
       try_key (lowercase_join_longident lid false);
-      // FStar.List (flatten (map (...)))
-      if is_constructor then
-        try_key (lowercase_join_longident lid true)
+      ()
   in
 
 
@@ -299,7 +300,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         collect_decls decls
 
   and collect_decls decls =
-    List.iter (fun x -> collect_decl x.d) decls
+    List.iter (fun x -> collect_decl x.d; List.iter collect_term x.attrs) decls
 
   and collect_decl = function
     | Open lid ->
@@ -307,16 +308,16 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | ModuleAbbrev (ident, lid) ->
         add_dep (lowercase_join_longident lid true);
         record_module_alias ident lid
-    | ToplevelLet (_, _, patterms) ->
+    | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | KindAbbrev (_, binders, t) ->
         collect_term t;
         collect_binders binders
     | Main t
-    | Assume (_, _, t)
+    | Assume (_, t)
     | SubEffect { lift_op = NonReifiableLift t }
     | SubEffect { lift_op = LiftForFree t }
-    | Val (_, _, t) ->
+    | Val (_, t) ->
         collect_term t
     | SubEffect { lift_op = ReifiableLift (t0, t1) } ->
         collect_term t0;
@@ -326,8 +327,8 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
-    | NewEffectForFree (_, ed)
-    | NewEffect (_, ed) ->
+    | NewEffectForFree ed
+    | NewEffect ed ->
         collect_effect_decl ed
     | Fsdoc _
     | Pragma _ ->
@@ -396,14 +397,17 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         if s = "@" then
           collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.append") Range.dummyRange));
         List.iter collect_term ts
-    | Tvar _ ->
+    | Tvar _
+    | AST.Uvar _ ->
         ()
     | Var lid
+    | AST.Projector (lid, _)
+    | AST.Discrim lid
     | Name lid ->
-        record_lid false lid
+        record_lid lid
     | Construct (lid, termimps) ->
         if List.length termimps = 1 && Options.universes () then
-          record_lid true lid;
+          record_lid lid;
         List.iter (fun (t, _) -> collect_term t) termimps
     | Abs (pats, t) ->
         collect_patterns pats;
@@ -457,6 +461,8 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | Ensures (t, _)
     | Labeled (t, _, _) ->
         collect_term t
+    | Attributes cattributes  ->
+        List.iter collect_term cattributes
 
   and collect_patterns ps =
     List.iter collect_pattern ps
@@ -496,7 +502,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     collect_term t2
 
   in
-  let ast = Driver.parse_file filename in
+  let ast, _ = Driver.parse_file filename in
   collect_file ast;
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps
@@ -617,8 +623,14 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
 
   List.iter (fun (m, r) ->
     if not !r && not (Options.interactive ()) then
-      raise (Err (Util.format2 "You passed --verify_module %s but I found no \
-        file that contains [module %s] in the dependency graph\n" m m))
+      let maybe_fst =
+        let k = String.length m in
+        if k > 4 && String.substring m (k-4) 4 = ".fst"
+        then Util.format1 " Did you mean %s ?" (String.substring m 0 (k-4))
+        else ""
+      in
+      raise (Err (Util.format3 "You passed --verify_module %s but I found no \
+        file that contains [module %s] in the dependency graph.%s\n" m m maybe_fst))
   ) verify_flags;
 
   (* At this stage the list is kept in reverse to make sure the caller in

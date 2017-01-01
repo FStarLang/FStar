@@ -124,11 +124,11 @@ let rec unfold m en e f =
       | E_const _                   -> en, e
       | E_var x                     ->
 	let dv_opt = en x in
-	if is_None dv_opt then (en, E_var x)
+	if None? dv_opt then (en, E_var x)
 	else
 	  let dv = Some.v dv_opt in
 	  let e_opt = value_to_exp en dv in
-	  if is_None e_opt then en, E_var x
+	  if None? e_opt then en, E_var x
 	  else Some.v e_opt
       | E_let x e1 e2               -> en, E_let x (snd (unfold m en e1 f)) (snd (unfold m en e2 f))
       | E_abs x e                   -> en, E_abs x (snd (unfold m en e f))

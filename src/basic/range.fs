@@ -70,6 +70,7 @@ type range = {
     use_range:int64
 }
 
+let zeroPos = 0
 let dummyRange = {
     def_range=0L;
     use_range=0L

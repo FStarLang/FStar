@@ -26,6 +26,7 @@
       ],
       0
     ],
+    [ "Ex01a.uu___is_InvalidRead", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex01a.checkedRead",
       1,

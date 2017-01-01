@@ -58,6 +58,7 @@ type step =
   | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
   | Reify
   | CompressUvars
+  | NoFullNorm
 and steps = list<step>
 
 type closure =
@@ -68,7 +69,8 @@ and env = list<closure>
 
 let closure_to_string = function
     | Clos (_, t, _, _) -> Print.term_to_string t
-    | _ -> "dummy"
+    | Univ _ -> "Univ"
+    | Dummy -> "dummy"
 
 type cfg = {
     steps: steps;
@@ -85,7 +87,7 @@ type stack_elt =
  | UnivArgs of list<universe> * Range.range
  | MemoLazy of memo<(env * term)>
  | Match    of env * branches * Range.range
- | Abs      of env * binders * env * option<either<lcomp,Ident.lident>> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
+ | Abs      of env * binders * env * option<either<lcomp,residual_comp>> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of term * aqual * Range.range
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
@@ -106,10 +108,17 @@ let env_to_string env =
     List.map closure_to_string env |> String.concat "; "
 
 let stack_elt_to_string = function
-    | Arg (c, _, _) -> closure_to_string c
+    | Arg (c, _, _) -> Util.format1 "Closure %s" (closure_to_string c)
     | MemoLazy _ -> "MemoLazy"
     | Abs (_, bs, _, _, _) -> Util.format1 "Abs %s" (string_of_int <| List.length bs)
-    | _ -> "Match"
+    | UnivArgs _ -> "UnivArgs"
+    | Match   _ -> "Match"
+    | App (t,_,_) -> Util.format1 "App %s" (Print.term_to_string t)
+    | Meta (m,_) -> "Meta"
+    | Let  _ -> "Let"
+    | Steps (s, _) -> "Steps"
+    | Debug t -> Util.format1 "Debug %s" (Print.term_to_string t)
+    // | _ -> "Match"
 
 let stack_to_string s =
     List.map stack_elt_to_string s |> String.concat "; "
@@ -145,7 +154,11 @@ let rec unfold_effect_abbrev env comp =
     | Some (binders, cdef) ->
       let binders, cdef = SS.open_comp binders cdef in
       if List.length binders <> List.length c.effect_args + 1
-      then raise (Error ("Effect constructor is not fully applied", comp.pos));
+      then raise (Error (Util.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s" 
+                                (Util.string_of_int (List.length binders))
+                                (Util.string_of_int (List.length c.effect_args + 1))
+                                (Print.comp_to_string (S.mk_Comp c))
+                            , comp.pos));
       let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
       let c1 = SS.subst_comp inst cdef in
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
@@ -304,6 +317,8 @@ let rec closure_as_term cfg env t =
 
            | Tm_meta(t', Meta_monadic(m, tbody)) -> //other metadata's do not have any embedded closures
              mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic(m, closure_as_term_delayed cfg env tbody))) t.pos
+           | Tm_meta(t', Meta_monadic_lift(m1, m2, tbody)) ->
+                 mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic_lift(m1, m2, closure_as_term_delayed cfg env tbody))) t.pos
 
            | Tm_meta(t', m) -> //other metadata's do not have any embedded closures
              mk (Tm_meta(closure_as_term_delayed cfg env t', m)) t.pos
@@ -405,14 +420,18 @@ and close_comp cfg env c =
                                result_typ=rt;
                                effect_args=args;
                                flags=flags})
+and filter_out_lcomp_cflags lc =
+    (* TODO : lc.comp might have more cflags than lcomp.cflags *)
+    lc.cflags |> List.filter (function DECREASES _ -> false | _ -> true)
 
 and close_lcomp_opt cfg env lopt = match lopt with
     | Some (Inl lc) -> //NS: Too expensive to close potentially huge VCs that are hardly read
+      let flags = filter_out_lcomp_cflags lc in
       if Util.is_total_lcomp lc
-      then Some (Inr Const.effect_Tot_lid)
+      then Some (Inr (Const.effect_Tot_lid, flags))
       else if Util.is_tot_or_gtot_lcomp lc
-      then Some (Inr Const.effect_GTot_lid)
-      else Some (Inr lc.eff_name) //retaining the effect name is sufficient
+      then Some (Inr (Const.effect_GTot_lid, flags))
+      else Some (Inr (lc.eff_name, flags)) //retaining the effect name and flags is sufficient
     | _ -> lopt
 
 (*******************************************************************)
@@ -552,26 +571,29 @@ let maybe_simplify steps tm =
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
 (********************************************************************************************************************)
-let is_norm_request hd args = 
-    match (U.un_uinst hd).n, args with 
+let is_norm_request hd args =
+    match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [_; _] ->
       S.fv_eq_lid fv Syntax.Const.normalize_term
-          
-    | Tm_fvar fv, [_] -> 
+
+    | Tm_fvar fv, [_] ->
       S.fv_eq_lid fv Syntax.Const.normalize
-      
+
     | _ -> false
 
-let get_norm_request args = 
-    match args with 
+let get_norm_request args =
+    match args with
     | [_; (tm, _)]
     | [(tm, _)] -> tm
     | _ -> failwith "Impossible"
 
-let rec norm : cfg -> env -> stack -> term -> term = 
-    fun cfg env stack t -> 
+let rec norm : cfg -> env -> stack -> term -> term =
+    fun cfg env stack t ->
         let t = compress t in
-        log cfg  (fun () -> Util.print2 ">>> %s\nNorm %s\n" (Print.tag_of_term t) (Print.term_to_string t));
+        log cfg  (fun () -> Util.print3 ">>> %s\nNorm %s with top of the stack %s \n"
+                                        (Print.tag_of_term t)
+                                        (Print.term_to_string t)
+                                        (stack_to_string (fst <| first_N 4 stack)));
         match t.n with
           | Tm_delayed _ ->
             failwith "Impossible"
@@ -583,10 +605,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_fvar( {fv_delta=Delta_constant} )
           | Tm_fvar( {fv_qual=Some Data_ctor } )
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
+            //log cfg (fun () -> Util.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
 
-          | Tm_app(hd, args) 
-            when is_norm_request hd args
+          | Tm_app(hd, args)
+            when not (cfg.steps |> List.contains NoFullNorm)
+              && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
             let tm = get_norm_request args in
             let s = [Reify; Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
@@ -603,50 +627,26 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_app({n=Tm_constant Const.Const_reify}, [a])
                 when (cfg.steps |> List.contains Reify) ->
             let reify_head, _ = Util.head_and_args t in
-            let a = SS.compress (fst a) in
-            // printfn "TRYING NORMALIZATION OF REIFY: %s ... %s" (Print.tag_of_term a) (Print.term_to_string a);
+            let a = SS.compress (Util.unascribe <| fst a) in
+            //Util.print2_warning "TRYING NORMALIZATION OF REIFY: %s ... %s\n" (Print.tag_of_term a) (Print.term_to_string a);
             begin match a.n with
-            | Tm_meta(e, Meta_monadic (m, t_body)) ->
-                begin match (SS.compress e).n with
-                | Tm_let((false, [lb]), body) ->
-                    //this is M.bind
-                    //reify (M.bind e1 \x.e2) ~> M.bind_repr (reify e1) (\x. (reify e2))
-                    let ed = Env.get_effect_decl cfg.tcenv m in
-                    let _, bind_repr = ed.bind_repr in
-                    begin match lb.lbname with
-                    | Inl x ->
-                      let head = U.mk_reify lb.lbdef in
-                      let body = S.mk (Tm_abs([S.mk_binder x], U.mk_reify body, None)) None body.pos in
-                      let reified = S.mk (Tm_app(bind_repr, [as_arg lb.lbtyp; as_arg t_body;  //a, b
-                                                             as_arg S.tun; as_arg head;   //wp_head, head--the term shouldn't depend on wp_head
-                                                             as_arg S.tun; as_arg body])) //wp_body, body--the term shouldn't depend on wp_body
-                                                             None t.pos in
-                      // printfn "Reified %s to %s\n" (Print.term_to_string t) (Print.term_to_string reified);
-                      norm cfg env stack reified
-                    | Inr _ -> failwith "Cannot reify a top-level let binding"
-                    end
-                | Tm_app _ ->
-                  //monadic application
-                  failwith "NYI: monadic application"
-                | _ ->
-                  let stack = App(reify_head, None, t.pos)::stack in
-                  norm cfg env stack a
-                end
+              (* KM : This assumes that reflect is never tagged by a Meta_monadic flag *)
+              (* Is that really the case ? *)
+              | Tm_app({n=Tm_constant (Const.Const_reflect _)}, [a]) ->
+                //reify (reflect e) ~> e
+                norm cfg env stack (fst a)
 
-            | Tm_app({n=Tm_constant (Const.Const_reflect _)}, [a]) ->
-              //reify (reflect e) ~> e
-              norm cfg env stack (fst a)
+              (* KM : This case reall y does not make any sense to me *)
+              // | Tm_match(e, branches) ->
+              //   //reify (match e with p -> e') ~> match (reify e) with p -> reify e'
+              //   let e = Util.mk_reify e in
+              //   let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, Util.mk_reify tm) in
+              //   let tm = mk (Tm_match(e, branches)) t.pos in
+              //   norm cfg env stack tm
 
-            | Tm_match(e, branches) ->
-              //reify (match e with p -> e') ~> match (reify e) with p -> reify e'
-              let e = Util.mk_reify e in
-              let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, Util.mk_reify tm) in
-              let tm = mk (Tm_match(e, branches)) t.pos in
-              norm cfg env stack tm
-
-            | _ ->
-              let stack = App(reify_head, None, t.pos)::stack in
-              norm cfg env stack a
+              | _ ->
+                let stack = App(reify_head, None, t.pos)::stack in
+                norm cfg env stack a
             end
 
           | Tm_type u ->
@@ -670,10 +670,16 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Unfold l -> Common.delta_depth_greater_than f.fv_delta l) in
 
             if not should_delta
-            then rebuild cfg env stack t
+            then begin
+             //log cfg (fun () -> Util.print "Tm_fvar case 1\n" []) ;
+              rebuild cfg env stack t
+            end
             else let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in //preserve the range info on the returned def
-                 begin match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with 
-                    | None -> rebuild cfg env stack t
+                 begin match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with
+                    | None -> begin
+                        log cfg (fun () -> Util.print "Tm_fvar case 2\n" []) ;
+                        rebuild cfg env stack t
+                      end
                     | Some (us, t) ->
                       log cfg (fun () -> Util.print2 ">>> Unfolded %s to %s\n"
                                     (Print.term_to_string t0) (Print.term_to_string t));
@@ -729,14 +735,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       begin match bs with
                         | [] -> failwith "Impossible"
                         | [_] ->
+                          (* TODO : what happens if the argument is implicit ? is it already elaborated on the stack ? *)
                           begin match lopt with
                             | None when (Options.__unit_tests()) ->
                               log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
                               norm cfg (c :: env) stack_rest body
 
-                            | Some (Inr l)
+                            | Some (Inr (l, cflags))
+                            (* TODO (KM) : wouldn't it be better to check the TOTAL cflag ? *)
                                 when (Ident.lid_equals l Const.effect_Tot_lid
-                                      || Ident.lid_equals l Const.effect_GTot_lid) ->
+                                      || Ident.lid_equals l Const.effect_GTot_lid
+                                      || cflags |> Util.for_some (function TOTAL -> true | _ -> false)) ->
                               log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
                               norm cfg (c :: env) stack_rest body
 
@@ -814,10 +823,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_ascribed(t1, tc, l) ->
             begin match stack with
-                | Match _ :: _
-                | Arg _ :: _
-                | MemoLazy _ :: _ -> norm cfg env stack t1 //ascriptions should not block reduction
-                | _ ->
+              | Match _ :: _
+              | Arg _ :: _
+              | App ({n=Tm_constant Const.Const_reify}, _, _) :: _
+              | MemoLazy _ :: _ -> norm cfg env stack t1 //ascriptions should not block reduction
+              | _ ->
+                (* Drops stack *)
                 let t1 = norm cfg env [] t1 in
                 log cfg  (fun () -> Util.print_string "+++ Normalizing ascription \n");
                 let tc = match tc with
@@ -875,25 +886,188 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_meta (head, m) ->
             begin match m with
                   | Meta_monadic (m, t) ->
-                    let t = norm cfg env [] t in
-                    let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                    let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
-                                        delta_level=[NoDelta]} in
-                    norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
-                 | Meta_monadic_lift (m, m') ->
+                    let should_reify = match stack with
+                        | App ({n=Tm_constant Const.Const_reify}, _, _) :: _ ->
+                            // Util.print1 "Found a reify on the stack. %s" "" ;
+                            cfg.steps |> List.contains Reify
+                        | _ -> false
+                    in
+
+                    // Util.print2 "Will %sreify : %s \n" (if should_reify then "" else "not ") (stack_to_string stack);
+
+                    if not should_reify
+                    then (*  We have an impure computation, and we aim to perform any pure steps within that computation.   *
+                          *                                                                                                 *
+                          *  This scenario arises primarily as we extract (impure) programs and partially evaluate them     *
+                          *  before extraction, as an optimization.                                                         *
+                          *                                                                                                 *
+                          *  First, we reduce **the type annotation** t with an empty stack                                 *
+                          *                                                                                                 *
+                          *  Then, we reduce the monadic computation `head`, in a stack marked with a Meta_monadic,         *
+                          *  indicating that this reduction should not consume any arguments on the stack. `rebuild`        *
+                          *  will notice the Meta_monadic marker and reconstruct the computation after normalization.       *)
+                        let t = norm cfg env [] t in
+                        let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                        let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
+                                   delta_level=[NoDelta]} in
+                        norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+
+                    else
+                        begin match (SS.compress head).n with
+                            | Tm_let((false, [lb]), body) ->
+                                (******************************************************************************)
+                                (* Monadic binding                                                            *)
+                                (*                                                                            *)
+                                (* This is reify (M.bind e1 (fun x -> e2)) which is elaborated to             *)
+                                (*                                                                            *)
+                                (*        M.bind_repr (reify e1) (fun x -> reify e2)                          *)
+                                (*                                                                            *)
+                                (******************************************************************************)
+                                let ed = Env.get_effect_decl cfg.tcenv m in
+                                let _, bind_repr = ed.bind_repr in
+                                begin match lb.lbname with
+                                    | Inl x ->
+                                        let head = U.mk_reify <| lb.lbdef in
+                                        let body = U.mk_reify <| body in
+                                        let body = S.mk (Tm_abs([S.mk_binder x], body, None)) None body.pos in
+                                        let bind_inst = match (SS.compress bind_repr).n with
+                                            | Tm_uinst (bind, [_ ; _]) ->
+                                                S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv lb.lbtyp
+                                                                        ; cfg.tcenv.universe_of cfg.tcenv t]))
+                                                None t.pos
+                                            | _ -> failwith "NIY : Reification of indexed effects"
+                                        in
+                                        let reified = S.mk (Tm_app(bind_inst, [as_arg lb.lbtyp; as_arg t;  //a, b
+                                                                               as_arg S.tun; as_arg head;   //wp_head, head--the term shouldn't depend on wp_head
+                                                                               as_arg S.tun; as_arg body])) //wp_body, body--the term shouldn't depend on wp_body
+                                                      None t.pos
+                                        in
+                                        // printfn "Reified %s to %s\n" (Print.term_to_string t) (Print.term_to_string reified);
+                                        norm cfg env (List.tl stack) reified
+                                    | Inr _ -> failwith "Cannot reify a top-level let binding"
+                                end
+                            | Tm_app (head, args) ->
+                                (******************************************************************************)
+                                (* Monadic application                                                        *)
+                                (*                                                                            *)
+                                (* Turn it into                                                               *)
+                                (*    let x0 = head in let x1 = arg0 in ... let xn = argn in x0 x1 ... xn     *)
+                                (* i.e. bind (reify head) (fun x0 ->                                          *)
+                                (*            bind (reify arg0) (fun x1 -> ... (fun xn -> x0 x1 .. xn) ))     *)
+                                (*                                                                            *)
+                                (* If head or some arg is a lift from pure then it optimizes away the bind    *)
+                                (* Moreover, if head is an action then it is unfolded otherwise the resulting *)
+                                (* application is reified again                                               *)
+                                (******************************************************************************)
+
+
+                                let ed = Env.get_effect_decl cfg.tcenv m in
+                                let _, bind_repr = ed.bind_repr in
+
+                                let maybe_unfold_action head =
+                                    let maybe_extract_fv t =
+                                        let t = match (SS.compress t).n with
+                                            | Tm_uinst (t, _) -> t
+                                            | _ -> head
+                                        in match (SS.compress t).n with
+                                            | Tm_fvar x -> Some x
+                                            | _ -> None
+                                    in
+                                    match maybe_extract_fv head with
+                                        | Some x when Env.is_action cfg.tcenv (S.lid_of_fv x) ->
+                                            // Notice that this is not a tail call, but it's a bounded (small) number of recursive steps
+                                            let head = norm cfg env [] head in
+                                            let action_unfolded = match maybe_extract_fv head with | Some _ -> Some true | _ -> Some false in
+                                            head, action_unfolded
+                                        | _ -> begin
+                                            //Util.print "Case 1" [] ;
+                                            head, None
+                                          end
+                                in
+
+                                let rec bind_on_lift args acc =
+                                    match args with
+                                        | [] ->
+                                            begin match List.rev acc with
+                                               | [] -> failwith "bind_on_lift should be always called with a non-empty list"
+                                               | (head, _) :: args ->
+                                                   let head, found_action = maybe_unfold_action head in
+                                                   let mk tm = S.mk tm None t.pos in
+                                                   let body = mk (Tm_app(head, args)) in
+                                                   match found_action with
+                                                       | None -> U.mk_reify body
+                                                       | Some false -> mk (Tm_meta (body, Meta_monadic(m, t)))
+                                                       | Some true -> body
+                                            end
+                                        | (e,q) :: es ->
+                                            begin match (SS.compress e).n with
+                                                | Tm_meta (e0, Meta_monadic_lift(m1, m2, t')) when not (Syntax.Util.is_pure_effect m1)->
+                                                    let x = S.gen_bv "monadic_app_var" None t' in
+                                                    let body = bind_on_lift es ((S.bv_to_name x, q)::acc) in
+                                                    (* bind t' t _ (lift e) _ (fun x -> body) *)
+                                                    let lifted_e0 = reify_lift cfg.tcenv e0 m1 m2 t' in
+                                                    (* TODO : what about qualifiers !!! (should they be brought by the meta annotation ?)*)
+                                                    let continuation = U.abs [x,None] body (Some (Inr (m2, []))) in
+                                                    let bind_inst = match (SS.compress bind_repr).n with
+                                                        | Tm_uinst (bind, [_ ; _]) ->
+                                                            S.mk (Tm_uinst (bind, [cfg.tcenv.universe_of cfg.tcenv t'
+                                                                                   ; cfg.tcenv.universe_of cfg.tcenv t]))
+                                                            None e0.pos
+                                                        | _ -> failwith "NIY : Reification of indexed effects"
+                                                    in
+                                                    S.mk (Tm_app (bind_inst, [as_arg t'; as_arg t ;
+                                                                              as_arg S.tun; as_arg lifted_e0;
+                                                                              as_arg S.tun; as_arg continuation ]))
+                                                    None e0.pos
+                                                    (* Tm_meta(_, Meta_monadic _) should not appear here *)
+                                                | Tm_meta (e0, Meta_monadic_lift _) -> bind_on_lift es ((e0,q)::acc)
+                                                | _ -> bind_on_lift es ((e,q)::acc)
+                                            end
+                                in
+                                let binded_head = bind_on_lift ((as_arg head)::args) [] in
+                                // Util.print1_warning "BEFORE NORMALIZING MONADIC APP : %s\n" (Print.term_to_string binded_head);
+                                norm cfg env (List.tl stack) binded_head
+                            | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
+                                let lifted = reify_lift cfg.tcenv e msrc mtgt t' in
+                                norm cfg env stack lifted
+                            | _ ->
+                                (* TODO : that seems a little fishy *)
+                                norm cfg env stack head
+                            end
+
+
+                 | Meta_monadic_lift (m, m', t) ->
+                    (* KM : This code is a partial duplicate of what can be found in Meta_monadic *)
+                    (* KM : Not exactly sure which case should be eliminated *)
+                    let should_reify = match stack with
+                        | App ({n=Tm_constant Const.Const_reify}, _, _) :: _ ->
+                            // Util.print1 "Found a reify on the stack. %s" "" ;
+                            cfg.steps |> List.contains Reify
+                        | _ -> false
+                    in
+
+                    if should_reify
+                    then
+                        norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' t)
+                    else
+                    (* TODO : don't we need to normalize t here ? *)
+                    // let t = norm cfg env stack t in
                     if (Util.is_pure_effect m
                     || Util.is_ghost_effect m)
                     && cfg.steps |> List.contains PureSubtermsWithinComputations
                     then let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                            let cfg = {cfg with steps=[PureSubtermsWithinComputations;
-                                                       Primops;
-                                                       AllowUnboundUniverses;
-                                                       EraseUniverses;
-                                                       Exclude Zeta];
-                                                delta_level=[Env.Inlining; Env.Eager_unfolding_only]} in
-                            norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
-                    else norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+                            let cfg = { cfg with
+                                        steps=[PureSubtermsWithinComputations;
+                                               Primops;
+                                               AllowUnboundUniverses;
+                                               EraseUniverses;
+                                               Exclude Zeta];
+                                        delta_level=[Env.Inlining; Env.Eager_unfolding_only]
+                                       }
+                            in
+                            norm cfg env (Meta(Meta_monadic_lift(m, m', t), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+                    else norm cfg env (Meta(Meta_monadic_lift(m, m', t), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
                  | _ ->
                     begin match stack with
@@ -910,6 +1084,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                     norm cfg env stack head //meta doesn't block reduction
                            end
                          | _ ->
+                            (* Drops stack *)
                             let head = norm cfg env [] head in
                             let m = match m with
                                 | Meta_pattern args ->
@@ -920,7 +1095,27 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    end
             end
 
+(* Reifies the lifting of the term [e] of type [t] from computational  *)
+(* effect [m] to computational effect [m'] using lifting data in [env] *)
+and reify_lift (env : Env.env) e msrc mtgt t =
+    (* Might not be the best place to put this function *)
+    // check if the lift is concrete, if so replace by its definition on terms
+    // if msrc is PURE or Tot we can use mtgt.return
+    if Syntax.Util.is_pure_effect msrc
+    then
+        let ed = Env.get_effect_decl env mtgt in
+        let _, return_repr = ed.return_repr in
+        let return_inst = match (SS.compress return_repr).n with
+            | Tm_uinst(return_tm, [_]) ->
+                S.mk (Tm_uinst (return_tm, [env.universe_of env t])) None e.pos
+            | _ -> failwith "NIY : Reification of indexed effects"
+        in
+        S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
+    else
+        failwith "NYI: non pure monadic lift normalisation"
+
 and norm_pattern_args cfg env args =
+    (* Drops stack *)
     args |> List.map (List.map (fun (a, imp) -> norm cfg env [] a, imp))
 
 and norm_comp : cfg -> env -> comp -> comp =
@@ -978,16 +1173,17 @@ and norm_binders : cfg -> env -> binders -> binders =
             bs in
         List.rev nbs
 
-and norm_lcomp_opt : cfg -> env -> option<either<lcomp, Ident.lident>> -> option<either<lcomp, Ident.lident>> =
+and norm_lcomp_opt : cfg -> env -> option<either<lcomp, residual_comp>> -> option<either<lcomp, residual_comp>> =
     fun cfg env lopt ->
         match lopt with
         | Some (Inl lc) ->
+          let flags = filter_out_lcomp_cflags lc in
           if Util.is_tot_or_gtot_lcomp lc
           then let t = norm cfg env [] lc.res_typ in
                if Util.is_total_lcomp lc
-               then Some (Inl (Util.lcomp_of_comp (S.mk_Total t)))
-               else Some (Inl (Util.lcomp_of_comp (S.mk_GTotal t)))
-          else Some (Inr lc.eff_name)
+               then Some (Inl (Util.lcomp_of_comp (comp_set_flags (S.mk_Total t) flags)))
+               else Some (Inl (Util.lcomp_of_comp (comp_set_flags (S.mk_GTotal t) flags)))
+          else Some (Inr (lc.eff_name, flags))
        | _ -> lopt
 
 
@@ -1067,12 +1263,12 @@ and rebuild : cfg -> env -> stack -> term -> term =
               let scrutinee = t in
               let norm_and_rebuild_match () =
                 let whnf = List.contains WHNF cfg.steps in
-                let cfg_exclude_iota_zeta = 
+                let cfg_exclude_iota_zeta =
                     let new_delta = cfg.delta_level |> List.filter (function
                             | Env.Inlining
                             | Env.Eager_unfolding_only -> true
                             | _ -> false) in
-                    let steps' = 
+                    let steps' =
                         if cfg.steps |> List.contains PureSubtermsWithinComputations
                         then [Exclude Zeta]
                         else [Exclude Iota; Exclude Zeta] in
@@ -1082,7 +1278,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
                     if whnf
                     then closure_as_term cfg_exclude_iota_zeta env t
                     else norm cfg_exclude_iota_zeta env [] t in
-                 let rec norm_pat env p = match p.v with 
+                 let rec norm_pat env p = match p.v with
                     | Pat_constant _ -> p, env
                     | Pat_disj [] -> failwith "Impossible"
                     | Pat_disj (hd::tl) ->

@@ -44,7 +44,7 @@ let signal s c =
   append tag0 (append s_b c_b)
 
 val signal_split : m:msg signal_size -> Tot (x:option (uint32 * uint16)
-    { is_Some x ==> m = signal (fst (Some.v x)) (snd (Some.v x))})
+    { Some? x ==> m = signal (fst (Some.v x)) (snd (Some.v x))})
 let signal_split m =
   let (t, sc) = split_eq m 1 in
   if t = tag0 then

@@ -31,32 +31,49 @@ open FStar.Ident
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
+type local_binding = (ident * bv * bool)                  (* local name binding for name resolution, paired with an env-generated unique name and a boolean that is true when the variable has been introduced with let-mutable *)
+type rec_binding   = (ident * lid * delta_depth)          (* name bound by recursive type and top-level let-bindings definitions only *)
+type module_abbrev = (ident * lident)                     (* module X = A.B.C, where A.B.C is fully qualified and already resolved *)
+
+type open_kind =                                          (* matters only for resolving names with some module qualifier *)
+| Open_module                                             (* only opens the module, not the namespace *)
+| Open_namespace                                          (* opens the whole namespace *)
+
+type open_module_or_namespace = (lident * open_kind)      (* lident fully qualified name, already resolved. *)
+
+type record_or_dc = {
+  typename: lident; (* the namespace part applies to the constructor and fields as well *)
+  constrname: ident;
+  parms: binders;
+  fields: list<(ident * typ)>;
+  is_private_or_abstract: bool;
+  is_record:bool
+}
+
+type scope_mod =
+| Local_binding            of local_binding
+| Rec_binding              of rec_binding
+| Module_abbrev            of module_abbrev
+| Open_module_or_namespace of open_module_or_namespace
+| Top_level_def            of ident           (* top-level definition for an unqualified identifier x to be resolved as curmodule.x. *)
+| Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
+
 type env = {
   curmodule:            option<lident>;                   (* name of the module being desugared *)
+  curmonad:             option<ident>;                    (* current monad being desugared *)
   modules:              list<(lident * modul)>;           (* previously desugared modules *)
-  open_namespaces:      list<lident>;                     (* fully qualified names, in order of precedence *)
-  modul_abbrevs:        list<(ident * lident)>;           (* module X = A.B.C *)
+  scope_mods:           list<scope_mod>;                  (* toplevel or definition-local scope modifiers *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
-  localbindings:        list<(ident * bv * bool)>;        (* local name bindings for name resolution, paired with an env-generated unique name and a boolean that is true when the variable has been introduced with let-mutable *)
-  recbindings:          list<(ident* lid * delta_depth)>; (* names bound by recursive type and top-level let-bindings definitions only *)
   sigmap:               Util.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
   default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
-  expect_typ:           bool;                             (* syntatically, expect a type at this position in the term *)
+  expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
 }
 
 type foundname =
   | Term_name of typ * bool // indicates if mutable
   | Eff_name  of sigelt * lident
-
-type record_or_dc = {
-  typename: lident;
-  constrname: lident;
-  parms: binders;
-  fields: list<(fieldname * typ)>;
-  is_record:bool
-}
 
 // VALS_HACK_HERE
 
@@ -64,19 +81,17 @@ let open_modules e = e.modules
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
     | Some m -> m
-let qual lid id = set_lid_range (lid_of_ids (lid.ns @ [lid.ident;id])) id.idRange
-let qualify env id = qual (current_module env) id
-let qualify_lid env lid =
-  let cur = current_module env in
-  set_lid_range (lid_of_ids (cur.ns @ [cur.ident] @ lid.ns @ [lid.ident])) (range_of_lid lid)
+let qual = qual_id
+let qualify env id =
+    match env.curmonad with
+    | None -> qual (current_module env) id
+    | Some monad -> mk_field_projector_name_from_ident (qual (current_module env) monad) id
 let new_sigmap () = Util.smap_create 100
 let empty_env () = {curmodule=None;
+                    curmonad=None;
                     modules=[];
-                    open_namespaces=[];
-                    modul_abbrevs=[];
+                    scope_mods=[];
                     sigaccum=[];
-                    localbindings=[];
-                    recbindings=[];
                     sigmap=new_sigmap();
                     default_result_effect=Const.effect_Tot_lid;
                     iface=false;
@@ -104,58 +119,207 @@ let bv_to_name bv r = bv_to_name (set_bv_range bv r)
 let unmangleMap = [("op_ColonColon", "Cons", Delta_constant, Some Data_ctor);
                    ("not", "op_Negation", Delta_equational, None)]
 
-let unmangleOpName (id:ident) : option<term> =
+let unmangleOpName (id:ident) : option<(term * bool)> =
+  let t =
   find_map unmangleMap (fun (x,y,dd,dq) ->
     if (id.idText = x) then Some (S.fvar (lid_of_path ["Prims"; y] id.idRange) dd dq)
     else None)
+  in
+  match t with
+  | Some v -> Some (v, false)
+  | None -> None
+
+type cont_t<'a> =
+    | Cont_ok of 'a  (* found *)
+    | Cont_fail      (* not found, do not retry *)
+    | Cont_ignore    (* not found, retry *)
+
+let option_of_cont (k_ignore: unit -> option<'a>) = function
+    | Cont_ok a -> Some a
+    | Cont_fail -> None
+    | Cont_ignore -> k_ignore ()
+
+(* Unqualified identifier lookup *)
+
+let find_in_record ns id record cont =
+ let typename' = lid_of_ids (ns @ [record.typename.ident]) in
+ if lid_equals typename' record.typename
+ then
+      let fname = lid_of_ids (record.typename.ns @ [id]) in
+      let find = Util.find_map record.fields (fun (f, _) ->
+        if id.idText = f.idText
+        then Some record
+        else None)
+      in
+      match find with
+      | Some r -> cont r
+      | None -> Cont_ignore
+ else
+      Cont_ignore
+
+let try_lookup_id''
+  env
+  (id: ident)
+  (k_local_binding: local_binding -> cont_t<'a>)
+  (k_rec_binding:   rec_binding   -> cont_t<'a>)
+  (k_record: (record_or_dc) -> cont_t<'a>)
+  (find_in_module: lident -> cont_t<'a>)
+  (lookup_default_id: cont_t<'a> -> ident -> cont_t<'a>)
+  =
+    let check_local_binding_id : local_binding -> bool = function
+      (id', _, _) -> id'.idText=id.idText
+    in
+    let check_rec_binding_id : rec_binding -> bool = function
+      (id', _, _) -> id'.idText=id.idText
+    in
+    let curmod_ns = ids_of_lid (current_module env) in
+    let proc = function
+      | Local_binding l
+        when check_local_binding_id l ->
+        k_local_binding l
+
+      | Rec_binding r
+        when check_rec_binding_id r ->
+        k_rec_binding r
+
+      | Open_module_or_namespace (ns, _) ->
+        let lid = qual ns id in
+        find_in_module lid
+
+      | Top_level_def id'
+        when id'.idText = id.idText ->
+        (* indicates a global definition shadowing previous
+        "open"s. If the definition is not actually found by the
+        [lookup_default_id] finder, then it may mean that we are in a
+        module and the [val] was already declared, with the actual
+        [let] not defined yet, so we must not fail, but ignore. *)
+        lookup_default_id Cont_ignore id
+
+      | Record_or_dc r ->
+        find_in_record curmod_ns id r k_record
+
+      | _ ->
+        Cont_ignore
+    in
+    let rec aux = function
+      | a :: q ->
+        option_of_cont (fun _ -> aux q) (proc a)
+      | [] ->
+        option_of_cont (fun _ -> None) (lookup_default_id Cont_fail id)
+
+    in aux env.scope_mods
+
+let found_local_binding r (id', x, mut) =
+    (bv_to_name x r, mut)
+
+let find_in_module env lid k_global_def k_not_found =
+    begin match Util.smap_try_find (sigmap env) lid.str with
+        | Some sb -> k_global_def lid sb
+        | None -> k_not_found
+    end
 
 let try_lookup_id env (id:ident) =
   match unmangleOpName id with
-  | Some f -> Some (f, false)
+  | Some f -> Some f
   | _ ->
-    find_map env.localbindings (function
-      | id', x, mut when (id'.idText=id.idText) -> Some (bv_to_name x id.idRange, mut)
-      | _ -> None)
+    try_lookup_id'' env id (fun r -> Cont_ok (found_local_binding id.idRange r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
 
-let resolve_in_open_namespaces' env lid (finder:lident -> option<'a>) : option<'a> =
-  let aux (namespaces:list<lident>) : option<'a> =
-    match finder lid with
-        | Some r -> Some r
-        | _ ->
-            let ids = ids_of_lid lid in
-            find_map namespaces (fun (ns:lident) ->
-                let full_name = lid_of_ids (ids_of_lid ns @ ids) in
-                finder full_name) in
-  aux (current_module env::env.open_namespaces)
+(* Unqualified identifier lookup, if lookup in all open namespaces failed. *)
 
-let expand_module_abbrev env lid =
+let lookup_default_id
+    env
+    (id: ident)
+    (k_global_def: lident -> sigelt * bool -> cont_t<'a>)
+    (k_not_found: cont_t<'a>)
+  =
+  let find_in_monad = match env.curmonad with
+  | Some _ ->
+    let lid = qualify env id in
+    begin match Util.smap_try_find (sigmap env) lid.str with
+    | Some r -> Some (k_global_def lid r)
+    | None -> None
+    end
+  | None -> None
+  in
+  match find_in_monad with
+  | Some v -> v
+  | None ->
+    let lid = qual (current_module env) id in
+    find_in_module env lid k_global_def k_not_found
+
+let module_is_defined env lid =
+    lid_equals lid (current_module env) ||
+    List.existsb (fun x -> lid_equals lid (fst x)) env.modules
+
+let resolve_module_name env lid (honor_ns: bool) : option<lident> =
+    let nslen = List.length lid.ns in
+    let rec aux = function
+        | [] ->
+          if module_is_defined env lid
+          then Some lid
+          else None
+
+        | Open_module_or_namespace (ns, Open_namespace) :: q
+          when honor_ns ->
+          let new_lid = lid_of_path (path_of_lid ns @ path_of_lid lid) (range_of_lid lid)
+          in
+          if module_is_defined env new_lid
+          then
+               Some new_lid
+          else aux q
+
+        | Module_abbrev (name, modul) :: _
+          when nslen = 0 && name.idText = lid.ident.idText ->
+          Some modul
+
+        | _ :: q ->
+          aux q
+
+    in
+    aux env.scope_mods
+
+(* Generic name resolution. *)
+
+let resolve_in_open_namespaces''
+  env
+  lid
+  (k_local_binding: local_binding -> cont_t<'a>)
+  (k_rec_binding:   rec_binding   -> cont_t<'a>)
+  (k_record: (record_or_dc) -> cont_t<'a>)
+  (f_module: cont_t<'a> -> lident -> cont_t<'a>)
+  (l_default: cont_t<'a> -> ident -> cont_t<'a>)
+  : option<'a> =
   match lid.ns with
   | _ :: _ ->
-      // Already of the form Foo.Bar. Can't be a module abbreviation.
-      lid
+    begin match resolve_module_name env (set_lid_range (lid_of_ids lid.ns) (range_of_lid lid)) true with
+    | None -> None
+    | Some modul ->
+        let lid' = qual modul lid.ident in
+        option_of_cont (fun _ -> None) (f_module Cont_fail lid')
+    end
   | [] ->
-      let id = lid.ident in
-      match List.tryFind (fun (id', _) -> id.idText = id'.idText) env.modul_abbrevs with
-      | None -> lid
-      | Some (_, lid') -> lid'
+    try_lookup_id'' env lid.ident k_local_binding k_rec_binding k_record (f_module Cont_ignore) l_default
 
-let expand_module_abbrevs env lid = 
-    match lid.ns with 
-        | id::rest ->
-          begin match env.modul_abbrevs |> List.tryFind (fun (id', _) -> id.idText = id'.idText) with 
-                | None -> lid
-                | Some (_, lid') -> 
-                  Ident.lid_of_ids (Ident.ids_of_lid lid' @ rest @ [lid.ident])
-          end
-        | _ -> lid
+let cont_of_option (k_none: cont_t<'a>) = function
+    | Some v -> Cont_ok v
+    | None -> k_none
 
-let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a> =
-    resolve_in_open_namespaces' env (expand_module_abbrevs env lid) finder 
+let resolve_in_open_namespaces'
+  env
+  lid
+  (k_local_binding: local_binding -> option<'a>)
+  (k_rec_binding:   rec_binding   -> option<'a>)
+  (k_global_def: lident -> (sigelt * bool) -> option<'a>)
+  : option<'a> =
+  let k_global_def' k lid def = cont_of_option k (k_global_def lid def) in
+  let f_module k lid' = find_in_module env lid' (k_global_def' k) k in
+  let l_default k i = lookup_default_id env i (k_global_def' k) k in
+  resolve_in_open_namespaces'' env lid (fun l -> cont_of_option Cont_fail (k_local_binding l)) (fun r -> cont_of_option Cont_fail (k_rec_binding r)) (fun _ -> Cont_ignore) f_module l_default
 
 let fv_qual_of_se = function
     | Sig_datacon(_, _, _, l, _, quals, _, _) ->
       let qopt = Util.find_map quals (function
-          | RecordConstructor fs -> Some (Record_ctor(l, fs))
+          | RecordConstructor (_, fs) -> Some (Record_ctor(l, fs))
           | _ -> None) in
       begin match qopt with
         | None -> Some Data_ctor
@@ -170,22 +334,20 @@ let lb_fv lbs lid =
         let fv = right lb.lbname in
         if S.fv_eq_lid fv lid then Some fv else None) |> must 
 
+let ns_of_lid_equals (lid: lident) (ns: lident) =
+    List.length lid.ns = List.length (ids_of_lid ns) &&
+    lid_equals (lid_of_ids lid.ns) ns
+
 let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> =
   let occurrence_range = Ident.range_of_lid lid in
-  (* Resolve using, in order,
-     0. local bindings, if the lid is unqualified
-     1. rec bindings, if the lid is unqualified
-     2. sig bindings in current module
-     3. each open namespace, in reverse order *)
-  let find_in_sig source_lid  =
-    match Util.smap_try_find (sigmap env) source_lid.str with
-      | Some (_, true) when exclude_interf -> None
-      | None -> None
-      | Some (se, _) ->
+
+  let k_global_def source_lid = function
+      | (_, true) when exclude_interf -> None
+      | (se, _) ->
         begin match se with
           | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid Delta_constant None, false))
           | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid Delta_constant (fv_qual_of_se se), false))
-          | Sig_let((_, lbs), _, _, _) ->
+          | Sig_let((_, lbs), _, _, _, _) ->
             let fv = lb_fv lbs source_lid in
             Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false))
           | Sig_declare_typ(lid, _, _, quals, _) ->
@@ -193,35 +355,39 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
             || quals |> Util.for_some (function Assumption -> true | _ -> false)
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
                  let dd = if Util.is_primop_lid lid
-                          || (Util.starts_with lid.nsstr "Prims." && quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+                          || (ns_of_lid_equals lid FStar.Syntax.Const.prims_lid && quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
-                 if quals |> List.contains Reflectable //this is really a M.reflect
-                 then let refl_monad = Ident.lid_of_path (lid.ns |> List.map (fun x -> x.idText)) occurrence_range in
+                 begin match Util.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
+                 | Some refl_monad ->
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
                         Some (Term_name (refl_const, false))
-                 else Some (Term_name(fvar lid dd (fv_qual_of_se se), false))
+                 | _ -> Some (Term_name(fvar lid dd (fv_qual_of_se se), false))
+                 end
             else None
           | Sig_new_effect_for_free (ne, _) | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
           | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
           | _ -> None
         end in
 
-  let found_id = match lid.ns with
-    | [] ->
-      begin match try_lookup_id env (lid.ident) with
-        | Some (e, mut) -> Some (Term_name (e, mut))
-        | None ->
-          let recname = qualify env lid.ident in
-          Util.find_map env.recbindings (fun (id, l, dd) -> if id.idText=lid.ident.idText 
-                                                        then Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, false))
-                                                        else None)
-      end
-    | _ -> None in
+  let k_local_binding r = Some (Term_name (found_local_binding (range_of_lid lid) r))
+  in
 
-  match found_id with
-    | Some _ -> found_id
-    | _ -> resolve_in_open_namespaces env lid find_in_sig
+  let k_rec_binding (id, l, dd) = Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, false))
+  in
+
+  let found_unmangled = match lid.ns with
+  | [] ->
+    begin match unmangleOpName lid.ident with
+    | Some f -> Some (Term_name f)
+    | _ -> None
+    end
+  | _ -> None
+  in
+
+  match found_unmangled with
+  | None -> resolve_in_open_namespaces'  env lid k_local_binding k_rec_binding k_global_def
+  | x -> x
 
 let try_lookup_effect_name' exclude_interf env (lid:lident) : option<(sigelt*lident)> =
   match try_lookup_name true exclude_interf env lid with
@@ -230,6 +396,12 @@ let try_lookup_effect_name' exclude_interf env (lid:lident) : option<(sigelt*lid
 let try_lookup_effect_name env l =
     match try_lookup_effect_name' (not env.iface) env l with
         | Some (o, l) -> Some l
+        | _ -> None
+let try_lookup_effect_name_and_attributes env l =
+    match try_lookup_effect_name' (not env.iface) env l with
+        | Some (Sig_new_effect(ne, _), l) -> Some (l, ne.cattributes)
+        | Some (Sig_new_effect_for_free(ne, _), l) -> Some (l, ne.cattributes)
+        | Some (Sig_effect_abbrev(_,_,_,_,_,cattributes,_), l) -> Some (l, cattributes)
         | _ -> None
 let try_lookup_effect_defn env l =
     match try_lookup_effect_name' (not env.iface) env l with
@@ -242,11 +414,10 @@ let is_effect_name env lid =
         | Some _ -> true
 
 let lookup_letbinding_quals env lid =
-  let find_in_sig lid =
-    match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_declare_typ(lid, _, _, quals, _), _) -> Some quals
+  let k_global_def lid = function
+      | (Sig_declare_typ(lid, _, _, quals, _), _) -> Some quals
       | _ -> None in
-  match resolve_in_open_namespaces env lid find_in_sig with
+  match resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def with
     | Some quals -> quals
     | _ -> []
 
@@ -256,25 +427,23 @@ let try_lookup_module env path =
     | None -> None
 
 let try_lookup_let env (lid:lident) =
-  let find_in_sig lid =
-    match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_let((_, lbs), _, _, _), _) -> 
+  let k_global_def lid = function
+      | (Sig_let((_, lbs), _, _, _, _), _) -> 
         let fv = lb_fv lbs lid in
         Some (fvar lid fv.fv_delta fv.fv_qual)
       | _ -> None in
-  resolve_in_open_namespaces env lid find_in_sig
+  resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 let try_lookup_definition env (lid:lident) = 
-    let find_in_sig lid = 
-    match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_let(lbs, _, _, _), _) ->
+    let k_global_def lid = function
+      | (Sig_let(lbs, _, _, _, _), _) ->
         Util.find_map (snd lbs) (fun lb -> 
             match lb.lbname with 
                 | Inr fv when S.fv_eq_lid fv lid ->
                   Some (lb.lbdef)
                 | _ -> None)
       | _ -> None in
-  resolve_in_open_namespaces env lid find_in_sig
+  resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 
 let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<(term * bool)> =
@@ -284,25 +453,23 @@ let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<(term * boo
 let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
 
 let try_lookup_datacon env (lid:lident) =
-  let find_in_sig lid =
-    match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_declare_typ(_, _, _, quals, _), _) ->
+  let k_global_def lid = function
+      | (Sig_declare_typ(_, _, _, quals, _), _) ->
         if quals |> Util.for_some (function Assumption -> true | _ -> false)
         then Some (lid_as_fv lid Delta_constant None)
         else None
-      | Some (Sig_datacon _, _) -> Some (lid_as_fv lid Delta_constant (Some Data_ctor))
+      | (Sig_datacon _, _) -> Some (lid_as_fv lid Delta_constant (Some Data_ctor))
       | _ -> None in
-  resolve_in_open_namespaces env lid find_in_sig
+  resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 let find_all_datacons env (lid:lident) =
-  let find_in_sig lid =
-    match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_inductive_typ(_, _, _, _, _, datas, _, _), _) -> Some datas
+  let k_global_def lid = function
+      | (Sig_inductive_typ(_, _, _, _, _, datas, _, _), _) -> Some datas
       | _ -> None in
-  resolve_in_open_namespaces env lid find_in_sig
+  resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 //no top-level pattern in F*, so need to do this ugliness
-let record_cache_aux = 
+let record_cache_aux_with_filter = 
     let record_cache : ref<list<list<record_or_dc>>> = Util.mk_ref [[]] in
     let push () =
         record_cache := List.hd !record_cache::!record_cache in
@@ -313,7 +480,22 @@ let record_cache_aux =
     let commit () = match !record_cache with 
         | hd::_::tl -> record_cache := hd::tl
         | _ -> failwith "Impossible" in
-    (push, pop, peek, insert, commit) 
+    (* remove private/abstract records *)
+    let filter () =
+        let rc = peek () in
+        let () = pop () in
+        let filtered = List.filter (fun r -> not r.is_private_or_abstract) rc in
+        record_cache := filtered :: !record_cache
+    in
+    let aux =
+    (push, pop, peek, insert, commit)
+    in (aux, filter)
+
+let record_cache_aux =
+    let (aux, _) = record_cache_aux_with_filter in aux
+
+let filter_record_cache =
+    let (_, filter) = record_cache_aux_with_filter in filter
     
 let push_record_cache = 
     let push, _, _, _, _ = record_cache_aux in
@@ -335,7 +517,7 @@ let commit_record_cache =
     let _, _, _, _, commit = record_cache_aux in
     commit
 
-let extract_record (e:env) = function
+let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = function
   | Sig_bundle(sigs, _, _, _) ->
     let is_rec = Util.for_some (function
       | RecordType _
@@ -357,12 +539,19 @@ let extract_record (e:env) = function
                         if S.is_null_bv x
                         || (is_rec && S.is_implicit q)
                         then []
-                        else [(qual constrname (if is_rec then Util.unmangle_field_name x.ppname else x.ppname), x.sort)]) in
+                        else [(if is_rec then Util.unmangle_field_name x.ppname else x.ppname), x.sort]) in
                 let record = {typename=typename;
-                              constrname=constrname;
+                              constrname=constrname.ident;
                               parms=parms;
                               fields=fields;
+                              is_private_or_abstract =
+                                List.contains Private tags ||
+                                List.contains Abstract tags;
                               is_record=is_rec} in
+                (* the record is added to the current list of
+                top-level definitions, to allow shadowing field names
+                that were reachable through previous "open"s. *)
+                let () = new_globs := Record_or_dc record :: !new_globs in
                 insert_record_cache record
             | _ -> ()
         end
@@ -371,55 +560,52 @@ let extract_record (e:env) = function
   | _ -> ()
 
 let try_lookup_record_or_dc_by_field_name env (fieldname:lident) =
-  let maybe_add_constrname ns c =
-    let rec aux ns = match ns with
-      | [] -> [c]
-      | [c'] -> if c'.idText = c.idText then [c] else [c';c]
-      | hd::tl -> hd::aux tl in
-    aux ns in
   let find_in_cache fieldname =
 //Util.print_string (Util.format1 "Trying field %s\n" fieldname.str);
-    let ns, fieldname = fieldname.ns, fieldname.ident in
+    let ns, id = fieldname.ns, fieldname.ident in
     Util.find_map (peek_record_cache()) (fun record ->
-      let constrname = record.constrname.ident in
-      let ns = maybe_add_constrname ns constrname in
-      let fname = lid_of_ids (ns@[fieldname]) in
-      Util.find_map record.fields (fun (f, _) ->
-        if lid_equals fname f
-        then Some(record, fname)
-        else None)) in
-  resolve_in_open_namespaces env fieldname find_in_cache
+      option_of_cont (fun _ -> None) (find_in_record ns id record (fun r -> Cont_ok r))
+    ) in
+  resolve_in_open_namespaces'' env fieldname (fun _ -> Cont_ignore) (fun _ -> Cont_ignore) (fun r -> Cont_ok r)  (fun k fn -> cont_of_option k (find_in_cache fn)) (fun k _ -> k)
 
 let try_lookup_record_by_field_name env (fieldname:lident) =
     match try_lookup_record_or_dc_by_field_name env fieldname with 
-        | Some (r, f) when r.is_record -> Some (r,f)
+        | Some r when r.is_record -> Some r
         | _ -> None
 
-let try_lookup_projector_by_field_name env (fieldname:lident) = 
+let belongs_to_record env lid record =
+    (* first determine whether lid is a valid record field name, and
+    that it resolves to a record' type in the same module as record
+    (even though the record types may be different.) *)
+    match try_lookup_record_by_field_name env lid with
+    | Some record'
+      when text_of_path (path_of_ns record.typename.ns)
+         = text_of_path (path_of_ns record'.typename.ns)
+      ->
+      (* now, check whether field belongs to record *)
+      begin match find_in_record record.typename.ns lid.ident record (fun _ -> Cont_ok ()) with
+      | Cont_ok _ -> true
+      | _ -> false
+      end
+    | _ -> false
+
+let try_lookup_dc_by_field_name env (fieldname:lident) = 
     match try_lookup_record_or_dc_by_field_name env fieldname with 
-        | Some (r, f) -> Some (f, r.is_record)
+        | Some r -> Some (set_lid_range (lid_of_ids (r.typename.ns @ [r.constrname])) (range_of_lid fieldname), r.is_record)
         | _ -> None
-
-let qualify_field_to_record env (recd:record_or_dc) (f:lident) =
-  let qualify fieldname =
-    let ns, fieldname = fieldname.ns, fieldname.ident in
-    let constrname = recd.constrname.ident in
-    let fname = lid_of_ids (ns@[constrname]@[fieldname]) in
-    Util.find_map recd.fields (fun (f, _) ->
-      if lid_equals fname f
-      then Some(fname)
-      else None) in
-  resolve_in_open_namespaces env f qualify
 
 let unique any_val exclude_if env lid =
-  let this_env = {env with open_namespaces=[]} in
+  let this_env = {env with scope_mods=[]} in
   match try_lookup_lid' any_val exclude_if env lid with
     | None -> true
     | Some _ -> false
 
+let push_scope_mod env scope_mod =
+ {env with scope_mods = scope_mod :: env.scope_mods}
+
 let push_bv' env (x:ident) is_mutable =
   let bv = S.gen_bv x.idText (Some x.idRange) tun in
-  {env with localbindings=(x, bv, is_mutable)::env.localbindings}, bv
+  push_scope_mod env (Local_binding (x, bv, is_mutable)), bv
 
 let push_bv_mutable env x =
   push_bv' env x true
@@ -430,7 +616,7 @@ let push_bv env x =
 let push_top_level_rec_binding env (x:ident) dd = 
   let l = qualify env x in
   if unique false true env l
-  then {env with recbindings=(x,l,dd)::env.recbindings}
+  then push_scope_mod env (Rec_binding (x,l,dd))
   else raise (Error ("Duplicate top-level names " ^ l.str, range_of_lid l))
 
 let push_sigelt env s =
@@ -444,6 +630,7 @@ let push_sigelt env s =
         end
       | None -> "<unknown>" in
     raise (Error (Util.format2 "Duplicate top-level names [%s]; previously declared at %s" (text_of_lid l) r, range_of_lid l)) in
+  let globals = ref env.scope_mods in
   let env =
       let any_val, exclude_if = match s with
         | Sig_let _ -> false, true
@@ -451,31 +638,43 @@ let push_sigelt env s =
         | _ -> false, false in
       let lids = lids_of_sigelt s in
       begin match Util.find_map lids (fun l -> if not (unique any_val exclude_if env l) then Some l else None) with
-        | None -> extract_record env s; {env with sigaccum=s::env.sigaccum}
+        | None -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
         | Some l -> err l
       end in
+  let env = {env with scope_mods = !globals} in
   let env, lss = match s with
     | Sig_bundle(ses, _, _, _) -> env, List.map (fun se -> (lids_of_sigelt se, se)) ses
     | _ -> env, [lids_of_sigelt s, s] in
   lss |> List.iter (fun (lids, se) ->
     lids |> List.iter (fun lid ->
+      (* the identifier is added into the list of global
+      declarations, to allow shadowing of definitions that were
+      formerly reachable by previous "open"s. *)
+      let () = globals := Top_level_def lid.ident :: !globals in
       Util.smap_add (sigmap env) lid.str (se, env.iface && not env.admitted_iface)));
+  let env = {env with scope_mods = !globals } in
   env
 
 let push_namespace env ns =
-  let modules = env.modules in
-  if modules |> Util.for_some (fun (m, _) ->
-     Util.starts_with (Ident.text_of_lid m) (Ident.text_of_lid ns))
-  then {env with open_namespaces = ns::env.open_namespaces}
-  else raise (Error(Util.format1 "Namespace %s cannot be found" (Ident.text_of_lid ns), Ident.range_of_lid ns))
+  (* namespace resolution disabled, but module abbrevs enabled *)
+  let (ns', kd) = match resolve_module_name env ns false with
+  | None ->
+     let modules = env.modules in
+     if modules |> Util.for_some (fun (m, _) ->
+      Util.starts_with (Ident.text_of_lid m ^ ".") (Ident.text_of_lid ns ^ "."))
+     then (ns, Open_namespace)
+     else raise (Error(Util.format1 "Namespace %s cannot be found" (Ident.text_of_lid ns), Ident.range_of_lid ns))
+  | Some ns' ->
+     (ns', Open_module)
+  in
+     push_scope_mod env (Open_module_or_namespace (ns', kd))
 
-let push_module_abbrev env x l = 
-  if env.modul_abbrevs |> Util.for_some (fun (y, _) -> x.idText=y.idText)
-  then raise (Error(Util.format1 "Module %s is already defined" x.idText, x.idRange))
-  else let modules = env.modules in
-       if modules |> Util.for_some (fun (m, _) -> Ident.lid_equals m l)
-       then {env with modul_abbrevs=(x,l)::env.modul_abbrevs}
-       else raise (Error(Util.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
+let push_module_abbrev env x l =
+  (* both namespace resolution and module abbrevs disabled:
+     in 'module A = B', B must be fully qualified *)
+  if module_is_defined env l
+  then push_scope_mod env (Module_abbrev (x,l))
+  else raise (Error(Util.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
 
 let check_admits env =
   env.sigaccum |> List.iter (fun se -> match se with
@@ -501,7 +700,7 @@ let finish env modul =
       if List.contains Private quals
       then Util.smap_remove (sigmap env) lid.str
     
-    | Sig_let((_,lbs), r, _, quals) ->
+    | Sig_let((_,lbs), r, _, quals, _) ->
       if List.contains Private quals
       || List.contains Abstract quals
       then begin
@@ -515,14 +714,14 @@ let finish env modul =
            Util.smap_add (sigmap env) lid.str (decl, false))
 
     | _ -> ());
+  (* remove abstract/private records *)
+  let () = filter_record_cache () in
   {env with
     curmodule=None;
     modules=(modul.name, modul)::env.modules;
-    modul_abbrevs=[];
-    open_namespaces=[];
+    scope_mods = [];
     sigaccum=[];
-    localbindings=[];
-    recbindings=[]}
+  }
 
 type env_stack_ops = { 
     push: env -> env;
@@ -608,7 +807,7 @@ let prepare_module_or_interface intf admitted env mname =
     {
       env with curmodule=Some mname;
       sigmap=env.sigmap;
-      open_namespaces = open_ns;
+      scope_mods = List.map (fun lid -> Open_module_or_namespace (lid, Open_namespace)) open_ns;
       iface=intf;
       admitted_iface=admitted;
       default_result_effect=
@@ -625,38 +824,43 @@ let prepare_module_or_interface intf admitted env mname =
       prep (push env), true //push a context so that we can pop it when we're done
       
 let enter_monad_scope env mname =
-  let curmod = current_module env in
-  let mscope = lid_of_ids (curmod.ns@[curmod.ident; mname]) in
-  {env with
-    curmodule=Some mscope;
-    open_namespaces=curmod::env.open_namespaces}
-
-let exit_monad_scope env0 env =
-  {env with
-    curmodule=env0.curmodule;
-    open_namespaces=env0.open_namespaces}
+  match env.curmonad with
+  | Some mname' -> raise (Error ("Trying to define monad " ^ mname.idText ^ ", but already in monad scope " ^ mname'.idText, mname.idRange))
+  | None -> {env with curmonad = Some mname}
 
 let fail_or env lookup lid = match lookup lid with
   | None ->
     let opened_modules = List.map (fun (lid, _) -> text_of_lid lid) env.modules in
-    let module_of_the_lid = text_of_path (path_of_ns lid.ns) in
     let msg = Util.format1 "Identifier not found: [%s]" (text_of_lid lid) in
     let msg =
-      match env.curmodule with
-      | Some m when (text_of_lid m = module_of_the_lid || module_of_the_lid = "") ->
-          (* Lookup in the current module *)
-          msg
-      | _ when List.existsb (fun m -> m = module_of_the_lid) opened_modules ->
-          (* Lookup in a module we've heard about *)
-          msg
-      | _ ->
-          (* Lookup in a module we haven't heard about *)
-          msg ^ "\n" ^
-          Util.format3 "Hint: %s belongs to module %s, which does not belong \
-            to the list of modules in scope, namely %s"
-            (text_of_lid lid)
-            (text_of_path (path_of_ns lid.ns))
-            (String.concat ", " opened_modules)
+      if List.length lid.ns = 0
+      then
+       msg
+      else
+       let modul = set_lid_range (lid_of_ids lid.ns) (range_of_lid lid) in
+       match resolve_module_name env modul true with
+       | None ->
+           let opened_modules = String.concat ", " opened_modules in
+           Util.format3
+           "%s\nModule %s does not belong to the list of modules in scope, namely %s"
+           msg
+           modul.str
+           opened_modules
+       | Some modul' when (not (List.existsb (fun m -> m = modul'.str) opened_modules)) ->
+           let opened_modules = String.concat ", " opened_modules in
+           Util.format4
+           "%s\nModule %s resolved into %s, which does not belong to the list of modules in scope, namely %s"
+           msg
+           modul.str
+           modul'.str
+           opened_modules
+       | Some modul' ->
+           Util.format4
+           "%s\nModule %s resolved into %s, definition %s not found"
+           msg
+           modul.str
+           modul'.str
+           lid.ident.idText
     in
     raise (Error (msg, range_of_lid lid))
   | Some r -> r

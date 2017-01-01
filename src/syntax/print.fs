@@ -32,7 +32,7 @@ let sli (l:lident) : string =
     if Options.print_real_names()
     then l.str
     else l.ident.idText
-//    Util.format3 "%s@{def=%s;use=%s}" s 
+//    Util.format3 "%s@{def=%s;use=%s}" s
 //        (Range.string_of_range (Ident.range_of_lid l))
 //        (Range.string_of_use_range (Ident.range_of_lid l))
 
@@ -172,12 +172,21 @@ let tag_of_term (t:term) = match t.n with
 
 let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int)
 
+let rec int_of_univ n u = match Subst.compress_univ u with
+    | U_zero -> n, None
+    | U_succ u -> int_of_univ (n+1) u
+    | _ -> n, Some u
+
 let rec univ_to_string u = match Subst.compress_univ u with
     | U_unif u -> uvar_to_string u
-    | U_name x -> "n"^x.idText
+    | U_name x -> x.idText
     | U_bvar x -> "@"^string_of_int x
     | U_zero   -> "0"
-    | U_succ u -> Util.format1 "(S %s)" (univ_to_string u)
+    | U_succ u ->
+        begin match int_of_univ 1 u with
+            | n, None -> string_of_int n
+            | n, Some u -> Util.format2 "(%s + %s)" (univ_to_string u) (string_of_int n)
+        end
     | U_max us -> Util.format1 "(max %s)" (List.map univ_to_string us |> String.concat ", ")
     | U_unknown -> "unknown"
 
@@ -191,6 +200,7 @@ let qual_to_string = function
   | Private               -> "private"
   | Unfold_for_unification_and_vcgen  -> "unfold"
   | Inline_for_extraction -> "inline"
+  | NoExtract             -> "noextract"
   | Visible_default       -> "visible"
   | Irreducible           -> "irreducible"
   | Abstract              -> "abstract"
@@ -200,13 +210,15 @@ let qual_to_string = function
   | TotalEffect           -> "total"
   | Discriminator l       -> Util.format1 "(Discriminator %s)" (lid_to_string l)
   | Projector (l, x)      -> Util.format2 "(Projector %s %s)" (lid_to_string l) x.idText
-  | RecordType        fns -> Util.format1 "(RecordType %s)" (fns |> List.map lid_to_string |> String.concat ", ")
-  | RecordConstructor fns -> Util.format1 "(RecordConstructor %s)" (fns |> List.map lid_to_string |> String.concat ", ")
+  | RecordType (ns, fns)  -> Util.format2 "(RecordType %s %s)" (text_of_path (path_of_ns ns)) (fns |> List.map text_of_id |> String.concat ", ")
+  | RecordConstructor (ns, fns) -> Util.format2 "(RecordConstructor %s %s)" (text_of_path (path_of_ns ns))  (fns |> List.map text_of_id |> String.concat ", ")
+  | Action eff_lid        -> Util.format1 "(Action %s)" (lid_to_string eff_lid)
   | ExceptionConstructor  -> "ExceptionConstructor"
   | HasMaskedEffect       -> "HasMaskedEffect"
   | Effect                -> "Effect"
-  | Reifiable                 -> "reify"
-  | Reflectable               -> "reflect"
+  | Reifiable             -> "reify"
+  | Reflectable l         -> Util.format1 "(reflect %s)" l.str
+  | OnlyName              -> "OnlyName"
 
 let quals_to_string quals =
     match quals with
@@ -233,8 +245,8 @@ let rec term_to_string x =
     let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
     Util.format2 "{:pattern %s} %s" pats (term_to_string t)
 
-  | Tm_meta(t, Meta_monadic (m, t')) -> Util.format4 ("(Monadic-%s{%s %s} %s )") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
-  | Tm_meta(t, Meta_monadic_lift(m0, m1)) -> Util.format4 ("(MonadicLift-%s{%s} %s -> %s)") (tag_of_term t) (term_to_string t) (sli m0) (sli m1)
+  | Tm_meta(t, Meta_monadic (m, t')) -> Util.format4 ("(Monadic-%s{%s %s} %s)") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
+  | Tm_meta(t, Meta_monadic_lift(m0, m1, t')) -> Util.format5 ("(MonadicLift-%s{%s : %s -> %s} %s)") (tag_of_term t) (term_to_string t') (sli m0) (sli m1) (term_to_string t)
   | Tm_meta(t, Meta_labeled(l,r,b)) when Options.print_implicits() ->
     Util.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)
   | Tm_meta(t, _) ->    term_to_string t
@@ -249,7 +261,8 @@ let rec term_to_string x =
     begin match lc with
         | Some (Inl l) when (Options.print_implicits()) ->
           Util.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| l.comp())
-        | Some (Inr l) when (Options.print_implicits()) ->
+          (* TODO : Consider adding an option printing the cflags *)
+        | Some (Inr (l, flags)) when (Options.print_implicits()) ->
           Util.format3 "(fun %s -> (%s $$ (name only) %s))" (binders_to_string " " bs) (term_to_string t2) l.str
         | _ ->
           Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
@@ -257,8 +270,8 @@ let rec term_to_string x =
   | Tm_refine(xt, f) -> Util.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
   | Tm_let(lbs, e) ->   Util.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
-  | Tm_ascribed(e,Inl t,_) ->
-                        Util.format2 "(%s <: %s)" (term_to_string e) (term_to_string t)
+  | Tm_ascribed(e,Inl t,eff_name) ->
+                        Util.format3 "(%s <: [%s] %s)" (term_to_string e) (map_opt eff_name Ident.text_of_lid |> dflt "default") (term_to_string t)
   | Tm_ascribed(e,Inr c,_) ->
                         Util.format2 "(%s <: %s)" (term_to_string e) (comp_to_string c)
   | Tm_match(head, branches) ->
@@ -368,8 +381,14 @@ and comp_to_string c =
         | _ -> Util.format1 "GTot %s" (term_to_string t)
       end
     | Comp c ->
-      let basic =
-          if c.flags |> Util.for_some (function TOTAL -> true | _ -> false)
+        let basic =
+          if (Options.print_effect_args())
+          then Util.format4 "%s (%s) %s (attributes %s)"
+                            (sli c.effect_name)
+                            (term_to_string c.result_typ)
+                            (c.effect_args |> List.map arg_to_string |> String.concat ", ")
+                            (c.flags |> List.map cflags_to_string |> String.concat " ")
+          else if c.flags |> Util.for_some (function TOTAL -> true | _ -> false)
           && not (Options.print_effect_args())
           then Util.format1 "Tot %s" (term_to_string c.result_typ)
           else if not (Options.print_effect_args())
@@ -379,14 +398,21 @@ and comp_to_string c =
           else if not (Options.print_effect_args())
                && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
           then Util.format1 "ALL %s" (term_to_string c.result_typ)
-          else if (Options.print_effect_args())
-          then Util.format3 "%s (%s) %s"
-                    (sli c.effect_name)
-                    (term_to_string c.result_typ)
-                    (c.effect_args |> List.map arg_to_string |> String.concat ", ")
           else Util.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
       let dec = c.flags |> List.collect (function DECREASES e -> [Util.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
       Util.format2 "%s%s" basic dec
+
+and cflags_to_string c =
+    match c with
+        | TOTAL -> "total"
+        | MLEFFECT -> "ml"
+        | RETURN -> "return"
+        | PARTIAL_RETURN -> "partial_return"
+        | SOMETRIVIAL -> "sometrivial"
+        | LEMMA -> "lemma"
+        | CPS -> "cps"
+        | DECREASES _ -> "" (* TODO : already printed for now *)
+
 
 (* CH: at this point not even trying to detect if something looks like a formula,
        only locally detecting certain patterns *)
@@ -478,7 +504,7 @@ let rec sigelt_to_string x = match x with
          else "")
         (term_to_string t)
   | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (term_to_string f)
-  | Sig_let(lbs, _, _, qs) -> lbs_to_string qs lbs
+  | Sig_let(lbs, _, _, qs, _) -> lbs_to_string qs lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (term_to_string e)
   | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
   | Sig_new_effect(ed, _) -> eff_decl_to_string false ed
@@ -497,7 +523,7 @@ let rec sigelt_to_string x = match x with
     Util.format4 "sub_effect %s ~> %s : <%s> %s"
         (lid_to_string se.source) (lid_to_string se.target)
         (univ_names_to_string us) (term_to_string t)
-  | Sig_effect_abbrev(l, univs, tps, c, _, _) ->
+  | Sig_effect_abbrev(l, univs, tps, c, _, flags, _) ->
     if (Options.print_universes())
     then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in
          let tps, c = match (Subst.compress t).n with
@@ -510,7 +536,7 @@ let rec sigelt_to_string x = match x with
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
 let rec sigelt_to_string_short x = match x with
-  | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _, _) -> Util.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
+  | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _, _, _) -> Util.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =
@@ -537,3 +563,32 @@ let abs_ascription_to_string ascription =
           Util.string_builder_append strb (Ident.text_of_lid lid)
   end ;
   Util.string_of_string_builder strb
+
+let set_to_string f s =
+    let elts = Util.set_elements s in
+    match elts with
+        | [] -> "{}"
+        | x::xs ->
+            let strb = Util.new_string_builder () in
+            Util.string_builder_append strb "{" ;
+            Util.string_builder_append strb (f x) ;
+            List.iter (fun x ->
+                       Util.string_builder_append strb ", " ;
+                       Util.string_builder_append strb (f x)
+                       ) xs ;
+            Util.string_builder_append strb "}" ;
+            Util.string_of_string_builder strb
+
+let list_to_string f elts =
+    match elts with
+        | [] -> "[]"
+        | x::xs ->
+            let strb = Util.new_string_builder () in
+            Util.string_builder_append strb "[" ;
+            Util.string_builder_append strb (f x) ;
+            List.iter (fun x ->
+                       Util.string_builder_append strb "; " ;
+                       Util.string_builder_append strb (f x)
+                       ) xs ;
+            Util.string_builder_append strb "]" ;
+            Util.string_of_string_builder strb

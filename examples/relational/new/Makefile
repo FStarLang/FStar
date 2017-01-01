@@ -1,4 +1,4 @@
-FLAGS=--z3timeout 30
+#FLAGS=
 #LIB=
 
 OTHERFLAGS+=$(FLAGS) $(LIB)
@@ -20,3 +20,6 @@ random_tapes:
 
 recursive:
 	$(FSTAR) recursive.fst
+
+WhileReify:
+	$(FSTAR) --include ../../dm4free WhileReify.fst

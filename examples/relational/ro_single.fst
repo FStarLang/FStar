@@ -21,8 +21,8 @@ type state_hash =
 
 type log_monotone (s':state_hash) (s:state_hash) =
             (s'.bad ==> s.bad) /\
-            (forall x. is_Some (assoc x s'.l) ==>
-                    is_Some (assoc x s.l) /\ Some.v (assoc x s.l) = Some.v (assoc x s'.l))
+            (forall x. Some? (assoc x s'.l) ==>
+                    Some? (assoc x s.l) /\ Some.v (assoc x s.l) = Some.v (assoc x s'.l))
 
 assume val s : ref state_hash
 
@@ -34,7 +34,7 @@ val hash_hon : k:key -> ST (option tag)
                            (requires (fun h -> True))
                            (ensures (fun h' r h -> log_monotone (sel h' s) (sel h s) /\
                                                    ((sel h s).bad \/
-                                                    is_Some r /\ is_Some (assoc k (sel h s).l) /\
+                                                    Some? r /\ Some? (assoc k (sel h s).l) /\
                                                     Some.v #tag r = snd (Some.v (assoc k (sel h s).l)))))
 let hash_hon k = match assoc k (!s).l with
   | Some (Hon, t) -> Some t
@@ -47,7 +47,7 @@ val hash_adv : k:key -> ST (option tag)
                            (requires (fun h -> True))
                            (ensures (fun h' r h -> log_monotone (sel h' s) (sel h s) /\
                                                    ((sel h s).bad \/
-                                                    is_Some r /\ is_Some (assoc k (sel h s).l) /\
+                                                    Some? r /\ Some? (assoc k (sel h s).l) /\
                                                     Some.v #tag r = snd (Some.v (assoc k (sel h s).l)))))
 let hash_adv k = match assoc k (!s).l with
   | Some (Adv, t) -> Some t
@@ -69,16 +69,16 @@ val encrypt_hon : k:bytes -> p:block
                   (requires (fun h -> True))
                   (ensures  (fun h' r h -> log_monotone (sel h' s) (sel h s) /\
                                              ((~ (sel h s).bad)  ==>
-                                             is_Some r /\
-                                             is_Some (assoc (append k (snd #block #block (Some.v r))) (sel h s).l) /\
+                                             Some? r /\
+                                             Some? (assoc (append k (snd #block #block (Some.v r))) (sel h s).l) /\
                                              encrypt p (snd (Some.v (assoc (append k (snd #block #block (Some.v r))) (sel h s).l))) = fst (Some.v r))))
 let encrypt_hon k p =
                   let r = sample () in
                   let kh = append k r in
                   let h  = hash_hon kh in
                   let st = !s in
-                  let a = if is_Some h then(
-                      assert(st.bad \/ is_Some(assoc kh st.l));
+                  let a = if Some? h then(
+                      assert(st.bad \/ Some?(assoc kh st.l));
                       Some ((encrypt p (Some.v h)), r))
                     else None in
                   a
@@ -88,13 +88,13 @@ val decrypt_hon : k:bytes -> c:(block * block)
                   (requires (fun h -> True))
                   (ensures  (fun h' r h -> log_monotone (sel h' s) (sel h s) /\
                                            ((~ (sel h s).bad /\
-                                            is_Some (assoc(append k (snd c)) (sel h' s).l)
-                                              ==> is_Some r /\
+                                            Some? (assoc(append k (snd c)) (sel h' s).l)
+                                              ==> Some? r /\
                                                   Some.v #block r = decrypt (fst c) (snd (Some.v (assoc (append k (snd c)) (sel h s).l)))))))
 let decrypt_hon k (c, r) =
                   let kh = append k r in
                   let h  = hash_hon kh in
-                  let a = if is_Some h then Some (decrypt c (Some.v h)) else None in
+                  let a = if Some? h then Some (decrypt c (Some.v h)) else None in
                   a
 val correctness : k:bytes -> p:block
                    -> ST unit
@@ -109,8 +109,8 @@ assume val arbitrary_actions : unit ->
 let correctness k p =
                   let c = encrypt_hon k p in
                   arbitrary_actions ();
-                  if is_Some c then
+                  if Some? c then
                     let p' = decrypt_hon k (Some.v c) in
                     let st = !s in
                     if not (st.bad) then
-                      assert(is_Some p' /\ p = Some.v p')
+                      assert(Some? p' /\ p = Some.v p')

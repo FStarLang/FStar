@@ -283,9 +283,10 @@ let head_normal env t =
 
 let head_redex env t =
     match (FStar.Syntax.Util.un_uinst t).n with
-    | Tm_abs(_, _, Some (Inr l)) ->
+    | Tm_abs(_, _, Some (Inr (l, flags))) ->
       Ident.lid_equals l Const.effect_Tot_lid
       || Ident.lid_equals l Const.effect_GTot_lid
+      || List.existsb (function TOTAL -> true | _ -> false) flags
 
     | Tm_abs(_, _, Some (Inl lc)) ->
       Util.is_tot_or_gtot_lcomp lc
@@ -700,17 +701,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
           let is_impure = function
             | Inl lc -> not (Util.is_pure_or_ghost_lcomp lc)
-            | Inr eff -> TypeChecker.Util.is_pure_or_ghost_effect env.tcenv eff |> not
+            | Inr (eff, _) -> TypeChecker.Util.is_pure_or_ghost_effect env.tcenv eff |> not
           in
 
           let codomain_eff lc = match lc with
             | Inl lc -> SS.subst_comp opening (lc.comp()) |> Some
-            | Inr eff ->
+            | Inr (eff, flags) ->
                 let new_uvar () = FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (Util.ktype0) |> fst in
                 if Ident.lid_equals eff Const.effect_Tot_lid
                 then S.mk_Total (new_uvar()) |> Some
                 else if Ident.lid_equals eff Const.effect_GTot_lid
                 then S.mk_GTotal (new_uvar()) |> Some
+                (* TODO (KM) : shouldn't we do something when flags contains TOTAL ? *)
                 else None
           in
 
@@ -1068,7 +1070,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           | None -> ()
           | Some (x,_) ->
             let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
-            Errors.warn pos (Util.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x))
+            Errors.warn pos (Util.format1 "SMT pattern misses at least one bound variable: %s" (Print.bv_to_string x))
         end
     in
     match Util.destruct_typ_as_formula phi with
@@ -1656,7 +1658,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let close_effect_params tm =
                 match ed.binders with
                 | [] -> tm
-                | _ -> S.mk (Tm_abs(ed.binders, tm, Some <| Inr Const.effect_Tot_lid)) None tm.pos
+                | _ -> S.mk (Tm_abs(ed.binders, tm, Some <| Inr (Const.effect_Tot_lid, [TOTAL]))) None tm.pos
             in
 
             let encode_action env (a:S.action) =
@@ -1705,7 +1707,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.lid_to_string l)), Some (varops.mk_unique ("assumption_"^l.str)))] in
         decls@g, env
 
-     | Sig_let(lbs, r, _, quals) when (quals |> List.contains S.Irreducible) ->
+     | Sig_let(lbs, r, _, quals, _) when (quals |> List.contains S.Irreducible) ->
        let env, decls = Util.fold_map (fun env lb ->
         let lid = (right lb.lbname).fv_name.v in
         if Option.isNone <| Env.try_lookup_val_decl env.tcenv lid
@@ -1715,7 +1717,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         else env, []) env (snd lbs) in
        List.flatten decls, env
 
-     | Sig_let((_, [{lbname=Inr b2t}]), _, _, _) when S.fv_eq_lid b2t Const.b2t_lid ->
+     | Sig_let((_, [{lbname=Inr b2t}]), _, _, _, _) when S.fv_eq_lid b2t Const.b2t_lid ->
        let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v in
        let xx = ("x", Term_sort) in
        let x = mkFreeV xx in
@@ -1727,16 +1729,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 Some "b2t_def")] in
        decls, env
 
-    | Sig_let(_, _, _, quals) when (quals |> Util.for_some (function Discriminator _ -> true | _ -> false)) ->
+    | Sig_let(_, _, _, quals, _) when (quals |> Util.for_some (function Discriminator _ -> true | _ -> false)) ->
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
       [], env
 
-    | Sig_let(_, _, lids, quals) when (lids |> Util.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
+    | Sig_let(_, _, lids, quals, _) when (lids |> Util.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
                                     && quals |> Util.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       [], env
 
-    | Sig_let((false, [lb]), _, _, quals) when (quals |> Util.for_some (function Projector _ -> true | _ -> false)) ->
+    | Sig_let((false, [lb]), _, _, quals, _) when (quals |> Util.for_some (function Projector _ -> true | _ -> false)) ->
      //Projectors are also are encoded directly via (our encoding of) theory of datatypes
      //Except in some cases where the front-end does not emit a declare_typ for some projector, because it doesn't know how to compute it
      let fv = right lb.lbname in
@@ -1749,7 +1751,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           encode_sigelt env se
      end
 
-    | Sig_let((false, [lb]), _, _, quals) when (quals |> List.contains Reifiable) ->
+    | Sig_let((false, [lb]), _, _, quals, _) when (quals |> List.contains Reifiable) ->
       begin match (SS.compress lb.lbdef).n with
         | Tm_abs(bs, body, _) ->
           let body = Util.mk_reify body in
@@ -1768,7 +1770,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | _ -> [], env
       end
 
-    | Sig_let((is_rec, bindings), _, _, quals) ->
+    | Sig_let((is_rec, bindings), _, _, quals, _) ->
       encode_top_level_let env (is_rec, bindings) quals
 
     | Sig_bundle(ses, _, _, _) ->
@@ -2153,7 +2155,7 @@ let encode_query use_env_msg tcenv q
         @label_prefix
         @qdecls in
     let qry = Term.Assume(mkNot phi, Some "query", Some (varops.mk_unique "@query")) in
-    let suffix = label_suffix@[Term.Echo "Done!"]  in
+    let suffix = label_suffix@(if Options.print_z3_statistics() then [PrintStats] else [])@[Term.Echo "Done!"] in
     query_prelude, labels, qry, suffix
 
 let is_trivial (tcenv:Env.env) (q:typ) : bool =
