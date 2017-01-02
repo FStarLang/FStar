@@ -265,7 +265,7 @@ let rec partition_mem_forall #a f l = match l with
 val partition_mem_p_forall: #a:eqtype -> p:(a -> Tot bool)
                   -> l:list a
                   -> Lemma (requires True)
-                          (ensures (let l1, l2 = partition p l in 
+                          (ensures (let l1, l2 = partition p l in
                                     (forall x. mem x l1 ==> p x) /\ (forall x. mem x l2 ==> not (p x))))
 let rec partition_mem_p_forall #a p l = match l with
   | [] -> ()
