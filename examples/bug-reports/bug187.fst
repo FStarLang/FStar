@@ -14,4 +14,4 @@ let fail =
 let no_fail =
   let x = test in
   if Some? x then
-    let (|sender, vk|) = Some.v x in  ()
+    let (|sender, vk|) = Some?.v x in  ()

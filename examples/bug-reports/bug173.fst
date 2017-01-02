@@ -191,7 +191,7 @@ let rec progress g h s = match s with
 (* type preservation for expressions *)
 val preservation_exp : g:env -> h:heap{typed_heap g h} -> 
                        e:exp{Some? (typing_exp g e) /\ Some? (step_exp h e)} -> 
-                       Lemma (typing_exp g (Some.v (step_exp h e)) = typing_exp g e) 
+                       Lemma (typing_exp g (Some?.v (step_exp h e)) = typing_exp g e) 
 let rec preservation_exp g h e = match e with
 | Val _ -> ()
 | Var _ -> ()
@@ -204,8 +204,8 @@ let rec preservation_exp g h e = match e with
 (* type preservation for statments -- working variant *)
 val preservation : g:env -> h:heap{typed_heap g h} -> 
                    s:stmt{typing g s /\ Some? (step h s)} -> Lemma
-                   (typing g (Mktuple2._2 (Some.v (step h s))) /\
-                     typed_heap g (Mktuple2._1 (Some.v (step h s))))
+                   (typing g (Mktuple2._2 (Some?.v (step h s))) /\
+                     typed_heap g (Mktuple2._1 (Some?.v (step h s))))
 let rec preservation g h s = match s with
 | Skip -> ()
 | Assign x t -> if not (Val? t) then preservation_exp g h t
@@ -216,8 +216,8 @@ let rec preservation g h s = match s with
 (* type preservation for statments -- failing variant *)
 val preservation' : g:env -> h:heap{typed_heap g h} -> 
                    s:stmt{typing g s /\ Some? (step h s)} -> Lemma
-                   (typing g (snd (Some.v (step h s))) /\
-                     typed_heap g (fst (Some.v (step h s))))
+                   (typing g (snd (Some?.v (step h s))) /\
+                     typed_heap g (fst (Some?.v (step h s))))
 let rec preservation' g h s = match s with
 | Skip -> ()
 | Assign x t -> if not (Val? t) then preservation_exp g h t

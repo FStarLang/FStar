@@ -58,7 +58,7 @@ let extend g x t y = if y < x then g y
 type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
             x:var{Some? (g x)} ->
-            typing g (EVar x) (Some.v (g x))
+            typing g (EVar x) (Some?.v (g x))
   | TyLam : #g:env ->
             t:typ ->
             #e1:exp ->
@@ -74,7 +74,7 @@ assume opaque val weakening : x:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
       (decreases h)
 
 type subst_typing (s:sub) (g1:env) (g2:env) =
-  (x:var{Some? (g1 x)} -> Tot(typing g2 (s x) (Some.v (g1 x)))) 
+  (x:var{Some? (g1 x)} -> Tot(typing g2 (s x) (Some?.v (g1 x)))) 
 
 val substitution :
       #g1:env -> #e:exp -> #t:typ -> s:sub -> #g2:env ->
