@@ -53,38 +53,24 @@ let rec merge'_sorted #a l1 l2 k = match (l1, l2) with
     then (merge'_sorted tl1 l2 k)
     else (merge'_sorted l1 tl2 k)
 
-(** This identity for merge is important later **)
-(* KM : Really needed ? *)
-val merge'_hd: #a:eqtype -> l:list a{Cons? l} -> r:list a{Cons? r} -> k:(a -> Tot int) ->
-  Lemma(ensures
-  ((k (hd l) <= k (hd r)) ==> (merge' l r k = ((hd l)::(merge' (tl l) r k))) /\
-  ((k (hd l) > k (hd r)) ==> (merge' l r k = ((hd r)::(merge' l (tl r) k))))))
-let rec merge'_hd #a l r k = ()
-
-(** Identity of merging **)
-val merge'_l_nil: #a:eqtype -> (l: list a) -> k:(a -> Tot int) ->
-  Lemma(ensures ((merge' l [] k) = l))
-let merge'_l_nil #a l k = ()
-(** Another merge identity **)
-val merge'_nil_r: #a:eqtype -> (r: list a) -> k:(a -> Tot int) ->
-  Lemma(ensures ((merge' [] r k) = r))
-let merge'_nil_r #a r k = ()
-
 (** filtering (l appended to r) wrt x is equivelant to merging l and r, then filtering wrt x **)
 val merge'_filter_eq_inv: #a:eqtype -> (l: list a{Cons? l}) -> (r: list a{Cons? r}) -> k:(a -> Tot int) ->
   Lemma (requires (sorted l k /\ sorted r k))
         (ensures (forall x. Cons? l /\ Cons? r /\ (filter_eq x (l@r) k = filter_eq x (merge' l r k) k)))
 let rec merge'_filter_eq_inv #a l r k =
-  if k (hd r) < k (hd l) then
-    (stable_lift l r k;
-    //merge'_hd l r k;
-    if (tl r) = [] then () //merge'_l_nil l k
-    else (merge'_filter_eq_inv l (tl r) k;
-      filter_eq_append [hd r] (merge' l (tl r) k) k))
-  else ( //merge'_hd l r k;
-    if (tl l) = [] then () //(merge'_nil_r r k)
-    else (merge'_filter_eq_inv (tl l) r k;
-      filter_eq_append [hd l] (merge' (tl l) r k) k))
+  if k (hd r) < k (hd l) then begin
+    stable_lift l r k;
+    if (tl r) = [] then ()
+    else begin
+      merge'_filter_eq_inv l (tl r) k;
+      filter_eq_append [hd r] (merge' l (tl r) k) k
+    end
+  end
+  else if (tl l) = [] then ()
+  else begin
+    merge'_filter_eq_inv (tl l) r k;
+    filter_eq_append [hd l] (merge' (tl l) r k) k
+  end
 
 (** merge is stable **)
 val merge'_stable: #a:eqtype -> (l: list a{Cons? l}) -> (r: list a{Cons? r}) -> k:(a -> Tot int) ->
