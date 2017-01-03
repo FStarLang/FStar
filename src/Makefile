@@ -172,6 +172,11 @@ extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
 	  --lax --fs_typ_app --no_location_info $(addprefix --no_extract \
 	  ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
 
+uextract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
+	$(FSTAR) --stratified --explicit_deps --eager_inference \
+	  --lax --fs_typ_app --no_location_info $(addprefix --no_extract \
+	  ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
+
 # Fastest way to refresh the snapshot (if it works)
 ocaml-fstar-ocaml:
 	+make boot-ocaml

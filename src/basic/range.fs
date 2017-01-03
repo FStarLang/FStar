@@ -256,6 +256,6 @@ let compare r1 r2 =
          else lcomp
     else fcomp
 
-let compare_use_range r1 r2 = 
+let compare_use_range r1 r2 =
     compare ({r1 with def_range=r1.use_range})
             ({r2 with def_range=r2.use_range})

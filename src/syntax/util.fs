@@ -382,7 +382,6 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     in
     let eq_and f g =
       match f with
-      | NotEqual -> NotEqual
       | Equal -> g()
       | _ -> Unknown
     in
@@ -397,7 +396,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
 
     | Tm_constant c, Tm_constant d ->
-      equal_iff (c=d)
+      equal_iff (FStar.Const.eq_const c d)
 
     | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
       equal_if (Unionfind.equivalent u1 u2)
@@ -423,7 +422,7 @@ and eq_args (a1:args) (a2:args) : eq_result =
       (match eq_tm a b with
        | Equal -> eq_args a1 b1
        | _ -> Unknown)
-    | _ -> NotEqual
+    | _ -> Unknown
 
 and eq_univs_list (us:universes) (vs:universes) : bool =
     List.length us = List.length vs

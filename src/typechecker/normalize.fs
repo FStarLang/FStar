@@ -485,21 +485,27 @@ let reduce_equality tm =
         //By typability, hasEq _typ. So, (a1, a2) are representations of 0-order terms.
         //We syntactically compare them, and trust that the compilation of
         //Prims.op_Equality (=) to OCaml's built-in polymorphic equality corresponds to this check
-        begin match U.eq_tm a1 a2 with
-                | U.Equal -> mk (Tm_constant (Const.Const_bool true)) tm.pos
-                | U.NotEqual -> mk (Tm_constant (Const.Const_bool false)) tm.pos
-                | _ -> tm
-        end
+        let tt =
+            match U.eq_tm a1 a2 with
+            | U.Equal -> mk (Tm_constant (Const.Const_bool true)) tm.pos
+            | U.NotEqual -> mk (Tm_constant (Const.Const_bool false)) tm.pos
+            | _ -> tm in
+//        if not (Util.physical_equality tt tm)
+//        then Util.print2 "Normalized %s to %s\n" (Print.term_to_string tm) (Print.term_to_string tt);
+        tt
 
     | Tm_app(eq2_inst, [_; (a1, _); (a2, _)])
     | Tm_app(eq2_inst, [(a1, _); (a2, _)]) //TODO: remove this case, see S.mk_eq, which seems to drop its type argument
         when is_propositional_equality eq2_inst ->
         //As an optimization, we simplify decidable instances of propositional equality
-        begin match U.eq_tm a1 a2 with
-                | U.Equal -> U.t_true
-                | U.NotEqual -> U.t_false
-                | _ -> tm
-        end
+        let tt =
+            match U.eq_tm a1 a2 with
+            | U.Equal -> U.t_true
+            | U.NotEqual -> U.t_false
+            | _ -> tm in
+//        if not (Util.physical_equality tt tm)
+//        then Util.print2 "Normalized %s to %s\n" (Print.term_to_string tm) (Print.term_to_string tt);
+        tt
 
     | _ -> tm
 
