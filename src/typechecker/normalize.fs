@@ -154,7 +154,7 @@ let rec unfold_effect_abbrev env comp =
     | Some (binders, cdef) ->
       let binders, cdef = SS.open_comp binders cdef in
       if List.length binders <> List.length c.effect_args + 1
-      then raise (Error (Util.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s" 
+      then raise (Error (Util.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                                 (Util.string_of_int (List.length binders))
                                 (Util.string_of_int (List.length c.effect_args + 1))
                                 (Print.comp_to_string (S.mk_Comp c))
@@ -467,6 +467,43 @@ let un_ops =
                                                       (a, None)]))
                ) (list_of_string s) (mk (Tm_app (mk_Tm_uinst (ctor ["Prims"; "Nil"]) [U_zero], [name ["FStar"; "Char"; "char"], Some (S.Implicit true)]))))]
 
+
+let reduce_equality tm =
+    let is_decidable_equality t =
+        match (U.un_uinst t).n with
+        | Tm_fvar fv -> S.fv_eq_lid fv Const.op_Eq
+        | _ -> false
+    in
+    let is_propositional_equality t =
+        match (U.un_uinst t).n with
+        | Tm_fvar fv -> S.fv_eq_lid fv Const.eq2_lid
+        | _ -> false
+    in
+    match tm.n with
+    | Tm_app(op_eq_inst, [(_typ, _); (a1, _); (a2, _)])
+        when is_decidable_equality op_eq_inst ->
+        //By typability, hasEq _typ. So, (a1, a2) are representations of 0-order terms.
+        //We syntactically compare them, and trust that the compilation of
+        //Prims.op_Equality (=) to OCaml's built-in polymorphic equality corresponds to this check
+        begin match U.eq_tm a1 a2 with
+                | U.Equal -> mk (Tm_constant (Const.Const_bool true)) tm.pos
+                | U.NotEqual -> mk (Tm_constant (Const.Const_bool false)) tm.pos
+                | _ -> tm
+        end
+
+    | Tm_app(eq2_inst, [_; (a1, _); (a2, _)])
+    | Tm_app(eq2_inst, [(a1, _); (a2, _)]) //TODO: remove this case, see S.mk_eq, which seems to drop its type argument
+        when is_propositional_equality eq2_inst ->
+        //As an optimization, we simplify decidable instances of propositional equality
+        begin match U.eq_tm a1 a2 with
+                | U.Equal -> U.t_true
+                | U.NotEqual -> U.t_false
+                | _ -> tm
+        end
+
+    | _ -> tm
+
+
 let reduce_primops steps tm =
     let find fv (ops: list<(Ident.lident*'a)>) = match fv.n with
         | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) ops
@@ -474,35 +511,40 @@ let reduce_primops steps tm =
     if not <| List.contains Primops steps
     then tm
     else match tm.n with
-         | Tm_app(fv, [(a1, _); (a2, _)]) ->
+         | Tm_app(fv, [(a1, _); (a2, _)]) -> //Arithmetic operators
             begin match find fv arith_ops with
-            | None -> tm
-            | Some (_, op) ->
-              let norm i j =
-                let c = op (Util.int_of_string i) (Util.int_of_string j) in
-                mk (Tm_constant c) tm.pos
-              in
-              begin match (SS.compress a1).n, (SS.compress a2).n with
-                | Tm_app (head1, [ arg1, _ ]), Tm_app (head2, [ arg2, _ ]) ->
-                    begin match (SS.compress head1).n, (SS.compress head2).n, (SS.compress arg1).n, (SS.compress arg2).n with
-                    | Tm_fvar fv1, Tm_fvar fv2,
-                      Tm_constant (Const.Const_int (i, None)),
-                      Tm_constant (Const.Const_int (j, None))
-                      when Util.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" &&
-                      Util.ends_with (Ident.text_of_lid fv2.fv_name.v) "int_to_t" ->
-                        // Machine integers are represented as applications, e.g.
-                        // [FStar.UInt8.uint_to_t 0xff], so as to get proper
-                        // bounds checking. Maintain that invariant.
-                        mk_app (mk (Tm_fvar fv1) tm.pos) [ norm i j, None ]
-                    | _ ->
-                        tm
+                  | None -> tm
+                  | Some (_, op) ->
+                    let norm i j =
+                        let c = op (Util.int_of_string i) (Util.int_of_string j) in
+                        mk (Tm_constant c) tm.pos
+                    in
+                    begin match (SS.compress a1).n, (SS.compress a2).n with
+                          | Tm_app (head1, [ arg1, _ ]), Tm_app (head2, [ arg2, _ ]) ->
+                            begin match (SS.compress head1).n,
+                                        (SS.compress head2).n,
+                                        (SS.compress arg1).n,
+                                        (SS.compress arg2).n with
+                                  | Tm_fvar fv1,
+                                    Tm_fvar fv2,
+                                    Tm_constant (Const.Const_int (i, None)),
+                                    Tm_constant (Const.Const_int (j, None))
+                                        when Util.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" &&
+                                             Util.ends_with (Ident.text_of_lid fv2.fv_name.v) "int_to_t" ->
+                                    // Machine integers are represented as applications, e.g.
+                                    // [FStar.UInt8.uint_to_t 0xff], so as to get proper
+                                    // bounds checking. Maintain that invariant.
+                                    mk_app (mk (Tm_fvar fv1) tm.pos) [ norm i j, None ]
+                                  | _ ->
+                                    tm
+                            end
+                          | Tm_constant (Const.Const_int(i, None)), Tm_constant (Const.Const_int(j, None)) ->
+                            norm i j
+                          | _ -> tm
                     end
-                | Tm_constant (Const.Const_int(i, None)), Tm_constant (Const.Const_int(j, None)) ->
-                    norm i j
-                | _ -> tm
-              end
             end
-         | Tm_app(fv, [(a1, _)]) ->
+
+         | Tm_app(fv, [(a1, _)]) -> //Unary operators. e.g., list_of_string
             begin match find fv un_ops with
             | None -> tm
             | Some (_, op) ->
@@ -512,7 +554,8 @@ let reduce_primops steps tm =
                 | _ -> tm
               end
             end
-         | _ -> tm
+
+         | _ -> reduce_equality tm
 
 let maybe_simplify steps tm =
     let w t = {t with pos=tm.pos} in
@@ -565,7 +608,7 @@ let maybe_simplify steps tm =
                                 | _ -> tm
                        end
                     | _ -> tm
-              else tm
+              else reduce_equality tm
             | _ -> tm
 
 (********************************************************************************************************************)
@@ -670,10 +713,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Unfold l -> Common.delta_depth_greater_than f.fv_delta l) in
 
             if not should_delta
-            then begin
-             //log cfg (fun () -> Util.print "Tm_fvar case 1\n" []) ;
-              rebuild cfg env stack t
-            end
+            then rebuild cfg env stack t
             else let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in //preserve the range info on the returned def
                  begin match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with
                     | None -> begin
