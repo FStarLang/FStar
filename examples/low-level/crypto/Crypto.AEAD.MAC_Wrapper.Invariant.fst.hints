@@ -350,14 +350,6 @@
       0
     ],
     [
-      "Crypto.AEAD.MAC_Wrapper.Invariant.frame_aead_entries_are_refined_mac_wrapper",
-      7,
-      0,
-      0,
-      [ "@query" ],
-      0
-    ],
-    [
       "Crypto.AEAD.MAC_Wrapper.Invariant.frame_unused_aead_id_for_prf_mac_wrapper",
       1,
       0,
@@ -705,14 +697,6 @@
       0,
       0,
       [ "@query", "equation_Crypto.AEAD.Encoding.alg" ],
-      0
-    ],
-    [
-      "Crypto.AEAD.MAC_Wrapper.Invariant.frame_unused_aead_id_for_prf_mac_wrapper",
-      5,
-      0,
-      0,
-      [ "@query" ],
       0
     ],
     [
