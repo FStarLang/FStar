@@ -74,6 +74,10 @@ following commands. (On Windows this requires Cygwin and `make`)
    sufficiently powerful.
 
         $ make -C examples
+   
+   Note: Currently this is known to fail for the F# build of F\*
+   ([#633](https://github.com/FStarLang/FStar/issues/633)).
+   Use the OCaml build for this or stop passing `--use_hints`.
 
 ### OPAM package ###
 
@@ -196,7 +200,7 @@ Read on for the more complete solution involving Visual Studio itself.
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono (any version from 4.0.3.0 to 4.6.x) and fsharp (version 4.0.1.x)
+  - Install mono (any version from 4.0.3.0 to 4.6.x.y) and fsharp (version 4.0.1.x)
 
     - On Debian/Ubuntu
 
@@ -226,12 +230,14 @@ Read on for the more complete solution involving Visual Studio itself.
           $ cd FStar
           $ make -C src
 
-  - Try out
+  - Try out binary using [the instructions above](https://github.com/FStarLang/FStar/blob/master/INSTALL.md#testing-a-binary-package).
+  
+  - Another thing you can try is bootstrapping the F\* compiler:
 
           $ export PATH=/path/to/fstar/bin:$PATH
-          $ make -C src boot && make -C examples
+          $ make -C src boot
 
-  - If `make boot` causes a stack overflow try issuing `ulimit -s unlimited` in the terminal beforehand.
+    If `make boot` causes a stack overflow try issuing `ulimit -s unlimited` in the terminal beforehand.
 
 Note: you may want to make the `PATH` change permanent by adding:
 
@@ -249,7 +255,7 @@ Steps 2 and 3 below require a working OCaml (any version from 4.02.2 to 4.04.0) 
 
 Please use the  [OCaml Installer for Windows](http://protz.github.io/ocaml-installer/).
 Follow the [installation guide](https://github.com/protz/ocaml-installer/wiki)
-that's over there (it's optimized for F*).
+that's over there (it's optimized for F*). This will install both OCaml and OPAM.
 
 #### Instructions for Linux and Mac OS X ####
 
@@ -257,16 +263,13 @@ that's over there (it's optimized for F*).
    - Can be installed using either your package manager or using OPAM
      (see below).
 
-#### Instructions for all OSes ####
-
 1. Install OPAM (version 1.2.x).
 
-   - If you're on Windows, the OCaml installer should have also installed OPAM for you.
-
-   - For other OSes installation instructions are available at various places
+   - Installation instructions are available at various places
      (e.g., https://github.com/realworldocaml/book/wiki/Installation-Instructions#getting-opam
      or http://opam.ocaml.org/doc/Install.html).
 
+#### Instructions for all OSes ####
 
 2. Initialize and configure OPAM
 
@@ -285,7 +288,7 @@ that's over there (it's optimized for F*).
      range required by F* (see above), type `opam switch ` and then
      the version number you wish to switch opam to.
 
-4. F* depends on a bunch of external OCaml packages which you can install using OPAM:
+4. F* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
   $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint
