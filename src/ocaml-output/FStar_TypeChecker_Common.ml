@@ -38,7 +38,7 @@ type ('a, 'b) problem =
 {pid : Prims.int; lhs : 'a; relation : rel; rhs : 'a; element : 'b Prims.option; logical_guard : (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term); scope : FStar_Syntax_Syntax.binders; reason : Prims.string Prims.list; loc : FStar_Range.range; rank : Prims.int Prims.option}
 
 
-let is_Mkproblem = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkproblem"))))
+let is_Mkproblem = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkproblem"))))
 
 
 type prob =

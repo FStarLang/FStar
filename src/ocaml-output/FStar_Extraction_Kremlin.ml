@@ -913,7 +913,7 @@ false
 end))
 
 
-let is_Mkbinder : binder  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbinder"))))
+let is_Mkbinder : binder  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkbinder"))))
 
 
 let is_TInt = (fun _discr_ -> (match (_discr_) with
@@ -1438,10 +1438,10 @@ type env =
 {pretty : Prims.string; mut : Prims.bool}
 
 
-let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv"))))
+let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv"))))
 
 
-let is_Mkname : name  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkname"))))
+let is_Mkname : name  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkname"))))
 
 
 let empty : Prims.string Prims.list  ->  env = (fun module_name -> {names = []; names_t = []; module_name = module_name})
@@ -1464,7 +1464,7 @@ let find_name : env  ->  Prims.string  ->  name = (fun env x -> (match ((FStar_L
 name
 end
 | None -> begin
-(FStar_All.failwith "internal error: name not found")
+(failwith "internal error: name not found")
 end))
 
 
@@ -1480,7 +1480,7 @@ end)
 with
 | _83_254 -> begin
 (let _181_729 = (FStar_Util.format1 "Internal error: name not found %s\n" x)
-in (FStar_All.failwith _181_729))
+in (failwith _181_729))
 end)
 
 
@@ -1492,7 +1492,7 @@ end)
 with
 | _83_264 -> begin
 (let _181_737 = (FStar_Util.format1 "Internal error: name not found %s\n" x)
-in (FStar_All.failwith _181_737))
+in (failwith _181_737))
 end)
 
 
@@ -1543,7 +1543,7 @@ let program = (match (modul) with
 (FStar_List.filter_map (translate_decl (empty module_name)) decls)
 end
 | _83_311 -> begin
-(FStar_All.failwith "Unexpected standalone interface or nested modules")
+(failwith "Unexpected standalone interface or nested modules")
 end)
 in (((FStar_String.concat "_" module_name)), (program))))
 end))
@@ -1682,7 +1682,7 @@ end)
 in None))
 end
 | FStar_Extraction_ML_Syntax.MLM_Let (_83_480) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | FStar_Extraction_ML_Syntax.MLM_Loc (_83_483) -> begin
 None
@@ -1763,10 +1763,10 @@ let _83_564 = (FStar_Util.print_string "Impossible!! Empty block of mutually rec
 in None)
 end
 | FStar_Extraction_ML_Syntax.MLM_Top (_83_567) -> begin
-(FStar_All.failwith "todo: translate_decl [MLM_Top]")
+(failwith "todo: translate_decl [MLM_Top]")
 end
 | FStar_Extraction_ML_Syntax.MLM_Exn (_83_570) -> begin
-(FStar_All.failwith "todo: translate_decl [MLM_Exn]")
+(failwith "todo: translate_decl [MLM_Exn]")
 end))
 and translate_type : env  ->  FStar_Extraction_ML_Syntax.mlty  ->  typ = (fun env t -> (match (t) with
 | (FStar_Extraction_ML_Syntax.MLTY_Tuple ([])) | (FStar_Extraction_ML_Syntax.MLTY_Top) -> begin
@@ -1874,14 +1874,14 @@ end
 | _83_705 -> begin
 (let _181_851 = (let _181_850 = (FStar_Extraction_ML_Code.string_of_mlty (([]), ("")) typ)
 in (FStar_Util.format1 "unexpected: bad desugaring of Mutable (typ is %s)" _181_850))
-in (FStar_All.failwith _181_851))
+in (failwith _181_851))
 end)
 in (let _181_852 = (match (body) with
 | {FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_App (_83_711, (body)::[]); FStar_Extraction_ML_Syntax.mlty = _83_709; FStar_Extraction_ML_Syntax.loc = _83_707} -> begin
 body
 end
 | _83_718 -> begin
-(FStar_All.failwith "unexpected: bad desugaring of Mutable")
+(failwith "unexpected: bad desugaring of Mutable")
 end)
 in ((_181_853), (_181_852))))
 end else begin
@@ -1951,7 +1951,7 @@ end
 (FStar_List.rev acc)
 end
 | _83_839 -> begin
-(FStar_All.failwith "Argument of FStar.Buffer.createL is not a string literal!")
+(failwith "Argument of FStar.Buffer.createL is not a string literal!")
 end))
 in (
 
@@ -2112,12 +2112,12 @@ in ((_181_937), (_181_936), ((Prims.snd path)))))
 in EField (_181_938))
 end
 | FStar_Extraction_ML_Syntax.MLE_Let (_83_1086) -> begin
-(FStar_All.failwith "todo: translate_expr [MLE_Let]")
+(failwith "todo: translate_expr [MLE_Let]")
 end
 | FStar_Extraction_ML_Syntax.MLE_App (head, _83_1090) -> begin
 (let _181_940 = (let _181_939 = (FStar_Extraction_ML_Code.string_of_mlexpr (([]), ("")) head)
 in (FStar_Util.format1 "todo: translate_expr [MLE_App] (head is: %s)" _181_939))
-in (FStar_All.failwith _181_940))
+in (failwith _181_940))
 end
 | FStar_Extraction_ML_Syntax.MLE_Seq (seqs) -> begin
 (let _181_941 = (FStar_List.map (translate_expr env) seqs)
@@ -2134,7 +2134,7 @@ in ((_181_944), (cons), (_181_943))))
 in ECons (_181_945))
 end
 | FStar_Extraction_ML_Syntax.MLE_Fun (_83_1105) -> begin
-(FStar_All.failwith "todo: translate_expr [MLE_Fun]")
+(failwith "todo: translate_expr [MLE_Fun]")
 end
 | FStar_Extraction_ML_Syntax.MLE_If (e1, e2, e3) -> begin
 (let _181_949 = (let _181_948 = (translate_expr env e1)
@@ -2150,13 +2150,13 @@ in ((_181_948), (_181_947), (_181_946)))))
 in EIfThenElse (_181_949))
 end
 | FStar_Extraction_ML_Syntax.MLE_Raise (_83_1116) -> begin
-(FStar_All.failwith "todo: translate_expr [MLE_Raise]")
+(failwith "todo: translate_expr [MLE_Raise]")
 end
 | FStar_Extraction_ML_Syntax.MLE_Try (_83_1119) -> begin
-(FStar_All.failwith "todo: translate_expr [MLE_Try]")
+(failwith "todo: translate_expr [MLE_Try]")
 end
 | FStar_Extraction_ML_Syntax.MLE_Coerce (_83_1122) -> begin
-(FStar_All.failwith "todo: translate_expr [MLE_Coerce]")
+(failwith "todo: translate_expr [MLE_Coerce]")
 end))
 and assert_lid : env  ->  FStar_Extraction_ML_Syntax.mlty  ->  typ = (fun env t -> (match (t) with
 | FStar_Extraction_ML_Syntax.MLTY_Named (ts, lid) -> begin
@@ -2169,7 +2169,7 @@ TQualified (lid)
 end
 end
 | _83_1131 -> begin
-(FStar_All.failwith "invalid argument: assert_lid")
+(failwith "invalid argument: assert_lid")
 end))
 and translate_branches : env  ->  FStar_Extraction_ML_Syntax.mlbranch Prims.list  ->  branches = (fun env branches -> (FStar_List.map (translate_branch env) branches))
 and translate_branch : env  ->  FStar_Extraction_ML_Syntax.mlbranch  ->  (pattern * expr) = (fun env _83_1138 -> (match (_83_1138) with
@@ -2184,7 +2184,7 @@ in (match (_83_1141) with
 in ((pat), (_181_958)))
 end))
 end else begin
-(FStar_All.failwith "todo: translate_branch")
+(failwith "todo: translate_branch")
 end
 end))
 and translate_pat : env  ->  FStar_Extraction_ML_Syntax.mlpattern  ->  (env * pattern) = (fun env p -> (match (p) with
@@ -2261,10 +2261,10 @@ in (match (_83_1202) with
 end))
 end
 | FStar_Extraction_ML_Syntax.MLP_Const (_83_1204) -> begin
-(FStar_All.failwith "todo: translate_pat [MLP_Const]")
+(failwith "todo: translate_pat [MLP_Const]")
 end
 | FStar_Extraction_ML_Syntax.MLP_Branch (_83_1207) -> begin
-(FStar_All.failwith "todo: translate_pat [MLP_Branch]")
+(failwith "todo: translate_pat [MLP_Branch]")
 end))
 and translate_constant : FStar_Extraction_ML_Syntax.mlconstant  ->  expr = (fun c -> (match (c) with
 | FStar_Extraction_ML_Syntax.MLC_Unit -> begin
@@ -2274,22 +2274,22 @@ end
 EBool (b)
 end
 | FStar_Extraction_ML_Syntax.MLC_Int (s, Some (_83_1215)) -> begin
-(FStar_All.failwith "impossible: machine integer not desugared to a function call")
+(failwith "impossible: machine integer not desugared to a function call")
 end
 | FStar_Extraction_ML_Syntax.MLC_Float (_83_1220) -> begin
-(FStar_All.failwith "todo: translate_expr [MLC_Float]")
+(failwith "todo: translate_expr [MLC_Float]")
 end
 | FStar_Extraction_ML_Syntax.MLC_Char (_83_1223) -> begin
-(FStar_All.failwith "todo: translate_expr [MLC_Char]")
+(failwith "todo: translate_expr [MLC_Char]")
 end
 | FStar_Extraction_ML_Syntax.MLC_String (_83_1226) -> begin
-(FStar_All.failwith "todo: translate_expr [MLC_String]")
+(failwith "todo: translate_expr [MLC_String]")
 end
 | FStar_Extraction_ML_Syntax.MLC_Bytes (_83_1229) -> begin
-(FStar_All.failwith "todo: translate_expr [MLC_Bytes]")
+(failwith "todo: translate_expr [MLC_Bytes]")
 end
 | FStar_Extraction_ML_Syntax.MLC_Int (_83_1232, None) -> begin
-(FStar_All.failwith "todo: translate_expr [MLC_Int]")
+(failwith "todo: translate_expr [MLC_Int]")
 end))
 and mk_op_app : env  ->  width  ->  op  ->  FStar_Extraction_ML_Syntax.mlexpr Prims.list  ->  expr = (fun env w op args -> (let _181_973 = (let _181_972 = (FStar_List.map (translate_expr env) args)
 in ((EOp (((op), (w)))), (_181_972)))

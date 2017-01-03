@@ -12,7 +12,7 @@ end)) l []))
 
 let mlconst_of_const : FStar_Const.sconst  ->  FStar_Extraction_ML_Syntax.mlconstant = (fun sctt -> (match (sctt) with
 | (FStar_Const.Const_range (_)) | (FStar_Const.Const_effect) -> begin
-(FStar_All.failwith "Unsupported constant")
+(failwith "Unsupported constant")
 end
 | FStar_Const.Const_unit -> begin
 FStar_Extraction_ML_Syntax.MLC_Unit
@@ -36,7 +36,7 @@ end
 FStar_Extraction_ML_Syntax.MLC_String ((FStar_Util.string_of_unicode bytes))
 end
 | (FStar_Const.Const_reify) | (FStar_Const.Const_reflect (_)) -> begin
-(FStar_All.failwith "Unhandled constant: reify/reflect")
+(failwith "Unhandled constant: reify/reflect")
 end))
 
 
@@ -50,7 +50,7 @@ with
 (let _174_14 = (let _174_13 = (FStar_Range.string_of_range p)
 in (let _174_12 = (FStar_Absyn_Print.const_to_string c)
 in (FStar_Util.format2 "(%s) Failed to translate constant %s " _174_13 _174_12)))
-in (FStar_All.failwith _174_14))
+in (failwith _174_14))
 end)
 
 
@@ -90,7 +90,7 @@ end))
 let subst : FStar_Extraction_ML_Syntax.mltyscheme  ->  FStar_Extraction_ML_Syntax.mlty Prims.list  ->  FStar_Extraction_ML_Syntax.mlty = (fun _76_78 args -> (match (_76_78) with
 | (formals, t) -> begin
 if ((FStar_List.length formals) <> (FStar_List.length args)) then begin
-(FStar_All.failwith "Substitution must be fully applied (see GitHub issue #490)")
+(failwith "Substitution must be fully applied (see GitHub issue #490)")
 end else begin
 (let _174_30 = (FStar_List.zip formals args)
 in (subst_aux _174_30 t))
@@ -176,7 +176,7 @@ end
 | _76_147 -> begin
 (let _174_54 = (let _174_53 = (FStar_Range.string_of_range r)
 in (FStar_Util.format3 "Impossible (%s): Inconsistent effects %s and %s" _174_53 (eff_to_string f) (eff_to_string f')))
-in (FStar_All.failwith _174_54))
+in (failwith _174_54))
 end))
 
 
@@ -464,7 +464,7 @@ in (match (_76_340) with
 end))
 end
 | _76_343 -> begin
-(FStar_All.failwith "impos")
+(failwith "impos")
 end))
 
 

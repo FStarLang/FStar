@@ -465,7 +465,7 @@ false
 end))
 
 
-let is_Mkterm : term  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm"))))
+let is_Mkterm : term  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkterm"))))
 
 
 let ___Integer____0 = (fun projectee -> (match (projectee) with
@@ -681,7 +681,7 @@ let freevar_sort : term  ->  sort = (fun _48_1 -> (match (_48_1) with
 (fv_sort x)
 end
 | _48_97 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 
 
@@ -690,7 +690,7 @@ let fv_of_term : term  ->  fv = (fun _48_2 -> (match (_48_2) with
 fv
 end
 | _48_107 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 
 
@@ -1049,7 +1049,7 @@ end))
 
 let mkCases : term Prims.list  ->  term = (fun t -> (match (t) with
 | [] -> begin
-(FStar_All.failwith "Impos")
+(failwith "Impos")
 end
 | (hd)::tl -> begin
 (FStar_List.fold_left (fun out t -> (mkAnd ((out), (t)))) hd tl)
@@ -1445,7 +1445,7 @@ end
 
 let _48_660 = (match ((FStar_Util.splitlines c)) with
 | [] -> begin
-(FStar_All.failwith "Empty caption")
+(failwith "Empty caption")
 end
 | (h)::[] -> begin
 ((h), (""))

@@ -26,7 +26,7 @@ type hint_stat =
 {hint : FStar_Util.hint Prims.option; replay_result : z3_replay_result; elapsed_time : Prims.int; source_location : FStar_Range.range}
 
 
-let is_Mkhint_stat : hint_stat  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkhint_stat"))))
+let is_Mkhint_stat : hint_stat  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkhint_stat"))))
 
 
 type hint_stats_t =
@@ -203,7 +203,7 @@ in (
 
 let _91_98 = (match (env.FStar_TypeChecker_Env.qname_and_index) with
 | None -> begin
-(FStar_All.failwith "No query name set!")
+(failwith "No query name set!")
 end
 | Some (q, n) -> begin
 (((FStar_Ident.text_of_lid q)), (n))
@@ -603,7 +603,7 @@ let _91_309 = (ask_and_report_errors tcenv labels prefix qry suffix)
 in (pop ()))
 end
 | _91_312 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 end)))))
 

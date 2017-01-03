@@ -141,14 +141,14 @@ type edge =
 {msource : FStar_Ident.lident; mtarget : FStar_Ident.lident; mlift : FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.typ}
 
 
-let is_Mkedge : edge  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkedge"))))
+let is_Mkedge : edge  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkedge"))))
 
 
 type effects =
 {decls : FStar_Syntax_Syntax.eff_decl Prims.list; order : edge Prims.list; joins : (FStar_Ident.lident * FStar_Ident.lident * FStar_Ident.lident * mlift * mlift) Prims.list}
 
 
-let is_Mkeffects : effects  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkeffects"))))
+let is_Mkeffects : effects  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkeffects"))))
 
 
 type cached_elt =
@@ -163,13 +163,13 @@ type env =
 {guard_f : FStar_TypeChecker_Common.guard_formula; deferred : FStar_TypeChecker_Common.deferred; univ_ineqs : FStar_TypeChecker_Common.univ_ineq Prims.list; implicits : (Prims.string * env * FStar_Syntax_Syntax.uvar * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ * FStar_Range.range) Prims.list}
 
 
-let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv"))))
+let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv"))))
 
 
-let is_Mksolver_t : solver_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksolver_t"))))
+let is_Mksolver_t : solver_t  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mksolver_t"))))
 
 
-let is_Mkguard_t : guard_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkguard_t"))))
+let is_Mkguard_t : guard_t  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkguard_t"))))
 
 
 type env_t =
@@ -229,7 +229,7 @@ type env_stack_ops =
 {es_push : env  ->  env; es_mark : env  ->  env; es_reset_mark : env  ->  env; es_commit_mark : env  ->  env; es_pop : env  ->  env; es_incr_query_index : env  ->  env}
 
 
-let is_Mkenv_stack_ops : env_stack_ops  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv_stack_ops"))))
+let is_Mkenv_stack_ops : env_stack_ops  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv_stack_ops"))))
 
 
 let stack_ops : env_stack_ops = (
@@ -241,7 +241,7 @@ let push_query_indices = (fun _53_126 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read query_indices)) with
 | [] -> begin
-(FStar_All.failwith "Empty query indices!")
+(failwith "Empty query indices!")
 end
 | _53_129 -> begin
 (let _151_487 = (let _151_486 = (let _151_484 = (FStar_ST.read query_indices)
@@ -257,7 +257,7 @@ let pop_query_indices = (fun _53_131 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read query_indices)) with
 | [] -> begin
-(FStar_All.failwith "Empty query indices!")
+(failwith "Empty query indices!")
 end
 | (hd)::tl -> begin
 (FStar_ST.op_Colon_Equals query_indices tl)
@@ -272,7 +272,7 @@ let add_query_index = (fun _53_139 -> (match (_53_139) with
 (FStar_ST.op_Colon_Equals query_indices (((((l), (n)))::hd)::tl))
 end
 | _53_144 -> begin
-(FStar_All.failwith "Empty query indices")
+(failwith "Empty query indices")
 end)
 end))
 in (
@@ -291,7 +291,7 @@ let commit_query_index_mark = (fun _53_148 -> (match (()) with
 (FStar_ST.op_Colon_Equals query_indices ((hd)::tl))
 end
 | _53_156 -> begin
-(FStar_All.failwith "Unmarked query index stack")
+(failwith "Unmarked query index stack")
 end)
 end))
 in (
@@ -320,7 +320,7 @@ let _53_169 = (FStar_ST.op_Colon_Equals stack tl)
 in env)
 end
 | _53_172 -> begin
-(FStar_All.failwith "Impossible: Too many pops")
+(failwith "Impossible: Too many pops")
 end))
 in (
 
@@ -538,7 +538,7 @@ in (let _151_597 = (FStar_All.pipe_left FStar_Util.string_of_int (FStar_List.len
 in (let _151_596 = (FStar_Syntax_Print.lid_to_string ed.FStar_Syntax_Syntax.mname)
 in (let _151_595 = (FStar_Syntax_Print.term_to_string t)
 in (FStar_Util.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n" _151_598 _151_597 _151_596 _151_595)))))
-in (FStar_All.failwith _151_599))
+in (failwith _151_599))
 end else begin
 ()
 end
@@ -548,7 +548,7 @@ end
 | _53_308 -> begin
 (let _151_602 = (let _151_601 = (FStar_Syntax_Print.lid_to_string ed.FStar_Syntax_Syntax.mname)
 in (FStar_Util.format1 "Unexpected use of an uninstantiated effect: %s\n" _151_601))
-in (FStar_All.failwith _151_602))
+in (failwith _151_602))
 end)
 end))
 
@@ -744,7 +744,7 @@ end
 | FStar_Syntax_Syntax.Sig_let ((_53_437, lbs), _53_441, _53_443, _53_445, _53_447) -> begin
 (FStar_Util.find_map lbs (fun lb -> (match (lb.FStar_Syntax_Syntax.lbname) with
 | FStar_Util.Inl (_53_452) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | FStar_Util.Inr (fv) -> begin
 if (FStar_Syntax_Syntax.fv_eq_lid fv lid) then begin
@@ -960,7 +960,7 @@ end
 | _53_714 -> begin
 (let _151_746 = (let _151_745 = (FStar_Syntax_Print.lid_to_string lid)
 in (FStar_Util.format1 "Not a datacon: %s" _151_745))
-in (FStar_All.failwith _151_746))
+in (failwith _151_746))
 end))
 
 
@@ -1046,18 +1046,18 @@ end else begin
 (let _151_782 = (let _151_781 = (FStar_Syntax_Print.lid_to_string lid)
 in (let _151_780 = (FStar_All.pipe_right (FStar_List.length univ_insts) FStar_Util.string_of_int)
 in (FStar_Util.format2 "Unexpected instantiation of effect %s with %s universes" _151_781 _151_780)))
-in (FStar_All.failwith _151_782))
+in (failwith _151_782))
 end
 end
 in (match (((binders), (univs))) with
 | ([], _53_791) -> begin
-(FStar_All.failwith "Unexpected effect abbreviation with no arguments")
+(failwith "Unexpected effect abbreviation with no arguments")
 end
 | (_53_794, (_53_801)::(_53_798)::_53_796) when (not ((FStar_Ident.lid_equals lid FStar_Syntax_Const.effect_Lemma_lid))) -> begin
 (let _151_785 = (let _151_784 = (FStar_Syntax_Print.lid_to_string lid)
 in (let _151_783 = (FStar_All.pipe_left FStar_Util.string_of_int (FStar_List.length univs))
 in (FStar_Util.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes" _151_784 _151_783)))
-in (FStar_All.failwith _151_785))
+in (failwith _151_785))
 end
 | _53_805 -> begin
 (
@@ -1076,7 +1076,7 @@ in _151_788.FStar_Syntax_Syntax.n)) with
 Some (((binders), (c)))
 end
 | _53_816 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 end))
 end))
@@ -1148,7 +1148,7 @@ let fail = (fun _53_862 -> (match (()) with
 (let _151_809 = (let _151_808 = (FStar_Util.string_of_int i)
 in (let _151_807 = (FStar_Syntax_Print.lid_to_string lid)
 in (FStar_Util.format2 "Impossible: projecting field #%s from constructor %s is undefined" _151_808 _151_807)))
-in (FStar_All.failwith _151_809))
+in (failwith _151_809))
 end))
 in (
 
@@ -1319,7 +1319,7 @@ end)
 let wp_sig_aux : FStar_Syntax_Syntax.eff_decl Prims.list  ->  FStar_Ident.lident  ->  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) = (fun decls m -> (match ((FStar_All.pipe_right decls (FStar_Util.find_opt (fun d -> (FStar_Ident.lid_equals d.FStar_Syntax_Syntax.mname m))))) with
 | None -> begin
 (let _151_945 = (FStar_Util.format1 "Impossible: declaration for monad %s not found" m.FStar_Ident.str)
-in (FStar_All.failwith _151_945))
+in (failwith _151_945))
 end
 | Some (md) -> begin
 (
@@ -1335,7 +1335,7 @@ in (match (((md.FStar_Syntax_Syntax.binders), (s.FStar_Syntax_Syntax.n))) with
 ((a), (wp.FStar_Syntax_Syntax.sort))
 end
 | _53_1097 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 end))
 end))
@@ -1384,7 +1384,7 @@ let sub_lift_wp = (match (sub.FStar_Syntax_Syntax.lift_wp) with
 sub_lift_wp
 end
 | None -> begin
-(FStar_All.failwith "sub effect should\'ve been elaborated at this stage")
+(failwith "sub effect should\'ve been elaborated at this stage")
 end)
 in (
 

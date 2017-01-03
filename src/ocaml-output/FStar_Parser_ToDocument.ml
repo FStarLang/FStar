@@ -143,7 +143,7 @@ end
 | _67_104 -> begin
 (let _165_106 = (let _165_105 = (FStar_Parser_AST.term_to_string e)
 in (FStar_Util.format1 "Not a list %s" _165_105))
-in (FStar_All.failwith _165_106))
+in (failwith _165_106))
 end))
 
 
@@ -186,7 +186,7 @@ end
 | _67_224 -> begin
 (let _165_116 = (let _165_115 = (FStar_Parser_AST.term_to_string e)
 in (FStar_Util.format1 "Not a ref set %s" _165_115))
-in (FStar_All.failwith _165_116))
+in (failwith _165_116))
 end))
 
 
@@ -341,7 +341,7 @@ let assign_levels : associativity_level Prims.list  ->  Prims.string  ->  (Prims
 assoc_levels
 end
 | _67_271 -> begin
-(FStar_All.failwith (Prims.strcat "Unrecognized operator " s))
+(failwith (Prims.strcat "Unrecognized operator " s))
 end))
 
 
@@ -365,7 +365,7 @@ end
 (let _165_160 = (let _165_159 = (let _165_158 = (FStar_List.map token_to_string (Prims.snd level))
 in (FStar_String.concat "," _165_158))
 in (FStar_Util.format1 "Undefined associativity level %s" _165_159))
-in (FStar_All.failwith _165_160))
+in (failwith _165_160))
 end))
 in (FStar_List.fold_left find_level_and_max (Prims.parse_int "0") l)))
 
@@ -484,7 +484,7 @@ in (FStar_Pprint.op_Hat_Hat _165_307 _165_306)))
 in (FStar_Pprint.group _165_308))
 end
 | FStar_Parser_AST.KindAbbrev (_67_327) -> begin
-(FStar_All.failwith "Deprecated, please stop throwing your old stuff at me !")
+(failwith "Deprecated, please stop throwing your old stuff at me !")
 end
 | FStar_Parser_AST.Tycon (true, ((FStar_Parser_AST.TyconAbbrev (uid, tpars, None, t), None))::[]) -> begin
 (
@@ -575,10 +575,10 @@ end
 in (FStar_Pprint.op_Hat_Hat _165_351 FStar_Pprint.hardline))
 end
 | FStar_Parser_AST.Main (_67_376) -> begin
-(FStar_All.failwith "*Main declaration* : Is that really still in use ??")
+(failwith "*Main declaration* : Is that really still in use ??")
 end
 | FStar_Parser_AST.Tycon (true, _67_380) -> begin
-(FStar_All.failwith "Effect abbreviation is expected to be defined by an abbreviation")
+(failwith "Effect abbreviation is expected to be defined by an abbreviation")
 end))
 and p_pragma : FStar_Parser_AST.pragma  ->  FStar_Pprint.document = (fun _67_6 -> (match (_67_6) with
 | FStar_Parser_AST.SetOptions (s) -> begin
@@ -757,7 +757,7 @@ end
 | _67_501 -> begin
 (let _165_454 = (let _165_453 = (FStar_Parser_AST.decl_to_string d)
 in (FStar_Util.format1 "Not a declaration of an effect member... or at least I hope so : %s" _165_453))
-in (FStar_All.failwith _165_454))
+in (failwith _165_454))
 end))
 and p_subEffect : FStar_Parser_AST.lift  ->  FStar_Pprint.document = (fun lift -> (
 
@@ -968,7 +968,7 @@ end
 (p_quident uid)
 end
 | FStar_Parser_AST.PatOr (_67_613) -> begin
-(FStar_All.failwith "Inner or pattern !")
+(failwith "Inner or pattern !")
 end
 | (FStar_Parser_AST.PatApp ({FStar_Parser_AST.pat = FStar_Parser_AST.PatName (_); FStar_Parser_AST.prange = _}, _)) | (FStar_Parser_AST.PatTuple (_, false)) -> begin
 (let _165_510 = (p_tuplePattern p)
@@ -977,7 +977,7 @@ end
 | _67_631 -> begin
 (let _165_512 = (let _165_511 = (FStar_Parser_AST.pat_to_string p)
 in (FStar_Util.format1 "Invalid pattern %s" _165_511))
-in (FStar_All.failwith _165_512))
+in (failwith _165_512))
 end))
 and p_binder : Prims.bool  ->  FStar_Parser_AST.binder  ->  FStar_Pprint.document = (fun is_atomic b -> (match (b.FStar_Parser_AST.b) with
 | FStar_Parser_AST.Variable (lid) -> begin
@@ -1006,7 +1006,7 @@ end else begin
 end)
 end
 | FStar_Parser_AST.TAnnotated (_67_644) -> begin
-(FStar_All.failwith "Is this still used ?")
+(failwith "Is this still used ?")
 end
 | FStar_Parser_AST.NoName (t) -> begin
 if is_atomic then begin
@@ -1213,7 +1213,7 @@ end
 (str "exists")
 end
 | _67_773 -> begin
-(FStar_All.failwith "Imposible : p_quantifier called on a non-quantifier term")
+(failwith "Imposible : p_quantifier called on a non-quantifier term")
 end))
 and p_trigger : FStar_Parser_AST.term Prims.list Prims.list  ->  FStar_Pprint.document = (fun _67_13 -> (match (_67_13) with
 | [] -> begin
@@ -1484,12 +1484,12 @@ in (FStar_Pprint.op_Hat_Hat _165_763 _165_762)))
 in (FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen _165_764))
 end
 | FStar_Parser_AST.TAnnotated (_67_954) -> begin
-(FStar_All.failwith "Is this still used ?")
+(failwith "Is this still used ?")
 end
 | (FStar_Parser_AST.Variable (_)) | (FStar_Parser_AST.TVariable (_)) | (FStar_Parser_AST.NoName (_)) -> begin
 (let _165_766 = (let _165_765 = (FStar_Parser_AST.binder_to_string b)
 in (FStar_Util.format1 "Imposible : a refined binder ought to be annotated %s" _165_765))
-in (FStar_All.failwith _165_766))
+in (failwith _165_766))
 end))
 and p_simpleDef : (FStar_Ident.lid * FStar_Parser_AST.term)  ->  FStar_Pprint.document = (fun _67_967 -> (match (_67_967) with
 | (lid, e) -> begin
@@ -1683,7 +1683,7 @@ end
 in (parens_with_nesting _165_837))
 end
 | FStar_Parser_AST.Labeled (_67_1173) -> begin
-(FStar_All.failwith "Not valid in universe")
+(failwith "Not valid in universe")
 end))
 and p_constant : FStar_Const.sconst  ->  FStar_Pprint.document = (fun _67_17 -> (match (_67_17) with
 | FStar_Const.Const_effect -> begin
@@ -1792,7 +1792,7 @@ end
 | _67_1238 -> begin
 (let _165_870 = (let _165_869 = (FStar_Parser_AST.term_to_string u)
 in (FStar_Util.format1 "Invalid term in universe context %s" _165_869))
-in (FStar_All.failwith _165_870))
+in (failwith _165_870))
 end)
 end))
 end
@@ -1820,7 +1820,7 @@ end
 | _67_1265 -> begin
 (let _165_875 = (let _165_874 = (FStar_Parser_AST.term_to_string u)
 in (FStar_Util.format1 "Invalid term in universe context %s" _165_874))
-in (FStar_All.failwith _165_875))
+in (failwith _165_875))
 end))
 and p_univar : FStar_Parser_AST.term  ->  FStar_Pprint.document = (fun u -> (match (u.FStar_Parser_AST.tm) with
 | FStar_Parser_AST.Uvar (id) -> begin
@@ -1829,7 +1829,7 @@ end
 | _67_1270 -> begin
 (let _165_878 = (let _165_877 = (FStar_Parser_AST.term_to_string u)
 in (FStar_Util.format1 "Not a universe variable %s" _165_877))
-in (FStar_All.failwith _165_878))
+in (failwith _165_878))
 end))
 
 

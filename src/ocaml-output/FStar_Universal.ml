@@ -407,7 +407,7 @@ in (match (_95_256) with
 end))
 end
 | [] -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in (match (_95_264) with
 | ((intf, impl), dsenv, env, remaining) -> begin

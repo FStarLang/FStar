@@ -44,7 +44,7 @@ type record_or_dc =
 {typename : FStar_Ident.lident; constrname : FStar_Ident.ident; parms : FStar_Syntax_Syntax.binders; fields : (FStar_Ident.ident * FStar_Syntax_Syntax.typ) Prims.list; is_private_or_abstract : Prims.bool; is_record : Prims.bool}
 
 
-let is_Mkrecord_or_dc : record_or_dc  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkrecord_or_dc"))))
+let is_Mkrecord_or_dc : record_or_dc  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkrecord_or_dc"))))
 
 
 type scope_mod =
@@ -150,7 +150,7 @@ type env =
 {curmodule : FStar_Ident.lident Prims.option; curmonad : FStar_Ident.ident Prims.option; modules : (FStar_Ident.lident * FStar_Syntax_Syntax.modul) Prims.list; scope_mods : scope_mod Prims.list; sigaccum : FStar_Syntax_Syntax.sigelts; sigmap : (FStar_Syntax_Syntax.sigelt * Prims.bool) FStar_Util.smap; default_result_effect : FStar_Ident.lident; iface : Prims.bool; admitted_iface : Prims.bool; expect_typ : Prims.bool}
 
 
-let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv"))))
+let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv"))))
 
 
 type foundname =
@@ -193,7 +193,7 @@ let open_modules : env  ->  (FStar_Ident.lident * FStar_Syntax_Syntax.modul) Pri
 
 let current_module : env  ->  FStar_Ident.lident = (fun env -> (match (env.curmodule) with
 | None -> begin
-(FStar_All.failwith "Unset current module")
+(failwith "Unset current module")
 end
 | Some (m) -> begin
 m
@@ -953,7 +953,7 @@ let commit = (fun _64_736 -> (match (()) with
 (FStar_ST.op_Colon_Equals record_cache ((hd)::tl))
 end
 | _64_744 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end))
 in (
@@ -1452,7 +1452,7 @@ type env_stack_ops =
 {push : env  ->  env; mark : env  ->  env; reset_mark : env  ->  env; commit_mark : env  ->  env; pop : env  ->  env}
 
 
-let is_Mkenv_stack_ops : env_stack_ops  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv_stack_ops"))))
+let is_Mkenv_stack_ops : env_stack_ops  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv_stack_ops"))))
 
 
 let stack_ops : env_stack_ops = (
@@ -1486,7 +1486,7 @@ let _64_1162 = (FStar_ST.op_Colon_Equals stack tl)
 in env))
 end
 | _64_1165 -> begin
-(FStar_All.failwith "Impossible: Too many pops")
+(failwith "Impossible: Too many pops")
 end))
 in (
 
@@ -1501,7 +1501,7 @@ let _64_1174 = (FStar_ST.op_Colon_Equals stack tl)
 in env)
 end
 | _64_1177 -> begin
-(FStar_All.failwith "Impossible: Too many pops")
+(failwith "Impossible: Too many pops")
 end)))
 in {push = push; mark = push; reset_mark = pop; commit_mark = commit_mark; pop = pop}))))
 

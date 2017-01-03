@@ -65,7 +65,7 @@ in (
 let t = (FStar_Syntax_Subst.compress tm)
 in (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_37_35) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Syntax_Syntax.Tm_name (x) -> begin
 (singleton_bv x)

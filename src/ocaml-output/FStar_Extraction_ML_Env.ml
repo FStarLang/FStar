@@ -56,7 +56,7 @@ type env =
 {tcenv : FStar_Tc_Env.env; gamma : binding Prims.list; tydefs : (FStar_Extraction_ML_Syntax.mlsymbol Prims.list * FStar_Extraction_ML_Syntax.mltydecl) Prims.list; currentModule : FStar_Extraction_ML_Syntax.mlpath}
 
 
-let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv"))))
+let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv"))))
 
 
 let debug : env  ->  (Prims.unit  ->  Prims.unit)  ->  Prims.unit = (fun g f -> if (FStar_Options.debug_at_level (Prims.snd g.currentModule) (FStar_Options.Other ("Extraction"))) then begin
@@ -134,7 +134,7 @@ end
 (lookup_ty_local tl b)
 end
 | [] -> begin
-(FStar_All.failwith (Prims.strcat "extraction: unbound type var " b.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.ppname.FStar_Ident.idText))
+(failwith (Prims.strcat "extraction: unbound type var " b.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.ppname.FStar_Ident.idText))
 end))
 
 
@@ -189,7 +189,7 @@ in (match (x) with
 | None -> begin
 (let _172_104 = (let _172_103 = (FStar_Absyn_Print.sli fv)
 in (FStar_Util.format1 "free Variable %s not found\n" _172_103))
-in (FStar_All.failwith _172_104))
+in (failwith _172_104))
 end
 | Some (y) -> begin
 y
@@ -210,7 +210,7 @@ in (match (x) with
 (let _172_112 = (let _172_111 = (FStar_Range.string_of_range fv.FStar_Absyn_Syntax.p)
 in (let _172_110 = (FStar_Absyn_Print.sli fv.FStar_Absyn_Syntax.v)
 in (FStar_Util.format2 "(%s) free Variable %s not found\n" _172_111 _172_110)))
-in (FStar_All.failwith _172_112))
+in (failwith _172_112))
 end
 | Some (y) -> begin
 y
@@ -231,7 +231,7 @@ in (match (x) with
 (let _172_120 = (let _172_119 = (FStar_Range.string_of_range bv.FStar_Absyn_Syntax.p)
 in (let _172_118 = (FStar_Absyn_Print.strBvd bv.FStar_Absyn_Syntax.v)
 in (FStar_Util.format2 "(%s) bound Variable %s not found\n" _172_119 _172_118)))
-in (FStar_All.failwith _172_120))
+in (failwith _172_120))
 end
 | Some (y) -> begin
 y
@@ -257,7 +257,7 @@ end
 in ((_172_128), (b)))
 end
 | _74_152 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 
 
@@ -384,7 +384,7 @@ in (
 let _74_221 = g
 in {tcenv = tcenv; gamma = gamma; tydefs = _74_221.tydefs; currentModule = _74_221.currentModule}))))))
 end else begin
-(FStar_All.failwith "freevars found")
+(failwith "freevars found")
 end)
 
 

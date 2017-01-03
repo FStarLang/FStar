@@ -196,7 +196,7 @@ let as_bool : option_val  ->  Prims.bool = (fun _25_1 -> (match (_25_1) with
 b
 end
 | _25_30 -> begin
-(FStar_All.failwith "Impos: expected Bool")
+(failwith "Impos: expected Bool")
 end))
 
 
@@ -205,7 +205,7 @@ let as_int : option_val  ->  Prims.int = (fun _25_2 -> (match (_25_2) with
 b
 end
 | _25_35 -> begin
-(FStar_All.failwith "Impos: expected Int")
+(failwith "Impos: expected Int")
 end))
 
 
@@ -214,7 +214,7 @@ let as_string : option_val  ->  Prims.string = (fun _25_3 -> (match (_25_3) with
 b
 end
 | _25_40 -> begin
-(FStar_All.failwith "Impos: expected String")
+(failwith "Impos: expected String")
 end))
 
 
@@ -223,7 +223,7 @@ let as_list = (fun as_t _25_4 -> (match (_25_4) with
 (FStar_All.pipe_right ts (FStar_List.map as_t))
 end
 | _25_46 -> begin
-(FStar_All.failwith "Impos: expected List")
+(failwith "Impos: expected List")
 end))
 
 
@@ -251,7 +251,7 @@ let pop : Prims.unit  ->  Prims.unit = (fun _25_52 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read fstar_options)) with
 | ([]) | ((_)::[]) -> begin
-(FStar_All.failwith "TOO MANY POPS!")
+(failwith "TOO MANY POPS!")
 end
 | (_25_59)::tl -> begin
 (FStar_ST.op_Colon_Equals fstar_options tl)
@@ -312,7 +312,7 @@ let _run : Prims.unit = (clear ())
 let lookup_opt = (fun s c -> (match ((let _123_129 = (peek ())
 in (FStar_Util.smap_try_find _123_129 s))) with
 | None -> begin
-(FStar_All.failwith (Prims.strcat "Impossible: option " (Prims.strcat s " not found")))
+(failwith (Prims.strcat "Impossible: option " (Prims.strcat s " not found")))
 end
 | Some (s) -> begin
 (c s)
@@ -849,7 +849,7 @@ end else begin
 if (s = "false") then begin
 Bool (false)
 end else begin
-(FStar_All.failwith "Invalid argument to --admit_smt_queries")
+(failwith "Invalid argument to --admit_smt_queries")
 end
 end)), ("[true|false]")))), ("Admit SMT queries, unsafe! (default \'false\')")))::(((FStar_Getopt.noshort), ("cardinality"), (FStar_Getopt.OneArg ((((fun x -> (let _123_322 = (validate_cardinality x)
 in String (_123_322)))), ("[off|warn|check]")))), ("Check cardinality constraints on inductive data types (default \'off\')")))::(((FStar_Getopt.noshort), ("codegen"), (FStar_Getopt.OneArg ((((fun s -> (let _123_326 = (parse_codegen s)
@@ -865,7 +865,7 @@ in (FStar_All.pipe_right _123_346 (FStar_List.map (fun _123_345 -> String (_123_
 in List (_123_347)))), ("[Low|Medium|High|Extreme|...]")))), ("Control the verbosity of debugging info")))::(((FStar_Getopt.noshort), ("dep"), (FStar_Getopt.OneArg ((((fun x -> if ((x = "make") || (x = "graph")) then begin
 String (x)
 end else begin
-(FStar_All.failwith "invalid argument to \'dep\'")
+(failwith "invalid argument to \'dep\'")
 end)), ("[make|graph]")))), ("Output the transitive closure of the dependency graph in a format suitable for the given tool")))::(((FStar_Getopt.noshort), ("detail_errors"), (FStar_Getopt.ZeroArgs ((fun _25_208 -> (match (()) with
 | () -> begin
 Bool (true)

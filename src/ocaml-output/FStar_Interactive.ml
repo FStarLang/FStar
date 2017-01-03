@@ -5,7 +5,7 @@ type ('env, 'modul) interactive_tc =
 {pop : 'env  ->  Prims.string  ->  Prims.unit; push : 'env  ->  Prims.bool  ->  Prims.bool  ->  Prims.string  ->  'env; mark : 'env  ->  'env; reset_mark : 'env  ->  'env; commit_mark : 'env  ->  'env; check_frag : 'env  ->  'modul  ->  FStar_Parser_ParseIt.input_frag  ->  ('modul * 'env * Prims.int) Prims.option; report_fail : Prims.unit  ->  Prims.unit; tc_prims : Prims.unit  ->  'env; tc_one_file : Prims.string Prims.list  ->  'env  ->  ((Prims.string Prims.option * Prims.string) * 'env * 'modul * Prims.string Prims.list); cleanup : 'env  ->  Prims.unit}
 
 
-let is_Mkinteractive_tc = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkinteractive_tc"))))
+let is_Mkinteractive_tc = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkinteractive_tc"))))
 
 
 type input_chunks =
@@ -67,7 +67,7 @@ type interactive_state =
 {chunk : FStar_Util.string_builder; stdin : FStar_Util.stream_reader Prims.option FStar_ST.ref; buffer : input_chunks Prims.list FStar_ST.ref; log : FStar_Util.file_handle Prims.option FStar_ST.ref}
 
 
-let is_Mkinteractive_state : interactive_state  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkinteractive_state"))))
+let is_Mkinteractive_state : interactive_state  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkinteractive_state"))))
 
 
 let the_interactive_state : interactive_state = (let _191_194 = (FStar_Util.new_string_builder ())
@@ -352,7 +352,7 @@ end
 in (fail _191_237))
 end
 | Some (None, None) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)))
 end)
 end)
@@ -443,7 +443,7 @@ end
 false
 end
 | (_93_248, _93_250) -> begin
-(FStar_All.failwith "Impossible, if the interface is None, the timestamp entry should also be None")
+(failwith "Impossible, if the interface is None, the timestamp entry should also be None")
 end))))
 in (
 

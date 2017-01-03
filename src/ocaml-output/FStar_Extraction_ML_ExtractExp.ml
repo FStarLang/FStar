@@ -17,7 +17,7 @@ let fail = (fun r msg -> (
 
 let _79_19 = (let _177_27 = (FStar_Absyn_Print.format_error r msg)
 in (FStar_All.pipe_left FStar_Util.print_string _177_27))
-in (FStar_All.failwith msg)))
+in (failwith msg)))
 
 
 let err_uninst = (fun env e _79_25 -> (match (_79_25) with
@@ -164,7 +164,7 @@ let extract_pat : FStar_Extraction_ML_Env.env  ->  (FStar_Absyn_Syntax.pat', ((F
 
 let rec extract_one_pat = (fun disj imp g p -> (match (p.FStar_Absyn_Syntax.v) with
 | FStar_Absyn_Syntax.Pat_disj (_79_171) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Absyn_Syntax.Pat_constant (FStar_Const.Const_int (c, None)) -> begin
 (
@@ -202,7 +202,7 @@ let _79_203 = (match ((FStar_Extraction_ML_Env.lookup_fv g f)) with
 ((n), (ttys))
 end
 | _79_200 -> begin
-(FStar_All.failwith "Expected a constructor")
+(failwith "Expected a constructor")
 end)
 in (match (_79_203) with
 | (d, tys) -> begin
@@ -320,7 +320,7 @@ let extract_one_pat = (fun disj g p -> (match ((extract_one_pat disj false g p))
 ((g), (((x), (v))))
 end
 | _79_271 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 in (
 
@@ -334,7 +334,7 @@ in Some (_177_143))
 end))
 in (match (p.FStar_Absyn_Syntax.v) with
 | FStar_Absyn_Syntax.Pat_disj ([]) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Absyn_Syntax.Pat_disj ((p)::pats) -> begin
 (
@@ -427,7 +427,7 @@ end else begin
 if (n = (Prims.parse_int "2")) then begin
 "mkpair"
 end else begin
-(FStar_All.failwith "NYI in runtime/allocator/camlstack.mli")
+(failwith "NYI in runtime/allocator/camlstack.mli")
 end
 end
 in ((("Camlstack")::[]), (name))))
@@ -435,7 +435,7 @@ in ((("Camlstack")::[]), (name))))
 
 let fix_lalloc : FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Extraction_ML_Syntax.mlexpr = (fun arg -> (match (arg.FStar_Extraction_ML_Syntax.expr) with
 | FStar_Extraction_ML_Syntax.MLE_Tuple (args) -> begin
-(FStar_All.failwith "unexpected. Prims.TupleN is not specially handled yet. So, F* tuples, which are sugar forPrims.TupleN,  were expected to be extracted as MLE_CTor")
+(failwith "unexpected. Prims.TupleN is not specially handled yet. So, F* tuples, which are sugar forPrims.TupleN,  were expected to be extracted as MLE_CTor")
 end
 | FStar_Extraction_ML_Syntax.MLE_Record (mlns, fields) -> begin
 (
@@ -455,10 +455,10 @@ let dummyTy = FStar_Extraction_ML_Syntax.ml_unit_ty
 in (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty dummyTy) (FStar_Extraction_ML_Syntax.MLE_Coerce (((tup), (dummyTy), (dummyTy))))))))
 end
 | FStar_Extraction_ML_Syntax.MLE_CTor (mlp, args) -> begin
-(FStar_All.failwith "NYI: lalloc ctor")
+(failwith "NYI: lalloc ctor")
 end
 | _79_347 -> begin
-(FStar_All.failwith "for efficiency, the argument to lalloc should be a head normal form of the type. Extraction will then avoid creating this value on the heap.")
+(failwith "for efficiency, the argument to lalloc should be a head normal form of the type. Extraction will then avoid creating this value on the heap.")
 end))
 
 
@@ -479,7 +479,7 @@ end
 (((FStar_List.rev more_args)), (t))
 end
 | _79_369 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 in (
 
@@ -524,7 +524,7 @@ in (FStar_All.pipe_left FStar_Extraction_ML_Util.resugar_exp _177_196))
 in (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty e.FStar_Extraction_ML_Syntax.mlty) (FStar_Extraction_ML_Syntax.MLE_Fun (((binders), (body))))))
 end
 | _79_407 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end))
 end)
@@ -664,7 +664,7 @@ in (
 
 let f = (match (f) with
 | None -> begin
-(FStar_All.failwith "Ascription node with an empty effect label")
+(failwith "Ascription node with an empty effect label")
 end
 | Some (l) -> begin
 (FStar_Extraction_ML_ExtractTyp.translate_eff g l)
@@ -739,7 +739,7 @@ if (type_leq g tunit FStar_Extraction_ML_Syntax.ml_unit_ty) then begin
 in ((_177_257), (t)))
 in (synth_app is_data ((mlhead), ((((FStar_Extraction_ML_Syntax.ml_unit), (FStar_Extraction_ML_Syntax.E_PURE)))::mlargs_f)) _177_258 rest))
 end else begin
-(FStar_All.failwith "Impossible: ill-typed application")
+(failwith "Impossible: ill-typed application")
 end
 end
 | (((FStar_Util.Inr (e0), _79_633))::rest, FStar_Extraction_ML_Syntax.MLTY_Fun (tExpected, f', t)) -> begin
@@ -854,7 +854,7 @@ let _79_751 = head
 in {FStar_Extraction_ML_Syntax.expr = _79_751.FStar_Extraction_ML_Syntax.expr; FStar_Extraction_ML_Syntax.mlty = FStar_Extraction_ML_Syntax.MLTY_Fun (((FStar_Extraction_ML_Syntax.ml_unit_ty), (FStar_Extraction_ML_Syntax.E_PURE), (t))); FStar_Extraction_ML_Syntax.loc = _79_751.FStar_Extraction_ML_Syntax.loc})), ((FStar_Extraction_ML_Syntax.ml_unit)::[])))) (FStar_Extraction_ML_Syntax.with_ty t))
 end
 | _79_754 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in ((head), (t), (rest)))))
 end))
@@ -987,7 +987,7 @@ in (match (_79_851) with
 
 let expected_t = (match ((FStar_Absyn_Util.mk_subst_binder targs tbinders)) with
 | None -> begin
-(FStar_All.failwith "Not enough type binders in the body of the let expression")
+(failwith "Not enough type binders in the body of the let expression")
 end
 | Some (s) -> begin
 (FStar_Absyn_Util.subst_typ s tbody)
@@ -999,7 +999,7 @@ let targs = (FStar_All.pipe_right targs (FStar_List.map (fun _79_5 -> (match (_7
 a
 end
 | _79_863 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))))
 in (
 
@@ -1039,7 +1039,7 @@ end)
 in ((lbname), (f_e), (((t), (((targs), (polytype))))), (add_unit), (body))))))))))
 end))
 end else begin
-(FStar_All.failwith "Not enough type binders")
+(failwith "Not enough type binders")
 end
 end
 | _79_880 -> begin
@@ -1189,7 +1189,7 @@ end))
 end))
 end
 | _79_968 -> begin
-(FStar_All.failwith "ITE pats matched but then and else expressions not found?")
+(failwith "ITE pats matched but then and else expressions not found?")
 end)
 end else begin
 (
@@ -1349,7 +1349,7 @@ in (FStar_All.pipe_right _177_361 (FStar_List.map (fun _79_1092 -> (let _177_360
 in ((_177_360), (FStar_Extraction_ML_Syntax.MLTY_Top)))))))
 end
 | _79_1095 -> begin
-(FStar_All.failwith "Discriminator must be a function")
+(failwith "Discriminator must be a function")
 end)
 in (
 

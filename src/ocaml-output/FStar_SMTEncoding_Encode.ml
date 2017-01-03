@@ -56,7 +56,7 @@ let fail = (fun _90_59 -> (match (()) with
 | () -> begin
 (let _188_30 = (let _188_29 = (FStar_Util.string_of_int i)
 in (FStar_Util.format2 "Projector %s on data constructor %s not found" _188_29 lid.FStar_Ident.str))
-in (FStar_All.failwith _188_30))
+in (failwith _188_30))
 end))
 in (
 
@@ -109,7 +109,7 @@ type varops_t =
 {push : Prims.unit  ->  Prims.unit; pop : Prims.unit  ->  Prims.unit; mark : Prims.unit  ->  Prims.unit; reset_mark : Prims.unit  ->  Prims.unit; commit_mark : Prims.unit  ->  Prims.unit; new_var : FStar_Ident.ident  ->  Prims.int  ->  Prims.string; new_fvar : FStar_Ident.lident  ->  Prims.string; fresh : Prims.string  ->  Prims.string; string_const : Prims.string  ->  FStar_SMTEncoding_Term.term; next_id : Prims.unit  ->  Prims.int; mk_unique : Prims.string  ->  Prims.string}
 
 
-let is_Mkvarops_t : varops_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkvarops_t"))))
+let is_Mkvarops_t : varops_t  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkvarops_t"))))
 
 
 let varops : varops_t = (
@@ -259,7 +259,7 @@ let _90_170 = (FStar_Util.smap_fold hd2 (fun key value v -> (FStar_Util.smap_add
 in (FStar_ST.op_Colon_Equals scopes ((((next1), (next2)))::tl))))
 end
 | _90_173 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end))
 in {push = push; pop = pop; mark = mark; reset_mark = reset_mark; commit_mark = commit_mark; new_var = new_var; new_fvar = new_fvar; fresh = fresh; string_const = string_const; next_id = next_id; mk_unique = mk_unique})))))))))))))))
@@ -314,7 +314,7 @@ type env_t =
 {bindings : binding Prims.list; depth : Prims.int; tcenv : FStar_TypeChecker_Env.env; warn : Prims.bool; cache : (Prims.string * FStar_SMTEncoding_Term.sort Prims.list * FStar_SMTEncoding_Term.decl Prims.list) FStar_Util.smap; nolabels : Prims.bool; use_zfuel_name : Prims.bool; encode_non_total_function_typ : Prims.bool}
 
 
-let is_Mkenv_t : env_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv_t"))))
+let is_Mkenv_t : env_t  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv_t"))))
 
 
 let print_env : env_t  ->  Prims.string = (fun e -> (let _188_277 = (FStar_All.pipe_right e.bindings (FStar_List.map (fun _90_2 -> (match (_90_2) with
@@ -406,7 +406,7 @@ in (match ((aux a)) with
 | None -> begin
 (let _188_322 = (let _188_321 = (FStar_Syntax_Print.bv_to_string a)
 in (FStar_Util.format1 "Bound term variable not found (after unmangling): %s" _188_321))
-in (FStar_All.failwith _188_322))
+in (failwith _188_322))
 end
 | Some (b, t) -> begin
 t
@@ -458,7 +458,7 @@ let lookup_lid : env_t  ->  FStar_Ident.lident  ->  (Prims.string * FStar_SMTEnc
 | None -> begin
 (let _188_350 = (let _188_349 = (FStar_Syntax_Print.lid_to_string a)
 in (FStar_Util.format1 "Name not found: %s" _188_349))
-in (FStar_All.failwith _188_350))
+in (failwith _188_350))
 end
 | Some (s) -> begin
 s
@@ -531,7 +531,7 @@ end
 | None -> begin
 (let _188_380 = (let _188_379 = (FStar_Syntax_Print.lid_to_string a.FStar_Syntax_Syntax.v)
 in (FStar_Util.format1 "Name not found: %s" _188_379))
-in (FStar_All.failwith _188_380))
+in (failwith _188_380))
 end))
 
 
@@ -768,7 +768,7 @@ type pattern =
 {pat_vars : (FStar_Syntax_Syntax.bv * FStar_SMTEncoding_Term.fv) Prims.list; pat_term : Prims.unit  ->  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.decls_t); guard : FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term; projections : FStar_SMTEncoding_Term.term  ->  (FStar_Syntax_Syntax.bv * FStar_SMTEncoding_Term.term) Prims.list}
 
 
-let is_Mkpattern : pattern  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkpattern"))))
+let is_Mkpattern : pattern  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkpattern"))))
 
 
 exception Let_rec_unencodeable
@@ -805,7 +805,7 @@ end
 in (FStar_SMTEncoding_Term.boxInt _188_490))
 end
 | FStar_Const.Const_int (i, Some (_90_580)) -> begin
-(FStar_All.failwith "Machine integers should be desugared")
+(failwith "Machine integers should be desugared")
 end
 | FStar_Const.Const_string (bytes, _90_586) -> begin
 (let _188_491 = (FStar_All.pipe_left FStar_Util.string_of_bytes bytes)
@@ -820,7 +820,7 @@ end
 | c -> begin
 (let _188_493 = (let _188_492 = (FStar_Syntax_Print.const_to_string c)
 in (FStar_Util.format1 "Unhandled constant: %s" _188_492))
-in (FStar_All.failwith _188_493))
+in (failwith _188_493))
 end))
 
 
@@ -845,7 +845,7 @@ end else begin
 (let _188_506 = (let _188_505 = (FStar_Range.string_of_range t0.FStar_Syntax_Syntax.pos)
 in (let _188_504 = (FStar_Syntax_Print.term_to_string t0)
 in (FStar_Util.format2 "(%s) Expected a function typ; got %s" _188_505 _188_504)))
-in (FStar_All.failwith _188_506))
+in (failwith _188_506))
 end
 end)))
 in (aux true t0)))
@@ -947,12 +947,12 @@ in (let _188_579 = (FStar_Syntax_Print.tag_of_term t0)
 in (let _188_578 = (FStar_Syntax_Print.term_to_string t0)
 in (let _188_577 = (FStar_Syntax_Print.term_to_string t)
 in (FStar_Util.format4 "(%s) Impossible: %s\n%s\n%s\n" _188_580 _188_579 _188_578 _188_577)))))
-in (FStar_All.failwith _188_581))
+in (failwith _188_581))
 end
 | FStar_Syntax_Syntax.Tm_bvar (x) -> begin
 (let _188_583 = (let _188_582 = (FStar_Syntax_Print.bv_to_string x)
 in (FStar_Util.format1 "Impossible: locally nameless; got %s" _188_582))
-in (FStar_All.failwith _188_583))
+in (failwith _188_583))
 end
 | FStar_Syntax_Syntax.Tm_ascribed (t, k, _90_678) -> begin
 (encode_term t env)
@@ -1196,7 +1196,7 @@ in ((_188_624), (f)))
 end))
 end
 | _90_795 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (match (_90_798) with
 | (x, f) -> begin
@@ -1701,7 +1701,7 @@ end))))
 end))
 end
 | FStar_Syntax_Syntax.Tm_let ((_90_1133, ({FStar_Syntax_Syntax.lbname = FStar_Util.Inr (_90_1145); FStar_Syntax_Syntax.lbunivs = _90_1143; FStar_Syntax_Syntax.lbtyp = _90_1141; FStar_Syntax_Syntax.lbeff = _90_1139; FStar_Syntax_Syntax.lbdef = _90_1137})::_90_1135), _90_1151) -> begin
-(FStar_All.failwith "Impossible: already handled by encoding of Sig_let")
+(failwith "Impossible: already handled by encoding of Sig_let")
 end
 | FStar_Syntax_Syntax.Tm_let ((false, ({FStar_Syntax_Syntax.lbname = FStar_Util.Inl (x); FStar_Syntax_Syntax.lbunivs = _90_1160; FStar_Syntax_Syntax.lbtyp = t1; FStar_Syntax_Syntax.lbeff = _90_1157; FStar_Syntax_Syntax.lbdef = e1})::[]), e2) -> begin
 (encode_let x t1 e1 e2 env encode_term)
@@ -1859,7 +1859,7 @@ in (match (_90_1269) with
 
 let rec mk_guard = (fun pat scrutinee -> (match (pat.FStar_Syntax_Syntax.v) with
 | FStar_Syntax_Syntax.Pat_disj (_90_1274) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Syntax_Syntax.Pat_var (_)) | (FStar_Syntax_Syntax.Pat_wild (_)) | (FStar_Syntax_Syntax.Pat_dot_term (_)) -> begin
 FStar_SMTEncoding_Util.mkTrue
@@ -1889,7 +1889,7 @@ in (
 
 let rec mk_projections = (fun pat scrutinee -> (match (pat.FStar_Syntax_Syntax.v) with
 | FStar_Syntax_Syntax.Pat_disj (_90_1303) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Syntax_Syntax.Pat_dot_term (x, _)) | (FStar_Syntax_Syntax.Pat_var (x)) | (FStar_Syntax_Syntax.Pat_wild (x)) -> begin
 (((x), (scrutinee)))::[]
@@ -1966,7 +1966,7 @@ end
 ((e), (None))
 end
 | _90_1381 -> begin
-(FStar_All.failwith "Unexpected pattern term")
+(failwith "Unexpected pattern term")
 end)
 end)))
 in (
@@ -2034,12 +2034,12 @@ in (let _188_816 = (lemma_pats pats')
 in ((binders), (pre), (post), (_188_816))))
 end
 | _90_1444 -> begin
-(FStar_All.failwith "impos")
+(failwith "impos")
 end)
 end))
 end
 | _90_1446 -> begin
-(FStar_All.failwith "Impos")
+(failwith "Impos")
 end)
 in (match (_90_1451) with
 | (binders, pre, post, patterns) -> begin
@@ -2181,7 +2181,7 @@ let bin_op = (fun f _90_11 -> (match (_90_11) with
 (f ((t1), (t2)))
 end
 | _90_1537 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 in (
 
@@ -2240,7 +2240,7 @@ end)
 end))
 end
 | _90_1596 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (
 
@@ -2270,7 +2270,7 @@ end))
 end))
 end
 | _90_1624 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (
 
@@ -2534,7 +2534,7 @@ type prims_t =
 {mk : FStar_Ident.lident  ->  Prims.string  ->  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.decl Prims.list); is : FStar_Ident.lident  ->  Prims.bool}
 
 
-let is_Mkprims_t : prims_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkprims_t"))))
+let is_Mkprims_t : prims_t  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkprims_t"))))
 
 
 let prims : prims_t = (
@@ -3816,7 +3816,7 @@ end
 (let _188_2118 = (let _188_2117 = (FStar_Syntax_Print.term_to_string e)
 in (let _188_2116 = (FStar_Syntax_Print.term_to_string t_norm)
 in (FStar_Util.format3 "Impossible! let-bound lambda %s = %s has a type that\'s not a function: %s\n" flid.FStar_Ident.str _188_2117 _188_2116)))
-in (FStar_All.failwith _188_2118))
+in (failwith _188_2118))
 end)
 end))
 end
@@ -3975,7 +3975,7 @@ end))
 end))))
 end
 | _90_2456 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end else begin
 (
@@ -4027,7 +4027,7 @@ in (match (_90_2501) with
 (
 
 let _90_2502 = if curry then begin
-(FStar_All.failwith "Unexpected type of let rec in SMT Encoding; expected it to be annotated with an arrow type")
+(failwith "Unexpected type of let rec in SMT Encoding; expected it to be annotated with an arrow type")
 end else begin
 ()
 end
@@ -4253,7 +4253,7 @@ and encode_sigelt' : env_t  ->  FStar_Syntax_Syntax.sigelt  ->  (FStar_SMTEncodi
 let should_skip = (fun l -> false)
 in (match (se) with
 | FStar_Syntax_Syntax.Sig_new_effect_for_free (_90_2589) -> begin
-(FStar_All.failwith "impossible -- removed by tc.fs")
+(failwith "impossible -- removed by tc.fs")
 end
 | (FStar_Syntax_Syntax.Sig_pragma (_)) | (FStar_Syntax_Syntax.Sig_main (_)) | (FStar_Syntax_Syntax.Sig_effect_abbrev (_)) | (FStar_Syntax_Syntax.Sig_sub_effect (_)) -> begin
 (([]), (env))
@@ -4675,7 +4675,7 @@ in (match (_90_2959) with
 (
 
 let _90_2960 = if ((FStar_List.length indices) <> (FStar_List.length vars)) then begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end else begin
 ()
 end
@@ -5064,7 +5064,7 @@ in (FStar_SMTEncoding_Util.mk_Precedes _188_2424 dapp))
 in (_188_2425)::[])
 end
 | _90_3153 -> begin
-(FStar_All.failwith "unexpected sort")
+(failwith "unexpected sort")
 end))))
 in (let _188_2432 = (let _188_2431 = (let _188_2430 = (let _188_2429 = (add_fuel ((fuel_var), (FStar_SMTEncoding_Term.Fuel_sort)) (FStar_List.append vars arg_binders))
 in (let _188_2428 = (let _188_2427 = (let _188_2426 = (FStar_SMTEncoding_Util.mk_and_l prec)
@@ -5278,7 +5278,7 @@ in (FStar_ST.op_Colon_Equals last_env _188_2499)))
 
 let get_env : FStar_TypeChecker_Env.env  ->  env_t = (fun tcenv -> (match ((FStar_ST.read last_env)) with
 | [] -> begin
-(FStar_All.failwith "No env; call init first!")
+(failwith "No env; call init first!")
 end
 | (e)::_90_3252 -> begin
 (
@@ -5290,7 +5290,7 @@ end))
 
 let set_env : env_t  ->  Prims.unit = (fun env -> (match ((FStar_ST.read last_env)) with
 | [] -> begin
-(FStar_All.failwith "Empty env stack")
+(failwith "Empty env stack")
 end
 | (_90_3261)::tl -> begin
 (FStar_ST.op_Colon_Equals last_env ((env)::tl))
@@ -5301,7 +5301,7 @@ let push_env : Prims.unit  ->  Prims.unit = (fun _90_3263 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read last_env)) with
 | [] -> begin
-(FStar_All.failwith "Empty env stack")
+(failwith "Empty env stack")
 end
 | (hd)::tl -> begin
 (
@@ -5322,7 +5322,7 @@ let pop_env : Prims.unit  ->  Prims.unit = (fun _90_3272 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read last_env)) with
 | [] -> begin
-(FStar_All.failwith "Popping an empty stack")
+(failwith "Popping an empty stack")
 end
 | (_90_3276)::tl -> begin
 (FStar_ST.op_Colon_Equals last_env tl)
@@ -5349,7 +5349,7 @@ let commit_mark_env : Prims.unit  ->  Prims.unit = (fun _90_3280 -> (match (()) 
 (FStar_ST.op_Colon_Equals last_env ((hd)::tl))
 end
 | _90_3288 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end))
 

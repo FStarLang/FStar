@@ -75,7 +75,7 @@ let dd = (FStar_Util.int_of_char d)
 in if ((dd >= (FStar_Util.int_of_char '0')) && (dd <= (FStar_Util.int_of_char '9'))) then begin
 ((FStar_Util.int_of_char d) - (FStar_Util.int_of_char '0'))
 end else begin
-(FStar_All.failwith "digit")
+(failwith "digit")
 end))
 
 
@@ -91,14 +91,14 @@ end else begin
 if ((dd >= (FStar_Util.int_of_char 'A')) && (dd <= (FStar_Util.int_of_char 'F'))) then begin
 ((dd - (FStar_Util.int_of_char 'A')) + (Prims.parse_int "10"))
 end else begin
-(FStar_All.failwith "hexdigit")
+(failwith "hexdigit")
 end
 end
 end))
 
 
 let unicodegraph_short : Prims.string  ->  FStar_BaseTypes.uint16 = (fun s -> if ((FStar_String.length s) <> (Prims.parse_int "4")) then begin
-(FStar_All.failwith "unicodegraph")
+(failwith "unicodegraph")
 end else begin
 (let _167_63 = (((((let _167_59 = (FStar_Util.char_at s (Prims.parse_int "0"))
 in (hexdigit _167_59)) * (Prims.parse_int "4096")) + ((let _167_60 = (FStar_Util.char_at s (Prims.parse_int "1"))
@@ -110,7 +110,7 @@ end)
 
 
 let hexgraph_short : Prims.string  ->  FStar_BaseTypes.uint16 = (fun s -> if ((FStar_String.length s) <> (Prims.parse_int "2")) then begin
-(FStar_All.failwith "hexgraph")
+(failwith "hexgraph")
 end else begin
 (let _167_68 = (((let _167_66 = (FStar_Util.char_at s (Prims.parse_int "0"))
 in (hexdigit _167_66)) * (Prims.parse_int "16")) + (let _167_67 = (FStar_Util.char_at s (Prims.parse_int "1"))
@@ -120,7 +120,7 @@ end)
 
 
 let unicodegraph_long : Prims.string  ->  (FStar_BaseTypes.uint16 Prims.option * FStar_BaseTypes.uint16) = (fun s -> if ((FStar_String.length s) <> (Prims.parse_int "8")) then begin
-(FStar_All.failwith "unicodegraph_long")
+(failwith "unicodegraph_long")
 end else begin
 (
 
@@ -229,7 +229,7 @@ type lexargs =
 {getSourceDirectory : Prims.unit  ->  Prims.string; contents : Prims.string}
 
 
-let is_Mklexargs : lexargs  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklexargs"))))
+let is_Mklexargs : lexargs  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mklexargs"))))
 
 
 let mkLexargs = (fun _69_81 -> (match (_69_81) with

@@ -143,13 +143,13 @@ type 'a config =
 'a Prims.option FStar_ST.ref
 
 
-let is_Mkconfig = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkconfig"))))
+let is_Mkconfig = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkconfig"))))
 
 
-let is_Mkenvironment : environment  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenvironment"))))
+let is_Mkenvironment : environment  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenvironment"))))
 
 
-let is_Mkstack : stack  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkstack"))))
+let is_Mkstack : stack  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkstack"))))
 
 
 let is_T = (fun _discr_ -> (match (_discr_) with
@@ -268,7 +268,7 @@ end
 t
 end
 | ((_43_129)::_43_127, []) -> begin
-(FStar_All.failwith "Ill-kinded type")
+(failwith "Ill-kinded type")
 end
 | ([], more) -> begin
 (
@@ -298,14 +298,14 @@ end))
 end)
 end
 | (FStar_Absyn_Syntax.Kind_lam (_)) | (FStar_Absyn_Syntax.Kind_delayed (_)) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Absyn_Syntax.Kind_unknown -> begin
 (let _141_140 = (let _141_139 = (let _141_137 = (FStar_Tc_Env.get_range tcenv)
 in (FStar_All.pipe_right _141_137 FStar_Range.string_of_range))
 in (let _141_138 = (FStar_Absyn_Print.typ_to_string t)
 in (FStar_Util.format2 "%s: Impossible: Kind_unknown: %s" _141_139 _141_138)))
-in (FStar_All.failwith _141_140))
+in (failwith _141_140))
 end))
 in (aux t k))))
 
@@ -331,7 +331,7 @@ in _141_148.FStar_Absyn_Syntax.n)) with
 if ((FStar_List.length bs) = (FStar_List.length bs')) then begin
 e
 end else begin
-(FStar_All.failwith "NYI")
+(failwith "NYI")
 end
 end
 | _43_180 -> begin
@@ -683,7 +683,7 @@ in (let _141_276 = (FStar_Absyn_Util.compress_typ cfg.code)
 in {code = _141_276; environment = _43_507.environment; stack = _43_507.stack; close = _43_507.close; steps = _43_507.steps}))
 in (match (config.code.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_delayed (_43_511) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Absyn_Syntax.Typ_uvar (_43_514) -> begin
 (rebuild config)
@@ -723,7 +723,7 @@ let _43_535 = config
 in {code = t; environment = e; stack = _43_535.stack; close = _43_535.close; steps = _43_535.steps}))
 end
 | _43_538 -> begin
-(FStar_All.failwith "Impossible: expected a type")
+(failwith "Impossible: expected a type")
 end)
 end
 | FStar_Absyn_Syntax.Typ_app (head, args) -> begin
@@ -817,7 +817,7 @@ in (FStar_Range.string_of_range _141_297))
 in (let _141_299 = (FStar_Absyn_Print.binder_to_string formal)
 in (let _141_298 = (FStar_All.pipe_left FStar_Absyn_Print.arg_to_string (Prims.fst actual))
 in (FStar_Util.format3 "(%s) Impossible: ill-typed redex\n formal is %s\nactual is %s\n" _141_300 _141_299 _141_298))))
-in (FStar_All.failwith _141_301))
+in (failwith _141_301))
 end)
 in (beta ((m)::env_entries) rest rest'))
 end))
@@ -868,7 +868,7 @@ in {code = t; environment = env; stack = empty_stack; close = (close_with_config
 in (sn tcenv _141_314)))
 end
 | _43_664 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end
 | FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_pattern (t, ps)) -> begin
@@ -995,7 +995,7 @@ in (FStar_All.pipe_right _141_331 FStar_Range.string_of_range))
 in (let _141_333 = (FStar_Absyn_Print.tag_of_typ config.code)
 in (let _141_332 = (FStar_Absyn_Print.typ_to_string config.code)
 in (FStar_Util.format3 "(%s) Unexpected type (%s): %s" _141_334 _141_333 _141_332))))
-in (FStar_All.failwith _141_335))
+in (failwith _141_335))
 end)
 end)))))
 and sn_binders : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.binders  ->  environment  ->  step Prims.list  ->  (FStar_Absyn_Syntax.binders * environment) = (fun tcenv binders env steps -> (
@@ -1152,7 +1152,7 @@ let w = (fun f -> (f cfg.code.FStar_Absyn_Syntax.pos))
 in (match ((let _141_403 = (FStar_Absyn_Util.compress_kind cfg.code)
 in _141_403.FStar_Absyn_Syntax.n)) with
 | (FStar_Absyn_Syntax.Kind_delayed (_)) | (FStar_Absyn_Syntax.Kind_lam (_)) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Absyn_Syntax.Kind_type) | (FStar_Absyn_Syntax.Kind_effect) -> begin
 cfg
@@ -1220,7 +1220,7 @@ end)))
 end))
 end
 | FStar_Absyn_Syntax.Kind_unknown -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)))
 and wne : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.exp config  ->  FStar_Absyn_Syntax.exp config = (fun tcenv cfg -> (
 
@@ -1266,7 +1266,7 @@ in {code = _141_424; environment = _43_925.environment; stack = empty_stack; clo
 end)
 in (match (e.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Exp_delayed (_43_928) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (FStar_Absyn_Syntax.Exp_fvar (_)) | (FStar_Absyn_Syntax.Exp_constant (_)) | (FStar_Absyn_Syntax.Exp_uvar (_)) -> begin
 (FStar_All.pipe_right config rebuild)
@@ -1283,7 +1283,7 @@ let _43_950 = config
 in {code = vc; environment = env; stack = _43_950.stack; close = _43_950.close; steps = _43_950.steps}))
 end
 | _43_953 -> begin
-(FStar_All.failwith "Impossible: ill-typed term")
+(failwith "Impossible: ill-typed term")
 end)
 end
 | FStar_Absyn_Syntax.Exp_app (head, args) -> begin
@@ -1363,7 +1363,7 @@ in (FStar_Range.string_of_range _141_438))
 in (let _141_440 = (FStar_Absyn_Print.binder_to_string formal)
 in (let _141_439 = (FStar_All.pipe_left FStar_Absyn_Print.arg_to_string (Prims.fst actual))
 in (FStar_Util.format3 "(%s) Impossible: ill-typed redex\n formal is %s\nactual is %s\n" _141_441 _141_440 _141_439))))
-in (FStar_All.failwith _141_442))
+in (failwith _141_442))
 end)
 in (beta ((m)::entries) rest rest'))
 end))
@@ -1677,7 +1677,7 @@ in (match (e.FStar_Absyn_Syntax.n) with
 FStar_Absyn_Syntax.Sig_let (((lbs), (r), (l), (b)))
 end
 | _43_1242 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)))
 end
 | s -> begin

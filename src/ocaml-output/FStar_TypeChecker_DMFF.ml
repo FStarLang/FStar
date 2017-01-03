@@ -38,7 +38,7 @@ let rest = (match (comp.FStar_Syntax_Syntax.n) with
 t
 end
 | _58_40 -> begin
-(FStar_All.failwith "wp_a contains non-Tot arrow")
+(failwith "wp_a contains non-Tot arrow")
 end)
 in (let _156_19 = (collect_binders rest)
 in (FStar_List.append bs _156_19)))
@@ -47,7 +47,7 @@ end
 []
 end
 | _58_46 -> begin
-(FStar_All.failwith "wp_a doesn\'t end in Type0")
+(failwith "wp_a doesn\'t end in Type0")
 end))
 in (
 
@@ -703,7 +703,7 @@ in {FStar_Syntax_Syntax.n = _156_356; FStar_Syntax_Syntax.tk = _58_255.FStar_Syn
 in (mk_rel t x y))
 end
 | FStar_Syntax_Syntax.Tm_arrow (_58_259) -> begin
-(FStar_All.failwith "unhandled arrow")
+(failwith "unhandled arrow")
 end
 | _58_262 -> begin
 (FStar_Syntax_Util.mk_eq t t x y)
@@ -745,7 +745,7 @@ in (let _156_373 = (project i y)
 in (mk_stronger t _156_374 _156_373)))
 end)) args)) with
 | [] -> begin
-(FStar_All.failwith "Impossible : Empty application when creating stronger relation in DM4F")
+(failwith "Impossible : Empty application when creating stronger relation in DM4F")
 end
 | (rel0)::rels -> begin
 ((rel0), (rels))
@@ -776,7 +776,7 @@ in (mk_stronger b _156_382 _156_381)))
 in (FStar_List.fold_right (fun bv body -> (mk_forall bv body)) bvs body))))
 end
 | _58_331 -> begin
-(FStar_All.failwith "Not a DM elaborated type")
+(failwith "Not a DM elaborated type")
 end)))
 in (
 
@@ -843,7 +843,7 @@ in (mk _156_401))
 in (FStar_Syntax_Util.close_forall binders pattern_guarded_body)))))
 end
 | _58_354 -> begin
-(FStar_All.failwith "Impossible: Expected the equivalence to be a quantified formula")
+(failwith "Impossible: Expected the equivalence to be a quantified formula")
 end)))
 in (
 
@@ -969,7 +969,7 @@ type env =
 {env : FStar_TypeChecker_Env.env; subst : FStar_Syntax_Syntax.subst_elt Prims.list; tc_const : FStar_Const.sconst  ->  FStar_Syntax_Syntax.typ}
 
 
-let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv"))))
+let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv"))))
 
 
 let empty : FStar_TypeChecker_Env.env  ->  (FStar_Const.sconst  ->  FStar_Syntax_Syntax.typ)  ->  env = (fun env tc_const -> {env = env; subst = []; tc_const = tc_const})
@@ -1038,10 +1038,10 @@ end
 (let _156_516 = (let _156_515 = (let _156_514 = (FStar_Syntax_Syntax.mk_Comp c)
 in (FStar_All.pipe_left FStar_Syntax_Print.comp_to_string _156_514))
 in (FStar_Util.format1 "[nm_of_comp]: impossible (%s)" _156_515))
-in (FStar_All.failwith _156_516))
+in (failwith _156_516))
 end
 | FStar_Syntax_Syntax.GTotal (_58_407) -> begin
-(FStar_All.failwith "[nm_of_comp]: impossible (GTot)")
+(failwith "[nm_of_comp]: impossible (GTot)")
 end))
 
 
@@ -1061,7 +1061,7 @@ let is_monadic_arrow : FStar_Syntax_Syntax.term'  ->  nm = (fun n -> (match (n) 
 (nm_of_comp n)
 end
 | _58_428 -> begin
-(FStar_All.failwith "unexpected_argument: [is_monadic_arrow]")
+(failwith "unexpected_argument: [is_monadic_arrow]")
 end))
 
 
@@ -1426,13 +1426,13 @@ in FStar_Syntax_Syntax.Err (_156_658))
 in (Prims.raise _156_659))
 end
 | FStar_Syntax_Syntax.Tm_delayed (_58_646) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)))))
 
 
 let is_monadic = (fun _58_5 -> (match (_58_5) with
 | None -> begin
-(FStar_All.failwith "un-annotated lambda?!")
+(failwith "un-annotated lambda?!")
 end
 | (Some (FStar_Util.Inl ({FStar_Syntax_Syntax.eff_name = _; FStar_Syntax_Syntax.res_typ = _; FStar_Syntax_Syntax.cflags = flags; FStar_Syntax_Syntax.comp = _}))) | (Some (FStar_Util.Inr (_, flags))) -> begin
 (FStar_All.pipe_right flags (FStar_Util.for_some (fun _58_4 -> (match (_58_4) with
@@ -1460,7 +1460,7 @@ let _58_679 = if (not ((FStar_List.for_all (fun _58_678 -> (match (_58_678) with
 | (h, _58_677) -> begin
 (is_C h)
 end)) args))) then begin
-(FStar_All.failwith "not a C (A * C)")
+(failwith "not a C (A * C)")
 end else begin
 ()
 end
@@ -1472,7 +1472,7 @@ let _58_685 = if (not ((FStar_List.for_all (fun _58_684 -> (match (_58_684) with
 | (h, _58_683) -> begin
 (not ((is_C h)))
 end)) args))) then begin
-(FStar_All.failwith "not a C (C * A)")
+(failwith "not a C (C * A)")
 end else begin
 ()
 end
@@ -1485,7 +1485,7 @@ end
 (
 
 let _58_693 = if (is_C t) then begin
-(FStar_All.failwith "not a C (C -> C)")
+(failwith "not a C (C -> C)")
 end else begin
 ()
 end
@@ -1587,7 +1587,7 @@ let strip_m = (fun _58_7 -> (match (_58_7) with
 ((t), (s_e), (u_e))
 end
 | _58_771 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (match (context_nm) with
 | N (t) -> begin
@@ -1619,31 +1619,31 @@ end
 | FStar_Syntax_Syntax.Tm_let (_58_827) -> begin
 (let _156_773 = (let _156_772 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format1 "[check]: Tm_let %s" _156_772))
-in (FStar_All.failwith _156_773))
+in (failwith _156_773))
 end
 | FStar_Syntax_Syntax.Tm_type (_58_830) -> begin
-(FStar_All.failwith "impossible (stratified)")
+(failwith "impossible (stratified)")
 end
 | FStar_Syntax_Syntax.Tm_arrow (_58_833) -> begin
-(FStar_All.failwith "impossible (stratified)")
+(failwith "impossible (stratified)")
 end
 | FStar_Syntax_Syntax.Tm_refine (_58_836) -> begin
 (let _156_775 = (let _156_774 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format1 "[check]: Tm_refine %s" _156_774))
-in (FStar_All.failwith _156_775))
+in (failwith _156_775))
 end
 | FStar_Syntax_Syntax.Tm_uvar (_58_839) -> begin
 (let _156_777 = (let _156_776 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format1 "[check]: Tm_uvar %s" _156_776))
-in (FStar_All.failwith _156_777))
+in (failwith _156_777))
 end
 | FStar_Syntax_Syntax.Tm_delayed (_58_842) -> begin
-(FStar_All.failwith "impossible (compressed)")
+(failwith "impossible (compressed)")
 end
 | FStar_Syntax_Syntax.Tm_unknown -> begin
 (let _156_782 = (let _156_781 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format1 "[check]: Tm_unknown %s" _156_781))
-in (FStar_All.failwith _156_782))
+in (failwith _156_782))
 end)))))
 and infer : env  ->  FStar_Syntax_Syntax.term  ->  (nm * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term) = (fun env e -> (
 
@@ -1654,7 +1654,7 @@ let normalize = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Norma
 in (match ((let _156_788 = (FStar_Syntax_Subst.compress e)
 in _156_788.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_bvar (bv) -> begin
-(FStar_All.failwith "I failed to open a binder... boo")
+(failwith "I failed to open a binder... boo")
 end
 | FStar_Syntax_Syntax.Tm_name (bv) -> begin
 ((N (bv.FStar_Syntax_Syntax.sort)), (e), (e))
@@ -1979,11 +1979,11 @@ in (mk _156_859))
 in N (_156_860))
 end
 | _58_1038 -> begin
-(FStar_All.failwith "wat?")
+(failwith "wat?")
 end)
 end
 | ([], (_58_1043)::_58_1041) -> begin
-(FStar_All.failwith "just checked that?!")
+(failwith "just checked that?!")
 end
 | (((bv, _58_1049))::binders, ((arg, _58_1055))::args) -> begin
 (final_type ((FStar_Syntax_Syntax.NT (((bv), (arg))))::subst) ((binders), (comp)) args)
@@ -2058,31 +2058,31 @@ end
 | FStar_Syntax_Syntax.Tm_let (_58_1115) -> begin
 (let _156_873 = (let _156_872 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format1 "[infer]: Tm_let %s" _156_872))
-in (FStar_All.failwith _156_873))
+in (failwith _156_873))
 end
 | FStar_Syntax_Syntax.Tm_type (_58_1118) -> begin
-(FStar_All.failwith "impossible (stratified)")
+(failwith "impossible (stratified)")
 end
 | FStar_Syntax_Syntax.Tm_arrow (_58_1121) -> begin
-(FStar_All.failwith "impossible (stratified)")
+(failwith "impossible (stratified)")
 end
 | FStar_Syntax_Syntax.Tm_refine (_58_1124) -> begin
 (let _156_875 = (let _156_874 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format1 "[infer]: Tm_refine %s" _156_874))
-in (FStar_All.failwith _156_875))
+in (failwith _156_875))
 end
 | FStar_Syntax_Syntax.Tm_uvar (_58_1127) -> begin
 (let _156_877 = (let _156_876 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format1 "[infer]: Tm_uvar %s" _156_876))
-in (FStar_All.failwith _156_877))
+in (failwith _156_877))
 end
 | FStar_Syntax_Syntax.Tm_delayed (_58_1130) -> begin
-(FStar_All.failwith "impossible (compressed)")
+(failwith "impossible (compressed)")
 end
 | FStar_Syntax_Syntax.Tm_unknown -> begin
 (let _156_882 = (let _156_881 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format1 "[infer]: Tm_unknown %s" _156_881))
-in (FStar_All.failwith _156_882))
+in (failwith _156_882))
 end))))
 and mk_match : env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.branch Prims.list  ->  (env  ->  FStar_Syntax_Syntax.term  ->  (nm * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term))  ->  (nm * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term) = (fun env e0 branches f -> (
 
@@ -2151,7 +2151,7 @@ in (match (_58_1195) with
 end))
 end
 | (M (_58_1197), false) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 end)) nms branches)
 in (FStar_List.unzip3 _156_902))
@@ -2363,7 +2363,7 @@ in (match ((check env e mn)) with
 ((t), (s_e), (u_e))
 end
 | _58_1290 -> begin
-(FStar_All.failwith "[check_n]: impossible")
+(failwith "[check_n]: impossible")
 end)))
 and check_m : env_  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term) = (fun env e -> (
 
@@ -2374,7 +2374,7 @@ in (match ((check env e mn)) with
 ((t), (s_e), (u_e))
 end
 | _58_1300 -> begin
-(FStar_All.failwith "[check_m]: impossible")
+(failwith "[check_m]: impossible")
 end)))
 and comp_of_nm : nm_  ->  FStar_Syntax_Syntax.comp = (fun nm -> (match (nm) with
 | N (t) -> begin
@@ -2388,7 +2388,7 @@ and type_of_comp : (FStar_Syntax_Syntax.comp', Prims.unit) FStar_Syntax_Syntax.s
 and trans_F_ : env_  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun env c wp -> (
 
 let _58_1311 = if (not ((is_C c))) then begin
-(FStar_All.failwith "not a C")
+(failwith "not a C")
 end else begin
 ()
 end
@@ -2407,7 +2407,7 @@ in (match (_58_1321) with
 
 let _58_1322 = if ((not (((FStar_List.length wp_args) = (FStar_List.length args)))) || (not ((let _156_990 = (FStar_Syntax_Util.mk_tuple_data_lid (FStar_List.length wp_args) FStar_Range.dummyRange)
 in (FStar_Syntax_Util.is_constructor wp_head _156_990))))) then begin
-(FStar_All.failwith "mismatch")
+(failwith "mismatch")
 end else begin
 ()
 end
@@ -2505,7 +2505,7 @@ end
 (trans_F_ env e wp)
 end
 | _58_1364 -> begin
-(FStar_All.failwith "impossible trans_F_")
+(failwith "impossible trans_F_")
 end))))
 and trans_G : env_  ->  FStar_Syntax_Syntax.typ  ->  Prims.bool  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.comp = (fun env h is_monadic wp -> (
 

@@ -157,7 +157,7 @@ in _158_58.FStar_Syntax_Syntax.n)) with
 ((uvs), (binders), (c))
 end
 | _60_114 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end)))
 end))
@@ -517,7 +517,7 @@ in _158_235.FStar_Syntax_Syntax.n)) with
 ((t), (wp))
 end
 | _60_259 -> begin
-(FStar_All.failwith "Unexpected repr type")
+(failwith "Unexpected repr type")
 end))
 in (
 
@@ -771,7 +771,7 @@ end))
 end))
 end
 | _60_355 -> begin
-(FStar_All.failwith "")
+(failwith "")
 end)
 in (
 
@@ -815,7 +815,7 @@ end
 (FStar_Syntax_Util.comp_result c)
 end
 | _60_386 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in (
 
@@ -839,7 +839,7 @@ end
 in (let _158_320 = (let _158_319 = (FStar_Util.string_of_int n)
 in (let _158_318 = (FStar_Syntax_Print.tscheme_to_string ts)
 in (FStar_Util.format3 "The effect combinator is %s (n=%s) (%s)" error _158_319 _158_318)))
-in (FStar_All.failwith _158_320)))
+in (failwith _158_320)))
 end else begin
 ()
 end
@@ -941,7 +941,7 @@ in _158_344.FStar_Syntax_Syntax.n)) with
 ((a), (effect_marker))
 end
 | _60_445 -> begin
-(FStar_All.failwith "bad shape for effect-for-free signature")
+(failwith "bad shape for effect-for-free signature")
 end)
 in (match (_60_448) with
 | (a, effect_marker) -> begin
@@ -1088,7 +1088,7 @@ in (FStar_Syntax_Subst.open_term ((b1)::(b2)::[]) _158_375))) with
 ((b1), (b2), (body))
 end
 | _60_521 -> begin
-(FStar_All.failwith "Impossible : open_term not preserving binders arity")
+(failwith "Impossible : open_term not preserving binders arity")
 end)
 in (match (_60_525) with
 | (b1, b2, body) -> begin
@@ -1137,7 +1137,7 @@ end))))
 end))
 end
 | _60_537 -> begin
-(FStar_All.failwith "unexpected shape for return")
+(failwith "unexpected shape for return")
 end)
 in (
 
@@ -1148,7 +1148,7 @@ in _158_393.FStar_Syntax_Syntax.n)) with
 in (FStar_Syntax_Util.abs ((b1)::(b2)::[]) _158_394 (Some (FStar_Util.Inr (((FStar_Syntax_Const.effect_GTot_lid), ([])))))))
 end
 | _60_549 -> begin
-(FStar_All.failwith "unexpected shape for return")
+(failwith "unexpected shape for return")
 end)
 in (
 
@@ -1165,7 +1165,7 @@ in (FStar_List.append _158_398 binders))
 in (FStar_Syntax_Util.abs _158_399 body what)))
 end
 | _60_558 -> begin
-(FStar_All.failwith "unexpected shape for bind")
+(failwith "unexpected shape for bind")
 end)
 in (
 
@@ -1306,7 +1306,7 @@ let _60_625 = (match ((FStar_Syntax_Subst.open_term ((type_param)::effect_param)
 ((b), (bs), (body))
 end
 | _60_621 -> begin
-(FStar_All.failwith "Impossible : open_term nt preserving binders arity")
+(failwith "Impossible : open_term nt preserving binders arity")
 end)
 in (match (_60_625) with
 | (type_param, effect_param, arrow) -> begin
@@ -1338,7 +1338,7 @@ end
 | _60_643 -> begin
 (let _158_449 = (let _158_448 = (FStar_Syntax_Print.term_to_string arrow)
 in (FStar_Util.format1 "Impossible: multiple post candidates %s" _158_448))
-in (FStar_All.failwith _158_449))
+in (failwith _158_449))
 end)
 in (let _158_451 = (FStar_Syntax_Util.arrow pre_args c)
 in (let _158_450 = (FStar_Syntax_Util.abs ((type_param)::effect_param) (Prims.fst post).FStar_Syntax_Syntax.sort None)
@@ -1349,14 +1349,14 @@ end
 | _60_646 -> begin
 (let _158_453 = (let _158_452 = (FStar_Syntax_Print.term_to_string arrow)
 in (FStar_Util.format1 "Impossible: pre/post arrow %s" _158_452))
-in (FStar_All.failwith _158_453))
+in (failwith _158_453))
 end)
 end))
 end
 | _60_648 -> begin
 (let _158_455 = (let _158_454 = (FStar_Syntax_Print.term_to_string wp_type)
 in (FStar_Util.format1 "Impossible: pre/post abs %s" _158_454))
-in (FStar_All.failwith _158_455))
+in (failwith _158_455))
 end)
 in (match (_60_651) with
 | (pre, post) -> begin
@@ -1508,7 +1508,7 @@ end
 | _60_735 -> begin
 (let _158_499 = (let _158_498 = (FStar_Syntax_Print.sigelt_to_string (FStar_Syntax_Syntax.Sig_bundle (((ses), ([]), (lids), (FStar_Range.dummyRange)))))
 in (FStar_Util.format1 "Unexpected lex_t: %s\n" _158_498))
-in (FStar_All.failwith _158_499))
+in (failwith _158_499))
 end))))
 and tc_assume : FStar_TypeChecker_Env.env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.formula  ->  FStar_Syntax_Syntax.qualifier Prims.list  ->  FStar_Range.range  ->  FStar_Syntax_Syntax.sigelt = (fun env lid phi quals r -> (
 
@@ -1615,7 +1615,7 @@ end))
 end))))
 end
 | _60_809 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (
 
@@ -1651,7 +1651,7 @@ in ((_158_540), (tps), (u_tc)))
 in Some (_158_541))))
 end
 | _60_857 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end else begin
 None
@@ -1780,7 +1780,7 @@ end))
 end)))
 end
 | _60_926 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end))
 in (
 
@@ -1796,7 +1796,7 @@ in (FStar_All.pipe_left (FStar_Syntax_Util.arrow tps) _158_578))
 in (FStar_Syntax_Syntax.null_binder _158_579))
 end
 | _60_952 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))))
 in (
 
@@ -1805,7 +1805,7 @@ let binders' = (FStar_All.pipe_right datas (FStar_List.map (fun _60_3 -> (match 
 (FStar_Syntax_Syntax.null_binder t)
 end
 | _60_973 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))))
 in (
 
@@ -1890,7 +1890,7 @@ FStar_Syntax_Syntax.Sig_inductive_typ (((tc), (uvs), (tps), (t), (mutuals), (dat
 end)))
 end
 | _60_1029 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end)) tc_types tcs)
 in (
@@ -1910,7 +1910,7 @@ let tc_insts = (FStar_All.pipe_right tcs (FStar_List.map (fun _60_4 -> (match (_
 ((tc), (uvs_universes))
 end
 | _60_1054 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))))
 in (FStar_List.map2 (fun _60_1059 d -> (match (_60_1059) with
 | (t, _60_1058) -> begin
@@ -1923,7 +1923,7 @@ in (FStar_All.pipe_right _158_595 (FStar_Syntax_Subst.close_univ_vars uvs)))
 in FStar_Syntax_Syntax.Sig_datacon (((l), (uvs), (ty), (tc), (ntps), (quals), (mutuals), (r))))
 end
 | _60_1075 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 end)) data_types datas)))
 end)
@@ -2026,7 +2026,7 @@ let datacon_typ = (fun data -> (match (data) with
 t
 end
 | _60_1147 -> begin
-(FStar_All.failwith "Impossible!")
+(failwith "Impossible!")
 end))
 in (
 
@@ -2042,7 +2042,7 @@ let _60_1177 = (match (ty) with
 ((lid), (bs), (t), (d_lids))
 end
 | _60_1172 -> begin
-(FStar_All.failwith "Impossible!")
+(failwith "Impossible!")
 end)
 in (match (_60_1177) with
 | (lid, bs, t, d_lids) -> begin
@@ -2174,7 +2174,7 @@ let t_datas = (FStar_List.filter (fun s -> (match (s) with
 (t_lid = lid)
 end
 | _60_1258 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)) datas)
 in (
 
@@ -2246,7 +2246,7 @@ in (match (ty) with
 us
 end
 | _60_1305 -> begin
-(FStar_All.failwith "Impossible!")
+(failwith "Impossible!")
 end))
 in (
 
@@ -2311,7 +2311,7 @@ let mutuals = (FStar_List.map (fun ty -> (match (ty) with
 lid
 end
 | _60_1358 -> begin
-(FStar_All.failwith "Impossible!")
+(failwith "Impossible!")
 end)) tcs)
 in (
 
@@ -2322,7 +2322,7 @@ let _60_1385 = (match (ty) with
 ((lid), (bs), (t), (d_lids))
 end
 | _60_1380 -> begin
-(FStar_All.failwith "Impossible!")
+(failwith "Impossible!")
 end)
 in (match (_60_1385) with
 | (lid, bs, t, d_lids) -> begin
@@ -2470,7 +2470,7 @@ let t_datas = (FStar_List.filter (fun s -> (match (s) with
 (t_lid = lid)
 end
 | _60_1485 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)) datas)
 in (
 
@@ -2517,7 +2517,7 @@ in (match (ty) with
 ((lid), (us))
 end
 | _60_1516 -> begin
-(FStar_All.failwith "Impossible!")
+(failwith "Impossible!")
 end))
 in (match (_60_1519) with
 | (lid, us) -> begin
@@ -2563,7 +2563,7 @@ in (match (ty) with
 lid
 end
 | _60_1555 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end))
 in (
 
@@ -2603,7 +2603,7 @@ in (
 let _60_1567 = (FStar_TypeChecker_Util.check_sigelt_quals env se)
 in (match (se) with
 | (FStar_Syntax_Syntax.Sig_inductive_typ (_)) | (FStar_Syntax_Syntax.Sig_datacon (_)) -> begin
-(FStar_All.failwith "Impossible bare data-constructor")
+(failwith "Impossible bare data-constructor")
 end
 | FStar_Syntax_Syntax.Sig_bundle (ses, quals, lids, r) when (FStar_All.pipe_right lids (FStar_Util.for_some (FStar_Ident.lid_equals FStar_Syntax_Const.lex_t_lid))) -> begin
 (
@@ -2671,7 +2671,7 @@ in (((se)::[]), (env), ([])))))
 end))
 end
 | FStar_Syntax_Syntax.Sig_new_effect_for_free (_60_1623) -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end
 | FStar_Syntax_Syntax.Sig_new_effect (ne, r) -> begin
 (
@@ -2766,7 +2766,7 @@ in (
 
 let _60_1692 = (match (((sub.FStar_Syntax_Syntax.lift), (sub.FStar_Syntax_Syntax.lift_wp))) with
 | (None, None) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (lift, Some (_60_1669, lift_wp)) -> begin
 (let _158_811 = (check_and_gen env lift_wp expected_k)
@@ -2939,7 +2939,7 @@ end
 ((tps), (c))
 end
 | _60_1776 -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end)
 in (match (_60_1779) with
 | (tps, c) -> begin
@@ -3183,7 +3183,7 @@ end)
 in ((FStar_Syntax_Syntax.Sig_let (((lbs), (r), (lids), (quals), (attrs)))), (lbs)))
 end
 | _60_1939 -> begin
-(FStar_All.failwith "impossible")
+(failwith "impossible")
 end)
 in (match (_60_1942) with
 | (se, lbs) -> begin
@@ -3246,7 +3246,7 @@ in (match (se) with
 (([]), (hidden))
 end
 | (FStar_Syntax_Syntax.Sig_inductive_typ (_)) | (FStar_Syntax_Syntax.Sig_datacon (_)) -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | FStar_Syntax_Syntax.Sig_bundle (ses, quals, _60_1981, r) -> begin
 if (is_abstract quals) then begin
