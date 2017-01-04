@@ -1131,19 +1131,25 @@ end)
 in (FStar_Getopt.parse_string specs (fun _25_368 -> ()) s)))
 
 
+let file_list_ : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
+
+
 let parse_cmd_line : Prims.unit  ->  (FStar_Getopt.parse_cmdline_res * Prims.string Prims.list) = (fun _25_370 -> (match (()) with
 | () -> begin
 (
 
-let file_list = (FStar_Util.mk_ref [])
-in (
-
 let res = (let _123_504 = (specs ())
-in (FStar_Getopt.parse_cmdline _123_504 (fun i -> (let _123_503 = (let _123_502 = (FStar_ST.read file_list)
+in (FStar_Getopt.parse_cmdline _123_504 (fun i -> (let _123_503 = (let _123_502 = (FStar_ST.read file_list_)
 in (FStar_List.append _123_502 ((i)::[])))
-in (FStar_ST.op_Colon_Equals file_list _123_503)))))
-in (let _123_505 = (FStar_ST.read file_list)
-in ((res), (_123_505)))))
+in (FStar_ST.op_Colon_Equals file_list_ _123_503)))))
+in (let _123_505 = (FStar_ST.read file_list_)
+in ((res), (_123_505))))
+end))
+
+
+let file_list : Prims.unit  ->  Prims.string Prims.list = (fun _25_373 -> (match (()) with
+| () -> begin
+(FStar_ST.read file_list_)
 end))
 
 
@@ -1159,14 +1165,14 @@ end else begin
 end
 in (
 
-let r = (let _123_509 = (specs ())
-in (FStar_Getopt.parse_cmdline _123_509 (fun x -> ())))
+let r = (let _123_511 = (specs ())
+in (FStar_Getopt.parse_cmdline _123_511 (fun x -> ())))
 in (
 
-let _25_380 = (let _123_513 = (let _123_512 = (let _123_511 = (FStar_List.map (fun _123_510 -> String (_123_510)) old_verify_module)
-in List (_123_511))
-in (("verify_module"), (_123_512)))
-in (set_option' _123_513))
+let _25_380 = (let _123_515 = (let _123_514 = (let _123_513 = (FStar_List.map (fun _123_512 -> String (_123_512)) old_verify_module)
+in List (_123_513))
+in (("verify_module"), (_123_514)))
+in (set_option' _123_515))
 in r)))))
 
 
@@ -1183,8 +1189,8 @@ end)
 end)
 
 
-let dont_gen_projectors : Prims.string  ->  Prims.bool = (fun m -> (let _123_518 = (get___temp_no_proj ())
-in (FStar_List.contains m _123_518)))
+let dont_gen_projectors : Prims.string  ->  Prims.bool = (fun m -> (let _123_520 = (get___temp_no_proj ())
+in (FStar_List.contains m _123_520)))
 
 
 let should_print_message : Prims.string  ->  Prims.bool = (fun m -> if (should_verify m) then begin
@@ -1209,11 +1215,11 @@ universe_include_path_base_dirs
 end else begin
 include_path_base_dirs
 end
-in (let _123_527 = (let _123_524 = (FStar_All.pipe_right defs (FStar_List.map (fun x -> (Prims.strcat h x))))
-in (FStar_All.pipe_right _123_524 (FStar_List.filter FStar_Util.file_exists)))
-in (let _123_526 = (let _123_525 = (get_include ())
-in (FStar_List.append _123_525 ((".")::[])))
-in (FStar_List.append _123_527 _123_526)))))
+in (let _123_529 = (let _123_526 = (FStar_All.pipe_right defs (FStar_List.map (fun x -> (Prims.strcat h x))))
+in (FStar_All.pipe_right _123_526 (FStar_List.filter FStar_Util.file_exists)))
+in (let _123_528 = (let _123_527 = (get_include ())
+in (FStar_List.append _123_527 ((".")::[])))
+in (FStar_List.append _123_529 _123_528)))))
 end
 end))
 
@@ -1225,9 +1231,9 @@ end else begin
 None
 end
 end else begin
-(let _123_532 = (let _123_530 = (include_path ())
-in (FStar_List.rev _123_530))
-in (FStar_Util.find_map _123_532 (fun p -> (
+(let _123_534 = (let _123_532 = (include_path ())
+in (FStar_List.rev _123_532))
+in (FStar_Util.find_map _123_534 (fun p -> (
 
 let path = (FStar_Util.join_paths p filename)
 in if (FStar_Util.file_exists path) then begin
@@ -1250,9 +1256,9 @@ in (match ((find_file filename)) with
 result
 end
 | None -> begin
-(let _123_536 = (let _123_535 = (FStar_Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
-in FStar_Util.Failure (_123_535))
-in (Prims.raise _123_536))
+(let _123_538 = (let _123_537 = (FStar_Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
+in FStar_Util.Failure (_123_537))
+in (Prims.raise _123_538))
 end))
 end
 | Some (x) -> begin
@@ -1270,8 +1276,8 @@ end
 end))
 
 
-let __temp_no_proj : Prims.string  ->  Prims.bool = (fun s -> (let _123_541 = (get___temp_no_proj ())
-in (FStar_All.pipe_right _123_541 (FStar_List.contains s))))
+let __temp_no_proj : Prims.string  ->  Prims.bool = (fun s -> (let _123_543 = (get___temp_no_proj ())
+in (FStar_All.pipe_right _123_543 (FStar_List.contains s))))
 
 
 let admit_smt_queries : Prims.unit  ->  Prims.bool = (fun _25_407 -> (match (()) with
@@ -1294,8 +1300,8 @@ end))
 
 let codegen_libs : Prims.unit  ->  Prims.string Prims.list Prims.list = (fun _25_410 -> (match (()) with
 | () -> begin
-(let _123_551 = (get_codegen_lib ())
-in (FStar_All.pipe_right _123_551 (FStar_List.map (fun x -> (FStar_Util.split x ".")))))
+(let _123_553 = (get_codegen_lib ())
+in (FStar_All.pipe_right _123_553 (FStar_List.map (fun x -> (FStar_Util.split x ".")))))
 end))
 
 
@@ -1305,8 +1311,8 @@ let debug_any : Prims.unit  ->  Prims.bool = (fun _25_412 -> (match (()) with
 end))
 
 
-let debug_at_level : Prims.string  ->  debug_level_t  ->  Prims.bool = (fun modul level -> (((modul = "") || (let _123_558 = (get_debug ())
-in (FStar_All.pipe_right _123_558 (FStar_List.contains modul)))) && (debug_level_geq level)))
+let debug_at_level : Prims.string  ->  debug_level_t  ->  Prims.bool = (fun modul level -> (((modul = "") || (let _123_560 = (get_debug ())
+in (FStar_All.pipe_right _123_560 (FStar_List.contains modul)))) && (debug_level_geq level)))
 
 
 let dep : Prims.unit  ->  Prims.string Prims.option = (fun _25_415 -> (match (()) with
@@ -1327,8 +1333,8 @@ let doc : Prims.unit  ->  Prims.bool = (fun _25_417 -> (match (()) with
 end))
 
 
-let dump_module : Prims.string  ->  Prims.bool = (fun s -> (let _123_567 = (get_dump_module ())
-in (FStar_All.pipe_right _123_567 (FStar_List.contains s))))
+let dump_module : Prims.string  ->  Prims.bool = (fun s -> (let _123_569 = (get_dump_module ())
+in (FStar_All.pipe_right _123_569 (FStar_List.contains s))))
 
 
 let eager_inference : Prims.unit  ->  Prims.bool = (fun _25_419 -> (match (()) with
@@ -1463,8 +1469,8 @@ let no_default_includes : Prims.unit  ->  Prims.bool = (fun _25_440 -> (match ((
 end))
 
 
-let no_extract : Prims.string  ->  Prims.bool = (fun s -> (let _123_614 = (get_no_extract ())
-in (FStar_All.pipe_right _123_614 (FStar_List.contains s))))
+let no_extract : Prims.string  ->  Prims.bool = (fun s -> (let _123_616 = (get_no_extract ())
+in (FStar_All.pipe_right _123_616 (FStar_List.contains s))))
 
 
 let no_location_info : Prims.unit  ->  Prims.bool = (fun _25_442 -> (match (()) with
