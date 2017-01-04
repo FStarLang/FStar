@@ -216,6 +216,11 @@ let disentangle_abbrevs_from_bundle
         (* Start unfolding in a type abbreviation that has not occurred before. *)
         and unfold_abbrev = function
             | Sig_let ((false, [lb]) , rng, _, quals, attr) ->
+	        (* eliminate some qualifiers for definitions *)
+	        let quals = quals |> List.filter begin function
+	        | Noeq -> false
+	        | _ -> true
+	        end in
                 let lid = match lb.lbname with
                     | Inr fv -> fv.fv_name.v
                     | _ -> failwith "instfv: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible"
