@@ -99,24 +99,29 @@ let go _ =
     | Success ->
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
-        else if Options.interactive() then //--in
-          let main_buffer_filename_opt, main_buffer_mod_name_opt, filenames =
-            if Options.explicit_deps() then begin
-              if List.length filenames = 0 then
-                Util.print_error "--explicit_deps was provided without a file list!\n";
-                None, None, filenames
-              end
-            else begin
-              if List.length filenames > 0 then
-                Util.print_warning "ignoring the file list (no --explicit_deps)\n";
-                let fn, mn, deps = detect_dependencies_with_first_interactive_chunk () in
-                Some fn, Some mn, deps
-              end
+        else if Options.interactive () then begin //--in
+          if Options.explicit_deps () then begin
+            Util.print_error "--explicit_deps incompatible with --in|n";
+            exit 1
+          end;
+          if List.length filenames <> 1 then begin
+            Util.print_error "fstar-mode.el should pass the current filename to F*\n";
+            exit 1
+          end;
+          (* If we can do it now, be smart and load as many dependencies as
+           * possible. *)
+          let filenames =
+            try
+              FStar.Dependences.find_deps_if_needed Parser.Dep.VerifyFigureItOut filenames
+            with _ ->
+              Util.print_warning ("There was an error reading dependencies from: " ^ (List.hd filenames));
+              // Rely on Aseem's discover-as-you-go feature
+              []
           in
           if Options.universes()
-          then interactive_mode main_buffer_filename_opt main_buffer_mod_name_opt Parser.Dep.VerifyUserList filenames None Universal.interactive_tc //and then call interactive mode
-          else interactive_mode None None Parser.Dep.VerifyUserList filenames None Stratified.interactive_tc //and then start checking chunks from the current buffer
-        else if Options.doc() then // --doc Generate Markdown documentation files
+          then interactive_mode filenames None Universal.interactive_tc //and then call interactive mode
+          else interactive_mode filenames None Stratified.interactive_tc //and then start checking chunks from the current buffer
+        end else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if Options.indent () then
           FStar.Indent.generate filenames

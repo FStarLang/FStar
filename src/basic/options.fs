@@ -750,10 +750,14 @@ let set_options o s =
         | Restore -> all_specs in
     Getopt.parse_string specs (fun _ -> ()) s
 
+let file_list_ = Util.mk_ref []
+
 let parse_cmd_line () =
-  let file_list = Util.mk_ref [] in
-  let res = Getopt.parse_cmdline (specs()) (fun i -> file_list := !file_list @ [i]) in
-  res, !file_list
+  let res = Getopt.parse_cmdline (specs()) (fun i -> file_list_ := !file_list_ @ [i]) in
+  res, !file_list_
+
+let file_list () =
+  !file_list_
 
 let restore_cmd_line_options should_clear =
     (* Some options must be preserved because they can't be reset via #pragrams.
