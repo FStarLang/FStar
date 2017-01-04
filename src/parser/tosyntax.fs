@@ -1485,7 +1485,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         | _ -> failwith "impossible")
       in
       let sigelts = tps_sigelts |> List.map snd in
-      let bundle, abbrevs = FStar.Syntax.InstFV.disentangle_abbrevs_from_bundle sigelts quals (List.collect Util.lids_of_sigelt sigelts) rng in
+      let bundle, abbrevs = FStar.Syntax.MutRecTy.disentangle_abbrevs_from_bundle sigelts quals (List.collect Util.lids_of_sigelt sigelts) rng in
       let env = push_sigelt env0 bundle in
       let env = List.fold_left push_sigelt env abbrevs in
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)

@@ -92,7 +92,7 @@ BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
 BOOT_FORMAT=$(addprefix format/, formatml.fs)
 ABSYN=syntax.fs const.fs visit.fs util.fs print.fs
 ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
-SYNTAX=syntax.fsi syntax.fs const.fs subst.fsi subst.fs free.fsi free.fs instfv.fsi instfv.fs util.fs print.fsi print.fs
+SYNTAX=syntax.fsi syntax.fs const.fs subst.fsi subst.fs free.fsi free.fs instfv.fsi instfv.fs util.fs print.fsi print.fs mutrecty.fsi mutrecty.fs
 SYNTAX_SRC=$(addprefix syntax/, $(SYNTAX))
 TC=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 TC_SRC=$(addprefix tc/, $(TC))
@@ -119,6 +119,7 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 	        FStar.Format.fst \
 	    	FStar.Absyn.Syntax.fst FStar.Absyn.Const.fst FStar.Absyn.Visit.fst FStar.Absyn.Util.fst FStar.Absyn.Print.fst \
 	    	FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.Free.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst \
+		FStar.Syntax.MutRecTy.fst \
 	    	FStar.Tc.Env.fst FStar.Tc.Recheck.fst FStar.Tc.Normalize.fst FStar.Tc.Errors.fst FStar.Tc.Rel.fst FStar.Tc.Util.fst FStar.Tc.Tc.fst \
 	    	FStar.ToSMT.Term.fst FStar.ToSMT.Z3.fst FStar.ToSMT.SplitQueryCases.fst FStar.ToSMT.Encode.fst \
 	    	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Errors.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst \
