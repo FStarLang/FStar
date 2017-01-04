@@ -22,7 +22,7 @@ val hd: list 'a -> 'a
 let hd = function
   | hd::tl -> hd
   | _ -> failwith "head of empty list"
-  
+
 val tail: list 'a -> list 'a
 let tail = function
   | hd::tl -> tl
@@ -49,7 +49,7 @@ val iter: ('a -> unit) -> list 'a -> unit
 let rec iter f x = match x with
   | [] -> ()
   | a::tl -> let _ = f a in iter f tl
-  
+
 val iteri_aux: int -> (int -> 'a -> unit) -> list 'a -> unit
 let rec iteri_aux i f x = match x with
   | [] -> ()

@@ -94,7 +94,7 @@ let rec step h s = match s with
   | e -> (match step_exp h e with 
     | Some e' -> Some (h, Assign x e')    
     | None -> None))
-| Seq s1 s2 -> if is_Skip s1 then Some (h, s2) else
+| Seq s1 s2 -> if Skip? s1 then Some (h, s2) else
   (match step h s1 with
   | Some (h', s') -> Some (h', Seq s' s2)
   | None -> None)
@@ -169,8 +169,8 @@ type typed_heap (g : env) (h : heap) = (forall x. typing_val (h x) = g x)
 
 (* progress for well-typed expressions *)
 val progress_exp : g:env -> h:heap{typed_heap g h} -> 
-                   e:exp{is_Some (typing_exp g e)} -> Lemma
-                   (is_Val e \/ is_Some (step_exp h e))
+                   e:exp{Some? (typing_exp g e)} -> Lemma
+                   (Val? e \/ Some? (step_exp h e))
 let rec progress_exp g h e = match e with
 | Val _ -> ()
 | Var _ -> () 
@@ -180,22 +180,22 @@ let rec progress_exp g h e = match e with
 
 (* progress for well typed statements *)
 val progress : g : env -> h : heap {typed_heap g h} -> s : stmt{typing g s} -> 
-               Lemma (is_Skip s \/ is_Some (step h s))
+               Lemma (Skip? s \/ Some? (step h s))
 let rec progress g h s = match s with
 | Skip -> ()
-| Assign x t -> if not (is_Val t) then progress_exp g h t
-| Seq s1 s2 -> if not (is_Skip s1) then progress g h s1
-| Cond c t e -> if not (is_Val c) then progress_exp g h c
-| While c b -> if not (is_Val c) then progress_exp g h c
+| Assign x t -> if not (Val? t) then progress_exp g h t
+| Seq s1 s2 -> if not (Skip? s1) then progress g h s1
+| Cond c t e -> if not (Val? c) then progress_exp g h c
+| While c b -> if not (Val? c) then progress_exp g h c
 
 (* type preservation for expressions *)
 val preservation_exp : g:env -> h:heap{typed_heap g h} -> 
-                       e:exp{is_Some (typing_exp g e) /\ is_Some (step_exp h e)} -> 
-                       Lemma (typing_exp g (Some.v (step_exp h e)) = typing_exp g e) 
+                       e:exp{Some? (typing_exp g e) /\ Some? (step_exp h e)} -> 
+                       Lemma (typing_exp g (Some?.v (step_exp h e)) = typing_exp g e) 
 let rec preservation_exp g h e = match e with
 | Val _ -> ()
 | Var _ -> ()
-| If c tb eb -> if not (is_Val c) then preservation_exp g h c
+| If c tb eb -> if not (Val? c) then preservation_exp g h c
 | Op op op1 op2 -> match (op1, op2) with 
   | (Val _, Val _) -> ()
   | (Val _, _) -> preservation_exp g h op2
@@ -203,24 +203,24 @@ let rec preservation_exp g h e = match e with
 
 (* type preservation for statments -- working variant *)
 val preservation : g:env -> h:heap{typed_heap g h} -> 
-                   s:stmt{typing g s /\ is_Some (step h s)} -> Lemma
-                   (typing g (Mktuple2._2 (Some.v (step h s))) /\
-                     typed_heap g (Mktuple2._1 (Some.v (step h s))))
+                   s:stmt{typing g s /\ Some? (step h s)} -> Lemma
+                   (typing g (Mktuple2._2 (Some?.v (step h s))) /\
+                     typed_heap g (Mktuple2._1 (Some?.v (step h s))))
 let rec preservation g h s = match s with
 | Skip -> ()
-| Assign x t -> if not (is_Val t) then preservation_exp g h t
-| Seq s1 s2 -> if not (is_Skip s1) then preservation g h s1
-| Cond c t e -> if not (is_Val c) then preservation_exp g h c
-| While c b -> if not (is_Val c) then preservation_exp g h c
+| Assign x t -> if not (Val? t) then preservation_exp g h t
+| Seq s1 s2 -> if not (Skip? s1) then preservation g h s1
+| Cond c t e -> if not (Val? c) then preservation_exp g h c
+| While c b -> if not (Val? c) then preservation_exp g h c
 
 (* type preservation for statments -- failing variant *)
 val preservation' : g:env -> h:heap{typed_heap g h} -> 
-                   s:stmt{typing g s /\ is_Some (step h s)} -> Lemma
-                   (typing g (snd (Some.v (step h s))) /\
-                     typed_heap g (fst (Some.v (step h s))))
+                   s:stmt{typing g s /\ Some? (step h s)} -> Lemma
+                   (typing g (snd (Some?.v (step h s))) /\
+                     typed_heap g (fst (Some?.v (step h s))))
 let rec preservation' g h s = match s with
 | Skip -> ()
-| Assign x t -> if not (is_Val t) then preservation_exp g h t
-| Seq s1 s2 -> if not (is_Skip s1) then preservation' g h s1
-| Cond c t e -> if not (is_Val c) then preservation_exp g h c
-| While c b -> if not (is_Val c) then preservation_exp g h c
+| Assign x t -> if not (Val? t) then preservation_exp g h t
+| Seq s1 s2 -> if not (Skip? s1) then preservation' g h s1
+| Cond c t e -> if not (Val? c) then preservation_exp g h c
+| While c b -> if not (Val? c) then preservation_exp g h c

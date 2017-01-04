@@ -34,7 +34,7 @@ let is_punctuation c = (
 let return_all x = x
 
 type time = float
-let now () = Unix.gettimeofday ()
+let now () = BatUnix.gettimeofday ()
 let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
   n, 
@@ -44,7 +44,10 @@ let record_time f =
     let res = f () in 
     let _, elapsed = time_diff start (now()) in
     res, elapsed
-
+let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
+let is_before t1 t2 = compare t1 t2 < 0
+let string_of_time = string_of_float
+  
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -258,6 +261,7 @@ let int_of_uint8 = int_of_char
 let uint16_of_int i = Z.to_int i
 let byte_of_char (c:char) = Char.code c
 
+let float_of_string s = float_of_string s
 let float_of_byte b = float_of_int (Char.code b)
 let float_of_int32 = float_of_int
 let float_of_int64 = BatInt64.to_float
@@ -470,6 +474,12 @@ let forall_exists rel l1 l2 =
   for_all (fun x -> for_some (rel x) l2) l1
 let multiset_equiv rel l1 l2 =
   BatList.length l1 = BatList.length l2 && forall_exists rel l1 l2
+let take p l =
+    let rec take_aux acc = function
+        | [] -> l, []
+        | x::xs when p x -> take_aux (x::acc) xs
+        | x::xs -> List.rev acc, x::xs
+    in take_aux [] l
 
 let add_unique f x l =
   if for_some (f x) l then

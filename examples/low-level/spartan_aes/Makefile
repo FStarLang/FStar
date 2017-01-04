@@ -1,19 +1,25 @@
 # Override to get cross-compilation
 MARCH?=$(shell uname -m)
+UNAME?=$(shell uname | cut -c 1-6)
 
-ifeq ($(shell uname | cut -c 1-6),CYGWIN)
+ifeq ($(UNAME),CYGWIN)
   CC=$(MARCH)-w64-mingw32-gcc
+else ifeq ($(MARCH),i686)
+  CC=gcc -m32
 else
-  ifeq ($(MARCH),i686)
-    CC=gcc -m32
-  else
-    CC=gcc
-  endif
+  CC=gcc
 endif
+
+ifeq ($(UNAME),Darwin)
+  VARIANT=-Darwin
+else ifeq ($(UNAME),Linux)
+  VARIANT=-Linux
+endif
+
 
 all: aes.o sha256.o
 
-%.o: %-$(MARCH).S
+%.o: %-$(MARCH)$(VARIANT).S
 	$(CC) -c $< -o $@
 
 .PHONY: import

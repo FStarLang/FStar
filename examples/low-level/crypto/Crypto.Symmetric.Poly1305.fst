@@ -1079,6 +1079,7 @@ private let modifies_mac (#a1:Type) (#a2:Type) (#a3:Type) (#a4:Type)
     lemma_reveal_modifies_2 b4 b3 h4 h5;
     lemma_intro_modifies_1 b4 h0 h6
 
+#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0"
 (** Computes the Poly1305 MAC on a buffer *)
 val poly1305_mac:
   tag:wordB{length tag == 16} ->

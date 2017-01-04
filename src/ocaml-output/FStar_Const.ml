@@ -181,50 +181,65 @@ end))
 
 
 let ___Const_bool____0 = (fun projectee -> (match (projectee) with
-| Const_bool (_26_3) -> begin
-_26_3
+| Const_bool (_27_3) -> begin
+_27_3
 end))
 
 
 let ___Const_int____0 = (fun projectee -> (match (projectee) with
-| Const_int (_26_6) -> begin
-_26_6
+| Const_int (_27_6) -> begin
+_27_6
 end))
 
 
 let ___Const_char____0 = (fun projectee -> (match (projectee) with
-| Const_char (_26_9) -> begin
-_26_9
+| Const_char (_27_9) -> begin
+_27_9
 end))
 
 
 let ___Const_float____0 = (fun projectee -> (match (projectee) with
-| Const_float (_26_12) -> begin
-_26_12
+| Const_float (_27_12) -> begin
+_27_12
 end))
 
 
 let ___Const_bytearray____0 = (fun projectee -> (match (projectee) with
-| Const_bytearray (_26_15) -> begin
-_26_15
+| Const_bytearray (_27_15) -> begin
+_27_15
 end))
 
 
 let ___Const_string____0 = (fun projectee -> (match (projectee) with
-| Const_string (_26_18) -> begin
-_26_18
+| Const_string (_27_18) -> begin
+_27_18
 end))
 
 
 let ___Const_range____0 = (fun projectee -> (match (projectee) with
-| Const_range (_26_21) -> begin
-_26_21
+| Const_range (_27_21) -> begin
+_27_21
 end))
 
 
 let ___Const_reflect____0 = (fun projectee -> (match (projectee) with
-| Const_reflect (_26_24) -> begin
-_26_24
+| Const_reflect (_27_24) -> begin
+_27_24
+end))
+
+
+let eq_const : sconst  ->  sconst  ->  Prims.bool = (fun c1 c2 -> (match (((c1), (c2))) with
+| (Const_int (s1, o1), Const_int (s2, o2)) -> begin
+(((FStar_Util.ensure_decimal s1) = (FStar_Util.ensure_decimal s2)) && (o1 = o2))
+end
+| ((Const_bytearray (a, _), Const_bytearray (b, _))) | ((Const_string (a, _), Const_string (b, _))) -> begin
+(a = b)
+end
+| (Const_reflect (l1), Const_reflect (l2)) -> begin
+(FStar_Ident.lid_equals l1 l2)
+end
+| _27_62 -> begin
+(c1 = c2)
 end))
 
 

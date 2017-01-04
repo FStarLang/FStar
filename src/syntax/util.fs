@@ -327,7 +327,7 @@ let is_trivial_wp c =
   comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
 (********************************************************************************)
-(****************Simple utils on the local structure of a term ******************)
+(*               Simple utils on the structure of a term                        *)
 (********************************************************************************)
 let primops =
   [Const.op_Eq;
@@ -360,6 +360,73 @@ let rec unascribe e =
 let rec ascribe t k = match t.n with
   | Tm_ascribed (t', _, _) -> ascribe t' k
   | _ -> mk (Tm_ascribed(t, k, None)) None t.pos
+
+(* ---------------------------------------------------------------------- *)
+(* <eq_tm> Syntactic equality of zero-order terms                         *)
+(* ---------------------------------------------------------------------- *)
+type eq_result =
+    | Equal
+    | NotEqual
+    | Unknown
+
+let rec eq_tm (t1:term) (t2:term) : eq_result =
+    let t1 = unascribe t1 in
+    let t2 = unascribe t2 in
+    let equal_if = function
+        | true -> Equal
+        | _ -> Unknown
+    in
+    let equal_iff = function
+        | true -> Equal
+        | _ -> NotEqual
+    in
+    let eq_and f g =
+      match f with
+      | Equal -> g()
+      | _ -> Unknown
+    in
+    match t1.n, t2.n with
+    | Tm_name a, Tm_name b ->
+      equal_if (bv_eq a b)
+
+    | Tm_fvar f, Tm_fvar g ->
+      equal_if (fv_eq f g)
+
+    | Tm_uinst(f, us), Tm_uinst(g, vs) ->
+      eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
+
+    | Tm_constant c, Tm_constant d ->
+      equal_iff (FStar.Const.eq_const c d)
+
+    | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
+      equal_if (Unionfind.equivalent u1 u2)
+
+    | Tm_app (h1, args1), Tm_app(h2, args2) ->
+      eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
+
+    | Tm_type u, Tm_type v ->
+      equal_if (eq_univs u v)
+
+    | Tm_meta(t1, _), _ ->
+      eq_tm t1 t2
+
+    | _, Tm_meta(t2, _) ->
+      eq_tm t1 t2
+
+    | _ -> Unknown
+
+and eq_args (a1:args) (a2:args) : eq_result =
+    match a1, a2 with
+    | [], [] -> Equal
+    | (a, _)::a1, (b, _)::b1 ->
+      (match eq_tm a b with
+       | Equal -> eq_args a1 b1
+       | _ -> Unknown)
+    | _ -> Unknown
+
+and eq_univs_list (us:universes) (vs:universes) : bool =
+    List.length us = List.length vs
+    && List.forall2 eq_univs us vs
 
 let rec unrefine t =
   let t = compress t in
@@ -418,8 +485,8 @@ let destruct typ lid =
     | Tm_fvar tc when fv_eq_lid tc lid -> Some []
     | _ -> None
 
-let rec lids_of_sigelt se = match se with
-  | Sig_let(_, _, lids, _)
+let lids_of_sigelt se = match se with
+  | Sig_let(_, _, lids, _, _)
   | Sig_bundle(_, _, lids, _) -> lids
   | Sig_inductive_typ (lid, _, _,  _, _, _, _, _)
   | Sig_effect_abbrev(lid, _, _, _,  _, _, _)
@@ -443,7 +510,7 @@ let quals_of_sigelt x = match x with
   | Sig_datacon (_, _, _, _, _, quals, _, _)
   | Sig_declare_typ (_, _, _, quals, _)
   | Sig_assume (_, _, quals, _)
-  | Sig_let(_, _, _, quals)
+  | Sig_let(_, _, _, quals, _)
   | Sig_new_effect({qualifiers=quals}, _)
   | Sig_new_effect_for_free({qualifiers=quals}, _) ->
     quals
@@ -458,7 +525,7 @@ let range_of_sigelt x = match x with
   | Sig_datacon (_, _, _, _, _, _, _, r)
   | Sig_declare_typ (_, _, _, _, r)
   | Sig_assume (_, _, _, r)
-  | Sig_let(_, r, _, _)
+  | Sig_let(_, r, _, _, _)
   | Sig_main(_, r)
   | Sig_pragma(_, r)
   | Sig_new_effect(_, r)
@@ -554,7 +621,7 @@ let set_uvar uv t =
 let qualifier_equal q1 q2 = match q1, q2 with
   | Discriminator l1, Discriminator l2 -> lid_equals l1 l2
   | Projector (l1a, l1b), Projector (l2a, l2b) -> lid_equals l1a l2a && l1b.idText=l2b.idText
-  | RecordType (ns1, f1), RecordType (ns2, f2) 
+  | RecordType (ns1, f1), RecordType (ns2, f2)
   | RecordConstructor (ns1, f1), RecordConstructor (ns2, f2) ->
       List.length ns1 = List.length ns2 && List.forall2 (fun x1 x2 -> x1.idText = x2.idText) f1 f2 &&
       List.length f1 = List.length f2 && List.forall2 (fun x1 x2 -> x1.idText = x2.idText) f1 f2
@@ -652,7 +719,8 @@ let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
         | Some fvs, _ ->
           let universes = univ_vars |> List.map U_name in
           let inst = fvs |> List.map (fun fv -> fv.fv_name.v, universes) in
-          FStar.Syntax.InstFV.instantiate inst def in
+          FStar.Syntax.InstFV.instantiate inst def
+    in
     let typ = Subst.close_univ_vars univ_vars typ in
     let def = Subst.close_univ_vars univ_vars def in
     mk_letbinding lbname univ_vars typ eff def
@@ -687,8 +755,17 @@ let mk_tuple_data_lid n r =
 let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)
 
+let is_tuple_data_lid' f =
+    f.nsstr = "Prims" && Util.starts_with f.ident.idText "Mktuple"
+
+let is_tuple_constructor_lid lid =
+    Util.starts_with (Ident.text_of_lid lid) "Prims.tuple"
+
+let is_dtuple_constructor_lid lid =
+  lid.nsstr = "Prims" && Util.starts_with lid.ident.idText "Prims.dtuple"
+
 let is_dtuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> Util.starts_with fv.fv_name.v.str "Prims.dtuple"
+  | Tm_fvar fv -> is_dtuple_constructor_lid fv.fv_name.v
   | _ -> false
 
 let mk_dtuple_lid n r =
@@ -698,6 +775,9 @@ let mk_dtuple_lid n r =
 let mk_dtuple_data_lid n r =
   let t = Util.format1 "Mkdtuple%s" (Util.string_of_int n) in
   set_lid_range (Const.pconst t) r
+
+let is_dtuple_data_lid' f =
+    Util.starts_with (Ident.text_of_lid f) "Mkdtuple"
 
 let is_lid_equality x = lid_equals x Const.eq2_lid
 
@@ -922,15 +1002,16 @@ let destruct_typ_as_formula f : option<connective> =
         | None -> destruct_q_conn phi
 
 
-  let action_as_lb a =
+  let action_as_lb eff_lid a =
     let lb = close_univs_and_mk_letbinding
                 None
+                (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
                 (Inr (lid_as_fv a.action_name Delta_equational None))
                 a.action_univs
                 a.action_typ
                 Const.effect_Tot_lid
                 a.action_defn in
-    Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [])
+    Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [Visible_default ; Action eff_lid], [])
 
 (* Some reification utilities *)
 let mk_reify t =

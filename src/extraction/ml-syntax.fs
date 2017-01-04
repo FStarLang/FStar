@@ -72,7 +72,9 @@ let rec gensyms x = match x with
 
 (* -------------------------------------------------------------------- *)
 let mlpath_of_lident (x : lident) : mlpath =
-    (List.map (fun x -> x.idText) x.ns, x.ident.idText)
+    if Ident.lid_equals x FStar.Syntax.Const.failwith_lid
+    then ([], x.ident.idText)
+    else (List.map (fun x -> x.idText) x.ns, x.ident.idText)
 
 let as_mlident (x:bvdef<'a>) = x.ppname.idText, 0
 
@@ -162,6 +164,7 @@ and c_flag = // C backend only
   | Assumed
   | Private
   | NoExtract
+  | Attribute of string
 
 and mlletflavor =
   | Rec

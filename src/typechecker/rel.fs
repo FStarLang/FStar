@@ -858,25 +858,6 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
 (* </decomposition>                                 *)
 (* ------------------------------------------------ *)
 
-(* ---------------------------------------------------------------------- *)
-(* <eq_args> Special case of deciding syntactic equality, an optimization *)
-(* ---------------------------------------------------------------------- *)
-let rec eq_tm (t1:typ) (t2:typ) =
-    let t1 = SS.compress t1 in
-    let t2 = SS.compress t2 in
-    match t1.n, t2.n with
-        | Tm_name a, Tm_name b -> S.bv_eq a b
-        | Tm_fvar f, Tm_fvar g -> S.fv_eq f g
-        | Tm_constant c, Tm_constant d -> c=d
-        | Tm_uvar (u1, _), Tm_uvar (u2, _) -> Unionfind.equivalent u1 u2
-        | Tm_app (h1, args1), Tm_app(h2, args2) ->
-          eq_tm h1 h2 && eq_args args1 args2
-        | _ -> false
-
-and eq_args (a1:args) (a2:args) : bool =
-    List.length a1 = List.length a2
-    && List.forall2 (fun (a1, _) (a2, _) -> eq_tm a1 a2) a1 a2
-
 (* ----------------------------------------------------- *)
 (* Ranking problems for the order in which to solve them *)
 (* ----------------------------------------------------- *)
@@ -1468,7 +1449,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             (Print.term_to_string head2)
                             (args_to_string args2))
                             orig
-                else if nargs=0 || eq_args args1 args2 //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
+                else if nargs=0 || U.eq_args args1 args2=U.Equal //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
                 then match solve_maybe_uinsts env orig head1 head2 wl with
                         | USolved wl -> solve env (solve_prob orig None [] wl)
                         | UFailed msg -> giveup env msg orig
@@ -2106,7 +2087,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          then let uv1 = Free.uvars t1 in
               let uv2 = Free.uvars t2 in
               if Util.set_is_empty uv1 && Util.set_is_empty uv2 //and we don't have any unification variables left to solve within the terms
-              then let guard = if eq_tm t1 t2
+              then let guard = if U.eq_tm t1 t2 = U.Equal
                                then None
                                else Some <| Util.mk_eq tun tun t1 t2 in
                    solve env (solve_prob orig guard [] wl)
@@ -2170,7 +2151,9 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
              else let c2_decl = Env.get_effect_decl env c2.effect_name in
                   let g =
-                     if is_null_wp_2
+                     if env.lax then
+                        Util.t_true
+                     else if is_null_wp_2
                      then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
                           mk (Tm_app(inst_effect_fun_with [env.universe_of env c1.result_typ] env c2_decl c2_decl.trivial,
                                     [as_arg c1.result_typ; as_arg <| edge.mlift c1.result_typ wpc1]))

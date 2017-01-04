@@ -67,7 +67,8 @@ let as_option as_t = function
 
 let fstar_options : ref<list<Util.smap<option_val>> > = Util.mk_ref []
 let peek () = List.hd !fstar_options
-let pop  () = match !fstar_options with
+let pop  () =
+    match !fstar_options with
     | []
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
@@ -102,6 +103,7 @@ let init () =
         ("hint_info"                    , Bool false);
         ("in"                           , Bool false);
         ("include"                      , List []);
+        ("indent"                       , Bool false);
         ("initial_fuel"                 , Int 2);
         ("initial_ifuel"                , Int 1);
         ("inline_arith"                 , Bool false);
@@ -184,6 +186,7 @@ let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
+let get_indent                  ()      = lookup_opt "indent"                   as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_inline_arith            ()      = lookup_opt "inline_arith"             as_bool
@@ -405,6 +408,11 @@ let rec specs () : list<Getopt.opt> =
         "A directory in which to search for files included on the command line");
 
        ( noshort,
+        "indent",
+        ZeroArgs (fun () -> Bool true),
+        "Parses and outputs the files on the command line");
+
+       ( noshort,
         "initial_fuel",
         OneArg((fun x -> Int (int_of_string x)),
                 "[non-negative integer]"),
@@ -434,7 +442,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "log_queries",
         ZeroArgs (fun () -> Bool true),
-        "Log the Z3 queries in queries.smt2");
+        "Log the Z3 queries in several queries-*.smt2 files, as we go");
 
        ( noshort,
         "max_fuel",
@@ -830,6 +838,7 @@ let full_context_dependency      () = get_MLish() = false
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
+let indent                       () = get_indent                      ()
 let initial_fuel                 () = get_initial_fuel                ()
 let initial_ifuel                () = get_initial_ifuel               ()
 let inline_arith                 () = get_inline_arith                ()

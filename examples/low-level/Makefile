@@ -26,17 +26,18 @@ CHACHA_EXTRACTED=Buffer_Utils.ml Crypto_Symmetric_Chacha20.ml
 POLY_EXTRACTED=FStar_List_Tot.ml FStar_Ghost.ml FStar_Seq.ml FStar_SeqProperties.ml Buffer_Utils.ml Crypto_Config.ml Crypto_Indexing.ml Crypto_Symmetric_Bytes.ml Crypto_Symmetric_Poly1305_Parameters.ml Crypto_Symmetric_Poly1305_Bigint.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part6.ml Crypto_Symmetric_Poly1305_Bignum.ml Crypto_Symmetric_Poly1305_Spec.ml Flag.ml Crypto_Symmetric_Poly1305.ml
 AEAD_EXTRACTED=FStar_List_Tot.ml FStar_Seq.ml FStar_SeqProperties.ml Buffer_Utils.ml  Crypto_Config.ml Crypto_Indexing.ml Crypto_Symmetric_Bytes.ml Crypto_Symmetric_Chacha20.ml Crypto_Symmetric_AES.ml Crypto_Symmetric_AES128.ml Crypto_Symmetric_Cipher.ml FStar_Ghost.ml Crypto_Symmetric_Poly1305_Spec.ml Crypto_Symmetric_Poly1305_Parameters.ml Crypto_Symmetric_Poly1305_Bigint.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part6.ml Crypto_Symmetric_Poly1305_Bignum.ml Flag.ml Crypto_Symmetric_Poly1305_Lemmas.ml Crypto_Symmetric_Poly1305.ml FStar_Monotonic_RRef.ml Crypto_Symmetric_Poly1305_MAC.ml Crypto_AEAD_Chacha20Poly1305.ml
 # TODO: remove FStar_BitVector below once it's no longer needed
-CHACHA_AEAD_EXTRACTED=Spartan.ml FStar_List_Tot.ml FStar_Seq.ml FStar_SeqProperties.ml FStar_BitVector.ml FStar_UInt.ml Buffer_Utils.ml Crypto_Config.ml Crypto_Indexing.ml Crypto_Symmetric_Bytes.ml Crypto_Symmetric_Chacha20.ml Crypto_Symmetric_AES.ml Crypto_Symmetric_AES128.ml Crypto_Symmetric_Cipher.ml FStar_Ghost.ml Flag.ml Crypto_Plain.ml Crypto_Symmetric_GF128_Spec.ml Crypto_Symmetric_GF128.ml Crypto_Symmetric_Poly1305_Spec.ml Crypto_Symmetric_Poly1305_Parameters.ml Crypto_Symmetric_Poly1305_Bigint.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part6.ml Crypto_Symmetric_Poly1305_Bignum.ml Crypto_Symmetric_Poly1305_Lemmas.ml Crypto_Symmetric_Poly1305.ml FStar_Monotonic_RRef.ml Crypto_Symmetric_MAC.ml Crypto_Symmetric_UF1CMA.ml Crypto_Symmetric_PRF.ml Crypto_AEAD_Encoding.ml Crypto_AEAD_Invariant.ml Crypto_AEAD_Lemmas.ml Crypto_AEAD_Lemmas_Part2.ml Crypto_AEAD_Lemmas_Part3.ml Crypto_AEAD_Wrappers.ml Crypto_AEAD_BufferUtils.ml Crypto_AEAD.ml
+CHACHA_AEAD_EXTRACTED=Spartan.ml FStar_List_Tot.ml FStar_Seq.ml FStar_SeqProperties.ml FStar_BitVector.ml FStar_UInt.ml Buffer_Utils.ml Crypto_Config.ml Crypto_Indexing.ml Crypto_Symmetric_Bytes.ml Crypto_Symmetric_Chacha20.ml Crypto_Symmetric_AES.ml Crypto_Symmetric_AES128.ml Crypto_Symmetric_Cipher.ml FStar_Ghost.ml Flag.ml Crypto_Plain.ml Crypto_Symmetric_GF128_Spec.ml Crypto_Symmetric_GF128.ml Crypto_Symmetric_Poly1305_Spec.ml Crypto_Symmetric_Poly1305_Parameters.ml Crypto_Symmetric_Poly1305_Bigint.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part6.ml Crypto_Symmetric_Poly1305_Bignum.ml Crypto_Symmetric_Poly1305_Lemmas.ml Crypto_Symmetric_Poly1305.ml FStar_Monotonic_RRef.ml Crypto_Symmetric_MAC.ml Crypto_Symmetric_UF1CMA.ml Crypto_Symmetric_PRF.ml Crypto_AEAD_Encoding.ml Crypto_AEAD_Invariant.ml Crypto_AEAD_Encrypt_Invariant.ml Crypto_AEAD_Wrappers_PRF.ml Crypto_AEAD_Wrappers_Encoding.ml Crypto_AEAD_Wrappers_CMA.ml Crypto_AEAD_BufferUtils.ml Crypto_AEAD_Enxor_Invariant.ml Crypto_AEAD_EnxorDexor.ml Crypto_AEAD_MAC_Wrapper_Invariant.ml Crypto_AEAD_Encrypt_Ideal_Invariant.ml Crypto_AEAD_Encrypt.ml Crypto_AEAD_Decrypt.ml Crypto_AEAD.ml
 
 .PHONY: lib-ver chacha-ver chacha-ml ulib
 
-#16-09-18 lib-ver works but is too slow/brittle? 
-all: uall sall
-
+#NS: 12/21, we decided to only check verification on each commit; a full test happens nightly using the extra target
 uall:
+	+make -C crypto all
+
+extra:
 	make clean
 	+make chacha-test aes-test aesgcm-test chacha-aead-test
-	+make -C crypto all
+	+make -C crypto all extra
 # removed tests poly-test and aead-test, relying on older code.
 
 sall:
@@ -193,10 +194,13 @@ bignum-ver:
 
 KRML_INCLUDES=$(addprefix -I ,spartan_aes crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
 KRML_ARGS=-verbose -ccopt -maes -ccopt -Wno-error=pointer-sign $(KOPTS)
-KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
+KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES) 
 
 spartan_aes/aes.o:
 	make -C spartan_aes
+
+extract-krml-test:
+	$(FSTAR) --no_extract FStar.Math.Lib --no_extract FStar.HyperHeap --no_extract FStar.HyperStack --no_extract FStar.ST --no_extract FStar.Seq --no_extract FStar.UInt128 --no_extract FStar.Int128 --no_extract FStar.UInt64 --no_extract FStar.Int64 --no_extract FStar.UInt63 --no_extract FStar.Int63 --no_extract FStar.UInt32 --no_extract FStar.Int32 --no_extract FStar.UInt31 --no_extract FStar.Int31 --no_extract FStar.UInt16 --no_extract FStar.Int16 --no_extract FStar.UInt8 --no_extract FStar.Int8 --no_extract Crypto.AEAD.MAC_Wrapper.Invariant --trace_error --include D:/workspace/clean/FStar/ulib/hyperstack --include spartan_aes --include crypto --include ../../../../everest/kremlin/kremlib --include ../../../../everest/kremlin/test --include D:/workspace/everest/kremlin/kremlib crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst
 
 krml-test.exe: spartan_aes/aes.o
 	$(KRML) crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst \
@@ -204,10 +208,6 @@ krml-test.exe: spartan_aes/aes.o
 	       	crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest \
 	       	$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c \
 		-tmpdir tmp -add-include '"testlib.h"' -o krml-test.exe
-#	$(CC) -O3 -o krml-test.exe spartan_aes/aes.o tmp/*.c $(KREMLIN_HOME)/kremlib/kremlib.c \
-#		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c \
-#		$(KRML_INCLUDES) $(CFLAGS) \
-#		-g -Wall -msse2 -msse -m32 -maes -Wno-unused-variable
 	./krml-test.exe
 
 OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List_Tot.ml \
@@ -305,13 +305,18 @@ ocaml-test.exe: ocaml-test-extract
 	./ocaml-test.exe
 
 OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
+#OPENSSL_HOME=/usr/local/Cellar/openssl\@1.1/1.1.0c
+#CC=gcc-6 
 
 test-perf.exe: krml-test.exe crypto/test_perf.c
-	$(CC) -O3 -o test-perf.exe $(OBJ_FILES) $(KREMLIN_HOME)/kremlib/kremlib.c \
-		$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c crypto/test_perf.c -I tmp \
+	$(CC) -Ofast -m64 -march=native -mtune=native -flto -funroll-loops -fomit-frame-pointer \
+	 -o test-perf.exe tmp/FStar.c tmp/Crypto_AEAD*.c tmp/Crypto_Symmetric*.c tmp/Crypto_Indexing*.c tmp/Buffer_Utils*.c tmp/Crypto_Plain*.c $(KREMLIN_HOME)/kremlib/kremlib.c \
+		$(KREMLIN_HOME)/test/testlib.c crypto/test_perf.c crypto/spartan_stub.c spartan_aes/*.o crypto/test_hacks.c -I tmp -L tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
-		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME) -lcrypto $(CFLAGS)
-	DYLD_LIBRARY_PATH=$(OPENSSL_HOME) ./test-perf.exe
+		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME)/lib -L $(OPENSSL_HOME) -lcrypto $(CFLAGS)
+	PATH=$(OPENSSL_HOME):"$(PATH)" \
+	  LD_LIBRARY_PATH=$(OPENSSL_HOME):"$(LD_LIBRARY_PATH)" \
+	  DYLD_LIBRARY_PATH=$(OPENSSL_HOME):"$(DYLD_LIBRARY_PATH)" ./test-perf.exe
 
 # Cleaning
 clean:

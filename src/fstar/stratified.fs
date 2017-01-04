@@ -43,7 +43,7 @@ let module_or_interface_name m = m.is_interface, m.name
 (***********************************************************************)
 let parse (env:DsEnv.env) (fn:string) : DsEnv.env  
                                       * list<Syntax.modul> =
-  let ast = Parser.Driver.parse_file fn in
+  let ast, _ = Parser.Driver.parse_file fn in
   Desugar.desugar_file env ast
 
 (***********************************************************************)
@@ -140,7 +140,8 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
           env.solver.refresh();
           Options.pop() in
 
-    let push (dsenv, env) msg = 
+    let push (dsenv, env) lax restore_cmd_line_options msg =
+          //Warning: ignoring the lax flag and restore_cmd_line_options flag, stratified should go away 
           let dsenv = DsEnv.push dsenv in
           let env = TcEnv.push env msg in
           Options.push();
@@ -173,10 +174,24 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
         Tc.Errors.report_all() |> ignore;
         Tc.Errors.num_errs := 0 in
 
+    let tc_prims_interactive () =
+      let _, dsenv, env = tc_prims () in
+      (dsenv, env) in
+
+   let tc_one_file_interactive (remaining:list<string>) (uenv:Parser.DesugarEnv.env * env) = //:((option<string> * string) * (Parser.DesugarEnv.env * env) * modul option * string list) =
+     match remaining with
+        | file::remaining ->
+          let _, dsenv, env = tc_one_file (fst uenv) (snd uenv) file in
+          (None, file), (dsenv, env), None, remaining
+        | [] -> failwith "Impossible" in
+        
     { pop = pop; 
       push = push;
       mark = mark;
       reset_mark = reset_mark;
       commit_mark = commit_mark;
       check_frag = check_frag;
-      report_fail = report_fail}
+      report_fail = report_fail;
+      tc_prims = tc_prims_interactive;
+      tc_one_file = tc_one_file_interactive;
+      cleanup = (fun _ -> ())}

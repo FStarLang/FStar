@@ -8,7 +8,7 @@ open FStar.Constructive
 *)
 
 (* Ingredient #1: impredicative polymorphism in Type *)
-
+#set-options "--print_universes"
 type t = a:Type -> Tot a
 val foo : t -> Tot t
 let foo f = f t
@@ -161,30 +161,30 @@ let l1 (a:Type) (b:Type) =
 // Expected type "((retract (pow a) (pow b)) \/ (~ (retract (pow a) (pow b))))";
 // got type "(((U6898 a b _2_71 x) -> Tot (U6898 a b _2_71 x)) \/ (U6900 a b _2_71 x))"
 
-type U = p:Type -> Tot (pow p)
+type u_type = p:Type -> Tot (pow p)
 
-val f : U -> Tot (pow U)
-let f u = u U
+val f : u_type -> Tot (pow u_type)
+let f u = u u_type
 
-assume val g : pow U -> GTot U
-// let g (h:pow U) = fun (x:Type) ->
-//   let lX = j2 (l1 x U) in
-//   let rU = i2 (l1 U U) in
+assume val g : pow u_type -> GTot u_type
+// let g (h:pow u_type) = fun (x:Type) ->
+//   let lX = j2 (l1 x u_type) in
+//   let rU = i2 (l1 u_type u_type) in
 //   lX (rU h)
 // berardi.fst(173,0-176,11) : Error
-// Expected a term of type "((pow U) -> GTot (U))";
-// got a function "(fun h x -> let  lX:<UNKNOWN> = (j2 (l1 x U)) in let  rU:<UNKNOWN> = (i2 (l1 U U)) in (lX (rU h)))" (Curried function, but not total)
+// Expected a term of type "((pow u_type) -> GTot (u_type))";
+// got a function "(fun h x -> let  lX:<UNKNOWN> = (j2 (l1 x u_type)) in let  rU:<UNKNOWN> = (i2 (l1 u_type u_type)) in (lX (rU h)))" (Curried function, but not total)
 
-// val r : GTot U
+// val r : GTot u_type
 // Kinds "Effect" and "Type" are incompatible
 // CH: should be able to define the effect of top level computations?
 // CH: need to pass a silly unit
-val r : unit -> GTot U
-let r () = g (fun (u:U) -> op_Negation (u U u))
+val r : unit -> GTot u_type
+let r () = g (fun (u:u_type) -> op_Negation (u u_type u))
 
-assume val not_has_fixpoint : unit -> Tot (ceq ((r()) U (r()))
-                                                (op_Negation ((r()) U (r()))))
-// let not_has_fixpoint () = Eq bool (r U r)
+assume val not_has_fixpoint : unit -> Tot (ceq ((r()) u_type (r()))
+                                                (op_Negation ((r()) u_type (r()))))
+// let not_has_fixpoint () = Eq bool (r u_type r)
 
 val contradict : unit -> Lemma false
 let contradict () = ignore (not_has_fixpoint ())

@@ -139,7 +139,9 @@ and metadata =
   | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
   | Meta_monadic       of monad_name * typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
-  | Meta_monadic_lift  of monad_name * monad_name                (* Sub-effecting: a lift from m1 to m2 *)
+                                                                 (* Contains the name of the monadic effect and  the type of the subterm *)
+  | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
+                                                                 (* from the first monad_name m1 to the second monad name  m2 *)
 and uvar_basis<'a> =
   | Uvar
   | Fixed of 'a
@@ -224,9 +226,14 @@ type qualifier =
   | Projector of lident * ident            //projector for datacon l's argument x
   | RecordType of (list<ident> * list<ident>)          //record type whose namespace is fst and unmangled field names are snd
   | RecordConstructor of (list<ident> * list<ident>)   //record constructor whose namespace is fst and unmangled field names are snd
+  | Action of lident                       //action of some effect
   | ExceptionConstructor                   //a constructor of Prims.exn
   | HasMaskedEffect                        //a let binding that may have a top-level effect
   | Effect                                 //qualifier on a name that corresponds to an effect constructor
+  | OnlyName                               //qualifier internal to the compiler indicating a dummy declaration which
+                                           //is present only for name resolution and will be elaborated at typechecking
+
+type attribute = term
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {
@@ -309,6 +316,7 @@ and sigelt =
                        * Range.range
                        * list<lident>               //mutually defined
                        * list<qualifier>
+                       * list<attribute>
   | Sig_main           of term
                        * Range.range
   | Sig_assume         of lident
@@ -327,6 +335,7 @@ and sigelt =
                        * list<cflags>
                        * Range.range
   | Sig_pragma         of pragma * Range.range
+
 type sigelts = list<sigelt>
 
 type modul = {
@@ -494,7 +503,7 @@ let freshen_bv bv =
     else {bv with index=next_id()}
 let new_univ_name ropt =
     let id = next_id() in
-    mk_ident (Util.string_of_int id, range_of_ropt ropt)
+    mk_ident ("'uu___" ^ Util.string_of_int id, range_of_ropt ropt)
 let mkbv x y t  = {ppname=x;index=y;sort=t}
 let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y
@@ -512,3 +521,11 @@ let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid fv.fv_name.v)
 let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
+
+let has_simple_attribute (l: list<term>) s =
+  List.existsb (function
+    | { n = Tm_constant (Const_string (data, _)) } when string_of_unicode data = s ->
+        true
+    | _ ->
+        false
+  ) l

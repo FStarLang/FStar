@@ -35,16 +35,16 @@ type fragment =
 
 let parse_fragment frag : fragment =
     match ParseIt.parse (Inr frag) with
-    | Inl (Inl []) ->
+    | Inl (Inl [], _) ->
       Empty
 
-    | Inl (Inl [modul]) -> //interactive mode: module
+    | Inl (Inl [modul], _) -> //interactive mode: module
       Modul modul
 
-    | Inl (Inr decls) -> //interactive mode: more decls
-      Decls decls 
+    | Inl (Inr decls, _) -> //interactive mode: more decls
+      Decls decls
 
-    | Inl (Inl _) ->
+    | Inl (Inl _, _) ->
       if (Options.universes())
       then raise (Syntax.Syntax.Err("Refusing to check more than one module at a time incrementally"))
       else raise (Absyn.Syntax.Err("Refusing to check more than one module at a time incrementally"))
@@ -57,10 +57,10 @@ let parse_fragment frag : fragment =
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 let parse_file fn =
   match ParseIt.parse (Inl fn) with
-  | Inl (Inl ast) ->
-    ast
+  | Inl (Inl ast, comments) ->
+    ast, comments
 
-  | Inl (Inr _) ->
+  | Inl (Inr _ , _) ->
     let msg = Util.format1 "%s: expected a module\n" fn in
     let r = Range.dummyRange in
     if (Options.universes())
