@@ -133,7 +133,7 @@ let disentangle_abbrevs_from_bundle
                 let sigelt' = Sig_let ((false, [lb']), rng, [lid], quals, attr) in
                 let () = rev_unfolded_type_abbrevs := sigelt' :: !rev_unfolded_type_abbrevs in
                 let () = in_progress := List.tl !in_progress in (* pop *)
-                ty'
+                tm'
             | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible"
         in
             
