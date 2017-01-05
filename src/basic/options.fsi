@@ -110,6 +110,7 @@ val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : options -> string -> parse_cmdline_res
 val should_print_message        : string  -> bool
+val should_extract              : string  -> bool
 val should_verify               : string  -> bool
 val silent                      : unit    -> bool
 val split_cases                 : unit    -> int

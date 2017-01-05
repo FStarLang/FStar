@@ -832,7 +832,7 @@ in (
 let collect_one = (collect_one verify_flags verify_mode)
 in (
 
-let partial_discovery = ((FStar_Options.universes ()) && (not ((FStar_Options.verify_all ()))))
+let partial_discovery = ((FStar_Options.universes ()) && (not (((FStar_Options.verify_all ()) || (FStar_Options.extract_all ())))))
 in (
 
 let rec discover_one = (fun interface_only key -> if ((FStar_Util.smap_try_find graph key) = None) then begin

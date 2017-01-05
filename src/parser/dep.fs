@@ -542,7 +542,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
    *   - both M.fsti and M.fst if the argument was M.fst
    *)
   let partial_discovery =
-    Options.universes () && not (Options.verify_all () (*|| Options.extract_all ()*))
+    Options.universes () && not (Options.verify_all () || Options.extract_all ())
   in
   let rec discover_one interface_only key =
     if smap_try_find graph key = None then
