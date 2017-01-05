@@ -58,11 +58,33 @@ type scope_mod =
 | Top_level_def            of ident           (* top-level definition for an unqualified identifier x to be resolved as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
+type string_set = set<string>
+
+type exported_id_kind = (* kinds of identifiers exported by a module *)
+| Exported_id_term_type (* term and type identifiers *)
+| Exported_id_field     (* field identifiers *)
+type exported_id_set = exported_id_kind -> ref<string_set>
+
 type env = {
   curmodule:            option<lident>;                   (* name of the module being desugared *)
   curmonad:             option<ident>;                    (* current monad being desugared *)
   modules:              list<(lident * modul)>;           (* previously desugared modules *)
   scope_mods:           list<scope_mod>;                  (* toplevel or definition-local scope modifiers *)
+  exported_ids:         Util.smap<exported_id_set>;       (* identifiers (stored as strings for efficiency)
+                                                             reachable in a module, not shadowed by "include"
+                                                             declarations. Used only to handle such shadowings,
+                                                             not "private"/"abstract" definitions which it is
+                                                             enough to just remove from the sigmap. Formally,
+                                                             iden is in exported_ids[ModulA] if, and only if,
+                                                             there is no 'include ModulB' (with ModulB.iden
+                                                             defined or reachable) after iden in ModulA.
+                                                           *)  
+  trans_exported_ids:   Util.smap<exported_id_set>;       (* transitive version of exported_ids along the
+                                                             "include" relation, for each module: an identifier is in this set
+                                                             for a module if and only if it is defined either
+                                                             in this module or in one of its included modules.
+                                                           *)
+  includes:             Util.smap<(ref<(list<lident>)>)>; (* list of "includes" declarations for each module. *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
   sigmap:               Util.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
   default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
@@ -104,6 +126,7 @@ val push_bv_mutable: env -> ident -> env * bv
 val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env
 val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
+val push_include: env -> lident -> env
 val push_module_abbrev : env -> ident -> lident -> env
 
 val pop: env -> env

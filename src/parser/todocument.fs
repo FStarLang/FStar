@@ -309,6 +309,8 @@ and p_fsdoc (doc, kwd_args) =
 and p_rawDecl d = match d.d with
   | Open uid ->
     group (str "open" ^/^ p_quident uid)
+  | Include uid ->
+    group (str "include" ^/^ p_quident uid)
   | ModuleAbbrev (uid1, uid2) ->
     (str "module" ^^ space ^^ p_uident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2
   | TopLevelModule uid ->

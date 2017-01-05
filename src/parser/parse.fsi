@@ -93,6 +93,7 @@ type token =
   | INT of (string * bool)
   | INLINE_FOR_EXTRACTION
   | INLINE
+  | INCLUDE
   | IN
   | IMPLIES
   | IFF
@@ -231,6 +232,7 @@ type tokenId =
     | TOKEN_INT
     | TOKEN_INLINE_FOR_EXTRACTION
     | TOKEN_INLINE
+    | TOKEN_INCLUDE
     | TOKEN_IN
     | TOKEN_IMPLIES
     | TOKEN_IFF

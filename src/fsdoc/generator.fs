@@ -117,6 +117,7 @@ let string_of_decl' d =
   match d with
   | TopLevelModule l -> "module " ^ l.str // SI: should never get here
   | Open l -> "open " ^ l.str
+  | Include l -> "include " ^ l.str
   | ModuleAbbrev (i, l) -> "module " ^ i.idText ^ " = " ^ l.str
   | KindAbbrev(i, _, _) -> "kind " ^ i.idText
   | TopLevelLet(_, pats) ->
