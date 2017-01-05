@@ -65,6 +65,7 @@ val dont_gen_projectors         : string  -> bool
 val dump_module                 : string  -> bool
 val eager_inference             : unit    -> bool
 val explicit_deps               : unit    -> bool
+val extract_all                 : unit    -> bool
 val file_list                   : unit    -> list<string>
 val find_file                   : string  -> option<string>
 val fs_typ_app                  : unit    -> bool

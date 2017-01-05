@@ -108,6 +108,8 @@ let go _ =
             Util.print_error "fstar-mode.el should pass the current filename to F*\n";
             exit 1
           end;
+          if Options.verify_module () <> [] then
+            Util.print_warning "Interactive mode; ignoring --verify_module";
           (* If we can do it now, be smart and load as many dependencies as
            * possible. *)
           let filenames =

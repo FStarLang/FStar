@@ -94,6 +94,7 @@ let init () =
         ("dump_module"                  , List []);
         ("eager_inference"              , Bool false);
         ("explicit_deps"                , Bool false);
+        ("extract_all"                  , Bool false);
         ("fs_typ_app"                   , Bool false);
         ("fsi"                          , Bool false);
         ("fstar_home"                   , Unset);
@@ -178,6 +179,7 @@ let get_doc                     ()      = lookup_opt "doc"                      
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
 let get_explicit_deps           ()      = lookup_opt "explicit_deps"            as_bool
+let get_extract_all             ()      = lookup_opt "extract_all"              as_bool
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_fsi                     ()      = lookup_opt "fsi"                      as_bool
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
@@ -363,6 +365,11 @@ let rec specs () : list<Getopt.opt> =
         "explicit_deps",
         ZeroArgs (fun () -> Bool true),
         "Do not find dependencies automatically, the user provides them on the command-line");
+
+       ( noshort,
+        "extract_all",
+        ZeroArgs (fun () -> Bool true),
+        "Extract all modules in the dependency graph, not just those specified on the command-line");
 
        ( noshort,
         "fs_typ_app",
@@ -837,6 +844,7 @@ let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
 let explicit_deps                () = get_explicit_deps               ()
+let extract_all                  () = get_extract_all                 ()
 let fs_typ_app                   () = get_fs_typ_app                  ()
 let full_context_dependency      () = get_MLish() = false
 let hide_genident_nums           () = get_hide_genident_nums          ()
