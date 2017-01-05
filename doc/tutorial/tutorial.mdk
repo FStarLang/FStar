@@ -245,16 +245,17 @@ describe a simple interface provided by the framework as follows:
 ~
 
 This interface provides two functions, `read` and `write`, which
-presumably implement the corresponding operations on files.
+in a real setup would implement the corresponding operations on files.
+In our simplified example they just print things on screen.
 
-By using the `assume val` notation, we *declare* that this module provides
-the `read` and `write` operations (they are *values*), but that we are
-*_not_ defining* those values here---they will be provided by an external
-module. Our use of `assume val` is much like the
-`extern`{language=csharp} keyword in C and other programming languages.
+<!-- By using the `assume val` notation, we *declare* that this module provides -->
+<!-- the `read` and `write` operations (they are *values*), but that we are -->
+<!-- *_not_ defining* those values here---they will be provided by an external -->
+<!-- module. Our use of `assume val` is much like the -->
+<!-- `extern`{language=csharp} keyword in C and other programming languages. -->
 
-As with `extern`{language=csharp}, when declaring a value, we also
-provide its type signature.
+<!-- As with `extern`{language=csharp}, when declaring a value, we also -->
+<!-- provide its type signature. -->
 
 * The type of `read` says that it is a function expecting a `filename`
   argument `f` for which `canRead f` evaluates to `true` and returning a
