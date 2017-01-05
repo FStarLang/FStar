@@ -632,22 +632,22 @@ let g = (
 
 let _82_493 = g
 in {FStar_Extraction_ML_UEnv.tcenv = _82_493.FStar_Extraction_ML_UEnv.tcenv; FStar_Extraction_ML_UEnv.gamma = _82_493.FStar_Extraction_ML_UEnv.gamma; FStar_Extraction_ML_UEnv.tydefs = _82_493.FStar_Extraction_ML_UEnv.tydefs; FStar_Extraction_ML_UEnv.currentModule = name})
-in if (((m.FStar_Syntax_Syntax.name.FStar_Ident.str = "Prims") || m.FStar_Syntax_Syntax.is_interface) || (FStar_Options.no_extract m.FStar_Syntax_Syntax.name.FStar_Ident.str)) then begin
+in if ((((m.FStar_Syntax_Syntax.name.FStar_Ident.str <> "Prims") && (not (m.FStar_Syntax_Syntax.is_interface))) && (not ((FStar_Options.no_extract m.FStar_Syntax_Syntax.name.FStar_Ident.str)))) && ((let _180_194 = (let _180_192 = (FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name)
+in (Prims.strcat _180_192 ".fst"))
+in (let _180_193 = (FStar_Options.file_list ())
+in (FStar_List.contains _180_194 _180_193))) || (FStar_Options.extract_all ()))) then begin
 (
 
-let g = (extract_iface g m)
-in ((g), ([])))
-end else begin
-(
-
-let _82_499 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
-in (match (_82_499) with
+let _82_498 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
+in (match (_82_498) with
 | (g, sigs) -> begin
 (
 
 let mlm = (FStar_List.flatten sigs)
 in ((g), ((FStar_Extraction_ML_Syntax.MLLib ((((name), (Some ((([]), (mlm)))), (FStar_Extraction_ML_Syntax.MLLib ([]))))::[]))::[])))
 end))
+end else begin
+((g), ([]))
 end)))))
 
 
