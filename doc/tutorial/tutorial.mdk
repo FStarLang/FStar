@@ -12,6 +12,7 @@ Package       : fullpage
 ~BB           : .comment color=purple author="Benjamin Beurdouche"
 ~NS           : .comment color=red author="Nik"
 ~MK           : .comment color=blue author=Markulf
+~KK           : .comment color=orange author="Konrad Kohbrok"
 ~Todo         : .comment author="Todo"
 
 ~Remark       : font-style=italic padding-left=1em
@@ -124,6 +125,23 @@ resources freely available on the web, e.g., [TryF#],
 [Introduction to Caml]: http://www.cs.jhu.edu/~scott/pl/lectures/caml-intro.html
 [Real World OCaml]: https://realworldocaml.org/
 
+~KK
+Without any experience in ML or Ocaml my experience has been that the later
+exercises are very hard to solve as some of the notation is not obvious. Even
+knowing the correct solution, I had to either infer syntax from the exercise
+code (which is fine) or go by trial and error (which was frustrating at times).
+I will leave comments on the exercises detailing what kind of notation I was (or
+am still) missing Is there a resource (maybe in the wiki) that we can point
+readers to, that includes examples for most of the concepts? Something like the
+[F# reference] would be really helpful. Also, it might help to specify the
+audience of this tutorial a bit more. As a programmer with slightly faded memory
+of how inductive proofs work, the lemmas are not very straight forward. As
+someone who has never seen ML or has never done any functional programming, the
+syntax and some of the patterns are hard to grasp, I feel.
+~
+
+[F# reference]: https://docs.microsoft.com/en-us/dotnet/articles/fsharp/language-reference/
+
 The easiest way to try F\* and solve the verification exercises in this tutorial is
 directly in your browser by using the [online F\* editor]. You can
 load the boilerplate code needed for each exercise into the online
@@ -143,16 +161,29 @@ the [source code on github] using these [instructions].
 [source code on github]: http://github.com/FStarLang/FStar
 [instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
 
-You can edit F\* code using your favorite text editor, but [Emacs],
-[Atom], and [Vim] have extensions that add special support for F\*,
-including syntax highlighting and interactive development. More
-details on [editor support] on the [F\* wiki].
+You can edit F\* code using your favorite text editor, but [Emacs] has an
+extension that add special support for F\*, including syntax highlighting and
+interactive development. More details on [editor support] on the [F\* wiki].
+You can find the code for the exercises and the solutions in the [F\* repository] 
+on Github. However, note that for some exercises, you have to include additional
+libraries. Details on how to do this for Emacs can be found in the wiki.
+
+~KK
+Both Atom and Vim support seems to be either broken or discontinued (or both),
+so we might not want to list them as viable options for the audience of this
+tutorial. Also, the code available on the tutorial page and on github differs
+quite a bit (as does the F\* version I guess). In my case, this lead to some
+unexpected errors when copying code from the online-editor to Emacs. When
+someone is using Emacs, we might want to point them to the libraries they have
+to include (only where necessary).
+~
 
 [Emacs]: https://github.com/FStarLang/fstar-mode.el
 [Atom]: https://github.com/FStarLang/fstar-interactive
 [Vim]: https://github.com/FStarLang/VimFStar
 [editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
 [F\* wiki]: https://github.com/FStarLang/FStar/wiki
+[F\* repository]: https://github.com/FStarLang/FStar/tree/master/doc/tutorial/code/
 
 By default F\* only verifies the input code, **it does not execute it**.
 To execute F\* code one needs to extract it to OCaml or F# and then
@@ -556,6 +587,7 @@ as arguments (e.g. sorting).
 ### Computing functions
 
 _Skip this section on a first read, if you are new to functional programming._
+
 
 Sometimes it is useful to return a function after performing some
 computation. For example, here is a function that makes a new counter,
@@ -1008,6 +1040,11 @@ sounds mysterious to you. However, as you start to use quantified
 formulas in refinement types, you should make sure you understand this
 section._
 
+~KK
+Depending on the audience of this tutorial, we might want to move this to
+further towards the end of the tutorial.
+~
+
 We mentioned earlier that a refinement type has the form `:x:t{phi(x)}`.
 In its primitive form, `phi` is in fact a type, a predicate on the value
 `x:t`. We allow you to use a boolean function in place of a type: under
@@ -1200,6 +1237,11 @@ let rec append_mem l1 l2 a = match l1 with
 ~~
 ~
 
+~KK
+Implicit type parameters were not yet introduced, neither was the "hasEq"
+function or what it means. It is not visible in the code snippet above, but
+becomes visible when you load the code into the editor.
+~
 
 ## To type intrinsically, or to prove lemmas?
 
@@ -1255,6 +1297,13 @@ it is:
 In the `Cons` case of `rev_involutive` we are explicitly applying not just
 the induction hypothesis but also the `snoc_cons` lemma we proved above.
 
+~KK
+At this point it would be nice to have an explaination on how these two
+functions actually help F\* (or Z3) prove the property. It took me quite a while
+to figure out how this might work and I'm still not entirely certain. Again,
+this depends on who the audience of this tutorial is.
+~
+
 ~Exercise
 Prove that reverse is injective, i.e.,
 ~~ ExerciseFragment {exname=Ex04d}
@@ -1307,6 +1356,14 @@ By adding a type annotation we can give a _different_ type to `map`:
 
 This type is neither a subtype nor a supertype of the type F\*
 inferred on its own.
+
+~KK
+At this point I could not really figure out how the type inferred by F\* and the
+explicitly written type differ functionally. I suspect this is due to my limited
+knowledge of functional programming and has something to do with currying.
+Anyway, a small remark about this might make sense here.
+Also: why can or does F\* not infer the different type? 
+~
 
 >**No parametric polymorphism on effects**: You might hope to give
 `map` a very general type, one that accepts a function with any effect
@@ -1368,6 +1425,14 @@ Prove that `(fold_right Cons [] l = l)`.
 ~
 -->
 
+~KK
+This exercise seems to be commented out in the Github version of the tutorial as
+opposed to the version actually available on the tutorial page. I don't mind
+having multiple exercises of a certain type. However, it might be nice to have
+an explaination to go along with it. Even looking at the code I often had a hard
+time figuring out why exactly the solution checks out.
+~
+
 ## Implicitly defined functions on inductive types
 
 For each definition of an inductive type, F\* automatically introduces a
@@ -1391,6 +1456,11 @@ we have two discriminators:
 
     val is_Cons: list 'a -> Tot bool
     let is_Cons xs = match xs with _::_-> true | _ -> false
+
+~KK
+The notation without a "|" before the first case causes syntax errors. Or am I
+missing something?
+~
 
 ### Projectors
 
@@ -1903,6 +1973,11 @@ F\* to prove it.
 
 ~CH
 Is this an exercise or not? :)
+~
+
+~KK
+This was also my thought. To make the online-editor verify it, definitions of
+sorted, mem, etc would be needed.
 ~
 
 Unsurprisingly, it fails, on several counts:
@@ -3832,6 +3907,13 @@ let revoke e =
   ST.write acls db
 ~~~
 ~~
+~
+
+~KK
+The notation to reason about heaps was introduced in the previous section, which
+was marked as "optional" on the first read. A primer on how it works on a
+more superficial level (without the theoretical background) at the start of this
+section might be helpful.
 ~
 
 ## Reasoning about (anti-)aliased heap structures
