@@ -94,6 +94,7 @@ and binder' =
   | Annotated of ident * term
   | TAnnotated of ident * term
   | NoName of term
+
 and binder = {b:binder'; brange:range; blevel:level; aqual:aqual}
 
 and pattern' =
@@ -177,6 +178,7 @@ type pragma =
 type decl' =
   | TopLevelModule of lid
   | Open of lid
+  | Include of lid
   | ModuleAbbrev of ident * lid
   | TopLevelLet of let_qualifier * list<(pattern * term)>
   | Main of term
@@ -203,6 +205,7 @@ and decl = {
   attrs: attributes_
 }
 and effect_decl =
+  (* KM : Is there really need of the genrality of decl here instead of e.g. lid * term ? *)
   | DefineEffect   of ident * list<binder> * term * list<decl> * list<decl>
   | RedefineEffect of ident * list<binder> * term
 
@@ -335,6 +338,7 @@ let focusLetBindings lbs r =
 let mkFsTypApp t args r =
   mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
 
+  (* TODO : is this valid or should it use Construct ? *)
 let mkTuple args r =
   let cons =
     if Options.universes()
@@ -604,6 +608,7 @@ let id_of_tycon = function
 let decl_to_string (d:decl) = match d.d with
   | TopLevelModule l -> "module " ^ l.str
   | Open l -> "open " ^ l.str
+  | Include l -> "include " ^ l.str
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
   | KindAbbrev(i, _, _) -> "kind " ^ i.idText
   | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")

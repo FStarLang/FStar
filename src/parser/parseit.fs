@@ -109,7 +109,8 @@ let parse fn =
                 | _ -> failwith "Impossible"))
            else Inl mods
         | _ -> fileOrFragment in
-       Inl frags
+       let non_polymorphic_nil : list<string * FStar.Range.range> = [] in
+       Inl (frags, non_polymorphic_nil)
   with
     | Absyn.Syntax.Error(msg, r)
     | Syntax.Syntax.Error(msg, r) ->

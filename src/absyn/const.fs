@@ -50,6 +50,8 @@ let uint32_lid  = p2l ["FStar"; "UInt32"; "uint32"]
 let int64_lid   = p2l ["FStar"; "Int64"; "int64"]
 let uint64_lid  = p2l ["FStar"; "UInt64"; "uint64"]
 
+let max_lid = p2l ["max"]
+
 let float_lid  = p2l ["FStar"; "Float"; "float"]
 
 let char_lid  = p2l ["FStar"; "Char"; "char"]

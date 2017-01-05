@@ -228,5 +228,20 @@ _27_24
 end))
 
 
+let eq_const : sconst  ->  sconst  ->  Prims.bool = (fun c1 c2 -> (match (((c1), (c2))) with
+| (Const_int (s1, o1), Const_int (s2, o2)) -> begin
+(((FStar_Util.ensure_decimal s1) = (FStar_Util.ensure_decimal s2)) && (o1 = o2))
+end
+| ((Const_bytearray (a, _), Const_bytearray (b, _))) | ((Const_string (a, _), Const_string (b, _))) -> begin
+(a = b)
+end
+| (Const_reflect (l1), Const_reflect (l2)) -> begin
+(FStar_Ident.lid_equals l1 l2)
+end
+| _27_62 -> begin
+(c1 = c2)
+end))
+
+
 
 

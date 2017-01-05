@@ -157,6 +157,7 @@ let keywords =
     ALWAYS, "if"         ,IF;
     ALWAYS, "kind"       ,KIND;
     ALWAYS, "in"         ,IN;
+    ALWAYS, "include"    ,INCLUDE;
     ALWAYS, "inline"     ,INLINE;
     ALWAYS, "inline_for_extraction"     ,INLINE_FOR_EXTRACTION;
     ALWAYS, "irreducible",IRREDUCIBLE;

@@ -93,6 +93,7 @@ type token =
   | INT of (string * bool)
   | INLINE_FOR_EXTRACTION
   | INLINE
+  | INCLUDE
   | IN
   | IMPLIES
   | IFF
@@ -231,6 +232,7 @@ type tokenId =
     | TOKEN_INT
     | TOKEN_INLINE_FOR_EXTRACTION
     | TOKEN_INLINE
+    | TOKEN_INCLUDE
     | TOKEN_IN
     | TOKEN_IMPLIES
     | TOKEN_IFF
@@ -330,7 +332,7 @@ type nonTerminalId =
     | NONTERM_pragma
     | NONTERM_decoration
     | NONTERM_decl
-    | NONTERM_raw_decl
+    | NONTERM_rawDecl
     | NONTERM_typeDecl
     | NONTERM_typars
     | NONTERM_tvarinsts
@@ -401,17 +403,17 @@ type nonTerminalId =
     | NONTERM_atomicTermNotQUident
     | NONTERM_opPrefixTerm_atomicTermNotQUident_
     | NONTERM_opPrefixTerm_atomicTermQUident_
-    | NONTERM_fsTypeArgs
-    | NONTERM_someFsTypeArgs
-    | NONTERM_qidentWithTypeArgs_qlident_option_fsTypeArgs__
-    | NONTERM_qidentWithTypeArgs_quident_someFsTypeArgs_
     | NONTERM_projectionLHS
+    | NONTERM_fsTypeArgs
+    | NONTERM_qidentWithTypeArgs_qlident_option_fsTypeArgs__
+    | NONTERM_qidentWithTypeArgs_quident_some_fsTypeArgs__
     | NONTERM_hasSort
     | NONTERM_constant
     | NONTERM_universe
     | NONTERM_universeFrom
     | NONTERM_atomicUniverse
     | NONTERM_univar
+    | NONTERM_some_fsTypeArgs_
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_
     | NONTERM_right_flexible_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_list_SEMICOLON_simpleDef_

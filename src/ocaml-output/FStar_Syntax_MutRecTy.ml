@@ -8,7 +8,7 @@ let type_abbrev_sigelts = (FStar_All.pipe_right sigelts (FStar_List.collect (fun
 (x)::[]
 end
 | FStar_Syntax_Syntax.Sig_let (_41_37, _41_39, _41_41, _41_43, _41_45) -> begin
-(FStar_All.failwith "mutrecty: disentangle_abbrevs_from_bundle: type_abbrev_sigelts: impossible")
+(failwith "mutrecty: disentangle_abbrevs_from_bundle: type_abbrev_sigelts: impossible")
 end
 | _41_49 -> begin
 []
@@ -25,7 +25,7 @@ let type_abbrevs = (FStar_All.pipe_right type_abbrev_sigelts (FStar_List.map (fu
 fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v
 end
 | _41_81 -> begin
-(FStar_All.failwith "mutrecty: disentangle_abbrevs_from_bundle: type_abbrevs: impossible")
+(failwith "mutrecty: disentangle_abbrevs_from_bundle: type_abbrevs: impossible")
 end))))
 in (
 
@@ -40,15 +40,15 @@ in (
 let not_unfolded_yet = (FStar_Util.mk_ref type_abbrev_sigelts)
 in (
 
-let remove_not_unfolded = (fun lid -> (let _139_15 = (let _139_14 = (FStar_ST.read not_unfolded_yet)
-in (FStar_All.pipe_right _139_14 (FStar_List.filter (fun _41_2 -> (match (_41_2) with
+let remove_not_unfolded = (fun lid -> (let _140_15 = (let _140_14 = (FStar_ST.read not_unfolded_yet)
+in (FStar_All.pipe_right _140_14 (FStar_List.filter (fun _41_2 -> (match (_41_2) with
 | FStar_Syntax_Syntax.Sig_let ((_41_90, ({FStar_Syntax_Syntax.lbname = FStar_Util.Inr (fv); FStar_Syntax_Syntax.lbunivs = _41_98; FStar_Syntax_Syntax.lbtyp = _41_96; FStar_Syntax_Syntax.lbeff = _41_94; FStar_Syntax_Syntax.lbdef = _41_92})::[]), _41_105, _41_107, _41_109, _41_111) -> begin
 (not ((FStar_Ident.lid_equals lid fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)))
 end
 | _41_115 -> begin
 true
 end)))))
-in (FStar_ST.op_Colon_Equals not_unfolded_yet _139_15)))
+in (FStar_ST.op_Colon_Equals not_unfolded_yet _140_15)))
 in (
 
 let rec unfold_abbrev_fv = (fun t fv -> (
@@ -69,16 +69,16 @@ end
 | _41_177 -> begin
 None
 end))
-in (match ((let _139_25 = (FStar_ST.read rev_unfolded_type_abbrevs)
-in (FStar_Util.find_map _139_25 replacee_term))) with
+in (match ((let _140_25 = (FStar_ST.read rev_unfolded_type_abbrevs)
+in (FStar_Util.find_map _140_25 replacee_term))) with
 | Some (x) -> begin
 x
 end
 | None -> begin
 (match ((FStar_Util.find_map type_abbrev_sigelts replacee)) with
 | Some (se) -> begin
-if (let _139_27 = (FStar_ST.read in_progress)
-in (FStar_List.existsb (fun x -> (FStar_Ident.lid_equals x fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)) _139_27)) then begin
+if (let _140_27 = (FStar_ST.read in_progress)
+in (FStar_List.existsb (fun x -> (FStar_Ident.lid_equals x fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)) _140_27)) then begin
 (
 
 let msg = (FStar_Util.format1 "Cycle on %s in mutually recursive type abbreviations" fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str)
@@ -109,13 +109,13 @@ let lid = (match (lb.FStar_Syntax_Syntax.lbname) with
 fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v
 end
 | _41_207 -> begin
-(FStar_All.failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible")
+(failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible")
 end)
 in (
 
-let _41_209 = (let _139_31 = (let _139_30 = (FStar_ST.read in_progress)
-in (lid)::_139_30)
-in (FStar_ST.op_Colon_Equals in_progress _139_31))
+let _41_209 = (let _140_31 = (let _140_30 = (FStar_ST.read in_progress)
+in (lid)::_140_30)
+in (FStar_ST.op_Colon_Equals in_progress _140_31))
 in (match (()) with
 | () -> begin
 (
@@ -140,16 +140,16 @@ in (
 let sigelt' = FStar_Syntax_Syntax.Sig_let (((((false), ((lb')::[]))), (rng), ((lid)::[]), (quals), (attr)))
 in (
 
-let _41_217 = (let _139_33 = (let _139_32 = (FStar_ST.read rev_unfolded_type_abbrevs)
-in (sigelt')::_139_32)
-in (FStar_ST.op_Colon_Equals rev_unfolded_type_abbrevs _139_33))
+let _41_217 = (let _140_33 = (let _140_32 = (FStar_ST.read rev_unfolded_type_abbrevs)
+in (sigelt')::_140_32)
+in (FStar_ST.op_Colon_Equals rev_unfolded_type_abbrevs _140_33))
 in (match (()) with
 | () -> begin
 (
 
-let _41_218 = (let _139_35 = (let _139_34 = (FStar_ST.read in_progress)
-in (FStar_List.tl _139_34))
-in (FStar_ST.op_Colon_Equals in_progress _139_35))
+let _41_218 = (let _140_35 = (let _140_34 = (FStar_ST.read in_progress)
+in (FStar_List.tl _140_34))
+in (FStar_ST.op_Colon_Equals in_progress _140_35))
 in (match (()) with
 | () -> begin
 tm'
@@ -159,7 +159,7 @@ end))
 end))))
 end
 | _41_220 -> begin
-(FStar_All.failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible")
+(failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible")
 end))
 in (
 
@@ -173,8 +173,8 @@ let _unused = (unfold_abbrev x)
 in (aux ()))
 end
 | _41_229 -> begin
-(let _139_38 = (FStar_ST.read rev_unfolded_type_abbrevs)
-in (FStar_List.rev _139_38))
+(let _140_38 = (FStar_ST.read rev_unfolded_type_abbrevs)
+in (FStar_List.rev _140_38))
 end)
 end))
 in (aux ())))))))
@@ -229,7 +229,7 @@ end
 []
 end
 | _41_310 -> begin
-(FStar_All.failwith "mutrecty: inductives_with_abbrevs_unfolded: unfold_in_sig: impossible")
+(failwith "mutrecty: inductives_with_abbrevs_unfolded: unfold_in_sig: impossible")
 end))
 in (FStar_List.collect unfold_in_sig sigelts))))
 in (

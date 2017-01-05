@@ -207,7 +207,7 @@ type z3job = job<(bool * list<(string * Range.range)>)>
 
 (* The pseudo-annotation is required because the ref<list<z3job>> annotation is erased in OCaml*)
 let job_queue : ref<list<z3job>> =
-    let x = Util.mk_ref [{job=(fun () -> (false, [("",Range.mk_range "" 0 0)])); callback=(fun a -> ())}] in
+    let x = Util.mk_ref [{job=(fun () -> (false, [("",Range.mk_range "" Range.zeroPos Range.zeroPos)])); callback=(fun a -> ())}] in
     x:=[]; x
 
 let pending_jobs = Util.mk_ref 0

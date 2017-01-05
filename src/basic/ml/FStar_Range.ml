@@ -31,10 +31,15 @@ type range = {
     def_range:FStar_BaseTypes.int64;
     use_range:FStar_BaseTypes.int64
 }
+
+type int_t = int
+
+let zeroPos : int_t = 0
 let dummyRange = {
     def_range=0L;
     use_range=0L
 }
+
 let set_use_range r2 r = if r.use_range <> 0L then {r2 with use_range=r.use_range} else r2
 let range_of_def_range i = {def_range=i; use_range=i}
 
@@ -118,7 +123,7 @@ let fileIndexTable = {
 let file_idx_of_file f = (fileToIndex fileIndexTable f) mod maxFileIndex
 let file_of_file_idx n = indexToFile fileIndexTable n
 
-let mk_range f b e = mk_file_idx_range (file_idx_of_file f) b e
+let mk_range f (b:int_t) (e:int_t) = mk_file_idx_range (file_idx_of_file f) b e
 let file_of_range r = file_of_file_idx (file_idx_of_range r)
 
 let start_of_range r = mk_pos (start_line_of_range r) (start_col_of_range r)
@@ -217,5 +222,5 @@ let compare_use_range r1 r2 =
     compare ({r1 with def_range=r1.use_range})
             ({r2 with def_range=r2.use_range})
 
-let mk_range f b e = mk_range f (Z.to_int b) (Z.to_int e)
+(* let mk_range f b e = mk_range f (Z.to_int b) (Z.to_int e) *)
 let line_of_pos p = Z.of_int (line_of_pos p)

@@ -373,8 +373,10 @@ let label_conjuncts tag polarity label_opt f =
     let msg = match label_opt with
         | Some l -> l
         | _ ->
-          Util.format2 "%s at %s" tag (Range.string_of_range f.range) in
-    mk_term (Labeled(f, msg, polarity)) f.range f.level  in
+          Util.format2 "%s at %s" tag (Range.string_of_range f.range)
+    in
+    mk_term (Labeled(f, msg, polarity)) f.range f.level
+  in
 
   let rec aux f = match f.tm with
     | Paren g ->
@@ -1543,6 +1545,9 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
   | Open lid ->
     let env = DesugarEnv.push_namespace env lid in
     env, []
+
+  | Include _ ->
+      failwith "include not supported by legacy desugaring"
 
   | ModuleAbbrev(x, l) -> 
     DesugarEnv.push_module_abbrev env x l, []

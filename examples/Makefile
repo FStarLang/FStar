@@ -21,6 +21,7 @@ metatheory \
 verifythis \
 preorders \
 dm4free \
+incl \
 unit-tests
 
 # wysteria (was before preorders)

@@ -37,7 +37,7 @@ let ill_kinded_type = "Ill-kinded type"
 let totality_check  = "This term may not terminate"
 
 let diag r msg =
-  if Options.debug_any() 
+  if Options.debug_any()
   then Util.print_string (format2 "%s : (Diagnostic) %s\n" (Range.string_of_range r) msg)
 
 let warn r msg =
@@ -50,27 +50,34 @@ type error_message_prefix = {
     append_prefix: string -> string;
     clear_prefix: unit -> unit;
 }
-let message_prefix = 
-    let pfx = Util.mk_ref None in 
+let message_prefix =
+    let pfx = Util.mk_ref None in
     let set_prefix s = pfx := Some s in
     let clear_prefix () = pfx := None in
-    let append_prefix s = match !pfx with 
+    let append_prefix s = match !pfx with
         | None -> s
         | Some p -> p ^ ": " ^ s in
     {set_prefix=set_prefix;
      clear_prefix=clear_prefix;
      append_prefix=append_prefix}
 open Range
-let add_errors env errs =
-    let errs = errs |> List.map (fun (msg, r) -> 
-        let r = if r=dummyRange then Env.get_range env else r in 
-        (r, message_prefix.append_prefix msg)) in
-    let n_errs = List.length errs in
-    atomically (fun () ->
-        verification_errs := errs@ (!verification_errs);
-        num_errs := !num_errs + n_errs)
 
-let mk_error msg r = 
+let add_errors env errs =
+    let errs =
+        errs |> List.map (fun (msg, r) ->
+                    let r, msg =
+                        if r = dummyRange
+                        then Env.get_range env, msg
+                        else let r' = {r with def_range=r.use_range} in
+                             if Range.file_of_range r' <> Range.file_of_range (Env.get_range env) //r points to another file
+                             then Env.get_range env, (msg ^ ("(Also see: " ^ (Range.string_of_use_range r) ^")"))
+                             else r, msg in
+                    (r, message_prefix.append_prefix msg)) in
+    let n_errs = List.length errs in
+    atomically (fun () -> verification_errs := errs @ (!verification_errs);
+                          num_errs := !num_errs + n_errs)
+
+let mk_error msg r =
     if r.use_range <> r.def_range
     then Util.format3 "%s: (Error) %s (see %s)\n" (Range.string_of_use_range r) msg (Range.string_of_range r)
     else Util.format2 "%s: (Error) %s\n" (Range.string_of_range r) msg
@@ -228,5 +235,5 @@ let failed_to_prove_specification lbls =
 
 let top_level_effect = "Top-level let-bindings must be total; this term may have effects"
 
-let cardinality_constraint_violated l a = 
+let cardinality_constraint_violated l a =
     format2 "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed" (Print.lid_to_string l) (Print.bv_to_string a.v)

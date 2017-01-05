@@ -1,5 +1,5 @@
 [
-  "ºFó„&r¥$ãÊn\u0006Q¹ÀT",
+  "·a\u0007íŽRJ>˜h\u000bo¤Ñ£l",
   [
     [ "MRefHeap.contains", 1, 2, 1, [ "@query", "equation_Prims.dfst" ], 0 ],
     [ "MRefHeap.sel", 1, 2, 1, [ "@query" ], 0 ],
@@ -51,8 +51,8 @@
     [
       "MRefHeap.alloc_ref",
       18,
-      4,
       2,
+      1,
       [
         "@query", "constructor_distinct_Prims.Mktuple2",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",

@@ -5,14 +5,14 @@ type ident =
 {idText : Prims.string; idRange : FStar_Range.range}
 
 
-let is_Mkident : ident  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkident"))))
+let is_Mkident : ident  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkident"))))
 
 
 type lident =
 {ns : ident Prims.list; ident : ident; nsstr : Prims.string; str : Prims.string}
 
 
-let is_Mklident : lident  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklident"))))
+let is_Mklident : lident  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mklident"))))
 
 
 type lid =
@@ -33,13 +33,13 @@ let gen : FStar_Range.range  ->  ident = (
 let x = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (fun r -> (
 
-let _26_14 = (let _124_25 = ((FStar_ST.read x) + (Prims.parse_int "1"))
-in (FStar_ST.op_Colon_Equals x _124_25))
-in (let _124_29 = (let _124_28 = (let _124_27 = (let _124_26 = (FStar_ST.read x)
-in (Prims.string_of_int _124_26))
-in (Prims.strcat reserved_prefix _124_27))
-in ((_124_28), (r)))
-in (mk_ident _124_29)))))
+let _26_14 = (let _125_25 = ((FStar_ST.read x) + (Prims.parse_int "1"))
+in (FStar_ST.op_Colon_Equals x _125_25))
+in (let _125_29 = (let _125_28 = (let _125_27 = (let _125_26 = (FStar_ST.read x)
+in (Prims.string_of_int _125_26))
+in (Prims.strcat reserved_prefix _125_27))
+in ((_125_28), (r)))
+in (mk_ident _125_29)))))
 
 
 let id_of_text : Prims.string  ->  ident = (fun str -> (mk_ident ((str), (FStar_Range.dummyRange))))
@@ -70,8 +70,8 @@ in (match (_26_26) with
 | (ns, id) -> begin
 (
 
-let nsstr = (let _124_46 = (FStar_List.map text_of_id ns)
-in (FStar_All.pipe_right _124_46 text_of_path))
+let nsstr = (let _125_46 = (FStar_List.map text_of_id ns)
+in (FStar_All.pipe_right _125_46 text_of_path))
 in {ns = ns; ident = id; nsstr = nsstr; str = if (nsstr = "") then begin
 id.idText
 end else begin
@@ -113,8 +113,8 @@ let path = (path_of_lid l)
 in (lid_of_path (FStar_List.append path ((s)::[])) (range_of_lid l))))
 
 
-let string_of_lid : lident  ->  Prims.string = (fun lid -> (let _124_74 = (path_of_lid lid)
-in (text_of_path _124_74)))
+let string_of_lid : lident  ->  Prims.string = (fun lid -> (let _125_74 = (path_of_lid lid)
+in (text_of_path _125_74)))
 
 
 

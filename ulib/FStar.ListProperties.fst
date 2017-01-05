@@ -24,6 +24,12 @@ val mem_empty : #a:eqtype -> x:a ->
         (ensures False)
 let mem_empty #a x = ()
 
+val mem_existsb: #a:eqtype -> f:(a -> Tot bool) -> xs:list a ->
+  Lemma(ensures (existsb f xs <==> (exists (x:a). (f x = true /\ mem x xs))))
+let rec mem_existsb #a f xs =
+  match xs with
+  | [] -> ()
+  | hd::tl -> mem_existsb f tl
 
 (** Properties about rev **)
 
@@ -259,7 +265,7 @@ let rec partition_mem_forall #a f l = match l with
 val partition_mem_p_forall: #a:eqtype -> p:(a -> Tot bool)
                   -> l:list a
                   -> Lemma (requires True)
-                          (ensures (let l1, l2 = partition p l in 
+                          (ensures (let l1, l2 = partition p l in
                                     (forall x. mem x l1 ==> p x) /\ (forall x. mem x l2 ==> not (p x))))
 let rec partition_mem_p_forall #a p l = match l with
   | [] -> ()

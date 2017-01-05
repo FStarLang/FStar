@@ -22,8 +22,8 @@ end
 let deps = (FStar_List.rev deps)
 in (
 
-let deps = if ((let _191_5 = (FStar_List.hd deps)
-in (FStar_Util.basename _191_5)) = "prims.fst") then begin
+let deps = if ((let _192_5 = (FStar_List.hd deps)
+in (FStar_Util.basename _192_5)) = "prims.fst") then begin
 (FStar_List.tl deps)
 end else begin
 (

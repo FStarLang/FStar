@@ -1507,17 +1507,6 @@
       0,
       [ "@query", "equation_Crypto.AEAD.Encoding.alg" ],
       0
-    ],
-    [
-      "Crypto.AEAD.Decrypt.decrypt",
-      14,
-      0,
-      0,
-      [
-        "@query", "assumption_FStar.UInt32.t__haseq",
-        "equation_FStar.UInt32.t"
-      ],
-      0
     ]
   ]
 ]
