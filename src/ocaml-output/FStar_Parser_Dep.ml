@@ -948,10 +948,10 @@ in (
 
 let must_find = (fun k -> (match ((let _170_205 = (FStar_Util.smap_try_find m k)
 in (FStar_Util.must _170_205))) with
-| (Some (intf), Some (impl)) when ((not (partial_discovery)) && (not ((FStar_List.existsb (fun f -> ((lowercase_module_name f) = k)) filenames)))) -> begin
+| (Some (intf), Some (impl)) when ((not (partial_discovery)) && (not ((FStar_List.existsML (fun f -> ((lowercase_module_name f) = k)) filenames)))) -> begin
 (intf)::(impl)::[]
 end
-| (Some (intf), Some (impl)) when (FStar_List.existsb (fun f -> ((is_implementation f) && ((lowercase_module_name f) = k))) filenames) -> begin
+| (Some (intf), Some (impl)) when (FStar_List.existsML (fun f -> ((is_implementation f) && ((lowercase_module_name f) = k))) filenames) -> begin
 (intf)::(impl)::[]
 end
 | (Some (intf), _72_727) -> begin

@@ -613,11 +613,11 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
      * then it's always fst+fsti; otherwise, it's governed by the
      * partial_discovery flag. *)
     match must (smap_try_find m k) with
-    | Some intf, Some impl when not partial_discovery && not (List.existsb (fun f ->
+    | Some intf, Some impl when not partial_discovery && not (List.existsML (fun f ->
         lowercase_module_name f = k
       ) filenames) ->
         [ intf; impl ]
-    | Some intf, Some impl when List.existsb (fun f ->
+    | Some intf, Some impl when List.existsML (fun f ->
         is_implementation f && lowercase_module_name f = k
       ) filenames ->
         [ intf; impl ]

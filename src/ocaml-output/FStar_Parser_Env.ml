@@ -1961,13 +1961,12 @@ in (match (()) with
 (
 
 let _64_1364 = env
-in (let _162_1153 = (FStar_List.map (fun lid -> Open_module_or_namespace (((lid), (Open_namespace)))) open_ns)
-in (let _162_1152 = if ((FStar_Ident.lid_equals mname FStar_Syntax_Const.all_lid) || (has_all_in_scope env)) then begin
+in (let _162_1152 = (FStar_List.map (fun lid -> Open_module_or_namespace (((lid), (Open_namespace)))) open_ns)
+in {curmodule = Some (mname); curmonad = _64_1364.curmonad; modules = _64_1364.modules; scope_mods = _162_1152; exported_ids = _64_1364.exported_ids; trans_exported_ids = _64_1364.trans_exported_ids; includes = _64_1364.includes; sigaccum = _64_1364.sigaccum; sigmap = env.sigmap; default_result_effect = if ((FStar_Ident.lid_equals mname FStar_Syntax_Const.all_lid) || (has_all_in_scope env)) then begin
 FStar_Syntax_Const.effect_ML_lid
 end else begin
 FStar_Syntax_Const.effect_Tot_lid
-end
-in {curmodule = Some (mname); curmonad = _64_1364.curmonad; modules = _64_1364.modules; scope_mods = _162_1153; exported_ids = _64_1364.exported_ids; trans_exported_ids = _64_1364.trans_exported_ids; includes = _64_1364.includes; sigaccum = _64_1364.sigaccum; sigmap = env.sigmap; default_result_effect = _162_1152; iface = intf; admitted_iface = admitted; expect_typ = _64_1364.expect_typ})))
+end; iface = intf; admitted_iface = admitted; expect_typ = _64_1364.expect_typ}))
 end))
 end))
 end)))))
@@ -1976,23 +1975,23 @@ in (match ((FStar_All.pipe_right env.modules (FStar_Util.find_opt (fun _64_1370 
 (FStar_Ident.lid_equals l mname)
 end))))) with
 | None -> begin
-(let _162_1155 = (prep env)
-in ((_162_1155), (false)))
+(let _162_1154 = (prep env)
+in ((_162_1154), (false)))
 end
 | Some (_64_1373, m) -> begin
 (
 
 let _64_1377 = if ((not (m.FStar_Syntax_Syntax.is_interface)) || intf) then begin
-(let _162_1158 = (let _162_1157 = (let _162_1156 = (FStar_Util.format1 "Duplicate module or interface name: %s" mname.FStar_Ident.str)
-in ((_162_1156), ((FStar_Ident.range_of_lid mname))))
-in FStar_Syntax_Syntax.Error (_162_1157))
-in (Prims.raise _162_1158))
+(let _162_1157 = (let _162_1156 = (let _162_1155 = (FStar_Util.format1 "Duplicate module or interface name: %s" mname.FStar_Ident.str)
+in ((_162_1155), ((FStar_Ident.range_of_lid mname))))
+in FStar_Syntax_Syntax.Error (_162_1156))
+in (Prims.raise _162_1157))
 end else begin
 ()
 end
-in (let _162_1160 = (let _162_1159 = (push env)
-in (prep _162_1159))
-in ((_162_1160), (true))))
+in (let _162_1159 = (let _162_1158 = (push env)
+in (prep _162_1158))
+in ((_162_1159), (true))))
 end)))
 
 
@@ -2026,8 +2025,8 @@ msg
 end else begin
 (
 
-let modul = (let _162_1172 = (FStar_Ident.lid_of_ids lid.FStar_Ident.ns)
-in (FStar_Ident.set_lid_range _162_1172 (FStar_Ident.range_of_lid lid)))
+let modul = (let _162_1171 = (FStar_Ident.lid_of_ids lid.FStar_Ident.ns)
+in (FStar_Ident.set_lid_range _162_1171 (FStar_Ident.range_of_lid lid)))
 in (match ((resolve_module_name env modul true)) with
 | None -> begin
 (

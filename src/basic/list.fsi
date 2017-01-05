@@ -39,6 +39,7 @@ val fold_left2 : ('s -> 'a -> 'b -> 's) -> 's -> (list<'a>) -> (list<'b>) -> 's
 val fold_right : ('a -> 'b -> 'b) -> (list<'a>) -> 'b -> 'b
 val mem<'a when 'a : equality>  : 'a -> (list<'a>) -> Tot<bool>
 val existsb : f:('a -> Tot<bool>) -> (list<'a>) -> Tot<bool>
+val existsML : f:('a -> bool) -> (list<'a>) -> bool
 val find : f:('a -> Tot<bool>) -> (list<'a>) -> Tot<(option<'a>)>
 val filter : ('a -> bool) -> (list<'a>) -> (list<'a>)
 val for_all : ('a -> bool) -> (list<'a>) -> bool
