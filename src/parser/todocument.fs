@@ -263,19 +263,40 @@ let is_operatorInfix34 =
     let opinfix34 = [ opinfix3 ; opinfix4 ] in
     fun op -> List.tryFind (matches_level op) opinfix34 <> None
 
-// printer really begins here
 
-let doc_of_let_qualifier = function
-  | NoLetQualifier -> empty
-  | Rec -> str "rec"
-  | Mutable -> str "mutable"
 
-(* TODO: we should take into account FsTypApp to be able to beautify the source
- * of the compiler itself *)
-let doc_of_imp = function
-  | Hash -> str "#"
-  | UnivApp -> str "u#"
-  | Nothing | FsTypApp -> empty
+(******************************************************************************)
+(*                                                                            *)
+(*                   Taking care of comments                                  *)
+(*                                                                            *)
+(******************************************************************************)
+
+let comment_stack = ref []
+
+let with_comment printer tm tmrange =
+  let rec comments_before_pos acc print_pos lookahead_pos =
+    match !comment_stack with
+    | [] -> acc, false
+    | (comment, crange) :: cs ->
+      if range_before_pos crange print_pos
+      then begin
+        comment_stack := cs ;
+        comments_before_pos (acc ^^ str comment ^^ hardline) print_pos lookahead_pos
+      end
+      else acc, range_before_pos crange lookahead_pos
+  in
+  let comments, has_lookahead =
+      comments_before_pos empty (start_of_range tmrange) (end_of_range tmrange)
+  in
+  let printed_e = printer tm in
+  let comments =
+      if has_lookahead
+      then
+        let pos = end_of_range tmrange in
+        fst (comments_before_pos comments pos pos)
+      else comments
+   in
+   group (comments ^^ printed_e)
 
 
 (******************************************************************************)
@@ -364,28 +385,41 @@ and p_fsdocTypeDeclPairs (typedecl, fsdoc_opt) =
 
 and p_typeDecl = function
   | TyconAbstract (lid, bs, typ_opt) ->
-    p_typeDeclPrefix lid bs typ_opt empty
+    let empty' : unit -> document = fun () -> empty in
+    p_typeDeclPrefix lid bs typ_opt empty'
   | TyconAbbrev (lid, bs, typ_opt, t) ->
-    p_typeDeclPrefix lid bs typ_opt (prefix2 equals (p_typ t))
+    let f () = prefix2 equals (p_typ t) in
+    p_typeDeclPrefix lid bs typ_opt f
   | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
-    p_typeDeclPrefix lid bs typ_opt
-    (equals ^^ space ^^ braces_with_nesting (separate_map (semi ^^ break1) p_recordFieldDecl record_field_decls))
-  | TyconVariant (lid, bs, typ_opt, ct_decls) ->
-    let datacon_doc =
-      // match ct_decls with
-      //   | [ct_decl] -> p_constructorDecl ct_decl
-      //   | ct_decls ->
-      group (separate_map break1 (fun decl -> group (bar ^^ space ^^ p_constructorDecl decl)) ct_decls)
+    let p_recordFieldAndComments (lid, t, doc_opt) =
+      with_comment p_recordFieldDecl (lid, t, doc_opt) t.range
     in
-    p_typeDeclPrefix lid bs typ_opt (prefix2 equals datacon_doc)
+    let p_fields () =
+        equals ^^ space ^^
+        braces_with_nesting (
+            separate_map (semi ^^ break1) p_recordFieldAndComments record_field_decls
+            )
+    in
+    p_typeDeclPrefix lid bs typ_opt p_fields
+  | TyconVariant (lid, bs, typ_opt, ct_decls) ->
+    let p_constructorBranchAndComments (uid, t_opt, doc_opt, use_of) =
+        let range = dflt uid.idRange (map_opt t_opt (fun t -> t.range)) in
+        let p_constructorBranch decl = group (bar ^^ space ^^ p_constructorDecl decl) in
+        with_comment p_constructorBranch (uid, t_opt, doc_opt, use_of) range
+    in
+    (* Beware of side effects with comments printing *)
+    let datacon_doc () =
+      group (separate_map break1 p_constructorBranchAndComments ct_decls)
+    in
+    p_typeDeclPrefix lid bs typ_opt (fun () -> prefix2 equals (datacon_doc ()))
 
 and p_typeDeclPrefix lid bs typ_opt cont =
     if bs = [] && typ_opt = None
-    then p_ident lid ^^ space ^^ cont
+    then p_ident lid ^^ space ^^ cont ()
     else
         let binders_doc =
           p_typars bs ^^ optional (fun t -> break1 ^^ colon ^^ space ^^ p_typ t) typ_opt
-        in surround 2 1 (p_ident lid) binders_doc cont
+        in surround 2 1 (p_ident lid) binders_doc (cont ())
 
 and p_recordFieldDecl (lid, t, doc_opt) =
     group (optional p_fsdoc doc_opt ^^ p_lident lid ^^ colon ^^ p_typ t)
@@ -488,7 +522,7 @@ and p_qualifier = function
   | Logic -> str "logic"
 
 and p_qualifiers qs =
-  group (separate_map break1 p_qualifier qs ^^ (if qs = [] then empty else space))
+  group (separate_map break1 p_qualifier qs)
 
 (* Skipping focus since it cannot be recoverred at printing *)
 
@@ -620,7 +654,9 @@ and p_term e = match e.tm with
   | _ ->
       group (p_noSeqTerm e)
 
-and p_noSeqTerm e = match e.tm with
+and p_noSeqTerm e = with_comment p_noSeqTerm' e e.range
+
+and p_noSeqTerm' e = match e.tm with
   | Ascribed (e, t) ->
       group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t)
   | Op (op, [ e1; e2; e3 ]) when op = ".()<-" ->
@@ -1004,9 +1040,6 @@ let term_to_document e = p_term e
 
 let decl_to_document e = p_decl e
 
-(* JP, KM: tweaked up to here *)
-
-// SI: go straight to decls (might have to change if TopLevel is not the first decl).
 let modul_to_document (m:modul) =
   match m with
   | Module (_, decls)
@@ -1016,6 +1049,15 @@ let modul_to_document (m:modul) =
 let comments_to_document (comments : list<(string * FStar.Range.range)>) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
+(* [modul_with_comments_to_document m comments] prints the module [m] trying
+ * to insert the comments from [comments]. The list comments is composed of
+ * pairs of a raw string and a position which is used to place the comment
+ * not too far from its original position.
+ *
+ * The rules for placing comments are as follow :
+ *
+ *
+ *      *)
 let modul_with_comments_to_document (m:modul) comments =
   let rec aux (previous_range_end, comments, doc) decl =
     let current_range = decl.drange in
@@ -1044,15 +1086,21 @@ let modul_with_comments_to_document (m:modul) comments =
     //             (string_of_int line_count)
     //             (string_of_int (List.length preceding_comments))
     //             (string_of_int (List.length comments));
-    let inner_comments_doc =
-      if inner_comments = [] then empty
-      else hardline ^^ comments_to_document inner_comments
-    in
+(*    let inner_comments_doc = *)
+(*      if inner_comments = [] then empty *)
+(*      else hardline ^^ comments_to_document inner_comments *)
+(*    in *)
+    comment_stack := inner_comments ;
     let doc =
       doc ^^ repeat line_count hardline ^^
       comments_to_document preceding_comments ^^ hardline ^^
-      decl_to_document decl ^^ inner_comments_doc
+      decl_to_document decl (* ^^ inner_comments_doc *)
     in
+    let () =
+        if !comment_stack <> []
+        then failwith ("Something went wrong with the comment stack, leftover comments : " ^
+                       String.concat " ; " (List.map fst !comment_stack))
+   in
     (end_of_range current_range, comments,  doc)
   in
   let decls = match m with

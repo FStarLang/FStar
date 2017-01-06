@@ -204,7 +204,7 @@ let detect_dependencies_for_module (mname:option<string>) : string         //the
 
 let detect_dependencies_with_first_interactive_chunk () : string         //the filename of the buffer being checked, if any
                                                         * string         //the module name of the buffer being checked
-                                                        * list<string>   //all its dependences 
+                                                        * list<string>   //all its dependences
   = detect_dependencies_for_module (find_initial_module_name ())
 
 (******************************************************************************************)
@@ -222,7 +222,7 @@ let interactive_mode (filename:option<string>)    //current filename
                      (filenames:list<string>)
                      (initial_mod:'modul)
                      (tc:interactive_tc<'env,'modul>) =
-    if Option.isSome (Options.codegen()) 
+    if Option.isSome (Options.codegen())
     then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
 
     (*
@@ -253,8 +253,8 @@ let interactive_mode (filename:option<string>)    //current filename
             intf_t, impl_t
           in
           tc_deps m stack env remaining ((intf, impl, intf_t, impl_t)::ts)
-    in 
-    
+    in
+
     (*
      * check if some dependencies have been modified, added, or deleted
      * if so, only type check them and anything that follows, while maintaining others as is (current dependency graph is a total order)
@@ -289,7 +289,7 @@ let interactive_mode (filename:option<string>)    //current filename
        *)
       let rec iterate (depnames:list<string>) (st:stack<'env, 'modul>) (env':'env) (ts:m_timestamps) (good_stack:stack<'env, 'modul>) (good_ts:m_timestamps) = //:(stack<'env, 'modul> * 'env * m_timestamps) =
         //invariant length good_stack = length good_ts, and same for stack and ts
-        
+
         let match_dep (depnames:list<string>) (intf:option<string>) (impl:string) : (bool * list<string>) =
           match intf with
             | None      ->
@@ -362,13 +362,14 @@ let interactive_mode (filename:option<string>)    //current filename
             tc.report_fail();
             Util.print1 "%s\n" fail;
             let env = tc.reset_mark env_mark in
-            go line_col stack curmod env ts in
+            go line_col stack curmod env ts
+          in
 
           let env_mark = tc.mark env in
           let frag = {frag_text=text;
-                      frag_line=fst line_col; 
+                      frag_line=fst line_col;
                       frag_col=snd line_col} in
-//          Util.print3 "got frag %s, %s, %s" frag.frag_text 
+//          Util.print3 "got frag %s, %s, %s" frag.frag_text
 //            (Util.string_of_int frag.frag_line)
 //            (Util.string_of_int frag.frag_col);
           let res = tc.check_frag env_mark curmod frag in begin
@@ -387,7 +388,7 @@ let interactive_mode (filename:option<string>)    //current filename
     //type check prims and the dependencies
     let filenames = FStar.Dependences.find_deps_if_needed verify_mode filenames in
     let env = tc.tc_prims () in
-    let stack, env, ts = tc_deps initial_mod [] env filenames [] in 
+    let stack, env, ts = tc_deps initial_mod [] env filenames [] in
 
     if Options.universes()
     && (FStar.Options.record_hints() //and if we're recording or using hints

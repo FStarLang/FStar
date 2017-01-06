@@ -49,4 +49,6 @@ val compare_use_range: range -> range -> int
 val set_file_of_range: range -> string -> unit
 val range_contains_range: range -> range -> bool
 val range_contains_pos: range -> pos -> bool
+val range_before_pos : range -> pos -> bool
+val range_before_range : range -> range -> bool
 

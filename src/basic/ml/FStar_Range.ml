@@ -179,6 +179,9 @@ let range_contains_pos m1 p =
 let range_before_pos m1 p =
   pos_geq p (end_of_range m1)
 
+let range_before_range m1 m2 =
+  pos_geq (start_of_range m2) (end_of_range m1)
+
 let rangeN filename line =  mk_range filename (mk_pos line 0) (mk_pos line 80)
 let pos0 = mk_pos 1 0
 let range0 =  rangeN "unknown" 1

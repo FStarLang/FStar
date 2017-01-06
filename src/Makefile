@@ -232,6 +232,7 @@ plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) fs
 
 deploy-boot-fs: fsharp-output/fstar.exe
 	cp $^ ../bin
+	cp $^ ../bin/fstar.fsharp
 
 clean-boot-fs:
 	rm -rf fsharp-output
