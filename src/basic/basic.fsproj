@@ -79,10 +79,10 @@
     <Compile Include="bytes.fs" />
     <Compile Include="range.fsi" />
     <Compile Include="range.fs" />
-    <Compile Include="getoptsimple.fsi" />
-    <Compile Include="getoptsimple.fs" />
     <Compile Include="version.fsi" />
     <Compile Include="version.fs" />
+    <Compile Include="getopt.fsi" />
+    <Compile Include="getopt.fs" />
     <Compile Include="options.fsi" />
     <Compile Include="options.fs" />
     <Compile Include="unionfind.fsi" />

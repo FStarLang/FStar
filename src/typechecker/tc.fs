@@ -944,7 +944,7 @@ and tc_inductive env ses quals lids =
                                 (uvs |> List.map (fun u -> u.idText) |> String.concat ", ")
                                 (Print.term_to_string t);
         //Now, (uvs, t) is the generalized type scheme for all the inductives and their data constuctors
-        //we have to destruct t, knowing its shape above, 
+        //we have to destruct t, knowing its shape above,
         //and rebuild the Sig_inductive_typ, Sig_datacon etc
         let uvs, t = SS.open_univ_vars uvs t in
         let args, _ = Util.arrow_formals t in
@@ -1814,7 +1814,8 @@ let check_exports env (modul:modul) exports =
 let finish_partial_modul env modul exports =
   let modul = {modul with exports=exports; is_interface=modul.is_interface} in
   let env = Env.finish_module env modul in
-  check_exports env modul exports;
+  if not (Options.lax())
+  then check_exports env modul exports;
   env.solver.pop ("Ending modul " ^ modul.name.str);
   env.solver.encode_modul env modul;
   env.solver.refresh();
@@ -1829,6 +1830,7 @@ let tc_modul env modul =
 let check_module env m =
     if Options.debug_any()
     then Util.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
+    let env = {env with lax=Options.lax()} in
     let m, env = tc_modul env m in
     if Options.dump_module m.name.str
     then Util.print1 "%s\n" (Print.modul_to_string m);
