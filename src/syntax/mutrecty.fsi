@@ -15,10 +15,8 @@
 *)
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
-module FStar.Syntax.InstFV
+module FStar.Syntax.MutRecTy
 open FStar.Syntax.Syntax
 open FStar.Ident
-type inst_t = list<(lident * universes)>
-val inst: (term -> fv -> term) -> term -> term
-val inst_binders: (term -> fv -> term) -> binders -> binders
-val instantiate: inst_t -> term -> term
+
+val disentangle_abbrevs_from_bundle: list<sigelt> -> list<qualifier> -> list<lident> -> FStar.Range.range -> sigelt * list<sigelt>
