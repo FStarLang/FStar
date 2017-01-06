@@ -26,9 +26,11 @@ type inst_t = list<(lident * universes)>
 
 // VALS_HACK_HERE
 
-let rec inst (s:inst_t) t =
+let mk t s = S.mk s !t.tk t.pos
+
+let rec inst (s:term -> fv -> term) t =
     let t = SS.compress t in
-    let mk s = S.mk s !t.tk t.pos in
+    let mk = mk t in
     match t.n with
       | Tm_delayed _ -> failwith "Impossible"
 
@@ -42,18 +44,15 @@ let rec inst (s:inst_t) t =
       | Tm_uinst _ -> t
 
       | Tm_fvar fv ->
-        begin match U.find_opt (fun (x, _) -> lid_equals x fv.fv_name.v) s with
-            | None -> t
-            | Some (_, us) -> mk (Tm_uinst(t, us))
-        end
+        s t fv
 
       | Tm_abs(bs, body, lopt) ->
-        let bs = bs |> List.map (fun (x, imp) -> {x with sort=inst s x.sort}, imp) in
+        let bs = inst_binders s bs in
         let body = inst s body in
         mk (Tm_abs(bs, body, inst_lcomp_opt s lopt))
 
       | Tm_arrow (bs, c) ->
-        let bs = bs |> List.map (fun (x, imp) -> {x with sort=inst s x.sort}, imp) in
+        let bs = inst_binders s bs in
         let c = inst_comp s c in
         mk (Tm_arrow(bs, c))
 
@@ -93,6 +92,8 @@ let rec inst (s:inst_t) t =
       | Tm_meta(t, tag) ->
         mk (Tm_meta(inst s t, tag))
 
+and inst_binders s bs = bs |> List.map (fun (x, imp) -> {x with sort=inst s x.sort}, imp)
+
 and inst_args s args = args |> List.map (fun (a, imp) -> inst s a, imp)
 
 and inst_comp s c = match c.n with
@@ -115,4 +116,12 @@ and inst_lcomp_opt s l = match l with
 
 let instantiate i t = match i with
     | [] -> t
-    | _ -> inst i t
+    | _ ->
+      let inst_fv (t: term) (fv: S.fv) : term =
+        begin match U.find_opt (fun (x, _) -> lid_equals x fv.fv_name.v) i with
+            | None -> t
+            | Some (_, us) -> mk t (Tm_uinst(t, us))
+        end
+      in
+        inst inst_fv t
+

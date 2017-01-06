@@ -63,6 +63,8 @@
     <Compile Include="util.fs" />
     <Compile Include="print.fsi" />
     <Compile Include="print.fs" />
+    <Compile Include="mutrecty.fsi" />
+    <Compile Include="mutrecty.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\basic\basic.fsproj">
