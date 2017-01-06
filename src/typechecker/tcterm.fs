@@ -1280,8 +1280,8 @@ and tc_eqn scrutinee env branch
 
     (* (a) eqs are equalities between the scrutinee and the pattern *)
     let eqs =
-        if not (Env.should_verify env) 
-        then None 
+        if not (Env.should_verify env)
+        then None
         else disj_exps |> List.fold_left (fun fopt e ->
                 let e = SS.compress e in
                 match e.n with
@@ -1344,8 +1344,8 @@ and tc_eqn scrutinee env branch
   (*                                                                                                    *)
   (* (d) Strengthen 6 (c) with the when condition, if there is one                                      *)
   let branch_guard =
-      if not (Env.should_verify env) 
-      then Util.t_true 
+      if not (Env.should_verify env)
+      then Util.t_true
       else (* 6 (a) *)
           let rec build_branch_guard scrutinee_tm pat_exp : list<typ> =
             let discriminate scrutinee_tm f =
@@ -1398,7 +1398,7 @@ and tc_eqn scrutinee env branch
                                 build_branch_guard sub_term ei) |> List.flatten in
                          discriminate scrutinee_tm f @ sub_term_guards
                 | _ -> [] //a non-pattern sub-term: must be from a dot pattern
-          in 
+          in
 
           (* 6 (b) *)
           let build_and_check_branch_guard scrutinee_tm pat =
@@ -1406,7 +1406,7 @@ and tc_eqn scrutinee env branch
              then TcUtil.fvar_const env Const.true_lid //if we're not verifying, then don't even bother building it
              else let t = Util.mk_conj_l <| build_branch_guard scrutinee_tm pat in
                   let k, _ = U.type_u() in
-                  let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k in
+                  let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k in //NS: discarding the guard here means that the VC is not fully type-checked and may contain unresolved unification variables, e.g. FIXME!
                   t in
 
           (* 6 (c) *)
@@ -1417,7 +1417,7 @@ and tc_eqn scrutinee env branch
             | None -> branch_guard
             | Some w -> Util.mk_conj branch_guard w in
 
-          branch_guard 
+          branch_guard
   in
 
   let guard = Rel.conj_guard g_when g_branch in
@@ -1852,11 +1852,11 @@ let universe_or_type_of env e =
           S.mk t None e.pos in
       universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
 
-let universe_of env e = 
-   match universe_or_type_of env e with 
-   | Inl t -> 
-     raise (Error(Util.format2 "Expected a term of type 'Type'; got %s : %s" 
-                        (Print.term_to_string e) 
-                        (Print.term_to_string t), 
+let universe_of env e =
+   match universe_or_type_of env e with
+   | Inl t ->
+     raise (Error(Util.format2 "Expected a term of type 'Type'; got %s : %s"
+                        (Print.term_to_string e)
+                        (Print.term_to_string t),
                   Env.get_range env))
    | Inr u -> u
