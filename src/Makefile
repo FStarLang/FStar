@@ -3,6 +3,7 @@
 # --------------------------------------------------------------------
 LIB=../lib
 BIN=../bin
+ULIB=../ulib
 
 # --------------------------------------------------------------------
 # Configuration of some platform-specific tools; eventually we will want a configure script
@@ -155,7 +156,7 @@ boot_fsts/FStar.Parser.ParseIt.fsti: parser/parseit.fsi
 $(LIB)/FStar.Util.fsti: basic/util.fsi
 	cat $^ | $(SED) 's/open System.IO//g' | $(SED) 's/type time.*/new type time/g' | $(SED) 's/type smap.*/new type smap : Type -> Type/g' | $(SED) 's/type out_channel.*/new type out_channel/g' | $(SED) 's/type file_handle.*/new type file_handle/g' | $(SED) 's/type stream_reader.*/new type stream_reader/g' | $(SED) 's/type string_builder.*/new type string_builder/g' | $(SED) 's/type proc.*/new type proc/g' | $(SED) 's/type set.*/new type set:Type -> Type/g' > $@
 
-$(LIB)/FStar.GetOpt.fsti: basic/getoptsimple.fsi
+$(LIB)/FStar.GetOpt.fsti: basic/getopt.fsi
 	cp $^ $@
 
 $(LIB)/FStar.Unionfind.fsti: basic/unionfind.fsi
@@ -173,10 +174,64 @@ extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
 	  --lax --fs_typ_app --no_location_info $(addprefix --no_extract \
 	  ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
 
-uextract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
-	$(FSTAR) --stratified --explicit_deps --eager_inference \
+U_STDLIB=$(addprefix $(ULIB)/, FStar.FunctionalExtensionality.fst FStar.PropositionalExtensionality.fst FStar.PredicateExtensionality.fst \
+			       FStar.TSet.fst FStar.Set.fst \
+			       FStar.Heap.fst FStar.ST.fst FStar.All.fst \
+			       FStar.Char.fsti FStar.Float.fsti FStar.Mul.fst FStar.Int.fst $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti)
+U_BOOT_BASIC_FSTI=$(addprefix boot_fstis/FStar., string.fsti list.fst util.fst platform.fsti bytes.fst range.fsti version.fsti getopt.fsti unionfind.fsti Pprint.fsti)
+U_ALL_INTERFACES=$(U_STDLIB) $(U_BOOT_BASIC_FSTI)
+U_ALL_SOURCES=$(addprefix boot_fsts/, FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst FStar.Absyn.Syntax.fst)
+
+boot_fstis/FStar.%.fsti: basic/%.fsi
+	cp $^ $@
+
+boot_fstis/FStar.list.fst: basic/list.fsi
+	cp $^ $@
+	$(SED) -i 's/open Prims/module ALL_TEMP = FStar.All/g' $@
+	$(SED) -i 's/<.* when .* : equality>//g' $@
+	$(SED) -i 's/val/assume val/g' $@
+
+boot_fstis/FStar.bytes.fst: basic/bytes.fsti
+	cp $^ $@
+	$(SED) -i 's/val/assume val/g' $@
+	$(SED) -i 's/new/assume new/g' $@
+
+boot_fstis/FStar.util.fst: basic/util.fsi
+	cp $^ $@
+	$(SED) -i 's/open System.IO/module ALL_TMP = FStar.All/g' $@
+	$(SED) -i 's/type time.*/assume new type time/g'  $@ 
+	$(SED) -i 's/type smap.*/assume new type smap : Type -> Type/g'  $@ 
+	$(SED) -i 's/type out_channel.*/assume new type out_channel/g'  $@ 
+	$(SED) -i 's/type file_handle.*/assume new type file_handle/g'  $@ 
+	$(SED) -i 's/type stream_reader.*/assume new type stream_reader/g'  $@ 
+	$(SED) -i 's/type string_builder.*/assume new type string_builder/g'  $@ 
+	$(SED) -i 's/type proc.*/assume new type proc/g' $@ 
+	$(SED) -i 's/type set.*/assume new type set:Type -> Type/g' $@
+	$(SED) -i 's/^val/assume val/g' $@
+
+boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
+	cp $^ $@
+	$(SED) -i 's/type cell.*//g' $@
+	$(SED) -i 's/and contents.*//g' $@
+	$(SED) -i 's/.*| Data.*//g' $@
+	$(SED) -i 's/.*| Fwd.*//g' $@
+	$(SED) -i 's/type uvar.*/assume new type uvar : Type -> Type/g' $@
+
+prep_u_extract_ocaml: $(U_ALL_INTERFACES)
+
+clean_u_extract_ocaml:
+	rm -rf boot_fstis
+	mkdir boot_fstis
+	make prep_u_extract_ocaml
+#	make all_boot_fsts
+
+u_extract_ocaml: 
+	make clean_u_extract_ocaml
+	$(FSTAR) --eager_inference \
 	  --lax --fs_typ_app --no_location_info $(addprefix --no_extract \
-	  ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
+	  ,$(NUM)) --odir u_ocaml-output $(FSTAROPTS) --codegen OCaml \
+	$(U_ALL_INTERFACES) boot_fsts/FStar.Options.fst #$(U_ALL_SOURCES)
+
 
 # Fastest way to refresh the snapshot (if it works)
 ocaml-fstar-ocaml:
@@ -203,7 +258,7 @@ boot-ocaml:
 
 BASELIBS    = $(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
 FS_SUPPORT_LIBS=native_int/prims.fs st.fs all.fs option.fs
-FSTAR_SUPPORT_LIBS=char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs platform.fsi platform.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs version.fsi version.fs unionfind.fsi unionfind.fs
+FSTAR_SUPPORT_LIBS=char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs platform.fsi platform.fs bytes.fsi bytes.fs range.fsi range.fs getopt.fsi getopt.fs version.fsi version.fs unionfind.fsi unionfind.fs
 BOOT_FS_BASE=FStar.Options.fs
 BOOT_FS_SYNTAX=FStar.Absyn.Syntax.fs FStar.Absyn.Const.fs FStar.Absyn.Visit.fs FStar.Absyn.Util.fs FStar.Absyn.Print.fs
 BOOT_FS_TC=FStar.Tc.Env.fs FStar.Tc.Recheck.fs FStar.Tc.Normalize.fs FStar.Tc.Errors.fs FStar.Tc.Rel.fs FStar.Tc.Util.fs FStar.Tc.Tc.fs
