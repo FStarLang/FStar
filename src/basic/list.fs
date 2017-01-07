@@ -86,7 +86,7 @@ end
 in (iter f tl))
 end))
 
-let rec iter2 f l m = match l, m with 
+let rec iter2 f l m = match l, m with
     | [], [] -> ()
     | x::l, y::m -> f x y; iter2 f l m
     | _ -> failwith "iter2: unequal list lengths"
@@ -125,6 +125,8 @@ let fold_left f x y = List.fold_left f x y
 let fold_left2 f a x y = List.fold_left2 f a x y
 
 let fold_right f x a = List.fold_right f x a
+
+let fold_right2 f x y a = List.fold_right2 f x y a
 
 let mem x l = List.mem x l
 
@@ -224,10 +226,10 @@ end))
 
 let partition f l = List.partition f l
 
-let rec assoc = fun ( a  :  'a ) ( x  :  ('a * 'b) Prims.list ) -> 
- match (x) with 
- | [] -> None 
- | (a', b)::tl -> 
+let rec assoc = fun ( a  :  'a ) ( x  :  ('a * 'b) Prims.list ) ->
+ match (x) with
+ | [] -> None
+ | (a', b)::tl ->
    if (a = a')
    then Some b
    else assoc a tl
@@ -269,10 +271,10 @@ let rec unique l =
   // this matches the semantics of BatList.unique.
   match l with
   | [] -> []
-  | h::t -> 
+  | h::t ->
     if mem h t then
       unique t
-    else 
+    else
       h::(unique t)
 
 let rec iteri_aux i f x = match x with

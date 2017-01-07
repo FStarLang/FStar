@@ -2079,7 +2079,7 @@ in (FStar_All.pipe_left FStar_List.rev _133_1432))))
 
 let gen_reset : ((Prims.unit  ->  Prims.int) * (Prims.unit  ->  Prims.unit)) = (
 
-let x = (FStar_ST.alloc (Prims.parse_int "0"))
+let x = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (
 
 let gen = (fun _34_514 -> (match (()) with

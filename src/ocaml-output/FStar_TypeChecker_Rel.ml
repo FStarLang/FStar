@@ -5201,17 +5201,20 @@ in (match (g.FStar_TypeChecker_Env.implicits) with
 in (FStar_All.pipe_left Prims.ignore _156_1905))
 end
 | ((reason, _57_3742, _57_3744, e, t, r))::_57_3739 -> begin
-(let _156_1908 = (let _156_1907 = (FStar_Syntax_Print.term_to_string t)
+(
+
+let _57_3750 = (let _156_1908 = (let _156_1907 = (FStar_Syntax_Print.term_to_string t)
 in (let _156_1906 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format3 "Failed to resolve implicit argument of type \'%s\' introduced in %s because %s" _156_1907 _156_1906 reason)))
 in (FStar_TypeChecker_Errors.report r _156_1908))
+in (failwith "die"))
 end)))
 
 
 let universe_inequality : FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe  ->  FStar_TypeChecker_Env.guard_t = (fun u1 u2 -> (
 
-let _57_3752 = trivial_guard
-in {FStar_TypeChecker_Env.guard_f = _57_3752.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _57_3752.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = (((u1), (u2)))::[]; FStar_TypeChecker_Env.implicits = _57_3752.FStar_TypeChecker_Env.implicits}))
+let _57_3754 = trivial_guard
+in {FStar_TypeChecker_Env.guard_f = _57_3754.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _57_3754.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = (((u1), (u2)))::[]; FStar_TypeChecker_Env.implicits = _57_3754.FStar_TypeChecker_Env.implicits}))
 
 
 

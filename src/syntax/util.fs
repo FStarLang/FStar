@@ -26,7 +26,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Const
 module U = FStar.Util
-
+module List = FStar.List
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)

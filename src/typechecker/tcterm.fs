@@ -1630,10 +1630,9 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
             then t
             else if top_level && not(env.generalize) //t is from an already-checked val decl
             then t
-            else (printfn "About to check type %s\n" (Print.term_to_string t);
-                  let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) in
-                  printfn "checked type %s\n" (Print.term_to_string t);
-                  Rel.force_trivial_guard env0 g;
+            else (let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) in
+                  let g = Rel.resolve_implicits g in
+                  ignore <| Rel.discharge_guard env g;
                   norm env0 t) in
         let env = if termination_check_enabled t
                   && Env.should_verify env (* store the let rec names separately for termination checks *)

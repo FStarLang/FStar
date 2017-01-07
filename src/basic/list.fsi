@@ -37,6 +37,7 @@ val map3 : ('a -> 'b -> 'c -> 'd) -> (list<'a>) -> (list<'b>) -> (list<'c>) -> (
 val fold_left : ('a -> 'b -> 'a) -> 'a -> (list<'b>) -> 'a
 val fold_left2 : ('s -> 'a -> 'b -> 's) -> 's -> (list<'a>) -> (list<'b>) -> 's
 val fold_right : ('a -> 'b -> 'b) -> (list<'a>) -> 'b -> 'b
+val fold_right2 : ('a -> 'b -> 'c -> 'c) -> list<'a> -> list<'b> -> 'c -> 'c
 val mem<'a when 'a : equality>  : 'a -> (list<'a>) -> Tot<bool>
 val existsb : f:('a -> Tot<bool>) -> (list<'a>) -> Tot<bool>
 val find : f:('a -> Tot<bool>) -> (list<'a>) -> Tot<(option<'a>)>
