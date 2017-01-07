@@ -180,7 +180,8 @@ U_STDLIB=$(addprefix $(ULIB)/, FStar.FunctionalExtensionality.fst FStar.Proposit
 			       FStar.Char.fsti FStar.Float.fsti FStar.Mul.fst FStar.Int.fst $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti)
 U_BOOT_BASIC_FSTI=$(addprefix boot_fstis/FStar., string.fsti list.fst util.fst platform.fsti bytes.fst range.fsti version.fsti getopt.fsti unionfind.fsti Pprint.fsti)
 U_ALL_INTERFACES=$(U_STDLIB) $(U_BOOT_BASIC_FSTI)
-U_ALL_SOURCES=$(addprefix boot_fsts/, FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst FStar.Absyn.Syntax.fst)
+U_ALL_SOURCES=$(addprefix boot_fsts/, FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst \
+					FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.Free.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst)
 
 boot_fstis/FStar.%.fsti: basic/%.fsi
 	cp $^ $@
@@ -211,11 +212,11 @@ boot_fstis/FStar.util.fst: basic/util.fsi
 
 boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	cp $^ $@
-	$(SED) -i 's/type cell.*//g' $@
+	$(SED) -i 's/type cell.*/module ALL_TMP = FStar.All/g' $@
 	$(SED) -i 's/and contents.*//g' $@
 	$(SED) -i 's/.*| Data.*//g' $@
 	$(SED) -i 's/.*| Fwd.*//g' $@
-	$(SED) -i 's/type uvar.*/assume new type uvar : Type -> Type/g' $@
+	$(SED) -i 's/type uvar.*/assume new type uvar : Type0 -> Type0/g' $@
 
 prep_u_extract_ocaml: $(U_ALL_INTERFACES)
 
@@ -227,10 +228,10 @@ clean_u_extract_ocaml:
 
 u_extract_ocaml: 
 	make clean_u_extract_ocaml
-	$(FSTAR) --eager_inference \
+	$(FSTAR) --eager_inference --MLish \
 	  --lax --fs_typ_app --no_location_info $(addprefix --no_extract \
 	  ,$(NUM)) --odir u_ocaml-output $(FSTAROPTS) --codegen OCaml \
-	$(U_ALL_INTERFACES) boot_fsts/FStar.Options.fst #$(U_ALL_SOURCES)
+	$(U_ALL_INTERFACES) boot_fsts/FStar.Options.fst $(U_ALL_SOURCES)
 
 
 # Fastest way to refresh the snapshot (if it works)

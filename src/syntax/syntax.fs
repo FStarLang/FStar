@@ -484,7 +484,7 @@ let pat_bvs (p:pat) : list<bv> =
 
 (* Gen sym *)
 let gen_reset =
-    let x = ref 0 in
+    let x = Util.mk_ref 0 in
     let gen () = incr x; !x in
     let reset () = x := 0 in
     gen, reset

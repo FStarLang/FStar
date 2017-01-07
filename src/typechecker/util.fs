@@ -102,7 +102,11 @@ let force_sort' s = match !s.tk with
 
 let force_sort s = mk (force_sort' s) None s.pos
 
-let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
+let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} :
+    list<univ_name>
+   * typ
+   * bool //true indicates that the type needs to be checked; false indicates that it is already checked
+   =
   let rng = t.pos in
   let t = SS.compress t in
   match t.n with
@@ -117,22 +121,25 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
           {a with sort=t}, false
         | _ -> a, true in
 
-    let rec aux vars e : either<typ,comp> * bool =
+    let rec aux must_check_ty vars e : either<typ,comp> * bool =
       let e = SS.compress e in
       match e.n with
-      | Tm_meta(e, _) -> aux vars e
+      | Tm_meta(e, _) -> aux must_check_ty vars e
       | Tm_ascribed(e, t, _) -> t, true
 
       | Tm_abs(bs, body, _) ->
-        let scope, bs, check = bs |> List.fold_left (fun (scope, bs, check) (a, imp) ->
-              let tb, c = mk_binder scope a in
+        let scope, bs, must_check_ty = bs |> List.fold_left (fun (scope, bs, must_check_ty) (a, imp) ->
+              let tb, must_check_ty =
+                if must_check_ty
+                then a, true
+                else mk_binder scope a in
               let b = (tb, imp) in
               let bs = bs@[b] in
               let scope = scope@[b] in
-              scope, bs, c || check)
-           (vars,[],false) in
+              scope, bs, must_check_ty)
+           (vars,[], must_check_ty) in
 
-        let res, check_res = aux scope body in
+        let res, must_check_ty = aux must_check_ty scope body in
         let c = match res with
             | Inl t -> Util.ml_comp t r //let rec without annotations default to being in the ML monad; TODO: revisit this
             | Inr c -> c in
@@ -140,18 +147,22 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
         if debug env Options.High
         then Util.print2 "(%s) Using type %s\n"
                 (Range.string_of_range r) (Print.term_to_string t);
-        Inl t, check_res || check
+        Inl t, must_check_ty
 
-      | _ -> Inl (Rel.new_uvar r vars Util.ktype0 |> fst), false in
+      | _ ->
+        if must_check_ty
+        then Inl S.tun, true
+        else Inl (Rel.new_uvar r vars Util.ktype0 |> fst), false
+    in
 
-     let t, b = aux (t_binders env) e in
-     let t = match t with
+    let t, b = aux false (t_binders env) e in
+    let t = match t with
         | Inr c ->
           raise (Error(Util.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
                         (Print.comp_to_string c),
                        rng))
         | Inl t -> t in
-     [], t, b
+    [], t, b
 
   | _ ->
     let univ_vars, t = open_univ_vars univ_vars t in
@@ -447,9 +458,9 @@ let mk_comp_l mname u_result result wp flags =
              effect_args=[S.as_arg wp];
              flags=flags})
 
-let mk_comp md = mk_comp_l md.mname 
+let mk_comp md = mk_comp_l md.mname
 
-let lax_mk_tot_or_comp_l mname u_result result flags = 
+let lax_mk_tot_or_comp_l mname u_result result flags =
     if Ident.lid_equals mname Const.effect_Tot_lid
     then S.mk_Total' result (Some u_result)
     else mk_comp_l mname u_result result S.tun flags
@@ -468,8 +479,8 @@ let return_value env t v =
     then mk_Total t //we're still in prims, not yet having fully defined the primitive effects
     else let m = must (Env.effect_decl_opt env Const.effect_PURE_lid) in //if Tot isn't fully defined in prims yet, then just return (Total t)
          let u_t = env.universe_of env t in
-         let wp = 
-            if env.lax 
+         let wp =
+            if env.lax
             then S.tun
             else let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
                  let k = SS.subst [NT(a, t)] kwp in
@@ -493,7 +504,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
         (match e1opt with | None -> "None" | Some e -> Print.term_to_string e)
         (Print.lcomp_to_string lc1) bstr (Print.lcomp_to_string lc2));
   let bind_it () =
-      if env.lax then 
+      if env.lax then
          let u_t = env.universe_of env lc2.res_typ in
          lax_mk_tot_or_comp_l joined_eff u_t lc2.res_typ []
       else begin
@@ -597,7 +608,7 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
                  let md = Env.get_effect_decl env c.effect_name in
                  let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assume_p)  [S.as_arg res_t; S.as_arg f; S.as_arg wp]  None wp.pos in
                  mk_comp md u_res_t res_t wp c.flags
-      end 
+      end
   in
   {lc with comp=weaken}
 
@@ -642,7 +653,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
 
                     let c2 = mk_comp md u_res_t res_t wp flags in
                     c2
-             end 
+             end
        in
        {lc with eff_name=norm_eff_name env lc.eff_name;
                 cflags=(if Util.is_pure_lcomp lc && not <| Util.is_function_typ lc.res_typ then flags else []);
@@ -670,7 +681,7 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
 let ite env (guard:formula) lcomp_then lcomp_else =
   let joined_eff = join_lcomp env lcomp_then lcomp_else in
   let comp () =
-      if env.lax then 
+      if env.lax then
          let u_t = env.universe_of env lcomp_then.res_typ in
          lax_mk_tot_or_comp_l joined_eff u_t lcomp_then.res_typ []
       else begin
@@ -681,7 +692,7 @@ let ite env (guard:formula) lcomp_then lcomp_else =
           then let comp = mk_comp md u_res_t res_t wp [] in
                add_equality_to_post_condition env comp res_t
           else let wp = mk_Tm_app  (inst_effect_fun_with [u_res_t] env md md.ite_wp)  [S.as_arg res_t; S.as_arg wp] None wp.pos in
-               mk_comp md u_res_t res_t wp [] 
+               mk_comp md u_res_t res_t wp []
       end
  in
  {eff_name=join_effects env lcomp_then.eff_name lcomp_else.eff_name;
@@ -718,7 +729,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
                  let md = Env.get_effect_decl env comp.effect_name in
                  let _, _, wp = destruct_comp comp in
                  let wp = mk_Tm_app  (inst_effect_fun_with [u_res_t] env md md.ite_wp)  [S.as_arg res_t; S.as_arg wp] None wp.pos in
-                 mk_comp md u_res_t res_t wp [] 
+                 mk_comp md u_res_t res_t wp []
         end
     in
     {eff_name=eff;
@@ -731,7 +742,7 @@ let close_comp env bvs (lc:lcomp) =
       let c = lc.comp() in
       if Util.is_ml_comp c then c
       else
-        if env.lax then 
+        if env.lax then
            c
         else begin
             let close_wp u_res md res_t bvs wp0 =

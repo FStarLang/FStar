@@ -834,7 +834,7 @@ let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
 let explicit_deps                () = get_explicit_deps               ()
 let fs_typ_app                   () = get_fs_typ_app                  ()
-let full_context_dependency      () = get_MLish() = false
+let full_context_dependency      () = if get_stratified () then get_MLish() = false else true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()

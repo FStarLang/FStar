@@ -155,10 +155,13 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
   let expected_c_opt = match copt with
     | Some _ -> copt
     | None  ->
-        if (Options.ml_ish()) && Ident.lid_equals Const.effect_ALL_lid (Util.comp_effect_name c)
+        if (Options.ml_ish()
+            && Ident.lid_equals Const.effect_ALL_lid (Util.comp_effect_name c))
+        || (Options.ml_ish ()
+            && env.lax
+            && not (Util.is_pure_or_ghost_comp c))
         then Some (Util.ml_comp (Util.comp_result c) e.pos)
-        else if (*	env.top_level  || *)
-                Util.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
+        else if Util.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
         then None
         else if Util.is_pure_comp c
              then Some (mk_Total (Util.comp_result c))
@@ -424,7 +427,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
-    let e, c, g = if TcUtil.short_circuit_head head
+    let e, c, g = if not env.lax && TcUtil.short_circuit_head head
                   then check_short_circuit_args env head chead g_head args (Env.expected_typ env0)
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
     if Env.debug env Options.Extreme
@@ -718,9 +721,10 @@ and tc_universe env u : universe =
             // if env.use_bv_sorts || Env.lookup_univ env x
             // then u
             // else raise (Error (Util.format1 "Universe variable '%s' not found" x.idText, Env.get_range env))
-   in match u with
-       | U_unknown -> U.type_u () |> snd
-       | _ -> aux u
+   in if env.lax_universes then U_zero
+      else match u with
+           | U_unknown -> U.type_u () |> snd
+           | _ -> aux u
 
 (* Several complex cases from the main type-checker are factored in to separate functions below *)
 
@@ -1626,7 +1630,9 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
             then t
             else if top_level && not(env.generalize) //t is from an already-checked val decl
             then t
-            else (let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) in
+            else (printfn "About to check type %s\n" (Print.term_to_string t);
+                  let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) in
+                  printfn "checked type %s\n" (Print.term_to_string t);
                   Rel.force_trivial_guard env0 g;
                   norm env0 t) in
         let env = if termination_check_enabled t

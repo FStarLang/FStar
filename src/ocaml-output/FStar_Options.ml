@@ -1351,7 +1351,11 @@ end))
 
 let full_context_dependency : Prims.unit  ->  Prims.bool = (fun _25_422 -> (match (()) with
 | () -> begin
+if (get_stratified ()) then begin
 ((get_MLish ()) = false)
+end else begin
+true
+end
 end))
 
 

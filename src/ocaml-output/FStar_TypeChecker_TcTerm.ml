@@ -285,7 +285,7 @@ let expected_c_opt = (match (copt) with
 copt
 end
 | None -> begin
-if ((FStar_Options.ml_ish ()) && (FStar_Ident.lid_equals FStar_Syntax_Const.effect_ALL_lid (FStar_Syntax_Util.comp_effect_name c))) then begin
+if (((FStar_Options.ml_ish ()) && (FStar_Ident.lid_equals FStar_Syntax_Const.effect_ALL_lid (FStar_Syntax_Util.comp_effect_name c))) || (((FStar_Options.ml_ish ()) && env.FStar_TypeChecker_Env.lax) && (not ((FStar_Syntax_Util.is_pure_or_ghost_comp c))))) then begin
 (let _159_113 = (FStar_Syntax_Util.ml_comp (FStar_Syntax_Util.comp_result c) e.FStar_Syntax_Syntax.pos)
 in Some (_159_113))
 end else begin
@@ -1046,7 +1046,7 @@ in (match (_60_657) with
 | (head, chead, g_head) -> begin
 (
 
-let _60_661 = if (FStar_TypeChecker_Util.short_circuit_head head) then begin
+let _60_661 = if ((not (env.FStar_TypeChecker_Env.lax)) && (FStar_TypeChecker_Util.short_circuit_head head)) then begin
 (let _159_310 = (FStar_TypeChecker_Env.expected_typ env0)
 in (check_short_circuit_args env head chead g_head args _159_310))
 end else begin
@@ -1825,14 +1825,18 @@ end
 | FStar_Syntax_Syntax.U_name (x) -> begin
 u
 end)))
-in (match (u) with
+in if env.FStar_TypeChecker_Env.lax_universes then begin
+FStar_Syntax_Syntax.U_zero
+end else begin
+(match (u) with
 | FStar_Syntax_Syntax.U_unknown -> begin
 (let _159_417 = (FStar_Syntax_Util.type_u ())
 in (FStar_All.pipe_right _159_417 Prims.snd))
 end
 | _60_1143 -> begin
 (aux u)
-end)))
+end)
+end))
 and tc_abs : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.lcomp * FStar_TypeChecker_Env.guard_t) = (fun env top bs body -> (
 
 let fail = (fun msg t -> (let _159_426 = (let _159_425 = (let _159_424 = (FStar_TypeChecker_Errors.expected_a_term_of_type_t_got_a_function env msg t top)

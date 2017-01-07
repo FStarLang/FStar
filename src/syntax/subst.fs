@@ -23,6 +23,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Util
 open FStar.Ident
+module U = FStar.Util
 
 // VALS_HACK_HERE
 
@@ -99,7 +100,7 @@ let rec force_uvar' t =
 //from the uvar to anything it may have been resolved to
 let force_uvar t =
   let t' = force_uvar' t in
-  if FStar.Util.physical_equality t t'
+  if U.physical_equality t t'
   then t
   else delay t' ([], Some t.pos)
 
@@ -130,18 +131,18 @@ let rec compress_univ u = match u with
 (********************************************************************************)
 
 //Lookup a bound var or a name in a parallel substitution
-let subst_bv a s = Util.find_map s (function
+let subst_bv a s = U.find_map s (function
     | DB (i, x) when (i=a.index) ->
       Some (bv_to_name (Syntax.set_range_of_bv x (Syntax.range_of_bv a)))
     | _ -> None)
-let subst_nm a s = Util.find_map s (function
+let subst_nm a s = U.find_map s (function
     | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({a with index=i}))
     | NT (x, t) when bv_eq a x -> Some t
     | _ -> None)
-let subst_univ_bv x s = Util.find_map s (function
+let subst_univ_bv x s = U.find_map s (function
     | UN(y, t) when (x=y) -> Some t
     | _ -> None)
-let subst_univ_nm (x:univ_name) s = Util.find_map s (function
+let subst_univ_nm (x:univ_name) s = U.find_map s (function
     | UD(y, i) when (x.idText=y.idText) -> Some (U_bvar i)
     | _ -> None)
 
@@ -365,7 +366,7 @@ let push_subst s t =
         let body = subst' sn body in
         let lbs = lbs |> List.map (fun lb ->
         let lbt = subst' s lb.lbtyp in
-        let lbd = if is_rec && Util.is_left (lb.lbname) //if it is a recursive local let, then all the let bound names are in scope for the body
+        let lbd = if is_rec && U.is_left (lb.lbname) //if it is a recursive local let, then all the let bound names are in scope for the body
                     then subst' sn lb.lbdef
                     else subst' s lb.lbdef in
         let lbname = match lb.lbname with
@@ -437,7 +438,7 @@ let open_pat (p:pat) : pat * subst_t =
                        aux_disj sub renaming p, b))}
 
            | Pat_var x ->
-             let yopt = Util.find_map renaming (function
+             let yopt = U.find_map renaming (function
                     | (x', y) when (x.ppname.idText=x'.ppname.idText) -> Some y
                     | _ -> None) in
              let y = match yopt with
