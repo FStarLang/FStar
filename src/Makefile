@@ -181,7 +181,7 @@ U_STDLIB=$(addprefix $(ULIB)/, FStar.FunctionalExtensionality.fst FStar.Proposit
 U_BOOT_BASIC_FSTI=$(addprefix boot_fstis/FStar., string.fsti list.fst util.fst platform.fsti bytes.fst range.fsti version.fsti getopt.fsti unionfind.fsti Pprint.fsti)
 U_ALL_INTERFACES=$(U_STDLIB) $(U_BOOT_BASIC_FSTI)
 U_ALL_SOURCES=$(addprefix boot_fsts/, FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst \
-					FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst) #FStar.Syntax.Free.fst 
+					FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst FStar.Syntax.Free.fst)
 
 boot_fstis/FStar.%.fsti: basic/%.fsi
 	cp $^ $@
@@ -207,7 +207,7 @@ boot_fstis/FStar.util.fst: basic/util.fsi
 	$(SED) -i 's/type stream_reader.*/assume new type stream_reader/g'  $@ 
 	$(SED) -i 's/type string_builder.*/assume new type string_builder/g'  $@ 
 	$(SED) -i 's/type proc.*/assume new type proc/g' $@ 
-	$(SED) -i 's/type set.*/assume new type set:Type -> Type/g' $@
+	$(SED) -i 's/type set.*/assume new type set:Type0 -> Type0/g' $@
 	$(SED) -i 's/^val/assume val/g' $@
 
 boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
@@ -228,6 +228,7 @@ clean_u_extract_ocaml:
 
 u_extract_ocaml: 
 	make clean_u_extract_ocaml
+	mkdir -p u_ocaml-output
 	$(FSTAR) --eager_inference --MLish \
 	  --lax --fs_typ_app --no_location_info $(addprefix --no_extract \
 	  ,$(NUM)) --odir u_ocaml-output $(FSTAROPTS) --codegen OCaml \
