@@ -23,7 +23,7 @@ open FStar.Getopt
 open FStar.Ident
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
-open FStar.Dependences
+open FStar.Dependencies
 open FStar.Interactive
 
 (* Module abbreviations for the universal type-checker  *)

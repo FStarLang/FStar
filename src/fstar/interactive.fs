@@ -162,7 +162,7 @@ module F_Syntax = FStar.Absyn.Syntax
 
 let detect_dependencies_for_module (mname:option<string>) : string         //the filename of the buffer being checked, if any
                                                           * string         //the module name of the buffer being checked
-                                                          * list<string>   //all its dependences
+                                                          * list<string>   //all its dependencies
   =
   let failr msg r =
     if Options.universes()
@@ -322,7 +322,7 @@ let interactive_mode (filenames:list<string>)
 
       (* Well, the file list hasn't changed, so our (single) file is still there. *)
       let filenames = Options.file_list () in
-      let filenames = FStar.Dependences.find_deps_if_needed Parser.Dep.VerifyFigureItOut filenames in
+      let filenames = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut filenames in
       //reverse stk and ts, since iterate expects them in "first dependency first order"
       iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
     in
@@ -379,7 +379,7 @@ let interactive_mode (filenames:list<string>)
     end in
 
     //type check prims and the dependencies
-    let filenames = FStar.Dependences.find_deps_if_needed Parser.Dep.VerifyFigureItOut filenames in
+    let filenames = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut filenames in
     let env = tc.tc_prims () in
     let stack, env, ts = tc_deps initial_mod [] env filenames [] in 
 

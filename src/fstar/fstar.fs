@@ -114,7 +114,7 @@ let go _ =
            * possible. *)
           let filenames =
             try
-              FStar.Dependences.find_deps_if_needed Parser.Dep.VerifyFigureItOut filenames
+              FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut filenames
             with _ ->
               Util.print_warning ("There was an error reading dependencies from: " ^ (List.hd filenames));
               // Rely on Aseem's discover-as-you-go feature
@@ -141,7 +141,7 @@ let go _ =
               Parser.Dep.VerifyFigureItOut
           in
           if Options.universes() then
-            let filenames = FStar.Dependences.find_deps_if_needed verify_mode filenames in
+            let filenames = FStar.Dependencies.find_deps_if_needed verify_mode filenames in
             let fmods, dsenv, env = Universal.batch_mode_tc filenames in
             let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
             report_errors module_names_and_times;

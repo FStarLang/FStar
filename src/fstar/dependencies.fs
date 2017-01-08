@@ -17,14 +17,14 @@
 
 // A dependency-finding routine shared between the universal and stratified
 // flavors of F*
-module FStar.Dependences
+module FStar.Dependencies
 open FStar
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
 
 (***********************************************************************)
-(* Finding the transitive dependences of a list of files               *)
+(* Finding the transitive dependencies of a list of files               *)
 (***********************************************************************)
 let find_deps_if_needed verify_mode files =
   if Options.explicit_deps () then
