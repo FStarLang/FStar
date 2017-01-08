@@ -108,21 +108,13 @@ let go _ =
             Util.print_error "fstar-mode.el should pass the current filename to F*\n";
             exit 1
           end;
+          let filename = List.hd filenames in
           if Options.verify_module () <> [] then
             Util.print_warning "Interactive mode; ignoring --verify_module";
-          (* If we can do it now, be smart and load as many dependencies as
-           * possible. *)
-          let filenames =
-            try
-              FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut filenames
-            with _ ->
-              Util.print_warning ("There was an error reading dependencies from: " ^ (List.hd filenames));
-              // Rely on Aseem's discover-as-you-go feature
-              []
-          in
+          (* interactive_mode takes care of calling [find_deps_if_needed] *)
           if Options.universes()
-          then interactive_mode filenames None Universal.interactive_tc //and then call interactive mode
-          else interactive_mode filenames None Stratified.interactive_tc //and then start checking chunks from the current buffer
+          then interactive_mode filename None Universal.interactive_tc //and then call interactive mode
+          else interactive_mode filename None Stratified.interactive_tc //and then start checking chunks from the current buffer
         end else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if Options.indent () then

@@ -140,67 +140,8 @@ let fill_buffer () =
   let s = the_interactive_state in
   s.buffer := !s.buffer @ [ read_chunk () ]
 
-exception Found of string
-let find_initial_module_name () =
-  fill_buffer (); fill_buffer ();
-  try begin match !the_interactive_state.buffer with
-    | [Push _; Code (code, _)] ->
-        let lines = Util.split code "\n" in
-        List.iter (fun line ->
-          let line = trim_string line in
-          if String.length line > 7 && substring line 0 6 = "module" then
-            let module_name = substring line 7 (String.length line - 7) in
-            raise (Found module_name)
-        ) lines
-    | _ -> ()
-    end;
-    None
-  with Found n -> Some n
-
 module U_Syntax = FStar.Syntax.Syntax
 module F_Syntax = FStar.Absyn.Syntax
-
-let detect_dependencies_for_module (mname:option<string>) : string         //the filename of the buffer being checked, if any
-                                                          * string         //the module name of the buffer being checked
-                                                          * list<string>   //all its dependencies
-  =
-  let failr msg r =
-    if Options.universes()
-    then FStar.TypeChecker.Errors.warn r msg
-    else FStar.Tc.Errors.warn r msg;
-    exit 1
-  in
-  let fail msg = failr msg Range.dummyRange in
-  let parse_msg = "Dependency analysis may not be correct because the file failed to parse: " in
-  try
-      match mname with
-      | None ->
-        fail "No initial module directive found\n"
-      | Some module_name ->
-          let file_of_module_name = Parser.Dep.build_map [] in
-          let filename = smap_try_find file_of_module_name (String.lowercase module_name) in
-          match filename with
-          | None ->
-             fail (Util.format2 "I found a \"module %s\" directive, but there \
-                is no %s.fst\n" module_name module_name)
-          | Some (None, Some filename)
-          | Some (Some filename, None) ->
-              Options.add_verify_module module_name;
-              let _, all_filenames, _ = Parser.Dep.collect Parser.Dep.VerifyUserList [ filename ] in
-              filename, module_name, List.rev (List.tl all_filenames)
-          | Some (Some _, Some _) ->
-             fail (Util.format1 "The combination of split interfaces and \
-               interactive verification is not supported for: %s\n" module_name)
-          | Some (None, None) ->
-              failwith "impossible"
-
-  with
-  | U_Syntax.Error(msg, r)
-  | F_Syntax.Error(msg, r) ->
-      failr (parse_msg ^ msg) r
-  | U_Syntax.Err msg
-  | F_Syntax.Err msg ->
-      fail (parse_msg ^ msg)
 
 (******************************************************************************************)
 (* The main interactive loop *)
@@ -210,9 +151,8 @@ open FStar.Parser.ParseIt
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
 type m_timestamps = list<(option<string> * string * option<time> * time)>
 
-// filenames are the dependencies that have been figured out by reading the file
-// currently edited, if possible
-let interactive_mode (filenames:list<string>)
+// filename is the name of the file currently edited
+let interactive_mode (filename:string)
                      (initial_mod:'modul)
                      (tc:interactive_tc<'env,'modul>) =
     if Option.isSome (Options.codegen()) 
@@ -321,8 +261,7 @@ let interactive_mode (filenames:list<string>)
       in
 
       (* Well, the file list hasn't changed, so our (single) file is still there. *)
-      let filenames = Options.file_list () in
-      let filenames = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut filenames in
+      let filenames = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut [ filename ] in
       //reverse stk and ts, since iterate expects them in "first dependency first order"
       iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
     in
@@ -379,7 +318,7 @@ let interactive_mode (filenames:list<string>)
     end in
 
     //type check prims and the dependencies
-    let filenames = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut filenames in
+    let filenames = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut [ filename ] in
     let env = tc.tc_prims () in
     let stack, env, ts = tc_deps initial_mod [] env filenames [] in 
 
