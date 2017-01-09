@@ -796,11 +796,13 @@ let should_verify m =
     true
   else match get_verify_module () with
     | [] ->
-        (* Only verify modules on the command-line. This is imprecise because of
-         * the include path. *)
+        (* Note: in auto-deps mode, [dep.fs] fills in the [verify_module] option
+         * meaning that this case is only called when in [--explicit_deps] mode.
+         * If we could remove [--explicit_deps], there would be less complexity
+         * here. *)
         List.existsML (fun f ->
           let f = basename f in
-          let f = String.substring f 0 (String.length (get_file_extension f) - 4) in
+          let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
           String.lowercase f = m
         ) (file_list ())
     | l ->

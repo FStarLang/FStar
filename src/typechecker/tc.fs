@@ -1735,8 +1735,7 @@ let tc_partial_modul env modul =
 
   let name = Util.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
   let msg = "Internals for " ^name in
-  let env = {env with Env.is_iface=modul.is_interface;
-                      admit=not (Options.should_verify modul.name.str)} in
+  let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
   //AR: the interactive mode calls this function, because of which there is an extra solver push.
   //    the interactive mode does not call finish_partial_modul, so this push is not popped.
   //    currently, there is a cleanup function in the interactive mode tc, that does this extra pop.

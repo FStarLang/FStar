@@ -1215,8 +1215,8 @@ in (FStar_List.existsML (fun f -> (
 let f = (FStar_Util.basename f)
 in (
 
-let f = (let _124_535 = ((let _124_534 = (FStar_Util.get_file_extension f)
-in (FStar_String.length _124_534)) - (Prims.parse_int "4"))
+let f = (let _124_535 = (((FStar_String.length f) - (let _124_534 = (FStar_Util.get_file_extension f)
+in (FStar_String.length _124_534))) - (Prims.parse_int "1"))
 in (FStar_String.substring f (Prims.parse_int "0") _124_535))
 in ((FStar_String.lowercase f) = m)))) _124_536))
 end
