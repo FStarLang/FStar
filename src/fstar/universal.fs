@@ -193,41 +193,6 @@ let rec tc_fold_interleave (acc:list<(modul * int)> * uenv) (remaining:list<stri
       let remaining, nmods, (dsenv, env) = tc_one_file_from_remaining remaining uenv in
       tc_fold_interleave (mods@nmods, (dsenv, env)) remaining
 
-//let rec tc_fold_interleave acc remaining =
-//  let move intf impl remaining =
-//    Syntax.reset_gensym ();
-//    let all_mods, dsenv, env = acc in
-//    let ms, dsenv, env = match intf with
-//        | None -> //no interface; easy
-//          tc_one_file dsenv env None impl
-//
-//        | Some _ when ((Options.codegen()) <> None) ->
-//          if not (Options.lax())
-//          then raise (Err "Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately");
-//          tc_one_file dsenv env intf impl
-//
-//        | Some iname ->
-//          if Options.debug_any () then
-//            FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
-//          let caption = "interface: " ^ iname in
-//          //push a new solving context, so that we can blow away implementation details below
-//          let dsenv', env' = push_context (dsenv, env) caption in
-//          let _, dsenv', env' = tc_one_file dsenv' env' intf impl in //check the impl and interface together, if any
-//          //discard the impl and check the interface alone for the rest of the program
-//          let _ = pop_context (dsenv', env') caption in
-//          tc_one_file dsenv env None iname in //check the interface alone
-//    let acc = all_mods @ ms, dsenv, env in
-//    tc_fold_interleave acc remaining
-//  in
-//
-//  match remaining with
-//  | intf :: impl :: remaining when needs_interleaving intf impl ->
-//      move (Some intf) impl remaining
-//  | intf_or_impl :: remaining ->
-//      move None intf_or_impl remaining
-//  | [] ->
-//      acc
-
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
 (***********************************************************************)
