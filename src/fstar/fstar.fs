@@ -37,7 +37,7 @@ let finished_message fmods errs =
                 let tag = if iface then "i'face" else "module" in
                 if Options.should_print_message name.str
                 then if time >= 0
-                then print_to (Util.format3 "Verified %s: %s (%s milliseconds)\n" 
+                then print_to (Util.format3 "Verified %s: %s (%s milliseconds)\n"
                                                         tag (Ident.text_of_lid name) (Util.string_of_int time))
                 else print_to (Util.format2 "Verified %s: %s\n" tag (Ident.text_of_lid name)));
     if errs > 0
@@ -158,14 +158,14 @@ let main () =
     cleanup ();
     exit 0
   with | e ->
-    (begin 
+    (begin
         if F_Util.handleable e then F_Util.handle_err false () e;
         if FStar.TypeChecker.Errors.handleable e then FStar.TypeChecker.Errors.handle_err false e;
         if (Options.trace_error()) then
           Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
         else if not (F_Util.handleable e || FStar.TypeChecker.Errors.handleable e) then
           Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
-     end; 
+     end;
      cleanup();
      FStar.TypeChecker.Errors.report_all () |> ignore;
      report_errors [];

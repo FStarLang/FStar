@@ -43,6 +43,8 @@ val string_of_pos: pos -> string
 val start_of_range: range -> pos
 val end_of_range: range -> pos
 val line_of_pos: pos -> int
+val pos_eq : pos -> pos -> bool
+val pos_geq : pos -> pos -> bool
 val end_range: range -> range
 val compare: range -> range -> int
 val compare_use_range: range -> range -> int
@@ -51,4 +53,5 @@ val range_contains_range: range -> range -> bool
 val range_contains_pos: range -> pos -> bool
 val range_before_pos : range -> pos -> bool
 val range_before_range : range -> range -> bool
-
+val end_of_line : pos -> pos
+val extend_to_end_of_line : range -> range

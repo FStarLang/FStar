@@ -191,6 +191,7 @@
 
   let push_one_line_comment lexbuf =
     let startpos, endpos = L.range lexbuf in
+    assert (startpos.pos_lnum = endpos.pos_lnum) ;
     comments := (lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos) :: !comments
 }
 

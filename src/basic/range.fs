@@ -70,7 +70,6 @@ type range = {
     use_range:int64
 }
 
-let zeroPos = 0
 let dummyRange = {
     def_range=0L;
     use_range=0L
@@ -92,9 +91,11 @@ let mk_pos l c =
     ||| ((l <<< col_nbits) &&& line_col_mask)
 let line_of_pos p =  (p lsr col_nbits)
 let col_of_pos p =  (p &&& pos_col_mask)
+let zeroPos = mk_pos 1 0
 
 let bits_of_pos (x:pos) :int32 = x
 let pos_of_bits (x:int32) : pos = x
+let end_of_line (x:pos) = (x &&& line_col_mask) ||| pos_col_mask
 
 let file_idx_nbits = 14
 let start_line_nbits = line_nbits
@@ -172,6 +173,9 @@ let dest_file_idx_range r = file_idx_of_range r,start_of_range r,end_of_range r
 let dest_range r = file_of_range r,start_of_range r,end_of_range r
 let dest_pos p = line_of_pos p,col_of_pos p
 let end_range r = mk_range (file_of_range r) (end_of_range r) (end_of_range r)
+let extend_to_end_of_line r = mk_range (file_of_range r)
+                                       (start_of_range r)
+                                       (end_of_line (end_of_range r))
 
 let trim_range_right r n =
     let fidx,p1,p2 = dest_file_idx_range r in
