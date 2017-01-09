@@ -946,7 +946,7 @@ let maybe_instantiate (env:Env.env) e t =
              let n_expected = number_of_implicits expected_t in
              let n_available = number_of_implicits t in
              if n_available < n_expected
-             then raise (Error(Util.format3 "Expected a term with %s implicit arguments, but %s has only %s"
+             then raise (Error(BU.format3 "Expected a term with %s implicit arguments, but %s has only %s"
                                         (BU.string_of_int n_expected)
                                         (Print.term_to_string e)
                                         (BU.string_of_int n_available), Env.get_range env))

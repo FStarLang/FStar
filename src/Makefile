@@ -183,8 +183,7 @@ U_ALL_INTERFACES=$(U_STDLIB) $(U_BOOT_BASIC_FSTI)
 U_ALL_SOURCES=$(addprefix boot_fsts/, \
 	FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst \
 	FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst FStar.Syntax.Free.fst FStar.Syntax.MutRecTy.fst \
-	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Errors.fst FStar.TypeChecker.Rel.fst) # FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst \
-)
+	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Errors.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst)
 
 boot_fstis/FStar.%.fsti: basic/%.fsi
 	cp $^ $@
@@ -223,6 +222,9 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 
 prep_u_extract_ocaml: $(U_ALL_INTERFACES)
 	$(SED) -i 's/type env = {/type env : Type0 = {/g' boot_fsts/FStar.TypeChecker.Env.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+        # temporary, to go quickly past Rel
+	cp typechecker/rel.fsi boot_fsts/FStar.TypeChecker.Rel.fst
+	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Rel.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
 
 clean_u_extract_ocaml:
 	rm -rf boot_fstis

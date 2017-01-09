@@ -50,6 +50,7 @@ val tryPick : ('a -> (option<'b>)) -> (list<'a>) -> (option<'b>)
 val choose : ('a -> (option<'b>)) -> (list<'a>) -> (list<'b>)
 val partition : ('a -> bool) -> (list<'a>) -> ((list<'a>) * (list<'a>))
 val assoc<'a, 'b when 'a : equality>  : 'a -> (list<('a * 'b)>) -> Tot<(option<'b>)>
+val splitAt : int -> list<'a> -> list<'a> * list<'a>
 val split : (list<('a * 'b)>) -> Tot<((list<'a>) * (list<'b>))>
 val unzip3 : (list<('a * 'b * 'c)>) -> Tot<((list<'a>) * (list<'b>) * (list<'c>))>
 val zip : (list<'a>) -> (list<'b>) -> (list<('a * 'b)>)

@@ -234,6 +234,8 @@ let rec assoc = fun ( a  :  'a ) ( x  :  ('a * 'b) Prims.list ) ->
    then Some b
    else assoc a tl
 
+let splitAt n l = List.splitAt n l
+
 let split l = List.split l
 
 let unzip x = split x
