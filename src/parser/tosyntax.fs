@@ -664,7 +664,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       desugar_name mk setpos env l
 
     | Projector (l, i) ->
-      let found = 
+      let found =
         Option.isSome (Env.try_lookup_datacon env l) ||
         Option.isSome (Env.try_lookup_effect_defn env l)
       in
@@ -859,8 +859,27 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 push_top_level_rec_binding env l.ident S.Delta_equational, Inr l, rec_bindings in
             env, (lbname::fnames), rec_bindings) (env, [], []) funs
         in
-        let fnames = List.rev fnames in
 
+        let fnames = List.rev fnames in
+        let rec_bindings = List.rev rec_bindings in
+        (* This comment is taken from Syntax.Subst.open_let_rec
+           The desugaring of let recs has to be consistent with their opening
+
+            Consider
+                let rec f<u> x = g x
+                and g<u'> y = f y in
+                f 0, g 0
+            In de Bruijn notation, this is
+                let rec f x = g@1 x@0
+                and g y = f@2 y@0 in
+                f@1 0, g@0 0
+            i.e., the recursive environment for f is, in order:
+                        u, f, g, x
+                  for g is
+                        u, f, g, y
+                  and for the body is
+                        f, g
+         *)
         let desugar_one_def env lbname ((_, args, result_t), def) =
             let args = args |> List.map replace_unit_pattern in
             let def =
