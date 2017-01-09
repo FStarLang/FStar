@@ -121,21 +121,20 @@ in (match (opt) with
 let newDocs = (FStar_List.collect FStar_Extraction_ML_Code.doc_of_mllib mllibs)
 in (FStar_List.iter (fun _98_46 -> (match (_98_46) with
 | (n, d) -> begin
-(let _197_28 = (FStar_Options.prepend_output_dir (Prims.strcat n ext))
-in (let _197_27 = (FStar_Format.pretty (Prims.parse_int "120") d)
-in (FStar_Util.write_file _197_28 _197_27)))
+(let _197_27 = (FStar_Options.prepend_output_dir (Prims.strcat n ext))
+in (FStar_Util.write_file _197_27 (FStar_Format.pretty (Prims.parse_int "120") d)))
 end)) newDocs))
 end
 | Some ("Kremlin") -> begin
 (
 
-let programs = (let _197_29 = (FStar_List.map FStar_Extraction_Kremlin.translate mllibs)
-in (FStar_List.flatten _197_29))
+let programs = (let _197_28 = (FStar_List.map FStar_Extraction_Kremlin.translate mllibs)
+in (FStar_List.flatten _197_28))
 in (
 
 let bin = ((FStar_Extraction_Kremlin.current_version), (programs))
-in (let _197_30 = (FStar_Options.prepend_output_dir "out.krml")
-in (FStar_Util.save_value_to_file _197_30 bin))))
+in (let _197_29 = (FStar_Options.prepend_output_dir "out.krml")
+in (FStar_Util.save_value_to_file _197_29 bin))))
 end
 | _98_52 -> begin
 (failwith "Unrecognized option")
@@ -162,8 +161,8 @@ end
 end
 | FStar_Getopt.Success -> begin
 if ((FStar_Options.dep ()) <> None) then begin
-(let _197_32 = (FStar_Parser_Dep.collect FStar_Parser_Dep.VerifyAll filenames)
-in (FStar_Parser_Dep.print _197_32))
+(let _197_31 = (FStar_Parser_Dep.collect FStar_Parser_Dep.VerifyAll filenames)
+in (FStar_Parser_Dep.print _197_31))
 end else begin
 if (FStar_Options.interactive ()) then begin
 (
@@ -250,10 +249,10 @@ in (
 let _98_90 = (report_errors module_names_and_times)
 in (
 
-let _98_92 = (let _197_36 = (let _197_35 = (let _197_34 = (FStar_All.pipe_right fmods (FStar_List.map Prims.fst))
-in ((_197_34), (env)))
-in FStar_Util.Inr (_197_35))
-in (codegen _197_36))
+let _98_92 = (let _197_35 = (let _197_34 = (let _197_33 = (FStar_All.pipe_right fmods (FStar_List.map Prims.fst))
+in ((_197_33), (env)))
+in FStar_Util.Inr (_197_34))
+in (codegen _197_35))
 in (finished_message module_names_and_times (Prims.parse_int "0")))))
 end)))
 end else begin
@@ -273,10 +272,10 @@ in (
 let _98_102 = (report_errors module_names_and_times)
 in (
 
-let _98_104 = (let _197_40 = (let _197_39 = (let _197_38 = (FStar_All.pipe_right fmods (FStar_List.map Prims.fst))
-in ((_197_38), (env)))
-in FStar_Util.Inl (_197_39))
-in (codegen _197_40))
+let _98_104 = (let _197_39 = (let _197_38 = (let _197_37 = (FStar_All.pipe_right fmods (FStar_List.map Prims.fst))
+in ((_197_37), (env)))
+in FStar_Util.Inl (_197_38))
+in (codegen _197_39))
 in (finished_message module_names_and_times (Prims.parse_int "0")))))
 end))
 end)
@@ -323,13 +322,13 @@ end else begin
 ()
 end
 in if (FStar_Options.trace_error ()) then begin
-(let _197_45 = (FStar_Util.message_of_exn e)
-in (let _197_44 = (FStar_Util.trace_of_exn e)
-in (FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _197_45 _197_44)))
+(let _197_44 = (FStar_Util.message_of_exn e)
+in (let _197_43 = (FStar_Util.trace_of_exn e)
+in (FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _197_44 _197_43)))
 end else begin
 if (not (((FStar_Absyn_Util.handleable e) || (FStar_TypeChecker_Errors.handleable e)))) then begin
-(let _197_46 = (FStar_Util.message_of_exn e)
-in (FStar_Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _197_46))
+(let _197_45 = (FStar_Util.message_of_exn e)
+in (FStar_Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _197_45))
 end else begin
 ()
 end
@@ -339,8 +338,8 @@ in (
 let _98_117 = (cleanup ())
 in (
 
-let _98_119 = (let _197_47 = (FStar_TypeChecker_Errors.report_all ())
-in (FStar_All.pipe_right _197_47 Prims.ignore))
+let _98_119 = (let _197_46 = (FStar_TypeChecker_Errors.report_all ())
+in (FStar_All.pipe_right _197_46 Prims.ignore))
 in (
 
 let _98_121 = (report_errors [])
