@@ -34,7 +34,7 @@ let finished_message fmods errs =
   let print_to = if errs > 0 then Util.print_error else Util.print_string in
   if not (Options.silent()) then begin
     fmods |> List.iter (fun ((iface, name), time) ->
-                let tag = if iface then "i'face" else "module" in
+                let tag = if iface then "i'face (or impl+i'face)" else "module" in
                 if Options.should_print_message name.str
                 then if time >= 0
                 then print_to (Util.format3 "Verified %s: %s (%s milliseconds)\n" 

@@ -28,7 +28,7 @@ let _98_12 = (FStar_All.pipe_right fmods (FStar_List.iter (fun _98_10 -> (match 
 (
 
 let tag = if iface then begin
-"i\'face"
+"i\'face (or impl+i\'face)"
 end else begin
 "module"
 end

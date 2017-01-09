@@ -790,11 +790,21 @@ let restore_cmd_line_options should_clear =
     r
 
 let should_verify m =
-  if get_lax()
-  then false
-  else match get_verify_module() with
-       | [] -> true //the verify_module flag was not set, so verify everything
-       | l -> List.contains (String.lowercase m) l //otherwise, look in the list to see if it is explicitly mentioned
+  if get_lax () then
+    false
+  else if get_verify_all () then
+    true
+  else match get_verify_module () with
+    | [] ->
+        (* Only verify modules on the command-line. This is imprecise because of
+         * the include path. *)
+        List.existsML (fun f ->
+          let f = basename f in
+          let f = String.substring f 0 (String.length (get_file_extension f) - 4) in
+          String.lowercase f = m
+        ) (file_list ())
+    | l ->
+        List.contains (String.lowercase m) l
 
 let dont_gen_projectors m = List.contains m (get___temp_no_proj())
 

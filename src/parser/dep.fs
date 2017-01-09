@@ -181,7 +181,13 @@ exception Exit
 
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
     it depends on. *)
-let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_mode) (is_user_provided_filename: bool) (original_map: map) (filename: string): list<string> =
+let collect_one
+  (verify_flags: list<(string * ref<bool>)>)
+  (verify_mode: verify_mode)
+  (is_user_provided_filename: bool)
+  (original_map: map)
+  (filename: string): list<string>
+=
   let deps = ref [] in
   let add_dep d =
     if not (List.existsb (fun d' -> d' = d) !deps) then
@@ -265,13 +271,22 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | Module (lid, decls)
     | Interface (lid, decls, _) ->
         check_module_declaration_against_filename lid filename;
+        (* We discovered a new file in the graph. *)
         begin match verify_mode with
         | VerifyAll ->
+            (* Every module we discover is a module we verify. *)
             Options.add_verify_module (string_of_lid lid true)
         | VerifyFigureItOut ->
+            (* Well... to put all the code in one place, the function takes an
+             * argument that tells whether this is a root of the discovery (i.e.
+             * we started from a file that was provided on the command-line. *)
             if is_user_provided_filename then
               Options.add_verify_module (string_of_lid lid true)
         | VerifyUserList ->
+            (* Mutate the reference to acknowledge that we have found the file
+             * the user mentioned in the first place (the code will later bail
+             * if there a user-provided --verify_module argument referes to a
+             * module that hasn't been found in the graph). *)
             List.iter (fun (m, r) ->
               if String.lowercase m = String.lowercase (string_of_lid lid true) then
                 r := true
@@ -544,31 +559,31 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
   let partial_discovery =
     Options.universes () && not (Options.verify_all () || Options.extract_all ())
   in
-  let rec discover_one interface_only key =
+  let rec discover_one is_user_provided_filename interface_only key =
     if smap_try_find graph key = None then
       (* Util.print1 "key: %s\n" key; *)
       let intf, impl = must (smap_try_find m key) in
       let intf_deps =
         match intf with
-        | Some intf -> collect_one false m intf
+        | Some intf -> collect_one is_user_provided_filename m intf
         | None -> []
       in
       let impl_deps =
         match impl, intf with
         | Some impl, Some _ when interface_only -> []
-        | Some impl, _ -> collect_one false m impl
+        | Some impl, _ -> collect_one is_user_provided_filename m impl
         | None, _-> []
       in
       let deps = List.unique (impl_deps @ intf_deps) in
       smap_add graph key (deps, White);
-      List.iter (discover_one partial_discovery) deps
+      List.iter (discover_one false partial_discovery) deps
   in
   let discover_command_line_argument f =
     let m = lowercase_module_name f in
     if is_interface f then
-      discover_one true m
+      discover_one true true m
     else
-      discover_one false m
+      discover_one true false m
   in
   List.iter discover_command_line_argument filenames;
 
