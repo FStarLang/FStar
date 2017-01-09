@@ -180,8 +180,11 @@ U_STDLIB=$(addprefix $(ULIB)/, FStar.FunctionalExtensionality.fst FStar.Proposit
 			       FStar.Char.fsti FStar.Float.fsti FStar.Mul.fst FStar.Int.fst $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti)
 U_BOOT_BASIC_FSTI=$(addprefix boot_fstis/FStar., string.fsti list.fst util.fst platform.fsti bytes.fst range.fsti version.fsti getopt.fsti unionfind.fsti Pprint.fsti)
 U_ALL_INTERFACES=$(U_STDLIB) $(U_BOOT_BASIC_FSTI)
-U_ALL_SOURCES=$(addprefix boot_fsts/, FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst \
-					FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst FStar.Syntax.Free.fst FStar.Syntax.MutRecTy.fst)
+U_ALL_SOURCES=$(addprefix boot_fsts/, \
+	FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst \
+	FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst FStar.Syntax.Free.fst FStar.Syntax.MutRecTy.fst \
+	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Errors.fst FStar.TypeChecker.Rel.fst) # FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst \
+)
 
 boot_fstis/FStar.%.fsti: basic/%.fsi
 	cp $^ $@
@@ -201,7 +204,7 @@ boot_fstis/FStar.util.fst: basic/util.fsi
 	cp $^ $@
 	$(SED) -i 's/open System.IO/module ALL_TMP = FStar.All/g' $@
 	$(SED) -i 's/type time.*/assume new type time/g'  $@ 
-	$(SED) -i 's/type smap.*/assume new type smap : Type -> Type/g'  $@ 
+	$(SED) -i 's/type smap.*/assume new type smap : Type0 -> Type0/g'  $@ 
 	$(SED) -i 's/type out_channel.*/assume new type out_channel/g'  $@ 
 	$(SED) -i 's/type file_handle.*/assume new type file_handle/g'  $@ 
 	$(SED) -i 's/type stream_reader.*/assume new type stream_reader/g'  $@ 
@@ -219,6 +222,7 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	$(SED) -i 's/type uvar.*/assume new type uvar : Type0 -> Type0/g' $@
 
 prep_u_extract_ocaml: $(U_ALL_INTERFACES)
+	$(SED) -i 's/type env = {/type env : Type0 = {/g' boot_fsts/FStar.TypeChecker.Env.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
 
 clean_u_extract_ocaml:
 	rm -rf boot_fstis

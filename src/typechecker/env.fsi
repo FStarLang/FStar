@@ -44,16 +44,16 @@ type effects = {
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
-type cached_elt = Util.either<(universes * typ), (sigelt * option<universes>)>
+type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)>
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment and signature elements *)
-  gamma_cache    :Util.smap<cached_elt>;        (* Memo table for the local environment *)
+  gamma_cache    :FStar.Util.smap<cached_elt>;        (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
-  sigtab         :Util.smap<sigelt>;            (* a dictionary of long-names to sigelts *)
+  sigtab         :FStar.Util.smap<sigelt>;            (* a dictionary of long-names to sigelts *)
   is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
@@ -89,10 +89,10 @@ and guard_t = {
   guard_f:    guard_formula;
   deferred:   deferred;
   univ_ineqs: list<univ_ineq>;
-  implicits:  list<(string * env * uvar * term * typ * Range.range)>;
+  implicits:  implicits;
 }
+and implicits = list<(string * env * uvar * term * typ * Range.range)>
 
-type implicits = list<(env * uvar * term * typ * Range.range)>
 type env_t = env
 val initial_env : (env -> term -> term*typ*guard_t) -> (env -> term -> universe) -> solver_t -> lident -> env
 
@@ -163,8 +163,8 @@ val bound_vars   : env -> list<bv>
 val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
-val univ_vars    : env -> Util.set<universe_uvar>
-val univnames   : env -> Util.set<univ_name>
+val univ_vars    : env -> FStar.Util.set<universe_uvar>
+val univnames   : env -> FStar.Util.set<univ_name>
 val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 

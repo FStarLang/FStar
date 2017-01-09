@@ -27,31 +27,32 @@ open FStar.Range
 open FStar.Ident
 
 module N = FStar.TypeChecker.Normalize
+module BU = FStar.Util //basic util
 
 (* Error messages for labels in VCs *)
 let exhaustiveness_check = "Patterns are incomplete"
 let subtyping_failed : env -> typ -> typ -> unit -> string =
-     fun env t1 t2 x -> Util.format2 "Subtyping check failed; expected type %s; got type %s"
+     fun env t1 t2 x -> BU.format2 "Subtyping check failed; expected type %s; got type %s"
         (N.term_to_string env t2) (N.term_to_string env t1)
 let ill_kinded_type = "Ill-kinded type"
 let totality_check  = "This term may not terminate"
 
 let diag r msg =
   if Options.debug_any()
-  then Util.print_string (format2 "%s : (Diagnostic) %s\n" (Range.string_of_range r) msg)
+  then BU.print_string (format2 "%s : (Diagnostic) %s\n" (Range.string_of_range r) msg)
 
 let warn r msg =
-  Util.print2_error "%s: (Warning) %s\n" (Range.string_of_range r) msg
+  BU.print2_error "%s: (Warning) %s\n" (Range.string_of_range r) msg
 
-let num_errs = Util.mk_ref 0
-let verification_errs : ref<list<(Range.range * string)>> = Util.mk_ref []
+let num_errs = BU.mk_ref 0
+let verification_errs : ref<list<(Range.range * string)>> = BU.mk_ref []
 type error_message_prefix = {
     set_prefix: string -> unit;
     append_prefix: string -> string;
     clear_prefix: unit -> unit;
 }
 let message_prefix =
-    let pfx = Util.mk_ref None in
+    let pfx = BU.mk_ref None in
     let set_prefix s = pfx := Some s in
     let clear_prefix () = pfx := None in
     let append_prefix s = match !pfx with
@@ -60,7 +61,6 @@ let message_prefix =
     {set_prefix=set_prefix;
      clear_prefix=clear_prefix;
      append_prefix=append_prefix}
-open Range
 
 let add_errors env errs =
     let errs =
@@ -79,26 +79,26 @@ let add_errors env errs =
 
 let mk_error msg r =
     if r.use_range <> r.def_range
-    then Util.format3 "%s: (Error) %s (see %s)\n" (Range.string_of_use_range r) msg (Range.string_of_range r)
-    else Util.format2 "%s: (Error) %s\n" (Range.string_of_range r) msg
+    then BU.format3 "%s: (Error) %s (see %s)\n" (Range.string_of_use_range r) msg (Range.string_of_range r)
+    else BU.format2 "%s: (Error) %s\n" (Range.string_of_range r) msg
 
 let report_all () =
     let all_errs = atomically (fun () -> let x = !verification_errs in verification_errs := []; x) in
     let all_errs = List.sortWith (fun (r1, _) (r2, _) -> Range.compare_use_range r1 r2) all_errs in
-    all_errs |> List.iter (fun (r, msg) -> Util.print_error (mk_error msg r));
+    all_errs |> List.iter (fun (r, msg) -> BU.print_error (mk_error msg r));
     List.length all_errs
 
 let handle_err warning e =
   match e with
     | Error(msg, r) ->
         let msg = message_prefix.append_prefix msg in
-        Util.print3_error "%s : %s %s\n" (Range.string_of_range r) (if warning then "(Warning)" else "(Error)") msg
+        BU.print3_error "%s : %s %s\n" (Range.string_of_range r) (if warning then "(Warning)" else "(Error)") msg
     | NYI msg ->
         let msg = message_prefix.append_prefix msg in
-        Util.print1_error "Feature not yet implemented: %s" msg
+        BU.print1_error "Feature not yet implemented: %s" msg
     | Err msg ->
         let msg = message_prefix.append_prefix msg in
-        Util.print1_error "Error: %s" msg
+        BU.print1_error "Error: %s" msg
     | _ -> raise e
 
 let handleable = function
@@ -110,7 +110,7 @@ let handleable = function
 let report r msg =
   incr num_errs;
   let msg = message_prefix.append_prefix msg in
-  Util.print_error (mk_error msg r)
+  BU.print_error (mk_error msg r)
 
 let get_err_count () = !num_errs
 

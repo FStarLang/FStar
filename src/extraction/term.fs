@@ -117,14 +117,14 @@ let effect_as_etag =
 (* Basic syntactic operations on a term                                                     *)
 (********************************************************************************************)
 
-(* is_arity t: 
+(* is_arity t:
          t is a sort s, i.e., Type i
      or, t = x1:t1 -> ... -> xn:tn -> C
              where C.result_type is an arity
 
  *)
 let rec is_arity env t =
-    let t = U.unmeta t in 
+    let t = U.unmeta t in
     match (SS.compress t).n with
     | Tm_unknown
     | Tm_delayed _
@@ -132,26 +132,26 @@ let rec is_arity env t =
     | Tm_meta _ -> failwith "Impossible"
     | Tm_uvar _
     | Tm_constant _
-    | Tm_name _ 
+    | Tm_name _
     | Tm_bvar _ -> false
     | Tm_type _ -> true
-    | Tm_arrow(_, c) -> 
+    | Tm_arrow(_, c) ->
       is_arity env (FStar.Syntax.Util.comp_result c)
-    | Tm_fvar _ -> 
+    | Tm_fvar _ ->
       let t = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.UnfoldUntil Delta_constant] env.tcenv t in
-      begin match (SS.compress t).n with 
+      begin match (SS.compress t).n with
         | Tm_fvar _ -> false
         | _ -> is_arity env t
       end
-    | Tm_app _ -> 
+    | Tm_app _ ->
       let head, _ = U.head_and_args t in
       is_arity env head
     | Tm_uinst(head, _) ->
       is_arity env head
-    | Tm_refine(x, _) -> 
+    | Tm_refine(x, _) ->
       is_arity env x.sort
     | Tm_abs(_, body, _)
-    | Tm_let(_, body) -> 
+    | Tm_let(_, body) ->
       is_arity env body
     | Tm_match(_, branches) ->
       begin match branches with
@@ -174,12 +174,12 @@ let rec is_type_aux env t =
 
     | Tm_type _
     | Tm_refine _
-    | Tm_arrow _ -> 
+    | Tm_arrow _ ->
       true
 
-    | Tm_fvar fv when S.fv_eq_lid fv FStar.Syntax.Const.failwith_lid -> 
+    | Tm_fvar fv when S.fv_eq_lid fv FStar.Syntax.Const.failwith_lid ->
       false //special case this, since we emit it during extraction even in prims, before it is in the F* scope
-    
+
     | Tm_fvar fv ->
       if TypeChecker.Env.is_type_constructor env.tcenv fv.fv_name.v
       then true
@@ -190,7 +190,7 @@ let rec is_type_aux env t =
     | Tm_bvar ({sort=t})
     | Tm_name ({sort=t}) ->
       is_arity env t
-        
+
     | Tm_ascribed(t, _, _) ->
       is_type_aux env t
 
@@ -215,10 +215,10 @@ let rec is_type_aux env t =
     | Tm_app(head, _) ->
       is_type_aux env head
 
-let is_type env t = 
+let is_type env t =
     let b = is_type_aux env t in
-    debug env (fun _ -> 
-        if b 
+    debug env (fun _ ->
+        if b
         then Util.print2 "is_type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t)
         else Util.print2 "not a type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
     b
@@ -477,10 +477,10 @@ and fv_app_as_mlty (g:env) (fv:fv) (args : args) : mlty =
         then let _, rest = Util.first_N n_args formals in
              mlargs @ (List.map (fun _ -> erasedContent) rest)
         else mlargs in
-    let nm = match maybe_mangle_type_projector g fv with 
-             | Some p -> 
+    let nm = match maybe_mangle_type_projector g fv with
+             | Some p ->
                p
-             | None -> 
+             | None ->
                mlpath_of_lident fv.fv_name.v in
     MLTY_Named (mlargs, nm)
 
@@ -954,9 +954,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                    begin match head.n with
                     | Tm_fvar _ ->
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
-                      let (head_ml, (vars, t), inst_ok), qual = 
-                        match lookup_term g head with 
-                        | Inr (u), q -> u, q 
+                      let (head_ml, (vars, t), inst_ok), qual =
+                        match lookup_term g head with
+                        | Inr (u), q -> u, q
                         | _ -> failwith "FIXME Ty" in
 
                       let has_typ_apps = match args with
@@ -1057,7 +1057,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                             | Some (bs, b, rest) -> bs, U.arrow (b::rest) c in
 
                    let n_tbinders = List.length tbinders in
-                   let e = normalize_abs e in
+                   let e = normalize_abs e |> U.unmeta in
                    begin match e.n with
                       | Tm_abs(bs, body, _) ->
                         let bs, body = SS.open_term bs body in
