@@ -148,6 +148,14 @@ module F_Syntax = FStar.Absyn.Syntax
 (******************************************************************************************)
 open FStar.Parser.ParseIt
 
+let deps_of_our_file filename =
+  (* Now that fstar-mode.el passes the name of the current file, we must parse
+   * and lax-check everything but the current module we're editing. *)
+  let deps = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut [ filename ] in
+  List.filter (fun x ->
+    Parser.Dep.lowercase_module_name x <> Parser.Dep.lowercase_module_name filename
+  ) deps
+
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
 type m_timestamps = list<(option<string> * string * option<time> * time)>
 
@@ -261,7 +269,7 @@ let interactive_mode (filename:string)
       in
 
       (* Well, the file list hasn't changed, so our (single) file is still there. *)
-      let filenames = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut [ filename ] in
+      let filenames = deps_of_our_file filename in
       //reverse stk and ts, since iterate expects them in "first dependency first order"
       iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
     in
@@ -318,7 +326,7 @@ let interactive_mode (filename:string)
     end in
 
     //type check prims and the dependencies
-    let filenames = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut [ filename ] in
+    let filenames = deps_of_our_file filename in
     let env = tc.tc_prims () in
     let stack, env, ts = tc_deps initial_mod [] env filenames [] in 
 
