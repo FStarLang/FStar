@@ -183,7 +183,6 @@ let get_explicit_deps           ()      = lookup_opt "explicit_deps"            
 let get_extract_all             ()      = lookup_opt "extract_all"              as_bool
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
-let get_fsi                     ()      = lookup_opt "fsi"                      as_bool
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
 let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
@@ -390,11 +389,6 @@ let rec specs () : list<Getopt.opt> =
         ZeroArgs (fun () -> Bool true),
         "Allow the use of t<t1,...,tn> syntax for type applications;
         brittle since it clashes with the integer less-than operator");
-
-       ( noshort,
-        "fsi",
-        ZeroArgs (fun () -> Bool true),
-        "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
 
        ( noshort,
         "fstar_home",
@@ -697,11 +691,6 @@ and validate_cardinality x = match x with
     | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
               display_usage_aux (specs ()); exit 1)
 
-and set_interactive_fsi _ =
-    if get_in() then set_option' ("fsi", Bool true)
-    else (Util.print_string "Set interactive flag first before setting interactive fsi flag\n";
-          display_usage_aux (specs ()); exit 1)
-
 //Several options can only be set at the time the process is created, and not controlled interactively via pragmas
 //Additionaly, the --smt option is a security concern
 let settable = function
@@ -881,7 +870,6 @@ let initial_fuel                 () = get_initial_fuel                ()
 let initial_ifuel                () = get_initial_ifuel               ()
 let inline_arith                 () = get_inline_arith                ()
 let interactive                  () = get_in                          ()
-let interactive_fsi              () = get_fsi                         ()
 let lax                          () = get_lax                         ()
 let log_queries                  () = get_log_queries                 ()
 let log_types                    () = get_log_types                   ()
