@@ -145,7 +145,7 @@ let empty_worklist env = {
     wl_deferred=[];
     ctr=0;
     tcenv=env;
-    defer_ok=true;
+    defer_ok=not (Options.eager_inference());
     smt_ok=true
 }
 let singleton' env prob smt_ok   = {empty_worklist env with attempting=[prob]; smt_ok = smt_ok}
@@ -894,7 +894,7 @@ let rank wl pr : int    //the rank
         | Tm_uvar _, Tm_uvar _ -> flex_flex, tp
 
         | Tm_uvar _, _
-        | _, Tm_uvar _ when (tp.relation=EQ) -> flex_rigid_eq, tp
+        | _, Tm_uvar _ when (tp.relation=EQ || Options.eager_inference()) -> flex_rigid_eq, tp
 
         | Tm_uvar _, _ ->
           let b, ref_opt = base_and_refinement wl.tcenv wl tp.rhs in
@@ -921,7 +921,7 @@ let rank wl pr : int    //the rank
 
     | CProb cp -> rigid_rigid, {cp with rank=Some rigid_rigid} |> CProb
 
-let next_prob wl : option<prob>  //the first problem that is at most a flex_rigid_eq
+let next_prob wl : option<prob>  //a problem with the lowest rank, or a problem whose rank <= flex_rigid_eq, if any
                  * list<prob>    //all the other problems in wl
                  * int           //the rank of the first problem, or the minimum rank in the wl
                  =
@@ -2372,9 +2372,7 @@ let teq env t1 t2 : guard_t =
 let try_subtype' env t1 t2 smt_ok =
  if debug env <| Options.Other "Rel"
  then BU.print2 "try_subtype of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
- let prob, x =
-    let rel = SUB in
-    new_t_prob env t1 rel t2 in
+ let prob, x = new_t_prob env t1 SUB t2 in
  let g = with_guard env prob <| solve_and_commit env (singleton' env prob smt_ok) (fun _ -> None) in
  if debug env <| Options.Other "Rel"
     && BU.is_some g

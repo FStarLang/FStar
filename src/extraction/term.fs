@@ -72,11 +72,12 @@ let fail r msg =
     Util.print_string <| format2 "%s: %s\n" (Range.string_of_range r) msg;
     failwith msg
 
-let err_uninst env (t:term) (vars, ty) =
-    fail t.pos (Util.format3 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated"
+let err_uninst env (t:term) (vars, ty) (app:term) =
+    fail t.pos (Util.format4 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated, but got %s"
                     (Print.term_to_string t)
                     (vars |> List.map fst |> String.concat ", ")
-                    (ML.Code.string_of_mlty env.currentModule ty))
+                    (ML.Code.string_of_mlty env.currentModule ty)
+                    (Print.term_to_string app))
 
 let err_ill_typed_application env (t : term) args (ty : mlty) =
     fail t.pos (Util.format3 "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n"
@@ -842,7 +843,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                   begin match mltys with
                     | ([], t) when (t=ml_unit_ty) -> ml_unit, E_PURE, t //optimize (x:unit) to ()
                     | ([], t) -> maybe_eta_data_and_project_record g qual t x, E_PURE, t
-                    | _ -> err_uninst g t mltys
+                    | _ -> err_uninst g t mltys t
                   end
                end
 
@@ -952,6 +953,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               then ml_unit, E_PURE, ml_unit_ty //Erase type argument: TODO: FIXME, this could be effectful
               else let head = U.un_uinst head in
                    begin match head.n with
+                    | Tm_name _
                     | Tm_fvar _ ->
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
                       let (head_ml, (vars, t), inst_ok), qual =
@@ -983,7 +985,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                                  | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) -> MLE_App({head with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
                                  | _ -> failwith "Impossible: Unexpected head term" in
                                head, t, rest
-                          else err_uninst g head (vars, t) in
+                          else err_uninst g head (vars, t) top in
                         //debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
                        begin match args with
                             | [] -> maybe_eta_data_and_project_record g qual head_t head_ml, E_PURE, head_t

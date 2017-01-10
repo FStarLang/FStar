@@ -146,8 +146,8 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} :
             | Inr c -> c in
         let t = U.arrow bs c in
         if debug env Options.High
-        then BU.print2 "(%s) Using type %s\n"
-                (Range.string_of_range r) (Print.term_to_string t);
+        then BU.print3 "(%s) Using type %s .... must check = %s\n"
+                (Range.string_of_range r) (Print.term_to_string t) (BU.string_of_bool must_check_ty);
         Inl t, must_check_ty
 
       | _ ->

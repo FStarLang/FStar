@@ -3685,9 +3685,6 @@ in (
 let t = if (not (check_t)) then begin
 t
 end else begin
-if (top_level && (not (env.FStar_TypeChecker_Env.generalize))) then begin
-t
-end else begin
 (
 
 let _60_2270 = (let _159_802 = (let _159_801 = (FStar_Syntax_Util.type_u ())
@@ -3707,7 +3704,6 @@ let _60_2272 = (let _159_803 = (FStar_TypeChecker_Rel.discharge_guard env g)
 in (FStar_All.pipe_left Prims.ignore _159_803))
 in (norm env0 t)))
 end))
-end
 end
 in (
 

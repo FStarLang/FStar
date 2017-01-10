@@ -28,7 +28,7 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>test.fst --print_universes</StartArguments>
+    <StartArguments>--explicit_deps test.fst --print_universes --lax</StartArguments>
     <StartAction>Project</StartAction>
     <StartWorkingDirectory>d:\workspace\test</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>

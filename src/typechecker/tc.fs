@@ -518,7 +518,7 @@ and cps_and_elaborate env ed =
   in
   let effect_signature = recheck_debug "turned into the effect signature" env effect_signature in
 
-  let sigelts = ref [] in
+  let sigelts = BU.mk_ref [] in
   let mk_lid name: lident =
     lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ name)) Range.dummyRange
   in
