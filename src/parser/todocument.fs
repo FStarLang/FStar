@@ -30,6 +30,15 @@ module C = FStar.Syntax.Const
 
 // VALS_HACK_HERE
 
+(* TODO : Unparenthesizing the ast should be put as an option until we get rid of the Paren node *)
+let should_unparen = ref true
+
+(* Unparen the ast to check that we are not relying on user inputed parens *)
+let rec unparen t =
+  if not !should_unparen then t
+  else match t.tm with
+  | Paren t -> unparen t
+  | _ -> t
 
 (* TODO : everything is printed under the assumption of the universe option *)
 
@@ -102,6 +111,9 @@ let brackets_with_nesting contents =
 let soft_brackets_with_nesting contents =
   soft_surround 2 1 lbracket contents rbracket
 
+let soft_begin_end_with_nesting contents =
+  soft_surround 2 1 (str "begin") contents (str "end")
+
 let separate_map_or_flow sep f l =
     if List.length l < 10
     then separate_map sep f l
@@ -118,12 +130,12 @@ let doc_of_fsdoc (comment,keywords) =
 
 // Really specific functions to retro-engineer the desugaring
 let is_unit e =
-    match e.tm with
+    match (unparen e).tm with
         | Const Const_unit -> true
         | _ -> false
 
 let matches_var t x =
-    match t.tm with
+    match (unparen t).tm with
         | Var y -> x.idText = text_of_lid y
         | _ -> false
 
@@ -131,7 +143,7 @@ let is_tuple_constructor = FStar.Syntax.Util.is_tuple_data_lid'
 let is_dtuple_constructor = FStar.Syntax.Util.is_dtuple_data_lid'
 
 let is_list_structure cons_lid nil_lid =
-  let rec aux e = match e.tm with
+  let rec aux e = match (unparen e).tm with
     | Construct (lid, []) -> lid_equals lid nil_lid
     | Construct (lid, [ _ ; e2, _]) -> lid_equals lid cons_lid && aux e2
     | _ -> false
@@ -141,17 +153,17 @@ let is_list = is_list_structure C.cons_lid C.nil_lid
 let is_lex_list = is_list_structure C.lexcons_lid C.lextop_lid
 
 (* [extract_from_list e] assumes that [is_list_structure xxx yyy e] holds and returns the list of terms contained in the list *)
-let rec extract_from_list e = match e.tm with
+let rec extract_from_list e = match (unparen e).tm with
   | Construct (_, []) -> []
   | Construct (_, [e1,Nothing ; e2, Nothing]) -> e1 :: extract_from_list e2
   | _ -> failwith (Util.format1 "Not a list %s" (term_to_string e))
 
-let is_array e = match e.tm with
+let is_array e = match (unparen e).tm with
     (* TODO check that there is no implicit parameters *)
     | App ({tm=Var lid}, l, Nothing) -> lid_equals lid C.array_mk_array_lid && is_list l
     | _ -> false
 
-let rec is_ref_set e = match e.tm with
+let rec is_ref_set e = match (unparen e).tm with
     | Var maybe_empty_lid -> lid_equals maybe_empty_lid C.tset_empty
     | App ({tm=Var maybe_singleton_lid}, {tm=App({tm=Var maybe_ref_lid}, e, Nothing)}, Nothing) ->
         lid_equals maybe_singleton_lid C.tset_singleton && lid_equals maybe_ref_lid C.heap_ref
@@ -160,7 +172,7 @@ let rec is_ref_set e = match e.tm with
     | _ -> false
 
 (* [extract_from_ref_set e] assumes that [is_ref_set e] holds and returns the list of terms contained in the set *)
-let rec extract_from_ref_set e = match e.tm with
+let rec extract_from_ref_set e = match (unparen e).tm with
   | Var _ -> []
   | App ({tm=Var _}, {tm=App({tm=Var _}, e, Nothing)}, Nothing) -> [e]
   | App({tm = App({tm=Var _}, e1, Nothing)}, e2, Nothing) ->
@@ -173,12 +185,16 @@ let is_general_application e =
 let is_general_construction e =
   not (is_list e || is_lex_list e)
 
+let is_general_prefix_op op =
+    op <> "~"
+
 (* might already exist somewhere *)
 let head_and_args e =
-  let rec aux e acc = match e.tm with
+  let rec aux e acc = match (unparen e).tm with
   | App (head, arg, imp) -> aux head ((arg,imp)::acc)
   | _ -> e, acc
   in aux e []
+
 
 (* Automatic level assignment *)
 (* would be perfect with a little of staging... *)
@@ -226,18 +242,18 @@ let colon_colon = Right, [Inr "::"]
 (* The latter the element, the tighter it binds *)
 let level_associativity_spec =
   [
-    colon_colon ;
-    amp ;
-    colon_equals ;
-    opinfix0a ;
-    opinfix0b ;
-    opinfix0c ;
-    opinfix0d ;
-    pipe_right ;
-    opinfix1 ;
-    opinfix2 ;
+    opinfix4 ;
     opinfix3 ;
-    opinfix4
+    opinfix2 ;
+    opinfix1 ;
+    pipe_right ;
+    opinfix0d ;
+    opinfix0c ;
+    opinfix0b ;
+    opinfix0a ;
+    colon_equals ;
+    amp ;
+    colon_colon ;
   ]
 
 let level_table =
@@ -317,8 +333,9 @@ let with_comment printer tm tmrange =
 (******************************************************************************)
 
 let rec p_decl d =
-    optional p_fsdoc d.doc  ^^ p_attributes d.attrs ^^ p_qualifiers d.quals ^^
-    (if d.quals = [] then empty else break1) ^^ p_rawDecl d
+    group(
+        optional p_fsdoc d.doc ^^ p_attributes d.attrs ^^ p_qualifiers d.quals ^^
+        (if d.quals = [] then empty else break1) ^^ p_rawDecl d)
 
 and p_attributes attrs =
   surround_separate_map 0 2 empty
@@ -403,7 +420,7 @@ and p_typeDecl = function
     p_typeDeclPrefix lid bs typ_opt f
   | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
     let p_recordFieldAndComments (lid, t, doc_opt) =
-      with_comment p_recordFieldDecl (lid, t, doc_opt) t.range
+      with_comment p_recordFieldDecl (lid, t, doc_opt) (extend_to_end_of_line t.range)
     in
     let p_fields () =
         equals ^^ space ^^
@@ -414,7 +431,7 @@ and p_typeDecl = function
     p_typeDeclPrefix lid bs typ_opt p_fields
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
     let p_constructorBranchAndComments (uid, t_opt, doc_opt, use_of) =
-        let range = dflt uid.idRange (map_opt t_opt (fun t -> t.range)) in
+        let range = extend_to_end_of_line (dflt uid.idRange (map_opt t_opt (fun t -> t.range))) in
         let p_constructorBranch decl = group (bar ^^ space ^^ p_constructorDecl decl) in
         with_comment p_constructorBranch (uid, t_opt, doc_opt, use_of) range
     in
@@ -445,7 +462,7 @@ and p_letbinding (pat, e) =
     let pat_doc =
       let pat, ascr_doc =
         match pat.pat with
-          | PatAscribed (pat, t) -> pat, break1 ^^ colon ^^ break1 ^^ p_typ t
+          | PatAscribed (pat, t) -> pat, break1 ^^ group (colon ^^ space ^^ p_tmArrow p_tmNoEq t)
           | _ -> pat, empty
       in
       match pat.pat with
@@ -573,7 +590,15 @@ and p_constructorPattern p = match p.pat with
 
 and p_atomicPattern p = match p.pat with
   | PatAscribed (pat, t) ->
-      soft_parens_with_nesting (infix2 colon (p_tuplePattern pat) (p_typ t))
+    begin match pat.pat, (unparen t).tm with
+    | PatVar (lid, aqual), Refine({b = Annotated(lid', t)}, phi)
+      when lid.idText = lid'.idText ->
+      soft_parens_with_nesting (p_refinement aqual (p_ident lid) t phi)
+    | PatWild, Refine({b = NoName t}, phi) ->
+      soft_parens_with_nesting (p_refinement None underscore t phi)
+    | _ ->
+        soft_parens_with_nesting (p_tuplePattern pat ^^ break_ 0 ^^ colon ^^ p_typ t)
+    end
   | PatList pats ->
     surround 2 0 lbracket (separate_break_map semi p_tuplePattern pats) rbracket
   | PatRecord pats ->
@@ -608,15 +633,32 @@ and p_binder is_atomic b = match b.b with
     | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid
     | TVariable lid -> p_lident lid
     | Annotated (lid, t) ->
-        let doc = optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^^ p_typ t in
+        let doc = match (unparen t).tm with
+          | Refine ({b = Annotated (lid', t)}, phi) when lid.idText = lid'.idText ->
+            p_refinement b.aqual (p_ident lid) t phi
+          | _ ->
+            optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^^ break_ 0 ^^ p_tmFormula t
+        in
         if is_atomic
         then group (lparen ^^ doc ^^ rparen)
         else group doc
     | TAnnotated _ -> failwith "Is this still used ?"
     | NoName t ->
-        if is_atomic
-        then p_atomicTerm t (* t is a type but it might need some parenthesis *)
-        else p_appTerm t (* This choice seems valid (used in p_tmNoEq') *)
+      begin match (unparen t).tm with
+        | Refine ({b = NoName t}, phi) ->
+          if is_atomic
+          then group (lparen ^^ p_refinement b.aqual underscore t phi ^^ rparen)
+          else group (p_refinement b.aqual underscore t phi)
+        | _ ->
+          if is_atomic
+          then p_atomicTerm t (* t is a type but it might need some parenthesis *)
+          else p_appTerm t (* This choice seems valid (used in p_tmNoEq') *)
+      end
+
+and p_refinement aqual_opt binder t phi =
+      optional p_aqual aqual_opt ^^ binder ^^ colon ^^
+      p_appTerm t ^^ soft_braces_with_nesting (p_noSeqTerm phi)
+
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
 and p_binders is_atomic bs = separate_map break1 (p_binder is_atomic) bs
@@ -659,7 +701,7 @@ and p_lidentOrUnderscore id =
 (*                                                                            *)
 (******************************************************************************)
 
-and p_term e = match e.tm with
+and p_term e = match (unparen e).tm with
   | Seq (e1, e2) ->
       group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
   | _ ->
@@ -667,7 +709,7 @@ and p_term e = match e.tm with
 
 and p_noSeqTerm e = with_comment p_noSeqTerm' e e.range
 
-and p_noSeqTerm' e = match e.tm with
+and p_noSeqTerm' e = match (unparen e).tm with
   | Ascribed (e, t) ->
       group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t)
   | Op (op, [ e1; e2; e3 ]) when op = ".()<-" ->
@@ -691,7 +733,7 @@ and p_noSeqTerm' e = match e.tm with
       then group ((str "if" ^/+^ p_noSeqTerm e1) ^/^ (str "then" ^/+^ p_noSeqTerm e2))
       else
           let e2_doc =
-              match e2.tm with
+              match (unparen e2).tm with
                   | If (_,_,e3) when is_unit e3 ->
                       soft_parens_with_nesting (p_noSeqTerm e2)
                   | _ -> p_noSeqTerm e2
@@ -700,7 +742,8 @@ and p_noSeqTerm' e = match e.tm with
                (str "then" ^/+^ e2_doc) ^/^
                (str "else" ^/+^ p_noSeqTerm e3))
   | TryWith(e, branches) ->
-      group (prefix2 (str "try") (p_noSeqTerm e) ^/^ str "with" ^/^ separate_map hardline p_patternBranch branches)
+      group (prefix2 (str "try") (p_noSeqTerm e) ^/^ str "with" ^/^
+             separate_map hardline p_patternBranch branches)
   | Match (e, branches) ->
       group (surround 2 1 (str "match") (p_noSeqTerm e) (str "with") ^/^ separate_map hardline p_patternBranch branches)
   | LetOpen (uid, e) ->
@@ -717,7 +760,7 @@ and p_noSeqTerm' e = match e.tm with
 
 and p_typ e = with_comment p_typ' e e.range
 
-and p_typ' e = match e.tm with
+and p_typ' e = match (unparen e).tm with
   | QForall (bs, trigger, e1)
   | QExists (bs, trigger, e1) ->
       prefix2
@@ -725,7 +768,7 @@ and p_typ' e = match e.tm with
         (p_trigger trigger ^^ p_noSeqTerm e1)
   | _ -> p_simpleTerm e
 
-and p_quantifier e = match e.tm with
+and p_quantifier e = match (unparen e).tm with
     | QForall _ -> str "forall"
     | QExists _ -> str "exists"
     | _ -> failwith "Imposible : p_quantifier called on a non-quantifier term"
@@ -741,7 +784,7 @@ and p_disjunctivePats pats =
 and p_conjunctivePats pats =
     group (separate_map semi p_appTerm pats)
 
-and p_simpleTerm e = match e.tm with
+and p_simpleTerm e = match (unparen e).tm with
     | Abs(pats, e) ->
         (str "fun" ^/+^ separate_map break1 p_atomicPattern pats ^/^ rarrow) ^/+^ p_term e
     | _ -> p_tmIff e
@@ -752,38 +795,46 @@ and p_maybeFocusArrow b =
 (* slight modification here : a patternBranch always begins with a `|` *)
 (* TODO : can we recover the focusing *)
 and p_patternBranch (pat, when_opt, e) =
-    group (
-        group (bar ^^ space ^^ p_disjunctivePattern pat ^/^ p_maybeWhen when_opt ^^ rarrow )
-        ^/+^ p_term e)
+  let maybe_paren =
+    match (unparen e).tm with
+    | Match _
+    | TryWith _ -> soft_begin_end_with_nesting
+    | Abs([{pat=PatVar(x, _)}], {tm=Match(maybe_x, _)}) when matches_var maybe_x x ->
+        soft_begin_end_with_nesting
+    | _ -> fun x -> x
+  in
+  group (
+      group (bar ^^ space ^^ p_disjunctivePattern pat ^/+^ p_maybeWhen when_opt ^^ rarrow )
+      ^/+^ maybe_paren (p_term e))
 
 and p_maybeWhen = function
     | None -> empty
     | Some e -> str "when" ^/+^ p_tmFormula e ^^ space  (*always immediately followed by an arrow*)
 
-and p_tmIff e = match e.tm with
+and p_tmIff e = match (unparen e).tm with
     | Op("<==>", [e1;e2]) -> infix0 (str "<==>") (p_tmImplies e1) (p_tmIff e2)
     | _ -> p_tmImplies e
 
-and p_tmImplies e = match e.tm with
+and p_tmImplies e = match (unparen e).tm with
     | Op("==>", [e1;e2]) -> infix0 (str "==>") (p_tmArrow p_tmFormula e1) (p_tmImplies e2)
     | _ -> p_tmArrow p_tmFormula e
 
-and p_tmArrow p_Tm e = match e.tm with
+and p_tmArrow p_Tm e = match (unparen e).tm with
   | Product(bs, tgt) ->
       group (concat_map (fun b -> p_binder false b ^^ space ^^ rarrow ^^ break1) bs ^^ p_tmArrow p_Tm tgt)
   | _ -> p_Tm e
 
-and p_tmFormula e = match e.tm with
+and p_tmFormula e = match (unparen e).tm with
   | Op("\\/", [e1;e2]) ->
       infix0 (str "\\/") (p_tmFormula e1) (p_tmConjunction e2)
   | _ -> p_tmConjunction e
 
-and p_tmConjunction e = match e.tm with
+and p_tmConjunction e = match (unparen e).tm with
   | Op("/\\", [e1;e2]) ->
       infix0 (str "/\\") (p_tmConjunction e1) (p_tmTuple e2)
   | _ -> p_tmTuple e
 
-and p_tmTuple e = match e.tm with
+and p_tmTuple e = match (unparen e).tm with
   | Construct (lid, args) when is_tuple_constructor lid ->
       separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args
   | _ -> p_tmEq e
@@ -799,32 +850,7 @@ and p_tmEq e =
   let n = max_level ([colon_equals ; pipe_right] @ operatorInfix0ad12) in
   p_tmEq' n e
 
-// and levels (op:string) =
-//   (* Note: it might seem surprising that we're not special-casing, say, '*' to
-//    * be 6, 6, 6; the user, however, may shadow the ( * ) operator with a custom
-//    * operator that is not associative; so, we adopt a strict (correct) behavior
-//    * which will result in [1*(2*3)] printed back the same way. *)
-//   match op.[0] with
-//   | '*' | '/' | '%' ->
-//       6, 6, 5
-//   | '+' | '-' ->
-//       5, 5, 4
-//   | '@' | '^' ->
-//       3, 4, 4
-//   | _ when op = "|>" ->
-//       3, 3, 2
-//   | '$' ->
-//       2, 2, 1
-//   | '=' | '<' | '>' ->
-//       1, 1, 0
-//   | '&' ->
-//       0, 0, -1
-//   | '|' ->
-//       -1, -1, -2
-//   | _ ->
-//       failwith ("invalid first character for infix operator " ^ op)
-
-and p_tmEq' curr e = match e.tm with
+and p_tmEq' curr e = match (unparen e).tm with
     (* We don't have any information to print `infix` aplication *)
   | Op (op, [ e1; e2]) when is_operatorInfix0ad12 op || op = "=" || op = "|>" ->
       let left, mine, right = levels op in
@@ -838,7 +864,7 @@ and p_tmNoEq e =
   let n = max_level [colon_colon ; amp ; opinfix3 ; opinfix4] in (* minus is not a level *)
   p_tmNoEq' n e
 
-and p_tmNoEq' curr e = match e.tm with
+and p_tmNoEq' curr e = match (unparen e).tm with
   | Construct (lid, [e1, _ ; e2, _]) when lid_equals lid C.cons_lid && not (is_list e) ->
       let op = "::" in
       let left, mine, right = levels op in
@@ -869,16 +895,18 @@ and p_with_clause e = p_appTerm e ^^ space ^^ str "with" ^^ break1
 
 and p_refinedBinder b phi =
     match b.b with
-    | Annotated (lid, t) -> lparen ^^ p_lident lid ^^ colon ^^ p_typ t ^^ soft_braces_with_nesting (p_term phi) ^^ rparen
+    | Annotated (lid, t) ->
+        soft_parens_with_nesting (p_refinement b.aqual (p_lident lid) t phi)
     | TAnnotated _ -> failwith "Is this still used ?"
     | Variable _
     | TVariable _
     | NoName _ -> failwith (Util.format1 "Imposible : a refined binder ought to be annotated %s" (binder_to_string b))
 
+(* A simple def can be followed by a ';' *)
 and p_simpleDef (lid, e) =
-  group (p_qlident lid ^/^ equals ^/^ p_simpleTerm e)
+  group (p_qlident lid ^/^ equals ^/^ p_tmIff e)
 
-and p_appTerm e = match e.tm with
+and p_appTerm e = match (unparen e).tm with
   | App _ when is_general_application e ->
       let head, args = head_and_args e in
       p_indexingTerm head ^/+^ separate_map space p_argTerm args
@@ -901,7 +929,7 @@ and p_argTerm arg_imp = match arg_imp with
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
   | (e, Nothing) -> p_indexingTerm e
 
-and p_indexingTerm_aux exit e = match e.tm with
+and p_indexingTerm_aux exit e = match (unparen e).tm with
   | Op(".()", [e1 ; e2]) ->
         group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term e2))
   | Op(".[]", [e1; e2]) ->
@@ -911,39 +939,39 @@ and p_indexingTerm_aux exit e = match e.tm with
 and p_indexingTerm e = p_indexingTerm_aux p_atomicTerm e
 
 (* p_atomicTermQUident is merged with p_atomicTerm *)
-and p_atomicTerm e = match e.tm with
+and p_atomicTerm e = match (unparen e).tm with
   (* already handled higher in the hierarchy *)
   | LetOpen (lid, e) ->
       p_quident lid ^^ dot ^^ soft_parens_with_nesting (p_term e)
   | Name lid ->
       p_quident lid
-  | Op(op, [e]) ->
+  | Op(op, [e]) when is_general_prefix_op op ->
       str op ^^ p_atomicTerm e
   | _ -> p_atomicTermNotQUident e
 
-and p_atomicTermNotQUident e = match e.tm with
+and p_atomicTermNotQUident e = match (unparen e).tm with
   | Wild -> underscore
-  | Var lid when text_of_lid lid = "assert" ->
+  | Var lid when lid_equals lid C.assert_lid ->
     str "assert"
   | Tvar tv -> p_tvar tv
   | Const c -> p_constant c
-  | Name lid when text_of_lid lid = "True" ->
+  | Name lid when lid_equals lid C.true_lid ->
     str "True"
-  | Name lid when text_of_lid lid = "False" ->
+  | Name lid when lid_equals lid C.false_lid ->
     str "False"
-  | Op(op, [e]) ->
+  | Op(op, [e]) when is_general_prefix_op op ->
     str op ^^ p_atomicTermNotQUident e
   | Op(op, []) ->
     lparen ^^ space ^^ str op ^^ space ^^ rparen
   | Construct (lid, args) when is_dtuple_constructor lid ->
     surround 2 1 (lparen ^^ bar) (separate_map (comma ^^ break1) p_tmEq (List.map fst args)) (bar ^^ rparen)
   | Project (e, lid) ->
-    group (p_atomicTermNotQUident e ^/^ dot ^^ p_qlident lid)
+    group (prefix 2 0 (p_atomicTermNotQUident e)  (dot ^^ p_qlident lid))
   | _ ->
     p_projectionLHS e
   (* BEGIN e END skipped *)
 
-and p_projectionLHS e = match e.tm with
+and p_projectionLHS e = match (unparen e).tm with
   | Var lid ->
     p_qlident lid
     (* fsType application skipped *)
@@ -1025,12 +1053,12 @@ and p_constant = function
 
 and p_universe u = str "u#" ^^ p_atomicUniverse u
 
-and p_universeFrom u = match u.tm with
+and p_universeFrom u = match (unparen u).tm with
   | Op("+", [u1 ; u2]) ->
     group (p_universeFrom u1 ^/^ plus ^/^ p_universeFrom u2)
   | App _ ->
     let head, args = head_and_args u in
-    begin match head.tm with
+    begin match (unparen head).tm with
       | Var maybe_max_lid when lid_equals maybe_max_lid C.max_lid ->
         group (p_qlident C.max_lid ^/+^
                separate_map space (fun (u,_) -> p_atomicUniverse u) args)
@@ -1040,7 +1068,7 @@ and p_universeFrom u = match u.tm with
     end
   | _ -> p_atomicUniverse u
 
-and p_atomicUniverse u = match u.tm with
+and p_atomicUniverse u = match (unparen u).tm with
     | Wild -> underscore
     | Const (Const_int (r, sw)) -> p_constant (Const_int (r, sw))
     | Uvar _ -> p_univar u
@@ -1049,7 +1077,7 @@ and p_atomicUniverse u = match u.tm with
     | App _ -> soft_parens_with_nesting (p_universeFrom u)
     | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
-and p_univar u = match u.tm with
+and p_univar u = match (unparen u).tm with
     | Uvar id -> str (text_of_id id)
     | _ -> failwith (Util.format1 "Not a universe variable %s" (term_to_string u))
 
