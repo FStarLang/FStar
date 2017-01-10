@@ -1,13 +1,9 @@
-
-(*--build-config
-    options:--z3timeout 60 --max_fuel 60;
- --*)
 module VerInterpreter
 
 open FStar.Int
 open FStar.Heap
+open FStar.HyperStack
 open FStar.Buffer
-open FStar.HST
 open FStar.UInt64
 open FStar.List.Tot
 open FStar.IO
@@ -18,6 +14,11 @@ open VerSGXState
 
 exception Halt
 
+module HS = FStar.HyperStack
+
+type u64 = UInt64.t
+type u32 = UInt32.t
+
 (*
 val STX.Halt: unit -> STX 'a 
 val STX.Load : unit -> buffer ... -> STX dword
@@ -26,140 +27,141 @@ val STX.Store: unit -> buffer ... -> STX unit
 
 assume val debugflag:bool
 
+#set-options "--z3rlimit 50"
+noeq type mmem =
+  | C: base:address
+       -> ucodestart:address
+       -> wbmapstart:address
+       -> uheapstart:address{UInt.fits (UInt64.v uheapstart) UInt32.n}
+       -> ustackstart:address{UInt.fits (UInt64.v ustackstart) UInt32.n}
+       -> ucodesize:u64
+       -> wbmapsize:u32{UInt.fits (UInt32.v wbmapsize) UInt16.n}
+       -> uheapsize:u64{UInt.fits (UInt64.v uheapsize) UInt32.n}
+       -> ustacksize:u64{UInt.fits (UInt64.v ustacksize) UInt32.n}
+       -> buf:buffer dword{ucodestart >=^ base        /\
+                          wbmapstart >=^ ucodestart  /\
+                          uheapstart >=^ wbmapstart  /\
+                          ustackstart >=^ uheapstart /\
+			  UInt.fits (UInt64.v (ustackstart -^ base)) UInt32.n                 /\
+                          UInt64.v (ustackstart -^ base) < Buffer.length buf                  /\
+			  UInt32.v wbmapsize < UInt64.v ((ustackstart -^ uheapstart) /^ 64uL) /\
+			  lastaddr_less_than_stackaddress wbmapsize uheapstart ustackstart <=^ ustackstart /\
+			  ustackstart >=^ ustacksize /\
+			  ustackstart -^ ustacksize >=^ uheapstart +^ uheapsize}
+       -> mmem
+#reset-options
+
+let addr_in_range (addr:address) (m:mmem) =
+  gte addr m.base /\
+  (let idx = addr -^ m.base in
+   Int.size (UInt64.v idx) UInt32.n /\
+   UInt64.v idx < Buffer.length m.buf)
+
 (* pre-condition: idx fits the size of UInt32
    		  idx is less than length of the buffer
  *)
-let load (n:word) (addr:address) (buf: buffer dword) (base:address): STL dword
-	(requires (fun h -> (gte addr base) /\ (let idx =(sub addr base) in (Int.size (UInt64.v idx) UInt32.n))
-				/\ (let idx = (sub addr base) in ((UInt64.v idx) < (Buffer.length buf)))
-				/\ live h buf)
-				)
-	(ensures (fun h0 r h1 -> live h0 buf /\ h1 == h0))
-	  =
-       let idx = (sub addr base) in
-       let wordidx = (cast_to_word idx) in
-      		 Buffer.index buf wordidx 
+let load (n:word) (addr:address) (m:mmem)
+  :STL dword
+       (requires (fun h -> addr_in_range addr m /\
+			live h m.buf))
+       (ensures (fun h0 r h1 -> h1 == h0             /\
+                             addr_in_range addr m /\
+                             live h0 m.buf        /\ 
+                             r == Buffer.get h0 m.buf (UInt32.v (cast_to_word (addr -^ m.base)))))
+  = let idx = addr -^ m.base in
+    let wordidx = cast_to_word idx in
+    Buffer.index m.buf wordidx
 
+#reset-options "--z3rlimit 100"
+let get_bitmap_set_pre (h:HS.mem) (addr:address) (m:mmem)
+  =  addr_in_range addr m   /\
+     addr >=^ m.uheapstart  /\
+     m.ustackstart >=^ addr /\
+     live h m.buf
 
-let get_bitmap_set (addr:address) (buf:buffer dword) (base:address)  (wbmapstart:address) (uheapstart:address) (ustackstart:address): STL bool 
-	(requires (fun h -> (gte addr base) 
-				/\ (gte uheapstart wbmapstart) 
-				/\ (gte wbmapstart base)
-				/\ (gte addr uheapstart)
-				/\ (gte ustackstart addr)
-				/\ (let idx =(sub addr base) in (Int.size (UInt64.v idx) UInt32.n))
-				/\ (let size = (sub ustackstart base) in ((UInt64.v size) < (Buffer.length buf)))
-				/\ live h buf)
-	)
-	(ensures (fun h0 r h1 -> live h0 buf /\ h1 == h0)) =
-		let bitmapoffset = get_bitmap_offset addr base wbmapstart uheapstart ustackstart in 
-		let value = load 1ul bitmapoffset buf base in
-		let index = get_bitmap_index addr base wbmapstart uheapstart ustackstart in 
-		let wordidx = cast_to_word index  in
-		let mask = shift_left 1uL wordidx (* prepare mask *) in
-		(eq (UInt64.logand value  mask) 1uL)
+let get_bitmap_set_pure (h:HS.mem) (addr:address) (m:mmem{get_bitmap_set_pre h addr m})
+  :GTot bool =
+  let bitmapoffset = get_bitmap_offset addr m.base m.wbmapstart m.uheapstart m.ustackstart in 
+  let bufindex = bitmapoffset -^ m.base in
+  let value = Buffer.get h m.buf (UInt64.v bufindex) in
+  let index = get_bitmap_index addr m.base m.wbmapstart m.uheapstart m.ustackstart in 
+  let wordidx = cast_to_word index  in
+  let mask = 1uL <<^ wordidx (* prepare mask *) in
+  UInt64.logand value mask =^ 1uL
 
-let heap_or_active_stack (addr:address)  (uheapstart:address) (ustackstart:address) : Ghost bool
-	(requires ((gte ustackstart uheapstart) /\
-		   (gte ustackstart addr))
-	)
-	(ensures  (fun r -> if r then 
-				((gte addr uheapstart) /\ (gte ustackstart addr))
-			    else
-				True
-		)) =
-    if (gte addr uheapstart) && (lte addr ustackstart)  then true
-    else false
-   
+let get_bitmap_set (addr:address) (m:mmem)
+  :STL bool
+      (requires (fun h0 -> get_bitmap_set_pre h0 addr m))
+      (ensures (fun h0 r h1 -> h1 == h0                     /\
+                            get_bitmap_set_pre h0 addr m /\
+                            r = get_bitmap_set_pure h0 addr m))
+  = let bitmapoffset = get_bitmap_offset addr m.base m.wbmapstart m.uheapstart m.ustackstart in 
+    let value = load 1ul bitmapoffset m in
 
-let get_bitmap_set_pure (h:HyperStack.mem) (addr:address) (buf:buffer dword{live h buf}) (base:address)  (wbmapstart:address) (uheapstart:address) (ustackstart:address): Ghost bool 
-	(requires ((gte addr base) 
-				/\ (gte uheapstart wbmapstart) 
-				/\ (gte wbmapstart base)
-				/\ (gte addr uheapstart)
-				/\ (gte ustackstart addr)
-				/\ (let idx =(sub addr base) in (Int.size (UInt64.v idx) UInt32.n))
-				/\ (let size = (sub ustackstart base) in ((UInt64.v size) < (Buffer.length buf)))
-				)
-	)
-	(ensures (fun r -> True)) =
-		let bitmapoffset = get_bitmap_offset addr base wbmapstart uheapstart ustackstart in 
-		let bufindex = sub bitmapoffset base in
-		let value = Buffer.get h buf (UInt64.v bufindex) in
-		let index = get_bitmap_index addr base wbmapstart uheapstart ustackstart in 
-		let wordidx = cast_to_word index  in
-		let mask = shift_left 1uL wordidx (* prepare mask *) in
-		(eq (UInt64.logand value  mask) 1uL)
-		
-#set-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 2 --max_ifuel 2"
+    let h = ST.get () in
+    let index = get_bitmap_index addr m.base m.wbmapstart m.uheapstart m.ustackstart in 
+    let wordidx = cast_to_word index  in
+    let mask = 1uL <<^ wordidx (* prepare mask *) in
+    UInt64.logand value mask =^ 1uL
+#reset-options
 
-  let store (n:word) (addr:address) (v:dword) (env:cpuregstate)  (base:address)  (wbmapstart:address) (wbmapsize:word) (ucodestart:address) (ucodesize:address) (uheapstart:address) (uheapsize:address) (ustackstart:address) (ustacksize:address) (buf:buffer dword): STL bool 
-	(requires (fun h -> (gte addr base) 
-				/\ (gte ustackstart addr)
-				(* buffer layout *)
-				/\ (gte ucodestart base)
-				/\ (gte wbmapstart ucodestart)
-				/\ (gte uheapstart wbmapstart) 
-				/\ (gte ustackstart uheapstart)
-				(* bitmapsize (16bits), heapstart,heapsize, stackstart, stacksize fits in 32 bits...
-				   just to make life easier for satisfying mul pre-conditions *)
-			 	/\ (UInt.fits (UInt32.v wbmapsize) UInt16.n)
-				/\ (Int.size (UInt64.v uheapstart) UInt32.n)  
-				/\ (Int.size (UInt64.v uheapsize) UInt32.n)  
-				/\ (Int.size (UInt64.v ustackstart) UInt32.n)  
-				/\ (Int.size (UInt64.v ustacksize) UInt32.n)  
-				  (* buffer size fits in 32bit *)
-			 	/\ (UInt.size (UInt64.v (UInt64.sub ustackstart base)) UInt32.n)
-				    (* bitmapsize *)
-				/\ (UInt32.v wbmapsize) < (UInt64.v (div (UInt64.sub ustackstart uheapstart) 64uL))
-				  (* requires that last address represented by bitmap is less than stackstart *)
-				/\ (let lastaddr = lastaddr_less_than_stackaddress wbmapsize uheapstart ustackstart in
-					(lte lastaddr ustackstart) 
-				    )
-				(*  size between base and ustackstart is less than actual buffer size *)
-				/\ (let size = (sub ustackstart base) in ((UInt64.v size) < (Buffer.length buf)))
-				/\ (let idx =(sub addr base) in (Int.size (UInt64.v idx) UInt32.n))
+let heap_or_active_stack (addr:address) (m:mmem) :Tot bool =
+  addr >=^ m.uheapstart && addr <=^ m.ustackstart
 
-				(* rbp and rsp are always in stack ranges *)
-				/\ ( let stackend = (add ustackstart  ustacksize) in
-					(gte env.rbp stackend) && (lte env.rbp ustackstart) && (gte env.rsp stackend) && (lte env.rsp ustackstart) 
-				   )
-				 (* rbp >= rsp *)
-				/\ ((gte env.rbp env.rsp) == true)
-				/\ live h buf)
-	)
-	(ensures (fun h0 r h1 ->live h0 buf /\ live h1 buf /\ modifies_1 buf h0 h1 
-				/\ (gte addr base) 
-				/\ (gte ucodestart base)
-				/\ (gte wbmapstart ucodestart)
-				/\ (gte ustackstart uheapstart)
-				/\ (gte uheapstart wbmapstart) 
-				/\ (gte ustackstart addr)
-				/\ (let idx =(sub addr base) in (Int.size (UInt64.v idx) UInt32.n))
-				/\ ((UInt64.v (sub ustackstart base)) < (Buffer.length buf)) 
-				(*
-				(* if address is stack or heap and the store is successful, then it should be writable *)
-				/\ (if (heap_or_active_stack addr uheapstart ustackstart ) && r then 
-					((get_bitmap_set_pure h0 addr buf base wbmapstart uheapstart ustackstart) == true)
-				   else True
-				   )
-				*)
-				/\ (if (gte addr ucodestart) && (lte addr wbmapstart) then
-						(r==false)
-				    else True
-				   )
-				(* rbp and rsp are always in stack ranges *)
-				/\ (Int.size (UInt64.v ustackstart) UInt32.n)  
-				/\ (Int.size (UInt64.v ustacksize) UInt32.n)  
-				/\ ( let stackend = (add ustackstart  ustacksize) in
-					(gte env.rbp stackend) && (lte env.rbp ustackstart) && (gte env.rsp stackend) && (lte env.rsp ustackstart) 
-				   )
-				 (* rbp >= rsp *)
-				/\ ((gte env.rbp env.rsp) == true)
-		 )
-	) =
+//#set-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 2 --max_ifuel 2"
+#set-options "--z3rlimit 100"
+let store (n:word) (addr:address) (v:dword) (env:cpuregstate) (m:mmem)
+  : STL bool 
+	(requires (fun h -> addr_in_range addr m /\
+			 m.ustackstart >=^ addr /\
+		         (* rbp and rsp are always in stack ranges *)
+			 (let stackend = m.ustackstart -^ m.ustacksize in
+			  env.rbp >=^ stackend && env.rbp <=^ m.ustackstart &&
+			  env.rsp >=^ stackend && env.rsp <=^ m.ustackstart) /\
+		         env.rbp >=^ env.rsp /\
+			 live h m.buf))
+	(ensures (fun h0 r h1 -> live h0 m.buf /\ live h1 m.buf /\ modifies_1 m.buf h0 h1 /\
+	                      addr_in_range addr m /\
+  			      m.ustackstart >=^ addr /\
+			      (let stackend = m.ustackstart -^ m.ustacksize in
+			       env.rbp >=^ stackend && env.rbp <=^ m.ustackstart &&
+			       env.rsp >=^ stackend && env.rsp <=^ m.ustackstart) /\
+		               env.rbp >=^ env.rsp /\
+			       ((heap_or_active_stack addr m /\ r) ==>
+			        get_bitmap_set_pure h0 addr m))) =
+	(*                       addr_in_range addr m /\ *)
+	(* 			/\ (gte addr base)  *)
+	(* 			/\ (gte ucodestart base) *)
+	(* 			/\ (gte wbmapstart ucodestart) *)
+	(* 			/\ (gte ustackstart uheapstart) *)
+	(* 			/\ (gte uheapstart wbmapstart)  *)
+	(* 			/\ (gte ustackstart addr) *)
+	(* 			/\ (let idx =(sub addr base) in (Int.size (UInt64.v idx) UInt32.n)) *)
+	(* 			/\ ((UInt64.v (sub ustackstart base)) < (Buffer.length buf))  *)
+	(* 			(\* *)
+	(* 			(\* if address is stack or heap and the store is successful, then it should be writable *\) *)
+	(* 			/\ (if (heap_or_active_stack addr uheapstart ustackstart ) && r then  *)
+	(* 				((get_bitmap_set_pure h0 addr buf base wbmapstart uheapstart ustackstart) == true) *)
+	(* 			   else True *)
+	(* 			   ) *)
+	(* 			*\) *)
+	(* 			/\ (if (gte addr ucodestart) && (lte addr wbmapstart) then *)
+	(* 					(r==false) *)
+	(* 			    else True *)
+	(* 			   ) *)
+	(* 			(\* rbp and rsp are always in stack ranges *\) *)
+	(* 			/\ (Int.size (UInt64.v ustackstart) UInt32.n)   *)
+	(* 			/\ (Int.size (UInt64.v ustacksize) UInt32.n)   *)
+	(* 			/\ ( let stackend = (add ustackstart  ustacksize) in *)
+	(* 				(gte env.rbp stackend) && (lte env.rbp ustackstart) && (gte env.rsp stackend) && (lte env.rsp ustackstart)  *)
+	(* 			   ) *)
+	(* 			 (\* rbp >= rsp *\) *)
+	(* 			/\ ((gte env.rbp env.rsp) == true) *)
+	(* 	 ) *)
+	(* ) = *)
 	
       (* Code section is not writable *)
+     let C base ucodestart wbmapstart uheapstart ustackstart ucodesize wbmapsize uheapsize ustacksize buf = m in
      if	(gte addr ucodestart) && (lte addr wbmapstart) then
 	false
      else if (gte addr  wbmapstart) && (lt addr  uheapstart)&& (lte (UInt64.sub addr wbmapstart) (Int.Cast.uint32_to_uint64 wbmapsize)) then
@@ -212,7 +214,7 @@ let get_bitmap_set_pure (h:HyperStack.mem) (addr:address) (buf:buffer dword{live
 		false
     else if (gte addr uheapstart) && (lt addr  (add uheapstart uheapsize)) then
 	(* Address is in UHeap... Check that bitmap is set *)  
-	let isbitmapset = get_bitmap_set addr buf base  wbmapstart uheapstart ustackstart in
+	let isbitmapset = get_bitmap_set addr m in
 	if isbitmapset then
 	       let idx = (sub addr base) in
 	       let wordidx = (cast_to_word idx) in
@@ -229,65 +231,69 @@ let get_bitmap_set_pure (h:HyperStack.mem) (addr:address) (buf:buffer dword{live
 				debug_print_string "Bitmap not set: Raise Halt\n" 
 			else true in
 		false
- 
-    else if  (lte addr ustackstart) && (gt addr (read "rbp" env))  then
-	(* Address belongs to older stack frames *)  
-	let isbitmapset = get_bitmap_set addr buf base  wbmapstart uheapstart ustackstart in
-	if isbitmapset then
-	       let idx = (sub addr base) in
-	       let wordidx = (cast_to_word idx) in
-	       let _ = if debugflag then 
-				let _ =  debug_print_string "Updating older stack frame: " in
-				let _ = debug_print_string (UInt32.to_string wordidx) in
-				debug_print_string "\n"
-			 else true in
-         	let _ = Buffer.upd buf wordidx v in
-		true
-	else
-		(* raise Halt *)
-		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt\n" else true in
-		false
-    else if (lte addr (read "rbp" env)) && (gte addr (read "rsp" env))  then
-	(* Address belongs to current stack frames *)  
-	       let idx = (sub addr base) in
-	       let wordidx = (cast_to_word idx) in
-	       let _ = if debugflag then 
-				let _ =  debug_print_string "Updating current stack frame: " in
-				let _ = debug_print_string (UInt32.to_string wordidx) in
-				debug_print_string "\n"
-			 else true in
-               let _ = Buffer.upd buf wordidx v in
-	       true
-    else
-	let _ = if debugflag then 
-			let _ = debug_print_string "Something went wrong. Dump as follows:\n" in
-			let _ =  debug_print_string "Address being written to: " in
-			let _ = debug_print_string (to_string addr) in
-			let _ = debug_print_string "\n" in
-			let _ =  debug_print_string "Frame Pointer: " in
-			let _ = debug_print_string (to_string (read "rbp" env)) in
-			let _ = debug_print_string "\n" in
-			let _ =  debug_print_string "Stack Pointer: " in
-			let _ = debug_print_string (to_string (read "rsp" env)) in
-			let _ = debug_print_string "\n" in
-			let _ =  debug_print_string "Base Address: " in
-			let _ = debug_print_string (to_string base) in
-			let _ = debug_print_string "\n" in
-			let _ =  debug_print_string "Code Start: " in
-			let _ = debug_print_string (to_string ucodestart) in
-			let _ = debug_print_string "\n" in
-			let _ =  debug_print_string "Bitmap Start: " in
-			let _ = debug_print_string (to_string wbmapstart) in
-			let _ = debug_print_string "\n" in
-			let _ =  debug_print_string "Heap Start: " in
-			let _ = debug_print_string (to_string uheapstart) in
-			let _ = debug_print_string "\n" in
-			let _ =  debug_print_string "Stack Start: " in
-			let _ = debug_print_string (to_string ustackstart) in
-			let _ =  debug_print_string "\nEnd-of-Dump\n" in
-			debug_print_string "====================\n" 
-		else true in
-        false	
+    else admit ()
+
+
+
+
+    (* else if  (lte addr ustackstart) && (gt addr (read "rbp" env))  then *)
+    (* 	(\* Address belongs to older stack frames *\)   *)
+    (* 	let isbitmapset = get_bitmap_set addr buf base  wbmapstart uheapstart ustackstart in *)
+    (* 	if isbitmapset then *)
+    (* 	       let idx = (sub addr base) in *)
+    (* 	       let wordidx = (cast_to_word idx) in *)
+    (* 	       let _ = if debugflag then  *)
+    (* 				let _ =  debug_print_string "Updating older stack frame: " in *)
+    (* 				let _ = debug_print_string (UInt32.to_string wordidx) in *)
+    (* 				debug_print_string "\n" *)
+    (* 			 else true in *)
+    (*      	let _ = Buffer.upd buf wordidx v in *)
+    (* 		true *)
+    (* 	else *)
+    (* 		(\* raise Halt *\) *)
+    (* 		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt\n" else true in *)
+    (* 		false *)
+    (* else if (lte addr (read "rbp" env)) && (gte addr (read "rsp" env))  then *)
+    (* 	(\* Address belongs to current stack frames *\)   *)
+    (* 	       let idx = (sub addr base) in *)
+    (* 	       let wordidx = (cast_to_word idx) in *)
+    (* 	       let _ = if debugflag then  *)
+    (* 				let _ =  debug_print_string "Updating current stack frame: " in *)
+    (* 				let _ = debug_print_string (UInt32.to_string wordidx) in *)
+    (* 				debug_print_string "\n" *)
+    (* 			 else true in *)
+    (*            let _ = Buffer.upd buf wordidx v in *)
+    (* 	       true *)
+    (* else *)
+    (* 	let _ = if debugflag then  *)
+    (* 			let _ = debug_print_string "Something went wrong. Dump as follows:\n" in *)
+    (* 			let _ =  debug_print_string "Address being written to: " in *)
+    (* 			let _ = debug_print_string (to_string addr) in *)
+    (* 			let _ = debug_print_string "\n" in *)
+    (* 			let _ =  debug_print_string "Frame Pointer: " in *)
+    (* 			let _ = debug_print_string (to_string (read "rbp" env)) in *)
+    (* 			let _ = debug_print_string "\n" in *)
+    (* 			let _ =  debug_print_string "Stack Pointer: " in *)
+    (* 			let _ = debug_print_string (to_string (read "rsp" env)) in *)
+    (* 			let _ = debug_print_string "\n" in *)
+    (* 			let _ =  debug_print_string "Base Address: " in *)
+    (* 			let _ = debug_print_string (to_string base) in *)
+    (* 			let _ = debug_print_string "\n" in *)
+    (* 			let _ =  debug_print_string "Code Start: " in *)
+    (* 			let _ = debug_print_string (to_string ucodestart) in *)
+    (* 			let _ = debug_print_string "\n" in *)
+    (* 			let _ =  debug_print_string "Bitmap Start: " in *)
+    (* 			let _ = debug_print_string (to_string wbmapstart) in *)
+    (* 			let _ = debug_print_string "\n" in *)
+    (* 			let _ =  debug_print_string "Heap Start: " in *)
+    (* 			let _ = debug_print_string (to_string uheapstart) in *)
+    (* 			let _ = debug_print_string "\n" in *)
+    (* 			let _ =  debug_print_string "Stack Start: " in *)
+    (* 			let _ = debug_print_string (to_string ustackstart) in *)
+    (* 			let _ =  debug_print_string "\nEnd-of-Dump\n" in *)
+    (* 			debug_print_string "====================\n"  *)
+    (* 		else true in *)
+    (*     false	 *)
 
  (* post-condition:
 	A call is successfull only if it is present in calltable
