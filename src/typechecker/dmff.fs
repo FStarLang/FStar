@@ -35,6 +35,26 @@ module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
 
+
+type env = {
+  // The type-checking environment which we abuse to store our DMFF-style types
+  // when entering a binder.
+  env: FStar.TypeChecker.Env.env;
+  // The substitution from every [x: C] to its [x^w: C*].
+  subst: list<subst_elt>;
+  // Hack to avoid a dependency NS: env already has a type_of, so why not reuse that?
+  tc_const: sconst -> typ;
+}
+
+//VALS_HACK_HERE
+
+let empty env tc_const = {
+  env = env;
+  subst = [];
+  tc_const = tc_const
+}
+
+
 // Synthesis of WPs from a partial effect definition (in F*) ------------------
 
 let gen_wps_for_free
@@ -490,23 +510,6 @@ let gen_wps_for_free
 
 
 // Some helpers for... --------------------------------------------------------
-
-type env = {
-  // The type-checking environment which we abuse to store our DMFF-style types
-  // when entering a binder.
-  env: FStar.TypeChecker.Env.env;
-  // The substitution from every [x: C] to its [x^w: C*].
-  subst: list<subst_elt>;
-  // Hack to avoid a dependency
-  tc_const: sconst -> typ;
-}
-
-let empty env tc_const = {
-  env = env;
-  subst = [];
-  tc_const = tc_const
-}
-
 type env_ = env
 
 let get_env env = env.env
