@@ -1727,10 +1727,15 @@ let tc_decls env ses =
   List.rev_append ses [], (List.rev_append exports []) |> List.flatten, env
 
 let tc_partial_modul env modul =
+  let verify = Options.should_verify modul.name.str in
+  let action = if verify then "Verifying" else "Lax-checking" in
+  let label = if modul.is_interface then "interface" else "implementation" in
+  if Options.debug_any () then
+    Util.print3 "%s %s of %s\n" action label modul.name.str;
+
   let name = Util.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
   let msg = "Internals for " ^name in
-  let env = {env with Env.is_iface=modul.is_interface;
-                      admit=not (Options.should_verify modul.name.str)} in
+  let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
   //AR: the interactive mode calls this function, because of which there is an extra solver push.
   //    the interactive mode does not call finish_partial_modul, so this push is not popped.
   //    currently, there is a cleanup function in the interactive mode tc, that does this extra pop.
@@ -1827,8 +1832,6 @@ let tc_modul env modul =
   finish_partial_modul env modul non_private_decls
 
 let check_module env m =
-    if Options.debug_any()
-    then Util.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
     let m, env = tc_modul env m in
     if Options.dump_module m.name.str
     then Util.print1 "%s\n" (Print.modul_to_string m);

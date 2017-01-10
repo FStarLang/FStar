@@ -1443,14 +1443,19 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
             env, Inl(se, constructors, tconstr, quals)::tcs
           | TyconAbbrev(id, binders, kopt, t) ->
             let env, _, se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
-            env, Inr(se, t, quals)::tcs
+            env, Inr(se, binders, t, quals)::tcs
           | _ -> failwith "Unrecognized mutual type definition" in
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
       let tps_sigelts = tcs |> List.collect (function
-        | Inr(Sig_inductive_typ(id, uvs, tpars, k, _, _, _, _), t, quals) -> //should be impossible
-          let env_tps, _ = push_tparams env tpars in
-          let t = desugar_term env_tps t in
+        | Inr(Sig_inductive_typ(id, uvs, tpars, k, _, _, _, _), binders, t, quals) -> //type abbrevs in mutual type definitions
+	    let t =
+	      let env, tpars = typars_of_binders env binders in
+	      let env_tps, tpars = push_tparams env tpars in
+	      let t = desugar_typ env_tps t in
+	      let tpars = Subst.close_binders tpars in
+	      Subst.close tpars t
+            in
           [[], mk_typ_abbrev id uvs tpars k t [id] quals rng]
 
         | Inl (Sig_inductive_typ(tname, univs, tpars, k, mutuals, _, tags, _), constrs, tconstr, quals) ->
@@ -1480,8 +1485,10 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         | _ -> failwith "impossible")
       in
       let sigelts = tps_sigelts |> List.map snd in
-      let bundle = Sig_bundle(sigelts, quals, List.collect Util.lids_of_sigelt sigelts, rng) in
+      let bundle, abbrevs = FStar.Syntax.MutRecTy.disentangle_abbrevs_from_bundle sigelts quals (List.collect Util.lids_of_sigelt sigelts) rng in
       let env = push_sigelt env0 bundle in
+      let env = List.fold_left push_sigelt env abbrevs in
+      (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
       let data_ops = tps_sigelts |> List.collect (mk_data_projector_names quals env) in
       let discs = sigelts |> List.collect (function
         | Sig_inductive_typ(tname, _, tps, k, _, constrs, quals, _) when (List.length constrs > 1)->
@@ -1492,7 +1499,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         | _ -> []) in
       let ops = discs@data_ops in
       let env = List.fold_left push_sigelt env ops in
-      env, [bundle]@ops
+      env, [bundle]@abbrevs@ops
 
     | [] -> failwith "impossible"
 
@@ -1853,10 +1860,12 @@ let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool 
 
 let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modul =
   let m =
-    if (Options.interactive_fsi()) then
-        match m with
-            | Module(mname, decls) -> AST.Interface(mname, decls, true)
-            | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
+    if Options.interactive () &&
+      get_file_extension (List.hd (Options.file_list ())) = "fsti"
+    then
+      match m with
+      | Module(mname, decls) -> AST.Interface(mname, decls, true)
+      | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
     else m
   in
   let x, y, _ = desugar_modul_common curmod env m in

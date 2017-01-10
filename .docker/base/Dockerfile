@@ -23,7 +23,7 @@ ENV OPAMYES true
 RUN opam init
 RUN echo ". /home/FStar/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" >> .bashrc
 RUN opam switch ${opamv}
-RUN opam install ocamlfind batteries sqlite3 fileutils stdint zarith yojson pprint
+RUN opam install ocamlfind batteries sqlite3 fileutils stdint zarith yojson pprint menhir
 
 # Prepare and build Z3
 RUN git clone -b ${z3v} https://github.com/Z3Prover/z3.git
@@ -42,6 +42,3 @@ ENV PATH "~/FStar/bin:$PATH"
 RUN opam config exec -- make -C FStar/src/ocaml-output
 RUN make ocaml -C FStar/src
 RUN opam config exec -- make -C FStar/src/ocaml-output
-
-# F* Testing
-RUN opam config exec -- make -C FStar/src regressions OTHERFLAGS=--lax

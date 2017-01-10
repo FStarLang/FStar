@@ -333,16 +333,13 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 let extract_iface (g:env) (m:modul) =  Util.fold_map extract_sig g m.declarations |> fst
 
 let rec extract (g:env) (m:modul) : env * list<mllib> =
-    S.reset_gensym();
-    Util.print1 "Extracting module %s\n" (Print.lid_to_string m.name);         
-    let name = MLS.mlpath_of_lident m.name in
-    let g = {g with currentModule = name}  in
-    if m.name.str = "Prims"
-    || m.is_interface
-    || Options.no_extract m.name.str
-    then let g = extract_iface g m in
-         g, [] //MLLib([Util.flatten_mlpath name, None, MLLib []])
-    else (let g, sigs = Util.fold_map extract_sig g m.declarations in
-         let mlm : mlmodule = List.flatten sigs in
-         g, [MLLib ([name, Some ([], mlm), (MLLib [])])])
-
+  S.reset_gensym();
+  let name = MLS.mlpath_of_lident m.name in
+  let g = {g with currentModule = name}  in
+  let g, sigs = Util.fold_map extract_sig g m.declarations in
+  let mlm : mlmodule = List.flatten sigs in
+  if m.name.str <> "Prims" && not m.is_interface && Options.should_extract m.name.str then begin
+    Util.print1 "Extracted module %s\n" (Print.lid_to_string m.name);
+    g, [MLLib ([name, Some ([], mlm), (MLLib [])])]
+  end else
+    g, []

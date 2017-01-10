@@ -2314,7 +2314,7 @@ atomicUniverse:
              ( u )}
 | LPAREN universeFrom RPAREN
     {let (_1, u, _3) = ((), $2, ()) in
-                          ( u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) )}
+    ( u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) )}
 
 univar:
   UNIVAR

@@ -47,6 +47,7 @@ let flatten = BatList.flatten
 let split = unzip
 let choose = BatList.filter_map
 let existsb f l = BatList.exists f l
+let existsML f l = BatList.exists f l
 let contains x l = BatList.exists (fun y -> x = y) l
 let zip = BatList.combine
 let rec zip3 l1 l2 l3 =

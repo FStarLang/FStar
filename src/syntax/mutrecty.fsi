@@ -14,11 +14,9 @@
    limitations under the License.
 *)
 #light "off"
-module FStar.TypeChecker.Tc
+// (c) Microsoft Corporation. All rights reserved
+module FStar.Syntax.MutRecTy
 open FStar.Syntax.Syntax
-open FStar.TypeChecker.Env
-open FStar.TypeChecker.Common
+open FStar.Ident
 
-val check_module: env -> modul -> modul * env
-val tc_partial_modul: env -> modul -> modul * list<sigelt> * env
-val tc_more_partial_modul: env -> modul -> list<sigelt> -> modul * list<sigelt> * env
+val disentangle_abbrevs_from_bundle: list<sigelt> -> list<qualifier> -> list<lident> -> FStar.Range.range -> sigelt * list<sigelt>
