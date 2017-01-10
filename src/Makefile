@@ -222,9 +222,18 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 
 prep_u_extract_ocaml: $(U_ALL_INTERFACES)
 	$(SED) -i 's/type env = {/type env : Type0 = {/g' boot_fsts/FStar.TypeChecker.Env.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+        # temporary, to go quickly past Normalize
+	cp typechecker/normalize.fsi boot_fsts/FStar.TypeChecker.Normalize.fst
+	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Normalize.fst
         # temporary, to go quickly past Rel
 	cp typechecker/rel.fsi boot_fsts/FStar.TypeChecker.Rel.fst
-	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Rel.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Rel.fst
+        # temporary, to go quickly past Util
+	cp typechecker/util.fsi boot_fsts/FStar.TypeChecker.Util.fst
+	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Util.fst
+        # temporary, to go quickly past DMFF
+	cp typechecker/dmff.fsi boot_fsts/FStar.TypeChecker.DMFF.fst
+	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.DMFF.fst
 
 clean_u_extract_ocaml:
 	rm -rf boot_fstis
