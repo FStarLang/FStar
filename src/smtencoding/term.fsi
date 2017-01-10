@@ -35,8 +35,8 @@ type sort =
   | Sort of string
 
 type op =
-  | True
-  | False
+  | TrueOp
+  | FalseOp
   | Not
   | And
   | Or

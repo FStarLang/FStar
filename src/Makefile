@@ -183,7 +183,8 @@ U_ALL_INTERFACES=$(U_STDLIB) $(U_BOOT_BASIC_FSTI)
 U_ALL_SOURCES=$(addprefix boot_fsts/, \
 	FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst \
 	FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst FStar.Syntax.Free.fst FStar.Syntax.MutRecTy.fst \
-	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Errors.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst)
+	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Errors.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst \
+        FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst)
 
 boot_fstis/FStar.%.fsti: basic/%.fsi
 	cp $^ $@
@@ -222,18 +223,25 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 
 prep_u_extract_ocaml: $(U_ALL_INTERFACES)
 	$(SED) -i 's/type env = {/type env : Type0 = {/g' boot_fsts/FStar.TypeChecker.Env.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-        # # temporary, to go quickly past Normalize
-	# cp typechecker/normalize.fsi boot_fsts/FStar.TypeChecker.Normalize.fst
-	# $(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Normalize.fst
-        # # temporary, to go quickly past Rel
-	# cp typechecker/rel.fsi boot_fsts/FStar.TypeChecker.Rel.fst
-	# $(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Rel.fst
-        # # temporary, to go quickly past Util
-	# cp typechecker/util.fsi boot_fsts/FStar.TypeChecker.Util.fst
-	# $(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Util.fst
-        # # temporary, to go quickly past DMFF
-	# cp typechecker/dmff.fsi boot_fsts/FStar.TypeChecker.DMFF.fst
-	# $(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.DMFF.fst
+	$(SED) -i "s/type term' =/type term': Type0 =/g" boot_fsts/FStar.SMTEncoding.Term.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+        # temporary, to go quickly past Normalize
+	cp typechecker/normalize.fsi boot_fsts/FStar.TypeChecker.Normalize.fst
+	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Normalize.fst
+        # temporary, to go quickly past Rel
+	cp typechecker/rel.fsi boot_fsts/FStar.TypeChecker.Rel.fst
+	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Rel.fst
+        # temporary, to go quickly past Util
+	cp typechecker/util.fsi boot_fsts/FStar.TypeChecker.Util.fst
+	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Util.fst
+        # temporary, to go quickly past DMFF
+	cp typechecker/dmff.fsi boot_fsts/FStar.TypeChecker.DMFF.fst
+	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.DMFF.fst
+        # temporary, to go quickly past tcterm
+	cp typechecker/tcterm.fsi boot_fsts/FStar.TypeChecker.TcTerm.fst
+	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.TcTerm.fst
+        # temporary, to go quickly past TC
+	cp typechecker/tc.fsi boot_fsts/FStar.TypeChecker.Tc.fst
+	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Tc.fst
 
 clean_u_extract_ocaml:
 	rm -rf boot_fstis

@@ -448,8 +448,9 @@ end))
 
 let rec term_to_string : FStar_Syntax_Syntax.term  ->  Prims.string = (fun x -> (
 
-let x = (FStar_Syntax_Subst.compress x)
-in (match (x.FStar_Syntax_Syntax.n) with
+let x = (FStar_Syntax_Subst.compress x) in
+let x = if FStar_Options.debug_any() then x else FStar_Syntax_Util.unmeta x in
+ (match (x.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_40_245) -> begin
 (failwith "impossible")
 end

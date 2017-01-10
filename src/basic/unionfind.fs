@@ -29,23 +29,23 @@ type uvar<'a when 'a : not struct> = 'a cell
 exception Impos
 
 type tx = int
- 
+
 let log : ref<list<(tx * list<(unit -> unit)>)>> = Util.mk_ref []
 
-let log_undo x = match !log with 
+let log_undo x = match !log with
     | (tx, undos)::rest -> log := (tx, x::undos)::rest
-    | _ -> ()//no current transaction; nothing to log 
-            
-let new_transaction = 
-    let tx_ctr = ref 0 in 
-    fun () -> 
+    | _ -> ()//no current transaction; nothing to log
+
+let new_transaction =
+    let tx_ctr = ref 0 in
+    fun () ->
         let tx = incr tx_ctr; !tx_ctr in
         log := (tx, [])::!log ;
         tx
 
-//apply undo logs for all transactions succeeding tx, including tx itself          
-let rollback tx = 
-    let rec aux = function 
+//apply undo logs for all transactions succeeding tx, including tx itself
+let rollback tx =
+    let rec aux = function
         | [] -> failwith "Transaction identifier is invalid"
         | (tx', undo)::rest ->
           undo |> List.iter (fun f -> f());
@@ -53,23 +53,23 @@ let rollback tx =
           then log := rest
           else aux rest in
    aux !log
- 
-//discard undo logs for all transactions succeeding tx, including tx itself          
-let commit tx = 
-    let rec aux = function 
+
+//discard undo logs for all transactions succeeding tx, including tx itself
+let commit tx =
+    let rec aux = function
         | [] -> failwith "Transaction identifier is invalid"
         | (tx', undo)::rest ->
           if tx=tx'
           then log := rest
           else aux rest in
     aux !log
-            
-let update_in_tx r v = 
+
+let update_in_tx r v =
     let old = !r in
     let undo () = r := old in
     log_undo undo;
     r := v
-                    
+
 let counter = ref 0
 
 let fresh x = counter := !counter + 1; {contents = Data ([x], !counter) }
@@ -81,7 +81,7 @@ let rec rep cell = match cell.contents with
     then failwith "YIKES! Cycle in unionfind graph"
     else rep cell'
 
-let update x c = 
+let update x c =
     let cur = x.contents in
     let undo () = x.contents <- cur in
     log_undo undo;

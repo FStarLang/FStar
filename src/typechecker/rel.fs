@@ -2550,8 +2550,7 @@ let force_trivial_guard env g =
            Errors.report r (BU.format3 "Failed to resolve implicit argument of type '%s' introduced in %s because %s"
                                        (Print.term_to_string t)
                                        (Print.term_to_string e)
-                                       reason);
-          failwith "die"
+                                       reason)
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);

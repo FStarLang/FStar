@@ -238,6 +238,7 @@ let quals_to_string' quals =
    redexes that should first be reduced. *)
 let rec term_to_string x =
   let x = Subst.compress x in
+  let x = if Options.print_implicits() then x else unmeta x in
   match x.n with
   | Tm_delayed _ ->   failwith "impossible"
   | Tm_app(_, []) ->  failwith "Empty args!"

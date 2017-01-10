@@ -5221,7 +5221,7 @@ let _57_3749 = (let _156_1917 = (let _156_1916 = (FStar_Syntax_Print.term_to_str
 in (let _156_1915 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format3 "Failed to resolve implicit argument of type \'%s\' introduced in %s because %s" _156_1916 _156_1915 reason)))
 in (FStar_TypeChecker_Errors.report r _156_1917))
-in (failwith "die"))
+in ())
 end)))
 
 
