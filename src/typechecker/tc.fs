@@ -944,7 +944,7 @@ and tc_inductive env ses quals lids =
                                 (uvs |> List.map (fun u -> u.idText) |> String.concat ", ")
                                 (Print.term_to_string t);
         //Now, (uvs, t) is the generalized type scheme for all the inductives and their data constuctors
-        //we have to destruct t, knowing its shape above, 
+        //we have to destruct t, knowing its shape above,
         //and rebuild the Sig_inductive_typ, Sig_datacon etc
         let uvs, t = SS.open_univ_vars uvs t in
         let args, _ = Util.arrow_formals t in
@@ -1832,6 +1832,7 @@ let tc_modul env modul =
   finish_partial_modul env modul non_private_decls
 
 let check_module env m =
+    let env = {env with lax=not (Options.should_verify m.name.str)} in
     let m, env = tc_modul env m in
     if Options.dump_module m.name.str
     then Util.print1 "%s\n" (Print.modul_to_string m);
