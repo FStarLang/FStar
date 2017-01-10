@@ -849,7 +849,8 @@ let check_admits env =
     | Sig_declare_typ(l, u, t, quals, r) ->
       begin match try_lookup_lid env l with
         | None ->
-          Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
+          if not (Options.interactive ()) then
+            Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
           Util.smap_add (sigmap env) l.str (Sig_declare_typ(l, u, t, Assumption::quals, r), false)
         | Some _ -> ()
       end
@@ -1005,7 +1006,7 @@ let prepare_module_or_interface intf admitted env mname =
   match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with
     | None -> prep env, false
     | Some (_, m) ->
-      if not m.is_interface || intf
+      if not (Options.interactive ()) && (not m.is_interface || intf)
       then raise (Error(Util.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
       //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
       prep (push env), true //push a context so that we can pop it when we're done

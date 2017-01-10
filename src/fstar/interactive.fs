@@ -191,7 +191,7 @@ type m_timestamps = list<(option<string> * string * option<time> * time)>
 
 // filename is the name of the file currently edited
 let interactive_mode (filename:string)
-                     (initial_mod:'modul)
+                     (initial_mod:'modul) // always None
                      (tc:interactive_tc<'env,'modul>) =
     if Option.isSome (Options.codegen()) 
     then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
@@ -360,20 +360,33 @@ let interactive_mode (filename:string)
     let env = tc.tc_prims () in
     let stack, env, ts = tc_deps initial_mod [] env filenames [] in 
 
-    // Let's use some horrible global mutable state! The string builder is empty
-    // at this stage, so let's drop the interface in there before anything else
-    // happens -- this performs an approximate interleaving of the interface
-    // with the implementation.
-    begin match maybe_intf with
-    | Some intf ->
-        if !the_interactive_state.buffer <> [] then
-          failwith "non-empty initial buffer list";
-        // This hardcodes the expected answers! Boo!
-        the_interactive_state.buffer :=
-          [ Code (file_get_contents intf, ("#done-ok", "#done-nok")) ]
-    | None ->
-        ()
-    end;
+    let initial_mod, env = match maybe_intf with
+      | Some intf ->
+          // We found an interface: send it to the interactive mode as if it
+          // were a regular chunk
+          let frag = {
+            frag_text = file_get_contents intf;
+            frag_line = 0;
+            frag_col = 0
+          } in
+          begin match tc.check_frag env initial_mod frag with
+          | Some (curmod, env, n_errs) ->
+              if n_errs <> 0 then begin
+                Util.print_warning (Util.format1
+                  "Found the interface %s but it has errors!"
+                  intf);
+                exit 1
+              end;
+              curmod, env
+          | None ->
+              Util.print_warning (Util.format1
+                "Found the interface %s but could not parse it first!"
+                intf);
+              exit 1
+          end
+      | None ->
+          initial_mod, env
+    in
 
     if Options.universes()
     && (FStar.Options.record_hints() //and if we're recording or using hints
