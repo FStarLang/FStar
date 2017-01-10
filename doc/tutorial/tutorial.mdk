@@ -4807,12 +4807,21 @@ We now attach these predicates to unforgeable cryptographic tokens also called c
 
 Capabilities need to be kept secret, as everyone knowing the capabilities is granted access to 
 the corresponding files, however, parties no longer need to keep a synchronized access control database.
-In order to verify capabilities, they only need to store the cryptographic key used to generate the capability.
+In order to verify capabilities, they only need to store the cryptographic key
+used to generate the capability. The tokens generated in this fashion work in a
+similar fashion as tokens in the *Kerberos* authentication protocol.
 
 ~ Exercise
 Relying on `ACLs` and `MAC`, implement a pair of functions with
 the following specification, and verify them by typing under the
-security assumption that HMACSHA1 is INT-CMA.
+security assumption that HMACSHA1 is INT-CMA. Use `failwith "bad capability"` in
+case the verification fails.
+
+~KK
+So far we have only introduced UF-CMA. It might be better to either introduce
+the reader to the security assumptions we use here or to just omit them for
+simplicity.
+~
 
 ~~ ExerciseFragment {exname=Ex12a.Cap}
 [INCLUDE=code/exercises/Ex12a.Cap.fst:CapType]
@@ -4836,6 +4845,18 @@ The patterns instructs the SMT solver to associate the injectivity axiom only wi
 ~~
 
 How would we extend it to also cover write access?
+
+~KK
+Added Ex12a1.Cap.fst as a proposed answer to this question. It would be nice if
+someone could review my code and confirm that it is actually a valid solution.
+~
+
+~~ Answer
+```
+[INCLUDE=code/solutions/Ex12a1.Cap.fst:CapImplementation2]
+```
+~~
+
 ~
 
 ## Secure RPC
@@ -4893,6 +4914,11 @@ in the following protocol
 ```
 [INCLUDE=code/solutions/Ex12b.RPC.fst:RpcProtocol]
 ```
+
+~KK
+Where "@|" is a macro for "append"?
+~
+
 For simplicity we initially elide the client code which is similar.
 
 The `assert` guarantee that messages that are received by a party have been sent by its peer.
@@ -4983,6 +5009,10 @@ The security goals of our RPC protocol are that (1) whenever a principal `b` acc
 request message `s` from `a`, principal `a` has indeed sent the message to `b` and, conversely,
 (2) whenever `a` accepts a response message `t` from `b`, principal `b` has indeed sent the
 message in response to a matching request from `a`.
+~
+
+~KK
+What lecture is this exactly?
 ~
 
 <!--
@@ -5153,6 +5183,9 @@ A program is *safe* if, in every run of the program, all runtime
 values satisfy their type. A key property of a type system is that
 well-typed programs are always safe.
 
+~KK
+Are modules and expressions the same?
+~
 [link]: http://link.com "link title"
 
 **Theorem 1 (Safety by Typing):** If $\emptyset \vdash A : t$, then $A$ is safe.
@@ -5197,6 +5230,10 @@ is $\epsilon$. If $A$ is not closed, then the value of $\epsilon$ may depend on 
 it is executed, in this case we model $\epsilon(\cdot)$ as a function that depends on the context 
 and call it an advantage function.
 
+~KK
+What is M at this point and what does the $\Downarrow$ notation mean?
+~
+
 *c) Keyed module:* Keyed modules export `gen`, `leak`, and `coerce`
 functions and provide some cryptographic functionality modeled
 using idealization for honest keys and strong algorithms. To this
@@ -5204,6 +5241,11 @@ end keys can be associated with a unique index upon generation. Keyed
 modules enforce that `gen` is called at most once per index. The index
 describes the context the key was created in and the algorithms it is
 to be used with.
+
+~KK
+Many buzzwords in this paragraph. What is "idealization", "honest" and "strong"
+in this context?
+~
 
 *d) Plain module:* To define confidentiality using types, consider a
 module $P$ that is typeable using an interface $IP$ of the form
@@ -5237,6 +5279,11 @@ of `plain` , if `conf=true`, $IP \vdash C \leadsto IC$ and for all modules $P$ w
 `conf=false`, $P \leadsto IP$ and `conf=true`, $P \leadsto IP$; and $A$ with $IP,IC \vdash A$ 
 we have `conf=false`, $P \cdot C \cdot A \approx_{\epsilon(A,P)}$ `conf=true`, 
 $P \cdot C \cdot A$
+
+~KK
+I was not able to parse this definition. Maybe we can add an verbatim
+explaination of the formalism?
+~
 
 The function $\epsilon(.,.)$ is called the advantage function of $P,A$.
 
