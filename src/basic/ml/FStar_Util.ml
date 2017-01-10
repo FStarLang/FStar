@@ -573,6 +573,12 @@ let write_file (fn:string) s =
   append_to_file fh s;
   close_file fh
 let flush_file (fh:file_handle) = flush fh
+let file_get_contents f =
+  let ic = open_in_bin f in
+  let l = in_channel_length ic in
+  let s = really_input_string ic l in
+  close_in ic;
+  s
 
 let for_range lo hi f =
   for i = Z.to_int lo to Z.to_int hi do

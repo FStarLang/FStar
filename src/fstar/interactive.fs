@@ -25,6 +25,9 @@ open FStar.Ident
 (******************************************************************************************)
 (* The interface expected to be provided by a type-checker to run in the interactive loop *)
 (******************************************************************************************)
+// JP: we should remove this ad-hoc first-class module as soon as we drop
+// support for the stratified mode -- it adds another layer of indirection that
+// won't be needed anymore
 type interactive_tc<'env,'modul> = {
     pop:         'env -> string -> unit;
     push:        'env -> bool -> bool -> string -> 'env;
@@ -34,6 +37,16 @@ type interactive_tc<'env,'modul> = {
     check_frag:  'env -> 'modul -> FStar.Parser.ParseIt.input_frag -> option<('modul * 'env * int)>;
     report_fail:  unit -> unit;
     tc_prims:     unit -> 'env;
+    (* JP: from what I understand, the semantics of [tc_one_file remaining env] is as follows:
+     * - consume one or two items off the front of [remaining]
+     * - type-check them in [env]
+     * - return:
+     *   + the interface, if two items were consumed
+     *   + the interface or implementaion, if one item was consumed
+     *   + the new environment
+     *   + None, always (why?)
+     *   + the remaining items.
+     *)
     tc_one_file:  list<string> -> 'env -> (option<string> * string) * 'env * 'modul * list<string>;
     //cleanup is currently called when all the fragments from the current buffer are popped
     //the reason is that tc_partial_modul in tc.fs currently calls a solver.push, that needs to be popped before next fragment is type checked
@@ -52,8 +65,11 @@ type input_chunks =
 type stack<'env,'modul> = list<('env * 'modul)>
 
 type interactive_state = {
+  // The current chunk -- chunks end on #end boundaries per the communication
+  // protocol.
   chunk: string_builder;
   stdin: ref<option<stream_reader>>; // Initialized once.
+  // A list of chunks read so far
   buffer: ref<list<input_chunks>>;
   log: ref<option<file_handle>>;
 }
@@ -150,11 +166,25 @@ open FStar.Parser.ParseIt
 
 let deps_of_our_file filename =
   (* Now that fstar-mode.el passes the name of the current file, we must parse
-   * and lax-check everything but the current module we're editing. *)
+   * and lax-check everything but the current module we're editing. This
+   * function may, optionally, return an interface if the currently edited
+   * module is an implementation and an interface was found. *)
   let deps = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut [ filename ] in
-  List.filter (fun x ->
+  let deps, same_name = List.partition (fun x ->
     Parser.Dep.lowercase_module_name x <> Parser.Dep.lowercase_module_name filename
-  ) deps
+  ) deps in
+  let maybe_intf = match same_name with
+    | [ intf; impl ] ->
+        if not (Parser.Dep.is_interface intf) || not (Parser.Dep.is_implementation impl) then
+          Util.print_warning (Util.format2 "Found %s and %s but not an interface + implementation" intf impl);
+        Some intf
+    | [ impl ] ->
+        None
+    | _ ->
+        Util.print_warning (Util.format1 "Unexpected: ended up with %s" (String.concat " " same_name));
+        None
+  in
+  deps, maybe_intf
 
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
 type m_timestamps = list<(option<string> * string * option<time> * time)>
@@ -269,7 +299,7 @@ let interactive_mode (filename:string)
       in
 
       (* Well, the file list hasn't changed, so our (single) file is still there. *)
-      let filenames = deps_of_our_file filename in
+      let filenames, _ = deps_of_our_file filename in
       //reverse stk and ts, since iterate expects them in "first dependency first order"
       iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
     in
@@ -326,9 +356,24 @@ let interactive_mode (filename:string)
     end in
 
     //type check prims and the dependencies
-    let filenames = deps_of_our_file filename in
+    let filenames, maybe_intf = deps_of_our_file filename in
     let env = tc.tc_prims () in
     let stack, env, ts = tc_deps initial_mod [] env filenames [] in 
+
+    // Let's use some horrible global mutable state! The string builder is empty
+    // at this stage, so let's drop the interface in there before anything else
+    // happens -- this performs an approximate interleaving of the interface
+    // with the implementation.
+    begin match maybe_intf with
+    | Some intf ->
+        if !the_interactive_state.buffer <> [] then
+          failwith "non-empty initial buffer list";
+        // This hardcodes the expected answers! Boo!
+        the_interactive_state.buffer :=
+          [ Code (file_get_contents intf, ("#done-ok", "#done-nok")) ]
+    | None ->
+        ()
+    end;
 
     if Options.universes()
     && (FStar.Options.record_hints() //and if we're recording or using hints
