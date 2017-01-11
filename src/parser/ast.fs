@@ -16,10 +16,11 @@
 #light "off"
 module FStar.Parser.AST
 //open FStar.Absyn
-module C = FStar.Absyn.Const
-module U = FStar.Absyn.Util
-module P = FStar.Absyn.Print
-module S = FStar.Absyn.Syntax
+open FStar.Errors
+module C = FStar.Syntax.Const
+module U = FStar.Syntax.Util
+module P = FStar.Syntax.Print
+module S = FStar.Syntax.Syntax
 //open FStar.Absyn.Syntax
 open FStar.Range
 open FStar.Ident
@@ -221,13 +222,13 @@ let check_id id =
     then let first_char = String.substring id.idText 0 1 in
          if String.lowercase first_char = first_char
          then ()
-         else raise (FStar.Syntax.Syntax.Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
+         else raise (Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
     else ()
 
 let at_most_one s r l = match l with
   | [ x ] -> Some x
   | [] -> None
-  | _ -> raise (FStar.Syntax.Syntax.Error (Util.format1 "At most one %s is allowed on declarations" s, r))
+  | _ -> raise (Error (Util.format1 "At most one %s is allowed on declarations" s, r))
 
 let mk_decl d r decorations =
   let doc = at_most_one "fsdoc" r (List.choose (function Doc d -> Some d | _ -> None) decorations) in
@@ -256,10 +257,8 @@ let un_curry_abs ps body = match body.tm with
     | _ -> Abs(ps, body)
 let mk_function branches r1 r2 =
   let x =
-    if Options.universes()
-    then let i = FStar.Syntax.Syntax.next_id () in
-         Ident.gen r1
-    else U.genident (Some r1) in
+    let i = FStar.Syntax.Syntax.next_id () in
+    Ident.gen r1 in
   mk_term (Abs([mk_pattern (PatVar(x,None)) r1],
                mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
     r2 Expr
@@ -321,7 +320,7 @@ let mkWildAdmitMagic r = (mk_pattern PatWild r, None, mkAdmitMagic r)
 let focusBranches branches r =
     let should_filter = Util.for_some fst branches in
         if should_filter
-        then let _ = Tc.Errors.warn r "Focusing on only some cases" in
+        then let _ = Errors.warn r "Focusing on only some cases" in
          let focussed = List.filter fst branches |> List.map snd in
                  focussed@[mkWildAdmitMagic r]
         else branches |> List.map snd
@@ -329,7 +328,7 @@ let focusBranches branches r =
 let focusLetBindings lbs r =
     let should_filter = Util.for_some fst lbs in
         if should_filter
-        then let _ = Tc.Errors.warn r "Focusing on only some cases in this (mutually) recursive definition" in
+        then let _ = Errors.warn r "Focusing on only some cases in this (mutually) recursive definition" in
          List.map (fun (f, lb) ->
               if f then lb
               else (fst lb, mkAdmitMagic r)) lbs
@@ -441,7 +440,7 @@ let as_frag d ds =
   | _ ->
       let ds = d::ds in
       List.iter (function
-        | {d=TopLevelModule _; drange=r} -> raise (S.Error("Unexpected module declaration", r))
+        | {d=TopLevelModule _; drange=r} -> raise (Error("Unexpected module declaration", r))
         | _ -> ()
       ) ds;
       Inr ds
@@ -638,6 +637,4 @@ let modul_to_string (m:modul) = match m with
 let error msg tm r =
  let tm = tm |> term_to_string in
  let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in
- if Options.universes()
- then raise (FStar.Syntax.Syntax.Error(msg^"\n"^tm, r))
- else raise (S.Error(msg^"\n"^tm, r))
+ raise (Error(msg^"\n"^tm, r))

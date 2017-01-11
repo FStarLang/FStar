@@ -165,9 +165,7 @@ let detect_dependencies_for_module (mname:option<string>) : string         //the
                                                           * list<string>   //all its dependences
   =
   let failr msg r =
-    if Options.universes()
-    then FStar.TypeChecker.Errors.warn r msg
-    else FStar.Tc.Errors.warn r msg;
+    FStar.Errors.warn r msg;
     exit 1
   in
   let fail msg = failr msg Range.dummyRange in
@@ -195,11 +193,9 @@ let detect_dependencies_for_module (mname:option<string>) : string         //the
               failwith "impossible"
 
   with
-  | U_Syntax.Error(msg, r)
-  | F_Syntax.Error(msg, r) ->
+  | FStar.Errors.Error(msg, r) ->
       failr (parse_msg ^ msg) r
-  | U_Syntax.Err msg
-  | F_Syntax.Err msg ->
+  | FStar.Errors.Err msg ->
       fail (parse_msg ^ msg)
 
 let detect_dependencies_with_first_interactive_chunk () : string         //the filename of the buffer being checked, if any

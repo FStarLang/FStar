@@ -21,10 +21,7 @@ open FStar.Parser
 open FStar.Parser.AST
 open FStar.Parser.Parse
 open FStar.Util
-
-open FStar.Absyn
-open FStar.Absyn.Syntax
-
+open FStar.Errors
 
 let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
 
@@ -45,15 +42,11 @@ let parse_fragment frag : fragment =
       Decls decls
 
     | Inl (Inl _, _) ->
-      if (Options.universes())
-      then raise (Syntax.Syntax.Err("Refusing to check more than one module at a time incrementally"))
-      else raise (Absyn.Syntax.Err("Refusing to check more than one module at a time incrementally"))
-
+      raise (Err("Refusing to check more than one module at a time incrementally"))
+      
     | Inr (msg,r) ->
-      if (Options.universes())
-      then raise (Syntax.Syntax.Error(msg, r))
-      else raise (Absyn.Syntax.Error(msg, r))
-
+      raise (Error(msg, r))
+      
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 let parse_file fn =
   match ParseIt.parse (Inl fn) with
@@ -63,11 +56,8 @@ let parse_file fn =
   | Inl (Inr _ , _) ->
     let msg = Util.format1 "%s: expected a module\n" fn in
     let r = Range.dummyRange in
-    if (Options.universes())
-    then raise (FStar.Syntax.Syntax.Error(msg, r))
-    else raise (FStar.Absyn.Syntax.Error(msg, r))
-
+    raise (Error(msg, r))
+    
   | Inr (msg, r) ->
-    if (Options.universes())
-    then raise (FStar.Syntax.Syntax.Error(msg, r))
-    else raise (FStar.Absyn.Syntax.Error(msg, r))
+    raise (Error(msg, r))
+    

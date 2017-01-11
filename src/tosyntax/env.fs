@@ -27,7 +27,7 @@ open FStar.Syntax.Util
 open FStar.Syntax.Const
 open FStar.Parser
 open FStar.Ident
-
+open FStar.Errors
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 

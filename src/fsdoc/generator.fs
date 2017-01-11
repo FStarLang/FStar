@@ -194,7 +194,7 @@ let document_toplevel name topdecl =
         | None -> None, Some(doc)
         | Some (_, summary) -> Some(summary), Some(doc))
     | None -> None, None)
-  | _ -> raise(FStar.Syntax.Syntax.Err("Not a TopLevelModule"))
+  | _ -> raise(FStar.Errors.Err("Not a TopLevelModule"))
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -228,7 +228,7 @@ let document_module (m:modul) =
           close_file fd;
           name
         end
-    | None -> raise(FStar.Syntax.Syntax.Err(Util.format1 "No singleton toplevel in module %s" name.str))
+    | None -> raise(FStar.Errors.Err(Util.format1 "No singleton toplevel in module %s" name.str))
 
 ///////////////////////////////////////////////////////////////////////////////
 // entry point

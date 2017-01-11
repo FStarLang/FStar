@@ -790,7 +790,7 @@ and encode_exp (e:exp) (env:env_t) : (term
 
         begin match !e.tk with
             | None ->
-              Tc.Errors.warn e.pos ("Losing precision when encoding a function literal");
+              FStar.Errors.warn e.pos ("Losing precision when encoding a function literal");
               fallback ()
             | Some tfun ->
             if not <| Util.is_pure_or_ghost_function tfun
@@ -920,7 +920,7 @@ and encode_exp (e:exp) (env:env_t) : (term
         ee2, decls1@decls2
 
       | Exp_let _ ->
-        Tc.Errors.warn e.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
+        FStar.Errors.warn e.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
         let e = varops.fresh "let-rec" in
         let decl_e = Term.DeclFun(e, [], Term_sort, None) in
         Term.mkFreeV(e, Term_sort), [decl_e]
@@ -1036,7 +1036,7 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
         | Exp_app({n=Exp_fvar(fv, _)}, _) when lid_equals fv.v Const.nil_lid -> []
         | Exp_app({n=Exp_fvar(fv, _)}, [_; (Inr hd, _); (Inr tl, _)]) when lid_equals fv.v Const.cons_lid -> 
           hd::list_elements tl
-        | _ -> Tc.Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
+        | _ -> FStar.Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
 
     let v_or_t_pat p = match (Util.unmeta_exp p).n with
         | Exp_app({n=Exp_fvar(fv, _)}, [(Inl _, _); (Inr e, _)]) when lid_equals fv.v Const.smtpat_lid -> varg e
@@ -1734,7 +1734,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   arg_decls, [typing_inversion; subterm_ordering]
 
                 | _ ->
-                  Tc.Errors.warn drange (Util.format2 "Constructor %s builds an unexpected type %s\n" (Print.sli d) (Print.typ_to_string head));
+                  FStar.Errors.warn drange (Util.format2 "Constructor %s builds an unexpected type %s\n" (Print.sli d) (Print.typ_to_string head));
                   [], [] in
         let decls2, elim = encode_elim () in
         let g = binder_decls

@@ -25,6 +25,7 @@ open FStar.Syntax.Util
 open FStar.Util
 open FStar.Ident
 open FStar.Range
+open FStar.Errors
 open FStar.TypeChecker.Common
 
 module BU = FStar.Util

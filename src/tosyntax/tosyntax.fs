@@ -26,7 +26,7 @@ open FStar.Parser.Env
 open FStar.Parser.AST
 open FStar.Ident
 open FStar.Const
-
+open FStar.Errors
 module C = FStar.Syntax.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
@@ -50,7 +50,7 @@ let trans_qual r maybe_effect_id = function
   | AST.Effect ->        S.Effect
   | AST.New  ->          S.New
   | AST.Abstract ->      S.Abstract
-  | AST.Opaque ->        FStar.TypeChecker.Errors.warn r "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."; S.Visible_default
+  | AST.Opaque ->        Errors.warn r "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."; S.Visible_default
   | AST.Reflectable ->
     begin match maybe_effect_id with
     | None -> raise (Error ("Qualifier reflect only supported on effects", r))

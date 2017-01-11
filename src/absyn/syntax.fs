@@ -22,12 +22,10 @@ open FStar.Util
 open FStar.Ident
 open FStar.Range
 open FStar.Const
+open FStar.Errors
 
 type ident = FStar.Ident.ident
 type lident = FStar.Ident.lid
-exception Err of string
-exception Error of string * Range.range
-exception Warning of string * Range.range
 
 type withinfo_t<'a,'t> = {
   v: 'a;

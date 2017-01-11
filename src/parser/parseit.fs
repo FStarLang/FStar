@@ -18,6 +18,7 @@
 module FStar.Parser.ParseIt
 open FStar
 open FStar.Util
+open FStar.Errors
 
 type filename = string
 
@@ -46,7 +47,7 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise (Absyn.Syntax.Err(Util.format1 "Unable to find file: %s\n" filename))
+      raise (Err(Util.format1 "Unable to find file: %s\n" filename))
 
 let read_file (filename:string) =
   if Options.debug_any()
@@ -59,7 +60,7 @@ let read_file (filename:string) =
 let check_extension fn =
     if not (Util.ends_with fn ".fst")
     && not (Util.ends_with fn ".fsti")
-    then raise (FStar.Syntax.Syntax.Err("Unrecognized file extension: " ^fn))
+    then raise (Err("Unrecognized file extension: " ^fn))
 
 let parse fn =
   Parser.Util.warningHandler := (function
@@ -112,8 +113,7 @@ let parse fn =
        let non_polymorphic_nil : list<string * FStar.Range.range> = [] in
        Inl (frags, non_polymorphic_nil)
   with
-    | Absyn.Syntax.Error(msg, r)
-    | Syntax.Syntax.Error(msg, r) ->
+    | Error(msg, r) ->
       Inr (msg, r)
     | e ->
       let p0 =

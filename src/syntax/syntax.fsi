@@ -24,10 +24,6 @@ open FStar.Util
 open FStar.Range
 open FStar.Ident
 
-exception Err of string
-exception Error of string * Range.range
-exception Warning of string * Range.range
-
 // JP: all these types are defined twice and every change has to be performed
 // twice (because of the .fs). TODO: move the type definitions into a standalone
 // fs without fsi, and move the helpers into syntaxhelpers.fs / syntaxhelpers.fsi

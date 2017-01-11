@@ -19,6 +19,7 @@
 module FStar.Tc.Normalize
 
 open FStar
+open FStar.Errors
 open FStar.Tc
 open FStar.Absyn
 open FStar.Absyn.Syntax

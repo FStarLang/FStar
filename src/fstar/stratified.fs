@@ -18,6 +18,7 @@
 //Top-level invocations into the stratified type-checker FStar.Tc
 module FStar.Stratified
 open FStar
+open FStar.Errors
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
@@ -83,7 +84,7 @@ let batch_mode_tc_no_prims dsenv env filenames =
                                 let ms, dsenv, env = tc_one_file dsenv env f in
                                 all_mods@ms, dsenv, env)
                                 ([], dsenv, env) in
-  if (Options.interactive()) && FStar.Tc.Errors.get_err_count () = 0
+  if (Options.interactive()) && FStar.Errors.get_err_count () = 0
   then env.solver.refresh()
   else env.solver.finish();
   all_mods, dsenv, env
@@ -108,7 +109,7 @@ let tc_one_fragment curmod dsenv env frag =
       let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
       let env = match curmod with
           | None -> env
-          | Some _ -> raise (Absyn.Syntax.Err("Interactive mode only supports a single module at the top-level")) in
+          | Some _ -> raise (Err("Interactive mode only supports a single module at the top-level")) in
       let modul, env = Tc.tc_partial_modul env modul in
       Some (Some modul, dsenv, env)
 
@@ -121,11 +122,11 @@ let tc_one_fragment curmod dsenv env frag =
             Some (Some modul, dsenv, env) 
 
     with
-      | Syntax.Error(msg, r) ->
-          Tc.Errors.add_errors env [(msg,r)];
+      | FStar.Errors.Error(msg, r) ->
+          FStar.Errors.add_errors [(msg,r)];
           None
-      | Syntax.Err msg ->
-          Tc.Errors.add_errors env [(msg,Range.dummyRange)];
+      | FStar.Errors.Err msg ->
+          FStar.Errors.add_errors [(msg,FStar.Tc.Env.get_range env)];
           None
       | e -> raise e
 
@@ -167,12 +168,12 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
     let check_frag (dsenv, env) curmod frag =  
         match tc_one_fragment curmod dsenv env frag with
             | Some (m, dsenv, env) -> 
-              Some (m, (dsenv, env), FStar.Tc.Errors.get_err_count())
+              Some (m, (dsenv, env), FStar.Errors.get_err_count())
             | _ -> None in
 
     let report_fail () = 
-        Tc.Errors.report_all() |> ignore;
-        Tc.Errors.num_errs := 0 in
+        FStar.Errors.report_all() |> ignore;
+        FStar.Errors.num_errs := 0 in
 
     let tc_prims_interactive () =
       let _, dsenv, env = tc_prims () in

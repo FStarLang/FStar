@@ -18,6 +18,7 @@ module FStar.Syntax.MutRecTy
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Util
+open FStar.Errors
 open FStar.Syntax.InstFV
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst

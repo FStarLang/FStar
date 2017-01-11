@@ -17,6 +17,7 @@
 module FStar.Parser.Desugar
 
 open FStar
+open FStar.Errors
 open FStar.Parser
 open FStar.Parser.AST
 open FStar.Parser.DesugarEnv

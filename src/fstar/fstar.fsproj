@@ -76,6 +76,11 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\desugar\desugar.fsproj">
+      <Name>desugar</Name>
+      <Project>{2d83dee1-5633-47dd-8493-2f94721c151e}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\extraction\extraction.fsproj">
       <Name>extraction</Name>
       <Project>{55398b56-03cf-4e11-adb0-a4274b7dbb35}</Project>
@@ -99,6 +104,11 @@
     <ProjectReference Include="..\tosmt\tosmt.fsproj">
       <Name>tosmt</Name>
       <Project>{670da3f6-7e41-4c1d-ab17-1f59e0317f52}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\tosyntax\tosyntax.fsproj">
+      <Name>tosyntax</Name>
+      <Project>{966645a6-4a32-4652-94fe-0a3e3d15519a}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\typechecker\typechecker.fsproj">

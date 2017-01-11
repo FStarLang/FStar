@@ -18,6 +18,7 @@
 //Top-level invocations into the universal type-checker FStar.TypeChecker
 module FStar.Universal
 open FStar
+open FStar.Errors
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
@@ -89,7 +90,7 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
       let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
       let env = match curmod with
           | None -> env
-          | Some _ -> raise (Syntax.Err("Interactive mode only supports a single module at the top-level")) in
+          | Some _ -> raise (Err("Interactive mode only supports a single module at the top-level")) in
       let modul, _, env = Tc.tc_partial_modul env modul in
       Some (Some modul, dsenv, env)
 
@@ -102,10 +103,10 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
             Some (Some modul, dsenv, env)
 
     with
-      | Syntax.Error(msg, r) when not ((Options.trace_error())) ->
+      | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
           TypeChecker.Errors.add_errors env [(msg,r)];
           None
-      | Syntax.Err msg when not ((Options.trace_error())) ->
+      | FStar.Errors.Err msg when not ((Options.trace_error())) ->
           TypeChecker.Errors.add_errors env [(msg,Range.dummyRange)];
           None
       | e when not ((Options.trace_error())) -> raise e
@@ -233,7 +234,8 @@ let rec tc_fold_interleave (acc:list<(modul * int)> * uenv) (remaining:list<stri
 (***********************************************************************)
 let batch_mode_tc_no_prims dsenv env filenames =
   let all_mods, (dsenv, env) = tc_fold_interleave ([], (dsenv, env)) filenames in
-  if (Options.interactive()) && FStar.TypeChecker.Errors.get_err_count () = 0
+  if Options.interactive() 
+  && FStar.Errors.get_err_count () = 0
   then env.solver.refresh()
   else env.solver.finish();
   all_mods, dsenv, env
@@ -306,20 +308,20 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
         try
             match tc_one_fragment curmod dsenv env text with
                 | Some (m, dsenv, env) ->
-                  Some (m, (dsenv, env), FStar.TypeChecker.Errors.get_err_count())
+                  Some (m, (dsenv, env), FStar.Errors.get_err_count())
                 | _ -> None
         with
-            | FStar.Syntax.Syntax.Error(msg, r) when not ((Options.trace_error())) ->
+            | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
               FStar.TypeChecker.Errors.add_errors env [(msg, r)];
               None
 
-            | FStar.Syntax.Syntax.Err msg when not ((Options.trace_error())) ->
+            | FStar.Errors.Err msg when not ((Options.trace_error())) ->
               FStar.TypeChecker.Errors.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
               None in
 
     let report_fail () =
-        TypeChecker.Errors.report_all() |> ignore;
-        TypeChecker.Errors.num_errs := 0 in
+        FStar.Errors.report_all() |> ignore;
+        FStar.Errors.num_errs := 0 in
 
     { pop = pop;
       push = push;

@@ -29,10 +29,9 @@ open FStar.Parser.Parse
 open FStar.Util
 open FStar.Const
 open FStar.String
-
-open FStar.Absyn
-open FStar.Absyn.Syntax
 open FStar.Ident
+open FStar.Errors
+module Const = FStar.Syntax.Const
 
 (* In case the user passed [--verify_all], we record every single module name we
  * found in the list of modules to be verified.

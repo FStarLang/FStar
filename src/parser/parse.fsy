@@ -6,9 +6,10 @@ open FStar.List
 open FStar.Util
 open FStar.Range
 open FStar.Options
-open FStar.Absyn.Syntax
-open FStar.Absyn.Const
-open FStar.Absyn.Util
+open FStar.Errors
+open FStar.Syntax.Syntax
+open FStar.Syntax.Const
+open FStar.Syntax.Util
 open FStar.Parser.AST
 open FStar.Parser.Util
 open FStar.Const

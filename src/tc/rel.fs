@@ -22,6 +22,7 @@
 module FStar.Tc.Rel
 
 open FStar
+open FStar.Errors
 open FStar.Options
 open FStar.Tc
 open FStar.Absyn
@@ -2593,6 +2594,6 @@ let try_discharge_guard env (g:guard_t) =
         begin match check_trivial vc with
             | Trivial -> ()
             | NonTrivial vc ->
-                if Tc.Env.debug env <| Options.Other "Rel" then Tc.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
+                if Tc.Env.debug env <| Options.Other "Rel" then FStar.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
                 env.solver.solve env vc
         end

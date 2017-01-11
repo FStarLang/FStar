@@ -19,6 +19,7 @@
 module FStar.TypeChecker.Util
 open FStar
 open FStar.Util
+open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
 open FStar.TypeChecker.Env

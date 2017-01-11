@@ -17,6 +17,7 @@
 module FStar.Tc.Tc
 
 open FStar
+open FStar.Errors
 open FStar.Tc
 open FStar.Tc.Env
 open FStar.Util
@@ -1119,7 +1120,7 @@ and tc_exp env e : exp * lcomp * guard_t =
                  if ok
                  then e2, c1
                  else (if (Options.warn_top_level_effects())
-                       then Tc.Errors.warn (Tc.Env.get_range env) Tc.Errors.top_level_effect;
+                       then FStar.Errors.warn (Tc.Env.get_range env) Tc.Errors.top_level_effect;
                        mk_Exp_meta(Meta_desugared(e2, Masked_effect)), c1)
             else (let g = Rel.conj_guard g1 guard_f in
                   Tc.Util.discharge_guard env g;  //still need to solve remaining unification/subtyping constraints
@@ -1620,7 +1621,7 @@ and tc_decl env se deserialized = match se with
         | Inl a -> 
           begin 
               if (Options.warn_cardinality())
-              then Tc.Errors.warn r (Tc.Errors.cardinality_constraint_violated lid a)
+              then FStar.Errors.warn r (Tc.Errors.cardinality_constraint_violated lid a)
               else if (Options.check_cardinality())
               then raise (Error(Tc.Errors.cardinality_constraint_violated lid a, r))
           end;

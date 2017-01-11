@@ -236,7 +236,7 @@ let doZ3Exe' (input:string) (z3proc:proc) =
       | "unsat"::tl   -> UNSAT   (fst (unsat_core_and_lblnegs tl true))
       | "killed"::tl  -> bg_z3_proc.restart(); KILLED
       | hd::tl ->
-        TypeChecker.Errors.warn Range.dummyRange (BU.format2 "%s: Unexpected output from Z3: %s\n" (query_logging.get_module_name()) hd);
+        FStar.Errors.warn Range.dummyRange (BU.format2 "%s: Unexpected output from Z3: %s\n" (query_logging.get_module_name()) hd);
         result tl
       | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n"
                             (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (BU.trim_string l)) lines)) in
@@ -352,7 +352,7 @@ let finish () =
         let n, m = with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue)  in
         //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
         if n+m=0
-        then TypeChecker.Errors.report_all() |> ignore
+        then FStar.Errors.report_all() |> ignore
         else let _ = BU.sleep(500) in
              aux() in
     aux()

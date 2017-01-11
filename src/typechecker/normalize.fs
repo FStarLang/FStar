@@ -21,6 +21,7 @@ open FStar
 open FStar.Util
 open FStar.String
 open FStar.Const
+open FStar.Errors
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst

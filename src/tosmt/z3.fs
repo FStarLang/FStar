@@ -279,7 +279,7 @@ let finish () =
         let n, m = with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue)  in
         //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
         if n+m=0
-        then Tc.Errors.report_all() |> ignore
+        then FStar.Errors.report_all() |> ignore
         else let _ = Util.sleep(500) in
              aux() in
     aux()

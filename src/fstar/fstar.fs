@@ -49,10 +49,7 @@ let finished_message fmods errs =
 
 (* printing total error count *)
 let report_errors fmods =
-  let errs =
-      if (Options.universes())
-      then FStar.TypeChecker.Errors.get_err_count()
-      else FStar.Tc.Errors.get_err_count () in
+  let errs = FStar.Errors.get_err_count() in
   if errs > 0 then begin
     finished_message fmods errs;
     exit 1
@@ -159,14 +156,13 @@ let main () =
     exit 0
   with | e ->
     (begin 
-        if F_Util.handleable e then F_Util.handle_err false () e;
-        if FStar.TypeChecker.Errors.handleable e then FStar.TypeChecker.Errors.handle_err false e;
+        if FStar.Errors.handleable e then FStar.Errors.handle_err false e;
         if (Options.trace_error()) then
           Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
-        else if not (F_Util.handleable e || FStar.TypeChecker.Errors.handleable e) then
+        else if not (FStar.Errors.handleable e) then
           Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
      end; 
      cleanup();
-     FStar.TypeChecker.Errors.report_all () |> ignore;
+     FStar.Errors.report_all () |> ignore;
      report_errors [];
      exit 1)

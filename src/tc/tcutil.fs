@@ -19,6 +19,7 @@
 module FStar.Tc.Util
 
 open FStar
+open FStar.Errors
 open FStar.Tc
 open FStar.Absyn
 open FStar.Absyn.Util
@@ -38,8 +39,8 @@ type lcomp_with_binder = option<Env.binding> * lcomp
 (**************************************************************************************)
 let try_solve env f = env.solver.solve env f
 let report env errs =
-    Tc.Errors.report (Tc.Env.get_range env)
-                     (Tc.Errors.failed_to_prove_specification errs)
+    FStar.Errors.report (Tc.Env.get_range env)
+                        (Tc.Errors.failed_to_prove_specification errs)
 
 let discharge_guard env (g:guard_t) = Rel.try_discharge_guard env g
 
@@ -1085,7 +1086,7 @@ let check_uvars r t =
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
     Options.set_option "print_implicits" (Options.Bool true);
-    Tc.Errors.report r
+    FStar.Errors.report r
       (format2 "Unconstrained unification variables %s in type signature %s; \
        please add an annotation" union (Print.typ_to_string t));
     Options.pop()

@@ -20,6 +20,7 @@ module FStar.Parser.Interleave
 
 open FStar
 open FStar.Ident
+open FStar.Errors
 open FStar.Syntax.Syntax
 open FStar.Parser.AST
 

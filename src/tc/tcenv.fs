@@ -18,6 +18,7 @@
 module FStar.Tc.Env
 
 open FStar
+open FStar.Errors
 open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Absyn.Util

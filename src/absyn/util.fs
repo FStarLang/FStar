@@ -25,27 +25,6 @@ open FStar.Absyn.Syntax
 open FStar.Profiling
 open FStar.Ident
 
-let handle_err warning ret e =
-  match e with
-    | Failure s ->
-        fprint stderr "Fatal: %s" [s]
-    | Error(msg, r) ->
-        fprint stderr "%s : %s\n%s\n" [Range.string_of_range r; (if warning then "Warning" else "Error"); msg];
-        ret
-    | NYI s ->
-        fprint stderr "Feature not yet implemented: %s" [s];
-        ret
-    | Err s ->
-        fprint stderr "Error: %s" [s]
-    | _ -> raise e
-
-let handleable = function
-  | Failure _
-  | Error _
-  | NYI _
-  | Err _ -> true
-  | _ -> false
-
 
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)

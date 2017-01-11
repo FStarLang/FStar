@@ -25,10 +25,6 @@ open FStar.Range
 open FStar.Ident
 open FStar.Const
 
-exception Err of string
-exception Error of string * Range.range
-exception Warning of string * Range.range
-
 (* Objects with metadata *)
 type withinfo_t<'a,'t> = {
   v:  'a;

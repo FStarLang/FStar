@@ -21,6 +21,7 @@ open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.Util
 open FStar.Ident
+open FStar.Errors
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
