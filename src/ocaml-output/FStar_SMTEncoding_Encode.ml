@@ -2224,7 +2224,7 @@ let _91_1584 = (encode_formula rhs env)
 in (match (_91_1584) with
 | (l1, decls1) -> begin
 (match (l1.FStar_SMTEncoding_Term.tm) with
-| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.True, _91_1587) -> begin
+| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.TrueOp, _91_1587) -> begin
 ((l1), (decls1))
 end
 | _91_1591 -> begin
@@ -5616,7 +5616,7 @@ in (match (_91_3410) with
 
 let _91_3411 = (pop "query")
 in (match (f.FStar_SMTEncoding_Term.tm) with
-| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.True, _91_3415) -> begin
+| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.TrueOp, _91_3415) -> begin
 true
 end
 | _91_3419 -> begin

@@ -171,7 +171,7 @@ let bg_z3_proc =
       if !the_z3proc = None then
         the_z3proc := Some (new_proc ());
       must (!the_z3proc) in
-    let x : list unit = [] in
+    let x : list<unit> = [] in
     let grab () = BU.monitor_enter x; z3proc () in
     let release () = BU.monitor_exit(x) in
     let refresh () =

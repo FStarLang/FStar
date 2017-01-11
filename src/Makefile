@@ -180,6 +180,9 @@ U_STDLIB=$(addprefix $(ULIB)/, FStar.FunctionalExtensionality.fst FStar.Proposit
 			       FStar.Char.fsti FStar.Float.fsti FStar.Mul.fst FStar.Int.fst $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti)
 U_BOOT_BASIC_FSTI=$(addprefix boot_fstis/FStar., string.fsti list.fst util.fst platform.fsti bytes.fst range.fsti version.fsti getopt.fsti unionfind.fsti Pprint.fsti)
 U_ALL_INTERFACES=$(U_STDLIB) $(U_BOOT_BASIC_FSTI)
+# U_ALL_SOURCES=$(addprefix boot_fsts/, \
+# 	FStar.Ident.fst FStar.SMTEncoding.Encode.fst) # FStar.SMTEncoding.Solver.fst)
+
 U_ALL_SOURCES=$(addprefix boot_fsts/, \
 	FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst \
 	FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst FStar.Syntax.Free.fst FStar.Syntax.MutRecTy.fst \

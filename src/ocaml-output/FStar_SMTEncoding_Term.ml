@@ -147,8 +147,8 @@ end))
 
 
 type op =
-| True
-| False
+| TrueOp
+| FalseOp
 | Not
 | And
 | Or
@@ -169,8 +169,8 @@ type op =
 | Var of Prims.string
 
 
-let is_True = (fun _discr_ -> (match (_discr_) with
-| True (_) -> begin
+let is_TrueOp = (fun _discr_ -> (match (_discr_) with
+| TrueOp (_) -> begin
 true
 end
 | _ -> begin
@@ -178,8 +178,8 @@ false
 end))
 
 
-let is_False = (fun _discr_ -> (match (_discr_) with
-| False (_) -> begin
+let is_FalseOp = (fun _discr_ -> (match (_discr_) with
+| FalseOp (_) -> begin
 true
 end
 | _ -> begin
@@ -785,10 +785,10 @@ end))
 
 
 let op_to_string : op  ->  Prims.string = (fun _86_4 -> (match (_86_4) with
-| True -> begin
+| TrueOp -> begin
 "true"
 end
-| False -> begin
+| FalseOp -> begin
 "false"
 end
 | Not -> begin
@@ -914,10 +914,10 @@ let mk : term'  ->  FStar_Range.range  ->  term = (fun t r -> (let _185_364 = (F
 in {tm = t; freevars = _185_364; rng = r}))
 
 
-let mkTrue : FStar_Range.range  ->  term = (fun r -> (mk (App (((True), ([])))) r))
+let mkTrue : FStar_Range.range  ->  term = (fun r -> (mk (App (((TrueOp), ([])))) r))
 
 
-let mkFalse : FStar_Range.range  ->  term = (fun r -> (mk (App (((False), ([])))) r))
+let mkFalse : FStar_Range.range  ->  term = (fun r -> (mk (App (((FalseOp), ([])))) r))
 
 
 let mkInteger : Prims.string  ->  FStar_Range.range  ->  term = (fun i r -> (let _185_374 = (let _185_373 = (FStar_Util.ensure_decimal i)
@@ -945,10 +945,10 @@ end))
 
 
 let mkNot : term  ->  FStar_Range.range  ->  term = (fun t r -> (match (t.tm) with
-| App (True, _86_237) -> begin
+| App (TrueOp, _86_237) -> begin
 (mkFalse r)
 end
-| App (False, _86_242) -> begin
+| App (FalseOp, _86_242) -> begin
 (mkTrue r)
 end
 | _86_246 -> begin
@@ -959,13 +959,13 @@ end))
 let mkAnd : (term * term)  ->  FStar_Range.range  ->  term = (fun _86_249 r -> (match (_86_249) with
 | (t1, t2) -> begin
 (match (((t1.tm), (t2.tm))) with
-| (App (True, _86_253), _86_257) -> begin
+| (App (TrueOp, _86_253), _86_257) -> begin
 t2
 end
-| (_86_260, App (True, _86_263)) -> begin
+| (_86_260, App (TrueOp, _86_263)) -> begin
 t1
 end
-| ((App (False, _), _)) | ((_, App (False, _))) -> begin
+| ((App (FalseOp, _), _)) | ((_, App (FalseOp, _))) -> begin
 (mkFalse r)
 end
 | (App (And, ts1), App (And, ts2)) -> begin
@@ -986,13 +986,13 @@ end))
 let mkOr : (term * term)  ->  FStar_Range.range  ->  term = (fun _86_310 r -> (match (_86_310) with
 | (t1, t2) -> begin
 (match (((t1.tm), (t2.tm))) with
-| ((App (True, _), _)) | ((_, App (True, _))) -> begin
+| ((App (TrueOp, _), _)) | ((_, App (TrueOp, _))) -> begin
 (mkTrue r)
 end
-| (App (False, _86_330), _86_334) -> begin
+| (App (FalseOp, _86_330), _86_334) -> begin
 t2
 end
-| (_86_337, App (False, _86_340)) -> begin
+| (_86_337, App (FalseOp, _86_340)) -> begin
 t1
 end
 | (App (Or, ts1), App (Or, ts2)) -> begin
@@ -1013,10 +1013,10 @@ end))
 let mkImp : (term * term)  ->  FStar_Range.range  ->  term = (fun _86_371 r -> (match (_86_371) with
 | (t1, t2) -> begin
 (match (((t1.tm), (t2.tm))) with
-| ((_, App (True, _))) | ((App (False, _), _)) -> begin
+| ((_, App (TrueOp, _))) | ((App (FalseOp, _), _)) -> begin
 (mkTrue r)
 end
-| (App (True, _86_391), _86_395) -> begin
+| (App (TrueOp, _86_391), _86_395) -> begin
 t2
 end
 | (_86_398, App (Imp, (t1')::(t2')::[])) -> begin
@@ -1076,15 +1076,15 @@ let mkMod : (term * term)  ->  FStar_Range.range  ->  term = (mk_bin_op Mod)
 let mkITE : (term * term * term)  ->  FStar_Range.range  ->  term = (fun _86_418 r -> (match (_86_418) with
 | (t1, t2, t3) -> begin
 (match (((t2.tm), (t3.tm))) with
-| (App (True, _86_422), App (True, _86_427)) -> begin
+| (App (TrueOp, _86_422), App (TrueOp, _86_427)) -> begin
 (mkTrue r)
 end
-| (App (True, _86_433), _86_437) -> begin
+| (App (TrueOp, _86_433), _86_437) -> begin
 (let _185_452 = (let _185_451 = (mkNot t1 t1.rng)
 in ((_185_451), (t3)))
 in (mkImp _185_452 r))
 end
-| (_86_440, App (True, _86_443)) -> begin
+| (_86_440, App (TrueOp, _86_443)) -> begin
 (mkImp ((t1), (t2)) r)
 end
 | (_86_448, _86_450) -> begin
@@ -1108,7 +1108,7 @@ if ((FStar_List.length vars) = (Prims.parse_int "0")) then begin
 body
 end else begin
 (match (body.tm) with
-| App (True, _86_469) -> begin
+| App (TrueOp, _86_469) -> begin
 body
 end
 | _86_473 -> begin

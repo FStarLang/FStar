@@ -1025,7 +1025,12 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             then lbs |> List.map (fun lb ->
                     let tcenv = TcEnv.set_current_module g.tcenv
                                 (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
-                    let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses;
+                    debug g (fun () -> 
+                                Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
+                    let lbdef = 
+                        if Options.ml_ish()
+                        then lb.lbdef
+                        else N.normalize [N.AllowUnboundUniverses; N.EraseUniverses;
                                              N.Inlining; N.Eager_unfolding;
                                              N.Exclude N.Zeta; N.PureSubtermsWithinComputations; N.Primops]
                                 tcenv lb.lbdef in

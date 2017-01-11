@@ -646,7 +646,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
         log cfg  (fun () -> BU.print3 ">>> %s\nNorm %s with top of the stack %s \n"
                                         (Print.tag_of_term t)
                                         (Print.term_to_string t)
-                                        (stack_to_string (fst <| first_N 4 stack)));
+                                        (stack_to_string stack));
         match t.n with
           | Tm_delayed _ ->
             failwith "Impossible"

@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--explicit_deps test.fst --print_universes --lax</StartArguments>
+    <StartArguments>--lax FStar.Util.fst FStar.SMTEncoding.Encode.fst --eager_inference --MLish --codegen OCaml --odir out --debug FStar.SMTEncoding.Encode --debug_level Extraction</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>d:\workspace\test</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\test\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

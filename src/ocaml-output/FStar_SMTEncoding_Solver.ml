@@ -584,7 +584,7 @@ in (FStar_Util.format1 "Ending query at %s" _191_219))
 in (FStar_SMTEncoding_Encode.pop _191_220))
 end))
 in (match (qry) with
-| FStar_SMTEncoding_Term.Assume ({FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.False, _92_286); FStar_SMTEncoding_Term.freevars = _92_283; FStar_SMTEncoding_Term.rng = _92_281}, _92_291, _92_293) -> begin
+| FStar_SMTEncoding_Term.Assume ({FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.FalseOp, _92_286); FStar_SMTEncoding_Term.freevars = _92_283; FStar_SMTEncoding_Term.rng = _92_281}, _92_291, _92_293) -> begin
 (
 
 let _92_296 = (pop ())
