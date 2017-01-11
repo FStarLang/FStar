@@ -89,8 +89,9 @@ private val lemma_aead_entries_are_same_after_prf_mac
   (x:PRF.domain_mac i)
   (h0 h1:mem)
   (mac:CMA.state (i, x.iv)) : Lemma
-  (requires (h0 `HS.contains` (st_ilog aead_st) /\            //initial heap contains the aead log
-             prf_mac_ensures i aead_st.prf k_0 x h0 mac h1))   //h0 and h1 are related by prf_mac_ensures
+  (requires
+     (h0 `HS.contains` (st_ilog aead_st) /\            //initial heap contains the aead log
+      prf_mac_ensures i aead_st.prf k_0 x h0 mac h1))   //h0 and h1 are related by prf_mac_ensures
   (ensures  (let entries_0 = HS.sel #(aead_entries i) h0 aead_st.log in
              let entries_1 = HS.sel #(aead_entries i) h1 aead_st.log in
 	     entries_0 == entries_1))  //aead entries are same in h0 and h1

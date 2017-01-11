@@ -450,11 +450,13 @@ and p_typeDeclPrefix lid bs typ_opt cont =
         in surround 2 1 (p_ident lid) binders_doc (cont ())
 
 and p_recordFieldDecl (lid, t, doc_opt) =
+    (* TODO : Should we allow tagging individual field with a comment ? *)
     group (optional p_fsdoc doc_opt ^^ p_lident lid ^^ colon ^^ p_typ t)
 
 and p_constructorDecl (uid, t_opt, doc_opt, use_of) =
     let sep = if use_of then str "of" else colon in
     let uid_doc = p_uident uid in
+    (* TODO : Should we allow tagging individual constructor with a comment ? *)
     optional p_fsdoc doc_opt ^^ default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ t) t_opt
 
 and p_letbinding (pat, e) =
@@ -834,7 +836,9 @@ and p_tmConjunction e = match (unparen e).tm with
       infix0 (str "/\\") (p_tmConjunction e1) (p_tmTuple e2)
   | _ -> p_tmTuple e
 
-and p_tmTuple e = match (unparen e).tm with
+and p_tmTuple e = with_comment p_tmTuple' e e.range
+
+and p_tmTuple' e = match (unparen e).tm with
   | Construct (lid, args) when is_tuple_constructor lid ->
       separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args
   | _ -> p_tmEq e
@@ -916,7 +920,7 @@ and p_appTerm e = match (unparen e).tm with
       | [arg] -> group (p_quident lid ^/^ p_argTerm arg)
       | hd::tl ->
           group (
-              group (p_quident lid ^/^ p_argTerm hd) ^^
+              group (prefix2 (p_quident lid) (p_argTerm hd)) ^^
                     jump2 (separate_map break1 p_argTerm tl))
     end
   | _ ->
@@ -1110,7 +1114,11 @@ let modul_with_comments_to_document (m:modul) comments =
     let max x y = if x < y then y else x in
     let rec process_preceding_comments doc last_line end_pos n = function
       | (comment,range) :: comments when pos_geq end_pos (start_of_range range) ->
-        let l = max 1 (line_of_pos (start_of_range range) - last_line) in
+        let l =
+          (* Annoying special case fo the first comment of the file if any *)
+          let min = if last_line = 1 then 0 else 1 in
+          max min (line_of_pos (start_of_range range) - last_line)
+        in
         let doc = doc ^^ repeat l hardline ^^ str comment in
         process_preceding_comments doc (line_of_pos (end_of_range range))
           end_pos 1 comments
