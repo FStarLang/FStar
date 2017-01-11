@@ -83,6 +83,7 @@ let at_least_is_stable (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grow
   : Lemma (ensures stable_on_t r (at_least n x r))
   = ()
 
+(** extending a stored sequence, witnessing its new entry for convenience. *)
 let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
   : ST unit
        (requires (fun h -> True))
@@ -103,7 +104,7 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
     witness r (at_least n x r)
 
 ////////////////////////////////////////////////////////////////////////////////
-//Monotone sequences with invariants
+//Monotone sequences with a (stateless) invariant of the whole sequence
 ////////////////////////////////////////////////////////////////////////////////
 
 let i_seq (r:rid) (a:Type) (p:seq a -> Type) = m_rref r (s:seq a{p s}) grows
@@ -166,11 +167,11 @@ let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:
 ////////////////////////////////////////////////////////////////////////////////
 //Testing invariant sequences
 ////////////////////////////////////////////////////////////////////////////////
-let invariant (s:seq nat) = 
+private let invariant (s:seq nat) = 
   forall (i:nat) (j:nat). i < Seq.length s /\ j < Seq.length s /\ i<>j 
 		 ==> Seq.index s i <> Seq.index s j
   
-val test0: r:rid -> a:m_rref r (seq nat) grows -> k:nat -> ST unit
+private val test0: r:rid -> a:m_rref r (seq nat) grows -> k:nat -> ST unit
   (requires (fun h -> k < Seq.length (m_sel h a)))
   (ensures (fun h0 result h1 -> True))
 let test0 r a k =
@@ -181,7 +182,7 @@ let test0 r a k =
     SeqP.contains_intro s k (Seq.index s k) in
   MR.witness a (at_least k (Seq.index (m_sel h0 a) k) a)
   
-val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
+private val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
   (requires (fun h -> k < Seq.length (i_sel h a)))
   (ensures (fun h0 result h1 -> True))
 let itest r a k =
@@ -189,7 +190,7 @@ let itest r a k =
   i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
   MR.witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
 
-let test_alloc (#a:Type0) (p:seq a -> Type) (r:rid) (init:seq a{p init})
+private let test_alloc (#a:Type0) (p:seq a -> Type) (r:rid) (init:seq a{p init})
                : ST unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True)) =
   let is = alloc_mref_iseq p r init in
   let h = get () in
@@ -260,7 +261,9 @@ let rec map_index f s i =
   then ()
   else let prefix, last = un_snoc s in
        map_index f prefix i
-       
+
+//17-01-05 all the stuff above should go to SeqProperties! 
+
 let map_grows (f:'a -> Tot 'b)
 	      (s1:seq 'a) (s3:seq 'a) (s2:seq 'a)
   : Lemma (seq_extension s1 s2 s3
@@ -274,6 +277,7 @@ let map_prefix (#a:Type) (#b:Type) (#i:rid)
 	       (h:mem) =
   grows bs (map f (MR.m_sel h r))
 
+//17-01-05  this applies to log_t's defined below. 
 let map_prefix_stable (#a:Type) (#b:Type) (#i:rid) (r:m_rref i (seq a) grows) (f:a -> Tot b) (bs:seq b)
   : Lemma (MR.stable_on_t r (map_prefix r f bs))
   = let aux : h0:mem -> h1:mem -> Lemma
@@ -306,6 +310,7 @@ let map_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 //Collecting monotone sequences
 ////////////////////////////////////////////////////////////////////////////////
 
+(** yields the concatenation of all sequences returned by f applied to the sequence elements *)
 val collect: ('a -> Tot (seq 'b)) -> s:seq 'a -> Tot (seq 'b)
     (decreases (Seq.length s))
 let rec collect f s =
@@ -339,6 +344,8 @@ let rec collect_append f s_1 s_2 =
   	cut (Seq.equal ((m_s_1 @ m_p_2) @ flast)
   		       (m_s_1 @ (m_p_2 @ flast)));                 //              = map f s1 @ (snoc (map f p) (f last))
         collect_snoc f prefix_2 last)                                       //              = map f s1 @ map f (snoc p last)
+
+//17-01-05 all the stuff above should go to SeqProperties! 
 
 #reset-options "--z3rlimit 5"
 
@@ -403,6 +410,7 @@ let collect_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 ////////////////////////////////////////////////////////////////////////////////
 //Monotonic sequence numbers, bounded by the length of a log
 ////////////////////////////////////////////////////////////////////////////////
+//17-01-05 the simpler variant, with an historic name; consider using uniform names below. 
 type log_t (i:rid) (a:Type) = m_rref i (seq a) grows
 
 let increases (x:int) (y:int) = b2t (x <= y)
@@ -437,7 +445,7 @@ let new_seqn (#l:rid) (#a:Type) (#max:nat)
        (requires (fun h ->
 	   init <= max /\
 	   init <= Seq.length (m_sel h log)))
-       (ensures (fun h0 c h1 ->
+       (ensures (fun h0 c h1 -> //17-01-05 unify with ralloc_post? 
 		   modifies_one i h0 h1 /\
 		   modifies_rref i TSet.empty h0.h h1.h /\
 		   m_fresh c h0 h1 /\
@@ -475,7 +483,7 @@ let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:s
   = let n = m_read ctr in
     testify (at_most_log_len n log)
 
-let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
+private let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
          (r:seqn i log 8) (h:mem)
   = //assert (m_sel2 h r = HyperHeap.sel h (as_rref r));
     let r_ashsref = MR.as_hsref r in
