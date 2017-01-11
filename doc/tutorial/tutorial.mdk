@@ -127,7 +127,7 @@ resources freely available on the web, e.g., [TryF#],
 
 ~KK
 Without any experience in ML or Ocaml my experience has been that the later
-exercises are very hard to solve as some of the notation is not obvious. Even
+exercises are very hard to solve, as some of the notation was not obvious to me. Even
 knowing the correct solution, I had to either infer syntax from the exercise
 code (which is fine) or go by trial and error (which was frustrating at times).
 I will leave comments on the exercises detailing what kind of notation I was (or
@@ -170,12 +170,12 @@ libraries. Details on how to do this for Emacs can be found in the wiki.
 
 ~KK
 Both Atom and Vim support seems to be either broken or discontinued (or both),
-so we might not want to list them as viable options for the audience of this
+so it might be misleading to list them as viable options for the audience of this
 tutorial. Also, the code available on the tutorial page and on github differs
 quite a bit (as does the F\* version I guess). In my case, this lead to some
-unexpected errors when copying code from the online-editor to Emacs. When
-someone is using Emacs, we might want to point them to the libraries they have
-to include (only where necessary).
+unexpected errors when copying code from the online-editor to Emacs. It would be
+nice to have a pointer to the actual file and maybe the proper parameters to
+verify it, in case someone prefers emacs over the online editor.
 ~
 
 [Emacs]: https://github.com/FStarLang/fstar-mode.el
@@ -1212,10 +1212,10 @@ let rec append_mem l1 l2 a = match l1 with
 ~~
 ~
 
-~KK
+~KK 
 Implicit type parameters were not yet introduced, neither was the "hasEq"
-function or what it means. It is not visible in the code snippet above, but
-becomes visible when you load the code into the editor.
+function or what it means. The implicity type parameters are not visible in the
+code snippet above, but are present in the code that is loaded into the editor.
 ~
 
 ## To type intrinsically, or to prove lemmas?
@@ -1333,7 +1333,7 @@ This type is neither a subtype nor a supertype of the type F\*
 inferred on its own.
 
 ~KK
-At this point I could not really figure out how the type inferred by F\* and the
+I could not really figure out how the type inferred by F\* and the
 explicitly written type differ functionally. I suspect this is due to my limited
 knowledge of functional programming and has something to do with currying.
 Anyway, a small remark about this might make sense here.
@@ -5184,7 +5184,7 @@ values satisfy their type. A key property of a type system is that
 well-typed programs are always safe.
 
 ~KK
-Are modules and expressions the same?
+Are modules and expressions the same in this notation?
 ~
 [link]: http://link.com "link title"
 
@@ -5231,7 +5231,8 @@ it is executed, in this case we model $\epsilon(\cdot)$ as a function that depen
 and call it an advantage function.
 
 ~KK
-What is M at this point and what does the $\Downarrow$ notation mean?
+I dit not quite understand what M is at this point and what the $\Downarrow$
+notation means.
 ~
 
 *c) Keyed module:* Keyed modules export `gen`, `leak`, and `coerce`
@@ -5281,7 +5282,7 @@ we have `conf=false`, $P \cdot C \cdot A \approx_{\epsilon(A,P)}$ `conf=true`,
 $P \cdot C \cdot A$
 
 ~KK
-I was not able to parse this definition. Maybe we can add an verbatim
+I was not able to parse this definition. It might make sense to add a verbatim
 explaination of the formalism? 
 ~
 
@@ -5304,10 +5305,11 @@ decryption of such encryptions of zero indistinguishable from decryptions of the
 plaintext, the idealization of $C$ decrypts using a table lookup.
 
 ~KK
-Maybe elaborate more on the concept of idealization? Maybe reuse some of the
-material of the intro to the Record-Layer paper? For the encrypt-then-mac
-example in the next section, it might be nice to have an introduction to
-game-based proofs.
+At this point, maybe it would be possible to reuse some of the material of the
+intro to the Record-Layer paper? It might be helpful to provide the reader with
+a more high-lever overview over what we are actually trying to achieve here and
+how F\* is used in the process. For the encrypt-then-mac example in the next
+section, it might be nice to have an introduction to game-based proofs.
 ~
 
 Lets make the theory more concrete by looking at Encrypt-then-MAC 
@@ -5540,10 +5542,6 @@ In other words, the distinguishing advantage of an adversary $A$ between the con
 and the idealized implementation of Encrypt-then-MAC is bounded by $\epsilon_{indcpa}(B_1)+\epsilon_{ufcma}(B_2)$.
 
 To see this we reason about several game transformations.
-
-~KK
-Explain how game transformations work?
-~
 
 *Game 1* is the same as program (1), except that we swap the order of `MAC` and `Plain`⋅`CPA` with 
 the goal of clearly separating out a `MAC` adversary. This change does not affect the 
