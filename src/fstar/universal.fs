@@ -88,8 +88,18 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
     | Parser.Driver.Modul ast_modul ->
       let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
       let env = match curmod with
-          | None -> env
-          | Some _ -> raise (Syntax.Err("Interactive mode only supports a single module at the top-level")) in
+        | Some modul ->
+            (* Same-module is only allowed when editing a fst with an fsti,
+             * because we sent the interface as the first chunk. *)
+            if Parser.Dep.lowercase_module_name (List.hd (Options.file_list ())) <>
+              String.lowercase (string_of_lid modul.name)
+            then
+              raise (Syntax.Err("Interactive mode only supports a single module at the top-level"))
+            else
+              env
+        | None ->
+            env
+      in
       let modul, _, env = Tc.tc_partial_modul env modul in
       Some (Some modul, dsenv, env)
 

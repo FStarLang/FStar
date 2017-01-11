@@ -736,7 +736,7 @@ let push_bv env x =
 
 let push_top_level_rec_binding env (x:ident) dd = 
   let l = qualify env x in
-  if unique false true env l
+  if unique false true env l || Options.interactive ()
   then push_scope_mod env (Rec_binding (x,l,dd))
   else raise (Error ("Duplicate top-level names " ^ l.str, range_of_lid l))
 
@@ -759,8 +759,8 @@ let push_sigelt env s =
         | _ -> false, false in
       let lids = lids_of_sigelt s in
       begin match Util.find_map lids (fun l -> if not (unique any_val exclude_if env l) then Some l else None) with
-        | None -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
-        | Some l -> err l
+        | Some l when not (Options.interactive ()) -> err l
+        | _ -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
       end in
   let env = {env with scope_mods = !globals} in
   let env, lss = match s with
