@@ -50,31 +50,8 @@ let example1 : string =
 ml type of head is Prims.unit dir_type
 *)
 
-exception InvalidFormatString
-
-let rec parse_format (s:list char) : Ex (list dir) =
-  match s with
-  | [] -> []
-  | '%' :: c :: s' ->
-    let d = match c with
-            | '%' -> Lit '%'
-            | 'b' -> Arg Bool
-            | 'd' -> Arg Int
-            | 'c' -> Arg Char
-            | 's' -> Arg String
-            | _   -> raise InvalidFormatString
-    in d :: parse_format s'
-  | '%' :: [] -> raise InvalidFormatString
-  | c :: s' -> Lit c :: parse_format s'
-
-(* let parse_format_pure (s:list char) : option (list dir) = *)
-(*   match reify (parse_format s) with *)
-(* Effect Prims.EXN cannot be reified [3 times] *)
-
-(* Need some serious effect hiding to be able to call parse_format in
-   a type! Could try to use reify but only after we switch EXN to dm4free
-
-   Below we change parse_format to return option *)
+(* Below we write parse_format returning option 
+   (see SimplePrintfReify for more interesting version) *)
 
 let add_dir (d:dir) (ods : option (list dir)) : Tot (option (list dir)) =
   match ods with
