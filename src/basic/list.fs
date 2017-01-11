@@ -131,6 +131,7 @@ let mem x l = List.mem x l
 let contains x l = mem x l
 
 let existsb f l = List.exists f l
+let existsML f l = List.exists f l
 
 let rec find = (fun ( f  :  ' a  ->  Prims.bool ) ( l  :  ' a Prims.list ) -> (match (l) with
 | [] -> begin

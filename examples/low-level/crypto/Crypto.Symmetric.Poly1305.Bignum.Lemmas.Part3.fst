@@ -136,7 +136,7 @@ let lemma_2_26_p (a:nat) : Lemma (requires (a < pow2 26)) (ensures  (a < reveal 
     lemma_modulo_00 a (reveal prime)
 
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 2000 --initial_fuel 0 --max_fuel 0"
 
 private val lemma_freduce_degree2_0:
   a:nat -> b:nat -> n:nat{n >= 130} ->

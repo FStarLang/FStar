@@ -1,5 +1,5 @@
 [
-  "¬H\u0015™\u000by€Èÿ¡~¼T\r.¡",
+  "\u0001ÃpybPKa6\u0012=\u001fTzqo",
   [
     [
       "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_div_def",
@@ -630,27 +630,22 @@
         "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
         "equation_FStar.List.Tot.test_sort", "equation_FStar.Mul.op_Star",
         "equation_FStar.UInt.fits", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "equation_FStar.UInt128.n",
-        "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
-        "equation_FStar.UInt32.uint_to_t", "equation_Prims._assert",
-        "equation_Prims.nat", "equation_Prims.pos",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt32.t", "equation_FStar.UInt32.uint_to_t",
+        "equation_Prims._assert", "equation_Prims.nat", "equation_Prims.pos",
         "fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.p_1305",
         "function_token_typing_Crypto.Symmetric.Poly1305.Spec.taglen",
-        "function_token_typing_FStar.List.Tot.test_sort",
-        "function_token_typing_FStar.UInt128.n", "int_inversion",
-        "int_typing", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
-        "primitive_Prims.op_Subtraction",
+        "function_token_typing_FStar.List.Tot.test_sort", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_01682d6c4d9e6e3a8e6275843d8da889",
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Tm_refine_e9a76007e0467ae540411f3d3dbfc5be",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_FStar.Mul.op_Star", "typing_Prims.pow2", "unit_inversion"
+        "typing_Prims.pow2", "unit_inversion"
       ],
       0
     ],

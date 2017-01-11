@@ -4155,7 +4155,9 @@ end))))
 
 let desugar_partial_modul : FStar_Syntax_Syntax.modul Prims.option  ->  FStar_Parser_Env.env  ->  FStar_Parser_AST.modul  ->  (FStar_Parser_Env.env * FStar_Syntax_Syntax.modul) = (fun curmod env m -> (
 
-let m = if (FStar_Options.interactive_fsi ()) then begin
+let m = if ((FStar_Options.interactive ()) && ((let _166_1153 = (let _166_1152 = (FStar_Options.file_list ())
+in (FStar_List.hd _166_1152))
+in (FStar_Util.get_file_extension _166_1153)) = "fsti")) then begin
 (match (m) with
 | FStar_Parser_AST.Module (mname, decls) -> begin
 FStar_Parser_AST.Interface (((mname), (decls), (true)))
@@ -4186,17 +4188,17 @@ let env = (FStar_Parser_Env.finish_module_or_interface env modul)
 in (
 
 let _67_2982 = if (FStar_Options.dump_module modul.FStar_Syntax_Syntax.name.FStar_Ident.str) then begin
-(let _166_1156 = (FStar_Syntax_Print.modul_to_string modul)
-in (FStar_Util.print1 "%s\n" _166_1156))
+(let _166_1158 = (FStar_Syntax_Print.modul_to_string modul)
+in (FStar_Util.print1 "%s\n" _166_1158))
 end else begin
 ()
 end
-in (let _166_1157 = if pop_when_done then begin
+in (let _166_1159 = if pop_when_done then begin
 (FStar_Parser_Env.export_interface modul.FStar_Syntax_Syntax.name env)
 end else begin
 env
 end
-in ((_166_1157), (modul)))))
+in ((_166_1159), (modul)))))
 end)))
 
 

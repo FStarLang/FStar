@@ -1860,10 +1860,12 @@ let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool 
 
 let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modul =
   let m =
-    if (Options.interactive_fsi()) then
-        match m with
-            | Module(mname, decls) -> AST.Interface(mname, decls, true)
-            | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
+    if Options.interactive () &&
+      get_file_extension (List.hd (Options.file_list ())) = "fsti"
+    then
+      match m with
+      | Module(mname, decls) -> AST.Interface(mname, decls, true)
+      | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
     else m
   in
   let x, y, _ = desugar_modul_common curmod env m in
