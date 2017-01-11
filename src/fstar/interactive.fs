@@ -378,6 +378,7 @@ let interactive_mode (filename:string)
                   intf);
                 exit 1
               end;
+              Util.print_string "Reminder: fst+fsti in interactive mode is unsound.\n";
               curmod, env
           | None ->
               Util.print_warning (Util.format1

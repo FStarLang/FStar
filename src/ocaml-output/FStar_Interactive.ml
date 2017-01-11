@@ -545,34 +545,54 @@ in (match (_94_310) with
 | (stack, env, ts) -> begin
 (
 
-let _94_316 = (match (maybe_intf) with
+let _94_331 = (match (maybe_intf) with
 | Some (intf) -> begin
 (
 
-let _94_313 = if ((FStar_ST.read the_interactive_state.buffer) <> []) then begin
-(failwith "non-empty initial buffer list")
+let frag = (let _193_295 = (FStar_Util.file_get_contents intf)
+in {FStar_Parser_ParseIt.frag_text = _193_295; FStar_Parser_ParseIt.frag_line = (Prims.parse_int "0"); FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")})
+in (match ((tc.check_frag env initial_mod frag)) with
+| Some (curmod, env, n_errs) -> begin
+(
+
+let _94_321 = if (n_errs <> (Prims.parse_int "0")) then begin
+(
+
+let _94_319 = (let _193_296 = (FStar_Util.format1 "Found the interface %s but it has errors!" intf)
+in (FStar_Util.print_warning _193_296))
+in (FStar_All.exit (Prims.parse_int "1")))
 end else begin
 ()
 end
-in (let _193_298 = (let _193_297 = (let _193_296 = (let _193_295 = (FStar_Util.file_get_contents intf)
-in ((_193_295), ((("#done-ok"), ("#done-nok")))))
-in Code (_193_296))
-in (_193_297)::[])
-in (FStar_ST.op_Colon_Equals the_interactive_state.buffer _193_298)))
+in (
+
+let _94_323 = (FStar_Util.print_string "Reminder: fst+fsti in interactive mode is unsound.\n")
+in ((curmod), (env))))
 end
 | None -> begin
-()
+(
+
+let _94_326 = (let _193_297 = (FStar_Util.format1 "Found the interface %s but could not parse it first!" intf)
+in (FStar_Util.print_warning _193_297))
+in (FStar_All.exit (Prims.parse_int "1")))
+end))
+end
+| None -> begin
+((initial_mod), (env))
 end)
-in if ((FStar_Options.universes ()) && ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))) then begin
-(let _193_301 = (let _193_299 = (FStar_Options.file_list ())
-in (FStar_List.hd _193_299))
-in (FStar_SMTEncoding_Solver.with_hints_db _193_301 (fun _94_318 -> (match (()) with
+in (match (_94_331) with
+| (initial_mod, env) -> begin
+if ((FStar_Options.universes ()) && ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))) then begin
+(let _193_300 = (let _193_298 = (FStar_Options.file_list ())
+in (FStar_List.hd _193_298))
+in (FStar_SMTEncoding_Solver.with_hints_db _193_300 (fun _94_332 -> (match (()) with
 | () -> begin
 (go (((Prims.parse_int "1")), ((Prims.parse_int "0"))) stack initial_mod env ts)
 end))))
 end else begin
 (go (((Prims.parse_int "1")), ((Prims.parse_int "0"))) stack initial_mod env ts)
-end)
+end
+end))
 end)))
 end)))))))
 
