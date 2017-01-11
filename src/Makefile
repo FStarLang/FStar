@@ -253,7 +253,11 @@ utest:
 	make fsharp-regressions
 	+make -C ocaml-output
 	+make fstar-ocaml
-	+make uregressions
+	+make uregressions interactive-test
+
+# Interactive mode regressions
+interactive-test:
+	+make -C test/interactive
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
