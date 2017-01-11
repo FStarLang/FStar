@@ -480,7 +480,7 @@ let compile_op' s =
 // Printing ASTs, mostly for debugging
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-let string_of_fsdoc (comment,keywords) = 
+let string_of_fsdoc (comment,keywords) =
     comment ^ (String.concat "," (List.map (fun (k,v) -> k ^ "->" ^ v) keywords))
 
 let string_of_let_qualifier = function

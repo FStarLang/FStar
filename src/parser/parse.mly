@@ -957,7 +957,7 @@ atomicUniverse:
       }
   | u=univar { u }
   | LPAREN u=universeFrom RPAREN
-      { mk_term (Paren u) (rhs2 parseState 1 3) Expr }
+    { u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) }
 
 univar:
   | id=UNIVAR
