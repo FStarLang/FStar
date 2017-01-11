@@ -5282,7 +5282,7 @@ $P \cdot C \cdot A$
 
 ~KK
 I was not able to parse this definition. Maybe we can add an verbatim
-explaination of the formalism?
+explaination of the formalism? 
 ~
 
 The function $\epsilon(.,.)$ is called the advantage function of $P,A$.
@@ -5302,6 +5302,13 @@ needs to be idealized. For encryption modules this is typically done by encrypti
 value that is independent of the plaintext, such as a string of zeros. To make also the 
 decryption of such encryptions of zero indistinguishable from decryptions of the acutal 
 plaintext, the idealization of $C$ decrypts using a table lookup.
+
+~KK
+Maybe elaborate more on the concept of idealization? Maybe reuse some of the
+material of the intro to the Record-Layer paper? For the encrypt-then-mac
+example in the next section, it might be nice to have an introduction to
+game-based proofs.
+~
 
 Lets make the theory more concrete by looking at Encrypt-then-MAC 
 based authenticated encryption. 
@@ -5483,6 +5490,10 @@ As any adversary that causes a difference between `verified` and `found` is also
 `uf_cma=false`, `MAC`⋅$A$ $\approx_{\epsilon_{ufcma}}(A)$
 `uf_cma=true`, `MAC`⋅$A$. 
 
+~KK
+At this point maybe another verbatim explaination of the formal statement?
+~
+
 For our Encrypt-then-MAC scheme we establish the invariant that all `mac`ed messages correspond to 
 `encrypt`ed ciphertexts. This allows us to establish the precondition of `decrypt` after MAC `verify`.
 
@@ -5513,7 +5524,8 @@ We can thus set `ind_cpa_rest_adv=uf_cma`.
 ### The computational security proof
 
 We want to prove that:
-For all 𝐴 such that well typed with respect to an unrestricted Plain and AE interfec, that is `conf=false, auth=false`, $IP$, $IC \vdash A$,
+For all 𝐴 such that well typed with respect to an unrestricted Plain and AE
+interface, that is `conf=false, auth=false`, $IP$, $IC \vdash A$,
 the following computational equivalence holds:
 
 > (1) `conf=false, auth=false, Plain` ⋅ `CPA` ⋅ `MAC` ⋅ `AE` ⋅
@@ -5528,6 +5540,10 @@ In other words, the distinguishing advantage of an adversary $A$ between the con
 and the idealized implementation of Encrypt-then-MAC is bounded by $\epsilon_{indcpa}(B_1)+\epsilon_{ufcma}(B_2)$.
 
 To see this we reason about several game transformations.
+
+~KK
+Explain how game transformations work?
+~
 
 *Game 1* is the same as program (1), except that we swap the order of `MAC` and `Plain`⋅`CPA` with 
 the goal of clearly separating out a `MAC` adversary. This change does not affect the 
