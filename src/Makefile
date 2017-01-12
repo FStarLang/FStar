@@ -89,7 +89,7 @@ BOOT_BASIC_FSTI=$(addprefix boot_fstis/, string.fsti bytes.fsti platform.fsti ve
 BOOT_PRETTYPRINT_FSTI=$(addprefix boot_fstis/, FStar.Pprint.fsti)
 
 # All the .fs and .fsi files that need to be pre-processed into valid .fst files.
-BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
+BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs errors.fs const.fs)
 BOOT_FORMAT=$(addprefix format/, formatml.fs)
 ABSYN=syntax.fs const.fs visit.fs util.fs print.fs
 ABSYN_SRC=$(addprefix absyn/, $(ABSYN))

@@ -2,19 +2,20 @@
 module FStar.Tests.Test
 open FStar.Syntax
 open FStar
+open FStar.Errors
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U = FStar.Syntax.Util
 let r = Range.dummyRange
-[<EntryPoint>] 
+[<EntryPoint>]
 let main argv =
     printfn "Initializing ...";
-    try 
+    try
         Pars.init() |> ignore;
-        Norm.run_all (); 
+        Norm.run_all ();
         Unif.run_all ();
         0
-    with S.Error(msg, r) when not <| Options.trace_error()->
+    with Error(msg, r) when not <| Options.trace_error()->
          if r = Range.dummyRange
          then print_string msg
          else printfn "%s: %s" (Range.string_of_range r) msg;
