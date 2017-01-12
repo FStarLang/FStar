@@ -21,7 +21,7 @@ open FStar.Ident
 open FStar.Extraction.ML.Syntax
 open FStar.Syntax
 open FStar.Syntax.Syntax
-
+module BU = FStar.Util
 type ty_or_exp_b = either<(mlident * mlty), (mlexpr * mltyscheme * bool)>
 
 type binding =
@@ -59,8 +59,8 @@ let erasableTypeNoDelta (t:mlty) =
 let unknownType : mlty =  MLTY_Top
 
 (*copied from ocaml-strtrans.fs*)
-let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("'A"^x,n) ///the addition of the space is intentional; it's apparently valid syntax of tvars
-let removeTick (x,n) = if Util.starts_with x "'" then (Util.substring_from x 1,n) else (x,n)
+let prependTick (x,n) = if BU.starts_with x "'" then (x,n) else ("'A"^x,n) ///the addition of the space is intentional; it's apparently valid syntax of tvars
+let removeTick (x,n) = if BU.starts_with x "'" then (BU.substring_from x 1,n) else (x,n)
 
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
 let convIdent (id:ident) : mlident = id.idText, 0
@@ -94,9 +94,9 @@ let tyscheme_of_td (_, _, _, vars, body_opt) : option<mltyscheme> = match body_o
 
 //TODO: this two-level search is pretty inefficient: we should optimize it
 let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyscheme> =
-    Util.find_map env.tydefs  (fun (m, tds) ->
+    BU.find_map env.tydefs  (fun (m, tds) ->
         if module_name = m
-        then Util.find_map tds (fun td ->
+        then BU.find_map tds (fun td ->
              let (_, n, _, _, _) = td in
              if n=ty_name
              then tyscheme_of_td td
@@ -108,8 +108,8 @@ let module_name_of_fv fv = fv.fv_name.v.ns |> List.map (fun (i:ident) -> i.idTex
 let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> = 
     let mname = module_name_of_fv fv in
     let ty_name = fv.fv_name.v.ident.idText in
-    Util.find_map env.tydefs  (fun (m, tds) ->
-        Util.find_map tds (fun (_, n, mangle_opt, _, _) ->
+    BU.find_map env.tydefs  (fun (m, tds) ->
+        BU.find_map tds (fun (_, n, mangle_opt, _, _) ->
             if m = mname
             then if n=ty_name
                  then match mangle_opt with 
@@ -124,28 +124,28 @@ let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
 let lookup_tyvar (g:env) (bt:bv) : mlty = lookup_ty_local g.gamma bt
 
 let lookup_fv_by_lid (g:env) (lid:lident) : ty_or_exp_b =
-    let x = Util.find_map g.gamma (function
+    let x = BU.find_map g.gamma (function
         | Fv (fv', x) when fv_eq_lid fv' lid -> Some x
         | _ -> None) in
     match x with
-        | None -> failwith (Util.format1 "free Variable %s not found\n" (lid.nsstr))
+        | None -> failwith (BU.format1 "free Variable %s not found\n" (lid.nsstr))
         | Some y -> y
 
 (*keep this in sync with lookup_fv_by_lid, or call it here. lid does not have position information*)
 let lookup_fv (g:env) (fv:fv) : ty_or_exp_b =
-    let x = Util.find_map g.gamma (function
+    let x = BU.find_map g.gamma (function
         | Fv (fv', t) when fv_eq fv fv' -> Some t
         | _ -> None) in
     match x with
-        | None -> failwith (Util.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.fv_name.p) (Print.lid_to_string fv.fv_name.v))
+        | None -> failwith (BU.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.fv_name.p) (Print.lid_to_string fv.fv_name.v))
         | Some y -> y
 
 let lookup_bv (g:env) (bv:bv) : ty_or_exp_b =
-    let x = Util.find_map g.gamma (function
+    let x = BU.find_map g.gamma (function
         | Bv (bv', r) when bv_eq bv bv' -> Some (r)
         | _ -> None) in
     match x with
-        | None -> failwith (Util.format2 "(%s) bound Variable %s not found\n" (Range.string_of_range bv.ppname.idRange) (Print.bv_to_string bv))
+        | None -> failwith (BU.format2 "(%s) bound Variable %s not found\n" (Range.string_of_range bv.ppname.idRange) (Print.bv_to_string bv))
         | Some y -> y
 
 

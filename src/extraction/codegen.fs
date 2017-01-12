@@ -25,7 +25,7 @@ open FStar.Extraction.ML.Syntax
 open FStar.Format
 open FStar.Const
 open FStar.BaseTypes
-
+module BU = FStar.Util
 // VALS_HACK_HERE
 
 (* -------------------------------------------------------------------- *)
@@ -72,10 +72,10 @@ let path_of_ns (currentModule : mlsymbol) ns =
     then []
     else let cg_libs = Options.codegen_libs() in
          let ns_len = List.length ns in
-         let found = Util.find_map cg_libs (fun cg_path ->
+         let found = BU.find_map cg_libs (fun cg_path ->
             let cg_len = List.length cg_path in
             if List.length cg_path < ns_len
-            then let pfx, sfx = Util.first_N cg_len ns in
+            then let pfx, sfx = BU.first_N cg_len ns in
                  if pfx = cg_path
                  then Some (pfx@[Util.flatten_ns sfx])
                  else None
@@ -173,15 +173,7 @@ let is_uni_op (p : mlpath) =
     as_uni_op p <> None
 
 (* -------------------------------------------------------------------- *)
-let as_standard_type ((ns, x) : mlpath) =
-    if is_prims_ns ns then
-        List.tryFind (fun (y, _) -> x = y) prim_types
-    else
-        None
-
-(* -------------------------------------------------------------------- *)
-let is_standard_type (p : mlpath) =
-  as_standard_type p <> None
+let is_standard_type (p : mlpath) = false
 
 (* -------------------------------------------------------------------- *)
 let as_standard_constructor ((ns, x) : mlpath) =
@@ -272,8 +264,8 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     match ty with
     | MLTY_Var x ->
         let escape_tyvar s =
-            if Util.starts_with s "'_" //this denotes a weak type variable in OCaml; it cannot be written in source programs
-            then Util.replace_char s '_' 'u'
+            if BU.starts_with s "'_" //this denotes a weak type variable in OCaml; it cannot be written in source programs
+            then BU.replace_char s '_' 'u'
             else s in
         text (escape_tyvar <| idsym x)
 
@@ -293,13 +285,9 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
 
         in
 
-        let name =
-          if is_standard_type name then
-            snd (Option.get (as_standard_type name))
-          else
-            ptsym currentModule name
+        let name = ptsym currentModule name in
 
-        in hbox (reduce1 [args; text name])
+        hbox (reduce1 [args; text name])
     end
 
     | MLTY_Fun (t1, _, t2) ->
@@ -599,7 +587,7 @@ and doc_of_loc (lineno, file) =
     if (Options.no_location_info()) || Util.codegen_fsharp () then
         empty
     else
-        let file = Util.basename file in
+        let file = BU.basename file in
         reduce1 [ text "#"; num lineno; text ("\"" ^ file ^ "\"") ]
 
 (* -------------------------------------------------------------------- *)

@@ -26,6 +26,8 @@ open FStar.Format
 open FStar.Const
 open FStar.BaseTypes
 
+module BU = FStar.Util
+
 (* COPY-PASTED ****************************************************************)
 
 type program =
@@ -281,13 +283,13 @@ let find env x =
   try
     List.index (fun name -> name.pretty = x) env.names
   with _ ->
-    failwith (Util.format1 "Internal error: name not found %s\n" x)
+    failwith (BU.format1 "Internal error: name not found %s\n" x)
 
 let find_t env x =
   try
     List.index (fun name -> name = x) env.names_t
   with _ ->
-    failwith (Util.format1 "Internal error: name not found %s\n" x)
+    failwith (BU.format1 "Internal error: name not found %s\n" x)
 
 let add_binders env binders =
   List.fold_left (fun env ((name, _), _) -> extend env name false) env binders
@@ -301,12 +303,12 @@ let rec translate (MLLib modules): list<file> =
       String.concat "." (prefix @ [ final ])
     in
     try
-      Util.print1 "Attempting to translate module %s\n" m_name;
+      BU.print1 "Attempting to translate module %s\n" m_name;
       Some (translate_module m)
     with
     | e ->
-        Util.print2 "Unable to translate module: %s because:\n  %s\n"
-          m_name (Util.print_exn e);
+        BU.print2 "Unable to translate module: %s because:\n  %s\n"
+          m_name (BU.print_exn e);
         None
   ) modules
 
@@ -344,7 +346,7 @@ and translate_decl env d: option<decl> =
       mllb_tysc = Some ([], t0);
       mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
     } ]) ->
-      let assumed = Util.for_some (function Syntax.Assumed -> true | _ -> false) flags in
+      let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) flags in
       let env = if flavor = Rec then extend env name false else env in
       let rec find_return_type = function
         | MLTY_Fun (_, _, t) ->
@@ -364,7 +366,7 @@ and translate_decl env d: option<decl> =
           let body = translate_expr env body in
           Some (DFunction (None, flags, t, name, binders, body))
         with e ->
-          Util.print2 "Warning: writing a stub for %s (%s)\n" (snd name) (Util.print_exn e);
+          BU.print2 "Warning: writing a stub for %s (%s)\n" (snd name) (BU.print_exn e);
           Some (DFunction (None, flags, t, name, binders, EAbort))
       end
 
@@ -380,7 +382,7 @@ and translate_decl env d: option<decl> =
         let expr = translate_expr env expr in
         Some (DGlobal (flags, name, t, expr))
       with e ->
-        Util.print2 "Warning: not translating definition for %s (%s)\n" (snd name) (Util.print_exn e);
+        BU.print2 "Warning: not translating definition for %s (%s)\n" (snd name) (BU.print_exn e);
         Some (DGlobal (flags, name, t, EAny))
       end
 
@@ -388,10 +390,10 @@ and translate_decl env d: option<decl> =
       (* Things we currently do not translate:
        * - polymorphic functions (lemmas do count, sadly)
        *)
-      Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
+      BU.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
       begin match ts with
       | Some (idents, t) ->
-          Util.print2 "Type scheme is: forall %s. %s\n"
+          BU.print2 "Type scheme is: forall %s. %s\n"
             (String.concat ", " (List.map fst idents))
             (ML.Code.string_of_mlty ([], "") t)
       | None ->
@@ -425,16 +427,16 @@ and translate_decl env d: option<decl> =
       Some (DTypeVariant (name, List.length args, List.mapi (fun i (cons, ts) ->
         cons, List.mapi (fun j t ->
           // TODO: carry the right names
-          Util.format2 "x%s%s" (string_of_int i) (string_of_int j), (translate_type env t, false)
+          BU.format2 "x%s%s" (string_of_int i) (string_of_int j), (translate_type env t, false)
         ) ts
       ) branches))
 
   | MLM_Ty ((_, name, _mangled_name, _, _) :: _) ->
-      Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
+      BU.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
       None
 
   | MLM_Ty [] ->
-      Util.print_string "Impossible!! Empty block of mutually recursive type declarations";
+      BU.print_string "Impossible!! Empty block of mutually recursive type declarations";
       None
 
   | MLM_Top _ ->
@@ -467,7 +469,7 @@ and translate_type env t: typ =
   | MLTY_Named ([], (path, type_name)) ->
       // Generate an unbound reference... to be filled in later by glue code.
       TQualified (path, type_name)
-  | MLTY_Named (args, ([ "Prims" ], t)) when Util.starts_with t "tuple" ->
+  | MLTY_Named (args, ([ "Prims" ], t)) when BU.starts_with t "tuple" ->
       TTuple (List.map (translate_type env) args)
   | MLTY_Named (args, lid) ->
       if List.length args > 0 then
@@ -511,12 +513,12 @@ and translate_expr env e: expr =
       mllb_def = body;
       print_typ = print // ?
     }]), continuation) ->
-      let is_mut = Util.for_some (function Mutable -> true | _ -> false) flags in
+      let is_mut = BU.for_some (function Mutable -> true | _ -> false) flags in
       let typ, body =
         if is_mut then
           (match typ with
           | MLTY_Named ([ t ], p) when string_of_mlpath p = "FStar.ST.stackref" -> t
-          | _ -> failwith (Util.format1
+          | _ -> failwith (BU.format1
             "unexpected: bad desugaring of Mutable (typ is %s)"
             (ML.Code.string_of_mlty ([], "") typ))),
           (match body with
@@ -642,7 +644,7 @@ and translate_expr env e: expr =
        * supported, and quantified type schemes are not supported either *)
       failwith "todo: translate_expr [MLE_Let]"
   | MLE_App (head, _) ->
-      failwith (Util.format1 "todo: translate_expr [MLE_App] (head is: %s)"
+      failwith (BU.format1 "todo: translate_expr [MLE_App] (head is: %s)"
         (ML.Code.string_of_mlexpr ([], "") head))
   | MLE_Seq seqs ->
       ESequence (List.map (translate_expr env) seqs)

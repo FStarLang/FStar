@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 #light "off"
-module FStar.Extraction.ML.Env
+module FStar.StratifiedExtraction.ML.Env
 open FStar
 open FStar.Util
 open FStar.Absyn

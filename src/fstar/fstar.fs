@@ -60,7 +60,7 @@ let codegen uf_mods_env =
   let opt = Options.codegen () in
   if opt <> None then
     let mllibs = match uf_mods_env with
-        | Inl (fmods, env) -> snd <| Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods
+        | Inl (fmods, env) -> snd <| Util.fold_map StratifiedExtraction.ML.ExtractMod.extract (StratifiedExtraction.ML.Env.mkContext env) fmods
         | Inr (umods, env) -> snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
     let ext = match opt with

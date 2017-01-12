@@ -86,6 +86,7 @@
     <Compile Include="parseit.fs" />
     <Compile Include="driver.fs" />
     <Content Include="packages.config" />
+    <Compile Include="dep.fsi" />
     <Compile Include="dep.fs" />
     <Compile Include="todocument.fsi" />
     <Compile Include="todocument.fs" />

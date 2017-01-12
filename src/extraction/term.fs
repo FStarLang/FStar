@@ -26,6 +26,8 @@ open FStar.Extraction.ML.UEnv
 open FStar.Extraction.ML.Util
 open FStar.Syntax.Syntax
 
+module Code = FStar.Extraction.ML.Code
+module BU = FStar.Util
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U  = FStar.Syntax.Util
@@ -58,7 +60,7 @@ module Print = FStar.Syntax.Print
 
 
 (* taramana 2016-10-31: we redefine
-FStar.Extraction.ML.Util.record_fields here because the desugaring
+FStar.Extraction.ML.BU.record_fields here because the desugaring
 of field names has changed, but we cannot change the definition in
 FStar.Extraction.ML.Util for now because it is used by legacy
 extraction, which is still used in the bootstrapping process *)
@@ -69,43 +71,43 @@ let record_fields fs vs = List.map2 (fun (f:ident) e -> f.idText, e) fs vs
 (* Some basic error reporting; all are fatal errors at this stage                           *)
 (********************************************************************************************)
 let fail r msg =
-    Util.print_string <| format2 "%s: %s\n" (Range.string_of_range r) msg;
+    BU.print_string <| format2 "%s: %s\n" (Range.string_of_range r) msg;
     failwith msg
 
 let err_uninst env (t:term) (vars, ty) (app:term) =
-    fail t.pos (Util.format4 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated, but got %s"
+    fail t.pos (BU.format4 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated, but got %s"
                     (Print.term_to_string t)
                     (vars |> List.map fst |> String.concat ", ")
-                    (ML.Code.string_of_mlty env.currentModule ty)
+                    (Code.string_of_mlty env.currentModule ty)
                     (Print.term_to_string app))
 
 let err_ill_typed_application env (t : term) args (ty : mlty) =
-    fail t.pos (Util.format3 "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n"
+    fail t.pos (BU.format3 "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n"
                 (Print.term_to_string t)
                 (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " ")
-                (ML.Code.string_of_mlty env.currentModule ty))
+                (Code.string_of_mlty env.currentModule ty))
 
 
 let err_value_restriction t =
-    fail t.pos (Util.format2 "Refusing to generalize because of the value restriction: (%s) %s"
+    fail t.pos (BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
                     (Print.tag_of_term t) (Print.term_to_string t))
 
 let err_unexpected_eff t f0 f1 =
-    fail t.pos (Util.format3 "for expression %s, Expected effect %s; got effect %s" (Print.term_to_string t) (eff_to_string f0) (eff_to_string f1))
+    fail t.pos (BU.format3 "for expression %s, Expected effect %s; got effect %s" (Print.term_to_string t) (eff_to_string f0) (eff_to_string f1))
 
 (********************************************************************)
 (* Translating an effect lid to an e_tag = {E_PURE, E_GHOST, E_ANY} *)
 (********************************************************************)
 let effect_as_etag =
-    let cache = Util.smap_create 20 in
+    let cache = BU.smap_create 20 in
     let rec delta_norm_eff g (l:lident) =
-        match Util.smap_try_find cache l.str with
+        match BU.smap_try_find cache l.str with
             | Some l -> l
             | None ->
                 let res = match TypeChecker.Env.lookup_effect_abbrev g.tcenv [S.U_zero] l with
                 | None -> l
                 | Some (_, c) -> delta_norm_eff g (U.comp_effect_name c) in
-                Util.smap_add cache l.str res;
+                BU.smap_add cache l.str res;
                 res in
     fun g l ->
         let l = delta_norm_eff g l in
@@ -168,7 +170,7 @@ let rec is_type_aux env t =
     match t.n with
     | Tm_delayed _
     | Tm_unknown ->
-        failwith (Util.format1 "Impossible: %s" (Print.tag_of_term t))
+        failwith (BU.format1 "Impossible: %s" (Print.tag_of_term t))
 
     | Tm_constant _ ->
       false
@@ -220,8 +222,8 @@ let is_type env t =
     let b = is_type_aux env t in
     debug env (fun _ ->
         if b
-        then Util.print2 "is_type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t)
-        else Util.print2 "not a type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
+        then BU.print2 "is_type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t)
+        else BU.print2 "not a type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
     b
 
 let is_type_binder env x = is_arity env (fst x).sort
@@ -265,8 +267,8 @@ let rec is_ml_value e =
     | MLE_Name  _
     | MLE_Fun   _ -> true
     | MLE_CTor (_, exps)
-    | MLE_Tuple exps -> Util.for_all is_ml_value exps
-    | MLE_Record (_, fields) -> Util.for_all (fun (_, e) -> is_ml_value e) fields
+    | MLE_Tuple exps -> BU.for_all is_ml_value exps
+    | MLE_Record (_, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
     | _ -> false
 
 //pre-condition: SS.compress t = Tm_abs _
@@ -348,7 +350,7 @@ let maybe_coerce (g:env) e ty (expect:mlty) : mlexpr  =
     match type_leq_c g (Some e) ty expect with
         | true, Some e' -> e'
         | _ ->
-          debug g (fun () -> Util.print3 "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
+          debug g (fun () -> BU.print3 "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
                              (Code.string_of_mlexpr g.currentModule e)
                              (Code.string_of_mlty g.currentModule ty)
                              (Code.string_of_mlty g.currentModule expect));
@@ -399,7 +401,7 @@ and term_as_mlty' env t =
      match t.n with
       | Tm_bvar _
       | Tm_delayed _
-      | Tm_unknown -> failwith (Util.format1 "Impossible: Unexpected term %s" (Print.term_to_string t))
+      | Tm_unknown -> failwith (BU.format1 "Impossible: Unexpected term %s" (Print.term_to_string t))
 
       | Tm_constant _ -> unknownType
 
@@ -430,7 +432,7 @@ and term_as_mlty' env t =
                  (*        (Print.comp_to_string c) (Print.term_to_string t) in *)
                  let res = term_as_mlty' env t in
                  (* let _ = printfn "Translated comp type %s as %s ... to %s\n" *)
-                 (*        (Print.comp_to_string c) (Print.term_to_string t) (ML.Code.string_of_mlty env.currentModule res) in *)
+                 (*        (Print.comp_to_string c) (Print.term_to_string t) (Code.string_of_mlty env.currentModule res) in *)
                  res
             else term_as_mlty' env (U.comp_result c) in
         let erase = effect_as_etag env (U.comp_effect_name c) in
@@ -475,7 +477,7 @@ and fv_app_as_mlty (g:env) (fv:fv) (args : args) : mlty =
     let mlargs =
         let n_args = List.length args in
         if List.length formals > n_args //it's not fully applied; so apply the rest to unit
-        then let _, rest = Util.first_N n_args formals in
+        then let _, rest = BU.first_N n_args formals in
              mlargs @ (List.map (fun _ -> erasedContent) rest)
         else mlargs in
     let nm = match maybe_mangle_type_projector g fv with
@@ -555,89 +557,89 @@ let resugar_pat q p = match p with
 //     Translates an F* pattern to an ML pattern
 //     The main work is erasing inaccessible (dot) patterns
 //     And turning F*'s curried pattern style to ML's fully applied ones
+let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) (g:env) (p:S.pat) (expected_topt:option<mlty>) 
+    : env * option<(mlpattern * list<mlexpr>)> * bool =
+    let ok t =
+        match expected_topt with
+        | None -> true
+        | Some t' ->
+            let ok = type_leq g t t' in
+            if not ok then debug g (fun _ -> BU.print2 "Expected pattern type %s; got pattern type %s\n"
+                                                (Code.string_of_mlty g.currentModule t')
+                                                (Code.string_of_mlty g.currentModule t));
+            ok
+    in
+    match p.v with
+    | Pat_disj _ -> failwith "Impossible: Nested disjunctive pattern"
+
+    | Pat_constant (Const_int (c, None))  ->
+        // note: as-patterns are not valid F* and "let Pat_constant i = p.v"
+        // is not valid F# ?!!
+        let i = Const_int (c, None) in
+        //these may be extracted to bigint, in which case, we need to emit a when clause
+        let x = gensym() in // as_mlident (S.new_bv None Tm_bvar) in
+        let when_clause = with_ty ml_bool_ty <|
+            MLE_App(prims_op_equality, [with_ty ml_int_ty <| MLE_Var x;
+                                    with_ty ml_int_ty <| (MLE_Const <| mlconst_of_const' p.p i)]) in
+        g, Some (MLP_Var x, [when_clause]), ok ml_int_ty
+
+    | Pat_constant s     ->
+        let t : term = TcTerm.tc_constant Range.dummyRange s in
+        let mlty = term_as_mlty g t in
+        g, Some (MLP_Const (mlconst_of_const' p.p s), []), ok mlty
+
+    | Pat_var x ->
+        let mlty = term_as_mlty g x.sort in
+        let g = extend_bv g x ([], mlty) false false imp in
+        g, (if imp then None else Some (MLP_Var (bv_as_mlident x), [])), ok mlty
+
+    | Pat_wild x when disjunctive_pat ->
+        g, Some (MLP_Wild, []), true
+
+    | Pat_wild x -> (*how is this different from Pat_var? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
+        let mlty = term_as_mlty g x.sort in
+        let g = UEnv.extend_bv g x ([], mlty) false false imp in
+        g, (if imp then None else Some (MLP_Var (bv_as_mlident x), [])), ok mlty
+
+    | Pat_dot_term _ ->
+        g, None, true
+
+    | Pat_cons (f, pats) ->
+        let d, tys = match lookup_fv g f with
+            | Inr({expr=MLE_Name n}, ttys, _) -> n, ttys
+            | _ -> failwith "Expected a constructor" in
+        let nTyVars = List.length (fst tys) in
+        let tysVarPats, restPats =  BU.first_N nTyVars pats in
+        let f_ty_opt =
+                try
+                    let mlty_args = tysVarPats |> List.map (fun (p, _) ->
+                        match p.v with
+                        | Pat_dot_term (_, t) -> term_as_mlty g t
+                        | _ ->
+                            debug g (fun _ -> BU.print1 "Pattern %s is not extractable" (Print.pat_to_string p));
+                            raise Un_extractable) in
+                    let f_ty = subst tys mlty_args in
+                    Some (Util.uncurry_mlty_fun f_ty)
+                with Un_extractable -> None in
+
+        let g, tyMLPats = BU.fold_map (fun g (p, imp) ->
+            let g, p, _ = extract_one_pat disjunctive_pat true g p None in
+            g, p) g tysVarPats in (*not all of these were type vars in ML*)
+
+        let (g, f_ty_opt), restMLPats = BU.fold_map (fun (g, f_ty_opt) (p, imp) ->
+            let f_ty_opt, expected_ty = match f_ty_opt with
+                | Some (hd::rest, res) -> Some (rest, res), Some hd
+                | _ -> None, None in
+            let g, p, _ = extract_one_pat disjunctive_pat false g p expected_ty in
+            (g, f_ty_opt), p) (g, f_ty_opt) restPats in
+
+        let mlPats, when_clauses = List.append tyMLPats restMLPats |> List.collect (function (Some x) -> [x] | _ -> []) |> List.split in
+        let pat_ty_compat = match f_ty_opt with
+            | Some ([], t) -> ok t
+            | _ -> false in
+        g, Some (resugar_pat f.fv_qual (MLP_CTor (d, mlPats)), when_clauses |> List.flatten), pat_ty_compat
+
 let extract_pat (g:env) p (expected_t:mlty) : (env * list<(mlpattern * option<mlexpr>)> * bool) =
-    let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) g p expected_topt : env * option<(mlpattern * list<mlexpr>)> * bool =
-        let ok t =
-            match expected_topt with
-            | None -> true
-            | Some t' ->
-              let ok = type_leq g t t' in
-              if not ok then debug g (fun _ -> Util.print2 "Expected pattern type %s; got pattern type %s\n"
-                                                    (Code.string_of_mlty g.currentModule t')
-                                                    (Code.string_of_mlty g.currentModule t));
-              ok
-        in
-        match p.v with
-          | Pat_disj _ -> failwith "Impossible: Nested disjunctive pattern"
-
-          | Pat_constant (Const_int (c, None))  ->
-            // note: as-patterns are not valid F* and "let Pat_constant i = p.v"
-            // is not valid F# ?!!
-            let i = Const_int (c, None) in
-            //these may be extracted to bigint, in which case, we need to emit a when clause
-            let x = gensym() in // as_mlident (S.new_bv None Tm_bvar) in
-            let when_clause = with_ty ml_bool_ty <|
-              MLE_App(prims_op_equality, [with_ty ml_int_ty <| MLE_Var x;
-                                        with_ty ml_int_ty <| (MLE_Const <| mlconst_of_const' p.p i)]) in
-            g, Some (MLP_Var x, [when_clause]), ok ml_int_ty
-
-          | Pat_constant s     ->
-            let t : term = TcTerm.tc_constant Range.dummyRange s in
-            let mlty = term_as_mlty g t in
-            g, Some (MLP_Const (mlconst_of_const' p.p s), []), ok mlty
-
-          | Pat_var x ->
-            let mlty = term_as_mlty g x.sort in
-            let g = extend_bv g x ([], mlty) false false imp in
-            g, (if imp then None else Some (MLP_Var (bv_as_mlident x), [])), ok mlty
-
-          | Pat_wild x when disjunctive_pat ->
-            g, Some (MLP_Wild, []), true
-
-          | Pat_wild x -> (*how is this different from Pat_var? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
-            let mlty = term_as_mlty g x.sort in
-            let g = UEnv.extend_bv g x ([], mlty) false false imp in
-            g, (if imp then None else Some (MLP_Var (bv_as_mlident x), [])), ok mlty
-
-          | Pat_dot_term _ ->
-            g, None, true
-
-          | Pat_cons (f, pats) ->
-            let d, tys = match lookup_fv g f with
-                | Inr({expr=MLE_Name n}, ttys, _) -> n, ttys
-                | _ -> failwith "Expected a constructor" in
-            let nTyVars = List.length (fst tys) in
-            let tysVarPats, restPats =  Util.first_N nTyVars pats in
-            let f_ty_opt =
-                    try
-                        let mlty_args = tysVarPats |> List.map (fun (p, _) ->
-                            match p.v with
-                            | Pat_dot_term (_, t) -> term_as_mlty g t
-                            | _ ->
-                              debug g (fun _ -> Util.print1 "Pattern %s is not extractable" (Print.pat_to_string p));
-                              raise Un_extractable) in
-                        let f_ty = subst tys mlty_args in
-                        Some (Util.uncurry_mlty_fun f_ty)
-                    with Un_extractable -> None in
-
-            let g, tyMLPats = Util.fold_map (fun g (p, imp) ->
-                let g, p, _ = extract_one_pat disjunctive_pat true g p None in
-                g, p) g tysVarPats in (*not all of these were type vars in ML*)
-
-            let (g, f_ty_opt), restMLPats = Util.fold_map (fun (g, f_ty_opt) (p, imp) ->
-                let f_ty_opt, expected_ty = match f_ty_opt with
-                    | Some (hd::rest, res) -> Some (rest, res), Some hd
-                    | _ -> None, None in
-                let g, p, _ = extract_one_pat disjunctive_pat false g p expected_ty in
-                (g, f_ty_opt), p) (g, f_ty_opt) restPats in
-
-            let mlPats, when_clauses = List.append tyMLPats restMLPats |> List.collect (function (Some x) -> [x] | _ -> []) |> List.split in
-            let pat_ty_compat = match f_ty_opt with
-                | Some ([], t) -> ok t
-                | _ -> false in
-            g, Some (resugar_pat f.fv_qual (MLP_CTor (d, mlPats)), when_clauses |> List.flatten), pat_ty_compat in
-
-
     let extract_one_pat disj g p expected_t =
         match extract_one_pat disj false g p expected_t with
             | g, Some (x, v), b -> g, (x, v), b
@@ -653,7 +655,7 @@ let extract_pat (g:env) p (expected_t:mlty) : (env * list<(mlpattern * option<ml
 
       | Pat_disj (p::pats)      ->
         let g, p, b = extract_one_pat true g p (Some expected_t) in
-        let b, ps = Util.fold_map (fun b p ->
+        let b, ps = BU.fold_map (fun b p ->
                     let _, p, b' = extract_one_pat true g p (Some expected_t) in
                     b && b', p) b pats in
         let ps = p :: ps in
@@ -746,7 +748,7 @@ let maybe_downgrade_eff g f t =
 let rec term_as_mlexpr (g:env) (t:term) : (mlexpr * e_tag * mlty) =
     let e, tag, ty = term_as_mlexpr' g t in
     let tag = maybe_downgrade_eff g tag ty in
-    (debug g (fun u -> Util.print_string (Util.format4 "term_as_mlexpr (%s) :  %s has ML type %s and effect %s\n"
+    (debug g (fun u -> BU.print_string (BU.format4 "term_as_mlexpr (%s) :  %s has ML type %s and effect %s\n"
         (Print.tag_of_term t)
         (Print.term_to_string t)
         (Code.string_of_mlty g.currentModule ty)
@@ -767,7 +769,7 @@ and check_term_as_mlexpr' (g:env) (e0:term) (f:e_tag) (ty:mlty) : (mlexpr * mlty
     else err_unexpected_eff e0 f tag
 
 and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
-    (debug g (fun u -> Util.print_string (Util.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
+    (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
         (Range.string_of_range top.pos)
         (Print.tag_of_term top)
         (Print.term_to_string top))));
@@ -776,7 +778,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_unknown
         | Tm_delayed _
         | Tm_uvar _
-        | Tm_bvar _ -> failwith (Util.format1 "Impossible: Unexpected term: %s" (Print.tag_of_term t))
+        | Tm_bvar _ -> failwith (BU.format1 "Impossible: Unexpected term: %s" (Print.tag_of_term t))
 
         | Tm_type _
         | Tm_refine _
@@ -802,7 +804,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_meta(t, Meta_monadic (m, _)) ->
           let t = SS.compress t in
           begin match t.n with
-            | Tm_let((false, [lb]), body) when (Util.is_left lb.lbname) ->
+            | Tm_let((false, [lb]), body) when (BU.is_left lb.lbname) ->
               let ed = TypeChecker.Env.get_effect_decl g.tcenv m in
               if ed.qualifiers |> List.contains Reifiable |> not
               then term_as_mlexpr' g t
@@ -917,7 +919,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                     | (arg, _)::rest, MLTY_Fun (formal_t, f', t) when is_type g arg -> //non-prefix type app; this type argument gets erased to unit
                       if type_leq g formal_t ml_unit_ty
                       then extract_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join arg.pos f f', t) rest
-                      else failwith (Util.format4 "Impossible: ill-typed application:\n\thead=%s, arg=%s, tag=%s\n\texpected type unit, got %s" //ill-typed; should be impossible
+                      else failwith (BU.format4 "Impossible: ill-typed application:\n\thead=%s, arg=%s, tag=%s\n\texpected type unit, got %s" //ill-typed; should be impossible
                                             (Code.string_of_mlexpr g.currentModule mlhead)
                                             (Print.term_to_string arg)
                                             (Print.tag_of_term arg)
@@ -974,7 +976,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         | _ ->
                           let n = List.length vars in
                           if n <= List.length args
-                          then let prefix, rest = Util.first_N n args in
+                          then let prefix, rest = BU.first_N n args in
         //                       let _ = (if n=1 then printfn "\n (*prefix was  \n %A \n  *) \n" prefix) in
                                let prefixAsMLTypes = List.map (fun (x, _) -> term_as_mlty g x) prefix in
         //                        let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
@@ -1059,7 +1061,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                   //TODO: ERASE ONLY THOSE THAT ABSTRACT OVER PURE FUNCTIONS in Type(i),
                   //      NOT, e.g., (x:int -> St Type)
                    let tbinders, tbody =
-                        match Util.prefix_until (fun x -> not (is_type_binder g x)) bs with
+                        match BU.prefix_until (fun x -> not (is_type_binder g x)) bs with
                             | None -> bs, U.comp_result c
                             | Some (bs, b, rest) -> bs, U.arrow (b::rest) c in
 
@@ -1069,7 +1071,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                       | Tm_abs(bs, body, _) ->
                         let bs, body = SS.open_term bs body in
                         if n_tbinders <= List.length bs
-                        then let targs, rest_args = Util.first_N n_tbinders bs in
+                        then let targs, rest_args = BU.first_N n_tbinders bs in
 //                             printfn "tbinders are %s\n" (tbinders |> (Print.binders_to_string ", "));
 //                             printfn "tbody is %s\n" (Print.typ_to_string tbody);
 //                             printfn "targs are %s\n" (targs |> Print.binders_to_string ", ");
@@ -1082,7 +1084,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                              (* debug g (fun () -> printfn "+++LB=%s ... Translated source type %s to mlty %s" *)
                              (*                (Print.lbname_to_string lbname) *)
                              (*                (Print.term_to_string expected_source_ty) *)
-                             (*                (ML.Code.string_of_mlty g.currentModule expected_t)); *)
+                             (*                (Code.string_of_mlty g.currentModule expected_t)); *)
                              let polytype = targs |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
                              let add_unit = match rest_args with
                                 | [] -> not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
@@ -1135,7 +1137,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                   (* debug g (fun () -> printfn "+++LB=%s ... Translated source type %s to mlty %s" *)
                   (*                       (Print.lbname_to_string lbname) *)
                   (*                       (Print.term_to_string t) *)
-                  (*                       (ML.Code.string_of_mlty g.currentModule expected_t)); *)
+                  (*                       (Code.string_of_mlty g.currentModule expected_t)); *)
                   (lbname_, f_e, (t, ([], ([],expected_t))), false, e) in
 
           let check_lb env (nm, (lbname, f, (t, (targs, polytype)), add_unit, e)) =
@@ -1187,7 +1189,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                     t_branch
                 | _ -> failwith "ITE pats matched but then and else expressions not found?"
         else
-            let pat_t_compat, mlbranches = pats |> Util.fold_map (fun compat br ->
+            let pat_t_compat, mlbranches = pats |> BU.fold_map (fun compat br ->
                 let pat, when_opt, branch = SS.open_branch br in
                 let env, p, pat_t_compat = extract_pat g pat t_e in
                 let when_opt, f_when = match when_opt with
@@ -1208,13 +1210,13 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
              //    insert a magic around the scrutinee
              let e = if pat_t_compat
                      then e
-                     else (debug g (fun _ -> Util.print2 "Coercing scrutinee %s from type %s because pattern type is incompatible\n"
+                     else (debug g (fun _ -> BU.print2 "Coercing scrutinee %s from type %s because pattern type is incompatible\n"
                                                 (Code.string_of_mlexpr g.currentModule e)
                                                 (Code.string_of_mlty g.currentModule t_e));
                            with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in
              begin match mlbranches with
                 | [] ->
-                    let fw, _, _ = Util.right <| UEnv.lookup_fv g (S.lid_as_fv FStar.Syntax.Const.failwith_lid Delta_constant None) in
+                    let fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv FStar.Syntax.Const.failwith_lid Delta_constant None) in
                     with_ty ml_unit_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
                     ml_unit_ty
@@ -1255,7 +1257,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
 (*copied from ocaml-asttrans.fs*)
 let fresh = let c = mk_ref 0 in
-            fun x -> (incr c; (x, !c))
+            fun (x:string) -> (incr c; (x, !c))
 
 let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1 =
     // First, lookup the original (F*) type to figure out how many implicit arguments there are.

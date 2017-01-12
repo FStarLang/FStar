@@ -14,16 +14,17 @@
    limitations under the License.
 *)
 #light "off"
-module FStar.Extraction.ML.ExtractExp
+module FStar.StratifiedExtraction.ML.ExtractExp
 open FStar
 open FStar.Util
 open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Const
 open FStar.Extraction
+open FStar.StratifiedExtraction
 open FStar.Extraction.ML.Syntax
-open FStar.Extraction.ML.Env
-open FStar.Extraction.ML.Util
+open FStar.StratifiedExtraction.ML.Env
+open FStar.StratifiedExtraction.ML.Util
 open FStar.Ident
 
 let type_leq g t1 t2 = Util.type_leq (Util.delta_unfold g) t1 t2

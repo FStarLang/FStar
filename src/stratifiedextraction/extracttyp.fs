@@ -14,11 +14,11 @@
    limitations under the License.
 *)
 #light "off"
-module FStar.Extraction.ML.ExtractTyp
+module FStar.StratifiedExtraction.ML.ExtractTyp
 open Prims
 open FStar.Absyn
 open FStar.Extraction.ML.Syntax
-open FStar.Extraction.ML.Util
+open FStar.StratifiedExtraction.ML.Util
 open FStar.Util
 open FStar.Tc.Env
 open FStar.Absyn.Syntax
@@ -26,7 +26,7 @@ open FStar.Ident
 open FStar
 open FStar.Tc.Normalize
 open FStar.Absyn.Print
-open FStar.Extraction.ML.Env
+open FStar.StratifiedExtraction.ML.Env
 
 let binderIsExp (bn:binder): bool = is_inr (fst bn)
 

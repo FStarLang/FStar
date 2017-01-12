@@ -19,7 +19,6 @@
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.Syntax
 open FStar
-//open FStar.Absyn.Syntax
 open FStar.Ident
 open FStar.Util
 open FStar.Const
@@ -118,6 +117,20 @@ type mlpattern =
 | MLP_Record of list<mlsymbol> * list<(mlsymbol * mlpattern)>
 | MLP_Tuple  of list<mlpattern>
 
+
+type c_flag = // C backend only
+  | Mutable
+  | Assumed
+  | Private
+  | NoExtract
+  | Attribute of string
+
+type mlletflavor =
+  | Rec
+  | NonRec
+
+type c_flags = list<c_flag>
+
 type mlexpr' =
 | MLE_Const  of mlconstant
 | MLE_Var    of mlident
@@ -154,19 +167,6 @@ and mllb = {
 }
 
 and mlletbinding = mlletflavor * c_flags * list<mllb>
-
-and c_flags = list<c_flag>
-
-and c_flag = // C backend only
-  | Mutable
-  | Assumed
-  | Private
-  | NoExtract
-  | Attribute of string
-
-and mlletflavor =
-  | Rec
-  | NonRec
 
 type mltybody =
 | MLTD_Abbrev of mlty

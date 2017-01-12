@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 #light "off"
-module FStar.Extraction.ML.Util
+module FStar.StratifiedExtraction.ML.Util
 open FStar
 open FStar.Util
 open FStar.Absyn
@@ -75,18 +75,6 @@ let delta_unfold g = function
         | _ -> None
       end
     | _ -> None
-
-let udelta_unfold (g:UEnv.env) = function
-    | MLTY_Named(args, n) ->
-      begin match UEnv.lookup_ty_const g n with
-        | Some ts ->
-//          UEnv.debug g (fun _ -> printfn "Instantiating %A with %d formals with %d args"
-//                                     n (List.length <| fst ts) (List.length args));
-          Some (subst ts args)
-        | _ -> None
-      end
-    | _ -> None
-
 
 let eff_leq f f' = match f, f' with
     | E_PURE, _          -> true

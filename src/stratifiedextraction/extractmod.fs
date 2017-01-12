@@ -14,15 +14,15 @@
    limitations under the License.
 *)
 #light "off"
-module FStar.Extraction.ML.ExtractMod
+module FStar.StratifiedExtraction.ML.ExtractMod
 open FStar
 open FStar.Util
 open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Const
 open FStar.Extraction.ML.Syntax
-open FStar.Extraction.ML.Env
-open FStar.Extraction.ML.Util
+open FStar.StratifiedExtraction.ML.Env
+open FStar.StratifiedExtraction.ML.Util
 open FStar.Ident
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)

@@ -48,6 +48,10 @@ type verify_mode =
 
 type map = smap<(option<string> * option<string>)>
 
+type color = | White | Gray | Black
+
+//VALS_HACK_HERE
+
 let check_and_strip_suffix (f: string): option<string> =
   let suffixes = [ ".fsti"; ".fst"; ".fsi"; ".fs" ] in
   let matches = List.map (fun ext ->
@@ -507,8 +511,6 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
   collect_file ast;
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps
-
-type color = | White | Gray | Black
 
 let print_graph graph =
   Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph";

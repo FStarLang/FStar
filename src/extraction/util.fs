@@ -19,9 +19,13 @@ open FStar
 open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
+open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Const
 open FStar.Ident
+module BU = FStar.Util
+module U = FStar.Syntax.Util
+module UEnv = FStar.Extraction.ML.UEnv
 
 let pruneNones (l : list<option<'a>>) : list<'a> =
     List.fold_right (fun  x ll -> match x with
@@ -51,11 +55,11 @@ let mlconst_of_const (sctt : sconst) =
 
 let mlconst_of_const' (p:Range.range) (c:sconst) =
     try mlconst_of_const c
-    with _ -> failwith (Util.format2 "(%s) Failed to translate constant %s " (Range.string_of_range p) (Print.const_to_string c))
+    with _ -> failwith (BU.format2 "(%s) Failed to translate constant %s " (Range.string_of_range p) (Print.const_to_string c))
 
 let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty)  : mlty =
     match t with
-    | MLTY_Var  x -> (match Util.find_opt (fun (y, _) -> y=x) subst with
+    | MLTY_Var  x -> (match BU.find_opt (fun (y, _) -> y=x) subst with
                      | Some ts -> snd ts
                      | None -> t) // TODO : previously, this case would abort. why? this case was encountered while extracting st3.fst
     | MLTY_Fun (t1, f, t2) -> MLTY_Fun(subst_aux subst t1, f, subst_aux subst t2)
@@ -99,7 +103,7 @@ let join r f f' = match f, f' with
     | E_PURE  , E_GHOST  -> E_GHOST
     | E_GHOST , E_PURE   -> E_GHOST
     | E_PURE  , E_PURE   -> E_PURE
-    | _ -> failwith (Util.format3 "Impossible (%s): Inconsistent effects %s and %s"
+    | _ -> failwith (BU.format3 "Impossible (%s): Inconsistent effects %s and %s"
                             (Range.string_of_range r)
                             (eff_to_string f) (eff_to_string f'))
 
@@ -192,31 +196,9 @@ let rec type_leq_c (unfold_ty:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : 
 
 and type_leq g t1 t2 : bool = type_leq_c g None t1 t2 |> fst
 
-//let unit_binder =
-//    let x = Util.gen_bvar Tc.Recheck.t_unit in
-//    v_binder x
-
 let is_type_abstraction = function
     | (Inl _, _)::_ -> true
     | _ -> false
-
-//let mkTypFun (bs : Syntax.binders) (c : Syntax.comp) (original : Syntax.typ) : Syntax.typ =
-//     mk_Typ_fun (bs,c) None original.pos // is this right? if not, also update mkTyp* below
-//
-//let mkTypApp (typ : Syntax.typ) (arrgs : Syntax.args) (original : Syntax.typ) : Syntax.typ =
-//      mk_Typ_app (typ,arrgs) None original.pos
-
-//
-//(*TODO: Do we need to recurse for c?*)
-//let tbinder_prefix t = match (Util.compress_typ t).n with
-//    | Typ_fun(bs, c) ->
-//      begin match Util.prefix_until (function (Inr _, _) -> true | _ -> false) bs with
-//        | None -> bs,t
-//        | Some (bs, b, rest) -> bs, (mkTypFun (b::rest) c t)
-//      end
-//
-//    | _ -> [],t
-//
 
 let is_xtuple (ns, n) =
     if ns = ["Prims"]
@@ -240,7 +222,7 @@ let resugar_exp e = match e.expr with
 
 let record_field_path = function
     | f::_ ->
-        let ns, _ = Util.prefix f.ns in
+        let ns, _ = BU.prefix f.ns in
         ns |> List.map (fun id -> id.idText)
     | _ -> failwith "impos"
 
