@@ -257,7 +257,7 @@ utest:
 
 # Interactive mode regressions
 interactive-test:
-	+make -C test/interactive
+	+make -C tests/interactive
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
