@@ -32,6 +32,7 @@ open FStar.String
 open FStar.Ident
 open FStar.Errors
 module Const = FStar.Syntax.Const
+module BU = FStar.Util
 
 (* In case the user passed [--verify_all], we record every single module name we
  * found in the list of modules to be verified.
@@ -163,7 +164,7 @@ let build_map (filenames: list<string>): map =
     entry where [i] stripped from [prefix] points to the same value. Returns a
     boolean telling whether the map was modified. *)
 let enter_namespace (original_map: map) (working_map: map) (prefix: string): bool =
-  let found = ref false in
+  let found = BU.mk_ref false in
   let prefix = prefix ^ "." in
   List.iter (fun k ->
     if Util.starts_with k prefix then
@@ -201,7 +202,7 @@ exception Exit
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
     it depends on. *)
 let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_mode) (is_user_provided_filename: bool) (original_map: map) (filename: string): list<string> =
-  let deps = ref [] in
+  let deps = BU.mk_ref [] in
   let add_dep d =
     if not (List.existsb (fun d' -> d' = d) !deps) then
       deps := d :: !deps
@@ -265,7 +266,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
   in
   List.iter (record_open false) auto_open;
 
-  let num_of_toplevelmods = ref 0 in
+  let num_of_toplevelmods = BU.mk_ref 0 in
 
   let rec collect_fragment = function
     | Inl file ->
@@ -531,7 +532,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
 
   (* A bitmap that ensures every --verify_module X was matched by an existing X
    * in our dependency graph. *)
-  let verify_flags = List.map (fun f -> f, ref false) (Options.verify_module ()) in
+  let verify_flags = List.map (fun f -> f, BU.mk_ref false) (Options.verify_module ()) in
 
   (* A map from lowercase module names (e.g. [a.b.c]) to the corresponding
    * filenames (e.g. [/where/to/find/A.B.C.fst]). Consider this map
@@ -573,7 +574,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
   (* At this point, we have the (immediate) dependency graph of all the files. *)
   let immediate_graph = smap_copy graph in
 
-  let topologically_sorted = ref [] in
+  let topologically_sorted = BU.mk_ref [] in
 
   (* Compute the transitive closure. *)
   let rec discover cycle key =

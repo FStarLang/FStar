@@ -474,7 +474,7 @@ and p_qualifier = function
   | Assumption -> str "assume"
   | DefaultEffect -> str "default"
   | TotalEffect -> str "total"
-  | Effect -> empty
+  | Effect_qual -> empty
   | New -> str "new"
   | Inline -> str "inline"
   | Visible -> empty

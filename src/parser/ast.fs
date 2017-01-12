@@ -139,7 +139,7 @@ type qualifier =
   | Assumption
   | DefaultEffect
   | TotalEffect
-  | Effect
+  | Effect_qual
   | New
   | Inline                                 //a definition that *should* always be unfolded by the normalizer
   | Visible                                //a definition that may be unfolded by the normalizer, but only if necessary (default)

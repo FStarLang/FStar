@@ -1515,7 +1515,7 @@ let trans_qual r = function
   | AST.New -> New
   | AST.TotalEffect -> TotalEffect
   | AST.DefaultEffect -> DefaultEffect None
-  | AST.Effect -> Effect
+  | AST.Effect_qual -> Effect
   | AST.Reflectable
   | AST.Reifiable
   | AST.Inline
@@ -1554,7 +1554,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     DesugarEnv.push_module_abbrev env x l, []
 
   | Tycon(is_effect, tcs) ->
-    let quals = if is_effect then AST.Effect :: d.quals else d.quals in
+    let quals = if is_effect then AST.Effect_qual :: d.quals else d.quals in
     let tcs = List.map (fun (x,_) -> x) tcs in
     desugar_tycon env d.drange (trans_quals quals) tcs
 
