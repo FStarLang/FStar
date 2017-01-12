@@ -17,8 +17,8 @@
 module FStar.Extraction.ML.Util
 open FStar
 open FStar.Util
-open FStar.Syntax
-open FStar.Syntax.Syntax
+open FStar.Absyn
+open FStar.Absyn.Syntax
 open FStar.Extraction.ML.Syntax
 open FStar.Const
 open FStar.Ident
@@ -67,6 +67,14 @@ let subst ((formals, t):mltyscheme) (args:list<mlty>) : mlty =
     if List.length formals <> List.length args
     then failwith "Substitution must be fully applied (see GitHub issue #490)"
     else subst_aux (List.zip formals args) t
+
+let delta_unfold g = function
+    | MLTY_Named(args, n) ->
+      begin match Env.lookup_ty_const g n with
+        | Some ts -> Some (subst ts args)
+        | _ -> None
+      end
+    | _ -> None
 
 let udelta_unfold (g:UEnv.env) = function
     | MLTY_Named(args, n) ->
@@ -192,35 +200,36 @@ let rec type_leq_c (unfold_ty:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : 
 
 and type_leq g t1 t2 : bool = type_leq_c g None t1 t2 |> fst
 
-//let unit_binder =
-//    let x = Util.gen_bvar Tc.Recheck.t_unit in
-//    v_binder x
+let unit_binder =
+    let x = Util.gen_bvar Tc.Recheck.t_unit in
+    v_binder x
 
 let is_type_abstraction = function
     | (Inl _, _)::_ -> true
     | _ -> false
 
-//let mkTypFun (bs : Syntax.binders) (c : Syntax.comp) (original : Syntax.typ) : Syntax.typ =
-//     mk_Typ_fun (bs,c) None original.pos // is this right? if not, also update mkTyp* below
-//
-//let mkTypApp (typ : Syntax.typ) (arrgs : Syntax.args) (original : Syntax.typ) : Syntax.typ =
-//      mk_Typ_app (typ,arrgs) None original.pos
+let mkTypFun (bs : Syntax.binders) (c : Syntax.comp) (original : Syntax.typ) : Syntax.typ =
+     mk_Typ_fun (bs,c) None original.pos // is this right? if not, also update mkTyp* below
 
-//
-//(*TODO: Do we need to recurse for c?*)
-//let tbinder_prefix t = match (Util.compress_typ t).n with
-//    | Typ_fun(bs, c) ->
-//      begin match Util.prefix_until (function (Inr _, _) -> true | _ -> false) bs with
-//        | None -> bs,t
-//        | Some (bs, b, rest) -> bs, (mkTypFun (b::rest) c t)
-//      end
-//
-//    | _ -> [],t
-//
+let mkTypApp (typ : Syntax.typ) (arrgs : Syntax.args) (original : Syntax.typ) : Syntax.typ =
+      mk_Typ_app (typ,arrgs) None original.pos
+
+
+(*TODO: Do we need to recurse for c?*)
+let tbinder_prefix t = match (Util.compress_typ t).n with
+    | Typ_fun(bs, c) ->
+      begin match Util.prefix_until (function (Inr _, _) -> true | _ -> false) bs with
+        | None -> bs,t
+        | Some (bs, b, rest) -> bs, (mkTypFun (b::rest) c t)
+      end
+
+    | _ -> [],t
+
 
 let is_xtuple (ns, n) =
     if ns = ["Prims"]
-    then match n with
+    then if (Options.universes())
+         then match n with
             | "Mktuple2" -> Some 2
             | "Mktuple3" -> Some 3
             | "Mktuple4" -> Some 4
@@ -228,6 +237,15 @@ let is_xtuple (ns, n) =
             | "Mktuple6" -> Some 6
             | "Mktuple7" -> Some 7
             | "Mktuple8" -> Some 8
+            | _ -> None
+         else match n with
+            | "MkTuple2" -> Some 2
+            | "MkTuple3" -> Some 3
+            | "MkTuple4" -> Some 4
+            | "MkTuple5" -> Some 5
+            | "MkTuple6" -> Some 6
+            | "MkTuple7" -> Some 7
+            | "MkTuple8" -> Some 8
             | _ -> None
     else None
 
@@ -245,20 +263,20 @@ let record_field_path = function
     | _ -> failwith "impos"
 
 let record_fields fs vs = List.map2 (fun (f:lident) e -> f.ident.idText, e) fs vs
-//
-//let resugar_pat q p = match p with
-//    | MLP_CTor(d, pats) ->
-//      begin match is_xtuple d with
-//        | Some n -> MLP_Tuple(pats)
-//        | _ ->
-//          match q with
-//            | Some (Record_ctor (_, fns)) ->
-//              let p = record_field_path fns in
-//              let fs = record_fields fns pats in
-//              MLP_Record(p, fs)
-//            | _ -> p
-//      end
-//    | _ -> p
+
+let resugar_pat q p = match p with
+    | MLP_CTor(d, pats) ->
+      begin match is_xtuple d with
+        | Some n -> MLP_Tuple(pats)
+        | _ ->
+          match q with
+            | Some (Record_ctor (_, fns)) ->
+              let p = record_field_path fns in
+              let fs = record_fields fns pats in
+              MLP_Record(p, fs)
+            | _ -> p
+      end
+    | _ -> p
 
 
 let is_xtuple_ty (ns, n) =
@@ -305,7 +323,7 @@ let mlpath_of_lid (l:lident) = (l.ns |> List.map (fun i -> i.idText),  l.ident.i
 
 let rec erasableType (unfold_ty:unfold_t) (t:mlty) :bool =
     //printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
-   if UEnv.erasableTypeNoDelta t
+   if Env.erasableTypeNoDelta t
    then true
    else match unfold_ty t with
      | Some t -> (erasableType unfold_ty t)
@@ -314,7 +332,7 @@ let rec erasableType (unfold_ty:unfold_t) (t:mlty) :bool =
 let rec eraseTypeDeep unfold_ty (t:mlty) : mlty =
     match t with
     | MLTY_Fun (tyd, etag, tycd) -> if etag=E_PURE then MLTY_Fun (eraseTypeDeep unfold_ty tyd, etag, eraseTypeDeep unfold_ty tycd) else t
-    | MLTY_Named (lty, mlp) -> if erasableType unfold_ty t then UEnv.erasedContent else MLTY_Named (List.map (eraseTypeDeep unfold_ty) lty, mlp)  // only some named constants are erased to unit.
+    | MLTY_Named (lty, mlp) -> if erasableType unfold_ty t then Env.erasedContent else MLTY_Named (List.map (eraseTypeDeep unfold_ty) lty, mlp)  // only some named constants are erased to unit.
     | MLTY_Tuple lty ->  MLTY_Tuple (List.map (eraseTypeDeep unfold_ty) lty)
     | _ ->  t
 

@@ -28,11 +28,11 @@ open FStar.Dependences
 open FStar.Interactive
 
 (* Module abbreviations for the universal type-checker  *)
-module DsEnv   = FStar.Parser.Env
+module DsEnv   = FStar.ToSyntax.Env
 module TcEnv   = FStar.TypeChecker.Env
 module Syntax  = FStar.Syntax.Syntax
 module Util    = FStar.Syntax.Util
-module Desugar = FStar.Parser.ToSyntax
+module Desugar = FStar.ToSyntax.ToSyntax
 module SMT     = FStar.SMTEncoding.Solver
 module Const   = FStar.Syntax.Const
 module Tc      = FStar.TypeChecker.Tc
@@ -152,7 +152,7 @@ let push_context (dsenv, env) msg =
     let env = TcEnv.push env msg in
     (dsenv, env)
 
-let tc_one_file_and_intf (intf:option<string>) (impl:string) (dsenv:Parser.Env.env) (env:env) = //:(modul * int) list * Parser.Env.env * env =
+let tc_one_file_and_intf (intf:option<string>) (impl:string) (dsenv:DsEnv.env) (env:env) = //:(modul * int) list * Parser.Env.env * env =
   Syntax.reset_gensym ();
   match intf with
     | None -> //no interface; easy
@@ -172,7 +172,7 @@ let tc_one_file_and_intf (intf:option<string>) (impl:string) (dsenv:Parser.Env.e
         let _ = pop_context (dsenv', env') caption in
         tc_one_file dsenv env None iname //check the interface alone
 
-type uenv = Parser.Env.env * env
+type uenv = DsEnv.env * env
 
 let tc_one_file_from_remaining (remaining:list<string>) (uenv:uenv) = //:(string list * (modul* int) list * uenv) =
   let dsenv, env = uenv in
@@ -234,7 +234,7 @@ let rec tc_fold_interleave (acc:list<(modul * int)> * uenv) (remaining:list<stri
 (***********************************************************************)
 let batch_mode_tc_no_prims dsenv env filenames =
   let all_mods, (dsenv, env) = tc_fold_interleave ([], (dsenv, env)) filenames in
-  if Options.interactive() 
+  if Options.interactive()
   && FStar.Errors.get_err_count () = 0
   then env.solver.refresh()
   else env.solver.finish();

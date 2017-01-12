@@ -78,7 +78,7 @@
   <ItemGroup>
     <ProjectReference Include="..\desugar\desugar.fsproj">
       <Name>desugar</Name>
-      <Project>{2d83dee1-5633-47dd-8493-2f94721c151e}</Project>
+      <Project>{6a104ab9-85d2-400b-9cf0-61895019d4b9}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\extraction\extraction.fsproj">
@@ -96,6 +96,11 @@
       <Project>{f6879027-a97f-4857-8f52-cc5641455652}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\stratifiedextraction\stratifiedextraction.fsproj">
+      <Name>stratifiedextraction</Name>
+      <Project>{a4d0fa8e-9f0f-408b-8b5a-99320b3facdb}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\syntax\syntax.fsproj">
       <Name>syntax</Name>
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
@@ -108,7 +113,7 @@
     </ProjectReference>
     <ProjectReference Include="..\tosyntax\tosyntax.fsproj">
       <Name>tosyntax</Name>
-      <Project>{966645a6-4a32-4652-94fe-0a3e3d15519a}</Project>
+      <Project>{b0968012-b93c-4198-9085-b89669e8e4e8}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\typechecker\typechecker.fsproj">

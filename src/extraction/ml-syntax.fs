@@ -19,7 +19,7 @@
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.Syntax
 open FStar
-open FStar.Absyn.Syntax
+//open FStar.Absyn.Syntax
 open FStar.Ident
 open FStar.Util
 open FStar.Const
@@ -75,8 +75,6 @@ let mlpath_of_lident (x : lident) : mlpath =
     if Ident.lid_equals x FStar.Syntax.Const.failwith_lid
     then ([], x.ident.idText)
     else (List.map (fun x -> x.idText) x.ns, x.ident.idText)
-
-let as_mlident (x:bvdef<'a>) = x.ppname.idText, 0
 
 (* -------------------------------------------------------------------- *)
 type mlidents  = list<mlident>
@@ -214,9 +212,9 @@ let ml_unit_ty = MLTY_Named ([], (["Prims"], "unit"))
 let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool"))
 let ml_int_ty  = MLTY_Named ([], (["Prims"], "int"))
 let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
-let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit) 
+let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit)
 let mlp_lalloc = (["SST"], "lalloc")
-let apply_obj_repr x t = 
+let apply_obj_repr x t =
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name(["Obj"], "repr")) in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
 
@@ -250,7 +248,7 @@ let avoid_keyword s =
     s
 
 open FStar.Syntax.Syntax
-let bv_as_mlident (x:bv): mlident = 
+let bv_as_mlident (x:bv): mlident =
   if Util.starts_with x.ppname.idText Ident.reserved_prefix
   || is_null_bv x || is_reserved x.ppname.idText
   then x.ppname.idText ^ "_" ^ (string_of_int x.index), 0

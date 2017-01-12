@@ -14,7 +14,7 @@
   limitations under the License.
 *)
 #light "off"
-module FStar.Parser.ToSyntax
+module FStar.ToSyntax.ToSyntax
 
 open FStar
 open FStar.Util
@@ -22,7 +22,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
 open FStar.Parser
-open FStar.Parser.Env
+open FStar.ToSyntax.Env
 open FStar.Parser.AST
 open FStar.Ident
 open FStar.Const

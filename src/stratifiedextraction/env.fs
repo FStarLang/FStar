@@ -23,6 +23,7 @@ open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML
 open FStar.Tc
 open FStar.Ident
+let as_mlident (x:bvdef<'a>) = x.ppname.idText, 0
 
 type binding =
     | Ty  of btvar * mlident * mlty                //a, 'a, ('a | Top)
@@ -163,14 +164,14 @@ let extend_ty (g:env) (a:btvar) (mapped_to:option<mlty>) : env =
     {g with gamma=gamma; tcenv=tcenv}
 
 let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) (mk_unit:bool (*some pattern terms become unit while extracting*)) : env =
-    let ml_ty = match t_x with 
+    let ml_ty = match t_x with
         | ([], t) -> t
         | _ -> MLTY_Top in
     let mlx = MLE_Var (as_mlident x.v) in
-    let mlx = if mk_unit 
-              then ml_unit 
-              else if add_unit 
-              then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit]) 
+    let mlx = if mk_unit
+              then ml_unit
+              else if add_unit
+              then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit])
               else with_ty ml_ty mlx in
     let gamma = Bv(x, mlx, t_x, is_rec)::g.gamma in
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_var(x.v, x.sort)) in
@@ -195,7 +196,7 @@ let tySchemeIsClosed (tys : mltyscheme) : bool =
 let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env =
     if  tySchemeIsClosed t_x
     then
-        let ml_ty = match t_x with 
+        let ml_ty = match t_x with
             | ([], t) -> t
             | _ -> MLTY_Top in
         let mly = MLE_Name y in

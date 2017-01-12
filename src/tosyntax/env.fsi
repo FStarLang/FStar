@@ -16,7 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module FStar.Parser.Env
+module FStar.ToSyntax.Env
 
 
 open FStar
@@ -78,7 +78,7 @@ type env = {
                                                              iden is in exported_ids[ModulA] if, and only if,
                                                              there is no 'include ModulB' (with ModulB.iden
                                                              defined or reachable) after iden in ModulA.
-                                                           *)  
+                                                           *)
   trans_exported_ids:   Util.smap<exported_id_set>;       (* transitive version of exported_ids along the
                                                              "include" relation, for each module: an identifier is in this set
                                                              for a module if and only if it is defined either

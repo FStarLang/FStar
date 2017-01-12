@@ -5,6 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{6a104ab9-85d2-400b-9cf0-61895019d4b9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>desugar</RootNamespace>
     <AssemblyName>desugar</AssemblyName>

@@ -16,7 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module FStar.Parser.Env
+module FStar.ToSyntax.Env
 
 
 open FStar
@@ -137,8 +137,8 @@ let default_ml env =
     env
 
 
-let set_bv_range bv r = 
-    let id = {bv.ppname with idRange=r} in 
+let set_bv_range bv r =
+    let id = {bv.ppname with idRange=r} in
     {bv with ppname=id}
 
 let bv_to_name bv r = bv_to_name (set_bv_range bv r)
@@ -412,10 +412,10 @@ let fv_qual_of_se = function
       None
     | _ -> None
 
-let lb_fv lbs lid = 
-     Util.find_map lbs  (fun lb -> 
+let lb_fv lbs lid =
+     Util.find_map lbs  (fun lb ->
         let fv = right lb.lbname in
-        if S.fv_eq_lid fv lid then Some fv else None) |> must 
+        if S.fv_eq_lid fv lid then Some fv else None) |> must
 
 let ns_of_lid_equals (lid: lident) (ns: lident) =
     List.length lid.ns = List.length (ids_of_lid ns) &&
@@ -511,17 +511,17 @@ let try_lookup_module env path =
 
 let try_lookup_let env (lid:lident) =
   let k_global_def lid = function
-      | (Sig_let((_, lbs), _, _, _, _), _) -> 
+      | (Sig_let((_, lbs), _, _, _, _), _) ->
         let fv = lb_fv lbs lid in
         Some (fvar lid fv.fv_delta fv.fv_qual)
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
-let try_lookup_definition env (lid:lident) = 
+let try_lookup_definition env (lid:lident) =
     let k_global_def lid = function
       | (Sig_let(lbs, _, _, _, _), _) ->
-        Util.find_map (snd lbs) (fun lb -> 
-            match lb.lbname with 
+        Util.find_map (snd lbs) (fun lb ->
+            match lb.lbname with
                 | Inr fv when S.fv_eq_lid fv lid ->
                   Some (lb.lbdef)
                 | _ -> None)
@@ -552,15 +552,15 @@ let find_all_datacons env (lid:lident) =
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 //no top-level pattern in F*, so need to do this ugliness
-let record_cache_aux_with_filter = 
+let record_cache_aux_with_filter =
     let record_cache : ref<list<list<record_or_dc>>> = Util.mk_ref [[]] in
     let push () =
         record_cache := List.hd !record_cache::!record_cache in
-    let pop () = 
+    let pop () =
         record_cache := List.tl !record_cache in
     let peek () = List.hd !record_cache in
     let insert r = record_cache := (r::peek())::List.tl (!record_cache) in
-    let commit () = match !record_cache with 
+    let commit () = match !record_cache with
         | hd::_::tl -> record_cache := hd::tl
         | _ -> failwith "Impossible" in
     (* remove private/abstract records *)
@@ -579,24 +579,24 @@ let record_cache_aux =
 
 let filter_record_cache =
     let (_, filter) = record_cache_aux_with_filter in filter
-    
-let push_record_cache = 
+
+let push_record_cache =
     let push, _, _, _, _ = record_cache_aux in
     push
 
-let pop_record_cache = 
+let pop_record_cache =
     let _, pop, _, _, _ = record_cache_aux in
     pop
 
-let peek_record_cache = 
+let peek_record_cache =
     let _, _, peek, _, _ = record_cache_aux in
     peek
 
-let insert_record_cache = 
+let insert_record_cache =
     let _, _, _, insert, _ = record_cache_aux in
     insert
 
-let commit_record_cache = 
+let commit_record_cache =
     let _, _, _, _, commit = record_cache_aux in
     commit
 
@@ -673,7 +673,7 @@ let try_lookup_record_or_dc_by_field_name env (fieldname:lident) =
   resolve_in_open_namespaces'' env fieldname Exported_id_field (fun _ -> Cont_ignore) (fun _ -> Cont_ignore) (fun r -> Cont_ok r)  (fun fn -> cont_of_option Cont_ignore (find_in_cache fn)) (fun k _ -> k)
 
 let try_lookup_record_by_field_name env (fieldname:lident) =
-    match try_lookup_record_or_dc_by_field_name env fieldname with 
+    match try_lookup_record_or_dc_by_field_name env fieldname with
         | Some r when r.is_record -> Some r
         | _ -> None
 
@@ -693,8 +693,8 @@ let belongs_to_record env lid record =
       end
     | _ -> false
 
-let try_lookup_dc_by_field_name env (fieldname:lident) = 
-    match try_lookup_record_or_dc_by_field_name env fieldname with 
+let try_lookup_dc_by_field_name env (fieldname:lident) =
+    match try_lookup_record_or_dc_by_field_name env fieldname with
         | Some r -> Some (set_lid_range (lid_of_ids (r.typename.ns @ [r.constrname])) (range_of_lid fieldname), r.is_record)
         | _ -> None
 
@@ -734,7 +734,7 @@ let push_bv_mutable env x =
 let push_bv env x =
   push_bv' env x false
 
-let push_top_level_rec_binding env (x:ident) dd = 
+let push_top_level_rec_binding env (x:ident) dd =
   let l = qualify env x in
   if unique false true env l
   then push_scope_mod env (Rec_binding (x,l,dd))
@@ -867,7 +867,7 @@ let finish env modul =
     | Sig_declare_typ(lid, _, _, quals, _) ->
       if List.contains Private quals
       then Util.smap_remove (sigmap env) lid.str
-    
+
     | Sig_let((_,lbs), r, _, quals, _) ->
       if List.contains Private quals
       || List.contains Abstract quals
@@ -876,7 +876,7 @@ let finish env modul =
       end;
       if List.contains Abstract quals
       && not (List.contains Private quals)
-      then lbs |> List.iter (fun lb -> 
+      then lbs |> List.iter (fun lb ->
            let lid = (right lb.lbname).fv_name.v in
            let decl = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, Assumption::quals, r) in
            Util.smap_add (sigmap env) lid.str (decl, false))
@@ -904,7 +904,7 @@ let finish env modul =
     sigaccum=[];
   }
 
-type env_stack_ops = { 
+type env_stack_ops = {
     push: env -> env;
     mark: env -> env;
     reset_mark: env -> env;
@@ -912,24 +912,24 @@ type env_stack_ops = {
     pop:env -> env
 }
 
-let stack_ops = 
-    let stack = Util.mk_ref [] in 
-    let push env = 
+let stack_ops =
+    let stack = Util.mk_ref [] in
+    let push env =
         push_record_cache();
         stack := env::!stack;
         {env with sigmap=Util.smap_copy (sigmap env)} in
-    let pop env = match !stack with 
-        | env::tl -> 
+    let pop env = match !stack with
+        | env::tl ->
          pop_record_cache();
          stack := tl;
          env
         | _ -> failwith "Impossible: Too many pops" in
-    let commit_mark env = 
+    let commit_mark env =
         commit_record_cache();
-        match !stack with 
+        match !stack with
          | _::tl -> stack := tl; env
          | _ -> failwith "Impossible: Too many pops" in
-    { push=push; 
+    { push=push;
       pop=pop;
       mark=push;
       reset_mark=pop;
@@ -943,22 +943,22 @@ let pop env = stack_ops.pop env
 
 let export_interface (m:lident) env =
 //    printfn "Exporting interface %s" m.str;
-    let sigelt_in_m se = 
-        match Util.lids_of_sigelt se with 
+    let sigelt_in_m se =
+        match Util.lids_of_sigelt se with
             | l::_ -> l.nsstr=m.str
             | _ -> false in
-    let sm = sigmap env in 
-    let env = pop env in 
+    let sm = sigmap env in
+    let env = pop env in
     let keys = Util.smap_keys sm in
-    let sm' = sigmap env in 
+    let sm' = sigmap env in
     keys |> List.iter (fun k ->
-    match Util.smap_try_find sm' k with 
-        | Some (se, true) when sigelt_in_m se ->  
+    match Util.smap_try_find sm' k with
+        | Some (se, true) when sigelt_in_m se ->
           Util.smap_remove sm' k;
 //          printfn "Exporting %s" k;
-          let se = match se with 
+          let se = match se with
             | Sig_declare_typ(l, u, t, q, r) -> Sig_declare_typ(l, u, t, Assumption::q, r)
-            | _ -> se in 
+            | _ -> se in
           Util.smap_add sm' k (se, false)
         | _ -> ());
     env
@@ -1009,7 +1009,7 @@ let prepare_module_or_interface intf admitted env mname =
       then raise (Error(Util.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
       //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
       prep (push env), true //push a context so that we can pop it when we're done
-      
+
 let enter_monad_scope env mname =
   match env.curmonad with
   | Some mname' -> raise (Error ("Trying to define monad " ^ mname.idText ^ ", but already in monad scope " ^ mname'.idText, mname.idRange))
