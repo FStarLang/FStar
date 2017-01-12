@@ -6,6 +6,8 @@ type rel (t:Type)  =
 
 type eq (t:Type) = v:(rel t){R?.l v == R?.r v}
 
+let same x = R x x
+
 val lift : #t:Type -> #t2:Type 
            -> f:(t -> Tot t2) -> rel t 
            -> Tot (rel t2)

@@ -157,6 +157,24 @@
     comments := [] ;
     lexed_comments
 
+  (* Try to trim each line of [comment] by the ammount of space
+     on the first line of the comment if possible *)
+  (* TODO : apply this to FSDOC too *)
+  let maybe_trim_lines start_column comment =
+    if start_column = 0 then comment
+    else
+      let comment_lines = String.split_on_char '\n' comment in
+      let ensures_empty_prefix k s =
+        let j = min k (String.length s - 1) in
+        let rec aux i = if i > j then k else if s.[i] <> ' ' then i else aux (i+1) in
+        aux 0
+      in
+      let trim_width =
+        List.fold_left ensures_empty_prefix start_column comment_lines
+      in
+      String.concat "\n" (List.map (fun s -> String.tail s trim_width) comment_lines)
+
+
   let comment_buffer = Buffer.create 1024
 
   let start_comment lexbuf =
@@ -167,11 +185,13 @@
     let endpos = snd (L.range lexbuf) in
     Buffer.add_bytes buffer "*)" ;
     let comment = Buffer.contents buffer in
+    let comment = maybe_trim_lines (startpos.pos_cnum - startpos.pos_bol) comment in
     Buffer.clear buffer ;
     comments := (comment, FStar_Parser_Util.mksyn_range startpos endpos) :: ! comments
 
   let push_one_line_comment lexbuf =
     let startpos, endpos = L.range lexbuf in
+    assert (startpos.pos_lnum = endpos.pos_lnum) ;
     comments := (lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos) :: !comments
 }
 

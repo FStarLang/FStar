@@ -483,6 +483,7 @@ let return_value env t v =
          let u_t = env.universe_of env t in
          let wp =
             if env.lax
+            && Options.ml_ish() //NS: Disabling this optimization temporarily
             then S.tun
             else let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
                  let k = SS.subst [NT(a, t)] kwp in
@@ -506,7 +507,9 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
         (match e1opt with | None -> "None" | Some e -> Print.term_to_string e)
         (Print.lcomp_to_string lc1) bstr (Print.lcomp_to_string lc2));
   let bind_it () =
-      if env.lax then
+      if env.lax
+      && Options.ml_ish() //NS: disabling this optimization temporarily
+      then
          let u_t = env.universe_of env lc2.res_typ in
          lax_mk_tot_or_comp_l joined_eff u_t lc2.res_typ []
       else begin
@@ -598,7 +601,9 @@ let weaken_guard g1 g2 = match g1, g2 with
 let weaken_precondition env lc (f:guard_formula) : lcomp =
   let weaken () =
       let c = lc.comp () in
-      if env.lax then c
+      if env.lax
+      && Options.ml_ish() //NS: Disabling this optimization temporarily
+      then c
       else begin
          match f with
          | Trivial -> c
@@ -624,7 +629,9 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
          let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
          let strengthen () =
             let c = lc.comp () in
-            if env.lax then c
+            if env.lax
+            && Options.ml_ish() //NS: Disabling this optimization temporarily
+            then c
             else begin
                 let g0 = Rel.simplify_guard env g0 in
                 match guard_form g0 with
@@ -683,7 +690,9 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
 let ite env (guard:formula) lcomp_then lcomp_else =
   let joined_eff = join_lcomp env lcomp_then lcomp_else in
   let comp () =
-      if env.lax then
+      if env.lax
+      && Options.ml_ish() //NS: Disabling this optimization temporarily
+      then
          let u_t = env.universe_of env lcomp_then.res_typ in
          lax_mk_tot_or_comp_l joined_eff u_t lcomp_then.res_typ []
       else begin
@@ -708,7 +717,9 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
     let eff = List.fold_left (fun eff (_, lc) -> join_effects env eff lc.eff_name) Const.effect_PURE_lid lcases in
     let bind_cases () =
         let u_res_t = env.universe_of env res_t in
-        if env.lax then
+        if env.lax
+        && Options.ml_ish() //NS: Disabling this optimization temporarily
+        then
              lax_mk_tot_or_comp_l eff u_res_t res_t []
         else begin
             let ifthenelse md res_t g wp_t wp_e =
@@ -744,7 +755,9 @@ let close_comp env bvs (lc:lcomp) =
       let c = lc.comp() in
       if U.is_ml_comp c then c
       else
-        if env.lax then
+        if env.lax
+	&& Options.ml_ish() //NS: disabling this optimization temporarily
+        then
            c
         else begin
             let close_wp u_res md res_t bvs wp0 =
@@ -767,7 +780,8 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
   let refine () =
       let c = lc.comp() in
       if not (is_pure_or_ghost_effect env lc.eff_name)
-      || env.lax
+      || (env.lax
+          && Options.ml_ish()) //NS: disabling this optimization temporarily
       then c
       else if U.is_partial_return c then c
       else if U.is_tot_or_gtot_comp c
@@ -832,7 +846,9 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
         | NonTrivial f ->
           let g = {g with guard_f=Trivial} in
           let strengthen () =
-              if env.lax then
+              if env.lax
+              && Options.ml_ish() //NS: disabling this optimization temporarily
+              then
                 lc.comp()
               else begin
                   //try to normalize one more time, since more unification variables may be resolved now

@@ -621,34 +621,31 @@ let rec extract : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.modul  -
 let _83_488 = (FStar_Syntax_Syntax.reset_gensym ())
 in (
 
-let _83_490 = (let _182_191 = (FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name)
-in (FStar_Util.print1 "Extracting module %s\n" _182_191))
-in (
-
 let name = (FStar_Extraction_ML_Syntax.mlpath_of_lident m.FStar_Syntax_Syntax.name)
 in (
 
 let g = (
 
-let _83_493 = g
-in {FStar_Extraction_ML_UEnv.tcenv = _83_493.FStar_Extraction_ML_UEnv.tcenv; FStar_Extraction_ML_UEnv.gamma = _83_493.FStar_Extraction_ML_UEnv.gamma; FStar_Extraction_ML_UEnv.tydefs = _83_493.FStar_Extraction_ML_UEnv.tydefs; FStar_Extraction_ML_UEnv.currentModule = name})
-in if (((m.FStar_Syntax_Syntax.name.FStar_Ident.str = "Prims") || m.FStar_Syntax_Syntax.is_interface) || (FStar_Options.no_extract m.FStar_Syntax_Syntax.name.FStar_Ident.str)) then begin
-(
+let _83_491 = g
+in {FStar_Extraction_ML_UEnv.tcenv = _83_491.FStar_Extraction_ML_UEnv.tcenv; FStar_Extraction_ML_UEnv.gamma = _83_491.FStar_Extraction_ML_UEnv.gamma; FStar_Extraction_ML_UEnv.tydefs = _83_491.FStar_Extraction_ML_UEnv.tydefs; FStar_Extraction_ML_UEnv.currentModule = name})
+in (
 
-let g = (extract_iface g m)
-in ((g), ([])))
-end else begin
-(
-
-let _83_499 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
-in (match (_83_499) with
+let _83_496 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
+in (match (_83_496) with
 | (g, sigs) -> begin
 (
 
 let mlm = (FStar_List.flatten sigs)
+in if (((m.FStar_Syntax_Syntax.name.FStar_Ident.str <> "Prims") && (not (m.FStar_Syntax_Syntax.is_interface))) && (FStar_Options.should_extract m.FStar_Syntax_Syntax.name.FStar_Ident.str)) then begin
+(
+
+let _83_498 = (let _182_191 = (FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name)
+in (FStar_Util.print1 "Extracted module %s\n" _182_191))
 in ((g), ((FStar_Extraction_ML_Syntax.MLLib ((((name), (Some ((([]), (mlm)))), (FStar_Extraction_ML_Syntax.MLLib ([]))))::[]))::[])))
-end))
-end)))))
+end else begin
+((g), ([]))
+end)
+end))))))
 
 
 

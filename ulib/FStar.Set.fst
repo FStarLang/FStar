@@ -14,6 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+(** Computatiional sets (on eqtypes): membership is a boolean function *)
 module FStar.Set
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.FunctionalExtensionality

@@ -1729,10 +1729,15 @@ let tc_decls env ses =
   List.rev_append ses [], (List.rev_append exports []) |> List.flatten, env
 
 let tc_partial_modul env modul =
+  let verify = Options.should_verify modul.name.str in
+  let action = if verify then "Verifying" else "Lax-checking" in
+  let label = if modul.is_interface then "interface" else "implementation" in
+  if Options.debug_any () then
+    BU.print3 "%s %s of %s\n" action label modul.name.str;
+
   let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
   let msg = "Internals for " ^name in
-  let env = {env with Env.is_iface=modul.is_interface;
-                      admit=not (Options.should_verify modul.name.str)} in
+  let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
   //AR: the interactive mode calls this function, because of which there is an extra solver push.
   //    the interactive mode does not call finish_partial_modul, so this push is not popped.
   //    currently, there is a cleanup function in the interactive mode tc, that does this extra pop.
@@ -1832,7 +1837,7 @@ let tc_modul env modul =
 let check_module env m =
     if Options.debug_any()
     then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
-    let env = {env with lax=Options.lax()} in
+    let env = {env with lax=not (Options.should_verify m.name.str)} in
     let m, env = tc_modul env m in
     if Options.dump_module m.name.str
     then BU.print1 "%s\n" (Print.modul_to_string m);
@@ -1840,8 +1845,12 @@ let check_module env m =
     then begin
       let normalize_toplevel_lets = function
           | Sig_let ((b, lbs), r, ids, qs, attrs) ->
-              let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant] env in
-              Sig_let ((b, List.map (fun lb -> {lb with lbdef = n lb.lbdef}) lbs), r, ids, qs, attrs)
+              let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
+              let update lb =
+                  let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
+                  { lb with lbdef = n (Env.push_univ_vars env univnames) e }
+              in
+              Sig_let ((b, List.map update lbs), r, ids, qs, attrs)
           | se -> se
       in
       let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in

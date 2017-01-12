@@ -140,85 +140,30 @@ let fill_buffer () =
   let s = the_interactive_state in
   s.buffer := !s.buffer @ [ read_chunk () ]
 
-exception Found of string
-let find_initial_module_name () =
-  fill_buffer (); fill_buffer ();
-  try begin match !the_interactive_state.buffer with
-    | [Push _; Code (code, _)] ->
-        let lines = Util.split code "\n" in
-        List.iter (fun line ->
-          let line = trim_string line in
-          if String.length line > 7 && substring line 0 6 = "module" then
-            let module_name = substring line 7 (String.length line - 7) in
-            raise (Found module_name)
-        ) lines
-    | _ -> ()
-    end;
-    None
-  with Found n -> Some n
-
 module U_Syntax = FStar.Syntax.Syntax
 module F_Syntax = FStar.Absyn.Syntax
-
-let detect_dependencies_for_module (mname:option<string>) : string         //the filename of the buffer being checked, if any
-                                                          * string         //the module name of the buffer being checked
-                                                          * list<string>   //all its dependences
-  =
-  let failr msg r =
-    FStar.Errors.warn r msg;
-    exit 1
-  in
-  let fail msg = failr msg Range.dummyRange in
-  let parse_msg = "Dependency analysis may not be correct because the file failed to parse: " in
-  try
-      match mname with
-      | None ->
-        fail "No initial module directive found\n"
-      | Some module_name ->
-          let file_of_module_name = Parser.Dep.build_map [] in
-          let filename = smap_try_find file_of_module_name (String.lowercase module_name) in
-          match filename with
-          | None ->
-             fail (Util.format2 "I found a \"module %s\" directive, but there \
-                is no %s.fst\n" module_name module_name)
-          | Some (None, Some filename)
-          | Some (Some filename, None) ->
-              Options.add_verify_module module_name;
-              let _, all_filenames, _ = Parser.Dep.collect Parser.Dep.VerifyUserList [ filename ] in
-              filename, module_name, List.rev (List.tl all_filenames)
-          | Some (Some _, Some _) ->
-             fail (Util.format1 "The combination of split interfaces and \
-               interactive verification is not supported for: %s\n" module_name)
-          | Some (None, None) ->
-              failwith "impossible"
-
-  with
-  | FStar.Errors.Error(msg, r) ->
-      failr (parse_msg ^ msg) r
-  | FStar.Errors.Err msg ->
-      fail (parse_msg ^ msg)
-
-let detect_dependencies_with_first_interactive_chunk () : string         //the filename of the buffer being checked, if any
-                                                        * string         //the module name of the buffer being checked
-                                                        * list<string>   //all its dependences 
-  = detect_dependencies_for_module (find_initial_module_name ())
 
 (******************************************************************************************)
 (* The main interactive loop *)
 (******************************************************************************************)
 open FStar.Parser.ParseIt
 
+let deps_of_our_file filename =
+  (* Now that fstar-mode.el passes the name of the current file, we must parse
+   * and lax-check everything but the current module we're editing. *)
+  let deps = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut [ filename ] in
+  List.filter (fun x ->
+    Parser.Dep.lowercase_module_name x <> Parser.Dep.lowercase_module_name filename
+  ) deps
+
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
 type m_timestamps = list<(option<string> * string * option<time> * time)>
 
-//filenames are the dependencies
-let interactive_mode (filename:option<string>)    //current filename
-                     (modname:option<string>)     //current module name, used to recompute dependencies when needed
-                     (verify_mode:Parser.Dep.verify_mode)    //verify_mode passed from fstar.fs, again used to recompute dependencies when needed
-                     (filenames:list<string>)
+// filename is the name of the file currently edited
+let interactive_mode (filename:string)
                      (initial_mod:'modul)
                      (tc:interactive_tc<'env,'modul>) =
-    if Option.isSome (Options.codegen()) 
+    if Option.isSome (Options.codegen())
     then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
 
     (*
@@ -249,8 +194,8 @@ let interactive_mode (filename:option<string>)    //current filename
             intf_t, impl_t
           in
           tc_deps m stack env remaining ((intf, impl, intf_t, impl_t)::ts)
-    in 
-    
+    in
+
     (*
      * check if some dependencies have been modified, added, or deleted
      * if so, only type check them and anything that follows, while maintaining others as is (current dependency graph is a total order)
@@ -285,7 +230,7 @@ let interactive_mode (filename:option<string>)    //current filename
        *)
       let rec iterate (depnames:list<string>) (st:stack<'env, 'modul>) (env':'env) (ts:m_timestamps) (good_stack:stack<'env, 'modul>) (good_ts:m_timestamps) = //:(stack<'env, 'modul> * 'env * m_timestamps) =
         //invariant length good_stack = length good_ts, and same for stack and ts
-        
+
         let match_dep (depnames:list<string>) (intf:option<string>) (impl:string) : (bool * list<string>) =
           match intf with
             | None      ->
@@ -323,8 +268,8 @@ let interactive_mode (filename:option<string>)    //current filename
           | []           -> (* st should also be empty here *) tc_deps m good_stack env' depnames good_ts
       in
 
-      let _, _, filenames = detect_dependencies_for_module modname in
-      let filenames = FStar.Dependences.find_deps_if_needed verify_mode filenames in
+      (* Well, the file list hasn't changed, so our (single) file is still there. *)
+      let filenames = deps_of_our_file filename in
       //reverse stk and ts, since iterate expects them in "first dependency first order"
       iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
     in
@@ -358,13 +303,14 @@ let interactive_mode (filename:option<string>)    //current filename
             tc.report_fail();
             Util.print1 "%s\n" fail;
             let env = tc.reset_mark env_mark in
-            go line_col stack curmod env ts in
+            go line_col stack curmod env ts
+          in
 
           let env_mark = tc.mark env in
           let frag = {frag_text=text;
-                      frag_line=fst line_col; 
+                      frag_line=fst line_col;
                       frag_col=snd line_col} in
-//          Util.print3 "got frag %s, %s, %s" frag.frag_text 
+//          Util.print3 "got frag %s, %s, %s" frag.frag_text
 //            (Util.string_of_int frag.frag_line)
 //            (Util.string_of_int frag.frag_col);
           let res = tc.check_frag env_mark curmod frag in begin
@@ -381,13 +327,12 @@ let interactive_mode (filename:option<string>)    //current filename
     end in
 
     //type check prims and the dependencies
-    let filenames = FStar.Dependences.find_deps_if_needed verify_mode filenames in
+    let filenames = deps_of_our_file filename in
     let env = tc.tc_prims () in
-    let stack, env, ts = tc_deps initial_mod [] env filenames [] in 
+    let stack, env, ts = tc_deps initial_mod [] env filenames [] in
 
     if Options.universes()
     && (FStar.Options.record_hints() //and if we're recording or using hints
     || FStar.Options.use_hints())
-    && Option.isSome filename
-    then FStar.SMTEncoding.Solver.with_hints_db (Option.get filename) (fun () -> go (1, 0) stack initial_mod env ts)
+    then FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go (1, 0) stack initial_mod env ts)
     else go (1, 0) stack initial_mod env ts

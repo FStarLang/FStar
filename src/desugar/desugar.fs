@@ -1755,7 +1755,7 @@ let desugar_modul_common (curmod:option<modul>) env (m:AST.modul) : env_t * Synt
 
 let desugar_partial_modul curmod env (m:AST.modul) : env_t * Syntax.modul =
   let m =
-    if (Options.interactive_fsi()) then
+    if false then
         match m with
             | Module(mname, decls) -> AST.Interface(mname, decls, true)
             | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)

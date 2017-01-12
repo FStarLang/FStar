@@ -8,7 +8,7 @@ let dummyRange = 0L
 let lor64 = BatInt64.logor
 let land64 = BatInt64.logand
 let lsl64 = BatInt64.shift_left
-let lsr64 = BatInt64.shift_right
+let lsr64 = BatInt64.shift_right_logical
 
 let rec pown32 n = if n = 0 then 0  else (pown32 (n-1) lor (1 lsl (n-1)))
 let rec pown64 n = if n = 0 then 0L else (lor64 (pown64 (n-1)) (lsl64 1L (n-1)))
@@ -34,7 +34,6 @@ type range = {
 
 type int_t = int
 
-let zeroPos : int_t = 0
 let dummyRange = {
     def_range=0L;
     use_range=0L
@@ -58,6 +57,9 @@ let mk_pos l c =
   lor ((l lsl col_nbits) land line_col_mask)
 let line_of_pos p =  (p lsr col_nbits)
 let col_of_pos p =  (p land pos_col_mask)
+let end_of_line p = mk_pos (line_of_pos p) 511 (* pos_col_mask *)
+let zeroPos = mk_pos 1 0
+
 
 let bits_of_pos (x:pos) : FStar_BaseTypes.int32 = x
 let pos_of_bits (x:FStar_BaseTypes.int32) : pos = x
@@ -132,6 +134,12 @@ let dest_file_idx_range r = file_idx_of_range r,start_of_range r,end_of_range r
 let dest_range r = file_of_range r,start_of_range r,end_of_range r
 let dest_pos p = line_of_pos p,col_of_pos p
 let end_range (r:range) = mk_range (file_of_range r) (end_of_range r) (end_of_range r)
+let extend_to_end_of_line r =
+   let end_pos = (end_of_line (end_of_range r)) in
+   assert (col_of_pos end_pos = 511) ;
+   let r = mk_range (file_of_range r) (start_of_range r) end_pos in
+   assert (col_of_pos (end_of_range r) = 511) ;
+   r
 
 let trim_range_right r n =
   let fidx,p1,p2 = dest_file_idx_range r in
@@ -178,6 +186,9 @@ let range_contains_pos m1 p =
 
 let range_before_pos m1 p =
   pos_geq p (end_of_range m1)
+
+let range_before_range m1 m2 =
+  pos_geq (start_of_range m2) (end_of_range m1)
 
 let rangeN filename line =  mk_range filename (mk_pos line 0) (mk_pos line 80)
 let pos0 = mk_pos 1 0

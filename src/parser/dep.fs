@@ -80,32 +80,12 @@ let list_of_option = function Some x -> [x] | None -> []
 let list_of_pair (intf, impl) =
   list_of_option intf @ list_of_option impl
 
-(* Old behavior: just pick the interface if presented with both the interface
- * and the implementation. *)
-let must_find_stratified m k =
-  match must (smap_try_find m k) with
-  | Some intf, _ ->
-      [ intf ]
-  | None, Some impl ->
-      [ impl ]
-  | None, None ->
-      []
-
-let must_find_universes m k =
-  list_of_pair (must (smap_try_find m k))
-
-let must_find m k =
-  if Options.universes () then
-    must_find_universes m k
-  else
-    must_find_stratified m k
-
-let print_map (m: map): unit =
-  List.iter (fun k ->
-    List.iter (fun f ->
-      Util.print2 "%s: %s\n" k f
-    ) (must_find m k)
-  ) (List.unique (smap_keys m))
+(* let print_map (m: map): unit = *)
+(*   List.iter (fun k -> *)
+(*     List.iter (fun f -> *)
+(*       Util.print2 "%s: %s\n" k f *)
+(*     ) (must_find m k) *)
+(*   ) (List.unique (smap_keys m)) *)
 
 
 let lowercase_module_name f =
@@ -205,7 +185,13 @@ exception Exit
 
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
     it depends on. *)
-let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_mode) (is_user_provided_filename: bool) (original_map: map) (filename: string): list<string> =
+let collect_one
+  (verify_flags: list<(string * ref<bool>)>)
+  (verify_mode: verify_mode)
+  (is_user_provided_filename: bool)
+  (original_map: map)
+  (filename: string): list<string>
+=
   let deps = BU.mk_ref [] in
   let add_dep d =
     if not (List.existsb (fun d' -> d' = d) !deps) then
@@ -289,13 +275,22 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | Module (lid, decls)
     | Interface (lid, decls, _) ->
         check_module_declaration_against_filename lid filename;
+        (* We discovered a new file in the graph. *)
         begin match verify_mode with
         | VerifyAll ->
+            (* Every module we discover is a module we verify. *)
             Options.add_verify_module (string_of_lid lid true)
         | VerifyFigureItOut ->
+            (* Well... to put all the code in one place, the function takes an
+             * argument that tells whether this is a root of the discovery (i.e.
+             * we started from a file that was provided on the command-line. *)
             if is_user_provided_filename then
               Options.add_verify_module (string_of_lid lid true)
         | VerifyUserList ->
+            (* Mutate the reference to acknowledge that we have found the file
+             * the user mentioned in the first place (the code will later bail
+             * if there a user-provided --verify_module argument referes to a
+             * module that hasn't been found in the graph). *)
             List.iter (fun (m, r) ->
               if String.lowercase m = String.lowercase (string_of_lid lid true) then
                 r := true
@@ -552,26 +547,47 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
 
   let collect_one = collect_one verify_flags verify_mode in
 
-  (* This function takes a lowercase module name. *)
-  let rec discover_one is_user_provided_filename key =
+  (* There are two desired behaviors.
+   * - During a graph traversal (which this function implements), visiting M
+   *   (because someone mentioned it somewhere) generates a dependency on:
+   *   - M.fsti if there is no implementation, or if in universes and neither
+   *     verify_all or extract_all is specified ("partial")
+   *   - M.fsti and M.fst otherwise
+   * - When starting from a command-line argument, visiting M (because it is
+   *   passed from the command-line) generates a dependency on:
+   *   - M.fsti only if the argument was M.fsti
+   *   - both M.fsti and M.fst if the argument was M.fst
+   *)
+  let partial_discovery =
+    Options.universes () && not (Options.verify_all () || Options.extract_all ())
+  in
+  let rec discover_one is_user_provided_filename interface_only key =
     if smap_try_find graph key = None then
       (* Util.print1 "key: %s\n" key; *)
       let intf, impl = must (smap_try_find m key) in
       let intf_deps =
         match intf with
-        | None -> []
         | Some intf -> collect_one is_user_provided_filename m intf
+        | None -> []
       in
       let impl_deps =
-        match impl with
-        | None -> []
-        | Some impl -> collect_one is_user_provided_filename m impl
+        match impl, intf with
+        | Some impl, Some _ when interface_only -> []
+        | Some impl, _ -> collect_one is_user_provided_filename m impl
+        | None, _-> []
       in
       let deps = List.unique (impl_deps @ intf_deps) in
       smap_add graph key (deps, White);
-      List.iter (discover_one false) deps
+      List.iter (discover_one false partial_discovery) deps
   in
-  List.iter (discover_one true) (List.map lowercase_module_name filenames);
+  let discover_command_line_argument f =
+    let m = lowercase_module_name f in
+    if is_interface f then
+      discover_one true true m
+    else
+      discover_one true false m
+  in
+  List.iter discover_command_line_argument filenames;
 
   (* At this point, we have the (immediate) dependency graph of all the files. *)
   let immediate_graph = smap_copy graph in
@@ -607,7 +623,28 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
   in
   let discover = discover [] in
 
-  let must_find = must_find m in
+  let must_find k =
+    (* Now a bit of reverse-engineering. Sadly, I made the decision to have keys
+     * in my map be lowercase module names, so now we must determine which of
+     * the two cases we originally were in. If Foo.fst was on the command-line,
+     * then it's always fst+fsti; otherwise, it's governed by the
+     * partial_discovery flag. *)
+    match must (smap_try_find m k) with
+    | Some intf, Some impl when not partial_discovery && not (List.existsML (fun f ->
+        lowercase_module_name f = k
+      ) filenames) ->
+        [ intf; impl ]
+    | Some intf, Some impl when List.existsML (fun f ->
+        is_implementation f && lowercase_module_name f = k
+      ) filenames ->
+        [ intf; impl ]
+    | Some intf, _ ->
+        [ intf ]
+    | None, Some impl ->
+        [ impl ]
+    | None, None ->
+        []
+  in
   let must_find_r f = List.rev (must_find f) in
   let by_target = List.collect (fun k ->
     let as_list = must_find k in

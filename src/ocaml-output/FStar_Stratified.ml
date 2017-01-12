@@ -108,7 +108,7 @@ in (match (_95_61) with
 | (prims_mod, dsenv, env) -> begin
 (
 
-let filenames = (FStar_Dependences.find_deps_if_needed verify_mode filenames)
+let filenames = (FStar_Dependencies.find_deps_if_needed verify_mode filenames)
 in (
 
 let _95_66 = (batch_mode_tc_no_prims dsenv env filenames)

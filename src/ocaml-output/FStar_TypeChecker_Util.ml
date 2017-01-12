@@ -972,7 +972,7 @@ in (
 let u_t = (env.FStar_TypeChecker_Env.universe_of env t)
 in (
 
-let wp = if env.FStar_TypeChecker_Env.lax then begin
+let wp = if (env.FStar_TypeChecker_Env.lax && false) then begin
 FStar_Syntax_Syntax.tun
 end else begin
 (
@@ -1047,7 +1047,7 @@ in (
 
 let bind_it = (fun _58_730 -> (match (()) with
 | () -> begin
-if env.FStar_TypeChecker_Env.lax then begin
+if (env.FStar_TypeChecker_Env.lax && false) then begin
 (
 
 let u_t = (env.FStar_TypeChecker_Env.universe_of env lc2.FStar_Syntax_Syntax.res_typ)
@@ -1248,7 +1248,7 @@ let weaken = (fun _58_824 -> (match (()) with
 (
 
 let c = (lc.FStar_Syntax_Syntax.comp ())
-in if env.FStar_TypeChecker_Env.lax then begin
+in if (env.FStar_TypeChecker_Env.lax && false) then begin
 c
 end else begin
 (match (f) with
@@ -1320,7 +1320,7 @@ let strengthen = (fun _58_852 -> (match (()) with
 (
 
 let c = (lc.FStar_Syntax_Syntax.comp ())
-in if env.FStar_TypeChecker_Env.lax then begin
+in if (env.FStar_TypeChecker_Env.lax && false) then begin
 c
 end else begin
 (
@@ -1484,7 +1484,7 @@ in (
 
 let comp = (fun _58_899 -> (match (()) with
 | () -> begin
-if env.FStar_TypeChecker_Env.lax then begin
+if (env.FStar_TypeChecker_Env.lax && false) then begin
 (
 
 let u_t = (env.FStar_TypeChecker_Env.universe_of env lcomp_then.FStar_Syntax_Syntax.res_typ)
@@ -1554,7 +1554,7 @@ let bind_cases = (fun _58_939 -> (match (()) with
 (
 
 let u_res_t = (env.FStar_TypeChecker_Env.universe_of env res_t)
-in if env.FStar_TypeChecker_Env.lax then begin
+in if (env.FStar_TypeChecker_Env.lax && false) then begin
 (lax_mk_tot_or_comp_l eff u_res_t res_t [])
 end else begin
 (
@@ -1654,7 +1654,7 @@ let c = (lc.FStar_Syntax_Syntax.comp ())
 in if (FStar_Syntax_Util.is_ml_comp c) then begin
 c
 end else begin
-if env.FStar_TypeChecker_Env.lax then begin
+if (env.FStar_TypeChecker_Env.lax && false) then begin
 c
 end else begin
 (
@@ -1711,7 +1711,7 @@ let refine = (fun _58_1016 -> (match (()) with
 (
 
 let c = (lc.FStar_Syntax_Syntax.comp ())
-in if ((not ((is_pure_or_ghost_effect env lc.FStar_Syntax_Syntax.eff_name))) || env.FStar_TypeChecker_Env.lax) then begin
+in if ((not ((is_pure_or_ghost_effect env lc.FStar_Syntax_Syntax.eff_name))) || (env.FStar_TypeChecker_Env.lax && false)) then begin
 c
 end else begin
 if (FStar_Syntax_Util.is_partial_return c) then begin
@@ -1860,7 +1860,7 @@ in (
 
 let strengthen = (fun _58_1082 -> (match (()) with
 | () -> begin
-if env.FStar_TypeChecker_Env.lax then begin
+if (env.FStar_TypeChecker_Env.lax && false) then begin
 (lc.FStar_Syntax_Syntax.comp ())
 end else begin
 (

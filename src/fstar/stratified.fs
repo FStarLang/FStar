@@ -24,7 +24,7 @@ open FStar.Getopt
 open FStar.Ident
 open FStar.Absyn.Syntax
 open FStar.Tc.Env
-open FStar.Dependences
+open FStar.Dependencies
 open FStar.Interactive
 
 (* Module abbreviations for the stratified type-checker *)

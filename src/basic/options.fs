@@ -94,6 +94,8 @@ let init () =
         ("dump_module"                  , List []);
         ("eager_inference"              , Bool false);
         ("explicit_deps"                , Bool false);
+        ("extract_module"               , List []);
+        ("extract_all"                  , Bool false);
         ("fs_typ_app"                   , Bool false);
         ("fsi"                          , Bool false);
         ("fstar_home"                   , Unset);
@@ -178,8 +180,9 @@ let get_doc                     ()      = lookup_opt "doc"                      
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
 let get_explicit_deps           ()      = lookup_opt "explicit_deps"            as_bool
+let get_extract_all             ()      = lookup_opt "extract_all"              as_bool
+let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
-let get_fsi                     ()      = lookup_opt "fsi"                      as_bool
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
 let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
@@ -285,6 +288,12 @@ let mk_spec o : opt =
           OneArg (g, d) in
     ns, name, arg, desc
 
+let cons_extract_module s  =
+    List (String.lowercase s::get_extract_module() |> List.map String)
+
+let add_extract_module s =
+    set_option "extract_module" (cons_extract_module s)
+
 let cons_verify_module s  =
     List (String.lowercase s::get_verify_module() |> List.map String)
 
@@ -365,15 +374,21 @@ let rec specs () : list<Getopt.opt> =
         "Do not find dependencies automatically, the user provides them on the command-line");
 
        ( noshort,
+        "extract_all",
+        ZeroArgs (fun () -> Bool true),
+        "Discover the complete dependency graph and do not stop at interface boundaries");
+
+       ( noshort,
+        "extract_module",
+        OneArg (cons_extract_module,
+                 "[module name]"),
+        "Only extract the specified modules (instead of the possibly-partial dependency graph)");
+
+       ( noshort,
         "fs_typ_app",
         ZeroArgs (fun () -> Bool true),
         "Allow the use of t<t1,...,tn> syntax for type applications;
         brittle since it clashes with the integer less-than operator");
-
-       ( noshort,
-        "fsi",
-        ZeroArgs (fun () -> Bool true),
-        "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
 
        ( noshort,
         "fstar_home",
@@ -676,11 +691,6 @@ and validate_cardinality x = match x with
     | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
               display_usage_aux (specs ()); exit 1)
 
-and set_interactive_fsi _ =
-    if get_in() then set_option' ("fsi", Bool true)
-    else (Util.print_string "Set interactive flag first before setting interactive fsi flag\n";
-          display_usage_aux (specs ()); exit 1)
-
 //Several options can only be set at the time the process is created, and not controlled interactively via pragmas
 //Additionaly, the --smt option is a security concern
 let settable = function
@@ -750,10 +760,14 @@ let set_options o s =
         | Restore -> all_specs in
     Getopt.parse_string specs (fun _ -> ()) s
 
+let file_list_ = Util.mk_ref []
+
 let parse_cmd_line () =
-  let file_list = Util.mk_ref [] in
-  let res = Getopt.parse_cmdline (specs()) (fun i -> file_list := !file_list @ [i]) in
-  res, !file_list
+  let res = Getopt.parse_cmdline (specs()) (fun i -> file_list_ := !file_list_ @ [i]) in
+  res, !file_list_
+
+let file_list () =
+  !file_list_
 
 let restore_cmd_line_options should_clear =
     (* Some options must be preserved because they can't be reset via #pragrams.
@@ -765,11 +779,23 @@ let restore_cmd_line_options should_clear =
     r
 
 let should_verify m =
-  if get_lax()
-  then false
-  else match get_verify_module() with
-       | [] -> true //the verify_module flag was not set, so verify everything
-       | l -> List.contains (String.lowercase m) l //otherwise, look in the list to see if it is explicitly mentioned
+  if get_lax () then
+    false
+  else if get_verify_all () then
+    true
+  else match get_verify_module () with
+    | [] ->
+        (* Note: in auto-deps mode, [dep.fs] fills in the [verify_module] option
+         * meaning that this case is only called when in [--explicit_deps] mode.
+         * If we could remove [--explicit_deps], there would be less complexity
+         * here. *)
+        List.existsML (fun f ->
+          let f = basename f in
+          let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
+          String.lowercase f = m
+        ) (file_list ())
+    | l ->
+        List.contains (String.lowercase m) l
 
 let dont_gen_projectors m = List.contains m (get___temp_no_proj())
 
@@ -833,6 +859,7 @@ let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
 let explicit_deps                () = get_explicit_deps               ()
+let extract_all                  () = get_extract_all                 ()
 let fs_typ_app                   () = get_fs_typ_app                  ()
 let full_context_dependency      () = if get_stratified () then get_MLish() = false else true
 let hide_genident_nums           () = get_hide_genident_nums          ()
@@ -843,7 +870,6 @@ let initial_fuel                 () = get_initial_fuel                ()
 let initial_ifuel                () = get_initial_ifuel               ()
 let inline_arith                 () = get_inline_arith                ()
 let interactive                  () = get_in                          ()
-let interactive_fsi              () = get_fsi                         ()
 let lax                          () = get_lax                         ()
 let log_queries                  () = get_log_queries                 ()
 let log_types                    () = get_log_types                   ()
@@ -885,3 +911,11 @@ let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_seed                      () = get_z3seed                      ()
 let z3_timeout                   () = get_z3timeout                   ()
+
+
+let should_extract m =
+  not (no_extract m) && (extract_all () ||
+  (match get_extract_module () with
+  | [] -> true
+  | l -> List.contains (String.lowercase m) l))
+

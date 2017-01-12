@@ -111,7 +111,7 @@ FSDOC=generator.fs
 FSDOC_SRC=$(addprefix fsdoc/, $(FSDOC))
 SMTENCODING=term.fsi term.fs util.fs z3.fs splitcases.fs errorReporting.fs encode.fs solver.fs
 SMTENCODING_SRC=$(addprefix smtencoding/, $(SMTENCODING))
-TOPLEVEL=dependences.fs interactive.fs stratified.fs universal.fs indent.fs fstar.fs
+TOPLEVEL=dependencies.fs interactive.fs stratified.fs universal.fs indent.fs fstar.fs
 TOPLEVEL_SRC=$(addprefix fstar/, $(TOPLEVEL))
 
 BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) \
@@ -132,7 +132,7 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Errors.fst \
 		FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.Env.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.ExtractTyp.fst FStar.Extraction.ML.ExtractExp.fst FStar.Extraction.ML.ExtractMod.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst FStar.Extraction.Kremlin.fst \
 		FStar.Fsdoc.Generator.fst \
 	    	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
-	    	FStar.Dependences.fst FStar.Interactive.fst FStar.Stratified.fst FStar.Universal.fst FStar.Indent.fst FStar.FStar.fst
+	    	FStar.Dependencies.fst FStar.Interactive.fst FStar.Stratified.fst FStar.Universal.fst FStar.Indent.fst FStar.FStar.fst
 
 ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse FStar.Pprint
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
@@ -341,6 +341,7 @@ plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) fs
 
 deploy-boot-fs: fsharp-output/fstar.exe
 	cp $^ ../bin
+	cp $^ ../bin/fstar.fsharp
 
 clean-boot-fs:
 	rm -rf fsharp-output
