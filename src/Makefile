@@ -193,8 +193,8 @@ U_ALL_SOURCES=$(addprefix boot_fsts/, \
 	FStar.Parser.AST.fst FStar.Parser.Interleave.fst FStar.Parser.ToDocument.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst \
 	FStar.ToSyntax.Env.fst FStar.ToSyntax.ToSyntax.fst \
 	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Err.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst \
+	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
 	FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst FStar.Extraction.Kremlin.fst)
-        # FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst)
 
 wc_u_all:
 	wc -l $(U_ALL_SOURCES)
@@ -243,9 +243,9 @@ prep_u_extract_ocaml: $(U_ALL_INTERFACES) boot_fsts/FStar.Parser.Parse.fsti boot
 	$(SED) -i "s/type decl' =/type decl': Type0 =/g" boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
 	$(SED) -i "s/type mlexpr' =/type mlexpr': Type0 =/g" boot_fsts/FStar.Extraction.ML.Syntax.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
 	$(SED) -i "s/type mlsig1 =/type mlsig1: Type0 =/g" boot_fsts/FStar.Extraction.ML.Syntax.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	#-----------------------------------
-	$(SED) -i 's/module FStar.Parser.Lexhelp/module FStar.Parser.Lexhelp open FStar.Mul/' boot_fsts/FStar.Parser.LexHelp.fst #uses * for multiplication only
-	#-----------------------------------
+	-----------------------------------
+	$(SED) -i 's/module FStar.Parser.Lexhelp/module FStar.Parser.Lexhelp open FStar.Mul/' boot_fsts/FStar.Parser.LexHelp.fst uses * for multiplication only
+	-----------------------------------
         # temporary, to go quickly past Normalize
 	cp typechecker/normalize.fsi boot_fsts/FStar.TypeChecker.Normalize.fst
 	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Normalize.fst
@@ -267,10 +267,7 @@ prep_u_extract_ocaml: $(U_ALL_INTERFACES) boot_fsts/FStar.Parser.Parse.fsti boot
         # temporary, to go quickly past tosyntax
 	cp tosyntax/tosyntax.fsi boot_fsts/FStar.ToSyntax.ToSyntax.fst
 	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.ToSyntax.ToSyntax.fst
-        # temporary, to go quickly past tosyntax
-	cp tosyntax/tosyntax.fsi boot_fsts/FStar.ToSyntax.ToSyntax.fst
-	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.ToSyntax.ToSyntax.fst
-        # temporary, to go quickly past tosyntax
+        # temporary, to go quickly past dep
 	cp parser/dep.fsi boot_fsts/FStar.Parser.Dep.fst
 	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.Parser.Dep.fst
 
