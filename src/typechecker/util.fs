@@ -44,7 +44,7 @@ module C = FStar.Syntax.Const
 //Reporting errors
 let report env errs =
     Errors.report (Env.get_range env)
-                  (Errors.failed_to_prove_specification errs)
+                  (Err.failed_to_prove_specification errs)
 
 (************************************************************************)
 (* Unification variables *)
@@ -277,7 +277,7 @@ let pat_as_exps allow_implicits env p
         let p = elaborate_pat env p in
         let b, a, w, env, arg, p = pat_as_arg_with_env allow_wc_dependence env p in
         match b |> BU.find_dup bv_eq with
-            | Some x -> raise (Error(Errors.nonlinear_pattern_variable x, p.p))
+            | Some x -> raise (Error(Err.nonlinear_pattern_variable x, p.p))
             | _ -> b, a, w, arg, p in
 
    let top_level_pat_as_args env (p:pat) : (list<bv>                    (* pattern bound variables *)
@@ -291,7 +291,7 @@ let pat_as_exps allow_implicits env p
               let w, args, pats = List.fold_right (fun p (w, args, pats) ->
                   let b', a', w', arg, p = one_pat false env p in
                   if not (BU.multiset_equiv bv_eq a a')
-                  then raise (Error(Errors.disjunctive_pattern_vars a a', Env.get_range env))
+                  then raise (Error(Err.disjunctive_pattern_vars a a', Env.get_range env))
                   else (w'@w, S.as_arg arg::args, p::pats))
                   pats ([], [], []) in
               b@w, S.as_arg te::args, {p with v=Pat_disj(q::pats)}
@@ -718,7 +718,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
                 let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
                 let post   = S.new_bv None post_k in
                 let wp     = U.abs [mk_binder post]
-                                   (label Errors.exhaustiveness_check (Env.get_range env) <| fvar_const env Const.false_lid)
+                                   (label Err.exhaustiveness_check (Env.get_range env) <| fvar_const env Const.false_lid)
                                    (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in
                 let md     = Env.get_effect_decl env Const.effect_PURE_lid in
                 mk_comp md u_res_t res_t wp [] in
@@ -797,7 +797,7 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
 let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
   //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_to_string c) (Print.comp_to_string c');
   match Rel.sub_comp env c c' with
-    | None -> raise (Error(Errors.computed_computation_type_does_not_match_annotation env e c c', Env.get_range env))
+    | None -> raise (Error(Err.computed_computation_type_does_not_match_annotation env e c c', Env.get_range env))
     | Some g -> e, c', g
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
@@ -869,7 +869,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                                       else f
                           in
                           let eq_ret, _trivial_so_ok_to_discard =
-                              strengthen_precondition (Some <| Errors.subtyping_failed env lc.res_typ t)
+                              strengthen_precondition (Some <| Err.subtyping_failed env lc.res_typ t)
                                                       (Env.set_range env e.pos) e cret
                                                       (guard_of_guard_formula <| NonTrivial guard)
                           in
@@ -1177,7 +1177,7 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
         | _ -> {e with tk=BU.mk_ref (Some t2.n)} in
   let env = {env with use_eq=env.use_eq || (env.is_pattern && is_var e)} in
   match check env t1 t2 with
-    | None -> raise (Error(Errors.expected_expression_of_type env t2 e t1, Env.get_range env))
+    | None -> raise (Error(Err.expected_expression_of_type env t2 e t1, Env.get_range env))
     | Some g ->
         if debug env <| Options.Other "Rel"
         then BU.print1 "Applied guard is %s\n" <| guard_to_string env g;

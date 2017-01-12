@@ -32,7 +32,7 @@ open FStar.Const
    It is not stratified: a single type called "term" containing
    expressions, formulas, types, and so on
  *)
-type level = | Un | Expr | Type | Kind | Formula
+type level = | Un | Expr | Type_level | Kind | Formula
 type imp =
     | FsTypApp
     | Hash
@@ -353,16 +353,16 @@ let mkDTuple args r =
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkRefinedBinder id t should_bind_var refopt m implicit =
-  let b = mk_binder (Annotated(id, t)) m Type implicit in
+  let b = mk_binder (Annotated(id, t)) m Type_level implicit in
   match refopt with
     | None -> b
     | Some phi ->
         if should_bind_var
-        then mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type)) m Type implicit
+        then mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit
         else
             let x = gen t.range in
-            let b = mk_binder (Annotated (x, t)) m Type implicit in
-            mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type)) m Type implicit
+            let b = mk_binder (Annotated (x, t)) m Type_level implicit in
+            mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit
 
 let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
     let t = match phi_opt with
@@ -372,7 +372,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
             then
                 begin match pat.pat with
                 | PatVar (x,_) ->
-                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type None, phi)) range Type
+                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type_level None, phi)) range Type_level
                 | _ ->
                     let x = gen t_range in
                     let phi =
@@ -385,11 +385,11 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                         in
                         mk_term (Match (x_var, [pat_branch ; otherwise_branch])) phi.range Formula
                     in
-                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type None, phi)) range Type
+                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type_level None, phi)) range Type_level
                 end
             else
                 let x = gen t.range in
-                mk_term (Refine(mk_binder (Annotated (x, t)) t_range Type None, phi)) range Type
+                mk_term (Refine(mk_binder (Annotated (x, t)) t_range Type_level None, phi)) range Type_level
      in
      mk_pattern (PatAscribed(pat, t)) range
 
@@ -413,18 +413,22 @@ let rec extract_named_refinement t1  =
      list-of-modules] where each "module" [Module (lid, list-of-declarations)], with the
      unspecified invariant that the first declaration is a [TopLevelModule]
    JP: TODO actually forbid multiple modules and remove all of this. *)
-let as_frag d ds =
-  let rec as_mlist out ((m_name, m_decl), cur) ds =
+
+//NS: needed to hoist this to workaround a bootstrapping bug
+//    leaving it within as_frag causes the type-checker to take a very long time, perhaps looping
+let rec as_mlist (out:list<modul>) (cur: (lid * decl) * list<decl>) (ds:list<decl>) : list<modul> =
+    let ((m_name, m_decl), cur) = cur in
     match ds with
     | [] -> List.rev (Module(m_name, m_decl :: List.rev cur)::out)
     | d :: ds ->
-      begin match d.d with
+        begin match d.d with
         | TopLevelModule m' ->
             as_mlist (Module(m_name, m_decl :: List.rev cur)::out) ((m', d), []) ds
         | _ ->
             as_mlist out ((m_name, m_decl), d::cur) ds
-      end
-  in
+        end
+
+let as_frag (d:decl) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
   match d.d with
   | TopLevelModule m ->
       let ms = as_mlist [] ((m,d), []) ds in
@@ -479,7 +483,7 @@ let compile_op' s =
 // Printing ASTs, mostly for debugging
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-let string_of_fsdoc (comment,keywords) = 
+let string_of_fsdoc (comment,keywords) =
     comment ^ (String.concat "," (List.map (fun (k,v) -> k ^ "->" ^ v) keywords))
 
 let string_of_let_qualifier = function
@@ -534,7 +538,7 @@ let rec term_to_string (x:term) = match x.tm with
     term_to_string t
   | Product(b::hd::tl, t) ->
     term_to_string (mk_term (Product([b], mk_term (Product(hd::tl, t)) x.range x.level)) x.range x.level)
-  | Product([b], t) when (x.level = Type) ->
+  | Product([b], t) when (x.level = Type_level) ->
     Util.format2 "%s -> %s" (b|> binder_to_string) (t|> term_to_string)
   | Product([b], t) when (x.level = Kind) ->
     Util.format2 "%s => %s" (b|> binder_to_string) (t|> term_to_string)

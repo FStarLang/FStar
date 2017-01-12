@@ -131,7 +131,7 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
      then BU.print4 "check_and_ascribe: type is %s<:%s \tguard is %s, %s\n"
                 (Print.term_to_string t) (Print.term_to_string t')
                 (Rel.guard_to_string env g) (Rel.guard_to_string env guard);
-     let msg = if Rel.is_trivial g then None else (Some <| Errors.subtyping_failed env t t') in
+     let msg = if Rel.is_trivial g then None else (Some <| Err.subtyping_failed env t t') in
      let g = Rel.conj_guard g guard in
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in
      memo_tk e t', set_lcomp_result lc t', g in
@@ -191,7 +191,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
 let no_logical_guard env (te, kt, f) =
   match guard_form f with
     | Trivial -> te, kt, f
-    | NonTrivial f -> raise (Error(Errors.unexpected_non_trivial_precondition_on_term env f, Env.get_range env))
+    | NonTrivial f -> raise (Error(Err.unexpected_non_trivial_precondition_on_term env f, Env.get_range env))
 
 let print_expected_ty env = match Env.expected_typ env with
     | None -> BU.print_string "Expected type is None"
@@ -350,7 +350,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let k, u = U.type_u () in
     let t, _, f = tc_check_tot_or_gtot_term env t k in
     let e, c, g = tc_term (Env.set_expected_typ env t) e in
-    let c, f = TcUtil.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t.pos) e c f in
+    let c, f = TcUtil.strengthen_precondition (Some (fun () -> Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
     let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, Inl t, Some c.eff_name)) (Some t.n) top.pos) c in
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
@@ -405,9 +405,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let e, g =
               let e, c, g = tc_tot_or_gtot_term env_no_ex e in
               if not <| U.is_total_lcomp c
-              then Errors.add_errors env ["Expected Tot, got a GTot computation", e.pos];
+              then Err.add_errors env ["Expected Tot, got a GTot computation", e.pos];
               match Rel.try_teq env_no_ex c.res_typ expected_repr_typ with
-              | None -> Errors.add_errors env [BU.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
+              | None -> Err.add_errors env [BU.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
                         e, Rel.conj_guard g g0
               | Some g' -> e, Rel.conj_guard g' (Rel.conj_guard g g0) in
         let c = S.mk_Comp ({
@@ -736,7 +736,7 @@ and tc_universe env u : universe =
 (*******************************************************************************************************************)
 and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let fail :string -> typ -> 'a = fun msg t ->
-        raise (Error(Errors.expected_a_term_of_type_t_got_a_function env msg t top, top.pos)) in
+        raise (Error(Err.expected_a_term_of_type_t_got_a_function env msg t top, top.pos)) in
 
     (***************************************************************************************************************)
     (* check_binders checks that the binders bs of top                                                             *)
@@ -1154,7 +1154,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         | _ ->
             if not norm
             then check_function_app true (unfold_whnf env tf)
-            else raise (Error(Errors.expected_function_typ env tf, head.pos)) in
+            else raise (Error(Err.expected_function_typ env tf, head.pos)) in
 
     check_function_app false (N.normalize [N.Beta;N.WHNF] env (U.unrefine thead))
 
@@ -1464,7 +1464,7 @@ and check_top_level_let env e =
                 if ok
                 then e2, c1
                 else (if (Options.warn_top_level_effects()) //otherwise warn
-                      then Errors.warn (Env.get_range env) Errors.top_level_effect;
+                      then Errors.warn (Env.get_range env) Err.top_level_effect;
                       mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
             else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
                  (Rel.force_trivial_guard env g1;
@@ -1682,7 +1682,7 @@ and check_let_bound_def top_level env lb
 
     (* and strengthen its VC with and well-formedness condition on its annotated type *)
     let c1, guard_f = TcUtil.strengthen_precondition
-                        (Some (fun () -> Errors.ill_kinded_type))
+                        (Some (fun () -> Err.ill_kinded_type))
                         (Env.set_range env1 e1.pos) e1 c1 wf_annot in
     let g1 = Rel.conj_guard g1 guard_f in
 
@@ -1774,8 +1774,8 @@ and tc_tot_or_gtot_term env e : term
         | Some g' -> e, U.lcomp_of_comp target_comp, Rel.conj_guard g g'
         | _ ->
             if allow_ghost
-            then raise (Error(Errors.expected_ghost_expression e c, e.pos))
-            else raise (Error(Errors.expected_pure_expression e c, e.pos))
+            then raise (Error(Err.expected_ghost_expression e c, e.pos))
+            else raise (Error(Err.expected_pure_expression e c, e.pos))
 
 and tc_check_tot_or_gtot_term env e t : term
                                       * lcomp

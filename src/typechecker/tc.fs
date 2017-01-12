@@ -91,7 +91,7 @@ let tc_tparams env (tps:binders) : (binders * Env.env * universes) =
     tps, env, us
 
 let monad_signature env m s =
- let fail () = raise (Error(Errors.unexpected_signature_for_monad env m s, range_of_lid m)) in
+ let fail () = raise (Error(Err.unexpected_signature_for_monad env m s, range_of_lid m)) in
  let s = SS.compress s in
  match s.n with
   | Tm_arrow(bs, c) ->
@@ -151,7 +151,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
   in
    //Returns (a:Type) and M.WP a, for a fresh name a
   let wp_with_fresh_result_type env mname signature =
-       let fail t = raise (Error(Errors.unexpected_signature_for_monad env mname t, range_of_lid mname)) in
+       let fail t = raise (Error(Err.unexpected_signature_for_monad env mname t, range_of_lid mname)) in
        match (SS.compress signature).n with
           | Tm_arrow(bs, c) ->
             let bs = SS.open_binders bs in
@@ -1759,7 +1759,7 @@ let tc_more_partial_modul env modul decls =
    to make sure that all of them have types that are well-formed from a client's
    perspective.
 *)
-open FStar.TypeChecker.Errors
+open FStar.TypeChecker.Err
 let check_exports env (modul:modul) exports =
     let env = {env with lax=true; lax_universes=true; top_level=true} in
     let check_term lid univs t =

@@ -99,11 +99,14 @@ TC=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi re
 TC_SRC=$(addprefix tc/, $(TC))
 TOSMT=term.fsi term.fs z3.fs splitcases.fs encode.fs
 TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
-BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs interleave.fs tosyntax.fs lexhelp.fs parseit.fsi driver.fs dep.fs todocument.fs)
+BOOT_PARSER=$(addprefix parser/, ast.fs env.fs interleave.fs tosyntax.fs lexhelp.fs parseit.fsi driver.fs dep.fs todocument.fs)
+DESUGAR_SRC=$(addprefix desugar/, dsenv.fs desugar.fs)
+TOSYNTAX_SRC=$(addprefix tosyntax/, env.fs tosyntax.fs)
 TYPECHECKER=common.fs env.fsi env.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs util.fsi util.fs dmff.fs tcterm.fsi tcterm.fs tc.fsi tc.fs
 TYPECHECKER_SRC=$(addprefix typechecker/, $(TYPECHECKER))
-EXTRACTION=ml-syntax.fs env.fs uenv.fs util.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs term.fs modul.fs kremlin.fs
+EXTRACTION=ml-syntax.fs uenv.fs util.fs codegen.fsi codegen.fs term.fs modul.fs kremlin.fs
 EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
+STRATIFIEDEXTRACTION_SRC=$(addprefix stratifiedextraction/, env.fs util.fs extracttyp.fs extractexp.fs extractmod.fs)
 FSDOC=generator.fs
 FSDOC_SRC=$(addprefix fsdoc/, $(FSDOC))
 SMTENCODING=term.fsi term.fs util.fs z3.fs splitcases.fs errorReporting.fs encode.fs solver.fs
@@ -112,11 +115,12 @@ TOPLEVEL=dependences.fs interactive.fs stratified.fs universal.fs indent.fs fsta
 TOPLEVEL_SRC=$(addprefix fstar/, $(TOPLEVEL))
 
 BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) \
-  $(TOSMT_SRC) $(BOOT_PARSER) $(TYPECHECKER_SRC) $(EXTRACTION_SRC) $(FSDOC_SRC) $(SMTENCODING_SRC) $(TOPLEVEL_SRC)
+  $(TOSMT_SRC) $(BOOT_PARSER) $(DESUGAR_SRC) $(TOSYNTAX_SRC) $(TYPECHECKER_SRC) \
+  $(EXTRACTION_SRC) $(STRATIFIEDEXTRACTION_SRC) $(FSDOC_SRC) $(SMTENCODING_SRC) $(TOPLEVEL_SRC)
 
 ALL_INTERFACES=$(STDLIB) $(BOOT_BASIC_FSTI) $(BOOT_PRETTYPRINT_FSTI)
 # In the dependency order... eventually we want to use auto-deps
-ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
+ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Errors.fst \
 	        FStar.Format.fst \
 	    	FStar.Absyn.Syntax.fst FStar.Absyn.Const.fst FStar.Absyn.Visit.fst FStar.Absyn.Util.fst FStar.Absyn.Print.fst \
 	    	FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.Free.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst \
@@ -184,10 +188,13 @@ U_ALL_INTERFACES=$(U_STDLIB) $(U_BOOT_BASIC_FSTI)
 # 	FStar.Ident.fst FStar.SMTEncoding.Encode.fst) # FStar.SMTEncoding.Solver.fst)
 
 U_ALL_SOURCES=$(addprefix boot_fsts/, \
-	FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst \
+	FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst FStar.Errors.fst \
 	FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst FStar.Syntax.Free.fst FStar.Syntax.MutRecTy.fst \
-	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Errors.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst \
-        FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst)
+	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Err.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst \
+        FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
+	FStar.Parser.AST.fst FStar.Parser.Interleave.fst FStar.Parser.ToDocument.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst)
+	# FStar.ToSyntax.Env.fst FStar.ToSyntax.ToSyntax.fst \
+	# SFtar)
 
 boot_fstis/FStar.%.fsti: basic/%.fsi
 	cp $^ $@
@@ -224,9 +231,14 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	$(SED) -i 's/.*| Fwd.*//g' $@
 	$(SED) -i 's/type uvar.*/assume new type uvar : Type0 -> Type0/g' $@
 
-prep_u_extract_ocaml: $(U_ALL_INTERFACES)
+prep_u_extract_ocaml: $(U_ALL_INTERFACES) boot_fsts/FStar.Parser.Parse.fsti boot_fsts/FStar.Parser.ParseIt.fsti 
 	$(SED) -i 's/type env = {/type env : Type0 = {/g' boot_fsts/FStar.TypeChecker.Env.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
 	$(SED) -i "s/type term' =/type term': Type0 =/g" boot_fsts/FStar.SMTEncoding.Term.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/type term' =/type term': Type0 =/g" boot_fsts/FStar.SMTEncoding.Term.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/type term' =/type term': Type0 =/g" boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/type pattern' =/type pattern': Type0 =/g" boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/type decl' =/type decl': Type0 =/g" boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i 's/module FStar.Parser.Lexhelp/module FStar.Parser.Lexhelp open FStar.Mul/' boot_fsts/FStar.Parser.LexHelp.fst #uses * for multiplication only
         # temporary, to go quickly past Normalize
 	cp typechecker/normalize.fsi boot_fsts/FStar.TypeChecker.Normalize.fst
 	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Normalize.fst

@@ -101,7 +101,7 @@ let rec is_comp_type env t =
     | LetOpen(_, t) -> is_comp_type env t
     | _ -> false
 
-let unit_ty = mk_term (Name FStar.Syntax.Const.unit_lid) Range.dummyRange Type
+let unit_ty = mk_term (Name FStar.Syntax.Const.unit_lid) Range.dummyRange Type_level
 
 let compile_op_lid n s r = [mk_ident(compile_op n s, r)] |> lid_of_ids
 
@@ -225,7 +225,7 @@ let close env t =
   let ftv = sort_ftv <| free_type_vars env t in
   if List.length ftv = 0
   then t
-  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type x.idRange)) x.idRange Type (Some Implicit)) in
+  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type x.idRange)) x.idRange Type_level (Some Implicit)) in
        let result = mk_term (Product(binders, t)) t.range t.level in
        result
 
@@ -233,7 +233,7 @@ let close_fun env t =
   let ftv = sort_ftv <| free_type_vars env t in
   if List.length ftv = 0
   then t
-  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type x.idRange)) x.idRange Type (Some Implicit)) in
+  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type x.idRange)) x.idRange Type_level (Some Implicit)) in
        let t = match (unparen t).tm with
         | Product _ -> t
         | _ -> mk_term (App(mk_term (Name C.effect_Tot_lid) t.range t.level, t, Nothing)) t.range t.level in
@@ -709,7 +709,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                     | Some x -> push_bv env x in
                 (env, tparams@[{x with sort=t}, None], typs@[as_arg <| no_annot_abs tparams t]))
         (env, [], [])
-        (binders@[mk_binder (NoName t) t.range Type None]) in
+        (binders@[mk_binder (NoName t) t.range Type_level None]) in
       let tup, _ = fail_or env  (try_lookup_lid env) (Util.mk_dtuple_lid (List.length targs) top.range) in
       mk <| Tm_app(tup, targs)
 
@@ -1056,9 +1056,9 @@ and desugar_comp r default_ok env t =
         let head, args = head_and_args t in
         match head.tm with
             | Name lemma when (lemma.ident.idText = "Lemma") -> //need to add the unit result type and the empty SMTPat list, if n
-              let unit_tm = mk_term (Name C.unit_lid) t.range Type, Nothing in
+              let unit_tm = mk_term (Name C.unit_lid) t.range Type_level, Nothing in
               let nil_pat = mk_term (Name C.nil_lid) t.range Expr, Nothing in
-              let req_true = mk_term (Requires (mk_term (Name C.true_lid) t.range Formula, None)) t.range Type, Nothing in
+              let req_true = mk_term (Requires (mk_term (Name C.true_lid) t.range Formula, None)) t.range Type_level, Nothing in
               let args = match args with
                     | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
                     | [ens] -> [unit_tm;req_true;ens;nil_pat] //a single ensures clause
@@ -1088,7 +1088,7 @@ and desugar_comp r default_ok env t =
                             || l.ident.idText="Type0"
                             || l.ident.idText="Effect")
                            && default_ok) ->
-              //the default effect for Type is always Tot
+              //the default effect for Type_level is always Tot
               (Ident.set_lid_range Const.effect_Tot_lid head.range, []), [t, Nothing]
 
             | _  when default_ok -> //add the default effect
@@ -1334,7 +1334,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | Annotated (x, _)
     | Variable x -> mk_term (Var (lid_of_ids [x])) x.idRange Expr
     | TAnnotated(a, _)
-    | TVariable a -> mk_term (Tvar a) a.idRange Type
+    | TVariable a -> mk_term (Tvar a) a.idRange Type_level
     | NoName t -> t in
   let tot = mk_term (Name (C.effect_Tot_lid)) rng Expr in
   let with_constructor_effect t = mk_term (App(tot, t, Nothing)) t.range t.level in
@@ -1349,8 +1349,8 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let constrName = mk_ident("Mk" ^ id.idText, id.idRange) in
       (* it is necessary to mangle field names to avoid capture as they are turned into the formal parameters of the data constructor *)
       let mfields = List.map (fun (x,t,_) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr None) fields in
-      let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) parms in
-      let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type in
+      let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type_level) parms in
+      let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type_level in
       //let _ = Util.print_string (Util.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in
       TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, None, false)]), fields |> List.map (fun (x, _, _) -> unmangle_field_name x)
     | _ -> failwith "impossible" in
@@ -1360,7 +1360,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let k = match kopt with
         | None -> Util.ktype
         | Some k -> desugar_term _env' k in
-      let tconstr = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) binders in
+      let tconstr = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type_level) binders in
       let qlid = qualify _env id in
       let typars = Subst.close_binders typars in
       let k = Subst.close typars k in

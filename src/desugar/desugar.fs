@@ -55,7 +55,7 @@ let rec unlabel t = match t.tm with
   | Labeled(t, _, _) -> unlabel t
   | _ -> t
 
-let kind_star r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
+let kind_star r = mk_term (Name (lid_of_path ["Type_level"] r)) r Kind
 
 
 let compile_op arity s =
@@ -134,7 +134,7 @@ let op_as_tylid env arity rng s =
       end
 
 let rec is_type env (t:term) =
-  if t.level = Type then true
+  if t.level = Type_level then true
   else match (unparen t).tm with
     | Wild -> true
     | Labeled _ -> true
@@ -203,7 +203,7 @@ and is_kind env (t:term) : bool =
   if t.level = Kind
   then true
   else match (unparen t).tm with
-    | Name {str="Type"} -> true
+    | Name {str="Type_level"} -> true
     | Product(_, t) -> is_kind env t
     | Paren t -> is_kind env t
     | Construct(l, _)
@@ -309,7 +309,7 @@ let close env t =
   let ftv = sort_ftv <| free_type_vars env t in
   if List.length ftv = 0
   then t
-  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type (Some AST.Implicit)) in
+  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type_level (Some AST.Implicit)) in
        let result = mk_term (Product(binders, t)) t.range t.level in
        result
 
@@ -317,7 +317,7 @@ let close_fun env t =
   let ftv = sort_ftv <| free_type_vars env t in
   if List.length ftv = 0
   then t
-  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type (Some AST.Implicit)) in
+  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type_level (Some AST.Implicit)) in
        let t = match (unlabel t).tm with
         | Product _ -> t
         | _ -> mk_term (App(mk_term (Name Const.effect_Tot_lid) t.range t.level, t, Nothing)) t.range t.level in
@@ -964,14 +964,14 @@ and desugar_typ env (top:term) : typ =
                     | None -> env, new_bvd (Some top.range)
                     | Some x -> push_local_vbinding env x in
         (env, tparams@[Inr (bvd_to_bvar_s x t), None], typs@[targ <| close_with_lam tparams t]))
-        (env, [], []) (binders@[mk_binder (NoName t) t.range Type None]) in
+        (env, [], []) (binders@[mk_binder (NoName t) t.range Type_level None]) in
       let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_dtuple_lid (List.length targs) top.range) in
       wpos <| mk_Typ_app(tup, targs)
 
     | Record _ -> failwith "Unexpected record type"
 
-    | Let(NoLetQualifier, [(x, v)], t) -> 
-      //desugar as Let v (fun x -> t) 
+    | Let(NoLetQualifier, [(x, v)], t) ->
+      //desugar as Let v (fun x -> t)
       let let_v = mk_term (App(mk_term(Name Const.let_in_typ) top.range top.level, v, Nothing)) v.range v.level in
       let t' = mk_term(App(let_v, mk_term (Abs([x], t)) t.range t.level, Nothing)) top.range top.level in
       desugar_typ env t'
@@ -988,7 +988,7 @@ and desugar_comp r default_ok env t =
         let head, args = head_and_args t in
         match head.tm with
             | Name lemma when (lemma.ident.idText = "Lemma") ->
-              let unit = mk_term (Name Const.unit_lid) t.range Type, Nothing in
+              let unit = mk_term (Name Const.unit_lid) t.range Type_level, Nothing in
               let nil_pat = mk_term (Name Const.nil_lid) t.range Expr, Nothing in
               let decreases_clause, args = args |> List.partition (fun (arg, _) ->
                   match (unparen arg).tm with
@@ -997,7 +997,7 @@ and desugar_comp r default_ok env t =
               let args = match args with
                     | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
                     | [ens] -> (* a single ensures clause *)
-                      let req_true = mk_term (Requires (mk_term (Name Const.true_lid) t.range Formula, None)) t.range Type, Nothing in
+                      let req_true = mk_term (Requires (mk_term (Name Const.true_lid) t.range Formula, None)) t.range Type_level, Nothing in
                       [unit;req_true;ens;nil_pat]
                     | [req;ens] -> [unit;req;ens;nil_pat]
                     | more -> unit::more in
@@ -1041,11 +1041,11 @@ and desugar_comp r default_ok env t =
                         else if lid_equals eff.v Const.effect_Tot_lid   then [TOTAL]
                         else if lid_equals eff.v Const.effect_ML_lid    then [MLEFFECT]
                         else [] in
-                    let rest = 
+                    let rest =
                         if lid_equals eff.v Const.effect_Lemma_lid
-                        then match rest with 
+                        then match rest with
                                 | [req;ens;(Inr pat, aq)] -> [req;ens;(Inr (Syntax.mk_Exp_meta(Meta_desugared(pat, Syntax.Meta_smt_pat))), aq)]
-                                | _ -> rest 
+                                | _ -> rest
                         else rest in
                         mk_Comp ({effect_name=eff.v;
                                   result_typ=result_typ;
@@ -1064,7 +1064,7 @@ and desugar_kind env k : knd =
   let setpos kk = {kk with pos=k.range} in
   let k = unparen k in
   match k.tm with
-    | Name {str="Type"} -> setpos mk_Kind_type
+    | Name {str="Type_level"} -> setpos mk_Kind_type
     | Name {str="Effect"} -> setpos mk_Kind_effect
     | Name l ->
       begin match DesugarEnv.find_kind_abbrev env (DesugarEnv.qualify_lid env l) with
@@ -1308,7 +1308,7 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
                             if i+ntps=j  //this is the one to project
                             then [pos (Pat_var projection), as_imp imp]
                             else if j < ntps
-                            then [] //this is an inaccessible pattern 
+                            then [] //this is an inaccessible pattern
                             else [pos (Pat_wild (Util.gen_bvar tun)), as_imp imp]) |> List.flatten in
                      let pat = (Syntax.Pat_cons(Util.fv lid, Some fvq, arg_pats) |> pos, None, Util.bvar_to_exp projection) in
                      let body = mk_Exp_match(arg_exp, [pat]) None p in
@@ -1333,7 +1333,7 @@ let mk_data_projectors env = function
                 | Some l -> List.length l > 1
                 | _ -> true in
         begin match Util.function_formals t with
-        | Some(formals, cod) -> //close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t 
+        | Some(formals, cod) -> //close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t
           let cod = Util.comp_result cod in
           let qual = match Util.find_map quals (function RecordConstructor fns -> Some (Record_ctor(lid, fns)) | _ -> None) with
             | None -> Data_ctor
@@ -1355,12 +1355,12 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | Annotated (x, _)
     | Variable x -> mk_term (Var (lid_of_ids [x])) x.idRange Expr
     | TAnnotated(a, _)
-    | TVariable a -> mk_term (Tvar a) a.idRange Type
+    | TVariable a -> mk_term (Tvar a) a.idRange Type_level
     | NoName t -> t in
   let tot = mk_term (Name (Const.effect_Tot_lid)) rng Expr in
   let with_constructor_effect t = mk_term (App(tot, t, Nothing)) t.range t.level in
   let apply_binders t binders =
-    let imp_of_aqual (b:AST.binder) = match b.aqual with 
+    let imp_of_aqual (b:AST.binder) = match b.aqual with
         | Some AST.Implicit -> Hash
         | _ -> Nothing in
     List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, imp_of_aqual b)) out.range out.level)
@@ -1369,8 +1369,8 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | TyconRecord(id, parms, kopt, fields) ->
       let constrName = mk_ident("Mk" ^ id.idText, id.idRange) in
       let mfields = List.map (fun (x,t,_) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr None) fields in
-      let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) parms in
-      let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type in
+      let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type_level) parms in
+      let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type_level in
       //let _ = Util.print_string (Util.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in
       TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, None, false)]), fields |> List.map (fun (x, _, _) -> DesugarEnv.qualify env x)
     | _ -> failwith "impossible" in
@@ -1380,7 +1380,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let k = match kopt with
         | None -> kun
         | Some k -> desugar_kind _env' k in
-      let tconstr = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) binders in
+      let tconstr = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type_level) binders in
       let qlid = qualify _env id in
       let se = Sig_tycon(qlid, typars, k, mutuals, [], quals, rng) in
       let _env = push_rec_binding _env (Binding_tycon qlid) in
@@ -1395,11 +1395,11 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | [TyconAbstract _] ->
         let tc = List.hd tcs in
         let _, _, se, _ = desugar_abstract_tc quals env [] tc in
-        let quals = if quals |> List.contains Assumption 
+        let quals = if quals |> List.contains Assumption
                     || quals |> List.contains New
                     then quals
-                    else (Util.print2 "%s (Warning): Adding an implicit 'new' qualifier on %s\n" 
-                                                (Range.string_of_range rng) (Util.lids_of_sigelt se |> List.map Print.sli |> String.concat ", ");          
+                    else (Util.print2 "%s (Warning): Adding an implicit 'new' qualifier on %s\n"
+                                                (Range.string_of_range rng) (Util.lids_of_sigelt se |> List.map Print.sli |> String.concat ", ");
                                New::quals) in
         let env = push_sigelt env se in
         (* let _ = pr "Pushed %s\n" (text_of_lid (qualify env (tycon_id tc))) in *)
@@ -1518,7 +1518,7 @@ let trans_qual r = function
   | AST.Effect -> Effect
   | AST.Reflectable
   | AST.Reifiable
-  | AST.Inline 
+  | AST.Inline
   | AST.Irreducible
   | AST.Noeq
   | AST.Unopteq
@@ -1534,7 +1534,7 @@ let trans_pragma = function
 let trans_quals r = List.map (trans_qual r)
 
 let rec desugar_decl env (d:decl) : (env_t * sigelts) =
-  let trans_quals = trans_quals d.drange in 
+  let trans_quals = trans_quals d.drange in
   match d.d with
   | Fsdoc _ -> env, []
   | Pragma p ->
@@ -1550,7 +1550,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
   | Include _ ->
       failwith "include not supported by legacy desugaring"
 
-  | ModuleAbbrev(x, l) -> 
+  | ModuleAbbrev(x, l) ->
     DesugarEnv.push_module_abbrev env x l, []
 
   | Tycon(is_effect, tcs) ->
@@ -1565,7 +1565,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
           let lids = snd lbs |> List.map (fun lb -> match lb.lbname with
             | Inr l -> l
             | _ -> failwith "impossible") in
-          let quals = match quals with 
+          let quals = match quals with
             | _::_ -> trans_quals quals
             | _ -> snd lbs |> List.collect
             (function | {lbname=Inl _} -> []
@@ -1710,7 +1710,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
         | Some l -> l in
     let src = lookup l.msource in
     let dst = lookup l.mdest in
-    let non_reifiable = function 
+    let non_reifiable = function
         | NonReifiableLift f -> f
         | _ -> raise (Error("Unexpected reifiable sub-effect", d.drange)) in
     let lift = desugar_typ env (non_reifiable l.lift_op) in
@@ -1774,7 +1774,7 @@ let desugar_file env (f:file) =
   let env, mods = List.fold_left (fun (env, mods) m ->
     let env, m = desugar_modul env m in
     env, m::mods) (env, []) f in
-  env, List.rev mods 
+  env, List.rev mods
 
 let add_modul_to_env (m:Syntax.modul) (en: env) :env =
   let en, pop_when_done = DesugarEnv.prepare_module_or_interface false false en m.name in

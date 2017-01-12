@@ -104,10 +104,10 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
 
     with
       | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
-          TypeChecker.Errors.add_errors env [(msg,r)];
+          TypeChecker.Err.add_errors env [(msg,r)];
           None
       | FStar.Errors.Err msg when not ((Options.trace_error())) ->
-          TypeChecker.Errors.add_errors env [(msg,Range.dummyRange)];
+          TypeChecker.Err.add_errors env [(msg,Range.dummyRange)];
           None
       | e when not ((Options.trace_error())) -> raise e
 
@@ -312,11 +312,11 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
                 | _ -> None
         with
             | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
-              FStar.TypeChecker.Errors.add_errors env [(msg, r)];
+              FStar.TypeChecker.Err.add_errors env [(msg, r)];
               None
 
             | FStar.Errors.Err msg when not ((Options.trace_error())) ->
-              FStar.TypeChecker.Errors.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
+              FStar.TypeChecker.Err.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
               None in
 
     let report_fail () =

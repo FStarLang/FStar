@@ -210,7 +210,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                     (Range.string_of_range (Env.get_range env))
                     (Options.max_fuel()  |> BU.string_of_int)
                     (Options.max_ifuel() |> BU.string_of_int);
-            Errors.add_errors env (fst errs |> List.map (fun (_, x, y) -> x, y))
+            Err.add_errors env (fst errs |> List.map (fun (_, x, y) -> x, y))
         in
 
         let use_errors (errs:error_labels * error_kind) (result:z3_result) : z3_result =
