@@ -143,9 +143,7 @@ let test() =
   );
   AEAD.Encrypt.encrypt i st iv aadlen aad plainlen plain cipher;
 
-  // String for 'cipher'
-  let string_cipher = FStar.Buffer.createL [99y; 105y; 112y; 104y; 101y; 114y; 0y] in
-  TestLib.compare_and_print string_cipher expected_cipher cipher cipherlen;
+  TestLib.compare_and_print (C.string_of_literal "cipher") expected_cipher cipher cipherlen;
 
   (* let ok_0 = diff "cipher" cipherlen expected_cipher cipher in *)
 
@@ -154,12 +152,7 @@ let test() =
   let st = AE.genReader st in
   let ok_1 = AEAD.Decrypt.decrypt i st iv aadlen aad plainlen decrypted cipher in
 
-  // String for 'decryption'
-  let string_decryption = FStar.Buffer.createL [
-    100y; 101y; 99y; 114y; 121y; 112y; 116y; 105y; 111y; 110y; 0y
-  ] in
-
-  TestLib.compare_and_print string_decryption (bufferRepr #i plain) (bufferRepr #i decrypted) plainlen;
+  TestLib.compare_and_print (C.string_of_literal "decryption") (bufferRepr #i plain) (bufferRepr #i decrypted) plainlen;
   (* let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in *)
 
   // testing that decryption fails when truncating aad or tweaking the ciphertext.
@@ -205,21 +198,14 @@ let test_aes_gcm i (tn: UInt32.t) key ivBuffer aadlen aad plainlen plainrepr exp
   AEAD.Encrypt.encrypt i st iv aadlen aad plainlen plain cipher;
 
   (* let ok_0 = diff "cipher" cipherlen expected_cipher cipher in  *)
-  // String for 'cipher'
-  let string_cipher = FStar.Buffer.createL [99y; 105y; 112y; 104y; 101y; 114y; 0y] in
-  TestLib.compare_and_print string_cipher expected_cipher cipher cipherlen;
+  TestLib.compare_and_print (C.string_of_literal "cipher")  expected_cipher cipher cipherlen;
 
   let st = AE.genReader st in
   let decrypted = Plain.create i 3uy plainlen in
   let ok_1 = AEAD.Decrypt.decrypt i st iv aadlen aad plainlen decrypted cipher in
   (* let ok_2 = diff "decryption" plainlen (bufferRepr #i plain) (bufferRepr #i decrypted) in *)
 
-  // String for 'decryption'
-  let string_decryption = FStar.Buffer.createL [
-    100y; 101y; 99y; 114y; 121y; 112y; 116y; 105y; 111y; 110y; 0y
-  ] in
-
-  TestLib.compare_and_print string_decryption (bufferRepr #i decrypted) (bufferRepr #i plain) plainlen;
+  TestLib.compare_and_print (C.string_of_literal "decryption") (bufferRepr #i decrypted) (bufferRepr #i plain) plainlen;
   (* let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in *)
 
   pop_frame();
