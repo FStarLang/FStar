@@ -109,6 +109,22 @@ let go _ =
             exit 1
           end;
           let filename = List.hd filenames in
+
+          //try to convert filename passed from the editor to windows path
+          //on cygwin emacs this is required
+          let try_convert_file_name_to_windows (s:string) :string =
+            try
+              let _, t_out, _ = run_proc "which" "cygpath" "" in
+              if not (trim_string t_out = "/usr/bin/cygpath") then s
+              else
+                let _, t_out, _ = run_proc "cygpath" ("-m " ^ s) "" in
+                trim_string t_out
+            with
+              | _ -> s
+          in
+
+          let filename = try_convert_file_name_to_windows filename in
+
           if Options.verify_module () <> [] then
             Util.print_warning "Interactive mode; ignoring --verify_module";
           (* interactive_mode takes care of calling [find_deps_if_needed] *)
