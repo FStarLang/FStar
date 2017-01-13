@@ -52,12 +52,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="syntax.fsi" />
-    <Compile Include="syntax.fs" />
-    <Compile Include="const.fs" />
-    <Compile Include="visit.fs" />
-    <Compile Include="util.fs" />
-    <Compile Include="print.fs" />
+    <Compile Include="FStar.Absyn.Syntax.fsi" />
+    <Compile Include="FStar.Absyn.Syntax.fs" />
+    <Compile Include="FStar.Absyn.Const.fs" />
+    <Compile Include="FStar.Absyn.Visit.fs" />
+    <Compile Include="FStar.Absyn.Util.fs" />
+    <Compile Include="FStar.Absyn.Print.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\basic\basic.fsproj">

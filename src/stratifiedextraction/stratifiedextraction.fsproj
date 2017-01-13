@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -70,11 +70,11 @@
   </Target>
   <Import Project="$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets')" />
   <ItemGroup>
-    <Compile Include="env.fs" />
-    <Compile Include="util.fs" />
-    <Compile Include="extracttyp.fs" />
-    <Compile Include="extractexp.fs" />
-    <Compile Include="extractmod.fs" />
+    <Compile Include="FStar.StratifiedExtraction.ML.env.fs" />
+    <Compile Include="FStar.StratifiedExtraction.ML.Util.fs" />
+    <Compile Include="FStar.StratifiedExtraction.ML.ExtractTyp.fs" />
+    <Compile Include="FStar.StratifiedExtraction.ML.ExtractExp.fs" />
+    <Compile Include="FStar.StratifiedExtraction.ML.ExtractMod.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\absyn\absyn.fsproj">

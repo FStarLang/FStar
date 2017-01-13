@@ -70,11 +70,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="term.fsi" />
-    <Compile Include="term.fs" />
-    <Compile Include="splitcases.fs" />
-    <Compile Include="z3.fs" />
-    <Compile Include="encode.fs" />
+    <Compile Include="FStar.ToSMT.Term.fsi" />
+    <Compile Include="FStar.ToSMT.Term.fs" />
+    <Compile Include="FStar.ToSMT.SplitQueryCases.fs" />
+    <Compile Include="FStar.ToSMT.Z3.fs" />
+    <Compile Include="FStar.ToSMT.Encode.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

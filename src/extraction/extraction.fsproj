@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -51,15 +51,15 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
-    <Compile Include="ml-syntax.fs" />
-    <Compile Include="uenv.fs" />
-    <Compile Include="util.fs" />
-    <Compile Include="codegen.fsi" />
-    <Compile Include="codegen.fs" />
-    <Compile Include="term.fs" />
-    <Compile Include="modul.fs" />
+    <Compile Include="FStar.Extraction.ML.Syntax.fs" />
+    <Compile Include="FStar.Extraction.ML.UEnv.fs" />
+    <Compile Include="FStar.Extraction.ML.Util.fs" />
+    <Compile Include="FStar.Extraction.ML.Code.fsi" />
+    <Compile Include="FStar.Extraction.ML.Code.fs" />
+    <Compile Include="FStar.Extraction.ML.Term.fs" />
+    <Compile Include="FStar.Extraction.ML.Modul.fs" />
     <Content Include="app.config" />
-    <Compile Include="kremlin.fs" />
+    <Compile Include="FStar.Extraction.Kremlin.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\typechecker\typechecker.fsproj">

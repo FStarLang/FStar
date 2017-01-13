@@ -70,10 +70,10 @@
   </Target>
   <Import Project="$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets')" />
   <ItemGroup>
-    <Compile Include="env.fsi" />
-    <Compile Include="env.fs" />
-    <Compile Include="tosyntax.fsi" />
-    <Compile Include="tosyntax.fs" />
+    <Compile Include="FStar.ToSyntax.Env.fsi" />
+    <Compile Include="FStar.ToSyntax.Env.fs" />
+    <Compile Include="FStar.ToSyntax.ToSyntax.fsi" />
+    <Compile Include="FStar.ToSyntax.ToSyntax.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\parser\parser.fsproj">

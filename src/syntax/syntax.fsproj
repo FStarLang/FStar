@@ -51,20 +51,20 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="syntax.fsi" />
-    <Compile Include="syntax.fs" />
-    <Compile Include="const.fs" />
-    <Compile Include="subst.fsi" />
-    <Compile Include="subst.fs" />
-    <Compile Include="free.fsi" />
-    <Compile Include="free.fs" />
-    <Compile Include="instfv.fsi" />
-    <Compile Include="instfv.fs" />
-    <Compile Include="util.fs" />
-    <Compile Include="print.fsi" />
-    <Compile Include="print.fs" />
-    <Compile Include="mutrecty.fsi" />
-    <Compile Include="mutrecty.fs" />
+    <Compile Include="FStar.Syntax.Syntax.fsi" />
+    <Compile Include="FStar.Syntax.Syntax.fs" />
+    <Compile Include="FStar.Syntax.Const.fs" />
+    <Compile Include="FStar.Syntax.Subst.fsi" />
+    <Compile Include="FStar.Syntax.Subst.fs" />
+    <Compile Include="FStar.Syntax.Free.fsi" />
+    <Compile Include="FStar.Syntax.Free.fs" />
+    <Compile Include="FStar.Syntax.InstFV.fsi" />
+    <Compile Include="FStar.Syntax.InstFV.fs" />
+    <Compile Include="FStar.Syntax.Util.fs" />
+    <Compile Include="FStar.Syntax.Print.fsi" />
+    <Compile Include="FStar.Syntax.Print.fs" />
+    <Compile Include="FStar.Syntax.MutRecTy.fsi" />
+    <Compile Include="FStar.Syntax.MutRecTy.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\basic\basic.fsproj">

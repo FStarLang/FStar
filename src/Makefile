@@ -89,29 +89,30 @@ BOOT_BASIC_FSTI=$(addprefix boot_fstis/, string.fsti bytes.fsti platform.fsti ve
 BOOT_PRETTYPRINT_FSTI=$(addprefix boot_fstis/, FStar.Pprint.fsti)
 
 # All the .fs and .fsi files that need to be pre-processed into valid .fst files.
-BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs errors.fs const.fs)
-BOOT_FORMAT=$(addprefix format/, formatml.fs)
-ABSYN=syntax.fs const.fs visit.fs util.fs print.fs
+BOOT_BASIC_FS=$(addprefix basic/, FStar.Options.fs FStar.Ident.fs FStar.Errors.fs FStar.Const.fs)
+BOOT_FORMAT=$(addprefix format/, FStar.Format.fs)
+ABSYN=FStar.Absyn.Syntax.fs FStar.Absyn.Const.fs FStar.Absyn.Visit.fs FStar.Absyn.Util.fs FStar.Absyn.Print.fs
 ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
-SYNTAX=syntax.fsi syntax.fs const.fs subst.fsi subst.fs free.fsi free.fs instfv.fsi instfv.fs util.fs print.fsi print.fs mutrecty.fsi mutrecty.fs
+SYNTAX=FStar.Syntax.Syntax.fsi FStar.Syntax.Syntax.fs FStar.Syntax.Const.fs FStar.Syntax.Subst.fsi FStar.Syntax.Subst.fs FStar.Syntax.Free.fsi FStar.Syntax.Free.fs \
+       FStar.Syntax.InstFV.fsi FStar.Syntax.InstFV.fs FStar.Syntax.Util.fs FStar.Syntax.Print.fsi FStar.Syntax.Print.fs FStar.Syntax.MutRecTy.fsi FStar.Syntax.MutRecTy.fs
 SYNTAX_SRC=$(addprefix syntax/, $(SYNTAX))
-TC=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
+TC=FStar.Tc.Env.fsi FStar.Tc.Env.fs FStar.Tc.Recheck.fs FStar.Tc.Normalize.fsi FStar.Tc.Normalize.fs FStar.Tc.Errors.fs FStar.Tc.Rel.fsi FStar.Tc.Rel.fs FStar.Tc.Util.fsi FStar.Tc.Util.fs FStar.Tc.Tc.fs
 TC_SRC=$(addprefix tc/, $(TC))
-TOSMT=term.fsi term.fs z3.fs splitcases.fs encode.fs
+TOSMT=FStar.ToSMT.Term.fsi FStar.ToSMT.Term.fs FStar.ToSMT.Z3.fs FStar.ToSMT.SplitQueryCases.fs FStar.ToSMT.Encode.fs
 TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
-BOOT_PARSER=$(addprefix parser/, ast.fs interleave.fs lexhelp.fs parseit.fsi driver.fs dep.fs todocument.fs)
-DESUGAR_SRC=$(addprefix desugar/, dsenv.fs desugar.fs)
-TOSYNTAX_SRC=$(addprefix tosyntax/, env.fs tosyntax.fs)
-TYPECHECKER=common.fs env.fsi env.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs util.fsi util.fs dmff.fs tcterm.fsi tcterm.fs tc.fsi tc.fs
+BOOT_PARSER=$(addprefix parser/, FStar.Parser.ast.fs FStar.Parser.Interleave.fs FStar.Parser.Lexhelp.fs parseit.fsi FStar.Parser.Driver.fs FStar.Parser.Dep.fs FStar.Parser.ToDocument.fs)
+DESUGAR_SRC=$(addprefix desugar/, FStar.Desugar.DesugarEnv.fs FStar.Desugar.Desugar.fs)
+TOSYNTAX_SRC=$(addprefix tosyntax/, FStar.ToSyntax.Env.fsi FStar.ToSyntax.Env.fs FStar.ToSyntax.ToSyntax.fsi FStar.ToSyntax.ToSyntax.fs)
+TYPECHECKER=$(addprefix FStar.TypeChecker., Common.fs Env.fsi Env.fs Normalize.fsi Normalize.fs Err.fs Rel.fsi Rel.fs Util.fsi Util.fs DMFF.fsi DMFF.fs TcTerm.fsi TcTerm.fs Tc.fsi Tc.fs)
 TYPECHECKER_SRC=$(addprefix typechecker/, $(TYPECHECKER))
-EXTRACTION=ml-syntax.fs uenv.fs util.fs codegen.fsi codegen.fs term.fs modul.fs kremlin.fs
+EXTRACTION=$(addprefix FStar.Extraction., ML.Syntax.fs ML.UEnv.fs ML.Util.fs ML.Code.fsi ML.Code.fs ML.Term.fs ML.Modul.fs kremlin.fs)
 EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
-STRATIFIEDEXTRACTION_SRC=$(addprefix stratifiedextraction/, env.fs util.fs extracttyp.fs extractexp.fs extractmod.fs)
-FSDOC=generator.fs
+STRATIFIEDEXTRACTION_SRC=$(addprefix stratifiedextraction/FStar.StratifiedExtraction.ML, Env.fs Util.fs ExtractTyp.fs ExtractExp.fs ExtractMod.fs)
+FSDOC=FStar.Fsdoc.Generator.fs
 FSDOC_SRC=$(addprefix fsdoc/, $(FSDOC))
-SMTENCODING=term.fsi term.fs util.fs z3.fs splitcases.fs errorReporting.fs encode.fs solver.fs
+SMTENCODING=$(addprefix FStar.SMTEncoding., Term.fsi Term.fs Util.fs Z3.fs SplitQueryCases.fs ErrorReporting.fs Encode.fs Solver.fs)
 SMTENCODING_SRC=$(addprefix smtencoding/, $(SMTENCODING))
-TOPLEVEL=dependencies.fs interactive.fs stratified.fs universal.fs indent.fs fstar.fs
+TOPLEVEL=$(addprefix FStar., Dependencies.fs Interactive.fs Stratified.fs Universal.fs Indent.fs FStar.fs)
 TOPLEVEL_SRC=$(addprefix fstar/, $(TOPLEVEL))
 
 BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) \
@@ -144,6 +145,9 @@ FSTAROPTS=
 
 all_boot_fsts:
 	./tools/make_all_boot_fsts "$(BOOT_ALL)"
+
+rename_fs_files:
+	./tools/rename_all_boot_fsts "$(BOOT_ALL)"
 
 # SI: does it have to go prettyprint.fsti->FStar.Pprint.fsti?
 boot_fstis/FStar.Pprint.fsti: prettyprint/prettyprint.fsi

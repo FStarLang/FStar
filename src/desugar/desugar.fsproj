@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -70,10 +70,10 @@
   </Target>
   <Import Project="$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets')" />
   <ItemGroup>
-    <Compile Include="dsenv.fsi" />
-    <Compile Include="dsenv.fs" />
-    <Compile Include="desugar.fsi" />
-    <Compile Include="desugar.fs" />
+    <Compile Include="FStar.Parser.DesugarEnv.fsi" />
+    <Compile Include="FStar.Parser.DesugarEnv.fs" />
+    <Compile Include="FStar.Parser.Desugar.fsi" />
+    <Compile Include="FStar.Parser.Desugar.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\absyn\absyn.fsproj">
