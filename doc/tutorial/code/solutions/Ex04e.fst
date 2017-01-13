@@ -3,7 +3,7 @@ module Ex04e
 
 type option 'a =  
    | None : option 'a
-   | Some : 'a -> option 'a
+   | Some : v:'a -> option 'a
 
 (* The intrinsic style is more convenient in this case *)
 val find : f:('a -> Tot bool) -> list 'a -> Tot (option (x:'a{f x}))
@@ -19,11 +19,9 @@ let rec find' #t f l = match l with
   | [] -> None
   | hd::tl -> if f hd then Some hd else find' f tl
 
-
-val find_some : #t:Type -> f:(t -> Tot bool) -> l:list t -> x:t -> Lemma
-                  (requires (find' f l == Some x))
-                  (ensures (f x = true))
-let rec find_some #t f l x =
-  match l with
-  | [] -> ()
-  | hd::tl -> if f hd then () else find_some f tl x
+val find_some : f:('a -> Tot bool) -> xs:(list 'a) ->
+    Lemma (None? (find' f xs) || f (Some?.v (find' f xs)))
+let rec find_some f xs =
+    match xs with
+    | [] -> ()
+    | x::xs' -> find_some f xs'
