@@ -498,8 +498,10 @@ let is_effect_name env lid =
 
 let lookup_letbinding_quals env lid =
   let k_global_def lid = function
-      | (Sig_declare_typ(lid, _, _, quals, _), _) -> Some quals
-      | _ -> None in
+      | (Sig_declare_typ(lid, _, _, quals, _), _) ->
+          Some quals
+      | _ ->
+          None in
   match resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def with
     | Some quals -> quals
     | _ -> []

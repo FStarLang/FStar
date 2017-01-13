@@ -358,15 +358,22 @@ let finish () =
 
 type scope_t = list<list<decl>>
 
-//fresh_scope: Is a stack of declarations, corresponding to the current 
-//             state of declarations to be pushed to Z3
+// bg_scope is a global, mutable variable that keeps a list of the declarations
+// that we have given to z3 so far. In order to allow rollback of history,
+// one can enter a new "scope" by pushing a new, empty z3 list of declarations
+// on fresh_scope (a stack) -- one can then, for instance, verify these
+// declarations immediately, then call pop so that subsequent queries will not
+// reverify or use these declarations
 let fresh_scope : ref<scope_t> = Util.mk_ref [[]]
 
-//bg_scope: Is the flat sequence of declarations already given to Z3
-//          When refreshing the solver, the bg_scope is set to 
-//          a flattened version of fresh_scope
+// bg_scope: Is the flat sequence of declarations already given to Z3
+//           When refreshing the solver, the bg_scope is set to
+//           a flattened version of fresh_scope
 let bg_scope : ref<list<decl>> = Util.mk_ref []
 
+// fresh_scope is a mutable reference; this pushes a new list at the front;
+// then, givez3 modifies the reference so that within the new list at the front,
+// new queries are pushed
 let push msg    =
     fresh_scope := [Term.Caption msg; Term.Push]::!fresh_scope;
     bg_scope := [Term.Caption msg; Term.Push]@ !bg_scope
@@ -380,6 +387,8 @@ let pop msg      =
 //              query comes up
 let giveZ3 decls =
    decls |> List.iter (function Push | Pop -> failwith "Unexpected push/pop" | _ -> ());
+   // This is where we prepend new queries to the head of the list at the head
+   // of fresh_scope
    begin match !fresh_scope with
     | hd::tl -> fresh_scope := (hd@decls)::tl
     | _ -> failwith "Impossible"
@@ -405,9 +414,18 @@ let refresh () =
 
 //mark, reset_mark, commit_mark:
 //    setting rollback points for the interactive mode
+// JP: I suspect the expected usage for the interactive mode is as follows:
+// - the stack (fresh_scope) has size >= 1, the top scope contains the queries
+//   that have been successful so far
+// - one calls "mark" to push a new scope of tentative queries
+// - in case of success, the new scope is collapsed with the previous scope,
+//   effectively bringing the new queries into the scope of successful queries so far
+// - in case of failure, the new scope is discarded
 let mark msg =
     push msg
 let reset_mark msg =
+    // JP: pop_context (in universal.fs) does the same thing: it calls pop,
+    // followed by refresh
     pop msg;
     refresh ()
 let commit_mark msg =

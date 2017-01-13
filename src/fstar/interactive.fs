@@ -333,8 +333,6 @@ let interactive_mode (filename:string)
             tc.report_fail();
             Util.print1 "%s\n" fail;
             let env = tc.reset_mark env_mark in
-            let env = tc.reset_mark env_mark in
-            let env = tc.reset_mark env_mark in
             go line_col stack curmod env ts
           in
 

@@ -175,9 +175,16 @@ let tc_one_file_and_intf (intf:option<string>) (impl:string) (dsenv:Parser.Env.e
         FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
         let caption = "interface: " ^ iname in
         //push a new solving context, so that we can blow away implementation details below
+
+        // JP: TcEnv.pop and TcEnv.push in turn call z3 push & pop -- the z3
+        // queries have a notion of push & pop that allow one to "scope" a bunch
+        // of queries and make them invisible to the outside -- what we're doing
+        // in addition to that is we're being paranoid and are killing the z3 process to be
+        // absolutely sure it doesn't use any knowledge acquired from checking the queries
+        // that stem from the implementation
         let dsenv', env' = push_context (dsenv, env) caption in
         let _, dsenv', env' = tc_one_file dsenv' env' intf impl in //check the impl and interface together, if any
-        //discard the impl and check the interface alone for the rest of the program
+        // discard the impl and check the interface alone for the rest of the program
         let _ = pop_context (dsenv', env') caption in
         tc_one_file dsenv env None iname //check the interface alone
 
