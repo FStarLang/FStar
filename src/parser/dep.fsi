@@ -27,14 +27,10 @@ type map = smap<(option<string> * option<string>)>
 
 type color = | White | Gray | Black
 
-val lowercase_module_name : f:string -> Prims.Tot<string>
+val lowercase_module_name : string -> string
 
-val build_map : filenames:list<string> -> map
+val build_map : list<string> -> map
 
-val collect : verify_mode:verify_mode 
-           -> filenames:list<string> 
-           -> list<(string * list<string>)>
-            * list<string>
-            * BU.smap<(list<string> * color)>
+val collect : verify_mode -> list<string> -> list<(string * list<string>)> * list<string> * BU.smap<(list<string> * color)>
 
-val print : make_deps:list<(string * list<string>)> * 'a * graph:smap<(list<string> * 'b)> -> unit
+val print : list<(string * list<string>)> * 'a * smap<(list<string> * 'b)> -> unit

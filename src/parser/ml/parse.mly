@@ -33,14 +33,15 @@
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
+open FStar_Errors
 open FStar_List
 open FStar_Util
 open FStar_Range
 open FStar_Options
 (* TODO : these files should be deprecated and removed *)
-open FStar_Absyn_Syntax
-open FStar_Absyn_Const
-open FStar_Absyn_Util
+open FStar_Syntax_Syntax
+open FStar_Syntax_Const
+open FStar_Syntax_Util
 open FStar_Parser_AST
 open FStar_Parser_Util
 open FStar_Const
@@ -719,7 +720,7 @@ rawDecl:
       (
         let t = match flatten bss with
           | [] -> t
-          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type
+          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       )}
 | EXCEPTION uident option___anonymous_1_
@@ -1198,7 +1199,7 @@ binder:
     {let aqualified_lid = $1 in
      (
        let (q, lid) = aqualified_lid in
-       mk_binder (Variable lid) (rhs parseState 1) Type q
+       mk_binder (Variable lid) (rhs parseState 1) Type_level q
      )}
 | tvar
     {let tv = $1 in
@@ -1470,13 +1471,13 @@ in
       )}
 | REQUIRES typ
     {let (_1, t) = ((), $2) in
-      ( mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type )}
+      ( mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level )}
 | ENSURES typ
     {let (_1, t) = ((), $2) in
-      ( mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type )}
+      ( mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level )}
 | ATTRIBUTES nonempty_list_atomicTerm_
     {let (_1, es) = ((), $2) in
-      ( mk_term (Attributes es) (rhs2 parseState 1 2) Type )}
+      ( mk_term (Attributes es) (rhs2 parseState 1 2) Type_level )}
 | IF noSeqTerm THEN noSeqTerm ELSE noSeqTerm
     {let (_1, e1, _3, e2, _5, e3) = ((), $2, (), $4, (), $6) in
       ( mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr )}
@@ -1851,7 +1852,7 @@ tmNoEq:
         let dom, res = match tail.tm with
             | Sum(dom', res) -> dom::dom', res
             | _ -> [dom], tail in
-        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type
+        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       )}
 | tmNoEq MINUS tmNoEq
     {let (e1, _2, e2) = ($1, (), $3) in
@@ -1870,8 +1871,8 @@ tmNoEq:
       (
         let t = match phi_opt with
           | None -> NamedTyp(id, e)
-          | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) Type None, phi)
-        in mk_term t (rhs2 parseState 1 4) Type
+          | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) Type_level None, phi)
+        in mk_term t (rhs2 parseState 1 4) Type_level
       )}
 | LBRACE recordExp RBRACE
     {let (_1, e, _3) = ((), $2, ()) in
@@ -1988,16 +1989,16 @@ atomicTermNotQUident:
              ( mk_term (Var assert_lid) (rhs parseState 1) Expr )}
 | tvar
     {let tv = $1 in
-                ( mk_term (Tvar tv) (rhs parseState 1) Type )}
+                ( mk_term (Tvar tv) (rhs parseState 1) Type_level )}
 | constant
     {let c = $1 in
                ( mk_term (Const c) (rhs parseState 1) Expr )}
 | L_TRUE
     {let _1 = () in
-             ( mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type )}
+             ( mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type_level )}
 | L_FALSE
     {let _1 = () in
-              ( mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type )}
+              ( mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type_level )}
 | opPrefixTerm_atomicTermNotQUident_
     {let x = $1 in
     ( x )}
@@ -2192,7 +2193,7 @@ qidentWithTypeArgs_quident_some_fsTypeArgs__:
 hasSort:
   SUBKIND
     {let _1 = () in
-            ( Type )}
+            ( Type_level )}
 
 constant:
   LPAREN_RPAREN

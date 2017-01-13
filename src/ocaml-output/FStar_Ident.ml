@@ -33,13 +33,13 @@ let gen : FStar_Range.range  ->  ident = (
 let x = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (fun r -> (
 
-let _26_14 = (let _125_25 = ((FStar_ST.read x) + (Prims.parse_int "1"))
-in (FStar_ST.op_Colon_Equals x _125_25))
-in (let _125_29 = (let _125_28 = (let _125_27 = (let _125_26 = (FStar_ST.read x)
-in (Prims.string_of_int _125_26))
-in (Prims.strcat reserved_prefix _125_27))
-in ((_125_28), (r)))
-in (mk_ident _125_29)))))
+let _26_14 = (let _127_25 = ((FStar_ST.read x) + (Prims.parse_int "1"))
+in (FStar_ST.op_Colon_Equals x _127_25))
+in (let _127_29 = (let _127_28 = (let _127_27 = (let _127_26 = (FStar_ST.read x)
+in (Prims.string_of_int _127_26))
+in (Prims.strcat reserved_prefix _127_27))
+in ((_127_28), (r)))
+in (mk_ident _127_29)))))
 
 
 let id_of_text : Prims.string  ->  ident = (fun str -> (mk_ident ((str), (FStar_Range.dummyRange))))
@@ -70,8 +70,8 @@ in (match (_26_26) with
 | (ns, id) -> begin
 (
 
-let nsstr = (let _125_46 = (FStar_List.map text_of_id ns)
-in (FStar_All.pipe_right _125_46 text_of_path))
+let nsstr = (let _127_46 = (FStar_List.map text_of_id ns)
+in (FStar_All.pipe_right _127_46 text_of_path))
 in {ns = ns; ident = id; nsstr = nsstr; str = if (nsstr = "") then begin
 id.idText
 end else begin
@@ -113,8 +113,8 @@ let path = (path_of_lid l)
 in (lid_of_path (FStar_List.append path ((s)::[])) (range_of_lid l))))
 
 
-let string_of_lid : lident  ->  Prims.string = (fun lid -> (let _125_74 = (path_of_lid lid)
-in (text_of_path _125_74)))
+let string_of_lid : lident  ->  Prims.string = (fun lid -> (let _127_74 = (path_of_lid lid)
+in (text_of_path _127_74)))
 
 
 

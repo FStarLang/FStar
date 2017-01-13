@@ -339,7 +339,7 @@ let rec extract (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with currentModule = name}  in
-  let g, sigs = Util.fold_map extract_sig g m.declarations in
+  let g, sigs = BU.fold_map extract_sig g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
   if m.name.str <> "Prims" && not m.is_interface && Options.should_extract m.name.str then begin
     BU.print1 "Extracted module %s\n" (Print.lid_to_string m.name);

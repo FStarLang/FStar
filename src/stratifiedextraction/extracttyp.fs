@@ -27,6 +27,7 @@ open FStar
 open FStar.Tc.Normalize
 open FStar.Absyn.Print
 open FStar.StratifiedExtraction.ML.Env
+module MU = FStar.StratifiedExtraction.ML.Util
 
 let binderIsExp (bn:binder): bool = is_inr (fst bn)
 
@@ -61,7 +62,7 @@ let delta_norm_eff =
 
 let translate_eff g l : e_tag =
     let l = delta_norm_eff g l in
-    if lid_equals l Const.effect_PURE_lid 
+    if lid_equals l Const.effect_PURE_lid
     then E_PURE
     else if lid_equals l Const.effect_GHOST_lid
     then E_GHOST
@@ -157,7 +158,7 @@ let rec extractTyp  (c:context) (ft:typ) : mlty =
             | Typ_btvar btv ->  extractTyVar c btv
                 (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
             | Typ_const ftv -> extractTyConstApp c ftv arrgs
-            | Typ_app (tyin, argsin) -> extractTyp c (Util.mkTypApp tyin (List.append argsin arrgs) ty)
+            | Typ_app (tyin, argsin) -> extractTyp c (mkTypApp tyin (List.append argsin arrgs) ty)
             | _ -> unknownType in
         res
 
@@ -258,10 +259,10 @@ let lookupDataConType (c:context) (sigb : sigelts) (l:lident)(*this sigbundle co
     let tr =
       Util.find_map sigb (fun s ->
                     match s with
-                    | Sig_datacon (l',t,(_, tps, _),quals,lids,_) -> 
-                       if l=l' 
+                    | Sig_datacon (l',t,(_, tps, _),quals,lids,_) ->
+                       if l=l'
                        then let t = Absyn.Util.close_typ (List.map (fun (x, _) -> (x, Some <| Implicit true)) tps) t in
-                            Some t 
+                            Some t
                        else None
                     | _ -> None
                     )  in must tr
@@ -453,9 +454,9 @@ let rec extractSigElt (c:context) (s:sigelt) : context * list<mlmodule1> =
          if (quals |> List.contains Assumption
             || quals |> List.contains New)
          && not (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
-         then let kbs, _ = Util.kind_formals k in 
+         then let kbs, _ = Util.kind_formals k in
               let se = Sig_typ_abbrev(l, bs@kbs, mk_Kind_type, Tc.Recheck.t_unit, quals, r) in
-              extractSigElt c se 
+              extractSigElt c se
          else c,[]
 
     | _ -> c, []

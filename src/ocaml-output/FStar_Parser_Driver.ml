@@ -38,40 +38,32 @@ end))
 
 
 let ___Modul____0 = (fun projectee -> (match (projectee) with
-| Modul (_72_4) -> begin
-_72_4
+| Modul (_69_4) -> begin
+_69_4
 end))
 
 
 let ___Decls____0 = (fun projectee -> (match (projectee) with
-| Decls (_72_7) -> begin
-_72_7
+| Decls (_69_7) -> begin
+_69_7
 end))
 
 
 let parse_fragment : FStar_Parser_ParseIt.input_frag  ->  fragment = (fun frag -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inr (frag)))) with
-| FStar_Util.Inl (FStar_Util.Inl ([]), _72_12) -> begin
+| FStar_Util.Inl (FStar_Util.Inl ([]), _69_12) -> begin
 Empty
 end
-| FStar_Util.Inl (FStar_Util.Inl ((modul)::[]), _72_19) -> begin
+| FStar_Util.Inl (FStar_Util.Inl ((modul)::[]), _69_19) -> begin
 Modul (modul)
 end
-| FStar_Util.Inl (FStar_Util.Inr (decls), _72_25) -> begin
+| FStar_Util.Inl (FStar_Util.Inr (decls), _69_25) -> begin
 Decls (decls)
 end
-| FStar_Util.Inl (FStar_Util.Inl (_72_29), _72_32) -> begin
-if (FStar_Options.universes ()) then begin
-(Prims.raise (FStar_Syntax_Syntax.Err ("Refusing to check more than one module at a time incrementally")))
-end else begin
-(Prims.raise (FStar_Absyn_Syntax.Err ("Refusing to check more than one module at a time incrementally")))
-end
+| FStar_Util.Inl (FStar_Util.Inl (_69_29), _69_32) -> begin
+(Prims.raise (FStar_Errors.Err ("Refusing to check more than one module at a time incrementally")))
 end
 | FStar_Util.Inr (msg, r) -> begin
-if (FStar_Options.universes ()) then begin
-(Prims.raise (FStar_Syntax_Syntax.Error (((msg), (r)))))
-end else begin
-(Prims.raise (FStar_Absyn_Syntax.Error (((msg), (r)))))
-end
+(Prims.raise (FStar_Errors.Error (((msg), (r)))))
 end))
 
 
@@ -79,25 +71,17 @@ let parse_file : FStar_Parser_ParseIt.filename  ->  (FStar_Parser_AST.modul Prim
 | FStar_Util.Inl (FStar_Util.Inl (ast), comments) -> begin
 ((ast), (comments))
 end
-| FStar_Util.Inl (FStar_Util.Inr (_72_46), _72_49) -> begin
+| FStar_Util.Inl (FStar_Util.Inr (_69_46), _69_49) -> begin
 (
 
 let msg = (FStar_Util.format1 "%s: expected a module\n" fn)
 in (
 
 let r = FStar_Range.dummyRange
-in if (FStar_Options.universes ()) then begin
-(Prims.raise (FStar_Syntax_Syntax.Error (((msg), (r)))))
-end else begin
-(Prims.raise (FStar_Absyn_Syntax.Error (((msg), (r)))))
-end))
+in (Prims.raise (FStar_Errors.Error (((msg), (r)))))))
 end
 | FStar_Util.Inr (msg, r) -> begin
-if (FStar_Options.universes ()) then begin
-(Prims.raise (FStar_Syntax_Syntax.Error (((msg), (r)))))
-end else begin
-(Prims.raise (FStar_Absyn_Syntax.Error (((msg), (r)))))
-end
+(Prims.raise (FStar_Errors.Error (((msg), (r)))))
 end))
 
 

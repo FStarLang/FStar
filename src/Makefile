@@ -99,7 +99,7 @@ TC=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi re
 TC_SRC=$(addprefix tc/, $(TC))
 TOSMT=term.fsi term.fs z3.fs splitcases.fs encode.fs
 TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
-BOOT_PARSER=$(addprefix parser/, ast.fs env.fs interleave.fs tosyntax.fs lexhelp.fs parseit.fsi driver.fs dep.fs todocument.fs)
+BOOT_PARSER=$(addprefix parser/, ast.fs interleave.fs lexhelp.fs parseit.fsi driver.fs dep.fs todocument.fs)
 DESUGAR_SRC=$(addprefix desugar/, dsenv.fs desugar.fs)
 TOSYNTAX_SRC=$(addprefix tosyntax/, env.fs tosyntax.fs)
 TYPECHECKER=common.fs env.fsi env.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs util.fsi util.fs dmff.fs tcterm.fsi tcterm.fs tc.fsi tc.fs
@@ -127,9 +127,12 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Errors.fst \
 		FStar.Syntax.MutRecTy.fst \
 	    	FStar.Tc.Env.fst FStar.Tc.Recheck.fst FStar.Tc.Normalize.fst FStar.Tc.Errors.fst FStar.Tc.Rel.fst FStar.Tc.Util.fst FStar.Tc.Tc.fst \
 	    	FStar.ToSMT.Term.fst FStar.ToSMT.Z3.fst FStar.ToSMT.SplitQueryCases.fst FStar.ToSMT.Encode.fst \
-	    	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Errors.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst \
-		FStar.Parser.AST.fst FStar.Parser.DesugarEnv.fst FStar.Parser.Desugar.fst FStar.Parser.Env.fst FStar.Parser.Interleave.fst FStar.Parser.ToSyntax.fst FStar.Parser.ToDocument.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst \
-		FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.Env.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.ExtractTyp.fst FStar.Extraction.ML.ExtractExp.fst FStar.Extraction.ML.ExtractMod.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst FStar.Extraction.Kremlin.fst \
+	    	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Err.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst \
+		FStar.Parser.AST.fst FStar.Parser.Interleave.fst FStar.Parser.ToDocument.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst \
+		FStar.Parser.DesugarEnv.fst FStar.Parser.Desugar.fst \
+		FStar.ToSyntax.Env.fst FStar.ToSyntax.ToSyntax.fst \
+		FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst FStar.Extraction.Kremlin.fst \
+		FStar.StratifiedExtraction.ML.Env.fst FStar.StratifiedExtraction.ML.Util.fst FStar.StratifiedExtraction.ML.ExtractTyp.fst FStar.StratifiedExtraction.ML.ExtractExp.fst FStar.StratifiedExtraction.ML.ExtractMod.fst \
 		FStar.Fsdoc.Generator.fst \
 	    	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
 	    	FStar.Dependencies.fst FStar.Interactive.fst FStar.Stratified.fst FStar.Universal.fst FStar.Indent.fst FStar.FStar.fst
@@ -190,11 +193,14 @@ U_ALL_INTERFACES=$(U_STDLIB) $(U_BOOT_BASIC_FSTI)
 U_ALL_SOURCES=$(addprefix boot_fsts/, \
 	FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst FStar.Errors.fst \
 	FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst FStar.Syntax.Free.fst FStar.Syntax.MutRecTy.fst \
-	FStar.Parser.AST.fst FStar.Parser.Interleave.fst FStar.Parser.ToDocument.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst \
-	FStar.ToSyntax.Env.fst FStar.ToSyntax.ToSyntax.fst \
 	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Err.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst \
-	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
-	FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst FStar.Extraction.Kremlin.fst)
+	FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst)
+
+# FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst FStar.Extraction.Kremlin.fst)
+# 	FStar.Parser.AST.fst FStar.Parser.Interleave.fst FStar.Parser.ToDocument.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst \
+# 	FStar.ToSyntax.Env.fst FStar.ToSyntax.ToSyntax.fst \
+# 	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
+# 	FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst FStar.Extraction.Kremlin.fst)
 
 wc_u_all:
 	wc -l $(U_ALL_SOURCES)
@@ -243,9 +249,9 @@ prep_u_extract_ocaml: $(U_ALL_INTERFACES) boot_fsts/FStar.Parser.Parse.fsti boot
 	$(SED) -i "s/type decl' =/type decl': Type0 =/g" boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
 	$(SED) -i "s/type mlexpr' =/type mlexpr': Type0 =/g" boot_fsts/FStar.Extraction.ML.Syntax.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
 	$(SED) -i "s/type mlsig1 =/type mlsig1: Type0 =/g" boot_fsts/FStar.Extraction.ML.Syntax.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	-----------------------------------
-	$(SED) -i 's/module FStar.Parser.Lexhelp/module FStar.Parser.Lexhelp open FStar.Mul/' boot_fsts/FStar.Parser.LexHelp.fst uses * for multiplication only
-	-----------------------------------
+	# -----------------------------------
+	$(SED) -i 's/module FStar.Parser.Lexhelp/module FStar.Parser.Lexhelp open FStar.Mul/' boot_fsts/FStar.Parser.LexHelp.fst #uses * for multiplication only
+	# -----------------------------------
         # temporary, to go quickly past Normalize
 	cp typechecker/normalize.fsi boot_fsts/FStar.TypeChecker.Normalize.fst
 	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Normalize.fst
