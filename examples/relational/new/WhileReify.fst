@@ -66,6 +66,8 @@ reifiable let rec interpret_exp_st e =
     let b = interpret_exp_st e2 in
     interpret_binop o a b
 
+let interpret_exp h e = normalize_term (reify (interpret_exp_st e) h)
+
 (* function used for the decreases clause *)
 val decr_while : heap -> com -> GTot int
 let decr_while h c =
@@ -114,3 +116,5 @@ reifiable let rec interpret_com_st c h0 =
         else
           () (* raise OutOfFuel -- XXX: no exceptions yet *)
       end
+
+let interpret_com h c = normalize_term (reify (interpret_com_st c h) h)

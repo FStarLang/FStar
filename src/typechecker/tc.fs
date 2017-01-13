@@ -1840,8 +1840,12 @@ let check_module env m =
     then begin
       let normalize_toplevel_lets = function
           | Sig_let ((b, lbs), r, ids, qs, attrs) ->
-              let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant] env in
-              Sig_let ((b, List.map (fun lb -> {lb with lbdef = n lb.lbdef}) lbs), r, ids, qs, attrs)
+              let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
+              let update lb =
+                  let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
+                  { lb with lbdef = n (Env.push_univ_vars env univnames) e }
+              in
+              Sig_let ((b, List.map update lbs), r, ids, qs, attrs)
           | se -> se
       in
       let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
