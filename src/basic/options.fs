@@ -760,7 +760,7 @@ let set_options o s =
         | Restore -> all_specs in
     Getopt.parse_string specs (fun _ -> ()) s
 
-let file_list_ = Util.mk_ref []
+let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
 let parse_cmd_line () =
   let res = Getopt.parse_cmdline (specs()) (fun i -> file_list_ := !file_list_ @ [i]) in
