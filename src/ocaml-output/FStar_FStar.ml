@@ -203,7 +203,7 @@ s
 end else begin
 (
 
-let _98_93 = (FStar_Util.run_proc "cygpath" (Prims.strcat "-m " filename) "")
+let _98_93 = (FStar_Util.run_proc "cygpath" (Prims.strcat "-m " s) "")
 in (match (_98_93) with
 | (_98_89, t_out, _98_92) -> begin
 (FStar_Util.trim_string t_out)

@@ -117,7 +117,7 @@ let go _ =
               let _, t_out, _ = run_proc "which" "cygpath" "" in
               if not (trim_string t_out = "/usr/bin/cygpath") then s
               else
-                let _, t_out, _ = run_proc "cygpath" ("-m " ^ filename) "" in
+                let _, t_out, _ = run_proc "cygpath" ("-m " ^ s) "" in
                 trim_string t_out
             with
               | _ -> s
