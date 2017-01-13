@@ -664,7 +664,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       desugar_name mk setpos env l
 
     | Projector (l, i) ->
-      let found = 
+      let found =
         Option.isSome (Env.try_lookup_datacon env l) ||
         Option.isSome (Env.try_lookup_effect_defn env l)
       in
@@ -688,10 +688,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
             begin match args with
               | [] -> head
               | _ ->
+                let universes, args = Util.take (fun (_, imp) -> imp = UnivApp) args in
+                let universes = List.map (fun x -> desugar_universe (fst x)) universes in
                 let args = List.map (fun (t, imp) ->
                   let te = desugar_term env t in
                   arg_withimp_e imp te) args in
-                let app = mk (Tm_app(head, args)) in
+                let app = mk (Tm_app(mk (Tm_uinst(head, universes)), args)) in
                 if is_data
                 then mk (Tm_meta(app, Meta_desugared Data_app))
                 else app
@@ -1032,6 +1034,7 @@ and desugar_comp r default_ok env t =
     let is_app head (t, _) = match (unparen t).tm with
        | App({tm=Var d}, _, _) -> d.ident.idText = head
        | _ -> false in
+    (* TODO : Applying explicit universes to effects is not yet supported *)
     let is_decreases = is_app "decreases" in
     let pre_process_comp_typ (t:AST.term) =
         let head, args = head_and_args t in
@@ -1080,6 +1083,9 @@ and desugar_comp r default_ok env t =
     let (eff, cattributes), args = pre_process_comp_typ t in
     if List.length args = 0
     then fail (Util.format1 "Not enough args to effect %s" (Print.lid_to_string eff));
+    let is_universe (_, imp) = imp = UnivApp in
+    let universes, args = Util.take is_universe args in
+    let universes = List.map (fun (u, imp) -> desugar_universe u) universes in
     let result_arg, rest = List.hd args, List.tl args in
     let result_typ = desugar_typ env (fst result_arg) in
     let rest = desugar_args env rest in
@@ -1093,9 +1099,14 @@ and desugar_comp r default_ok env t =
                 match t.n with
                 | Tm_app(_, [(arg, _)]) -> DECREASES arg
                 | _ -> failwith "impos") in
-    let no_additional_args = List.length decreases_clause = 0
-                             && List.length rest = 0
-                             && List.length cattributes = 0 in
+    let no_additional_args =
+        (* F# complains about not being able to use = on some types.. *)
+        let is_empty (l:list<'a>) = match l with | [] -> true | _ -> false in
+        is_empty decreases_clause &&
+        is_empty rest &&
+        is_empty cattributes &&
+        is_empty universes
+    in
     if no_additional_args
     && lid_equals eff C.effect_Tot_lid
     then mk_Total result_typ
@@ -1123,7 +1134,7 @@ and desugar_comp r default_ok env t =
                         (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) None pat.pos, aq)]
                     | _ -> rest
             else rest in
-        mk_Comp ({comp_univs=[];
+        mk_Comp ({comp_univs=universes;
                   effect_name=eff;
                   result_typ=result_typ;
                   effect_args=rest;
