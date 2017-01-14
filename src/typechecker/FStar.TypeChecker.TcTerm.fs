@@ -468,7 +468,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if Env.debug env Options.Extreme
     then BU.print1 "Tm_match: expected type of branches is %s\n" (Print.term_to_string res_t);
 
-    let guard_x = S.gen_bv "scrutinee" (Some e1.pos) c1.res_typ in
+    let guard_x = S.new_bv (Some e1.pos) c1.res_typ in
     let t_eqns = eqns |> List.map (tc_eqn guard_x env_branches) in
     let c_branches, g_branches =
       let cases, g = List.fold_right (fun (_, f, c, g) (caccum, gaccum) ->

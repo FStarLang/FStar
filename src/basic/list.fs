@@ -24,7 +24,7 @@ end
 (failwith "tail of empty list")
 end))
 
-let tl = tail
+let tl x = tail x
 
 let rec length = (fun ( _5_3  :  'a Prims.list ) -> (match (_5_3) with
 | [] -> begin
