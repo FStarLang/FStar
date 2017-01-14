@@ -55,7 +55,7 @@ let rec unlabel t = match t.tm with
   | Labeled(t, _, _) -> unlabel t
   | _ -> t
 
-let kind_star r = mk_term (Name (lid_of_path ["Type_level"] r)) r Kind
+let kind_star r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
 
 
 let compile_op arity s =
@@ -203,7 +203,7 @@ and is_kind env (t:term) : bool =
   if t.level = Kind
   then true
   else match (unparen t).tm with
-    | Name {str="Type_level"} -> true
+    | Name {str="Type"} -> true
     | Product(_, t) -> is_kind env t
     | Paren t -> is_kind env t
     | Construct(l, _)
@@ -1064,7 +1064,7 @@ and desugar_kind env k : knd =
   let setpos kk = {kk with pos=k.range} in
   let k = unparen k in
   match k.tm with
-    | Name {str="Type_level"} -> setpos mk_Kind_type
+    | Name {str="Type"} -> setpos mk_Kind_type
     | Name {str="Effect"} -> setpos mk_Kind_effect
     | Name l ->
       begin match DesugarEnv.find_kind_abbrev env (DesugarEnv.qualify_lid env l) with

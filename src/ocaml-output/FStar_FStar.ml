@@ -293,19 +293,19 @@ try
 | () -> begin
 (
 
-let _100_122 = (go ())
+let _100_120 = (go ())
 in (
 
-let _100_124 = (cleanup ())
+let _100_122 = (cleanup ())
 in (FStar_All.exit (Prims.parse_int "0"))))
 end)
 with
 | e -> begin
 (
 
-let _100_112 = (
+let _100_110 = (
 
-let _100_110 = if (FStar_Errors.handleable e) then begin
+let _100_108 = if (FStar_Errors.handleable e) then begin
 (FStar_Errors.handle_err false e)
 end else begin
 ()
@@ -324,14 +324,14 @@ end
 end)
 in (
 
-let _100_114 = (cleanup ())
+let _100_112 = (cleanup ())
 in (
 
-let _100_116 = (let _201_46 = (FStar_Errors.report_all ())
+let _100_114 = (let _201_46 = (FStar_Errors.report_all ())
 in (FStar_All.pipe_right _201_46 Prims.ignore))
 in (
 
-let _100_118 = (report_errors [])
+let _100_116 = (report_errors [])
 in (FStar_All.exit (Prims.parse_int "1"))))))
 end
 end))

@@ -17,7 +17,7 @@ let totality_check : Prims.string = "This term may not terminate"
 
 let add_errors : FStar_Tc_Env.env  ->  (Prims.string * FStar_Range.range) Prims.list  ->  Prims.unit = (fun env errs -> (
 
-let errs = (FStar_All.pipe_right errs (FStar_List.map (fun _46_10 -> (match (_46_10) with
+let errs = (FStar_All.pipe_right errs (FStar_List.map (fun _46_9 -> (match (_46_9) with
 | (msg, r) -> begin
 (
 
@@ -145,7 +145,7 @@ in (FStar_Util.format1 "The pattern variable \"%s\" was used more than once" m))
 
 let disjunctive_pattern_vars = (fun v1 v2 -> (
 
-let vars = (fun v -> (let _147_161 = (FStar_All.pipe_right v (FStar_List.map (fun _46_1 -> (match (_46_1) with
+let vars = (fun v -> (let _147_161 = (FStar_All.pipe_right v (FStar_List.map (fun uu___125 -> (match (uu___125) with
 | FStar_Util.Inl (a) -> begin
 (FStar_Absyn_Print.strBvd a)
 end
@@ -170,13 +170,13 @@ end))
 
 let computed_computation_type_does_not_match_annotation = (fun env e c c' -> (
 
-let _46_94 = (name_and_result c)
-in (match (_46_94) with
+let _46_93 = (name_and_result c)
+in (match (_46_93) with
 | (f1, r1) -> begin
 (
 
-let _46_97 = (name_and_result c')
-in (match (_46_97) with
+let _46_96 = (name_and_result c')
+in (match (_46_96) with
 | (f2, r2) -> begin
 (let _147_171 = (FStar_Tc_Normalize.typ_norm_to_string env r1)
 in (let _147_170 = (FStar_Tc_Normalize.typ_norm_to_string env r2)
@@ -215,7 +215,7 @@ let failed_to_prove_specification : Prims.string Prims.list  ->  Prims.string = 
 | [] -> begin
 "An unknown assertion in the term at this location was not provable"
 end
-| _46_111 -> begin
+| _46_110 -> begin
 (let _147_201 = (FStar_All.pipe_right lbls (FStar_String.concat "\n\t"))
 in (FStar_Util.format1 "The following problems were found:\n\t%s" _147_201))
 end))

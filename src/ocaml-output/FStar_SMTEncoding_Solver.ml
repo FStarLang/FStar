@@ -13,11 +13,11 @@ type z3_replay_result =
 (FStar_SMTEncoding_Z3.unsat_core, FStar_SMTEncoding_Term.error_labels) FStar_Util.either
 
 
-let z3_result_as_replay_result = (fun _94_1 -> (match (_94_1) with
+let z3_result_as_replay_result = (fun uu___609 -> (match (uu___609) with
 | FStar_Util.Inl (l) -> begin
 FStar_Util.Inl (l)
 end
-| FStar_Util.Inr (r, _94_9) -> begin
+| FStar_Util.Inr (r, _94_6) -> begin
 FStar_Util.Inr (r)
 end))
 
@@ -47,10 +47,10 @@ let format_hints_file_name : Prims.string  ->  Prims.string = (fun src_filename 
 
 let initialize_hints_db = (fun src_filename force_record -> (
 
-let _94_20 = (FStar_ST.op_Colon_Equals hint_stats [])
+let _94_17 = (FStar_ST.op_Colon_Equals hint_stats [])
 in (
 
-let _94_22 = if (FStar_Options.record_hints ()) then begin
+let _94_19 = if (FStar_Options.record_hints ()) then begin
 (FStar_ST.op_Colon_Equals recorded_hints (Some ([])))
 end else begin
 ()
@@ -69,7 +69,7 @@ in (match ((FStar_Util.read_hints val_filename)) with
 let expected_digest = (FStar_Util.digest_of_file norm_src_filename)
 in (
 
-let _94_29 = if (FStar_Options.hint_info ()) then begin
+let _94_26 = if (FStar_Options.hint_info ()) then begin
 if (hints.FStar_Util.module_digest = expected_digest) then begin
 (FStar_Util.print1 "(%s) digest is valid; using hints db.\n" norm_src_filename)
 end else begin
@@ -94,7 +94,7 @@ end)))
 
 let finalize_hints_db : Prims.string  ->  Prims.unit = (fun src_filename -> (
 
-let _94_36 = if (FStar_Options.record_hints ()) then begin
+let _94_33 = if (FStar_Options.record_hints ()) then begin
 (
 
 let hints = (let _195_21 = (FStar_ST.read recorded_hints)
@@ -112,7 +112,7 @@ end else begin
 end
 in (
 
-let _94_44 = if (FStar_Options.hint_info ()) then begin
+let _94_41 = if (FStar_Options.hint_info ()) then begin
 (
 
 let stats = (let _195_23 = (FStar_ST.read hint_stats)
@@ -133,36 +133,36 @@ end else begin
 end
 in (
 
-let _94_46 = (FStar_ST.op_Colon_Equals recorded_hints None)
+let _94_43 = (FStar_ST.op_Colon_Equals recorded_hints None)
 in (
 
-let _94_48 = (FStar_ST.op_Colon_Equals replaying_hints None)
+let _94_45 = (FStar_ST.op_Colon_Equals replaying_hints None)
 in (FStar_ST.op_Colon_Equals hint_stats []))))))
 
 
 let with_hints_db = (fun fname f -> (
 
-let _94_52 = (initialize_hints_db fname false)
+let _94_49 = (initialize_hints_db fname false)
 in (
 
 let result = (f ())
 in (
 
-let _94_55 = (finalize_hints_db fname)
+let _94_52 = (finalize_hints_db fname)
 in result))))
 
 
 let next_hint : Prims.string  ->  Prims.int  ->  FStar_Util.hint Prims.option = (fun qname qindex -> (match ((FStar_ST.read replaying_hints)) with
 | Some (hints) -> begin
-(FStar_Util.find_map hints (fun _94_2 -> (match (_94_2) with
+(FStar_Util.find_map hints (fun uu___610 -> (match (uu___610) with
 | Some (hint) when ((hint.FStar_Util.hint_name = qname) && (hint.FStar_Util.hint_index = qindex)) -> begin
 Some (hint)
 end
-| _94_65 -> begin
+| _94_62 -> begin
 None
 end)))
 end
-| _94_67 -> begin
+| _94_64 -> begin
 None
 end))
 
@@ -176,14 +176,14 @@ end
 | Some (h) -> begin
 Some ((
 
-let _94_72 = h
-in {FStar_Util.hint_name = _94_72.FStar_Util.hint_name; FStar_Util.hint_index = _94_72.FStar_Util.hint_index; FStar_Util.fuel = _94_72.FStar_Util.fuel; FStar_Util.ifuel = _94_72.FStar_Util.ifuel; FStar_Util.unsat_core = _94_72.FStar_Util.unsat_core; FStar_Util.query_elapsed_time = (Prims.parse_int "0")}))
+let _94_69 = h
+in {FStar_Util.hint_name = _94_69.FStar_Util.hint_name; FStar_Util.hint_index = _94_69.FStar_Util.hint_index; FStar_Util.fuel = _94_69.FStar_Util.fuel; FStar_Util.ifuel = _94_69.FStar_Util.ifuel; FStar_Util.unsat_core = _94_69.FStar_Util.unsat_core; FStar_Util.query_elapsed_time = (Prims.parse_int "0")}))
 end)
 in (match ((FStar_ST.read recorded_hints)) with
 | Some (l) -> begin
 (FStar_ST.op_Colon_Equals recorded_hints (Some ((FStar_List.append l ((hint)::[])))))
 end
-| _94_78 -> begin
+| _94_75 -> begin
 ()
 end)))
 
@@ -198,30 +198,30 @@ in (FStar_ST.op_Colon_Equals hint_stats _195_50))))
 
 let ask_and_report_errors : FStar_TypeChecker_Env.env  ->  ((FStar_SMTEncoding_Z3.label * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list  ->  FStar_SMTEncoding_Term.decl Prims.list  ->  FStar_SMTEncoding_Term.decl  ->  FStar_SMTEncoding_Term.decl Prims.list  ->  Prims.unit = (fun env all_labels prefix query suffix -> (
 
-let _94_89 = (FStar_SMTEncoding_Z3.giveZ3 prefix)
+let _94_86 = (FStar_SMTEncoding_Z3.giveZ3 prefix)
 in (
 
-let _94_98 = (match (env.FStar_TypeChecker_Env.qname_and_index) with
+let _94_95 = (match (env.FStar_TypeChecker_Env.qname_and_index) with
 | None -> begin
 (failwith "No query name set!")
 end
 | Some (q, n) -> begin
 (((FStar_Ident.text_of_lid q)), (n))
 end)
-in (match (_94_98) with
+in (match (_94_95) with
 | (query_name, query_index) -> begin
 (
 
 let minimum_workable_fuel = (FStar_Util.mk_ref None)
 in (
 
-let set_minimum_workable_fuel = (fun f _94_3 -> (match (_94_3) with
-| ([], _94_105) -> begin
+let set_minimum_workable_fuel = (fun f uu___611 -> (match (uu___611) with
+| ([], _94_102) -> begin
 ()
 end
 | errs -> begin
 (match ((FStar_ST.read minimum_workable_fuel)) with
-| Some (_94_109) -> begin
+| Some (_94_106) -> begin
 ()
 end
 | None -> begin
@@ -230,7 +230,7 @@ end)
 end))
 in (
 
-let with_fuel = (fun label_assumptions p _94_118 -> (match (_94_118) with
+let with_fuel = (fun label_assumptions p _94_115 -> (match (_94_115) with
 | (n, i, rlimit) -> begin
 (let _195_98 = (let _195_88 = (let _195_73 = (let _195_72 = (FStar_Util.string_of_int n)
 in (let _195_71 = (FStar_Util.string_of_int i)
@@ -281,24 +281,24 @@ in (
 let hint_opt = (next_hint query_name query_index)
 in (
 
-let _94_132 = (match (hint_opt) with
+let _94_129 = (match (hint_opt) with
 | None -> begin
 ((None), (default_initial_config))
 end
 | Some (hint) -> begin
 (
 
-let _94_129 = if (FStar_Option.isSome hint.FStar_Util.unsat_core) then begin
+let _94_126 = if (FStar_Option.isSome hint.FStar_Util.unsat_core) then begin
 ((hint.FStar_Util.unsat_core), (rlimit))
 end else begin
 ((None), (((Prims.parse_int "60") * (Prims.parse_int "544656"))))
 end
-in (match (_94_129) with
+in (match (_94_126) with
 | (core, timeout) -> begin
 ((core), (((hint.FStar_Util.fuel), (hint.FStar_Util.ifuel), (timeout))))
 end))
 end)
-in (match (_94_132) with
+in (match (_94_129) with
 | (unsat_core, initial_config) -> begin
 (
 
@@ -351,7 +351,7 @@ let report = (fun p errs -> (
 let errs = if ((FStar_Options.detail_errors ()) && ((FStar_Options.n_cores ()) = (Prims.parse_int "1"))) then begin
 (
 
-let _94_144 = (match ((FStar_ST.read minimum_workable_fuel)) with
+let _94_141 = (match ((FStar_ST.read minimum_workable_fuel)) with
 | Some (f, errs) -> begin
 ((f), (errs))
 end
@@ -360,7 +360,7 @@ end
 in ((_195_128), ((Prims.parse_int "1")), (rlimit)))
 in ((_195_129), (errs)))
 end)
-in (match (_94_144) with
+in (match (_94_141) with
 | (min_fuel, potential_errors) -> begin
 (
 
@@ -369,7 +369,7 @@ let ask_z3 = (fun label_assumptions -> (
 let res = (FStar_Util.mk_ref None)
 in (
 
-let _94_149 = (let _195_133 = (with_fuel label_assumptions p min_fuel)
+let _94_146 = (let _195_133 = (with_fuel label_assumptions p min_fuel)
 in (FStar_SMTEncoding_Z3.ask None all_labels _195_133 (fun r -> (FStar_ST.op_Colon_Equals res (Some (r))))))
 in (let _195_134 = (FStar_ST.read res)
 in (FStar_Option.get _195_134)))))
@@ -384,19 +384,19 @@ end
 | ([], FStar_SMTEncoding_Z3.Default) -> begin
 (((((((""), (FStar_SMTEncoding_Term.Term_sort))), ("Unknown assertion failed"), (FStar_Range.dummyRange)))::[]), ((Prims.snd errs)))
 end
-| (_94_158, FStar_SMTEncoding_Z3.Kill) -> begin
+| (_94_155, FStar_SMTEncoding_Z3.Kill) -> begin
 (((((((""), (FStar_SMTEncoding_Term.Term_sort))), ("Killed: Unknown assertion failed"), (FStar_Range.dummyRange)))::[]), ((Prims.snd errs)))
 end
-| _94_162 -> begin
+| _94_159 -> begin
 errs
 end)
 end
 in (
 
-let _94_164 = (record_hint None)
+let _94_161 = (record_hint None)
 in (
 
-let _94_166 = if (FStar_Options.print_fuels ()) then begin
+let _94_163 = if (FStar_Options.print_fuels ()) then begin
 (let _195_141 = (let _195_136 = (FStar_TypeChecker_Env.get_range env)
 in (FStar_Range.string_of_range _195_136))
 in (let _195_140 = (let _195_137 = (FStar_Options.max_fuel ())
@@ -407,8 +407,8 @@ in (FStar_Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _1
 end else begin
 ()
 end
-in (let _195_143 = (FStar_All.pipe_right (Prims.fst errs) (FStar_List.map (fun _94_172 -> (match (_94_172) with
-| (_94_169, x, y) -> begin
+in (let _195_143 = (FStar_All.pipe_right (Prims.fst errs) (FStar_List.map (fun _94_169 -> (match (_94_169) with
+| (_94_166, x, y) -> begin
 ((x), (y))
 end))))
 in (FStar_TypeChecker_Err.add_errors env _195_143))))))
@@ -418,46 +418,46 @@ let use_errors = (fun errs result -> (match (((errs), (result))) with
 | ((([], _), _)) | ((_, FStar_Util.Inl (_))) -> begin
 result
 end
-| (_94_190, FStar_Util.Inr (_94_192)) -> begin
+| (_94_187, FStar_Util.Inr (_94_189)) -> begin
 FStar_Util.Inr (errs)
 end))
 in (
 
 let rec try_alt_configs = (fun prev_f p errs cfgs -> (
 
-let _94_201 = (set_minimum_workable_fuel prev_f errs)
+let _94_198 = (set_minimum_workable_fuel prev_f errs)
 in (match (((cfgs), ((Prims.snd errs)))) with
 | (([], _)) | ((_, FStar_SMTEncoding_Z3.Kill)) -> begin
 (report p errs)
 end
-| ((mi)::[], _94_214) -> begin
+| ((mi)::[], _94_211) -> begin
 (match (errs) with
-| ([], _94_218) -> begin
+| ([], _94_215) -> begin
 (let _195_161 = (with_fuel [] p mi)
 in (FStar_SMTEncoding_Z3.ask None all_labels _195_161 (cb false mi p [])))
 end
-| _94_221 -> begin
+| _94_218 -> begin
 (
 
-let _94_222 = (set_minimum_workable_fuel prev_f errs)
+let _94_219 = (set_minimum_workable_fuel prev_f errs)
 in (report p errs))
 end)
 end
-| ((mi)::tl, _94_228) -> begin
+| ((mi)::tl, _94_225) -> begin
 (let _195_163 = (with_fuel [] p mi)
-in (FStar_SMTEncoding_Z3.ask None all_labels _195_163 (fun _94_232 -> (match (_94_232) with
+in (FStar_SMTEncoding_Z3.ask None all_labels _195_163 (fun _94_229 -> (match (_94_229) with
 | (result, elapsed_time) -> begin
 (cb false mi p tl (((use_errors errs result)), (elapsed_time)))
 end))))
 end)))
-and cb = (fun used_hint _94_237 p alt _94_242 -> (match (((_94_237), (_94_242))) with
+and cb = (fun used_hint _94_234 p alt _94_239 -> (match (((_94_234), (_94_239))) with
 | ((prev_fuel, prev_ifuel, timeout), (result, elapsed_time)) -> begin
 (
 
-let _94_245 = if used_hint then begin
+let _94_242 = if used_hint then begin
 (
 
-let _94_243 = (FStar_SMTEncoding_Z3.refresh ())
+let _94_240 = (FStar_SMTEncoding_Z3.refresh ())
 in (let _195_169 = (FStar_TypeChecker_Env.get_range env)
 in (record_hint_stat hint_opt result elapsed_time _195_169)))
 end else begin
@@ -465,7 +465,7 @@ end else begin
 end
 in (
 
-let _94_247 = if ((FStar_Options.z3_refresh ()) || (FStar_Options.print_z3_statistics ())) then begin
+let _94_244 = if ((FStar_Options.z3_refresh ()) || (FStar_Options.print_z3_statistics ())) then begin
 (FStar_SMTEncoding_Z3.refresh ())
 end else begin
 ()
@@ -497,7 +497,7 @@ in (match (result) with
 | FStar_Util.Inl (unsat_core) -> begin
 (
 
-let _94_254 = if (not (used_hint)) then begin
+let _94_251 = if (not (used_hint)) then begin
 (
 
 let hint = {FStar_Util.hint_name = query_name; FStar_Util.hint_index = query_index; FStar_Util.fuel = prev_fuel; FStar_Util.ifuel = prev_ifuel; FStar_Util.unsat_core = unsat_core; FStar_Util.query_elapsed_time = elapsed_time}
@@ -514,7 +514,7 @@ end
 | FStar_Util.Inr (errs) -> begin
 (
 
-let _94_258 = if ((FStar_Options.print_fuels ()) || (FStar_Options.hint_info ())) then begin
+let _94_255 = if ((FStar_Options.print_fuels ()) || (FStar_Options.hint_info ())) then begin
 (query_info "failed")
 end else begin
 ()
@@ -524,7 +524,7 @@ end))))
 end))
 in (
 
-let _94_260 = if (FStar_Option.isSome unsat_core) then begin
+let _94_257 = if (FStar_Option.isSome unsat_core) then begin
 (FStar_SMTEncoding_Z3.refresh ())
 end else begin
 ()
@@ -539,9 +539,9 @@ in (
 let process_query = (fun q -> if ((FStar_Options.split_cases ()) > (Prims.parse_int "0")) then begin
 (
 
-let _94_266 = (let _195_196 = (FStar_Options.split_cases ())
+let _94_263 = (let _195_196 = (FStar_Options.split_cases ())
 in (FStar_SMTEncoding_SplitQueryCases.can_handle_query _195_196 q))
-in (match (_94_266) with
+in (match (_94_263) with
 | (b, cb) -> begin
 if b then begin
 (FStar_SMTEncoding_SplitQueryCases.handle_query cb check)
@@ -562,7 +562,7 @@ end))))
 
 let solve : (Prims.unit  ->  Prims.string) Prims.option  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  Prims.unit = (fun use_env_msg tcenv q -> (
 
-let _94_270 = (let _195_215 = (let _195_214 = (let _195_213 = (FStar_TypeChecker_Env.get_range tcenv)
+let _94_267 = (let _195_215 = (let _195_214 = (let _195_213 = (FStar_TypeChecker_Env.get_range tcenv)
 in (FStar_All.pipe_left FStar_Range.string_of_range _195_213))
 in (FStar_Util.format1 "Starting query at %s" _195_214))
 in (FStar_SMTEncoding_Encode.push _195_215))
@@ -571,12 +571,12 @@ in (
 let tcenv = (FStar_TypeChecker_Env.incr_query_index tcenv)
 in (
 
-let _94_277 = (FStar_SMTEncoding_Encode.encode_query use_env_msg tcenv q)
-in (match (_94_277) with
+let _94_274 = (FStar_SMTEncoding_Encode.encode_query use_env_msg tcenv q)
+in (match (_94_274) with
 | (prefix, labels, qry, suffix) -> begin
 (
 
-let pop = (fun _94_279 -> (match (()) with
+let pop = (fun _94_276 -> (match (()) with
 | () -> begin
 (let _195_220 = (let _195_219 = (let _195_218 = (FStar_TypeChecker_Env.get_range tcenv)
 in (FStar_All.pipe_left FStar_Range.string_of_range _195_218))
@@ -584,25 +584,25 @@ in (FStar_Util.format1 "Ending query at %s" _195_219))
 in (FStar_SMTEncoding_Encode.pop _195_220))
 end))
 in (match (qry) with
-| FStar_SMTEncoding_Term.Assume ({FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.FalseOp, _94_286); FStar_SMTEncoding_Term.freevars = _94_283; FStar_SMTEncoding_Term.rng = _94_281}, _94_291, _94_293) -> begin
+| FStar_SMTEncoding_Term.Assume ({FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.FalseOp, _94_283); FStar_SMTEncoding_Term.freevars = _94_280; FStar_SMTEncoding_Term.rng = _94_278}, _94_288, _94_290) -> begin
 (
 
-let _94_296 = (pop ())
+let _94_293 = (pop ())
 in ())
 end
-| _94_299 when tcenv.FStar_TypeChecker_Env.admit -> begin
+| _94_296 when tcenv.FStar_TypeChecker_Env.admit -> begin
 (
 
-let _94_300 = (pop ())
+let _94_297 = (pop ())
 in ())
 end
-| FStar_SMTEncoding_Term.Assume (q, _94_304, _94_306) -> begin
+| FStar_SMTEncoding_Term.Assume (q, _94_301, _94_303) -> begin
 (
 
-let _94_309 = (ask_and_report_errors tcenv labels prefix qry suffix)
+let _94_306 = (ask_and_report_errors tcenv labels prefix qry suffix)
 in (pop ()))
 end
-| _94_312 -> begin
+| _94_309 -> begin
 (failwith "Impossible")
 end))
 end)))))
@@ -611,7 +611,7 @@ end)))))
 let solver : FStar_TypeChecker_Env.solver_t = {FStar_TypeChecker_Env.init = FStar_SMTEncoding_Encode.init; FStar_TypeChecker_Env.push = FStar_SMTEncoding_Encode.push; FStar_TypeChecker_Env.pop = FStar_SMTEncoding_Encode.pop; FStar_TypeChecker_Env.mark = FStar_SMTEncoding_Encode.mark; FStar_TypeChecker_Env.reset_mark = FStar_SMTEncoding_Encode.reset_mark; FStar_TypeChecker_Env.commit_mark = FStar_SMTEncoding_Encode.commit_mark; FStar_TypeChecker_Env.encode_modul = FStar_SMTEncoding_Encode.encode_modul; FStar_TypeChecker_Env.encode_sig = FStar_SMTEncoding_Encode.encode_sig; FStar_TypeChecker_Env.solve = solve; FStar_TypeChecker_Env.is_trivial = FStar_SMTEncoding_Encode.is_trivial; FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish; FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh}
 
 
-let dummy : FStar_TypeChecker_Env.solver_t = {FStar_TypeChecker_Env.init = (fun _94_313 -> ()); FStar_TypeChecker_Env.push = (fun _94_315 -> ()); FStar_TypeChecker_Env.pop = (fun _94_317 -> ()); FStar_TypeChecker_Env.mark = (fun _94_319 -> ()); FStar_TypeChecker_Env.reset_mark = (fun _94_321 -> ()); FStar_TypeChecker_Env.commit_mark = (fun _94_323 -> ()); FStar_TypeChecker_Env.encode_modul = (fun _94_325 _94_327 -> ()); FStar_TypeChecker_Env.encode_sig = (fun _94_329 _94_331 -> ()); FStar_TypeChecker_Env.solve = (fun _94_333 _94_335 _94_337 -> ()); FStar_TypeChecker_Env.is_trivial = (fun _94_339 _94_341 -> false); FStar_TypeChecker_Env.finish = (fun _94_343 -> ()); FStar_TypeChecker_Env.refresh = (fun _94_344 -> ())}
+let dummy : FStar_TypeChecker_Env.solver_t = {FStar_TypeChecker_Env.init = (fun _94_310 -> ()); FStar_TypeChecker_Env.push = (fun _94_312 -> ()); FStar_TypeChecker_Env.pop = (fun _94_314 -> ()); FStar_TypeChecker_Env.mark = (fun _94_316 -> ()); FStar_TypeChecker_Env.reset_mark = (fun _94_318 -> ()); FStar_TypeChecker_Env.commit_mark = (fun _94_320 -> ()); FStar_TypeChecker_Env.encode_modul = (fun _94_322 _94_324 -> ()); FStar_TypeChecker_Env.encode_sig = (fun _94_326 _94_328 -> ()); FStar_TypeChecker_Env.solve = (fun _94_330 _94_332 _94_334 -> ()); FStar_TypeChecker_Env.is_trivial = (fun _94_336 _94_338 -> false); FStar_TypeChecker_Env.finish = (fun _94_340 -> ()); FStar_TypeChecker_Env.refresh = (fun _94_341 -> ())}
 
 
 

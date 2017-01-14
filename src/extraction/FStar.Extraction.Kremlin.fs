@@ -20,6 +20,7 @@ module FStar.Extraction.Kremlin
 
 open FStar
 open FStar.Util
+open FStar.Extraction
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Format

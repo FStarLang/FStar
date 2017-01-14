@@ -94,8 +94,9 @@ let init () =
         ("dump_module"                  , List []);
         ("eager_inference"              , Bool false);
         ("explicit_deps"                , Bool false);
-        ("extract_module"               , List []);
         ("extract_all"                  , Bool false);
+        ("extract_module"               , List []);
+        ("extract_namespace"            , List []);
         ("fs_typ_app"                   , Bool false);
         ("fsi"                          , Bool false);
         ("fstar_home"                   , Unset);
@@ -182,6 +183,7 @@ let get_eager_inference         ()      = lookup_opt "eager_inference"          
 let get_explicit_deps           ()      = lookup_opt "explicit_deps"            as_bool
 let get_extract_all             ()      = lookup_opt "extract_all"              as_bool
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
+let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
 let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
@@ -291,8 +293,14 @@ let mk_spec o : opt =
 let cons_extract_module s  =
     List (String.lowercase s::get_extract_module() |> List.map String)
 
+let cons_extract_namespace s  =
+    List (String.lowercase s::get_extract_namespace() |> List.map String)
+
 let add_extract_module s =
     set_option "extract_module" (cons_extract_module s)
+
+let add_extract_namespace s =
+    set_option "extract_namespace" (cons_extract_namespace s)
 
 let cons_verify_module s  =
     List (String.lowercase s::get_verify_module() |> List.map String)
@@ -383,6 +391,12 @@ let rec specs () : list<Getopt.opt> =
         OneArg (cons_extract_module,
                  "[module name]"),
         "Only extract the specified modules (instead of the possibly-partial dependency graph)");
+
+       ( noshort,
+        "extract_namespace",
+        OneArg (cons_extract_namespace,
+                 "[namespace name]"),
+        "Only extract modules in the specified namespace");
 
        ( noshort,
         "fs_typ_app",
@@ -916,6 +930,9 @@ let z3_timeout                   () = get_z3timeout                   ()
 let should_extract m =
   not (no_extract m) && (extract_all () ||
   (match get_extract_module () with
-  | [] -> true
+  | [] -> 
+    (match get_extract_namespace () with 
+     | [] -> true
+     | ns -> Util.for_some (Util.starts_with (String.lowercase m)) ns)
   | l -> List.contains (String.lowercase m) l))
 

@@ -65,14 +65,14 @@ end))
 
 
 let ___TProb____0 = (fun projectee -> (match (projectee) with
-| TProb (_54_17) -> begin
-_54_17
+| TProb (_54_16) -> begin
+_54_16
 end))
 
 
 let ___CProb____0 = (fun projectee -> (match (projectee) with
-| CProb (_54_20) -> begin
-_54_20
+| CProb (_54_19) -> begin
+_54_19
 end))
 
 
@@ -104,8 +104,8 @@ end))
 
 
 let ___NonTrivial____0 = (fun projectee -> (match (projectee) with
-| NonTrivial (_54_23) -> begin
-_54_23
+| NonTrivial (_54_22) -> begin
+_54_22
 end))
 
 
@@ -149,30 +149,30 @@ let t_range : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Synta
 
 
 let rec delta_depth_greater_than : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth  ->  Prims.bool = (fun l m -> (match (((l), (m))) with
-| (FStar_Syntax_Syntax.Delta_constant, _54_30) -> begin
+| (FStar_Syntax_Syntax.Delta_constant, _54_29) -> begin
 false
 end
-| (FStar_Syntax_Syntax.Delta_equational, _54_34) -> begin
+| (FStar_Syntax_Syntax.Delta_equational, _54_33) -> begin
 true
 end
-| (_54_37, FStar_Syntax_Syntax.Delta_equational) -> begin
+| (_54_36, FStar_Syntax_Syntax.Delta_equational) -> begin
 false
 end
 | (FStar_Syntax_Syntax.Delta_defined_at_level (i), FStar_Syntax_Syntax.Delta_defined_at_level (j)) -> begin
 (i > j)
 end
-| (FStar_Syntax_Syntax.Delta_defined_at_level (_54_46), FStar_Syntax_Syntax.Delta_constant) -> begin
+| (FStar_Syntax_Syntax.Delta_defined_at_level (_54_45), FStar_Syntax_Syntax.Delta_constant) -> begin
 true
 end
-| (FStar_Syntax_Syntax.Delta_abstract (d), _54_53) -> begin
+| (FStar_Syntax_Syntax.Delta_abstract (d), _54_52) -> begin
 (delta_depth_greater_than d m)
 end
-| (_54_56, FStar_Syntax_Syntax.Delta_abstract (d)) -> begin
+| (_54_55, FStar_Syntax_Syntax.Delta_abstract (d)) -> begin
 (delta_depth_greater_than l d)
 end))
 
 
-let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun _54_1 -> (match (_54_1) with
+let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun uu___243 -> (match (uu___243) with
 | (FStar_Syntax_Syntax.Delta_constant) | (FStar_Syntax_Syntax.Delta_equational) -> begin
 None
 end

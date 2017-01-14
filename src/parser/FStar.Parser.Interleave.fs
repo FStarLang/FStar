@@ -118,6 +118,28 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
           
     let prefix_until_let x ds = ds |> FStar.Util.prefix_until (is_let x) in
 
+    let aux_ml (iface:list<decl>) (impl:list<decl>) : list<decl> = 
+        let rec interleave_vals (vals:list<decl>) (impl:list<decl>) = 
+            match vals with 
+            | [] -> impl
+            | {d=Val(x, _)}::remaining_vals ->
+              let d = List.hd vals in
+              let lopt = prefix_until_let x impl in
+              begin match lopt with 
+                    | None -> 
+                      raise (Error("No definition found for " ^x.idText, d.drange))
+
+                    | Some (prefix, let_x, rest_impl) ->
+                      let impl = prefix@[d;let_x]@rest_impl in
+                      interleave_vals remaining_vals impl
+              end
+            
+            | _::remaining_vals -> 
+              interleave_vals remaining_vals impl
+        in
+        interleave_vals iface impl
+    in
+
     let rec aux (out:list<list<decl>>) iface impl =
         match iface with 
             | [] -> (List.rev out |> List.flatten) @ impl
@@ -178,5 +200,8 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
                        end
                     end
 
-                | _ -> aux ([d]::out) ds impl in
-        aux [] iface impl
+                | _ -> aux ([d]::out) ds impl 
+    in
+	if Options.ml_ish ()
+	then aux_ml iface impl
+	else aux [] iface impl

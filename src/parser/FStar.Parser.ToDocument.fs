@@ -27,11 +27,12 @@ open FStar.Pprint
 open FStar.Range
 
 module C = FStar.Syntax.Const
+module BU = FStar.Util
 
 // VALS_HACK_HERE
 
 (* TODO : Unparenthesizing the ast should be put as an option until we get rid of the Paren node *)
-let should_unparen = ref true
+let should_unparen = BU.mk_ref true
 
 (* Unparen the ast to check that we are not relying on user inputed parens *)
 let rec unparen t =
@@ -298,7 +299,7 @@ let is_operatorInfix34 =
 (*                                                                            *)
 (******************************************************************************)
 
-let comment_stack = ref []
+let comment_stack : ref<(list<(string*range)>)>= BU.mk_ref []
 
 let with_comment printer tm tmrange =
   let rec comments_before_pos acc print_pos lookahead_pos =
@@ -795,7 +796,7 @@ and p_maybeFocusArrow b =
 (* slight modification here : a patternBranch always begins with a `|` *)
 (* TODO : can we recover the focusing *)
 and p_patternBranch (pat, when_opt, e) =
-  let maybe_paren =
+  let maybe_paren : document -> document =
     match (unparen e).tm with
     | Match _
     | TryWith _ -> soft_begin_end_with_nesting

@@ -101,13 +101,13 @@ TC_SRC=$(addprefix tc/, $(TC))
 TOSMT=FStar.ToSMT.Term.fsi FStar.ToSMT.Term.fs FStar.ToSMT.Z3.fs FStar.ToSMT.SplitQueryCases.fs FStar.ToSMT.Encode.fs
 TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
 BOOT_PARSER=$(addprefix parser/, FStar.Parser.ast.fs FStar.Parser.Interleave.fs FStar.Parser.Lexhelp.fs parseit.fsi FStar.Parser.Driver.fs FStar.Parser.Dep.fs FStar.Parser.ToDocument.fs)
-DESUGAR_SRC=$(addprefix desugar/, FStar.Desugar.DesugarEnv.fs FStar.Desugar.Desugar.fs)
+DESUGAR_SRC=$(addprefix desugar/, FStar.Parser.DesugarEnv.fs FStar.Parser.Desugar.fs)
 TOSYNTAX_SRC=$(addprefix tosyntax/, FStar.ToSyntax.Env.fsi FStar.ToSyntax.Env.fs FStar.ToSyntax.ToSyntax.fsi FStar.ToSyntax.ToSyntax.fs)
 TYPECHECKER=$(addprefix FStar.TypeChecker., Common.fs Env.fsi Env.fs Normalize.fsi Normalize.fs Err.fs Rel.fsi Rel.fs Util.fsi Util.fs DMFF.fsi DMFF.fs TcTerm.fsi TcTerm.fs Tc.fsi Tc.fs)
 TYPECHECKER_SRC=$(addprefix typechecker/, $(TYPECHECKER))
 EXTRACTION=$(addprefix FStar.Extraction., ML.Syntax.fs ML.UEnv.fs ML.Util.fs ML.Code.fsi ML.Code.fs ML.Term.fs ML.Modul.fs kremlin.fs)
 EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
-STRATIFIEDEXTRACTION_SRC=$(addprefix stratifiedextraction/FStar.StratifiedExtraction.ML, Env.fs Util.fs ExtractTyp.fs ExtractExp.fs ExtractMod.fs)
+STRATIFIEDEXTRACTION_SRC=$(addprefix stratifiedextraction/FStar.StratifiedExtraction.ML., Env.fs Util.fs ExtractTyp.fs ExtractExp.fs ExtractMod.fs)
 FSDOC=FStar.Fsdoc.Generator.fs
 FSDOC_SRC=$(addprefix fsdoc/, $(FSDOC))
 SMTENCODING=$(addprefix FStar.SMTEncoding., Term.fsi Term.fs Util.fs Z3.fs SplitQueryCases.fs ErrorReporting.fs Encode.fs Solver.fs)
@@ -146,8 +146,6 @@ FSTAROPTS=
 all_boot_fsts:
 	./tools/make_all_boot_fsts "$(BOOT_ALL)"
 
-rename_fs_files:
-	./tools/rename_all_boot_fsts "$(BOOT_ALL)"
 
 # SI: does it have to go prettyprint.fsti->FStar.Pprint.fsti?
 boot_fstis/FStar.Pprint.fsti: prettyprint/prettyprint.fsi
@@ -189,22 +187,23 @@ U_STDLIB=$(addprefix $(ULIB)/, FStar.FunctionalExtensionality.fst FStar.Proposit
 			       FStar.TSet.fst FStar.Set.fst \
 			       FStar.Heap.fst FStar.ST.fst FStar.All.fst \
 			       FStar.Char.fsti FStar.Float.fsti FStar.Mul.fst FStar.Int.fst $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti)
-U_BOOT_BASIC_FSTI=$(addprefix boot_fstis/FStar., string.fsti list.fst util.fst platform.fsti bytes.fst range.fsti version.fsti getopt.fsti unionfind.fsti Pprint.fsti)
-U_ALL_INTERFACES=$(U_STDLIB) $(U_BOOT_BASIC_FSTI)
-# U_ALL_SOURCES=$(addprefix boot_fsts/, \
-# 	FStar.Ident.fst FStar.SMTEncoding.Encode.fst) # FStar.SMTEncoding.Solver.fst)
-
-U_ALL_SOURCES=$(addprefix boot_fsts/, \
-	FStar.Options.fst FStar.Ident.fst FStar.Const.fst FStar.Format.fst FStar.Errors.fst \
-	FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst FStar.Syntax.Free.fst FStar.Syntax.MutRecTy.fst \
-	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Err.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fst FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fst \
-	FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst)
-
-# FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst FStar.Extraction.Kremlin.fst)
-# 	FStar.Parser.AST.fst FStar.Parser.Interleave.fst FStar.Parser.ToDocument.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst \
-# 	FStar.ToSyntax.Env.fst FStar.ToSyntax.ToSyntax.fst \
-# 	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
-# 	FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst FStar.Extraction.Kremlin.fst)
+U_BOOT_BASIC_FSTI=$(addprefix boot_fstis/FStar., string.fsti list.fst util.fsti platform.fsti bytes.fst range.fsti version.fsti getopt.fsti unionfind.fsti Pprint.fsti)
+U_ALL_INTERFACES=$(U_STDLIB) $(U_BOOT_BASIC_FSTI) boot_fstis/FStar.Parser.Parse.fsti
+U_ALL_SOURCES=$(addprefix u_boot_fsts/, \
+FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
+FStar.Format.fst \
+FStar.Fsdoc.Generator.fst \
+FStar.Syntax.Syntax.fsti FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fsti FStar.Syntax.Subst.fst FStar.Syntax.Free.fsti FStar.Syntax.Free.fst \
+     FStar.Syntax.InstFV.fsti FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fsti FStar.Syntax.Print.fst FStar.Syntax.MutRecTy.fsti FStar.Syntax.MutRecTy.fst \
+FStar.Parser.AST.fst FStar.Parser.Interleave.fst FStar.Parser.Lexhelp.fst FStar.Parser.Parseit.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst FStar.Parser.ToDocument.fst \
+FStar.ToSyntax.Env.fsti FStar.ToSyntax.Env.fst FStar.ToSyntax.ToSyntax.fsti FStar.ToSyntax.ToSyntax.fst \
+FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fsti FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fsti FStar.TypeChecker.Normalize.fst \
+     FStar.TypeChecker.Err.fst FStar.TypeChecker.Rel.fsti FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fsti FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fsti FStar.TypeChecker.DMFF.fst \
+     FStar.TypeChecker.TcTerm.fsti FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fsti FStar.TypeChecker.Tc.fst \
+FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fsti FStar.Extraction.ML.Code.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst \
+     FStar.Extraction.Kremlin.fst \
+FStar.SMTEncoding.Term.fsti FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst \
+     FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst)
 
 wc_u_all:
 	wc -l $(U_ALL_SOURCES)
@@ -223,7 +222,7 @@ boot_fstis/FStar.bytes.fst: basic/bytes.fsti
 	$(SED) -i 's/val/assume val/g' $@
 	$(SED) -i 's/new/assume new/g' $@
 
-boot_fstis/FStar.util.fst: basic/util.fsi
+boot_fstis/FStar.util.fsti: basic/util.fsi
 	cp $^ $@
 	$(SED) -i 's/open System.IO/module ALL_TMP = FStar.All/g' $@
 	$(SED) -i 's/type time.*/assume new type time/g'  $@ 
@@ -234,7 +233,6 @@ boot_fstis/FStar.util.fst: basic/util.fsi
 	$(SED) -i 's/type string_builder.*/assume new type string_builder/g'  $@ 
 	$(SED) -i 's/type proc.*/assume new type proc/g' $@ 
 	$(SED) -i 's/type set.*/assume new type set:Type0 -> Type0/g' $@
-	$(SED) -i 's/^val/assume val/g' $@
 
 boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	cp $^ $@
@@ -244,56 +242,116 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	$(SED) -i 's/.*| Fwd.*//g' $@
 	$(SED) -i 's/type uvar.*/assume new type uvar : Type0 -> Type0/g' $@
 
-prep_u_extract_ocaml: $(U_ALL_INTERFACES) boot_fsts/FStar.Parser.Parse.fsti boot_fsts/FStar.Parser.ParseIt.fsti 
-	$(SED) -i 's/type env = {/type env : Type0 = {/g' boot_fsts/FStar.TypeChecker.Env.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type term' =/type term': Type0 =/g" boot_fsts/FStar.SMTEncoding.Term.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type term' =/type term': Type0 =/g" boot_fsts/FStar.SMTEncoding.Term.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type term' =/type term': Type0 =/g" boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type pattern' =/type pattern': Type0 =/g" boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type decl' =/type decl': Type0 =/g" boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type mlexpr' =/type mlexpr': Type0 =/g" boot_fsts/FStar.Extraction.ML.Syntax.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type mlsig1 =/type mlsig1: Type0 =/g" boot_fsts/FStar.Extraction.ML.Syntax.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	# -----------------------------------
-	$(SED) -i 's/module FStar.Parser.Lexhelp/module FStar.Parser.Lexhelp open FStar.Mul/' boot_fsts/FStar.Parser.LexHelp.fst #uses * for multiplication only
-	# -----------------------------------
-        # temporary, to go quickly past Normalize
-	cp typechecker/normalize.fsi boot_fsts/FStar.TypeChecker.Normalize.fst
-	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Normalize.fst
-        # temporary, to go quickly past Rel
-	cp typechecker/rel.fsi boot_fsts/FStar.TypeChecker.Rel.fst
-	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Rel.fst
-        # temporary, to go quickly past Util
-	cp typechecker/util.fsi boot_fsts/FStar.TypeChecker.Util.fst
-	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Util.fst
-        # temporary, to go quickly past DMFF
-	cp typechecker/dmff.fsi boot_fsts/FStar.TypeChecker.DMFF.fst
-	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.DMFF.fst
-        # temporary, to go quickly past tcterm
-	cp typechecker/tcterm.fsi boot_fsts/FStar.TypeChecker.TcTerm.fst
-	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.TcTerm.fst
-        # temporary, to go quickly past TC
-	cp typechecker/tc.fsi boot_fsts/FStar.TypeChecker.Tc.fst
-	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.TypeChecker.Tc.fst
-        # temporary, to go quickly past tosyntax
-	cp tosyntax/tosyntax.fsi boot_fsts/FStar.ToSyntax.ToSyntax.fst
-	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.ToSyntax.ToSyntax.fst
-        # temporary, to go quickly past dep
-	cp parser/dep.fsi boot_fsts/FStar.Parser.Dep.fst
-	$(SED) -i 's/^val/assume val/g' boot_fsts/FStar.Parser.Dep.fst
+boot_fstis/FStar.Parser.Parse.fsti: parser/parse.fsi
+	$(HEAD) -n -12 $^ > $@
+	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse open FStar.BaseTypes type bytes = array<byte>/' $@
+
+U_BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(SYNTAX_SRC) \
+	   $(BOOT_PARSER) $(TOSYNTAX_SRC) $(TYPECHECKER_SRC) \
+	   $(EXTRACTION_SRC) $(SMTENCODING_SRC) $(FSDOC_SRC) #$(TOPLEVEL_SRC)
+
+rename_as_fst:
+	./tools/rename_all_boot_fsts "$(U_BOOT_ALL)"
+	mv u_boot_fsts/parseit.fsti u_boot_fsts/FStar.Parser.ParseIt.fsti
+
+prep_u_extract_ocaml: $(U_ALL_INTERFACES)
+	make rename_as_fst
+	$(SED) -i "s/type term' =/type term' : Type0 =/g"      u_boot_fsts/FStar.Syntax.Syntax.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/and pat' =/and pat' : Type0 =/g"          u_boot_fsts/FStar.Syntax.Syntax.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/and comp' =/and comp' : Type0 =/g"        u_boot_fsts/FStar.Syntax.Syntax.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i 's/type env =/type env : Type0 =/g'          u_boot_fsts/FStar.TypeChecker.Env.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i 's/and solver_t =/and solver_t : Type0 =/g'  u_boot_fsts/FStar.TypeChecker.Env.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i 's/and guard_t =/and guard_t : Type0 =/g'    u_boot_fsts/FStar.TypeChecker.Env.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/type term' =/type term': Type0 =/g"       u_boot_fsts/FStar.SMTEncoding.Term.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/type term' =/type term': Type0 =/g"       u_boot_fsts/FStar.SMTEncoding.Term.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/type term' =/type term': Type0 =/g"       u_boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/type pattern' =/type pattern': Type0 =/g" u_boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/type decl' =/type decl': Type0 =/g"       u_boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/type mlexpr' =/type mlexpr': Type0 =/g"   u_boot_fsts/FStar.Extraction.ML.Syntax.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i "s/type mlsig1 =/type mlsig1: Type0 =/g"     u_boot_fsts/FStar.Extraction.ML.Syntax.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
+	$(SED) -i 's/module FStar.Parser.Lexhelp/module FStar.Parser.Lexhelp open FStar.Mul/' u_boot_fsts/FStar.Parser.Lexhelp.fst #uses * for multiplication only
 
 clean_u_extract_ocaml:
-	rm -rf boot_fstis
-	mkdir boot_fstis
-	make prep_u_extract_ocaml
-#	make all_boot_fsts
-
-u_extract_ocaml: 
-	make clean_u_extract_ocaml
+	rm -rf boot_fstis u_boot_fsts
 	mkdir -p u_ocaml-output
-	$(FSTAR) --eager_inference --MLish \
-	  --lax --fs_typ_app --no_location_info $(addprefix --no_extract \
-	  ,$(NUM)) --odir u_ocaml-output $(FSTAROPTS) --codegen OCaml \
-	$(U_ALL_INTERFACES) boot_fsts/FStar.Options.fst $(U_ALL_SOURCES)
+	mkdir boot_fstis u_boot_fsts
+	make prep_u_extract_ocaml
+
+NOEXTRACT=$(NUM) \
+FStar.UInt \
+FStar.Int \
+FStar.Mul \
+FStar.StrongExcludedMiddle \
+FStar.List.Tot \
+FStar.Classical \
+FStar.ListProperties \
+FStar.Seq \
+FStar.SeqProperties \
+FStar.Math.Lib \
+FStar.Math.Lemmas \
+FStar.BitVector \
+FStar.FunctionalExtensionality \
+FStar.PropositionalExtensionality \
+FStar.PredicateExtensionality \
+FStar.TSet \
+FStar.Heap \
+FStar.ST \
+FStar.All \
+FStar.List
+
+FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --MLish --lax --fs_typ_app --no_location_info \
+		   --odir u_ocaml-output --codegen OCaml --include ../ulib --include u_boot_fsts --include boot_fstis \
+		   $(addprefix --no_extract ,$(NOEXTRACT))
+
+u_extract_misc:$(addprefix u_boot_fsts/, FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
+					 FStar.Format.fst)
+	$(FSTARBOOT) $^
+
+u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Const.fst Subst.fst Free.fst \
+							InstFV.fst Util.fst Print.fst MutRecTy.fst) \
+                  u_boot_fsts/FStar.Fsdoc.Generator.fst
+	$(FSTARBOOT) $^ --extract_namespace FStar.Syntax --extract_namespace FStar.Fsdoc
+
+u_extract_parser:$(addprefix u_boot_fsts/FStar.Parser., AST.fst Interleave.fst Lexhelp.fst Parseit.fsti Driver.fst Dep.fst ToDocument.fst)
+	$(FSTARBOOT) $^ --extract_namespace FStar.Parser
+
+u_extract_normalizer: $(addprefix u_boot_fsts/FStar.TypeChecker., Common.fst Env.fst Normalize.fst Err.fst)
+	$(FSTARBOOT) $^ --extract_namespace FStar.TypeChecker
+
+u_extract_rel: u_boot_fsts/FStar.TypeChecker.Rel.fst
+	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.Rel
+
+u_extract_util: u_boot_fsts/FStar.TypeChecker.Util.fst
+	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.Util
+
+u_extract_dmff: u_boot_fsts/FStar.TypeChecker.DMFF.fst
+	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.DMFF
+
+u_extract_tcterm: u_boot_fsts/FStar.TypeChecker.TcTerm.fst
+	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.TcTerm
+
+u_extract_tc: u_boot_fsts/FStar.TypeChecker.Tc.fst
+	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.Tc
+
+u_extract_typechecker: u_extract_normalizer u_extract_rel u_extract_util u_extract_dmff u_extract_tcterm u_extract_tc 
+
+u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst ToSyntax.fst)
+	$(FSTARBOOT) $^ --extract_namespace FStar.ToSyntax
+
+u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML.UEnv.fst ML.Util.fst ML.Code.fst ML.Term.fst ML.Modul.fst Kremlin.fst)
+	$(FSTARBOOT) $^ --extract_namespace FStar.Extraction
+
+u_extract_smtencoding:$(addprefix u_boot_fsts/FStar.SMTEncoding., Term.fst Util.fst Z3.fst SplitQueryCases.fst \
+								   ErrorReporting.fst Encode.fst Solver.fst)
+	$(FSTARBOOT) $^ --extract_namespace FStar.SMTEncoding
+
+u_extract_all: clean_u_extract_ocaml \
+	       u_extract_misc u_extract_syntax u_extract_parser \
+	       u_extract_typechecker u_extract_tosyntax u_extract_smtencoding u_extract_extraction
+
+u_ocaml: clean_u_extract_ocaml
+	 +make u_extract_misc u_extract_syntax u_extract_parser \
+	       u_extract_typechecker u_extract_tosyntax u_extract_smtencoding u_extract_extraction
 
 
 # Fastest way to refresh the snapshot (if it works)

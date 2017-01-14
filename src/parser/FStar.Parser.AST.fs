@@ -28,6 +28,29 @@ open FStar
 open FStar.Util
 open FStar.Const
 
+let old_mk_tuple_lid n r =
+  let t = Util.format1 "Tuple%s" (Util.string_of_int n) in
+  set_lid_range (C.pconst t) r
+
+let old_mk_tuple_data_lid n r =
+  let t = Util.format1 "MkTuple%s" (Util.string_of_int n) in
+  set_lid_range (C.pconst t) r
+
+//let old_is_tuple_data_lid f n =
+//  Syntax.lid_equals f (mk_tuple_data_lid n Syntax.dummyRange)
+//
+//let old_is_dtuple_constructor (t:typ) = match t.n with
+//  | Typ_const l -> Util.starts_with l.v.str "Prims.DTuple"
+//  | _ -> false
+
+let old_mk_dtuple_lid n r =
+  let t = Util.format1 "DTuple%s" (Util.string_of_int n) in
+  set_lid_range (C.pconst t) r
+
+let old_mk_dtuple_data_lid n r =
+  let t = Util.format1 "MkDTuple%s" (Util.string_of_int n) in
+  set_lid_range (C.pconst t) r
+
 (* AST produced by the parser, before desugaring
    It is not stratified: a single type called "term" containing
    expressions, formulas, types, and so on
@@ -288,7 +311,10 @@ let mkApp t args r = match args with
 
 let mkRefSet r elts =
   let univs = Options.universes () in
-  let empty_lid, singleton_lid, union_lid = if univs then C.tset_empty, C.tset_singleton, C.tset_union else C.set_empty, C.set_singleton, C.set_union in
+  let empty_lid, singleton_lid, union_lid = 
+      if univs 
+      then C.tset_empty, C.tset_singleton, C.tset_union 
+      else C.set_empty, C.set_singleton, C.set_union in
   let empty = mk_term (Var(set_lid_range empty_lid r)) r Expr in
   let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r Expr in
   let singleton = mk_term (Var (set_lid_range singleton_lid r)) r Expr in
@@ -342,14 +368,14 @@ let mkTuple args r =
   let cons =
     if Options.universes()
     then FStar.Syntax.Util.mk_tuple_data_lid (List.length args) r
-    else U.mk_tuple_data_lid (List.length args) r in
+    else old_mk_tuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkDTuple args r =
   let cons =
         if Options.universes()
         then FStar.Syntax.Util.mk_dtuple_data_lid (List.length args) r
-        else U.mk_dtuple_data_lid (List.length args) r in
+        else old_mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkRefinedBinder id t should_bind_var refopt m implicit =
