@@ -13,7 +13,7 @@ in (let _158_11 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Nor
 in {FStar_Syntax_Syntax.ppname = _59_19.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _59_19.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _158_11}))
 in (
 
-let d = (fun s -> (FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s))
+let d = (fun s -> (FStar_Util.print1 "[01;36m%s[00m\n" s))
 in (
 
 let _59_26 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("ED"))) then begin

@@ -54,7 +54,7 @@ let equal_pair (i1,h1) (i2,h2) = let x = (i1 = i2 /\ h1 `equals` h2) in x
 type ni_exp (env:label_fun) (e:exp) (l:label) = 
   forall (h: rel heap).
    (low_equiv env h /\ Low? l) ==> 
-     (interpret_exp (R?.r h) e `equal_pair` interpret_exp (R?.l h) e)
+     (fst (interpret_exp (R?.r h) e) = fst (interpret_exp (R?.l h) e))
 
 (* env,pc:l |- c
    - References with a label below l are not modified
