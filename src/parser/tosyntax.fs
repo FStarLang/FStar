@@ -693,7 +693,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 let args = List.map (fun (t, imp) ->
                   let te = desugar_term env t in
                   arg_withimp_e imp te) args in
-                let app = mk (Tm_app(mk (Tm_uinst(head, universes)), args)) in
+                let head = if universes = [] then head else mk (Tm_uinst(head, universes)) in
+                let app = mk (Tm_app(head, args)) in
                 if is_data
                 then mk (Tm_meta(app, Meta_desugared Data_app))
                 else app
@@ -1034,7 +1035,6 @@ and desugar_comp r default_ok env t =
     let is_app head (t, _) = match (unparen t).tm with
        | App({tm=Var d}, _, _) -> d.ident.idText = head
        | _ -> false in
-    (* TODO : Applying explicit universes to effects is not yet supported *)
     let is_decreases = is_app "decreases" in
     let pre_process_comp_typ (t:AST.term) =
         let head, args = head_and_args t in
