@@ -59,7 +59,7 @@ val zip3 : (list<'a>) -> (list<'b>) -> (list<'c>) -> (list<('a * 'b * 'c)>)
 val sortWith : ('a -> 'a -> int) -> (list<'a>) -> (list<'a>)
 val bool_of_compare : ('a -> 'a -> Tot<int>) -> 'a -> 'a -> Tot<bool>
 val tail : (list<'_1225>) -> (list<'_1225>)
-val tl : (list<'_1230> -> list<'_1230>)
+val tl : list<'_1230> -> list<'_1230>
 val rev_append : (list<'_5110>) -> (list<'_5110>) -> Tot<(list<'_5110>)>
 val concat : (list<(list<'_6116>)>) -> Tot<(list<'_6116>)>
 val contains<'_17778 when '_17778 : equality>  : '_17778 -> (list<'_17778>) -> Tot<bool>
