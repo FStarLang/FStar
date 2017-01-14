@@ -272,9 +272,8 @@ prep_u_extract_ocaml: $(U_ALL_INTERFACES)
 	$(SED) -i 's/module FStar.Parser.Lexhelp/module FStar.Parser.Lexhelp open FStar.Mul/' u_boot_fsts/FStar.Parser.Lexhelp.fst #uses * for multiplication only
 
 clean_u_extract_ocaml:
-	rm -rf boot_fstis u_boot_fsts
-	mkdir -p u_ocaml-output
-	mkdir boot_fstis u_boot_fsts
+	rm -rf boot_fstis u_boot_fsts u_ocaml-output
+	mkdir boot_fstis u_boot_fsts u_ocaml-output
 	make prep_u_extract_ocaml
 
 NOEXTRACT=$(NUM) \
@@ -300,12 +299,11 @@ FStar.All \
 FStar.List
 
 FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --MLish --lax --fs_typ_app --no_location_info \
-		   --odir u_ocaml-output --codegen OCaml --include ../ulib --include u_boot_fsts --include boot_fstis \
-		   $(addprefix --no_extract ,$(NOEXTRACT))
+		   --odir u_ocaml-output --codegen OCaml --include ../ulib --include u_boot_fsts --include boot_fstis
 
 u_extract_misc:$(addprefix u_boot_fsts/, FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
 					 FStar.Format.fst)
-	$(FSTARBOOT) $^
+	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
 
 u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Const.fst Subst.fst Free.fst \
 							InstFV.fst Util.fst Print.fst MutRecTy.fst) \
@@ -350,9 +348,8 @@ u_extract_all: clean_u_extract_ocaml \
 	       u_extract_typechecker u_extract_tosyntax u_extract_smtencoding u_extract_extraction
 
 u_ocaml: clean_u_extract_ocaml
-	 +make u_extract_misc u_extract_syntax u_extract_parser \
-	       u_extract_typechecker u_extract_tosyntax u_extract_smtencoding u_extract_extraction
-
+	+make u_extract_misc u_extract_syntax u_extract_parser \
+              u_extract_typechecker u_extract_tosyntax u_extract_smtencoding u_extract_extraction
 
 # Fastest way to refresh the snapshot (if it works)
 ocaml-fstar-ocaml:
