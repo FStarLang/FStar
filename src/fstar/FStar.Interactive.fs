@@ -61,9 +61,9 @@ type interactive_state = {
 
 let the_interactive_state = {
   chunk = Util.new_string_builder ();
-  stdin = ref None;
-  buffer = ref [];
-  log = ref None
+  stdin = mk_ref None;
+  buffer = mk_ref [];
+  log = mk_ref None
 }
 
 (***********************************************************************)
@@ -71,7 +71,7 @@ let the_interactive_state = {
 (***********************************************************************)
 let rec read_chunk () =
   let s = the_interactive_state in
-  let log =
+  let log : string -> unit =
     if Options.debug_any() then
       let transcript =
         match !s.log with
@@ -140,8 +140,6 @@ let fill_buffer () =
   let s = the_interactive_state in
   s.buffer := !s.buffer @ [ read_chunk () ]
 
-module U_Syntax = FStar.Syntax.Syntax
-module F_Syntax = FStar.Absyn.Syntax
 
 (******************************************************************************************)
 (* The main interactive loop *)
@@ -162,7 +160,7 @@ type m_timestamps = list<(option<string> * string * option<time> * time)>
 // filename is the name of the file currently edited
 let interactive_mode (filename:string)
                      (initial_mod:'modul)
-                     (tc:interactive_tc<'env,'modul>) =
+                     (tc:interactive_tc<'env,'modul>) : unit =
     if Option.isSome (Options.codegen())
     then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
 
@@ -244,7 +242,7 @@ let interactive_mode (filename:string)
         in
 
         //expected the stack to be in "last dependency first order", we want to pop in the proper order (although should not matter)
-        let rec pop_tc_and_stack env stack ts =
+        let rec pop_tc_and_stack env (stack:list<('env * 'modul)>) ts =
           match ts with
             | []    -> (* stack should also be empty here *) env
             | _::ts ->

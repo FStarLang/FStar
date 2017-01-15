@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -75,7 +75,9 @@
     <Compile Include="FStar.SMTEncoding.Util.fs" />
     <Compile Include="FStar.SMTEncoding.Z3.fs" />
     <Compile Include="FStar.SMTEncoding.SplitQueryCases.fs" />
+    <Compile Include="FStar.SMTEncoding.ErrorReporting.fsi" />
     <Compile Include="FStar.SMTEncoding.ErrorReporting.fs" />
+    <Compile Include="FStar.SMTEncoding.Encode.fsi" />
     <Compile Include="FStar.SMTEncoding.Encode.fs" />
     <Compile Include="FStar.SMTEncoding.Solver.fs" />
   </ItemGroup>

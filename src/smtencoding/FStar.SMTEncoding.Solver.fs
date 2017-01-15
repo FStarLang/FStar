@@ -23,6 +23,7 @@ open FStar.BaseTypes
 open FStar.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
+open FStar.SMTEncoding
 open FStar.SMTEncoding.ErrorReporting
 open FStar.SMTEncoding.Encode
 open FStar.SMTEncoding.Util

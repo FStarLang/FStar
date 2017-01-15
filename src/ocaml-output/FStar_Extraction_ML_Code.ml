@@ -1,6 +1,5 @@
 
 open Prims
-
 type assoc =
 | ILeft
 | IRight
@@ -9,50 +8,49 @@ type assoc =
 | NonAssoc
 
 
-let is_ILeft = (fun _discr_ -> (match (_discr_) with
-| ILeft (_) -> begin
+let uu___is_ILeft : assoc  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| ILeft -> begin
 true
 end
-| _ -> begin
+| uu____4 -> begin
 false
 end))
 
 
-let is_IRight = (fun _discr_ -> (match (_discr_) with
-| IRight (_) -> begin
+let uu___is_IRight : assoc  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| IRight -> begin
 true
 end
-| _ -> begin
+| uu____8 -> begin
 false
 end))
 
 
-let is_Left = (fun _discr_ -> (match (_discr_) with
-| Left (_) -> begin
+let uu___is_Left : assoc  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Left -> begin
 true
 end
-| _ -> begin
+| uu____12 -> begin
 false
 end))
 
 
-let is_Right = (fun _discr_ -> (match (_discr_) with
-| Right (_) -> begin
+let uu___is_Right : assoc  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Right -> begin
 true
 end
-| _ -> begin
+| uu____16 -> begin
 false
 end))
 
 
-let is_NonAssoc = (fun _discr_ -> (match (_discr_) with
-| NonAssoc (_) -> begin
+let uu___is_NonAssoc : assoc  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| NonAssoc -> begin
 true
 end
-| _ -> begin
+| uu____20 -> begin
 false
 end))
-
 
 type fixity =
 | Prefix
@@ -60,36 +58,36 @@ type fixity =
 | Infix of assoc
 
 
-let is_Prefix = (fun _discr_ -> (match (_discr_) with
-| Prefix (_) -> begin
+let uu___is_Prefix : fixity  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Prefix -> begin
 true
 end
-| _ -> begin
+| uu____27 -> begin
 false
 end))
 
 
-let is_Postfix = (fun _discr_ -> (match (_discr_) with
-| Postfix (_) -> begin
+let uu___is_Postfix : fixity  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Postfix -> begin
 true
 end
-| _ -> begin
+| uu____31 -> begin
 false
 end))
 
 
-let is_Infix = (fun _discr_ -> (match (_discr_) with
-| Infix (_) -> begin
+let uu___is_Infix : fixity  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Infix (_0) -> begin
 true
 end
-| _ -> begin
+| uu____36 -> begin
 false
 end))
 
 
-let ___Infix____0 = (fun projectee -> (match (projectee) with
-| Infix (_78_3) -> begin
-_78_3
+let __proj__Infix__item___0 : fixity  ->  assoc = (fun projectee -> (match (projectee) with
+| Infix (_0) -> begin
+_0
 end))
 
 
@@ -159,13 +157,13 @@ let max_op_prec : (Prims.int * fixity) = ((FStar_Util.max_int), (Infix (NonAssoc
 
 
 let rec in_ns = (fun x -> (match (x) with
-| ([], _78_8) -> begin
+| ([], uu____101) -> begin
 true
 end
 | ((x1)::t1, (x2)::t2) when (x1 = x2) -> begin
 (in_ns ((t1), (t2)))
 end
-| (_78_18, _78_20) -> begin
+| (uu____115, uu____116) -> begin
 false
 end))
 
@@ -173,9 +171,11 @@ end))
 let path_of_ns : FStar_Extraction_ML_Syntax.mlsymbol  ->  Prims.string Prims.list  ->  Prims.string Prims.list = (fun currentModule ns -> (
 
 let ns' = (FStar_Extraction_ML_Util.flatten_ns ns)
-in if (ns' = currentModule) then begin
+in (match ((ns' = currentModule)) with
+| true -> begin
 []
-end else begin
+end
+| uu____132 -> begin
 (
 
 let cg_libs = (FStar_Options.codegen_libs ())
@@ -187,24 +187,27 @@ in (
 let found = (FStar_Util.find_map cg_libs (fun cg_path -> (
 
 let cg_len = (FStar_List.length cg_path)
-in if ((FStar_List.length cg_path) < ns_len) then begin
+in (match (((FStar_List.length cg_path) < ns_len)) with
+| true -> begin
 (
 
-let _78_31 = (FStar_Util.first_N cg_len ns)
-in (match (_78_31) with
+let uu____154 = (FStar_Util.first_N cg_len ns)
+in (match (uu____154) with
 | (pfx, sfx) -> begin
-if (pfx = cg_path) then begin
-(let _179_31 = (let _179_30 = (let _179_29 = (FStar_Extraction_ML_Util.flatten_ns sfx)
-in (_179_29)::[])
-in (FStar_List.append pfx _179_30))
-in Some (_179_31))
-end else begin
-None
+(match ((pfx = cg_path)) with
+| true -> begin
+Some ((let _0_284 = (let _0_283 = (FStar_Extraction_ML_Util.flatten_ns sfx)
+in (_0_283)::[])
+in (FStar_List.append pfx _0_284)))
 end
-end))
-end else begin
+| uu____173 -> begin
 None
-end)))
+end)
+end))
+end
+| uu____175 -> begin
+None
+end))))
 in (match (found) with
 | None -> begin
 (ns')::[]
@@ -212,7 +215,7 @@ end
 | Some (x) -> begin
 x
 end))))
-end))
+end)))
 
 
 let mlpath_of_mlpath : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlpath = (fun currentModule x -> (match ((FStar_Extraction_ML_Syntax.string_of_mlpath x)) with
@@ -222,55 +225,69 @@ end
 | "Prims.None" -> begin
 (([]), ("None"))
 end
-| _78_41 -> begin
+| uu____190 -> begin
 (
 
-let _78_44 = x
-in (match (_78_44) with
+let uu____191 = x
+in (match (uu____191) with
 | (ns, x) -> begin
-(let _179_36 = (path_of_ns currentModule ns)
-in ((_179_36), (x)))
+(let _0_285 = (path_of_ns currentModule ns)
+in ((_0_285), (x)))
 end))
 end))
 
 
-let ptsym_of_symbol : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun s -> if ((let _179_39 = (FStar_String.get s (Prims.parse_int "0"))
-in (FStar_Char.lowercase _179_39)) <> (FStar_String.get s (Prims.parse_int "0"))) then begin
+let ptsym_of_symbol : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun s -> (
+
+let uu____200 = (let _0_287 = (FStar_Char.lowercase (FStar_String.get s (Prims.parse_int "0")))
+in (let _0_286 = (FStar_String.get s (Prims.parse_int "0"))
+in (_0_287 <> _0_286)))
+in (match (uu____200) with
+| true -> begin
 (Prims.strcat "l__" s)
-end else begin
+end
+| uu____201 -> begin
 s
-end)
+end)))
 
 
-let ptsym : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun currentModule mlp -> if (FStar_List.isEmpty (Prims.fst mlp)) then begin
+let ptsym : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun currentModule mlp -> (match ((FStar_List.isEmpty (Prims.fst mlp))) with
+| true -> begin
 (ptsym_of_symbol (Prims.snd mlp))
-end else begin
+end
+| uu____210 -> begin
 (
 
-let _78_50 = (mlpath_of_mlpath currentModule mlp)
-in (match (_78_50) with
+let uu____211 = (mlpath_of_mlpath currentModule mlp)
+in (match (uu____211) with
 | (p, s) -> begin
-(let _179_46 = (let _179_45 = (let _179_44 = (ptsym_of_symbol s)
-in (_179_44)::[])
-in (FStar_List.append p _179_45))
-in (FStar_String.concat "." _179_46))
+(let _0_290 = (let _0_289 = (let _0_288 = (ptsym_of_symbol s)
+in (_0_288)::[])
+in (FStar_List.append p _0_289))
+in (FStar_String.concat "." _0_290))
 end))
-end)
+end))
 
 
 let ptctor : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun currentModule mlp -> (
 
-let _78_55 = (mlpath_of_mlpath currentModule mlp)
-in (match (_78_55) with
+let uu____222 = (mlpath_of_mlpath currentModule mlp)
+in (match (uu____222) with
 | (p, s) -> begin
 (
 
-let s = if ((let _179_51 = (FStar_String.get s (Prims.parse_int "0"))
-in (FStar_Char.uppercase _179_51)) <> (FStar_String.get s (Prims.parse_int "0"))) then begin
+let s = (
+
+let uu____228 = (let _0_292 = (FStar_Char.uppercase (FStar_String.get s (Prims.parse_int "0")))
+in (let _0_291 = (FStar_String.get s (Prims.parse_int "0"))
+in (_0_292 <> _0_291)))
+in (match (uu____228) with
+| true -> begin
 (Prims.strcat "U__" s)
-end else begin
-s
 end
+| uu____229 -> begin
+s
+end))
 in (FStar_String.concat "." (FStar_List.append p ((s)::[]))))
 end)))
 
@@ -281,7 +298,7 @@ let infix_prim_ops : (Prims.string * (Prims.int * fixity) * Prims.string) Prims.
 let prim_uni_ops : (Prims.string * Prims.string) Prims.list = ((("op_Negation"), ("not")))::((("op_Minus"), ("~-")))::((("op_Bang"), ("Support.ST.read")))::[]
 
 
-let prim_types = []
+let prim_types = (fun uu____353 -> [])
 
 
 let prim_constructors : (Prims.string * Prims.string) Prims.list = ((("Some"), ("Some")))::((("None"), ("None")))::((("Nil"), ("[]")))::((("Cons"), ("::")))::[]
@@ -290,70 +307,79 @@ let prim_constructors : (Prims.string * Prims.string) Prims.list = ((("Some"), (
 let is_prims_ns : FStar_Extraction_ML_Syntax.mlsymbol Prims.list  ->  Prims.bool = (fun ns -> (ns = ("Prims")::[]))
 
 
-let as_bin_op : FStar_Extraction_ML_Syntax.mlpath  ->  (Prims.string * (Prims.int * fixity) * Prims.string) Prims.option = (fun _78_60 -> (match (_78_60) with
+let as_bin_op : FStar_Extraction_ML_Syntax.mlpath  ->  (FStar_Extraction_ML_Syntax.mlsymbol * (Prims.int * fixity) * Prims.string) Prims.option = (fun uu____381 -> (match (uu____381) with
 | (ns, x) -> begin
-if (is_prims_ns ns) then begin
-(FStar_List.tryFind (fun _78_66 -> (match (_78_66) with
-| (y, _78_63, _78_65) -> begin
+(match ((is_prims_ns ns)) with
+| true -> begin
+(FStar_List.tryFind (fun uu____403 -> (match (uu____403) with
+| (y, uu____410, uu____411) -> begin
 (x = y)
 end)) infix_prim_ops)
-end else begin
-None
 end
+| uu____416 -> begin
+None
+end)
 end))
 
 
-let is_bin_op : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> ((as_bin_op p) <> None))
+let is_bin_op : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> (let _0_293 = (as_bin_op p)
+in (_0_293 <> None)))
 
 
-let as_uni_op : FStar_Extraction_ML_Syntax.mlpath  ->  (Prims.string * Prims.string) Prims.option = (fun _78_70 -> (match (_78_70) with
+let as_uni_op : FStar_Extraction_ML_Syntax.mlpath  ->  (FStar_Extraction_ML_Syntax.mlsymbol * Prims.string) Prims.option = (fun uu____441 -> (match (uu____441) with
 | (ns, x) -> begin
-if (is_prims_ns ns) then begin
-(FStar_List.tryFind (fun _78_74 -> (match (_78_74) with
-| (y, _78_73) -> begin
+(match ((is_prims_ns ns)) with
+| true -> begin
+(FStar_List.tryFind (fun uu____454 -> (match (uu____454) with
+| (y, uu____458) -> begin
 (x = y)
 end)) prim_uni_ops)
-end else begin
-None
 end
+| uu____459 -> begin
+None
+end)
 end))
 
 
-let is_uni_op : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> ((as_uni_op p) <> None))
+let is_uni_op : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> (let _0_294 = (as_uni_op p)
+in (_0_294 <> None)))
 
 
 let is_standard_type : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> false)
 
 
-let as_standard_constructor : FStar_Extraction_ML_Syntax.mlpath  ->  (Prims.string * Prims.string) Prims.option = (fun _78_79 -> (match (_78_79) with
+let as_standard_constructor : FStar_Extraction_ML_Syntax.mlpath  ->  (FStar_Extraction_ML_Syntax.mlsymbol * Prims.string) Prims.option = (fun uu____478 -> (match (uu____478) with
 | (ns, x) -> begin
-if (is_prims_ns ns) then begin
-(FStar_List.tryFind (fun _78_83 -> (match (_78_83) with
-| (y, _78_82) -> begin
+(match ((is_prims_ns ns)) with
+| true -> begin
+(FStar_List.tryFind (fun uu____491 -> (match (uu____491) with
+| (y, uu____495) -> begin
 (x = y)
 end)) prim_constructors)
-end else begin
-None
 end
+| uu____496 -> begin
+None
+end)
 end))
 
 
-let is_standard_constructor : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> ((as_standard_constructor p) <> None))
+let is_standard_constructor : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> (let _0_295 = (as_standard_constructor p)
+in (_0_295 <> None)))
 
 
-let maybe_paren : ((Prims.int * fixity) * assoc)  ->  (Prims.int * fixity)  ->  FStar_Format.doc  ->  FStar_Format.doc = (fun _78_87 inner doc -> (match (_78_87) with
+let maybe_paren : ((Prims.int * fixity) * assoc)  ->  (Prims.int * fixity)  ->  FStar_Format.doc  ->  FStar_Format.doc = (fun uu____519 inner doc -> (match (uu____519) with
 | (outer, side) -> begin
 (
 
 let noparens = (fun _inner _outer side -> (
 
-let _78_96 = _inner
-in (match (_78_96) with
+let uu____552 = _inner
+in (match (uu____552) with
 | (pi, fi) -> begin
 (
 
-let _78_99 = _outer
-in (match (_78_99) with
+let uu____557 = _outer
+in (match (uu____557) with
 | (po, fo) -> begin
 ((pi > po) || (match (((fi), (side))) with
 | (Postfix, Left) -> begin
@@ -374,19 +400,21 @@ end
 | (Infix (Right), IRight) -> begin
 ((pi = po) && (fo = Infix (Right)))
 end
-| (_78_123, NonAssoc) -> begin
+| (uu____562, NonAssoc) -> begin
 ((pi = po) && (fi = fo))
 end
-| (_78_127, _78_129) -> begin
+| (uu____563, uu____564) -> begin
 false
 end))
 end))
 end)))
-in if (noparens inner outer side) then begin
+in (match ((noparens inner outer side)) with
+| true -> begin
 doc
-end else begin
+end
+| uu____565 -> begin
 (FStar_Format.parens doc)
-end)
+end))
 end))
 
 
@@ -396,7 +424,7 @@ let escape_byte_hex : FStar_BaseTypes.byte  ->  Prims.string = (fun x -> (Prims.
 let escape_char_hex : FStar_BaseTypes.char  ->  Prims.string = (fun x -> (escape_byte_hex (FStar_Util.byte_of_char x)))
 
 
-let escape_or : (FStar_Char.char  ->  Prims.string)  ->  FStar_Char.char  ->  Prims.string = (fun fallback uu___504 -> (match (uu___504) with
+let escape_or : (FStar_Char.char  ->  Prims.string)  ->  FStar_Char.char  ->  Prims.string = (fun fallback uu___126_580 -> (match (uu___126_580) with
 | c when (c = '\\') -> begin
 "\\\\"
 end
@@ -446,9 +474,9 @@ end
 "false"
 end
 | FStar_Extraction_ML_Syntax.MLC_Char (c) -> begin
-(let _179_99 = (let _179_98 = (escape_or escape_char_hex c)
-in (Prims.strcat _179_98 "\'"))
-in (Prims.strcat "\'" _179_99))
+(let _0_297 = (let _0_296 = (escape_or escape_char_hex c)
+in (Prims.strcat _0_296 "\'"))
+in (Prims.strcat "\'" _0_297))
 end
 | FStar_Extraction_ML_Syntax.MLC_Int (s, Some (FStar_Const.Signed, FStar_Const.Int32)) -> begin
 (Prims.strcat s "l")
@@ -466,16 +494,16 @@ end
 (FStar_Util.string_of_float d)
 end
 | FStar_Extraction_ML_Syntax.MLC_Bytes (bytes) -> begin
-(let _179_101 = (let _179_100 = (FStar_Bytes.f_encode escape_byte_hex bytes)
-in (Prims.strcat _179_100 "\""))
-in (Prims.strcat "\"" _179_101))
+(let _0_299 = (let _0_298 = (FStar_Bytes.f_encode escape_byte_hex bytes)
+in (Prims.strcat _0_298 "\""))
+in (Prims.strcat "\"" _0_299))
 end
 | FStar_Extraction_ML_Syntax.MLC_String (chars) -> begin
-(let _179_103 = (let _179_102 = (FStar_String.collect (escape_or FStar_Util.string_of_char) chars)
-in (Prims.strcat _179_102 "\""))
-in (Prims.strcat "\"" _179_103))
+(let _0_301 = (let _0_300 = (FStar_String.collect (escape_or FStar_Util.string_of_char) chars)
+in (Prims.strcat _0_300 "\""))
+in (Prims.strcat "\"" _0_301))
 end
-| _78_195 -> begin
+| uu____634 -> begin
 (failwith "TODO: extract integer constants properly into OCaml")
 end))
 
@@ -484,13 +512,14 @@ let rec doc_of_mltype' : FStar_Extraction_ML_Syntax.mlsymbol  ->  level  ->  FSt
 | FStar_Extraction_ML_Syntax.MLTY_Var (x) -> begin
 (
 
-let escape_tyvar = (fun s -> if (FStar_Util.starts_with s "\'_") then begin
+let escape_tyvar = (fun s -> (match ((FStar_Util.starts_with s "\'_")) with
+| true -> begin
 (FStar_Util.replace_char s '_' 'u')
-end else begin
+end
+| uu____655 -> begin
 s
-end)
-in (let _179_115 = (FStar_All.pipe_left escape_tyvar (FStar_Extraction_ML_Syntax.idsym x))
-in (FStar_Format.text _179_115)))
+end))
+in (FStar_Format.text (FStar_All.pipe_left escape_tyvar (FStar_Extraction_ML_Syntax.idsym x))))
 end
 | FStar_Extraction_ML_Syntax.MLTY_Tuple (tys) -> begin
 (
@@ -498,9 +527,7 @@ end
 let doc = (FStar_List.map (doc_of_mltype currentModule ((t_prio_tpl), (Left))) tys)
 in (
 
-let doc = (let _179_117 = (let _179_116 = (FStar_Format.combine (FStar_Format.text " * ") doc)
-in (FStar_Format.hbox _179_116))
-in (FStar_Format.parens _179_117))
+let doc = (FStar_Format.parens (FStar_Format.hbox (FStar_Format.combine (FStar_Format.text " * ") doc)))
 in doc))
 end
 | FStar_Extraction_ML_Syntax.MLTY_Named (args, name) -> begin
@@ -513,40 +540,41 @@ end
 | (arg)::[] -> begin
 (doc_of_mltype currentModule ((t_prio_name), (Left)) arg)
 end
-| _78_215 -> begin
+| uu____671 -> begin
 (
 
 let args = (FStar_List.map (doc_of_mltype currentModule ((min_op_prec), (NonAssoc))) args)
-in (let _179_119 = (let _179_118 = (FStar_Format.combine (FStar_Format.text ", ") args)
-in (FStar_Format.hbox _179_118))
-in (FStar_Format.parens _179_119)))
+in (FStar_Format.parens (FStar_Format.hbox (FStar_Format.combine (FStar_Format.text ", ") args))))
 end)
 in (
 
 let name = (ptsym currentModule name)
-in (let _179_120 = (FStar_Format.reduce1 ((args)::((FStar_Format.text name))::[]))
-in (FStar_Format.hbox _179_120))))
+in (FStar_Format.hbox (FStar_Format.reduce1 ((args)::((FStar_Format.text name))::[])))))
 end
-| FStar_Extraction_ML_Syntax.MLTY_Fun (t1, _78_221, t2) -> begin
+| FStar_Extraction_ML_Syntax.MLTY_Fun (t1, uu____679, t2) -> begin
 (
 
 let d1 = (doc_of_mltype currentModule ((t_prio_fun), (Left)) t1)
 in (
 
 let d2 = (doc_of_mltype currentModule ((t_prio_fun), (Right)) t2)
-in (let _179_122 = (let _179_121 = (FStar_Format.reduce1 ((d1)::((FStar_Format.text " -> "))::(d2)::[]))
-in (FStar_Format.hbox _179_121))
-in (maybe_paren outer t_prio_fun _179_122))))
+in (let _0_302 = (FStar_Format.hbox (FStar_Format.reduce1 ((d1)::((FStar_Format.text " -> "))::(d2)::[])))
+in (maybe_paren outer t_prio_fun _0_302))))
 end
 | FStar_Extraction_ML_Syntax.MLTY_Top -> begin
-if (FStar_Extraction_ML_Util.codegen_fsharp ()) then begin
+(
+
+let uu____687 = (FStar_Extraction_ML_Util.codegen_fsharp ())
+in (match (uu____687) with
+| true -> begin
 (FStar_Format.text "obj")
-end else begin
-(FStar_Format.text "Obj.t")
 end
+| uu____688 -> begin
+(FStar_Format.text "Obj.t")
 end))
-and doc_of_mltype : FStar_Extraction_ML_Syntax.mlsymbol  ->  level  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Format.doc = (fun currentModule outer ty -> (let _179_126 = (FStar_Extraction_ML_Util.resugar_mlty ty)
-in (doc_of_mltype' currentModule outer _179_126)))
+end))
+and doc_of_mltype : FStar_Extraction_ML_Syntax.mlsymbol  ->  level  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Format.doc = (fun currentModule outer ty -> (let _0_303 = (FStar_Extraction_ML_Util.resugar_mlty ty)
+in (doc_of_mltype' currentModule outer _0_303)))
 
 
 let rec doc_of_expr : FStar_Extraction_ML_Syntax.mlsymbol  ->  level  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Format.doc = (fun currentModule outer e -> (match (e.FStar_Extraction_ML_Syntax.expr) with
@@ -554,13 +582,16 @@ let rec doc_of_expr : FStar_Extraction_ML_Syntax.mlsymbol  ->  level  ->  FStar_
 (
 
 let doc = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e)
-in if (FStar_Extraction_ML_Util.codegen_fsharp ()) then begin
-(let _179_147 = (FStar_Format.reduce (((FStar_Format.text "Prims.checked_cast"))::(doc)::[]))
-in (FStar_Format.parens _179_147))
-end else begin
-(let _179_148 = (FStar_Format.reduce (((FStar_Format.text "Obj.magic "))::((FStar_Format.parens doc))::[]))
-in (FStar_Format.parens _179_148))
-end)
+in (
+
+let uu____739 = (FStar_Extraction_ML_Util.codegen_fsharp ())
+in (match (uu____739) with
+| true -> begin
+(FStar_Format.parens (FStar_Format.reduce (((FStar_Format.text "Prims.checked_cast"))::(doc)::[])))
+end
+| uu____740 -> begin
+(FStar_Format.parens (FStar_Format.reduce (((FStar_Format.text "Obj.magic "))::((FStar_Format.parens doc))::[])))
+end)))
 end
 | FStar_Extraction_ML_Syntax.MLE_Seq (es) -> begin
 (
@@ -569,58 +600,59 @@ let docs = (FStar_List.map (doc_of_expr currentModule ((min_op_prec), (NonAssoc)
 in (
 
 let docs = (FStar_List.map (fun d -> (FStar_Format.reduce ((d)::((FStar_Format.text ";"))::(FStar_Format.hardline)::[]))) docs)
-in (FStar_Format.reduce docs)))
+in (FStar_Format.parens (FStar_Format.reduce docs))))
 end
 | FStar_Extraction_ML_Syntax.MLE_Const (c) -> begin
-(let _179_150 = (string_of_mlconstant c)
-in (FStar_Format.text _179_150))
+(FStar_Format.text (string_of_mlconstant c))
 end
-| FStar_Extraction_ML_Syntax.MLE_Var (x, _78_249) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Var (x, uu____752) -> begin
 (FStar_Format.text x)
 end
 | FStar_Extraction_ML_Syntax.MLE_Name (path) -> begin
-(let _179_151 = (ptsym currentModule path)
-in (FStar_Format.text _179_151))
+(FStar_Format.text (ptsym currentModule path))
 end
 | FStar_Extraction_ML_Syntax.MLE_Record (path, fields) -> begin
 (
 
-let for1 = (fun _78_261 -> (match (_78_261) with
+let for1 = (fun uu____769 -> (match (uu____769) with
 | (name, e) -> begin
 (
 
 let doc = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e)
-in (let _179_156 = (let _179_155 = (let _179_154 = (ptsym currentModule ((path), (name)))
-in (FStar_Format.text _179_154))
-in (_179_155)::((FStar_Format.text "="))::(doc)::[])
-in (FStar_Format.reduce1 _179_156)))
+in (FStar_Format.reduce1 (let _0_304 = (FStar_Format.text (ptsym currentModule ((path), (name))))
+in (_0_304)::((FStar_Format.text "="))::(doc)::[])))
 end))
-in (let _179_158 = (let _179_157 = (FStar_List.map for1 fields)
-in (FStar_Format.combine (FStar_Format.text "; ") _179_157))
-in (FStar_Format.cbrackets _179_158)))
+in (FStar_Format.cbrackets (let _0_305 = (FStar_List.map for1 fields)
+in (FStar_Format.combine (FStar_Format.text "; ") _0_305))))
 end
 | FStar_Extraction_ML_Syntax.MLE_CTor (ctor, []) -> begin
 (
 
-let name = if (is_standard_constructor ctor) then begin
-(let _179_160 = (let _179_159 = (as_standard_constructor ctor)
-in (FStar_Option.get _179_159))
-in (Prims.snd _179_160))
-end else begin
-(ptctor currentModule ctor)
+let name = (
+
+let uu____783 = (is_standard_constructor ctor)
+in (match (uu____783) with
+| true -> begin
+(Prims.snd (FStar_Option.get (as_standard_constructor ctor)))
 end
+| uu____786 -> begin
+(ptctor currentModule ctor)
+end))
 in (FStar_Format.text name))
 end
 | FStar_Extraction_ML_Syntax.MLE_CTor (ctor, args) -> begin
 (
 
-let name = if (is_standard_constructor ctor) then begin
-(let _179_162 = (let _179_161 = (as_standard_constructor ctor)
-in (FStar_Option.get _179_161))
-in (Prims.snd _179_162))
-end else begin
-(ptctor currentModule ctor)
+let name = (
+
+let uu____792 = (is_standard_constructor ctor)
+in (match (uu____792) with
+| true -> begin
+(Prims.snd (FStar_Option.get (as_standard_constructor ctor)))
 end
+| uu____795 -> begin
+(ptctor currentModule ctor)
+end))
 in (
 
 let args = (FStar_List.map (doc_of_expr currentModule ((min_op_prec), (NonAssoc))) args)
@@ -630,57 +662,53 @@ let doc = (match (((name), (args))) with
 | ("::", (x)::(xs)::[]) -> begin
 (FStar_Format.reduce (((FStar_Format.parens x))::((FStar_Format.text "::"))::(xs)::[]))
 end
-| (_78_280, _78_282) -> begin
-(let _179_166 = (let _179_165 = (let _179_164 = (let _179_163 = (FStar_Format.combine (FStar_Format.text ", ") args)
-in (FStar_Format.parens _179_163))
-in (_179_164)::[])
-in ((FStar_Format.text name))::_179_165)
-in (FStar_Format.reduce1 _179_166))
+| (uu____805, uu____806) -> begin
+(FStar_Format.reduce1 (let _0_307 = (let _0_306 = (FStar_Format.parens (FStar_Format.combine (FStar_Format.text ", ") args))
+in (_0_306)::[])
+in ((FStar_Format.text name))::_0_307))
 end)
 in (maybe_paren outer e_app_prio doc))))
 end
 | FStar_Extraction_ML_Syntax.MLE_Tuple (es) -> begin
 (
 
-let docs = (FStar_List.map (fun x -> (let _179_168 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) x)
-in (FStar_Format.parens _179_168))) es)
+let docs = (FStar_List.map (fun x -> (FStar_Format.parens (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) x))) es)
 in (
 
-let docs = (let _179_169 = (FStar_Format.combine (FStar_Format.text ", ") docs)
-in (FStar_Format.parens _179_169))
+let docs = (FStar_Format.parens (FStar_Format.combine (FStar_Format.text ", ") docs))
 in docs))
 end
-| FStar_Extraction_ML_Syntax.MLE_Let ((rec_, _78_292, lets), body) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Let ((rec_, uu____818, lets), body) -> begin
 (
 
-let pre = if (e.FStar_Extraction_ML_Syntax.loc <> FStar_Extraction_ML_Syntax.dummy_loc) then begin
-(let _179_172 = (let _179_171 = (let _179_170 = (doc_of_loc e.FStar_Extraction_ML_Syntax.loc)
-in (_179_170)::[])
-in (FStar_Format.hardline)::_179_171)
-in (FStar_Format.reduce _179_172))
-end else begin
-FStar_Format.empty
+let pre = (match ((e.FStar_Extraction_ML_Syntax.loc <> FStar_Extraction_ML_Syntax.dummy_loc)) with
+| true -> begin
+(FStar_Format.reduce (let _0_309 = (let _0_308 = (doc_of_loc e.FStar_Extraction_ML_Syntax.loc)
+in (_0_308)::[])
+in (FStar_Format.hardline)::_0_309))
 end
+| uu____828 -> begin
+FStar_Format.empty
+end)
 in (
 
 let doc = (doc_of_lets currentModule ((rec_), (false), (lets)))
 in (
 
 let body = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) body)
-in (let _179_177 = (let _179_176 = (let _179_175 = (let _179_174 = (let _179_173 = (FStar_Format.reduce1 (((FStar_Format.text "in"))::(body)::[]))
-in (_179_173)::[])
-in (doc)::_179_174)
-in (pre)::_179_175)
-in (FStar_Format.combine FStar_Format.hardline _179_176))
-in (FStar_Format.parens _179_177)))))
+in (FStar_Format.parens (let _0_313 = (let _0_312 = (let _0_311 = (let _0_310 = (FStar_Format.reduce1 (((FStar_Format.text "in"))::(body)::[]))
+in (_0_310)::[])
+in (doc)::_0_311)
+in (pre)::_0_312)
+in (FStar_Format.combine FStar_Format.hardline _0_313))))))
 end
 | FStar_Extraction_ML_Syntax.MLE_App (e, args) -> begin
 (match (((e.FStar_Extraction_ML_Syntax.expr), (args))) with
-| (FStar_Extraction_ML_Syntax.MLE_Name (p), ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Fun ((_78_325)::[], scrutinee); FStar_Extraction_ML_Syntax.mlty = _78_323; FStar_Extraction_ML_Syntax.loc = _78_321})::({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Fun (((arg, _78_313))::[], possible_match); FStar_Extraction_ML_Syntax.mlty = _78_310; FStar_Extraction_ML_Syntax.loc = _78_308})::[]) when ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.All.try_with") -> begin
+| (FStar_Extraction_ML_Syntax.MLE_Name (p), ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Fun ((uu____840)::[], scrutinee); FStar_Extraction_ML_Syntax.mlty = uu____842; FStar_Extraction_ML_Syntax.loc = uu____843})::({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Fun (((arg, uu____845))::[], possible_match); FStar_Extraction_ML_Syntax.mlty = uu____847; FStar_Extraction_ML_Syntax.loc = uu____848})::[]) when ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.All.try_with") -> begin
 (
 
 let branches = (match (possible_match) with
-| {FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Match ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Var (arg'); FStar_Extraction_ML_Syntax.mlty = _78_340; FStar_Extraction_ML_Syntax.loc = _78_338}, branches); FStar_Extraction_ML_Syntax.mlty = _78_336; FStar_Extraction_ML_Syntax.loc = _78_334} when ((FStar_Extraction_ML_Syntax.idsym arg) = (FStar_Extraction_ML_Syntax.idsym arg')) -> begin
+| {FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Match ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Var (arg'); FStar_Extraction_ML_Syntax.mlty = uu____878; FStar_Extraction_ML_Syntax.loc = uu____879}, branches); FStar_Extraction_ML_Syntax.mlty = uu____881; FStar_Extraction_ML_Syntax.loc = uu____882} when ((FStar_Extraction_ML_Syntax.idsym arg) = (FStar_Extraction_ML_Syntax.idsym arg')) -> begin
 branches
 end
 | e -> begin
@@ -691,24 +719,23 @@ end
 | (FStar_Extraction_ML_Syntax.MLE_Name (p), (e1)::(e2)::[]) when (is_bin_op p) -> begin
 (doc_of_binop currentModule p e1 e2)
 end
-| (FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (p); FStar_Extraction_ML_Syntax.mlty = _78_359; FStar_Extraction_ML_Syntax.loc = _78_357}, (unitVal)::[]), (e1)::(e2)::[]) when ((is_bin_op p) && (unitVal = FStar_Extraction_ML_Syntax.ml_unit)) -> begin
+| (FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (p); FStar_Extraction_ML_Syntax.mlty = uu____913; FStar_Extraction_ML_Syntax.loc = uu____914}, (unitVal)::[]), (e1)::(e2)::[]) when ((is_bin_op p) && (unitVal = FStar_Extraction_ML_Syntax.ml_unit)) -> begin
 (doc_of_binop currentModule p e1 e2)
 end
 | (FStar_Extraction_ML_Syntax.MLE_Name (p), (e1)::[]) when (is_uni_op p) -> begin
 (doc_of_uniop currentModule p e1)
 end
-| (FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (p); FStar_Extraction_ML_Syntax.mlty = _78_379; FStar_Extraction_ML_Syntax.loc = _78_377}, (unitVal)::[]), (e1)::[]) when ((is_uni_op p) && (unitVal = FStar_Extraction_ML_Syntax.ml_unit)) -> begin
+| (FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (p); FStar_Extraction_ML_Syntax.mlty = uu____924; FStar_Extraction_ML_Syntax.loc = uu____925}, (unitVal)::[]), (e1)::[]) when ((is_uni_op p) && (unitVal = FStar_Extraction_ML_Syntax.ml_unit)) -> begin
 (doc_of_uniop currentModule p e1)
 end
-| _78_391 -> begin
+| uu____930 -> begin
 (
 
 let e = (doc_of_expr currentModule ((e_app_prio), (ILeft)) e)
 in (
 
 let args = (FStar_List.map (doc_of_expr currentModule ((e_app_prio), (IRight))) args)
-in (let _179_178 = (FStar_Format.reduce1 ((e)::args))
-in (FStar_Format.parens _179_178))))
+in (FStar_Format.parens (FStar_Format.reduce1 ((e)::args)))))
 end)
 end
 | FStar_Extraction_ML_Syntax.MLE_Proj (e, f) -> begin
@@ -717,43 +744,49 @@ end
 let e = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e)
 in (
 
-let doc = if (FStar_Extraction_ML_Util.codegen_fsharp ()) then begin
+let doc = (
+
+let uu____947 = (FStar_Extraction_ML_Util.codegen_fsharp ())
+in (match (uu____947) with
+| true -> begin
 (FStar_Format.reduce ((e)::((FStar_Format.text "."))::((FStar_Format.text (Prims.snd f)))::[]))
-end else begin
-(let _179_183 = (let _179_182 = (let _179_181 = (let _179_180 = (let _179_179 = (ptsym currentModule f)
-in (FStar_Format.text _179_179))
-in (_179_180)::[])
-in ((FStar_Format.text "."))::_179_181)
-in (e)::_179_182)
-in (FStar_Format.reduce _179_183))
 end
+| uu____949 -> begin
+(FStar_Format.reduce (let _0_316 = (let _0_315 = (let _0_314 = (FStar_Format.text (ptsym currentModule f))
+in (_0_314)::[])
+in ((FStar_Format.text "."))::_0_315)
+in (e)::_0_316))
+end))
 in doc))
 end
 | FStar_Extraction_ML_Syntax.MLE_Fun (ids, body) -> begin
 (
 
-let bvar_annot = (fun x xt -> if (FStar_Extraction_ML_Util.codegen_fsharp ()) then begin
-(let _179_194 = (let _179_193 = (let _179_192 = (let _179_191 = (match (xt) with
+let bvar_annot = (fun x xt -> (
+
+let uu____967 = (FStar_Extraction_ML_Util.codegen_fsharp ())
+in (match (uu____967) with
+| true -> begin
+(FStar_Format.reduce1 (let _0_321 = (let _0_320 = (let _0_319 = (match (xt) with
 | Some (xxt) -> begin
-(let _179_190 = (let _179_189 = (let _179_188 = (doc_of_mltype currentModule outer xxt)
-in (_179_188)::[])
-in ((FStar_Format.text " : "))::_179_189)
-in (FStar_Format.reduce1 _179_190))
+(FStar_Format.reduce1 (let _0_318 = (let _0_317 = (doc_of_mltype currentModule outer xxt)
+in (_0_317)::[])
+in ((FStar_Format.text " : "))::_0_318))
 end
-| _78_410 -> begin
+| uu____969 -> begin
 (FStar_Format.text "")
 end)
-in (_179_191)::((FStar_Format.text ")"))::[])
-in ((FStar_Format.text x))::_179_192)
-in ((FStar_Format.text "("))::_179_193)
-in (FStar_Format.reduce1 _179_194))
-end else begin
+in (_0_319)::((FStar_Format.text ")"))::[])
+in ((FStar_Format.text x))::_0_320)
+in ((FStar_Format.text "("))::_0_321))
+end
+| uu____971 -> begin
 (FStar_Format.text x)
-end)
+end)))
 in (
 
-let ids = (FStar_List.map (fun _78_416 -> (match (_78_416) with
-| ((x, _78_413), xt) -> begin
+let ids = (FStar_List.map (fun uu____978 -> (match (uu____978) with
+| ((x, uu____984), xt) -> begin
 (bvar_annot x (Some (xt)))
 end)) ids)
 in (
@@ -761,10 +794,9 @@ in (
 let body = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) body)
 in (
 
-let doc = (let _179_198 = (let _179_197 = (let _179_196 = (FStar_Format.reduce1 ids)
-in (_179_196)::((FStar_Format.text "->"))::(body)::[])
-in ((FStar_Format.text "fun"))::_179_197)
-in (FStar_Format.reduce1 _179_198))
+let doc = (FStar_Format.reduce1 (let _0_323 = (let _0_322 = (FStar_Format.reduce1 ids)
+in (_0_322)::((FStar_Format.text "->"))::(body)::[])
+in ((FStar_Format.text "fun"))::_0_323))
 in (FStar_Format.parens doc)))))
 end
 | FStar_Extraction_ML_Syntax.MLE_If (cond, e1, None) -> begin
@@ -773,11 +805,11 @@ end
 let cond = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) cond)
 in (
 
-let doc = (let _179_202 = (let _179_201 = (FStar_Format.reduce1 (((FStar_Format.text "if"))::(cond)::((FStar_Format.text "then"))::((FStar_Format.text "begin"))::[]))
-in (let _179_200 = (let _179_199 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e1)
-in (_179_199)::((FStar_Format.text "end"))::[])
-in (_179_201)::_179_200))
-in (FStar_Format.combine FStar_Format.hardline _179_202))
+let doc = (let _0_327 = (let _0_326 = (FStar_Format.reduce1 (((FStar_Format.text "if"))::(cond)::((FStar_Format.text "then"))::((FStar_Format.text "begin"))::[]))
+in (let _0_325 = (let _0_324 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e1)
+in (_0_324)::((FStar_Format.text "end"))::[])
+in (_0_326)::_0_325))
+in (FStar_Format.combine FStar_Format.hardline _0_327))
 in (maybe_paren outer e_bin_prio_if doc)))
 end
 | FStar_Extraction_ML_Syntax.MLE_If (cond, e1, Some (e2)) -> begin
@@ -786,15 +818,15 @@ end
 let cond = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) cond)
 in (
 
-let doc = (let _179_210 = (let _179_209 = (FStar_Format.reduce1 (((FStar_Format.text "if"))::(cond)::((FStar_Format.text "then"))::((FStar_Format.text "begin"))::[]))
-in (let _179_208 = (let _179_207 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e1)
-in (let _179_206 = (let _179_205 = (FStar_Format.reduce1 (((FStar_Format.text "end"))::((FStar_Format.text "else"))::((FStar_Format.text "begin"))::[]))
-in (let _179_204 = (let _179_203 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e2)
-in (_179_203)::((FStar_Format.text "end"))::[])
-in (_179_205)::_179_204))
-in (_179_207)::_179_206))
-in (_179_209)::_179_208))
-in (FStar_Format.combine FStar_Format.hardline _179_210))
+let doc = (let _0_335 = (let _0_334 = (FStar_Format.reduce1 (((FStar_Format.text "if"))::(cond)::((FStar_Format.text "then"))::((FStar_Format.text "begin"))::[]))
+in (let _0_333 = (let _0_332 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e1)
+in (let _0_331 = (let _0_330 = (FStar_Format.reduce1 (((FStar_Format.text "end"))::((FStar_Format.text "else"))::((FStar_Format.text "begin"))::[]))
+in (let _0_329 = (let _0_328 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e2)
+in (_0_328)::((FStar_Format.text "end"))::[])
+in (_0_330)::_0_329))
+in (_0_332)::_0_331))
+in (_0_334)::_0_333))
+in (FStar_Format.combine FStar_Format.hardline _0_335))
 in (maybe_paren outer e_bin_prio_if doc)))
 end
 | FStar_Extraction_ML_Syntax.MLE_Match (cond, pats) -> begin
@@ -806,49 +838,43 @@ in (
 let pats = (FStar_List.map (doc_of_branch currentModule) pats)
 in (
 
-let doc = (let _179_211 = (FStar_Format.reduce1 (((FStar_Format.text "match"))::((FStar_Format.parens cond))::((FStar_Format.text "with"))::[]))
-in (_179_211)::pats)
+let doc = (let _0_336 = (FStar_Format.reduce1 (((FStar_Format.text "match"))::((FStar_Format.parens cond))::((FStar_Format.text "with"))::[]))
+in (_0_336)::pats)
 in (
 
 let doc = (FStar_Format.combine FStar_Format.hardline doc)
 in (FStar_Format.parens doc)))))
 end
 | FStar_Extraction_ML_Syntax.MLE_Raise (exn, []) -> begin
-(let _179_215 = (let _179_214 = (let _179_213 = (let _179_212 = (ptctor currentModule exn)
-in (FStar_Format.text _179_212))
-in (_179_213)::[])
-in ((FStar_Format.text "raise"))::_179_214)
-in (FStar_Format.reduce1 _179_215))
+(FStar_Format.reduce1 (let _0_338 = (let _0_337 = (FStar_Format.text (ptctor currentModule exn))
+in (_0_337)::[])
+in ((FStar_Format.text "raise"))::_0_338))
 end
 | FStar_Extraction_ML_Syntax.MLE_Raise (exn, args) -> begin
 (
 
 let args = (FStar_List.map (doc_of_expr currentModule ((min_op_prec), (NonAssoc))) args)
-in (let _179_222 = (let _179_221 = (let _179_220 = (let _179_216 = (ptctor currentModule exn)
-in (FStar_Format.text _179_216))
-in (let _179_219 = (let _179_218 = (let _179_217 = (FStar_Format.combine (FStar_Format.text ", ") args)
-in (FStar_Format.parens _179_217))
-in (_179_218)::[])
-in (_179_220)::_179_219))
-in ((FStar_Format.text "raise"))::_179_221)
-in (FStar_Format.reduce1 _179_222)))
+in (FStar_Format.reduce1 (let _0_342 = (let _0_341 = (FStar_Format.text (ptctor currentModule exn))
+in (let _0_340 = (let _0_339 = (FStar_Format.parens (FStar_Format.combine (FStar_Format.text ", ") args))
+in (_0_339)::[])
+in (_0_341)::_0_340))
+in ((FStar_Format.text "raise"))::_0_342)))
 end
 | FStar_Extraction_ML_Syntax.MLE_Try (e, pats) -> begin
-(let _179_229 = (let _179_228 = (let _179_227 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e)
-in (let _179_226 = (let _179_225 = (let _179_224 = (let _179_223 = (FStar_List.map (doc_of_branch currentModule) pats)
-in (FStar_Format.combine FStar_Format.hardline _179_223))
-in (_179_224)::[])
-in ((FStar_Format.text "with"))::_179_225)
-in (_179_227)::_179_226))
-in ((FStar_Format.text "try"))::_179_228)
-in (FStar_Format.combine FStar_Format.hardline _179_229))
+(let _0_349 = (let _0_348 = (let _0_347 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e)
+in (let _0_346 = (let _0_345 = (let _0_344 = (let _0_343 = (FStar_List.map (doc_of_branch currentModule) pats)
+in (FStar_Format.combine FStar_Format.hardline _0_343))
+in (_0_344)::[])
+in ((FStar_Format.text "with"))::_0_345)
+in (_0_347)::_0_346))
+in ((FStar_Format.text "try"))::_0_348)
+in (FStar_Format.combine FStar_Format.hardline _0_349))
 end))
 and doc_of_binop : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Format.doc = (fun currentModule p e1 e2 -> (
 
-let _78_464 = (let _179_234 = (as_bin_op p)
-in (FStar_Option.get _179_234))
-in (match (_78_464) with
-| (_78_461, prio, txt) -> begin
+let uu____1061 = (FStar_Option.get (as_bin_op p))
+in (match (uu____1061) with
+| (uu____1072, prio, txt) -> begin
 (
 
 let e1 = (doc_of_expr currentModule ((prio), (Left)) e1)
@@ -862,10 +888,9 @@ in (FStar_Format.parens doc))))
 end)))
 and doc_of_uniop : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Format.doc = (fun currentModule p e1 -> (
 
-let _78_474 = (let _179_238 = (as_uni_op p)
-in (FStar_Option.get _179_238))
-in (match (_78_474) with
-| (_78_472, txt) -> begin
+let uu____1089 = (FStar_Option.get (as_uni_op p))
+in (match (uu____1089) with
+| (uu____1094, txt) -> begin
 (
 
 let e1 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e1)
@@ -879,8 +904,7 @@ and doc_of_pattern : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_M
 (FStar_Format.text "_")
 end
 | FStar_Extraction_ML_Syntax.MLP_Const (c) -> begin
-(let _179_241 = (string_of_mlconstant c)
-in (FStar_Format.text _179_241))
+(FStar_Format.text (string_of_mlconstant c))
 end
 | FStar_Extraction_ML_Syntax.MLP_Var (x) -> begin
 (FStar_Format.text (Prims.fst x))
@@ -888,68 +912,66 @@ end
 | FStar_Extraction_ML_Syntax.MLP_Record (path, fields) -> begin
 (
 
-let for1 = (fun _78_491 -> (match (_78_491) with
+let for1 = (fun uu____1119 -> (match (uu____1119) with
 | (name, p) -> begin
-(let _179_249 = (let _179_248 = (let _179_244 = (ptsym currentModule ((path), (name)))
-in (FStar_Format.text _179_244))
-in (let _179_247 = (let _179_246 = (let _179_245 = (doc_of_pattern currentModule p)
-in (_179_245)::[])
-in ((FStar_Format.text "="))::_179_246)
-in (_179_248)::_179_247))
-in (FStar_Format.reduce1 _179_249))
+(FStar_Format.reduce1 (let _0_353 = (FStar_Format.text (ptsym currentModule ((path), (name))))
+in (let _0_352 = (let _0_351 = (let _0_350 = (doc_of_pattern currentModule p)
+in (_0_350)::[])
+in ((FStar_Format.text "="))::_0_351)
+in (_0_353)::_0_352)))
 end))
-in (let _179_251 = (let _179_250 = (FStar_List.map for1 fields)
-in (FStar_Format.combine (FStar_Format.text "; ") _179_250))
-in (FStar_Format.cbrackets _179_251)))
+in (FStar_Format.cbrackets (let _0_354 = (FStar_List.map for1 fields)
+in (FStar_Format.combine (FStar_Format.text "; ") _0_354))))
 end
 | FStar_Extraction_ML_Syntax.MLP_CTor (ctor, []) -> begin
 (
 
-let name = if (is_standard_constructor ctor) then begin
-(let _179_253 = (let _179_252 = (as_standard_constructor ctor)
-in (FStar_Option.get _179_252))
-in (Prims.snd _179_253))
-end else begin
-(ptctor currentModule ctor)
+let name = (
+
+let uu____1130 = (is_standard_constructor ctor)
+in (match (uu____1130) with
+| true -> begin
+(Prims.snd (FStar_Option.get (as_standard_constructor ctor)))
 end
+| uu____1133 -> begin
+(ptctor currentModule ctor)
+end))
 in (FStar_Format.text name))
 end
 | FStar_Extraction_ML_Syntax.MLP_CTor (ctor, pats) -> begin
 (
 
-let name = if (is_standard_constructor ctor) then begin
-(let _179_255 = (let _179_254 = (as_standard_constructor ctor)
-in (FStar_Option.get _179_254))
-in (Prims.snd _179_255))
-end else begin
-(ptctor currentModule ctor)
+let name = (
+
+let uu____1139 = (is_standard_constructor ctor)
+in (match (uu____1139) with
+| true -> begin
+(Prims.snd (FStar_Option.get (as_standard_constructor ctor)))
 end
+| uu____1142 -> begin
+(ptctor currentModule ctor)
+end))
 in (
 
 let doc = (match (((name), (pats))) with
 | ("::", (x)::(xs)::[]) -> begin
-(let _179_261 = (let _179_260 = (let _179_256 = (doc_of_pattern currentModule x)
-in (FStar_Format.parens _179_256))
-in (let _179_259 = (let _179_258 = (let _179_257 = (doc_of_pattern currentModule xs)
-in (_179_257)::[])
-in ((FStar_Format.text "::"))::_179_258)
-in (_179_260)::_179_259))
-in (FStar_Format.reduce _179_261))
+(FStar_Format.reduce (let _0_358 = (FStar_Format.parens (doc_of_pattern currentModule x))
+in (let _0_357 = (let _0_356 = (let _0_355 = (doc_of_pattern currentModule xs)
+in (_0_355)::[])
+in ((FStar_Format.text "::"))::_0_356)
+in (_0_358)::_0_357)))
 end
-| (_78_508, (FStar_Extraction_ML_Syntax.MLP_Tuple (_78_510))::[]) -> begin
-(let _179_265 = (let _179_264 = (let _179_263 = (let _179_262 = (FStar_List.hd pats)
-in (doc_of_pattern currentModule _179_262))
-in (_179_263)::[])
-in ((FStar_Format.text name))::_179_264)
-in (FStar_Format.reduce1 _179_265))
+| (uu____1148, (FStar_Extraction_ML_Syntax.MLP_Tuple (uu____1149))::[]) -> begin
+(FStar_Format.reduce1 (let _0_361 = (let _0_360 = (let _0_359 = (FStar_List.hd pats)
+in (doc_of_pattern currentModule _0_359))
+in (_0_360)::[])
+in ((FStar_Format.text name))::_0_361))
 end
-| _78_515 -> begin
-(let _179_270 = (let _179_269 = (let _179_268 = (let _179_267 = (let _179_266 = (FStar_List.map (doc_of_pattern currentModule) pats)
-in (FStar_Format.combine (FStar_Format.text ", ") _179_266))
-in (FStar_Format.parens _179_267))
-in (_179_268)::[])
-in ((FStar_Format.text name))::_179_269)
-in (FStar_Format.reduce1 _179_270))
+| uu____1152 -> begin
+(FStar_Format.reduce1 (let _0_364 = (let _0_363 = (FStar_Format.parens (let _0_362 = (FStar_List.map (doc_of_pattern currentModule) pats)
+in (FStar_Format.combine (FStar_Format.text ", ") _0_362)))
+in (_0_363)::[])
+in ((FStar_Format.text name))::_0_364))
 end)
 in (maybe_paren ((min_op_prec), (NonAssoc)) e_app_prio doc)))
 end
@@ -957,8 +979,7 @@ end
 (
 
 let ps = (FStar_List.map (doc_of_pattern currentModule) ps)
-in (let _179_271 = (FStar_Format.combine (FStar_Format.text ", ") ps)
-in (FStar_Format.parens _179_271)))
+in (FStar_Format.parens (FStar_Format.combine (FStar_Format.text ", ") ps)))
 end
 | FStar_Extraction_ML_Syntax.MLP_Branch (ps) -> begin
 (
@@ -969,38 +990,36 @@ in (
 let ps = (FStar_List.map FStar_Format.parens ps)
 in (FStar_Format.combine (FStar_Format.text " | ") ps)))
 end))
-and doc_of_branch : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlbranch  ->  FStar_Format.doc = (fun currentModule _78_528 -> (match (_78_528) with
+and doc_of_branch : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlbranch  ->  FStar_Format.doc = (fun currentModule uu____1169 -> (match (uu____1169) with
 | (p, cond, e) -> begin
 (
 
 let case = (match (cond) with
 | None -> begin
-(let _179_276 = (let _179_275 = (let _179_274 = (doc_of_pattern currentModule p)
-in (_179_274)::[])
-in ((FStar_Format.text "|"))::_179_275)
-in (FStar_Format.reduce1 _179_276))
+(FStar_Format.reduce1 (let _0_366 = (let _0_365 = (doc_of_pattern currentModule p)
+in (_0_365)::[])
+in ((FStar_Format.text "|"))::_0_366))
 end
 | Some (c) -> begin
 (
 
 let c = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) c)
-in (let _179_279 = (let _179_278 = (let _179_277 = (doc_of_pattern currentModule p)
-in (_179_277)::((FStar_Format.text "when"))::(c)::[])
-in ((FStar_Format.text "|"))::_179_278)
-in (FStar_Format.reduce1 _179_279)))
+in (FStar_Format.reduce1 (let _0_368 = (let _0_367 = (doc_of_pattern currentModule p)
+in (_0_367)::((FStar_Format.text "when"))::(c)::[])
+in ((FStar_Format.text "|"))::_0_368)))
 end)
-in (let _179_283 = (let _179_282 = (FStar_Format.reduce1 ((case)::((FStar_Format.text "->"))::((FStar_Format.text "begin"))::[]))
-in (let _179_281 = (let _179_280 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e)
-in (_179_280)::((FStar_Format.text "end"))::[])
-in (_179_282)::_179_281))
-in (FStar_Format.combine FStar_Format.hardline _179_283)))
+in (let _0_372 = (let _0_371 = (FStar_Format.reduce1 ((case)::((FStar_Format.text "->"))::((FStar_Format.text "begin"))::[]))
+in (let _0_370 = (let _0_369 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e)
+in (_0_369)::((FStar_Format.text "end"))::[])
+in (_0_371)::_0_370))
+in (FStar_Format.combine FStar_Format.hardline _0_372)))
 end))
-and doc_of_lets : FStar_Extraction_ML_Syntax.mlsymbol  ->  (FStar_Extraction_ML_Syntax.mlletflavor * Prims.bool * FStar_Extraction_ML_Syntax.mllb Prims.list)  ->  FStar_Format.doc = (fun currentModule _78_538 -> (match (_78_538) with
+and doc_of_lets : FStar_Extraction_ML_Syntax.mlsymbol  ->  (FStar_Extraction_ML_Syntax.mlletflavor * Prims.bool * FStar_Extraction_ML_Syntax.mllb Prims.list)  ->  FStar_Format.doc = (fun currentModule uu____1183 -> (match (uu____1183) with
 | (rec_, top_level, lets) -> begin
 (
 
-let for1 = (fun _78_546 -> (match (_78_546) with
-| {FStar_Extraction_ML_Syntax.mllb_name = name; FStar_Extraction_ML_Syntax.mllb_tysc = tys; FStar_Extraction_ML_Syntax.mllb_add_unit = _78_543; FStar_Extraction_ML_Syntax.mllb_def = e; FStar_Extraction_ML_Syntax.print_typ = pt} -> begin
+let for1 = (fun uu____1196 -> (match (uu____1196) with
+| {FStar_Extraction_ML_Syntax.mllb_name = name; FStar_Extraction_ML_Syntax.mllb_tysc = tys; FStar_Extraction_ML_Syntax.mllb_add_unit = uu____1199; FStar_Extraction_ML_Syntax.mllb_def = e; FStar_Extraction_ML_Syntax.print_typ = pt} -> begin
 (
 
 let e = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e)
@@ -1009,16 +1028,22 @@ in (
 let ids = []
 in (
 
-let ids = (FStar_List.map (fun _78_552 -> (match (_78_552) with
-| (x, _78_551) -> begin
+let ids = (FStar_List.map (fun uu____1216 -> (match (uu____1216) with
+| (x, uu____1220) -> begin
 (FStar_Format.text x)
 end)) ids)
 in (
 
-let ty_annot = if (not (pt)) then begin
+let ty_annot = (match ((not (pt))) with
+| true -> begin
 (FStar_Format.text "")
-end else begin
-if ((FStar_Extraction_ML_Util.codegen_fsharp ()) && ((rec_ = FStar_Extraction_ML_Syntax.Rec) || top_level)) then begin
+end
+| uu____1222 -> begin
+(
+
+let uu____1223 = ((FStar_Extraction_ML_Util.codegen_fsharp ()) && ((rec_ = FStar_Extraction_ML_Syntax.Rec) || top_level))
+in (match (uu____1223) with
+| true -> begin
 (match (tys) with
 | (Some ((_)::_, _)) | (None) -> begin
 (FStar_Format.text "")
@@ -1029,8 +1054,10 @@ end
 let ty = (doc_of_mltype currentModule ((min_op_prec), (NonAssoc)) ty)
 in (FStar_Format.reduce1 (((FStar_Format.text ":"))::(ty)::[])))
 end)
-end else begin
-if top_level then begin
+end
+| uu____1239 -> begin
+(match (top_level) with
+| true -> begin
 (match (tys) with
 | (None) | (Some ((_)::_, _)) -> begin
 (FStar_Format.text "")
@@ -1041,52 +1068,61 @@ end
 let ty = (doc_of_mltype currentModule ((min_op_prec), (NonAssoc)) ty)
 in (FStar_Format.reduce1 (((FStar_Format.text ":"))::(ty)::[])))
 end)
-end else begin
+end
+| uu____1255 -> begin
 (FStar_Format.text "")
-end
-end
-end
-in (let _179_291 = (let _179_290 = (let _179_289 = (FStar_Format.reduce1 ids)
-in (_179_289)::(ty_annot)::((FStar_Format.text "="))::(e)::[])
-in ((FStar_Format.text (FStar_Extraction_ML_Syntax.idsym name)))::_179_290)
-in (FStar_Format.reduce1 _179_291))))))
+end)
+end))
+end)
+in (FStar_Format.reduce1 (let _0_374 = (let _0_373 = (FStar_Format.reduce1 ids)
+in (_0_373)::(ty_annot)::((FStar_Format.text "="))::(e)::[])
+in ((FStar_Format.text (FStar_Extraction_ML_Syntax.idsym name)))::_0_374))))))
 end))
 in (
 
-let letdoc = if (rec_ = FStar_Extraction_ML_Syntax.Rec) then begin
+let letdoc = (match ((rec_ = FStar_Extraction_ML_Syntax.Rec)) with
+| true -> begin
 (FStar_Format.reduce1 (((FStar_Format.text "let"))::((FStar_Format.text "rec"))::[]))
-end else begin
-(FStar_Format.text "let")
 end
+| uu____1257 -> begin
+(FStar_Format.text "let")
+end)
 in (
 
 let lets = (FStar_List.map for1 lets)
 in (
 
-let lets = (FStar_List.mapi (fun i doc -> (FStar_Format.reduce1 ((if (i = (Prims.parse_int "0")) then begin
+let lets = (FStar_List.mapi (fun i doc -> (FStar_Format.reduce1 (((match ((i = (Prims.parse_int "0"))) with
+| true -> begin
 letdoc
-end else begin
+end
+| uu____1264 -> begin
 (FStar_Format.text "and")
-end)::(doc)::[]))) lets)
+end))::(doc)::[]))) lets)
 in (FStar_Format.combine FStar_Format.hardline lets)))))
 end))
-and doc_of_loc : FStar_Extraction_ML_Syntax.mlloc  ->  FStar_Format.doc = (fun _78_592 -> (match (_78_592) with
+and doc_of_loc : FStar_Extraction_ML_Syntax.mlloc  ->  FStar_Format.doc = (fun uu____1265 -> (match (uu____1265) with
 | (lineno, file) -> begin
-if ((FStar_Options.no_location_info ()) || (FStar_Extraction_ML_Util.codegen_fsharp ())) then begin
+(
+
+let uu____1268 = ((FStar_Options.no_location_info ()) || (FStar_Extraction_ML_Util.codegen_fsharp ()))
+in (match (uu____1268) with
+| true -> begin
 FStar_Format.empty
-end else begin
+end
+| uu____1269 -> begin
 (
 
 let file = (FStar_Util.basename file)
 in (FStar_Format.reduce1 (((FStar_Format.text "#"))::((FStar_Format.num lineno))::((FStar_Format.text (Prims.strcat "\"" (Prims.strcat file "\""))))::[])))
-end
+end))
 end))
 
 
 let doc_of_mltydecl : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mltydecl  ->  FStar_Format.doc = (fun currentModule decls -> (
 
-let for1 = (fun _78_603 -> (match (_78_603) with
-| (_78_598, x, mangle_opt, tparams, body) -> begin
+let for1 = (fun uu____1288 -> (match (uu____1288) with
+| (uu____1297, x, mangle_opt, tparams, body) -> begin
 (
 
 let x = (match (mangle_opt) with
@@ -1105,12 +1141,11 @@ end
 | (x)::[] -> begin
 (FStar_Format.text (FStar_Extraction_ML_Syntax.idsym x))
 end
-| _78_612 -> begin
+| uu____1312 -> begin
 (
 
 let doc = (FStar_List.map (fun x -> (FStar_Format.text (FStar_Extraction_ML_Syntax.idsym x))) tparams)
-in (let _179_302 = (FStar_Format.combine (FStar_Format.text ", ") doc)
-in (FStar_Format.parens _179_302)))
+in (FStar_Format.parens (FStar_Format.combine (FStar_Format.text ", ") doc)))
 end)
 in (
 
@@ -1121,7 +1156,7 @@ end
 | FStar_Extraction_ML_Syntax.MLTD_Record (fields) -> begin
 (
 
-let forfield = (fun _78_625 -> (match (_78_625) with
+let forfield = (fun uu____1333 -> (match (uu____1333) with
 | (name, ty) -> begin
 (
 
@@ -1131,20 +1166,19 @@ in (
 let ty = (doc_of_mltype currentModule ((min_op_prec), (NonAssoc)) ty)
 in (FStar_Format.reduce1 ((name)::((FStar_Format.text ":"))::(ty)::[]))))
 end))
-in (let _179_308 = (let _179_307 = (FStar_List.map forfield fields)
-in (FStar_Format.combine (FStar_Format.text "; ") _179_307))
-in (FStar_Format.cbrackets _179_308)))
+in (FStar_Format.cbrackets (let _0_375 = (FStar_List.map forfield fields)
+in (FStar_Format.combine (FStar_Format.text "; ") _0_375))))
 end
 | FStar_Extraction_ML_Syntax.MLTD_DType (ctors) -> begin
 (
 
-let forctor = (fun _78_633 -> (match (_78_633) with
+let forctor = (fun uu____1355 -> (match (uu____1355) with
 | (name, tys) -> begin
 (match (tys) with
 | [] -> begin
 (FStar_Format.text name)
 end
-| _78_636 -> begin
+| uu____1363 -> begin
 (
 
 let tys = (FStar_List.map (doc_of_mltype currentModule ((t_prio_tpl), (Left))) tys)
@@ -1164,11 +1198,9 @@ in (FStar_Format.combine FStar_Format.hardline ctors))))
 end))
 in (
 
-let doc = (let _179_315 = (let _179_314 = (let _179_313 = (let _179_312 = (ptsym currentModule (([]), (x)))
-in (FStar_Format.text _179_312))
-in (_179_313)::[])
-in (tparams)::_179_314)
-in (FStar_Format.reduce1 _179_315))
+let doc = (FStar_Format.reduce1 (let _0_377 = (let _0_376 = (FStar_Format.text (ptsym currentModule (([]), (x))))
+in (_0_376)::[])
+in (tparams)::_0_377))
 in (match (body) with
 | None -> begin
 doc
@@ -1177,9 +1209,9 @@ end
 (
 
 let body = (forbody body)
-in (let _179_317 = (let _179_316 = (FStar_Format.reduce1 ((doc)::((FStar_Format.text "="))::[]))
-in (_179_316)::(body)::[])
-in (FStar_Format.combine FStar_Format.hardline _179_317)))
+in (let _0_379 = (let _0_378 = (FStar_Format.reduce1 ((doc)::((FStar_Format.text "="))::[]))
+in (_0_378)::(body)::[])
+in (FStar_Format.combine FStar_Format.hardline _0_379)))
 end)))))
 end))
 in (
@@ -1187,26 +1219,27 @@ in (
 let doc = (FStar_List.map for1 decls)
 in (
 
-let doc = if ((FStar_List.length doc) > (Prims.parse_int "0")) then begin
-(let _179_320 = (let _179_319 = (let _179_318 = (FStar_Format.combine (FStar_Format.text " \n and ") doc)
-in (_179_318)::[])
-in ((FStar_Format.text "type"))::_179_319)
-in (FStar_Format.reduce1 _179_320))
-end else begin
-(FStar_Format.text "")
+let doc = (match (((FStar_List.length doc) > (Prims.parse_int "0"))) with
+| true -> begin
+(FStar_Format.reduce1 (let _0_381 = (let _0_380 = (FStar_Format.combine (FStar_Format.text " \n and ") doc)
+in (_0_380)::[])
+in ((FStar_Format.text "type"))::_0_381))
 end
+| uu____1396 -> begin
+(FStar_Format.text "")
+end)
 in doc))))
 
 
 let rec doc_of_sig1 : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlsig1  ->  FStar_Format.doc = (fun currentModule s -> (match (s) with
 | FStar_Extraction_ML_Syntax.MLS_Mod (x, subsig) -> begin
-(let _179_332 = (let _179_331 = (FStar_Format.reduce1 (((FStar_Format.text "module"))::((FStar_Format.text x))::((FStar_Format.text "="))::[]))
-in (let _179_330 = (let _179_329 = (doc_of_sig currentModule subsig)
-in (let _179_328 = (let _179_327 = (FStar_Format.reduce1 (((FStar_Format.text "end"))::[]))
-in (_179_327)::[])
-in (_179_329)::_179_328))
-in (_179_331)::_179_330))
-in (FStar_Format.combine FStar_Format.hardline _179_332))
+(let _0_387 = (let _0_386 = (FStar_Format.reduce1 (((FStar_Format.text "module"))::((FStar_Format.text x))::((FStar_Format.text "="))::[]))
+in (let _0_385 = (let _0_384 = (doc_of_sig currentModule subsig)
+in (let _0_383 = (let _0_382 = (FStar_Format.reduce1 (((FStar_Format.text "end"))::[]))
+in (_0_382)::[])
+in (_0_384)::_0_383))
+in (_0_386)::_0_385))
+in (FStar_Format.combine FStar_Format.hardline _0_387))
 end
 | FStar_Extraction_ML_Syntax.MLS_Exn (x, []) -> begin
 (FStar_Format.reduce1 (((FStar_Format.text "exception"))::((FStar_Format.text x))::[]))
@@ -1217,11 +1250,10 @@ end
 let args = (FStar_List.map (doc_of_mltype currentModule ((min_op_prec), (NonAssoc))) args)
 in (
 
-let args = (let _179_333 = (FStar_Format.combine (FStar_Format.text " * ") args)
-in (FStar_Format.parens _179_333))
+let args = (FStar_Format.parens (FStar_Format.combine (FStar_Format.text " * ") args))
 in (FStar_Format.reduce1 (((FStar_Format.text "exception"))::((FStar_Format.text x))::((FStar_Format.text "of"))::(args)::[]))))
 end
-| FStar_Extraction_ML_Syntax.MLS_Val (x, (_78_667, ty)) -> begin
+| FStar_Extraction_ML_Syntax.MLS_Val (x, (uu____1423, ty)) -> begin
 (
 
 let ty = (doc_of_mltype currentModule ((min_op_prec), (NonAssoc)) ty)
@@ -1249,23 +1281,21 @@ end
 let args = (FStar_List.map (doc_of_mltype currentModule ((min_op_prec), (NonAssoc))) args)
 in (
 
-let args = (let _179_341 = (FStar_Format.combine (FStar_Format.text " * ") args)
-in (FStar_Format.parens _179_341))
+let args = (FStar_Format.parens (FStar_Format.combine (FStar_Format.text " * ") args))
 in (FStar_Format.reduce1 (((FStar_Format.text "exception"))::((FStar_Format.text x))::((FStar_Format.text "of"))::(args)::[]))))
 end
 | FStar_Extraction_ML_Syntax.MLM_Ty (decls) -> begin
 (doc_of_mltydecl currentModule decls)
 end
-| FStar_Extraction_ML_Syntax.MLM_Let (rec_, _78_696, lets) -> begin
+| FStar_Extraction_ML_Syntax.MLM_Let (rec_, uu____1457, lets) -> begin
 (doc_of_lets currentModule ((rec_), (true), (lets)))
 end
 | FStar_Extraction_ML_Syntax.MLM_Top (e) -> begin
-(let _179_346 = (let _179_345 = (let _179_344 = (let _179_343 = (let _179_342 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e)
-in (_179_342)::[])
-in ((FStar_Format.text "="))::_179_343)
-in ((FStar_Format.text "_"))::_179_344)
-in ((FStar_Format.text "let"))::_179_345)
-in (FStar_Format.reduce1 _179_346))
+(FStar_Format.reduce1 (let _0_391 = (let _0_390 = (let _0_389 = (let _0_388 = (doc_of_expr currentModule ((min_op_prec), (NonAssoc)) e)
+in (_0_388)::[])
+in ((FStar_Format.text "="))::_0_389)
+in ((FStar_Format.text "_"))::_0_390)
+in ((FStar_Format.text "let"))::_0_391))
 end
 | FStar_Extraction_ML_Syntax.MLM_Loc (loc) -> begin
 (doc_of_loc loc)
@@ -1278,20 +1308,20 @@ let docs = (FStar_List.map (fun x -> (
 
 let doc = (doc_of_mod1 currentModule x)
 in (doc)::((match (x) with
-| FStar_Extraction_ML_Syntax.MLM_Loc (_78_709) -> begin
+| FStar_Extraction_ML_Syntax.MLM_Loc (uu____1478) -> begin
 FStar_Format.empty
 end
-| _78_712 -> begin
+| uu____1479 -> begin
 FStar_Format.hardline
 end))::(FStar_Format.hardline)::[])) m)
 in (FStar_Format.reduce (FStar_List.flatten docs))))
 
 
-let rec doc_of_mllib_r : FStar_Extraction_ML_Syntax.mllib  ->  (Prims.string * FStar_Format.doc) Prims.list = (fun _78_715 -> (match (_78_715) with
+let rec doc_of_mllib_r : FStar_Extraction_ML_Syntax.mllib  ->  (Prims.string * FStar_Format.doc) Prims.list = (fun uu____1485 -> (match (uu____1485) with
 | FStar_Extraction_ML_Syntax.MLLib (mllib) -> begin
 (
 
-let rec for1_sig = (fun _78_722 -> (match (_78_722) with
+let rec for1_sig = (fun uu____1523 -> (match (uu____1523) with
 | (x, sigmod, FStar_Extraction_ML_Syntax.MLLib (sub)) -> begin
 (
 
@@ -1304,8 +1334,8 @@ in (
 let tail = (FStar_Format.reduce1 (((FStar_Format.text "end"))::[]))
 in (
 
-let doc = (FStar_Option.map (fun _78_729 -> (match (_78_729) with
-| (s, _78_728) -> begin
+let doc = (FStar_Option.map (fun uu____1562 -> (match (uu____1562) with
+| (s, uu____1566) -> begin
 (doc_of_sig x s)
 end)) sigmod)
 in (
@@ -1314,46 +1344,53 @@ let sub = (FStar_List.map for1_sig sub)
 in (
 
 let sub = (FStar_List.map (fun x -> (FStar_Format.reduce ((x)::(FStar_Format.hardline)::(FStar_Format.hardline)::[]))) sub)
-in (let _179_363 = (let _179_362 = (let _179_361 = (let _179_360 = (FStar_Format.reduce sub)
-in (_179_360)::((FStar_Format.cat tail FStar_Format.hardline))::[])
+in (FStar_Format.reduce (let _0_394 = (let _0_393 = (let _0_392 = (FStar_Format.reduce sub)
+in (_0_392)::((FStar_Format.cat tail FStar_Format.hardline))::[])
 in ((match (doc) with
 | None -> begin
 FStar_Format.empty
 end
 | Some (s) -> begin
 (FStar_Format.cat s FStar_Format.hardline)
-end))::_179_361)
-in ((FStar_Format.cat head FStar_Format.hardline))::_179_362)
-in (FStar_Format.reduce _179_363))))))))
+end))::_0_393)
+in ((FStar_Format.cat head FStar_Format.hardline))::_0_394))))))))
 end))
-and for1_mod = (fun istop _78_742 -> (match (_78_742) with
+and for1_mod = (fun istop uu____1583 -> (match (uu____1583) with
 | (x, sigmod, FStar_Extraction_ML_Syntax.MLLib (sub)) -> begin
 (
 
 let x = (FStar_Extraction_ML_Util.flatten_mlpath x)
 in (
 
-let head = (let _179_366 = if (FStar_Extraction_ML_Util.codegen_fsharp ()) then begin
+let head = (FStar_Format.reduce1 (
+
+let uu____1617 = (FStar_Extraction_ML_Util.codegen_fsharp ())
+in (match (uu____1617) with
+| true -> begin
 ((FStar_Format.text "module"))::((FStar_Format.text x))::[]
-end else begin
-if (not (istop)) then begin
+end
+| uu____1619 -> begin
+(match ((not (istop))) with
+| true -> begin
 ((FStar_Format.text "module"))::((FStar_Format.text x))::((FStar_Format.text "="))::((FStar_Format.text "struct"))::[]
-end else begin
+end
+| uu____1621 -> begin
 []
-end
-end
-in (FStar_Format.reduce1 _179_366))
+end)
+end)))
 in (
 
-let tail = if (not (istop)) then begin
+let tail = (match ((not (istop))) with
+| true -> begin
 (FStar_Format.reduce1 (((FStar_Format.text "end"))::[]))
-end else begin
-(FStar_Format.reduce1 [])
 end
+| uu____1623 -> begin
+(FStar_Format.reduce1 [])
+end)
 in (
 
-let doc = (FStar_Option.map (fun _78_749 -> (match (_78_749) with
-| (_78_747, m) -> begin
+let doc = (FStar_Option.map (fun uu____1628 -> (match (uu____1628) with
+| (uu____1631, m) -> begin
 (doc_of_mod x m)
 end)) sigmod)
 in (
@@ -1364,34 +1401,39 @@ in (
 let sub = (FStar_List.map (fun x -> (FStar_Format.reduce ((x)::(FStar_Format.hardline)::(FStar_Format.hardline)::[]))) sub)
 in (
 
-let prefix = if (FStar_Extraction_ML_Util.codegen_fsharp ()) then begin
+let prefix = (
+
+let uu____1649 = (FStar_Extraction_ML_Util.codegen_fsharp ())
+in (match (uu____1649) with
+| true -> begin
 ((FStar_Format.cat (FStar_Format.text "#light \"off\"") FStar_Format.hardline))::[]
-end else begin
-[]
 end
-in (let _179_376 = (let _179_375 = (let _179_374 = (let _179_373 = (let _179_372 = (let _179_371 = (let _179_370 = (let _179_369 = (FStar_Format.reduce sub)
-in (_179_369)::((FStar_Format.cat tail FStar_Format.hardline))::[])
+| uu____1651 -> begin
+[]
+end))
+in (let _0_402 = (let _0_401 = (let _0_400 = (let _0_399 = (let _0_398 = (let _0_397 = (let _0_396 = (let _0_395 = (FStar_Format.reduce sub)
+in (_0_395)::((FStar_Format.cat tail FStar_Format.hardline))::[])
 in ((match (doc) with
 | None -> begin
 FStar_Format.empty
 end
 | Some (s) -> begin
 (FStar_Format.cat s FStar_Format.hardline)
-end))::_179_370)
-in (FStar_Format.hardline)::_179_371)
-in ((FStar_Format.text "open Prims"))::_179_372)
-in (FStar_Format.hardline)::_179_373)
-in (head)::_179_374)
-in (FStar_List.append prefix _179_375))
-in (FStar_All.pipe_left FStar_Format.reduce _179_376)))))))))
+end))::_0_396)
+in (FStar_Format.hardline)::_0_397)
+in ((FStar_Format.text "open Prims"))::_0_398)
+in (FStar_Format.hardline)::_0_399)
+in (head)::_0_400)
+in (FStar_List.append prefix _0_401))
+in (FStar_All.pipe_left FStar_Format.reduce _0_402)))))))))
 end))
 in (
 
-let docs = (FStar_List.map (fun _78_761 -> (match (_78_761) with
+let docs = (FStar_List.map (fun uu____1669 -> (match (uu____1669) with
 | (x, s, m) -> begin
-(let _179_379 = (FStar_Extraction_ML_Util.flatten_mlpath x)
-in (let _179_378 = (for1_mod true ((x), (s), (m)))
-in ((_179_379), (_179_378))))
+(let _0_404 = (FStar_Extraction_ML_Util.flatten_mlpath x)
+in (let _0_403 = (for1_mod true ((x), (s), (m)))
+in ((_0_404), (_0_403))))
 end)) mllib)
 in docs))
 end))
@@ -1402,15 +1444,15 @@ let doc_of_mllib : FStar_Extraction_ML_Syntax.mllib  ->  (Prims.string * FStar_F
 
 let string_of_mlexpr : FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  Prims.string = (fun cmod e -> (
 
-let doc = (let _179_386 = (FStar_Extraction_ML_Util.flatten_mlpath cmod)
-in (doc_of_expr _179_386 ((min_op_prec), (NonAssoc)) e))
+let doc = (let _0_405 = (FStar_Extraction_ML_Util.flatten_mlpath cmod)
+in (doc_of_expr _0_405 ((min_op_prec), (NonAssoc)) e))
 in (FStar_Format.pretty (Prims.parse_int "0") doc)))
 
 
 let string_of_mlty : FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlty  ->  Prims.string = (fun cmod e -> (
 
-let doc = (let _179_391 = (FStar_Extraction_ML_Util.flatten_mlpath cmod)
-in (doc_of_mltype _179_391 ((min_op_prec), (NonAssoc)) e))
+let doc = (let _0_406 = (FStar_Extraction_ML_Util.flatten_mlpath cmod)
+in (doc_of_mltype _0_406 ((min_op_prec), (NonAssoc)) e))
 in (FStar_Format.pretty (Prims.parse_int "0") doc)))
 
 

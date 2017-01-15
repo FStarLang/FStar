@@ -27,7 +27,7 @@ open FStar.Syntax.Util
 open FStar.Syntax.Const
 open FStar.Parser
 open FStar.Ident
-
+module BU = FStar.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
@@ -70,7 +70,7 @@ type env = {
   curmonad:             option<ident>;                    (* current monad being desugared *)
   modules:              list<(lident * modul)>;           (* previously desugared modules *)
   scope_mods:           list<scope_mod>;                  (* toplevel or definition-local scope modifiers *)
-  exported_ids:         Util.smap<exported_id_set>;       (* identifiers (stored as strings for efficiency)
+  exported_ids:         BU.smap<exported_id_set>;       (* identifiers (stored as strings for efficiency)
                                                              reachable in a module, not shadowed by "include"
                                                              declarations. Used only to handle such shadowings,
                                                              not "private"/"abstract" definitions which it is
@@ -79,14 +79,14 @@ type env = {
                                                              there is no 'include ModulB' (with ModulB.iden
                                                              defined or reachable) after iden in ModulA.
                                                            *)
-  trans_exported_ids:   Util.smap<exported_id_set>;       (* transitive version of exported_ids along the
+  trans_exported_ids:   BU.smap<exported_id_set>;       (* transitive version of exported_ids along the
                                                              "include" relation, for each module: an identifier is in this set
                                                              for a module if and only if it is defined either
                                                              in this module or in one of its included modules.
                                                            *)
-  includes:             Util.smap<(ref<(list<lident>)>)>; (* list of "includes" declarations for each module. *)
+  includes:             BU.smap<(ref<(list<lident>)>)>; (* list of "includes" declarations for each module. *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
-  sigmap:               Util.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
+  sigmap:               BU.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
   default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)

@@ -315,7 +315,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
     | MLE_Seq es ->
         let docs = List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) es in
         let docs = List.map (fun d -> reduce [d; text ";"; hardline]) docs in
-        reduce docs
+        parens (reduce docs)
 
     | MLE_Const c ->
         text (string_of_mlconstant c)

@@ -55,7 +55,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                                   //usually "could not check implicit argument",
                                   //        "could not prove post-condition"
                                   //or something like that
-                r            //the source range in which this query was asked
+                (r:Range.range)            //the source range in which this query was asked
                 q            //the query
                : labels      //the labels themselves
                * term        //the query, decorated with labels

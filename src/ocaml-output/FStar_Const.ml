@@ -1,28 +1,26 @@
 
 open Prims
-
 type signedness =
 | Unsigned
 | Signed
 
 
-let is_Unsigned = (fun _discr_ -> (match (_discr_) with
-| Unsigned (_) -> begin
+let uu___is_Unsigned : signedness  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Unsigned -> begin
 true
 end
-| _ -> begin
+| uu____4 -> begin
 false
 end))
 
 
-let is_Signed = (fun _discr_ -> (match (_discr_) with
-| Signed (_) -> begin
+let uu___is_Signed : signedness  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Signed -> begin
 true
 end
-| _ -> begin
+| uu____8 -> begin
 false
 end))
-
 
 type width =
 | Int8
@@ -31,41 +29,40 @@ type width =
 | Int64
 
 
-let is_Int8 = (fun _discr_ -> (match (_discr_) with
-| Int8 (_) -> begin
+let uu___is_Int8 : width  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Int8 -> begin
 true
 end
-| _ -> begin
+| uu____12 -> begin
 false
 end))
 
 
-let is_Int16 = (fun _discr_ -> (match (_discr_) with
-| Int16 (_) -> begin
+let uu___is_Int16 : width  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Int16 -> begin
 true
 end
-| _ -> begin
+| uu____16 -> begin
 false
 end))
 
 
-let is_Int32 = (fun _discr_ -> (match (_discr_) with
-| Int32 (_) -> begin
+let uu___is_Int32 : width  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Int32 -> begin
 true
 end
-| _ -> begin
+| uu____20 -> begin
 false
 end))
 
 
-let is_Int64 = (fun _discr_ -> (match (_discr_) with
-| Int64 (_) -> begin
+let uu___is_Int64 : width  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Int64 -> begin
 true
 end
-| _ -> begin
+| uu____24 -> begin
 false
 end))
-
 
 type sconst =
 | Const_effect
@@ -81,156 +78,158 @@ type sconst =
 | Const_reflect of FStar_Ident.lid
 
 
-let is_Const_effect = (fun _discr_ -> (match (_discr_) with
-| Const_effect (_) -> begin
+let uu___is_Const_effect : sconst  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Const_effect -> begin
 true
 end
-| _ -> begin
+| uu____63 -> begin
 false
 end))
 
 
-let is_Const_unit = (fun _discr_ -> (match (_discr_) with
-| Const_unit (_) -> begin
+let uu___is_Const_unit : sconst  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Const_unit -> begin
 true
 end
-| _ -> begin
+| uu____67 -> begin
 false
 end))
 
 
-let is_Const_bool = (fun _discr_ -> (match (_discr_) with
-| Const_bool (_) -> begin
+let uu___is_Const_bool : sconst  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Const_bool (_0) -> begin
 true
 end
-| _ -> begin
+| uu____72 -> begin
 false
 end))
 
 
-let is_Const_int = (fun _discr_ -> (match (_discr_) with
-| Const_int (_) -> begin
+let __proj__Const_bool__item___0 : sconst  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Const_bool (_0) -> begin
+_0
+end))
+
+
+let uu___is_Const_int : sconst  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Const_int (_0) -> begin
 true
 end
-| _ -> begin
+| uu____89 -> begin
 false
 end))
 
 
-let is_Const_char = (fun _discr_ -> (match (_discr_) with
-| Const_char (_) -> begin
+let __proj__Const_int__item___0 : sconst  ->  (Prims.string * (signedness * width) Prims.option) = (fun projectee -> (match (projectee) with
+| Const_int (_0) -> begin
+_0
+end))
+
+
+let uu___is_Const_char : sconst  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Const_char (_0) -> begin
 true
 end
-| _ -> begin
+| uu____116 -> begin
 false
 end))
 
 
-let is_Const_float = (fun _discr_ -> (match (_discr_) with
-| Const_float (_) -> begin
+let __proj__Const_char__item___0 : sconst  ->  FStar_BaseTypes.char = (fun projectee -> (match (projectee) with
+| Const_char (_0) -> begin
+_0
+end))
+
+
+let uu___is_Const_float : sconst  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Const_float (_0) -> begin
 true
 end
-| _ -> begin
+| uu____128 -> begin
 false
 end))
 
 
-let is_Const_bytearray = (fun _discr_ -> (match (_discr_) with
-| Const_bytearray (_) -> begin
+let __proj__Const_float__item___0 : sconst  ->  FStar_BaseTypes.double = (fun projectee -> (match (projectee) with
+| Const_float (_0) -> begin
+_0
+end))
+
+
+let uu___is_Const_bytearray : sconst  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Const_bytearray (_0) -> begin
 true
 end
-| _ -> begin
+| uu____143 -> begin
 false
 end))
 
 
-let is_Const_string = (fun _discr_ -> (match (_discr_) with
-| Const_string (_) -> begin
+let __proj__Const_bytearray__item___0 : sconst  ->  (FStar_BaseTypes.byte Prims.array * FStar_Range.range) = (fun projectee -> (match (projectee) with
+| Const_bytearray (_0) -> begin
+_0
+end))
+
+
+let uu___is_Const_string : sconst  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Const_string (_0) -> begin
 true
 end
-| _ -> begin
+| uu____167 -> begin
 false
 end))
 
 
-let is_Const_range = (fun _discr_ -> (match (_discr_) with
-| Const_range (_) -> begin
+let __proj__Const_string__item___0 : sconst  ->  (FStar_BaseTypes.byte Prims.array * FStar_Range.range) = (fun projectee -> (match (projectee) with
+| Const_string (_0) -> begin
+_0
+end))
+
+
+let uu___is_Const_range : sconst  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Const_range (_0) -> begin
 true
 end
-| _ -> begin
+| uu____188 -> begin
 false
 end))
 
 
-let is_Const_reify = (fun _discr_ -> (match (_discr_) with
-| Const_reify (_) -> begin
+let __proj__Const_range__item___0 : sconst  ->  FStar_Range.range = (fun projectee -> (match (projectee) with
+| Const_range (_0) -> begin
+_0
+end))
+
+
+let uu___is_Const_reify : sconst  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Const_reify -> begin
 true
 end
-| _ -> begin
+| uu____199 -> begin
 false
 end))
 
 
-let is_Const_reflect = (fun _discr_ -> (match (_discr_) with
-| Const_reflect (_) -> begin
+let uu___is_Const_reflect : sconst  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Const_reflect (_0) -> begin
 true
 end
-| _ -> begin
+| uu____204 -> begin
 false
 end))
 
 
-let ___Const_bool____0 = (fun projectee -> (match (projectee) with
-| Const_bool (_27_3) -> begin
-_27_3
-end))
-
-
-let ___Const_int____0 = (fun projectee -> (match (projectee) with
-| Const_int (_27_6) -> begin
-_27_6
-end))
-
-
-let ___Const_char____0 = (fun projectee -> (match (projectee) with
-| Const_char (_27_9) -> begin
-_27_9
-end))
-
-
-let ___Const_float____0 = (fun projectee -> (match (projectee) with
-| Const_float (_27_12) -> begin
-_27_12
-end))
-
-
-let ___Const_bytearray____0 = (fun projectee -> (match (projectee) with
-| Const_bytearray (_27_15) -> begin
-_27_15
-end))
-
-
-let ___Const_string____0 = (fun projectee -> (match (projectee) with
-| Const_string (_27_18) -> begin
-_27_18
-end))
-
-
-let ___Const_range____0 = (fun projectee -> (match (projectee) with
-| Const_range (_27_21) -> begin
-_27_21
-end))
-
-
-let ___Const_reflect____0 = (fun projectee -> (match (projectee) with
-| Const_reflect (_27_24) -> begin
-_27_24
+let __proj__Const_reflect__item___0 : sconst  ->  FStar_Ident.lid = (fun projectee -> (match (projectee) with
+| Const_reflect (_0) -> begin
+_0
 end))
 
 
 let eq_const : sconst  ->  sconst  ->  Prims.bool = (fun c1 c2 -> (match (((c1), (c2))) with
 | (Const_int (s1, o1), Const_int (s2, o2)) -> begin
-(((FStar_Util.ensure_decimal s1) = (FStar_Util.ensure_decimal s2)) && (o1 = o2))
+((let _0_118 = (FStar_Util.ensure_decimal s1)
+in (let _0_117 = (FStar_Util.ensure_decimal s2)
+in (_0_118 = _0_117))) && (o1 = o2))
 end
 | ((Const_bytearray (a, _), Const_bytearray (b, _))) | ((Const_string (a, _), Const_string (b, _))) -> begin
 (a = b)
@@ -238,7 +237,7 @@ end
 | (Const_reflect (l1), Const_reflect (l2)) -> begin
 (FStar_Ident.lid_equals l1 l2)
 end
-| _27_62 -> begin
+| uu____254 -> begin
 (c1 = c2)
 end))
 

@@ -110,7 +110,7 @@ EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
 STRATIFIEDEXTRACTION_SRC=$(addprefix stratifiedextraction/FStar.StratifiedExtraction.ML., Env.fs Util.fs ExtractTyp.fs ExtractExp.fs ExtractMod.fs)
 FSDOC=FStar.Fsdoc.Generator.fs
 FSDOC_SRC=$(addprefix fsdoc/, $(FSDOC))
-SMTENCODING=$(addprefix FStar.SMTEncoding., Term.fsi Term.fs Util.fs Z3.fs SplitQueryCases.fs ErrorReporting.fs Encode.fs Solver.fs)
+SMTENCODING=$(addprefix FStar.SMTEncoding., Term.fsi Term.fs Util.fs Z3.fs SplitQueryCases.fs ErrorReporting.fsi ErrorReporting.fs Encode.fsi Encode.fs Solver.fsi Solver.fs)
 SMTENCODING_SRC=$(addprefix smtencoding/, $(SMTENCODING))
 TOPLEVEL=$(addprefix FStar., Dependencies.fs Interactive.fs Stratified.fs Universal.fs Indent.fs FStar.fs)
 TOPLEVEL_SRC=$(addprefix fstar/, $(TOPLEVEL))
@@ -189,24 +189,6 @@ U_STDLIB=$(addprefix $(ULIB)/, FStar.FunctionalExtensionality.fst FStar.Proposit
 			       FStar.Char.fsti FStar.Float.fsti FStar.Mul.fst FStar.Int.fst $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti)
 U_BOOT_BASIC_FSTI=$(addprefix boot_fstis/FStar., string.fsti list.fst util.fsti platform.fsti bytes.fst range.fsti version.fsti getopt.fsti unionfind.fsti Pprint.fsti)
 U_ALL_INTERFACES=$(U_STDLIB) $(U_BOOT_BASIC_FSTI) boot_fstis/FStar.Parser.Parse.fsti
-U_ALL_SOURCES=$(addprefix u_boot_fsts/, \
-FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
-FStar.Format.fst \
-FStar.Fsdoc.Generator.fst \
-FStar.Syntax.Syntax.fsti FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fsti FStar.Syntax.Subst.fst FStar.Syntax.Free.fsti FStar.Syntax.Free.fst \
-     FStar.Syntax.InstFV.fsti FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fsti FStar.Syntax.Print.fst FStar.Syntax.MutRecTy.fsti FStar.Syntax.MutRecTy.fst \
-FStar.Parser.AST.fst FStar.Parser.Interleave.fst FStar.Parser.Lexhelp.fst FStar.Parser.Parseit.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst FStar.Parser.ToDocument.fst \
-FStar.ToSyntax.Env.fsti FStar.ToSyntax.Env.fst FStar.ToSyntax.ToSyntax.fsti FStar.ToSyntax.ToSyntax.fst \
-FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fsti FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fsti FStar.TypeChecker.Normalize.fst \
-     FStar.TypeChecker.Err.fst FStar.TypeChecker.Rel.fsti FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fsti FStar.TypeChecker.Util.fst FStar.TypeChecker.DMFF.fsti FStar.TypeChecker.DMFF.fst \
-     FStar.TypeChecker.TcTerm.fsti FStar.TypeChecker.TcTerm.fst FStar.TypeChecker.Tc.fsti FStar.TypeChecker.Tc.fst \
-FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fsti FStar.Extraction.ML.Code.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst \
-     FStar.Extraction.Kremlin.fst \
-FStar.SMTEncoding.Term.fsti FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Util.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst \
-     FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst)
-
-wc_u_all:
-	wc -l $(U_ALL_SOURCES)
 
 boot_fstis/FStar.%.fsti: basic/%.fsi
 	cp $^ $@
@@ -246,9 +228,11 @@ boot_fstis/FStar.Parser.Parse.fsti: parser/parse.fsi
 	$(HEAD) -n -12 $^ > $@
 	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse open FStar.BaseTypes type bytes = array<byte>/' $@
 
+U_TOPLEVEL_SRC=$(addprefix fstar/FStar., Dependencies.fs Interactive.fs Universal.fs Indent.fs) #Stratified.fs  FStar.fs)
+
 U_BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(SYNTAX_SRC) \
 	   $(BOOT_PARSER) $(TOSYNTAX_SRC) $(TYPECHECKER_SRC) \
-	   $(EXTRACTION_SRC) $(SMTENCODING_SRC) $(FSDOC_SRC) #$(TOPLEVEL_SRC)
+	   $(EXTRACTION_SRC) $(SMTENCODING_SRC) $(FSDOC_SRC) $(U_TOPLEVEL_SRC)
 
 rename_as_fst:
 	./tools/rename_all_boot_fsts "$(U_BOOT_ALL)"
@@ -339,17 +323,29 @@ u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst ToSyntax.fst
 u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML.UEnv.fst ML.Util.fst ML.Code.fst ML.Term.fst ML.Modul.fst Kremlin.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Extraction
 
-u_extract_smtencoding:$(addprefix u_boot_fsts/FStar.SMTEncoding., Term.fst Util.fst Z3.fst SplitQueryCases.fst \
-								   ErrorReporting.fst Encode.fst Solver.fst)
+u_extract_smtencoding_base: $(addprefix u_boot_fsts/FStar.SMTEncoding., Term.fst Util.fst Z3.fst SplitQueryCases.fst ErrorReporting.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.SMTEncoding
 
-u_extract_all: clean_u_extract_ocaml \
-	       u_extract_misc u_extract_syntax u_extract_parser \
-	       u_extract_typechecker u_extract_tosyntax u_extract_smtencoding u_extract_extraction
+u_extract_encode: u_boot_fsts/FStar.SMTEncoding.Encode.fst
+	$(FSTARBOOT) $^ --extract_module FStar.SMTEncoding.Encode
+
+u_extract_solver: u_boot_fsts/FStar.SMTEncoding.Solver.fst
+	$(FSTARBOOT) $^ --extract_module FStar.SMTEncoding.Solver
+
+u_extract_smtencoding: u_extract_encode u_extract_solver
+
+u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fst Universal.fst Indent.fst) #Stratified.fs  FStar.fs)
+	$(FSTARBOOT) $^ --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Universal --extract_module FStar.Indent
+
+u_extract_all: u_extract_misc u_extract_syntax u_extract_parser \
+	       u_extract_typechecker u_extract_tosyntax u_extract_smtencoding \
+	       u_extract_extraction #u_extract_fstar
 
 u_ocaml: clean_u_extract_ocaml
 	+make u_extract_misc u_extract_syntax u_extract_parser \
-              u_extract_typechecker u_extract_tosyntax u_extract_smtencoding u_extract_extraction
+              u_extract_typechecker u_extract_tosyntax u_extract_smtencoding \
+	      u_extract_extraction u_extract_fstar
+	cp u_ocaml-output/*.ml ocaml_output/
 
 # Fastest way to refresh the snapshot (if it works)
 ocaml-fstar-ocaml:

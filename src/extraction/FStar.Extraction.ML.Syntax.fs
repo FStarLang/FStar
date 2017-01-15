@@ -60,7 +60,7 @@ type gensym_t = {
 let gs =
   let ctr = Util.mk_ref 0 in
   let n_resets = Util.mk_ref 0 in
-  {gensym =(fun () -> "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (incr ctr; !ctr)), 0);
+  {gensym =(fun () -> incr ctr; "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (!ctr)), 0);
    reset = (fun () -> ctr := 0; incr n_resets)}
 
 let gensym () = gs.gensym()

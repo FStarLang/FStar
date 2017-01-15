@@ -776,7 +776,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_match(e, pats) ->
         encode_match e pats mk_Term_unit env encode_term
 
-and encode_let x t1 e1 e2 env (encode_body:S.term -> env_t -> (term * decls_t)) : term * decls_t =
+and encode_let
+    : bv -> typ -> S.term -> S.term -> env_t -> (S.term -> env_t -> term * decls_t) 
+    -> term * decls_t
+    =
+    fun x t1 e1 e2 env encode_body ->
     let ee1, decls1 = encode_term e1 env in
     let xs, e2 = SS.open_term [(x, None)] e2 in
     let x, _ = List.hd xs in
@@ -784,7 +788,8 @@ and encode_let x t1 e1 e2 env (encode_body:S.term -> env_t -> (term * decls_t)) 
     let ee2, decls2 = encode_body e2 env' in
     ee2, decls1@decls2
 
-and encode_match e pats default_case env (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t =
+and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t) 
+                 (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t =
     let scr, decls = encode_term e env in
     let match_tm, decls = List.fold_right (fun b (else_case, decls) ->
         let p, w, br = SS.open_branch b in
@@ -806,12 +811,12 @@ and encode_match e pats default_case env (encode_br:S.term -> env_t -> (term * d
     match_tm, decls
 
 
-and encode_pat env (pat:Syntax.pat) : list<(env_t * pattern)>  (* one for each disjunct *) =
+and encode_pat (env:env_t) (pat:Syntax.pat) : list<(env_t * pattern)>  (* one for each disjunct *) =
     match pat.v with
         | Pat_disj ps -> List.map (encode_one_pat env) ps
         | _ -> [encode_one_pat env pat]
 
-and encode_one_pat (env:env_t) pat : (env_t * pattern) =
+and encode_one_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
         if Env.debug env.tcenv Options.Low then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
         let vars, pat_term = FStar.TypeChecker.Util.decorated_pattern_as_term pat in
 
@@ -860,7 +865,7 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
 
         env, pattern
 
-and encode_args l env : (list<term> * decls_t)  =
+and encode_args (l:args) (env:env_t) : (list<term> * decls_t)  =
     let l, decls = l |> List.fold_left
         (fun (tms, decls) (t, _) -> let t, decls' = encode_term t env in t::tms, decls@decls')
         ([], []) in
@@ -1451,7 +1456,9 @@ let encode_top_level_vals env bindings quals =
         let decls', env = encode_top_level_val env (right lb.lbname) lb.lbtyp quals in
         decls@decls', env) ([], env)
 
-let encode_top_level_let env (is_rec, bindings) quals =
+let encode_top_level_let :
+    env_t -> (bool * list<letbinding>) -> list<qualifier> -> list<decl> * env_t =
+    fun env (is_rec, bindings) quals ->
     let eta_expand binders formals body t =
         let nbinders = List.length binders in
         let formals, extra_formals = BU.first_N nbinders formals in
@@ -2086,7 +2093,7 @@ let push msg =
     varops.push();
     Z3.push msg
 let pop msg   =
-    ignore <| pop_env();
+    let _ = pop_env() in
     varops.pop();
     Z3.pop msg
 let mark msg =
@@ -2097,7 +2104,7 @@ let reset_mark msg =
     reset_mark_env();
     varops.reset_mark();
     Z3.reset_mark msg
-let commit_mark msg =
+let commit_mark (msg:string) =
     commit_mark_env();
     varops.commit_mark();
     Z3.commit_mark msg
