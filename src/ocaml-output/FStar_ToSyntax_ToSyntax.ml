@@ -216,7 +216,11 @@ end
 (r FStar_Syntax_Const.read_lid FStar_Syntax_Syntax.Delta_equational)
 end
 | "@" -> begin
+if (FStar_Options.ml_ish ()) then begin
 (r FStar_Syntax_Const.list_append_lid FStar_Syntax_Syntax.Delta_equational)
+end else begin
+(r FStar_Syntax_Const.list_tot_append_lid FStar_Syntax_Syntax.Delta_equational)
+end
 end
 | "^" -> begin
 (r FStar_Syntax_Const.strcat_lid FStar_Syntax_Syntax.Delta_equational)

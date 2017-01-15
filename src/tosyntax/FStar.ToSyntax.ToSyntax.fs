@@ -124,7 +124,9 @@ let op_as_term env arity rng s : option<S.term> =
         | "/" ->    r C.op_Division Delta_equational
         | "%" ->    r C.op_Modulus Delta_equational
         | "!" ->    r C.read_lid Delta_equational
-        | "@" ->    r C.list_append_lid Delta_equational
+        | "@" ->    if Options.ml_ish ()
+		   then r C.list_append_lid Delta_equational
+		   else r C.list_tot_append_lid Delta_equational
         | "^" ->    r C.strcat_lid Delta_equational
         | "|>" ->   r C.pipe_right_lid Delta_equational
         | "<|" ->   r C.pipe_left_lid Delta_equational

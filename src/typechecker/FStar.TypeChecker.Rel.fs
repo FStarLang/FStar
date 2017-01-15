@@ -1056,7 +1056,7 @@ let match_num_binders (bc1: (list<'a> * (list<'a> -> 'b)))
     : (list<'a> * 'b) * (list<'a> * 'b) =
     let (bs1, mk_cod1) = bc1 in
     let (bs2, mk_cod2) = bc2 in
-    let curry n bs mk_cod =
+    let curry n bs (mk_cod:(list<'a> -> 'b)) =
         let bs, rest = BU.first_N n bs in
         (bs, mk_cod rest)
     in

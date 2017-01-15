@@ -895,8 +895,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                           List.length mlargs_f = 1 ||
                           Util.codegen_fsharp () ||
                           (match head.n with
-                           | Tm_fvar { fv_name = { v = v } } ->
-                             v = Syntax.Const.op_And || v = Syntax.Const.op_Or
+                           | Tm_fvar fv ->
+			     S.fv_eq_lid fv Syntax.Const.op_And ||
+			     S.fv_eq_lid fv Syntax.Const.op_Or
                            | _ ->
                               false)
                         in
