@@ -1010,13 +1010,17 @@ let maybe_set_tk ts = function
       (snd ts).tk := Some t.n;
       ts
 
-let check_universe_generalization (explicit_univ_names : list<univ_name>)
-                         (generalized_univ_names : list<univ_name>)
-                         (t : term) : list<univ_name> =
-                             match explicit_univ_names, generalized_univ_names with
-                                 | [], _ -> generalized_univ_names
-                                 | _, [] -> explicit_univ_names
-                                 | _ -> raise (Error("Generalized universe in a term containing explicit universe annotation : "^ Print.term_to_string t, t.pos))
+let check_universe_generalization
+  (explicit_univ_names : list<univ_name>)
+  (generalized_univ_names : list<univ_name>)
+  (t : term)
+  : list<univ_name>
+=
+  match explicit_univ_names, generalized_univ_names with
+  | [], _ -> generalized_univ_names
+  | _, [] -> explicit_univ_names
+  | _ -> raise (Error("Generalized universe in a term containing explicit universe annotation : "
+                      ^ Print.term_to_string t, t.pos))
 
 let generalize_universes (env:env) (t0:term) : tscheme =
     let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
