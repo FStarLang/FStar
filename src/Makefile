@@ -334,8 +334,8 @@ u_extract_solver: u_boot_fsts/FStar.SMTEncoding.Solver.fst
 
 u_extract_smtencoding: u_extract_encode u_extract_solver
 
-u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fst Universal.fst Indent.fst) #Stratified.fs  FStar.fs)
-	$(FSTARBOOT) $^ --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Universal --extract_module FStar.Indent
+u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fst Universal.fst Indent.fst Main.fst)
+	$(FSTARBOOT) $^ --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
 u_extract_all: u_extract_misc u_extract_syntax u_extract_parser \
 	       u_extract_typechecker u_extract_tosyntax u_extract_smtencoding \
@@ -418,10 +418,10 @@ test:
 	make regressions
 
 utest:
-	make all
-	make fsharp-regressions
+	# make all
+	# make fsharp-regressions
 	+make -C ocaml-output
-	+make fstar-ocaml
+	# +make fstar-ocaml
 	+make uregressions
 
 # The regressions to be run with a working F# build of F*
