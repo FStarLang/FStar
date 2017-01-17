@@ -157,13 +157,6 @@ let deps_of_our_file filename =
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
 type m_timestamps = list<(option<string> * string * option<time> * time)>
 
-// filename is the name of the file currently edited
-let interactive_mode (filename:string)
-                     (initial_mod:'modul)
-                     (tc:interactive_tc<'env,'modul>) : unit =
-    if Option.isSome (Options.codegen())
-    then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
-
     (*
      * type check remaining dependencies and record the timestamps.
      * m is the current module name, not the module name of the dependency. it's actually a dummy that is pushed on the stack and never used.
@@ -174,8 +167,10 @@ let interactive_mode (filename:string)
      * note that for dependencies, the stack and ts go together (i.e. their sizes are same)
      * returns the new stack, environment, and timestamps.
      *)
-    let rec tc_deps (m:'modul) (stack:stack<'env,'modul>) (env:'env) (remaining:list<string>) (ts:m_timestamps) = //:stack<'env,'modul> * 'env * m_timestamps
-      match remaining with
+    let rec tc_deps (tc:interactive_tc<'env,'modul>) (m:'modul) (stack:stack<'env,'modul>) 
+		    (env:'env) (remaining:list<string>) (ts:m_timestamps) 
+//      : stack<'env,'modul> * 'env * m_timestamps
+      = match remaining with
         | [] -> stack, env, ts
         | _  ->
           let stack = (env, m)::stack in
@@ -191,8 +186,8 @@ let interactive_mode (filename:string)
             let impl_t = get_file_last_modification_time impl in
             intf_t, impl_t
           in
-          tc_deps m stack env remaining ((intf, impl, intf_t, impl_t)::ts)
-    in
+          tc_deps tc m stack env remaining ((intf, impl, intf_t, impl_t)::ts)
+
 
     (*
      * check if some dependencies have been modified, added, or deleted
@@ -204,8 +199,8 @@ let interactive_mode (filename:string)
      * as with tc_deps, m is the dummy argument used for the stack entry
      * returns the new stack, environment, and timestamps
      *)
-    let update_deps (m:'modul) (stk:stack<'env, 'modul>) (env:'env) (ts:m_timestamps) = //:(stack<'env, 'modul> * 'env * m_timestamps) =
-
+    let update_deps (filename:string) (tc:interactive_tc<'env,'modul>) (m:'modul) (stk:stack<'env, 'modul>) (env:'env) (ts:m_timestamps) 
+      : (stack<'env, 'modul> * 'env * m_timestamps) =
       let is_stale (intf:option<string>) (impl:string) (intf_t:option<time>) (impl_t:time) :bool =
         let impl_mt = get_file_last_modification_time impl in
         (is_before impl_t impl_mt ||
@@ -259,20 +254,22 @@ let interactive_mode (filename:string)
             if not b || (is_stale intf impl intf_t impl_t) then
               //reverse st from "first dependency first order" to "last dependency first order"
               let env = pop_tc_and_stack env' (List.rev_append st []) ts in
-              tc_deps m good_stack env depnames good_ts
+              tc_deps tc m good_stack env depnames good_ts
             else
               let stack_elt, st' = List.hd st, List.tl st in
               iterate depnames' st' env' ts' (stack_elt::good_stack) (ts_elt::good_ts)
-          | []           -> (* st should also be empty here *) tc_deps m good_stack env' depnames good_ts
+          | []           -> (* st should also be empty here *) tc_deps tc m good_stack env' depnames good_ts
       in
 
       (* Well, the file list hasn't changed, so our (single) file is still there. *)
       let filenames = deps_of_our_file filename in
       //reverse stk and ts, since iterate expects them in "first dependency first order"
       iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
-    in
 
-    let rec go line_col (stack:stack<'env,'modul>) (curmod:'modul) (env:'env) (ts:m_timestamps) = begin
+    let rec go (line_col:(int*int))
+	       (filename:string) 
+	       (tc:interactive_tc<'env,'modul>) 
+	       (stack:stack<'env,'modul>) (curmod:'modul) (env:'env) (ts:m_timestamps) : unit = begin
       match shift_chunk () with
       | Pop msg ->
           tc.pop env msg;
@@ -283,25 +280,25 @@ let interactive_mode (filename:string)
           in
           //all the fragments from the current buffer have been popped, call cleanup
           let _ = if List.length stack = List.length ts then tc.cleanup env else () in
-          go line_col stack curmod env ts
+          go line_col filename tc stack curmod env ts
 
       | Push (lax, l, c) ->
           //if we are at a stage where we have not yet pushed a fragment from the current buffer, see if some dependency is stale
           //if so, update it
           //also if this is the first chunk, we need to restore the command line options
           let restore_cmd_line_options, (stack, env, ts) =
-            if List.length stack = List.length ts then true, update_deps curmod stack env ts else false, (stack, env, ts)
+            if List.length stack = List.length ts then true, update_deps filename tc curmod stack env ts else false, (stack, env, ts)
           in
           let stack = (env, curmod)::stack in
           let env = tc.push env lax restore_cmd_line_options "#push" in
-          go (l, c) stack curmod env ts
+          go (l, c) filename tc stack curmod env ts
 
       | Code (text, (ok, fail)) ->
           let fail curmod env_mark =
             tc.report_fail();
             Util.print1 "%s\n" fail;
             let env = tc.reset_mark env_mark in
-            go line_col stack curmod env ts
+            go line_col filename tc stack curmod env ts
           in
 
           let env_mark = tc.mark env in
@@ -317,20 +314,27 @@ let interactive_mode (filename:string)
                 if n_errs=0 then begin
                   Util.print1 "\n%s\n" ok;
                   let env = tc.commit_mark env in
-                  go line_col stack curmod env ts
+                  go line_col filename tc stack curmod env ts
                   end
                 else fail curmod env_mark
             | _ -> fail curmod env_mark
             end
-    end in
+    end
+
+// filename is the name of the file currently edited
+let interactive_mode (filename:string)
+                     (initial_mod:'modul)
+                     (tc:interactive_tc<'env,'modul>) : unit =
+    if Option.isSome (Options.codegen())
+    then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
 
     //type check prims and the dependencies
     let filenames = deps_of_our_file filename in
     let env = tc.tc_prims () in
-    let stack, env, ts = tc_deps initial_mod [] env filenames [] in
+    let stack, env, ts = tc_deps tc initial_mod [] env filenames [] in
 
     if Options.universes()
     && (FStar.Options.record_hints() //and if we're recording or using hints
     || FStar.Options.use_hints())
-    then FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go (1, 0) stack initial_mod env ts)
-    else go (1, 0) stack initial_mod env ts
+    then FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go (1, 0) filename tc stack initial_mod env ts)
+    else go (1, 0) filename tc stack initial_mod env ts
