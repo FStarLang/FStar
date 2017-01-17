@@ -82,7 +82,7 @@ let run i r expected =
 //    force_term r;
     Printf.printf "%d: ... \n" i;
     let _, tcenv = Pars.init() in
-    FStar.process_args() |> ignore; //set the command line args for debugging
+    FStar.Main.process_args() |> ignore; //set the command line args for debugging
     let x = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops] tcenv r in
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);

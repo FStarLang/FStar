@@ -14,8 +14,7 @@
    limitations under the License.
 *)
 #light "off"
-module FStar.FStar
-open FStar
+module FStar.Main
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
@@ -56,12 +55,10 @@ let report_errors fmods =
   end
 
 (* Extraction to OCaml, F# or Kremlin *)
-let codegen uf_mods_env =
+let codegen (umods, env) =
   let opt = Options.codegen () in
   if opt <> None then
-    let mllibs = match uf_mods_env with
-        | Inl (fmods, env) -> snd <| Util.fold_map StratifiedExtraction.ML.ExtractMod.extract (StratifiedExtraction.ML.Env.mkContext env) fmods
-        | Inr (umods, env) -> snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
+    let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
     let ext = match opt with
       | Some "FSharp" -> ".fs"
@@ -109,9 +106,8 @@ let go _ =
           if Options.verify_module () <> [] then
             Util.print_warning "Interactive mode; ignoring --verify_module";
           (* interactive_mode takes care of calling [find_deps_if_needed] *)
-          if Options.universes()
-          then interactive_mode filename None Universal.interactive_tc //and then call interactive mode
-          else interactive_mode filename None Stratified.interactive_tc //and then start checking chunks from the current buffer
+          interactive_mode filename None Universal.interactive_tc //and then call interactive mode
+	  //and then start checking chunks from the current buffer
         end else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if Options.indent () then
@@ -129,24 +125,15 @@ let go _ =
             else
               Parser.Dep.VerifyFigureItOut
           in
-          if Options.universes() then
-            let filenames = FStar.Dependencies.find_deps_if_needed verify_mode filenames in
-            let fmods, dsenv, env = Universal.batch_mode_tc filenames in
-            let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
-            report_errors module_names_and_times;
-            codegen (Inr (fmods |> List.map fst, env));
-            finished_message module_names_and_times 0
-          else
-            let fmods, dsenv, env = Stratified.batch_mode_tc verify_mode filenames in
-            let module_names_and_times = fmods |> List.map (fun (x, t) -> Stratified.module_or_interface_name x, t) in
-            report_errors module_names_and_times;
-            codegen (Inl (fmods |> List.map fst, env));
-            finished_message module_names_and_times 0
+          let filenames = FStar.Dependencies.find_deps_if_needed verify_mode filenames in
+          let fmods, dsenv, env = Universal.batch_mode_tc filenames in
+          let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
+          report_errors module_names_and_times;
+          codegen (fmods |> List.map fst, env);
+          finished_message module_names_and_times 0
         end else
           Util.print_error "no file provided\n"
 
-module F_Util = FStar.Absyn.Util
-module U_Util = FStar.Syntax.Util
 
 let main () =
   try
