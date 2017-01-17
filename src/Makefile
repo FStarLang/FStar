@@ -228,7 +228,7 @@ ocaml: clean_u_extract_ocaml
 	+make u_extract_misc u_extract_syntax u_extract_parser \
               u_extract_typechecker u_extract_tosyntax u_extract_smtencoding \
 	      u_extract_extraction u_extract_fstar
-	cp u_ocaml-output/*.ml ocaml_output/
+	cp u_ocaml-output/*.ml ocaml-output/
 
 # Fastest way to refresh the snapshot (if it works)
 ocaml-fstar-ocaml:
