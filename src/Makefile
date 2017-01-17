@@ -145,7 +145,6 @@ boot_fstis/FStar.Parser.Parse.fsti: parser/parse.fsi
 rename_as_fst:
 	./tools/rename_all_boot_fsts
 	cp parser/parseit.fsi u_boot_fsts/FStar.Parser.ParseIt.fsti
-	rm u_boot_fsts/FStar.Char.*
 
 prep_u_extract_ocaml: $(U_ALL_INTERFACES)
 	make rename_as_fst
