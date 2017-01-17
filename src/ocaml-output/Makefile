@@ -99,13 +99,14 @@ FStar_Parser_Parse.ml: parse.mly
 	# We are opening the same module twice but we need these modules
 	# open for the definition of tokens
 	echo "open Prims" > $@
+	echo "open FStar_Errors" >> $@
 	echo "open FStar_List" >> $@
 	echo "open FStar_Util" >> $@
 	echo "open FStar_Range" >> $@
 	echo "open FStar_Options" >> $@
-	echo "open FStar_Absyn_Syntax" >> $@
-	echo "open FStar_Absyn_Const" >> $@
-	echo "open FStar_Absyn_Util" >> $@
+	echo "open FStar_Syntax_Syntax" >> $@
+	echo "open FStar_Syntax_Const" >> $@
+	echo "open FStar_Syntax_Util" >> $@
 	echo "open FStar_Parser_AST" >> $@
 	echo "open FStar_Parser_Util" >> $@
 	echo "open FStar_Const" >> $@
