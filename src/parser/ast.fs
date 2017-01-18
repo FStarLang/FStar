@@ -205,7 +205,7 @@ and decl = {
   attrs: attributes_
 }
 and effect_decl =
-  (* KM : Is there really need of the genrality of decl here instead of e.g. lid * term ? *)
+  (* KM : Is there really need of the generality of decl here instead of e.g. lid * term ? *)
   | DefineEffect   of ident * list<binder> * term * list<decl> * list<decl>
   | RedefineEffect of ident * list<binder> * term
 
