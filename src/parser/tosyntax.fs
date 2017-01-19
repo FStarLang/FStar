@@ -475,7 +475,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
             | LocalBinder(x, aq) ->
               let t = desugar_term env (close_fun env t) in
               (* TODO : This should be a real check instead of just a warning *)
-              if x.sort.n <> S.Tm_unknown
+              if (match x.sort.n with | S.Tm_unknown -> false | _ -> true)
               then Util.print3_warning "Multiple ascriptions for %s in pattern, type %s was shadowed by %s"
                                        (Print.bv_to_string x)
                                        (Print.term_to_string x.sort)
