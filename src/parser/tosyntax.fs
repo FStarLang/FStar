@@ -272,6 +272,29 @@ let rec destruct_app_pattern env is_top_level p = match p.pat with
   | _ ->
     failwith "Not an app pattern"
 
+let rec gather_pattern_bound_vars_maybe_top acc p =
+  let gather_pattern_bound_vars_from_list =
+      List.fold_left gather_pattern_bound_vars_maybe_top acc
+  in
+  match p.pat with
+  | PatWild
+  | PatConst _
+  | PatVar (_, Some Implicit)
+  | PatName _
+  | PatTvar _
+  | PatOp _ -> acc
+  | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
+  | PatVar (x, _) -> set_add x acc
+  | PatList pats
+  | PatTuple  (pats, _)
+  | PatOr pats -> gather_pattern_bound_vars_from_list pats
+  | PatRecord guarded_pats -> gather_pattern_bound_vars_from_list (List.map snd guarded_pats)
+  | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
+
+let gather_pattern_bound_vars =
+  let acc = new_set (fun id1 id2 -> if id1.idText = id2.idText then 0 else 1) (fun _ -> 0) in
+  fun p -> gather_pattern_bound_vars_maybe_top acc p
+
 type bnd =
   | LocalBinder of bv     * S.aqual
   | LetBinder   of lident * S.term
@@ -1751,12 +1774,12 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let attrs = List.map (desugar_term env) attrs in
     (* If a toplevel let has a non-trivial pattern it needs to be desugared to a serie of top-level lets *)
     let expand_toplevel_pattern =
-      not isrec &&
+      isrec = NoLetQualifier &&
       begin match lets with
         | [ { pat = PatOp _}, _ ]
         | [ { pat = PatVar _}, _ ]
         | [ { pat = PatAscribed ({ pat = PatVar _}, _) }, _ ] -> false
-        | [ _ ] -> true
+        | [ p, _ ] -> not (is_app_pattern p)
         | _ -> false
       end
     in
@@ -1789,12 +1812,14 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
         | _ -> failwith "Desugaring a let did not produce a let"
     end
     else
-      (* *)
+      (* If there is a top-level pattern we first bind the result of the body *)
+      (* to some private anonymous name then we gather each idents bounded in *)
+      (* the pattern and introduce one toplevel binding for each of them      *)
       let (pat, body) = match lets with
         | [pat, body] -> pat, body
         | _ -> failwith "expand_toplevel_pattern should only allow single definition lets"
       in
-      let fresh_toplevel_name = Ident.gen "toplevelPatternElaboration" in
+      let fresh_toplevel_name = Ident.gen Range.dummyRange in
       let fresh_pat =
         let var_pat = mk_pattern (PatVar (fresh_toplevel_name, None)) Range.dummyRange in
         (* TODO : What about inner type ascriptions ? Is there any way to retrieve those ? *)
@@ -1804,25 +1829,26 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
       in
       (* TODO : We should ensure that the result of body always matches pat (add a type annotation ?) *)
       let main_let =
-        desugar_decl ({ d with d = TopLevelLet (isrec, [fresh_pat, body]) ; quals = Private :: d.quals })
+        desugar_decl env ({ d with
+          d = TopLevelLet (isrec, [fresh_pat, body]) ;
+          quals = Private :: d.quals })
       in
 
-      let build_projection env bv =
-        let main = mk_term (Var fresh_toplevel_name) Range.dummyRange Expr in
-        let bv_lid = lid_of_path [bv.ppname] in
-        let projectee = mk_term (Var bv_lid) Range.dummyRange Expr in
+      let build_projection (env, ses) id =
+        (* We build a new toplevel definition as follow and then desugar it *)
+        (* let id = match fresh_toplevel_name with | pat -> id              *)
+        let main = mk_term (Var (lid_of_ids [fresh_toplevel_name])) Range.dummyRange Expr in
+        let lid = lid_of_ids [id] in
+        let projectee = mk_term (Var lid) Range.dummyRange Expr in
         let body = mk_term (Match (main, [pat, None, projectee])) Range.dummyRange Expr in
-        let bv_pat = mk_pattern (PatVar (bv_lid, None)) Range.dummyRange in
-        desugar_decl env <| mk_decl (TopLevelLet(false, [bv_pat, body])) Range.dummyRange
+        let bv_pat = mk_pattern (PatVar (id, None)) Range.dummyRange in
+        (* TODO : do we need to put some attributes for this declaration ? *)
+        let id_decl = mk_decl (TopLevelLet(NoLetQualifier, [bv_pat, body])) Range.dummyRange [] in
+        let env, ses' = desugar_decl env id_decl in
+        env, ses @ ses'
       in
-      let bvs =
-        let ds_pat = desugar_match_pat env pat in
-        (* TODO : Is it possible to build a "dummy" empty env *)
-        let empty_env = failwith "bouh" in
-        fst <| FStar.Typechecker.Util.pat_as_exps empty_env ds_pat
-      in
-      let projected_lets = List.unique bvs |> List.fold_left build_projection env in
-      env, main_let :: projected_lets
+      let bvs = gather_pattern_bound_vars pat |> set_elements in
+      List.fold_left build_projection main_let bvs
 
   | Main t ->
     let e = desugar_term env t in
