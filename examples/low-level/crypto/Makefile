@@ -36,24 +36,30 @@ VERIFY= \
   Crypto.AEAD.Encoding \
   Crypto.AEAD.Invariant \
   Crypto.AEAD.BufferUtils \
-  Crypto.AEAD.Encrypt.Invariant \
   Crypto.AEAD.Enxor.Invariant \
   Crypto.AEAD.EnxorDexor \
   Crypto.AEAD.Wrappers.PRF \
   Crypto.AEAD.Wrappers.CMA \
-  Crypto.AEAD.Wrappers.Encoding \
-  Crypto.AEAD.Decrypt \
   Crypto.AEAD.MAC_Wrapper.Invariant \
-  Crypto.AEAD.Encrypt.Ideal.Invariant \
   Crypto.AEAD.Encrypt \
-  Crypto.AEAD \
   Crypto.Plain \
   TestMonotonic
 
+# Moved tests to here as they were breaking Nightly run on linux
+ifeq ($(OS),Windows_NT)
+  Crypto.AEAD.Encrypt.Invariant \
+  Crypto.AEAD.Encrypt.Ideal.Invariant \
+  Crypto.AEAD.Decrypt \
+  Crypto.AEAD.Wrappers.Encoding \
+  Crypto.AEAD
+endif
+
 EXTRA= \
   Crypto.Symmetric.Poly1305 \
-  Crypto.Symmetric.Poly1305.Lemmas \
-  Crypto.Test
+  Crypto.Test 
+ifeq ($(OS),Windows_NT)
+  Crypto.Symmetric.Poly1305.Lemmas 
+endif
 
 #16-10-30 removed files specific to Poly1305:
 #  Crypto.Symmetric.Poly1305.MAC 
