@@ -45,8 +45,12 @@ VERIFY= \
   Crypto.Plain \
   TestMonotonic
 
-# Moved tests to here as they were breaking Nightly run on linux
+# Moved tests to end as they were breaking Nightly run on linux
+# Found info online saying comments or ifeq in middle of split lines
+# cause problems so moved these on Linux fails out here
+# need to add \ at start so concats onto full line
 ifeq ($(OS),Windows_NT)
+   \
   Crypto.AEAD.Encrypt.Invariant \
   Crypto.AEAD.Encrypt.Ideal.Invariant \
   Crypto.AEAD.Decrypt \
@@ -58,6 +62,7 @@ EXTRA= \
   Crypto.Symmetric.Poly1305 \
   Crypto.Test 
 ifeq ($(OS),Windows_NT)
+   \
   Crypto.Symmetric.Poly1305.Lemmas 
 endif
 
