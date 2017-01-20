@@ -75,11 +75,11 @@ let ini_params () =
   then raise <| BU.Failure (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
   else ()
   end;
-  BU.format1 "-smt2 -in \
-    AUTO_CONFIG=false \
-    MODEL=true \
-    SMT.RELEVANCY=2 \
-    SMT.RANDOM_SEED=%s" (string_of_int (Options.z3_seed()))
+  (String.concat " "
+                (List.append
+                 [ "-smt2 -in auto_config=false model=true smt.relevancy=2";
+                   (Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed()))) ]
+                 (Options.z3_cliopt())))
 
 type label = string
 type unsat_core = option<list<string>>
@@ -254,11 +254,10 @@ let doZ3Exe =
         res
 
 let z3_options () =
-    BU.format1 "(set-option :global-decls false)\
+    "(set-option :global-decls false)\
      (set-option :smt.mbqi false)\
      (set-option :auto_config false)\
-     (set-option :produce-unsat-cores true)\
-     (set-option :smt.random_seed %s)\n" (string_of_int (Options.z3_seed()))
+     (set-option :produce-unsat-cores true)"
 
 type job<'a> = {
     job:unit -> 'a;
