@@ -161,11 +161,11 @@ end
 end))
 
 
-let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun uu___105_358 -> (match (uu___105_358) with
+let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun uu___91_358 -> (match (uu___91_358) with
 | (FStar_Syntax_Syntax.Delta_constant) | (FStar_Syntax_Syntax.Delta_equational) -> begin
 None
 end
-| FStar_Syntax_Syntax.Delta_defined_at_level (_0_243) when (_0_243 = (Prims.parse_int "1")) -> begin
+| FStar_Syntax_Syntax.Delta_defined_at_level (_0_158) when (_0_158 = (Prims.parse_int "1")) -> begin
 Some (FStar_Syntax_Syntax.Delta_constant)
 end
 | FStar_Syntax_Syntax.Delta_defined_at_level (i) -> begin

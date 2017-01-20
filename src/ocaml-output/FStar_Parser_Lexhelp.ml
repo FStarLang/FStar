@@ -21,12 +21,12 @@ end))))
 let default_string_finish = (fun endm b s -> FStar_Parser_Parse.STRING (s))
 
 
-let call_string_finish = (fun fin buf endm b -> (let _0_359 = (FStar_Bytes.close buf)
-in (fin endm b _0_359)))
+let call_string_finish = (fun fin buf endm b -> (let _0_274 = (FStar_Bytes.close buf)
+in (fin endm b _0_274)))
 
 
-let add_string : FStar_Bytes.bytebuf  ->  Prims.string  ->  Prims.unit = (fun buf x -> (let _0_360 = (FStar_Bytes.string_as_unicode_bytes x)
-in (FStar_Bytes.emit_bytes buf _0_360)))
+let add_string : FStar_Bytes.bytebuf  ->  Prims.string  ->  Prims.unit = (fun buf x -> (let _0_275 = (FStar_Bytes.string_as_unicode_bytes x)
+in (FStar_Bytes.emit_bytes buf _0_275)))
 
 
 let add_int_char : FStar_Bytes.bytebuf  ->  Prims.int  ->  Prims.unit = (fun buf c -> ((FStar_Bytes.emit_int_as_byte buf (c mod (Prims.parse_int "256")));
@@ -43,9 +43,9 @@ let add_byte_char : FStar_Bytes.bytebuf  ->  FStar_BaseTypes.char  ->  Prims.uni
 let stringbuf_as_bytes : FStar_Bytes.bytebuf  ->  FStar_Bytes.bytes = (fun buf -> (
 
 let bytes = (FStar_Bytes.close buf)
-in (let _0_362 = (let _0_361 = (FStar_Bytes.length bytes)
-in (_0_361 / (Prims.parse_int "2")))
-in (FStar_Bytes.make (fun i -> (FStar_Bytes.get bytes (FStar_Mul.op_Star i (Prims.parse_int "2")))) _0_362))))
+in (let _0_277 = (let _0_276 = (FStar_Bytes.length bytes)
+in (_0_276 / (Prims.parse_int "2")))
+in (FStar_Bytes.make (fun i -> (FStar_Bytes.get bytes (FStar_Mul.op_Star i (Prims.parse_int "2")))) _0_277))))
 
 
 let stringbuf_is_bytes : FStar_Bytes.bytebuf  ->  Prims.bool = (fun buf -> (
@@ -54,13 +54,13 @@ let bytes = (FStar_Bytes.close buf)
 in (
 
 let ok = (FStar_Util.mk_ref true)
-in ((let _0_366 = (let _0_364 = (let _0_363 = (FStar_Bytes.length bytes)
-in (_0_363 / (Prims.parse_int "2")))
-in (_0_364 - (Prims.parse_int "1")))
-in (FStar_Util.for_range (Prims.parse_int "0") _0_366 (fun i -> (
+in ((let _0_281 = (let _0_279 = (let _0_278 = (FStar_Bytes.length bytes)
+in (_0_278 / (Prims.parse_int "2")))
+in (_0_279 - (Prims.parse_int "1")))
+in (FStar_Util.for_range (Prims.parse_int "0") _0_281 (fun i -> (
 
-let uu____109 = (let _0_365 = (FStar_Bytes.get bytes ((FStar_Mul.op_Star i (Prims.parse_int "2")) + (Prims.parse_int "1")))
-in (_0_365 <> (Prims.parse_int "0")))
+let uu____109 = (let _0_280 = (FStar_Bytes.get bytes ((FStar_Mul.op_Star i (Prims.parse_int "2")) + (Prims.parse_int "1")))
+in (_0_280 <> (Prims.parse_int "0")))
 in (match (uu____109) with
 | true -> begin
 (FStar_ST.write ok false)
@@ -119,16 +119,16 @@ let unicodegraph_short : Prims.string  ->  FStar_BaseTypes.uint16 = (fun s -> (m
 (failwith "unicodegraph")
 end
 | uu____145 -> begin
-(FStar_Util.uint16_of_int (let _0_375 = (let _0_373 = (let _0_370 = (let _0_367 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "0")))
-in (FStar_Mul.op_Star _0_367 (Prims.parse_int "4096")))
-in (let _0_369 = (let _0_368 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "1")))
-in (FStar_Mul.op_Star _0_368 (Prims.parse_int "256")))
-in (_0_370 + _0_369)))
-in (let _0_372 = (let _0_371 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "2")))
-in (FStar_Mul.op_Star _0_371 (Prims.parse_int "16")))
-in (_0_373 + _0_372)))
-in (let _0_374 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "3")))
-in (_0_375 + _0_374))))
+(FStar_Util.uint16_of_int (let _0_290 = (let _0_288 = (let _0_285 = (let _0_282 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "0")))
+in (FStar_Mul.op_Star _0_282 (Prims.parse_int "4096")))
+in (let _0_284 = (let _0_283 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "1")))
+in (FStar_Mul.op_Star _0_283 (Prims.parse_int "256")))
+in (_0_285 + _0_284)))
+in (let _0_287 = (let _0_286 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "2")))
+in (FStar_Mul.op_Star _0_286 (Prims.parse_int "16")))
+in (_0_288 + _0_287)))
+in (let _0_289 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "3")))
+in (_0_290 + _0_289))))
 end))
 
 
@@ -137,10 +137,10 @@ let hexgraph_short : Prims.string  ->  FStar_BaseTypes.uint16 = (fun s -> (match
 (failwith "hexgraph")
 end
 | uu____151 -> begin
-(FStar_Util.uint16_of_int (let _0_378 = (let _0_376 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "0")))
-in (FStar_Mul.op_Star _0_376 (Prims.parse_int "16")))
-in (let _0_377 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "1")))
-in (_0_378 + _0_377))))
+(FStar_Util.uint16_of_int (let _0_293 = (let _0_291 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "0")))
+in (FStar_Mul.op_Star _0_291 (Prims.parse_int "16")))
+in (let _0_292 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "1")))
+in (_0_293 + _0_292))))
 end))
 
 
@@ -151,28 +151,28 @@ end
 | uu____166 -> begin
 (
 
-let high = (let _0_387 = (let _0_385 = (let _0_382 = (let _0_379 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "0")))
-in (FStar_Mul.op_Star _0_379 (Prims.parse_int "4096")))
-in (let _0_381 = (let _0_380 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "1")))
-in (FStar_Mul.op_Star _0_380 (Prims.parse_int "256")))
-in (_0_382 + _0_381)))
-in (let _0_384 = (let _0_383 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "2")))
-in (FStar_Mul.op_Star _0_383 (Prims.parse_int "16")))
-in (_0_385 + _0_384)))
-in (let _0_386 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "3")))
-in (_0_387 + _0_386)))
+let high = (let _0_302 = (let _0_300 = (let _0_297 = (let _0_294 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "0")))
+in (FStar_Mul.op_Star _0_294 (Prims.parse_int "4096")))
+in (let _0_296 = (let _0_295 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "1")))
+in (FStar_Mul.op_Star _0_295 (Prims.parse_int "256")))
+in (_0_297 + _0_296)))
+in (let _0_299 = (let _0_298 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "2")))
+in (FStar_Mul.op_Star _0_298 (Prims.parse_int "16")))
+in (_0_300 + _0_299)))
+in (let _0_301 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "3")))
+in (_0_302 + _0_301)))
 in (
 
-let low = (let _0_396 = (let _0_394 = (let _0_391 = (let _0_388 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "4")))
-in (FStar_Mul.op_Star _0_388 (Prims.parse_int "4096")))
-in (let _0_390 = (let _0_389 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "5")))
-in (FStar_Mul.op_Star _0_389 (Prims.parse_int "256")))
-in (_0_391 + _0_390)))
-in (let _0_393 = (let _0_392 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "6")))
-in (FStar_Mul.op_Star _0_392 (Prims.parse_int "16")))
-in (_0_394 + _0_393)))
-in (let _0_395 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "7")))
-in (_0_396 + _0_395)))
+let low = (let _0_311 = (let _0_309 = (let _0_306 = (let _0_303 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "4")))
+in (FStar_Mul.op_Star _0_303 (Prims.parse_int "4096")))
+in (let _0_305 = (let _0_304 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "5")))
+in (FStar_Mul.op_Star _0_304 (Prims.parse_int "256")))
+in (_0_306 + _0_305)))
+in (let _0_308 = (let _0_307 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "6")))
+in (FStar_Mul.op_Star _0_307 (Prims.parse_int "16")))
+in (_0_309 + _0_308)))
+in (let _0_310 = (hexdigit (FStar_Util.char_at s (Prims.parse_int "7")))
+in (_0_311 + _0_310)))
 in (match ((high = (Prims.parse_int "0"))) with
 | true -> begin
 ((None), ((FStar_Util.uint16_of_int low)))
@@ -289,9 +289,9 @@ end
 FStar_Parser_Parse.STRING ((FStar_Bytes.string_as_unicode_bytes (FStar_Range.file_of_range r)))
 end
 | "__LINE__" -> begin
-FStar_Parser_Parse.INT ((let _0_398 = (let _0_397 = (FStar_Range.line_of_pos (FStar_Range.start_of_range r))
-in (FStar_All.pipe_left FStar_Util.string_of_int _0_397))
-in ((_0_398), (false))))
+FStar_Parser_Parse.INT ((let _0_313 = (let _0_312 = (FStar_Range.line_of_pos (FStar_Range.start_of_range r))
+in (FStar_All.pipe_left FStar_Util.string_of_int _0_312))
+in ((_0_313), (false))))
 end
 | uu____472 -> begin
 (match ((FStar_Util.starts_with s FStar_Ident.reserved_prefix)) with

@@ -68,9 +68,9 @@ y
 end))
 
 
-let string_of_fsdoco : (Prims.string * (Prims.string * Prims.string) Prims.list) Prims.option  ->  Prims.string = (fun d -> (string_of_optiont (fun x -> (let _0_715 = (let _0_714 = (FStar_Parser_AST.string_of_fsdoc x)
-in (Prims.strcat _0_714 "*)"))
-in (Prims.strcat "(*" _0_715))) "" d))
+let string_of_fsdoco : (Prims.string * (Prims.string * Prims.string) Prims.list) Prims.option  ->  Prims.string = (fun d -> (string_of_optiont (fun x -> (let _0_630 = (let _0_629 = (FStar_Parser_AST.string_of_fsdoc x)
+in (Prims.strcat _0_629 "*)"))
+in (Prims.strcat "(*" _0_630))) "" d))
 
 
 let string_of_termo : FStar_Parser_AST.term Prims.option  ->  Prims.string = (fun t -> (string_of_optiont FStar_Parser_AST.term_to_string "" t))
@@ -87,31 +87,31 @@ end
 "abbrev"
 end
 | FStar_Parser_AST.TyconRecord (id, _bb, _ko, fields) -> begin
-(let _0_723 = (let _0_722 = (let _0_721 = (let _0_720 = (FStar_All.pipe_right fields (FStar_List.map (fun uu____199 -> (match (uu____199) with
+(let _0_638 = (let _0_637 = (let _0_636 = (let _0_635 = (FStar_All.pipe_right fields (FStar_List.map (fun uu____199 -> (match (uu____199) with
 | (id, t, doco) -> begin
-(let _0_719 = (string_of_fsdoco doco)
-in (let _0_718 = (let _0_717 = (let _0_716 = (FStar_Parser_AST.term_to_string t)
-in (Prims.strcat ":" _0_716))
-in (Prims.strcat id.FStar_Ident.idText _0_717))
-in (Prims.strcat _0_719 _0_718)))
+(let _0_634 = (string_of_fsdoco doco)
+in (let _0_633 = (let _0_632 = (let _0_631 = (FStar_Parser_AST.term_to_string t)
+in (Prims.strcat ":" _0_631))
+in (Prims.strcat id.FStar_Ident.idText _0_632))
+in (Prims.strcat _0_634 _0_633)))
 end))))
-in (FStar_All.pipe_right _0_720 (FStar_String.concat "; ")))
-in (Prims.strcat _0_721 " }"))
-in (Prims.strcat " = { " _0_722))
-in (Prims.strcat id.FStar_Ident.idText _0_723))
+in (FStar_All.pipe_right _0_635 (FStar_String.concat "; ")))
+in (Prims.strcat _0_636 " }"))
+in (Prims.strcat " = { " _0_637))
+in (Prims.strcat id.FStar_Ident.idText _0_638))
 end
 | FStar_Parser_AST.TyconVariant (id, _bb, _ko, vars) -> begin
-(let _0_730 = (let _0_729 = (let _0_728 = (FStar_All.pipe_right vars (FStar_List.map (fun uu____266 -> (match (uu____266) with
+(let _0_645 = (let _0_644 = (let _0_643 = (FStar_All.pipe_right vars (FStar_List.map (fun uu____266 -> (match (uu____266) with
 | (id, trmo, doco, u) -> begin
-(let _0_727 = (string_of_fsdoco doco)
-in (let _0_726 = (let _0_725 = (let _0_724 = (string_of_optiont FStar_Parser_AST.term_to_string "" trmo)
-in (Prims.strcat ":" _0_724))
-in (Prims.strcat id.FStar_Ident.idText _0_725))
-in (Prims.strcat _0_727 _0_726)))
+(let _0_642 = (string_of_fsdoco doco)
+in (let _0_641 = (let _0_640 = (let _0_639 = (string_of_optiont FStar_Parser_AST.term_to_string "" trmo)
+in (Prims.strcat ":" _0_639))
+in (Prims.strcat id.FStar_Ident.idText _0_640))
+in (Prims.strcat _0_642 _0_641)))
 end))))
-in (FStar_All.pipe_right _0_728 (FStar_String.concat " | ")))
-in (Prims.strcat " = " _0_729))
-in (Prims.strcat id.FStar_Ident.idText _0_730))
+in (FStar_All.pipe_right _0_643 (FStar_String.concat " | ")))
+in (Prims.strcat " = " _0_644))
+in (Prims.strcat id.FStar_Ident.idText _0_645))
 end))
 
 
@@ -136,9 +136,9 @@ end
 
 let termty = (FStar_List.map (fun uu____325 -> (match (uu____325) with
 | (p, t) -> begin
-(let _0_732 = (FStar_Parser_AST.pat_to_string p)
-in (let _0_731 = (FStar_Parser_AST.term_to_string t)
-in ((_0_732), (_0_731))))
+(let _0_647 = (FStar_Parser_AST.pat_to_string p)
+in (let _0_646 = (FStar_Parser_AST.term_to_string t)
+in ((_0_647), (_0_646))))
 end)) pats)
 in (
 
@@ -152,27 +152,27 @@ end
 "main ..."
 end
 | FStar_Parser_AST.Assume (i, t) -> begin
-(let _0_735 = (let _0_734 = (let _0_733 = (FStar_Parser_AST.term_to_string t)
-in (Prims.strcat ":" _0_733))
-in (Prims.strcat i.FStar_Ident.idText _0_734))
-in (Prims.strcat "assume " _0_735))
+(let _0_650 = (let _0_649 = (let _0_648 = (FStar_Parser_AST.term_to_string t)
+in (Prims.strcat ":" _0_648))
+in (Prims.strcat i.FStar_Ident.idText _0_649))
+in (Prims.strcat "assume " _0_650))
 end
 | FStar_Parser_AST.Tycon (uu____344, tys) -> begin
-(let _0_740 = (let _0_739 = (FStar_All.pipe_right tys (FStar_List.map (fun uu____368 -> (match (uu____368) with
+(let _0_655 = (let _0_654 = (FStar_All.pipe_right tys (FStar_List.map (fun uu____368 -> (match (uu____368) with
 | (t, d) -> begin
-(let _0_738 = (string_of_tycon t)
-in (let _0_737 = (let _0_736 = (string_of_fsdoco d)
-in (Prims.strcat " " _0_736))
-in (Prims.strcat _0_738 _0_737)))
+(let _0_653 = (string_of_tycon t)
+in (let _0_652 = (let _0_651 = (string_of_fsdoco d)
+in (Prims.strcat " " _0_651))
+in (Prims.strcat _0_653 _0_652)))
 end))))
-in (FStar_All.pipe_right _0_739 (FStar_String.concat " and ")))
-in (Prims.strcat "type " _0_740))
+in (FStar_All.pipe_right _0_654 (FStar_String.concat " and ")))
+in (Prims.strcat "type " _0_655))
 end
 | FStar_Parser_AST.Val (i, t) -> begin
-(let _0_743 = (let _0_742 = (let _0_741 = (FStar_Parser_AST.term_to_string t)
-in (Prims.strcat ":" _0_741))
-in (Prims.strcat i.FStar_Ident.idText _0_742))
-in (Prims.strcat "val " _0_743))
+(let _0_658 = (let _0_657 = (let _0_656 = (FStar_Parser_AST.term_to_string t)
+in (Prims.strcat ":" _0_656))
+in (Prims.strcat i.FStar_Ident.idText _0_657))
+in (Prims.strcat "val " _0_658))
 end
 | FStar_Parser_AST.Exception (i, uu____394) -> begin
 (Prims.strcat "exception " i.FStar_Ident.idText)
@@ -368,8 +368,8 @@ let on = (FStar_Options.prepend_output_dir "index.md")
 in (
 
 let fd = (FStar_Util.open_file_for_writing on)
-in ((FStar_List.iter (fun m -> (let _0_744 = (FStar_Util.format "%s\n" ((m.FStar_Ident.str)::[]))
-in (FStar_Util.append_to_file fd _0_744))) mods);
+in ((FStar_List.iter (fun m -> (let _0_659 = (FStar_Util.format "%s\n" ((m.FStar_Ident.str)::[]))
+in (FStar_Util.append_to_file fd _0_659))) mods);
 (FStar_Util.close_file fd);
 ))))))
 

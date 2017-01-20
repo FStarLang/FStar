@@ -479,7 +479,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
               let t = desugar_term env (close_fun env t) in
               (* TODO : This should be a real check instead of just a warning *)
               if (match x.sort.n with | S.Tm_unknown -> false | _ -> true)
-              then Util.print3_warning "Multiple ascriptions for %s in pattern, type %s was shadowed by %s"
+              then BU.print3_warning "Multiple ascriptions for %s in pattern, type %s was shadowed by %s"
                                        (Print.bv_to_string x)
                                        (Print.term_to_string x.sort)
                                        (Print.term_to_string t) ;
@@ -726,7 +726,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
             begin match args with
               | [] -> head
               | _ ->
-                let universes, args = Util.take (fun (_, imp) -> imp = UnivApp) args in
+                let universes, args = BU.take (fun (_, imp) -> imp = UnivApp) args in
                 let universes = List.map (fun x -> desugar_universe (fst x)) universes in
                 let args = List.map (fun (t, imp) ->
                   let te = desugar_term env t in
@@ -1141,7 +1141,7 @@ and desugar_comp r default_ok env t =
     if List.length args = 0
     then fail (BU.format1 "Not enough args to effect %s" (Print.lid_to_string eff));
     let is_universe (_, imp) = imp = UnivApp in
-    let universes, args = Util.take is_universe args in
+    let universes, args = BU.take is_universe args in
     let universes = List.map (fun (u, imp) -> desugar_universe u) universes in
     let result_arg, rest = List.hd args, List.tl args in
     let result_typ = desugar_typ env (fst result_arg) in

@@ -1,9 +1,29 @@
 [
-  "·a\u0007íŽRJ>˜h\u000bo¤Ñ£l",
+  "\u0016‘\u0012x\u0014n÷Î¿3É¡câÐ.",
   [
     [ "MRefHeap.contains", 1, 2, 1, [ "@query", "equation_Prims.dfst" ], 0 ],
-    [ "MRefHeap.sel", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.sel", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "MRefHeap.sel",
+      1,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.sel",
+      2,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
     [
       "MRefHeap.sel",
       3,
@@ -21,36 +41,132 @@
       ],
       0
     ],
-    [ "MRefHeap.alloc_ref", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 2, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 3, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 4, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 5, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 6, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 7, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 8, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 9, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 10, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 11, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 12, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 13, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 14, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 15, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.alloc_ref", 16, 2, 1, [ "@query" ], 0 ],
     [
       "MRefHeap.alloc_ref",
-      17,
+      1,
       2,
       1,
       [
         "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.alloc_ref",
+      2,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.alloc_ref",
+      3,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.alloc_ref",
+      4,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [ "MRefHeap.alloc_ref", 5, 2, 1, [ "@query" ], 0 ],
+    [
+      "MRefHeap.alloc_ref",
+      6,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.alloc_ref",
+      7,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.alloc_ref",
+      8,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.alloc_ref",
+      9,
+      2,
+      1,
+      [
+        "@query", "equation_MRefHeap.preorder_t",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.alloc_ref",
+      10,
+      2,
+      1,
+      [
+        "@query", "equation_MRefHeap.preorder_t",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.alloc_ref",
+      11,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.alloc_ref",
+      12,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
         "refinement_interpretation_Tm_refine_d0c876227b3dc37e4d9eedf29fb0eafc"
       ],
       0
     ],
     [
       "MRefHeap.alloc_ref",
-      18,
+      13,
       2,
       1,
       [
@@ -58,16 +174,17 @@
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
         "data_elim_Prims.Mkdtuple2", "data_elim_Prims.Mktuple2",
         "data_elim_Prims.Some", "equation_MRefHeap.contains",
-        "equation_MRefHeap.heap", "equation_MRefHeap.mref",
-        "equation_MRefHeap.sel", "equation_Prims.dfst",
-        "equation_Prims.dsnd", "equation_Prims.fst", "equation_Prims.nat",
-        "equation_Prims.pure_pre", "equation_Prims.snd",
-        "fuel_guarded_inversion_Prims.dtuple2",
+        "equation_MRefHeap.heap", "equation_MRefHeap.heap_cell",
+        "equation_MRefHeap.heap_cell_a", "equation_MRefHeap.mref",
+        "equation_MRefHeap.preorder_t", "equation_MRefHeap.sel",
+        "equation_Prims.dfst", "equation_Prims.dsnd", "equation_Prims.fst",
+        "equation_Prims.nat", "equation_Prims.pure_pre",
+        "equation_Prims.snd", "fuel_guarded_inversion_Prims.dtuple2",
+        "fuel_guarded_inversion_Prims.option",
         "fuel_guarded_inversion_Prims.tuple2",
         "function_token_typing_Prims.pure_pre", "int_inversion",
-        "interpretation_Tm_abs_7baa749a1c20df7e986defd69725238f",
-        "interpretation_Tm_abs_ff245d131b2ebbcdb9f843ba10864455",
-        "interpretation_Tm_arrow_058d1e1a9855dfe006e724d80039e040",
+        "interpretation_Tm_abs_f8a2e779a3f788d76844eb0b0efcb1d3",
+        "interpretation_Tm_arrow_7c94c96dc293d3467019c1d15bb27fe9",
         "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "proj_equation_Prims.Mkdtuple2__1",
@@ -81,18 +198,31 @@
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Mktuple2__a",
         "projection_inverse_Prims.Mktuple2__b",
-        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_181a427542e18fc1b8d103725d2e6fcb",
+        "projection_inverse_Prims.None_a", "projection_inverse_Prims.Some_a",
+        "projection_inverse_Prims.Some_v",
+        "refinement_interpretation_Tm_refine_254e04dec7f833b80538e288b12a4573",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_d0c876227b3dc37e4d9eedf29fb0eafc",
+        "token_correspondence_MRefHeap.heap_cell_a",
         "token_correspondence_Prims.snd", "typing_Prims.dsnd"
       ],
       0
     ],
-    [ "MRefHeap.alloc_ref", 19, 2, 1, [ "@query" ], 0 ],
     [
       "MRefHeap.alloc_ref",
-      20,
+      14,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.alloc_ref",
+      15,
       2,
       1,
       [
@@ -101,51 +231,98 @@
       ],
       0
     ],
-    [ "MRefHeap.upd", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.upd", 2, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.upd", 3, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.upd", 4, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.upd", 5, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.upd", 6, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.upd", 7, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.upd", 8, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.upd", 9, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.upd", 10, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.upd", 11, 2, 1, [ "@query" ], 0 ],
-    [ "MRefHeap.upd", 12, 2, 1, [ "@query" ], 0 ],
     [
       "MRefHeap.upd",
-      13,
+      1,
       2,
       1,
       [
         "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.upd",
+      2,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [ "MRefHeap.upd", 3, 2, 1, [ "@query" ], 0 ],
+    [
+      "MRefHeap.upd",
+      4,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.upd",
+      5,
+      2,
+      1,
+      [
+        "@query", "equation_MRefHeap.preorder_t",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.upd",
+      6,
+      2,
+      1,
+      [
+        "@query", "equation_MRefHeap.preorder_t",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+      ],
+      0
+    ],
+    [
+      "MRefHeap.upd",
+      7,
+      2,
+      1,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
         "refinement_interpretation_Tm_refine_d0c876227b3dc37e4d9eedf29fb0eafc"
       ],
       0
     ],
     [
       "MRefHeap.upd",
-      14,
+      8,
       2,
       1,
       [
         "@query", "constructor_distinct_Prims.Mkdtuple2",
         "constructor_distinct_Prims.Mktuple2",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
-        "data_elim_Prims.Mkdtuple2", "data_elim_Prims.Some",
+        "data_elim_Prims.Mkdtuple2", "data_elim_Prims.Mktuple2",
+        "data_elim_Prims.Some", "disc_equation_Prims.None",
         "disc_equation_Prims.Some", "equation_MRefHeap.contains",
-        "equation_MRefHeap.heap", "equation_MRefHeap.mref",
-        "equation_MRefHeap.sel", "equation_Prims.dfst",
-        "equation_Prims.dsnd", "equation_Prims.fst", "equation_Prims.nat",
-        "equation_Prims.pure_pre", "equation_Prims.snd",
+        "equation_MRefHeap.heap", "equation_MRefHeap.heap_cell",
+        "equation_MRefHeap.heap_cell_a", "equation_MRefHeap.mref",
+        "equation_MRefHeap.preorder_t", "equation_MRefHeap.sel",
+        "equation_Prims.dfst", "equation_Prims.dsnd", "equation_Prims.fst",
+        "equation_Prims.nat", "equation_Prims.snd",
         "fuel_guarded_inversion_Prims.dtuple2",
         "fuel_guarded_inversion_Prims.option",
         "fuel_guarded_inversion_Prims.tuple2",
-        "function_token_typing_Prims.pure_pre", "int_inversion",
-        "interpretation_Tm_abs_7baa749a1c20df7e986defd69725238f",
-        "interpretation_Tm_abs_b1c098902ab92636bf036535b1d11700",
-        "interpretation_Tm_arrow_058d1e1a9855dfe006e724d80039e040",
+        "function_token_typing_MRefHeap.heap_cell", "int_inversion",
+        "interpretation_Tm_abs_4711bb6e0c161515520abf3cede6e548",
+        "interpretation_Tm_arrow_7c94c96dc293d3467019c1d15bb27fe9",
+        "lemma_Prims.invertOption",
         "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_Equality", "proj_equation_Prims.Mkdtuple2__1",
         "proj_equation_Prims.Mkdtuple2__2",
@@ -159,17 +336,20 @@
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Mktuple2__a",
         "projection_inverse_Prims.Mktuple2__b",
-        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_181a427542e18fc1b8d103725d2e6fcb",
+        "projection_inverse_Prims.None_a", "projection_inverse_Prims.Some_a",
+        "projection_inverse_Prims.Some_v",
+        "refinement_interpretation_Tm_refine_254e04dec7f833b80538e288b12a4573",
+        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_d0c876227b3dc37e4d9eedf29fb0eafc",
-        "token_correspondence_Prims.snd", "typing_Prims.dsnd"
+        "token_correspondence_MRefHeap.heap_cell_a",
+        "token_correspondence_Prims.snd"
       ],
       0
     ],
     [
       "MRefHeap.upd",
-      15,
+      9,
       2,
       1,
       [
@@ -184,9 +364,9 @@
       2,
       1,
       [
-        "@query", "equation_Prims.fst", "equation_Prims.nat",
-        "equation_Prims.snd",
-        "interpretation_Tm_abs_21621cfc2510dd1e4493283e543296a2",
+        "@query", "equation_MRefHeap.heap_cell", "equation_Prims.fst",
+        "equation_Prims.nat", "equation_Prims.snd",
+        "interpretation_Tm_abs_543febcaa427b2401496410f0022772f",
         "pretyping_ae567c2fb75be05905677af440075565",
         "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
         "projection_inverse_Prims.Mktuple2__1",

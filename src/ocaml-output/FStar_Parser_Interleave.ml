@@ -29,15 +29,15 @@ in (
 
 let is_let = (fun x d -> (match (d.FStar_Parser_AST.d) with
 | FStar_Parser_AST.TopLevelLet (uu____70, defs) -> begin
-(let _0_942 = (FStar_Parser_AST.lids_of_let defs)
-in (FStar_All.pipe_right _0_942 (FStar_Util.for_some (id_eq_lid x))))
+(let _0_857 = (FStar_Parser_AST.lids_of_let defs)
+in (FStar_All.pipe_right _0_857 (FStar_Util.for_some (id_eq_lid x))))
 end
 | FStar_Parser_AST.Tycon (uu____79, tys) -> begin
-(let _0_943 = (FStar_All.pipe_right tys (FStar_List.map (fun uu____98 -> (match (uu____98) with
+(let _0_858 = (FStar_All.pipe_right tys (FStar_List.map (fun uu____98 -> (match (uu____98) with
 | (x, uu____103) -> begin
 x
 end))))
-in (FStar_All.pipe_right _0_943 (FStar_Util.for_some (fun uu___157_106 -> (match (uu___157_106) with
+in (FStar_All.pipe_right _0_858 (FStar_Util.for_some (fun uu___143_106 -> (match (uu___143_106) with
 | FStar_Parser_AST.TyconAbbrev (id', uu____108, uu____109, uu____110) -> begin
 (x.FStar_Ident.idText = id'.FStar_Ident.idText)
 end
@@ -85,12 +85,12 @@ in (
 
 let rec aux = (fun out iface impl -> (match (iface) with
 | [] -> begin
-(let _0_944 = (FStar_All.pipe_right (FStar_List.rev out) FStar_List.flatten)
-in (FStar_List.append _0_944 impl))
+(let _0_859 = (FStar_All.pipe_right (FStar_List.rev out) FStar_List.flatten)
+in (FStar_List.append _0_859 impl))
 end
 | (d)::ds -> begin
 (match (d.FStar_Parser_AST.d) with
-| FStar_Parser_AST.Tycon (uu____234, tys) when (FStar_All.pipe_right tys (FStar_Util.for_some (fun uu___158_251 -> (match (uu___158_251) with
+| FStar_Parser_AST.Tycon (uu____234, tys) when (FStar_All.pipe_right tys (FStar_Util.for_some (fun uu___144_251 -> (match (uu___144_251) with
 | (FStar_Parser_AST.TyconAbstract (uu____255), uu____256) -> begin
 true
 end
@@ -108,22 +108,22 @@ in (match (uu____272) with
 ()
 end
 | Some ({FStar_Parser_AST.d = FStar_Parser_AST.Val (uu____277); FStar_Parser_AST.drange = r; FStar_Parser_AST.doc = uu____279; FStar_Parser_AST.quals = uu____280; FStar_Parser_AST.attrs = uu____281}) -> begin
-(Prims.raise (FStar_Errors.Error ((let _0_946 = (let _0_945 = (FStar_Parser_AST.decl_to_string d)
-in (FStar_Util.format1 "%s is repeated in the implementation" _0_945))
-in ((_0_946), (r))))))
+(Prims.raise (FStar_Errors.Error ((let _0_861 = (let _0_860 = (FStar_Parser_AST.decl_to_string d)
+in (FStar_Util.format1 "%s is repeated in the implementation" _0_860))
+in ((_0_861), (r))))))
 end
 | Some (i) -> begin
-(Prims.raise (FStar_Errors.Error ((let _0_948 = (let _0_947 = (FStar_Parser_AST.decl_to_string d)
-in (FStar_Util.format1 "%s in the interface is implemented with a \'type\'" _0_947))
-in ((_0_948), (i.FStar_Parser_AST.drange))))))
+(Prims.raise (FStar_Errors.Error ((let _0_863 = (let _0_862 = (FStar_Parser_AST.decl_to_string d)
+in (FStar_Util.format1 "%s in the interface is implemented with a \'type\'" _0_862))
+in ((_0_863), (i.FStar_Parser_AST.drange))))))
 end));
 (
 
 let uu____286 = (prefix_until_let x iface)
 in (match (uu____286) with
 | Some (uu____294) -> begin
-(Prims.raise (FStar_Errors.Error ((let _0_949 = (FStar_Util.format2 "\'val %s\' and \'let %s\' cannot both be provided in an interface" x.FStar_Ident.idText x.FStar_Ident.idText)
-in ((_0_949), (d.FStar_Parser_AST.drange))))))
+(Prims.raise (FStar_Errors.Error ((let _0_864 = (FStar_Util.format2 "\'val %s\' and \'let %s\' cannot both be provided in an interface" x.FStar_Ident.idText x.FStar_Ident.idText)
+in ((_0_864), (d.FStar_Parser_AST.drange))))))
 end
 | None -> begin
 (
@@ -148,9 +148,9 @@ end
 let uu____341 = (FStar_All.pipe_right d.FStar_Parser_AST.quals (FStar_List.contains FStar_Parser_AST.Assumption))
 in (match (uu____341) with
 | true -> begin
-(Prims.raise (FStar_Errors.Error ((let _0_951 = (let _0_950 = (FStar_Range.string_of_range let_x.FStar_Parser_AST.drange)
-in (FStar_Util.format2 "Assumed declaration %s is defined at %s" x.FStar_Ident.idText _0_950))
-in ((_0_951), (d.FStar_Parser_AST.drange))))))
+(Prims.raise (FStar_Errors.Error ((let _0_866 = (let _0_865 = (FStar_Range.string_of_range let_x.FStar_Parser_AST.drange)
+in (FStar_Util.format2 "Assumed declaration %s is defined at %s" x.FStar_Ident.idText _0_865))
+in ((_0_866), (d.FStar_Parser_AST.drange))))))
 end
 | uu____344 -> begin
 (
@@ -167,10 +167,10 @@ in (
 let uu____354 = (FStar_All.pipe_right prefix (FStar_List.tryFind (fun d -> (FStar_All.pipe_right remaining_iface_vals (FStar_Util.for_some (fun x -> (is_let x d)))))))
 in (match (uu____354) with
 | Some (d) -> begin
-(Prims.raise (FStar_Errors.Error ((let _0_954 = (let _0_953 = (FStar_Parser_AST.decl_to_string d)
-in (let _0_952 = (FStar_Parser_AST.decl_to_string let_x)
-in (FStar_Util.format2 "%s is out of order with %s" _0_953 _0_952)))
-in ((_0_954), (d.FStar_Parser_AST.drange))))))
+(Prims.raise (FStar_Errors.Error ((let _0_869 = (let _0_868 = (FStar_Parser_AST.decl_to_string d)
+in (let _0_867 = (FStar_Parser_AST.decl_to_string let_x)
+in (FStar_Util.format2 "%s is out of order with %s" _0_868 _0_867)))
+in ((_0_869), (d.FStar_Parser_AST.drange))))))
 end
 | uu____364 -> begin
 (match (let_x.FStar_Parser_AST.d) with
