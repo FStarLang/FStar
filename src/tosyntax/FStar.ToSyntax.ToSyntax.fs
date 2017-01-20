@@ -275,6 +275,29 @@ let rec destruct_app_pattern env is_top_level p = match p.pat with
   | _ ->
     failwith "Not an app pattern"
 
+let rec gather_pattern_bound_vars_maybe_top acc p =
+  let gather_pattern_bound_vars_from_list =
+      List.fold_left gather_pattern_bound_vars_maybe_top acc
+  in
+  match p.pat with
+  | PatWild
+  | PatConst _
+  | PatVar (_, Some Implicit)
+  | PatName _
+  | PatTvar _
+  | PatOp _ -> acc
+  | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
+  | PatVar (x, _) -> set_add x acc
+  | PatList pats
+  | PatTuple  (pats, _)
+  | PatOr pats -> gather_pattern_bound_vars_from_list pats
+  | PatRecord guarded_pats -> gather_pattern_bound_vars_from_list (List.map snd guarded_pats)
+  | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
+
+let gather_pattern_bound_vars =
+  let acc = new_set (fun id1 id2 -> if id1.idText = id2.idText then 0 else 1) (fun _ -> 0) in
+  fun p -> gather_pattern_bound_vars_maybe_top acc p
+
 type bnd =
   | LocalBinder of bv     * S.aqual
   | LetBinder   of lident * S.term
@@ -394,6 +417,8 @@ let check_fields env fields rg =
     in
     record
 
+(* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
+(* and these type ascriptions should not be dropped !!!                              *)
 let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
   let check_linear_pattern_variables (p:Syntax.pat) =
     let rec pat_vars (p:Syntax.pat) = match p.v with
@@ -410,8 +435,10 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
                               BU.set_is_subset_of xs ys
                               && BU.set_is_subset_of ys xs) tl)
         then raise (Error ("Disjunctive pattern binds different variables in each case", p.p))
-        else xs in
-    pat_vars p in
+        else xs
+    in
+    pat_vars p
+  in
 
   begin match is_mut, p.pat with
   | false, _
@@ -427,7 +454,8 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
       | Some y -> l, e, y
       | _ ->
         let e, x = push_bv_maybe_mut e x in
-        (x::l), e, x in
+        (x::l), e, x
+  in
   let rec aux (loc:lenv_t) env (p:pattern) =
     let pos q = Syntax.withinfo q tun.n p.prange in
     let pos_r r q = Syntax.withinfo q tun.n r in
@@ -449,7 +477,14 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
             | LetBinder _ -> failwith "impossible"
             | LocalBinder(x, aq) ->
               let t = desugar_term env (close_fun env t) in
-              LocalBinder({x with sort=t}, aq) in
+              (* TODO : This should be a real check instead of just a warning *)
+              if (match x.sort.n with | S.Tm_unknown -> false | _ -> true)
+              then Util.print3_warning "Multiple ascriptions for %s in pattern, type %s was shadowed by %s"
+                                       (Print.bv_to_string x)
+                                       (Print.term_to_string x.sort)
+                                       (Print.term_to_string t) ;
+              LocalBinder({x with sort=t}, aq)
+        in
         loc, env', binder, p, imp
 
       | PatWild ->
@@ -691,9 +726,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
             begin match args with
               | [] -> head
               | _ ->
+                let universes, args = Util.take (fun (_, imp) -> imp = UnivApp) args in
+                let universes = List.map (fun x -> desugar_universe (fst x)) universes in
                 let args = List.map (fun (t, imp) ->
                   let te = desugar_term env t in
                   arg_withimp_e imp te) args in
+                let head = if universes = [] then head else mk (Tm_uinst(head, universes)) in
                 let app = mk (Tm_app(head, args)) in
                 if is_data
                 then mk (Tm_meta(app, Meta_desugared Data_app))
@@ -1102,6 +1140,9 @@ and desugar_comp r default_ok env t =
     let (eff, cattributes), args = pre_process_comp_typ t in
     if List.length args = 0
     then fail (BU.format1 "Not enough args to effect %s" (Print.lid_to_string eff));
+    let is_universe (_, imp) = imp = UnivApp in
+    let universes, args = Util.take is_universe args in
+    let universes = List.map (fun (u, imp) -> desugar_universe u) universes in
     let result_arg, rest = List.hd args, List.tl args in
     let result_typ = desugar_typ env (fst result_arg) in
     let rest = desugar_args env rest in
@@ -1115,9 +1156,14 @@ and desugar_comp r default_ok env t =
                 match t.n with
                 | Tm_app(_, [(arg, _)]) -> DECREASES arg
                 | _ -> failwith "impos") in
-    let no_additional_args = List.length decreases_clause = 0
-                             && List.length rest = 0
-                             && List.length cattributes = 0 in
+    let no_additional_args =
+        (* F# complains about not being able to use = on some types.. *)
+        let is_empty (l:list<'a>) = match l with | [] -> true | _ -> false in
+        is_empty decreases_clause &&
+        is_empty rest &&
+        is_empty cattributes &&
+        is_empty universes
+    in
     if no_additional_args
     && lid_equals eff C.effect_Tot_lid
     then mk_Total result_typ
@@ -1145,7 +1191,7 @@ and desugar_comp r default_ok env t =
                         (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) None pat.pos, aq)]
                     | _ -> rest
             else rest in
-        mk_Comp ({comp_univs=[];
+        mk_Comp ({comp_univs=universes;
                   effect_name=eff;
                   result_typ=result_typ;
                   effect_args=rest;
@@ -1749,7 +1795,24 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let quals = d.quals in
     let attrs = d.attrs in
     let attrs = List.map (desugar_term env) attrs in
-    begin match (Subst.compress <| desugar_term_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
+    (* If a toplevel let has a non-trivial pattern it needs to be desugared to a serie of top-level lets *)
+    let expand_toplevel_pattern =
+      isrec = NoLetQualifier &&
+      begin match lets with
+        | [ { pat = PatOp _}, _ ]
+        | [ { pat = PatVar _}, _ ]
+        | [ { pat = PatAscribed ({ pat = PatVar _}, _) }, _ ] -> false
+        | [ p, _ ] -> not (is_app_pattern p)
+        | _ -> false
+      end
+    in
+    if not expand_toplevel_pattern
+    then begin
+      let as_inner_let =
+        mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr
+      in
+      let ds_lets = desugar_term_maybe_top true env as_inner_let in
+      match (Subst.compress <| ds_lets).n with
         | Tm_let(lbs, _) ->
           let fvs = snd lbs |> List.map (fun lb -> right lb.lbname) in
           let quals = match quals with
@@ -1771,6 +1834,44 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           env, [s]
         | _ -> failwith "Desugaring a let did not produce a let"
     end
+    else
+      (* If there is a top-level pattern we first bind the result of the body *)
+      (* to some private anonymous name then we gather each idents bounded in *)
+      (* the pattern and introduce one toplevel binding for each of them      *)
+      let (pat, body) = match lets with
+        | [pat, body] -> pat, body
+        | _ -> failwith "expand_toplevel_pattern should only allow single definition lets"
+      in
+      let fresh_toplevel_name = Ident.gen Range.dummyRange in
+      let fresh_pat =
+        let var_pat = mk_pattern (PatVar (fresh_toplevel_name, None)) Range.dummyRange in
+        (* TODO : What about inner type ascriptions ? Is there any way to retrieve those ? *)
+        match pat.pat with
+          | PatAscribed (pat, ty) -> { pat with pat = PatAscribed (var_pat, ty) }
+          | _ -> var_pat
+      in
+      (* TODO : We should ensure that the result of body always matches pat (add a type annotation ?) *)
+      let main_let =
+        desugar_decl env ({ d with
+          d = TopLevelLet (isrec, [fresh_pat, body]) ;
+          quals = Private :: d.quals })
+      in
+
+      let build_projection (env, ses) id =
+        (* We build a new toplevel definition as follow and then desugar it *)
+        (* let id = match fresh_toplevel_name with | pat -> id              *)
+        let main = mk_term (Var (lid_of_ids [fresh_toplevel_name])) Range.dummyRange Expr in
+        let lid = lid_of_ids [id] in
+        let projectee = mk_term (Var lid) Range.dummyRange Expr in
+        let body = mk_term (Match (main, [pat, None, projectee])) Range.dummyRange Expr in
+        let bv_pat = mk_pattern (PatVar (id, None)) Range.dummyRange in
+        (* TODO : do we need to put some attributes for this declaration ? *)
+        let id_decl = mk_decl (TopLevelLet(NoLetQualifier, [bv_pat, body])) Range.dummyRange [] in
+        let env, ses' = desugar_decl env id_decl in
+        env, ses @ ses'
+      in
+      let bvs = gather_pattern_bound_vars pat |> set_elements in
+      List.fold_left build_projection main_let bvs
 
   | Main t ->
     let e = desugar_term env t in

@@ -49,12 +49,16 @@ val set_count: set<'a> -> int
 val set_difference: set<'a> -> set<'a> -> set<'a>
 val set_elements: set<'a> -> list<'a>
 
+(* A fifo_set is a set preserving the insertion order *)
 type fifo_set<'a> = set<'a>
 val new_fifo_set: ('a -> 'a -> int) -> ('a -> int) -> fifo_set<'a>
 val fifo_set_is_empty: fifo_set<'a> -> bool
+(* [fifo_set_add x s] pushes an element [x] at the end of the set [s] *)
 val fifo_set_add: 'a -> fifo_set<'a> -> fifo_set<'a>
+(* [fifo_set_remove x s] removes [x]from [s] *)
 val fifo_set_remove: 'a -> fifo_set<'a> -> fifo_set<'a>
 val fifo_set_mem: 'a -> fifo_set<'a> -> bool
+(* [fifo_set s1 s2] is the set with all elements in [s1] inserted before those of [s2] *)
 val fifo_set_union: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
 val fifo_set_count: fifo_set<'a> -> int
 val fifo_set_difference: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>

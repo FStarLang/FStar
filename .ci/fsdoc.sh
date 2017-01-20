@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Script to run fsdoc on certain dirs in the FStar repo.
 # Currently, this script gets called by the VSTF "FStar, Docs, Linux, CI"

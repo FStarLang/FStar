@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/usr/bin/env bash
 
 FINE_COMPILER="fstar.exe --silent"
 OUTDIR=out
@@ -15,7 +15,7 @@ function clean(){
 
 function set_config(){
     case $1 in
-        "1") 
+        "1")
             CONFIG_NAME="SOURCE CHECKING ONLY"
             FLAGS="--skip_translation"
             EXTRASRC="--prooflibvals $FINE_HOME/lib/prooflibvals.f9";;
@@ -91,7 +91,7 @@ function process_test_result(){
     NOERR=$?
     grep -q "Verified module" $FILE
     CHECKED=$?
-    if [ "$CHECKED" -eq "0" -a "$NOERR" -eq "0" ]; then 
+    if [ "$CHECKED" -eq "0" -a "$NOERR" -eq "0" ]; then
         echo "$testname ok"
     else
         echo "$testname ******FAILURE******"

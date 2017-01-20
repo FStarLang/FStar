@@ -566,6 +566,20 @@ let abs_ascription_to_string ascription =
   end ;
   U.string_of_string_builder strb
 
+let list_to_string f elts =
+    match elts with
+        | [] -> "[]"
+        | x::xs ->
+            let strb = U.new_string_builder () in
+            U.string_builder_append strb "[" ;
+            U.string_builder_append strb (f x) ;
+            List.iter (fun x ->
+                       U.string_builder_append strb "; " ;
+                       U.string_builder_append strb (f x)
+                       ) xs ;
+            U.string_builder_append strb "]" ;
+            U.string_of_string_builder strb
+
 let set_to_string f s =
     let elts = U.set_elements s in
     match elts with
@@ -579,18 +593,5 @@ let set_to_string f s =
                        U.string_builder_append strb (f x)
                        ) xs ;
             U.string_builder_append strb "}" ;
-            U.string_of_string_builder strb
-
-let list_to_string f elts =
-    match elts with
-        | [] -> "[]"
-        | x::xs ->
-            let strb = U.new_string_builder () in
-            U.string_builder_append strb "[" ;
-            U.string_builder_append strb (f x) ;
-            List.iter (fun x ->
-                       U.string_builder_append strb "; " ;
-                       U.string_builder_append strb (f x)
-                       ) xs ;
-            U.string_builder_append strb "]" ;
+            (* U.string_builder_append strb (list_to_string f (raw_list s)) ; *)
             U.string_of_string_builder strb

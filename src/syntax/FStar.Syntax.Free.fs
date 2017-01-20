@@ -151,17 +151,14 @@ let rec free_names_and_uvs' tm : free_vars =
         free_names_and_uvars t
 
 and free_names_and_uvars t =
-    let t = Subst.compress t in
-    match !t.vars with
-        | Some n ->
-          if should_invalidate_cache n
-          then //invalidate the cache
-              (t.vars := None; free_names_and_uvars t)
-          else n
-        | _ ->
-          let n = free_names_and_uvs' t in
-          t.vars := Some n;
-          n
+  let t = Subst.compress t in
+  match !t.vars with
+  | Some n when not (should_invalidate_cache n) -> n
+  | _ ->
+      t.vars := None;
+      let n = free_names_and_uvs' t in
+      t.vars := Some n;
+      n
 
 and free_names_and_uvars_args args acc =
         args |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x)) acc

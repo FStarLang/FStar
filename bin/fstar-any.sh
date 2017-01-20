@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 if which greadlink >/dev/null 2>&1; then
   READLINK=greadlink
 else
