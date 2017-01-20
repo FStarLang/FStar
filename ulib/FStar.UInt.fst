@@ -16,6 +16,7 @@ val pow2_values: x:nat -> Lemma
    | 32 -> p=4294967296
    | 63 -> p=9223372036854775808
    | 64 -> p=18446744073709551616
+   | 128 -> p=0x100000000000000000000000000000000
    | _  -> True))
   [SMTPat (pow2 x)]
 let pow2_values x =
@@ -28,6 +29,7 @@ let pow2_values x =
    | 32 -> assert_norm (pow2 32 == 4294967296)
    | 63 -> assert_norm (pow2 63 == 9223372036854775808)
    | 64 -> assert_norm (pow2 64 == 18446744073709551616)
+   | 128 -> assert_norm (pow2 128 = 0x100000000000000000000000000000000)
    | _  -> ()
 
 (* NOTE: anything that you fix/update here should be reflected in [FStar.Int.fst], which is mostly
