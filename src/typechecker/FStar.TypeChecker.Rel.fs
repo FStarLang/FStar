@@ -1807,11 +1807,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 then BU.print5 "Flex-flex patterns: intersected %s and %s; got %s\n\tk1=%s\n\tk2=%s\n"
                         (Print.binders_to_string ", " xs) (Print.binders_to_string ", " ys) (Print.binders_to_string ", " zs)
                         (Print.term_to_string k1) (Print.term_to_string k2);
-                let subst_of_list k xs args =
+                let subst_k k xs args : term =
                     let xs_len = List.length xs in
                     let args_len = List.length args in
                     if xs_len = args_len
-                    then U.subst_of_list xs args
+                    then Subst.subst (U.subst_of_list xs args) k
+                    else if args_len < xs_len
+                    then let xs, xs_rest = BU.first_N args_len xs in
+                         let k = U.arrow xs_rest (S.mk_GTotal k) in
+                         Subst.subst (U.subst_of_list xs args) k
                     else failwith (BU.format3 "k=%s\nxs=%s\nargs=%s\nIll-formed substitutution"
                                     (Print.term_to_string k)
                                     (Print.binders_to_string ", " xs)
@@ -1819,8 +1823,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 let k_u', sub_probs =
                     let bs, k1' = U.arrow_formals (N.normalize [N.Beta] env k1) in
                     let cs, k2' = U.arrow_formals (N.normalize [N.Beta] env k2) in
-                    let k1'_xs = Subst.subst (subst_of_list k1 bs args1) k1' in
-                    let k2'_ys = Subst.subst (subst_of_list k2 cs args2) k2' in
+                    let k1'_xs = subst_k k1' bs args1 in
+                    let k2'_ys = subst_k k2' cs args2 in
                     let sub_prob = TProb <| mk_problem (p_scope orig) orig k1'_xs EQ k2'_ys None "flex-flex kinding" in
                     match (SS.compress k1').n, (SS.compress k2').n with
                     | Tm_type _, _ ->

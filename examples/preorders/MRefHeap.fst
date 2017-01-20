@@ -18,10 +18,10 @@ abstract type mref (a:Type) (r:relation a{preorder r}) = nat
 (* Containment predicate on heaps. *)
 
 let contains (#a:Type) (#r:relation a{preorder r}) (h:heap) (m:mref a r) =
-  exists v .
+  exists (v:(a:Type0 & (a * r:relation a{preorder r}))) .
     snd h m == Some v /\
     dfst v == a /\
-    snd #a #(r:relation a{preorder r}) (dsnd v) == r
+    snd (dsnd v) == r
 
 
 (* Select. *)
