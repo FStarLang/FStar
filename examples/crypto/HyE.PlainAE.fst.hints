@@ -1,0 +1,120 @@
+[
+  "ãß’ˆf®D$\u001b«\u0003\u0019\u0014”€Ù",
+  [
+    [
+      "HyE.PlainAE.plain_content",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Platform.Bytes.bytes" ],
+      0
+    ],
+    [
+      "HyE.PlainAE.protected_ae_plain",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_HyE.Indexing.Index_hasEq",
+        "assumption_Platform.Bytes.HasEq_bytes", "bool_inversion",
+        "equation_HyE.Flags.pke_ind_cca",
+        "equation_HyE.PlainAE.plain_content",
+        "lemma_HyE.Flags.honest_implies_pke_inc_cca",
+        "projection_inverse_BoxBool_proj_0", "typing_HyE.Flags.honest"
+      ],
+      0
+    ],
+    [
+      "HyE.PlainAE.__proj__Protected_ae_plain__item__i",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "HyE.PlainAE.__proj__Protected_ae_plain__item__p",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_HyE.PlainAE.Protected_ae_plain_i",
+        "projection_inverse_HyE.PlainAE.Protected_ae_plain_i"
+      ],
+      0
+    ],
+    [
+      "HyE.PlainAE.ae_message_unwrap",
+      1,
+      2,
+      1,
+      [
+        "@query", "data_elim_HyE.PlainAE.Protected_ae_plain",
+        "equation_HyE.Flags.pke_ind_cca",
+        "equation_HyE.PlainAE.plain_content",
+        "equation_HyE.PlainHPKE.hpke_plain", "equation_Platform.Bytes.bytes",
+        "fuel_guarded_inversion_HyE.PlainAE.protected_ae_plain",
+        "lemma_HyE.Flags.honest_implies_pke_inc_cca",
+        "proj_equation_HyE.PlainAE.Protected_ae_plain_i",
+        "proj_equation_HyE.PlainAE.Protected_ae_plain_p",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_HyE.PlainAE.__proj__Protected_ae_plain__item__i"
+      ],
+      0
+    ],
+    [
+      "HyE.PlainAE.repr",
+      1,
+      2,
+      1,
+      [
+        "@query", "data_elim_HyE.PlainAE.Protected_ae_plain",
+        "equation_HyE.Flags.pke_ind_cca", "equation_HyE.PlainAE.ae_plain",
+        "equation_HyE.PlainAE.plain_content",
+        "equation_Platform.Bytes.bytes",
+        "fuel_guarded_inversion_HyE.PlainAE.protected_ae_plain",
+        "lemma_HyE.Flags.honest_implies_pke_inc_cca",
+        "proj_equation_HyE.PlainAE.Protected_ae_plain_i",
+        "proj_equation_HyE.PlainAE.Protected_ae_plain_p",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_a952156c92050b92d0014cae08daa635",
+        "typing_HyE.PlainAE.__proj__Protected_ae_plain__item__i"
+      ],
+      0
+    ],
+    [
+      "HyE.PlainAE.coerce",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_HyE.Flags.pke_ind_cca",
+        "equation_HyE.PlainAE.ae_plain",
+        "equation_HyE.PlainAE.plain_content",
+        "lemma_HyE.Flags.honest_implies_pke_inc_cca",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_a517b021f5d37be47cf2f999a1bb36a0"
+      ],
+      0
+    ],
+    [
+      "HyE.PlainAE.length",
+      1,
+      2,
+      1,
+      [
+        "@query", "data_elim_HyE.PlainAE.Protected_ae_plain",
+        "equation_HyE.Flags.pke_ind_cca",
+        "equation_HyE.PlainAE.plain_content",
+        "equation_Platform.Bytes.bytes",
+        "fuel_guarded_inversion_HyE.PlainAE.protected_ae_plain",
+        "lemma_HyE.Flags.honest_implies_pke_inc_cca",
+        "proj_equation_HyE.PlainAE.Protected_ae_plain_i",
+        "proj_equation_HyE.PlainAE.Protected_ae_plain_p",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_HyE.PlainAE.__proj__Protected_ae_plain__item__i"
+      ],
+      0
+    ]
+  ]
+]

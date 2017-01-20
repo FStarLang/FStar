@@ -15,10 +15,13 @@ EtM.CPA.fst \
 EtM.AE.fst \
 HyE.RSA.fst \
 HyE.PlainPKE.fst \
-HyE.Plain.fst \
+HyE.PlainHPKE.fst \
+HyE.PlainAE.fst \
 HyE.AE.fst \
-HyE.CCA2.fst \
-HyE.HCCA2.fst
+HyE.PKE.fst \
+HyE.HPKE.fst \
+HyE.Indexing.fsti \
+HyE.Flags.fsti
 
 LIB = ../../contrib/CoreCrypto/ml
 

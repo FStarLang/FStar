@@ -1,4 +1,4 @@
-module HyE.CCA2  (* intuitively, parameterized by both PlainPKE and RSA *)
+module HyE.PKE  (* intuitively, parameterized by both PlainPKE and RSA *)
 
 open FStar.HyperHeap
 open FStar.HyperStack
@@ -6,14 +6,16 @@ open FStar.Monotonic.RRef
 open FStar.Seq
 open FStar.SeqProperties
 open FStar.Monotonic.Seq
-
 open FStar.List.Tot
+
 open HyE.PlainPKE
+open HyE.Flags
+open HyE.RSA
 
 type cipher = RSA.cipher
 noeq type entry =
   | Entry : c:RSA.cipher
-         -> p:PlainPKE.t
+         -> p:protected_pke_plain
          -> entry
 
 assume val ciphersize : nat
@@ -39,19 +41,20 @@ let keygen parent  =
   pkey, SKey skey_raw pkey
 
 
-let encrypt pk (p:PlainPKE.t) : RSA.cipher =
-  let p' = if Ideal.ind_cca then RSA.dummy else PlainPKE.repr p in
+let encrypt pk (p:protected_pke_plain) : RSA.cipher =
+  let p' = if Flags.pke_ind_cca then RSA.dummy else PlainPKE.repr p in
   let c = RSA.enc pk.rawpk p' in
   write_at_end pk.log (Entry c p);
   c
 
 
-let decrypt sk (c:RSA.cipher) : option (PlainPKE.t) =
+let decrypt sk (c:RSA.cipher) : option (protected_pke_plain) =
   let log = m_read (PKey?.log sk.pk) in
-  match Ideal.ind_cca, seq_find (function Entry c' _ -> c=c') log with
+  match Flags.pke_ind_cca, seq_find (function Entry c' _ -> c=c') log with
   | true,  Some t  -> Some(Entry?.p t)
-  | _,  _       -> None
-  | false, _ -> 
+  | _,  _       ->
     (match RSA.dec sk.raw c with
-     | Some(t') -> PlainPKE.coerce t'
+     | Some t' -> 
+       let id = Flags.dishonestId() in
+       PlainPKE.coerce id sk.pk.region t'
      | None     -> None)
