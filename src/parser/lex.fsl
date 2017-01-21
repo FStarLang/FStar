@@ -26,6 +26,7 @@ open FStar.Parser
 open FStar.Parser.Parse
 open FStar.Parser.AST
 open FStar.Parser.Util
+open FStar.Errors
 
 let string_trim_both s n m = Util.substring s n (String.length s - (n+m))
 let trim_both   lexbuf n m = string_trim_both (ulexeme lexbuf) n m
@@ -34,7 +35,7 @@ let trim_left   lexbuf n = trim_both lexbuf n 0
 
 let fail lexbuf msg dflt =
      let m = getLexerRange lexbuf in
-     errorR(Absyn.Syntax.Error(msg,m));
+     errorR(Error(msg,m));
      dflt
 
 let trim_right_char s c =
@@ -70,7 +71,7 @@ let inline trim_and_check_range_u lexbuf narrow descr =
 
 let checkExprOp lexbuf =
   if String.contains (ulexeme lexbuf)  ':'
-  then errorR(Absyn.Syntax.Error("':' is no longer permitted as a character in operator names" , getLexerRange lexbuf))
+  then errorR(Error("':' is no longer permitted as a character in operator names" , getLexerRange lexbuf))
 
 let unexpected_char lexbuf =
     failwith ("Unexpected character '"^(lexeme lexbuf)^"'")

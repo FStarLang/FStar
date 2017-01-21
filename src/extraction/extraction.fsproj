@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -51,19 +51,15 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
-    <Compile Include="ml-syntax.fs" />
-    <Compile Include="uenv.fs" />
-    <Compile Include="env.fs" />
-    <Compile Include="util.fs" />
-    <Compile Include="codegen.fsi" />
-    <Compile Include="codegen.fs" />
-    <Compile Include="term.fs" />
-    <Compile Include="modul.fs" />
-    <Compile Include="extracttyp.fs" />
-    <Compile Include="extractexp.fs" />
-    <Compile Include="extractmod.fs" />
+    <Compile Include="FStar.Extraction.ML.Syntax.fs" />
+    <Compile Include="FStar.Extraction.ML.UEnv.fs" />
+    <Compile Include="FStar.Extraction.ML.Util.fs" />
+    <Compile Include="FStar.Extraction.ML.Code.fsi" />
+    <Compile Include="FStar.Extraction.ML.Code.fs" />
+    <Compile Include="FStar.Extraction.ML.Term.fs" />
+    <Compile Include="FStar.Extraction.ML.Modul.fs" />
     <Content Include="app.config" />
-    <Compile Include="kremlin.fs" />
+    <Compile Include="FStar.Extraction.Kremlin.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\typechecker\typechecker.fsproj">
@@ -84,11 +80,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\absyn\absyn.fsproj">
-      <Name>absyn</Name>
-      <Project>{13e8984e-188d-447b-b7b7-9f7441050565}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
@@ -102,11 +93,6 @@
     <ProjectReference Include="..\syntax\syntax.fsproj">
       <Name>syntax</Name>
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\tc\tc.fsproj">
-      <Name>tc</Name>
-      <Project>{5bf4af3f-bec2-4cfd-94b7-11a38a031f4b}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

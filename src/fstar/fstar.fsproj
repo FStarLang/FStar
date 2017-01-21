@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>FStar.List.Tot.fst --codegen OCaml --odir out</StartArguments>
+    <StartArguments>--stratified FStar.Char.fsti --lax</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\ulib\</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\lib\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -66,13 +66,12 @@
     </PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="dependencies.fs" />
-    <Compile Include="interactive.fs" />
-    <Compile Include="stratified.fs" />
-    <Compile Include="universal.fs" />
-    <Compile Include="indent.fs" />
-    <Compile Include="fstar.fs" />
-    <Compile Include="main.fs" />
+    <Compile Include="FStar.Dependencies.fs" />
+    <Compile Include="FStar.Interactive.fs" />
+    <Compile Include="FStar.Universal.fs" />
+    <Compile Include="FStar.Indent.fs" />
+    <Compile Include="FStar.Main.fs" />
+    <Compile Include="FStar.Top.fs" />
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
@@ -96,9 +95,9 @@
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\tosmt\tosmt.fsproj">
-      <Name>tosmt</Name>
-      <Project>{670da3f6-7e41-4c1d-ab17-1f59e0317f52}</Project>
+    <ProjectReference Include="..\tosyntax\tosyntax.fsproj">
+      <Name>tosyntax</Name>
+      <Project>{b0968012-b93c-4198-9085-b89669e8e4e8}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\typechecker\typechecker.fsproj">
@@ -122,11 +121,6 @@
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
     </Reference>
-    <ProjectReference Include="..\absyn\absyn.fsproj">
-      <Name>absyn</Name>
-      <Project>{13e8984e-188d-447b-b7b7-9f7441050565}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
@@ -140,11 +134,6 @@
     <ProjectReference Include="..\parser\parser.fsproj">
       <Name>parser</Name>
       <Project>{9974a6de-6ca8-44b6-a52e-51fc52932179}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\tc\tc.fsproj">
-      <Name>tc</Name>
-      <Project>{5bf4af3f-bec2-4cfd-94b7-11a38a031f4b}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\prettyprint\prettyprint.fsproj">
