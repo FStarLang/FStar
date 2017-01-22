@@ -121,13 +121,13 @@ boot_fstis/FStar.bytes.fst: basic/bytes.fsti
 boot_fstis/FStar.util.fsti: basic/util.fsi
 	cp $^ $@
 	$(SED) -i 's/open System.IO/module ALL_TMP = FStar.All/g' $@
-	$(SED) -i 's/type time.*/assume new type time/g'  $@ 
-	$(SED) -i 's/type smap.*/assume new type smap : Type0 -> Type0/g'  $@ 
-	$(SED) -i 's/type out_channel.*/assume new type out_channel/g'  $@ 
-	$(SED) -i 's/type file_handle.*/assume new type file_handle/g'  $@ 
-	$(SED) -i 's/type stream_reader.*/assume new type stream_reader/g'  $@ 
-	$(SED) -i 's/type string_builder.*/assume new type string_builder/g'  $@ 
-	$(SED) -i 's/type proc.*/assume new type proc/g' $@ 
+	$(SED) -i 's/type time.*/assume new type time/g'  $@
+	$(SED) -i 's/type smap.*/assume new type smap : Type0 -> Type0/g'  $@
+	$(SED) -i 's/type out_channel.*/assume new type out_channel/g'  $@
+	$(SED) -i 's/type file_handle.*/assume new type file_handle/g'  $@
+	$(SED) -i 's/type stream_reader.*/assume new type stream_reader/g'  $@
+	$(SED) -i 's/type string_builder.*/assume new type string_builder/g'  $@
+	$(SED) -i 's/type proc.*/assume new type proc/g' $@
 	$(SED) -i 's/type set.*/assume new type set:Type0 -> Type0/g' $@
 
 boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
@@ -144,7 +144,7 @@ boot_fstis/FStar.Parser.Parse.fsti: parser/parse.fsi
 
 rename_as_fst:
 	./tools/rename_all_boot_fsts
-	cp parser/parseit.fsi u_boot_fsts/FStar.Parser.ParseIt.fsti
+	cp parser/parseit.fsi u_boot_fsts/FStar.Parser.Parseit.fsti
 
 prep_u_extract_ocaml: $(U_ALL_INTERFACES)
 	make rename_as_fst
@@ -197,7 +197,7 @@ u_extract_tcterm: u_boot_fsts/FStar.TypeChecker.TcTerm.fst
 u_extract_tc: u_boot_fsts/FStar.TypeChecker.Tc.fst
 	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.Tc
 
-u_extract_typechecker: u_extract_normalizer u_extract_rel u_extract_util u_extract_dmff u_extract_tcterm u_extract_tc 
+u_extract_typechecker: u_extract_normalizer u_extract_rel u_extract_util u_extract_dmff u_extract_tcterm u_extract_tc
 
 u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst ToSyntax.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.ToSyntax
