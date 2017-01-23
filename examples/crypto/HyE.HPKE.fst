@@ -14,7 +14,6 @@ As children of the public key, each private key (honest and dishonest) live in t
 
 TODO: 
    * Actually structure the memory layout that way.
-   * Remove redundancy from the way the public key is stored.
    * Investigate where the secret key is actually stored.
    * Figure out, why the precondition in HyE.AE.encrypt is not met. (recall <-> m_contains...)
    * Sketch overall proof structure
@@ -29,6 +28,7 @@ open HyE.AE
 open HyE.PKE
 open HyE.PlainHPKE
 open HyE.PlainAE
+open HyE.PlainPKE
 open HyE.Indexing
 
 module B = Platform.Bytes
@@ -45,7 +45,7 @@ noeq type hpke_pkey =
 
 noeq abstract type hpke_skey =
   | SKey: pke_sk:PKE.skey -> hpke_pk:hpke_pkey -> hpke_skey
- 
+
 val keygen: rid -> hpke_pkey * hpke_skey
 let keygen (parent:rid) =
   let (pke_pk, pke_sk) = PKE.keygen parent in
@@ -69,24 +69,19 @@ val encrypt: hpke_pkey -> protected_hpke_plain -> c
 let encrypt pk p =
   let region = new_region pk.region in
   let i = createId() in
-  let k = AE.keygen i region in 
-  // Deduplicate code here.
-  if honest i then
-    let msg = ae_message_wrap #i p in
-    assume (AE.getIndex k == PlainAE.getIndex msg);
-    ((PKE.encrypt pk.pke_pk k) ,(AE.encrypt k msg))
-  else 
-    let unprotected_p = PlainHPKE.repr p in
-    let msg = ae_message_wrap #i unprotected_p in
-    assume (AE.getIndex k == PlainAE.getIndex msg);
-    ((PKE.encrypt pk.pke_pk k) ,(AE.encrypt k msg))
+  let k = AE.keygen region in 
+  let msg_content = if not (honest i) then PlainHPKE.repr p else p in
+  let ae_msg = ae_message_wrap #i msg_content in
+  let pke_msg = Prot_pke_p i k in
+  ((PKE.encrypt pk.pke_pk pke_msg) ,(AE.encrypt k ae_msg))
     
 val decrypt: hpke_skey -> c -> option protected_hpke_plain
 let decrypt sk c =
   let (c0,c1) = c in 
-  match PKE.decrypt sk.pke_sk c0 with 
-  | Some k -> 
-    (match AE.decrypt k c1 with
+  let pke_plain = PKE.decrypt sk.pke_sk c0 in
+  match pke_plain with 
+  | Some p -> 
+    (match AE.decrypt p.k c1 with
     | Some ae_protected_p -> Some (PlainAE.ae_message_unwrap ae_protected_p)
     | None -> None)
   | None   -> None

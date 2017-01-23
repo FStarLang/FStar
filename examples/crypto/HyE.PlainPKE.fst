@@ -1,3 +1,6 @@
+(**
+   TODO: Documentation.
+*)
 module HyE.PlainPKE
 
 open Platform.Bytes
@@ -10,16 +13,20 @@ open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.Monotonic.RRef
 
+noeq type protected_pke_plain = 
+  | Prot_pke_p : i:id -> k:AE.key i -> protected_pke_plain
 
-type protected_pke_plain = HyE.AE.key // This works because HyE.AE.key is abstract
-assume Plain_hasEq: hasEq protected_pke_plain
 type pke_plain = aes_key 
 
-(* two pure functions, never called when ideal *)
-val repr: p:protected_pke_plain{not pke_ind_cca} -> Tot pke_plain
-let repr p = HyE.AE.leak p       (* a pure function from t to RSA.plain *)
 
-val coerce: i:id{not (honest i)} -> parent:rid -> x:pke_plain -> ST (option (y:HyE.AE.key)) 
+(* two pure functions, never called when ideal *)
+val repr: p:protected_pke_plain{not pke_ind_cca || not (honest p.i)} -> Tot pke_plain
+let repr p = HyE.AE.leak_key p.k
+
+val coerce: parent:rid -> pke_plain -> ST protected_pke_plain
   (requires (fun h0 -> True))
-  (ensures (fun h0 _ h1 -> True))
-let coerce i parent x = Some (HyE.AE.coerce_key i parent x ) (* a partial function from RSA.plain to HyE.AE.key *)
+  (ensures (fun h0 p h1 ->
+    not (honest p.i)))
+let coerce parent p_plain = 
+  let i = dishonestId() in
+  Prot_pke_p i (HyE.AE.coerce_key i parent p_plain )

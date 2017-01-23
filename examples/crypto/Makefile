@@ -23,6 +23,17 @@ HyE.HPKE.fst \
 HyE.Indexing.fsti \
 HyE.Flags.fsti
 
+HYE_VERFILES= \
+HyE.RSA.fst \
+HyE.PlainPKE.fst \
+HyE.PlainHPKE.fst \
+HyE.PlainAE.fst \
+HyE.AE.fst \
+HyE.PKE.fst \
+HyE.HPKE.fst \
+HyE.Indexing.fsti \
+HyE.Flags.fsti
+
 LIB = ../../contrib/CoreCrypto/ml
 
 ifeq ($(OS),Windows_NT)
@@ -54,6 +65,8 @@ verify_hh-%: __force__
 		 --z3rlimit 20 $*
 
 all: uall sall
+
+hye: $(HYE_VERFILES:%=verify_hh-%)
 
 uall: $(VERFILES:%=verify-%) $(HH_VERFILES:%=verify_hh-%)
 
