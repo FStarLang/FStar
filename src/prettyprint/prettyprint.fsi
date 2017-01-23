@@ -1,4 +1,3 @@
-#light "off"
 (*
    Copyright 2016 Microsoft Research
 
@@ -14,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+#light "off"
 module FStar.Pprint
 
 open FStar.BaseTypes

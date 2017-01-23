@@ -75,7 +75,7 @@ endif
 	echo "open FStar.Syntax.Syntax" >> $@
 	echo "open FStar.Syntax.Const" >> $@
 	echo "open FStar.Syntax.Util" >> $@
-	echo "open FStar.Parser.AST" >> $@
+	e	cho "open FStar.Parser.AST" >> $@
 	echo "open FStar.Parser.Util" >> $@
 	echo "open FStar.Const" >> $@
 	echo "open FStar.Ident" >> $@

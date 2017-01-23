@@ -1,5 +1,5 @@
 #light "off"
-﻿module FStar.TypeChecker.TcTerm
+module FStar.TypeChecker.TcTerm
 open FStar
 open FStar.TypeChecker
 open FStar.TypeChecker.Env

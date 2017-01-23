@@ -1,4 +1,3 @@
-#light "off"
 ﻿(*
    Copyright 2008-2015 Abhishek Anand, Nikhil Swamy and Microsoft Research
 
@@ -15,6 +14,7 @@
    limitations under the License.
 *)
 (* -------------------------------------------------------------------- *)
+#light "off"
 module FStar.Extraction.ML.Code
 
 open FStar.Extraction.ML.Syntax

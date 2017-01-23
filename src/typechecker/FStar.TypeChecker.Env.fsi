@@ -1,4 +1,3 @@
-#light "off"
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -14,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+#light "off"
 module FStar.TypeChecker.Env
 open FStar
 open FStar.Syntax.Syntax

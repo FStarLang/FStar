@@ -139,7 +139,8 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	$(SED) -i 's/type uvar.*/assume new type uvar : Type0 -> Type0/g' $@
 
 boot_fstis/FStar.Parser.Parse.fsti: parser/parse.fsi
-	$(HEAD) -n -12 $^ > $@
+	echo "#light \"off\"" > $@
+	$(HEAD) -n -12 $^ >> $@
 	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse open FStar.BaseTypes type bytes = array<byte>/' $@
 
 rename_as_fst:
