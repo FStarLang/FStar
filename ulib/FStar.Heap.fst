@@ -12,7 +12,7 @@ abstract noeq type heap_rec = {
   memory   : nat -> Tot (option (a:Type0 & a))
 }  
 
-abstract type heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> is_None (h.memory n))}
+abstract type heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
 
 (* Consistency of heaps. aka, no strong updates *)
 let consistent (h0:heap) (h1:heap) =
@@ -32,8 +32,8 @@ let addr_of #a r = r.addr
 abstract val compare_addrs: #a:Type -> #b:Type -> r1:ref a -> r2:ref b -> Tot (b:bool{b = (addr_of r1 = addr_of r2)})
 let compare_addrs #a #b r1 r2 = r1.addr = r2.addr
 
-abstract let contains_a_well_typed (#a:Type) (h:heap) (r:ref a) =
-  exists x. h.memory r.addr == Some (| a, x |)
+abstract let contains_a_well_typed (#a:Type0) (h:heap) (r:ref a) =
+  exists (x:a). h.memory r.addr == Some (| a, x |)
 
 (* Select. *)
 private abstract val sel_tot : #a:Type -> h:heap -> r:ref a{h `contains_a_well_typed` r} -> Tot a
@@ -43,7 +43,7 @@ let sel_tot #a h r =
 
 abstract val sel: #a:Type -> h:heap -> r:ref a -> GTot a
 let sel #a h r =
-  if FStar.Classical.excluded_middle (h `contains_a_well_typed` r) then
+  if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains_a_well_typed` r) then
     sel_tot #a h r
   else r.init
 
@@ -58,7 +58,7 @@ let upd_tot #a h0 r x =
 abstract val upd: #a:Type -> h0:heap -> r:ref a -> x:a
  -> GTot heap
 let upd #a h0 r x =
-  if FStar.Classical.excluded_middle (h0 `contains_a_well_typed` r)
+  if FStar.StrongExcludedMiddle.strong_excluded_middle (h0 `contains_a_well_typed` r)
   then upd_tot h0 r x
   else
     if r.addr >= h0.next_addr
@@ -79,7 +79,7 @@ let alloc #a h0 x =
   let r = { addr = h0.next_addr; init = x } in
   r, upd #a h0 r x
 
-abstract let contains (#a:Type) (h:heap) (r:ref a): GTot Type0 = is_Some (h.memory r.addr)
+abstract let contains (#a:Type) (h:heap) (r:ref a): GTot Type0 = Some? (h.memory r.addr)
 
 val contains_a_well_typed_implies_contains: #a:Type -> h:heap -> r:ref a
                               -> Lemma (requires (h `contains_a_well_typed` r))
