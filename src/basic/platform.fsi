@@ -1,4 +1,4 @@
-﻿module FStar.Platform
+module FStar.Platform
 
 type sys =
 | Windows

@@ -1,3 +1,4 @@
+#light "off"
 ﻿module FStar.TypeChecker.TcTerm
 open FStar
 open FStar.TypeChecker

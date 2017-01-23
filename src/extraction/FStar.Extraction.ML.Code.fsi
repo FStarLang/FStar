@@ -1,3 +1,4 @@
+#light "off"
 ﻿(*
    Copyright 2008-2015 Abhishek Anand, Nikhil Swamy and Microsoft Research
 

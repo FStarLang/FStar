@@ -1,3 +1,4 @@
+#light "off"
 ﻿module FStar.Parser.Dep
 open FStar
 open FStar.Parser
