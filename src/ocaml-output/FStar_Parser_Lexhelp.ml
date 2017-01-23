@@ -264,19 +264,19 @@ tab;
 let kwd : Prims.string  ->  FStar_Parser_Parse.token Prims.option = (fun s -> (FStar_Util.smap_try_find kwd_table s))
 
 type lexargs =
-{getSourceDirectory : Prims.unit  ->  Prims.string; contents : Prims.string}
+{getSourceDirectory : Prims.unit  ->  Prims.string; filename : Prims.string; contents : Prims.string}
 
 
-let mkLexargs = (fun uu____447 -> (match (uu____447) with
+let mkLexargs : ((Prims.unit  ->  Prims.string) * Prims.string * Prims.string)  ->  lexargs = (fun uu____450 -> (match (uu____450) with
 | (srcdir, filename, contents) -> begin
-{getSourceDirectory = srcdir; contents = contents}
+{getSourceDirectory = srcdir; filename = filename; contents = contents}
 end))
 
 
 let kwd_or_id : lexargs  ->  FStar_Range.range  ->  Prims.string  ->  FStar_Parser_Parse.token = (fun args r s -> (
 
-let uu____469 = (kwd s)
-in (match (uu____469) with
+let uu____472 = (kwd s)
+in (match (uu____472) with
 | Some (v) -> begin
 v
 end
@@ -293,12 +293,12 @@ FStar_Parser_Parse.INT ((let _0_313 = (let _0_312 = (FStar_Range.line_of_pos (FS
 in (FStar_All.pipe_left FStar_Util.string_of_int _0_312))
 in ((_0_313), (false))))
 end
-| uu____472 -> begin
+| uu____475 -> begin
 (match ((FStar_Util.starts_with s FStar_Ident.reserved_prefix)) with
 | true -> begin
 (Prims.raise (FStar_Errors.Error ((((Prims.strcat FStar_Ident.reserved_prefix " is a reserved prefix for an identifier")), (r)))))
 end
-| uu____473 -> begin
+| uu____476 -> begin
 FStar_Parser_Parse.IDENT ((intern_string s))
 end)
 end)

@@ -1,3 +1,4 @@
+#light "off"
 module FStar.Bytes
 
 type bytes = (* abstract *)

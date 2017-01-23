@@ -1,3 +1,4 @@
+#light "off"
 module FStar.Version
 
 val version : string

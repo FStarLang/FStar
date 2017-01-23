@@ -49,13 +49,13 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
         $ fstar.exe --version
-        F* 0.9.1.1
+        F* 0.9.3.1-beta
         platform=Linux_x86_64
-        compiler=OCaml 4.02.3
-        date=2015-12-04T15:45:49+0100
-        commit=344c7d1
+        compiler=OCaml 4.04.0
+        date=2017-01-21T20:16:56+01:00
+        commit=34f11c159 (dirty)
         $ z3 --version
-        Z3 version 4.4.1
+        Z3 version 4.5.0
 
 2. Run the unit tests:
 
