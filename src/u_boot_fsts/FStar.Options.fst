@@ -564,11 +564,6 @@ let rec specs () : list<Getopt.opt> =
         "Print implicit arguments");
 
        ( noshort,
-        "print_ml",
-        ZeroArgs(fun () -> Bool true),
-        "Print OCaml AST");
-
-       ( noshort,
         "print_universes",
         ZeroArgs(fun () -> Bool true),
         "Print universes");
