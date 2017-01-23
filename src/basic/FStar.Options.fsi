@@ -51,7 +51,7 @@ val parse_cmd_line              : unit    -> parse_cmdline_res * list<string>
 val add_verify_module           : string  -> unit
 
 (* Only used with F# *)
-val add_light_off_file          : int     -> unit
+val add_light_off_file          : string  -> unit
 
 val __temp_no_proj              : string  -> bool
 val admit_smt_queries           : unit    -> bool
@@ -71,7 +71,7 @@ val explicit_deps               : unit    -> bool
 val extract_all                 : unit    -> bool
 val file_list                   : unit    -> list<string>
 val find_file                   : string  -> option<string>
-val fs_typ_app                  : int     -> bool
+val fs_typ_app                  : string  -> bool
 val fstar_home                  : unit    -> string
 val full_context_dependency     : unit    -> bool
 val hide_genident_nums          : unit    -> bool
