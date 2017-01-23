@@ -28,8 +28,8 @@ in (
 
 let deps = (
 
-let uu____56 = (let _0_274 = (FStar_Util.basename (FStar_List.hd deps))
-in (_0_274 = "prims.fst"))
+let uu____56 = (let _0_567 = (FStar_Util.basename (FStar_List.hd deps))
+in (_0_567 = "prims.fst"))
 in (match (uu____56) with
 | true -> begin
 (FStar_List.tl deps)
