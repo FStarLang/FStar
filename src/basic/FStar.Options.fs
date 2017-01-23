@@ -76,6 +76,10 @@ let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
 
+let light_off_files : ref<list<string>> = Util.mk_ref []
+let add_light_off_file (filename:string) = light_off_files := filename :: !light_off_files
+
+
 let init () =
   let vals =
        [
@@ -160,6 +164,7 @@ let init () =
 let clear () =
    let o = Util.smap_create 50 in
    fstar_options := [o];                                 //clear and reset the options stack
+   light_off_files := [];
    init()
 
 let _run = clear()
@@ -860,6 +865,7 @@ let prepend_output_dir fname =
   | None -> fname
   | Some x -> x ^ "/" ^ fname
 
+
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let check_cardinality            () = get_cardinality () = "check"
@@ -874,7 +880,7 @@ let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
 let explicit_deps                () = get_explicit_deps               ()
 let extract_all                  () = get_extract_all                 ()
-let fs_typ_app                   () = get_fs_typ_app                  ()
+let fs_typ_app    (filename:string) = get_fs_typ_app () && List.contains filename !light_off_files
 let full_context_dependency      () = if get_stratified () then get_MLish() = false else true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()

@@ -1,4 +1,4 @@
-﻿
+﻿#light "off"
 module FStar.Ident
 open FStar.Range
 
