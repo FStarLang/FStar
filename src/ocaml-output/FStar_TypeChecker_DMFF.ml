@@ -20,11 +20,7 @@ in {FStar_Syntax_Syntax.ppname = uu___93_64.FStar_Syntax_Syntax.ppname; FStar_Sy
 in (
 
 let d = (fun s -> (FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s))
-<<<<<<< HEAD
-in (
-=======
 in ((
->>>>>>> master
 
 let uu____70 = (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("ED")))
 in (match (uu____70) with

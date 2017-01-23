@@ -73,12 +73,7 @@ Doc (d)
 end))
 
 
-<<<<<<< HEAD
-let groups : doc Prims.list  ->  doc = (fun docs -> (let _120_35 = (reduce docs)
-in (group _120_35)))
-=======
 let groups : doc Prims.list  ->  doc = (fun docs -> (group (reduce docs)))
->>>>>>> master
 
 
 let combine : doc  ->  doc Prims.list  ->  doc = (fun uu____71 docs -> (match (uu____71) with

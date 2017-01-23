@@ -3251,9 +3251,6 @@ end))
 end)))
 
 
-<<<<<<< HEAD
-let d : Prims.string  ->  Prims.unit = (fun s -> (FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s))
-=======
 let effect_repr : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.term Prims.option = (fun env c u_c -> (effect_repr_aux false env c u_c))
 
 
@@ -3492,7 +3489,6 @@ end))
 end
 | FStar_Syntax_Syntax.Sig_assume (uu____6588) -> begin
 (
->>>>>>> master
 
 let uu____6594 = (not ((FStar_All.pipe_right quals (FStar_Util.for_all (fun x -> ((visibility x) || (x = FStar_Syntax_Syntax.Assumption)))))))
 in (match (uu____6594) with
