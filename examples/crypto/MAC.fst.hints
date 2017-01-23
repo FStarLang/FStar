@@ -1,7 +1,6 @@
 [
-  "xo®”hÀ7\u001fÖìxñ\u0002¹lV",
+  "wÔÖ'‰„Ž'\rpÎ”i[\u0016N",
   [
-    [ "MAC.pkey", 1, 2, 1, [ "@query" ], 0 ],
     [
       "MAC.entry",
       1,
@@ -17,9 +16,9 @@
       ],
       0
     ],
-    [ "MAC.Entry.k", 1, 2, 1, [ "@query" ], 0 ],
+    [ "MAC.__proj__Entry__item__k", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "MAC.Entry.t",
+      "MAC.__proj__Entry__item__t",
       1,
       2,
       1,
@@ -30,8 +29,7 @@
       ],
       0
     ],
-    [ "MAC.Entry.m", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MAC.mac", 1, 2, 1, [ "@query" ], 0 ],
+    [ "MAC.__proj__Entry__item__m", 1, 2, 1, [ "@query" ], 0 ],
     [
       "MAC.keygen",
       1,
@@ -44,7 +42,7 @@
     ],
     [
       "MAC.mac",
-      2,
+      1,
       2,
       1,
       [
@@ -54,11 +52,11 @@
         "assumption_FStar.Heap.SelConcat", "assumption_FStar.Heap.SelUpd2",
         "b2t_def", "data_typing_intro_FStar.Heap.Ref@tok",
         "equation_FStar.ST.modifies", "equation_FStar.ST.ref",
-        "equation_Prims.l_not", "function_token_typing_MAC.log",
-        "kinding_FStar.Heap.aref@tok", "kinding_MAC.entry@tok",
-        "kinding_Prims.list@tok", "l_and-interp", "l_or-interp",
-        "lemma_FStar.TSet.mem_complement", "lemma_FStar.TSet.mem_intersect",
-        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_union",
+        "function_token_typing_MAC.log", "kinding_FStar.Heap.aref@tok",
+        "kinding_MAC.entry@tok", "kinding_Prims.list@tok", "l_and-interp",
+        "l_not-interp", "l_or-interp", "lemma_FStar.TSet.mem_complement",
+        "lemma_FStar.TSet.mem_intersect", "lemma_FStar.TSet.mem_singleton",
+        "lemma_FStar.TSet.mem_union",
         "pretyping_24fcca413a49c3b9891a433ace204782",
         "pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
         "projection_inverse_BoxBool_proj_0", "ref_injectivity",

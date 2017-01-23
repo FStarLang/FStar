@@ -17,10 +17,9 @@
       [ "@query", "equation_FStar.Ghost.erased" ],
       0
     ],
-    [ "FStar.Ghost.lemma_hide_reveal", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Ghost.lemma_hide_reveal",
-      2,
+      1,
       2,
       1,
       [
@@ -29,10 +28,9 @@
       ],
       0
     ],
-    [ "FStar.Ghost.as_ghost", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Ghost.as_ghost",
-      2,
+      1,
       2,
       1,
       [
@@ -67,10 +65,9 @@
       [ "@query", "equation_FStar.Ghost.erased" ],
       0
     ],
-    [ "FStar.Ghost.elift1_p", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Ghost.elift1_p",
-      2,
+      1,
       2,
       1,
       [

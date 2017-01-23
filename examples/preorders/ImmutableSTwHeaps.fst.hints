@@ -1,13 +1,8 @@
 [
-  "ña‘«Wy2F\u0000×ü>¢öÓû",
+  "@9\u0007Ýý)‚Óª¾ä8¼sßË",
   [
-    [ "ImmutableSTwHeaps.sel", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ImmutableSTwHeaps.upd", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ImmutableSTwHeaps.heap_rel", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ImmutableSTwHeaps.heap_rel", 2, 2, 1, [ "@query" ], 0 ],
-    [ "ImmutableSTwHeaps.lift_div_istate", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "ImmutableSTwHeaps.7651",
+      "ImmutableSTwHeaps.5292",
       1,
       2,
       1,
@@ -18,7 +13,6 @@
       ],
       0
     ],
-    [ "ImmutableSTwHeaps.IST", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ImmutableSTwHeaps.ist_witnessed",
       1,
@@ -31,8 +25,6 @@
       ],
       0
     ],
-    [ "ImmutableSTwHeaps.ist_get", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ImmutableSTwHeaps.ist_put", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ImmutableSTwHeaps.ist_witness",
       1,
@@ -57,11 +49,9 @@
       ],
       0
     ],
-    [ "ImmutableSTwHeaps.gen_ref", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ImmutableSTwHeaps.alloc", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ImmutableSTwHeaps.alloc",
-      2,
+      1,
       2,
       1,
       [
@@ -72,7 +62,6 @@
         "l_or-interp", "lemma_FStar.TSet.mem_singleton",
         "lemma_FStar.TSet.mem_union",
         "pretyping_24fcca413a49c3b9891a433ace204782", "ref_injectivity",
-        "ref_inversion",
         "refinement_interpretation_Tm_refine_7e4fb39fb289d0cf400f348dcba69d21",
         "refinement_interpretation_Tm_refine_b0e2fbc99f1f2f8504b456c7567e5361",
         "refinement_interpretation_Tm_refine_c3ad7b12cbe4b2476807f377c3846893",
@@ -81,10 +70,9 @@
       ],
       0
     ],
-    [ "ImmutableSTwHeaps.read", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ImmutableSTwHeaps.read",
-      2,
+      1,
       2,
       1,
       [
@@ -93,10 +81,9 @@
       ],
       0
     ],
-    [ "ImmutableSTwHeaps.write", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ImmutableSTwHeaps.write",
-      2,
+      1,
       2,
       1,
       [

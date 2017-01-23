@@ -21,10 +21,10 @@ let all_post (a:Type) = all_post_h HyperHeap.t a
 let all_wp (a:Type) = all_wp_h HyperHeap.t a
 new_effect ALL = ALL_h HyperHeap.t
 
-inline let lift_state_all (a:Type) (wp:st_wp a) (p:all_post a) =  wp (fun a -> p (V a))
+unfold let lift_state_all (a:Type) (wp:st_wp a) (p:all_post a) =  wp (fun a -> p (V a))
 sub_effect STATE ~> ALL = lift_state_all
 
-inline let lift_exn_all (a:Type) (wp:ex_wp a)   (p:all_post a) (h:HyperHeap.t) = wp (fun ra -> p ra h)
+unfold let lift_exn_all (a:Type) (wp:ex_wp a)   (p:all_post a) (h:HyperHeap.t) = wp (fun ra -> p ra h)
 sub_effect EXN   ~> ALL = lift_exn_all
 
 effect All (a:Type) (pre:all_pre) (post: (HyperHeap.t -> Tot (all_post a))) =
@@ -35,6 +35,6 @@ effect ML (a:Type) =
 
 assume val pipe_right: 'a -> ('a -> 'b) -> 'b
 assume val pipe_left: ('a -> 'b) -> 'a -> 'b
-assume val failwith: string -> All 'a (fun h -> True) (fun h a h' -> is_Err a /\ h==h')
+assume val failwith: string -> All 'a (fun h -> True) (fun h a h' -> Err? a /\ h==h')
 assume val exit: int -> 'a
 assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a

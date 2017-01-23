@@ -11,19 +11,19 @@ type exp =
 
 type sub = nat -> Tot (exp)
 
-type renaming (s:sub) = (forall x. is_EVar (s x))
+type renaming (s:sub) = (forall x. EVar? (s x))
 
 val is_renaming : s:sub -> GTot nat
 let is_renaming s =
   if (excluded_middle (renaming s)) then 0 else 1
 
 val is_evar : exp -> Tot nat
-let is_evar e = if (is_EVar e) then 0 else 1
+let is_evar e = if (EVar? e) then 0 else 1
 
 val sub_einc : nat -> Tot (exp)
 let sub_einc x = EVar (x+1)
 
-val esubst : s:sub -> e:exp -> Tot (r:exp{renaming s /\ is_EVar e ==> is_EVar r})
+val esubst : s:sub -> e:exp -> Tot (r:exp{renaming s /\ EVar? e ==> EVar? r})
 (decreases %[is_evar e; is_renaming s; 1;e])
 val sub_elam : s:sub -> Tot (r:sub{renaming s ==> renaming r})
 (decreases %[1;is_renaming s; 0; EVar 0])

@@ -2,8 +2,7 @@ module TestMonotonic
 
 open FStar.HyperHeap
 open FStar.HyperStack
-open FStar.HST
-open FStar.HST.Monotonic.RRef
+open FStar.Monotonic.RRef
 
 type t = option bool
 
@@ -17,8 +16,8 @@ let rel (a:t) (b:t) =
   | Some true,  Some true -> True
   | _, _ -> False
 
-val root_has_color_zero': unit ->
-  Lemma (requires True) (ensures (color root = 0)) [SMTPat (color root)]
+val root_has_color_zero': u:unit ->
+  Lemma (requires True) (ensures (color root = 0)) [SMTPat (has_type u unit)]
 let root_has_color_zero' _ = root_has_color_zero ()
 
 val rel_transitive: a:t -> b:t -> c:t -> Lemma
@@ -29,18 +28,18 @@ let rel_transitive a b c = ()
 
 val init: unit -> ST (m_rref root t rel)
   (requires (fun m0 -> True))
-  (ensures  (fun m0 r m1 -> witnessed (fun m -> is_Some (m_sel m r))))
+  (ensures  (fun m0 r m1 -> witnessed (fun m -> Some? (m_sel m r))))
 let init _ =
   let r = m_alloc #t #rel root (Some false) in
-  witness r (fun m -> is_Some (m_sel m r));
+  witness r (fun m -> Some? (m_sel m r));
   r
 
 val set: mr:m_rref root t rel -> STL unit
-  (requires (fun m0 -> witnessed (fun m -> is_Some (m_sel m mr))))
+  (requires (fun m0 -> witnessed (fun m -> Some? (m_sel m mr))))
   (ensures  (fun _ _ _ -> witnessed (fun m -> m_sel m mr = Some true)))
 let set mr =
   m_recall mr;
-  testify (fun m -> is_Some (m_sel m mr));
+  testify (fun m -> Some? (m_sel m mr));
   let v = m_read mr in
   begin
   match v with

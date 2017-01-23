@@ -30,19 +30,19 @@ end) -> struct
     | Left of ' p
     | Right of ' q
 
-  let is_Left = function Left _ -> true | Right _ -> false
+  let uu___is_Left = function Left _ -> true | Right _ -> false
 
-  let is_Right = function Left _ -> false | Right _ -> true
+  let uu___is_Right = function Left _ -> false | Right _ -> true
 
   type (' p, ' q) l_and =
   | And of ' p * ' q
 
-  let is_And _ = true
+  let uu___is_And _ = true
 
   type l__True =
     | T
 
-  let is_T _ = true
+  let uu___is_T _ = true
 
   type l__False = unit
   (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
@@ -79,13 +79,13 @@ end) -> struct
   let op_disEquality x y = x<>y
   let op_AmpAmp x y = x && y
   let op_BarBar x y  = x || y
-  let is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
-  let is_Cons l = not (is_Nil l)
+  let uu___is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
+  let uu___is_Cons l = not (uu___is_Nil l)
   let strcat x y = x ^ y
-  let is_Some = function (*consider redefining Option.isSome as this function*)
+  let uu___is_Some = function (*consider redefining Option.isSome as this function*)
       | Some _ -> true
       | None -> false
-  let is_None o = not (is_Some o)
+  let uu___is_None o = not (uu___is_Some o)
   let raise e = raise e
 
   let ___Some___v x = match x with
@@ -96,11 +96,11 @@ end) -> struct
     | Inl of 'a
     | Inr of 'b
 
-  let is_Inl = function
+  let uu___is_Inl = function
     | Inl _ -> true
     | _     -> false
 
-  let is_Inr x = not (is_Inl x)
+  let uu___is_Inr x = not (uu___is_Inl x)
 
   let ___Inl___v x = match x with
     | Inl v -> v

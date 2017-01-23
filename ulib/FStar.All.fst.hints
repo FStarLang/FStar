@@ -1,9 +1,1 @@
-[
-  "éÍîüÞ0¦GÕ™×rµ>”<",
-  [
-    [ "FStar.All.lift_state_all", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.All.lift_exn_all", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.All.All", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.All.failwith", 1, 2, 1, [ "@query" ], 0 ]
-  ]
-]
+[ "åà-y‹…ZæIí\u000bé–¸r}", [] ]

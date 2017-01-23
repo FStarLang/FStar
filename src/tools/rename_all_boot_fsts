@@ -1,0 +1,21 @@
+#!/bin/bash
+
+for file in `find . -name "FStar.*.fs*" -print | grep -v u_boot_fsts | grep -v "~"`; do
+	directory=`dirname $file`
+        echo $file | grep -q '.*fs$'
+        if [ $? -eq 0 ]; then
+    	    full_name=`basename $file .fs`
+            echo "[rename_all_boot_fsts]: copying $file to u_boot_fsts/$full_name.fst"
+	    cp $file u_boot_fsts/$full_name.fst
+	else
+            echo $file | grep -q '.*fsi$'
+            if [ $? -eq 0 ]; then
+      		full_name=`basename $file .fsi`
+		echo "[rename_all_boot_fsts]: copying $file to u_boot_fsts/$full_name.fsti"
+		cp $file u_boot_fsts/$full_name.fsti
+	    else
+		echo "$file is unrecognized"
+	    fi;
+	fi;
+done
+    

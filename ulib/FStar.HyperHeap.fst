@@ -19,6 +19,8 @@ open FStar.Heap
 
 abstract let rid = list (int * int)
 
+let reveal (r:rid) : GTot (list (int * int)) = r
+
 abstract let color (x:rid): GTot int = 
   match x with 
   | [] -> 0
@@ -35,8 +37,14 @@ assume HasEq_rid: hasEq rid //TODO: we just proved this above, but we need to ex
 
 abstract let root : rid = []
 
+//is this SMTPat bad ?
+val lemma_root_has_color_zero: r:rid{r = root}
+                               -> Lemma (requires (True)) (ensures (color r = 0))
+                                 [SMTPat (color r)]
+let lemma_root_has_color_zero r = ()
+
 //expose this so that no-one should assume otheriwse
-let root_has_color_zero (u:unit) : Lemma (color root = 0) = ()
+let root_has_color_zero (u:unit) :Lemma (color root = 0) = ()
 
 abstract let rref (id:rid) (a:Type) = Heap.ref a
 
@@ -66,7 +74,7 @@ abstract val includes : rid -> rid -> GTot bool
 let rec includes r1 r2 =
   if r1=r2 then true
   else if List.Tot.length r2 > List.Tot.length r1
-  then includes r1 (Cons.tl r2)
+  then includes r1 (Cons?.tl r2)
   else false
 
 let disjoint (i:rid) (j:rid) : GTot bool =
@@ -77,32 +85,32 @@ private val lemma_aux: k:rid -> i:rid
                     List.Tot.length k > 0
                     /\ List.Tot.length k <= List.Tot.length i
                     /\ includes k i
-                    /\ not (includes (Cons.tl k) i))
+                    /\ not (includes (Cons?.tl k) i))
                  (ensures False)
                  (decreases (List.Tot.length i))
-let rec lemma_aux k i = lemma_aux k (Cons.tl i)
+let rec lemma_aux k i = lemma_aux k (Cons?.tl i)
 
 abstract val lemma_disjoint_includes: i:rid -> j:rid -> k:rid ->
   Lemma (requires (disjoint i j /\ includes j k))
         (ensures (disjoint i k))
-        (decreases (List.Tot.length k))
+        (decreases (List.Tot.length (reveal k)))
         [SMTPat (disjoint i j);
          SMTPat (includes j k)]
 let rec lemma_disjoint_includes i j k =
   if List.Tot.length k <= List.Tot.length j
   then ()
-  else (lemma_disjoint_includes i j (Cons.tl k);
-        if List.Tot.length i <= List.Tot.length (Cons.tl k)
+  else (lemma_disjoint_includes i j (Cons?.tl k);
+        if List.Tot.length i <= List.Tot.length (Cons?.tl k)
         then ()
         else (if includes k i
               then lemma_aux k i
               else ()))
 
 abstract val extends: rid -> rid -> GTot bool
-let extends r0 r1 = is_Cons r0 && Cons.tl r0 = r1
+let extends r0 r1 = Cons? r0 && Cons?.tl r0 = r1
 
 abstract val parent: r:rid{r<>root} -> Tot rid
-let parent r = Cons.tl r
+let parent r = Cons?.tl r
 
 abstract val lemma_includes_refl: i:rid
                       -> Lemma (requires (True))
@@ -153,10 +161,10 @@ let fresh_region (i:rid) (m0:t) (m1:t) =
  /\ Map.contains m1 i
 
 let sel (#a:Type) (#i:rid) (m:t) (r:rref i a) : GTot a = Heap.sel (Map.sel m i) (as_ref r)
-inline let op_String_Access (#a:Type) (#i:rid) (m:t) (r:rref i a) = sel m r
+unfold let op_String_Access (#a:Type) (#i:rid) (m:t) (r:rref i a) = sel m r
 
 let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) : GTot t = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
-inline let op_String_Assignment (#a:Type) (#i:rid) (m:t) (r:rref i a) v = upd m r v
+unfold let op_String_Assignment (#a:Type) (#i:rid) (m:t) (r:rref i a) v = upd m r v
 
 open FStar.Set
 
@@ -226,7 +234,16 @@ let lemma_disjoint_parents pr r ps s = ()
 
 (* AR: using excluded_middle here, could make it GTot Type0 instead ? *)
 let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) : GTot bool =
-    Map.contains m i && (FStar.Classical.excluded_middle (Heap.contains (Map.sel m i) (as_ref r)))
+  Map.contains m i && (FStar.Classical.excluded_middle (Heap.contains (Map.sel m i) (as_ref r)))
+  (* AR: in master this is the code *)
+  Map.contains m i && Heap.contains (Map.sel m i) (as_ref r)
+
+(*
+ * AR: using this from HyperStack:weak_contains,
+ * Map.contains covered by weak_live_region in HyperStack
+ *)
+let weak_contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) : GTot bool =
+  Heap.contains (Map.sel m i) (as_ref r)
 
 let fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
   ~ (Heap.contains (Map.sel m0 i) (as_ref r))

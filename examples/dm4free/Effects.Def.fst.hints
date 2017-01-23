@@ -1,11 +1,9 @@
 [
-  "j+<æÝ™)ô\u000feÊ€÷oÎÊ",
+  "w!\"ìëuo¿T\u0018K”?§©P",
   [
-    [ "Effects.Def.eq_m", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.monad_laws_via_eq", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.monad_laws_via_eq",
-      2,
+      1,
       2,
       1,
       [
@@ -19,10 +17,9 @@
       ],
       0
     ],
-    [ "Effects.Def.morphism_laws_via_eq", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.morphism_laws_via_eq",
-      2,
+      1,
       0,
       0,
       [
@@ -37,11 +34,7 @@
       ],
       0
     ],
-    [ "Effects.Def.eq_st", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.return_st", 1, 2, 1, [ "@query" ], 0 ],
     [ "Effects.Def.bind_st", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.get", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.put", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.st_laws",
       1,
@@ -70,8 +63,6 @@
       ],
       0
     ],
-    [ "Effects.Def.eq_ex", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.return_ex", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.bind_ex",
       1,
@@ -87,7 +78,6 @@
       ],
       0
     ],
-    [ "Effects.Def.raise_", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.handle",
       1,
@@ -138,8 +128,6 @@
       ],
       0
     ],
-    [ "Effects.Def.eq_stexn", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.return_stexn", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.bind_stexn",
       1,
@@ -151,8 +139,9 @@
         "function_token_typing_Effects.Def.s",
         "interpretation_Tm_arrow_d31be72f7ffa26a6c694331da23e23e2",
         "kinding_Prims.option@tok", "lemma_Prims.invertOption",
-        "proj_equation_Prims.Mktuple2__1", "typing_Prims.Mktuple2._1",
-        "typing_Prims.is_None", "typing_Prims.is_Some"
+        "proj_equation_Prims.Mktuple2__1",
+        "typing_Prims.__proj__Mktuple2__item___1",
+        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some"
       ],
       0
     ],
@@ -191,8 +180,6 @@
       ],
       0
     ],
-    [ "Effects.Def.eq_exnst", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Effects.Def.eq_exnst", 2, 2, 1, [ "@query" ], 0 ],
     [ "Effects.Def.return_exnst", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.bind_exnst",
@@ -288,7 +275,6 @@
       ],
       0
     ],
-    [ "Effects.Def.lift_ex_stexn", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Effects.Def.morphism_lift_ex_stexn",
       1,

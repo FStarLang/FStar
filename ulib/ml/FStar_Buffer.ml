@@ -30,6 +30,8 @@ type u64 = FStar_UInt64.t
 type u128 = FStar_UInt128.t
 
 let create init len = {content = Array.make len init; idx = 0; length = len}
+let createL l = {content = Array.of_list l; idx = 0; length = List.length l}
+let rcreate r init len = create init len
 let index b n = Array.get b.content (n+b.idx)
 let upd (b:'a buffer) (n:int) (v:'a) = Array.set b.content (n+b.idx) v
 let sub b i len = {content = b.content; idx = b.idx+i; length = len}
@@ -40,9 +42,17 @@ let split a i = (sub a 0 i, sub a i (a.length - i))
 let of_seq s l = ()
 let copy b l = {content = Array.sub b.content b.idx l; idx = 0; length = l}
 
+let eqb b1 b2 len =
+  Array.sub b1.content b1.idx len = Array.sub b2.content b2.idx len
+
 type ('a, 'b, 'c, 'd) modifies_buf = ()
 let op_Plus_Plus a b = BatSet.empty
 let only a = BatSet.empty
 
 let op_Array_Access b n = index b n
 let op_Array_Assignment b n v = upd b n v
+
+let recall = fun b -> ()
+
+(* AR: revisit. This is used in the idealization code of AEAD encrypt *)
+let to_seq_full b = Obj.magic ()

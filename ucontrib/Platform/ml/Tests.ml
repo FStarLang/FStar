@@ -32,7 +32,7 @@ let total  = ref 0
 
 let client_sock = socket PF_INET SOCK_STREAM 0
 
-let tcp_client_sock = Platform.Tcp.connect "fstar-lang.org" 25
+let tcp_client_sock = Platform.Tcp.connect "fstar-lang.org" (Z.of_int 25)
 
 let hentry =
     gethostbyname "fstar-lang.org" ;;
@@ -41,7 +41,7 @@ connect client_sock (ADDR_INET (hentry.h_addr_list.(0), 25)) ; (* SMTP *)
 
 let unix = unix_recv client_sock 1024 in
 (* Printf.printf "Unix: %s \n" unix; *)
-let tcp  = tcp_recv tcp_client_sock 1024 in
+let tcp  = tcp_recv tcp_client_sock (Z.of_int 1024) in
 (* Printf.printf "Tcp:  %s \n" tcp; *)
 total := !total + 1;
 if unix=tcp then
@@ -52,11 +52,10 @@ Platform.Tcp.send tcp_client_sock (Platform.Bytes.abytes "mail from: <strider@fs
 
 let unix = unix_recv client_sock 1024 in
 (* Printf.printf "Unix: %s \n" unix; *)
-let tcp  = tcp_recv tcp_client_sock 1024 in
-(* Printf.printf "Tcp:  %s \n" tcp; *)
+let tcp  = tcp_recv tcp_client_sock (Z.of_int 1024) in
+Printf.printf "Tcp:  %s \n" tcp;
 total := !total + 1;
-if unix=tcp && tcp= "250 OK
-"
+if unix=tcp && tcp= "250 OK\r\n"
 then
   passed := !passed + 1;
 
@@ -104,7 +103,7 @@ Thread.create thread () |> ignore ;
 
 let (client_sock, client_addr) = accept server_sock in
 
-let tcp = tcp_recv client_sock 1024 in
+let tcp = tcp_recv client_sock (Z.of_int 1024) in
 (* Printf.printf "Tcp:  %s \n" tcp; *)
 total := !total + 1;
 if tcp="Hello\n" then

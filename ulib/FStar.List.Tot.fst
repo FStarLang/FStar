@@ -22,11 +22,11 @@ let isEmpty l = match l with
   | [] -> true
   | _ -> false
 
-val hd: l:list 'a{is_Cons l} -> Tot 'a
+val hd: l:list 'a{Cons? l} -> Tot 'a
 let hd = function
   | hd::_ -> hd
 
-val tl: l:list 'a {is_Cons l} -> Tot (list 'a)
+val tl: l:list 'a {Cons? l} -> Tot (list 'a)
 let tl = function
   | _::tl -> tl
 
@@ -108,6 +108,13 @@ val fold_right: ('a -> 'b -> Tot 'b) -> list 'a -> 'b -> Tot 'b
 let rec fold_right f l x = match l with
   | [] -> x
   | hd::tl -> f hd (fold_right f tl x)
+
+val fold_left2 : f:('a -> 'b -> 'c -> Tot 'a) -> accu:'a -> l1:(list 'b) -> l2:(list 'c) ->
+  Pure 'a (requires (length l1 == length l2)) (ensures (fun _ -> True)) (decreases l1)
+let rec fold_left2 f accu l1 l2 =
+  match (l1, l2) with
+  | ([], []) -> accu
+  | (a1::l1, a2::l2) -> fold_left2 f (f accu a1 a2) l1 l2
 
 (** List searching **)
 

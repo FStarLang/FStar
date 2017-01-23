@@ -12,7 +12,7 @@ type exp =
 
 type sub = var -> Tot exp
 
-type renaming (s:sub) = (forall (x:var). is_EVar (s x))
+type renaming (s:sub) = (forall (x:var). EVar? (s x))
 
 assume val is_renaming : s:sub -> Tot (n:int{  (renaming s  ==> n=0) /\
                                       (~(renaming s) ==> n=1)})
@@ -23,24 +23,26 @@ let sub_inc y = EVar (y+1)
 val renaming_sub_inc : unit -> Lemma (renaming (sub_inc))
 let renaming_sub_inc _ = ()
 
-let is_var (e:exp) : int = if is_EVar e then 0 else 1
+let is_var (e:exp) : int = if EVar? e then 0 else 1
 
+val sub_lam: s:sub -> Tot sub
 val subst : s:sub -> e:exp -> Pure exp (requires True)
-     (ensures (fun e' -> (renaming s /\ is_EVar e) ==> is_EVar e'))
-     (decreases %[is_var e; is_renaming s; e])
+      (ensures (fun e' -> (renaming s /\ EVar? e) ==> EVar? e'))
+      (decreases %[is_var e; is_renaming s; e])
+
 let rec subst s e =
   match e with
   | EVar x -> s x
 
   | ELam e1 ->
-     let sub_elam : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) =
-       fun y -> if y=0 then EVar y
-                       else subst sub_inc (s (y-1))            (* shift +1 *)
-     in ELam (subst sub_elam e1)
+     let sub_elam = sub_lam s in
+     assert (forall y. renaming s ==> EVar? (sub_elam y)) ;
+     ELam (subst sub_elam e1)
 
-val sub_lam: s:sub -> Tot sub
-let sub_lam s y = if y=0 then EVar y
-                   else subst sub_inc (s (y-1))
+and sub_lam s y : Tot (e:exp{renaming s ==> EVar? e}) =
+  if y=0 then EVar y
+  else subst sub_inc (s (y-1))
+
 
 (* Substitution extensional; trivial with the extensionality axiom *)
 val subst_extensional: s1:sub -> s2:sub{feq s1 s2} -> e:exp ->

@@ -1,5 +1,5 @@
 [
-  "œéùÅ“:À¹~BÁ-ÅØ9Ï",
+  "‰ûA²ÖÒÁÙ1\n’å<„Z",
   [
     [
       "FStar.Int32.t'",
@@ -36,7 +36,19 @@
       0
     ],
     [
-      "FStar.Int32.Mk.v",
+      "FStar.Int32.t'",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Int.int_t",
+        "equation_FStar.Int32.n",
+        "haseqTm_refine_ae791d5fae3bac5aab1116259a4112c6"
+      ],
+      0
+    ],
+    [
+      "FStar.Int32.__proj__Mk__item__v",
       1,
       2,
       1,
@@ -46,7 +58,7 @@
       ],
       0
     ],
-    [ "FStar.Int32.Mk.v", 2, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Int32.__proj__Mk__item__v", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Int32.v",
       1,

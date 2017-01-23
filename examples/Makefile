@@ -3,6 +3,7 @@ include Makefile.include
 
 ALL_EXAMPLE_DIRS=\
 bug-reports \
+low-level \
 data_structures \
 algorithms \
 crypto \
@@ -13,16 +14,15 @@ software_foundations \
 relational \
 relational/new \
 voting \
-low-level \
 maths \
 paradoxes \
 printf \
 metatheory \
 verifythis \
 preorders \
-dm4free
-
-#unit-tests
+dm4free \
+incl \
+unit-tests
 
 # wysteria (was before preorders)
 # This is failing since some time before 2016-09-07

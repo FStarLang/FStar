@@ -12,7 +12,7 @@ let macsize = BMAC.macsize
 type key = BMAC.key
 type tag = BMAC.tag
 
-assume type bspec (spec: (text -> Type)) (b:block) = 
+type bspec (spec: (text -> Type)) (b:block) = 
   (forall (t:text). equal b (encode t) ==> spec t)
 
 

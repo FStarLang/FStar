@@ -1,32 +1,18 @@
 (* https://www.lexifi.com/blog/references-physical-equality *)
-type 'a ref = {
-  mutable contents: 'a;
-  id: int
-}
 
-let read x =
-  x.contents
+open FStar_CommonST
 
-let op_Colon_Equals i x y =
-  x.contents <- y
+type 'a ref = 'a FStar_Heap.ref
 
-let uid = ref 0
+let read = read
 
-let alloc contents =
-  let id = incr uid; !uid in
-  let r = { id; contents } in
-  Obj.(set_tag (repr r) object_tag);
-  r
+let op_Bang = op_Bang
 
-let op_Bang i x =
-  x.contents
+let write = write
 
-let new_region = (fun r0 -> ())
-let new_colored_region = (fun r0 c -> ())
+let op_Colon_Equals = op_Colon_Equals
 
-let ralloc i contents =
-  alloc contents
+let alloc = alloc
 
-let recall = (fun i r -> ())
-let recall_region = (fun r -> ())
-let get () = ()
+let recall = recall
+let get = get

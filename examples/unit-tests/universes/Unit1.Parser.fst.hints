@@ -7,7 +7,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -20,7 +20,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Parser.t3", 3, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Parser.t5",
       1,
@@ -29,21 +28,17 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Parser.t5", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Parser.f1", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Parser.f1",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Parser.f2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Parser.f3", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Parser.f3",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -74,9 +69,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Parser.s1", 5, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Parser.s2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.Parser.s2", 2, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.Parser.s3", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Parser.s3",
@@ -101,7 +93,6 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
-    ],
-    [ "Unit1.Parser.s3", 5, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

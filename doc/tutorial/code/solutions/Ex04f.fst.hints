@@ -1,5 +1,5 @@
 [
-  "1Ú\u0007i˝\u00066\bAvV¯ïZù\u0004",
+  "é\u0003ˇG|\u000efÀ1xÀ\u001b.ã'\u0003",
   [
     [
       "Ex04f.append",
@@ -25,7 +25,6 @@
       ],
       0
     ],
-    [ "Ex04f.snoc", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex04f.fold_left",
       1,
@@ -44,15 +43,14 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
     ],
-    [ "Ex04f.append_cons", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex04f.append_cons",
-      3,
+      2,
       2,
       1,
       [
@@ -65,8 +63,8 @@
         "fuel_irrelevance_Ex04f.append.fuel_instrumented",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons", "unit_typing"
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons",
+        "unit_typing"
       ],
       0
     ],
@@ -76,22 +74,24 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
     ],
-    [ "Ex04f.snoc_append", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex04f.snoc_append",
-      3,
+      2,
       2,
       1,
       [
         "@query", "binder_x_63893f6163361bb7b4db46296cfdfc01_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Ex04f.snoc", "fuel_guarded_inversion_Prims.list",
-        "subterm_ordering_Prims.Cons", "unit_typing"
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons",
+        "unit_typing"
       ],
       0
     ],
@@ -101,15 +101,14 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
     ],
-    [ "Ex04f.reverse_append", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex04f.reverse_append",
-      3,
+      2,
       2,
       1,
       [
@@ -119,7 +118,7 @@
         "fuel_irrelevance_Ex04f.reverse.fuel_instrumented",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "unit_inversion", "unit_typing"
+        "projection_inverse_Prims.Cons_tl"
       ],
       0
     ],
@@ -129,22 +128,20 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "@query", "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
     ],
-    [ "Ex04f.fold_left_cons_is_reverse", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex04f.fold_left_cons_is_reverse",
-      3,
+      2,
       2,
       1,
       [
         "@query", "binder_x_63893f6163361bb7b4db46296cfdfc01_2",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.Cons@tok",
+        "constructor_distinct_Prims.Nil", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_Prims.Cons@tok",
         "equation_with_fuel_Ex04f.append.fuel_instrumented",
         "equation_with_fuel_Ex04f.fold_left.fuel_instrumented",
         "equation_with_fuel_Ex04f.reverse.fuel_instrumented",
@@ -153,10 +150,9 @@
         "fuel_correspondence_Ex04f.reverse.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "fuel_irrelevance_Ex04f.fold_left.fuel_instrumented",
-        "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons", "unit_typing"
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons",
+        "unit_typing"
       ],
       0
     ]

@@ -1,0 +1,51 @@
+[
+  "|ˇIèﬂAˇ]˛0?3J–q\n",
+  [
+    [
+      "AES.plain",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_AES.blocksize", "equation_AES.psize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "AES.cipher",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_AES.blocksize", "equation_AES.csize",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "AES.key",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_AES.keysize", "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "AES.enc",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_AES.blocksize", "equation_AES.bytes",
+        "equation_AES.nbytes", "equation_AES.plain", "equation_AES.psize",
+        "equation_Platform.Bytes.bytes",
+        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
+      ],
+      0
+    ]
+  ]
+]

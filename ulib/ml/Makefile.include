@@ -4,10 +4,17 @@
 # This Makefile assumes that $(FSTAR_HOME) is properly defined.
 
 FSTAR_REALIZED_MODULES=All BaseTypes Char Float Heap Int8 Int16 Int32 Int64 \
-  UInt8 UInt16 UInt32 UInt64 IO List Option Set ST String HyperHeap HyperStack HST
+  UInt8 UInt16 UInt32 UInt64 Int_Cast IO List Option Set ST String HyperHeap HyperStack \
+  HST Buffer Mul
 FSTAR_DEFAULT_ARGS=$(addprefix --no_extract FStar.,$(FSTAR_REALIZED_MODULES))
 ULIB_ML=$(FSTAR_HOME)/ulib/ml
-OCAML_DEFAULT_FLAGS=$(ULIB_ML)/fstarlib.cmxa -I $(ULIB_ML)
+
+ifeq ($(MEM),HST)
+     OCAML_DEFAULT_FLAGS=$(ULIB_ML)/fstarlib.cmxa -I $(ULIB_ML)/extracted -I $(ULIB_ML)/hyperstack -I $(ULIB_ML)
+else
+     OCAML_DEFAULT_FLAGS=$(ULIB_ML)/fstarlib.cmxa -I $(ULIB_ML)
+endif
+
 OCAMLOPT_=ocamlfind opt -package batteries,stdint,zarith -linkpkg -g
 OCAMLOPT=$(OCAMLOPT_) $(OCAML_DEFAULT_FLAGS)
 OCAMLC_=ocamlfind c -package batteries,stdint,zarith -linkpkg -g -I $(ULIB_ML)

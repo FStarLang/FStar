@@ -1,0 +1,35 @@
+[
+  ".å\u0014ç\\ÜÉ7ÂLqíık|,",
+  [
+    [
+      "HyE.RSA.plain",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_CoreCrypto.AES_128_GCM",
+        "equality_tok_CoreCrypto.AES_128_GCM@tok",
+        "equation_CoreCrypto.aeadKeySize", "equation_HyE.RSA.plainsize",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "HyE.RSA.enc",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "assumption_Prims.option_haseq",
+        "equality_tok_CoreCrypto.AES_128_GCM@tok",
+        "equation_CoreCrypto.aeadKeySize", "equation_HyE.RSA.plain",
+        "equation_HyE.RSA.plainsize", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes",
+        "function_token_typing_HyE.RSA.plain",
+        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
+      ],
+      0
+    ]
+  ]
+]

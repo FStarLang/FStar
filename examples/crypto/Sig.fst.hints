@@ -1,0 +1,116 @@
+[
+  "ò».\tÍv–;^e´e®\u0014Fã",
+  [
+    [
+      "Sig.sig_t",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Sig.sigsize", "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "Sig.pk",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Sig.pksize", "projection_inverse_BoxInt_proj_0" ],
+      0
+    ],
+    [
+      "Sig.sk",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Sig.sksize", "projection_inverse_BoxInt_proj_0" ],
+      0
+    ],
+    [
+      "Sig.entry",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sig_t",
+        "equation_Sig.sigsize", "equation_Sig.text",
+        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5",
+        "haseqTm_refine_cde4d222f8ab5744405107af8baa7ed1"
+      ],
+      0
+    ],
+    [ "Sig.__proj__Entry__item__k", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Sig.__proj__Entry__item__t",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Platform.Bytes.bytes", "equation_Sig.text",
+        "proj_equation_Sig.Entry_k", "projection_inverse_Sig.Entry_k",
+        "refinement_interpretation_Tm_refine_cde4d222f8ab5744405107af8baa7ed1"
+      ],
+      0
+    ],
+    [ "Sig.__proj__Entry__item__m", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Sig.sign", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Sig.verify",
+      1,
+      2,
+      2,
+      [
+        "@query", "data_elim_Prims.Some", "data_elim_Sig.Entry",
+        "disc_equation_Prims.Some", "equation_Platform.Bytes.bytes",
+        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
+        "equation_Sig.text", "fuel_guarded_inversion_Sig.entry",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9970fb6494b58df4001869be77ed038f",
+        "refinement_interpretation_Tm_refine_cde4d222f8ab5744405107af8baa7ed1"
+      ],
+      0
+    ],
+    [
+      "Sig.verify",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
+        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
+      ],
+      0
+    ],
+    [
+      "Sig.verify",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_Sig.text"
+      ],
+      0
+    ],
+    [
+      "Sig.verify",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
+        "equation_Sig.text",
+        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
+      ],
+      0
+    ]
+  ]
+]

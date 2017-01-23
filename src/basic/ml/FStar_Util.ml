@@ -34,12 +34,20 @@ let is_punctuation c = (
 let return_all x = x
 
 type time = float
-let now () = Unix.gettimeofday ()
+let now () = BatUnix.gettimeofday ()
 let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
   n, 
   Z.of_float (n *. 1000.0)
-
+let record_time f = 
+    let start = now () in
+    let res = f () in 
+    let _, elapsed = time_diff start (now()) in
+    res, elapsed
+let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
+let is_before t1 t2 = compare t1 t2 < 0
+let string_of_time = string_of_float
+  
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -81,10 +89,11 @@ let ask_process (p:proc) (stdin:string) : string =
   let out = Buffer.create 16 in
 
   let rec read_out _ =
-    let s = BatString.trim (input_line p.inc) in
-    if s = "Done!" then ()
-    else
-      (Buffer.add_string out (s ^ "\n"); read_out ())
+    try
+      let s = BatString.trim (input_line p.inc) in
+      if s = "Done!" then ()
+      else (Buffer.add_string out (s ^ "\n"); read_out ())
+    with End_of_file -> Buffer.add_string out ("\nkilled\n")
   in
 
   let child_thread = Thread.create (fun _ -> read_out ()) () in
@@ -184,6 +193,36 @@ let set_count ((s1, _):'a set) = Z.of_int (BatList.length s1)
 let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
   (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
 
+
+(* See ../Util.fsi for documentation and ../Util.fs for implementation details *)
+type 'a fifo_set = ('a list) * ('a -> 'a -> bool)
+
+let fifo_set_is_empty ((s, _):'a fifo_set) =
+  match s with
+  | [] -> true
+  | _ -> false
+
+let new_fifo_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a fifo_set =
+  ([], fun x y -> cmp x y = Z.zero)
+
+let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
+  let rec aux out = function
+    | [] -> out
+    | hd::tl ->
+       if BatList.exists (eq hd) tl then
+         aux out tl
+       else
+         aux (hd::out) tl in
+  aux [] s1
+let fifo_set_add a ((s, b):'a fifo_set) = (a::s, b)
+let fifo_set_remove x ((s1, eq):'a fifo_set) =
+  (BatList.filter (fun y -> not (eq x y)) s1, eq)
+let fifo_set_mem a ((s, b):'a fifo_set) = BatList.exists (b a) s
+let fifo_set_union ((s1, b):'a fifo_set) ((s2, _):'a fifo_set) = (s2@s1, b)
+let fifo_set_count ((s1, _):'a fifo_set) = Z.of_int (BatList.length s1)
+let fifo_set_difference ((s1, eq):'a fifo_set) ((s2, _):'a fifo_set) : 'a fifo_set =
+  (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
+
 type 'value smap = (string, 'value) BatHashtbl.t
 let smap_create (i:Z.t) : 'value smap = BatHashtbl.create (Z.to_int i)
 let smap_clear (s:('value smap)) = BatHashtbl.clear s
@@ -224,6 +263,7 @@ let int_of_uint8 = int_of_char
 let uint16_of_int i = Z.to_int i
 let byte_of_char (c:char) = Char.code c
 
+let float_of_string s = float_of_string s
 let float_of_byte b = float_of_int (Char.code b)
 let float_of_int32 = float_of_int
 let float_of_int64 = BatInt64.to_float
@@ -308,12 +348,12 @@ let colorize_cyan s =
   | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
   | _ -> s
 
-let print_error s = fpr stderr "%s" (colorize_red ("Error: " ^ s)); flush stdout; flush stderr
+let print_error s = fpr stderr "%s" (colorize_red s); flush stdout; flush stderr
 let print1_error a b = print_error (format1 a b)
 let print2_error a b c = print_error (format2 a b c)
 let print3_error a b c d = print_error (format3 a b c d)
 
-let print_warning s = fpr stderr "%s" (colorize_cyan ("Warning: " ^ s)); flush stdout; flush stderr
+let print_warning s = fpr stderr "%s" (colorize_cyan s); flush stdout; flush stderr
 let print1_warning a b = print_warning (format1 a b)
 let print2_warning a b c = print_warning (format2 a b c)
 let print3_warning a b c d = print_warning (format3 a b c d)
@@ -436,6 +476,12 @@ let forall_exists rel l1 l2 =
   for_all (fun x -> for_some (rel x) l2) l1
 let multiset_equiv rel l1 l2 =
   BatList.length l1 = BatList.length l2 && forall_exists rel l1 l2
+let take p l =
+    let rec take_aux acc = function
+        | [] -> l, []
+        | x::xs when p x -> take_aux (x::acc) xs
+        | x::xs -> List.rev acc, x::xs
+    in take_aux [] l
 
 let add_unique f x l =
   if for_some (f x) l then

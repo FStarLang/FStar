@@ -5,15 +5,20 @@ Encrypt_SymEnc.fst\
 Encrypt_Sample.fst \
 SHA1.fst \
 MAC.fst \
-Sig.fst \
-CCA2.RSA.fst \
-CCA2.Plain.fst \
-CCA2.CCA2.fst
+Sig.fst 
 
-HH_VERFILES=EtM.Plain.fst \
+
+HH_VERFILES= \
+EtM.Plain.fst \
 EtM.MAC.fst \
 EtM.CPA.fst \
-EtM.AE.fst
+EtM.AE.fst \
+HyE.RSA.fst \
+HyE.PlainPKE.fst \
+HyE.Plain.fst \
+HyE.AE.fst \
+HyE.CCA2.fst \
+HyE.HCCA2.fst
 
 LIB = ../../contrib/CoreCrypto/ml
 
@@ -27,17 +32,23 @@ endif
 FSTAR_HOME=../..
 include ../Makefile.include
 
+%.fst-in: 
+	@echo --include $(FSTAR_HOME)/ulib/hyperstack \
+	      --include $(FSTAR_HOME)/ucontrib/Platform/fst \
+	      --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
+	      --z3rlimit 20
+	      --verify_module $(basename $(notdir $@))
 
 verify-%: __force__
 	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		 --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
-		 --z3timeout 20 $*
+		 --z3rlimit 20 $*
 
 verify_hh-%: __force__
-	$(FSTAR) --include $(FSTAR_HOME)/ulib/hyperheap \
+	$(FSTAR) --include $(FSTAR_HOME)/ulib/hyperstack \
 		 --include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		 --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
-		 --z3timeout 20 $*
+		 --z3rlimit 20 $*
 
 all: uall sall
 
@@ -62,14 +73,14 @@ merkle_tree: MerkleTree.fst
 	$^
 
 acls-cap: SHA1.fst MAC.fst ../security/ACLs_simplified.fst Cap.fst
-	$(FSTAR) --z3timeout 10 \
+	$(FSTAR) --z3rlimit 10 \
 	--verify_module ACLs_simplified --verify_module Cap \
 	--include $(FSTAR_HOME)/ucontrib/Platform/fst \
 	--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 	$^
 
 rpc: Formatting.fst SHA1.fst MAC.fst RPC.fst
-	$(FSTAR) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
+	$(FSTAR) --z3rlimit 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
 		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst RPC.fst
 
@@ -104,12 +115,12 @@ rpc-test: RPC.exe
 	$(EXTRA_PATH) ./RPC.exe
 
 CntProtocol: CntFormat.fst MAC.fst SHA1.fst CntProtocol.fst
-	$(FSTAR) --z3timeout 10 --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
+	$(FSTAR) --z3rlimit 10 --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
 		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst CntProtocol.fst
 
 CntProtocol.ml: CntFormat.fst MAC.fst SHA1.fst CntProtocol.fst
-	$(FSTAR_ALWAYS) --stratified --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+	$(FSTAR_ALWAYS) --stratified --z3rlimit 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst CntProtocol.fst \
@@ -120,6 +131,11 @@ CntProtocol.exe: CntProtocol.ml $(CONTRIB_LIBS)
 
 cnt-test: CntProtocol.exe
 	$(EXTRA_PATH) ./CntProtocol.exe
+
+deploy-tutorial:
+	cp EtM.AE.fst  EtM.CPA.fst  EtM.Ideal.fsti  EtM.MAC.fst  EtM.Plain.fst ../../doc/tutorial/code/solutions/
+	cp EtM.AE.fst  EtM.CPA.fst  EtM.Ideal.fsti  EtM.MAC.fst  EtM.Plain.fst ../../doc/tutorial/code/exercises/
+
 
 clean:
 	rm -fr RPC *.ml *.cmi *.cmx *.o *.exe *~

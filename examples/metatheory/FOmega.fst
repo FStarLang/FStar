@@ -48,7 +48,7 @@ type exp =
    (in this calculus doesn't interact with type substitution below) *)
 
 type esub = var -> Tot exp
-type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
+type erenaming (s:esub) = (forall (x:var). EVar? (s x))
 
 val is_erenaming : s:esub -> GTot (n:int{(  erenaming s  ==> n=0) /\
                                          (~(erenaming s) ==> n=1)})
@@ -60,10 +60,10 @@ let esub_inc y = EVar (y+1)
 val erenaming_sub_inc : unit -> Lemma (erenaming (esub_inc))
 let erenaming_sub_inc _ = ()
 
-let is_evar (e:exp) : int = if is_EVar e then 0 else 1
+let is_evar (e:exp) : int = if EVar? e then 0 else 1
 
 type tsub = var -> Tot typ
-opaque type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
+opaque type trenaming (s:tsub) = (forall (x:var). TVar? (s x))
 
 val is_trenaming : s:tsub -> GTot (n:int{(  trenaming s  ==> n=0) /\
                                          (~(trenaming s) ==> n=1)})
@@ -78,10 +78,10 @@ let tsub_inc = tsub_inc_above 0
 val trenaming_sub_inc : unit -> Lemma (trenaming (tsub_inc))
 let trenaming_sub_inc _ = ()
 
-let is_tvar (t:typ) : int = if is_TVar t then 0 else 1
+let is_tvar (t:typ) : int = if TVar? t then 0 else 1
 
 val tsubst : t:typ -> s:tsub -> Pure typ (requires True)
-      (ensures (fun t' -> trenaming s /\ is_TVar t ==> is_TVar t'))
+      (ensures (fun t' -> trenaming s /\ TVar? t ==> TVar? t'))
       (decreases %[is_tvar t; is_trenaming s; t])
 
 let rec tsubst t s =
@@ -90,7 +90,7 @@ let rec tsubst t s =
 
   | TFor k t1
   | TLam k t1 ->
-     let tsubst_lam : y:var -> Tot (t:typ{trenaming s ==> is_TVar t}) = fun y ->
+     let tsubst_lam : y:var -> Tot (t:typ{trenaming s ==> TVar? t}) = fun y ->
        if y=0
        then TVar y
        else (tsubst (s (y - 1)) tsub_inc) in
@@ -116,7 +116,7 @@ let rec esubst_t e st =
 
 
 val esubst : e:exp -> s:esub -> Pure exp (requires True)
-      (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
+      (ensures (fun e' -> erenaming s /\ EVar? e ==> EVar? e'))
       (decreases %[is_evar e; is_erenaming s; e])
 
 let rec esubst e s =
@@ -124,7 +124,7 @@ let rec esubst e s =
   | EVar x -> s x
 
   | ELam t e1 ->
-     let esubst_lam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) = fun y ->
+     let esubst_lam : y:var -> Tot (e:exp{erenaming s ==> EVar? e}) = fun y ->
        if y=0 then EVar y
        else (esubst (s (y - 1)) esub_inc) in
      ELam t (esubst e1 esubst_lam)
@@ -141,7 +141,7 @@ let esubst_lam s y =
   else esubst (s (y-1)) esub_inc
 
 (* val esubst_lam_renaming: s:esub -> Lemma *)
-(*   (ensures (forall (x:var). erenaming s ==> is_EVar (esubst_lam s x))) *)
+(*   (ensures (forall (x:var). erenaming s ==> EVar? (esubst_lam s x))) *)
 (* let esubst_lam_renaming s = () *)
 
 (* Substitution extensional; trivial with the extensionality axiom *)
@@ -663,7 +663,7 @@ let extend_evar g n t =
 
 type kinding : env -> typ -> knd -> Type =
   | KiVar : #g:env ->
-            a:var{is_Some (lookup_tvar g a)} ->
+            a:var{Some? (lookup_tvar g a)} ->
             kinding g (TVar a) (Some.v (lookup_tvar g a))
   | KiLam : #g:env ->
             k:knd ->
@@ -736,7 +736,7 @@ type tequiv : typ -> typ -> Type =
 
 type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
-            x:var{is_Some (lookup_evar g x)} ->
+            x:var{Some? (lookup_evar g x)} ->
             kinding g (Some.v (lookup_evar g x)) KTyp ->
             typing g (EVar x) (Some.v (lookup_evar g x))
   | TyLam : #g:env ->
@@ -775,7 +775,7 @@ type typing : env -> exp -> typ -> Type =
             typing g (ETApp e t) (tsubst_beta t t')
 
 val is_value : exp -> Tot bool
-let is_value = fun e -> is_ELam e || is_EForT e
+let is_value = fun e -> ELam? e || EForT? e
 
 val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
 let rec tappears_free_in x t =
@@ -1120,15 +1120,15 @@ let rec rlen l = match l with
   | RNil -> 0
   | RSnoc tl _ -> rlen tl + 1
 
-val lookup_rl: l:rl -> x:var -> Tot (r:option typ{x < rlen l  ==> is_Some r /\
-                                                  x >= rlen l ==> is_None r})
+val lookup_rl: l:rl -> x:var -> Tot (r:option typ{x < rlen l  ==> Some? r /\
+                                                  x >= rlen l ==> None? r})
 let rec lookup_rl l x = match l with
   | RNil -> None
   | RSnoc tl hd -> if x = 0 then Some hd else lookup_rl tl (x - 1)
 
 (* AR: why do I need this ! *)
 val redundant_lemma: l:rl -> x:nat -> Lemma (requires True)
-                                      (ensures (x < rlen l ==> is_Some (lookup_rl l x))) (decreases l)
+                                      (ensures (x < rlen l ==> Some? (lookup_rl l x))) (decreases l)
 let rec redundant_lemma l x = match l with
   | RNil -> ()
   | RSnoc tl hd -> if x = 0 then () else redundant_lemma tl (x - 1)
@@ -1156,9 +1156,9 @@ let rec rmap l f = match l with
   | RNil -> RNil
   | RSnoc tl hd -> RSnoc (rmap tl f) (f hd)
 
-val rmap_lookup_lemma: l:rl -> f:(typ -> Tot typ) -> x:nat{is_Some (lookup_rl l x)} ->
+val rmap_lookup_lemma: l:rl -> f:(typ -> Tot typ) -> x:nat{Some? (lookup_rl l x)} ->
                        Lemma (requires True)
-                       (ensures (is_Some (lookup_rl (rmap l f) x) /\
+                       (ensures (Some? (lookup_rl (rmap l f) x) /\
                                  Some.v (lookup_rl (rmap l f) x) =
                                  f (Some.v (lookup_rl l x))))
 let rec rmap_lookup_lemma l f x = match l with
@@ -1199,7 +1199,7 @@ let commute_with_rl_lemma2 g x k_x l k y = (* AR: goes through, long time *)
     rmap_lookup_lemma l (tshift_up_above 0) y
   else
     let _ = extend_rl_elookup_lemma g l y in
-    if is_Some (lookup_evar g (y - rlen l)) then
+    if Some? (lookup_evar g (y - rlen l)) then
       let t' = Some.v (lookup_evar g (y - rlen l)) in
       tshifts_reordering 0 x t';
       tshifts_ereordering 0 x (EVar y)
@@ -1934,7 +1934,7 @@ let rec elam_typing_eq_tarr t1 e t h =
 (* expression with type TArr cannot be a EForT, used in progress *)
 opaque val tarr_not_efor: #e:exp -> #t1:typ -> #t2:typ ->
                           h:typing empty e (TArr t1 t2) ->
-                          Tot (u:unit{(not (is_value e)) \/ is_ELam e})
+                          Tot (u:unit{(not (is_value e)) \/ ELam? e})
 let tarr_not_efor e t1 t2 h =
   match e with
     | EForT k e1 ->
@@ -1945,7 +1945,7 @@ let tarr_not_efor e t1 t2 h =
 (* expression with type TFor cannot be a lambda, used in progress *)
 opaque val fort_not_elam: #e:exp -> #k:knd -> #t1:typ ->
                           h:typing empty e (TFor k t1) ->
-                          Tot (u:unit{(not (is_value e)) \/ is_EForT e})
+                          Tot (u:unit{(not (is_value e)) \/ EForT? e})
 let fort_not_elam e k t1 h =
   match e with
     | ELam t e1 ->

@@ -65,7 +65,7 @@ let verify k text tag =
   let m= hmac_sha1 k text in
   let verified = (Platform.Bytes.equalBytes m tag) in
   let found =
-    is_Some
+    Some?
       (List.Tot.find
         (fun (Entry k' text' tag') -> Platform.Bytes.equalBytes k k' && Platform.Bytes.equalBytes text text')
         !log) in

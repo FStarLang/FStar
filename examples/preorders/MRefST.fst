@@ -3,6 +3,41 @@ module MRefST
 open Preorder
 open MRefHeap
 
+////////////////////////////////////////////////////////////////////////////////
+// In the DM sub-language
+////////////////////////////////////////////////////////////////////////////////
+(* Define a state monad with the `heap` type as the state *)
+let st (a: Type) = heap -> M (a * heap)
+
+val return_st: a:Type -> x:a -> Tot (st a)
+let return_st a x = fun s -> x, s
+
+val bind_st: a:Type -> b:Type -> f:st a -> g:(a -> Tot (st b)) -> Tot (st b)
+let bind_st a b f g = fun s0 ->
+  let tmp = f s0 in
+  let x, s1 = tmp in
+  g x s1
+
+let get (_:unit): st heap =
+  fun x -> x, x
+
+let put (x: heap): st unit =
+  fun _ -> (), x
+
+////////////////////////////////////////////////////////////////////////////////
+// Instruct F* to CPS and elaborate the terms above to build a new STATE effect
+////////////////////////////////////////////////////////////////////////////////
+
+reifiable reflectable total new_effect_for_free {
+  ISTATE : a:Type -> Effect
+  with repr     = st
+     ; bind     = bind_st
+     ; return   = return_st
+  and effect_actions
+       get      = get
+     ; put      = put
+}
+
 
 (* Swapping the reference and heap arguments of (NatHeap.contains) to 
    use it in point-free style in calls to (witness) and (recall). *)
@@ -23,7 +58,7 @@ let contains_lemma #a #r h m = ()
 
 let heap_rel (h0:heap) (h1:heap) = 
   (forall a r (m:mref a r) . contains m h0  ==> contains m h1) /\  
-  (forall a r (m:mref a r{contains m h0}) . r (sel h0 m) (sel h1 m))
+  (forall a (r:relation a{preorder r}) (m:mref a r{contains m h0}) . r (sel h0 m) (sel h1 m))
 
 
 (* *************************************************** *)
@@ -41,46 +76,42 @@ let heap_rel (h0:heap) (h1:heap) =
 (* Preconditions, postconditions and WPs for the preorder-indexed state monad. *)
 
 let ist_pre  (state:Type)          = state -> Type0
-let ist_post (state:Type) (a:Type) = a -> state -> Type0
+let ist_post (state:Type) (a:Type) = (a * state) -> Type0
 let ist_wp   (state:Type) (a:Type) = ist_post state a -> Tot (ist_pre state)
 
 
-(* A WP-style preorder-indexed state monad specialised for the allocated references instance. *)
+(* Pure is a sub-effect/sub-monad of the allocated references instance of the preorder-indexed monad. *)
 
-new_effect ISTATE = STATE_h heap
-
-
-(* DIV is a sub-effect/sub-monad of the allocated references instance of the preorder-indexed monad. *)
-
-inline let lift_div_istate (state:Type) (rel:relation state{preorder rel}) 
-                           (a:Type) (wp:pure_wp a) (p:ist_post state a) (s:state) = wp (fun x -> p x s)
-sub_effect DIV ~> ISTATE = lift_div_istate heap heap_rel
+unfold let lift_pure_istate (state:Type) (rel:relation state{preorder rel}) 
+                           (a:Type) (wp:pure_wp a) (s:state) (p:ist_post state a) = wp (fun x -> p (x, s))
+sub_effect PURE ~> ISTATE = lift_pure_istate heap heap_rel
 
 
 (* A pre- and postcondition version of this preorder-indexed state monad. *)
 
 effect IST    (a:Type) 
               (pre:ist_pre heap) 
-	      (post:(heap -> Tot (ist_post heap a))) 
+	      (post:(heap -> a -> heap -> Type0))
        =
-       ISTATE a (fun p s0 -> pre s0 /\ (forall x s1 . pre s0 /\ post s0 x s1 ==> p x s1))
-
-
-(* A box-like modality for witnessed stable predicates for IST. *)
-
-assume type ist_witnessed : p:predicate heap{stable heap_rel p} -> Type0
-
+       ISTATE a (fun s0 p -> pre s0 /\ (forall x s1 . pre s0 /\ post s0 x s1 ==> p (x, s1)))
 
 (* Generic effects (operations) for IST. *)
 
-assume val ist_get :     unit -> IST heap (fun s0 -> True) (fun s0 s s1 -> s0 == s /\ s == s1)
+val ist_get :     unit -> IST heap (fun s0 -> True) (fun s0 s s1 -> s0 == s /\ s == s1)
+let ist_get () = ISTATE?.get()
 
-assume val ist_put :     x:heap ->
-		         IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 == x)
+val ist_put :     x:heap ->
+		  IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 == x)
+let ist_put x = ISTATE?.put x		  
+
+(* A box-like modality for witnessed stable predicates for IST. *)
+
+assume type ist_witnessed : (p:predicate heap{stable heap_rel p}) -> Type0
 
 assume val ist_witness : p:predicate heap{stable heap_rel p} ->
 		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)
 
+(* Justified by the metatheory of pre-order indexed state monads *)
 assume val ist_recall :  p:predicate heap{stable heap_rel p} -> 
 		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 == s1 /\ p s1)
 

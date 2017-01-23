@@ -127,6 +127,13 @@ module Bytes = struct
   let createBytes len (value:char) : bytes =
       try abytes (String.make len value)
       with _ -> failwith "Default integer for createBytes was greater than max_value"
+  let initBytes len (value:int -> char) : bytes =
+      try abytes (
+              let s = String.make len (char_of_int 0) in
+              for i = 0 to len - 1 do
+                set_nth_char s i (value i)              
+              done )
+      with _ -> failwith "Default integer for createBytes was greater than max_value"
 
   type 'a lbytes = bytes
 

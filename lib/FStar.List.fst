@@ -208,6 +208,13 @@ let rec existsb (a:Type) f l = match l with
  | [] -> false
  | hd::tl -> if f hd then true else existsb f tl
 
+val existsML: #a:Type
+       -> f:(a -> ML bool)
+       -> list a
+       -> ML bool
+let rec existsML (a:Type) f l = match l with
+ | [] -> false
+ | hd::tl -> if f hd then true else existsML f tl
 
 val find: #a:Type
         -> f:(a -> Tot bool)

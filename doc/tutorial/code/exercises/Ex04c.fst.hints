@@ -1,0 +1,20 @@
+[
+  " S¶|ªÍﬁ\u0015P\u0015éC>è\tq",
+  [
+    [
+      "Ex04c.append",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [ "Ex04c.append_mem", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex04c.append_mem", 2, 2, 1, [ "@query" ], 0 ],
+    [ "Ex04c.append_mem", 3, 2, 1, [ "@query" ], 0 ]
+  ]
+]

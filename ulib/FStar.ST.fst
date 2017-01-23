@@ -27,7 +27,7 @@ let st_pre = st_pre_h heap
 let st_post a = st_post_h heap a
 let st_wp a = st_wp_h heap a
 new_effect STATE = STATE_h heap
-inline let lift_div_state (a:Type) (wp:pure_wp a) (p:st_post a) (h:heap) = wp (fun a -> p a h)
+unfold let lift_div_state (a:Type) (wp:pure_wp a) (p:st_post a) (h:heap) = wp (fun a -> p a h)
 sub_effect DIV ~> STATE = lift_div_state
 
 effect State (a:Type) (wp:st_wp a) =
@@ -50,10 +50,6 @@ assume val read:  #a:Type -> r:ref a -> STATE a
                                          (fun 'p h -> 'p (sel h r) h)
 
 assume val write:  #a:Type -> r:ref a -> v:a -> ST unit
-                                                 (fun h -> True)
-                                                 (fun h0 x h1 -> h1==upd h0 r v)
-
-assume val op_Colon_Equals:  #a:Type -> r:ref a -> v:a -> ST unit
                                                  (fun h -> True)
                                                  (fun h0 x h1 -> h1==upd h0 r v)
 

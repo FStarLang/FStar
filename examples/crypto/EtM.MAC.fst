@@ -4,10 +4,8 @@ open FStar.Seq
 open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
+open FStar.HyperStack
 open FStar.Monotonic.RRef
-
-
-
 
 open Platform.Bytes
 open CoreCrypto
@@ -20,9 +18,6 @@ let macsize   = hashSize SHA1
 
 type sha1_key = lbytes keysize
 type tag = lbytes macsize
-
-
-
 
 val sha1: bytes -> Tot (h:bytes{length h = macsize})
 let sha1 b = hash SHA1 b
@@ -42,7 +37,7 @@ let hmac_sha1 k t =
 (* Type log_t defined as follows (in ulib/FStar.Monotonic.Seq.fst):
    type log_t (i:rid) (a:Type) = m_rref i (seq a) grows *)
 
-type log_t (r:rid) = Monotonic.Seq.log_t r (msg * tag)
+type log_t (r:rid) = m_rref r (seq (msg * tag)) grows
 
 noeq type key =
   | Key: #region:rid -> raw:sha1_key -> log:log_t region -> key
@@ -52,7 +47,7 @@ noeq type key =
 let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
   /\ extends k.region parent
-  /\ fresh_region k.region h0 h1
+  /\ fresh_region k.region h0.h h1.h
   /\ m_contains k.log h1
   /\ m_sel h1 k.log == createEmpty
   (* CH: equivalent definition makes gen fail:

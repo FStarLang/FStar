@@ -1,14 +1,1 @@
-[
-  "Ö\n\t[<?Þê/•ì)Æ <8",
-  [
-    [ "FStar.ST.modifies", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.lift_div_state", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.ST", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.recall", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.alloc", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.read", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.write", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.op_Colon_Equals", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.get", 1, 2, 1, [ "@query" ], 0 ]
-  ]
-]
+[ "ï\t«1›»ÅŽêü5vS‘Ùb", [] ]

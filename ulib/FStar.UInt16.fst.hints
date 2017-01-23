@@ -1,5 +1,5 @@
 [
-  "iÖ#\u0007åÆºÂæ}\u007fÒ&b\u0015í",
+  "SgEl½ô&¹\"\u001a\\XÒ«óé",
   [
     [
       "FStar.UInt16.t'",
@@ -36,7 +36,19 @@
       0
     ],
     [
-      "FStar.UInt16.Mk.v",
+      "FStar.UInt16.t'",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt16.n",
+        "haseqTm_refine_03d0bed5c0733099844f268aecd0836d"
+      ],
+      0
+    ],
+    [
+      "FStar.UInt16.__proj__Mk__item__v",
       1,
       2,
       1,
@@ -46,7 +58,7 @@
       ],
       0
     ],
-    [ "FStar.UInt16.Mk.v", 2, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.UInt16.__proj__Mk__item__v", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.UInt16.v",
       1,
@@ -761,16 +773,21 @@
         "@query", "b2t_def", "data_elim_FStar.UInt32.Mk",
         "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt16.t", "equation_FStar.UInt16.v",
-        "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
-        "equation_FStar.UInt32.v", "fuel_guarded_inversion_FStar.UInt32.t_",
-        "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.UInt16.n", "equation_FStar.UInt16.t",
+        "equation_FStar.UInt16.v", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt32.t", "equation_FStar.UInt32.v",
+        "equation_Prims.pos", "fuel_guarded_inversion_FStar.UInt16.t_",
+        "fuel_guarded_inversion_FStar.UInt32.t_",
+        "function_token_typing_FStar.UInt16.n", "int_inversion",
+        "lemma_FStar.UInt.shift_right_value_lemma",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.UInt16.Mk_v", "proj_equation_FStar.UInt32.Mk_v",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.UInt16.Mk_v",
-        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d"
+        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "typing_FStar.UInt16.v"
       ],
       0
     ],
@@ -821,18 +838,22 @@
       [
         "@query", "b2t_def", "data_elim_FStar.UInt32.Mk",
         "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.shift_left", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "equation_FStar.UInt16.n",
-        "equation_FStar.UInt16.t", "equation_FStar.UInt16.v",
-        "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
-        "equation_FStar.UInt32.v", "fuel_guarded_inversion_FStar.UInt32.t_",
-        "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt16.n", "equation_FStar.UInt16.t",
+        "equation_FStar.UInt16.v", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt32.t", "equation_FStar.UInt32.v",
+        "equation_Prims.pos", "fuel_guarded_inversion_FStar.UInt16.t_",
+        "fuel_guarded_inversion_FStar.UInt32.t_",
+        "function_token_typing_FStar.UInt16.n", "int_inversion",
+        "lemma_FStar.UInt.shift_left_value_lemma",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.UInt16.Mk_v", "proj_equation_FStar.UInt32.Mk_v",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.UInt16.Mk_v",
-        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d"
+        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "typing_FStar.UInt16.v"
       ],
       0
     ],

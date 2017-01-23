@@ -1,5 +1,5 @@
-OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g -I ../
-OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g -I ../
+OCAMLC=ocamlfind ocamlc -thread -package batteries,zarith -linkpkg -g -I ../
+OCAMLOPT=ocamlfind ocamlopt -thread -package batteries,zarith -linkpkg -g -I ../
 OCAMLDEP=ocamldep
 INCLUDES=                 # all relevant -I options here
 OCAMLFLAGS=$(INCLUDES)    # add other options for ocamlc here

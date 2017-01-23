@@ -3,14 +3,14 @@ module Error = struct
       | Error of 'a
       | Correct of 'b
 
-  let perror (file:string) (line:int) (text:string) =
+  let perror (file:string) (line:Z.t) (text:string) =
       text
 
-  let is_Correct = function
+  let uu___is_Correct = function
     | Correct _ -> true
     | _ -> false
 
-  let is_Error = function
+  let uu___is_Error = function
     | Error _ -> true
     | _ -> false
 
@@ -42,7 +42,6 @@ module Bytes = struct
      | h::t when (String.length h) - i >= 2 -> String.get h i, String.get h (i+1)
      | h1::h2::t when (String.length h1) - i = 1 && (String.length h2) > 0 -> String.get h1 i, String.get h2 0
      | _ -> failwith "getByte2: array out of bounds"
-
 
   let rec getBytes (bl:cbytes list) i n  =
       match bl with
@@ -80,6 +79,7 @@ module Bytes = struct
       else failwith "cbyte2: expected an array of length 2"
 
   let index (b:bytes) i =
+    let i = Z.to_int i in
     if b.length >= i then
       let s = getBytes b.bl b.index b.length in
       String.get s i
@@ -124,6 +124,7 @@ module Bytes = struct
   let op_AtBar a b = a @| b
 
   let split (b:bytes) i : bytes * bytes =
+    let i = Z.to_int i in
       {bl = b.bl;
        length = i;
        index = b.index;
@@ -135,50 +136,57 @@ module Bytes = struct
 
   let split_eq = split
 
-  let length (d:bytes) = d.length
+  let length (d:bytes) = Z.of_int d.length
 
 
   let empty_bytes = abytes ""
   let createBytes len (value:char) : bytes =
+      let len = Z.to_int len in
       try abytes (String.make len value)
       with _ -> failwith "Default integer for createBytes was greater than max_value"
 
   type 'a lbytes = bytes
 
   let bytes_of_int nb i =
+    let nb = Z.to_int nb in
+    let i = Z.to_int64 i in
+    if Int64.compare i Int64.zero < 0 then failwith "Negative 64bit.";
     let rec put_bytes bb lb n =
       if lb = 0 then failwith "not enough bytes"
       else
         begin
-          Bytes.set bb (lb-1) (char_of_int (n mod 256));
-          if n/256 > 0 then
-            put_bytes bb (lb-1) (n/256)
+          let lown = Int64.logand n (Int64.of_int 255) in
+          Bytes.set bb (lb-1) (char_of_int (Int64.to_int lown));
+          let ns = Int64.div n (Int64.of_int 256) in
+          if Int64.compare ns Int64.zero > 0 then
+            put_bytes bb (lb-1) ns
           else bb
         end
     in
     let b = String.make nb (char_of_int 0) in
       abytes(put_bytes b nb i)
 
-  let int_of_bytes (b:bytes) : int =
+  let int_of_bytes (b:bytes) =
       let x = ref 0 in
       let c = get_cbytes b in
       for y = 0 to b.length-1 do
           x := 256 * !x + (int_of_char (String.get c y))
       done;
-      !x
+      Z.of_int !x
 
   let equalBytes (b1:bytes) (b2:bytes) =
       if length b1 = length b2 then
          let cb1 = get_cbytes b1 in
          let cb2 = get_cbytes b2 in
          let ok = ref true in
-         for x = 0 to length b1-1 do
+         for x = 0 to b1.length-1 do
              ok := String.get cb1 x = String.get cb2 x && !ok;
          done;
          !ok
       else false
 
   let xor len s1 s2 =
+      let len = Z.to_int len in
       let s1 = get_cbytes s1 in
       let s2 = get_cbytes s2 in
       let res = String.make len (char_of_int 0) in
@@ -212,7 +220,7 @@ module Bytes = struct
   *)
 
   let byte_of_int i =
-    char_of_int i
+    char_of_int (Z.to_int i)
 
   (* Some helpers to deal with the conversation from hex literals to bytes and
    * conversely. Mostly for tests. *)
@@ -274,6 +282,7 @@ module Tcp = struct
   type tcpListener = file_descr
 
   let listen s i =
+      let i = Z.to_int i in
       let server_sock = socket PF_INET SOCK_STREAM 0 in
       (setsockopt server_sock SO_REUSEADDR true ;
        let address = inet_addr_of_string s in
@@ -290,6 +299,7 @@ module Tcp = struct
   let stop s = shutdown s SHUTDOWN_ALL
 
   let connect s i =
+      let i = Z.to_int i in
       let client_sock = socket PF_INET SOCK_STREAM 0 in
       let hentry = gethostbyname s in
       connect client_sock (ADDR_INET (hentry.h_addr_list.(0), i)) ;
@@ -309,12 +319,13 @@ module Tcp = struct
       abytes str
 
   let recv s i =
+      let i = Z.to_int i in
       try Correct (sock_recv s i)
       with Unix_error (e,s1,s2) ->
        Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)
 
   let send s b =
-      try (let n = sock_send s b in if n < Bytes.length b then Error(Printf.sprintf "Network error, wrote %d bytes" n) else Correct())
+      try (let n = sock_send s b in if n < Z.to_int (Bytes.length b) then Error(Printf.sprintf "Network error, wrote %d bytes" n) else Correct())
       with Unix_error (e,s1,s2) ->
        Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)
 
@@ -412,6 +423,7 @@ module Udp = struct
 
   (* Initiate a connection *)
   let connect ip port =
+    let port = Z.to_int port in
     let client_sock = socket PF_INET SOCK_DGRAM 0 in
     let addr = inet_addr_of_string ip in
     connect client_sock (ADDR_INET(addr,port));
@@ -432,6 +444,7 @@ module Udp = struct
 
   (* Receive bytes from the netwok *)
   let recv s i =
+    let i = Z.to_int i in
     try Correct (sock_recv s i)
     with Unix_error (e,s1,s2) ->
       Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)
@@ -440,7 +453,7 @@ module Udp = struct
   let send s b =
     try
       (let n = sock_send s b in
-       if n < Bytes.length b then
+       if n < Z.to_int (Bytes.length b) then
          Error(Printf.sprintf "Network error, wrote %d bytes" n)
        else Correct())
     with Unix_error (e,s1,s2) ->
@@ -500,8 +513,8 @@ module Date = struct
   type dateTime = DT of float
   type timeSpan = TS of float
   let now () = DT (Unix.gettimeofday())
-  let secondsFromDawn () = int_of_float (Unix.time())
-  let newTimeSpan d h m s = TS (((((float_of_int d) *. 24.0) +. (float_of_int h)) *. 60.0 +. (float_of_int m)) *. 60.0 +. (float_of_int s))
+  let secondsFromDawn () = Int64.of_float (Unix.time()) |> Z.of_int64
+  let newTimeSpan d h m s = TS (((((float_of_int (Z.to_int d)) *. 24.0) +. (float_of_int (Z.to_int h))) *. 60.0 +. (float_of_int (Z.to_int m))) *. 60.0 +. (float_of_int (Z.to_int s)))
   let addTimeSpan (DT(a)) (TS(b)) = DT (a +. b)
   let greaterDateTime (DT(a)) (DT(b)) = a > b
 end

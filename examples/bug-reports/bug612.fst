@@ -1,8 +1,7 @@
 module Bug612
 
-assume val f' : int -> int -> int -> Tot int
-assume val g' : int -> int -> int -> Tot int
-
-val l' : unit -> Lemma (requires (f 0 == g 0))
-                       (ensures (f 0 1 == g 0 1))
-let l' () = ()
+val incr: x:int -> Pure int
+  (requires True)
+  (ensures  (fun r -> r = x + 1))
+//let incr n = 0 // 1 error
+let incr = function | _ -> 0 // 2 errors

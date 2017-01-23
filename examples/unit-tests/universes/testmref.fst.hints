@@ -14,10 +14,9 @@
       ],
       0
     ],
-    [ "TestMRef.test_frame_write_ref", 1, 2, 1, [ "@query" ], 0 ],
     [
       "TestMRef.test_frame_write_ref",
-      2,
+      1,
       2,
       1,
       [
@@ -27,10 +26,10 @@
         "assumption_FStar.Heap.SelConcat", "assumption_FStar.Heap.SelUpd2",
         "b2t_def", "data_typing_intro_FStar.Heap.Ref@tok",
         "equation_FStar.ST.modifies", "equation_FStar.ST.ref",
-        "equation_Prims.l_not", "function_token_typing_Prims.int",
+        "function_token_typing_Prims.int",
         "function_token_typing_TestMRef.y",
         "function_token_typing_TestMRef.z", "int_typing",
-        "kinding_FStar.Heap.aref@tok", "l_and-interp",
+        "kinding_FStar.Heap.aref@tok", "l_and-interp", "l_not-interp",
         "lemma_FStar.TSet.mem_complement", "lemma_FStar.TSet.mem_intersect",
         "lemma_FStar.TSet.mem_singleton",
         "pretyping_24fcca413a49c3b9891a433ace204782",
@@ -44,16 +43,15 @@
     ],
     [
       "TestMRef.test_frame_write_ref",
-      3,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "TestMRef.test_frame_write_mref", 1, 2, 1, [ "@query" ], 0 ],
     [
       "TestMRef.test_frame_write_mref",
-      2,
+      1,
       2,
       1,
       [
@@ -64,11 +62,10 @@
         "b2t_def", "data_typing_intro_FStar.Heap.Ref@tok",
         "equation_FStar.MRef.as_ref", "equation_FStar.MRef.reln",
         "equation_FStar.MRef.sel", "equation_FStar.ST.modifies",
-        "equation_FStar.ST.ref", "equation_Prims.l_not",
-        "function_token_typing_Prims.int",
+        "equation_FStar.ST.ref", "function_token_typing_Prims.int",
         "function_token_typing_TestMRef.x",
         "function_token_typing_TestMRef.y", "int_typing",
-        "kinding_FStar.Heap.aref@tok", "l_and-interp",
+        "kinding_FStar.Heap.aref@tok", "l_and-interp", "l_not-interp",
         "lemma_FStar.TSet.mem_complement", "lemma_FStar.TSet.mem_intersect",
         "lemma_FStar.TSet.mem_singleton",
         "pretyping_24fcca413a49c3b9891a433ace204782",
@@ -84,16 +81,15 @@
     ],
     [
       "TestMRef.test_frame_write_mref",
-      3,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "TestMRef.test_frame_alloc_mref", 1, 2, 1, [ "@query" ], 0 ],
     [
       "TestMRef.test_frame_alloc_mref",
-      2,
+      1,
       2,
       1,
       [
@@ -119,16 +115,15 @@
     ],
     [
       "TestMRef.test_frame_alloc_mref",
-      3,
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "TestMRef.test_write_mref", 1, 2, 1, [ "@query" ], 0 ],
     [
       "TestMRef.test_write_mref",
-      2,
+      1,
       2,
       1,
       [
@@ -139,11 +134,10 @@
         "b2t_def", "data_typing_intro_FStar.Heap.Ref@tok",
         "equation_FStar.MRef.as_ref", "equation_FStar.MRef.reln",
         "equation_FStar.MRef.upd", "equation_FStar.ST.modifies",
-        "equation_FStar.ST.ref", "equation_Prims.l_not",
-        "function_token_typing_Prims.int",
+        "equation_FStar.ST.ref", "function_token_typing_Prims.int",
         "function_token_typing_TestMRef.x",
         "function_token_typing_TestMRef.y", "int_typing",
-        "kinding_FStar.Heap.aref@tok", "l_and-interp",
+        "kinding_FStar.Heap.aref@tok", "l_and-interp", "l_not-interp",
         "lemma_FStar.TSet.mem_complement", "lemma_FStar.TSet.mem_intersect",
         "lemma_FStar.TSet.mem_singleton",
         "pretyping_24fcca413a49c3b9891a433ace204782",

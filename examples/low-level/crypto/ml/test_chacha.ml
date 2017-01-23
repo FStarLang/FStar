@@ -1,13 +1,7 @@
 open Crypto_Symmetric_Chacha20
 open Char
 open FStar_Buffer
-       
-let key = {content = Array.init 32 (fun x -> x); idx = 0; length = 32 }
 
-let iv = FStar_UInt64.of_string "0x0000004a000000"
-let constant = FStar_UInt32.of_string "0x00"
-                                
-let counter = FStar_UInt32.one
 
 let from_string s =
   let b = create FStar_UInt8.zero (String.length s) in
@@ -16,6 +10,13 @@ let from_string s =
   done;
   b
 
+let from_bytestring (s:string)  =
+  let b = create (FStar_UInt8.of_string "0") ((String.length s) / 2) in
+  for i = 0 to ((String.length s / 2) - 1) do
+    upd b i (int_of_string ("0x" ^ (String.sub s (2*i) 2)))
+  done;
+  b
+    
 let print (b:int buffer) =
   let s = ref "" in
   for i = 0 to b.length - 1 do
@@ -41,8 +42,13 @@ let print_array (a:int buffer) =
 let print_bytes b =
   print_string (print b); print_string "\n"
 
+
+(* test vector from  RFC7539 2.4.2 *)
+                                  
+let key = {content = Array.init 32 (fun x -> x); idx = 0; length = 32 }
+let iv = from_bytestring "000000000000004a00000000"
+let counter = FStar_UInt32.one
 let plaintext = from_string "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it."
-                            
 let expected = [
   0x6e; 0x2e; 0x35; 0x9a; 0x25; 0x68; 0xf9; 0x80; 0x41; 0xba; 0x07; 0x28; 0xdd; 0x0d; 0x69; 0x81;
   0xe9; 0x7e; 0x7a; 0xec; 0x1d; 0x43; 0x60; 0xc2; 0x0a; 0x27; 0xaf; 0xcc; 0xfd; 0x9f; 0xae; 0x0b;
@@ -57,14 +63,14 @@ let expected = [
 let time f x s =
   let t = Sys.time() in
   let _ = f x in
-  Printf.printf "Ellapsed time for %s : %fs\n" s (Sys.time() -. t)
+  Printf.printf "Elapsed time for %s : %fs\n" s (Sys.time() -. t)
 
 let _ =
   let ciphertext = create 0 114 in
-  time (fun () -> for i = 0 to 0 do chacha20_encrypt ciphertext key counter iv constant plaintext 114 done) () "10.000 chacha iterations";
+  time (fun () -> for i = 0 to 9999 do counter_mode key iv counter 114 plaintext ciphertext done) () "10.000 chacha iterations";
   print_string "Expected ciphertext:\n";
   print_string (String.concat "" (List.map (fun i -> Printf.sprintf "%02X" i) expected));
-  print_string "Got ciphertext:\n";
+  print_string "\nGot ciphertext:\n";
   print_bytes ciphertext;
   List.iteri (fun i c ->
     if index ciphertext i <> c then

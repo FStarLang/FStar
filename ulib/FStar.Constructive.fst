@@ -20,7 +20,7 @@ noeq type cexists (#a:Type) (p:a -> Type) =
 type ceq (#a:Type) x : a -> Type =
   | Refl : ceq #a x x
 
-type ceq_type a : Type -> Type =
+type ceq_type (a:Type) : Type -> Type =
   | ReflType : ceq_type a a
 
 val eq_ind : #a:Type -> x:a -> p:(a -> Type) -> f:p x -> y:a -> e:ceq x y -> Tot (p y)
@@ -52,6 +52,6 @@ val false_elim2 : #a:Type -> cfalse -> Tot a
 let rec false_elim2 #a x = false_elim2 x
 
 val false_elim : #a:Type -> u:unit{false} -> Tot a
-let rec false_elim #a () = false_elim ()
+let rec false_elim #a u = false_elim ()
 
 type cnot (p:Type) = cimp p cfalse

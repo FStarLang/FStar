@@ -3,11 +3,12 @@ module Buffer.Utils
 open FStar.Mul
 open FStar.Ghost
 open FStar.HyperStack
-open FStar.HST
 open FStar.Int.Cast
 open FStar.UInt8
 open FStar.UInt32
 open FStar.Buffer
+
+open FStar.Math.Lemmas
 
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
@@ -16,10 +17,6 @@ let u32 = FStar.UInt32.t
 let u8 = FStar.UInt8.t
 let uint32s = buffer u32
 let bytes = buffer u8
-
-// TODO: Needs to be instanciated differently
-assume MaxUint8: FStar.UInt.max_int 8 = 255
-assume MaxUint32: FStar.UInt.max_int 32 = 4294967295
 
 (** Rotate operators on UInt32.t *)
 let op_Greater_Greater_Greater (a:u32) (s:u32{v s <= 32}) =
@@ -44,14 +41,14 @@ let rec xor_bytes_inplace output in1 len =
       let in1i = index in1 i in
       let oi   = index output i in
       let oi   = UInt8.logxor in1i oi in
-      upd output i oi;
+      output.(i) <- oi;
       xor_bytes_inplace output in1 i
     end
 
-val lemma_euclidian_division: r:nat -> b:nat -> q:pos -> Lemma
+val lemma_euclidean_division: r:nat -> b:nat -> q:pos -> Lemma
   (requires (r < q))
   (ensures  (r + q * b < q * (b+1)))
-let lemma_euclidian_division r b q = ()
+let lemma_euclidean_division r b q = ()
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
@@ -60,20 +57,18 @@ let lemma_uint32_of_bytes (a:t) (b:t) (c:t) (d:t) : Lemma
   (ensures  (v a + pow2 8 * v b < pow2 16
     /\ v a + pow2 8 * v b + pow2 16 * v c < pow2 24
     /\ v a + pow2 8 * v b + pow2 16 * v c + pow2 24 * v d < pow2 32))
-  = Math.Lib.pow2_exp_lemma 8 8;
-    lemma_euclidian_division (v a) (v b) (pow2 8);
-    Math.Lib.pow2_exp_lemma 8 16;
-    lemma_euclidian_division (v a + pow2 8 * v b) (v c) (pow2 16);
-    Math.Lib.pow2_exp_lemma 8 24;
-    lemma_euclidian_division (v a + pow2 8 * v b + pow2 16 * v c) (v d) (pow2 24)
-
-#reset-options
+  = pow2_plus 8 8;
+    lemma_euclidean_division (v a) (v b) (pow2 8);
+    pow2_plus 8 16;
+    lemma_euclidean_division (v a + pow2 8 * v b) (v c) (pow2 16);
+    pow2_plus 8 24;
+    lemma_euclidean_division (v a + pow2 8 * v b + pow2 16 * v c) (v d) (pow2 24)
 
 (** Reads an unsigned int32 out of 4 bytes *)
 val uint32_of_bytes: b:bytes{length b >= 4} -> STL u32
   (requires (fun h -> live h b))
   (ensures (fun h0 r h1 -> h0 == h1 /\ live h0 b
-    /\ v r = U8 (v (get h0 b 0)
+    /\ v r = U8.(v (get h0 b 0)
 		 + pow2 8 * v (get h0 b 1)
 		 + pow2 16 * v (get h0 b 2)
 		 + pow2 24 * v (get h0 b 3)) ))
@@ -86,14 +81,14 @@ let uint32_of_bytes (b:bytes{length b >= 4}) =
   let b1' = uint8_to_uint32 b1 in
   let b2' = uint8_to_uint32 b2 in
   let b3' = uint8_to_uint32 b3 in
-  Math.Lib.pow2_increases_lemma 32 8;
+  pow2_lt_compat 32 8;
   cut (v b0' = U8.v b0 /\ v b1' = U8.v b1 /\ v b2' = U8.v b2 /\ v b3' = U8.v b3);
-  Math.Lib.pow2_increases_lemma 16 8;
-  Math.Lib.pow2_increases_lemma 24 16;
-  Math.Lib.pow2_increases_lemma 32 24;
-  Math.Lib.pow2_exp_lemma 8 8;
-  Math.Lib.pow2_exp_lemma 8 16;
-  Math.Lib.pow2_exp_lemma 8 24;
+  pow2_lt_compat 16 8;
+  pow2_lt_compat 24 16;
+  pow2_lt_compat 32 24;
+  pow2_plus 8 8;
+  pow2_plus 8 16;
+  pow2_plus 8 24;
   let b1'' = b1' <<^ 8ul in
   let b2'' = b2' <<^ 16ul in
   let b3'' = b3' <<^ 24ul in
@@ -101,7 +96,7 @@ let uint32_of_bytes (b:bytes{length b >= 4}) =
   lemma_uint32_of_bytes b0' b1' b2' b3';
   b0' +^ b1'' +^ b2'' +^ b3''
 
-#reset-options "--z3timeout 20"
+#reset-options "--z3rlimit 20"
 
 (** Stores the content of a byte buffer into a unsigned int32 buffer *)
 (* TODO: add functional spec *)
@@ -118,15 +113,15 @@ let rec bytes_of_uint32s output m l =
       let l = l -^ rem in
       let x = index m (l /^ 4ul) in
       let b0 = uint32_to_uint8 (x &^ 255ul) in
-      upd output l b0;
+      output.(l) <- b0;
       if UInt32.gt rem 1ul then
         begin
         let b1 = uint32_to_uint8 ((x >>^ 8ul) &^ 255ul) in
-        upd output (l +^ 1ul) b1;
+        output.(l +^ 1ul) <- b1;
 	if UInt32.gt rem 2ul then
 	  begin
 	  let b2 = uint32_to_uint8 ((x >>^ 16ul) &^ 255ul) in
-	  upd output (l +^ 2ul) b2
+	  output.(l +^ 2ul) <- b2
           end
 	else ()
 	end
@@ -141,44 +136,50 @@ let rec bytes_of_uint32s output m l =
       let b1 = uint32_to_uint8 ((x >>^ 8ul) &^ 255ul) in
       let b2 = uint32_to_uint8 ((x >>^ 16ul) &^ 255ul) in
       let b3 = uint32_to_uint8 ((x >>^ 24ul) &^ 255ul) in
-      upd output l b0;
-      upd output (l +^ 1ul) b1;
-      upd output (l +^ 2ul) b2;
-      upd output (l +^ 3ul) b3;
+      output.(l) <- b0;
+      output.(l +^ 1ul) <- b1;
+      output.(l +^ 2ul) <- b2;
+      output.(l +^ 3ul) <- b3;
       bytes_of_uint32s output m l
       end
     end
 
-#reset-options
-
 (** Stores the content of a byte buffer into a unsigned int32 buffer *)
-(* TODO: add functional spec *)
 val bytes_of_uint32: output:bytes{length output >= 4} -> m:u32 -> STL unit
   (requires (fun h -> live h output))
   (ensures (fun h0 _ h1 -> live h1 output
-    /\ modifies_1 output h0 h1 ))
+    /\ modifies_1 output h0 h1
+    /\ U8.v (get h1 output 0) = (U32.v m) % pow2 8
+    /\ U8.v (get h1 output 1) = (U32.v m / pow2 8) % pow2 8
+    /\ U8.v (get h1 output 2) = (U32.v m / pow2 16) % pow2 8
+    /\ U8.v (get h1 output 3) = (U32.v m / pow2 24)  % pow2 8 ))
 let rec bytes_of_uint32 output x =
-  let b0 = uint32_to_uint8 (x &^ 255ul) in
-  let b1 = uint32_to_uint8 ((x >>^ 8ul) &^ 255ul) in
-  let b2 = uint32_to_uint8 ((x >>^ 16ul) &^ 255ul) in
-  let b3 = uint32_to_uint8 ((x >>^ 24ul) &^ 255ul) in
-  upd output 0ul b0;
-  upd output 1ul b1;
-  upd output 2ul b2;
-  upd output 3ul b3
+  let b0 = uint32_to_uint8 (x) in
+  let b1 = uint32_to_uint8 ((x >>^ 8ul)) in
+  let b2 = uint32_to_uint8 ((x >>^ 16ul)) in
+  let b3 = uint32_to_uint8 ((x >>^ 24ul)) in
+  output.(0ul) <- b0;
+  output.(1ul) <- b1;
+  output.(2ul) <- b2;
+  output.(3ul) <- b3
 
 (* A form of memset, could go into some "Utils" functions module *)
-(* TODO: add functional spec *)
+//16-10-03 added functional step; made pre-condition tighter (sufficient for use in AEAD)
 val memset: b:bytes -> z:u8 -> len:u32 -> STL unit
-  (requires (fun h -> live h b /\ v len <= length b))
-  (ensures  (fun h0 _ h1 -> modifies_1 b h0 h1 /\ live h1 b
-    (* /\ Seq.slice (as_seq h1 b) 0 (v len) == Seq.create (v len) z *)
-    (* /\ Seq.slice (as_seq h1 b) (v len) (length b) == (as_seq h0 b) (v len) (length b) *)
-    ))
+  (requires (fun h -> live h b /\ v len = length b))
+  (ensures  (fun h0 _ h1 -> 
+    live h1 b /\ modifies_1 b h0 h1 /\ 
+    Seq.equal (as_seq h1 b) (Seq.create (v len) z)))
 let rec memset b z len =
-  if len =^ 0ul then ()
-  else (
+  if len = 0ul then ()
+  else
+  begin
+    let h0 = ST.get() in
     let i = len -^ 1ul in
-    upd b i z;
-    memset b z i
-  )
+    memset (offset b 1ul) z i; // we should swap these two lines for tail recursion
+    b.(0ul) <- z; 
+    let h1 = ST.get() in 
+    let s = as_seq h1 b in
+    assert(Seq.index s 0 = z); // ...but this fails in the absence of framing
+    assert(Seq.equal s (SeqProperties.cons z (Seq.slice s 1 (v len))))
+  end

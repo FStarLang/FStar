@@ -1,15 +1,8 @@
 [
-  "=Rñ\rá¤ÊMhÎ“#}^Ãt",
+  "\u001dÆ\\‚\u0017ˆû\u000evr¸ˆ\u00018—<",
   [
-    [ "Unit1.WPsAndTriples.as_requires", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples.as_ensures", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.WPsAndTriples.f", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples.f", 2, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.WPsAndTriples.h", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples.g", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples.g", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples.g", 3, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples.g", 4, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples.g", 5, 2, 1, [ "@query" ], 0 ]
+    [ "Unit1.WPsAndTriples.g", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

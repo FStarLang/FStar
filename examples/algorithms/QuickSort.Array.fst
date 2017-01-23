@@ -22,6 +22,11 @@ open FStar.Heap
 open FStar.ST
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
 
+(* 2016-11-22: Due to the QuickSort namespace being opened *after* the
+FStar namespace,Array resolves to QuickSort.Array instead of
+FStar.Array, so we have to fix this explicitly as a module abbrev. *)
+module Array = FStar.Array
+
 type partition_inv (a:eqtype) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) =
            ((length hi) >= 0)
            /\ (forall y. (mem y hi ==> f pv y) /\ (mem y lo ==> f y pv))
@@ -53,8 +58,7 @@ type partition_post (a:eqtype) (f:tot_ord a) (start:nat) (len:nat{start <= len} 
                       (index (sel h1 x) i)
                       (slice (sel h1 x) i len)))
 
-#reset-options
-#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
+#reset-options "--z3rlimit 10 --initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
 val partition: #a:eqtype -> f:tot_ord a
                -> start:nat -> len:nat{start <= len}
                -> pivot:nat{start <= pivot /\ pivot < len}
@@ -134,7 +138,7 @@ let lemma_slice_cons_pv #a s i pivot j pv =
   cut (Seq.equal (slice s i j) (append lo (cons pv hi)))
 
 #reset-options
-#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --z3timeout 15"
+#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --z3rlimit 15"
 val sort: #a:eqtype -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
   (requires (fun h -> contains h x /\ j <= length (sel h x)))

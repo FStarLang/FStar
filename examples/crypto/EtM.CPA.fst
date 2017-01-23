@@ -4,9 +4,9 @@ open FStar.Seq
 open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
+open FStar.HyperStack
 open FStar.Monotonic.RRef
 open EtM.Ideal
-
 
 open Platform.Bytes
 open CoreCrypto
@@ -15,14 +15,14 @@ module B = Platform.Bytes
 
 open EtM.Plain
 
-type ivsize = blockSize AES_128_CBC
+let ivsize = blockSize AES_128_CBC
 type keysize = 16
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type msg = plain
 type cipher = b:bytes{B.length b >= ivsize}
 (* MK: minimal cipher length twice blocksize? *)
 
-type log_t (r:rid) = Monotonic.Seq.log_t r (msg * cipher)
+type log_t (r:rid) = m_rref r (seq (msg * cipher)) grows
 
 (* CH*MK: If we wanted to also prove correctness of the EtM.AE
           we would additionally need this
@@ -35,10 +35,10 @@ type log_t (r:rid) (raw:aes_key) =
 noeq type key =
   | Key: #region:rid -> raw:aes_key -> log:log_t region -> key
 
-let genPost parent m0 (k:key) m1 =
+let genPost parent (m0:mem) (k:key) (m1:mem) =
     modifies Set.empty m0 m1
   /\ extends k.region parent
-  /\ fresh_region k.region m0 m1
+  /\ stronger_fresh_region k.region m0 m1
   /\ m_contains k.log m1
   /\ m_sel m1 k.log == createEmpty
 
@@ -63,11 +63,10 @@ val encrypt: k:key -> m:msg -> ST cipher
      /\ log1 == snoc log0 (m, c)
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
 
-
 let encrypt k m : cipher =
   m_recall k.log;
   let iv = random ivsize in
-  let text = if ind_cpa then createBytes (length m) 0z else repr m in
+  let text = if ind_cpa && ind_cpa_rest_adv then createBytes (length m) 0z else repr m in
   let c = CoreCrypto.block_encrypt AES_128_CBC k.raw iv text in
   let c = iv@|c in
   write_at_end k.log (m,c);
@@ -88,19 +87,19 @@ let encryption_injective k iv t1 t2 = correctness k iv t1; correctness k iv t2
 
 (* this doesn't really belong here *)
 val mem : #a:eqtype -> x:a -> xs:Seq.seq a -> Tot bool
-let mem (#a:eqtype) x xs = is_Some (SeqProperties.seq_find (fun y -> y = x) xs)
+let mem (#a:eqtype) x xs = Some? (SeqProperties.seq_find (fun y -> y = x) xs)
 
 val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
-    Map.contains h0 k.region /\
+    Map.contains h0.h k.region /\
     (let log0 = m_sel h0 k.log in
-      (b2t ind_cpa_rest_adv) ==> is_Some (seq_find (fun mc -> snd mc = c) log0))))
+      (b2t ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) log0))))
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
     ( (b2t ind_cpa_rest_adv) ==> mem (res,c) (m_sel h0 k.log)
-     (* (let log0 = m_sel h0 k.log in *)
+     (* (let log0 = m_sel h0 k.log in *) //specification of correctness
      (*  let found = seq_find (fun mc -> snd mc = c) log0 in *)
-     (*  is_Some found /\ fst (Some.v found) = res) *)
+     (*  Some? found /\ fst (Some.v found) = res) *)
     )
   )
   )

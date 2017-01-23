@@ -1,13 +1,21 @@
 [
-  "µ\tV\u00185üÅ/èi”±Û\u001bB\u001a",
+  "ª\u0002◊HK* §°\"—Ûpù\u0013o",
   [
-    [ "FStar.PredicateExtensionality.peq", 1, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.PredicateExtensionality.predicateExtensionality",
       1,
       0,
       0,
-      [ "@query" ],
+      [
+        "@query", "assumption_FStar.FunctionalExtensionality.Extensionality",
+        "equation_FStar.FunctionalExtensionality.efun",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.PredicateExtensionality.peq",
+        "equation_FStar.PredicateExtensionality.predicate",
+        "equation_Prims.prop",
+        "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "refinement_kinding_Tm_refine_8c9ebed3095a60bf2b256a37e40b13f4"
+      ],
       0
     ]
   ]

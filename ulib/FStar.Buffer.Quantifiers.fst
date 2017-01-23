@@ -4,7 +4,6 @@ open FStar.Seq
 open FStar.UInt32
 open FStar.HyperStack
 open FStar.Ghost
-open FStar.HST
 open FStar.Buffer
 open FStar.Classical
 
@@ -44,6 +43,12 @@ let lemma_create_quantifiers #a h b init len =
    fun i -> assert (i < length b ==> get h b i == Seq.index (as_seq h b) i) in
   Classical.forall_intro #_ #lemma_post qi
 
+val lemma_index_quantifiers: #a:Type -> h:mem -> b:buffer a -> n:FStar.UInt32.t -> Lemma
+  (requires (live h b /\ v n < length b))
+  (ensures  (live h b /\ v n < length b /\ get h b (v n) == Seq.index (as_seq h b) (v n)))
+  [SMTPat (Seq.index (as_seq h b) (v n))]
+let lemma_index_quantifiers #a h b n = ()
+
 val lemma_upd_quantifiers: #a:Type -> h0:mem -> h1:mem -> b:buffer a -> n:FStar.UInt32.t -> z:a -> Lemma
   (requires (live h0 b /\ live h1 b /\ v n < length b /\ as_seq h1 b == Seq.upd (as_seq h0 b) (v n) z))
   (ensures  (live h0 b /\ live h1 b /\ v n < length b
@@ -54,7 +59,7 @@ val lemma_upd_quantifiers: #a:Type -> h0:mem -> h1:mem -> b:buffer a -> n:FStar.
 let lemma_upd_quantifiers #a h0 h1 b n z =
   assert(forall (i:nat). i < length b ==> get h1 b i == Seq.index (as_seq h1 b) i)
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_blit_quantifiers: #a:Type -> h0:mem -> h1:mem -> b:buffer a -> bi:UInt32.t{v bi <= length b} ->
   b':buffer a{disjoint b b'} -> bi':UInt32.t{v bi' <= length b'} -> len:UInt32.t{v bi+v len <= length b /\ v bi'+v len <= length b'} -> Lemma

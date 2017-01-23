@@ -110,37 +110,37 @@ let value_to_exp en dv = match D_v.v dv with
 
 val inline: m:mode{mode_inv m Target} -> en:env -> e:exp -> f:(config -> option config) -> env * exp
 val inline_l: m:mode{mode_inv m Target} -> en:env -> l:list exp -> f:(config -> option config) -> list exp
-let rec inline m en e f =
+let rec unfold m en e f =
   (* if is_inlined e then en, e *)
   (* else *)
     match e with
       | E_aspar _ _
       | E_assec _ _                 -> failwith "Inline of aspar and assec not yet supported"
-      | E_box ps e                  -> en, E_box (snd (inline m en ps f)) (snd (inline m en e f))
-      | E_unbox e                   -> en, E_unbox (snd (inline m en e f))
-      | E_mkwire e1 e2              -> en, E_mkwire (snd (inline m en e1 f)) (snd (inline m en e2 f))
-      | E_projwire e1 e2            -> en, E_projwire (snd (inline m en e1 f)) (snd (inline m en e2 f))
-      | E_concatwire e1 e2          -> en, E_concatwire (snd (inline m en e1 f)) (snd (inline m en e2 f))
+      | E_box ps e                  -> en, E_box (snd (unfold m en ps f)) (snd (unfold m en e f))
+      | E_unbox e                   -> en, E_unbox (snd (unfold m en e f))
+      | E_mkwire e1 e2              -> en, E_mkwire (snd (unfold m en e1 f)) (snd (unfold m en e2 f))
+      | E_projwire e1 e2            -> en, E_projwire (snd (unfold m en e1 f)) (snd (unfold m en e2 f))
+      | E_concatwire e1 e2          -> en, E_concatwire (snd (unfold m en e1 f)) (snd (unfold m en e2 f))
       | E_const _                   -> en, e
       | E_var x                     ->
 	let dv_opt = en x in
-	if is_None dv_opt then (en, E_var x)
+	if None? dv_opt then (en, E_var x)
 	else
 	  let dv = Some.v dv_opt in
 	  let e_opt = value_to_exp en dv in
-	  if is_None e_opt then en, E_var x
+	  if None? e_opt then en, E_var x
 	  else Some.v e_opt
-      | E_let x e1 e2               -> en, E_let x (snd (inline m en e1 f)) (snd (inline m en e2 f))
-      | E_abs x e                   -> en, E_abs x (snd (inline m en e f))
-      | E_fix f' x e                -> en, E_fix f' x (snd (inline m en e f))
-      | E_empabs x e                -> en, E_empabs x (snd (inline m en e f))
+      | E_let x e1 e2               -> en, E_let x (snd (unfold m en e1 f)) (snd (unfold m en e2 f))
+      | E_abs x e                   -> en, E_abs x (snd (unfold m en e f))
+      | E_fix f' x e                -> en, E_fix f' x (snd (unfold m en e f))
+      | E_empabs x e                -> en, E_empabs x (snd (unfold m en e f))
       | E_app e1 e2                 ->
-	let en', e1' = inline m en e1 f in
+	let en', e1' = unfold m en e1 f in
 	(match e1' with
-	  | E_abs x e     -> en, snd (inline m en' (subst e x e2) f)
-	  | E_fix f' x e  -> en, snd (inline m en' (subst (subst e f' (E_fix f' x e)) x e2) f)
-	  | E_empabs x e  -> en, snd (inline m en' (subst e x e2) f)
-	  | _             -> FStar.IO.print_string (Print.exp_to_string e1'); failwith "E_app case, inline of e1 is not an abstraction")
+	  | E_abs x e     -> en, snd (unfold m en' (subst e x e2) f)
+	  | E_fix f' x e  -> en, snd (unfold m en' (subst (subst e f' (E_fix f' x e)) x e2) f)
+	  | E_empabs x e  -> en, snd (unfold m en' (subst e x e2) f)
+	  | _             -> FStar.IO.print_string (Print.exp_to_string e1'); failwith "E_app case, unfold of e1 is not an abstraction")
 
       | E_ffi 'a 'b a fname b args c  -> en, E_ffi a fname b (inline_l m en args f) c
       | E_cond e e1 e2              ->
@@ -153,11 +153,11 @@ let rec inline m en e f =
 	      let Conf _ _ _ _ (T_val v) _ = c in
 	      if Semantics.is_v_bool v then
 		let V_bool b = v in
-		if b then (inline m en e1 f) else (inline m en e2 f)
+		if b then (unfold m en e1 f) else (unfold m en e2 f)
 	      else failwith "Cond expr evaluated to something other than bool"
 	    else
-	      en, E_cond (snd (inline m en e f)) (snd (inline m en e1 f)) (snd (inline m en e2 f))
+	      en, E_cond (snd (unfold m en e f)) (snd (unfold m en e1 f)) (snd (unfold m en e2 f))
 
 and inline_l m en l f = match l with
   | []   -> []
-  | e::tl -> (snd (inline m en e f))::(inline_l m en tl f)
+  | e::tl -> (snd (unfold m en e f))::(inline_l m en tl f)

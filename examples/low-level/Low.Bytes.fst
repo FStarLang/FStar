@@ -2,7 +2,6 @@ module Low.Bytes
 
 open FStar.Mul
 open FStar.HyperStack
-open FStar.HST
 open FStar.Buffer
 
 assume MaxUInt32: pow2 32 = 4294967296

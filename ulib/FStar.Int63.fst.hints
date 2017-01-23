@@ -1,5 +1,5 @@
 [
-  "ˆ!£Ú\u0004Ð½\u0013:\u0015ÌÍ@Ï_6",
+  "ëD'&ž~Ônw†}S\r-ÐL",
   [
     [
       "FStar.Int63.t'",
@@ -36,7 +36,19 @@
       0
     ],
     [
-      "FStar.Int63.Mk.v",
+      "FStar.Int63.t'",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Int.int_t",
+        "equation_FStar.Int63.n",
+        "haseqTm_refine_ae791d5fae3bac5aab1116259a4112c6"
+      ],
+      0
+    ],
+    [
+      "FStar.Int63.__proj__Mk__item__v",
       1,
       2,
       1,
@@ -46,7 +58,7 @@
       ],
       0
     ],
-    [ "FStar.Int63.Mk.v", 2, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Int63.__proj__Mk__item__v", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Int63.v",
       1,

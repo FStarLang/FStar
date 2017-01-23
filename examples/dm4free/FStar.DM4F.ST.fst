@@ -1,32 +1,47 @@
 module FStar.DM4F.ST
 
-// Note: being in the [FStar] namespace, only [Prims] is automatically opened
-// for the current module.
+(**********************************************************
+ * Dijkstra Monads for Free : Simple state
+ *
+ * A minimal example of defining a state effect along
+ * with actions, over a parametrized state type.
+ *
+ **********************************************************)
 
-let st (h: Type) (a: Type) =
-  h -> M (a * h)
+(* The underlying representation type *)
+let st (s:Type) (a:Type) = s -> M (a * s)
 
-val return_st: h:Type -> a:Type -> x:a -> st h a
-let return_st h a x = fun s -> x, s
+(* Monad definition *)
+let return_st (s:Type) (a:Type) (x:a) : st s a = fun s0 -> x, s0
 
-val bind_st: h:Type -> a:Type -> b:Type -> f:st h a -> g:(a -> st h b) -> st h b
-let bind_st h a b f g = fun s0 ->
-  let tmp = f s0 in
-  let x, s1 = tmp in
-  g x s1
+let bind_st (s:Type) (a:Type) (b:Type) (f:st s a) (g:a -> st s b) : st s b
+  = fun (s0:s) -> let (x,s) = f s0 in g x s //<: M (b * s)
+  (* TODO : investigate why the following does not work *)
+  (* let h (s0:s) : = let (x,s) = f s0 in g x s <: M (a * s) in h *)
 
-let get (h: Type) (_:unit): st h h =
-  fun x -> x, x
+(* Actions *)
+let get (s:Type) () : st s s = fun s0 -> s0, s0
 
-let put (h: Type) (x: h): st h unit =
-  fun _ -> (), x
+let put (s:Type) (x:s) : st s unit = fun _ -> (), x
 
-reifiable reflectable new_effect_for_free {
-  STATE (h: Type): a:Type -> Effect
-  with repr     = st h
-     ; bind     = bind_st h
-     ; return   = return_st h
+(*
+ * Do the DM4F work. Note that the heap type is a parameter
+ * of the resulting effect.
+ *)
+total reifiable reflectable new_effect_for_free {
+  STATE_h (s:Type0) : a:Type -> Effect
+  with repr     = st s
+     ; bind     = bind_st s
+     ; return   = return_st s
   and effect_actions
-       get      = get h
-     ; put      = put h
+       get      = get s
+     ; put      = put s
 }
+
+// Works fine
+//let repr0 = STATE_h.repr int
+
+// I would expect STATE.get to have type (s:Type) -> unit -> STATE s int
+// but this is not a valid type in F* (the effect is depedent on the input type s)
+// In current F*, we need to create a new applied effect in order to use this definition
+// i.e. new_effect_for_free STATE_int = STATE_h int

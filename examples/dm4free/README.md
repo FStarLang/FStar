@@ -1,6 +1,9 @@
 Dijkstra Monads for Free
 ------------------------
 
+Examples associated to this paper:
+https://www.fstar-lang.org/papers/dm4free/
+
 Any `FStar.DM4F.*` file successfully verifies.
 
 To try out a basic, complete example:
@@ -45,24 +48,5 @@ generated terms are well-formed in F*); the effect definition is lifted from DM
 to F*; missing WPs are generated, and everything is sent off to the "regular"
 effect checking code.
 
-Items left:
-- change the elaboration of the match to push the return _inside_ the branches
-  instead of wrapping the whole branch on the outside (better for Z3)
-- fill out various TODOs in `dmff.fs` to faithfully check everything (right now,
-  most checks are fairly lax);
-- try out more things in the definition language; try out with a parameterized
-  `STATE (h: heap)` effect; etc
-- * and elaboration of lifts
-- inserting "return" on the fly when reflecting Tot computations
-- more examples!
-- extraction!
-
-- it would be good to have a generic way of noticing that a WP
-  combinator contains a branching construct within it and that it may
-  lead to exponential blowup. In such a case, we should wrap the WP
-  with a "name_continuation" combinator, which is currently called
-  "wp_ite" and should be renamed. This is particularly important for
-  the exceptions monad, where every bind contains a branch.
-
-- dreaming: can we also generate abbreviations for the "triples" form
-  of an effect?
+Further work on this is tracked here:
+https://github.com/FStarLang/FStar/issues/753

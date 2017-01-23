@@ -1,9 +1,6 @@
 [
-  "&+\u0001Ëðu†U¦çU‚?o‡©",
+  "²\u0017o:Cšc\bÅÎ}3[à¶…",
   [
-    [ "FStar.Axiomatic.Array.LengthConst", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Axiomatic.Array.IndexConst", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Axiomatic.Array.LengthUpdate", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Axiomatic.Array.IndexUpdate",
       1,
@@ -13,14 +10,6 @@
       0
     ],
     [ "FStar.Axiomatic.Array.IndexUpdate", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Axiomatic.Array.LengthSlice", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Axiomatic.Array.IndexSlice", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Axiomatic.Array.LengthAppend", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Axiomatic.Array.IndexAppend", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Axiomatic.Array.SeqEquals", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Axiomatic.Array.Extensional", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Axiomatic.Array.ProjEmp", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Axiomatic.Array.ProjLen", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Axiomatic.Array.EmpConst", 1, 2, 1, [ "@query" ], 0 ]
+    [ "FStar.Axiomatic.Array.IndexAppend", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]
