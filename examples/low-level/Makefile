@@ -206,10 +206,24 @@ krml-test.exe: spartan_aes/aes.o crypto/*.fst
 	$(KRML) crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst \
 		spartan_aes/aes.o crypto/spartan_stub.c \
 	       	crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest \
-		-bundle Crypto=Flag,Crypto.* \
+		-bundle Crypto_KrmlTest=Flag,Crypto.* \
 	       	$(KREMLIN_HOME)/test/../kremlib/testlib.c crypto/test_hacks.c \
-		-tmpdir tmp -add-include '"testlib.h"' -o krml-test.exe
+		-tmpdir tmp -add-include '"testlib.h"' -o $@
 	./krml-test.exe
+
+test-perf.exe: crypto/test_perf.c krml-test.exe
+	$(KRML) tmp/out.krml \
+		-bundle Crypto_KrmlTest=Flag,Crypto.* \
+		-tmpdir tmp -add-include '"testlib.h"' -o $@ \
+	       	$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
+	        crypto/test_perf.c crypto/spartan_stub.c spartan_aes/*.o crypto/test_hacks.c \
+		crypto/spartan_stub.c \
+		-ccopts -Ofast,-m64,-march=native,-mtune=native,-flto,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
+		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
+		-I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto $(CFLAGS)
+	PATH=$(OPENSSL_HOME):"$(PATH)" \
+	  LD_LIBRARY_PATH=$(OPENSSL_HOME):"$(LD_LIBRARY_PATH)" \
+	  DYLD_LIBRARY_PATH=$(OPENSSL_HOME):"$(DYLD_LIBRARY_PATH)" ./test-perf.exe
 
 OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List_Tot.ml \
 		tmp/FStar_Seq.ml \
@@ -308,16 +322,6 @@ ocaml-test.exe: ocaml-test-extract
 OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
 #OPENSSL_HOME=/usr/local/Cellar/openssl\@1.1/1.1.0c
 #CC=gcc-6 
-
-test-perf.exe: krml-test.exe crypto/test_perf.c
-	$(CC) -Ofast -m64 -march=native -mtune=native -flto -funroll-loops -fomit-frame-pointer \
-	 -o test-perf.exe tmp/FStar.c tmp/Crypto_AEAD*.c tmp/Crypto_Symmetric*.c tmp/Crypto_Indexing*.c tmp/Buffer_Utils*.c tmp/Crypto_Plain*.c $(KREMLIN_HOME)/kremlib/kremlib.c \
-		$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_perf.c crypto/spartan_stub.c spartan_aes/*.o crypto/test_hacks.c -I tmp -L tmp \
-		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
-		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME)/lib -L $(OPENSSL_HOME) -lcrypto $(CFLAGS)
-	PATH=$(OPENSSL_HOME):"$(PATH)" \
-	  LD_LIBRARY_PATH=$(OPENSSL_HOME):"$(LD_LIBRARY_PATH)" \
-	  DYLD_LIBRARY_PATH=$(OPENSSL_HOME):"$(DYLD_LIBRARY_PATH)" ./test-perf.exe
 
 # Cleaning
 clean:
