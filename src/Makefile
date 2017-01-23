@@ -248,12 +248,6 @@ boot-ocaml:
 # Testing
 # --------------------------------------------------------------------
 
-test:
-	make all
-	make fsharp-regressions
-	make fstar-ocaml
-	make regressions
-
 utest:
 	make all
 	make fsharp-regressions
@@ -265,16 +259,6 @@ utest:
 fsharp-regressions:
 	$(RUNTIME) $(BIN)/tests.exe
 
-# The regressions to be run with a working OCaml build of F*
-regressions:
-	make -C ../lib
-	+make -C ../ulib
-	+make -C ../examples
-	make -C ../examples/hello ocaml
-	make -C ../ucontrib/CoreCrypto/ml/ test
-	make -C ../examples/crypto clean #rpc-test cnt-test #removed until we can add it in uregressions
-	#make -C ../examples/wysteria a.out distclean
-
 # Getting parallelism from this target
 uregressions: ulib uexamples
 
@@ -282,10 +266,7 @@ ulib:
 	+make -C ../ulib
 
 uexamples:
-	+make -C ../examples uall
-
-examples:
-	+make -C ../examples sall
+	+make -C ../examples all
 
 ulong:
 	+make utest
