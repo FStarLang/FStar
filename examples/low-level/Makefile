@@ -11,7 +11,7 @@ CODEGEN_ARGS=--lax --codegen OCaml --no_location_info $(FSTAR_DEFAULT_ARGS)
 
 KREMLIN_HOME=../../../kremlin
 KREMLIN=$(KREMLIN_HOME)/Kremlin.native
-KREMLIN_ARGS=-tmpdir kremlin -verbose -cc clang -ccopt -Wno-error=pointer-sign -ccopt -Wno-error=non-literal-null-conversion
+KREMLIN_ARGS=-tmpdir kremlin -verbose -cc clang
 
 CHACHA_ODIR=chacha
 POLY_ODIR=poly
@@ -193,7 +193,7 @@ bignum-ver:
 	$(FSTAR) --use_hints --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
 
 KRML_INCLUDES=$(addprefix -I ,spartan_aes crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
-KRML_ARGS=-verbose -ccopt -maes -ccopt -Wno-error=pointer-sign $(KOPTS)
+KRML_ARGS=-verbose -ccopt -maes $(KOPTS)
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES) 
 
 spartan_aes/aes.o:
@@ -206,6 +206,7 @@ krml-test.exe: spartan_aes/aes.o crypto/*.fst
 	$(KRML) crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst \
 		spartan_aes/aes.o crypto/spartan_stub.c \
 	       	crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest \
+		-bundle Crypto=Flag,Crypto.* \
 	       	$(KREMLIN_HOME)/test/../kremlib/testlib.c crypto/test_hacks.c \
 		-tmpdir tmp -add-include '"testlib.h"' -o krml-test.exe
 	./krml-test.exe
