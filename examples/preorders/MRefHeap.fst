@@ -6,22 +6,25 @@ open Preorder
    reference to be allocated) and a mapping of allocated raw references
    (represented as natural numbers) to types, values and preorders. *)
 
-abstract type heap = h:(nat * (nat -> Tot (option (dtuple2 Type0 (fun a -> a * r:relation a{preorder r})))))
+let preorder_t (a:Type0) = r:relation a{preorder r}
+let heap_cell_a (a:Type0) = a * preorder_t a
+let heap_cell = (a:Type0 & heap_cell_a a)
+abstract type heap = h:(nat * (nat -> Tot (option heap_cell)))
 		       {(forall (n:nat) . n < fst h ==> (exists v . snd h n == Some v)) /\
 			(forall (n:nat) . n >= fst h ==> snd h n == None)}
 
 (* References. *)
 
-abstract type mref (a:Type) (r:relation a{preorder r}) = nat
+abstract type mref (a:Type) (r:preorder_t a) = nat
 
 
 (* Containment predicate on heaps. *)
 
-let contains (#a:Type) (#r:relation a{preorder r}) (h:heap) (m:mref a r) =
-  exists v .
+let contains (#a:Type) (#r:preorder_t a) (h:heap) (m:mref a r) : GTot Type0 =
+  exists (v:heap_cell).
     snd h m == Some v /\
     dfst v == a /\
-    snd #a #(r:relation a{preorder r}) (dsnd v) == r
+    snd #(dfst v) #(preorder_t a) (dsnd v) == r
 
 
 (* Select. *)
@@ -84,5 +87,4 @@ let upd #a #r h0 m x =
 (* Empty. *)
 
 val emp : heap
-let emp =
-  Mktuple2 #nat #(nat -> Tot (option (dtuple2 Type0 (fun a -> a * r:relation a{preorder r})))) 0 (fun (r:nat) -> None)
+let emp = 0, (fun (r:nat) -> None)

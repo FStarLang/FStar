@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -64,21 +64,22 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="common.fs" />
-    <Compile Include="env.fsi" />
-    <Compile Include="env.fs" />
-    <Compile Include="normalize.fsi" />
-    <Compile Include="normalize.fs" />
-    <Compile Include="errors.fs" />
-    <Compile Include="rel.fsi" />
-    <Compile Include="rel.fs" />
-    <Compile Include="util.fsi" />
-    <Compile Include="util.fs" />
-    <Compile Include="dmff.fs" />
-    <Compile Include="tcterm.fsi" />
-    <Compile Include="tcterm.fs" />
-    <Compile Include="tc.fsi" />
-    <Compile Include="tc.fs" />
+    <Compile Include="FStar.TypeChecker.Common.fs" />
+    <Compile Include="FStar.TypeChecker.Env.fsi" />
+    <Compile Include="FStar.TypeChecker.Env.fs" />
+    <Compile Include="FStar.TypeChecker.Normalize.fsi" />
+    <Compile Include="FStar.TypeChecker.Normalize.fs" />
+    <Compile Include="FStar.TypeChecker.Err.fs" />
+    <Compile Include="FStar.TypeChecker.Rel.fsi" />
+    <Compile Include="FStar.TypeChecker.Rel.fs" />
+    <Compile Include="FStar.TypeChecker.Util.fsi" />
+    <Compile Include="FStar.TypeChecker.Util.fs" />
+    <Compile Include="FStar.TypeChecker.DMFF.fsi" />
+    <Compile Include="FStar.TypeChecker.DMFF.fs" />
+    <Compile Include="FStar.TypeChecker.TcTerm.fsi" />
+    <Compile Include="FStar.TypeChecker.TcTerm.fs" />
+    <Compile Include="FStar.TypeChecker.Tc.fsi" />
+    <Compile Include="FStar.TypeChecker.Tc.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

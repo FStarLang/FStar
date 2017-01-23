@@ -1,111 +1,104 @@
 
 open Prims
-
 type rel =
 | EQ
 | SUB
 | SUBINV
 
 
-let is_EQ = (fun _discr_ -> (match (_discr_) with
-| EQ (_) -> begin
+let uu___is_EQ : rel  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| EQ -> begin
 true
 end
-| _ -> begin
+| uu____4 -> begin
 false
 end))
 
 
-let is_SUB = (fun _discr_ -> (match (_discr_) with
-| SUB (_) -> begin
+let uu___is_SUB : rel  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| SUB -> begin
 true
 end
-| _ -> begin
+| uu____8 -> begin
 false
 end))
 
 
-let is_SUBINV = (fun _discr_ -> (match (_discr_) with
-| SUBINV (_) -> begin
+let uu___is_SUBINV : rel  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| SUBINV -> begin
 true
 end
-| _ -> begin
+| uu____12 -> begin
 false
 end))
-
 
 type ('a, 'b) problem =
 {pid : Prims.int; lhs : 'a; relation : rel; rhs : 'a; element : 'b Prims.option; logical_guard : (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term); scope : FStar_Syntax_Syntax.binders; reason : Prims.string Prims.list; loc : FStar_Range.range; rank : Prims.int Prims.option}
-
-
-let is_Mkproblem = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkproblem"))))
-
 
 type prob =
 | TProb of (FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.term) problem
 | CProb of (FStar_Syntax_Syntax.comp, Prims.unit) problem
 
 
-let is_TProb = (fun _discr_ -> (match (_discr_) with
-| TProb (_) -> begin
+let uu___is_TProb : prob  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| TProb (_0) -> begin
 true
 end
-| _ -> begin
+| uu____240 -> begin
 false
 end))
 
 
-let is_CProb = (fun _discr_ -> (match (_discr_) with
-| CProb (_) -> begin
+let __proj__TProb__item___0 : prob  ->  (FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.term) problem = (fun projectee -> (match (projectee) with
+| TProb (_0) -> begin
+_0
+end))
+
+
+let uu___is_CProb : prob  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| CProb (_0) -> begin
 true
 end
-| _ -> begin
+| uu____260 -> begin
 false
 end))
 
 
-let ___TProb____0 = (fun projectee -> (match (projectee) with
-| TProb (_53_17) -> begin
-_53_17
-end))
-
-
-let ___CProb____0 = (fun projectee -> (match (projectee) with
-| CProb (_53_20) -> begin
-_53_20
+let __proj__CProb__item___0 : prob  ->  (FStar_Syntax_Syntax.comp, Prims.unit) problem = (fun projectee -> (match (projectee) with
+| CProb (_0) -> begin
+_0
 end))
 
 
 type probs =
 prob Prims.list
 
-
 type guard_formula =
 | Trivial
 | NonTrivial of FStar_Syntax_Syntax.formula
 
 
-let is_Trivial = (fun _discr_ -> (match (_discr_) with
-| Trivial (_) -> begin
+let uu___is_Trivial : guard_formula  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Trivial -> begin
 true
 end
-| _ -> begin
+| uu____281 -> begin
 false
 end))
 
 
-let is_NonTrivial = (fun _discr_ -> (match (_discr_) with
-| NonTrivial (_) -> begin
+let uu___is_NonTrivial : guard_formula  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| NonTrivial (_0) -> begin
 true
 end
-| _ -> begin
+| uu____286 -> begin
 false
 end))
 
 
-let ___NonTrivial____0 = (fun projectee -> (match (projectee) with
-| NonTrivial (_53_23) -> begin
-_53_23
+let __proj__NonTrivial__item___0 : guard_formula  ->  FStar_Syntax_Syntax.formula = (fun projectee -> (match (projectee) with
+| NonTrivial (_0) -> begin
+_0
 end))
 
 
@@ -117,14 +110,10 @@ type univ_ineq =
 (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
 
 
-let tconst : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _152_83 = (let _152_82 = (FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None)
-in FStar_Syntax_Syntax.Tm_fvar (_152_82))
-in (FStar_Syntax_Syntax.mk _152_83 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
+let tconst : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> ((FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar ((FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None)))) (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange))
 
 
-let tabbrev : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _152_87 = (let _152_86 = (FStar_Syntax_Syntax.lid_as_fv l (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "1"))) None)
-in FStar_Syntax_Syntax.Tm_fvar (_152_86))
-in (FStar_Syntax_Syntax.mk _152_87 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
+let tabbrev : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> ((FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar ((FStar_Syntax_Syntax.lid_as_fv l (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "1"))) None)))) (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange))
 
 
 let t_unit : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.unit_lid)
@@ -149,34 +138,34 @@ let t_range : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Synta
 
 
 let rec delta_depth_greater_than : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth  ->  Prims.bool = (fun l m -> (match (((l), (m))) with
-| (FStar_Syntax_Syntax.Delta_constant, _53_30) -> begin
+| (FStar_Syntax_Syntax.Delta_constant, uu____345) -> begin
 false
 end
-| (FStar_Syntax_Syntax.Delta_equational, _53_34) -> begin
+| (FStar_Syntax_Syntax.Delta_equational, uu____346) -> begin
 true
 end
-| (_53_37, FStar_Syntax_Syntax.Delta_equational) -> begin
+| (uu____347, FStar_Syntax_Syntax.Delta_equational) -> begin
 false
 end
 | (FStar_Syntax_Syntax.Delta_defined_at_level (i), FStar_Syntax_Syntax.Delta_defined_at_level (j)) -> begin
 (i > j)
 end
-| (FStar_Syntax_Syntax.Delta_defined_at_level (_53_46), FStar_Syntax_Syntax.Delta_constant) -> begin
+| (FStar_Syntax_Syntax.Delta_defined_at_level (uu____350), FStar_Syntax_Syntax.Delta_constant) -> begin
 true
 end
-| (FStar_Syntax_Syntax.Delta_abstract (d), _53_53) -> begin
+| (FStar_Syntax_Syntax.Delta_abstract (d), uu____352) -> begin
 (delta_depth_greater_than d m)
 end
-| (_53_56, FStar_Syntax_Syntax.Delta_abstract (d)) -> begin
+| (uu____353, FStar_Syntax_Syntax.Delta_abstract (d)) -> begin
 (delta_depth_greater_than l d)
 end))
 
 
-let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun _53_1 -> (match (_53_1) with
+let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun uu___91_358 -> (match (uu___91_358) with
 | (FStar_Syntax_Syntax.Delta_constant) | (FStar_Syntax_Syntax.Delta_equational) -> begin
 None
 end
-| FStar_Syntax_Syntax.Delta_defined_at_level (_152_94) when (_152_94 = (Prims.parse_int "1")) -> begin
+| FStar_Syntax_Syntax.Delta_defined_at_level (_0_158) when (_0_158 = (Prims.parse_int "1")) -> begin
 Some (FStar_Syntax_Syntax.Delta_constant)
 end
 | FStar_Syntax_Syntax.Delta_defined_at_level (i) -> begin
