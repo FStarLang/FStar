@@ -211,11 +211,13 @@ let kwd s = Util.smap_try_find kwd_table s
 
 type lexargs = {
   getSourceDirectory: (unit -> string);
+  filename:string;
   contents:string
 }
 
-let mkLexargs (srcdir,filename,(contents:string)) = {
+let mkLexargs (srcdir,(filename:string),(contents:string)) = {
   getSourceDirectory = srcdir;
+  filename = filename;
   contents = contents
 }
 
