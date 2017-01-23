@@ -212,12 +212,13 @@ krml-test.exe: spartan_aes/aes.o crypto/*.fst
 	./krml-test.exe
 
 test-perf.exe: crypto/test_perf.c krml-test.exe
+	# Add this argument once someone writes a proper API for the Crypto
+	# subsystem
+	#-bundle Crypto_KrmlTest=Flag,Crypto.* 
 	$(KRML) tmp/out.krml \
-		-bundle Crypto_KrmlTest=Flag,Crypto.* \
 		-tmpdir tmp -add-include '"testlib.h"' -o $@ \
 	       	$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
-	        crypto/test_perf.c crypto/spartan_stub.c spartan_aes/*.o crypto/test_hacks.c \
-		crypto/spartan_stub.c \
+	        crypto/test_perf.c spartan_aes/aes.o crypto/spartan_stub.c \
 		-ccopts -Ofast,-m64,-march=native,-mtune=native,-flto,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
 		-I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto $(CFLAGS)
