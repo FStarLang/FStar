@@ -31,7 +31,7 @@ CHACHA_AEAD_EXTRACTED=Spartan.ml FStar_List_Tot.ml FStar_Seq.ml FStar_SeqPropert
 .PHONY: lib-ver chacha-ver chacha-ml ulib
 
 #NS: 12/21, we decided to only check verification on each commit; a full test happens nightly using the extra target
-uall:
+all:
 	+make -C crypto all
 
 extra:
@@ -39,8 +39,6 @@ extra:
 	+make chacha-test aes-test aesgcm-test chacha-aead-test
 	+make -C crypto all extra
 # removed tests poly-test and aead-test, relying on older code.
-
-sall:
 
 ulib: $(FSTAR_HOME)/ulib/ml/fstarlib.cmxa
 

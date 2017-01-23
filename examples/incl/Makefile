@@ -21,7 +21,5 @@ $(NEGTARGETS): %.nver: %
 	! $(FSTAR) --include $^ --odir $^ Test.fst > $^/error.log 2>&1
 	@echo $^ failed as expected
 
-sall: # --stratified does not support 'include'
-
 clean:
 	for f in $(NEGTESTS) ; do rm -f $$f/error.log ; done
