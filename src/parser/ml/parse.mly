@@ -1015,8 +1015,7 @@ letqualifier:
 aqual:
   EQUALS
     {let _1 = () in
-              ( if universes()
-                then print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
+              ( print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
 				        Equality )}
 | aqualUniverses
     {let q = $1 in

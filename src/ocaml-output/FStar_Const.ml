@@ -227,9 +227,9 @@ end))
 
 let eq_const : sconst  ->  sconst  ->  Prims.bool = (fun c1 c2 -> (match (((c1), (c2))) with
 | (Const_int (s1, o1), Const_int (s2, o2)) -> begin
-((let _0_121 = (FStar_Util.ensure_decimal s1)
-in (let _0_120 = (FStar_Util.ensure_decimal s2)
-in (_0_121 = _0_120))) && (o1 = o2))
+((let _0_120 = (FStar_Util.ensure_decimal s1)
+in (let _0_119 = (FStar_Util.ensure_decimal s2)
+in (_0_120 = _0_119))) && (o1 = o2))
 end
 | ((Const_bytearray (a, _), Const_bytearray (b, _))) | ((Const_string (a, _), Const_string (b, _))) -> begin
 (a = b)

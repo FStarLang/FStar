@@ -406,7 +406,7 @@ let collect_one
     | Name lid ->
         record_lid lid
     | Construct (lid, termimps) ->
-        if List.length termimps = 1 && Options.universes () then
+        if List.length termimps = 1 then
           record_lid lid;
         List.iter (fun (t, _) -> collect_term t) termimps
     | Abs (pats, t) ->
@@ -559,7 +559,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
    *   - both M.fsti and M.fst if the argument was M.fst
    *)
   let partial_discovery =
-    Options.universes () && not (Options.verify_all () || Options.extract_all ())
+    not (Options.verify_all () || Options.extract_all ())
   in
   let rec discover_one is_user_provided_filename interface_only key =
     if smap_try_find graph key = None then

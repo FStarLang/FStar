@@ -9,7 +9,7 @@ MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
 OCAMLBUILD=cd ../../ && ocamlbuild -cflag '-g' -I src/ocaml-output -I src/basic/ml \
   -I src/parser/ml -I src/fstar/ml -j 24 -build-dir src/ocaml-output/_build \
-  -I src/prettyprint/ml -I lib/ml -use-ocamlfind
+  -I src/prettyprint/ml -I src/ocaml-output/bootlibs -use-ocamlfind
 COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
 PRETTYPRINT_ML_LIB=FStar_Pprint.cmx

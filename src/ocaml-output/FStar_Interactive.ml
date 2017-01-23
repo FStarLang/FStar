@@ -517,7 +517,7 @@ in (match (uu____1485) with
 | (stack, env, ts) -> begin
 (
 
-let uu____1506 = ((FStar_Options.universes ()) && ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ())))
+let uu____1506 = ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))
 in (match (uu____1506) with
 | true -> begin
 (let _0_671 = (FStar_List.hd (FStar_Options.file_list ()))
