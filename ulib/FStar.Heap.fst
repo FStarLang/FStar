@@ -33,7 +33,8 @@ abstract val compare_addrs: #a:Type -> #b:Type -> r1:ref a -> r2:ref b -> Tot (b
 let compare_addrs #a #b r1 r2 = r1.addr = r2.addr
 
 abstract let contains_a_well_typed (#a:Type0) (h:heap) (r:ref a) =
-  exists (x:a). h.memory r.addr == Some (| a, x |)
+  Some? (h.memory r.addr) /\ dfst (Some?.v (h.memory r.addr)) == a
+  (* exists (x:a). h.memory r.addr == Some (| a, x |) *)
 
 (* Select. *)
 private abstract val sel_tot : #a:Type -> h:heap -> r:ref a{h `contains_a_well_typed` r} -> Tot a
