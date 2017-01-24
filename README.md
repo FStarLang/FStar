@@ -74,7 +74,7 @@ We don't maintain old releases, so if possible please use the
 [online F\* editor] or directly [the GitHub sources] to check
 that your problem still exists on the `master` branch.
 
-[F* issue tracker]: https://github.com/FStarLang/FStar/issues
+[F\* issue tracker]: https://github.com/FStarLang/FStar/issues
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [the GitHub sources]: [https://github.com/FStarLang/FStar/blob/master/INSTALL.md#building-f-from-sources
 
