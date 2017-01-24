@@ -1,9 +1,9 @@
 module WhileReify
 
-open FStar.DM4F.Heap
-open FStar.DM4F.Heap.ST
+open FStar.DM4F.IntStoreAux
+open FStar.DM4F.IntStore
 
-type id = ref int
+type id = index
 
 type binop =
 | Plus
