@@ -1817,9 +1817,14 @@ let type_of_tot_term env e =
  *
  *  Another involves reading t's universe from its memoized type in the .tk field
  *)
+let hit_count = ref 0
 let universe_or_type_of env e =
     let _ = if Env.debug env Options.Extreme
-            then BU.print1 "<start> universe_of %s\n" (Print.term_to_string e) in
+            || Env.debug env <| Options.Other "Looping"
+            then (incr hit_count;
+                  BU.print1 "<start> universe_of %s\n" (Print.term_to_string e)) in
+    if !hit_count = 14
+    then Options.set_option "debug_level" (Options.List [Options.String "Extreme"; Options.String "Norm"]);
     let env, _ = Env.clear_expected_typ env in
     let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
     let fail e t = Inl t in
