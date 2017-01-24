@@ -50,32 +50,32 @@ let sel #a h r =
 
 (* Update. *)
 private abstract val upd_tot : #a:Type -> h0:heap -> r:ref a{h0 `contains_a_well_typed` r} -> x:a
-          -> Tot heap
+                               -> Tot heap
 let upd_tot #a h0 r x =
   { h0 with memory = (fun r' -> if r.addr = r'
-			     then Some (| a , x |)
+			     then Some (| a, x |)
                              else h0.memory r') }
 
 abstract val upd: #a:Type -> h0:heap -> r:ref a -> x:a
- -> GTot heap
+                  -> GTot heap
 let upd #a h0 r x =
   if FStar.StrongExcludedMiddle.strong_excluded_middle (h0 `contains_a_well_typed` r)
   then upd_tot h0 r x
   else
     if r.addr >= h0.next_addr
-    then //alloc at r.addr
+    then (* alloc at r.addr *)
       { next_addr = r.addr + 1;
         memory    = (fun (r':nat) -> if r' = r.addr
 			        then Some (| a, x |)
                                 else h0.memory r') }
-    else //type modifying update at r.addr
+    else (* type modifying update at r.addr *)
       { h0 with memory = (fun r' -> if r' = r.addr
-				 then Some (| a , x |)
+				 then Some (| a, x |)
                                  else h0.memory r') }
 
 (* Generating a fresh reference for the given heap. *)
 
-abstract val alloc: #a:Type -> h0:heap -> x:a -> GTot (rh1:(ref a * heap))
+abstract val alloc: #a:Type -> h0:heap -> x:a -> GTot (ref a * heap)
 let alloc #a h0 x =
   let r = { addr = h0.next_addr; init = x } in
   r, upd #a h0 r x
@@ -84,13 +84,13 @@ abstract let contains (#a:Type) (h:heap) (r:ref a): GTot Type0 = Some? (h.memory
 
 val contains_a_well_typed_implies_contains: #a:Type -> h:heap -> r:ref a
                               -> Lemma (requires (h `contains_a_well_typed` r))
-			              (ensures (h `contains` r))
+			              (ensures  (h `contains` r))
 				[SMTPatOr [[SMTPat (h `contains_a_well_typed` r)]; [SMTPat (h `contains` r)]]]
 let contains_a_well_typed_implies_contains #a h r = ()
 
 val contains_addr_of: #a:Type -> #b:Type -> h:heap -> r1:ref a -> r2:ref b
                      -> Lemma (requires (h `contains` r1 /\ ~ (h `contains` r2)))
-		             (ensures (addr_of r1 <> addr_of r2))
+		             (ensures  (addr_of r1 <> addr_of r2))
 		       [SMTPat (h `contains` r1); SMTPat (h `contains` r2)]
 let contains_addr_of #a #b h r1 r2 = ()
 
@@ -153,12 +153,6 @@ val upd_contains_a_well_typed: #a:Type -> #b:Type -> h:heap -> r:ref a -> v:a ->
 			            ((h `contains_a_well_typed` r /\ h `contains_a_well_typed` r') ==> (upd h r v) `contains_a_well_typed` r')))
 		    [SMTPat ((upd h r v) `contains_a_well_typed` r')]
 let upd_contains_a_well_typed #a #b h r v r' = ()
-
-val addr_of_contains: #a:Type -> #b:Type -> h:heap -> r1:ref a -> r2:ref b
-                      -> Lemma (requires (h `contains` r1 /\ ~ (h `contains` r2)))
-		              (ensures (addr_of r1 <> addr_of r2))
-			[SMTPat (h `contains` r1); SMTPat (h `contains` r2)]
-let addr_of_contains #a #b h r1 r2 = ()			
 
 let modifies (s:set nat) (h0:heap) (h1:heap) =
   (forall (a:Type) (r:ref a).{:pattern (sel h1 r)}

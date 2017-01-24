@@ -18,7 +18,7 @@ let interpret_binop o a b =
   | Times -> op_Multiply a b
   | Max   -> if a <= b then b else a
 
-type exp =
+noeq type exp =
 | AInt : int -> exp
 | AVar : id -> exp
 | AOp  : binop -> exp -> exp -> exp
@@ -38,16 +38,15 @@ let rec interpret_exp h e =
        Decreasingness and positivity of this termination metric
        _dynamically_ checked. *)
 type variant = exp
-//type variant = e:exp{forall h. 0 <= interpret_exp h e}
+(* type variant = e:exp{forall h. 0 <= interpret_exp h e} *)
 
 (* Commands -- loops are annotated with variants *)
-type com =
+noeq type com =
 | Skip   : com
 | Assign : var:id -> term:exp -> com
 | Seq    : first:com -> second:com -> com
 | If     : cond:exp -> then_branch:com -> else_branch:com -> com
 | While  : cond:exp -> body:com -> variant:variant -> com
-
 
 (* function used for the decreases clause *)
 val decr_while : heap -> com -> GTot int
