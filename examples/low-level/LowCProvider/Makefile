@@ -26,9 +26,11 @@ ifeq ($(OS),Windows_NT)
     ARCH = win32
     EXTRA_OPTS =
     EXTRA_LIBS = -L.
+    AR = x86_64-w64-mingw32-ar
 else
     EXTRA_PATH = LD_LIBRARY_PATH=.
     UNAME_S := $(shell uname -s)
+    AR = ar
     ifeq ($(UNAME_S),Darwin)
         EXTRA_OPTS =
         EXTRA_LIBS = -L.
@@ -62,9 +64,11 @@ all: ../krml-test.exe ../spartan_aes/aes.o LowCProvider.cmxa
 $(CORECRYPTO)/CoreCrypto.cmx: $(CORECRYPTO)/CoreCrypto.ml
 	$(MAKE) -C $(CORECRYPTO)
 
+
+
 libllcrypto.a: ../krml-test.exe
-	ar -cr libllcrypto.a ../spartan_aes/aes.o ../tmp/*.o
-	ar -d libllcrypto.a Crypto_KrmlTest.o
+	$(AR) -cr libllcrypto.a ../spartan_aes/aes.o ../tmp/*.o
+	$(AR) -d libllcrypto.a Crypto_KrmlTest.o
 
 lowc_stub.o: libllcrypto.a
 	$(OCAMLOPT) $(CCOPTS) $(EXTRA_OPTS) $(KRML_INCLUDES) -c lowc_stub.c
