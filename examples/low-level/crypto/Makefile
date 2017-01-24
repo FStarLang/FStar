@@ -36,33 +36,25 @@ VERIFY= \
   Crypto.AEAD.Encoding \
   Crypto.AEAD.Invariant \
   Crypto.AEAD.BufferUtils \
+  Crypto.AEAD.Encrypt.Invariant \
   Crypto.AEAD.Enxor.Invariant \
   Crypto.AEAD.EnxorDexor \
   Crypto.AEAD.Wrappers.PRF \
   Crypto.AEAD.Wrappers.CMA \
+  Crypto.AEAD.Wrappers.Encoding \
+  Crypto.AEAD.Decrypt \
   Crypto.AEAD.MAC_Wrapper.Invariant \
+  Crypto.AEAD.Encrypt.Ideal.Invariant \
   Crypto.AEAD.Encrypt \
+  Crypto.AEAD \
   Crypto.Plain \
   TestMonotonic
 
-# Moved tests to end as they were breaking Nightly run on linux
-# Found info online saying comments or ifeq in middle of split lines
-# cause problems so moved these on Linux fails out here
-# split lines did not like concat so just comment out tests so do not run at all
-# ifeq ($(OS),Windows_NT)
-#  Crypto.AEAD.Encrypt.Invariant 
-#  Crypto.AEAD.Encrypt.Ideal.Invariant
-#  Crypto.AEAD.Decrypt 
-#  Crypto.AEAD.Wrappers.Encoding
-#  Crypto.AEAD
-# endif
-
 EXTRA= \
-  Crypto.Symmetric.Poly1305
-#ifeq ($(OS),Windows_NT)
-#  Crypto.Test
-#  Crypto.Symmetric.Poly1305.Lemmas 
-#endif
+  Crypto.Symmetric.Poly1305 \
+  Crypto.Test
+
+#  Crypto.Symmetric.Poly1305.Lemmas # verification target is not passing reliably so commenting out
 
 #16-10-30 removed files specific to Poly1305:
 #  Crypto.Symmetric.Poly1305.MAC 
