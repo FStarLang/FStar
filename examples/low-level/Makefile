@@ -212,14 +212,9 @@ krml-test.exe: spartan_aes/aes.o crypto/*.fst
 test-perf.exe: crypto/test_perf.c krml-test.exe
 	# Add this argument once someone writes a proper API for the Crypto
 	# subsystem
-	# Note: LowCProvider/Makefile just bundles every single .o in tmp inside
-	# a .a file. On CI, we just make krml-test.exe, make test-perf.exe, THEN
-	# make libllcrypto.a. x86_64-w64-mingw32-ar has trouble dealing with LTO
-	# .o files. So, we write out the -flto'd .o files in a separate
-	# directory.
 	#-bundle Crypto_KrmlTest=Flag,Crypto.* 
 	$(KRML) tmp/out.krml -drop Crypto.KrmlTest \
-		-tmpdir tmp-lto -add-include '"testlib.h"' -o $@ \
+		-tmpdir tmp -add-include '"testlib.h"' -o $@ \
 	       	$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
 	        crypto/test_perf.c spartan_aes/aes.o crypto/spartan_stub.c \
 		-ldopt -flto \
