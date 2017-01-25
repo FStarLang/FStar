@@ -387,8 +387,7 @@ letqualifier:
 
  (* Remove with stratify *)
 aqual:
-  | EQUALS    { if universes()
-                then print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
+  | EQUALS    { print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
 				        Equality }
   | q=aqualUniverses { q }
 

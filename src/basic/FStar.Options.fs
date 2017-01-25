@@ -76,6 +76,10 @@ let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
 
+let light_off_files : ref<list<string>> = Util.mk_ref []
+let add_light_off_file (filename:string) = light_off_files := filename :: !light_off_files
+
+
 let init () =
   let vals =
        [
@@ -139,7 +143,6 @@ let init () =
         ("silent"                       , Bool false);
         ("smt"                          , Unset);
         ("split_cases"                  , Int 0);
-        ("stratified"                   , Bool false); // ~universes
         ("timing"                       , Bool false);
         ("trace_error"                  , Bool false);
         ("unthrottle_inductives"        , Bool false);
@@ -160,6 +163,7 @@ let init () =
 let clear () =
    let o = Util.smap_create 50 in
    fstar_options := [o];                                 //clear and reset the options stack
+   light_off_files := [];
    init()
 
 let _run = clear()
@@ -222,7 +226,6 @@ let get_show_signatures         ()      = lookup_opt "show_signatures"          
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
 let get_split_cases             ()      = lookup_opt "split_cases"              as_int
-let get_stratified              ()      = lookup_opt "stratified"               as_bool
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
@@ -358,7 +361,7 @@ let rec specs () : list<Getopt.opt> =
         "detail_errors",
         ZeroArgs (fun () -> Bool true),
          "Emit a detailed error report by asking the SMT solver many queries; will take longer;
-         implies n_cores=1; incompatible with --stratified");
+         implies n_cores=1");
 
        ( noshort,
         "doc",
@@ -604,11 +607,6 @@ let rec specs () : list<Getopt.opt> =
         "Partition VC of a match into groups of [n] cases");
 
        ( noshort,
-        "stratified",
-        ZeroArgs (fun () -> Bool true),
-        "Remove the support for universes");
-
-       ( noshort,
         "timing",
         ZeroArgs (fun () -> Bool true),
         "Print the time it takes to verify each top-level definition");
@@ -679,7 +677,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "z3timeout",
-         OneArg ((fun s -> Util.print_string "Warning: z3timeout ignored with universes; use z3rlimit instead\n"; Int (int_of_string s)),
+         OneArg ((fun s -> Util.print_string "Warning: z3timeout ignored; use z3rlimit instead\n"; Int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
 
@@ -769,7 +767,7 @@ let fstar_home () =
 
 let set_options o s =
     let specs = match o with
-        | Set -> if (not (get_stratified())) then resettable_specs else settable_specs
+        | Set -> resettable_specs
         | Reset -> resettable_specs
         | Restore -> all_specs in
     Getopt.parse_string specs (fun _ -> ()) s
@@ -825,7 +823,7 @@ let include_path () =
     get_include()
   else
   let h = fstar_home () in
-  let defs = if (not (get_stratified())) then universe_include_path_base_dirs else include_path_base_dirs in
+  let defs = universe_include_path_base_dirs in
   (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
 
 let find_file filename =
@@ -860,6 +858,7 @@ let prepend_output_dir fname =
   | None -> fname
   | Some x -> x ^ "/" ^ fname
 
+
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let check_cardinality            () = get_cardinality () = "check"
@@ -874,8 +873,8 @@ let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
 let explicit_deps                () = get_explicit_deps               ()
 let extract_all                  () = get_extract_all                 ()
-let fs_typ_app                   () = get_fs_typ_app                  ()
-let full_context_dependency      () = if get_stratified () then get_MLish() = false else true
+let fs_typ_app    (filename:string) = get_fs_typ_app () && List.contains filename !light_off_files
+let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
@@ -910,7 +909,6 @@ let silent                       () = get_silent                      ()
 let split_cases                  () = get_split_cases                 ()
 let timing                       () = get_timing                      ()
 let trace_error                  () = get_trace_error                 ()
-let universes                    () = (not (get_stratified()))
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()

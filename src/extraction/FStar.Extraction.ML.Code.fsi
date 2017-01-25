@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 (* -------------------------------------------------------------------- *)
+#light "off"
 module FStar.Extraction.ML.Code
 
 open FStar.Extraction.ML.Syntax

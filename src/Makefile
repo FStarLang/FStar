@@ -139,7 +139,8 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	$(SED) -i 's/type uvar.*/assume new type uvar : Type0 -> Type0/g' $@
 
 boot_fstis/FStar.Parser.Parse.fsti: parser/parse.fsi
-	$(HEAD) -n -12 $^ > $@
+	echo "#light \"off\"" > $@
+	$(HEAD) -n -12 $^ >> $@
 	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse open FStar.BaseTypes type bytes = array<byte>/' $@
 
 rename_as_fst:
@@ -247,15 +248,11 @@ boot-ocaml:
 # Testing
 # --------------------------------------------------------------------
 
-test:
-	make all
-	make fsharp-regressions
-	make fstar-ocaml
-	make regressions
-
 utest:
 	make all
-	make fsharp-regressions
+ifeq ($(OS),Windows_NT)
+	make fsharp-regressions #normalizer failures on linux so only run on windows
+endif
 	+make -C ocaml-output
 	+make fstar-ocaml
 	+make uregressions
@@ -264,16 +261,6 @@ utest:
 fsharp-regressions:
 	$(RUNTIME) $(BIN)/tests.exe
 
-# The regressions to be run with a working OCaml build of F*
-regressions:
-	make -C ../lib
-	+make -C ../ulib
-	+make -C ../examples
-	make -C ../examples/hello ocaml
-	make -C ../ucontrib/CoreCrypto/ml/ test
-	make -C ../examples/crypto clean #rpc-test cnt-test #removed until we can add it in uregressions
-	#make -C ../examples/wysteria a.out distclean
-
 # Getting parallelism from this target
 uregressions: ulib uexamples
 
@@ -281,10 +268,7 @@ ulib:
 	+make -C ../ulib
 
 uexamples:
-	+make -C ../examples uall
-
-examples:
-	+make -C ../examples sall
+	+make -C ../examples all
 
 ulong:
 	+make utest

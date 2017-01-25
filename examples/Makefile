@@ -11,9 +11,7 @@ termination \
 software_foundations \
 ../doc/tutorial/code/exercises \
 ../doc/tutorial/code/solutions \
-relational \
-relational/new \
-voting \
+rel \
 maths \
 paradoxes \
 printf \
@@ -22,12 +20,7 @@ verifythis \
 preorders \
 dm4free \
 incl \
-unit-tests
-
-# wysteria (was before preorders)
-# This is failing since some time before 2016-09-07
-# (13 Unknown assertion failed in ckt.fst, print.fst, smc_main.fst)
-
+micro-benchmarks
 
 # #	make -C bignum  -- big timeout (30) + failing asserts (even with 50)
 # #	make -C stateful_bignum  -- huge timeout (50) + code duplication (prims)
@@ -43,17 +36,10 @@ unit-tests
 
 # WARNING: this target shouldn't depend on anything other than the F*
 # binary; in particular it shouldn't depend on OCaml, F#, git, etc.
-all: uall sall
+all: $(addsuffix .all, $(ALL_EXAMPLE_DIRS))
 
-%.uall: %
-	+make -C $^ uall
-
-%.sall: %
-	+make -C $^ sall
-
-uall: $(addsuffix .uall, $(ALL_EXAMPLE_DIRS))
-
-sall: $(addsuffix .sall, $(ALL_EXAMPLE_DIRS))
+%.all: %
+	+make -C $^ all
 
 test: all
 

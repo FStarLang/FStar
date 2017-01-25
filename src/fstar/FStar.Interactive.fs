@@ -333,8 +333,7 @@ let interactive_mode (filename:string)
     let env = tc.tc_prims () in
     let stack, env, ts = tc_deps tc initial_mod [] env filenames [] in
 
-    if Options.universes()
-    && (FStar.Options.record_hints() //and if we're recording or using hints
-    || FStar.Options.use_hints())
+    if FStar.Options.record_hints() //and if we're recording or using hints
+    || FStar.Options.use_hints()
     then FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go (1, 0) filename tc stack initial_mod env ts)
     else go (1, 0) filename tc stack initial_mod env ts
