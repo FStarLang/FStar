@@ -1820,7 +1820,10 @@ let level_of_type env e t =
           if retry
           then let t = Normalize.normalize [N.UnfoldUntil Delta_constant] env t in
                aux false t
-          else level_of_type_fail env e (Print.term_to_string t)
+          else let t_u, u = U.type_u() in
+               let g = FStar.TypeChecker.Rel.teq env t t_u in
+               Rel.force_trivial_guard env g;
+               u
     in aux true t
 
 (* universe_of_aux env e:
@@ -1898,18 +1901,26 @@ let rec universe_of_aux env e =
         | Tm_name _
         | Tm_uvar _
         | Tm_uinst _
-        | Tm_ascribed _ -> universe_of_aux env t
+        | Tm_ascribed _
+        | Tm_refine _
+        | Tm_constant _
+        | Tm_arrow _ -> universe_of_aux env t
         | Tm_match(_, hd::_) ->
           let (_, _, hd) = SS.open_branch hd in
           type_of_head retry hd
         | _ when retry ->
-          let e = N.normalize [N.UnfoldUntil Delta_constant] env e in
+          let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
           let hd, _ = U.head_and_args e in
           type_of_head false hd
         | _ ->
           let env, _ = Env.clear_expected_typ env in
-          let env = {env with lax=true; use_bv_sorts=true} in
-          let _, t, _ = env.type_of env t in
+          let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
+          if Env.debug env <| Options.Other "UniverseOf"
+          then BU.print2 "%s: About to type-check %s\n"
+                        (Range.string_of_range (Env.get_range env))
+                        (Print.term_to_string t);
+          let _, ({res_typ=t}), g = tc_term env t in
+          Rel.solve_deferred_constraints env g |> ignore;
           t
      in
      let t = type_of_head true hd in
