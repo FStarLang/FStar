@@ -155,7 +155,8 @@ let init () =
         ("z3refresh"                    , Bool false);
         ("z3rlimit"                     , Int 5);
         ("z3seed"                       , Int 0);
-        ("z3timeout"                    , Int 5)] in
+        ("z3timeout"                    , Int 5);
+        ("z3cliopt"                     , List [])] in
    let o = peek () in
    Util.smap_clear o;
    vals |> List.iter set_option'                          //initialize it with the default values
@@ -236,6 +237,7 @@ let get_verify_module           ()      = lookup_opt "verify_module"            
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
 let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects"   as_bool
+let get_z3cliopt                ()      = lookup_opt "z3cliopt"                 (as_list as_string)
 let get_z3refresh               ()      = lookup_opt "z3refresh"                as_bool
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
@@ -659,6 +661,11 @@ let rec specs () : list<Getopt.opt> =
         "Top-level effects are checked by default; turn this flag on to prevent warning when this happens");
 
        ( noshort,
+         "z3cliopt",
+         OneArg ((fun s -> List (get_z3cliopt() @ [s] |> List.map String)), "[option]"),
+         "Z3 command line options");
+
+       ( noshort,
         "z3refresh",
         ZeroArgs (fun () -> Bool false),
         "Restart Z3 after each query; useful for ensuring proof robustness");
@@ -919,6 +926,7 @@ let warn_top_level_effects       () = get_warn_top_level_effects      ()
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
+let z3_cliopt                    () = get_z3cliopt                    ()
 let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_seed                      () = get_z3seed                      ()
