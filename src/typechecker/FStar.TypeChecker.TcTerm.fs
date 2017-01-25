@@ -1862,11 +1862,89 @@ let universe_or_type_of env e =
           S.mk t None e.pos in
       universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
 
+let universe_of_fail env e t =
+    raise (Error(BU.format2 "Expected a term of type 'Type'; got %s : %s"
+                                (Print.term_to_string e)
+                                t,
+                      Env.get_range env))
+
+let rec universe_of_type retry env e t =
+    match (U.unrefine t).n with
+    | Tm_type u -> u
+    | _ -> 
+        if retry 
+        then let t = Normalize.normalize [N.UnfoldUntil Delta_constant] env t in
+            universe_of_type false env e t
+        else universe_of_fail env e (Print.term_to_string t)
+
+let rec universe_of' env e =
+   match (SS.compress e).n with
+   | Tm_bvar _
+   | Tm_unknown
+   | Tm_delayed _ -> failwith "Impossible"
+   | Tm_uvar(_, t) -> t
+   | Tm_meta(t, _) -> universe_of' env t
+   | Tm_type u -> S.mk (Tm_type (U_succ u)) None e.pos
+   | Tm_name n -> n.sort
+   | Tm_fvar fv -> fv.fv_name.ty
+   | Tm_constant sc -> tc_constant e.pos sc
+   | Tm_refine(x, _) -> universe_of' env x.sort
+   | Tm_ascribed(_, Inl t, _) -> t
+   | Tm_ascribed(_, Inr c, _) -> U.comp_result c
+   | Tm_uinst({n=Tm_fvar fv}, us) ->
+     let us', t = Env.lookup_lid env fv.fv_name.v in
+     if List.length us <> List.length us'
+     then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
+     else List.iter2 (fun u' u -> match u' with
+        | U_unif u'' -> Unionfind.change u'' (Some u)
+        | _ -> failwith "Impossible") us' us;
+     t
+   | Tm_uinst _ -> failwith "Impossible"
+   | Tm_let(lbs, t) -> failwith "Impossible"
+   | Tm_abs(bs, t, _) -> universe_of_fail env e "arrow type"
+   | Tm_arrow(bs, c) -> begin
+        let bs, c = SS.open_comp bs c in
+        let us = List.map (fun (b, _) -> universe_of_type true env b.sort (universe_of' env b.sort)) bs in
+        let c, uc, f = tc_comp env c in
+        let e = {U.arrow bs c with pos=top.pos} in
+        let u = S.U_max (uc::us) in
+        let t = mk (Tm_type u) None top.pos in
+        let g = Rel.conj_guard g (Rel.close_guard bs f) in
+        value_check_expected_typ env0 e (Inl t) g
+    end
+   | Tm_app(hd, args) ->
+     let rec type_of_head t = 
+        let t = SS.compress t in
+        match t.n with 
+        | Tm_fvar _
+        | Tm_name _
+        | Tm_uvar _
+        | Tm_uinst _
+        | Tm_ascribed _ -> universe_of' env t
+        | Tm_match(_, hd::_) -> 
+          let (_, _, hd) = SS.open_branch hd in
+          type_of_head hd
+        | _ -> let _, t, _ = env.type_of env hd in t
+     in
+     let t = type_of_head hd in
+     let _, res = U.arrow_formals_comp t in
+     Util.comp_result res
+   | Tm_match(_, []) ->
+     universe_of_fail env e "empty match cases"
+   | Tm_match(_, hd::_) ->
+     let (_, _, hd) = SS.open_branch hd in
+     universe_of' env hd
+
 let universe_of env e =
-   match universe_or_type_of env e with
-   | Inl t ->
-     raise (Error(BU.format2 "Expected a term of type 'Type'; got %s : %s"
-                        (Print.term_to_string e)
-                        (Print.term_to_string t),
-                  Env.get_range env))
-   | Inr u -> u
+    let e = Normalize.normalize [N.UnfoldUntil Delta_constant] env e in
+    let t = universe_of' env e in 
+    universe_of_type true env e t
+    
+
+//   match universe_or_type_of env e with
+//   | Inl t ->
+//     raise (Error(BU.format2 "Expected a term of type 'Type'; got %s : %s"
+//                        (Print.term_to_string e)
+//                        (Print.term_to_string t),
+//                  Env.get_range env))
+//   | Inr u -> u
