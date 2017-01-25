@@ -17,3 +17,9 @@ abstract let rec set_nth_opt (acc : list int) (n:index) (l:list int) (y:int)
   | n, x :: xs -> set_nth_opt (x :: acc) (n-1) xs y
 
 let index_from_nat (n:nat) : index = n
+
+let rec in_ (r:index) (store:list int) : Tot Type0 (decreases r) =
+  match r, store with
+  | 0, x :: xs -> True
+  | _, [] -> False
+  | r, x :: xs -> (r-1) `in_` xs

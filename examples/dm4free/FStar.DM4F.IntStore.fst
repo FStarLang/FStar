@@ -49,3 +49,12 @@ let write (r:index) (x:int) =
   match set_nth_opt [] r store x with
   | None -> raise_ ()
   | Some store' -> INT_STORE?.put store'
+
+
+(* let total_read_lemma (store:list int) (r:index) *)
+(*   : Lemma (r `in_` store ==> Some? (fst (reify (read r) store))) *)
+(* = () *)
+
+(* let total_write_lemma (store:list int) (r:index) (x:int) *)
+(*   : Lemma (r `in_` store ==> Some? (fst (reify (write r x) store))) *)
+(* = () *)
