@@ -3,7 +3,7 @@
 .code
 .XMM
 ALIGN 16
-KeyExpansionStdcall@12 proc
+_KeyExpansionStdcall@12 proc
   mov eax, dword ptr [esp + 4]
   movdqu xmm1, xmmword ptr [eax + 0]
   mov eax, dword ptr [esp + 8]
@@ -113,9 +113,9 @@ KeyExpansionStdcall@12 proc
   pxor xmm2, xmm2
   pxor xmm3, xmm3
   ret 12
-KeyExpansionStdcall@12 endp
+_KeyExpansionStdcall@12 endp
 ALIGN 16
-KeyExpansionAndInversionStdcall@12 proc
+_KeyExpansionAndInversionStdcall@12 proc
   mov eax, dword ptr [esp + 4]
   movdqu xmm1, xmmword ptr [eax + 0]
   mov eax, dword ptr [esp + 8]
@@ -252,9 +252,9 @@ KeyExpansionAndInversionStdcall@12 proc
   pxor xmm2, xmm2
   pxor xmm3, xmm3
   ret 12
-KeyExpansionAndInversionStdcall@12 endp
+_KeyExpansionAndInversionStdcall@12 endp
 ALIGN 16
-AES128EncryptOneBlockStdcall@16 proc
+_AES128EncryptOneBlockStdcall@16 proc
   mov eax, dword ptr [esp + 8]
   movdqu xmm0, xmmword ptr [eax + 0]
   mov eax, dword ptr [esp + 12]
@@ -284,9 +284,9 @@ AES128EncryptOneBlockStdcall@16 proc
   mov eax, dword ptr [esp + 4]
   movdqu xmmword ptr [eax + 0], xmm0
   ret 16
-AES128EncryptOneBlockStdcall@16 endp
+_AES128EncryptOneBlockStdcall@16 endp
 ALIGN 16
-AES128EncryptOneBlock proc
+_AES128EncryptOneBlock proc
   movdqu xmm2, xmmword ptr [eax + 0]
   pxor xmm0, xmm2
   movdqu xmm2, xmmword ptr [eax + 16]
@@ -311,9 +311,9 @@ AES128EncryptOneBlock proc
   aesenclast xmm0, xmm2
   pxor xmm2, xmm2
   ret 8
-AES128EncryptOneBlock endp
+_AES128EncryptOneBlock endp
 ALIGN 16
-AES128DecryptOneBlock proc
+_AES128DecryptOneBlock proc
   movdqu xmm2, xmmword ptr [eax + 160]
   pxor xmm0, xmm2
   movdqu xmm2, xmmword ptr [eax + 144]
@@ -338,5 +338,5 @@ AES128DecryptOneBlock proc
   aesdeclast xmm0, xmm2
   pxor xmm2, xmm2
   ret 8
-AES128DecryptOneBlock endp
+_AES128DecryptOneBlock endp
 end

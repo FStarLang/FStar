@@ -3,6 +3,7 @@ CONTRIB=ucontrib
 PLATFORM = $(FSTAR_HOME)/$(CONTRIB)/Platform/ml
 CORECRYPTO = $(FSTAR_HOME)/$(CONTRIB)/CoreCrypto/ml
 INCLUDE=-package batteries,zarith -I $(PLATFORM) -I $(CORECRYPTO)
+MARCH?=x86_64
 
 KREMLIN_HOME=../../../../kremlin
 KRML_INCLUDES=$(addprefix -I ,.. $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
@@ -22,11 +23,11 @@ ifeq ($(OS),Windows_NT)
     # altered to include by default the mingw64 native DLLs. We also need to
     # find dllcorecrypto.dll; it is in the current directory, which Windows
     # always uses to search for DLLs.
-    EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
+    EXTRA_PATH = PATH="/usr/$(MARCH)-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
     ARCH = win32
     EXTRA_OPTS =
     EXTRA_LIBS = -L.
-    AR = x86_64-w64-mingw32-ar
+    AR = $(MARCH)-w64-mingw32-ar
 else
     EXTRA_PATH = LD_LIBRARY_PATH=.
     UNAME_S := $(shell uname -s)
