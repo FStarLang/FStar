@@ -57,6 +57,25 @@ let write (i:nat) (x:int) =
   then IS?.put (upd store i x)
   else raise_ ()
 
+reifiable
+let read_tot (i:nat)
+  : INT_STORE int (fun s0 p -> i < length s0 /\ p (Some (index s0 i), s0))
+  (* KM : The following pre-post condition is not accepted *)
+  (* It may be that IntStore is wrongly defined *)
+  (* : IntStore int *)
+  (*   (requires (fun s0 -> i < length s0)) *)
+  (*   (ensures (fun s0 x s1 -> s0 `equals` s1 /\ i < length s1 /\ x = Some (index s1 i))) *)
+=
+  let store = IS?.get () in
+  index store i
+
+reifiable
+let write_tot (i:nat) (x:int)
+  : INT_STORE unit (fun s0 p -> i < length s0 /\ p (Some (), upd s0 i x))
+=
+  let store = IS?.get () in
+  IS?.put (upd store i x)
+
 (* assume val r : nat *)
 (* assume val store : seq int *)
 
@@ -71,8 +90,9 @@ let total_write_lemma (store:seq int) (r:nat) (x:int)
   : Lemma (requires r < length store) (ensures Some? (fst (reify (write r x) store)))
 = ()
 
-(* Cannot prove that lemma, r < length store seems to get in the way... *)
-(* let read_write_lemma1 (store:seq int) (r:nat) (x:int) *)
-(*     : Lemma ((fst (reify (let () = write r x in read r) store) = (if r < length store then Some x else None))) *)
-(* = () *)
+
+let read_write_lemma1 (store:seq int) (r:nat) (x:int)
+    : Lemma (requires (r < length store))
+      (ensures (r < length store /\ normalize_term (fst (reify (let () = write_tot r x in read_tot r) store)) == Some x))
+= ()
 
