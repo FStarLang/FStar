@@ -54,7 +54,7 @@ EXTRA= \
   Crypto.Symmetric.Poly1305 \
   Crypto.Test
 
-#  Crypto.Symmetric.Poly1305.Lemmas # verification target is not passing reliably so commenting out
+#  Crypto.Symmetric.Poly1305.Lemmas  # verification target is not passing reliably so commenting out
 
 #16-10-30 removed files specific to Poly1305:
 #  Crypto.Symmetric.Poly1305.MAC 
@@ -115,3 +115,4 @@ aead-wc:
 
 all-assumes: $(addsuffix .fst, $(VERIFY) $(LAX))
 	grep "\(assume\)\|\(admit\)\|\(lax\)" $^
+	
