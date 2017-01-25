@@ -609,8 +609,8 @@ and desugar_machine_integer env repr (signedness, width) range =
   let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
   S.mk (Tm_app (lid, [repr, as_implicit false])) None range
 
-and desugar_name mk setpos (env: env_t) (l: lid) : S.term =
-    let tm, mut = fail_or env (Env.try_lookup_lid env) l in
+and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
+    let tm, mut = fail_or env ((if resolve then Env.try_lookup_lid else Env.try_lookup_lid_no_resolve) env) l in
     let tm = setpos tm in
     if mut then mk <| Tm_meta (mk_ref_read tm, Meta_desugared Mutable_rval)
     else tm
@@ -699,16 +699,24 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Var l
     | Name l ->
-      desugar_name mk setpos env l
+      desugar_name mk setpos env true l
 
     | Projector (l, i) ->
-      let found =
-        Option.isSome (Env.try_lookup_datacon env l) ||
-        Option.isSome (Env.try_lookup_effect_defn env l)
+      let name =
+        match Env.try_lookup_datacon env l with
+	| Some _ -> Some (true, l)
+	| None ->
+	  begin match Env.try_lookup_root_effect_name env l with
+	  | Some new_name -> Some (false, new_name)
+	  | _ -> None
+	  end
       in
-      if found
-      then desugar_name mk setpos env (mk_field_projector_name_from_ident l i)
-      else raise (Error (BU.format1 "Data constructor or effect %s not found" l.str, top.range))
+      begin match name with
+      | Some (resolve, new_name) ->
+        desugar_name mk setpos env resolve (mk_field_projector_name_from_ident new_name i)
+      | _ ->
+        raise (Error (BU.format1 "Data constructor or effect %s not found" l.str, top.range))
+      end
 
     | Discrim lid ->
       begin match Env.try_lookup_datacon env lid with
@@ -716,7 +724,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         raise (Error (BU.format1 "Data constructor %s not found" lid.str, top.range))
       | _ ->
         let lid' = U.mk_discriminator lid in
-        desugar_name mk setpos env lid'
+        desugar_name mk setpos env true lid'
       end
 
     | Construct(l, args) ->
