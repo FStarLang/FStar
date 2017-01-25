@@ -510,7 +510,8 @@ let try_lookup_root_effect_name env l =
                 | Sig_new_effect_for_free (ne, _)
 		| Sig_new_effect(ne, _)
 		  -> Some (set_lid_range ne.mname (range_of_lid l))
-		| Sig_effect_abbrev (l'', _, _, _, _, _, _) ->
+		| Sig_effect_abbrev (_, _, _, cmp, _, _, _) ->
+                  let l'' = U.comp_effect_name cmp in
 		  aux l''
 	        | _ -> None
 		end
