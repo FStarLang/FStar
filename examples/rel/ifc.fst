@@ -60,19 +60,19 @@ type ni_exp (env:label_fun) (e:exp) (l:label) =
    - Low equivalent input heaps ==> Low equivalet output heaps 
 *)
 type ni_com' (env:label_fun) (c:com) (l:label) (h0: rel (option heap)) = 
-    (* (Some? (R?.l h0) /\ Some? (R?.r h0) ==> *)
-    (*  (let h0 = R (Some?.v (R?.l h0)) (Some?.v (R?.r h0)) in *)
-    (*   let o_l = interpret_com (R?.l h0) c in *)
-    (*   let o_r = interpret_com (R?.r h0) c in *)
-    (*    ((Some? o_l /\ Some? o_r /\ low_equiv env h0) *)
-    (*       ==> low_equiv env (R (Some?.v o_l) (Some?.v o_r))))) *)
-    (* /\ *)
-    (* (Some? (R?.l h0) ==> *)
-    (*  (let hl = Some?.v (R?.l h0) in *)
-    (*   let o_l = interpret_com hl c in *)
-    (*     (forall r. (env r < l /\ Some? o_l) *)
-    (*       ==> sel hl r = sel (Some?.v o_l) r))) *)
-    (* /\ *)
+    (Some? (R?.l h0) /\ Some? (R?.r h0) ==>
+     (let h0 = R (Some?.v (R?.l h0)) (Some?.v (R?.r h0)) in
+      let o_l = interpret_com (R?.l h0) c in
+      let o_r = interpret_com (R?.r h0) c in
+       ((Some? o_l /\ Some? o_r /\ low_equiv env h0)
+          ==> low_equiv env (R (Some?.v o_l) (Some?.v o_r)))))
+    /\
+    (Some? (R?.l h0) ==>
+     (let hl = Some?.v (R?.l h0) in
+      let o_l = interpret_com hl c in
+        (forall r. (label_of env r < l /\ Some? o_l)
+          ==> sel hl r = sel (Some?.v o_l) r)))
+    /\
     (Some? (R?.r h0) ==>
      (let hr = Some?.v (R?.r h0) in
       let o_r = interpret_com hr c in

@@ -107,10 +107,10 @@ val alloc_lemma: #a:Type -> h0:heap -> x:a
 		   [SMTPat (alloc h0 x)]
 let alloc_lemma #a h0 x = ()
 
-val sel_upd1: #a:Type -> h:heap -> r:ref a -> v:a
-	      -> Lemma (requires True) (ensures (sel (upd h r v) r == v))
-                [SMTPat (sel (upd h r v) r)]
-let sel_upd1 #a h r v = ()
+val sel_upd1: #a:Type -> h:heap -> r:ref a -> v:a -> r':ref a
+	      -> Lemma (requires (addr_of r = addr_of r')) (ensures (sel (upd h r v) r' == v))
+                [SMTPat (sel (upd h r v) r')]
+let sel_upd1 #a h r v r' = ()
 
 val sel_upd2: #a:Type -> #b:Type -> h:heap -> k1:ref a -> k2:ref b -> v:b
               -> Lemma (requires True) (ensures (addr_of k1 <> addr_of k2 ==> sel (upd h k2 v) k1 == sel h k1))
