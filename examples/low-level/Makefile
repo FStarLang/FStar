@@ -213,8 +213,10 @@ test-perf.exe: crypto/test_perf.c krml-test.exe
 	# Add this argument once someone writes a proper API for the Crypto
 	# subsystem
 	#-bundle Crypto_KrmlTest=Flag,Crypto.* 
+	# Note: cannot share the tmp directory otherwise the Makefile in
+	# LowCProvider (which does ar ../tmp/*.o) would pick up the wrong main
 	$(KRML) tmp/out.krml -drop Crypto.KrmlTest \
-		-tmpdir tmp -add-include '"testlib.h"' -o $@ \
+		-tmpdir tmp-test-perf -add-include '"testlib.h"' -o $@ \
 	       	$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
 	        crypto/test_perf.c spartan_aes/aes.o crypto/spartan_stub.c \
 		-ldopt -flto \
