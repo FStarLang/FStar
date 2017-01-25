@@ -147,7 +147,7 @@ rename_as_fst:
 	./tools/rename_all_boot_fsts
 	cp parser/parseit.fsi u_boot_fsts/FStar.Parser.Parseit.fsti
 
-prep_u_extract_ocaml: $(U_ALL_INTERFACES)
+prep: $(U_ALL_INTERFACES)
 	make rename_as_fst
 	$(SED) -i "s/type term' =/type term' : Type0 =/g"      u_boot_fsts/FStar.Syntax.Syntax.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
 	$(SED) -i "s/and pat' =/and pat' : Type0 =/g"          u_boot_fsts/FStar.Syntax.Syntax.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
@@ -225,7 +225,7 @@ u_extract_all: u_extract_misc u_extract_syntax u_extract_parser \
 	       u_extract_extraction u_extract_fstar
 
 ocaml: clean_u_extract_ocaml
-	make prep_u_extract_ocaml
+	make prep
 	+make u_extract_misc u_extract_syntax u_extract_parser \
               u_extract_typechecker u_extract_tosyntax u_extract_smtencoding \
 	      u_extract_extraction u_extract_fstar

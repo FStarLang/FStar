@@ -1821,8 +1821,14 @@ let level_of_type env e t =
           then let t = Normalize.normalize [N.UnfoldUntil Delta_constant] env t in
                aux false t
           else let t_u, u = U.type_u() in
+               let env = {env with lax=true} in
                let g = FStar.TypeChecker.Rel.teq env t t_u in
-               Rel.force_trivial_guard env g;
+               begin match g.guard_f with
+                     | NonTrivial f ->
+                       level_of_type_fail env e (Print.term_to_string t)
+                     | _ ->
+                       Rel.force_trivial_guard env g
+               end;
                u
     in aux true t
 
@@ -1894,9 +1900,9 @@ let rec universe_of_aux env e =
      S.mk (Tm_type u) None e.pos
    //See the comment at the top of this function; we just compute the universe of hd's result type
    | Tm_app(hd, args) ->
-     let rec type_of_head retry t =
-        let t = SS.compress t in
-        match t.n with
+     let rec type_of_head retry hd args =
+        let hd = SS.compress hd in
+        match hd.n with
         | Tm_unknown
         | Tm_bvar _
         | Tm_delayed _ ->
@@ -1910,30 +1916,36 @@ let rec universe_of_aux env e =
         | Tm_constant _
         | Tm_arrow _
         | Tm_meta _
-        | Tm_type _ -> universe_of_aux env t
+        | Tm_type _ ->
+          universe_of_aux env hd, args
         | Tm_match(_, hd::_) ->
           let (_, _, hd) = SS.open_branch hd in
-          type_of_head retry hd
+          let hd, args = U.head_and_args hd in
+          type_of_head retry hd args
         | _ when retry ->
           //head is either an abs, so we have a beta-redex
           //      or a let,
           let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
-          let hd, _ = U.head_and_args e in
-          type_of_head false hd
+          let hd, args = U.head_and_args e in
+          type_of_head false hd args
         | _ ->
           let env, _ = Env.clear_expected_typ env in
           let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
           if Env.debug env <| Options.Other "UniverseOf"
           then BU.print2 "%s: About to type-check %s\n"
                         (Range.string_of_range (Env.get_range env))
-                        (Print.term_to_string t);
-          let _, ({res_typ=t}), g = tc_term env t in
+                        (Print.term_to_string hd);
+          let _, ({res_typ=t}), g = tc_term env hd in
           Rel.solve_deferred_constraints env g |> ignore;
-          t
+          t, args
      in
-     let t = type_of_head true hd in
-     let _, res = U.arrow_formals_comp t in
-     Util.comp_result res
+     let t, args = type_of_head true hd args in
+     let bs, res = U.arrow_formals_comp t in
+     let res = N.normalize [N.UnfoldUntil Delta_constant] env (U.comp_result res) in
+     if List.length bs = List.length args
+     then let subst = U.subst_of_list bs args in
+          SS.subst subst res
+     else level_of_type_fail env e (Print.term_to_string res)
    | Tm_match(_, hd::_) ->
      let (_, _, hd) = SS.open_branch hd in
      universe_of_aux env hd
