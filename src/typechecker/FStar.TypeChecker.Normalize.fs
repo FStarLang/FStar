@@ -644,10 +644,11 @@ let get_norm_request args =
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t = compress t in
+        let firstn k l = if List.length l < k then l,[] else first_N k l in
         log cfg  (fun () -> BU.print3 ">>> %s\nNorm %s with top of the stack %s \n"
                                         (Print.tag_of_term t)
                                         (Print.term_to_string t)
-                                        (stack_to_string stack));
+                                        (stack_to_string (fst <| firstn 4 stack)));
         match t.n with
           | Tm_delayed _ ->
             failwith "Impossible"
@@ -979,13 +980,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                 let _, bind_repr = ed.bind_repr in
                                 begin match lb.lbname with
                                     | Inl x ->
+                                        (* TODO : optimize away bind-return pairs if possible *)
                                         let head = U.mk_reify <| lb.lbdef in
                                         let body = U.mk_reify <| body in
                                         let body = S.mk (Tm_abs([S.mk_binder x], body, None)) None body.pos in
                                         let bind_inst = match (SS.compress bind_repr).n with
                                             | Tm_uinst (bind, [_ ; _]) ->
                                                 S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv lb.lbtyp
-                                                                        ; cfg.tcenv.universe_of cfg.tcenv t]))
+                                                                      ; cfg.tcenv.universe_of cfg.tcenv t]))
                                                 None t.pos
                                             | _ -> failwith "NIY : Reification of indexed effects"
                                         in

@@ -369,13 +369,15 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     then Errors.warn e.pos "Qualifier on argument to reify is irrelevant and will be ignored";
     let e, c, g =
         let env0, _ = Env.clear_expected_typ env in
-        tc_term env0 e in
+        tc_term env0 e
+    in
     let reify_op, _ = U.head_and_args top in
     let u_c =
         let _, c, _ = tc_term env c.res_typ in
         match (SS.compress c.res_typ).n with
         | Tm_type u -> u
-        | _ -> failwith "Unexpected result type of computation" in
+        | _ -> failwith "Unexpected result type of computation"
+    in
     let repr = TcUtil.reify_comp env c u_c in
     let e = mk (Tm_app(reify_op, [(e, aqual)])) (Some repr.n) top.pos in
     let c = S.mk_Total repr |> U.lcomp_of_comp in
@@ -434,12 +436,14 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
     if Env.debug env Options.Extreme
     then BU.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
-    let c = if Env.should_verify env
-            && not (U.is_lcomp_partial_return c)
-            //&& not (U.is_unit c.res_typ)
-            && U.is_pure_or_ghost_lcomp c //ADD_EQ_REFINEMENT for pure applications
-            then TcUtil.maybe_assume_result_eq_pure_term env e c
-            else c in
+    let c =
+      if Env.should_verify env &&
+         not (U.is_lcomp_partial_return c) &&
+         //not (U.is_unit c.res_typ) &&
+         U.is_pure_or_ghost_lcomp c //ADD_EQ_REFINEMENT for pure applications
+      then TcUtil.maybe_assume_result_eq_pure_term env e c
+      else c
+    in
     let e, c, g' = comp_check_expected_typ env0 e c in
     let gimp =
         match (SS.compress head).n with
@@ -473,32 +477,38 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let c_branches, g_branches =
       let cases, g = List.fold_right (fun (_, f, c, g) (caccum, gaccum) ->
         (f, c)::caccum, Rel.conj_guard g gaccum) t_eqns ([], Rel.trivial_guard) in
-      TcUtil.bind_cases env res_t cases, g in (* bind_cases adds an exhaustiveness check *)
+      (* bind_cases adds an exhaustiveness check *)
+      TcUtil.bind_cases env res_t cases, g
+    in
 
     let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some guard_x, c_branches) in
     let e =
-        let mk_match scrutinee =
-            let scrutinee = TcUtil.maybe_lift env scrutinee c1.eff_name cres.eff_name c1.res_typ in
-            let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, lc, _) ->
-                 (pat, wopt, TcUtil.maybe_lift env br lc.eff_name cres.eff_name lc.res_typ )) in
-            let e = mk (Tm_match(scrutinee, branches)) (Some cres.res_typ.n) top.pos in
-             //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
-            mk (Tm_ascribed(e, Inl cres.res_typ, Some cres.eff_name)) None e.pos in
-        //see issue #594: if the scrutinee is impure, then explicitly sequence it with an impure let binding
-        //                to protect it from the normalizer optimizing it away
-        if TcUtil.is_pure_or_ghost_effect env c1.eff_name
-        then mk_match e1
-        else //generate a let binding for e1
-             let e_match = mk_match (S.bv_to_name guard_x) in
-             let lb = {
-                lbname=Inl guard_x;
-                lbunivs=[];
-                lbtyp=c1.res_typ;
-                lbeff=Env.norm_eff_name env c1.eff_name;
-                lbdef=e1;
-             } in
-             let e = mk (Tm_let((false, [lb]), SS.close [S.mk_binder guard_x] e_match)) (Some cres.res_typ.n) top.pos in
-             TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
+      let mk_match scrutinee =
+        (* TODO (KM) : I have the impression that lifting here is useless/wrong : the scrutinee should always be pure... *)
+        (* let scrutinee = TypeChecker.Util.maybe_lift env scrutinee c1.eff_name cres.eff_name c1.res_typ in *)
+        let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, lc, _) ->
+              (pat, wopt, TypeChecker.Util.maybe_lift env br lc.eff_name cres.eff_name lc.res_typ ))
+        in
+        let e = mk (Tm_match(scrutinee, branches)) (Some cres.res_typ.n) top.pos in
+        //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
+        mk (Tm_ascribed(e, Inl cres.res_typ, Some cres.eff_name)) None e.pos
+      in
+      //see issue #594: if the scrutinee is impure, then explicitly sequence it with an impure let binding
+      //                to protect it from the normalizer optimizing it away
+      if TcUtil.is_pure_or_ghost_effect env c1.eff_name
+      then mk_match e1
+      else //generate a let binding for e1
+        let e_match = mk_match (S.bv_to_name guard_x) in
+        let lb = {
+          lbname=Inl guard_x;
+          lbunivs=[];
+          lbtyp=c1.res_typ;
+          lbeff=Env.norm_eff_name env c1.eff_name;
+          lbdef=e1;
+        } in
+        let e = mk (Tm_let((false, [lb]), SS.close [S.mk_binder guard_x] e_match)) (Some cres.res_typ.n) top.pos in
+        TcUtil.maybe_monadic env e cres.eff_name cres.res_typ
+    in
     if debug env Options.Extreme
     then BU.print2 "(%s) comp type = %s\n"
                       (Range.string_of_range top.pos) (Print.comp_to_string <| cres.comp());
@@ -988,8 +998,9 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                     U.is_pure_or_ghost_lcomp cres
                     && arg_comps_rev |> BU.for_some (function
                         | (_, _, Inl _) -> false
-                        | (_, _, Inr c) -> not (U.is_pure_or_ghost_lcomp c)) in
+                        | (_, _, Inr c) -> not (U.is_pure_or_ghost_lcomp c))
                     (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
+                in
 
                 let cres = //NS: Choosing when to add an equality refinement is VERY important for performance.
                             //Adding it unconditionally impacts run time by >5x
@@ -1011,21 +1022,28 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         if debug env Options.Low then BU.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
         //Note: The outargs are in reverse order. e.g., f e1 e2 e3, we have outargs = [(e3, _, c3); (e2; _; c2); (e1; _; c2)]
         //We build bind chead (bind c1 (bind c2 (bind c3 cres)))
-        let args, comp, monadic = List.fold_left (fun (args, out_c, monadic) ((e, q), x, c) ->
-                    match c with
-                    | Inl (eff_name, arg_typ) ->
-                      (TcUtil.maybe_lift env e eff_name out_c.eff_name arg_typ, q)::args, out_c, monadic
+        let args, comp, monadic =
+          List.fold_left
+            (fun (args, out_c, monadic) ((e, q), x, c) ->
+              match c with
+              | Inl (eff_name, arg_typ) ->
+                (TcUtil.maybe_lift env e eff_name out_c.eff_name arg_typ, q)::args, out_c, monadic
 
-                    | Inr c ->
-                        let monadic = monadic || not (U.is_pure_or_ghost_lcomp c) in
-                        let out_c =
-                            TcUtil.bind e.pos env None  //proving (Some e) here instead of None causes significant Z3 overhead
-                                        c (x, out_c) in
-                        let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in
-                        let e = TcUtil.maybe_lift env e c.eff_name out_c.eff_name c.res_typ in
-                        (e, q)::args, out_c, monadic) ([], cres, false) arg_comps_rev in
+              | Inr c ->
+                  let monadic = monadic || not (U.is_pure_or_ghost_lcomp c) in
+                  let out_c =
+                      //proving (Some e) here instead of None causes significant Z3 overhead
+                      TcUtil.bind e.pos env None c (x, out_c)
+                  in
+                  (* KM : a monadic argument should already be annotated by a Meta_monadic if needed *)
+                  (* let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in *)
+                  let e = TcUtil.maybe_lift env e c.eff_name out_c.eff_name c.res_typ in
+                  (e, q)::args, out_c, monadic)
+            ([], cres, false)
+            arg_comps_rev
+        in
         let comp = TcUtil.bind head.pos env None chead (None, comp) in
-        let app =  mk_Tm_app head args (Some comp.res_typ.n) r in
+        let app = mk_Tm_app head args (Some comp.res_typ.n) r in
         let app = if monadic || not (U.is_pure_or_ghost_lcomp comp) then TcUtil.maybe_monadic env app comp.eff_name comp.res_typ else app in
         let comp, g = TcUtil.strengthen_precondition None env app comp guard in //Each conjunct in g is already labeled
         app, comp, g
@@ -1249,7 +1267,8 @@ and tc_eqn scrutinee env branch
         //explicitly return e here, not its normal form, since pattern decoration relies on it
         e,e') |> List.unzip in
     let p = TcUtil.decorate_pattern env p exps in
-    p, pat_bvs, pat_env, exps, norm_exps in
+    p, pat_bvs, pat_env, exps, norm_exps
+  in
   (*</tc_pat>*)
 
   let pat_t = scrutinee.sort in
@@ -1334,7 +1353,8 @@ and tc_eqn scrutinee env branch
     let binders = List.map S.mk_binder pat_bvs in
     TcUtil.close_comp env pat_bvs c_weak,
     Rel.close_guard binders g_when_weak,
-    g_branch in
+    g_branch
+  in
 
   (* 6. Building the guard for this branch;                                                             *)
   (*        the caller assembles the guards for each branch into an exhaustiveness check.               *)
