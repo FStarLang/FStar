@@ -46,9 +46,7 @@ ordmap:
 	$(FSTAR) FStar.OrdSet.fst FStar.OrdSetProps.fst FStar.OrdMap.fst FStar.OrdMapProps.fst
 
 pext:
-ifeq ($(OS),Windows_NT)
-	$(FSTAR) FStar.PredicateExtensionality.fst  #failing on Linux so commenting out until it is fixed
-endif
+	$(FSTAR) FStar.PredicateExtensionality.fst
 
 st:
 	$(FSTAR) FStar.Map.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst FStar.Util.fst
