@@ -218,11 +218,12 @@ test-perf.exe: crypto/test_perf.c krml-test.exe
 	# .o files. So, we write out the -flto'd .o files in a separate
 	# directory.
 	#-bundle Crypto_KrmlTest=Flag,Crypto.* 
-	$(KRML) tmp/out.krml \
+	$(KRML) tmp/out.krml -drop Crypto.KrmlTest \
 		-tmpdir tmp-lto -add-include '"testlib.h"' -o $@ \
 	       	$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
 	        crypto/test_perf.c spartan_aes/aes.o crypto/spartan_stub.c \
-		-ccopts -Ofast,-m64,-march=native,-mtune=native,-flto,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
+		-ldopt -flto \
+		-ccopts -Ofast,-m64,-march=native,-mtune=native,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
 		-I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto $(CFLAGS)
 	PATH=$(OPENSSL_HOME):"$(PATH)" \
