@@ -15,73 +15,40 @@
 *)
 module FStar.List
 open FStar.All
-open FStar.List.Tot
-
-(** Base operations **)
-val hd: list 'a -> 'a
-let hd = function
-  | hd::tl -> hd
-  | _ -> failwith "head of empty list"
-
-val tail: list 'a -> list 'a
-let tail = function
-  | hd::tl -> tl
-  | _ -> failwith "tail of empty list"
-let tl = tail
-
-val nth: list 'a -> int -> 'a
-let rec nth l n =
-  if n < 0 then
-    failwith "nth takes a non-negative integer as input"
-  else
-    if n = 0 then
-      match l with
-        | [] -> failwith "not enough elements"
-        | hd::_ -> hd
-    else
-      match l with
-        | [] -> failwith "not enough elements"
-        | _::tl -> nth tl (n - 1)
+include FStar.List.Tot
 
 (** Iterators **)
 
-val iter: ('a -> unit) -> list 'a -> unit
+val iter: ('a -> ML unit) -> list 'a -> ML unit
 let rec iter f x = match x with
   | [] -> ()
   | a::tl -> let _ = f a in iter f tl
 
-val iteri_aux: int -> (int -> 'a -> unit) -> list 'a -> unit
+val iteri_aux: int -> (int -> 'a -> ML unit) -> list 'a -> ML unit
 let rec iteri_aux i f x = match x with
   | [] -> ()
   | a::tl -> f i a; iteri_aux (i+1) f tl
 
-val iteri: (int -> 'a -> unit) -> list 'a -> unit
+val iteri: (int -> 'a -> ML unit) -> list 'a -> ML unit
 let iteri f x = iteri_aux 0 f x
 
-val map: ('a -> 'b) -> list 'a -> list 'b
+val map: ('a -> ML 'b) -> list 'a -> ML (list 'b)
 let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
 val mapT: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
-let rec mapT f x = match x with
-  | [] -> []
-  | a::tl -> f a::mapT f tl
+let mapT = FStar.List.Tot.map
 
-val mapi_init: (int -> 'a -> 'b) -> list 'a -> int -> list 'b
+val mapi_init: (int -> 'a -> ML 'b) -> list 'a -> int -> ML (list 'b)
 let rec mapi_init f l i = match l with
     | [] -> []
     | hd::tl -> (f i hd)::(mapi_init f tl (i+1))
 
-val mapi_initT: (int -> 'a -> Tot 'b) -> list 'a -> int -> Tot (list 'b)
-let rec mapi_initT f l i = match l with
-    | [] -> []
-    | hd::tl -> (f i hd)::(mapi_initT f tl (i+1))
-
-val mapi: (int -> 'a -> 'b) -> list 'a -> list 'b
+val mapi: (int -> 'a -> ML 'b) -> list 'a -> ML (list 'b)
 let mapi f l = mapi_init f l 0
 
-val concatMap: ('a -> list 'b) -> list 'a -> list 'b
+val concatMap: ('a -> ML (list 'b)) -> list 'a -> ML (list 'b)
 let rec concatMap f = function
   | [] -> []
   | a::tl ->
@@ -89,62 +56,62 @@ let rec concatMap f = function
     let ftl = concatMap f tl in
     fa @ ftl
 
-val map2: ('a -> 'b -> 'c) -> list 'a -> list 'b -> list 'c
+val map2: ('a -> 'b -> ML 'c) -> list 'a -> list 'b -> ML (list 'c)
 let rec map2 f l1 l2 = match l1, l2 with
     | [], [] -> []
     | hd1::tl1, hd2::tl2 -> (f hd1 hd2)::(map2 f tl1 tl2)
     | _, _ -> failwith "The lists do not have the same length"
 
-val map3: ('a -> 'b -> 'c -> 'd) -> list 'a -> list 'b -> list 'c -> list 'd
+val map3: ('a -> 'b -> 'c -> ML 'd) -> list 'a -> list 'b -> list 'c -> ML (list 'd)
 let rec map3 f l1 l2 l3 = match l1, l2, l3 with
     | [], [], [] -> []
     | hd1::tl1, hd2::tl2, hd3::tl3 -> (f hd1 hd2 hd3)::(map3 f tl1 tl2 tl3)
     | _, _, _ -> failwith "The lists do not have the same length"
 
-val fold_left: ('a -> 'b -> 'a) -> 'a -> list 'b -> 'a
+val fold_left: ('a -> 'b -> ML 'a) -> 'a -> list 'b -> ML 'a
 let rec fold_left f x y = match y with
   | [] -> x
   | hd::tl -> fold_left f (f x hd) tl
 
-val fold_left2: ('s -> 'a -> 'b -> 's) -> 's -> list 'a -> list 'b -> 's
+val fold_left2: ('s -> 'a -> 'b -> ML 's) -> 's -> list 'a -> list 'b -> ML 's
 let rec fold_left2 f a l1 l2 = match l1, l2 with
     | [], [] -> a
     | hd1::tl1, hd2::tl2 -> fold_left2 f (f a hd1 hd2) tl1 tl2
     | _, _ -> failwith "The lists do not have the same length"
 
-val fold_right: ('a -> 'b -> 'b) -> list 'a -> 'b -> 'b
+val fold_right: ('a -> 'b -> ML 'b) -> list 'a -> 'b -> ML 'b
 let rec fold_right f l x = match l with
   | [] -> x
   | hd::tl -> f hd (fold_right f tl x)
 
 (** List searching **)
-val filter: ('a -> bool) -> list 'a -> list 'a
+val filter: ('a -> ML bool) -> list 'a -> ML (list 'a)
 let rec filter f = function
   | [] -> []
   | hd::tl -> if f hd then hd::(filter f tl) else filter f tl
 
-val for_all: ('a -> bool) -> list 'a -> bool
+val for_all: ('a -> ML bool) -> list 'a -> ML bool
 let rec for_all f l = match l with
     | [] -> true
     | hd::tl -> if f hd then for_all f tl else false
 
-val forall2: ('a -> 'b -> bool) -> list 'a -> list 'b -> bool
+val forall2: ('a -> 'b -> ML bool) -> list 'a -> list 'b -> ML bool
 let rec forall2 f l1 l2 = match l1,l2 with
     | [], [] -> true
     | hd1::tl1, hd2::tl2 -> if f hd1 hd2 then forall2 f tl1 tl2 else false
     | _, _ -> failwith "The lists do not have the same length"
 
-val collect: ('a -> list 'b) -> list 'a -> list 'b
+val collect: ('a -> ML (list 'b)) -> list 'a -> ML (list 'b)
 let rec collect f l = match l with
     | [] -> []
     | hd::tl -> append (f hd) (collect f tl)
 
-val tryFind: ('a -> bool) -> list 'a -> option 'a
+val tryFind: ('a -> ML bool) -> list 'a -> ML (option 'a)
 let rec tryFind p l = match l with
     | [] -> None
     | hd::tl -> if p hd then Some hd else tryFind p tl
 
-val tryPick: ('a -> option 'b) -> list 'a -> option 'b
+val tryPick: ('a -> ML (option 'b)) -> list 'a -> ML (option 'b)
 let rec tryPick f l = match l with
     | [] -> None
     | hd::tl ->
@@ -152,7 +119,7 @@ let rec tryPick f l = match l with
          | Some x -> Some x
          | None -> tryPick f tl
 
-val choose: ('a -> option 'b) -> list 'a -> list 'b
+val choose: ('a -> ML (option 'b)) -> list 'a -> ML (list 'b)
 let rec choose f l = match l with
     | [] -> []
     | hd::tl ->
@@ -160,7 +127,7 @@ let rec choose f l = match l with
          | Some x -> x::(choose f tl)
          | None -> choose f tl
 
-val partition: ('a -> bool) -> list 'a -> (list 'a * list 'a)
+val partition: ('a -> ML bool) -> list 'a -> ML (list 'a * list 'a)
 let rec partition f = function
   | [] -> [], []
   | hd::tl ->
@@ -170,7 +137,7 @@ let rec partition f = function
      else l1, hd::l2
 
 (** List of tuples **)
-val zip: list 'a -> list 'b -> list ('a * 'b)
+val zip: list 'a -> list 'b -> ML (list ('a * 'b))
 let rec zip l1 l2 = match l1,l2 with
     | [], [] -> []
     | hd1::tl1, hd2::tl2 -> (hd1,hd2)::(zip tl1 tl2)
@@ -178,14 +145,14 @@ let rec zip l1 l2 = match l1,l2 with
 
 (** Sorting (implemented as quicksort) **)
 
-val sortWith: ('a -> 'a -> int) -> list 'a -> list 'a
+val sortWith: ('a -> 'a -> ML int) -> list 'a -> ML (list 'a)
 let rec sortWith f = function
   | [] -> []
   | pivot::tl ->
      let hi, lo  = partition (fun x -> f pivot x > 0) tl in
      sortWith f lo@(pivot::sortWith f hi)
 
-val splitAt: nat -> list 'a -> (list 'a * list 'a)
+val splitAt: nat -> list 'a -> ML (list 'a * list 'a)
 let rec splitAt n l =
   if n = 0 then l, []
   else
@@ -195,8 +162,8 @@ let rec splitAt n l =
 	let l1, l2 = splitAt (n - 1) tl in
 	hd::l1, l2
 
-let filter_map (f:'a -> option 'b) (l:list 'a) =
-  let rec filter_map_acc (acc:list 'b) (l:list 'a) : list 'b =
+let filter_map (f:'a -> ML (option 'b)) (l:list 'a) : ML (list 'b) =
+  let rec filter_map_acc (acc:list 'b) (l:list 'a) : ML (list 'b) =
     match l with
     | [] ->
         rev acc
@@ -209,7 +176,7 @@ let filter_map (f:'a -> option 'b) (l:list 'a) =
   in
   filter_map_acc [] l
 
-val index: ('a -> bool) -> list 'a -> int
+val index: ('a -> ML bool) -> list 'a -> ML int
 let index f l =
   let rec index f l i =
     match l with

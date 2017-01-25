@@ -13,33 +13,60 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+(**
+This module defines all pure and total operations on lists that can be
+used in specifications.
+
+@summary Pure total operations on lists
+*)
 module FStar.List.Tot
 
-(** Base operations **)
+(**
+Base operations
+*)
 
+(** [isEmpty l] returns [true] if and only if [l] is empty  *)
 val isEmpty: list 'a -> Tot bool
 let isEmpty l = match l with
   | [] -> true
   | _ -> false
 
+(** [hd l] returns the first element of [l]. Requires [l] to be
+nonempty, at type-checking time. Named as in: OCaml, F#, Coq *)
 val hd: l:list 'a{Cons? l} -> Tot 'a
 let hd = function
   | hd::_ -> hd
 
-val tl: l:list 'a {Cons? l} -> Tot (list 'a)
-let tl = function
+(** [tail l] returns [l] without its first element. Requires, at
+type-checking time, that [l] be nonempty. Similar to: tl in OCaml, F#, Coq
+*)
+val tail: l:list 'a {Cons? l} -> Tot (list 'a)
+let tail = function
   | _::tl -> tl
 
+(** [tl l] returns [l] without its first element. Requires, at
+type-checking time, that [l] be nonempty. Named as in: OCaml, F#, Coq
+*)
+let tl = tail
+
+(** [length l] returns the total number of elements in [l]. Named as
+in: OCaml, F#, Coq *)
 val length: list 'a -> Tot nat
 let rec length = function
   | [] -> 0
   | _::tl -> 1 + length tl
 
+(** [nth l n] returns the [n]-th element in list [l] (with the first
+element being the 0-th) if [l] is long enough, or [None]
+otherwise. Named as in: OCaml, F#, Coq *)
 val nth: list 'a -> nat -> Tot (option 'a)
 let rec nth l n = match l with
   | []     -> None
   | hd::tl -> if n = 0 then Some hd else nth tl (n - 1)
 
+(** [index l n] returns the [n]-th element in list [l] (with the first
+element being the 0-th). Requires, at type-checking time, that [l] be
+of length at least [n+1]. *)
 val index: #a:Type -> l:list a -> i:nat{i < length l} -> Tot a
 let rec index #a (l: list a) (i:nat{i < length l}): Tot a =
   if i = 0 then
@@ -47,50 +74,72 @@ let rec index #a (l: list a) (i:nat{i < length l}): Tot a =
   else
     index (tl l) (i - 1)
 
+(** [count x l] returns the number of occurrences of [x] in
+[l]. Requires, at type-checking time, the type of [a] to have equality
+defined. Similar to: [List.count_occ] in Coq. *)
 val count: #a:eqtype -> a -> list a -> Tot nat
 let rec count #a x = function
   | [] -> 0
   | hd::tl -> if x=hd then 1 + count x tl else count x tl
 
+(** [rev_acc l1 l2] appends the elements of [l1] to the beginning of
+[l2], in reverse order. It is equivalent to [append (rev l1) l2], but
+is tail-recursive. Similar to: [List.rev_append] in OCaml, Coq. *)
 val rev_acc: list 'a -> list 'a -> Tot (list 'a)
 let rec rev_acc l acc = match l with
     | [] -> acc
     | hd::tl -> rev_acc tl (hd::acc)
 
+(** [rev l] returns the list [l] in reverse order. Named as in: OCaml,
+F#, Coq. *)
 val rev: list 'a -> Tot (list 'a)
 let rev l = rev_acc l []
 
+(** [append l1 l2] appends the elements of [l2] to the end of [l1]. Named as: OCaml, F#. Similar to: [List.app] in Coq. *)
 val append: list 'a -> list 'a -> Tot (list 'a)
 let rec append x y = match x with
   | [] -> y
   | a::tl -> a::append tl y
 
+(** Defines notation [@] for [append], as in OCaml, F# . *)
 let op_At x y = append x y
 
+(** [flatten l], where [l] is a list of lists, returns the list of the
+elements of the lists in [l], preserving their order. Named as in:
+OCaml, Coq. *)
 val flatten: list (list 'a) -> Tot (list 'a)
 let rec flatten l = match l with
     | [] -> []
     | hd::tl -> append hd (flatten tl)
 
-(* CH: this is just useless, remove? *)
-val iter: ('a -> Tot unit) -> list 'a -> Tot unit
-let rec iter f x = match x with
-  | [] -> ()
-  | a::tl -> let _ = f a in iter f tl
-
+(** [map f l] applies [f] to each element of [l] and returns the list
+of results, in the order of the original elements in [l]. Requires, at
+type-checking time, [f] to be a pure total function. *)
 val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
 let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
+(** [mapi_init f n l] applies, for each [k], [f (n+k)] to the [k]-th
+element of [l] and returns the list of results, in the order of the
+original elements in [l]. Requires, at type-checking time, [f] to be a
+pure total function. *)
 val mapi_init: (int -> 'a -> Tot 'b) -> list 'a -> int -> Tot (list 'b)
 let rec mapi_init f l i = match l with
     | [] -> []
     | hd::tl -> (f i hd)::(mapi_init f tl (i+1))
 
+(** [mapi f l] applies, for each [k], [f k] to the [k]-th element of
+[l] and returns the list of results, in the order of the original
+elements in [l]. Requires, at type-checking time, [f] to be a pure
+total function. Named as in: OCaml *)
 val mapi: (int -> 'a -> Tot 'b) -> list 'a -> Tot (list 'b)
 let mapi f l = mapi_init f l 0
 
+(** [concatMap f l] applies [f] to each element of [l] and returns the
+concatenation of the results, in the order of the original elements of
+[l]. This is equivalent to [flatten (map f l)]. Requires, at
+type-checking time, [f] to be a pure total function. *)
 val concatMap: ('a -> Tot (list 'b)) -> list 'a -> Tot (list 'b)
 let rec concatMap f = function
   | [] -> []
@@ -99,16 +148,26 @@ let rec concatMap f = function
     let ftl = concatMap f tl in
     append fa ftl
 
+(** [fold_left f x [y1; y2; ...; yn]] computes (f (... (f x y1) y2)
+... yn). Requires, at type-checking time, [f] to be a pure total
+function. *)
 val fold_left: ('a -> 'b -> Tot 'a) -> 'a -> l:list 'b -> Tot 'a (decreases l)
 let rec fold_left f x y = match y with
   | [] -> x
   | hd::tl -> fold_left f (f x hd) tl
 
+(** [fold_right f [x1; x2; ...; xn] y] computes (f x1 (f x2 (... (f xn
+y)) ... )). Requires, at type-checking time, [f] to be a pure total
+function. *)
 val fold_right: ('a -> 'b -> Tot 'b) -> list 'a -> 'b -> Tot 'b
 let rec fold_right f l x = match l with
   | [] -> x
   | hd::tl -> f hd (fold_right f tl x)
 
+(** [fold_left2 f x [y1; y2; ...; yn] [z1; z2; ...; zn]] computes (f
+(... (f x y1 z1) y2 z2) ... yn zn). Requires, at type-checking time,
+[f] to be a pure total function, and the lists [y1; y2; ...; yn] and
+[z1; z2; ...; zn] to have the same lengths. *)
 val fold_left2 : f:('a -> 'b -> 'c -> Tot 'a) -> accu:'a -> l1:(list 'b) -> l2:(list 'c) ->
   Pure 'a (requires (length l1 == length l2)) (ensures (fun _ -> True)) (decreases l1)
 let rec fold_left2 f accu l1 l2 =
@@ -118,6 +177,9 @@ let rec fold_left2 f accu l1 l2 =
 
 (** List searching **)
 
+(** [mem x l] returns [true] if, and only if, [x] appears as an
+element of [l]. Requires, at type-checking time, the type of elements
+of [l] to have decidable equality. *)
 val mem: #a:eqtype -> a -> list a -> Tot bool
 let rec mem #a x = function
   | [] -> false
@@ -140,10 +202,23 @@ let rec find #a f l = match l with
   | [] -> None #(x:a{f x}) //These type annotations are only present because it makes bootstrapping go much faster
   | hd::tl -> if f hd then Some #(x:a{f x}) hd else find f tl
 
-val filter: #a:eqtype -> f:(a -> Tot bool) -> list a -> Tot (m:list a{forall x. mem x m ==> f x})
+let mem_filter_spec (#a : Type) (f: (a -> Tot bool)) (m: list a) (u: option (x : unit { hasEq a } )) : Tot Type0 =
+  match u with
+  | None -> True
+  | Some z -> forall x . mem x m ==> f x
+
+val filter : #a: Type -> f:(a -> Tot bool) -> l: list a -> Tot (m:list a { forall u . mem_filter_spec f m u } )
 let rec filter #a f = function
   | [] -> []
   | hd::tl -> if f hd then hd::filter f tl else filter f tl
+
+val mem_filter (#a: eqtype) (f: (a -> Tot bool)) (l: list a) (x: a) : Lemma
+  (requires (mem #a x (filter f l)))
+  (ensures (f x))
+let mem_filter #a f l x =
+  let u : option ( u : unit { hasEq a } ) = Some () in
+  let y : (z : unit { mem_filter_spec f (filter f l) u } ) = () in
+  ()
 
 val for_all: ('a -> Tot bool) -> list 'a -> Tot bool
 let rec for_all f l = match l with
