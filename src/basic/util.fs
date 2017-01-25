@@ -29,11 +29,11 @@ let return_all x = x
 type time = System.DateTime
 let now () = System.DateTime.Now
 let time_diff (t1:time) (t2:time) : float * int =
-    let ts = t2 - t1 in 
+    let ts = t2 - t1 in
     ts.TotalSeconds, int32 ts.TotalMilliseconds
-let record_time f = 
+let record_time f =
     let start = now () in
-    let res = f () in 
+    let res = f () in
     let _, elapsed = time_diff start (now()) in
     res, elapsed
 let get_file_last_modification_time f = System.IO.File.GetLastWriteTime f
@@ -381,7 +381,7 @@ type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
 
-let is_left = function 
+let is_left = function
   | Inl _ -> true
   | _ -> false
 let is_right = function
@@ -715,8 +715,8 @@ let print_exn (e: exn): string =
   e.Message
 
 let format_md5 bytes =
-  let sb = 
-    Array.fold 
+  let sb =
+    Array.fold
       (fun (acc:StringBuilder) (by:byte) ->
         acc.Append(by.ToString("x2")))
       (new StringBuilder())
@@ -760,5 +760,8 @@ type hints_db = {
 let write_hints (_: string) (_: hints_db): unit =
   failwith "[record_hints_json]: not implemented"
 
-let read_hints (_: string): option<hints_db> =
-  failwith "[record_hints_json]: not implemented"
+let read_hints (filename : string): option<hints_db> =
+    if not (File.Exists filename) then
+        None
+    else
+        failwith "[record_hints_json]: not implemented"
