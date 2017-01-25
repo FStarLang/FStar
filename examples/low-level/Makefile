@@ -212,17 +212,15 @@ krml-test.exe: spartan_aes/aes.o crypto/*.fst
 test-perf.exe: crypto/test_perf.c krml-test.exe
 	# Add this argument once someone writes a proper API for the Crypto
 	# subsystem
-	# Note: LowCProvider/Makefile just bundles every single .o in tmp inside
-	# a .a file. On CI, we just make krml-test.exe, make test-perf.exe, THEN
-	# make libllcrypto.a. x86_64-w64-mingw32-ar has trouble dealing with LTO
-	# .o files. So, we write out the -flto'd .o files in a separate
-	# directory.
 	#-bundle Crypto_KrmlTest=Flag,Crypto.* 
-	$(KRML) tmp/out.krml \
-		-tmpdir tmp-lto -add-include '"testlib.h"' -o $@ \
+	# Note: cannot share the tmp directory otherwise the Makefile in
+	# LowCProvider (which does ar ../tmp/*.o) would pick up the wrong main
+	$(KRML) tmp/out.krml -drop Crypto.KrmlTest \
+		-tmpdir tmp-test-perf -add-include '"testlib.h"' -o $@ \
 	       	$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
 	        crypto/test_perf.c spartan_aes/aes.o crypto/spartan_stub.c \
-		-ccopts -Ofast,-m64,-march=native,-mtune=native,-flto,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
+		-ldopt -flto \
+		-ccopts -Ofast,-m64,-march=native,-mtune=native,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
 		-I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto $(CFLAGS)
 	PATH=$(OPENSSL_HOME):"$(PATH)" \
