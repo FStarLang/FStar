@@ -1897,6 +1897,10 @@ let rec universe_of_aux env e =
      let rec type_of_head retry t =
         let t = SS.compress t in
         match t.n with
+        | Tm_unknown
+        | Tm_bvar _
+        | Tm_delayed _ ->
+          failwith "Impossible"
         | Tm_fvar _
         | Tm_name _
         | Tm_uvar _
@@ -1904,11 +1908,15 @@ let rec universe_of_aux env e =
         | Tm_ascribed _
         | Tm_refine _
         | Tm_constant _
-        | Tm_arrow _ -> universe_of_aux env t
+        | Tm_arrow _
+        | Tm_meta _
+        | Tm_type _ -> universe_of_aux env t
         | Tm_match(_, hd::_) ->
           let (_, _, hd) = SS.open_branch hd in
           type_of_head retry hd
         | _ when retry ->
+          //head is either an abs, so we have a beta-redex
+          //      or a let,
           let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
           let hd, _ = U.head_and_args e in
           type_of_head false hd

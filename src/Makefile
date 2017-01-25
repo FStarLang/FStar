@@ -215,7 +215,7 @@ u_extract_encode: u_boot_fsts/FStar.SMTEncoding.Encode.fst
 u_extract_solver: u_boot_fsts/FStar.SMTEncoding.Solver.fst
 	$(FSTARBOOT) $^ --extract_module FStar.SMTEncoding.Solver
 
-u_extract_smtencoding: u_extract_encode u_extract_solver
+u_extract_smtencoding: u_extract_smtencoding_base u_extract_encode u_extract_solver
 
 u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fst Universal.fst Indent.fst Main.fst)
 	$(FSTARBOOT) $^ --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
