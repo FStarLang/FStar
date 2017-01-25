@@ -8,7 +8,7 @@
    Exception function in the heap is acceptable.
 *)
 module FStar.DM4F.Heap.ST
-open FStar.DM4F.Heap
+open FStar.Heap
 open FStar.DM4F.ST
 
 
@@ -35,41 +35,32 @@ effect STNull (a:Type) = ST a (fun h -> True) (fun _ _ _ -> True)
 ////////////////////////////////////////////////////////////////////////////////
 
 (* Allocation *)
+(*
+ * AR: Ghost does not go with ST, hence the admit
+ *     also removed the post-conditions as they are covered by alloc_lemma in the heap
+ *)
 let alloc (#a:Type) (init:a)
     : ST (ref a)
   	 (requires (fun h -> True))
-	 (ensures (fun h0 r h1 ->
-	 	    ~ (h0 `contains` r)          //the ref r is fresh
-		  /\ h1 `contains_a_well_typed` r //and is well-typed in h1
-		  /\ sel h1 r == init             //initialized to init
-		  /\ modifies Set.empty h0 h1))   //and no existing ref is modified
-    = let h0 = STATE?.get () in
-      let r, h1 = alloc h0 init in
-      STATE?.put h1;
-      r
+	 (ensures (fun h0 r h1 -> alloc h0 init == (r, h1)))
+    = admit ()
 
 (* Reading, aka dereference *)
 reifiable let read (#a:Type) (r:ref a)
     : ST a
-  	 (requires (fun h -> h `contains_a_well_typed` r))
-	 (ensures (fun h0 v h1 ->
-		        h0 == h1                         //heap does not change
-            /\  h1 `contains_a_well_typed` r
-		        /\  sel h1 r == v))                  //returns the contents of r
-   = let h0 = STATE?.get () in
-     sel h0 r
+  	 (requires (fun h0     -> True))
+	 (ensures (fun h0 v h1 -> h0 == h1 /\ sel h0 r == v))
+   = admit ()
+   
 reifiable let (!) = read
 
 (* Writing, aka assignment *)
 reifiable let write (#a:Type) (r:ref a) (v:a)
     : ST unit
-  	 (requires (fun h -> h `contains_a_well_typed` r))
-	 (ensures (fun h0 _ h1 ->
-           	     h0 `contains_a_well_typed` r
- 		  /\  h1 `contains_a_well_typed` r     //the heap remains well-typed
-		  /\  h1 == upd h0 r v))               //and is updated at location r only
-    = let h0 = STATE?.get () in
-      STATE?.put (upd h0 r v)
+  	 (requires (fun h0     -> True))
+	 (ensures (fun h0 _ h1 -> h1 == upd h0 r v))
+    = admit ()
+    
 let op_Colon_Equals = write
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,23 +68,19 @@ let op_Colon_Equals = write
 ////////////////////////////////////////////////////////////////////////////////
 let incr (r:ref int)
     :  ST unit
-	  (requires (fun h -> h `contains_a_well_typed` r))
-	  (ensures (fun h0 s h1 ->
-			     h0 `contains_a_well_typed` r
-			   /\ modifies (Set.singleton r) h0 h1
-			   /\ sel h1 r = sel h0 r + 1))
+	  (requires (fun h0     -> h0 `contains_a_well_typed` r))
+	  (ensures (fun h0 s h1 -> modifies (Set.singleton (addr_of r)) h0 h1 /\
+			        sel h1 r = sel h0 r + 1))
     = r := !r + 1
 
 let copy_and_incr (r:ref int)
     :  ST (ref int)
-	  (requires (fun h -> h `contains_a_well_typed` r))
-	  (ensures (fun h0 s h1 ->
-			     h0 `contains_a_well_typed` r
-			   /\ ~ (h0 `contains` s)
-			   /\ h1 `contains_a_well_typed` s
-			   /\ modifies (Set.singleton r) h0 h1
-			   /\ sel h1 r = sel h0 r + 1
-			   /\ sel h1 s = sel h0 r))
+	  (requires (fun h0     -> h0 `contains_a_well_typed` r))
+	  (ensures (fun h0 s h1 -> ~ (h0 `contains` s)                        /\
+			        h1 `contains_a_well_typed` s               /\
+			        modifies (Set.singleton (addr_of r)) h0 h1 /\
+			        sel h1 r = sel h0 r + 1                    /\
+			        sel h1 s = sel h0 r))
     = let s = alloc !r in
       incr r;
       s
@@ -109,7 +96,7 @@ let alloc_addition_and_incr (r:ref int)
 			     h0 `contains_a_well_typed` r
 			   /\ ~ (h0 `contains` s)
 			   /\ h1 `contains_a_well_typed` s
-			   /\ modifies (Set.singleton r) h0 h1
+			   /\ modifies (Set.singleton (addr_of r)) h0 h1
 			   /\ (forall y. sel h1 s y = sel h0 r + y)))
     = let x = !r in
       let s = alloc (fun y -> x + y) in
@@ -121,7 +108,7 @@ let alloc_addition_and_incr (r:ref int)
 val zero: x:ref nat -> ghost_heap:heap{ghost_heap `contains_a_well_typed` x} -> ST unit
   (requires (fun h -> h==ghost_heap))
   (ensures (fun h0 _ h1 -> h0 `contains_a_well_typed` x
- 		       /\ modifies (Set.singleton x) h0 h1
+ 		       /\ modifies (Set.singleton (addr_of x)) h0 h1
 		       /\ sel h1 x = 0))
   (decreases (sel ghost_heap x))
 let rec zero x ghost_heap =

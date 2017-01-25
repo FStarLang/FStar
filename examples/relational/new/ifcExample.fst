@@ -15,10 +15,10 @@ let c = ST. alloc 200
 (* TODO F* does not infer that these refs are distinct *)
 
 let env var = 
-  if addr_of var = addr_of x then Low
-  else if addr_of var = addr_of y then Low 
-    else if addr_of var = addr_of c then Low
-      else if addr_of var = addr_of z then High
+  if var = addr_of x then Low
+  else if var = addr_of y then Low 
+    else if var = addr_of c then Low
+      else if var = addr_of z then High
         else High
 
 let c1_0 body = While (AVar c) body (AVar c)

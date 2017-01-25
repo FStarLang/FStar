@@ -1,6 +1,7 @@
 module WhileReify
 
-open FStar.DM4F.Heap
+open FStar.Heap
+(* open FStar.DM4F.Heap *)
 open FStar.DM4F.Heap.ST
 
 type id = ref int
@@ -19,7 +20,7 @@ let interpret_binop o a b =
   | Times -> op_Multiply a b
   | Max   -> if a <= b then b else a
 
-type exp =
+noeq type exp =
 | AInt : int -> exp
 | AVar : id -> exp
 | AOp  : binop -> exp -> exp -> exp
@@ -41,16 +42,15 @@ let rec interpret_exp h e =
        Decreasingness and positivity of this termination metric
        _dynamically_ checked. *)
 type variant = exp
-//type variant = e:exp{forall h. 0 <= interpret_exp h e}
+(* type variant = e:exp{forall h. 0 <= interpret_exp h e} *)
 
 (* Commands -- loops are annotated with variants *)
-type com =
+noeq type com =
 | Skip   : com
 | Assign : var:id -> term:exp -> com
 | Seq    : first:com -> second:com -> com
 | If     : cond:exp -> then_branch:com -> else_branch:com -> com
 | While  : cond:exp -> body:com -> variant:variant -> com
-
 
 reifiable val interpret_exp_st : e:exp -> ST int
   (requires (fun _ -> True))
@@ -58,9 +58,7 @@ reifiable val interpret_exp_st : e:exp -> ST int
 reifiable let rec interpret_exp_st e =
   match e with
   | AInt i -> i
-  | AVar x -> let h = STATE?.get() in
-              assume(h `contains_a_well_typed` x); (* XXX: now needing this *)
-              !x
+  | AVar x -> !x
   | AOp o e1 e2 ->
     let a = interpret_exp_st e1 in
     let b = interpret_exp_st e2 in
@@ -86,9 +84,7 @@ reifiable val interpret_com_st : c:com -> h0:heap -> ST unit
 reifiable let rec interpret_com_st c h0 =
   match c with
   | Skip -> ()
-  | Assign x e -> let h = STATE?.get() in
-                  assume(h `contains_a_well_typed` x); (* XXX: now needing this *)
-                  x := interpret_exp_st e
+  | Assign x e -> x := interpret_exp_st e
   | Seq c1 c2 ->
     begin
       interpret_com_st c1 (STATE?.get());

@@ -103,7 +103,7 @@ let only x = singleton (addr_of x)
 val alloc_lemma: #a:Type -> h0:heap -> x:a
                  -> Lemma (requires (True))
 		         (ensures (let r, h1 = alloc h0 x in
-			           h1 == upd h0 r x /\ ~ (h0 `contains_a_well_typed` r) /\ h1 `contains_a_well_typed` r))
+			           h1 == upd h0 r x /\ ~ (h0 `contains` r) /\ h1 `contains_a_well_typed` r))
 		   [SMTPat (alloc h0 x)]
 let alloc_lemma #a h0 x = ()
 
@@ -150,7 +150,8 @@ let upd_contains #a #b h r v r' = ()
 val upd_contains_a_well_typed: #a:Type -> #b:Type -> h:heap -> r:ref a -> v:a -> r':ref b
                   -> Lemma (requires True)
 		          (ensures ((upd h r v) `contains_a_well_typed` r /\
-			            ((h `contains_a_well_typed` r /\ h `contains_a_well_typed` r') ==> (upd h r v) `contains_a_well_typed` r')))
+			            (((h `contains_a_well_typed` r \/ ~ (h `contains` r)) /\ h `contains_a_well_typed` r')
+				     ==> (upd h r v) `contains_a_well_typed` r')))
 		    [SMTPat ((upd h r v) `contains_a_well_typed` r')]
 let upd_contains_a_well_typed #a #b h r v r' = ()
 
@@ -159,7 +160,10 @@ let modifies (s:set nat) (h0:heap) (h1:heap) =
                          ~ (mem (addr_of r) s) /\ h0 `contains` r ==>
                          sel h1 r == sel h0 r) /\
   (forall (a:Type) (r:ref a).{:pattern (h1 `contains` r)}
-                        h0 `contains` r ==> h1 `contains` r)
+                        h0 `contains` r ==> h1 `contains` r) /\
+  (* AR: an alternative to this would be to prove a lemma that if sel is same and h0 contains_a_well_typed then h1 contains_a_well_typed, then the following clause would follow from the first clause of sel remaining same *)
+  (forall (a:Type) (r:ref a).{:pattern (h1 `contains_a_well_typed` r)}
+                        (~ (mem (addr_of r) s) /\ h0 `contains_a_well_typed` r) ==> h1 `contains_a_well_typed` r)
 
 (* let modifies (s:set nat) (h0:heap) (h1:heap) = *)
 (*   (forall (a:Type) (r:ref a).{:pattern (sel h1 r)} *)
