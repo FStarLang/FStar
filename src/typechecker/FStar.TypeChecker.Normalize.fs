@@ -1082,6 +1082,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
                             | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
                                 let lifted = reify_lift cfg.tcenv e msrc mtgt t' in
                                 norm cfg env stack lifted
+                            | Tm_match(e, branches) ->
+                              (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
+                              (* (should be checked at typechecking and elaborated with an explicit binding if needed) *)
+                              (* reify (match e with p -> e') ~> match e with p -> reify e' *)
+                              let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
+                              let tm = mk (Tm_match(e, branches)) t.pos in
+                              norm cfg env (List.tl stack) tm
                             | _ ->
                                 (* TODO : that seems a little fishy *)
                                 norm cfg env stack head

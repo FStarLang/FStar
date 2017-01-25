@@ -477,28 +477,33 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
     let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some guard_x, c_branches) in
     let e =
-        let mk_match scrutinee =
-            let scrutinee = TcUtil.maybe_lift env scrutinee c1.eff_name cres.eff_name c1.res_typ in
-            let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, lc, _) ->
-                 (pat, wopt, TcUtil.maybe_lift env br lc.eff_name cres.eff_name lc.res_typ )) in
-            let e = mk (Tm_match(scrutinee, branches)) (Some cres.res_typ.n) top.pos in
-             //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
-            mk (Tm_ascribed(e, Inl cres.res_typ, Some cres.eff_name)) None e.pos in
-        //see issue #594: if the scrutinee is impure, then explicitly sequence it with an impure let binding
-        //                to protect it from the normalizer optimizing it away
-        if TcUtil.is_pure_or_ghost_effect env c1.eff_name
-        then mk_match e1
-        else //generate a let binding for e1
-             let e_match = mk_match (S.bv_to_name guard_x) in
-             let lb = {
-                lbname=Inl guard_x;
-                lbunivs=[];
-                lbtyp=c1.res_typ;
-                lbeff=Env.norm_eff_name env c1.eff_name;
-                lbdef=e1;
-             } in
-             let e = mk (Tm_let((false, [lb]), SS.close [S.mk_binder guard_x] e_match)) (Some cres.res_typ.n) top.pos in
-             TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
+      let mk_match scrutinee =
+        (* let scrutinee = TcUtil.maybe_lift env scrutinee c1.eff_name cres.eff_name c1.res_typ in *)
+        let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, lc, _) ->
+              (pat, wopt, TcUtil.maybe_lift env br lc.eff_name cres.eff_name lc.res_typ ))
+        in
+        let e = mk (Tm_match(scrutinee, branches)) (Some cres.res_typ.n) top.pos in
+        let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
+        //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
+        mk (Tm_ascribed(e, Inl cres.res_typ, Some cres.eff_name)) None e.pos
+      in
+      //see issue #594: if the scrutinee is impure, then explicitly sequence it with an impure let binding
+      //                to protect it from the normalizer optimizing it away
+      if TcUtil.is_pure_or_ghost_effect env c1.eff_name
+      then mk_match e1
+      else
+        (* generate a let binding for e1 *)
+        let e_match = mk_match (S.bv_to_name guard_x) in
+        let lb = {
+          lbname=Inl guard_x;
+          lbunivs=[];
+          lbtyp=c1.res_typ;
+          lbeff=Env.norm_eff_name env c1.eff_name;
+          lbdef=e1;
+        } in
+        let e = mk (Tm_let((false, [lb]), SS.close [S.mk_binder guard_x] e_match)) (Some cres.res_typ.n) top.pos in
+        TcUtil.maybe_monadic env e cres.eff_name cres.res_typ
+    in
     if debug env Options.Extreme
     then BU.print2 "(%s) comp type = %s\n"
                       (Range.string_of_range top.pos) (Print.comp_to_string <| cres.comp());
