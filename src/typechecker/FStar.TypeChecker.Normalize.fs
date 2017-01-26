@@ -981,7 +981,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                     | Inl x ->
                                         let head = U.mk_reify <| lb.lbdef in
                                         let body = U.mk_reify <| body in
-                                        let body = S.mk (Tm_abs([S.mk_binder x], body, None)) None body.pos in
+                                        (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)
+                                        let body = S.mk (Tm_abs([S.mk_binder x], body, Some (Inr (m, [])))) None body.pos in
                                         let bind_inst = match (SS.compress bind_repr).n with
                                             | Tm_uinst (bind, [_ ; _]) ->
                                                 S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv lb.lbtyp

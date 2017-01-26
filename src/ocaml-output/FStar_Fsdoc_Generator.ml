@@ -261,20 +261,20 @@ end))
 
 
 let document_toplevel = (fun name topdecl -> (match (topdecl.FStar_Parser_AST.d) with
-| FStar_Parser_AST.TopLevelModule (uu____607) -> begin
+| FStar_Parser_AST.TopLevelModule (uu____603) -> begin
 (match (topdecl.FStar_Parser_AST.doc) with
 | Some (doc, kw) -> begin
 (
 
-let uu____625 = (FStar_List.tryFind (fun uu____631 -> (match (uu____631) with
+let uu____621 = (FStar_List.tryFind (fun uu____627 -> (match (uu____627) with
 | (k, v) -> begin
 (k = "summary")
 end)) kw)
-in (match (uu____625) with
+in (match (uu____621) with
 | None -> begin
 ((None), (Some (doc)))
 end
-| Some (uu____644, summary) -> begin
+| Some (uu____640, summary) -> begin
 ((Some (summary)), (Some (doc)))
 end))
 end
@@ -282,26 +282,26 @@ end
 ((None), (None))
 end)
 end
-| uu____652 -> begin
+| uu____648 -> begin
 (Prims.raise (FStar_Errors.Err ("Not a TopLevelModule")))
 end))
 
 
 let document_module : FStar_Parser_AST.modul  ->  FStar_Ident.lid = (fun m -> (
 
-let uu____660 = (match (m) with
+let uu____656 = (match (m) with
 | FStar_Parser_AST.Module (n, d) -> begin
 ((n), (d), ("module"))
 end
-| FStar_Parser_AST.Interface (n, d, uu____676) -> begin
+| FStar_Parser_AST.Interface (n, d, uu____672) -> begin
 ((n), (d), ("interface"))
 end)
-in (match (uu____660) with
+in (match (uu____656) with
 | (name, decls, _mt) -> begin
 (
 
-let uu____685 = (one_toplevel decls)
-in (match (uu____685) with
+let uu____681 = (one_toplevel decls)
+in (match (uu____681) with
 | Some (top_decl, other_decls) -> begin
 (
 
@@ -320,8 +320,8 @@ in (
 let no_comment = "fsdoc: no-comment-found"
 in (
 
-let uu____704 = (document_toplevel name top_decl)
-in (match (uu____704) with
+let uu____700 = (document_toplevel name top_decl)
+in (match (uu____700) with
 | (summary, comment) -> begin
 (
 
