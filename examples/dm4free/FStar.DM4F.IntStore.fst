@@ -49,6 +49,9 @@ let raise_ (#a:Type0) ()
   : IntStore a (fun _ -> True) (fun l0 x l1 -> l0 == l1 /\ None? x)
 = let x = INT_STORE?.raise_ () in begin match x with end
 
+
+(* KM : Would it be possible to merge both read by adding a boolean flag *)
+(* deciding whether the check on the index i must be static or dynamic ? *)
 reifiable
 let read (i:id)
   : INT_STORE int
@@ -113,4 +116,5 @@ let read_write_lemma1 (store:heap) (r:id) (x:int)
     : Lemma (requires (r `in_` store))
       (ensures (r `in_` store /\ normalize_term (fst (reify (let () = write_tot r x in read_tot r) store)) == Some x))
 = ()
+
 
