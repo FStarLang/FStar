@@ -1940,8 +1940,9 @@ let rec universe_of_aux env e =
           t, args
      in
      let t, args = type_of_head true hd args in
+     let t = N.normalize [N.UnfoldUntil Delta_constant] env t in
      let bs, res = U.arrow_formals_comp t in
-     let res = N.normalize [N.UnfoldUntil Delta_constant] env (U.comp_result res) in
+     let res = U.comp_result res in
      if List.length bs = List.length args
      then let subst = U.subst_of_list bs args in
           SS.subst subst res

@@ -4708,12 +4708,15 @@ in (match (uu____9176) with
 | (t, args) -> begin
 (
 
-let uu____9204 = (FStar_Syntax_Util.arrow_formals_comp t)
-in (match (uu____9204) with
+let t = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::[]) env t)
+in (
+
+let uu____9205 = (FStar_Syntax_Util.arrow_formals_comp t)
+in (match (uu____9205) with
 | (bs, res) -> begin
 (
 
-let res = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::[]) env (FStar_Syntax_Util.comp_result res))
+let res = (FStar_Syntax_Util.comp_result res)
 in (match (((FStar_List.length bs) = (FStar_List.length args))) with
 | true -> begin
 (
@@ -4721,23 +4724,23 @@ in (match (((FStar_List.length bs) = (FStar_List.length args))) with
 let subst = (FStar_Syntax_Util.subst_of_list bs args)
 in (FStar_Syntax_Subst.subst subst res))
 end
-| uu____9234 -> begin
+| uu____9237 -> begin
 (let _0_604 = (FStar_Syntax_Print.term_to_string res)
 in (level_of_type_fail env e _0_604))
 end))
-end))
+end)))
 end)))
 end
-| FStar_Syntax_Syntax.Tm_match (uu____9237, (hd)::uu____9239) -> begin
+| FStar_Syntax_Syntax.Tm_match (uu____9240, (hd)::uu____9242) -> begin
 (
 
-let uu____9286 = (FStar_Syntax_Subst.open_branch hd)
-in (match (uu____9286) with
-| (uu____9289, uu____9290, hd) -> begin
+let uu____9289 = (FStar_Syntax_Subst.open_branch hd)
+in (match (uu____9289) with
+| (uu____9292, uu____9293, hd) -> begin
 (universe_of_aux env hd)
 end))
 end
-| FStar_Syntax_Syntax.Tm_match (uu____9306, []) -> begin
+| FStar_Syntax_Syntax.Tm_match (uu____9309, []) -> begin
 (level_of_type_fail env e "empty match cases")
 end)))
 
