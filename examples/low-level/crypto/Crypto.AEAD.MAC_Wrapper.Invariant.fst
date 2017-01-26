@@ -56,7 +56,7 @@ private val frame_aead_entries_are_refined_mac_wrapper
 	      aead_entries_are_refined table_0 entries_0 h1)))
 #set-options "--z3rlimit 50"
 let frame_aead_entries_are_refined_mac_wrapper #i #rw #aadlen #plainlen aead_st nonce aad plain cipher_tagged mac_st h0 h1 =
-  let open FStar.SeqProperties in
+  let open FStar.Seq in
   let open FStar.Classical in
   if safeId i then begin
     let entries_0 = HS.sel h0 (st_ilog aead_st) in

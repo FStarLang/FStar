@@ -51,7 +51,7 @@ let prf_mac_added (i:id{prf i}) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:P
     match find_mac t1 x with 
     | Some mac_entry -> 
       returned_mac == mac_entry                              /\ //returned what is now in the table
-      t1 == SeqProperties.snoc t0 (PRF.Entry x returned_mac) /\ //precisely extended the table with 1 new entry
+      t1 == Seq.snoc t0 (PRF.Entry x returned_mac) /\ //precisely extended the table with 1 new entry
       CMA.genPost (i,x.iv) t.mac_rgn h0 returned_mac h1      /\ //the mac is freshly generated (and unset)
       HS.modifies_transitively (Set.singleton t.rgn) h0 h1   /\ //only touched the prf's region (and its children)
       HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1             /\ //in the prf region, only modified the table
@@ -293,7 +293,7 @@ private val prf_mac_find_unchanged (#i:id) (#rw:rw) (aead_st:aead_state i rw)
 		      let t0 = HS.sel h0 (itable i aead_st.prf) in
 		      let t1 = HS.sel h1 (itable i aead_st.prf) in
 		      e.x == x /\
-		      t1 == SeqProperties.snoc t0 e)))
+		      t1 == Seq.snoc t0 e)))
            (ensures (let open PRF in
 		     prf i /\ (
 		     let t0 = HS.sel h0 (itable i aead_st.prf) in
@@ -303,7 +303,7 @@ let prf_mac_find_unchanged #i #rw aead_st k_0 x h0 h1 e =
   let t0 = HS.sel h0 (itable i aead_st.prf) in
   let t1 = HS.sel h1 (itable i aead_st.prf) in  
   let aux (y:domain i) : Lemma (y <> x ==> PRF.find t0 y == PRF.find t1 y) =
-    FStar.SeqProperties.find_snoc t0 e (is_entry_domain y) 
+    FStar.Seq.find_snoc t0 e (is_entry_domain y) 
   in
   FStar.Classical.forall_intro aux
 

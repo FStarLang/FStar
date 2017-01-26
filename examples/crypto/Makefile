@@ -79,7 +79,7 @@ RPC.ml: SHA1.fst MAC.fst Formatting.fst RPC.fst
 	$(FSTAR_ALWAYS) --no_location_info --lax \
 		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst RPC.fst \
-		--codegen-lib Platform --codegen-lib CoreCrypto --codegen-lib SeqProperties --codegen OCaml --use_native_int 
+		--codegen-lib Platform --codegen-lib CoreCrypto --codegen-lib Seq --codegen OCaml --use_native_int 
 
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/ulib/ml/native_int $(FSTAR_HOME)/ulib/ml)
 OCAMLC=ocamlfind ocamlopt -ccopt -L$(LIB) -package batteries -linkpkg -g -thread

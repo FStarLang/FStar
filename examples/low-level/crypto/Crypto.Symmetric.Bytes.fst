@@ -472,7 +472,6 @@ type word = b:Seq.seq UInt8.t {Seq.length b <= 16}
 open FStar.Math.Lib
 open FStar.Math.Lemmas
 open FStar.Seq
-open FStar.SeqProperties 
 
 private let endian_is_injective q r q' r' : Lemma
   (requires UInt8.v r + pow2 8 * q = UInt8.v r' + pow2 8 * q')

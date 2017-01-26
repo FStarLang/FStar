@@ -353,7 +353,7 @@ val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
      Buffer.live h0 w /\
      (if mac_log then
        HS.sel h1 (alog acc) ==
-       SeqProperties.cons (Buffer.as_seq h0 w) (HS.sel h0 (alog acc)) /\
+       Seq.cons (Buffer.as_seq h0 w) (HS.sel h0 (alog acc)) /\
        (let buf = MAC.as_buffer acc.a in
         let rid = frameOf buf in
         //Alternative 1:
