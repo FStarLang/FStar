@@ -1,5 +1,6 @@
 module WhileReify
 
+open FStar.Seq
 open FStar.DM4F.IntStore
 
 type id = nat
@@ -51,9 +52,7 @@ type com =
 | While  : cond:exp -> body:com -> variant:variant -> com
 
 
-reifiable val interpret_exp_st : e:exp -> IS int
-  (requires (fun _ -> True))
-  (ensures  (fun h r h' -> h == h'))
+reifiable val interpret_exp_st : e:exp -> INT_STORE int (fun s0 p -> forall opt. p (opt, s0))
 reifiable let rec interpret_exp_st e =
   match e with
   | AInt i -> i
@@ -66,17 +65,20 @@ reifiable let rec interpret_exp_st e =
 let interpret_exp h e = normalize_term (reify (interpret_exp_st e) h)
 
 (* function used for the decreases clause *)
-val decr_while : heap -> com -> GTot int
+val decr_while : seq int -> com -> GTot int
 let decr_while h c =
   match c with
   | While c b v ->
     let tmp, _h' = reify (interpret_exp_st v) h in
-    if tmp < 0 then 0 else tmp
+    begin match tmp with
+    | Some tmp -> if tmp < 0 then 0 else tmp
+    | _ -> 0
+    end
   | _ -> 0
 
 exception OutOfFuel
 
-reifiable val interpret_com_st : c:com -> h0:heap -> IS unit
+reifiable val interpret_com_st : c:com -> h0:seq int -> IntStore unit
   (requires (fun h -> h == h0))
   (ensures (fun _ _ _ -> True))
   (decreases %[c; decr_while h0 c])
@@ -100,17 +102,18 @@ reifiable let rec interpret_com_st c h0 =
   | While e body v ->
     if interpret_exp_st e <> 0 then
       begin
-      (*   let m0 = interpret_exp_st v in *)
-      (*   interpret_com_st body (IS?.get()); *)
-      (*   let m1 = interpret_exp_st v in *)
+        let m0 = interpret_exp_st v in
+        let h = IS?.get () in
+        interpret_com_st body h;
+        let m1 = interpret_exp_st v in
       (* proving recursive terminating relies of interpret_exp not
          changing the state? somehow F* can't prove this although
          interpret_exp_st has that in the spec! *)
       (* working around by using reify *)
-        let m0, _ = reify (interpret_exp_st v) h0 in
-        interpret_com_st body h0;
-        let h1 = IS?.get() in
-        let m1, _ = reify (interpret_exp_st v) h1 in
+        (* let m0, _ = reify (interpret_exp_st v) h0 in *)
+        (* interpret_com_st body h0; *)
+        (* let h1 = IS?.get() in *)
+        (* let m1, _ = reify (interpret_exp_st v) h1 in *)
         if m0 > m1 && m1 >= 0 then
           let h2 = (IS?.get()) in
           interpret_com_st c h2

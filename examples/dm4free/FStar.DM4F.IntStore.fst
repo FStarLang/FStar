@@ -44,14 +44,26 @@ let raise_ (#a:Type0) ()
 = let x = INT_STORE?.raise_ () in begin match x with end
 
 reifiable
-let read (i:nat) =
+let read (i:nat)
+  : INT_STORE int
+    (fun s p ->
+      if i < length s
+      then p (Some (index s i), s)
+      else p (None, s))
+=
   let store = IS?.get () in
   if i < length store
   then index store i
   else raise_ ()
 
 reifiable
-let write (i:nat) (x:int) =
+  let write (i:nat) (x:int)
+  : INT_STORE unit
+    (fun s p ->
+      if i < length s
+      then p (Some (),upd s i x)
+      else p (None, s))
+=
   let store = IS?.get () in
   if i < length store
   then IS?.put (upd store i x)

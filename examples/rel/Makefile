@@ -25,4 +25,4 @@ delimited_release:
 	$(FSTAR) delimited_release.fst
 
 WhileReify:
-	$(FSTAR) --include ../../dm4free WhileReify.fst
+	$(FSTAR) --include ../dm4free --include ../../ulib --explicit_deps FStar.List.Tot.fst FStar.ListProperties.fst FStar.Seq.fst FStar.FunctionalExtensionality.fst FStar.DM4F.IntStore.fst WhileReify.fst
