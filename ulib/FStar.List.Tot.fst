@@ -391,7 +391,7 @@ let rec partition_length f l = match l with
   | hd::tl -> partition_length f tl
 
 val bool_of_compare : ('a -> 'a -> Tot int) -> 'a -> 'a -> Tot bool
-let bool_of_compare f x y = f x y >= 0
+let bool_of_compare f x y = f x y > 0
 
 val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
 let compare_of_bool #a rel x y =
