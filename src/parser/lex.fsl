@@ -106,7 +106,7 @@ type delimiters = {
 
 let n_typ_apps = Util.mk_ref 0
 let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) =
- if not (Options.fs_typ_app()) then ((* printfn "False 0" ; *) false) else
+ if not (Options.fs_typ_app args.filename) then ((* printfn "False 0" ; *) false) else
  try
    let char_ok = new System.Text.RegularExpressions.Regex(@"\w|\s|\(|\)|<|>|\*|-|'|,|\.") in
    let balanced (contents : string) pos =
@@ -240,7 +240,7 @@ rule token args = parse
  | tvar
      { TVAR (ulexeme lexbuf) }
  | "#light"
-     { PRAGMALIGHT }
+     { Options.add_light_off_file args.filename; PRAGMALIGHT }
  | "#set-options"
      { PRAGMA_SET_OPTIONS }
  | "#reset-options"

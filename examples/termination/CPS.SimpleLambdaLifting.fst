@@ -1,6 +1,6 @@
 (** Second implementation with λ-lifting **)
 module CPS.SimpleLambdaLifting
-open List
+open FStar.List.Tot
 
 val add_cps_intern : (int -> Tot 'a) -> int -> int -> Tot 'a
 let add_cps_intern k x y = k (x + y)

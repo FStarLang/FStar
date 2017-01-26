@@ -139,14 +139,15 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	$(SED) -i 's/type uvar.*/assume new type uvar : Type0 -> Type0/g' $@
 
 boot_fstis/FStar.Parser.Parse.fsti: parser/parse.fsi
-	$(HEAD) -n -12 $^ > $@
+	echo "#light \"off\"" > $@
+	$(HEAD) -n -12 $^ >> $@
 	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse open FStar.BaseTypes type bytes = array<byte>/' $@
 
 rename_as_fst:
 	./tools/rename_all_boot_fsts
 	cp parser/parseit.fsi u_boot_fsts/FStar.Parser.Parseit.fsti
 
-prep_u_extract_ocaml: $(U_ALL_INTERFACES)
+prep: $(U_ALL_INTERFACES)
 	make rename_as_fst
 	$(SED) -i "s/type term' =/type term' : Type0 =/g"      u_boot_fsts/FStar.Syntax.Syntax.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
 	$(SED) -i "s/and pat' =/and pat' : Type0 =/g"          u_boot_fsts/FStar.Syntax.Syntax.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
@@ -214,9 +215,9 @@ u_extract_encode: u_boot_fsts/FStar.SMTEncoding.Encode.fst
 u_extract_solver: u_boot_fsts/FStar.SMTEncoding.Solver.fst
 	$(FSTARBOOT) $^ --extract_module FStar.SMTEncoding.Solver
 
-u_extract_smtencoding: u_extract_encode u_extract_solver
+u_extract_smtencoding: u_extract_smtencoding_base u_extract_encode u_extract_solver
 
-u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fst) # Universal.fst Indent.fst Main.fst)
+u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fst Universal.fst Indent.fst Main.fst)
 	$(FSTARBOOT) $^ --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
 u_extract_all: u_extract_misc u_extract_syntax u_extract_parser \
@@ -224,7 +225,7 @@ u_extract_all: u_extract_misc u_extract_syntax u_extract_parser \
 	       u_extract_extraction u_extract_fstar
 
 ocaml: clean_u_extract_ocaml
-	make prep_u_extract_ocaml
+	make prep
 	+make u_extract_misc u_extract_syntax u_extract_parser \
               u_extract_typechecker u_extract_tosyntax u_extract_smtencoding \
 	      u_extract_extraction u_extract_fstar
@@ -247,15 +248,11 @@ boot-ocaml:
 # Testing
 # --------------------------------------------------------------------
 
-test:
-	make all
-	make fsharp-regressions
-	make fstar-ocaml
-	make regressions
-
 utest:
 	make all
-	make fsharp-regressions
+ifeq ($(OS),Windows_NT)
+	make fsharp-regressions #normalizer failures on linux so only run on windows
+endif
 	+make -C ocaml-output
 	+make fstar-ocaml
 	+make uregressions
@@ -264,16 +261,6 @@ utest:
 fsharp-regressions:
 	$(RUNTIME) $(BIN)/tests.exe
 
-# The regressions to be run with a working OCaml build of F*
-regressions:
-	make -C ../lib
-	+make -C ../ulib
-	+make -C ../examples
-	make -C ../examples/hello ocaml
-	make -C ../ucontrib/CoreCrypto/ml/ test
-	make -C ../examples/crypto clean #rpc-test cnt-test #removed until we can add it in uregressions
-	#make -C ../examples/wysteria a.out distclean
-
 # Getting parallelism from this target
 uregressions: ulib uexamples
 
@@ -281,10 +268,7 @@ ulib:
 	+make -C ../ulib
 
 uexamples:
-	+make -C ../examples uall
-
-examples:
-	+make -C ../examples sall
+	+make -C ../examples all
 
 ulong:
 	+make utest

@@ -29,13 +29,13 @@ type debug_level_t =
   | Other of string
 
 type option_val =
-  | Bool of bool 
+  | Bool of bool
   | String of string
   | Int of int
   | List of list<option_val>
   | Unset
 
-type options = 
+type options =
     | Set
     | Reset
     | Restore
@@ -49,6 +49,9 @@ val __set_unit_tests            : unit    -> unit
 val __clear_unit_tests          : unit    -> unit
 val parse_cmd_line              : unit    -> parse_cmdline_res * list<string>
 val add_verify_module           : string  -> unit
+
+(* Only used with F# *)
+val add_light_off_file          : string  -> unit
 
 val __temp_no_proj              : string  -> bool
 val admit_smt_queries           : unit    -> bool
@@ -68,7 +71,7 @@ val explicit_deps               : unit    -> bool
 val extract_all                 : unit    -> bool
 val file_list                   : unit    -> list<string>
 val find_file                   : string  -> option<string>
-val fs_typ_app                  : unit    -> bool
+val fs_typ_app                  : string  -> bool
 val fstar_home                  : unit    -> string
 val full_context_dependency     : unit    -> bool
 val hide_genident_nums          : unit    -> bool
@@ -115,7 +118,6 @@ val silent                      : unit    -> bool
 val split_cases                 : unit    -> int
 val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool
-val universes                   : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
@@ -124,6 +126,7 @@ val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool
 val warn_top_level_effects      : unit    -> bool
 val z3_exe                      : unit    -> string
+val z3_cliopt                   : unit    -> list<string>
 val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_seed                     : unit    -> int

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 for file in `find . -name "FStar.*.fs*" -print | grep -v u_boot_fsts | grep -v "~"`; do
 	directory=`dirname $file`
@@ -18,4 +18,4 @@ for file in `find . -name "FStar.*.fs*" -print | grep -v u_boot_fsts | grep -v "
 	    fi;
 	fi;
 done
-    
+

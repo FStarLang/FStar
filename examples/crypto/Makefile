@@ -50,27 +50,12 @@ verify_hh-%: __force__
 		 --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 		 --z3rlimit 20 $*
 
-all: uall sall
+all: uall
 
-uall: $(VERFILES:%=verify-%) $(HH_VERFILES:%=verify_hh-%)
-
-sall: merkle_tree rpc CntProtocol padding statefulEnc
+uall: $(VERFILES:%=verify-%) $(HH_VERFILES:%=verify_hh-%) rpc CntProtocol
 
 
 export CONTRIB=../../contrib
-
-
-padding: Padding.Pad.fst Padding.BMAC.fst Padding.MAC2.fst Padding.TMAC.fst
-	$(SFSTAR) --z3timeout 20 --verify_module Padding.Pad --verify_module Padding.BMAC --verify_module Padding.MAC2 --verify_module Padding.TMAC --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
-		--include $(FSTAR_HOME)/contrib/Platform/fst \
-		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
-		$^
-
-merkle_tree: MerkleTree.fst
-	$(SFSTAR) --verify_module MerkleTree \
-	--include $(FSTAR_HOME)/contrib/Platform/fst \
-	--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
-	$^
 
 acls-cap: SHA1.fst MAC.fst ../security/ACLs_simplified.fst Cap.fst
 	$(FSTAR) --z3rlimit 10 \
@@ -83,10 +68,6 @@ rpc: Formatting.fst SHA1.fst MAC.fst RPC.fst
 	$(FSTAR) --z3rlimit 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
 		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst RPC.fst
-
-statefulEnc: StatefulEncryption.SingleInstance.fst StatefulEncryption.TwoLevelHeap.fst
-	$(SFSTAR) --verify_module StatefulEncryption.SingleInstance StatefulEncryption.SingleInstance.fst
-	$(SFSTAR) --verify_module StatefulEncryption.TwoLevelHeap StatefulEncryption.TwoLevelHeap.fst
 
 .PHONY: mllibs
 
@@ -120,7 +101,7 @@ CntProtocol: CntFormat.fst MAC.fst SHA1.fst CntProtocol.fst
 		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst CntProtocol.fst
 
 CntProtocol.ml: CntFormat.fst MAC.fst SHA1.fst CntProtocol.fst
-	$(FSTAR_ALWAYS) --stratified --z3rlimit 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+	$(FSTAR_ALWAYS) --z3rlimit 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst CntProtocol.fst \
