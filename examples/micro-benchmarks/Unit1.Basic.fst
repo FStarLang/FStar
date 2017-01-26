@@ -1,5 +1,5 @@
 module Unit1.Basic
-
+open FStar.All
 open FStar.BaseTypes
 
 type t =
@@ -39,7 +39,7 @@ let hd_int_impure l = match l with
   | hd::_ -> hd
   | [] -> failwith "Empty list"
 
-val hd_int_impure_default_case : x:list int -> int
+val hd_int_impure_default_case : x:list int -> ML int
 let hd_int_impure_default_case l = match l with
   | hd::_ -> hd
   | _ -> failwith "Empty list"
@@ -57,7 +57,7 @@ let infer_nat x = if x < 0 then -x else x
 val check_nat: x:int -> Tot nat
 let check_nat x = infer_nat x
 
-val assert_nat: x:int -> unit
+val assert_nat: x:int -> ML unit
 let assert_nat x =
   let assert_nat_y = infer_nat x in
   assert (assert_nat_y >= 0)
@@ -69,7 +69,7 @@ let church_false x y = y
 val pure_id_annot : 'a -> Tot 'a
 let pure_id_annot x = x
 
-val ml_id_annot : 'a -> 'a
+val ml_id_annot : 'a -> ML 'a
 let ml_id_annot x = x
 
 val tabs_id_pure_annot_eq : a:eqtype -> x:a -> Pure a True (fun y -> b2t (y=x))
@@ -83,7 +83,7 @@ let id_pure_annot_eq #a x = x
 val id_all_annot_eq: #a:eqtype -> x:a -> All a (fun h -> True) (fun h0 y h1 -> V? y /\ h0==h1 /\ x=(V?.v y))
 let id_all_annot_eq #a x = x
 
-val hd: list 'a -> 'a
+val hd: list 'a -> ML 'a
 let hd = function
   | x::_ -> x
   | _ -> failwith "empty list"
@@ -158,10 +158,10 @@ let slength s = Seq?.end_i s - Seq?.start_i s
 assume val impure: m:message -> ST message
                                  (requires (fun h -> True))
                                  (ensures (fun h0 n h1 -> slength n = slength m))
-assume val lm_corr: l:nat -> m:message{slength m=l} -> int
+assume val lm_corr: l:nat -> m:message{slength m=l} -> ML int
 val unsafe_slice: message -> i:nat -> j:nat{i<=j} -> Tot message
 let unsafe_slice (Seq c _ _) n m = Seq c n m
-val test_impure: l:nat{l > 0} -> m:message{slength m=l} -> int
+val test_impure: l:nat{l > 0} -> m:message{slength m=l} -> ML int
 let test_impure l m =  lm_corr (l - 1) (unsafe_slice (impure m) 1 l)
 
 
@@ -183,7 +183,7 @@ let do_ok l = match l with
   | N -> N
   | C(n, l') -> if n = 0 then l else C(0, l')
 
-val short_circuit1: x:option int{Some? x /\ Some?.v x = 0} -> nat
+val short_circuit1: x:option int{Some? x /\ Some?.v x = 0} -> Tot nat
 let short_circuit1 x = Some?.v x
 
 (* TESTING skolem variables for lambdas *)
@@ -286,6 +286,3 @@ let test_odd2 = assert (odd 5 = true)
 assume val f_eq: #a:Type -> #p:(a -> Type) -> $arg:(u:unit -> Pure a (requires True) (ensures p)) -> Tot (x:a{p x})
 assume val g_eq_c: u:unit -> Pure int (requires True) (ensures (fun x -> x >= 0))
 let h_test_eq : nat = f_eq #int g_eq_c //NS: 05.28: Needed to add the #int
-
-
-

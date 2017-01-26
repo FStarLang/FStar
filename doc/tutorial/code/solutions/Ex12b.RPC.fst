@@ -21,8 +21,8 @@ val msg_buffer: ref message
 let msg_buffer = ST.alloc (empty_bytes)
 
 // BEGIN: Network
-val send: message -> unit
-val recv: (message -> unit) -> unit
+val send: message -> ML unit
+val recv: (message -> ML unit) -> ML unit
 // END: Network
 
 let send m = msg_buffer := m
