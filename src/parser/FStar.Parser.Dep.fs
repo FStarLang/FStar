@@ -21,6 +21,7 @@
     (not module names).
 *)
 module FStar.Parser.Dep
+open FStar.All
 
 open FStar
 open FStar.Parser

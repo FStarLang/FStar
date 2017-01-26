@@ -115,8 +115,6 @@ boot_fstis/FStar.list.fst: basic/list.fsi
 
 boot_fstis/FStar.bytes.fst: basic/bytes.fsti
 	cp $^ $@
-	$(SED) -i 's/val/assume val/g' $@
-	$(SED) -i 's/new/assume new/g' $@
 
 boot_fstis/FStar.util.fsti: basic/util.fsi
 	cp $^ $@
@@ -141,7 +139,7 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 boot_fstis/FStar.Parser.Parse.fsti: parser/parse.fsi
 	echo "#light \"off\"" > $@
 	$(HEAD) -n -12 $^ >> $@
-	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse open FStar.BaseTypes type bytes = array<byte>/' $@
+	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse\nopen FStar.All\nopen FStar.BaseTypes\ntype bytes = array<byte>/' $@
 
 rename_as_fst:
 	./tools/rename_all_boot_fsts

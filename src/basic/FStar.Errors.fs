@@ -1,5 +1,6 @@
 #light "off"
 module FStar.Errors
+open FStar.All
 open FStar.Util
 open FStar.Range
 

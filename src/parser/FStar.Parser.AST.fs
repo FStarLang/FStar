@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Parser.AST
+open FStar.All
 //open FStar.Absyn
 open FStar.Errors
 module C = FStar.Syntax.Const
