@@ -58,7 +58,7 @@ let contains_lemma #a #r h m = ()
 
 let heap_rel (h0:heap) (h1:heap) = 
   (forall a r (m:mref a r) . contains m h0  ==> contains m h1) /\  
-  (forall a r (m:mref a r{contains m h0}) . r (sel h0 m) (sel h1 m))
+  (forall a (r:relation a{preorder r}) (m:mref a r{contains m h0}) . r (sel h0 m) (sel h1 m))
 
 
 (* *************************************************** *)

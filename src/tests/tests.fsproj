@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -66,11 +66,6 @@
     <Compile Include="test.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\absyn\absyn.fsproj">
-      <Name>absyn</Name>
-      <Project>{13e8984e-188d-447b-b7b7-9f7441050565}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
@@ -94,6 +89,11 @@
     <ProjectReference Include="..\syntax\syntax.fsproj">
       <Name>syntax</Name>
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\tosyntax\tosyntax.fsproj">
+      <Name>tosyntax</Name>
+      <Project>{b0968012-b93c-4198-9085-b89669e8e4e8}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\typechecker\typechecker.fsproj">

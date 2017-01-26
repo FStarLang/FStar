@@ -1,6 +1,6 @@
 (** It is easy to defunctionalize it **)
 module CPS.SimpleDefun
-open List
+open FStar.List.Tot
 
 type cont =
   | C0 : cont

@@ -23,46 +23,72 @@ open FStar.Seq
 open FStar.Heap
 (* abstract *) type array (t:Type) = ref (seq t)
 
-assume val op_At_Bar: #a:Type -> array a -> array a -> St (array a)
+abstract val op_At_Bar: #a:Type -> s1:array a -> s2:array a -> ST (array a)
+  (requires (fun h -> contains h s1 /\ contains h s2))
+  (ensures  (fun h0 s h1 -> contains h0 s1 /\ contains h0 s2 /\ contains h1 s
+    /\ sel h1 s == Seq.append (sel h0 s1) (sel h0 s2)
+    /\ modifies !{} h0 h1))
+let op_At_Bar #a s1 s2 =
+  let s1' = !s1 in
+  let s2' = !s2 in
+  alloc (Seq.append s1' s2')
 
-assume val of_seq: #a:Type -> s:seq a -> ST (array a)
+abstract val of_seq: #a:Type -> s:seq a -> ST (array a)
   (requires (fun h -> True))
   (ensures  (fun h0 x h1 -> (not(contains h0 x)
                              /\ contains h1 x
                              /\ modifies TSet.empty h0 h1
                              /\ sel h1 x==s)))
+let of_seq #a s =
+  alloc s
 
-assume val to_seq: #a:Type -> s:array a -> ST (seq a)
+abstract val to_seq: #a:Type -> s:array a -> ST (seq a)
   (requires (fun h -> contains h s))
   (ensures  (fun h0 x h1 -> (sel h0 s==x /\ h0==h1)))
+let to_seq #a s =
+  !s
 
-assume val create : #a:Type -> n:nat -> init:a -> ST (array a)
+abstract val create : #a:Type -> n:nat -> init:a -> ST (array a)
   (requires (fun h -> True))
   (ensures  (fun h0 x h1 -> (not(contains h0 x)
                              /\ contains h1 x
                              /\ modifies TSet.empty h0 h1
                              /\ sel h1 x==Seq.create n init)))
+let create #a n init =
+  alloc (Seq.create n init)
 
-assume val index : #a:Type -> x:array a -> n:nat -> ST a
+abstract val index : #a:Type -> x:array a -> n:nat -> ST a
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
   (ensures  (fun h0 v h1 -> (n < Seq.length (sel h0 x)
                              /\ h0==h1
                              /\ v==Seq.index (sel h0 x) n)))
+let index #a x n =
+  let s = to_seq x in
+  Seq.index s n
 
-
-assume val upd : #a:Type -> x:array a -> n:nat -> v:a -> ST unit
+abstract val upd : #a:Type -> x:array a -> n:nat -> v:a -> ST unit
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
   (ensures  (fun h0 u h1 -> (n < Seq.length (sel h0 x)
                             /\ contains h1 x
                             /\ h1==upd h0 x (Seq.upd (sel h0 x) n v))))
+let upd #a x n v =
+  let s = !x in
+  let s' = Seq.upd s n v in
+  x:= s'
 
-assume val length: #a:Type -> x:array a -> ST nat
+abstract val length: #a:Type -> x:array a -> ST nat
   (requires (fun h -> contains h x))
   (ensures  (fun h0 y h1 -> y=length (sel h0 x) /\ h0==h1))
+let length #a x =
+  let s = !x in Seq.length s
 
-assume val op: #a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
+abstract val op: #a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
   (requires (fun h -> contains h x))
   (ensures  (fun h0 u h1 -> modifies (TSet.singleton (Ref x)) h0 h1 /\ sel h1 x==f (sel h0 x)))
+let op #a f x =
+  let s = !x in
+  let s' = f s in
+  x := s'
 
 val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j}
                  -> ST unit (requires (fun h -> contains h x /\ j < Seq.length (sel h x)))
@@ -133,11 +159,15 @@ val blit_aux:
 	       /\ (forall (i:nat).
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     Seq.index (sel h1 t) i == Seq.index (sel h0 t) i) ))
+
+#set-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 10"
 let rec blit_aux #a s s_idx t t_idx len ctr =
   match len - ctr with
   | 0 -> ()
   | _ -> upd t (t_idx + ctr) (index s (s_idx + ctr));
 	 blit_aux s s_idx t t_idx len (ctr+1)
+
+#set-options "--initial_fuel 0 --max_fuel 0"
 
 val blit:
   #a:Type -> s:array a -> s_idx:nat -> t:array a -> t_idx:nat -> len:nat ->
@@ -162,8 +192,6 @@ val blit:
 		     (Seq.index (sel h1 t) i == Seq.index (sel h0 t) i)) ))
 let rec blit #a s s_idx t t_idx len =
   blit_aux s s_idx t t_idx len 0
-
-#reset-options "--z3rlimit 5"
 
 val sub :
   #a:Type -> s:array a -> idx:nat -> len:nat ->

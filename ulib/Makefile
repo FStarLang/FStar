@@ -1,3 +1,5 @@
+.PHONY: indent
+
 FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 include $(FSTAR_HOME)/src/gmake/nubuild.mk
@@ -9,6 +11,19 @@ HYPERSTACK=FStar.Buffer.fst FStar.Buffer.Quantifiers.fst FStar.Monotonic.RRef.fs
 ALL=$(filter-out $(FLAKY) $(HYPERSTACK) $(MATH),$(wildcard FStar.*.fst FStar.*.fsti))
 
 all: $(addsuffix -ver, $(ALL)) st m_rref bufferq
+
+indent: $(addsuffix -indent, $(ALL))
+
+%.fst-indent: %.fst
+	$(FSTAR) --indent $^ > $^.indent.fst
+
+%.fsti-indent: %.fsti
+	$(FSTAR) --indent $^ > $^.indent.fsti
+
+verify-indent: $(addsuffix -verindent, $(wildcard *.indent.fst))
+
+%-verindent: %
+	$(FSTAR) $^
 
 %-ver: %
 	$(FSTAR) $^

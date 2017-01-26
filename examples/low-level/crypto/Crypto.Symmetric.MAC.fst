@@ -21,7 +21,7 @@ module PL = Crypto.Symmetric.Poly1305
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-type id = id * UInt128.t
+type id = id * UInt128.t //NS: why not this definition : i:id & iv (alg i)
 let alg (i:id) = macAlg_of_id (fst i) 
 
 type text = Seq.seq (lbytes 16) // Used to be seq elem, then seq (lbytes 16)
@@ -124,6 +124,16 @@ let sel_elem h #i b =
   | B_POLY1305 b -> PL.sel_elem h b
   | B_GHASH    b -> Buffer.as_seq h b
 
+val frame_norm: h0:mem -> h1:mem -> #i:id -> b:elemB i{live h1 b} -> Lemma
+  (requires (norm h0 b /\
+    Buffer.as_seq h0 (as_buffer b) == Buffer.as_seq h1 (as_buffer b)))
+  (ensures  (norm h1 b))
+let frame_norm h0 h1 #i b =
+  match alg i with
+  | POLY1305 ->
+    Crypto.Symmetric.Poly1305.Bigint.norm_eq_lemma h0 h1 (as_buffer b) (as_buffer b)
+  | _ -> ()
+
 val eq_sel_elem: h:mem -> #i:id -> b1:elemB i{live h b1} -> b2:elemB i{live h b2} -> Lemma
  (requires (Buffer.as_seq h (as_buffer b1) == Buffer.as_seq h (as_buffer b2)))
  (ensures  (sel_elem h b1 == sel_elem h b2))
@@ -150,9 +160,9 @@ val rcreate: rgn:HH.rid{HS.is_eternal_region rgn} -> i:id -> ST (elemB i)
   (ensures  (fun h0 r h1 ->
     HS.modifies (Set.singleton rgn) h0 h1 /\
     HS.modifies_ref rgn TSet.empty h0 h1 /\
+    ~(HS.((Buffer.content (as_buffer r)).mm)) /\
     Buffer.frameOf (as_buffer r) == rgn /\
-    ~(live h0 r) /\
-    live h1 r))
+    ~(live h0 r) /\live h1 r))
 let rcreate rgn i =
   match alg i with
   | POLY1305 -> B_POLY1305 (FStar.Buffer.rcreate rgn 0UL  5ul)
@@ -187,15 +197,17 @@ val encode_r: #i:id -> b:elemB i -> raw:lbuffer 16{Buffer.disjoint (as_buffer b)
   (ensures  (fun h0 _ h1 -> 
     norm h1 b /\ 
     Buffer.live h1 raw /\ 
-    Buffer.modifies_2 (as_buffer b) raw h0 h1))
+    (match alg i with 
+      | POLY1305 -> Buffer.modifies_2 (as_buffer b) raw h0 h1
+      | GHASH -> Buffer.modifies_1 (as_buffer b) h0 h1)))
 let encode_r #i b raw =
   match b with 
   | B_POLY1305 b -> 
       PL.clamp raw; 
       PL.toField b raw
   | B_GHASH    b -> 
-      let h0 = ST.get () in
-      assert (Buffer.modifies_1 raw h0 h0); // Necessary for triggering right lemmas
+      //let h0 = ST.get () in
+      //assert (Buffer.modifies_1 raw h0 h0); // Necessary for triggering right lemmas
       Buffer.blit raw 0ul b 0ul 16ul
 
 // TODO: generalize to word
@@ -264,6 +276,13 @@ let field_mul #i a b =
 
 let op_Plus_At #i e1 e2 = field_add #i e1 e2
 let op_Star_At #i e1 e2 = field_mul #i e1 e2
+
+val poly_empty: #i:id -> t:text{Seq.length t == 0} -> r:elem i ->
+  Lemma (poly #i t r == zero i)
+let poly_empty #i t r =
+  match alg i with
+  | POLY1305 -> PL.poly_empty (text_to_PS_text t) r
+  | GHASH    -> GS.poly_empty t r
 
 val poly_cons: #i:id -> x:word_16 -> xs:text -> r:elem i ->
   Lemma (poly #i (Seq.cons x xs) r == (poly #i xs r +@ encode i x) *@ r)

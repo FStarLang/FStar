@@ -1,6 +1,5 @@
 
 open Prims
-
 type sort =
 | Bool_sort
 | Int_sort
@@ -13,102 +12,102 @@ type sort =
 | Sort of Prims.string
 
 
-let is_Bool_sort = (fun _discr_ -> (match (_discr_) with
-| Bool_sort (_) -> begin
+let uu___is_Bool_sort : sort  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Bool_sort -> begin
 true
 end
-| _ -> begin
+| uu____17 -> begin
 false
 end))
 
 
-let is_Int_sort = (fun _discr_ -> (match (_discr_) with
-| Int_sort (_) -> begin
+let uu___is_Int_sort : sort  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Int_sort -> begin
 true
 end
-| _ -> begin
+| uu____21 -> begin
 false
 end))
 
 
-let is_String_sort = (fun _discr_ -> (match (_discr_) with
-| String_sort (_) -> begin
+let uu___is_String_sort : sort  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| String_sort -> begin
 true
 end
-| _ -> begin
+| uu____25 -> begin
 false
 end))
 
 
-let is_Ref_sort = (fun _discr_ -> (match (_discr_) with
-| Ref_sort (_) -> begin
+let uu___is_Ref_sort : sort  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Ref_sort -> begin
 true
 end
-| _ -> begin
+| uu____29 -> begin
 false
 end))
 
 
-let is_Term_sort = (fun _discr_ -> (match (_discr_) with
-| Term_sort (_) -> begin
+let uu___is_Term_sort : sort  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Term_sort -> begin
 true
 end
-| _ -> begin
+| uu____33 -> begin
 false
 end))
 
 
-let is_Fuel_sort = (fun _discr_ -> (match (_discr_) with
-| Fuel_sort (_) -> begin
+let uu___is_Fuel_sort : sort  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Fuel_sort -> begin
 true
 end
-| _ -> begin
+| uu____37 -> begin
 false
 end))
 
 
-let is_Array = (fun _discr_ -> (match (_discr_) with
-| Array (_) -> begin
+let uu___is_Array : sort  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Array (_0) -> begin
 true
 end
-| _ -> begin
+| uu____44 -> begin
 false
 end))
 
 
-let is_Arrow = (fun _discr_ -> (match (_discr_) with
-| Arrow (_) -> begin
+let __proj__Array__item___0 : sort  ->  (sort * sort) = (fun projectee -> (match (projectee) with
+| Array (_0) -> begin
+_0
+end))
+
+
+let uu___is_Arrow : sort  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Arrow (_0) -> begin
 true
 end
-| _ -> begin
+| uu____64 -> begin
 false
 end))
 
 
-let is_Sort = (fun _discr_ -> (match (_discr_) with
-| Sort (_) -> begin
+let __proj__Arrow__item___0 : sort  ->  (sort * sort) = (fun projectee -> (match (projectee) with
+| Arrow (_0) -> begin
+_0
+end))
+
+
+let uu___is_Sort : sort  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Sort (_0) -> begin
 true
 end
-| _ -> begin
+| uu____82 -> begin
 false
 end))
 
 
-let ___Array____0 = (fun projectee -> (match (projectee) with
-| Array (_83_10) -> begin
-_83_10
-end))
-
-
-let ___Arrow____0 = (fun projectee -> (match (projectee) with
-| Arrow (_83_13) -> begin
-_83_13
-end))
-
-
-let ___Sort____0 = (fun projectee -> (match (projectee) with
-| Sort (_83_16) -> begin
-_83_16
+let __proj__Sort__item___0 : sort  ->  Prims.string = (fun projectee -> (match (projectee) with
+| Sort (_0) -> begin
+_0
 end))
 
 
@@ -132,23 +131,22 @@ end
 "Fuel"
 end
 | Array (s1, s2) -> begin
-(let _178_52 = (strSort s1)
-in (let _178_51 = (strSort s2)
-in (FStar_Util.format2 "(Array %s %s)" _178_52 _178_51)))
+(let _0_160 = (strSort s1)
+in (let _0_159 = (strSort s2)
+in (FStar_Util.format2 "(Array %s %s)" _0_160 _0_159)))
 end
 | Arrow (s1, s2) -> begin
-(let _178_54 = (strSort s1)
-in (let _178_53 = (strSort s2)
-in (FStar_Util.format2 "(%s -> %s)" _178_54 _178_53)))
+(let _0_162 = (strSort s1)
+in (let _0_161 = (strSort s2)
+in (FStar_Util.format2 "(%s -> %s)" _0_162 _0_161)))
 end
 | Sort (s) -> begin
 s
 end))
 
-
 type op =
-| True
-| False
+| TrueOp
+| FalseOp
 | Not
 | And
 | Or
@@ -169,339 +167,340 @@ type op =
 | Var of Prims.string
 
 
-let is_True = (fun _discr_ -> (match (_discr_) with
-| True (_) -> begin
+let uu___is_TrueOp : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| TrueOp -> begin
 true
 end
-| _ -> begin
+| uu____104 -> begin
 false
 end))
 
 
-let is_False = (fun _discr_ -> (match (_discr_) with
-| False (_) -> begin
+let uu___is_FalseOp : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| FalseOp -> begin
 true
 end
-| _ -> begin
+| uu____108 -> begin
 false
 end))
 
 
-let is_Not = (fun _discr_ -> (match (_discr_) with
-| Not (_) -> begin
+let uu___is_Not : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Not -> begin
 true
 end
-| _ -> begin
+| uu____112 -> begin
 false
 end))
 
 
-let is_And = (fun _discr_ -> (match (_discr_) with
-| And (_) -> begin
+let uu___is_And : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| And -> begin
 true
 end
-| _ -> begin
+| uu____116 -> begin
 false
 end))
 
 
-let is_Or = (fun _discr_ -> (match (_discr_) with
-| Or (_) -> begin
+let uu___is_Or : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Or -> begin
 true
 end
-| _ -> begin
+| uu____120 -> begin
 false
 end))
 
 
-let is_Imp = (fun _discr_ -> (match (_discr_) with
-| Imp (_) -> begin
+let uu___is_Imp : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Imp -> begin
 true
 end
-| _ -> begin
+| uu____124 -> begin
 false
 end))
 
 
-let is_Iff = (fun _discr_ -> (match (_discr_) with
-| Iff (_) -> begin
+let uu___is_Iff : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Iff -> begin
 true
 end
-| _ -> begin
+| uu____128 -> begin
 false
 end))
 
 
-let is_Eq = (fun _discr_ -> (match (_discr_) with
-| Eq (_) -> begin
+let uu___is_Eq : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Eq -> begin
 true
 end
-| _ -> begin
+| uu____132 -> begin
 false
 end))
 
 
-let is_LT = (fun _discr_ -> (match (_discr_) with
-| LT (_) -> begin
+let uu___is_LT : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| LT -> begin
 true
 end
-| _ -> begin
+| uu____136 -> begin
 false
 end))
 
 
-let is_LTE = (fun _discr_ -> (match (_discr_) with
-| LTE (_) -> begin
+let uu___is_LTE : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| LTE -> begin
 true
 end
-| _ -> begin
+| uu____140 -> begin
 false
 end))
 
 
-let is_GT = (fun _discr_ -> (match (_discr_) with
-| GT (_) -> begin
+let uu___is_GT : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| GT -> begin
 true
 end
-| _ -> begin
+| uu____144 -> begin
 false
 end))
 
 
-let is_GTE = (fun _discr_ -> (match (_discr_) with
-| GTE (_) -> begin
+let uu___is_GTE : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| GTE -> begin
 true
 end
-| _ -> begin
+| uu____148 -> begin
 false
 end))
 
 
-let is_Add = (fun _discr_ -> (match (_discr_) with
-| Add (_) -> begin
+let uu___is_Add : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Add -> begin
 true
 end
-| _ -> begin
+| uu____152 -> begin
 false
 end))
 
 
-let is_Sub = (fun _discr_ -> (match (_discr_) with
-| Sub (_) -> begin
+let uu___is_Sub : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Sub -> begin
 true
 end
-| _ -> begin
+| uu____156 -> begin
 false
 end))
 
 
-let is_Div = (fun _discr_ -> (match (_discr_) with
-| Div (_) -> begin
+let uu___is_Div : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Div -> begin
 true
 end
-| _ -> begin
+| uu____160 -> begin
 false
 end))
 
 
-let is_Mul = (fun _discr_ -> (match (_discr_) with
-| Mul (_) -> begin
+let uu___is_Mul : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Mul -> begin
 true
 end
-| _ -> begin
+| uu____164 -> begin
 false
 end))
 
 
-let is_Minus = (fun _discr_ -> (match (_discr_) with
-| Minus (_) -> begin
+let uu___is_Minus : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Minus -> begin
 true
 end
-| _ -> begin
+| uu____168 -> begin
 false
 end))
 
 
-let is_Mod = (fun _discr_ -> (match (_discr_) with
-| Mod (_) -> begin
+let uu___is_Mod : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Mod -> begin
 true
 end
-| _ -> begin
+| uu____172 -> begin
 false
 end))
 
 
-let is_ITE = (fun _discr_ -> (match (_discr_) with
-| ITE (_) -> begin
+let uu___is_ITE : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| ITE -> begin
 true
 end
-| _ -> begin
+| uu____176 -> begin
 false
 end))
 
 
-let is_Var = (fun _discr_ -> (match (_discr_) with
-| Var (_) -> begin
+let uu___is_Var : op  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Var (_0) -> begin
 true
 end
-| _ -> begin
+| uu____181 -> begin
 false
 end))
 
 
-let ___Var____0 = (fun projectee -> (match (projectee) with
-| Var (_83_36) -> begin
-_83_36
+let __proj__Var__item___0 : op  ->  Prims.string = (fun projectee -> (match (projectee) with
+| Var (_0) -> begin
+_0
 end))
-
 
 type qop =
 | Forall
 | Exists
 
 
-let is_Forall = (fun _discr_ -> (match (_discr_) with
-| Forall (_) -> begin
+let uu___is_Forall : qop  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Forall -> begin
 true
 end
-| _ -> begin
+| uu____192 -> begin
 false
 end))
 
 
-let is_Exists = (fun _discr_ -> (match (_discr_) with
-| Exists (_) -> begin
+let uu___is_Exists : qop  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Exists -> begin
 true
 end
-| _ -> begin
+| uu____196 -> begin
 false
 end))
-
 
 type term' =
 | Integer of Prims.string
 | BoundV of Prims.int
-| FreeV of fv
+| FreeV of (Prims.string * sort)
 | App of (op * term Prims.list)
-| Quant of (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)
+| Quant of (qop * term Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)
 | Labeled of (term * Prims.string * FStar_Range.range)
 | LblPos of (term * Prims.string) 
  and term =
-{tm : term'; freevars : fvs FStar_Syntax_Syntax.memo; rng : FStar_Range.range} 
- and pat =
-term 
- and fv =
-(Prims.string * sort) 
- and fvs =
-fv Prims.list
+{tm : term'; freevars : (Prims.string * sort) Prims.list FStar_Syntax_Syntax.memo; rng : FStar_Range.range}
 
 
-let is_Integer = (fun _discr_ -> (match (_discr_) with
-| Integer (_) -> begin
+let uu___is_Integer : term'  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Integer (_0) -> begin
 true
 end
-| _ -> begin
+| uu____255 -> begin
 false
 end))
 
 
-let is_BoundV = (fun _discr_ -> (match (_discr_) with
-| BoundV (_) -> begin
+let __proj__Integer__item___0 : term'  ->  Prims.string = (fun projectee -> (match (projectee) with
+| Integer (_0) -> begin
+_0
+end))
+
+
+let uu___is_BoundV : term'  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| BoundV (_0) -> begin
 true
 end
-| _ -> begin
+| uu____267 -> begin
 false
 end))
 
 
-let is_FreeV = (fun _discr_ -> (match (_discr_) with
-| FreeV (_) -> begin
+let __proj__BoundV__item___0 : term'  ->  Prims.int = (fun projectee -> (match (projectee) with
+| BoundV (_0) -> begin
+_0
+end))
+
+
+let uu___is_FreeV : term'  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| FreeV (_0) -> begin
 true
 end
-| _ -> begin
+| uu____281 -> begin
 false
 end))
 
 
-let is_App = (fun _discr_ -> (match (_discr_) with
-| App (_) -> begin
+let __proj__FreeV__item___0 : term'  ->  (Prims.string * sort) = (fun projectee -> (match (projectee) with
+| FreeV (_0) -> begin
+_0
+end))
+
+
+let uu___is_App : term'  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| App (_0) -> begin
 true
 end
-| _ -> begin
+| uu____302 -> begin
 false
 end))
 
 
-let is_Quant = (fun _discr_ -> (match (_discr_) with
-| Quant (_) -> begin
+let __proj__App__item___0 : term'  ->  (op * term Prims.list) = (fun projectee -> (match (projectee) with
+| App (_0) -> begin
+_0
+end))
+
+
+let uu___is_Quant : term'  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Quant (_0) -> begin
 true
 end
-| _ -> begin
+| uu____332 -> begin
 false
 end))
 
 
-let is_Labeled = (fun _discr_ -> (match (_discr_) with
-| Labeled (_) -> begin
+let __proj__Quant__item___0 : term'  ->  (qop * term Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term) = (fun projectee -> (match (projectee) with
+| Quant (_0) -> begin
+_0
+end))
+
+
+let uu___is_Labeled : term'  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Labeled (_0) -> begin
 true
 end
-| _ -> begin
+| uu____374 -> begin
 false
 end))
 
 
-let is_LblPos = (fun _discr_ -> (match (_discr_) with
-| LblPos (_) -> begin
+let __proj__Labeled__item___0 : term'  ->  (term * Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
+| Labeled (_0) -> begin
+_0
+end))
+
+
+let uu___is_LblPos : term'  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| LblPos (_0) -> begin
 true
 end
-| _ -> begin
+| uu____397 -> begin
 false
 end))
 
 
-let is_Mkterm : term  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm"))))
-
-
-let ___Integer____0 = (fun projectee -> (match (projectee) with
-| Integer (_83_42) -> begin
-_83_42
+let __proj__LblPos__item___0 : term'  ->  (term * Prims.string) = (fun projectee -> (match (projectee) with
+| LblPos (_0) -> begin
+_0
 end))
 
 
-let ___BoundV____0 = (fun projectee -> (match (projectee) with
-| BoundV (_83_45) -> begin
-_83_45
-end))
+type pat =
+term
 
 
-let ___FreeV____0 = (fun projectee -> (match (projectee) with
-| FreeV (_83_48) -> begin
-_83_48
-end))
+type fv =
+(Prims.string * sort)
 
 
-let ___App____0 = (fun projectee -> (match (projectee) with
-| App (_83_51) -> begin
-_83_51
-end))
-
-
-let ___Quant____0 = (fun projectee -> (match (projectee) with
-| Quant (_83_54) -> begin
-_83_54
-end))
-
-
-let ___Labeled____0 = (fun projectee -> (match (projectee) with
-| Labeled (_83_57) -> begin
-_83_57
-end))
-
-
-let ___LblPos____0 = (fun projectee -> (match (projectee) with
-| LblPos (_83_60) -> begin
-_83_60
-end))
+type fvs =
+(Prims.string * sort) Prims.list
 
 
 type caption =
@@ -523,7 +522,6 @@ type constructor_t =
 type constructors =
 constructor_t Prims.list
 
-
 type decl =
 | DefPrelude
 | DeclFun of (Prims.string * sort Prims.list * sort * caption)
@@ -540,162 +538,162 @@ type decl =
 | PrintStats
 
 
-let is_DefPrelude = (fun _discr_ -> (match (_discr_) with
-| DefPrelude (_) -> begin
+let uu___is_DefPrelude : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| DefPrelude -> begin
 true
 end
-| _ -> begin
+| uu____492 -> begin
 false
 end))
 
 
-let is_DeclFun = (fun _discr_ -> (match (_discr_) with
-| DeclFun (_) -> begin
+let uu___is_DeclFun : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| DeclFun (_0) -> begin
 true
 end
-| _ -> begin
+| uu____502 -> begin
 false
 end))
 
 
-let is_DefineFun = (fun _discr_ -> (match (_discr_) with
-| DefineFun (_) -> begin
+let __proj__DeclFun__item___0 : decl  ->  (Prims.string * sort Prims.list * sort * caption) = (fun projectee -> (match (projectee) with
+| DeclFun (_0) -> begin
+_0
+end))
+
+
+let uu___is_DefineFun : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| DefineFun (_0) -> begin
 true
 end
-| _ -> begin
+| uu____535 -> begin
 false
 end))
 
 
-let is_Assume = (fun _discr_ -> (match (_discr_) with
-| Assume (_) -> begin
+let __proj__DefineFun__item___0 : decl  ->  (Prims.string * sort Prims.list * sort * term * caption) = (fun projectee -> (match (projectee) with
+| DefineFun (_0) -> begin
+_0
+end))
+
+
+let uu___is_Assume : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Assume (_0) -> begin
 true
 end
-| _ -> begin
+| uu____569 -> begin
 false
 end))
 
 
-let is_Caption = (fun _discr_ -> (match (_discr_) with
-| Caption (_) -> begin
+let __proj__Assume__item___0 : decl  ->  (term * caption * Prims.string Prims.option) = (fun projectee -> (match (projectee) with
+| Assume (_0) -> begin
+_0
+end))
+
+
+let uu___is_Caption : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Caption (_0) -> begin
 true
 end
-| _ -> begin
+| uu____593 -> begin
 false
 end))
 
 
-let is_Eval = (fun _discr_ -> (match (_discr_) with
-| Eval (_) -> begin
+let __proj__Caption__item___0 : decl  ->  Prims.string = (fun projectee -> (match (projectee) with
+| Caption (_0) -> begin
+_0
+end))
+
+
+let uu___is_Eval : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Eval (_0) -> begin
 true
 end
-| _ -> begin
+| uu____605 -> begin
 false
 end))
 
 
-let is_Echo = (fun _discr_ -> (match (_discr_) with
-| Echo (_) -> begin
+let __proj__Eval__item___0 : decl  ->  term = (fun projectee -> (match (projectee) with
+| Eval (_0) -> begin
+_0
+end))
+
+
+let uu___is_Echo : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Echo (_0) -> begin
 true
 end
-| _ -> begin
+| uu____617 -> begin
 false
 end))
 
 
-let is_Push = (fun _discr_ -> (match (_discr_) with
-| Push (_) -> begin
+let __proj__Echo__item___0 : decl  ->  Prims.string = (fun projectee -> (match (projectee) with
+| Echo (_0) -> begin
+_0
+end))
+
+
+let uu___is_Push : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Push -> begin
 true
 end
-| _ -> begin
+| uu____628 -> begin
 false
 end))
 
 
-let is_Pop = (fun _discr_ -> (match (_discr_) with
-| Pop (_) -> begin
+let uu___is_Pop : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Pop -> begin
 true
 end
-| _ -> begin
+| uu____632 -> begin
 false
 end))
 
 
-let is_CheckSat = (fun _discr_ -> (match (_discr_) with
-| CheckSat (_) -> begin
+let uu___is_CheckSat : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| CheckSat -> begin
 true
 end
-| _ -> begin
+| uu____636 -> begin
 false
 end))
 
 
-let is_GetUnsatCore = (fun _discr_ -> (match (_discr_) with
-| GetUnsatCore (_) -> begin
+let uu___is_GetUnsatCore : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| GetUnsatCore -> begin
 true
 end
-| _ -> begin
+| uu____640 -> begin
 false
 end))
 
 
-let is_SetOption = (fun _discr_ -> (match (_discr_) with
-| SetOption (_) -> begin
+let uu___is_SetOption : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| SetOption (_0) -> begin
 true
 end
-| _ -> begin
+| uu____647 -> begin
 false
 end))
 
 
-let is_PrintStats = (fun _discr_ -> (match (_discr_) with
-| PrintStats (_) -> begin
+let __proj__SetOption__item___0 : decl  ->  (Prims.string * Prims.string) = (fun projectee -> (match (projectee) with
+| SetOption (_0) -> begin
+_0
+end))
+
+
+let uu___is_PrintStats : decl  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| PrintStats -> begin
 true
 end
-| _ -> begin
+| uu____664 -> begin
 false
-end))
-
-
-let ___DeclFun____0 = (fun projectee -> (match (projectee) with
-| DeclFun (_83_64) -> begin
-_83_64
-end))
-
-
-let ___DefineFun____0 = (fun projectee -> (match (projectee) with
-| DefineFun (_83_67) -> begin
-_83_67
-end))
-
-
-let ___Assume____0 = (fun projectee -> (match (projectee) with
-| Assume (_83_70) -> begin
-_83_70
-end))
-
-
-let ___Caption____0 = (fun projectee -> (match (projectee) with
-| Caption (_83_73) -> begin
-_83_73
-end))
-
-
-let ___Eval____0 = (fun projectee -> (match (projectee) with
-| Eval (_83_76) -> begin
-_83_76
-end))
-
-
-let ___Echo____0 = (fun projectee -> (match (projectee) with
-| Echo (_83_79) -> begin
-_83_79
-end))
-
-
-let ___SetOption____0 = (fun projectee -> (match (projectee) with
-| SetOption (_83_82) -> begin
-_83_82
 end))
 
 
@@ -721,37 +719,37 @@ let freevar_eq : term  ->  term  ->  Prims.bool = (fun x y -> (match (((x.tm), (
 | (FreeV (x), FreeV (y)) -> begin
 (fv_eq x y)
 end
-| _83_94 -> begin
+| uu____701 -> begin
 false
 end))
 
 
-let freevar_sort : term  ->  sort = (fun _83_1 -> (match (_83_1) with
-| {tm = FreeV (x); freevars = _83_99; rng = _83_97} -> begin
+let freevar_sort : term  ->  sort = (fun uu___82_706 -> (match (uu___82_706) with
+| {tm = FreeV (x); freevars = uu____708; rng = uu____709} -> begin
 (fv_sort x)
 end
-| _83_104 -> begin
-(FStar_All.failwith "impossible")
+| uu____716 -> begin
+(failwith "impossible")
 end))
 
 
-let fv_of_term : term  ->  fv = (fun _83_2 -> (match (_83_2) with
-| {tm = FreeV (fv); freevars = _83_109; rng = _83_107} -> begin
+let fv_of_term : term  ->  fv = (fun uu___83_719 -> (match (uu___83_719) with
+| {tm = FreeV (fv); freevars = uu____721; rng = uu____722} -> begin
 fv
 end
-| _83_114 -> begin
-(FStar_All.failwith "impossible")
+| uu____729 -> begin
+(failwith "impossible")
 end))
 
 
-let rec freevars : term  ->  fv Prims.list = (fun t -> (match (t.tm) with
+let rec freevars : term  ->  (Prims.string * sort) Prims.list = (fun t -> (match (t.tm) with
 | (Integer (_)) | (BoundV (_)) -> begin
 []
 end
 | FreeV (fv) -> begin
 (fv)::[]
 end
-| App (_83_125, tms) -> begin
+| App (uu____750, tms) -> begin
 (FStar_List.collect freevars tms)
 end
 | (Quant (_, _, _, _, t)) | (Labeled (t, _, _)) | (LblPos (t, _)) -> begin
@@ -759,23 +757,25 @@ end
 end))
 
 
-let free_variables : term  ->  fvs = (fun t -> (match ((FStar_ST.read t.freevars)) with
+let free_variables : term  ->  fvs = (fun t -> (
+
+let uu____771 = (FStar_ST.read t.freevars)
+in (match (uu____771) with
 | Some (b) -> begin
 b
 end
 | None -> begin
 (
 
-let fvs = (let _178_319 = (freevars t)
-in (FStar_Util.remove_dups fv_eq _178_319))
-in (
+let fvs = (let _0_163 = (freevars t)
+in (FStar_Util.remove_dups fv_eq _0_163))
+in ((FStar_ST.write t.freevars (Some (fvs)));
+fvs;
+))
+end)))
 
-let _83_155 = (FStar_ST.op_Colon_Equals t.freevars (Some (fvs)))
-in fvs))
-end))
 
-
-let qop_to_string : qop  ->  Prims.string = (fun _83_3 -> (match (_83_3) with
+let qop_to_string : qop  ->  Prims.string = (fun uu___84_804 -> (match (uu___84_804) with
 | Forall -> begin
 "forall"
 end
@@ -784,11 +784,11 @@ end
 end))
 
 
-let op_to_string : op  ->  Prims.string = (fun _83_4 -> (match (_83_4) with
-| True -> begin
+let op_to_string : op  ->  Prims.string = (fun uu___85_807 -> (match (uu___85_807) with
+| TrueOp -> begin
 "true"
 end
-| False -> begin
+| FalseOp -> begin
 "false"
 end
 | Not -> begin
@@ -847,13 +847,13 @@ s
 end))
 
 
-let weightToSmt : Prims.int Prims.option  ->  Prims.string = (fun _83_5 -> (match (_83_5) with
+let weightToSmt : Prims.int Prims.option  ->  Prims.string = (fun uu___86_812 -> (match (uu___86_812) with
 | None -> begin
 ""
 end
 | Some (i) -> begin
-(let _178_326 = (FStar_Util.string_of_int i)
-in (FStar_Util.format1 ":weight %s\n" _178_326))
+(let _0_164 = (FStar_Util.string_of_int i)
+in (FStar_Util.format1 ":weight %s\n" _0_164))
 end))
 
 
@@ -862,71 +862,70 @@ let rec hash_of_term' : term'  ->  Prims.string = (fun t -> (match (t) with
 i
 end
 | BoundV (i) -> begin
-(let _178_330 = (FStar_Util.string_of_int i)
-in (Prims.strcat "@" _178_330))
+(let _0_165 = (FStar_Util.string_of_int i)
+in (Prims.strcat "@" _0_165))
 end
 | FreeV (x) -> begin
-(let _178_332 = (let _178_331 = (strSort (Prims.snd x))
-in (Prims.strcat ":" _178_331))
-in (Prims.strcat (Prims.fst x) _178_332))
+(let _0_167 = (let _0_166 = (strSort (Prims.snd x))
+in (Prims.strcat ":" _0_166))
+in (Prims.strcat (Prims.fst x) _0_167))
 end
 | App (op, tms) -> begin
-(let _178_336 = (let _178_335 = (let _178_334 = (let _178_333 = (FStar_List.map hash_of_term tms)
-in (FStar_All.pipe_right _178_333 (FStar_String.concat " ")))
-in (Prims.strcat _178_334 ")"))
-in (Prims.strcat (op_to_string op) _178_335))
-in (Prims.strcat "(" _178_336))
+(let _0_171 = (let _0_170 = (let _0_169 = (let _0_168 = (FStar_List.map hash_of_term tms)
+in (FStar_All.pipe_right _0_168 (FStar_String.concat " ")))
+in (Prims.strcat _0_169 ")"))
+in (Prims.strcat (op_to_string op) _0_170))
+in (Prims.strcat "(" _0_171))
 end
 | Labeled (t, r1, r2) -> begin
-(let _178_339 = (hash_of_term t)
-in (let _178_338 = (let _178_337 = (FStar_Range.string_of_range r2)
-in (Prims.strcat r1 _178_337))
-in (Prims.strcat _178_339 _178_338)))
+(let _0_174 = (hash_of_term t)
+in (let _0_173 = (let _0_172 = (FStar_Range.string_of_range r2)
+in (Prims.strcat r1 _0_172))
+in (Prims.strcat _0_174 _0_173)))
 end
 | LblPos (t, r) -> begin
-(let _178_341 = (let _178_340 = (hash_of_term t)
-in (Prims.strcat _178_340 (Prims.strcat " :lblpos " (Prims.strcat r ")"))))
-in (Prims.strcat "(! " _178_341))
+(let _0_176 = (let _0_175 = (hash_of_term t)
+in (Prims.strcat _0_175 (Prims.strcat " :lblpos " (Prims.strcat r ")"))))
+in (Prims.strcat "(! " _0_176))
 end
 | Quant (qop, pats, wopt, sorts, body) -> begin
-(let _178_358 = (let _178_357 = (let _178_356 = (let _178_355 = (let _178_342 = (FStar_List.map strSort sorts)
-in (FStar_All.pipe_right _178_342 (FStar_String.concat " ")))
-in (let _178_354 = (let _178_353 = (let _178_352 = (hash_of_term body)
-in (let _178_351 = (let _178_350 = (let _178_349 = (weightToSmt wopt)
-in (let _178_348 = (let _178_347 = (let _178_346 = (let _178_345 = (FStar_All.pipe_right pats (FStar_List.map (fun pats -> (let _178_344 = (FStar_List.map hash_of_term pats)
-in (FStar_All.pipe_right _178_344 (FStar_String.concat " "))))))
-in (FStar_All.pipe_right _178_345 (FStar_String.concat "; ")))
-in (Prims.strcat _178_346 "))"))
-in (Prims.strcat " " _178_347))
-in (Prims.strcat _178_349 _178_348)))
-in (Prims.strcat " " _178_350))
-in (Prims.strcat _178_352 _178_351)))
-in (Prims.strcat ")(! " _178_353))
-in (Prims.strcat _178_355 _178_354)))
-in (Prims.strcat " (" _178_356))
-in (Prims.strcat (qop_to_string qop) _178_357))
-in (Prims.strcat "(" _178_358))
+(let _0_192 = (let _0_191 = (let _0_190 = (let _0_189 = (let _0_177 = (FStar_List.map strSort sorts)
+in (FStar_All.pipe_right _0_177 (FStar_String.concat " ")))
+in (let _0_188 = (let _0_187 = (let _0_186 = (hash_of_term body)
+in (let _0_185 = (let _0_184 = (let _0_183 = (weightToSmt wopt)
+in (let _0_182 = (let _0_181 = (let _0_180 = (let _0_179 = (FStar_All.pipe_right pats (FStar_List.map (fun pats -> (let _0_178 = (FStar_List.map hash_of_term pats)
+in (FStar_All.pipe_right _0_178 (FStar_String.concat " "))))))
+in (FStar_All.pipe_right _0_179 (FStar_String.concat "; ")))
+in (Prims.strcat _0_180 "))"))
+in (Prims.strcat " " _0_181))
+in (Prims.strcat _0_183 _0_182)))
+in (Prims.strcat " " _0_184))
+in (Prims.strcat _0_186 _0_185)))
+in (Prims.strcat ")(! " _0_187))
+in (Prims.strcat _0_189 _0_188)))
+in (Prims.strcat " (" _0_190))
+in (Prims.strcat (qop_to_string qop) _0_191))
+in (Prims.strcat "(" _0_192))
 end))
 and hash_of_term : term  ->  Prims.string = (fun tm -> (hash_of_term' tm.tm))
 
 
-let mk : term'  ->  FStar_Range.range  ->  term = (fun t r -> (let _178_364 = (FStar_Util.mk_ref None)
-in {tm = t; freevars = _178_364; rng = r}))
+let mk : term'  ->  FStar_Range.range  ->  term = (fun t r -> (let _0_193 = (FStar_Util.mk_ref None)
+in {tm = t; freevars = _0_193; rng = r}))
 
 
-let mkTrue : FStar_Range.range  ->  term = (fun r -> (mk (App (((True), ([])))) r))
+let mkTrue : FStar_Range.range  ->  term = (fun r -> (mk (App (((TrueOp), ([])))) r))
 
 
-let mkFalse : FStar_Range.range  ->  term = (fun r -> (mk (App (((False), ([])))) r))
+let mkFalse : FStar_Range.range  ->  term = (fun r -> (mk (App (((FalseOp), ([])))) r))
 
 
-let mkInteger : Prims.string  ->  FStar_Range.range  ->  term = (fun i r -> (let _178_374 = (let _178_373 = (FStar_Util.ensure_decimal i)
-in Integer (_178_373))
-in (mk _178_374 r)))
+let mkInteger : Prims.string  ->  FStar_Range.range  ->  term = (fun i r -> (let _0_194 = Integer ((FStar_Util.ensure_decimal i))
+in (mk _0_194 r)))
 
 
-let mkInteger' : Prims.int  ->  FStar_Range.range  ->  term = (fun i r -> (let _178_379 = (FStar_Util.string_of_int i)
-in (mkInteger _178_379 r)))
+let mkInteger' : Prims.int  ->  FStar_Range.range  ->  term = (fun i r -> (let _0_195 = (FStar_Util.string_of_int i)
+in (mkInteger _0_195 r)))
 
 
 let mkBoundV : Prims.int  ->  FStar_Range.range  ->  term = (fun i r -> (mk (BoundV (i)) r))
@@ -938,100 +937,100 @@ let mkFreeV : (Prims.string * sort)  ->  FStar_Range.range  ->  term = (fun x r 
 let mkApp' : (op * term Prims.list)  ->  FStar_Range.range  ->  term = (fun f r -> (mk (App (f)) r))
 
 
-let mkApp : (Prims.string * term Prims.list)  ->  FStar_Range.range  ->  term = (fun _83_231 r -> (match (_83_231) with
+let mkApp : (Prims.string * term Prims.list)  ->  FStar_Range.range  ->  term = (fun uu____928 r -> (match (uu____928) with
 | (s, args) -> begin
 (mk (App (((Var (s)), (args)))) r)
 end))
 
 
 let mkNot : term  ->  FStar_Range.range  ->  term = (fun t r -> (match (t.tm) with
-| App (True, _83_237) -> begin
+| App (TrueOp, uu____944) -> begin
 (mkFalse r)
 end
-| App (False, _83_242) -> begin
+| App (FalseOp, uu____947) -> begin
 (mkTrue r)
 end
-| _83_246 -> begin
+| uu____950 -> begin
 (mkApp' ((Not), ((t)::[])) r)
 end))
 
 
-let mkAnd : (term * term)  ->  FStar_Range.range  ->  term = (fun _83_249 r -> (match (_83_249) with
+let mkAnd : (term * term)  ->  FStar_Range.range  ->  term = (fun uu____958 r -> (match (uu____958) with
 | (t1, t2) -> begin
 (match (((t1.tm), (t2.tm))) with
-| (App (True, _83_253), _83_257) -> begin
+| (App (TrueOp, uu____964), uu____965) -> begin
 t2
 end
-| (_83_260, App (True, _83_263)) -> begin
+| (uu____968, App (TrueOp, uu____969)) -> begin
 t1
 end
-| ((App (False, _), _)) | ((_, App (False, _))) -> begin
+| ((App (FalseOp, _), _)) | ((_, App (FalseOp, _))) -> begin
 (mkFalse r)
 end
 | (App (And, ts1), App (And, ts2)) -> begin
 (mkApp' ((And), ((FStar_List.append ts1 ts2))) r)
 end
-| (_83_293, App (And, ts2)) -> begin
+| (uu____985, App (And, ts2)) -> begin
 (mkApp' ((And), ((t1)::ts2)) r)
 end
-| (App (And, ts1), _83_304) -> begin
+| (App (And, ts1), uu____991) -> begin
 (mkApp' ((And), ((FStar_List.append ts1 ((t2)::[])))) r)
 end
-| _83_307 -> begin
+| uu____995 -> begin
 (mkApp' ((And), ((t1)::(t2)::[])) r)
 end)
 end))
 
 
-let mkOr : (term * term)  ->  FStar_Range.range  ->  term = (fun _83_310 r -> (match (_83_310) with
+let mkOr : (term * term)  ->  FStar_Range.range  ->  term = (fun uu____1005 r -> (match (uu____1005) with
 | (t1, t2) -> begin
 (match (((t1.tm), (t2.tm))) with
-| ((App (True, _), _)) | ((_, App (True, _))) -> begin
+| ((App (TrueOp, _), _)) | ((_, App (TrueOp, _))) -> begin
 (mkTrue r)
 end
-| (App (False, _83_330), _83_334) -> begin
+| (App (FalseOp, uu____1017), uu____1018) -> begin
 t2
 end
-| (_83_337, App (False, _83_340)) -> begin
+| (uu____1021, App (FalseOp, uu____1022)) -> begin
 t1
 end
 | (App (Or, ts1), App (Or, ts2)) -> begin
 (mkApp' ((Or), ((FStar_List.append ts1 ts2))) r)
 end
-| (_83_354, App (Or, ts2)) -> begin
+| (uu____1032, App (Or, ts2)) -> begin
 (mkApp' ((Or), ((t1)::ts2)) r)
 end
-| (App (Or, ts1), _83_365) -> begin
+| (App (Or, ts1), uu____1038) -> begin
 (mkApp' ((Or), ((FStar_List.append ts1 ((t2)::[])))) r)
 end
-| _83_368 -> begin
+| uu____1042 -> begin
 (mkApp' ((Or), ((t1)::(t2)::[])) r)
 end)
 end))
 
 
-let mkImp : (term * term)  ->  FStar_Range.range  ->  term = (fun _83_371 r -> (match (_83_371) with
+let mkImp : (term * term)  ->  FStar_Range.range  ->  term = (fun uu____1052 r -> (match (uu____1052) with
 | (t1, t2) -> begin
 (match (((t1.tm), (t2.tm))) with
-| ((_, App (True, _))) | ((App (False, _), _)) -> begin
+| ((_, App (TrueOp, _))) | ((App (FalseOp, _), _)) -> begin
 (mkTrue r)
 end
-| (App (True, _83_391), _83_395) -> begin
+| (App (TrueOp, uu____1064), uu____1065) -> begin
 t2
 end
-| (_83_398, App (Imp, (t1')::(t2')::[])) -> begin
-(let _178_414 = (let _178_413 = (let _178_412 = (mkAnd ((t1), (t1')) r)
-in (_178_412)::(t2')::[])
-in ((Imp), (_178_413)))
-in (mkApp' _178_414 r))
+| (uu____1068, App (Imp, (t1')::(t2')::[])) -> begin
+(let _0_198 = (let _0_197 = (let _0_196 = (mkAnd ((t1), (t1')) r)
+in (_0_196)::(t2')::[])
+in ((Imp), (_0_197)))
+in (mkApp' _0_198 r))
 end
-| _83_407 -> begin
+| uu____1073 -> begin
 (mkApp' ((Imp), ((t1)::(t2)::[])) r)
 end)
 end))
 
 
-let mk_bin_op : op  ->  (term * term)  ->  FStar_Range.range  ->  term = (fun op _83_411 r -> (match (_83_411) with
+let mk_bin_op : op  ->  (term * term)  ->  FStar_Range.range  ->  term = (fun op uu____1086 r -> (match (uu____1086) with
 | (t1, t2) -> begin
 (mkApp' ((op), ((t1)::(t2)::[])) r)
 end))
@@ -1073,21 +1072,21 @@ let mkMul : (term * term)  ->  FStar_Range.range  ->  term = (mk_bin_op Mul)
 let mkMod : (term * term)  ->  FStar_Range.range  ->  term = (mk_bin_op Mod)
 
 
-let mkITE : (term * term * term)  ->  FStar_Range.range  ->  term = (fun _83_418 r -> (match (_83_418) with
+let mkITE : (term * term * term)  ->  FStar_Range.range  ->  term = (fun uu____1173 r -> (match (uu____1173) with
 | (t1, t2, t3) -> begin
 (match (((t2.tm), (t3.tm))) with
-| (App (True, _83_422), App (True, _83_427)) -> begin
+| (App (TrueOp, uu____1181), App (TrueOp, uu____1182)) -> begin
 (mkTrue r)
 end
-| (App (True, _83_433), _83_437) -> begin
-(let _178_452 = (let _178_451 = (mkNot t1 t1.rng)
-in ((_178_451), (t3)))
-in (mkImp _178_452 r))
+| (App (TrueOp, uu____1187), uu____1188) -> begin
+(let _0_200 = (let _0_199 = (mkNot t1 t1.rng)
+in ((_0_199), (t3)))
+in (mkImp _0_200 r))
 end
-| (_83_440, App (True, _83_443)) -> begin
+| (uu____1191, App (TrueOp, uu____1192)) -> begin
 (mkImp ((t1), (t2)) r)
 end
-| (_83_448, _83_450) -> begin
+| (uu____1195, uu____1196) -> begin
 (mkApp' ((ITE), ((t1)::(t2)::(t3)::[])) r)
 end)
 end))
@@ -1095,26 +1094,28 @@ end))
 
 let mkCases : term Prims.list  ->  FStar_Range.range  ->  term = (fun t r -> (match (t) with
 | [] -> begin
-(FStar_All.failwith "Impos")
+(failwith "Impos")
 end
 | (hd)::tl -> begin
 (FStar_List.fold_left (fun out t -> (mkAnd ((out), (t)) r)) hd tl)
 end))
 
 
-let mkQuant : (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)  ->  FStar_Range.range  ->  term = (fun _83_465 r -> (match (_83_465) with
+let mkQuant : (qop * term Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)  ->  FStar_Range.range  ->  term = (fun uu____1224 r -> (match (uu____1224) with
 | (qop, pats, wopt, vars, body) -> begin
-if ((FStar_List.length vars) = (Prims.parse_int "0")) then begin
-body
-end else begin
-(match (body.tm) with
-| App (True, _83_469) -> begin
+(match (((FStar_List.length vars) = (Prims.parse_int "0"))) with
+| true -> begin
 body
 end
-| _83_473 -> begin
+| uu____1250 -> begin
+(match (body.tm) with
+| App (TrueOp, uu____1251) -> begin
+body
+end
+| uu____1254 -> begin
 (mk (Quant (((qop), (pats), (wopt), (vars), (body)))) r)
 end)
-end
+end)
 end))
 
 
@@ -1123,60 +1124,67 @@ let abstr : fv Prims.list  ->  term  ->  term = (fun fvs t -> (
 let nvars = (FStar_List.length fvs)
 in (
 
-let index_of = (fun fv -> (match ((FStar_Util.try_find_index (fv_eq fv) fvs)) with
+let index_of = (fun fv -> (
+
+let uu____1274 = (FStar_Util.try_find_index (fv_eq fv) fvs)
+in (match (uu____1274) with
 | None -> begin
 None
 end
 | Some (i) -> begin
 Some ((nvars - (i + (Prims.parse_int "1"))))
-end))
+end)))
 in (
 
-let rec aux = (fun ix t -> (match ((FStar_ST.read t.freevars)) with
+let rec aux = (fun ix t -> (
+
+let uu____1288 = (FStar_ST.read t.freevars)
+in (match (uu____1288) with
 | Some ([]) -> begin
 t
 end
-| _83_488 -> begin
+| uu____1304 -> begin
 (match (t.tm) with
 | (Integer (_)) | (BoundV (_)) -> begin
 t
 end
 | FreeV (x) -> begin
-(match ((index_of x)) with
+(
+
+let uu____1314 = (index_of x)
+in (match (uu____1314) with
 | None -> begin
 t
 end
 | Some (i) -> begin
 (mkBoundV (i + ix) t.rng)
-end)
+end))
 end
 | App (op, tms) -> begin
-(let _178_474 = (let _178_473 = (FStar_List.map (aux ix) tms)
-in ((op), (_178_473)))
-in (mkApp' _178_474 t.rng))
+(let _0_202 = (let _0_201 = (FStar_List.map (aux ix) tms)
+in ((op), (_0_201)))
+in (mkApp' _0_202 t.rng))
 end
 | Labeled (t, r1, r2) -> begin
-(let _178_477 = (let _178_476 = (let _178_475 = (aux ix t)
-in ((_178_475), (r1), (r2)))
-in Labeled (_178_476))
-in (mk _178_477 t.rng))
+(let _0_204 = Labeled ((let _0_203 = (aux ix t)
+in ((_0_203), (r1), (r2))))
+in (mk _0_204 t.rng))
 end
 | LblPos (t, r) -> begin
-(let _178_480 = (let _178_479 = (let _178_478 = (aux ix t)
-in ((_178_478), (r)))
-in LblPos (_178_479))
-in (mk _178_480 t.rng))
+(let _0_206 = LblPos ((let _0_205 = (aux ix t)
+in ((_0_205), (r))))
+in (mk _0_206 t.rng))
 end
 | Quant (qop, pats, wopt, vars, body) -> begin
 (
 
 let n = (FStar_List.length vars)
-in (let _178_483 = (let _178_482 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (aux (ix + n)))))
-in (let _178_481 = (aux (ix + n) body)
-in ((qop), (_178_482), (wopt), (vars), (_178_481))))
-in (mkQuant _178_483 t.rng)))
+in (let _0_209 = (let _0_208 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (aux (ix + n)))))
+in (let _0_207 = (aux (ix + n) body)
+in ((qop), (_0_208), (wopt), (vars), (_0_207))))
+in (mkQuant _0_209 t.rng)))
 end)
-end))
+end)))
 in (aux (Prims.parse_int "0") t)))))
 
 
@@ -1193,28 +1201,28 @@ let rec aux = (fun shift t -> (match (t.tm) with
 t
 end
 | BoundV (i) -> begin
-if (((Prims.parse_int "0") <= (i - shift)) && ((i - shift) < n)) then begin
+(match ((((Prims.parse_int "0") <= (i - shift)) && ((i - shift) < n))) with
+| true -> begin
 (FStar_List.nth tms (i - shift))
-end else begin
-t
 end
+| uu____1380 -> begin
+t
+end)
 end
 | App (op, tms) -> begin
-(let _178_493 = (let _178_492 = (FStar_List.map (aux shift) tms)
-in ((op), (_178_492)))
-in (mkApp' _178_493 t.rng))
+(let _0_211 = (let _0_210 = (FStar_List.map (aux shift) tms)
+in ((op), (_0_210)))
+in (mkApp' _0_211 t.rng))
 end
 | Labeled (t, r1, r2) -> begin
-(let _178_496 = (let _178_495 = (let _178_494 = (aux shift t)
-in ((_178_494), (r1), (r2)))
-in Labeled (_178_495))
-in (mk _178_496 t.rng))
+(let _0_213 = Labeled ((let _0_212 = (aux shift t)
+in ((_0_212), (r1), (r2))))
+in (mk _0_213 t.rng))
 end
 | LblPos (t, r) -> begin
-(let _178_499 = (let _178_498 = (let _178_497 = (aux shift t)
-in ((_178_497), (r)))
-in LblPos (_178_498))
-in (mk _178_499 t.rng))
+(let _0_215 = LblPos ((let _0_214 = (aux shift t)
+in ((_0_214), (r))))
+in (mk _0_215 t.rng))
 end
 | Quant (qop, pats, wopt, vars, body) -> begin
 (
@@ -1223,93 +1231,90 @@ let m = (FStar_List.length vars)
 in (
 
 let shift = (shift + m)
-in (let _178_502 = (let _178_501 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (aux shift))))
-in (let _178_500 = (aux shift body)
-in ((qop), (_178_501), (wopt), (vars), (_178_500))))
-in (mkQuant _178_502 t.rng))))
+in (let _0_218 = (let _0_217 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (aux shift))))
+in (let _0_216 = (aux shift body)
+in ((qop), (_0_217), (wopt), (vars), (_0_216))))
+in (mkQuant _0_218 t.rng))))
 end))
 in (aux (Prims.parse_int "0") t)))))
 
 
-let mkQuant' : (qop * term Prims.list Prims.list * Prims.int Prims.option * fv Prims.list * term)  ->  FStar_Range.range  ->  term = (fun _83_563 -> (match (_83_563) with
+let mkQuant' : (qop * term Prims.list Prims.list * Prims.int Prims.option * fv Prims.list * term)  ->  FStar_Range.range  ->  term = (fun uu____1432 -> (match (uu____1432) with
 | (qop, pats, wopt, vars, body) -> begin
-(let _178_513 = (let _178_512 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (abstr vars))))
-in (let _178_511 = (FStar_List.map fv_sort vars)
-in (let _178_510 = (abstr vars body)
-in ((qop), (_178_512), (wopt), (_178_511), (_178_510)))))
-in (mkQuant _178_513))
+(mkQuant (let _0_221 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (abstr vars))))
+in (let _0_220 = (FStar_List.map fv_sort vars)
+in (let _0_219 = (abstr vars body)
+in ((qop), (_0_221), (wopt), (_0_220), (_0_219))))))
 end))
 
 
-let mkForall'' : (pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)  ->  FStar_Range.range  ->  term = (fun _83_568 r -> (match (_83_568) with
+let mkForall'' : (pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)  ->  FStar_Range.range  ->  term = (fun uu____1481 r -> (match (uu____1481) with
 | (pats, wopt, sorts, body) -> begin
 (mkQuant ((Forall), (pats), (wopt), (sorts), (body)) r)
 end))
 
 
-let mkForall' : (pat Prims.list Prims.list * Prims.int Prims.option * fvs * term)  ->  FStar_Range.range  ->  term = (fun _83_574 r -> (match (_83_574) with
+let mkForall' : (pat Prims.list Prims.list * Prims.int Prims.option * fvs * term)  ->  FStar_Range.range  ->  term = (fun uu____1518 r -> (match (uu____1518) with
 | (pats, wopt, vars, body) -> begin
-(mkQuant' ((Forall), (pats), (wopt), (vars), (body)) r)
+((mkQuant' ((Forall), (pats), (wopt), (vars), (body))) r)
 end))
 
 
-let mkForall : (pat Prims.list Prims.list * fvs * term)  ->  FStar_Range.range  ->  term = (fun _83_579 r -> (match (_83_579) with
+let mkForall : (pat Prims.list Prims.list * fvs * term)  ->  FStar_Range.range  ->  term = (fun uu____1549 r -> (match (uu____1549) with
 | (pats, vars, body) -> begin
-(mkQuant' ((Forall), (pats), (None), (vars), (body)) r)
+((mkQuant' ((Forall), (pats), (None), (vars), (body))) r)
 end))
 
 
-let mkExists : (pat Prims.list Prims.list * fvs * term)  ->  FStar_Range.range  ->  term = (fun _83_584 r -> (match (_83_584) with
+let mkExists : (pat Prims.list Prims.list * fvs * term)  ->  FStar_Range.range  ->  term = (fun uu____1575 r -> (match (uu____1575) with
 | (pats, vars, body) -> begin
-(mkQuant' ((Exists), (pats), (None), (vars), (body)) r)
+((mkQuant' ((Exists), (pats), (None), (vars), (body))) r)
 end))
 
 
 let norng : FStar_Range.range = FStar_Range.dummyRange
 
 
-let mkDefineFun : (Prims.string * (Prims.string * sort) Prims.list * sort * term * caption)  ->  decl = (fun _83_591 -> (match (_83_591) with
+let mkDefineFun : (Prims.string * (Prims.string * sort) Prims.list * sort * term * caption)  ->  decl = (fun uu____1602 -> (match (uu____1602) with
 | (nm, vars, s, tm, c) -> begin
-(let _178_534 = (let _178_533 = (FStar_List.map fv_sort vars)
-in (let _178_532 = (abstr vars tm)
-in ((nm), (_178_533), (s), (_178_532), (c))))
-in DefineFun (_178_534))
+DefineFun ((let _0_223 = (FStar_List.map fv_sort vars)
+in (let _0_222 = (abstr vars tm)
+in ((nm), (_0_223), (s), (_0_222), (c)))))
 end))
 
 
-let constr_id_of_sort : sort  ->  Prims.string = (fun sort -> (let _178_537 = (strSort sort)
-in (FStar_Util.format1 "%s_constr_id" _178_537)))
+let constr_id_of_sort : sort  ->  Prims.string = (fun sort -> (let _0_224 = (strSort sort)
+in (FStar_Util.format1 "%s_constr_id" _0_224)))
 
 
-let fresh_token : (Prims.string * sort)  ->  Prims.int  ->  decl = (fun _83_595 id -> (match (_83_595) with
+let fresh_token : (Prims.string * sort)  ->  Prims.int  ->  decl = (fun uu____1634 id -> (match (uu____1634) with
 | (tok_name, sort) -> begin
 (
 
 let a_name = (Prims.strcat "fresh_token_" tok_name)
-in (let _178_550 = (let _178_549 = (let _178_548 = (let _178_547 = (mkInteger' id norng)
-in (let _178_546 = (let _178_545 = (let _178_544 = (constr_id_of_sort sort)
-in (let _178_543 = (let _178_542 = (mkApp ((tok_name), ([])) norng)
-in (_178_542)::[])
-in ((_178_544), (_178_543))))
-in (mkApp _178_545 norng))
-in ((_178_547), (_178_546))))
-in (mkEq _178_548 norng))
-in ((_178_549), (Some ("fresh token")), (Some (a_name))))
-in Assume (_178_550)))
+in Assume ((let _0_232 = (let _0_231 = (let _0_230 = (mkInteger' id norng)
+in (let _0_229 = (let _0_228 = (let _0_227 = (constr_id_of_sort sort)
+in (let _0_226 = (let _0_225 = (mkApp ((tok_name), ([])) norng)
+in (_0_225)::[])
+in ((_0_227), (_0_226))))
+in (mkApp _0_228 norng))
+in ((_0_230), (_0_229))))
+in (mkEq _0_231 norng))
+in ((_0_232), (Some ("fresh token")), (Some (a_name))))))
 end))
 
 
-let fresh_constructor : (Prims.string * sort Prims.list * sort * Prims.int)  ->  decl = (fun _83_602 -> (match (_83_602) with
+let fresh_constructor : (Prims.string * sort Prims.list * sort * Prims.int)  ->  decl = (fun uu____1652 -> (match (uu____1652) with
 | (name, arg_sorts, sort, id) -> begin
 (
 
 let id = (FStar_Util.string_of_int id)
 in (
 
-let bvars = (FStar_All.pipe_right arg_sorts (FStar_List.mapi (fun i s -> (let _178_557 = (let _178_556 = (let _178_555 = (FStar_Util.string_of_int i)
-in (Prims.strcat "x_" _178_555))
-in ((_178_556), (s)))
-in (mkFreeV _178_557 norng)))))
+let bvars = (FStar_All.pipe_right arg_sorts (FStar_List.mapi (fun i s -> (let _0_235 = (let _0_234 = (let _0_233 = (FStar_Util.string_of_int i)
+in (Prims.strcat "x_" _0_233))
+in ((_0_234), (s)))
+in (mkFreeV _0_235 norng)))))
 in (
 
 let bvar_names = (FStar_List.map fv_of_term bvars)
@@ -1318,44 +1323,42 @@ in (
 let capp = (mkApp ((name), (bvars)) norng)
 in (
 
-let cid_app = (let _178_559 = (let _178_558 = (constr_id_of_sort sort)
-in ((_178_558), ((capp)::[])))
-in (mkApp _178_559 norng))
+let cid_app = (let _0_237 = (let _0_236 = (constr_id_of_sort sort)
+in ((_0_236), ((capp)::[])))
+in (mkApp _0_237 norng))
 in (
 
 let a_name = (Prims.strcat "constructor_distinct_" name)
-in (let _178_565 = (let _178_564 = (let _178_563 = (let _178_562 = (let _178_561 = (let _178_560 = (mkInteger id norng)
-in ((_178_560), (cid_app)))
-in (mkEq _178_561 norng))
-in ((((capp)::[])::[]), (bvar_names), (_178_562)))
-in (mkForall _178_563 norng))
-in ((_178_564), (Some ("Constructor distinct")), (Some (a_name))))
-in Assume (_178_565))))))))
+in Assume ((let _0_242 = (let _0_241 = (let _0_240 = (let _0_239 = (let _0_238 = (mkInteger id norng)
+in ((_0_238), (cid_app)))
+in (mkEq _0_239 norng))
+in ((((capp)::[])::[]), (bvar_names), (_0_240)))
+in (mkForall _0_241 norng))
+in ((_0_242), (Some ("Constructor distinct")), (Some (a_name)))))))))))
 end))
 
 
-let injective_constructor : (Prims.string * (Prims.string * sort) Prims.list * sort)  ->  decls_t = (fun _83_614 -> (match (_83_614) with
+let injective_constructor : (Prims.string * (Prims.string * sort) Prims.list * sort)  ->  decls_t = (fun uu____1693 -> (match (uu____1693) with
 | (name, projectors, sort) -> begin
 (
 
 let n_bvars = (FStar_List.length projectors)
 in (
 
-let bvar_name = (fun i -> (let _178_570 = (FStar_Util.string_of_int i)
-in (Prims.strcat "x_" _178_570)))
+let bvar_name = (fun i -> (let _0_243 = (FStar_Util.string_of_int i)
+in (Prims.strcat "x_" _0_243)))
 in (
 
 let bvar_index = (fun i -> (n_bvars - (i + (Prims.parse_int "1"))))
 in (
 
-let bvar = (fun i s -> (let _178_582 = (let _178_581 = (bvar_name i)
-in ((_178_581), (s)))
-in (mkFreeV _178_582)))
+let bvar = (fun i s -> (mkFreeV (let _0_244 = (bvar_name i)
+in ((_0_244), (s)))))
 in (
 
-let bvars = (FStar_All.pipe_right projectors (FStar_List.mapi (fun i _83_627 -> (match (_83_627) with
-| (_83_625, s) -> begin
-(bvar i s norng)
+let bvars = (FStar_All.pipe_right projectors (FStar_List.mapi (fun i uu____1742 -> (match (uu____1742) with
+| (uu____1745, s) -> begin
+((bvar i s) norng)
 end))))
 in (
 
@@ -1363,7 +1366,7 @@ let bvar_names = (FStar_List.map fv_of_term bvars)
 in (
 
 let capp = (mkApp ((name), (bvars)) norng)
-in (let _178_595 = (FStar_All.pipe_right projectors (FStar_List.mapi (fun i _83_634 -> (match (_83_634) with
+in (let _0_252 = (FStar_All.pipe_right projectors (FStar_List.mapi (fun i uu____1763 -> (match (uu____1763) with
 | (name, s) -> begin
 (
 
@@ -1374,35 +1377,32 @@ let proj_name = DeclFun (((name), ((sort)::[]), (s), (Some ("Projector"))))
 in (
 
 let a_name = (Prims.strcat "projection_inverse_" name)
-in (let _178_594 = (let _178_593 = (let _178_592 = (let _178_591 = (let _178_590 = (let _178_589 = (let _178_588 = (let _178_587 = (bvar i s norng)
-in ((cproj_app), (_178_587)))
-in (mkEq _178_588 norng))
-in ((((capp)::[])::[]), (bvar_names), (_178_589)))
-in (mkForall _178_590 norng))
-in ((_178_591), (Some ("Projection inverse")), (Some (a_name))))
-in Assume (_178_592))
-in (_178_593)::[])
-in (proj_name)::_178_594))))
+in (let _0_251 = (let _0_250 = Assume ((let _0_249 = (let _0_248 = (let _0_247 = (let _0_246 = (let _0_245 = ((bvar i s) norng)
+in ((cproj_app), (_0_245)))
+in (mkEq _0_246 norng))
+in ((((capp)::[])::[]), (bvar_names), (_0_247)))
+in (mkForall _0_248 norng))
+in ((_0_249), (Some ("Projection inverse")), (Some (a_name)))))
+in (_0_250)::[])
+in (proj_name)::_0_251))))
 end))))
-in (FStar_All.pipe_right _178_595 FStar_List.flatten)))))))))
+in (FStar_All.pipe_right _0_252 FStar_List.flatten)))))))))
 end))
 
 
-let constructor_to_decl : constructor_t  ->  decls_t = (fun _83_643 -> (match (_83_643) with
+let constructor_to_decl : constructor_t  ->  decls_t = (fun uu____1784 -> (match (uu____1784) with
 | (name, projectors, sort, id, injective) -> begin
 (
 
 let injective = (injective || true)
 in (
 
-let cdecl = (let _178_599 = (let _178_598 = (FStar_All.pipe_right projectors (FStar_List.map Prims.snd))
-in ((name), (_178_598), (sort), (Some ("Constructor"))))
-in DeclFun (_178_599))
+let cdecl = DeclFun ((let _0_253 = (FStar_All.pipe_right projectors (FStar_List.map Prims.snd))
+in ((name), (_0_253), (sort), (Some ("Constructor")))))
 in (
 
-let cid = (let _178_601 = (let _178_600 = (FStar_All.pipe_right projectors (FStar_List.map Prims.snd))
-in ((name), (_178_600), (sort), (id)))
-in (fresh_constructor _178_601))
+let cid = (fresh_constructor (let _0_254 = (FStar_All.pipe_right projectors (FStar_List.map Prims.snd))
+in ((name), (_0_254), (sort), (id))))
 in (
 
 let disc = (
@@ -1416,49 +1416,49 @@ in (
 let xx = (mkFreeV xfv norng)
 in (
 
-let disc_eq = (let _178_607 = (let _178_606 = (let _178_603 = (let _178_602 = (constr_id_of_sort sort)
-in ((_178_602), ((xx)::[])))
-in (mkApp _178_603 norng))
-in (let _178_605 = (let _178_604 = (FStar_Util.string_of_int id)
-in (mkInteger _178_604 norng))
-in ((_178_606), (_178_605))))
-in (mkEq _178_607 norng))
+let disc_eq = (let _0_260 = (let _0_259 = (let _0_256 = (let _0_255 = (constr_id_of_sort sort)
+in ((_0_255), ((xx)::[])))
+in (mkApp _0_256 norng))
+in (let _0_258 = (let _0_257 = (FStar_Util.string_of_int id)
+in (mkInteger _0_257 norng))
+in ((_0_259), (_0_258))))
+in (mkEq _0_260 norng))
 in (
 
-let proj_terms = (FStar_All.pipe_right projectors (FStar_List.map (fun _83_653 -> (match (_83_653) with
+let proj_terms = (FStar_All.pipe_right projectors (FStar_List.map (fun uu____1820 -> (match (uu____1820) with
 | (proj, s) -> begin
 (mkApp ((proj), ((xx)::[])) norng)
 end))))
 in (
 
-let disc_inv_body = (let _178_610 = (let _178_609 = (mkApp ((name), (proj_terms)) norng)
-in ((xx), (_178_609)))
-in (mkEq _178_610 norng))
+let disc_inv_body = (let _0_262 = (let _0_261 = (mkApp ((name), (proj_terms)) norng)
+in ((xx), (_0_261)))
+in (mkEq _0_262 norng))
 in (
 
 let disc_ax = (mkAnd ((disc_eq), (disc_inv_body)) norng)
 in (mkDefineFun ((disc_name), ((xfv)::[]), (Bool_sort), (disc_ax), (Some ("Discriminator definition")))))))))))
 in (
 
-let projs = if injective then begin
+let projs = (match (injective) with
+| true -> begin
 (injective_constructor ((name), (projectors), (sort)))
-end else begin
-[]
 end
-in (let _178_617 = (let _178_612 = (let _178_611 = (FStar_Util.format1 "<start constructor %s>" name)
-in Caption (_178_611))
-in (_178_612)::(cdecl)::(cid)::projs)
-in (let _178_616 = (let _178_615 = (let _178_614 = (let _178_613 = (FStar_Util.format1 "</end constructor %s>" name)
-in Caption (_178_613))
-in (_178_614)::[])
-in (FStar_List.append ((disc)::[]) _178_615))
-in (FStar_List.append _178_617 _178_616))))))))
+| uu____1839 -> begin
+[]
+end)
+in (let _0_267 = (let _0_263 = Caption ((FStar_Util.format1 "<start constructor %s>" name))
+in (_0_263)::(cdecl)::(cid)::projs)
+in (let _0_266 = (let _0_265 = (let _0_264 = Caption ((FStar_Util.format1 "</end constructor %s>" name))
+in (_0_264)::[])
+in (FStar_List.append ((disc)::[]) _0_265))
+in (FStar_List.append _0_267 _0_266))))))))
 end))
 
 
 let name_binders_inner : (Prims.string * sort) Prims.list  ->  Prims.int  ->  sort Prims.list  ->  ((Prims.string * sort) Prims.list * Prims.string Prims.list * Prims.int) = (fun outer_names start sorts -> (
 
-let _83_677 = (FStar_All.pipe_right sorts (FStar_List.fold_left (fun _83_665 s -> (match (_83_665) with
+let uu____1864 = (FStar_All.pipe_right sorts (FStar_List.fold_left (fun uu____1887 s -> (match (uu____1887) with
 | (names, binders, n) -> begin
 (
 
@@ -1466,23 +1466,23 @@ let prefix = (match (s) with
 | Term_sort -> begin
 "@x"
 end
-| _83_669 -> begin
+| uu____1915 -> begin
 "@u"
 end)
 in (
 
-let nm = (let _178_626 = (FStar_Util.string_of_int n)
-in (Prims.strcat prefix _178_626))
+let nm = (let _0_268 = (FStar_Util.string_of_int n)
+in (Prims.strcat prefix _0_268))
 in (
 
 let names = (((nm), (s)))::names
 in (
 
-let b = (let _178_627 = (strSort s)
-in (FStar_Util.format2 "(%s %s)" nm _178_627))
+let b = (let _0_269 = (strSort s)
+in (FStar_Util.format2 "(%s %s)" nm _0_269))
 in ((names), ((b)::binders), ((n + (Prims.parse_int "1"))))))))
 end)) ((outer_names), ([]), (start))))
-in (match (_83_677) with
+in (match (uu____1864) with
 | (names, binders, n) -> begin
 ((names), ((FStar_List.rev binders)), (n))
 end)))
@@ -1490,8 +1490,8 @@ end)))
 
 let name_binders : sort Prims.list  ->  ((Prims.string * sort) Prims.list * Prims.string Prims.list) = (fun sorts -> (
 
-let _83_682 = (name_binders_inner [] (Prims.parse_int "0") sorts)
-in (match (_83_682) with
+let uu____1965 = (name_binders_inner [] (Prims.parse_int "0") sorts)
+in (match (uu____1965) with
 | (names, binders, n) -> begin
 (((FStar_List.rev names)), (binders))
 end)))
@@ -1500,13 +1500,13 @@ end)))
 let termToSmt : term  ->  Prims.string = (fun t -> (
 
 let remove_guard_free = (fun pats -> (FStar_All.pipe_right pats (FStar_List.map (fun ps -> (FStar_All.pipe_right ps (FStar_List.map (fun tm -> (match (tm.tm) with
-| App (Var ("Prims.guard_free"), ({tm = BoundV (_83_695); freevars = _83_693; rng = _83_691})::[]) -> begin
+| App (Var ("Prims.guard_free"), ({tm = BoundV (uu____2022); freevars = uu____2023; rng = uu____2024})::[]) -> begin
 tm
 end
 | App (Var ("Prims.guard_free"), (p)::[]) -> begin
 p
 end
-| _83_708 -> begin
+| uu____2032 -> begin
 tm
 end))))))))
 in (
@@ -1516,8 +1516,8 @@ let rec aux' = (fun n names t -> (match (t.tm) with
 i
 end
 | BoundV (i) -> begin
-(let _178_645 = (FStar_List.nth names i)
-in (FStar_All.pipe_right _178_645 Prims.fst))
+(let _0_270 = (FStar_List.nth names i)
+in (FStar_All.pipe_right _0_270 Prims.fst))
 end
 | FreeV (x) -> begin
 (Prims.fst x)
@@ -1526,22 +1526,22 @@ end
 (op_to_string op)
 end
 | App (op, tms) -> begin
-(let _178_647 = (let _178_646 = (FStar_List.map (aux n names) tms)
-in (FStar_All.pipe_right _178_646 (FStar_String.concat "\n")))
-in (FStar_Util.format2 "(%s %s)" (op_to_string op) _178_647))
+(let _0_272 = (let _0_271 = (FStar_List.map (aux n names) tms)
+in (FStar_All.pipe_right _0_271 (FStar_String.concat "\n")))
+in (FStar_Util.format2 "(%s %s)" (op_to_string op) _0_272))
 end
-| Labeled (t, _83_730, _83_732) -> begin
+| Labeled (t, uu____2066, uu____2067) -> begin
 (aux n names t)
 end
 | LblPos (t, s) -> begin
-(let _178_648 = (aux n names t)
-in (FStar_Util.format2 "(! %s :lblpos %s)" _178_648 s))
+(let _0_273 = (aux n names t)
+in (FStar_Util.format2 "(! %s :lblpos %s)" _0_273 s))
 end
 | Quant (qop, pats, wopt, sorts, body) -> begin
 (
 
-let _83_749 = (name_binders_inner names n sorts)
-in (match (_83_749) with
+let uu____2083 = (name_binders_inner names n sorts)
+in (match (uu____2083) with
 | (names, binders, n) -> begin
 (
 
@@ -1555,56 +1555,58 @@ let pats_str = (match (pats) with
 | (([])::[]) | ([]) -> begin
 ""
 end
-| _83_756 -> begin
-(let _178_654 = (FStar_All.pipe_right pats (FStar_List.map (fun pats -> (let _178_653 = (let _178_652 = (FStar_List.map (fun p -> (let _178_651 = (aux n names p)
-in (FStar_Util.format1 "%s" _178_651))) pats)
-in (FStar_String.concat " " _178_652))
-in (FStar_Util.format1 "\n:pattern (%s)" _178_653)))))
-in (FStar_All.pipe_right _178_654 (FStar_String.concat "\n")))
+| uu____2111 -> begin
+(let _0_277 = (FStar_All.pipe_right pats (FStar_List.map (fun pats -> (let _0_276 = (let _0_275 = (FStar_List.map (fun p -> (let _0_274 = (aux n names p)
+in (FStar_Util.format1 "%s" _0_274))) pats)
+in (FStar_String.concat " " _0_275))
+in (FStar_Util.format1 "\n:pattern (%s)" _0_276)))))
+in (FStar_All.pipe_right _0_277 (FStar_String.concat "\n")))
 end)
 in (match (((pats), (wopt))) with
 | ((([])::[], None)) | (([], None)) -> begin
-(let _178_655 = (aux n names body)
-in (FStar_Util.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders _178_655))
+(let _0_278 = (aux n names body)
+in (FStar_Util.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders _0_278))
 end
-| _83_768 -> begin
-(let _178_657 = (aux n names body)
-in (let _178_656 = (weightToSmt wopt)
-in (FStar_Util.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders _178_657 _178_656 pats_str)))
+| uu____2134 -> begin
+(let _0_280 = (aux n names body)
+in (let _0_279 = (weightToSmt wopt)
+in (FStar_Util.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders _0_280 _0_279 pats_str)))
 end))))
 end))
 end))
 and aux = (fun n names t -> (
 
 let s = (aux' n names t)
-in if (t.rng <> norng) then begin
-(let _178_662 = (FStar_Range.string_of_range t.rng)
-in (let _178_661 = (FStar_Range.string_of_use_range t.rng)
-in (FStar_Util.format3 "\n;; def=%s; use=%s\n%s\n" _178_662 _178_661 s)))
-end else begin
+in (match ((t.rng <> norng)) with
+| true -> begin
+(let _0_282 = (FStar_Range.string_of_range t.rng)
+in (let _0_281 = (FStar_Range.string_of_use_range t.rng)
+in (FStar_Util.format3 "\n;; def=%s; use=%s\n%s\n" _0_282 _0_281 s)))
+end
+| uu____2145 -> begin
 s
-end))
+end)))
 in (aux (Prims.parse_int "0") [] t))))
 
 
-let caption_to_string : Prims.string Prims.option  ->  Prims.string = (fun _83_6 -> (match (_83_6) with
+let caption_to_string : Prims.string Prims.option  ->  Prims.string = (fun uu___87_2149 -> (match (uu___87_2149) with
 | None -> begin
 ""
 end
 | Some (c) -> begin
 (
 
-let _83_786 = (match ((FStar_Util.splitlines c)) with
+let uu____2152 = (match ((FStar_Util.splitlines c)) with
 | [] -> begin
-(FStar_All.failwith "Impossible")
+(failwith "Impossible")
 end
 | (hd)::[] -> begin
 ((hd), (""))
 end
-| (hd)::_83_781 -> begin
+| (hd)::uu____2161 -> begin
 ((hd), ("..."))
 end)
-in (match (_83_786) with
+in (match (uu____2152) with
 | (hd, suffix) -> begin
 (FStar_Util.format2 ";;;;;;;;;;;;;;;;%s%s\n" hd suffix)
 end))
@@ -1619,52 +1621,52 @@ in (match (decl) with
 (mkPrelude z3options)
 end
 | Caption (c) -> begin
-(let _178_673 = (FStar_All.pipe_right (FStar_Util.splitlines c) (fun _83_7 -> (match (_83_7) with
+(let _0_283 = (FStar_All.pipe_right (FStar_Util.splitlines c) (fun uu___88_2179 -> (match (uu___88_2179) with
 | [] -> begin
 ""
 end
 | (h)::t -> begin
 h
 end)))
-in (FStar_Util.format1 "\n; %s" _178_673))
+in (FStar_Util.format1 "\n; %s" _0_283))
 end
 | DeclFun (f, argsorts, retsort, c) -> begin
 (
 
 let l = (FStar_List.map strSort argsorts)
-in (let _178_675 = (caption_to_string c)
-in (let _178_674 = (strSort retsort)
-in (FStar_Util.format4 "%s(declare-fun %s (%s) %s)" _178_675 f (FStar_String.concat " " l) _178_674))))
+in (let _0_285 = (caption_to_string c)
+in (let _0_284 = (strSort retsort)
+in (FStar_Util.format4 "%s(declare-fun %s (%s) %s)" _0_285 f (FStar_String.concat " " l) _0_284))))
 end
 | DefineFun (f, arg_sorts, retsort, body, c) -> begin
 (
 
-let _83_815 = (name_binders arg_sorts)
-in (match (_83_815) with
+let uu____2199 = (name_binders arg_sorts)
+in (match (uu____2199) with
 | (names, binders) -> begin
 (
 
-let body = (let _178_677 = (FStar_List.map (fun x -> (mkFreeV x norng)) names)
-in (inst _178_677 body))
-in (let _178_680 = (caption_to_string c)
-in (let _178_679 = (strSort retsort)
-in (let _178_678 = (termToSmt body)
-in (FStar_Util.format5 "%s(define-fun %s (%s) %s\n %s)" _178_680 f (FStar_String.concat " " binders) _178_679 _178_678)))))
+let body = (let _0_286 = (FStar_List.map (fun x -> (mkFreeV x norng)) names)
+in (inst _0_286 body))
+in (let _0_289 = (caption_to_string c)
+in (let _0_288 = (strSort retsort)
+in (let _0_287 = (termToSmt body)
+in (FStar_Util.format5 "%s(define-fun %s (%s) %s\n %s)" _0_289 f (FStar_String.concat " " binders) _0_288 _0_287)))))
 end))
 end
 | Assume (t, c, Some (n)) -> begin
-(let _178_682 = (caption_to_string c)
-in (let _178_681 = (termToSmt t)
-in (FStar_Util.format3 "%s(assert (!\n%s\n:named %s))" _178_682 _178_681 (escape n))))
+(let _0_291 = (caption_to_string c)
+in (let _0_290 = (termToSmt t)
+in (FStar_Util.format3 "%s(assert (!\n%s\n:named %s))" _0_291 _0_290 (escape n))))
 end
 | Assume (t, c, None) -> begin
-(let _178_684 = (caption_to_string c)
-in (let _178_683 = (termToSmt t)
-in (FStar_Util.format2 "%s(assert %s)" _178_684 _178_683)))
+(let _0_293 = (caption_to_string c)
+in (let _0_292 = (termToSmt t)
+in (FStar_Util.format2 "%s(assert %s)" _0_293 _0_292)))
 end
 | Eval (t) -> begin
-(let _178_685 = (termToSmt t)
-in (FStar_Util.format1 "(eval %s)" _178_685))
+(let _0_294 = (termToSmt t)
+in (FStar_Util.format1 "(eval %s)" _0_294))
 end
 | Echo (s) -> begin
 (FStar_Util.format1 "(echo \"%s\")" s)
@@ -1695,9 +1697,9 @@ in (
 let constrs = ((("FString_const"), (((("FString_const_proj_0"), (Int_sort)))::[]), (String_sort), ((Prims.parse_int "0")), (true)))::((("Tm_type"), ([]), (Term_sort), ((Prims.parse_int "2")), (true)))::((("Tm_arrow"), (((("Tm_arrow_id"), (Int_sort)))::[]), (Term_sort), ((Prims.parse_int "3")), (false)))::((("Tm_uvar"), (((("Tm_uvar_fst"), (Int_sort)))::[]), (Term_sort), ((Prims.parse_int "5")), (true)))::((("Tm_unit"), ([]), (Term_sort), ((Prims.parse_int "6")), (true)))::((("BoxInt"), (((("BoxInt_proj_0"), (Int_sort)))::[]), (Term_sort), ((Prims.parse_int "7")), (true)))::((("BoxBool"), (((("BoxBool_proj_0"), (Bool_sort)))::[]), (Term_sort), ((Prims.parse_int "8")), (true)))::((("BoxString"), (((("BoxString_proj_0"), (String_sort)))::[]), (Term_sort), ((Prims.parse_int "9")), (true)))::((("BoxRef"), (((("BoxRef_proj_0"), (Ref_sort)))::[]), (Term_sort), ((Prims.parse_int "10")), (true)))::((("LexCons"), (((("LexCons_0"), (Term_sort)))::((("LexCons_1"), (Term_sort)))::[]), (Term_sort), ((Prims.parse_int "11")), (true)))::[]
 in (
 
-let bcons = (let _178_688 = (let _178_687 = (FStar_All.pipe_right constrs (FStar_List.collect constructor_to_decl))
-in (FStar_All.pipe_right _178_687 (FStar_List.map (declToSmt z3options))))
-in (FStar_All.pipe_right _178_688 (FStar_String.concat "\n")))
+let bcons = (let _0_296 = (let _0_295 = (FStar_All.pipe_right constrs (FStar_List.collect constructor_to_decl))
+in (FStar_All.pipe_right _0_295 (FStar_List.map (declToSmt z3options))))
+in (FStar_All.pipe_right _0_296 (FStar_String.concat "\n")))
 in (
 
 let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-LexCons t))\n(assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n(iff (Valid (Precedes (LexCons x1 x2) (LexCons y1 y2)))\n(or (Valid (Precedes x1 y1))\n(and (= x1 y1)\n(Valid (Precedes x2 y2)))))))\n"
@@ -1713,10 +1715,10 @@ let mk_Term_type : term = (mkApp (("Tm_type"), ([])) norng)
 let mk_Term_app : term  ->  term  ->  FStar_Range.range  ->  term = (fun t1 t2 r -> (mkApp (("Tm_app"), ((t1)::(t2)::[])) r))
 
 
-let mk_Term_uvar : Prims.int  ->  FStar_Range.range  ->  term = (fun i r -> (let _178_701 = (let _178_700 = (let _178_699 = (mkInteger' i norng)
-in (_178_699)::[])
-in (("Tm_uvar"), (_178_700)))
-in (mkApp _178_701 r)))
+let mk_Term_uvar : Prims.int  ->  FStar_Range.range  ->  term = (fun i r -> (let _0_299 = (let _0_298 = (let _0_297 = (mkInteger' i norng)
+in (_0_297)::[])
+in (("Tm_uvar"), (_0_298)))
+in (mkApp _0_299 r)))
 
 
 let mk_Term_unit : term = (mkApp (("Tm_unit"), ([])) norng)
@@ -1759,7 +1761,7 @@ end
 | Ref_sort -> begin
 (boxRef t)
 end
-| _83_867 -> begin
+| uu____2456 -> begin
 (Prims.raise FStar_Util.Impos)
 end))
 
@@ -1777,7 +1779,7 @@ end
 | Ref_sort -> begin
 (unboxRef t)
 end
-| _83_875 -> begin
+| uu____2463 -> begin
 (Prims.raise FStar_Util.Impos)
 end))
 
@@ -1786,60 +1788,60 @@ let mk_PreType : term  ->  term = (fun t -> (mkApp (("PreType"), ((t)::[])) t.rn
 
 
 let mk_Valid : term  ->  term = (fun t -> (match (t.tm) with
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_Equality"), (_83_889)::(t1)::(t2)::[]); freevars = _83_883; rng = _83_881})::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_Equality"), (uu____2471)::(t1)::(t2)::[]); freevars = uu____2474; rng = uu____2475})::[]) -> begin
 (mkEq ((t1), (t2)) t.rng)
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_disEquality"), (_83_908)::(t1)::(t2)::[]); freevars = _83_902; rng = _83_900})::[]) -> begin
-(let _178_730 = (mkEq ((t1), (t2)) norng)
-in (mkNot _178_730 t.rng))
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_disEquality"), (uu____2482)::(t1)::(t2)::[]); freevars = uu____2485; rng = uu____2486})::[]) -> begin
+(let _0_300 = (mkEq ((t1), (t2)) norng)
+in (mkNot _0_300 t.rng))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThanOrEqual"), (t1)::(t2)::[]); freevars = _83_921; rng = _83_919})::[]) -> begin
-(let _178_733 = (let _178_732 = (unboxInt t1)
-in (let _178_731 = (unboxInt t2)
-in ((_178_732), (_178_731))))
-in (mkLTE _178_733 t.rng))
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThanOrEqual"), (t1)::(t2)::[]); freevars = uu____2495; rng = uu____2496})::[]) -> begin
+(let _0_303 = (let _0_302 = (unboxInt t1)
+in (let _0_301 = (unboxInt t2)
+in ((_0_302), (_0_301))))
+in (mkLTE _0_303 t.rng))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThan"), (t1)::(t2)::[]); freevars = _83_938; rng = _83_936})::[]) -> begin
-(let _178_736 = (let _178_735 = (unboxInt t1)
-in (let _178_734 = (unboxInt t2)
-in ((_178_735), (_178_734))))
-in (mkLT _178_736 t.rng))
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThan"), (t1)::(t2)::[]); freevars = uu____2505; rng = uu____2506})::[]) -> begin
+(let _0_306 = (let _0_305 = (unboxInt t1)
+in (let _0_304 = (unboxInt t2)
+in ((_0_305), (_0_304))))
+in (mkLT _0_306 t.rng))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThanOrEqual"), (t1)::(t2)::[]); freevars = _83_955; rng = _83_953})::[]) -> begin
-(let _178_739 = (let _178_738 = (unboxInt t1)
-in (let _178_737 = (unboxInt t2)
-in ((_178_738), (_178_737))))
-in (mkGTE _178_739 t.rng))
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThanOrEqual"), (t1)::(t2)::[]); freevars = uu____2515; rng = uu____2516})::[]) -> begin
+(let _0_309 = (let _0_308 = (unboxInt t1)
+in (let _0_307 = (unboxInt t2)
+in ((_0_308), (_0_307))))
+in (mkGTE _0_309 t.rng))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThan"), (t1)::(t2)::[]); freevars = _83_972; rng = _83_970})::[]) -> begin
-(let _178_742 = (let _178_741 = (unboxInt t1)
-in (let _178_740 = (unboxInt t2)
-in ((_178_741), (_178_740))))
-in (mkGT _178_742 t.rng))
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThan"), (t1)::(t2)::[]); freevars = uu____2525; rng = uu____2526})::[]) -> begin
+(let _0_312 = (let _0_311 = (unboxInt t1)
+in (let _0_310 = (unboxInt t2)
+in ((_0_311), (_0_310))))
+in (mkGT _0_312 t.rng))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_AmpAmp"), (t1)::(t2)::[]); freevars = _83_989; rng = _83_987})::[]) -> begin
-(let _178_745 = (let _178_744 = (unboxBool t1)
-in (let _178_743 = (unboxBool t2)
-in ((_178_744), (_178_743))))
-in (mkAnd _178_745 t.rng))
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_AmpAmp"), (t1)::(t2)::[]); freevars = uu____2535; rng = uu____2536})::[]) -> begin
+(let _0_315 = (let _0_314 = (unboxBool t1)
+in (let _0_313 = (unboxBool t2)
+in ((_0_314), (_0_313))))
+in (mkAnd _0_315 t.rng))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_BarBar"), (t1)::(t2)::[]); freevars = _83_1006; rng = _83_1004})::[]) -> begin
-(let _178_748 = (let _178_747 = (unboxBool t1)
-in (let _178_746 = (unboxBool t2)
-in ((_178_747), (_178_746))))
-in (mkOr _178_748 t.rng))
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_BarBar"), (t1)::(t2)::[]); freevars = uu____2545; rng = uu____2546})::[]) -> begin
+(let _0_318 = (let _0_317 = (unboxBool t1)
+in (let _0_316 = (unboxBool t2)
+in ((_0_317), (_0_316))))
+in (mkOr _0_318 t.rng))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_Negation"), (t)::[]); freevars = _83_1023; rng = _83_1021})::[]) -> begin
-(let _178_749 = (unboxBool t)
-in (mkNot _178_749 t.rng))
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_Negation"), (t)::[]); freevars = uu____2554; rng = uu____2555})::[]) -> begin
+(let _0_319 = (unboxBool t)
+in (mkNot _0_319 t.rng))
 end
 | App (Var ("Prims.b2t"), (t1)::[]) -> begin
 (
 
-let _83_1040 = (unboxBool t1)
-in {tm = _83_1040.tm; freevars = _83_1040.freevars; rng = t.rng})
+let uu___89_2564 = (unboxBool t1)
+in {tm = uu___89_2564.tm; freevars = uu___89_2564.freevars; rng = t.rng})
 end
-| _83_1043 -> begin
+| uu____2567 -> begin
 (mkApp (("Valid"), ((t)::[])) t.rng)
 end))
 
@@ -1853,11 +1855,16 @@ let mk_HasTypeZ : term  ->  term  ->  term = (fun v t -> (mkApp (("HasTypeZ"), (
 let mk_IsTyped : term  ->  term = (fun v -> (mkApp (("IsTyped"), ((v)::[])) norng))
 
 
-let mk_HasTypeFuel : term  ->  term  ->  term  ->  term = (fun f v t -> if (FStar_Options.unthrottle_inductives ()) then begin
+let mk_HasTypeFuel : term  ->  term  ->  term  ->  term = (fun f v t -> (
+
+let uu____2596 = (FStar_Options.unthrottle_inductives ())
+in (match (uu____2596) with
+| true -> begin
 (mk_HasType v t)
-end else begin
+end
+| uu____2597 -> begin
 (mkApp (("HasTypeFuel"), ((f)::(v)::(t)::[])) t.rng)
-end)
+end)))
 
 
 let mk_HasTypeWithFuel : term Prims.option  ->  term  ->  term  ->  term = (fun f v t -> (match (f) with
@@ -1884,27 +1891,29 @@ let mk_ApplyTF : term  ->  term  ->  term = (fun t t' -> (mkApp (("ApplyTF"), ((
 let mk_ApplyTT : term  ->  term  ->  FStar_Range.range  ->  term = (fun t t' r -> (mkApp (("ApplyTT"), ((t)::(t')::[])) r))
 
 
-let mk_String_const : Prims.int  ->  FStar_Range.range  ->  term = (fun i r -> (let _178_804 = (let _178_803 = (let _178_802 = (mkInteger' i norng)
-in (_178_802)::[])
-in (("FString_const"), (_178_803)))
-in (mkApp _178_804 r)))
+let mk_String_const : Prims.int  ->  FStar_Range.range  ->  term = (fun i r -> (let _0_322 = (let _0_321 = (let _0_320 = (mkInteger' i norng)
+in (_0_320)::[])
+in (("FString_const"), (_0_321)))
+in (mkApp _0_322 r)))
 
 
-let mk_Precedes : term  ->  term  ->  FStar_Range.range  ->  term = (fun x1 x2 r -> (let _178_811 = (mkApp (("Precedes"), ((x1)::(x2)::[])) r)
-in (FStar_All.pipe_right _178_811 mk_Valid)))
+let mk_Precedes : term  ->  term  ->  FStar_Range.range  ->  term = (fun x1 x2 r -> (let _0_323 = (mkApp (("Precedes"), ((x1)::(x2)::[])) r)
+in (FStar_All.pipe_right _0_323 mk_Valid)))
 
 
 let mk_LexCons : term  ->  term  ->  FStar_Range.range  ->  term = (fun x1 x2 r -> (mkApp (("LexCons"), ((x1)::(x2)::[])) r))
 
 
-let rec n_fuel : Prims.int  ->  term = (fun n -> if (n = (Prims.parse_int "0")) then begin
+let rec n_fuel : Prims.int  ->  term = (fun n -> (match ((n = (Prims.parse_int "0"))) with
+| true -> begin
 (mkApp (("ZFuel"), ([])) norng)
-end else begin
-(let _178_822 = (let _178_821 = (let _178_820 = (n_fuel (n - (Prims.parse_int "1")))
-in (_178_820)::[])
-in (("SFuel"), (_178_821)))
-in (mkApp _178_822 norng))
-end)
+end
+| uu____2678 -> begin
+(let _0_326 = (let _0_325 = (let _0_324 = (n_fuel (n - (Prims.parse_int "1")))
+in (_0_324)::[])
+in (("SFuel"), (_0_325)))
+in (mkApp _0_326 norng))
+end))
 
 
 let fuel_2 : term = (n_fuel (Prims.parse_int "2"))
@@ -1915,8 +1924,7 @@ let fuel_100 : term = (n_fuel (Prims.parse_int "100"))
 
 let mk_and_opt : term Prims.option  ->  term Prims.option  ->  FStar_Range.range  ->  term Prims.option = (fun p1 p2 r -> (match (((p1), (p2))) with
 | (Some (p1), Some (p2)) -> begin
-(let _178_829 = (mkAnd ((p1), (p2)) r)
-in Some (_178_829))
+Some ((mkAnd ((p1), (p2)) r))
 end
 | ((Some (p), None)) | ((None, Some (p))) -> begin
 Some (p)
@@ -1929,16 +1937,15 @@ end))
 let mk_and_opt_l : term Prims.option Prims.list  ->  FStar_Range.range  ->  term Prims.option = (fun pl r -> (FStar_List.fold_right (fun p out -> (mk_and_opt p out r)) pl None))
 
 
-let mk_and_l : term Prims.list  ->  FStar_Range.range  ->  term = (fun l r -> (let _178_842 = (mkTrue r)
-in (FStar_List.fold_right (fun p1 p2 -> (mkAnd ((p1), (p2)) r)) l _178_842)))
+let mk_and_l : term Prims.list  ->  FStar_Range.range  ->  term = (fun l r -> (let _0_327 = (mkTrue r)
+in (FStar_List.fold_right (fun p1 p2 -> (mkAnd ((p1), (p2)) r)) l _0_327)))
 
 
-let mk_or_l : term Prims.list  ->  FStar_Range.range  ->  term = (fun l r -> (let _178_849 = (mkFalse r)
-in (FStar_List.fold_right (fun p1 p2 -> (mkOr ((p1), (p2)) r)) l _178_849)))
+let mk_or_l : term Prims.list  ->  FStar_Range.range  ->  term = (fun l r -> (let _0_328 = (mkFalse r)
+in (FStar_List.fold_right (fun p1 p2 -> (mkOr ((p1), (p2)) r)) l _0_328)))
 
 
-let mk_haseq : term  ->  term = (fun t -> (let _178_852 = (mkApp (("Prims.hasEq"), ((t)::[])) t.rng)
-in (mk_Valid _178_852)))
+let mk_haseq : term  ->  term = (fun t -> (mk_Valid (mkApp (("Prims.hasEq"), ((t)::[])) t.rng)))
 
 
 let rec print_smt_term : term  ->  Prims.string = (fun t -> (match (t.tm) with
@@ -1946,35 +1953,35 @@ let rec print_smt_term : term  ->  Prims.string = (fun t -> (match (t.tm) with
 (FStar_Util.format1 "(Integer %s)" n)
 end
 | BoundV (n) -> begin
-(let _178_857 = (FStar_Util.string_of_int n)
-in (FStar_Util.format1 "(BoundV %s)" _178_857))
+(let _0_329 = (FStar_Util.string_of_int n)
+in (FStar_Util.format1 "(BoundV %s)" _0_329))
 end
 | FreeV (fv) -> begin
 (FStar_Util.format1 "(FreeV %s)" (Prims.fst fv))
 end
 | App (op, l) -> begin
-(let _178_858 = (print_smt_term_list l)
-in (FStar_Util.format2 "(%s %s)" (op_to_string op) _178_858))
+(let _0_330 = (print_smt_term_list l)
+in (FStar_Util.format2 "(%s %s)" (op_to_string op) _0_330))
 end
 | Labeled (t, r1, r2) -> begin
-(let _178_859 = (print_smt_term t)
-in (FStar_Util.format2 "(Labeled \'%s\' %s)" r1 _178_859))
+(let _0_331 = (print_smt_term t)
+in (FStar_Util.format2 "(Labeled \'%s\' %s)" r1 _0_331))
 end
 | LblPos (t, s) -> begin
-(let _178_860 = (print_smt_term t)
-in (FStar_Util.format2 "(LblPos %s %s)" s _178_860))
+(let _0_332 = (print_smt_term t)
+in (FStar_Util.format2 "(LblPos %s %s)" s _0_332))
 end
-| Quant (qop, l, _83_1130, _83_1132, t) -> begin
-(let _178_862 = (print_smt_term_list_list l)
-in (let _178_861 = (print_smt_term t)
-in (FStar_Util.format3 "(%s %s %s)" (qop_to_string qop) _178_862 _178_861)))
+| Quant (qop, l, uu____2775, uu____2776, t) -> begin
+(let _0_334 = (print_smt_term_list_list l)
+in (let _0_333 = (print_smt_term t)
+in (FStar_Util.format3 "(%s %s %s)" (qop_to_string qop) _0_334 _0_333)))
 end))
-and print_smt_term_list : term Prims.list  ->  Prims.string = (fun l -> (let _178_864 = (FStar_List.map print_smt_term l)
-in (FStar_All.pipe_right _178_864 (FStar_String.concat " "))))
-and print_smt_term_list_list : term Prims.list Prims.list  ->  Prims.string = (fun l -> (FStar_List.fold_left (fun s l -> (let _178_870 = (let _178_869 = (let _178_868 = (print_smt_term_list l)
-in (Prims.strcat _178_868 " ] "))
-in (Prims.strcat "; [ " _178_869))
-in (Prims.strcat s _178_870))) "" l))
+and print_smt_term_list : term Prims.list  ->  Prims.string = (fun l -> (let _0_335 = (FStar_List.map print_smt_term l)
+in (FStar_All.pipe_right _0_335 (FStar_String.concat " "))))
+and print_smt_term_list_list : term Prims.list Prims.list  ->  Prims.string = (fun l -> (FStar_List.fold_left (fun s l -> (let _0_338 = (let _0_337 = (let _0_336 = (print_smt_term_list l)
+in (Prims.strcat _0_336 " ] "))
+in (Prims.strcat "; [ " _0_337))
+in (Prims.strcat s _0_338))) "" l))
 
 
 

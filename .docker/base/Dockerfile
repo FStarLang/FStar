@@ -3,8 +3,8 @@ FROM ubuntu:xenial
 MAINTAINER Benjamin Beurdouche <benjamin.beurdouche@inria.fr>; Daniel Fabian <daniel.fabian@integral-it.ch>
 
 # Define versions of dependencies
-ENV opamv 4.03.0
-ENV z3v z3-4.4.1
+ENV opamv 4.04.0
+ENV z3v z3-4.5.0
 
 # Install required packages and set versions
 RUN apt-get -qq update
@@ -23,7 +23,7 @@ ENV OPAMYES true
 RUN opam init
 RUN echo ". /home/FStar/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" >> .bashrc
 RUN opam switch ${opamv}
-RUN opam install ocamlfind batteries sqlite3 fileutils stdint zarith yojson
+RUN opam install ocamlfind batteries sqlite3 fileutils stdint zarith yojson pprint menhir
 
 # Prepare and build Z3
 RUN git clone -b ${z3v} https://github.com/Z3Prover/z3.git
@@ -42,6 +42,3 @@ ENV PATH "~/FStar/bin:$PATH"
 RUN opam config exec -- make -C FStar/src/ocaml-output
 RUN make ocaml -C FStar/src
 RUN opam config exec -- make -C FStar/src/ocaml-output
-
-# F* Testing
-RUN opam config exec -- make -C FStar/src regressions OTHERFLAGS=--lax

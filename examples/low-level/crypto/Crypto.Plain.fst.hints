@@ -1,5 +1,5 @@
 [
-  "¬NÚõ\u0012êcJR\u0018v\u0003áâÅc",
+  "F’H*«X—ﬂù\u000b^Ãˇ*ˆØ",
   [
     [
       "Crypto.Plain.repr",
@@ -356,16 +356,15 @@
       1,
       [
         "@query", "data_elim_FStar.UInt32.Mk",
-        "equation_Crypto.Plain.as_buffer", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
-        "equation_FStar.UInt32.v", "equation_FStar.UInt8.t",
-        "fuel_guarded_inversion_FStar.UInt32.t_",
+        "equation_Crypto.Plain.as_buffer", "equation_FStar.Buffer.idx",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt32.t", "equation_FStar.UInt32.v",
+        "equation_FStar.UInt8.t", "fuel_guarded_inversion_FStar.UInt32.t_",
         "lemma_FStar.Buffer.lemma_size", "proj_equation_FStar.UInt32.Mk_v",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
         "refinement_interpretation_Tm_refine_1d4330dfe317247b686dae78dc218da3",
         "refinement_interpretation_Tm_refine_27eb738955e795e5dd1cab5fe18de9a0",
-        "refinement_interpretation_Tm_refine_5e30fa9a6a523fa8f8a78dd31a2a5abf",
         "typing_FStar.UInt32.v"
       ],
       0

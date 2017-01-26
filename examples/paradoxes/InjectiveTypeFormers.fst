@@ -8,10 +8,10 @@ module InjectiveTypeFormers
 open FStar.Constructive
 
 (* this file relies on a violation of the cardinality constraints of Type*)
-#set-options "--cardinality warn"
+#set-options "--cardinality warn --print_universes --print_bound_var_types"
 
-type i : (Type -> Type) -> Type =
-| Mk : f:(Type->Type) -> i f
+noeq type i: (Type 'ua -> Type 'ub) -> Type u#(max ('ua + 1) ('ub + 1)) =
+| Mk: f:(Type -> Type) -> i f
 
 val injI : x:(Type->Type) -> y:(Type->Type) ->
            Lemma (requires (i x == i y)) (ensures (x == y))
@@ -37,7 +37,7 @@ let injI (x:Type->Type) (y:Type->Type) = injI_ x y (Mk x)
 // type P (x:Type) = (exists (a:Type->Type). i a == x /\ ~(a x))
 
 // P in constructive logic -- not accepted, for no good reason (filed as #350)!
-type cexists_type_to_type : ((Type->Type) -> Type) -> Type =
+noeq type cexists_type_to_type : ((Type->Type) -> Type) -> Type =
   | ExTypeToTypeIntro : #p:((Type->Type) -> Type) -> t:(Type -> Type) ->
                          h:(p t) -> cexists_type_to_type p
 
@@ -46,12 +46,19 @@ val exInd : #p:((Type->Type) -> Type) -> p0:Type ->
 let exInd (#p:((Type->Type) -> Type)) (p0:Type) 
           (f: (x:(Type->Type) -> p x -> Tot p0)) (h:cexists_type_to_type p) = 
     match h with 
-       | ExTypeToTypeIntro 'q 't h -> f 't h
+       | ExTypeToTypeIntro #q #t h -> f t h
 
-type r (x:Type) = (cexists_type_to_type (fun (a:Type->Type) ->
-                     cand (ceq_type (i a) x) (cnot (a x))))
 
-type p = i r
+#set-options "--log_types"
+
+(** Hitting non-cumulativity:
+(Error) Expected expression of type "Type((S n'ua))";
+got expression "x" of type "Type(n'ua)"
+*)
+type r (x:Type 'ua) =
+  cexists_type_to_type
+    (fun (a:Type 'ua -> Type0) -> cand (ceq_type (i a) x) (cnot (a x)))
+
 
 val aux : h:r p ->
                  a:(Type->Type) ->

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 for i in 8 16 31 32 63 64 128; do
   f=FStar.Int$i.fst

@@ -33,72 +33,20 @@
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
+open FStar_Errors
 open FStar_List
 open FStar_Util
 open FStar_Range
 open FStar_Options
-open FStar_Absyn_Syntax
-open FStar_Absyn_Const
-open FStar_Absyn_Util
+(* TODO : these files should be deprecated and removed *)
+open FStar_Syntax_Syntax
+open FStar_Syntax_Const
+open FStar_Syntax_Util
 open FStar_Parser_AST
 open FStar_Parser_Util
 open FStar_Const
 open FStar_Ident
 open FStar_String
-
-let as_frag d ds =
-    let rec as_mlist out ((m,r,doc), cur) ds =
-    match ds with
-    | [] -> List.rev (Module(m, (mk_decl (TopLevelModule(m)) r doc) ::(List.rev cur))::out)
-    | d::ds ->
-      begin match d.d with
-        | TopLevelModule m' ->
-				as_mlist (Module(m, (mk_decl (TopLevelModule(m)) r doc) :: (List.rev cur))::out) ((m',d.drange,d.doc), []) ds
-        | _ -> as_mlist out ((m,r,doc), d::cur) ds
-      end in
-    match d.d with
-    | TopLevelModule m ->
-        let ms = as_mlist [] ((m,d.drange,d.doc), []) ds in
-        begin match ms with
-        | _::Module(n, _)::_ ->
-		(* This check is coded to hard-fail in dep.num_of_toplevelmods. *)
-        let msg = "Support for more than one module in a file is deprecated" in
-        print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid n)) msg
-        | _ -> ()
-        end;
-        Inl ms
-    | _ ->
-        let ds = d::ds in
-        iter (function {d=TopLevelModule _; drange=r} -> raise (Error("Unexpected module declaration", r))
-                       | _ -> ()) ds;
-        Inr ds
-
-let compile_op arity s =
-    let name_of_char = function
-            |'&' -> "Amp"
-            |'@'  -> "At"
-            |'+' -> "Plus"
-            |'-' when (arity=1) -> "Minus"
-            |'-' -> "Subtraction"
-            |'/' -> "Slash"
-            |'<' -> "Less"
-            |'=' -> "Equals"
-            |'>' -> "Greater"
-            |'_' -> "Underscore"
-            |'|' -> "Bar"
-            |'!' -> "Bang"
-            |'^' -> "Hat"
-            |'%' -> "Percent"
-            |'*' -> "Star"
-            |'?' -> "Question"
-            |':' -> "Colon"
-            | _ -> "UNKNOWN" in
-    match s with
-    | ".[]<-" -> "op_String_Assignment"
-    | ".()<-" -> "op_Array_Assignment"
-    | ".[]" -> "op_String_Access"
-    | ".()" -> "op_Array_Access"
-    | _ -> "op_"^ (concat "_" (map name_of_char (list_of_string s)))
 %}
 %start inputFragment
 %start term
@@ -108,6 +56,7 @@ let compile_op arity s =
 %token AND
 %token ASSERT
 %token ASSUME
+%token ATTRIBUTES
 %token BACKTICK
 %token BANG_LBRACE
 %token BAR
@@ -161,6 +110,7 @@ let compile_op arity s =
 %token LBRACE
 %token LBRACE_COLON_PATTERN
 %token LBRACK
+%token LBRACK_AT
 %token LBRACK_BAR
 %token LENS_PAREN_LEFT
 %token LENS_PAREN_RIGHT
@@ -232,6 +182,8 @@ let compile_op arity s =
 %token UNDERSCORE
 %token UNFOLD
 %token UNFOLDABLE
+%token <string> UNIVAR
+%token UNIV_HASH
 %token UNOPTEQUALITY
 %token VAL
 %token WHEN
@@ -413,18 +365,6 @@ let x =
 in
     ( x :: xs )}
 
-list___anonymous_5_:
-  
-    {    ( [] )}
-| BAR patternBranch list___anonymous_5_
-    {let (_10, pb0, xs) = ((), $2, $3) in
-let x =
-  let pb = pb0 in
-  let _1 = _10 in
-                                                      (pb)
-in
-    ( x :: xs )}
-
 list___anonymous_7_:
   
     {    ( [] )}
@@ -435,6 +375,27 @@ let x =
   let _1 = _10 in
                                                       (id)
 in
+    ( x :: xs )}
+
+list_argTerm_:
+  
+    {    ( [] )}
+| argTerm list_argTerm_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
+list_atomicTerm_:
+  
+    {    ( [] )}
+| atomicTerm list_atomicTerm_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
+list_atomicUniverse_:
+  
+    {    ( [] )}
+| atomicUniverse list_atomicUniverse_
+    {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
 list_constructorDecl_:
@@ -451,43 +412,17 @@ list_decl_:
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
+list_decoration_:
+  
+    {    ( [] )}
+| decoration list_decoration_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
 list_multiBinder_:
   
     {    ( [] )}
 | multiBinder list_multiBinder_
-    {let (x, xs) = ($1, $2) in
-    ( x :: xs )}
-
-list_pair_maybeHash_indexingTerm__:
-  
-    {    ( [] )}
-| indexingTerm list_pair_maybeHash_indexingTerm__
-    {let (y0, xs) = ($1, $2) in
-let x =
-  let y = y0 in
-  let x =
-             ( Nothing )
-  in
-      ( (x, y) )
-in
-    ( x :: xs )}
-| HASH indexingTerm list_pair_maybeHash_indexingTerm__
-    {let (_100, y0, xs) = ((), $2, $3) in
-let x =
-  let y = y0 in
-  let _10 = _100 in
-  let x =
-    let _1 = _10 in
-             ( Hash )
-  in
-      ( (x, y) )
-in
-    ( x :: xs )}
-
-list_qualifier_:
-  
-    {    ( [] )}
-| qualifier list_qualifier_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -512,6 +447,14 @@ nonempty_list_atomicPattern_:
     {let x = $1 in
     ( [ x ] )}
 | atomicPattern nonempty_list_atomicPattern_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
+nonempty_list_atomicTerm_:
+  atomicTerm
+    {let x = $1 in
+    ( [ x ] )}
+| atomicTerm nonempty_list_atomicTerm_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -699,8 +642,12 @@ inputFragment:
 
 mainDecl:
   SEMICOLON_SEMICOLON option_FSDOC_ term
-    {let (_1, doc_opt, t) = ((), $2, $3) in
-      ( mk_decl (Main t) (rhs2 parseState 1 3) doc_opt )}
+    {let (_1, doc, t) = ((), $2, $3) in
+      ( let decorations = match doc with
+        | Some d -> [ Doc d ]
+        | _ -> [] in
+        mk_decl (Main t) (rhs2 parseState 1 3) decorations
+      )}
 
 pragma:
   PRAGMA_SET_OPTIONS STRING
@@ -714,13 +661,37 @@ in
     {let (_1, s_opt) = ((), $2) in
       ( ResetOptions s_opt )}
 
-decl:
-  option_FSDOC_ decl2
-    {let (fsdoc_opt, decl) = ($1, $2) in
-                                ( mk_decl decl (rhs parseState 2) fsdoc_opt )}
+decoration:
+  FSDOC
+    {let x = $1 in
+      ( Doc x )}
+| LBRACK_AT list_atomicTerm_ RBRACK
+    {let (_1, x, _3) = ((), $2, ()) in
+      ( DeclAttributes x )}
+| qualifier
+    {let x = $1 in
+      ( Qualifier x )}
 
-decl2:
-  OPEN quident
+decl:
+  ASSUME uident COLON noSeqTerm
+    {let (_1, lid, _3, e0) = ((), $2, (), $4) in
+let phi =
+  let e = e0 in
+                  ( {e with level=Formula} )
+in
+      ( mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] )}
+| decoration list_decoration_ rawDecl
+    {let (d, ds, decl) = ($1, $2, $3) in
+      ( mk_decl decl (rhs parseState 3) (d :: ds) )}
+| rawDecl
+    {let decl = $1 in
+      ( mk_decl decl (rhs parseState 1) [] )}
+
+rawDecl:
+  pragma
+    {let p = $1 in
+      ( Pragma p )}
+| OPEN quident
     {let (_1, uid) = ((), $2) in
       ( Open uid )}
 | INCLUDE quident
@@ -728,86 +699,48 @@ decl2:
       ( Include uid )}
 | MODULE uident EQUALS quident
     {let (_1, uid1, _3, uid2) = ((), $2, (), $4) in
-      (  ModuleAbbrev(uid1, uid2) )}
+      ( ModuleAbbrev(uid1, uid2) )}
 | MODULE quident
     {let (_1, uid) = ((), $2) in
       (  TopLevelModule uid )}
-| kind_abbrev
-    {let k = $1 in
-      ( k )}
-| list_qualifier_ TYPE separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
-    {let (qs0, _2, tcdefs) = ($1, (), $3) in
-let qs =
-  let qs = qs0 in
-                         ( qs )
-in
-      ( Tycon (qs, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
-| list_qualifier_ EFFECT uident typars EQUALS typ
-    {let (qs0, _2, uid, tparams, _5, t) = ($1, (), $3, $4, (), $6) in
-let qs =
-  let qs = qs0 in
-                         ( qs )
-in
-      ( Tycon(Effect::qs, [(TyconAbbrev(uid, tparams, None, t), None)]) )}
-| list_qualifier_ LET letqualifier separated_nonempty_list_AND_letbinding_
-    {let (qs0, _2, q, lbs) = ($1, $2, $3, $4) in
-let qs =
-  let qs = qs0 in
-                         ( qs )
-in
+| TYPE separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
+    {let (_1, tcdefs) = ((), $2) in
+      ( Tycon (false, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
+| EFFECT uident typars EQUALS typ
+    {let (_1, uid, tparams, _4, t) = ((), $2, $3, (), $5) in
+      ( Tycon(true, [(TyconAbbrev(uid, tparams, None, t), None)]) )}
+| LET letqualifier separated_nonempty_list_AND_letbinding_
+    {let (_1, q, lbs) = ($1, $2, $3) in
       (
-        let lbs = focusLetBindings lbs (rhs2 parseState 1 4) in
-        TopLevelLet(qs, q, lbs)
+        let lbs = focusLetBindings lbs (rhs2 parseState 1 3) in
+        TopLevelLet(q, lbs)
       )}
-| list_qualifier_ VAL lidentOrOperator list_multiBinder_ COLON typ
-    {let (qs0, _2, lid, bss, _5, t) = ($1, (), $3, $4, (), $6) in
-let qs =
-  let qs = qs0 in
-                         ( qs )
-in
+| VAL lidentOrOperator list_multiBinder_ COLON typ
+    {let (_1, lid, bss, _4, t) = ((), $2, $3, (), $5) in
       (
         let t = match flatten bss with
           | [] -> t
-          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 4 6) Type
-        in Val(qs, lid, t)
+          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
+        in Val(lid, t)
       )}
-| assumeTag uident COLON noSeqTerm
-    {let (tag, lid, _3, e0) = ($1, $2, (), $4) in
-let phi =
-  let e = e0 in
-                  ( {e with level=Formula} )
-in
-      ( Assume(tag, lid, phi) )}
 | EXCEPTION uident option___anonymous_1_
     {let (_1, lid, t_opt) = ((), $2, $3) in
       ( Exception(lid, t_opt) )}
-| list_qualifier_ NEW_EFFECT newEffect
-    {let (qs0, _2, ne) = ($1, (), $3) in
-let qs =
-  let qs = qs0 in
-                         ( qs )
-in
-      ( NewEffect (qs, ne) )}
-| list_qualifier_ SUB_EFFECT subEffect
-    {let (qs0, _2, se) = ($1, (), $3) in
-let qs =
-  let qs = qs0 in
-                         ( qs )
-in
+| NEW_EFFECT newEffect
+    {let (_1, ne) = ((), $2) in
+      ( NewEffect ne )}
+| SUB_EFFECT subEffect
+    {let (_1, se) = ((), $2) in
       ( SubEffect se )}
-| list_qualifier_ NEW_EFFECT_FOR_FREE newEffect
-    {let (qs0, _2, ne) = ($1, (), $3) in
-let qs =
-  let qs = qs0 in
-                         ( qs )
-in
-      ( NewEffectForFree (qs, ne) )}
-| pragma
-    {let p = $1 in
-      ( Pragma p )}
+| NEW_EFFECT_FOR_FREE newEffect
+    {let (_1, ne) = ((), $2) in
+      ( NewEffectForFree ne )}
 | FSDOC_STANDALONE
     {let doc = $1 in
       ( Fsdoc doc )}
+| KIND ident binders EQUALS kind
+    {let (_1, lid, bs, _4, k) = ((), $2, $3, (), $5) in
+      ( KindAbbrev(lid, bs, k) )}
 
 typeDecl:
   ident typars option_ascribeKind_ typeDefinition
@@ -863,11 +796,6 @@ constructorDecl:
     {let (_1, doc_opt, uid, t_opt) = ((), $2, $3, $4) in
                                                              ( (uid, t_opt, doc_opt, true) )}
 
-kind_abbrev:
-  KIND ident binders EQUALS kind
-    {let (_1, lid, bs, _4, k) = ((), $2, $3, (), $5) in
-      ( KindAbbrev(lid, bs, k) )}
-
 letbinding:
   maybeFocus lidentOrOperator nonempty_list_patternOrMultibinder_ option_ascribeTyp_ EQUALS term
     {let (focus_opt, lid, lbp, ascr_opt, _5, tm) = ($1, $2, $3, $4, (), $6) in
@@ -920,7 +848,7 @@ in
 effectDecl:
   lident EQUALS simpleTerm
     {let (lid, _2, t) = ($1, (), $3) in
-     ( mk_decl (Tycon ([], [(TyconAbbrev(lid, [], None, t), None)])) (rhs2 parseState 1 3) None )}
+     ( mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
@@ -1069,11 +997,6 @@ qualifier:
     {let _1 = () in
                   ( Reflectable )}
 
-assumeTag:
-  ASSUME
-    {let _1 = () in
-           ( [Assumption] )}
-
 maybeFocus:
   boption_SQUIGGLY_RARROW_
     {let b = $1 in
@@ -1092,8 +1015,7 @@ letqualifier:
 aqual:
   EQUALS
     {let _1 = () in
-              ( if universes()
-                then print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
+              ( print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
 				        Equality )}
 | aqualUniverses
     {let q = $1 in
@@ -1148,7 +1070,7 @@ in
       ( mk_pattern (PatList pats) (rhs2 parseState 1 3) )}
 | LBRACE separated_nonempty_list_SEMICOLON_separated_pair_qlident_EQUALS_tuplePattern__ RBRACE
     {let (_1, record_pat, _3) = ((), $2, ()) in
-      ( mk_pattern (PatRecord record_pat) (rhs2 parseState 1 4) )}
+      ( mk_pattern (PatRecord record_pat) (rhs2 parseState 1 3) )}
 | LENS_PAREN_LEFT constructorPattern COMMA separated_nonempty_list_COMMA_constructorPattern_ LENS_PAREN_RIGHT
     {let (_1, pat0, _3, pats, _5) = ((), $2, (), $4, ()) in
       ( mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) )}
@@ -1265,8 +1187,8 @@ patternOrMultibinder:
 | LPAREN aqualified_lident_ nonempty_list_aqualified_lident__ COLON typ refineOpt RPAREN
     {let (_1, qual_id0, qual_ids, _4, t, r, _7) = ((), $2, $3, (), $5, $6, ()) in
       (
-        let pos = rhs2 parseState 1 6 in
-        let t_pos = rhs parseState 4 in
+        let pos = rhs2 parseState 1 7 in
+        let t_pos = rhs parseState 5 in
         let qual_ids = qual_id0 :: qual_ids in
         List.map (fun (q, x) -> mkRefinedPattern (mk_pattern (PatVar (x, q)) pos) t false r t_pos pos) qual_ids
       )}
@@ -1276,7 +1198,7 @@ binder:
     {let aqualified_lid = $1 in
      (
        let (q, lid) = aqualified_lid in
-       mk_binder (Variable lid) (rhs parseState 1) Type q
+       mk_binder (Variable lid) (rhs parseState 1) Type_level q
      )}
 | tvar
     {let tv = $1 in
@@ -1287,7 +1209,7 @@ multiBinder:
     {let (_1, qual_ids, _3, t, r, _6) = ((), $2, (), $4, $5, ()) in
      (
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
-       List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 5) q) qual_ids
+       List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q) qual_ids
      )}
 
 binders:
@@ -1387,21 +1309,21 @@ let id =
   let op = op0 in
        ( op )
 in
-    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
 | LPAREN OPINFIX3 RPAREN
     {let (_1, op0, _3) = ((), $2, ()) in
 let id =
   let op = op0 in
        ( op )
 in
-    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
 | LPAREN OPINFIX4 RPAREN
     {let (_1, op0, _3) = ((), $2, ()) in
 let id =
   let op = op0 in
        ( op )
 in
-    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
 | LPAREN OPINFIX0a RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1412,7 +1334,7 @@ let id =
   in
        ( op )
 in
-    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
 | LPAREN OPINFIX0b RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1423,7 +1345,7 @@ let id =
   in
        ( op )
 in
-    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
 | LPAREN OPINFIX0c RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1434,7 +1356,7 @@ let id =
   in
        ( op )
 in
-    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
 | LPAREN OPINFIX0d RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1445,7 +1367,7 @@ let id =
   in
        ( op )
 in
-    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
 | LPAREN OPINFIX1 RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1456,7 +1378,7 @@ let id =
   in
        ( op )
 in
-    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
 | LPAREN OPINFIX2 RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1467,7 +1389,7 @@ let id =
   in
        ( op )
 in
-    ( mk_ident(compile_op (-1) id, rhs parseState 1) )}
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
 
 lidentOrUnderscore:
   IDENT
@@ -1532,7 +1454,7 @@ let op_expr =
 in
       (
         let (op, e2, _) = op_expr in
-        mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr
+        mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
 | atomicTermNotQUident DOT_LBRACK term RBRACK LARROW noSeqTerm
     {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
@@ -1544,14 +1466,17 @@ let op_expr =
 in
       (
         let (op, e2, _) = op_expr in
-        mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 6) Expr
+        mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
 | REQUIRES typ
     {let (_1, t) = ((), $2) in
-      ( mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type )}
+      ( mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level )}
 | ENSURES typ
     {let (_1, t) = ((), $2) in
-      ( mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type )}
+      ( mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level )}
+| ATTRIBUTES nonempty_list_atomicTerm_
+    {let (_1, es) = ((), $2) in
+      ( mk_term (Attributes es) (rhs2 parseState 1 2) Type_level )}
 | IF noSeqTerm THEN noSeqTerm ELSE noSeqTerm
     {let (_1, e1, _3, e2, _5, e3) = ((), $2, (), $4, (), $6) in
       ( mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr )}
@@ -1571,8 +1496,12 @@ in
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       )}
-| MATCH term WITH list___anonymous_5_
-    {let (_1, e, _3, pbs) = ((), $2, (), $4) in
+| MATCH term WITH reverse_left_flexible_list_BAR___anonymous_5_
+    {let (_1, e, _3, xs0) = ((), $2, (), $4) in
+let pbs =
+  let xs = xs0 in
+     ( List.rev xs )
+in
       (
         let branches = focusBranches pbs (rhs2 parseState 1 4) in
         mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
@@ -1593,7 +1522,7 @@ let pbs =
      ( List.rev xs )
 in
       (
-        let branches = focusBranches (pbs) (rhs2 parseState 1 2) in
+        let branches = focusBranches pbs (rhs2 parseState 1 2) in
         mk_function branches (lhs parseState) (rhs2 parseState 1 2)
       )}
 | ASSUME atomicTerm
@@ -1672,7 +1601,7 @@ in
       (
         let pat = match pat with
           | [p] -> p
-          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2)
+          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 1)
         in
         (focus, (pat, when_opt, e))
       )}
@@ -1686,7 +1615,7 @@ in
       (
         let pat = match pat with
           | [p] -> p
-          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2)
+          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 1)
         in
         (focus, (pat, when_opt, e))
       )}
@@ -1916,13 +1845,13 @@ tmNoEq:
       (
         let x, t, f = match extract_named_refinement e1 with
             | Some (x, t, f) -> x, t, f
-            | _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs2 parseState 1 2)) in
-        let dom = mkRefinedBinder x t true f (rhs2 parseState 1 2) None in
+            | _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs parseState 1)) in
+        let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
         let tail = e2 in
         let dom, res = match tail.tm with
             | Sum(dom', res) -> dom::dom', res
             | _ -> [dom], tail in
-        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type
+        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       )}
 | tmNoEq MINUS tmNoEq
     {let (e1, _2, e2) = ($1, (), $3) in
@@ -1935,21 +1864,21 @@ tmNoEq:
       ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
 | MINUS tmNoEq
     {let (_1, e) = ((), $2) in
-      ( mk_uminus e (rhs2 parseState 1 3) Expr )}
+      ( mk_uminus e (rhs2 parseState 1 2) Expr )}
 | lidentOrUnderscore COLON appTerm refineOpt
     {let (id, _2, e, phi_opt) = ($1, (), $3, $4) in
       (
         let t = match phi_opt with
           | None -> NamedTyp(id, e)
-          | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) Type None, phi)
-        in mk_term t (rhs2 parseState 1 4) Type
+          | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) Type_level None, phi)
+        in mk_term t (rhs2 parseState 1 4) Type_level
       )}
 | LBRACE recordExp RBRACE
     {let (_1, e, _3) = ((), $2, ()) in
                               ( e )}
 | TILDE atomicTerm
     {let (op, e) = ($1, $2) in
-      ( mk_term (Op(op, [e])) (rhs2 parseState 1 3) Formula )}
+      ( mk_term (Op(op, [e])) (rhs2 parseState 1 2) Formula )}
 | appTerm
     {let e = $1 in
               ( e )}
@@ -1962,13 +1891,13 @@ refineOpt:
 recordExp:
   right_flexible_nonempty_list_SEMICOLON_simpleDef_
     {let record_fields = $1 in
-      ( mk_term (Record (None, record_fields)) (rhs2 parseState 1 2) Expr )}
+      ( mk_term (Record (None, record_fields)) (rhs parseState 1) Expr )}
 | appTerm WITH right_flexible_nonempty_list_SEMICOLON_simpleDef_
     {let (e, _2, record_fields) = ($1, (), $3) in
-      ( mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 2) Expr )}
+      ( mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr )}
 
 simpleDef:
-  qlident EQUALS simpleTerm
+  qlident EQUALS noSeqTerm
     {let (x0, _20, y0) = ($1, (), $3) in
 let e =
   let y = y0 in
@@ -1976,12 +1905,42 @@ let e =
   let x = x0 in
       ( (x, y) )
 in
-                                                  ( e )}
+                                                 ( e )}
 
 appTerm:
-  indexingTerm list_pair_maybeHash_indexingTerm__
+  indexingTerm list_argTerm_
     {let (head, args) = ($1, $2) in
       ( mkApp head (map (fun (x,y) -> (y,x)) args) (rhs2 parseState 1 2) )}
+
+argTerm:
+  indexingTerm
+    {let y0 = $1 in
+let x =
+  let y = y0 in
+  let x =
+             ( Nothing )
+  in
+      ( (x, y) )
+in
+                                    ( x )}
+| HASH indexingTerm
+    {let (_100, y0) = ((), $2) in
+let x =
+  let y = y0 in
+  let _10 = _100 in
+  let x =
+    let _1 = _10 in
+             ( Hash )
+  in
+      ( (x, y) )
+in
+                                    ( x )}
+| universe
+    {let u = $1 in
+               ( u )}
+| univar
+    {let u = $1 in
+             ( UnivApp, u )}
 
 indexingTerm:
   atomicTermNotQUident nonempty_list_dotOperator_
@@ -2012,7 +1971,7 @@ atomicTermQUident:
     (
         let t = Name id in
         let e = mk_term t (rhs parseState 1) Un in
-	e
+	      e
     )}
 | quident DOT_LPAREN term RPAREN
     {let (id, _2, t, _4) = ($1, (), $3, ()) in
@@ -2029,16 +1988,16 @@ atomicTermNotQUident:
              ( mk_term (Var assert_lid) (rhs parseState 1) Expr )}
 | tvar
     {let tv = $1 in
-                ( mk_term (Tvar tv) (rhs parseState 1) Type )}
+                ( mk_term (Tvar tv) (rhs parseState 1) Type_level )}
 | constant
     {let c = $1 in
                ( mk_term (Const c) (rhs parseState 1) Expr )}
 | L_TRUE
     {let _1 = () in
-             ( mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type )}
+             ( mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type_level )}
 | L_FALSE
     {let _1 = () in
-              ( mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type )}
+              ( mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type_level )}
 | opPrefixTerm_atomicTermNotQUident_
     {let x = $1 in
     ( x )}
@@ -2142,50 +2101,18 @@ in
 opPrefixTerm_atomicTermNotQUident_:
   OPPREFIX atomicTermNotQUident
     {let (op, e) = ($1, $2) in
-      ( mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr )}
+      ( mk_term (Op(op, [e])) (rhs2 parseState 1 2) Expr )}
 
 opPrefixTerm_atomicTermQUident_:
   OPPREFIX atomicTermQUident
     {let (op, e) = ($1, $2) in
-      ( mk_term (Op(op, [e])) (rhs2 parseState 1 3) Expr )}
-
-fsTypeArgs:
-  TYP_APP_LESS separated_nonempty_list_COMMA_atomicTerm_ TYP_APP_GREATER
-    {let (_1, targs, _3) = ((), $2, ()) in
-    (targs)}
-
-someFsTypeArgs:
-  fsTypeArgs
-    {let targs = $1 in
-    ( Some targs )}
-
-qidentWithTypeArgs_qlident_option_fsTypeArgs__:
-  qlident option_fsTypeArgs_
-    {let (id, targs_opt) = ($1, $2) in
-      (
-        let t = if is_name id then Name id else Var id in
-        let e = mk_term t (rhs parseState 1) Un in
-        match targs_opt with
-        | None -> e
-        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
-      )}
-
-qidentWithTypeArgs_quident_someFsTypeArgs_:
-  quident someFsTypeArgs
-    {let (id, targs_opt) = ($1, $2) in
-      (
-        let t = if is_name id then Name id else Var id in
-        let e = mk_term t (rhs parseState 1) Un in
-        match targs_opt with
-        | None -> e
-        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
-      )}
+      ( mk_term (Op(op, [e])) (rhs2 parseState 1 2) Expr )}
 
 projectionLHS:
   qidentWithTypeArgs_qlident_option_fsTypeArgs__
     {let e = $1 in
       ( e )}
-| qidentWithTypeArgs_quident_someFsTypeArgs_
+| qidentWithTypeArgs_quident_some_fsTypeArgs__
     {let e = $1 in
       ( e )}
 | LPAREN term option_pair_hasSort_simpleTerm__ RPAREN
@@ -2230,21 +2157,42 @@ in
       ( mkRefSet (rhs2 parseState 1 3) es )}
 | quident QMARK_DOT lident
     {let (ns, _2, id) = ($1, (), $3) in
-      (
-        mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr
-      )}
+      ( mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr )}
 | quident QMARK
     {let (lid, _2) = ($1, ()) in
+      ( mk_term (Discrim lid) (rhs2 parseState 1 2) Un )}
+
+fsTypeArgs:
+  TYP_APP_LESS separated_nonempty_list_COMMA_atomicTerm_ TYP_APP_GREATER
+    {let (_1, targs, _3) = ((), $2, ()) in
+    (targs)}
+
+qidentWithTypeArgs_qlident_option_fsTypeArgs__:
+  qlident option_fsTypeArgs_
+    {let (id, targs_opt) = ($1, $2) in
       (
-	let t = Discrim lid in
+        let t = if is_name id then Name id else Var id in
         let e = mk_term t (rhs parseState 1) Un in
-	e
+        match targs_opt with
+        | None -> e
+        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
+      )}
+
+qidentWithTypeArgs_quident_some_fsTypeArgs__:
+  quident some_fsTypeArgs_
+    {let (id, targs_opt) = ($1, $2) in
+      (
+        let t = if is_name id then Name id else Var id in
+        let e = mk_term t (rhs parseState 1) Un in
+        match targs_opt with
+        | None -> e
+        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
       )}
 
 hasSort:
   SUBKIND
     {let _1 = () in
-            ( Type )}
+            ( Type_level )}
 
 constant:
   LPAREN_RPAREN
@@ -2319,6 +2267,68 @@ constant:
     {let _1 = () in
             ( Const_reify )}
 
+universe:
+  UNIV_HASH atomicUniverse
+    {let (_1, ua) = ((), $2) in
+                                ( (UnivApp, ua) )}
+
+universeFrom:
+  atomicUniverse
+    {let ua = $1 in
+                      ( ua )}
+| universeFrom OPINFIX2 universeFrom
+    {let (u1, op_plus, u2) = ($1, $2, $3) in
+       (
+         if op_plus <> "+"
+         then errorR(Error("The operator " ^ op_plus ^ " was found in universe context."
+                           ^ "The only allowed operator in that context is +.",
+                           rhs parseState 2)) ;
+         mk_term (Op(op_plus, [u1 ; u2])) (rhs2 parseState 1 3) Expr
+       )}
+| ident list_atomicUniverse_
+    {let (max, us) = ($1, $2) in
+      (
+        if text_of_id max <> text_of_lid max_lid
+        then errorR(Error("A lower case ident " ^ text_of_id max ^
+                          " was found in a universe context. " ^
+                          "It should be either max or a universe variable 'usomething.",
+                          rhs parseState 1)) ;
+        let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in
+        mkApp max (map (fun u -> u, Nothing) us) (rhs2 parseState 1 2)
+      )}
+
+atomicUniverse:
+  UNDERSCORE
+    {let _1 = () in
+      ( mk_term Wild (rhs parseState 1) Expr )}
+| INT
+    {let n = $1 in
+      (
+        if snd n then
+          errorR(Error("This number is outside the allowable range for representable integer constants",
+                       lhs(parseState)));
+        mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
+      )}
+| univar
+    {let u = $1 in
+             ( u )}
+| LPAREN universeFrom RPAREN
+    {let (_1, u, _3) = ((), $2, ()) in
+    ( u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) )}
+
+univar:
+  UNIVAR
+    {let id = $1 in
+      (
+        let pos = rhs parseState 1 in
+        mk_term (Uvar (mk_ident (id, pos))) pos Expr
+      )}
+
+some_fsTypeArgs_:
+  fsTypeArgs
+    {let x = $1 in
+        ( Some x )}
+
 right_flexible_list_SEMICOLON_noSeqTerm_:
   
     {        ( [] )}
@@ -2364,6 +2374,24 @@ right_flexible_nonempty_list_SEMICOLON_simpleDef_:
 | simpleDef SEMICOLON right_flexible_list_SEMICOLON_simpleDef_
     {let (x, _2, xs) = ($1, (), $3) in
                                            ( x :: xs )}
+
+reverse_left_flexible_list_BAR___anonymous_5_:
+  
+    {   ( [] )}
+| patternBranch
+    {let pb0 = $1 in
+let x =
+  let pb = pb0 in
+                                                                     (pb)
+in
+   ( [x] )}
+| reverse_left_flexible_list_BAR___anonymous_5_ BAR patternBranch
+    {let (xs, _2, pb0) = ($1, (), $3) in
+let x =
+  let pb = pb0 in
+                                                                     (pb)
+in
+   ( x :: xs )}
 
 reverse_left_flexible_nonempty_list_BAR_patternBranch_:
   patternBranch

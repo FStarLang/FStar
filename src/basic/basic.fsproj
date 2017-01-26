@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -79,16 +79,17 @@
     <Compile Include="bytes.fs" />
     <Compile Include="range.fsi" />
     <Compile Include="range.fs" />
-    <Compile Include="getoptsimple.fsi" />
-    <Compile Include="getoptsimple.fs" />
     <Compile Include="version.fsi" />
     <Compile Include="version.fs" />
-    <Compile Include="options.fsi" />
-    <Compile Include="options.fs" />
+    <Compile Include="getopt.fsi" />
+    <Compile Include="getopt.fs" />
+    <Compile Include="FStar.Options.fsi" />
+    <Compile Include="FStar.Options.fs" />
     <Compile Include="unionfind.fsi" />
     <Compile Include="unionfind.fs" />
-    <Compile Include="ident.fs" />
-    <Compile Include="const.fs" />
+    <Compile Include="FStar.Ident.fs" />
+    <Compile Include="FStar.Const.fs" />
+    <Compile Include="FStar.Errors.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
