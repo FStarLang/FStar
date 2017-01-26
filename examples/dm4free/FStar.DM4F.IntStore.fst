@@ -3,7 +3,13 @@ module FStar.DM4F.IntStore
 (* open FStar.DM4F.IntStoreAux *)
 open FStar.Seq
 
-type int_store (a:Type) = seq int -> M (option a * seq int)
+
+type id = nat
+type heap = seq int
+let in_ (x:id) (store:heap) = x < length store
+
+(* TODO : Try to use [either a exn] instead of [option] *)
+type int_store (a:Type) = heap -> M (option a * heap)
 let return_is (a:Type) (x:a) : int_store a = fun store -> Some x, store
 let bind_is (a b : Type) (x:int_store a) (f: a -> int_store b) : int_store b =
   fun store ->
@@ -12,7 +18,7 @@ let bind_is (a b : Type) (x:int_store a) (f: a -> int_store b) : int_store b =
     | None -> None, store'
     | Some xa -> f xa store'
 
-let get () : int_store (seq int) = fun store -> Some store, store
+let get () : int_store (heap) = fun store -> Some store, store
 let put s : int_store unit = fun _ -> Some (), s
 
 (* DM4F does not handle polymorphic types yet so we go around this limitation *)
@@ -30,11 +36,11 @@ total reifiable reflectable new_effect_for_free {
      ; raise_ = raise_impl
 }
 
-effect IntStore (a:Type) (pre:INT_STORE?.pre) (post: seq int -> option a -> seq int -> GTot Type0) =
+effect IntStore (a:Type) (pre:INT_STORE?.pre) (post: heap -> option a -> heap -> GTot Type0) =
   INT_STORE a (fun l0 p -> pre l0 /\ (forall x l1. pre l0 /\ post l0 x l1 ==> p (x, l1)))
 
 effect IS (a:Type) =
-  INT_STORE a (fun (l0:seq int) (p:((option a * seq int) -> Type0)) -> forall (x:(option a * seq int)). p x)
+  INT_STORE a (fun (l0:heap) (p:((option a * heap) -> Type0)) -> forall (x:(option a * heap)). p x)
 
 (* TODO : having a in Type *and* reifiable induces a Failure("Universe variable not found") *)
 (* whenever we try to normalize-reify it (see below in xxx for instance) *)
@@ -44,67 +50,67 @@ let raise_ (#a:Type0) ()
 = let x = INT_STORE?.raise_ () in begin match x with end
 
 reifiable
-let read (i:nat)
+let read (i:id)
   : INT_STORE int
     (fun s p ->
-      if i < length s
+      if i `in_` s
       then p (Some (index s i), s)
       else p (None, s))
 =
   let store = IS?.get () in
-  if i < length store
+  if i `in_` store
   then index store i
   else raise_ ()
 
 reifiable
-  let write (i:nat) (x:int)
+  let write (i:id) (x:int)
   : INT_STORE unit
     (fun s p ->
-      if i < length s
+      if i `in_` s
       then p (Some (),upd s i x)
       else p (None, s))
 =
   let store = IS?.get () in
-  if i < length store
+  if i `in_` store
   then IS?.put (upd store i x)
   else raise_ ()
 
 reifiable
-let read_tot (i:nat)
-  : INT_STORE int (fun s0 p -> i < length s0 /\ p (Some (index s0 i), s0))
+let read_tot (i:id)
+  : INT_STORE int (fun s0 p -> i `in_` s0 /\ p (Some (index s0 i), s0))
   (* KM : The following pre-post condition is not accepted *)
   (* It may be that IntStore is wrongly defined *)
   (* : IntStore int *)
-  (*   (requires (fun s0 -> i < length s0)) *)
-  (*   (ensures (fun s0 x s1 -> s0 `equals` s1 /\ i < length s1 /\ x = Some (index s1 i))) *)
+  (*   (requires (fun s0 -> i `in_` s0)) *)
+  (*   (ensures (fun s0 x s1 -> s0 `equals` s1 /\ i `in_` s1 /\ x = Some (index s1 i))) *)
 =
   let store = IS?.get () in
   index store i
 
 reifiable
-let write_tot (i:nat) (x:int)
-  : INT_STORE unit (fun s0 p -> i < length s0 /\ p (Some (), upd s0 i x))
+let write_tot (i:id) (x:int)
+  : INT_STORE unit (fun s0 p -> i `in_` s0 /\ p (Some (), upd s0 i x))
 =
   let store = IS?.get () in
   IS?.put (upd store i x)
 
-(* assume val r : nat *)
-(* assume val store : seq int *)
+(* assume val r : id *)
+(* assume val store : heap *)
 
-(* (\* KM : Is there any way to assume that r < length store so that it reduces in the normalizer ? *\) *)
+(* (\* KM : Is there any way to assume that r `in_` store so that it reduces in the normalizer ? *\) *)
 (* let xxx = reify (read r) store *)
 
-let total_read_lemma (store:seq int) (r:nat)
-  : Lemma (requires r < length store) (ensures Some? (fst (reify (read r) store)))
+let total_read_lemma (store:heap) (r:id)
+  : Lemma (requires r `in_` store) (ensures Some? (fst (reify (read r) store)))
 = ()
 
-let total_write_lemma (store:seq int) (r:nat) (x:int)
-  : Lemma (requires r < length store) (ensures Some? (fst (reify (write r x) store)))
+let total_write_lemma (store:heap) (r:id) (x:int)
+  : Lemma (requires r `in_` store) (ensures Some? (fst (reify (write r x) store)))
 = ()
 
 
-let read_write_lemma1 (store:seq int) (r:nat) (x:int)
-    : Lemma (requires (r < length store))
-      (ensures (r < length store /\ normalize_term (fst (reify (let () = write_tot r x in read_tot r) store)) == Some x))
+let read_write_lemma1 (store:heap) (r:id) (x:int)
+    : Lemma (requires (r `in_` store))
+      (ensures (r `in_` store /\ normalize_term (fst (reify (let () = write_tot r x in read_tot r) store)) == Some x))
 = ()
 

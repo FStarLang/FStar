@@ -2,7 +2,8 @@ module IfcReify
 
 open Rel
 open WhileReify
-open FStar.DM4F.Heap
+open FStar.Seq
+open FStar.DM4F.IntStore
 open FStar.Classical
 
 (****************************** Preliminaries ******************************)
@@ -30,64 +31,75 @@ let join l1 l2 =
   | Low,Low -> Low
   | _, _ -> High
 
-type label_fun = ref int -> Tot label
+type label_fun = nat -> Tot label
 
-let r_contains h x = R?.l h `contains_a_well_typed` x /\
-                     R?.r h `contains_a_well_typed` x
+let in_r x h = (in_ x) `diagb` h
 
-type low_equiv (env:label_fun) (h1:rel heap) = 
-  forall (x:(ref int){h1 `r_contains` x}).
-    env x = Low ==> sel (R?.l h1) x = sel (R?.r h1) x
+type low_equiv (env:label_fun) (h1:rel heap) =
+  forall (x:id{x `in_r` h1}).
+    env x = Low ==> index (R?.l h1) x = index (R?.r h1) x
 
+let get_heap (#a:Type) : option a * heap -> Tot (option heap)
+= function
+  | None, _ -> None
+  | Some _, h -> Some h
 
 (**************************** Typing Judgements ****************************)
 
 (* env |- e : l
    - Expressions do not modify the heap
    - Correctness
-   - Low equivalent input heaps + Low label ==> same result 
+   - Low equivalent input heaps + Low label ==> same result
 *)
 
 val equal_pair : int * heap -> int * heap -> Type0
 let equal_pair (i1,h1) (i2,h2) = let x = (i1 = i2 /\ h1 `equals` h2) in x
 
-type ni_exp (env:label_fun) (e:exp) (l:label) = 
+unfold
+type ni_exp (env:label_fun) (e:exp) (l:label) =
   forall (h: rel heap).
-   (low_equiv env h /\ Low? l) ==> 
+   (low_equiv env h /\ Low? l) ==>
      (fst (interpret_exp (R?.r h) e) = fst (interpret_exp (R?.l h) e))
 
 (* env,pc:l |- c
    - References with a label below l are not modified
    - Total correctness
-   - Low equivalent input heaps ==> Low equivalet output heaps 
+   - Low equivalent input heaps ==> Low equivalent output heaps
 *)
-type ni_com' (env:label_fun) (c:com) (l:label) (h0: rel (option heap)) = 
-    (Some? (R?.l h0) /\ Some? (R?.r h0) ==>
-     (let h0 = R (Some?.v (R?.l h0)) (Some?.v (R?.r h0)) in
-      let o_l = Some (snd (interpret_com (R?.l h0) c)) in
-      let o_r = Some (snd (interpret_com (R?.r h0) c)) in
-       ((Some? o_l /\ Some? o_r /\ low_equiv env h0)
-          ==> low_equiv env (R (Some?.v o_l) (Some?.v o_r)))))
-    /\
-    (Some? (R?.l h0) ==>
-     (let hl = Some?.v (R?.l h0) in
-      let o_l : x:option heap{Some? x} = Some (snd (interpret_com hl c)) in
-        Some? o_l ==>
-        (forall (r:(ref int){hl `contains_a_well_typed` r /\
-                             Some?.v o_l `contains_a_well_typed` r}).
-          env r < l ==> sel hl r = sel (Some?.v o_l) r)))
-    /\
-    (Some? (R?.r h0) ==>
-     (let hr = Some?.v (R?.r h0) in
-      let o_r : x:option heap{Some? x} = Some (snd (interpret_com hr c)) in
-        Some? o_r ==>
-        (forall (r:(ref int){hr `contains_a_well_typed` r /\
-                             Some?.v o_r `contains_a_well_typed` r}).
-          (env r < l  ==> sel hr r = sel (Some?.v o_r) r))))
+unfold
+let preserves_env_upto_label (env:label_fun) (l:label) (c:com) (h0_opt:option heap) : Tot Type0
+= Some? h0_opt ==> begin
+    let h0 = Some?.v h0_opt in
+    let h1_opt = get_heap (interpret_com h0 c) in
+    Some? h1_opt ==> (forall (i:id{i `in_` h0}). env i < l ==> index h0 i = index (Some?.v h1_opt) i)
+  end
 
-type ni_com (env:label_fun) (c:com) (l:label) = 
+type ni_com' (env:label_fun) (c:com) (l:label) (h0_opt: rel (option heap)) =
+  (Some? `diagb` h0_opt ==> begin
+    let h0 = lift Some?.v h0_opt in
+    let h1_opt = lift (fun h -> get_heap (interpret_com h c)) h0 in
+    low_equiv env h0 /\ Some? `diagb` h1_opt ==> low_equiv env (lift Some?.v h1_opt)
+  end)
+ /\ (preserves_env_upto_label env l c) `diag` h0_opt
+
+type ni_com (env:label_fun) (c:com) (l:label) =
     forall (h0: rel (option heap)). ni_com' env c l h0
 
+(* KM : Trying to figure out wht are the design tradeoffs on option heap *)
+(* unfold *)
+(* let preserves_env_upto_label (env:label_fun) (l:label) (c:com) (h0:heap) : Tot Type0 *)
+(* = let (res, h1) = interpret_com h0 c in *)
+(*   Some? res ==> (forall (i:id{i `in_` h0}). env i < l ==> index h0 i = index h1 i) *)
+
+(* type ni_com' (env:label_fun) (c:com) (l:label) (h0:rel heap) = *)
+(*   begin *)
+(*     let res, h1 = split (lift (fun h -> interpret_com h c) h0) in *)
+(*     low_equiv env h0 /\ Some? `diagb` res ==> low_equiv env h1 *)
+(*     end /\ *)
+(*     (preserves_env_upto_label env l c) `diag` h0 *)
+
+(* type ni_com (env:label_fun) (c:com) (l:label) = *)
+(*     forall (h0: rel heap). ni_com' env c l h0 *)
 
 (*********************** Typing Rules for Expressions **********************)
 
@@ -120,27 +132,21 @@ let sub_exp _ _ _ _ = ()
 (* assume val r : id *)
 (* assume val h : rel heap *)
 
-(* let foo0 = *)
-(*   let e = (AVar r) in *)
-(*   let l = (env r) in *)
-(*   (low_equiv env h /\ Low? l) ==>  *)
-(*      (normalize_term (interpret_exp (R?.r h) e) `equal_pair` normalize_term (interpret_exp (R?.l h) e)) *)
 
-(* let foo (env:label_fun) r = (ni_exp env (AVar r) (env r)) *)
+(* let foo = (ni_exp env (AVar r) (env r)) *)
 
-val avar_exp : env:label_fun -> r:id -> 
+val avar_exp : env:label_fun -> r:id ->
   Lemma (requires True)
-        (ensures  (normalize_term (ni_exp env (AVar r) (env r))) )
+        (ensures  (ni_exp env (AVar r) (env r)))
 let avar_exp _ _ = ()
 
-(*
 (* Typing rule for Int constants
 
          i : int
          -------
          i : Low
 *)
-val aint_exp : env:label_fun -> i:int -> 
+val aint_exp : env:label_fun -> i:int ->
   Lemma (requires True)
         (ensures (ni_exp env (AInt i) Low))
 let aint_exp _ _ = ()
@@ -168,7 +174,7 @@ let binop_exp _ _ _ _ _ = ()
                env,pc:l2 |- c
 *)
 
-val sub_com : env:label_fun -> c:com -> l1:label -> l2:label{l2 <= l1} -> 
+val sub_com : env:label_fun -> c:com -> l1:label -> l2:label{l2 <= l1} ->
   Lemma (requires (ni_com env c l1 ))
         (ensures  (ni_com env c l2 ))
 let sub_com _ _ _ _ = ()
@@ -183,7 +189,7 @@ let sub_com _ _ _ _ = ()
     - label of expression and context label have to be below label of r
       (first one to prevent explicit, second to prevent implicit flows)
 *)
-val assign_com : env:label_fun -> e:exp -> r:id -> 
+val assign_com : env:label_fun -> e:exp -> r:id ->
   Lemma (requires (ni_exp env e (env r)))
         (ensures  (ni_com env (Assign r e) (env r)))
 let assign_com _ _ _ = ()
@@ -201,13 +207,13 @@ val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel (option h
 let seq_com' env c1 c2 l h0 =
   match h0 with
   | R None None -> ()
-  | R (Some hl) None -> cut (ni_com' env c2 l (R (interpret_com hl c1) None))
-  | R None (Some hr) -> cut (ni_com' env c2 l (R None (interpret_com hr c1)))
-  | R (Some hl) (Some hr) -> cut (ni_com' env c2 l (R (interpret_com hl c1) (interpret_com hr c1)))
+  | R (Some hl) None -> cut (ni_com' env c2 l (R (get_heap (interpret_com hl c1)) None))
+  | R None (Some hr) -> cut (ni_com' env c2 l (R None (get_heap (interpret_com hr c1)) ))
+  | R (Some hl) (Some hr) -> cut (ni_com' env c2 l (R (get_heap (interpret_com hl c1)) (get_heap (interpret_com hr c1))))
 
-val seq_com : env:label_fun -> c1:com -> c2:com -> l:label -> 
+val seq_com : env:label_fun -> c1:com -> c2:com -> l:label ->
   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
-        (ensures  (ni_com env (Seq c1 c2) l)) 
+        (ensures  (ni_com env (Seq c1 c2) l))
 let seq_com env c1 c2 l = forall_intro
      (fun (h0:rel (option heap)) ->
        seq_com' env c1 c2 l h0 <: Lemma (ni_com' env (Seq c1 c2) l h0))
@@ -235,85 +241,85 @@ val skip_com : env:label_fun ->
   Lemma (ni_com env Skip High)
 let skip_com _ = ()
 
-(* While rule for commands
+(* (\* While rule for commands *)
 
-         env |- e : l          env,pc:l |- c
-         -----------------------------------
-          env,pc:l |- while (e <> 0) do c
-*)
+(*          env |- e : l          env,pc:l |- c *)
+(*          ----------------------------------- *)
+(*           env,pc:l |- while (e <> 0) do c *)
+(* *\) *)
 
-(* slight variant taking option heap *)
-val decr_while : h:(option heap) -> v:variant -> GTot nat
-let decr_while h v = match h with
-  | None -> 0
-  | Some h0 ->
-    let tmp = interpret_exp h0 v in
-    if 0 > tmp then 0 else tmp
+(* (\* slight variant taking option heap *\) *)
+(* val decr_while : h:(option heap) -> v:variant -> GTot nat *)
+(* let decr_while h v = match h with *)
+(*   | None -> 0 *)
+(*   | Some h0 -> *)
+(*     let tmp = interpret_exp h0 v in *)
+(*     if 0 > tmp then 0 else tmp *)
 
-#reset-options "--z3rlimit 30"
+(* (\* #reset-options "--z3rlimit 30" *\) *)
 
-val while_com' : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> h:rel (option heap) -> 
-  Lemma (requires (ni_exp env e l /\ ni_com env c l))
-        (ensures  (ni_com' env (While e c v) l h)) 
-        (decreases (decr_while (R?.l h) v + decr_while (R?.r h) v))
-let rec while_com' env e c v l h = 
-  // Interpret the body
-  match h with
-  | R None None -> ()
-  | R (Some h_l) None ->
-  begin
-    let o_l = interpret_com h_l c in 
-    match o_l with
-    | Some hl -> 
-      if (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 then
-        while_com' env e c v l (R o_l None)
-      else
-        ()
-    | None  -> ()
-  end
-  | R None (Some h_r) -> 
-  begin
-    let o_r = interpret_com h_r c in 
-    match o_r with
-    | Some hr -> 
-      if (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 then
-        while_com' env e c v l (R None o_r)
-      else
-        ()
-    | None  -> ()
-  end
-  | R (Some h_l) (Some h_r) -> 
-  begin
-    let o_l = interpret_com h_l c in 
-    let o_r = interpret_com h_r c in 
+(* val while_com' : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> h:rel (option heap) -> *)
+(*   Lemma (requires (ni_exp env e l /\ ni_com env c l)) *)
+(*         (ensures  (ni_com' env (While e c v) l h)) *)
+(*         (decreases (decr_while (R?.l h) v + decr_while (R?.r h) v)) *)
+(* let rec while_com' env e c v l h = *)
+(*   // Interpret the body *)
+(*   match h with *)
+(*   | R None None -> () *)
+(*   | R (Some h_l) None -> *)
+(*   begin *)
+(*     let o_l = interpret_com h_l c in *)
+(*     match o_l with *)
+(*     | Some hl -> *)
+(*       if (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 then *)
+(*         while_com' env e c v l (R o_l None) *)
+(*       else *)
+(*         () *)
+(*     | None  -> () *)
+(*   end *)
+(*   | R None (Some h_r) -> *)
+(*   begin *)
+(*     let o_r = interpret_com h_r c in *)
+(*     match o_r with *)
+(*     | Some hr -> *)
+(*       if (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 then *)
+(*         while_com' env e c v l (R None o_r) *)
+(*       else *)
+(*         () *)
+(*     | None  -> () *)
+(*   end *)
+(*   | R (Some h_l) (Some h_r) -> *)
+(*   begin *)
+(*     let o_l = interpret_com h_l c in *)
+(*     let o_r = interpret_com h_r c in *)
 
-    // Case analysis on termination of bodies
-    match o_l, o_r with
-    | Some hl , Some hr  -> 
-      begin
-        // case analysis on decreasing of variant
-        match (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 , 
-          (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 with
-        | true , true  -> while_com' env e c v l (R o_l o_r)
-        | true , false -> while_com' env e c v l (R o_l (Some h_r))
-        | false , true -> while_com' env e c v l (R (Some h_l) o_r )
-        | false, false -> ()
-      end
-    | Some hl , None -> 
-      if (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 then
-        while_com' env e c v l (R o_l (Some h_r))
-    | None , Some hr  -> 
-      if (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 then
-        while_com' env e c v l (R (Some h_l) o_r)
-    | None, None -> ()
-  end
+(*     // Case analysis on termination of bodies *)
+(*     match o_l, o_r with *)
+(*     | Some hl , Some hr  -> *)
+(*       begin *)
+(*         // case analysis on decreasing of variant *)
+(*         match (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 , *)
+(*           (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 with *)
+(*         | true , true  -> while_com' env e c v l (R o_l o_r) *)
+(*         | true , false -> while_com' env e c v l (R o_l (Some h_r)) *)
+(*         | false , true -> while_com' env e c v l (R (Some h_l) o_r ) *)
+(*         | false, false -> () *)
+(*       end *)
+(*     | Some hl , None -> *)
+(*       if (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 then *)
+(*         while_com' env e c v l (R o_l (Some h_r)) *)
+(*     | None , Some hr  -> *)
+(*       if (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 then *)
+(*         while_com' env e c v l (R (Some h_l) o_r) *)
+(*     | None, None -> () *)
+(*   end *)
 
-#reset-options
+(* #reset-options *)
 
-val while_com : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> 
-  Lemma (requires (ni_exp env e l /\ ni_com env c l))
-        (ensures  (ni_com env (While e c v) l)) 
-let while_com env e c v l = forall_intro
-  (fun (h:rel (option heap)) -> while_com' env e c v l h
-    <: Lemma (ensures  (ni_com' env (While e c v) l h)))
-*)
+(* val while_com : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> *)
+(*   Lemma (requires (ni_exp env e l /\ ni_com env c l)) *)
+(*         (ensures  (ni_com env (While e c v) l)) *)
+(* let while_com env e c v l = forall_intro *)
+(*   (fun (h:rel (option heap)) -> while_com' env e c v l h *)
+(*     <: Lemma (ensures  (ni_com' env (While e c v) l h))) *)
+(* *\) *)

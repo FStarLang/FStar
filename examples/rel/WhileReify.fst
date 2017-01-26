@@ -3,8 +3,6 @@ module WhileReify
 open FStar.Seq
 open FStar.DM4F.IntStore
 
-type id = nat
-
 type binop =
 | Plus
 | Minus
@@ -62,10 +60,11 @@ reifiable let rec interpret_exp_st e =
     let b = interpret_exp_st e2 in
     interpret_binop o a b
 
+unfold
 let interpret_exp h e = normalize_term (reify (interpret_exp_st e) h)
 
 (* function used for the decreases clause *)
-val decr_while : seq int -> com -> GTot int
+val decr_while : heap -> com -> GTot nat
 let decr_while h c =
   match c with
   | While c b v ->
@@ -78,9 +77,9 @@ let decr_while h c =
 
 exception OutOfFuel
 
-reifiable val interpret_com_st : c:com -> h0:seq int -> IntStore unit
+reifiable val interpret_com_st : c:com -> h0:heap -> IntStore unit
   (requires (fun h -> h == h0))
-  (ensures (fun _ _ _ -> True))
+  (ensures (fun h _ ho -> length h = length ho))
   (decreases %[c; decr_while h0 c])
 reifiable let rec interpret_com_st c h0 =
   match c with
@@ -106,19 +105,12 @@ reifiable let rec interpret_com_st c h0 =
         let h = IS?.get () in
         interpret_com_st body h;
         let m1 = interpret_exp_st v in
-      (* proving recursive terminating relies of interpret_exp not
-         changing the state? somehow F* can't prove this although
-         interpret_exp_st has that in the spec! *)
-      (* working around by using reify *)
-        (* let m0, _ = reify (interpret_exp_st v) h0 in *)
-        (* interpret_com_st body h0; *)
-        (* let h1 = IS?.get() in *)
-        (* let m1, _ = reify (interpret_exp_st v) h1 in *)
         if m0 > m1 && m1 >= 0 then
           let h2 = (IS?.get()) in
           interpret_com_st c h2
         else
-          raise_ () (* raise OutOfFuel -- XXX: no exceptions yet *)
+          raise_ () (* OutOfFuel *)
       end
 
+unfold
 let interpret_com h c = normalize_term (reify (interpret_com_st c h) h)
