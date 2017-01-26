@@ -88,7 +88,6 @@ type env = {
   includes:             BU.smap<(ref<(list<lident>)>)>; (* list of "includes" declarations for each module. *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
   sigmap:               BU.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
-  default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
@@ -121,7 +120,6 @@ let empty_env () = {curmodule=None;
                     includes=new_sigmap();
                     sigaccum=[];
                     sigmap=new_sigmap();
-                    default_result_effect=Const.effect_Tot_lid;
                     iface=false;
                     admitted_iface=false;
                     expect_typ=false}
@@ -129,14 +127,6 @@ let sigmap env = env.sigmap
 let has_all_in_scope env =
   List.existsb (fun (m, _) ->
     lid_equals m Const.all_lid) env.modules
-
-let default_total env = {env with default_result_effect=Const.effect_Tot_lid}
-let default_ml env =
-  if has_all_in_scope env then
-    { env with default_result_effect=Const.effect_ML_lid }
-  else
-    env
-
 
 let set_bv_range bv r =
     let id = {bv.ppname with idRange=r} in
@@ -997,11 +987,8 @@ let prepare_module_or_interface intf admitted env mname =
       sigmap=env.sigmap;
       scope_mods = List.map (fun lid -> Open_module_or_namespace (lid, Open_namespace)) open_ns;
       iface=intf;
-      admitted_iface=admitted;
-      default_result_effect=
-        (if lid_equals mname Const.all_lid || has_all_in_scope env
-         then Const.effect_ML_lid
-         else Const.effect_Tot_lid) } in
+      admitted_iface=admitted }
+  in
 
   match env.modules |> BU.find_opt (fun (l, _) -> lid_equals l mname) with
     | None -> prep env, false

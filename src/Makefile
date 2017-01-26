@@ -79,7 +79,7 @@ wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMA
 #   -- we use automatic dependence analysis based on files in ulib, u_boot_fsts and boot_fstis
 #   -- eager_inference, MLish, lax: all tune type-inference for use with unverified ML programs
 #   -- fs_typ_app parses list<foo> as valid syntax, for overlap with F# syntax
-FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --MLish --lax --fs_typ_app --no_location_info \
+FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --lax --no_location_info \
 		   --odir u_ocaml-output --codegen OCaml --include ../ulib --include u_boot_fsts --include boot_fstis
 
 # JP: these modules are meant to be fsti's (realized in ML); but, the compiler

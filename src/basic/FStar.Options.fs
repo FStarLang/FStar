@@ -404,12 +404,6 @@ let rec specs () : list<Getopt.opt> =
         "Only extract modules in the specified namespace");
 
        ( noshort,
-        "fs_typ_app",
-        ZeroArgs (fun () -> Bool true),
-        "Allow the use of t<t1,...,tn> syntax for type applications;
-        brittle since it clashes with the integer less-than operator");
-
-       ( noshort,
         "fstar_home",
         OneArg (String,
                 "[dir]"),
@@ -495,11 +489,6 @@ let rec specs () : list<Getopt.opt> =
         OneArg((fun x -> Int (int_of_string x)),
                 "[non-negative integer]"),
         "Minimum number of unrolling of recursive functions to try (default 1)");
-
-       ( noshort,
-        "MLish",
-        ZeroArgs(fun () -> Bool true),//ml_ish := true; full_context_dependency := false),
-        "Introduce unification variables that are only dependent on the type variables in the context");
 
        ( noshort,
         "n_cores",
@@ -936,8 +925,8 @@ let z3_timeout                   () = get_z3timeout                   ()
 let should_extract m =
   not (no_extract m) && (extract_all () ||
   (match get_extract_module () with
-  | [] -> 
-    (match get_extract_namespace () with 
+  | [] ->
+    (match get_extract_namespace () with
      | [] -> true
      | ns -> Util.for_some (Util.starts_with (String.lowercase m)) ns)
   | l -> List.contains (String.lowercase m) l))

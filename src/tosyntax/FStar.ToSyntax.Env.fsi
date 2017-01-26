@@ -87,7 +87,6 @@ type env = {
   includes:             BU.smap<(ref<(list<lident>)>)>; (* list of "includes" declarations for each module. *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
   sigmap:               BU.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
-  default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
@@ -103,9 +102,6 @@ val fail_or2: (ident -> option<'a>) -> ident -> 'a
 val qualify: env -> ident -> lident
 
 val empty_env: unit -> env
-val default_total: env -> env
-val default_ml: env -> env
-
 val current_module: env -> lident
 val try_lookup_id: env -> ident -> option<(term*bool)>
 val try_lookup_lid: env -> lident -> option<(term*bool)>
