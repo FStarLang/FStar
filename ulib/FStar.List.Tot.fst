@@ -179,13 +179,21 @@ let rec fold_left2 f accu l1 l2 =
 
 (** [mem x l] returns [true] if, and only if, [x] appears as an
 element of [l]. Requires, at type-checking time, the type of elements
-of [l] to have decidable equality. *)
+of [l] to have decidable equality. Named as in: OCaml. See also:
+List.In in Coq, which is propositional. *)
 val mem: #a:eqtype -> a -> list a -> Tot bool
 let rec mem #a x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
+
+(** [contains x l] returns [true] if, and only if, [x] appears as an
+element of [l]. Requires, at type-checking time, the type of elements
+of [l] to have decidable equality. It is equivalent to: [mem x
+l]. TODO: should we rather swap the order of arguments? *)
 let contains = mem
 
+(** [ecistsb f l] returns [true] if, and only if, there exists some
+element [x] in [l] such that [f x] holds. *)
 val existsb: #a:Type
        -> f:(a -> Tot bool)
        -> list a
@@ -194,6 +202,8 @@ let rec existsb #a f l = match l with
  | [] -> false
  | hd::tl -> if f hd then true else existsb f tl
 
+(** [find f l] returns [Some x] for some element [x] appearing in [l]
+such that [f x] holds, or [None] only if no such [x] exists. *)
 val find: #a:Type
         -> f:(a -> Tot bool)
         -> list a
@@ -202,16 +212,35 @@ let rec find #a f l = match l with
   | [] -> None #(x:a{f x}) //These type annotations are only present because it makes bootstrapping go much faster
   | hd::tl -> if f hd then Some #(x:a{f x}) hd else find f tl
 
+(** Filtering elements of a list [l] through a Boolean pure total
+predicate [f] *)
+
+(** We would like to have a postcondition for [filter f l] saying
+that, for any element [x] of [filter f l], [f x] holds. To this end,
+we need to use [mem] as defined above, which would require the
+underlying type [a] of list elements to have decidable
+equality. However, we would still like to define [filter] on all
+element types, even those that do not have decidable equality. Thus,
+we define our postcondition as [mem_filter_spec f m u] below, where
+[m] is the intended [filter f l] and [u] indicates whether [a] has
+decidable equality ([None] if not). Requires, at type-checking time,
+[f] to be a pure total function. *)
 let mem_filter_spec (#a : Type) (f: (a -> Tot bool)) (m: list a) (u: option (x : unit { hasEq a } )) : Tot Type0 =
   match u with
   | None -> True
   | Some z -> forall x . mem x m ==> f x
 
+(** [filter f l] returns [l] with all elements [x] such that [f x]
+does not hold removed. Requires, at type-checking time, [f] to be a
+pure total function. *)
 val filter : #a: Type -> f:(a -> Tot bool) -> l: list a -> Tot (m:list a { forall u . mem_filter_spec f m u } )
 let rec filter #a f = function
   | [] -> []
   | hd::tl -> if f hd then hd::filter f tl else filter f tl
 
+(** Postcondition on [filter f l] for types with decidable equality:
+for any element [x] of [filter f l], [f x] holds. Requires, at
+type-checking time, [f] to be a pure total function.*)
 val mem_filter (#a: eqtype) (f: (a -> Tot bool)) (l: list a) (x: a) : Lemma
   (requires (mem #a x (filter f l)))
   (ensures (f x))
@@ -220,27 +249,47 @@ let mem_filter #a f l x =
   let y : (z : unit { mem_filter_spec f (filter f l) u } ) = () in
   ()
 
+(** Postcondition on [filter f l] for types with decidable equality,
+stated with [forall]: for any element [x] of [filter f l], [f x]
+holds. Requires, at type-checking time, [f] to be a pure total
+function. *)
 val mem_filter_forall (#a: eqtype) (f: (a -> Tot bool)) (l: list a) : Lemma
   (requires True)
   (ensures (forall x . mem #a x (filter f l) ==> f x))
   [SMTPat (filter f l)]
 let mem_filter_forall #a f l = FStar.Classical.ghost_lemma (mem_filter f l)
 
+(** [for_all f l] returns [true] if, and only if, for all elements [x]
+appearing in [l], [f x] holds. Requires, at type-checking time, [f] to
+be a pure total function. *)
 val for_all: ('a -> Tot bool) -> list 'a -> Tot bool
 let rec for_all f l = match l with
     | [] -> true
     | hd::tl -> if f hd then for_all f tl else false
 
+(** [collect f l] applies [f] to each element of [l] and returns the
+concatenation of the results, in the order of the original elements of
+[l]. It is equivalent to [flatten (map f l)]. Requires, at
+type-checking time, [f] to be a pure total function. TODO: what is
+the difference with [concatMap]? *)
 val collect: ('a -> Tot (list 'b)) -> list 'a -> Tot (list 'b)
 let rec collect f l = match l with
     | [] -> []
     | hd::tl -> append (f hd) (collect f tl)
 
+(** [tryFind f l] returns [Some x] for some element [x] appearing in
+[l] such that [f x] holds, or [None] only if no such [x]
+exists. Requires, at type-checking time, [f] to be a pure total
+function. TODO: what is the difference with [find]? *)
 val tryFind: ('a -> Tot bool) -> list 'a -> Tot (option 'a)
 let rec tryFind p l = match l with
     | [] -> None
     | hd::tl -> if p hd then Some hd else tryFind p tl
 
+(** [tryPick f l] returns [y] for some element [x] appearing in [l]
+such that [f x = Some y] for some y, or [None] only if [f x = None]
+for all elements [x] of [l]. Requires, at type-checking time, [f] to
+be a pure total function. *)
 val tryPick: ('a -> Tot (option 'b)) -> list 'a -> Tot (option 'b)
 let rec tryPick f l = match l with
     | [] -> None
@@ -249,6 +298,9 @@ let rec tryPick f l = match l with
          | Some x -> Some x
          | None -> tryPick f tl
 
+(** [tryPick f l] returns the list of [y] for all elements [x]
+appearing in [l] such that [f x = Some y] for some [y]. Requires, at
+type-checking time, [f] to be a pure total function. *)
 val choose: ('a -> Tot (option 'b)) -> list 'a -> Tot (list 'b)
 let rec choose f l = match l with
     | [] -> []
@@ -257,6 +309,11 @@ let rec choose f l = match l with
          | Some x -> x::(choose f tl)
          | None -> choose f tl
 
+(** [partition f l] returns the pair of lists [(l1, l2)] where all
+elements [x] of [l] are in [l1] if [f x] holds, and in [l2]
+otherwise. Both [l1] and [l2] retain the original order of
+[l]. Requires, at type-checking time, [f] to be a pure total
+function. *)
 val partition: f:('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
 let rec partition f = function
   | [] -> [], []
@@ -267,13 +324,17 @@ let rec partition f = function
      else l1, hd::l2
 
 (** [subset la lb] is true if and only if all the elements from [la]
-    are also in [lb]. *)
+    are also in [lb]. Requires, at type-checking time, the type of
+    elements of [la] and [lb] to have decidable equality. *)
 val subset: #a:eqtype -> list a -> list a -> Tot bool
 let rec subset #a la lb =
   match la with
   | [] -> true
   | h :: tl ->  mem h lb && subset tl lb
 
+(** [noRepeats l] returns [true] if, and only if, no element of [l]
+appears in [l] more than once. Requires, at type-checking time, the
+type of elements of [la] and [lb] to have decidable equality. *)
 val noRepeats : #a:eqtype -> list a -> Tot bool
 let rec noRepeats #a la =
   match la with
@@ -281,19 +342,34 @@ let rec noRepeats #a la =
   | h :: tl -> not(mem h tl) && noRepeats tl
 
 (** List of tuples **)
+
+(** [assoc x l] returns [Some y] where [(x, y)] is the first element
+of [l] whose first element is [x], or [None] only if no such element
+exists. Requires, at type-checking time, the type of [x] to have
+decidable equality. Named as in: OCaml. *)
 val assoc: #a:eqtype -> #b:Type -> a -> list (a * b) -> Tot (option b)
 let rec assoc #a #b x = function
   | [] -> None
   | (x', y)::tl -> if x=x' then Some y else assoc x tl
 
+(** [split] takes a list of pairs [(x1, y1), ..., (xn, yn)] and
+returns the pair of lists ([x1, ..., xn], [y1, ..., yn]). Named as in:
+OCaml *)
 val split: list ('a * 'b) -> Tot (list 'a * list 'b)
 let rec split l = match l with
     | [] -> ([],[])
     | (hd1,hd2)::tl ->
        let (tl1,tl2) = split tl in
        (hd1::tl1,hd2::tl2)
+
+(** [unzip] takes a list of pairs [(x1, y1), ..., (xn, yn)] and
+returns the pair of lists ([x1, ..., xn], [y1, ..., yn]). Named as in:
+Haskell *)
 let unzip = split
 
+(** [unzip3] takes a list of triples [(x1, y1, z1), ..., (xn, yn, zn)]
+and returns the triple of lists ([x1, ..., xn], [y1, ..., yn], [z1,
+..., zn]). Named as in: Haskell *)
 val unzip3: list ('a * 'b * 'c) -> Tot (list 'a * list 'b * list 'c)
 let rec unzip3 l = match l with
     | [] -> ([],[],[])
@@ -302,6 +378,9 @@ let rec unzip3 l = match l with
        (hd1::tl1,hd2::tl2,hd3::tl3)
 
 (** Sorting (implemented as quicksort) **)
+
+(** [partition] splits a list [l] into two lists, the sum of whose
+lengths is the length of [l]. *)
 val partition_length: f:('a -> Tot bool)
                     -> l:list 'a
                     -> Lemma (requires True)
