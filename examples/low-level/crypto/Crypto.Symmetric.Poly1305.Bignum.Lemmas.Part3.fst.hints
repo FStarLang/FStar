@@ -873,7 +873,7 @@
         "equation_FStar.Mul.op_Star", "equation_Prims.nat",
         "equation_Prims.pos",
         "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "int_inversion", "primitive_Prims.op_Addition",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",

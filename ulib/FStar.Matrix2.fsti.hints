@@ -108,8 +108,9 @@
       0,
       0,
       [
-        "@query",
-        "refinement_interpretation_Tm_refine_48f24197874ec0c162e3bf5cbdf022f1"
+        "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368",
+        "refinement_interpretation_Tm_refine_d70501a9ebd0660fc59c3349dad118ea"
       ],
       0
     ],
@@ -153,8 +154,9 @@
       0,
       0,
       [
-        "@query",
-        "refinement_interpretation_Tm_refine_48f24197874ec0c162e3bf5cbdf022f1"
+        "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368",
+        "refinement_interpretation_Tm_refine_d70501a9ebd0660fc59c3349dad118ea"
       ],
       0
     ],
