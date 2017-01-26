@@ -220,6 +220,12 @@ let mem_filter #a f l x =
   let y : (z : unit { mem_filter_spec f (filter f l) u } ) = () in
   ()
 
+val mem_filter_forall (#a: eqtype) (f: (a -> Tot bool)) (l: list a) : Lemma
+  (requires True)
+  (ensures (forall x . mem #a x (filter f l) ==> f x))
+  [SMTPat (filter f l)]
+let mem_filter_forall #a f l = FStar.Classical.ghost_lemma (mem_filter f l)
+
 val for_all: ('a -> Tot bool) -> list 'a -> Tot bool
 let rec for_all f l = match l with
     | [] -> true
