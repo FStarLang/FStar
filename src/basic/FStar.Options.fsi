@@ -17,6 +17,7 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.All
 open FStar.Getopt
 
 //let __test_norm_all = Util.mk_ref false

@@ -15,7 +15,7 @@
 *)
 #light "off"
 module FStar.Range
-
+open FStar.All
 open FStar.BaseTypes
 
 type range = {

@@ -17,6 +17,7 @@
 
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStar.Parser.ToDocument
+open FStar.All
 
 open FStar
 open FStar.Util

@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Syntax.Syntax
+open FStar.All
 (* Type definitions for the core AST *)
 
 (* Prims is used for bootstrapping *)

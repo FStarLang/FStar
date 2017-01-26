@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Util
+open FStar.All
 open FStar
 open FStar.Util
 open FStar.Errors

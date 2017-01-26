@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Solver
+open FStar.All
 open FStar
 open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding.Term
