@@ -68,6 +68,7 @@ let codegen (umods, env) =
     in
     match opt with
     | Some "OCaml" when Options.print_ml() -> 
+        let _ = FStar.Util.print1 "%s\n" "invoking PrintML.print" in
         List.iter FStar.Extraction.ML.PrintML.print mllibs
     | Some "FSharp" | Some "OCaml" ->
         let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in

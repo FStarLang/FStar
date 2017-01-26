@@ -245,8 +245,7 @@ let record_fields fs vs = List.map2 (fun (f:lident) e -> f.ident.idText, e) fs v
 
 let is_xtuple_ty (ns, n) =
     if ns = ["Prims"]
-    then if (Options.universes())
-         then match n with
+    then match n with
             | "tuple2" -> Some 2
             | "tuple3" -> Some 3
             | "tuple4" -> Some 4
@@ -254,15 +253,6 @@ let is_xtuple_ty (ns, n) =
             | "tuple6" -> Some 6
             | "tuple7" -> Some 7
             | "tuple8" -> Some 8
-            | _ -> None
-         else match n with
-            | "Tuple2" -> Some 2
-            | "Tuple3" -> Some 3
-            | "Tuple4" -> Some 4
-            | "Tuple5" -> Some 5
-            | "Tuple6" -> Some 6
-            | "Tuple7" -> Some 7
-            | "Tuple8" -> Some 8
             | _ -> None
     else None
 

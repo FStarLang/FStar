@@ -241,12 +241,10 @@ type inputFragment = either<file,list<decl>>
 
 (********************************************************************************)
 let check_id id =
-    if Options.universes()
-    then let first_char = String.substring id.idText 0 1 in
-         if String.lowercase first_char = first_char
-         then ()
-         else raise (Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
-    else ()
+    let first_char = String.substring id.idText 0 1 in
+    if String.lowercase first_char = first_char
+    then ()
+    else raise (Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
 
 let at_most_one s r l = match l with
   | [ x ] -> Some x
@@ -310,11 +308,8 @@ let mkApp t args r = match args with
       | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
 
 let mkRefSet r elts =
-  let univs = Options.universes () in
   let empty_lid, singleton_lid, union_lid = 
-      if univs 
-      then C.tset_empty, C.tset_singleton, C.tset_union 
-      else C.set_empty, C.set_singleton, C.set_union in
+      C.tset_empty, C.tset_singleton, C.tset_union in
   let empty = mk_term (Var(set_lid_range empty_lid r)) r Expr in
   let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r Expr in
   let singleton = mk_term (Var (set_lid_range singleton_lid r)) r Expr in
@@ -365,17 +360,11 @@ let mkFsTypApp t args r =
 
   (* TODO : is this valid or should it use Construct ? *)
 let mkTuple args r =
-  let cons =
-    if Options.universes()
-    then FStar.Syntax.Util.mk_tuple_data_lid (List.length args) r
-    else old_mk_tuple_data_lid (List.length args) r in
+  let cons = FStar.Syntax.Util.mk_tuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkDTuple args r =
-  let cons =
-        if Options.universes()
-        then FStar.Syntax.Util.mk_dtuple_data_lid (List.length args) r
-        else old_mk_dtuple_data_lid (List.length args) r in
+  let cons = FStar.Syntax.Util.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkRefinedBinder id t should_bind_var refopt m implicit =

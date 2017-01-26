@@ -27,7 +27,7 @@ open FStar.BaseTypes
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
 type mlident  = mlsymbol * int //what is the second component? Why do we need it?
-type mlpath   = list<mlsymbol> * mlsymbol
+type mlpath   = list<mlsymbol> * mlsymbol //Path and name of a module
 
 (* -------------------------------------------------------------------- *)
 let ocamlkeywords = [
@@ -204,7 +204,7 @@ let with_ty t e = with_ty_loc t e dummy_loc
 
 (* -------------------------------------------------------------------- *)
 type mllib =
-  | MLLib of list<(mlpath * option<(mlsig * mlmodule)> * mllib)>
+  | MLLib of list<(mlpath * option<(mlsig * mlmodule)> * mllib)> //Last field never seems to be used. Refactor?
 
 (* -------------------------------------------------------------------- *)
 // do NOT remove Prims, because all mentions of unit/bool in F* are actually Prims.unit/bool.

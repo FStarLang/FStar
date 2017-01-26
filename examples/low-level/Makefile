@@ -11,7 +11,7 @@ CODEGEN_ARGS=--lax --codegen OCaml --no_location_info $(FSTAR_DEFAULT_ARGS)
 
 KREMLIN_HOME=../../../kremlin
 KREMLIN=$(KREMLIN_HOME)/Kremlin.native
-KREMLIN_ARGS=-tmpdir kremlin -verbose -cc clang -ccopt -Wno-error=pointer-sign -ccopt -Wno-error=non-literal-null-conversion
+KREMLIN_ARGS=-tmpdir kremlin -verbose -cc clang
 
 CHACHA_ODIR=chacha
 POLY_ODIR=poly
@@ -31,7 +31,7 @@ CHACHA_AEAD_EXTRACTED=Spartan.ml FStar_List_Tot.ml FStar_Seq.ml FStar_SeqPropert
 .PHONY: lib-ver chacha-ver chacha-ml ulib
 
 #NS: 12/21, we decided to only check verification on each commit; a full test happens nightly using the extra target
-uall:
+all:
 	+make -C crypto all
 
 extra:
@@ -39,8 +39,6 @@ extra:
 	+make chacha-test aes-test aesgcm-test chacha-aead-test
 	+make -C crypto all extra
 # removed tests poly-test and aead-test, relying on older code.
-
-sall:
 
 ulib: $(FSTAR_HOME)/ulib/ml/fstarlib.cmxa
 
@@ -193,7 +191,7 @@ bignum-ver:
 	$(FSTAR) --use_hints --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
 
 KRML_INCLUDES=$(addprefix -I ,spartan_aes crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
-KRML_ARGS=-verbose -ccopt -maes -ccopt -Wno-error=pointer-sign $(KOPTS)
+KRML_ARGS=-verbose -ccopt -maes $(KOPTS)
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES) 
 
 spartan_aes/aes.o:
@@ -206,9 +204,25 @@ krml-test.exe: spartan_aes/aes.o crypto/*.fst
 	$(KRML) crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst \
 		spartan_aes/aes.o crypto/spartan_stub.c \
 	       	crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest \
+		-bundle Crypto_KrmlTest=Flag,Crypto.* \
 	       	$(KREMLIN_HOME)/test/../kremlib/testlib.c crypto/test_hacks.c \
-		-tmpdir tmp -add-include '"testlib.h"' -o krml-test.exe
+		-tmpdir tmp -add-include '"testlib.h"' -o $@
 	./krml-test.exe
+
+test-perf.exe: crypto/test_perf.c krml-test.exe
+	# Add this argument once someone writes a proper API for the Crypto
+	# subsystem
+	#-bundle Crypto_KrmlTest=Flag,Crypto.* 
+	$(KRML) tmp/out.krml \
+		-tmpdir tmp -add-include '"testlib.h"' -o $@ \
+	       	$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
+	        crypto/test_perf.c spartan_aes/aes.o crypto/spartan_stub.c \
+		-ccopts -Ofast,-m64,-march=native,-mtune=native,-flto,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
+		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
+		-I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto $(CFLAGS)
+	PATH=$(OPENSSL_HOME):"$(PATH)" \
+	  LD_LIBRARY_PATH=$(OPENSSL_HOME):"$(LD_LIBRARY_PATH)" \
+	  DYLD_LIBRARY_PATH=$(OPENSSL_HOME):"$(DYLD_LIBRARY_PATH)" ./test-perf.exe
 
 OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List_Tot.ml \
 		tmp/FStar_Seq.ml \
@@ -307,16 +321,6 @@ ocaml-test.exe: ocaml-test-extract
 OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
 #OPENSSL_HOME=/usr/local/Cellar/openssl\@1.1/1.1.0c
 #CC=gcc-6 
-
-test-perf.exe: krml-test.exe crypto/test_perf.c
-	$(CC) -Ofast -m64 -march=native -mtune=native -flto -funroll-loops -fomit-frame-pointer \
-	 -o test-perf.exe tmp/FStar.c tmp/Crypto_AEAD*.c tmp/Crypto_Symmetric*.c tmp/Crypto_Indexing*.c tmp/Buffer_Utils*.c tmp/Crypto_Plain*.c $(KREMLIN_HOME)/kremlib/kremlib.c \
-		$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_perf.c crypto/spartan_stub.c spartan_aes/*.o crypto/test_hacks.c -I tmp -L tmp \
-		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
-		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME)/lib -L $(OPENSSL_HOME) -lcrypto $(CFLAGS)
-	PATH=$(OPENSSL_HOME):"$(PATH)" \
-	  LD_LIBRARY_PATH=$(OPENSSL_HOME):"$(LD_LIBRARY_PATH)" \
-	  DYLD_LIBRARY_PATH=$(OPENSSL_HOME):"$(DYLD_LIBRARY_PATH)" ./test-perf.exe
 
 # Cleaning
 clean:
