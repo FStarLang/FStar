@@ -1,9 +1,8 @@
 module WhileReify
 
-open FStar.DM4F.IntStoreAux
 open FStar.DM4F.IntStore
 
-type id = index
+type id = nat
 
 type binop =
 | Plus
@@ -89,20 +88,20 @@ reifiable let rec interpret_com_st c h0 =
     write x v
   | Seq c1 c2 ->
     begin
-      let h1 = (INT_STORE?.get()) in
+      let h1 = (IS?.get()) in
       interpret_com_st c1 h1;
-      let h2 = (INT_STORE?.get()) in
+      let h2 = (IS?.get()) in
       interpret_com_st c2 h2
     end
   | If e ct cf ->
       let c = if interpret_exp_st e = 0 then cf else ct in
-      let h = (INT_STORE?.get()) in
+      let h = (IS?.get()) in
       interpret_com_st c h
   | While e body v ->
     if interpret_exp_st e <> 0 then
       begin
       (*   let m0 = interpret_exp_st v in *)
-      (*   interpret_com_st body (INT_STORE?.get()); *)
+      (*   interpret_com_st body (IS?.get()); *)
       (*   let m1 = interpret_exp_st v in *)
       (* proving recursive terminating relies of interpret_exp not
          changing the state? somehow F* can't prove this although
@@ -110,10 +109,10 @@ reifiable let rec interpret_com_st c h0 =
       (* working around by using reify *)
         let m0, _ = reify (interpret_exp_st v) h0 in
         interpret_com_st body h0;
-        let h1 = INT_STORE?.get() in
+        let h1 = IS?.get() in
         let m1, _ = reify (interpret_exp_st v) h1 in
         if m0 > m1 && m1 >= 0 then
-          let h2 = (INT_STORE?.get()) in
+          let h2 = (IS?.get()) in
           interpret_com_st c h2
         else
           raise_ () (* raise OutOfFuel -- XXX: no exceptions yet *)
