@@ -557,7 +557,7 @@ let resugar_pat q p = match p with
 //     Translates an F* pattern to an ML pattern
 //     The main work is erasing inaccessible (dot) patterns
 //     And turning F*'s curried pattern style to ML's fully applied ones
-let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) (g:env) (p:S.pat) (expected_topt:option<mlty>) 
+let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) (g:env) (p:S.pat) (expected_topt:option<mlty>)
     : env * option<(mlpattern * list<mlexpr>)> * bool =
     let ok t =
         match expected_topt with
@@ -1028,9 +1028,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             then lbs |> List.map (fun lb ->
                     let tcenv = TcEnv.set_current_module g.tcenv
                                 (Ident.lid_of_path ((fst g.currentModule) @ [snd g.currentModule]) Range.dummyRange) in
-                    debug g (fun () -> 
+                    debug g (fun () ->
                                 Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
-                    let lbdef = 
+                    let lbdef =
                         if Options.ml_ish()
                         then lb.lbdef
                         else N.normalize [N.AllowUnboundUniverses; N.EraseUniverses;

@@ -43,6 +43,7 @@ type sconst = FStar.Const.sconst
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
+  | LightOff
 
 type memo<'a> = ref<option<'a>>
 

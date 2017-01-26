@@ -90,6 +90,7 @@ val max_fuel                    : unit    -> int
 val max_ifuel                   : unit    -> int
 val min_fuel                    : unit    -> int
 val ml_ish                      : unit    -> bool
+val set_ml_ish                  : unit    -> unit
 val n_cores                     : unit    -> int
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool

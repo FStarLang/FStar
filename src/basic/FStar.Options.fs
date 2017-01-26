@@ -491,6 +491,11 @@ let rec specs () : list<Getopt.opt> =
         "Minimum number of unrolling of recursive functions to try (default 1)");
 
        ( noshort,
+        "MLish",
+        ZeroArgs(fun () -> Bool true),
+        "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
+
+       ( noshort,
         "n_cores",
         OneArg ((fun x -> Int (int_of_string x)),//; detail_errors := false),
                  "[positive integer]"),
@@ -869,7 +874,7 @@ let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
 let explicit_deps                () = get_explicit_deps               ()
 let extract_all                  () = get_extract_all                 ()
-let fs_typ_app    (filename:string) = get_fs_typ_app () && List.contains filename !light_off_files
+let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
@@ -886,6 +891,7 @@ let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
 let min_fuel                     () = get_min_fuel                    ()
 let ml_ish                       () = get_MLish                       ()
+let set_ml_ish                   () = set_option "MLish" (Bool true)
 let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.contains s

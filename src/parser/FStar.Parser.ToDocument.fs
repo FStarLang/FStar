@@ -405,6 +405,7 @@ and p_rawDecl d = match d.d with
 and p_pragma = function
     | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
     | ResetOptions s_opt -> str "#reset-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
+    | LightOff -> str "#light \"off\""
 
 (* TODO : needs to take the F# specific type instantiation *)
 and p_typars bs = p_binders true bs

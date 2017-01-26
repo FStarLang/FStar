@@ -249,8 +249,10 @@ let collect_one
   let auto_open =
     if basename filename = "prims.fst" then
       []
-    else
+    else if starts_with (String.lowercase (basename filename)) "fstar." then
       [ Const.fstar_ns_lid; Const.prims_lid ]
+    else
+      [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ]
   in
   List.iter (record_open false) auto_open;
 

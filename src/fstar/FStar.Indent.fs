@@ -1,3 +1,4 @@
+#light "off"
 module FStar.Indent
 
 open FStar.Util

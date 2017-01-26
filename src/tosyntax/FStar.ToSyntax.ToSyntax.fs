@@ -67,7 +67,7 @@ let trans_qual r maybe_effect_id = function
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
   | AST.ResetOptions sopt -> S.ResetOptions sopt
-  | AST.LightOff -> failwith "Refusing to translate #light \"off\""
+  | AST.LightOff -> S.LightOff
 
 let as_imp = function
     | Hash -> Some S.imp_tag
@@ -1771,12 +1771,10 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (bu
 and desugar_decl env (d:decl) : (env_t * sigelts) =
   let trans_qual = trans_qual d.drange in
   match d.d with
-  | Pragma LightOff ->
-    Options.set_option "MLish" (Options.Bool true);
-    env, []
-
   | Pragma p ->
     let se = Sig_pragma(trans_pragma p, d.drange) in
+    if p = LightOff
+    then Options.set_ml_ish();
     env, [se]
 
   | Fsdoc _ -> env, []
