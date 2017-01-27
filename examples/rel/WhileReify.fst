@@ -61,7 +61,7 @@ reifiable let rec interpret_exp_st e =
     interpret_binop o a b
 
 
-let interpret_exp (h:heap) (e:exp) : Tot (option int * heap) = normalize_term (reify (interpret_exp_st e) h)
+let interpret_exp (h:heap) (e:exp) : Tot (option int * heap) = (* normalize_term *) (reify (interpret_exp_st e) h)
 
 
 let interpret_exp' (h:heap) (e:exp) : Tot nat =
@@ -80,7 +80,7 @@ exception OutOfFuel
 
 reifiable val interpret_com_st : c:com -> h0:heap -> IntStore unit
   (requires (fun h -> h == h0))
-  (ensures (fun h _ ho -> length h = length ho))
+  (ensures (fun h _ ho -> h == h0 /\ length h0 = length ho))
   (decreases %[c; decr_while h0 c])
 reifiable let rec interpret_com_st c h0 =
   match c with
@@ -120,6 +120,13 @@ reifiable let rec interpret_com_st c h0 =
           raise_ () (* OutOfFuel *)
       end
 
-unfold
-let interpret_com h c = normalize_term (reify (interpret_com_st c h) h)
+
+(* TODO : Normalization does not play very well with ensures clauses... *)
+(* But there is no problem when replacing normalize_term by foobar where *)
+(* abstract let foobar (#a:Type) (x:a) : a = x *)
+let interpret_com (h0:heap) (c:com) : Tot (option (h:heap{length h = length h0} ))
+=
+  match (* normalize_term *) (reify (interpret_com_st c h0) h0) with
+  | Some (), h -> assert (length h0 == length h) ;Some h
+  | None, _ -> None
 

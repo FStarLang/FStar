@@ -721,8 +721,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           in
 
           begin match lopt with
-            | None -> //we don't even know if this is a pure function, so give up
-              Errors.warn t0.pos (BU.format1 "Losing precision when encoding a function literal: %s" (Print.term_to_string t0));
+            | None ->
+              //we don't even know if this is a pure function, so give up
+              Errors.warn t0.pos (BU.format1
+                "Losing precision when encoding a function literal: %s\n\
+                 (Unnannotated abstraction in the compiler ?)" (Print.term_to_string t0));
               fallback ()
 
             | Some lc ->

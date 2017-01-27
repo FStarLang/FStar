@@ -1560,7 +1560,7 @@ end))
 in (match (lopt) with
 | None -> begin
 ((let _0_387 = (let _0_386 = (FStar_Syntax_Print.term_to_string t0)
-in (FStar_Util.format1 "Losing precision when encoding a function literal: %s" _0_386))
+in (FStar_Util.format1 "Losing precision when encoding a function literal: %s\n(Unnannotated abstraction in the compiler ?)" _0_386))
 in (FStar_Errors.warn t0.FStar_Syntax_Syntax.pos _0_387));
 (fallback ());
 )
