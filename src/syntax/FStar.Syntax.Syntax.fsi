@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Syntax.Syntax
+open FStar.All
 (* Type definitions for the core AST *)
 
 (* Prims is used for bootstrapping *)
@@ -43,6 +44,7 @@ type sconst = FStar.Const.sconst
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
+  | LightOff
 
 type memo<'a> = ref<option<'a>>
 

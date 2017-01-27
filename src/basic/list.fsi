@@ -15,6 +15,7 @@
  *)
 #light "off"
 module FStar.List
+open FStar.All
 open Prims
 
 val isEmpty : (list<'a>) -> Tot<bool>

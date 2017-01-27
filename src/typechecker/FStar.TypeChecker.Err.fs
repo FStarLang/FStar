@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.TypeChecker.Err
+open FStar.All
 
 open FStar
 open FStar.Syntax
