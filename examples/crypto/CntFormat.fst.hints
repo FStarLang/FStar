@@ -34,9 +34,10 @@
       ],
       0
     ],
+    [ "CntFormat.append_inj_lemma", 4, 2, 1, [ "@query" ], 0 ],
     [
       "CntFormat.append_inj_lemma",
-      4,
+      5,
       2,
       1,
       [
@@ -52,6 +53,8 @@
       ],
       0
     ],
+    [ "CntFormat.uint16", 1, 2, 1, [ "@query" ], 0 ],
+    [ "CntFormat.uint32", 1, 2, 1, [ "@query" ], 0 ],
     [
       "CntFormat.uint16_to_bytes",
       1,
@@ -95,6 +98,8 @@
       ],
       0
     ],
+    [ "CntFormat.UTF8_inj", 2, 2, 1, [ "@query" ], 0 ],
+    [ "CntFormat.string16", 1, 2, 1, [ "@query" ], 0 ],
     [
       "CntFormat.tag0",
       1,
@@ -119,9 +124,10 @@
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0
     ],
+    [ "CntFormat.response", 1, 2, 1, [ "@query" ], 0 ],
     [
       "CntFormat.response",
-      1,
+      2,
       2,
       1,
       [
@@ -279,6 +285,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0
-    ]
+    ],
+    [ "CntFormat.signal_components_corr", 6, 2, 1, [ "@query" ], 0 ]
   ]
 ]
