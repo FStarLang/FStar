@@ -441,29 +441,34 @@ in (FStar_List.append _0_470 _0_469)))
 in (sort_labels results))
 end
 | (hd)::tl -> begin
+((let _0_471 = (FStar_Util.string_of_int (FStar_List.length active))
+in (FStar_Util.print1 "%s, " _0_471));
+(FStar_SMTEncoding_Z3.refresh ());
 (
 
-let uu____954 = (askZ3 (FStar_All.pipe_left elim (FStar_List.append eliminated (FStar_List.append errors tl))))
-in (match (uu____954) with
-| (result, uu____975) -> begin
+let uu____959 = (askZ3 (FStar_All.pipe_left elim (FStar_List.append eliminated (FStar_List.append errors tl))))
+in (match (uu____959) with
+| (result, uu____980) -> begin
 (
 
-let uu____984 = (FStar_Util.is_left result)
-in (match (uu____984) with
+let uu____989 = (FStar_Util.is_left result)
+in (match (uu____989) with
 | true -> begin
 (linear_check ((hd)::eliminated) errors tl)
 end
-| uu____993 -> begin
+| uu____998 -> begin
 (linear_check eliminated ((hd)::errors) tl)
 end))
-end))
+end));
+)
 end))
 in ((print_banner ());
 (FStar_Options.set_option "z3rlimit" (FStar_Options.Int ((Prims.parse_int "5"))));
 (
 
 let res = (linear_check [] [] all_labels)
-in ((FStar_All.pipe_right res (FStar_List.iter print_result));
+in ((FStar_Util.print_string "\n");
+(FStar_All.pipe_right res (FStar_List.iter print_result));
 [];
 ));
 ))))))

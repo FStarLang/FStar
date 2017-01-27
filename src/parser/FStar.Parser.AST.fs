@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Parser.AST
+open FStar.All
 //open FStar.Absyn
 open FStar.Errors
 module C = FStar.Syntax.Const
@@ -198,6 +199,7 @@ type lift = {
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
+  | LightOff
 
 type decl' =
   | TopLevelModule of lid
@@ -308,7 +310,7 @@ let mkApp t args r = match args with
       | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
 
 let mkRefSet r elts =
-  let empty_lid, singleton_lid, union_lid = 
+  let empty_lid, singleton_lid, union_lid =
       C.tset_empty, C.tset_singleton, C.tset_union in
   let empty = mk_term (Var(set_lid_range empty_lid r)) r Expr in
   let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r Expr in
@@ -443,9 +445,10 @@ let rec as_mlist (out:list<modul>) (cur: (lid * decl) * list<decl>) (ds:list<dec
             as_mlist out ((m_name, m_decl), d::cur) ds
         end
 
-let as_frag (d:decl) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
+let as_frag is_light (d:decl) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
   match d.d with
   | TopLevelModule m ->
+      let ds = if is_light then mk_decl (Pragma LightOff) d.drange [] :: ds else ds in
       let ms = as_mlist [] ((m,d), []) ds in
       begin match List.tl ms with
       | Module (m', _) :: _ ->

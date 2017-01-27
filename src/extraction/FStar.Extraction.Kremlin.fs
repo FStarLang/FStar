@@ -17,6 +17,7 @@
 #light "off"
 
 module FStar.Extraction.Kremlin
+open FStar.All
 
 open FStar
 open FStar.Util
