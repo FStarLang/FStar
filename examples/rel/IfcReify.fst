@@ -6,135 +6,138 @@ open FStar.Seq
 open FStar.DM4F.IntStore
 open FStar.Classical
 
-(****************************** Preliminaries ******************************)
+(* Just for debug *)
+let ni_exp (e:exp)  = forall (h: heap). b2t (normalize_term (fst (interpret_exp h e)) = Some 5)
 
-(* CH: Everything specialized to 2-point lattice *)
-type label =
-| Low
-| High
+(* (\****************************** Preliminaries ******************************\) *)
 
-val op_Less : label -> label -> Tot bool
-let op_Less l1 l2 =
-  match l1, l2 with
-  | Low,High -> true
-  | _, _ -> false
+(* (\* CH: Everything specialized to 2-point lattice *\) *)
+(* type label = *)
+(* | Low *)
+(* | High *)
 
-val op_Less_Equals : label -> label -> Tot bool
-let op_Less_Equals l1 l2 =
-  match l1, l2 with
-  | High,Low -> false
-  | _, _ -> true
+(* val op_Less : label -> label -> Tot bool *)
+(* let op_Less l1 l2 = *)
+(*   match l1, l2 with *)
+(*   | Low,High -> true *)
+(*   | _, _ -> false *)
 
-val join : label -> label -> Tot label
-let join l1 l2 =
-  match l1, l2 with
-  | Low,Low -> Low
-  | _, _ -> High
+(* val op_Less_Equals : label -> label -> Tot bool *)
+(* let op_Less_Equals l1 l2 = *)
+(*   match l1, l2 with *)
+(*   | High,Low -> false *)
+(*   | _, _ -> true *)
 
-type label_fun = nat -> Tot label
+(* val join : label -> label -> Tot label *)
+(* let join l1 l2 = *)
+(*   match l1, l2 with *)
+(*   | Low,Low -> Low *)
+(*   | _, _ -> High *)
 
-let in_r x h = (in_ x) `diagb` h
+(* type label_fun = nat -> Tot label *)
 
-type low_equiv (env:label_fun) (h1:rel heap) =
-  forall (x:id{x `in_r` h1}).
-    env x = Low ==> index (R?.l h1) x = index (R?.r h1) x
+(* let in_r x h = (in_ x) `diagb` h *)
 
-let get_heap (#a:Type) : option a * heap -> Tot (option heap)
-= function
-  | None, _ -> None
-  | Some _, h -> Some h
+(* type low_equiv (env:label_fun) (h1:rel heap) = *)
+(*   forall (x:id{x `in_r` h1}). *)
+(*     env x = Low ==> index (R?.l h1) x = index (R?.r h1) x *)
 
-(**************************** Typing Judgements ****************************)
+(* let get_heap (#a:Type) : option a * heap -> Tot (option heap) *)
+(* = function *)
+(*   | None, _ -> None *)
+(*   | Some _, h -> Some h *)
 
-(* env |- e : l
-   - Expressions do not modify the heap
-   - Correctness
-   - Low equivalent input heaps + Low label ==> same result
-*)
-unfold
-let ni_exp (env:label_fun) (e:exp) (l:label) =
-  forall (h: rel heap).
-   (low_equiv env h /\ Low? l) ==>
-     b2t (normalize_term (fst (interpret_exp (R?.r h) e)) = normalize_term (fst (interpret_exp (R?.l h) e)))
+(* (\**************************** Typing Judgements ****************************\) *)
 
-(* env,pc:l |- c
-   - References with a label below l are not modified
-   - Total correctness
-   - Low equivalent input heaps ==> Low equivalent output heaps
-*)
-let inv_com' (env:label_fun) (c:com) (l:label) (h0_opt:option heap) : Tot Type0
-= match h0_opt with
-  | None -> True
-  | Some h0 ->
-    match interpret_com h0 c with
-    | None -> True
-    | Some h1 ->
-      forall (i:id{i `in_` h0 }). env i < l ==> index h0 i = index h1 i
-
-let ni_com' (env:label_fun) (c:com) (l:label) (h0_opt: rel (option heap)) =
-  match h0_opt with
-  | R (Some h0l) (Some h0r) ->
-    (* KM : That's the code that we would like to write but subtyping and matching on pairs interplay badly *)
-    (* it generates a VC which boils down to [forall (h1l:heap). length h1l = length h0l] which is obviously false *)
-    (* begin match interpret_com h0l c, interpret_com h0r c with *)
-    (* | Some h1l, Some h1r -> low_equiv env (R h0l h0r) ==> low_equiv env (R h1l h1r) *)
-    (* | _ -> True *)
-    (* end *)
-    begin match interpret_com h0l c with
-      | Some h1l -> begin match  interpret_com h0r c with
-        | Some h1r -> low_equiv env (R h0l h0r) ==> low_equiv env (R h1l h1r)
-        | _ -> True
-      end
-      | _ -> True
-    end
-  | _ -> True
-
-let ni_com (env:label_fun) (c:com) (l:label) =
-  (forall (h0: rel (option heap)). ni_com' env c l h0) /\
-  (forall (h0:option heap). inv_com' env c l h0)
-
-(* KM : Trying to figure out wht are the design tradeoffs on option heap *)
+(* (\* env |- e : l *)
+(*    - Expressions do not modify the heap *)
+(*    - Correctness *)
+(*    - Low equivalent input heaps + Low label ==> same result *)
+(* *\) *)
 (* unfold *)
-(* let preserves_env_upto_label (env:label_fun) (l:label) (c:com) (h0:heap) : Tot Type0 *)
-(* = let (res, h1) = interpret_com h0 c in *)
-(*   Some? res ==> (forall (i:id{i `in_` h0}). env i < l ==> index h0 i = index h1 i) *)
+(* let ni_exp (env:label_fun) (e:exp) (l:label) = *)
+(*   forall (h: rel heap). *)
+(*    (low_equiv env h /\ Low? l) ==> *)
+(*      b2t (normalize_term (fst (interpret_exp (R?.r h) e)) = normalize_term (fst (interpret_exp (R?.l h) e))) *)
 
-(* type ni_com' (env:label_fun) (c:com) (l:label) (h0:rel heap) = *)
-(*   begin *)
-(*     let res, h1 = split (lift (fun h -> interpret_com h c) h0) in *)
-(*     low_equiv env h0 /\ Some? `diagb` res ==> low_equiv env h1 *)
-(*     end /\ *)
-(*     (preserves_env_upto_label env l c) `diag` h0 *)
+(* (\* env,pc:l |- c *)
+(*    - References with a label below l are not modified *)
+(*    - Total correctness *)
+(*    - Low equivalent input heaps ==> Low equivalent output heaps *)
+(* *\) *)
+(* let inv_com' (env:label_fun) (c:com) (l:label) (h0_opt:option heap) : Tot Type0 *)
+(* = match h0_opt with *)
+(*   | None -> True *)
+(*   | Some h0 -> *)
+(*     match interpret_com h0 c with *)
+(*     | None -> True *)
+(*     | Some h1 -> *)
+(*       forall (i:id{i `in_` h0 }). env i < l ==> index h0 i = index h1 i *)
 
-(* type ni_com (env:label_fun) (c:com) (l:label) = *)
-(*     forall (h0: rel heap). ni_com' env c l h0 *)
+(* let ni_com' (env:label_fun) (c:com) (l:label) (h0_opt: rel (option heap)) = *)
+(*   match h0_opt with *)
+(*   | R (Some h0l) (Some h0r) -> *)
+(*     (\* KM : That's the code that we would like to write but subtyping and matching on pairs interplay badly *\) *)
+(*     (\* it generates a VC which boils down to [forall (h1l:heap). length h1l = length h0l] which is obviously false *\) *)
+(*     (\* begin match interpret_com h0l c, interpret_com h0r c with *\) *)
+(*     (\* | Some h1l, Some h1r -> low_equiv env (R h0l h0r) ==> low_equiv env (R h1l h1r) *\) *)
+(*     (\* | _ -> True *\) *)
+(*     (\* end *\) *)
+(*     begin match interpret_com h0l c with *)
+(*       | Some h1l -> begin match  interpret_com h0r c with *)
+(*         | Some h1r -> low_equiv env (R h0l h0r) ==> low_equiv env (R h1l h1r) *)
+(*         | _ -> True *)
+(*       end *)
+(*       | _ -> True *)
+(*     end *)
+(*   | _ -> True *)
 
-(*********************** Typing Rules for Expressions **********************)
+(* let ni_com (env:label_fun) (c:com) (l:label) = *)
+(*   (forall (h0: rel (option heap)). ni_com' env c l h0) /\ *)
+(*   (forall (h0:option heap). inv_com' env c l h0) *)
 
-(* CH: The way we derive these rules looks more like a
-       semantically-justified program logic than a syntactic type
-       system. Any connection to Dave Naumann and Anindya Banerjee's
-       "relational logic"? (e.g. https://arxiv.org/abs/1611.08992) *)
+(* (\* KM : Trying to figure out wht are the design tradeoffs on option heap *\) *)
+(* (\* unfold *\) *)
+(* (\* let preserves_env_upto_label (env:label_fun) (l:label) (c:com) (h0:heap) : Tot Type0 *\) *)
+(* (\* = let (res, h1) = interpret_com h0 c in *\) *)
+(* (\*   Some? res ==> (forall (i:id{i `in_` h0}). env i < l ==> index h0 i = index h1 i) *\) *)
 
-(* Subtyping rule for expression labels
+(* (\* type ni_com' (env:label_fun) (c:com) (l:label) (h0:rel heap) = *\) *)
+(* (\*   begin *\) *)
+(* (\*     let res, h1 = split (lift (fun h -> interpret_com h c) h0) in *\) *)
+(* (\*     low_equiv env h0 /\ Some? `diagb` res ==> low_equiv env h1 *\) *)
+(* (\*     end /\ *\) *)
+(* (\*     (preserves_env_upto_label env l c) `diag` h0 *\) *)
 
-         E |- e : l1   l1 <= l2
-         ----------------------
-              E |- e : l2
-*)
+(* (\* type ni_com (env:label_fun) (c:com) (l:label) = *\) *)
+(* (\*     forall (h0: rel heap). ni_com' env c l h0 *\) *)
 
-val sub_exp : env:label_fun -> e:exp -> l1:label -> l2:label{l1 <= l2} ->
-  Lemma (requires (ni_exp env e l1))
-        (ensures  (ni_exp env e l2))
-let sub_exp _ _ _ _ = ()
+(* (\*********************** Typing Rules for Expressions **********************\) *)
+
+(* (\* CH: The way we derive these rules looks more like a *)
+(*        semantically-justified program logic than a syntactic type *)
+(*        system. Any connection to Dave Naumann and Anindya Banerjee's *)
+(*        "relational logic"? (e.g. https://arxiv.org/abs/1611.08992) *\) *)
+
+(* (\* Subtyping rule for expression labels *)
+
+(*          E |- e : l1   l1 <= l2 *)
+(*          ---------------------- *)
+(*               E |- e : l2 *)
+(* *\) *)
+
+(* val sub_exp : env:label_fun -> e:exp -> l1:label -> l2:label{l1 <= l2} -> *)
+(*   Lemma (requires (ni_exp env e l1)) *)
+(*         (ensures  (ni_exp env e l2)) *)
+(* let sub_exp _ _ _ _ = () *)
 
 
 
-(* Typing rule for dereferencing
+(* (\* Typing rule for dereferencing *)
 
-         ----------------
-          E | - r : E(r)
-*)
+(*          ---------------- *)
+(*           E | - r : E(r) *)
+(* *\) *)
 
 (* assume val env:label_fun *)
 (* assume val r : id *)

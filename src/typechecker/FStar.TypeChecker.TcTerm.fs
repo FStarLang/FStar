@@ -372,17 +372,18 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       tc_term env0 e
     in
     let reify_op, _ = U.head_and_args top in
-    let u_c, g =
+    let u_c =
+        (* c' is the computation type of the computation type and as such should be Type u *)
         let _, c', _ = tc_term env c.res_typ in
         match (SS.compress c'.res_typ).n with
-        | Tm_type u -> u, g
+        | Tm_type u -> u
         | _ ->
             (* We constrain this unification variable to be of the shape Type u *)
             (* for some new unification variable u *)
-            let u = U_unif <| Unionfind.fresh None in
-            let g_opt = Rel.try_teq env c'.res_typ (mk (Tm_type u) None Range.dummyRange) in
-            match g_opt with
-            | Some g' -> u, Rel.conj_guard g g'
+            let t, u = U.type_u () in
+            let g_opt = Rel.try_teq env c'.res_typ t in
+            begin match g_opt with
+            | Some g' -> Rel.force_trivial_guard env g'
             | None ->
                 failwith (BU.format3
                   "Unexpected result type of computation. \
@@ -391,6 +392,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                   (Print.lcomp_to_string c')
                   (Print.term_to_string c.res_typ)
                   (Print.term_to_string c'.res_typ))
+            end ;
+            u
     in
     let repr = TcUtil.reify_comp env c u_c in
     let e = mk (Tm_app(reify_op, [(e, aqual)])) (Some repr.n) top.pos in
