@@ -61,7 +61,7 @@ val swap: #a:Type -> x:array a -> i:u32 -> j:u32{v i <= v j} -> STL unit
   (ensures (fun s0 _u s1 -> contains s0 x /\ contains s1 x /\ v j < Seq.length (sel s0 x)
     /\ modifies (Set.singleton (frameOf x)) s0 s1
     /\ modifies_ref (frameOf x) !{as_ref x} s0 s1
-    /\ Seq.equal (HS.sel s1 x) (SeqProperties.swap (sel s0 x) (v i) (v j))))
+    /\ Seq.equal (HS.sel s1 x) (Seq.swap (sel s0 x) (v i) (v j))))
 let swap #a x i j =
   let tmpi = index x i in
   let tmpj = index x j in

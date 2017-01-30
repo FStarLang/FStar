@@ -1,7 +1,6 @@
 module HyE.AE
 
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.HyperStack
@@ -74,7 +73,7 @@ let encrypt k m : cipher =
 
 (* this doesn't really belong here *)
 val mem : #a:eqtype -> x:a -> xs:Seq.seq a -> Tot bool
-let mem (#a:eqtype) x xs = Some? (SeqProperties.seq_find (fun y -> y = x) xs)
+let mem (#a:eqtype) x xs = Some? (Seq.seq_find (fun y -> y = x) xs)
 
 val decrypt: k:key -> c:cipher -> ST (option msg)
   (requires (fun h0 -> True (* Could require Map.contains h0 k.region *)

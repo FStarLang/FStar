@@ -1020,7 +1020,7 @@
         "lemma_FStar.Buffer.lemma_modifies_0_1_",
         "lemma_FStar.Buffer.live_fresh", "lemma_FStar.Buffer.no_upd_lemma_0",
         "lemma_FStar.HyperHeap.lemma_root_has_color_zero",
-        "lemma_FStar.Seq.lemma_eq_elim", "lemma_Flag.mac1_implies_prf",
+        "lemma_FStar.Seq.Base.lemma_eq_elim", "lemma_Flag.mac1_implies_prf",
         "lemma_Flag.safeId_implies_mac1", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",

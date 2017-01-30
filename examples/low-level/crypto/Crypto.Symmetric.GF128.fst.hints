@@ -110,7 +110,7 @@
       0,
       1,
       [
-        "@query", "assumption_FStar.Seq.seq_haseq",
+        "@query", "assumption_FStar.Seq.Base.seq_haseq",
         "assumption_FStar.UInt8.t__haseq", "assumption_Prims.HasEq_int",
         "equation_Crypto.Symmetric.Bytes.buffer",
         "equation_Crypto.Symmetric.Bytes.lbuffer",
@@ -128,14 +128,14 @@
       "Crypto.Symmetric.GF128.gf128_add",
       2,
       0,
-      1,
+      0,
       [
         "@query", "equation_Crypto.Symmetric.Bytes.buffer",
         "equation_Crypto.Symmetric.Bytes.lbuffer",
         "equation_Crypto.Symmetric.GF128.elemB", "equation_FStar.UInt8.t",
         "refinement_interpretation_Tm_refine_1b5d9020cc8f44163e9c491b867a8c24",
-        "refinement_interpretation_Tm_refine_46641acd90d2b6089d6e481fd82969c8",
-        "refinement_interpretation_Tm_refine_790772d82e6c5382184d4482620e08ca"
+        "refinement_interpretation_Tm_refine_790772d82e6c5382184d4482620e08ca",
+        "refinement_interpretation_Tm_refine_c32bdda13bfb14d0d2f58700b5fc6c38"
       ],
       0
     ],
@@ -143,7 +143,7 @@
       "Crypto.Symmetric.GF128.gf128_add",
       3,
       0,
-      1,
+      0,
       [
         "@query", "bool_inversion", "equation_Crypto.Symmetric.Bytes.buffer",
         "equation_Crypto.Symmetric.Bytes.lbuffer",
@@ -168,11 +168,12 @@
         "proj_equation_FStar.UInt32.Mk_v",
         "refinement_interpretation_Tm_refine_0dc1829dbc3c1d1c42b7a4e9e5c89884",
         "refinement_interpretation_Tm_refine_1b5d9020cc8f44163e9c491b867a8c24",
-        "refinement_interpretation_Tm_refine_46641acd90d2b6089d6e481fd82969c8",
         "refinement_interpretation_Tm_refine_790772d82e6c5382184d4482620e08ca",
-        "refinement_interpretation_Tm_refine_a57e6988f2d29bd5aa0679db10f4f337",
-        "typing_FStar.Buffer.MkBuffer.length",
-        "typing_FStar.HyperStack.HS.h", "typing_FStar.HyperStack.is_in"
+        "refinement_interpretation_Tm_refine_a2e6366d2de5a2469cf7063420642cdc",
+        "refinement_interpretation_Tm_refine_c32bdda13bfb14d0d2f58700b5fc6c38",
+        "typing_FStar.Buffer.__proj__MkBuffer__item__length",
+        "typing_FStar.HyperStack.__proj__HS__item__h",
+        "typing_FStar.HyperStack.is_in"
       ],
       0
     ],
@@ -182,7 +183,7 @@
       0,
       1,
       [
-        "@query", "assumption_FStar.Seq.seq_haseq",
+        "@query", "assumption_FStar.Seq.Base.seq_haseq",
         "assumption_FStar.UInt8.t__haseq", "assumption_Prims.HasEq_int",
         "equation_Crypto.Symmetric.Bytes.buffer",
         "equation_Crypto.Symmetric.Bytes.lbuffer",
@@ -525,7 +526,7 @@
       0,
       1,
       [
-        "@query", "assumption_FStar.Seq.seq_haseq",
+        "@query", "assumption_FStar.Seq.Base.seq_haseq",
         "assumption_FStar.UInt8.t__haseq", "assumption_Prims.HasEq_int",
         "equation_Crypto.Symmetric.Bytes.buffer",
         "equation_Crypto.Symmetric.Bytes.lbuffer",
@@ -543,14 +544,14 @@
       "Crypto.Symmetric.GF128.gf128_mul",
       2,
       0,
-      1,
+      0,
       [
         "@query", "equation_Crypto.Symmetric.Bytes.buffer",
         "equation_Crypto.Symmetric.Bytes.lbuffer",
         "equation_Crypto.Symmetric.GF128.elemB", "equation_FStar.UInt8.t",
         "refinement_interpretation_Tm_refine_1b5d9020cc8f44163e9c491b867a8c24",
-        "refinement_interpretation_Tm_refine_46641acd90d2b6089d6e481fd82969c8",
-        "refinement_interpretation_Tm_refine_790772d82e6c5382184d4482620e08ca"
+        "refinement_interpretation_Tm_refine_790772d82e6c5382184d4482620e08ca",
+        "refinement_interpretation_Tm_refine_c32bdda13bfb14d0d2f58700b5fc6c38"
       ],
       0
     ],
@@ -632,14 +633,14 @@
         "refinement_interpretation_Tm_refine_0dc1829dbc3c1d1c42b7a4e9e5c89884",
         "refinement_interpretation_Tm_refine_1b5d9020cc8f44163e9c491b867a8c24",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_46641acd90d2b6089d6e481fd82969c8",
         "refinement_interpretation_Tm_refine_790772d82e6c5382184d4482620e08ca",
         "refinement_interpretation_Tm_refine_7e3beb6acccffb41919f80afab550fdd",
         "refinement_interpretation_Tm_refine_a2e6366d2de5a2469cf7063420642cdc",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_c32bdda13bfb14d0d2f58700b5fc6c38",
         "refinement_interpretation_Tm_refine_de8123dd3e45084cdea7d9d0e7ffb100",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "refinement_kinding_Tm_refine_8e561ff83f56135ffaf292b237824306",
+        "refinement_kinding_Tm_refine_a121f8bda6f05793d62ed0cfe5b942df",
         "typing_FStar.Buffer.__proj__MkBuffer__item__content",
         "typing_FStar.Buffer.__proj__MkBuffer__item__idx",
         "typing_FStar.Buffer.__proj__MkBuffer__item__length",
@@ -661,7 +662,7 @@
       0,
       1,
       [
-        "@query", "assumption_FStar.Seq.seq_haseq",
+        "@query", "assumption_FStar.Seq.Base.seq_haseq",
         "assumption_FStar.UInt8.t__haseq", "assumption_Prims.HasEq_int",
         "equation_Crypto.Symmetric.Bytes.buffer",
         "equation_Crypto.Symmetric.Bytes.lbuffer",
@@ -691,7 +692,7 @@
       "Crypto.Symmetric.GF128.add_and_multiply",
       2,
       0,
-      1,
+      0,
       [
         "@query", "equation_Crypto.Symmetric.Bytes.buffer",
         "equation_Crypto.Symmetric.Bytes.lbuffer",
@@ -700,8 +701,8 @@
         "fuel_guarded_inversion_FStar.Buffer._buffer",
         "refinement_interpretation_Tm_refine_1b5d9020cc8f44163e9c491b867a8c24",
         "refinement_interpretation_Tm_refine_239c895d77548021393da920ca92cad1",
-        "refinement_interpretation_Tm_refine_46641acd90d2b6089d6e481fd82969c8",
-        "refinement_interpretation_Tm_refine_790772d82e6c5382184d4482620e08ca"
+        "refinement_interpretation_Tm_refine_790772d82e6c5382184d4482620e08ca",
+        "refinement_interpretation_Tm_refine_c32bdda13bfb14d0d2f58700b5fc6c38"
       ],
       0
     ],
@@ -743,13 +744,13 @@
       "Crypto.Symmetric.GF128.finish",
       2,
       0,
-      1,
+      0,
       [
         "@query", "equation_Crypto.Symmetric.Bytes.buffer",
         "equation_Crypto.Symmetric.Bytes.lbuffer",
         "equation_Crypto.Symmetric.GF128.elemB", "equation_FStar.UInt8.t",
         "refinement_interpretation_Tm_refine_1b5d9020cc8f44163e9c491b867a8c24",
-        "refinement_interpretation_Tm_refine_46641acd90d2b6089d6e481fd82969c8"
+        "refinement_interpretation_Tm_refine_c32bdda13bfb14d0d2f58700b5fc6c38"
       ],
       0
     ],

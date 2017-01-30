@@ -226,7 +226,7 @@ val seq_slice_lemma: #n:nat -> a:bv_t n -> s1:nat{s1 < n} -> t1:nat{t1 >= s1 && 
   Lemma (equal (slice (slice a s1 t1) s2 t2) (slice a (s1 + s2) (s1 + t2)))
 let seq_slice_lemma #n a s1 t1 s2 t2 = ()
 
-#set-options "--initial_fuel 1 --max_fuel 1"
+#set-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 8"
 
 val from_vec_propriety: #n:pos -> a:bv_t n -> s:nat{s < n} ->
   Lemma (requires True)
@@ -553,7 +553,7 @@ let logor_disjoint #n a b m =
   assert (b < pow2 m); // To trigger pattern above
   assert (forall (i:nat{i < n - m}).{:pattern (index (to_vec b) i)}
     index (to_vec b) i == false);
-  SeqProperties.lemma_split (logor_vec (to_vec a) (to_vec b)) (n - m);
+  Seq.lemma_split (logor_vec (to_vec a) (to_vec b)) (n - m);
   Seq.lemma_eq_intro
     (logor_vec (to_vec a) (to_vec b))
     (append (slice (to_vec a) 0 (n - m)) (slice (to_vec b) (n - m) n));
@@ -569,7 +569,7 @@ val logand_mask: #n:pos -> a:uint_t n -> m:pos{m < n} ->
   Lemma (pow2 m < pow2 n /\ logand #n a (pow2 m - 1) == a % pow2 m)
 let logand_mask #n a m =
   pow2_lt_compat n m;
-  SeqProperties.lemma_split (logand_vec (to_vec a) (to_vec (pow2 m - 1))) (n - m);
+  Seq.lemma_split (logand_vec (to_vec a) (to_vec (pow2 m - 1))) (n - m);
   Seq.lemma_eq_intro
     (logand_vec (to_vec a) (to_vec (pow2 m - 1)))
     (append (zero_vec #(n - m)) (slice (to_vec a) (n - m) n));

@@ -59,7 +59,7 @@ val lemma_upd_quantifiers: #a:Type -> h0:mem -> h1:mem -> b:buffer a -> n:FStar.
 let lemma_upd_quantifiers #a h0 h1 b n z =
   assert(forall (i:nat). i < length b ==> get h1 b i == Seq.index (as_seq h1 b) i)
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 8"
 
 val lemma_blit_quantifiers: #a:Type -> h0:mem -> h1:mem -> b:buffer a -> bi:UInt32.t{v bi <= length b} ->
   b':buffer a{disjoint b b'} -> bi':UInt32.t{v bi' <= length b'} -> len:UInt32.t{v bi+v len <= length b /\ v bi'+v len <= length b'} -> Lemma

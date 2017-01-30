@@ -18,8 +18,7 @@ module Formatting
 
 open FStar.String
 open Platform.Bytes         //This shadows length, index etc. from FStar.Seq, for no good reason?
-open FStar.Seq              //It's really important for FStar.Seq.index to have precedence for proper use of the lemmas in FStar.Seq and FStar.SeqProperties
-open FStar.SeqProperties
+open FStar.Seq              //It's really important for FStar.Seq.index to have precedence for proper use of the lemmas in FStar.Seq and FStar.Seq
 open FStar.Classical
 
 
