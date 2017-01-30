@@ -534,7 +534,7 @@ let lemma_ststack_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 h3
   [SMTPatT (modifies_2 b b' h1 h2); SMTPatT (fresh_frame h0 h1); SMTPatT (popped h2 h3)]
   = ()
 
-#reset-options "--z3rlimit 1000 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 100"
 
 (* Specialized modifies clauses lemmas + associated SMTPatterns. Those are critical for
    verification as the specialized modifies clauses are abstract from outside the
