@@ -12,7 +12,7 @@ module HyE.Flags
 
 open HyE.Indexing
 
-val pke_ind_cca : bool
+val prf_odh : bool
 
 val ae_int_ctxt : bool
 
@@ -20,13 +20,13 @@ val ae_ind_cpa : bool
 
 val ae_ind_cca : b:bool{ae_ind_cpa /\ ae_int_ctxt ==> b}
 
-val hpke_ind_cca : b:bool{b ==> b2t ae_ind_cca /\ pke_ind_cca}
+val hpke_ind_cca : b:bool{b ==> b2t ae_ind_cca /\ prf_odh}
 
 val dishonestId: unit -> Tot (i:id{not (honest i)})
 val honestId: unit -> Tot (i:id{honest i})
 
 type dependentId =
-  (if pke_ind_cca then
+  (if prf_odh then
     i:id{honest i}
   else
     i:id{not (honest i)})
@@ -35,5 +35,5 @@ val createId: unit -> Tot dependentId
 
 val honest_implies_pke_inc_cca: i:id -> Lemma
   (requires honest i)
-  (ensures (pke_ind_cca))
+  (ensures (prf_odh))
   [SMTPat (honest i)]
