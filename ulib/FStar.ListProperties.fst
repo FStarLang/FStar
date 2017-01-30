@@ -13,17 +13,26 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+(**
+This module states and proves some properties about pure and total
+operations on lists.
+
+@summary Properties of pure total operations on lists
+*)
 module FStar.ListProperties
 open FStar.List.Tot
 
 
 (** Properties about mem **)
 
+(** The empty list has no elements *)
 val mem_empty : #a:eqtype -> x:a ->
   Lemma (requires (mem x []))
         (ensures False)
 let mem_empty #a x = ()
 
+(** Full specification for [existsb]: [existsb f xs] holds if, and
+only if, there exists an element [x] of [xs] such that [f x] holds. *)
 val mem_existsb: #a:eqtype -> f:(a -> Tot bool) -> xs:list a ->
   Lemma(ensures (existsb f xs <==> (exists (x:a). (f x = true /\ mem x xs))))
 let rec mem_existsb #a f xs =
@@ -52,6 +61,7 @@ let rec rev_acc_mem #a l acc x = match l with
     | [] -> ()
     | hd::tl -> rev_acc_mem tl (hd::acc) x
 
+(** A list and its reversed have the same elements *)
 val rev_mem : #a:eqtype -> l:list a -> x:a ->
   Lemma (requires True)
         (ensures (mem x (rev l) <==> mem x l))
@@ -243,6 +253,9 @@ let rec map_lemma f l =
     | h::t -> map_lemma f t
 
 (** Properties about partition **)
+
+(** If [partition f l = (l1, l2)], then for any [x], [x] is in [l] if
+and only if [x] is in either one of [l1] or [l2] *)
 val partition_mem: #a:eqtype -> f:(a -> Tot bool)
                   -> l:list a
                   -> x:a
@@ -253,6 +266,7 @@ let rec partition_mem #a f l x = match l with
   | [] -> ()
   | hd::tl -> partition_mem f tl x
 
+(** Same as [partition_mem], but using [forall] *)
 val partition_mem_forall: #a:eqtype -> f:(a -> Tot bool)
                   -> l:list a
                   -> Lemma (requires True)
@@ -262,6 +276,8 @@ let rec partition_mem_forall #a f l = match l with
   | [] -> ()
   | hd::tl -> partition_mem_forall f tl
 
+(** If [partition f l = (l1, l2)], then for any [x], if [x] is in [l1]
+(resp. [l2]), then [f x] holds (resp. does not hold) *)
 val partition_mem_p_forall: #a:eqtype -> p:(a -> Tot bool)
                   -> l:list a
                   -> Lemma (requires True)
@@ -271,6 +287,9 @@ let rec partition_mem_p_forall #a p l = match l with
   | [] -> ()
   | hd::tl -> partition_mem_p_forall p tl
 
+(** If [partition f l = (l1, l2)], then the number of occurrences of
+any [x] in [l] is the same as the sum of the number of occurrences in
+[l1] and [l2]. *)
 val partition_count: #a:eqtype -> f:(a -> Tot bool)
                   -> l:list a
                   -> x:a
@@ -280,6 +299,7 @@ let rec partition_count #a f l x = match l with
   | [] -> ()
   | hd::tl -> partition_count f tl x
 
+(** Same as [partition_count], but using [forall] *)
 val partition_count_forall: #a:eqtype -> f:(a -> Tot bool)
                   -> l:list a
                   -> Lemma (requires True)
@@ -292,6 +312,9 @@ let rec partition_count_forall #a f l= match l with
 
 (** Correctness of quicksort **)
 
+(** Correctness of [sortWith], part 1/2: the number of occurrences of
+any [x] in [sortWith f l] is the same as the number of occurrences in
+[l]. *)
 val sortWith_permutation: #a:eqtype -> f:(a -> a -> Tot int) -> l:list a ->
   Lemma (requires True)
         (ensures (forall x. count x l = count x (sortWith f l)))
@@ -306,18 +329,23 @@ let rec sortWith_permutation #a f l = match l with
        sortWith_permutation f hi;
        append_count_forall (sortWith f lo) (pivot::sortWith f hi)
 
+(** [sorted f l] holds if, and only if, any two consecutive elements
+[x], [y] of [l] are such that [f x y] holds. *)
 val sorted: ('a -> 'a -> Tot bool) -> list 'a -> Tot bool
 let rec sorted f = function
   | []
   | [_] -> true
   | x::y::tl -> f x y && sorted f (y::tl)
 
+(** [f] is a total order if, and only if, it is reflexive,
+anti-symmetric, transitive and total. *)
 type total_order (#a:Type) (f: (a -> a -> Tot bool)) =
     (forall a. f a a)                                           (* reflexivity   *)
     /\ (forall a1 a2. f a1 a2 /\ f a2 a1  ==> a1 == a2)          (* anti-symmetry *)
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
     /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                       (* totality *)
 
+(** Correctness of the merging of two sorted lists around a pivot. *)
 val append_sorted: #a:eqtype
                ->  f:(a -> a -> Tot bool)
                ->  l1:list a{sorted f l1}
@@ -332,6 +360,9 @@ let rec append_sorted #a f l1 l2 pivot = match l1 with
   | [] -> ()
   | hd::tl -> append_sorted f tl l2 pivot
 
+(** Correctness of [sortWith], part 2/2: the elements of [sortWith f
+l] are sorted according to comparison function [f], and the elements
+of [sortWith f l] are the elements of [l]. *)
 val sortWith_sorted: #a:eqtype -> f:(a -> a -> Tot int) -> l:list a ->
   Lemma (requires (total_order #a (bool_of_compare f)))
         (ensures ((sorted (bool_of_compare f) (sortWith f l)) /\ (forall x. mem x l = mem x (sortWith f l))))

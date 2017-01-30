@@ -114,7 +114,7 @@ let rec flatten l = match l with
 
 (** [map f l] applies [f] to each element of [l] and returns the list
 of results, in the order of the original elements in [l]. Requires, at
-type-checking time, [f] to be a pure total function. *)
+type-checking time, [f] to be a pure total function. Named as in: OCaml, Coq, F# *)
 val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
 let rec map f x = match x with
   | [] -> []
@@ -150,7 +150,7 @@ let rec concatMap f = function
 
 (** [fold_left f x [y1; y2; ...; yn]] computes (f (... (f x y1) y2)
 ... yn). Requires, at type-checking time, [f] to be a pure total
-function. *)
+function. Named as in: OCaml, Coq. *)
 val fold_left: ('a -> 'b -> Tot 'a) -> 'a -> l:list 'b -> Tot 'a (decreases l)
 let rec fold_left f x y = match y with
   | [] -> x
@@ -158,7 +158,7 @@ let rec fold_left f x y = match y with
 
 (** [fold_right f [x1; x2; ...; xn] y] computes (f x1 (f x2 (... (f xn
 y)) ... )). Requires, at type-checking time, [f] to be a pure total
-function. *)
+function. Named as in: OCaml, Coq *)
 val fold_right: ('a -> 'b -> Tot 'b) -> list 'a -> 'b -> Tot 'b
 let rec fold_right f l x = match l with
   | [] -> x
@@ -167,7 +167,7 @@ let rec fold_right f l x = match l with
 (** [fold_left2 f x [y1; y2; ...; yn] [z1; z2; ...; zn]] computes (f
 (... (f x y1 z1) y2 z2) ... yn zn). Requires, at type-checking time,
 [f] to be a pure total function, and the lists [y1; y2; ...; yn] and
-[z1; z2; ...; zn] to have the same lengths. *)
+[z1; z2; ...; zn] to have the same lengths. Named as in: OCaml *)
 val fold_left2 : f:('a -> 'b -> 'c -> Tot 'a) -> accu:'a -> l1:(list 'b) -> l2:(list 'c) ->
   Pure 'a (requires (length l1 == length l2)) (ensures (fun _ -> True)) (decreases l1)
 let rec fold_left2 f accu l1 l2 =
@@ -192,7 +192,7 @@ of [l] to have decidable equality. It is equivalent to: [mem x
 l]. TODO: should we rather swap the order of arguments? *)
 let contains = mem
 
-(** [ecistsb f l] returns [true] if, and only if, there exists some
+(** [existsb f l] returns [true] if, and only if, there exists some
 element [x] in [l] such that [f x] holds. *)
 val existsb: #a:Type
        -> f:(a -> Tot bool)
@@ -232,7 +232,7 @@ let mem_filter_spec (#a : Type) (f: (a -> Tot bool)) (m: list a) (u: option (x :
 
 (** [filter f l] returns [l] with all elements [x] such that [f x]
 does not hold removed. Requires, at type-checking time, [f] to be a
-pure total function. *)
+pure total function.  Named as in: OCaml, Coq *)
 val filter : #a: Type -> f:(a -> Tot bool) -> l: list a -> Tot (m:list a { forall u . mem_filter_spec f m u } )
 let rec filter #a f = function
   | [] -> []
@@ -261,7 +261,8 @@ let mem_filter_forall #a f l = FStar.Classical.ghost_lemma (mem_filter f l)
 
 (** [for_all f l] returns [true] if, and only if, for all elements [x]
 appearing in [l], [f x] holds. Requires, at type-checking time, [f] to
-be a pure total function. *)
+be a pure total function. Named as in: OCaml. Similar to: List.forallb
+in Coq *)
 val for_all: ('a -> Tot bool) -> list 'a -> Tot bool
 let rec for_all f l = match l with
     | [] -> true
@@ -280,7 +281,8 @@ let rec collect f l = match l with
 (** [tryFind f l] returns [Some x] for some element [x] appearing in
 [l] such that [f x] holds, or [None] only if no such [x]
 exists. Requires, at type-checking time, [f] to be a pure total
-function. TODO: what is the difference with [find]? *)
+function. Contrary to [find], [tryFind] provides no postcondition on
+its result. *)
 val tryFind: ('a -> Tot bool) -> list 'a -> Tot (option 'a)
 let rec tryFind p l = match l with
     | [] -> None
@@ -298,7 +300,7 @@ let rec tryPick f l = match l with
          | Some x -> Some x
          | None -> tryPick f tl
 
-(** [tryPick f l] returns the list of [y] for all elements [x]
+(** [choose f l] returns the list of [y] for all elements [x]
 appearing in [l] such that [f x = Some y] for some [y]. Requires, at
 type-checking time, [f] to be a pure total function. *)
 val choose: ('a -> Tot (option 'b)) -> list 'a -> Tot (list 'b)
@@ -390,15 +392,34 @@ let rec partition_length f l = match l with
   | [] -> ()
   | hd::tl -> partition_length f tl
 
+(** [bool_of_compare] turns a comparison function into a strict
+order. More precisely, [bool_of_compare compare x y] returns true if,
+and only if, [compare x y] is positive. Inspired from OCaml, where
+polymorphic comparison using both the [compare] function and the (>)
+infix operator are such that [compare x y] is positive if, and only
+if, x > y. Requires, at type-checking time, [compare] to be a pure
+total function. *)
 val bool_of_compare : ('a -> 'a -> Tot int) -> 'a -> 'a -> Tot bool
 let bool_of_compare f x y = f x y > 0
 
+(** [compare_of_bool] turns a strict order into a comparison
+function. More precisely, [compare_of_bool rel x y] returns a positive
+number if, and only if, x `rel` y holds. Inspired from OCaml, where
+polymorphic comparison using both the [compare] function and the (>)
+infix operator are such that [compare x y] is positive if, and only
+if, x > y. Requires, at type-checking time, [rel] to be a pure total
+function.  *)
 val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
 let compare_of_bool #a rel x y =
   if x `rel` y  then 1 
   else if x = y then 0
   else 0-1
-  
+
+(** [sortWith compare l] returns the list [l'] containing the elements
+of [l] sorted along the comparison function [compare], in such a way
+that if [compare x y > 0], then [x] appears before [y] in
+[l']. Requires, at type-checking time, [compare] to be a pure total
+function. *)
 val sortWith: ('a -> 'a -> Tot int) -> l:list 'a -> Tot (list 'a) (decreases (length l))
 let rec sortWith f = function
   | [] -> []
@@ -408,4 +429,4 @@ let rec sortWith f = function
      append (sortWith f lo) (pivot::sortWith f hi)
 
 #set-options "--initial_fuel 4 --initial_ifuel 4"
-let test_sort = assert (sortWith (compare_of_bool (<)) [3; 2; 1] = [1; 2; 3])
+private let test_sort = assert (sortWith (compare_of_bool (<)) [3; 2; 1] = [1; 2; 3])
