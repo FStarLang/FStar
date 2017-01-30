@@ -1304,7 +1304,7 @@ below and available in F\*'s standard prelude).
 ~~ ExerciseFragment {exname=Ex04e}
     type option 'a =
        | None : option 'a
-       | Some : 'a -> option 'a
+       | Some : v:'a -> option 'a
 
     let rec find f l = match l with
       | [] -> None
@@ -1409,15 +1409,7 @@ those of `Cons.hd` and `Cons.tl`.
 ~~
 ~~Answer
 ~~~ SolutionFragment {exname=Ex04g}
-val hd : l:list 'a{is_Cons l} -> Tot 'a
-let hd l =
-  match l with
-  | h :: t -> h
-
-val tl : l:list 'a{is_Cons l} -> Tot (list 'a)
-let tl l =
-  match l with
-  | h :: t -> t
+[INCLUDE=code/solutions/Ex04g.fst]
 ~~~
 ~~
 ~

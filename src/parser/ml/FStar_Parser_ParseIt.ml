@@ -1,5 +1,6 @@
 open FStar_Util
-open FStar_Absyn_Syntax
+open FStar_Errors
+open FStar_Syntax_Syntax
 open Lexing
 
 type filename = string
@@ -41,7 +42,7 @@ let read_file (filename:string) =
 let check_extension fn =
     if not (FStar_Util.ends_with fn ".fst")
     && not (FStar_Util.ends_with fn ".fsti")
-    then raise (FStar_Syntax_Syntax.Err("Unrecognized file extension: " ^fn))
+    then raise (Err("Unrecognized file extension: " ^fn))
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
@@ -74,8 +75,7 @@ let parse fn =
       in
       Inl (frags, FStar_Parser_LexFStar.flush_comments ())
   with
-    | FStar_Syntax_Syntax.Error(msg, r)
-    | FStar_Absyn_Syntax.Error(msg, r) ->
+    | FStar_Errors.Error(msg, r) ->
       Inr (msg, r)
 
     | e ->

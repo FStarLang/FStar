@@ -3,6 +3,7 @@ CONTRIB=ucontrib
 PLATFORM = $(FSTAR_HOME)/$(CONTRIB)/Platform/ml
 DB=db
 INCLUDE=-package batteries,zarith -I $(PLATFORM) -I $(DB)
+MARCH?=x86_64
 
 OCAMLC = ocamlfind c $(INCLUDE) -g -annot
 OCAMLOPT = ocamlfind opt $(INCLUDE) -g -annot
@@ -17,11 +18,15 @@ ifeq ($(OS),Windows_NT)
     # altered to include by default the mingw64 native DLLs. We also need to
     # find dllcorecrypto.dll; it is in the current directory, which Windows
     # always uses to search for DLLs.
-    EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
+    EXTRA_PATH = PATH="/usr/$(MARCH)-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
     ARCH = win32
     EXTRA_OPTS =
     EXTRA_LIBS = -L.
-    OPENSSL_CONF = CC=x86_64-w64-mingw32-gcc ./Configure mingw64
+    ifeq ($(MARCH),x86_64)
+      OPENSSL_CONF = CC=x86_64-w64-mingw32-gcc ./Configure mingw64
+    else
+      OPENSSL_CONF = CC=i686-w64-mingw32-gcc ./Configure mingw
+    endif
 else
     # On Unix-like systems, the library search path is LD_LIBRARY_PATH, which is
     # correctly setup to find libssleay.so and the like, but never includes the

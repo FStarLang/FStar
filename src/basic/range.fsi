@@ -13,8 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+#light "off"
 module FStar.Range
-
+open FStar.All
 open FStar.BaseTypes
 
 type range = {

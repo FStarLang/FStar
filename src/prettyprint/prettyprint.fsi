@@ -13,8 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+#light "off"
 module FStar.Pprint
-
+open FStar.All
 open FStar.BaseTypes
 
 (** A pretty-printing engine and a set of basic document combinators. *)

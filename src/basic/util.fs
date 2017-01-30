@@ -29,11 +29,11 @@ let return_all x = x
 type time = System.DateTime
 let now () = System.DateTime.Now
 let time_diff (t1:time) (t2:time) : float * int =
-    let ts = t2 - t1 in 
+    let ts = t2 - t1 in
     ts.TotalSeconds, int32 ts.TotalMilliseconds
-let record_time f = 
+let record_time f =
     let start = now () in
-    let res = f () in 
+    let res = f () in
     let _, elapsed = time_diff start (now()) in
     res, elapsed
 let get_file_last_modification_time f = System.IO.File.GetLastWriteTime f
@@ -208,6 +208,11 @@ let set_is_subset_of ((s1, eq): set<'a>) ((s2, _):set<'a>) = List.for_all (fun y
 let set_count ((s1, _):set<'a>) = s1.Length
 let set_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> = List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
 
+
+(* fifo_set is implemented with the same underlying representation as sets         *)
+(* (i.e. a list + equality) and the invariant that "insertion order" is preserved. *)
+(* The convention is that the first element in insertion order is at the end of the*)
+(* underlying list.                                                                *)
 type fifo_set<'a> = set<'a>
 
 let fifo_set_is_empty ((s, _):fifo_set<'a>) =
@@ -218,19 +223,25 @@ let fifo_set_is_empty ((s, _):fifo_set<'a>) =
 let new_fifo_set (cmp:'a -> 'a -> int) (hash:'a -> int) : fifo_set<'a> =
     ([], fun x y -> cmp x y = 0)
 
+(* The input list [s1] is in reverse order and we need to keep only the last       *)
+(* occurence of each elements in s1. Note that accumulating over such elements     *)
+(* will reverse the order of the input list so that we obtain back the insertion   *)
+(* order.                                                                          *)
 let fifo_set_elements ((s1, eq):fifo_set<'a>) :list<'a> =
    let rec aux out = function
         | [] -> out
         | hd::tl -> if List.exists (eq hd) out
                     then aux out tl
-                    else aux (hd::out) tl in
-   aux [] (List.rev s1)
+                    else aux (hd::out) tl
+   in
+   aux [] s1
 let fifo_set_add a ((s, b):fifo_set<'a>) = (a::s, b)
 let fifo_set_remove x ((s1, eq):fifo_set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
 let fifo_set_mem a ((s, b):fifo_set<'a>) = List.exists (b a) s
 let fifo_set_union ((s1, b):fifo_set<'a>) ((s2, _):fifo_set<'a>) = (s2@s1, b)
 let fifo_set_count ((s1, _):fifo_set<'a>) = s1.Length
-let fifo_set_difference ((s1, eq):fifo_set<'a>) ((s2, _):fifo_set<'a>) : fifo_set<'a> = List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
+let fifo_set_difference ((s1, eq):fifo_set<'a>) ((s2, _):fifo_set<'a>) : fifo_set<'a> =
+  List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
 
 type System.Collections.Generic.Dictionary<'K, 'V> with
   member x.TryFind(key) =
@@ -370,7 +381,7 @@ type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
 
-let is_left = function 
+let is_left = function
   | Inl _ -> true
   | _ -> false
 let is_right = function
@@ -704,8 +715,8 @@ let print_exn (e: exn): string =
   e.Message
 
 let format_md5 bytes =
-  let sb = 
-    Array.fold 
+  let sb =
+    Array.fold
       (fun (acc:StringBuilder) (by:byte) ->
         acc.Append(by.ToString("x2")))
       (new StringBuilder())
@@ -749,5 +760,8 @@ type hints_db = {
 let write_hints (_: string) (_: hints_db): unit =
   failwith "[record_hints_json]: not implemented"
 
-let read_hints (_: string): option<hints_db> =
-  failwith "[record_hints_json]: not implemented"
+let read_hints (filename : string): option<hints_db> =
+    if not (File.Exists filename) then
+        None
+    else
+        failwith "[record_hints_json]: not implemented"

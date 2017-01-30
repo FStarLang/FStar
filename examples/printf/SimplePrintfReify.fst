@@ -27,7 +27,7 @@ let bind_ex a b f g = fun _ ->
 let raise_ex (a:Type) (e:exn) : Tot (ex a) = fun _ -> None
 
 (* Define the new effect using DM4F *)
-reifiable reflectable new_effect_for_free {
+total reifiable reflectable new_effect_for_free {
   XEXN : (a:Type) -> Effect
   with repr     = ex
      ; bind     = bind_ex
@@ -40,12 +40,6 @@ reifiable reflectable new_effect_for_free {
 unfold let lift_pure_ex_wp (a:Type) (wp:pure_wp a) (_:unit) (p:XEXN?.post a) =
   wp (fun a -> p (Some a))
 sub_effect PURE ~> XEXN = lift_pure_ex_wp
-
-(* TODO: this should work but Pure is not reifiable *)
-(* sub_effect PURE ~> XEXN { *)
-(*   lift_wp = lift_pure_ex_wp; *)
-(*   lift = return_ex *)
-(* } *)
 
 (* An effect to alias easily write pre- and postconditions *)
 (* Note: we use Type0 instead of XEXN.pre to avoid having to thunk everything. *)
@@ -101,9 +95,7 @@ let example1 : string =
 
 exception InvalidFormatString
 
-(* reifiable let my_return (#a:Type) (x:a) : Xex a = *)
-(*   XEXN.reflect (return_ex a x) *)
-
+(* TODO: can we get rid of the two `let x` or are they really required? *)
 reifiable let rec parse_format (s:list char) : Xex (list dir) =
   match s with
   | [] -> []
@@ -115,9 +107,9 @@ reifiable let rec parse_format (s:list char) : Xex (list dir) =
             | 'c' -> Arg Char
             | 's' -> Arg String
             | _   -> XEXN?.raise dir InvalidFormatString
-    in d :: parse_format s'
+    in let x = parse_format s' in d :: x
   | '%' :: [] -> XEXN?.raise (list dir) InvalidFormatString
-  | c :: s' -> Lit c :: parse_format s'
+  | c :: s' -> let x = parse_format s' in Lit c :: x
 
 let parse_format_pure (s:list char) : option (list dir) =
   reify (parse_format s) ()
@@ -133,22 +125,18 @@ let example_error_lemma () :
   Lemma (parse_format_pure ['%'] == None) =
   assert_norm (parse_format_pure ['%'] == None)
 
-(* Doesn't work; seems it's because missing lift PURE->EXN at
-   expression level; tried to write that lift above but didn't manage
-   because pure is not marked as reifiable -- dm4f compiler should
-   automatically produce this lift *)
-(* let example3_lemma () : *)
-(*   Lemma (parse_format_pure ['%'; 'd'; '='; '%'; 's'] *)
-(*          == Some [Arg Int; Lit '='; Arg String]) = *)
-(*   assert_norm (parse_format_pure ['%'; 'd'; '='; '%'; 's'] *)
-(*                == Some [Arg Int; Lit '='; Arg String]) *)
+let example3_lemma () :
+  Lemma (parse_format_pure ['%'; 'd'; '='; '%'; 's']
+         == Some [Arg Int; Lit '='; Arg String]) =
+  assert_norm (parse_format_pure ['%'; 'd'; '='; '%'; 's']
+               == Some [Arg Int; Lit '='; Arg String])
 
-(* let example4_lemma () : *)
-(*   Lemma (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]) = *)
-(*   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]) *)
+let example4_lemma () :
+  Lemma (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]) =
+  assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String])
 
-(* let example5 : string = *)
-(*   (\* Requiring such an assert_norm on each usage seems quite bad for usability *\) *)
-(*   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]); *)
-(*   (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer" *)
-(*   (\* We also requires a pesky type annotation, but that seems more acceptable *\) *)
+let example5 : string =
+  (* Requiring such an assert_norm on each usage seems quite bad for usability *)
+  assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]);
+  (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer"
+  (* We also requires a pesky type annotation, but that seems more acceptable *)

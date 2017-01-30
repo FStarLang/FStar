@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 BOOT_FSTS=boot_fsts
 rm -rf $BOOT_FSTS
