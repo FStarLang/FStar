@@ -17,7 +17,6 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
-open FStar.All
 open FStar
 open FStar.Util
 open FStar.Getopt
@@ -156,8 +155,7 @@ let init () =
         ("z3refresh"                    , Bool false);
         ("z3rlimit"                     , Int 5);
         ("z3seed"                       , Int 0);
-        ("z3timeout"                    , Int 5);
-        ("z3cliopt"                     , List [])] in
+        ("z3timeout"                    , Int 5)] in
    let o = peek () in
    Util.smap_clear o;
    vals |> List.iter set_option'                          //initialize it with the default values
@@ -238,7 +236,6 @@ let get_verify_module           ()      = lookup_opt "verify_module"            
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
 let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects"   as_bool
-let get_z3cliopt                ()      = lookup_opt "z3cliopt"                 (as_list as_string)
 let get_z3refresh               ()      = lookup_opt "z3refresh"                as_bool
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
@@ -405,6 +402,12 @@ let rec specs () : list<Getopt.opt> =
         "Only extract modules in the specified namespace");
 
        ( noshort,
+        "fs_typ_app",
+        ZeroArgs (fun () -> Bool true),
+        "Allow the use of t<t1,...,tn> syntax for type applications;
+        brittle since it clashes with the integer less-than operator");
+
+       ( noshort,
         "fstar_home",
         OneArg (String,
                 "[dir]"),
@@ -493,8 +496,8 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "MLish",
-        ZeroArgs(fun () -> Bool true),
-        "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
+        ZeroArgs(fun () -> Bool true),//ml_ish := true; full_context_dependency := false),
+        "Introduce unification variables that are only dependent on the type variables in the context");
 
        ( noshort,
         "n_cores",
@@ -654,11 +657,6 @@ let rec specs () : list<Getopt.opt> =
         "no_warn_top_level_effects",
         ZeroArgs (fun () -> Bool false),
         "Top-level effects are checked by default; turn this flag on to prevent warning when this happens");
-
-       ( noshort,
-         "z3cliopt",
-         OneArg ((fun s -> List (get_z3cliopt() @ [s] |> List.map String)), "[option]"),
-         "Z3 command line options");
 
        ( noshort,
         "z3refresh",
@@ -875,7 +873,7 @@ let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
 let explicit_deps                () = get_explicit_deps               ()
 let extract_all                  () = get_extract_all                 ()
-let fs_typ_app    (filename:string) = List.contains filename !light_off_files
+let fs_typ_app    (filename:string) = get_fs_typ_app () && List.contains filename !light_off_files
 let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
@@ -892,7 +890,6 @@ let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
 let min_fuel                     () = get_min_fuel                    ()
 let ml_ish                       () = get_MLish                       ()
-let set_ml_ish                   () = set_option "MLish" (Bool true)
 let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.contains s
@@ -922,7 +919,6 @@ let warn_top_level_effects       () = get_warn_top_level_effects      ()
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
-let z3_cliopt                    () = get_z3cliopt                    ()
 let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_seed                      () = get_z3seed                      ()
@@ -932,8 +928,8 @@ let z3_timeout                   () = get_z3timeout                   ()
 let should_extract m =
   not (no_extract m) && (extract_all () ||
   (match get_extract_module () with
-  | [] ->
-    (match get_extract_namespace () with
+  | [] -> 
+    (match get_extract_namespace () with 
      | [] -> true
      | ns -> Util.for_some (Util.starts_with (String.lowercase m)) ns)
   | l -> List.contains (String.lowercase m) l))

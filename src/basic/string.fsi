@@ -15,7 +15,6 @@
 *)
 #light "off"
 module FStar.String
-open FStar.All
 open Prims
 open FStar.Char
 (* The name of this file is misleading: most string functions are to be found in

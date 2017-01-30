@@ -15,7 +15,6 @@
 *)
 #light "off"
 module FStar.ToSyntax.ToSyntax
-open FStar.All
 
 open FStar
 open FStar.Util

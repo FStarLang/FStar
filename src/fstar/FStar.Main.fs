@@ -15,7 +15,6 @@
 *)
 #light "off"
 module FStar.Main
-open FStar.All
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
@@ -125,8 +124,7 @@ let go _ =
           (* interactive_mode takes care of calling [find_deps_if_needed] *)
           interactive_mode filename None Universal.interactive_tc //and then call interactive mode
 	  //and then start checking chunks from the current buffer
-        end //end interactive mode
-        else if Options.doc() then // --doc Generate Markdown documentation files
+        end else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if Options.indent () then
           FStar.Indent.generate filenames
@@ -149,8 +147,7 @@ let go _ =
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);
           finished_message module_names_and_times 0
-        end //end normal batch mode
-        else
+        end else
           Util.print_error "no file provided\n"
 
 

@@ -1,5 +1,4 @@
 module Ex01a
-open FStar.All
 //safe-read-write
 
 // BEGIN: ACLs
@@ -18,10 +17,10 @@ let canRead (f:filename) =
 // END: ACLs
 
 // BEGIN: FileIO
-val read  : f:filename{canRead f}  -> ML string
+val read  : f:filename{canRead f}  -> string
 let read f  = FStar.IO.print_string ("Dummy read of file " ^ f ^ "\n"); f
 
-val write : f:filename{canWrite f} -> string -> ML unit
+val write : f:filename{canWrite f} -> string -> unit
 let write f s = FStar.IO.print_string ("Dummy write of string " ^ s ^ " to file " ^ f ^ "\n")
 // END: FileIO
 
@@ -32,7 +31,7 @@ let tmp     = "demo/tempfile"
 // END: UntrustedClientCode
 
 // BEGIN: StaticChecking
-val staticChecking : unit -> ML unit
+val staticChecking : unit -> unit
 let staticChecking () =
   let v1 = read tmp in
   let v2 = read readme in
@@ -43,13 +42,13 @@ let staticChecking () =
 
 // BEGIN: CheckedRead
 exception InvalidRead
-val checkedRead : filename -> ML string
+val checkedRead : filename -> string
 let checkedRead f =
   if canRead f then read f else raise InvalidRead
 // END: CheckedRead
 
 // BEGIN: CheckedWriteType
-assume val checkedWrite : filename -> string -> ML unit
+assume val checkedWrite : filename -> string -> unit
 // END: CheckedWriteType
 
 // solution here

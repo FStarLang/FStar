@@ -145,15 +145,12 @@ open FStar_String
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
 inputFragment:
-  | light_opt=option(PRAGMALIGHT STRING { true }) d=decl decls=list(decl) main_opt=mainDecl? EOF
+  | option(PRAGMALIGHT STRING {}) d=decl decls=list(decl) main_opt=mainDecl? EOF
        {
-         let is_light = match light_opt with
-	   | None -> false
-	   | Some _ -> true in
          let decls = match main_opt with
            | None -> decls
            | Some main -> decls @ [main]
-         in as_frag is_light d decls
+         in as_frag d decls
        }
 
 (* TODO : let's try to remove that *)

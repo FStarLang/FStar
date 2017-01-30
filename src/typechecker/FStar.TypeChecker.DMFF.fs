@@ -15,7 +15,6 @@
 *)
 #light "off"
 module FStar.TypeChecker.DMFF
-open FStar.All
 
 open FStar
 open FStar.TypeChecker

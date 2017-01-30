@@ -15,7 +15,7 @@
 *)
 #light "off"
 module FStar.Util
-open FStar.All
+
 open System.IO
 
 open FStar.BaseTypes

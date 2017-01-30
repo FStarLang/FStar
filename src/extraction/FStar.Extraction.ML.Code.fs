@@ -17,7 +17,6 @@
 #light "off"
 
 module FStar.Extraction.ML.Code
-open FStar.All
 
 open FStar
 open FStar.Util

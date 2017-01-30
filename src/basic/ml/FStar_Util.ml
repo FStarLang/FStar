@@ -37,17 +37,17 @@ type time = float
 let now () = BatUnix.gettimeofday ()
 let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
-  n,
+  n, 
   Z.of_float (n *. 1000.0)
-let record_time f =
+let record_time f = 
     let start = now () in
-    let res = f () in
+    let res = f () in 
     let _, elapsed = time_diff start (now()) in
     res, elapsed
 let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
 let is_before t1 t2 = compare t1 t2 < 0
 let string_of_time = string_of_float
-
+  
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -66,7 +66,7 @@ let sleep n = Thread.delay ((Z.to_float n) /. 1000.)
 
 let monitor_enter _ = ()
 let monitor_exit _ = ()
-let monitor_wait n = Thread.delay (0.01)
+let monitor_wait _ = ()
 let monitor_pulse _ = ()
 let current_tid _ = Z.zero
 
@@ -699,7 +699,7 @@ let print_endline = print_endline
 let map_option f opt = BatOption.map f opt
 
 let save_value_to_file (fname:string) value =
-  BatFile.with_file_out
+  BatFile.with_file_out 
     fname
     (fun f ->
       BatPervasives.output_value f value)
@@ -719,7 +719,7 @@ let print_exn e =
 
 let digest_of_file (fname:string) =
   BatDigest.file fname
-
+  
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)
 
@@ -775,7 +775,7 @@ let read_hints (filename: string): hints_db option =
         `List hints
       ] ->
         {
-          module_digest;
+          module_digest; 
           hints = List.map (function
             | `Null -> None
             | `List [
@@ -805,7 +805,7 @@ let read_hints (filename: string): hints_db option =
                   query_elapsed_time = Z.of_int query_elapsed_time
                 }
               | _ ->
-                 raise Exit
+                 raise Exit 
           ) hints
         }
     | _ ->
@@ -815,6 +815,6 @@ let read_hints (filename: string): hints_db option =
    | Exit ->
       Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
       None
-   | Sys_error _ ->
+   | Sys_error _ -> 
       Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
       None
