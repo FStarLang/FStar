@@ -87,7 +87,7 @@ of results, in the order of the original elements in [l]. (Hides
 [List.Tot.map] which requires, at type-checking time, [f] to be a pure
 total function.)  Named as in: OCaml, Coq, F# *)
 val map: ('a -> ML 'b) -> list 'a -> ML (list 'b)
-0let rec map f x = match x with
+let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
