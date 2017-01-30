@@ -79,7 +79,7 @@ wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMA
 #   -- we use automatic dependence analysis based on files in ulib, u_boot_fsts and boot_fstis
 #   -- eager_inference, MLish, lax: all tune type-inference for use with unverified ML programs
 #   -- fs_typ_app parses list<foo> as valid syntax, for overlap with F# syntax
-FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --MLish --lax --fs_typ_app --no_location_info \
+FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --lax --MLish --no_location_info \
 		   --odir u_ocaml-output --codegen OCaml --include ../ulib --include u_boot_fsts --include boot_fstis
 
 # JP: these modules are meant to be fsti's (realized in ML); but, the compiler
@@ -115,8 +115,6 @@ boot_fstis/FStar.list.fst: basic/list.fsi
 
 boot_fstis/FStar.bytes.fst: basic/bytes.fsti
 	cp $^ $@
-	$(SED) -i 's/val/assume val/g' $@
-	$(SED) -i 's/new/assume new/g' $@
 
 boot_fstis/FStar.util.fsti: basic/util.fsi
 	cp $^ $@
@@ -141,13 +139,13 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 boot_fstis/FStar.Parser.Parse.fsti: parser/parse.fsi
 	echo "#light \"off\"" > $@
 	$(HEAD) -n -12 $^ >> $@
-	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse open FStar.BaseTypes type bytes = array<byte>/' $@
+	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse\nopen FStar.All\nopen FStar.BaseTypes\ntype bytes = array<byte>/' $@
 
 rename_as_fst:
 	./tools/rename_all_boot_fsts
 	cp parser/parseit.fsi u_boot_fsts/FStar.Parser.Parseit.fsti
 
-prep_u_extract_ocaml: $(U_ALL_INTERFACES)
+prep: $(U_ALL_INTERFACES)
 	make rename_as_fst
 	$(SED) -i "s/type term' =/type term' : Type0 =/g"      u_boot_fsts/FStar.Syntax.Syntax.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
 	$(SED) -i "s/and pat' =/and pat' : Type0 =/g"          u_boot_fsts/FStar.Syntax.Syntax.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
@@ -215,7 +213,7 @@ u_extract_encode: u_boot_fsts/FStar.SMTEncoding.Encode.fst
 u_extract_solver: u_boot_fsts/FStar.SMTEncoding.Solver.fst
 	$(FSTARBOOT) $^ --extract_module FStar.SMTEncoding.Solver
 
-u_extract_smtencoding: u_extract_encode u_extract_solver
+u_extract_smtencoding: u_extract_smtencoding_base u_extract_encode u_extract_solver
 
 u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fst Universal.fst Indent.fst Main.fst)
 	$(FSTARBOOT) $^ --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
@@ -225,7 +223,7 @@ u_extract_all: u_extract_misc u_extract_syntax u_extract_parser \
 	       u_extract_extraction u_extract_fstar
 
 ocaml: clean_u_extract_ocaml
-	make prep_u_extract_ocaml
+	make prep
 	+make u_extract_misc u_extract_syntax u_extract_parser \
               u_extract_typechecker u_extract_tosyntax u_extract_smtencoding \
 	      u_extract_extraction u_extract_fstar

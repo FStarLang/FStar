@@ -256,8 +256,10 @@ let mac #i st #aadlen aad #txtlen plain cipher_tagged ak acc h_init =
    recall_aead_liveness st;
    mac_wrapper ak acc tag; 
    let h1 = get () in
+   assume (enc_dec_liveness st aad plain cipher_tagged h1);
    intro_mac_is_set st aad plain cipher_tagged ak acc h_init h0 h1
-
+   
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 (*** UF1CMA.verify ***)
 
 (*+ The main work of wrapping UF1CMA.verify is to 

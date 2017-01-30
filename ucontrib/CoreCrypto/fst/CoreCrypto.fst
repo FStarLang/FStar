@@ -1,5 +1,5 @@
 module CoreCrypto
-
+open FStar.ST
 open Platform.Bytes
 
 effect EXT (a:Type) = ST a
