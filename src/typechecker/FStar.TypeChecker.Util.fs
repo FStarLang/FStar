@@ -17,7 +17,6 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Util
-open FStar.All
 open FStar
 open FStar.Util
 open FStar.Errors
@@ -105,12 +104,12 @@ let force_sort' s = match !s.tk with
 
 let force_sort s = mk (force_sort' s) None s.pos
 
-let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; lbdef=e} :
+let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} :
     list<univ_name>
    * typ
    * bool //true indicates that the type needs to be checked; false indicates that it is already checked
    =
-  let rng = S.range_of_lbname lbname in
+  let rng = t.pos in
   let t = SS.compress t in
   match t.n with
    | Tm_unknown ->
@@ -144,11 +143,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 
         let res, must_check_ty = aux must_check_ty scope body in
         let c = match res with
-            | Inl t -> 
-	      begin match Env.try_lookup_effect_lid env Const.effect_ML_lid with
-		| None -> S.mk_Total t
-		| _ -> U.ml_comp t r //let rec without annotations default to being in the ML monad; TODO: revisit this
-	      end
+            | Inl t -> U.ml_comp t r //let rec without annotations default to being in the ML monad; TODO: revisit this
             | Inr c -> c in
         let t = U.arrow bs c in
         if debug env Options.High
@@ -165,11 +160,9 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
     let t, b = aux false (t_binders env) e in
     let t = match t with
         | Inr c ->
-	  if U.is_tot_or_gtot_comp c
-	  then U.comp_result c
-	  else raise (Error(BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
-				       (Print.comp_to_string c),
-                      rng))
+          raise (Error(BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+                        (Print.comp_to_string c),
+                       rng))
         | Inl t -> t in
     [], t, b
 

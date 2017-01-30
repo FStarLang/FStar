@@ -1,5 +1,4 @@
 module Ex10a
-open FStar.All
 //acls-variant
 
 open FStar.List.Tot
@@ -79,7 +78,7 @@ let safe_delete file =
   else failwith "unwritable"
 
 (* Finally, we have a top-level client program *)
-val test_acls: file -> ML unit
+val test_acls: file -> unit
 let test_acls f =
   grant (Readable f);     (* ok *)
   let _ = read f in       (* ok --- it's in the acl *)

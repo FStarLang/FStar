@@ -17,7 +17,6 @@
 
 //Batch-mode type-checking for the stratified type-checker
 module FStar.Interactive
-open FStar.All
 open FStar
 open FStar.Util
 open FStar.Getopt

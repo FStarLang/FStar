@@ -15,7 +15,7 @@
 *)
 #light "off"
 module FStar.Getopt
-open FStar.All
+
 open FStar.BaseTypes
 
 val noshort : char

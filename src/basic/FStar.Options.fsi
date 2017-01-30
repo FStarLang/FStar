@@ -17,7 +17,6 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
-open FStar.All
 open FStar.Getopt
 
 //let __test_norm_all = Util.mk_ref false
@@ -91,7 +90,6 @@ val max_fuel                    : unit    -> int
 val max_ifuel                   : unit    -> int
 val min_fuel                    : unit    -> int
 val ml_ish                      : unit    -> bool
-val set_ml_ish                  : unit    -> unit
 val n_cores                     : unit    -> int
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool

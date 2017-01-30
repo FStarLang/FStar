@@ -16,7 +16,6 @@
 #light "off"
 
 module FStar.SMTEncoding.SplitQueryCases
-open FStar.All
 
 open FStar
 open FStar.Util
