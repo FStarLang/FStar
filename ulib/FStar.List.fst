@@ -17,6 +17,20 @@ module FStar.List
 open FStar.All
 include FStar.List.Tot
 
+val nth: list 'a -> int -> ML 'a
+let rec nth l n =
+  if n < 0 then
+    failwith "nth takes a non-negative integer as input"
+  else
+    if n = 0 then
+      match l with
+        | [] -> failwith "not enough elements"
+        | hd::_ -> hd
+    else
+      match l with
+        | [] -> failwith "not enough elements"
+        | _::tl -> nth tl (n - 1)
+
 (** Iterators **)
 
 val iter: ('a -> ML unit) -> list 'a -> ML unit

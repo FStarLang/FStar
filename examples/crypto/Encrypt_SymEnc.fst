@@ -1,5 +1,5 @@
 module Encrypt_SymEnc (* a multi-key symmetric variant; for simplicity: (1) only using AES above; and (2) parsing is complete *)
-
+open FStar.All
 type bytes = Platform.Bytes.bytes
 
 (* TODO: we get the index from a counter; 
@@ -19,9 +19,9 @@ assume type encrypted: #p: Type -> #r: Type -> key p r -> bytes -> Type    (* an
 
 type cipher (p:Type) (r:Type) (k: key p r) = c:AES.cipher { encrypted k c }    
 (* TODO why do I need explicit implicits?; NS: you don't seem to need it *)
-val keygen:  #p:Type0 -> bool -> plain:(AES.plain -> p) -> repr:(p -> AES.plain) -> key p AES.plain
-val decrypt: #p:Type0 -> k:key p AES.plain -> cipher p AES.plain k -> p
-val encrypt: #p:Type0 -> k:key p AES.plain -> plain: p -> cipher p AES.plain k 
+val keygen:  #p:Type0 -> bool -> plain:(AES.plain -> p) -> repr:(p -> AES.plain) -> ML (key p AES.plain)
+val decrypt: #p:Type0 -> k:key p AES.plain -> cipher p AES.plain k -> ML p
+val encrypt: #p:Type0 -> k:key p AES.plain -> plain: p -> ML (cipher p AES.plain k)
 
 
 (* TODO: implementation *)
@@ -39,7 +39,7 @@ let keygen #p safe plain repr =
 noeq type entry (#p:Type0): Type0 = 
   | Entry : k:key p AES.plain -> c:cipher p AES.plain k -> plain:p -> entry #p
 
-let log (p:Type): ref (list (entry #p)) = ST.alloc [] 
+let log (p:Type): St (ref (list (entry #p))) = ST.alloc [] 
 
 let encrypt #p k text = 
   match k with 
