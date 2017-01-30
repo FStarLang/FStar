@@ -1,5 +1,5 @@
 module HyE.HCCA2
-open FStar.All
+
 open HyE.Plain
 open HyE.PlainPKE
 open Platform.Bytes
@@ -27,9 +27,9 @@ noeq abstract type skey =
 
 type c = C.cipher * A.cipher //lbytes(CCA2.ciphersize + AE.ciphersize)
 
-val keygen: rid -> ML (pkey * skey)
-val encrypt: pkey -> p -> ML c 
-val decrypt: skey -> c -> ML (option p )
+val keygen: rid -> pkey * skey
+val encrypt: pkey -> p -> c 
+val decrypt: skey -> c -> option p 
 
 
 let keygen (parent:rid) =

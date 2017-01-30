@@ -1,6 +1,5 @@
 #light "off"
 module FStar.Parser.Dep
-open FStar.All
 open FStar
 open FStar.Parser
 open FStar.Parser.AST

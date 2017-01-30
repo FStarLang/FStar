@@ -17,7 +17,6 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
-open FStar.All
 open FStar.Getopt
 
 //let __test_norm_all = Util.mk_ref false
@@ -91,7 +90,6 @@ val max_fuel                    : unit    -> int
 val max_ifuel                   : unit    -> int
 val min_fuel                    : unit    -> int
 val ml_ish                      : unit    -> bool
-val set_ml_ish                  : unit    -> unit
 val n_cores                     : unit    -> int
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
@@ -128,7 +126,6 @@ val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool
 val warn_top_level_effects      : unit    -> bool
 val z3_exe                      : unit    -> string
-val z3_cliopt                   : unit    -> list<string>
 val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_seed                     : unit    -> int

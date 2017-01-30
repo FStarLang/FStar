@@ -17,7 +17,7 @@
 
 #light "off"
 module FStar.Unionfind
-open FStar.All
+
 type cell<'a when 'a : not struct> = {mutable contents : contents<'a> }
 and contents<'a when 'a : not struct> =
   | Data of list<'a> * int

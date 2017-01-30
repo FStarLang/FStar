@@ -24,13 +24,13 @@ all: aes.o sha256.o
 
 .PHONY: import
 import:
-	@if [ x"$(VALE_HOME)" = x ]; then echo "VALE_HOME not defined"; exit 1; fi
-	cp $(VALE_HOME)/obj/aes-gcc.S aes-x86_64.S
-	cp $(VALE_HOME)/obj/sha256-gcc.S sha256-x86_64.S
-	cp $(VALE_HOME)/obj/aes-macos.S aes-x86_64-Darwin.S
-	cp $(VALE_HOME)/obj/sha256-macos.S sha256-x86_64-Darwin.S
-	cp $(VALE_HOME)/obj/aes-linux.S aes-x86_64-Linux.S
-	cp $(VALE_HOME)/obj/sha256-linux.S sha256-x86_64-Linux.S
+	@if [ x"$(SPARTAN_HOME)" = x ]; then echo "SPARTAN_HOME not defined"; exit 1; fi
+	cp $(SPARTAN_HOME)/obj/aes-gcc.S aes-x86_64.S
+	cp $(SPARTAN_HOME)/obj/sha256-gcc.S sha256-x86_64.S
+	cp $(SPARTAN_HOME)/obj/aes-macos.S aes-x86_64-Darwin.S
+	cp $(SPARTAN_HOME)/obj/sha256-macos.S sha256-x86_64-Darwin.S
+	cp $(SPARTAN_HOME)/obj/aes-linux.S aes-x86_64-Linux.S
+	cp $(SPARTAN_HOME)/obj/sha256-linux.S sha256-x86_64-Linux.S
 	sed -i 's/.section .text/.text/' *.S
 
 clean:

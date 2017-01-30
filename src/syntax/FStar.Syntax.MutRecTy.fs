@@ -15,7 +15,6 @@
 *)
 #light "off"
 module FStar.Syntax.MutRecTy
-open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Util

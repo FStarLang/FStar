@@ -3,7 +3,7 @@
    computational assumption *)
 
 module Ex12.MAC
-open FStar.All
+
 open Ex12.SHA1
 open FStar.IO
 
@@ -31,7 +31,7 @@ type entry =
 let log = ST.alloc #(list entry) []
 
 // BEGIN: MacSpec
-val keygen: p:(text -> Type) -> ML (pkey p)
+val keygen: p:(text -> Type) -> pkey p
 val mac:    k:key -> t:text{key_prop k t} -> ST tag 
   (requires (fun h -> True)) 
   (ensures (fun h x h' -> modifies !{ log } h h'))
