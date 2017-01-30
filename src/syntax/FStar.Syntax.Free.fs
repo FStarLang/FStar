@@ -34,24 +34,28 @@ let no_free_vars = {
     free_uvars=no_uvs;
     free_univs=no_universe_uvars;
     free_univ_names=no_universe_names;
+    free_fvars=no_fvars;
 }
 let singleton_bv x   = {
     free_names=Util.set_add x (new_bv_set());
     free_uvars=no_uvs;
     free_univs=no_universe_uvars;
     free_univ_names=no_universe_names;
+    free_fvars=no_fvars;
 }
 let singleton_uv x   = {
     free_names=no_names;
     free_uvars=Util.set_add x (new_uv_set());
     free_univs=no_universe_uvars;
     free_univ_names=no_universe_names;
+    free_fvars=no_fvars;
 }
 let singleton_univ x = {
     free_names=no_names;
     free_uvars=no_uvs;
     free_univs=Util.set_add x (new_universe_uvar_set());
     free_univ_names=no_universe_names;
+    free_fvars=no_fvars;
 }
 
 
@@ -59,14 +63,24 @@ let singleton_univ_name x = {
     free_names=no_names;
     free_uvars=no_uvs;
     free_univs=no_universe_uvars;
-    free_univ_names=Util.fifo_set_add x (new_universe_names_fifo_set ())
+    free_univ_names=Util.fifo_set_add x (new_universe_names_fifo_set ());
+    free_fvars=no_fvars;
+}
+
+let singleton_fvar fv = {
+  free_names=no_names;
+  free_uvars=no_uvs;
+  free_univs=no_universe_uvars;
+  free_univ_names=no_universe_names;
+  free_fvars=Util.set_add fv.fv_name.v (new_fv_set ());
 }
 
 let union f1 f2 = {
     free_names=Util.set_union f1.free_names f2.free_names;
     free_uvars=Util.set_union f1.free_uvars f2.free_uvars;
     free_univs=Util.set_union f1.free_univs f2.free_univs;
-    free_univ_names=Util.fifo_set_union f1.free_univ_names f2.free_univ_names
+    free_univ_names=Util.fifo_set_union f1.free_univ_names f2.free_univ_names;
+    free_fvars=Util.set_union f1.free_fvars f2.free_fvars;
 }
 
 let rec free_univs u = match Subst.compress_univ u with
@@ -96,8 +110,8 @@ let rec free_names_and_uvs' tm : free_vars =
       | Tm_type u ->
         free_univs u
 
-      | Tm_bvar _
-      | Tm_fvar _
+      | Tm_bvar _ -> no_free_vars
+      | Tm_fvar fv -> singleton_fvar fv
       | Tm_constant _
       | Tm_unknown ->
         no_free_vars
@@ -201,4 +215,5 @@ let names t = (free_names_and_uvars t).free_names
 let uvars t = (free_names_and_uvars t).free_uvars
 let univs t = (free_names_and_uvars t).free_univs
 let univnames t = (free_names_and_uvars t).free_univ_names
+let fvars t = (free_names_and_uvars t).free_fvars
 let names_of_binders (bs:binders) = (free_names_and_uvars_binders bs no_free_vars).free_names

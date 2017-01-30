@@ -188,6 +188,7 @@ and free_vars = {
     free_uvars:uvars;
     free_univs:set<universe_uvar>;
     free_univ_names:fifo_set<univ_name>;
+    free_fvars:set<lident>;
 }
 and lcomp = {
     eff_name: lident;
@@ -365,6 +366,8 @@ let order_bv x y =
   then x.index - y.index
   else i
 
+let order_fv x y = String.compare x.str y.str
+
 let range_of_lbname (l:lbname) = match l with
     | Inl x -> x.ppname.idRange
     | Inr fv -> range_of_lid fv.fv_name.v
@@ -380,6 +383,7 @@ let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
+let new_fv_set () :set<lident> = Util.new_set order_fv (fun x -> Util.hashcode x.str)
 let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_id x - Unionfind.uvar_id y)
                                            (fun (x, _) -> Unionfind.uvar_id x)
 let new_universe_uvar_set () : set<universe_uvar> =
@@ -390,6 +394,7 @@ let new_universe_names_fifo_set () : fifo_set<univ_name> =
                  (fun x -> Util.hashcode (Ident.text_of_id x))
 
 let no_names  = new_bv_set()
+let no_fvars  = new_fv_set()
 let no_uvs : uvars = new_uv_set()
 let no_universe_uvars = new_universe_uvar_set()
 let no_universe_names = new_universe_names_fifo_set ()
@@ -398,6 +403,7 @@ let empty_free_vars = {
         free_uvars=no_uvs;
         free_univs=no_universe_uvars;
         free_univ_names=no_universe_names;
+        free_fvars=no_fvars;
     }
 let memo_no_uvs = Util.mk_ref (Some no_uvs)
 let memo_no_names = Util.mk_ref (Some no_names)

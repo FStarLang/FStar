@@ -1014,9 +1014,65 @@ and tc_inductive env ses quals lids =
     let tcs, datas = generalize_and_inst_within env0 g (List.map fst tcs) datas in
     let sig_bndle = Sig_bundle(tcs@datas, quals, lids, Env.get_range env0) in
 
+    let datacon_typ (data:sigelt) :term = match data with
+        | Sig_datacon (_, _, t, _, _, _, _, _) -> t
+        | _                                    -> failwith "Impossible!"
+    in
+
+    
 
     (* Once the datacons are generalized we can construct the projectors with the right types *)
     let data_ops_ses = List.map (TcUtil.mk_data_operations quals env tcs) datas |> List.flatten in
+
+    let check_positivity (_:unit) :bool =
+      //get the universe variables substitution
+      //TODO: generalize to multiple types in the bundle (note they all share the universe variables though)
+      //TODO: do we need all the substitutions and opens?
+      let ty = List.hd tcs in
+      let lid, us, bs =
+        match ty with
+          | Sig_inductive_typ (lid, us, bs, _, _, _, _, _) -> lid, us, bs  //TODO: handle type indices
+          | _                                           -> failwith "Impossible!"
+      in
+      let usubst, us = SS.univ_var_opening us in
+      //apply usubt to bs
+      let bs = SS.subst_binders usubst bs in
+
+      //TODO: when doing multiple types in the bundle, datas will have to be checked per type constructor
+      
+      let check_datacon (data:sigelt) :bool =
+        let dt = datacon_typ data in
+        //apply the universes substitution to dt, TODO: this may not be necessary actually
+        let dt = SS.subst usubst dt in
+
+        match (SS.compress dt).n with
+          | Tm_fvar _         -> Util.print_string "This is the case of type with no argument, datacon also no arguments\n"; true  //TODO: my understanding is that this is the case where type has no arguments
+          | Tm_arrow (dbs, _) ->
+            //filter out the inductive type parameters, dbs are the remaining binders
+            let dbs = snd (List.splitAt (List.length bs) dbs) in
+            //substitute bs into dbs
+            let dbs = SS.subst_binders (SS.opening_of_binders bs) dbs in
+            //open dbs
+            let dbs = SS.open_binders dbs in
+
+            let check_dbinder ((bv, _):binder) :bool =
+              //normalize the sort to unfold any type abbreviations, TODO: what steps?
+              let sort = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] env0 bv.sort in
+              let sort_fvars = Free.fvars sort in
+              let b = FStar.Util.set_mem lid sort_fvars in
+              if b then Util.print_string "Found occurence of type in some binder sort\n" else Util.print_string "No occurence of the type in this binder sort\n";
+              b
+            in
+
+            List.forall check_dbinder dbs
+          | Tm_app (_, args)  -> Util.print_string "This is the case when type may have args but datacon none\n"; true  //TODO: confirm this, but I think our typechecker already does not allow t (the inductive type) to be referenced in args, so nothing to check here
+          | _                 -> failwith "Data constructor type something other than an arrow or type application"
+      in
+
+      List.forall check_datacon datas
+    in
+
+    if env.curmodule.str = "Test" then ignore (check_positivity ()) else ();
 
     //generate hasEq predicate for this inductive
 
