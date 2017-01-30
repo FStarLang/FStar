@@ -13,10 +13,14 @@ OCAMLCOPT := $(OCAMLC_) -I $(ULIB_ML)/hyperheap  $(ULIB_ML)/fstarlib-hyperheap.a
 
 .PHONY: lib-ver x86Interpreter-ver
 
+# CH: this thing doesn't even lax type-check
+ver:
+	$(FSTAR) --lax Test.fst Interpreter.fst Ast.fst SGXState.fst Util.fst
+
 all: x86Interpreter-ml
 
 x86Interpreter-ml: 
-	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap # CH: No hyperheap target
 	mkdir -p $(X86_ODIR)
 	$(FSTAR) $(OPTIONS_OCAML) Test.fst Interpreter.fst Ast.fst SGXState.fst Util.fst --odir $(X86_ODIR)
 	$(MAKE) x86Interpreter-compile

@@ -1,5 +1,6 @@
 module Fixnat
-open IO
+open FStar.All
+open FStar.Mul
 
 val exp2: nat -> Tot nat
 let rec exp2 n =
