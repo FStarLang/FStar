@@ -536,8 +536,8 @@ let lookup_datacon env lid =
 
 let datacons_of_typ env lid =
   match lookup_qname env lid with
-    | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _), _)) -> dcs
-    | _ -> []
+    | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _), _)) -> true, dcs
+    | _ -> false, []
 
 let typ_of_datacon env lid =
   match lookup_qname env lid with

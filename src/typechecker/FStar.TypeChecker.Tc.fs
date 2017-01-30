@@ -1059,22 +1059,79 @@ and tc_inductive env ses quals lids =
             let ty_occurs_in (t:term) :bool = FStar.Util.set_mem lid (Free.fvars t) in
 
             let rec ty_strictly_positive_in (bsort:term) (env:env) :bool =
+
+              let ty_nested_positive_in (ilid:lident) (args:args) (env:env) :bool =
+                let b, idatas = datacons_of_typ env ilid in
+                if not b then false
+                else
+                  //TODO: is there a better way to get the number of binders of the inductive?
+                  let _, ityp = lookup_lid env ilid in
+                  let num_ibs =
+                    match (SS.compress ityp).n with  //TODO: perhaps unnecessary to have this compress? and many below. check.
+                    | Tm_arrow (bs, _) -> List.length bs
+                    | _                -> 0
+                  in
+                  
+                  let ty_nested_positive_in_d (dlid:lident) (env:env) :bool =
+                    let _, dt = lookup_datacon env dlid in
+                    //apply universe substitution to the datacon type
+                    let dt = SS.subst usubst dt in
+                    //open the type parameters of the inductive
+                    match (SS.compress dt).n with
+                    | Tm_arrow (dbs, c) ->
+                      let ibs, dbs = List.splitAt num_ibs dbs in
+                      let ibs = SS.open_binders ibs in
+                      let dbs = SS.subst_binders (SS.opening_of_binders ibs) dbs in
+                      let subst = List.fold2 (fun subst ib arg -> subst @ [NT (fst ib, fst arg)]) [] ibs args in
+                      let dbs = SS.subst_binders subst dbs in
+                      let c = SS.subst_comp subst c in
+
+                      fst (List.fold_left (fun (r, env) b ->
+                             if not r then r, env
+                             else
+                               let _ = Util.print_string ("Checking strict positivity for sort: " ^ (PP.term_to_string (fst b).sort) ^ "\n") in
+                               //TODO: this is an infinite loop if b.sort it ilid itself, e.g. list, fix
+                               ty_strictly_positive_in (fst b).sort env, push_binders env [b]
+                          ) (true, env) dbs)
+                      //TODO: check c also, basically for index parameters
+                    | _ -> Util.print_string "True: from the case with no arrow\n"; true  //TODO: this is the case when it's a no argument data constructor, we need to check index parameters
+                      
+                  in
+                    
+                  List.forall (fun d -> ty_nested_positive_in_d d env) idatas
+              in
+
+              let ty_not_in_its_args (args:args) :bool =
+                List.for_all (fun s -> Util.print_string ("Checking that ty does not occur in: " ^ (PP.term_to_string s) ^ "\n"); not (ty_occurs_in s)) (List.map fst args)
+              in
+
               //normalize the sort to unfold any type abbreviations, TODO: what steps?
-              let bsort = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] env bsort in
+              let bsort = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env bsort in
+              Util.print_string ("Checking for strict positivity in: " ^ (PP.term_to_string bsort) ^ "\n");
               not (ty_occurs_in bsort) ||
                 (match (SS.compress bsort).n with
                  | Tm_app (t, args) ->
-                   (match t.n with
+                   (match (SS.compress t).n with
                     | Tm_fvar fv ->
                       if Ident.lid_equals fv.fv_name.v lid then
-                         List.for_all (fun s -> not (ty_occurs_in s)) (List.map fst args)
-                      else false
-                    | _                                              -> false)  //TODO: if this is not an inductive that we can unfold, we have to error out
+                         let _ = Util.print_string ("Head of application found equal to tycon, which is: " ^ lid.str ^ "\n") in
+                         ty_not_in_its_args args
+                      else let _ = Util.print_string "False: app node with fvar but not ty\n" in false
+                    | Tm_uinst (t, _) ->
+                      (match t.n with
+                       | Tm_fvar fv ->
+                         if Ident.lid_equals fv.fv_name.v lid then ty_not_in_its_args args
+                         else ty_nested_positive_in fv.fv_name.v args env
+                       | _          -> Util.print_string "False: app node with head as uinst but uinst applied to something other than an fvar\n"; false)
+                    | _                                              -> Util.print_string "False: app node with not an fvar or uinst\n"; false)  //TODO: if this is not an inductive that we can unfold, we have to error out
                  | Tm_arrow (sbs, c) ->
-                   List.for_all (fun (b, _) -> not (ty_occurs_in b.sort)) sbs &&
-                     ty_strictly_positive_in (FStar.Syntax.Util.comp_result c) (push_binders env sbs)  //TODO: do we need to compress c, if so how?
+                   let b1 = List.for_all (fun (b, _) -> not (ty_occurs_in b.sort)) sbs in
+                   let b2 = ty_strictly_positive_in (FStar.Syntax.Util.comp_result c) (push_binders env sbs) in //TODO: do we need to compress c, if so how?
+                   Util.print_string ("Checking arrow for lid: " ^ lid.str ^ ", b1 = " ^ (string_of_bool b1) ^ "\n");
+                   Util.print_string ("Checking arrow for lid: " ^ lid.str ^ ", b2 = " ^ (string_of_bool b2) ^ " in c: " ^ (PP.term_to_string (FStar.Syntax.Util.comp_result c) ^ "\n"));
+                   b1 && b2
                  | Tm_fvar _ -> true  //if it's just a fvar, it should be fine?
-                 | _ -> false  //TODO: returning false in all other cases, will see as they come up
+                 | _ -> Util.print_string "False: not an app node\n"; false  //TODO: returning false in all other cases, will see as they come up
                 )
             in
 
