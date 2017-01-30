@@ -149,6 +149,7 @@ type expr = term
 //  - In the middle of a file, as a standalone documentation declaration
 type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
 
+(* TODO (KM) : it would be useful for the printer to have range information for those *)
 type tycon =
   | TyconAbstract of ident * list<binder> * option<knd>
   | TyconAbbrev   of ident * list<binder> * option<knd> * term
@@ -445,10 +446,10 @@ let rec as_mlist (out:list<modul>) (cur: (lid * decl) * list<decl>) (ds:list<dec
             as_mlist out ((m_name, m_decl), d::cur) ds
         end
 
-let as_frag is_light (d:decl) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
+let as_frag is_light (light_range:Range.range) (d:decl) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
   match d.d with
   | TopLevelModule m ->
-      let ds = if is_light then mk_decl (Pragma LightOff) d.drange [] :: ds else ds in
+      let ds = if is_light then mk_decl (Pragma LightOff) light_range [] :: ds else ds in
       let ms = as_mlist [] ((m,d), []) ds in
       begin match List.tl ms with
       | Module (m', _) :: _ ->
