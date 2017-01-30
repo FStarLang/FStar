@@ -413,7 +413,7 @@ let mk (t:'a) = fun (topt:option<'b>) r -> {
 }
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (Some bv.sort.n) (range_of_bv bv)
 let bv_to_name bv :term = mk (Tm_name bv) (Some bv.sort.n) (range_of_bv bv)
-let mk_Tm_app (t1:typ) (args:list<arg>) : mk_t = fun k p ->
+let mk_Tm_app (t1:typ) (args:list<arg>) k p =
     match args with
     | [] -> t1
     | _ -> mk (Tm_app (t1, args)) k p

@@ -211,7 +211,7 @@ let filter_map (f:'a -> ML (option 'b)) (l:list 'a) : ML (list 'b) =
 
 val index: ('a -> ML bool) -> list 'a -> ML int
 let index f l =
-  let rec index f l i =
+  let rec index l i : ML int =
     match l with
     | [] ->
         failwith "List.index: not found"
@@ -219,6 +219,6 @@ let index f l =
         if f hd then
           i
         else
-          index f tl (i + 1)
+          index tl (i + 1)
   in
-  index f l 0
+  index l 0

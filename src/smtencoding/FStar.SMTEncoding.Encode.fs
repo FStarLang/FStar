@@ -17,7 +17,7 @@
 
 module FStar.SMTEncoding.Encode
 open FStar.All
-
+open Prims
 open FStar
 open FStar.TypeChecker.Env
 open FStar.Util
@@ -778,18 +778,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         encode_match e pats mk_Term_unit env encode_term
 
 and encode_let
-    : bv -> typ -> S.term -> S.term -> env_t -> (S.term -> env_t -> term * decls_t) 
+    : bv -> typ -> S.term -> S.term -> env_t -> (S.term -> env_t -> term * decls_t)
     -> term * decls_t
     =
     fun x t1 e1 e2 env encode_body ->
-    let ee1, decls1 = encode_term e1 env in
-    let xs, e2 = SS.open_term [(x, None)] e2 in
-    let x, _ = List.hd xs in
-    let env' = push_term_var env x ee1 in
-    let ee2, decls2 = encode_body e2 env' in
-    ee2, decls1@decls2
+        let ee1, decls1 = encode_term e1 env in
+        let xs, e2 = SS.open_term [(x, None)] e2 in
+        let x, _ = List.hd xs in
+        let env' = push_term_var env x ee1 in
+        let ee2, decls2 = encode_body e2 env' in
+        ee2, decls1@decls2
 
-and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t) 
+and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t)
                  (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t =
     let scr, decls = encode_term e env in
     let match_tm, decls = List.fold_right (fun b (else_case, decls) ->
@@ -971,12 +971,12 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
             [] l in
         ({f phis with rng=r}, decls) in
 
-    let eq_op r : args -> (term * decls_t) = function
+    let eq_op r : Tot<(args -> (term * decls_t))> = function
         | [_; e1; e2]
         | [_;_;e1;e2] -> enc  (bin_op mkEq) r [e1;e2]
         | l -> enc (bin_op mkEq) r l in
 
-    let mk_imp r : args -> (term * decls_t) = function
+    let mk_imp r : Tot<(args -> (term * decls_t))> = function
         | [(lhs, _); (rhs, _)] ->
           let l1, decls1 = encode_formula rhs env in
           begin match l1.tm with
@@ -987,7 +987,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           end
          | _ -> failwith "impossible" in
 
-    let mk_ite  r: args -> (term * decls_t) = function
+    let mk_ite r: Tot<(args -> (term * decls_t))> = function
         | [(guard, _); (_then, _); (_else, _)] ->
           let (g, decls1) = encode_formula guard env in
           let (t, decls2) = encode_formula _then env in
@@ -999,12 +999,12 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
 
     let unboxInt_l : (list<term> -> term) -> list<term> -> term = fun f l -> f (List.map Term.unboxInt l) in
     let connectives = [
-        (Const.and_lid,   enc_prop_c <| bin_op mkAnd);
-        (Const.or_lid,    enc_prop_c <| bin_op mkOr);
+        (Const.and_lid,   enc_prop_c (bin_op mkAnd));
+        (Const.or_lid,    enc_prop_c (bin_op mkOr));
         (Const.imp_lid,   mk_imp);
-        (Const.iff_lid,   enc_prop_c <| bin_op mkIff);
+        (Const.iff_lid,   enc_prop_c (bin_op mkIff));
         (Const.ite_lid,   mk_ite);
-        (Const.not_lid,   enc_prop_c <| un_op mkNot);
+        (Const.not_lid,   enc_prop_c (un_op mkNot));
         (Const.eq2_lid,   eq_op);
         (Const.eq3_lid,   eq_op);
         (Const.true_lid,  const_op Term.mkTrue);

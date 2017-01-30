@@ -112,7 +112,8 @@ in ((_0_348), (None), (None)))))))
 
 let can_handle_query : Prims.int  ->  FStar_SMTEncoding_Term.decl  ->  (Prims.bool * ((FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term) * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term)) = (fun n q -> (match (q) with
 | FStar_SMTEncoding_Term.Assume (q', uu____363, uu____364) -> begin
-(parse_query_for_split_cases n (strip_not q') (fun x -> x))
+(let _0_349 = (strip_not q')
+in (parse_query_for_split_cases n _0_349 (fun x -> x)))
 end
 | uu____368 -> begin
 ((false), ((((fun x -> x)), ([]), (FStar_SMTEncoding_Util.mkFalse))))

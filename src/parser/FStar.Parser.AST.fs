@@ -303,6 +303,16 @@ let mkLexList r elts =
   let nil = mk_term (Construct(C.lextop_lid, [])) r Expr in
   List.fold_right (fun e tl -> lexConsTerm r e tl) elts nil
 
+let ml_comp t =
+    let ml = mk_term (Name FStar.Syntax.Const.effect_ML_lid) t.range Expr in
+    let t = mk_term (App(ml, t, Nothing)) t.range Expr in
+    t
+
+let tot_comp t =
+    let ml = mk_term (Name FStar.Syntax.Const.effect_Tot_lid) t.range Expr in
+    let t = mk_term (App(ml, t, Nothing)) t.range Expr in
+    t
+
 let mkApp t args r = match args with
   | [] -> t
   | _ -> match t.tm with
