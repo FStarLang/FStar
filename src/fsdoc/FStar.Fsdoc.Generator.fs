@@ -20,7 +20,6 @@
 *)
 #light "off"
 module FStar.Fsdoc.Generator
-open FStar.All
 
 open FStar
 open FStar.Util

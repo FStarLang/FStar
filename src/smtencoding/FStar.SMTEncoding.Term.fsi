@@ -16,7 +16,6 @@
 #light "off"
 
 module FStar.SMTEncoding.Term
-open FStar.All
 open Prims
     open FStar
 open FStar.Syntax.Syntax

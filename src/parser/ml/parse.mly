@@ -223,7 +223,7 @@ option___anonymous_0_:
 let x =
   let _2 = _20 in
   let _1 = _10 in
-                                          ( true )
+                                ()
 in
     ( Some x )}
 
@@ -632,15 +632,12 @@ separated_nonempty_list_SEMICOLON_tuplePattern_:
 
 inputFragment:
   option___anonymous_0_ decl list_decl_ option_mainDecl_ EOF
-    {let (light_opt, d, decls, main_opt, _5) = ($1, $2, $3, $4, ()) in
+    {let (_1, d, decls, main_opt, _5) = ($1, $2, $3, $4, ()) in
        (
-         let is_light = match light_opt with
-	   | None -> false
-	   | Some _ -> true in
          let decls = match main_opt with
            | None -> decls
            | Some main -> decls @ [main]
-         in as_frag is_light d decls
+         in as_frag d decls
        )}
 
 mainDecl:

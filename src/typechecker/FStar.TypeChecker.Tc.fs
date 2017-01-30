@@ -15,7 +15,6 @@
 *)
 #light "off"
 module FStar.TypeChecker.Tc
-open FStar.All
 
 open FStar
 open FStar.Errors
@@ -1378,10 +1377,6 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
             | Getopt.Error s -> raise (Error ("Failed to process pragma: " ^s, r))
         in
         begin match p with
-            | LightOff ->
-                if p = LightOff
-                then Options.set_ml_ish();
-                [se], env, []
             | SetOptions o ->
                 set_options Options.Set o;
                 [se], env, []

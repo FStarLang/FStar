@@ -15,7 +15,6 @@
 *)
 #light "off"
 module FStar.TypeChecker.Tc
-open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common

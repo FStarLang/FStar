@@ -355,7 +355,7 @@ private let encode_lengths (i:id) (aadlen:aadlen_32) (txtlen:txtlen_32) : lbytes
   | GHASH -> encode_lengths_ghash aadlen txtlen
 
 let encode_both (i:id) (aadlen:aadlen_32) (aad:lbytes (v aadlen)) (txtlen:txtlen_32) (cipher:lbytes (v txtlen)) :
-  GTot (e:MAC.text {Seq.length e > 0 /\ Seq.head e = encode_lengths i aadlen txtlen}) = 
+  e:MAC.text {Seq.length e > 0 /\ Seq.head e = encode_lengths i aadlen txtlen} = 
   Seq.cons (encode_lengths i aadlen txtlen)
     (Seq.append 
       (encode_bytes cipher) 

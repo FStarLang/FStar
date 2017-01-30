@@ -19,7 +19,6 @@
    computational assumption *)
 
 module MAC
-open FStar.All
 open FStar.Seq
 type bytes = seq FStar.UInt8.byte (* concrete byte arrays *)
 type text  = bytes    (* a type abbreviation, for clarity *)
@@ -47,15 +46,15 @@ let sha1verify k txt tag = eq (sha1 k txt) tag
 assume type key_prop : key -> text -> Type
 type pkey (p:(text -> Type)) = k:key{key_prop k == p}
 
-assume val leak: k:key { forall t. key_prop k t } -> ML bytes
-assume val leaked: k:key -> ML (b:bool { b ==> (forall t. key_prop k t) })
+assume val leak: k:key { forall t. key_prop k t } -> bytes
+assume val leaked: k:key -> b:bool { b ==> (forall t. key_prop k t) }
 
 (* this function returns the key bytes, and marks the key as corrupted *)
 
-assume val keygen: p:(text -> Type) -> ML (pkey p)
+assume val keygen: p:(text -> Type) -> pkey p
 
-val mac:    k:key -> t:text{key_prop k t} -> ML tag
-val verify: k:key -> t:text -> tag -> ML (b:bool{b ==> key_prop k t})
+val mac:    k:key -> t:text{key_prop k t} -> tag
+val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
 
 (* to model authentication, we log all genuine calls to MACs *)
 

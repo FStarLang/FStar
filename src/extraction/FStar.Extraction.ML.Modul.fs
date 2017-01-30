@@ -15,7 +15,6 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Modul
-open FStar.All
 open FStar
 open FStar.Util
 open FStar.Syntax.Syntax
@@ -330,18 +329,14 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
        | Sig_assume _ //not needed; purely logical
        | Sig_sub_effect  _
-       | Sig_effect_abbrev _ -> //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
-         g, []
-       | Sig_pragma (p, _) ->
-         if p = S.LightOff
-         then Options.set_ml_ish();
+       | Sig_effect_abbrev _  //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
+       | Sig_pragma _ -> //pragmas are currently not relevant for codegen; they may be in the future
          g, []
 
 let extract_iface (g:env) (m:modul) =  BU.fold_map extract_sig g m.declarations |> fst
 
 let rec extract (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
-  let _ = Options.restore_cmd_line_options true in
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with currentModule = name}  in
   let g, sigs = BU.fold_map extract_sig g m.declarations in

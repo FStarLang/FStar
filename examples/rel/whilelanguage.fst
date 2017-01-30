@@ -1,5 +1,5 @@
 module WhileLanguage
-open FStar.ST
+
 open FStar.Heap
 
 type id = ref int

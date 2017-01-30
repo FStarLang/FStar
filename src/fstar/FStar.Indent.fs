@@ -1,6 +1,4 @@
-#light "off"
 module FStar.Indent
-open FStar.All
 
 open FStar.Util
 open FStar.Parser.ToDocument

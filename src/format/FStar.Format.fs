@@ -2,7 +2,6 @@
 #light "off"
 
 module FStar.Format
-open FStar.All
 open FStar
 
 (* -------------------------------------------------------------------- *)
