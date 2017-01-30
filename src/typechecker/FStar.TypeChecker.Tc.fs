@@ -1055,16 +1055,33 @@ and tc_inductive env ses quals lids =
             //open dbs
             let dbs = SS.open_binders dbs in
 
-            let check_dbinder ((bv, _):binder) :bool =
+            //caller should normalize the term
+            let ty_occurs_in (t:term) :bool = FStar.Util.set_mem lid (Free.fvars t) in
+
+            let rec ty_strictly_positive_in (bsort:term) (env:env) :bool =
               //normalize the sort to unfold any type abbreviations, TODO: what steps?
-              let sort = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] env0 bv.sort in
-              let sort_fvars = Free.fvars sort in
-              let b = FStar.Util.set_mem lid sort_fvars in
-              if b then Util.print_string "Found occurence of type in some binder sort\n" else Util.print_string "No occurence of the type in this binder sort\n";
-              b
+              let bsort = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] env bsort in
+              not (ty_occurs_in bsort) ||
+                (match (SS.compress bsort).n with
+                 | Tm_app (t, args) ->
+                   (match t.n with
+                    | Tm_fvar fv ->
+                      if Ident.lid_equals fv.fv_name.v lid then
+                         List.for_all (fun s -> not (ty_occurs_in s)) (List.map fst args)
+                      else false
+                    | _                                              -> false)  //TODO: if this is not an inductive that we can unfold, we have to error out
+                 | Tm_arrow (sbs, c) ->
+                   List.for_all (fun (b, _) -> not (ty_occurs_in b.sort)) sbs &&
+                     ty_strictly_positive_in (FStar.Syntax.Util.comp_result c) (push_binders env sbs)  //TODO: do we need to compress c, if so how?
+                 | Tm_fvar _ -> true  //if it's just a fvar, it should be fine?
+                 | _ -> false  //TODO: returning false in all other cases, will see as they come up
+                )
             in
 
-            List.forall check_dbinder dbs
+            fst (List.fold_left (fun (r, env) b ->
+                   if not r then r, env
+                   else ty_strictly_positive_in (fst b).sort env, push_binders env [b]
+                   ) (true, env0) dbs)
           | Tm_app (_, args)  -> Util.print_string "This is the case when type may have args but datacon none\n"; true  //TODO: confirm this, but I think our typechecker already does not allow t (the inductive type) to be referenced in args, so nothing to check here
           | _                 -> failwith "Data constructor type something other than an arrow or type application"
       in
@@ -1072,7 +1089,11 @@ and tc_inductive env ses quals lids =
       List.forall check_datacon datas
     in
 
-    if env.curmodule.str = "Test" then ignore (check_positivity ()) else ();
+    let _ =
+      if env.curmodule.str = "Test" then
+        let b = check_positivity () in
+        if b then Util.print_string "The type satisfies the positivity condition\n" else Util.print_string "The type does not satisfy the positivity condition\n"
+    in
 
     //generate hasEq predicate for this inductive
 
