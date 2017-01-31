@@ -112,7 +112,7 @@ chacha-kremlin-extract:
 
 chacha-kremlin-test:
 	mkdir -p kremlin
-	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Chacha20.fst $(addprefix $(KREMLIN_HOME)/test/, main-Chacha.c testlib.c) -o test_chacha.exe
+	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Chacha20.fst $(addprefix $(KREMLIN_HOME)/test/, main-Chacha.c ) $(KREMLIN_HOME)/kremlib/testlib.c -o test_chacha.exe
 	./test_chacha.exe
 
 poly-kremlin-extract:
@@ -121,7 +121,7 @@ poly-kremlin-extract:
 
 poly-kremlin-test:
 	mkdir -p kremlin
-	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/real/Flag.fst crypto/Crypto.Symmetric.Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Poly1305.c testlib.c) -o test_poly.exe
+	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/real/Flag.fst crypto/Crypto.Symmetric.Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Poly1305.c) $(KREMLIN_HOME)/kremlib/testlib.c -o test_poly.exe
 	./test_poly.exe
 
 aead-kremlin-extract:
@@ -130,7 +130,7 @@ aead-kremlin-extract:
 
 aead-kremlin-test:
 	mkdir -p kremlin
-	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.AEAD.Chacha20Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Aead.c testlib.c) -o test_aead.exe
+	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.AEAD.Chacha20Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Aead.c ) $(KREMLIN_HOME)/kremlib/testlib.c -o test_aead.exe
 	./test_aead.exe
 
 aes-ver:
@@ -206,7 +206,7 @@ krml-test.exe: spartan_aes/aes.o
 	$(KRML) crypto/hacl/Crypto.Config.fst crypto/real/Flag.fst \
 		crypto/spartan_dummy.c  \
 	       	crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest \
-	       	$(KREMLIN_HOME)/test/testlib.c crypto/test_hacks.c \
+	       	$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
 		-tmpdir tmp -add-include '"testlib.h"' -o krml-test.exe
 	./krml-test.exe
 
@@ -314,7 +314,7 @@ CC=gcc-6
 test-perf.exe: krml-test.exe crypto/test_perf.c
 	$(CC) -Ofast -m64 -flto -march=native -mtune=native -funroll-loops -fomit-frame-pointer \
 	 -o test-perf.exe tmp/FStar.c tmp/Crypto_AEAD*.c tmp/Crypto_Indexing*.c tmp/Crypto_Symmetric*.c tmp/Buffer_Utils*.c tmp/Crypto_Plain*.c $(KREMLIN_HOME)/kremlib/kremlib.c \
-		$(KREMLIN_HOME)/test/testlib.c crypto/test_perf.c crypto/spartan_dummy.c crypto/test_hacks.c  -I tmp \
+		$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_perf.c crypto/spartan_dummy.c crypto/test_hacks.c  -I tmp \
 		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
 		-I $(OPENSSL_HOME)/include -L $(OPENSSL_HOME) -lcrypto $(CFLAGS)
 	PATH=$(OPENSSL_HOME):$(PATH) LD_LIBRARY_PATH=$(OPENSSL_HOME):$(LD_LIBRARY_PATH) DYLD_LIBRARY_PATH=$(OPENSSL_HOME):$(DYLD_LIBRARY_PATH) ./test-perf.exe
