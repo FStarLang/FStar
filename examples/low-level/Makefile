@@ -31,7 +31,7 @@ CHACHA_AEAD_EXTRACTED=Spartan.ml FStar_List_Tot.ml FStar_Seq.ml FStar_SeqPropert
 .PHONY: lib-ver chacha-ver chacha-ml ulib
 
 #NS: 12/21, we decided to only check verification on each commit; a full test happens nightly using the extra target
-uall:
+all:
 	+make -C crypto all
 
 extra:
@@ -39,8 +39,6 @@ extra:
 	+make chacha-test aes-test aesgcm-test chacha-aead-test
 	+make -C crypto all extra
 # removed tests poly-test and aead-test, relying on older code.
-
-sall:
 
 ulib: $(FSTAR_HOME)/ulib/ml/fstarlib.cmxa
 
@@ -193,7 +191,7 @@ bignum-ver:
 	$(FSTAR) --use_hints --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
 
 KRML_INCLUDES=$(addprefix -I ,spartan_aes crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
-KRML_ARGS=-verbose -ccopt -maes -ccopt -Wno-error=pointer-sign $(KOPTS)
+KRML_ARGS=-verbose -ccopt -maes $(KOPTS)
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES) 
 
 spartan_aes/aes.o:
@@ -212,6 +210,7 @@ krml-test.exe: spartan_aes/aes.o
 
 run-krml-test.exe: 
 	gcc-6 -Wno-unused-but-set-variable -std=c11 -Wall -Werror -Wno-parentheses -Wno-unused-variable -g -O3 -fwrapv -I FSTAR_HOME/ulib/hyperstack -I spartan_aes -I crypto -I ../../../kremlin/kremlib -I ../../../kremlin/test -I /Users/bhargava/Desktop/repositories/kremlin/kremlib -I tmp -maes -Wno-error=pointer-sign tmp/Prims.c tmp/Buffer_Utils.c tmp/Crypto_Symmetric_Bytes.c tmp/Crypto_Symmetric_Poly1305_Spec.c tmp/Crypto_Symmetric_Poly1305_Parameters.c tmp/Crypto_Symmetric_Poly1305_Bigint.c tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.c tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.c tmp/Crypto_AEAD_BufferUtils.c tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.c tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.c tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.c tmp/FStar.c tmp/Crypto_Symmetric_Chacha20.c tmp/Crypto_Config.c tmp/Crypto_Indexing.c tmp/Flag.c tmp/Crypto_Symmetric_AES.c tmp/Spartan.c tmp/Crypto_Symmetric_AES128.c tmp/Crypto_Symmetric_Cipher.c tmp/Crypto_Symmetric_Poly1305_Lemmas.c tmp/Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part6.c tmp/Crypto_Symmetric_Poly1305_Bignum.c tmp/Crypto_Symmetric_Poly1305.c tmp/Crypto_Symmetric_GF128_Spec.c tmp/Crypto_Symmetric_GF128.c tmp/Crypto_Symmetric_MAC.c tmp/Crypto_Symmetric_UF1CMA.c tmp/Crypto_Plain.c tmp/Crypto_Symmetric_PRF.c tmp/Crypto_AEAD_Encoding.c tmp/Crypto_AEAD_Invariant.c tmp/Crypto_AEAD_Wrappers_Encoding.c tmp/Crypto_AEAD_Wrappers_CMA.c tmp/Crypto_AEAD_Encrypt_Invariant.c tmp/Crypto_AEAD_Wrappers_PRF.c tmp/Crypto_AEAD_EnxorDexor.c tmp/Crypto_AEAD_Encrypt_Ideal_Invariant.c tmp/Crypto_AEAD_MAC_Wrapper_Invariant.c tmp/Crypto_AEAD_Enxor_Invariant.c tmp/Crypto_AEAD_Encrypt.c tmp/Crypto_AEAD_Decrypt.c tmp/Crypto_AEAD.c tmp/Crypto_KrmlTest.c tmp/kremlib.o crypto/test_hacks.c tmp/testlib.o tmp/spartan_stub.o spartan_aes/aes.o -o krml-test.exe
+
 
 OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List_Tot.ml \
 		tmp/FStar_Seq.ml \
@@ -253,8 +252,8 @@ OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List
 		tmp/Crypto_AEAD_Lemmas_Part2.ml \
 		tmp/Crypto_AEAD_Lemmas.ml \
 		tmp/Crypto_AEAD.ml \
-		crypto/ml/TestLib.ml \
-		crypto/ml/C.ml \
+		$(KREMLIN_HOME)/kremlib/TestLib.ml \
+		$(KREMLIN_HOME)/kremlib/C.ml \
 		tmp/Crypto_KrmlTest.ml
 
 

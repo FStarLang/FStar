@@ -13,7 +13,7 @@ let rec appears_free_in e =
 let closed (e : exp) : Tot bool = not (appears_free_in e)
 
 (* This variant makes things work
-let closed (e : exp) : Tot bool = not (is_EVar e) *)
+let closed (e : exp) : Tot bool = not (EVar? e) *)
 
 val subst_closed : e:exp -> Lemma (requires (closed e)) (ensures (True))
 let rec subst_closed e =

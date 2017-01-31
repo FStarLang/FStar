@@ -136,7 +136,7 @@ let lemma_2_26_p (a:nat) : Lemma (requires (a < pow2 26)) (ensures  (a < reveal 
     lemma_modulo_00 a (reveal prime)
 
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 2000 --initial_fuel 0 --max_fuel 0"
 
 private val lemma_freduce_degree2_0:
   a:nat -> b:nat -> n:nat{n >= 130} ->
@@ -186,12 +186,13 @@ let lemma_freduce_degree2_3 b0 b1 b2 b3 b4 b5 b6 b7 b8 =
       + 5 * pow2 26 * b6 + 5 * pow2 52 * b7 + 5 * pow2 78 * b8) 130
 
 
-val lemma_freduce_degree2_4:
+val lemma_freduce_degree2_4_no_prime:
   b0:nat -> b1:nat -> b2:nat -> b3:nat -> b4:nat -> b5:nat -> b6:nat -> b7:nat -> b8:nat ->
-  Lemma ((b0 + 5 * b5 + pow2 26 * (b1 + 5 * b6) + pow2 52 * (b2 + 5 * b7) + pow2 78 * (b3 + 5 * b8) + pow2 104 * b4) % reveal prime =
+  Lemma ((b0 + 5 * b5 + pow2 26 * (b1 + 5 * b6) + pow2 52 * (b2 + 5 * b7) + pow2 78 * (b3 + 5 * b8) + pow2 104 * b4) =
       (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4
-      + 5 * b5 + 5 * pow2 26 * b6 + 5 * pow2 52 * b7 + 5 * pow2 78 * b8) % reveal prime)
-let lemma_freduce_degree2_4 b0 b1 b2 b3 b4 b5 b6 b7 b8 =
+      + 5 * b5 + 5 * pow2 26 * b6 + 5 * pow2 52 * b7 + 5 * pow2 78 * b8))
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+let lemma_freduce_degree2_4_no_prime b0 b1 b2 b3 b4 b5 b6 b7 b8 =
   distributivity_add_right (pow2 26) b1 (5*b6);
   distributivity_add_right (pow2 52) b2 (5*b7);
   distributivity_add_right (pow2 78) b3 (5*b8)
@@ -218,7 +219,7 @@ let lemma_freduce_degree2 h0 h1 b =
   let p = reveal prime in
   lemma_eval_bigint_5 h1 b;
   lemma_freduce_degree2_3 b0 b1 b2 b3 b4 b5 b6 b7 b8;
-  lemma_freduce_degree2_4 b0 b1 b2 b3 b4 b5 b6 b7 b8
+  lemma_freduce_degree2_4_no_prime b0 b1 b2 b3 b4 b5 b6 b7 b8
 
 #reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val lemma_freduce_degree:

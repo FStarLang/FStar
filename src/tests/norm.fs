@@ -82,7 +82,7 @@ let run i r expected =
 //    force_term r;
     Printf.printf "%d: ... \n" i;
     let _, tcenv = Pars.init() in
-    FStar.process_args() |> ignore; //set the command line args for debugging
+    FStar.Main.process_args() |> ignore; //set the command line args for debugging
     let x = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops] tcenv r in
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
@@ -141,7 +141,7 @@ let run_all () =
     run 21 (tc "recons [0;1]") (tc "[0;1]");
     run 22 (tc "copy [0;1]") (tc "[0;1]");
     run 23 (tc "rev [0;1;2;3;4;5;6;7;8;9;10]") (tc "[10;9;8;7;6;5;4;3;2;1;0]");
-//    run 24 (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"); -- CH: works up to an unfolding too much (char -> char')
+//  run 24 (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"); -- CH: works up to an unfolding too much (char -> char')
     Printf.printf "Normalizer ok\n"
  
     

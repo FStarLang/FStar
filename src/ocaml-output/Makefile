@@ -7,9 +7,9 @@ endif
 
 MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
-OCAMLBUILD=cd ../../ && ocamlbuild -I src/ocaml-output -I src/basic/ml \
+OCAMLBUILD=cd ../../ && ocamlbuild -cflag '-g' -I src/ocaml-output -I src/basic/ml \
   -I src/parser/ml -I src/fstar/ml -j 24 -build-dir src/ocaml-output/_build \
-  -I src/prettyprint/ml -I lib/ml -use-ocamlfind
+  -I src/prettyprint/ml -I src/ocaml-output/bootlibs -use-ocamlfind
 COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
 PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
@@ -67,13 +67,14 @@ endif
 	echo "#light \"off\"" >> $@
 	echo "// (c) Microsoft Corporation. All rights reserved" >> $@
 	echo "open Prims" >> $@
+	echo "open FStar.Errors" >> $@
 	echo "open FStar.List" >> $@
 	echo "open FStar.Util" >> $@
 	echo "open FStar.Range" >> $@
 	echo "open FStar.Options" >> $@
-	echo "open FStar.Absyn.Syntax" >> $@
-	echo "open FStar.Absyn.Const" >> $@
-	echo "open FStar.Absyn.Util" >> $@
+	echo "open FStar.Syntax.Syntax" >> $@
+	echo "open FStar.Syntax.Const" >> $@
+	echo "open FStar.Syntax.Util" >> $@
 	echo "open FStar.Parser.AST" >> $@
 	echo "open FStar.Parser.Util" >> $@
 	echo "open FStar.Const" >> $@
@@ -92,18 +93,20 @@ endif
 fstar.exe: $(GENERATED_FILES)
 	$(OCAMLBUILD) main.native
 	cp _build/src/fstar/ml/main.native ../../bin/$@
+	cp _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
 
 FStar_Parser_Parse.ml: parse.mly
 	# We are opening the same module twice but we need these modules
 	# open for the definition of tokens
 	echo "open Prims" > $@
+	echo "open FStar_Errors" >> $@
 	echo "open FStar_List" >> $@
 	echo "open FStar_Util" >> $@
 	echo "open FStar_Range" >> $@
 	echo "open FStar_Options" >> $@
-	echo "open FStar_Absyn_Syntax" >> $@
-	echo "open FStar_Absyn_Const" >> $@
-	echo "open FStar_Absyn_Util" >> $@
+	echo "open FStar_Syntax_Syntax" >> $@
+	echo "open FStar_Syntax_Const" >> $@
+	echo "open FStar_Syntax_Util" >> $@
 	echo "open FStar_Parser_AST" >> $@
 	echo "open FStar_Parser_Util" >> $@
 	echo "open FStar_Const" >> $@
@@ -155,7 +158,7 @@ install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {}
 # Install FStar into $(PREFIX) using the standard Unix directory structure.
 install: all
         # Install the binary
-	$(INSTALL_EXEC) -m 755 -D -T fstar.exe $(PREFIX)/bin/fstar.exe
+	$(INSTALL_EXEC) -m 755 -D -T _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
 	$(call install_dir,ulib,lib/fstar)
 	$(call install_dir,examples,share/fstar/examples)

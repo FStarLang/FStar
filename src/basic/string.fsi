@@ -13,7 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+#light "off"
 module FStar.String
+open FStar.All
 open Prims
 open FStar.Char
 (* The name of this file is misleading: most string functions are to be found in

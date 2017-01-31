@@ -1,0 +1,175 @@
+[
+  "\bME‹{µÊö~èﬁ„ƒ'⁄",
+  [
+    [
+      "Problem01.prefix",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.list_haseq", "equation_Prims.nat",
+        "function_token_typing_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Problem01.prefix",
+      2,
+      2,
+      1,
+      [
+        "@query", "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_0",
+        "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_1", "bool_inversion",
+        "bool_typing", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.nat",
+        "equation_with_fuel_FStar.List.Tot.append.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.append.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "fuel_irrelevance_FStar.List.Tot.append.fuel_instrumented",
+        "int_inversion", "pretyping_f537159ed795b314b4e58c260361ae86",
+        "primitive_Prims.op_Equality", "proj_equation_Prims.Mktuple2__1",
+        "proj_equation_Prims.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_95b0500010f23fa0a182bdef875e5c3a",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [
+      "Problem01.prefix",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Problem01.remove_elem_from_list",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_0",
+        "binder_x_e2b1e5e99e3d6ce22573c4c45948e254_1",
+        "disc_equation_Prims.Cons", "equation_Prims.nat",
+        "equation_with_fuel_FStar.List.Tot.length.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.length.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "fuel_irrelevance_FStar.List.Tot.length.fuel_instrumented",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_c8141aa6f1c651d5d780632f7f221bf1",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [
+      "Problem01.remove_elem_from_list",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Problem01.test_prefix",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_88caa947bb5fec6d59419b258b115839"
+      ],
+      0
+    ],
+    [
+      "Problem01.test_prefix",
+      2,
+      1,
+      1,
+      [
+        "@query", "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_0",
+        "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_2",
+        "binder_x_e2b1e5e99e3d6ce22573c4c45948e254_1", "bool_inversion",
+        "bool_typing", "data_elim_Prims.Cons", "equation_Prims.nat",
+        "equation_with_fuel_FStar.List.Tot.length.fuel_instrumented",
+        "equation_with_fuel_Problem01.prefix.fuel_instrumented",
+        "equation_with_fuel_Problem01.remove_elem_from_list.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.length.fuel_instrumented",
+        "fuel_correspondence_Problem01.prefix.fuel_instrumented",
+        "fuel_correspondence_Problem01.remove_elem_from_list.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_3de601a2b7a92f127d62f75b357e5c66",
+        "refinement_interpretation_Tm_refine_4f1720f8838d30bdb975ac44286a946b",
+        "refinement_interpretation_Tm_refine_7b75b0e78bacebad54e5df0d5b3aa215",
+        "refinement_interpretation_Tm_refine_88caa947bb5fec6d59419b258b115839",
+        "refinement_interpretation_Tm_refine_95b0500010f23fa0a182bdef875e5c3a",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_c8141aa6f1c651d5d780632f7f221bf1",
+        "typing_Problem01.prefix", "typing_Problem01.remove_elem_from_list",
+        "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [ "Problem01.test_relaxed_prefix", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Problem01.test_relaxed_prefix",
+      2,
+      2,
+      1,
+      [
+        "@query", "bool_inversion", "bool_typing", "data_elim_Prims.Cons",
+        "equation_Prims.nat",
+        "equation_with_fuel_FStar.List.Tot.append.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.length.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.append.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.length.fuel_instrumented",
+        "fuel_correspondence_Problem01.prefix.fuel_instrumented",
+        "fuel_correspondence_Problem01.remove_elem_from_list.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "fuel_irrelevance_FStar.List.Tot.length.fuel_instrumented",
+        "function_token_typing_Prims.nat", "int_inversion", "int_typing",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_3de601a2b7a92f127d62f75b357e5c66",
+        "refinement_interpretation_Tm_refine_88caa947bb5fec6d59419b258b115839",
+        "refinement_interpretation_Tm_refine_95b0500010f23fa0a182bdef875e5c3a",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_FStar.List.Tot.length.fuel_instrumented",
+        "typing_Problem01.prefix", "typing_Problem01.remove_elem_from_list",
+        "typing_Problem01.test_prefix"
+      ],
+      0
+    ]
+  ]
+]

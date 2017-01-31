@@ -1,5 +1,5 @@
-﻿module FStar.Platform
-
+module FStar.Platform
+open FStar.All
 type sys =
 | Windows
 | Posix
