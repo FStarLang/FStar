@@ -927,32 +927,42 @@ and tc_inductive env ses quals lids =
       | _ -> failwith "impossible" in
 
     (* 3. Generalizing universes and 4. instantiate inductives within the datacons *)
-    let generalize_and_inst_within env g tcs datas =
+    let generalize_and_inst_within env g (tcs:list<(sigelt * universe)>) datas =
+        let tc_universe_vars = List.map snd tcs in
+        let g = {g with univ_ineqs=tc_universe_vars, snd (g.univ_ineqs)} in
+
+        if Env.debug env <| Options.Other "GenUniverses"
+        then BU.print1 "@@@@@@Guard before generalization: %s\n" (Rel.guard_to_string env g);
+
         Rel.force_trivial_guard env g;
         //We build a single arrow term of the form
         //   tc_1 -> .. -> tc_n -> dt_1 -> .. dt_n -> Tot unit
         //for each type constructor tc_i
         //and each data constructor type dt_i
         //and generalize their universes together
-        let binders = tcs |> List.map (function
+        let binders = tcs |> List.map (fun (se, _) ->
+            match se with
             | Sig_inductive_typ(_, _, tps, k, _, _, _, _) -> S.null_binder (U.arrow tps <| mk_Total k)
             | _ -> failwith "Impossible")  in
         let binders' = datas |> List.map (function
             | Sig_datacon(_, _, t, _, _, _, _, _) -> S.null_binder t
             | _ -> failwith "Impossible") in
         let t = U.arrow (binders@binders') (S.mk_Total Common.t_unit) in
-        if Env.debug env Options.Low then BU.print1 "@@@@@@Trying to generalize universes in %s\n" (N.term_to_string env t);
+        if Env.debug env <| Options.Other "GenUniverses"
+        then BU.print1 "@@@@@@Trying to generalize universes in %s\n" (N.term_to_string env t);
         let (uvs, t) = TcUtil.generalize_universes env t in
-        if Env.debug env Options.Low then BU.print2 "@@@@@@Generalized to (%s, %s)\n"
-                                (uvs |> List.map (fun u -> u.idText) |> String.concat ", ")
-                                (Print.term_to_string t);
+        if Env.debug env <| Options.Other "GenUniverses"
+        then BU.print2 "@@@@@@Generalized to (%s, %s)\n"
+                            (uvs |> List.map (fun u -> u.idText) |> String.concat ", ")
+                            (Print.term_to_string t);
         //Now, (uvs, t) is the generalized type scheme for all the inductives and their data constuctors
+
         //we have to destruct t, knowing its shape above,
         //and rebuild the Sig_inductive_typ, Sig_datacon etc
         let uvs, t = SS.open_univ_vars uvs t in
         let args, _ = U.arrow_formals t in
         let tc_types, data_types = BU.first_N (List.length binders) args in
-        let tcs = List.map2 (fun (x, _) se -> match se with
+        let tcs = List.map2 (fun (x, _) (se, _) -> match se with
             | Sig_inductive_typ(tc, _, tps, _, mutuals, datas, quals, r) ->
               let ty = SS.close_univ_vars uvs x.sort in
               let tps, t = match (SS.compress ty).n with
@@ -1011,8 +1021,14 @@ and tc_inductive env ses quals lids =
         ([], g)
     in
 
-    let tcs, datas = generalize_and_inst_within env0 g (List.map fst tcs) datas in
+    (* Generalize their universes *)
+    let tcs, datas = generalize_and_inst_within env0 g tcs datas in
+
     let sig_bndle = Sig_bundle(tcs@datas, quals, lids, Env.get_range env0) in
+    (* we have a well-typed inductive;
+            we still need to check whether or not it supports equality
+            and whether it is strictly positive
+       *)
 
 
     (* Once the datacons are generalized we can construct the projectors with the right types *)

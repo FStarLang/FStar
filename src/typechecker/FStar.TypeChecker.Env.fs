@@ -102,7 +102,7 @@ and solver_t = {
 and guard_t = {
   guard_f:    guard_formula;
   deferred:   deferred;
-  univ_ineqs: list<univ_ineq>;
+  univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
 and implicits = list<(string * env * uvar * term * typ * Range.range)>
