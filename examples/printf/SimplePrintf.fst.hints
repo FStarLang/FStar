@@ -1,5 +1,5 @@
 [
-  "·∞wKıÊ\u0002~JıÓv{\u0012\u0018ê",
+  "BÍ∫∫…µØ\u007fˇI1\nRA,2",
   [
     [ "SimplePrintf.uu___is_Bool", 1, 2, 1, [ "@query" ], 0 ],
     [ "SimplePrintf.uu___is_Int", 1, 2, 1, [ "@query" ], 0 ],
@@ -135,26 +135,6 @@
         "equation_with_fuel_SimplePrintf.dir_type.fuel_instrumented",
         "fuel_correspondence_SimplePrintf.dir_type.fuel_instrumented",
         "int_typing", "projection_inverse_Prims.Nil_a", "string_typing"
-      ],
-      0
-    ],
-    [ "SimplePrintf.uu___is_InvalidFormatString", 1, 2, 1, [ "@query" ], 0 ],
-    [
-      "SimplePrintf.parse_format",
-      1,
-      2,
-      1,
-      [
-        "@query", "constructor_distinct_Prims.V", "data_elim_Prims.E",
-        "data_elim_Prims.V", "data_typing_intro_Prims.E@tok",
-        "data_typing_intro_Prims.V@tok", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.E", "disc_equation_Prims.Nil",
-        "disc_equation_Prims.V", "equation_FStar.Char.char",
-        "equation_FStar.String.char", "fuel_guarded_inversion_Prims.list",
-        "kinding_Prims.list@tok", "kinding_SimplePrintf.dir@tok",
-        "pretyping_f0f36a8010f6cdb7f770fc7699b02fbd",
-        "proj_equation_Prims.E_e", "proj_equation_Prims.V_v",
-        "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.V_v"
       ],
       0
     ],
