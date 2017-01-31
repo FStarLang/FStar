@@ -23,7 +23,7 @@ type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type cipher = b:bytes{B.length b >= ivsize}
 (* MK: minimal cipher length twice blocksize? *)
 
-type log_t (r:rid) = m_rref r (seq ((protected_ae_plain i) * cipher)) grows
+type log_t (r:rid) = m_rref r (seq ((protected_ae_plain) * cipher)) grows
 
 (**
    The key type is abstract and can only be accessed via the leak and coerce_key functions.

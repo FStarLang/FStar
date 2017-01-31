@@ -1,0 +1,75 @@
+[
+  "~[H\fµûiíIZ“\f\fûáñ",
+  [
+    [ "HyE.HPKE.__proj__PKey__item__region", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HPKE.__proj__PKey__item__pke_pk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HPKE.__proj__SKey__item__pke_sk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HPKE.__proj__SKey__item__hpke_pk", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "HyE.HPKE.keygen",
+      1,
+      2,
+      1,
+      [
+        "@query", "bool_inversion",
+        "equation_FStar.HyperStack.is_eternal_region",
+        "equation_FStar.Monotonic.RRef.rid",
+        "equation_FStar.Monotonic.Seq.rid", "equation_HyE.HPKE.rid",
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4",
+        "typing_FStar.HyperStack.is_eternal_region"
+      ],
+      0
+    ],
+    [
+      "HyE.HPKE.encrypt",
+      1,
+      2,
+      1,
+      [
+        "@query", "bool_inversion", "data_elim_HyE.HPKE.PKey",
+        "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
+        "equation_FStar.List.Tot.test_sort",
+        "equation_FStar.Monotonic.RRef.rid",
+        "equation_FStar.Monotonic.Seq.rid", "equation_HyE.Flags.dependentId",
+        "equation_HyE.Flags.pke_ind_cca", "equation_HyE.HPKE.rid",
+        "equation_HyE.PlainAE.plain_content",
+        "equation_HyE.PlainHPKE.hpke_plain", "equation_Platform.Bytes.bytes",
+        "equation_Prims._assert",
+        "fuel_guarded_inversion_HyE.HPKE.hpke_pkey",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "function_token_typing_HyE.Flags.hpke_ind_cca",
+        "function_token_typing_HyE.Flags.pke_ind_cca",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "primitive_Prims.op_LessThanOrEqual",
+        "proj_equation_HyE.HPKE.PKey_region", "proj_equation_Prims.V_v",
+        "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.V_v",
+        "refinement_interpretation_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4",
+        "refinement_interpretation_Tm_refine_60a4f495b9f968983279d1d08d8d5302",
+        "refinement_interpretation_Tm_refine_ea392e04b76cf6ee0c88c97a6ea1e066",
+        "typing_HyE.Flags.createId", "typing_HyE.Flags.honest"
+      ],
+      0
+    ],
+    [
+      "HyE.HPKE.decrypt",
+      1,
+      2,
+      1,
+      [
+        "@query", "bool_inversion", "disc_equation_Prims.None",
+        "disc_equation_Prims.Some", "equation_HyE.AE.msg",
+        "equation_HyE.PlainPKE.protected_pke_plain",
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
+        "function_token_typing_HyE.AE.key",
+        "function_token_typing_HyE.PlainAE.protected_ae_plain",
+        "lemma_Prims.invertOption", "proj_equation_Prims.V_v",
+        "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.V_v",
+        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some"
+      ],
+      0
+    ]
+  ]
+]
