@@ -147,6 +147,7 @@ type expr = term
 //  - Immediately before a top-level declaration
 //  - Immediately after a type constructor or record field
 //  - In the middle of a file, as a standalone documentation declaration
+(* KM : Would need some range information on fsdocs to be able to print them correctly *)
 type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
 
 (* TODO (KM) : it would be useful for the printer to have range information for those *)

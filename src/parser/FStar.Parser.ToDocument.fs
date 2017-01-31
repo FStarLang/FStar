@@ -382,26 +382,43 @@ let with_comment printer tm tmrange =
    in
    group (comments ^^ printed_e)
 
+(* [place_comments_until_pos k lbegin pos doc] appends to doc all the comments present in *)
+(* [comment_stack] whose range is before pos and separate each comments by as much lines *)
+(* as indicated by the range information (at least [k]) using [lbegin] as the last line of *)
+(* [doc] in the original document. Between 2 comments [k] is set to [1] *)
+let rec place_comments_until_pos k lbegin pos_end doc =
+  match !comment_stack with
+  | (comment, crange) :: cs when range_before_pos crange pos_end ->
+    comment_stack := cs ;
+    let lnum = max k (line_of_pos (start_of_range crange) - lbegin) in
+    let doc = doc ^^ repeat lnum hardline ^^ str comment in
+    place_comments_until_pos 1 (line_of_pos (end_of_range crange)) pos_end doc
+  | _ ->
+    let lnum = max 1 (line_of_pos pos_end - lbegin) in
+    doc ^^ repeat lnum hardline
+
+(* [separate_map_with_comments prefix sep f xs extract_range] is the document *)
+(*                                                                            *)
+(*   prefix (f xs[0]) *)
+(*   comments[0] *)
+(*   sep (f xs[1]) *)
+(*   comments[1] *)
+(*   ... *)
+(*   sep (f xs[n]) *)
+(*                                                                            *)
+(* where comments[_] are obtained by successive calls to [place_comments_until_pos] *)
+(* using the range informations provided by [extract_range] and the comments in *)
+(* [comment_stack]. [xs] must contain at least one element. There is no break *)
+(* inserted after [prefix] and [sep]. *)
 let separate_map_with_comments prefix sep f xs extract_range =
-  let rec comments_between lbegin pos_end doc =
-    match !comment_stack with
-    | (comment, crange) :: cs when range_before_pos crange pos_end ->
-      comment_stack := cs ;
-      let lnum = max 1 (line_of_pos (start_of_range crange) - lbegin) in
-      let doc = doc ^^ repeat lnum hardline ^^ str comment in
-      comments_between (line_of_pos (end_of_range crange)) pos_end doc
-    | _ ->
-      let lnum = max 1 (line_of_pos pos_end - lbegin) in
-      doc ^^ repeat lnum hardline
-  in
   let fold_fun (last_line, doc) x =
     let r = extract_range x in
-    let doc = comments_between last_line (start_of_range r) doc in
-    line_of_pos (end_of_range r), doc ^^ sep ^^ space ^^ f x
+    let doc = place_comments_until_pos 1 last_line (start_of_range r) doc in
+    line_of_pos (end_of_range r), doc ^^ sep ^^ f x
   in
   let x, xs = List.hd xs, List.tl xs in
   let init =
-    line_of_pos (end_of_range (extract_range x)), prefix ^^ space ^^ f x
+    line_of_pos (end_of_range (extract_range x)), prefix ^^ f x
   in
   snd (List.fold_left fold_fun init xs)
 
@@ -451,11 +468,11 @@ and p_rawDecl d = match d.d with
     surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ t
   | Tycon(false, tcdefs) ->
     (* TODO : needs some range information to be able to use this *)
-    (* separate_map_with_comments (str "type") (str "and") p_fsdocTypeDeclPairs tcdefs *)
+    (* separate_map_with_comments (str "type" ^^ space) (str "and" ^^ space) p_fsdocTypeDeclPairs tcdefs *)
     precede_break_separate_map (str "type") (str "and") p_fsdocTypeDeclPairs tcdefs
   | TopLevelLet(q, lbs) ->
-    let let_doc = str "let" ^^ p_letqualifier q in
-    separate_map_with_comments let_doc (str "and") p_letbinding lbs
+    let let_doc = str "let" ^^ p_letqualifier q ^^ space in
+    separate_map_with_comments let_doc (str "and" ^^ space) p_letbinding lbs
       (fun (p, t) -> Range.union_ranges p.prange t.range)
   | Val(lid, t) ->
     (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ t
@@ -1206,56 +1223,12 @@ let modul_to_document (m:modul) =
 let comments_to_document (comments : list<(string * FStar.Range.range)>) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
-(* [modul_with_comments_to_document m comments] prints the module [m] trying
- * to insert the comments from [comments]. The list comments is composed of
- * pairs of a raw string and a position which is used to place the comment
- * not too far from its original position.
- *
- * The rules for placing comments are as follow :
- *
- *
- *      *)
+(* [modul_with_comments_to_document m comments] prints the module [m] trying *)
+(* to insert the comments from [comments]. The list comments is composed of *)
+(* pairs of a raw string and a position which is used to place the comment *)
+(* not too far from its original position. The rules for placing comments *)
+(* are described in the ``Taking care of comments`` section *)
 let modul_with_comments_to_document (m:modul) comments =
-  let rec aux (previous_range_end, comments, doc) decl =
-    let current_range = extend_to_end_of_line decl.drange in
-    let max x y = if x < y then y else x in
-    let rec process_preceding_comments doc last_line end_pos n = function
-      | (comment,range) :: comments when pos_geq end_pos (start_of_range range) ->
-        let l =
-          (* Annoying special case for the first comment of the file if any *)
-          let min = if last_line = 1 then 0 else 1 in
-          max min (line_of_pos (start_of_range range) - last_line)
-        in
-        let doc = doc ^^ repeat l hardline ^^ str comment in
-        process_preceding_comments doc (line_of_pos (end_of_range range))
-          end_pos 1 comments
-      | comments ->
-        let l = max n (line_of_pos end_pos - last_line) in
-        doc ^^ repeat l hardline, comments
-    in
-    let doc, comments =
-      process_preceding_comments doc (line_of_pos previous_range_end)
-        (end_of_line (start_of_range current_range)) 1 comments
-    in
-    let inner_comments, comments =
-      take (function (_, range) -> range_contains_range current_range range) comments
-    in
-    (* Inner comment's side effect insertion begins here *)
-    comment_stack := inner_comments ;
-    let doc = doc ^^ decl_to_document decl in
-    (* After printing the current toplevel definition decl the [comment_stack] *)
-    (* should be empty unless we are printing a standalone fsdoc               *)
-    let inner_comments_doc =
-        if !comment_stack = []
-        then empty
-        else begin
-            BU.print1_warning "Leftover comments : %s\n"
-                (String.concat " ; " (List.map fst !comment_stack)) ;
-            comments_to_document !comment_stack
-        end
-    in
-    (end_of_range decl.drange, comments,  doc ^^ inner_comments_doc)
-  in
   let decls = match m with
     | Module (_, decls)
     | Interface (_, decls, _) -> decls
@@ -1263,11 +1236,24 @@ let modul_with_comments_to_document (m:modul) comments =
   should_print_fs_typ_app := false ;
   match decls with
     | [] -> empty, comments
-    | _ :: _ ->
-      let (_, comments, doc) =
-        List.fold_left aux (Range.zeroPos, comments, empty) decls
+    | d :: ds ->
+      (* KM : Hack to fix the inversion that is happening in FStar.Parser.ASTs.as_frag *)
+      (* '#light "off"' is supposed to come before 'module ..' but it is swapped there *)
+      let decls, first_range =
+        match ds with
+        | { d = Pragma LightOff } :: _ ->
+            let d0 = List.hd ds in
+            d0 :: d :: List.tl ds, d0.drange
+        | _ -> d :: ds, d.drange
       in
+      (* TODO : take into account the space of the fsdoc (and attributes ?) *)
+      let extract_decl_range d = d.drange in
+      comment_stack := comments ;
+      let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) empty in
+      let doc = separate_map_with_comments empty empty decl_to_document decls extract_decl_range in
+      let comments = !comment_stack in
+      comment_stack := [] ;
       should_print_fs_typ_app := false ;
-      (doc, comments)
+      (initial_comment ^^ doc, comments)
 
 
