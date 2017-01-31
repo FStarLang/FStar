@@ -2017,7 +2017,7 @@ in ((_0_637), (_0_636), (_0_635))))))
 end
 | FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (p); FStar_Extraction_ML_Syntax.mlty = uu____2719; FStar_Extraction_ML_Syntax.loc = uu____2720}, (uu____2721)::[]) when (let _0_638 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
 in (_0_638 = "FStar.ST.get")) -> begin
-ECast (((EConstant (((UInt8), ("0")))), (TAny)))
+EUnit
 end
 | FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (p); FStar_Extraction_ML_Syntax.mlty = uu____2724; FStar_Extraction_ML_Syntax.loc = uu____2725}, (e)::[]) when (let _0_639 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
 in (_0_639 = "Obj.repr")) -> begin
