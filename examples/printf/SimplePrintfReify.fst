@@ -121,6 +121,9 @@ let sprintf (s:string{Some? (parse_format_string s)})
   : Tot (dir_type (Some?.v (parse_format_string s))) =
   string_of_dirs (Some?.v (parse_format_string s)) (fun s -> s)
 
+let yyy = parse_format_pure ['%'] == None
+let xxx = parse_format_pure ['%'; 'd'; '='; '%'; 's']
+
 let example_error_lemma () :
   Lemma (parse_format_pure ['%'] == None) =
   assert_norm (parse_format_pure ['%'] == None)
