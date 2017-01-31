@@ -19,7 +19,7 @@ used in specifications.
 
 @summary Pure total operations on lists
 *)
-module FStar.List.Tot
+module FStar.List.Tot.Base
 
 (**
 Base operations

@@ -88,8 +88,8 @@ CH: this is very strange since it is reported on x, which has no decreases claus
   match t with
   | None -> ()
   | Some (Node left i right) ->
-     ListProperties.append_mem (in_order_opt left @ [i]) (in_order_opt right) x;
-     ListProperties.append_mem (in_order_opt left) [i] x;
+     List.Tot.append_mem (in_order_opt left @ [i]) (in_order_opt right) x;
+     List.Tot.append_mem (in_order_opt left) [i] x;
      index_is_max left x;
      index_is_max right x
 *)
@@ -104,8 +104,8 @@ let rec index_is_max2 (#max:int) t x = admit()
   match t with
   | None -> ()
   | Some (Node #l left i #r right) -> (* You can also writing the implicit arguments explicitly ... just testing it *)
-     ListProperties.append_mem (in_order_opt #l left @ [i]) (in_order_opt #r right) x;
-     ListProperties.append_mem (in_order_opt #l left) [i] x;
+     List.Tot.append_mem (in_order_opt #l left @ [i]) (in_order_opt #r right) x;
+     List.Tot.append_mem (in_order_opt #l left) [i] x;
      index_is_max2 #l left x;
      index_is_max2 #r right x
 *)

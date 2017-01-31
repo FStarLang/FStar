@@ -105,7 +105,7 @@ abstract val lemma_len_append: #a:Type -> s1:seq a -> s2:seq a -> Lemma
   (requires True)
   (ensures (length (append s1 s2) = length s1 + length s2))
   [SMTPat (length (append s1 s2))]
-let lemma_len_append #a s1 s2 = FStar.ListProperties.append_length (MkSeq?.l s1) (MkSeq?.l s2)
+let lemma_len_append #a s1 s2 = FStar.List.Tot.append_length (MkSeq?.l s1) (MkSeq?.l s2)
 
 abstract val lemma_len_slice: #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s} -> Lemma
   (requires True)

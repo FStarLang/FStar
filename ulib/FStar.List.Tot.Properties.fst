@@ -19,8 +19,8 @@ operations on lists.
 
 @summary Properties of pure total operations on lists
 *)
-module FStar.ListProperties
-open FStar.List.Tot
+module FStar.List.Tot.Properties
+open FStar.List.Tot.Base
 
 
 (** Properties about mem **)

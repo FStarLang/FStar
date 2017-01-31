@@ -633,7 +633,7 @@ end
 | FStar_Parser_AST.Op (s, ts) -> begin
 ((match ((s = "@")) with
 | true -> begin
-(collect_term' (FStar_Parser_AST.Name ((FStar_Ident.lid_of_path (FStar_Ident.path_of_text "FStar.List.Tot.append") FStar_Range.dummyRange))))
+(collect_term' (FStar_Parser_AST.Name ((FStar_Ident.lid_of_path (FStar_Ident.path_of_text "FStar.List.Tot.Base.append") FStar_Range.dummyRange))))
 end
 | uu____832 -> begin
 ()

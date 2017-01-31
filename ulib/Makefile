@@ -28,7 +28,7 @@ verify-indent: $(addsuffix -verindent, $(wildcard *.indent.fst))
 %-ver: %
 	$(FSTAR) $^
 list:
-	$(FSTAR) FStar.List.Tot.fst FStar.ListProperties.fst FStar.List.fst
+	$(FSTAR) FStar.List.Tot.Base FStar.List.Tot.Properties.fst FStar.List.Tot.fst FStar.List.fst
 
 array:
 	$(FSTAR) FStar.Seq.Base.fst FStar.Classical.fst FStar.Seq.Properties.fst FStar.Seq.fst FStar.Array.fst

@@ -50,9 +50,10 @@ FStar.Int64.fst \
 FStar.Int8.fst \
 FStar.Integers.fst \
 FStar.IO.fsti \
-FStar.List.fst \
 FStar.List.Tot.fst \
-FStar.ListProperties.fst \
+FStar.List.Tot.Properties.fst \
+FStar.List.Tot.fst \
+FStar.List.fst \
 FStar.Map.fst \
 FStar.MarkovsPrinciple.fst \
 FStar.Math.Lemmas.fst \

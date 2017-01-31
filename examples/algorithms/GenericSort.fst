@@ -4,7 +4,7 @@
 **)
 module GenericSort
 open FStar.List.Tot
-open FStar.ListProperties
+open FStar.List.Tot
 
 (**
   Checks that a list is sorted.

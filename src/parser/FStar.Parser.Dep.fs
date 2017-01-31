@@ -395,7 +395,8 @@ let collect_one
         collect_constant c
     | Op (s, ts) ->
         if s = "@" then
-          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.append") Range.dummyRange));
+          (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
+          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
         List.iter collect_term ts
     | Tvar _
     | AST.Uvar _ ->
