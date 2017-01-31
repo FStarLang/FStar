@@ -1772,6 +1772,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       (* version should not contain any reify at all after normalization. *)
       begin match (SS.compress lb.lbdef).n with
         | Tm_abs(bs, body, _) ->
+          (* TODO (KM) We should make sure that this is indeed a monadic term to which we are applying reify *)
           let body = U.mk_reify body in
           let tm = S.mk (Tm_abs(bs, body, None)) None lb.lbdef.pos in
           let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in

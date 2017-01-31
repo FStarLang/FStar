@@ -69,77 +69,77 @@ let ni_ifc = assert (forall h0 h1 s0. reify (ifc h0) s0 = reify (ifc h1) s0)
 // Although we have STINT?.get and STINT?.put now as actions,
 // we can also "rederive" them using reflection
 
-val action_get: (u:unit) -> repr int (fun n post -> post (n, n))
-let action_get () i = (i, i)
+(* val action_get: (u:unit) -> repr int (fun n post -> post (n, n)) *)
+(* let action_get () i = (i, i) *)
 
-val action_put: x:int -> repr unit (fun n post -> post ((), x))
-let action_put x i = ((), x)
+(* val action_put: x:int -> repr unit (fun n post -> post ((), x)) *)
+(* let action_put x i = ((), x) *)
 
-reifiable val get' : unit -> STINT int (fun z post -> post (z, z))
-let get' () = STINT?.reflect (action_get ())
+(* reifiable val get' : unit -> STINT int (fun z post -> post (z, z)) *)
+(* let get' () = STINT?.reflect (action_get ()) *)
 
-reifiable val put': x:int -> STINT unit (fun z post -> post ((), x))
-let put' x = STINT?.reflect (action_put x)
+(* reifiable val put': x:int -> STINT unit (fun z post -> post ((), x)) *)
+(* let put' x = STINT?.reflect (action_put x) *)
 
-let assert_after_reify (_:unit) : StNull unit =
-  let n0 = STINT?.get() in
-  let _, n1 = reify (incr ()) n0 in
-  assert (n1 = n0 + 1);
-  STINT?.put n1
+(* let assert_after_reify (_:unit) : StNull unit = *)
+(*   let n0 = STINT?.get() in *)
+(*   let _, n1 = reify (incr ()) n0 in *)
+(*   assert (n1 = n0 + 1); *)
+(*   STINT?.put n1 *)
 
-val assert_after_reflect : unit -> StNull int
-let assert_after_reflect u =
-  let n0 = STINT?.get () in
-  put' (n0 + 2);
-  let n1 = STINT?.get () in
-  assert (n0 + 2 = n1);
-  n1
+(* val assert_after_reflect : unit -> StNull int *)
+(* let assert_after_reflect u = *)
+(*   let n0 = STINT?.get () in *)
+(*   put' (n0 + 2); *)
+(*   let n1 = STINT?.get () in *)
+(*   assert (n0 + 2 = n1); *)
+(*   n1 *)
 
-val reflect_on_the_fly : unit -> StNull int
-let reflect_on_the_fly u =
-  let n0 = STINT?.get () in
-  let add_two : repr unit (fun n post -> post ((), n + 2)) =
-    //need this annotation, since reflect doesn't insert a M.return; but it should
-    fun n0 -> (), n0+2 in
-  STINT?.reflect add_two;
-  let n1 = STINT?.get () in
-  assert (n0 + 2 = n1);
-  n1
+(* val reflect_on_the_fly : unit -> StNull int *)
+(* let reflect_on_the_fly u = *)
+(*   let n0 = STINT?.get () in *)
+(*   let add_two : repr unit (fun n post -> post ((), n + 2)) = *)
+(*     //need this annotation, since reflect doesn't insert a M.return; but it should *)
+(*     fun n0 -> (), n0+2 in *)
+(*   STINT?.reflect add_two; *)
+(*   let n1 = STINT?.get () in *)
+(*   assert (n0 + 2 = n1); *)
+(*   n1 *)
 
 
 
-(* Refining the specification of a refiable impure function using reify/reflect *)
-(* Note that unless we internalize monotonicity for wps we need to define
-   refine_st using pre/post condition                                           *)
-let refine_st (#a:Type)
-              (#b:Type)
-              (#pre : a -> Tot STINT?.pre)
-              (#post : a -> Tot (int -> b -> int -> Tot Type0))
-              ($f :(x:a -> StInt b (pre x) (post x)))
-              (x:a)
-  : StInt b (pre x) (fun h0 z h1 -> pre x h0 /\
-                                 reify (f x) h0 == (z, h1) /\
-                                 post x h0 z h1)
-  = let g (h0:int)
-      : Pure (b * int)
-             (pre x h0)
-             (fun (z,h1) -> pre x h0 /\
-                       reify (f x) h0 == (z, h1) /\
-                       post x h0 z h1)
-      = reify (f x) h0
-    in
-    STINT?.reflect g
+(* (\* Refining the specification of a refiable impure function using reify/reflect *\) *)
+(* (\* Note that unless we internalize monotonicity for wps we need to define *)
+(*    refine_st using pre/post condition                                           *\) *)
+(* let refine_st (#a:Type) *)
+(*               (#b:Type) *)
+(*               (#pre : a -> Tot STINT?.pre) *)
+(*               (#post : a -> Tot (int -> b -> int -> Tot Type0)) *)
+(*               ($f :(x:a -> StInt b (pre x) (post x))) *)
+(*               (x:a) *)
+(*   : StInt b (pre x) (fun h0 z h1 -> pre x h0 /\ *)
+(*                                  reify (f x) h0 == (z, h1) /\ *)
+(*                                  post x h0 z h1) *)
+(*   = let g (h0:int) *)
+(*       : Pure (b * int) *)
+(*              (pre x h0) *)
+(*              (fun (z,h1) -> pre x h0 /\ *)
+(*                        reify (f x) h0 == (z, h1) /\ *)
+(*                        post x h0 z h1) *)
+(*       = reify (f x) h0 *)
+(*     in *)
+(*     STINT?.reflect g *)
 
-(* This is a little annoying but we need an explicit pre/post effect *)
-reifiable val incr_pre_post : unit ->
-  StInt unit (requires (fun _ -> True))
-             (ensures (fun _ _ _ -> True))
-let incr_pre_post u =
-  let n = STINT?.get() in
-  STINT?.put (n + 1)
+(* (\* This is a little annoying but we need an explicit pre/post effect *\) *)
+(* reifiable val incr_pre_post : unit -> *)
+(*   StInt unit (requires (fun _ -> True)) *)
+(*              (ensures (fun _ _ _ -> True)) *)
+(* let incr_pre_post u = *)
+(*   let n = STINT?.get() in *)
+(*   STINT?.put (n + 1) *)
 
-let refine_st_incr_test (_:unit) : StNull unit =
-  let n0 = STINT?.get() in
-  refine_st incr_pre_post ();
-  let n1 = STINT?.get() in
-  assert(n1 == n0 + 1)
+(* let refine_st_incr_test (_:unit) : StNull unit = *)
+(*   let n0 = STINT?.get() in *)
+(*   refine_st incr_pre_post (); *)
+(*   let n1 = STINT?.get() in *)
+(*   assert(n1 == n0 + 1) *)
