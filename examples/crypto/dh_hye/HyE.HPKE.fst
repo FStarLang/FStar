@@ -80,7 +80,7 @@ let encrypt #i pk p =
   let p' = 
     match hpke_ind_cca && ae_honest ae_i with
     | true -> p
-    | false -> PlainHPKE.repr p
+    | false -> PlainHPKE.repr #(fst ae_i) p
   in
   let ae_m = ae_message_wrap #ae_i p' in
   //let dh_m = dh_message_wrap #pk.i eph_dh_pk.rawpk in
