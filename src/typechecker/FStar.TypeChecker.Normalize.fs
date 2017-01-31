@@ -1249,212 +1249,227 @@ and norm_lcomp_opt : cfg -> env -> option<either<lcomp, residual_comp>> -> optio
        | _ -> lopt
 
 
-and rebuild : cfg -> env -> stack -> term -> term =
-    fun cfg env stack t ->
-    (* Pre-condition: t is in either weak or strong normal form w.r.t env, depending on whether cfg.steps constains WHNF
-                      In either case, it has no free de Bruijn indices *)
-        match stack with
-            | [] -> t
+and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
+  (* Pre-condition: t is in either weak or strong normal form w.r.t env, depending on *)
+  (* whether cfg.steps constains WHNF In either case, it has no free de Bruijn *)
+  (* indices *)
+  match stack with
+  | [] -> t
 
-            | Debug tm :: stack ->
-              if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
-              then BU.print2 "Normalized %s to %s\n" (Print.term_to_string tm) (Print.term_to_string t);
+  | Debug tm :: stack ->
+    if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
+    then BU.print2 "Normalized %s to %s\n" (Print.term_to_string tm) (Print.term_to_string t);
+    rebuild cfg env stack t
+
+  | Steps (s, dl) :: stack ->
+    rebuild ({cfg with steps=s; delta_level=dl}) env stack t
+
+  | Meta(m, r)::stack ->
+    let t = mk (Tm_meta(t, m)) r in
+    rebuild cfg env stack t
+
+  | MemoLazy r::stack ->
+    set_memo r (env, t);
+    log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (Print.term_to_string t));
+    rebuild cfg env stack t
+
+  | Let(env', bs, lb, r)::stack ->
+    let body = SS.close bs t in
+    let t = S.mk (Tm_let((false, [lb]), body)) None r in
+    rebuild cfg env' stack t
+
+  | Abs (env', bs, env'', lopt, r)::stack ->
+    let bs = norm_binders cfg env' bs in
+    let lopt = norm_lcomp_opt cfg env'' lopt in
+    rebuild cfg env stack ({abs bs t lopt with pos=r})
+
+  | Arg (Univ _,  _, _)::_
+  | Arg (Dummy,  _, _)::_ -> failwith "Impossible"
+
+  | UnivArgs(us, r)::stack ->
+    let t = mk_Tm_uinst t us in
+    rebuild cfg env stack t
+
+  | Arg (Clos(env, tm, m, _), aq, r) :: stack ->
+    log cfg  (fun () -> BU.print1 "Rebuilding with arg %s\n" (Print.term_to_string tm));
+    //this needs to be tail recursive for reducing large terms
+    if List.contains (Exclude Iota) cfg.steps
+    then if List.contains WHNF cfg.steps
+          then let arg = closure_as_term cfg env tm in
+              let t = extend_app t (arg, aq) None r in
               rebuild cfg env stack t
-
-            | Steps (s, dl) :: stack ->
-              rebuild ({cfg with steps=s; delta_level=dl}) env stack t
-
-            | Meta(m, r)::stack ->
-              let t = mk (Tm_meta(t, m)) r in
+          else let stack = App(t, aq, r)::stack in
+              norm cfg env stack tm
+    else begin match !m with
+      | None ->
+        if List.contains WHNF cfg.steps
+        then let arg = closure_as_term cfg env tm in
+              let t = extend_app t (arg, aq) None r in
               rebuild cfg env stack t
+        else let stack = MemoLazy m::App(t, aq, r)::stack in
+              norm cfg env stack tm
 
-            | MemoLazy r::stack ->
-              set_memo r (env, t);
-              log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (Print.term_to_string t));
-              rebuild cfg env stack t
+      | Some (_, a) ->
+        let t = S.extend_app t (a,aq) None r in
+        rebuild cfg env stack t
+    end
 
-            | Let(env', bs, lb, r)::stack ->
-              let body = SS.close bs t in
-              let t = S.mk (Tm_let((false, [lb]), body)) None r in
-              rebuild cfg env' stack t
+  | App(head, aq, r)::stack ->
+    let t = S.extend_app head (t,aq) None r in
+    rebuild cfg env stack (maybe_simplify cfg.steps t)
 
-            | Abs (env', bs, env'', lopt, r)::stack ->
-              let bs = norm_binders cfg env' bs in
-              let lopt = norm_lcomp_opt cfg env'' lopt in
-              rebuild cfg env stack ({abs bs t lopt with pos=r})
+  | Match(env, branches, r) :: stack ->
+    log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
+    //the scrutinee is always guaranteed to be a pure or ghost term
+    //see tc.fs, the case of Tm_match and the comment related to issue #594
+    let scrutinee = t in
+    let norm_and_rebuild_match () =
+      let whnf = List.contains WHNF cfg.steps in
+      let cfg_exclude_iota_zeta =
+        let new_delta =
+          cfg.delta_level |> List.filter (function
+            | Env.Inlining
+            | Env.Eager_unfolding_only -> true
+            | _ -> false)
+        in
+        let steps' =
+          if cfg.steps |> List.contains PureSubtermsWithinComputations
+          then [Exclude Zeta]
+          (* KM : Why are we excluding Iota (pattern matching) here ? *)
+          else [Exclude Iota; Exclude Zeta]
+        in
+        {cfg with delta_level=new_delta;
+                        steps=steps'@cfg.steps}
+      in
+      let norm_or_whnf env t =
+        if whnf
+        then closure_as_term cfg_exclude_iota_zeta env t
+        else norm cfg_exclude_iota_zeta env [] t
+      in
+      let rec norm_pat env p = match p.v with
+        | Pat_constant _ -> p, env
+        | Pat_disj [] -> failwith "Impossible"
+        | Pat_disj (hd::tl) ->
+          let hd, env' = norm_pat env hd in
+          let tl = tl |> List.map (fun p -> fst (norm_pat env p)) in
+          {p with v=Pat_disj(hd::tl)}, env'
+        | Pat_cons(fv, pats) ->
+          let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
+                let p, env = norm_pat env p in
+                (p,b)::pats, env) ([], env) in
+          {p with v=Pat_cons(fv, List.rev pats)}, env
+        | Pat_var x ->
+          let x = {x with sort=norm_or_whnf env x.sort} in
+          {p with v=Pat_var x}, Dummy::env
+        | Pat_wild x ->
+          let x = {x with sort=norm_or_whnf env x.sort} in
+          {p with v=Pat_wild x}, Dummy::env
+        | Pat_dot_term(x, t) ->
+          let x = {x with sort=norm_or_whnf env x.sort} in
+          let t = norm_or_whnf env t in
+          {p with v=Pat_dot_term(x, t)}, env
+      in
+      let branches = match env with
+        | [] when whnf -> branches //nothing to close over
+        | _ -> branches |> List.map (fun branch ->
+          let p, wopt, e = SS.open_branch branch in
+          //It's important to normalize all the sorts within the pat!
+          let p, env = norm_pat env p in
+          let wopt = match wopt with
+            | None -> None
+            | Some w -> Some (norm_or_whnf env w) in
+          let e = norm_or_whnf env e in
+          U.branch (p, wopt, e))
+      in
+      rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r)
+    in
 
-            | Arg (Univ _,  _, _)::_
-            | Arg (Dummy,  _, _)::_ -> failwith "Impossible"
+    let rec is_cons head = match head.n with
+      | Tm_uinst(h, _) -> is_cons h
+      | Tm_constant _
+      | Tm_fvar( {fv_qual=Some Data_ctor} )
+      | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> true
+      | _ -> false
+    in
 
-            | UnivArgs(us, r)::stack ->
-              let t = mk_Tm_uinst t us in
-              rebuild cfg env stack t
-
-            | Arg (Clos(env, tm, m, _), aq, r) :: stack ->
-              log cfg  (fun () -> BU.print1 "Rebuilding with arg %s\n" (Print.term_to_string tm));
-              //this needs to be tail recursive for reducing large terms
-              if List.contains (Exclude Iota) cfg.steps
-              then if List.contains WHNF cfg.steps
-                   then let arg = closure_as_term cfg env tm in
-                        let t = extend_app t (arg, aq) None r in
-                        rebuild cfg env stack t
-                   else let stack = App(t, aq, r)::stack in
-                        norm cfg env stack tm
-              else begin match !m with
-                | None ->
-                  if List.contains WHNF cfg.steps
-                  then let arg = closure_as_term cfg env tm in
-                       let t = extend_app t (arg, aq) None r in
-                       rebuild cfg env stack t
-                  else let stack = MemoLazy m::App(t, aq, r)::stack in
-                       norm cfg env stack tm
-
-                | Some (_, a) ->
-                  let t = S.extend_app t (a,aq) None r in
-                  rebuild cfg env stack t
-              end
-
-            | App(head, aq, r)::stack ->
-              let t = S.extend_app head (t,aq) None r in
-              rebuild cfg env stack (maybe_simplify cfg.steps t)
-
-            | Match(env, branches, r) :: stack ->
-              log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
-              //the scrutinee is always guaranteed to be a pure or ghost term
-              //see tc.fs, the case of Tm_match and the comment related to issue #594
-              let scrutinee = t in
-              let norm_and_rebuild_match () =
-                let whnf = List.contains WHNF cfg.steps in
-                let cfg_exclude_iota_zeta =
-                    let new_delta = cfg.delta_level |> List.filter (function
-                            | Env.Inlining
-                            | Env.Eager_unfolding_only -> true
-                            | _ -> false) in
-                    let steps' =
-                        if cfg.steps |> List.contains PureSubtermsWithinComputations
-                        then [Exclude Zeta]
-                        else [Exclude Iota; Exclude Zeta] in
-                    {cfg with delta_level=new_delta;
-                                    steps=steps'@cfg.steps} in
-                let norm_or_whnf env t =
-                    if whnf
-                    then closure_as_term cfg_exclude_iota_zeta env t
-                    else norm cfg_exclude_iota_zeta env [] t in
-                 let rec norm_pat env p = match p.v with
-                    | Pat_constant _ -> p, env
-                    | Pat_disj [] -> failwith "Impossible"
-                    | Pat_disj (hd::tl) ->
-                      let hd, env' = norm_pat env hd in
-                      let tl = tl |> List.map (fun p -> fst (norm_pat env p)) in
-                      {p with v=Pat_disj(hd::tl)}, env'
-                    | Pat_cons(fv, pats) ->
-                      let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
-                            let p, env = norm_pat env p in
-                            (p,b)::pats, env) ([], env) in
-                      {p with v=Pat_cons(fv, List.rev pats)}, env
-                    | Pat_var x ->
-                      let x = {x with sort=norm_or_whnf env x.sort} in
-                      {p with v=Pat_var x}, Dummy::env
-                    | Pat_wild x ->
-                      let x = {x with sort=norm_or_whnf env x.sort} in
-                      {p with v=Pat_wild x}, Dummy::env
-                    | Pat_dot_term(x, t) ->
-                      let x = {x with sort=norm_or_whnf env x.sort} in
-                      let t = norm_or_whnf env t in
-                      {p with v=Pat_dot_term(x, t)}, env in
-                let branches = match env with
-                    | [] when whnf -> branches //nothing to close over
-                    | _ -> branches |> List.map (fun branch ->
-                     let p, wopt, e = SS.open_branch branch in
-                     //It's important to normalize all the sorts within the pat!
-                     let p, env = norm_pat env p in
-                     let wopt = match wopt with
-                        | None -> None
-                        | Some w -> Some (norm_or_whnf env w) in
-                     let e = norm_or_whnf env e in
-                     U.branch (p, wopt, e)) in
-                rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r) in
-
-              let rec is_cons head = match head.n with
-                | Tm_uinst(h, _) -> is_cons h
-                | Tm_constant _
-                | Tm_fvar( {fv_qual=Some Data_ctor} )
-                | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> true
-                | _ -> false in
-
-              let guard_when_clause wopt b rest =
-                  match wopt with
-                   | None -> b
-                   | Some w ->
-                     let then_branch = b in
-                     let else_branch = mk (Tm_match(scrutinee, rest)) r in
-                     U.if_then_else w then_branch else_branch in
+    let guard_when_clause wopt b rest =
+      match wopt with
+      | None -> b
+      | Some w ->
+        let then_branch = b in
+        let else_branch = mk (Tm_match(scrutinee, rest)) r in
+        U.if_then_else w then_branch else_branch
+    in
 
 
-              let rec matches_pat (scrutinee:term) (p:pat)
-                :  either<list<term>, bool> //Inl ts: p matches t and ts are bindings for the branch
-                =                           //Inr false: p definitely does not match t
-                                            //Inr true: p may match t, but p is an open term and we cannot decide for sure
-                    let scrutinee = U.unmeta scrutinee in
-                    let head, args = U.head_and_args scrutinee in
-                    match p.v with
-                        | Pat_disj ps ->
-                          let mopt = BU.find_map ps (fun p ->
-                            let m = matches_pat scrutinee p in
-                            match m with
-                             | Inl _ -> Some m //definite match
-                             | Inr true -> Some m //maybe match; stop considering other cases
-                             | Inr false -> None (*definite mismatch*)) in
-                          begin match mopt with
-                            | None -> Inr false //all cases definitely do not match
-                            | Some m -> m
-                          end
-                        | Pat_var _
-                        | Pat_wild _ -> Inl [scrutinee]
-                        | Pat_dot_term _ -> Inl []
-                        | Pat_constant s ->
-                          begin match scrutinee.n with
-                            | Tm_constant s' when (s=s') -> Inl []
-                            | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
-                          end
-                        | Pat_cons(fv, arg_pats) ->
-                          begin match (U.un_uinst head).n with
-                            | Tm_fvar fv' when fv_eq fv fv' ->
-                              matches_args [] args arg_pats
-                            | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
-                          end
+    let rec matches_pat (scrutinee:term) (p:pat)
+      : either<list<term>, bool>
+        (* Inl ts: p matches t and ts are bindings for the branch *)
+        (* Inr false: p definitely does not match t *)
+        (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
+      = let scrutinee = U.unmeta scrutinee in
+        let head, args = U.head_and_args scrutinee in
+        match p.v with
+        | Pat_disj ps ->
+          let mopt = BU.find_map ps (fun p ->
+            let m = matches_pat scrutinee p in
+            match m with
+              | Inl _ -> Some m //definite match
+              | Inr true -> Some m //maybe match; stop considering other cases
+              | Inr false -> None (*definite mismatch*))
+          in
+          begin match mopt with
+            | None -> Inr false //all cases definitely do not match
+            | Some m -> m
+          end
+        | Pat_var _
+        | Pat_wild _ -> Inl [scrutinee]
+        | Pat_dot_term _ -> Inl []
+        | Pat_constant s ->
+          begin match scrutinee.n with
+            | Tm_constant s' when (s=s') -> Inl []
+            | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
+          end
+        | Pat_cons(fv, arg_pats) ->
+          begin match (U.un_uinst head).n with
+            | Tm_fvar fv' when fv_eq fv fv' ->
+              matches_args [] args arg_pats
+            | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
+          end
 
-              and matches_args out (a:args) (p:list<(pat * bool)>) : either<list<term>, bool> = match a, p with
-                | [], [] -> Inl out
-                | (t, _)::rest_a, (p, _)::rest_p ->
-                    begin match matches_pat t p with
-                        | Inl s -> matches_args (out@s) rest_a rest_p
-                        | m -> m
-                    end
-                | _ -> Inr false in
+    and matches_args out (a:args) (p:list<(pat * bool)>) : either<list<term>, bool> = match a, p with
+      | [], [] -> Inl out
+      | (t, _)::rest_a, (p, _)::rest_p ->
+          begin match matches_pat t p with
+              | Inl s -> matches_args (out@s) rest_a rest_p
+              | m -> m
+          end
+      | _ -> Inr false
+    in
 
-              let rec matches scrutinee p = match p with
-                | [] -> norm_and_rebuild_match ()
-                | (p, wopt, b)::rest ->
-                   match matches_pat scrutinee p with
-                    | Inr false -> //definite mismatch; safe to consider the remaining patterns
-                      matches scrutinee rest
+    let rec matches scrutinee p = match p with
+      | [] -> norm_and_rebuild_match ()
+      | (p, wopt, b)::rest ->
+          match matches_pat scrutinee p with
+          | Inr false -> //definite mismatch; safe to consider the remaining patterns
+            matches scrutinee rest
 
-                    | Inr true -> //may match this pattern but t is an open term; block reduction
-                      norm_and_rebuild_match ()
+          | Inr true -> //may match this pattern but t is an open term; block reduction
+            norm_and_rebuild_match ()
 
-                    | Inl s -> //definite match
-                      log cfg (fun () -> BU.print2 "Matches pattern %s with subst = %s\n"
-                                    (Print.pat_to_string p)
-                                    (List.map Print.term_to_string s |> String.concat "; "));
-                      //the elements of s are sub-terms of t
-                      //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
-                      let env = List.fold_left (fun env t -> Clos([], t, BU.mk_ref (Some ([], t)), false)::env) env s in
-                      norm cfg env stack (guard_when_clause wopt b rest) in
+          | Inl s -> //definite match
+            log cfg (fun () -> BU.print2 "Matches pattern %s with subst = %s\n"
+                          (Print.pat_to_string p)
+                          (List.map Print.term_to_string s |> String.concat "; "));
+            //the elements of s are sub-terms of t
+            //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
+            let env = List.fold_left (fun env t -> Clos([], t, BU.mk_ref (Some ([], t)), false)::env) env s in
+            norm cfg env stack (guard_when_clause wopt b rest)
+    in
 
-              if cfg.steps |> List.contains (Exclude Iota)
-              then norm_and_rebuild_match ()
-              else matches scrutinee branches
+    if cfg.steps |> List.contains (Exclude Iota)
+    then norm_and_rebuild_match ()
+    else matches scrutinee branches
 
 let config s e =
     let d = s |> List.collect (function
