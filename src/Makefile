@@ -147,7 +147,6 @@ rename_as_fst:
 
 prep: $(U_ALL_INTERFACES)
 	make rename_as_fst
-	$(SED) -i 's/module FStar.Parser.Lexhelp/module FStar.Parser.Lexhelp open FStar.Mul/' u_boot_fsts/FStar.Parser.Lexhelp.fst #uses * for multiplication only
 
 clean_u_extract_ocaml:
 	rm -rf boot_fstis u_boot_fsts u_ocaml-output
