@@ -1063,8 +1063,10 @@ and tc_inductive env ses quals lids =
         match (SS.compress dt).n with
           | Tm_fvar _         -> true  //TODO: my understanding is that this is the case where type has no arguments
           | Tm_arrow (dbs, _) ->
+            Util.print_string ("Length of bs: " ^ (string_of_int (List.length bs) ^ ", and length dbs before filter: " ^ (string_of_int (List.length dbs))));
             //filter out the inductive type parameters, dbs are the remaining binders
             let dbs = snd (List.splitAt (List.length bs) dbs) in
+            Util.print_string ("Length of bs: " ^ (string_of_int (List.length bs) ^ ", and length dbs: " ^ (string_of_int (List.length dbs))));
             //substitute bs into dbs
             let dbs = SS.subst_binders (SS.opening_of_binders bs) dbs in
             //open dbs
