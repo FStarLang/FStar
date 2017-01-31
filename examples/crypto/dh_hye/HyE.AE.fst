@@ -17,19 +17,26 @@ module B = Platform.Bytes
 
 open HyE.PlainAE
 
+
+
 let ivsize = aeadRealIVSize AES_128_GCM
 type keysize = aeadKeySize AES_128_GCM
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type cipher = b:bytes{B.length b >= ivsize}
 (* MK: minimal cipher length twice blocksize? *)
 
-type log_t (r:rid) = m_rref r (seq ((protected_ae_plain i) * cipher)) grows
+
+type log_t (i:ae_id) (r:rid) = m_rref r (seq ((protected_ae_plain i) * cipher)) grows
+
 
 (**
    The key type is abstract and can only be accessed via the leak and coerce_key functions.
 *)
 noeq abstract type key =
   | Key: #i:ae_id -> #region:rid -> raw:aes_key -> log:log_t i region -> key
+
+val getIndex: key -> Tot(ae_id)
+let getIndex k = k.i
 
 
 (**
@@ -47,7 +54,7 @@ let safe_key_gen parent m0 k m1 =
    This function generates a key in a fresh region of memory below the parent region.
    The postcondition ensures that the log is empty after creation.
 *)
-val keygen: i:ae_id -> parent:rid -> ST key
+val keygen: i:ae_id -> parent:rid -> ST (k:key{k.i=i})
   (requires (fun _ -> True))
   (ensures  (fun h0 k h1 -> 
     safe_key_gen parent h0 k h1
