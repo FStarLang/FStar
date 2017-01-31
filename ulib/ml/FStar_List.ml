@@ -19,6 +19,8 @@ let forall2 = BatList.for_all2
 let zip = BatList.combine
 let splitAt x l = BatList.split_at (Z.to_int x) l
 let filter_map = BatList.filter_map
+let index f l =
+  Z.of_int (fst (BatList.findi (fun _ x -> f x) l))
 
 (* Other functions not part of FStar.List.fst *)
 let memT = mem

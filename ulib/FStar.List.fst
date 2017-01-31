@@ -321,10 +321,10 @@ let filter_map (f:'a -> ML (option 'b)) (l:list 'a) : ML (list 'b) =
   in
   filter_map_acc [] l
 
-(** [index l n] returns the [n]-th element in list [l] (with the first
-element being the 0-th). Raises an exception if [l] has [n] or fewer
-elements (thus hides [FStar.List.Tot.index] which requires such a
-condition at type checking time.) *)
+(** [index f l] returns the position index in list [l] of the first
+element [x] in [l] such that [f x] holds. Raises an exception if no
+such [x] exists. TODO: rename this function (it hides List.Tot.index
+which has a completely different semantics.) *)
 val index: ('a -> ML bool) -> list 'a -> ML int
 let index f l =
   let rec index f l i =

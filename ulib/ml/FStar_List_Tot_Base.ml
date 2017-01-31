@@ -6,8 +6,7 @@ let tail = BatList.tl
 let tl = BatList.tl
 let length l = Z.of_int (BatList.length l)
 let nth l i = try Some (BatList.nth l (Z.to_int i)) with _ -> None
-let index f l =
-  Z.of_int (fst (BatList.findi (fun _ x -> f x) l))
+let index = BatList.nth
 let count _ _ = failwith "FStar_List_Tot_Base.ml: Not implemented: count"
 let rev_acc _ _ = failwith "FStar_List_Tot_Base.ml: Not implemented: rev_acc"
 let rev = BatList.rev
