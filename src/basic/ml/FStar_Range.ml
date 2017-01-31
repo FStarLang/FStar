@@ -3,8 +3,6 @@ let b1 n =  ((n lsr 8)  land 0xFF)
 let b2 n =  ((n lsr 16) land 0xFF)
 let b3 n =  ((n lsr 24) land 0xFF)
 
-let dummyRange = 0L
-
 let lor64 = BatInt64.logor
 let land64 = BatInt64.logand
 let lsl64 = BatInt64.shift_left
@@ -26,7 +24,10 @@ let pair_ord (compare1,compare2) (a1,a2) (aa1,aa2) =
 let proj_ord f a1 a2 = compare (f a1)  (f a2)
 
 type file_idx = FStar_BaseTypes.int32
-type pos = FStar_BaseTypes.int32
+(* KM In a perfect world this file would satisfy the F# interface that*)
+(* we are relying on... it is not the case and pos are actually using *)
+(* regular ocaml int. *)
+type pos = int (* FStar_BaseTypes.int32 *)
 type range = {
     def_range:FStar_BaseTypes.int64;
     use_range:FStar_BaseTypes.int64
@@ -39,18 +40,19 @@ let dummyRange = {
     use_range=0L
 }
 
-let set_use_range r2 r = if r.use_range <> 0L then {r2 with use_range=r.use_range} else r2
+let set_use_range (r2:range) (r:range) : range =
+  if r.use_range <> 0L then {r2 with use_range=r.use_range} else r2
 let range_of_def_range i = {def_range=i; use_range=i}
 
 let col_nbits  = 9
 let line_nbits  = 16
 
 let pos_nbits = line_nbits + col_nbits
-let _ = assert (pos_nbits <= 32)
+let _ = assert (pos_nbits <= 31)
 let pos_col_mask  = mask32 0         col_nbits
 let line_col_mask = mask32 col_nbits line_nbits
 
-let mk_pos l c =
+let mk_pos (l:int) (c:int) : pos =
   let l = max 0 l in
   let c = max 0 c in
   (c land pos_col_mask)
@@ -58,11 +60,11 @@ let mk_pos l c =
 let line_of_pos p =  (p lsr col_nbits)
 let col_of_pos p =  (p land pos_col_mask)
 let end_of_line p = mk_pos (line_of_pos p) 511 (* pos_col_mask *)
-let zeroPos = mk_pos 1 0
+let zeroPos : pos = mk_pos 1 0
 
-
-let bits_of_pos (x:pos) : FStar_BaseTypes.int32 = x
-let pos_of_bits (x:FStar_BaseTypes.int32) : pos = x
+(* Not usable in current situation *)
+(* let bits_of_pos (x:pos) : FStar_BaseTypes.int32 = x *)
+(* let pos_of_bits (x:FStar_BaseTypes.int32) : pos = x *)
 
 let file_idx_nbits = 14
 let start_line_nbits = line_nbits
@@ -77,7 +79,7 @@ let start_col_mask  = mask64 (file_idx_nbits + start_line_nbits) start_col_nbits
 let end_line_mask   = mask64 (file_idx_nbits + start_line_nbits + start_col_nbits) end_line_nbits
 let end_col_mask    = mask64 (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits) end_col_nbits
 
-let mk_file_idx_range fidx b e =
+let mk_file_idx_range fidx (b:pos) (e:pos) =
   range_of_def_range (
   lor64
     (lor64
