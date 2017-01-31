@@ -86,16 +86,8 @@ FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --lax --MLish --no_location_i
 # currently works in non-universes mode so this is not possible. These files are
 # in ulib/ as fstis, though, so the --no_extract argument will go away once the
 # F* compiler bootstraps in universes.
-# NUM=FStar.Int8 FStar.UInt8 FStar.Int16 FStar.UInt16 FStar.Int32 FStar.UInt32 FStar.Int64 FStar.UInt64
-
-# U_STDLIB=$(addprefix $(ULIB)/, FStar.FunctionalExtensionality.fst FStar.PropositionalExtensionality.fst FStar.PredicateExtensionality.fst \
-# 			       FStar.TSet.fst FStar.Set.fst \
-# 			       FStar.Heap.fst FStar.ST.fst FStar.All.fst \
-# 			       FStar.Char.fsti FStar.Float.fsti FStar.Mul.fst FStar.Int.fst $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti)
 U_BOOT_BASIC_FSTI=$(addprefix boot_fstis/FStar., string.fsti list.fst util.fsti platform.fsti bytes.fst range.fsti version.fsti getopt.fsti unionfind.fsti Pprint.fsti)
 U_ALL_INTERFACES=$(U_BOOT_BASIC_FSTI) boot_fstis/FStar.Parser.Parse.fsti
-
-# $(U_STDLIB)
 
 # SI: does it have to go prettyprint.fsti->FStar.Pprint.fsti?
 boot_fstis/FStar.Pprint.fsti: prettyprint/prettyprint.fsi
