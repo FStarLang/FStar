@@ -1025,136 +1025,155 @@ and tc_inductive env ses quals lids =
     let data_ops_ses = List.map (TcUtil.mk_data_operations quals env tcs) datas |> List.flatten in
 
     let check_positivity (_:unit) :bool =
-      //get the universe variables substitution
-      //TODO: generalize to multiple types in the bundle (note they all share the universe variables though)
-      //TODO: do we need all the substitutions and opens?
+      //TODO: mutual inductives
+      //ty is the current inductive we are checking positivity for
       let ty = List.hd tcs in
-      let lid, us, bs =
+      //ty_bs are the parameters of ty, it does not include the indexes (also indexes are not parameters of data constructor types, inductive type parameters are)
+      let ty_lid, ty_us, ty_bs =
         match ty with
-          | Sig_inductive_typ (lid, us, bs, _, _, _, _, _) -> lid, us, bs  //TODO: handle type indices
-          | _                                           -> failwith "Impossible!"
+          | Sig_inductive_typ (lid, us, bs, _, _, _, _, _) -> lid, us, bs
+          | _                                              -> failwith "Impossible!"
       in
 
-      let ty_occurs_in (t:term) :bool = FStar.Util.set_mem lid (Free.fvars t) in
+      //return true if ty occurs in the term
+      let ty_occurs_in (t:term) :bool = FStar.Util.set_mem ty_lid (Free.fvars t) in
 
-      let ty_not_in_its_args (args:args) :bool = List.for_all (fun s -> not (ty_occurs_in s)) (List.map fst args) in
-
-      let get_head_fvar_of_app_node (t:term) :fv =
+      //this function is called when we have a type that is a Tm_app, and t is the head node of Tm_app
+      //it tries to get fvar from this t
+      let try_get_fv (t:term) :fv =
         match (SS.compress t).n with
         | Tm_fvar fv      -> fv
         | Tm_uinst (t, _) ->
           (match t.n with
            | Tm_fvar fv   -> fv
-           | _            -> failwith "Head node is a Tm_uinst, but Tm_uinst is not an fvar")
-        | _               -> failwith "Head node is not an fvar or a Tm_uinst"
+           | _            -> failwith "Node is a Tm_uinst, but Tm_uinst is not an fvar")
+        | _               -> failwith "Node is not an fvar or a Tm_uinst"
       in
 
-      let usubst, us = SS.univ_var_opening us in
-      //apply usubt to bs
-      let bs = SS.subst_binders usubst bs in
+      //open the universe variables, we will use this substitution to open the data constructors later on
+      let ty_usubst, ty_us = SS.univ_var_opening ty_us in
+      //apply ty_usubst to ty_bs
+      let ty_bs = SS.subst_binders ty_usubst ty_bs in
+      let ty_bs = SS.open_binders ty_bs in
 
-      //TODO: when doing multiple types in the bundle, datas will have to be checked per type constructor
-      
-      let check_datacon (data:sigelt) :bool =
-        let dt = datacon_typ data in
-        //apply the universes substitution to dt, TODO: this may not be necessary actually
-        let dt = SS.subst usubst dt in
-
+      //dterm is the type of a ty data constructor
+      let rec ty_positive_in_datacon (dt:term) :bool =
+        //apply the universes substitution ty_usubst to dt
+        let dt = SS.subst ty_usubst dt in
         match (SS.compress dt).n with
-          | Tm_fvar _         -> true  //TODO: my understanding is that this is the case where type has no arguments
-          | Tm_arrow (dbs, _) ->
-            Util.print_string ("Length of bs: " ^ (string_of_int (List.length bs) ^ ", and length dbs before filter: " ^ (string_of_int (List.length dbs))));
+          | Tm_fvar _ -> true  //if the dataconstructor type is simply an fvar, should be an inductive with no params, no indexes, and no binders in data constructor type
+          | Tm_arrow (dbs, _) ->  //TODO: we should check the computation type is not of the form t (t a), but then typechecker already rejects this type
             //filter out the inductive type parameters, dbs are the remaining binders
-            let dbs = snd (List.splitAt (List.length bs) dbs) in
-            Util.print_string ("Length of bs: " ^ (string_of_int (List.length bs) ^ ", and length dbs: " ^ (string_of_int (List.length dbs))));
-            //substitute bs into dbs
-            let dbs = SS.subst_binders (SS.opening_of_binders bs) dbs in
+            let dbs = snd (List.splitAt (List.length ty_bs) dbs) in
+            //open dbs with ty_bs opening
+            let dbs = SS.subst_binders (SS.opening_of_binders ty_bs) dbs in
             //open dbs
             let dbs = SS.open_binders dbs in
-
-            let rec ty_strictly_positive_in (bsort:term) (env:env) :bool =
-
-              let ty_nested_positive_in_ilid (ilid:lident) (args:args) (env:env) :bool =
-                let b, idatas = datacons_of_typ env ilid in
-                if not b then false
-                else
-                  //TODO: is there a better way to get the number of binders of the inductive?
-                  let _, ityp = lookup_lid env ilid in
-                  let num_ibs =
-                    match (SS.compress ityp).n with  //TODO: perhaps unnecessary to have this compress? and many below. check.
-                    | Tm_arrow (bs, _) -> List.length bs
-                    | _                -> 0
-                  in
-                  
-                  let ty_nested_positive_in (t:term') (env:env) :bool =
-                    match t with
-                    | Tm_app (t, args) ->
-                      let fv = get_head_fvar_of_app_node t in
-                      if Ident.lid_equals fv.fv_name.v ilid then true  //TODO: check that the ty does not appear in the indexes, don't understand that though
-                      else false
-                    | Tm_arrow (sbs, c) ->
-                      fst (List.fold_left (fun (r, env) b ->
-                             if not r then r, env
-                             else
-                             match (SS.compress (fst b).sort).n with
-                             | Tm_app (t, args) ->
-                               let fv = get_head_fvar_of_app_node t in
-                               if Ident.lid_equals fv.fv_name.v ilid then true, push_binders env [b]  //TODO: check that the ty does not appear in the indexes
-                               else (ty_strictly_positive_in (fst b).sort env, push_binders env [b])
-                             | _ ->  ty_strictly_positive_in (fst b).sort env, push_binders env [b]
-                           ) (true, env) sbs)  //TODO: also check c, c should be an I ... check ty does not occur in indexes
-                    | _ -> failwith "Nested positive check, unhandled case"  //TODO: Type typed binders?
-                  in
-
-                  let ty_nested_positive_in_dlid (dlid:lident) (env:env) :bool =
-                    let _, dt = lookup_datacon env dlid in
-                    let dt = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env dt in
-                    //apply universe substitution to the datacon type
-                    let dt = SS.subst usubst dt in
-                    //open the type parameters of the inductive
-                    match (SS.compress dt).n with
-                    | Tm_arrow (dbs, c) ->
-                      let ibs, dbs = List.splitAt num_ibs dbs in
-                      let ibs = SS.open_binders ibs in
-                      let dbs = SS.subst_binders (SS.opening_of_binders ibs) dbs in
-                      let subst = List.fold2 (fun subst ib arg -> subst @ [NT (fst ib, fst arg)]) [] ibs args in
-                      let dbs = SS.subst_binders subst dbs in
-                      let c = SS.subst_comp subst c in
-
-                      ty_nested_positive_in (Tm_arrow (dbs, c)) env
-                    | _ -> ty_nested_positive_in (SS.compress dt).n env
-                      
-                  in
-                    
-                  List.forall (fun d -> ty_nested_positive_in_dlid d env) idatas
-              in
-
-              //normalize the sort to unfold any type abbreviations, TODO: what steps?
-              let bsort = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env bsort in
-              not (ty_occurs_in bsort) ||
-                (match (SS.compress bsort).n with
-                 | Tm_app (t, args) ->
-                   let fv = get_head_fvar_of_app_node t in
-                   if Ident.lid_equals fv.fv_name.v lid then ty_not_in_its_args args
-                   else ty_nested_positive_in_ilid fv.fv_name.v args env
-                 | Tm_arrow (sbs, c) ->
-                   let b1 = List.for_all (fun (b, _) -> not (ty_occurs_in b.sort)) sbs in
-                   let b2 = ty_strictly_positive_in (FStar.Syntax.Util.comp_result c) (push_binders env sbs) in //TODO: do we need to compress c, if so how?
-                   b1 && b2
-                 | Tm_fvar _ -> true  //if it's just a fvar, it should be fine?
-                 | _ -> false  //TODO: returning false in all other cases, will see as they come up
-                )
+            //check that ty occurs strictly positively in each binder sort
+            let b, _ =
+              List.fold_left (fun (r, env) b ->
+                if not r then r, env  //if we have already found some binder that does not satisfy the condition, short circuit
+                else ty_strictly_positive_in_type (fst b).sort env, push_binders env [b]  //push the binder in the environment, we do some normalization, so might be better to keep env good
+              ) (true, env0) dbs
             in
+            b
+          | Tm_app (_, _) -> true  //if the data constructor type is a simple app, it must be t ..., and we already don't allow t (t ..), so nothing to check here
+          | _ -> failwith "Unexpected data constructor type when checking positivity"
+        
+      //btype is type of some binder in some ty data constructor 
+      and ty_strictly_positive_in_type (btype:term) (env:env) :bool =
+        //normalize the type to unfold any type abbreviations, TODO: what steps?
+        let btype = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env btype in
+        not (ty_occurs_in btype) ||  //true if ty does not occur in btype
+          (match (SS.compress btype).n with
+           | Tm_app (t, args) ->  //the binder type is an application
+             //get the head node fv, try_get_fv would fail if it's not an fv 
+             let fv = try_get_fv t in
+             //if it's same as ty_lid, then check that ty_lid does not occur in the arguments
+             if Ident.lid_equals fv.fv_name.v ty_lid then List.for_all (fun (t, _) -> not (ty_occurs_in t)) args
+             //else it must be another inductive type, and we would check nested positivity, ty_nested_positive fails if fv is not another inductive
+             //that case could arise when, for example, it's a type constructor that we could not unfold in normalization
+             else ty_nested_positive_in_inductive fv.fv_name.v args env
+           | Tm_arrow (sbs, c) ->  //binder type is an arrow type
+             List.for_all (fun (b, _) -> not (ty_occurs_in b.sort)) sbs &&  //ty must not occur on the left of any arrow
+               (let _, return_type = SS.open_term sbs (FStar.Syntax.Util.comp_result c) in  //and it must occur strictly positive in the result type
+                ty_strictly_positive_in_type return_type (push_binders env sbs)) //TODO: do we need to compress c, if so how?
+           | Tm_fvar _ -> true  //if it's just an fvar, should be fine
+           | _ -> false)  //remaining cases, will handle as they come up
+      
+      //some binder of some data constructor is an application of ilid to the args
+      and ty_nested_positive_in_inductive (ilid:lident) (args:args) (env:env) :bool =
+        let b, idatas = datacons_of_typ env ilid in
+        //if ilid is not an inductive, return false
+        if not b then false
+        else
+          //TODO: is there a better way to get the number of binders of the inductive?
+          //note that num_ibs gives us only the type parameters, and not inductives, which is what we need since we will substitute them in the data constructor type
+          let num_ibs = num_inductive_ty_params env ilid in
+          List.forall (fun d -> ty_nested_positive_in_dlid d ilid args num_ibs env) idatas
+      
+      //dlid is a data constructor of ilid, args are the arguments of the ilid application, num_ibs is the # of type parameters of ilid 
+      and ty_nested_positive_in_dlid (dlid:lident) (ilid:lident) (args:args) (num_ibs:int) (env:env) :bool =
+        //get the type of the data constructor
+        let _, dt = lookup_datacon env dlid in
+        //normalize it, TODO: as before steps?
+        let dt = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env dt in
+        //TODO: totally confused here
+        //when we called lookup_datacon, it seems to have instantiated the universe variables with new unification variables
+        //and so, dt contains those unification variables
+        //on the other hand, the application of ilid would have those universe variables instantiated with some universes
+        //can we somehow unify the universe variables in dt with these universes, is it important?
+        
+        //open the type parameters of the inductive
+        match (SS.compress dt).n with
+        | Tm_arrow (dbs, c) ->  //if the data construtor type is an arrow, we need to substitute the args for type parameters of ilid
+          //so ibs are the type parameters of inductive, that we would substitute with args, dbs are remaining binders of the data constructor
+          let ibs, dbs = List.splitAt num_ibs dbs in
+          //open ibs
+          let ibs = SS.open_binders ibs in
+          //substitute the opening of ibs in dbs
+          let dbs = SS.subst_binders (SS.opening_of_binders ibs) dbs in
+          //get the number of arguments that cover the type parameters num_ibs, these are what we will substitute
+          let args, _ = List.splitAt num_ibs args in
+          let subst = List.fold2 (fun subst ib arg -> subst @ [NT (fst ib, fst arg)]) [] ibs args in
+          //substitute into the dbs and the computation type c
+          let dbs = SS.subst_binders subst dbs in
+          let c = SS.subst_comp subst c in
 
-            fst (List.fold_left (fun (r, env) b ->
-                   if not r then r, env
-                   else ty_strictly_positive_in (fst b).sort env, push_binders env [b]
-                   ) (true, env0) dbs)
-          | Tm_app (_, args)  -> true  //TODO: confirm this, but I think our typechecker already does not allow t (the inductive type) to be referenced in args, so nothing to check here
-          | _                 -> failwith "Data constructor type something other than an arrow or type application"
+          ty_nested_positive_in (Tm_arrow (dbs, c)) ilid env
+        | _ -> ty_nested_positive_in (SS.compress dt).n ilid env  //in this case, we don't have anything to substitute, simply check
+      
+      //t is some data constructor type of ilid, after ilid arguments have been substituted                
+      and ty_nested_positive_in (t:term') (ilid:lident) (env:env) :bool =
+        match t with
+        | Tm_app (t, args) ->
+          //if it's an application node, it must be ilid directly (or TODO: some mutual inductive)
+          //TODO: confused here, how should we proceed in this case. trying to unfold again could lead to infinite loop
+          //on the other hand, what if the original inductive, ty, that we are checking for is passed in a different position to ilid?
+          let fv = try_get_fv t in
+          if Ident.lid_equals fv.fv_name.v ilid then true
+          else false  //else, we don't know how to expand this type
+        | Tm_arrow (sbs, c) ->
+          //if it's an arrow type, we want to check that ty occurs strictly positive in the sort of every binder
+          //TODO: confused here, but then if the binder's sort is ilid applied to something, again, we don't want to have an infinite loop
+          //but then, what if ty is passed in a different position to ilid
+          let b, _ =
+            List.fold_left (fun (r, env) b ->
+              if not r then r, env  //we have already seen a problematic binder
+              else
+                match (SS.compress (fst b).sort).n with
+                | Tm_app (t, args) ->
+                  let fv = try_get_fv t in
+                  if Ident.lid_equals fv.fv_name.v ilid then true, push_binders env [b]  //TODO: this is the special casing that's troubling
+                  else (ty_strictly_positive_in_type (fst b).sort env, push_binders env [b])
+                | _ ->  ty_strictly_positive_in_type (fst b).sort env, push_binders env [b]
+            ) (true, env) sbs
+          in
+          b
+        | _ -> failwith "Nested positive check, unhandled case"
       in
 
-      List.forall check_datacon datas
+      List.forall (fun d -> ty_positive_in_datacon (datacon_typ d)) datas
     in
 
     let _ =
