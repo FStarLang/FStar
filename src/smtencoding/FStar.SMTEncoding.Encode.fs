@@ -1767,6 +1767,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      end
 
     | Sig_let((false, [lb]), _, _, quals, _) when (quals |> List.contains Reifiable) ->
+      (* This let binding has been declared reifiable so we have to generate a *)
+      (* pure reified version of it that can be encoded by the SMT. The reified *)
+      (* version should not contain any reify at all after normalization. *)
       begin match (SS.compress lb.lbdef).n with
         | Tm_abs(bs, body, _) ->
           let body = U.mk_reify body in
@@ -1777,10 +1780,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let reified_typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) (U.lcomp_of_comp comp) U_unknown in
             U.arrow formals (S.mk_Total reified_typ) in
           let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in
-          (* printfn "%s: Reified %s\nto %s\n"  *)
-          (*       (Print.lbname_to_string lb.lbname)  *)
-          (*       (Print.term_to_string tm)  *)
-          (*       (Print.term_to_string tm');  *)
+          BU.print3 "%s: Reified %s\nto %s\n"
+                (Print.lbname_to_string lb.lbname)
+                (Print.term_to_string tm)
+                (Print.term_to_string tm');
           encode_top_level_let env (false, [lb]) quals
         | _ -> [], env
       end
