@@ -1,5 +1,5 @@
 module FStar.Buffer
-
+ 
 open FStar.Seq
 open FStar.UInt32
 open FStar.HyperStack
@@ -534,7 +534,7 @@ let lemma_ststack_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 h3
   [SMTPatT (modifies_2 b b' h1 h2); SMTPatT (fresh_frame h0 h1); SMTPatT (popped h2 h3)]
   = ()
 
-#reset-options "--z3rlimit 40"
+#reset-options "--z3rlimit 100"
 
 (* Specialized modifies clauses lemmas + associated SMTPatterns. Those are critical for
    verification as the specialized modifies clauses are abstract from outside the
@@ -743,9 +743,15 @@ let create #a init len =
 
 module L = FStar.List.Tot
 
+unfold let p (#a:Type0) (init:list a) : GTot Type0 =
+  normalize (0 < L.length init) /\ normalize (L.length init < UInt.max_int 32)
+
+unfold let q (#a:Type0) (len:nat) (buf:buffer a) : GTot Type0 =
+  normalize (length buf = len)
+
 (** Concrete getters and setters *)
-val createL: #a:Type -> init:list a -> StackInline (buffer a)
-  (requires (fun h -> 0 < normalize_term (L.length init) /\ normalize_term (L.length init) < UInt.max_int 32))
+val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
+  (requires (fun h -> p #a init))
   (ensures (fun (h0:mem) b h1 ->
      let len = L.length init in
      len > 0
@@ -754,7 +760,8 @@ val createL: #a:Type -> init:list a -> StackInline (buffer a)
      /\ frameOf b = h0.tip
      /\ Map.domain h1.h == Map.domain h0.h
      /\ modifies_0 h0 h1
-     /\ as_seq h1 b == Seq.of_list init))
+     /\ as_seq h1 b == Seq.of_list init
+     /\ q #a len b))
 #set-options "--initial_fuel 1 --max_fuel 1" //the normalize_term (L.length init) in the pre-condition will be unfolded
 	                                     //whereas the L.length init below will not
 let createL #a init =
