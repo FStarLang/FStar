@@ -5,9 +5,9 @@ open FStar.BaseTypes
 type t =
   | A
   | B
-let rec comp x y = comp x y
+let rec comp x y : Dv unit = comp x y
 
-let rec foo x =
+let rec foo x : Dv unit =
   let rec bar y = bar y in
   foo (bar x)
 
