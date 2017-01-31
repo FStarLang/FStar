@@ -47,6 +47,7 @@ let tail = function
 (** [tl l] returns [l] without its first element. Requires, at
 type-checking time, that [l] be nonempty. Named as in: OCaml, F#, Coq
 *)
+val tl: l:list 'a {Cons? l} -> Tot (list 'a)
 let tl = tail
 
 (** [length l] returns the total number of elements in [l]. Named as

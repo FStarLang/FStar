@@ -40,7 +40,8 @@ let tail = function
 if [l] is empty (thus, [tl] hides [List.Tot.tl] which requires [l] to
 be nonempty at type-checking time). Named as in: tl in OCaml, F#, Coq
 *)
-let tl = tail
+val tl : list 'a -> ML (list 'a)
+let tl l = tail l
 
 (** [nth l n] returns the [n]-th element in list [l] (with the first
 element being the 0-th) if [l] is long enough, or raises an exception
