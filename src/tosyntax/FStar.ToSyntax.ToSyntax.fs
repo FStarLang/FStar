@@ -33,7 +33,7 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 
-// VALS_HACK_HERE
+
 
 let trans_aqual = function
   | Some AST.Implicit -> Some S.imp_tag

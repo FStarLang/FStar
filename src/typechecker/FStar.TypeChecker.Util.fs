@@ -32,7 +32,7 @@ open FStar.TypeChecker.Common
 
 type lcomp_with_binder = option<bv> * lcomp
 
-// VALS_HACK_HERE
+
 
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax

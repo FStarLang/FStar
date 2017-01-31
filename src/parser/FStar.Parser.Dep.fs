@@ -51,7 +51,7 @@ type map = smap<(option<string> * option<string>)>
 
 type color = | White | Gray | Black
 
-//VALS_HACK_HERE
+
 
 let check_and_strip_suffix (f: string): option<string> =
   let suffixes = [ ".fsti"; ".fst"; ".fsi"; ".fs" ] in

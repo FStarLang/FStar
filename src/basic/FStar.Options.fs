@@ -42,7 +42,7 @@ type options =
     | Reset
     | Restore
 
-// VALS_HACK_HERE
+
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
 let __unit_tests__ = Util.mk_ref false

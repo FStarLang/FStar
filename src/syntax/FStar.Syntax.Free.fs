@@ -24,7 +24,7 @@ open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 module Util = FStar.Util
-// VALS_HACK_HERE
+
 
 (********************************************************************************)
 (************************* Free names and unif variables ************************)

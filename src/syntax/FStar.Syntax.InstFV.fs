@@ -25,7 +25,7 @@ module SS = FStar.Syntax.Subst
 module U = FStar.Util
 type inst_t = list<(lident * universes)>
 
-// VALS_HACK_HERE
+
 
 let mk t s = S.mk s !t.tk t.pos
 

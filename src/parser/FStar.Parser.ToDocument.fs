@@ -45,7 +45,7 @@ module BU = FStar.Util
 
 
 
-// VALS_HACK_HERE
+
 
 (* [should_print_fs_typ_app] is set when encountering a [LightOff] pragma and *)
 (* reset at the end of each module. If you are using individual print function you *)

@@ -110,7 +110,7 @@ type env_t = env
 
 type sigtable = BU.smap<sigelt>
 
-// VALS_HACK_HERE
+
 
 let should_verify env =
     not env.lax

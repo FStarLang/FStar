@@ -48,7 +48,7 @@ type env = {
   tc_const: sconst -> typ;
 }
 
-//VALS_HACK_HERE
+
 
 let empty env tc_const = {
   env = env;

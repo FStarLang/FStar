@@ -26,7 +26,7 @@ open FStar.Util
 open FStar.Ident
 module U = FStar.Util
 
-// VALS_HACK_HERE
+
 
 ///////////////////////////////////////////////////////////////////////////
 // A few utility functions for working with lists of parallel substitutions

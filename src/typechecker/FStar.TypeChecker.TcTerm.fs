@@ -38,7 +38,7 @@ module BU = FStar.Util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 
-// VALS_HACK_HERE
+
 
 (* Some local utilities *)
 let instantiate_both env = {env with Env.instantiate_imp=true}

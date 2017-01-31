@@ -39,7 +39,7 @@ module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 
-// VALS_HACK_HERE
+
 
 //set the name of the query so that we can correlate hints to source program fragments
 let set_hint_correlator env se =

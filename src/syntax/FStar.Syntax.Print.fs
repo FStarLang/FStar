@@ -28,7 +28,7 @@ open FStar.Ident
 open FStar.Const
 module U = FStar.Util
 
-// VALS_HACK_HERE
+
 
 let sli (l:lident) : string =
     if Options.print_real_names()
