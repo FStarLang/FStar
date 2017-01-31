@@ -505,7 +505,7 @@ For more details on the syntax of function types and definitions, in
 particular the rules for default effects, see [this wiki
 page][wiki-default-effects].
 
-[wiki-default-effects]: https://github.com/FStarLang/FStar/wiki
+[wiki-default-effects]: https://github.com/FStarLang/FStar/wiki/The-syntax-of-arrow-types-and-default-effects
 
 ~CH
 This seems like the right place to explain higher-order functions.
