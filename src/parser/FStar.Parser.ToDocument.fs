@@ -366,8 +366,6 @@ and p_rawDecl d = match d.d with
     (str "module" ^^ space ^^ p_uident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2
   | TopLevelModule uid ->
     group(str "module" ^^ space ^^ p_quident uid)
-  (* skipping kind abbreviation *)
-  | KindAbbrev _ -> failwith "Deprecated, please stop throwing your old stuff at me !"
   | Tycon(true, [TyconAbbrev(uid, tpars, None, t), None]) ->
     let effect_prefix_doc = str "effect" ^^ space ^^ p_uident uid in
     surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ t
@@ -378,14 +376,6 @@ and p_rawDecl d = match d.d with
     precede_break_separate_map let_doc (str "and") p_letbinding lbs
   | Val(lid, t) ->
     (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ t
-    (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
-  | Assume(id, t) ->
-    let decl_keyword =
-      if char_at id.idText 0 |> is_upper
-      then empty
-      else str "val" ^^ space
-    in
-    (decl_keyword ^^ p_ident id ^^ space ^^ colon) ^/+^ p_typ t
   | Exception(uid, t_opt) ->
     str "exception" ^^ space ^^ p_uident uid ^^ optional (fun t -> str "of" ^/+^ p_typ t) t_opt
   | NewEffect(ne) ->

@@ -185,9 +185,6 @@ decoration:
       { Qualifier x }
 
 decl:
-  | ASSUME lid=uident COLON phi=formula
-      { mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] }
-
   | d=decoration ds=list(decoration) decl=rawDecl
       { mk_decl decl (rhs parseState 3) (d :: ds) }
 
@@ -231,11 +228,6 @@ rawDecl:
       { NewEffectForFree ne }
   | doc=FSDOC_STANDALONE
       { Fsdoc doc }
-
-  (* stratified only *)
-  | KIND lid=ident bs=binders EQUALS k=kind
-      { KindAbbrev(lid, bs, k) }
-
 
 typeDecl:
   (* TODO : change to lident with stratify *)

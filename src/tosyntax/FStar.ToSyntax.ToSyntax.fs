@@ -1885,11 +1885,6 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let se = Sig_main(e, d.drange) in
     env, [se]
 
-  | Assume(id, t) ->
-    let f = desugar_formula env t in
-    env, [Sig_assume(qualify env id, f, [S.Assumption], d.drange)]
-
-
   | Val(id, t) ->
     let quals = d.quals in
     let t = desugar_term env (close_fun env t) in
@@ -1920,14 +1915,6 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
-
-  | KindAbbrev(id, binders, k) ->
-    let env_k, binders = desugar_binders env binders in
-    let k = desugar_term env_k k in
-    let name = Env.qualify env id in
-    let se = mk_typ_abbrev name [] binders tun k [name] [] d.drange in
-    let env = push_sigelt env se in
-    env, [se]
 
   | NewEffect (RedefineEffect(eff_name, eff_binders, defn)) ->
     let quals = d.quals in
