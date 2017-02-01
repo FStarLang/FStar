@@ -182,6 +182,9 @@ decoration:
       { Qualifier x }
 
 decl:
+  | ASSUME lid=uident COLON phi=formula
+      { mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] }
+
   | d=decoration ds=list(decoration) decl=rawDecl
       { mk_decl decl (rhs parseState 3) (d :: ds) }
 

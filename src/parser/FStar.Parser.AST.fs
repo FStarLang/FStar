@@ -219,6 +219,7 @@ type decl' =
   | SubEffect of lift
   | Pragma of pragma
   | Fsdoc of fsdoc
+  | Assume of ident * term
 
 and decl = {
   d:decl';
@@ -640,6 +641,7 @@ let decl_to_string (d:decl) = match d.d with
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
   | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
   | Main _ -> "main ..."
+  | Assume(i, _) -> "assume " ^ i.idText
   | Tycon(_, tys) -> "type " ^ (tys |> List.map (fun (x,_)->id_of_tycon x) |> String.concat ", ")
   | Val(i, _) -> "val " ^ i.idText
   | Exception(i, _) -> "exception " ^ i.idText

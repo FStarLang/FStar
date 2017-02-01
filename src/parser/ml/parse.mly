@@ -673,7 +673,14 @@ decoration:
       ( Qualifier x )}
 
 decl:
-  decoration list_decoration_ rawDecl
+  ASSUME uident COLON noSeqTerm
+    {let (_1, lid, _3, e0) = ((), $2, (), $4) in
+let phi =
+  let e = e0 in
+                  ( {e with level=Formula} )
+in
+      ( mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] )}
+| decoration list_decoration_ rawDecl
     {let (d, ds, decl) = ($1, $2, $3) in
       ( mk_decl decl (rhs parseState 3) (d :: ds) )}
 | rawDecl

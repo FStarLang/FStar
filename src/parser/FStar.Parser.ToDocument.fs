@@ -474,6 +474,14 @@ and p_rawDecl d = match d.d with
       (fun (p, t) -> Range.union_ranges p.prange t.range)
   | Val(lid, t) ->
     (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ t
+    (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
+  | Assume(id, t) ->
+    let decl_keyword =
+      if char_at id.idText 0 |> is_upper
+      then empty
+      else str "val" ^^ space
+    in
+    (decl_keyword ^^ p_ident id ^^ space ^^ colon) ^/+^ p_typ t
   | Exception(uid, t_opt) ->
     str "exception" ^^ space ^^ p_uident uid ^^ optional (fun t -> str "of" ^/+^ p_typ t) t_opt
   | NewEffect(ne) ->

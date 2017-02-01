@@ -125,6 +125,7 @@ let string_of_decl' d =
         let termty' = List.map (fun (p,t) -> p ^ ":" ^ t) termty in
         "let " ^ (String.concat ", " termty')
   | Main _ -> "main ..."
+  | Assume(i, t) -> "assume " ^ i.idText ^ ":" ^ (term_to_string t)
   | Tycon(_, tys) ->
             "type " ^
              (tys |> List.map (fun (t,d)-> (string_of_tycon t) ^ " " ^ (string_of_fsdoco d))
