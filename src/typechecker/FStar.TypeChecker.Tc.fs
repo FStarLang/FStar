@@ -1144,6 +1144,9 @@ and tc_inductive env ses quals lids =
            | Tm_uinst (t, _) ->
              debug_log ("Checking strict positivity in an Tm_uinst, recur on the term inside (mostly it should be the same inductive)");
              ty_strictly_positive_in_type t env
+           |Tm_refine (bv, _) ->
+             debug_log ("Checking strict positivity in an Tm_refine, recur in the bv sort)");
+             ty_strictly_positive_in_type bv.sort env
            | _ ->
              debug_log ("Checking strict positivity, unexpected term: " ^ (PP.term_to_string btype));
              false)  //remaining cases, will handle as they come up
