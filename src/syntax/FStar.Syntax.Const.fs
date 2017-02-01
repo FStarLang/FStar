@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Syntax.Const
+open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
 open FStar.Ident

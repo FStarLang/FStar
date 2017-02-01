@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Encode
+open FStar.All
 open FStar.SMTEncoding.Term
 module ErrorReporting = FStar.SMTEncoding.ErrorReporting
 module S = FStar.Syntax.Syntax
