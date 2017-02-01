@@ -18,6 +18,7 @@
 // A dependency-finding routine shared between the universal and stratified
 // flavors of F*
 module FStar.Dependencies
+open FStar.All
 open FStar
 open FStar.Util
 open FStar.Getopt

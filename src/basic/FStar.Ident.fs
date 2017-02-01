@@ -1,5 +1,6 @@
 ﻿#light "off"
 module FStar.Ident
+open FStar.All
 open FStar.Range
 
 type ident = {idText:string;

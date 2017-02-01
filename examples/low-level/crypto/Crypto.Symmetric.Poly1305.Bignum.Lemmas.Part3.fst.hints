@@ -1,5 +1,5 @@
 [
-  "\u0001√pybPKa6\u0012=\u001fTzqo",
+  "ÛÆ4≤π“Ÿ‹ô≥3/#ÿ}ï",
   [
     [
       "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_div_def",
@@ -834,49 +834,31 @@
       0
     ],
     [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_4",
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_4_no_prime",
       1,
       0,
-      1,
+      0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
     [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_4",
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_4_no_prime",
       2,
       0,
-      1,
-      [
-        "@query",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "equation_Crypto.Symmetric.Poly1305.Spec.elem",
-        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "equation_Crypto.Symmetric.Poly1305.Spec.zero", "equation_Prims.nat",
-        "equation_Prims.pos",
-        "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
-        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368"
-      ],
+      0,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0
     ],
     [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_4",
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_4_no_prime",
       3,
       0,
       0,
       [
-        "@query",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "equation_FStar.Mul.op_Star", "equation_Prims.nat",
-        "equation_Prims.pos",
-        "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
+        "@query", "equation_FStar.Mul.op_Star", "equation_Prims.nat",
+        "fuel_correspondence_Prims.pow2.fuel_instrumented", "int_inversion",
+        "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
