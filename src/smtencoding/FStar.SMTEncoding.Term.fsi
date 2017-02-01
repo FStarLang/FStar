@@ -92,6 +92,7 @@ type decl =
   | Pop
   | CheckSat
   | GetUnsatCore
+  | GetProof
   | SetOption  of string * string
   | PrintStats
 type decls_t = list<decl>

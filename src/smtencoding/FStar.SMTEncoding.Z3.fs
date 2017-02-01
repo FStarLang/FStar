@@ -118,7 +118,8 @@ type query_log = {
     set_module_name: string -> unit;
     append_to_log:   string -> unit;
     close_log:       unit -> unit;
-    log_file_name:   unit -> string
+    log_file_name:   unit -> string;
+    proof_log_file:  unit -> out_channel
 }
 
 let query_logging =
@@ -126,6 +127,7 @@ let query_logging =
     let used_file_names : ref<list<(string * int)>> = BU.mk_ref [] in
     let current_module_name : ref<option<string>> = BU.mk_ref None in
     let current_file_name : ref<option<string>> = BU.mk_ref None in
+    let current_proof_file_name : ref<option<string>> = BU.mk_ref None in
     let set_module_name n = current_module_name := Some n in
     let get_module_name () = match !current_module_name with
         | None -> failwith "Module name not set"
@@ -157,11 +159,24 @@ let query_logging =
     let log_file_name () = match !current_file_name with
         | None -> failwith "no log file"
         | Some n -> n in
-     {set_module_name=set_module_name;
-      get_module_name=get_module_name;
-      append_to_log=append_to_log;
-      close_log=close_log;
-      log_file_name=log_file_name}
+    let proof_log_file () = match !current_proof_file_name with
+        | None ->
+            let x = get_log_file () in
+            BU.close_file x ;
+            let fn = log_file_name() ^ ".proof" in
+            current_proof_file_name := Some fn ;
+            open_out_gen [ Open_trunc ] 655 fn
+        | Some fn ->
+            let f = (open_out_gen [ Open_append ] 655 fn) in
+            fprintf f "\n" ;
+            f
+    in
+    {set_module_name=set_module_name;
+     get_module_name=get_module_name;
+     append_to_log=append_to_log;
+     close_log=close_log;
+     log_file_name=log_file_name;
+     proof_log_file=proof_log_file}
 
 let bg_z3_proc =
     let the_z3proc = BU.mk_ref None in
@@ -222,12 +237,27 @@ let doZ3Exe' (fresh:bool) (input:string) =
         | "<unsat-core>"::core::"</unsat-core>"::rest ->
           parse_core core, lines
         | _ -> None, lines in
+    let proof lines =
+        let mutable write = false in
+        let f = query_logging.proof_log_file() in
+        let fw = (fun line ->
+            if line = "<proof>" then
+                write <- true
+            elif line = "</proof>" then
+                write <- false
+            elif write then
+                fprintf f "%s\n" line
+        ) in
+        Seq.iter fw lines ;
+        flush f ;
+        close_out f in
     let rec lblnegs lines succeeded = match lines with
       | lname::"false"::rest when BU.starts_with lname "label_" -> lname::lblnegs rest succeeded
       | lname::_::rest when BU.starts_with lname "label_" -> lblnegs rest succeeded
       | _ -> if succeeded then print_stats lines; [] in
     let unsat_core_and_lblnegs lines succeeded =
        let core_opt, rest = unsat_core lines in
+       if Options.record_proofs() then (proof lines) else () ;
        core_opt, lblnegs rest succeeded in
 
     let rec result x = match x with
@@ -263,8 +293,11 @@ let doZ3Exe =
 let z3_options () =
     "(set-option :global-decls false)\
      (set-option :smt.mbqi false)\
-     (set-option :auto_config false)\
-     (set-option :produce-unsat-cores true)"
+     (set-option :auto_config false)"
+    ^
+    (if Options.record_hints() then "(set-option :produce-unsat-cores true)" else "")
+    ^
+    (if Options.record_proofs() then "(set-option :produce-proofs true)" else "")
 
 type job<'a> = {
     job:unit -> 'a;
