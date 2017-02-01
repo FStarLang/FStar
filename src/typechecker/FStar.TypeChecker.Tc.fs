@@ -1022,18 +1022,18 @@ and tc_inductive env ses quals lids =
     (* Once the datacons are generalized we can construct the projectors with the right types *)
     let data_ops_ses = List.map (TcUtil.mk_data_operations quals env tcs) datas |> List.flatten in
 
-    let check_positivity (env:env) (ty:sigelt) :bool =
+    let check_positivity env (ty:sigelt) :bool =
       //memo table, memoizes the Tm_app nodes for inductives that we have already unfolded
-      let unfolded_inductives = ref [] in
+      let unfolded_inductives = BU.mk_ref [] in
       
       //check if ilid applied to args has already been unfolded
       //in the memo table we only keep the type parameters, not indexes, but the passed args also contain indexes
       //so, once we have confirmed that the ilid is same, we will split the args list before checking equality of each argument
-      let already_unfolded (env:env) (ilid:lident) (args:args) :bool =
-        List.exists (fun (lid, l) ->
+      let already_unfolded env (ilid:lident) (args:args) :bool =
+        List.existsML (fun (lid, l) ->
           Ident.lid_equals lid ilid &&
             (let args = fst (List.splitAt (List.length l) args) in
-             List.fold2 (fun b a a' -> b && Rel.teq_nosmt env (fst a) (fst a')) true args l)
+             List.fold_left2 (fun b a a' -> b && Rel.teq_nosmt env (fst a) (fst a')) true args l)
         ) !unfolded_inductives
       in
 
@@ -1044,7 +1044,7 @@ and tc_inductive env ses quals lids =
           | _                                              -> failwith "Impossible!"
       in
 
-      let debug_log (s:string) :unit = if Env.debug env <| Options.Other "Positivity" then Util.print_endline ("Positivity::" ^ s) else () in
+      let debug_log (s:string) :unit = if Env.debug env <| Options.Other "Positivity" then BU.print_string ("Positivity::" ^ s ^ "\n") else () in
 
       debug_log ("Checking positivity for " ^ ty_lid.str);
 
@@ -1075,7 +1075,7 @@ and tc_inductive env ses quals lids =
       let ty_bs = SS.open_binders ty_bs in
 
       //dterm is the type of a ty data constructor
-      let rec ty_positive_in_datacon (env:env) (dt:term) :bool =
+      let rec ty_positive_in_datacon env (dt:term) :bool =
         debug_log ("Checking data constructor type: " ^ (PP.term_to_string dt));
         //apply the universes substitution ty_usubst to dt
         let dt = SS.subst ty_usubst dt in
@@ -1105,7 +1105,7 @@ and tc_inductive env ses quals lids =
           | _ -> failwith "Unexpected data constructor type when checking positivity"
         
       //btype is type of some binder in some ty data constructor 
-      and ty_strictly_positive_in_type (btype:term) (env:env) :bool =
+      and ty_strictly_positive_in_type (btype:term) env :bool =
         debug_log ("Checking strict positivity in type: " ^ (PP.term_to_string btype));
         //normalize the type to unfold any type abbreviations, TODO: what steps?
         let btype = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env btype in
@@ -1151,7 +1151,7 @@ and tc_inductive env ses quals lids =
       //some binder of some data constructor is an application of ilid to the args
       //ilid may not be an inductive, in which case we simply return false
       //TODO: change the name of the function to reflect this behavior
-      and ty_nested_positive_in_inductive (ilid:lident) (us:universes) (args:args) (env:env) :bool =
+      and ty_nested_positive_in_inductive (ilid:lident) (us:universes) (args:args) env :bool =
         debug_log ("Checking nested positivity in the inductive " ^ ilid.str ^ " applied to arguments: " ^ (PP.args_to_string args));
         let b, idatas = datacons_of_typ env ilid in
         //if ilid is not an inductive, return false
@@ -1170,10 +1170,10 @@ and tc_inductive env ses quals lids =
           debug_log ("Checking nested positivity, number of type parameters is " ^ (string_of_int num_ibs) ^ ", also adding to the memo table");
           //update the memo table with the inductive name and the args, note we keep only the parameters and not indices
           unfolded_inductives := !unfolded_inductives @ [ilid, fst (List.splitAt num_ibs args)];
-          List.forall (fun d -> ty_nested_positive_in_dlid d ilid us args num_ibs env) idatas
+          List.for_all (fun d -> ty_nested_positive_in_dlid d ilid us args num_ibs env) idatas
       
       //dlid is a data constructor of ilid, args are the arguments of the ilid application, num_ibs is the # of type parameters of ilid 
-      and ty_nested_positive_in_dlid (dlid:lident) (ilid:lident) (us:universes) (args:args) (num_ibs:int) (env:env) :bool =
+      and ty_nested_positive_in_dlid (dlid:lident) (ilid:lident) (us:universes) (args:args) (num_ibs:int) env :bool =
         debug_log ("Checking nested positivity in data constructor " ^ dlid.str ^ " of the inductive " ^ ilid.str);
         //get the type of the data constructor
         let univ_unif_vars, dt = lookup_datacon env dlid in
@@ -1204,7 +1204,7 @@ and tc_inductive env ses quals lids =
           let c = SS.subst_comp (SS.opening_of_binders ibs) c in
           //get the number of arguments that cover the type parameters num_ibs, these are what we will substitute
           let args, _ = List.splitAt num_ibs args in
-          let subst = List.fold2 (fun subst ib arg -> subst @ [NT (fst ib, fst arg)]) [] ibs args in
+          let subst = List.fold_left2 (fun subst ib arg -> subst @ [NT (fst ib, fst arg)]) [] ibs args in
           //substitute into the dbs and the computation type c
           let dbs = SS.subst_binders subst dbs in
           let c = SS.subst_comp (SS.shift_subst (List.length dbs) subst) c in
@@ -1216,7 +1216,7 @@ and tc_inductive env ses quals lids =
           ty_nested_positive_in (SS.compress dt).n ilid num_ibs env  //in this case, we don't have anything to substitute, simply check
       
       //t is some data constructor type of ilid, after ilid arguments have been substituted                
-      and ty_nested_positive_in (t:term') (ilid:lident) (num_ibs:int) (env:env) :bool =
+      and ty_nested_positive_in (t:term') (ilid:lident) (num_ibs:int) env :bool =
         match t with
         | Tm_app (t, args) ->
           //if it's an application node, it must be ilid directly (or TODO: some mutual inductive)
@@ -1238,10 +1238,10 @@ and tc_inductive env ses quals lids =
         | _ -> failwith "Nested positive check, unhandled case"
       in
 
-      List.forall (fun d -> ty_positive_in_datacon env (datacon_typ d)) datas
+      List.for_all (fun d -> ty_positive_in_datacon env (datacon_typ d)) datas
     in
 
-    (if Options.no_positivity () then ()
+    (if Options.no_positivity () || Options.lax ()  then ()  //skipping positivity check if lax mode
      else
        let env = push_sigelt env0 sig_bndle in
        let b = List.for_all (fun ty ->
