@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.Rel
+open FStar.All
 
 open FStar
 open FStar.Util

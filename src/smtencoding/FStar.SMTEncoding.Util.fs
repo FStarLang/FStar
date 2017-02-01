@@ -1,6 +1,7 @@
 ﻿#light "off"
 
 module FStar.SMTEncoding.Util
+open FStar.All
 
 open FStar
 open FStar.TypeChecker.Env
