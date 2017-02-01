@@ -1,5 +1,5 @@
 [
-  "Lú!yUË\u001e ð=®„$…”F",
+  "P&Ô\u0003\u00049h/r3@›\u0004¥_$",
   [
     [ "FStar.List.Tot.Base.isEmpty", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -26,6 +26,7 @@
       ],
       0
     ],
+    [ "FStar.List.Tot.Base.tl", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.List.Tot.Base.length",
       1,
