@@ -2501,27 +2501,38 @@ let rec solve_deferred_constraints env (g:guard_t) =
    solve_universe_inequalities env g.univ_ineqs;
    {g with univ_ineqs=[]}
 
-let discharge_guard' use_env_range_msg env (g:guard_t) : guard_t =
-   let g = solve_deferred_constraints env g in
-   (if not (Env.should_verify env) then ()
-    else match g.guard_f with
-    | Trivial -> ()
+//use_smt flag says whether to use the smt solver to discharge this guard
+//if use_smt = true, this function NEVER returns None, the error might come from the smt solver though
+//if use_smt = false, then None means could not discharge the guard without using smt
+let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<guard_t> =
+  let g = solve_deferred_constraints env g in
+  let ret_g = {g with guard_f = Trivial} in
+  if not (Env.should_verify env) then Some ret_g
+  else
+    match g.guard_f with
+    | Trivial -> Some ret_g
     | NonTrivial vc ->
-        if Env.debug env <| Options.Other "Norm"
-        then Errors.diag (Env.get_range env)
-                            (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
-        let vc = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify] env vc in
-        begin match check_trivial vc with
-            | Trivial -> ()
-            | NonTrivial vc ->
-                if Env.debug env <| Options.Other "Rel"
-                then Errors.diag (Env.get_range env)
-                                 (BU.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
-                env.solver.solve use_env_range_msg env vc
-        end);
-  {g with guard_f=Trivial}
+      if Env.debug env <| Options.Other "Norm"
+      then Errors.diag (Env.get_range env)
+                       (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
+      let vc = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify] env vc in
+      match check_trivial vc with
+      | Trivial -> Some ret_g
+      | NonTrivial vc ->
+        if not use_smt then None
+        else
+          let _ =
+            if Env.debug env <| Options.Other "Rel"
+            then Errors.diag (Env.get_range env)
+                             (BU.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
+            env.solver.solve use_env_range_msg env vc
+          in
+          Some ret_g
 
-let discharge_guard env g = discharge_guard' None env g
+let discharge_guard env g =
+  match discharge_guard' None env g true with
+  | Some g -> g
+  | None   -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
 let resolve_implicits g =
   let unresolved u = match Unionfind.find u with
@@ -2544,7 +2555,11 @@ let resolve_implicits g =
                let g = if env.is_pattern
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
                        else g in
-               let g' = discharge_guard' (Some (fun () -> Print.term_to_string tm)) env g in
+               let g' =
+                 match discharge_guard' (Some (fun () -> Print.term_to_string tm)) env g true with
+                 | Some g -> g
+                 | None   -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
+               in
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 
@@ -2561,3 +2576,11 @@ let force_trivial_guard env g =
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
     {trivial_guard with univ_ineqs=[u1,u2]}
+
+let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
+  match try_teq env t1 t2 with
+  | None -> false
+  | Some g ->
+    match discharge_guard' None env g false with
+    | Some _ -> true
+    | None   -> false
