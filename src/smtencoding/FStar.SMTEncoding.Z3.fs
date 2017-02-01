@@ -119,7 +119,7 @@ type query_log = {
     append_to_log:   string -> unit;
     close_log:       unit -> unit;
     log_file_name:   unit -> string;
-    proof_log_file:  unit -> out_channel
+    proof_log_file:  unit -> file_handle
 }
 
 let query_logging =
@@ -127,7 +127,7 @@ let query_logging =
     let used_file_names : ref<list<(string * int)>> = BU.mk_ref [] in
     let current_module_name : ref<option<string>> = BU.mk_ref None in
     let current_file_name : ref<option<string>> = BU.mk_ref None in
-    let current_proof_file_name : ref<option<string>> = BU.mk_ref None in
+    let current_proof_file : ref<option<file_handle>> = BU.mk_ref None in
     let set_module_name n = current_module_name := Some n in
     let get_module_name () = match !current_module_name with
         | None -> failwith "Module name not set"
@@ -159,17 +159,15 @@ let query_logging =
     let log_file_name () = match !current_file_name with
         | None -> failwith "no log file"
         | Some n -> n in
-    let proof_log_file () = match !current_proof_file_name with
+    let proof_log_file () = match !current_proof_file with
         | None ->
             let x = get_log_file () in
             BU.close_file x ;
             let fn = log_file_name() ^ ".proof" in
-            current_proof_file_name := Some fn ;
-            open_out_gen [ Open_trunc ] 655 fn
-        | Some fn ->
-            let f = (open_out_gen [ Open_append ] 655 fn) in
-            fprintf f "\n" ;
-            f
+            let fh = BU.open_file_for_writing fn in
+            current_proof_file := Some fh ;
+            fh
+        | Some f -> f
     in
     {set_module_name=set_module_name;
      get_module_name=get_module_name;
@@ -241,16 +239,13 @@ let doZ3Exe' (fresh:bool) (input:string) =
         let mutable write = false in
         let f = query_logging.proof_log_file() in
         let fw = (fun line ->
-            if line = "<proof>" then
-                write <- true
-            elif line = "</proof>" then
-                write <- false
-            elif write then
-                fprintf f "%s\n" line
+            match line with
+            | "<proof>" -> write <- true
+            | "</proof>" -> write <- false
+            | _ -> if write then append_to_file f line
         ) in
-        Seq.iter fw lines ;
-        flush f ;
-        close_out f in
+        List.iter fw lines ;
+        append_to_file f  "" in
     let rec lblnegs lines succeeded = match lines with
       | lname::"false"::rest when BU.starts_with lname "label_" -> lname::lblnegs rest succeeded
       | lname::_::rest when BU.starts_with lname "label_" -> lblnegs rest succeeded
