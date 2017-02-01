@@ -184,12 +184,10 @@ package: all
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
         # Install the F* binary
 	mkdir -p $(PREFIX)/bin/
-	$(INSTALL_EXEC) -m 755 fstar.exe $(PREFIX)/bin/fstar.exe
+	$(INSTALL_EXEC) -m 755 _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
-	$(call fexport,lib)
 	$(call fexport,ulib)
 	$(call fexport,examples)
-	$(call fexport,contrib)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
 ifeq ($(MADOKO),Madoko)
