@@ -191,7 +191,6 @@ and free_vars = {
     free_uvars:uvars;
     free_univs:set<universe_uvar>;
     free_univ_names:fifo_set<univ_name>;
-    free_fvars:set<lident>;
 }
 and lcomp = {
     eff_name: lident;

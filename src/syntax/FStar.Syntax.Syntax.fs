@@ -188,7 +188,6 @@ and free_vars = {
     free_uvars:uvars;
     free_univs:set<universe_uvar>;
     free_univ_names:fifo_set<univ_name>;
-    free_fvars:set<lident>;
 }
 and lcomp = {
     eff_name: lident;
@@ -403,7 +402,6 @@ let empty_free_vars = {
         free_uvars=no_uvs;
         free_univs=no_universe_uvars;
         free_univ_names=no_universe_names;
-        free_fvars=no_fvars;
     }
 let memo_no_uvs = Util.mk_ref (Some no_uvs)
 let memo_no_names = Util.mk_ref (Some no_names)
