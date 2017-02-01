@@ -1117,21 +1117,16 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             (* Infer: t1 -> ... -> tn -> C ('u x1...xm),
                     where ti are the result types of each arg
                     and   xi are the free type/term variables in the environment
-               where C = GTot, if the expected result type is Type(u)
-                else C = Tot,  if the ML monad is not in scope
-                else C = ML,   otherwise *)
+               where C = Tot,
+                except when Options.ml_ish(), where C = ML (for compatibility with ML)
+            *)
             let args, comps, g_args = tc_args env args in
             let bs = null_binders_of_tks (comps |> List.map (fun (_, c) -> c.res_typ, None)) in
-            let ml_or_tot = match Env.try_lookup_effect_lid env Const.effect_ML_lid with
-                | None -> fun t r -> S.mk_Total t
-                | _ -> U.ml_comp in
-            let ml_or_tot = match expected_topt with
-                | None -> ml_or_tot
-                | Some t ->
-                  match (SS.compress t).n with
-                    | Tm_type _ -> fun t r -> S.mk_GTotal t
-                    | _ -> ml_or_tot in
-
+            let ml_or_tot t r =
+                if Options.ml_ish ()
+                then U.ml_comp t r
+                else S.mk_Total t
+            in
             let cres = ml_or_tot (TcUtil.new_uvar env (U.type_u () |> fst)) r in
             let bs_cres = U.arrow bs cres in
             if Env.debug env <| Options.Extreme
@@ -1464,7 +1459,7 @@ and check_top_level_let env e =
                 let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
                 if ok
                 then e2, c1
-                else (if (Options.warn_top_level_effects()) //otherwise warn
+                else (if Options.warn_top_level_effects() //otherwise warn
                       then Errors.warn (Env.get_range env) Err.top_level_effect;
                       mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
             else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
@@ -1474,15 +1469,16 @@ and check_top_level_let env e =
          in
 
 
-         (* the result always has type ML unit *)
-         let cres = U.lcomp_of_comp <| U.ml_comp Common.t_unit e.pos in
+         (* the result has the same effect as c1, except it returns unit *)
+         let cres = Env.null_wp_for_eff env (U.comp_effect_name c1) U_zero Common.t_unit in
+
          e2.tk := Some (Common.t_unit.n);
 
 (*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 in
          mk (Tm_let((false, [lb]), e2))
-           (Some (Common.t_unit.n))
-           e.pos,
-         cres,
+            (Some (Common.t_unit.n))
+            e.pos,
+         U.lcomp_of_comp cres,
          Rel.trivial_guard
 
      | _ -> failwith "Impossible"

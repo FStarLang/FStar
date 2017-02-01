@@ -598,6 +598,31 @@ let rec lemma_seq_list_bij #a s =
     lemma_eq_intro s (seq_of_list (seq_to_list s))
   )
 
+val lemma_list_seq_bij: #a:Type -> l:list a -> Lemma
+  (requires (True))
+  (ensures  (seq_to_list (seq_of_list l) == l))
+  (decreases (L.length l))
+let rec lemma_list_seq_bij #a l =
+  if L.length l = 0 then ()
+  else (
+    lemma_list_seq_bij #a (L.tl l);
+    let hd = L.hd l in let tl = L.tl l in
+    cut (seq_to_list (seq_of_list tl) == tl);
+    cut (seq_of_list l == create 1 hd @| seq_of_list tl);
+    lemma_eq_intro (seq_of_list tl) (slice (seq_of_list l) 1 (length (seq_of_list l)))
+  )
+
+unfold let createL_post (#a:Type0) (l:list a) (s:seq a) : GTot Type0 =
+  normalize (L.length l = length s) /\ seq_to_list s == l /\ seq_of_list l == s
+
+val createL: #a:Type0 -> l:list a -> Pure (seq a)
+  (requires True)
+  (ensures (fun s -> createL_post #a l s))
+let createL #a l =
+  let s = seq_of_list l in
+  lemma_list_seq_bij l;
+  s
+
 val lemma_index_is_nth: #a:Type -> s:seq a -> i:nat{i < length s} -> Lemma
   (requires True)
   (ensures  (L.index (seq_to_list s) i == index s i))

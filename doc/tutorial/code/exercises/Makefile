@@ -42,7 +42,7 @@ verify_hh-%: __force__
 	$(FSTAR) --include $(HYPERHEAP) $*
 
 
-all: uall sall Ex01a-ocaml
+all: uall sall
 
 sall:
 
