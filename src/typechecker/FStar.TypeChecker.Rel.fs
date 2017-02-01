@@ -2438,20 +2438,6 @@ let solve_universe_inequalities' tx env (variables, ineqs) =
        | U_unif v0, U_unif v0' -> Unionfind.equivalent v0 v0'
        | _ -> false
    in
-   let _ =
-      //collapse all variables by unifying them with each other
-      //this forces all mutually inductive types to be in the same universe,
-      //unless they are annotated otherwise.
-      //This seems to be a useful default.
-      //We might consider relaxing this if it becomes problematic.
-      variables |> List.fold_left (fun uopt v ->
-        match SS.compress_univ v with
-        | U_unif v0 ->
-          begin match uopt with
-            | Some u0 -> Unionfind.union u0 v0; uopt
-            | None -> Some v0
-          end
-        | _ -> uopt) None in
    let sols = variables |> List.collect (fun v ->
      match SS.compress_univ v with
      | U_unif _ -> //if it really is a variable, that try to solve it
