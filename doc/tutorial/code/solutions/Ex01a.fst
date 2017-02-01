@@ -1,4 +1,5 @@
 module Ex01a
+open FStar.All
 //safe-read-write
 
 type filename = string
@@ -14,17 +15,17 @@ let canRead (f:filename) =
   canWrite f               (* writeable files are also readable *)
   || f="demo/README"       (* and so is this file *)
 
-val read  : f:filename{canRead f}  -> string
+val read  : f:filename{canRead f}  -> ML string
 let read f  = FStar.IO.print_string ("Dummy read of file " ^ f ^ "\n"); f
 
-val write : f:filename{canWrite f} -> string -> unit
+val write : f:filename{canWrite f} -> string -> ML unit
 let write f s = FStar.IO.print_string ("Dummy write of string " ^ s ^ " to file " ^ f ^ "\n")
 
 let passwd  = "demo/password"
 let readme  = "demo/README"
 let tmp     = "demo/tempfile"
 
-val staticChecking : unit -> unit
+val staticChecking : unit -> ML unit
 let staticChecking () =
   let v1 = read tmp in
   let v2 = read readme in
@@ -33,12 +34,12 @@ let staticChecking () =
   (* ; write passwd "junk" -- invalid write , fails type-checking *)
 
 exception InvalidRead
-val checkedRead : filename -> string
+val checkedRead : filename -> ML string
 let checkedRead f =
   if canRead f then read f else raise InvalidRead
 
 
-val checkedWrite : filename -> string -> unit
+val checkedWrite : filename -> string -> ML unit
 // BEGIN: CheckedWrite
 
 exception InvalidWrite

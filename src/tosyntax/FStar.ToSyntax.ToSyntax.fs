@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.ToSyntax.ToSyntax
+open FStar.All
 
 open FStar
 open FStar.Util
@@ -67,6 +68,7 @@ let trans_qual r maybe_effect_id = function
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
   | AST.ResetOptions sopt -> S.ResetOptions sopt
+  | AST.LightOff -> S.LightOff
 
 let as_imp = function
     | Hash -> Some S.imp_tag
@@ -758,12 +760,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       let bs, t = uncurry binders t in
       let rec aux env bs = function
         | [] ->
-          let cod = desugar_comp top.range true env t in
+          let cod = desugar_comp top.range env t in
           setpos <| U.arrow (List.rev bs) cod
 
         | hd::tl ->
-          let mlenv = default_ml env in
-          let bb = desugar_binder mlenv hd in
+          let bb = desugar_binder env hd in
           let b, env = as_binder env hd.aqual bb in
           aux env (b::bs) tl in
       aux env [] bs
@@ -1008,8 +1009,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       mk <| Tm_match(desugar_term env e, List.map desugar_branch branches)
 
     | Ascribed(e, t) ->
-      let env = Env.default_ml env in
-      let c = desugar_comp t.range true env t in
+      let c = desugar_comp t.range env t in
       let annot = if U.is_ml_comp c
                   then Inl (U.comp_result c)
                   else Inr c in
@@ -1081,7 +1081,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 and desugar_args env args =
     args |> List.map (fun (a, imp) -> arg_withimp_e imp (desugar_term env a))
 
-and desugar_comp r default_ok env t =
+and desugar_comp r env t =
     let fail : string -> 'a = fun msg -> raise (Error(msg, r)) in
     let is_requires (t, _) = match (unparen t).tm with
         | Requires _ -> true
@@ -1125,18 +1125,19 @@ and desugar_comp r default_ok env t =
              //we have an explicit effect annotation ... no need to add anything
              (Ident.set_lid_range Const.effect_GTot_lid head.range, []), args
 
-            | Name l when ((l.ident.idText="Type"
-                            || l.ident.idText="Type0"
-                            || l.ident.idText="Effect")
-                           && default_ok) ->
-              //the default effect for Type_level is always Tot
+            | Name l when (l.ident.idText="Type"
+                           || l.ident.idText="Type0"
+                           || l.ident.idText="Effect") ->
+              //the default effect for Type is always Tot
               (Ident.set_lid_range Const.effect_Tot_lid head.range, []), [t, Nothing]
 
-            | _  when default_ok -> //add the default effect
-             (Ident.set_lid_range env.default_result_effect head.range, []), [t, Nothing]
-
             | _ ->
-             fail (BU.format1 "%s is not an effect" (AST.term_to_string t)) in
+             let default_effect =
+               if Options.ml_ish ()
+               then Const.effect_ML_lid
+               else Const.effect_Tot_lid in
+             (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
+    in
     let (eff, cattributes), args = pre_process_comp_typ t in
     if List.length args = 0
     then fail (BU.format1 "Not enough args to effect %s" (Print.lid_to_string eff));
@@ -1481,7 +1482,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                             desugar_attributes env cattributes
                          | _ -> t, []
                  in
-                 let c = desugar_comp t.range false env' t in
+                 let c = desugar_comp t.range env' t in
                  let typars = Subst.close_binders typars in
                  let c = Subst.close_comp typars c in
                  Sig_effect_abbrev(qualify env id, [], typars, c, quals |> List.filter (function S.Effect -> false | _ -> true), cattributes @ comp_flags c, rng)
@@ -1518,30 +1519,34 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let tcs = List.rev tcs in
       let tps_sigelts = tcs |> List.collect (function
         | Inr(Sig_inductive_typ(id, uvs, tpars, k, _, _, _, _), binders, t, quals) -> //type abbrevs in mutual type definitions
-	    let t =
-	      let env, tpars = typars_of_binders env binders in
-	      let env_tps, tpars = push_tparams env tpars in
-	      let t = desugar_typ env_tps t in
-	      let tpars = Subst.close_binders tpars in
-	      Subst.close tpars t
-            in
+	      let t =
+	          let env, tpars = typars_of_binders env binders in
+	          let env_tps, tpars = push_tparams env tpars in
+	          let t = desugar_typ env_tps t in
+	          let tpars = Subst.close_binders tpars in
+	          Subst.close tpars t
+          in
           [[], mk_typ_abbrev id uvs tpars k t [id] quals rng]
 
         | Inl (Sig_inductive_typ(tname, univs, tpars, k, mutuals, _, tags, _), constrs, tconstr, quals) ->
+          let mk_tot t =
+            let tot = mk_term (Name FStar.Syntax.Const.effect_Tot_lid) t.range t.level in
+            mk_term (App(tot, t, Nothing)) t.range t.level in
           let tycon = (tname, tpars, k) in
           let env_tps, tps = push_tparams env tpars in
           let data_tpars = List.map (fun (x, _) -> (x, Some (S.Implicit true))) tps in
+          let tot_tconstr = mk_tot tconstr in
           let constrNames, constrs = List.split <|
               (constrs |> List.map (fun (id, topt, _, of_notation) ->
                 let t =
                   if of_notation
                   then match topt with
-                    | Some t -> mk_term (Product([mk_binder (NoName t) t.range t.level None], tconstr)) t.range t.level
+                    | Some t -> mk_term (Product([mk_binder (NoName t) t.range t.level None], tot_tconstr)) t.range t.level
                     | None -> tconstr
                   else match topt with
                     | None -> failwith "Impossible"
                     | Some t -> t in
-                let t = desugar_term (default_total env_tps) (close env_tps t) in
+                let t = desugar_term env_tps (close env_tps t) in
                 let name = qualify env id in
                 let quals = tags |> List.collect (function
                     | RecordType fns -> [RecordConstructor fns]
@@ -1586,7 +1591,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
     let env0 = env in
     let monad_env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders monad_env eff_binders in
-    let eff_k = desugar_term (Env.default_total env) eff_kind in
+    let eff_k = desugar_term env eff_kind in
     let env, decls = eff_decls |> List.fold_left (fun (env, out) decl ->
         let env, ses = desugar_decl env decl in
         env, List.hd ses::out) (env, []) in
@@ -1769,6 +1774,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
   match d.d with
   | Pragma p ->
     let se = Sig_pragma(trans_pragma p, d.drange) in
+    if p = LightOff
+    then Options.set_ml_ish();
     env, [se]
 
   | Fsdoc _ -> env, []
