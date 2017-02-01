@@ -1091,41 +1091,60 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       in
       let comp = TcUtil.bind head.pos env None chead (None, comp) in
 
-      (* 2. For each monadic argument (including the head of the application) we introduce *)
-      (*    a fresh variable "monadic_app_var" and lift the actual argument to comp.       *)
-      let lifted_args, head, args =
-        let map_fun ((e, q), _ , c0) =
-          match c0 with
-          | Inl _ ->
-            None, (e, q)
-          | Inr c when U.is_pure_or_ghost_lcomp c ->
-            None, (e, q)
-          | Inr c ->
-            let x = S.gen_bv "monadic_app_var" None c.res_typ in
-            let e = TcUtil.maybe_lift env e c.eff_name comp.eff_name c.res_typ in
-            Some (x, c.eff_name, c.res_typ, e), (S.bv_to_name x, q)
-        in
-        let lifted_args, reverse_args =
-            List.split <| List.map map_fun ((as_arg head, None, Inr chead)::arg_comps_rev)
-        in
-        lifted_args, fst (List.hd reverse_args), List.rev (List.tl reverse_args)
+      (* TODO : This is a really syntactic criterion to check if we can evaluate *)
+      (* applications left-to-right, can we do better ? *)
+      let shortcuts_evaluation_order =
+        match (SS.compress head).n with
+        | Tm_fvar fv ->
+			     S.fv_eq_lid fv Syntax.Const.op_And ||
+			     S.fv_eq_lid fv Syntax.Const.op_Or
+        | _ -> false
       in
 
-      (* 3. We apply the (non-monadic) head to the non-monadic arguments, lift the *)
-      (*    result to comp and then bind each monadic arguments to close over the *)
-      (*    "monadic_app_var" variables introduces at step 2. *)
       let app =
-        let app = mk_Tm_app head args (Some comp.res_typ.n) r in
-        let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
-        let app = TcUtil.maybe_monadic env app comp.eff_name comp.res_typ in
-        let bind_lifted_args e = function
-          | None -> e
-          | Some (x, m, t, e1) ->
-            let lb = U.mk_letbinding (Inl x) [] t m e1 in
-            let letbinding = mk (Tm_let ((false, [lb]), SS.close [S.mk_binder x] e)) None e.pos in
-            mk (Tm_meta(letbinding, Meta_monadic(m, comp.res_typ))) None e.pos
-        in
-        List.fold_left bind_lifted_args app lifted_args
+        if shortcuts_evaluation_order then
+          (* If the head is shortcutting we cannot hoist its arguments *)
+          (* Leaving it `as is` is a little dubious *)
+          let args = List.fold_left (fun args (arg, _, _) -> arg::args) [] arg_comps_rev in
+          let app = mk_Tm_app head args (Some comp.res_typ.n) r in
+          let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
+          TcUtil.maybe_monadic env app comp.eff_name comp.res_typ
+
+        else
+          (* 2. For each monadic argument (including the head of the application) we introduce *)
+          (*    a fresh variable and lift the actual argument to comp.       *)
+          let lifted_args, head, args =
+            let map_fun ((e, q), _ , c0) =
+              match c0 with
+              | Inl _ ->
+                None, (e, q)
+              | Inr c when U.is_pure_or_ghost_lcomp c ->
+                None, (e, q)
+              | Inr c ->
+                let x = S.new_bv None c.res_typ in
+                let e = TcUtil.maybe_lift env e c.eff_name comp.eff_name c.res_typ in
+                Some (x, c.eff_name, c.res_typ, e), (S.bv_to_name x, q)
+            in
+            let lifted_args, reverse_args =
+                List.split <| List.map map_fun ((as_arg head, None, Inr chead)::arg_comps_rev)
+            in
+            lifted_args, fst (List.hd reverse_args), List.rev (List.tl reverse_args)
+          in
+
+          (* 3. We apply the (non-monadic) head to the non-monadic arguments, lift the *)
+          (*    result to comp and then bind each monadic arguments to close over the *)
+          (*    variables introduces at step 2. *)
+          let app = mk_Tm_app head args (Some comp.res_typ.n) r in
+          let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
+          let app = TcUtil.maybe_monadic env app comp.eff_name comp.res_typ in
+          let bind_lifted_args e = function
+            | None -> e
+            | Some (x, m, t, e1) ->
+              let lb = U.mk_letbinding (Inl x) [] t m e1 in
+              let letbinding = mk (Tm_let ((false, [lb]), SS.close [S.mk_binder x] e)) None e.pos in
+              mk (Tm_meta(letbinding, Meta_monadic(m, comp.res_typ))) None e.pos
+          in
+          List.fold_left bind_lifted_args app lifted_args
       in
 
       (* Each conjunct in g is already labeled *)

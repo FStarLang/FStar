@@ -64,7 +64,15 @@ reifiable let ifc (h:bool) : StNull int =
   if h then (incr(); let y = STINT?.get() in decr(); y)
        else STINT?.get() + 1
 
-let ni_ifc = assert (forall h0 h1 s0. reify (ifc h0) s0 = reify (ifc h1) s0)
+assume val b : bool
+assume val s0 : int
+let x = reify (ifc b) s0
+
+(* let ni_ifc_expanded = assert (forall s0. reify (ifc true) s0 = reify (ifc true) s0 /\ *)
+(*                                     reify (ifc true) s0 = reify (ifc false) s0 /\ *)
+(*                                     reify (ifc false) s0 = reify (ifc true) s0 /\ *)
+(*                                     reify (ifc false) s0 = reify (ifc false) s0) *)
+(* let ni_ifc = assert (forall h0 h1 s0. reify (ifc h0) s0 = reify (ifc h1) s0) *)
 
 // Although we have STINT?.get and STINT?.put now as actions,
 // we can also "rederive" them using reflection
