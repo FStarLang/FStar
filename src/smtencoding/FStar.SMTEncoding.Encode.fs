@@ -630,14 +630,42 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let v2, decls2 = encode_term v2 env in
               mk_LexCons v1 v2, decls1@decls2
 
-            | Tm_constant Const_reify, (_::_::_) ->
+            | Tm_constant Const_reify, _ (* (_::_::_) *) ->
               let e0 = S.mk (S.Tm_app(head, [List.hd args_e])) None head.pos in
-              let e = S.mk (S.Tm_app(e0, List.tl args_e)) None t0.pos in
+              if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
+              then BU.print1 "Trying to normalize %s\n" (Print.term_to_string e0) ;
+              let e0 =
+                N.normalize [
+                    N.Beta;
+                    N.Reify;
+                    N.Eager_unfolding;
+                    N.EraseUniverses;
+                    N.AllowUnboundUniverses
+                  ]
+                  env.tcenv e0
+              in
+              if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
+              then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0) ;
+              let e0 =
+                if match (SS.compress e0).n with | Tm_app _ -> false | _ -> true
+                then e0
+                else
+                  let head, args = U.head_and_args e0 in
+                  if match (SS.compress head).n with Tm_constant Const_reify -> true | _ -> false
+                  then begin assert (List.tl args = []) ; fst (List.hd args) end
+                  else e0
+              in
+              let e =
+                  match args_e with
+                  | [_] -> e0
+                  | _ -> S.mk (S.Tm_app(e0, List.tl args_e)) None t0.pos
+              in
               encode_term e env
 
-            | Tm_constant Const_reify, [(arg, _)] ->
-              let tm, decls = encode_term arg env in
-              mkApp("Reify", [tm]), decls
+
+            (* | Tm_constant Const_reify, [(arg, _)] -> *)
+            (*   let tm, decls = encode_term arg env in *)
+            (*   mkApp("Reify", [tm]), decls *)
 
             | Tm_constant (Const_reflect _), [(arg, _)] ->
               encode_term arg env
