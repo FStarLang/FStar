@@ -4,6 +4,7 @@
 # Currently, this script gets called by the VSTF "FStar, Docs, Linux, CI"
 # Build Defn. The $PAT env var is stored in that Build Defn.  
 set -x # debug on
+set -e
 
 echo Running fsdoc in `pwd`
 
