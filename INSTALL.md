@@ -69,9 +69,8 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -C examples/hello fs
 
-5. You can try verifying all the examples, but keep in mind that
-   things might fail because of Z3 timeouts if your machine is not
-   sufficiently powerful.
+5. You can verify all the examples, keeping in mind that this might
+   take a long time.
 
         $ make -C examples
    
