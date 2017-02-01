@@ -31,7 +31,8 @@ open FStar.TypeChecker
 open FStar.TypeChecker.Env
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util //basic util
+//basic util
+module BU = FStar.Util
 module FC = FStar.Const
 module U  = FStar.Syntax.Util
 module I  = FStar.Ident
@@ -56,6 +57,7 @@ type step =
   | Inlining
   | NoDeltaSteps
   | UnfoldUntil of S.delta_depth
+  (* | UnfoldIf of S.fv -> *)
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses

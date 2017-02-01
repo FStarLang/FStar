@@ -1080,13 +1080,13 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       (* 1. We compute the final computation type comp  *)
       let comp =
         List.fold_left
-          (fun (args, out_c, monadic) ((e, q), x, c) ->
+          (fun out_c ((e, q), x, c) ->
             match c with
             (* Looking at the code of tc_args below, Inl seems to be reserved for Tot or GTot *)
             | Inl (eff_name, arg_typ) -> out_c
             (* proving (Some e) here instead of None causes significant Z3 overhead *)
             | Inr c -> TcUtil.bind e.pos env None c (x, out_c))
-          (cres, false)
+          cres
           arg_comps_rev
       in
       let comp = TcUtil.bind head.pos env None chead (None, comp) in
@@ -1096,15 +1096,17 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       let lifted_args, head, args =
         let map_fun ((e, q), _ , c0) =
           match c0 with
-          | Inl _ | Inr c when U.is_pure_or_ghost_lcomp c ->
+          | Inl _ ->
+            None, (e, q)
+          | Inr c when U.is_pure_or_ghost_lcomp c ->
             None, (e, q)
           | Inr c ->
-            let x = S.gen_bv "monadic_app_var" None c.res_type in
+            let x = S.gen_bv "monadic_app_var" None c.res_typ in
             let e = TcUtil.maybe_lift env e c.eff_name comp.eff_name c.res_typ in
             Some (x, c.eff_name, c.res_typ, e), (S.bv_to_name x, q)
         in
         let lifted_args, reverse_args =
-            List.split <| List.map map_fun (as_arg head, None, chead)::arg_comps_rev
+            List.split <| List.map map_fun ((as_arg head, None, Inr chead)::arg_comps_rev)
         in
         lifted_args, fst (List.hd reverse_args), List.rev (List.tl reverse_args)
       in
@@ -1115,7 +1117,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       let app =
         let app = mk_Tm_app head args (Some comp.res_typ.n) r in
         let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
-        let app = TcUtil.maybe_monadic env body comp.eff_name comp.res_typ in
+        let app = TcUtil.maybe_monadic env app comp.eff_name comp.res_typ in
         let bind_lifted_args e = function
           | None -> e
           | Some (x, m, t, e1) ->
