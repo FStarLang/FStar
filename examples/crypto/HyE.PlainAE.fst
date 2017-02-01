@@ -18,10 +18,6 @@ type ae_plain_content (i:id) = (
     hpke_plain
   )
 
-val extract_id: #i:id -> ae_plain_content i -> Tot (ret_i:id{ret_i=i})
-let extract_id #i ae_p =
-  i
-
 noeq abstract type protected_ae_plain (i:id)=
   | Protected_ae_plain: (p:ae_plain_content i) -> protected_ae_plain i
 

@@ -99,7 +99,7 @@ let decrypt #i sk c =
     (match AE.decrypt p.k c1 with
     | Some ae_prot_p -> 
       let ae_m = PlainAE.ae_message_unwrap ae_prot_p in
-      let ae_i = PlainAE.extract_id ae_m in
+      let ae_i = p.i in
       if honest ae_i && hpke_ind_cca then
 	Some ae_m
       else

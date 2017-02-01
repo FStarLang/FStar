@@ -6,6 +6,7 @@ open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.Monotonic.RRef
+open MonotoneMap
 open HyE.Flags
 open HyE.Indexing
 
@@ -23,7 +24,11 @@ type msg = protected_ae_plain
 type cipher = b:bytes{B.length b >= ivsize}
 (* MK: minimal cipher length twice blocksize? *)
 
-type log_t (i:id) (r:rid) = m_rref r (seq ((msg i) * cipher)) grows
+let plain_to_cipher (i:id) = fun (p:protected_ae_plain i) -> cipher
+
+//type log_t (i:id) (r:rid) = m_rref r (seq ((msg i) * cipher)) grows
+type log_t (i:id) = MonotoneMap.map' (protected_ae_plain i) (plain_to_cipher i)
+
 
 (**
    The key type is abstract and can only be accessed via the leak and coerce_key functions.
