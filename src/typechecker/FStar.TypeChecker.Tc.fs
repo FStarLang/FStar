@@ -1126,14 +1126,19 @@ and tc_inductive env ses quals lids =
                let _ = debug_log ("Checking strict positivity in the Tm_app node, head lid is not ty, so checking nested positivity") in
                ty_nested_positive_in_inductive fv.fv_name.v us args env
            | Tm_arrow (sbs, c) ->  //binder type is an arrow type
-             debug_log ("Checking strict positivity in Tm_arrow, checking that ty does not occur in the binders, and that it is strictly positive in the return type");
-             List.for_all (fun (b, _) -> not (ty_occurs_in b.sort)) sbs &&  //ty must not occur on the left of any arrow
-               (let _, return_type = SS.open_term sbs (FStar.Syntax.Util.comp_result c) in  //and it must occur strictly positive in the result type
-                ty_strictly_positive_in_type return_type (push_binders env sbs)) //TODO: do we need to compress c, if so how?
+             debug_log ("Checking strict positivity in Tm_arrow");
+             if not (is_pure_or_ghost_comp c) then
+               let _ = debug_log ("Checking strict positivity , the arrow is impure, so return true") in
+               true
+             else
+               let _ = debug_log ("Checking struict positivity, Pure arrow, checking that ty does not occur in the binders, and that it is strictly positive in the return type") in
+               List.for_all (fun (b, _) -> not (ty_occurs_in b.sort)) sbs &&  //ty must not occur on the left of any arrow
+                 (let _, return_type = SS.open_term sbs (FStar.Syntax.Util.comp_result c) in  //and it must occur strictly positive in the result type
+                  ty_strictly_positive_in_type return_type (push_binders env sbs)) //TODO: do we need to compress c, if so how?
            | Tm_fvar _ ->
              debug_log ("Checking strict positivity in an fvar, return true");
              true  //if it's just an fvar, should be fine
-           | Tm_type _ ->
+           | Tm_type _ ->  //TODO: actually we should not even reach here, it should already be covered by ty_occurs_in check at the beginning
              debug_log ("Checking strict positivity in an Tm_type, return true");
              true  //if it's just a Type(u), should be fine
            | Tm_uinst (t, _) ->
