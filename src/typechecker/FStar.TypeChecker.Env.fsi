@@ -176,6 +176,7 @@ val monad_leq       : env -> lident -> lident -> option<edge>
 val effect_decl_opt : env -> lident -> option<eff_decl>
 val get_effect_decl : env -> lident -> eff_decl
 val wp_signature    : env -> lident -> (bv * term)
+val null_wp_for_eff : env -> lident -> universe -> term -> comp
 
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders

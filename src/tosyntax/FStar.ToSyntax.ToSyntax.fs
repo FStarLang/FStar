@@ -786,7 +786,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           | PatAscribed(_, t) -> env, free_type_vars env t@ftvs
           | _ -> env, ftvs) (env, []) binders in
       let ftv = sort_ftv ftv in
-      let binders = (ftv |> List.map (fun a -> mk_pattern (PatTvar(a, Some AST.Implicit)) top.range))@binders in //close over the free type variables
+      let binders = (ftv |> List.map (fun a ->
+                        mk_pattern (PatTvar(a, Some AST.Implicit)) top.range))
+                    @binders in //close over the free type variables
       (*
          fun (P1 x1) (P2 x2) (P3 x3) -> e
 
@@ -928,13 +930,24 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
               match result_t with
               | None -> def
               | Some t ->
-                if is_comp_type env t
-                then begin match args |> List.tryFind (fun x -> not (is_var_pattern x)) with
-                     | None -> ()
-                     | Some p ->
-                        raise (Error ("Computation type annotations are only permitted on let-bindings without inlined patterns; replace this pattern with a variable", p.prange))
-                end;
-                mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr in
+                let t =
+                    if is_comp_type env t
+                    then let _ =
+                            match args |> List.tryFind (fun x -> not (is_var_pattern x)) with
+                            | None -> ()
+                            | Some p ->
+                              raise (Error ("Computation type annotations are only permitted on let-bindings \
+                                             without inlined patterns; \
+                                             replace this pattern with a variable", p.prange)) in
+                         t
+                    else if Options.ml_ish () //we're type-checking the compiler itself, e.g.
+                    && Option.isSome (Env.try_lookup_effect_name env C.effect_ML_lid) //ML is in scope (not still in prims, e.g)
+                    && (not is_rec || List.length args <> 0) //and we don't have something like `let rec f : t -> t' = fun x -> e`
+                    then AST.ml_comp t
+                    else AST.tot_comp t
+                in
+                mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr
+            in
             let def = match args with
                  | [] -> def
                  | _ -> mk_term (un_curry_abs args def) top.range top.level in
@@ -1009,10 +1022,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       mk <| Tm_match(desugar_term env e, List.map desugar_branch branches)
 
     | Ascribed(e, t) ->
-      let c = desugar_comp t.range env t in
-      let annot = if U.is_ml_comp c
-                  then Inl (U.comp_result c)
-                  else Inr c in
+      let annot = if is_comp_type env t
+                  then Inr (desugar_comp t.range env t)
+                  else Inl (desugar_term env t) in
       mk <| Tm_ascribed(desugar_term env e, annot, None)
 
     | Record(_, []) ->

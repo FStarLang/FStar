@@ -147,8 +147,10 @@ type expr = term
 //  - Immediately before a top-level declaration
 //  - Immediately after a type constructor or record field
 //  - In the middle of a file, as a standalone documentation declaration
+(* KM : Would need some range information on fsdocs to be able to print them correctly *)
 type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
 
+(* TODO (KM) : it would be useful for the printer to have range information for those *)
 type tycon =
   | TyconAbstract of ident * list<binder> * option<knd>
   | TyconAbbrev   of ident * list<binder> * option<knd> * term
@@ -298,6 +300,16 @@ let mkLexList r elts =
   let nil = mk_term (Construct(C.lextop_lid, [])) r Expr in
   List.fold_right (fun e tl -> lexConsTerm r e tl) elts nil
 
+let ml_comp t =
+    let ml = mk_term (Name FStar.Syntax.Const.effect_ML_lid) t.range Expr in
+    let t = mk_term (App(ml, t, Nothing)) t.range Expr in
+    t
+
+let tot_comp t =
+    let ml = mk_term (Name FStar.Syntax.Const.effect_Tot_lid) t.range Expr in
+    let t = mk_term (App(ml, t, Nothing)) t.range Expr in
+    t
+
 let mkApp t args r = match args with
   | [] -> t
   | _ -> match t.tm with
@@ -440,10 +452,10 @@ let rec as_mlist (out:list<modul>) (cur: (lid * decl) * list<decl>) (ds:list<dec
             as_mlist out ((m_name, m_decl), d::cur) ds
         end
 
-let as_frag is_light (d:decl) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
+let as_frag is_light (light_range:Range.range) (d:decl) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
   match d.d with
   | TopLevelModule m ->
-      let ds = if is_light then mk_decl (Pragma LightOff) d.drange [] :: ds else ds in
+      let ds = if is_light then mk_decl (Pragma LightOff) light_range [] :: ds else ds in
       let ms = as_mlist [] ((m,d), []) ds in
       begin match List.tl ms with
       | Module (m', _) :: _ ->

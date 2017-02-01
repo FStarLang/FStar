@@ -104,8 +104,10 @@ let cons_lid        = pconst  "Cons"
 let nil_lid         = pconst  "Nil"
 let assume_lid      = pconst  "_assume"
 let assert_lid      = pconst  "_assert"
+(* list_append_lid is needed to desugar @ in the compiler *)
 let list_append_lid = p2l ["FStar"; "List"; "append"]
-let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "append"]
+(* list_tot_append_lid is used to desugar @ everywhere else *)
+let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let strcat_lid      = p2l ["Prims"; "strcat"]
 let let_in_typ      = p2l ["Prims"; "Let"]
 

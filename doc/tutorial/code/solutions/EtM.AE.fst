@@ -1,7 +1,6 @@
 module EtM.AE
 
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.Monotonic.RRef
@@ -125,7 +124,7 @@ val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
 
 (* CH*MK: If we wanted to also prove correctness of the EtM.AE
           we would use this stronger post-condition:
-        SeqProperties.mem (Some.v res, c) (m_sel h0 k.log) *)
+        Seq.mem (Some.v res, c) (m_sel h0 k.log) *)
 
       )
   ))

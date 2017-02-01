@@ -112,12 +112,13 @@ let kill_all () =
 
 let run_proc (name:string) (args:string) (stdin:string) : bool * string * string =
   let command = name^" "^args in
-  let (inc,outc) = Unix.open_process command in
+  let (inc,outc,errc) = Unix.open_process_full command (Unix.environment ()) in
   output_string outc stdin;
   flush outc;
   let res = BatPervasives.input_all inc in
-  let _ = Unix.close_process (inc, outc) in
-  (true, res, "")
+  let err = BatPervasives.input_all errc in
+  let _ = Unix.close_process_full (inc, outc, errc) in
+  (true, res, err)
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
 let is_path_absolute path_str =

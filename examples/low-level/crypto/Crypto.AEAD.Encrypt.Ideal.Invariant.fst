@@ -41,7 +41,7 @@ let safeMac_ideal_writes
     HS.modifies (Set.singleton aead_st.log_region) h0 h1 /\
     HS.modifies_ref aead_st.log_region (TSet.singleton (FStar.Heap.Ref (HS.as_ref (aead_log_as_ref aead_st.log)))) h0 h1 /\
     aead_entries_1 
-      == SeqProperties.snoc 
+      == Seq.snoc 
                       aead_entries_0 
 		      (AEADEntry nonce 
 				 (Buffer.as_seq h0 aad) 
@@ -103,11 +103,11 @@ let fresh_nonces_are_unused_after_ideal #i #rw #aadlen #plainlen aead_st nonce a
     let entry = AEADEntry nonce ad (v plainlen) p c in
     let entries_1 = HS.sel h1 (st_ilog aead_st) in 
     let prf_table = HS.sel h0 (PRF.itable i aead_st.prf) in
-    assert (entries_1 == SeqProperties.snoc entries_0 entry);
+    assert (entries_1 == Seq.snoc entries_0 entry);
     let aux (iv:Cipher.iv (alg i)) : Lemma
 	(requires (fresh_nonce iv entries_1))
 	(ensures (unused_aead_iv_for_prf prf_table iv h1)) =
-	FStar.SeqProperties.find_snoc entries_0 entry (is_aead_entry_nonce iv) 
+	FStar.Seq.find_snoc entries_0 entry (is_aead_entry_nonce iv) 
     in	
     FStar.Classical.(forall_intro (move_requires aux))
 		 
@@ -138,7 +138,7 @@ let reestablish_inv #i #rw #aadlen #plainlen aead_st nonce aad plain ct h0 h1 =
     let p = sel_plain h0 plainlen plain in
     let entries_0 = HS.sel h0 (st_ilog aead_st) in
     let entry = AEADEntry nonce ad (v plainlen) p (Buffer.as_seq h0 ct) in    
-    let entries_1 = SeqProperties.snoc entries_0 entry in
+    let entries_1 = Seq.snoc entries_0 entry in
     frame_refines_entries_h i aead_st.prf.mac_rgn prf_table entries_0 h0 h1;
     assert (aead_entries_are_refined prf_table entries_0 h1);
     if safeId i then begin

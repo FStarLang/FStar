@@ -1,5 +1,5 @@
 [
-  "÷×\nñ\\\nr\u0000Q¶\nú»«5=",
+  "7\u0003s\u001e\u0017\u001f\u0017È\u0003±gÇ9ŸOI",
   [
     [ "Unit1.Basic.uu___is_A", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.Basic.uu___is_B", 1, 2, 1, [ "@query" ], 0 ],
@@ -729,12 +729,13 @@
       [
         "@query", "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.List.Tot.op_At", "equation_Unit1.Basic.xy_y",
-        "equation_with_fuel_FStar.List.Tot.append.fuel_instrumented",
-        "fuel_correspondence_FStar.List.Tot.append.fuel_instrumented",
+        "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.List.Tot.Base.op_At",
+        "equation_Unit1.Basic.xy_y",
+        "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_a",
+        "function_token_typing_Prims.int", "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "subterm_ordering_Prims.Cons"

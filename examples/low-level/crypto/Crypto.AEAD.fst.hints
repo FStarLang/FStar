@@ -36,7 +36,8 @@
         "equation_FStar.HyperHeap.t", "equation_FStar.HyperStack.contains",
         "equation_FStar.HyperStack.frameOf", "equation_FStar.HyperStack.hh",
         "equation_FStar.HyperStack.is_eternal_region",
-        "equation_FStar.HyperStack.ref", "equation_FStar.List.Tot.test_sort",
+        "equation_FStar.HyperStack.ref",
+        "equation_FStar.List.Tot.Base.test_sort",
         "equation_FStar.Set.eqtype", "equation_Prims._assert",
         "fuel_guarded_inversion_Crypto.Symmetric.PRF.state",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
@@ -45,7 +46,7 @@
         "function_token_typing_FStar.Heap.heap",
         "function_token_typing_FStar.HyperHeap.rid",
         "function_token_typing_FStar.HyperStack.__proj__MkRef__item__ref",
-        "function_token_typing_FStar.List.Tot.test_sort",
+        "function_token_typing_FStar.List.Tot.Base.test_sort",
         "interpretation_Tm_arrow_1e80fbabad4b25880a6efbda6c400e06",
         "kinding_Crypto.Symmetric.PRF.entry@tok",
         "lemma_FStar.HyperStack.lemma_equal_stack_domains_trans",
@@ -61,7 +62,7 @@
         "refinement_interpretation_Tm_refine_0dc1829dbc3c1d1c42b7a4e9e5c89884",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4",
-        "refinement_interpretation_Tm_refine_9b9201ccbfd99139a24c221142f1d58d",
+        "refinement_interpretation_Tm_refine_908f2c0e163cabd6be3a8c5eadc14c29",
         "refinement_interpretation_Tm_refine_eb8f0a0ac9d8793518e02704d205443b",
         "refinement_interpretation_Tm_refine_f38d46289ad40d7ad5a9da2f43cecefb",
         "token_correspondence_FStar.HyperStack.__proj__MkRef__item__ref",
@@ -73,7 +74,7 @@
         "typing_FStar.HyperStack.__proj__MkRef__item__mm",
         "typing_FStar.HyperStack.__proj__MkRef__item__ref",
         "typing_FStar.HyperStack.is_eternal_region", "typing_FStar.Map.sel",
-        "typing_FStar.Seq.seq"
+        "typing_FStar.Seq.Base.seq"
       ],
       0
     ],

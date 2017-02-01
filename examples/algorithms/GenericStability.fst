@@ -4,7 +4,7 @@
 **)
 module GenericStability
 open FStar.List.Tot
-open FStar.ListProperties
+open FStar.List.Tot
 open GenericSort
 (*
   This module is heavily inspired by Leino and Lucio's 2012 paper,

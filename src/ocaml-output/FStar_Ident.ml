@@ -23,12 +23,12 @@ let reserved_prefix : Prims.string = "uu___"
 let gen : FStar_Range.range  ->  ident = (
 
 let x = (FStar_Util.mk_ref (Prims.parse_int "0"))
-in (fun r -> ((let _0_118 = (let _0_117 = (FStar_ST.read x)
-in (_0_117 + (Prims.parse_int "1")))
-in (FStar_ST.write x _0_118));
-(mk_ident (let _0_120 = (let _0_119 = (Prims.string_of_int (FStar_ST.read x))
-in (Prims.strcat reserved_prefix _0_119))
-in ((_0_120), (r))));
+in (fun r -> ((let _0_127 = (let _0_126 = (FStar_ST.read x)
+in (_0_126 + (Prims.parse_int "1")))
+in (FStar_ST.write x _0_127));
+(mk_ident (let _0_129 = (let _0_128 = (Prims.string_of_int (FStar_ST.read x))
+in (Prims.strcat reserved_prefix _0_128))
+in ((_0_129), (r))));
 )))
 
 
@@ -60,8 +60,8 @@ in (match (uu____102) with
 | (ns, id) -> begin
 (
 
-let nsstr = (let _0_121 = (FStar_List.map text_of_id ns)
-in (FStar_All.pipe_right _0_121 text_of_path))
+let nsstr = (let _0_130 = (FStar_List.map text_of_id ns)
+in (FStar_All.pipe_right _0_130 text_of_path))
 in {ns = ns; ident = id; nsstr = nsstr; str = (match ((nsstr = "")) with
 | true -> begin
 id.idText

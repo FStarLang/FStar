@@ -34,7 +34,7 @@ all: $(addsuffix .all, $(ALL_EXAMPLE_DIRS))
 
 test: all
 
-stdlib: $(addprefix ../lib/, FStar.List.fst FStar.String.fsti partialmap.fst FStar.ST.fst FStar.ListProperties.fst)
+stdlib: $(addprefix ../lib/, FStar.List.fst FStar.String.fsti partialmap.fst FStar.ST.fst)
 	mkdir -p ../cache
 	$(FSTAR) $^ --serialize_mods
 

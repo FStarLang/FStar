@@ -14,6 +14,8 @@ let rec remove_elem_from_list p i =
   match p with
   | a::q -> if i = 0 then q else a::remove_elem_from_list q (i-1)
 
+#reset-options "--z3rlimit 10"
+
 val test_prefix: p:list nat -> n:nat{n < length p} -> str:list nat ->
   Tot (b:bool{b <==> (exists (i:nat). i <= n && prefix (remove_elem_from_list p i) str)})
 let rec test_prefix p n str =
