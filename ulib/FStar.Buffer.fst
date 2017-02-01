@@ -550,7 +550,7 @@ let lemma_modifies_3_2_comm (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 
   (requires (True))
   (ensures  (modifies_3_2 b b' h0 h1 <==> modifies_3_2 b' b h0 h1))
   [SMTPatT (modifies_3_2 b b' h0 h1)]
-  = admit ()
+  = ()
 (* TODO: add commutativity lemmas for modifies_3 *)
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
