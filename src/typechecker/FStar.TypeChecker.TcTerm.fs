@@ -1070,7 +1070,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
       (* G |- head : chead      G |- ei :ci                *)
       (* ------------------------------------------------- *)
-      (*  G |- let xhead = lift_{chead}^{comp}  in         *)
+      (*  G |- let xhead = lift_{chead}^{comp} head in     *)
       (*       let x1 = lift_{ci}^{comp} e1 in             *)
       (*       ...                                         *)
       (*       lift_{cres}^{comp} (xhead x1 ... xn) : cres *)
