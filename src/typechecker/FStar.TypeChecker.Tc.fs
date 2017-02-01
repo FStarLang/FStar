@@ -1053,12 +1053,12 @@ and tc_inductive env ses quals lids =
 
       //this function is called when we have a type that is a Tm_app, and t is the head node of Tm_app
       //it tries to get fvar from this t
-      let try_get_fv (t:term) :fv =
+      let try_get_fv (t:term) :(fv * universes) =
         match (SS.compress t).n with
-        | Tm_fvar fv      -> fv
-        | Tm_uinst (t, _) ->
+        | Tm_fvar fv      -> fv, []
+        | Tm_uinst (t, us) ->
           (match t.n with
-           | Tm_fvar fv   -> fv
+           | Tm_fvar fv   -> fv, us
            | _            -> failwith "Node is a Tm_uinst, but Tm_uinst is not an fvar")
         | _               -> failwith "Node is not an fvar or a Tm_uinst"
       in
@@ -1066,7 +1066,9 @@ and tc_inductive env ses quals lids =
       //open the universe variables, we will use this substitution to open the data constructors later on
       let ty_usubst, ty_us = SS.univ_var_opening ty_us in
       //push the universe names in the env
-      //let env = push_univ_vars env ty_us in
+      let env = push_univ_vars env ty_us in
+      //also push the parameters
+      let env = push_binders env ty_bs in
 
       //apply ty_usubst to ty_bs
       let ty_bs = SS.subst_binders ty_usubst ty_bs in
@@ -1113,7 +1115,7 @@ and tc_inductive env ses quals lids =
            match (SS.compress btype).n with
            | Tm_app (t, args) ->  //the binder type is an application
              //get the head node fv, try_get_fv would fail if it's not an fv 
-             let fv = try_get_fv t in
+             let fv, us = try_get_fv t in
              //if it's same as ty_lid, then check that ty_lid does not occur in the arguments
              if Ident.lid_equals fv.fv_name.v ty_lid then
                let _ = debug_log ("Checking strict positivity in the Tm_app node where head lid is ty itself, checking that ty does not occur in the arguments") in
@@ -1122,7 +1124,7 @@ and tc_inductive env ses quals lids =
              //that case could arise when, for example, it's a type constructor that we could not unfold in normalization
              else
                let _ = debug_log ("Checking strict positivity in the Tm_app node, head lid is not ty, so checking nested positivity") in
-               ty_nested_positive_in_inductive fv.fv_name.v args env
+               ty_nested_positive_in_inductive fv.fv_name.v us args env
            | Tm_arrow (sbs, c) ->  //binder type is an arrow type
              debug_log ("Checking strict positivity in Tm_arrow, checking that ty does not occur in the binders, and that it is strictly positive in the return type");
              List.for_all (fun (b, _) -> not (ty_occurs_in b.sort)) sbs &&  //ty must not occur on the left of any arrow
@@ -1131,14 +1133,20 @@ and tc_inductive env ses quals lids =
            | Tm_fvar _ ->
              debug_log ("Checking strict positivity in an fvar, return true");
              true  //if it's just an fvar, should be fine
+           | Tm_type _ ->
+             debug_log ("Checking strict positivity in an Tm_type, return true");
+             true  //if it's just a Type(u), should be fine
+           | Tm_uinst (t, _) ->
+             debug_log ("Checking strict positivity in an Tm_uinst, recur on the term inside (mostly it should be the same inductive)");
+             ty_strictly_positive_in_type t env
            | _ ->
-             debug_log ("Checking strict positivity, unexpected term");
+             debug_log ("Checking strict positivity, unexpected term: " ^ (PP.term_to_string btype));
              false)  //remaining cases, will handle as they come up
       
       //some binder of some data constructor is an application of ilid to the args
       //ilid may not be an inductive, in which case we simply return false
       //TODO: change the name of the function to reflect this behavior
-      and ty_nested_positive_in_inductive (ilid:lident) (args:args) (env:env) :bool =
+      and ty_nested_positive_in_inductive (ilid:lident) (us:universes) (args:args) (env:env) :bool =
         debug_log ("Checking nested positivity in the inductive " ^ ilid.str ^ " applied to arguments: " ^ (PP.args_to_string args));
         let b, idatas = datacons_of_typ env ilid in
         //if ilid is not an inductive, return false
@@ -1157,13 +1165,18 @@ and tc_inductive env ses quals lids =
           debug_log ("Checking nested positivity, number of type parameters is " ^ (string_of_int num_ibs) ^ ", also adding to the memo table");
           //update the memo table with the inductive name and the args, note we keep only the parameters and not indices
           unfolded_inductives := !unfolded_inductives @ [ilid, fst (List.splitAt num_ibs args)];
-          List.forall (fun d -> ty_nested_positive_in_dlid d ilid args num_ibs env) idatas
+          List.forall (fun d -> ty_nested_positive_in_dlid d ilid us args num_ibs env) idatas
       
       //dlid is a data constructor of ilid, args are the arguments of the ilid application, num_ibs is the # of type parameters of ilid 
-      and ty_nested_positive_in_dlid (dlid:lident) (ilid:lident) (args:args) (num_ibs:int) (env:env) :bool =
+      and ty_nested_positive_in_dlid (dlid:lident) (ilid:lident) (us:universes) (args:args) (num_ibs:int) (env:env) :bool =
         debug_log ("Checking nested positivity in data constructor " ^ dlid.str ^ " of the inductive " ^ ilid.str);
         //get the type of the data constructor
-        let _, dt = lookup_datacon env dlid in
+        let univ_unif_vars, dt = lookup_datacon env dlid in
+        //we should unify the universe variables with us, us are the universes that the ilid fvar was instantiated with
+        (List.iter2 (fun u' u -> match u' with
+         | U_unif u'' -> Unionfind.change u'' (Some u)
+         | _ -> failwith "Impossible") univ_unif_vars us);
+
         //normalize it, TODO: as before steps?
         let dt = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env dt in
         //TODO: totally confused here
@@ -1203,7 +1216,7 @@ and tc_inductive env ses quals lids =
         | Tm_app (t, args) ->
           //if it's an application node, it must be ilid directly (or TODO: some mutual inductive)
           debug_log ("Checking nested positivity in an Tm_app node, which is expected to be the ilid itself");
-          let fv = try_get_fv t in
+          let fv, _ = try_get_fv t in
           if Ident.lid_equals fv.fv_name.v ilid then true  //TODO: in this case Coq manual says we should check for indexes, not sure why
           else failwith "Impossible, expected the type to be ilid"
         | Tm_arrow (sbs, c) ->
@@ -1223,12 +1236,21 @@ and tc_inductive env ses quals lids =
       List.forall (fun d -> ty_positive_in_datacon env (datacon_typ d)) datas
     in
 
-    let _ =
-      if env.curmodule.str = "Test" then
-        let env = push_sigelt env0 sig_bndle in
-        let b = List.for_all (fun ty -> check_positivity env ty) tcs in
-        if b then Util.print_string "The type satisfies the positivity condition\n" else Util.print_string "The type does not satisfy the positivity condition\n"
-    in
+    (if Options.no_positivity () then ()
+     else
+       let env = push_sigelt env0 sig_bndle in
+       let b = List.for_all (fun ty ->
+         let b = check_positivity env ty in
+         if not b then
+           let lid, r =
+             match ty with
+             | Sig_inductive_typ (lid, _, _, _, _, _, _, r) -> lid, r
+             | _                                            -> failwith "Impossible!"
+           in
+           raise (Error("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition", r))
+         else true
+       ) tcs in
+       ());
 
     //generate hasEq predicate for this inductive
 
