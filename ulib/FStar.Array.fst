@@ -95,7 +95,7 @@ val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j}
                             (ensures (fun h0 _u h1 ->
                                       (j < Seq.length (sel h0 x))
                                       /\ contains h1 x
-                                      /\ (h1==Heap.upd h0 x (SeqProperties.swap (sel h0 x) i j))))
+                                      /\ (h1==Heap.upd h0 x (Seq.swap (sel h0 x) i j))))
 let swap #a x i j =
   let h0 = get () in
   let tmpi = index x i in

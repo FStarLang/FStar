@@ -1,5 +1,6 @@
+#light "off"
 module FStar.Version
-
+open FStar.All
 val version : string
 
 val platform : string

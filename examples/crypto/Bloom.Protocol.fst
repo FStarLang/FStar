@@ -12,7 +12,6 @@ let init_print = print_string "\ninitializing...\n\n"
 
 open Platform.Bytes
 open FStar.Seq
-open FStar.SeqProperties
 open CoreCrypto
 open Format
 open MAC

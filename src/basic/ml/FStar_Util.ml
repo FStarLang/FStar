@@ -37,17 +37,17 @@ type time = float
 let now () = BatUnix.gettimeofday ()
 let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
-  n, 
+  n,
   Z.of_float (n *. 1000.0)
-let record_time f = 
+let record_time f =
     let start = now () in
-    let res = f () in 
+    let res = f () in
     let _, elapsed = time_diff start (now()) in
     res, elapsed
 let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
 let is_before t1 t2 = compare t1 t2 < 0
 let string_of_time = string_of_float
-  
+
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -66,7 +66,7 @@ let sleep n = Thread.delay ((Z.to_float n) /. 1000.)
 
 let monitor_enter _ = ()
 let monitor_exit _ = ()
-let monitor_wait _ = ()
+let monitor_wait n = Thread.delay (0.01)
 let monitor_pulse _ = ()
 let current_tid _ = Z.zero
 
@@ -112,12 +112,13 @@ let kill_all () =
 
 let run_proc (name:string) (args:string) (stdin:string) : bool * string * string =
   let command = name^" "^args in
-  let (inc,outc) = Unix.open_process command in
+  let (inc,outc,errc) = Unix.open_process_full command (Unix.environment ()) in
   output_string outc stdin;
   flush outc;
   let res = BatPervasives.input_all inc in
-  let _ = Unix.close_process (inc, outc) in
-  (true, res, "")
+  let err = BatPervasives.input_all errc in
+  let _ = Unix.close_process_full (inc, outc, errc) in
+  (true, res, err)
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
 let is_path_absolute path_str =
@@ -193,6 +194,8 @@ let set_count ((s1, _):'a set) = Z.of_int (BatList.length s1)
 let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
   (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
 
+
+(* See ../Util.fsi for documentation and ../Util.fs for implementation details *)
 type 'a fifo_set = ('a list) * ('a -> 'a -> bool)
 
 let fifo_set_is_empty ((s, _):'a fifo_set) =
@@ -207,7 +210,7 @@ let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
   let rec aux out = function
     | [] -> out
     | hd::tl ->
-       if BatList.exists (eq hd) out then
+       if BatList.exists (eq hd) tl then
          aux out tl
        else
          aux (hd::out) tl in
@@ -216,7 +219,7 @@ let fifo_set_add a ((s, b):'a fifo_set) = (a::s, b)
 let fifo_set_remove x ((s1, eq):'a fifo_set) =
   (BatList.filter (fun y -> not (eq x y)) s1, eq)
 let fifo_set_mem a ((s, b):'a fifo_set) = BatList.exists (b a) s
-let fifo_set_union ((s1, b):'a fifo_set) ((s2, _):'a fifo_set) = (s1@s2, b)
+let fifo_set_union ((s1, b):'a fifo_set) ((s2, _):'a fifo_set) = (s2@s1, b)
 let fifo_set_count ((s1, _):'a fifo_set) = Z.of_int (BatList.length s1)
 let fifo_set_difference ((s1, eq):'a fifo_set) ((s2, _):'a fifo_set) : 'a fifo_set =
   (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
@@ -703,7 +706,7 @@ let print_endline = print_endline
 let map_option f opt = BatOption.map f opt
 
 let save_value_to_file (fname:string) value =
-  BatFile.with_file_out 
+  BatFile.with_file_out
     fname
     (fun f ->
       BatPervasives.output_value f value)
@@ -723,7 +726,7 @@ let print_exn e =
 
 let digest_of_file (fname:string) =
   BatDigest.file fname
-  
+
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)
 
@@ -779,7 +782,7 @@ let read_hints (filename: string): hints_db option =
         `List hints
       ] ->
         {
-          module_digest; 
+          module_digest;
           hints = List.map (function
             | `Null -> None
             | `List [
@@ -809,7 +812,7 @@ let read_hints (filename: string): hints_db option =
                   query_elapsed_time = Z.of_int query_elapsed_time
                 }
               | _ ->
-                 raise Exit 
+                 raise Exit
           ) hints
         }
     | _ ->
@@ -819,6 +822,6 @@ let read_hints (filename: string): hints_db option =
    | Exit ->
       Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
       None
-   | Sys_error _ -> 
+   | Sys_error _ ->
       Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
       None

@@ -33,6 +33,7 @@ cache/
 /bin/*.xml
 /bin/*.config
 /bin/fstar.exe
+/bin/fstar.ocaml
 /bin/tests.exe
 /bin/z3.exe
 /bin/z3-x86.exe
