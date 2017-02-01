@@ -260,7 +260,7 @@ let rec map_index f s i =
   else let prefix, last = un_snoc s in
        map_index f prefix i
 
-//17-01-05 all the stuff above should go to SeqProperties! 
+//17-01-05 all the stuff above should go to Seq.Properties! 
 
 let map_grows (f:'a -> Tot 'b)
 	      (s1:seq 'a) (s3:seq 'a) (s2:seq 'a)
@@ -343,7 +343,7 @@ let rec collect_append f s_1 s_2 =
   		       (m_s_1 @ (m_p_2 @ flast)));                 //              = map f s1 @ (snoc (map f p) (f last))
         collect_snoc f prefix_2 last)                                       //              = map f s1 @ map f (snoc p last)
 
-//17-01-05 all the stuff above should go to SeqProperties! 
+//17-01-05 all the stuff above should go to Seq.Properties! 
 
 #reset-options "--z3rlimit 5"
 
