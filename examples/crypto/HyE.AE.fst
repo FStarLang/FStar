@@ -1,5 +1,5 @@
 module HyE.AE
-
+open FStar.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
@@ -61,7 +61,7 @@ val encrypt: k:key -> m:msg -> ST cipher
      /\ log1 == snoc log0 (m, c)
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
 
-let encrypt k m : cipher =
+let encrypt k m =
   m_recall k.log;
   let iv = random ivsize in
   let text = if ind_cca && int_ctxt then createBytes (length m) 0z else repr m in
