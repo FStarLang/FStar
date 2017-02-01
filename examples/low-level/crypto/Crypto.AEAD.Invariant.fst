@@ -148,7 +148,7 @@ noextract let is_aead_entry_nonce (#i:id) (n:Cipher.iv (alg i)) (e:aead_entry i)
 
 noextract let find_aead_entry (#i:id) (n:Cipher.iv (alg i)) (entries:Seq.seq (aead_entry i))
   : option (aead_entry i)
-  = SeqProperties.find_l (is_aead_entry_nonce n) entries
+  = Seq.find_l (is_aead_entry_nonce n) entries
 
 let fresh_nonce (#i:id) (n:Cipher.iv (alg i)) (entries:aead_entries i) =
   match find_aead_entry n entries with
@@ -197,7 +197,7 @@ let rec counterblocks i mac_rgn x l from_pos to_pos plain cipher =
     //    this could account for both the cases of safe_mac/safeId here
     let block = PRF.Entry x (PRF.OTP l_32 plain_hd cipher_hd) in 
     let blocks = counterblocks i mac_rgn (PRF.incr i x) l (from_pos + l0) to_pos plain cipher in
-    SeqProperties.cons block blocks
+    Seq.cons block blocks
 
 (*+ mac_is_set prf_table iv: 
         the mac entry in the prf_table, at location (iv, ctr_0 i)
@@ -238,7 +238,7 @@ let prf_contains_all_otp_blocks
       (plain:plain i len)
       (cipher:lbytes len)
       (prf_table:prf_table r i)
-   = let open FStar.SeqProperties in
+   = let open FStar.Seq in
      (safeId i ==> (
       let otp_blocks = counterblocks i r x len from_pos len plain cipher in
       (forall (prf_entry:PRF.entry r i).{:pattern (otp_blocks `contains` prf_entry)} 
@@ -254,7 +254,7 @@ let refines_one_entry (#rgn:region) (#i:id)
 		      (prf_table:prf_table rgn i) //the entire prf table
 		      (aead_entry:aead_entry i)   //a single aead_entry
 		      (h:mem{safeId i})
- = let open FStar.SeqProperties in
+ = let open FStar.Seq in
    let AEADEntry iv ad l plain cipher_tagged = aead_entry in
    let b = num_blocks_for_entry aead_entry in //number of expected OTP blocks
    let total_blocks = b + 1 in //including the MAC block
@@ -288,8 +288,8 @@ let none_above_prf_st (#i:id) (x:PRF.domain i) (st:PRF.state i) (h:mem) =
 	not the full prf table
 **)
 let all_above (#rgn:region) (#i:id) (x:PRF.domain i) (s:prf_table rgn i) =
-  (forall (e:PRF.entry rgn i).{:pattern (s `SeqProperties.contains` e)}
-     s `SeqProperties.contains` e ==> e.x `PRF.above` x)
+  (forall (e:PRF.entry rgn i).{:pattern (s `Seq.contains` e)}
+     s `Seq.contains` e ==> e.x `PRF.above` x)
 
 (*
  * For x.iv, the PRF table contains a mac entry but the underlying mac is unset
@@ -318,7 +318,7 @@ let aead_entries_are_refined (#rgn:region) (#i:id)
                              (prf_table: prf_table rgn i)
 	                     (aead_entries:Seq.seq (aead_entry i))
 	                     (h:mem) : GTot Type0 =
-  let open FStar.SeqProperties in
+  let open FStar.Seq in
   (safeId i ==> (forall (aead_entry:aead_entry i).{:pattern (aead_entries `contains` aead_entry)}
 		   aead_entries `contains` aead_entry ==>
 		   refines_one_entry prf_table aead_entry h))
@@ -327,7 +327,7 @@ let fresh_nonces_are_unused (#rgn:region) (#i:id)
                             (prf_table: prf_table rgn i)
 	                    (aead_entries:Seq.seq (aead_entry i))
 	                    (h:mem{safeMac i}) : GTot Type0 =
-  let open FStar.SeqProperties in
+  let open FStar.Seq in
   (forall (iv:Cipher.iv (alg i)).{:pattern (fresh_nonce iv aead_entries)}
      fresh_nonce iv aead_entries ==> 
      unused_aead_iv_for_prf prf_table iv h)
@@ -578,7 +578,7 @@ let counterblocks_emp   (i:id)
 let find_append (#i:id) (#r:rid) (d:domain i) (s1:prf_table r i) (s2:prf_table r i)
    : Lemma (requires (None? (find s1 d)))
            (ensures (find (Seq.append s1 s2) d == find s2 d))
-   = SeqProperties.find_append_none s1 s2 (is_entry_domain d)
+   = Seq.find_append_none s1 s2 (is_entry_domain d)
 
 #set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 2 --max_fuel 2"
 let find_singleton (#rgn:region) (#i:id) (e:PRF.entry rgn i) (x:PRF.domain i) 
@@ -595,7 +595,7 @@ let lemma_prf_find_append_some
   : Lemma
     (requires (Some? (PRF.find table x)))
     (ensures  (PRF.find (Seq.append table blocks) x == PRF.find table x))
-  = SeqProperties.find_append_some table blocks (is_entry_domain x)
+  = Seq.find_append_some table blocks (is_entry_domain x)
 
 let lemma_prf_find_append_some_forall
   (#r:region)
@@ -619,7 +619,7 @@ let lemma_prf_find_append_none
   : Lemma
     (requires (None? (PRF.find blocks x)))
     (ensures  (PRF.find (Seq.append table blocks) x == PRF.find table x))
-  = SeqProperties.find_append_none_s2 table blocks (is_entry_domain x)
+  = Seq.find_append_none_s2 table blocks (is_entry_domain x)
 
 (*
  * refines_one_entry framing lemma for append to the PRF blocks
@@ -712,7 +712,7 @@ noextract let find_refined_aead_entry
       assert (fresh_nonce n aead_entries); 
       false_elim()
     | Some e -> 
-      SeqProperties.lemma_find_l_contains (is_aead_entry_nonce n) aead_entries;
+      Seq.lemma_find_l_contains (is_aead_entry_nonce n) aead_entries;
       e
 
 val frame_unused_aead_iv_for_prf_append
@@ -751,7 +751,7 @@ val counterblocks_snoc: #i:id{safeId i} -> (rgn:region) -> (x:domain i{ctr_0 i <
 	      let cipher_last = Seq.slice cipher completed_len (completed_len + next) in
 	      let from = (v x.ctr - (v (otp_offset i))) * v (PRF.blocklen i) in
 	      Seq.equal (counterblocks i rgn x len from (completed_len + next) plain cipher)
-			(SeqProperties.snoc (counterblocks i rgn x len from completed_len plain cipher)
+			(Seq.snoc (counterblocks i rgn x len from completed_len plain cipher)
 							   (PRF.Entry ({x with ctr=UInt32.uint_to_t k}) 
 							              (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last)))))
 	   (decreases (completed_len - v x.ctr))
@@ -774,10 +774,10 @@ let rec counterblocks_snoc #i rgn x k len next completed_len plain cipher =
 	  let middle = counterblocks i rgn y len (from_pos + l0) completed_len plain cipher in
 	  let last_entry = PRF.Entry ({x with ctr=UInt32.uint_to_t k}) (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last) in
 	  assert (counterblocks i rgn x len from_pos to_pos plain cipher ==
-		  SeqProperties.cons head recursive_call);
+		  Seq.cons head recursive_call);
 	  counterblocks_snoc rgn y k len next completed_len plain cipher;
-	  assert (recursive_call == SeqProperties.snoc middle last_entry);
-          SeqProperties.lemma_cons_snoc head middle last_entry //REVIEW: THIS PROOF TAKES A WHILE ...optimize
+	  assert (recursive_call == Seq.snoc middle last_entry);
+          Seq.lemma_cons_snoc head middle last_entry //REVIEW: THIS PROOF TAKES A WHILE ...optimize
 
 #reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 (*+ counterblocks_slice: 
@@ -870,12 +870,12 @@ let rec counterblocks_domains_increasing
 			   (cipher:lbytes l)
 			   (e:PRF.entry r i)
    : Lemma (requires (let cb = counterblocks i r x l from_pos l plain cipher in
-		      cb `SeqProperties.contains` e))
+		      cb `Seq.contains` e))
            (ensures  (let open PRF in
 		      x_init.ctr <^ e.x.ctr /\ e.x.iv = x_init.iv))
            (decreases (l - from_pos)) 
    =
-   let open FStar.SeqProperties in
+   let open FStar.Seq in
    let cb = counterblocks i r x l from_pos l plain cipher in
    contains_elim cb e;
    if from_pos = l
@@ -905,14 +905,14 @@ let rec counterblocks_is_a_map (i:id{safeId i})
 			   (plain:Crypto.Plain.plain i l)
 			   (cipher:lbytes l)
 			   (e:PRF.entry r i)
-    : Lemma (requires (let open FStar.SeqProperties in
+    : Lemma (requires (let open FStar.Seq in
 	               let cb = counterblocks i r x l from_pos l plain cipher in
 		       cb `contains` e))
             (ensures (let cb = counterblocks i r x l from_pos l plain cipher in
 		      PRF.find cb e.x == Some e.range))
             (decreases (l - from_pos))
     = 
-    let open FStar.SeqProperties in
+    let open FStar.Seq in
     let cb = counterblocks i r x l from_pos l plain cipher in
     contains_elim cb e;
     if from_pos = l
@@ -950,7 +950,7 @@ let counterblocks_contains_all_otp_blocks
   = 
   assert (PRF.ctr_0 i <^ x.ctr);
   assert (safelen i (v remaining_len) PRF.(x.ctr));
-  let open FStar.SeqProperties in
+  let open FStar.Seq in
   let from_pos = v (len -^ remaining_len) in
   let all_blocks = counterblocks i r x (v len) from_pos (v len) plain cipher in
   let aux (e:PRF.entry r i)
@@ -985,7 +985,7 @@ val invert_prf_contains_all_otp_blocks
      		      PRF.contains_plain_block x plain_hd blocks /\ 
 		      prf_contains_all_otp_blocks (PRF.incr i x) (from_pos + l) plain cipher blocks))
 let invert_prf_contains_all_otp_blocks #i #r x #len from_pos plain cipher blocks
-   = let open FStar.SeqProperties in
+   = let open FStar.Seq in
      if safeId i 
      then let otp_blocks = counterblocks i r x len from_pos len plain cipher in
 	  contains_intro otp_blocks 0 (head otp_blocks);
@@ -1007,13 +1007,13 @@ let find_mac_all_above_1 (#i:id) (#r:rgn) (t:prf_table r i) (iv:Cipher.iv (alg i
 	   let x_1 = PRF.incr i x_0 in
 	   all_above x_1 t ==> None? (PRF.find_mac t x_0))
   = let x_0 = {iv=iv; ctr=PRF.ctr_0 i} in
-    SeqProperties.lemma_find_l_contains (PRF.is_entry_domain x_0) t
+    Seq.lemma_find_l_contains (PRF.is_entry_domain x_0) t
 
 let find_other_iv_all_above (#i:id) (#r:rgn) (t:prf_table r i) 
 			    (x:PRF.domain i) (y:domain i)
   : Lemma (requires (all_above x t /\ x.iv <> y.iv))
 	  (ensures (PRF.find t y == None))
-  = SeqProperties.lemma_find_l_contains (PRF.is_entry_domain y) t
+  = Seq.lemma_find_l_contains (PRF.is_entry_domain y) t
 
 val lemma_counterblocks_all_entries_are_above_x
   (i:id{safeId i})
@@ -1025,7 +1025,7 @@ val lemma_counterblocks_all_entries_are_above_x
   (cipher:lbytes l)
   (e:PRF.entry r i) : Lemma
   (requires  (let otp_entries = counterblocks i r x l from_pos l plain cipher in
-              otp_entries `SeqProperties.contains` e))
+              otp_entries `Seq.contains` e))
   (ensures   (e.x `PRF.above` x))
 let lemma_counterblocks_all_entries_are_above_x i r x l from_pos plain cipher e = 
   let x_prev = {x with ctr=x.ctr -^ 1ul} in
@@ -1067,7 +1067,7 @@ let lemma_prf_find_append_none_table
   : Lemma
     (requires (None? (PRF.find table x)))
     (ensures  (PRF.find (Seq.append table blocks) x == PRF.find blocks x))
-  = SeqProperties.find_append_none table blocks (is_entry_domain x)
+  = Seq.find_append_none table blocks (is_entry_domain x)
 
 #reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let frame_prf_contains_all_otp_blocks_prefix
@@ -1137,11 +1137,11 @@ let lemma_fresh_nonce_implies_all_entries_nonces_are_different
   (aead_entries:aead_entries i)
   (nonce:Cipher.iv (alg i)) : Lemma
   (requires (fresh_nonce nonce aead_entries))
-  (ensures  (forall (e:aead_entry i).{:pattern (aead_entries `SeqProperties.contains` e)}
-	        aead_entries `SeqProperties.contains` e ==> e.nonce <> nonce))
+  (ensures  (forall (e:aead_entry i).{:pattern (aead_entries `Seq.contains` e)}
+	        aead_entries `Seq.contains` e ==> e.nonce <> nonce))
   = let open FStar.Classical in
-    move_requires (SeqProperties.find_l_none_no_index aead_entries) (is_aead_entry_nonce nonce);
-    forall_intro (SeqProperties.contains_elim aead_entries)
+    move_requires (Seq.find_l_none_no_index aead_entries) (is_aead_entry_nonce nonce);
+    forall_intro (Seq.contains_elim aead_entries)
 
 let aead_entries_are_refined_snoc 
     (#r:region) 
@@ -1152,5 +1152,5 @@ let aead_entries_are_refined_snoc
     (h:mem)
     : Lemma (requires (aead_entries_are_refined prf_table aead_entries h /\
 		       (safeId i ==> refines_one_entry prf_table e h)))
-            (ensures (aead_entries_are_refined prf_table (SeqProperties.snoc aead_entries e) h))
-    = FStar.SeqProperties.contains_snoc aead_entries e
+            (ensures (aead_entries_are_refined prf_table (Seq.snoc aead_entries e) h))
+    = FStar.Seq.contains_snoc aead_entries e

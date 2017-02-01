@@ -1,6 +1,5 @@
 module QuickSort.Seq
 open FStar.Seq
-open FStar.SeqProperties
 
 (* 2016-11-22: Due to the QuickSort namespace being opened *after* the
 FStar namespace, Seq resolves to QuickSort.Seq instead of FStar.Seq,

@@ -79,7 +79,7 @@ RPC.ml: SHA1.fst MAC.fst Formatting.fst RPC.fst
 	$(FSTAR_ALWAYS) --no_location_info --lax \
 		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst RPC.fst \
-		--codegen-lib Platform --codegen-lib CoreCrypto --codegen-lib SeqProperties --codegen OCaml --use_native_int 
+		--codegen-lib Platform --codegen-lib CoreCrypto --codegen-lib Seq --codegen OCaml --use_native_int 
 
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/ulib/ml/native_int $(FSTAR_HOME)/ulib/ml)
 OCAMLC=ocamlfind ocamlopt -ccopt -L$(LIB) -package batteries -linkpkg -g -thread
@@ -90,7 +90,7 @@ $(CONTRIB_LIBS):
 	$(MAKE) -C $(FSTAR_HOME)/contrib/
 
 RPC.exe: RPC.ml $(CONTRIB_LIBS)
-	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml FStar_List_Tot.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
+	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq_Base.ml FStar_Seq_Properties.ml FStar_Seq.ml FStar_List_Tot_Base.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 rpc-test: RPC.exe
 	$(EXTRA_PATH) ./RPC.exe
@@ -108,7 +108,7 @@ CntProtocol.ml: CntFormat.fst MAC.fst SHA1.fst CntProtocol.fst
 		--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml
 
 CntProtocol.exe: CntProtocol.ml $(CONTRIB_LIBS)
-	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml ../../ulib/ml/FStar_Set.ml FStar_SeqProperties.ml SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
+	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq_Base.ml ../../ulib/ml/FStar_Set.ml FStar_Seq_Properties.ml FStar_Seq.ml SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
 
 cnt-test: CntProtocol.exe
 	$(EXTRA_PATH) ./CntProtocol.exe

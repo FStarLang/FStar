@@ -1946,7 +1946,7 @@ let tc_decls env ses =
     let ses', env, ses_elaborated = tc_decl env se  in
 
     if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
-    then BU.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ (Print.sigelt_to_string se) ^ "\n") "" ses');
+    then BU.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ Print.sigelt_to_string se ^ "\n") "" ses');
 
     List.iter (fun se -> env.solver.encode_sig env se) ses';
 

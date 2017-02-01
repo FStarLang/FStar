@@ -1,9 +1,11 @@
-module FStar.Integers#set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 0 --max_fuel 0"
+module FStar.Integers
 
-type signed = 
+#set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 0 --max_fuel 0"
+
+type signed =
   | Signed
   | Unsigned
-  
+
 let int_t (s:signed) (n:nat) : Tot Type0 =
   match s, n with
   | Unsigned, 0 -> nat
@@ -24,15 +26,15 @@ let int_t (s:signed) (n:nat) : Tot Type0 =
   | Signed, 128 -> FStar.Int128.t
   | _ -> False
 
-let size (x:int) (n:nat) (s:signed) = 
-  match s, n with 
+let size (x:int) (n:nat) (s:signed) =
+  match s, n with
   | _, 0 -> True
   | Unsigned, n -> FStar.UInt.size x n
   | Signed, n -> FStar.Int.size x n
 
 let v (#s:signed) (#n:nat) (x:int_t s n) : Tot (y:int_t Signed 0{size y n s}) =
-  match s with 
-  | Unsigned -> 
+  match s with
+  | Unsigned ->
     (match n with
     | 0 -> (x <: nat)
     | 8 -> FStar.UInt8.v x
@@ -99,7 +101,7 @@ unfold let op_Plus_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
     | Signed, 128 -> FStar.Int128.(x +?^ y)
 
 let modulo (s:signed) (x:int) (y:pos{s=Signed ==> y%2=0}) =
-  match s with 
+  match s with
   | Unsigned ->  x % y
   | _ -> FStar.Int.(x @% y)
 
