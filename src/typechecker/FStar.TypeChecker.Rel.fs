@@ -2438,23 +2438,47 @@ let solve_universe_inequalities' tx env (variables, ineqs) =
        | U_unif v0, U_unif v0' -> Unionfind.equivalent v0 v0'
        | _ -> false
    in
-   let wl = {empty_worklist env with defer_ok=false} in
-   let sols = variables |> List.map (fun v ->
-     let lower_bounds_of_v = //lower bounds of v, excluding the other variables
-       ineqs |> List.collect (fun (u, v') ->
-         if equiv v v'
-         then if variables |> BU.for_some (equiv u)
-              then []
-              else [u]
-         else [])
-     in
-     let lb = N.normalize_universe env (U_max lower_bounds_of_v) in
-     (lb, v)) in
-   let _ = sols |> List.map (fun (lb, v) ->
-//     printfn "Setting %s to its lower bound %s" (Print.univ_to_string v) (Print.univ_to_string lb);
-     match solve_universe_eq (-1) wl lb v with
-     | USolved wl -> ()
-     | _ -> fail lb v) in
+   let _ =
+      //collapse all variables by unifying them with each other
+      //this forces all mutually inductive types to be in the same universe,
+      //unless they are annotated otherwise.
+      //This seems to be a useful default.
+      //We might consider relaxing this if it becomes problematic.
+      variables |> List.fold_left (fun uopt v ->
+        match SS.compress_univ v with
+        | U_unif v0 ->
+          begin match uopt with
+            | Some u0 -> Unionfind.union u0 v0; uopt
+            | None -> Some v0
+          end
+        | _ -> uopt) None in
+   let sols = variables |> List.collect (fun v ->
+     match SS.compress_univ v with
+     | U_unif _ -> //if it really is a variable, that try to solve it
+         let lower_bounds_of_v = //lower bounds of v, excluding the other variables
+           ineqs |> List.collect (fun (u, v') ->
+             if equiv v v'
+             then if variables |> BU.for_some (equiv u)
+                  then []
+                  else [u]
+             else [])
+         in
+         let lb = N.normalize_universe env (U_max lower_bounds_of_v) in
+         [(lb, v)]
+     | _ ->
+       //it may not actually be a variable in case the user provided an explicit universe annnotation
+       //see, e.g., ulib/FStar.Universe.fst
+      []) in
+   //apply all the solutions
+   let _ =
+     let wl = {empty_worklist env with defer_ok=false} in
+     sols |> List.map (fun (lb, v) ->
+         //     printfn "Setting %s to its lower bound %s" (Print.univ_to_string v) (Print.univ_to_string lb);
+         match solve_universe_eq (-1) wl lb v with
+         | USolved wl -> ()
+         | _ -> fail lb v)
+   in
+   //check that the solutions produced valid inequalities
    let rec check_ineq (u, v) : bool =
      let u = N.normalize_universe env u in
      let v = N.normalize_universe env v in
