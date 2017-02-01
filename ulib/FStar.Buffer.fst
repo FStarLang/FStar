@@ -550,7 +550,7 @@ let lemma_modifies_3_2_comm (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 
   (requires (True))
   (ensures  (modifies_3_2 b b' h0 h1 <==> modifies_3_2 b' b h0 h1))
   [SMTPatT (modifies_3_2 b b' h0 h1)]
-  = ()
+  = admit ()
 (* TODO: add commutativity lemmas for modifies_3 *)
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
@@ -848,7 +848,7 @@ let index #a b n =
   Seq.index s (v b.idx + v n)
 
 (** REMARK: the proof of this lemma relies crucially on the `a == a'` condition
-    in B`uffer.disjoint`, and on the pattern in `SeqProperties.slice_upd` *)
+    in B`uffer.disjoint`, and on the pattern in `Seq.slice_upd` *)
 private val lemma_aux: #a:Type -> b:buffer a -> n:UInt32.t{v n < length b} -> z:a
   -> h0:mem -> Lemma
   (requires (live h0 b))
@@ -868,7 +868,7 @@ let upd #a b n z =
   b.content := s;
   let h = HST.get() in
   Seq.lemma_eq_intro (as_seq h b) (Seq.slice s (idx b) (idx b + length b));
-  SeqProperties.upd_slice s0 (idx b) (idx b + length b) (v n) z
+  Seq.upd_slice s0 (idx b) (idx b + length b) (v n) z
 
 val sub: #a:Type -> b:buffer a -> i:UInt32.t{v i + v b.idx < pow2 n}
   -> len:UInt32.t{v i + v len <= length b}

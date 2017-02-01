@@ -21,7 +21,7 @@ module HH            = FStar.HyperHeap
 module HS            = FStar.HyperStack
 module CMA           = Crypto.Symmetric.UF1CMA
 module MAC           = Crypto.Symmetric.MAC
-module SeqProperties = FStar.SeqProperties
+module Seq = FStar.Seq
 module BufferUtils   = Crypto.AEAD.BufferUtils
 
 (*** First, some predicates and lemmas
@@ -110,7 +110,7 @@ let refl_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
 	let c0 = HS.sel h r in
 	let emp = Seq.slice c0 (Seq.length c0) (Seq.length c0) in
 	cut (Seq.equal Seq.createEmpty emp);
-	FStar.Classical.forall_intro (SeqProperties.contains_elim emp)
+	FStar.Classical.forall_intro (Seq.contains_elim emp)
       else ()
 
 let trans_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i) 
@@ -129,7 +129,7 @@ let trans_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
 	let diff_12 = Seq.slice c2 (Seq.length c1) (Seq.length c2) in
 	let diff_02 = Seq.slice c2 (Seq.length c0) (Seq.length c2) in
 	assert (Seq.equal diff_02 (Seq.append diff_01 diff_12));
-	FStar.Classical.forall_intro (SeqProperties.append_contains_equiv diff_01 diff_12)
+	FStar.Classical.forall_intro (Seq.append_contains_equiv diff_01 diff_12)
       else ()
 
 (*+ modifies_x_buffer_1 is the write effect of prf_enxor and prf_dexor, 
@@ -149,7 +149,7 @@ let x_buffer_1_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i
         let c0 = HS.sel h_0 r in
       	let c1 = HS.sel h_1 r in
 	let diff = Seq.slice c1 (Seq.length c0) (Seq.length c1) in
-	FStar.Classical.forall_intro (SeqProperties.contains_elim diff)
+	FStar.Classical.forall_intro (Seq.contains_elim diff)
       else Buffer.lemma_reveal_modifies_1 c h_0 h_1
 
 (*** Enxor specifics ***)
@@ -179,17 +179,17 @@ let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
 	let t_1 = HS.sel h_1 r in
 	let ex = Seq.index t_1 (Seq.length t_0) in
 	assert (PRF.is_entry_domain x ex);
-	assert (Seq.equal t_1 (SeqProperties.snoc t_0 ex));
+	assert (Seq.equal t_1 (Seq.snoc t_0 ex));
 	let rgn = t.mac_rgn in
 	assert (find t_0 x == None);
-	SeqProperties.find_snoc t_0 ex (PRF.is_entry_domain x);
+	Seq.find_snoc t_0 ex (PRF.is_entry_domain x);
 	assert (Some? (find t_1 x));
 	assert (find t_1 x == Some ex.range);
 	let y = PRF.incr i x in
 	let aux (z:domain i{z `above` y})
 	  : Lemma (find t_1 z == None)
 	  = assert (z `above` x); 
-	    SeqProperties.find_snoc t_0 ex (PRF.is_entry_domain z) in
+	    Seq.find_snoc t_0 ex (PRF.is_entry_domain z) in
 	FStar.Classical.forall_intro aux
       else ()
 
@@ -232,7 +232,7 @@ val frame_counterblocks_snoc: i:id{safeId i} -> (t:PRF.state i) -> (x:domain i{c
 		    let cipher_last = Seq.slice c completed_len (completed_len + next) in
 		    let last_entry = PRF.Entry ({x with ctr=UInt32.uint_to_t k})
 	 				       (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last) in
-		    final_blocks == SeqProperties.snoc initial_blocks last_entry))
+		    final_blocks == Seq.snoc initial_blocks last_entry))
 let frame_counterblocks_snoc i t x k len completed_len plain cipher h0 h1 = 
   let open FStar.Mul in
   let remaining_len = len - completed_len in
@@ -342,8 +342,8 @@ let extending_counter_blocks #i t x len completed_len plain cipher h0 h1 h_init
 	 let r = itable i t in 
 	 let r0 = HS.sel h0 r in
 	 let r1 = HS.sel h1 r in 
- 	 let suffix = SeqProperties.last r1 in
-	 assert (Seq.equal r1 (SeqProperties.snoc r0 suffix));
+ 	 let suffix = Seq.last r1 in
+	 assert (Seq.equal r1 (Seq.snoc r0 suffix));
 	 assert (PRF.find r0 x == None);
 	 find_append x r0 (Seq.create 1 suffix);
 	 find_singleton suffix x;

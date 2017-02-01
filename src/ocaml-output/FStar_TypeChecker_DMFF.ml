@@ -1552,10 +1552,10 @@ end
 in (FStar_Util.format1 "[check]: Tm_let %s" _0_494)))
 end
 | FStar_Syntax_Syntax.Tm_type (uu____2293) -> begin
-(failwith "impossible (stratified)")
+(failwith "impossible (DM stratification)")
 end
 | FStar_Syntax_Syntax.Tm_arrow (uu____2297) -> begin
-(failwith "impossible (stratified)")
+(failwith "impossible (DM stratification)")
 end
 | FStar_Syntax_Syntax.Tm_refine (uu____2308) -> begin
 (failwith (let _0_495 = (FStar_Syntax_Print.term_to_string e)
@@ -2003,10 +2003,10 @@ end
 in (FStar_Util.format1 "[infer]: Tm_let %s" _0_531)))
 end
 | FStar_Syntax_Syntax.Tm_type (uu____3364) -> begin
-(failwith "impossible (stratified)")
+(failwith "impossible (DM stratification)")
 end
 | FStar_Syntax_Syntax.Tm_arrow (uu____3368) -> begin
-(failwith "impossible (stratified)")
+(failwith "impossible (DM stratification)")
 end
 | FStar_Syntax_Syntax.Tm_refine (uu____3379) -> begin
 (failwith (let _0_532 = (FStar_Syntax_Print.term_to_string e)

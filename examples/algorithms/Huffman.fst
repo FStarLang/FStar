@@ -2,7 +2,7 @@ module Huffman
 
 open FStar.Char
 open FStar.List.Tot
-open FStar.ListProperties
+open FStar.List.Tot
 
 type symbol = char
 

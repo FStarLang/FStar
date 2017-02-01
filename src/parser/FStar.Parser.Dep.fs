@@ -309,9 +309,6 @@ let collect_one
         record_module_alias ident lid
     | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
-    | KindAbbrev (_, binders, t) ->
-        collect_term t;
-        collect_binders binders
     | Main t
     | Assume (_, t)
     | SubEffect { lift_op = NonReifiableLift t }
@@ -394,7 +391,8 @@ let collect_one
         collect_constant c
     | Op (s, ts) ->
         if s = "@" then
-          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.append") Range.dummyRange));
+          (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
+          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
         List.iter collect_term ts
     | Tvar _
     | AST.Uvar _ ->

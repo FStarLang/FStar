@@ -133,3 +133,4 @@ val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_seed                     : unit    -> int
 val z3_timeout                  : unit    -> int
+val no_positivity               : unit    -> bool

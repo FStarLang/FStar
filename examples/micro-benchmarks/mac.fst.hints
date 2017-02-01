@@ -71,7 +71,7 @@
         "equation_FStar.UInt8.t", "equation_MAC.bytes", "equation_MAC.key",
         "equation_MAC.keysize", "equation_MAC.nbytes", "equation_MAC.text",
         "equation_Prims.eqtype", "fuel_guarded_inversion_MAC.entry",
-        "kinding_FStar.UInt8.t_@tok", "lemma_FStar.Seq.lemma_eq_elim",
+        "kinding_FStar.UInt8.t_@tok", "lemma_FStar.Seq.Base.lemma_eq_elim",
         "pretyping_f537159ed795b314b4e58c260361ae86",
         "primitive_Prims.op_AmpAmp", "proj_equation_Prims.V_v",
         "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.V_a",
@@ -81,7 +81,7 @@
         "refinement_interpretation_Tm_refine_d4aaeb44afd9014ffa1175af1903c82d",
         "refinement_interpretation_Tm_refine_efe335931539402e9fdf173d2969658e",
         "refinement_interpretation_Tm_refine_f091aa111656dca1abe181160db583cc",
-        "typing_FStar.Seq.eq"
+        "typing_FStar.Seq.Base.eq"
       ],
       0
     ],

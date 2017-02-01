@@ -229,11 +229,6 @@ rawDecl:
   | doc=FSDOC_STANDALONE
       { Fsdoc doc }
 
-  (* stratified only *)
-  | KIND lid=ident bs=binders EQUALS k=kind
-      { KindAbbrev(lid, bs, k) }
-
-
 typeDecl:
   (* TODO : change to lident with stratify *)
   | lid=ident tparams=typars ascr_opt=ascribeKind? tcdef=typeDefinition

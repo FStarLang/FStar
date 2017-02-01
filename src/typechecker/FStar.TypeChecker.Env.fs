@@ -484,6 +484,7 @@ let try_lookup_lid_aux env lid =
 //        val is_record              : env -> lident -> bool
 //        val is_interpreted         : (env -> term -> bool)
 //        val is_type_constructor    : env -> lident -> bool
+//        val num_inductive_ty_params: env -> lident -> int
 //Each of these functions that returns a term ensures to update
 //the range information on the term with the currrent use-site
 ////////////////////////////////////////////////////////////////
@@ -537,8 +538,8 @@ let lookup_datacon env lid =
 
 let datacons_of_typ env lid =
   match lookup_qname env lid with
-    | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _), _)) -> dcs
-    | _ -> []
+    | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _), _)) -> true, dcs
+    | _ -> false, []
 
 let typ_of_datacon env lid =
   match lookup_qname env lid with
@@ -707,6 +708,11 @@ let is_type_constructor env lid =
     match BU.bind_opt (lookup_qname env lid) mapper with
       | Some b -> b
       | None -> false
+
+let num_inductive_ty_params env lid =
+  match lookup_qname env lid with
+  | Some (Inr (Sig_inductive_typ (_, _, tps, _, _, _, _, _), _)) -> List.length tps
+  | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
