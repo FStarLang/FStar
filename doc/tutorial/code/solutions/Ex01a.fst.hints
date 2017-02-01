@@ -1,5 +1,5 @@
 [
-  "\u0012#ю;ЧШ╫юєЮ╙Є\u001aRd\u0016",
+  "Ы\u0005Щ\u0013<U^шЦF┌\r[┘др",
   [
     [ "Ex01a.canWrite", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -10,7 +10,6 @@
       [ "@query", "assumption_Prims.HasEq_string" ],
       0
     ],
-    [ "Ex01a.read", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex01a.staticChecking",
       1,

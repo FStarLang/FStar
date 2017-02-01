@@ -484,8 +484,8 @@ let is_function t = match (compress t).n with
 
 let return_value env t v =
   let c =
-    if not <| Env.lid_exists env Const.effect_GTot_lid
-    then mk_Total t //we're still in prims, not yet having fully defined the primitive effects
+    if not <| Env.lid_exists env Const.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
+    then mk_Total t
     else let m = must (Env.effect_decl_opt env Const.effect_PURE_lid) in //if Tot isn't fully defined in prims yet, then just return (Total t)
          let u_t = env.universe_of env t in
          let wp =
@@ -637,7 +637,6 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
          let strengthen () =
             let c = lc.comp () in
             if env.lax
-            && Options.ml_ish() //NS: Disabling this optimization temporarily
             then c
             else begin
                 let g0 = Rel.simplify_guard env g0 in
@@ -787,8 +786,7 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
   let refine () =
       let c = lc.comp() in
       if not (is_pure_or_ghost_effect env lc.eff_name)
-      || (env.lax
-          && Options.ml_ish()) //NS: disabling this optimization temporarily
+      || env.lax
       then c
       else if U.is_partial_return c then c
       else if U.is_tot_or_gtot_comp c

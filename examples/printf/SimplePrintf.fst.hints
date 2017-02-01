@@ -85,6 +85,7 @@
         "@query", "binder_x_513418ee1a9bd16c03f003addbbcba09_0",
         "binder_x_a703a5688952559d5cefe1268f16f195_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "constructor_distinct_SimplePrintf.Arg",
         "constructor_distinct_SimplePrintf.Bool",
         "constructor_distinct_SimplePrintf.Char",
         "constructor_distinct_SimplePrintf.Int",
@@ -114,8 +115,11 @@
         "projection_inverse_SimplePrintf.Arg__0",
         "projection_inverse_SimplePrintf.Lit__0",
         "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
+        "refinement_interpretation_Tm_refine_b3bb4082cc2555466dedf2b2286da087",
         "string_inversion", "string_typing", "subterm_ordering_Prims.Cons",
         "typing_Prims.__proj__Cons__item__hd",
+        "typing_SimplePrintf.string_of_dirs",
+        "typing_Tm_abs_3396653ae743e718aa67bcc4a54c86b3",
         "typing_Tm_abs_62c1daadc89fe63fe0e6ea45f061e0bf"
       ],
       0

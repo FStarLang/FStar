@@ -443,11 +443,11 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
   in
 
   begin match is_mut, p.pat with
-  | false, _
-  | true, PatVar _ ->
-      ()
-  | true, _ ->
-      raise (Error ("let-mutable is for variables only", p.prange))
+      | false, _
+      | true, PatVar _ ->
+          ()
+      | true, _ ->
+          raise (Error ("let-mutable is for variables only", p.prange))
   end;
   let push_bv_maybe_mut = if is_mut then push_bv_mutable else push_bv in
 
@@ -877,15 +877,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           else match un_function p def with
                 | Some (p, def) -> destruct_app_pattern env top_level p, def
                 | _ -> begin match p.pat with
-                                | PatAscribed({pat=PatVar(id,_)}, t) ->
-                                  if top_level
-                                  then (Inr (qualify env id), [], Some t), def
-                                  else (Inl id, [], Some t), def
-                                | PatVar(id, _) ->
-                                  if top_level
-                                  then (Inr (qualify env id), [], None), def
-                                  else (Inl id, [], None), def
-                                | _ -> raise (Error("Unexpected let binding", p.prange))
+                        | PatAscribed({pat=PatVar(id,_)}, t) ->
+                            if top_level
+                            then (Inr (qualify env id), [], Some t), def
+                            else (Inl id, [], Some t), def
+                        | PatVar(id, _) ->
+                            if top_level
+                            then (Inr (qualify env id), [], None), def
+                            else (Inl id, [], None), def
+                        | _ -> raise (Error("Unexpected let binding", p.prange))
                       end)
         in
 

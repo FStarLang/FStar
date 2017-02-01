@@ -1,5 +1,5 @@
 [
-  "\u0006@‡c\u001f¥≤\u007f\u001eº\u0005æb›\u0006ë",
+  "tUáÚ4X‡õR¥ùn•ıgS",
   [
     [ "FStar.List.hd", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.List.tail", 1, 2, 1, [ "@query" ], 0 ],
@@ -56,6 +56,19 @@
       0
     ],
     [
+      "FStar.List.mapT",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_3dddec8ced2db740e4e8aaf70542be7a_5",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [
       "FStar.List.mapi_init",
       1,
       2,
@@ -63,6 +76,18 @@
       [
         "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list"
+      ],
+      0
+    ],
+    [
+      "FStar.List.mapi_initT",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_3dddec8ced2db740e4e8aaf70542be7a_5",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0
     ],
