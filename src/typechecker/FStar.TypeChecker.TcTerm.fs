@@ -319,6 +319,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           let e2, c2, g2 = tc_term env e2 in
           let c = TcUtil.bind e1.pos env (Some e1) c1 (None, c2) in
           let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, Common.t_unit, e1)]), e2)) (Some c.res_typ.n) e.pos in
+          let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in
           let e = mk (Tm_meta(e, Meta_desugared Sequence)) (Some c.res_typ.n) top.pos in
           e, c, Rel.conj_guard g1 g2
         | _ ->
@@ -328,6 +329,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     end
 
   | Tm_meta(e, Meta_monadic _) ->
+    (* KM : This case should not happen when typechecking once but is it really *)
+    (* okay to just drop the annotation ? And what about Meta_monadic_lift then ? *)
     tc_term env e
 
   | Tm_meta(e, m) ->
@@ -508,6 +511,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
               (pat, wopt, TcUtil.maybe_lift env br lc.eff_name cres.eff_name lc.res_typ ))
         in
         let e = mk (Tm_match(scrutinee, branches)) (Some cres.res_typ.n) top.pos in
+        let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
         mk (Tm_ascribed(e, Inl cres.res_typ, Some cres.eff_name)) None e.pos
       in
@@ -1000,131 +1004,136 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 M, wp is built using
                          bind chead (bind c0 (bind c1 ... (bind cn (Tot (bs -> cres))))
     *)
-    let monadic_application (head, chead, ghead, cres)
-                            subst
-                            (arg_comps_rev:list<(arg * option<bv> * either<(lident * typ),lcomp>)>) arg_rets guard fvs bs
+    let monadic_application
+      (head, chead, ghead, cres)
+      subst
+      (arg_comps_rev:list<(arg * option<bv> * either<(lident * typ),lcomp>)>)
+      arg_rets
+      guard
+      fvs
+      bs
         : term   //application of head to args
         * lcomp  //its computation type
         * guard_t //and whatever guard remains
-        =
-        let rt = check_no_escape (Some head) env fvs cres.res_typ in
-        let cres = {cres with res_typ=rt} in
-        let cres, guard =
-            match bs with
-            | [] -> (* full app *)
-                let cres = TcUtil.subst_lcomp subst cres in
-                (* If we have f e1 e2
-                    where e1 or e2 is impure but f is a pure function,
-                    then refine the result to be equal to f x1 x2,
-                    where xi is the result of ei. (See the last two tests in examples/unit-tests/unit1.fst)
-                *)
-                let g = Rel.conj_guard ghead guard in
+    =
+      let rt = check_no_escape (Some head) env fvs cres.res_typ in
+      let cres = {cres with res_typ=rt} in
+      let cres, guard =
+          match bs with
+          | [] -> (* full app *)
+              let cres = TcUtil.subst_lcomp subst cres in
+              (* If we have f e1 e2
+                  where e1 or e2 is impure but f is a pure function,
+                  then refine the result to be equal to f x1 x2,
+                  where xi is the result of ei. (See the last two tests in examples/unit-tests/unit1.fst)
+              *)
+              let g = Rel.conj_guard ghead guard in
 
-                let refine_with_equality =
-                    //if the function is pure, but its arguments are not, then add an equality refinement here
-                    //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
-                    //not (U.is_unit cres.res_typ)
-                    //&&
-                    U.is_pure_or_ghost_lcomp cres
-                    && arg_comps_rev |> BU.for_some (function
-                        | (_, _, Inl _) -> false
-                        | (_, _, Inr c) -> not (U.is_pure_or_ghost_lcomp c))
-                    (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
-                in
+              let refine_with_equality =
+                  //if the function is pure, but its arguments are not, then add an equality refinement here
+                  //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
+                  //not (U.is_unit cres.res_typ)
+                  //&&
+                  U.is_pure_or_ghost_lcomp cres
+                  && arg_comps_rev |> BU.for_some (function
+                      | (_, _, Inl _) -> false
+                      | (_, _, Inr c) -> not (U.is_pure_or_ghost_lcomp c))
+                  (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
+              in
 
-                let cres =
-                    (* NS: Choosing when to add an equality refinement is VERY important for performance. *)
-                    (* Adding it unconditionally impacts run time by >5x *)
-                    if refine_with_equality
-                    then TcUtil.maybe_assume_result_eq_pure_term env
-                            (mk_Tm_app head (List.rev arg_rets) (Some cres.res_typ.n) r)
-                            cres
-                    else (if Env.debug env Options.Low
-                          then BU.print3 "Not refining result: f=%s; cres=%s; guard=%s\n"
-                                                  (Print.term_to_string head)
-                                                  (Print.lcomp_to_string cres)
-                                                  (guard_to_string env g);
-                          cres)
-                in
-                cres, g
+              let cres =
+                  (* NS: Choosing when to add an equality refinement is VERY important for performance. *)
+                  (* Adding it unconditionally impacts run time by >5x *)
+                  if refine_with_equality
+                  then TcUtil.maybe_assume_result_eq_pure_term env
+                          (mk_Tm_app head (List.rev arg_rets) (Some cres.res_typ.n) r)
+                          cres
+                  else (if Env.debug env Options.Low
+                        then BU.print3 "Not refining result: f=%s; cres=%s; guard=%s\n"
+                                                (Print.term_to_string head)
+                                                (Print.lcomp_to_string cres)
+                                                (guard_to_string env g);
+                        cres)
+              in
+              cres, g
 
-            | _ ->  (* partial app *)
-                let g = Rel.conj_guard ghead guard |> Rel.solve_deferred_constraints env in
-                U.lcomp_of_comp <| mk_Total  (SS.subst subst <| U.arrow bs (cres.comp())), g
+          | _ ->  (* partial app *)
+              let g = Rel.conj_guard ghead guard |> Rel.solve_deferred_constraints env in
+              U.lcomp_of_comp <| mk_Total  (SS.subst subst <| U.arrow bs (cres.comp())), g
+      in
+      if debug env Options.Low then BU.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
+
+      (* Note: The outargs are in reverse order. e.g., f e1 e2 e3, we have *)
+      (* outargs = [(e3, _, c3); (e2; _; c2); (e1; _; c2)] *)
+      (* We build comp = bind chead (bind c1 (bind c2 (bind c3 cres))) *)
+      (* KM : We are lifting arguments to cres and not comp which seems wrong if some argument *)
+      (* has an effect not lower than cres *)
+      (* The typing rule for monadic application should be something like *)
+
+      (* G |- head : Mhead (b1 -> ... bn -> Mres tres | gres) | ghead     G |- ei : Mi ti | gi *)
+      (* ---------------------------------------------------------------------------------------- *)
+      (* G |- let x1 = lift_{Mi}^{M} e1 in ... lift_{Mres}^{M} (head x1 ... xn) : M tres | g *)
+
+      (* where (M,g) = bind (Mhead, ghead) (bind (M1,g1) (... bind (Mn, gn) (Mres, gres))) *)
+      let comp, monadic =
+        List.fold_left
+          (fun (args, out_c, monadic) ((e, q), x, c) ->
+            match c with
+            | Inl (eff_name, arg_typ) ->
+              (* Looking at the code of tc_args below, Inl seems to be reserved for Tot or GTot *)
+              out_c, monadic
+
+            | Inr c ->
+              let monadic = monadic || not (U.is_pure_or_ghost_lcomp c) in
+              let out_c =
+                  //proving (Some e) here instead of None causes significant Z3 overhead
+                  TcUtil.bind e.pos env None c (x, out_c)
+              in
+              (* KM : a monadic argument should already be annotated by a Meta_monadic if needed *)
+              (* let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in *)
+              (* let e = TcUtil.maybe_lift env e c.eff_name out_c.eff_name c.res_typ in *)
+              out_c, monadic)
+          (cres, false)
+          arg_comps_rev
+      in
+      let comp = TcUtil.bind head.pos env None chead (None, comp) in
+
+      let lifted_args, head, args =
+        let map_fun ((e, q), _ , c0) =
+          match c0 with
+          | Inl _ | Inr c when U.is_pure_or_ghost_lcomp c ->
+            None, (e, q)
+          | Inr c ->
+            let x = S.gen_bv "monadic_app_var" None c.res_type in
+            let e = TcUtil.maybe_lift env e c.eff_name comp.eff_name c.res_typ in
+            Some (x, c.eff_name, c.res_typ, e), (S.bv_to_name x, q)
         in
-        if debug env Options.Low then BU.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
-
-        (* Note: The outargs are in reverse order. e.g., f e1 e2 e3, we have *)
-        (* outargs = [(e3, _, c3); (e2; _; c2); (e1; _; c2)] *)
-        (* We build bind chead (bind c1 (bind c2 (bind c3 cres))) *)
-        (* KM : We are lifting arguments to cres and not comp which seems wrong if some argument *)
-        (* has an effect not lower than cres *)
-        (* The typing rule for monadic application should be something like *)
-
-        (* G |- head : b1 -> ... bn -> Mres tres | gres                    G |- ei : Mi ti | gi *)
-        (* ---------------------------------------------------------------------------------------- *)
-        (* G |- let x1 = lift_{Mi}^{M} e1 in ... lift_{Mres}^{M} (head x1 ... xn) : M tres | g *)
-
-        (* where (M,g) = bind (M1,g1) (... bind (Mn, gn) (Mres, gres)) *)
-        let args, comp, monadic =
-          List.fold_left
-            (fun (args, out_c, monadic) ((e, q), x, c) ->
-              match c with
-              | Inl (eff_name, arg_typ) ->
-                (TcUtil.maybe_lift env e eff_name out_c.eff_name arg_typ, q)::args, out_c, monadic
-
-              | Inr c ->
-                  let monadic = monadic || not (U.is_pure_or_ghost_lcomp c) in
-                  let out_c =
-                      //proving (Some e) here instead of None causes significant Z3 overhead
-                      TcUtil.bind e.pos env None c (x, out_c)
-                  in
-                  (* KM : a monadic argument should already be annotated by a Meta_monadic if needed *)
-                  (* let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in *)
-                  let e = TcUtil.maybe_lift env e c.eff_name out_c.eff_name c.res_typ in
-                  (e, q)::args, out_c, monadic)
-            ([], cres, false)
-            arg_comps_rev
+        let lifted_args, reverse_args =
+            List.split <| List.map map_fun (as_arg head, None, chead)::arg_comps_rev
         in
-        let comp = TcUtil.bind head.pos env None chead (None, comp) in
+        lifted_args, fst (List.hd reverse_args), List.rev (List.tl reverse_args)
+      in
 
-        (* KM : Future code for monadic application *)
-        (* We elaborate monadic applications to a serie of monadic let-bindings *)
-        (* let rec letbind_on_lift args acc = *)
-        (*   match args with *)
-        (*   | [] -> *)
-        (*       begin match List.rev acc with *)
-        (*       | [] -> failwith "letbind_on_lift should be always called with a non-empty list" *)
-        (*       | (head, _) :: args -> *)
-        (*           let body = mk_Tm_app head args (Some comp.res_typ.n) r in *)
-        (*           let body = TcUtil.maybe_lift env body cres.eff_name comp.eff_name comp.res_typ in *)
-        (*           TcUtil.maybe_monadic env body comp.eff_name comp.res_typ *)
-        (*       end *)
-        (*   | (e,q) :: es -> *)
-        (*       let hoist_and_bind e m t' = *)
-        (*         let x = S.gen_bv "monadic_app_var" None t' in *)
-        (*         let body = letbind_on_lift es ((S.bv_to_name x, q)::acc) in *)
-        (*         let lb = U.mk_letbinding (Inl x) [] t' m e in *)
-        (*         let letbinding = mk (Tm_let ((false, [lb]), SS.close [S.mk_binder x] body)) None e.pos in *)
-        (*         mk (Tm_meta(letbinding, Meta_monadic(m, comp.res_typ))) None e.pos *)
-        (*       in *)
-        (*       begin match (SS.compress e).n with *)
-        (*       | Tm_meta (e0, Meta_monadic(m, t')) *)
-        (*       | Tm_meta (e0, Meta_monadic_lift(_, m, t')) -> *)
-        (*           hoist_and_bind e m t' *)
-        (*       | _ -> letbind_on_lift es ((e,q)::acc) *)
-        (*       end *)
-        (* in *)
-        (* let app = letbind_on_lift (as_arg head :: args) [] in *)
+      let app =
+          let app = mk_Tm_app head args (Some comp.res_typ.n) r in
+          let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
+          let app = TcUtil.maybe_monadic env body comp.eff_name comp.res_typ in
+          let bind_lifted_args e = function
+            | None -> e
+            | Some (x, m, t, e1) ->
+              let lb = U.mk_letbinding (Inl x) [] t m e1 in
+              let letbinding = mk (Tm_let ((false, [lb]), SS.close [S.mk_binder x] e)) None e.pos in
+              mk (Tm_meta(letbinding, Meta_monadic(m, comp.res_typ))) None e.pos
+          in
+          List.fold_left bind_lifted_args app lifted_args
+      in
 
-        let app = mk_Tm_app head args (Some comp.res_typ.n) r in
-        let app = if monadic || not (U.is_pure_or_ghost_lcomp comp) then TcUtil.maybe_monadic env app comp.eff_name comp.res_typ else app in
-        let comp, g = TcUtil.strengthen_precondition None env app comp guard in //Each conjunct in g is already labeled
-        app, comp, g
+      let comp, g = TcUtil.strengthen_precondition None env app comp guard in //Each conjunct in g is already labeled
+      app, comp, g
     in
 
     let rec tc_args (head_info:(term * lcomp * guard_t * lcomp)) //the head of the application, its lcomp and guard, returning a bs -> cres
-                    (subst,  (* substituting actuals for formals seen so far, when actual is pure *)
+                    (subst,   (* substituting actuals for formals seen so far, when actual is pure *)
                      outargs, (* type-checked actual arguments, so far *)
                      arg_rets,(* The results of each argument at the logic level *)
                      g,       (* conjoined guard formula for all the actuals *)
