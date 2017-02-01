@@ -65,41 +65,44 @@ type c = DH.dh_share * AE.cipher //lbytes(PKE.ciphersize + AE.ciphersize)
    we encrypt the protected_hpke_plain. Else we strip it of its 
    protection and encrypt the plain representation.
 *)
-val encrypt: #(i:id) -> hpke_pkey i -> protected_hpke_plain i -> St c 
-let encrypt #i pk p =
+val encrypt: #(pk_i:id) -> #(eph_i:id)-> hpke_pkey pk_i -> p:protected_hpke_plain{PlainHPKE.get_index p = (pk_i,eph_i)} -> St c 
+let encrypt #pk_i #eph_i pk p =
   let region = new_region pk.region in
-  let eph_i = createId () in
+  //let eph_i = createId () in
   let eph_dh_pk,eph_dh_sk = DH.keygen #eph_i region in
   let k = prf_odh_snd eph_dh_sk pk.dh_pk in
-  let ae_i = AE.getIndex k in
-  assert (getIndex eph_dh_sk = snd ae_i);
+  let ae_i = pk_i,eph_i in
+  assert (DH.get_index eph_dh_sk = snd ae_i);
   assert (pk.dh_pk.pk_i = fst ae_i);
-  assert (getIndex eph_dh_sk = eph_i);
-  assert (pk.dh_pk.pk_i = i);
-  assert (ae_i = (i,eph_i));
+  assert (DH.get_index eph_dh_sk = eph_i);
+  assert (pk.dh_pk.pk_i = pk_i);
+  assert (ae_i = (pk_i,eph_i));
   let p' = 
     match hpke_ind_cca && ae_honest ae_i with
     | true -> p
-    | false -> PlainHPKE.repr #(fst ae_i) p
+    | false -> PlainHPKE.repr p
   in
   let ae_m = ae_message_wrap #ae_i p' in
   //let dh_m = dh_message_wrap #pk.i eph_dh_pk.rawpk in
   eph_dh_pk.rawpk,(AE.encrypt #ae_i k ae_m)
 
 
-val decrypt: #(i:id) -> hpke_skey i -> c -> option (protected_hpke_plain i)
-let decrypt #i sk c =
+val decrypt: #(sk_i:id) -> hpke_skey sk_i -> c -> option (p:protected_hpke_plain{fst (PlainHPKE.get_index p) = sk_i })
+let decrypt #sk_i sk c =
   let (dh_sh,ae_c) = c in 
-  let ae_i,k = prf_odh_rcv #i dh_sh sk.dh_sk in
+  let k = prf_odh_rcv #sk_i dh_sh sk.dh_sk in
+  let ae_i = AE.get_index k in
   let hpke_p =
     (match AE.decrypt #ae_i k ae_c with
     | Some p -> Some (PlainAE.ae_message_unwrap #ae_i p)
     | None -> None)
   in
+  //assert(PlainHPKE.get_index hpke_p = AE.get_index k);
   match hpke_p with
   | Some p' -> 
+  assert(PlainHPKE.get_index p' = AE.get_index k);
     (if ae_honest ae_i && hpke_ind_cca then
       Some p'
     else 
-      Some (PlainHPKE.coerce p'))
+      Some p') //(PlainHPKE.coerce #ae_i p'))
   | None -> None

@@ -34,8 +34,8 @@ type log_t (i:ae_id) (r:rid) = m_rref r (seq ((protected_ae_plain i) * cipher)) 
 noeq abstract type key =
   | Key: #i:ae_id -> #region:rid -> raw:aes_key -> log:log_t i region -> key
 
-val getIndex: key -> Tot(ae_id)
-let getIndex k = k.i
+val get_index: k:key -> Tot (i:ae_id{i=k.i})
+let get_index k = k.i
 
 
 (**

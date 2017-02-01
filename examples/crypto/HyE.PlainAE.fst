@@ -13,7 +13,7 @@ open Platform.Bytes
 *)
 type ae_plain_content (i:id) = (
   if honest i && hpke_ind_cca then
-    protected_hpke_plain
+    p:protected_hpke_plain{get_index p = i}
   else 
     hpke_plain
   )

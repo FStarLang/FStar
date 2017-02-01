@@ -14,9 +14,9 @@ open Platform.Bytes
 
 type ae_plain_content (i:ae_id) = (
   if ae_honest i && hpke_ind_cca then
-    protected_hpke_plain (fst i)
+    p:protected_hpke_plain{get_index p = i}
   else 
-    hpke_plain (fst i)
+    hpke_plain
   )
 
 noeq abstract type protected_ae_plain (i:ae_id)=
@@ -30,7 +30,7 @@ val length: #i:ae_id -> (protected_ae_plain i) -> Tot nat
 let length #i p = 
   if ae_honest i && hpke_ind_cca then
     let pk_i = fst i in
-    PlainHPKE.length #pk_i p.p
+    PlainHPKE.length #i p.p
   else
     length p.p
 
@@ -48,7 +48,7 @@ let coerce #i p =
 val repr: #i:ae_id -> p:protected_ae_plain i{not ae_ind_cca || not (ae_honest i)} -> Tot (ae_plain_content i)
 let repr #i p = 
   if ae_honest i && ae_ind_cca then
-    PlainHPKE.repr #(fst i) p.p 
+    PlainHPKE.repr p.p 
   else
     p.p
 
