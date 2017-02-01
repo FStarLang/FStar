@@ -25,7 +25,7 @@ val repr: p:protected_hpke_plain{not hpke_ind_cca || not (ae_honest p.i)} -> Tot
 let repr p = p.b
 
 // Change this if we want to use signcryption with hpke_int-ctxt
-val coerce: #i:ae_id -> p:hpke_plain{not hpke_ind_cca || not (ae_honest i)} -> Tot protected_hpke_plain
+val coerce: #i:ae_id -> p:hpke_plain{not hpke_ind_cca || not (ae_honest i)} -> Tot (prot:protected_hpke_plain{i=prot.i})
 let coerce #i p = 
   Prot_hpke_p #i p  
 

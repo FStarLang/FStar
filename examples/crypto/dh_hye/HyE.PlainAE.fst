@@ -25,6 +25,9 @@ noeq abstract type protected_ae_plain (i:ae_id)=
 
 type ae_plain = bytes
 
+val extract_id: #i:ae_id -> ae_plain_content i -> Tot (i:ae_id)
+let extract_id #i p =
+  i
 
 val length: #i:ae_id -> (protected_ae_plain i) -> Tot nat
 let length #i p = 

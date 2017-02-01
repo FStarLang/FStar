@@ -25,15 +25,15 @@ val hpke_ind_cca : b:bool{b ==> b2t ae_ind_cca /\ prf_odh}
 val dishonestId: unit -> Tot (i:id{not (honest i)})
 val honestId: unit -> Tot (i:id{honest i})
 
-type dependentId =
-  (if prf_odh then
-    i:id{honest i}
-  else
-    i:id{not (honest i)})
+//type dependentId =
+//  (if prf_odh then
+//    i:id{honest i}
+//  else
+//    i:id{not (honest i)})
+//
+//val createId: unit -> Tot dependentId
 
-val createId: unit -> Tot dependentId
-
-val honest_implies_pke_inc_cca: i:id -> Lemma
+val honest_implies_prf_odh: i:id -> Lemma
   (requires honest i)
   (ensures (prf_odh))
   [SMTPat (honest i)]

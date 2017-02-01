@@ -68,7 +68,6 @@ type c = DH.dh_share * AE.cipher //lbytes(PKE.ciphersize + AE.ciphersize)
 val encrypt: #(pk_i:id) -> #(eph_i:id)-> hpke_pkey pk_i -> p:protected_hpke_plain{PlainHPKE.get_index p = (pk_i,eph_i)} -> St c 
 let encrypt #pk_i #eph_i pk p =
   let region = new_region pk.region in
-  //let eph_i = createId () in
   let eph_dh_pk,eph_dh_sk = DH.keygen #eph_i region in
   let k = prf_odh_snd eph_dh_sk pk.dh_pk in
   let ae_i = pk_i,eph_i in
@@ -87,22 +86,24 @@ let encrypt #pk_i #eph_i pk p =
   eph_dh_pk.rawpk,(AE.encrypt #ae_i k ae_m)
 
 
-val decrypt: #(sk_i:id) -> hpke_skey sk_i -> c -> option (p:protected_hpke_plain{fst (PlainHPKE.get_index p) = sk_i })
+val decrypt: #(sk_i:id) -> hpke_skey sk_i -> c -> option (p:protected_hpke_plain)//{fst (PlainHPKE.get_index p) = sk_i })
 let decrypt #sk_i sk c =
   let (dh_sh,ae_c) = c in 
   let k = prf_odh_rcv #sk_i dh_sh sk.dh_sk in
   let ae_i = AE.get_index k in
   let hpke_p =
     (match AE.decrypt #ae_i k ae_c with
-    | Some p -> Some (PlainAE.ae_message_unwrap #ae_i p)
+    | Some p -> let p'' = (PlainAE.ae_message_unwrap #ae_i p) in Some p''
     | None -> None)
   in
+  let content_id = extract_id #ae_i hpke_p in
+  assert(content_id=ae_i);
   //assert(PlainHPKE.get_index hpke_p = AE.get_index k);
   match hpke_p with
   | Some p' -> 
-  assert(PlainHPKE.get_index p' = AE.get_index k);
-    (if ae_honest ae_i && hpke_ind_cca then
+    (if hpke_ind_cca && ae_honest ae_i  then
       Some p'
-    else 
-      Some p') //(PlainHPKE.coerce #ae_i p'))
+    else
+      let p'' = (PlainHPKE.coerce #ae_i p') in
+      Some p'')
   | None -> None
