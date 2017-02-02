@@ -759,11 +759,28 @@ type hints_db = {
     hints: hints
 }
 
-let write_hints (_: string) (_: hints_db): unit =
-  failwith "[record_hints_json]: not implemented"
+open System.IO
+open System.Runtime.Serialization
+open System.Runtime.Serialization.Json
+open System.Xml
+open System.Text
+
+let internal json<'t> (obj : 't) =
+        use ms = new MemoryStream()
+        (new DataContractJsonSerializer(typeof<'t>)).WriteObject(ms, obj)
+        ASCIIEncoding.Default.GetString(ms.ToArray())
+
+let internal unjson<'t> (s : string)  : 't =
+        use ms = new MemoryStream(ASCIIEncoding.Default.GetBytes(s))
+        let obj = (new DataContractJsonSerializer(typeof<'t>)).ReadObject(ms)
+        obj :?> 't
+
+let write_hints (filename : string) (hints : hints_db) : unit =
+    write_file filename (json hints)
 
 let read_hints (filename : string): option<hints_db> =
     if not (File.Exists filename) then
         None
     else
-        failwith "[record_hints_json]: not implemented"
+        let gh = open_in filename in
+        unjson (gh.ReadToEnd())
