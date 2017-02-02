@@ -1797,7 +1797,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           encode_sigelt env se
      end
 
-    | Sig_let((false, [lb]), _, _, quals, _) when (quals |> List.contains Reifiable) ->
+    (* KM : Experimental remove of the false here, I guess more care should be given in order *)
+    (* to prevent the SMT solver from calling this recursively !!! *)
+    | Sig_let((_, [lb]), _, _, quals, _) when (quals |> List.contains Reifiable) ->
       (* This let binding has been declared reifiable so we have to generate a *)
       (* pure reified version of it that can be encoded by the SMT. The reified *)
       (* version should not contain any reify at all after normalization. *)
@@ -1813,10 +1815,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             U.arrow formals (S.mk_Total reified_typ)
           in
           let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in
-          BU.print3 "%s: Reified %s\nto %s\n"
-                (Print.lbname_to_string lb.lbname)
-                (Print.term_to_string tm)
-                (Print.term_to_string tm');
+          if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
+          then BU.print3 "%s: Reified %s\nto %s\n"
+                         (Print.lbname_to_string lb.lbname)
+                         (Print.term_to_string tm)
+                         (Print.term_to_string tm');
           encode_top_level_let env (false, [lb]) quals
         | _ -> [], env
       end

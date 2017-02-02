@@ -117,4 +117,22 @@ let read_write_lemma1 (store:heap) (r:id) (x:int)
       (ensures (r `in_` store /\ normalize_term (fst (reify (let () = write_tot r x in read_tot r) store)) == Some x))
 = ()
 
+(* Need indexed effects to have the following go through... *)
+
+(* type heap_n n = h:heap{length h = n} *)
+
+(* effect INT_STORE_N (n:nat) (a:Type) (wp:(heap_n n -> (option a -> h:heap_n n -> GTot Type0) -> GTot Type0)) = *)
+(*   INT_STORE a (fun l0 p -> length l0 = n /\ wp l0 (fun x l1 -> p (x,l1))) *)
+
+(* reifiable *)
+(* let read_n (#n:nat) (i:id) *)
+(*   : INT_STORE_N n int *)
+(*     (fun l0 p -> i < n /\ p (Some (index l0 i)) l0) *)
+(* = index (IS?.get ()) i *)
+
+(* reifiable *)
+(* let write_n (#n:nat) (i:id) (x:int) *)
+(*   : INT_STORE_N n int *)
+(*     (fun l0 p -> i < n /\ p (Some ()) (upd l0 i x)) *)
+(* = IS?.put (upd (IS?.get ()) i x) *)
 
