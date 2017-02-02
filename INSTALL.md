@@ -72,7 +72,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 5. You can verify all the examples, keeping in mind that this might
    take a long time.
 
-        $ make -C examples
+        $ make -j6 -C examples
    
    Note: Currently this is known to fail for the F# build of F\*
    ([#633](https://github.com/FStarLang/FStar/issues/633)).
@@ -147,8 +147,8 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
 
 Some convenience Makefile targets are available for steps 2 and 3:
 
-- To run steps 2 and 3, do `make -j 15 fstar-ocaml`.
-- To run steps 3, 2 and 3 again, do: `make -j 15 ocaml-fstar-ocaml`.
+- To run steps 2 and 3, do `make -j 6 fstar-ocaml`.
+- To run steps 3, 2 and 3 again, do: `make -j 6 ocaml-fstar-ocaml`.
 
 The latter step is not always guaranteed to work but almost always does,
 and is a tiny bit faster than extracting F* using the F# version.
@@ -314,9 +314,9 @@ that's over there (it's optimized for F*). This will install both OCaml and OPAM
 Once you have a working OCaml setup (see above)
 just run the following command:
 
-        $ make -C src/ocaml-output -j 15
+        $ make -C src/ocaml-output -j 6
 
-The option `-j 15` controls the number of cores to be used in parallel build. This is a relatively standard unix feature.
+The option `-j 6` controls the number of cores to be used in parallel build. This is a relatively standard unix feature.
 
 **Note:** On Windows this generates a native F* binary, that is, a binary that
 does *not* depend on `cygwin1.dll`, since the installer above uses a
