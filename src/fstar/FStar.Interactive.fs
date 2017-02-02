@@ -15,7 +15,6 @@
 *)
 #light "off"
 
-//Batch-mode type-checking
 module FStar.Interactive
 open FStar.All
 open FStar
@@ -59,6 +58,11 @@ type env_t = DsEnv.env * TcEnv.env
 type modul_t = option<Syntax.Syntax.modul>
 type stack_t = list<(env_t * modul_t)>
 
+// Note: many of these functions are passing env around just for the sake of
+// providing a link to the solver (to avoid a cross-project dependency). They're
+// not actually doing anything useful with the environment you're passing it (e.g.
+// pop or reset_mark).
+
 let pop (_, env) msg =
     FStar.Util.print_string "U/pop\n";
     pop_context env msg;
@@ -99,13 +103,7 @@ let check_frag (dsenv, (env:TcEnv.env)) curmod text =
     try
         match tc_one_fragment curmod dsenv env text with
             | Some (m, dsenv, env) ->
-                // DsEnv pushes more than it pops -- when type-checking a
-                // fragment, it always pushes something on its internal
-                // stack but only pops it if it thinks it's checking an
-                // interface...
-                if is_some curmod then
-                  ignore (DsEnv.pop ());
-              Some (m, (dsenv, env), FStar.Errors.get_err_count())
+                  Some (m, (dsenv, env), FStar.Errors.get_err_count())
             | _ -> None
     with
         | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
@@ -367,18 +365,28 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
   //reverse stk and ts, since iterate expects them in "first dependency first order"
   iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
 
+let debug (dsenv: DsEnv.env, _) =
+  match smap_try_find dsenv.sigmap "Test.x" with
+  | Some (sig_x, bool_x) ->
+      let quals_x = FStar.Syntax.Util.quals_of_sigelt sig_x in
+      Util.print1 "Qualifiers for Test.x: %s\n" (String.concat " " (List.map FStar.Syntax.Print.qual_to_string quals_x))
+  | None ->
+      Util.print_string "Test.x not found\n"
+
 let rec go (line_col:(int*int))
            (filename:string) 
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
   | Pop msg ->
       Util.print1 "--- Pop (%s)\n" (string_of_int (List.length stack));
+      debug env;
       pop env msg;
       let (env, curmod), stack =
         match stack with
         | [] -> Util.print_error "too many pops"; exit 1
         | hd::tl -> hd, tl
       in
+      debug env;
       //all the fragments from the current buffer have been popped, call cleanup
       let _ = if List.length stack = List.length ts then cleanup env else () in
       go line_col filename stack curmod env ts
@@ -392,7 +400,9 @@ let rec go (line_col:(int*int))
         if List.length stack = List.length ts then true, update_deps filename curmod stack env ts else false, (stack, env, ts)
       in
       let stack = (env, curmod)::stack in
+      debug env;
       let env = push env lax restore_cmd_line_options "#push" in
+      debug env;
       go (l, c) filename stack curmod env ts
 
   | Code (text, (ok, fail)) ->

@@ -2005,7 +2005,9 @@ let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modu
       | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
     else m
   in
-  let x, y, _ = desugar_modul_common curmod env m in
+  let x, y, pop_when_done = desugar_modul_common curmod env m in
+  if pop_when_done then
+    ignore (pop ());
   x,y
 
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
