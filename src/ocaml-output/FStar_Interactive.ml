@@ -440,10 +440,11 @@ let rec go = (fun line_col filename tc stack curmod env ts -> (
 let uu____1310 = (shift_chunk ())
 in (match (uu____1310) with
 | Pop (msg) -> begin
-((tc.pop env msg);
+((FStar_Util.print_string "Pop\n");
+(tc.pop env msg);
 (
 
-let uu____1313 = (match (stack) with
+let uu____1314 = (match (stack) with
 | [] -> begin
 ((FStar_Util.print_error "too many pops");
 (FStar_All.exit (Prims.parse_int "1"));
@@ -452,13 +453,13 @@ end
 | (hd)::tl -> begin
 ((hd), (tl))
 end)
-in (match (uu____1313) with
+in (match (uu____1314) with
 | ((env, curmod), stack) -> begin
 ((match (((FStar_List.length stack) = (FStar_List.length ts))) with
 | true -> begin
 (tc.cleanup env)
 end
-| uu____1378 -> begin
+| uu____1379 -> begin
 ()
 end);
 (go line_col filename tc stack curmod env ts);
@@ -467,17 +468,18 @@ end));
 )
 end
 | Push (lax, l, c) -> begin
+((FStar_Util.print_string "Push\n");
 (
 
-let uu____1382 = (match (((FStar_List.length stack) = (FStar_List.length ts))) with
+let uu____1384 = (match (((FStar_List.length stack) = (FStar_List.length ts))) with
 | true -> begin
 (let _0_694 = (update_deps filename tc curmod stack env ts)
 in ((true), (_0_694)))
 end
-| uu____1422 -> begin
+| uu____1424 -> begin
 ((false), (((stack), (env), (ts))))
 end)
-in (match (uu____1382) with
+in (match (uu____1384) with
 | (restore_cmd_line_options, (stack, env, ts)) -> begin
 (
 
@@ -486,9 +488,11 @@ in (
 
 let env = (tc.push env lax restore_cmd_line_options "#push")
 in (go ((l), (c)) filename tc stack curmod env ts)))
-end))
+end));
+)
 end
 | Code (text, (ok, fail)) -> begin
+((FStar_Util.print_string "Code\n");
 (
 
 let fail = (fun curmod env_mark -> ((tc.report_fail ());
@@ -504,7 +508,7 @@ in (
 let env = (tc.reset_mark env_mark)
 in (
 
-let uu____1475 = (tc.mark env)
+let uu____1478 = (tc.mark env)
 in (go line_col filename tc stack curmod env ts)))));
 ))
 in (
@@ -527,42 +531,43 @@ let env = (tc.commit_mark env)
 in (go line_col filename tc stack curmod env ts));
 )
 end
-| uu____1499 -> begin
+| uu____1502 -> begin
 (fail curmod env_mark)
 end)
 end
-| uu____1500 -> begin
+| uu____1503 -> begin
 (fail curmod env_mark)
-end)))))
+end)))));
+)
 end)))
 
 
 let interactive_mode = (fun filename initial_mod tc -> ((
 
-let uu____1529 = (FStar_Option.isSome (FStar_Options.codegen ()))
-in (match (uu____1529) with
+let uu____1532 = (FStar_Option.isSome (FStar_Options.codegen ()))
+in (match (uu____1532) with
 | true -> begin
 (FStar_Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag")
 end
-| uu____1530 -> begin
+| uu____1533 -> begin
 ()
 end));
 (
 
-let uu____1531 = (deps_of_our_file filename)
-in (match (uu____1531) with
+let uu____1534 = (deps_of_our_file filename)
+in (match (uu____1534) with
 | (filenames, maybe_intf) -> begin
 (
 
 let env = (tc.tc_prims ())
 in (
 
-let uu____1543 = (tc_deps tc initial_mod [] env filenames [])
-in (match (uu____1543) with
+let uu____1546 = (tc_deps tc initial_mod [] env filenames [])
+in (match (uu____1546) with
 | (stack, env, ts) -> begin
 (
 
-let uu____1564 = (match (maybe_intf) with
+let uu____1567 = (match (maybe_intf) with
 | Some (intf) -> begin
 (
 
@@ -570,8 +575,8 @@ let frag = (let _0_695 = (FStar_Util.file_get_contents intf)
 in {FStar_Parser_ParseIt.frag_text = _0_695; FStar_Parser_ParseIt.frag_line = (Prims.parse_int "0"); FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")})
 in (
 
-let uu____1571 = (tc.check_frag env initial_mod frag)
-in (match (uu____1571) with
+let uu____1574 = (tc.check_frag env initial_mod frag)
+in (match (uu____1574) with
 | Some (curmod, env, n_errs) -> begin
 ((match ((n_errs <> (Prims.parse_int "0"))) with
 | true -> begin
@@ -579,7 +584,7 @@ in (match (uu____1571) with
 (FStar_All.exit (Prims.parse_int "1"));
 )
 end
-| uu____1586 -> begin
+| uu____1589 -> begin
 ()
 end);
 (FStar_Util.print_string "Reminder: fst+fsti in interactive mode is unsound.\n");
@@ -595,17 +600,17 @@ end
 | None -> begin
 ((initial_mod), (env))
 end)
-in (match (uu____1564) with
+in (match (uu____1567) with
 | (initial_mod, env) -> begin
 (
 
-let uu____1596 = ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))
-in (match (uu____1596) with
+let uu____1599 = ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))
+in (match (uu____1599) with
 | true -> begin
 (let _0_696 = (FStar_List.hd (FStar_Options.file_list ()))
-in (FStar_SMTEncoding_Solver.with_hints_db _0_696 (fun uu____1597 -> (go (((Prims.parse_int "1")), ((Prims.parse_int "0"))) filename tc stack initial_mod env ts))))
+in (FStar_SMTEncoding_Solver.with_hints_db _0_696 (fun uu____1600 -> (go (((Prims.parse_int "1")), ((Prims.parse_int "0"))) filename tc stack initial_mod env ts))))
 end
-| uu____1602 -> begin
+| uu____1605 -> begin
 (go (((Prims.parse_int "1")), ((Prims.parse_int "0"))) filename tc stack initial_mod env ts)
 end))
 end))

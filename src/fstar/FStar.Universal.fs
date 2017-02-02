@@ -258,10 +258,12 @@ let tc_one_file_interactive (remaining:list<string>) (uenv:uenv) = //:((string o
 
 let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul>> =
     let pop (dsenv, env) msg =
+          FStar.Util.print_string "U/pop\n";
           pop_context (dsenv, env) msg;
           Options.pop() in
 
     let push (dsenv, env) lax restore_cmd_line_options msg =
+          FStar.Util.print_string "U/push\n";
           let env = { env with lax = lax } in
           let res = push_context (dsenv, env) msg in
           Options.push();
@@ -269,12 +271,14 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
           res in
 
     let mark (dsenv, env) =
+        FStar.Util.print_string "U/mark\n";
         let dsenv = DsEnv.mark dsenv in
         let env = TcEnv.mark env in
         Options.push();
         dsenv, env in
 
     let reset_mark (dsenv, env) =
+        FStar.Util.print_string "U/reset_mark\n";
         let dsenv = DsEnv.reset_mark dsenv in
         let env = TcEnv.reset_mark env in
         Options.pop();
@@ -283,14 +287,22 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
     let cleanup (dsenv, env) = TcEnv.cleanup_interactive env in
 
     let commit_mark (dsenv, env) =
+        FStar.Util.print_string "U/commit_mark\n";
         let dsenv = DsEnv.commit_mark dsenv in
         let env = TcEnv.commit_mark env in
         dsenv, env in
 
     let check_frag (dsenv, (env:TcEnv.env)) curmod text =
+        FStar.Util.print_string "U/check_frag\n";
         try
             match tc_one_fragment curmod dsenv env text with
                 | Some (m, dsenv, env) ->
+                    // DsEnv pushes more than it pops -- when type-checking a
+                    // fragment, it always pushes something on its internal
+                    // stack but only pops it if it thinks it's checking an
+                    // interface...
+                    if is_some curmod then
+                      ignore (DsEnv.pop dsenv);
                   Some (m, (dsenv, env), FStar.Errors.get_err_count())
                 | _ -> None
         with

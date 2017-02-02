@@ -303,6 +303,7 @@ type m_timestamps = list<(option<string> * string * option<time> * time)>
 	       (stack:stack<'env,'modul>) (curmod:'modul) (env:'env) (ts:m_timestamps) : unit = begin
       match shift_chunk () with
       | Pop msg ->
+          Util.print1 "--- Pop (%s)\n" (string_of_int (List.length stack));
           tc.pop env msg;
           let (env, curmod), stack =
             match stack with
@@ -314,6 +315,7 @@ type m_timestamps = list<(option<string> * string * option<time> * time)>
           go line_col filename tc stack curmod env ts
 
       | Push (lax, l, c) ->
+          Util.print1 "--- Push (%s)\n" (string_of_int (List.length stack));
           //if we are at a stage where we have not yet pushed a fragment from the current buffer, see if some dependency is stale
           //if so, update it
           //also if this is the first chunk, we need to restore the command line options
@@ -321,25 +323,18 @@ type m_timestamps = list<(option<string> * string * option<time> * time)>
             if List.length stack = List.length ts then true, update_deps filename tc curmod stack env ts else false, (stack, env, ts)
           in
           let stack = (env, curmod)::stack in
-          // Side-effect: pushes to an internal, hidden stack
           let env = tc.push env lax restore_cmd_line_options "#push" in
           go (l, c) filename tc stack curmod env ts
 
       | Code (text, (ok, fail)) ->
+          Util.print_string "--- Code\n";
           let fail curmod env_mark =
             tc.report_fail();
             Util.print1 "%s\n" fail;
             // Side-effect: pops from an internal, hidden stack
-            // At this stage, the internal stack has grown with size 1.
+            // At this stage, the internal stack has grown with size 1. BUT! The
+            // interactive mode will send us a pop message.
             let env = tc.reset_mark env_mark in
-            // Because we were preceded by a push, do not keep whatever we
-            // pushed (it's a failure)
-            let env = tc.reset_mark env_mark in
-            // We want the environment that used to be there. But we can't probe
-            // it without popping it
-            let env = tc.reset_mark env_mark in
-            // So let's put it back. Sigh.
-            let _ = tc.mark env in
             go line_col filename tc stack curmod env ts
           in
 

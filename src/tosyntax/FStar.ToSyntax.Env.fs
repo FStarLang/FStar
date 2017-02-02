@@ -912,17 +912,21 @@ let stack_ops =
     let push env =
         push_record_cache();
         stack := env::!stack;
+        print1 "DS/Pushed; size of stack is now: %s\n" (string_of_int (List.length !stack));
         {env with sigmap=BU.smap_copy (sigmap env)} in
     let pop env = match !stack with
         | env::tl ->
          pop_record_cache();
          stack := tl;
+         print1 "DS/Popped; size of stack is now: %s\n" (string_of_int (List.length !stack));
          env
         | _ -> failwith "Impossible: Too many pops" in
     let commit_mark env =
         commit_record_cache();
         match !stack with
-         | _::tl -> stack := tl; env
+         | _::tl -> stack := tl;
+         print1 "DS/Committed; size of stack is now: %s\n" (string_of_int (List.length !stack));
+         env
          | _ -> failwith "Impossible: Too many pops" in
     { push=push;
       pop=pop;

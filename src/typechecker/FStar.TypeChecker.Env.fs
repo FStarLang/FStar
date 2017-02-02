@@ -190,6 +190,7 @@ let stack_ops =
     let stack = BU.mk_ref [] in
     let push_stack env =
         stack := env::!stack;
+        print1 "TC/Pushed; size of stack is now: %s\n" (string_of_int (List.length !stack));
         {env with sigtab=BU.smap_copy (sigtab env);
                   gamma_cache=BU.smap_copy (gamma_cache env)}
     in
@@ -197,6 +198,7 @@ let stack_ops =
         match !stack with
         | env::tl ->
           stack := tl;
+          print1 "TC/Popped; size of stack is now: %s\n" (string_of_int (List.length !stack));
           env
         | _ -> failwith "Impossible: Too many pops"
     in

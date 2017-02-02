@@ -5,6 +5,17 @@ module Test
 
 let x = "hello"
 #end #done-ok #done-nok
+#pop
+#push 1 11
+
+let x = "hello"
+#end #done-ok #done-nok
+#pop
+#push 1 11
+
+let x = 1
+#end #done-ok #done-nok
+#pop
 #push 1 11
 
 let x = 1
