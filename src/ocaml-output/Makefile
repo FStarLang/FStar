@@ -208,7 +208,8 @@ endif
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/fstar.mk ../../src/gmake/nubuild.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
-	cp ../../bin/msvc*dll $(PREFIX)
+	cp ../../bin/msvc*.dll/bin $(PREFIX)
+	cp ../../bin/libgmp-10.dll/bin $(PREFIX)
 	zip -r -9 $(NAME).zip fstar
 else
 	tar czf $(NAME).tar.gz fstar
