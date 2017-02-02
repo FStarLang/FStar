@@ -10,7 +10,7 @@ val ae_honest: i:ae_id -> Tot (b:bool{b ==> pke_honest (fst i)})
 
 val fresh_pke_id: unit -> Tot (i:pke_id{pke_honest i})
 
-val fresh_ae_id: pke_id -> Tot UInt32.t
-val dishonest_ae_id: pk_i:pke_id -> Tot (num:UInt32.t{not (ae_honest (pk_i,num))})
+val fresh_ae_id: pk_id:pke_id -> Tot (k_id:ae_id{fst k_id = pk_id})
+val dishonest_ae_id: pk_i:pke_id -> Tot (k_id:ae_id{not (ae_honest k_id)})
 
 assume Index_hasEq: hasEq pke_id
