@@ -26,21 +26,41 @@ let mk_sym s: 'a Location.loc = {txt=s; loc=no_location}
 
 let build_symbol (s: string): Longident.t = Longident.parse s
 
+let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
+  match l with
+  | [] -> Lident sym |> mk_sym
+  | (hd::tl) -> 
+     let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
+     Ldot(q, sym) |> mk_sym
+
 let build_constant (c: mlconstant): Parsetree.constant =
   match c with
-  | MLC_Unit -> Const.string ">>>>> ()"
-  | MLC_Bool _ -> Const.string ">>>>> bool"
-  | MLC_Int (sym, _) -> Const.integer sym
-  (* | MLC_Float _ -> Const.float "bogus" *)
-  | MLC_Char c -> Const.char c
-  | MLC_String s -> Const.string s 
-  (* | MLC_Bytes b -> Const.string ">>>>> bytes" *)
-  | _ -> Const.string "<<<<<< bad"
+  | MLC_Int (v, _) -> Const.integer v
+  | MLC_Float v -> Const.float (string_of_float v)
+  | MLC_Char v -> Const.char v
+  | MLC_String v -> Const.string v
+  | _ -> failwith "not defined10"
+
+let build_constant_expr (c: mlconstant): expression =
+  match c with
+  | MLC_Unit -> Exp.construct (mk_sym (Lident "()")) None
+  | MLC_Bool b -> 
+     let id = if b then "true" else "false" in
+     Exp.construct (mk_sym (Lident id)) None
+  | _ -> Exp.constant (build_constant c)
+
+let build_constant_pat (c: mlconstant): pattern_desc =
+  match c with
+  | MLC_Unit -> Ppat_construct (mk_sym (Lident "()"), None)
+  | MLC_Bool b -> 
+     let id = if b then "true" else "false" in
+     Ppat_construct (mk_sym (Lident id), None)
+  | _ -> Ppat_constant (build_constant c)
 
 let rec build_pattern (p: mlpattern): pattern =
   let desc = (match p with
   | MLP_Wild -> Ppat_any
-  | MLP_Const c -> Ppat_constant (build_constant c)
+  | MLP_Const c -> build_constant_pat c
   | MLP_Var (sym, _) -> Ppat_var (mk_sym sym)
   | MLP_CTor (path, l) -> Ppat_tuple (map build_pattern l) (* wrong *)
   | MLP_Branch l -> Ppat_tuple (map build_pattern l)
@@ -48,13 +68,6 @@ let rec build_pattern (p: mlpattern): pattern =
   | MLP_Tuple l -> Ppat_tuple (map build_pattern l)
              ) in
   Pat.mk desc
-
-let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
-  match l with
-  | [] -> Lident sym |> mk_sym
-  | (hd::tl) -> 
-     let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
-     Ldot(q, sym) |> mk_sym
 
 let rec build_core_type (ty: mlty): core_type =
   match ty with
@@ -84,7 +97,7 @@ let rec build_binding_pattern ?ty ((sym, _): mlident) : pattern =
 
 let rec build_expr (e: mlexpr): expression = 
   match e.expr with
-  | MLE_Const c -> Exp.constant (build_constant c)
+  | MLE_Const c -> build_constant_expr c
   | MLE_Var (sym, _) -> Exp.ident (mk_sym (Lident sym))
   | MLE_Name path -> Exp.ident (path_to_ident path)
   | MLE_Let ((flavour, c_flags, lbs), expr) -> failwith "not defined 15" 
@@ -110,12 +123,15 @@ let rec build_expr (e: mlexpr): expression =
       let ty1p = build_core_type ty1 in
       let ty2p = build_core_type ty2 in
       Exp.coerce ep (Some ty1p) ty2p
-   | MLE_CTor _ -> Exp.unreachable () (* wrong *)
+   | MLE_CTor (path, es) -> 
+      (match es with
+      | [] -> Exp.construct (path_to_ident path) None
+      | es -> Exp.construct (path_to_ident path) (Some (build_expr (hd es))))  (* wrong *)
    | MLE_Seq _ -> failwith "not defined26"    
    | MLE_Tuple _ -> failwith "not defined27"  
    | MLE_Record _ -> failwith "not defined28" 
    | MLE_Proj _ -> failwith "not defined29"   
-   | MLE_If _ -> failwith "not defined30"     
+   | MLE_If _ -> failwith "not defined30" (* always desugared to match? *)    
    | MLE_Raise _ -> failwith "not defined31"  
    | MLE_Try _ -> failwith "not defined32"
 
@@ -128,44 +144,55 @@ and build_value (mllbs: mllb list): value_binding list =
   map build_binding mllbs
 
 and build_binding (lb: mllb): value_binding =
-  (* let e = build_expr lb.mllb_def in
-  let p = match lb.mllb_tysc with 
-    | Some (ids, ty) -> build_binding_pattern ty 
-    | None -> (Pat.mk Ppat_any) in
-  (Vb.mk p e) *)
   match lb.mllb_tysc with
   | None -> 
      let e = build_expr lb.mllb_def in
      let p = build_binding_pattern lb.mllb_name in
      (Vb.mk p e)
-  | Some _ -> failwith "not defined57"
+  | Some _ -> (* wrong *)
+     let e = build_expr lb.mllb_def in
+     let p = build_binding_pattern lb.mllb_name in
+     (Vb.mk p e)
 
 let build_row_field (sym, tys): row_field = 
   Rtag (sym, no_attrs, false, map build_core_type tys)
 
-let build_tybody (b: mltybody option): core_type option = 
+let build_ty_manifest (b: mltybody): core_type option= 
   match b with
-  | Some body -> (match body with
-     | MLTD_Abbrev ty -> Some (build_core_type ty)
-     | MLTD_Record l -> 
-        let rows: row_field list = map (fun (sym, ty) -> Rtag (sym, no_attrs, false, [build_core_type ty])) l in
-        Some (Typ.variant rows Closed None) (* maybe don't map records to variants *)
-     | MLTD_DType l -> 
-        let rows = map build_row_field l in
-        Some (Typ.variant rows Closed None)
-     )
-  | None -> None
+  | MLTD_Abbrev ty -> Some (build_core_type ty)
+  | MLTD_Record l -> None
+     (* let rows = map (fun (sym, ty) -> Rtag (sym, no_attrs, false, [build_core_type ty])) l in
+     (Typ.variant rows Closed None) *)
+  | MLTD_DType l -> None
+     (* let rows = map build_row_field l in
+     (Typ.variant rows Closed None) *)
+
+let build_label_decl (sym, ty): label_declaration =
+  Type.field (mk_sym sym) (build_core_type ty)
+
+let build_constructor_decl (sym, tys): constructor_declaration =
+  let args = if BatList.is_empty tys then None else
+    Some (Pcstr_tuple (map build_core_type tys)) in
+  Type.constructor ?args:args (mk_sym sym)
+
+let build_ty_kind (b: mltybody): type_kind = 
+  match b with
+  | MLTD_Abbrev ty -> Ptype_abstract
+  | MLTD_Record l -> Ptype_record (map build_label_decl l)
+  | MLTD_DType l -> Ptype_variant (map build_constructor_decl l)
 
 let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_declaration = 
   let ptype_name = match mangle_opt with
     | Some y -> mk_sym y
     | None -> mk_sym x in
   let ptype_params = Some (map (fun (sym, _) -> Typ.mk (Ptyp_var sym), Invariant) tparams) in
-  let ptype_manifest = build_tybody body in
-  (Type.mk ?params:ptype_params ptype_name ?manifest:ptype_manifest)
+  let (ptype_manifest: core_type option) = BatOption.map_default build_ty_manifest None body in
+  let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
+  (Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ptype_name)
 
 let build_tydecl (td: mltydecl): structure_item_desc =
-  let recf = Nonrecursive in
+  (* list > 1 for mutually recursive type declarations *)
+  let recf = Recursive in
   let type_declarations = map build_one_tydecl td in 
   Pstr_type(recf, type_declarations)
 
@@ -189,7 +216,9 @@ let build_module1 (m1: mlmodule1): structure_item option = match m1 with
   | MLM_Loc loc -> None
 
 let build_m (md: (mlsig * mlmodule) option) : structure = match md with
-  | Some(s, m) -> map build_module1 m |> flatmap opt_to_list
+  | Some(s, m) -> 
+     let a = map build_mlsig1 s in (* is this necessary? *)
+     (map build_module1 m |> flatmap opt_to_list)
   | None -> failwith "not defined7"
 
 let build_ast = function
