@@ -1147,7 +1147,9 @@ and desugar_comp r env t =
              let default_effect =
                if Options.ml_ish ()
                then Const.effect_ML_lid
-               else Const.effect_Tot_lid in
+               else (if Options.warn_default_effects()
+                     then FStar.Errors.warn head.range "Using default effect Tot";
+                     Const.effect_Tot_lid) in
              (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
     in
     let (eff, cattributes), args = pre_process_comp_typ t in
