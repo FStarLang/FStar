@@ -1806,7 +1806,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     (* KM : Experimental remove of the false here, I guess more care should be given in order *)
     (* to prevent the SMT solver from calling this recursively !!! *)
-    | Sig_let((_, [lb]), _, _, quals, _) when (quals |> List.contains Reifiable) ->
+    | Sig_let((is_rec, [lb]), _, _, quals, _) when (quals |> List.contains Reifiable) ->
       (* This let binding has been declared reifiable so we have to generate a *)
       (* pure reified version of it that can be encoded by the SMT. The reified *)
       (* version should not contain any reify at all after normalization. *)
@@ -1827,7 +1827,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          (Print.lbname_to_string lb.lbname)
                          (Print.term_to_string tm)
                          (Print.term_to_string tm');
-          encode_top_level_let env (false, [lb]) quals
+          encode_top_level_let env (is_rec, [lb]) quals
         | _ -> [], env
       end
 

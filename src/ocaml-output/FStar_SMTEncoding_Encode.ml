@@ -6620,7 +6620,7 @@ let se = FStar_Syntax_Syntax.Sig_declare_typ (((l), (lb.FStar_Syntax_Syntax.lbun
 in (encode_sigelt env se))
 end))))
 end
-| FStar_Syntax_Syntax.Sig_let ((uu____13301, (lb)::[]), uu____13303, uu____13304, quals, uu____13306) when (FStar_All.pipe_right quals (FStar_List.contains FStar_Syntax_Syntax.Reifiable)) -> begin
+| FStar_Syntax_Syntax.Sig_let ((is_rec, (lb)::[]), uu____13303, uu____13304, quals, uu____13306) when (FStar_All.pipe_right quals (FStar_List.contains FStar_Syntax_Syntax.Reifiable)) -> begin
 (
 
 let uu____13318 = (
@@ -6681,7 +6681,7 @@ end
 | uu____13411 -> begin
 ()
 end));
-(encode_top_level_let env ((false), ((lb)::[])) quals);
+(encode_top_level_let env ((is_rec), ((lb)::[])) quals);
 ))))))
 end
 | uu____13413 -> begin

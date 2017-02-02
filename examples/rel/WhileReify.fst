@@ -61,13 +61,16 @@ reifiable let rec interpret_exp_st (e:exp) : INT_STORE int (fun s0 p -> forall x
     interpret_binop o a b
 
 
-let interpret_exp (h:heap) (e:exp) : Tot (option int * heap) = reify (interpret_exp_st e) h
+unfold
+let interpret_exp (h:heap) (e:exp) : Tot int =
+  let Some x, h1 = reify (interpret_exp_st e) h in
+  assert (h1 == h) ;
+  x
 
 
 let interpret_exp' (h:heap) (e:exp) : Tot nat =
-  match fst (interpret_exp h e) with
-  | None -> 0
-  | Some n -> if 0 > n then 0 else n
+  let n = interpret_exp h e in
+  if 0 > n then 0 else n
 
 (* function used for the decreases clause *)
 val decr_while : heap -> com -> GTot nat
@@ -124,6 +127,7 @@ reifiable let rec interpret_com_st c h0 =
 (* TODO : Normalization does not play very well with ensures clauses... *)
 (* But there is no problem when replacing normalize_term by foobar where *)
 (* abstract let foobar (#a:Type) (x:a) : a = x *)
+unfold
 let interpret_com (h0:heap) (c:com) : Tot (option heap)
 =
   match (* normalize_term *) (reify (interpret_com_st c h0) h0) with
@@ -133,4 +137,4 @@ let interpret_com (h0:heap) (c:com) : Tot (option heap)
 
 let bidule = assert (fst (reify (interpret_exp_st (AOp Plus (AVar (to_id 7)) (AInt 5))) (create 3)) = Some 8)
 
-let bidule2 = assert (fst  (interpret_exp (create 3) (AOp Plus (AVar (to_id 7)) (AInt 5))) = Some 8)
+let bidule2 = assert (interpret_exp (create 3) (AOp Plus (AVar (to_id 7)) (AInt 5)) = 8)

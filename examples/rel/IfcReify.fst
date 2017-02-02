@@ -33,12 +33,8 @@ let join l1 l2 =
 
 type label_fun = id -> Tot label
 
-(* let in_r x h = (in_ x) `diagb` h *)
-
 type low_equiv (env:label_fun) (h1:rel heap) =
-  (* length (R?.l h1) = length (R?.r h1) /\ *)
-  (forall (x:id(* {x `in_r` h1} *)).
-    env x = Low ==> index (R?.l h1) x = index (R?.r h1) x)
+  (forall (x:id). {:pattern (env x)} env x = Low ==> index (R?.l h1) x = index (R?.r h1) x)
 
 (**************************** Typing Judgements ****************************)
 
@@ -48,9 +44,9 @@ type low_equiv (env:label_fun) (h1:rel heap) =
    - Low equivalent input heaps + Low label ==> same result
 *)
 let ni_exp (env:label_fun) (e:exp) (l:label) : Tot Type0 =
-  forall (h: rel heap).
+  forall (h: rel heap). {:pattern (low_equiv env h)}
    (low_equiv env h /\ Low? l) ==>
-     b2t ( fst (interpret_exp (R?.r h) e) = fst (interpret_exp (R?.l h) e))
+     interpret_exp (R?.r h) e = interpret_exp (R?.l h) e
 
 (* env,pc:l |- c
    - References with a label below l are not modified
@@ -147,12 +143,36 @@ val aint_exp : env:label_fun -> i:int ->
 let aint_exp _ _ = ()
 
 
-(* (\* Typing rule for binary operators *)
+(* Typing rule for binary operators
 
-(*           e1 : l   e2 : l *)
-(*           ---------------- *)
-(*           e1 `op` e2  : l *)
-(* *\) *)
+          e1 : l   e2 : l
+          ----------------
+          e1 `op` e2  : l
+*)
+(* Verifies *)
+let bidule (h:heap) (op:binop) (e1 e2:exp) =
+  let Some v1, h1 = reify (interpret_exp_st e1) h in
+  let Some v2, h2 = reify (interpret_exp_st e2) h in
+  let e = AOp op e1 e2 in
+  let Some v, h3 = reify (interpret_exp_st e) h in
+  assert (h1 == h /\ h2 == h /\ h3 == h) ;
+  assert (v = interpret_binop op v1 v2)
+
+(* Verifies if interpret_exp is qaulified with unfold *)
+let bidule (h:heap) (op:binop) (e1 e2:exp) =
+  let v1 = interpret_exp h e1 in
+  let v2 = interpret_exp h e2 in
+  let e = AOp op e1 e2 in
+  let v = interpret_exp h e in
+  assert (v = interpret_binop op v1 v2)
+
+(* Do not verify... try with largest rlimit/fuel ? *)
+(* let binop_exp0 (env:label_fun) (op:binop) (e1 e2:exp) (l:label) (h:rel heap) *)
+(*   : Lemma (requires (ni_exp env e1 l) /\ ni_exp env e2 l /\ low_equiv env h /\ Low? l ) *)
+(*     (ensures (let e = AOp op e1 e2 in interpret_exp (R?.r h) e = interpret_exp (R?.l h) e)) *)
+(* = *)
+(*   assert (interpret_exp (R?.r h) e1 = interpret_exp (R?.l h) e1) ; *)
+(*   assert (interpret_exp (R?.r h) e2 = interpret_exp (R?.l h) e2) *)
 
 (* val binop_exp : env:label_fun -> op:binop -> e1:exp -> e2:exp -> l:label -> *)
 (*   Lemma (requires (ni_exp env e1 l) /\ (ni_exp env e2 l)) *)
@@ -196,12 +216,12 @@ let sub_com _ _ _ _ = ()
                env,pc:l |- c1; c2
 *)
 
-val seq_inv_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0:option heap ->
-  Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
-    (ensures (inv_com' env (Seq c1 c2) l h0))
-let seq_inv_com' env c1 c2 l = function
-  | None -> ()
-  | Some h0 -> cut (inv_com' env c2 l (interpret_com h0 c1))
+(* val seq_inv_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0:option heap -> *)
+(*   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l)) *)
+(*     (ensures (inv_com' env (Seq c1 c2) l h0)) *)
+(* let seq_inv_com' env c1 c2 l = function *)
+(*   | None -> () *)
+(*   | Some h0 -> cut (inv_com' env c2 l (interpret_com h0 c1)) *)
 
 val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel (option heap) ->
   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
@@ -211,16 +231,16 @@ let seq_com' env c1 c2 l h0 =
   | R (Some hl) (Some hr) -> cut (ni_com' env c2 l (R (interpret_com hl c1) (interpret_com hr c1)))
   | _ -> ()
 
-val seq_com : env:label_fun -> c1:com -> c2:com -> l:label ->
-  Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
-        (ensures  (ni_com env (Seq c1 c2) l))
-let seq_com env c1 c2 l =
-  forall_intro
-    (fun (h0:rel (option heap)) ->
-      seq_com' env c1 c2 l h0 <: Lemma (ni_com' env (Seq c1 c2) l h0)) ;
-  forall_intro
-    (fun (h0:option heap) ->
-      seq_inv_com' env c1 c2 l h0 <: Lemma (inv_com' env (Seq c1 c2) l h0))
+(* val seq_com : env:label_fun -> c1:com -> c2:com -> l:label -> *)
+(*   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l)) *)
+(*         (ensures  (ni_com env (Seq c1 c2) l)) *)
+(* let seq_com env c1 c2 l = *)
+(*   forall_intro *)
+(*     (fun (h0:rel (option heap)) -> *)
+(*       seq_com' env c1 c2 l h0 <: Lemma (ni_com' env (Seq c1 c2) l h0)) ; *)
+(*   forall_intro *)
+(*     (fun (h0:option heap) -> *)
+(*       seq_inv_com' env c1 c2 l h0 <: Lemma (inv_com' env (Seq c1 c2) l h0)) *)
 
 (* (\* Typing rule for conditional commands *)
 
@@ -252,16 +272,16 @@ let skip_com _ = ()
           env,pc:l |- while (e <> 0) do c
 *)
 
-let interpret_exp (h:heap) (v:variant) : Tot nat =
-  match fst (interpret_exp h v) with
-  | Some n -> if 0 > n then 0 else n
-  | None -> 0
+(* let interpret_exp (h:heap) (v:variant) : Tot nat = *)
+(*   match fst (interpret_exp h v) with *)
+(*   | Some n -> if 0 > n then 0 else n *)
+(*   | None -> 0 *)
 
-(* slight variant taking option heap *)
-val decr_while : h:(option heap) -> v:variant -> GTot nat
-let decr_while h v = match h with
-  | None -> 0
-  | Some h0 -> interpret_exp h0 v
+(* (\* slight variant taking option heap *\) *)
+(* val decr_while : h:(option heap) -> v:variant -> GTot nat *)
+(* let decr_while h v = match h with *)
+(*   | None -> 0 *)
+(*   | Some h0 -> interpret_exp h0 v *)
 
 (* (\* #reset-options "--z3rlimit 30" *\) *)
 

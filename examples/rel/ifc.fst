@@ -32,7 +32,7 @@ let join l1 l2 =
 
 type label_fun = ref int -> Tot label
 
-type low_equiv (env:label_fun) (h1:rel heap) = 
+type low_equiv (env:label_fun) (h1:rel heap) =
   forall (x:ref int). env x = Low ==> sel (R?.l h1) x = sel (R?.r h1) x
 
 
@@ -41,20 +41,20 @@ type low_equiv (env:label_fun) (h1:rel heap) =
 (* env |- e : l
    - Expressions do not modify the heap
    - Correctness
-   - Low equivalent input heaps + Low label ==> same result 
+   - Low equivalent input heaps + Low label ==> same result
 *)
 
-type ni_exp (env:label_fun) (e:exp) (l:label) = 
+type ni_exp (env:label_fun) (e:exp) (l:label) =
   forall (h: rel heap).
-   (low_equiv env h /\ Low? l) ==> 
+   (low_equiv env h /\ Low? l) ==>
      (interpret_exp (R?.r h) e = interpret_exp (R?.l h) e)
 
 (* env,pc:l |- c
    - References with a label below l are not modified
    - Total correctness
-   - Low equivalent input heaps ==> Low equivalet output heaps 
+   - Low equivalent input heaps ==> Low equivalet output heaps
 *)
-type ni_com' (env:label_fun) (c:com) (l:label) (h0: rel (option heap)) = 
+type ni_com' (env:label_fun) (c:com) (l:label) (h0: rel (option heap)) =
     (Some? (R?.l h0) /\ Some? (R?.r h0) ==>
      (let h0 = R (Some?.v (R?.l h0)) (Some?.v (R?.r h0)) in
       let o_l = interpret_com (R?.l h0) c in
@@ -74,7 +74,7 @@ type ni_com' (env:label_fun) (c:com) (l:label) (h0: rel (option heap)) =
         (forall r. (env r < l /\ Some? o_r)
           ==> sel hr r = sel (Some?.v o_r) r)))
 
-type ni_com (env:label_fun) (c:com) (l:label) = 
+type ni_com (env:label_fun) (c:com) (l:label) =
     forall (h0: rel (option heap)). ni_com' env c l h0
 
 
@@ -105,9 +105,9 @@ let sub_exp _ _ _ _ = ()
           E | - r : E(r)
 *)
 
-val avar_exp : env:label_fun -> r:id -> 
+val avar_exp : env:label_fun -> r:id ->
   Lemma (requires True)
-        (ensures  (ni_exp env (AVar r) (env r))) 
+        (ensures  (ni_exp env (AVar r) (env r)))
 let avar_exp _ _ = ()
 
 
@@ -117,7 +117,7 @@ let avar_exp _ _ = ()
          -------
          i : Low
 *)
-val aint_exp : env:label_fun -> i:int -> 
+val aint_exp : env:label_fun -> i:int ->
   Lemma (requires True)
         (ensures (ni_exp env (AInt i) Low))
 let aint_exp _ _ = ()
@@ -145,7 +145,7 @@ let binop_exp _ _ _ _ _ = ()
                env,pc:l2 |- c
 *)
 
-val sub_com : env:label_fun -> c:com -> l1:label -> l2:label{l2 <= l1} -> 
+val sub_com : env:label_fun -> c:com -> l1:label -> l2:label{l2 <= l1} ->
   Lemma (requires (ni_com env c l1 ))
         (ensures  (ni_com env c l2 ))
 let sub_com _ _ _ _ = ()
@@ -160,7 +160,7 @@ let sub_com _ _ _ _ = ()
     - label of expression and context label have to be below label of r
       (first one to prevent explicit, second to prevent implicit flows)
 *)
-val assign_com : env:label_fun -> e:exp -> r:id -> 
+val assign_com : env:label_fun -> e:exp -> r:id ->
   Lemma (requires (ni_exp env e (env r)))
         (ensures  (ni_com env (Assign r e) (env r)))
 let assign_com _ _ _ = ()
@@ -182,9 +182,9 @@ let seq_com' env c1 c2 l h0 =
   | R None (Some hr) -> cut (ni_com' env c2 l (R None (interpret_com hr c1)))
   | R (Some hl) (Some hr) -> cut (ni_com' env c2 l (R (interpret_com hl c1) (interpret_com hr c1)))
 
-val seq_com : env:label_fun -> c1:com -> c2:com -> l:label -> 
+val seq_com : env:label_fun -> c1:com -> c2:com -> l:label ->
   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
-        (ensures  (ni_com env (Seq c1 c2) l)) 
+        (ensures  (ni_com env (Seq c1 c2) l))
 let seq_com env c1 c2 l = forall_intro
      (fun (h0:rel (option heap)) ->
        seq_com' env c1 c2 l h0 <: Lemma (ni_com' env (Seq c1 c2) l h0))
@@ -229,57 +229,57 @@ let decr_while h v = match h with
 
 #reset-options "--z3rlimit 30"
 
-val while_com' : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> h:rel (option heap) -> 
+val while_com' : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> h:rel (option heap) ->
   Lemma (requires (ni_exp env e l /\ ni_com env c l))
-        (ensures  (ni_com' env (While e c v) l h)) 
+        (ensures  (ni_com' env (While e c v) l h))
         (decreases (decr_while (R?.l h) v + decr_while (R?.r h) v))
-let rec while_com' env e c v l h = 
+let rec while_com' env e c v l h =
   // Interpret the body
   match h with
   | R None None -> ()
   | R (Some h_l) None ->
   begin
-    let o_l = interpret_com h_l c in 
+    let o_l = interpret_com h_l c in
     match o_l with
-    | Some hl -> 
+    | Some hl ->
       if (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 then
         while_com' env e c v l (R o_l None)
       else
         ()
     | None  -> ()
   end
-  | R None (Some h_r) -> 
+  | R None (Some h_r) ->
   begin
-    let o_r = interpret_com h_r c in 
+    let o_r = interpret_com h_r c in
     match o_r with
-    | Some hr -> 
+    | Some hr ->
       if (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 then
         while_com' env e c v l (R None o_r)
       else
         ()
     | None  -> ()
   end
-  | R (Some h_l) (Some h_r) -> 
+  | R (Some h_l) (Some h_r) ->
   begin
-    let o_l = interpret_com h_l c in 
-    let o_r = interpret_com h_r c in 
+    let o_l = interpret_com h_l c in
+    let o_r = interpret_com h_r c in
 
     // Case analysis on termination of bodies
     match o_l, o_r with
-    | Some hl , Some hr  -> 
+    | Some hl , Some hr  ->
       begin
         // case analysis on decreasing of variant
-        match (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 , 
+        match (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 ,
           (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 with
         | true , true  -> while_com' env e c v l (R o_l o_r)
         | true , false -> while_com' env e c v l (R o_l (Some h_r))
         | false , true -> while_com' env e c v l (R (Some h_l) o_r )
         | false, false -> ()
       end
-    | Some hl , None -> 
+    | Some hl , None ->
       if (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 then
         while_com' env e c v l (R o_l (Some h_r))
-    | None , Some hr  -> 
+    | None , Some hr  ->
       if (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 then
         while_com' env e c v l (R (Some h_l) o_r)
     | None, None -> ()
@@ -287,9 +287,9 @@ let rec while_com' env e c v l h =
 
 #reset-options
 
-val while_com : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> 
+val while_com : env:label_fun -> e:exp -> c:com -> v:variant -> l:label ->
   Lemma (requires (ni_exp env e l /\ ni_com env c l))
-        (ensures  (ni_com env (While e c v) l)) 
+        (ensures  (ni_com env (While e c v) l))
 let while_com env e c v l = forall_intro
   (fun (h:rel (option heap)) -> while_com' env e c v l h
     <: Lemma (ensures  (ni_com' env (While e c v) l h)))
