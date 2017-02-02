@@ -126,6 +126,7 @@ val use_hints                   : unit    -> bool
 val verify_all                  : unit    -> bool
 val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool
+val warn_default_effects        : unit    -> bool
 val warn_top_level_effects      : unit    -> bool
 val z3_exe                      : unit    -> string
 val z3_cliopt                   : unit    -> list<string>
