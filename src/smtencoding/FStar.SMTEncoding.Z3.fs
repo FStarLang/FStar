@@ -159,15 +159,23 @@ let query_logging =
     let log_file_name () = match !current_file_name with
         | None -> failwith "no log file"
         | Some n -> n in
-    let proof_log_file () = match !current_proof_file with
+    let proof_log_file () =
+        match !current_proof_file with
+        | Some fh -> fh
         | None ->
-            let x = get_log_file () in
-            BU.close_file x ;
-            let fn = log_file_name() ^ ".proof" in
-            let fh = BU.open_file_for_writing fn in
+            let file_name =
+                match !current_file_name with
+                | Some n -> n
+                | None ->
+                    ignore (new_log_file ()) ;
+                    match !current_file_name with
+                    | Some n -> n
+                    | _ -> "" in
+            let file_name_p =
+                (replace_string file_name ".smt2" ".proofs.smt2") in
+            let fh = BU.open_file_for_writing file_name_p in
             current_proof_file := Some fh ;
             fh
-        | Some f -> f
     in
     {set_module_name=set_module_name;
      get_module_name=get_module_name;
@@ -236,15 +244,14 @@ let doZ3Exe' (fresh:bool) (input:string) =
           parse_core core, lines
         | _ -> None, lines in
     let proof lines =
-        let mutable write = false in
         let f = query_logging.proof_log_file() in
-        let fw = (fun line ->
+        let fw = (fun w line ->
             match line with
-            | "<proof>" -> write <- true
-            | "</proof>" -> write <- false
-            | _ -> if write then append_to_file f line
+            | "<proof>" -> true
+            | "</proof>" -> false
+            | _ -> if w then append_to_file f line ; w
         ) in
-        List.iter fw lines ;
+        ignore (List.fold_left fw false lines) ;
         append_to_file f  "" in
     let rec lblnegs lines succeeded = match lines with
       | lname::"false"::rest when BU.starts_with lname "label_" -> lname::lblnegs rest succeeded
