@@ -321,6 +321,7 @@ type m_timestamps = list<(option<string> * string * option<time> * time)>
             if List.length stack = List.length ts then true, update_deps filename tc curmod stack env ts else false, (stack, env, ts)
           in
           let stack = (env, curmod)::stack in
+          // Side-effect: pushes to an internal, hidden stack
           let env = tc.push env lax restore_cmd_line_options "#push" in
           go (l, c) filename tc stack curmod env ts
 
@@ -328,10 +329,21 @@ type m_timestamps = list<(option<string> * string * option<time> * time)>
           let fail curmod env_mark =
             tc.report_fail();
             Util.print1 "%s\n" fail;
+            // Side-effect: pops from an internal, hidden stack
+            // At this stage, the internal stack has grown with size 1.
             let env = tc.reset_mark env_mark in
+            // Because we were preceded by a push, do not keep whatever we
+            // pushed (it's a failure)
+            let env = tc.reset_mark env_mark in
+            // We want the environment that used to be there. But we can't probe
+            // it without popping it
+            let env = tc.reset_mark env_mark in
+            // So let's put it back. Sigh.
+            let _ = tc.mark env in
             go line_col filename tc stack curmod env ts
           in
 
+          // Side-effect: pushes to an internal, hidden stack
           let env_mark = tc.mark env in
           let frag = {frag_text=text;
                       frag_line=fst line_col;
@@ -344,6 +356,8 @@ type m_timestamps = list<(option<string> * string * option<time> * time)>
             | Some (curmod, env, n_errs) ->
                 if n_errs=0 then begin
                   Util.print1 "\n%s\n" ok;
+                  // Side-effect: pops from an internal, hidden stack
+                  // At this stage, the internal stack has grown with size 1.
                   let env = tc.commit_mark env in
                   go line_col filename tc stack curmod env ts
                   end
