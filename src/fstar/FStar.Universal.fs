@@ -87,6 +87,10 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
       Some (curmod, dsenv, env)
 
     | Parser.Driver.Modul ast_modul ->
+        (* It may seem surprising that this function, whose name indicates that
+        it type-checks a fragment, can actually parse an entire module.
+        Actually, this is an abuse, and just means that we're type-checking the
+        first chunk. *)
       let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
       let env = match curmod with
         | Some modul ->

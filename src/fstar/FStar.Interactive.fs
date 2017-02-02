@@ -408,17 +408,21 @@ let rec go (line_col:(int*int))
   | Code (text, (ok, fail)) ->
       Util.print_string "--- Code\n";
       let fail curmod env_mark =
+        debug env;
         report_fail();
         Util.print1 "%s\n" fail;
         // Side-effect: pops from an internal, hidden stack
         // At this stage, the internal stack has grown with size 1. BUT! The
         // interactive mode will send us a pop message.
         let env = reset_mark env_mark in
+        debug env;
         go line_col filename stack curmod env ts
       in
 
       // Side-effect: pushes to an internal, hidden stack
+      debug env;
       let env_mark = mark env in
+      debug env;
       let frag = {frag_text=text;
                   frag_line=fst line_col;
                   frag_col=snd line_col} in
@@ -432,7 +436,9 @@ let rec go (line_col:(int*int))
               Util.print1 "\n%s\n" ok;
               // Side-effect: pops from an internal, hidden stack
               // At this stage, the internal stack has grown with size 1.
+              debug env;
               let env = commit_mark env in
+              debug env;
               go line_col filename stack curmod env ts
               end
             else fail curmod env_mark

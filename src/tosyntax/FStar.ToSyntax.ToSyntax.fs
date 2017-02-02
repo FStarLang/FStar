@@ -1977,10 +1977,17 @@ let open_prims_all =
 (* Top-level functionality: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
-let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool =
-  let env = match curmod with
-    | None -> env
-    | Some(prev_mod) ->  Env.finish_module_or_interface env prev_mod in
+let desugar_modul_common (curmod: option<S.modul>) env (m:AST.modul) : env_t * Syntax.modul * bool =
+  let env = match curmod, m with
+    | None, _ ->
+        env
+    | Some ({ name = prev_lid }), Module (current_lid, _)
+      when lid_equals prev_lid current_lid && Options.interactive () ->
+        // If we're in the interactive mode reading the contents of an fst after
+        // desugaring the corresponding fsti, don't finish the fsti
+        env
+    | Some prev_mod, _ ->
+        Env.finish_module_or_interface env prev_mod in
   let (env, pop_when_done), mname, decls, intf = match m with
     | Interface(mname, decls, admitted) ->
       Env.prepare_module_or_interface true admitted env mname, mname, decls, true
@@ -1996,6 +2003,10 @@ let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool 
   env, modul, pop_when_done
 
 let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modul =
+  begin match curmod with
+  | Some _ -> Util.print_string "desugar_partial_module curmod=Some\n"
+  | None -> Util.print_string "desugar_partial_module curmod=None\n"
+  end;
   let m =
     if Options.interactive () &&
       get_file_extension (List.hd (Options.file_list ())) = "fsti"

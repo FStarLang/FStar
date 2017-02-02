@@ -987,12 +987,15 @@ let prepare_module_or_interface intf admitted env mname =
   in
 
   match env.modules |> BU.find_opt (fun (l, _) -> lid_equals l mname) with
-    | None -> prep env, false
+    | None ->
+        Util.print_string "prepare_module_or_interface NONE\n";
+        prep env, false
     | Some (_, m) ->
-      if not (Options.interactive ()) && (not m.is_interface || intf)
-      then raise (Error(BU.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
-      //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
-      prep (push env), true //push a context so that we can pop it when we're done
+        Util.print_string "prepare_module_or_interface SOME\n";
+        if not (Options.interactive ()) && (not m.is_interface || intf)
+        then raise (Error(BU.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
+        //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
+        prep (push env), true //push a context so that we can pop it when we're done
 
 let enter_monad_scope env mname =
   match env.curmonad with
