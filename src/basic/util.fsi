@@ -13,8 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+#light "off"
 module FStar.Util
-
+open FStar.All
 open System.IO
 
 open FStar.BaseTypes

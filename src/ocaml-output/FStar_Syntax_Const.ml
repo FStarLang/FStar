@@ -1,7 +1,7 @@
 
 open Prims
 
-let mk : FStar_Syntax_Syntax.term'  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun t -> (FStar_Syntax_Syntax.mk t None FStar_Range.dummyRange))
+let mk : FStar_Syntax_Syntax.term'  ->  FStar_Syntax_Syntax.term = (fun t -> ((FStar_Syntax_Syntax.mk t) None FStar_Range.dummyRange))
 
 
 let p2l : Prims.string Prims.list  ->  FStar_Ident.lident = (fun l -> (FStar_Ident.lid_of_path l FStar_Range.dummyRange))
@@ -118,34 +118,28 @@ let char_lid : FStar_Ident.lident = (p2l (("FStar")::("Char")::("char")::[]))
 let heap_lid : FStar_Ident.lident = (p2l (("FStar")::("Heap")::("heap")::[]))
 
 
-let kunary : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun k k' -> (let _134_15 = (let _134_14 = (let _134_13 = (let _134_11 = (FStar_Syntax_Syntax.null_binder k)
-in (_134_11)::[])
-in (let _134_12 = (FStar_Syntax_Syntax.mk_Total k')
-in ((_134_13), (_134_12))))
-in FStar_Syntax_Syntax.Tm_arrow (_134_14))
-in (mk _134_15)))
+let kunary : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.term = (fun k k' -> (mk (FStar_Syntax_Syntax.Tm_arrow ((let _0_180 = (let _0_178 = (FStar_Syntax_Syntax.null_binder k)
+in (_0_178)::[])
+in (let _0_179 = (FStar_Syntax_Syntax.mk_Total k')
+in ((_0_180), (_0_179))))))))
 
 
-let kbin : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun k1 k2 k' -> (let _134_28 = (let _134_27 = (let _134_26 = (let _134_24 = (FStar_Syntax_Syntax.null_binder k1)
-in (let _134_23 = (let _134_22 = (FStar_Syntax_Syntax.null_binder k2)
-in (_134_22)::[])
-in (_134_24)::_134_23))
-in (let _134_25 = (FStar_Syntax_Syntax.mk_Total k')
-in ((_134_26), (_134_25))))
-in FStar_Syntax_Syntax.Tm_arrow (_134_27))
-in (mk _134_28)))
+let kbin : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.term = (fun k1 k2 k' -> (mk (FStar_Syntax_Syntax.Tm_arrow ((let _0_185 = (let _0_183 = (FStar_Syntax_Syntax.null_binder k1)
+in (let _0_182 = (let _0_181 = (FStar_Syntax_Syntax.null_binder k2)
+in (_0_181)::[])
+in (_0_183)::_0_182))
+in (let _0_184 = (FStar_Syntax_Syntax.mk_Total k')
+in ((_0_185), (_0_184))))))))
 
 
-let ktern : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun k1 k2 k3 k' -> (let _134_45 = (let _134_44 = (let _134_43 = (let _134_41 = (FStar_Syntax_Syntax.null_binder k1)
-in (let _134_40 = (let _134_39 = (FStar_Syntax_Syntax.null_binder k2)
-in (let _134_38 = (let _134_37 = (FStar_Syntax_Syntax.null_binder k3)
-in (_134_37)::[])
-in (_134_39)::_134_38))
-in (_134_41)::_134_40))
-in (let _134_42 = (FStar_Syntax_Syntax.mk_Total k')
-in ((_134_43), (_134_42))))
-in FStar_Syntax_Syntax.Tm_arrow (_134_44))
-in (mk _134_45)))
+let ktern : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.term = (fun k1 k2 k3 k' -> (mk (FStar_Syntax_Syntax.Tm_arrow ((let _0_192 = (let _0_190 = (FStar_Syntax_Syntax.null_binder k1)
+in (let _0_189 = (let _0_188 = (FStar_Syntax_Syntax.null_binder k2)
+in (let _0_187 = (let _0_186 = (FStar_Syntax_Syntax.null_binder k3)
+in (_0_186)::[])
+in (_0_188)::_0_187))
+in (_0_190)::_0_189))
+in (let _0_191 = (FStar_Syntax_Syntax.mk_Total k')
+in ((_0_192), (_0_191))))))))
 
 
 let true_lid : FStar_Ident.lident = (pconst "l_True")
@@ -199,13 +193,13 @@ let eq2_lid : FStar_Ident.lident = (pconst "eq2")
 let eq3_lid : FStar_Ident.lident = (pconst "eq3")
 
 
-let exp_true_bool : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool (true))))
+let exp_true_bool : FStar_Syntax_Syntax.term = (mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool (true))))
 
 
-let exp_false_bool : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool (false))))
+let exp_false_bool : FStar_Syntax_Syntax.term = (mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool (false))))
 
 
-let exp_unit : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_unit)))
+let exp_unit : FStar_Syntax_Syntax.term = (mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_unit)))
 
 
 let cons_lid : FStar_Ident.lident = (pconst "Cons")
@@ -220,7 +214,10 @@ let assume_lid : FStar_Ident.lident = (pconst "_assume")
 let assert_lid : FStar_Ident.lident = (pconst "_assert")
 
 
-let list_append_lid : FStar_Ident.lident = (p2l (("FStar")::("List")::("Tot")::("append")::[]))
+let list_append_lid : FStar_Ident.lident = (p2l (("FStar")::("List")::("append")::[]))
+
+
+let list_tot_append_lid : FStar_Ident.lident = (p2l (("FStar")::("List")::("Tot")::("Base")::("append")::[]))
 
 
 let strcat_lid : FStar_Ident.lident = (p2l (("Prims")::("strcat")::[]))

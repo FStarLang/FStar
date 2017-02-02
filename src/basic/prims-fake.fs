@@ -15,3 +15,4 @@ type 'a option' = 'a option
 type 'a option = 'a option'
 type 'a list' = 'a list
 type 'a list = 'a list'
+let op_Multiply x y = x * y

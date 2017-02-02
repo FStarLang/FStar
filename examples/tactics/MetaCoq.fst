@@ -1,5 +1,7 @@
 module MetaCoq
 
+open FStar.All
+
 (*
 The Next 700 Safe Tactic Languages.
 B. Ziliani, Y. Régis-Gianas, J.-O. Kaiser.

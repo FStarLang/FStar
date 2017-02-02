@@ -7,9 +7,9 @@ endif
 
 MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
-OCAMLBUILD=cd ../../ && ocamlbuild -I src/ocaml-output -I src/basic/ml \
+OCAMLBUILD=cd ../../ && ocamlbuild -cflag '-g' -I src/ocaml-output -I src/basic/ml \
   -I src/parser/ml -I src/fstar/ml -j 24 -build-dir src/ocaml-output/_build \
-  -I src/prettyprint/ml -I lib/ml -use-ocamlfind
+  -I src/prettyprint/ml -I src/ocaml-output/bootlibs -use-ocamlfind
 COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
 PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
@@ -67,13 +67,14 @@ endif
 	echo "#light \"off\"" >> $@
 	echo "// (c) Microsoft Corporation. All rights reserved" >> $@
 	echo "open Prims" >> $@
+	echo "open FStar.Errors" >> $@
 	echo "open FStar.List" >> $@
 	echo "open FStar.Util" >> $@
 	echo "open FStar.Range" >> $@
 	echo "open FStar.Options" >> $@
-	echo "open FStar.Absyn.Syntax" >> $@
-	echo "open FStar.Absyn.Const" >> $@
-	echo "open FStar.Absyn.Util" >> $@
+	echo "open FStar.Syntax.Syntax" >> $@
+	echo "open FStar.Syntax.Const" >> $@
+	echo "open FStar.Syntax.Util" >> $@
 	echo "open FStar.Parser.AST" >> $@
 	echo "open FStar.Parser.Util" >> $@
 	echo "open FStar.Const" >> $@
@@ -98,13 +99,14 @@ FStar_Parser_Parse.ml: parse.mly
 	# We are opening the same module twice but we need these modules
 	# open for the definition of tokens
 	echo "open Prims" > $@
+	echo "open FStar_Errors" >> $@
 	echo "open FStar_List" >> $@
 	echo "open FStar_Util" >> $@
 	echo "open FStar_Range" >> $@
 	echo "open FStar_Options" >> $@
-	echo "open FStar_Absyn_Syntax" >> $@
-	echo "open FStar_Absyn_Const" >> $@
-	echo "open FStar_Absyn_Util" >> $@
+	echo "open FStar_Syntax_Syntax" >> $@
+	echo "open FStar_Syntax_Const" >> $@
+	echo "open FStar_Syntax_Util" >> $@
 	echo "open FStar_Parser_AST" >> $@
 	echo "open FStar_Parser_Util" >> $@
 	echo "open FStar_Const" >> $@
@@ -133,7 +135,7 @@ COMPILER = OCaml $(shell ocamlc -version)
 DATE = $(shell $(DATE_EXEC) -Iseconds)
 COMMIT = $(shell ../tools/get_commit)
 
-.PHONY: version
+.PHONY: FStar_Version.ml
 FStar_Version.ml:
 	echo 'let version = "$(VERSION)"' > $@
 	echo 'let platform = "$(PLATFORM)"' >> $@
@@ -182,12 +184,10 @@ package: all
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
         # Install the F* binary
 	mkdir -p $(PREFIX)/bin/
-	$(INSTALL_EXEC) -m 755 fstar.exe $(PREFIX)/bin/fstar.exe
+	$(INSTALL_EXEC) -m 755 _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
-	$(call fexport,lib)
 	$(call fexport,ulib)
 	$(call fexport,examples)
-	$(call fexport,contrib)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
 ifeq ($(MADOKO),Madoko)
@@ -201,17 +201,15 @@ endif
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
         # Copy Z3 binary
 	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$(FSTAR_HOME)/bin or in your \\$PATH, skipped from package ************** "
-        # JP: actually this only makes sense for the F# build of F*. Why are we
-        # copying these files while this directory builds an OCaml-compiled,
-        # Windows-native version of F*?
-        # CH: Nik added these, and if I remember right it might be related to bootstrapping?
+        # Need this for running code extracted to F# (for instance hello)
 	make -C ../VS install-packages
 	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/fstar.mk ../../src/gmake/nubuild.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
-	cp ../../bin/msvc*dll $(PREFIX)
+	cp ../../bin/msvc*.dll $(PREFIX)/bin
+	cp ../../bin/libgmp-10.dll $(PREFIX)/bin
 	zip -r -9 $(NAME).zip fstar
 else
 	tar czf $(NAME).tar.gz fstar

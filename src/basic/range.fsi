@@ -13,8 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+#light "off"
 module FStar.Range
-
+open FStar.All
 open FStar.BaseTypes
 
 type range = {
@@ -55,3 +56,8 @@ val range_before_pos : range -> pos -> bool
 val range_before_range : range -> range -> bool
 val end_of_line : pos -> pos
 val extend_to_end_of_line : range -> range
+
+(* The OCaml file does not satisfy this interface and is using [int] for [pos] *)
+(* even though FStar_Range.pos is defined to be FStar_BaseTypes.int32 *)
+(* This code needs a major cleanup, in particular we should make sure that the *)
+(* F# interface are satisfied by the ocaml code *)

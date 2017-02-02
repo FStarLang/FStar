@@ -3,7 +3,6 @@
 module Cap (* capabilities *)
 
 open FStar.Seq
-open FStar.SeqProperties
 open ACLs_simplified
 open MAC
 open FStar.BaseTypes

@@ -103,7 +103,7 @@ type table (rgn:region) (i:id) = Seq.seq (entry rgn i)
 noextract let is_entry_domain (#i:id) (#rgn:rid) (x:domain i) (e:entry rgn i) : Tot bool = e.x = x
 
 noextract let find (#rgn:region) (#i:id) (s:table rgn i) (x:domain i) : option (range rgn i x) =
-  match SeqProperties.find_l (is_entry_domain x) s with
+  match Seq.find_l (is_entry_domain x) s with
   | Some e -> Some e.range
   | None   -> None
 
@@ -126,9 +126,9 @@ let find_blk #rgn (#i:id) s (x:domain_blk i) =
 
 (* not sure why it fails; inlined below.
 #reset-options "--z3rlimit 100"
-private val lemma_find_snoc: #rgn:region -> #i:id -> s:table rgn i -> e:entry rgn i -> Lemma (ensures (find (SeqProperties.snoc s e) e.x == Some e.range))
+private val lemma_find_snoc: #rgn:region -> #i:id -> s:table rgn i -> e:entry rgn i -> Lemma (ensures (find (Seq.snoc s e) e.x == Some e.range))
 let lemma_find_snoc #rgn #i s e = 
-  SeqProperties.find_snoc s e (is_entry_domain e.x)
+  Seq.find_snoc s e (is_entry_domain e.x)
 *)
 
 
@@ -246,7 +246,7 @@ val prf_mac:
          (match find_mac (HS.sel h1 r) x with 
           | Some mc' -> 
               mc == mc' /\ 
-              t1 == SeqProperties.snoc t0 (Entry x mc) /\
+              t1 == Seq.snoc t0 (Entry x mc) /\
               CMA.genPost (i,x.iv) t.mac_rgn h0 mc h1 /\
               HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
               HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
@@ -280,8 +280,8 @@ let prf_mac i t k_0 x =
         mc
     | None ->
         let mc = CMA.gen t.mac_rgn macId k_0 in
-        r := SeqProperties.snoc contents (Entry x mc);
-        SeqProperties.find_snoc contents (Entry x mc) (is_entry_domain x);
+        r := Seq.snoc contents (Entry x mc);
+        Seq.find_snoc contents (Entry x mc) (is_entry_domain x);
         mc
     end
   else
@@ -311,7 +311,7 @@ val prf_sk0:
          (match find_sk0 (HS.sel h1 r) x with 
           | Some r1 -> 
               k == r1 /\
-              t1 == SeqProperties.snoc t0 (Entry x r1) /\
+              t1 == Seq.snoc t0 (Entry x r1) /\
               HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
               HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
               HS.modifies_ref t.mac_rgn TSet.empty h0 h1
@@ -333,8 +333,8 @@ let prf_sk0 #i t =
       | Some sk0 -> sk0 
       | None -> 
           let sk0 = CMA.get_skey (CMA.akey_gen t.mac_rgn i) in
-          r := SeqProperties.snoc contents (Entry x sk0);
-          SeqProperties.find_snoc contents (Entry x sk0) (is_entry_domain x);
+          r := Seq.snoc contents (Entry x sk0);
+          Seq.find_snoc contents (Entry x sk0) (is_entry_domain x);
           sk0 in
       Buffer.recall sk0;
       sk0
@@ -353,7 +353,6 @@ let prf_sk0 #i t =
 let extends (#rgn:region) (#i:id) (s0:Seq.seq (entry rgn i)) 
 	    (s1:Seq.seq (entry rgn i)) (x:domain i{ctr_0 i <^ x.ctr}) =
   let open FStar.Seq in 
-  let open FStar.SeqProperties in 
   match find s0 x with 
   | Some _ -> s0 == s1
   | None   -> Seq.length s1 = Seq.length s0 + 1 /\ 
@@ -397,7 +396,7 @@ let prf_blk i t x len output =
       | Some block -> block
       | None ->
           let block = random_bytes (blocklen i) in
-          r := SeqProperties.snoc contents (Entry x block);
+          r := Seq.snoc contents (Entry x block);
           // assert(extends (HS.sel h0 r) (HS.sel h' r) x);
           block
     in
@@ -523,8 +522,8 @@ let prf_enxor i t x l cipher plain =
     let p = Crypto.Plain.load #i l plain in
     let c = random_bytes l in // sample a fresh ciphertext block
     let newblock = OTP #i l p c in
-    let contents' = SeqProperties.snoc contents (Entry x newblock) in
-    SeqProperties.find_snoc contents (Entry x newblock) (is_entry_domain x);
+    let contents' = Seq.snoc contents (Entry x newblock) in
+    Seq.find_snoc contents (Entry x newblock) (is_entry_domain x);
 
     let h0 = ST.get() in
     assert(p == sel_plain h0 l plain);

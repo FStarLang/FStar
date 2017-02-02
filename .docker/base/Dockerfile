@@ -3,8 +3,8 @@ FROM ubuntu:xenial
 MAINTAINER Benjamin Beurdouche <benjamin.beurdouche@inria.fr>; Daniel Fabian <daniel.fabian@integral-it.ch>
 
 # Define versions of dependencies
-ENV opamv 4.03.0
-ENV z3v z3-4.4.1
+ENV opamv 4.04.0
+ENV z3v z3-4.5.0
 
 # Install required packages and set versions
 RUN apt-get -qq update
