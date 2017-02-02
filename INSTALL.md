@@ -51,9 +51,9 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ fstar.exe --version
         F* 0.9.4.0
         platform=Linux_x86_64
-        compiler=OCaml 4.04.0
-        date=2017-01-21T20:16:56+01:00
-        commit=34f11c159 (dirty)
+        compiler=OCaml 4.03.0
+        date=2017-02-02T11:54:08+01:00
+        commit=9fc07cf
         $ z3 --version
         Z3 version 4.5.0
 
