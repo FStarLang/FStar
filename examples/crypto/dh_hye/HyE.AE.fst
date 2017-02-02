@@ -119,6 +119,7 @@ val decrypt: #(i:ae_id) -> k:key{k.i=i} -> c:cipher -> ST (option (protected_ae_
   (requires (fun h -> True (* Could require Map.contains h0 k.region *)))
   (ensures  (fun h0 res h1 -> //True))
     modifies_none h0 h1
+    /\ ((ae_ind_cca /\ ae_honest i) ==> (get_index res)
     ///\ ( (b2t ae_int_ctxt /\ honest i /\ Some? res) ==> SeqProperties.mem (Some?.v res,c) (m_sel h0 k.log) )
     ))
 let decrypt #i k c =

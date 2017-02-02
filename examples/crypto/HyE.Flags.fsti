@@ -22,18 +22,15 @@ val ae_ind_cca : b:bool{ae_ind_cpa /\ ae_int_ctxt ==> b}
 
 val hpke_ind_cca : b:bool{b ==> b2t ae_ind_cca /\ pke_ind_cca}
 
-val dishonestId: unit -> Tot (i:id{not (honest i)})
-val honestId: unit -> Tot (i:id{honest i})
-
-type dependentId =
+type dependent_ae_id =
   (if pke_ind_cca then
-    i:id{honest i}
+    i:ae_id{b2t (ae_honest i)}
   else
-    i:id{not (honest i)})
+    i:ae_id{not (ae_honest i)})
 
-val createId: unit -> Tot dependentId
+val createId: unit -> Tot dependent_ae_id
 
-val honest_implies_pke_inc_cca: i:id -> Lemma
-  (requires honest i)
+val honest_implies_pke_inc_cca: i:ae_id -> Lemma
+  (requires b2t (ae_honest i))
   (ensures (pke_ind_cca))
-  [SMTPat (honest i)]
+  [SMTPat (ae_honest i)]

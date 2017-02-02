@@ -93,16 +93,19 @@ let decrypt #sk_i sk c =
   let ae_i = AE.get_index k in
   let hpke_p =
     (match AE.decrypt #ae_i k ae_c with
-    | Some p -> let p'' = (PlainAE.ae_message_unwrap #ae_i p) in Some p''
+    | Some p -> 
+      let p' = (PlainAE.ae_message_unwrap #ae_i p) in 
+      let content_id = extract_id #ae_i p' in
+      assert(content_id=ae_i);
+      Some p'
     | None -> None)
   in
-  let content_id = extract_id #ae_i hpke_p in
-  assert(content_id=ae_i);
   //assert(PlainHPKE.get_index hpke_p = AE.get_index k);
   match hpke_p with
   | Some p' -> 
     (if hpke_ind_cca && ae_honest ae_i  then
-      Some p'
+      //Some p'
+      Some (PlainHPKE.coerce #ae_i p')
     else
       let p'' = (PlainHPKE.coerce #ae_i p') in
       Some p'')

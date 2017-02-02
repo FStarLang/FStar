@@ -27,7 +27,7 @@ type cipher = b:bytes{B.length b >= ivsize}
 let plain_to_cipher (i:id) = fun (p:protected_ae_plain i) -> cipher
 
 //type log_t (i:id) (r:rid) = m_rref r (seq ((msg i) * cipher)) grows
-type log_t (i:id) = MonotoneMap.map' (protected_ae_plain i) (plain_to_cipher i)
+type log_t (i:id) (r:rid) = MonotoneMap.t r (protected_ae_plain i) (plain_to_cipher i) (grows (empty_map (protected_ae_plain i) (plain_to_cipher i)))
 
 
 (**

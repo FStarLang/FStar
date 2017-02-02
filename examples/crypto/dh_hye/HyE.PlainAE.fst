@@ -22,7 +22,6 @@ type ae_plain_content (i:ae_id) = (
 noeq abstract type protected_ae_plain (i:ae_id)=
   | Protected_ae_plain: (p:ae_plain_content i) -> protected_ae_plain i
 
-
 type ae_plain = bytes
 
 val extract_id: #i:ae_id -> ae_plain_content i -> Tot (i:ae_id)

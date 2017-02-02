@@ -40,21 +40,25 @@ type rid = FStar.Monotonic.Seq.rid
    The HPKE key types contain a region in which they live, as well as the concrete PKE key
    that is used for the encryption/decryption. The secret key is abstract.
 *)
-noeq abstract type hpke_pkey (pk_id:pke_id) = 
-  | PKey: #region:rid -> pke_pk:PKE.pkey pk_id -> hpke_pkey pk_id
+noeq abstract type hpke_pkey = 
+  | PKey: #pk_id:pke_id -> #region:rid -> pke_pk:PKE.pkey pk_id -> hpke_pkey
 
-noeq abstract type hpke_skey (sk_id:pke_id) =
-  | SKey: pke_sk:PKE.skey sk_id -> hpke_pk:hpke_pkey sk_id -> hpke_skey sk_id
+noeq abstract type hpke_skey =
+  | SKey: #sk_id:pke_id -> pke_sk:PKE.skey sk_id -> hpke_pk:hpke_pkey sk_id -> hpke_skey
   
-
-val keygen: #i:pke_id -> rid -> hpke_pkey i * hpke_skey i
-let keygen #i (parent:rid) =
-  let (pke_pk, pke_sk) = PKE.keygen parent in
+(**
+   TODO: Have a table with public keys, binding pks to ids.
+     - look at miTLS:Sig
+*)
+val keygen: rid -> hpke_pkey * hpke_skey
+let keygen (parent:rid) =
+  let pk_id = fresh_pke_id() in
+  let (pke_pk, pke_sk) = PKE.keygen #pk_id parent in
   let region = new_region parent in
-  let hpke_pk = PKey #i #region pke_pk in
-  hpke_pk, SKey pke_sk hpke_pk
+  let hpke_pk = PKey #pk_id #region pke_pk in
+  hpke_pk, SKey #pk_id pke_sk hpke_pk
 
-val coerce_key: #i:pke_id{not (pke_honest i)} -> rid -> PKE.pkey i-> Tot (hpke_pkey i)
+val coerce_key: #i:pke_id{not (pke_honest i)} -> rid -> PKE.pkey i -> Tot (hpke_pkey i)
 let coerce_key #i parent pke_pk =
   PKey #i #parent pke_pk
 
@@ -70,19 +74,14 @@ type c = PKE.cipher * AE.cipher //lbytes(PKE.ciphersize + AE.ciphersize)
    we encrypt the protected_hpke_plain. Else we strip it of its 
    protection and encrypt the plain representation.
 *)
-val encrypt: #(pke_i:pke_id) -> hpke_pkey pke_i -> p:protected_hpke_plain -> ST c
-  (requires (fun _ -> 
-    let ae_i = PlainHPKE.get_index p in
-    not (pke_honest pke_i) ==> not (honest ae_i)
-  ))
-  (ensures (fun _ _ _ -> True))
+val encrypt: #(pke_i:pke_id) -> hpke_pkey pke_i -> p:protected_hpke_plain i -> St c
 let encrypt #i pk p =
   let region = new_region pk.region in
-  let ae_i = PlainHPKE.get_index p in
-  let k = AE.keygen #ae_i region in 
-  let pke_p = Prot_pke_p ae_i k in
+  let k = AE.keygen pke_i region in 
+  let ae_i = AE.get_index k in
+  let pke_p = Prot_pke_p pke_i k in
   let p' =
-    match hpke_ind_cca && honest ae_i with
+    match hpke_ind_cca with
     | true -> p
     | false -> PlainHPKE.repr p
   in
