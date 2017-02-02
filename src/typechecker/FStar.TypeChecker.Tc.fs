@@ -1263,7 +1263,7 @@ and tc_inductive env ses quals lids =
     (if Options.no_positivity () || Options.lax ()  then ()  //skipping positivity check if lax mode
      else
        let env = push_sigelt env0 sig_bndle in
-       let b = List.for_all (fun ty ->
+       let b = List.iter (fun ty ->
          let b = check_positivity env ty in
          if not b then
            let lid, r =
@@ -1271,8 +1271,8 @@ and tc_inductive env ses quals lids =
              | Sig_inductive_typ (lid, _, _, _, _, _, _, r) -> lid, r
              | _                                            -> failwith "Impossible!"
            in
-           raise (Error("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition", r))
-         else true
+           Errors.report r ("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition")
+         else ()
        ) tcs in
        ());
 
