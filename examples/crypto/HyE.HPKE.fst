@@ -44,13 +44,13 @@ noeq abstract type hpke_pkey =
   | PKey: #pk_id:pke_id -> #region:rid -> pke_pk:PKE.pkey pk_id -> hpke_pkey
 
 noeq abstract type hpke_skey =
-  | SKey: #sk_id:pke_id -> pke_sk:PKE.skey sk_id -> hpke_pk:hpke_pkey sk_id -> hpke_skey
+  | SKey: #sk_id:pke_id -> pke_sk:PKE.skey sk_id -> hpke_pk:hpke_pkey -> hpke_skey
   
 (**
    TODO: Have a table with public keys, binding pks to ids.
      - look at miTLS:Sig
 *)
-val keygen: rid -> hpke_pkey * hpke_skey
+val keygen: rid -> St (hpke_pkey * hpke_skey)
 let keygen (parent:rid) =
   let pk_id = fresh_pke_id() in
   let (pke_pk, pke_sk) = PKE.keygen #pk_id parent in
@@ -58,7 +58,7 @@ let keygen (parent:rid) =
   let hpke_pk = PKey #pk_id #region pke_pk in
   hpke_pk, SKey #pk_id pke_sk hpke_pk
 
-val coerce_key: #i:pke_id{not (pke_honest i)} -> rid -> PKE.pkey i -> Tot (hpke_pkey i)
+val coerce_key: #i:pke_id{not (pke_honest i)} -> rid -> PKE.pkey i -> Tot (hpke_pkey)
 let coerce_key #i parent pke_pk =
   PKey #i #parent pke_pk
 
@@ -74,34 +74,23 @@ type c = PKE.cipher * AE.cipher //lbytes(PKE.ciphersize + AE.ciphersize)
    we encrypt the protected_hpke_plain. Else we strip it of its 
    protection and encrypt the plain representation.
 *)
-val encrypt: #(pke_i:pke_id) -> hpke_pkey pke_i -> p:protected_hpke_plain i -> St c
-let encrypt #i pk p =
+val encrypt: #(pk_id:pke_id) -> pk:hpke_pkey{pk.pk_id=pk_id} -> p:protected_hpke_plain pk_id -> St c
+let encrypt #pk_id pk p =
   let region = new_region pk.region in
-  let k = AE.keygen pke_i region in 
-  let ae_i = AE.get_index k in
-  let pke_p = Prot_pke_p pke_i k in
-  let p' =
-    match hpke_ind_cca with
-    | true -> p
-    | false -> PlainHPKE.repr p
-  in
-  let ae_m = ae_message_wrap p' in
-  ((PKE.encrypt pk.pke_pk pke_p) ,(AE.encrypt k ae_m))
+  let k_id = fresh_ae_id pk_id in
+  let k = AE.keygen #k_id region in 
+  let ae_m = p in
+  ((PKE.encrypt #pk_id pk.pke_pk k) ,(AE.encrypt #k_id k ae_m))
 
     
-val decrypt: #i:pke_id -> hpke_skey i -> c -> option (protected_hpke_plain)
-let decrypt #i sk c =
+val decrypt: #pk_id:pke_id -> sk:hpke_skey{sk.sk_id=pk_id} -> c -> St (option (protected_hpke_plain pk_id))
+let decrypt #pk_id sk c =
   let (c0,c1) = c in 
-  let pke_plain = PKE.decrypt sk.pke_sk c0 in
-  match pke_plain with 
-  | Some p -> 
-    (match AE.decrypt p.k c1 with
-    | Some ae_prot_p -> 
-      let ae_m = PlainAE.ae_message_unwrap ae_prot_p in
-      let ae_i = p.i in
-      if honest ae_i && hpke_ind_cca then
-	Some ae_m
-      else
-	Some (PlainHPKE.coerce #ae_i ae_m)
+  let k_option = PKE.decrypt sk.pke_sk c0 in
+  match k_option with 
+  | Some k -> 
+    let k_id = get_index k in
+    (match AE.decrypt #k_id k c1 with
+    | Some ae_m -> Some (PlainAE.ae_unwrap ae_m)
     | None -> None)
   | None   -> None

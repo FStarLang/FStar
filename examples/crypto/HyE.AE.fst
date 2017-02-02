@@ -18,7 +18,7 @@ open HyE.PlainAE
 let ivsize = aeadRealIVSize AES_128_GCM
 type keysize = aeadKeySize AES_128_GCM
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
-type cipher = b:bytes{B.length b >= ivsize}
+type cipher = b:B.bytes{B.length b >= ivsize}
 (* MK: minimal cipher length twice blocksize? *)
 
 type log_t (i:ae_id) (r:rid) = m_rref r (seq ((protected_ae_plain i) * cipher)) grows
@@ -29,7 +29,7 @@ type log_t (i:ae_id) (r:rid) = m_rref r (seq ((protected_ae_plain i) * cipher)) 
 noeq abstract type key =
   | Key: #i:ae_id -> #region:rid -> raw:aes_key -> log:log_t i region -> (key)
 
-val get_index: key -> Tot ae_id
+val get_index: k:key -> Tot (k_id:ae_id{k.i=k_id})
 let get_index k =
   k.i
 
@@ -48,7 +48,7 @@ let safe_key_gen parent m0 (k:key) m1 =
    This function generates a key in a fresh region of memory below the parent region.
    The postcondition ensures that the log is empty after creation.
 *)
-val keygen: #i:pke_id -> parent:rid -> ST (k:key{fst k.i = i})
+val keygen: #i:ae_id -> parent:rid -> ST (k:key{k.i = i})
   (requires (fun _ -> True))
   (ensures  (fun h0 k h1 -> 
     safe_key_gen parent h0 k h1
@@ -56,9 +56,8 @@ val keygen: #i:pke_id -> parent:rid -> ST (k:key{fst k.i = i})
 let keygen #i parent =
   let raw = random keysize in
   let region = new_region parent in
-  let ae_i = i,fresh_ae_id i in
   let log = alloc_mref_seq region createEmpty in
-  Key #ae_i #region raw log
+  Key #i #region raw log
 
 (**
    The leak_key function transforms an abstract key into a raw aes_key.
@@ -73,7 +72,7 @@ let leak_key #i k =
    as we need to allocate space in memory for the key. The refinement type on the key makes sure that
    abstract keys created this way can not be honest.
 *)
-val coerce_key: i:ae_id{not (ae_honest i) } -> parent:rid -> aes_key -> ST (k:key{k.i=i})
+val coerce_key: i:ae_id{not (ae_honest i) || not ae_ind_cca } -> parent:rid -> aes_key -> ST (k:key{k.i=i})
   (requires (fun _ -> True))
   (ensures  (safe_key_gen parent))
 let coerce_key i parent raw = 
@@ -100,7 +99,7 @@ val encrypt: #(i:ae_id) -> (k:key{k.i=i} ) -> (m:protected_ae_plain i) -> ST cip
 let encrypt #i k m =
   m_recall k.log;
   let iv = random ivsize in
-  let p = if (ae_ind_cca && ae_honest i) then createBytes (length m) 0z else (repr m) in
+  let p = if (ae_ind_cca && ae_honest i) then B.createBytes (length m) 0z else (repr m) in
   let c = CoreCrypto.aead_encrypt AES_128_GCM k.raw iv empty_bytes p in
   let c = iv@|c in
   write_at_end k.log (m,c);

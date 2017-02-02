@@ -8,7 +8,6 @@ open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.Monotonic.RRef
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.List.Tot
 
@@ -91,5 +90,5 @@ let decrypt #i sk c =
       (match RSA.dec sk.rawsk c with
 	| Some p' ->
 	    let disId = dishonest_ae_id i in
-	    Some (PlainPKE.coerce #(disId)sk.pk.region p')
+	    Some (PlainPKE.coerce #(disId) sk.pk.region p')
 	| None -> None)
