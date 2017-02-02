@@ -59,7 +59,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 
 2. Run the unit tests:
 
-        $ make -C examples/unit-tests
+        $ make -C examples/micro-benchmarks
 
 3. If you have OCaml installed run, the following command should print "Hello F*!"
 
@@ -258,7 +258,7 @@ that's over there (it's optimized for F*). This will install both OCaml and OPAM
 
 #### Instructions for Linux and Mac OS X ####
 
-0. Install OCaml (any version from 4.02.2 to 4.03.0)
+0. Install OCaml
    - Can be installed using either your package manager or using OPAM
      (see below).
 
