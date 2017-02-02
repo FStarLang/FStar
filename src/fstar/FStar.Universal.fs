@@ -26,7 +26,6 @@ open FStar.Ident
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.Dependencies
-open FStar.Interactive
 
 (* Module abbreviations for the universal type-checker  *)
 module DsEnv   = FStar.ToSyntax.Env
@@ -235,96 +234,3 @@ let batch_mode_tc filenames =
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
   prims_mod :: all_mods, dsenv, env
 
-(******************************************************************************)
-(* Building an instance of the type-checker to be run in the interactive loop *)
-(******************************************************************************)
-let tc_prims_interactive () = //:uenv =
-  let _, dsenv, env = tc_prims () in
-  (dsenv, env)
-
-let tc_one_file_interactive (remaining:list<string>) (uenv:uenv) = //:((string option * string) * uenv * modul option * string list) =
-  let dsenv, env = uenv in
-  let (intf, impl), dsenv, env, remaining =
-    match remaining with
-        | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let _, dsenv, env = tc_one_file_and_intf (Some intf) impl dsenv env in
-          (Some intf, impl), dsenv, env, remaining
-        | intf_or_impl :: remaining ->
-          let _, dsenv, env = tc_one_file_and_intf None intf_or_impl dsenv env in
-          (None, intf_or_impl), dsenv, env, remaining
-        | [] -> failwith "Impossible"
-  in
-  (intf, impl), (dsenv, env), None, remaining
-
-let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul>> =
-    let pop (_, env) msg =
-          FStar.Util.print_string "U/pop\n";
-          pop_context env msg;
-          Options.pop() in
-
-    let push (dsenv, env) lax restore_cmd_line_options msg =
-          FStar.Util.print_string "U/push\n";
-          let env = { env with lax = lax } in
-          let res = push_context (dsenv, env) msg in
-          Options.push();
-          if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
-          res in
-
-    let mark (dsenv, env) =
-        FStar.Util.print_string "U/mark\n";
-        let dsenv = DsEnv.mark dsenv in
-        let env = TcEnv.mark env in
-        Options.push();
-        dsenv, env in
-
-    let reset_mark (_, env) =
-        FStar.Util.print_string "U/reset_mark\n";
-        let dsenv = DsEnv.reset_mark () in
-        let env = TcEnv.reset_mark env in
-        Options.pop();
-        dsenv, env in
-
-    let cleanup (dsenv, env) = TcEnv.cleanup_interactive env in
-
-    let commit_mark (dsenv, env) =
-        FStar.Util.print_string "U/commit_mark\n";
-        let dsenv = DsEnv.commit_mark dsenv in
-        let env = TcEnv.commit_mark env in
-        dsenv, env in
-
-    let check_frag (dsenv, (env:TcEnv.env)) curmod text =
-        FStar.Util.print_string "U/check_frag\n";
-        try
-            match tc_one_fragment curmod dsenv env text with
-                | Some (m, dsenv, env) ->
-                    // DsEnv pushes more than it pops -- when type-checking a
-                    // fragment, it always pushes something on its internal
-                    // stack but only pops it if it thinks it's checking an
-                    // interface...
-                    if is_some curmod then
-                      ignore (DsEnv.pop ());
-                  Some (m, (dsenv, env), FStar.Errors.get_err_count())
-                | _ -> None
-        with
-            | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
-              FStar.TypeChecker.Err.add_errors env [(msg, r)];
-              None
-
-            | FStar.Errors.Err msg when not ((Options.trace_error())) ->
-              FStar.TypeChecker.Err.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
-              None in
-
-    let report_fail () =
-        FStar.Errors.report_all() |> ignore;
-        FStar.Errors.num_errs := 0 in
-
-    { pop = pop;
-      push = push;
-      mark = mark;
-      reset_mark = reset_mark;
-      commit_mark = commit_mark;
-      check_frag = check_frag;
-      report_fail = report_fail;
-      tc_prims = tc_prims_interactive;
-      tc_one_file = tc_one_file_interactive;
-      cleanup = cleanup }

@@ -19,7 +19,6 @@ open FStar.All
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
-open FStar.Interactive
 
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)
@@ -123,7 +122,7 @@ let go _ =
           if Options.verify_module () <> [] then
             Util.print_warning "Interactive mode; ignoring --verify_module";
           (* interactive_mode takes care of calling [find_deps_if_needed] *)
-          interactive_mode filename None Universal.interactive_tc //and then call interactive mode
+          FStar.Interactive.interactive_mode filename
 	  //and then start checking chunks from the current buffer
         end //end interactive mode
         else if Options.doc() then // --doc Generate Markdown documentation files
