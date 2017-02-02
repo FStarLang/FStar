@@ -19,7 +19,7 @@ in (let _0_170 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Norm
 in {FStar_Syntax_Syntax.ppname = uu___94_64.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = uu___94_64.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _0_170}))
 in (
 
-let d = (fun s -> (FStar_Util.print1 "[01;36m%s[00m\n" s))
+let d = (fun s -> (FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s))
 in ((
 
 let uu____70 = (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("ED")))
