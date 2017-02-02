@@ -126,8 +126,10 @@
       then (failwith  "Unexpected position in is_typ_lapp");
       let d = {angle=ref 1; paren=ref 0} in
       let upd i = match contents.[i] with
-        | '(' -> incr d.paren | ')' -> decr d.paren
-        | '<' -> incr d.angle | '>' -> decr d.angle
+        | '(' -> incr d.paren
+        | ')' -> decr d.paren
+        | '<' -> incr d.angle
+        | '>' when contents.[i-1] <> '-' -> decr d.angle
         | _ -> ()
       in
       let ok () = !(d.angle) >= 0 && !(d.paren) >= 0 in

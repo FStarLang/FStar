@@ -217,18 +217,6 @@ option_FSDOC_:
     {let x = $1 in
     ( Some x )}
 
-option___anonymous_0_:
-  
-    {    ( None )}
-| PRAGMALIGHT STRING
-    {let (_10, _20) = ((), $2) in
-let x =
-  let _2 = _20 in
-  let _1 = _10 in
-                                          ( true )
-in
-    ( Some x )}
-
 option___anonymous_1_:
   
     {    ( None )}
@@ -326,6 +314,18 @@ boption_SQUIGGLY_RARROW_:
     {    ( false )}
 | SQUIGGLY_RARROW
     {let _1 = () in
+    ( true )}
+
+boption___anonymous_0_:
+  
+    {    ( false )}
+| PRAGMALIGHT STRING
+    {let (_10, _20) = ((), $2) in
+let _1 =
+  let _2 = _20 in
+  let _1 = _10 in
+                                          ( )
+in
     ( true )}
 
 loption_separated_nonempty_list_COMMA_appTerm__:
@@ -633,17 +633,14 @@ separated_nonempty_list_SEMICOLON_tuplePattern_:
     ( x :: xs )}
 
 inputFragment:
-  option___anonymous_0_ decl list_decl_ option_mainDecl_ EOF
-    {let (light_opt, d, decls, main_opt, _5) = ($1, $2, $3, $4, ()) in
-       (
-         let is_light = match light_opt with
-	   | None -> false
-	   | Some _ -> true in
-         let decls = match main_opt with
+  boption___anonymous_0_ decl list_decl_ option_mainDecl_ EOF
+    {let (is_light, d, decls, main_opt, _5) = ($1, $2, $3, $4, ()) in
+      (
+        let decls = match main_opt with
            | None -> decls
            | Some main -> decls @ [main]
-         in as_frag is_light d decls
-       )}
+        in as_frag is_light (rhs parseState 1) d decls
+      )}
 
 mainDecl:
   SEMICOLON_SEMICOLON option_FSDOC_ term
@@ -743,9 +740,6 @@ rawDecl:
 | FSDOC_STANDALONE
     {let doc = $1 in
       ( Fsdoc doc )}
-| KIND ident binders EQUALS kind
-    {let (_1, lid, bs, _4, k) = ((), $2, $3, (), $5) in
-      ( KindAbbrev(lid, bs, k) )}
 
 typeDecl:
   ident typars option_ascribeKind_ typeDefinition

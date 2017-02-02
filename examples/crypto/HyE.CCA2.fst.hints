@@ -1,5 +1,5 @@
 [
-  "6U€1\u000f\"÷£³œ4R¾ŸèC",
+  "’\u0014Ñ#Ä1G\u0010´K“º{ý'^",
   [
     [ "HyE.CCA2.__proj__Entry__item__c", 1, 2, 1, [ "@query" ], 0 ],
     [ "HyE.CCA2.__proj__Entry__item__p", 1, 2, 1, [ "@query" ], 0 ],
@@ -35,8 +35,32 @@
       0
     ],
     [
+      "HyE.CCA2.encrypt",
+      1,
+      2,
+      1,
+      [
+        "@query", "bool_inversion", "equation_HyE.Ideal.conf",
+        "function_token_typing_HyE.Ideal.ind_cca"
+      ],
+      0
+    ],
+    [
       "HyE.CCA2.decrypt",
       1,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_HyE.RSA.cipher", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes",
+        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
+      ],
+      0
+    ],
+    [
+      "HyE.CCA2.decrypt",
+      2,
       2,
       1,
       [

@@ -15,6 +15,10 @@
 *)
 #light "off"
 
+
+
+
+
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStar.Parser.ToDocument
 open FStar.All
@@ -30,7 +34,30 @@ open FStar.Range
 module C = FStar.Syntax.Const
 module BU = FStar.Util
 
-// VALS_HACK_HERE
+
+
+(* !!! SIDE EFFECT WARNING !!! *)
+(* There are 3 uses of global side-effect in the printer for : *)
+(* - Printing F# style type application [should_print_fs_typ_app] *)
+(* - Removing the original parens of the ast [should_unparen] *)
+(* - Printing the comments [comment_stack] *)
+
+
+
+
+
+
+(* [should_print_fs_typ_app] is set when encountering a [LightOff] pragma and *)
+(* reset at the end of each module. If you are using individual print function you *)
+(* should wrap them in [with_fs_typ_app] *)
+let should_print_fs_typ_app = BU.mk_ref false
+
+let with_fs_typ_app b printer t =
+  let b0 = !should_print_fs_typ_app in
+  should_print_fs_typ_app := b ;
+  let res = printer t in
+  should_print_fs_typ_app := b0 ;
+  res
 
 (* TODO : Unparenthesizing the ast should be put as an option until we get rid of the Paren node *)
 let should_unparen = BU.mk_ref true
@@ -121,6 +148,11 @@ let separate_map_or_flow sep f l =
     then separate_map sep f l
     else flow_map sep f l
 
+let soft_surround_separate_map n b void_ opening sep closing f xs =
+  if xs = []
+  then void_
+  else soft_surround n b opening (separate_map sep f xs) closing
+
 let doc_of_fsdoc (comment,keywords) =
   group (concat [
     str comment; space;
@@ -128,7 +160,6 @@ let doc_of_fsdoc (comment,keywords) =
       concat [str k; rarrow; str v]
     ) keywords
   ])
-
 
 // Really specific functions to retro-engineer the desugaring
 let is_unit e =
@@ -154,7 +185,8 @@ let is_list_structure cons_lid nil_lid =
 let is_list = is_list_structure C.cons_lid C.nil_lid
 let is_lex_list = is_list_structure C.lexcons_lid C.lextop_lid
 
-(* [extract_from_list e] assumes that [is_list_structure xxx yyy e] holds and returns the list of terms contained in the list *)
+(* [extract_from_list e] assumes that [is_list_structure xxx yyy e] holds *)
+(* and returns the list of terms contained in the list *)
 let rec extract_from_list e = match (unparen e).tm with
   | Construct (_, []) -> []
   | Construct (_, [e1,Nothing ; e2, Nothing]) -> e1 :: extract_from_list e2
@@ -294,11 +326,34 @@ let is_operatorInfix34 =
 
 
 
-(******************************************************************************)
+(* ****************************************************************************)
 (*                                                                            *)
 (*                   Taking care of comments                                  *)
 (*                                                                            *)
-(******************************************************************************)
+(* ****************************************************************************)
+
+(* Comments are not part of the AST but can be collected by the lexer so that we *)
+(* can try to reinstate them when printing. Since they are not inside the AST, we *)
+(* need to find some valid place to place them back. *)
+
+(* We assume that comments are tagged by their original position (a range) and *)
+(* that they are given in the order they appear. Then we use the range information *)
+(* inside the printed AST to reinstate the comments. *)
+
+(* The rules for placing comments are : *)
+(* 1. There is at most one comment per line *)
+(* 2. Line feeds between comments occuring between two toplevel declarations are *)
+(*    preserved *)
+(* 3. A comment is printed just before some AST node if it has not been printed *)
+(*    before and its range ends before the end of the line where the AST node *)
+(*    was originally *)
+(* 4. Left-over comments are always printed even if the position could be meaningless *)
+(* 5. The AST node on which comments can be attached are the one using the *)
+(*    [with_comment] function defined just below *)
+
+(* Since comments are using side effects to be printed in the correct order it is important *)
+(* that all printed AST nodes that could eventually contain a comment are printed in the *)
+(* sequential order of the document. *)
 
 let comment_stack : ref<(list<(string*range)>)>= BU.mk_ref []
 
@@ -327,12 +382,52 @@ let with_comment printer tm tmrange =
    in
    group (comments ^^ printed_e)
 
+(* [place_comments_until_pos k lbegin pos doc] appends to doc all the comments present in *)
+(* [comment_stack] whose range is before pos and separate each comments by as much lines *)
+(* as indicated by the range information (at least [k]) using [lbegin] as the last line of *)
+(* [doc] in the original document. Between 2 comments [k] is set to [1] *)
+let rec place_comments_until_pos k lbegin pos_end doc =
+  match !comment_stack with
+  | (comment, crange) :: cs when range_before_pos crange pos_end ->
+    comment_stack := cs ;
+    let lnum = max k (line_of_pos (start_of_range crange) - lbegin) in
+    let doc = doc ^^ repeat lnum hardline ^^ str comment in
+    place_comments_until_pos 1 (line_of_pos (end_of_range crange)) pos_end doc
+  | _ ->
+    let lnum = max 1 (line_of_pos pos_end - lbegin) in
+    doc ^^ repeat lnum hardline
 
-(******************************************************************************)
+(* [separate_map_with_comments prefix sep f xs extract_range] is the document *)
+(*                                                                            *)
+(*   prefix (f xs[0]) *)
+(*   comments[0] *)
+(*   sep (f xs[1]) *)
+(*   comments[1] *)
+(*   ... *)
+(*   sep (f xs[n]) *)
+(*                                                                            *)
+(* where comments[_] are obtained by successive calls to [place_comments_until_pos] *)
+(* using the range informations provided by [extract_range] and the comments in *)
+(* [comment_stack]. [xs] must contain at least one element. There is no break *)
+(* inserted after [prefix] and [sep]. *)
+let separate_map_with_comments prefix sep f xs extract_range =
+  let fold_fun (last_line, doc) x =
+    let r = extract_range x in
+    let doc = place_comments_until_pos 1 last_line (start_of_range r) doc in
+    line_of_pos (end_of_range r), doc ^^ sep ^^ f x
+  in
+  let x, xs = List.hd xs, List.tl xs in
+  let init =
+    line_of_pos (end_of_range (extract_range x)), prefix ^^ f x
+  in
+  snd (List.fold_left fold_fun init xs)
+
+
+(* ****************************************************************************)
 (*                                                                            *)
 (*                        Printing declarations                               *)
 (*                                                                            *)
-(******************************************************************************)
+(* ****************************************************************************)
 
 let rec p_decl d =
     group(
@@ -340,7 +435,7 @@ let rec p_decl d =
         (if d.quals = [] then empty else break1) ^^ p_rawDecl d)
 
 and p_attributes attrs =
-  surround_separate_map 0 2 empty
+  soft_surround_separate_map 0 2 empty
                         (lbracket ^^ str "@") space (rbracket ^^ hardline)
                         p_atomicTerm attrs
 
@@ -366,16 +461,17 @@ and p_rawDecl d = match d.d with
     (str "module" ^^ space ^^ p_uident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2
   | TopLevelModule uid ->
     group(str "module" ^^ space ^^ p_quident uid)
-  (* skipping kind abbreviation *)
-  | KindAbbrev _ -> failwith "Deprecated, please stop throwing your old stuff at me !"
   | Tycon(true, [TyconAbbrev(uid, tpars, None, t), None]) ->
     let effect_prefix_doc = str "effect" ^^ space ^^ p_uident uid in
     surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ t
   | Tycon(false, tcdefs) ->
+    (* TODO : needs some range information to be able to use this *)
+    (* separate_map_with_comments (str "type" ^^ space) (str "and" ^^ space) p_fsdocTypeDeclPairs tcdefs *)
     precede_break_separate_map (str "type") (str "and") p_fsdocTypeDeclPairs tcdefs
   | TopLevelLet(q, lbs) ->
-    let let_doc = str "let" ^^ p_letqualifier q in
-    precede_break_separate_map let_doc (str "and") p_letbinding lbs
+    let let_doc = str "let" ^^ p_letqualifier q ^^ space in
+    separate_map_with_comments let_doc (str "and" ^^ space) p_letbinding lbs
+      (fun (p, t) -> Range.union_ranges p.prange t.range)
   | Val(lid, t) ->
     (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ t
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
@@ -403,10 +499,13 @@ and p_rawDecl d = match d.d with
   | Tycon(true, _) ->
     failwith "Effect abbreviation is expected to be defined by an abbreviation"
 
+(* !!! Side-effect !!! : When a [#light "off"] is printed it activates the fs_typ_app *)
 and p_pragma = function
-    | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
-    | ResetOptions s_opt -> str "#reset-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
-    | LightOff -> str "#light \"off\""
+  | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
+  | ResetOptions s_opt -> str "#reset-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
+  | LightOff ->
+      should_print_fs_typ_app := true ;
+      str "#light \"off\""
 
 (* TODO : needs to take the F# specific type instantiation *)
 and p_typars bs = p_binders true bs
@@ -445,43 +544,45 @@ and p_typeDecl = function
     p_typeDeclPrefix lid bs typ_opt (fun () -> prefix2 equals (datacon_doc ()))
 
 and p_typeDeclPrefix lid bs typ_opt cont =
-    if bs = [] && typ_opt = None
-    then p_ident lid ^^ space ^^ cont ()
-    else
-        let binders_doc =
-          p_typars bs ^^ optional (fun t -> break1 ^^ colon ^^ space ^^ p_typ t) typ_opt
-        in surround 2 1 (p_ident lid) binders_doc (cont ())
+  if bs = [] && typ_opt = None
+  then p_ident lid ^^ space ^^ cont ()
+  else
+      let binders_doc =
+        p_typars bs ^^ optional (fun t -> break1 ^^ colon ^^ space ^^ p_typ t) typ_opt
+      in surround 2 1 (p_ident lid) binders_doc (cont ())
 
 and p_recordFieldDecl (lid, t, doc_opt) =
-    group (optional p_fsdoc doc_opt ^^ p_lident lid ^^ colon ^^ p_typ t)
+  (* TODO : Should we allow tagging individual field with a comment ? *)
+  group (optional p_fsdoc doc_opt ^^ p_lident lid ^^ colon ^^ p_typ t)
 
 and p_constructorDecl (uid, t_opt, doc_opt, use_of) =
-    let sep = if use_of then str "of" else colon in
-    let uid_doc = p_uident uid in
-    optional p_fsdoc doc_opt ^^ default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ t) t_opt
+  let sep = if use_of then str "of" else colon in
+  let uid_doc = p_uident uid in
+  (* TODO : Should we allow tagging individual constructor with a comment ? *)
+  optional p_fsdoc doc_opt ^^ default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ t) t_opt
 
 and p_letbinding (pat, e) =
-    (* TODO : this should be refined when head is an applicative pattern (function definition) *)
-    let pat_doc =
-      let pat, ascr_doc =
-        match pat.pat with
-          | PatAscribed (pat, t) -> pat, break1 ^^ group (colon ^^ space ^^ p_tmArrow p_tmNoEq t)
-          | _ -> pat, empty
-      in
+  (* TODO : this should be refined when head is an applicative pattern (function definition) *)
+  let pat_doc =
+    let pat, ascr_doc =
       match pat.pat with
-        | PatApp ({pat=PatVar (x, _)}, pats) ->
-            surround 2 1 (p_lident x)
-                         (separate_map break1 p_atomicPattern pats ^^ ascr_doc)
-                         equals
-        | _ -> group (p_tuplePattern pat ^^ ascr_doc ^/^ equals)
+      | PatAscribed (pat, t) -> pat, break1 ^^ group (colon ^^ space ^^ p_tmArrow p_tmNoEq t)
+      | _ -> pat, empty
     in
-    prefix2 pat_doc (p_term e)
+    match pat.pat with
+    | PatApp ({pat=PatVar (x, _)}, pats) ->
+        surround 2 1 (p_lident x)
+                      (separate_map break1 p_atomicPattern pats ^^ ascr_doc)
+                      equals
+    | _ -> group (p_tuplePattern pat ^^ ascr_doc ^/^ equals)
+  in
+  prefix2 pat_doc (p_term e)
 
-(******************************************************************************)
+(* ****************************************************************************)
 (*                                                                            *)
 (*                          Printing effects                                  *)
 (*                                                                            *)
-(******************************************************************************)
+(* ****************************************************************************)
 
 and p_newEffect = function
   | RedefineEffect (lid, bs, t) ->
@@ -504,32 +605,32 @@ and p_actionDecls = function
   | l -> break1 ^^ prefix2 (str "and actions") (separate_break_map semi p_effectDecl l)
 
 and p_effectDecl d = match d.d with
-    | Tycon(false, [TyconAbbrev(lid, [], None, e), None]) ->
-        prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm e)
-    | _ ->
-        failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
-                               (decl_to_string d))
+  | Tycon(false, [TyconAbbrev(lid, [], None, e), None]) ->
+      prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm e)
+  | _ ->
+      failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
+                              (decl_to_string d))
 
 and p_subEffect lift =
-    let lift_op_doc =
-      let lifts =
-        match lift.lift_op with
-          | NonReifiableLift t -> ["lift_wp", t]
-          | ReifiableLift (t1, t2) -> ["lif_wp", t1 ; "lift", t2]
-          | LiftForFree t -> ["lift", t]
-      in
-      let p_lift (kwd, t) = prefix2 (str kwd ^^ space ^^ equals) (p_simpleTerm t) in
-      separate_break_map semi p_lift lifts
+  let lift_op_doc =
+    let lifts =
+      match lift.lift_op with
+        | NonReifiableLift t -> ["lift_wp", t]
+        | ReifiableLift (t1, t2) -> ["lif_wp", t1 ; "lift", t2]
+        | LiftForFree t -> ["lift", t]
     in
-    prefix2 (p_quident lift.msource ^^ space ^^ str "~>") (p_quident lift.mdest) ^^
-      space ^^ braces_with_nesting lift_op_doc
+    let p_lift (kwd, t) = prefix2 (str kwd ^^ space ^^ equals) (p_simpleTerm t) in
+    separate_break_map semi p_lift lifts
+  in
+  prefix2 (p_quident lift.msource ^^ space ^^ str "~>") (p_quident lift.mdest) ^^
+    space ^^ braces_with_nesting lift_op_doc
 
 
-(******************************************************************************)
+(* ****************************************************************************)
 (*                                                                            *)
 (*                     Printing qualifiers, tags                              *)
 (*                                                                            *)
-(******************************************************************************)
+(* ****************************************************************************)
 
 and p_qualifier = function
   | Private -> str "private"
@@ -566,11 +667,11 @@ and p_aqual = function
   | Implicit -> str "#"
   | Equality -> str "$"
 
-(******************************************************************************)
+(* ****************************************************************************)
 (*                                                                            *)
 (*                     Printing patterns and binders                          *)
 (*                                                                            *)
-(******************************************************************************)
+(* ****************************************************************************)
 
 and p_disjunctivePattern p = match p.pat with
   | PatOr pats ->
@@ -633,30 +734,30 @@ and p_atomicPattern p = match p.pat with
 (* is_atomic is true if the binder must be parsed atomically *)
 (* TODO : try to print refinement with the compact form if possible *)
 and p_binder is_atomic b = match b.b with
-    | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid
-    | TVariable lid -> p_lident lid
-    | Annotated (lid, t) ->
-        let doc = match (unparen t).tm with
-          | Refine ({b = Annotated (lid', t)}, phi) when lid.idText = lid'.idText ->
-            p_refinement b.aqual (p_ident lid) t phi
-          | _ ->
-            optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^^ break_ 0 ^^ p_tmFormula t
-        in
-        if is_atomic
-        then group (lparen ^^ doc ^^ rparen)
-        else group doc
-    | TAnnotated _ -> failwith "Is this still used ?"
-    | NoName t ->
-      begin match (unparen t).tm with
-        | Refine ({b = NoName t}, phi) ->
-          if is_atomic
-          then group (lparen ^^ p_refinement b.aqual underscore t phi ^^ rparen)
-          else group (p_refinement b.aqual underscore t phi)
+  | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid
+  | TVariable lid -> p_lident lid
+  | Annotated (lid, t) ->
+      let doc = match (unparen t).tm with
+        | Refine ({b = Annotated (lid', t)}, phi) when lid.idText = lid'.idText ->
+          p_refinement b.aqual (p_ident lid) t phi
         | _ ->
-          if is_atomic
-          then p_atomicTerm t (* t is a type but it might need some parenthesis *)
-          else p_appTerm t (* This choice seems valid (used in p_tmNoEq') *)
-      end
+          optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^^ break_ 0 ^^ p_tmFormula t
+      in
+      if is_atomic
+      then group (lparen ^^ doc ^^ rparen)
+      else group doc
+  | TAnnotated _ -> failwith "Is this still used ?"
+  | NoName t ->
+    begin match (unparen t).tm with
+      | Refine ({b = NoName t}, phi) ->
+        if is_atomic
+        then group (lparen ^^ p_refinement b.aqual underscore t phi ^^ rparen)
+        else group (p_refinement b.aqual underscore t phi)
+      | _ ->
+        if is_atomic
+        then p_atomicTerm t (* t is a type but it might need some parenthesis *)
+        else p_appTerm t (* This choice seems valid (used in p_tmNoEq') *)
+    end
 
 and p_refinement aqual_opt binder t phi =
       optional p_aqual aqual_opt ^^ binder ^^ colon ^^
@@ -667,11 +768,11 @@ and p_refinement aqual_opt binder t phi =
 and p_binders is_atomic bs = separate_map break1 (p_binder is_atomic) bs
 
 
-(******************************************************************************)
+(* ****************************************************************************)
 (*                                                                            *)
 (*                Printing identifiers and module paths                       *)
 (*                                                                            *)
-(******************************************************************************)
+(* ****************************************************************************)
 
 (* TODO : should add some defensive checks *)
 
@@ -698,11 +799,11 @@ and p_lidentOrUnderscore id =
   then underscore
   else p_lident id
 
-(******************************************************************************)
+(* ****************************************************************************)
 (*                                                                            *)
 (*                     Printing terms and types                               *)
 (*                                                                            *)
-(******************************************************************************)
+(* ****************************************************************************)
 
 and p_term e = match (unparen e).tm with
   | Seq (e1, e2) ->
@@ -837,7 +938,9 @@ and p_tmConjunction e = match (unparen e).tm with
       infix0 (str "/\\") (p_tmConjunction e1) (p_tmTuple e2)
   | _ -> p_tmTuple e
 
-and p_tmTuple e = match (unparen e).tm with
+and p_tmTuple e = with_comment p_tmTuple' e e.range
+
+and p_tmTuple' e = match (unparen e).tm with
   | Construct (lid, args) when is_tuple_constructor lid ->
       separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args
   | _ -> p_tmEq e
@@ -912,14 +1015,25 @@ and p_simpleDef (lid, e) =
 and p_appTerm e = match (unparen e).tm with
   | App _ when is_general_application e ->
       let head, args = head_and_args e in
-      p_indexingTerm head ^/+^ separate_map space p_argTerm args
-  | Construct (lid, args) when is_general_construction e && not (is_dtuple_constructor lid) -> (* dependent tuples are handled below *)
+      let head_doc, args =
+        if !should_print_fs_typ_app
+        then
+          let fs_typ_args, args = BU.take (fun (_,aq) -> aq = FsTypApp) args in
+          p_indexingTerm head ^^
+          soft_surround_separate_map 2 0 empty langle (comma ^^ break1) rangle p_fsTypArg fs_typ_args,
+          args
+        else p_indexingTerm head, args
+      in
+      group (soft_surround_separate_map 2 0 head_doc (head_doc ^^ space) break1 empty p_argTerm args)
+
+  (* dependent tuples are handled below *)
+  | Construct (lid, args) when is_general_construction e && not (is_dtuple_constructor lid) ->
     begin match args with
       | [] -> p_quident lid
       | [arg] -> group (p_quident lid ^/^ p_argTerm arg)
       | hd::tl ->
           group (
-              group (p_quident lid ^/^ p_argTerm hd) ^^
+              group (prefix2 (p_quident lid) (p_argTerm hd)) ^^
                     jump2 (separate_map break1 p_argTerm tl))
     end
   | _ ->
@@ -928,9 +1042,14 @@ and p_appTerm e = match (unparen e).tm with
 and p_argTerm arg_imp = match arg_imp with
   | ({tm=Uvar _}, UnivApp) -> p_univar (fst arg_imp)
   | (u, UnivApp) -> p_universe u
-  | (e, FsTypApp) -> surround 2 1 langle (p_indexingTerm e) rangle
+  | (e, FsTypApp) ->
+      (* This case should not happen since it might lead to badly formed type applications (e.g t<a><b>)*)
+      BU.print_warning "Unexpected FsTypApp, output might not be formatted correctly.\n" ;
+      surround 2 1 langle (p_indexingTerm e) rangle
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
   | (e, Nothing) -> p_indexingTerm e
+
+and p_fsTypArg (e, _) = p_indexingTerm e
 
 and p_indexingTerm_aux exit e = match (unparen e).tm with
   | Op(".()", [e1 ; e2]) ->
@@ -1090,70 +1209,49 @@ let term_to_document e = p_term e
 let decl_to_document e = p_decl e
 
 let modul_to_document (m:modul) =
-  match m with
-  | Module (_, decls)
-  | Interface (_, decls, _) ->
-      decls |> List.map decl_to_document |> separate hardline
+  should_print_fs_typ_app := false ;
+  let res =
+    match m with
+    | Module (_, decls)
+    | Interface (_, decls, _) ->
+        decls |> List.map decl_to_document |> separate hardline
+  in  should_print_fs_typ_app := false ;
+  res
 
 let comments_to_document (comments : list<(string * FStar.Range.range)>) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
-(* [modul_with_comments_to_document m comments] prints the module [m] trying
- * to insert the comments from [comments]. The list comments is composed of
- * pairs of a raw string and a position which is used to place the comment
- * not too far from its original position.
- *
- * The rules for placing comments are as follow :
- *
- *
- *      *)
+(* [modul_with_comments_to_document m comments] prints the module [m] trying *)
+(* to insert the comments from [comments]. The list comments is composed of *)
+(* pairs of a raw string and a position which is used to place the comment *)
+(* not too far from its original position. The rules for placing comments *)
+(* are described in the ``Taking care of comments`` section *)
 let modul_with_comments_to_document (m:modul) comments =
-  let rec aux (previous_range_end, comments, doc) decl =
-    let current_range = extend_to_end_of_line decl.drange in
-    let max x y = if x < y then y else x in
-    let rec process_preceding_comments doc last_line end_pos n = function
-      | (comment,range) :: comments when pos_geq end_pos (start_of_range range) ->
-        let l = max 1 (line_of_pos (start_of_range range) - last_line) in
-        let doc = doc ^^ repeat l hardline ^^ str comment in
-        process_preceding_comments doc (line_of_pos (end_of_range range))
-          end_pos 1 comments
-      | comments ->
-        let l = max n (line_of_pos end_pos - last_line) in
-        doc ^^ repeat l hardline, comments
-    in
-    let doc, comments =
-      process_preceding_comments doc (line_of_pos previous_range_end)
-        (end_of_line (start_of_range current_range)) 0 comments
-    in
-    let inner_comments, comments =
-      take (function (_, range) -> range_contains_range current_range range) comments
-    in
-    (* Inner comment's side effect insertion begins here *)
-    comment_stack := inner_comments ;
-    let doc = doc ^^ decl_to_document decl in
-    (* After printing the current toplevel definition decl the [comment_stack] *)
-    (* should be empty unless we are printing a standalone fsdoc               *)
-    let inner_comments_doc =
-        if !comment_stack = []
-        then empty
-        else begin
-            Util.print1_warning "Leftover comments : %s\n"
-                (String.concat " ; " (List.map fst !comment_stack)) ;
-            comments_to_document !comment_stack
-        end
-    in
-    (end_of_range decl.drange, comments,  doc ^^ inner_comments_doc)
-  in
   let decls = match m with
     | Module (_, decls)
     | Interface (_, decls, _) -> decls
   in
+  should_print_fs_typ_app := false ;
   match decls with
     | [] -> empty, comments
-    | d :: _ ->
-      let (_, comments, doc) =
-        List.fold_left aux (Range.zeroPos, comments, empty) decls
+    | d :: ds ->
+      (* KM : Hack to fix the inversion that is happening in FStar.Parser.ASTs.as_frag *)
+      (* '#light "off"' is supposed to come before 'module ..' but it is swapped there *)
+      let decls, first_range =
+        match ds with
+        | { d = Pragma LightOff } :: _ ->
+            let d0 = List.hd ds in
+            d0 :: d :: List.tl ds, d0.drange
+        | _ -> d :: ds, d.drange
       in
-      (doc, comments)
+      (* TODO : take into account the space of the fsdoc (and attributes ?) *)
+      let extract_decl_range d = d.drange in
+      comment_stack := comments ;
+      let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) empty in
+      let doc = separate_map_with_comments empty empty decl_to_document decls extract_decl_range in
+      let comments = !comment_stack in
+      comment_stack := [] ;
+      should_print_fs_typ_app := false ;
+      (initial_comment ^^ doc, comments)
 
 

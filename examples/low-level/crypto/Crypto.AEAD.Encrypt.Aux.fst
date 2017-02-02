@@ -19,7 +19,7 @@ module Invariant = Crypto.AEAD.Invariant
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module CMA = Crypto.Symmetric.UF1CMA
-module SeqProperties = FStar.SeqProperties
+module Seq = FStar.Seq
 
 
 #reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
@@ -39,7 +39,7 @@ val extend_refines_aux: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i
 
      		      let p = Plain.sel_plain h1 (u len) plain in
 		      let c_tagged = Buffer.as_seq h1 cipher in
-	              let c, tag = SeqProperties.split c_tagged len in
+	              let c, tag = Seq.split c_tagged len in
 		      let ad = Buffer.as_seq h1 aad in
   		      let entry = Entry nonce ad len p c_tagged in
 		      pre_refines_one_entry i st nonce len plain cipher h0 h1 /\
@@ -54,10 +54,10 @@ val extend_refines_aux: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i
 		      let table_1 = HS.sel h1 (PRF.itable i st.prf) in
      		      let p = Plain.sel_plain h1 (u len) plain in
 		      let c_tagged = Buffer.as_seq h1 cipher in
-	              let c, tag = SeqProperties.split c_tagged len in
+	              let c, tag = Seq.split c_tagged len in
 		      let ad = Buffer.as_seq h1 aad in
   		      let entry = Entry nonce ad len p c_tagged in
-		      refines h1 i mac_rgn (SeqProperties.snoc entries_0 entry) table_1)))
+		      refines h1 i mac_rgn (Seq.snoc entries_0 entry) table_1)))
 let extend_refines_aux i st nonce aadlen aad len plain cipher h0 h1 = 
   if safeId i then
      let mac_rgn = st.prf.mac_rgn in
@@ -67,7 +67,7 @@ let extend_refines_aux i st nonce aadlen aad len plain cipher h0 h1 =
      let blocks_1 = Seq.slice table_1 (Seq.length blocks_0) (Seq.length table_1) in
      let p = Plain.sel_plain h1 (u len) plain in
      let c_tagged = Buffer.as_seq h1 cipher in
-     let c, tag = SeqProperties.split c_tagged len in
+     let c, tag = Seq.split c_tagged len in
      let ad = Buffer.as_seq h1 aad in
      let entry = Entry nonce ad len p c_tagged in
      extend_refines h0 i mac_rgn entries_0 blocks_0 entry blocks_1 h1
@@ -91,7 +91,7 @@ let encrypt_ensures' (regions:Set.set HH.rid)
        let aad = Buffer.as_seq h5 aad in
        let p = Plain.sel_plain h5 plainlen plain in
        let c = Buffer.as_seq h5 cipher_tagged in
-       HS.sel h5 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
+       HS.sel h5 st.log == Seq.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c)))
 
 let encrypt_ensures_tip (i:id) (st:state i Writer)
 		     (n: Cipher.iv (alg i))
@@ -206,7 +206,7 @@ let encrypt_ensures_push_pop (i:id) (st:state i Writer)
      (*   let aad = Buffer.as_seq h5 aad in *)
      (*   let p = Plain.sel_plain h5 plainlen plain in *)
      (*   let c = Buffer.as_seq h5 cipher_tagged in *)
-     (*   HS.sel h5 st.log == SeqProperties.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c))) *)
+     (*   HS.sel h5 st.log == Seq.snoc (HS.sel h0 st.log) (Entry n aad (v plainlen) p c))) *)
 
 (* let encrypt_ensures_tip (i:id) (st:state i Writer) *)
 (* 		     (n: Cipher.iv (alg i)) *)

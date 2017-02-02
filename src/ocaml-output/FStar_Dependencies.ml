@@ -28,18 +28,13 @@ in (
 
 let deps = (
 
-let uu____56 = (
-
-let uu____57 = (
-
-let uu____58 = (FStar_List.hd deps)
-in (FStar_Util.basename uu____58))
-in (uu____57 = "prims.fst"))
+let uu____56 = (let _0_591 = (FStar_Util.basename (FStar_List.hd deps))
+in (_0_591 = "prims.fst"))
 in (match (uu____56) with
 | true -> begin
 (FStar_List.tl deps)
 end
-| uu____60 -> begin
+| uu____58 -> begin
 ((FStar_Util.print_error "dependency analysis did not find prims.fst?!");
 (FStar_All.exit (Prims.parse_int "1"));
 )

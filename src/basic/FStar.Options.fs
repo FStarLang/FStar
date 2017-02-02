@@ -42,7 +42,7 @@ type options =
     | Reset
     | Restore
 
-// VALS_HACK_HERE
+
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
 let __unit_tests__ = Util.mk_ref false
@@ -126,6 +126,7 @@ let init () =
         ("no_default_includes"          , Bool false);
         ("no_extract"                   , List []);
         ("no_location_info"             , Bool false);
+        ("no_warn_top_level_effects"    , Bool true);
         ("odir"                         , Unset);
         ("prims"                        , Unset);
         ("pretype"                      , Bool true);
@@ -152,12 +153,13 @@ let init () =
         ("verify"                       , Bool true);
         ("verify_all"                   , Bool false);
         ("verify_module"                , List []);
-        ("no_warn_top_level_effects"    , Bool true);
+        ("warn_default_effects"         , Bool false);
         ("z3refresh"                    , Bool false);
         ("z3rlimit"                     , Int 5);
         ("z3seed"                       , Int 0);
         ("z3timeout"                    , Int 5);
-        ("z3cliopt"                     , List [])] in
+        ("z3cliopt"                     , List []);
+        ("__no_positivity"              , Bool false)] in
    let o = peek () in
    Util.smap_clear o;
    vals |> List.iter set_option'                          //initialize it with the default values
@@ -212,6 +214,7 @@ let get_n_cores                 ()      = lookup_opt "n_cores"                  
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
+let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects" as_bool
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_before_norm       ()      = lookup_opt "print_before_norm"        as_bool
@@ -237,12 +240,13 @@ let get_verify_all              ()      = lookup_opt "verify_all"               
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
-let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects"   as_bool
+let get_warn_default_effects    ()      = lookup_opt "warn_default_effects"     as_bool
 let get_z3cliopt                ()      = lookup_opt "z3cliopt"                 (as_list as_string)
 let get_z3refresh               ()      = lookup_opt "z3refresh"                as_bool
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
 let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
+let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -651,9 +655,9 @@ let rec specs () : list<Getopt.opt> =
          "Display version number");
 
        ( noshort,
-        "no_warn_top_level_effects",
-        ZeroArgs (fun () -> Bool false),
-        "Top-level effects are checked by default; turn this flag on to prevent warning when this happens");
+         "warn_default_effects",
+         ZeroArgs (fun _ -> Bool true),
+         "Warn when (a -> b) is desugared to (a -> Tot b)");
 
        ( noshort,
          "z3cliopt",
@@ -682,6 +686,12 @@ let rec specs () : list<Getopt.opt> =
          OneArg ((fun s -> Util.print_string "Warning: z3timeout ignored; use z3rlimit instead\n"; Int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
+
+       ( noshort,
+        "__no_positivity",
+        ZeroArgs (fun () -> Bool true),
+        "Don't check positivity of inductive types");
+
 
   ] in
      ( 'h',
@@ -918,6 +928,7 @@ let use_hints                    () = get_use_hints                   ()
 let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
 let warn_cardinality             () = get_cardinality() = "warn"
+let warn_default_effects         () = get_warn_default_effects        ()
 let warn_top_level_effects       () = get_warn_top_level_effects      ()
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
@@ -927,6 +938,7 @@ let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_seed                      () = get_z3seed                      ()
 let z3_timeout                   () = get_z3timeout                   ()
+let no_positivity                () = get_no_positivity               ()
 
 
 let should_extract m =

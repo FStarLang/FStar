@@ -20,7 +20,7 @@ module Invariant = Crypto.AEAD.Invariant
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module CMA = Crypto.Symmetric.UF1CMA
-module SeqProperties = FStar.SeqProperties
+module Seq = FStar.Seq
 module MAC = Crypto.Symmetric.MAC
 module EncodingWrapper = Crypto.AEAD.Wrappers.Encoding
 module RR = FStar.Monotonic.RRef
@@ -467,14 +467,14 @@ let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged
     let prf_table = HS.sel h (PRF.itable i st.prf) in
     let x0 = {iv = n; ctr=ctr_0 i} in
     let cipher_tagged = Buffer.as_seq h cipher_tagged_b in
-    let cipher, _ = SeqProperties.split cipher_tagged (v plainlen) in
+    let cipher, _ = Seq.split cipher_tagged (v plainlen) in
     let tag = Buffer.as_seq h tag_b in
     intro_mac_is_used st aad plain cipher_tagged_b ak acc h;
     let aead_entry = find_refined_aead_entry n aead_entries prf_table h in 
     let Some ak' = PRF.find_mac prf_table x0 in
     assert (ak == ak');
     let AEADEntry nonce aad' plainlen' p' cipher_tagged' = aead_entry in
-    let cipher', _ = SeqProperties.split cipher_tagged' plainlen' in
+    let cipher', _ = Seq.split cipher_tagged' plainlen' in
     let mac_log = CMA.ilog (CMA.State?.log ak) in
     match m_sel h mac_log with
     | _, None           -> ()

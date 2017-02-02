@@ -246,7 +246,7 @@ let mod2_26 x =
   y
 
 private val div2_26: x:U64.t -> Tot (y:U64.t{v y = v x / pow2 26 /\ v y <= pow2 38})
-#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
 let div2_26 x =
     pow2_minus 64 26;
     let y = x >>^ 26ul in

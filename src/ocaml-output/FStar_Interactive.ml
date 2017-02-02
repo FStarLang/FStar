@@ -61,37 +61,29 @@ type interactive_state =
 {chunk : FStar_Util.string_builder; stdin : FStar_Util.stream_reader Prims.option FStar_ST.ref; buffer : input_chunks Prims.list FStar_ST.ref; log : FStar_Util.file_handle Prims.option FStar_ST.ref}
 
 
-let the_interactive_state : interactive_state = (
-
-let uu____512 = (FStar_Util.new_string_builder ())
-in (
-
-let uu____513 = (FStar_Util.mk_ref None)
-in (
-
-let uu____518 = (FStar_Util.mk_ref [])
-in (
-
-let uu____523 = (FStar_Util.mk_ref None)
-in {chunk = uu____512; stdin = uu____513; buffer = uu____518; log = uu____523}))))
+let the_interactive_state : interactive_state = (let _0_678 = (FStar_Util.new_string_builder ())
+in (let _0_677 = (FStar_Util.mk_ref None)
+in (let _0_676 = (FStar_Util.mk_ref [])
+in (let _0_675 = (FStar_Util.mk_ref None)
+in {chunk = _0_678; stdin = _0_677; buffer = _0_676; log = _0_675}))))
 
 
-let rec read_chunk : Prims.unit  ->  input_chunks = (fun uu____536 -> (
+let rec read_chunk : Prims.unit  ->  input_chunks = (fun uu____523 -> (
 
 let s = the_interactive_state
 in (
 
 let log = (
 
-let uu____541 = (FStar_Options.debug_any ())
-in (match (uu____541) with
+let uu____528 = (FStar_Options.debug_any ())
+in (match (uu____528) with
 | true -> begin
 (
 
 let transcript = (
 
-let uu____545 = (FStar_ST.read s.log)
-in (match (uu____545) with
+let uu____532 = (FStar_ST.read s.log)
+in (match (uu____532) with
 | Some (transcript) -> begin
 transcript
 end
@@ -107,15 +99,15 @@ in (fun line -> ((FStar_Util.append_to_file transcript line);
 (FStar_Util.flush_file transcript);
 )))
 end
-| uu____558 -> begin
-(fun uu____559 -> ())
+| uu____545 -> begin
+(fun uu____546 -> ())
 end))
 in (
 
 let stdin = (
 
-let uu____561 = (FStar_ST.read s.stdin)
-in (match (uu____561) with
+let uu____548 = (FStar_ST.read s.stdin)
+in (match (uu____548) with
 | Some (i) -> begin
 i
 end
@@ -131,8 +123,8 @@ in (
 
 let line = (
 
-let uu____573 = (FStar_Util.read_line stdin)
-in (match (uu____573) with
+let uu____560 = (FStar_Util.read_line stdin)
+in (match (uu____560) with
 | None -> begin
 (FStar_All.exit (Prims.parse_int "0"))
 end
@@ -148,10 +140,10 @@ in (match ((FStar_Util.starts_with l "#end")) with
 (
 
 let responses = (match ((FStar_Util.split l " ")) with
-| (uu____583)::(ok)::(fail)::[] -> begin
+| (uu____570)::(ok)::(fail)::[] -> begin
 ((ok), (fail))
 end
-| uu____586 -> begin
+| uu____573 -> begin
 (("ok"), ("fail"))
 end)
 in (
@@ -161,45 +153,34 @@ in ((FStar_Util.clear_string_builder s.chunk);
 Code (((str), (responses)));
 )))
 end
-| uu____592 -> begin
+| uu____579 -> begin
 (match ((FStar_Util.starts_with l "#pop")) with
 | true -> begin
 ((FStar_Util.clear_string_builder s.chunk);
 Pop (l);
 )
 end
-| uu____594 -> begin
+| uu____581 -> begin
 (match ((FStar_Util.starts_with l "#push")) with
 | true -> begin
 ((FStar_Util.clear_string_builder s.chunk);
 (
 
-let lc_lax = (
-
-let uu____597 = (FStar_Util.substring_from l (FStar_String.length "#push"))
-in (FStar_Util.trim_string uu____597))
+let lc_lax = (FStar_Util.trim_string (FStar_Util.substring_from l (FStar_String.length "#push")))
 in (
 
 let lc = (match ((FStar_Util.split lc_lax " ")) with
 | (l)::(c)::("#lax")::[] -> begin
-(
-
-let uu____609 = (FStar_Util.int_of_string l)
-in (
-
-let uu____610 = (FStar_Util.int_of_string c)
-in ((true), (uu____609), (uu____610))))
+(let _0_680 = (FStar_Util.int_of_string l)
+in (let _0_679 = (FStar_Util.int_of_string c)
+in ((true), (_0_680), (_0_679))))
 end
 | (l)::(c)::[] -> begin
-(
-
-let uu____613 = (FStar_Util.int_of_string l)
-in (
-
-let uu____614 = (FStar_Util.int_of_string c)
-in ((false), (uu____613), (uu____614))))
+(let _0_682 = (FStar_Util.int_of_string l)
+in (let _0_681 = (FStar_Util.int_of_string c)
+in ((false), (_0_682), (_0_681))))
 end
-| uu____615 -> begin
+| uu____597 -> begin
 ((FStar_Util.print_warning (Prims.strcat "Error locations may be wrong, unrecognized string after #push: " lc_lax));
 ((false), ((Prims.parse_int "1")), ((Prims.parse_int "0")));
 )
@@ -207,12 +188,12 @@ end)
 in Push (lc)));
 )
 end
-| uu____618 -> begin
+| uu____600 -> begin
 (match ((l = "#finish")) with
 | true -> begin
 (FStar_All.exit (Prims.parse_int "0"))
 end
-| uu____619 -> begin
+| uu____601 -> begin
 ((FStar_Util.string_builder_append s.chunk line);
 (FStar_Util.string_builder_append s.chunk "\n");
 (read_chunk ());
@@ -224,13 +205,13 @@ end));
 ))))))
 
 
-let shift_chunk : Prims.unit  ->  input_chunks = (fun uu____624 -> (
+let shift_chunk : Prims.unit  ->  input_chunks = (fun uu____606 -> (
 
 let s = the_interactive_state
 in (
 
-let uu____626 = (FStar_ST.read s.buffer)
-in (match (uu____626) with
+let uu____608 = (FStar_ST.read s.buffer)
+in (match (uu____608) with
 | [] -> begin
 (read_chunk ())
 end
@@ -241,34 +222,22 @@ chunk;
 end))))
 
 
-let fill_buffer : Prims.unit  ->  Prims.unit = (fun uu____640 -> (
+let fill_buffer : Prims.unit  ->  Prims.unit = (fun uu____622 -> (
 
 let s = the_interactive_state
-in (
-
-let uu____642 = (
-
-let uu____644 = (FStar_ST.read s.buffer)
-in (
-
-let uu____649 = (
-
-let uu____651 = (read_chunk ())
-in (uu____651)::[])
-in (FStar_List.append uu____644 uu____649)))
-in (FStar_ST.write s.buffer uu____642))))
+in (let _0_686 = (let _0_685 = (FStar_ST.read s.buffer)
+in (let _0_684 = (let _0_683 = (read_chunk ())
+in (_0_683)::[])
+in (FStar_List.append _0_685 _0_684)))
+in (FStar_ST.write s.buffer _0_686))))
 
 
 let deps_of_our_file : Prims.string  ->  Prims.string Prims.list = (fun filename -> (
 
 let deps = (FStar_Dependencies.find_deps_if_needed FStar_Parser_Dep.VerifyFigureItOut ((filename)::[]))
-in (FStar_List.filter (fun x -> (
-
-let uu____662 = (FStar_Parser_Dep.lowercase_module_name x)
-in (
-
-let uu____663 = (FStar_Parser_Dep.lowercase_module_name filename)
-in (uu____662 <> uu____663)))) deps)))
+in (FStar_List.filter (fun x -> (let _0_688 = (FStar_Parser_Dep.lowercase_module_name x)
+in (let _0_687 = (FStar_Parser_Dep.lowercase_module_name filename)
+in (_0_688 <> _0_687)))) deps)))
 
 
 type m_timestamps =
@@ -279,31 +248,26 @@ let rec tc_deps = (fun tc m stack env remaining ts -> (match (remaining) with
 | [] -> begin
 ((stack), (env), (ts))
 end
-| uu____730 -> begin
+| uu____703 -> begin
 (
 
 let stack = (((env), (m)))::stack
 in (
 
-let env = (
-
-let uu____743 = (FStar_Options.lax ())
-in (tc.push env uu____743 true "typecheck_modul"))
+let env = (let _0_689 = (FStar_Options.lax ())
+in (tc.push env _0_689 true "typecheck_modul"))
 in (
 
-let uu____744 = (tc.tc_one_file remaining env)
-in (match (uu____744) with
+let uu____716 = (tc.tc_one_file remaining env)
+in (match (uu____716) with
 | ((intf, impl), env, modl, remaining) -> begin
 (
 
-let uu____770 = (
+let uu____742 = (
 
 let intf_t = (match (intf) with
 | Some (intf) -> begin
-(
-
-let uu____778 = (FStar_Util.get_file_last_modification_time intf)
-in Some (uu____778))
+Some ((FStar_Util.get_file_last_modification_time intf))
 end
 | None -> begin
 None
@@ -312,7 +276,7 @@ in (
 
 let impl_t = (FStar_Util.get_file_last_modification_time impl)
 in ((intf_t), (impl_t))))
-in (match (uu____770) with
+in (match (uu____742) with
 | (intf_t, impl_t) -> begin
 (tc_deps tc m stack env remaining ((((intf), (impl), (intf_t), (impl_t)))::ts))
 end))
@@ -335,7 +299,7 @@ end
 | (None, None) -> begin
 false
 end
-| (uu____876, uu____877) -> begin
+| (uu____847, uu____848) -> begin
 (failwith "Impossible, if the interface is None, the timestamp entry should also be None")
 end))))
 in (
@@ -350,11 +314,11 @@ let match_dep = (fun depnames intf impl -> (match (intf) with
 | true -> begin
 ((true), (depnames'))
 end
-| uu____957 -> begin
+| uu____928 -> begin
 ((false), (depnames))
 end)
 end
-| uu____959 -> begin
+| uu____930 -> begin
 ((false), (depnames))
 end)
 end
@@ -365,11 +329,11 @@ end
 | true -> begin
 ((true), (depnames'))
 end
-| uu____974 -> begin
+| uu____945 -> begin
 ((false), (depnames))
 end)
 end
-| uu____976 -> begin
+| uu____947 -> begin
 ((false), (depnames))
 end)
 end))
@@ -379,19 +343,15 @@ let rec pop_tc_and_stack = (fun env stack ts -> (match (ts) with
 | [] -> begin
 env
 end
-| (uu____1015)::ts -> begin
+| (uu____986)::ts -> begin
 ((tc.pop env "");
 (
 
-let uu____1037 = (
-
-let uu____1045 = (FStar_List.hd stack)
-in (
-
-let uu____1050 = (FStar_List.tl stack)
-in ((uu____1045), (uu____1050))))
-in (match (uu____1037) with
-| ((env, uu____1062), stack) -> begin
+let uu____1008 = (let _0_691 = (FStar_List.hd stack)
+in (let _0_690 = (FStar_List.tl stack)
+in ((_0_691), (_0_690))))
+in (match (uu____1008) with
+| ((env, uu____1026), stack) -> begin
 (pop_tc_and_stack env stack ts)
 end));
 )
@@ -400,35 +360,31 @@ in (match (ts) with
 | (ts_elt)::ts' -> begin
 (
 
-let uu____1098 = ts_elt
-in (match (uu____1098) with
+let uu____1062 = ts_elt
+in (match (uu____1062) with
 | (intf, impl, intf_t, impl_t) -> begin
 (
 
-let uu____1118 = (match_dep depnames intf impl)
-in (match (uu____1118) with
+let uu____1082 = (match_dep depnames intf impl)
+in (match (uu____1082) with
 | (b, depnames') -> begin
 (
 
-let uu____1131 = ((not (b)) || (is_stale intf impl intf_t impl_t))
-in (match (uu____1131) with
+let uu____1095 = ((not (b)) || (is_stale intf impl intf_t impl_t))
+in (match (uu____1095) with
 | true -> begin
 (
 
 let env = (pop_tc_and_stack env' (FStar_List.rev_append st []) ts)
 in (tc_deps tc m good_stack env depnames good_ts))
 end
-| uu____1150 -> begin
+| uu____1114 -> begin
 (
 
-let uu____1151 = (
-
-let uu____1159 = (FStar_List.hd st)
-in (
-
-let uu____1168 = (FStar_List.tl st)
-in ((uu____1159), (uu____1168))))
-in (match (uu____1151) with
+let uu____1115 = (let _0_693 = (FStar_List.hd st)
+in (let _0_692 = (FStar_List.tl st)
+in ((_0_693), (_0_692))))
+in (match (uu____1115) with
 | (stack_elt, st') -> begin
 (iterate depnames' st' env' ts' ((stack_elt)::good_stack) ((ts_elt)::good_ts))
 end))
@@ -447,13 +403,13 @@ in (iterate filenames (FStar_List.rev_append stk []) env (FStar_List.rev_append 
 
 let rec go = (fun line_col filename tc stack curmod env ts -> (
 
-let uu____1307 = (shift_chunk ())
-in (match (uu____1307) with
+let uu____1264 = (shift_chunk ())
+in (match (uu____1264) with
 | Pop (msg) -> begin
 ((tc.pop env msg);
 (
 
-let uu____1310 = (match (stack) with
+let uu____1267 = (match (stack) with
 | [] -> begin
 ((FStar_Util.print_error "too many pops");
 (FStar_All.exit (Prims.parse_int "1"));
@@ -462,13 +418,13 @@ end
 | (hd)::tl -> begin
 ((hd), (tl))
 end)
-in (match (uu____1310) with
+in (match (uu____1267) with
 | ((env, curmod), stack) -> begin
 ((match (((FStar_List.length stack) = (FStar_List.length ts))) with
 | true -> begin
 (tc.cleanup env)
 end
-| uu____1375 -> begin
+| uu____1332 -> begin
 ()
 end);
 (go line_col filename tc stack curmod env ts);
@@ -479,17 +435,15 @@ end
 | Push (lax, l, c) -> begin
 (
 
-let uu____1379 = (match (((FStar_List.length stack) = (FStar_List.length ts))) with
+let uu____1336 = (match (((FStar_List.length stack) = (FStar_List.length ts))) with
 | true -> begin
-(
-
-let uu____1410 = (update_deps filename tc curmod stack env ts)
-in ((true), (uu____1410)))
+(let _0_694 = (update_deps filename tc curmod stack env ts)
+in ((true), (_0_694)))
 end
-| uu____1425 -> begin
+| uu____1376 -> begin
 ((false), (((stack), (env), (ts))))
 end)
-in (match (uu____1379) with
+in (match (uu____1336) with
 | (restore_cmd_line_options, (stack, env, ts)) -> begin
 (
 
@@ -530,11 +484,11 @@ let env = (tc.commit_mark env)
 in (go line_col filename tc stack curmod env ts));
 )
 end
-| uu____1499 -> begin
+| uu____1450 -> begin
 (fail curmod env_mark)
 end)
 end
-| uu____1500 -> begin
+| uu____1451 -> begin
 (fail curmod env_mark)
 end)))))
 end)))
@@ -542,15 +496,12 @@ end)))
 
 let interactive_mode = (fun filename initial_mod tc -> ((
 
-let uu____1529 = (
-
-let uu____1530 = (FStar_Options.codegen ())
-in (FStar_Option.isSome uu____1530))
-in (match (uu____1529) with
+let uu____1480 = (FStar_Option.isSome (FStar_Options.codegen ()))
+in (match (uu____1480) with
 | true -> begin
 (FStar_Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag")
 end
-| uu____1532 -> begin
+| uu____1481 -> begin
 ()
 end));
 (
@@ -561,23 +512,18 @@ in (
 let env = (tc.tc_prims ())
 in (
 
-let uu____1536 = (tc_deps tc initial_mod [] env filenames [])
-in (match (uu____1536) with
+let uu____1485 = (tc_deps tc initial_mod [] env filenames [])
+in (match (uu____1485) with
 | (stack, env, ts) -> begin
 (
 
-let uu____1557 = ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))
-in (match (uu____1557) with
+let uu____1506 = ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))
+in (match (uu____1506) with
 | true -> begin
-(
-
-let uu____1558 = (
-
-let uu____1559 = (FStar_Options.file_list ())
-in (FStar_List.hd uu____1559))
-in (FStar_SMTEncoding_Solver.with_hints_db uu____1558 (fun uu____1561 -> (go (((Prims.parse_int "1")), ((Prims.parse_int "0"))) filename tc stack initial_mod env ts))))
+(let _0_695 = (FStar_List.hd (FStar_Options.file_list ()))
+in (FStar_SMTEncoding_Solver.with_hints_db _0_695 (fun uu____1507 -> (go (((Prims.parse_int "1")), ((Prims.parse_int "0"))) filename tc stack initial_mod env ts))))
 end
-| uu____1566 -> begin
+| uu____1512 -> begin
 (go (((Prims.parse_int "1")), ((Prims.parse_int "0"))) filename tc stack initial_mod env ts)
 end))
 end))));
