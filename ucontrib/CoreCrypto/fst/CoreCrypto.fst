@@ -1,4 +1,5 @@
 module CoreCrypto
+
 open FStar.ST
 open Platform.Bytes
 
@@ -75,7 +76,7 @@ assume val aead_encryptT:
   ad:bytes -> 
   plain:bytes -> 
   GTot (lbytes (length plain + aeadTagSize a))
-  
+
 assume val aead_encrypt: 
   a: aead_cipher -> 
   k: lbytes (aeadKeySize a) -> 
@@ -83,14 +84,15 @@ assume val aead_encrypt:
   ad:bytes -> 
   plain:bytes -> 
   EXT (c:bytes {c = aead_encryptT a k iv ad plain})
-  
+
 assume val aead_decrypt:
   a: aead_cipher -> 
   k: lbytes (aeadKeySize a) -> 
   iv:lbytes (aeadRealIVSize a) -> 
   ad:bytes -> 
   cipher:bytes{length cipher >= aeadTagSize a} -> 
-  EXT (o:option (b:bytes{length b + aeadTagSize a = length cipher}) {forall (p:bytes). cipher = aead_encryptT a k iv ad p <==> o = Some p })
+  EXT (o:option (b:bytes{length b + aeadTagSize a = length cipher})
+    {forall (p:bytes). cipher = aead_encryptT a k iv ad p <==> (Some? o /\ Some?.v o == p) })
 
 
 type rsa_key = {
