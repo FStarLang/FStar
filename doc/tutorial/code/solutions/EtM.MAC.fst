@@ -1,7 +1,6 @@
 module EtM.MAC
 
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.Monotonic.RRef

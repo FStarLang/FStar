@@ -1,7 +1,6 @@
 module HyE.AE
-
+open FStar.ST
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.HyperStack

@@ -17,12 +17,12 @@
 (* A logical theory of integer-indexed arrays, from [0, n) *)
 module ArrayRealized
 
-noeq type contents (a:Type) =
+noeq type contents (a:Type 'ua) : Type 'ua =
   | Const : v:a -> contents a
   | Upd   : ix:int -> v:a -> tl:contents a -> contents a
   | Append : s1:seq a -> s2:seq a -> contents a
 
-and seq (a:Type) =
+and seq (a:Type 'ua) : Type 'ua =
   | Seq : c:contents a
           -> start_i:nat
           -> end_i:nat{end_i >= start_i}

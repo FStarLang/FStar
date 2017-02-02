@@ -1,22 +1,15 @@
 
 open Prims
-
 type doc =
 | Doc of Prims.string
 
 
-let is_Doc = (fun _discr_ -> (match (_discr_) with
-| Doc (_) -> begin
-true
-end
-| _ -> begin
-false
-end))
+let uu___is_Doc : doc  ->  Prims.bool = (fun projectee -> true)
 
 
-let ___Doc____0 = (fun projectee -> (match (projectee) with
-| Doc (_28_2) -> begin
-_28_2
+let __proj__Doc__item___0 : doc  ->  Prims.string = (fun projectee -> (match (projectee) with
+| Doc (_0) -> begin
+_0
 end))
 
 
@@ -41,31 +34,31 @@ let break0 : doc = (break_ (Prims.parse_int "0"))
 let break1 : doc = (text " ")
 
 
-let enclose : doc  ->  doc  ->  doc  ->  doc = (fun _28_7 _28_9 _28_11 -> (match (((_28_7), (_28_9), (_28_11))) with
+let enclose : doc  ->  doc  ->  doc  ->  doc = (fun uu____26 uu____27 uu____28 -> (match (((uu____26), (uu____27), (uu____28))) with
 | (Doc (l), Doc (r), Doc (x)) -> begin
 Doc ((Prims.strcat l (Prims.strcat x r)))
 end))
 
 
-let brackets : doc  ->  doc = (fun _28_13 -> (match (_28_13) with
+let brackets : doc  ->  doc = (fun uu____34 -> (match (uu____34) with
 | Doc (d) -> begin
 (enclose (text "[") (text "]") (Doc (d)))
 end))
 
 
-let cbrackets : doc  ->  doc = (fun _28_15 -> (match (_28_15) with
+let cbrackets : doc  ->  doc = (fun uu____38 -> (match (uu____38) with
 | Doc (d) -> begin
 (enclose (text "{") (text "}") (Doc (d)))
 end))
 
 
-let parens : doc  ->  doc = (fun _28_17 -> (match (_28_17) with
+let parens : doc  ->  doc = (fun uu____42 -> (match (uu____42) with
 | Doc (d) -> begin
 (enclose (text "(") (text ")") (Doc (d)))
 end))
 
 
-let cat : doc  ->  doc  ->  doc = (fun _28_19 _28_21 -> (match (((_28_19), (_28_21))) with
+let cat : doc  ->  doc  ->  doc = (fun uu____48 uu____49 -> (match (((uu____48), (uu____49))) with
 | (Doc (d1), Doc (d2)) -> begin
 Doc ((Prims.strcat d1 d2))
 end))
@@ -74,27 +67,28 @@ end))
 let reduce : doc Prims.list  ->  doc = (fun docs -> (FStar_List.fold_left cat empty docs))
 
 
-let group : doc  ->  doc = (fun _28_24 -> (match (_28_24) with
+let group : doc  ->  doc = (fun uu____59 -> (match (uu____59) with
 | Doc (d) -> begin
 Doc (d)
 end))
 
 
-let groups : doc Prims.list  ->  doc = (fun docs -> (let _127_35 = (reduce docs)
-in (group _127_35)))
+let groups : doc Prims.list  ->  doc = (fun docs -> (group (reduce docs)))
 
 
-let combine : doc  ->  doc Prims.list  ->  doc = (fun _28_27 docs -> (match (_28_27) with
+let combine : doc  ->  doc Prims.list  ->  doc = (fun uu____71 docs -> (match (uu____71) with
 | Doc (sep) -> begin
 (
 
-let select = (fun _28_31 -> (match (_28_31) with
+let select = (fun uu____79 -> (match (uu____79) with
 | Doc (d) -> begin
-if (d = "") then begin
+(match ((d = "")) with
+| true -> begin
 None
-end else begin
-Some (d)
 end
+| uu____83 -> begin
+Some (d)
+end)
 end))
 in (
 
@@ -109,7 +103,7 @@ let cat1 : doc  ->  doc  ->  doc = (fun d1 d2 -> (reduce ((d1)::(break1)::(d2)::
 let reduce1 : doc Prims.list  ->  doc = (fun docs -> (combine break1 docs))
 
 
-let nest : Prims.int  ->  doc  ->  doc = (fun i _28_38 -> (match (_28_38) with
+let nest : Prims.int  ->  doc  ->  doc = (fun i uu____102 -> (match (uu____102) with
 | Doc (d) -> begin
 Doc (d)
 end))
@@ -117,8 +111,8 @@ end))
 
 let align : doc Prims.list  ->  doc = (fun docs -> (
 
-let _28_41 = (combine hardline docs)
-in (match (_28_41) with
+let uu____109 = (combine hardline docs)
+in (match (uu____109) with
 | Doc (doc) -> begin
 Doc (doc)
 end)))
@@ -127,7 +121,7 @@ end)))
 let hbox : doc  ->  doc = (fun d -> d)
 
 
-let pretty : Prims.int  ->  doc  ->  Prims.string = (fun sz _28_45 -> (match (_28_45) with
+let pretty : Prims.int  ->  doc  ->  Prims.string = (fun sz uu____119 -> (match (uu____119) with
 | Doc (doc) -> begin
 doc
 end))

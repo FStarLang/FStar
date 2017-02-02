@@ -450,8 +450,9 @@
         "refinement_interpretation_Tm_refine_c90e16742d2e633e32c657b87c3493b3",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "typing_FStar.Buffer.as_seq", "typing_FStar.Buffer.get",
-        "typing_FStar.Seq.index", "typing_FStar.UInt64.__proj__Mk__item__v",
-        "typing_FStar.UInt64.v", "typing_Prims.pow2"
+        "typing_FStar.Seq.Base.index",
+        "typing_FStar.UInt64.__proj__Mk__item__v", "typing_FStar.UInt64.v",
+        "typing_Prims.pow2"
       ],
       0
     ],

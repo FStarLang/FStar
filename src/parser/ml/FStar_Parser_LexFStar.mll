@@ -17,6 +17,18 @@
       (lexeme_start_p lexbuf, lexeme_end_p lexbuf)
   end
 
+  let split_on_char sep s =
+     let open String in
+     let r = ref [] in
+     let j = ref (length s) in
+     for i = length s - 1 downto 0 do
+        if unsafe_get s i = sep then begin
+          r := sub s (i + 1) (!j - i - 1) :: !r;
+          j := i
+        end
+     done;
+     sub s 0 !j :: !r
+
   let string_trim_both s n m = BatString.sub s n (String.length s - (n+m))
   let trim_both   lexbuf n m = string_trim_both (L.lexeme lexbuf) n m
   let trim_right  lexbuf n = trim_both lexbuf 0 n
@@ -100,7 +112,7 @@
   let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
   let n_typ_apps = FStar_Util.mk_ref 0
   let is_typ_app lexbuf =
-    if not (FStar_Options.fs_typ_app()) then false
+    if not (FStar_Options.fs_typ_app lexbuf.lex_start_p.pos_fname) then false
     else try
       let char_ok = function
         | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | '_' | ',' | '.' | ' ' | '\t' -> true
@@ -163,7 +175,7 @@
   let maybe_trim_lines start_column comment =
     if start_column = 0 then comment
     else
-      let comment_lines = String.split_on_char '\n' comment in
+      let comment_lines = split_on_char '\n' comment in
       let ensures_empty_prefix k s =
         let j = min k (String.length s - 1) in
         let rec aux i = if i > j then k else if s.[i] <> ' ' then i else aux (i+1) in
@@ -274,7 +286,7 @@ rule token = parse
  | "\xef\xbb\xbf"   (* UTF-8 byte order mark, some compiler files have them *)
      {token lexbuf}
  | "#light"
-     { PRAGMALIGHT }
+     { FStar_Options.add_light_off_file lexbuf.lex_start_p.pos_fname ; PRAGMALIGHT }
  | "#set-options"
      { PRAGMA_SET_OPTIONS }
  | "#reset-options"

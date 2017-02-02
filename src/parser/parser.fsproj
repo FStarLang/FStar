@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -76,27 +76,20 @@
     <FsLex Include="lex.fsl">
       <OtherFlags>--unicode</OtherFlags>
     </FsLex>
-    <Compile Include="ast.fs" />
+    <Compile Include="FStar.Parser.AST.fs" />
     <Compile Include="parseutil.fs" />
     <Compile Include="parse.fs" />
-    <Compile Include="lexhelp.fs" />
+    <Compile Include="FStar.Parser.Lexhelp.fs" />
     <Compile Include="lex.fs" />
-    <Compile Include="dsenv.fsi" />
-    <Compile Include="dsenv.fs" />
-    <Compile Include="desugar.fsi" />
-    <Compile Include="desugar.fs" />
-    <Compile Include="env.fsi" />
-    <Compile Include="env.fs" />
-    <Compile Include="interleave.fs" />
-    <Compile Include="tosyntax.fsi" />
-    <Compile Include="tosyntax.fs" />
+    <Compile Include="FStar.Parser.Interleave.fs" />
     <Compile Include="parseit.fsi" />
     <Compile Include="parseit.fs" />
-    <Compile Include="driver.fs" />
+    <Compile Include="FStar.Parser.Driver.fs" />
     <Content Include="packages.config" />
-    <Compile Include="dep.fs" />
-    <Compile Include="todocument.fsi" />
-    <Compile Include="todocument.fs" />
+    <Compile Include="FStar.Parser.Dep.fsi" />
+    <Compile Include="FStar.Parser.Dep.fs" />
+    <Compile Include="FStar.Parser.ToDocument.fsi" />
+    <Compile Include="FStar.Parser.ToDocument.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\prettyprint\prettyprint.fsproj">
@@ -107,11 +100,6 @@
     <ProjectReference Include="..\syntax\syntax.fsproj">
       <Name>syntax</Name>
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\tc\tc.fsproj">
-      <Name>tc</Name>
-      <Project>{5bf4af3f-bec2-4cfd-94b7-11a38a031f4b}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\typechecker\typechecker.fsproj">
@@ -136,11 +124,6 @@
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
     </Reference>
-    <ProjectReference Include="..\absyn\absyn.fsproj">
-      <Name>absyn</Name>
-      <Project>{13e8984e-188d-447b-b7b7-9f7441050565}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>

@@ -110,7 +110,7 @@ assume val xor: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
 val split: b:bytes -> n:nat{n <= Seq.length b} ->
   Tot (x:(bytes * bytes) {Seq.length (fst (x))= n /\ Seq.length (snd (x)) == (Seq.length b) - n }) //(lbytes n * lbytes (length b - n))
 //val split: bytes -> nat -> Tot (bytes * bytes)
-let split b (n:nat { n <= Seq.length b}) = SeqProperties.split b n
+let split b (n:nat { n <= Seq.length b}) = Seq.split b n
 
 val lemma_split : s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Lemma
   (ensures ((fst (split s i)) @| (snd (split s i)) = s))

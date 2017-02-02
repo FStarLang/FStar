@@ -1,0 +1,59 @@
+[
+  "(\r—…M§\u001e >|+\u001b»¿¨ª",
+  [
+    [ "FStar.Universe.uu___is_Ret", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Universe.__proj__Ret__item___0",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_FStar.Universe.Ret",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_93cf4d3fe85b97017eefeb624a579fc0"
+      ],
+      0
+    ],
+    [ "FStar.Universe.uu___is_Unused", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Universe.__proj__Unused__item___0",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_FStar.Universe.Unused",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_4d7edee42e8e9e0012accc15fe5f5349"
+      ],
+      0
+    ],
+    [ "FStar.Universe.raise_t", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Universe.raise_val",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Universe.Ret",
+        "disc_equation_FStar.Universe.Ret",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Universe.Ret__0",
+        "projection_inverse_FStar.Universe.Ret_a"
+      ],
+      0
+    ],
+    [
+      "FStar.Universe.downgrade_val",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_FStar.Universe.Ret",
+        "equation_FStar.Universe.raise_t",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_93cf4d3fe85b97017eefeb624a579fc0"
+      ],
+      0
+    ]
+  ]
+]
