@@ -318,6 +318,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           let e1, c1, g1 = tc_term (Env.set_expected_typ env Common.t_unit) e1 in
           let e2, c2, g2 = tc_term env e2 in
           let c = TcUtil.bind e1.pos env (Some e1) c1 (None, c2) in
+          let e1 = TcUtil.maybe_lift env e1 c1.eff_name c.eff_name c1.res_typ in
+          let e2 = TcUtil.maybe_lift env e2 c2.eff_name c.eff_name c2.res_typ in
           let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, Common.t_unit, e1)]), e2)) (Some c.res_typ.n) e.pos in
           let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in
           let e = mk (Tm_meta(e, Meta_desugared Sequence)) (Some c.res_typ.n) top.pos in
