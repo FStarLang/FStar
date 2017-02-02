@@ -106,6 +106,7 @@ assume val equalBytes : b1:bytes -> b2:bytes -> Tot (b:bool{b = (b1=b2)})
 (*@ assume val xor : (bytes -> (bytes -> (nb:nat -> (b3:bytes){Length (b3) = nb}))) @*)
 
 assume val xor: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
+// consider making the length implicit
 
 val split: b:bytes -> n:nat{n <= Seq.length b} ->
   Tot (x:(bytes * bytes) {Seq.length (fst (x))= n /\ Seq.length (snd (x)) == (Seq.length b) - n }) //(lbytes n * lbytes (length b - n))
