@@ -49,7 +49,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
         $ fstar.exe --version
-        F* 0.9.3.1-beta
+        F* 0.9.4.0
         platform=Linux_x86_64
         compiler=OCaml 4.04.0
         date=2017-01-21T20:16:56+01:00
