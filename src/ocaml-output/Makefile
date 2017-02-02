@@ -135,7 +135,7 @@ COMPILER = OCaml $(shell ocamlc -version)
 DATE = $(shell $(DATE_EXEC) -Iseconds)
 COMMIT = $(shell ../tools/get_commit)
 
-.PHONY: version
+.PHONY: FStar_Version.ml
 FStar_Version.ml:
 	echo 'let version = "$(VERSION)"' > $@
 	echo 'let platform = "$(PLATFORM)"' >> $@
@@ -201,11 +201,15 @@ endif
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
         # Copy Z3 binary
 	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$(FSTAR_HOME)/bin or in your \\$PATH, skipped from package ************** "
+        # Need this for running code extracted to F# (for instance hello)
+	make -C ../VS install-packages
+	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/fstar.mk ../../src/gmake/nubuild.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
-	cp ../../bin/msvc*dll $(PREFIX)
+	cp ../../bin/msvc*.dll $(PREFIX)/bin
+	cp ../../bin/libgmp-10.dll $(PREFIX)/bin
 	zip -r -9 $(NAME).zip fstar
 else
 	tar czf $(NAME).tar.gz fstar

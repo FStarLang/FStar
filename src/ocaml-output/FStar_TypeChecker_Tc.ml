@@ -2461,9 +2461,7 @@ end
 (
 
 let env = (FStar_TypeChecker_Env.push_sigelt env0 sig_bndle)
-in (
-
-let b = (FStar_List.for_all (fun ty -> (
+in (FStar_List.iter (fun ty -> (
 
 let b = (check_positivity env ty)
 in (match ((not (b))) with
@@ -2479,13 +2477,12 @@ end
 end)
 in (match (uu____3944) with
 | (lid, r) -> begin
-(Prims.raise (FStar_Errors.Error ((((Prims.strcat "Inductive type " (Prims.strcat lid.FStar_Ident.str " does not satisfy the positivity condition"))), (r)))))
+(FStar_Errors.report r (Prims.strcat "Inductive type " (Prims.strcat lid.FStar_Ident.str " does not satisfy the positivity condition")))
 end))
 end
 | uu____3968 -> begin
-true
-end))) tcs)
-in ()))
+()
+end))) tcs))
 end));
 (
 
