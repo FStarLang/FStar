@@ -135,7 +135,7 @@ COMPILER = OCaml $(shell ocamlc -version)
 DATE = $(shell $(DATE_EXEC) -Iseconds)
 COMMIT = $(shell ../tools/get_commit)
 
-.PHONY: version
+.PHONY: FStar_Version.ml
 FStar_Version.ml:
 	echo 'let version = "$(VERSION)"' > $@
 	echo 'let platform = "$(PLATFORM)"' >> $@
