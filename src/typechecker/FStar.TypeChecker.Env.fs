@@ -159,113 +159,83 @@ let initial_env type_of universe_of solver module_lid =
 (* Marking and resetting the environment, for the interactive mode *)
 let sigtab env = env.sigtab
 let gamma_cache env = env.gamma_cache
-type env_stack_ops = {
-    es_push: env -> env;
-    es_mark: env -> env;
-    es_reset_mark: env -> env;
-    es_commit_mark: env -> env;
-    es_pop:env -> env;
-    es_incr_query_index:env -> env
-}
 
-let stack_ops =
-    let query_indices = BU.mk_ref [[]] in
-    let push_query_indices () = match !query_indices with
-        | [] -> failwith "Empty query indices!"
-        | _ -> query_indices := (List.hd !query_indices)::!query_indices
-    in
-    let pop_query_indices () = match !query_indices with
-        | [] -> failwith "Empty query indices!"
-        | hd::tl -> query_indices := tl
-    in
-    let add_query_index (l, n) = match !query_indices with
-        | hd::tl -> query_indices := ((l,n)::hd)::tl
-        | _ -> failwith "Empty query indices"
-    in
-    let peek_query_indices () = List.hd !query_indices in
-    let commit_query_index_mark () = match !query_indices with
-        | hd::_::tl -> query_indices := hd::tl
-        | _ -> failwith "Unmarked query index stack"
-    in
-    let stack = BU.mk_ref [] in
-    let push_stack env =
-        stack := env::!stack;
-        print1 "TC/Pushed; size of stack is now: %s\n" (string_of_int (List.length !stack));
-        {env with sigtab=BU.smap_copy (sigtab env);
-                  gamma_cache=BU.smap_copy (gamma_cache env)}
-    in
-    let pop_stack env =
-        match !stack with
-        | env::tl ->
-          stack := tl;
-          print1 "TC/Popped; size of stack is now: %s\n" (string_of_int (List.length !stack));
-          env
-        | _ -> failwith "Impossible: Too many pops"
-    in
-    let push env =
-        push_query_indices();
-        push_stack env
-    in
-    let pop env =
-        pop_query_indices();
-        pop_stack env
-    in
-    let mark env =
-        push_query_indices();
-        push_stack env
-    in
-    let commit_mark env =
-        commit_query_index_mark();
-        ignore (pop_stack env);
-        env
-    in
-    let reset_mark env =
-        pop_query_indices();
-        pop_stack env
-    in
+let query_indices = BU.mk_ref [[]]
+let push_query_indices () = match !query_indices with
+    | [] -> failwith "Empty query indices!"
+    | _ -> query_indices := (List.hd !query_indices)::!query_indices
 
-    let incr_query_index env =
-        let qix = peek_query_indices () in
-        match env.qname_and_index with
-        | None -> env
-        | Some (l, n) ->
-        match qix |> List.tryFind (fun (m, _) -> Ident.lid_equals l m) with
-        | None ->
-            let next = n + 1 in
-            add_query_index (l, next);
-            {env with qname_and_index=Some (l, next)}
-        | Some (_, m) ->
-            let next = m + 1 in
-            add_query_index (l, next);
-            {env with qname_and_index=Some (l, next)}
-    in
-    { es_push=push;
-      es_pop=pop;
-      es_mark=push;
-      es_reset_mark=pop;
-      es_commit_mark=commit_mark;
-      es_incr_query_index=incr_query_index }
+let pop_query_indices () = match !query_indices with
+    | [] -> failwith "Empty query indices!"
+    | hd::tl -> query_indices := tl
 
+let add_query_index (l, n) = match !query_indices with
+    | hd::tl -> query_indices := ((l,n)::hd)::tl
+    | _ -> failwith "Empty query indices"
 
+let peek_query_indices () = List.hd !query_indices
+let commit_query_index_mark () = match !query_indices with
+    | hd::_::tl -> query_indices := hd::tl
+    | _ -> failwith "Unmarked query index stack"
+
+let stack = BU.mk_ref []
+let push_stack env =
+    stack := env::!stack;
+    print1 "TC/Pushed; size of stack is now: %s\n" (string_of_int (List.length !stack));
+    {env with sigtab=BU.smap_copy (sigtab env);
+              gamma_cache=BU.smap_copy (gamma_cache env)}
+
+let pop_stack () =
+    match !stack with
+    | env::tl ->
+      stack := tl;
+      print1 "TC/Popped; size of stack is now: %s\n" (string_of_int (List.length !stack));
+      env
+    | _ -> failwith "Impossible: Too many pops"
+
+let cleanup_interactive env = env.solver.pop ""
 
 let push env msg =
+    push_query_indices();
     env.solver.push msg;
-    stack_ops.es_push env
-let mark env =
-    env.solver.mark "USER MARK";
-    stack_ops.es_mark env
-let commit_mark env =
-    env.solver.commit_mark "USER MARK";
-    stack_ops.es_commit_mark env
-let reset_mark env =
-    env.solver.reset_mark "USER MARK";
-    stack_ops.es_reset_mark env
+    push_stack env
+
 let pop env msg =
     env.solver.pop msg;
-    stack_ops.es_pop env
-let cleanup_interactive env = env.solver.pop ""
+    pop_query_indices();
+    pop_stack ()
+
+let mark env =
+    env.solver.mark "USER MARK";
+    push_query_indices();
+    push_stack env
+
+let commit_mark (env: env) =
+    commit_query_index_mark();
+    env.solver.commit_mark "USER MARK";
+    ignore (pop_stack ());
+    env
+
+let reset_mark env =
+    env.solver.reset_mark "USER MARK";
+    pop_query_indices();
+    pop_stack ()
+
 let incr_query_index env =
-    stack_ops.es_incr_query_index env
+    let qix = peek_query_indices () in
+    match env.qname_and_index with
+    | None -> env
+    | Some (l, n) ->
+    match qix |> List.tryFind (fun (m, _) -> Ident.lid_equals l m) with
+    | None ->
+        let next = n + 1 in
+        add_query_index (l, next);
+        {env with qname_and_index=Some (l, next)}
+    | Some (_, m) ->
+        let next = m + 1 in
+        add_query_index (l, next);
+        {env with qname_and_index=Some (l, next)}
+
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
 ////////////////////////////////////////////////////////////

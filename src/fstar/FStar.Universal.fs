@@ -153,7 +153,7 @@ let needs_interleaving intf impl =
   m1 = m2 &&
   FStar.Util.get_file_extension intf = "fsti" && FStar.Util.get_file_extension impl = "fst"
 
-let pop_context (dsenv, env) msg =
+let pop_context env msg =
     DsEnv.pop () |> ignore;
     TcEnv.pop env msg |> ignore;
     env.solver.refresh()
@@ -187,7 +187,7 @@ let tc_one_file_and_intf (intf:option<string>) (impl:string) (dsenv:DsEnv.env) (
         let dsenv', env' = push_context (dsenv, env) caption in
         let _, dsenv', env' = tc_one_file dsenv' env' intf impl in //check the impl and interface together, if any
         // discard the impl and check the interface alone for the rest of the program
-        let _ = pop_context (dsenv', env') caption in
+        let _ = pop_context env' caption in
         tc_one_file dsenv env None iname //check the interface alone
 
 type uenv = DsEnv.env * env
@@ -257,9 +257,9 @@ let tc_one_file_interactive (remaining:list<string>) (uenv:uenv) = //:((string o
   (intf, impl), (dsenv, env), None, remaining
 
 let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul>> =
-    let pop (dsenv, env) msg =
+    let pop (_, env) msg =
           FStar.Util.print_string "U/pop\n";
-          pop_context (dsenv, env) msg;
+          pop_context env msg;
           Options.pop() in
 
     let push (dsenv, env) lax restore_cmd_line_options msg =
@@ -277,7 +277,7 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
         Options.push();
         dsenv, env in
 
-    let reset_mark (dsenv, env) =
+    let reset_mark (_, env) =
         FStar.Util.print_string "U/reset_mark\n";
         let dsenv = DsEnv.reset_mark () in
         let env = TcEnv.reset_mark env in
