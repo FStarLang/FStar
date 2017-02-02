@@ -59,7 +59,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 
 2. Run the unit tests:
 
-        $ make -C examples/unit-tests
+        $ make -C examples/micro-benchmarks
 
 3. If you have OCaml installed run, the following command should print "Hello F*!"
 
