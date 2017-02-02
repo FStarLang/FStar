@@ -26,7 +26,7 @@ module SS = FStar.Syntax.Subst
 module U = FStar.Util
 
 
-// VALS_HACK_HERE
+
 
 (* Given a list of bundled type declarations potentially with type
    abbreviations, construct the new bundle without type abbreviations

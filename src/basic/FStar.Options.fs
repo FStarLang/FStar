@@ -42,7 +42,7 @@ type options =
     | Reset
     | Restore
 
-// VALS_HACK_HERE
+
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
 let __unit_tests__ = Util.mk_ref false
@@ -157,7 +157,8 @@ let init () =
         ("z3rlimit"                     , Int 5);
         ("z3seed"                       , Int 0);
         ("z3timeout"                    , Int 5);
-        ("z3cliopt"                     , List [])] in
+        ("z3cliopt"                     , List []);
+        ("__no_positivity"              , Bool false)] in
    let o = peek () in
    Util.smap_clear o;
    vals |> List.iter set_option'                          //initialize it with the default values
@@ -243,6 +244,7 @@ let get_z3refresh               ()      = lookup_opt "z3refresh"                
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
 let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
+let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -683,6 +685,12 @@ let rec specs () : list<Getopt.opt> =
                   "[positive integer]"),
         "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
 
+       ( noshort,
+        "__no_positivity",
+        ZeroArgs (fun () -> Bool true),
+        "Don't check positivity of inductive types");
+
+
   ] in
      ( 'h',
         "help",
@@ -927,6 +935,7 @@ let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_seed                      () = get_z3seed                      ()
 let z3_timeout                   () = get_z3timeout                   ()
+let no_positivity                () = get_no_positivity               ()
 
 
 let should_extract m =

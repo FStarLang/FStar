@@ -45,7 +45,7 @@ module BU = FStar.Util
 
 
 
-// VALS_HACK_HERE
+
 
 (* [should_print_fs_typ_app] is set when encountering a [LightOff] pragma and *)
 (* reset at the end of each module. If you are using individual print function you *)
@@ -461,8 +461,6 @@ and p_rawDecl d = match d.d with
     (str "module" ^^ space ^^ p_uident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2
   | TopLevelModule uid ->
     group(str "module" ^^ space ^^ p_quident uid)
-  (* skipping kind abbreviation *)
-  | KindAbbrev _ -> failwith "Deprecated, please stop throwing your old stuff at me !"
   | Tycon(true, [TyconAbbrev(uid, tpars, None, t), None]) ->
     let effect_prefix_doc = str "effect" ^^ space ^^ p_uident uid in
     surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ t

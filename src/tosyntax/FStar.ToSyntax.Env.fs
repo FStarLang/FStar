@@ -98,7 +98,7 @@ type foundname =
   | Term_name of typ * bool // indicates if mutable
   | Eff_name  of sigelt * lident
 
-// VALS_HACK_HERE
+
 
 let all_exported_id_kinds: list<exported_id_kind> = [ Exported_id_field; Exported_id_term_type ]
 

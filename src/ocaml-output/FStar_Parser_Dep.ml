@@ -483,29 +483,24 @@ end
 )
 end)) patterms)
 end
-| FStar_Parser_AST.KindAbbrev (uu____617, binders, t) -> begin
-((collect_term t);
-(collect_binders binders);
-)
-end
 | (FStar_Parser_AST.Main (t)) | (FStar_Parser_AST.Assume (_, t)) | (FStar_Parser_AST.SubEffect ({FStar_Parser_AST.msource = _; FStar_Parser_AST.mdest = _; FStar_Parser_AST.lift_op = FStar_Parser_AST.NonReifiableLift (t)})) | (FStar_Parser_AST.SubEffect ({FStar_Parser_AST.msource = _; FStar_Parser_AST.mdest = _; FStar_Parser_AST.lift_op = FStar_Parser_AST.LiftForFree (t)})) | (FStar_Parser_AST.Val (_, t)) -> begin
 (collect_term t)
 end
-| FStar_Parser_AST.SubEffect ({FStar_Parser_AST.msource = uu____630; FStar_Parser_AST.mdest = uu____631; FStar_Parser_AST.lift_op = FStar_Parser_AST.ReifiableLift (t0, t1)}) -> begin
+| FStar_Parser_AST.SubEffect ({FStar_Parser_AST.msource = uu____624; FStar_Parser_AST.mdest = uu____625; FStar_Parser_AST.lift_op = FStar_Parser_AST.ReifiableLift (t0, t1)}) -> begin
 ((collect_term t0);
 (collect_term t1);
 )
 end
-| FStar_Parser_AST.Tycon (uu____635, ts) -> begin
+| FStar_Parser_AST.Tycon (uu____629, ts) -> begin
 (
 
-let ts = (FStar_List.map (fun uu____650 -> (match (uu____650) with
+let ts = (FStar_List.map (fun uu____644 -> (match (uu____644) with
 | (x, doc) -> begin
 x
 end)) ts)
 in (FStar_List.iter collect_tycon ts))
 end
-| FStar_Parser_AST.Exception (uu____658, t) -> begin
+| FStar_Parser_AST.Exception (uu____652, t) -> begin
 (FStar_Util.iter_opt t collect_term)
 end
 | (FStar_Parser_AST.NewEffectForFree (ed)) | (FStar_Parser_AST.NewEffect (ed)) -> begin
@@ -518,72 +513,72 @@ end
 ((FStar_Util.incr num_of_toplevelmods);
 (
 
-let uu____670 = (let _0_859 = (FStar_ST.read num_of_toplevelmods)
+let uu____664 = (let _0_859 = (FStar_ST.read num_of_toplevelmods)
 in (_0_859 > (Prims.parse_int "1")))
-in (match (uu____670) with
+in (match (uu____664) with
 | true -> begin
 (Prims.raise (FStar_Errors.Err ((let _0_860 = (string_of_lid lid true)
 in (FStar_Util.format1 "Automatic dependency analysis demands one module per file (module %s not supported)" _0_860)))))
 end
-| uu____673 -> begin
+| uu____667 -> begin
 ()
 end));
 )
 end))
-and collect_tycon = (fun uu___134_674 -> (match (uu___134_674) with
-| FStar_Parser_AST.TyconAbstract (uu____675, binders, k) -> begin
+and collect_tycon = (fun uu___134_668 -> (match (uu___134_668) with
+| FStar_Parser_AST.TyconAbstract (uu____669, binders, k) -> begin
 ((collect_binders binders);
 (FStar_Util.iter_opt k collect_term);
 )
 end
-| FStar_Parser_AST.TyconAbbrev (uu____683, binders, k, t) -> begin
+| FStar_Parser_AST.TyconAbbrev (uu____677, binders, k, t) -> begin
 ((collect_binders binders);
 (FStar_Util.iter_opt k collect_term);
 (collect_term t);
 )
 end
-| FStar_Parser_AST.TyconRecord (uu____693, binders, k, identterms) -> begin
+| FStar_Parser_AST.TyconRecord (uu____687, binders, k, identterms) -> begin
 ((collect_binders binders);
 (FStar_Util.iter_opt k collect_term);
-(FStar_List.iter (fun uu____717 -> (match (uu____717) with
-| (uu____722, t, uu____724) -> begin
+(FStar_List.iter (fun uu____711 -> (match (uu____711) with
+| (uu____716, t, uu____718) -> begin
 (collect_term t)
 end)) identterms);
 )
 end
-| FStar_Parser_AST.TyconVariant (uu____727, binders, k, identterms) -> begin
+| FStar_Parser_AST.TyconVariant (uu____721, binders, k, identterms) -> begin
 ((collect_binders binders);
 (FStar_Util.iter_opt k collect_term);
-(FStar_List.iter (fun uu____757 -> (match (uu____757) with
-| (uu____764, t, uu____766, uu____767) -> begin
+(FStar_List.iter (fun uu____751 -> (match (uu____751) with
+| (uu____758, t, uu____760, uu____761) -> begin
 (FStar_Util.iter_opt t collect_term)
 end)) identterms);
 )
 end))
-and collect_effect_decl = (fun uu___135_772 -> (match (uu___135_772) with
-| FStar_Parser_AST.DefineEffect (uu____773, binders, t, decls, actions) -> begin
+and collect_effect_decl = (fun uu___135_766 -> (match (uu___135_766) with
+| FStar_Parser_AST.DefineEffect (uu____767, binders, t, decls, actions) -> begin
 ((collect_binders binders);
 (collect_term t);
 (collect_decls decls);
 (collect_decls actions);
 )
 end
-| FStar_Parser_AST.RedefineEffect (uu____787, binders, t) -> begin
+| FStar_Parser_AST.RedefineEffect (uu____781, binders, t) -> begin
 ((collect_binders binders);
 (collect_term t);
 )
 end))
 and collect_binders = (fun binders -> (FStar_List.iter collect_binder binders))
-and collect_binder = (fun uu___136_795 -> (match (uu___136_795) with
+and collect_binder = (fun uu___136_789 -> (match (uu___136_789) with
 | ({FStar_Parser_AST.b = FStar_Parser_AST.Annotated (_, t); FStar_Parser_AST.brange = _; FStar_Parser_AST.blevel = _; FStar_Parser_AST.aqual = _}) | ({FStar_Parser_AST.b = FStar_Parser_AST.TAnnotated (_, t); FStar_Parser_AST.brange = _; FStar_Parser_AST.blevel = _; FStar_Parser_AST.aqual = _}) | ({FStar_Parser_AST.b = FStar_Parser_AST.NoName (t); FStar_Parser_AST.brange = _; FStar_Parser_AST.blevel = _; FStar_Parser_AST.aqual = _}) -> begin
 (collect_term t)
 end
-| uu____808 -> begin
+| uu____802 -> begin
 ()
 end))
 and collect_term = (fun t -> (collect_term' t.FStar_Parser_AST.tm))
-and collect_constant = (fun uu___137_810 -> (match (uu___137_810) with
-| FStar_Const.Const_int (uu____811, Some (signedness, width)) -> begin
+and collect_constant = (fun uu___137_804 -> (match (uu___137_804) with
+| FStar_Const.Const_int (uu____805, Some (signedness, width)) -> begin
 (
 
 let u = (match (signedness) with
@@ -610,10 +605,10 @@ end
 end)
 in (add_dep (FStar_Util.format2 "fstar.%sint%s" u w))))
 end
-| uu____821 -> begin
+| uu____815 -> begin
 ()
 end))
-and collect_term' = (fun uu___138_822 -> (match (uu___138_822) with
+and collect_term' = (fun uu___138_816 -> (match (uu___138_816) with
 | FStar_Parser_AST.Wild -> begin
 ()
 end
@@ -625,7 +620,7 @@ end
 | true -> begin
 (collect_term' (FStar_Parser_AST.Name ((FStar_Ident.lid_of_path (FStar_Ident.path_of_text "FStar.List.Tot.Base.append") FStar_Range.dummyRange))))
 end
-| uu____829 -> begin
+| uu____823 -> begin
 ()
 end);
 (FStar_List.iter collect_term ts);
@@ -642,11 +637,11 @@ end
 | true -> begin
 (record_lid lid)
 end
-| uu____847 -> begin
+| uu____841 -> begin
 ()
 end);
-(FStar_List.iter (fun uu____850 -> (match (uu____850) with
-| (t, uu____854) -> begin
+(FStar_List.iter (fun uu____844 -> (match (uu____844) with
+| (t, uu____848) -> begin
 (collect_term t)
 end)) termimps);
 )
@@ -656,13 +651,13 @@ end
 (collect_term t);
 )
 end
-| FStar_Parser_AST.App (t1, t2, uu____862) -> begin
+| FStar_Parser_AST.App (t1, t2, uu____856) -> begin
 ((collect_term t1);
 (collect_term t2);
 )
 end
-| FStar_Parser_AST.Let (uu____864, patterms, t) -> begin
-((FStar_List.iter (fun uu____876 -> (match (uu____876) with
+| FStar_Parser_AST.Let (uu____858, patterms, t) -> begin
+((FStar_List.iter (fun uu____870 -> (match (uu____870) with
 | (pat, t) -> begin
 ((collect_pattern pat);
 (collect_term t);
@@ -699,13 +694,13 @@ end
 end
 | FStar_Parser_AST.Record (t, idterms) -> begin
 ((FStar_Util.iter_opt t collect_term);
-(FStar_List.iter (fun uu____932 -> (match (uu____932) with
-| (uu____935, t) -> begin
+(FStar_List.iter (fun uu____926 -> (match (uu____926) with
+| (uu____929, t) -> begin
 (collect_term t)
 end)) idterms);
 )
 end
-| FStar_Parser_AST.Project (t, uu____938) -> begin
+| FStar_Parser_AST.Project (t, uu____932) -> begin
 (collect_term t)
 end
 | (FStar_Parser_AST.Product (binders, t)) | (FStar_Parser_AST.Sum (binders, t)) -> begin
@@ -724,7 +719,7 @@ end
 (collect_term t);
 )
 end
-| FStar_Parser_AST.NamedTyp (uu____967, t) -> begin
+| FStar_Parser_AST.NamedTyp (uu____961, t) -> begin
 (collect_term t)
 end
 | FStar_Parser_AST.Paren (t) -> begin
@@ -738,7 +733,7 @@ end
 end))
 and collect_patterns = (fun ps -> (FStar_List.iter collect_pattern ps))
 and collect_pattern = (fun p -> (collect_pattern' p.FStar_Parser_AST.pat))
-and collect_pattern' = (fun uu___139_983 -> (match (uu___139_983) with
+and collect_pattern' = (fun uu___139_977 -> (match (uu___139_977) with
 | (FStar_Parser_AST.PatWild) | (FStar_Parser_AST.PatOp (_)) | (FStar_Parser_AST.PatConst (_)) -> begin
 ()
 end
@@ -754,8 +749,8 @@ end
 (collect_patterns ps)
 end
 | FStar_Parser_AST.PatRecord (lidpats) -> begin
-(FStar_List.iter (fun uu____1006 -> (match (uu____1006) with
-| (uu____1009, p) -> begin
+(FStar_List.iter (fun uu____1000 -> (match (uu____1000) with
+| (uu____1003, p) -> begin
 (collect_pattern p)
 end)) lidpats)
 end
@@ -765,7 +760,7 @@ end
 )
 end))
 and collect_branches = (fun bs -> (FStar_List.iter collect_branch bs))
-and collect_branch = (fun uu____1024 -> (match (uu____1024) with
+and collect_branch = (fun uu____1018 -> (match (uu____1018) with
 | (pat, t1, t2) -> begin
 ((collect_pattern pat);
 (FStar_Util.iter_opt t1 collect_term);
@@ -774,9 +769,9 @@ and collect_branch = (fun uu____1024 -> (match (uu____1024) with
 end))
 in (
 
-let uu____1036 = (FStar_Parser_Driver.parse_file filename)
-in (match (uu____1036) with
-| (ast, uu____1044) -> begin
+let uu____1030 = (FStar_Parser_Driver.parse_file filename)
+in (match (uu____1030) with
+| (ast, uu____1038) -> begin
 ((collect_file ast);
 (FStar_ST.read deps);
 )
@@ -823,14 +818,14 @@ in (
 
 let rec discover_one = (fun is_user_provided_filename interface_only key -> (
 
-let uu____1163 = (let _0_868 = (FStar_Util.smap_try_find graph key)
+let uu____1157 = (let _0_868 = (FStar_Util.smap_try_find graph key)
 in (_0_868 = None))
-in (match (uu____1163) with
+in (match (uu____1157) with
 | true -> begin
 (
 
-let uu____1174 = (FStar_Util.must (FStar_Util.smap_try_find m key))
-in (match (uu____1174) with
+let uu____1168 = (FStar_Util.must (FStar_Util.smap_try_find m key))
+in (match (uu____1168) with
 | (intf, impl) -> begin
 (
 
@@ -844,13 +839,13 @@ end)
 in (
 
 let impl_deps = (match (((impl), (intf))) with
-| (Some (impl), Some (uu____1203)) when interface_only -> begin
+| (Some (impl), Some (uu____1197)) when interface_only -> begin
 []
 end
-| (Some (impl), uu____1207) -> begin
+| (Some (impl), uu____1201) -> begin
 (collect_one is_user_provided_filename m impl)
 end
-| (None, uu____1211) -> begin
+| (None, uu____1205) -> begin
 []
 end)
 in (
@@ -861,7 +856,7 @@ in ((FStar_Util.smap_add graph key ((deps), (White)));
 ))))
 end))
 end
-| uu____1222 -> begin
+| uu____1216 -> begin
 ()
 end)))
 in (
@@ -871,12 +866,12 @@ let discover_command_line_argument = (fun f -> (
 let m = (lowercase_module_name f)
 in (
 
-let uu____1228 = (is_interface f)
-in (match (uu____1228) with
+let uu____1222 = (is_interface f)
+in (match (uu____1222) with
 | true -> begin
 (discover_one true true m)
 end
-| uu____1229 -> begin
+| uu____1223 -> begin
 (discover_one true false m)
 end))))
 in ((FStar_List.iter discover_command_line_argument filenames);
@@ -890,8 +885,8 @@ in (
 
 let rec discover = (fun cycle key -> (
 
-let uu____1254 = (FStar_Util.must (FStar_Util.smap_try_find graph key))
-in (match (uu____1254) with
+let uu____1248 = (FStar_Util.must (FStar_Util.smap_try_find graph key))
+in (match (uu____1248) with
 | (direct_deps, color) -> begin
 (match (color) with
 | Gray -> begin
@@ -927,8 +922,8 @@ in (
 
 let must_find = (fun k -> (
 
-let uu____1305 = (FStar_Util.must (FStar_Util.smap_try_find m k))
-in (match (uu____1305) with
+let uu____1299 = (FStar_Util.must (FStar_Util.smap_try_find m k))
+in (match (uu____1299) with
 | (Some (intf), Some (impl)) when ((not (partial_discovery)) && (not ((FStar_List.existsML (fun f -> (let _0_872 = (lowercase_module_name f)
 in (_0_872 = k))) filenames)))) -> begin
 (intf)::(impl)::[]
@@ -937,7 +932,7 @@ end
 in (_0_873 = k)))) filenames) -> begin
 (intf)::(impl)::[]
 end
-| (Some (intf), uu____1330) -> begin
+| (Some (intf), uu____1324) -> begin
 (intf)::[]
 end
 | (None, Some (impl)) -> begin
@@ -967,7 +962,7 @@ let suffix = (match (should_append_fsti) with
 | true -> begin
 ((Prims.strcat f "i"))::[]
 end
-| uu____1366 -> begin
+| uu____1360 -> begin
 []
 end)
 in (
@@ -985,12 +980,12 @@ in (
 
 let topologically_sorted = (let _0_876 = (FStar_ST.read topologically_sorted)
 in (FStar_List.collect must_find_r _0_876))
-in ((FStar_List.iter (fun uu____1385 -> (match (uu____1385) with
+in ((FStar_List.iter (fun uu____1379 -> (match (uu____1379) with
 | (m, r) -> begin
 (
 
-let uu____1393 = ((not ((FStar_ST.read r))) && (not ((FStar_Options.interactive ()))))
-in (match (uu____1393) with
+let uu____1387 = ((not ((FStar_ST.read r))) && (not ((FStar_Options.interactive ()))))
+in (match (uu____1387) with
 | true -> begin
 (
 
@@ -999,19 +994,19 @@ let maybe_fst = (
 let k = (FStar_String.length m)
 in (
 
-let uu____1399 = ((k > (Prims.parse_int "4")) && (let _0_877 = (FStar_String.substring m (k - (Prims.parse_int "4")) (Prims.parse_int "4"))
+let uu____1393 = ((k > (Prims.parse_int "4")) && (let _0_877 = (FStar_String.substring m (k - (Prims.parse_int "4")) (Prims.parse_int "4"))
 in (_0_877 = ".fst")))
-in (match (uu____1399) with
+in (match (uu____1393) with
 | true -> begin
 (let _0_878 = (FStar_String.substring m (Prims.parse_int "0") (k - (Prims.parse_int "4")))
 in (FStar_Util.format1 " Did you mean %s ?" _0_878))
 end
-| uu____1409 -> begin
+| uu____1403 -> begin
 ""
 end)))
 in (Prims.raise (FStar_Errors.Err ((FStar_Util.format3 "You passed --verify_module %s but I found no file that contains [module %s] in the dependency graph.%s\n" m m maybe_fst)))))
 end
-| uu____1410 -> begin
+| uu____1404 -> begin
 ()
 end))
 end)) verify_flags);
@@ -1020,7 +1015,7 @@ end)) verify_flags);
 )))))))))
 
 
-let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.unit = (fun deps -> (FStar_List.iter (fun uu____1434 -> (match (uu____1434) with
+let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.unit = (fun deps -> (FStar_List.iter (fun uu____1428 -> (match (uu____1428) with
 | (f, deps) -> begin
 (
 
@@ -1029,19 +1024,19 @@ in (FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps)))
 end)) deps))
 
 
-let print = (fun uu____1464 -> (match (uu____1464) with
-| (make_deps, uu____1477, graph) -> begin
+let print = (fun uu____1458 -> (match (uu____1458) with
+| (make_deps, uu____1471, graph) -> begin
 (
 
-let uu____1495 = (FStar_Options.dep ())
-in (match (uu____1495) with
+let uu____1489 = (FStar_Options.dep ())
+in (match (uu____1489) with
 | Some ("make") -> begin
 (print_make make_deps)
 end
 | Some ("graph") -> begin
 (print_graph graph)
 end
-| Some (uu____1497) -> begin
+| Some (uu____1491) -> begin
 (Prims.raise (FStar_Errors.Err ("unknown tool for --dep\n")))
 end
 | None -> begin

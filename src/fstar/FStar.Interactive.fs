@@ -15,7 +15,7 @@
 *)
 #light "off"
 
-//Batch-mode type-checking for the stratified type-checker
+//Batch-mode type-checking
 module FStar.Interactive
 open FStar.All
 open FStar

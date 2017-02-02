@@ -184,12 +184,10 @@ package: all
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
         # Install the F* binary
 	mkdir -p $(PREFIX)/bin/
-	$(INSTALL_EXEC) -m 755 fstar.exe $(PREFIX)/bin/fstar.exe
+	$(INSTALL_EXEC) -m 755 _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
-	$(call fexport,lib)
 	$(call fexport,ulib)
 	$(call fexport,examples)
-	$(call fexport,contrib)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
 ifeq ($(MADOKO),Madoko)
@@ -203,12 +201,6 @@ endif
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
         # Copy Z3 binary
 	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$(FSTAR_HOME)/bin or in your \\$PATH, skipped from package ************** "
-        # JP: actually this only makes sense for the F# build of F*. Why are we
-        # copying these files while this directory builds an OCaml-compiled,
-        # Windows-native version of F*?
-        # CH: Nik added these, and if I remember right it might be related to bootstrapping?
-	make -C ../VS install-packages
-	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/fstar.mk ../../src/gmake/nubuild.mk $(PREFIX)/src/gmake/

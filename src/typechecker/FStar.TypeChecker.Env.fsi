@@ -90,7 +90,7 @@ and solver_t = {
 and guard_t = {
   guard_f:    guard_formula;
   deferred:   deferred;
-  univ_ineqs: list<univ_ineq>;
+  univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
 and implicits = list<(string * env * uvar * term * typ * Range.range)>
@@ -125,7 +125,7 @@ val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
 val lookup_val_decl        : env -> lident -> (universes * typ)
 val lookup_datacon         : env -> lident -> universes * typ
-val datacons_of_typ        : env -> lident -> list<lident>
+val datacons_of_typ        : env -> lident -> (bool * list<lident>)  //the boolean tells if the lident was actually a inductive
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
 val try_lookup_effect_lid  : env -> lident -> option<term>
@@ -140,6 +140,7 @@ val is_record              : env -> lident -> bool
 val is_action              : env -> lident -> bool
 val is_interpreted         : (env -> term -> bool)
 val is_type_constructor    : env -> lident -> bool
+val num_inductive_ty_params: env -> lident -> int
 
 (* Universe instantiation *)
 val new_u_univ             : unit -> universe

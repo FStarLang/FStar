@@ -738,9 +738,6 @@ rawDecl:
 | FSDOC_STANDALONE
     {let doc = $1 in
       ( Fsdoc doc )}
-| KIND ident binders EQUALS kind
-    {let (_1, lid, bs, _4, k) = ((), $2, $3, (), $5) in
-      ( KindAbbrev(lid, bs, k) )}
 
 typeDecl:
   ident typars option_ascribeKind_ typeDefinition

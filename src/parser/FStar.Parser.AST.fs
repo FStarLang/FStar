@@ -219,10 +219,6 @@ type decl' =
   | SubEffect of lift
   | Pragma of pragma
   | Fsdoc of fsdoc
-
-  (* TODO remove these two when we drop stratified -- they don't even parse
-   * anymore! But I don't want to even touch the stratified code to remove them. *)
-  | KindAbbrev of ident * list<binder> * knd
   | Assume of ident * term
 
 and decl = {
@@ -643,7 +639,6 @@ let decl_to_string (d:decl) = match d.d with
   | Open l -> "open " ^ l.str
   | Include l -> "include " ^ l.str
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
-  | KindAbbrev(i, _, _) -> "kind " ^ i.idText
   | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
   | Main _ -> "main ..."
   | Assume(i, _) -> "assume " ^ i.idText

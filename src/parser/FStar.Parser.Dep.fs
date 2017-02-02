@@ -51,7 +51,7 @@ type map = smap<(option<string> * option<string>)>
 
 type color = | White | Gray | Black
 
-//VALS_HACK_HERE
+
 
 let check_and_strip_suffix (f: string): option<string> =
   let suffixes = [ ".fsti"; ".fst"; ".fsi"; ".fs" ] in
@@ -309,9 +309,6 @@ let collect_one
         record_module_alias ident lid
     | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
-    | KindAbbrev (_, binders, t) ->
-        collect_term t;
-        collect_binders binders
     | Main t
     | Assume (_, t)
     | SubEffect { lift_op = NonReifiableLift t }
