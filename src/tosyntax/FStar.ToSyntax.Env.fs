@@ -899,46 +899,34 @@ let finish env modul =
     sigaccum=[];
   }
 
-type env_stack_ops = {
-    push: env -> env;
-    mark: env -> env;
-    reset_mark: env -> env;
-    commit_mark: env -> env;
-    pop:env -> env
-}
+// Evil global state!
+let stack = BU.mk_ref []
+let push env =
+  push_record_cache();
+  stack := env::!stack;
+  print1 "DS/Pushed; size of stack is now: %s\n" (string_of_int (List.length !stack));
+  {env with sigmap=BU.smap_copy (sigmap env)}
 
-let stack_ops =
-    let stack = BU.mk_ref [] in
-    let push env =
-        push_record_cache();
-        stack := env::!stack;
-        print1 "DS/Pushed; size of stack is now: %s\n" (string_of_int (List.length !stack));
-        {env with sigmap=BU.smap_copy (sigmap env)} in
-    let pop env = match !stack with
-        | env::tl ->
-         pop_record_cache();
-         stack := tl;
-         print1 "DS/Popped; size of stack is now: %s\n" (string_of_int (List.length !stack));
-         env
-        | _ -> failwith "Impossible: Too many pops" in
-    let commit_mark env =
-        commit_record_cache();
-        match !stack with
-         | _::tl -> stack := tl;
-         print1 "DS/Committed; size of stack is now: %s\n" (string_of_int (List.length !stack));
-         env
-         | _ -> failwith "Impossible: Too many pops" in
-    { push=push;
-      pop=pop;
-      mark=push;
-      reset_mark=pop;
-      commit_mark=commit_mark;}
+let pop () =
+  match !stack with
+  | env::tl ->
+    pop_record_cache();
+    stack := tl;
+    print1 "DS/Popped; size of stack is now: %s\n" (string_of_int (List.length !stack));
+    env
+  | _ -> failwith "Impossible: Too many pops"
 
-let push (env:env) = stack_ops.push env
-let mark env = stack_ops.mark env
-let reset_mark env = stack_ops.reset_mark env
-let commit_mark env = stack_ops.commit_mark env
-let pop env = stack_ops.pop env
+let commit_mark (env: env) =
+  commit_record_cache();
+  match !stack with
+  | _::tl ->
+    stack := tl;
+    print1 "DS/Committed; size of stack is now: %s\n" (string_of_int (List.length !stack));
+    env
+  | _ -> failwith "Impossible: Too many pops"
+
+let mark x = push x
+let reset_mark () = pop ()
 
 let export_interface (m:lident) env =
 //    printfn "Exporting interface %s" m.str;
@@ -947,7 +935,7 @@ let export_interface (m:lident) env =
             | l::_ -> l.nsstr=m.str
             | _ -> false in
     let sm = sigmap env in
-    let env = pop env in
+    let env = pop () in
     let keys = BU.smap_keys sm in
     let sm' = sigmap env in
     keys |> List.iter (fun k ->

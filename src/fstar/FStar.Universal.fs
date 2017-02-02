@@ -154,7 +154,7 @@ let needs_interleaving intf impl =
   FStar.Util.get_file_extension intf = "fsti" && FStar.Util.get_file_extension impl = "fst"
 
 let pop_context (dsenv, env) msg =
-    DsEnv.pop dsenv |> ignore;
+    DsEnv.pop () |> ignore;
     TcEnv.pop env msg |> ignore;
     env.solver.refresh()
 
@@ -279,7 +279,7 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
 
     let reset_mark (dsenv, env) =
         FStar.Util.print_string "U/reset_mark\n";
-        let dsenv = DsEnv.reset_mark dsenv in
+        let dsenv = DsEnv.reset_mark () in
         let env = TcEnv.reset_mark env in
         Options.pop();
         dsenv, env in
@@ -302,7 +302,7 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
                     // stack but only pops it if it thinks it's checking an
                     // interface...
                     if is_some curmod then
-                      ignore (DsEnv.pop dsenv);
+                      ignore (DsEnv.pop ());
                   Some (m, (dsenv, env), FStar.Errors.get_err_count())
                 | _ -> None
         with
