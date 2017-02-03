@@ -62,9 +62,17 @@ let rec build_pattern (p: mlpattern): pattern =
   | MLP_Wild -> Ppat_any
   | MLP_Const c -> build_constant_pat c
   | MLP_Var (sym, _) -> Ppat_var (mk_sym sym)
-  | MLP_CTor (path, l) -> Ppat_tuple (map build_pattern l) (* wrong *)
+  | MLP_CTor (path, [pat]) ->
+     let name = match path with (_, sym) -> sym in
+     Ppat_construct (mk_sym (Lident name), Some (build_pattern pat))
+  | MLP_CTor (path, pats) ->
+     let name = match path with (_, sym) -> sym in
+     let inner = Pat.tuple (map build_pattern pats) in
+     Ppat_construct (mk_sym (Lident name), Some inner) 
   | MLP_Branch l -> Ppat_tuple (map build_pattern l)
-  | MLP_Record (syms, l) -> Ppat_tuple (map (fun (_, x) -> build_pattern x) l) (* wrong *)
+  | MLP_Record (syms, l) -> 
+     let fs = map (fun (x,y) -> (mk_sym (Lident x), build_pattern y)) l in
+     Ppat_record (fs, Open) (* does the closed flag matter? *)
   | MLP_Tuple l -> Ppat_tuple (map build_pattern l)
              ) in
   Pat.mk desc
@@ -100,10 +108,10 @@ let rec build_expr (e: mlexpr): expression =
   | MLE_Const c -> build_constant_expr c
   | MLE_Var (sym, _) -> Exp.ident (mk_sym (Lident sym))
   | MLE_Name path -> Exp.ident (path_to_ident path)
-  | MLE_Let ((flavour, c_flags, lbs), expr) -> failwith "not defined 15" 
-     (* let recf = match flavour with | Rec -> Recursive | NonRec -> Nonrecursive in
+  | MLE_Let ((flavour, c_flags, lbs), expr) -> 
+     let recf = match flavour with | Rec -> Recursive | NonRec -> Nonrecursive in
      let val_bindings = map build_binding lbs in
-     Exp.let_ recf val_bindings (build_expr expr) *)
+     Exp.let_ recf val_bindings (build_expr expr)
 
    | MLE_App (e, es) -> 
       let args = map (fun x -> (Nolabel, build_expr x)) es in
@@ -123,14 +131,21 @@ let rec build_expr (e: mlexpr): expression =
       let ty1p = build_core_type ty1 in
       let ty2p = build_core_type ty2 in
       Exp.coerce ep (Some ty1p) ty2p
-   | MLE_CTor (path, es) -> 
-      (match es with
-      | [] -> Exp.construct (path_to_ident path) None
-      | es -> Exp.construct (path_to_ident path) (Some (build_expr (hd es))))  (* wrong *)
+   | MLE_CTor (path, [e]) ->
+      let name = match path with (_, sym) -> sym in
+      Exp.construct (mk_sym (Lident name)) (Some (build_expr e))
+   | MLE_CTor (path, es) ->
+      let name = match path with (_, sym) -> sym in
+      let inner = Exp.tuple (map build_expr es) in
+      Exp.construct (mk_sym (Lident name)) (Some inner) 
    | MLE_Seq _ -> failwith "not defined26"    
-   | MLE_Tuple _ -> failwith "not defined27"  
-   | MLE_Record _ -> failwith "not defined28" 
-   | MLE_Proj _ -> failwith "not defined29"   
+   | MLE_Tuple l -> Exp.tuple (map build_expr l)
+   | MLE_Record (path, l) ->
+      let fields = map (fun (x,y) -> (mk_sym (Lident x), build_expr y)) l in
+      Exp.record fields None
+   | MLE_Proj (e, path) -> 
+      let field = match path with (_, f) -> f in
+      Exp.field (build_expr e) (mk_sym (Lident field))
    | MLE_If _ -> failwith "not defined30" (* always desugared to match? *)    
    | MLE_Raise _ -> failwith "not defined31"  
    | MLE_Try _ -> failwith "not defined32"
@@ -149,10 +164,10 @@ and build_binding (lb: mllb): value_binding =
      let e = build_expr lb.mllb_def in
      let p = build_binding_pattern lb.mllb_name in
      (Vb.mk p e)
-  | Some _ -> (* wrong *)
+  | Some _ ->  (* wrong *)
      let e = build_expr lb.mllb_def in
      let p = build_binding_pattern lb.mllb_name in
-     (Vb.mk p e)
+     (Vb.mk p e) 
 
 let build_row_field (sym, tys): row_field = 
   Rtag (sym, no_attrs, false, map build_core_type tys)
@@ -161,11 +176,7 @@ let build_ty_manifest (b: mltybody): core_type option=
   match b with
   | MLTD_Abbrev ty -> Some (build_core_type ty)
   | MLTD_Record l -> None
-     (* let rows = map (fun (sym, ty) -> Rtag (sym, no_attrs, false, [build_core_type ty])) l in
-     (Typ.variant rows Closed None) *)
   | MLTD_DType l -> None
-     (* let rows = map build_row_field l in
-     (Typ.variant rows Closed None) *)
 
 let build_label_decl (sym, ty): label_declaration =
   Type.field (mk_sym sym) (build_core_type ty)
@@ -182,7 +193,7 @@ let build_ty_kind (b: mltybody): type_kind =
   | MLTD_DType l -> Ptype_variant (map build_constructor_decl l)
 
 let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_declaration = 
-  let ptype_name = match mangle_opt with
+ let ptype_name = match mangle_opt with
     | Some y -> mk_sym y
     | None -> mk_sym x in
   let ptype_params = Some (map (fun (sym, _) -> Typ.mk (Ptyp_var sym), Invariant) tparams) in
@@ -191,7 +202,7 @@ let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_dec
   (Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ptype_name)
 
 let build_tydecl (td: mltydecl): structure_item_desc =
-  (* list > 1 for mutually recursive type declarations *)
+  (* list length > 1 for mutually recursive type declarations *)
   let recf = Recursive in
   let type_declarations = map build_one_tydecl td in 
   Pstr_type(recf, type_declarations)
@@ -203,23 +214,20 @@ let build_mlsig1 = function
   | MLS_Exn (sym, mltys) -> failwith "not defined3"
 
 let build_module1 (m1: mlmodule1): structure_item option = match m1 with
-  | MLM_Ty tydecl -> Some (Str.mk (build_tydecl tydecl))  (* failwith "not defined4" *)
+  | MLM_Ty tydecl -> Some (Str.mk (build_tydecl tydecl))
   | MLM_Let (flav, flags, mllbs) -> 
      let recf = match flav with | Rec -> Recursive | NonRec -> Nonrecursive in
      let bindings = map build_binding mllbs in
-     let toplevel_e = Exp.construct (mk_sym (Lident "()")) None in
-     let e = (Exp.let_ recf bindings toplevel_e) in 
-     Some (Str.eval e)
-  (* Some (Str.value Nonrecursive (build_value mllbs)) *)
-  | MLM_Exn (sym, tys) -> None (* failwith "not defined6" *)
-  | MLM_Top expr -> Some (Str.eval (build_expr expr))
-  | MLM_Loc loc -> None
+     Some (Str.value recf bindings)
+  | MLM_Exn (sym, tys) ->  failwith "not defined6"
+  | MLM_Top expr -> failwith "not defined45" (* Some (Str.eval (build_expr expr)) *)
+  | MLM_Loc loc -> None (* do we need this? *)
 
 let build_m (md: (mlsig * mlmodule) option) : structure = match md with
   | Some(s, m) -> 
      let a = map build_mlsig1 s in (* is this necessary? *)
      (map build_module1 m |> flatmap opt_to_list)
-  | None -> failwith "not defined7"
+  | None -> []
 
 let build_ast = function
   MLLib l -> map (fun (path, md, _) -> build_m md) l |> List.flatten
