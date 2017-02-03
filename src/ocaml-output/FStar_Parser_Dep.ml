@@ -82,8 +82,8 @@ in (
 let l = (FStar_String.length f)
 in (
 
-let uu____46 = ((l > lext) && (let _0_802 = (FStar_String.substring f (l - lext) lext)
-in (_0_802 = ext)))
+let uu____46 = ((l > lext) && (let _0_842 = (FStar_String.substring f (l - lext) lext)
+in (_0_842 = ext)))
 in (match (uu____46) with
 | true -> begin
 Some ((FStar_String.substring f (Prims.parse_int "0") (l - lext)))
@@ -103,8 +103,8 @@ None
 end)))))
 
 
-let is_interface : Prims.string  ->  Prims.bool = (fun f -> (let _0_803 = (FStar_String.get f ((FStar_String.length f) - (Prims.parse_int "1")))
-in (_0_803 = 'i')))
+let is_interface : Prims.string  ->  Prims.bool = (fun f -> (let _0_843 = (FStar_String.get f ((FStar_String.length f) - (Prims.parse_int "1")))
+in (_0_843 = 'i')))
 
 
 let is_implementation : Prims.string  ->  Prims.bool = (fun f -> (not ((is_interface f))))
@@ -216,8 +216,8 @@ end
 | uu____220 -> begin
 (Prims.raise (FStar_Errors.Err ((FStar_Util.format1 "not a valid include directory: %s\n" d))))
 end)) include_directories);
-(FStar_List.iter (fun f -> (let _0_804 = (lowercase_module_name f)
-in (add_entry _0_804 f))) filenames);
+(FStar_List.iter (fun f -> (let _0_844 = (lowercase_module_name f)
+in (add_entry _0_844 f))) filenames);
 map;
 ))))))))
 
@@ -228,7 +228,7 @@ let found = (FStar_Util.mk_ref false)
 in (
 
 let prefix = (Prims.strcat prefix ".")
-in ((let _0_805 = (FStar_List.unique (FStar_Util.smap_keys original_map))
+in ((let _0_845 = (FStar_List.unique (FStar_Util.smap_keys original_map))
 in (FStar_List.iter (fun k -> (match ((FStar_Util.starts_with k prefix)) with
 | true -> begin
 (
@@ -243,7 +243,7 @@ in ((FStar_Util.smap_add working_map suffix filename);
 end
 | uu____266 -> begin
 ()
-end)) _0_805));
+end)) _0_845));
 (FStar_ST.read found);
 ))))
 
@@ -259,8 +259,8 @@ end
 end)
 in (
 
-let names = (let _0_806 = (FStar_List.map (fun x -> x.FStar_Ident.idText) l.FStar_Ident.ns)
-in (FStar_List.append _0_806 suffix))
+let names = (let _0_846 = (FStar_List.map (fun x -> x.FStar_Ident.idText) l.FStar_Ident.ns)
+in (FStar_List.append _0_846 suffix))
 in (FStar_String.concat "." names))))
 
 
@@ -272,13 +272,13 @@ let check_module_declaration_against_filename : FStar_Ident.lident  ->  Prims.st
 let k' = (lowercase_join_longident lid true)
 in (
 
-let uu____299 = (let _0_807 = (FStar_String.lowercase (FStar_Util.must (check_and_strip_suffix (FStar_Util.basename filename))))
-in (_0_807 <> k'))
+let uu____299 = (let _0_847 = (FStar_String.lowercase (FStar_Util.must (check_and_strip_suffix (FStar_Util.basename filename))))
+in (_0_847 <> k'))
 in (match (uu____299) with
 | true -> begin
-(let _0_809 = (let _0_808 = (string_of_lid lid true)
-in (_0_808)::(filename)::[])
-in (FStar_Util.fprint FStar_Util.stderr "Warning: the module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect.\n" _0_809))
+(let _0_849 = (let _0_848 = (string_of_lid lid true)
+in (_0_848)::(filename)::[])
+in (FStar_Util.fprint FStar_Util.stderr "Warning: the module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect.\n" _0_849))
 end
 | uu____300 -> begin
 ()
@@ -303,13 +303,13 @@ in (
 
 let add_dep = (fun d -> (
 
-let uu____339 = (not ((let _0_810 = (FStar_ST.read deps)
-in (FStar_List.existsb (fun d' -> (d' = d)) _0_810))))
+let uu____339 = (not ((let _0_850 = (FStar_ST.read deps)
+in (FStar_List.existsb (fun d' -> (d' = d)) _0_850))))
 in (match (uu____339) with
 | true -> begin
-(let _0_812 = (let _0_811 = (FStar_ST.read deps)
-in (d)::_0_811)
-in (FStar_ST.write deps _0_812))
+(let _0_852 = (let _0_851 = (FStar_ST.read deps)
+in (d)::_0_851)
+in (FStar_ST.write deps _0_852))
 end
 | uu____350 -> begin
 ()
@@ -340,9 +340,9 @@ in (match ((not (r))) with
 (Prims.raise (FStar_Errors.Err ("let-open only supported for modules, not namespaces")))
 end
 | uu____394 -> begin
-(let _0_814 = (let _0_813 = (string_of_lid lid true)
-in (_0_813)::[])
-in (FStar_Util.fprint FStar_Util.stderr "Warning: no modules in namespace %s and no file with that name either\n" _0_814))
+(let _0_854 = (let _0_853 = (string_of_lid lid true)
+in (_0_853)::[])
+in (FStar_Util.fprint FStar_Util.stderr "Warning: no modules in namespace %s and no file with that name either\n" _0_854))
 end)
 end
 | uu____395 -> begin
@@ -384,9 +384,9 @@ end
 let uu____464 = (((FStar_List.length lid.FStar_Ident.ns) > (Prims.parse_int "0")) && (FStar_Options.debug_any ()))
 in (match (uu____464) with
 | true -> begin
-(let _0_816 = (let _0_815 = (string_of_lid lid false)
-in (_0_815)::[])
-in (FStar_Util.fprint FStar_Util.stderr "Warning: unbound module reference %s\n" _0_816))
+(let _0_856 = (let _0_855 = (string_of_lid lid false)
+in (_0_855)::[])
+in (FStar_Util.fprint FStar_Util.stderr "Warning: unbound module reference %s\n" _0_856))
 end
 | uu____468 -> begin
 ()
@@ -397,8 +397,8 @@ in (
 
 let auto_open = (
 
-let uu____472 = (let _0_817 = (FStar_Util.basename filename)
-in (_0_817 = "prims.fst"))
+let uu____472 = (let _0_857 = (FStar_Util.basename filename)
+in (_0_857 = "prims.fst"))
 in (match (uu____472) with
 | true -> begin
 []
@@ -449,8 +449,8 @@ end
 | (m, r) -> begin
 (
 
-let uu____588 = (let _0_818 = (FStar_String.lowercase (string_of_lid lid true))
-in ((FStar_String.lowercase m) = _0_818))
+let uu____588 = (let _0_858 = (FStar_String.lowercase (string_of_lid lid true))
+in ((FStar_String.lowercase m) = _0_858))
 in (match (uu____588) with
 | true -> begin
 (FStar_ST.write r true)
@@ -513,12 +513,12 @@ end
 ((FStar_Util.incr num_of_toplevelmods);
 (
 
-let uu____664 = (let _0_819 = (FStar_ST.read num_of_toplevelmods)
-in (_0_819 > (Prims.parse_int "1")))
+let uu____664 = (let _0_859 = (FStar_ST.read num_of_toplevelmods)
+in (_0_859 > (Prims.parse_int "1")))
 in (match (uu____664) with
 | true -> begin
-(Prims.raise (FStar_Errors.Err ((let _0_820 = (string_of_lid lid true)
-in (FStar_Util.format1 "Automatic dependency analysis demands one module per file (module %s not supported)" _0_820)))))
+(Prims.raise (FStar_Errors.Err ((let _0_860 = (string_of_lid lid true)
+in (FStar_Util.format1 "Automatic dependency analysis demands one module per file (module %s not supported)" _0_860)))))
 end
 | uu____667 -> begin
 ()
@@ -782,18 +782,18 @@ end))));
 let print_graph = (fun graph -> ((FStar_Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph");
 (FStar_Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph");
 (FStar_Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims");
-(let _0_825 = (let _0_824 = (let _0_823 = (let _0_822 = (let _0_821 = (FStar_List.unique (FStar_Util.smap_keys graph))
+(let _0_865 = (let _0_864 = (let _0_863 = (let _0_862 = (let _0_861 = (FStar_List.unique (FStar_Util.smap_keys graph))
 in (FStar_List.collect (fun k -> (
 
 let deps = (Prims.fst (FStar_Util.must (FStar_Util.smap_try_find graph k)))
 in (
 
 let r = (fun s -> (FStar_Util.replace_char s '.' '_'))
-in (FStar_List.map (fun dep -> (FStar_Util.format2 "  %s -> %s" (r k) (r dep))) deps)))) _0_821))
-in (FStar_String.concat "\n" _0_822))
-in (Prims.strcat _0_823 "\n}\n"))
-in (Prims.strcat "digraph {\n" _0_824))
-in (FStar_Util.write_file "dep.graph" _0_825));
+in (FStar_List.map (fun dep -> (FStar_Util.format2 "  %s -> %s" (r k) (r dep))) deps)))) _0_861))
+in (FStar_String.concat "\n" _0_862))
+in (Prims.strcat _0_863 "\n}\n"))
+in (Prims.strcat "digraph {\n" _0_864))
+in (FStar_Util.write_file "dep.graph" _0_865));
 ))
 
 
@@ -802,9 +802,9 @@ let collect : verify_mode  ->  Prims.string Prims.list  ->  ((Prims.string * Pri
 let graph = (FStar_Util.smap_create (Prims.parse_int "41"))
 in (
 
-let verify_flags = (let _0_827 = (FStar_Options.verify_module ())
-in (FStar_List.map (fun f -> (let _0_826 = (FStar_Util.mk_ref false)
-in ((f), (_0_826)))) _0_827))
+let verify_flags = (let _0_867 = (FStar_Options.verify_module ())
+in (FStar_List.map (fun f -> (let _0_866 = (FStar_Util.mk_ref false)
+in ((f), (_0_866)))) _0_867))
 in (
 
 let m = (build_map filenames)
@@ -818,8 +818,8 @@ in (
 
 let rec discover_one = (fun is_user_provided_filename interface_only key -> (
 
-let uu____1157 = (let _0_828 = (FStar_Util.smap_try_find graph key)
-in (_0_828 = None))
+let uu____1157 = (let _0_868 = (FStar_Util.smap_try_find graph key)
+in (_0_868 = None))
 in (match (uu____1157) with
 | true -> begin
 (
@@ -904,12 +904,12 @@ end
 ((FStar_Util.smap_add graph key ((direct_deps), (Gray)));
 (
 
-let all_deps = (FStar_List.unique (FStar_List.flatten (FStar_List.map (fun dep -> (let _0_829 = (discover ((key)::cycle) dep)
-in (dep)::_0_829)) direct_deps)))
+let all_deps = (FStar_List.unique (FStar_List.flatten (FStar_List.map (fun dep -> (let _0_869 = (discover ((key)::cycle) dep)
+in (dep)::_0_869)) direct_deps)))
 in ((FStar_Util.smap_add graph key ((all_deps), (Black)));
-(let _0_831 = (let _0_830 = (FStar_ST.read topologically_sorted)
-in (key)::_0_830)
-in (FStar_ST.write topologically_sorted _0_831));
+(let _0_871 = (let _0_870 = (FStar_ST.read topologically_sorted)
+in (key)::_0_870)
+in (FStar_ST.write topologically_sorted _0_871));
 all_deps;
 ));
 )
@@ -924,12 +924,12 @@ let must_find = (fun k -> (
 
 let uu____1299 = (FStar_Util.must (FStar_Util.smap_try_find m k))
 in (match (uu____1299) with
-| (Some (intf), Some (impl)) when ((not (partial_discovery)) && (not ((FStar_List.existsML (fun f -> (let _0_832 = (lowercase_module_name f)
-in (_0_832 = k))) filenames)))) -> begin
+| (Some (intf), Some (impl)) when ((not (partial_discovery)) && (not ((FStar_List.existsML (fun f -> (let _0_872 = (lowercase_module_name f)
+in (_0_872 = k))) filenames)))) -> begin
 (intf)::(impl)::[]
 end
-| (Some (intf), Some (impl)) when (FStar_List.existsML (fun f -> ((is_implementation f) && (let _0_833 = (lowercase_module_name f)
-in (_0_833 = k)))) filenames) -> begin
+| (Some (intf), Some (impl)) when (FStar_List.existsML (fun f -> ((is_implementation f) && (let _0_873 = (lowercase_module_name f)
+in (_0_873 = k)))) filenames) -> begin
 (intf)::(impl)::[]
 end
 | (Some (intf), uu____1324) -> begin
@@ -946,7 +946,7 @@ in (
 let must_find_r = (fun f -> (FStar_List.rev (must_find f)))
 in (
 
-let by_target = (let _0_835 = (FStar_Util.smap_keys graph)
+let by_target = (let _0_875 = (FStar_Util.smap_keys graph)
 in (FStar_List.collect (fun k -> (
 
 let as_list = (must_find k)
@@ -973,13 +973,13 @@ in (
 let deps = (FStar_List.rev (discover k))
 in (
 
-let deps_as_filenames = (let _0_834 = (FStar_List.collect must_find deps)
-in (FStar_List.append _0_834 suffix))
-in ((f), (deps_as_filenames)))))))) as_list)))) _0_835))
+let deps_as_filenames = (let _0_874 = (FStar_List.collect must_find deps)
+in (FStar_List.append _0_874 suffix))
+in ((f), (deps_as_filenames)))))))) as_list)))) _0_875))
 in (
 
-let topologically_sorted = (let _0_836 = (FStar_ST.read topologically_sorted)
-in (FStar_List.collect must_find_r _0_836))
+let topologically_sorted = (let _0_876 = (FStar_ST.read topologically_sorted)
+in (FStar_List.collect must_find_r _0_876))
 in ((FStar_List.iter (fun uu____1379 -> (match (uu____1379) with
 | (m, r) -> begin
 (
@@ -994,12 +994,12 @@ let maybe_fst = (
 let k = (FStar_String.length m)
 in (
 
-let uu____1393 = ((k > (Prims.parse_int "4")) && (let _0_837 = (FStar_String.substring m (k - (Prims.parse_int "4")) (Prims.parse_int "4"))
-in (_0_837 = ".fst")))
+let uu____1393 = ((k > (Prims.parse_int "4")) && (let _0_877 = (FStar_String.substring m (k - (Prims.parse_int "4")) (Prims.parse_int "4"))
+in (_0_877 = ".fst")))
 in (match (uu____1393) with
 | true -> begin
-(let _0_838 = (FStar_String.substring m (Prims.parse_int "0") (k - (Prims.parse_int "4")))
-in (FStar_Util.format1 " Did you mean %s ?" _0_838))
+(let _0_878 = (FStar_String.substring m (Prims.parse_int "0") (k - (Prims.parse_int "4")))
+in (FStar_Util.format1 " Did you mean %s ?" _0_878))
 end
 | uu____1403 -> begin
 ""

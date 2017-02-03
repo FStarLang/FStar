@@ -595,6 +595,8 @@ let write_file (fn:string) s =
   append_to_file fh s;
   close_file fh
 let flush_file (fh:file_handle) = fh.Flush()
+let file_get_contents f =
+  File.ReadAllText f
 
 let for_range lo hi f =
   for i = lo to hi do
