@@ -2003,10 +2003,6 @@ let desugar_modul_common (curmod: option<S.modul>) env (m:AST.modul) : env_t * S
   env, modul, pop_when_done
 
 let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modul =
-  begin match curmod with
-  | Some _ -> FStar.Util.print_string "desugar_partial_module curmod=Some\n"
-  | None -> FStar.Util.print_string "desugar_partial_module curmod=None\n"
-  end;
   let m =
     if Options.interactive () &&
       get_file_extension (List.hd (Options.file_list ())) = "fsti"

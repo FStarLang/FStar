@@ -4476,74 +4476,66 @@ end))
 end))))
 
 
-let desugar_partial_modul : FStar_Syntax_Syntax.modul Prims.option  ->  FStar_ToSyntax_Env.env  ->  FStar_Parser_AST.modul  ->  (FStar_ToSyntax_Env.env * FStar_Syntax_Syntax.modul) = (fun curmod env m -> ((match (curmod) with
-| Some (uu____9101) -> begin
-(FStar_Util.print_string "desugar_partial_module curmod=Some\n")
-end
-| None -> begin
-(FStar_Util.print_string "desugar_partial_module curmod=None\n")
-end);
-(
+let desugar_partial_modul : FStar_Syntax_Syntax.modul Prims.option  ->  FStar_ToSyntax_Env.env  ->  FStar_Parser_AST.modul  ->  (FStar_ToSyntax_Env.env * FStar_Syntax_Syntax.modul) = (fun curmod env m -> (
 
 let m = (
 
-let uu____9103 = ((FStar_Options.interactive ()) && (let _0_727 = (FStar_Util.get_file_extension (FStar_List.hd (FStar_Options.file_list ())))
+let uu____9101 = ((FStar_Options.interactive ()) && (let _0_727 = (FStar_Util.get_file_extension (FStar_List.hd (FStar_Options.file_list ())))
 in (_0_727 = "fsti")))
-in (match (uu____9103) with
+in (match (uu____9101) with
 | true -> begin
 (match (m) with
 | FStar_Parser_AST.Module (mname, decls) -> begin
 FStar_Parser_AST.Interface (((mname), (decls), (true)))
 end
-| FStar_Parser_AST.Interface (mname, uu____9110, uu____9111) -> begin
+| FStar_Parser_AST.Interface (mname, uu____9108, uu____9109) -> begin
 (failwith (Prims.strcat "Impossible: " mname.FStar_Ident.ident.FStar_Ident.idText))
 end)
 end
-| uu____9114 -> begin
+| uu____9112 -> begin
 m
 end))
 in (
 
-let uu____9115 = (desugar_modul_common curmod env m)
-in (match (uu____9115) with
+let uu____9113 = (desugar_modul_common curmod env m)
+in (match (uu____9113) with
 | (x, y, pop_when_done) -> begin
 ((match (pop_when_done) with
 | true -> begin
 (Prims.ignore (FStar_ToSyntax_Env.pop ()))
 end
-| uu____9125 -> begin
+| uu____9123 -> begin
 ()
 end);
 ((x), (y));
 )
-end)));
-))
+end))))
 
 
 let desugar_modul : FStar_ToSyntax_Env.env  ->  FStar_Parser_AST.modul  ->  (FStar_ToSyntax_Env.env * FStar_Syntax_Syntax.modul) = (fun env m -> (
 
-let uu____9136 = (desugar_modul_common None env m)
-in (match (uu____9136) with
+let uu____9134 = (desugar_modul_common None env m)
+in (match (uu____9134) with
 | (env, modul, pop_when_done) -> begin
 (
 
 let env = (FStar_ToSyntax_Env.finish_module_or_interface env modul)
 in ((
 
-let uu____9147 = (FStar_Options.dump_module modul.FStar_Syntax_Syntax.name.FStar_Ident.str)
-in (match (uu____9147) with
+let uu____9145 = (FStar_Options.dump_module modul.FStar_Syntax_Syntax.name.FStar_Ident.str)
+in (match (uu____9145) with
 | true -> begin
 (let _0_728 = (FStar_Syntax_Print.modul_to_string modul)
 in (FStar_Util.print1 "%s\n" _0_728))
 end
-| uu____9148 -> begin
+| uu____9146 -> begin
 ()
 end));
 (let _0_729 = (match (pop_when_done) with
 | true -> begin
 (FStar_ToSyntax_Env.export_interface modul.FStar_Syntax_Syntax.name env)
 end
-| uu____9149 -> begin
+| uu____9147 -> begin
 env
 end)
 in ((_0_729), (modul)));
@@ -4553,17 +4545,17 @@ end)))
 
 let desugar_file : FStar_ToSyntax_Env.env  ->  FStar_Parser_AST.file  ->  (FStar_ToSyntax_Env.env * FStar_Syntax_Syntax.modul Prims.list) = (fun env f -> (
 
-let uu____9159 = (FStar_List.fold_left (fun uu____9166 m -> (match (uu____9166) with
+let uu____9157 = (FStar_List.fold_left (fun uu____9164 m -> (match (uu____9164) with
 | (env, mods) -> begin
 (
 
-let uu____9178 = (desugar_modul env m)
-in (match (uu____9178) with
+let uu____9176 = (desugar_modul env m)
+in (match (uu____9176) with
 | (env, m) -> begin
 ((env), ((m)::mods))
 end))
 end)) ((env), ([])) f)
-in (match (uu____9159) with
+in (match (uu____9157) with
 | (env, mods) -> begin
 ((env), ((FStar_List.rev mods)))
 end)))
@@ -4571,15 +4563,15 @@ end)))
 
 let add_modul_to_env : FStar_Syntax_Syntax.modul  ->  FStar_ToSyntax_Env.env  ->  FStar_ToSyntax_Env.env = (fun m en -> (
 
-let uu____9202 = (FStar_ToSyntax_Env.prepare_module_or_interface false false en m.FStar_Syntax_Syntax.name)
-in (match (uu____9202) with
+let uu____9200 = (FStar_ToSyntax_Env.prepare_module_or_interface false false en m.FStar_Syntax_Syntax.name)
+in (match (uu____9200) with
 | (en, pop_when_done) -> begin
 (
 
 let en = (FStar_List.fold_left FStar_ToSyntax_Env.push_sigelt (
 
-let uu___226_9208 = en
-in {FStar_ToSyntax_Env.curmodule = Some (m.FStar_Syntax_Syntax.name); FStar_ToSyntax_Env.curmonad = uu___226_9208.FStar_ToSyntax_Env.curmonad; FStar_ToSyntax_Env.modules = uu___226_9208.FStar_ToSyntax_Env.modules; FStar_ToSyntax_Env.scope_mods = uu___226_9208.FStar_ToSyntax_Env.scope_mods; FStar_ToSyntax_Env.exported_ids = uu___226_9208.FStar_ToSyntax_Env.exported_ids; FStar_ToSyntax_Env.trans_exported_ids = uu___226_9208.FStar_ToSyntax_Env.trans_exported_ids; FStar_ToSyntax_Env.includes = uu___226_9208.FStar_ToSyntax_Env.includes; FStar_ToSyntax_Env.sigaccum = uu___226_9208.FStar_ToSyntax_Env.sigaccum; FStar_ToSyntax_Env.sigmap = uu___226_9208.FStar_ToSyntax_Env.sigmap; FStar_ToSyntax_Env.iface = uu___226_9208.FStar_ToSyntax_Env.iface; FStar_ToSyntax_Env.admitted_iface = uu___226_9208.FStar_ToSyntax_Env.admitted_iface; FStar_ToSyntax_Env.expect_typ = uu___226_9208.FStar_ToSyntax_Env.expect_typ}) m.FStar_Syntax_Syntax.exports)
+let uu___226_9206 = en
+in {FStar_ToSyntax_Env.curmodule = Some (m.FStar_Syntax_Syntax.name); FStar_ToSyntax_Env.curmonad = uu___226_9206.FStar_ToSyntax_Env.curmonad; FStar_ToSyntax_Env.modules = uu___226_9206.FStar_ToSyntax_Env.modules; FStar_ToSyntax_Env.scope_mods = uu___226_9206.FStar_ToSyntax_Env.scope_mods; FStar_ToSyntax_Env.exported_ids = uu___226_9206.FStar_ToSyntax_Env.exported_ids; FStar_ToSyntax_Env.trans_exported_ids = uu___226_9206.FStar_ToSyntax_Env.trans_exported_ids; FStar_ToSyntax_Env.includes = uu___226_9206.FStar_ToSyntax_Env.includes; FStar_ToSyntax_Env.sigaccum = uu___226_9206.FStar_ToSyntax_Env.sigaccum; FStar_ToSyntax_Env.sigmap = uu___226_9206.FStar_ToSyntax_Env.sigmap; FStar_ToSyntax_Env.iface = uu___226_9206.FStar_ToSyntax_Env.iface; FStar_ToSyntax_Env.admitted_iface = uu___226_9206.FStar_ToSyntax_Env.admitted_iface; FStar_ToSyntax_Env.expect_typ = uu___226_9206.FStar_ToSyntax_Env.expect_typ}) m.FStar_Syntax_Syntax.exports)
 in (
 
 let env = (FStar_ToSyntax_Env.finish_module_or_interface en m)
@@ -4587,7 +4579,7 @@ in (match (pop_when_done) with
 | true -> begin
 (FStar_ToSyntax_Env.export_interface m.FStar_Syntax_Syntax.name env)
 end
-| uu____9210 -> begin
+| uu____9208 -> begin
 env
 end)))
 end)))
