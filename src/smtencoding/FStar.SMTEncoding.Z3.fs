@@ -197,7 +197,7 @@ let at_log_file () =
   then "@" ^ (query_logging.log_file_name())
   else ""
 
-let doZ3Exe' (input:string) (z3proc:proc) =
+let doZ3Exe' (input:string) =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
     let print_stats (lines:list<string>) =
@@ -242,17 +242,12 @@ let doZ3Exe' (input:string) (z3proc:proc) =
       | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n"
                             (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (BU.trim_string l)) lines)) in
     result lines in
-  let stdout = BU.ask_process z3proc input in
+  let stdout = BU.launch_process ((Options.z3_exe())) (ini_params()) input in
   parse (BU.trim_string stdout)
 
-let doZ3Exe =
-    let ctr = BU.mk_ref 0 in
-    fun (fresh:bool) (input:string) ->
-        let z3proc = if fresh then (incr ctr; new_z3proc (BU.string_of_int !ctr)) else bg_z3_proc.grab() in
-        let res = doZ3Exe' input z3proc in
-        //Printf.printf "z3-%A says %s\n"  (get_z3version()) (status_to_string (fst res));
-        if fresh then BU.kill_process z3proc else bg_z3_proc.release();
-        res
+let doZ3Exe (fresh:bool) (input:string) =
+    let res = doZ3Exe' input in
+    res
 
 let z3_options () =
     "(set-option :global-decls false)\
@@ -463,5 +458,5 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
     else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
   if Options.log_queries() then query_logging.append_to_log input;
-  enqueue false ({job=z3_job false label_messages input; callback=cb})
+  enqueue false ({job=z3_job true label_messages input; callback=cb})
 
