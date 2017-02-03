@@ -48,6 +48,14 @@ let ni_exp (env:label_fun) (e:exp) (l:label) : Tot Type0 =
    (low_equiv env h /\ Low? l) ==>
      interpret_exp (R?.r h) e = interpret_exp (R?.l h) e
 
+(*   begin *)
+(* let Some vr, hr = reify (interpret_exp_st e) (R?.r h)in *)
+(*         let Some vl, hl = reify (interpret_exp_st e) (R?.l h) in *)
+(*         R?.r h = hr /\ R?.l h = hl /\ vr = vl *)
+(*         end *)
+
+
+
 (* env,pc:l |- c
    - References with a label below l are not modified
    - Total correctness
@@ -150,7 +158,9 @@ let aint_exp _ _ = ()
           e1 `op` e2  : l
 *)
 (* Verifies *)
-let bidule (h:heap) (op:binop) (e1 e2:exp) =
+let interpret_exp_binop (h:heap) (op:binop) (e1 e2:exp)
+  : Lemma (interpret_exp h (AOp op e1 e2) = interpret_binop op (interpret_exp h e1) (interpret_exp h e2))
+=
   let Some v1, h1 = reify (interpret_exp_st e1) h in
   let Some v2, h2 = reify (interpret_exp_st e2) h in
   let e = AOp op e1 e2 in
@@ -158,26 +168,32 @@ let bidule (h:heap) (op:binop) (e1 e2:exp) =
   assert (h1 == h /\ h2 == h /\ h3 == h) ;
   assert (v = interpret_binop op v1 v2)
 
-(* Verifies if interpret_exp is qaulified with unfold *)
-let bidule (h:heap) (op:binop) (e1 e2:exp) =
-  let v1 = interpret_exp h e1 in
-  let v2 = interpret_exp h e2 in
-  let e = AOp op e1 e2 in
-  let v = interpret_exp h e in
-  assert (v = interpret_binop op v1 v2)
-
-(* Do not verify... try with largest rlimit/fuel ? *)
-(* let binop_exp0 (env:label_fun) (op:binop) (e1 e2:exp) (l:label) (h:rel heap) *)
-(*   : Lemma (requires (ni_exp env e1 l) /\ ni_exp env e2 l /\ low_equiv env h /\ Low? l ) *)
-(*     (ensures (let e = AOp op e1 e2 in interpret_exp (R?.r h) e = interpret_exp (R?.l h) e)) *)
+(* Do not verify *)
+(* let interpret_exp_binop (h:heap) (op:binop) (e1 e2:exp) *)
+(* (\* : Lemma (interpret_exp h (AOp op e1 e2) = interpret_binop op (interpret_exp h e1) (interpret_exp h e2)) *\) *)
 (* = *)
-(*   assert (interpret_exp (R?.r h) e1 = interpret_exp (R?.l h) e1) ; *)
-(*   assert (interpret_exp (R?.r h) e2 = interpret_exp (R?.l h) e2) *)
+(*   let v1 = interpret_exp h e1 in *)
+(*   let v2 = interpret_exp h e2 in *)
+(*   let e = AOp op e1 e2 in *)
+(*   let v = interpret_exp h e in *)
+(*   assert (v = interpret_binop op v1 v2) *)
 
-(* val binop_exp : env:label_fun -> op:binop -> e1:exp -> e2:exp -> l:label -> *)
-(*   Lemma (requires (ni_exp env e1 l) /\ (ni_exp env e2 l)) *)
-(*         (ensures  (ni_exp env (AOp op e1 e2) l)) *)
-(* let binop_exp _ _ _ _ _ = () *)
+let binop_exp0 (env:label_fun) (op:binop) (e1 e2:exp) (l:label) (h:rel heap)
+  : Lemma (requires (ni_exp env e1 l) /\ ni_exp env e2 l /\ low_equiv env h /\ Low? l )
+    (ensures (let e = AOp op e1 e2 in interpret_exp (R?.r h) e = interpret_exp (R?.l h) e))
+=
+  interpret_exp_binop (R?.r h) op e1 e2 ;
+  interpret_exp_binop (R?.l h) op e1 e2
+
+val binop_exp : env:label_fun -> op:binop -> e1:exp -> e2:exp -> l:label ->
+  Lemma (requires (ni_exp env e1 l) /\ (ni_exp env e2 l))
+        (ensures  (ni_exp env (AOp op e1 e2) l))
+let binop_exp env op e1 e2 l =
+  let e = AOp op e1 e2 in
+  let f (h:rel heap) : Lemma ((low_equiv env h /\ Low? l) ==> interpret_exp (R?.r h) e = interpret_exp (R?.l h) e) =
+      move_requires (binop_exp0 env op e1 e2 l) h
+  in
+  forall_intro f
 
 
 (************************ Typing Rules for Commands ************************)
@@ -223,13 +239,13 @@ let sub_com _ _ _ _ = ()
 (*   | None -> () *)
 (*   | Some h0 -> cut (inv_com' env c2 l (interpret_com h0 c1)) *)
 
-val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel (option heap) ->
-  Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
-        (ensures  (ni_com' env (Seq c1 c2) l h0))
-let seq_com' env c1 c2 l h0 =
-  match h0 with
-  | R (Some hl) (Some hr) -> cut (ni_com' env c2 l (R (interpret_com hl c1) (interpret_com hr c1)))
-  | _ -> ()
+(* val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel (option heap) -> *)
+(*   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l)) *)
+(*         (ensures  (ni_com' env (Seq c1 c2) l h0)) *)
+(* let seq_com' env c1 c2 l h0 = *)
+(*   match h0 with *)
+(*   | R (Some hl) (Some hr) -> cut (ni_com' env c2 l (R (interpret_com hl c1) (interpret_com hr c1))) *)
+(*   | _ -> () *)
 
 (* val seq_com : env:label_fun -> c1:com -> c2:com -> l:label -> *)
 (*   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l)) *)

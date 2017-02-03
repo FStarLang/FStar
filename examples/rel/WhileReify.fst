@@ -51,7 +51,10 @@ type com =
 
 
 (* reifiable val interpret_exp_st : e:exp -> INT_STORE int (fun s0 p -> forall opt. p (opt, s0)) *)
-reifiable let rec interpret_exp_st (e:exp) : INT_STORE int (fun s0 p -> forall x. p (Some x, s0)) =
+reifiable let rec interpret_exp_st (e:exp)
+  (* : INT_STORE int (fun s0 p -> forall x. p (Some x, s0)) *)
+  : IntStore int (requires (fun _ -> True)) (ensures (fun h0 x h1 -> h0 == h1 /\ Some? x))
+=
   match e with
   | AInt i -> i
   | AVar x -> read x
@@ -61,7 +64,7 @@ reifiable let rec interpret_exp_st (e:exp) : INT_STORE int (fun s0 p -> forall x
     interpret_binop o a b
 
 
-unfold
+(* unfold *)
 let interpret_exp (h:heap) (e:exp) : Tot int =
   let Some x, h1 = reify (interpret_exp_st e) h in
   assert (h1 == h) ;
@@ -127,7 +130,7 @@ reifiable let rec interpret_com_st c h0 =
 (* TODO : Normalization does not play very well with ensures clauses... *)
 (* But there is no problem when replacing normalize_term by foobar where *)
 (* abstract let foobar (#a:Type) (x:a) : a = x *)
-unfold
+(* unfold *)
 let interpret_com (h0:heap) (c:com) : Tot (option heap)
 =
   match (* normalize_term *) (reify (interpret_com_st c h0) h0) with
