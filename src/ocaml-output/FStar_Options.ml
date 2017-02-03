@@ -1024,10 +1024,14 @@ let hint_info : Prims.unit  ->  Prims.bool = (fun uu____1749 -> (get_hint_info (
 let indent : Prims.unit  ->  Prims.bool = (fun uu____1752 -> (get_indent ()))
 
 
-let initial_fuel : Prims.unit  ->  Prims.int = (fun uu____1755 -> (get_initial_fuel ()))
+let initial_fuel : Prims.unit  ->  Prims.int = (fun uu____1755 -> (let _0_113 = (get_initial_fuel ())
+in (let _0_112 = (get_max_fuel ())
+in (Prims.min _0_113 _0_112))))
 
 
-let initial_ifuel : Prims.unit  ->  Prims.int = (fun uu____1758 -> (get_initial_ifuel ()))
+let initial_ifuel : Prims.unit  ->  Prims.int = (fun uu____1758 -> (let _0_115 = (get_initial_ifuel ())
+in (let _0_114 = (get_max_ifuel ())
+in (Prims.min _0_115 _0_114))))
 
 
 let inline_arith : Prims.unit  ->  Prims.bool = (fun uu____1761 -> (get_inline_arith ()))
@@ -1066,15 +1070,15 @@ let n_cores : Prims.unit  ->  Prims.int = (fun uu____1791 -> (get_n_cores ()))
 let no_default_includes : Prims.unit  ->  Prims.bool = (fun uu____1794 -> (get_no_default_includes ()))
 
 
-let no_extract : Prims.string  ->  Prims.bool = (fun s -> (let _0_112 = (get_no_extract ())
-in (FStar_All.pipe_right _0_112 (FStar_List.contains s))))
+let no_extract : Prims.string  ->  Prims.bool = (fun s -> (let _0_116 = (get_no_extract ())
+in (FStar_All.pipe_right _0_116 (FStar_List.contains s))))
 
 
 let no_location_info : Prims.unit  ->  Prims.bool = (fun uu____1801 -> (get_no_location_info ()))
 
 
-let norm_then_print : Prims.unit  ->  Prims.bool = (fun uu____1804 -> (let _0_113 = (get_print_before_norm ())
-in (_0_113 = false)))
+let norm_then_print : Prims.unit  ->  Prims.bool = (fun uu____1804 -> (let _0_117 = (get_print_before_norm ())
+in (_0_117 = false)))
 
 
 let output_dir : Prims.unit  ->  Prims.string Prims.option = (fun uu____1808 -> (get_odir ()))
@@ -1134,8 +1138,8 @@ let verify_all : Prims.unit  ->  Prims.bool = (fun uu____1860 -> (get_verify_all
 let verify_module : Prims.unit  ->  Prims.string Prims.list = (fun uu____1864 -> (get_verify_module ()))
 
 
-let warn_cardinality : Prims.unit  ->  Prims.bool = (fun uu____1867 -> (let _0_114 = (get_cardinality ())
-in (_0_114 = "warn")))
+let warn_cardinality : Prims.unit  ->  Prims.bool = (fun uu____1867 -> (let _0_118 = (get_cardinality ())
+in (_0_118 = "warn")))
 
 
 let warn_default_effects : Prims.unit  ->  Prims.bool = (fun uu____1870 -> (get_warn_default_effects ()))

@@ -84,7 +84,6 @@ type token =
   | LBRACE_COLON_PATTERN
   | LBRACE
   | LARROW
-  | KIND
   | IRREDUCIBLE
   | INT8 of (string * bool)
   | INT64 of (string * bool)
@@ -223,7 +222,6 @@ type tokenId =
     | TOKEN_LBRACE_COLON_PATTERN
     | TOKEN_LBRACE
     | TOKEN_LARROW
-    | TOKEN_KIND
     | TOKEN_IRREDUCIBLE
     | TOKEN_INT8
     | TOKEN_INT64
