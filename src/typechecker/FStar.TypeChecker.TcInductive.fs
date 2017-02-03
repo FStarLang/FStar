@@ -230,7 +230,8 @@ match (SS.compress t).n with
     | _            -> failwith "Node is a Tm_uinst, but Tm_uinst is not an fvar")
 | _                -> failwith "Node is not an fvar or a Tm_uinst"
 
-type unfolded_memo_t = ref<list<lident * args> >
+type unfolded_memo_elt = list<(lident * args)>
+type unfolded_memo_t = ref<unfolded_memo_elt>
 
 //check if ilid applied to args has already been unfolded
 //in the memo table we only keep the type parameters, not indexes, but the passed args also contain indexes
