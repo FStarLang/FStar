@@ -64,9 +64,11 @@ let lock () = ()
 let release () = ()
 let sleep n = Thread.delay ((Z.to_float n) /. 1000.)
 
-let monitor_enter _ = ()
-let monitor_exit _ = ()
-let monitor_wait n = Thread.delay (0.01)
+let mlock = Mutex.create ()
+
+let monitor_enter _ = Mutex.lock mlock
+let monitor_exit _ = Mutex.unlock mlock
+let monitor_wait _ = Thread.delay (0.01)
 let monitor_pulse _ = ()
 let current_tid _ = Z.zero
 
@@ -77,6 +79,41 @@ let atomically =
 
 let spawn f =
   let _ = Thread.create f () in ()
+
+let write_input in_write input =
+  output_string in_write input;
+  flush in_write
+
+let read_output out_read =
+  let out = Buffer.create 16 in
+  let rec read_out _ =
+    try
+      let s = BatString.trim (input_line out_read) in
+      if s = "Done!" then ()
+      else (Buffer.add_string out (s ^ "\n"); read_out ())
+    with End_of_file -> Buffer.add_string out ("\nkilled\n")
+  in
+  let child_thread = Thread.create (fun _ -> read_out ()) () in
+  Thread.join child_thread;
+  Buffer.contents out
+
+let launch_process prog args input =
+  let cmd = prog^" "^args in
+  let (out_read, out_write) = Unix.pipe () in
+  let (in_read, in_write) = Unix.pipe () in
+  let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
+                                in_read out_write out_write
+  in
+  let inc = Unix.out_channel_of_descr in_write in
+  write_input inc input;
+  (*let _ = Unix.waitpid [] (-1) in*)
+  let oc = Unix.in_channel_of_descr out_read in
+  let outt = read_output oc in
+  Unix.close out_read;
+  Unix.close out_write;
+  Unix.close in_read;
+  Unix.close in_write;
+  outt
 
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
   let command = prog^" "^args in
@@ -102,6 +139,7 @@ let ask_process (p:proc) (stdin:string) : string =
   flush p.outc;
   Thread.join child_thread;
   Buffer.contents out
+
 
 let kill_process (p:proc) =
   let _ = Unix.close_process (p.inc, p.outc) in

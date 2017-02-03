@@ -66,6 +66,9 @@ let atomically (f:unit -> 'a) =
     result
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
+
+let launch_process _ _ _ = ""
+
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
     let signal = new Object() in
     let startInfo = new ProcessStartInfo() in

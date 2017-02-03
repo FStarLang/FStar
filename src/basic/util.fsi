@@ -143,6 +143,7 @@ val message_of_exn: exn -> string
 val trace_of_exn: exn -> string
 
 type proc = {m:System.Object; outbuf:System.Text.StringBuilder; proc:System.Diagnostics.Process; killed:ref<bool>; id:string}  (* not relying on representation; this needs to be defined on one line for a sed script *)
+val launch_process: string -> string -> string -> string
 val start_process: string -> string -> string -> (string -> string -> bool) -> proc
 val ask_process: proc -> string -> string
 val kill_process: proc -> unit
