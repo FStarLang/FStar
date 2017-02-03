@@ -68,7 +68,7 @@ let pop (_, env) msg =
     pop_context env msg;
     Options.pop()
 
-let push (dsenv: DsEnv.env, env) lax restore_cmd_line_options msg =
+let push ((dsenv: DsEnv.env), env) lax restore_cmd_line_options msg =
     FStar.Util.print_string "U/push\n";
     let env = { env with lax = lax } in
     let res = push_context (dsenv, env) msg in
@@ -365,8 +365,9 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
   //reverse stk and ts, since iterate expects them in "first dependency first order"
   iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
 
-let debug (dsenv: DsEnv.env, _) =
-  match smap_try_find dsenv.sigmap "Test.x" with
+let debug ((dsenv: DsEnv.env), _) =
+  let { DsEnv.sigmap = sigmap } = dsenv in
+  match smap_try_find sigmap "Test.x" with
   | Some (sig_x, bool_x) ->
       let quals_x = FStar.Syntax.Util.quals_of_sigelt sig_x in
       Util.print1 "Qualifiers for Test.x: %s\n" (String.concat " " (List.map FStar.Syntax.Print.qual_to_string quals_x))
@@ -378,6 +379,7 @@ let rec go (line_col:(int*int))
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
   | Pop msg ->
+      // This shrinks all internal stacks by 1
       Util.print1 "--- Pop (%s)\n" (string_of_int (List.length stack));
       debug env;
       pop env msg;
@@ -392,6 +394,7 @@ let rec go (line_col:(int*int))
       go line_col filename stack curmod env ts
 
   | Push (lax, l, c) ->
+      // This grows all internal stacks by 1
       Util.print1 "--- Push (%s)\n" (string_of_int (List.length stack));
       //if we are at a stage where we have not yet pushed a fragment from the current buffer, see if some dependency is stale
       //if so, update it
@@ -406,6 +409,7 @@ let rec go (line_col:(int*int))
       go (l, c) filename stack curmod env ts
 
   | Code (text, (ok, fail)) ->
+      // This does not grow any of the internal stacks.
       Util.print_string "--- Code\n";
       let fail curmod env_mark =
         debug env;

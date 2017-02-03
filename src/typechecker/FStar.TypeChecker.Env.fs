@@ -160,7 +160,7 @@ let initial_env type_of universe_of solver module_lid =
 let sigtab env = env.sigtab
 let gamma_cache env = env.gamma_cache
 
-let query_indices = BU.mk_ref [[]]
+let query_indices: ref<(list<(list<(lident * int)>)>)> = BU.mk_ref [[]]
 let push_query_indices () = match !query_indices with
     | [] -> failwith "Empty query indices!"
     | _ -> query_indices := (List.hd !query_indices)::!query_indices
@@ -178,7 +178,7 @@ let commit_query_index_mark () = match !query_indices with
     | hd::_::tl -> query_indices := hd::tl
     | _ -> failwith "Unmarked query index stack"
 
-let stack = BU.mk_ref []
+let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
     stack := env::!stack;
     print1 "TC/Pushed; size of stack is now: %s\n" (string_of_int (List.length !stack));
@@ -899,8 +899,8 @@ let expected_typ env = match env.expected_typ with
   | None -> None
   | Some t -> Some t
 
-let clear_expected_typ env =
-    {env with expected_typ=None; use_eq=false}, expected_typ env
+let clear_expected_typ (env_: env): env * option<typ> =
+    {env_ with expected_typ=None; use_eq=false}, expected_typ env_
 
 let finish_module =
     let empty_lid = lid_of_ids [id_of_text ""] in

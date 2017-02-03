@@ -899,8 +899,7 @@ let finish env modul =
     sigaccum=[];
   }
 
-// Evil global state!
-let stack = BU.mk_ref []
+let stack: ref<(list<env>)> = BU.mk_ref []
 let push env =
   push_record_cache();
   stack := env::!stack;
@@ -988,10 +987,10 @@ let prepare_module_or_interface intf admitted env mname =
 
   match env.modules |> BU.find_opt (fun (l, _) -> lid_equals l mname) with
     | None ->
-        Util.print_string "prepare_module_or_interface NONE\n";
+        FStar.Util.print_string "prepare_module_or_interface NONE\n";
         prep env, false
     | Some (_, m) ->
-        Util.print_string "prepare_module_or_interface SOME\n";
+        FStar.Util.print_string "prepare_module_or_interface SOME\n";
         if not (Options.interactive ()) && (not m.is_interface || intf)
         then raise (Error(BU.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
         //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
