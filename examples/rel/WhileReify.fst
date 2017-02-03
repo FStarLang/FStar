@@ -50,6 +50,13 @@ type com =
 | While  : cond:exp -> body:com -> variant:variant -> com
 
 
+(* TODO : This function is total and does not use exceptions *)
+(* as such it wouldn't be that surprising that writing it in a *)
+(* exception free effect helps proving properties about it *)
+(* The problem is that we then need refiable lifts from the *)
+(* exceptionless effect to the exceptionfull one and this not covered yet *)
+(* by the F* implementation. *)
+
 (* reifiable val interpret_exp_st : e:exp -> INT_STORE int (fun s0 p -> forall opt. p (opt, s0)) *)
 reifiable let rec interpret_exp_st (e:exp)
   (* : INT_STORE int (fun s0 p -> forall x. p (Some x, s0)) *)

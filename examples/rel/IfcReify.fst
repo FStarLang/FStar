@@ -46,13 +46,12 @@ type low_equiv (env:label_fun) (h1:rel heap) =
 let ni_exp (env:label_fun) (e:exp) (l:label) : Tot Type0 =
   forall (h: rel heap). {:pattern (low_equiv env h)}
    (low_equiv env h /\ Low? l) ==>
-     interpret_exp (R?.r h) e = interpret_exp (R?.l h) e
-
-(*   begin *)
-(* let Some vr, hr = reify (interpret_exp_st e) (R?.r h)in *)
-(*         let Some vl, hl = reify (interpret_exp_st e) (R?.l h) in *)
-(*         R?.r h = hr /\ R?.l h = hl /\ vr = vl *)
-(*         end *)
+     (* interpret_exp (R?.r h) e = interpret_exp (R?.l h) e *)
+     begin
+       let Some vr, hr = reify (interpret_exp_st e) (R?.r h)in
+       let Some vl, hl = reify (interpret_exp_st e) (R?.l h) in
+       R?.r h = hr /\ R?.l h = hl /\ vr = vl
+     end
 
 
 
@@ -211,15 +210,25 @@ val sub_com : env:label_fun -> c:com -> l1:label -> l2:label{l2 <= l1} ->
 let sub_com _ _ _ _ = ()
 
 
-(* (\* Typing rule for assignment *)
+(* Typing rule for assignment
 
-(*          env |- e : env(r) *)
-(*          ------------------------ *)
-(*          env, pc:env(r) |- r := e *)
+         env |- e : env(r)
+         ------------------------
+         env, pc:env(r) |- r := e
 
-(*     - label of expression and context label have to be below label of r *)
-(*       (first one to prevent explicit, second to prevent implicit flows) *)
-(* *\) *)
+    - label of expression and context label have to be below label of r
+      (first one to prevent explicit, second to prevent implicit flows)
+*)
+
+let assign_inv_com0 (env:label_fun) (e:exp) (r:id)
+  : Lemma (requires True)
+    (ensures (forall h0. let Some h1 = interpret_com h0 (Assign r e) in h1 = upd h0 r (interpret_exp h0 e)))
+= ()
+
+(*   let assign_inv_com' (env:label_fun) (e:exp) (r:id) *)
+(*     : Lemma (requires True) *)
+(*       (ensures (forall hopt. inv_com' env (Assign r e) (env r) hopt)) *)
+(*   = () *)
 (* val assign_com : env:label_fun -> e:exp -> r:id -> *)
 (*   Lemma (requires (ni_exp env e (env r))) *)
 (*         (ensures  (ni_com env (Assign r e) (env r))) *)
