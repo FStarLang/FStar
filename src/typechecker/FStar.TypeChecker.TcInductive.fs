@@ -740,3 +740,93 @@ let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<s
   [se]
 
 
+//returns: sig bundle, list of type constructors, list of data constructors
+let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qualifier>) (lids:list<lident>) :(sigelt * list<sigelt> * list<sigelt>) =
+    (*  Consider this illustrative example:
+
+         type T (a:Type) : (b:Type) -> Type =
+             | C1 : x:a -> y:Type -> T a y
+             | C2 : x:a -> z:Type -> w:Type -> T a z
+
+         (1). We elaborate the type of T to
+                T :  a:Type(ua) -> b:Type(ub) -> Type(u)
+
+         (2). In a context
+              G = a:Type(ua), T: (a:Type(ua) -> b:Type(ub) -> Type(u))
+              we elaborate the type of
+
+                C1 to x:a -> y:Type(uy) -> T a y
+                C2 to x:a -> z:Type(uz) -> w:Type(uw) -> T a z
+
+              Let the elaborated type of constructor i be of the form
+                 xs:ts_i -> ti
+
+              For each constructor i, we check
+
+                 - G, [xs:ts_i]_j |- ts_i_j : Type(u_i_j)
+                 - u_i_j <= u
+                 - G, [xs:ts_i]   |- ti : Type _
+                 - ti is an instance of T a
+
+
+         (3). We jointly generalize the term
+
+                (a:Type(ua) -> b:Type(ub) -> Type u)
+                -> (xs:ts_1 -> t1)
+                -> (xs:ts_2 -> t2)
+                -> unit
+
+             computing
+
+                (uvs,            (a:Type(ua') -> b:Type(ub') -> Type u')
+                                -> (xs:ts_1' -> t1')
+                                -> (xs:ts_2' -> t2')
+                                -> unit)
+
+             The inductive is generalized to
+
+                T<uvs> (a:Type(ua')) : b:Type(ub') -> Type u'
+
+
+         (4). We re-typecheck and elaborate the type of each constructor to
+              capture the proper instantiations of T
+
+              i.e., we check
+
+                G, T<uvs> : a:Type(ua') -> b:Type(ub') -> Type u', uvs |-
+                       xs:ts_i' -> t_i'
+                  ~>   xs:ts_i'' -> t_i''
+
+
+             What we get, in effect, is
+
+             type T<ua, ub, uw> (a:Type(ua)) : Type(ub) -> Type (max ua (ub + 1) (uw + 1)) =
+                | C1 : (ua, ub, uw) => a:Type(ua) -> y:Type(ub) -> T<ua,ub,uw> a y
+                | C2 : (ua, ub, uw) => a:Type(ua) -> z:Type(ub) -> w:Type(uw) -> T<ua,ub,uw> a z
+    *)
+  let tys, datas = ses |> List.partition (function Sig_inductive_typ _ -> true | _ -> false) in
+  if datas |> BU.for_some (function Sig_datacon _ -> false | _ -> true)
+  then raise (Error("Mutually defined type contains a non-inductive element", Env.get_range env));
+  let env0 = env in
+
+  (* Check each tycon *)
+  let env, tcs, g = List.fold_right (fun tc (env, all_tcs, g)  ->
+    let env, tc, tc_u, guard = tc_tycon env tc in
+    let g' = Rel.universe_inequality S.U_zero tc_u in
+    if Env.debug env Options.Low then BU.print1 "Checked inductive: %s\n" (Print.sigelt_to_string tc);
+    env, (tc, tc_u)::all_tcs, Rel.conj_guard g (Rel.conj_guard guard g')
+  ) tys (env, [], Rel.trivial_guard)
+  in
+
+  (* Check each datacon *)
+  let datas, g = List.fold_right (fun se (datas, g) ->
+    let data, g' = tc_data env tcs se in
+    data::datas, Rel.conj_guard g g'
+  ) datas ([], g)
+  in
+
+  (* Generalize their universes *)
+  let tcs, datas = generalize_and_inst_within env0 g tcs datas in
+
+  let sig_bndle = Sig_bundle(tcs@datas, quals, lids, Env.get_range env0) in
+  sig_bndle, tcs, datas
