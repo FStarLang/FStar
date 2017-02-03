@@ -4730,5 +4730,16 @@ let universe_of : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  F
 in (level_of_type env e _0_615)))
 
 
+let tc_tparams : FStar_TypeChecker_Env.env_t  ->  FStar_Syntax_Syntax.binders  ->  (FStar_Syntax_Syntax.binders * FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.universes) = (fun env tps -> (
+
+let uu____9271 = (tc_binders env tps)
+in (match (uu____9271) with
+| (tps, env, g, us) -> begin
+((FStar_TypeChecker_Rel.force_trivial_guard env g);
+((tps), (env), (us));
+)
+end)))
+
+
 
 
