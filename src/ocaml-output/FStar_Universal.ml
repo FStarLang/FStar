@@ -183,7 +183,8 @@ in (match (uu____326) with
 end)))
 in (match (fmods) with
 | (m)::[] when ((FStar_Options.should_verify m.FStar_Syntax_Syntax.name.FStar_Ident.str) && ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))) -> begin
-(FStar_SMTEncoding_Solver.with_hints_db fn check_mods)
+(let _0_678 = (FStar_Parser_ParseIt.find_file fn)
+in (FStar_SMTEncoding_Solver.with_hints_db _0_678 check_mods))
 end
 | uu____423 -> begin
 (check_mods ())
@@ -197,15 +198,15 @@ let m1 = (FStar_Parser_Dep.lowercase_module_name intf)
 in (
 
 let m2 = (FStar_Parser_Dep.lowercase_module_name impl)
-in (((m1 = m2) && (let _0_678 = (FStar_Util.get_file_extension intf)
-in (_0_678 = "fsti"))) && (let _0_679 = (FStar_Util.get_file_extension impl)
-in (_0_679 = "fst"))))))
+in (((m1 = m2) && (let _0_679 = (FStar_Util.get_file_extension intf)
+in (_0_679 = "fsti"))) && (let _0_680 = (FStar_Util.get_file_extension impl)
+in (_0_680 = "fst"))))))
 
 
-let pop_context : FStar_TypeChecker_Env.env  ->  Prims.string  ->  Prims.unit = (fun env msg -> ((let _0_680 = (FStar_ToSyntax_Env.pop ())
-in (FStar_All.pipe_right _0_680 Prims.ignore));
-(let _0_681 = (FStar_TypeChecker_Env.pop env msg)
+let pop_context : FStar_TypeChecker_Env.env  ->  Prims.string  ->  Prims.unit = (fun env msg -> ((let _0_681 = (FStar_ToSyntax_Env.pop ())
 in (FStar_All.pipe_right _0_681 Prims.ignore));
+(let _0_682 = (FStar_TypeChecker_Env.pop env msg)
+in (FStar_All.pipe_right _0_682 Prims.ignore));
 (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ());
 ))
 
@@ -227,8 +228,8 @@ let tc_one_file_and_intf : Prims.string Prims.option  ->  Prims.string  ->  FSta
 | None -> begin
 (tc_one_file dsenv env None impl)
 end
-| Some (uu____486) when (let _0_682 = (FStar_Options.codegen ())
-in (_0_682 <> None)) -> begin
+| Some (uu____486) when (let _0_683 = (FStar_Options.codegen ())
+in (_0_683 <> None)) -> begin
 ((
 
 let uu____489 = (not ((FStar_Options.lax ())))
@@ -289,12 +290,12 @@ in (match (uu____549) with
 
 let uu____561 = (match (remaining) with
 | (intf)::(impl)::remaining when (needs_interleaving intf impl) -> begin
-(let _0_683 = (tc_one_file_and_intf (Some (intf)) impl dsenv env)
-in ((remaining), (_0_683)))
+(let _0_684 = (tc_one_file_and_intf (Some (intf)) impl dsenv env)
+in ((remaining), (_0_684)))
 end
 | (intf_or_impl)::remaining -> begin
-(let _0_684 = (tc_one_file_and_intf None intf_or_impl dsenv env)
-in ((remaining), (_0_684)))
+(let _0_685 = (tc_one_file_and_intf None intf_or_impl dsenv env)
+in ((remaining), (_0_685)))
 end
 | [] -> begin
 (([]), ((([]), (dsenv), (env))))
@@ -334,8 +335,8 @@ in (match (uu____748) with
 | (all_mods, (dsenv, env)) -> begin
 ((
 
-let uu____779 = ((FStar_Options.interactive ()) && (let _0_685 = (FStar_Errors.get_err_count ())
-in (_0_685 = (Prims.parse_int "0"))))
+let uu____779 = ((FStar_Options.interactive ()) && (let _0_686 = (FStar_Errors.get_err_count ())
+in (_0_686 = (Prims.parse_int "0"))))
 in (match (uu____779) with
 | true -> begin
 (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())
@@ -360,9 +361,9 @@ in (match (uu____815) with
 | true -> begin
 ((FStar_Util.print_endline "Auto-deps kicked in; here\'s some info.");
 (FStar_Util.print1 "Here\'s the list of filenames we will process: %s\n" (FStar_String.concat " " filenames));
-(let _0_687 = (let _0_686 = (FStar_Options.verify_module ())
-in (FStar_String.concat " " _0_686))
-in (FStar_Util.print1 "Here\'s the list of modules we will verify: %s\n" _0_687));
+(let _0_688 = (let _0_687 = (FStar_Options.verify_module ())
+in (FStar_String.concat " " _0_687))
+in (FStar_Util.print1 "Here\'s the list of modules we will verify: %s\n" _0_688));
 )
 end
 | uu____818 -> begin
