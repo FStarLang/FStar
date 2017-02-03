@@ -428,7 +428,7 @@
       0,
       0,
       [
-        "@query", "b2t_def", "bool_inversion",
+        "@query", "b2t_def", "bool_inversion", "bool_typing",
         "equation_Crypto.Symmetric.Bytes.bytes",
         "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
         "equation_Crypto.Symmetric.Poly1305.Spec.word_16",
@@ -449,7 +449,7 @@
         "refinement_interpretation_Tm_refine_e12d5b0d6896d21b5a9f45fbe3a0fc71",
         "refinement_interpretation_Tm_refine_e9a76007e0467ae540411f3d3dbfc5be",
         "refinement_interpretation_Tm_refine_f036386c79577e8bb0cde1e972c414cd",
-        "typing_FStar.UInt.fits", "typing_FStar.UInt8.v"
+        "typing_FStar.UInt8.v"
       ],
       0
     ],
