@@ -903,7 +903,6 @@ let stack: ref<(list<env>)> = BU.mk_ref []
 let push env =
   push_record_cache();
   stack := env::!stack;
-  print1 "DS/Pushed; size of stack is now: %s\n" (string_of_int (List.length !stack));
   {env with sigmap=BU.smap_copy (sigmap env)}
 
 let pop () =
@@ -911,7 +910,6 @@ let pop () =
   | env::tl ->
     pop_record_cache();
     stack := tl;
-    print1 "DS/Popped; size of stack is now: %s\n" (string_of_int (List.length !stack));
     env
   | _ -> failwith "Impossible: Too many pops"
 
@@ -920,7 +918,6 @@ let commit_mark (env: env) =
   match !stack with
   | _::tl ->
     stack := tl;
-    print1 "DS/Committed; size of stack is now: %s\n" (string_of_int (List.length !stack));
     env
   | _ -> failwith "Impossible: Too many pops"
 
@@ -987,10 +984,8 @@ let prepare_module_or_interface intf admitted env mname =
 
   match env.modules |> BU.find_opt (fun (l, _) -> lid_equals l mname) with
     | None ->
-        FStar.Util.print_string "prepare_module_or_interface NONE\n";
         prep env, false
     | Some (_, m) ->
-        FStar.Util.print_string "prepare_module_or_interface SOME\n";
         if not (Options.interactive ()) && (not m.is_interface || intf)
         then raise (Error(BU.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
         //we have an interface for this module already; if we're not interactive then do not export any symbols from this module

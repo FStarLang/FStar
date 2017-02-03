@@ -64,12 +64,10 @@ type stack_t = list<(env_t * modul_t)>
 // pop or reset_mark).
 
 let pop (_, env) msg =
-    FStar.Util.print_string "U/pop\n";
     pop_context env msg;
     Options.pop()
 
 let push ((dsenv: DsEnv.env), env) lax restore_cmd_line_options msg =
-    FStar.Util.print_string "U/push\n";
     let env = { env with lax = lax } in
     let res = push_context (dsenv, env) msg in
     Options.push();
@@ -77,14 +75,12 @@ let push ((dsenv: DsEnv.env), env) lax restore_cmd_line_options msg =
     res
 
 let mark (dsenv, env) =
-    FStar.Util.print_string "U/mark\n";
     let dsenv = DsEnv.mark dsenv in
     let env = TcEnv.mark env in
     Options.push();
     dsenv, env
 
 let reset_mark (_, env) =
-    FStar.Util.print_string "U/reset_mark\n";
     let dsenv = DsEnv.reset_mark () in
     let env = TcEnv.reset_mark env in
     Options.pop();
@@ -93,13 +89,11 @@ let reset_mark (_, env) =
 let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
 
 let commit_mark (dsenv, env) =
-    FStar.Util.print_string "U/commit_mark\n";
     let dsenv = DsEnv.commit_mark dsenv in
     let env = TcEnv.commit_mark env in
     dsenv, env
 
 let check_frag (dsenv, (env:TcEnv.env)) curmod text =
-    FStar.Util.print_string "U/check_frag\n";
     try
         match tc_one_fragment curmod dsenv env text with
             | Some (m, dsenv, env) ->
@@ -365,37 +359,24 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
   //reverse stk and ts, since iterate expects them in "first dependency first order"
   iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
 
-let debug ((dsenv: DsEnv.env), _) =
-  let { DsEnv.sigmap = sigmap } = dsenv in
-  match smap_try_find sigmap "Test.x" with
-  | Some (sig_x, bool_x) ->
-      let quals_x = FStar.Syntax.Util.quals_of_sigelt sig_x in
-      Util.print1 "Qualifiers for Test.x: %s\n" (String.concat " " (List.map FStar.Syntax.Print.qual_to_string quals_x))
-  | None ->
-      Util.print_string "Test.x not found\n"
-
 let rec go (line_col:(int*int))
            (filename:string) 
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
   | Pop msg ->
       // This shrinks all internal stacks by 1
-      Util.print1 "--- Pop (%s)\n" (string_of_int (List.length stack));
-      debug env;
       pop env msg;
       let (env, curmod), stack =
         match stack with
         | [] -> Util.print_error "too many pops"; exit 1
         | hd::tl -> hd, tl
       in
-      debug env;
       //all the fragments from the current buffer have been popped, call cleanup
       let _ = if List.length stack = List.length ts then cleanup env else () in
       go line_col filename stack curmod env ts
 
   | Push (lax, l, c) ->
       // This grows all internal stacks by 1
-      Util.print1 "--- Push (%s)\n" (string_of_int (List.length stack));
       //if we are at a stage where we have not yet pushed a fragment from the current buffer, see if some dependency is stale
       //if so, update it
       //also if this is the first chunk, we need to restore the command line options
@@ -403,30 +384,23 @@ let rec go (line_col:(int*int))
         if List.length stack = List.length ts then true, update_deps filename curmod stack env ts else false, (stack, env, ts)
       in
       let stack = (env, curmod)::stack in
-      debug env;
       let env = push env lax restore_cmd_line_options "#push" in
-      debug env;
       go (l, c) filename stack curmod env ts
 
   | Code (text, (ok, fail)) ->
       // This does not grow any of the internal stacks.
-      Util.print_string "--- Code\n";
       let fail curmod env_mark =
-        debug env;
         report_fail();
         Util.print1 "%s\n" fail;
         // Side-effect: pops from an internal, hidden stack
         // At this stage, the internal stack has grown with size 1. BUT! The
         // interactive mode will send us a pop message.
         let env = reset_mark env_mark in
-        debug env;
         go line_col filename stack curmod env ts
       in
 
       // Side-effect: pushes to an internal, hidden stack
-      debug env;
       let env_mark = mark env in
-      debug env;
       let frag = {frag_text=text;
                   frag_line=fst line_col;
                   frag_col=snd line_col} in
@@ -440,9 +414,7 @@ let rec go (line_col:(int*int))
               Util.print1 "\n%s\n" ok;
               // Side-effect: pops from an internal, hidden stack
               // At this stage, the internal stack has grown with size 1.
-              debug env;
               let env = commit_mark env in
-              debug env;
               go line_col filename stack curmod env ts
               end
             else fail curmod env_mark

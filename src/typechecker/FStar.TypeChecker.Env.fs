@@ -181,7 +181,6 @@ let commit_query_index_mark () = match !query_indices with
 let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
     stack := env::!stack;
-    print1 "TC/Pushed; size of stack is now: %s\n" (string_of_int (List.length !stack));
     {env with sigtab=BU.smap_copy (sigtab env);
               gamma_cache=BU.smap_copy (gamma_cache env)}
 
@@ -189,7 +188,6 @@ let pop_stack () =
     match !stack with
     | env::tl ->
       stack := tl;
-      print1 "TC/Popped; size of stack is now: %s\n" (string_of_int (List.length !stack));
       env
     | _ -> failwith "Impossible: Too many pops"
 

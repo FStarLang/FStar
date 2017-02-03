@@ -157,7 +157,6 @@ let keywords =
     ALWAYS, "fun"        ,FUN;
     ALWAYS, "function"   ,FUNCTION;
     ALWAYS, "if"         ,IF;
-    ALWAYS, "kind"       ,KIND;
     ALWAYS, "in"         ,IN;
     ALWAYS, "include"    ,INCLUDE;
     ALWAYS, "inline"     ,INLINE;
