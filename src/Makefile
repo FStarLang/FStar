@@ -232,7 +232,11 @@ ifeq ($(OS),Windows_NT)
 endif
 	+make -C ocaml-output
 	+make fstar-ocaml
-	+make uregressions
+	+make uregressions interactive-test
+
+# Interactive mode regressions
+interactive-test:
+	+make -C tests/interactive
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:

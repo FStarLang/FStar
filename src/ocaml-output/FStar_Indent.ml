@@ -21,10 +21,10 @@ comments;
 end))) (FStar_List.rev comments) moduls)
 in (
 
-let left_over_doc = (FStar_Pprint.concat (let _0_594 = (let _0_593 = (let _0_592 = (FStar_Parser_ToDocument.comments_to_document leftover_comments)
-in (_0_592)::[])
-in (FStar_Pprint.hardline)::_0_593)
-in (FStar_Pprint.hardline)::_0_594))
+let left_over_doc = (FStar_Pprint.concat (let _0_690 = (let _0_689 = (let _0_688 = (FStar_Parser_ToDocument.comments_to_document leftover_comments)
+in (_0_688)::[])
+in (FStar_Pprint.hardline)::_0_689)
+in (FStar_Pprint.hardline)::_0_690))
 in (FStar_Pprint.pretty_out_channel (FStar_Util.float_of_string "1.0") (Prims.parse_int "100") left_over_doc FStar_Util.stdout)))
 end)))
 in (FStar_List.iter parse_and_indent filenames)))
