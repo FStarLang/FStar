@@ -34,11 +34,8 @@ RUN make
 RUN sudo make install
 WORKDIR /home/FStar
 
-
 # Prepare and build F*
 ADD update-fstar.sh .
 RUN git clone https://github.com/FStarLang/FStar.git
 ENV PATH "~/FStar/bin:$PATH"
-RUN opam config exec -- make -C FStar/src/ocaml-output
-RUN make ocaml -C FStar/src
 RUN opam config exec -- make -C FStar/src/ocaml-output
