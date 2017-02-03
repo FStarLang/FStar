@@ -47,6 +47,7 @@ type effects = {
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
 type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)>
+type goal = term
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
@@ -82,8 +83,9 @@ and solver_t = {
     commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
-    solve        :option<(unit -> string)> -> env -> typ -> unit;
-    is_trivial   :env -> typ -> bool;
+    preprocess   :env -> goal -> list<goal>;  //a hook for a tactic; still too simple
+    solve        :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
+    is_trivial   :env -> goal -> bool;
     finish       :unit -> unit;
     refresh      :unit -> unit;
 }
