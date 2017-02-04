@@ -761,14 +761,13 @@ type hints_db = {
     hints: hints
 }
 
-
 [<DataContract>]
-type json_db = System.Object []
+type internal json_db = System.Object []
 
-let json_db_from_hints_db (hdb) : json_db =
+let internal json_db_from_hints_db (hdb) : json_db =
     let json_unsat_core_from_unsat_core (core : string list option) =
         match core with
-        | None -> (Array.zeroCreate 0)
+        | None -> [||]
         | Some c -> (List.map (fun e -> e :> System.Object) c) |> List.toArray
     let json_hint_from_hint (h) =
         [|
@@ -776,20 +775,20 @@ let json_db_from_hints_db (hdb) : json_db =
             h.hint_index :> System.Object;
             h.fuel :> System.Object;
             h.ifuel :> System.Object;
-            h.unsat_core :> System.Object;
+            (json_unsat_core_from_unsat_core h.unsat_core) :> System.Object;
             h.query_elapsed_time :> System.Object
         |]
     let json_hints_from_hints (hs) = List.map (fun x ->
         match x with
-        | None -> null
-        | Some h -> json_hint_from_hint(h)) hs in
+        | None -> [||]
+        | Some h -> (json_hint_from_hint h)) hs in
     let json_hints = (json_hints_from_hints hdb.hints) |> List.toArray in
     [|
       hdb.module_digest :> System.Object ;
       json_hints :> System.Object
     |]
 
-let hints_db_from_json_db (jdb : json_db) : hints_db =
+let internal hints_db_from_json_db (jdb : json_db) : hints_db =
     let unsat_core_from_json_unsat_core (core : System.Object) =
         let core_list = core :?> System.Object [] |> Array.toList in
         if (List.length core_list) = 0 then None else
@@ -814,23 +813,33 @@ let hints_db_from_json_db (jdb : json_db) : hints_db =
       hints = (hints_from_json_hints jdb.[1])
     }
 
-let internal json<'t> (obj : 't) =
+let internal json<'t> (obj : 't) (known_types : Type list) =
     use ms = new MemoryStream()
-    (new DataContractJsonSerializer(typeof<'t>)).WriteObject(ms, obj)
+    (new DataContractJsonSerializer(typeof<'t>, known_types)).WriteObject(ms, obj)
     ASCIIEncoding.Default.GetString(ms.ToArray())
 
-let internal unjson<'t> (s : string)  : 't =
+let internal unjson<'t> (s : string) (known_types : Type list) : 't =
     use ms = new MemoryStream(ASCIIEncoding.Default.GetBytes(s))
-    let obj = (new DataContractJsonSerializer(typeof<'t>)).ReadObject(ms)
+    let obj = (new DataContractJsonSerializer(typeof<'t>, known_types)).ReadObject(ms)
     obj :?> 't
 
+let internal known_json_types =
+    [
+        typeof<System.Object>;
+        typeof<System.Object[]>;
+        typeof<System.Object[][]>;
+        typeof<string>;
+        typeof<int>
+    ]
+
 let write_hints (filename : string) (hdb : hints_db) : unit =
-    write_file filename (json (json_db_from_hints_db hdb))
+    let jdb = (json_db_from_hints_db hdb) in
+    write_file filename (json jdb known_json_types)
 
 let read_hints (filename : string) : option<hints_db> =
     try
         let sr = new System.IO.StreamReader(filename) in
-        Some (hints_db_from_json_db (unjson (sr.ReadToEnd())))
+        Some (hints_db_from_json_db (unjson (sr.ReadToEnd()) known_json_types))
     with
     | Failure _ ->
         Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
