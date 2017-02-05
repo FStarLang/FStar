@@ -172,10 +172,13 @@ u_extract_dmff: u_boot_fsts/FStar.TypeChecker.DMFF.fst
 u_extract_tcterm: u_boot_fsts/FStar.TypeChecker.TcTerm.fst
 	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.TcTerm
 
+u_extract_tcinductive: u_boot_fsts/FStar.TypeChecker.TcInductive.fst
+	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.TcInductive
+
 u_extract_tc: u_boot_fsts/FStar.TypeChecker.Tc.fst
 	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.Tc
 
-u_extract_typechecker: u_extract_normalizer u_extract_rel u_extract_util u_extract_dmff u_extract_tcterm u_extract_tc
+u_extract_typechecker: u_extract_normalizer u_extract_rel u_extract_util u_extract_dmff u_extract_tcterm u_extract_tcinductive u_extract_tc
 
 u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst ToSyntax.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.ToSyntax
@@ -232,7 +235,11 @@ ifeq ($(OS),Windows_NT)
 endif
 	+make -C ocaml-output
 	+make fstar-ocaml
-	+make uregressions
+	+make uregressions interactive-test
+
+# Interactive mode regressions
+interactive-test:
+	+make -C tests/interactive
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:

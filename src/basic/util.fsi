@@ -128,6 +128,7 @@ val append_to_file: file_handle -> string -> unit
 val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val flush_file: file_handle -> unit
+val file_get_contents: string -> string
 
 type stream_reader = System.IO.StreamReader (* not relying on representation *)
 val open_stdin : unit -> stream_reader

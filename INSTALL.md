@@ -57,15 +57,15 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ z3 --version
         Z3 version 4.5.0
 
-2. Run the unit tests:
+2. Run the micro benchmarks:
 
         $ make -C examples/micro-benchmarks
 
-3. If you have OCaml installed run, the following command should print "Hello F*!"
+3. If you have OCaml installed the following command should print "Hello F*!"
 
         $ make -C examples/hello ocaml
 
-4. If you have F# installed run, the following command should print "Hello F*!"
+4. If you have F# installed the following command should print "Hello F*!"
 
         $ make -C examples/hello fs
 

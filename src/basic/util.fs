@@ -23,6 +23,8 @@ open System.Diagnostics
 open System.IO
 open System.IO.Compression
 open System.Security.Cryptography
+open System.Runtime.Serialization
+open System.Runtime.Serialization.Json
 
 let return_all x = x
 
@@ -595,6 +597,8 @@ let write_file (fn:string) s =
   append_to_file fh s;
   close_file fh
 let flush_file (fh:file_handle) = fh.Flush()
+let file_get_contents f =
+  File.ReadAllText f
 
 let for_range lo hi f =
   for i = lo to hi do
@@ -757,11 +761,84 @@ type hints_db = {
     hints: hints
 }
 
-let write_hints (_: string) (_: hints_db): unit =
-  failwith "[record_hints_json]: not implemented"
 
-let read_hints (filename : string): option<hints_db> =
-    if not (File.Exists filename) then
+[<DataContract>]
+type json_db = System.Object []
+
+let json_db_from_hints_db (hdb) : json_db =
+    let json_unsat_core_from_unsat_core (core : string list option) =
+        match core with
+        | None -> (Array.zeroCreate 0)
+        | Some c -> (List.map (fun e -> e :> System.Object) c) |> List.toArray
+    let json_hint_from_hint (h) =
+        [|
+            h.hint_name :> System.Object;
+            h.hint_index :> System.Object;
+            h.fuel :> System.Object;
+            h.ifuel :> System.Object;
+            h.unsat_core :> System.Object;
+            h.query_elapsed_time :> System.Object
+        |]
+    let json_hints_from_hints (hs) = List.map (fun x ->
+        match x with
+        | None -> null
+        | Some h -> json_hint_from_hint(h)) hs in
+    let json_hints = (json_hints_from_hints hdb.hints) |> List.toArray in
+    [|
+      hdb.module_digest :> System.Object ;
+      json_hints :> System.Object
+    |]
+
+let hints_db_from_json_db (jdb : json_db) : hints_db =
+    let unsat_core_from_json_unsat_core (core : System.Object) =
+        let core_list = core :?> System.Object [] |> Array.toList in
+        if (List.length core_list) = 0 then None else
+        Some (List.map (fun e -> (e : System.Object) :?> System.String) core_list) in
+    let hint_from_json_hint (h : System.Object) =
+        let ha = h :?> System.Object [] in
+        if (Array.length ha) <> 6 then failwith "malformed hint" else
+        {
+            hint_name=ha.[0] :?> System.String;
+            hint_index=ha.[1] :?> int;
+            fuel=ha.[2] :?> int;
+            ifuel=ha.[3] :?> int;
+            unsat_core=unsat_core_from_json_unsat_core ha.[4];
+            query_elapsed_time=ha.[5] :?> int
+        } in
+    let hints_from_json_hints (hs : System.Object) =
+        let hint_list = (hs :?> System.Object []) |> Array.toList in
+        List.map (fun e -> (Some (hint_from_json_hint e))) hint_list  in
+    if (Array.length jdb) <> 2 then failwith "malformed hints_db" else
+    {
+      module_digest = jdb.[0] :?> System.String;
+      hints = (hints_from_json_hints jdb.[1])
+    }
+
+let internal json<'t> (obj : 't) =
+    use ms = new MemoryStream()
+    (new DataContractJsonSerializer(typeof<'t>)).WriteObject(ms, obj)
+    ASCIIEncoding.Default.GetString(ms.ToArray())
+
+let internal unjson<'t> (s : string)  : 't =
+    use ms = new MemoryStream(ASCIIEncoding.Default.GetBytes(s))
+    let obj = (new DataContractJsonSerializer(typeof<'t>)).ReadObject(ms)
+    obj :?> 't
+
+let write_hints (filename : string) (hdb : hints_db) : unit =
+    write_file filename (json (json_db_from_hints_db hdb))
+
+let read_hints (filename : string) : option<hints_db> =
+    try
+        let sr = new System.IO.StreamReader(filename) in
+        Some (hints_db_from_json_db (unjson (sr.ReadToEnd())))
+    with
+    | Failure _ ->
+        Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
         None
-    else
-        failwith "[record_hints_json]: not implemented"
+    | :? System.ArgumentException
+    | :? System.ArgumentNullException
+    | :? System.IO.FileNotFoundException
+    | :? System.IO.DirectoryNotFoundException
+    | :? System.IO.IOException ->
+        Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
+        None
