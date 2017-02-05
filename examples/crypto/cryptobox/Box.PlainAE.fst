@@ -25,7 +25,7 @@ let length #i p = PlainPKAE.length #i p
 (**
    Coerced messages can only be flagged as not honest.
 *)
-val coerce: #i:ae_id -> p:ae_plain{not ae_ind_cca || not (ae_honest i)} -> Tot (protected_ae_plain i)
+val coerce: #i:ae_id -> p:ae_plain{not ae_ind_cca \/ ~(ae_honest i)} -> Tot (protected_ae_plain i)
 let coerce #i p = 
   PlainPKAE.coerce #i p
 
@@ -34,7 +34,7 @@ let coerce #i p =
    We allow a transition from protected_ae_plain to ae_plain only if either there is no
    idealization or if if the message is not honest.
 *)
-val repr: #i:ae_id -> p:protected_ae_plain i{not ae_ind_cca || not (ae_honest i)} -> Tot (ae_plain)
+val repr: #i:ae_id -> p:protected_ae_plain i{not ae_ind_cca \/ ~(ae_honest i)} -> Tot (ae_plain)
 let repr #i p = 
     PlainPKAE.repr p 
 

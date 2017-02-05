@@ -29,7 +29,13 @@ assume val dh_gen_key: unit -> St (dh_share*dh_exponent)
 type keysize = aeadKeySize AES_128_GCM
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 
-type log_t (i:id) (r:rid) = m_rref r (seq (entry:(PlainDH.key*dh_share){fst (AE.get_index (fst entry)) = i})) grows
+
+noeq type entry (i:id) = 
+  | DH_entry: ent_i:id -> ent_share:dh_share -> ent_key:PlainDH.key{AE.get_index ent_key = (i,ent_i)} -> entry i
+
+
+type log_t (i:id) (r:rid) = m_rref r (seq (entry i)) grows
+
 
 noeq type dh_pkey = 
   | DH_pkey:  #pk_i:id -> #region:rid ->rawpk:dh_share -> log:log_t pk_i region -> dh_pkey
@@ -79,33 +85,38 @@ let prf_odh_snd dh_snd_sk dh_rcv_pk =
   let pk_id = dh_rcv_pk.pk_i in
   let sk_id = dh_snd_sk.sk_i in
   let i = pk_id, sk_id in
-  if ae_honest i && prf_odh then
+  let ae_honest_i = ae_honestST i in
+  if ae_honest_i && prf_odh then
     let k' = PlainDH.keygen i dh_rcv_pk.region in
-    write_at_end dh_rcv_pk.log (k',dh_snd_sk.pk.rawpk);
+    write_at_end dh_rcv_pk.log (DH_entry sk_id dh_snd_sk.pk.rawpk k');
     k'
   else
     let real_k = dh_exponentiate dh_rcv_pk.rawpk dh_snd_sk.rawsk in
     let k=PlainDH.coerce_key i dh_rcv_pk.region real_k in
     k
 
-val equal_share: dh_sh:dh_share -> entry:(PlainDH.key*dh_share) -> Tot bool
-let equal_share dh_sh entry =
-  snd entry = dh_sh
+val equal_share: sk_i:id -> pk_i:id -> dh_sh:dh_share -> e:entry sk_i -> Tot bool
+let equal_share sk_i pk_i dh_sh e =
+  match e with 
+  | DH_entry ent_i ent_share _ -> ent_i=pk_i && ent_share = dh_sh
 
 
-val prf_odh_rcv: #(sk_id:id) -> dh_sk:dh_skey -> #(pk_id:id) -> dh_snd_pk:dh_pkey ->  St (k:PlainDH.key)//{fst (AE.get_index k) = sk_id})
+val prf_odh_rcv: #(sk_id:id) -> dh_sk:dh_skey{dh_sk.sk_i=sk_id} -> #(pk_id:id) -> dh_snd_pk:dh_pkey{dh_snd_pk.pk_i=pk_id} ->  St (k:PlainDH.key{AE.get_index k = (sk_id,pk_id)}
+)
 let prf_odh_rcv #sk_id dh_rcv_sk #pk_id dh_snd_pk  =
-  if honest sk_id && prf_odh then
+  let honest_i = ae_honestST (sk_id, pk_id) in
+  if honest_i && prf_odh then
     let log = m_read dh_rcv_sk.pk.log in
-    let entry = seq_find (equal_share dh_snd_pk.rawpk) log in
-    match entry with
-    | Some (k',_) -> k'
+    let e = seq_find (equal_share sk_id pk_id dh_snd_pk.rawpk) log in
+    match e with
+    | Some (DH_entry _ _ k') -> k'
     | None -> 
-      let i = sk_id,dishonestId() in
+      let i = sk_id,pk_id in
+//      let i = sk_id,dishonestId() in
       let raw_k = dh_exponentiate dh_snd_pk.rawpk dh_rcv_sk.rawsk in
+      admit ();
       PlainDH.coerce_key i dh_rcv_sk.pk.region raw_k
   else
-    let dis_id = dishonestId() in
-    let i =  sk_id,dis_id in
+    let i =  sk_id,pk_id in
     let raw_k = dh_exponentiate dh_snd_pk.rawpk dh_rcv_sk.rawsk in
     PlainDH.coerce_key i dh_rcv_sk.pk.region raw_k

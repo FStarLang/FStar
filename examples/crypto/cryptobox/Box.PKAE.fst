@@ -81,7 +81,8 @@ let encrypt #pk_i #eph_i pk p =
   eph_dh_pk.rawpk,(AE.encrypt #ae_i k ae_m)
 
 
-val decrypt: #(sk_i:id) -> pkae_skey sk_i -> #(pk_i:id) -> pkae_pkey sk_i -> c -> St(option (p:protected_pkae_plain))//{fst (PlainPKAE.get_index p) = sk_i })
+val decrypt: #(sk_i:id) -> pkae_skey sk_i -> #(pk_i:id) -> pkae_pkey sk_i -> c -> St(option (p:protected_pkae_plain//{PlainPKAE.get_index p = (sk_i,pk_i) }
+))
 let decrypt #sk_i sk #pk_i pk c =
   let (dh_sh,ae_c) = c in 
   let k = prf_odh_rcv #sk_i sk.dh_sk #pk_i pk.dh_pk  in

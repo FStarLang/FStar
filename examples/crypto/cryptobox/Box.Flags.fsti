@@ -22,7 +22,7 @@ val ae_ind_cca : b:bool{ae_ind_cpa /\ ae_int_ctxt ==> b}
 
 val pkae : b:bool{b ==> b2t ae_ind_cpa /\ ae_int_ctxt /\ prf_odh}
 
-val dishonestId: unit -> Tot (i:id{not (honest i)})
+val dishonestId: unit -> Tot (i:id{dishonest i})
 val honestId: unit -> Tot (i:id{honest i})
 
 val honest_implies_prf_odh: i:id -> Lemma
