@@ -31,7 +31,7 @@ type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 
 
 noeq type entry (i:id) = 
-  | DH_entry: ent_i:id -> ent_share:dh_share -> ent_key:PlainDH.key{AE.get_index ent_key = (i,ent_i)} -> entry i
+  | DH_entry: ent_i:id -> ent_share:dh_share -> ent_key:PlainDH.key{AE.get_index ent_key = (i,ent_i) /\ ae_honest (i,ent_i)} -> entry i
 
 
 type log_t (i:id) (r:rid) = m_rref r (seq (entry i)) grows
@@ -101,7 +101,7 @@ let equal_share sk_i pk_i dh_sh e =
   | DH_entry ent_i ent_share _ -> ent_i=pk_i && ent_share = dh_sh
 
 
-val prf_odh_rcv: #(sk_id:id) -> dh_sk:dh_skey{dh_sk.sk_i=sk_id} -> #(pk_id:id) -> dh_snd_pk:dh_pkey{dh_snd_pk.pk_i=pk_id} ->  St (k:PlainDH.key{AE.get_index k = (sk_id,pk_id)}
+val prf_odh_rcv: #(sk_id:id) -> dh_sk:dh_skey{dh_sk.sk_i=sk_id} -> #(pk_id:id) -> dh_snd_pk:dh_pkey{dh_snd_pk.pk_i=pk_id} ->  St (k:PlainDH.key{ AE.get_index k = (sk_id,pk_id)}
 )
 let prf_odh_rcv #sk_id dh_rcv_sk #pk_id dh_snd_pk  =
   let honest_i = ae_honestST (sk_id, pk_id) in

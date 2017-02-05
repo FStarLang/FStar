@@ -43,7 +43,7 @@ noeq abstract type pkae_pkey (pk_id:id) =
   | PKey: #region:rid -> dh_pk:dh_pkey{dh_pk.pk_i=pk_id} -> pkae_pkey pk_id
 
 noeq abstract type pkae_skey (sk_id:id) =
-  | SKey: dh_sk:dh_skey -> pkae_pk:pkae_pkey sk_id -> pkae_skey sk_id
+  | SKey: dh_sk:dh_skey{DH.get_index dh_sk=sk_id} -> pkae_pk:pkae_pkey sk_id -> pkae_skey sk_id
 
 val keygen: #(i:id) -> rid -> St (pkae_pkey i * pkae_skey i)
 let keygen #i (parent:rid) =
@@ -81,7 +81,7 @@ let encrypt #pk_i #eph_i pk p =
   eph_dh_pk.rawpk,(AE.encrypt #ae_i k ae_m)
 
 
-val decrypt: #(sk_i:id) -> pkae_skey sk_i -> #(pk_i:id) -> pkae_pkey sk_i -> c -> St(option (p:protected_pkae_plain//{PlainPKAE.get_index p = (sk_i,pk_i) }
+val decrypt: #(sk_i:id) -> sk:pkae_skey sk_i -> #(pk_i:id) -> pkae_pkey pk_i -> c -> St(option (p:protected_pkae_plain{PlainPKAE.get_index p = (sk_i,pk_i) }
 ))
 let decrypt #sk_i sk #pk_i pk c =
   let (dh_sh,ae_c) = c in 
