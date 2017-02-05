@@ -1951,3 +1951,8 @@ let rec universe_of_aux env e =
      level_of_type_fail env e "empty match cases"
 
 let universe_of env e = level_of_type env e (universe_of_aux env e)
+
+let tc_tparams env (tps:binders) : (binders * Env.env * universes) =
+    let tps, env, g, us = tc_binders env tps in
+    Rel.force_trivial_guard env g;
+    tps, env, us

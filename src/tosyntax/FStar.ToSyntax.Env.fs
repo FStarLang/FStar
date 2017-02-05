@@ -490,8 +490,10 @@ let is_effect_name env lid =
 
 let lookup_letbinding_quals env lid =
   let k_global_def lid = function
-      | (Sig_declare_typ(lid, _, _, quals, _), _) -> Some quals
-      | _ -> None in
+      | (Sig_declare_typ(lid, _, _, quals, _), _) ->
+          Some quals
+      | _ ->
+          None in
   match resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def with
     | Some quals -> quals
     | _ -> []
@@ -728,7 +730,7 @@ let push_bv env x =
 
 let push_top_level_rec_binding env (x:ident) dd =
   let l = qualify env x in
-  if unique false true env l
+  if unique false true env l || Options.interactive ()
   then push_scope_mod env (Rec_binding (x,l,dd))
   else raise (Error ("Duplicate top-level names " ^ l.str, range_of_lid l))
 
@@ -751,8 +753,8 @@ let push_sigelt env s =
         | _ -> false, false in
       let lids = lids_of_sigelt s in
       begin match BU.find_map lids (fun l -> if not (unique any_val exclude_if env l) then Some l else None) with
-        | None -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
-        | Some l -> err l
+        | Some l when not (Options.interactive ()) -> err l
+        | _ -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
       end in
   let env = {env with scope_mods = !globals} in
   let env, lss = match s with
@@ -841,7 +843,8 @@ let check_admits env =
     | Sig_declare_typ(l, u, t, quals, r) ->
       begin match try_lookup_lid env l with
         | None ->
-          BU.print_string (BU.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
+          if not (Options.interactive ()) then
+            BU.print_string (BU.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
           BU.smap_add (sigmap env) l.str (Sig_declare_typ(l, u, t, Assumption::quals, r), false)
         | Some _ -> ()
       end
@@ -896,42 +899,30 @@ let finish env modul =
     sigaccum=[];
   }
 
-type env_stack_ops = {
-    push: env -> env;
-    mark: env -> env;
-    reset_mark: env -> env;
-    commit_mark: env -> env;
-    pop:env -> env
-}
+let stack: ref<(list<env>)> = BU.mk_ref []
+let push env =
+  push_record_cache();
+  stack := env::!stack;
+  {env with sigmap=BU.smap_copy (sigmap env)}
 
-let stack_ops =
-    let stack = BU.mk_ref [] in
-    let push env =
-        push_record_cache();
-        stack := env::!stack;
-        {env with sigmap=BU.smap_copy (sigmap env)} in
-    let pop env = match !stack with
-        | env::tl ->
-         pop_record_cache();
-         stack := tl;
-         env
-        | _ -> failwith "Impossible: Too many pops" in
-    let commit_mark env =
-        commit_record_cache();
-        match !stack with
-         | _::tl -> stack := tl; env
-         | _ -> failwith "Impossible: Too many pops" in
-    { push=push;
-      pop=pop;
-      mark=push;
-      reset_mark=pop;
-      commit_mark=commit_mark;}
+let pop () =
+  match !stack with
+  | env::tl ->
+    pop_record_cache();
+    stack := tl;
+    env
+  | _ -> failwith "Impossible: Too many pops"
 
-let push (env:env) = stack_ops.push env
-let mark env = stack_ops.mark env
-let reset_mark env = stack_ops.reset_mark env
-let commit_mark env = stack_ops.commit_mark env
-let pop env = stack_ops.pop env
+let commit_mark (env: env) =
+  commit_record_cache();
+  match !stack with
+  | _::tl ->
+    stack := tl;
+    env
+  | _ -> failwith "Impossible: Too many pops"
+
+let mark x = push x
+let reset_mark () = pop ()
 
 let export_interface (m:lident) env =
 //    printfn "Exporting interface %s" m.str;
@@ -940,7 +931,7 @@ let export_interface (m:lident) env =
             | l::_ -> l.nsstr=m.str
             | _ -> false in
     let sm = sigmap env in
-    let env = pop env in
+    let env = pop () in
     let keys = BU.smap_keys sm in
     let sm' = sigmap env in
     keys |> List.iter (fun k ->
@@ -992,12 +983,13 @@ let prepare_module_or_interface intf admitted env mname =
   in
 
   match env.modules |> BU.find_opt (fun (l, _) -> lid_equals l mname) with
-    | None -> prep env, false
+    | None ->
+        prep env, false
     | Some (_, m) ->
-      if not m.is_interface || intf
-      then raise (Error(BU.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
-      //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
-      prep (push env), true //push a context so that we can pop it when we're done
+        if not (Options.interactive ()) && (not m.is_interface || intf)
+        then raise (Error(BU.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
+        //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
+        prep (push env), true //push a context so that we can pop it when we're done
 
 let enter_monad_scope env mname =
   match env.curmonad with
