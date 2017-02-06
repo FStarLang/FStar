@@ -21,11 +21,11 @@ let get_index p =
   p.i
 
 (* two pure functions, never called when ideal *)
-val repr: p:protected_pkae_plain{not pkae \/ ~(ae_honest p.i) } -> Tot pkae_plain
+val repr: p:protected_pkae_plain{not pkae \/ (ae_dishonest p.i) } -> Tot pkae_plain
 let repr p = p.b
 
 // Change this if we want to use signcryption with pkae_int-ctxt
-val coerce: #i:ae_id -> p:pkae_plain{not pkae \/ ~(ae_honest i)} -> Tot (prot:protected_pkae_plain{i=prot.i})
+val coerce: #i:ae_id -> p:pkae_plain{not pkae \/ (ae_dishonest i)} -> Tot (prot:protected_pkae_plain{i=prot.i})
 let coerce #i p = 
   Prot_pkae_p #i p  
 

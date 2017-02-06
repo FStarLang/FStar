@@ -67,7 +67,7 @@ let keygen i parent =
    The leak_key function transforms an abstract key into a raw aes_key.
    The refinement type on the key makes sure that no honest keys can be leaked.
 *)
-val leak_key: k:key{~(ae_honest k.i)} -> Tot aes_key 
+val leak_key: k:key{~(ae_honest k.i) \/ ~(b2t ae_ind_cca)} -> Tot aes_key 
 let leak_key k =
   k.raw
 
@@ -76,7 +76,7 @@ let leak_key k =
    as we need to allocate space in memory for the key. The refinement type on the key makes sure that
    abstract keys created this way can not be honest.
 *)
-val coerce_key: i:ae_id{~(ae_honest i)} -> parent:rid -> aes_key -> ST (k:key{k.i=i})
+val coerce_key: i:ae_id{~(ae_honest i) \/ ~(prf_odh)} -> parent:rid -> aes_key -> ST (k:key{k.i=i})
   (requires (fun _ -> True))
   (ensures  (safe_key_gen parent))
 let coerce_key i parent raw = 
@@ -106,6 +106,7 @@ val encrypt: #(i:ae_id) -> k:key{k.i=i} -> (m:protected_ae_plain i) -> ST cipher
 let encrypt #i k m =
   m_recall k.log;
   let iv = random ivsize in
+  //assert(ae_dishonest i \/ ae_honest i);
   let ae_honest_i = ae_honestST i in
   let p = if (ae_ind_cca && ae_honest_i) then createBytes (length m) 0z else (repr m) in
   let c = CoreCrypto.aead_encrypt AES_128_GCM k.raw iv empty_bytes p in
