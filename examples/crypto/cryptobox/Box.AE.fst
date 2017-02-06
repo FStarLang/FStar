@@ -76,7 +76,7 @@ let leak_key k =
    as we need to allocate space in memory for the key. The refinement type on the key makes sure that
    abstract keys created this way can not be honest.
 *)
-val coerce_key: i:ae_id{~(ae_honest i) \/ ~(prf_odh)} -> parent:rid -> aes_key -> ST (k:key{k.i=i})
+val coerce_key: i:ae_id{(ae_dishonest i) \/ ~(prf_odh)} -> parent:rid -> aes_key -> ST (k:key{k.i=i})
   (requires (fun _ -> True))
   (ensures  (safe_key_gen parent))
 let coerce_key i parent raw = 

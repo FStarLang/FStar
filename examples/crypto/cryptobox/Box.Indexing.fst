@@ -24,10 +24,6 @@ let honest (i:id) =
 let dishonest (i:id) =
   MR.witnessed (MM.contains table i false)
 
-val lemma_dis_implies_not: i:id -> Lemma 
-  (requires (True))
-  (ensures (dishonest i ==> ~(honest i)))
-  [SMTPat (dishonest i) ]
 
 
 val honestST: i:id -> St(b:bool{(b ==> honest i) /\ (not b ==> dishonest i)})
@@ -35,18 +31,41 @@ let honestST (i:id) =
   MR.m_recall table;
   match MM.lookup table i with
   |Some v -> 
+//    MR.testify (MM.contains table i v);
     v
   |None -> 
     MM.extend table i true;
+ //   MR.testify (MM.contains table i true);
     true
+
+
+val lemma_hon_implies_not_dis: i:id -> w:(honest i)-> Lemma
+  (requires (True))
+  (ensures (honest i ==> ~(dishonest i)))
+  [SMTPat (honest i)]
+let lemma_hon_implies_not_dis i =
+  ()
+
+
+val lemma_dis_implies_not: i:id -> Lemma 
+  (requires (True))
+  (ensures (dishonest i ==> ~(honest i)))
+  [SMTPat (dishonest i) ]
+let lemma_dis_implies_not i = ()
+
+
 
 type ae_id = (id*id)
 
 let ae_honest (i1,i2:ae_id) =
-  honest i1 /\ honest i2
+  MR.witnessed (MM.contains table i1 true) /\
+  MR.witnessed (MM.contains table i2 true)
+  //honest i1 /\ honest i2
 
 let ae_dishonest (i1,i2:ae_id) =
-  dishonest i1 \/ dishonest i2
+  MR.witnessed (MM.contains table i1 false) \/
+  MR.witnessed (MM.contains table i2 false)
+  //dishonest i1 \/ dishonest i2
 
 val ae_honestST: i:(id*id) -> St(b:bool{(b ==> (ae_honest i)) /\ (not b ==> (ae_dishonest i))})
 let ae_honestST (i1,i2) =
@@ -58,12 +77,13 @@ val lemma_ae_dis_implies_not: i:ae_id -> Lemma
   (requires (True))
   (ensures (ae_dishonest i ==> ~(ae_honest i)))
   [SMTPat (ae_honest i) ]
-
+let lemma_ae_dis_implies_not i = ()
 
 val lemma_ae_hon_implies_not_dis: i:ae_id -> Lemma 
   (requires (True))
   (ensures (ae_honest i ==> ~(ae_dishonest i)))
   [SMTPat (ae_honest i) ]
+let lemma_ae_hon_implies_not_dis i = ()
 
 //private type ae_range = fun (i:ae_id) -> (b:bool{b ==> honest (fst i) /\ honest (snd i)})
 //private let ae_inv (f:MM.map' ae_id ae_range) = True

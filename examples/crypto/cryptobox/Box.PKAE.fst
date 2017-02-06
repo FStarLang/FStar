@@ -40,16 +40,15 @@ type rid = FStar.Monotonic.Seq.rid
    that is used for the encryption/decryption. The secret key is abstract.
 *)
 noeq abstract type pkae_pkey (pk_id:id) =
-  | PKey: #region:rid -> dh_pk:dh_pkey{DH.pk_get_index dh_pk=pk_id} -> pkae_pkey pk_id
+  | PKey: dh_pk:dh_pkey{DH.pk_get_index dh_pk=pk_id} -> pkae_pkey pk_id
 
 noeq abstract type pkae_skey (sk_id:id) =
   | SKey: dh_sk:dh_skey{DH.sk_get_index dh_sk=sk_id} -> pkae_pk:pkae_pkey sk_id -> pkae_skey sk_id
 
-val keygen: #(i:id) -> rid -> St (pkae_pkey i * pkae_skey i)
-let keygen #i (parent:rid) =
-  let (dh_pk, dh_sk) = DH.keygen #i parent in
-  let region = new_region parent in
-  let pkae_pk = PKey #i #region dh_pk in
+val keygen: #(i:id) -> St (pkae_pkey i * pkae_skey i)
+let keygen #i =
+  let (dh_pk, dh_sk) = DH.keygen #i in
+  let pkae_pk = PKey #i dh_pk in
   pkae_pk, SKey #i dh_sk pkae_pk
 
 (**
@@ -59,11 +58,11 @@ let keygen #i (parent:rid) =
 type c = DH.dh_share * AE.cipher //lbytes(PKE.ciphersize + AE.ciphersize)
 
 
-val encrypt: #(pk_id:id) -> #(sk_id:id) -> pkae_pkey pk_id -> pkae_skey sk_id -> p:protected_pkae_plain{PlainPKAE.get_index p = (pk_id,sk_id)} -> St c 
+val encrypt: #(pk_id:id) -> #(sk_id:id) -> pkae_pkey pk_id -> pkae_skey sk_id -> p:protected_pkae_plain{PlainPKAE.get_index p = (pk_id,sk_id) || PlainPKAE.get_index p = (sk_id,pk_id)} -> St c 
 let encrypt #pk_id #sk_id pkae_pk  pkae_sk p =
-  let k = prf_odh_snd pkae_sk.dh_sk pkae_pk.dh_pk in
-  let ae_i = pk_id,sk_id in
-  assert(AE.get_index k = ae_i);
+  let k = prf_odh pkae_sk.dh_sk pkae_pk.dh_pk in
+  let ae_i = AE.get_index k in
+  assert(AE.get_index k = ae_i || AE.get_index k = (snd ae_i, fst ae_i));
 //  assert (DH.get_index eph_dh_sk = snd ae_i);
 //  assert (pk.dh_pk.pk_i = fst ae_i);
 //  assert (DH.get_index eph_dh_sk = eph_i);
@@ -78,7 +77,7 @@ val decrypt: #(sk_id:id) -> pkae_skey sk_id -> #(pk_id:id) -> pkae_pkey sk_id ->
 ))
 let decrypt #sk_id sk #pk_id pk c =
   let (dh_sh,ae_c) = c in 
-  let k = prf_odh_rcv #sk_id sk.dh_sk #pk_id pk.dh_pk  in
+  let k = prf_odh sk.dh_sk pk.dh_pk  in
   let ae_i = AE.get_index k in
   (match AE.decrypt #ae_i k ae_c with
   | Some p -> 
