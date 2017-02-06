@@ -31,7 +31,7 @@ type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 
 
 noeq type entry (i:id) = 
-  | DH_entry: ent_i:id -> ent_share:dh_share -> ent_key:PlainDH.key{AE.get_index ent_key = (i,ent_i)} -> entry i
+  | DH_entry: ent_i:id -> ent_share:dh_share -> ent_key:PlainDH.key{AE.get_index ent_key = (i,ent_i) /\ ae_honest (i,ent_i)} -> entry i
 
 
 type log_t (i:id) (r:rid) = m_rref r (seq (entry i)) grows
@@ -121,7 +121,6 @@ let prf_odh_snd dh_snd_sk dh_rcv_pk =
     let real_k = dh_exponentiate dh_rcv_pk.rawpk dh_snd_sk.rawsk in
     let k=PlainDH.coerce_key i dh_rcv_pk.region real_k in
     k
-
 
 
 
