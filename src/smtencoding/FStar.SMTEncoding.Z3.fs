@@ -132,19 +132,19 @@ let query_logging =
     let get_module_name () = match !current_module_name with
         | None -> failwith "Module name not set"
         | Some n -> n in
+    let get_next_log_file_name n =
+        match List.tryFind (fun (m, _) -> n=m) !used_file_names with
+        | None ->
+            used_file_names := (n, 0)::!used_file_names;
+            n
+        | Some (_, k) ->
+            used_file_names := (n, k+1)::!used_file_names;
+            BU.format2 "%s-%s" n (BU.string_of_int (k+1)) in
     let new_log_file () =
         match !current_module_name with
         | None -> failwith "current module not set"
         | Some n ->
-          let file_name =
-              match List.tryFind (fun (m, _) -> n=m) !used_file_names with
-              | None ->
-                used_file_names := (n, 0)::!used_file_names;
-                n
-              | Some (_, k) ->
-                used_file_names := (n, k+1)::!used_file_names;
-                BU.format2 "%s-%s" n (BU.string_of_int (k+1)) in
-          let file_name = BU.format1 "queries-%s.smt2" file_name in
+          let file_name = BU.format1 "queries-%s.smt2" (get_next_log_file_name n) in
           current_file_name := Some file_name;
           let fh = BU.open_file_for_writing file_name in
           log_file_opt := Some fh;
@@ -167,17 +167,19 @@ let query_logging =
                 match !current_file_name with
                 | Some n -> n
                 | None ->
-                    ignore (new_log_file ()) ;
-                    match !current_file_name with
-                    | Some n -> n
-                    | _ -> "" in
-            let replace_ext s _from _to =
-                let tokens = (List.rev (String.split ['.'] s)) in
-                (String.concat "." (List.rev
-                    (match tokens with
-                    | x :: xs -> (if (x = _from) then _to else x) :: xs
-                    | _ -> tokens))) in
-            let file_name_p = replace_ext file_name "smt2" "proofs.smt2" in
+                   if Options.log_queries() then (
+                     ignore (new_log_file ()) ;
+                     match !current_file_name with
+                     | Some n -> n
+                     | _ -> "")
+                   else (
+                     match !current_module_name with
+                     | None -> failwith "current module not set"
+                     | Some n ->
+                        let fn = (get_next_log_file_name n) in
+                        current_file_name := Some fn;
+                        fn) in
+            let file_name_p = BU.format1 "queries-%s.proofs.smt2" file_name in
             let fh = BU.open_file_for_writing file_name_p in
             current_proof_file := Some fh ;
             fh
