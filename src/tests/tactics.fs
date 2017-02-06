@@ -35,7 +35,7 @@ let test () =
     match simplify_eq_impl p1 with
     | Success (_, p2) -> 
       p2.goals |> List.iter (fun g ->
-      printfn "Goal: %s" (Print.term_to_string g.goal_ty))
+      printfn "Goal: %s" (P.term_to_string g.goal_ty))
     | Failed (msg, _) ->
       printfn "Tactic failed: %s" msg                                    
  
