@@ -171,8 +171,13 @@ let query_logging =
                     match !current_file_name with
                     | Some n -> n
                     | _ -> "" in
-            let file_name_p =
-                (replace_string file_name ".smt2" ".proofs.smt2") in
+            let replace_ext s _from _to =
+                let tokens = (List.rev (String.split ['.'] s)) in
+                (String.concat "." (List.rev
+                    (match tokens with
+                    | x :: xs -> (if (x = _from) then _to else x) :: xs
+                    | _ -> tokens))) in
+            let file_name_p = replace_ext file_name "smt2" "proofs.smt2" in
             let fh = BU.open_file_for_writing file_name_p in
             current_proof_file := Some fh ;
             fh
