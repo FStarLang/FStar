@@ -378,3 +378,115 @@ let rec sortWith_sorted #a f l = match l with
        sortWith_sorted f hi;
        append_mem_forall (sortWith f lo) (pivot::sortWith f hi);
        append_sorted (bool_of_compare f) (sortWith f lo) (sortWith f hi) pivot
+
+(** Properties of [fold_left] *)
+
+let rec fold_left_invar
+  (#a #b: Type)
+  (f: (a -> b -> Tot a))
+  (l: list b)
+  (p: (a -> Tot Type0))
+  : Lemma
+  (requires forall (x: a) (y: b) . p x ==> memP y l ==> p (f x y) )
+  (ensures forall (x: a) . p x ==> p (fold_left f x l))
+=
+  match l with
+  | [] -> ()
+  | y :: q -> fold_left_invar f q p
+
+let rec fold_left_map
+  (#a #b #c: Type)
+  (f_aba: a -> b -> Tot a)
+  (f_bc:  b -> Tot c)
+  (f_aca: a -> c -> Tot a)
+  (l: list b)
+  : Lemma
+  (requires forall (x: a) (y: b) . f_aba x y == f_aca x (f_bc y) )
+  (ensures forall (x : a) . fold_left f_aba x l == fold_left f_aca x (map f_bc l) )
+  =
+  match l with
+  | [] -> ()
+  | y :: q -> fold_left_map f_aba f_bc f_aca q
+
+let rec map_append
+  (#a #b: Type)
+  (f: a -> Tot b)
+  (l1 l2: list a)
+:
+  Lemma
+  (ensures map f (l1 @ l2) == map f l1 @ map f l2)
+=
+  match l1 with
+  | [] -> ()
+  | x :: q -> map_append f q l2
+
+let rec fold_left_append
+  (#a #b: Type)
+  (f: a -> b -> Tot a)
+  (l1 l2: list b)
+  : Lemma
+  (ensures forall x . fold_left f x (l1 @ l2) == fold_left f (fold_left f x l1) l2)
+= match l1 with
+  | [] -> ()
+  | x :: q -> fold_left_append f q l2
+
+let rec fold_left_monoid
+  (#a: Type)
+  (opA: (a -> a -> Tot a))
+  (zeroA: a)
+  (l: list a)
+: Lemma
+  (requires
+    (forall u v w . (u `opA` (v `opA` w)) == ((u `opA` v) `opA` w)) /\
+    (forall x . (x `opA` zeroA) == x) /\
+    (forall x . (zeroA `opA` x) == x))
+  (ensures
+    forall x .
+    (fold_left opA x l) == (x `opA` (fold_left opA zeroA l)))
+= match l with
+  | [] -> ()
+  | x :: q -> fold_left_monoid opA zeroA q
+
+let fold_left_append_monoid
+  (#a: Type)
+  (f: (a -> a -> Tot a))
+  (z: a)
+  (l1 l2: list a)
+: Lemma
+  (requires
+    (forall u v w . f u (f v w) == f (f u v) w) /\
+    (forall x . f x z == x) /\
+    (forall x . f z x == x))
+  (ensures
+    fold_left f z (l1 @ l2) == f (fold_left f z l1) (fold_left f z l2))
+= fold_left_append f l1 l2;
+  fold_left_monoid f z l2
+
+(* Properties of [index] *)
+
+private let rec index_extensionality_aux
+  (#a: Type)
+  (l1 l2: list a)
+  (l_len: (l_len: unit { length l1 == length l2 } ))
+  (l_index: (i: (i: nat {i < length l1})) -> Tot (l_index: unit {index l1 i == index l2 i}))
+: Lemma
+  (ensures (l1 == l2))
+= match (l1, l2) with
+  | (a1::q1, a2::q2) ->
+    let a_eq : (a_eq : unit {a1 == a2}) = l_index 0 in
+    let q_len : (q_len: unit {length q1 == length q2}) = () in
+    let q_index (i: (i: nat {i < length q1})) : Tot (q_index: unit {index q1 i == index q2 i}) =
+      l_index (i + 1) in
+    let q_eq : (q_eq : unit {l1 == l2}) = index_extensionality_aux q1 q2 q_len q_index in
+    ()
+  | _ -> ()
+
+let index_extensionality
+  (#a: Type)
+  (l1 l2: list a)
+: Lemma
+  (requires
+    (length l1 == length l2 /\
+    (forall (i: nat) . i < length l1 ==> index l1 i == index l2 i)))
+  (ensures (l1 == l2))
+= index_extensionality_aux l1 l2 () (fun i -> ())

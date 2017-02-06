@@ -132,6 +132,16 @@ val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes -> t2:bytes {Seq.length s
         (ensures (Seq.equal s1 t1 /\ Seq.equal s2 t2))
 let lemma_append_inj s1 s2 t1 t2 = admit() (* CH: this used to fail *)
 
+let append_empty_bytes_l (l: bytes): Lemma (ensures (empty_bytes @| l == l)) =
+  Seq.append_empty_l l
+
+let append_empty_bytes_r (l: bytes): Lemma (ensures (l @| empty_bytes == l)) =
+  Seq.append_empty_r l
+  
+let append_assoc (l1 l2 l3: bytes): Lemma
+  (ensures ((l1 @| l2) @| l3 == l1 @| (l2 @| l3))) =
+  Seq.append_assoc l1 l2 l3
+
 (*@ assume val split2 : (b:bytes -> (i:nat -> ((j:nat){C_pr_GreaterThanOrEqual(Length (b), C_bop_Addition (i, j))} -> (b1:bytes * b2:bytes * b3:bytes){Length (b1) = i /\ Length (b2) = j /\ B (b) = C_bop_ArrayAppend (B (b1), C_bop_ArrayAppend (B (b2), B (b3)))}))) @*)
 assume val split2 : b:bytes -> n1:nat{n1 <= Seq.length b} -> n2:nat{n1 + n2 <= Seq.length b} -> Tot (lbytes n1 * lbytes n2 * lbytes (length b - n1 - n2))
 (*@  assume (!x. C_bop_ArrayAppend (x, C_array_of_list C_op_Nil ()) = x) @*)
