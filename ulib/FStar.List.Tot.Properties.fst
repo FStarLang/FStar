@@ -379,6 +379,35 @@ let rec sortWith_sorted #a f l = match l with
        append_mem_forall (sortWith f lo) (pivot::sortWith f hi);
        append_sorted (bool_of_compare f) (sortWith f lo) (sortWith f hi) pivot
 
+
+(** Correctness of [mem] for types with decidable equality. TODO:
+replace [mem] with [memP] in relevant lemmas and define the right
+SMTPat to automatically recover lemmas about [mem] for types with
+decidable equality *)
+let rec mem_memP
+  (#a: eqtype)
+  (x: a)
+  (l: list a)
+: Lemma (ensures (mem x l <==> memP x l))
+= match l with
+  | [] -> ()
+  | a :: q -> mem_memP x q
+
+(** The empty list has no elements. *)
+val memP_empty : #a: Type -> x:a ->
+  Lemma (requires (memP x []))
+        (ensures False)
+let memP_empty #a x = ()
+
+(** Full specification for [existsb]: [existsb f xs] holds if, and
+only if, there exists an element [x] of [xs] such that [f x] holds. *)
+val memP_existsb: #a: Type -> f:(a -> Tot bool) -> xs:list a ->
+  Lemma(ensures (existsb f xs <==> (exists (x:a). (f x = true /\ memP x xs))))
+let rec memP_existsb #a f xs =
+  match xs with
+  | [] -> ()
+  | hd::tl -> memP_existsb f tl
+
 (** Properties of [fold_left] *)
 
 let rec fold_left_invar
