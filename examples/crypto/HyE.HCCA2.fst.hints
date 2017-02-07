@@ -46,8 +46,13 @@
       2,
       1,
       [
-        "@query", "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "equation_HyE.PlainPKE.t", "fuel_guarded_inversion_Prims.option"
+        "@query", "bool_inversion", "data_elim_Prims.V",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "disc_equation_Prims.V", "equation_HyE.PlainPKE.t",
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
+        "function_token_typing_HyE.AE.key", "lemma_Prims.invertOption",
+        "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0",
+        "typing_Prims.uu___is_None"
       ],
       0
     ]

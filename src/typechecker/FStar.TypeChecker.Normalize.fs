@@ -102,7 +102,7 @@ type stack_elt =
 
 type stack = list<stack_elt>
 
-// VALS_HACK_HERE
+
 
 let mk t r = mk t None r
 let set_memo r t =

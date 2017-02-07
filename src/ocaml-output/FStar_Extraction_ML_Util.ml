@@ -123,7 +123,7 @@ end)
 end))
 
 
-let udelta_unfold : FStar_Extraction_ML_UEnv.env  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty Prims.option = (fun g uu___106_140 -> (match (uu___106_140) with
+let udelta_unfold : FStar_Extraction_ML_UEnv.env  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty Prims.option = (fun g uu___107_140 -> (match (uu___107_140) with
 | FStar_Extraction_ML_Syntax.MLTY_Named (args, n) -> begin
 (
 
@@ -159,7 +159,7 @@ false
 end))
 
 
-let eff_to_string : FStar_Extraction_ML_Syntax.e_tag  ->  Prims.string = (fun uu___107_166 -> (match (uu___107_166) with
+let eff_to_string : FStar_Extraction_ML_Syntax.e_tag  ->  Prims.string = (fun uu___108_166 -> (match (uu___108_166) with
 | FStar_Extraction_ML_Syntax.E_PURE -> begin
 "Pure"
 end
@@ -416,7 +416,7 @@ let uu____510 = (type_leq_c g None t1 t2)
 in (FStar_All.pipe_right uu____510 Prims.fst)))
 
 
-let is_type_abstraction = (fun uu___108_536 -> (match (uu___108_536) with
+let is_type_abstraction = (fun uu___109_536 -> (match (uu___109_536) with
 | ((FStar_Util.Inl (uu____542), uu____543))::uu____544 -> begin
 true
 end
@@ -476,7 +476,7 @@ e
 end))
 
 
-let record_field_path : FStar_Ident.lident Prims.list  ->  Prims.string Prims.list = (fun uu___109_597 -> (match (uu___109_597) with
+let record_field_path : FStar_Ident.lident Prims.list  ->  Prims.string Prims.list = (fun uu___110_597 -> (match (uu___110_597) with
 | (f)::uu____601 -> begin
 (
 

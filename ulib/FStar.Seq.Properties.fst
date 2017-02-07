@@ -14,10 +14,11 @@
    limitations under the License.
 *)
 
-module FStar.SeqProperties
+module FStar.Seq.Properties
 
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-open FStar.Seq
+open FStar.Seq.Base
+module Seq = FStar.Seq.Base
 
 let indexable (#a:Type) (s:Seq.seq a) (j:int) = 0 <= j /\ j < Seq.length s
 
@@ -461,7 +462,7 @@ let lemma_snoc_inj #a s1 s2 v1 v2 =
   assert(head t1  == head t2)
 
 #set-options "--initial_fuel 2 --max_fuel 2"
-val lemma_mem_snoc : #a:eqtype -> s:FStar.Seq.seq a -> x:a ->
+val lemma_mem_snoc : #a:eqtype -> s:Seq.seq a -> x:a ->
    Lemma (ensures (forall y. mem y (snoc s x) <==> mem y s \/ x=y))
 let lemma_mem_snoc #a s x = lemma_append_count s (Seq.create 1 x)
 
@@ -674,7 +675,7 @@ let append_contains_equiv (#a:Type) (s1:seq a) (s2:seq a) (x:a)
   	   (s1 `contains` x \/ s2 `contains` x))
   = FStar.Classical.move_requires (intro_append_contains_from_disjunction s1 s2) x
 
-val contains_snoc : #a:Type -> s:FStar.Seq.seq a -> x:a ->
+val contains_snoc : #a:Type -> s:Seq.seq a -> x:a ->
    Lemma (ensures (forall y. (snoc s x) `contains` y  <==> s `contains` y \/ x==y))
 let contains_snoc #a s x =
   FStar.Classical.forall_intro (append_contains_equiv s (Seq.create 1 x))

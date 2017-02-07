@@ -171,14 +171,17 @@ in (check uu____357)))
 
 let can_handle_query : Prims.int  ->  FStar_SMTEncoding_Term.decl  ->  (Prims.bool * ((FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term) * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term)) = (fun n q -> (match (q) with
 | FStar_SMTEncoding_Term.Assume (q', uu____399, uu____400) -> begin
-(parse_query_for_split_cases n (strip_not q') (fun x -> x))
+(
+
+let uu____403 = (strip_not q')
+in (parse_query_for_split_cases n uu____403 (fun x -> x)))
 end
-| uu____404 -> begin
+| uu____405 -> begin
 ((false), ((((fun x -> x)), ([]), (FStar_SMTEncoding_Util.mkFalse))))
 end))
 
 
-let handle_query : ((FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term) * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term)  ->  (FStar_SMTEncoding_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun uu____429 check -> (match (uu____429) with
+let handle_query : ((FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term) * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term)  ->  (FStar_SMTEncoding_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun uu____430 check -> (match (uu____430) with
 | (f, l, negs) -> begin
 ((check_split_cases f l check);
 (check_exhaustiveness f negs check);

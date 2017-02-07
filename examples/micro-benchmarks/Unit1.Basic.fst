@@ -5,10 +5,10 @@ open FStar.BaseTypes
 type t =
   | A
   | B
-let rec comp x y = comp x y
+let rec comp x y : Dv unit = comp x y
 
-let rec foo x =
-  let rec bar y = bar y in
+let rec foo x : Dv unit =
+  let rec bar y : Dv unit = bar y in
   foo (bar x)
 
 let partial_app f x y =

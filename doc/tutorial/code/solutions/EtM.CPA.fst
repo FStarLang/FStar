@@ -1,7 +1,6 @@
 module EtM.CPA
 
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.Monotonic.RRef
@@ -88,7 +87,7 @@ let encryption_injective k iv t1 t2 = correctness k iv t1; correctness k iv t2
 
 (* this doesn't really belong here *)
 val mem : #a:eqtype -> x:a -> xs:Seq.seq a -> Tot bool
-let mem (#a:eqtype) x xs = Some? (SeqProperties.seq_find (fun y -> y = x) xs)
+let mem (#a:eqtype) x xs = Some? (Seq.seq_find (fun y -> y = x) xs)
 
 val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->

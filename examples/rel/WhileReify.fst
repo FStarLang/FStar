@@ -1,7 +1,7 @@
 module WhileReify
 
-open FStar.Seq
-open FStar.DM4F.IntStore
+open Def
+open FStar.DM4F.IntStoreFixed
 
 type binop =
 | Plus
@@ -50,8 +50,18 @@ type com =
 | While  : cond:exp -> body:com -> variant:variant -> com
 
 
-reifiable val interpret_exp_st : e:exp -> INT_STORE int (fun s0 p -> forall opt. p (opt, s0))
-reifiable let rec interpret_exp_st e =
+(* TODO : This function is total and does not use exceptions *)
+(* as such it wouldn't be that surprising that writing it in a *)
+(* exception free effect helps proving properties about it *)
+(* The problem is that we then need refiable lifts from the *)
+(* exceptionless effect to the exceptionfull one and this not covered yet *)
+(* by the F* implementation. *)
+
+(* reifiable val interpret_exp_st : e:exp -> INT_STORE int (fun s0 p -> forall opt. p (opt, s0)) *)
+reifiable let rec interpret_exp_st (e:exp)
+  (* : INT_STORE int (fun s0 p -> forall x. p (Some x, s0)) *)
+  : IntStore int (requires (fun _ -> True)) (ensures (fun h0 x h1 -> h0 == h1 /\ Some? x))
+=
   match e with
   | AInt i -> i
   | AVar x -> read x
@@ -61,13 +71,16 @@ reifiable let rec interpret_exp_st e =
     interpret_binop o a b
 
 
-let interpret_exp (h:heap) (e:exp) : Tot (option int * heap) = (* normalize_term *) (reify (interpret_exp_st e) h)
+(* unfold *)
+let interpret_exp (h:heap) (e:exp) : Tot int =
+  let Some x, h1 = reify (interpret_exp_st e) h in
+  assert (h1 == h) ;
+  x
 
 
 let interpret_exp' (h:heap) (e:exp) : Tot nat =
-  match fst (interpret_exp h e) with
-  | None -> 0
-  | Some n -> if 0 > n then 0 else n
+  let n = interpret_exp h e in
+  if 0 > n then 0 else n
 
 (* function used for the decreases clause *)
 val decr_while : heap -> com -> GTot nat
@@ -80,7 +93,7 @@ exception OutOfFuel
 
 reifiable val interpret_com_st : c:com -> h0:heap -> IntStore unit
   (requires (fun h -> h == h0))
-  (ensures (fun h _ ho -> h == h0 /\ length h0 = length ho))
+  (ensures (fun h _ ho -> h == h0))
   (decreases %[c; decr_while h0 c])
 reifiable let rec interpret_com_st c h0 =
   match c with
@@ -124,9 +137,14 @@ reifiable let rec interpret_com_st c h0 =
 (* TODO : Normalization does not play very well with ensures clauses... *)
 (* But there is no problem when replacing normalize_term by foobar where *)
 (* abstract let foobar (#a:Type) (x:a) : a = x *)
-let interpret_com (h0:heap) (c:com) : Tot (option (h:heap{length h = length h0} ))
+(* unfold *)
+let interpret_com (h0:heap) (c:com) : Tot (option heap)
 =
   match (* normalize_term *) (reify (interpret_com_st c h0) h0) with
-  | Some (), h -> assert (length h0 == length h) ;Some h
+  | Some (), h -> Some h
   | None, _ -> None
 
+
+let bidule = assert (fst (reify (interpret_exp_st (AOp Plus (AVar (to_id 7)) (AInt 5))) (create 3)) = Some 8)
+
+let bidule2 = assert (interpret_exp (create 3) (AOp Plus (AVar (to_id 7)) (AInt 5)) = 8)

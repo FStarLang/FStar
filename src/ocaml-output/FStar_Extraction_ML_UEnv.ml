@@ -111,19 +111,19 @@ end))
 let convRange : FStar_Range.range  ->  Prims.int = (fun r -> (Prims.parse_int "0"))
 
 
-let convIdent : FStar_Ident.ident  ->  (Prims.string * Prims.int) = (fun id -> ((id.FStar_Ident.idText), ((Prims.parse_int "0"))))
+let convIdent : FStar_Ident.ident  ->  FStar_Extraction_ML_Syntax.mlident = (fun id -> ((id.FStar_Ident.idText), ((Prims.parse_int "0"))))
 
 
 let bv_as_ml_tyvar : FStar_Syntax_Syntax.bv  ->  (Prims.string * Prims.int) = (fun x -> (
 
-let uu____183 = (FStar_Extraction_ML_Syntax.bv_as_mlident x)
-in (prependTick uu____183)))
+let uu____181 = (FStar_Extraction_ML_Syntax.bv_as_mlident x)
+in (prependTick uu____181)))
 
 
 let bv_as_ml_termvar : FStar_Syntax_Syntax.bv  ->  (Prims.string * Prims.int) = (fun x -> (
 
-let uu____191 = (FStar_Extraction_ML_Syntax.bv_as_mlident x)
-in (removeTick uu____191)))
+let uu____189 = (FStar_Extraction_ML_Syntax.bv_as_mlident x)
+in (removeTick uu____189)))
 
 
 let rec lookup_ty_local : binding Prims.list  ->  FStar_Syntax_Syntax.bv  ->  FStar_Extraction_ML_Syntax.mlty = (fun gamma b -> (match (gamma) with
@@ -132,20 +132,20 @@ let rec lookup_ty_local : binding Prims.list  ->  FStar_Syntax_Syntax.bv  ->  FS
 | true -> begin
 mlt
 end
-| uu____219 -> begin
+| uu____217 -> begin
 (lookup_ty_local tl b)
 end)
 end
-| (Bv (b', FStar_Util.Inr (uu____221)))::tl -> begin
+| (Bv (b', FStar_Util.Inr (uu____219)))::tl -> begin
 (match ((FStar_Syntax_Syntax.bv_eq b b')) with
 | true -> begin
 (failwith (Prims.strcat "Type/Expr clash: " b.FStar_Syntax_Syntax.ppname.FStar_Ident.idText))
 end
-| uu____239 -> begin
+| uu____237 -> begin
 (lookup_ty_local tl b)
 end)
 end
-| (uu____240)::tl -> begin
+| (uu____238)::tl -> begin
 (lookup_ty_local tl b)
 end
 | [] -> begin
@@ -153,39 +153,39 @@ end
 end))
 
 
-let tyscheme_of_td = (fun uu____260 -> (match (uu____260) with
-| (uu____267, uu____268, uu____269, vars, body_opt) -> begin
+let tyscheme_of_td = (fun uu____258 -> (match (uu____258) with
+| (uu____265, uu____266, uu____267, vars, body_opt) -> begin
 (match (body_opt) with
 | Some (FStar_Extraction_ML_Syntax.MLTD_Abbrev (t)) -> begin
 Some (((vars), (t)))
 end
-| uu____279 -> begin
+| uu____277 -> begin
 None
 end)
 end))
 
 
-let lookup_ty_const : env  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mltyscheme Prims.option = (fun env uu____287 -> (match (uu____287) with
+let lookup_ty_const : env  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mltyscheme Prims.option = (fun env uu____285 -> (match (uu____285) with
 | (module_name, ty_name) -> begin
-(FStar_Util.find_map env.tydefs (fun uu____297 -> (match (uu____297) with
+(FStar_Util.find_map env.tydefs (fun uu____295 -> (match (uu____295) with
 | (m, tds) -> begin
 (match ((module_name = m)) with
 | true -> begin
 (FStar_Util.find_map tds (fun td -> (
 
-let uu____309 = td
-in (match (uu____309) with
-| (uu____311, n, uu____313, uu____314, uu____315) -> begin
+let uu____307 = td
+in (match (uu____307) with
+| (uu____309, n, uu____311, uu____312, uu____313) -> begin
 (match ((n = ty_name)) with
 | true -> begin
 (tyscheme_of_td td)
 end
-| uu____322 -> begin
+| uu____320 -> begin
 None
 end)
 end))))
 end
-| uu____323 -> begin
+| uu____321 -> begin
 None
 end)
 end)))
@@ -201,10 +201,10 @@ let mname = (module_name_of_fv fv)
 in (
 
 let ty_name = fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.ident.FStar_Ident.idText
-in (FStar_Util.find_map env.tydefs (fun uu____356 -> (match (uu____356) with
+in (FStar_Util.find_map env.tydefs (fun uu____354 -> (match (uu____354) with
 | (m, tds) -> begin
-(FStar_Util.find_map tds (fun uu____371 -> (match (uu____371) with
-| (uu____376, n, mangle_opt, uu____379, uu____380) -> begin
+(FStar_Util.find_map tds (fun uu____369 -> (match (uu____369) with
+| (uu____374, n, mangle_opt, uu____377, uu____378) -> begin
 (match ((m = mname)) with
 | true -> begin
 (match ((n = ty_name)) with
@@ -220,11 +220,11 @@ let modul = m
 in Some (((modul), (mangled))))
 end)
 end
-| uu____409 -> begin
+| uu____407 -> begin
 None
 end)
 end
-| uu____413 -> begin
+| uu____411 -> begin
 None
 end)
 end)))
@@ -236,19 +236,19 @@ let lookup_tyvar : env  ->  FStar_Syntax_Syntax.bv  ->  FStar_Extraction_ML_Synt
 
 let lookup_fv_by_lid : env  ->  FStar_Ident.lident  ->  ty_or_exp_b = (fun g lid -> (
 
-let x = (FStar_Util.find_map g.gamma (fun uu___99_431 -> (match (uu___99_431) with
+let x = (FStar_Util.find_map g.gamma (fun uu___100_429 -> (match (uu___100_429) with
 | Fv (fv', x) when (FStar_Syntax_Syntax.fv_eq_lid fv' lid) -> begin
 Some (x)
 end
-| uu____435 -> begin
+| uu____433 -> begin
 None
 end)))
 in (match (x) with
 | None -> begin
 (
 
-let uu____436 = (FStar_Util.format1 "free Variable %s not found\n" lid.FStar_Ident.nsstr)
-in (failwith uu____436))
+let uu____434 = (FStar_Util.format1 "free Variable %s not found\n" lid.FStar_Ident.nsstr)
+in (failwith uu____434))
 end
 | Some (y) -> begin
 y
@@ -257,25 +257,25 @@ end)))
 
 let lookup_fv : env  ->  FStar_Syntax_Syntax.fv  ->  ty_or_exp_b = (fun g fv -> (
 
-let x = (FStar_Util.find_map g.gamma (fun uu___100_446 -> (match (uu___100_446) with
+let x = (FStar_Util.find_map g.gamma (fun uu___101_444 -> (match (uu___101_444) with
 | Fv (fv', t) when (FStar_Syntax_Syntax.fv_eq fv fv') -> begin
 Some (t)
 end
-| uu____450 -> begin
+| uu____448 -> begin
 None
 end)))
 in (match (x) with
 | None -> begin
 (
 
-let uu____451 = (
+let uu____449 = (
 
-let uu____452 = (FStar_Range.string_of_range fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.p)
+let uu____450 = (FStar_Range.string_of_range fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.p)
 in (
 
-let uu____457 = (FStar_Syntax_Print.lid_to_string fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
-in (FStar_Util.format2 "(%s) free Variable %s not found\n" uu____452 uu____457)))
-in (failwith uu____451))
+let uu____455 = (FStar_Syntax_Print.lid_to_string fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
+in (FStar_Util.format2 "(%s) free Variable %s not found\n" uu____450 uu____455)))
+in (failwith uu____449))
 end
 | Some (y) -> begin
 y
@@ -284,25 +284,25 @@ end)))
 
 let lookup_bv : env  ->  FStar_Syntax_Syntax.bv  ->  ty_or_exp_b = (fun g bv -> (
 
-let x = (FStar_Util.find_map g.gamma (fun uu___101_471 -> (match (uu___101_471) with
+let x = (FStar_Util.find_map g.gamma (fun uu___102_469 -> (match (uu___102_469) with
 | Bv (bv', r) when (FStar_Syntax_Syntax.bv_eq bv bv') -> begin
 Some (r)
 end
-| uu____475 -> begin
+| uu____473 -> begin
 None
 end)))
 in (match (x) with
 | None -> begin
 (
 
-let uu____476 = (
+let uu____474 = (
 
-let uu____477 = (FStar_Range.string_of_range bv.FStar_Syntax_Syntax.ppname.FStar_Ident.idRange)
+let uu____475 = (FStar_Range.string_of_range bv.FStar_Syntax_Syntax.ppname.FStar_Ident.idRange)
 in (
 
-let uu____478 = (FStar_Syntax_Print.bv_to_string bv)
-in (FStar_Util.format2 "(%s) bound Variable %s not found\n" uu____477 uu____478)))
-in (failwith uu____476))
+let uu____476 = (FStar_Syntax_Print.bv_to_string bv)
+in (FStar_Util.format2 "(%s) bound Variable %s not found\n" uu____475 uu____476)))
+in (failwith uu____474))
 end
 | Some (y) -> begin
 y
@@ -313,14 +313,14 @@ let lookup : env  ->  (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Uti
 | FStar_Util.Inl (x) -> begin
 (
 
-let uu____500 = (lookup_bv g x)
-in ((uu____500), (None)))
+let uu____498 = (lookup_bv g x)
+in ((uu____498), (None)))
 end
 | FStar_Util.Inr (x) -> begin
 (
 
-let uu____503 = (lookup_fv g x)
-in ((uu____503), (x.FStar_Syntax_Syntax.fv_qual)))
+let uu____501 = (lookup_fv g x)
+in ((uu____501), (x.FStar_Syntax_Syntax.fv_qual)))
 end))
 
 
@@ -331,7 +331,7 @@ end
 | FStar_Syntax_Syntax.Tm_fvar (x) -> begin
 (lookup g (FStar_Util.Inr (x)))
 end
-| uu____519 -> begin
+| uu____517 -> begin
 (failwith "Impossible: lookup_term for a non-name")
 end))
 
@@ -356,8 +356,8 @@ in (
 let tcenv = (FStar_TypeChecker_Env.push_bv g.tcenv a)
 in (
 
-let uu___102_560 = g
-in {tcenv = tcenv; gamma = gamma; tydefs = uu___102_560.tydefs; currentModule = uu___102_560.currentModule}))))))
+let uu___103_558 = g
+in {tcenv = tcenv; gamma = gamma; tydefs = uu___103_558.tydefs; currentModule = uu___103_558.currentModule}))))))
 
 
 let extend_bv : env  ->  FStar_Syntax_Syntax.bv  ->  FStar_Extraction_ML_Syntax.mltyscheme  ->  Prims.bool  ->  Prims.bool  ->  Prims.bool  ->  env = (fun g x t_x add_unit is_rec mk_unit -> (
@@ -366,27 +366,27 @@ let ml_ty = (match (t_x) with
 | ([], t) -> begin
 t
 end
-| uu____582 -> begin
+| uu____580 -> begin
 FStar_Extraction_ML_Syntax.MLTY_Top
 end)
 in (
 
 let mlx = (
 
-let uu____584 = (FStar_Extraction_ML_Syntax.bv_as_mlident x)
-in FStar_Extraction_ML_Syntax.MLE_Var (uu____584))
+let uu____582 = (FStar_Extraction_ML_Syntax.bv_as_mlident x)
+in FStar_Extraction_ML_Syntax.MLE_Var (uu____582))
 in (
 
 let mlx = (match (mk_unit) with
 | true -> begin
 FStar_Extraction_ML_Syntax.ml_unit
 end
-| uu____586 -> begin
+| uu____584 -> begin
 (match (add_unit) with
 | true -> begin
 (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top) (FStar_Extraction_ML_Syntax.MLE_App ((((FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top mlx)), ((FStar_Extraction_ML_Syntax.ml_unit)::[])))))
 end
-| uu____588 -> begin
+| uu____586 -> begin
 (FStar_Extraction_ML_Syntax.with_ty ml_ty mlx)
 end)
 end)
@@ -397,12 +397,12 @@ in (
 
 let tcenv = (
 
-let uu____604 = (FStar_Syntax_Syntax.binders_of_list ((x)::[]))
-in (FStar_TypeChecker_Env.push_binders g.tcenv uu____604))
+let uu____602 = (FStar_Syntax_Syntax.binders_of_list ((x)::[]))
+in (FStar_TypeChecker_Env.push_binders g.tcenv uu____602))
 in (
 
-let uu___103_605 = g
-in {tcenv = tcenv; gamma = gamma; tydefs = uu___103_605.tydefs; currentModule = uu___103_605.currentModule})))))))
+let uu___104_603 = g
+in {tcenv = tcenv; gamma = gamma; tydefs = uu___104_603.tydefs; currentModule = uu___104_603.currentModule})))))))
 
 
 let rec mltyFvars : FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlident Prims.list = (fun t -> (match (t) with
@@ -412,11 +412,11 @@ end
 | FStar_Extraction_ML_Syntax.MLTY_Fun (t1, f, t2) -> begin
 (
 
-let uu____616 = (mltyFvars t1)
+let uu____614 = (mltyFvars t1)
 in (
 
-let uu____618 = (mltyFvars t2)
-in (FStar_List.append uu____616 uu____618)))
+let uu____616 = (mltyFvars t2)
+in (FStar_List.append uu____614 uu____616)))
 end
 | FStar_Extraction_ML_Syntax.MLTY_Named (args, path) -> begin
 (FStar_List.collect mltyFvars args)
@@ -440,14 +440,14 @@ end))
 
 let tySchemeIsClosed : FStar_Extraction_ML_Syntax.mltyscheme  ->  Prims.bool = (fun tys -> (
 
-let uu____642 = (mltyFvars (Prims.snd tys))
-in (subsetMlidents uu____642 (Prims.fst tys))))
+let uu____640 = (mltyFvars (Prims.snd tys))
+in (subsetMlidents uu____640 (Prims.fst tys))))
 
 
 let extend_fv' : env  ->  FStar_Syntax_Syntax.fv  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mltyscheme  ->  Prims.bool  ->  Prims.bool  ->  env = (fun g x y t_x add_unit is_rec -> (
 
-let uu____662 = (tySchemeIsClosed t_x)
-in (match (uu____662) with
+let uu____660 = (tySchemeIsClosed t_x)
+in (match (uu____660) with
 | true -> begin
 (
 
@@ -455,15 +455,15 @@ let ml_ty = (match (t_x) with
 | ([], t) -> begin
 t
 end
-| uu____666 -> begin
+| uu____664 -> begin
 FStar_Extraction_ML_Syntax.MLTY_Top
 end)
 in (
 
 let mly = FStar_Extraction_ML_Syntax.MLE_Name ((
 
-let uu____668 = y
-in (match (uu____668) with
+let uu____666 = y
+in (match (uu____666) with
 | (ns, i) -> begin
 ((ns), ((FStar_Extraction_ML_Syntax.avoid_keyword i)))
 end)))
@@ -473,7 +473,7 @@ let mly = (match (add_unit) with
 | true -> begin
 (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top) (FStar_Extraction_ML_Syntax.MLE_App ((((FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top mly)), ((FStar_Extraction_ML_Syntax.ml_unit)::[])))))
 end
-| uu____676 -> begin
+| uu____674 -> begin
 (FStar_Extraction_ML_Syntax.with_ty ml_ty mly)
 end)
 in (
@@ -481,10 +481,10 @@ in (
 let gamma = (Fv (((x), (FStar_Util.Inr (((mly), (t_x), (is_rec)))))))::g.gamma
 in (
 
-let uu___104_691 = g
-in {tcenv = uu___104_691.tcenv; gamma = gamma; tydefs = uu___104_691.tydefs; currentModule = uu___104_691.currentModule})))))
+let uu___105_689 = g
+in {tcenv = uu___105_689.tcenv; gamma = gamma; tydefs = uu___105_689.tydefs; currentModule = uu___105_689.currentModule})))))
 end
-| uu____692 -> begin
+| uu____690 -> begin
 (failwith "freevars found")
 end)))
 
@@ -499,22 +499,22 @@ let extend_lb : env  ->  FStar_Syntax_Syntax.lbname  ->  FStar_Syntax_Syntax.typ
 | FStar_Util.Inl (x) -> begin
 (
 
-let uu____738 = (extend_bv g x t_x add_unit is_rec false)
+let uu____736 = (extend_bv g x t_x add_unit is_rec false)
 in (
 
-let uu____739 = (bv_as_ml_termvar x)
-in ((uu____738), (uu____739))))
+let uu____737 = (bv_as_ml_termvar x)
+in ((uu____736), (uu____737))))
 end
 | FStar_Util.Inr (f) -> begin
 (
 
-let uu____745 = (FStar_Extraction_ML_Syntax.mlpath_of_lident f.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
-in (match (uu____745) with
+let uu____743 = (FStar_Extraction_ML_Syntax.mlpath_of_lident f.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
+in (match (uu____743) with
 | (p, y) -> begin
 (
 
-let uu____756 = (extend_fv' g f ((p), (y)) t_x add_unit is_rec)
-in ((uu____756), ((((FStar_Extraction_ML_Syntax.avoid_keyword y)), ((Prims.parse_int "0"))))))
+let uu____754 = (extend_fv' g f ((p), (y)) t_x add_unit is_rec)
+in ((uu____754), ((((FStar_Extraction_ML_Syntax.avoid_keyword y)), ((Prims.parse_int "0"))))))
 end))
 end))
 
@@ -524,8 +524,8 @@ let extend_tydef : env  ->  FStar_Syntax_Syntax.fv  ->  FStar_Extraction_ML_Synt
 let m = (module_name_of_fv fv)
 in (
 
-let uu___105_771 = g
-in {tcenv = uu___105_771.tcenv; gamma = uu___105_771.gamma; tydefs = (((m), (td)))::g.tydefs; currentModule = uu___105_771.currentModule})))
+let uu___106_769 = g
+in {tcenv = uu___106_769.tcenv; gamma = uu___106_769.gamma; tydefs = (((m), (td)))::g.tydefs; currentModule = uu___106_769.currentModule})))
 
 
 let emptyMlPath : (FStar_Extraction_ML_Syntax.mlsymbol Prims.list * Prims.string) = (([]), (""))
@@ -542,20 +542,20 @@ in (
 let failwith_ty = (((a)::[]), (FStar_Extraction_ML_Syntax.MLTY_Fun (((FStar_Extraction_ML_Syntax.MLTY_Named ((([]), (((("Prims")::[]), ("string")))))), (FStar_Extraction_ML_Syntax.E_IMPURE), (FStar_Extraction_ML_Syntax.MLTY_Var (a))))))
 in (
 
-let uu____808 = (
+let uu____806 = (
 
-let uu____811 = (
+let uu____809 = (
 
-let uu____812 = (FStar_Syntax_Syntax.lid_as_fv FStar_Syntax_Const.failwith_lid FStar_Syntax_Syntax.Delta_constant None)
-in FStar_Util.Inr (uu____812))
-in (extend_lb env uu____811 FStar_Syntax_Syntax.tun failwith_ty false false))
-in (FStar_All.pipe_right uu____808 Prims.fst))))))
+let uu____810 = (FStar_Syntax_Syntax.lid_as_fv FStar_Syntax_Const.failwith_lid FStar_Syntax_Syntax.Delta_constant None)
+in FStar_Util.Inr (uu____810))
+in (extend_lb env uu____809 FStar_Syntax_Syntax.tun failwith_ty false false))
+in (FStar_All.pipe_right uu____806 Prims.fst))))))
 
 
 let monad_op_name : FStar_Syntax_Syntax.eff_decl  ->  Prims.string  ->  (FStar_Extraction_ML_Syntax.mlpath * FStar_Ident.lident) = (fun ed nm -> (
 
-let uu____823 = ((ed.FStar_Syntax_Syntax.mname.FStar_Ident.ns), (ed.FStar_Syntax_Syntax.mname.FStar_Ident.ident))
-in (match (uu____823) with
+let uu____821 = ((ed.FStar_Syntax_Syntax.mname.FStar_Ident.ns), (ed.FStar_Syntax_Syntax.mname.FStar_Ident.ident))
+in (match (uu____821) with
 | (module_name, eff_name) -> begin
 (
 

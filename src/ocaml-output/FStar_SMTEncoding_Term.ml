@@ -732,7 +732,7 @@ false
 end))
 
 
-let freevar_sort : term  ->  sort = (fun uu___82_710 -> (match (uu___82_710) with
+let freevar_sort : term  ->  sort = (fun uu___83_710 -> (match (uu___83_710) with
 | {tm = FreeV (x); freevars = uu____712; rng = uu____713} -> begin
 (fv_sort x)
 end
@@ -741,7 +741,7 @@ end
 end))
 
 
-let fv_of_term : term  ->  fv = (fun uu___83_723 -> (match (uu___83_723) with
+let fv_of_term : term  ->  fv = (fun uu___84_723 -> (match (uu___84_723) with
 | {tm = FreeV (fv); freevars = uu____725; rng = uu____726} -> begin
 fv
 end
@@ -785,7 +785,7 @@ fvs;
 end)))
 
 
-let qop_to_string : qop  ->  Prims.string = (fun uu___84_810 -> (match (uu___84_810) with
+let qop_to_string : qop  ->  Prims.string = (fun uu___85_810 -> (match (uu___85_810) with
 | Forall -> begin
 "forall"
 end
@@ -794,7 +794,7 @@ end
 end))
 
 
-let op_to_string : op  ->  Prims.string = (fun uu___85_813 -> (match (uu___85_813) with
+let op_to_string : op  ->  Prims.string = (fun uu___86_813 -> (match (uu___86_813) with
 | TrueOp -> begin
 "true"
 end
@@ -857,7 +857,7 @@ s
 end))
 
 
-let weightToSmt : Prims.int Prims.option  ->  Prims.string = (fun uu___86_818 -> (match (uu___86_818) with
+let weightToSmt : Prims.int Prims.option  ->  Prims.string = (fun uu___87_818 -> (match (uu___87_818) with
 | None -> begin
 ""
 end
@@ -1897,7 +1897,7 @@ end)))
 in (aux (Prims.parse_int "0") [] t))))
 
 
-let caption_to_string : Prims.string Prims.option  ->  Prims.string = (fun uu___87_2445 -> (match (uu___87_2445) with
+let caption_to_string : Prims.string Prims.option  ->  Prims.string = (fun uu___88_2445 -> (match (uu___88_2445) with
 | None -> begin
 ""
 end
@@ -1931,7 +1931,7 @@ end
 | Caption (c) -> begin
 (
 
-let uu____2474 = (FStar_All.pipe_right (FStar_Util.splitlines c) (fun uu___88_2476 -> (match (uu___88_2476) with
+let uu____2474 = (FStar_All.pipe_right (FStar_Util.splitlines c) (fun uu___89_2476 -> (match (uu___89_2476) with
 | [] -> begin
 ""
 end
@@ -2220,8 +2220,8 @@ end
 | App (Var ("Prims.b2t"), (t1)::[]) -> begin
 (
 
-let uu___89_2916 = (unboxBool t1)
-in {tm = uu___89_2916.tm; freevars = uu___89_2916.freevars; rng = t.rng})
+let uu___90_2916 = (unboxBool t1)
+in {tm = uu___90_2916.tm; freevars = uu___90_2916.freevars; rng = t.rng})
 end
 | uu____2919 -> begin
 (mkApp (("Valid"), ((t)::[])) t.rng)

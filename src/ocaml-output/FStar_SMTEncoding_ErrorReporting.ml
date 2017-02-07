@@ -145,8 +145,8 @@ end
 | Some (r) -> begin
 (
 
-let uu___98_297 = r
-in {FStar_Range.def_range = rng.FStar_Range.def_range; FStar_Range.use_range = uu___98_297.FStar_Range.use_range})
+let uu___99_297 = r
+in {FStar_Range.def_range = rng.FStar_Range.def_range; FStar_Range.use_range = uu___99_297.FStar_Range.use_range})
 end)
 in (fresh_label msg rng t))))
 in (

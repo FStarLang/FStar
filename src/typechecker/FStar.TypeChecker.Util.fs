@@ -32,7 +32,7 @@ open FStar.TypeChecker.Common
 
 type lcomp_with_binder = option<bv> * lcomp
 
-// VALS_HACK_HERE
+
 
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
@@ -144,11 +144,10 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 
         let res, must_check_ty = aux must_check_ty scope body in
         let c = match res with
-            | Inl t -> 
-	      begin match Env.try_lookup_effect_lid env Const.effect_ML_lid with
-		| None -> S.mk_Total t
-		| _ -> U.ml_comp t r //let rec without annotations default to being in the ML monad; TODO: revisit this
-	      end
+            | Inl t ->
+              if Options.ml_ish()
+              then U.ml_comp t r
+              else S.mk_Total t //let rec without annotations default to Tot, except if --MLish
             | Inr c -> c in
         let t = U.arrow bs c in
         if debug env Options.High

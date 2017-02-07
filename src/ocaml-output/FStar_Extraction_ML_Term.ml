@@ -1142,7 +1142,7 @@ in (match (uu____2098) with
 
 let uu____2326 = (
 
-let uu____2332 = (FStar_All.pipe_right (FStar_List.append tyMLPats restMLPats) (FStar_List.collect (fun uu___113_2357 -> (match (uu___113_2357) with
+let uu____2332 = (FStar_All.pipe_right (FStar_List.append tyMLPats restMLPats) (FStar_List.collect (fun uu___114_2357 -> (match (uu___114_2357) with
 | Some (x) -> begin
 (x)::[]
 end
@@ -1232,7 +1232,7 @@ in (match (uu____2600) with
 let ps = (p)::ps
 in (
 
-let uu____2661 = (FStar_All.pipe_right ps (FStar_List.partition (fun uu___114_2689 -> (match (uu___114_2689) with
+let uu____2661 = (FStar_All.pipe_right ps (FStar_List.partition (fun uu___115_2689 -> (match (uu___115_2689) with
 | (uu____2693, (uu____2694)::uu____2695) -> begin
 true
 end
@@ -1720,12 +1720,12 @@ end
 | FStar_Syntax_Syntax.Tm_app (head, args) -> begin
 (
 
-let is_total = (fun uu___116_3648 -> (match (uu___116_3648) with
+let is_total = (fun uu___117_3648 -> (match (uu___117_3648) with
 | FStar_Util.Inl (l) -> begin
 (FStar_Syntax_Util.is_total_lcomp l)
 end
 | FStar_Util.Inr (l, flags) -> begin
-((FStar_Ident.lid_equals l FStar_Syntax_Const.effect_Tot_lid) || (FStar_All.pipe_right flags (FStar_List.existsb (fun uu___115_3666 -> (match (uu___115_3666) with
+((FStar_Ident.lid_equals l FStar_Syntax_Const.effect_Tot_lid) || (FStar_All.pipe_right flags (FStar_List.existsb (fun uu___116_3666 -> (match (uu___116_3666) with
 | FStar_Syntax_Syntax.TOTAL -> begin
 true
 end
@@ -1983,14 +1983,14 @@ let head = (match (head_ml.FStar_Extraction_ML_Syntax.expr) with
 | (FStar_Extraction_ML_Syntax.MLE_Name (_)) | (FStar_Extraction_ML_Syntax.MLE_Var (_)) -> begin
 (
 
-let uu___120_4436 = head_ml
-in {FStar_Extraction_ML_Syntax.expr = uu___120_4436.FStar_Extraction_ML_Syntax.expr; FStar_Extraction_ML_Syntax.mlty = t; FStar_Extraction_ML_Syntax.loc = uu___120_4436.FStar_Extraction_ML_Syntax.loc})
+let uu___121_4436 = head_ml
+in {FStar_Extraction_ML_Syntax.expr = uu___121_4436.FStar_Extraction_ML_Syntax.expr; FStar_Extraction_ML_Syntax.mlty = t; FStar_Extraction_ML_Syntax.loc = uu___121_4436.FStar_Extraction_ML_Syntax.loc})
 end
 | FStar_Extraction_ML_Syntax.MLE_App (head, ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Const (FStar_Extraction_ML_Syntax.MLC_Unit); FStar_Extraction_ML_Syntax.mlty = uu____4438; FStar_Extraction_ML_Syntax.loc = uu____4439})::[]) -> begin
 (FStar_All.pipe_right (FStar_Extraction_ML_Syntax.MLE_App ((((
 
-let uu___121_4442 = head
-in {FStar_Extraction_ML_Syntax.expr = uu___121_4442.FStar_Extraction_ML_Syntax.expr; FStar_Extraction_ML_Syntax.mlty = FStar_Extraction_ML_Syntax.MLTY_Fun (((FStar_Extraction_ML_Syntax.ml_unit_ty), (FStar_Extraction_ML_Syntax.E_PURE), (t))); FStar_Extraction_ML_Syntax.loc = uu___121_4442.FStar_Extraction_ML_Syntax.loc})), ((FStar_Extraction_ML_Syntax.ml_unit)::[])))) (FStar_Extraction_ML_Syntax.with_ty t))
+let uu___122_4442 = head
+in {FStar_Extraction_ML_Syntax.expr = uu___122_4442.FStar_Extraction_ML_Syntax.expr; FStar_Extraction_ML_Syntax.mlty = FStar_Extraction_ML_Syntax.MLTY_Fun (((FStar_Extraction_ML_Syntax.ml_unit_ty), (FStar_Extraction_ML_Syntax.E_PURE), (t))); FStar_Extraction_ML_Syntax.loc = uu___122_4442.FStar_Extraction_ML_Syntax.loc})), ((FStar_Extraction_ML_Syntax.ml_unit)::[])))) (FStar_Extraction_ML_Syntax.with_ty t))
 end
 | uu____4443 -> begin
 (failwith "Impossible: Unexpected head term")
@@ -2088,8 +2088,8 @@ in (
 
 let lb = (
 
-let uu___122_4578 = lb
-in {FStar_Syntax_Syntax.lbname = FStar_Util.Inl (x); FStar_Syntax_Syntax.lbunivs = uu___122_4578.FStar_Syntax_Syntax.lbunivs; FStar_Syntax_Syntax.lbtyp = uu___122_4578.FStar_Syntax_Syntax.lbtyp; FStar_Syntax_Syntax.lbeff = uu___122_4578.FStar_Syntax_Syntax.lbeff; FStar_Syntax_Syntax.lbdef = uu___122_4578.FStar_Syntax_Syntax.lbdef})
+let uu___123_4578 = lb
+in {FStar_Syntax_Syntax.lbname = FStar_Util.Inl (x); FStar_Syntax_Syntax.lbunivs = uu___123_4578.FStar_Syntax_Syntax.lbunivs; FStar_Syntax_Syntax.lbtyp = uu___123_4578.FStar_Syntax_Syntax.lbtyp; FStar_Syntax_Syntax.lbeff = uu___123_4578.FStar_Syntax_Syntax.lbeff; FStar_Syntax_Syntax.lbdef = uu___123_4578.FStar_Syntax_Syntax.lbdef})
 in (
 
 let e' = (FStar_Syntax_Subst.subst ((FStar_Syntax_Syntax.DB ((((Prims.parse_int "0")), (x))))::[]) e')
@@ -2123,8 +2123,8 @@ end
 end))
 in (
 
-let uu___123_4607 = lb
-in {FStar_Syntax_Syntax.lbname = uu___123_4607.FStar_Syntax_Syntax.lbname; FStar_Syntax_Syntax.lbunivs = uu___123_4607.FStar_Syntax_Syntax.lbunivs; FStar_Syntax_Syntax.lbtyp = uu___123_4607.FStar_Syntax_Syntax.lbtyp; FStar_Syntax_Syntax.lbeff = uu___123_4607.FStar_Syntax_Syntax.lbeff; FStar_Syntax_Syntax.lbdef = lbdef}));
+let uu___124_4607 = lb
+in {FStar_Syntax_Syntax.lbname = uu___124_4607.FStar_Syntax_Syntax.lbname; FStar_Syntax_Syntax.lbunivs = uu___124_4607.FStar_Syntax_Syntax.lbunivs; FStar_Syntax_Syntax.lbtyp = uu___124_4607.FStar_Syntax_Syntax.lbtyp; FStar_Syntax_Syntax.lbeff = uu___124_4607.FStar_Syntax_Syntax.lbeff; FStar_Syntax_Syntax.lbdef = lbdef}));
 )))))
 end
 | uu____4608 -> begin
@@ -2712,7 +2712,7 @@ in (match (uu____6372) with
 | FStar_Syntax_Syntax.Tm_arrow (binders, uu____6382) -> begin
 (
 
-let uu____6393 = (FStar_All.pipe_right binders (FStar_List.filter (fun uu___117_6408 -> (match (uu___117_6408) with
+let uu____6393 = (FStar_All.pipe_right binders (FStar_List.filter (fun uu___118_6408 -> (match (uu___118_6408) with
 | (uu____6412, Some (FStar_Syntax_Syntax.Implicit (uu____6413))) -> begin
 true
 end
@@ -2750,41 +2750,62 @@ let uu____6464 = (
 
 let uu____6465 = (
 
-let uu____6473 = (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty targ) (FStar_Extraction_ML_Syntax.MLE_Name ((([]), ((FStar_Extraction_ML_Syntax.idsym mlid))))))
-in (
+let uu____6473 = (
+
+let uu____6474 = (
 
 let uu____6475 = (
 
-let uu____6481 = (
-
-let uu____6486 = (
-
-let uu____6487 = (
-
-let uu____6491 = (FStar_Extraction_ML_Syntax.mlpath_of_lident constrName)
-in ((uu____6491), ((FStar_Extraction_ML_Syntax.MLP_Wild)::[])))
-in FStar_Extraction_ML_Syntax.MLP_CTor (uu____6487))
+let uu____6476 = (FStar_Extraction_ML_Syntax.idsym mlid)
+in (([]), (uu____6476)))
+in FStar_Extraction_ML_Syntax.MLE_Name (uu____6475))
+in (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty targ) uu____6474))
 in (
 
-let uu____6493 = (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.ml_bool_ty) (FStar_Extraction_ML_Syntax.MLE_Const (FStar_Extraction_ML_Syntax.MLC_Bool (true))))
-in ((uu____6486), (None), (uu____6493))))
+let uu____6478 = (
+
+let uu____6484 = (
+
+let uu____6489 = (
+
+let uu____6490 = (
+
+let uu____6494 = (FStar_Extraction_ML_Syntax.mlpath_of_lident constrName)
+in ((uu____6494), ((FStar_Extraction_ML_Syntax.MLP_Wild)::[])))
+in FStar_Extraction_ML_Syntax.MLP_CTor (uu____6490))
 in (
 
-let uu____6495 = (
+let uu____6496 = (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.ml_bool_ty) (FStar_Extraction_ML_Syntax.MLE_Const (FStar_Extraction_ML_Syntax.MLC_Bool (true))))
+in ((uu____6489), (None), (uu____6496))))
+in (
 
-let uu____6501 = (
+let uu____6498 = (
 
-let uu____6506 = (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.ml_bool_ty) (FStar_Extraction_ML_Syntax.MLE_Const (FStar_Extraction_ML_Syntax.MLC_Bool (false))))
-in ((FStar_Extraction_ML_Syntax.MLP_Wild), (None), (uu____6506)))
-in (uu____6501)::[])
-in (uu____6481)::uu____6495))
-in ((uu____6473), (uu____6475))))
+let uu____6504 = (
+
+let uu____6509 = (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.ml_bool_ty) (FStar_Extraction_ML_Syntax.MLE_Const (FStar_Extraction_ML_Syntax.MLC_Bool (false))))
+in ((FStar_Extraction_ML_Syntax.MLP_Wild), (None), (uu____6509)))
+in (uu____6504)::[])
+in (uu____6484)::uu____6498))
+in ((uu____6473), (uu____6478))))
 in FStar_Extraction_ML_Syntax.MLE_Match (uu____6465))
 in (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.ml_bool_ty) uu____6464))
 in (((FStar_List.append wildcards ((((mlid), (targ)))::[]))), (uu____6463)))
 in FStar_Extraction_ML_Syntax.MLE_Fun (uu____6457))
 in (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty disc_ty) uu____6456))
-in FStar_Extraction_ML_Syntax.MLM_Let (((FStar_Extraction_ML_Syntax.NonRec), ([]), (({FStar_Extraction_ML_Syntax.mllb_name = (FStar_Extraction_ML_UEnv.convIdent discName.FStar_Ident.ident); FStar_Extraction_ML_Syntax.mllb_tysc = None; FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = discrBody; FStar_Extraction_ML_Syntax.print_typ = false})::[]))))))))
+in (
+
+let uu____6547 = (
+
+let uu____6548 = (
+
+let uu____6550 = (
+
+let uu____6551 = (FStar_Extraction_ML_UEnv.convIdent discName.FStar_Ident.ident)
+in {FStar_Extraction_ML_Syntax.mllb_name = uu____6551; FStar_Extraction_ML_Syntax.mllb_tysc = None; FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = discrBody; FStar_Extraction_ML_Syntax.print_typ = false})
+in (uu____6550)::[])
+in ((FStar_Extraction_ML_Syntax.NonRec), ([]), (uu____6548)))
+in FStar_Extraction_ML_Syntax.MLM_Let (uu____6547)))))))
 end)))
 
 

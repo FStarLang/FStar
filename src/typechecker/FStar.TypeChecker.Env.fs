@@ -29,6 +29,7 @@ open FStar.Range
 open FStar.Errors
 open FStar.TypeChecker.Common
 
+module S = FStar.Syntax.Syntax
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
 
@@ -101,7 +102,7 @@ and solver_t = {
 and guard_t = {
   guard_f:    guard_formula;
   deferred:   deferred;
-  univ_ineqs: list<univ_ineq>;
+  univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
 and implicits = list<(string * env * uvar * term * typ * Range.range)>
@@ -109,7 +110,7 @@ type env_t = env
 
 type sigtable = BU.smap<sigelt>
 
-// VALS_HACK_HERE
+
 
 let should_verify env =
     not env.lax
@@ -483,6 +484,7 @@ let try_lookup_lid_aux env lid =
 //        val is_record              : env -> lident -> bool
 //        val is_interpreted         : (env -> term -> bool)
 //        val is_type_constructor    : env -> lident -> bool
+//        val num_inductive_ty_params: env -> lident -> int
 //Each of these functions that returns a term ensures to update
 //the range information on the term with the currrent use-site
 ////////////////////////////////////////////////////////////////
@@ -536,8 +538,8 @@ let lookup_datacon env lid =
 
 let datacons_of_typ env lid =
   match lookup_qname env lid with
-    | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _), _)) -> dcs
-    | _ -> []
+    | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _), _)) -> true, dcs
+    | _ -> false, []
 
 let typ_of_datacon env lid =
   match lookup_qname env lid with
@@ -707,6 +709,11 @@ let is_type_constructor env lid =
       | Some b -> b
       | None -> false
 
+let num_inductive_ty_params env lid =
+  match lookup_qname env lid with
+  | Some (Inr (Sig_inductive_typ (_, _, tps, _, _, _, _, _), _)) -> List.length tps
+  | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
 ////////////////////////////////////////////////////////////
@@ -745,6 +752,21 @@ let wp_sig_aux decls m =
       | _ -> failwith "Impossible"
 
 let wp_signature env m = wp_sig_aux env.effects.decls m
+
+let null_wp_for_eff env eff_name (res_u:universe) (res_t:term) =
+    if lid_equals eff_name Const.effect_Tot_lid
+    then S.mk_Total' res_t (Some res_u)
+    else if lid_equals eff_name Const.effect_GTot_lid
+    then S.mk_GTotal' res_t (Some res_u)
+    else let eff_name = norm_eff_name env eff_name in
+         let ed = get_effect_decl env eff_name in
+         let null_wp = inst_effect_fun_with [res_u] env ed ed.null_wp in
+         let null_wp_res = Syntax.mk (Tm_app(null_wp, [S.as_arg res_t])) None (get_range env) in
+         Syntax.mk_Comp ({comp_univs=[res_u];
+                          effect_name=eff_name;
+                          result_typ=res_t;
+                          effect_args=[S.as_arg null_wp_res];
+                          flags=[]})
 
 let build_lattice env se = match se with
   | Sig_new_effect(ne, _) ->

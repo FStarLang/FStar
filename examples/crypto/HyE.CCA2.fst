@@ -4,7 +4,6 @@ open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.Monotonic.RRef
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Monotonic.Seq
 
 open FStar.List.Tot

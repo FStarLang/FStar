@@ -347,7 +347,7 @@ type subst_t = list<subst_elt>
 type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
 type mk_t = mk_t_a<term',term'>
 
-// VALS_HACK_HERE
+
 
 let contains_reflectable (l: list<qualifier>): bool =
     Util.for_some (function Reflectable _ -> true | _ -> false) l
@@ -365,6 +365,8 @@ let order_bv x y =
   then x.index - y.index
   else i
 
+let order_fv x y = String.compare x.str y.str
+
 let range_of_lbname (l:lbname) = match l with
     | Inl x -> x.ppname.idRange
     | Inr fv -> range_of_lid fv.fv_name.v
@@ -380,6 +382,7 @@ let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
+let new_fv_set () :set<lident> = Util.new_set order_fv (fun x -> Util.hashcode x.str)
 let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_id x - Unionfind.uvar_id y)
                                            (fun (x, _) -> Unionfind.uvar_id x)
 let new_universe_uvar_set () : set<universe_uvar> =
@@ -390,6 +393,7 @@ let new_universe_names_fifo_set () : fifo_set<univ_name> =
                  (fun x -> Util.hashcode (Ident.text_of_id x))
 
 let no_names  = new_bv_set()
+let no_fvars  = new_fv_set()
 let no_uvs : uvars = new_uv_set()
 let no_universe_uvars = new_universe_uvar_set()
 let no_universe_names = new_universe_names_fifo_set ()
@@ -413,7 +417,7 @@ let mk (t:'a) = fun (topt:option<'b>) r -> {
 }
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (Some bv.sort.n) (range_of_bv bv)
 let bv_to_name bv :term = mk (Tm_name bv) (Some bv.sort.n) (range_of_bv bv)
-let mk_Tm_app (t1:typ) (args:list<arg>) : mk_t = fun k p ->
+let mk_Tm_app (t1:typ) (args:list<arg>) k p =
     match args with
     | [] -> t1
     | _ -> mk (Tm_app (t1, args)) k p

@@ -17,7 +17,7 @@
 
 module FStar.SMTEncoding.Encode
 open FStar.All
-
+open Prims
 open FStar
 open FStar.TypeChecker.Env
 open FStar.Util
@@ -303,8 +303,10 @@ let head_redex env t =
 
 let whnf env t =
     if head_normal env t then t
-    else N.normalize [N.Beta; N.WHNF; N.Eager_unfolding; N.EraseUniverses] env.tcenv t
-let norm env t = N.normalize [N.Beta; N.Eager_unfolding; N.EraseUniverses] env.tcenv t
+    else N.normalize [N.Beta; N.WHNF; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
+                      N.Eager_unfolding; N.EraseUniverses] env.tcenv t
+let norm env t = N.normalize [N.Beta; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
+                              N.Eager_unfolding; N.EraseUniverses] env.tcenv t
 
 let trivial_post t : Syntax.term =
     U.abs [null_binder t]
@@ -812,18 +814,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         encode_match e pats mk_Term_unit env encode_term
 
 and encode_let
-    : bv -> typ -> S.term -> S.term -> env_t -> (S.term -> env_t -> term * decls_t) 
+    : bv -> typ -> S.term -> S.term -> env_t -> (S.term -> env_t -> term * decls_t)
     -> term * decls_t
     =
     fun x t1 e1 e2 env encode_body ->
-    let ee1, decls1 = encode_term e1 env in
-    let xs, e2 = SS.open_term [(x, None)] e2 in
-    let x, _ = List.hd xs in
-    let env' = push_term_var env x ee1 in
-    let ee2, decls2 = encode_body e2 env' in
-    ee2, decls1@decls2
+        let ee1, decls1 = encode_term e1 env in
+        let xs, e2 = SS.open_term [(x, None)] e2 in
+        let x, _ = List.hd xs in
+        let env' = push_term_var env x ee1 in
+        let ee2, decls2 = encode_body e2 env' in
+        ee2, decls1@decls2
 
-and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t) 
+and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t)
                  (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t =
     let scr, decls = encode_term e env in
     let match_tm, decls = List.fold_right (fun b (else_case, decls) ->
@@ -1005,12 +1007,12 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
             [] l in
         ({f phis with rng=r}, decls) in
 
-    let eq_op r : args -> (term * decls_t) = function
+    let eq_op r : Tot<(args -> (term * decls_t))> = function
         | [_; e1; e2]
         | [_;_;e1;e2] -> enc  (bin_op mkEq) r [e1;e2]
         | l -> enc (bin_op mkEq) r l in
 
-    let mk_imp r : args -> (term * decls_t) = function
+    let mk_imp r : Tot<(args -> (term * decls_t))> = function
         | [(lhs, _); (rhs, _)] ->
           let l1, decls1 = encode_formula rhs env in
           begin match l1.tm with
@@ -1021,7 +1023,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           end
          | _ -> failwith "impossible" in
 
-    let mk_ite  r: args -> (term * decls_t) = function
+    let mk_ite r: Tot<(args -> (term * decls_t))> = function
         | [(guard, _); (_then, _); (_else, _)] ->
           let (g, decls1) = encode_formula guard env in
           let (t, decls2) = encode_formula _then env in
@@ -1033,12 +1035,12 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
 
     let unboxInt_l : (list<term> -> term) -> list<term> -> term = fun f l -> f (List.map Term.unboxInt l) in
     let connectives = [
-        (Const.and_lid,   enc_prop_c <| bin_op mkAnd);
-        (Const.or_lid,    enc_prop_c <| bin_op mkOr);
+        (Const.and_lid,   enc_prop_c (bin_op mkAnd));
+        (Const.or_lid,    enc_prop_c (bin_op mkOr));
         (Const.imp_lid,   mk_imp);
-        (Const.iff_lid,   enc_prop_c <| bin_op mkIff);
+        (Const.iff_lid,   enc_prop_c (bin_op mkIff));
         (Const.ite_lid,   mk_ite);
-        (Const.not_lid,   enc_prop_c <| un_op mkNot);
+        (Const.not_lid,   enc_prop_c (un_op mkNot));
         (Const.eq2_lid,   eq_op);
         (Const.eq3_lid,   eq_op);
         (Const.true_lid,  const_op Term.mkTrue);
@@ -1510,48 +1512,50 @@ let encode_top_level_let :
         * bool          //if set, we should generate a curried application of f
         =
         let rec aux norm t_norm =
-            match (U.unascribe e).n with
-            | Tm_abs(binders, body, lopt) ->
-                let binders, body, opening = SS.open_term' binders body in
-                begin match (SS.compress t_norm).n with
-                    | Tm_arrow(formals, c) ->
-                        let formals, c = SS.open_comp formals c in
-                        let nformals = List.length formals in
-                        let nbinders = List.length binders in
-                        let tres = U.comp_result c in
-                        if nformals < nbinders && U.is_total_comp c (* explicit currying *)
-                        then let lopt = subst_lcomp_opt opening lopt in
-                             let bs0, rest = BU.first_N nformals binders in
-                             let c =
-                                 let subst = List.map2 (fun (b, _) (x, _) -> NT(b, S.bv_to_name x)) bs0 formals in
-                                 SS.subst_comp subst c in
-                             let body = U.abs rest body lopt in
-                             (bs0, body, bs0, U.comp_result c), false
-                        else if nformals > nbinders (* eta-expand before translating it *)
-                        then let binders, body = eta_expand binders formals body tres in
-                             (binders, body, formals, tres), false
-                        else (binders, body, formals, tres), false
+            let binders, body, lopt = U.abs_formals e in
+            match binders with
+            | _::_ -> begin
+                match (SS.compress t_norm).n with
+                | Tm_arrow(formals, c) ->
+                    let formals, c = SS.open_comp formals c in
+                    let nformals = List.length formals in
+                    let nbinders = List.length binders in
+                    let tres = U.comp_result c in
+                    if nformals < nbinders && U.is_total_comp c (* explicit currying *)
+                    then let bs0, rest = BU.first_N nformals binders in
+                            let c =
+                                let subst = List.map2 (fun (b, _) (x, _) -> NT(b, S.bv_to_name x)) bs0 formals in
+                                SS.subst_comp subst c in
+                            let body = U.abs rest body lopt in
+                            (bs0, body, bs0, U.comp_result c), false
+                    else if nformals > nbinders (* eta-expand before translating it *)
+                    then let binders, body = eta_expand binders formals body tres in
+                            (binders, body, formals, tres), false
+                    else (binders, body, formals, tres), false
 
-                    | Tm_refine(x, _) ->
-                        fst (aux norm x.sort), true
+                | Tm_refine(x, _) ->
+                    fst (aux norm x.sort), true
 
-                    | _ when not norm -> //have another go, after unfolding all definitions
-                        let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.WHNF; N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm in
-                        aux true t_norm
+                | _ when not norm -> //have another go, after unfolding all definitions
+                    let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.WHNF;
+                                              N.Exclude N.Zeta; //we don't know if this will terminate; so don't do recursive steps
+                                              N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm in
+                    aux true t_norm
 
-                    | _ ->
-                        failwith (BU.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n"
-                                flid.str (Print.term_to_string e) (Print.term_to_string t_norm))
-                end
-            | _ ->
-                begin match (SS.compress t_norm).n with
-                    | Tm_arrow(formals, c) ->
-                        let formals, c = SS.open_comp formals c in
-                        let tres = U.comp_result c in
-                        let binders, body = eta_expand [] formals e tres in
-                        (binders, body, formals, tres), false
-                    | _ -> ([], e, [], t_norm), false
-                end in
+                | _ ->
+                    failwith (BU.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n"
+                            flid.str (Print.term_to_string e) (Print.term_to_string t_norm))
+             end
+            | _ -> begin
+                match (SS.compress t_norm).n with
+                | Tm_arrow(formals, c) ->
+                    let formals, c = SS.open_comp formals c in
+                    let tres = U.comp_result c in
+                    let binders, body = eta_expand [] formals e tres in
+                    (binders, body, formals, tres), false
+                | _ -> ([], e, [], t_norm), false
+              end
+        in
         aux false t_norm in
     try
         if bindings |> BU.for_all (fun lb -> U.is_lemma lb.lbtyp)
@@ -1607,8 +1611,17 @@ let encode_top_level_let :
                     let env = push_free_var env flid gtok (Some <| mkApp(g, [fuel_tm])) in
                     (flid, f, ftok, g, gtok)::gtoks, env) ([], env) in
                 let gtoks = List.rev gtoks in
-                let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm ({lbdef=e}) =
+                let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm ({lbname=lbn; lbdef=e}) =
+                    if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
+                    then BU.print3 "Encoding let rec %s : %s = %s\n"
+                                (Print.lbname_to_string lbn)
+                                (Print.term_to_string t_norm)
+                                (Print.term_to_string e);
                     let (binders, body, formals, tres), curry = destruct_bound_function flid t_norm e in
+                    if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
+                    then BU.print2 "Encoding let rec: binders=[%s], body=%s\n"
+                                      (Print.binders_to_string ", " binders)
+                                      (Print.term_to_string body);
                     let _ = if curry then failwith "Unexpected type of let rec in SMT Encoding; expected it to be annotated with an arrow type" in
                     let vars, guards, env', binder_decls, _ = encode_binders None binders env in
                     let decl_g = Term.DeclFun(g, Fuel_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
@@ -1647,8 +1660,8 @@ let encode_top_level_let :
                                             Some ("token_correspondence_"^g))] in
                     binder_decls@aux_decls, typing_corr@[tok_corr] in
                     binder_decls@decls2@aux_decls@[decl_g;decl_g_tok], [eqn_g;eqn_g';eqn_f]@g_typing, env0 in
-                let decls, eqns, env0 = List.fold_left (fun (decls, eqns, env0) (gtok, ty, bs) ->
-                    let decls', eqns', env0 = encode_one_binding env0 gtok ty bs in
+                let decls, eqns, env0 = List.fold_left (fun (decls, eqns, env0) (gtok, ty, lb) ->
+                    let decls', eqns', env0 = encode_one_binding env0 gtok ty lb in
                     decls'::decls, eqns'@eqns, env0) ([decls], [], env0) (List.zip3 gtoks typs bindings) in
                 let prefix_decls, rest = decls |> List.flatten |> List.partition (function
                     | DeclFun _ -> true
@@ -1673,12 +1686,6 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | _ -> Caption (format1 "<Start encoding %s>" nm)::g@[Caption (format1 "</end encoding %s>" nm)], e
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
-    let should_skip (l:lident) = false in
-//        U.starts_with l.str "Prims.pure_"
-//        || U.starts_with l.str "Prims.ex_"
-//        || U.starts_with l.str "Prims.st_"
-//        || U.starts_with l.str "Prims.all_"
-
     match se with
      | Sig_new_effect_for_free _ ->
          failwith "impossible -- removed by tc.fs"
@@ -1797,7 +1804,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           encode_sigelt env se
      end
 
-    | Sig_let((false, [lb]), _, _, quals, _) when (quals |> List.contains Reifiable) ->
+    (* KM : Experimental remove of the false here, I guess more care should be given in order *)
+    (* to prevent the SMT solver from calling this recursively !!! *)
+    | Sig_let((is_rec, [lb]), _, _, quals, _) when (quals |> List.contains Reifiable) ->
       (* This let binding has been declared reifiable so we have to generate a *)
       (* pure reified version of it that can be encoded by the SMT. The reified *)
       (* version should not contain any reify at all after normalization. *)
@@ -1813,11 +1822,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             U.arrow formals (S.mk_Total reified_typ)
           in
           let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in
-          BU.print3 "%s: Reified %s\nto %s\n"
-                (Print.lbname_to_string lb.lbname)
-                (Print.term_to_string tm)
-                (Print.term_to_string tm');
-          encode_top_level_let env (false, [lb]) quals
+          if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
+          then BU.print3 "%s: Reified %s\nto %s\n"
+                         (Print.lbname_to_string lb.lbname)
+                         (Print.term_to_string tm)
+                         (Print.term_to_string tm');
+          encode_top_level_let env (is_rec, [lb]) quals
         | _ -> [], env
       end
 

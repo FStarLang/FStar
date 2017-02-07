@@ -35,7 +35,7 @@ _0
 end))
 
 
-let z3version_as_string : z3version  ->  Prims.string = (fun uu___90_48 -> (match (uu___90_48) with
+let z3version_as_string : z3version  ->  Prims.string = (fun uu___91_48 -> (match (uu___91_48) with
 | Z3V_Unknown (s) -> begin
 (FStar_Util.format1 "unknown version: %s" s)
 end
@@ -281,7 +281,7 @@ false
 end))
 
 
-let status_to_string : z3status  ->  Prims.string = (fun uu___91_248 -> (match (uu___91_248) with
+let status_to_string : z3status  ->  Prims.string = (fun uu___92_248 -> (match (uu___92_248) with
 | SAT (uu____249) -> begin
 "sat"
 end
@@ -856,7 +856,7 @@ res;
 
 let z3_job : Prims.bool  ->  ((label * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list  ->  Prims.string  ->  Prims.unit  ->  ((unsat_core, (FStar_SMTEncoding_Term.error_labels * error_kind)) FStar_Util.either * Prims.int) = (fun fresh label_messages input uu____1060 -> (
 
-let ekind = (fun uu___92_1076 -> (match (uu___92_1076) with
+let ekind = (fun uu___93_1076 -> (match (uu___93_1076) with
 | TIMEOUT (uu____1077) -> begin
 Timeout
 end
@@ -1101,7 +1101,7 @@ in (FStar_ST.write bg_scope uu____1556));
 ))
 
 
-let giveZ3 : FStar_SMTEncoding_Term.decl Prims.list  ->  Prims.unit = (fun decls -> ((FStar_All.pipe_right decls (FStar_List.iter (fun uu___93_1573 -> (match (uu___93_1573) with
+let giveZ3 : FStar_SMTEncoding_Term.decl Prims.list  ->  Prims.unit = (fun decls -> ((FStar_All.pipe_right decls (FStar_List.iter (fun uu___94_1573 -> (match (uu___94_1573) with
 | (FStar_SMTEncoding_Term.Push) | (FStar_SMTEncoding_Term.Pop) -> begin
 (failwith "Unexpected push/pop")
 end
@@ -1219,7 +1219,7 @@ let missed = (
 
 let uu____1815 = (FStar_All.pipe_right core (FStar_List.filter (fun nm -> (
 
-let uu____1820 = (FStar_All.pipe_right th (FStar_Util.for_some (fun uu___94_1822 -> (match (uu___94_1822) with
+let uu____1820 = (FStar_All.pipe_right th (FStar_Util.for_some (fun uu___95_1822 -> (match (uu___95_1822) with
 | FStar_SMTEncoding_Term.Assume (uu____1823, uu____1824, Some (nm')) -> begin
 (nm = nm')
 end
@@ -1232,7 +1232,7 @@ in (
 
 let included = (
 
-let uu____1830 = (FStar_All.pipe_right th (FStar_List.collect (fun uu___95_1834 -> (match (uu___95_1834) with
+let uu____1830 = (FStar_All.pipe_right th (FStar_List.collect (fun uu___96_1834 -> (match (uu___96_1834) with
 | FStar_SMTEncoding_Term.Assume (uu____1836, uu____1837, Some (nm)) -> begin
 (nm)::[]
 end

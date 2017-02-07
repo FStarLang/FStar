@@ -41,7 +41,7 @@ let uu____91 = (FStar_All.pipe_right tys (FStar_List.map (fun uu____101 -> (matc
 | (x, uu____106) -> begin
 x
 end))))
-in (FStar_All.pipe_right uu____91 (FStar_Util.for_some (fun uu___143_110 -> (match (uu___143_110) with
+in (FStar_All.pipe_right uu____91 (FStar_Util.for_some (fun uu___140_110 -> (match (uu___140_110) with
 | FStar_Parser_AST.TyconAbbrev (id', uu____112, uu____113, uu____114) -> begin
 (x.FStar_Ident.idText = id'.FStar_Ident.idText)
 end
@@ -96,7 +96,7 @@ in (FStar_List.append uu____230 impl))
 end
 | (d)::ds -> begin
 (match (d.FStar_Parser_AST.d) with
-| FStar_Parser_AST.Tycon (uu____240, tys) when (FStar_All.pipe_right tys (FStar_Util.for_some (fun uu___144_257 -> (match (uu___144_257) with
+| FStar_Parser_AST.Tycon (uu____240, tys) when (FStar_All.pipe_right tys (FStar_Util.for_some (fun uu___141_257 -> (match (uu___141_257) with
 | (FStar_Parser_AST.TyconAbstract (uu____261), uu____262) -> begin
 true
 end

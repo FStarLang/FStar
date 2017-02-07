@@ -30,7 +30,7 @@
 
 module FStar.Parser.Lexhelp
 open FStar.All
-
+open FStar.Mul
 open FStar
 open FStar.Util
 open FStar.Range
@@ -40,7 +40,7 @@ open FStar.Parser.Parse
 open FStar.BaseTypes
 
 let intern_string : string -> string =
-  let strings = Util.smap_create 100 in 
+  let strings = Util.smap_create 100 in
   fun s ->
     match Util.smap_try_find strings s with
       | Some res -> res

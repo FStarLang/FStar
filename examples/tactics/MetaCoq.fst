@@ -26,7 +26,6 @@ let idtac : tactic = fun g -> [g]
 
 let fail (e : exn) : tactic = fun g -> raise e
 
-(* CH: commented to 
 let ttry (t : tactic) : tactic = fun g ->
   try t g with | _ -> [g]
 
@@ -91,4 +90,3 @@ let select (t:Type) (f : t -> tactic) : tactic = fun g ->
   let g = goal_type g in
   admit()
   (* match_goal ([| (x : T) |- G |] => f x) g *)
-*)
