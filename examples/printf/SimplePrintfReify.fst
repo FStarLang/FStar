@@ -25,6 +25,8 @@ let bind_ex a b f g = fun _ ->
   | None -> None
   | Some x -> g x ()
 
+(* DMFF does not support yet polymorphic actions *)
+(* Returning something in [False] allow to derive the usual raise below *)
 let raise_ex (_:exn) : Tot (ex False) = fun _ -> None
 
 (* Define the new effect using DM4F *)
