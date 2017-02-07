@@ -407,12 +407,12 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     | [], _ -> t
     | _, Tm_arrow(_, c) -> U.comp_result c
     | _ -> failwith "Impossible" in
-  let close n ts =
+  let close env n ts =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme effect_params ts) in
     // We always close [bind_repr], even though it may be [Tm_unknown]
     // (non-reifiable, non-reflectable effect)
     let m = List.length (fst ts) in
-    if n >= 0 && not (is_unknown (snd ts)) && m <> n
+    if not env.lax_universes && n >= 0 && not (is_unknown (snd ts)) && m <> n
     then begin
         let error = if m < n then "not universe-polymorphic enough" else "too universe-polymorphic" in
         failwith (BU.format3
@@ -422,9 +422,9 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
                   (Print.tscheme_to_string ts))
     end ;
     ts in
-  let close_action act =
-    let univs, defn = close (-1) (act.action_univs, act.action_defn) in
-    let univs', typ = close (-1) (act.action_univs, act.action_typ) in
+  let close_action env act =
+    let univs, defn = close env (-1) (act.action_univs, act.action_defn) in
+    let univs', typ = close env (-1) (act.action_univs, act.action_typ) in
     assert (List.length univs = List.length univs');
     { act with
         action_univs=univs;
@@ -436,20 +436,20 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
       univs       = univs
     ; binders     = effect_params
     ; signature   = signature
-    ; ret_wp      = close 0 return_wp
-    ; bind_wp     = close 1 bind_wp
-    ; if_then_else= close 0 if_then_else
-    ; ite_wp      = close 0 ite_wp
-    ; stronger    = close 0 stronger
-    ; close_wp    = close 1 close_wp
-    ; assert_p    = close 0 assert_p
-    ; assume_p    = close 0 assume_p
-    ; null_wp     = close 0 null_wp
-    ; trivial     = close 0 trivial_wp
-    ; repr        = (snd (close 0 ([], repr)))
-    ; return_repr = close 0 return_repr
-    ; bind_repr   = close 1 bind_repr
-    ; actions     = List.map close_action actions} in
+    ; ret_wp      = close env 0 return_wp
+    ; bind_wp     = close env 1 bind_wp
+    ; if_then_else= close env 0 if_then_else
+    ; ite_wp      = close env 0 ite_wp
+    ; stronger    = close env 0 stronger
+    ; close_wp    = close env 1 close_wp
+    ; assert_p    = close env 0 assert_p
+    ; assume_p    = close env 0 assume_p
+    ; null_wp     = close env 0 null_wp
+    ; trivial     = close env 0 trivial_wp
+    ; repr        = (snd (close env 0 ([], repr)))
+    ; return_repr = close env 0 return_repr
+    ; bind_repr   = close env 1 bind_repr
+    ; actions     = List.map (close_action env) actions} in
 
   if Env.debug env Options.Low
   || Env.debug env <| Options.Other "ED"
@@ -949,7 +949,7 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
         | [], Tm_arrow(_, c) -> [], c
         | _,  Tm_arrow(tps, c) -> tps, c
         | _ -> failwith "Impossible" in
-      if List.length uvs <> 1
+      if not env.lax_universes && List.length uvs <> 1
       && not (Ident.lid_equals lid Const.effect_Lemma_lid)
       then (let _, t = Subst.open_univ_vars uvs t in
             raise (Error(BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
@@ -1284,43 +1284,92 @@ let check_exports env (modul:modul) exports =
     then ()
     else List.iter check_sigelt exports
 
-
-let finish_partial_modul env modul exports =
+(*
+ * AR: in two phase, we don't want to encode the module to the SMT solver after the first phase
+ *     control that using the encode flag
+ *)
+let finish_partial_modul env modul exports encode =
   let modul = {modul with exports=exports; is_interface=modul.is_interface} in
   let env = Env.finish_module env modul in
   if not (Options.lax())
   then check_exports env modul exports;
   env.solver.pop ("Ending modul " ^ modul.name.str);
-  env.solver.encode_modul env modul;
-  env.solver.refresh();
+  if encode then begin
+      env.solver.encode_modul env modul;
+      env.solver.refresh()
+  end
+  else ();
   //interactive mode manages it itself
   let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
   modul, env
 
-let tc_modul env modul =
+let tc_modul env modul encode =
   let modul, non_private_decls, env = tc_partial_modul env modul in
-  finish_partial_modul env modul non_private_decls
+  finish_partial_modul env modul non_private_decls encode
 
 let check_module env m =
+    //save the copy of env with lax set as false
+    let env0 = env in
+    //set lax to true for the first phase
+    let env = { env with lax = true } in
+    Options.set_option "lax" (Options.Bool true);
+
+    //save the qualifiers for the letbindings
+    let let_quals = List.fold_left (fun l d ->
+      match d with
+      | Sig_let (_, _, lids, quals, _) -> (lids, quals)::l
+      | _                              -> l
+    ) [] m.declarations in
+
     if Options.debug_any()
     then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
     let env = {env with lax=not (Options.should_verify m.name.str)} in
-    let m, env = tc_modul env m in
+    //in the first phase, encode only if prims
+    let m, env = tc_modul env m (lid_equals m.name Const.prims_lid) in
     if Options.dump_module m.name.str
     then BU.print1 "%s\n" (Print.modul_to_string m);
-    if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
-    then begin
-      let normalize_toplevel_lets = function
-          | Sig_let ((b, lbs), r, ids, qs, attrs) ->
-              let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
-              let update lb =
-                  let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
-                  { lb with lbdef = n (Env.push_univ_vars env univnames) e }
-              in
-              Sig_let ((b, List.map update lbs), r, ids, qs, attrs)
-          | se -> se
-      in
-      let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
-      BU.print1 "%s\n" (Print.modul_to_string normalized_module)
-    end;
+    //now we will work on env0
+    let m, env =
+        if (lid_equals m.name Const.prims_lid) then m, env
+        else begin
+            env0.solver.refresh ();
+            //env0.solver.init env0;
+            //set lax to false for the second phase
+            let env0 = { env0 with lax = false; lax_universes = true } in
+            Options.set_option "lax" (Options.Bool false);
+
+            let lids_to_string l = List.fold (fun s l -> s ^ "; " ^ l.str) "" l in
+            //reset the qualifiers
+            let decls = List.fold (fun l d ->
+              match d with
+              | Sig_let (p1, p2, lids, _, p3) ->
+                (match List.find (fun (lids', _) -> lids' = lids) let_quals with
+                 | Some v -> let (_, quals) = v in l @ [Sig_let (p1, p2, lids, quals, p3)]
+                 | None   -> l)                
+              | _ -> l @ [d]
+            ) [] m.declarations in
+            let m = { m with declarations = decls } in
+
+            //second phase, so encode to the SMT solver
+            tc_modul env0 m true
+        end
+    in
+    if Options.dump_module m.name.str
+    then BU.print1 "%s\n" (Print.modul_to_string m);
+
+//    if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
+//    then begin
+//      let normalize_toplevel_lets = function
+//          | Sig_let ((b, lbs), r, ids, qs, attrs) ->
+//              let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
+//              let update lb =
+//                  let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
+//                  { lb with lbdef = n (Env.push_univ_vars env univnames) e }
+//              in
+//              Sig_let ((b, List.map update lbs), r, ids, qs, attrs)
+//          | se -> se
+//      in
+//      let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
+//      BU.print1 "%s\n" (Print.modul_to_string normalized_module)
+//    end;
     m, env

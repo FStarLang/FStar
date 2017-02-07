@@ -2508,7 +2508,8 @@ let rec solve_deferred_constraints env (g:guard_t) =
    let g = match solve_and_commit env wl fail with
     | Some [] -> {g with deferred=[]}
     | _ -> failwith "impossible: Unexpected deferred constraints remain" in
-   solve_universe_inequalities env g.univ_ineqs;
+   if not env.lax_universes then
+     solve_universe_inequalities env g.univ_ineqs;
    {g with univ_ineqs=([], [])}
 
 //use_smt flag says whether to use the smt solver to discharge this guard
