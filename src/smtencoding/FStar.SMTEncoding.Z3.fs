@@ -169,7 +169,7 @@ let bg_z3_proc =
         let ctr = BU.mk_ref (-1) in
         fun () -> new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) in
     let z3proc () =
-      if !the_z3proc = None then
+      (*if !the_z3proc = None then*)
         the_z3proc := Some (new_proc ());
       must (!the_z3proc) in
     let x : list<unit> = [] in
@@ -245,9 +245,12 @@ let doZ3Exe' (input:string) =
   let stdout = BU.launch_process ((Options.z3_exe())) (ini_params()) input in
   parse (BU.trim_string stdout)
 
-let doZ3Exe (fresh:bool) (input:string) =
-    let res = doZ3Exe' input in
-    res
+let doZ3Exe =
+    let ctr = BU.mk_ref 0 in
+    fun (fresh:bool) (input:string) ->
+        let res = doZ3Exe' input in
+        //Printf.printf "z3-%A says %s\n"  (get_z3version()) (status_to_string (fst res));
+        res
 
 let z3_options () =
     "(set-option :global-decls false)\
@@ -298,7 +301,10 @@ let z3_job fresh label_messages input () : either<unsat_core, (error_labels * er
         Inr (failing_assertions, ekind status), elapsed_time in
     result
 
+let running = BU.mk_ref false
+
 let rec dequeue' () =
+    (*print_string (BU.string_of_int (List.length !job_queue));*)
     let j = match !job_queue with
         | [] -> failwith "Impossible"
         | hd::tl ->
@@ -307,22 +313,29 @@ let rec dequeue' () =
     incr pending_jobs;
     BU.monitor_exit job_queue;
     run_job j;
-    with_monitor job_queue (fun () -> decr pending_jobs);
-    dequeue(); ()
+    with_monitor job_queue (fun () -> decr pending_jobs); dequeue (); ()
 
-and dequeue () =
+and dequeue () = match !running with
+  | true ->
+    (*BU.print_string "====deq1====";*)
     BU.monitor_enter (job_queue);
+    (*BU.print_string "----deq2----";*)
     let rec aux () = match !job_queue with
         | [] ->
+          BU.monitor_exit job_queue;
+          (*BU.print_string "waiting..";*)
           BU.monitor_wait(job_queue);
           aux ()
         | _ -> dequeue'() in
     aux()
+  | false -> (*BU.print_string "false"*) ()
 
 and run_job j = j.callback <| j.job ()
 
 let init () =
-    let n_runners = (Options.n_cores()) - 1 in
+    running := true;
+    let n_cores = (Options.n_cores()) in
+    let n_runners = if n_cores > 1 then n_cores else 1 in
     let rec aux n =
         if n = 0 then ()
         else (spawn dequeue; aux (n - 1)) in
@@ -340,14 +353,14 @@ let enqueue fresh j =
     end
 
 let finish () =
-    let bg = bg_z3_proc.grab() in
-    BU.kill_process bg;
-    bg_z3_proc.release();
+    (*BU.print_string "finish";*)
     let rec aux () =
+        (*BU.print_string "finish";*)
         let n, m = with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue)  in
+        (*BU.print2 "size: %s - %s" (string_of_int n) (string_of_int m);*)
         //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
         if n+m=0
-        then FStar.Errors.report_all() |> ignore
+        then (running := false;FStar.Errors.report_all() |> ignore)
         else let _ = BU.sleep(500) in
              aux() in
     aux()
@@ -465,9 +478,9 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
                          (BU.string_of_int n_pruned)
       end;
       theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true in
-  let theory = bgtheory false in
+  let theory = bgtheory true in
   let theory = theory@[Term.Push]@qry@[Term.Pop] in
-  let theory, used_unsat_core = filter_assertions theory in
+  let theory, used_unsat_core = (theory, false) (*filter_assertions theory*) in
   let cb (uc_errs, time) =
     if used_unsat_core
     then match uc_errs with
@@ -476,5 +489,6 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
     else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
   if Options.log_queries() then query_logging.append_to_log input;
-  enqueue false ({job=z3_job true label_messages input; callback=cb})
+  enqueue true({job=z3_job true label_messages input; callback=cb})
+
 

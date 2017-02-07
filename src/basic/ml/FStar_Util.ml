@@ -84,36 +84,39 @@ let write_input in_write input =
   output_string in_write input;
   flush in_write
 
-let read_output out_read =
+let launch_process prog args input =
+  let cmd = prog^" "^args in
+  let (to_chd_r, to_chd_w) = Unix.pipe () in
+  let (from_chd_r, from_chd_w) = Unix.pipe () in
+  Unix.set_close_on_exec to_chd_w;
+  Unix.set_close_on_exec from_chd_r;
+  let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
+                               to_chd_r from_chd_w Unix.stderr
+  in
+  Unix.close from_chd_w;
+  Unix.close to_chd_r;
+  let cin = Unix.in_channel_of_descr from_chd_r in
+  let cout = Unix.out_channel_of_descr to_chd_w in
+
+  (* parallel reading thread *)
   let out = Buffer.create 16 in
   let rec read_out _ =
     try
-      let s = BatString.trim (input_line out_read) in
+      let s = BatString.trim (input_line cin) in
       if s = "Done!" then ()
       else (Buffer.add_string out (s ^ "\n"); read_out ())
     with End_of_file -> Buffer.add_string out ("\nkilled\n")
   in
   let child_thread = Thread.create (fun _ -> read_out ()) () in
-  Thread.join child_thread;
-  Buffer.contents out
 
-let launch_process prog args input =
-  let cmd = prog^" "^args in
-  let (out_read, out_write) = Unix.pipe () in
-  let (in_read, in_write) = Unix.pipe () in
-  let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
-                                in_read out_write out_write
-  in
-  let inc = Unix.out_channel_of_descr in_write in
-  write_input inc input;
-  (*let _ = Unix.waitpid [] (-1) in*)
-  let oc = Unix.in_channel_of_descr out_read in
-  let outt = read_output oc in
-  Unix.close out_read;
-  Unix.close out_write;
-  Unix.close in_read;
-  Unix.close in_write;
-  outt
+  (* writing to z3 *)
+  write_input cout input;
+  close_out cout;
+
+  (* waiting for z3 to finish *)
+  Thread.join child_thread;
+  close_in cin;
+  Buffer.contents out
 
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
   let command = prog^" "^args in
