@@ -18,11 +18,7 @@ reifiable let p1 x y hi =
     write x (read x + read y) 
   else 
     write x (read x + read y + read hi);
-  write x (read x - read hi);
-  write x (read x);
-  write x (read x)
-  (* adding more copies of this line causes an extreme blow-up in verification
-  time and RAM usage... related to #389? *)
+  write x (read x - read hi)
 
 let p1_r x y hi h = (* normalize_term *) (snd (reify (p1 x y hi) h))
 
