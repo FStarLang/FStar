@@ -1,6 +1,5 @@
 
 open Prims
-
 type source_t =
 | JS_Statement of statement_t 
  and statement_t =
@@ -8,70 +7,45 @@ type source_t =
 | JSS_Block of statement_t Prims.list
 | JSS_Expression of expression_t
 | JSS_If of (expression_t * statement_t * statement_t Prims.option)
-| JSS_With of (expression_t * statement_t)
-| JSS_TypeAlias of (identifier_t * param_decl_t Prims.option * typ)
-| JSS_Switch of (expression_t * (expression_t Prims.option * statement_t Prims.list) Prims.list)
+| JSS_TypeAlias of ((Prims.string * typ Prims.option) * Prims.string Prims.list Prims.option * typ)
 | JSS_Return of expression_t Prims.option
 | JSS_Throw of expression_t
-| JSS_Try of (statement_t Prims.list * (pattern_t * statement_t Prims.list) Prims.option)
-| JSS_FunctionDeclaration of function_t
 | JSS_VariableDeclaration of ((pattern_t * expression_t Prims.option) * kind_var_t)
-| JSS_ExportDefaultDeclaration of export_default_declaration_t
-| JSS_ImportDeclaration of import_declaration_t
+| JSS_ExportDefaultDeclaration of (declaration * export_kind)
+| JSS_ImportDeclaration of (Prims.string * typ Prims.option)
 | JSS_Seq of statement_t Prims.list 
  and expression_t =
 | JSE_Array of expression_t Prims.list Prims.option
 | JSE_Object of property_obj_t Prims.list
-| JSE_Function of function_t
-| JSE_ArrowFunction of function_t
-| JSE_Sequence of expression_t Prims.list
+| JSE_ArrowFunction of ((Prims.string * typ Prims.option) Prims.option * pattern_t Prims.list * body_t * typ Prims.option * Prims.string Prims.list Prims.option)
 | JSE_Unary of (op_un * expression_t)
 | JSE_Binary of (op_bin * expression_t * expression_t)
 | JSE_Assignment of (pattern_t * expression_t)
 | JSE_Logical of (op_log * expression_t * expression_t)
 | JSE_Call of (expression_t * expression_t Prims.list)
 | JSE_Member of (expression_t * propmem_t)
-| JSE_Identifier of identifier_t
-| JSE_Literal of literal_t
+| JSE_Identifier of (Prims.string * typ Prims.option)
+| JSE_Literal of (value_t * Prims.string)
 | JSE_TypeCast of (expression_t * typ) 
  and op_un =
 | JSU_Minus
-| JSU_Plus
-| JSU_Not
-| JSU_BitNot
-| JSU_Typeof
-| JSU_Void
-| JSU_Delete
-| JSU_Await 
+| JSU_Not 
  and op_bin =
 | JSB_Equal
 | JSB_NotEqual
-| JSB_StrictEqual
-| JSB_StrictNotEqual
 | JSB_LessThan
 | JSB_LessThanEqual
 | JSB_GreaterThan
 | JSB_GreaterThanEqual
-| JSB_LShift
-| JSB_RShift
-| JSB_RShift3
 | JSB_Plus
 | JSB_Minus
 | JSB_Mult
-| JSB_Exp
 | JSB_Div
 | JSB_Mod
-| JSB_BitOr
-| JSB_Xor
-| JSB_BitAnd
-| JSB_In
-| JSB_Instanceof 
+| JSB_StrictEqual 
  and op_log =
 | JSL_Or
 | JSL_And 
- and forinit_t =
-| JSF_Declaration of ((pattern_t * expression_t Prims.option) Prims.list * kind_var_t)
-| JSF_Expression of expression_t 
  and kind_var_t =
 | JSV_Var
 | JSV_Let
@@ -84,33 +58,23 @@ type source_t =
 | JSPO_Property of (object_prop_key_t * expression_t * kind_obj_t)
 | JSPO_SpreadProperty of expression_t 
  and propmem_t =
-| JSPM_Identifier of identifier_t
+| JSPM_Identifier of (Prims.string * typ Prims.option)
 | JSPM_Expression of expression_t 
  and typ =
 | JST_Any
-| JST_Mixed
-| JST_Empty
 | JST_Void
 | JST_Null
 | JST_Number
 | JST_String
 | JST_Boolean
-| JST_Nullable of typ
-| JST_Function of ((identifier_t * typ) Prims.list * typ * param_decl_t Prims.option)
-| JST_Object of ((object_prop_key_t * typ) Prims.list * (identifier_t * typ * typ) Prims.list * function_t Prims.list)
+| JST_Function of (((Prims.string * typ Prims.option) * typ) Prims.list * typ * Prims.string Prims.list Prims.option)
+| JST_Object of (object_prop_key_t * typ) Prims.list
 | JST_Array of typ
-| JST_Generic of (generic_t * typ Prims.list Prims.option)
+| JST_Generic of (Prims.string * typ Prims.list Prims.option)
 | JST_Union of typ Prims.list
 | JST_Intersection of typ Prims.list
-| JST_Typeof of typ
 | JST_Tuple of typ Prims.list
-| JST_StringLiteral of (Prims.string * Prims.string)
-| JST_NumberLiteral of (FStar_BaseTypes.float * Prims.string)
-| JST_BooleanLiteral of (Prims.bool * Prims.string)
-| JST_Exists 
- and generic_t =
-| Unqualified of identifier_t
-| Qualified of (generic_t * identifier_t) 
+| JST_StringLiteral of (Prims.string * Prims.string) 
  and body_t =
 | JS_BodyBlock of statement_t Prims.list
 | JS_BodyExpression of expression_t 
@@ -119,1515 +83,1059 @@ type source_t =
 | JSV_Boolean of Prims.bool
 | JSV_Null
 | JSV_Number of FStar_BaseTypes.float 
- and predicate_t =
-| JSP_Declared of expression_t
-| JSP_Inferred 
  and pattern_t =
-| JGP_Object of (property_t Prims.list * typ Prims.option)
-| JGP_Array of (pattern_t Prims.list Prims.option * typ Prims.option)
-| JGP_Assignment of (pattern_t * expression_t)
-| JGP_Identifier of identifier_t
+| JGP_Identifier of (Prims.string * typ Prims.option)
 | JGP_Expression of expression_t 
  and property_t =
 | JSP_SpreadProperty of pattern_t
 | JSP_Property of (object_prop_key_t * pattern_t) 
  and object_prop_key_t =
-| JSO_Literal of literal_t
-| JSO_Identifier of identifier_t
+| JSO_Literal of (value_t * Prims.string)
+| JSO_Identifier of (Prims.string * typ Prims.option)
 | JSO_Computed of expression_t 
  and declaration =
 | JSE_Declaration of statement_t
 | JSE_Expression of expression_t 
  and export_kind =
 | ExportType
-| ExportValue 
- and t =
-source_t Prims.list 
- and identifier_t =
-(Prims.string * typ Prims.option) 
- and function_t =
-(identifier_t Prims.option * pattern_t Prims.list * body_t * typ Prims.option * param_decl_t Prims.option) 
- and literal_t =
-(value_t * Prims.string) 
- and param_decl_t =
-Prims.string Prims.list 
- and export_default_declaration_t =
-(declaration * export_kind) 
- and import_declaration_t =
-identifier_t
+| ExportValue
 
 
-let is_JS_Statement = (fun _discr_ -> (match (_discr_) with
-| JS_Statement (_) -> begin
-true
-end
-| _ -> begin
-false
-end))
+let uu___is_JS_Statement : source_t  ->  Prims.bool = (fun projectee -> true)
 
 
-let is_JSS_Empty = (fun _discr_ -> (match (_discr_) with
-| JSS_Empty (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JS_Statement__item___0 : source_t  ->  statement_t = (fun projectee -> (match (projectee) with
+| JS_Statement (_0) -> begin
+_0
 end))
 
 
-let is_JSS_Block = (fun _discr_ -> (match (_discr_) with
-| JSS_Block (_) -> begin
+let uu___is_JSS_Empty : statement_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSS_Empty -> begin
 true
 end
-| _ -> begin
+| uu____261 -> begin
 false
 end))
 
 
-let is_JSS_Expression = (fun _discr_ -> (match (_discr_) with
-| JSS_Expression (_) -> begin
+let uu___is_JSS_Block : statement_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSS_Block (_0) -> begin
 true
 end
-| _ -> begin
+| uu____267 -> begin
 false
 end))
 
 
-let is_JSS_If = (fun _discr_ -> (match (_discr_) with
-| JSS_If (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSS_Block__item___0 : statement_t  ->  statement_t Prims.list = (fun projectee -> (match (projectee) with
+| JSS_Block (_0) -> begin
+_0
 end))
 
 
-let is_JSS_With = (fun _discr_ -> (match (_discr_) with
-| JSS_With (_) -> begin
+let uu___is_JSS_Expression : statement_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSS_Expression (_0) -> begin
 true
 end
-| _ -> begin
+| uu____282 -> begin
 false
 end))
 
 
-let is_JSS_TypeAlias = (fun _discr_ -> (match (_discr_) with
-| JSS_TypeAlias (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSS_Expression__item___0 : statement_t  ->  expression_t = (fun projectee -> (match (projectee) with
+| JSS_Expression (_0) -> begin
+_0
 end))
 
 
-let is_JSS_Switch = (fun _discr_ -> (match (_discr_) with
-| JSS_Switch (_) -> begin
+let uu___is_JSS_If : statement_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSS_If (_0) -> begin
 true
 end
-| _ -> begin
+| uu____298 -> begin
 false
 end))
 
 
-let is_JSS_Return = (fun _discr_ -> (match (_discr_) with
-| JSS_Return (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSS_If__item___0 : statement_t  ->  (expression_t * statement_t * statement_t Prims.option) = (fun projectee -> (match (projectee) with
+| JSS_If (_0) -> begin
+_0
 end))
 
 
-let is_JSS_Throw = (fun _discr_ -> (match (_discr_) with
-| JSS_Throw (_) -> begin
+let uu___is_JSS_TypeAlias : statement_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSS_TypeAlias (_0) -> begin
 true
 end
-| _ -> begin
+| uu____330 -> begin
 false
 end))
 
 
-let is_JSS_Try = (fun _discr_ -> (match (_discr_) with
-| JSS_Try (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSS_TypeAlias__item___0 : statement_t  ->  ((Prims.string * typ Prims.option) * Prims.string Prims.list Prims.option * typ) = (fun projectee -> (match (projectee) with
+| JSS_TypeAlias (_0) -> begin
+_0
 end))
 
 
-let is_JSS_FunctionDeclaration = (fun _discr_ -> (match (_discr_) with
-| JSS_FunctionDeclaration (_) -> begin
+let uu___is_JSS_Return : statement_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSS_Return (_0) -> begin
 true
 end
-| _ -> begin
+| uu____367 -> begin
 false
 end))
 
 
-let is_JSS_VariableDeclaration = (fun _discr_ -> (match (_discr_) with
-| JSS_VariableDeclaration (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSS_Return__item___0 : statement_t  ->  expression_t Prims.option = (fun projectee -> (match (projectee) with
+| JSS_Return (_0) -> begin
+_0
 end))
 
 
-let is_JSS_ExportDefaultDeclaration = (fun _discr_ -> (match (_discr_) with
-| JSS_ExportDefaultDeclaration (_) -> begin
+let uu___is_JSS_Throw : statement_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSS_Throw (_0) -> begin
 true
 end
-| _ -> begin
+| uu____382 -> begin
 false
 end))
 
 
-let is_JSS_ImportDeclaration = (fun _discr_ -> (match (_discr_) with
-| JSS_ImportDeclaration (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSS_Throw__item___0 : statement_t  ->  expression_t = (fun projectee -> (match (projectee) with
+| JSS_Throw (_0) -> begin
+_0
 end))
 
 
-let is_JSS_Seq = (fun _discr_ -> (match (_discr_) with
-| JSS_Seq (_) -> begin
+let uu___is_JSS_VariableDeclaration : statement_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSS_VariableDeclaration (_0) -> begin
 true
 end
-| _ -> begin
+| uu____399 -> begin
 false
 end))
 
 
-let is_JSE_Array = (fun _discr_ -> (match (_discr_) with
-| JSE_Array (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSS_VariableDeclaration__item___0 : statement_t  ->  ((pattern_t * expression_t Prims.option) * kind_var_t) = (fun projectee -> (match (projectee) with
+| JSS_VariableDeclaration (_0) -> begin
+_0
 end))
 
 
-let is_JSE_Object = (fun _discr_ -> (match (_discr_) with
-| JSE_Object (_) -> begin
+let uu___is_JSS_ExportDefaultDeclaration : statement_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSS_ExportDefaultDeclaration (_0) -> begin
 true
 end
-| _ -> begin
+| uu____428 -> begin
 false
 end))
 
 
-let is_JSE_Function = (fun _discr_ -> (match (_discr_) with
-| JSE_Function (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSS_ExportDefaultDeclaration__item___0 : statement_t  ->  (declaration * export_kind) = (fun projectee -> (match (projectee) with
+| JSS_ExportDefaultDeclaration (_0) -> begin
+_0
 end))
 
 
-let is_JSE_ArrowFunction = (fun _discr_ -> (match (_discr_) with
-| JSE_ArrowFunction (_) -> begin
+let uu___is_JSS_ImportDeclaration : statement_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSS_ImportDeclaration (_0) -> begin
 true
 end
-| _ -> begin
+| uu____449 -> begin
 false
 end))
 
 
-let is_JSE_Sequence = (fun _discr_ -> (match (_discr_) with
-| JSE_Sequence (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSS_ImportDeclaration__item___0 : statement_t  ->  (Prims.string * typ Prims.option) = (fun projectee -> (match (projectee) with
+| JSS_ImportDeclaration (_0) -> begin
+_0
 end))
 
 
-let is_JSE_Unary = (fun _discr_ -> (match (_discr_) with
-| JSE_Unary (_) -> begin
+let uu___is_JSS_Seq : statement_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSS_Seq (_0) -> begin
 true
 end
-| _ -> begin
+| uu____471 -> begin
 false
 end))
 
 
-let is_JSE_Binary = (fun _discr_ -> (match (_discr_) with
-| JSE_Binary (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSS_Seq__item___0 : statement_t  ->  statement_t Prims.list = (fun projectee -> (match (projectee) with
+| JSS_Seq (_0) -> begin
+_0
 end))
 
 
-let is_JSE_Assignment = (fun _discr_ -> (match (_discr_) with
-| JSE_Assignment (_) -> begin
+let uu___is_JSE_Array : expression_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_Array (_0) -> begin
 true
 end
-| _ -> begin
+| uu____488 -> begin
 false
 end))
 
 
-let is_JSE_Logical = (fun _discr_ -> (match (_discr_) with
-| JSE_Logical (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSE_Array__item___0 : expression_t  ->  expression_t Prims.list Prims.option = (fun projectee -> (match (projectee) with
+| JSE_Array (_0) -> begin
+_0
 end))
 
 
-let is_JSE_Call = (fun _discr_ -> (match (_discr_) with
-| JSE_Call (_) -> begin
+let uu___is_JSE_Object : expression_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_Object (_0) -> begin
 true
 end
-| _ -> begin
+| uu____507 -> begin
 false
 end))
 
 
-let is_JSE_Member = (fun _discr_ -> (match (_discr_) with
-| JSE_Member (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSE_Object__item___0 : expression_t  ->  property_obj_t Prims.list = (fun projectee -> (match (projectee) with
+| JSE_Object (_0) -> begin
+_0
 end))
 
 
-let is_JSE_Identifier = (fun _discr_ -> (match (_discr_) with
-| JSE_Identifier (_) -> begin
+let uu___is_JSE_ArrowFunction : expression_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_ArrowFunction (_0) -> begin
 true
 end
-| _ -> begin
+| uu____535 -> begin
 false
 end))
 
 
-let is_JSE_Literal = (fun _discr_ -> (match (_discr_) with
-| JSE_Literal (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSE_ArrowFunction__item___0 : expression_t  ->  ((Prims.string * typ Prims.option) Prims.option * pattern_t Prims.list * body_t * typ Prims.option * Prims.string Prims.list Prims.option) = (fun projectee -> (match (projectee) with
+| JSE_ArrowFunction (_0) -> begin
+_0
 end))
 
 
-let is_JSE_TypeCast = (fun _discr_ -> (match (_discr_) with
-| JSE_TypeCast (_) -> begin
+let uu___is_JSE_Unary : expression_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_Unary (_0) -> begin
 true
 end
-| _ -> begin
+| uu____588 -> begin
 false
 end))
 
 
-let is_JSU_Minus = (fun _discr_ -> (match (_discr_) with
-| JSU_Minus (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSE_Unary__item___0 : expression_t  ->  (op_un * expression_t) = (fun projectee -> (match (projectee) with
+| JSE_Unary (_0) -> begin
+_0
 end))
 
 
-let is_JSU_Plus = (fun _discr_ -> (match (_discr_) with
-| JSU_Plus (_) -> begin
+let uu___is_JSE_Binary : expression_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_Binary (_0) -> begin
 true
 end
-| _ -> begin
+| uu____609 -> begin
 false
 end))
 
 
-let is_JSU_Not = (fun _discr_ -> (match (_discr_) with
-| JSU_Not (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSE_Binary__item___0 : expression_t  ->  (op_bin * expression_t * expression_t) = (fun projectee -> (match (projectee) with
+| JSE_Binary (_0) -> begin
+_0
 end))
 
 
-let is_JSU_BitNot = (fun _discr_ -> (match (_discr_) with
-| JSU_BitNot (_) -> begin
+let uu___is_JSE_Assignment : expression_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_Assignment (_0) -> begin
 true
 end
-| _ -> begin
+| uu____632 -> begin
 false
 end))
 
 
-let is_JSU_Typeof = (fun _discr_ -> (match (_discr_) with
-| JSU_Typeof (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSE_Assignment__item___0 : expression_t  ->  (pattern_t * expression_t) = (fun projectee -> (match (projectee) with
+| JSE_Assignment (_0) -> begin
+_0
 end))
 
 
-let is_JSU_Void = (fun _discr_ -> (match (_discr_) with
-| JSU_Void (_) -> begin
+let uu___is_JSE_Logical : expression_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_Logical (_0) -> begin
 true
 end
-| _ -> begin
+| uu____653 -> begin
 false
 end))
 
 
-let is_JSU_Delete = (fun _discr_ -> (match (_discr_) with
-| JSU_Delete (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSE_Logical__item___0 : expression_t  ->  (op_log * expression_t * expression_t) = (fun projectee -> (match (projectee) with
+| JSE_Logical (_0) -> begin
+_0
 end))
 
 
-let is_JSU_Await = (fun _discr_ -> (match (_discr_) with
-| JSU_Await (_) -> begin
+let uu___is_JSE_Call : expression_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_Call (_0) -> begin
 true
 end
-| _ -> begin
+| uu____677 -> begin
 false
 end))
 
 
-let is_JSB_Equal = (fun _discr_ -> (match (_discr_) with
-| JSB_Equal (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSE_Call__item___0 : expression_t  ->  (expression_t * expression_t Prims.list) = (fun projectee -> (match (projectee) with
+| JSE_Call (_0) -> begin
+_0
 end))
 
 
-let is_JSB_NotEqual = (fun _discr_ -> (match (_discr_) with
-| JSB_NotEqual (_) -> begin
+let uu___is_JSE_Member : expression_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_Member (_0) -> begin
 true
 end
-| _ -> begin
+| uu____700 -> begin
 false
 end))
 
 
-let is_JSB_StrictEqual = (fun _discr_ -> (match (_discr_) with
-| JSB_StrictEqual (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSE_Member__item___0 : expression_t  ->  (expression_t * propmem_t) = (fun projectee -> (match (projectee) with
+| JSE_Member (_0) -> begin
+_0
 end))
 
 
-let is_JSB_StrictNotEqual = (fun _discr_ -> (match (_discr_) with
-| JSB_StrictNotEqual (_) -> begin
+let uu___is_JSE_Identifier : expression_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_Identifier (_0) -> begin
 true
 end
-| _ -> begin
+| uu____721 -> begin
 false
 end))
 
 
-let is_JSB_LessThan = (fun _discr_ -> (match (_discr_) with
-| JSB_LessThan (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSE_Identifier__item___0 : expression_t  ->  (Prims.string * typ Prims.option) = (fun projectee -> (match (projectee) with
+| JSE_Identifier (_0) -> begin
+_0
 end))
 
 
-let is_JSB_LessThanEqual = (fun _discr_ -> (match (_discr_) with
-| JSB_LessThanEqual (_) -> begin
+let uu___is_JSE_Literal : expression_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_Literal (_0) -> begin
 true
 end
-| _ -> begin
+| uu____744 -> begin
 false
 end))
 
 
-let is_JSB_GreaterThan = (fun _discr_ -> (match (_discr_) with
-| JSB_GreaterThan (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSE_Literal__item___0 : expression_t  ->  (value_t * Prims.string) = (fun projectee -> (match (projectee) with
+| JSE_Literal (_0) -> begin
+_0
 end))
 
 
-let is_JSB_GreaterThanEqual = (fun _discr_ -> (match (_discr_) with
-| JSB_GreaterThanEqual (_) -> begin
+let uu___is_JSE_TypeCast : expression_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_TypeCast (_0) -> begin
 true
 end
-| _ -> begin
+| uu____764 -> begin
 false
 end))
 
 
-let is_JSB_LShift = (fun _discr_ -> (match (_discr_) with
-| JSB_LShift (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSE_TypeCast__item___0 : expression_t  ->  (expression_t * typ) = (fun projectee -> (match (projectee) with
+| JSE_TypeCast (_0) -> begin
+_0
 end))
 
 
-let is_JSB_RShift = (fun _discr_ -> (match (_discr_) with
-| JSB_RShift (_) -> begin
+let uu___is_JSU_Minus : op_un  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSU_Minus -> begin
 true
 end
-| _ -> begin
+| uu____781 -> begin
 false
 end))
 
 
-let is_JSB_RShift3 = (fun _discr_ -> (match (_discr_) with
-| JSB_RShift3 (_) -> begin
+let uu___is_JSU_Not : op_un  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSU_Not -> begin
 true
 end
-| _ -> begin
+| uu____785 -> begin
 false
 end))
 
 
-let is_JSB_Plus = (fun _discr_ -> (match (_discr_) with
-| JSB_Plus (_) -> begin
+let uu___is_JSB_Equal : op_bin  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSB_Equal -> begin
 true
 end
-| _ -> begin
+| uu____789 -> begin
 false
 end))
 
 
-let is_JSB_Minus = (fun _discr_ -> (match (_discr_) with
-| JSB_Minus (_) -> begin
+let uu___is_JSB_NotEqual : op_bin  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSB_NotEqual -> begin
 true
 end
-| _ -> begin
+| uu____793 -> begin
 false
 end))
 
 
-let is_JSB_Mult = (fun _discr_ -> (match (_discr_) with
-| JSB_Mult (_) -> begin
+let uu___is_JSB_LessThan : op_bin  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSB_LessThan -> begin
 true
 end
-| _ -> begin
+| uu____797 -> begin
 false
 end))
 
 
-let is_JSB_Exp = (fun _discr_ -> (match (_discr_) with
-| JSB_Exp (_) -> begin
+let uu___is_JSB_LessThanEqual : op_bin  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSB_LessThanEqual -> begin
 true
 end
-| _ -> begin
+| uu____801 -> begin
 false
 end))
 
 
-let is_JSB_Div = (fun _discr_ -> (match (_discr_) with
-| JSB_Div (_) -> begin
+let uu___is_JSB_GreaterThan : op_bin  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSB_GreaterThan -> begin
 true
 end
-| _ -> begin
+| uu____805 -> begin
 false
 end))
 
 
-let is_JSB_Mod = (fun _discr_ -> (match (_discr_) with
-| JSB_Mod (_) -> begin
+let uu___is_JSB_GreaterThanEqual : op_bin  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSB_GreaterThanEqual -> begin
 true
 end
-| _ -> begin
+| uu____809 -> begin
 false
 end))
 
 
-let is_JSB_BitOr = (fun _discr_ -> (match (_discr_) with
-| JSB_BitOr (_) -> begin
+let uu___is_JSB_Plus : op_bin  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSB_Plus -> begin
 true
 end
-| _ -> begin
+| uu____813 -> begin
 false
 end))
 
 
-let is_JSB_Xor = (fun _discr_ -> (match (_discr_) with
-| JSB_Xor (_) -> begin
+let uu___is_JSB_Minus : op_bin  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSB_Minus -> begin
 true
 end
-| _ -> begin
+| uu____817 -> begin
 false
 end))
 
 
-let is_JSB_BitAnd = (fun _discr_ -> (match (_discr_) with
-| JSB_BitAnd (_) -> begin
+let uu___is_JSB_Mult : op_bin  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSB_Mult -> begin
 true
 end
-| _ -> begin
+| uu____821 -> begin
 false
 end))
 
 
-let is_JSB_In = (fun _discr_ -> (match (_discr_) with
-| JSB_In (_) -> begin
+let uu___is_JSB_Div : op_bin  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSB_Div -> begin
 true
 end
-| _ -> begin
+| uu____825 -> begin
 false
 end))
 
 
-let is_JSB_Instanceof = (fun _discr_ -> (match (_discr_) with
-| JSB_Instanceof (_) -> begin
+let uu___is_JSB_Mod : op_bin  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSB_Mod -> begin
 true
 end
-| _ -> begin
+| uu____829 -> begin
 false
 end))
 
 
-let is_JSL_Or = (fun _discr_ -> (match (_discr_) with
-| JSL_Or (_) -> begin
+let uu___is_JSB_StrictEqual : op_bin  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSB_StrictEqual -> begin
 true
 end
-| _ -> begin
+| uu____833 -> begin
 false
 end))
 
 
-let is_JSL_And = (fun _discr_ -> (match (_discr_) with
-| JSL_And (_) -> begin
+let uu___is_JSL_Or : op_log  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSL_Or -> begin
 true
 end
-| _ -> begin
+| uu____837 -> begin
 false
 end))
 
 
-let is_JSF_Declaration = (fun _discr_ -> (match (_discr_) with
-| JSF_Declaration (_) -> begin
+let uu___is_JSL_And : op_log  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSL_And -> begin
 true
 end
-| _ -> begin
+| uu____841 -> begin
 false
 end))
 
 
-let is_JSF_Expression = (fun _discr_ -> (match (_discr_) with
-| JSF_Expression (_) -> begin
+let uu___is_JSV_Var : kind_var_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSV_Var -> begin
 true
 end
-| _ -> begin
+| uu____845 -> begin
 false
 end))
 
 
-let is_JSV_Var = (fun _discr_ -> (match (_discr_) with
-| JSV_Var (_) -> begin
+let uu___is_JSV_Let : kind_var_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSV_Let -> begin
 true
 end
-| _ -> begin
+| uu____849 -> begin
 false
 end))
 
 
-let is_JSV_Let = (fun _discr_ -> (match (_discr_) with
-| JSV_Let (_) -> begin
+let uu___is_JSV_Const : kind_var_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSV_Const -> begin
 true
 end
-| _ -> begin
+| uu____853 -> begin
 false
 end))
 
 
-let is_JSV_Const = (fun _discr_ -> (match (_discr_) with
-| JSV_Const (_) -> begin
+let uu___is_JSO_Init : kind_obj_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSO_Init -> begin
 true
 end
-| _ -> begin
+| uu____857 -> begin
 false
 end))
 
 
-let is_JSO_Init = (fun _discr_ -> (match (_discr_) with
-| JSO_Init (_) -> begin
+let uu___is_JSO_Get : kind_obj_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSO_Get -> begin
 true
 end
-| _ -> begin
+| uu____861 -> begin
 false
 end))
 
 
-let is_JSO_Get = (fun _discr_ -> (match (_discr_) with
-| JSO_Get (_) -> begin
+let uu___is_JSO_Set : kind_obj_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSO_Set -> begin
 true
 end
-| _ -> begin
+| uu____865 -> begin
 false
 end))
 
 
-let is_JSO_Set = (fun _discr_ -> (match (_discr_) with
-| JSO_Set (_) -> begin
+let uu___is_JSPO_Property : property_obj_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSPO_Property (_0) -> begin
 true
 end
-| _ -> begin
+| uu____873 -> begin
 false
 end))
 
 
-let is_JSPO_Property = (fun _discr_ -> (match (_discr_) with
-| JSPO_Property (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSPO_Property__item___0 : property_obj_t  ->  (object_prop_key_t * expression_t * kind_obj_t) = (fun projectee -> (match (projectee) with
+| JSPO_Property (_0) -> begin
+_0
 end))
 
 
-let is_JSPO_SpreadProperty = (fun _discr_ -> (match (_discr_) with
-| JSPO_SpreadProperty (_) -> begin
+let uu___is_JSPO_SpreadProperty : property_obj_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSPO_SpreadProperty (_0) -> begin
 true
 end
-| _ -> begin
+| uu____894 -> begin
 false
 end))
 
 
-let is_JSPM_Identifier = (fun _discr_ -> (match (_discr_) with
-| JSPM_Identifier (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSPO_SpreadProperty__item___0 : property_obj_t  ->  expression_t = (fun projectee -> (match (projectee) with
+| JSPO_SpreadProperty (_0) -> begin
+_0
 end))
 
 
-let is_JSPM_Expression = (fun _discr_ -> (match (_discr_) with
-| JSPM_Expression (_) -> begin
+let uu___is_JSPM_Identifier : propmem_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSPM_Identifier (_0) -> begin
 true
 end
-| _ -> begin
+| uu____909 -> begin
 false
 end))
 
 
-let is_JST_Any = (fun _discr_ -> (match (_discr_) with
-| JST_Any (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSPM_Identifier__item___0 : propmem_t  ->  (Prims.string * typ Prims.option) = (fun projectee -> (match (projectee) with
+| JSPM_Identifier (_0) -> begin
+_0
 end))
 
 
-let is_JST_Mixed = (fun _discr_ -> (match (_discr_) with
-| JST_Mixed (_) -> begin
+let uu___is_JSPM_Expression : propmem_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSPM_Expression (_0) -> begin
 true
 end
-| _ -> begin
+| uu____930 -> begin
 false
 end))
 
 
-let is_JST_Empty = (fun _discr_ -> (match (_discr_) with
-| JST_Empty (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSPM_Expression__item___0 : propmem_t  ->  expression_t = (fun projectee -> (match (projectee) with
+| JSPM_Expression (_0) -> begin
+_0
 end))
 
 
-let is_JST_Void = (fun _discr_ -> (match (_discr_) with
-| JST_Void (_) -> begin
+let uu___is_JST_Any : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_Any -> begin
 true
 end
-| _ -> begin
+| uu____941 -> begin
 false
 end))
 
 
-let is_JST_Null = (fun _discr_ -> (match (_discr_) with
-| JST_Null (_) -> begin
+let uu___is_JST_Void : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_Void -> begin
 true
 end
-| _ -> begin
+| uu____945 -> begin
 false
 end))
 
 
-let is_JST_Number = (fun _discr_ -> (match (_discr_) with
-| JST_Number (_) -> begin
+let uu___is_JST_Null : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_Null -> begin
 true
 end
-| _ -> begin
+| uu____949 -> begin
 false
 end))
 
 
-let is_JST_String = (fun _discr_ -> (match (_discr_) with
-| JST_String (_) -> begin
+let uu___is_JST_Number : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_Number -> begin
 true
 end
-| _ -> begin
+| uu____953 -> begin
 false
 end))
 
 
-let is_JST_Boolean = (fun _discr_ -> (match (_discr_) with
-| JST_Boolean (_) -> begin
+let uu___is_JST_String : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_String -> begin
 true
 end
-| _ -> begin
+| uu____957 -> begin
 false
 end))
 
 
-let is_JST_Nullable = (fun _discr_ -> (match (_discr_) with
-| JST_Nullable (_) -> begin
+let uu___is_JST_Boolean : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_Boolean -> begin
 true
 end
-| _ -> begin
+| uu____961 -> begin
 false
 end))
 
 
-let is_JST_Function = (fun _discr_ -> (match (_discr_) with
-| JST_Function (_) -> begin
+let uu___is_JST_Function : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_Function (_0) -> begin
 true
 end
-| _ -> begin
+| uu____977 -> begin
 false
 end))
 
 
-let is_JST_Object = (fun _discr_ -> (match (_discr_) with
-| JST_Object (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JST_Function__item___0 : typ  ->  (((Prims.string * typ Prims.option) * typ) Prims.list * typ * Prims.string Prims.list Prims.option) = (fun projectee -> (match (projectee) with
+| JST_Function (_0) -> begin
+_0
 end))
 
 
-let is_JST_Array = (fun _discr_ -> (match (_discr_) with
-| JST_Array (_) -> begin
+let uu___is_JST_Object : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_Object (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1025 -> begin
 false
 end))
 
 
-let is_JST_Generic = (fun _discr_ -> (match (_discr_) with
-| JST_Generic (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JST_Object__item___0 : typ  ->  (object_prop_key_t * typ) Prims.list = (fun projectee -> (match (projectee) with
+| JST_Object (_0) -> begin
+_0
 end))
 
 
-let is_JST_Union = (fun _discr_ -> (match (_discr_) with
-| JST_Union (_) -> begin
+let uu___is_JST_Array : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_Array (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1046 -> begin
 false
 end))
 
 
-let is_JST_Intersection = (fun _discr_ -> (match (_discr_) with
-| JST_Intersection (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JST_Array__item___0 : typ  ->  typ = (fun projectee -> (match (projectee) with
+| JST_Array (_0) -> begin
+_0
 end))
 
 
-let is_JST_Typeof = (fun _discr_ -> (match (_discr_) with
-| JST_Typeof (_) -> begin
+let uu___is_JST_Generic : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_Generic (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1062 -> begin
 false
 end))
 
 
-let is_JST_Tuple = (fun _discr_ -> (match (_discr_) with
-| JST_Tuple (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JST_Generic__item___0 : typ  ->  (Prims.string * typ Prims.list Prims.option) = (fun projectee -> (match (projectee) with
+| JST_Generic (_0) -> begin
+_0
 end))
 
 
-let is_JST_StringLiteral = (fun _discr_ -> (match (_discr_) with
-| JST_StringLiteral (_) -> begin
+let uu___is_JST_Union : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_Union (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1087 -> begin
 false
 end))
 
 
-let is_JST_NumberLiteral = (fun _discr_ -> (match (_discr_) with
-| JST_NumberLiteral (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JST_Union__item___0 : typ  ->  typ Prims.list = (fun projectee -> (match (projectee) with
+| JST_Union (_0) -> begin
+_0
 end))
 
 
-let is_JST_BooleanLiteral = (fun _discr_ -> (match (_discr_) with
-| JST_BooleanLiteral (_) -> begin
+let uu___is_JST_Intersection : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_Intersection (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1103 -> begin
 false
 end))
 
 
-let is_JST_Exists = (fun _discr_ -> (match (_discr_) with
-| JST_Exists (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JST_Intersection__item___0 : typ  ->  typ Prims.list = (fun projectee -> (match (projectee) with
+| JST_Intersection (_0) -> begin
+_0
 end))
 
 
-let is_Unqualified = (fun _discr_ -> (match (_discr_) with
-| Unqualified (_) -> begin
+let uu___is_JST_Tuple : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_Tuple (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1119 -> begin
 false
 end))
 
 
-let is_Qualified = (fun _discr_ -> (match (_discr_) with
-| Qualified (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JST_Tuple__item___0 : typ  ->  typ Prims.list = (fun projectee -> (match (projectee) with
+| JST_Tuple (_0) -> begin
+_0
 end))
 
 
-let is_JS_BodyBlock = (fun _discr_ -> (match (_discr_) with
-| JS_BodyBlock (_) -> begin
+let uu___is_JST_StringLiteral : typ  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JST_StringLiteral (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1136 -> begin
 false
 end))
 
 
-let is_JS_BodyExpression = (fun _discr_ -> (match (_discr_) with
-| JS_BodyExpression (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JST_StringLiteral__item___0 : typ  ->  (Prims.string * Prims.string) = (fun projectee -> (match (projectee) with
+| JST_StringLiteral (_0) -> begin
+_0
 end))
 
 
-let is_JSV_String = (fun _discr_ -> (match (_discr_) with
-| JSV_String (_) -> begin
+let uu___is_JS_BodyBlock : body_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JS_BodyBlock (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1155 -> begin
 false
 end))
 
 
-let is_JSV_Boolean = (fun _discr_ -> (match (_discr_) with
-| JSV_Boolean (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JS_BodyBlock__item___0 : body_t  ->  statement_t Prims.list = (fun projectee -> (match (projectee) with
+| JS_BodyBlock (_0) -> begin
+_0
 end))
 
 
-let is_JSV_Null = (fun _discr_ -> (match (_discr_) with
-| JSV_Null (_) -> begin
+let uu___is_JS_BodyExpression : body_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JS_BodyExpression (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1170 -> begin
 false
 end))
 
 
-let is_JSV_Number = (fun _discr_ -> (match (_discr_) with
-| JSV_Number (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JS_BodyExpression__item___0 : body_t  ->  expression_t = (fun projectee -> (match (projectee) with
+| JS_BodyExpression (_0) -> begin
+_0
 end))
 
 
-let is_JSP_Declared = (fun _discr_ -> (match (_discr_) with
-| JSP_Declared (_) -> begin
+let uu___is_JSV_String : value_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSV_String (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1182 -> begin
 false
 end))
 
 
-let is_JSP_Inferred = (fun _discr_ -> (match (_discr_) with
-| JSP_Inferred (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSV_String__item___0 : value_t  ->  Prims.string = (fun projectee -> (match (projectee) with
+| JSV_String (_0) -> begin
+_0
 end))
 
 
-let is_JGP_Object = (fun _discr_ -> (match (_discr_) with
-| JGP_Object (_) -> begin
+let uu___is_JSV_Boolean : value_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSV_Boolean (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1194 -> begin
 false
 end))
 
 
-let is_JGP_Array = (fun _discr_ -> (match (_discr_) with
-| JGP_Array (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSV_Boolean__item___0 : value_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSV_Boolean (_0) -> begin
+_0
 end))
 
 
-let is_JGP_Assignment = (fun _discr_ -> (match (_discr_) with
-| JGP_Assignment (_) -> begin
+let uu___is_JSV_Null : value_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSV_Null -> begin
 true
 end
-| _ -> begin
+| uu____1205 -> begin
 false
 end))
 
 
-let is_JGP_Identifier = (fun _discr_ -> (match (_discr_) with
-| JGP_Identifier (_) -> begin
+let uu___is_JSV_Number : value_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSV_Number (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1210 -> begin
 false
 end))
 
 
-let is_JGP_Expression = (fun _discr_ -> (match (_discr_) with
-| JGP_Expression (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSV_Number__item___0 : value_t  ->  FStar_BaseTypes.float = (fun projectee -> (match (projectee) with
+| JSV_Number (_0) -> begin
+_0
 end))
 
 
-let is_JSP_SpreadProperty = (fun _discr_ -> (match (_discr_) with
-| JSP_SpreadProperty (_) -> begin
+let uu___is_JGP_Identifier : pattern_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JGP_Identifier (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1225 -> begin
 false
 end))
 
 
-let is_JSP_Property = (fun _discr_ -> (match (_discr_) with
-| JSP_Property (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JGP_Identifier__item___0 : pattern_t  ->  (Prims.string * typ Prims.option) = (fun projectee -> (match (projectee) with
+| JGP_Identifier (_0) -> begin
+_0
 end))
 
 
-let is_JSO_Literal = (fun _discr_ -> (match (_discr_) with
-| JSO_Literal (_) -> begin
+let uu___is_JGP_Expression : pattern_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JGP_Expression (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1246 -> begin
 false
 end))
 
 
-let is_JSO_Identifier = (fun _discr_ -> (match (_discr_) with
-| JSO_Identifier (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JGP_Expression__item___0 : pattern_t  ->  expression_t = (fun projectee -> (match (projectee) with
+| JGP_Expression (_0) -> begin
+_0
 end))
 
 
-let is_JSO_Computed = (fun _discr_ -> (match (_discr_) with
-| JSO_Computed (_) -> begin
+let uu___is_JSP_SpreadProperty : property_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSP_SpreadProperty (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1258 -> begin
 false
 end))
 
 
-let is_JSE_Declaration = (fun _discr_ -> (match (_discr_) with
-| JSE_Declaration (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSP_SpreadProperty__item___0 : property_t  ->  pattern_t = (fun projectee -> (match (projectee) with
+| JSP_SpreadProperty (_0) -> begin
+_0
 end))
 
 
-let is_JSE_Expression = (fun _discr_ -> (match (_discr_) with
-| JSE_Expression (_) -> begin
+let uu___is_JSP_Property : property_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSP_Property (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1272 -> begin
 false
 end))
 
 
-let is_ExportType = (fun _discr_ -> (match (_discr_) with
-| ExportType (_) -> begin
-true
-end
-| _ -> begin
-false
+let __proj__JSP_Property__item___0 : property_t  ->  (object_prop_key_t * pattern_t) = (fun projectee -> (match (projectee) with
+| JSP_Property (_0) -> begin
+_0
 end))
 
 
-let is_ExportValue = (fun _discr_ -> (match (_discr_) with
-| ExportValue (_) -> begin
+let uu___is_JSO_Literal : object_prop_key_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSO_Literal (_0) -> begin
 true
 end
-| _ -> begin
+| uu____1292 -> begin
 false
-end))
-
-
-let ___JS_Statement____0 = (fun projectee -> (match (projectee) with
-| JS_Statement (_83_2) -> begin
-_83_2
-end))
-
-
-let ___JSS_Block____0 = (fun projectee -> (match (projectee) with
-| JSS_Block (_83_5) -> begin
-_83_5
-end))
-
-
-let ___JSS_Expression____0 = (fun projectee -> (match (projectee) with
-| JSS_Expression (_83_8) -> begin
-_83_8
-end))
-
-
-let ___JSS_If____0 = (fun projectee -> (match (projectee) with
-| JSS_If (_83_11) -> begin
-_83_11
-end))
-
-
-let ___JSS_With____0 = (fun projectee -> (match (projectee) with
-| JSS_With (_83_14) -> begin
-_83_14
-end))
-
-
-let ___JSS_TypeAlias____0 = (fun projectee -> (match (projectee) with
-| JSS_TypeAlias (_83_17) -> begin
-_83_17
-end))
-
-
-let ___JSS_Switch____0 = (fun projectee -> (match (projectee) with
-| JSS_Switch (_83_20) -> begin
-_83_20
-end))
-
-
-let ___JSS_Return____0 = (fun projectee -> (match (projectee) with
-| JSS_Return (_83_23) -> begin
-_83_23
-end))
-
-
-let ___JSS_Throw____0 = (fun projectee -> (match (projectee) with
-| JSS_Throw (_83_26) -> begin
-_83_26
-end))
-
-
-let ___JSS_Try____0 = (fun projectee -> (match (projectee) with
-| JSS_Try (_83_29) -> begin
-_83_29
-end))
-
-
-let ___JSS_FunctionDeclaration____0 = (fun projectee -> (match (projectee) with
-| JSS_FunctionDeclaration (_83_32) -> begin
-_83_32
-end))
-
-
-let ___JSS_VariableDeclaration____0 = (fun projectee -> (match (projectee) with
-| JSS_VariableDeclaration (_83_35) -> begin
-_83_35
-end))
-
-
-let ___JSS_ExportDefaultDeclaration____0 = (fun projectee -> (match (projectee) with
-| JSS_ExportDefaultDeclaration (_83_38) -> begin
-_83_38
-end))
-
-
-let ___JSS_ImportDeclaration____0 = (fun projectee -> (match (projectee) with
-| JSS_ImportDeclaration (_83_41) -> begin
-_83_41
-end))
-
-
-let ___JSS_Seq____0 = (fun projectee -> (match (projectee) with
-| JSS_Seq (_83_44) -> begin
-_83_44
-end))
-
-
-let ___JSE_Array____0 = (fun projectee -> (match (projectee) with
-| JSE_Array (_83_47) -> begin
-_83_47
-end))
-
-
-let ___JSE_Object____0 = (fun projectee -> (match (projectee) with
-| JSE_Object (_83_50) -> begin
-_83_50
-end))
-
-
-let ___JSE_Function____0 = (fun projectee -> (match (projectee) with
-| JSE_Function (_83_53) -> begin
-_83_53
-end))
-
-
-let ___JSE_ArrowFunction____0 = (fun projectee -> (match (projectee) with
-| JSE_ArrowFunction (_83_56) -> begin
-_83_56
-end))
-
-
-let ___JSE_Sequence____0 = (fun projectee -> (match (projectee) with
-| JSE_Sequence (_83_59) -> begin
-_83_59
-end))
-
-
-let ___JSE_Unary____0 = (fun projectee -> (match (projectee) with
-| JSE_Unary (_83_62) -> begin
-_83_62
-end))
-
-
-let ___JSE_Binary____0 = (fun projectee -> (match (projectee) with
-| JSE_Binary (_83_65) -> begin
-_83_65
-end))
-
-
-let ___JSE_Assignment____0 = (fun projectee -> (match (projectee) with
-| JSE_Assignment (_83_68) -> begin
-_83_68
-end))
-
-
-let ___JSE_Logical____0 = (fun projectee -> (match (projectee) with
-| JSE_Logical (_83_71) -> begin
-_83_71
-end))
-
-
-let ___JSE_Call____0 = (fun projectee -> (match (projectee) with
-| JSE_Call (_83_74) -> begin
-_83_74
-end))
-
-
-let ___JSE_Member____0 = (fun projectee -> (match (projectee) with
-| JSE_Member (_83_77) -> begin
-_83_77
-end))
-
-
-let ___JSE_Identifier____0 = (fun projectee -> (match (projectee) with
-| JSE_Identifier (_83_80) -> begin
-_83_80
-end))
-
-
-let ___JSE_Literal____0 = (fun projectee -> (match (projectee) with
-| JSE_Literal (_83_83) -> begin
-_83_83
-end))
-
-
-let ___JSE_TypeCast____0 = (fun projectee -> (match (projectee) with
-| JSE_TypeCast (_83_86) -> begin
-_83_86
-end))
-
-
-let ___JSF_Declaration____0 = (fun projectee -> (match (projectee) with
-| JSF_Declaration (_83_89) -> begin
-_83_89
-end))
-
-
-let ___JSF_Expression____0 = (fun projectee -> (match (projectee) with
-| JSF_Expression (_83_92) -> begin
-_83_92
-end))
-
-
-let ___JSPO_Property____0 = (fun projectee -> (match (projectee) with
-| JSPO_Property (_83_95) -> begin
-_83_95
-end))
-
-
-let ___JSPO_SpreadProperty____0 = (fun projectee -> (match (projectee) with
-| JSPO_SpreadProperty (_83_98) -> begin
-_83_98
-end))
-
-
-let ___JSPM_Identifier____0 = (fun projectee -> (match (projectee) with
-| JSPM_Identifier (_83_101) -> begin
-_83_101
-end))
-
-
-let ___JSPM_Expression____0 = (fun projectee -> (match (projectee) with
-| JSPM_Expression (_83_104) -> begin
-_83_104
-end))
-
-
-let ___JST_Nullable____0 = (fun projectee -> (match (projectee) with
-| JST_Nullable (_83_107) -> begin
-_83_107
-end))
-
-
-let ___JST_Function____0 = (fun projectee -> (match (projectee) with
-| JST_Function (_83_110) -> begin
-_83_110
-end))
-
-
-let ___JST_Object____0 = (fun projectee -> (match (projectee) with
-| JST_Object (_83_113) -> begin
-_83_113
-end))
-
-
-let ___JST_Array____0 = (fun projectee -> (match (projectee) with
-| JST_Array (_83_116) -> begin
-_83_116
-end))
-
-
-let ___JST_Generic____0 = (fun projectee -> (match (projectee) with
-| JST_Generic (_83_119) -> begin
-_83_119
-end))
-
-
-let ___JST_Union____0 = (fun projectee -> (match (projectee) with
-| JST_Union (_83_122) -> begin
-_83_122
-end))
-
-
-let ___JST_Intersection____0 = (fun projectee -> (match (projectee) with
-| JST_Intersection (_83_125) -> begin
-_83_125
-end))
-
-
-let ___JST_Typeof____0 = (fun projectee -> (match (projectee) with
-| JST_Typeof (_83_128) -> begin
-_83_128
-end))
-
-
-let ___JST_Tuple____0 = (fun projectee -> (match (projectee) with
-| JST_Tuple (_83_131) -> begin
-_83_131
-end))
-
-
-let ___JST_StringLiteral____0 = (fun projectee -> (match (projectee) with
-| JST_StringLiteral (_83_134) -> begin
-_83_134
-end))
-
-
-let ___JST_NumberLiteral____0 = (fun projectee -> (match (projectee) with
-| JST_NumberLiteral (_83_137) -> begin
-_83_137
-end))
-
-
-let ___JST_BooleanLiteral____0 = (fun projectee -> (match (projectee) with
-| JST_BooleanLiteral (_83_140) -> begin
-_83_140
-end))
-
-
-let ___Unqualified____0 = (fun projectee -> (match (projectee) with
-| Unqualified (_83_143) -> begin
-_83_143
-end))
-
-
-let ___Qualified____0 = (fun projectee -> (match (projectee) with
-| Qualified (_83_146) -> begin
-_83_146
-end))
-
-
-let ___JS_BodyBlock____0 = (fun projectee -> (match (projectee) with
-| JS_BodyBlock (_83_149) -> begin
-_83_149
-end))
-
-
-let ___JS_BodyExpression____0 = (fun projectee -> (match (projectee) with
-| JS_BodyExpression (_83_152) -> begin
-_83_152
 end))
 
 
-let ___JSV_String____0 = (fun projectee -> (match (projectee) with
-| JSV_String (_83_155) -> begin
-_83_155
+let __proj__JSO_Literal__item___0 : object_prop_key_t  ->  (value_t * Prims.string) = (fun projectee -> (match (projectee) with
+| JSO_Literal (_0) -> begin
+_0
 end))
 
 
-let ___JSV_Boolean____0 = (fun projectee -> (match (projectee) with
-| JSV_Boolean (_83_158) -> begin
-_83_158
+let uu___is_JSO_Identifier : object_prop_key_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSO_Identifier (_0) -> begin
+true
+end
+| uu____1313 -> begin
+false
 end))
 
 
-let ___JSV_Number____0 = (fun projectee -> (match (projectee) with
-| JSV_Number (_83_161) -> begin
-_83_161
+let __proj__JSO_Identifier__item___0 : object_prop_key_t  ->  (Prims.string * typ Prims.option) = (fun projectee -> (match (projectee) with
+| JSO_Identifier (_0) -> begin
+_0
 end))
 
 
-let ___JSP_Declared____0 = (fun projectee -> (match (projectee) with
-| JSP_Declared (_83_164) -> begin
-_83_164
+let uu___is_JSO_Computed : object_prop_key_t  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSO_Computed (_0) -> begin
+true
+end
+| uu____1334 -> begin
+false
 end))
 
 
-let ___JGP_Object____0 = (fun projectee -> (match (projectee) with
-| JGP_Object (_83_167) -> begin
-_83_167
+let __proj__JSO_Computed__item___0 : object_prop_key_t  ->  expression_t = (fun projectee -> (match (projectee) with
+| JSO_Computed (_0) -> begin
+_0
 end))
 
 
-let ___JGP_Array____0 = (fun projectee -> (match (projectee) with
-| JGP_Array (_83_170) -> begin
-_83_170
+let uu___is_JSE_Declaration : declaration  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_Declaration (_0) -> begin
+true
+end
+| uu____1346 -> begin
+false
 end))
 
 
-let ___JGP_Assignment____0 = (fun projectee -> (match (projectee) with
-| JGP_Assignment (_83_173) -> begin
-_83_173
+let __proj__JSE_Declaration__item___0 : declaration  ->  statement_t = (fun projectee -> (match (projectee) with
+| JSE_Declaration (_0) -> begin
+_0
 end))
 
 
-let ___JGP_Identifier____0 = (fun projectee -> (match (projectee) with
-| JGP_Identifier (_83_176) -> begin
-_83_176
+let uu___is_JSE_Expression : declaration  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| JSE_Expression (_0) -> begin
+true
+end
+| uu____1358 -> begin
+false
 end))
 
 
-let ___JGP_Expression____0 = (fun projectee -> (match (projectee) with
-| JGP_Expression (_83_179) -> begin
-_83_179
+let __proj__JSE_Expression__item___0 : declaration  ->  expression_t = (fun projectee -> (match (projectee) with
+| JSE_Expression (_0) -> begin
+_0
 end))
 
 
-let ___JSP_SpreadProperty____0 = (fun projectee -> (match (projectee) with
-| JSP_SpreadProperty (_83_182) -> begin
-_83_182
+let uu___is_ExportType : export_kind  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| ExportType -> begin
+true
+end
+| uu____1369 -> begin
+false
 end))
 
 
-let ___JSP_Property____0 = (fun projectee -> (match (projectee) with
-| JSP_Property (_83_185) -> begin
-_83_185
+let uu___is_ExportValue : export_kind  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| ExportValue -> begin
+true
+end
+| uu____1373 -> begin
+false
 end))
 
 
-let ___JSO_Literal____0 = (fun projectee -> (match (projectee) with
-| JSO_Literal (_83_188) -> begin
-_83_188
-end))
+type t =
+source_t Prims.list
 
 
-let ___JSO_Identifier____0 = (fun projectee -> (match (projectee) with
-| JSO_Identifier (_83_191) -> begin
-_83_191
-end))
+type identifier_t =
+(Prims.string * typ Prims.option)
 
 
-let ___JSO_Computed____0 = (fun projectee -> (match (projectee) with
-| JSO_Computed (_83_194) -> begin
-_83_194
-end))
+type param_decl_t =
+Prims.string Prims.list
 
 
-let ___JSE_Declaration____0 = (fun projectee -> (match (projectee) with
-| JSE_Declaration (_83_197) -> begin
-_83_197
-end))
+type function_t =
+((Prims.string * typ Prims.option) Prims.option * pattern_t Prims.list * body_t * typ Prims.option * Prims.string Prims.list Prims.option)
 
 
-let ___JSE_Expression____0 = (fun projectee -> (match (projectee) with
-| JSE_Expression (_83_200) -> begin
-_83_200
-end))
+type literal_t =
+(value_t * Prims.string)
 
 
 

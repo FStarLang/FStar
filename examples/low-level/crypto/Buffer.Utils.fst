@@ -181,5 +181,5 @@ let rec memset b z len =
     let h1 = ST.get() in 
     let s = as_seq h1 b in
     assert(Seq.index s 0 = z); // ...but this fails in the absence of framing
-    assert(Seq.equal s (SeqProperties.cons z (Seq.slice s 1 (v len))))
+    assert(Seq.equal s (Seq.cons z (Seq.slice s 1 (v len))))
   end

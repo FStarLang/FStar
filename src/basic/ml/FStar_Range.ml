@@ -3,12 +3,10 @@ let b1 n =  ((n lsr 8)  land 0xFF)
 let b2 n =  ((n lsr 16) land 0xFF)
 let b3 n =  ((n lsr 24) land 0xFF)
 
-let dummyRange = 0L
-
 let lor64 = BatInt64.logor
 let land64 = BatInt64.logand
 let lsl64 = BatInt64.shift_left
-let lsr64 = BatInt64.shift_right
+let lsr64 = BatInt64.shift_right_logical
 
 let rec pown32 n = if n = 0 then 0  else (pown32 (n-1) lor (1 lsl (n-1)))
 let rec pown64 n = if n = 0 then 0L else (lor64 (pown64 (n-1)) (lsl64 1L (n-1)))
@@ -26,36 +24,47 @@ let pair_ord (compare1,compare2) (a1,a2) (aa1,aa2) =
 let proj_ord f a1 a2 = compare (f a1)  (f a2)
 
 type file_idx = FStar_BaseTypes.int32
-type pos = FStar_BaseTypes.int32
+(* KM In a perfect world this file would satisfy the F# interface that*)
+(* we are relying on... it is not the case and pos are actually using *)
+(* regular ocaml int. *)
+type pos = int (* FStar_BaseTypes.int32 *)
 type range = {
     def_range:FStar_BaseTypes.int64;
     use_range:FStar_BaseTypes.int64
 }
+
+type int_t = int
+
 let dummyRange = {
     def_range=0L;
     use_range=0L
 }
-let set_use_range r2 r = if r.use_range <> 0L then {r2 with use_range=r.use_range} else r2
+
+let set_use_range (r2:range) (r:range) : range =
+  if r.use_range <> 0L then {r2 with use_range=r.use_range} else r2
 let range_of_def_range i = {def_range=i; use_range=i}
 
 let col_nbits  = 9
 let line_nbits  = 16
 
 let pos_nbits = line_nbits + col_nbits
-let _ = assert (pos_nbits <= 32)
+let _ = assert (pos_nbits <= 31)
 let pos_col_mask  = mask32 0         col_nbits
 let line_col_mask = mask32 col_nbits line_nbits
 
-let mk_pos l c =
+let mk_pos (l:int) (c:int) : pos =
   let l = max 0 l in
   let c = max 0 c in
   (c land pos_col_mask)
   lor ((l lsl col_nbits) land line_col_mask)
 let line_of_pos p =  (p lsr col_nbits)
 let col_of_pos p =  (p land pos_col_mask)
+let end_of_line p = mk_pos (line_of_pos p) 511 (* pos_col_mask *)
+let zeroPos : pos = mk_pos 1 0
 
-let bits_of_pos (x:pos) : FStar_BaseTypes.int32 = x
-let pos_of_bits (x:FStar_BaseTypes.int32) : pos = x
+(* Not usable in current situation *)
+(* let bits_of_pos (x:pos) : FStar_BaseTypes.int32 = x *)
+(* let pos_of_bits (x:FStar_BaseTypes.int32) : pos = x *)
 
 let file_idx_nbits = 14
 let start_line_nbits = line_nbits
@@ -70,7 +79,7 @@ let start_col_mask  = mask64 (file_idx_nbits + start_line_nbits) start_col_nbits
 let end_line_mask   = mask64 (file_idx_nbits + start_line_nbits + start_col_nbits) end_line_nbits
 let end_col_mask    = mask64 (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits) end_col_nbits
 
-let mk_file_idx_range fidx b e =
+let mk_file_idx_range fidx (b:pos) (e:pos) =
   range_of_def_range (
   lor64
     (lor64
@@ -118,7 +127,7 @@ let fileIndexTable = {
 let file_idx_of_file f = (fileToIndex fileIndexTable f) mod maxFileIndex
 let file_of_file_idx n = indexToFile fileIndexTable n
 
-let mk_range f b e = mk_file_idx_range (file_idx_of_file f) b e
+let mk_range f (b:int_t) (e:int_t) = mk_file_idx_range (file_idx_of_file f) b e
 let file_of_range r = file_of_file_idx (file_idx_of_range r)
 
 let start_of_range r = mk_pos (start_line_of_range r) (start_col_of_range r)
@@ -127,6 +136,12 @@ let dest_file_idx_range r = file_idx_of_range r,start_of_range r,end_of_range r
 let dest_range r = file_of_range r,start_of_range r,end_of_range r
 let dest_pos p = line_of_pos p,col_of_pos p
 let end_range (r:range) = mk_range (file_of_range r) (end_of_range r) (end_of_range r)
+let extend_to_end_of_line r =
+   let end_pos = (end_of_line (end_of_range r)) in
+   assert (col_of_pos end_pos = 511) ;
+   let r = mk_range (file_of_range r) (start_of_range r) end_pos in
+   assert (col_of_pos (end_of_range r) = 511) ;
+   r
 
 let trim_range_right r n =
   let fidx,p1,p2 = dest_file_idx_range r in
@@ -174,6 +189,9 @@ let range_contains_pos m1 p =
 let range_before_pos m1 p =
   pos_geq p (end_of_range m1)
 
+let range_before_range m1 m2 =
+  pos_geq (start_of_range m2) (end_of_range m1)
+
 let rangeN filename line =  mk_range filename (mk_pos line 0) (mk_pos line 80)
 let pos0 = mk_pos 1 0
 let range0 =  rangeN "unknown" 1
@@ -217,5 +235,5 @@ let compare_use_range r1 r2 =
     compare ({r1 with def_range=r1.use_range})
             ({r2 with def_range=r2.use_range})
 
-let mk_range f b e = mk_range f (Z.to_int b) (Z.to_int e)
+(* let mk_range f b e = mk_range f (Z.to_int b) (Z.to_int e) *)
 let line_of_pos p = Z.of_int (line_of_pos p)

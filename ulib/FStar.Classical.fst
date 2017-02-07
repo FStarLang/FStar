@@ -2,7 +2,7 @@ module FStar.Classical
 open FStar.Squash
 
 val give_witness: #a:Type -> a -> Lemma (ensures a)
-let give_witness #a x = return_squash x (* CH: this looks fishy *)
+let give_witness #a x = return_squash x
 
 (* TODO: Maybe this should move to FStar.Squash.fst *)
 val forall_intro_gtot  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (p x)) -> Tot (squash (forall (x:a). p x))

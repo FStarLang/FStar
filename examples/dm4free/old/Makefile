@@ -3,7 +3,6 @@ include ../../Makefile.include
 
 all: uall
 uall: intST.uver Exceptions.uver-explicit ExceptionsWithState.uver StExn.uver-explicit StExn.Handle.uver-explicit
-sall:
 
 %.uver-explicit: %.fst
 	$(FSTAR) $^ --explicit_deps

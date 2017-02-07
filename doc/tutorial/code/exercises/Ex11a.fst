@@ -1,4 +1,5 @@
 module Ex11a
+open FStar.ST
 //robot
 
 open FStar.Heap

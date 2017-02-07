@@ -33,13 +33,15 @@
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
+open FStar_Errors
 open FStar_List
 open FStar_Util
 open FStar_Range
 open FStar_Options
-open FStar_Absyn_Syntax
-open FStar_Absyn_Const
-open FStar_Absyn_Util
+(* TODO : these files should be deprecated and removed *)
+open FStar_Syntax_Syntax
+open FStar_Syntax_Const
+open FStar_Syntax_Util
 open FStar_Parser_AST
 open FStar_Parser_Util
 open FStar_Const
@@ -83,6 +85,7 @@ open FStar_String
 %token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
 %token OPEN REC MUTABLE THEN TRUE L_TRUE TRY TYPE EFFECT VAL
+%token INCLUDE
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
@@ -142,13 +145,13 @@ open FStar_String
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
 inputFragment:
-  | option(PRAGMALIGHT STRING {}) d=decl decls=list(decl) main_opt=mainDecl? EOF
-       {
-         let decls = match main_opt with
+  | is_light=boption(PRAGMALIGHT STRING { }) d=decl decls=list(decl) main_opt=mainDecl? EOF
+      {
+        let decls = match main_opt with
            | None -> decls
            | Some main -> decls @ [main]
-         in as_frag d decls
-       }
+        in as_frag is_light (rhs parseState 1) d decls
+      }
 
 (* TODO : let's try to remove that *)
 mainDecl:
@@ -180,21 +183,23 @@ decoration:
 
 decl:
   | ASSUME lid=uident COLON phi=formula
-      { mk_decl (Assume(lid, phi)) (rhs parseState 2) [ Qualifier Assumption ] }
+      { mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] }
 
-  | d=decoration ds=list(decoration) decl=raw_decl
-      { mk_decl decl (rhs parseState 2) (d :: ds) }
+  | d=decoration ds=list(decoration) decl=rawDecl
+      { mk_decl decl (rhs parseState 3) (d :: ds) }
 
-  | decl=raw_decl
-      { mk_decl decl (rhs parseState 2) [] }
+  | decl=rawDecl
+      { mk_decl decl (rhs parseState 1) [] }
 
-raw_decl:
+rawDecl:
   | p=pragma
       { Pragma p }
   | OPEN uid=quident
       { Open uid }
+  | INCLUDE uid=quident
+      { Include uid }
   | MODULE uid1=uident EQUALS uid2=quident
-      {  ModuleAbbrev(uid1, uid2) }
+      { ModuleAbbrev(uid1, uid2) }
   | MODULE uid=quident
       {  TopLevelModule uid }
   | TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
@@ -203,14 +208,14 @@ raw_decl:
       { Tycon(true, [(TyconAbbrev(uid, tparams, None, t), None)]) }
   | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
-        let lbs = focusLetBindings lbs (rhs2 parseState 1 4) in
+        let lbs = focusLetBindings lbs (rhs2 parseState 1 3) in
         TopLevelLet(q, lbs)
       }
   | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
       {
         let t = match flatten bss with
           | [] -> t
-          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 4 6) Type
+          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
@@ -223,11 +228,6 @@ raw_decl:
       { NewEffectForFree ne }
   | doc=FSDOC_STANDALONE
       { Fsdoc doc }
-
-  (* stratified only *)
-  | KIND lid=ident bs=binders EQUALS k=kind
-      { KindAbbrev(lid, bs, k) }
-
 
 typeDecl:
   (* TODO : change to lident with stratify *)
@@ -307,7 +307,7 @@ actionDecls:
 
 effectDecl:
   | lid=lident EQUALS t=simpleTerm
-     { mk_decl (Tycon (false, [(TyconAbbrev(lid, [], None, t), None)])) (rhs2 parseState 1 3) [] }
+     { mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
@@ -382,8 +382,7 @@ letqualifier:
 
  (* Remove with stratify *)
 aqual:
-  | EQUALS    { if universes()
-                then print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
+  | EQUALS    { print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
 				        Equality }
   | q=aqualUniverses { q }
 
@@ -457,7 +456,7 @@ binder:
   | aqualified_lid=aqualified(lidentOrUnderscore)
      {
        let (q, lid) = aqualified_lid in
-       mk_binder (Variable lid) (rhs parseState 1) Type q
+       mk_binder (Variable lid) (rhs parseState 1) Type_level q
      }
   | tv=tvar  { mk_binder (TVariable tv) (rhs parseState 1) Kind None  }
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
@@ -548,11 +547,11 @@ noSeqTerm:
         mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       }
   | REQUIRES t=typ
-      { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type }
+      { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level }
   | ENSURES t=typ
-      { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type }
+      { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
   | ATTRIBUTES es=nonempty_list(atomicTerm)
-      { mk_term (Attributes es) (rhs2 parseState 1 2) Type }
+      { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
   | IF e1=noSeqTerm THEN e2=noSeqTerm ELSE e3=noSeqTerm
       { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr }
   | IF e1=noSeqTerm THEN e2=noSeqTerm
@@ -579,7 +578,7 @@ noSeqTerm:
       }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
-        let branches = focusBranches (pbs) (rhs2 parseState 1 2) in
+        let branches = focusBranches pbs (rhs2 parseState 1 2) in
         mk_function branches (lhs parseState) (rhs2 parseState 1 2)
       }
   | ASSUME e=atomicTerm
@@ -691,7 +690,7 @@ tmEq:
   | e1=tmEq EQUALS e2=tmEq
       { mk_term (Op("=", [e1; e2])) (rhs2 parseState 1 3) Un}
   (* non-associativity of COLON_EQUALS is currently not well handled by fsyacc which reports a s/r conflict *)
-  (* see https://github.com/fsprojects/FsLexYacc/issues/39 *)
+  (* see https:/ /github.com/fsprojects/FsLexYacc/issues/39 *)
   | e1=tmEq COLON_EQUALS e2=tmEq
       { mk_term (Op(":=", [e1; e2])) (rhs2 parseState 1 3) Un}
   | e1=tmEq PIPE_RIGHT e2=tmEq
@@ -714,7 +713,7 @@ tmNoEq:
         let dom, res = match tail.tm with
             | Sum(dom', res) -> dom::dom', res
             | _ -> [dom], tail in
-        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type
+        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       }
   | e1=tmNoEq MINUS e2=tmNoEq
       { mk_term (Op("-", [e1; e2])) (rhs2 parseState 1 3) Un}
@@ -728,8 +727,8 @@ tmNoEq:
       {
         let t = match phi_opt with
           | None -> NamedTyp(id, e)
-          | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) Type None, phi)
-        in mk_term t (rhs2 parseState 1 4) Type
+          | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) Type_level None, phi)
+        in mk_term t (rhs2 parseState 1 4) Type_level
       }
   | LBRACE e=recordExp RBRACE { e }
   | op=TILDE e=atomicTerm
@@ -797,10 +796,10 @@ atomicTermQUident:
 atomicTermNotQUident:
   | UNDERSCORE { mk_term Wild (rhs parseState 1) Un }
   | ASSERT   { mk_term (Var assert_lid) (rhs parseState 1) Expr }
-  | tv=tvar     { mk_term (Tvar tv) (rhs parseState 1) Type }
+  | tv=tvar     { mk_term (Tvar tv) (rhs parseState 1) Type_level }
   | c=constant { mk_term (Const c) (rhs parseState 1) Expr }
-  | L_TRUE   { mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type }
-  | L_FALSE   { mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type }
+  | L_TRUE   { mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type_level }
+  | L_FALSE   { mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type_level }
   | x=opPrefixTerm(atomicTermNotQUident)
     { x }
   | LPAREN op=operator RPAREN
@@ -817,30 +816,11 @@ opPrefixTerm(Tm):
   | op=OPPREFIX e=Tm
       { mk_term (Op(op, [e])) (rhs2 parseState 1 2) Expr }
 
-fsTypeArgs:
-  | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER
-    {targs}
-
-someFsTypeArgs:
-  | targs=fsTypeArgs
-    { Some targs }
-
-(* Qid : quident or qlident.
-   TypeArgs : option(fsTypeArgs) or someFsTypeArgs. *)
-qidentWithTypeArgs(Qid,TypeArgs):
-  | id=Qid targs_opt=TypeArgs
-      {
-        let t = if is_name id then Name id else Var id in
-        let e = mk_term t (rhs parseState 1) Un in
-        match targs_opt with
-        | None -> e
-        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
-      }
 
 projectionLHS:
-  | e=qidentWithTypeArgs(qlident,option(fsTypeArgs))
+  | e=qidentWithTypeArgs(qlident, option(fsTypeArgs))
       { e }
-  | e=qidentWithTypeArgs(quident,someFsTypeArgs)
+  | e=qidentWithTypeArgs(quident, some(fsTypeArgs))
       { e }
   | LPAREN e=term sort_opt=option(pair(hasSort, simpleTerm)) RPAREN
       {
@@ -862,19 +842,29 @@ projectionLHS:
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
       { mkRefSet (rhs2 parseState 1 3) es }
   | ns=quident QMARK_DOT id=lident
-      {
-        mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr
-      }
+      { mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr }
   | lid=quident QMARK
+      { mk_term (Discrim lid) (rhs2 parseState 1 2) Un }
+
+fsTypeArgs:
+  | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER
+    {targs}
+
+(* Qid : quident or qlident.
+   TypeArgs : option(fsTypeArgs) or someFsTypeArgs. *)
+qidentWithTypeArgs(Qid,TypeArgs):
+  | id=Qid targs_opt=TypeArgs
       {
-	let t = Discrim lid in
-        let e = mk_term t (rhs2 parseState 1 2) Un in
-	e
+        let t = if is_name id then Name id else Var id in
+        let e = mk_term t (rhs parseState 1) Un in
+        match targs_opt with
+        | None -> e
+        | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
       }
 
 hasSort:
   (* | SUBTYPE { Expr } *)
-  | SUBKIND { Type } (* Remove with stratify *)
+  | SUBKIND { Type_level } (* Remove with stratify *)
 
   (* use flexible_list *)
 %inline semiColonTermList:
@@ -922,6 +912,7 @@ constant:
           errorR(Error("This number is outside the allowable range for 64-bit signed integers", lhs(parseState)));
         Const_int (fst n, Some (Signed, Int64))
       }
+  (* TODO : What about reflect ? There is also a constant representing it *)
   | REIFY   { Const_reify }
 
 
@@ -940,7 +931,7 @@ universeFrom:
        }
   | max=ident us=list(atomicUniverse)
       {
-        if text_of_id max <> "max"
+        if text_of_id max <> text_of_lid max_lid
         then errorR(Error("A lower case ident " ^ text_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.",
@@ -961,7 +952,7 @@ atomicUniverse:
       }
   | u=univar { u }
   | LPAREN u=universeFrom RPAREN
-      { mk_term (Paren u) (rhs2 parseState 1 3) Expr }
+    { u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) }
 
 univar:
   | id=UNIVAR
@@ -997,6 +988,9 @@ univar:
 %inline dotOperator:
   | DOT_LPAREN e=term RPAREN { ".()", e, rhs2 parseState 1 3 }
   | DOT_LBRACK e=term RBRACK { ".[]", e, rhs2 parseState 1 3 }
+
+some(X):
+  | x=X { Some x }
 
 right_flexible_list(SEP, X):
   |     { [] }

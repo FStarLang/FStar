@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Script to run fsdoc on certain dirs in the FStar repo.
 # Currently, this script gets called by the VSTF "FStar, Docs, Linux, CI"
@@ -50,9 +50,10 @@ FStar.Int64.fst \
 FStar.Int8.fst \
 FStar.Integers.fst \
 FStar.IO.fsti \
-FStar.List.fst \
 FStar.List.Tot.fst \
-FStar.ListProperties.fst \
+FStar.List.Tot.Properties.fst \
+FStar.List.Tot.fst \
+FStar.List.fst \
 FStar.Map.fst \
 FStar.MarkovsPrinciple.fst \
 FStar.Math.Lemmas.fst \
@@ -73,8 +74,9 @@ FStar.Reader.fst \
 FStar.Relational.Comp.fst \
 FStar.Relational.Relational.fst \
 FStar.Relational.State.fst \
+FStar.Seq.Base.fst \
+FStar.Seq.Properties.fst \
 FStar.Seq.fst \
-FStar.SeqProperties.fst \
 FStar.Set.fst \
 FStar.Squash.fst \
 FStar.Squash.fsti \

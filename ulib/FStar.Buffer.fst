@@ -1,5 +1,5 @@
 module FStar.Buffer
-
+ 
 open FStar.Seq
 open FStar.UInt32
 open FStar.HyperStack
@@ -11,6 +11,7 @@ module HST = FStar.ST
 
 #set-options "--initial_fuel 0 --max_fuel 0"
 
+//17-01-04 usage? move to UInt? 
 let lemma_size (x:int) : Lemma (requires (UInt.size x n))
 				     (ensures (x >= 0))
 				     [SMTPat (UInt.size x n)]
@@ -30,11 +31,17 @@ type buffer (a:Type) = _buffer a
 (* Ghost getters for specifications *)
 let contains #a h (b:buffer a) : GTot Type0 = HS.contains h b.content
 
+//17-01-04 notations: 
+//17-01-04 when to use sel, index, get, read? 
+//17-01-04 In most cases as_seq should be used instead of this one.
+//17-01-04 should the pre use contains or live? 
 let sel #a h (b:buffer a{contains h b}) : GTot (seq a) = HS.sel h b.content
 
 let max_length #a (b:buffer a) : GTot nat = v b.max_length
 let length #a (b:buffer a) : GTot nat = v b.length
 let idx #a (b:buffer a) : GTot nat = v b.idx
+
+//17-01-04 rename to container or ref? 
 let content #a (b:buffer a) :
   GTot (reference (s:seq a{Seq.length s == v b.max_length})) = b.content
 
@@ -42,10 +49,11 @@ let content #a (b:buffer a) :
 let as_ref #a (b:buffer a) = as_ref (content b)
 let as_aref #a (b:buffer a) = as_aref (content b)
 let frameOf #a (b:buffer a) : GTot HH.rid = frameOf (content b)
+//17-01-04 rename to region?
 
 (* Liveliness condition, necessary for any computation on the buffer *)
-(* abstract *) 
 let live #a (h:mem) (b:buffer a) : GTot Type0 = contains h b
+//17-01-04 global pick between live and contains?
 
 val recall: #a:Type
   -> b:buffer a{is_eternal_region (frameOf b) && not (b.content.mm)} -> Stack unit
@@ -61,6 +69,7 @@ let get #a h (b:buffer a{live h b}) (i:nat{i < length b}) : GTot a =
   Seq.index (as_seq h b) i
 
 (* Equality predicate on buffer contents, without quantifiers *)
+//17-01-04 revise comment? rename?
 let equal #a h (b:buffer a) h' (b':buffer a) : GTot Type0 =
   live h b /\ live h' b' /\ as_seq h b == as_seq h' b'
 
@@ -332,6 +341,9 @@ abstract let modifies_0 h0 h1 =
   /\ modifies_buf_0 h0.tip h0 h1
   /\ h0.tip=h1.tip
 
+(* This one is very generic: it says
+ * - some references have changed in the frame of b, but
+ * - among all buffers in this frame, b is the only one that changed. *)
 abstract let modifies_1 (#a:Type) (b:buffer a) h0 h1 =
   let rid = frameOf b in
   modifies_one rid h0 h1 /\ modifies_buf_1 rid b h0 h1
@@ -522,7 +534,7 @@ let lemma_ststack_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 h3
   [SMTPatT (modifies_2 b b' h1 h2); SMTPatT (fresh_frame h0 h1); SMTPatT (popped h2 h3)]
   = ()
 
-#reset-options "--z3rlimit 40"
+#reset-options "--z3rlimit 100"
 
 (* Specialized modifies clauses lemmas + associated SMTPatterns. Those are critical for
    verification as the specialized modifies clauses are abstract from outside the
@@ -731,9 +743,15 @@ let create #a init len =
 
 module L = FStar.List.Tot
 
+unfold let p (#a:Type0) (init:list a) : GTot Type0 =
+  normalize (0 < L.length init) /\ normalize (L.length init < UInt.max_int 32)
+
+unfold let q (#a:Type0) (len:nat) (buf:buffer a) : GTot Type0 =
+  normalize (length buf = len)
+
 (** Concrete getters and setters *)
-val createL: #a:Type -> init:list a -> StackInline (buffer a)
-  (requires (fun h -> 0 < normalize_term (L.length init) /\ normalize_term (L.length init) < UInt.max_int 32))
+val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
+  (requires (fun h -> p #a init))
   (ensures (fun (h0:mem) b h1 ->
      let len = L.length init in
      len > 0
@@ -742,7 +760,8 @@ val createL: #a:Type -> init:list a -> StackInline (buffer a)
      /\ frameOf b = h0.tip
      /\ Map.domain h1.h == Map.domain h0.h
      /\ modifies_0 h0 h1
-     /\ as_seq h1 b == Seq.of_list init))
+     /\ as_seq h1 b == Seq.of_list init
+     /\ q #a len b))
 #set-options "--initial_fuel 1 --max_fuel 1" //the normalize_term (L.length init) in the pre-condition will be unfolded
 	                                     //whereas the L.length init below will not
 let createL #a init =
@@ -829,7 +848,7 @@ let index #a b n =
   Seq.index s (v b.idx + v n)
 
 (** REMARK: the proof of this lemma relies crucially on the `a == a'` condition
-    in B`uffer.disjoint`, and on the pattern in `SeqProperties.slice_upd` *)
+    in B`uffer.disjoint`, and on the pattern in `Seq.slice_upd` *)
 private val lemma_aux: #a:Type -> b:buffer a -> n:UInt32.t{v n < length b} -> z:a
   -> h0:mem -> Lemma
   (requires (live h0 b))
@@ -849,7 +868,7 @@ let upd #a b n z =
   b.content := s;
   let h = HST.get() in
   Seq.lemma_eq_intro (as_seq h b) (Seq.slice s (idx b) (idx b + length b));
-  SeqProperties.upd_slice s0 (idx b) (idx b + length b) (v n) z
+  Seq.upd_slice s0 (idx b) (idx b + length b) (v n) z
 
 val sub: #a:Type -> b:buffer a -> i:UInt32.t{v i + v b.idx < pow2 n}
   -> len:UInt32.t{v i + v len <= length b}

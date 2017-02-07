@@ -4,23 +4,16 @@ open Prims
 type file =
 (Prims.string * FStar_Extraction_JavaScript_Ast.t)
 
-
 type env =
-{names : name Prims.list; module_name : Prims.string Prims.list} 
+{names : name Prims.list; module_name : Prims.string; export_module_names : Prims.string Prims.list} 
  and name =
 {pretty : Prims.string; mut : Prims.bool}
 
 
-let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkenv"))))
+let empty : Prims.string  ->  env = (fun module_name -> {names = []; module_name = module_name; export_module_names = []})
 
 
-let is_Mkname : name  ->  Prims.bool = (Obj.magic ((fun _ -> (failwith "Not yet implemented:is_Mkname"))))
-
-
-let empty : Prims.string Prims.list  ->  env = (fun module_name -> {names = []; module_name = module_name})
-
-
-let mk_op_bin : Prims.string  ->  FStar_Extraction_JavaScript_Ast.op_bin Prims.option = (fun _84_1 -> (match (_84_1) with
+let mk_op_bin : Prims.string  ->  FStar_Extraction_JavaScript_Ast.op_bin Prims.option = (fun uu___137_50 -> (match (uu___137_50) with
 | "op_Addition" -> begin
 Some (FStar_Extraction_JavaScript_Ast.JSB_Plus)
 end
@@ -54,7 +47,7 @@ end
 | "op_Modulus" -> begin
 Some (FStar_Extraction_JavaScript_Ast.JSB_Mod)
 end
-| _84_25 -> begin
+| uu____52 -> begin
 None
 end))
 
@@ -62,14 +55,14 @@ end))
 let is_op_bin : Prims.string  ->  Prims.bool = (fun op -> ((mk_op_bin op) <> None))
 
 
-let mk_op_un : Prims.string  ->  FStar_Extraction_JavaScript_Ast.op_un Prims.option = (fun _84_2 -> (match (_84_2) with
+let mk_op_un : Prims.string  ->  FStar_Extraction_JavaScript_Ast.op_un Prims.option = (fun uu___138_60 -> (match (uu___138_60) with
 | "op_Negation" -> begin
 Some (FStar_Extraction_JavaScript_Ast.JSU_Not)
 end
 | "op_Minus" -> begin
 Some (FStar_Extraction_JavaScript_Ast.JSU_Minus)
 end
-| _84_31 -> begin
+| uu____62 -> begin
 None
 end))
 
@@ -77,14 +70,14 @@ end))
 let is_op_un : Prims.string  ->  Prims.bool = (fun op -> ((mk_op_un op) <> None))
 
 
-let mk_op_bool : Prims.string  ->  FStar_Extraction_JavaScript_Ast.op_log Prims.option = (fun _84_3 -> (match (_84_3) with
+let mk_op_bool : Prims.string  ->  FStar_Extraction_JavaScript_Ast.op_log Prims.option = (fun uu___139_70 -> (match (uu___139_70) with
 | "op_AmpAmp" -> begin
 Some (FStar_Extraction_JavaScript_Ast.JSL_And)
 end
 | "op_BarBar" -> begin
 Some (FStar_Extraction_JavaScript_Ast.JSL_Or)
 end
-| _84_37 -> begin
+| uu____72 -> begin
 None
 end))
 
@@ -92,7 +85,7 @@ end))
 let is_op_bool : Prims.string  ->  Prims.bool = (fun op -> ((mk_op_bool op) <> None))
 
 
-let mk_standart_type : Prims.string  ->  FStar_Extraction_JavaScript_Ast.typ Prims.option = (fun _84_4 -> (match (_84_4) with
+let mk_standart_type : Prims.string  ->  FStar_Extraction_JavaScript_Ast.typ Prims.option = (fun uu___140_80 -> (match (uu___140_80) with
 | "unit" -> begin
 Some (FStar_Extraction_JavaScript_Ast.JST_Null)
 end
@@ -105,7 +98,7 @@ end
 | "string" -> begin
 Some (FStar_Extraction_JavaScript_Ast.JST_String)
 end
-| _84_46 -> begin
+| uu____82 -> begin
 None
 end))
 
@@ -116,164 +109,161 @@ let is_standart_type : Prims.string  ->  Prims.bool = (fun t -> ((mk_standart_ty
 let float_of_int : Prims.int  ->  FStar_BaseTypes.float = (fun i -> (FStar_Util.float_of_int32 (FStar_Util.int32_of_int i)))
 
 
-let export_modules : Prims.string Prims.list FStar_ST.ref = (FStar_ST.alloc [])
+let isMutable = (fun typ -> (match (typ) with
+| None -> begin
+false
+end
+| Some (uu____105, ty) -> begin
+(match (ty) with
+| FStar_Extraction_ML_Syntax.MLTY_Named (uu____109, p) when (let _0_374 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_374 = "FStar.ST.ref")) -> begin
+true
+end
+| uu____113 -> begin
+false
+end)
+end))
 
 
-let current_module_name : Prims.string FStar_ST.ref = (FStar_ST.alloc "")
-
-
-let lp_generic : Prims.string Prims.list FStar_ST.ref = (FStar_ST.alloc [])
-
-
-let isEqVar : Prims.bool FStar_ST.ref = (FStar_ST.alloc false)
-
-
-let getName = (fun _84_51 -> (match (_84_51) with
+let extendEnv = (fun env uu____135 typ -> (match (uu____135) with
 | (path, n) -> begin
 (
 
 let path = (FStar_String.concat "_" path)
-in if ((path = (FStar_ST.read current_module_name)) || (path = "")) then begin
-((n), (None))
-end else begin
+in (match (((path = env.module_name) || (path = ""))) with
+| true -> begin
 (
 
-let _84_54 = if (not ((let _184_37 = (FStar_ST.read export_modules)
-in (FStar_List.existsb (fun x -> (x = path)) _184_37)))) then begin
-(let _184_39 = (let _184_38 = (FStar_ST.read export_modules)
-in (FStar_List.append ((path)::[]) _184_38))
-in (FStar_ST.op_Colon_Equals export_modules _184_39))
-end else begin
-()
+let uu___141_148 = env
+in {names = ({pretty = n; mut = (isMutable typ)})::env.names; module_name = uu___141_148.module_name; export_module_names = uu___141_148.export_module_names})
 end
-in (((Prims.strcat path (Prims.strcat "." n))), (None)))
-end)
+| uu____149 -> begin
+(
+
+let n = (Prims.strcat path (Prims.strcat "." n))
+in (match ((not ((FStar_List.existsb (fun x -> (x = path)) env.export_module_names)))) with
+| true -> begin
+(
+
+let uu___142_152 = env
+in {names = ({pretty = n; mut = (isMutable typ)})::env.names; module_name = uu___142_152.module_name; export_module_names = (path)::env.export_module_names})
+end
+| uu____153 -> begin
+(
+
+let uu___143_154 = env
+in {names = ({pretty = n; mut = (isMutable typ)})::env.names; module_name = uu___143_154.module_name; export_module_names = uu___143_154.export_module_names})
 end))
+end))
+end))
+
+
+let findEnv : env  ->  Prims.string  ->  Prims.int = (fun env name -> (FStar_List.index (fun x -> (x.pretty = name)) env.names))
+
+
+let isInEnv : env  ->  Prims.string  ->  Prims.bool = (fun env name -> (FStar_List.existsb (fun x -> (x.pretty = name)) env.names))
 
 
 let rec is_pure_expr = (fun e var -> (match (e.FStar_Extraction_ML_Syntax.expr) with
 | (FStar_Extraction_ML_Syntax.MLE_Const (_)) | (FStar_Extraction_ML_Syntax.MLE_Name (_)) -> begin
 true
 end
-| FStar_Extraction_ML_Syntax.MLE_Var (n, _84_66) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Var (n, uu____188) -> begin
 (n <> (Prims.fst var))
 end
-| FStar_Extraction_ML_Syntax.MLE_Proj (expr, _84_71) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Proj (expr, uu____190) -> begin
 (is_pure_expr expr var)
 end
 | FStar_Extraction_ML_Syntax.MLE_CTor (p, le) -> begin
-(not ((let _184_43 = (FStar_List.map (fun x -> (is_pure_expr x var)) le)
-in (FStar_List.contains false _184_43))))
+(not ((let _0_375 = (FStar_List.map (fun x -> (is_pure_expr x var)) le)
+in (FStar_List.contains false _0_375))))
 end
 | FStar_Extraction_ML_Syntax.MLE_Tuple (le) -> begin
-(not ((let _184_45 = (FStar_List.map (fun x -> (is_pure_expr x var)) le)
-in (FStar_List.contains false _184_45))))
+(not ((let _0_376 = (FStar_List.map (fun x -> (is_pure_expr x var)) le)
+in (FStar_List.contains false _0_376))))
 end
-| FStar_Extraction_ML_Syntax.MLE_Record (_84_83, lne) -> begin
-(not ((let _184_47 = (FStar_List.map (fun _84_89 -> (match (_84_89) with
+| FStar_Extraction_ML_Syntax.MLE_Record (uu____199, lne) -> begin
+(not ((let _0_377 = (FStar_List.map (fun uu____211 -> (match (uu____211) with
 | (n, e) -> begin
 (is_pure_expr e var)
 end)) lne)
-in (FStar_List.contains false _184_47))))
+in (FStar_List.contains false _0_377))))
 end
-| FStar_Extraction_ML_Syntax.MLE_App (_84_91, args) -> begin
-(not ((let _184_49 = (FStar_List.map (fun x -> (is_pure_expr x var)) args)
-in (FStar_List.contains false _184_49))))
+| FStar_Extraction_ML_Syntax.MLE_App (uu____216, args) -> begin
+(not ((let _0_378 = (FStar_List.map (fun x -> (is_pure_expr x var)) args)
+in (FStar_List.contains false _0_378))))
 end
-| _84_97 -> begin
+| uu____221 -> begin
 false
 end))
 
 
-let isMutable = (fun tys -> (match (tys) with
-| None -> begin
-false
-end
-| Some (_84_101, ty) -> begin
-(match (ty) with
-| FStar_Extraction_ML_Syntax.MLTY_Named (_84_106, p) when ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.ST.ref") -> begin
-true
-end
-| _84_111 -> begin
-false
-end)
-end))
-
-
-let rec translate : FStar_Extraction_ML_Syntax.mllib  ->  file Prims.list = (fun _84_113 -> (match (_84_113) with
+let rec translate : FStar_Extraction_ML_Syntax.mllib  ->  file Prims.list = (fun uu____335 -> (match (uu____335) with
 | FStar_Extraction_ML_Syntax.MLLib (modules) -> begin
 (FStar_List.filter_map (fun m -> (
 
 let m_name = (
 
-let _84_122 = m
-in (match (_84_122) with
-| ((prefix, final), _84_119, _84_121) -> begin
-(FStar_String.concat "." (FStar_List.append prefix ((final)::[])))
+let uu____366 = m
+in (match (uu____366) with
+| ((prefix, final), uu____378, uu____379) -> begin
+(FStar_String.concat "_" (FStar_List.append prefix ((final)::[])))
 end))
 in try
 (match (()) with
 | () -> begin
-(
-
-let _84_132 = (FStar_Util.print1 "Attempting to translate module %s\n" m_name)
-in (
-
-let _84_134 = (FStar_ST.op_Colon_Equals export_modules [])
-in (let _184_85 = (translate_module m)
-in Some (_184_85))))
+((FStar_Util.print1 "Attempting to translate module %s\n" m_name);
+Some ((translate_module (empty m_name) m));
+)
 end)
 with
 | e -> begin
-(
-
-let _84_128 = (let _184_87 = (FStar_Util.print_exn e)
-in (FStar_Util.print2 "Unable to translate module: %s because:\n  %s\n" m_name _184_87))
-in None)
+((let _0_379 = (FStar_Util.print_exn e)
+in (FStar_Util.print2 "Unable to translate module: %s because:\n  %s\n" m_name _0_379));
+None;
+)
 end)) modules)
 end))
-and translate_module : ((Prims.string Prims.list * Prims.string) * (FStar_Extraction_ML_Syntax.mlsig * FStar_Extraction_ML_Syntax.mlmodule) Prims.option * FStar_Extraction_ML_Syntax.mllib)  ->  file = (fun _84_140 -> (match (_84_140) with
-| (module_name, modul, _84_139) -> begin
+and translate_module : env  ->  ((Prims.string Prims.list * Prims.string) * (FStar_Extraction_ML_Syntax.mlsig * FStar_Extraction_ML_Syntax.mlmodule) Prims.option * FStar_Extraction_ML_Syntax.mllib)  ->  file = (fun env uu____400 -> (match (uu____400) with
+| (module_name, modul, uu____412) -> begin
 (
-
-let module_name = (FStar_List.append (Prims.fst module_name) (((Prims.snd module_name))::[]))
-in (
 
 let program = (match (modul) with
 | Some (_signature, decls) -> begin
 (
 
-let _84_146 = (FStar_ST.op_Colon_Equals current_module_name (FStar_String.concat "_" module_name))
+let update_env = (fun uu____435 -> (
+
+let uu___146_436 = env
+in {names = []; module_name = uu___146_436.module_name; export_module_names = uu___146_436.export_module_names}))
 in (
 
-let res = (FStar_List.filter_map translate_decl decls)
+let res = (FStar_List.filter_map (translate_decl (update_env ())) decls)
 in (
 
-let create_module_imports = (let _184_94 = (let _184_92 = (let _184_90 = (FStar_ST.read export_modules)
-in (FStar_List.map (fun m -> FStar_Extraction_JavaScript_Ast.JSS_ImportDeclaration (((m), (None)))) _184_90))
-in (FStar_All.pipe_right _184_92 (fun _184_91 -> FStar_Extraction_JavaScript_Ast.JSS_Block (_184_91))))
-in (FStar_All.pipe_right _184_94 (fun _184_93 -> FStar_Extraction_JavaScript_Ast.JS_Statement (_184_93))))
+let create_module_imports = (let _0_383 = (let _0_381 = (FStar_List.map (fun m -> FStar_Extraction_JavaScript_Ast.JSS_ImportDeclaration (((m), (None)))) env.export_module_names)
+in (FStar_All.pipe_right _0_381 (fun _0_380 -> FStar_Extraction_JavaScript_Ast.JSS_Block (_0_380))))
+in (FStar_All.pipe_right _0_383 (fun _0_382 -> FStar_Extraction_JavaScript_Ast.JS_Statement (_0_382))))
 in (FStar_List.append ((create_module_imports)::[]) res))))
 end
-| _84_152 -> begin
+| uu____443 -> begin
 (failwith "Unexpected standalone interface or nested modules")
 end)
-in (((FStar_String.concat "_" module_name)), (program))))
+in ((env.module_name), (program)))
 end))
-and translate_decl : FStar_Extraction_ML_Syntax.mlmodule1  ->  FStar_Extraction_JavaScript_Ast.source_t Prims.option = (fun d -> (match (d) with
-| FStar_Extraction_ML_Syntax.MLM_Let (_84_156, c_flag, lfunc) -> begin
+and translate_decl : env  ->  FStar_Extraction_ML_Syntax.mlmodule1  ->  FStar_Extraction_JavaScript_Ast.source_t Prims.option = (fun env d -> (match (d) with
+| FStar_Extraction_ML_Syntax.MLM_Let (uu____453, c_flag, lfunc) -> begin
 (
 
-let for1 = (fun _84_170 -> (match (_84_170) with
-| {FStar_Extraction_ML_Syntax.mllb_name = (name, _84_168); FStar_Extraction_ML_Syntax.mllb_tysc = tys; FStar_Extraction_ML_Syntax.mllb_add_unit = unit_b; FStar_Extraction_ML_Syntax.mllb_def = expr; FStar_Extraction_ML_Syntax.print_typ = pt} -> begin
+let for1 = (fun uu____462 -> (match (uu____462) with
+| {FStar_Extraction_ML_Syntax.mllb_name = (name, uu____465); FStar_Extraction_ML_Syntax.mllb_tysc = tys; FStar_Extraction_ML_Syntax.mllb_add_unit = unit_b; FStar_Extraction_ML_Syntax.mllb_def = expr; FStar_Extraction_ML_Syntax.print_typ = pt} -> begin
 (
 
-let t = (
-
-let _84_171 = (FStar_ST.op_Colon_Equals lp_generic [])
-in if ((not (pt)) || unit_b) then begin
+let t = (match (((not (pt)) || unit_b)) with
+| true -> begin
 None
-end else begin
+end
+| uu____474 -> begin
 (match (tys) with
 | None -> begin
 None
@@ -281,13 +271,18 @@ end
 | Some (lp, ty) -> begin
 (
 
-let _84_182 = (let _184_99 = (FStar_List.map (fun _84_181 -> (match (_84_181) with
-| (id, _84_180) -> begin
+let lp_generic = (match (lp) with
+| [] -> begin
+None
+end
+| uu____486 -> begin
+Some ((FStar_List.map (fun uu____490 -> (match (uu____490) with
+| (id, uu____494) -> begin
 id
-end)) lp)
-in (FStar_ST.op_Colon_Equals lp_generic _184_99))
-in (let _184_101 = (translate_type ty)
-in (FStar_All.pipe_right _184_101 (fun _184_100 -> Some (_184_100)))))
+end)) lp))
+end)
+in (let _0_385 = (translate_type ty lp_generic env)
+in (FStar_All.pipe_right _0_385 (fun _0_384 -> Some (_0_384)))))
 end)
 end)
 in (
@@ -295,63 +290,69 @@ in (
 let is_private = (FStar_List.contains FStar_Extraction_ML_Syntax.Private c_flag)
 in (
 
-let c = if (is_pure_expr expr ((name), (None))) then begin
+let env = (extendEnv env (([]), (name)) tys)
+in (
+
+let c = (
+
+let uu____501 = (is_pure_expr expr ((name), (None)))
+in (match (uu____501) with
+| true -> begin
 (
 
-let var_decl_q = if (isMutable tys) then begin
+let var_decl_q = (match ((isMutable tys)) with
+| true -> begin
 FStar_Extraction_JavaScript_Ast.JSV_Let
-end else begin
+end
+| uu____506 -> begin
 FStar_Extraction_JavaScript_Ast.JSV_Const
+end)
+in (let _0_388 = FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration ((let _0_387 = (let _0_386 = Some ((translate_expr_pure expr env))
+in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((name), (t)))), (_0_386)))
+in ((_0_387), (var_decl_q))))
+in (_0_388)::[]))
 end
-in (let _184_106 = (let _184_105 = (let _184_104 = (let _184_103 = (let _184_102 = (translate_expr_pure expr)
-in Some (_184_102))
-in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((name), (t)))), (_184_103)))
-in ((_184_104), (var_decl_q)))
-in FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (_184_105))
-in (_184_106)::[]))
-end else begin
-(let _184_107 = (FStar_ST.alloc [])
-in (translate_expr expr ((name), (t)) None false _184_107 (isMutable tys)))
-end
-in if is_private then begin
-c
-end else begin
-(FStar_Extraction_JavaScript_Ast.JSS_ExportDefaultDeclaration (((FStar_Extraction_JavaScript_Ast.JSE_Declaration (FStar_Extraction_JavaScript_Ast.JSS_Block (c))), (FStar_Extraction_JavaScript_Ast.ExportValue))))::[]
-end)))
+| uu____512 -> begin
+(translate_expr expr ((name), (t)) [] env false)
 end))
-in (let _184_113 = (let _184_111 = (let _184_109 = (FStar_List.collect for1 lfunc)
-in (FStar_All.pipe_right _184_109 (fun _184_108 -> FStar_Extraction_JavaScript_Ast.JSS_Block (_184_108))))
-in (FStar_All.pipe_right _184_111 (fun _184_110 -> FStar_Extraction_JavaScript_Ast.JS_Statement (_184_110))))
-in (FStar_All.pipe_right _184_113 (fun _184_112 -> Some (_184_112)))))
+in (match (is_private) with
+| true -> begin
+c
 end
-| FStar_Extraction_ML_Syntax.MLM_Loc (_84_189) -> begin
+| uu____515 -> begin
+(FStar_Extraction_JavaScript_Ast.JSS_ExportDefaultDeclaration (((FStar_Extraction_JavaScript_Ast.JSE_Declaration (FStar_Extraction_JavaScript_Ast.JSS_Block (c))), (FStar_Extraction_JavaScript_Ast.ExportValue))))::[]
+end)))))
+end))
+in (let _0_394 = (let _0_392 = (let _0_390 = (FStar_List.collect for1 lfunc)
+in (FStar_All.pipe_right _0_390 (fun _0_389 -> FStar_Extraction_JavaScript_Ast.JSS_Block (_0_389))))
+in (FStar_All.pipe_right _0_392 (fun _0_391 -> FStar_Extraction_JavaScript_Ast.JS_Statement (_0_391))))
+in (FStar_All.pipe_right _0_394 (fun _0_393 -> Some (_0_393)))))
+end
+| FStar_Extraction_ML_Syntax.MLM_Loc (uu____518) -> begin
 None
 end
-| FStar_Extraction_ML_Syntax.MLM_Ty (((_84_192, name, _84_195, tparams, body))::[]) -> begin
+| FStar_Extraction_ML_Syntax.MLM_Ty (((uu____519, name, uu____521, tparams, body))::[]) -> begin
 (
 
 let tparams = (match (tparams) with
 | [] -> begin
 None
 end
-| _84_203 -> begin
-(let _184_116 = (FStar_List.map (fun _84_207 -> (match (_84_207) with
-| (id, _84_206) -> begin
+| uu____548 -> begin
+Some ((FStar_List.map (fun uu____552 -> (match (uu____552) with
+| (id, uu____556) -> begin
 id
-end)) tparams)
-in (FStar_All.pipe_right _184_116 (fun _184_115 -> Some (_184_115))))
+end)) tparams))
 end)
 in (
 
 let forbody = (fun body -> (
 
-let get_export = (fun stmt -> (FStar_All.pipe_right ((FStar_Extraction_JavaScript_Ast.JSE_Declaration (stmt)), (FStar_Extraction_JavaScript_Ast.ExportType)) (fun _184_121 -> FStar_Extraction_JavaScript_Ast.JSS_ExportDefaultDeclaration (_184_121))))
+let get_export = (fun stmt -> FStar_Extraction_JavaScript_Ast.JSS_ExportDefaultDeclaration (((FStar_Extraction_JavaScript_Ast.JSE_Declaration (stmt)), (FStar_Extraction_JavaScript_Ast.ExportType))))
 in (match (body) with
 | FStar_Extraction_ML_Syntax.MLTD_Abbrev (t) -> begin
-(let _184_124 = (let _184_123 = (let _184_122 = (translate_type t)
-in ((((name), (None))), (tparams), (_184_122)))
-in FStar_Extraction_JavaScript_Ast.JSS_TypeAlias (_184_123))
-in (get_export _184_124))
+(get_export (FStar_Extraction_JavaScript_Ast.JSS_TypeAlias ((let _0_395 = (translate_type t tparams env)
+in ((((name), (None))), (tparams), (_0_395))))))
 end
 | FStar_Extraction_ML_Syntax.MLTD_Record (fields) -> begin
 (
@@ -359,12 +360,12 @@ end
 let tag = (((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((("_tag"), (None)))), (FStar_Extraction_JavaScript_Ast.JST_StringLiteral ((("Record"), (""))))))::[]
 in (
 
-let fields_t = (FStar_List.map (fun _84_220 -> (match (_84_220) with
+let fields_t = (FStar_List.map (fun uu____593 -> (match (uu____593) with
 | (n, t) -> begin
-(let _184_126 = (translate_type t)
-in ((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((((Prims.strcat "_" n)), (None)))), (_184_126)))
+(let _0_396 = (translate_type t tparams env)
+in ((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((((Prims.strcat "_" n)), (None)))), (_0_396)))
 end)) fields)
-in (get_export (FStar_Extraction_JavaScript_Ast.JSS_TypeAlias (((((name), (None))), (tparams), (FStar_Extraction_JavaScript_Ast.JST_Object ((((FStar_List.append tag fields_t)), ([]), ([]))))))))))
+in (get_export (FStar_Extraction_JavaScript_Ast.JSS_TypeAlias (((((name), (None))), (tparams), (FStar_Extraction_JavaScript_Ast.JST_Object ((FStar_List.append tag fields_t)))))))))
 end
 | FStar_Extraction_ML_Syntax.MLTD_DType (lfields) -> begin
 (
@@ -372,39 +373,34 @@ end
 let tag = (fun n -> (((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((("_tag"), (None)))), (FStar_Extraction_JavaScript_Ast.JST_StringLiteral (((n), (""))))))::[])
 in (
 
-let fields_t = (fun fields -> (FStar_List.mapi (fun i t -> (let _184_137 = (let _184_135 = (let _184_134 = (let _184_133 = (FStar_Util.string_of_int i)
-in (Prims.strcat "_" _184_133))
-in ((_184_134), (None)))
-in FStar_Extraction_JavaScript_Ast.JSO_Identifier (_184_135))
-in (let _184_136 = (translate_type t)
-in ((_184_137), (_184_136))))) fields))
+let fields_t = (fun fields -> (FStar_List.mapi (fun i t -> (let _0_400 = FStar_Extraction_JavaScript_Ast.JSO_Identifier ((let _0_398 = (let _0_397 = (FStar_Util.string_of_int i)
+in (Prims.strcat "_" _0_397))
+in ((_0_398), (None))))
+in (let _0_399 = (translate_type t tparams env)
+in ((_0_400), (_0_399))))) fields))
 in (
 
-let lfields_t = (FStar_List.map (fun _84_232 -> (match (_84_232) with
+let lfields_t = (FStar_List.map (fun uu____645 -> (match (uu____645) with
 | (n, l) -> begin
-(let _184_144 = (let _184_143 = (let _184_142 = (let _184_141 = (let _184_140 = (let _184_139 = (fields_t l)
-in (FStar_List.append (tag n) _184_139))
-in ((_184_140), ([]), ([])))
-in FStar_Extraction_JavaScript_Ast.JST_Object (_184_141))
-in ((((n), (None))), (tparams), (_184_142)))
-in FStar_Extraction_JavaScript_Ast.JSS_TypeAlias (_184_143))
-in (get_export _184_144))
+(get_export (FStar_Extraction_JavaScript_Ast.JSS_TypeAlias ((let _0_402 = FStar_Extraction_JavaScript_Ast.JST_Object ((let _0_401 = (fields_t l)
+in (FStar_List.append (tag n) _0_401)))
+in ((((n), (None))), (tparams), (_0_402))))))
 end)) lfields)
 in (
 
 let tparams_gen = (match (tparams) with
 | Some (t) -> begin
-(let _184_147 = (FStar_List.map (fun x -> FStar_Extraction_JavaScript_Ast.JST_Generic (((FStar_Extraction_JavaScript_Ast.Unqualified (((x), (None)))), (None)))) t)
-in (FStar_All.pipe_right _184_147 (fun _184_146 -> Some (_184_146))))
+(let _0_404 = (FStar_List.map (fun x -> FStar_Extraction_JavaScript_Ast.JST_Generic (((x), (None)))) t)
+in (FStar_All.pipe_right _0_404 (fun _0_403 -> Some (_0_403))))
 end
 | None -> begin
 None
 end)
 in (
 
-let lnames = (FStar_List.map (fun _84_241 -> (match (_84_241) with
+let lnames = (FStar_List.map (fun uu____684 -> (match (uu____684) with
 | (n, l) -> begin
-FStar_Extraction_JavaScript_Ast.JST_Generic (((FStar_Extraction_JavaScript_Ast.Unqualified (((n), (None)))), (tparams_gen)))
+FStar_Extraction_JavaScript_Ast.JST_Generic (((n), (tparams_gen)))
 end)) lfields)
 in (
 
@@ -420,330 +416,272 @@ end
 | Some (v) -> begin
 (forbody v)
 end)
-in (let _184_151 = (FStar_All.pipe_right body_t (fun _184_149 -> FStar_Extraction_JavaScript_Ast.JS_Statement (_184_149)))
-in (FStar_All.pipe_right _184_151 (fun _184_150 -> Some (_184_150)))))))
+in (let _0_407 = (FStar_All.pipe_right body_t (fun _0_405 -> FStar_Extraction_JavaScript_Ast.JS_Statement (_0_405)))
+in (FStar_All.pipe_right _0_407 (fun _0_406 -> Some (_0_406)))))))
 end
-| FStar_Extraction_ML_Syntax.MLM_Ty (_84_249) -> begin
+| FStar_Extraction_ML_Syntax.MLM_Ty (uu____704) -> begin
 (failwith "todo: translate_decl [MLM_Ty]")
 end
-| FStar_Extraction_ML_Syntax.MLM_Top (_84_252) -> begin
+| FStar_Extraction_ML_Syntax.MLM_Top (uu____706) -> begin
 (failwith "todo: translate_decl [MLM_Top]")
 end
 | FStar_Extraction_ML_Syntax.MLM_Exn (x, []) -> begin
-(let _184_154 = (FStar_All.pipe_right (FStar_Extraction_JavaScript_Ast.JSS_Block ([])) (fun _184_152 -> FStar_Extraction_JavaScript_Ast.JS_Statement (_184_152)))
-in (FStar_All.pipe_right _184_154 (fun _184_153 -> Some (_184_153))))
+(let _0_410 = (FStar_All.pipe_right (FStar_Extraction_JavaScript_Ast.JSS_Block ([])) (fun _0_408 -> FStar_Extraction_JavaScript_Ast.JS_Statement (_0_408)))
+in (FStar_All.pipe_right _0_410 (fun _0_409 -> Some (_0_409))))
 end
-| FStar_Extraction_ML_Syntax.MLM_Exn (_84_259) -> begin
+| FStar_Extraction_ML_Syntax.MLM_Exn (uu____711) -> begin
 (failwith "todo: translate_decl [MLM_Exn]")
 end))
-and translate_expr : FStar_Extraction_ML_Syntax.mlexpr  ->  (Prims.string * FStar_Extraction_JavaScript_Ast.typ Prims.option)  ->  FStar_Extraction_JavaScript_Ast.statement_t Prims.list Prims.option  ->  Prims.bool  ->  Prims.string Prims.list FStar_ST.ref  ->  Prims.bool  ->  FStar_Extraction_JavaScript_Ast.statement_t Prims.list = (fun e var lstmt isDecl lDecl isMutableV -> (
+and translate_expr : FStar_Extraction_ML_Syntax.mlexpr  ->  (FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_JavaScript_Ast.typ Prims.option)  ->  FStar_Extraction_JavaScript_Ast.statement_t Prims.list  ->  env  ->  Prims.bool  ->  FStar_Extraction_JavaScript_Ast.statement_t Prims.list = (fun e var lstmt env isDecl -> (
 
 let get_res = (fun expr new_fv -> (
 
-let lstmt = (match (lstmt) with
-| Some (v) -> begin
-v
-end
-| None -> begin
-[]
-end)
-in (
-
-let isAssgmnt = (FStar_ST.alloc [])
-in (
-
 let expr = (match (expr) with
-| FStar_Extraction_JavaScript_Ast.JSE_Assignment (_84_276) -> begin
-(
-
-let _84_278 = (FStar_ST.op_Colon_Equals isAssgmnt ((FStar_Extraction_JavaScript_Ast.JSS_Expression (expr))::[]))
-in FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Null), (""))))
+| FStar_Extraction_JavaScript_Ast.JSE_Assignment (uu____739) -> begin
+(match (isDecl) with
+| true -> begin
+(FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_Expression (expr))::(FStar_Extraction_JavaScript_Ast.JSS_Expression (FStar_Extraction_JavaScript_Ast.JSE_Assignment (((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Null), (""))))))))::[]) lstmt)
 end
-| _84_281 -> begin
-expr
+| uu____743 -> begin
+(FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_Expression (expr))::(FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (Some (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Null), (""))))))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::[]) lstmt)
 end)
-in (
-
-let expr = if isDecl then begin
-FStar_Extraction_JavaScript_Ast.JSS_Expression (FStar_Extraction_JavaScript_Ast.JSE_Assignment (((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (expr))))
-end else begin
-(
-
-let _84_283 = (let _184_166 = (let _184_165 = (FStar_ST.read lDecl)
-in (FStar_List.append (((Prims.fst var))::[]) _184_165))
-in (FStar_ST.op_Colon_Equals lDecl _184_166))
-in (
-
-let var_decl_q = if isMutableV then begin
-FStar_Extraction_JavaScript_Ast.JSV_Let
-end else begin
-FStar_Extraction_JavaScript_Ast.JSV_Const
 end
-in FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (Some (expr)))), (var_decl_q)))))
+| uu____748 -> begin
+(match (isDecl) with
+| true -> begin
+(FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_Expression (FStar_Extraction_JavaScript_Ast.JSE_Assignment (((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (expr)))))::[]) lstmt)
 end
+| uu____750 -> begin
+(FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (Some (expr)))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::[]) lstmt)
+end)
+end)
 in (match (new_fv) with
-| Some (v) -> begin
-if (FStar_ST.read isEqVar) then begin
-(
-
-let _84_289 = (FStar_ST.op_Colon_Equals isEqVar false)
-in (let _184_169 = (FStar_ST.read v)
-in (let _184_168 = (let _184_167 = (FStar_ST.read isAssgmnt)
-in (FStar_List.append _184_167 ((FStar_Extraction_JavaScript_Ast.JSS_Block ((FStar_List.append ((expr)::[]) lstmt)))::[])))
-in (FStar_List.append _184_169 _184_168))))
-end else begin
-(let _184_172 = (FStar_ST.read v)
-in (let _184_171 = (let _184_170 = (FStar_ST.read isAssgmnt)
-in (FStar_List.append _184_170 (FStar_List.append ((expr)::[]) lstmt)))
-in (FStar_List.append _184_172 _184_171)))
+| [] -> begin
+expr
 end
-end
-| None -> begin
-(let _184_173 = (FStar_ST.read isAssgmnt)
-in (FStar_List.append _184_173 (FStar_List.append ((expr)::[]) lstmt)))
-end))))))
+| uu____756 -> begin
+(FStar_List.append new_fv ((FStar_Extraction_JavaScript_Ast.JSS_Block (expr))::[]))
+end)))
 in (match (e.FStar_Extraction_ML_Syntax.expr) with
 | x when (is_pure_expr e var) -> begin
 (
 
-let expr = (translate_expr_pure e)
-in (get_res expr None))
+let expr = (translate_expr_pure e env)
+in (get_res expr []))
 end
-| FStar_Extraction_ML_Syntax.MLE_Let ((_84_295, _84_297, ({FStar_Extraction_ML_Syntax.mllb_name = (name, _84_304); FStar_Extraction_ML_Syntax.mllb_tysc = tys; FStar_Extraction_ML_Syntax.mllb_add_unit = add_unit; FStar_Extraction_ML_Syntax.mllb_def = body; FStar_Extraction_ML_Syntax.print_typ = pt})::[]), continuation) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Let ((uu____762, uu____763, ({FStar_Extraction_ML_Syntax.mllb_name = (name, uu____765); FStar_Extraction_ML_Syntax.mllb_tysc = tys; FStar_Extraction_ML_Syntax.mllb_add_unit = add_unit; FStar_Extraction_ML_Syntax.mllb_def = body; FStar_Extraction_ML_Syntax.print_typ = pt})::[]), continuation) -> begin
 (
 
-let isEqName = (let _184_175 = (FStar_ST.read lDecl)
-in (FStar_List.existsb (fun x -> (x = name)) _184_175))
+let isEqName = (isInEnv env name)
 in (
 
-let lDecl = if isEqName then begin
-lDecl
-end else begin
-(
-
-let _84_314 = (let _184_177 = (let _184_176 = (FStar_ST.read lDecl)
-in (FStar_List.append ((name)::[]) _184_176))
-in (FStar_ST.op_Colon_Equals lDecl _184_177))
-in lDecl)
+let env = (match (isEqName) with
+| true -> begin
+env
 end
+| uu____779 -> begin
+(extendEnv env (([]), (name)) tys)
+end)
 in (
 
-let c = (translate_expr continuation var lstmt isDecl lDecl isMutableV)
-in if (is_pure_expr body ((name), (None))) then begin
+let c = (translate_expr continuation var lstmt env isDecl)
+in (
+
+let uu____783 = (is_pure_expr body ((name), (None)))
+in (match (uu____783) with
+| true -> begin
 (
 
-let var_decl_q = if (isMutable tys) then begin
+let var_decl_q = (match ((isMutable tys)) with
+| true -> begin
 FStar_Extraction_JavaScript_Ast.JSV_Let
-end else begin
-FStar_Extraction_JavaScript_Ast.JSV_Const
 end
+| uu____788 -> begin
+FStar_Extraction_JavaScript_Ast.JSV_Const
+end)
 in (
 
-let c = (let _184_183 = (let _184_182 = (let _184_181 = (let _184_180 = (let _184_179 = (let _184_178 = (translate_expr_pure body)
-in Some (_184_178))
-in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((name), (None)))), (_184_179)))
-in ((_184_180), (var_decl_q)))
-in FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (_184_181))
-in (_184_182)::[])
-in (FStar_List.append _184_183 c))
-in if isEqName then begin
+let c = (let _0_414 = (let _0_413 = FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration ((let _0_412 = (let _0_411 = Some ((translate_expr_pure body env))
+in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((name), (None)))), (_0_411)))
+in ((_0_412), (var_decl_q))))
+in (_0_413)::[])
+in (FStar_List.append _0_414 c))
+in (match (isEqName) with
+| true -> begin
 (FStar_Extraction_JavaScript_Ast.JSS_Block (c))::[]
-end else begin
+end
+| uu____797 -> begin
 c
-end))
-end else begin
-(translate_expr body ((name), (None)) (Some (c)) false lDecl (isMutable tys))
 end)))
 end
-| FStar_Extraction_ML_Syntax.MLE_Let (_84_321) -> begin
+| uu____798 -> begin
+(translate_expr body ((name), (None)) c env false)
+end)))))
+end
+| FStar_Extraction_ML_Syntax.MLE_Let (uu____800) -> begin
 (failwith "todo: translate_expr [MLE_Let]")
 end
 | FStar_Extraction_ML_Syntax.MLE_Fun (args, body) -> begin
 (
 
-let args = (FStar_List.map (fun _84_332 -> (match (_84_332) with
-| ((n, _84_329), t) -> begin
-(let _184_187 = (let _184_186 = (let _184_185 = (translate_type t)
-in Some (_184_185))
-in ((n), (_184_186)))
-in FStar_Extraction_JavaScript_Ast.JGP_Identifier (_184_187))
+let args = (FStar_List.map (fun uu____822 -> (match (uu____822) with
+| ((n, uu____828), t) -> begin
+FStar_Extraction_JavaScript_Ast.JGP_Identifier ((let _0_415 = Some ((translate_type t None env))
+in ((n), (_0_415))))
 end)) args)
 in (
 
-let generic_t = (match ((FStar_ST.read lp_generic)) with
-| [] -> begin
-None
-end
-| _84_336 -> begin
-(let _184_188 = (FStar_ST.read lp_generic)
-in Some (_184_188))
-end)
-in (
-
 let is_failwith = (match (body.FStar_Extraction_ML_Syntax.expr) with
-| FStar_Extraction_ML_Syntax.MLE_App (expr, _84_340) -> begin
+| FStar_Extraction_ML_Syntax.MLE_App (expr, uu____836) -> begin
 (match (expr.FStar_Extraction_ML_Syntax.expr) with
-| FStar_Extraction_ML_Syntax.MLE_Name (p) when ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "failwith") -> begin
+| FStar_Extraction_ML_Syntax.MLE_Name (p) when (let _0_416 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_416 = "failwith")) -> begin
 true
 end
-| _84_346 -> begin
+| uu____840 -> begin
 false
 end)
 end
-| _84_348 -> begin
+| uu____841 -> begin
 false
 end)
 in (
 
-let body_t = if is_failwith then begin
+let body_t = (match (is_failwith) with
+| true -> begin
 FStar_Extraction_JavaScript_Ast.JS_BodyBlock ((FStar_Extraction_JavaScript_Ast.JSS_Throw (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_String ("Not yet implemented!")), ("")))))::[])
-end else begin
-if (is_pure_expr body var) then begin
-(let _184_189 = (translate_expr_pure body)
-in FStar_Extraction_JavaScript_Ast.JS_BodyExpression (_184_189))
-end else begin
-(let _184_191 = (let _184_190 = (translate_expr body (("_res"), (None)) (Some ((FStar_Extraction_JavaScript_Ast.JSS_Return (Some (FStar_Extraction_JavaScript_Ast.JSE_Identifier ((("_res"), (None))))))::[])) true lDecl true)
-in (FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier ((("_res"), (None)))), (None))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::[]) _184_190))
-in FStar_Extraction_JavaScript_Ast.JS_BodyBlock (_184_191))
 end
+| uu____843 -> begin
+(
+
+let uu____844 = (is_pure_expr body var)
+in (match (uu____844) with
+| true -> begin
+FStar_Extraction_JavaScript_Ast.JS_BodyExpression ((translate_expr_pure body env))
 end
+| uu____846 -> begin
+FStar_Extraction_JavaScript_Ast.JS_BodyBlock ((let _0_417 = (translate_expr body (("_res"), (None)) ((FStar_Extraction_JavaScript_Ast.JSS_Return (Some (FStar_Extraction_JavaScript_Ast.JSE_Identifier ((("_res"), (None))))))::[]) env true)
+in (FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier ((("_res"), (None)))), (None))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::[]) _0_417)))
+end))
+end)
 in (
 
-let ret_t = (match ((Prims.snd var)) with
+let uu____854 = (match ((Prims.snd var)) with
 | None -> begin
-None
+((None), (None))
 end
 | Some (v) -> begin
 (match (v) with
-| FStar_Extraction_JavaScript_Ast.JST_Function (_84_355, t2, _84_358) -> begin
-Some (t2)
+| FStar_Extraction_JavaScript_Ast.JST_Function (uu____876, t2, lp) -> begin
+((Some (t2)), (lp))
 end
-| _84_362 -> begin
-None
+| uu____898 -> begin
+((None), (None))
 end)
 end)
-in (
-
-let expr = FStar_Extraction_JavaScript_Ast.JSE_ArrowFunction (((None), (args), (body_t), (ret_t), (generic_t)))
-in (
-
-let lstmt = (match (lstmt) with
-| Some (v) -> begin
-v
-end
-| None -> begin
-[]
-end)
-in (
-
-let expr = if isDecl then begin
-(FStar_Extraction_JavaScript_Ast.JSS_Expression (FStar_Extraction_JavaScript_Ast.JSE_Assignment (((FStar_Extraction_JavaScript_Ast.JGP_Identifier ((((Prims.fst var)), (None)))), (expr)))))::[]
-end else begin
+in (match (uu____854) with
+| (ret_t, lp_generic) -> begin
 (
 
-let _84_369 = (let _184_193 = (let _184_192 = (FStar_ST.read lDecl)
-in (FStar_List.append (((Prims.fst var))::[]) _184_192))
-in (FStar_ST.op_Colon_Equals lDecl _184_193))
-in (FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier ((((Prims.fst var)), (None)))), (Some (expr)))), (FStar_Extraction_JavaScript_Ast.JSV_Const))))::[])
+let expr = FStar_Extraction_JavaScript_Ast.JSE_ArrowFunction (((None), (args), (body_t), (ret_t), (lp_generic)))
+in (
+
+let expr = (match (isDecl) with
+| true -> begin
+(FStar_Extraction_JavaScript_Ast.JSS_Expression (FStar_Extraction_JavaScript_Ast.JSE_Assignment (((FStar_Extraction_JavaScript_Ast.JGP_Identifier ((((Prims.fst var)), (None)))), (expr)))))::[]
 end
-in (FStar_List.append expr lstmt)))))))))
+| uu____929 -> begin
+(FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier ((((Prims.fst var)), (None)))), (Some (expr)))), (FStar_Extraction_JavaScript_Ast.JSV_Const))))::[]
+end)
+in (FStar_List.append expr lstmt)))
+end)))))
 end
 | FStar_Extraction_ML_Syntax.MLE_If (cond, s1, s2) -> begin
 (
 
-let s1 = (let _184_194 = (translate_expr s1 var None true lDecl isMutableV)
-in FStar_Extraction_JavaScript_Ast.JSS_Block (_184_194))
+let s1 = FStar_Extraction_JavaScript_Ast.JSS_Block ((translate_expr s1 var [] env true))
 in (
 
 let s2 = (match (s2) with
 | Some (v) -> begin
-(let _184_196 = (let _184_195 = (translate_expr v var None true lDecl isMutableV)
-in FStar_Extraction_JavaScript_Ast.JSS_Block (_184_195))
-in Some (_184_196))
+Some (FStar_Extraction_JavaScript_Ast.JSS_Block ((translate_expr v var [] env true)))
 end
 | None -> begin
 None
 end)
 in (
 
-let c = if (is_pure_expr cond var) then begin
-(let _184_199 = (let _184_198 = (let _184_197 = (translate_expr_pure cond)
-in ((_184_197), (s1), (s2)))
-in FStar_Extraction_JavaScript_Ast.JSS_If (_184_198))
-in (_184_199)::[])
-end else begin
-(let _184_200 = (translate_expr cond (("_cond"), (None)) (Some ((FStar_Extraction_JavaScript_Ast.JSS_If (((FStar_Extraction_JavaScript_Ast.JSE_Identifier ((("_cond"), (Some (FStar_Extraction_JavaScript_Ast.JST_Boolean))))), (s1), (s2))))::[])) true lDecl true)
-in (FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier ((("_cond"), (Some (FStar_Extraction_JavaScript_Ast.JST_Boolean))))), (None))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::[]) _184_200))
+let c = (
+
+let uu____948 = (is_pure_expr cond var)
+in (match (uu____948) with
+| true -> begin
+(let _0_419 = FStar_Extraction_JavaScript_Ast.JSS_If ((let _0_418 = (translate_expr_pure cond env)
+in ((_0_418), (s1), (s2))))
+in (_0_419)::[])
 end
+| uu____952 -> begin
+(let _0_420 = (translate_expr cond (("_cond"), (None)) ((FStar_Extraction_JavaScript_Ast.JSS_If (((FStar_Extraction_JavaScript_Ast.JSE_Identifier ((("_cond"), (None)))), (s1), (s2))))::[]) env true)
+in (FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier ((("_cond"), (Some (FStar_Extraction_JavaScript_Ast.JST_Boolean))))), (None))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::[]) _0_420))
+end))
 in (
 
-let c = if isDecl then begin
+let c = (match (isDecl) with
+| true -> begin
 c
-end else begin
-(
-
-let _84_383 = (let _184_202 = (let _184_201 = (FStar_ST.read lDecl)
-in (FStar_List.append (((Prims.fst var))::[]) _184_201))
-in (FStar_ST.op_Colon_Equals lDecl _184_202))
-in (FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (None))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::[]) c))
 end
-in (match (lstmt) with
-| Some (v) -> begin
-(FStar_List.append c v)
+| uu____964 -> begin
+(FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (None))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::[]) c)
+end)
+in (FStar_List.append c lstmt)))))
 end
-| None -> begin
-c
-end)))))
-end
-| FStar_Extraction_ML_Syntax.MLE_Raise (_84_390) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Raise (uu____969) -> begin
 (failwith "todo: translate_expr [MLE_Raise]")
 end
-| FStar_Extraction_ML_Syntax.MLE_Try (_84_393) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Try (uu____974) -> begin
 (failwith "todo: translate_expr [MLE_Try]")
 end
 | FStar_Extraction_ML_Syntax.MLE_Coerce (in_e, t_from, t_to) -> begin
 (
 
 let var = (((Prims.fst var)), (Some (FStar_Extraction_JavaScript_Ast.JST_Any)))
-in (translate_expr in_e var lstmt isDecl lDecl isMutableV))
+in (translate_expr in_e var lstmt env isDecl))
 end
 | FStar_Extraction_ML_Syntax.MLE_Match (e_in, lb) -> begin
 (
 
-let match_e = (let _184_203 = (FStar_Absyn_Util.gensym ())
-in ((_184_203), (None)))
+let match_e = (let _0_421 = (Prims.fst (FStar_Extraction_ML_Syntax.gensym ()))
+in ((_0_421), (None)))
 in (
 
-let c = if (is_pure_expr e_in var) then begin
-(let _184_210 = (let _184_207 = (let _184_206 = (let _184_205 = (let _184_204 = (translate_expr_pure e_in)
-in Some (_184_204))
-in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (match_e)), (_184_205)))
-in ((_184_206), (FStar_Extraction_JavaScript_Ast.JSV_Const)))
-in FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (_184_207))
-in (let _184_209 = (let _184_208 = (translate_match lb (FStar_Extraction_JavaScript_Ast.JSE_Identifier (match_e)) var isMutableV lDecl)
-in (_184_208)::[])
-in (_184_210)::_184_209))
-end else begin
-(let _184_214 = (let _184_213 = (let _184_212 = (let _184_211 = (translate_match lb (FStar_Extraction_JavaScript_Ast.JSE_Identifier (match_e)) var isMutableV lDecl)
-in (_184_211)::[])
-in Some (_184_212))
-in (translate_expr e_in match_e _184_213 true lDecl true))
-in (FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (match_e)), (None))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::[]) _184_214))
+let c = (
+
+let uu____1011 = (is_pure_expr e_in var)
+in (match (uu____1011) with
+| true -> begin
+(let _0_426 = FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration ((let _0_423 = (let _0_422 = Some ((translate_expr_pure e_in env))
+in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (match_e)), (_0_422)))
+in ((_0_423), (FStar_Extraction_JavaScript_Ast.JSV_Const))))
+in (let _0_425 = (let _0_424 = (translate_match lb (FStar_Extraction_JavaScript_Ast.JSE_Identifier (match_e)) var env)
+in (_0_424)::[])
+in (_0_426)::_0_425))
 end
+| uu____1018 -> begin
+(let _0_429 = (let _0_428 = (let _0_427 = (translate_match lb (FStar_Extraction_JavaScript_Ast.JSE_Identifier (match_e)) var env)
+in (_0_427)::[])
+in (translate_expr e_in match_e _0_428 env true))
+in (FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (match_e)), (None))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::[]) _0_429))
+end))
 in (
 
-let c = if isDecl then begin
+let c = (match (isDecl) with
+| true -> begin
 c
-end else begin
+end
+| uu____1026 -> begin
 (FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (None))), (FStar_Extraction_JavaScript_Ast.JSV_Let))))::[]) c)
-end
-in (match (lstmt) with
-| Some (v) -> begin
-(FStar_List.append c v)
-end
-| None -> begin
-c
-end))))
+end)
+in (FStar_List.append c lstmt))))
 end
 | FStar_Extraction_ML_Syntax.MLE_Seq (ls) -> begin
 (
@@ -753,44 +691,34 @@ let rec translate_seq = (fun l -> (match (l) with
 (failwith "Empty list in [MLE_Seq]")
 end
 | (x)::[] -> begin
-(translate_expr x var None isDecl lDecl isMutableV)
+(translate_expr x var [] env isDecl)
 end
 | (hd)::tl -> begin
-(let _184_218 = (let _184_217 = (translate_seq tl)
-in Some (_184_217))
-in (translate_expr hd (("_"), (None)) _184_218 false lDecl true))
+(let _0_430 = (translate_seq tl)
+in (translate_expr hd (("_"), (None)) _0_430 env false))
 end))
-in (
-
-let c = (translate_seq ls)
-in (match (lstmt) with
-| Some (v) -> begin
-(FStar_List.append c v)
-end
-| None -> begin
-c
-end)))
+in (let _0_431 = (translate_seq ls)
+in (FStar_List.append _0_431 lstmt)))
 end
 | FStar_Extraction_ML_Syntax.MLE_App (e, args) -> begin
 (
 
-let new_fv = (FStar_ST.alloc [])
-in (
+let uu____1051 = (create_pure_args args var env)
+in (match (uu____1051) with
+| (args, new_fv) -> begin
+(
 
-let args = (create_pure_args new_fv args var)
-in (
-
-let expr = (translate_arg_app e args var)
-in (get_res expr (Some (new_fv))))))
+let expr = (translate_arg_app e args var env)
+in (get_res expr new_fv))
+end))
 end
 | FStar_Extraction_ML_Syntax.MLE_CTor ((path, c), lexpr) -> begin
 (
 
-let new_fv = (FStar_ST.alloc [])
-in (
-
-let lexpr = (create_pure_args new_fv lexpr var)
-in (
+let uu____1074 = (create_pure_args lexpr var env)
+in (match (uu____1074) with
+| (lexpr, new_fv) -> begin
+(
 
 let expr = (match (c) with
 | x when ((x = "Cons") || (x = "Nil")) -> begin
@@ -811,194 +739,225 @@ end
 (FStar_List.nth lexpr (Prims.parse_int "0"))
 end)
 end
-| _84_451 -> begin
-(let _184_227 = (let _184_226 = (FStar_List.mapi (fun i x -> (let _184_225 = (let _184_224 = (let _184_223 = (let _184_222 = (let _184_221 = (FStar_Util.string_of_int i)
-in (Prims.strcat "_" _184_221))
-in ((_184_222), (None)))
-in FStar_Extraction_JavaScript_Ast.JSO_Identifier (_184_223))
-in ((_184_224), (x), (FStar_Extraction_JavaScript_Ast.JSO_Init)))
-in FStar_Extraction_JavaScript_Ast.JSPO_Property (_184_225))) lexpr)
-in (FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSPO_Property (((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((("_tag"), (Some (FStar_Extraction_JavaScript_Ast.JST_String))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_String (c)), ("")))), (FStar_Extraction_JavaScript_Ast.JSO_Init))))::[]) _184_226))
-in FStar_Extraction_JavaScript_Ast.JSE_Object (_184_227))
+| uu____1099 -> begin
+FStar_Extraction_JavaScript_Ast.JSE_Object ((let _0_435 = (FStar_List.mapi (fun i x -> FStar_Extraction_JavaScript_Ast.JSPO_Property ((let _0_434 = FStar_Extraction_JavaScript_Ast.JSO_Identifier ((let _0_433 = (let _0_432 = (FStar_Util.string_of_int i)
+in (Prims.strcat "_" _0_432))
+in ((_0_433), (None))))
+in ((_0_434), (x), (FStar_Extraction_JavaScript_Ast.JSO_Init))))) lexpr)
+in (FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSPO_Property (((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((("_tag"), (Some (FStar_Extraction_JavaScript_Ast.JST_String))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_String (c)), ("")))), (FStar_Extraction_JavaScript_Ast.JSO_Init))))::[]) _0_435)))
 end)
-in (get_res expr (Some (new_fv))))))
+in (get_res expr new_fv))
+end))
 end
 | FStar_Extraction_ML_Syntax.MLE_Record (path, fields) -> begin
 (
 
-let new_fv = (FStar_ST.alloc [])
-in (
+let uu____1114 = (FStar_List.fold_left (fun uu____1125 uu____1126 -> (match (((uu____1125), (uu____1126))) with
+| ((lexpr, lnew_fv), (id, x)) -> begin
+(
 
-let create_fields = (FStar_List.map (fun _84_462 -> (match (_84_462) with
-| (id, x) -> begin
-(let _184_231 = (let _184_230 = (let _184_229 = (create_pure_args new_fv ((x)::[]) var)
-in (FStar_List.nth _184_229 (Prims.parse_int "0")))
-in ((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((((Prims.strcat "_" id)), (None)))), (_184_230), (FStar_Extraction_JavaScript_Ast.JSO_Init)))
-in FStar_Extraction_JavaScript_Ast.JSPO_Property (_184_231))
-end)) fields)
-in (
+let uu____1157 = (create_pure_args ((x)::[]) var env)
+in (match (uu____1157) with
+| (expr, fv) -> begin
+(let _0_439 = (let _0_438 = (let _0_437 = FStar_Extraction_JavaScript_Ast.JSPO_Property ((let _0_436 = (FStar_List.nth expr (Prims.parse_int "0"))
+in ((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((((Prims.strcat "_" id)), (None)))), (_0_436), (FStar_Extraction_JavaScript_Ast.JSO_Init))))
+in (_0_437)::[])
+in (FStar_List.append _0_438 lexpr))
+in ((_0_439), ((FStar_List.append fv lnew_fv))))
+end))
+end)) (([]), ([])) fields)
+in (match (uu____1114) with
+| (create_fields, new_fv) -> begin
+(
 
 let expr = FStar_Extraction_JavaScript_Ast.JSE_Object ((FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSPO_Property (((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((("_tag"), (Some (FStar_Extraction_JavaScript_Ast.JST_String))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_String ("Record")), ("")))), (FStar_Extraction_JavaScript_Ast.JSO_Init))))::[]) create_fields))
-in (get_res expr (Some (new_fv))))))
+in (get_res expr new_fv))
+end))
 end
 | FStar_Extraction_ML_Syntax.MLE_Tuple (lexp) -> begin
 (
 
-let new_fv = (FStar_ST.alloc [])
-in (
-
-let create_fields = (FStar_List.map (fun x -> (let _184_233 = (create_pure_args new_fv ((x)::[]) var)
-in (FStar_List.nth _184_233 (Prims.parse_int "0")))) lexp)
-in (
-
-let expr = FStar_Extraction_JavaScript_Ast.JSE_Array (Some (create_fields))
-in (get_res expr (Some (new_fv))))))
-end
-| _84_472 -> begin
-(failwith "todo: translation ml-expr")
-end)))
-and create_pure_args : FStar_Extraction_JavaScript_Ast.statement_t Prims.list FStar_ST.ref  ->  FStar_Extraction_ML_Syntax.mlexpr Prims.list  ->  (Prims.string * FStar_Extraction_JavaScript_Ast.typ Prims.option)  ->  FStar_Extraction_JavaScript_Ast.expression_t Prims.list = (fun new_fv args var -> (FStar_List.map (fun x -> (match (x.FStar_Extraction_ML_Syntax.expr) with
-| FStar_Extraction_ML_Syntax.MLE_CTor ((path, c), _84_481) when ((c = "Nil") || (c = "None")) -> begin
-(let _184_240 = (let _184_239 = (translate_expr_pure x)
-in (let _184_238 = (translate_type x.FStar_Extraction_ML_Syntax.mlty)
-in ((_184_239), (_184_238))))
-in FStar_Extraction_JavaScript_Ast.JSE_TypeCast (_184_240))
-end
-| _84_485 -> begin
-if (is_pure_expr x var) then begin
-(translate_expr_pure x)
-end else begin
+let uu____1188 = (FStar_List.fold_left (fun uu____1197 x -> (match (uu____1197) with
+| (lexpr, lnew_fv) -> begin
 (
 
-let fv_x = (FStar_Absyn_Util.gensym ())
+let uu____1213 = (create_pure_args ((x)::[]) var env)
+in (match (uu____1213) with
+| (expr, fv) -> begin
+(((FStar_List.append expr lexpr)), ((FStar_List.append fv lnew_fv)))
+end))
+end)) (([]), ([])) lexp)
+in (match (uu____1188) with
+| (create_fields, new_fv) -> begin
+(
+
+let expr = FStar_Extraction_JavaScript_Ast.JSE_Array (Some (create_fields))
+in (get_res expr new_fv))
+end))
+end
+| uu____1241 -> begin
+(failwith "todo: translation ml-expr")
+end)))
+and create_pure_args : FStar_Extraction_ML_Syntax.mlexpr Prims.list  ->  (FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_JavaScript_Ast.typ Prims.option)  ->  env  ->  (FStar_Extraction_JavaScript_Ast.expression_t Prims.list * FStar_Extraction_JavaScript_Ast.statement_t Prims.list) = (fun args var env -> (FStar_List.fold_left (fun uu____1254 x -> (match (uu____1254) with
+| (lexpr, lnew_fv) -> begin
+(match (x.FStar_Extraction_ML_Syntax.expr) with
+| FStar_Extraction_ML_Syntax.MLE_CTor ((path, c), uu____1276) when ((c = "Nil") || (c = "None")) -> begin
+(let _0_444 = (let _0_443 = (let _0_442 = FStar_Extraction_JavaScript_Ast.JSE_TypeCast ((let _0_441 = (translate_expr_pure x env)
+in (let _0_440 = (translate_type x.FStar_Extraction_ML_Syntax.mlty None env)
+in ((_0_441), (_0_440)))))
+in (_0_442)::[])
+in (FStar_List.append _0_443 lexpr))
+in ((_0_444), (lnew_fv)))
+end
+| uu____1287 -> begin
+(
+
+let uu____1288 = (is_pure_expr x var)
+in (match (uu____1288) with
+| true -> begin
+(let _0_447 = (let _0_446 = (let _0_445 = (translate_expr_pure x env)
+in (_0_445)::[])
+in (FStar_List.append _0_446 lexpr))
+in ((_0_447), (lnew_fv)))
+end
+| uu____1296 -> begin
+(
+
+let fv_x = (Prims.fst (FStar_Extraction_ML_Syntax.gensym ()))
 in (
 
 let c = (match (x.FStar_Extraction_ML_Syntax.expr) with
-| FStar_Extraction_ML_Syntax.MLE_Var (_84_488) -> begin
-(
-
-let _84_490 = (FStar_ST.op_Colon_Equals isEqVar true)
-in (let _184_245 = (let _184_244 = (let _184_243 = (let _184_242 = (let _184_241 = (translate_expr_pure x)
-in Some (_184_241))
-in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((fv_x), (None)))), (_184_242)))
-in ((_184_243), (FStar_Extraction_JavaScript_Ast.JSV_Const)))
-in FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (_184_244))
-in (_184_245)::[]))
+| FStar_Extraction_ML_Syntax.MLE_Var (uu____1301) -> begin
+(let _0_450 = FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration ((let _0_449 = (let _0_448 = Some ((translate_expr_pure x env))
+in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((fv_x), (None)))), (_0_448)))
+in ((_0_449), (FStar_Extraction_JavaScript_Ast.JSV_Const))))
+in (_0_450)::[])
 end
-| _84_493 -> begin
-(let _184_246 = (FStar_ST.alloc [])
-in (translate_expr x ((fv_x), (None)) None false _184_246 false))
+| uu____1307 -> begin
+(translate_expr x ((fv_x), (None)) [] env false)
 end)
-in (
-
-let _84_495 = (let _184_248 = (let _184_247 = (FStar_ST.read new_fv)
-in (FStar_List.append _184_247 c))
-in (FStar_ST.op_Colon_Equals new_fv _184_248))
-in FStar_Extraction_JavaScript_Ast.JSE_Identifier (((fv_x), (None))))))
-end
-end)) args))
-and translate_arg_app : FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Extraction_JavaScript_Ast.expression_t Prims.list  ->  (Prims.string * FStar_Extraction_JavaScript_Ast.typ Prims.option)  ->  FStar_Extraction_JavaScript_Ast.expression_t = (fun e args var -> (match (e.FStar_Extraction_ML_Syntax.expr) with
+in (((FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSE_Identifier (((fv_x), (None))))::[]) lexpr)), ((FStar_List.append c lnew_fv)))))
+end))
+end)
+end)) (([]), ([])) args))
+and translate_arg_app : FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Extraction_JavaScript_Ast.expression_t Prims.list  ->  (FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_JavaScript_Ast.typ Prims.option)  ->  env  ->  FStar_Extraction_JavaScript_Ast.expression_t = (fun e args var env -> (match (e.FStar_Extraction_ML_Syntax.expr) with
 | FStar_Extraction_ML_Syntax.MLE_Name (("Prims")::[], op) when (is_op_bin op) -> begin
-(let _184_255 = (let _184_254 = (FStar_Util.must (mk_op_bin op))
-in (let _184_253 = (FStar_List.nth args (Prims.parse_int "0"))
-in (let _184_252 = (FStar_List.nth args (Prims.parse_int "1"))
-in ((_184_254), (_184_253), (_184_252)))))
-in FStar_Extraction_JavaScript_Ast.JSE_Binary (_184_255))
+FStar_Extraction_JavaScript_Ast.JSE_Binary ((let _0_453 = (FStar_Util.must (mk_op_bin op))
+in (let _0_452 = (FStar_List.nth args (Prims.parse_int "0"))
+in (let _0_451 = (FStar_List.nth args (Prims.parse_int "1"))
+in ((_0_453), (_0_452), (_0_451))))))
 end
 | FStar_Extraction_ML_Syntax.MLE_Name (("Prims")::[], op) when (is_op_bool op) -> begin
-(let _184_259 = (let _184_258 = (FStar_Util.must (mk_op_bool op))
-in (let _184_257 = (FStar_List.nth args (Prims.parse_int "0"))
-in (let _184_256 = (FStar_List.nth args (Prims.parse_int "1"))
-in ((_184_258), (_184_257), (_184_256)))))
-in FStar_Extraction_JavaScript_Ast.JSE_Logical (_184_259))
+FStar_Extraction_JavaScript_Ast.JSE_Logical ((let _0_456 = (FStar_Util.must (mk_op_bool op))
+in (let _0_455 = (FStar_List.nth args (Prims.parse_int "0"))
+in (let _0_454 = (FStar_List.nth args (Prims.parse_int "1"))
+in ((_0_456), (_0_455), (_0_454))))))
 end
 | FStar_Extraction_ML_Syntax.MLE_Name (("Prims")::[], op) when (is_op_un op) -> begin
-(let _184_262 = (let _184_261 = (FStar_Util.must (mk_op_un op))
-in (let _184_260 = (FStar_List.nth args (Prims.parse_int "0"))
-in ((_184_261), (_184_260))))
-in FStar_Extraction_JavaScript_Ast.JSE_Unary (_184_262))
+FStar_Extraction_JavaScript_Ast.JSE_Unary ((let _0_458 = (FStar_Util.must (mk_op_un op))
+in (let _0_457 = (FStar_List.nth args (Prims.parse_int "0"))
+in ((_0_458), (_0_457)))))
 end
-| FStar_Extraction_ML_Syntax.MLE_Name (p) when (((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.Buffer.op_Array_Access") || ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.Buffer.index")) -> begin
-(let _184_266 = (let _184_265 = (FStar_List.nth args (Prims.parse_int "0"))
-in (let _184_264 = (let _184_263 = (FStar_List.nth args (Prims.parse_int "1"))
-in FStar_Extraction_JavaScript_Ast.JSPM_Expression (_184_263))
-in ((_184_265), (_184_264))))
-in FStar_Extraction_JavaScript_Ast.JSE_Member (_184_266))
+| FStar_Extraction_ML_Syntax.MLE_Name (p) when ((let _0_459 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_459 = "FStar.Buffer.op_Array_Access")) || (let _0_460 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_460 = "FStar.Buffer.index"))) -> begin
+FStar_Extraction_JavaScript_Ast.JSE_Member ((let _0_462 = (FStar_List.nth args (Prims.parse_int "0"))
+in (let _0_461 = FStar_Extraction_JavaScript_Ast.JSPM_Expression ((FStar_List.nth args (Prims.parse_int "1")))
+in ((_0_462), (_0_461)))))
 end
-| FStar_Extraction_ML_Syntax.MLE_Name (p) when (((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.Buffer.op_Array_Assignment") || ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.Buffer.upd")) -> begin
-(let _184_274 = (let _184_273 = (let _184_271 = (let _184_270 = (let _184_269 = (FStar_List.nth args (Prims.parse_int "0"))
-in (let _184_268 = (let _184_267 = (FStar_List.nth args (Prims.parse_int "1"))
-in FStar_Extraction_JavaScript_Ast.JSPM_Expression (_184_267))
-in ((_184_269), (_184_268))))
-in FStar_Extraction_JavaScript_Ast.JSE_Member (_184_270))
-in FStar_Extraction_JavaScript_Ast.JGP_Expression (_184_271))
-in (let _184_272 = (FStar_List.nth args (Prims.parse_int "2"))
-in ((_184_273), (_184_272))))
-in FStar_Extraction_JavaScript_Ast.JSE_Assignment (_184_274))
+| FStar_Extraction_ML_Syntax.MLE_Name (p) when ((let _0_463 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_463 = "FStar.Buffer.op_Array_Assignment")) || (let _0_464 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_464 = "FStar.Buffer.upd"))) -> begin
+FStar_Extraction_JavaScript_Ast.JSE_Assignment ((let _0_468 = FStar_Extraction_JavaScript_Ast.JGP_Expression (FStar_Extraction_JavaScript_Ast.JSE_Member ((let _0_466 = (FStar_List.nth args (Prims.parse_int "0"))
+in (let _0_465 = FStar_Extraction_JavaScript_Ast.JSPM_Expression ((FStar_List.nth args (Prims.parse_int "1")))
+in ((_0_466), (_0_465))))))
+in (let _0_467 = (FStar_List.nth args (Prims.parse_int "2"))
+in ((_0_468), (_0_467)))))
 end
-| FStar_Extraction_ML_Syntax.MLE_Name (p) when (((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.ST.op_Bang") || ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.ST.read")) -> begin
-(let _184_276 = (let _184_275 = (FStar_List.nth args (Prims.parse_int "0"))
-in ((_184_275), (FStar_Extraction_JavaScript_Ast.JSPM_Expression (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int (Prims.parse_int "0")))), ("0")))))))
-in FStar_Extraction_JavaScript_Ast.JSE_Member (_184_276))
+| FStar_Extraction_ML_Syntax.MLE_Name (p) when ((let _0_469 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_469 = "FStar.ST.op_Bang")) || (let _0_470 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_470 = "FStar.ST.read"))) -> begin
+FStar_Extraction_JavaScript_Ast.JSE_Member ((let _0_471 = (FStar_List.nth args (Prims.parse_int "0"))
+in ((_0_471), (FStar_Extraction_JavaScript_Ast.JSPM_Expression (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int (Prims.parse_int "0")))), ("0"))))))))
 end
-| FStar_Extraction_ML_Syntax.MLE_Name (p) when (((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.ST.op_Colon_Equals") || ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.ST.write")) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Name (p) when ((let _0_472 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_472 = "FStar.ST.op_Colon_Equals")) || (let _0_473 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_473 = "FStar.ST.write"))) -> begin
 (
 
-let expr = (let _184_278 = (let _184_277 = (FStar_List.nth args (Prims.parse_int "0"))
-in ((_184_277), (FStar_Extraction_JavaScript_Ast.JSPM_Expression (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int (Prims.parse_int "0")))), ("0")))))))
-in FStar_Extraction_JavaScript_Ast.JSE_Member (_184_278))
-in (let _184_280 = (let _184_279 = (FStar_List.nth args (Prims.parse_int "1"))
-in ((FStar_Extraction_JavaScript_Ast.JGP_Expression (expr)), (_184_279)))
-in FStar_Extraction_JavaScript_Ast.JSE_Assignment (_184_280)))
+let expr = FStar_Extraction_JavaScript_Ast.JSE_Member ((let _0_474 = (FStar_List.nth args (Prims.parse_int "0"))
+in ((_0_474), (FStar_Extraction_JavaScript_Ast.JSPM_Expression (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int (Prims.parse_int "0")))), ("0"))))))))
+in FStar_Extraction_JavaScript_Ast.JSE_Assignment ((let _0_475 = (FStar_List.nth args (Prims.parse_int "1"))
+in ((FStar_Extraction_JavaScript_Ast.JGP_Expression (expr)), (_0_475)))))
 end
-| FStar_Extraction_ML_Syntax.MLE_Name (p) when ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.ST.alloc") -> begin
-(let _184_283 = (let _184_282 = (let _184_281 = (FStar_List.nth args (Prims.parse_int "0"))
-in (_184_281)::[])
-in Some (_184_282))
-in FStar_Extraction_JavaScript_Ast.JSE_Array (_184_283))
+| FStar_Extraction_ML_Syntax.MLE_Name (p) when (let _0_476 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_476 = "FStar.ST.alloc")) -> begin
+FStar_Extraction_JavaScript_Ast.JSE_Array (Some ((let _0_477 = (FStar_List.nth args (Prims.parse_int "0"))
+in (_0_477)::[])))
 end
 | FStar_Extraction_ML_Syntax.MLE_Name (path, function_name) -> begin
-(let _184_286 = (let _184_285 = (let _184_284 = (getName ((path), (function_name)))
-in FStar_Extraction_JavaScript_Ast.JSE_Identifier (_184_284))
-in ((_184_285), (args)))
-in FStar_Extraction_JavaScript_Ast.JSE_Call (_184_286))
+(
+
+let path = (FStar_String.concat "_" path)
+in (
+
+let name = (match (((path = env.module_name) || (path = ""))) with
+| true -> begin
+function_name
 end
-| FStar_Extraction_ML_Syntax.MLE_Var (name, _84_532) -> begin
+| uu____1341 -> begin
+(Prims.strcat path (Prims.strcat "." function_name))
+end)
+in FStar_Extraction_JavaScript_Ast.JSE_Call (((FStar_Extraction_JavaScript_Ast.JSE_Identifier (((name), (None)))), (args)))))
+end
+| FStar_Extraction_ML_Syntax.MLE_Var (name, uu____1345) -> begin
 FStar_Extraction_JavaScript_Ast.JSE_Call (((FStar_Extraction_JavaScript_Ast.JSE_Identifier (((name), (None)))), (args)))
 end
-| _84_536 -> begin
-if (is_pure_expr e var) then begin
-(let _184_288 = (let _184_287 = (translate_expr_pure e)
-in ((_184_287), (args)))
-in FStar_Extraction_JavaScript_Ast.JSE_Call (_184_288))
-end else begin
-(failwith "todo: translation [MLE_App]")
+| uu____1348 -> begin
+(
+
+let uu____1349 = (is_pure_expr e var)
+in (match (uu____1349) with
+| true -> begin
+FStar_Extraction_JavaScript_Ast.JSE_Call ((let _0_478 = (translate_expr_pure e env)
+in ((_0_478), (args))))
 end
+| uu____1352 -> begin
+(failwith "todo: translation [MLE_App]")
 end))
-and translate_expr_pure : FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Extraction_JavaScript_Ast.expression_t = (fun e -> (match (e.FStar_Extraction_ML_Syntax.expr) with
+end))
+and translate_expr_pure : FStar_Extraction_ML_Syntax.mlexpr  ->  env  ->  FStar_Extraction_JavaScript_Ast.expression_t = (fun e env -> (match (e.FStar_Extraction_ML_Syntax.expr) with
 | FStar_Extraction_ML_Syntax.MLE_Const (c) -> begin
 (translate_constant c)
 end
-| FStar_Extraction_ML_Syntax.MLE_Var (name, _84_542) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Var (name, uu____1357) -> begin
 FStar_Extraction_JavaScript_Ast.JSE_Identifier (((name), (None)))
 end
-| FStar_Extraction_ML_Syntax.MLE_Name (path, n) -> begin
-(let _184_290 = (getName ((path), (n)))
-in FStar_Extraction_JavaScript_Ast.JSE_Identifier (_184_290))
+| FStar_Extraction_ML_Syntax.MLE_Name (path, name) -> begin
+(
+
+let path = (FStar_String.concat "_" path)
+in (
+
+let name = (match (((path = env.module_name) || (path = ""))) with
+| true -> begin
+name
+end
+| uu____1365 -> begin
+(Prims.strcat path (Prims.strcat "." name))
+end)
+in FStar_Extraction_JavaScript_Ast.JSE_Identifier (((name), (None)))))
 end
 | FStar_Extraction_ML_Syntax.MLE_Tuple (lexp) -> begin
-(let _184_292 = (let _184_291 = (FStar_List.map translate_expr_pure lexp)
-in Some (_184_291))
-in FStar_Extraction_JavaScript_Ast.JSE_Array (_184_292))
+FStar_Extraction_JavaScript_Ast.JSE_Array (Some ((FStar_List.map (fun x -> (translate_expr_pure x env)) lexp)))
 end
 | FStar_Extraction_ML_Syntax.MLE_Record (path, fields) -> begin
 (
 
-let create_fields = (FStar_List.map (fun _84_557 -> (match (_84_557) with
+let create_fields = (FStar_List.map (fun uu____1385 -> (match (uu____1385) with
 | (id, x) -> begin
-(let _184_295 = (let _184_294 = (translate_expr_pure x)
-in ((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((((Prims.strcat "_" id)), (None)))), (_184_294), (FStar_Extraction_JavaScript_Ast.JSO_Init)))
-in FStar_Extraction_JavaScript_Ast.JSPO_Property (_184_295))
+FStar_Extraction_JavaScript_Ast.JSPO_Property ((let _0_479 = (translate_expr_pure x env)
+in ((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((((Prims.strcat "_" id)), (None)))), (_0_479), (FStar_Extraction_JavaScript_Ast.JSO_Init))))
 end)) fields)
 in FStar_Extraction_JavaScript_Ast.JSE_Object ((FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSPO_Property (((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((("_tag"), (Some (FStar_Extraction_JavaScript_Ast.JST_String))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_String ("Record")), ("")))), (FStar_Extraction_JavaScript_Ast.JSO_Init))))::[]) create_fields)))
 end
@@ -1010,15 +969,11 @@ end
 FStar_Extraction_JavaScript_Ast.JSE_Array (None)
 end
 | (hd)::tl -> begin
-(let _184_303 = (let _184_302 = (let _184_300 = (let _184_299 = (let _184_298 = (let _184_297 = (let _184_296 = (translate_expr_pure hd)
-in (_184_296)::[])
-in Some (_184_297))
-in FStar_Extraction_JavaScript_Ast.JSE_Array (_184_298))
-in ((_184_299), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((("concat"), (None))))))
-in FStar_Extraction_JavaScript_Ast.JSE_Member (_184_300))
-in (let _184_301 = (FStar_List.map translate_expr_pure tl)
-in ((_184_302), (_184_301))))
-in FStar_Extraction_JavaScript_Ast.JSE_Call (_184_303))
+FStar_Extraction_JavaScript_Ast.JSE_Call ((let _0_483 = FStar_Extraction_JavaScript_Ast.JSE_Member ((let _0_481 = FStar_Extraction_JavaScript_Ast.JSE_Array (Some ((let _0_480 = (translate_expr_pure hd env)
+in (_0_480)::[])))
+in ((_0_481), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((("concat"), (None)))))))
+in (let _0_482 = (FStar_List.map (fun x -> (translate_expr_pure x env)) tl)
+in ((_0_483), (_0_482)))))
 end)
 end
 | x when ((x = "Some") || (x = "None")) -> begin
@@ -1027,118 +982,112 @@ end
 FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Null), ("")))
 end
 | (hd)::tl -> begin
-(let _184_304 = (FStar_List.map translate_expr_pure lexpr)
-in (FStar_List.nth _184_304 (Prims.parse_int "0")))
+(let _0_484 = (FStar_List.map (fun x -> (translate_expr_pure x env)) lexpr)
+in (FStar_List.nth _0_484 (Prims.parse_int "0")))
 end)
 end
-| _84_576 -> begin
-(let _184_314 = (let _184_313 = (FStar_List.mapi (fun i x -> (let _184_312 = (let _184_311 = (let _184_309 = (let _184_308 = (let _184_307 = (FStar_Util.string_of_int i)
-in (Prims.strcat "_" _184_307))
-in ((_184_308), (None)))
-in FStar_Extraction_JavaScript_Ast.JSO_Identifier (_184_309))
-in (let _184_310 = (translate_expr_pure x)
-in ((_184_311), (_184_310), (FStar_Extraction_JavaScript_Ast.JSO_Init))))
-in FStar_Extraction_JavaScript_Ast.JSPO_Property (_184_312))) lexpr)
-in (FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSPO_Property (((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((("_tag"), (Some (FStar_Extraction_JavaScript_Ast.JST_String))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_String (c)), ("")))), (FStar_Extraction_JavaScript_Ast.JSO_Init))))::[]) _184_313))
-in FStar_Extraction_JavaScript_Ast.JSE_Object (_184_314))
+| uu____1416 -> begin
+FStar_Extraction_JavaScript_Ast.JSE_Object ((let _0_489 = (FStar_List.mapi (fun i x -> FStar_Extraction_JavaScript_Ast.JSPO_Property ((let _0_488 = FStar_Extraction_JavaScript_Ast.JSO_Identifier ((let _0_486 = (let _0_485 = (FStar_Util.string_of_int i)
+in (Prims.strcat "_" _0_485))
+in ((_0_486), (None))))
+in (let _0_487 = (translate_expr_pure x env)
+in ((_0_488), (_0_487), (FStar_Extraction_JavaScript_Ast.JSO_Init)))))) lexpr)
+in (FStar_List.append ((FStar_Extraction_JavaScript_Ast.JSPO_Property (((FStar_Extraction_JavaScript_Ast.JSO_Identifier ((("_tag"), (Some (FStar_Extraction_JavaScript_Ast.JST_String))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_String (c)), ("")))), (FStar_Extraction_JavaScript_Ast.JSO_Init))))::[]) _0_489)))
 end)
 end
-| FStar_Extraction_ML_Syntax.MLE_Coerce (e, _84_581, _84_583) -> begin
-(translate_expr_pure e)
+| FStar_Extraction_ML_Syntax.MLE_Coerce (e, uu____1422, uu____1423) -> begin
+(translate_expr_pure e env)
 end
 | FStar_Extraction_ML_Syntax.MLE_App (e, args) -> begin
 (
 
 let args = (FStar_List.map (fun x -> (match (x.FStar_Extraction_ML_Syntax.expr) with
-| FStar_Extraction_ML_Syntax.MLE_CTor ((path, c), _84_595) when ((c = "Nil") || (c = "None")) -> begin
-(let _184_318 = (let _184_317 = (translate_expr_pure x)
-in (let _184_316 = (translate_type x.FStar_Extraction_ML_Syntax.mlty)
-in ((_184_317), (_184_316))))
-in FStar_Extraction_JavaScript_Ast.JSE_TypeCast (_184_318))
+| FStar_Extraction_ML_Syntax.MLE_CTor ((path, c), uu____1433) when ((c = "Nil") || (c = "None")) -> begin
+FStar_Extraction_JavaScript_Ast.JSE_TypeCast ((let _0_491 = (translate_expr_pure x env)
+in (let _0_490 = (translate_type x.FStar_Extraction_ML_Syntax.mlty None env)
+in ((_0_491), (_0_490)))))
 end
-| _84_599 -> begin
-(translate_expr_pure x)
+| uu____1442 -> begin
+(translate_expr_pure x env)
 end)) args)
-in (translate_arg_app e args ((""), (None))))
+in (translate_arg_app e args ((""), (None)) env))
 end
 | FStar_Extraction_ML_Syntax.MLE_Proj (expr, (path, name)) -> begin
-(let _184_320 = (let _184_319 = (translate_expr_pure expr)
-in ((_184_319), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((((Prims.strcat "_" name)), (None))))))
-in FStar_Extraction_JavaScript_Ast.JSE_Member (_184_320))
+FStar_Extraction_JavaScript_Ast.JSE_Member ((let _0_492 = (translate_expr_pure expr env)
+in ((_0_492), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((((Prims.strcat "_" name)), (None)))))))
 end
-| _84_608 -> begin
+| uu____1453 -> begin
 (failwith "todo: translation ml-expr-pure")
 end))
-and translate_match : FStar_Extraction_ML_Syntax.mlbranch Prims.list  ->  FStar_Extraction_JavaScript_Ast.expression_t  ->  (Prims.string * FStar_Extraction_JavaScript_Ast.typ Prims.option)  ->  Prims.bool  ->  Prims.string Prims.list FStar_ST.ref  ->  FStar_Extraction_JavaScript_Ast.statement_t = (fun lb fv_x var isMutableV lDecl -> (match (lb) with
+and translate_match : (FStar_Extraction_ML_Syntax.mlpattern * FStar_Extraction_ML_Syntax.mlexpr Prims.option * FStar_Extraction_ML_Syntax.mlexpr) Prims.list  ->  FStar_Extraction_JavaScript_Ast.expression_t  ->  (FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_JavaScript_Ast.typ Prims.option)  ->  env  ->  FStar_Extraction_JavaScript_Ast.statement_t = (fun lb match_e var env -> (match (lb) with
 | [] -> begin
 FStar_Extraction_JavaScript_Ast.JSS_Throw (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_String ("This value doesn\'t match!")), (""))))
 end
 | ((p, guard, expr_r))::tl -> begin
 (
 
-let expr_t = if (is_pure_expr expr_r var) then begin
-(let _184_329 = (let _184_327 = (let _184_326 = (translate_expr_pure expr_r)
-in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (_184_326)))
-in FStar_Extraction_JavaScript_Ast.JSE_Assignment (_184_327))
-in (FStar_All.pipe_right _184_329 (fun _184_328 -> FStar_Extraction_JavaScript_Ast.JSS_Expression (_184_328))))
-end else begin
-(let _184_331 = (translate_expr expr_r var None true lDecl isMutableV)
-in (FStar_All.pipe_right _184_331 (fun _184_330 -> FStar_Extraction_JavaScript_Ast.JSS_Seq (_184_330))))
+let expr_t = (
+
+let uu____1486 = (is_pure_expr expr_r var)
+in (match (uu____1486) with
+| true -> begin
+(let _0_495 = FStar_Extraction_JavaScript_Ast.JSE_Assignment ((let _0_493 = (translate_expr_pure expr_r env)
+in ((FStar_Extraction_JavaScript_Ast.JGP_Identifier (var)), (_0_493))))
+in (FStar_All.pipe_right _0_495 (fun _0_494 -> FStar_Extraction_JavaScript_Ast.JSS_Expression (_0_494))))
 end
-in (let _184_332 = (translate_match tl fv_x var isMutableV lDecl)
-in (translate_pat_guard ((p), (guard)) fv_x expr_t _184_332)))
+| uu____1488 -> begin
+(let _0_497 = (translate_expr expr_r var [] env true)
+in (FStar_All.pipe_right _0_497 (fun _0_496 -> FStar_Extraction_JavaScript_Ast.JSS_Seq (_0_496))))
 end))
-and translate_pat_guard : (FStar_Extraction_ML_Syntax.mlpattern * FStar_Extraction_ML_Syntax.mlexpr Prims.option)  ->  FStar_Extraction_JavaScript_Ast.expression_t  ->  FStar_Extraction_JavaScript_Ast.statement_t  ->  FStar_Extraction_JavaScript_Ast.statement_t  ->  FStar_Extraction_JavaScript_Ast.statement_t = (fun _84_624 fv_x s1 s2 -> (match (_84_624) with
+in (let _0_498 = (translate_match tl match_e var env)
+in (translate_pat_guard ((p), (guard)) match_e expr_t _0_498 env)))
+end))
+and translate_pat_guard : (FStar_Extraction_ML_Syntax.mlpattern * FStar_Extraction_ML_Syntax.mlexpr Prims.option)  ->  FStar_Extraction_JavaScript_Ast.expression_t  ->  FStar_Extraction_JavaScript_Ast.statement_t  ->  FStar_Extraction_JavaScript_Ast.statement_t  ->  env  ->  FStar_Extraction_JavaScript_Ast.statement_t = (fun uu____1491 match_e s1 s2 env -> (match (uu____1491) with
 | (p, guard) -> begin
 (match (guard) with
 | None -> begin
-(translate_pat p fv_x s1 s2)
+(translate_pat p match_e s1 s2)
 end
 | Some (v_guard) -> begin
 (
 
-let cond_stmt = (let _184_338 = (let _184_337 = (translate_expr_pure v_guard)
-in ((_184_337), (s1), (Some (s2))))
-in FStar_Extraction_JavaScript_Ast.JSS_If (_184_338))
-in (translate_pat p fv_x cond_stmt s2))
+let cond_stmt = FStar_Extraction_JavaScript_Ast.JSS_If ((let _0_499 = (translate_expr_pure v_guard env)
+in ((_0_499), (s1), (Some (s2)))))
+in (translate_pat p match_e cond_stmt s2))
 end)
 end))
-and translate_pat : FStar_Extraction_ML_Syntax.mlpattern  ->  FStar_Extraction_JavaScript_Ast.expression_t  ->  FStar_Extraction_JavaScript_Ast.statement_t  ->  FStar_Extraction_JavaScript_Ast.statement_t  ->  FStar_Extraction_JavaScript_Ast.statement_t = (fun p fv_x s1 s2 -> (match (p) with
-| FStar_Extraction_ML_Syntax.MLP_Var (name, _84_638) -> begin
-FStar_Extraction_JavaScript_Ast.JSS_Seq ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((name), (None)))), (Some (fv_x)))), (FStar_Extraction_JavaScript_Ast.JSV_Const))))::(s1)::[])
+and translate_pat : FStar_Extraction_ML_Syntax.mlpattern  ->  FStar_Extraction_JavaScript_Ast.expression_t  ->  FStar_Extraction_JavaScript_Ast.statement_t  ->  FStar_Extraction_JavaScript_Ast.statement_t  ->  FStar_Extraction_JavaScript_Ast.statement_t = (fun p match_e s1 s2 -> (match (p) with
+| FStar_Extraction_ML_Syntax.MLP_Var (name, uu____1511) -> begin
+FStar_Extraction_JavaScript_Ast.JSS_Seq ((FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((name), (None)))), (Some (match_e)))), (FStar_Extraction_JavaScript_Ast.JSV_Const))))::(s1)::[])
 end
 | FStar_Extraction_ML_Syntax.MLP_Wild -> begin
 s1
 end
 | FStar_Extraction_ML_Syntax.MLP_Const (c) -> begin
-(let _184_346 = (let _184_345 = (let _184_344 = (let _184_343 = (translate_constant c)
-in ((FStar_Extraction_JavaScript_Ast.JSB_Equal), (fv_x), (_184_343)))
-in FStar_Extraction_JavaScript_Ast.JSE_Binary (_184_344))
-in ((_184_345), (s1), (Some (s2))))
-in FStar_Extraction_JavaScript_Ast.JSS_If (_184_346))
+FStar_Extraction_JavaScript_Ast.JSS_If ((let _0_501 = FStar_Extraction_JavaScript_Ast.JSE_Binary ((let _0_500 = (translate_constant c)
+in ((FStar_Extraction_JavaScript_Ast.JSB_Equal), (match_e), (_0_500))))
+in ((_0_501), (s1), (Some (s2)))))
 end
 | FStar_Extraction_ML_Syntax.MLP_CTor ((path, c), lp) -> begin
 (
 
-let rec translate_p_ctor = (fun lp fv_x s1 s2 i -> (
+let rec translate_p_ctor = (fun lp match_e s1 s2 i -> (
 
 let new_fv_x = (match (c) with
 | x when (x = "Some") -> begin
-fv_x
+match_e
 end
 | x when ((x = "Cons") && (i = (Prims.parse_int "0"))) -> begin
-FStar_Extraction_JavaScript_Ast.JSE_Member (((fv_x), (FStar_Extraction_JavaScript_Ast.JSPM_Expression (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int (Prims.parse_int "0")))), ("0")))))))
+FStar_Extraction_JavaScript_Ast.JSE_Member (((match_e), (FStar_Extraction_JavaScript_Ast.JSPM_Expression (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int (Prims.parse_int "0")))), ("0")))))))
 end
 | x when ((x = "Cons") && (i = (Prims.parse_int "1"))) -> begin
-FStar_Extraction_JavaScript_Ast.JSE_Member (((fv_x), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((("slice(1)"), (None))))))
+FStar_Extraction_JavaScript_Ast.JSE_Member (((match_e), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((("slice(1)"), (None))))))
 end
-| _84_660 -> begin
-(let _184_361 = (let _184_360 = (let _184_359 = (let _184_358 = (let _184_357 = (FStar_Util.string_of_int i)
-in (Prims.strcat "_" _184_357))
-in ((_184_358), (None)))
-in FStar_Extraction_JavaScript_Ast.JSPM_Identifier (_184_359))
-in ((fv_x), (_184_360)))
-in FStar_Extraction_JavaScript_Ast.JSE_Member (_184_361))
+| uu____1552 -> begin
+FStar_Extraction_JavaScript_Ast.JSE_Member ((let _0_504 = FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((let _0_503 = (let _0_502 = (FStar_Util.string_of_int i)
+in (Prims.strcat "_" _0_502))
+in ((_0_503), (None))))
+in ((match_e), (_0_504))))
 end)
 in (match (lp) with
 | [] -> begin
@@ -1148,77 +1097,76 @@ end
 (translate_pat x new_fv_x s1 s2)
 end
 | (hd)::tl -> begin
-(let _184_362 = (translate_p_ctor tl fv_x s1 s2 (i + (Prims.parse_int "1")))
-in (translate_pat hd new_fv_x _184_362 s2))
+(let _0_505 = (translate_p_ctor tl match_e s1 s2 (i + (Prims.parse_int "1")))
+in (translate_pat hd new_fv_x _0_505 s2))
 end)))
 in (
 
-let if_stmt = (fun if_cond -> (let _184_366 = (let _184_365 = (translate_p_ctor lp fv_x s1 s2 (Prims.parse_int "0"))
-in ((if_cond), (_184_365), (Some (s2))))
-in FStar_Extraction_JavaScript_Ast.JSS_If (_184_366)))
+let if_stmt = (fun if_cond -> FStar_Extraction_JavaScript_Ast.JSS_If ((let _0_506 = (translate_p_ctor lp match_e s1 s2 (Prims.parse_int "0"))
+in ((if_cond), (_0_506), (Some (s2))))))
 in (match (c) with
 | x when (x = "Cons") -> begin
-(if_stmt (FStar_Extraction_JavaScript_Ast.JSE_Binary (((FStar_Extraction_JavaScript_Ast.JSB_GreaterThan), (FStar_Extraction_JavaScript_Ast.JSE_Member (((fv_x), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((("length"), (None))))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int (Prims.parse_int "0")))), ("0"))))))))
+(if_stmt (FStar_Extraction_JavaScript_Ast.JSE_Binary (((FStar_Extraction_JavaScript_Ast.JSB_GreaterThan), (FStar_Extraction_JavaScript_Ast.JSE_Member (((match_e), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((("length"), (None))))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int (Prims.parse_int "0")))), ("0"))))))))
 end
 | x when (x = "Nil") -> begin
-(if_stmt (FStar_Extraction_JavaScript_Ast.JSE_Binary (((FStar_Extraction_JavaScript_Ast.JSB_Equal), (FStar_Extraction_JavaScript_Ast.JSE_Member (((fv_x), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((("length"), (None))))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int (Prims.parse_int "0")))), ("0"))))))))
+(if_stmt (FStar_Extraction_JavaScript_Ast.JSE_Binary (((FStar_Extraction_JavaScript_Ast.JSB_Equal), (FStar_Extraction_JavaScript_Ast.JSE_Member (((match_e), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((("length"), (None))))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int (Prims.parse_int "0")))), ("0"))))))))
 end
 | x when (x = "Some") -> begin
-(if_stmt (FStar_Extraction_JavaScript_Ast.JSE_Binary (((FStar_Extraction_JavaScript_Ast.JSB_NotEqual), (fv_x), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Null), (""))))))))
+(if_stmt (FStar_Extraction_JavaScript_Ast.JSE_Binary (((FStar_Extraction_JavaScript_Ast.JSB_NotEqual), (match_e), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Null), (""))))))))
 end
 | x when (x = "None") -> begin
-(if_stmt (FStar_Extraction_JavaScript_Ast.JSE_Binary (((FStar_Extraction_JavaScript_Ast.JSB_Equal), (fv_x), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Null), (""))))))))
+(if_stmt (FStar_Extraction_JavaScript_Ast.JSE_Binary (((FStar_Extraction_JavaScript_Ast.JSB_Equal), (match_e), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Null), (""))))))))
 end
-| _84_675 -> begin
+| uu____1569 -> begin
 (
 
-let isSimple = (match (fv_x) with
-| FStar_Extraction_JavaScript_Ast.JSE_Identifier (_84_677) -> begin
+let isSimple = (match (match_e) with
+| FStar_Extraction_JavaScript_Ast.JSE_Identifier (uu____1571) -> begin
 true
 end
-| _84_680 -> begin
+| uu____1575 -> begin
 false
 end)
-in if isSimple then begin
-(if_stmt (FStar_Extraction_JavaScript_Ast.JSE_Binary (((FStar_Extraction_JavaScript_Ast.JSB_StrictEqual), (FStar_Extraction_JavaScript_Ast.JSE_Member (((fv_x), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((("_tag"), (Some (FStar_Extraction_JavaScript_Ast.JST_String)))))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_String (c)), (""))))))))
-end else begin
+in (match (isSimple) with
+| true -> begin
+(if_stmt (FStar_Extraction_JavaScript_Ast.JSE_Binary (((FStar_Extraction_JavaScript_Ast.JSB_StrictEqual), (FStar_Extraction_JavaScript_Ast.JSE_Member (((match_e), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((("_tag"), (Some (FStar_Extraction_JavaScript_Ast.JST_String)))))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_String (c)), (""))))))))
+end
+| uu____1577 -> begin
 (
 
-let new_name = (FStar_Absyn_Util.gensym ())
+let new_name = (Prims.fst (FStar_Extraction_ML_Syntax.gensym ()))
 in (
 
 let if_cond = FStar_Extraction_JavaScript_Ast.JSE_Binary (((FStar_Extraction_JavaScript_Ast.JSB_StrictEqual), (FStar_Extraction_JavaScript_Ast.JSE_Member (((FStar_Extraction_JavaScript_Ast.JSE_Identifier (((new_name), (None)))), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((("_tag"), (Some (FStar_Extraction_JavaScript_Ast.JST_String)))))))), (FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_String (c)), (""))))))
-in (let _184_371 = (let _184_370 = (let _184_369 = (let _184_368 = (let _184_367 = (translate_p_ctor lp (FStar_Extraction_JavaScript_Ast.JSE_Identifier (((new_name), (None)))) s1 s2 (Prims.parse_int "0"))
-in ((if_cond), (_184_367), (Some (s2))))
-in FStar_Extraction_JavaScript_Ast.JSS_If (_184_368))
-in (_184_369)::[])
-in (FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((new_name), (None)))), (Some (fv_x)))), (FStar_Extraction_JavaScript_Ast.JSV_Const))))::_184_370)
-in FStar_Extraction_JavaScript_Ast.JSS_Seq (_184_371))))
-end)
+in FStar_Extraction_JavaScript_Ast.JSS_Seq ((let _0_509 = (let _0_508 = FStar_Extraction_JavaScript_Ast.JSS_If ((let _0_507 = (translate_p_ctor lp (FStar_Extraction_JavaScript_Ast.JSE_Identifier (((new_name), (None)))) s1 s2 (Prims.parse_int "0"))
+in ((if_cond), (_0_507), (Some (s2)))))
+in (_0_508)::[])
+in (FStar_Extraction_JavaScript_Ast.JSS_VariableDeclaration (((((FStar_Extraction_JavaScript_Ast.JGP_Identifier (((new_name), (None)))), (Some (match_e)))), (FStar_Extraction_JavaScript_Ast.JSV_Const))))::_0_509))))
+end))
 end)))
 end
 | FStar_Extraction_ML_Syntax.MLP_Branch (lp) -> begin
 (
 
-let rec translate_p_branch = (fun lp fv_x s1 s2 -> (match (lp) with
+let rec translate_p_branch = (fun lp match_e s1 s2 -> (match (lp) with
 | [] -> begin
 (failwith "Empty list in translate_p_branch")
 end
 | (x)::[] -> begin
-(translate_pat x fv_x s1 s2)
+(translate_pat x match_e s1 s2)
 end
 | (hd)::tl -> begin
-(let _184_380 = (translate_p_branch tl fv_x s1 s2)
-in (translate_pat hd fv_x s1 _184_380))
+(let _0_510 = (translate_p_branch tl match_e s1 s2)
+in (translate_pat hd match_e s1 _0_510))
 end))
-in (translate_p_branch lp fv_x s1 s2))
+in (translate_p_branch lp match_e s1 s2))
 end
 | FStar_Extraction_ML_Syntax.MLP_Record (path, lp) -> begin
 (
 
-let rec translate_p_record = (fun lp fv_x s1 s2 -> (
+let rec translate_p_record = (fun lp match_e s1 s2 -> (
 
-let new_fv_x = (fun n -> FStar_Extraction_JavaScript_Ast.JSE_Member (((fv_x), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((((Prims.strcat "_" n)), (None)))))))
+let new_fv_x = (fun n -> FStar_Extraction_JavaScript_Ast.JSE_Member (((match_e), (FStar_Extraction_JavaScript_Ast.JSPM_Identifier ((((Prims.strcat "_" n)), (None)))))))
 in (match (lp) with
 | [] -> begin
 (failwith "Empty list in translate_p_record")
@@ -1227,22 +1175,19 @@ end
 (translate_pat (Prims.snd x) (new_fv_x (Prims.fst x)) s1 s2)
 end
 | (hd)::tl -> begin
-(let _184_391 = (translate_p_record tl fv_x s1 s2)
-in (translate_pat (Prims.snd hd) (new_fv_x (Prims.fst hd)) _184_391 s2))
+(let _0_511 = (translate_p_record tl match_e s1 s2)
+in (translate_pat (Prims.snd hd) (new_fv_x (Prims.fst hd)) _0_511 s2))
 end)))
-in (translate_p_record lp fv_x s1 s2))
+in (translate_p_record lp match_e s1 s2))
 end
 | FStar_Extraction_ML_Syntax.MLP_Tuple (lp) -> begin
 (
 
-let rec translate_p_tuple = (fun lp d fv_x s1 s2 -> (
+let rec translate_p_tuple = (fun lp d match_e s1 s2 -> (
 
-let new_fv_x = (let _184_406 = (let _184_405 = (let _184_404 = (let _184_403 = (let _184_402 = (FStar_Util.string_of_int d)
-in ((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int d))), (_184_402)))
-in FStar_Extraction_JavaScript_Ast.JSE_Literal (_184_403))
-in FStar_Extraction_JavaScript_Ast.JSPM_Expression (_184_404))
-in ((fv_x), (_184_405)))
-in FStar_Extraction_JavaScript_Ast.JSE_Member (_184_406))
+let new_fv_x = FStar_Extraction_JavaScript_Ast.JSE_Member ((let _0_513 = FStar_Extraction_JavaScript_Ast.JSPM_Expression (FStar_Extraction_JavaScript_Ast.JSE_Literal ((let _0_512 = (FStar_Util.string_of_int d)
+in ((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int d))), (_0_512)))))
+in ((match_e), (_0_513))))
 in (match (lp) with
 | [] -> begin
 (failwith "Empty list in translate_p_tuple")
@@ -1251,10 +1196,10 @@ end
 (translate_pat x new_fv_x s1 s2)
 end
 | (hd)::tl -> begin
-(let _184_407 = (translate_p_tuple tl (d + (Prims.parse_int "1")) fv_x s1 s2)
-in (translate_pat hd new_fv_x _184_407 s2))
+(let _0_514 = (translate_p_tuple tl (d + (Prims.parse_int "1")) match_e s1 s2)
+in (translate_pat hd new_fv_x _0_514 s2))
 end)))
-in (translate_p_tuple lp (Prims.parse_int "0") fv_x s1 s2))
+in (translate_p_tuple lp (Prims.parse_int "0") match_e s1 s2))
 end))
 and translate_constant : FStar_Extraction_ML_Syntax.mlconstant  ->  FStar_Extraction_JavaScript_Ast.expression_t = (fun c -> (match (c) with
 | FStar_Extraction_ML_Syntax.MLC_Unit -> begin
@@ -1263,82 +1208,95 @@ end
 | FStar_Extraction_ML_Syntax.MLC_Bool (b) -> begin
 FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Boolean (b)), ("")))
 end
-| FStar_Extraction_ML_Syntax.MLC_Int (s, _84_735) -> begin
+| FStar_Extraction_ML_Syntax.MLC_Int (s, uu____1690) -> begin
 FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Number ((float_of_int (Prims.parse_int "0")))), (s)))
 end
 | FStar_Extraction_ML_Syntax.MLC_Float (f) -> begin
 FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_Number (f)), ((FStar_Util.string_of_float f))))
 end
-| FStar_Extraction_ML_Syntax.MLC_Char (_84_741) -> begin
+| FStar_Extraction_ML_Syntax.MLC_Char (uu____1698) -> begin
 (failwith "todo: translate_const [MLC_Char]")
 end
 | FStar_Extraction_ML_Syntax.MLC_String (s) -> begin
 FStar_Extraction_JavaScript_Ast.JSE_Literal (((FStar_Extraction_JavaScript_Ast.JSV_String (s)), (s)))
 end
-| FStar_Extraction_ML_Syntax.MLC_Bytes (_84_746) -> begin
+| FStar_Extraction_ML_Syntax.MLC_Bytes (uu____1700) -> begin
 (failwith "todo: translate_const [MLC_Bytes]")
 end))
-and translate_type : FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_JavaScript_Ast.typ = (fun t -> (match (t) with
+and translate_type : FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlsymbol Prims.list Prims.option  ->  env  ->  FStar_Extraction_JavaScript_Ast.typ = (fun t lp_generic env -> (match (t) with
 | (FStar_Extraction_ML_Syntax.MLTY_Tuple ([])) | (FStar_Extraction_ML_Syntax.MLTY_Top) -> begin
 FStar_Extraction_JavaScript_Ast.JST_Any
 end
-| FStar_Extraction_ML_Syntax.MLTY_Var (id, _84_754) -> begin
-FStar_Extraction_JavaScript_Ast.JST_Generic (((FStar_Extraction_JavaScript_Ast.Unqualified (((id), (None)))), (None)))
+| FStar_Extraction_ML_Syntax.MLTY_Var (id, uu____1708) -> begin
+FStar_Extraction_JavaScript_Ast.JST_Generic (((id), (None)))
 end
 | FStar_Extraction_ML_Syntax.MLTY_Tuple (lt) -> begin
-(let _184_410 = (FStar_List.map translate_type lt)
-in FStar_Extraction_JavaScript_Ast.JST_Tuple (_184_410))
+FStar_Extraction_JavaScript_Ast.JST_Tuple ((FStar_List.map (fun x -> (translate_type x lp_generic env)) lt))
 end
 | FStar_Extraction_ML_Syntax.MLTY_Fun (t1, e_tag, t2) -> begin
 (
 
-let t2 = if (e_tag = FStar_Extraction_ML_Syntax.E_GHOST) then begin
+let t2 = (match ((e_tag = FStar_Extraction_ML_Syntax.E_GHOST)) with
+| true -> begin
 FStar_Extraction_JavaScript_Ast.JST_Null
-end else begin
-(translate_type t2)
 end
-in (let _184_414 = (let _184_413 = (let _184_412 = (let _184_411 = (translate_type t1)
-in (((("_1"), (None))), (_184_411)))
-in (_184_412)::[])
-in ((_184_413), (t2), (None)))
-in FStar_Extraction_JavaScript_Ast.JST_Function (_184_414)))
+| uu____1719 -> begin
+(translate_type t2 None env)
+end)
+in FStar_Extraction_JavaScript_Ast.JST_Function ((let _0_517 = (let _0_516 = (let _0_515 = (translate_type t1 None env)
+in (((("_1"), (None))), (_0_515)))
+in (_0_516)::[])
+in ((_0_517), (t2), (lp_generic)))))
 end
-| FStar_Extraction_ML_Syntax.MLTY_Named (args, p) when ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.ST.ref") -> begin
-(let _184_416 = (let _184_415 = (FStar_List.nth args (Prims.parse_int "0"))
-in (translate_type _184_415))
-in FStar_Extraction_JavaScript_Ast.JST_Array (_184_416))
+| FStar_Extraction_ML_Syntax.MLTY_Named (args, p) when (let _0_518 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_518 = "FStar.ST.ref")) -> begin
+FStar_Extraction_JavaScript_Ast.JST_Array ((let _0_519 = (FStar_List.nth args (Prims.parse_int "0"))
+in (translate_type _0_519 lp_generic env)))
 end
-| FStar_Extraction_ML_Syntax.MLTY_Named (args, p) when ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.Buffer.buffer") -> begin
-(let _184_419 = (let _184_418 = (let _184_417 = (getName p)
-in FStar_Extraction_JavaScript_Ast.Unqualified (_184_417))
-in ((_184_418), (None)))
-in FStar_Extraction_JavaScript_Ast.JST_Generic (_184_419))
+| FStar_Extraction_ML_Syntax.MLTY_Named (uu____1748, p) when (let _0_520 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_520 = "FStar.Buffer.buffer")) -> begin
+FStar_Extraction_JavaScript_Ast.JST_Generic ((("FStar_Buffer.buffer"), (None)))
+end
+| FStar_Extraction_ML_Syntax.MLTY_Named (uu____1755, p) when (let _0_521 = (FStar_Extraction_ML_Syntax.string_of_mlpath p)
+in (_0_521 = "FStar.Ghost.erased")) -> begin
+FStar_Extraction_JavaScript_Ast.JST_Any
 end
 | FStar_Extraction_ML_Syntax.MLTY_Named (args, (path, name)) -> begin
-if (is_standart_type name) then begin
+(match ((is_standart_type name)) with
+| true -> begin
 (FStar_Util.must (mk_standart_type name))
-end else begin
-if (let _184_420 = (FStar_Extraction_ML_Util.is_xtuple_ty ((path), (name)))
-in (FStar_Option.isSome _184_420)) then begin
-(let _184_421 = (FStar_List.map translate_type args)
-in FStar_Extraction_JavaScript_Ast.JST_Tuple (_184_421))
-end else begin
+end
+| uu____1769 -> begin
+(match ((FStar_Option.isSome (FStar_Extraction_ML_Util.is_xtuple_ty ((path), (name))))) with
+| true -> begin
+FStar_Extraction_JavaScript_Ast.JST_Tuple ((FStar_List.map (fun x -> (translate_type x lp_generic env)) args))
+end
+| uu____1772 -> begin
 (
 
 let args_t = (match (args) with
 | [] -> begin
 None
 end
-| _84_781 -> begin
-(let _184_423 = (FStar_List.map translate_type args)
-in (FStar_All.pipe_right _184_423 (fun _184_422 -> Some (_184_422))))
+| uu____1779 -> begin
+(let _0_523 = (FStar_List.map (fun x -> (translate_type x lp_generic env)) args)
+in (FStar_All.pipe_right _0_523 (fun _0_522 -> Some (_0_522))))
 end)
-in (let _184_426 = (let _184_425 = (let _184_424 = (getName ((path), (name)))
-in FStar_Extraction_JavaScript_Ast.Unqualified (_184_424))
-in ((_184_425), (args_t)))
-in FStar_Extraction_JavaScript_Ast.JST_Generic (_184_426)))
+in (
+
+let path = (FStar_String.concat "_" path)
+in (
+
+let name = (match (((path = env.module_name) || (path = ""))) with
+| true -> begin
+name
 end
-end
+| uu____1788 -> begin
+(Prims.strcat path (Prims.strcat "." name))
+end)
+in FStar_Extraction_JavaScript_Ast.JST_Generic (((name), (args_t))))))
+end)
+end)
 end))
 
 

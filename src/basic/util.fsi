@@ -13,8 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+#light "off"
 module FStar.Util
-
+open FStar.All
 open System.IO
 
 open FStar.BaseTypes
@@ -49,12 +50,16 @@ val set_count: set<'a> -> int
 val set_difference: set<'a> -> set<'a> -> set<'a>
 val set_elements: set<'a> -> list<'a>
 
+(* A fifo_set is a set preserving the insertion order *)
 type fifo_set<'a> = set<'a>
 val new_fifo_set: ('a -> 'a -> int) -> ('a -> int) -> fifo_set<'a>
 val fifo_set_is_empty: fifo_set<'a> -> bool
+(* [fifo_set_add x s] pushes an element [x] at the end of the set [s] *)
 val fifo_set_add: 'a -> fifo_set<'a> -> fifo_set<'a>
+(* [fifo_set_remove x s] removes [x]from [s] *)
 val fifo_set_remove: 'a -> fifo_set<'a> -> fifo_set<'a>
 val fifo_set_mem: 'a -> fifo_set<'a> -> bool
+(* [fifo_set s1 s2] is the set with all elements in [s1] inserted before those of [s2] *)
 val fifo_set_union: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
 val fifo_set_count: fifo_set<'a> -> int
 val fifo_set_difference: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
@@ -166,6 +171,7 @@ val uint16_of_int: int -> Tot<uint16>
 val float_of_byte: byte -> Tot<float>
 val float_of_int32: int32 -> Tot<float>
 val float_of_int64: int64 -> Tot<float>
+val float_of_string: string -> Tot<float>
 val int_of_int32: int32 -> Tot<int>
 val int32_of_int:   int -> Tot<int32> //potentially failing int32 coercion
 val string_of_int:   int -> string
@@ -214,6 +220,7 @@ val for_all: ('a -> bool) -> list<'a> -> bool
 val for_some: ('a -> bool) -> list<'a> -> bool
 val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 val multiset_equiv: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
+val take: ('a -> bool) -> list<'a> -> list<'a> * list<'a>
 
 val is_some: option<'a> -> Tot<bool>
 val must: option<'a> -> 'a

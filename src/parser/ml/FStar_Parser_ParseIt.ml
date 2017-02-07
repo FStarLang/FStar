@@ -1,5 +1,6 @@
 open FStar_Util
-open FStar_Absyn_Syntax
+open FStar_Errors
+open FStar_Syntax_Syntax
 open Lexing
 
 type filename = string
@@ -8,7 +9,7 @@ type input_frag = {
     frag_text:string;
     frag_line:Prims.int;
     frag_col:Prims.int
-}   
+}
 
 let resetLexbufPos filename lexbuf =
   lexbuf.lex_curr_p <- {
@@ -29,7 +30,7 @@ let find_file filename =
   match FStar_Options.find_file filename with
     | Some s ->
       s
-    | None -> 
+    | None ->
       raise(Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
 
 let read_file (filename:string) =
@@ -41,7 +42,7 @@ let read_file (filename:string) =
 let check_extension fn =
     if not (FStar_Util.ends_with fn ".fst")
     && not (FStar_Util.ends_with fn ".fsti")
-    then raise (FStar_Syntax_Syntax.Err("Unrecognized file extension: " ^fn))
+    then raise (Err("Unrecognized file extension: " ^fn))
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
@@ -50,7 +51,7 @@ let parse fn =
   let filename,lexbuf,line,col = match fn with
     | Inl(f) ->
         check_extension f;
-	let f' = find_file f in
+	      let f' = find_file f in
         (try f', Lexing.from_string (read_file f'), 1, 0
          with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
     | Inr s ->
@@ -70,15 +71,15 @@ let parse fn =
                     FStar_Parser_AST.Interface(l, d, true)
                   | _ -> failwith "Impossible"))
              else Inl mods
-          | _ -> fileOrFragment in
-      Inl frags
+          | _ -> fileOrFragment
+      in
+      Inl (frags, FStar_Parser_LexFStar.flush_comments ())
   with
-    | FStar_Syntax_Syntax.Error(msg, r)
-    | FStar_Absyn_Syntax.Error(msg, r) ->
+    | FStar_Errors.Error(msg, r) ->
       Inr (msg, r)
 
     | e ->
       let pos = lexbuf.lex_curr_p in
       let p = FStar_Range.mk_pos pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) in
-      let r = FStar_Range.mk_range filename (Z.of_int p) (Z.of_int p) in
+      let r = FStar_Range.mk_range filename p p in
       Inr ("Syntax error: " ^ (Printexc.to_string e), r)

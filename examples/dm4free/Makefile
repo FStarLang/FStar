@@ -16,8 +16,6 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.Continuations.uver \
 	delimcc.uver
 
-sall:
-
 old:
 	$(MAKE) -C old
 

@@ -1,5 +1,5 @@
 module AllocSTwHeaps
-
+open FStar.ST
 open Preorder
 
 //giving ourselves two non-ghost versions of the heap sel/upd functions
