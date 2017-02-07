@@ -105,7 +105,6 @@ open FStar_String
 %token <string * bool> INT64
 %token <string * bool> INT8
 %token IRREDUCIBLE
-%token KIND
 %token LARROW
 %token LBRACE
 %token LBRACE_COLON_PATTERN

@@ -34,7 +34,6 @@ RUN make
 RUN sudo make install
 WORKDIR /home/FStar
 
-
 # Prepare and build F*
 ADD update-fstar.sh .
 RUN git clone https://github.com/FStarLang/FStar.git

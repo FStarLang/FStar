@@ -69,7 +69,6 @@
     Hashtbl.add keywords "fun"           FUN         ;
     Hashtbl.add keywords "function"      FUNCTION    ;
     Hashtbl.add keywords "if"            IF          ;
-    Hashtbl.add keywords "kind"          KIND        ;
     Hashtbl.add keywords "in"            IN          ;
     Hashtbl.add keywords "include"       INCLUDE     ;
     Hashtbl.add keywords "inline"        INLINE      ;
