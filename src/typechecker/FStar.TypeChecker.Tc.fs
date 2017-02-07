@@ -542,25 +542,59 @@ and cps_and_elaborate env ed =
   let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
   let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env ed.return_repr in
 
+  (* Starting from [return_wp (b1:Type) (b2:b1) : M.wp b1 = fun bs -> body <: Type0], we elaborate *)
+  (* [lift_from_pure (b1:Type) (wp:(b1 -> Type0)-> Type0) : M.wp b1 = fun bs -> wp (fun b2 -> body)] *)
   let lift_from_pure_wp =
       match (SS.compress return_wp).n with
       | Tm_abs (b1 :: b2 :: bs, body, what) ->
-          let b1,b2, body =
-              match SS.open_term [b1 ; b2] (U.abs bs body None) with
-                  | [b1 ; b2], body -> b1, b2, body
-                  | _ -> failwith "Impossible : open_term not preserving binders arity"
-          in
-          // WARNING : pushing b1 and b2 in env might break the well-typedness invariant
-          let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
-          let wp_b1 = N.normalize [ N.Beta ] env0 (mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ]))) in
-          let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type body (U.unascribe wp_b1) in
-          (* TODO : Should check that what' is Tot Type0 *)
+        let b1,b2, body =
+          match SS.open_term [b1 ; b2] (U.abs bs body None) with
+          | [b1 ; b2], body -> b1, b2, body
+          | _ -> failwith "Impossible : open_term not preserving binders arity"
+        in
+        (* WARNING : pushing b1 and b2 in env might break the well-typedness *)
+        (* invariant but we need them for normalization *)
+        let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
+        let wp_b1 =
+          let raw_wp_b1 = mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ])) in
+          N.normalize [ N.Beta ] env0 raw_wp_b1
+        in
+        let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type body (U.unascribe wp_b1) in
+
+        (* We check that what' is Tot Type0 *)
+        let fail () =
+          let error_msg =
+            BU.format2 "The body of return_wp (%s) should be of type Type0 but is of type %s"
+              (Print.term_to_string body)
+              (match what' with
+               | None -> "None"
+               | Some (Inl lc) -> Print.lcomp_to_string lc
+               | Some (Inr (lid, _)) -> FStar.Ident.text_of_lid lid)
+          in failwith error_msg
+        in
+        begin match what' with
+        | None -> fail ()
+        | Some (Inl lc) ->
+          if U.is_pure_or_ghost_lcomp lc
+          then
+            let g_opt = Rel.try_teq env lc.res_typ U.ktype0 in
+            match g_opt with
+            | Some g' -> Rel.force_trivial_guard env g'
+            | None -> fail ()
+          else fail ()
+        | Some (Inr (lid, _)) ->
+          if not (U.is_pure_effect lid) then fail ()
+        end ;
+
+        let wp =
           let t2 = (fst b2).sort in
           let pure_wp_type = DMFF.double_star t2 in
-          let wp = S.gen_bv "wp" None pure_wp_type in
-          // fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a
-          let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
-          U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr (Const.effect_GTot_lid, [])))
+          S.gen_bv "wp" None pure_wp_type
+        in
+
+        (* fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a *)
+        let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
+        U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr (Const.effect_GTot_lid, [])))
       | _ ->
           failwith "unexpected shape for return"
   in
