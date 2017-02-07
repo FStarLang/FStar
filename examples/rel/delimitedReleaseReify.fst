@@ -69,27 +69,27 @@ val verify_test (x y z: id):
       if r = y || r = z then High
       else Low
     in
-    (* (forall h. List.noRepeats l /\ low_equiv h env /\ iexpr_eq h res ==> low_equiv (lift (fun h -> get_heap test l h) h) env) *)
     del_rel n env l [res] [] test
   end
 let verify_test x y z = ()
 
+reifiable
+val sum : prog 6
+let sum [y ; x1 ; x2 ; x3 ; x4 ; x5] =
+  write y (read x1 + read x2 + read x3 + read x4 + read x5)
+  (* upd h y ((sel h x1 + sel h x2 + sel h x3 + sel h x4 + sel h x5)) *)
 
-(* val sum : prog 6 *)
-(* let sum [x1;x2;x3;x4;x5;y] h = *)
-(*   upd h y ((sel h x1 + sel h x2 + sel h x3 + sel h x4 + sel h x5)) *)
-
-(* val verify_sum (x1 x2 x3 x4 x5 y : ref int): *)
-(*   Lemma *)
-(*     (del_rel 6 *)
-(*       (fun r -> *)
-(*         if r = y then Low *)
-(*         else if List.mem r [x1;x2;x3;x4;x5] then High *)
-(*         else Low) *)
-(*       [x1;x2;x3;x4;x5;y] *)
-(*       [fun h -> sel h x1 + sel h x2 + sel h x3 + sel h x4 + sel h x5] *)
-(*       [] *)
-(*       sum) *)
+(* The variant with 4 variables seems to work... *)
+(* val verify_sum (x1 x2 x3 x4 x5 y : id): *)
+(*   Lemma begin *)
+(*     let n = 6 in *)
+(*     let l = [x1 ; x2 ; x3 ; x4 ; x5] in *)
+(*     let env : env = fun r -> *)
+(*       if r = x1 || r = x2 || r = x3 || r = x4 || r = x5 then High else Low *)
+(*     in *)
+(*     let sum_val h = fst (reify (read x1 + read x2 + read x3 + read x4 + read x5) h) in *)
+(*     del_rel n env (y::l) [sum_val] [] sum *)
+(*   end *)
 (* let verify_sum x1 x2 x3 x4 x5 y = () *)
 
 (* val sum_swap : prog 6 *)

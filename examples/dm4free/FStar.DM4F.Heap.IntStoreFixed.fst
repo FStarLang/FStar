@@ -26,3 +26,10 @@ abstract val lemma_index_upd2: s:heap -> n:id -> v:int -> i:id{i<>n} -> Lemma
   (ensures (index (upd s n v) i == index s i))
   [SMTPat (index (upd s n v) i)]
 let lemma_index_upd2 s n v i = lemma_index_upd2 #int s n v i
+
+
+abstract val lemma_index_create: v:int -> i:id -> Lemma
+  (requires True)
+  (ensures (index (create v) i == v))
+  [SMTPat (index (create v) i)]
+let lemma_index_create v i = lemma_index_create #int store_size v i
