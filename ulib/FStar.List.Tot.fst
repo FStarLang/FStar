@@ -140,6 +140,18 @@ let rec find #a f l = match l with
   | [] -> None #(x:a{f x}) //These type annotations are only present because it makes bootstrapping go much faster
   | hd::tl -> if f hd then Some #(x:a{f x}) hd else find f tl
 
+val find_index :
+  #a:Type ->
+  f:(a -> Tot bool) ->
+  list a ->
+  Tot (option nat)
+let find_index #a f l =
+  let rec aux n = function
+  | [] -> None
+  | x :: xs -> if f x then Some n else aux (n+1) xs
+  in
+  aux 0 l
+
 val filter: #a:eqtype -> f:(a -> Tot bool) -> list a -> Tot (m:list a{forall x. mem x m ==> f x})
 let rec filter #a f = function
   | [] -> []
