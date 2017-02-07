@@ -2,7 +2,7 @@ module IfcReify
 
 open Rel
 open WhileReify
-open Def
+open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreExcFixed
 open FStar.Classical
 

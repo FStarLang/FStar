@@ -1,6 +1,6 @@
 module WhileReify
 
-open Def
+open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreExcFixed
 
 type binop =

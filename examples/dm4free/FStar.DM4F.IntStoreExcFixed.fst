@@ -1,6 +1,6 @@
 module FStar.DM4F.IntStoreExcFixed
 
-open Def
+open FStar.DM4F.Heap.IntStoreFixed
 
 (* TODO : Try to use [either a exn] instead of [option] *)
 type int_store (a:Type) = heap -> M (option a * heap)
