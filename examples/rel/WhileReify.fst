@@ -57,10 +57,10 @@ type com =
 (* exceptionless effect to the exceptionfull one and this not covered yet *)
 (* by the F* implementation. *)
 
-(* reifiable val interpret_exp_st : e:exp -> INT_STORE int (fun s0 p -> forall opt. p (opt, s0)) *)
+(* reifiable val interpret_exp_st : e:exp -> INT_STORE_EXC int (fun s0 p -> forall opt. p (opt, s0)) *)
 reifiable let rec interpret_exp_st (e:exp)
-  (* : INT_STORE int (fun s0 p -> forall x. p (Some x, s0)) *)
-  : IntStore int (requires (fun _ -> True)) (ensures (fun h0 x h1 -> h0 == h1 /\ Some? x))
+  (* : INT_STORE_EXC int (fun s0 p -> forall x. p (Some x, s0)) *)
+  : IntStoreExc int (requires (fun _ -> True)) (ensures (fun h0 x h1 -> h0 == h1 /\ Some? x))
 =
   match e with
   | AInt i -> i
@@ -91,7 +91,7 @@ let decr_while h c =
 
 exception OutOfFuel
 
-reifiable val interpret_com_st : c:com -> h0:heap -> IntStore unit
+reifiable val interpret_com_st : c:com -> h0:heap -> IntStoreExc unit
   (requires (fun h -> h == h0))
   (ensures (fun h _ ho -> h == h0))
   (decreases %[c; decr_while h0 c])
@@ -103,29 +103,29 @@ reifiable let rec interpret_com_st c h0 =
     write x v
   | Seq c1 c2 ->
     begin
-      let h1 = (IS?.get()) in
+      let h1 = (ISE?.get()) in
       interpret_com_st c1 h1;
-      let h2 = (IS?.get()) in
+      let h2 = (ISE?.get()) in
       interpret_com_st c2 h2
     end
   | If e ct cf ->
       let c = if interpret_exp_st e = 0 then cf else ct in
-      let h = (IS?.get()) in
+      let h = (ISE?.get()) in
       interpret_com_st c h
   | While e body v ->
     if interpret_exp_st e <> 0 then
       begin
         (* let m0 = interpret_exp_st v in *)
-        (* let h = IS?.get () in *)
+        (* let h = ISE?.get () in *)
         (* interpret_com_st body h; *)
         (* let m1 = interpret_exp_st v in *)
         (* proving recursive terminating relies of interpret_exp not *)
         (* changing the state? somehow F* can't prove this although *)
         (* interpret_exp_st has that in the spec! *)
         let m0 = interpret_exp' h0 v in
-        let h1 = IS?.get () in
+        let h1 = ISE?.get () in
         interpret_com_st body h1;
-        let h2 = IS?.get() in
+        let h2 = ISE?.get() in
         let m1 = interpret_exp' h2 v in
         if m0 > m1 && m1 >= 0 then
           interpret_com_st c h2

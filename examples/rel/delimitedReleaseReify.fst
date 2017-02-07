@@ -64,7 +64,7 @@ val verify_test (x y z: id):
   Lemma begin
     let n = 3 in
     let l = [x ; y ; z] in
-    let res h = sel h y + sel h z in
+    let res h = fst (reify (let tmp1 = read y in let tmp2 = read z in tmp1 + tmp2) h) in
     let env : env = fun r ->
       if r = y || r = z then High
       else Low
