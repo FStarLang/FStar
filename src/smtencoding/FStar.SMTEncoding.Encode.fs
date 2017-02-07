@@ -869,11 +869,17 @@ and encode_one_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             | Pat_constant c ->
                mkEq(scrutinee, encode_const c)
             | Pat_cons(f, args) ->
-                let is_f = mk_data_tester env f.fv_name.v scrutinee in
-                let sub_term_guards = args |> List.mapi (fun i (arg, _) ->
-                    let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
-                    mk_guard arg (mkApp(proj, [scrutinee]))) in
-                mk_and_l (is_f::sub_term_guards) in
+                let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
+                begin match Env.datacons_of_typ env.tcenv tc_name with
+                      | _, [_] -> mkTrue //single constructor type; no need for a test
+                      | _ ->
+                        let is_f = mk_data_tester env f.fv_name.v scrutinee in
+                        let sub_term_guards = args |> List.mapi (fun i (arg, _) ->
+                            let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
+                            mk_guard arg (mkApp(proj, [scrutinee]))) in
+                        mk_and_l (is_f::sub_term_guards)
+                end
+        in
 
          let rec mk_projections pat (scrutinee:term) =  match pat.v with
             | Pat_disj _ -> failwith "Impossible"

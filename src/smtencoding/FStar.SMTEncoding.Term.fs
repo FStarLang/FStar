@@ -257,11 +257,16 @@ let mkDiv = mk_bin_op Div
 let mkMul = mk_bin_op Mul
 let mkMod = mk_bin_op Mod
 let mkITE (t1, t2, t3) r =
-    match t2.tm, t3.tm with
-        | App(TrueOp,_), App(TrueOp, _) -> mkTrue r
-        | App(TrueOp,_), _ -> mkImp (mkNot t1 t1.rng, t3) r
-        | _, App(TrueOp, _) -> mkImp(t1, t2) r
-        | _, _ ->  mkApp'(ITE, [t1; t2; t3]) r
+    match t1.tm with
+    | App(TrueOp, _) -> t2
+    | App(FalseOp, _) -> t3
+    | _ -> begin
+      match t2.tm, t3.tm with
+      | App(TrueOp,_), App(TrueOp, _) -> mkTrue r
+      | App(TrueOp,_), _ -> mkImp (mkNot t1 t1.rng, t3) r
+      | _, App(TrueOp, _) -> mkImp(t1, t2) r
+      | _, _ ->  mkApp'(ITE, [t1; t2; t3]) r
+    end
 let mkCases t r = match t with
     | [] -> failwith "Impos"
     | hd::tl -> List.fold_left (fun out t -> mkAnd (out, t) r) hd tl
