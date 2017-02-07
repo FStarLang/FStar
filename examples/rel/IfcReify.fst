@@ -3,7 +3,7 @@ module IfcReify
 open Rel
 open WhileReify
 open Def
-open FStar.DM4F.IntStoreFixed
+open FStar.DM4F.IntStoreExcFixed
 open FStar.Classical
 
 (****************************** Preliminaries ******************************)
@@ -220,10 +220,10 @@ let sub_com _ _ _ _ = ()
       (first one to prevent explicit, second to prevent implicit flows)
 *)
 
-let assign_inv_com0 (env:label_fun) (e:exp) (r:id)
-  : Lemma (requires True)
-    (ensures (forall h0. let Some h1 = interpret_com h0 (Assign r e) in h1 = upd h0 r (interpret_exp h0 e)))
-= ()
+(* let assign_inv_com0 (env:label_fun) (e:exp) (r:id) *)
+(*   : Lemma (requires True) *)
+(*     (ensures (forall h0. let Some h1 = interpret_com h0 (Assign r e) in h1 = upd h0 r (interpret_exp h0 e))) *)
+(* = () *)
 
 (*   let assign_inv_com' (env:label_fun) (e:exp) (r:id) *)
 (*     : Lemma (requires True) *)
