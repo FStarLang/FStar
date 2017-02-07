@@ -2498,18 +2498,19 @@ end
 | FStar_Syntax_Syntax.Pat_cons (f, args) -> begin
 (
 
+let is_f = (
+
 let tc_name = (FStar_TypeChecker_Env.typ_of_datacon env.tcenv f.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
 in (
 
-let uu____4691 = (FStar_TypeChecker_Env.datacons_of_typ env.tcenv tc_name)
-in (match (uu____4691) with
-| (uu____4695, (uu____4696)::[]) -> begin
+let uu____4692 = (FStar_TypeChecker_Env.datacons_of_typ env.tcenv tc_name)
+in (match (uu____4692) with
+| (uu____4696, (uu____4697)::[]) -> begin
 FStar_SMTEncoding_Util.mkTrue
 end
-| uu____4698 -> begin
-(
-
-let is_f = (mk_data_tester env f.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v scrutinee)
+| uu____4699 -> begin
+(mk_data_tester env f.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v scrutinee)
+end)))
 in (
 
 let sub_term_guards = (FStar_All.pipe_right args (FStar_List.mapi (fun i uu____4720 -> (match (uu____4720) with
@@ -2523,7 +2524,6 @@ let uu____4736 = (FStar_SMTEncoding_Util.mkApp ((proj), ((scrutinee)::[])))
 in (mk_guard arg uu____4736)))
 end))))
 in (FStar_SMTEncoding_Util.mk_and_l ((is_f)::sub_term_guards))))
-end)))
 end))
 in (
 
