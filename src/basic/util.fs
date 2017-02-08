@@ -141,10 +141,6 @@ let ask_process (p:proc) (input:string) : string =
     System.Threading.Monitor.Exit(p.m);
     x
 
-let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
-  let proc = start_process id prog args cond in
-  ask_process proc input
-
 let kill_process (p:proc) =
 //    Printf.printf "Killing process %s\n" (p.id);
     p.killed := true;
@@ -152,6 +148,11 @@ let kill_process (p:proc) =
     p.proc.StandardInput.Close();
     System.Threading.Monitor.Exit(p.m);
     p.proc.WaitForExit()
+
+let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
+  let proc = start_process id prog args cond in
+  let output = ask_process proc input in
+  kill_process proc; output
 
 let kill_all () = !all_procs |> List.iter (fun p -> if not !p.killed then kill_process p)
 
