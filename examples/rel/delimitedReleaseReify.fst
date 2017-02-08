@@ -92,15 +92,13 @@ val verify_sum4 (x1 x2 x3 y : id):
 let verify_sum4 x1 x2 x3 y = ()
 
 
-(* Starting from a sum with 5 variables you need to modify the rlimit *)
-#set-options "--z3rlimit 100"
-
 reifiable
 val sum : prog 6
 let sum [y ; x1 ; x2 ; x3 ; x4 ; x5] =
   write y (read x1 + read x2 + read x3 + read x4 + read x5)
 
 (* The variant with 4 variables seems to work... *)
+(* This works with either more z3rlimit or putting the scrutinee of the match in a separate let at the smt-encoding level *)
 val verify_sum (x1 x2 x3 x4 x5 y : id):
   Lemma begin
     let n = 6 in
@@ -114,9 +112,9 @@ val verify_sum (x1 x2 x3 x4 x5 y : id):
   end
 let verify_sum x1 x2 x3 x4 x5 y = ()
 
-#set-options "--z3rlimit 5"
 
 (* Does not verify !!! *)
+(* #set-options "--z3rlimit 100" *)
 
 (* reifiable *)
 (* val sum_swap : prog 6 *)
@@ -142,6 +140,7 @@ let verify_sum x1 x2 x3 x4 x5 y = ()
 (*   end *)
 (* let verify_sum_swap x1 x2 x3 x4 x5 y = () *)
 
+(* #set-options "--z3rlimit 5" *)
 
 reifiable
 val sum_att : prog 6
@@ -169,7 +168,7 @@ let sum_att [y ; x1 ; x2 ; x3 ; x4 ; x5] =
 (* *\) *)
 
 
-#set-options "--z3rlimit 100"
+#set-options "--z3rlimit 10"
 reifiable
 val wallet : prog 3
 let wallet [x_h ; k ; x_l] =
@@ -186,6 +185,8 @@ val verify_wallet (x_h k x_l : id):
     del_rel n env l [] [b] wallet
   end
 let verify_wallet x_h k x_l = ()
+
+#set-options "--z3rlimit 5"
 
 (* Not accepted yet *)
 
