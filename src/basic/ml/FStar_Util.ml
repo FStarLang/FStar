@@ -86,7 +86,7 @@ let write_input in_write input =
 
 (*let cnt = ref 0*)
 
-let launch_process prog args input cond =
+let launch_process (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
   (*let fc = open_out ("tmp/q"^(string_of_int !cnt)) in
   output_string fc input;
   close_out fc;*)
