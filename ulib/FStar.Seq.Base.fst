@@ -42,7 +42,7 @@ let tl #a s = MkSeq (List.tl (MkSeq?.l s))
 abstract val create: #a:Type -> nat -> a -> Tot (seq a)
 let rec create #a len v = if len = 0 then MkSeq [] else cons v (create (len - 1) v)
 
-abstract val init: #a:Type -> len:nat -> contents: (i:nat { i < len } -> Tot a) -> Tot (seq a)
+abstract val init: #a:Type -> len:nat -> contents: (i:nat { i < len } -> Tot a) -> Tot (s:seq a{length s = len})
 let rec init #a len contents = if len = 0 then MkSeq [] else cons (contents 0) (init (len - 1) contents)
 
 abstract val of_list: #a:Type -> list a -> Tot (seq a)
