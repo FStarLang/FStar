@@ -169,7 +169,7 @@ let bg_z3_proc =
         let ctr = BU.mk_ref (-1) in
         fun () -> new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) in
     let z3proc () =
-      (*if !the_z3proc = None then*)
+      if !the_z3proc = None then
         the_z3proc := Some (new_proc ());
       must (!the_z3proc) in
     let x : list<unit> = [] in
@@ -197,7 +197,7 @@ let at_log_file () =
   then "@" ^ (query_logging.log_file_name())
   else ""
 
-let doZ3Exe' (input:string) =
+let doZ3Exe' (fresh:bool) (input:string) =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
     let print_stats (lines:list<string>) =
@@ -242,15 +242,24 @@ let doZ3Exe' (input:string) =
       | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n"
                             (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (BU.trim_string l)) lines)) in
     result lines in
-  let stdout = BU.launch_process ((Options.z3_exe())) (ini_params()) input in
+  let cond pid (s:string) =
+    (let x = BU.trim_string s = "Done!" in
+//     BU.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
+     x) in
+  let stdout =
+    if fresh then
+      BU.launch_process ((Options.z3_exe())) (ini_params()) input cond
+    else
+      let proc = bg_z3_proc.grab() in
+      let stdout = BU.ask_process proc input in
+      bg_z3_proc.release(); stdout
+  in
   parse (BU.trim_string stdout)
 
 let doZ3Exe =
     let ctr = BU.mk_ref 0 in
     fun (fresh:bool) (input:string) ->
-        let res = doZ3Exe' input in
-        //Printf.printf "z3-%A says %s\n"  (get_z3version()) (status_to_string (fst res));
-        res
+        doZ3Exe' fresh input
 
 let z3_options () =
     "(set-option :global-decls false)\
@@ -317,32 +326,32 @@ let rec dequeue' () =
 
 and dequeue () = match !running with
   | true ->
-    (*BU.print_string "====deq1====";*)
     BU.monitor_enter (job_queue);
-    (*BU.print_string "----deq2----";*)
     let rec aux () = match !job_queue with
         | [] ->
           BU.monitor_exit job_queue;
-          (*BU.print_string "waiting..";*)
           BU.monitor_wait(job_queue);
           aux ()
         | _ -> dequeue'() in
     aux()
-  | false -> (*BU.print_string "false"*) ()
+  | false -> ()
 
 and run_job j = j.callback <| j.job ()
 
+(* threads are spawned only if fresh, I.e. we check here and in ask the mode of execution,
+   should be improved by using another option, see ask *)
 let init () =
     running := true;
     let n_cores = (Options.n_cores()) in
-    let n_runners = if n_cores > 1 then n_cores else 1 in
-    let rec aux n =
-        if n = 0 then ()
-        else (spawn dequeue; aux (n - 1)) in
-    aux n_runners
+    if (n_cores > 1) then
+      let rec aux n =
+          if n = 0 then ()
+          else (spawn dequeue; aux (n - 1)) in
+      aux n_cores
+    else ()
+
 
 let enqueue fresh j =
- //   BU.print1 "Enqueue fresh is %s\n" (if fresh then "true" else "false");
     if not fresh
     then run_job j
     else begin
@@ -353,11 +362,8 @@ let enqueue fresh j =
     end
 
 let finish () =
-    (*BU.print_string "finish";*)
     let rec aux () =
-        (*BU.print_string "finish";*)
         let n, m = with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue)  in
-        (*BU.print2 "size: %s - %s" (string_of_int n) (string_of_int m);*)
         //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
         if n+m=0
         then (running := false;FStar.Errors.report_all() |> ignore)
@@ -444,6 +450,13 @@ let commit_mark msg =
     end
 
 let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
+  (* the fresh variable controls if we accumulate theory by using a single Z3 process
+     or using a "fresh" process for every obligation and giving it the whole theory.
+     A single Z3 process cannot work with multi-core although a single thread
+     can operate in the fresh mode.
+     In the future, a new parameter fresh should be added to FStar with this option, right now
+     this argument is automatically set to false for 1 thread and true for > 1 *)
+  let fresh = (Options.n_cores() > 1) in
   let filter_assertions theory = match core with
     | None -> theory, false
     | Some core ->
@@ -478,9 +491,9 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
                          (BU.string_of_int n_pruned)
       end;
       theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true in
-  let theory = bgtheory true in
+  let theory = bgtheory fresh in
   let theory = theory@[Term.Push]@qry@[Term.Pop] in
-  let theory, used_unsat_core = (theory, false) (*filter_assertions theory*) in
+  let theory, used_unsat_core = filter_assertions theory in
   let cb (uc_errs, time) =
     if used_unsat_core
     then match uc_errs with
@@ -489,6 +502,6 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
     else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
   if Options.log_queries() then query_logging.append_to_log input;
-  enqueue true({job=z3_job true label_messages input; callback=cb})
+  enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
 
 

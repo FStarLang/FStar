@@ -69,7 +69,8 @@ let atomically (f:unit -> 'a) =
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
 
-let launch_process _ _ _ = ""
+let launch_process prog args input cond =
+  failwith "multi-core not implemented in F*-F#"
 
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
     let signal = new Object() in

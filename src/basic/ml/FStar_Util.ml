@@ -84,15 +84,22 @@ let write_input in_write input =
   output_string in_write input;
   flush in_write
 
-let launch_process prog args input =
+(*let cnt = ref 0*)
+
+let launch_process prog args input cond =
+  (*let fc = open_out ("tmp/q"^(string_of_int !cnt)) in
+  output_string fc input;
+  close_out fc;*)
   let cmd = prog^" "^args in
   let (to_chd_r, to_chd_w) = Unix.pipe () in
   let (from_chd_r, from_chd_w) = Unix.pipe () in
   Unix.set_close_on_exec to_chd_w;
   Unix.set_close_on_exec from_chd_r;
   let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
+  (*let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; ("run.sh "^(string_of_int (!cnt)))^" | " ^ cmd |]*)
                                to_chd_r from_chd_w Unix.stderr
   in
+  (*cnt := !cnt +1;*)
   Unix.close from_chd_w;
   Unix.close to_chd_r;
   let cin = Unix.in_channel_of_descr from_chd_r in
