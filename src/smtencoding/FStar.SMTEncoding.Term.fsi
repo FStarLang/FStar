@@ -66,6 +66,7 @@ type term' =
   | FreeV      of fv
   | App        of op  * list<term>
   | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term
+  | Let        of list<term> * term
   | Labeled    of term * string * Range.range
   | LblPos     of term * string
 and pat  = term
@@ -134,6 +135,8 @@ val mkForall: (list<list<pat>> * fvs * term) -> Range.range -> term
 val mkForall': (list<list<pat>> * option<int> * fvs * term) -> Range.range -> term
 val mkForall'': (list<list<pat>> * option<int> * list<sort> * term) -> Range.range -> term
 val mkExists: (list<list<pat>> * fvs * term) -> Range.range -> term
+val mkLet: (list<term> * term) -> Range.range -> term
+val mkLet': (list<(fv * term)> * term) -> Range.range -> term
 
 val fresh_token: (string * sort) -> int -> decl
 val injective_constructor : (string * list<(string * sort)> * sort) -> decls_t
