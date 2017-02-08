@@ -248,7 +248,7 @@ let doZ3Exe' (fresh:bool) (input:string) =
      x) in
   let stdout =
     if fresh then
-      BU.launch_process ((Options.z3_exe())) (ini_params()) input cond
+      BU.launch_process (tid()) ((Options.z3_exe())) (ini_params()) input cond
     else
       let proc = bg_z3_proc.grab() in
       let stdout = BU.ask_process proc input in
@@ -257,7 +257,6 @@ let doZ3Exe' (fresh:bool) (input:string) =
   parse (BU.trim_string stdout)
 
 let doZ3Exe =
-    let ctr = BU.mk_ref 0 in
     fun (fresh:bool) (input:string) ->
         doZ3Exe' fresh input
 
@@ -326,11 +325,12 @@ let rec dequeue' () =
 
 and dequeue () = match !running with
   | true ->
-    BU.monitor_enter (job_queue);
-    let rec aux () = match !job_queue with
+    let rec aux () =
+      BU.monitor_enter (job_queue);
+      match !job_queue with
         | [] ->
           BU.monitor_exit job_queue;
-          BU.monitor_wait(job_queue);
+          BU.sleep(50);
           aux ()
         | _ -> dequeue'() in
     aux()
