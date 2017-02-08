@@ -187,6 +187,16 @@ let rec mem #a x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
 
+(** Propositional membership (as in Coq). Does not require decidable
+equality. *)
+
+(** [memP x l] holds if, and only if, [x] appears as an
+element of [l]. Similar to: List.In in Coq. *)
+let rec memP (#a: Type) (x: a) (l: list a) : Tot Type0 =
+  match l with
+  | [] -> False
+  | y :: q -> x == y \/ memP x q
+
 (** [contains x l] returns [true] if, and only if, [x] appears as an
 element of [l]. Requires, at type-checking time, the type of elements
 of [l] to have decidable equality. It is equivalent to: [mem x

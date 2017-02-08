@@ -3,7 +3,11 @@
 # Script to run fsdoc on certain dirs in the FStar repo.
 # Currently, this script gets called by the VSTF "FStar, Docs, Linux, CI"
 # Build Defn. The $PAT env var is stored in that Build Defn.  
-set -x # debug on
+
+# Please never enable debugging except locally -- this may result in the GitHub
+# personal access token being printed in our (now-public) logs.
+# set -x # debug on
+set -e
 
 echo Running fsdoc in `pwd`
 

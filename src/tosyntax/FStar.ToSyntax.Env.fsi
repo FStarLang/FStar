@@ -126,10 +126,10 @@ val push_namespace: env -> lident -> env
 val push_include: env -> lident -> env
 val push_module_abbrev : env -> ident -> lident -> env
 
-val pop: env -> env
+val pop: unit -> env
 val push: env -> env
 val mark: env -> env
-val reset_mark: env -> env
+val reset_mark: unit -> env
 val commit_mark: env -> env
 val finish_module_or_interface: env -> modul -> env
 val prepare_module_or_interface: bool -> bool -> env -> lident -> env * bool //pop the context when done desugaring

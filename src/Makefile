@@ -172,10 +172,13 @@ u_extract_dmff: u_boot_fsts/FStar.TypeChecker.DMFF.fst
 u_extract_tcterm: u_boot_fsts/FStar.TypeChecker.TcTerm.fst
 	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.TcTerm
 
+u_extract_tcinductive: u_boot_fsts/FStar.TypeChecker.TcInductive.fst
+	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.TcInductive
+
 u_extract_tc: u_boot_fsts/FStar.TypeChecker.Tc.fst
 	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.Tc
 
-u_extract_typechecker: u_extract_normalizer u_extract_rel u_extract_util u_extract_dmff u_extract_tcterm u_extract_tc
+u_extract_typechecker: u_extract_normalizer u_extract_rel u_extract_util u_extract_dmff u_extract_tcterm u_extract_tcinductive u_extract_tc
 
 u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst ToSyntax.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.ToSyntax
@@ -185,6 +188,9 @@ u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML
 
 u_extract_smtencoding_base: $(addprefix u_boot_fsts/FStar.SMTEncoding., Term.fst Util.fst Z3.fst SplitQueryCases.fst ErrorReporting.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.SMTEncoding
+u_extract_uz: $(addprefix u_boot_fsts/FStar.SMTEncoding., Util.fst Z3.fst)
+	$(FSTARBOOT) $^ --extract_namespace FStar.SMTEncoding
+
 
 u_extract_encode: u_boot_fsts/FStar.SMTEncoding.Encode.fst
 	$(FSTARBOOT) $^ --extract_module FStar.SMTEncoding.Encode
@@ -200,6 +206,12 @@ u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fs
 u_extract_all: u_extract_misc u_extract_syntax u_extract_parser \
 	       u_extract_typechecker u_extract_tosyntax u_extract_smtencoding \
 	       u_extract_extraction u_extract_fstar
+
+uz:
+	make prep
+	+make u_extract_uz
+	cp u_ocaml-output/*.ml ocaml-output/
+	+make -C ocaml-output
 
 ocaml: clean_u_extract_ocaml
 	make prep
@@ -232,7 +244,11 @@ ifeq ($(OS),Windows_NT)
 endif
 	+make -C ocaml-output
 	+make fstar-ocaml
-	+make uregressions
+	+make uregressions interactive-test
+
+# Interactive mode regressions
+interactive-test:
+	+make -C tests/interactive
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:

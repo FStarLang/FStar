@@ -36,3 +36,6 @@ val build_map : list<string> -> map
 val collect : verify_mode -> list<string> -> list<(string * list<string>)> * list<string> * BU.smap<(list<string> * color)>
 
 val print : list<(string * list<string>)> * 'a * smap<(list<string> * 'b)> -> unit
+
+val is_interface: string -> bool
+val is_implementation: string -> bool
