@@ -423,9 +423,10 @@ let bgtheory fresh =
 
 //refresh: create a new z3 process, and reset the bg_scope
 let refresh () =
-    bg_z3_proc.refresh();
-    let theory = bgtheory true in
-    bg_scope := List.rev theory
+    if (Options.n_cores() < 2) then
+      bg_z3_proc.refresh();
+      let theory = bgtheory true in
+      bg_scope := List.rev theory
 
 //mark, reset_mark, commit_mark:
 //    setting rollback points for the interactive mode
