@@ -827,25 +827,30 @@ and encode_let
 
 and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t)
                  (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t =
+    let scrsym, scr', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown None Range.dummyRange)) in
     let scr, decls = encode_term e env in
-    let match_tm, decls = List.fold_right (fun b (else_case, decls) ->
+    let match_tm, decls =
+      let encode_branch b (else_case, decls) =
         let p, w, br = SS.open_branch b in
         let patterns = encode_pat env p in
+        (* KM : Why are we using a fold_right here ? does the order of patterns in a disjunction really matter ? *)
         List.fold_right (fun (env0, pattern) (else_case, decls) ->
-            let guard = pattern.guard scr in
-            let projections = pattern.projections scr in
-            let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
-            let guard, decls2 = match w with
-                | None -> guard, []
-                | Some w ->
-                    let w, decls2 = encode_term w env in
-                    mkAnd(guard, mkEq(w, Term.boxBool mkTrue)), decls2 in
-            let br, decls3 = encode_br br env in
-            mkITE(guard, br, else_case), decls@decls2@decls3)
-        patterns (else_case, decls))
-        pats
-        (default_case (* default; should be unreachable *), decls) in
-    match_tm, decls
+          let guard = pattern.guard scr' in
+          let projections = pattern.projections scr' in
+          let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
+          let guard, decls2 = match w with
+            | None -> guard, []
+            | Some w ->
+              let w, decls2 = encode_term w env in
+              mkAnd(guard, mkEq(w, Term.boxBool mkTrue)), decls2
+          in
+          let br, decls3 = encode_br br env in
+          mkITE(guard, br, else_case), decls@decls2@decls3)
+          patterns (else_case, decls)
+      in
+      List.fold_right encode_branch pats (default_case (* default; should be unreachable *), decls)
+    in
+    mkLet' ([(scrsym,Term_sort), scr], match_tm) Range.dummyRange, decls
 
 
 and encode_pat (env:env_t) (pat:Syntax.pat) : list<(env_t * pattern)>  (* one for each disjunct *) =
