@@ -69,10 +69,6 @@ let atomically (f:unit -> 'a) =
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
 
-let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
-  let proc = start_process id prog args cond in
-  ask_process proc input
-
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
     let signal = new Object() in
     let startInfo = new ProcessStartInfo() in
@@ -144,6 +140,10 @@ let ask_process (p:proc) (input:string) : string =
     let x = p.outbuf.ToString() in
     System.Threading.Monitor.Exit(p.m);
     x
+
+let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
+  let proc = start_process id prog args cond in
+  ask_process proc input
 
 let kill_process (p:proc) =
 //    Printf.printf "Killing process %s\n" (p.id);
