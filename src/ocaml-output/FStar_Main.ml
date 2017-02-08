@@ -39,8 +39,8 @@ in (match (uu____58) with
 | true -> begin
 (match ((time >= (Prims.parse_int "0"))) with
 | true -> begin
-(print_to (let _0_1143 = (FStar_Util.string_of_int time)
-in (FStar_Util.format3 "Verified %s: %s (%s milliseconds)\n" tag (FStar_Ident.text_of_lid name) _0_1143)))
+(print_to (let _0_1078 = (FStar_Util.string_of_int time)
+in (FStar_Util.format3 "Verified %s: %s (%s milliseconds)\n" tag (FStar_Ident.text_of_lid name) _0_1078)))
 end
 | uu____59 -> begin
 (print_to (FStar_Util.format2 "Verified %s: %s\n" tag (FStar_Ident.text_of_lid name)))
@@ -57,13 +57,13 @@ end))));
 (FStar_Util.print_error "1 error was reported (see above)\n")
 end
 | uu____61 -> begin
-(let _0_1144 = (FStar_Util.string_of_int errs)
-in (FStar_Util.print1_error "%s errors were reported (see above)\n" _0_1144))
+(let _0_1079 = (FStar_Util.string_of_int errs)
+in (FStar_Util.print1_error "%s errors were reported (see above)\n" _0_1079))
 end)
 end
 | uu____62 -> begin
-(FStar_Util.print_string (let _0_1145 = (FStar_Util.colorize_bold "All verification conditions discharged successfully")
-in (FStar_Util.format1 "%s\n" _0_1145)))
+(FStar_Util.print_string (let _0_1080 = (FStar_Util.colorize_bold "All verification conditions discharged successfully")
+in (FStar_Util.format1 "%s\n" _0_1080)))
 end);
 )
 end
@@ -95,9 +95,9 @@ in (match ((opt <> None)) with
 | true -> begin
 (
 
-let mllibs = (let _0_1147 = (let _0_1146 = (FStar_Extraction_ML_UEnv.mkContext env)
-in (FStar_Util.fold_map FStar_Extraction_ML_Modul.extract _0_1146 umods))
-in (FStar_All.pipe_left Prims.snd _0_1147))
+let mllibs = (let _0_1082 = (let _0_1081 = (FStar_Extraction_ML_UEnv.mkContext env)
+in (FStar_Util.fold_map FStar_Extraction_ML_Modul.extract _0_1081 umods))
+in (FStar_All.pipe_left Prims.snd _0_1082))
 in (
 
 let mllibs = (FStar_List.flatten mllibs)
@@ -126,8 +126,8 @@ in (match (opt) with
 let newDocs = (FStar_List.collect FStar_Extraction_ML_Code.doc_of_mllib mllibs)
 in (FStar_List.iter (fun uu____121 -> (match (uu____121) with
 | (n, d) -> begin
-(let _0_1148 = (FStar_Options.prepend_output_dir (Prims.strcat n ext))
-in (FStar_Util.write_file _0_1148 (FStar_Format.pretty (Prims.parse_int "120") d)))
+(let _0_1083 = (FStar_Options.prepend_output_dir (Prims.strcat n ext))
+in (FStar_Util.write_file _0_1083 (FStar_Format.pretty (Prims.parse_int "120") d)))
 end)) newDocs))
 end
 | Some ("JavaScript") -> begin
@@ -139,8 +139,8 @@ in (FStar_List.iter (fun uu____130 -> (match (uu____130) with
 (
 
 let res = (FStar_Extraction_JavaScript_PrintAst.pretty_print d)
-in (let _0_1149 = (FStar_Options.prepend_output_dir (Prims.strcat n ext))
-in (FStar_Util.write_file _0_1149 (FStar_Format.pretty (Prims.parse_int "120") res))))
+in (let _0_1084 = (FStar_Options.prepend_output_dir (Prims.strcat n ext))
+in (FStar_Util.write_file _0_1084 (FStar_Format.pretty (Prims.parse_int "120") res))))
 end)) newDocs))
 end
 | Some ("Kremlin") -> begin
@@ -150,8 +150,8 @@ let programs = (FStar_List.flatten (FStar_List.map FStar_Extraction_Kremlin.tran
 in (
 
 let bin = ((FStar_Extraction_Kremlin.current_version), (programs))
-in (let _0_1150 = (FStar_Options.prepend_output_dir "out.krml")
-in (FStar_Util.save_value_to_file _0_1150 bin))))
+in (let _0_1085 = (FStar_Options.prepend_output_dir "out.krml")
+in (FStar_Util.save_value_to_file _0_1085 bin))))
 end
 | uu____141 -> begin
 (failwith "Unrecognized option")
@@ -180,8 +180,8 @@ end
 | FStar_Getopt.Success -> begin
 (
 
-let uu____161 = (let _0_1151 = (FStar_Options.dep ())
-in (_0_1151 <> None))
+let uu____161 = (let _0_1086 = (FStar_Options.dep ())
+in (_0_1086 <> None))
 in (match (uu____161) with
 | true -> begin
 (FStar_Parser_Dep.print (FStar_Parser_Dep.collect FStar_Parser_Dep.VerifyAll filenames))
@@ -250,8 +250,8 @@ in (
 let filename = (try_convert_file_name_to_windows filename)
 in ((
 
-let uu____200 = (let _0_1152 = (FStar_Options.verify_module ())
-in (_0_1152 <> []))
+let uu____200 = (let _0_1087 = (FStar_Options.verify_module ())
+in (_0_1087 <> []))
 in (match (uu____200) with
 | true -> begin
 (FStar_Util.print_warning "Interactive mode; ignoring --verify_module")
@@ -291,8 +291,8 @@ in (match (uu____215) with
 | true -> begin
 ((
 
-let uu____217 = (let _0_1153 = (FStar_Options.verify_module ())
-in (_0_1153 <> []))
+let uu____217 = (let _0_1088 = (FStar_Options.verify_module ())
+in (_0_1088 <> []))
 in (match (uu____217) with
 | true -> begin
 ((FStar_Util.print_error "--verify_module is incompatible with --verify_all");
@@ -308,8 +308,8 @@ end
 | uu____221 -> begin
 (
 
-let uu____222 = (let _0_1154 = (FStar_Options.verify_module ())
-in (_0_1154 <> []))
+let uu____222 = (let _0_1089 = (FStar_Options.verify_module ())
+in (_0_1089 <> []))
 in (match (uu____222) with
 | true -> begin
 FStar_Parser_Dep.VerifyUserList
@@ -333,8 +333,8 @@ let module_names_and_times = (FStar_All.pipe_right fmods (FStar_List.map (fun uu
 (((FStar_Universal.module_or_interface_name x)), (t))
 end))))
 in ((report_errors module_names_and_times);
-(codegen (let _0_1155 = (FStar_All.pipe_right fmods (FStar_List.map Prims.fst))
-in ((_0_1155), (env))));
+(codegen (let _0_1090 = (FStar_All.pipe_right fmods (FStar_List.map Prims.fst))
+in ((_0_1090), (env))));
 (finished_message module_names_and_times (Prims.parse_int "0"));
 ))
 end))))
@@ -372,23 +372,23 @@ end);
 let uu____299 = (FStar_Options.trace_error ())
 in (match (uu____299) with
 | true -> begin
-(let _0_1157 = (FStar_Util.message_of_exn e)
-in (let _0_1156 = (FStar_Util.trace_of_exn e)
-in (FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _0_1157 _0_1156)))
+(let _0_1092 = (FStar_Util.message_of_exn e)
+in (let _0_1091 = (FStar_Util.trace_of_exn e)
+in (FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _0_1092 _0_1091)))
 end
 | uu____300 -> begin
 (match ((not ((FStar_Errors.handleable e)))) with
 | true -> begin
-(let _0_1158 = (FStar_Util.message_of_exn e)
-in (FStar_Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _0_1158))
+(let _0_1093 = (FStar_Util.message_of_exn e)
+in (FStar_Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _0_1093))
 end
 | uu____301 -> begin
 ()
 end)
 end));
 (cleanup ());
-(let _0_1159 = (FStar_Errors.report_all ())
-in (FStar_All.pipe_right _0_1159 Prims.ignore));
+(let _0_1094 = (FStar_Errors.report_all ())
+in (FStar_All.pipe_right _0_1094 Prims.ignore));
 (report_errors []);
 (FStar_All.exit (Prims.parse_int "1"));
 )

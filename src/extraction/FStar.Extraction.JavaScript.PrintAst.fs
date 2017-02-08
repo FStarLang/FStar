@@ -107,11 +107,13 @@ and pretty_print_statement (p:statement_t) : doc =
         reduce [ws; text "return"; (match e with | None -> empty | Some v -> reduce [ws; pretty_print_exp v]); semi; hardline]
     | JSS_Throw e -> reduce [ws; text "throw "; pretty_print_exp e; semi]
     | JSS_VariableDeclaration ((p, e), k) ->
-        (match p with
+       (match p with
         | JGP_Identifier (n, _) when n = "_" ->
-            (match e with | Some v -> reduce [pretty_print_exp v; semi; hardline] | None -> empty)
+            (match e with 
+            | Some v when v = JSE_Literal (JSV_Null, "") -> empty
+            | Some v -> reduce [pretty_print_exp v; semi; hardline] | None -> empty)
         | _ -> reduce [print_kind_var k; print_pattern p true;
-            (match e with | None -> empty | Some v -> reduce [text "="; pretty_print_exp v]); semi; hardline])
+                      (match e with | None -> empty | Some v -> reduce [text "="; pretty_print_exp v]); semi; hardline])
     | JSS_ExportDefaultDeclaration (d, k) ->
          (match d with
          | JSE_Declaration s ->
@@ -131,7 +133,9 @@ and print_export_stmt s =
     | JSS_VariableDeclaration ((p, e), k) ->
        (match p with
         | JGP_Identifier (n, _) when n = "_" ->
-            (match e with | Some v -> reduce [pretty_print_exp v; semi; hardline] | None -> empty)
+            (match e with
+            | Some v when v = JSE_Literal (JSV_Null, "") -> empty
+            | Some v -> reduce [pretty_print_exp v; semi; hardline] | None -> empty)
         | _ -> reduce [text "export "; pretty_print_statement s; hardline])
     | _ -> reduce [text "export "; pretty_print_statement s; hardline])
 
