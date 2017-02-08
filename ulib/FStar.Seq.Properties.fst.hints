@@ -1604,8 +1604,7 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Seq.Base.Extensionality",
-        "equation_FStar.Seq.Properties.head",
+        "@query", "equation_FStar.Seq.Properties.head",
         "equation_FStar.Seq.Properties.mem",
         "equation_FStar.Seq.Properties.tail",
         "equation_FStar.Seq.Properties.tot_ord",
@@ -1615,6 +1614,7 @@
         "fuel_correspondence_FStar.Seq.Properties.count.fuel_instrumented",
         "int_inversion", "int_typing",
         "lemma_FStar.Seq.Base.lemma_create_len",
+        "lemma_FStar.Seq.Base.lemma_eq_elim",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "lemma_FStar.Seq.Base.lemma_index_app1",
         "lemma_FStar.Seq.Base.lemma_index_app2",
@@ -1638,7 +1638,6 @@
         "refinement_interpretation_Tm_refine_c0f2574a4596972f951b2742ae08e2a1",
         "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368",
         "refinement_interpretation_Tm_refine_ec8c52b60e5c33b3ae66e4063643ec19",
-        "token_correspondence_Prims.op_LessThan",
         "typing_FStar.Seq.Base.length"
       ],
       0
@@ -1772,9 +1771,10 @@
       0,
       1,
       [
-        "@query", "assumption_FStar.Seq.Base.Extensionality",
-        "equation_FStar.Seq.Properties.swap", "equation_Prims.nat",
-        "int_inversion", "lemma_FStar.Seq.Base.lemma_len_upd",
+        "@query", "equation_FStar.Seq.Properties.swap", "equation_Prims.nat",
+        "int_inversion", "lemma_FStar.Seq.Base.lemma_eq_elim",
+        "lemma_FStar.Seq.Base.lemma_eq_refl",
+        "lemma_FStar.Seq.Base.lemma_len_upd",
         "lemma_FStar.Seq.Properties.slice_upd",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
@@ -1814,9 +1814,10 @@
       0,
       1,
       [
-        "@query", "assumption_FStar.Seq.Base.Extensionality",
-        "equation_FStar.Seq.Properties.swap", "equation_Prims.nat",
-        "int_inversion", "lemma_FStar.Seq.Base.lemma_len_upd",
+        "@query", "equation_FStar.Seq.Properties.swap", "equation_Prims.nat",
+        "int_inversion", "lemma_FStar.Seq.Base.lemma_eq_elim",
+        "lemma_FStar.Seq.Base.lemma_eq_refl",
+        "lemma_FStar.Seq.Base.lemma_len_upd",
         "lemma_FStar.Seq.Properties.slice_upd",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
