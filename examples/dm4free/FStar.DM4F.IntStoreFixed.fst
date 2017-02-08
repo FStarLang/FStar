@@ -48,3 +48,15 @@ let write (i:id) (x:int)
   let store = IS?.get () in
   IS?.put (upd store i x)
 
+
+(* let read_does_not_write_lemma (h:heap) (x:id) *)
+(*   : Lemma (requires True) *)
+(*       (ensures (snd (reify (read x) h) == h)) *)
+(*       [SMTPat (snd (reify (read x) h))] *)
+(* = () *)
+
+unfold
+let (!) = read
+
+unfold
+let op_Colon_equals = write
