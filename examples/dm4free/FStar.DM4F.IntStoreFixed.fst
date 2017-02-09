@@ -60,3 +60,22 @@ let (!) = read
 
 unfold
 let op_Colon_equals = write
+
+let refine_st (#a:Type)
+              (#b:Type)
+              (#pre : a -> Tot INT_STORE?.pre)
+              (#post : a -> Tot (heap -> b -> heap -> Tot Type0))
+              ($f :(x:a -> IntStore b (pre x) (post x)))
+              (x:a)
+  : IntStore b (pre x) (fun h0 z h1 -> pre x h0 /\
+                                    reify (f x) h0 == (z, h1) /\
+                                    post x h0 z h1)
+  = let g (h0:heap)
+      : Pure (b * heap)
+             (pre x h0)
+             (fun (z,h1) -> pre x h0 /\
+                       reify (f x) h0 == (z, h1) /\
+                       post x h0 z h1)
+      = reify (f x) h0
+    in
+    IntStore?.reflect g
