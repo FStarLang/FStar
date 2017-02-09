@@ -109,11 +109,13 @@ reifiable let rec interpret_com_st c h0 =
       interpret_com_st c2 h2
     end
   | If e ct cf ->
-      let c = if interpret_exp_st e = 0 then cf else ct in
+      let v = interpret_exp_st e in
+      let c = if v = 0 then cf else ct in
       let h = (ISE?.get()) in
       interpret_com_st c h
   | While e body v ->
-    if interpret_exp_st e <> 0 then
+    let v0 = interpret_exp_st e in
+    if v0 <> 0 then
       begin
         (* let m0 = interpret_exp_st v in *)
         (* let h = ISE?.get () in *)
@@ -127,7 +129,7 @@ reifiable let rec interpret_com_st c h0 =
         interpret_com_st body h1;
         let h2 = ISE?.get() in
         let m1 = interpret_exp' h2 v in
-        if m0 > m1 && m1 >= 0 then
+        if m0 > m1 then
           interpret_com_st c h2
         else
           raise_ () (* OutOfFuel *)
@@ -146,5 +148,4 @@ let interpret_com (h0:heap) (c:com) : Tot (option heap)
 
 
 let bidule = assert (fst (reify (interpret_exp_st (AOp Plus (AVar (to_id 7)) (AInt 5))) (create 3)) = Some 8)
-
 let bidule2 = assert (interpret_exp (create 3) (AOp Plus (AVar (to_id 7)) (AInt 5)) = 8)

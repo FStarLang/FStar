@@ -984,6 +984,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           begin match lb.lbname with
                               | Inl x ->
                                   (* TODO : optimize away bind-return pairs if possible *)
+                                  (* TODO : optimize [bind (bind e1 e2) e3] into [bind e1 (bind e2 e3)] *)
                                   let head = U.mk_reify <| lb.lbdef in
                                   let body = U.mk_reify <| body in
                                   (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)

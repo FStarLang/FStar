@@ -59,7 +59,7 @@ let write (i:id) (x:int)
   let store = ISE?.get () in
   ISE?.put (upd store i x)
 
-open FStar.DM4F.IntStoreFixed
+(* open FStar.DM4F.IntStoreFixed *)
 
 (* Trying to have a refiable lift from IntStoreFixed to IntStoreExcFixed *)
 (* Right now the definition fails with  *)

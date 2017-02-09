@@ -60,36 +60,32 @@ let ni_exp (env:label_fun) (e:exp) (l:label) : Tot Type0 =
    - Total correctness
    - Low equivalent input heaps ==> Low equivalent output heaps
 *)
-let inv_com' (env:label_fun) (c:com) (l:label) (h0_opt:option heap) : Tot Type0
-= match h0_opt with
+let inv_com' (env:label_fun) (c:com) (l:label) (h0:heap) : Tot Type0
+=
+  match interpret_com h0 c with
   | None -> True
-  | Some h0 ->
-    match interpret_com h0 c with
-    | None -> True
-    | Some h1 ->
-      forall (i:id(* {i `in_` h0 } *)). env i < l ==> index h0 i = index h1 i
+  | Some h1 ->
+    forall (i:id). {:pattern (env i < l)} env i < l ==> index h0 i = index h1 i
 
-let ni_com' (env:label_fun) (c:com) (l:label) (h0_opt: rel (option heap)) =
-  match h0_opt with
-  | R (Some h0l) (Some h0r) ->
-    (* KM : That's the code that we would like to write but subtyping and matching on pairs interplay badly *)
-    (* it generates a VC which boils down to [forall (h1l:heap). length h1l = length h0l] which is obviously false *)
-    (* begin match interpret_com h0l c, interpret_com h0r c with *)
-    (* | Some h1l, Some h1r -> low_equiv env (R h0l h0r) ==> low_equiv env (R h1l h1r) *)
-    (* | _ -> True *)
-    (* end *)
-    begin match interpret_com h0l c with
-      | Some h1l -> begin match  interpret_com h0r c with
-        | Some h1r -> low_equiv env (R h0l h0r) ==> low_equiv env (R h1l h1r)
-        | _ -> True
-      end
+let ni_com' (env:label_fun) (c:com) (l:label) (h0:rel heap) =
+  let R h0l h0r = h0 in
+  (* KM : That's the code that we would like to write but subtyping and matching on pairs interplay badly *)
+  (* it generates a VC which boils down to [forall (h1l:heap). length h1l = length h0l] which is obviously false *)
+  (* begin match interpret_com h0l c, interpret_com h0r c with *)
+  (* | Some h1l, Some h1r -> low_equiv env (R h0l h0r) ==> low_equiv env (R h1l h1r) *)
+  (* | _ -> True *)
+  (* end *)
+  begin match interpret_com h0l c with
+    | Some h1l -> begin match  interpret_com h0r c with
+      | Some h1r -> low_equiv env h0 ==> low_equiv env (R h1l h1r)
       | _ -> True
     end
-  | _ -> True
+    | _ -> True
+  end
 
 let ni_com (env:label_fun) (c:com) (l:label) =
-  (forall (h0: rel (option heap)). ni_com' env c l h0) /\
-  (forall (h0:option heap). inv_com' env c l h0)
+  (forall (h0: rel heap). {:pattern (low_equiv env h0)} ni_com' env c l h0) /\
+  (forall (h0:heap). {:pattern (Some? (interpret_com h0 c))} inv_com' env c l h0)
 
 (* KM : Trying to figure out wht are the design tradeoffs on option heap *)
 (* let preserves_env_upto_label (env:label_fun) (l:label) (c:com) (h0:heap) : Tot Type0 *)
@@ -156,44 +152,12 @@ let aint_exp _ _ = ()
           ----------------
           e1 `op` e2  : l
 *)
-(* Verifies *)
-let interpret_exp_binop (h:heap) (op:binop) (e1 e2:exp)
-  : Lemma (interpret_exp h (AOp op e1 e2) = interpret_binop op (interpret_exp h e1) (interpret_exp h e2))
-=
-  let Some v1, h1 = reify (interpret_exp_st e1) h in
-  let Some v2, h2 = reify (interpret_exp_st e2) h in
-  let e = AOp op e1 e2 in
-  let Some v, h3 = reify (interpret_exp_st e) h in
-  assert (h1 == h /\ h2 == h /\ h3 == h) ;
-  assert (v = interpret_binop op v1 v2)
-
-(* Do not verify *)
-(* let interpret_exp_binop (h:heap) (op:binop) (e1 e2:exp) *)
-(* (\* : Lemma (interpret_exp h (AOp op e1 e2) = interpret_binop op (interpret_exp h e1) (interpret_exp h e2)) *\) *)
-(* = *)
-(*   let v1 = interpret_exp h e1 in *)
-(*   let v2 = interpret_exp h e2 in *)
-(*   let e = AOp op e1 e2 in *)
-(*   let v = interpret_exp h e in *)
-(*   assert (v = interpret_binop op v1 v2) *)
-
-let binop_exp0 (env:label_fun) (op:binop) (e1 e2:exp) (l:label) (h:rel heap)
-  : Lemma (requires (ni_exp env e1 l) /\ ni_exp env e2 l /\ low_equiv env h /\ Low? l )
-    (ensures (let e = AOp op e1 e2 in interpret_exp (R?.r h) e = interpret_exp (R?.l h) e))
-=
-  interpret_exp_binop (R?.r h) op e1 e2 ;
-  interpret_exp_binop (R?.l h) op e1 e2
 
 val binop_exp : env:label_fun -> op:binop -> e1:exp -> e2:exp -> l:label ->
   Lemma (requires (ni_exp env e1 l) /\ (ni_exp env e2 l))
         (ensures  (ni_exp env (AOp op e1 e2) l))
 let binop_exp env op e1 e2 l =
-  let e = AOp op e1 e2 in
-  let f (h:rel heap) : Lemma ((low_equiv env h /\ Low? l) ==> interpret_exp (R?.r h) e = interpret_exp (R?.l h) e) =
-      move_requires (binop_exp0 env op e1 e2 l) h
-  in
-  forall_intro f
-
+  ()
 
 (************************ Typing Rules for Commands ************************)
 
@@ -267,18 +231,21 @@ let sub_com _ _ _ _ = ()
 (*     (fun (h0:option heap) -> *)
 (*       seq_inv_com' env c1 c2 l h0 <: Lemma (inv_com' env (Seq c1 c2) l h0)) *)
 
-(* (\* Typing rule for conditional commands *)
+(* Typing rule for conditional commands
 
-(*          env |- e : l   env,pc:l |- ct   env,pc:l |- cf *)
-(*          ---------------------------------------------- *)
-(*              env,pc:l |- if e <> 0 then ct else cf *)
-(* *\) *)
+         env |- e : l   env,pc:l |- ct   env,pc:l |- cf
+         ----------------------------------------------
+             env,pc:l |- if e <> 0 then ct else cf
+*)
 
+#set-options "--z3rlimit 100"
 
-(* val cond_com : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> *)
-(*   Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l))) *)
-(*          (ensures  (ni_com env (If e ct cf) l)) *)
-(* let cond_com _ _ _ _ _ = () *)
+val cond_com : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label ->
+  Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l)))
+         (ensures  (ni_com env (If e ct cf) l))
+let cond_com _ _ _ _ _ = ()
+
+#set-options "--z3rlimit 5"
 
 (* Typing rule for Skip
 
