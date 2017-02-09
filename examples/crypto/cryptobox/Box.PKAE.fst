@@ -51,6 +51,7 @@ let keygen #i =
   let pkae_pk = PKey #i dh_pk in
   pkae_pk, SKey #i dh_sk pkae_pk
 
+
 (**
    The ciphertext of PKAE consists of a PKE ciphertext (containing the ephemeral AE key)
    and an AE ciphertext containing said key.
@@ -62,14 +63,7 @@ val encrypt: #(pk_id:id) -> #(sk_id:id) -> pkae_pkey pk_id -> pkae_skey sk_id ->
 let encrypt #pk_id #sk_id pkae_pk  pkae_sk p =
   let k = prf_odh pkae_sk.dh_sk pkae_pk.dh_pk in
   let ae_i = AE.get_index k in
-  assert(AE.get_index k = ae_i || AE.get_index k = (snd ae_i, fst ae_i));
-//  assert (DH.get_index eph_dh_sk = snd ae_i);
-//  assert (pk.dh_pk.pk_i = fst ae_i);
-//  assert (DH.get_index eph_dh_sk = eph_i);
-//  assert (pk.dh_pk.pk_i = pk_i);
-//  assert (ae_i = (pk_i,eph_i));
   let ae_m = ae_message_wrap #ae_i p in
-  //let dh_m = dh_message_wrap #pk.i eph_dh_pk.rawpk in
   DH.pk_get_rawpk pkae_pk.dh_pk,(AE.encrypt #ae_i k ae_m)
 
 

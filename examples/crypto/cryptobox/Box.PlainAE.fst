@@ -13,7 +13,7 @@ open Platform.Bytes
 *)
 
 
-abstract type protected_ae_plain (i:ae_id)= p:protected_pkae_plain{get_index p = i || get_index p = (snd i,fst i)}
+abstract type protected_ae_plain (i:ae_id)= p:protected_pkae_plain{get_index p = i}
 
 type ae_plain = bytes
 
@@ -42,7 +42,7 @@ let repr #i p =
    passing it on to AE.encrypt. If AE is idealized and the payload is honest, then we 
    wrap the payload into our abstract type in good faith. If not, we coerce it.
 *)
-val ae_message_wrap: #i:ae_id -> p:protected_pkae_plain{get_index p = i || get_index p = (snd i,fst i)} -> Tot (protected_ae_plain i)
+val ae_message_wrap: #i:ae_id -> p:protected_pkae_plain{get_index p = i} -> Tot (protected_ae_plain i)
 let ae_message_wrap #i p = p
 
 (**
@@ -51,6 +51,6 @@ let ae_message_wrap #i p = p
    we strip it of its protection in good faith. Otherwise we break it down to its 
    byte representation using repr.
 *)
-val ae_message_unwrap: #i:ae_id -> p:protected_ae_plain i -> Tot (p:protected_pkae_plain{get_index p = i || get_index p = (snd i,fst i)})
+val ae_message_unwrap: #i:ae_id -> p:protected_ae_plain i -> Tot (p:protected_pkae_plain{get_index p = i})
 let ae_message_unwrap #i p = p
  

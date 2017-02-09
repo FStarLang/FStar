@@ -11,6 +11,8 @@ open Box.AE
 
 type key = AE.key
 
+let ae_key_get_index = AE.get_index
+
 let keygen = AE.keygen
 
 let coerce_key = AE.coerce_key
