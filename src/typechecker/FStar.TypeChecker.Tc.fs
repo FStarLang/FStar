@@ -781,7 +781,7 @@ and tc_inductive env ses quals lids =
     //generate hasEq predicate for this inductive
     //skip logical connectives types in prims, tcs is bound to the inductive type, caller ensures its length is > 0
     let skip_prims_type : bool =
-      begin match tcs with | [] -> true | _ -> false end &&
+      begin match tcs with | [] -> false | _ -> true end &&
       lid_equals env.curmodule Const.prims_lid &&
       begin
         let lid =
