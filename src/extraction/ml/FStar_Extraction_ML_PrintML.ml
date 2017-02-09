@@ -32,14 +32,18 @@ let mk_typ_name s =
   | "'" -> BatString.tail s 1
   | _ -> s
 
-let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
+let rec path_to_string ((l, sym): mlpath): string =
+  match l with
+  | [] -> sym
+  | (hd::tl) -> BatString.concat "_" [hd; path_to_string (tl, sym)]
+
+let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
   match l with
   | [] -> mk_lident sym
-  | ("FStar"::(i::tl)) ->
-     (* handle cases where library names replace . with _ *)
-     let hd = BatString.concat "_" ["FStar"; i] in
-     let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
-     Ldot(q, sym) |> mk_sym_lident
+  | ("FStar"::tl) ->
+     let (l1, tl) = BatList.span (fun x -> x.[0] |> BatChar.is_uppercase) l in
+     let hd = BatString.concat "_" l1 in
+     path_to_ident ((hd::tl), sym)
   | (hd::tl) -> 
      let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
      Ldot(q, sym) |> mk_sym_lident
@@ -148,12 +152,8 @@ let rec build_expr (e: mlexpr): expression =
       let ep = build_expr e in
       let cases = map build_case branches in
       Exp.match_ ep cases
-   | MLE_Coerce (e, ty1, ty2) -> 
-      (* let ep = build_expr e in
-      let ty1p = build_core_type ty1 in
-      let ty2p = build_core_type ty2 in
-      Exp.coerce ep (Some ty1p) ty2p *)
-      build_expr e
+   | MLE_Coerce (e, _, ty) -> 
+      Exp.constraint_ (build_expr e) (build_core_type ty)
    | MLE_CTor args -> build_constructor_expr args
    | MLE_Seq args -> build_seq args
    | MLE_Tuple l -> Exp.tuple (map build_expr l)
@@ -163,7 +163,7 @@ let rec build_expr (e: mlexpr): expression =
    | MLE_Proj (e, path) -> 
       let field = match path with (_, f) -> f in
       Exp.field (build_expr e) (mk_lident field)
-   (* MLE_If always desugared to match? *)    
+   (* MLE_If always desugared to match? *)
    | MLE_If (e, e1, e2) -> 
       Exp.ifthenelse (build_expr e) (build_expr e1) (BatOption.map build_expr e2)
    | MLE_Raise (path, es) -> 
@@ -175,10 +175,9 @@ let rec build_expr (e: mlexpr): expression =
 
 and build_seq args =
   match args with
-  | (hd::tl) -> 
-     let es = Exp.tuple ([build_expr hd; build_seq tl]) in
-     Exp.construct (mk_lident "::") (Some es)
-  | [] -> Exp.construct (mk_lident "[]") None
+  | [hd] -> build_expr hd
+  | (hd::tl) -> Exp.sequence (build_expr hd) (build_seq tl)
+  | [] -> failwith "Empty sequence should never happen"
 
 and build_constructor_expr ((_, sym), exp): expression =
   let name = 
@@ -251,6 +250,11 @@ let build_tydecl (td: mltydecl): structure_item_desc =
   let type_declarations = map build_one_tydecl td in 
   Pstr_type(recf, type_declarations)
 
+let build_exn (sym, tys): extension_constructor =
+  let name = mk_sym sym in
+  let args = Some (Pcstr_tuple (map build_core_type tys)) in
+  Te.decl ?args:args name
+
 let build_mlsig1 = function
     MLS_Mod (sym, s) -> failwith "not defined0"
   | MLS_Ty  tydecl -> failwith "not defined1"
@@ -263,19 +267,25 @@ let build_module1 (m1: mlmodule1): structure_item option = match m1 with
      let recf = match flav with | Rec -> Recursive | NonRec -> Nonrecursive in
      let bindings = map build_binding mllbs in
      Some (Str.value recf bindings)
-  | MLM_Exn (sym, tys) -> None (* failwith "not defined6"*)
-  | MLM_Top expr -> None (* failwith "not defined45" *)
+  | MLM_Exn exn -> Some (Str.exception_ (build_exn exn))
+  | MLM_Top expr -> None
   | MLM_Loc (p, f) -> None (* Some (Str.eval (Exp.ident (mk_lident f))) *)
 
-let build_m (md: (mlsig * mlmodule) option) : structure = match md with
+let build_m (p: string) (md: (mlsig * mlmodule) option) : structure = 
+  match md with
   | Some(s, m) -> 
      let a = map build_mlsig1 s in (* is this necessary? *)
      (map build_module1 m |> flatmap opt_to_list)
   | None -> []
 
 let build_ast = function
-  MLLib l -> map (fun (path, md, _) -> build_m md) l |> List.flatten
+  | MLLib l -> 
+     map (fun (p, md, _) -> 
+         let name = BatString.concat "." [path_to_string p; "ml"] in
+         let path = BatString.concat "/" ["pretty-output"; name] in
+         let _ = Format.set_formatter_out_channel (open_out path) in
+         build_m path md) l |> List.flatten
 
-let x = Format.set_formatter_out_channel (open_out "test.ml")
+
 let print ml = structure Format.std_formatter (build_ast ml)
 
