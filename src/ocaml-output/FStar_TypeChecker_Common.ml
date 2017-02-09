@@ -110,10 +110,28 @@ type univ_ineq =
 (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
 
 
-let tconst : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> ((FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar ((FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None)))) (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange))
+let tconst : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (
+
+let uu____304 = (
+
+let uu____307 = (
+
+let uu____308 = (FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None)
+in FStar_Syntax_Syntax.Tm_fvar (uu____308))
+in (FStar_Syntax_Syntax.mk uu____307))
+in (uu____304 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
 
 
-let tabbrev : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> ((FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar ((FStar_Syntax_Syntax.lid_as_fv l (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "1"))) None)))) (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange))
+let tabbrev : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (
+
+let uu____322 = (
+
+let uu____325 = (
+
+let uu____326 = (FStar_Syntax_Syntax.lid_as_fv l (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "1"))) None)
+in FStar_Syntax_Syntax.Tm_fvar (uu____326))
+in (FStar_Syntax_Syntax.mk uu____325))
+in (uu____322 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
 
 
 let t_unit : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.unit_lid)
@@ -138,34 +156,34 @@ let t_range : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Synta
 
 
 let rec delta_depth_greater_than : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth  ->  Prims.bool = (fun l m -> (match (((l), (m))) with
-| (FStar_Syntax_Syntax.Delta_constant, uu____345) -> begin
+| (FStar_Syntax_Syntax.Delta_constant, uu____355) -> begin
 false
 end
-| (FStar_Syntax_Syntax.Delta_equational, uu____346) -> begin
+| (FStar_Syntax_Syntax.Delta_equational, uu____356) -> begin
 true
 end
-| (uu____347, FStar_Syntax_Syntax.Delta_equational) -> begin
+| (uu____357, FStar_Syntax_Syntax.Delta_equational) -> begin
 false
 end
 | (FStar_Syntax_Syntax.Delta_defined_at_level (i), FStar_Syntax_Syntax.Delta_defined_at_level (j)) -> begin
 (i > j)
 end
-| (FStar_Syntax_Syntax.Delta_defined_at_level (uu____350), FStar_Syntax_Syntax.Delta_constant) -> begin
+| (FStar_Syntax_Syntax.Delta_defined_at_level (uu____360), FStar_Syntax_Syntax.Delta_constant) -> begin
 true
 end
-| (FStar_Syntax_Syntax.Delta_abstract (d), uu____352) -> begin
+| (FStar_Syntax_Syntax.Delta_abstract (d), uu____362) -> begin
 (delta_depth_greater_than d m)
 end
-| (uu____353, FStar_Syntax_Syntax.Delta_abstract (d)) -> begin
+| (uu____363, FStar_Syntax_Syntax.Delta_abstract (d)) -> begin
 (delta_depth_greater_than l d)
 end))
 
 
-let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun uu___92_358 -> (match (uu___92_358) with
+let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun uu___92_368 -> (match (uu___92_368) with
 | (FStar_Syntax_Syntax.Delta_constant) | (FStar_Syntax_Syntax.Delta_equational) -> begin
 None
 end
-| FStar_Syntax_Syntax.Delta_defined_at_level (_0_169) when (_0_169 = (Prims.parse_int "1")) -> begin
+| FStar_Syntax_Syntax.Delta_defined_at_level (_0_27) when (_0_27 = (Prims.parse_int "1")) -> begin
 Some (FStar_Syntax_Syntax.Delta_constant)
 end
 | FStar_Syntax_Syntax.Delta_defined_at_level (i) -> begin
