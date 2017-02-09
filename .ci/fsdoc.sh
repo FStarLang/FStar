@@ -126,8 +126,8 @@ popd
 
 # push fstarlang.github.io with latest html.
 # The flow is described at https://github.com/blog/1270-easier-builds-and-deployments-using-git-over-https-and-oauth;
-# $PAT is stored in the Build Defn. 
-mkdir fstarlang.github.io
+# $PAT is stored in the Build Defn.
+rm -rf fstarlang.github.io && mkdir fstarlang.github.io
 pushd fstarlang.github.io
 git init
 git config user.name "fsdocbuild"
