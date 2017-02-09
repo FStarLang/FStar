@@ -2048,6 +2048,7 @@
         "disc_equation_Prims.None", "equation_FStar.List.Tot.Base.test_sort",
         "equation_Prims._assert", "equation_Unification.lsubst",
         "equation_Unification.subst", "equation_Unification.unify_eqns",
+        "fuel_correspondence_Unification.lsubst_eqns.fuel_instrumented",
         "fuel_correspondence_Unification.solved.fuel_instrumented",
         "function_token_typing_FStar.List.Tot.Base.test_sort",
         "function_token_typing_Unification.subst",

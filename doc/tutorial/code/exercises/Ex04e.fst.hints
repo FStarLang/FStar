@@ -22,12 +22,10 @@
       2,
       1,
       [
-        "@query", "binder_x_110dc7994f46cc2e07a637d4d5fe4369_1",
+        "@query", "binder_x_d468d3b67db8703bd17f5b46acf5cbe5_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "subterm_ordering_Prims.Cons"
       ],
       0
     ]
