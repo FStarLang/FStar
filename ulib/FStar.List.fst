@@ -13,6 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+
+(** @summary List operations *)
 module FStar.List
 open FStar.All
 include FStar.List.Tot

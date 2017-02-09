@@ -633,11 +633,10 @@ let rec lemma_index_is_nth #a s i =
     lemma_index_is_nth (slice s 1 (length s)) (i-1)
   )
 
-////////////////////////////////////////////////////////////////////////////////
-//s `contains` x : Type0
-//    An undecidable version of `mem`, 
-//    for when the sequence payload is not an eqtype
-////////////////////////////////////////////////////////////////////////////////
+(** [contains s x : Type0] returns True if [x] is contained in [s].
+    [contains] is an undecidable version of [mem], 
+    for when the sequence payload is not an [eqtype].
+*)
 abstract let contains (#a:Type) (s:seq a) (x:a) : Tot Type0 = 
   exists (k:nat). k < Seq.length s /\ Seq.index s k == x
     
