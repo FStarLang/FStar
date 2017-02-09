@@ -781,7 +781,7 @@ and tc_inductive env ses quals lids =
     //generate hasEq predicate for this inductive
     //skip logical connectives types in prims, tcs is bound to the inductive type, caller ensures its length is > 0
     let skip_prims_type : bool =
-      tcs <> [] &&
+      begin match tcs with | [] -> true | _ -> false end &&
       lid_equals env.curmodule Const.prims_lid &&
       begin
         let lid =
@@ -803,7 +803,7 @@ and tc_inductive env ses quals lids =
 
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
-    if (List.length tcs = 0 || skip_prims_type || is_noeq)
+    if (begin match tcs with | [] -> true | _ -> false end || skip_prims_type || is_noeq)
     then [sig_bndle], data_ops_ses
     else
         let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
