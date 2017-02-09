@@ -35,6 +35,7 @@ type b_exp =
   | CFalse: b_exp
   | ROp   : r_op -> i_exp -> i_exp -> b_exp
   | BOp   : b_op -> b_exp -> b_exp -> b_exp
+  | Not   : b_exp -> b_exp
 
 type com =
   | Skip  : com
@@ -68,9 +69,10 @@ reifiable let rec b_exp_denotation (b:b_exp) :ISNull bool =
   | BOp op b1 b2 ->
     let bc1 = b_exp_denotation b1 in
     let bc2 = b_exp_denotation b2 in
-    match op with
-    | And -> bc1 && bc2
-    | Or  -> bc1 || bc2
+    (match op with
+     | And -> bc1 && bc2
+     | Or  -> bc1 || bc2)
+  | Not b -> not (b_exp_denotation b)
 
 reifiable let rec com_denotation (c:com) :ISNull unit =
   match c with
@@ -93,6 +95,7 @@ type rel_exp =
   | RFalse: rel_exp
   | RROp  : r_op -> g_exp -> g_exp -> rel_exp
   | RBOp  : b_op -> rel_exp -> rel_exp -> rel_exp
+  | RNot  : rel_exp -> rel_exp
 
 let rec g_exp_denotation (g:g_exp) (h_left:heap) (h_right:heap) :int =
   match g with
@@ -118,9 +121,10 @@ let rec rel_exp_denotation (re:rel_exp) (h_left:heap) (h_right:heap) :bool =
   | RBOp op re1 re2 ->
     let bc1 = rel_exp_denotation re1 h_left h_right in
     let bc2 = rel_exp_denotation re2 h_left h_right in
-    match op with
-    | And -> bc1 && bc2
-    | Or  -> bc1 || bc2
+    (match op with
+     | And -> bc1 && bc2
+     | Or  -> bc1 || bc2)
+  | RNot re1 -> not (rel_exp_denotation re1 h_left h_right)
 
 assume val x:id
 assume val y:id
@@ -221,3 +225,19 @@ let lemma_sound_optimization4 (h_left:heap) (h_right:heap)
 		    rel_exp_denotation rel4 h_left' h_right'))
   = ()
 #reset-options
+
+let rhl (c1:com) (c2:com) (re1:rel_exp) (re2:rel_exp) =
+  forall (h_left:heap) (h_right:heap). rel_exp_denotation re1 h_left h_right ==>
+                                  (let _, h_left' = reify (com_denotation c1) h_left in
+				   let _, h_right' = reify (com_denotation c2) h_right in
+				   rel_exp_denotation re2 h_left' h_right')
+
+let lemma_r_cbl
+  (c:com)
+  (c':com)
+  (d:com)
+  (phi:rel_exp)
+  (phi':rel_exp)
+  : Lemma (requires (rhl c d phi phi'))
+	  (ensures  (rhl (If CTrue c c') d phi phi'))	  
+  = ()
