@@ -92,7 +92,7 @@ let rec lemma_create_len #a n i = if n = 0 then () else lemma_create_len #a (n -
 abstract val lemma_init_len: #a:Type -> n:nat -> contents: (i:nat { i < n } -> Tot a) -> Lemma
   (requires True)
   (ensures (length (init n contents) = n))
-  [SMTPat (length (create n contents))]
+  [SMTPat (length (init n contents))]
 let rec lemma_init_len #a n contents = if n = 0 then () else lemma_init_len #a (n - 1) contents
 
 abstract val lemma_len_upd: #a:Type -> n:nat -> v:a -> s:seq a{n < length s} -> Lemma
