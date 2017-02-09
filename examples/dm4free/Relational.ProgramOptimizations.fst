@@ -209,12 +209,15 @@ let com41 = Seq (Assign x (UMinus (Var y)))  //x := -y;
 let com42 = Seq (Assign x (Var y))  //x := y;
                 (Assign z (IOp Add (Var z) (Var x)))  //z := z + x
 
-let rel41 = RTrue
-let rel42 = RTrue
+let rel4 = RBOp And (RROp Eq (Left x) (Right x))
+                    (RBOp And (RROp Eq (Left y) (Right y))
+    	                      (RROp Eq (Left z) (Right z)))
 
+#set-options "--z3rlimit 20"
 let lemma_sound_optimization4 (h_left:heap) (h_right:heap)
-  :Lemma (requires (rel_exp_denotation rel41 h_left h_right))
+  :Lemma (requires (rel_exp_denotation rel4 h_left h_right))
          (ensures  (let _, h_left' = reify (com_denotation com41) h_left in
 	            let _, h_right' = reify (com_denotation com42) h_right in
-		    rel_exp_denotation rel42 h_left' h_right'))
+		    rel_exp_denotation rel4 h_left' h_right'))
   = ()
+#reset-options
