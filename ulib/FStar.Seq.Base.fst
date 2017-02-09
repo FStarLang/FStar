@@ -206,11 +206,36 @@ abstract val lemma_eq_refl: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      [SMTPatT (equal s1 s2)]
 let lemma_eq_refl #a s1 s2  = ()
 
-(*TODO: Would be nice to to not have to assume this again and instead derive it from feq
-  But, it doesn't work because in order to use feq, we need to show that s1.contents has type (efun e b) *)
-assume Extensionality: forall (a:Type) (s1:seq a) (s2:seq a).{:pattern (equal s1 s2)} equal s1 s2 <==> (s1==s2)
 abstract val lemma_eq_elim: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (equal s1 s2))
      (ensures (s1==s2))
      [SMTPatT (equal s1 s2)]
-let lemma_eq_elim #a s1 s2  = ()
+let lemma_eq_elim #a s1 s2  =
+  assert ( length s1 == List.length (MkSeq?.l s1) );
+  assert ( length s2 == List.length (MkSeq?.l s2) );
+  assert ( forall (i: nat) . i < length s1 ==> index s1 i == List.index (MkSeq?.l s1) i);
+  assert ( forall (i: nat) . i < length s1 ==> index s2 i == List.index (MkSeq?.l s2) i);
+  List.index_extensionality (MkSeq?.l s1) (MkSeq?.l s2)
+
+(* Properties of [append] *)
+
+abstract let append_assoc
+  (#a: Type)
+  (s1 s2 s3: seq a)
+: Lemma
+  (ensures (append (append s1 s2) s3 == append s1 (append s2 s3)))
+= List.append_assoc (MkSeq?.l s1) (MkSeq?.l s2) (MkSeq?.l s3)
+
+abstract let append_empty_l
+  (#a: Type)
+  (s: seq a)
+: Lemma
+  (ensures (append createEmpty s == s))
+= List.append_nil_l (MkSeq?.l s)
+
+abstract let append_empty_r
+  (#a: Type)
+  (s: seq a)
+: Lemma
+  (ensures (append s createEmpty == s))
+= List.append_l_nil (MkSeq?.l s)

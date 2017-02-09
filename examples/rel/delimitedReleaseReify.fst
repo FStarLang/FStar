@@ -1,6 +1,6 @@
 module DelimitedReleaseReify
 
-open Def
+open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreFixed
 open Rel
 
