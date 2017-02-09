@@ -383,8 +383,13 @@ and translate_expr e var lstmt env isDecl: (list<statement_t> * env_t) =
   | MLE_Try _ ->
       failwith "todo: translate_expr [MLE_Try]"
 
-  | MLE_Coerce (in_e, t_from, t_to) ->
-      let var = (fst var, Some JST_Any) in
+  | MLE_Coerce (in_e, t, _) ->
+      let lp_generic = 
+        (match (snd var) with
+         | None -> None
+         | Some v -> match v with | JST_Function (_, _, lp) -> lp | _ -> None) in
+      let (t, env) = translate_type t lp_generic env in
+      let var = (fst var, Some t) in
       translate_expr in_e var lstmt env isDecl
 
   | MLE_Match (e_in, lb) ->
