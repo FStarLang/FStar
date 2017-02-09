@@ -57,16 +57,16 @@ let diag : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (
 let uu____69 = (FStar_Options.debug_any ())
 in (match (uu____69) with
 | true -> begin
-(FStar_Util.print_string (let _0_122 = (FStar_Range.string_of_range r)
-in (FStar_Util.format2 "%s : (Diagnostic) %s\n" _0_122 msg)))
+(FStar_Util.print_string (let _0_115 = (FStar_Range.string_of_range r)
+in (FStar_Util.format2 "%s : (Diagnostic) %s\n" _0_115 msg)))
 end
 | uu____70 -> begin
 ()
 end)))
 
 
-let warn : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (let _0_123 = (FStar_Range.string_of_range r)
-in (FStar_Util.print2_error "%s: (Warning) %s\n" _0_123 msg)))
+let warn : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (let _0_116 = (FStar_Range.string_of_range r)
+in (FStar_Util.print2_error "%s: (Warning) %s\n" _0_116 msg)))
 
 
 let num_errs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref (Prims.parse_int "0"))
@@ -106,30 +106,30 @@ let add_errors : (Prims.string * FStar_Range.range) Prims.list  ->  Prims.unit =
 
 let errs = (FStar_All.pipe_right errs (FStar_List.map (fun uu____185 -> (match (uu____185) with
 | (msg, r) -> begin
-(let _0_124 = (message_prefix.append_prefix msg)
-in ((r), (_0_124)))
+(let _0_117 = (message_prefix.append_prefix msg)
+in ((r), (_0_117)))
 end))))
 in (
 
 let n_errs = (FStar_List.length errs)
-in (FStar_Util.atomically (fun uu____196 -> ((let _0_126 = (let _0_125 = (FStar_ST.read verification_errs)
-in (FStar_List.append errs _0_125))
-in (FStar_ST.write verification_errs _0_126));
-(let _0_128 = (let _0_127 = (FStar_ST.read num_errs)
-in (_0_127 + n_errs))
-in (FStar_ST.write num_errs _0_128));
+in (FStar_Util.atomically (fun uu____196 -> ((let _0_119 = (let _0_118 = (FStar_ST.read verification_errs)
+in (FStar_List.append errs _0_118))
+in (FStar_ST.write verification_errs _0_119));
+(let _0_121 = (let _0_120 = (FStar_ST.read num_errs)
+in (_0_120 + n_errs))
+in (FStar_ST.write num_errs _0_121));
 ))))))
 
 
 let mk_error : Prims.string  ->  FStar_Range.range  ->  Prims.string = (fun msg r -> (match ((r.FStar_Range.use_range <> r.FStar_Range.def_range)) with
 | true -> begin
-(let _0_130 = (FStar_Range.string_of_use_range r)
-in (let _0_129 = (FStar_Range.string_of_range r)
-in (FStar_Util.format3 "%s: (Error) %s (see %s)\n" _0_130 msg _0_129)))
+(let _0_123 = (FStar_Range.string_of_use_range r)
+in (let _0_122 = (FStar_Range.string_of_range r)
+in (FStar_Util.format3 "%s: (Error) %s (see %s)\n" _0_123 msg _0_122)))
 end
 | uu____222 -> begin
-(let _0_131 = (FStar_Range.string_of_range r)
-in (FStar_Util.format2 "%s: (Error) %s\n" _0_131 msg))
+(let _0_124 = (FStar_Range.string_of_range r)
+in (FStar_Util.format2 "%s: (Error) %s\n" _0_124 msg))
 end))
 
 
@@ -160,8 +160,8 @@ let handle_err : Prims.bool  ->  Prims.exn  ->  Prims.unit = (fun warning e -> (
 (
 
 let msg = (message_prefix.append_prefix msg)
-in (let _0_132 = (FStar_Range.string_of_range r)
-in (FStar_Util.print3_error "%s : %s %s\n" _0_132 (match (warning) with
+in (let _0_125 = (FStar_Range.string_of_range r)
+in (FStar_Util.print3_error "%s : %s %s\n" _0_125 (match (warning) with
 | true -> begin
 "(Warning)"
 end
@@ -186,7 +186,7 @@ end
 end))
 
 
-let handleable : Prims.exn  ->  Prims.bool = (fun uu___52_307 -> (match (uu___52_307) with
+let handleable : Prims.exn  ->  Prims.bool = (fun uu___50_307 -> (match (uu___50_307) with
 | (Error (_)) | (FStar_Util.NYI (_)) | (Err (_)) -> begin
 true
 end

@@ -1507,191 +1507,198 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
 
 
 
-let mk_discriminator_and_indexed_projectors iquals                   (* Qualifiers of the envelopping bundle    *)
-                                            (fvq:fv_qual)            (*                                         *)
-                                            (refine_domain:bool)     (* If true, discriminates the projectee    *)
-                                            env                      (*                                         *)
-                                            (tc:lident)              (* Type constructor name                   *)
-                                            (lid:lident)             (* Constructor name                        *)
-                                            (uvs:univ_names)         (* Original universe names                 *)
-                                            (inductive_tps:binders)  (* Type parameters of the type constructor *)
-                                            (indices:binders)        (* Implicit type parameters                *)
-                                            (fields:binders)         (* Fields of the constructor               *)
-                                            : list<sigelt> =
-    let p = range_of_lid lid in
-    let pos q = Syntax.withinfo q tun.n p in
-    let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
-    let inst_univs = List.map (fun u -> U_name u) uvs in
-    let tps = inductive_tps in //List.map2 (fun (x,_) (_,imp) -> ({x,imp)) implicit_tps inductive_tps in
-    let arg_typ =
-        let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc Delta_constant None), inst_univs)) None p in
-        let args = tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp) in
-        S.mk_Tm_app inst_tc args None p
-    in
-    let unrefined_arg_binder = S.mk_binder (projectee arg_typ) in
-    let arg_binder =
-        if not refine_domain
-        then unrefined_arg_binder //records have only one constructor; no point refining the domain
-        else let disc_name = U.mk_discriminator lid in
-             let x = S.new_bv (Some p) arg_typ in
-             let sort =
-                 let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) Delta_equational None in
-                 U.refine x (U.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] None p))
-             in
-             S.mk_binder ({projectee arg_typ with sort = sort})
-    in
+let mk_discriminator_and_indexed_projectors
+  (is_pure_not_defined_yet:bool)  (* true if the effect pure is yet to be    *)
+  iquals                          (* Qualifiers of the envelopping bundle    *)
+  (fvq:fv_qual)                   (*                                         *)
+  (refine_domain:bool)            (* If true, discriminates the projectee    *)
+  env                             (*                                         *)
+  (tc:lident)                     (* Type constructor name                   *)
+  (lid:lident)                    (* Constructor name                        *)
+  (uvs:univ_names)                (* Original universe names                 *)
+  (inductive_tps:binders)         (* Type parameters of the type constructor *)
+  (indices:binders)               (* Implicit type parameters                *)
+  (fields:binders)                (* Fields of the constructor               *)
+  : list<sigelt> =
+  let p = range_of_lid lid in
+  let pos q = Syntax.withinfo q tun.n p in
+  let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
+  let inst_univs = List.map (fun u -> U_name u) uvs in
+  let tps = inductive_tps in //List.map2 (fun (x,_) (_,imp) -> ({x,imp)) implicit_tps inductive_tps in
+  let arg_typ =
+    let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc Delta_constant None), inst_univs)) None p in
+    let args = tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp) in
+    S.mk_Tm_app inst_tc args None p
+  in
+  let unrefined_arg_binder = S.mk_binder (projectee arg_typ) in
+  let arg_binder =
+    if not refine_domain
+    (* records have only one constructor; no point refining the domain *)
+    then unrefined_arg_binder
+    else
+      let disc_name = U.mk_discriminator lid in
+      let x = S.new_bv (Some p) arg_typ in
+      let sort =
+        let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) Delta_equational None in
+        U.refine x (U.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] None p))
+      in
+      S.mk_binder ({projectee arg_typ with sort = sort})
+  in
 
 
-    let ntps = List.length tps in
-    let all_params = List.map (fun (x, _) -> x, Some S.imp_tag) tps @ fields in
+  let ntps = List.length tps in
+  let all_params = List.map (fun (x, _) -> x, Some S.imp_tag) tps @ fields in
 
-    let imp_binders = tps @ indices |> List.map (fun (x, _) -> x, Some S.imp_tag) in
+  let imp_binders = tps @ indices |> List.map (fun (x, _) -> x, Some S.imp_tag) in
 
-    let discriminator_ses =
-        if fvq <> Data_ctor
-        then [] // We do not generate discriminators for record types
-        else
-            let discriminator_name = U.mk_discriminator lid in
-            let no_decl = false in
-            let only_decl =
-                  lid_equals C.prims_lid  (Env.current_module env)
-                  || Options.dont_gen_projectors (Env.current_module env).str
-            in
-            let quals =
-                (* KM : What about Logic ? should it still be there even with an implementation *)
-                S.Discriminator lid ::
-                (if only_decl then [S.Logic] else []) @
-                (if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
-                List.filter (function S.Abstract -> not only_decl | S.Private -> true | _ -> false ) iquals
-            in
+  let discriminator_ses =
+    if fvq <> Data_ctor
+    (* We do not generate discriminators for record types *)
+    then []
+    else
+      let discriminator_name = U.mk_discriminator lid in
+      let no_decl = false in
+      let only_decl =
+        (* We need Pure to be defined so that the declaration makes sense *)
+        is_pure_not_defined_yet ||
+        Options.dont_gen_projectors (Env.current_module env).str
+      in
+      let quals =
+        (* KM : What about Logic ? should it still be there even with an implementation *)
+        S.Discriminator lid ::
+        (if only_decl then [S.Logic] else []) @
+        (if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
+        List.filter (function S.Abstract -> not only_decl | S.Private -> true | _ -> false ) iquals
+      in
 
-            (* Type of the discriminator *)
-            let binders = imp_binders@[unrefined_arg_binder] in
-            let t =
-                let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
-                SS.close_univ_vars uvs <| U.arrow binders bool_typ
-            in
-            let decl = Sig_declare_typ(discriminator_name, uvs, t, quals, range_of_lid discriminator_name) in
-            if Env.debug env (Options.Other "LogTypes")
-            then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
+      (* Type of the discriminator *)
+      let binders = imp_binders@[unrefined_arg_binder] in
+      let t =
+          let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
+          SS.close_univ_vars uvs <| U.arrow binders bool_typ
+      in
+      let decl = Sig_declare_typ(discriminator_name, uvs, t, quals, range_of_lid discriminator_name) in
+      if Env.debug env (Options.Other "LogTypes")
+      then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
 
-            if only_decl
-            then [decl]
-            else
-                (* Term of the discriminator *)
-                let body =
-                    if not refine_domain
-                    then C.exp_true_bool   // If we have at most one constructor
-                    else
-                        let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
-                            let b = S.is_implicit imp in
-                            if b && j < ntps
-                            then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
-                            else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
-                        in
-                        let pat_true = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, C.exp_true_bool in
-                        let pat_false = pos (Pat_wild (S.new_bv None tun)), None, C.exp_false_bool in
-                        let arg_exp = S.bv_to_name (fst unrefined_arg_binder) in
-                        mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) None p
-                in
-                let dd =
-                    if quals |> List.contains S.Abstract
-                    then Delta_abstract Delta_equational
-                    else Delta_equational
-                in
-                let imp = U.abs binders body None in
-                let lbtyp = if no_decl then t else tun in
-                let lb = {
-                    lbname=Inr (S.lid_as_fv discriminator_name dd None);
-                    lbunivs=uvs;
-                    lbtyp=lbtyp;
-                    lbeff=C.effect_Tot_lid;
-                    lbdef=SS.close_univ_vars uvs imp
-                } in
-                let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []) in
-                if Env.debug env (Options.Other "LogTypes")
-                then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
-                (* TODO : Are there some cases where we don't want one of these ? *)
-                (* If not the declaration is useless, isn't it ?*)
-                [decl ; impl]
-    in
-
-
-    let arg_exp = S.bv_to_name (fst arg_binder) in
-    let binders = imp_binders@[arg_binder] in
-    let arg = U.arg_of_non_null_binder arg_binder in
-
-    let subst = fields |> List.mapi (fun i (a, _) ->
-            let field_name, _ = U.mk_field_projector_name lid a i in
-            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name Delta_equational None)) inst_univs in
-            let proj = mk_Tm_app field_proj_tm [arg] None p in
-            NT(a, proj))
-    in
-
-    let projectors_ses =
-      fields |> List.mapi (fun i (x, _) ->
-          let p = S.range_of_bv x in
-          let field_name, _ = U.mk_field_projector_name lid x i in
-          let t = SS.close_univ_vars uvs <| U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
-          let only_decl =
-              lid_equals C.prims_lid  (Env.current_module env)
-              || fvq<>Data_ctor
-              || Options.dont_gen_projectors (Env.current_module env).str
-          in
-          (* KM : Why would we want to prevent a declaration only in this particular case ? *)
-          (* TODO : If we don't want the declaration then we need to propagate the right types in the patterns *)
-          let no_decl = false (* Syntax.is_type x.sort *) in
-          let quals q =
-              if only_decl
-              then S.Assumption::List.filter (function S.Abstract -> false | _ -> true) q
-              else q
-          in
-          let quals =
-              let iquals = iquals |> List.filter (function
-                  | S.Abstract
-                  | S.Private -> true
-                  | _ -> false)
-              in
-              quals (S.Projector(lid, x.ppname)::iquals) in
-          let decl = Sig_declare_typ(field_name, uvs, t, quals, range_of_lid field_name) in
-          if Env.debug env (Options.Other "LogTypes")
-          then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
-          if only_decl
-          then [decl] //only the signature
+      if only_decl
+      then [decl]
+      else
+        (* Term of the discriminator *)
+        let body =
+          if not refine_domain
+          then C.exp_true_bool   // If we have at most one constructor
           else
-              let projection = S.gen_bv x.ppname.idText None tun in
-              let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
-                  let b = S.is_implicit imp in
-                  if i+ntps=j  //this is the one to project
-                  then pos (Pat_var projection), b
-                  else if b && j < ntps
-                  then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
-                  else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
-              in
-              let pat = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
-              let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
-              let imp = U.abs binders body None in
-              let dd =
-                  if quals |> List.contains S.Abstract
-                  then Delta_abstract Delta_equational
-                  else Delta_equational
-              in
-              let lbtyp = if no_decl then t else tun in
-              let lb = {
-                  lbname=Inr (S.lid_as_fv field_name dd None);
-                  lbunivs=uvs;
-                  lbtyp=lbtyp;
-                  lbeff=C.effect_Tot_lid;
-                  lbdef=SS.close_univ_vars uvs imp
-              } in
-              let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []) in
-              if Env.debug env (Options.Other "LogTypes")
-              then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
-              if no_decl then [impl] else [decl;impl]) |> List.flatten
-    in
-    discriminator_ses @ projectors_ses
+            let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
+              let b = S.is_implicit imp in
+              if b && j < ntps
+              then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
+              else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
+            in
+            let pat_true = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, C.exp_true_bool in
+            let pat_false = pos (Pat_wild (S.new_bv None tun)), None, C.exp_false_bool in
+            let arg_exp = S.bv_to_name (fst unrefined_arg_binder) in
+            mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) None p
+        in
+        let dd =
+          if quals |> List.contains S.Abstract
+          then Delta_abstract Delta_equational
+          else Delta_equational
+        in
+        let imp = U.abs binders body None in
+        let lbtyp = if no_decl then t else tun in
+        let lb = {
+          lbname=Inr (S.lid_as_fv discriminator_name dd None);
+          lbunivs=uvs;
+          lbtyp=lbtyp;
+          lbeff=C.effect_Tot_lid;
+          lbdef=SS.close_univ_vars uvs imp
+        } in
+        let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []) in
+        if Env.debug env (Options.Other "LogTypes")
+        then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
+        (* TODO : Are there some cases where we don't want one of these ? *)
+        (* If not the declaration is useless, isn't it ?*)
+        [decl ; impl]
+  in
 
-let mk_data_operations iquals env tcs se = match se with
+
+  let arg_exp = S.bv_to_name (fst arg_binder) in
+  let binders = imp_binders@[arg_binder] in
+  let arg = U.arg_of_non_null_binder arg_binder in
+
+  let subst = fields |> List.mapi (fun i (a, _) ->
+    let field_name, _ = U.mk_field_projector_name lid a i in
+    let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name Delta_equational None)) inst_univs in
+    let proj = mk_Tm_app field_proj_tm [arg] None p in
+    NT(a, proj))
+  in
+
+  let projectors_ses =
+    fields |> List.mapi (fun i (x, _) ->
+      let p = S.range_of_bv x in
+      let field_name, _ = U.mk_field_projector_name lid x i in
+      let t = SS.close_univ_vars uvs <| U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
+      let only_decl =
+        (* We need Pure to be defined so that the declaration makes sense *)
+        is_pure_not_defined_yet ||
+        fvq<>Data_ctor ||
+        Options.dont_gen_projectors (Env.current_module env).str
+      in
+      (* KM : Why would we want to prevent a declaration only in this particular case ? *)
+      (* TODO : If we don't want the declaration then we need to propagate the right types in the patterns *)
+      let no_decl = false (* Syntax.is_type x.sort *) in
+      let quals q =
+          if only_decl
+          then S.Assumption::List.filter (function S.Abstract -> false | _ -> true) q
+          else q
+      in
+      let quals =
+          let iquals = iquals |> List.filter (function
+              | S.Abstract
+              | S.Private -> true
+              | _ -> false)
+          in
+          quals (S.Projector(lid, x.ppname)::iquals) in
+      let decl = Sig_declare_typ(field_name, uvs, t, quals, range_of_lid field_name) in
+      if Env.debug env (Options.Other "LogTypes")
+      then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
+      if only_decl
+      then [decl] //only the signature
+      else
+          let projection = S.gen_bv x.ppname.idText None tun in
+          let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
+              let b = S.is_implicit imp in
+              if i+ntps=j  //this is the one to project
+              then pos (Pat_var projection), b
+              else if b && j < ntps
+              then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
+              else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
+          in
+          let pat = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
+          let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
+          let imp = U.abs binders body None in
+          let dd =
+              if quals |> List.contains S.Abstract
+              then Delta_abstract Delta_equational
+              else Delta_equational
+          in
+          let lbtyp = if no_decl then t else tun in
+          let lb = {
+              lbname=Inr (S.lid_as_fv field_name dd None);
+              lbunivs=uvs;
+              lbtyp=lbtyp;
+              lbeff=C.effect_Tot_lid;
+              lbdef=SS.close_univ_vars uvs imp
+          } in
+          let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []) in
+          if Env.debug env (Options.Other "LogTypes")
+          then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
+          if no_decl then [impl] else [decl;impl]) |> List.flatten
+  in
+  discriminator_ses @ projectors_ses
+
+let mk_data_operations is_pure_not_defined_yet iquals env tcs se = match se with
   | Sig_datacon(constr_lid, uvs, t, typ_lid, n_typars, quals, _, r) when not (lid_equals constr_lid C.lexcons_lid) ->
 
     let univ_opening, uvs = SS.univ_var_opening uvs in
@@ -1746,6 +1753,17 @@ let mk_data_operations iquals env tcs se = match se with
         let rename = List.map2 (fun (x, _) (x', _) -> S.NT(x, S.bv_to_name x')) imp_tps inductive_tps in
         SS.subst_binders rename fields
     in
-    mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env typ_lid constr_lid uvs inductive_tps indices fields
+    mk_discriminator_and_indexed_projectors
+      is_pure_not_defined_yet
+      iquals
+      fv_qual
+      refine_domain
+      env
+      typ_lid
+      constr_lid
+      uvs
+      inductive_tps
+      indices
+      fields
 
   | _ -> []

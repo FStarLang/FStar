@@ -74,8 +74,12 @@ let rec parse_format_pure (s:list char) : Tot (option (list dir)) =
 let rec parse_format_string (s:string) : Tot (option (list dir)) =
   parse_format_pure (list_of_string s)
 
-let sprintf (s:string{normalize_term #bool (Some? (parse_format_string s))})
-  : Tot (normalize_term (dir_type (Some?.v (parse_format_string s)))) =
+let sprintf (#a:Type) (s:string)
+  : Pure a
+      (requires (Some? (normalize_term (parse_format_string s)) /\
+        a == normalize_term (dir_type (Some?.v (parse_format_string s)))))
+    (ensures (fun _ -> True))
+=
   string_of_dirs (Some?.v (parse_format_string s)) (fun s -> s)
 
 (* trying to make sure that it's not the SMT solver doing the reduction *)
@@ -113,9 +117,7 @@ let example4_lemma () :
 // #reset-options "--z3timeout 10"
 
 let example5 : string =
-  (* Requiring such an assert_norm on each usage seems quite bad for usability *)
-  assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]);
-  (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer"
+  (sprintf "%d=%s" <: int -> Tot (string -> Tot string)) 42 " answer"
   (* We also requires a pesky type annotation, but that seems more acceptable *)
 
 (* A (so far failed) attempt at getting rid of assert_norm:
