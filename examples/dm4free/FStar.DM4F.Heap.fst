@@ -15,7 +15,7 @@ abstract noeq type heap_rec = {
 abstract type heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
 
 (* Consistency of heaps. aka, no strong updates *)
-let consistent (h0:heap) (h1:heap) =
+private let consistent (h0:heap) (h1:heap) =
   forall n x y. h0.memory n == Some x /\ h1.memory n == Some y ==> dfst x == dfst y
 
 (* References. *)
@@ -185,14 +185,14 @@ abstract val lemma_modifies_trans: m1:heap -> m2:heap -> m3:heap
                                (ensures (modifies (union s1 s2) m1 m3))
 let lemma_modifies_trans m1 m2 m3 s1 s2 = ()
 
-abstract let equal (h1:heap) (h2:heap) =
-  h1.next_addr = h2.next_addr /\
-  FStar.FunctionalExtensionality.feq h1.memory h2.memory
+(* abstract let equal (h1:heap) (h2:heap) = *)
+(*   h1.next_addr = h2.next_addr /\ *)
+(*   FStar.FunctionalExtensionality.feq h1.memory h2.memory *)
 
-val equal_extensional: h1:heap -> h2:heap
-                       -> Lemma (requires True) (ensures (equal h1 h2 <==> h1 == h2))
-		         [SMTPat (equal h1 h2)]
-let equal_extensional h1 h2 = ()			 
+(* val equal_extensional: h1:heap -> h2:heap *)
+(*                        -> Lemma (requires True) (ensures (equal h1 h2 <==> h1 == h2)) *)
+(* 		         [SMTPat (equal h1 h2)] *)
+(* let equal_extensional h1 h2 = ()			  *)
 
 (* that sel_tot is same as sel and upd_tot is same as upd if h contains_a_well_typed r *)
 val lemma_sel_tot_is_sel_if_contains_a_well_typed:
@@ -203,11 +203,11 @@ val lemma_sel_tot_is_sel_if_contains_a_well_typed:
 let lemma_sel_tot_is_sel_if_contains_a_well_typed #a h r = ()  
 
 val lemma_upd_tot_is_upd_if_contains_a_well_typed:
-  #a:Type -> h:heap -> r:ref a{h `contains_a_well_typed` r}
+  #a:Type -> h:heap -> r:ref a{h `contains_a_well_typed` r} -> x:a
   -> Lemma (requires True)
-          (ensures  (upd_tot h r == upd h r))
-    [SMTPat (upd_tot h r)]
-let lemma_upd_tot_is_upd_if_contains_a_well_typed #a h r = ()  
+          (ensures  (upd h r x == upd_tot h r x))
+    [SMTPat (upd_tot h r x)]
+let lemma_upd_tot_is_upd_if_contains_a_well_typed #a h r x = ()  
 
 val op_Hat_Plus_Plus: #a:Type -> r:ref a -> set nat -> Tot (set nat)
 let op_Hat_Plus_Plus #a r s = union (only r) s

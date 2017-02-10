@@ -14,7 +14,8 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.StExnC.uver \
 	FStar.DM4F.IFC.uver \
 	FStar.DM4F.Continuations.uver \
-	delimcc.uver
+	delimcc.uver \
+	Relational.ProgramOptimizations.uver
 
 old:
 	$(MAKE) -C old

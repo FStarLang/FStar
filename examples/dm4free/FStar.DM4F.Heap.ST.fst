@@ -64,12 +64,11 @@ reifiable let (!) = read
 reifiable let write (#a:Type) (r:ref a) (v:a)
     : ST unit
   	 (requires (fun h -> h `contains_a_well_typed` r))
-	 (ensures (fun h0 _ h1 ->
-           	     h0 `contains_a_well_typed` r
- 		  /\  h1 `contains_a_well_typed` r     //the heap remains well-typed
-		  /\  h1 == upd h0 r v))               //and is updated at location r only
+	 (ensures (fun h0 _ h1 -> h0 `contains_a_well_typed` r /\
+ 		               h1 `contains_a_well_typed` r /\  //the heap remains well-typed
+		               h1 == upd h0 r v))  //and is updated at location r only
     = let h0 = STATE?.get () in
-      STATE?.put (upd h0 r v)
+      STATE?.put (upd_tot h0 r v)
 let op_Colon_Equals = write
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,22 +77,20 @@ let op_Colon_Equals = write
 let incr (r:ref int)
     :  ST unit
 	  (requires (fun h -> h `contains_a_well_typed` r))
-	  (ensures (fun h0 s h1 ->
-			     h0 `contains_a_well_typed` r
-			   /\ modifies (Set.singleton r) h0 h1
-			   /\ sel h1 r = sel h0 r + 1))
+	  (ensures (fun h0 s h1 -> h0 `contains_a_well_typed` r /\
+			        modifies (Set.singleton (addr_of r)) h0 h1 /\
+			        sel h1 r = sel h0 r + 1))
     = r := !r + 1
 
 let copy_and_incr (r:ref int)
     :  ST (ref int)
 	  (requires (fun h -> h `contains_a_well_typed` r))
-	  (ensures (fun h0 s h1 ->
-			     h0 `contains_a_well_typed` r
-			   /\ ~ (h0 `contains` s)
-			   /\ h1 `contains_a_well_typed` s
-			   /\ modifies (Set.singleton r) h0 h1
-			   /\ sel h1 r = sel h0 r + 1
-			   /\ sel h1 s = sel h0 r))
+	  (ensures (fun h0 s h1 -> h0 `contains_a_well_typed` r               /\
+			        ~ (h0 `contains` s)                        /\
+			        h1 `contains_a_well_typed` s               /\
+			        modifies (Set.singleton (addr_of r)) h0 h1 /\
+			        sel h1 r = sel h0 r + 1                    /\
+			        sel h1 s = sel h0 r))
     = let s = alloc !r in
       incr r;
       s
@@ -105,12 +102,11 @@ let copy_and_incr (r:ref int)
 let alloc_addition_and_incr (r:ref int)
     : ST (ref (int -> Tot int))
          (requires (fun h -> h `contains_a_well_typed` r))
-	 (ensures (fun h0 s h1 ->
-			     h0 `contains_a_well_typed` r
-			   /\ ~ (h0 `contains` s)
-			   /\ h1 `contains_a_well_typed` s
-			   /\ modifies (Set.singleton r) h0 h1
-			   /\ (forall y. sel h1 s y = sel h0 r + y)))
+	 (ensures (fun h0 s h1 -> h0 `contains_a_well_typed` r               /\
+			       ~ (h0 `contains` s)                        /\
+			       h1 `contains_a_well_typed` s               /\
+			       modifies (Set.singleton (addr_of r)) h0 h1 /\
+			       (forall y. sel h1 s y = sel h0 r + y)))
     = let x = !r in
       let s = alloc (fun y -> x + y) in
       s
@@ -119,10 +115,10 @@ let alloc_addition_and_incr (r:ref int)
 //Recursive, stateful functions are proven terminating using well-founded orders
 ////////////////////////////////////////////////////////////////////////////////
 val zero: x:ref nat -> ghost_heap:heap{ghost_heap `contains_a_well_typed` x} -> ST unit
-  (requires (fun h -> h==ghost_heap))
-  (ensures (fun h0 _ h1 -> h0 `contains_a_well_typed` x
- 		       /\ modifies (Set.singleton x) h0 h1
-		       /\ sel h1 x = 0))
+  (requires (fun h -> h == ghost_heap))
+  (ensures (fun h0 _ h1 -> h0 `contains_a_well_typed` x               /\
+ 		        modifies (Set.singleton (addr_of x)) h0 h1 /\
+		        sel h1 x = 0))
   (decreases (sel ghost_heap x))
 let rec zero x ghost_heap =
   if !x = 0
