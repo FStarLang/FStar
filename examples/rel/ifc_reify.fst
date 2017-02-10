@@ -19,10 +19,18 @@ reifiable let p1 x y hi =
     let vy = read y in
     write x (vx + vy)
   else
-    let vx = read x in
-    let vy = read y in
-    let vhi = read hi in
-    write x (vx + vy + vhi);
+    (let vx = read x in
+     let vy = read y in
+     let vhi = read hi in
+     write x (vx + vy + vhi));
+    (* Writing explicit lets because otherwise we get this: *)
+    (* (let s = *)
+    (*   let vx = read x in *)
+    (*   let vy = read y in *)
+    (*   vx + vy *)
+    (*  in *)
+    (*  let vhi = read hi in *)
+    (*  write x (s + vhi)); *)
   let vx = read x in
   let vhi = read hi in
   write x (vx - vhi)

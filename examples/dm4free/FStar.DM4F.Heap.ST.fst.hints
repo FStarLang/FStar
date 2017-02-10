@@ -1,5 +1,5 @@
 [
-  "Î/°\u0011[²CÔ„±×0<Ð7À",
+  "\bjÕý]¥ÕZQñ±â¥S\u0002Õ",
   [
     [ "FStar.DM4F.Heap.ST.STATE_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -141,6 +141,62 @@
     [
       "FStar.DM4F.Heap.ST.incr",
       5,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "FStar.DM4F.Heap.ST.incr'",
+      1,
+      2,
+      1,
+      [
+        "@query", "int_typing", "pretyping_ae567c2fb75be05905677af440075565"
+      ],
+      0
+    ],
+    [
+      "FStar.DM4F.Heap.ST.incr_increases",
+      1,
+      2,
+      1,
+      [
+        "@query", "FStar.DM4F.Heap.ST.__proj__STATE__item__get_equality",
+        "FStar.DM4F.Heap.ST.__proj__STATE__item__get_token_correspondence",
+        "FStar.DM4F.Heap.ST.__proj__STATE__item__put_equality",
+        "FStar.DM4F.Heap.ST.__proj__STATE__item__put_token_correspondence",
+        "equation_FStar.DM4F.Heap.ST.incr_",
+        "equation_FStar.DM4F.Heap.ST.op_Bang",
+        "equation_FStar.DM4F.Heap.ST.op_Colon_Equals",
+        "equation_FStar.DM4F.Heap.ST.read",
+        "equation_FStar.DM4F.Heap.ST.write",
+        "function_token_typing_Prims.int", "int_typing",
+        "interpretation_Tm_abs_03eb6798edc33e43779a319698085d40",
+        "interpretation_Tm_abs_3d60016ebe21b2fbbf91a2273a64e5be",
+        "interpretation_Tm_abs_4f703f6f05a3773768f69bc00137d12e",
+        "interpretation_Tm_abs_5b2171d9a9d2548e29b249581a6a399d",
+        "interpretation_Tm_abs_5cd5f27ea4d33b8c90b251195dccf494",
+        "interpretation_Tm_abs_8a4de822428eb2d47274795106e348e0",
+        "interpretation_Tm_abs_972a780cccb0fd6033bc718100b2fd9c",
+        "lemma_FStar.DM4F.Heap.lemma_sel_tot_is_sel_if_contains_a_well_typed",
+        "lemma_FStar.DM4F.Heap.lemma_upd_tot_is_upd_if_contains_a_well_typed",
+        "lemma_FStar.DM4F.Heap.sel_upd1",
+        "pretyping_ae567c2fb75be05905677af440075565",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "primitive_Prims.op_Addition",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_5f6273c5a48c47b6407b76ac7ebf059a",
+        "refinement_interpretation_Tm_refine_f65e86b35933aa205d88508883a052da",
+        "token_correspondence_FStar.DM4F.Heap.ST.read",
+        "token_correspondence_FStar.DM4F.Heap.ST.write"
+      ],
+      0
+    ],
+    [
+      "FStar.DM4F.Heap.ST.incr_increases",
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
