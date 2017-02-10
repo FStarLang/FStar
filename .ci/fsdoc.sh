@@ -97,6 +97,7 @@ FStar.UInt.fst \
 FStar.UInt128.fst \
 FStar.UInt16.fst \
 FStar.UInt31.fst \
+
 FStar.UInt32.fst \
 FStar.UInt63.fst \
 FStar.UInt64.fst \
@@ -142,6 +143,7 @@ echo git add
 git add *.html 
 echo git commit
 git commit -m "Automated doc refresh"
+echo git remote add
 git remote add origin https://$PAT@github.com/FStarLang/fstarlang.github.io
 echo git push 
 git push origin master
