@@ -96,8 +96,8 @@ val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
         (Some? (seq_find (fun (_,c') -> c = c') (get_log h0 k)))
 
 (* CH*MK: If we wanted to also prove correctness of the EtM.AE
-          we would use this stronger post-condition:
-        Seq.mem (Some.v res, c) (m_sel h0 k.log) *)
+          we would use this stronger post-condition: *)
+        // /\ Seq.mem (Some?.v res, c) (m_sel h0 k.log) 
 
       )
   ))
@@ -105,9 +105,9 @@ val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
 let decrypt k (c,tag) =
   if MAC.verify k.km c tag
   then (
-    if (Ideal.uf_cma) then
+    if (Ideal.uf_cma) then (
       Some (CPA.decrypt k.ke c)
-    else
+    ) else
       Some (CPA.decrypt k.ke c)
   )
   else ( None )

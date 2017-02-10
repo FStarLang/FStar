@@ -95,19 +95,25 @@ val decrypt: k:key -> c:cipher -> ST msg
       (b2t ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) log0))))
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
-    ( (b2t ind_cpa_rest_adv) ==> mem (res,c) (m_sel h0 k.log)
+    ( (b2t ind_cpa_rest_adv) ==> ( mem (res,c) (m_sel h0 k.log) 
+//     /\ Seq.contains (m_sel h0 k.log) (res,c) //provable using find_l lemma 
+     )
      (* (let log0 = m_sel h0 k.log in *) //specification of correctness
      (*  let found = seq_find (fun mc -> snd mc = c) log0 in *)
      (*  Some? found /\ fst (Some.v found) = res) *)
     )
   )
   )
+  
 
 let decrypt k c =
-  if ind_cpa_rest_adv then
+  if ind_cpa_rest_adv then (
     let log = m_read k.log in
-    match seq_find (fun mc -> snd mc = c) log with
-    | Some mc -> fst mc
-  else
+    let res = match seq_find (fun mc -> snd mc = c) log with
+    | Some mc -> fst mc in
+//    lemma_find_l_contains (fun mc -> snd mc = c) log;
+    res 
+  ) else (
     let iv,c' = split c ivsize in
     coerce (CoreCrypto.block_decrypt AES_128_CBC k.raw iv c')
+  )
