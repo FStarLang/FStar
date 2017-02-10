@@ -1720,29 +1720,40 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         encode forall x1..xn. Reify (Apply a x1 ... xn) = [[e]]
             *)
             let close_effect_params tm =
-                match ed.binders with
-                | [] -> tm
-                | _ -> S.mk (Tm_abs(ed.binders, tm, Some <| Inr (Const.effect_Tot_lid, [TOTAL]))) None tm.pos
+              match ed.binders with
+              | [] -> tm
+              | _ -> S.mk (Tm_abs(ed.binders, tm, Some <| Inr (Const.effect_Tot_lid, [TOTAL]))) None tm.pos
             in
 
             let encode_action env (a:S.action) =
-                let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name in
-                let formals, _ = U.arrow_formals_comp a.action_typ in
-                let tm, decls = encode_term (close_effect_params a.action_defn) env in
-                let a_decls =
-                    [Term.DeclFun(aname, formals |> List.map (fun _ -> Term_sort), Term_sort, Some "Action");
-                     Term.DeclFun(atok, [], Term_sort, Some "Action token")] in
-                let xs_sorts, xs = formals |> List.map (fun (bv, _) -> let xxsym, xx, _ = gen_term_var env bv in (xxsym, Term_sort), xx) |> List.split in
-                let app = mkApp("Reify", [mkApp(aname, xs)]) in
-                let a_eq = Term.Assume(mkForall([[app]], xs_sorts, mkEq(app, mk_Apply tm xs_sorts)),
-                                       Some "Action equality",
-                                       Some (aname ^"_equality")) in
-                let tok_correspondence =
-                    let tok_term = mkFreeV(atok,Term_sort) in
-                    let tok_app = mk_Apply tok_term xs_sorts in
-                    Term.Assume(mkForall([[tok_app]], xs_sorts, mkEq(tok_app, app)),
-                                Some "Action token correspondence", Some (aname ^ "_token_correspondence")) in
-                env, decls@a_decls@[a_eq; tok_correspondence]
+              let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name in
+              let formals, _ = U.arrow_formals_comp a.action_typ in
+              let tm, decls = encode_term (close_effect_params a.action_defn) env in
+              let a_decls =
+                [Term.DeclFun(aname, formals |> List.map (fun _ -> Term_sort), Term_sort, Some "Action");
+                  Term.DeclFun(atok, [], Term_sort, Some "Action token")]
+              in
+              let _, xs_sorts, xs =
+                let aux (bv, _) (env, acc_sorts, acc) =
+                  let xxsym, xx, env = gen_term_var env bv in
+                  env, (xxsym, Term_sort)::acc_sorts, xx::acc
+                in
+                List.fold_right aux formals (env, [], [])
+              in
+              (* let app = mkApp("Reify", [mkApp(aname, xs)]) in *)
+              let app = mkApp(aname, xs) in
+              let a_eq =
+                Term.Assume(mkForall([[app]], xs_sorts, mkEq(app, mk_Apply tm xs_sorts)),
+                            Some "Action equality",
+                            Some (aname ^"_equality"))
+              in
+              let tok_correspondence =
+                let tok_term = mkFreeV(atok,Term_sort) in
+                let tok_app = mk_Apply tok_term xs_sorts in
+                Term.Assume(mkForall([[tok_app]], xs_sorts, mkEq(tok_app, app)),
+                            Some "Action token correspondence", Some (aname ^ "_token_correspondence"))
+              in
+              env, decls@a_decls@[a_eq; tok_correspondence]
             in
 
             let env, decls2 = BU.fold_map encode_action env ed.actions in
