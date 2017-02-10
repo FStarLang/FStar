@@ -48,7 +48,9 @@ reifiable let alloc (#a:Type) (init:a)
       r
 
 reifiable let alloc_weak (#a:Type) (init:a)
-  : STNull (ref a)
+  :ST (ref a) (requires (fun h0      -> True))
+              (ensures  (fun h0 r h1 -> h1 `contains_a_well_typed` r /\
+	                             (forall (a:Type) (r':ref a). h0 `contains_a_well_typed` r' ==> h1 `contains_a_well_typed` r')))
   = let h0 = STATE?.get () in
     let r, h1 = FStar.DM4F.Heap.alloc h0 init in
     STATE?.put h1;
@@ -69,7 +71,7 @@ reifiable let (!) = read
 
 reifiable let read_weak (#a:Type) (r:ref a)
   : ST a (requires (fun h0      -> h0 `contains_a_well_typed` r))
-         (ensures  (fun h0 v h1 -> h1 `contains_a_well_typed` r))
+         (ensures  (fun h0 v h1 -> forall (a:Type) (r:ref a). h0 `contains_a_well_typed` r ==> h1 `contains_a_well_typed` r))
    = let h0 = STATE?.get () in
      sel_tot h0 r
 
