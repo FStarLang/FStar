@@ -182,9 +182,9 @@ let lookup_term_var env a =
     match aux a with
     | None ->
         //AR: this is a temporary fix, use reserved u__ for mangling names
-        let a = unmangle a in
-        (match aux a with
-            | None -> failwith (format1 "Bound term variable not found (after unmangling): %s" (Print.bv_to_string a))
+        let a2 = unmangle a in
+        (match aux a2 with
+            | None -> failwith (format2 "Bound term variable not found (after unmangling): %s %s" (Print.bv_to_string a2) (print_env env))
             | Some (b,t) -> t)
     | Some (b,t) -> t
 
