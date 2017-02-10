@@ -129,25 +129,26 @@ popd
 # push fstarlang.github.io with latest html.
 # The flow is described at https://github.com/blog/1270-easier-builds-and-deployments-using-git-over-https-and-oauth;
 # $PAT is stored in the Build Defn.
-echo rm and mkdir 
 rm -rf fstarlang.github.io && mkdir fstarlang.github.io
 pushd fstarlang.github.io
-echo git init
 git init
 git config user.name "fsdocbuild"
 git config user.email "fsdocbuild@somewhereontheinternet.com"
 git pull https://$PAT@github.com/FStarLang/fstarlang.github.io
 pushd docs
 mv "../../$FSDOC_ODIR"/*.html .
-echo git add 
-git add *.html 
-echo git commit
-git commit -m "Automated doc refresh"
-echo git remote add
+echo git add
+git add *.html
+echo ... returned $?
+echo git commit 
+if (git commit -m "Automated doc refresh"); then 
+    echo git commit ok
+else 
+    echo git commit failed
+fi
 git remote add origin https://$PAT@github.com/FStarLang/fstarlang.github.io
 echo git push 
 git push origin master
-echo popd-ing
 popd
 popd
 echo rmdir
