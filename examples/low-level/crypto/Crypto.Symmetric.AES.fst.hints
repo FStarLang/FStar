@@ -193,7 +193,8 @@
         "projection_inverse_FStar.UInt32.Mk_v",
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_Crypto.Symmetric.AES.v", "typing_FStar.UInt32.v"
+        "typing_Crypto.Symmetric.AES.v", "typing_FStar.UInt.fits",
+        "typing_FStar.UInt32.v"
       ],
       0
     ],
@@ -1216,7 +1217,7 @@
         "function_token_typing_FStar.List.Tot.Base.test_sort",
         "int_inversion", "int_typing", "kinding_FStar.UInt8.t_@tok",
         "lemma_FStar.Buffer.lemma_modifies_1_trans",
-        "lemma_FStar.Buffer.no_upd_lemma_1",
+        "lemma_FStar.Buffer.lemma_size", "lemma_FStar.Buffer.no_upd_lemma_1",
         "lemma_FStar.HyperStack.lemma_equal_domains_trans",
         "lemma_FStar.UInt.pow2_values",
         "pretyping_6c86c071b92797cdf01eb016249a9465",
