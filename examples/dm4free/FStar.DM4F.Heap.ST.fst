@@ -11,7 +11,6 @@ module FStar.DM4F.Heap.ST
 open FStar.DM4F.Heap
 open FStar.DM4F.ST
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Instruct F* to build a new STATE effect from the elaborated effect STATE_h
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,14 +34,14 @@ effect STNull (a:Type) = ST a (fun h -> True) (fun _ _ _ -> True)
 ////////////////////////////////////////////////////////////////////////////////
 
 (* Allocation *)
-let alloc (#a:Type) (init:a)
-    : ST (ref a)
-  	 (requires (fun h -> True))
-	 (ensures (fun h0 r h1 ->
-	 	    ~ (h0 `contains` r)          //the ref r is fresh
-		  /\ h1 `contains_a_well_typed` r //and is well-typed in h1
-		  /\ sel h1 r == init             //initialized to init
-		  /\ modifies Set.empty h0 h1))   //and no existing ref is modified
+reifiable let alloc (#a:Type) (init:a)
+  : ST (ref a)
+       (requires (fun h -> True))
+       (ensures (fun h0 r h1 ->
+	 	 ~ (h0 `contains` r)          /\  //the ref r is fresh
+		 h1 `contains_a_well_typed` r /\  //and is well-typed in h1
+		 sel h1 r == init             /\  //initialized to init
+		 modifies Set.empty h0 h1))  //and no existing ref is modified
     = let h0 = STATE?.get () in
       let r, h1 = alloc h0 init in
       STATE?.put h1;
@@ -50,14 +49,15 @@ let alloc (#a:Type) (init:a)
 
 (* Reading, aka dereference *)
 reifiable let read (#a:Type) (r:ref a)
-    : ST a
-  	 (requires (fun h -> h `contains_a_well_typed` r))
-	 (ensures (fun h0 v h1 ->
-		        h0 == h1                         //heap does not change
-            /\  h1 `contains_a_well_typed` r
-		        /\  sel h1 r == v))                  //returns the contents of r
+  : ST a
+       (requires (fun h -> h `contains_a_well_typed` r))
+       (ensures (fun h0 v h1 ->
+		 h0 == h1 /\  //heap does not change
+                 h1 `contains_a_well_typed` r /\
+		 sel h1 r == v))                  //returns the contents of r
    = let h0 = STATE?.get () in
-     sel h0 r
+     sel_tot h0 r
+
 reifiable let (!) = read
 
 (* Writing, aka assignment *)
