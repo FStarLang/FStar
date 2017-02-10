@@ -3,14 +3,14 @@ module FStar.DM4F.Heap
 open FStar.Classical
 open FStar.Set
 
-(* Heap is a tuple of a source of freshness (the no. of the next 
-   reference to be allocated) and a mapping of allocated raw 
+(* Heap is a tuple of a source of freshness (the no. of the next
+   reference to be allocated) and a mapping of allocated raw
    references (represented as natural numbers) to types and values. *)
 
 abstract noeq type heap_rec = {
   next_addr: nat;
   memory   : nat -> Tot (option (a:Type0 & a))
-}  
+}
 
 abstract type heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
 
@@ -24,7 +24,7 @@ private let consistent (h0:heap) (h1:heap) =
 abstract noeq type ref (a:Type0) = {
   addr: nat;
   init: a
-}  
+}
 
 abstract val addr_of: #a:Type -> ref a -> Tot nat
 let addr_of #a r = r.addr
@@ -122,13 +122,13 @@ let sel_upd1 #a h r v r' = ()
 val sel_upd2: #a:Type -> #b:Type -> h:heap -> k1:ref a -> k2:ref b -> v:b
               -> Lemma (requires True) (ensures (addr_of k1 <> addr_of k2 ==> sel (upd h k2 v) k1 == sel h k1))
 	        [SMTPat (sel (upd h k2 v) k1)]
-let sel_upd2 #a #b h k1 k2 v = ()	     
+let sel_upd2 #a #b h k1 k2 v = ()
 
-val upd_sel : #a:Type -> h:heap -> r:ref a -> 
+val upd_sel : #a:Type -> h:heap -> r:ref a ->
 	      Lemma (requires (h `contains_a_well_typed` r))
 	            (ensures  (upd h r (sel h r) == h))
 	      [SMTPat (upd h r (sel h r))]
-let upd_sel #a h r = 
+let upd_sel #a h r =
   assert (FStar.FunctionalExtensionality.feq (upd h r (sel h r)).memory h.memory)
 
 (* AR: does not need to be abstract *)
@@ -200,14 +200,14 @@ val lemma_sel_tot_is_sel_if_contains_a_well_typed:
   -> Lemma (requires True)
           (ensures  (sel_tot h r == sel h r))
     [SMTPat (sel_tot h r)]
-let lemma_sel_tot_is_sel_if_contains_a_well_typed #a h r = ()  
+let lemma_sel_tot_is_sel_if_contains_a_well_typed #a h r = ()
 
 val lemma_upd_tot_is_upd_if_contains_a_well_typed:
   #a:Type -> h:heap -> r:ref a{h `contains_a_well_typed` r} -> x:a
   -> Lemma (requires True)
           (ensures  (upd h r x == upd_tot h r x))
     [SMTPat (upd_tot h r x)]
-let lemma_upd_tot_is_upd_if_contains_a_well_typed #a h r x = ()  
+let lemma_upd_tot_is_upd_if_contains_a_well_typed #a h r x = ()
 
 val op_Hat_Plus_Plus: #a:Type -> r:ref a -> set nat -> Tot (set nat)
 let op_Hat_Plus_Plus #a r s = union (only r) s

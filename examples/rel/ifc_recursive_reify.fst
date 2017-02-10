@@ -6,10 +6,10 @@ open Rel
 
 reifiable val p1 (lo hi :id ): n:int -> IS unit (decreases n)
 reifiable let rec p1 lo hi n  =
-  if n > 0 then 
+  if n > 0 then
     (write hi (read hi -1);
     p1 lo hi (n-1))
- 
+
 
 (*
 let p1_r lo hi h = (* normalize_term *) (snd (reify (p1 lo hi) h))
