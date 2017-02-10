@@ -21,12 +21,13 @@ open Box.PlainAE
 
 
 
-let ivsize = aeadRealIVSize AES_128_GCM
-type keysize = aeadKeySize AES_128_GCM
+type noncesize = aeadRealIVSize AES_128_CCM
+type keysize = aeadKeySize AES_128_CCM
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
-type cipher = b:bytes{B.length b >= ivsize}
-type nonce = bytes
-(* MK: minimal cipher length twice blocksize? *)
+type cipher = b:bytes
+//type cipher = b:B.lbytes{B.length b >= aeadTagSize AES_128_CCM}
+type nonce = B.lbytes noncesize
+
 
 let ae_region_color = -1
 
@@ -37,16 +38,17 @@ private let ae_key_region =
   new_colored_region root ae_region_color
 
 
-type log_entry i = (protected_ae_plain i) * cipher * nonce
-type log_t (i:ae_id) (r:rid) = m_rref r (seq (log_entry i)) grows
+//type log_entry i = (protected_ae_plain i) * cipher * nonce
+//type log_t (i:ae_id) (r:rid) = m_rref r (seq (log_entry i)) grows
 
-//type log_key = (cipher * nonce)
-//type log_t (i:ae_id) = MM.t #ae_key_region 
+type log_key = nonce
+type log_value (i:ae_id) = (cipher*protected_ae_plain i)
+type log_range = fun (i:ae_id) -> (fun log_key -> (log_value i))
+type log_inv (i:ae_id) (f:MM.map' log_key (log_range i)) = True
+type log_t (i:ae_id) (r:rid)  = MM.t r log_key (log_range i) (log_inv i)
 
 
-val fresh_nonce: #(i:ae_id) -> (n:nonce) -> seq (log_entry i) -> Tot bool
-let fresh_nonce #i n entries =
-  not (Some? (seq_find (fun (_,_,n') -> n' = n) entries))
+
 
 (**
    The key type is abstract and can only be accessed via the leak and coerce_key functions.
@@ -72,7 +74,7 @@ let safe_key_gen parent m0 k m1 =
   /\ is_below k.region ae_key_region
   // Reason about memory (HyperStack)
   /\ m_contains k.log m1
-  /\ m_sel m1 k.log == createEmpty
+  /\ m_sel m1 k.log == MM.empty_map log_key (log_range k.i)
 
 
 (**
@@ -87,7 +89,7 @@ val keygen: i:ae_id -> ST (k:key{k.i=i})
 let keygen i =
   let rnd_k = random keysize in
   let region = new_colored_region ae_key_region ae_region_color in
-  let log = alloc_mref_seq region createEmpty in
+  let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
   Key #i #region rnd_k log
 
 
@@ -109,7 +111,7 @@ val coerce_key: i:ae_id{(ae_dishonest i) \/ ~(prf_odh)} -> aes_key -> ST (k:key{
   (ensures  (safe_key_gen ae_key_region))
 let coerce_key i raw = 
   let region = new_colored_region ae_key_region ae_region_color in
-  let log = alloc_mref_seq region createEmpty in
+  let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
   Key #i #region raw log
 
 
@@ -118,96 +120,133 @@ let coerce_key i raw =
 *)
 
 //Ideally use this instead of every postcondition separately.
-let safe_log_append k entry h0 h1 =
+let safe_log_append k n entry h0 h1 =
     let s1 = Set.singleton id_table_region in
     let s2 = Set.singleton k.region in
     let s = Set.union s1 s2 in
     modifies_just s h0.h h1.h
     /\ m_contains k.log h1
-    /\ m_sel h1 k.log == snoc (m_sel h0 k.log) entry
-    /\ witnessed (at_least (Seq.length (m_sel h0 k.log)) entry k.log)
+ //   /\ m_sel h1 k.log == upd (m_sel h0 k.log) n entry
+    /\ MR.witnessed (MM.contains k.log n entry)
+    
 
-
+#set-options "--initial_fuel 100 --initial_ifuel 100"
 (**
    Encrypt a a message under a key. Idealize if the key is honest and ae_ind_cca true.
 *)
 val encrypt: #(i:ae_id) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_plain i) -> ST cipher
   (requires (fun h0 -> 
-    let entries = m_sel h0 k.log in
-    fresh_nonce n entries
+    MM.fresh k.log n h0
+    /\ ae_fixed i
   ))
   (ensures  (fun h0 c h1 ->
     let s1 = Set.singleton id_table_region in
     let s2 = Set.singleton k.region in
     let s = Set.union s1 s2 in
     modifies_just s h0.h h1.h
+//    /\ m_sel h1 k.log == snoc (m_sel h0 k.log) (m,c,n)
     /\ m_contains k.log h1
-    /\ m_sel h1 k.log == snoc (m_sel h0 k.log) (m,c,n)
-    /\ witnessed (at_least (Seq.length (m_sel h0 k.log)) (m,c,n) k.log)
+    /\ ((ae_dishonest i \/ ~(b2t ae_ind_cca) ==> 
+      c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (repr m)) 
+    \/ 
+    (ae_honest i /\ b2t ae_ind_cca ==> 
+      (c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (createBytes (length m) 0z) )))
+    /\ (ae_dishonest i \/ ae_honest i)
+    /\ MR.witnessed (MM.contains k.log n (c,m))
     ))
 let encrypt #i n k m =
-  admit(); // REMOVE THIS!!!
   m_recall k.log;
-  let iv = random ivsize in
   let ae_honest_i = ae_honestST i in
-  let p = if (ae_ind_cca && ae_honest_i) then createBytes (length m) 0z else (repr m) in
-  let c = CoreCrypto.aead_encrypt AES_128_GCM k.raw iv empty_bytes p in
-  let c = iv@|c in
-  write_at_end k.log (m,c,n);
+  let p = 
+    if (ae_ind_cca && ae_honest_i) then 
+      createBytes (length m) 0z 
+    else 
+      repr m 
+  in
+  let c = CoreCrypto.aead_encrypt AES_128_CCM k.raw n empty_bytes p in
+  MR.m_recall k.log;
+  MM.extend k.log n (c,m);
   c
+#reset-options
 
-
-val is_in_entries: #i:ae_id -> log_entry i -> seq (log_entry i) -> Type0
-let is_in_entries #i entry entries =
-  Seq.contains entries entry
+assume val aead_decryptT:
+  a: aead_cipher -> 
+  k: lbytes (aeadKeySize a) -> 
+  iv:lbytes (aeadRealIVSize a) -> 
+  ad:bytes -> 
+  ciph:bytes{B.length ciph >= aeadTagSize a} -> 
+  GTot (o:option (b:bytes{B.length b + aeadTagSize a = B.length ciph}))
   
+assume val aead_decrypt:
+  a: aead_cipher -> 
+  k: lbytes (aeadKeySize a) -> 
+  iv:lbytes (aeadRealIVSize a) -> 
+  ad:bytes -> 
+  ciph:bytes{B.length ciph >= aeadTagSize a} -> 
+  EXT (o:option (b:bytes{B.length b + aeadTagSize a = B.length ciph})
+    {(forall (p:bytes). ciph = aead_encryptT a k iv ad p <==> (Some? o /\ Some?.v o == p))
+    /\ o = aead_decryptT a k iv ad ciph })
 
+   // {forall (p:bytes). ciph = aead_encryptT a k iv ad p <==> (Some? o /\ Some?.v o == p) })
+
+
+//#set-options "--z3rlimit 100 --initial_fuel 100 --initial_ifuel 100 --max_fuel 1000"
 (**
    Decrypt a ciphertext c using a key k. If the key is honest and ae_int_ctxt is idealized,
    try to obtain the ciphertext from the log. Else decrypt via concrete implementation.
    TODO: Make this a total function.
 *)
-val decrypt: #(i:ae_id) -> n:nonce -> k:key{k.i=i} -> c:cipher -> ST (option (protected_ae_plain i))
-  (requires (fun h -> Map.contains h.h k.region))
+val decrypt: #(i:ae_id) -> n:nonce -> k:key{k.i=i} -> c:cipher{B.length c >= aeadTagSize AES_128_CCM} -> ST (option (protected_ae_plain i))
+  (requires (fun h -> 
+    Map.contains h.h k.region
+    /\ ae_fixed i
+  ))
   (ensures  (fun h0 res h1 -> 
-    modifies_one id_table_region h0.h h1.h
-    /\ ( (~(b2t ae_ind_cca) \/ ae_dishonest i) \/ ((b2t ae_ind_cca /\ ae_honest i /\ Some? res) ==> (is_in_entries (Some?.v res,c,n) (m_sel h0 k.log))))
-    //Some? (seq_find (fun (res',c',n') -> c' = c && n' = n && res' = res) (m_sel h0 k.log)))
-//      Seq.contains (Some?.v res,c,n) (m_sel h0 k.log))
+    modifies_none h0 h1
+    /\ m_contains k.log h1
+    /\ ( ( (~(b2t ae_ind_cca) \/ ae_dishonest i) /\ Some? (aead_decryptT AES_128_CCM k.raw n empty_bytes c) ==> Some? res))
+     // (match aead_decryptT AES_128_CCM k.raw n empty_bytes c with
+     // | Some p -> Some?.v res == PlainAE.coerce #i p
+     // | None -> None == res)
+     //\/ 
+     // ( (b2t ae_ind_cca /\ ae_honest i /\ Some? res)) ) //==> (MR.witnessed (MM.contains k.log n (c,Some?.v res)) ) ))
     ))
 
-//val find_in_entries: #i:ae_id -> log_entry i -> seq (log_entry i) -> Type0
-//let find_in_entries #i entry entries =
-  
 
 let decrypt #i n k c =
-  admit(); //REMOVE THIS !!! (You may have to find proper settings for Z3,
+//  admit(); //REMOVE THIS !!! (You may have to find proper settings for Z3,
 	   // but this has verified before.
   let ae_honest_i = ae_honestST i in
+  m_recall k.log;
   if ae_ind_cca && ae_honest_i then (
-    let log = m_read k.log in
-    match Seq.find_l (fun (_,c',n') -> c' = c && n' = n) log with
-    | Some (m,_,_) ->
-      lemma_find_l_contains (fun (_,c',n') -> c' = c && n' = n) log;
-      Some m
+    match MM.lookup k.log n with
+    | Some (c',m') -> 
+      if c' = c then
+	Some m'
+      else
+	None
     | None -> None
   ) else (
-    let iv,c' = split c ivsize in
-    assume( B.length c' >= aeadTagSize AES_128_GCM);
-    let poption = (CoreCrypto.aead_decrypt AES_128_GCM k.raw iv empty_bytes c') in
+  assert(~(b2t ae_ind_cca) \/ ae_dishonest i);  
+//    assume( B.length c' >= aeadTagSize AES_128_GCM);
+    let poption = (aead_decrypt AES_128_CCM k.raw n empty_bytes c) in
     match poption with
-    | Some p -> Some (PlainAE.coerce #i (p))
+    | Some p -> Some (PlainAE.coerce #i p)
     | None -> None
   )
 
-//val dec_enc_inverse_lemma: #(i:ae_id) -> n:nonce -> k:key -> c:cipher -> ST bool
+#reset-options
+
+
+//val dec_enc_inverse_lemma: #(i:ae_id) -> n:nonce -> k:key -> c:cipher -> ST unit
 //  (requires (fun h0 -> 
 //    k.i==i
 //    /\ Map.contains h0.h k.region
 //  ))
-//  (ensures (fun h0 b h1 -> b))
+//  (ensures (fun h0 _ h1 ->
+//    match decrypt #i n k c with
+//    | Some m' -> c = encrypt #i n k m'
+//    | None -> true
+//  ))
 //let dec_enc_inverse_lemma #i n k c =
-//  match decrypt #i n k c with
-//  | Some m' -> c = encrypt #i n k m'
-//  | None -> true
     
