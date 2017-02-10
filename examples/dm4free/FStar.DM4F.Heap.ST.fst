@@ -69,7 +69,7 @@ reifiable let write (#a:Type) (r:ref a) (v:a)
 		               h1 == upd h0 r v))  //and is updated at location r only
     = let h0 = STATE?.get () in
       STATE?.put (upd_tot h0 r v)
-let op_Colon_Equals = write
+reifiable let op_Colon_Equals = write
 
 ////////////////////////////////////////////////////////////////////////////////
 //A simple example using the local state operations
@@ -81,6 +81,14 @@ let incr (r:ref int)
 			        modifies (Set.singleton (addr_of r)) h0 h1 /\
 			        sel h1 r = sel h0 r + 1))
     = r := !r + 1
+
+reifiable let incr' (r:ref int) :ST unit (fun h0 -> h0 `contains_a_well_typed` r)
+                                       (fun h0 _ h1 -> h0 `contains_a_well_typed` r /\ h1 `contains_a_well_typed` r)
+  = r := !r + 1
+
+let incr_increases (r:ref int) (h0:heap{h0 `contains_a_well_typed` r})
+  = assert (let _, h1 = (reify (incr' r)) h0 in
+            sel_tot h1 r = sel_tot h0 r + 1)
 
 let copy_and_incr (r:ref int)
     :  ST (ref int)
