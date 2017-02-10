@@ -9,6 +9,7 @@ open Longident
 
 open FStar_Extraction_ML_Syntax
 
+let m_ref = ref ""
 
 let flatmap f l = map f l |> List.flatten
 let opt_to_list = function Some x -> [x] | None -> []
@@ -45,8 +46,10 @@ let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
      let hd = BatString.concat "_" l1 in
      path_to_ident ((hd::tl), sym)
   | (hd::tl) -> 
-     let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
-     Ldot(q, sym) |> mk_sym_lident
+     let m_name = !m_ref in
+     if (BatString.compare m_name hd == 0) then path_to_ident (tl, sym) else 
+      (let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
+      Ldot(q, sym) |> mk_sym_lident)
 
 let build_constant (c: mlconstant): Parsetree.constant =
   match c with
@@ -261,7 +264,9 @@ let build_mlsig1 = function
   | MLS_Val (sym, tyscheme) -> failwith "not defined2"
   | MLS_Exn (sym, mltys) -> failwith "not defined3"
 
-let build_module1 (m1: mlmodule1): structure_item option = match m1 with
+let build_module1 path (m1: mlmodule1): structure_item option = 
+
+  match m1 with
   | MLM_Ty tydecl -> Some (Str.mk (build_tydecl tydecl))
   | MLM_Let (flav, flags, mllbs) -> 
      let recf = match flav with | Rec -> Recursive | NonRec -> Nonrecursive in
@@ -269,23 +274,33 @@ let build_module1 (m1: mlmodule1): structure_item option = match m1 with
      Some (Str.value recf bindings)
   | MLM_Exn exn -> Some (Str.exception_ (build_exn exn))
   | MLM_Top expr -> None
-  | MLM_Loc (p, f) -> None (* Some (Str.eval (Exp.ident (mk_lident f))) *)
+  | MLM_Loc (p, f) -> None
 
-let build_m (p: string) (md: (mlsig * mlmodule) option) : structure = 
+let build_m path (md: (mlsig * mlmodule) option) : structure = 
+
   match md with
   | Some(s, m) -> 
      let a = map build_mlsig1 s in (* is this necessary? *)
-     (map build_module1 m |> flatmap opt_to_list)
+     (map (build_module1 path) m |> flatmap opt_to_list)
   | None -> []
 
 let build_ast = function
   | MLLib l -> 
      map (fun (p, md, _) -> 
-         let name = BatString.concat "." [path_to_string p; "ml"] in
+         let m = path_to_string p in
+         m_ref := m;
+         let name = BatString.concat "." [m; "ml"] in
          let path = BatString.concat "/" ["pretty-output"; name] in
-         let _ = Format.set_formatter_out_channel (open_out path) in
-         build_m path md) l |> List.flatten
+         (* let _ = Format.set_formatter_out_channel (open_out path) in *)
+         (path, build_m path md)) l
 
+let print_module ((path, m): string * structure) = 
+  print_string path; print_string "\n";
+  Format.set_formatter_out_channel (open_out path);
+  structure Format.std_formatter m
 
-let print ml = structure Format.std_formatter (build_ast ml)
+let print ml = 
+  Unix.sleep(2);
+  let ast = build_ast ml in
+  iter print_module ast
 
