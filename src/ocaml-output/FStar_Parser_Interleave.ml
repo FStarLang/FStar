@@ -37,7 +37,7 @@ end
 | (x, uu____103) -> begin
 x
 end))))
-in (FStar_All.pipe_right _0_880 (FStar_Util.for_some (fun uu___140_106 -> (match (uu___140_106) with
+in (FStar_All.pipe_right _0_880 (FStar_Util.for_some (fun uu___142_106 -> (match (uu___142_106) with
 | FStar_Parser_AST.TyconAbbrev (id', uu____108, uu____109, uu____110) -> begin
 (x.FStar_Ident.idText = id'.FStar_Ident.idText)
 end
@@ -90,7 +90,7 @@ in (FStar_List.append _0_881 impl))
 end
 | (d)::ds -> begin
 (match (d.FStar_Parser_AST.d) with
-| FStar_Parser_AST.Tycon (uu____234, tys) when (FStar_All.pipe_right tys (FStar_Util.for_some (fun uu___141_251 -> (match (uu___141_251) with
+| FStar_Parser_AST.Tycon (uu____234, tys) when (FStar_All.pipe_right tys (FStar_Util.for_some (fun uu___143_251 -> (match (uu___143_251) with
 | (FStar_Parser_AST.TyconAbstract (uu____255), uu____256) -> begin
 true
 end
