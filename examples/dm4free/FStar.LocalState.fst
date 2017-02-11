@@ -134,8 +134,100 @@ let bind #s #a #b #n (m:local_state0 s a n) (f: k:nat -> a k -> local_state0 s b
     let (| k', yk', mapk' |) = f k xk (mapping_to_vect0 mapk) in
       (| k', yk', compose_mapping mapk mapk'|)
 
+(* Operations on local_state0 *)
+
+let const (a:Type0) : nat -> Type0 = fun n -> a
+
+let read (s:Type0) (n:nat) (i:nat{i < n}) : local_state0 s (const s) n =
+  fun v -> (| n, get v i, vect_to_mapping v |)
+
+let write (s:Type0) (n:nat) (i:nat{i < n}) (x:s) : local_state0 s (const unit) n =
+  fun v -> let v' = set v i x in (| n, (), vect_to_mapping v'|)
+
+let alloc (s:Type0) (n:nat) (i:nat{i < n + 1}) (x:s) : local_state0 s (const unit) n =
+  fun v -> (| n+1, (), minsert (vect_to_mapping v) i x |)
+
+let dealloc (s:Type0) (n:nat) (i:nat{i < n + 1}) : local_state0 s (const unit) (n+1) =
+  fun v -> (| n, (), mremove (vect_to_mapping v) i|)
 
 
+(* DMFF translation of local_state0' *)
+type local_state0' (s:Type0) (a:nat -> Type0) (n:nat) =
+  v:vect s n -> M (k:nat & _:(a k) & mapping s n k)
+
+type local_state1 (s:Type0) (a:nat -> Type0) (n:nat) =
+  v:vect s n -> ((k:nat & _:(a k) & mapping s n k) -> GTot Type0) -> GTot Type0
+
+let return1 #s #a #n (x:a n) : local_state1 s a n = fun (v:vect s n) p -> p (|n, x, vect_to_mapping v|)
+let bind1 #s #a #b #n (m:local_state1 s a n) (f: k:nat -> a k -> local_state1 s b k) : local_state1 s b n =
+  fun (v : vect s n) p ->
+  m v (fun (| k, xk, mapk |) ->
+    f k xk (mapping_to_vect0 mapk) (fun (| k', yk', mapk' |) ->
+      p (| k', yk', compose_mapping mapk mapk'|)))
+
+type local_state2 (s:Type0) (a:nat -> Type0) (n:nat) (spec:local_state1 s a n) =
+  v:vect s n -> PURE (k:nat & _:(a k) & mapping s n k) (spec v)
+
+let return2 #s #a #n (x:a n) : local_state2 s a n (return1 #s #a #n x) = fun (v:vect s n) -> (|n, x, vect_to_mapping v|)
+
+#set-options "--admit_smt_queries true"
+let bind2 #s #a #b #n (specm:local_state1 s a n) (m:local_state2 s a n specm) (specf: k:nat -> a k -> local_state1 s b k) (f: k:nat -> x:a k -> local_state2 s b k (specf k x))
+  : local_state2 s b n (bind1 #s #a #b #n specm specf) =
+  fun (v : vect s n) ->
+    let (| k, xk, mapk |)= m v in
+    let (| k', yk', mapk' |) = f k xk (mapping_to_vect0 mapk) in
+      (| k', yk', compose_mapping mapk mapk'|)
+#set-options "--admit_smt_queries false"
+
+let ls_pre (s:Type0) (n:nat) = vect s n -> GTot Type0
+let ls_post (s:Type0) (a:nat -> Type0) (n:nat) = (k:nat & _:(a k) & mapping s n k) -> GTot Type0
+let ls_wp (s:Type0) (a:nat -> Type0) (n:nat) = ls_post s a n -> Tot (ls_pre s n)
+
+unfold
+let ls_return (s:Type0) (a:nat -> Type0) (n:nat) (x:a n) (p:ls_post s a n) : Tot (ls_pre s n) =
+  fun v -> return1 #s #a #n x v p
+
+unfold
+let ls_bind_wp (s:Type0) (r1:range) (a b:nat -> Type0) (n:nat) (wp1:ls_wp s a n) (wp2: k:nat -> a k -> GTot (ls_wp s b k)) (p:ls_post s b n) (v:vect s n) =
+  bind1 #s #a #b #n (fun v p -> wp1 p v) (fun k a v p -> wp2 k a p v) v p
+
+unfold
+let ls_if_then_else (s:Type0) (a:nat -> Type0) (p:nat -> Type0) (n:nat) (wp_then:ls_wp s a n) (wp_else:ls_wp s a n) (post:ls_post s a n) (v:vect s n) =
+  l_ITE (p n) (wp_then post v) (wp_else post v)
+
+unfold
+let ls_ite_wp (s:Type0) (a:nat -> Type0) (n:nat) (wp:ls_wp s a n) (post:ls_post s a n) (v:vect s n) =
+  (forall (k:ls_post s a n). (forall (x:(k:nat & _:a k & mapping s n k)). {:pattern (guard_free (k x))} k x <==> post x) ==> wp k v)
+
+unfold
+let ls_stronger (s:Type0) (a:nat -> Type0) (n:nat) (wp1 wp2:ls_wp s a n) =
+  forall (p:ls_post s a n) (v:vect s n). wp1 p v ==> wp2 p v
+
+unfold
+let ls_close_wp (s:Type0) (a b:nat -> Type0) (wp: k:nat -> b k -> GTot (ls_wp s a k)) (n:nat) (p:ls_post s a n) (v:vect s n) =
+  forall (xb:b n). wp n xb p v
+
+unfold
+let ls_assert_p (s:Type0) (a:nat -> Type0) (p:nat -> Type0) (n:nat) (wp:ls_wp s a n) (q:ls_post s a n) (v:vect s n) =
+  p n /\ wp q v
+
+unfold
+let ls_assume_p (s:Type0) (a:nat -> Type0) (p:nat -> Type0) (n:nat) (wp:ls_wp s a n) (q:ls_post s a n) (v:vect s n) =
+  p n ==> wp q v
+
+unfold
+let ls_null_wp (s:Type0) (a:nat -> Type0) (n:nat) (p:ls_post s a n) (v:vect s n) =
+  forall x. p x
+
+unfold
+let ls_trivial (s:Type0) (a:nat -> Type0) (n:nat) (wp:ls_wp s a n) =
+  forall v. wp (fun _ -> True) v
+
+(* new_effect { *)
+(*   LS (s:Type0) : result:(nat -> Type) -> n:nat -> wp:ls_wp s (a n) n -> Effect *)
+(*   with *)
+
+(*   } *)
 
 (* Algebraic presentation *)
 
