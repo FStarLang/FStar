@@ -1715,7 +1715,7 @@ and check_inner_let_rec env top =
           let bvs = lbs |> List.map (fun lb -> left (lb.lbname)) in
 
           let e2, cres, g2 = tc_term env e2 in
-          let guard = Rel.conj_guard g_lbs g2 in
+          let guard = Rel.conj_guard g_lbs (Rel.close_guard (List.map S.mk_binder bvs) g2) in
           let cres = TcUtil.close_comp env bvs cres in
           let tres = norm env cres.res_typ in
           let cres = {cres with res_typ=tres} in
