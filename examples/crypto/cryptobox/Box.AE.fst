@@ -136,7 +136,6 @@ let coerce_key i raw =
    safe_log_append makes sure that new entries added to the log are appended in a memory-safe way.
 *)
 
-#set-options "--initial_fuel 100 --initial_ifuel 100"
 (**
    Encrypt a a message under a key. Idealize if the key is honest and ae_ind_cca true.
 *)
@@ -171,9 +170,7 @@ let encrypt #i n k m =
   MR.m_recall k.log;
   MM.extend k.log n (c,m);
   c
-#reset-options
 
-#set-options "--z3rlimit 100 --initial_fuel 3 --initial_ifuel 1"
 (**
    Decrypt a ciphertext c using a key k. If the key is honest and ae_int_ctxt is idealized,
    try to obtain the ciphertext from the log. Else decrypt via concrete implementation.
@@ -212,22 +209,3 @@ let decrypt #i n k c =
     match poption with
     | Some p -> Some (PlainAE.coerce #i p)
     | None -> None
-  
-
-#reset-options
-
-
-val dec_enc_inverse_lemma: #(i:ae_id) -> n:nonce -> k:key -> c:cipher{B.length c >= aeadTagSize AES_128_CCM} -> ST bool
-  (requires (fun h0 -> 
-    k.i==i
-    /\ Map.contains h0.h k.region
-    /\ ae_fixed i
-    /\ MM.fresh k.log n h0
-  ))
-  (ensures (fun h0 b h1 -> b
-  ))
-let dec_enc_inverse_lemma #i n k c =
-  match decrypt #i n k c with
-  | Some m' -> c = encrypt #i n k m'
-  | None -> true
-    
