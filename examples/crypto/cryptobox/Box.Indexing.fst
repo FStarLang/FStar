@@ -117,7 +117,7 @@ val ae_honestST: k_i:ae_id{ae_fixed k_i} -> ST(b:bool{(b ==> (ae_honest k_i)) /\
 let ae_honestST k_i =
   let h1 = honestST (fst k_i.i) in 
   let h2 = honestST (snd k_i.i) in
-  h1 && h2
+  (h1 && h2)
 
 
 

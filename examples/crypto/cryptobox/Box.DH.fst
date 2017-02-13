@@ -40,7 +40,8 @@ assume val hash: dh_element -> aes_key
 *)
 private type range = fun (k_id:ae_id) -> k:PlainDH.key{PlainDH.ae_key_get_index k = k_id}
 private let inv (f:MM.map' (ae_id) range) = True
-private let ae_key_log = MM.alloc #root #ae_id #range #inv
+private let ae_key_log_region = new_region root
+private let ae_key_log = MM.alloc #ae_key_log_region #ae_id #range #inv
 
 noeq abstract type dh_pkey = 
   | DH_pkey:  #pk_id:id -> rawpk:dh_share -> dh_pkey
@@ -85,10 +86,21 @@ let coerce_keypair #i dh_ex =
    If we prf_odh is true, the output of this function is random, if both 
    share and exponent are honest.
 *)
+
+// Weird bug here. Can assert(False)??
 val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
-  ( requires (fun _ -> True))
-  ( ensures (fun _ k _ -> 
-    (PlainDH.ae_key_get_index k = generate_ae_id sk.sk_id pk.pk_id)
+  ( requires (fun h0 -> True))
+  ( ensures (fun h0 k h1 -> False))
+    let i = generate_ae_id sk.sk_id pk.pk_id in
+    (PlainDH.ae_key_get_index k = i)
+    /\ ( (ae_honest i /\ prf_odh)
+	  ==> ( MR.witnessed (MM.contains ae_key_log i k) 
+	      /\ modifies_none h0 h1
+	    )
+      )
+    /\ ( (ae_dishonest i \/ ~prf_odh)
+	  ==> modifies_none h0 h1
+      )
   ))
 let prf_odh dh_sk dh_pk =
   let pk_id = dh_pk.pk_id in
