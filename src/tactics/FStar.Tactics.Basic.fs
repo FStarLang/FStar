@@ -65,12 +65,12 @@ let bind (t1:tac<'a>)
          (t2:'a -> tac<'b>)
     : tac<'b>
     = fun p ->
-        let tx = Unionfind.new_transaction () in //snapshot the state of the unionfind graph
+//        let tx = Unionfind.new_transaction () in //snapshot the state of the unionfind graph
         match t1 p with
         | Success (a, q) ->
           t2 a q
         | Failed(msg, q) ->
-          Unionfind.rollback tx; //and restore the snapshot in case the tactic fails
+//          Unionfind.rollback tx; //and restore the snapshot in case the tactic fails
           Failed(msg, q) //need to repack for tac<'b>
 
 (* get : get the current proof state *)
@@ -134,10 +134,11 @@ let or_else (t1:tac<'a>)
             (t2:tac<'a>)
     : tac<'a>
     = fun p ->
-        let tx = Unionfind.new_transaction () in
+//        let tx = Unionfind.new_transaction () in
         match t1 p with
         | Failed _ ->
-          Unionfind.rollback tx;
+//          Unionfind.rollback tx;
+          printfn "or_else: t1 failed; trying t2";
           t2 p
         | q -> q
 
@@ -150,7 +151,7 @@ let seq (t1:tac<unit>)
         (t2:tac<unit>)
     : tac<unit>
     = fun p ->
-        let tx = Unionfind.new_transaction () in
+//        let tx = Unionfind.new_transaction () in
         let q = {p with goals=[List.hd p.goals]} in
         match t1 q with
         | Success (_, q') -> begin
@@ -163,13 +164,20 @@ let seq (t1:tac<unit>)
                   Success((), ({q' with goals=goals@p.goals}))
               with
               | Failure m ->
-                Unionfind.rollback tx;
+//                Unionfind.rollback tx;
                 Failed(m, q)
          end
         | f ->
-          Unionfind.rollback tx;
+//          Unionfind.rollback tx;
           f
 
+(* intros:
+      corresponds to a variadic version of
+      val lemma_forall_intro_gtot  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (p x)) -> Lemma (forall (x:a). p x)
+*)
+//Q: should it instead be
+//    val forall_intro_squash_gtot_join  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (squash (p x))) -> Tot (forall (x:a). p x)
+//   ?? Note the additional squash on f
 let intros : tac<(list<name>)>
    = with_cur_goal (fun goal ->
          match U.destruct_typ_as_formula goal.goal_ty with
@@ -192,7 +200,30 @@ let intros : tac<(list<name>)>
 
 let intros_no_names = bind intros (fun _ -> ret ())
 
-let imp_intro : tac<name> = fun p -> failwith "Not yet implemented: imp_intro"
+let mk_squash p =
+    let sq = U.fvar_const FStar.Syntax.Const.squash_lid in
+    U.mk_app sq [S.as_arg p]
+
+(* imp_intro:
+        corresponds to
+        val arrow_to_impl : #a:Type0 -> #b:Type0 -> f:(squash a -> GTot (squash b)) -> GTot (a ==> b)
+*)
+let imp_intro : tac<name> =
+    with_cur_goal (fun goal ->
+    match U.destruct_typ_as_formula goal.goal_ty with
+    | Some (U.BaseConn(l, [(lhs, _); (rhs, _)]))
+        when Ident.lid_equals l SC.imp_lid ->
+      let name = S.new_bv None (mk_squash lhs) in
+      let new_goal = {
+        context = Env.push_bv goal.context name;
+        witness = None;
+        goal_ty = mk_squash rhs;
+      } in
+      bind dismiss (fun _ ->
+      bind (add_goals [new_goal]) (fun _ ->
+      ret name))
+    | _ ->
+      fail "Cannot intro this goal, expected an '==>'")
 
 let split : tac<unit>
     = with_cur_goal (fun goal ->
@@ -237,8 +268,12 @@ let rewrite (x:name) (e:term) : tac<unit>
         with _ ->
              fail (BU.format1 "Variable not found: %s" (Print.bv_to_string x)))
 
-let clear_hd (x:name) : tac<unit> = fun p -> failwith "Not yet implemented: clear_hd"
-let revert_hd (xs:list<name>) : tac<unit> = fun p -> failwith "Not yet implemented: revert_hd"
+let clear_hd (x:name) : tac<unit> = fun p ->
+    failwith "Not yet implemented: clear_hd"
+
+let revert_hd (xs:list<name>) : tac<unit> = fun p ->
+
+    failwith "Not yet implemented: revert_hd"
 
 (* We often have VCs of the form
          forall x. x==e ==> P
@@ -279,7 +314,7 @@ let at_most_one (t:tac<'a>) : tac<'a> =
 
 let merge_sub_goals : tac<unit> = fun p -> failwith "Not yet implemented: merge_sub_goals"
 
-let visit_strengthen (try_strengthen:tac<unit>)
+let rec visit_strengthen (try_strengthen:tac<unit>)
     : tac<unit>
     = focus_cur_goal
         (or_else try_strengthen
@@ -290,29 +325,29 @@ let visit_strengthen (try_strengthen:tac<unit>)
                     | Some (U.BaseConn(l, _))
                         when Ident.lid_equals l SC.and_lid ->
                       seq split
-                          (bind (at_most_one try_strengthen) (fun _ ->
+                          (bind (at_most_one (visit_strengthen try_strengthen)) (fun _ ->
                                  merge_sub_goals))
 
                     | Some (U.QAll _) ->
                       bind intros (fun names ->
-                      bind (at_most_one try_strengthen) (fun _ ->
+                      bind (at_most_one (visit_strengthen try_strengthen)) (fun _ ->
                            (revert_hd names)))
 
                     | Some _ ->  //not yet handled
                         ret ())))
 
-let rec simplify_eq_impl : tac<unit>
-    = fun p -> 
-          with_cur_goal (fun goal ->
+let simplify_eq_impl : tac<unit>
+    = with_cur_goal (fun goal ->
           match destruct_equality_imp goal.goal_ty with
-          | Some (x, e, rhs) ->
+          | Some (x, e, rhs) -> //we have x==e ==> rhs
+                 //imp_intro: introduce x=e in the context; goal is rhs
             bind imp_intro (fun eq_h ->
+                 //rewrite: goals become [x=e; rhs[e/x]]
             bind (rewrite x e) (fun _ ->
+                 //exact: dismiss the first sub-goal, i.e., prove that x=e
             bind (exact eq_h) (fun _ ->
-            //get rid of the eq_h in the context
-            bind (clear_hd eq_h) (fun _ ->
-            //dismiss the first sub-goal, i.e., prove that x=e
-            //recursively visit rhs[e/x]
-            visit_strengthen simplify_eq_impl))))
+                 //clear_hd: get rid of the eq_h in the context
+                 //we're left with rhs[e/x]
+            clear_hd eq_h)))
           | _ ->
-            fail "Not an equality implication") p
+            fail "Not an equality implication")
