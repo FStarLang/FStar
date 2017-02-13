@@ -6,8 +6,16 @@ module Box.KeyScheme
 open FStar.Monotonic.RRef
 open Platform.Bytes
 
+noeq type plain_scheme =
+  | PS: payload_type:Type ->
+	length: (payload_type -> nat) ->
+	coerce: (bytes -> payload_type) ->
+	repr: (payload_type -> bytes) ->
+	plain_scheme
+
+
 noeq type id_scheme =
-  | IS: id_type:(eqtype) ->
+  | IS: id_type:(t:Type0{hasEq t}) ->
 	dishonest: (id_type -> Type) ->
 	dishonestST: (i:id_type -> St (b:bool{b ==> dishonest i})) ->
 	honest: (id_type -> Type) ->
@@ -26,7 +34,7 @@ noeq type id_combiner =
 noeq type key_scheme =
   | KS: ks_is:id_scheme ->
 	key_region:rid ->
-        key_type:Type -> 
+        key_type:Type0 -> 
         get_key_index:(key_type -> ks_is.id_type) -> 
         key_gen: ((i:ks_is.id_type) -> ST key_type
           (requires (fun h0 -> True))
