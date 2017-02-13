@@ -45,9 +45,15 @@ let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
      let (l1, tl) = BatList.span (fun x -> x.[0] |> BatChar.is_uppercase) l in
      let hd = BatString.concat "_" l1 in
      path_to_ident ((hd::tl), sym)
+  | ["Prims"] -> 
+     let remove_qual = ["Some"; "None"] in
+     if (BatList.mem sym remove_qual) then
+       path_to_ident ([], sym)
+     else 
+       mk_lident (BatString.concat "." ["Prims"; sym])
   | (hd::tl) -> 
      let m_name = !m_ref in
-     if (BatString.compare m_name hd == 0) then path_to_ident (tl, sym) else 
+     if (BatString.equal m_name hd) then path_to_ident (tl, sym) else 
       (let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
       Ldot(q, sym) |> mk_sym_lident)
 
@@ -78,31 +84,35 @@ let build_constant_pat (c: mlconstant): pattern_desc =
   | _ -> Ppat_constant (build_constant c)
 
 let rec build_pattern (p: mlpattern): pattern =
-  let desc = (match p with
-  | MLP_Wild -> Ppat_any
-  | MLP_Const c -> build_constant_pat c
-  | MLP_Var (sym, _) -> Ppat_var (mk_sym sym)
-  | MLP_CTor args -> build_constructor_pat args
-  | MLP_Branch l -> Ppat_tuple (map build_pattern l)
-  | MLP_Record (syms, l) -> 
-     let fs = map (fun (x,y) -> (mk_lident x, build_pattern y)) l in
-     Ppat_record (fs, Open) (* does the closed flag matter? *)
-  | MLP_Tuple l -> Ppat_tuple (map build_pattern l)
-             ) in
-  Pat.mk desc
-
-and build_constructor_pat ((_, sym), p) =
-  let name = 
-    (match sym with
-    | "Cons" -> "::"
-    | "Nil" -> "[]"
-    | x -> x) in
   match p with
+  | MLP_Wild -> Pat.any ()
+  | MLP_Const c -> build_constant_pat c |> Pat.mk
+  | MLP_Var (sym, _) -> Pat.var (mk_sym sym)
+  | MLP_CTor args -> build_constructor_pat args |> Pat.mk
+  | MLP_Branch l -> 
+     (match l with
+      | [pat] -> build_pattern pat
+      | (pat1::tl) -> Pat.or_ (build_pattern pat1) (build_pattern (MLP_Branch tl))
+      | [] -> failwith "can this happen?")
+  | MLP_Record (path, l) -> 
+     let fs = map (fun (x,y) -> (path_to_ident (path, x), build_pattern y)) l in
+     Pat.record fs Open (* does the closed flag matter? *)
+  | MLP_Tuple l -> Pat.tuple (map build_pattern l)
+
+and build_constructor_pat ((path, sym), p) =
+  let (path', name) = 
+    (match sym with
+    | "Cons" -> ([], "::")
+    | "Nil" -> ([], "[]")
+    | x -> (path, x)) in
+  match p with
+  | [] ->
+     Ppat_construct (path_to_ident (path', name), None)
   | [pat] -> 
-     Ppat_construct (mk_lident name, Some (build_pattern pat))
+     Ppat_construct (path_to_ident (path', name), Some (build_pattern pat))
   | pats ->
      let inner = Pat.tuple (map build_pattern pats) in
-     Ppat_construct (mk_lident name, Some inner) 
+     Ppat_construct (path_to_ident(path', name), Some inner) 
 
 let rec build_core_type (ty: mlty): core_type =
   match ty with
@@ -120,11 +130,19 @@ let rec build_core_type (ty: mlty): core_type =
   | MLTY_Named (tys, path) -> 
      let c_tys = map build_core_type tys in
      let p = path_to_ident path in
-     Typ.mk (Ptyp_constr (p, c_tys))
+     (match path with
+      | (["Prims"], c) ->
+        if ((BatString.length c == 6) && 
+            (BatString.equal (BatString.sub c 0 5) "tuple")) then
+          (* resugar tuples (Prims.tupleX) *) 
+          Typ.mk (Ptyp_tuple (map build_core_type tys))
+        else
+          Typ.mk (Ptyp_constr (p, c_tys))
+      | _ -> Typ.mk (Ptyp_constr (p, c_tys)))
   | MLTY_Tuple tys -> Typ.mk (Ptyp_tuple (map build_core_type tys))
   | MLTY_Top -> Typ.mk Ptyp_any
 
-let build_binding_pattern ?ty ?scheme ((sym, _): mlident) : pattern =
+let build_binding_pattern ?print_ty ?ty ?scheme ((sym, _): mlident) : pattern =
   let pid = Pat.mk (Ppat_var (mk_sym sym)) in
   let p = pid (* (match scheme with
     | Some (ids, ty) -> 
@@ -133,14 +151,39 @@ let build_binding_pattern ?ty ?scheme ((sym, _): mlident) : pattern =
     | None -> pid) *) in
   match ty with
   | Some t -> 
-     Pat.mk (Ppat_constraint (p, build_core_type t))
+     (match print_ty with
+      | Some true -> Pat.mk (Ppat_constraint (p, build_core_type t))
+      | _ -> p)
   | None -> p
 
-let rec build_expr (e: mlexpr): expression = 
-  match e.expr with
+let resugar_prims_ops path: expression = 
+  (match path with
+  | (["Prims"], "op_Addition") -> mk_lident "+" 
+  | (["Prims"], "op_Subtraction") -> mk_lident "-" 
+  | (["Prims"], "op_Multiply") -> mk_lident "*" 
+  | (["Prims"], "op_Division") -> mk_lident "/" 
+  | (["Prims"], "op_Equality") -> mk_lident "=" 
+  | (["Prims"], "op_Colon_Equals") -> mk_lident ":="
+  | (["Prims"], "op_disEquality") -> mk_lident "<>"
+  | (["Prims"], "op_AmpAmp") -> mk_lident "&&"
+  | (["Prims"], "op_BarBar") -> mk_lident "||"
+  | (["Prims"], "op_LessThanOrEqual") -> mk_lident "<="
+  | (["Prims"], "op_GreaterThanOrEqual") -> mk_lident ">="
+  | (["Prims"], "op_LessThan") -> mk_lident "<" 
+  | (["Prims"], "op_GreaterThan") -> mk_lident ">" 
+  | (["Prims"], "op_Modulus") -> mk_lident "mod"
+  | (["Prims"], "op_Minus") -> mk_lident "~-"
+  | path -> path_to_ident path)
+  |> Exp.ident 
+
+let rec build_expr ?print_ty (e: mlexpr): expression = 
+  let e' = (match e.expr with
   | MLE_Const c -> build_constant_expr c
   | MLE_Var (sym, _) -> Exp.ident (mk_lident sym)
-  | MLE_Name path -> Exp.ident (path_to_ident path)
+  | MLE_Name path -> 
+     (match path with 
+      | (["Prims"], op) -> resugar_prims_ops path
+      | _ -> Exp.ident (path_to_ident path))
   | MLE_Let ((flavour, c_flags, lbs), expr) -> 
      let recf = match flavour with 
        | Rec -> Recursive 
@@ -161,7 +204,7 @@ let rec build_expr (e: mlexpr): expression =
    | MLE_Seq args -> build_seq args
    | MLE_Tuple l -> Exp.tuple (map build_expr l)
    | MLE_Record (path, l) ->
-      let fields = map (fun (x,y) -> (mk_lident x, build_expr y)) l in
+      let fields = map (fun (x,y) -> (path_to_ident(path, x), build_expr y)) l in
       Exp.record fields None
    | MLE_Proj (e, path) -> 
       let field = match path with (_, f) -> f in
@@ -174,7 +217,14 @@ let rec build_expr (e: mlexpr): expression =
       let args = map (fun x -> (Nolabel, build_expr x)) es in
       Exp.apply r args
    | MLE_Try (e, cs) ->
-      Exp.try_ (build_expr e) (map build_case cs)
+      Exp.try_ (build_expr e) (map build_case cs)) in
+  match e.mlty with
+  | MLTY_Top -> e'
+  | t -> 
+     (match print_ty with
+     | Some true -> Exp.constraint_ e' (build_core_type t)
+     | Some false -> e'
+     | _ -> e' (* Exp.constraint_ e' (build_core_type t) *)) (* not sure *)
 
 and build_seq args =
   match args with
@@ -182,18 +232,19 @@ and build_seq args =
   | (hd::tl) -> Exp.sequence (build_expr hd) (build_seq tl)
   | [] -> failwith "Empty sequence should never happen"
 
-and build_constructor_expr ((_, sym), exp): expression =
-  let name = 
+and build_constructor_expr ((path, sym), exp): expression =
+  let (path', name) = 
     (match sym with
-    | "Cons" -> "::"
-    | "Nil" -> "[]"
-    | x -> x) in
+    | "Cons" -> ([], "::")
+    | "Nil" -> ([], "[]")
+    | x -> (path, x)) in
   match exp with
+  | [] -> Exp.construct (path_to_ident(path', name)) None
   | [e] -> 
-     Exp.construct (mk_lident name) (Some (build_expr e))
+     Exp.construct (path_to_ident(path', name)) (Some (build_expr e))
   | es ->
       let inner = Exp.tuple (map build_expr es) in
-      Exp.construct (mk_lident name) (Some inner) 
+      Exp.construct (path_to_ident(path', name)) (Some inner) 
 
 and build_fun l e = 
    match l with
@@ -211,8 +262,9 @@ and build_value (mllbs: mllb list): value_binding list =
   map build_binding mllbs
 
 and build_binding (lb: mllb): value_binding =
-  let e = build_expr lb.mllb_def in
-  let p = build_binding_pattern ?scheme:lb.mllb_tysc lb.mllb_name in
+  let e = build_expr ?print_ty:(Some lb.print_typ) lb.mllb_def in
+  let p = build_binding_pattern ?print_ty:(Some lb.print_typ) 
+                                ?scheme:lb.mllb_tysc lb.mllb_name in
   (Vb.mk p e)
 
 let build_row_field (sym, tys): row_field = 
@@ -265,7 +317,6 @@ let build_mlsig1 = function
   | MLS_Exn (sym, mltys) -> failwith "not defined3"
 
 let build_module1 path (m1: mlmodule1): structure_item option = 
-
   match m1 with
   | MLM_Ty tydecl -> Some (Str.mk (build_tydecl tydecl))
   | MLM_Let (flav, flags, mllbs) -> 
@@ -280,8 +331,10 @@ let build_m path (md: (mlsig * mlmodule) option) : structure =
 
   match md with
   | Some(s, m) -> 
+     let open_prims = 
+       Str.open_ (Opn.mk ?override:(Some Fresh) (mk_lident "Prims")) in 
      let a = map build_mlsig1 s in (* is this necessary? *)
-     (map (build_module1 path) m |> flatmap opt_to_list)
+     open_prims::(map (build_module1 path) m |> flatmap opt_to_list)
   | None -> []
 
 let build_ast = function
@@ -291,16 +344,15 @@ let build_ast = function
          m_ref := m;
          let name = BatString.concat "." [m; "ml"] in
          let path = BatString.concat "/" ["pretty-output"; name] in
-         (* let _ = Format.set_formatter_out_channel (open_out path) in *)
          (path, build_m path md)) l
 
 let print_module ((path, m): string * structure) = 
-  print_string path; print_string "\n";
+  print_string path; print_string "\n"; 
   Format.set_formatter_out_channel (open_out path);
-  structure Format.std_formatter m
+  structure Format.std_formatter m;
+  Format.pp_print_flush Format.std_formatter ()
 
 let print ml = 
-  Unix.sleep(2);
   let ast = build_ast ml in
   iter print_module ast
 
