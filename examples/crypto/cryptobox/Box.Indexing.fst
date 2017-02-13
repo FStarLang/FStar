@@ -87,7 +87,17 @@ let honest_dishonest_lemma i =
   let h = get() in
   MR.testify (MM.defined id_table i); 
   match MM.lookup id_table i with
-  |Some v ->  MR.testify(MM.contains id_table i v); ()
+  |Some v -> ()
+
+val honest_dishonest_contradiction_lemma: i:id -> ST(unit)
+  (requires (fun h -> honest i /\ dishonest i))
+  (ensures (fun h0 _ h1 -> False
+  ))
+let honest_dishonest_contradiction_lemma i = 
+  MR.testify(MM.contains id_table i true);
+  MR.testify(MM.contains id_table i false);
+  ()
+
 
 type ae_honest k_i =
   honest (fst k_i.i) /\ honest (snd k_i.i)
