@@ -1,7 +1,7 @@
 module FStar.LocalState
 
 #set-options "--print_universes"
-type vect (a:Type0) : nat -> Type0 =
+type vect (a:Type) : nat -> Type =
   | Nil : vect a 0
   | Cons : #n:nat -> hd:a -> tl:vect a n -> vect a (n+1)
 
@@ -16,7 +16,6 @@ let rec set #n #a (v:vect a n) (i:nat{i < n}) (x:a) : vect a n =
 let rec insert #n #a (v:vect a n) (i:nat{i < n+1}) (x:a) : vect a (n+1) =
   if i = n then Cons x v
   else match v with | Cons hd tl -> Cons hd (insert tl i x)
-
 
 let rec remove (#n:nat) #a (v:vect a (n+1)) (i:nat{i < n+1}) : vect a n =
   if i = n then Cons?.tl v
@@ -34,7 +33,7 @@ let rec remove (#n:nat) #a (v:vect a (n+1)) (i:nat{i < n+1}) : vect a n =
 (* type mapping : nat -> nat -> Type = | Witness : (l:list count) -> mapping (left l) (right l) *)
 
 
-type mapping (a:Type0) : nat -> nat -> Type0 =
+type mapping (a:Type) : nat -> nat -> Type =
   | MNil : mapping a 0 0
   | MCons : #n1:nat -> #n2:nat -> hd:a -> tl:mapping a n1 n2 -> mapping a (n1+1) (n2+1)
   | MAdd : #n1:nat -> #n2:nat -> hd:a -> tl:mapping a n1 n2 -> mapping a n1 (n2+1)
@@ -82,7 +81,7 @@ let rec mremove #n1 (#n2:nat) #a (v:mapping a n1 (n2+1)) (i:nat{i < n2+1}) : map
     | MCons hd tl -> let n2' : nat = n2 - 1 in MCons hd (mremove #_ #n2' tl i)
     | MAdd hd tl -> let n2' : nat = n2 - 1 in MAdd hd (mremove #n1 #n2' tl i)
 
-let rec mapping_to_vect0 (#n1 #n2:nat) (#a:Type0) (v:mapping a n1 n2)  : vect a n2 =
+let rec mapping_to_vect0 (#n1 #n2:nat) (#a:Type) (v:mapping a n1 n2)  : vect a n2 =
   match v with
     | MNil -> Nil
     | MCons hd tl -> Cons hd (mapping_to_vect0 tl)
@@ -100,7 +99,7 @@ let rec mapping_to_vect0 (#n1 #n2:nat) (#a:Type0) (v:mapping a n1 n2)  : vect a 
 (* let rec mapping_to_vect (#n1 #n2 : nat) (#a:Type0) (v:mapping a n1 n2) : (k:nat & vect a k) = *)
 (*   mapping_to_vect_aux v Mkdtuple2 *)
 
-let rec vect_to_mapping (#n:nat) (#a:Type0) (v:vect a n) : mapping a n n =
+let rec vect_to_mapping (#n:nat) (#a:Type) (v:vect a n) : mapping a n n =
   match v with
     | Nil -> MNil
     | Cons hd tl -> MCons hd (vect_to_mapping tl)
@@ -123,9 +122,32 @@ let rec compose_mapping (#s:Type) (#n1 #n2 #n3:nat) (m1:mapping s n1 n2) (m2:map
   | MAdd hd1 tl1, MRemove tl2 ->
     compose_mapping tl1 tl2
 
+
+
+(* type ls (s:Type) (a:Type) : Type = n:nat -> v:vect s n -> k:nat & _:a & mapping s n k *)
+(* let ret s a (x:a) : ls s a = fun n v -> (|n, x, vect_to_mapping v|) *)
+(* let bind s a b (m:ls s a) (f: a -> ls s b) : ls s b = fun n v -> *)
+(*   let (| k, x, mapk |) = m n v in *)
+(*   let (| k', y, mapk' |) = f x k (mapping_to_vect0 mapk) in *)
+(*     (| k', y, compose_mapping mapk mapk' |) *)
+
+
+(* type ls_inf (s:Type) (k:nat) (a:Type) : Type = n:nat{n >= k} -> v:vect s n -> m:nat{m >= k} & _:a & mapping s n m *)
+(* let ret_inf s k a (x:a) : ls_inf s k a = fun n v -> (|n, x, vect_to_mapping v|) *)
+(* let bind_inf s k a b (m:ls_inf s k a) (f: a -> ls_inf s k b) : ls_inf s k b = fun n v -> *)
+(*   let (| k, x, mapk |) = m n v in *)
+(*   let (| k', y, mapk' |) = f x k (mapping_to_vect0 mapk) in *)
+(*     (| k', y, compose_mapping mapk mapk' |) *)
+(* let forget_alloc s k a (i:nat{i < k + 1}) (s0:s) (m:ls_inf s (k+1) a) : ls_inf s k a = *)
+(*   fun n v -> *)
+(*     let (|m, x, map|) = m (n+1) (insert v i s0) in *)
+(*     let m:(m:nat{m >= k}) = m in *)
+(*     (|m, x, map|) *)
+
+
 (* *)
 
-type local_state0 (s:Type0) (a:nat -> Type0) (n:nat) =  v:vect s n -> k:nat & _:(a k) & mapping s n k
+type local_state0 (s:Type) (a:nat -> Type) (n:nat) : Type = v:vect s n -> k:nat & _:(a k) & mapping s n k
 
 let return #s #a #n (x:a n) : local_state0 s a n = fun (v:vect s n) -> (|n, x, vect_to_mapping v|)
 let bind #s #a #b #n (m:local_state0 s a n) (f: k:nat -> a k -> local_state0 s b k) : local_state0 s b n =
@@ -181,7 +203,7 @@ let bind2 #s #a #b #n (specm:local_state1 s a n) (m:local_state2 s a n specm) (s
 
 let ls_pre (s:Type0) (n:nat) = vect s n -> GTot Type0
 let ls_post (s:Type0) (a:nat -> Type0) (n:nat) = (k:nat & _:(a k) & mapping s n k) -> GTot Type0
-let ls_wp (s:Type0) (a:nat -> Type0) (n:nat) = ls_post s a n -> Tot (ls_pre s n)
+let ls_wp (s:Type0) (a:nat -> Type0) (n:nat) : Type = ls_post s a n -> Tot (ls_pre s n)
 
 unfold
 let ls_return (s:Type0) (a:nat -> Type0) (n:nat) (x:a n) (p:ls_post s a n) : Tot (ls_pre s n) =
@@ -224,7 +246,7 @@ let ls_trivial (s:Type0) (a:nat -> Type0) (n:nat) (wp:ls_wp s a n) =
   forall v. wp (fun _ -> True) v
 
 (* new_effect { *)
-(*   LS (s:Type0) : result:(nat -> Type) -> n:nat -> wp:ls_wp s (a n) n -> Effect *)
+(*   LS (s:Type0) : result:(nat -> Type) -> wp:ls_wp s a -> (n:nat) -> Effect *)
 (*   with *)
 
 (*   } *)
