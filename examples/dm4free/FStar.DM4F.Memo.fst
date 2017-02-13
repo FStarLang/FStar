@@ -283,7 +283,9 @@ let rec complete_memo_rec_extr
   match px with
   | Done _ y -> y
   | Need x0 x' cont ->
-    let y = memo_f_extr_p (fun x' -> %[ %[x'; 1 ; ()] ] << %[ %[x; 0 ; px] ]) (memo_rec_extr f) x' in
+    let p x' = %[ %[x'; 1 ; ()] ] << %[ %[x; 0 ; px] ] in
+    let h (x:dom{p x}) : Memo codom = memo_rec_extr f x in
+    let y = memo_f_extr_p p h x' in
     assume (forall y. cont y << cont) ;
     complete_memo_rec_extr f x (cont y)
 
