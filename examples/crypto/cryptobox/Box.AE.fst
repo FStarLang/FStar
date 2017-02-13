@@ -147,14 +147,14 @@ val encrypt: #(i:ae_id) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_plain i) -
   (ensures  (fun h0 c h1 ->
     modifies_one k.region h0.h h1.h
     /\ m_contains k.log h1
+    /\ (ae_dishonest i \/ ae_honest i)
     /\ (
-	( (ae_dishonest i \/ ~(b2t ae_ind_cca))
+	((~(b2t ae_ind_cca) \/ ae_dishonest i )
 	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (repr m))
       \/ 
-        ( (ae_honest i /\ b2t ae_ind_cca)
+        (( (b2t ae_ind_cca) /\ ae_honest i )
 	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (createBytes (length m) 0z) )
       )
-    /\ (ae_dishonest i \/ ae_honest i)
     /\ MR.witnessed (MM.contains k.log n (c,m))
     ))
 let encrypt #i n k m =
@@ -186,12 +186,12 @@ val decrypt: #(i:ae_id) -> n:nonce -> k:key{k.i=i} -> c:cipher{B.length c >= aea
     /\ (
         ((~(b2t ae_ind_cca) \/ ae_dishonest i) 
         	==> (Some? (aead_decryptT AES_128_CCM k.raw n empty_bytes c) 
-        	  ==> Some? res /\ Some?.v res == coerce (Some?.v (aead_decryptT AES_128_CCM k.raw n empty_bytes c))))
+        	     ==> Some? res /\ Some?.v res == coerce (Some?.v (aead_decryptT AES_128_CCM k.raw n empty_bytes c))))
       \/
         (( (b2t ae_ind_cca) /\ ae_honest i ) 
         	==> (MM.defined k.log n h0 /\ (fst (MM.value k.log n h0) == c ) 
-        	  ==> Some? res /\ Some?.v res == snd (MM.value k.log n h0)))
-        )
+        	     ==> Some? res /\ Some?.v res == snd (MM.value k.log n h0)))
+      )
   ))
 let decrypt #i n k c =
   let ae_honest_i = ae_honestST i in
