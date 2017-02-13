@@ -22,32 +22,19 @@ type exp =
 | AVar : id -> exp
 | AOp  : binop -> exp -> exp -> exp
 
-(*
-val interpret_exp : h:heap -> e:exp -> GTot int
-let rec interpret_exp h e =
-  match e with
-  | AInt i -> i
-  | AVar x -> sel h x
-  | AOp o e1 e2 ->
-    let a = interpret_exp h e1 in
-    let b = interpret_exp h e2 in
-    interpret_binop o a b
-*)
-
 (* CH: This is a termination metric (natural number expression) for
-       showing termination of while.  (Why not call it that?)
+       showing termination of while.
        Decreasingness and positivity of this termination metric
        _dynamically_ checked. *)
-type variant = exp
-//type variant = e:exp{forall h. 0 <= interpret_exp h e}
+type metric = exp
 
-(* Commands -- loops are annotated with variants *)
+(* Commands -- loops are annotated with metrics *)
 type com =
 | Skip   : com
 | Assign : var:id -> term:exp -> com
 | Seq    : first:com -> second:com -> com
 | If     : cond:exp -> then_branch:com -> else_branch:com -> com
-| While  : cond:exp -> body:com -> variant:variant -> com
+| While  : cond:exp -> body:com -> metric:metric -> com
 
 
 (* TODO : This function is total and does not use exceptions *)

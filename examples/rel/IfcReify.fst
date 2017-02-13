@@ -34,7 +34,7 @@ let join l1 l2 =
 type label_fun = id -> Tot label
 
 type low_equiv (env:label_fun) (h1:rel heap) =
-  (forall (x:id). {:pattern (env x)} env x = Low ==> index (R?.l h1) x = index (R?.r h1) x)
+  (forall (x:id). (* {:pattern (env x)} *) env x = Low ==> index (R?.l h1) x = index (R?.r h1) x)
 
 (**************************** Typing Judgements ****************************)
 
@@ -44,7 +44,7 @@ type low_equiv (env:label_fun) (h1:rel heap) =
    - Low equivalent input heaps + Low label ==> same result
 *)
 let ni_exp (env:label_fun) (e:exp) (l:label) : Tot Type0 =
-  forall (h: rel heap). {:pattern (low_equiv env h)}
+  forall (h: rel heap). (* {:pattern (low_equiv env h)} *)
    (low_equiv env h /\ Low? l) ==>
      (* interpret_exp (R?.r h) e = interpret_exp (R?.l h) e *)
      begin
@@ -65,9 +65,9 @@ let inv_com' (env:label_fun) (c:com) (l:label) (h0:heap) : Tot Type0
   match interpret_com h0 c with
   | None -> True
   | Some h1 ->
-    forall (i:id). {:pattern (env i < l)} env i < l ==> index h0 i = index h1 i
+    forall (i:id). (* {:pattern (env i < l)} *) env i < l ==> index h0 i = index h1 i
 
-let ni_com' (env:label_fun) (c:com) (l:label) (h0:rel heap) =
+let ni_com' (env:label_fun) (c:com) (l:label) (h0:rel heap) : Tot Type0 =
   let R h0l h0r = h0 in
   (* KM : That's the code that we would like to write but subtyping and matching on pairs interplay badly *)
   (* it generates a VC which boils down to [forall (h1l:heap). length h1l = length h0l] which is obviously false *)
@@ -83,9 +83,9 @@ let ni_com' (env:label_fun) (c:com) (l:label) (h0:rel heap) =
     | _ -> True
   end
 
-let ni_com (env:label_fun) (c:com) (l:label) =
-  (forall (h0: rel heap). {:pattern (low_equiv env h0)} ni_com' env c l h0) /\
-  (forall (h0:heap). {:pattern (Some? (interpret_com h0 c))} inv_com' env c l h0)
+let ni_com (env:label_fun) (c:com) (l:label) : Tot Type0 =
+  (forall (h0: rel heap). (* {:pattern (low_equiv env h0)} *) ni_com' env c l h0) /\
+  (forall (h0:heap). (* {:pattern (Some? (interpret_com h0 c))} *) inv_com' env c l h0)
 
 (* KM : Trying to figure out wht are the design tradeoffs on option heap *)
 (* let preserves_env_upto_label (env:label_fun) (l:label) (c:com) (h0:heap) : Tot Type0 *)
@@ -130,8 +130,7 @@ let sub_exp _ _ _ _ = ()
 *)
 
 val avar_exp : env:label_fun -> r:id ->
-  Lemma (requires True)
-        (ensures  (ni_exp env (AVar r) (env r)))
+  Lemma (ensures  (ni_exp env (AVar r) (env r)))
 let avar_exp _ _ = ()
 
 (* Typing rule for Int constants
@@ -193,10 +192,11 @@ let sub_com _ _ _ _ = ()
 (*     : Lemma (requires True) *)
 (*       (ensures (forall hopt. inv_com' env (Assign r e) (env r) hopt)) *)
 (*   = () *)
-(* val assign_com : env:label_fun -> e:exp -> r:id -> *)
-(*   Lemma (requires (ni_exp env e (env r))) *)
-(*         (ensures  (ni_com env (Assign r e) (env r))) *)
-(* let assign_com _ _ _ = () *)
+
+val assign_com : env:label_fun -> e:exp -> r:id ->
+  Lemma (requires (ni_exp env e (env r)))
+        (ensures  (ni_com env (Assign r e) (env r)))
+let assign_com _ _ _ = ()
 
 (* Sequencing rule for commands
 
@@ -238,14 +238,14 @@ let sub_com _ _ _ _ = ()
              env,pc:l |- if e <> 0 then ct else cf
 *)
 
-#set-options "--z3rlimit 100"
+(* #set-options "--z3rlimit 100" *)
 
-val cond_com : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label ->
-  Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l)))
-         (ensures  (ni_com env (If e ct cf) l))
-let cond_com _ _ _ _ _ = ()
+(* val cond_com : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> *)
+(*   Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l))) *)
+(*          (ensures  (ni_com env (If e ct cf) l)) *)
+(* let cond_com _ _ _ _ _ = () *)
 
-#set-options "--z3rlimit 5"
+(* #set-options "--z3rlimit 5" *)
 
 (* Typing rule for Skip
 
@@ -264,13 +264,13 @@ let skip_com _ = ()
           env,pc:l |- while (e <> 0) do c
 *)
 
-(* let interpret_exp (h:heap) (v:variant) : Tot nat = *)
+(* let interpret_exp (h:heap) (v:metric) : Tot nat = *)
 (*   match fst (interpret_exp h v) with *)
 (*   | Some n -> if 0 > n then 0 else n *)
 (*   | None -> 0 *)
 
-(* (\* slight variant taking option heap *\) *)
-(* val decr_while : h:(option heap) -> v:variant -> GTot nat *)
+(* (\* slight metric taking option heap *\) *)
+(* val decr_while : h:(option heap) -> v:metric -> GTot nat *)
 (* let decr_while h v = match h with *)
 (*   | None -> 0 *)
 (*   | Some h0 -> interpret_exp h0 v *)
@@ -282,7 +282,7 @@ let skip_com _ = ()
 (*   : env:label_fun -> *)
 (*     e:exp -> *)
 (*     c:com -> *)
-(*     v:variant -> *)
+(*     v:metric -> *)
 (*     l:label -> *)
 (*     h:option heap -> *)
 (*     Lemma *)
@@ -302,7 +302,7 @@ let skip_com _ = ()
 (*       then while_inv_com' env e c v l h1_opt *)
 (*       else () *)
 
-(* val while_com' : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> h:rel (option heap) -> *)
+(* val while_com' : env:label_fun -> e:exp -> c:com -> v:metric -> l:label -> h:rel (option heap) -> *)
 (*   Lemma (requires (ni_exp env e l /\ ni_com env c l)) *)
 (*         (ensures  (ni_com' env (While e c v) l h)) *)
 (*         (decreases (decr_while (R?.l h) v + decr_while (R?.r h) v)) *)
@@ -317,7 +317,7 @@ let skip_com _ = ()
 (*     match o_l, o_r with *)
 (*     | Some hl , Some hr  -> *)
 (*       begin *)
-(*         // case analysis on decreasing of variant *)
+(*         // case analysis on decreasing of metric *)
 (*         match (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 , *)
 (*           (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 with *)
 (*         | true , true  -> while_com' env e c v l (R o_l o_r) *)
@@ -337,7 +337,7 @@ let skip_com _ = ()
 
 (* #reset-options *)
 
-(* val while_com : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> *)
+(* val while_com : env:label_fun -> e:exp -> c:com -> v:metric -> l:label -> *)
 (*   Lemma (requires (ni_exp env e l /\ ni_com env c l)) *)
 (*         (ensures  (ni_com env (While e c v) l)) *)
 (* let while_com env e c v l = *)

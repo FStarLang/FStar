@@ -1434,7 +1434,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let m, o = head_matches_delta env wl t1 t2 in
         match m, o  with
             | (MisMatch _, _) -> //heads definitely do not match
-                let may_relate head = match head.n with
+                let may_relate head =
+                    match (U.un_uinst head).n with
                     | Tm_name _
                     | Tm_match _ -> true
                     | Tm_fvar tc -> tc.fv_delta = Delta_equational

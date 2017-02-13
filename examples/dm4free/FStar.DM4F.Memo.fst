@@ -73,6 +73,94 @@ let memo_f (f : dom -> Tot codom) (x:dom) : MEMO codom (fun h0 p -> valid_memo h
     MEMO?.put x y ;
     y
 
+reifiable
+let memo_f_extr (f : dom -> Tot codom) (x:dom) : MEMO codom (fun h0 p -> (forall z. p z))
+= match MEMO?.get x with
+  | Some y -> y
+  | None ->
+    let y = f x in
+    MEMO?.put x y ;
+    y
+
+
+let memo_f_extr_lemma (f:dom -> Tot codom) (x:dom) (h0:heap)
+  : Lemma (requires (valid_memo h0 f))
+    (ensures (let (y, h1) = reify (memo_f_extr f x) h0 in valid_memo h1 f /\ y == f x))
+= match reify (MEMO?.get x) h0 with
+  | Some y, h0' ->
+    forall_prop_assoc_lemma2 x y (fun (x,y) -> y == f x)
+  | None, h0' ->
+    ()
+
+
+
+
+effect Memo (a:Type) = MEMO a (fun _ p -> forall z. p z)
+
+let computes (#p:dom -> Tot Type0) ($f: x:dom{p x} -> Memo codom) (g:dom -> Tot codom) =
+  forall h0. valid_memo h0 g ==> (forall x. p x ==> (let y ,h1 = reify (f x) h0 in y == g x /\ valid_memo h1 g))
+
+reifiable
+let memo_f_extr_p (p:dom -> Type0) (f : x:dom{p x} -> Memo codom) (x:dom{p x}) : Memo codom
+= match MEMO?.get x with
+  | Some y -> y
+  | None ->
+    let y = f x in
+    MEMO?.put x y ;
+    y
+
+(* let valid_memo_p (h:heap) (p:dom -> Type0) (f: x:dom{p x} -> Memo codom) = for_all_prop (fun (x,y) -> p x ==> y == fst (reify (f x) h)) h *)
+(* let valid_memo_preserve (x:dom) (y:codom) (h:heap) (f:dom -> Tot codom) *)
+(*   : Lemma (requires (y == f x /\ valid_memo h f)) (ensures (valid_memo ((x,y)::h) f)) *)
+(*   = () *)
+
+
+let memo_f_extr_p_lemma (p:dom -> Type0) (f: x:dom{p x} -> Memo codom) (g:dom -> Tot codom) (h0:heap) (x:dom)
+  : Lemma (requires (valid_memo h0 g /\ f `computes` g))
+    (ensures (p x ==> (let (y, h1) = reify (memo_f_extr_p p f x) h0 in y == g x /\ valid_memo h1 g)))
+= match reify (MEMO?.get x) h0 with
+  | Some y, h0' ->
+    forall_prop_assoc_lemma2 x y (fun (x,y) -> y == g x)
+  | None, h0' ->
+    ()
+
+
+
+let memo_f_extr_computes (p:dom -> Type0) (f: x:dom{p x} -> Memo codom) (g:dom -> Tot codom)
+: Lemma (requires (f `computes` g)) (ensures ((memo_f_extr_p p f) `computes` g))
+=
+  let open FStar.Squash in
+  let phi0 (fcg:squash(f `computes` g)) (h0:heap) (vm : squash (valid_memo h0 g)) (x:dom)
+    : Lemma (p x ==> (let y ,h1 = reify (memo_f_extr_p p f x) h0 in y == g x /\ valid_memo h1 g))
+  = give_proof fcg ;
+    give_proof vm ;
+    memo_f_extr_p_lemma p f g h0 x
+  in
+  let phi1 (fcg:squash(f `computes` g)) (h0:heap) () : Lemma (requires (valid_memo h0 g)) (ensures (forall x. p x ==> (let (y, h1) = reify (memo_f_extr_p p f x) h0 in y == g x /\ valid_memo h1 g))) =
+    FStar.Classical.forall_intro (phi0 fcg h0 (get_proof (valid_memo h0 g)))
+  in
+  let phi2 fcg (h0:heap)
+    : Lemma (valid_memo h0 g ==> (forall x. p x ==> (let y ,h1 = reify (memo_f_extr_p p f x) h0 in y == g x /\ valid_memo h1 g)))
+  = FStar.Classical.move_requires (phi1 fcg h0) () in
+  FStar.Classical.forall_intro (phi2 (get_proof (f `computes` g)))
+
+
+(* reifiable *)
+(* let memo_f_extr (f : dom -> Tot codom) (x:dom) : MEMO codom (fun h0 p -> (forall z. p z)) *)
+(* = memo_f_extr_p (fun _ -> True) f x *)
+
+(* (\* Should work but does not... *\) *)
+(* (\* needs induction to prove valid_memo h0 f ==> valid_memo_p h0 (fun _ -> True) f ? *\) *)
+
+(* let memo_f_extr_lemma (f:dom -> Tot codom) (x:dom) (h0:heap) *)
+(*     : Lemma (requires (valid_memo h0 f)) *)
+(*       (ensures (let (y, h1) = reify (memo_f_extr f x) h0 in valid_memo h1 f /\ y == f x)) *)
+(* = assert (valid_memo_p h0 (fun _ -> True) f) ; *)
+(*   memo_f_extr_p_lemma (fun _ -> True) f x h0 *)
+
+
+
+
 let fix (f : x0:dom -> f0:(x:dom{x << x0} -> Tot codom) -> Tot codom) (x0:dom) : Tot codom
 = let rec f0 (x:dom{x << x0}) = f x f0 in
   f x0 f0
@@ -180,6 +268,96 @@ let memo_rec (f: x:dom -> Tot (partial_result x)) (x0:dom)
     let y = complete_memo_rec f x0 (f x0) in
     MEMO?.put x0 y ;
     y
+
+
+
+
+
+reifiable
+let rec complete_memo_rec_extr
+  (f: (x:dom) -> partial_result x)
+  (x:dom)
+  (px:partial_result x)
+  : Memo codom (decreases %[x ; 0 ; px])
+=
+  match px with
+  | Done _ y -> y
+  | Need x0 x' cont ->
+    let y = memo_f_extr_p (fun x' -> %[ %[x'; 1 ; ()] ] << %[ %[x; 0 ; px] ]) (memo_rec_extr f) x' in
+    assume (forall y. cont y << cont) ;
+    complete_memo_rec_extr f x (cont y)
+
+and memo_rec_extr (f: x:dom -> Tot (partial_result x)) (x0:dom) : Memo codom (decreases %[ x0 ; 1 ; ()])
+= complete_memo_rec_extr f x0 (f x0)
+
+
+(* let rec complete_memo_rec_extr_computes *)
+(*   (f: (x:dom) -> partial_result x) *)
+(*   (x:dom) *)
+(*   (px:partial_result x) *)
+(*   (h0:heap) *)
+(*   : Lemma (requires (fpartial_result x f px /\ valid_memo h0 (fixp f) /\ (memo_rec_extr f) `computes` (fixp f))) *)
+(*     (ensures (let y, h1 = reify (complete_memo_rec_extr f x px) h0 in y == fixp f x /\ valid_memo h1 (fixp f))) *)
+(*     (decreases px) *)
+(* = *)
+(*   match px with *)
+(*   | Done _ y -> () *)
+(*   | Need _ x' cont -> *)
+(*     memo_f_extr_computes (fun x' -> %[ %[x'; 1 ; ()] ] << %[ %[x; 0 ; px] ]) (memo_rec_extr f) (fixp f) ; *)
+(*     let y, h1 = reify (memo_f_extr_p (fun x' -> %[ %[x'; 1 ; ()] ] << %[ %[x; 0 ; px] ]) (memo_rec_extr f) x') h0 in *)
+(*     assert (y == fixp f x') ; *)
+(*     assert (valid_memo h1 (fixp f)) ; *)
+(*     assume (forall y. cont y << cont) ; *)
+(*     complete_memo_rec_extr_computes f x (cont y) h1 *)
+
+
+(* let rec complete_memo_rec_extr_lemma *)
+(*   (f: (x:dom) -> partial_result x) *)
+(*   (x:dom) *)
+(*   (px:partial_result x) *)
+(*   (h0:heap) *)
+(*     : Lemma (requires (fpartial_result x f px /\ valid_memo_rec h0 f)) *)
+(*       (ensures (let y, h1 = reify (complete_memo_rec_extr f x px) h0 in valid_memo_rec h1 f /\ y == fixp f x)) *)
+(*       (decreases %[x ; px]) *)
+(* = *)
+(*   match px with *)
+(*   | Done _ y -> *)
+(*     assert (y == fixp f x) ; *)
+(*     assert (valid_memo_rec h0 f) *)
+(*   | Need x0 x' cont -> *)
+(*     assert (x0 == x) ; *)
+(*     let y, h0' = *)
+(*       assert (valid_memo_rec h0 f) ; *)
+(*       match reify (MEMO?.get x') h0 with *)
+(*       | Some y, h0' -> *)
+(*         valid_memo_rec_lemma f x' y h0' ; *)
+(*         assert (y == fixp f x') ; *)
+(*         y, h0' *)
+(*       | None, h0' -> *)
+(*         let px' = f x' in *)
+(*         fpartial_result_lemma f x' px' Now ; *)
+(*         assert ( %[x' ; px'] << %[x ; px]) ; *)
+(*         complete_memo_rec_extr_lemma f x' (f x') h0' ; *)
+(*         let y, h0' = reify (complete_memo_rec f x' (f x')) h0' in *)
+(*         assert (y == fixp f x') ; *)
+(*         let (), h0' = reify (MEMO?.put x' y) h0' in *)
+(*         assert (valid_memo_rec h0' f) ; *)
+(*         y,h0' *)
+(*     in *)
+(*     assert (y == fixp f x') ; *)
+(*     assert (valid_memo_rec h0' f) ; *)
+(*     assume (forall y. cont y << cont) ; *)
+(*     assert (fpartial_result x f (cont y)) ; *)
+(*     complete_memo_rec_extr_lemma f x (cont y) h0' ; *)
+(*     let y, h1 = reify (complete_memo_rec f x (cont y)) h0' in *)
+(*     let y', h1' = reify (complete_memo_rec f x px) h0 in *)
+(*     assert (y == fixp f x) ; *)
+(*     assert (valid_memo_rec h1 f) ; *)
+(*     assert ( y == y' ) ; *)
+(*     assert (y' == fixp f x) ; *)
+(*     assert ( h1 == h1' ) *)
+
+
 
 (* let fix2 (f : #a:Type -> wp:(dom -> pure_wp (codom * a)) -> x0:dom -> f0:(x:dom{x << x0} -> a -> PURE (codom * a) (wp x)) -> PURE (codom * a) (wp x0)) (x0:dom) : PURE codom (fun p -> forall y. p y) *)
 (* = let wp (p:pure_post (codom * unit)) : Type0 = forall (y:codom). p (y, ()) in *)
