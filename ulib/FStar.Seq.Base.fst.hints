@@ -1,5 +1,5 @@
 [
-  "\u001c.9¢&>¹\u000b\t\u0004iôÃ+¶",
+  "c_ÎÏI™¸i½q¹q–Iøû",
   [
     [
       "FStar.Seq.Base.seq",
@@ -1164,7 +1164,58 @@
       1,
       2,
       1,
-      [ "@query", "assumption_FStar.Seq.Base.Extensionality", "unit_typing" ],
+      [
+        "@query", "equation_FStar.Seq.Base.equal",
+        "equation_FStar.Seq.Base.index", "equation_FStar.Seq.Base.length",
+        "equation_Prims.nat", "fuel_guarded_inversion_FStar.Seq.Base.seq",
+        "int_inversion", "proj_equation_FStar.Seq.Base.MkSeq_l",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_ec8c52b60e5c33b3ae66e4063643ec19"
+      ],
+      0
+    ],
+    [
+      "FStar.Seq.Base.append_assoc",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.Base.op_At",
+        "equation_FStar.Seq.Base.append",
+        "fuel_guarded_inversion_FStar.Seq.Base.seq",
+        "proj_equation_FStar.Seq.Base.MkSeq_l",
+        "projection_inverse_FStar.Seq.Base.MkSeq_l"
+      ],
+      0
+    ],
+    [
+      "FStar.Seq.Base.append_empty_l",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.Base.op_At",
+        "equation_FStar.Seq.Base.append",
+        "equation_FStar.Seq.Base.createEmpty",
+        "fuel_guarded_inversion_FStar.Seq.Base.seq",
+        "proj_equation_FStar.Seq.Base.MkSeq_l",
+        "projection_inverse_FStar.Seq.Base.MkSeq_l"
+      ],
+      0
+    ],
+    [
+      "FStar.Seq.Base.append_empty_r",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.Base.op_At",
+        "equation_FStar.Seq.Base.append",
+        "equation_FStar.Seq.Base.createEmpty",
+        "fuel_guarded_inversion_FStar.Seq.Base.seq",
+        "proj_equation_FStar.Seq.Base.MkSeq_l",
+        "projection_inverse_FStar.Seq.Base.MkSeq_l"
+      ],
       0
     ]
   ]

@@ -236,109 +236,80 @@ end);
 let filename = (FStar_List.hd filenames)
 in (
 
-let try_convert_file_name_to_windows = (fun s -> try
-(match (()) with
-| () -> begin
-(
-
-let uu____204 = (FStar_Util.run_proc "which" "cygpath" "")
-in (match (uu____204) with
-| (uu____208, t_out, uu____210) -> begin
-(match ((not (((FStar_Util.trim_string t_out) = "/usr/bin/cygpath")))) with
-| true -> begin
-s
-end
-| uu____211 -> begin
-(
-
-let uu____212 = (FStar_Util.run_proc "cygpath" (Prims.strcat "-m " s) "")
-in (match (uu____212) with
-| (uu____216, t_out, uu____218) -> begin
-(FStar_Util.trim_string t_out)
-end))
-end)
-end))
-end)
-with
-| uu____220 -> begin
-s
-end)
-in (
-
-let filename = (try_convert_file_name_to_windows filename)
+let filename = (FStar_Parser_Dep.try_convert_file_name_to_windows filename)
 in ((
 
-let uu____223 = (
+let uu____201 = (
 
-let uu____224 = (FStar_Options.verify_module ())
-in (uu____224 <> []))
-in (match (uu____223) with
+let uu____202 = (FStar_Options.verify_module ())
+in (uu____202 <> []))
+in (match (uu____201) with
 | true -> begin
 (FStar_Util.print_warning "Interactive mode; ignoring --verify_module")
 end
-| uu____227 -> begin
+| uu____205 -> begin
 ()
 end));
 (FStar_Interactive.interactive_mode filename);
-))));
+)));
 )
 end
-| uu____228 -> begin
+| uu____206 -> begin
 (
 
-let uu____229 = (FStar_Options.doc ())
-in (match (uu____229) with
+let uu____207 = (FStar_Options.doc ())
+in (match (uu____207) with
 | true -> begin
 (FStar_Fsdoc_Generator.generate filenames)
 end
-| uu____230 -> begin
+| uu____208 -> begin
 (
 
-let uu____231 = (FStar_Options.indent ())
-in (match (uu____231) with
+let uu____209 = (FStar_Options.indent ())
+in (match (uu____209) with
 | true -> begin
 (FStar_Indent.generate filenames)
 end
-| uu____232 -> begin
+| uu____210 -> begin
 (match (((FStar_List.length filenames) >= (Prims.parse_int "1"))) with
 | true -> begin
 (
 
 let verify_mode = (
 
-let uu____237 = (FStar_Options.verify_all ())
-in (match (uu____237) with
+let uu____215 = (FStar_Options.verify_all ())
+in (match (uu____215) with
 | true -> begin
 ((
 
-let uu____239 = (
+let uu____217 = (
 
-let uu____240 = (FStar_Options.verify_module ())
-in (uu____240 <> []))
-in (match (uu____239) with
+let uu____218 = (FStar_Options.verify_module ())
+in (uu____218 <> []))
+in (match (uu____217) with
 | true -> begin
 ((FStar_Util.print_error "--verify_module is incompatible with --verify_all");
 (FStar_All.exit (Prims.parse_int "1"));
 )
 end
-| uu____244 -> begin
+| uu____222 -> begin
 ()
 end));
 FStar_Parser_Dep.VerifyAll;
 )
 end
-| uu____245 -> begin
+| uu____223 -> begin
 (
 
-let uu____246 = (
+let uu____224 = (
 
-let uu____247 = (FStar_Options.verify_module ())
-in (uu____247 <> []))
-in (match (uu____246) with
+let uu____225 = (FStar_Options.verify_module ())
+in (uu____225 <> []))
+in (match (uu____224) with
 | true -> begin
 FStar_Parser_Dep.VerifyUserList
 end
-| uu____250 -> begin
+| uu____228 -> begin
 FStar_Parser_Dep.VerifyFigureItOut
 end))
 end))
@@ -347,28 +318,28 @@ in (
 let filenames = (FStar_Dependencies.find_deps_if_needed verify_mode filenames)
 in (
 
-let uu____253 = (FStar_Universal.batch_mode_tc filenames)
-in (match (uu____253) with
+let uu____231 = (FStar_Universal.batch_mode_tc filenames)
+in (match (uu____231) with
 | (fmods, dsenv, env) -> begin
 (
 
-let module_names_and_times = (FStar_All.pipe_right fmods (FStar_List.map (fun uu____289 -> (match (uu____289) with
+let module_names_and_times = (FStar_All.pipe_right fmods (FStar_List.map (fun uu____267 -> (match (uu____267) with
 | (x, t) -> begin
 (((FStar_Universal.module_or_interface_name x)), (t))
 end))))
 in ((report_errors module_names_and_times);
 (
 
-let uu____302 = (
+let uu____280 = (
 
-let uu____306 = (FStar_All.pipe_right fmods (FStar_List.map Prims.fst))
-in ((uu____306), (env)))
-in (codegen uu____302));
+let uu____284 = (FStar_All.pipe_right fmods (FStar_List.map Prims.fst))
+in ((uu____284), (env)))
+in (codegen uu____280));
 (finished_message module_names_and_times (Prims.parse_int "0"));
 ))
 end))))
 end
-| uu____315 -> begin
+| uu____293 -> begin
 (FStar_Util.print_error "no file provided\n")
 end)
 end))
@@ -379,7 +350,7 @@ end)
 end)))
 
 
-let main = (fun uu____322 -> try
+let main = (fun uu____300 -> try
 (match (()) with
 | () -> begin
 ((go ());
@@ -393,39 +364,39 @@ with
 | true -> begin
 (FStar_Errors.handle_err false e)
 end
-| uu____330 -> begin
+| uu____308 -> begin
 ()
 end);
 (
 
-let uu____331 = (FStar_Options.trace_error ())
-in (match (uu____331) with
+let uu____309 = (FStar_Options.trace_error ())
+in (match (uu____309) with
 | true -> begin
 (
 
-let uu____332 = (FStar_Util.message_of_exn e)
+let uu____310 = (FStar_Util.message_of_exn e)
 in (
 
-let uu____333 = (FStar_Util.trace_of_exn e)
-in (FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____332 uu____333)))
+let uu____311 = (FStar_Util.trace_of_exn e)
+in (FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____310 uu____311)))
 end
-| uu____334 -> begin
+| uu____312 -> begin
 (match ((not ((FStar_Errors.handleable e)))) with
 | true -> begin
 (
 
-let uu____335 = (FStar_Util.message_of_exn e)
-in (FStar_Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" uu____335))
+let uu____313 = (FStar_Util.message_of_exn e)
+in (FStar_Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" uu____313))
 end
-| uu____336 -> begin
+| uu____314 -> begin
 ()
 end)
 end));
 (cleanup ());
 (
 
-let uu____339 = (FStar_Errors.report_all ())
-in (FStar_All.pipe_right uu____339 Prims.ignore));
+let uu____317 = (FStar_Errors.report_all ())
+in (FStar_All.pipe_right uu____317 Prims.ignore));
 (report_errors []);
 (FStar_All.exit (Prims.parse_int "1"));
 )
