@@ -255,7 +255,6 @@ let seq_com' env c1 c2 l h0 =
             assert (low_equiv env h0 ==> low_equiv env h1) ;
             assert (low_equiv env h1 ==> low_equiv env h2)
 
-#set-options "--z3rlimit 5"
 
 val seq_com : env:label_fun -> c1:com -> c2:com -> l:label ->
   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
@@ -275,12 +274,73 @@ let seq_com env c1 c2 l =
              env,pc:l |- if e <> 0 then ct else cf
 *)
 
-(* #set-options "--z3rlimit 100" *)
+val cond_inv_com' : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> h0:heap ->
+  Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l)))
+          (ensures  (inv_com' env (If e ct cf) l h0))
+let cond_inv_com' env e ct cf l h0 =
+  let Some v, h0' = reify (interpret_exp_st e) h0 in
+  if v = 0
+  then match reify (interpret_com_st cf h0) h0 with
+    | None, _ -> ()
+    | Some (), h1 -> ()
+  else match reify (interpret_com_st cf h0) h0 with
+    | None, _ -> ()
+    | Some (), h1 -> ()
 
-(* val cond_com : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> *)
-(*   Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l))) *)
-(*          (ensures  (ni_com env (If e ct cf) l)) *)
-(* let cond_com _ _ _ _ _ = () *)
+  (* Works too but takes 20s more *)
+  (* let c = if v = 0 then cf else ct in *)
+  (* match reify (interpret_com_st c h0) h0 with *)
+  (* | None, _ -> () *)
+  (* | Some (), h1 -> () *)
+
+
+val cond_ni_com' : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> h0:rel heap ->
+  Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l)))
+          (ensures  (ni_com' env (If e ct cf) l h0))
+let cond_ni_com' env e ct cf l h0 =
+  if not (FStar.StrongExcludedMiddle.strong_excluded_middle (low_equiv env h0))
+  then ()
+  else
+    let R h0l h0r = h0 in
+    let Some vl, h0l' = reify (interpret_exp_st e) h0l in
+    let Some vr, h0r' = reify (interpret_exp_st e) h0r in
+    if Low? l
+    then begin
+      assert (vl == vr) ;
+      let c = if vl = 0 then cf else ct in
+      assert (ni_com env c l) ;
+      match reify (interpret_com_st (If e ct cf) h0l) h0l with
+      | None, _ -> ()
+      | Some (), h1l ->
+          match reify (interpret_com_st (If e ct cf) h0r) h0r with
+          | None, _ -> ()
+          | Some (), h1r ->
+            assert (low_equiv env h0 ==> low_equiv env (R h1l h1r))
+      end
+    else
+      (* h0 and h1 are low_equiv since cl and cr cannot write at low cells *)
+      match reify (interpret_com_st (If e ct cf) h0l) h0l with
+      | None, _ -> ()
+      | Some (), h1l ->
+        match reify (interpret_com_st (If e ct cf) h0r) h0r with
+        | None, _ -> ()
+        | Some (), h1r ->
+          cond_inv_com' env e ct cf l h0l ;
+          cond_inv_com' env e ct cf l h0r ;
+          assert (low_equiv env h0 ==> low_equiv env (R h1l h1r))
+
+#set-options "--z3rlimit 5"
+
+val cond_com : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label ->
+  Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l)))
+         (ensures  (ni_com env (If e ct cf) l))
+let cond_com env e ct cf l =
+  forall_intro
+    (fun (h0:rel heap) ->
+      cond_ni_com' env e ct cf l h0 <: Lemma (ni_com' env (If e ct cf) l h0)) ;
+  forall_intro
+    (fun (h0:heap) ->
+      cond_inv_com' env e ct cf l h0 <: Lemma (inv_com' env (If e ct cf) l h0))
 
 (* #set-options "--z3rlimit 5" *)
 
