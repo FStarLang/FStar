@@ -45,7 +45,7 @@ type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type cipher = b:bytes
 type nonce = B.lbytes noncesize
 
-assume private val ae_key_region: (r:MR.rid{extends r root /\ is_eternal_region r /\ is_below r root /\ disjoint r id_table_region})
+assume val ae_key_region: (r:MR.rid{extends r root /\ is_eternal_region r /\ is_below r root /\ disjoint r id_table_region})
 //private let ae_key_region = 
 //  recall_region id_table_region;
 //  new_region root
@@ -76,7 +76,7 @@ let get_index k = k.i
 *)
 let safe_key_gen parent m0 k m1 =
   // Reason about regions (HyperHeap)
-  HH.modifies Set.empty m0.h m1.h
+  HH.modifies_one k.region m0.h m1.h
   /\ extends k.region parent
   /\ fresh_region k.region m0.h m1.h
   /\ is_below k.region ae_key_region
@@ -108,6 +108,15 @@ let keygen i =
 val leak_key: k:key{(ae_dishonest k.i) \/ ~(b2t ae_ind_cca)} -> Tot (raw_k:aes_key{raw_k=k.raw})
 let leak_key k =
   k.raw
+
+val leak_keyGT: k:key -> GTot (raw_k:aes_key{raw_k=k.raw})
+let leak_keyGT k =
+  k.raw
+
+val leak_logGT: k:key -> GTot (log:log_t k.i k.region{log=k.log})
+let leak_logGT k =
+  k.log
+
 
 (**
    The coerce function transforms a raw aes_key into an abstract key. The function is stateful,
@@ -174,9 +183,9 @@ val decrypt: #(i:ae_id) -> n:nonce -> k:key{k.i=i} -> c:cipher{B.length c >= aea
         	==> (Some? (aead_decryptT AES_128_CCM k.raw n empty_bytes c) 
         	  ==> Some? res /\ Some?.v res == coerce (Some?.v (aead_decryptT AES_128_CCM k.raw n empty_bytes c))))
       \/
-        (( (b2t ae_ind_cca) /\ ae_honest i ) 
+        (( (b2t ae_ind_cca) /\ ae_honest i /\ Some? res) 
         	==> (MM.defined k.log n h0 /\ (fst (MM.value k.log n h0) == c ) 
-        	  ==> Some? res /\ Some?.v res == snd (MM.value k.log n h0)))
+        	  /\ Some?.v res == snd (MM.value k.log n h0)))
         )
   ))
 let decrypt #i n k c =

@@ -18,3 +18,5 @@ let keygen = AE.keygen
 let coerce_key = AE.coerce_key
 
 let leak_key = AE.leak_key
+
+let ae_key_region = AE.ae_key_region

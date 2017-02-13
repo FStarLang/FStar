@@ -112,12 +112,16 @@ type ae_dishonest (k_i:ae_id) =
 
 type ae_fixed (k_i:ae_id) = 
   fixed (fst k_i.i) /\ fixed(snd k_i.i)
+  
+
 
 val ae_honestST: k_i:ae_id{ae_fixed k_i} -> ST(b:bool{(b ==> (ae_honest k_i)) /\ (not b ==> (ae_dishonest k_i))})
   (requires (fun h0 -> True))
   (ensures (fun h0 b h1 ->
     modifies_none h0 h1
     /\ MR.m_contains id_table h1
+    /\ (ae_honest k_i \/ ae_dishonest k_i)
+    /\ ae_fixed k_i
   ))
 let ae_honestST k_i =
   let h1 = honestST (fst k_i.i) in 

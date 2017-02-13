@@ -10,6 +10,7 @@ open Box.PlainPKAE
 open Box.PlainAE
 open Box.PlainDH
 open Box.Indexing
+open CoreCrypto
 
 module B = Platform.Bytes
 module MR = FStar.Monotonic.RRef
@@ -23,21 +24,24 @@ type rid = FStar.Monotonic.Seq.rid
      - We maintain a global log, that maps a nonce and an AE.key to a message.
      - When encrypting, we add a new log entry under that nonce AE.key involved.
 *)
-val pkae_table_region: (r:MR.rid{ extends r root /\ is_eternal_region r /\ is_below r root})
-let pkae_table_region = new_region root
+assume val pkae_table_region: (r:MR.rid)//{ extends r root /\ is_eternal_region r /\ is_below r root /\ disjoint r id_table_region})
+//let pkae_table_region = new_region root
 
 
 type pkae_afternm_table_key = (nonce*ae_id)
 type pkae_afternm_table_value = (protected_pkae_plain)
-type pkae_afternm_table_range = fun pkae_table_key -> pkae_table_value
-type pkae_afternm_table_inv (f:MM.map' pkae_table_key pkae_table_range) = True
-let pkae_afternm_table = MM.alloc #pkae_table_region #pkae_table_key #pkae_table_range #pkae_table_inv
+type pkae_afternm_table_range = fun pkae_afternm_table_key -> pkae_afternm_table_value
+type pkae_afternm_table_inv (f:MM.map' pkae_afternm_table_key pkae_afternm_table_range) = True
+assume val pkae_afternm_table: MM.t pkae_table_region pkae_afternm_table_key pkae_afternm_table_range pkae_afternm_table_inv
+//let pkae_afternm_table = MM.alloc #pkae_table_region #pkae_table_key #pkae_table_range #pkae_table_inv
 
 type pkae_beforenm_table_key = (ae_id)
 type pkae_beforenm_table_value = (AE.key)
-type pkae_beforenm_table_range = fun pkae_table_key -> pkae_table_value
-type pkae_beforenm_table_inv (f:MM.map' pkae_table_key pkae_table_range) = True
-let pkae_beforenm_table = MM.alloc #pkae_table_region #pkae_table_key #pkae_table_range #pkae_table_inv
+type pkae_beforenm_table_range = fun (i:pkae_beforenm_table_key) -> (k:pkae_beforenm_table_value{AE.get_index k = i})
+type pkae_beforenm_table_inv (f:MM.map' pkae_beforenm_table_key pkae_beforenm_table_range) = True
+assume val pkae_beforenm_table:  MM.t pkae_table_region pkae_beforenm_table_key pkae_beforenm_table_range pkae_beforenm_table_inv
+//let pkae_beforenm_table = MM.alloc #pkae_table_region #pkae_table_key #pkae_table_range #pkae_table_inv
+
 
 noeq abstract type pkae_pkey (pk_id:id) =
   | PKey: dh_pk:dh_pkey{DH.pk_get_index dh_pk=pk_id} -> pkae_pkey pk_id
@@ -59,37 +63,77 @@ val encrypt_beforenm: #(pk_id:id) ->
 	              #(sk_id:id) -> 
 	              pk:pkae_pkey pk_id{fixed pk_id} -> 
 	              sk:pkae_skey sk_id{fixed sk_id} ->
-		      ST (k:AE.key{AE.get_index k = generate_ae_id pk_id sk_id})
-  (requires (fun h0 -> True))
+		      ST (k:AE.key)
+  (requires (fun h0 -> 
+    let i = generate_ae_id pk_id sk_id in
+    ae_fixed i
+    /\ (ae_honest i \/ ae_dishonest i)
+  ))
   (ensures (fun h0 k h1 -> 
     let i = generate_ae_id pk_id sk_id in
-    ((ae_honest i /\ pkae)
-      ==> MR.witnessed (MM.contains pkae_beforenm_table ae_i k))
-    \/
-    ((ae_dishonest i \/ ~(b2t pkae))
-      ==> leak_key k = prf_odhT pk.dh_pk sk.dh_sk)
+    AE.get_index k = i
+    /\ ((ae_honest i /\ b2t pkae)
+      ==> MR.witnessed (MM.contains pkae_beforenm_table i k)
+      )
+    //\/
+    //((ae_dishonest i \/ ~(b2t pkae))
+    //  ==> (modifies_none h0 h1
+    //	 ///\ leak_key k = prf_odhT sk.dh_sk pk.dh_pk)
+    //	)
+    //))
+    /\ AE.get_index k = generate_ae_id pk_id sk_id
   ))
 let encrypt_beforenm #pk_id #sk_id pk sk =
   MR.m_recall pkae_beforenm_table;
-  let ae_i = generate_ae_id pk_id sk_id in
-  let k= prf_odh sk.dh_sk pk.dh_pk in
-  if honestST i && pkae then
-    match MM.lookup pkae_beforenm_table ae_i with
-    | Some k -> k
+  let i = generate_ae_id pk_id sk_id in
+  let ae_honest_i = ae_honestST i in
+  let k = prf_odh sk.dh_sk pk.dh_pk in
+  if ae_honest_i && pkae then
+    (assert(ae_honest i /\ b2t pkae);
+    match MM.lookup pkae_beforenm_table i with
+    | Some k' -> 
+      //assert(k==k');
+      assert(ae_honest i /\ b2t pkae ==> MR.witnessed (MM.contains pkae_beforenm_table i k'));
+      admit();
+      k'
     | None ->
-      MM.extend pkae_beforenm_table ae_i k;
-      k
-  else
-    k
+      //assert(MM.fresh pkae_beforenm_table i);
+      MM.extend pkae_beforenm_table i k;
+      assert(ae_honest i /\ b2t pkae ==> MR.witnessed (MM.contains pkae_beforenm_table i k));
+      admit();
+      k)
+  else(
+    //assert(ae_honest i /\ b2t pkae); 
+    admit();
+    k)
 
+
+// Implement invariant that states equality of logs before and after encrypt_afternm.
+//   - quantify over all nonces and prove that lookups on both logs result in the same values.
 val encrypt_afternm: k:AE.key ->
-		     n:nonce{ MM.fresh pkae_afternm_table (n,AE.get_index k)} ->
+		     n:nonce ->
 		     p:protected_pkae_plain{PlainPKAE.get_index p = AE.get_index k} ->
 		     ST c
-  (requires (fun h0 -> True))
+  (requires (fun h0 -> 
+    MM.fresh pkae_afternm_table (n,AE.get_index k) h0
+  ))
   (ensures (fun h0 c h1 -> 
-    let i = AE.get_index k in
-    MR.witnessed (MM.contains pkae_afternm_table (n,i) p)))
+   // Implement GTot function to get the log/raw_key/...
+   let i = AE.get_index k in
+   let k_log = leak_logGT k in
+   let k_raw = leak_keyGT k in
+    MR.m_contains k_log h1
+    /\ (
+	( (ae_dishonest i \/ ~(b2t pkae))
+	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k_raw n empty_bytes (PlainPKAE.repr p))
+      \/ 
+        ( (ae_honest i /\ b2t ae_ind_cca)
+	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k_raw n empty_bytes (createBytes (PlainPKAE.length #i p) 0z) )
+      )
+    /\ (ae_dishonest i \/ ae_honest i)
+    /\ MR.witnessed (MM.contains k_log n (c,ae_message_wrap p))
+    /\ MR.witnessed (MM.contains pkae_afternm_table (n,i) p)
+  ))
 let encrypt_afternm k n p =
   let ae_i = AE.get_index k in
   let ae_m = ae_message_wrap #ae_i p in
