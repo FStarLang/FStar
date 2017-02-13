@@ -49,3 +49,50 @@ let rec ni_p1 lo hi env h =
   | true , false -> ni_p1 lo hi env (R hl hr')
   | false, true  -> ni_p1 lo hi env (R hl' hr)
   | false, false -> ni_p1 lo hi env (R hl' hr')
+
+
+let op_Star = op_Multiply
+
+reifiable val fac (a:id) (n:id{a <> n}): gh:heap -> 
+  IntStore unit
+  (requires (fun h -> h == gh))
+  (ensures  (fun h1 _ h2 -> True))
+  (decreases (let x = sel gh n in if x < 0 then 0 else x))
+reifiable let rec fac a n gh =
+  let vn = read n in 
+  if vn <= 0 then 
+    write a 1
+  else
+  begin
+    let va = read a in 
+    let an = va * vn in 
+    write a an;
+    let n_1 = vn - 1 in 
+    write n n_1;
+    let h = IS?.get () in 
+    fac a n h
+  end
+
+let fac_r a n h = (snd (reify (fac a n h) h))
+
+#set-options "--z3rlimit 30"
+
+val fac_mon (a:id) (n:id{a<>n}) (h:rel heap) :
+  Lemma
+  (requires (sel (R?.l h) n <= sel (R?.r h) n /\ 
+             sel (R?.l h) a <= sel (R?.r h) a /\
+             sel (R?.l h) a >= 0 /\
+             sel (R?.r h) a >= 0))
+  (ensures  (sel (fac_r a n (R?.l h)) a <= sel (fac_r a n (R?.r h)) a))
+  (decreases (let x = sel (R?.l h) n in let y =  sel (R?.r h) n in 
+              (if x < 0 then 0 else x) + (if y < 0 then 0 else y)))
+let rec fac_mon a n h = 
+  let R hl hr = h in 
+  let hl'' = upd hl a (sel hl a * sel hl n) in 
+  let hl' = upd hl'' n (sel hl'' n - 1) in 
+  let hr'' = upd hr a (sel hr a * sel hr n) in
+  let hr' = upd hr'' n (sel hr'' n - 1) in
+  match sel hl n <= 0 , sel hr n <= 0 with
+  | true , true  -> ()
+  | true , false -> fac_mon a n (R hl hr')
+  | false, false -> fac_mon a n (R hl' hr')
