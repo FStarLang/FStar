@@ -183,20 +183,35 @@ let sub_com _ _ _ _ = ()
       (first one to prevent explicit, second to prevent implicit flows)
 *)
 
-(* let assign_inv_com0 (env:label_fun) (e:exp) (r:id) *)
-(*   : Lemma (requires True) *)
-(*     (ensures (forall h0. let Some h1 = interpret_com h0 (Assign r e) in h1 = upd h0 r (interpret_exp h0 e))) *)
-(* = () *)
+let assign_inv_com0 (env:label_fun) (e:exp) (r:id) (ne:squash(ni_exp env e (env r))) (h0:rel heap)
+  : Lemma (ni_com' env (Assign r e) (env r) h0)
+=
+  FStar.Squash.give_proof ne ;
+  let Some vr, h0r' = reify (interpret_exp_st e) (R?.r h0) in
+  let Some vl, h0l' = reify (interpret_exp_st e) (R?.l h0) in
+  match reify (interpret_com_st (Assign r e) (R?.l h0)) (R?.l h0) with
+  | Some (), h1l ->
+    begin match reify (interpret_com_st (Assign r e) (R?.r h0)) (R?.r h0) with
+    | Some (), h1r -> assert (h1l = upd (R?.l h0) r vl /\ h1r = upd (R?.r h0) r vr)
+    | None, _ -> ()
+    end
+  | None, _ -> ()
 
-(*   let assign_inv_com' (env:label_fun) (e:exp) (r:id) *)
-(*     : Lemma (requires True) *)
-(*       (ensures (forall hopt. inv_com' env (Assign r e) (env r) hopt)) *)
-(*   = () *)
+let assign_inv_com' (env:label_fun) (e:exp) (r:id) (h0:heap)
+ : Lemma (inv_com' env (Assign r e) (env r) h0)
+=
+  let Some v, h0' = reify (interpret_exp_st e) h0 in
+  match reify (interpret_com_st (Assign r e) h0) h0 with
+  | None, h1 -> ()
+  | Some (), h1 ->
+    assert (h1 == upd h0 r v)
 
 val assign_com : env:label_fun -> e:exp -> r:id ->
   Lemma (requires (ni_exp env e (env r)))
         (ensures  (ni_com env (Assign r e) (env r)))
-let assign_com _ _ _ = ()
+let assign_com env e r =
+  FStar.Classical.forall_intro (assign_inv_com0 env e r (FStar.Squash.get_proof (ni_exp env e (env r)))) ;
+  FStar.Classical.forall_intro (assign_inv_com' env e r)
 
 (* Sequencing rule for commands
 
