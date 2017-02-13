@@ -45,18 +45,10 @@ type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type cipher = b:bytes
 type nonce = B.lbytes noncesize
 
-
-let ae_region_color = -1
-
-
-private val ae_key_region: (r:MR.rid{extends r root /\ is_eternal_region r /\ (color r = ae_region_color) /\ is_below r root /\ disjoint r id_table_region})
-private let ae_key_region = 
-  recall_region id_table_region;
-  new_colored_region root ae_region_color
-
-
-//type log_entry i = (protected_ae_plain i) * cipher * nonce
-//type log_t (i:ae_id) (r:rid) = m_rref r (seq (log_entry i)) grows
+assume private val ae_key_region: (r:MR.rid{extends r root /\ is_eternal_region r /\ is_below r root /\ disjoint r id_table_region})
+//private let ae_key_region = 
+//  recall_region id_table_region;
+//  new_region root
 
 type log_key = nonce
 type log_value (i:ae_id) = (cipher*protected_ae_plain i)
@@ -87,7 +79,6 @@ let safe_key_gen parent m0 k m1 =
   HH.modifies Set.empty m0.h m1.h
   /\ extends k.region parent
   /\ fresh_region k.region m0.h m1.h
-  /\ color k.region = ae_region_color
   /\ is_below k.region ae_key_region
   // Reason about memory (HyperStack)
   /\ m_contains k.log m1
@@ -105,7 +96,7 @@ val keygen: i:ae_id -> ST (k:key{k.i=i})
   ))
 let keygen i =
   let rnd_k = random keysize in
-  let region = new_colored_region ae_key_region ae_region_color in
+  let region = new_region ae_key_region in
   let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
   Key #i #region rnd_k log
 
@@ -114,7 +105,7 @@ let keygen i =
    The leak_key function transforms an abstract key into a raw aes_key.
    The refinement type on the key makes sure that no honest keys can be leaked.
 *)
-val leak_key: k:key{(ae_dishonest k.i) \/ ~(b2t ae_ind_cca)} -> Tot aes_key 
+val leak_key: k:key{(ae_dishonest k.i) \/ ~(b2t ae_ind_cca)} -> Tot (raw_k:aes_key{raw_k=k.raw})
 let leak_key k =
   k.raw
 
@@ -123,18 +114,13 @@ let leak_key k =
    as we need to allocate space in memory for the key. The refinement type on the key makes sure that
    abstract keys created this way can not be honest.
 *)
-val coerce_key: i:ae_id{(ae_dishonest i) \/ ~(prf_odh)} -> aes_key -> ST (k:key{k.i=i})
+val coerce_key: i:ae_id{(ae_dishonest i) \/ ~(prf_odh)} -> raw_k:aes_key -> ST (k:key{k.i=i /\ k.raw = raw_k})
   (requires (fun _ -> True))
   (ensures  (safe_key_gen ae_key_region))
 let coerce_key i raw = 
-  let region = new_colored_region ae_key_region ae_region_color in
+  let region = new_region ae_key_region in
   let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
   Key #i #region raw log
-
-
-(**
-   safe_log_append makes sure that new entries added to the log are appended in a memory-safe way.
-*)
 
 (**
    Encrypt a a message under a key. Idealize if the key is honest and ae_ind_cca true.
