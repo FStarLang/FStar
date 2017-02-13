@@ -192,7 +192,7 @@ let intros : tac<(list<name>)>
 
 let intros_no_names = bind intros (fun _ -> ret ())
 
-let imp_intro : tac<name> = failwith "Not yet implemented"
+let imp_intro : tac<name> = fun p -> failwith "Not yet implemented: imp_intro"
 
 let split : tac<unit>
     = with_cur_goal (fun goal ->
@@ -237,8 +237,8 @@ let rewrite (x:name) (e:term) : tac<unit>
         with _ ->
              fail (BU.format1 "Variable not found: %s" (Print.bv_to_string x)))
 
-let clear_hd (x:name) : tac<unit> = ret ()
-let revert_hd (xs:list<name>) : tac<unit> = ret()
+let clear_hd (x:name) : tac<unit> = fun p -> failwith "Not yet implemented: clear_hd"
+let revert_hd (xs:list<name>) : tac<unit> = fun p -> failwith "Not yet implemented: revert_hd"
 
 (* We often have VCs of the form
          forall x. x==e ==> P
@@ -277,7 +277,7 @@ let at_most_one (t:tac<'a>) : tac<'a> =
     | [_] -> ret a
     | _ -> fail "expected at most one goal remaining"))
 
-let merge_sub_goals : tac<unit> = failwith "NYI"
+let merge_sub_goals : tac<unit> = fun p -> failwith "Not yet implemented: merge_sub_goals"
 
 let visit_strengthen (try_strengthen:tac<unit>)
     : tac<unit>
@@ -302,16 +302,17 @@ let visit_strengthen (try_strengthen:tac<unit>)
                         ret ())))
 
 let rec simplify_eq_impl : tac<unit>
-    = with_cur_goal (fun goal ->
-      match destruct_equality_imp goal.goal_ty with
-      | Some (x, e, rhs) ->
-        bind imp_intro (fun eq_h ->
-        bind (rewrite x e) (fun _ ->
-        bind (exact eq_h) (fun _ ->
-        //get rid of the eq_h in the context
-        bind (clear_hd eq_h) (fun _ ->
-        //dismiss the first sub-goal, i.e., prove that x=e
-        //recursively visit rhs[e/x]
-        visit_strengthen simplify_eq_impl))))
-      | _ ->
-        fail "Not an equality implication")
+    = fun p -> 
+          with_cur_goal (fun goal ->
+          match destruct_equality_imp goal.goal_ty with
+          | Some (x, e, rhs) ->
+            bind imp_intro (fun eq_h ->
+            bind (rewrite x e) (fun _ ->
+            bind (exact eq_h) (fun _ ->
+            //get rid of the eq_h in the context
+            bind (clear_hd eq_h) (fun _ ->
+            //dismiss the first sub-goal, i.e., prove that x=e
+            //recursively visit rhs[e/x]
+            visit_strengthen simplify_eq_impl))))
+          | _ ->
+            fail "Not an equality implication") p
