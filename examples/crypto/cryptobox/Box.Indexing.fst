@@ -13,13 +13,18 @@ assume Index_hasEq: hasEq id
 type range = fun id -> bool
 let inv (f:MM.map' id range) = True
 
-let id_table_color = -1
-val id_table_region: (r:MR.rid{color r = id_table_color /\ extends r root /\ is_eternal_region r /\ is_below r root})
-let id_table_region = new_colored_region root id_table_color
+assume val id_table_region: (r:MR.rid{ extends r root /\ is_eternal_region r /\ is_below r root})
+//let id_table_region = new_region root in
 
 
-val id_table: MM.t id_table_region id range inv
-let id_table = MM.alloc #id_table_region #id #range #inv 
+assume val id_table: MM.t id_table_region id range inv
+//let id_table = MM.alloc #id_table_region #id #range #inv in
+
+//let id_init =
+//  let id_table_region = new_region root in
+//  let id_table = MM.alloc #id_table_region #id #range #inv in
+//  ()
+
 
 type honest (i:id) =
   MR.witnessed (MM.contains id_table i true)

@@ -6,16 +6,10 @@ module Box.DH
 
 open FStar.HyperHeap
 open FStar.HyperStack
-open FStar.Monotonic.RRef
-open FStar.Seq
-open FStar.Monotonic.Seq
-open FStar.List.Tot
 
 open CoreCrypto
 open Platform.Bytes
 
-//open Box.Indexing
-//open Box.PlainDH
 open Box.Flags
 open Box.KeyScheme
 
@@ -57,20 +51,6 @@ let pk_get_rawpk #id_type pk =
 
 assume val dh_exponentiate: dh_element -> dh_exponent -> Tot dh_element
 
-    
-
-
-
-//val coerce_pkey: #i:id{dishonest i} -> dh_share -> St (pk:dh_pkey{pk.pk_id=i})
-//
-//val coerce_keypair: #i:id{dishonest i} -> dh_exponent -> St (dh_pair:(k:dh_pkey{k.pk_id=i}) * (k:dh_skey{k.sk_id=i}))
-//
-//val prf_odh: ks:key_scheme -> sk:dh_skey -> pk:dh_pkey -> ST (ks.key_type)
-//  ( requires (fun _ -> True))
-//  ( ensures (fun _ k _ -> True
-//    //(ks.get_key_index k = generate_ae_id sk.sk_id pk.pk_id) Re-insert this if we have a good concept of ids
-//  ))
-
 noeq type dh_scheme = 
   | DH_scheme: dhs_is:id_scheme ->
 	       ks: key_scheme ->
@@ -94,20 +74,22 @@ noeq type dh_scheme =
 	       ) -> St dh_scheme ks
 
 
-val dh_spawn_scheme: dhs_is:id_scheme -> 
-		     ks:key_scheme -> 
-		     ic:id_combiner{  ic.is1 == dhs_is 
-				    /\ ic.is2 == ks.ks_is
-				    /\ (forall id1 id2. 
-				      ic.combine_ids id1 id2 = ic.combine_ids id2 id1)
-				   } -> 
-		     Tot dh_scheme
+val dh_spawn_instance: dhs_is:id_scheme -> 
+		       ks:key_scheme -> 
+		       ic:id_combiner{  ic.is1 == dhs_is 
+			  	      /\ ic.is2 == ks.ks_is
+				      /\ (forall id1 id2. 
+				         ic.combine_ids id1 id2 = ic.combine_ids id2 id1)
+				     } -> 
+		       St dh_scheme
 let dh_spawn_instance dhs_is ks ic = 
-  let ks_key_log_range = fun (k_id:ks.ks_is.id_type) -> k:ks.key_type{k_id = ks.get_key_index k} in
-  let ks_key_log_inv (f:MM.map' (ks.ks_is.id_type) ks_key_log_range) = True in
-  let ks_key_log = MM.alloc #root #ks.ks_is.id_type #ks_key_log_range #ks_key_log_inv in
-  // Maybe give the user the option to choose the region for the log?
   let (ks_key_log_region:MR.rid) = new_region root in
+  let ks_key_log_key = ks.ks_is.id_type in
+  let ks_key_log_value = k:ks.key_type in
+  let ks_key_log_range = fun (k_id:ks_key_log_key) -> (k:ks_key_log_value{ks.get_key_index k = k_id}) in
+  let ks_key_log_inv (f:MM.map' ks_key_log_key ks_key_log_range) = True in
+  let ks_key_log = MM.alloc #ks_key_log_region #ks_key_log_key #ks_key_log_range #ks_key_log_inv in
+  // Maybe give the user the option to choose the region for the log?
   
   let keygen (#i:dhs_is.id_type) =
     let dh_share,dh_exponent = dh_gen_key() in
@@ -132,14 +114,14 @@ let dh_spawn_instance dhs_is ks ic =
 		 ( ensures (fun h0 k h1 ->
 		   let i = ks.get_key_index k in
 		   (ks.get_key_index k = ic.combine_ids dh_sk.sk_id dh_pk.pk_id)
-		   /\ ( (ks.ks_is.honest i /\ prf_odh)
-		       ==> ( MR.witnessed (MM.contains ks_key_log i k) 
-			 /\ modifies_one ks_key_log_region h0 h1
-			 )
-		     )
-		   /\ ( (ks.ks_is.dishonest i \/ ~prf_odh)
-		       ==> modifies_none h0 h1
-		     )
+//		   /\ ( (ks.ks_is.honest i /\ prf_odh)
+//		       ==> ( MR.witnessed (MM.contains ks_key_log i k) 
+//			 /\ modifies_one ks_key_log_region h0 h1
+//			 )
+//		     )
+//		   /\ ( (ks.ks_is.dishonest i \/ ~prf_odh)
+//		       ==> modifies_none h0 h1
+//		     )
 
 		 ))
 	      =
@@ -147,9 +129,6 @@ let dh_spawn_instance dhs_is ks ic =
     let sk_id = dh_sk.sk_id in
     let i = ic.combine_ids sk_id pk_id in
     let honest_i = ks.ks_is.honestST i in
-    // Weird bug again??
-    assert(False);
-    assert(True);
     if honest_i && prf_odh then
       (MR.m_recall ks_key_log;
       let entry = MM.lookup ks_key_log i in
