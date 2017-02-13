@@ -4,6 +4,7 @@ open Rel
 open WhileReify
 open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreExcFixed
+open FStar.Squash
 open FStar.Classical
 
 (****************************** Preliminaries ******************************)
@@ -210,8 +211,8 @@ val assign_com : env:label_fun -> e:exp -> r:id ->
   Lemma (requires (ni_exp env e (env r)))
         (ensures  (ni_com env (Assign r e) (env r)))
 let assign_com env e r =
-  FStar.Classical.forall_intro (assign_inv_com0 env e r (FStar.Squash.get_proof (ni_exp env e (env r)))) ;
-  FStar.Classical.forall_intro (assign_inv_com' env e r)
+  forall_intro (assign_inv_com0 env e r (FStar.Squash.get_proof (ni_exp env e (env r)))) ;
+  forall_intro (assign_inv_com' env e r)
 
 (* Sequencing rule for commands
 
@@ -220,31 +221,52 @@ let assign_com env e r =
                env,pc:l |- c1; c2
 *)
 
-(* val seq_inv_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0:option heap -> *)
-(*   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l)) *)
-(*     (ensures (inv_com' env (Seq c1 c2) l h0)) *)
-(* let seq_inv_com' env c1 c2 l = function *)
-(*   | None -> () *)
-(*   | Some h0 -> cut (inv_com' env c2 l (interpret_com h0 c1)) *)
+val seq_inv_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0:heap ->
+  Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
+    (ensures (inv_com' env (Seq c1 c2) l h0))
+let seq_inv_com' env c1 c2 l h0 =
+  match reify (interpret_com_st c1 h0) h0 with
+  | None, _ -> ()
+  | Some (), h1 ->
+    match reify (interpret_com_st c2 h1) h1 with
+    | None, _ -> ()
+    | Some (), h2 -> ()
 
-(* val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel (option heap) -> *)
-(*   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l)) *)
-(*         (ensures  (ni_com' env (Seq c1 c2) l h0)) *)
-(* let seq_com' env c1 c2 l h0 = *)
-(*   match h0 with *)
-(*   | R (Some hl) (Some hr) -> cut (ni_com' env c2 l (R (interpret_com hl c1) (interpret_com hr c1))) *)
-(*   | _ -> () *)
+#set-options "--z3rlimit 20"
 
-(* val seq_com : env:label_fun -> c1:com -> c2:com -> l:label -> *)
-(*   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l)) *)
-(*         (ensures  (ni_com env (Seq c1 c2) l)) *)
-(* let seq_com env c1 c2 l = *)
-(*   forall_intro *)
-(*     (fun (h0:rel (option heap)) -> *)
-(*       seq_com' env c1 c2 l h0 <: Lemma (ni_com' env (Seq c1 c2) l h0)) ; *)
-(*   forall_intro *)
-(*     (fun (h0:option heap) -> *)
-(*       seq_inv_com' env c1 c2 l h0 <: Lemma (inv_com' env (Seq c1 c2) l h0)) *)
+val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel heap ->
+  Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
+        (ensures  (ni_com' env (Seq c1 c2) l h0))
+let seq_com' env c1 c2 l h0 =
+  let R h0l h0r = h0 in
+  match reify (interpret_com_st c1 h0l) h0l with
+  | None, _ -> ()
+  | Some (), h1l ->
+    match reify (interpret_com_st c1 h0r) h0r with
+    | None, _ -> ()
+    | Some (), h1r ->
+      match reify (interpret_com_st (Seq c1 c2) h0l) h0l with
+      | None, _ -> ()
+      | Some (), h2l ->
+        match reify (interpret_com_st (Seq c1 c2) h0r) h0r with
+        | None, _ -> ()
+        | Some (), h2r ->
+            let h1 = R h1l h1r in let h2 = R h2l h2r in
+            assert (low_equiv env h0 ==> low_equiv env h1) ;
+            assert (low_equiv env h1 ==> low_equiv env h2)
+
+#set-options "--z3rlimit 5"
+
+val seq_com : env:label_fun -> c1:com -> c2:com -> l:label ->
+  Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
+        (ensures  (ni_com env (Seq c1 c2) l))
+let seq_com env c1 c2 l =
+  forall_intro
+    (fun (h0:rel heap) ->
+      seq_com' env c1 c2 l h0 <: Lemma (ni_com' env (Seq c1 c2) l h0)) ;
+  forall_intro
+    (fun (h0:heap) ->
+      seq_inv_com' env c1 c2 l h0 <: Lemma (inv_com' env (Seq c1 c2) l h0))
 
 (* Typing rule for conditional commands
 
