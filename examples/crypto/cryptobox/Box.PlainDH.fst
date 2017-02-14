@@ -20,3 +20,5 @@ let coerce_key = AE.coerce_key
 let leak_key = AE.leak_key
 
 let ae_key_region = AE.ae_key_region
+
+let leak_regionGT = AE.leak_regionGT

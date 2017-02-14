@@ -1,7 +1,6 @@
 module Box.AE
 
-open FStar.Seq
-open FStar.Monotonic.Seq
+open FStar.Set
 open FStar.HyperStack
 open FStar.HyperHeap
 open FStar.Monotonic.RRef
@@ -76,7 +75,8 @@ let get_index k = k.i
 *)
 let safe_key_gen parent m0 k m1 =
   // Reason about regions (HyperHeap)
-  HH.modifies_one k.region m0.h m1.h
+  let (s:Set.set (HH.rid)) = Set.singleton k.region in
+  HH.modifies_just s m0.h m1.h
   /\ extends k.region parent
   /\ fresh_region k.region m0.h m1.h
   /\ is_below k.region ae_key_region
@@ -117,6 +117,9 @@ val leak_logGT: k:key -> GTot (log:log_t k.i k.region{log=k.log})
 let leak_logGT k =
   k.log
 
+val leak_regionGT: k:key -> GTot (region:rid{region=k.region})
+let leak_regionGT k =
+  k.region
 
 (**
    The coerce function transforms a raw aes_key into an abstract key. The function is stateful,

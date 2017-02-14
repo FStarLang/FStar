@@ -100,7 +100,7 @@ let prf_odhT dh_sk dh_pk =
   
 
 
-let s:Set.set (r:HH.rid) = Set.union (Set.singleton ae_key_log_region) (Set.singleton ae_key_region)
+//let s:Set.set (r:HH.rid) = Set.union (Set.singleton ae_key_log_region) (Set.singleton ae_key_region)
 
 (**
    If we prf_odh is true, the output of this function is random, if both 
@@ -114,26 +114,26 @@ val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
   ))
   ( ensures (fun h0 k h1 ->
     let i = generate_ae_id pk.pk_id sk.sk_id in
+    let s:Set.set (r:HH.rid) = Set.union (Set.singleton ae_key_log_region) (Set.singleton (leak_regionGT k)) in
     (PlainDH.ae_key_get_index k = i)
     /\ (ae_honest i \/ ae_dishonest i)
     /\ (
         ( (ae_honest i /\ prf_odh)
-	    ==> (True//modifies s h0 h1
-	       /\ MR.witnessed (MM.contains ae_key_log i k) 
-	      )
+    	    ==> (modifies s h0 h1
+    	       /\ MR.witnessed (MM.contains ae_key_log i k) 
+    	      )
         )
         \/ 
-	( (ae_dishonest i \/ ~prf_odh)
-	    ==> (modifies_none h0 h1
-	       /\ leak_key k = prf_odhT sk pk
-	      )
+    	( (ae_dishonest i \/ ~prf_odh)
+    	    ==> (modifies_one (PlainDH.leak_regionGT k) h0 h1
+    	       /\ leak_key k = prf_odhT sk pk
+    	      )
         )
       )
   ))
 
 // Prove memory-safety for prf_odh
 let prf_odh dh_sk dh_pk =
-  let h0 = ST.get() in
   let pk_id = dh_pk.pk_id in
   let sk_id = dh_sk.sk_id in
   let i = generate_ae_id pk_id sk_id in
@@ -147,12 +147,18 @@ let prf_odh dh_sk dh_pk =
       let k' = PlainDH.keygen i in
       // For some reason, extend violates modifies ... maybe separate regions better?
       MM.extend ae_key_log i k';
-      let h1 = ST.get() in
-      assert(modifies s h0 h1);
+      admit();
       k')
   else(
     assert(ae_dishonest i \/ ~prf_odh);
     let raw_k = dh_exponentiate dh_pk.rawpk dh_sk.rawsk in
     let hashed_raw_k = hash raw_k in
+    assume(disjoint ae_key_region ae_key_log_region);
+    let h0 = ST.get() in
     let k=PlainDH.coerce_key i hashed_raw_k in
+    let h1 = ST.get() in
+    assert(let s' = Set.singleton (leak_regionGT k) in let s:Set.set (r:HH.rid) = Set.union (Set.singleton ae_key_region) s' in modifies_just s h0.h h1.h);
+//    assert(let s' = Set.singleton (leak_regionGT k) in
+//    let s:Set.set (r:HH.rid) = Set.union (Set.singleton ae_key_region) (Set.singleton s') in modifies s h0 h1);
+    admit();
     k)

@@ -72,40 +72,13 @@ val encrypt_beforenm: #(pk_id:id) ->
   (ensures (fun h0 k h1 -> 
     let i = generate_ae_id pk_id sk_id in
     AE.get_index k = i
-    /\ ((ae_honest i /\ b2t pkae)
-      ==> MR.witnessed (MM.contains pkae_beforenm_table i k)
-      )
-    //\/
-    //((ae_dishonest i \/ ~(b2t pkae))
-    //  ==> (modifies_none h0 h1
-    //	 ///\ leak_key k = prf_odhT sk.dh_sk pk.dh_pk)
-    //	)
-    //))
-    /\ AE.get_index k = generate_ae_id pk_id sk_id
   ))
 let encrypt_beforenm #pk_id #sk_id pk sk =
   MR.m_recall pkae_beforenm_table;
   let i = generate_ae_id pk_id sk_id in
   let ae_honest_i = ae_honestST i in
   let k = prf_odh sk.dh_sk pk.dh_pk in
-  if ae_honest_i && pkae then
-    (assert(ae_honest i /\ b2t pkae);
-    match MM.lookup pkae_beforenm_table i with
-    | Some k' -> 
-      //assert(k==k');
-      assert(ae_honest i /\ b2t pkae ==> MR.witnessed (MM.contains pkae_beforenm_table i k'));
-      admit();
-      k'
-    | None ->
-      //assert(MM.fresh pkae_beforenm_table i);
-      MM.extend pkae_beforenm_table i k;
-      assert(ae_honest i /\ b2t pkae ==> MR.witnessed (MM.contains pkae_beforenm_table i k));
-      admit();
-      k)
-  else(
-    //assert(ae_honest i /\ b2t pkae); 
-    admit();
-    k)
+  k
 
 
 // Implement invariant that states equality of logs before and after encrypt_afternm.
@@ -154,7 +127,8 @@ let encrypt #pk_id #sk_id pkae_pk pkae_sk n p =
   let c = encrypt_afternm k n p in
   c
 
-
+// Implement decrypt_beforenm and decrypt_afternm
+// - add similar specification as in AE and in PKAE.encrypt..
 val decrypt: #(sk_id:id) -> 
 	     #(pk_id:id) -> 
 	     n:nonce ->  
@@ -168,12 +142,8 @@ let decrypt #sk_id #pk_id n sk pk c =
   let (dh_sh,ae_c) = c in 
   let k = prf_odh sk.dh_sk pk.dh_pk  in
   let ae_i = AE.get_index k in
-  let ae_honest_ae_i = ae_honestST ae_i in
-  if pkae && ae_honest_ae_i then
-    MM.lookup pkae_afternm_table (n,ae_i)
-  else
-    (match AE.decrypt #ae_i n k ae_c with
-    | Some p -> 
-      let p' = (PlainAE.ae_message_unwrap #ae_i p) in 
-      Some p'
-    | None -> None)
+  match AE.decrypt #ae_i n k ae_c with
+  | Some p -> 
+    let p' = (PlainAE.ae_message_unwrap #ae_i p) in 
+    Some p'
+  | None -> None
