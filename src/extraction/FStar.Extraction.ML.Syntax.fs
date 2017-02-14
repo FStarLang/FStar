@@ -184,7 +184,7 @@ type mlmodule1 =
 | MLM_Ty  of mltydecl
 | MLM_Let of mlletbinding
 | MLM_Exn of mlsymbol * list<mlty>
-| MLM_Top of mlexpr
+| MLM_Top of mlexpr // this seems outdated
 | MLM_Loc of mlloc // Location information; line number + file; only for the OCaml backend
 
 type mlmodule = list<mlmodule1>

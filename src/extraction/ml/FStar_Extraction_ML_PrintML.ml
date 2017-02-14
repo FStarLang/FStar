@@ -39,6 +39,9 @@ let rec path_to_string ((l, sym): mlpath): string =
   | (hd::tl) -> BatString.concat "_" [hd; path_to_string (tl, sym)]
 
 let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
+  (* let _ = (match sym with
+  | "lbname" -> (BatString.concat "/" l) |> print_string; print_string "\n"
+  | _ -> ()) in *)
   match l with
   | [] -> mk_lident sym
   | ("FStar"::tl) ->
@@ -188,7 +191,7 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
      let recf = match flavour with 
        | Rec -> Recursive 
        | NonRec -> Nonrecursive in
-     let val_bindings = map build_binding lbs in
+     let val_bindings = map (build_binding false) lbs in
      Exp.let_ recf val_bindings (build_expr expr)
    | MLE_App (e, es) -> 
       let args = map (fun x -> (Nolabel, build_expr x)) es in
@@ -208,7 +211,7 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
       Exp.record fields None
    | MLE_Proj (e, path) -> 
       let field = match path with (_, f) -> f in
-      Exp.field (build_expr e) (mk_lident field)
+      Exp.field (build_expr e) (path_to_ident (path))
    (* MLE_If always desugared to match? *)
    | MLE_If (e, e1, e2) -> 
       Exp.ifthenelse (build_expr e) (build_expr e1) (BatOption.map build_expr e2)
@@ -258,11 +261,16 @@ and build_case ((lhs, guard, rhs): mlbranch): case =
    pc_guard = BatOption.map build_expr guard; 
    pc_rhs = (build_expr rhs)}
 
-and build_value (mllbs: mllb list): value_binding list =
-  map build_binding mllbs
+(* and build_value (mllbs: mllb list): value_binding list =
+  map build_binding mllbs *)
 
-and build_binding (lb: mllb): value_binding =
-  let e = build_expr ?print_ty:(Some lb.print_typ) lb.mllb_def in
+and build_binding (toplevel: bool) (lb: mllb): value_binding =
+  let print_ty = if (lb.print_typ && toplevel) then
+    (match lb.mllb_tysc with
+     | Some ([], ty) -> true
+     | _ -> false)
+                 else false in 
+  let e = build_expr ?print_ty:(Some print_ty) lb.mllb_def in
   let p = build_binding_pattern ?print_ty:(Some lb.print_typ) 
                                 ?scheme:lb.mllb_tysc lb.mllb_name in
   (Vb.mk p e)
@@ -321,14 +329,13 @@ let build_module1 path (m1: mlmodule1): structure_item option =
   | MLM_Ty tydecl -> Some (Str.mk (build_tydecl tydecl))
   | MLM_Let (flav, flags, mllbs) -> 
      let recf = match flav with | Rec -> Recursive | NonRec -> Nonrecursive in
-     let bindings = map build_binding mllbs in
+     let bindings = map (build_binding true) mllbs in
      Some (Str.value recf bindings)
   | MLM_Exn exn -> Some (Str.exception_ (build_exn exn))
   | MLM_Top expr -> None
   | MLM_Loc (p, f) -> None
 
 let build_m path (md: (mlsig * mlmodule) option) : structure = 
-
   match md with
   | Some(s, m) -> 
      let open_prims = 
