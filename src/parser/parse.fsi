@@ -84,7 +84,6 @@ type token =
   | LBRACE_COLON_PATTERN
   | LBRACE
   | LARROW
-  | KIND
   | IRREDUCIBLE
   | INT8 of (string * bool)
   | INT64 of (string * bool)
@@ -223,7 +222,6 @@ type tokenId =
     | TOKEN_LBRACE_COLON_PATTERN
     | TOKEN_LBRACE
     | TOKEN_LARROW
-    | TOKEN_KIND
     | TOKEN_IRREDUCIBLE
     | TOKEN_INT8
     | TOKEN_INT64
@@ -285,7 +283,6 @@ type nonTerminalId =
     | NONTERM__startterm
     | NONTERM__startinputFragment
     | NONTERM_option_FSDOC_
-    | NONTERM_option___anonymous_0_
     | NONTERM_option___anonymous_1_
     | NONTERM_option___anonymous_2_
     | NONTERM_option___anonymous_6_
@@ -296,6 +293,7 @@ type nonTerminalId =
     | NONTERM_option_pair_hasSort_simpleTerm__
     | NONTERM_option_string_
     | NONTERM_boption_SQUIGGLY_RARROW_
+    | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_effectDecl__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__

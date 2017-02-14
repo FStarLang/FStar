@@ -79,8 +79,6 @@ open FStar_String
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
 %token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
-/* TODO remove when dropping stratified */
-%token KIND
 %token AND ASSERT BEGIN ELSE END
 %token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
@@ -145,13 +143,13 @@ open FStar_String
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
 inputFragment:
-  | option(PRAGMALIGHT STRING {}) d=decl decls=list(decl) main_opt=mainDecl? EOF
-       {
-         let decls = match main_opt with
+  | is_light=boption(PRAGMALIGHT STRING { }) d=decl decls=list(decl) main_opt=mainDecl? EOF
+      {
+        let decls = match main_opt with
            | None -> decls
            | Some main -> decls @ [main]
-         in as_frag d decls
-       }
+        in as_frag is_light (rhs parseState 1) d decls
+      }
 
 (* TODO : let's try to remove that *)
 mainDecl:
@@ -228,11 +226,6 @@ rawDecl:
       { NewEffectForFree ne }
   | doc=FSDOC_STANDALONE
       { Fsdoc doc }
-
-  (* stratified only *)
-  | KIND lid=ident bs=binders EQUALS k=kind
-      { KindAbbrev(lid, bs, k) }
-
 
 typeDecl:
   (* TODO : change to lident with stratify *)

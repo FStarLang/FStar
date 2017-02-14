@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
+open FStar.All
 
 open FStar
 open FStar.Syntax
@@ -27,7 +28,7 @@ open FStar.Ident
 open FStar.Const
 module U = FStar.Util
 
-// VALS_HACK_HERE
+
 
 let sli (l:lident) : string =
     if Options.print_real_names()
@@ -484,6 +485,7 @@ let eff_decl_to_string for_free ed =
          actions_to_string ed.actions]
 
 let rec sigelt_to_string x = match x with
+  | Sig_pragma(LightOff, _) -> "#light \"off\""
   | Sig_pragma(ResetOptions None, _) -> "#reset-options"
   | Sig_pragma(ResetOptions (Some s), _) -> U.format1 "#reset-options \"%s\"" s
   | Sig_pragma(SetOptions s, _) -> U.format1 "#set-options \"%s\"" s

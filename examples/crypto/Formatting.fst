@@ -17,14 +17,17 @@
 module Formatting
 
 open FStar.String
-open Platform.Bytes         //This shadows length, index etc. from FStar.Seq, for no good reason?
-open FStar.Seq              //It's really important for FStar.Seq.index to have precedence for proper use of the lemmas in FStar.Seq and FStar.SeqProperties
-open FStar.SeqProperties
+
+open FStar.Seq              //It's really important for FStar.Seq.index to have precedence for proper use of the lemmas in FStar.Seq and FStar.Seq
 open FStar.Classical
 
+module Bytes = Platform.Bytes //This shadows length, index etc. from FStar.Seq
 
-type message = bytes
-type msg (l:nat) = lbytes l
+let op_At_Bar = Platform.Bytes.op_At_Bar
+let length = Platform.Bytes.length
+
+type message = Bytes.bytes
+type msg (l:nat) = Bytes.lbytes l
 
 
 (* ----- a lemma on array append *)
@@ -59,16 +62,16 @@ let utf8 s = magic()*)
 let iutf8 m = Platform.Bytes.iutf8 m*)
 
 assume UTF8_inj:
-  forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
-    b2t (Seq.eq (utf8 s0) (utf8 s1)) ==> s0==s1
+  forall s0 s1.{:pattern (Bytes.utf8 s0); (Bytes.utf8 s1)}
+    b2t (Seq.eq (Bytes.utf8 s0) (Bytes.utf8 s1)) ==> s0==s1
 
-val uint16_to_bytes: u:uint16{repr_bytes u <= 2} -> Tot (msg 2)
+val uint16_to_bytes: u:uint16{Bytes.repr_bytes u <= 2} -> Tot (msg 2)
 
-let uint16_to_bytes u = bytes_of_int 2 u
+let uint16_to_bytes u = Bytes.bytes_of_int 2 u
 
 assume UINT16_inj: forall s0 s1. b2t (Seq.eq (uint16_to_bytes s0) (uint16_to_bytes s1)) ==> s0==s1
 
-type string16 = s:string{uInt16 (length (utf8 s))} (* up to 65K *)
+type string16 = s:string{uInt16 (length (Bytes.utf8 s))} (* up to 65K *)
 
 
 (* =============== the formatting we use for authenticated RPCs *)
@@ -78,15 +81,15 @@ val response: string16 -> string -> Tot message
 
 (* -------- implementation *)
 
-let tag0 = createBytes 1 (Char.char_of_int 0)
-let tag1 = createBytes 1 (Char.char_of_int 1)
+let tag0 = Bytes.createBytes 1 (Char.char_of_int 0)
+let tag1 = Bytes.createBytes 1 (Char.char_of_int 1)
 
-let request s = tag0 @| (utf8 s)
+let request s = tag0 @| (Bytes.utf8 s)
 
 let response s t =
-  lemma_repr_bytes_values (length (utf8 s));
-  let lb = uint16_to_bytes (length (utf8 s)) in
-  tag1 @| (lb @| ( (utf8 s) @| (utf8 t)))
+  Bytes.lemma_repr_bytes_values (length (Bytes.utf8 s));
+  let lb = uint16_to_bytes (length (Bytes.utf8 s)) in
+  tag1 @| (lb @| ( (Bytes.utf8 s) @| (Bytes.utf8 t)))
 
 
 (* ------- 3 lemmas on message formats:
@@ -105,8 +108,8 @@ val req_resp_distinct:
         (ensures (request s <> response s' t'))
         [SMTPat (request s); SMTPat (response s' t')]
 let req_resp_distinct s s' t' = 
-  lemma_repr_bytes_values (length (utf8 s));
-  lemma_repr_bytes_values (length (utf8 s'));
+  Bytes.lemma_repr_bytes_values (length (Bytes.utf8 s));
+  Bytes.lemma_repr_bytes_values (length (Bytes.utf8 s'));
   assert (Seq.index (request s) 0 == Char.char_of_int 0);
   assert (Seq.index (response s' t') 0 == Char.char_of_int 1)
 
@@ -123,5 +126,5 @@ val resp_components_corr:
         (ensures  (s0==s1 /\ t0==t1))
         [SMTPat (response s0 t0); SMTPat (response s1 t1)]
 let resp_components_corr s0 t0 s1 t1 =
-  lemma_repr_bytes_values (length (utf8 s0));
-  lemma_repr_bytes_values (length (utf8 s1))
+  Bytes.lemma_repr_bytes_values (length (Bytes.utf8 s0));
+  Bytes.lemma_repr_bytes_values (length (Bytes.utf8 s1))

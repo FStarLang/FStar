@@ -15,7 +15,7 @@
 *)
 #light "off"
 module FStar.Util
-
+open FStar.All
 open System.IO
 
 open FStar.BaseTypes
@@ -128,6 +128,7 @@ val append_to_file: file_handle -> string -> unit
 val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val flush_file: file_handle -> unit
+val file_get_contents: string -> string
 
 type stream_reader = System.IO.StreamReader (* not relying on representation *)
 val open_stdin : unit -> stream_reader
@@ -143,6 +144,7 @@ val message_of_exn: exn -> string
 val trace_of_exn: exn -> string
 
 type proc = {m:System.Object; outbuf:System.Text.StringBuilder; proc:System.Diagnostics.Process; killed:ref<bool>; id:string}  (* not relying on representation; this needs to be defined on one line for a sed script *)
+val launch_process: string -> string -> string -> string -> (string -> string -> bool) -> string
 val start_process: string -> string -> string -> (string -> string -> bool) -> proc
 val ask_process: proc -> string -> string
 val kill_process: proc -> unit

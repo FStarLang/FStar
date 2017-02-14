@@ -51,7 +51,7 @@ let ideal_ensures
 			    (Plain.sel_plain h0 plainlen plain)
 			    (Buffer.as_seq h0 cipher_tag) in
     let log = st_ilog st in 				      
-    HS.sel h1 log == SeqProperties.snoc (HS.sel h0 log) entry)
+    HS.sel h1 log == Seq.snoc (HS.sel h0 log) entry)
 
 val do_ideal:
 	 #i: id -> 
@@ -73,7 +73,7 @@ let do_ideal #i st n #aadlen aad #plainlen plain cipher_tag =
     let c_tagged = Buffer.to_seq_full cipher_tag in
     let entry = AEADEntry n ad (v plainlen) p c_tagged in
     FStar.ST.recall (st_ilog st);
-    st_ilog st := SeqProperties.snoc !(st_ilog st) entry
+    st_ilog st := Seq.snoc !(st_ilog st) entry
 
 #reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 let encrypt_ensures  (#i:id) (st:aead_state i Writer)
@@ -89,7 +89,7 @@ let encrypt_ensures  (#i:id) (st:aead_state i Writer)
        let aad = Buffer.as_seq h1 aad in
        let p = Plain.sel_plain h1 plainlen plain in
        let c = Buffer.as_seq h1 cipher_tagged in
-       HS.sel h1 st.log == SeqProperties.snoc (HS.sel h0 st.log) (AEADEntry n aad (v plainlen) p c)))
+       HS.sel h1 st.log == Seq.snoc (HS.sel h0 st.log) (AEADEntry n aad (v plainlen) p c)))
 
 let encrypt_modifies (#i:id) (st:aead_state i Writer)
 		     (#plainlen: UInt32.t)

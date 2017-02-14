@@ -1,5 +1,5 @@
 [
-  "bêa€¹µ‡ÌMÊÿ“¸=\u001b",
+  "e‡'%dFe\u0001Ñ\u0018ğ‡^›Ó",
   [
     [ "Encrypt_SymEnc.uu___is_Ideal", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -113,6 +113,7 @@
       0
     ],
     [ "Encrypt_SymEnc.__proj__Entry__item__plain", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Encrypt_SymEnc.log", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Encrypt_SymEnc.encrypt",
       1,

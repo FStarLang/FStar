@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.TcTerm
+open FStar.All
 
 open FStar
 open FStar.Errors
@@ -37,7 +38,7 @@ module BU = FStar.Util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 
-// VALS_HACK_HERE
+
 
 (* Some local utilities *)
 let instantiate_both env = {env with Env.instantiate_imp=true}
@@ -1116,21 +1117,16 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             (* Infer: t1 -> ... -> tn -> C ('u x1...xm),
                     where ti are the result types of each arg
                     and   xi are the free type/term variables in the environment
-               where C = GTot, if the expected result type is Type(u)
-                else C = Tot,  if the ML monad is not in scope
-                else C = ML,   otherwise *)
+               where C = Tot,
+                except when Options.ml_ish(), where C = ML (for compatibility with ML)
+            *)
             let args, comps, g_args = tc_args env args in
             let bs = null_binders_of_tks (comps |> List.map (fun (_, c) -> c.res_typ, None)) in
-            let ml_or_tot = match Env.try_lookup_effect_lid env Const.effect_ML_lid with
-                | None -> fun t r -> S.mk_Total t
-                | _ -> U.ml_comp in
-            let ml_or_tot = match expected_topt with
-                | None -> ml_or_tot
-                | Some t ->
-                  match (SS.compress t).n with
-                    | Tm_type _ -> fun t r -> S.mk_GTotal t
-                    | _ -> ml_or_tot in
-
+            let ml_or_tot t r =
+                if Options.ml_ish ()
+                then U.ml_comp t r
+                else S.mk_Total t
+            in
             let cres = ml_or_tot (TcUtil.new_uvar env (U.type_u () |> fst)) r in
             let bs_cres = U.arrow bs cres in
             if Env.debug env <| Options.Extreme
@@ -1355,7 +1351,7 @@ and tc_eqn scrutinee env branch
       else (* 6 (a) *)
           let rec build_branch_guard scrutinee_tm pat_exp : list<typ> =
             let discriminate scrutinee_tm f =
-                if List.length (Env.datacons_of_typ env (Env.typ_of_datacon env f.v)) > 1
+                if List.length (snd (Env.datacons_of_typ env (Env.typ_of_datacon env f.v))) > 1
                 then
                     let discriminator = U.mk_discriminator f.v in
                     match Env.try_lookup_lid env discriminator with
@@ -1463,7 +1459,7 @@ and check_top_level_let env e =
                 let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
                 if ok
                 then e2, c1
-                else (if (Options.warn_top_level_effects()) //otherwise warn
+                else (if Options.warn_top_level_effects() //otherwise warn
                       then Errors.warn (Env.get_range env) Err.top_level_effect;
                       mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
             else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
@@ -1473,15 +1469,16 @@ and check_top_level_let env e =
          in
 
 
-         (* the result always has type ML unit *)
-         let cres = U.lcomp_of_comp <| U.ml_comp Common.t_unit e.pos in
+         (* the result has the same effect as c1, except it returns unit *)
+         let cres = Env.null_wp_for_eff env (U.comp_effect_name c1) U_zero Common.t_unit in
+
          e2.tk := Some (Common.t_unit.n);
 
 (*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 in
          mk (Tm_let((false, [lb]), e2))
-           (Some (Common.t_unit.n))
-           e.pos,
-         cres,
+            (Some (Common.t_unit.n))
+            e.pos,
+         U.lcomp_of_comp cres,
          Rel.trivial_guard
 
      | _ -> failwith "Impossible"
@@ -1806,62 +1803,156 @@ let type_of_tot_term env e =
     then t, c.res_typ, g
     else raise (Error(BU.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e), Env.get_range env))
 
-(*  universe_of env e:
- *    This is generally called from within TypeChecker.Util
- *    when building WPs. For example, in building (return_value<u> t e),
- *    u=universe_of env t.
- *
- *  One common case is when t is the application of a unification variable
- *  In such cases, it's more efficient to just read t's universe from its type
- *  rather than re-computing it.
- *
- *  Another involves reading t's universe from its memoized type in the .tk field
- *)
-let universe_or_type_of env e =
-    let _ = if Env.debug env Options.Extreme
-            then BU.print1 "<start> universe_of %s\n" (Print.term_to_string e) in
-    let env, _ = Env.clear_expected_typ env in
-    let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
-    let fail e t = Inl t in
-    let ok u =
-        let _ = if Env.debug env Options.Extreme
-                then BU.print3 "<end> universe_of (%s) %s is %s\n"
-                            (Print.tag_of_term e)
-                            (Print.term_to_string e)
-                            (Print.univ_to_string u) in
-        Inr u
-    in
-    let universe_of_type e t =
-        match (U.unrefine t).n with
-        | Tm_type u -> ok u
-        | _ -> fail e t
-    in
-    let head, args = U.head_and_args e in
-    match (SS.compress head).n with
-    | Tm_uvar(_, t) ->  //it's a uvar, so just read its type, rather than type-checking it
-      let t = N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t in
-      begin match (SS.compress t).n with
-            | Tm_arrow(_, t) -> universe_of_type e (U.comp_result t)
-            | _ -> universe_of_type e t
-     end
-    | _ ->
-      let t =
-	    match !e.tk with
-	    | None
-        | Some Tm_unknown ->
-          let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
-          let _, ({res_typ=t}), g = tc_term env e in
-          Rel.solve_deferred_constraints env g |> ignore;
-          t
-	    | Some t ->
-          S.mk t None e.pos in
-      universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
+let level_of_type_fail env e t =
+    raise (Error(BU.format2 "Expected a term of type 'Type'; got %s : %s"
+                                (Print.term_to_string e)
+                                t,
+                      Env.get_range env))
 
-let universe_of env e =
-   match universe_or_type_of env e with
-   | Inl t ->
-     raise (Error(BU.format2 "Expected a term of type 'Type'; got %s : %s"
-                        (Print.term_to_string e)
-                        (Print.term_to_string t),
-                  Env.get_range env))
-   | Inr u -> u
+let level_of_type env e t =
+    let rec aux retry t =
+        match (U.unrefine t).n with
+        | Tm_type u -> u
+        | _ ->
+          if retry
+          then let t = Normalize.normalize [N.UnfoldUntil Delta_constant] env t in
+               aux false t
+          else let t_u, u = U.type_u() in
+               let env = {env with lax=true} in
+               let g = FStar.TypeChecker.Rel.teq env t t_u in
+               begin match g.guard_f with
+                     | NonTrivial f ->
+                       level_of_type_fail env e (Print.term_to_string t)
+                     | _ ->
+                       Rel.force_trivial_guard env g
+               end;
+               u
+    in aux true t
+
+(* universe_of_aux env e:
+      During type-inference, we build terms like WPs for which we need to compute
+      explicit universe instantiations.
+
+      This is generally called from within TypeChecker.Util
+      when building WPs. For example, in building (return_value<u> t e),
+      u=universe_of env t.
+
+      We don't aim to compute a precise type for e.
+      Rather, we look to compute the universe level of e's type,
+      presuming that e must have type Type
+
+      For instance, if e is an application (f _), we compute the type of f to be bs -> C,
+      and we take the universe level of e to be (level_of (comp_result C)),
+      disregarding the arguments of f.
+ *)
+let rec universe_of_aux env e =
+   match (SS.compress e).n with
+   | Tm_bvar _
+   | Tm_unknown
+   | Tm_delayed _ -> failwith "Impossible"
+   //normalize let bindings away and then compute the universe
+   | Tm_let _ ->
+     let e = N.normalize [] env e in
+     universe_of_aux env e
+   //we expect to compute (Type u); so an abstraction always fails
+   | Tm_abs(bs, t, _) ->
+     level_of_type_fail env e "arrow type"
+   //these next few cases are easy; we just use the type stored at the node
+   | Tm_uvar(_, t) -> t
+   | Tm_meta(t, _) -> universe_of_aux env t
+   | Tm_name n -> n.sort
+   | Tm_fvar fv ->
+     let _, t = Env.lookup_lid env fv.fv_name.v in
+     t
+   | Tm_ascribed(_, Inl t, _) -> t
+   | Tm_ascribed(_, Inr c, _) -> U.comp_result c
+   //also easy, since we can quickly recompute the type
+   | Tm_type u -> S.mk (Tm_type (U_succ u)) None e.pos
+   | Tm_constant sc -> tc_constant e.pos sc
+   //slightly subtle, since fv is a type-scheme; instantiate it with us
+   | Tm_uinst({n=Tm_fvar fv}, us) ->
+     let us', t = Env.lookup_lid env fv.fv_name.v in
+     if List.length us <> List.length us'
+     then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
+     else List.iter2 (fun u' u -> match u' with
+        | U_unif u'' -> Unionfind.change u'' (Some u)
+        | _ -> failwith "Impossible") us' us;
+     t
+   | Tm_uinst _ ->
+     failwith "Impossible: Tm_uinst's head must be an fvar"
+   //the refinement formula plays no role in the universe computation; so skip it
+   | Tm_refine(x, _) -> universe_of_aux env x.sort
+   //U_max(univ_of bs, univ_of c)
+   | Tm_arrow(bs, c) ->
+     let bs, c = SS.open_comp bs c in
+     let us = List.map (fun (b, _) -> level_of_type env b.sort (universe_of_aux env b.sort)) bs in
+     let u_res =
+        let res = U.comp_result c in
+        level_of_type env res (universe_of_aux env res) in
+     let u_c =
+        match TcUtil.effect_repr env c u_res with
+        | None -> u_res
+        | Some trepr -> level_of_type env trepr (universe_of_aux env trepr) in
+     let u = N.normalize_universe env (S.U_max (u_c::us)) in
+     S.mk (Tm_type u) None e.pos
+   //See the comment at the top of this function; we just compute the universe of hd's result type
+   | Tm_app(hd, args) ->
+     let rec type_of_head retry hd args =
+        let hd = SS.compress hd in
+        match hd.n with
+        | Tm_unknown
+        | Tm_bvar _
+        | Tm_delayed _ ->
+          failwith "Impossible"
+        | Tm_fvar _
+        | Tm_name _
+        | Tm_uvar _
+        | Tm_uinst _
+        | Tm_ascribed _
+        | Tm_refine _
+        | Tm_constant _
+        | Tm_arrow _
+        | Tm_meta _
+        | Tm_type _ ->
+          universe_of_aux env hd, args
+        | Tm_match(_, hd::_) ->
+          let (_, _, hd) = SS.open_branch hd in
+          let hd, args = U.head_and_args hd in
+          type_of_head retry hd args
+        | _ when retry ->
+          //head is either an abs, so we have a beta-redex
+          //      or a let,
+          let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
+          let hd, args = U.head_and_args e in
+          type_of_head false hd args
+        | _ ->
+          let env, _ = Env.clear_expected_typ env in
+          let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
+          if Env.debug env <| Options.Other "UniverseOf"
+          then BU.print2 "%s: About to type-check %s\n"
+                        (Range.string_of_range (Env.get_range env))
+                        (Print.term_to_string hd);
+          let _, ({res_typ=t}), g = tc_term env hd in
+          Rel.solve_deferred_constraints env g |> ignore;
+          t, args
+     in
+     let t, args = type_of_head true hd args in
+     let t = N.normalize [N.UnfoldUntil Delta_constant] env t in
+     let bs, res = U.arrow_formals_comp t in
+     let res = U.comp_result res in
+     if List.length bs = List.length args
+     then let subst = U.subst_of_list bs args in
+          SS.subst subst res
+     else level_of_type_fail env e (Print.term_to_string res)
+   | Tm_match(_, hd::_) ->
+     let (_, _, hd) = SS.open_branch hd in
+     universe_of_aux env hd
+   | Tm_match(_, []) ->
+     level_of_type_fail env e "empty match cases"
+
+let universe_of env e = level_of_type env e (universe_of_aux env e)
+
+let tc_tparams env (tps:binders) : (binders * Env.env * universes) =
+    let tps, env, g, us = tc_binders env tps in
+    Rel.force_trivial_guard env g;
+    tps, env, us

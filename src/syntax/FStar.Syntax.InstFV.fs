@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.InstFV
+open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Util
@@ -24,7 +25,7 @@ module SS = FStar.Syntax.Subst
 module U = FStar.Util
 type inst_t = list<(lident * universes)>
 
-// VALS_HACK_HERE
+
 
 let mk t s = S.mk s !t.tk t.pos
 

@@ -2,12 +2,13 @@
 #light "off"
 
 module FStar.Format
+open FStar.All
 open FStar
 
 (* -------------------------------------------------------------------- *)
 type doc = | Doc of string
 
-// VALS_HACK_HERE
+
 
 (* -------------------------------------------------------------------- *)
 let empty    = Doc ""

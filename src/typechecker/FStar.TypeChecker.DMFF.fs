@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.DMFF
+open FStar.All
 
 open FStar
 open FStar.TypeChecker
@@ -47,7 +48,7 @@ type env = {
   tc_const: sconst -> typ;
 }
 
-//VALS_HACK_HERE
+
 
 let empty env tc_const = {
   env = env;
@@ -873,9 +874,9 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   | Tm_let _ ->
       failwith (BU.format1 "[check]: Tm_let %s" (Print.term_to_string e))
   | Tm_type _ ->
-      failwith "impossible (stratified)"
+      failwith "impossible (DM stratification)"
   | Tm_arrow _ ->
-      failwith "impossible (stratified)"
+      failwith "impossible (DM stratification)"
   | Tm_refine _ ->
       failwith (BU.format1 "[check]: Tm_refine %s" (Print.term_to_string e))
   | Tm_uvar _ ->
@@ -1079,9 +1080,9 @@ and infer (env: env) (e: term): nm * term * term =
   | Tm_let _ ->
       failwith (BU.format1 "[infer]: Tm_let %s" (Print.term_to_string e))
   | Tm_type _ ->
-      failwith "impossible (stratified)"
+      failwith "impossible (DM stratification)"
   | Tm_arrow _ ->
-      failwith "impossible (stratified)"
+      failwith "impossible (DM stratification)"
   | Tm_refine _ ->
       failwith (BU.format1 "[infer]: Tm_refine %s" (Print.term_to_string e))
   | Tm_uvar _ ->

@@ -28,7 +28,7 @@ type input_frag = {
     frag_col:int
 }
 
-// VALS_HACK_HERE
+
 
 let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
   lexbuf.EndPos <- {lexbuf.EndPos with

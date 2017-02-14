@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.ErrorReporting
+open FStar.All
 open FStar
 open FStar.BaseTypes
 open FStar.Util
@@ -282,6 +283,8 @@ let detail_errors env
               sort_labels results
 
             | hd::tl ->
+	      BU.print1 "%s, " (BU.string_of_int (List.length active));
+	      FStar.SMTEncoding.Z3.refresh();
               let result, _ = askZ3 (elim <| (eliminated @ errors @ tl)) in //hd is the only thing to prove
               if BU.is_left result //hd is provable
               then linear_check (hd::eliminated) errors tl
@@ -290,6 +293,7 @@ let detail_errors env
     print_banner ();
     Options.set_option "z3rlimit" (Options.Int 5);
     let res = linear_check [] [] all_labels in
+    BU.print_string "\n";
     res |> List.iter print_result;
     []
 //    let dummy, _, _ = all_labels |> List.hd in

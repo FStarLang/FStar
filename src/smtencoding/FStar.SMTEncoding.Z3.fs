@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Z3
+open FStar.All
 open FStar
 open FStar.SMTEncoding.Term
 open FStar.BaseTypes
@@ -75,11 +76,11 @@ let ini_params () =
   then raise <| BU.Failure (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
   else ()
   end;
-  BU.format1 "-smt2 -in \
-    AUTO_CONFIG=false \
-    MODEL=true \
-    SMT.RELEVANCY=2 \
-    SMT.RANDOM_SEED=%s" (string_of_int (Options.z3_seed()))
+  (String.concat " "
+                (List.append
+                 [ "-smt2 -in auto_config=false model=true smt.relevancy=2";
+                   (Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed()))) ]
+                 (Options.z3_cliopt())))
 
 type label = string
 type unsat_core = option<list<string>>
@@ -196,7 +197,7 @@ let at_log_file () =
   then "@" ^ (query_logging.log_file_name())
   else ""
 
-let doZ3Exe' (input:string) (z3proc:proc) =
+let doZ3Exe' (fresh:bool) (input:string) =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
     let print_stats (lines:list<string>) =
@@ -241,24 +242,29 @@ let doZ3Exe' (input:string) (z3proc:proc) =
       | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n"
                             (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (BU.trim_string l)) lines)) in
     result lines in
-  let stdout = BU.ask_process z3proc input in
+  let cond pid (s:string) =
+    (let x = BU.trim_string s = "Done!" in
+//     BU.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
+     x) in
+  let stdout =
+    if fresh then
+      BU.launch_process (tid()) ((Options.z3_exe())) (ini_params()) input cond
+    else
+      let proc = bg_z3_proc.grab() in
+      let stdout = BU.ask_process proc input in
+      bg_z3_proc.release(); stdout
+  in
   parse (BU.trim_string stdout)
 
 let doZ3Exe =
-    let ctr = BU.mk_ref 0 in
     fun (fresh:bool) (input:string) ->
-        let z3proc = if fresh then (incr ctr; new_z3proc (BU.string_of_int !ctr)) else bg_z3_proc.grab() in
-        let res = doZ3Exe' input z3proc in
-        //Printf.printf "z3-%A says %s\n"  (get_z3version()) (status_to_string (fst res));
-        if fresh then BU.kill_process z3proc else bg_z3_proc.release();
-        res
+        doZ3Exe' fresh input
 
 let z3_options () =
-    BU.format1 "(set-option :global-decls false)\
+    "(set-option :global-decls false)\
      (set-option :smt.mbqi false)\
      (set-option :auto_config false)\
-     (set-option :produce-unsat-cores true)\
-     (set-option :smt.random_seed %s)\n" (string_of_int (Options.z3_seed()))
+     (set-option :produce-unsat-cores true)"
 
 type job<'a> = {
     job:unit -> 'a;
@@ -303,7 +309,10 @@ let z3_job fresh label_messages input () : either<unsat_core, (error_labels * er
         Inr (failing_assertions, ekind status), elapsed_time in
     result
 
+let running = BU.mk_ref false
+
 let rec dequeue' () =
+    (*print_string (BU.string_of_int (List.length !job_queue));*)
     let j = match !job_queue with
         | [] -> failwith "Impossible"
         | hd::tl ->
@@ -312,29 +321,37 @@ let rec dequeue' () =
     incr pending_jobs;
     BU.monitor_exit job_queue;
     run_job j;
-    with_monitor job_queue (fun () -> decr pending_jobs);
-    dequeue(); ()
+    with_monitor job_queue (fun () -> decr pending_jobs); dequeue (); ()
 
-and dequeue () =
-    BU.monitor_enter (job_queue);
-    let rec aux () = match !job_queue with
+and dequeue () = match !running with
+  | true ->
+    let rec aux () =
+      BU.monitor_enter (job_queue);
+      match !job_queue with
         | [] ->
-          BU.monitor_wait(job_queue);
+          BU.monitor_exit job_queue;
+          BU.sleep(50);
           aux ()
         | _ -> dequeue'() in
     aux()
+  | false -> ()
 
 and run_job j = j.callback <| j.job ()
 
+(* threads are spawned only if fresh, I.e. we check here and in ask the mode of execution,
+   should be improved by using another option, see ask *)
 let init () =
-    let n_runners = (Options.n_cores()) - 1 in
-    let rec aux n =
-        if n = 0 then ()
-        else (spawn dequeue; aux (n - 1)) in
-    aux n_runners
+    running := true;
+    let n_cores = (Options.n_cores()) in
+    if (n_cores > 1) then
+      let rec aux n =
+          if n = 0 then ()
+          else (spawn dequeue; aux (n - 1)) in
+      aux n_cores
+    else ()
+
 
 let enqueue fresh j =
- //   BU.print1 "Enqueue fresh is %s\n" (if fresh then "true" else "false");
     if not fresh
     then run_job j
     else begin
@@ -345,29 +362,33 @@ let enqueue fresh j =
     end
 
 let finish () =
-    let bg = bg_z3_proc.grab() in
-    BU.kill_process bg;
-    bg_z3_proc.release();
     let rec aux () =
         let n, m = with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue)  in
         //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
         if n+m=0
-        then FStar.Errors.report_all() |> ignore
+        then (running := false;FStar.Errors.report_all() |> ignore)
         else let _ = BU.sleep(500) in
              aux() in
     aux()
 
 type scope_t = list<list<decl>>
 
-//fresh_scope: Is a stack of declarations, corresponding to the current
-//             state of declarations to be pushed to Z3
+// bg_scope is a global, mutable variable that keeps a list of the declarations
+// that we have given to z3 so far. In order to allow rollback of history,
+// one can enter a new "scope" by pushing a new, empty z3 list of declarations
+// on fresh_scope (a stack) -- one can then, for instance, verify these
+// declarations immediately, then call pop so that subsequent queries will not
+// reverify or use these declarations
 let fresh_scope : ref<scope_t> = BU.mk_ref [[]]
 
-//bg_scope: Is the flat sequence of declarations already given to Z3
-//          When refreshing the solver, the bg_scope is set to
-//          a flattened version of fresh_scope
+// bg_scope: Is the flat sequence of declarations already given to Z3
+//           When refreshing the solver, the bg_scope is set to
+//           a flattened version of fresh_scope
 let bg_scope : ref<list<decl>> = BU.mk_ref []
 
+// fresh_scope is a mutable reference; this pushes a new list at the front;
+// then, givez3 modifies the reference so that within the new list at the front,
+// new queries are pushed
 let push msg    =
     fresh_scope := [Term.Caption msg; Term.Push]::!fresh_scope;
     bg_scope := [Term.Caption msg; Term.Push]@ !bg_scope
@@ -381,6 +402,8 @@ let pop msg      =
 //              query comes up
 let giveZ3 decls =
    decls |> List.iter (function Push | Pop -> failwith "Unexpected push/pop" | _ -> ());
+   // This is where we prepend new queries to the head of the list at the head
+   // of fresh_scope
    begin match !fresh_scope with
     | hd::tl -> fresh_scope := (hd@decls)::tl
     | _ -> failwith "Impossible"
@@ -400,15 +423,25 @@ let bgtheory fresh =
 
 //refresh: create a new z3 process, and reset the bg_scope
 let refresh () =
-    bg_z3_proc.refresh();
-    let theory = bgtheory true in
-    bg_scope := List.rev theory
+    if (Options.n_cores() < 2) then
+      bg_z3_proc.refresh();
+      let theory = bgtheory true in
+      bg_scope := List.rev theory
 
 //mark, reset_mark, commit_mark:
 //    setting rollback points for the interactive mode
+// JP: I suspect the expected usage for the interactive mode is as follows:
+// - the stack (fresh_scope) has size >= 1, the top scope contains the queries
+//   that have been successful so far
+// - one calls "mark" to push a new scope of tentative queries
+// - in case of success, the new scope is collapsed with the previous scope,
+//   effectively bringing the new queries into the scope of successful queries so far
+// - in case of failure, the new scope is discarded
 let mark msg =
     push msg
 let reset_mark msg =
+    // JP: pop_context (in universal.fs) does the same thing: it calls pop,
+    // followed by refresh
     pop msg;
     refresh ()
 let commit_mark msg =
@@ -418,6 +451,13 @@ let commit_mark msg =
     end
 
 let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
+  (* the fresh variable controls if we accumulate theory by using a single Z3 process
+     or using a "fresh" process for every obligation and giving it the whole theory.
+     A single Z3 process cannot work with multi-core although a single thread
+     can operate in the fresh mode.
+     In the future, a new parameter fresh should be added to FStar with this option, right now
+     this argument is automatically set to false for 1 thread and true for > 1 *)
+  let fresh = (Options.n_cores() > 1) in
   let filter_assertions theory = match core with
     | None -> theory, false
     | Some core ->
@@ -452,7 +492,7 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
                          (BU.string_of_int n_pruned)
       end;
       theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true in
-  let theory = bgtheory false in
+  let theory = bgtheory fresh in
   let theory = theory@[Term.Push]@qry@[Term.Pop] in
   let theory, used_unsat_core = filter_assertions theory in
   let cb (uc_errs, time) =
@@ -463,5 +503,6 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
     else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
   if Options.log_queries() then query_logging.append_to_log input;
-  enqueue false ({job=z3_job false label_messages input; callback=cb})
+  enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
+
 

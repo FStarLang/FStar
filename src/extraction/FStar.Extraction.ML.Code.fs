@@ -17,6 +17,7 @@
 #light "off"
 
 module FStar.Extraction.ML.Code
+open FStar.All
 
 open FStar
 open FStar.Util
@@ -26,7 +27,7 @@ open FStar.Format
 open FStar.Const
 open FStar.BaseTypes
 module BU = FStar.Util
-// VALS_HACK_HERE
+
 
 (* -------------------------------------------------------------------- *)
 type assoc  = | ILeft | IRight | Left | Right | NonAssoc

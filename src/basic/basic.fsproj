@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -64,6 +64,8 @@
   <ItemGroup>
     <Compile Include="basetypes-fake.fs" />
     <Compile Include="prims-fake.fs" />
+    <Compile Include="all-fake.fs" />
+    <Compile Include="mul-fake.fs" />
     <Compile Include="char.fsi" />
     <Compile Include="char.fs" />
     <Compile Include="string.fsi" />

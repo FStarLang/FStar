@@ -21,6 +21,7 @@
     (not module names).
 *)
 module FStar.Parser.Dep
+open FStar.All
 
 open FStar
 open FStar.Parser
@@ -50,7 +51,7 @@ type map = smap<(option<string> * option<string>)>
 
 type color = | White | Gray | Black
 
-//VALS_HACK_HERE
+
 
 let check_and_strip_suffix (f: string): option<string> =
   let suffixes = [ ".fsti"; ".fst"; ".fsi"; ".fs" ] in
@@ -95,6 +96,18 @@ let lowercase_module_name f =
   | None ->
       raise (Err (Util.format1 "not a valid FStar file: %s\n" f))
 
+//try to convert filename passed from the editor to windows path
+//on cygwin emacs this is required
+let try_convert_file_name_to_windows (s:string) :string =
+  try
+    let _, t_out, _ = run_proc "which" "cygpath" "" in
+    if not (trim_string t_out = "/usr/bin/cygpath") then s
+    else
+      let _, t_out, _ = run_proc "cygpath" ("-m " ^ s) "" in
+      trim_string t_out
+  with
+    | _ -> s
+
 (** List the contents of all include directories, then build a map from long
     names (e.g. a.b) to pairs of filenames (/path/to/A.B.fst). Long names are
     all normalized to lowercase. The first component of the pair is the
@@ -102,6 +115,8 @@ let lowercase_module_name f =
     (if any). *)
 let build_map (filenames: list<string>): map =
   let include_directories = Options.include_path () in
+  //try to convert the cygwin paths to windows paths
+  let include_directories = List.map try_convert_file_name_to_windows include_directories in
   let include_directories = List.map normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
@@ -249,10 +264,8 @@ let collect_one
   let auto_open =
     if basename filename = "prims.fst" then
       []
-    else if starts_with (String.lowercase (basename filename)) "fstar." then
-      [ Const.fstar_ns_lid; Const.prims_lid ]
     else
-      [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ]
+      [ Const.fstar_ns_lid; Const.prims_lid ]
   in
   List.iter (record_open false) auto_open;
 
@@ -310,9 +323,6 @@ let collect_one
         record_module_alias ident lid
     | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
-    | KindAbbrev (_, binders, t) ->
-        collect_term t;
-        collect_binders binders
     | Main t
     | Assume (_, t)
     | SubEffect { lift_op = NonReifiableLift t }
@@ -395,7 +405,8 @@ let collect_one
         collect_constant c
     | Op (s, ts) ->
         if s = "@" then
-          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.append") Range.dummyRange));
+          (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
+          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
         List.iter collect_term ts
     | Tvar _
     | AST.Uvar _ ->

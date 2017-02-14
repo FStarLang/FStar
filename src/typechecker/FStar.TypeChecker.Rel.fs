@@ -20,6 +20,7 @@
 
 #light "off"
 module FStar.TypeChecker.Rel
+open FStar.All
 
 open FStar
 open FStar.Util
@@ -37,7 +38,7 @@ module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
 
-// VALS_HACK_HERE
+
 
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
@@ -953,7 +954,7 @@ type univ_eq_sol =
   | USolved   of worklist
   | UFailed   of string
 
-let rec really_solve_universe_eq orig wl u1 u2 =
+let rec really_solve_universe_eq pid_orig wl u1 u2 =
     let u1 = N.normalize_universe wl.tcenv u1 in
     let u2 = N.normalize_universe wl.tcenv u2 in
     let rec occurs_univ v1 u = match u with
@@ -971,7 +972,7 @@ let rec really_solve_universe_eq orig wl u1 u2 =
               if List.length us1 = List.length us2 //go for a structural match
               then let rec aux wl us1 us2 = match us1, us2 with
                         | u1::us1, u2::us2 ->
-                          begin match really_solve_universe_eq orig wl u1 u2 with
+                          begin match really_solve_universe_eq pid_orig wl u1 u2 with
                             | USolved wl ->
                                 aux wl us1 us2
                             | failed -> failed
@@ -985,7 +986,7 @@ let rec really_solve_universe_eq orig wl u1 u2 =
                 let rec aux wl us = match us with
                 | [] -> USolved wl
                 | u::us ->
-                    begin match really_solve_universe_eq orig wl u u' with
+                    begin match really_solve_universe_eq pid_orig wl u u' with
                     | USolved wl ->
                       aux wl us
                     | failed -> failed
@@ -1011,12 +1012,12 @@ let rec really_solve_universe_eq orig wl u1 u2 =
           USolved wl
 
         | U_succ u1, U_succ u2 ->
-          really_solve_universe_eq orig wl u1 u2
+          really_solve_universe_eq pid_orig wl u1 u2
 
         | U_unif v1, U_unif v2 ->
           if Unionfind.equivalent v1 v2
           then USolved wl
-          else let wl = extend_solution orig [UNIV(v1, u2)] wl in
+          else let wl = extend_solution pid_orig [UNIV(v1, u2)] wl in
                USolved wl
 
         | U_unif v1, u
@@ -1025,7 +1026,7 @@ let rec really_solve_universe_eq orig wl u1 u2 =
           if occurs_univ v1 u
           then try_umax_components u1 u2
                 (BU.format2 "Failed occurs check: %s occurs in %s" (Print.univ_to_string (U_unif v1)) (Print.univ_to_string u))
-          else USolved (extend_solution orig [UNIV(v1, u)] wl)
+          else USolved (extend_solution pid_orig [UNIV(v1, u)] wl)
 
         | U_max _, _
         | _, U_max _ ->
@@ -2236,9 +2237,24 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
 (* -------------------------------------------------------- *)
 let print_pending_implicits g = g.implicits |> List.map (fun (_, _, u, _, _, _) -> Print.uvar_to_string u) |> String.concat ", "
 
+let ineqs_to_string ineqs =
+    let vars =
+        fst ineqs
+        |> List.map Print.univ_to_string
+        |> String.concat ", " in
+    let ineqs =
+        snd ineqs
+        |> List.map (fun (u1, u2) ->
+                BU.format2 "%s < %s"
+                        (Print.univ_to_string u1)
+                        (Print.univ_to_string u2))
+        |> String.concat ", " in
+    BU.format2 "Solving for {%s}; inequalities are {%s}"
+                    vars ineqs
+
 let guard_to_string (env:env) g =
-  match g.guard_f, g.deferred with
-    | Trivial, [] -> "{}"
+  match g.guard_f, g.deferred, g.univ_ineqs with
+    | Trivial, [], (_, []) -> "{}"
     | _ ->
       let form = match g.guard_f with
           | Trivial -> "trivial"
@@ -2250,12 +2266,13 @@ let guard_to_string (env:env) g =
               else "non-trivial" in
       let carry = List.map (fun (_, x) -> prob_to_string env x) g.deferred |> String.concat ",\n" in
       let imps = print_pending_implicits g in
-      BU.format3 "\n\t{guard_f=%s;\n\t deferred={\n%s};\n\t implicits={%s}}\n" form carry imps
+      BU.format4 "\n\t{guard_f=%s;\n\t deferred={\n%s};\n\t univ_ineqs={%s};\n\t implicits={%s}}\n"
+        form carry (ineqs_to_string g.univ_ineqs) imps
 
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
 (* ------------------------------------------------*)
-let guard_of_guard_formula g = {guard_f=g; deferred=[]; univ_ineqs=[]; implicits=[]}
+let guard_of_guard_formula g = {guard_f=g; deferred=[]; univ_ineqs=([], []); implicits=[]}
 
 let guard_form g = g.guard_f
 
@@ -2263,7 +2280,7 @@ let is_trivial g = match g with
     | {guard_f=Trivial; deferred=[]} -> true
     | _ -> false
 
-let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=[]; implicits=[]}
+let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=[]}
 
 let abstract_guard x g = match g with
     | None
@@ -2299,7 +2316,8 @@ let imp_guard_f g1 g2 = match g1, g2 with
 
 let binop_guard f g1 g2 = {guard_f=f g1.guard_f g2.guard_f;
                            deferred=g1.deferred@g2.deferred;
-                           univ_ineqs=g1.univ_ineqs@g2.univ_ineqs;
+                           univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
+                                       snd g1.univ_ineqs@snd g2.univ_ineqs);
                            implicits=g1.implicits@g2.implicits}
 let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
 let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
@@ -2354,7 +2372,7 @@ let simplify_guard env g = match g.guard_f with
 let with_guard env prob dopt = match dopt with
     | None -> None
     | Some d ->
-      Some <| simplify_guard env ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d; univ_ineqs=[]; implicits=[]})
+      Some <| simplify_guard env ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
 
 let try_teq env t1 t2 : option<guard_t> =
  if debug env <| Options.Other "Rel"
@@ -2400,87 +2418,80 @@ let sub_comp env c1 c2 =
   let prob = CProb <| new_problem env c1 rel c2 None (Env.get_range env) "sub_comp" in
   with_guard env prob <| solve_and_commit env (singleton env prob)  (fun _ -> None)
 
-
-let solve_universe_inequalities' tx env ineqs =
-    let fail msg u1 u2 =
+let solve_universe_inequalities' tx env (variables, ineqs) =
+   //variables: ?u1, ..., ?un are the universes of the inductive types we're trying to compute
+   //ineqs: u1 < v1, ..., un < vn are inequality constraints gathered from checking the inductive definition
+   //The basic idea is to collect all lowerbounds of each variable ?ui,
+   //       excluding all of the variables themselves to avoid cycles
+   //       and setting each ?ui to max(lowerbounds(?ui))
+   //Then, we make a pass over all the inequalities again and check that they are all satisfied
+   //This ensures, e.g., that we don't needlessly generalize types, avoid issues lik #806
+   let fail u1 u2 =
         Unionfind.rollback tx;
-        let msg = match msg with
-            | None -> ""
-            | Some s -> ": " ^ s in
-        raise (Error (BU.format3 "Universe %s and %s are incompatible%s"
-                                                                (Print.univ_to_string u1)
-                                                                (Print.univ_to_string u2)
-                                                                msg,
-                                                          (Env.get_range env))) in
-
-   let rec insert uv u1 groups = match groups with
-      | [] -> [(uv, [u1])]
-      | hd::tl ->
-        let (uv', lower_bounds) = hd in
-        if Unionfind.equivalent uv uv'
-        then (uv', u1::lower_bounds)::tl
-        else hd :: insert uv u1 tl in
-
-   let rec group_by out ineqs = match ineqs with
-    | [] -> Some out
-    | (u1, u2)::rest ->
-      let u2 = N.normalize_universe env u2 in
-      match u2 with
-        | U_unif uv ->
-          let u1 = N.normalize_universe env u1 in
-          if U.eq_univs u1 u2
-          then group_by out rest
-          else group_by (insert uv u1 out) rest
-        | _ -> None in
-
-
-    let ad_hoc_fallback () =
-        match ineqs with
-            | [] -> ()
-            | _ ->
-//              ineqs |> List.iter (fun (u1, u2) -> Printf.printf "\t%s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2));
-              let wl = {empty_worklist env with defer_ok=true} in
-              ineqs |> List.iter (fun (u1, u2) ->
-                let u1 = N.normalize_universe env u1 in
-                let u2 = N.normalize_universe env u2 in
-                match u1 with
-                    | U_zero -> ()
-                    | _ -> match solve_universe_eq (-1) wl u1 u2 with
-                            | UDeferred _
-                            | UFailed _    ->
-                              let us1 = match u1 with
-                                | U_max us1 -> us1
-                                | _ -> [u1] in
-                              let us2 = match u2 with
-                                | U_max us2 -> us2
-                                | _ -> [u2] in
-                              if us1 |> BU.for_all (function
-                                | U_zero -> true
-                                | u ->
-                                  let k_u, n = U.univ_kernel u in
-                                  us2 |> BU.for_some (fun u' ->
-                                  let k_u', n' = U.univ_kernel u' in
-                                  U.eq_univs k_u k_u' && n <= n'))
-                              then ()
-                              else fail None u1 u2
-
-                            | USolved _ -> ()) in
-
-
-    begin match group_by [] ineqs with
-        | Some groups ->
-          let wl = {empty_worklist env with defer_ok=false} in
-          let rec solve_all_groups wl groups = match groups with
-            | [] -> ()
-            | (u, lower_bounds)::groups ->
-              begin match solve_universe_eq (-1) wl (U_max lower_bounds) (U_unif u) with
-                | USolved wl ->
-                    solve_all_groups wl groups
-                | _ -> ad_hoc_fallback()
-              end in
-          solve_all_groups wl groups
-        | None -> ad_hoc_fallback ()
-    end
+        raise (Error (BU.format2 "Universe %s and %s are incompatible"
+                                (Print.univ_to_string u1)
+                                (Print.univ_to_string u2),
+                      Env.get_range env))
+   in
+   let equiv v v' =
+       match SS.compress_univ v, SS.compress_univ v' with
+       | U_unif v0, U_unif v0' -> Unionfind.equivalent v0 v0'
+       | _ -> false
+   in
+   let sols = variables |> List.collect (fun v ->
+     match SS.compress_univ v with
+     | U_unif _ -> //if it really is a variable, that try to solve it
+         let lower_bounds_of_v = //lower bounds of v, excluding the other variables
+           ineqs |> List.collect (fun (u, v') ->
+             if equiv v v'
+             then if variables |> BU.for_some (equiv u)
+                  then []
+                  else [u]
+             else [])
+         in
+         let lb = N.normalize_universe env (U_max lower_bounds_of_v) in
+         [(lb, v)]
+     | _ ->
+       //it may not actually be a variable in case the user provided an explicit universe annnotation
+       //see, e.g., ulib/FStar.Universe.fst
+      []) in
+   //apply all the solutions
+   let _ =
+     let wl = {empty_worklist env with defer_ok=false} in
+     sols |> List.map (fun (lb, v) ->
+         //     printfn "Setting %s to its lower bound %s" (Print.univ_to_string v) (Print.univ_to_string lb);
+         match solve_universe_eq (-1) wl lb v with
+         | USolved wl -> ()
+         | _ -> fail lb v)
+   in
+   //check that the solutions produced valid inequalities
+   let rec check_ineq (u, v) : bool =
+     let u = N.normalize_universe env u in
+     let v = N.normalize_universe env v in
+     match u, v with
+     | U_zero, _ -> true
+     | U_succ u0, U_succ v0 -> check_ineq (u0, v0)
+     | U_name u0, U_name v0 -> Ident.ident_equals u0 v0
+     | U_unif u0, U_unif v0 -> Unionfind.equivalent u0 v0
+     | U_name _,  U_succ v0
+     | U_unif _,  U_succ v0 -> check_ineq (u, v0)
+     | U_max us,  _         -> us |> BU.for_all (fun u -> check_ineq (u, v))
+     | _,         U_max vs  -> vs |> BU.for_some (fun v -> check_ineq (u, v))
+     | _ -> false
+   in
+   if ineqs |> BU.for_all (fun (u, v) ->
+        if check_ineq (u, v)
+        then true
+        else (if Env.debug env <| Options.Other "GenUniverses"
+              then BU.print2 "%s </= %s" (Print.univ_to_string u) (Print.univ_to_string v);
+              false))
+   then ()
+   else (if Env.debug env <| Options.Other "GenUniverses"
+         then (BU.print1 "Partially solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs));
+               Unionfind.rollback tx;
+               BU.print1 "Original solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs)));
+         raise (Error ("Failed to solve universe inequalities for inductives",
+                      Env.get_range env)))
 
 let solve_universe_inequalities env ineqs =
     let tx = Unionfind.new_transaction () in
@@ -2498,29 +2509,40 @@ let rec solve_deferred_constraints env (g:guard_t) =
     | Some [] -> {g with deferred=[]}
     | _ -> failwith "impossible: Unexpected deferred constraints remain" in
    solve_universe_inequalities env g.univ_ineqs;
-   {g with univ_ineqs=[]}
+   {g with univ_ineqs=([], [])}
 
-let discharge_guard' use_env_range_msg env (g:guard_t) : guard_t =
-   let g = solve_deferred_constraints env g in
-   (if not (Env.should_verify env) then ()
-    else match g.guard_f with
-    | Trivial -> ()
+//use_smt flag says whether to use the smt solver to discharge this guard
+//if use_smt = true, this function NEVER returns None, the error might come from the smt solver though
+//if use_smt = false, then None means could not discharge the guard without using smt
+let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<guard_t> =
+  let g = solve_deferred_constraints env g in
+  let ret_g = {g with guard_f = Trivial} in
+  if not (Env.should_verify env) then Some ret_g
+  else
+    match g.guard_f with
+    | Trivial -> Some ret_g
     | NonTrivial vc ->
-        if Env.debug env <| Options.Other "Norm"
-        then Errors.diag (Env.get_range env)
-                            (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
-        let vc = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify] env vc in
-        begin match check_trivial vc with
-            | Trivial -> ()
-            | NonTrivial vc ->
-                if Env.debug env <| Options.Other "Rel"
-                then Errors.diag (Env.get_range env)
-                                 (BU.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
-                env.solver.solve use_env_range_msg env vc
-        end);
-  {g with guard_f=Trivial}
+      if Env.debug env <| Options.Other "Norm"
+      then Errors.diag (Env.get_range env)
+                       (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
+      let vc = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify] env vc in
+      match check_trivial vc with
+      | Trivial -> Some ret_g
+      | NonTrivial vc ->
+        if not use_smt then None
+        else
+          let _ =
+            if Env.debug env <| Options.Other "Rel"
+            then Errors.diag (Env.get_range env)
+                             (BU.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
+            env.solver.solve use_env_range_msg env vc
+          in
+          Some ret_g
 
-let discharge_guard env g = discharge_guard' None env g
+let discharge_guard env g =
+  match discharge_guard' None env g true with
+  | Some g -> g
+  | None   -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
 let resolve_implicits g =
   let unresolved u = match Unionfind.find u with
@@ -2543,7 +2565,11 @@ let resolve_implicits g =
                let g = if env.is_pattern
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
                        else g in
-               let g' = discharge_guard' (Some (fun () -> Print.term_to_string tm)) env g in
+               let g' =
+                 match discharge_guard' (Some (fun () -> Print.term_to_string tm)) env g true with
+                 | Some g -> g
+                 | None   -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
+               in
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 
@@ -2559,4 +2585,13 @@ let force_trivial_guard env g =
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
-    {trivial_guard with univ_ineqs=[u1,u2]}
+    {trivial_guard with univ_ineqs=([], [u1,u2])}
+
+let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
+  match try_teq env t1 t2 with
+  | None -> false
+  | Some g ->
+    match discharge_guard' None env g false with
+    | Some _ -> true
+    | None   -> false
+

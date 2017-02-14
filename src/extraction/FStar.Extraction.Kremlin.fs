@@ -17,6 +17,7 @@
 #light "off"
 
 module FStar.Extraction.Kremlin
+open FStar.All
 
 open FStar
 open FStar.Util
@@ -585,7 +586,7 @@ and translate_expr env e: expr =
       // (void*)0 so that it can get rid of ghost calls to HST.get at the
       // beginning of functions, which is needed to enforce the push/pop
       // structure.
-      ECast (EConstant (UInt8, "0"), TAny)
+      EUnit
 
   | MLE_App ({ expr = MLE_Name p }, [ e ]) when string_of_mlpath p = "Obj.repr" ->
       ECast (translate_expr env e, TAny)

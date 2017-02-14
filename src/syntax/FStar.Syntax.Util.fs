@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Util
+open FStar.All
 
 open Prims
 open FStar
@@ -690,21 +691,24 @@ let rec arrow_formals k =
     bs, comp_result c
 
 let abs_formals t =
-    let rec aux t what =
+    let subst_lcomp_opt s l = match l with
+        | Some (Inl l) ->
+          let l = {l with res_typ=Subst.subst s l.res_typ;
+                          comp=(fun () -> Subst.subst_comp s (l.comp()))} in
+          Some (Inl l)
+        | _ -> l
+    in
+    let rec aux t abs_body_lcomp =
         match (unascribe <| Subst.compress t).n with
         | Tm_abs(bs, t, what) ->
             let bs',t, what = aux t what in
             bs@bs', t, what
-        | _ -> [], t, what
+        | _ -> [], t, abs_body_lcomp
     in
-    let bs, t, what = aux t None in
-    (* TODO : what should be open, no ? *)
-    (*let what = match what with
-        | Some (Inr lc) -> Subst.open_lc bs what
-        | _ -> what
-    in*)
-    let bs, t = Subst.open_term bs t in
-    bs, t, what
+    let bs, t, abs_body_lcomp = aux t None in
+    let bs, t, opening = Subst.open_term' bs t in
+    let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
+    bs, t, abs_body_lcomp
 
 let mk_letbinding lbname univ_vars typ eff def =
     {lbname=lbname;

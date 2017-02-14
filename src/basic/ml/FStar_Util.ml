@@ -37,17 +37,17 @@ type time = float
 let now () = BatUnix.gettimeofday ()
 let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
-  n, 
+  n,
   Z.of_float (n *. 1000.0)
-let record_time f = 
+let record_time f =
     let start = now () in
-    let res = f () in 
+    let res = f () in
     let _, elapsed = time_diff start (now()) in
     res, elapsed
 let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
 let is_before t1 t2 = compare t1 t2 < 0
 let string_of_time = string_of_float
-  
+
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -64,8 +64,10 @@ let lock () = ()
 let release () = ()
 let sleep n = Thread.delay ((Z.to_float n) /. 1000.)
 
-let monitor_enter _ = ()
-let monitor_exit _ = ()
+let mlock = Mutex.create ()
+
+let monitor_enter _ = Mutex.lock mlock
+let monitor_exit _ = Mutex.unlock mlock
 let monitor_wait _ = ()
 let monitor_pulse _ = ()
 let current_tid _ = Z.zero
@@ -77,6 +79,51 @@ let atomically =
 
 let spawn f =
   let _ = Thread.create f () in ()
+
+let write_input in_write input =
+  output_string in_write input;
+  flush in_write
+
+(*let cnt = ref 0*)
+
+let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
+  (*let fc = open_out ("tmp/q"^(string_of_int !cnt)) in
+  output_string fc input;
+  close_out fc;*)
+  let cmd = prog^" "^args in
+  let (to_chd_r, to_chd_w) = Unix.pipe () in
+  let (from_chd_r, from_chd_w) = Unix.pipe () in
+  Unix.set_close_on_exec to_chd_w;
+  Unix.set_close_on_exec from_chd_r;
+  let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
+  (*let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; ("run.sh "^(string_of_int (!cnt)))^" | " ^ cmd |]*)
+                               to_chd_r from_chd_w Unix.stderr
+  in
+  (*cnt := !cnt +1;*)
+  Unix.close from_chd_w;
+  Unix.close to_chd_r;
+  let cin = Unix.in_channel_of_descr from_chd_r in
+  let cout = Unix.out_channel_of_descr to_chd_w in
+
+  (* parallel reading thread *)
+  let out = Buffer.create 16 in
+  let rec read_out _ =
+    try
+      let s = BatString.trim (input_line cin) in
+      if s = "Done!" then ()
+      else (Buffer.add_string out (s ^ "\n"); read_out ())
+    with End_of_file -> Buffer.add_string out ("\nkilled\n")
+  in
+  let child_thread = Thread.create (fun _ -> read_out ()) () in
+
+  (* writing to z3 *)
+  write_input cout input;
+  close_out cout;
+
+  (* waiting for z3 to finish *)
+  Thread.join child_thread;
+  close_in cin;
+  Buffer.contents out
 
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
   let command = prog^" "^args in
@@ -103,6 +150,7 @@ let ask_process (p:proc) (stdin:string) : string =
   Thread.join child_thread;
   Buffer.contents out
 
+
 let kill_process (p:proc) =
   let _ = Unix.close_process (p.inc, p.outc) in
   p.killed <- true
@@ -112,12 +160,13 @@ let kill_all () =
 
 let run_proc (name:string) (args:string) (stdin:string) : bool * string * string =
   let command = name^" "^args in
-  let (inc,outc) = Unix.open_process command in
+  let (inc,outc,errc) = Unix.open_process_full command (Unix.environment ()) in
   output_string outc stdin;
   flush outc;
   let res = BatPervasives.input_all inc in
-  let _ = Unix.close_process (inc, outc) in
-  (true, res, "")
+  let err = BatPervasives.input_all errc in
+  let _ = Unix.close_process_full (inc, outc, errc) in
+  (true, res, err)
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
 let is_path_absolute path_str =
@@ -575,6 +624,12 @@ let write_file (fn:string) s =
   append_to_file fh s;
   close_file fh
 let flush_file (fh:file_handle) = flush fh
+let file_get_contents f =
+  let ic = open_in_bin f in
+  let l = in_channel_length ic in
+  let s = really_input_string ic l in
+  close_in ic;
+  s
 
 let for_range lo hi f =
   for i = Z.to_int lo to Z.to_int hi do
@@ -699,7 +754,7 @@ let print_endline = print_endline
 let map_option f opt = BatOption.map f opt
 
 let save_value_to_file (fname:string) value =
-  BatFile.with_file_out 
+  BatFile.with_file_out
     fname
     (fun f ->
       BatPervasives.output_value f value)
@@ -719,7 +774,7 @@ let print_exn e =
 
 let digest_of_file (fname:string) =
   BatDigest.file fname
-  
+
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)
 
@@ -775,7 +830,7 @@ let read_hints (filename: string): hints_db option =
         `List hints
       ] ->
         {
-          module_digest; 
+          module_digest;
           hints = List.map (function
             | `Null -> None
             | `List [
@@ -805,7 +860,7 @@ let read_hints (filename: string): hints_db option =
                   query_elapsed_time = Z.of_int query_elapsed_time
                 }
               | _ ->
-                 raise Exit 
+                 raise Exit
           ) hints
         }
     | _ ->
@@ -815,6 +870,6 @@ let read_hints (filename: string): hints_db option =
    | Exit ->
       Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
       None
-   | Sys_error _ -> 
+   | Sys_error _ ->
       Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
       None

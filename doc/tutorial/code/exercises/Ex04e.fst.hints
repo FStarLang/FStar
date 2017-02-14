@@ -1,11 +1,11 @@
 [
-  "mS òlÿv\u001a·ƒ>ºß|¨Ó",
+  "y•\u0001eøoÎ]U³A(ÙÁâþ",
   [
     [ "Ex04e.option", 1, 2, 1, [ "@query" ], 0 ],
     [ "Ex04e.uu___is_None", 1, 2, 1, [ "@query" ], 0 ],
     [ "Ex04e.uu___is_Some", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Ex04e.__proj__Some__item___0",
+      "Ex04e.__proj__Some__item__v",
       1,
       2,
       1,
@@ -22,8 +22,12 @@
       2,
       1,
       [
-        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list"
+        "@query", "binder_x_110dc7994f46cc2e07a637d4d5fe4369_1",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
     ]
