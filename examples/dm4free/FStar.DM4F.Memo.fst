@@ -272,6 +272,7 @@ let memo_rec (f: x:dom -> Tot (partial_result x)) (x0:dom)
 
 
 
+let p (x:dom) (px:partial_result x) (x':dom) = %[ %[x'; 1 ; ()] ] << %[ %[x; 0 ; px] ]
 
 reifiable
 let rec complete_memo_rec_extr
@@ -283,11 +284,13 @@ let rec complete_memo_rec_extr
   match px with
   | Done _ y -> y
   | Need x0 x' cont ->
-    let p x' = %[ %[x'; 1 ; ()] ] << %[ %[x; 0 ; px] ] in
-    let h (x:dom{p x}) : Memo codom = memo_rec_extr f x in
-    let y = memo_f_extr_p p h x' in
+      let y = memo_f_extr_p (p x px) (memo_rec_extr_temp f x px) x' in
     assume (forall y. cont y << cont) ;
     complete_memo_rec_extr f x (cont y)
+
+and memo_rec_extr_temp (f: (x:dom) -> partial_result x) (x0:dom) (px0:partial_result x0) (x:dom{p x0 px0 x})
+  : Memo codom
+= memo_rec_extr f x
 
 and memo_rec_extr (f: x:dom -> Tot (partial_result x)) (x0:dom) : Memo codom (decreases %[ x0 ; 1 ; ()])
 = complete_memo_rec_extr f x0 (f x0)
