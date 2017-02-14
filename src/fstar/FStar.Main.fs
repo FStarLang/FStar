@@ -67,8 +67,9 @@ let codegen (umods, env) =
       | _ -> failwith "Unrecognized option"
     in
     match opt with
-    | Some "OCaml" when Options.print_ml() -> 
-        List.iter FStar.Extraction.ML.PrintML.print mllibs
+    | Some "OCaml" when FStar.Extraction.ML.PrintML.is_default_printer -> 
+        let out_dir = Options.output_dir() in
+        List.iter (FStar.Extraction.ML.PrintML.print out_dir ext) mllibs
     | Some "FSharp" | Some "OCaml" ->
         let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
         List.iter (fun (n,d) ->

@@ -2,4 +2,6 @@ module FStar.Extraction.ML.PrintML
 
 open FStar.Extraction.ML.Syntax
 
-let print (_:mllib) = failwith ""
+let is_default_printer = false
+
+let print (_:option<string>) (_:string) (_:mllib) = ()

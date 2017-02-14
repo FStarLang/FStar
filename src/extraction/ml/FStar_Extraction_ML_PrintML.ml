@@ -9,7 +9,12 @@ open Longident
 
 open FStar_Extraction_ML_Syntax
 
+(* Global state used for the name of the ML module being pprinted.
+   m_ref is only set once in build_ast and read once in path_to_ident
+   This is done in order to avoid clutter. *)
 let m_ref = ref ""
+
+let is_default_printer = true
 
 let flatmap f l = map f l |> List.flatten
 let opt_to_list = function Some x -> [x] | None -> []
@@ -39,12 +44,10 @@ let rec path_to_string ((l, sym): mlpath): string =
   | (hd::tl) -> BatString.concat "_" [hd; path_to_string (tl, sym)]
 
 let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
-  (* let _ = (match sym with
-  | "lbname" -> (BatString.concat "/" l) |> print_string; print_string "\n"
-  | _ -> ()) in *)
   match l with
   | [] -> mk_lident sym
   | ("FStar"::tl) ->
+     (* change "." to "_" in names of FStar modules *) 
      let (l1, tl) = BatList.span (fun x -> x.[0] |> BatChar.is_uppercase) l in
      let hd = BatString.concat "_" l1 in
      path_to_ident ((hd::tl), sym)
@@ -96,7 +99,7 @@ let rec build_pattern (p: mlpattern): pattern =
      (match l with
       | [pat] -> build_pattern pat
       | (pat1::tl) -> Pat.or_ (build_pattern pat1) (build_pattern (MLP_Branch tl))
-      | [] -> failwith "can this happen?")
+      | [] -> failwith "Empty branch shouldn't happen")
   | MLP_Record (path, l) -> 
      let fs = map (fun (x,y) -> (path_to_ident (path, x), build_pattern y)) l in
      Pat.record fs Open (* does the closed flag matter? *)
@@ -123,12 +126,7 @@ let rec build_core_type (ty: mlty): core_type =
   | MLTY_Fun (ty1, tag, ty2) -> 
      let c_ty1 = build_core_type ty1 in
      let c_ty2 = build_core_type ty2 in
-     let label = Nolabel (* do we need to preserve these labels? *)
-                 (* Labelled (match tag with
-                  | E_PURE -> "Pure"
-                  | E_GHOST -> "Ghost"
-                  | E_IMPURE -> "Impure"
-                 ) *) in
+     let label = Nolabel in
      Typ.mk (Ptyp_arrow (label,c_ty1,c_ty2))
   | MLTY_Named (tys, path) -> 
      let c_tys = map build_core_type tys in
@@ -146,12 +144,7 @@ let rec build_core_type (ty: mlty): core_type =
   | MLTY_Top -> Typ.mk Ptyp_any
 
 let build_binding_pattern ?print_ty ?ty ?scheme ((sym, _): mlident) : pattern =
-  let pid = Pat.mk (Ppat_var (mk_sym sym)) in
-  let p = pid (* (match scheme with
-    | Some (ids, ty) -> 
-       let binders = map (fun (x,_) -> (mk_typ_name x)) ids in
-       Pat.mk (Ppat_constraint (pid, Typ.poly binders (build_core_type ty)))
-    | None -> pid) *) in
+  let p = Pat.mk (Ppat_var (mk_sym sym)) in
   match ty with
   | Some t -> 
      (match print_ty with
@@ -226,8 +219,7 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
   | t -> 
      (match print_ty with
      | Some true -> Exp.constraint_ e' (build_core_type t)
-     | Some false -> e'
-     | _ -> e' (* Exp.constraint_ e' (build_core_type t) *)) (* not sure *)
+     | _ -> e')
 
 and build_seq args =
   match args with
@@ -261,9 +253,6 @@ and build_case ((lhs, guard, rhs): mlbranch): case =
    pc_guard = BatOption.map build_expr guard; 
    pc_rhs = (build_expr rhs)}
 
-(* and build_value (mllbs: mllb list): value_binding list =
-  map build_binding mllbs *)
-
 and build_binding (toplevel: bool) (lb: mllb): value_binding =
   let print_ty = if (lb.print_typ && toplevel) then
     (match lb.mllb_tysc with
@@ -274,9 +263,6 @@ and build_binding (toplevel: bool) (lb: mllb): value_binding =
   let p = build_binding_pattern ?print_ty:(Some lb.print_typ) 
                                 ?scheme:lb.mllb_tysc lb.mllb_name in
   (Vb.mk p e)
-
-let build_row_field (sym, tys): row_field = 
-  Rtag (sym, no_attrs, false, map build_core_type tys)
 
 let build_label_decl (sym, ty): label_declaration =
   Type.field (mk_sym sym) (build_core_type ty)
@@ -308,7 +294,6 @@ let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_dec
   (Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ptype_name)
 
 let build_tydecl (td: mltydecl): structure_item_desc =
-  (* list length > 1 for mutually recursive type declarations *)
   let recf = Recursive in
   let type_declarations = map build_one_tydecl td in 
   Pstr_type(recf, type_declarations)
@@ -340,26 +325,28 @@ let build_m path (md: (mlsig * mlmodule) option) : structure =
   | Some(s, m) -> 
      let open_prims = 
        Str.open_ (Opn.mk ?override:(Some Fresh) (mk_lident "Prims")) in 
-     let a = map build_mlsig1 s in (* is this necessary? *)
+     let a = map build_mlsig1 s in (* module signatures not yet implemented *)
      open_prims::(map (build_module1 path) m |> flatmap opt_to_list)
   | None -> []
 
-let build_ast = function
+let build_ast (out_dir: string option) (ext: string) (ml: mllib) = 
+  match ml with
   | MLLib l -> 
      map (fun (p, md, _) -> 
          let m = path_to_string p in
          m_ref := m;
-         let name = BatString.concat "." [m; "ml"] in
-         let path = BatString.concat "/" ["pretty-output"; name] in
+         let name = BatString.concat "" [m; ext] in
+         let path = (match out_dir with
+           | Some out -> BatString.concat "/" [out; name]
+           | None -> name) in
          (path, build_m path md)) l
 
 let print_module ((path, m): string * structure) = 
-  print_string path; print_string "\n"; 
   Format.set_formatter_out_channel (open_out path);
   structure Format.std_formatter m;
   Format.pp_print_flush Format.std_formatter ()
 
-let print ml = 
-  let ast = build_ast ml in
+let print (out_dir: string option) (ext: string) (ml: mllib) = 
+  let ast = build_ast out_dir ext ml in
   iter print_module ast
 
