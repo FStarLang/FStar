@@ -88,21 +88,6 @@ let ni_com (env:label_fun) (c:com) (l:label) : Tot Type0 =
   (forall (h0: rel heap). (* {:pattern (low_equiv env h0)} *) ni_com' env c l h0) /\
   (forall (h0:heap). (* {:pattern (Some? (interpret_com h0 c))} *) inv_com' env c l h0)
 
-(* KM : Trying to figure out wht are the design tradeoffs on option heap *)
-(* let preserves_env_upto_label (env:label_fun) (l:label) (c:com) (h0:heap) : Tot Type0 *)
-(* = let (res, h1) = interpret_com h0 c in *)
-(*   Some? res ==> (forall (i:id{i `in_` h0}). env i < l ==> index h0 i = index h1 i) *)
-
-(* type ni_com' (env:label_fun) (c:com) (l:label) (h0:rel heap) = *)
-(*   begin *)
-(*     let res, h1 = split (lift (fun h -> interpret_com h c) h0) in *)
-(*     low_equiv env h0 /\ Some? `diagb` res ==> low_equiv env h1 *)
-(*     end /\ *)
-(*     (preserves_env_upto_label env l c) `diag` h0 *)
-
-(* type ni_com (env:label_fun) (c:com) (l:label) = *)
-(*     forall (h0: rel heap). ni_com' env c l h0 *)
-
 (*********************** Typing Rules for Expressions **********************)
 
 (* CH: The way we derive these rules looks more like a
@@ -361,88 +346,96 @@ let skip_com _ = ()
           env,pc:l |- while (e <> 0) do c
 *)
 
-(* let interpret_exp (h:heap) (v:metric) : Tot nat = *)
-(*   match fst (interpret_exp h v) with *)
-(*   | Some n -> if 0 > n then 0 else n *)
-(*   | None -> 0 *)
+val while_inv_com'
+  : env:label_fun ->
+    e:exp ->
+    c:com ->
+    v:metric ->
+    l:label ->
+    h0:heap ->
+    Lemma
+      (requires (ni_exp env e l /\ ni_com env c l))
+      (ensures  (inv_com' env (While e c v) l h0))
+      (decreases (decr_while h0 (While e c v)))
+let rec while_inv_com' env e c v l h0 =
+  let Some v0, h0' = reify (interpret_exp_st e) h0 in
+  if v0 = 0 then ()
+  else
+    let m0 = interpret_exp' h0 v in
+    match reify (interpret_com_st c h0) h0 with
+    | None, _ -> ()
+    | Some (), h2 ->
+      let m1 = interpret_exp' h2 v in
+      if m0 > m1
+      then begin
+          assert (decr_while h2 (While e c v) << decr_while h0 (While e c v)) ;
+          while_inv_com' env e c v l h2
+        end
+      else assert (fst (reify (interpret_com_st (While e c v) h0) h0) = None)
 
-(* (\* slight metric taking option heap *\) *)
-(* val decr_while : h:(option heap) -> v:metric -> GTot nat *)
-(* let decr_while h v = match h with *)
-(*   | None -> 0 *)
-(*   | Some h0 -> interpret_exp h0 v *)
-
-(* (\* #reset-options "--z3rlimit 30" *\) *)
 
 
-(* val while_inv_com' *)
-(*   : env:label_fun -> *)
-(*     e:exp -> *)
-(*     c:com -> *)
-(*     v:metric -> *)
-(*     l:label -> *)
-(*     h:option heap -> *)
-(*     Lemma *)
-(*       (requires (ni_exp env e l /\ ni_com env c l)) *)
-(*       (ensures  (inv_com' env (While e c v) l h)) *)
-(*       (decreases (decr_while h v)) *)
-(* let rec while_inv_com' env e c v l = function *)
-(*   | None -> () *)
-(*   | Some h0 -> *)
-(*     let h1_opt = interpret_com h0 c in *)
-(*     match h1_opt with *)
-(*     | None -> () *)
-(*     | Some h1 -> *)
-(*       let v0 = interpret_exp h0 v in *)
-(*       let v1 = interpret_exp h1 v in *)
-(*       if v0 > v1 && v1 >= 0 *)
-(*       then while_inv_com' env e c v l h1_opt *)
-(*       else () *)
 
-(* val while_com' : env:label_fun -> e:exp -> c:com -> v:metric -> l:label -> h:rel (option heap) -> *)
-(*   Lemma (requires (ni_exp env e l /\ ni_com env c l)) *)
-(*         (ensures  (ni_com' env (While e c v) l h)) *)
-(*         (decreases (decr_while (R?.l h) v + decr_while (R?.r h) v)) *)
-(* let rec while_com' env e c v l h = *)
-(*   // Interpret the body *)
-(*   match h with *)
-(*   | R (Some h_l) (Some h_r) -> begin *)
-(*     let o_l = interpret_com h_l c in *)
-(*     let o_r = interpret_com h_r c in *)
+#set-options "--z3rlimit 30"
 
-(*     // Case analysis on termination of bodies *)
-(*     match o_l, o_r with *)
-(*     | Some hl , Some hr  -> *)
-(*       begin *)
-(*         // case analysis on decreasing of metric *)
-(*         match (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 , *)
-(*           (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 with *)
-(*         | true , true  -> while_com' env e c v l (R o_l o_r) *)
-(*         | true , false -> while_com' env e c v l (R o_l (Some h_r)) *)
-(*         | false , true -> while_com' env e c v l (R (Some h_l) o_r ) *)
-(*         | false, false -> () *)
-(*       end *)
-(*     | Some hl , None -> *)
-(*       if (interpret_exp h_l v > interpret_exp hl v) && interpret_exp hl v >= 0 then *)
-(*         while_com' env e c v l (R o_l (Some h_r)) *)
-(*     | None , Some hr  -> *)
-(*       if (interpret_exp h_r v > interpret_exp hr v) && interpret_exp hr v >= 0 then *)
-(*         while_com' env e c v l (R (Some h_l) o_r) *)
-(*     | None, None -> () *)
-(*     end *)
-(*   | _ -> () *)
+val while_ni_com' : env:label_fun -> e:exp -> c:com -> v:metric -> l:label -> h0:rel heap ->
+  Lemma (requires (ni_exp env e l /\ ni_com env c l))
+        (ensures  (ni_com' env (While e c v) l h0))
+        (decreases (decr_while (R?.l h0) (While e c v) + decr_while (R?.r h0) (While e c v)))
+let rec while_ni_com' env e c v l h0 =
+  if not (FStar.StrongExcludedMiddle.strong_excluded_middle (low_equiv env h0))
+  then ()
+  else
+    let R h0l h0r = h0 in
+    let Some v0l, h0l' = reify (interpret_exp_st e) h0l in
+    let Some v0r, h0r' = reify (interpret_exp_st e) h0r in
+    if Low? l
+    then begin
+      assert (v0l == v0r) ;
+      if v0l = 0 then ()
+      else
+        let m0l = interpret_exp' h0l v in
+        let m0r = interpret_exp' h0r v in
+        match reify (interpret_com_st c h0l) h0l with
+        | None, _ -> ()
+        | Some (), h2l ->
+          match reify (interpret_com_st c h0r) h0r with
+          | None, _ -> ()
+          | Some (), h2r ->
+            let m1l = interpret_exp' h2l v in
+            let m1r = interpret_exp' h2r v in
+            if m0l > m1l
+            then if m0r > m1r
+              then begin
+                  assert (decr_while h2l (While e c v) << decr_while h0l (While e c v)) ;
+                  while_ni_com' env e c v l (R h2l h2r)
+                end
+              else assert (fst (reify (interpret_com_st (While e c v) h0r) h0r) = None)
+            else
+              assert (fst (reify (interpret_com_st (While e c v) h0l) h0l) = None)
+      end
+    else
+      (* h0 and h1 are low_equiv since cl and cr cannot write at low cells *)
+      match reify (interpret_com_st (While e c v) h0l) h0l with
+      | None, _ -> ()
+      | Some (), h1l ->
+        match reify (interpret_com_st (While e c v) h0r) h0r with
+        | None, _ -> ()
+        | Some (), h1r ->
+          while_inv_com' env e c v l h0l ;
+          while_inv_com' env e c v l h0r ;
+          assert (low_equiv env h0 ==> low_equiv env (R h1l h1r))
 
-(* #reset-options *)
+#set-options "--z3rlimit 5"
 
-(* val while_com : env:label_fun -> e:exp -> c:com -> v:metric -> l:label -> *)
-(*   Lemma (requires (ni_exp env e l /\ ni_com env c l)) *)
-(*         (ensures  (ni_com env (While e c v) l)) *)
-(* let while_com env e c v l = *)
-  (* forall_intro *)
-  (*   (fun (h:rel (option heap)) -> *)
-  (*     while_com' env e c v l h <: Lemma (ensures (ni_com' env (While e c v) l h)))  *)
-  (*     ; *)
-  (* forall_intro *)
-  (*   (fun (h0:option heap) -> *)
-  (*     while_inv_com' env e c v l h0 <: Lemma (ensures (inv_com' env (While e c v) l h0))) *)
+val while_com : env:label_fun -> e:exp -> c:com -> v:metric -> l:label ->
+  Lemma (requires (ni_exp env e l /\ ni_com env c l))
+        (ensures  (ni_com env (While e c v) l))
+let while_com env e c v l =
+  forall_intro
+    (fun (h:rel heap) ->
+      while_ni_com' env e c v l h <: Lemma (ensures (ni_com' env (While e c v) l h))) ;
+  forall_intro
+    (fun (h0:heap) ->
+      while_inv_com' env e c v l h0 <: Lemma (ensures (inv_com' env (While e c v) l h0)))
 
