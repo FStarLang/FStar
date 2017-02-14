@@ -57,16 +57,23 @@ let diag : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (
 let uu____69 = (FStar_Options.debug_any ())
 in (match (uu____69) with
 | true -> begin
-(FStar_Util.print_string (let _0_122 = (FStar_Range.string_of_range r)
-in (FStar_Util.format2 "%s : (Diagnostic) %s\n" _0_122 msg)))
+(
+
+let uu____70 = (
+
+let uu____71 = (FStar_Range.string_of_range r)
+in (FStar_Util.format2 "%s : (Diagnostic) %s\n" uu____71 msg))
+in (FStar_Util.print_string uu____70))
 end
-| uu____70 -> begin
+| uu____72 -> begin
 ()
 end)))
 
 
-let warn : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (let _0_123 = (FStar_Range.string_of_range r)
-in (FStar_Util.print2_error "%s: (Warning) %s\n" _0_123 msg)))
+let warn : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (
+
+let uu____79 = (FStar_Range.string_of_range r)
+in (FStar_Util.print2_error "%s: (Warning) %s\n" uu____79 msg)))
 
 
 let num_errs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref (Prims.parse_int "0"))
@@ -86,13 +93,13 @@ in (
 let set_prefix = (fun s -> (FStar_ST.write pfx (Some (s))))
 in (
 
-let clear_prefix = (fun uu____148 -> (FStar_ST.write pfx None))
+let clear_prefix = (fun uu____151 -> (FStar_ST.write pfx None))
 in (
 
 let append_prefix = (fun s -> (
 
-let uu____156 = (FStar_ST.read pfx)
-in (match (uu____156) with
+let uu____159 = (FStar_ST.read pfx)
+in (match (uu____159) with
 | None -> begin
 s
 end
@@ -104,38 +111,54 @@ in {set_prefix = set_prefix; append_prefix = append_prefix; clear_prefix = clear
 
 let add_errors : (Prims.string * FStar_Range.range) Prims.list  ->  Prims.unit = (fun errs -> (
 
-let errs = (FStar_All.pipe_right errs (FStar_List.map (fun uu____185 -> (match (uu____185) with
+let errs = (FStar_All.pipe_right errs (FStar_List.map (fun uu____188 -> (match (uu____188) with
 | (msg, r) -> begin
-(let _0_124 = (message_prefix.append_prefix msg)
-in ((r), (_0_124)))
+(
+
+let uu____195 = (message_prefix.append_prefix msg)
+in ((r), (uu____195)))
 end))))
 in (
 
 let n_errs = (FStar_List.length errs)
-in (FStar_Util.atomically (fun uu____196 -> ((let _0_126 = (let _0_125 = (FStar_ST.read verification_errs)
-in (FStar_List.append errs _0_125))
-in (FStar_ST.write verification_errs _0_126));
-(let _0_128 = (let _0_127 = (FStar_ST.read num_errs)
-in (_0_127 + n_errs))
-in (FStar_ST.write num_errs _0_128));
+in (FStar_Util.atomically (fun uu____200 -> ((
+
+let uu____202 = (
+
+let uu____206 = (FStar_ST.read verification_errs)
+in (FStar_List.append errs uu____206))
+in (FStar_ST.write verification_errs uu____202));
+(
+
+let uu____222 = (
+
+let uu____223 = (FStar_ST.read num_errs)
+in (uu____223 + n_errs))
+in (FStar_ST.write num_errs uu____222));
 ))))))
 
 
 let mk_error : Prims.string  ->  FStar_Range.range  ->  Prims.string = (fun msg r -> (match ((r.FStar_Range.use_range <> r.FStar_Range.def_range)) with
 | true -> begin
-(let _0_130 = (FStar_Range.string_of_use_range r)
-in (let _0_129 = (FStar_Range.string_of_range r)
-in (FStar_Util.format3 "%s: (Error) %s (see %s)\n" _0_130 msg _0_129)))
+(
+
+let uu____236 = (FStar_Range.string_of_use_range r)
+in (
+
+let uu____237 = (FStar_Range.string_of_range r)
+in (FStar_Util.format3 "%s: (Error) %s (see %s)\n" uu____236 msg uu____237)))
 end
-| uu____222 -> begin
-(let _0_131 = (FStar_Range.string_of_range r)
-in (FStar_Util.format2 "%s: (Error) %s\n" _0_131 msg))
+| uu____238 -> begin
+(
+
+let uu____239 = (FStar_Range.string_of_range r)
+in (FStar_Util.format2 "%s: (Error) %s\n" uu____239 msg))
 end))
 
 
-let report_all : Prims.unit  ->  Prims.nat = (fun uu____226 -> (
+let report_all : Prims.unit  ->  Prims.nat = (fun uu____243 -> (
 
-let all_errs = (FStar_Util.atomically (fun uu____234 -> (
+let all_errs = (FStar_Util.atomically (fun uu____251 -> (
 
 let x = (FStar_ST.read verification_errs)
 in ((FStar_ST.write verification_errs []);
@@ -143,13 +166,16 @@ x;
 ))))
 in (
 
-let all_errs = (FStar_List.sortWith (fun uu____258 uu____259 -> (match (((uu____258), (uu____259))) with
-| ((r1, uu____269), (r2, uu____271)) -> begin
+let all_errs = (FStar_List.sortWith (fun uu____275 uu____276 -> (match (((uu____275), (uu____276))) with
+| ((r1, uu____286), (r2, uu____288)) -> begin
 (FStar_Range.compare_use_range r1 r2)
 end)) all_errs)
-in ((FStar_All.pipe_right all_errs (FStar_List.iter (fun uu____282 -> (match (uu____282) with
+in ((FStar_All.pipe_right all_errs (FStar_List.iter (fun uu____299 -> (match (uu____299) with
 | (r, msg) -> begin
-(FStar_Util.print_error (mk_error msg r))
+(
+
+let uu____304 = (mk_error msg r)
+in (FStar_Util.print_error uu____304))
 end))));
 (FStar_List.length all_errs);
 ))))
@@ -160,12 +186,14 @@ let handle_err : Prims.bool  ->  Prims.exn  ->  Prims.unit = (fun warning e -> (
 (
 
 let msg = (message_prefix.append_prefix msg)
-in (let _0_132 = (FStar_Range.string_of_range r)
-in (FStar_Util.print3_error "%s : %s %s\n" _0_132 (match (warning) with
+in (
+
+let uu____317 = (FStar_Range.string_of_range r)
+in (FStar_Util.print3_error "%s : %s %s\n" uu____317 (match (warning) with
 | true -> begin
 "(Warning)"
 end
-| uu____299 -> begin
+| uu____318 -> begin
 "(Error)"
 end) msg)))
 end
@@ -181,16 +209,16 @@ end
 let msg = (message_prefix.append_prefix msg)
 in (FStar_Util.print1_error "Error: %s" msg))
 end
-| uu____304 -> begin
+| uu____323 -> begin
 (Prims.raise e)
 end))
 
 
-let handleable : Prims.exn  ->  Prims.bool = (fun uu___52_307 -> (match (uu___52_307) with
+let handleable : Prims.exn  ->  Prims.bool = (fun uu___50_326 -> (match (uu___50_326) with
 | (Error (_)) | (FStar_Util.NYI (_)) | (Err (_)) -> begin
 true
 end
-| uu____311 -> begin
+| uu____330 -> begin
 false
 end))
 
@@ -199,11 +227,14 @@ let report : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg ->
 (
 
 let msg = (message_prefix.append_prefix msg)
-in (FStar_Util.print_error (mk_error msg r)));
+in (
+
+let uu____342 = (mk_error msg r)
+in (FStar_Util.print_error uu____342)));
 ))
 
 
-let get_err_count : Prims.unit  ->  Prims.int = (fun uu____325 -> (FStar_ST.read num_errs))
+let get_err_count : Prims.unit  ->  Prims.int = (fun uu____345 -> (FStar_ST.read num_errs))
 
 
 
