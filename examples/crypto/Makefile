@@ -64,7 +64,7 @@ verify_hh-%: __force__
 
 all: uall
 
-uall: $(VERFILES:%=verify-%) $(HH_VERFILES:%=verify_hh-%) rpc-test cnt-test
+uall: $(VERFILES:%=verify-%) $(HH_VERFILES:%=verify_hh-%) RPC.ml CntProtocol.ml
 
 RPC.ml: SHA1.fst MAC.fst Formatting.fst RPC.fst
 	$(FSTAR_ALWAYS) --no_location_info --lax \
