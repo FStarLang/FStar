@@ -289,8 +289,9 @@ let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfo
      | Tm_match (_, branches) ->
        debug_log env ("Checking strict positivity in an Tm_match, recur in the branches)");
        List.for_all (fun (p, _, t) ->
-         let bvs = pat_bvs p in
-         ty_strictly_positive_in_type ty_lid t unfolded (push_binders env (List.map (fun bv -> mk_binder bv) bvs))
+         let bs = List.map mk_binder (pat_bvs p) in
+         let bs, t = SS.open_term bs t in
+         ty_strictly_positive_in_type ty_lid t unfolded (push_binders env bs)
        ) branches
      | Tm_ascribed (t, _, _) ->
        debug_log env ("Checking strict positivity in an Tm_ascribed, recur)");
