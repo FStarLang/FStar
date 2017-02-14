@@ -153,6 +153,7 @@ val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 val push_sigelt        : env -> sigelt -> env
 val push_sigelt_inst   : env -> sigelt -> universes -> env
 val push_bv            : env -> bv -> env
+val pop_bv             : env -> option<(bv * env)>
 val push_let_binding   : env -> lbname -> tscheme -> env
 val push_binders       : env -> binders -> env
 val push_module        : env -> modul -> env
@@ -162,6 +163,7 @@ val expected_typ       : env -> option<typ>
 val clear_expected_typ : env -> env*option<typ>
 val set_current_module : env -> lident -> env
 val finish_module      : (env -> modul -> env)
+val eq_gamma           : env -> env -> bool
 
 (* Collective state of the environment *)
 val bound_vars   : env -> list<bv>

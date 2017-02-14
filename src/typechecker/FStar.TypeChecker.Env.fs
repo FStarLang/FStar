@@ -899,6 +899,13 @@ let push_local_binding env b = {env with gamma=b::env.gamma}
 
 let push_bv env x = push_local_binding env (Binding_var x)
 
+let pop_bv env = 
+    match env.gamma with
+    | Binding_var x::rest -> Some (x, {env with gamma=rest})
+    | _ -> None
+
+let eq_gamma env env' = FStar.Util.physical_equality env.gamma env'.gamma
+
 let push_binders env (bs:binders) =
     List.fold_left (fun env (x, _) -> push_bv env x) env bs
 
