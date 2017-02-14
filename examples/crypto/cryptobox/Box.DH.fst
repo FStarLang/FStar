@@ -44,7 +44,7 @@ assume val hash: dh_element -> Tot aes_key
 private type range = fun (k_id:ae_id) -> k:PlainDH.key{PlainDH.ae_key_get_index k = k_id}
 private let inv (f:MM.map' (ae_id) range) = True
 
-assume val ae_key_log_region: (r:HH.rid{ extends r root /\ is_eternal_region r /\ is_below r root /\ disjoint r id_table_region /\ disjoint r ae_key_region})
+assume val ae_key_log_region: (r:HH.rid{ extends r root /\ is_eternal_region r /\ is_below r root})
 //private let ae_key_log_region = new_region root
 assume val ae_key_log: MM.t ae_key_log_region ae_id range inv
 //private let ae_key_log = MM.alloc #ae_key_log_region #ae_id #range #inv
@@ -68,12 +68,15 @@ let pk_get_rawpk pk =
 assume val dh_exponentiate: dh_element -> dh_exponent -> Tot dh_element
 
 val keygen: #i:id -> ST (dh_pair:(k:dh_pkey{k.pk_id=i}) * (k:dh_skey{k.sk_id=i}))
-  (requires (fun h -> True))
-  (ensures (fun h0 k h1 -> True))
+  (requires (fun h -> fresh i h))
+  (ensures (fun h0 k h1 -> 
+    unfresh i
+  ))
 let keygen #i =
   let dh_share,dh_exponent = dh_gen_key() in
   let dh_pk = DH_pkey #i dh_share in
   let dh_sk = DH_skey #i dh_exponent dh_pk in
+  make_unfresh i;
   dh_pk,dh_sk
 
 val coerce_pkey: #i:id{dishonest i} -> dh_share -> St (pk:dh_pkey{pk.pk_id=i})
@@ -147,7 +150,6 @@ let prf_odh dh_sk dh_pk =
       let k' = PlainDH.keygen i in
       // For some reason, extend violates modifies ... maybe separate regions better?
       MM.extend ae_key_log i k';
-      admit();
       k')
   else(
     assert(ae_dishonest i \/ ~prf_odh);
@@ -157,7 +159,7 @@ let prf_odh dh_sk dh_pk =
     let h0 = ST.get() in
     let k=PlainDH.coerce_key i hashed_raw_k in
     let h1 = ST.get() in
-    assert(let s' = Set.singleton (leak_regionGT k) in let s:Set.set (r:HH.rid) = Set.union (Set.singleton ae_key_region) s' in modifies_just s h0.h h1.h);
+    //assert(let s' = Set.singleton (leak_regionGT k) in let s:Set.set (r:HH.rid) = Set.union (Set.singleton ae_key_region) s' in modifies_just s h0.h h1.h);
 //    assert(let s' = Set.singleton (leak_regionGT k) in
 //    let s:Set.set (r:HH.rid) = Set.union (Set.singleton ae_key_region) (Set.singleton s') in modifies s h0 h1);
     admit();

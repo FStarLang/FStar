@@ -44,7 +44,7 @@ type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type cipher = b:bytes
 type nonce = B.lbytes noncesize
 
-assume val ae_key_region: (r:MR.rid{extends r root /\ is_eternal_region r /\ is_below r root /\ disjoint r id_table_region})
+assume val ae_key_region: (r:MR.rid{extends r root /\ is_eternal_region r /\ is_below r root})
 //private let ae_key_region = 
 //  recall_region id_table_region;
 //  new_region root
@@ -63,7 +63,7 @@ type log_t (i:ae_id) (r:rid)  = MM.t r log_key (log_range i) (log_inv i)
 *)
 
 noeq type key =
-  | Key: #i:ae_id -> #(region:rid{extends region ae_key_region}) -> raw:aes_key -> log:log_t i region -> key
+  | Key: #i:ae_id{ae_unfresh i} -> #(region:rid{extends region ae_key_region}) -> raw:aes_key -> log:log_t i region -> key
 
 val get_index: k:key -> Tot (i:ae_id{i=k.i})
 let get_index k = k.i
@@ -75,7 +75,7 @@ let get_index k = k.i
 *)
 let safe_key_gen parent m0 k m1 =
   // Reason about regions (HyperHeap)
-  let (s:Set.set (HH.rid)) = Set.singleton k.region in
+  let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
   HH.modifies_just s m0.h m1.h
   /\ extends k.region parent
   /\ fresh_region k.region m0.h m1.h
@@ -90,11 +90,19 @@ let safe_key_gen parent m0 k m1 =
    The postcondition ensures that the log is empty after creation.
 *)
 val keygen: i:ae_id -> ST (k:key{k.i=i})
-  (requires (fun _ -> True))
+  (requires (fun h -> ae_fresh i h))
   (ensures  (fun h0 k h1 -> 
-    safe_key_gen ae_key_region h0 k h1
+    let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
+    HH.modifies_just s h0.h h1.h
+    /\ extends k.region ae_key_region
+    /\ fresh_region k.region h0.h h1.h
+    /\ is_below k.region ae_key_region
+    /\ m_contains k.log h1
+    /\ m_sel h1 k.log == MM.empty_map log_key (log_range k.i)
+    /\ ae_unfresh i
   ))
 let keygen i =
+  ae_make_unfresh i;
   let rnd_k = random keysize in
   let region = new_region ae_key_region in
   let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
@@ -128,10 +136,20 @@ let leak_regionGT k =
 *)
 val coerce_key: i:ae_id{(ae_dishonest i) \/ ~(prf_odh)} -> raw_k:aes_key -> ST (k:key{k.i=i /\ k.raw = raw_k})
   (requires (fun _ -> True))
-  (ensures  (safe_key_gen ae_key_region))
+  (ensures  (fun h0 k h1 ->
+    let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
+    HH.modifies_just s h0.h h1.h
+    /\ extends k.region ae_key_region
+    /\ fresh_region k.region h0.h h1.h
+    /\ is_below k.region ae_key_region
+    /\ m_contains k.log h1
+    /\ m_sel h1 k.log == MM.empty_map log_key (log_range k.i)
+    /\ ae_unfresh i
+  ))
 let coerce_key i raw = 
   let region = new_region ae_key_region in
   let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
+  ae_make_unfresh i;
   Key #i #region raw log
 
 (**
