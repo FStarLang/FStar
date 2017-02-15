@@ -1,7 +1,6 @@
 module HyE.AE
 
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.HyperStack
@@ -14,6 +13,9 @@ open Platform.Bytes
 open CoreCrypto
 
 module B = Platform.Bytes
+module HH = FStar.HyperHeap
+module HS = FStar.HyperStack
+module MR = FStar.Monotonic.RRef
 
 open HyE.PlainAE
 
@@ -43,7 +45,8 @@ let get_index k = k.i
     Also, it makes sure that the log created along with the key is empty.
 *)
 let safe_key_gen parent m0 k m1 =
-    modifies Set.empty m0 m1
+  let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
+  modifies s m0 m1
   /\ extends k.region parent
   /\ fresh_region k.region m0.h m1.h
   /\ m_contains k.log m1
@@ -54,9 +57,13 @@ let safe_key_gen parent m0 k m1 =
    The postcondition ensures that the log is empty after creation.
 *)
 val keygen: i:ae_id -> parent:rid -> ST (k:key{k.i=i})
-  (requires (fun _ -> True))
+  (requires (fun h0 -> ae_fixed i))
   (ensures  (fun h0 k h1 -> 
-    safe_key_gen parent h0 k h1
+    modifies_one k.region h0 h1
+    /\ extends k.region parent
+    /\ fresh_region k.region h0.h h1.h
+    /\ m_contains k.log h1
+    /\ m_sel h1 k.log == createEmpty
   ))
 let keygen i parent =
   let rnd_k = random keysize in
@@ -68,7 +75,7 @@ let keygen i parent =
    The leak_key function transforms an abstract key into a raw aes_key.
    The refinement type on the key makes sure that no honest keys can be leaked.
 *)
-val leak_key: k:key{not (ae_honest k.i)} -> Tot aes_key 
+val leak_key: k:key{(ae_dishonest k.i)} -> Tot aes_key 
 let leak_key k =
   k.raw
 
@@ -77,9 +84,15 @@ let leak_key k =
    as we need to allocate space in memory for the key. The refinement type on the key makes sure that
    abstract keys created this way can not be honest.
 *)
-val coerce_key: i:ae_id{not (ae_honest i)} -> parent:rid -> aes_key -> ST (k:key{k.i=i})
-  (requires (fun _ -> True))
-  (ensures  (safe_key_gen parent))
+val coerce_key: i:ae_id{(ae_dishonest i)} -> parent:rid -> aes_key -> ST (k:key{k.i=i})
+  (requires (fun h0 -> True))
+  (ensures  (fun h0 k h1 ->
+    modifies_one k.region h0 h1
+    /\ extends k.region parent
+    /\ fresh_region k.region h0.h h1.h
+    /\ m_contains k.log h1
+    /\ m_sel h1 k.log == createEmpty
+  ))
 let coerce_key i parent raw = 
   let region = new_region parent in
   let log = alloc_mref_seq region createEmpty in
@@ -89,22 +102,23 @@ let coerce_key i parent raw =
    safe_log_append makes sure that new entries added to the log are appended in a memory-safe way.
 *)
 type safe_log_append k entry h0 h1 =
-    modifies_one k.region h0 h1 
-    /\ m_contains k.log h1
+    //modifies_one k.region h0 h1 
+    m_contains k.log h1
     /\ m_sel h1 k.log == snoc (m_sel h0 k.log) entry
     /\ witnessed (at_least (Seq.length (m_sel h0 k.log)) entry k.log)
 (**
    Encrypt a a message under a key. Idealize if the key is honest and ae_ind_cca true.
 *)
-val encrypt: #(i:ae_id) -> k:key{k.i=i} -> (m:protected_ae_plain i) -> ST cipher
+val encrypt: #(i:ae_id{ae_fixed i}) -> k:key{k.i=i} -> (m:protected_ae_plain i) -> ST cipher
   (requires (fun h0 -> True
     (*m_contains k.log h0*)))
   (ensures  (fun h0 c h1 -> 
     safe_log_append k (m,c) h0 h1 ))
-let encrypt #i k m : cipher =
+let encrypt #i k m =
   m_recall k.log;
+  let ae_honest_i = ae_honestST i in
   let iv = random ivsize in
-  let p = if (ae_ind_cca && ae_honest i) then createBytes (length m) 0z else (repr m) in
+  let p = if (ae_ind_cca && ae_honest_i) then createBytes (length m) 0z else (repr m) in
   let c = CoreCrypto.aead_encrypt AES_128_GCM k.raw iv empty_bytes p in
   let c = iv@|c in
   write_at_end k.log (m,c);
@@ -115,15 +129,16 @@ let encrypt #i k m : cipher =
    try to obtain the ciphertext from the log. Else decrypt via concrete implementation.
    TODO: Make this a total function.
 *)
-val decrypt: #(i:ae_id) -> k:key{k.i=i} -> c:cipher -> ST (option (protected_ae_plain i))
+val decrypt: #(i:ae_id{ae_fixed i}) -> k:key{k.i=i} -> c:cipher -> ST (option (protected_ae_plain i))
   (requires (fun h -> True (* Could require Map.contains h0 k.region *)))
   (ensures  (fun h0 res h1 -> //True))
-    modifies_none h0 h1
-    /\ ((ae_ind_cca /\ ae_honest i) ==> (get_index res)
+    True//modifies_none h0 h1
+    ///\ ((ae_ind_cca /\ ae_honest i) ==> (get_index res)
     ///\ ( (b2t ae_int_ctxt /\ honest i /\ Some? res) ==> SeqProperties.mem (Some?.v res,c) (m_sel h0 k.log) )
     ))
 let decrypt #i k c =
-  if ae_ind_cca && ae_honest i then
+  let ae_honest_i = ae_honestST i in
+  if ae_ind_cca && ae_honest_i then
     let log = m_read k.log in
     match seq_find (fun mc -> snd mc = c) log with
     | Some mc -> Some (fst mc)

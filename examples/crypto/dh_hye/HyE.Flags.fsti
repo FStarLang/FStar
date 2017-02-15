@@ -20,18 +20,10 @@ val ae_ind_cpa : bool
 
 val ae_ind_cca : b:bool{ae_ind_cpa /\ ae_int_ctxt ==> b}
 
-val hpke_ind_cca : b:bool{b ==> b2t ae_ind_cca /\ prf_odh}
+val hpke_ind_cca : b:bool{b ==> b2t ae_ind_cpa /\ ae_int_ctxt /\ prf_odh}
 
-val dishonestId: unit -> Tot (i:id{not (honest i)})
+val dishonestId: unit -> Tot (i:id{dishonest i})
 val honestId: unit -> Tot (i:id{honest i})
-
-//type dependentId =
-//  (if prf_odh then
-//    i:id{honest i}
-//  else
-//    i:id{not (honest i)})
-//
-//val createId: unit -> Tot dependentId
 
 val honest_implies_prf_odh: i:id -> Lemma
   (requires honest i)
