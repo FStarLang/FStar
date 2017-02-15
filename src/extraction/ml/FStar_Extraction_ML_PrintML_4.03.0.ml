@@ -63,24 +63,14 @@ let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
       (let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
       Ldot(q, sym) |> mk_sym_lident)
 
-let build_constant (c: mlconstant): constant =
-  (* match c with
-  | MLC_Int (v, _) -> 
-     let i = BatString.concat "" ["(Prims.parse_int \""; v; "\")"] in
-     Const.integer i
-  | MLC_Float v -> Const.float (string_of_float v)
-  | MLC_Char v -> Const.char v
-  | MLC_String v -> Const.string v
-  | MLC_Bytes _ -> failwith "not defined10" (* do we need this? *)
-   *)
+let build_constant (c: mlconstant): Parsetree.constant =
   match c with
   | MLC_Int (v, _) -> 
      let i = BatString.concat "" ["(Prims.parse_int \""; v; "\")"] in
-     Const_float i
-(*     Const_int (int_of_string v) *)
-  | MLC_Float v -> Const_float (string_of_float v)
-  | MLC_Char v -> Const_char v
-  | MLC_String v -> Const_string (v, None)
+     Const.integer i
+  | MLC_Float v -> failwith "Case not handled"
+  | MLC_Char v -> Const.char v
+  | MLC_String v -> Const.string v
   | MLC_Bytes _ -> failwith "not defined10" (* do we need this? *)
 
 let build_constant_expr (c: mlconstant): expression =
@@ -136,7 +126,7 @@ let rec build_core_type (ty: mlty): core_type =
   | MLTY_Fun (ty1, tag, ty2) -> 
      let c_ty1 = build_core_type ty1 in
      let c_ty2 = build_core_type ty2 in
-     let label = Bytes.of_string "" in
+     let label = Nolabel in
      Typ.mk (Ptyp_arrow (label,c_ty1,c_ty2))
   | MLTY_Named (tys, path) -> 
      let c_tys = map build_core_type tys in
@@ -197,8 +187,7 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
      let val_bindings = map (build_binding false) lbs in
      Exp.let_ recf val_bindings (build_expr expr)
    | MLE_App (e, es) -> 
-      let label = Bytes.of_string "" in
-      let args = map (fun x -> (label, build_expr x)) es in
+      let args = map (fun x -> (Nolabel, build_expr x)) es in
       Exp.apply (build_expr e) args
    | MLE_Fun (l, e) -> build_fun l e
    | MLE_Match (e, branches) ->
@@ -221,8 +210,7 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
       Exp.ifthenelse (build_expr e) (build_expr e1) (BatOption.map build_expr e2)
    | MLE_Raise (path, es) -> 
       let r = Exp.ident (mk_lident "raise") in
-      let label = Bytes.of_string "" in
-      let args = map (fun x -> (label, build_expr x)) es in
+      let args = map (fun x -> (Nolabel, build_expr x)) es in
       Exp.apply r args
    | MLE_Try (e, cs) ->
       Exp.try_ (build_expr e) (map build_case cs)) in
@@ -257,8 +245,7 @@ and build_fun l e =
    match l with
    | ((id, ty)::tl) -> 
       let p = build_binding_pattern ~ty:ty id in 
-      let label = Bytes.of_string "" in
-      Exp.fun_ label None p (build_fun tl e)
+      Exp.fun_ Nolabel None p (build_fun tl e)
    | [] -> build_expr e
 
 and build_case ((lhs, guard, rhs): mlbranch): case =
@@ -282,7 +269,7 @@ let build_label_decl (sym, ty): label_declaration =
 
 let build_constructor_decl (sym, tys): constructor_declaration =
   let args = if BatList.is_empty tys then None else
-    Some (map build_core_type tys) in
+    Some (Pcstr_tuple (map build_core_type tys)) in
   Type.constructor ?args:args (mk_sym sym)
 
 let build_ty_kind (b: mltybody): type_kind = 
@@ -309,11 +296,11 @@ let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_dec
 let build_tydecl (td: mltydecl): structure_item_desc =
   let recf = Recursive in
   let type_declarations = map build_one_tydecl td in 
-  Pstr_type type_declarations
+  Pstr_type(recf, type_declarations)
 
 let build_exn (sym, tys): extension_constructor =
   let name = mk_sym sym in
-  let args = Some (map build_core_type tys) in
+  let args = Some (Pcstr_tuple (map build_core_type tys)) in
   Te.decl ?args:args name
 
 let build_mlsig1 = function

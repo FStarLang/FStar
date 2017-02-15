@@ -14,7 +14,7 @@ open FStar_Extraction_ML_Syntax
    This is done in order to avoid clutter. *)
 let m_ref = ref ""
 
-let is_default_printer = true
+let is_default_printer = false
 
 let flatmap f l = map f l |> List.flatten
 let opt_to_list = function Some x -> [x] | None -> []
@@ -64,21 +64,11 @@ let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
       Ldot(q, sym) |> mk_sym_lident)
 
 let build_constant (c: mlconstant): constant =
-  (* match c with
-  | MLC_Int (v, _) -> 
-     let i = BatString.concat "" ["(Prims.parse_int \""; v; "\")"] in
-     Const.integer i
-  | MLC_Float v -> Const.float (string_of_float v)
-  | MLC_Char v -> Const.char v
-  | MLC_String v -> Const.string v
-  | MLC_Bytes _ -> failwith "not defined10" (* do we need this? *)
-   *)
   match c with
   | MLC_Int (v, _) -> 
      let i = BatString.concat "" ["(Prims.parse_int \""; v; "\")"] in
-     Const_float i
-(*     Const_int (int_of_string v) *)
-  | MLC_Float v -> Const_float (string_of_float v)
+     Const_string (i, None)
+  | MLC_Float v -> failwith "Case not handled"
   | MLC_Char v -> Const_char v
   | MLC_String v -> Const_string (v, None)
   | MLC_Bytes _ -> failwith "not defined10" (* do we need this? *)
