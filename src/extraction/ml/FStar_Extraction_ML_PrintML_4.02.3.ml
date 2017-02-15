@@ -14,7 +14,7 @@ open FStar_Extraction_ML_Syntax
    This is done in order to avoid clutter. *)
 let m_ref = ref ""
 
-let is_default_printer = false
+let is_default_printer = true
 
 let flatmap f l = map f l |> List.flatten
 let opt_to_list = function Some x -> [x] | None -> []
@@ -67,7 +67,7 @@ let build_constant (c: mlconstant): constant =
   match c with
   | MLC_Int (v, _) -> 
      let i = BatString.concat "" ["(Prims.parse_int \""; v; "\")"] in
-     Const_string (i, None)
+     Const_float i
   | MLC_Float v -> failwith "Case not handled"
   | MLC_Char v -> Const_char v
   | MLC_String v -> Const_string (v, None)
@@ -79,6 +79,10 @@ let build_constant_expr (c: mlconstant): expression =
   | MLC_Bool b -> 
      let id = if b then "true" else "false" in
      Exp.construct (mk_lident id) None
+  | MLC_Int (v, _) ->
+      let label = Bytes.of_string "" in
+      let args = [label, Exp.constant (Const_string(v, None))]in
+      Exp.apply (Exp.ident (mk_lident "Prims.parse_int")) args
   | _ -> Exp.constant (build_constant c)
 
 let build_constant_pat (c: mlconstant): pattern_desc =

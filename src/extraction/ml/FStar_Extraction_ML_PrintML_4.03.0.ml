@@ -10,9 +10,9 @@ open Longident
 open FStar_Extraction_ML_Syntax
 
 (* Global state used for the name of the ML module being pprinted.
-   m_ref is only set once in build_ast and read once in path_to_ident
-   This is done in order to avoid clutter. *)
-let m_ref = ref ""
+   current_module is only set once in build_ast and read once in 
+   path_to_ident. This is done in order to avoid clutter. *)
+let current_module = ref ""
 
 let is_default_printer = true
 
@@ -58,11 +58,14 @@ let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
      else 
        mk_lident (BatString.concat "." ["Prims"; sym])
   | (hd::tl) -> 
-     let m_name = !m_ref in
-     if (BatString.equal m_name hd) then path_to_ident (tl, sym) else 
-      (let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
-      Ldot(q, sym) |> mk_sym_lident)
+     let m_name = !current_module in
+     if (BatString.equal m_name hd) then 
+       path_to_ident (tl, sym) 
+     else 
+       let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
+       Ldot(q, sym) |> mk_sym_lident
 
+(* mapping functions from F* ML AST to Parsetree *) 
 let build_constant (c: mlconstant): Parsetree.constant =
   match c with
   | MLC_Int (v, _) -> 
@@ -334,12 +337,13 @@ let build_ast (out_dir: string option) (ext: string) (ml: mllib) =
   | MLLib l -> 
      map (fun (p, md, _) -> 
          let m = path_to_string p in
-         m_ref := m;
+         current_module := m;
          let name = BatString.concat "" [m; ext] in
          let path = (match out_dir with
            | Some out -> BatString.concat "/" [out; name]
            | None -> name) in
          (path, build_m path md)) l
+
 
 let print_module ((path, m): string * structure) = 
   Format.set_formatter_out_channel (open_out path);
