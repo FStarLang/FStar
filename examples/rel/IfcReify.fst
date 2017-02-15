@@ -88,256 +88,256 @@ let ni_com (env:label_fun) (c:com) (l:label) : Tot Type0 =
   (forall (h0: rel heap). (* {:pattern (low_equiv env h0)} *) ni_com' env c l h0) /\
   (forall (h0:heap). (* {:pattern (Some? (interpret_com h0 c))} *) inv_com' env c l h0)
 
-(*********************** Typing Rules for Expressions **********************)
+(* (\*********************** Typing Rules for Expressions **********************\) *)
 
-(* CH: The way we derive these rules looks more like a
-       semantically-justified program logic than a syntactic type
-       system. Any connection to Dave Naumann and Anindya Banerjee's
-       "relational logic"? (e.g. https://arxiv.org/abs/1611.08992) *)
+(* (\* CH: The way we derive these rules looks more like a *)
+(*        semantically-justified program logic than a syntactic type *)
+(*        system. Any connection to Dave Naumann and Anindya Banerjee's *)
+(*        "relational logic"? (e.g. https://arxiv.org/abs/1611.08992) *\) *)
 
-(* Subtyping rule for expression labels
+(* (\* Subtyping rule for expression labels *)
 
-         E |- e : l1   l1 <= l2
-         ----------------------
-              E |- e : l2
-*)
+(*          E |- e : l1   l1 <= l2 *)
+(*          ---------------------- *)
+(*               E |- e : l2 *)
+(* *\) *)
 
-val sub_exp : env:label_fun -> e:exp -> l1:label -> l2:label{l1 <= l2} ->
-  Lemma (requires (ni_exp env e l1))
-        (ensures  (ni_exp env e l2))
-let sub_exp _ _ _ _ = ()
-
-
-
-(* Typing rule for dereferencing
-
-         ----------------
-          E | - r : E(r)
-*)
-
-val avar_exp : env:label_fun -> r:id ->
-  Lemma (ensures  (ni_exp env (AVar r) (env r)))
-let avar_exp _ _ = ()
-
-(* Typing rule for Int constants
-
-         i : int
-         -------
-         i : Low
-*)
-val aint_exp : env:label_fun -> i:int ->
-  Lemma (requires True)
-        (ensures (ni_exp env (AInt i) Low))
-let aint_exp _ _ = ()
+(* val sub_exp : env:label_fun -> e:exp -> l1:label -> l2:label{l1 <= l2} -> *)
+(*   Lemma (requires (ni_exp env e l1)) *)
+(*         (ensures  (ni_exp env e l2)) *)
+(* let sub_exp _ _ _ _ = () *)
 
 
-(* Typing rule for binary operators
 
-          e1 : l   e2 : l
-          ----------------
-          e1 `op` e2  : l
-*)
+(* (\* Typing rule for dereferencing *)
 
-val binop_exp : env:label_fun -> op:binop -> e1:exp -> e2:exp -> l:label ->
-  Lemma (requires (ni_exp env e1 l) /\ (ni_exp env e2 l))
-        (ensures  (ni_exp env (AOp op e1 e2) l))
-let binop_exp env op e1 e2 l =
-  ()
+(*          ---------------- *)
+(*           E | - r : E(r) *)
+(* *\) *)
 
-(************************ Typing Rules for Commands ************************)
+(* val avar_exp : env:label_fun -> r:id -> *)
+(*   Lemma (ensures  (ni_exp env (AVar r) (env r))) *)
+(* let avar_exp _ _ = () *)
 
-(* Subtyping rule for commands
+(* (\* Typing rule for Int constants *)
 
-         env,pc:l1 |- c   l2 <= l1
-        ---------------------------
-               env,pc:l2 |- c
-*)
-
-val sub_com : env:label_fun -> c:com -> l1:label -> l2:label{l2 <= l1} ->
-  Lemma (requires (ni_com env c l1 ))
-        (ensures  (ni_com env c l2 ))
-let sub_com _ _ _ _ = ()
+(*          i : int *)
+(*          ------- *)
+(*          i : Low *)
+(* *\) *)
+(* val aint_exp : env:label_fun -> i:int -> *)
+(*   Lemma (requires True) *)
+(*         (ensures (ni_exp env (AInt i) Low)) *)
+(* let aint_exp _ _ = () *)
 
 
-(* Typing rule for assignment
+(* (\* Typing rule for binary operators *)
 
-         env |- e : env(r)
-         ------------------------
-         env, pc:env(r) |- r := e
+(*           e1 : l   e2 : l *)
+(*           ---------------- *)
+(*           e1 `op` e2  : l *)
+(* *\) *)
 
-    - label of expression and context label have to be below label of r
-      (first one to prevent explicit, second to prevent implicit flows)
-*)
+(* val binop_exp : env:label_fun -> op:binop -> e1:exp -> e2:exp -> l:label -> *)
+(*   Lemma (requires (ni_exp env e1 l) /\ (ni_exp env e2 l)) *)
+(*         (ensures  (ni_exp env (AOp op e1 e2) l)) *)
+(* let binop_exp env op e1 e2 l = *)
+(*   () *)
 
-let assign_inv_com0 (env:label_fun) (e:exp) (r:id) (ne:squash(ni_exp env e (env r))) (h0:rel heap)
-  : Lemma (ni_com' env (Assign r e) (env r) h0)
-=
-  FStar.Squash.give_proof ne ;
-  let Some vr, h0r' = reify (interpret_exp_st e) (R?.r h0) in
-  let Some vl, h0l' = reify (interpret_exp_st e) (R?.l h0) in
-  match reify (interpret_com_st (Assign r e) (R?.l h0)) (R?.l h0) with
-  | Some (), h1l ->
-    begin match reify (interpret_com_st (Assign r e) (R?.r h0)) (R?.r h0) with
-    | Some (), h1r -> assert (h1l = upd (R?.l h0) r vl /\ h1r = upd (R?.r h0) r vr)
-    | None, _ -> ()
-    end
-  | None, _ -> ()
+(* (\************************ Typing Rules for Commands ************************\) *)
 
-let assign_inv_com' (env:label_fun) (e:exp) (r:id) (h0:heap)
- : Lemma (inv_com' env (Assign r e) (env r) h0)
-=
-  let Some v, h0' = reify (interpret_exp_st e) h0 in
-  match reify (interpret_com_st (Assign r e) h0) h0 with
-  | None, h1 -> ()
-  | Some (), h1 ->
-    assert (h1 == upd h0 r v)
+(* (\* Subtyping rule for commands *)
 
-val assign_com : env:label_fun -> e:exp -> r:id ->
-  Lemma (requires (ni_exp env e (env r)))
-        (ensures  (ni_com env (Assign r e) (env r)))
-let assign_com env e r =
-  forall_intro (assign_inv_com0 env e r (FStar.Squash.get_proof (ni_exp env e (env r)))) ;
-  forall_intro (assign_inv_com' env e r)
+(*          env,pc:l1 |- c   l2 <= l1 *)
+(*         --------------------------- *)
+(*                env,pc:l2 |- c *)
+(* *\) *)
 
-(* Sequencing rule for commands
-
-         env,pc:l |- c1  env,pc:l |- c2
-         ------------------------------
-               env,pc:l |- c1; c2
-*)
-
-val seq_inv_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0:heap ->
-  Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
-    (ensures (inv_com' env (Seq c1 c2) l h0))
-let seq_inv_com' env c1 c2 l h0 =
-  match reify (interpret_com_st c1 h0) h0 with
-  | None, _ -> ()
-  | Some (), h1 ->
-    match reify (interpret_com_st c2 h1) h1 with
-    | None, _ -> ()
-    | Some (), h2 -> ()
-
-#set-options "--z3rlimit 20"
-
-val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel heap ->
-  Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
-        (ensures  (ni_com' env (Seq c1 c2) l h0))
-let seq_com' env c1 c2 l h0 =
-  let R h0l h0r = h0 in
-  match reify (interpret_com_st c1 h0l) h0l with
-  | None, _ -> ()
-  | Some (), h1l ->
-    match reify (interpret_com_st c1 h0r) h0r with
-    | None, _ -> ()
-    | Some (), h1r ->
-      match reify (interpret_com_st (Seq c1 c2) h0l) h0l with
-      | None, _ -> ()
-      | Some (), h2l ->
-        match reify (interpret_com_st (Seq c1 c2) h0r) h0r with
-        | None, _ -> ()
-        | Some (), h2r ->
-            let h1 = R h1l h1r in let h2 = R h2l h2r in
-            assert (low_equiv env h0 ==> low_equiv env h1) ;
-            assert (low_equiv env h1 ==> low_equiv env h2)
+(* val sub_com : env:label_fun -> c:com -> l1:label -> l2:label{l2 <= l1} -> *)
+(*   Lemma (requires (ni_com env c l1 )) *)
+(*         (ensures  (ni_com env c l2 )) *)
+(* let sub_com _ _ _ _ = () *)
 
 
-val seq_com : env:label_fun -> c1:com -> c2:com -> l:label ->
-  Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
-        (ensures  (ni_com env (Seq c1 c2) l))
-let seq_com env c1 c2 l =
-  forall_intro
-    (fun (h0:rel heap) ->
-      seq_com' env c1 c2 l h0 <: Lemma (ni_com' env (Seq c1 c2) l h0)) ;
-  forall_intro
-    (fun (h0:heap) ->
-      seq_inv_com' env c1 c2 l h0 <: Lemma (inv_com' env (Seq c1 c2) l h0))
+(* (\* Typing rule for assignment *)
 
-(* Typing rule for conditional commands
+(*          env |- e : env(r) *)
+(*          ------------------------ *)
+(*          env, pc:env(r) |- r := e *)
 
-         env |- e : l   env,pc:l |- ct   env,pc:l |- cf
-         ----------------------------------------------
-             env,pc:l |- if e <> 0 then ct else cf
-*)
+(*     - label of expression and context label have to be below label of r *)
+(*       (first one to prevent explicit, second to prevent implicit flows) *)
+(* *\) *)
 
-val cond_inv_com' : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> h0:heap ->
-  Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l)))
-          (ensures  (inv_com' env (If e ct cf) l h0))
-let cond_inv_com' env e ct cf l h0 =
-  let Some v, h0' = reify (interpret_exp_st e) h0 in
-  if v = 0
-  then match reify (interpret_com_st cf h0) h0 with
-    | None, _ -> ()
-    | Some (), h1 -> ()
-  else match reify (interpret_com_st cf h0) h0 with
-    | None, _ -> ()
-    | Some (), h1 -> ()
+(* let assign_inv_com0 (env:label_fun) (e:exp) (r:id) (ne:squash(ni_exp env e (env r))) (h0:rel heap) *)
+(*   : Lemma (ni_com' env (Assign r e) (env r) h0) *)
+(* = *)
+(*   FStar.Squash.give_proof ne ; *)
+(*   let Some vr, h0r' = reify (interpret_exp_st e) (R?.r h0) in *)
+(*   let Some vl, h0l' = reify (interpret_exp_st e) (R?.l h0) in *)
+(*   match reify (interpret_com_st (Assign r e) (R?.l h0)) (R?.l h0) with *)
+(*   | Some (), h1l -> *)
+(*     begin match reify (interpret_com_st (Assign r e) (R?.r h0)) (R?.r h0) with *)
+(*     | Some (), h1r -> assert (h1l = upd (R?.l h0) r vl /\ h1r = upd (R?.r h0) r vr) *)
+(*     | None, _ -> () *)
+(*     end *)
+(*   | None, _ -> () *)
 
-  (* Works too but takes 20s more *)
-  (* let c = if v = 0 then cf else ct in *)
-  (* match reify (interpret_com_st c h0) h0 with *)
-  (* | None, _ -> () *)
-  (* | Some (), h1 -> () *)
+(* let assign_inv_com' (env:label_fun) (e:exp) (r:id) (h0:heap) *)
+(*  : Lemma (inv_com' env (Assign r e) (env r) h0) *)
+(* = *)
+(*   let Some v, h0' = reify (interpret_exp_st e) h0 in *)
+(*   match reify (interpret_com_st (Assign r e) h0) h0 with *)
+(*   | None, h1 -> () *)
+(*   | Some (), h1 -> *)
+(*     assert (h1 == upd h0 r v) *)
+
+(* val assign_com : env:label_fun -> e:exp -> r:id -> *)
+(*   Lemma (requires (ni_exp env e (env r))) *)
+(*         (ensures  (ni_com env (Assign r e) (env r))) *)
+(* let assign_com env e r = *)
+(*   forall_intro (assign_inv_com0 env e r (FStar.Squash.get_proof (ni_exp env e (env r)))) ; *)
+(*   forall_intro (assign_inv_com' env e r) *)
+
+(* (\* Sequencing rule for commands *)
+
+(*          env,pc:l |- c1  env,pc:l |- c2 *)
+(*          ------------------------------ *)
+(*                env,pc:l |- c1; c2 *)
+(* *\) *)
+
+(* val seq_inv_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0:heap -> *)
+(*   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l)) *)
+(*     (ensures (inv_com' env (Seq c1 c2) l h0)) *)
+(* let seq_inv_com' env c1 c2 l h0 = *)
+(*   match reify (interpret_com_st c1 h0) h0 with *)
+(*   | None, _ -> () *)
+(*   | Some (), h1 -> *)
+(*     match reify (interpret_com_st c2 h1) h1 with *)
+(*     | None, _ -> () *)
+(*     | Some (), h2 -> () *)
+
+(* #set-options "--z3rlimit 20" *)
+
+(* val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel heap -> *)
+(*   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l)) *)
+(*         (ensures  (ni_com' env (Seq c1 c2) l h0)) *)
+(* let seq_com' env c1 c2 l h0 = *)
+(*   let R h0l h0r = h0 in *)
+(*   match reify (interpret_com_st c1 h0l) h0l with *)
+(*   | None, _ -> () *)
+(*   | Some (), h1l -> *)
+(*     match reify (interpret_com_st c1 h0r) h0r with *)
+(*     | None, _ -> () *)
+(*     | Some (), h1r -> *)
+(*       match reify (interpret_com_st (Seq c1 c2) h0l) h0l with *)
+(*       | None, _ -> () *)
+(*       | Some (), h2l -> *)
+(*         match reify (interpret_com_st (Seq c1 c2) h0r) h0r with *)
+(*         | None, _ -> () *)
+(*         | Some (), h2r -> *)
+(*             let h1 = R h1l h1r in let h2 = R h2l h2r in *)
+(*             assert (low_equiv env h0 ==> low_equiv env h1) ; *)
+(*             assert (low_equiv env h1 ==> low_equiv env h2) *)
 
 
-val cond_ni_com' : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> h0:rel heap ->
-  Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l)))
-          (ensures  (ni_com' env (If e ct cf) l h0))
-let cond_ni_com' env e ct cf l h0 =
-  if not (FStar.StrongExcludedMiddle.strong_excluded_middle (low_equiv env h0))
-  then ()
-  else
-    let R h0l h0r = h0 in
-    let Some vl, h0l' = reify (interpret_exp_st e) h0l in
-    let Some vr, h0r' = reify (interpret_exp_st e) h0r in
-    if Low? l
-    then begin
-      assert (vl == vr) ;
-      let c = if vl = 0 then cf else ct in
-      assert (ni_com env c l) ;
-      match reify (interpret_com_st (If e ct cf) h0l) h0l with
-      | None, _ -> ()
-      | Some (), h1l ->
-          match reify (interpret_com_st (If e ct cf) h0r) h0r with
-          | None, _ -> ()
-          | Some (), h1r ->
-            assert (low_equiv env h0 ==> low_equiv env (R h1l h1r))
-      end
-    else
-      (* h0 and h1 are low_equiv since cl and cr cannot write at low cells *)
-      match reify (interpret_com_st (If e ct cf) h0l) h0l with
-      | None, _ -> ()
-      | Some (), h1l ->
-        match reify (interpret_com_st (If e ct cf) h0r) h0r with
-        | None, _ -> ()
-        | Some (), h1r ->
-          cond_inv_com' env e ct cf l h0l ;
-          cond_inv_com' env e ct cf l h0r ;
-          assert (low_equiv env h0 ==> low_equiv env (R h1l h1r))
+(* val seq_com : env:label_fun -> c1:com -> c2:com -> l:label -> *)
+(*   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l)) *)
+(*         (ensures  (ni_com env (Seq c1 c2) l)) *)
+(* let seq_com env c1 c2 l = *)
+(*   forall_intro *)
+(*     (fun (h0:rel heap) -> *)
+(*       seq_com' env c1 c2 l h0 <: Lemma (ni_com' env (Seq c1 c2) l h0)) ; *)
+(*   forall_intro *)
+(*     (fun (h0:heap) -> *)
+(*       seq_inv_com' env c1 c2 l h0 <: Lemma (inv_com' env (Seq c1 c2) l h0)) *)
 
-#set-options "--z3rlimit 5"
+(* (\* Typing rule for conditional commands *)
 
-val cond_com : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label ->
-  Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l)))
-         (ensures  (ni_com env (If e ct cf) l))
-let cond_com env e ct cf l =
-  forall_intro
-    (fun (h0:rel heap) ->
-      cond_ni_com' env e ct cf l h0 <: Lemma (ni_com' env (If e ct cf) l h0)) ;
-  forall_intro
-    (fun (h0:heap) ->
-      cond_inv_com' env e ct cf l h0 <: Lemma (inv_com' env (If e ct cf) l h0))
+(*          env |- e : l   env,pc:l |- ct   env,pc:l |- cf *)
+(*          ---------------------------------------------- *)
+(*              env,pc:l |- if e <> 0 then ct else cf *)
+(* *\) *)
+
+(* val cond_inv_com' : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> h0:heap -> *)
+(*   Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l))) *)
+(*           (ensures  (inv_com' env (If e ct cf) l h0)) *)
+(* let cond_inv_com' env e ct cf l h0 = *)
+(*   let Some v, h0' = reify (interpret_exp_st e) h0 in *)
+(*   if v = 0 *)
+(*   then match reify (interpret_com_st cf h0) h0 with *)
+(*     | None, _ -> () *)
+(*     | Some (), h1 -> () *)
+(*   else match reify (interpret_com_st cf h0) h0 with *)
+(*     | None, _ -> () *)
+(*     | Some (), h1 -> () *)
+
+(*   (\* Works too but takes 20s more *\) *)
+(*   (\* let c = if v = 0 then cf else ct in *\) *)
+(*   (\* match reify (interpret_com_st c h0) h0 with *\) *)
+(*   (\* | None, _ -> () *\) *)
+(*   (\* | Some (), h1 -> () *\) *)
+
+
+(* val cond_ni_com' : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> h0:rel heap -> *)
+(*   Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l))) *)
+(*           (ensures  (ni_com' env (If e ct cf) l h0)) *)
+(* let cond_ni_com' env e ct cf l h0 = *)
+(*   if not (FStar.StrongExcludedMiddle.strong_excluded_middle (low_equiv env h0)) *)
+(*   then () *)
+(*   else *)
+(*     let R h0l h0r = h0 in *)
+(*     let Some vl, h0l' = reify (interpret_exp_st e) h0l in *)
+(*     let Some vr, h0r' = reify (interpret_exp_st e) h0r in *)
+(*     if Low? l *)
+(*     then begin *)
+(*       assert (vl == vr) ; *)
+(*       let c = if vl = 0 then cf else ct in *)
+(*       assert (ni_com env c l) ; *)
+(*       match reify (interpret_com_st (If e ct cf) h0l) h0l with *)
+(*       | None, _ -> () *)
+(*       | Some (), h1l -> *)
+(*           match reify (interpret_com_st (If e ct cf) h0r) h0r with *)
+(*           | None, _ -> () *)
+(*           | Some (), h1r -> *)
+(*             assert (low_equiv env h0 ==> low_equiv env (R h1l h1r)) *)
+(*       end *)
+(*     else *)
+(*       (\* h0 and h1 are low_equiv since cl and cr cannot write at low cells *\) *)
+(*       match reify (interpret_com_st (If e ct cf) h0l) h0l with *)
+(*       | None, _ -> () *)
+(*       | Some (), h1l -> *)
+(*         match reify (interpret_com_st (If e ct cf) h0r) h0r with *)
+(*         | None, _ -> () *)
+(*         | Some (), h1r -> *)
+(*           cond_inv_com' env e ct cf l h0l ; *)
+(*           cond_inv_com' env e ct cf l h0r ; *)
+(*           assert (low_equiv env h0 ==> low_equiv env (R h1l h1r)) *)
 
 (* #set-options "--z3rlimit 5" *)
 
-(* Typing rule for Skip
+(* val cond_com : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> *)
+(*   Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l))) *)
+(*          (ensures  (ni_com env (If e ct cf) l)) *)
+(* let cond_com env e ct cf l = *)
+(*   forall_intro *)
+(*     (fun (h0:rel heap) -> *)
+(*       cond_ni_com' env e ct cf l h0 <: Lemma (ni_com' env (If e ct cf) l h0)) ; *)
+(*   forall_intro *)
+(*     (fun (h0:heap) -> *)
+(*       cond_inv_com' env e ct cf l h0 <: Lemma (inv_com' env (If e ct cf) l h0)) *)
 
-         -------------------
-         env,pc:High |- skip
-*)
+(* (\* #set-options "--z3rlimit 5" *\) *)
 
-val skip_com : env:label_fun ->
-  Lemma (ni_com env Skip High)
-let skip_com _ = ()
+(* (\* Typing rule for Skip *)
+
+(*          ------------------- *)
+(*          env,pc:High |- skip *)
+(* *\) *)
+
+(* val skip_com : env:label_fun -> *)
+(*   Lemma (ni_com env Skip High) *)
+(* let skip_com _ = () *)
 
 (* While rule for commands
 

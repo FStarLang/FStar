@@ -38,9 +38,9 @@ reifiable reflectable new_effect_for_free {
 }
 
 (* A lift from Pure *)
-unfold let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:EXNST?.post a) =
-        wp (fun a -> p (Some (a, h0)))
-sub_effect PURE ~> EXNST = lift_pure_exnst
+(* unfold let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:EXNST?.post a) = *)
+(*         wp (fun a -> p (Some (a, h0))) *)
+(* sub_effect PURE ~> EXNST = lift_pure_exnst *)
 
 (* A lift from a previously defined state effect *)
 val lift_state_exnst_wp : (a:Type) -> IntST.wp a -> EXNST?.wp a
@@ -54,7 +54,7 @@ let lift_state_exnst a wp f =
         fun h0 -> admit(); Some (f h0)
 
 sub_effect IntST.STINT ~> EXNST {
-  lift_wp = lift_state_exnst_wp;
+  (* lift_wp = lift_state_exnst_wp; *)
   lift = lift_state_exnst
 }
 
@@ -72,19 +72,18 @@ effect S (a:Type) =
  * state in between. The specification now also guarantees that div
  * doesn't modify the state.
  *)
-
-val div_intrinsic : i:nat -> j:int -> ExnSt int
-  (requires (fun h -> True))
-  (ensures (fun h0 x -> match x with
-                     | None -> j=0
-                     | Some (z, h1) -> h0 = h1 /\ j<>0 /\ z = i / j))
-let div_intrinsic i j =
-    if j = 0 then (
-        (* Despite the incr (implicitly lifted), the state is reset *)
-        IntST.incr ();
-        EXNST?.raise int
-    ) else
-        i / j
+(* val div_intrinsic : i:nat -> j:int -> ExnSt int *)
+(*   (requires (fun h -> True)) *)
+(*   (ensures (fun h0 x -> match x with *)
+(*                      | None -> j=0 *)
+(*                      | Some (z, h1) -> h0 = h1 /\ j<>0 /\ z = i / j)) *)
+(* let div_intrinsic i j = *)
+(*     if j = 0 then ( *)
+(*         (\* Despite the incr (implicitly lifted), the state is reset *\) *)
+(*         IntST.incr (); *)
+(*         EXNST?.raise int *)
+(*     ) else *)
+(*         i / j *)
 
 reifiable let div_extrinsic (i:nat) (j:int) : S int =
     if j = 0 then

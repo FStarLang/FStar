@@ -343,6 +343,42 @@ let is_eta env vars t =
         | _ -> None in
   aux t (List.rev vars)
 
+(* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
+(* a body or codomain of an arrow) [x] is reifiable *)
+
+let is_reifiable_effect (env:Env.env) (effect_lid:lident) : bool =
+  let quals = Env.lookup_effect_quals env effect_lid in
+  List.contains Reifiable quals
+
+let is_reifiable (env:Env.env) (c:either<S.lcomp, S.residual_comp>) : bool =
+  let effect_lid = match c with
+    | Inl lc -> lc.eff_name
+    | Inr (eff_name, _) -> eff_name
+  in
+  is_reifiable_effect env effect_lid
+
+let is_reifiable_comp (env:Env.env) (c:S.comp) : bool =
+  match c.n with
+  | Comp ct -> is_reifiable_effect env ct.effect_name
+  | _ -> false
+
+let is_reifiable_function (env:Env.env) (t:S.term) : bool =
+  match (SS.compress t).n with
+  | Tm_arrow (_, c) -> is_reifiable_comp env c
+  | _ -> false
+
+(* [reify_body env t] assumes that [t] has a reifiable computation type *)
+(* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
+(* and returns the result of reifying t *)
+let reify_body (env:Env.env) (t:S.term) : S.term =
+  let tm = U.mk_reify t in
+  let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env tm in
+  if Env.debug env <| Options.Other "SMTEncodingReify"
+  then BU.print2 "Reified body %s \nto %s\n"
+                (Print.term_to_string tm)
+                (Print.term_to_string tm') ;
+  tm'
+
 
 
 (* </Utilities> *)
@@ -401,10 +437,10 @@ let as_function_typ env t0 =
     in aux true t0
 
 let curried_arrow_formals_comp k =
-    let k = Subst.compress k in
-    match k.n with
-        | Tm_arrow(bs, c) -> Subst.open_comp bs c
-        | _ -> [], Syntax.mk_Total k
+  let k = Subst.compress k in
+  match k.n with
+  | Tm_arrow(bs, c) -> Subst.open_comp bs c
+  | _ -> [], Syntax.mk_Total k
 
 
 let rec encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
@@ -742,6 +778,20 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             | Inr (eff, _) -> TypeChecker.Util.is_pure_or_ghost_effect env.tcenv eff |> not
           in
 
+          let reify_comp_and_body env c body =
+            let reified_body = reify_body env.tcenv body in
+            let c = match c with
+              | Inl lc ->
+                let typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) lc U_unknown in
+                Inl (U.lcomp_of_comp (S.mk_Total typ))
+
+              (* In this case we don't have enough information to reconstruct the *)
+              (* whole computation type and reify it *)
+              | Inr (eff_name, _) -> c
+            in
+            c, reified_body
+          in
+
           let codomain_eff lc = match lc with
             | Inl lc -> SS.subst_comp opening (lc.comp()) |> Some
             | Inr (eff, flags) ->
@@ -763,39 +813,45 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               fallback ()
 
             | Some lc ->
-              if is_impure lc
+              if is_impure lc && not (is_reifiable env.tcenv lc)
               then fallback() //we know it's not pure; so don't encode it precisely
-              else let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                   let body, decls' = encode_term body envbody in
-                   let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
-                   let cvars = Term.free_variables key_body in
-                   let tkey = mkForall([], cvars, key_body) in
-                   let tkey_hash = Term.hash_of_term tkey in
-                   match BU.smap_try_find env.cache tkey_hash with
-                   | Some (t, _, _) -> mkApp(t, List.map mkFreeV cvars), []
-                   | None ->
-                     match is_eta env vars body with
-                     | Some t -> t, []
-                     | None ->
-                        let cvar_sorts = List.map snd cvars in
-                        let fsym = varops.mk_unique ("Tm_abs_" ^ (BU.digest_of_string tkey_hash)) in
-                        let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
-                        let f = mkApp(fsym, List.map mkFreeV cvars) in
-                        let app = mk_Apply f vars in
-                        let typing_f =
-                            match codomain_eff lc with
-                            | None -> [] //no typing axiom for this lambda, because we don't have enough info
-                            | Some c ->
-                                let tfun = U.arrow bs c in
-                                let f_has_t, decls'' = encode_term_pred None tfun env f in
-                                let a_name = Some("typing_"^fsym) in
-                                decls''@[Term.Assume(mkForall([[f]], cvars, f_has_t), a_name, a_name)] in
-                        let interp_f =
-                            let a_name = Some ("interpretation_" ^fsym) in
-                            Term.Assume(mkForall([[app]], vars@cvars, mkEq(app, body)), a_name, a_name) in
-                        let f_decls = decls@decls'@(fdecl::typing_f)@[interp_f] in
-                        BU.smap_add env.cache tkey_hash (fsym, cvar_sorts, f_decls);
-                        f, f_decls
+              else
+                let vars, guards, envbody, decls, _ = encode_binders None bs env in
+                let lc, body =
+                  if is_reifiable env.tcenv lc
+                  then reify_comp_and_body envbody lc body
+                  else lc, body
+                in
+                let body, decls' = encode_term body envbody in
+                let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
+                let cvars = Term.free_variables key_body in
+                let tkey = mkForall([], cvars, key_body) in
+                let tkey_hash = Term.hash_of_term tkey in
+                match BU.smap_try_find env.cache tkey_hash with
+                | Some (t, _, _) -> mkApp(t, List.map mkFreeV cvars), []
+                | None ->
+                  match is_eta env vars body with
+                  | Some t -> t, []
+                  | None ->
+                    let cvar_sorts = List.map snd cvars in
+                    let fsym = varops.mk_unique ("Tm_abs_" ^ (BU.digest_of_string tkey_hash)) in
+                    let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
+                    let f = mkApp(fsym, List.map mkFreeV cvars) in
+                    let app = mk_Apply f vars in
+                    let typing_f =
+                        match codomain_eff lc with
+                        | None -> [] //no typing axiom for this lambda, because we don't have enough info
+                        | Some c ->
+                            let tfun = U.arrow bs c in
+                            let f_has_t, decls'' = encode_term_pred None tfun env f in
+                            let a_name = Some("typing_"^fsym) in
+                            decls''@[Term.Assume(mkForall([[f]], cvars, f_has_t), a_name, a_name)] in
+                    let interp_f =
+                        let a_name = Some ("interpretation_" ^fsym) in
+                        Term.Assume(mkForall([[app]], vars@cvars, mkEq(app, body)), a_name, a_name) in
+                    let f_decls = decls@decls'@(fdecl::typing_f)@[interp_f] in
+                    BU.smap_add env.cache tkey_hash (fsym, cvar_sorts, f_decls);
+                    f, f_decls
           end
 
       | Tm_let((_, {lbname=Inr _}::_), _) ->
@@ -1394,7 +1450,7 @@ let encode_smt_lemma env fv t =
 
 let encode_free_var env fv tt t_norm quals =
     let lid = fv.fv_name.v in
-    if not <| U.is_pure_or_ghost_function t_norm
+    if not <| (U.is_pure_or_ghost_function t_norm || is_reifiable_function env.tcenv t_norm)
     || U.is_lemma t_norm
     then let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in
          let arg_sorts = match (SS.compress t_norm).n with
@@ -1411,9 +1467,15 @@ let encode_free_var env fv tt t_norm quals =
          else let encode_non_total_function_typ = lid.nsstr <> "Prims" in
               let formals, (pre_opt, res_t) =
                 let args, comp = curried_arrow_formals_comp t_norm in
+                let comp =
+                  if is_reifiable_comp env.tcenv comp
+                  then S.mk_Total (TcUtil.reify_comp ({env.tcenv with lax=true}) (U.lcomp_of_comp comp) U_unknown)
+                  else comp
+                in
                 if encode_non_total_function_typ
                 then args, TypeChecker.Util.pure_or_ghost_pre_and_post env.tcenv comp
-                else args, (None, U.comp_result comp) in
+                else args, (None, U.comp_result comp)
+              in
               let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in
               let vtok_tm = match formals with
                 | [] -> mkFreeV(vname, Term_sort)
@@ -1531,14 +1593,19 @@ let encode_top_level_let :
                     let formals, c = SS.open_comp formals c in
                     let nformals = List.length formals in
                     let nbinders = List.length binders in
-                    let tres = U.comp_result c in
+                    let get_result_type c =
+                      if is_reifiable_comp env.tcenv c
+                      then TcUtil.reify_comp ({env.tcenv with lax = true}) (U.lcomp_of_comp c) U_unknown
+                      else U.comp_result c
+                    in
+                    let tres = get_result_type c in
                     if nformals < nbinders && U.is_total_comp c (* explicit currying *)
                     then let bs0, rest = BU.first_N nformals binders in
                             let c =
                                 let subst = List.map2 (fun (x, _) (b, _) -> NT(x, S.bv_to_name b)) formals bs0 in
                                 SS.subst_comp subst c in
                             let body = U.abs rest body lopt in
-                            (bs0, body, bs0, U.comp_result c), false
+                            (bs0, body, bs0, get_result_type c), false
                     else if nformals > nbinders (* eta-expand before translating it *)
                     then let binders, body = eta_expand binders formals body tres in
                             (binders, body, formals, tres), false
@@ -1589,7 +1656,8 @@ let encode_top_level_let :
                             | None -> mk_Apply (mkFreeV(f, Term_sort)) vars
                        else mkApp(f, List.map mkFreeV vars) in
             if quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false)
-            || typs  |> BU.for_some (fun t -> not <| U.is_pure_or_ghost_function t)
+            || typs  |> BU.for_some (fun t -> not <| (U.is_pure_or_ghost_function t ||
+                                                      is_reifiable_function env.tcenv t))
             then decls, env
             else if not is_rec
             then match bindings, typs, toks with //Encoding non-recursive definitions
@@ -1602,6 +1670,7 @@ let encode_top_level_let :
                                       (Print.binders_to_string ", " binders)
                                       (Print.term_to_string body);
                     let vars, guards, env', binder_decls, _ = encode_binders None binders env in
+                    let body = if is_reifiable_function env'.tcenv t_norm then reify_body env'.tcenv body else body in
                     let app = mk_app curry f ftok vars in
                     let app, (body, decls2) =
                         if quals |> List.contains Logic
@@ -1648,6 +1717,7 @@ let encode_top_level_let :
                     let app = mkApp(f, List.map mkFreeV vars) in
                     let gsapp = mkApp(g, mkApp("SFuel", [fuel_tm])::vars_tm) in
                     let gmax = mkApp(g, mkApp("MaxFuel", [])::vars_tm) in
+                    let body = if is_reifiable_function env'.tcenv t_norm then reify_body env'.tcenv body else body in
                     let body_tm, decls2 = encode_term body env' in
                     //NS 05.25: This used to be  mkImp(mk_and_l guards, mkEq(gsapp, body_tm)
                     //But, the pattern ensures that this only applies to well-typed terms
@@ -1834,38 +1904,38 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     (* KM : Experimental remove of the false here, I guess more care should be given in order *)
     (* to prevent the SMT solver from calling this recursively !!! *)
-    | Sig_let((is_rec, bindings), _, _, quals, _) when (quals |> List.contains Reifiable) ->
-      let reify_lb lb =
-        (* This let binding has been declared reifiable so we have to generate a *)
-        (* pure reified version of it that can be encoded by the SMT. The reified *)
-        (* version should not contain any reify at all after normalization. *)
-        begin match (SS.compress lb.lbdef).n with
-          | Tm_abs(bs, body, _) ->
-            (* TODO (KM) We should make sure that this is indeed a monadic term to which we are applying reify *)
-            let body = U.mk_reify body in
-            let tm = S.mk (Tm_abs(bs, body, None)) None lb.lbdef.pos in
-            (* KM : I wouldn't be surprised if this call to Normalize were to fail *)
-            (* since we didn't put the recursively defined declaration in the env *)
-            let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in
-            let lb_typ =
-              let formals, comp = U.arrow_formals_comp lb.lbtyp in
-              let reified_typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) (U.lcomp_of_comp comp) U_unknown in
-              U.arrow formals (S.mk_Total reified_typ)
-            in
-            let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in
-            if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
-            then BU.print3 "%s: Reified %s\nto %s\n"
-                          (Print.lbname_to_string lb.lbname)
-                          (Print.term_to_string tm)
-                          (Print.term_to_string tm');
-            lb
-          | _ ->
-            failwith (BU.format1 "Unable to reify %s at smt encoding. \
-                     It might be time to have a more robust code for this cases."
-                     (Print.lbname_to_string lb.lbname))
-        end
-    in
-    encode_top_level_let env (is_rec, List.map reify_lb bindings) quals
+    (* | Sig_let((is_rec, bindings), _, _, quals, _) when (quals |> List.contains Reifiable) -> *)
+    (*   let reify_lb lb = *)
+    (*     (\* This let binding has been declared reifiable so we have to generate a *\) *)
+    (*     (\* pure reified version of it that can be encoded by the SMT. The reified *\) *)
+    (*     (\* version should not contain any reify at all after normalization. *\) *)
+    (*     begin match (SS.compress lb.lbdef).n with *)
+    (*       | Tm_abs(bs, body, _) -> *)
+    (*         (\* TODO (KM) We should make sure that this is indeed a monadic term to which we are applying reify *\) *)
+    (*         let body = U.mk_reify body in *)
+    (*         let tm = S.mk (Tm_abs(bs, body, None)) None lb.lbdef.pos in *)
+    (*         (\* KM : I wouldn't be surprised if this call to Normalize were to fail *\) *)
+    (*         (\* since we didn't put the recursively defined declaration in the env *\) *)
+    (*         let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in *)
+    (*         let lb_typ = *)
+    (*           let formals, comp = U.arrow_formals_comp lb.lbtyp in *)
+    (*           let reified_typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) (U.lcomp_of_comp comp) U_unknown in *)
+    (*           U.arrow formals (S.mk_Total reified_typ) *)
+    (*         in *)
+    (*         let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in *)
+    (*         if Env.debug env.tcenv <| Options.Other "SMTEncodingReify" *)
+    (*         then BU.print3 "%s: Reified %s\nto %s\n" *)
+    (*                       (Print.lbname_to_string lb.lbname) *)
+    (*                       (Print.term_to_string tm) *)
+    (*                       (Print.term_to_string tm'); *)
+    (*         lb *)
+    (*       | _ -> *)
+    (*         failwith (BU.format1 "Unable to reify %s at smt encoding. \ *)
+    (*                  It might be time to have a more robust code for this cases." *)
+    (*                  (Print.lbname_to_string lb.lbname)) *)
+    (*     end *)
+    (* in *)
+    (* encode_top_level_let env (is_rec, List.map reify_lb bindings) quals *)
 
     | Sig_let((is_rec, bindings), _, _, quals, _) ->
       encode_top_level_let env (is_rec, bindings) quals
