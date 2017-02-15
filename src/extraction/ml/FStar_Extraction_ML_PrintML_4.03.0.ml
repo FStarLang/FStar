@@ -14,10 +14,13 @@ open FStar_Extraction_ML_Syntax
    path_to_ident. This is done in order to avoid clutter. *)
 let current_module = ref ""
 
+(* If set to false, the old prettyprinter will be used for 
+   OCaml extraction. *)
 let is_default_printer = true
 
 let flatmap f l = map f l |> List.flatten
 let opt_to_list = function Some x -> [x] | None -> []
+
 
 let no_position : Lexing.position =
   {pos_fname = ""; pos_lnum = 0; pos_bol = 0; pos_cnum = 0}
@@ -27,13 +30,15 @@ let no_location : Location.t =
 
 let no_attrs: attributes = []
 
+(* functions for generating names and paths *)
 let mk_sym s: string Location.loc = {txt=s; loc=no_location}
+
 let mk_sym_lident s: Longident.t Location.loc = {txt=s; loc=no_location}
 
 let mk_lident name = Lident name |> mk_sym_lident
 
-(* remove an apostrophe from beginning of type name *)
 let mk_typ_name s = 
+  (* remove an apostrophe from beginning of type name *)
   match (BatString.sub s 0 1) with
   | "'" -> BatString.tail s 1
   | _ -> s
@@ -52,6 +57,7 @@ let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
      let hd = BatString.concat "_" l1 in
      path_to_ident ((hd::tl), sym)
   | ["Prims"] -> 
+     (* as in the original printer, stripping "Prims" from some constructors *)
      let remove_qual = ["Some"; "None"] in
      if (BatList.mem sym remove_qual) then
        path_to_ident ([], sym)
@@ -60,10 +66,12 @@ let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
   | (hd::tl) -> 
      let m_name = !current_module in
      if (BatString.equal m_name hd) then 
+       (* remove circular references *)
        path_to_ident (tl, sym) 
      else 
        let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
        Ldot(q, sym) |> mk_sym_lident
+
 
 (* mapping functions from F* ML AST to Parsetree *) 
 let build_constant (c: mlconstant): Parsetree.constant =
@@ -109,7 +117,8 @@ let rec build_pattern (p: mlpattern): pattern =
   | MLP_Tuple l -> Pat.tuple (map build_pattern l)
 
 and build_constructor_pat ((path, sym), p) =
-  let (path', name) = 
+  let (path', name) =
+    (* resugaring Cons and Nil *) 
     (match sym with
     | "Cons" -> ([], "::")
     | "Nil" -> ([], "[]")
@@ -257,6 +266,8 @@ and build_case ((lhs, guard, rhs): mlbranch): case =
    pc_rhs = (build_expr rhs)}
 
 and build_binding (toplevel: bool) (lb: mllb): value_binding =
+  (* replicating the rules for wether to print type ascriptions
+     from the old printer *)
   let print_ty = if (lb.print_typ && toplevel) then
     (match lb.mllb_tysc with
      | Some ([], ty) -> true
@@ -345,6 +356,7 @@ let build_ast (out_dir: string option) (ext: string) (ml: mllib) =
          (path, build_m path md)) l
 
 
+(* printing the AST to the correct path *)
 let print_module ((path, m): string * structure) = 
   Format.set_formatter_out_channel (open_out path);
   structure Format.std_formatter m;

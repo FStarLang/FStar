@@ -183,7 +183,7 @@ u_extract_typechecker: u_extract_normalizer u_extract_rel u_extract_util u_extra
 u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst ToSyntax.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.ToSyntax
 
-u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML.UEnv.fst ML.Util.fst ML.Code.fst ML.PrintML.fst ML.Term.fst ML.Modul.fst Kremlin.fst)
+u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML.UEnv.fst ML.Util.fst ML.Code.fst ML.Term.fst ML.Modul.fst Kremlin.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Extraction
 
 u_extract_smtencoding_base: $(addprefix u_boot_fsts/FStar.SMTEncoding., Term.fst Util.fst Z3.fst SplitQueryCases.fst ErrorReporting.fst)
