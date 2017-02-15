@@ -64,8 +64,9 @@ let defined #r #a #b #inv (m:t r a b inv) (x:a) (h:HS.mem)
   = Some? (sel (m_sel h m) x)
 
 let contains #r #a #b #inv (m:t r a b inv) (x:a) (y:b x) (h:HS.mem)
-  : GTot Type0
+  : GTot (t:Type0{t ==> defined m x h})
   = Some? (sel (m_sel h m) x) /\ Some?.v (sel (m_sel h m) x) == y
+
 
 let value #r #a #b #inv (m:t r a b inv) (x:a) (h:HS.mem{defined m x h})
   : GTot (r:b x{contains m x r h})
@@ -83,36 +84,43 @@ let map_contains #a #b (m1:map' a b) (m2:map' a b) (x:a) (y:b x)
 let contains_stable #r #a #b #inv (m:t r a b inv) (x:a) (y:b x)
   : Lemma (ensures (stable_on_t m (contains m x y)))
   = ()
-
+  
 let extend (#r:rid) (#a:eqtype) (#b:a -> Type) (#inv:(map' a b -> Type0)) (m:t r a b inv) (x:a) (y:b x)
   : ST unit
-      (requires (fun h -> let cur = m_sel h m in inv (upd cur x y) /\ sel cur x == None))
+      (requires (fun h -> 
+	let cur = m_sel h m in 
+	inv (upd cur x y) 
+	/\ sel cur x == None))
       (ensures (fun h0 u h1 ->
-		  let cur = m_sel h0 m in
-		  let hsref = as_hsref m in
-      		  m_contains m h1
-      		  /\ modifies (Set.singleton r) h0 h1
-      		  /\ modifies_rref r !{HH.as_ref (HS.MkRef?.ref hsref)} h0.h h1.h
-      		  /\ m_sel h1 m == upd cur x y
-      		  /\ witnessed (contains m x y)))
+        let cur = m_sel h0 m in
+        let hsref = as_hsref m in
+        m_contains m h1
+        /\ modifies (Set.singleton r) h0 h1
+        /\ modifies_rref r !{HH.as_ref (HS.MkRef?.ref hsref)} h0.h h1.h
+        /\ m_sel h1 m == upd cur x y
+        /\ witnessed (contains m x y)
+        /\ witnessed (defined m x)))
   = m_recall m;
     let cur = m_read m in
     m_write m (upd cur x y);
     contains_stable m x y;
-    witness m (contains m x y)
+    witness m (contains m x y);
+    witness m (defined m x )
 
 let lookup #r #a #b #inv (m:t r a b inv) (x:a)
   : ST (option (b x))
        (requires (fun h -> True))
        (ensures (fun h0 y h1 ->
-		   h0==h1 /\
-		   y == sel (m_sel h1 m) x /\
-       (None? y ==> fresh m x h1) /\
-		   (Some? y ==> witnessed (contains m x (Some?.v y)))))
+		   h0==h1
+		   /\ y == sel (m_sel h1 m) x
+		   /\ (None? y ==> fresh m x h1)
+		   /\ (Some? y ==> (witnessed (contains m x (Some?.v y)) /\ witnessed (defined m x) ))
+       ))
   = let y = sel (m_read m) x in
     match y with
       | None -> y
       | Some b ->
 	contains_stable m x b;
 	witness m (contains m x b);
+	witness m (defined m x);
 	y

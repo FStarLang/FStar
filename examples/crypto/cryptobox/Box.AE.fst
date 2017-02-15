@@ -50,10 +50,10 @@ assume val ae_key_region: (r:MR.rid{extends r root /\ is_eternal_region r /\ is_
 //  new_region root
 
 type log_key = nonce
-type log_value (i:ae_id) = (cipher*protected_ae_plain i)
-type log_range = fun (i:ae_id) -> (fun log_key -> (log_value i))
-type log_inv (i:ae_id) (f:MM.map' log_key (log_range i)) = True
-type log_t (i:ae_id) (r:rid)  = MM.t r log_key (log_range i) (log_inv i)
+type log_value (i:id{AE_id? i}) = (cipher*protected_ae_plain i)
+type log_range = fun (i:id{AE_id? i}) -> (fun log_key -> (log_value i))
+type log_inv (i:id{AE_id? i}) (f:MM.map' log_key (log_range i)) = True
+type log_t (i:id{AE_id? i}) (r:rid)  = MM.t r log_key (log_range i) (log_inv i)
 
 
 
@@ -63,9 +63,9 @@ type log_t (i:ae_id) (r:rid)  = MM.t r log_key (log_range i) (log_inv i)
 *)
 
 noeq type key =
-  | Key: #i:ae_id{ae_unfresh i} -> #(region:rid{extends region ae_key_region}) -> raw:aes_key -> log:log_t i region -> key
+  | Key: #i:id{AE_id? i /\ unfresh i} -> #(region:rid{extends region ae_key_region}) -> raw:aes_key -> log:log_t i region -> key
 
-val get_index: k:key -> Tot (i:ae_id{i=k.i})
+val get_index: k:key -> Tot (i:id{i=k.i})
 let get_index k = k.i
 
 
@@ -89,8 +89,10 @@ let safe_key_gen parent m0 k m1 =
    This function generates a key in a fresh region of memory below the parent region.
    The postcondition ensures that the log is empty after creation.
 *)
-val keygen: i:ae_id -> ST (k:key{k.i=i})
-  (requires (fun h -> ae_fresh i h))
+val keygen: i:id{AE_id? i} -> ST (k:key{k.i=i})
+  (requires (fun h -> 
+  fresh i h 
+  /\ fixed i))
   (ensures  (fun h0 k h1 -> 
     let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
     HH.modifies_just s h0.h h1.h
@@ -99,10 +101,11 @@ val keygen: i:ae_id -> ST (k:key{k.i=i})
     /\ is_below k.region ae_key_region
     /\ m_contains k.log h1
     /\ m_sel h1 k.log == MM.empty_map log_key (log_range k.i)
-    /\ ae_unfresh i
+    /\ unfresh i
   ))
 let keygen i =
-  ae_make_unfresh i;
+  make_unfresh i;
+  //ae_make_honest i;
   let rnd_k = random keysize in
   let region = new_region ae_key_region in
   let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
@@ -113,7 +116,7 @@ let keygen i =
    The leak_key function transforms an abstract key into a raw aes_key.
    The refinement type on the key makes sure that no honest keys can be leaked.
 *)
-val leak_key: k:key{(ae_dishonest k.i) \/ ~(b2t ae_ind_cca)} -> Tot (raw_k:aes_key{raw_k=k.raw})
+val leak_key: k:key{(dishonest k.i) \/ ~(b2t ae_ind_cca)} -> Tot (raw_k:aes_key{raw_k=k.raw})
 let leak_key k =
   k.raw
 
@@ -134,7 +137,7 @@ let leak_regionGT k =
    as we need to allocate space in memory for the key. The refinement type on the key makes sure that
    abstract keys created this way can not be honest.
 *)
-val coerce_key: i:ae_id{(ae_dishonest i) \/ ~(prf_odh)} -> raw_k:aes_key -> ST (k:key{k.i=i /\ k.raw = raw_k})
+val coerce_key: i:id{AE_id? i /\ ((dishonest i) \/ ~(prf_odh))} -> raw_k:aes_key -> ST (k:key{k.i=i /\ k.raw = raw_k})
   (requires (fun _ -> True))
   (ensures  (fun h0 k h1 ->
     let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
@@ -144,40 +147,40 @@ val coerce_key: i:ae_id{(ae_dishonest i) \/ ~(prf_odh)} -> raw_k:aes_key -> ST (
     /\ is_below k.region ae_key_region
     /\ m_contains k.log h1
     /\ m_sel h1 k.log == MM.empty_map log_key (log_range k.i)
-    /\ ae_unfresh i
+    /\ unfresh i
   ))
 let coerce_key i raw = 
   let region = new_region ae_key_region in
   let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
-  ae_make_unfresh i;
+  make_unfresh i;
   Key #i #region raw log
 
 (**
    Encrypt a a message under a key. Idealize if the key is honest and ae_ind_cca true.
 *)
-val encrypt: #(i:ae_id) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_plain i) -> ST cipher
+val encrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_plain i) -> ST cipher
   (requires (fun h0 -> 
     MM.fresh k.log n h0
-    /\ ae_fixed i
+    /\ fixed i
   ))
   (ensures  (fun h0 c h1 ->
     modifies_one k.region h0.h h1.h
     /\ m_contains k.log h1
     /\ (
-	( (ae_dishonest i \/ ~(b2t ae_ind_cca))
+	( (dishonest i \/ ~(b2t ae_ind_cca))
 	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (repr m))
       \/ 
-        ( (ae_honest i /\ b2t ae_ind_cca)
+        ( (honest i /\ b2t ae_ind_cca)
 	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (createBytes (length m) 0z) )
       )
-    /\ (ae_dishonest i \/ ae_honest i)
+    /\ (dishonest i \/ honest i)
     /\ MR.witnessed (MM.contains k.log n (c,m))
     ))
 let encrypt #i n k m =
   m_recall k.log;
-  let ae_honest_i = ae_honestST i in
+  let honest_i = honestST i in
   let p = 
-    if (ae_ind_cca && ae_honest_i) then 
+    if (ae_ind_cca && honest_i) then 
       createBytes (length m) 0z 
     else 
       repr m 
@@ -191,28 +194,28 @@ let encrypt #i n k m =
    Decrypt a ciphertext c using a key k. If the key is honest and ae_int_ctxt is idealized,
    try to obtain the ciphertext from the log. Else decrypt via concrete implementation.
 *)
-val decrypt: #(i:ae_id) -> n:nonce -> k:key{k.i=i} -> c:cipher{B.length c >= aeadTagSize AES_128_CCM} -> ST (option (protected_ae_plain i))
+val decrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> c:cipher{B.length c >= aeadTagSize AES_128_CCM} -> ST (option (protected_ae_plain i))
   (requires (fun h -> 
     Map.contains h.h k.region
-    /\ ae_fixed i
+    /\ fixed i
   ))
   (ensures  (fun h0 res h1 -> 
     modifies_none h0 h1
     /\ m_contains k.log h1
     /\ (
-        ((~(b2t ae_ind_cca) \/ ae_dishonest i) 
+        ((~(b2t ae_ind_cca) \/ dishonest i) 
         	==> (Some? (aead_decryptT AES_128_CCM k.raw n empty_bytes c) 
         	  ==> Some? res /\ Some?.v res == coerce (Some?.v (aead_decryptT AES_128_CCM k.raw n empty_bytes c))))
       \/
-        (( (b2t ae_ind_cca) /\ ae_honest i /\ Some? res) 
+        (( (b2t ae_ind_cca) /\ honest i /\ Some? res) 
         	==> (MM.defined k.log n h0 /\ (fst (MM.value k.log n h0) == c ) 
         	  /\ Some?.v res == snd (MM.value k.log n h0)))
         )
   ))
 let decrypt #i n k c =
-  let ae_honest_i = ae_honestST i in
+  let honest_i = honestST i in
   m_recall k.log;
-  if ae_ind_cca && ae_honest_i then
+  if ae_ind_cca && honest_i then
     match MM.lookup k.log n with
     | Some (c',m') -> 
       if c' = c then 
