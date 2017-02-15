@@ -196,14 +196,17 @@ noeq type partial_result (x0:dom) : Type =
 (* by [f : x:dom -> Tot (partial_result x)] with *)
 (* [fixp f : dom -> Tot codom] *)
 
-let rec  complete_fixp (f: (x:dom) -> partial_result x) (x:dom) (px:partial_result x) : Tot codom (decreases %[x ; px]) =
+let rec  complete_fixp (f: (x:dom) -> partial_result x) (x:dom) (px:partial_result x)
+  : Tot codom (decreases %[x ; 0 ; px])
+=
   match px with
   | Done y -> y
   | Need x' cont ->
     assume (forall y. cont y << cont) ;
-    complete_fixp f x (cont (complete_fixp f x' (f x')))
+    complete_fixp f x (cont (fixp f x'))
 
-let fixp (f: x:dom -> Tot (partial_result x)) (x0:dom) : Tot codom
+and fixp (f: x:dom -> Tot (partial_result x)) (x0:dom)
+  : Tot codom (decreases %[x0 ; 1 ; ()])
   = complete_fixp f x0 (f x0)
 
 
@@ -395,4 +398,41 @@ let memo_rec_lemma (f:(x:dom) -> partial_result x)
 (*                                                                            *)
 (* ****************************************************************************)
 
+let fibonnacci_partial (x:dom) : (partial_result x) =
+  if x <= 1
+  then Done 0
+  else Need (x - 1) (fun y1 -> Need (x - 2) (fun y2 -> Done (y1 + y2)))
 
+let fibonnacci_ = fixp fibonnacci_partial
+
+let fibonnacci_memo = memo_rec_extr fibonnacci_partial
+
+let rec fibonnacci (x:dom) =
+  if x <= 1
+  then 0
+  else fibonnacci (x - 1) + fibonnacci (x - 2)
+
+(* let eq_rec_partial_result *)
+(*   (f:x:dom -> Tot (partial_result x)) *)
+(*   (g:dom -> Tot codom) *)
+(*   (x:dom) *)
+(*   (px:partial_result x{fpartial_result f x px}) *)
+(*   : Type0 *)
+(* = *)
+(*   match px with *)
+(*   | Done y -> y == g x *)
+(*   | Need x1 cont -> fixp f x1 == g x1 /\ eq_rec_partial_result f g x (cont (fixp f x1)) *)
+
+(* let eq_rec_fixp (f : (x:dom -> partial_result x)) (g:dom -> Tot codom) *)
+(*   : Lemma (requires (forall x0. eq_rec_partial_result f g x (f x0)) *)
+(*     (forall x0. fixp f x0 == g x0) *)
+(* = *)
+(*   let rec f_eq0 (x:dom) (px:partial_result x{fpartial_result f x px})  : Lemma (requires (eq_rec_partial_result f g x px) (ensures (fixp f x == g x)) = *)
+(*     match f x with *)
+(*     | Done y -> () *)
+(*     | Need x1 cont -> f_eq x (cont (fixp f x1)) *)
+(*   in *)
+(*   let f_eq  *)
+
+(* let rec fibo_equiv (x:dom) : Lemma (fibonnacci_ x == fibonnacci x) = *)
+(*   if x <= 1 then () else begin admit () ; fibo_equiv (x - 1) ; fibo_equiv (x - 2) end *)
