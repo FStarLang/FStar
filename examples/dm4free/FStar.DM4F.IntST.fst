@@ -111,24 +111,24 @@ let reflect_on_the_fly u =
 (* Refining the specification of a refiable impure function using reify/reflect *)
 (* Note that unless we internalize monotonicity for wps we need to define
    refine_st using pre/post condition                                           *)
-(* let refine_st (#a:Type) *)
-(*               (#b:Type) *)
-(*               (#pre : a -> Tot STINT?.pre) *)
-(*               (#post : a -> Tot (int -> b -> int -> Tot Type0)) *)
-(*               ($f :(x:a -> StInt b (pre x) (post x))) *)
-(*               (x:a) *)
-(*   : StInt b (pre x) (fun h0 z h1 -> pre x h0 /\ *)
-(*                                  reify (f x) h0 == (z, h1) /\ *)
-(*                                  post x h0 z h1) *)
-(*   = let g (h0:int) *)
-(*       : Pure (b * int) *)
-(*              (pre x h0) *)
-(*              (fun (z,h1) -> pre x h0 /\ *)
-(*                        reify (f x) h0 == (z, h1) /\ *)
-(*                        post x h0 z h1) *)
-(*       = reify (f x) h0 *)
-(*     in *)
-(*     STINT?.reflect g *)
+let refine_st (#a:Type)
+              (#b:Type)
+              (#pre : a -> Tot STINT?.pre)
+              (#post : a -> Tot (int -> b -> int -> Tot Type0))
+              ($f :(x:a -> StInt b (pre x) (post x)))
+              (x:a)
+  : StInt b (pre x) (fun h0 z h1 -> pre x h0 /\
+                                 reify (f x) h0 == (z, h1) /\
+                                 post x h0 z h1)
+  = let g (h0:int)
+      : Pure (b * int)
+             (pre x h0)
+             (fun (z,h1) -> pre x h0 /\
+                       reify (f x) h0 == (z, h1) /\
+                       post x h0 z h1)
+      = reify (f x) h0
+    in
+    STINT?.reflect g
 
 (* This is a little annoying but we need an explicit pre/post effect *)
 reifiable val incr_pre_post : unit ->

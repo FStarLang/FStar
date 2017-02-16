@@ -52,10 +52,10 @@ type env = {
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment and signature elements *)
-  gamma_cache    :FStar.Util.smap<cached_elt>;        (* Memo table for the local environment *)
+  gamma_cache    :FStar.Util.smap<cached_elt>;  (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
-  sigtab         :FStar.Util.smap<sigelt>;            (* a dictionary of long-names to sigelts *)
+  sigtab         :FStar.Util.smap<sigelt>;      (* a dictionary of long-names to sigelts *)
   is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
@@ -125,7 +125,8 @@ val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
 val lookup_val_decl        : env -> lident -> (universes * typ)
 val lookup_datacon         : env -> lident -> universes * typ
-val datacons_of_typ        : env -> lident -> (bool * list<lident>)  //the boolean tells if the lident was actually a inductive
+(* the boolean tells if the lident was actually a inductive *)
+val datacons_of_typ        : env -> lident -> (bool * list<lident>)
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
 val try_lookup_effect_lid  : env -> lident -> option<term>

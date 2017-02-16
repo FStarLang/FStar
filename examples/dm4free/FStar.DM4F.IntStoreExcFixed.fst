@@ -38,10 +38,9 @@ effect ISE (a:Type) =
 
 effect ISENull (a:Type) =
   INT_STORE_EXC a (fun (l0:heap) (p:((option a * heap) -> Type0)) -> forall (x:option a * heap). p x)
-(* TODO : having a in Type *and* reifiable induces a Failure("Universe variable not found") *)
-(* whenever we try to normalize-reify it (see below in xxx for instance) *)
+
 reifiable
-let raise_ (#a:Type0) ()
+let raise_ (#a:Type) ()
   : IntStoreExc a (fun _ -> True) (fun l0 x l1 -> l0 == l1 /\ None? x)
 = let x = INT_STORE_EXC?.raise_ () in begin match x with end
 
