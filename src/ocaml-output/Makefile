@@ -206,7 +206,7 @@ endif
 	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
-	cp ../../src/gmake/fstar.mk ../../src/gmake/nubuild.mk $(PREFIX)/src/gmake/
+	cp ../../src/gmake/fstar.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
 	cp ../../bin/msvc*.dll $(PREFIX)/bin
 	cp ../../bin/libgmp-10.dll $(PREFIX)/bin

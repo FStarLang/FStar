@@ -22,7 +22,8 @@ pushd ulib
 # Get fst, fsti files (files are name-sorted by default). 
 # SI: Used to be this:
 #FST_FILES=(*.fst *.fsti)
-#     but FStar.IndefiniteDescription.fst fails to parse. 
+#     but FStar.IndefiniteDescription.fst fails to parse;
+#         prims.fst has a lower-case filename but an upper-case modulename.
 FST_FILES=(
 FStar.All.fst \
 FStar.Array.fst \
@@ -102,8 +103,7 @@ FStar.UInt32.fst \
 FStar.UInt63.fst \
 FStar.UInt64.fst \
 FStar.UInt8.fst \
-FStar.Util.fst \
-prims.fst)
+FStar.Util.fst)
 
 ../bin/fstar-any.sh --odir "../$FSDOC_ODIR" --doc ${FST_FILES[*]} 
 popd
@@ -127,33 +127,26 @@ pandoc index.md -s --css=style.ccs -f markdown -t html -o index.html
 popd
 
 # push fstarlang.github.io with latest html.
-# The flow is described at https://github.com/blog/1270-easier-builds-and-deployments-using-git-over-https-and-oauth;
 # $PAT is stored in the Build Defn.
-rm -rf fstarlang.github.io && mkdir fstarlang.github.io
+if [ ! -d fstarlang.github.io ]; then
+    git clone https://$PAT@github.com/FStarLang/fstarlang.github.io
+fi
 pushd fstarlang.github.io
-git init
 git config user.name "fsdocbuild"
 git config user.email "fsdocbuild@somewhereontheinternet.com"
-git pull https://$PAT@github.com/FStarLang/fstarlang.github.io
 pushd docs
 mv "../../$FSDOC_ODIR"/*.html .
-echo git add
 git add *.html
-echo ... returned $?
-echo git commit 
 if (git commit -m "Automated doc refresh"); then 
-    echo git commit ok
+    echo git commit ok.
+    git push origin master
+    echo pushed to origin.
 else 
-    echo git commit failed
+    echo git did not commit. 
 fi
-git remote add origin https://$PAT@github.com/FStarLang/fstarlang.github.io
-echo git push 
-git push origin master
 popd
 popd
-echo rmdir
-rm -rf fstarlang.github.io
-
-# SI: could cleanup FSDOC_ODIR too.
+# SI: `rm -rf fstarlang.github.io` sometimes fails on a docker container,
+#     so not tidying up after myself. 
 
 
