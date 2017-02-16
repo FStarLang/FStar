@@ -37,7 +37,9 @@ abstract let sel_create
   (f: ((k: key) -> Tot (value k)))
   (k: key)
 : Lemma
+  (requires True)
   (ensures (sel (create f) k == f k))
+  [SMTPat (sel (create f) k)]
 = ()
 
 abstract let upd
