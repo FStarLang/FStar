@@ -222,6 +222,7 @@ let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    
 let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
+
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
