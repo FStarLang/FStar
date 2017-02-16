@@ -3,6 +3,7 @@ open FStar.List.Tot
 open FStar.DM4F.Heap
 open FStar.DM4F.Heap.ST
 
+let v (r:ref int) (res: (unit * heap)) : GTot int = sel (snd res) r
 reifiable 
 let rec sum_up (r:ref int) (from:int) (to:int{from <= to})
     : ST unit (requires (fun h -> h `contains_a_well_typed` r))
@@ -11,6 +12,130 @@ let rec sum_up (r:ref int) (from:int) (to:int{from <= to})
     = if to <> from
       then (r := !r + from;
 	    sum_up r (from + 1) to)
+
+let sum_up_eq (r:ref int) (from:int) (to:int{from <= to}) 
+	      (h0:heap{h0 `contains_a_well_typed` r})
+	      (h1:heap{h1 `contains_a_well_typed` r})
+    : Lemma (requires (sel h0 r == sel h1 r))
+	    (ensures (v r (reify (sum_up r from to) h0) = 
+		      v r (reify (sum_up r from to) h1)))
+    = admit()		      
+	      
+#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
+let rec sum_up_commute (r:ref int)
+		       (from:int)
+		       (to:int{from <= to})
+		       (offset:int)
+		       (h:heap{h `contains_a_well_typed` r})
+      : Lemma (requires True)
+	      (ensures (v r (reify (sum_up r from to) h) 
+		      + offset
+		      = v r (reify (sum_up r from to) (upd h r (sel h r + offset)))))
+	      (decreases (to - from))
+      = if from = to
+	then ()
+	else begin 
+            let h1 = upd h r (sel h r + from) in
+   	    let h2 = upd h1 r (sel h1 r + offset) in
+	    let h3 = upd h1 r (sel h r + from + offset) in
+            let h4 = upd h r (sel h r + offset) in
+	    let h5 = upd h4 r (sel h4 r + from) in
+	    sum_up_commute r (from + 1) to offset h1; //IH 2
+	    assert (v r (reify (sum_up r from to) h) + offset
+		  = v r (reify (sum_up r (from + 1) to) h1) + offset); //unfolding
+	    assert (v r (reify (sum_up r (from + 1) to) h1) + offset
+	          = v r (reify (sum_up r (from + 1) to) h2)); //IH
+            assert (v r (reify (sum_up r (from + 1) to) (upd h1 r (sel h1 r + offset)))
+	          = v r (reify (sum_up r (from + 1) to) h3)); //sel/upd rewrite
+            sum_up_eq r (from + 1) to h3 h5;
+	    assert (v r (reify (sum_up r from to) h) + offset
+	          = v r (reify (sum_up r from to) h4))
+        end
+
+
+(* let test (r:ref int)  *)
+(* 	 (from:int) *)
+(* 	 (to:int{from < to})  *)
+(* 	 (h:heap{h `contains_a_well_typed` r}) = *)
+(*     sum_up_commute r (from + 1) to from h; *)
+(*     assume (v r (reify (sum_up r (from + 1) to) h) + from *)
+(* 	  = v r (reify (sum_up r from to) h)) *)
+
+         (* assume (v r (reify (sum_up r from' to) h) + from' - 1 =  *)
+	 (*     	 v r (reify (sum_up r (from' - 1) to) h)); *)
+
+		  
+(* 	    sum_up_commute r (from + 1) to (from + offset) h; *)
+
+(* 	    assert (v r (reify (sum_up r (from + 1) to) h) *)
+(* 	    	  + from *)
+(* 		  + offset *)
+(* 	    	  = v r (reify (sum_up r (from + 1) to) (upd h r (sel h r + from + offset)))); *)
+
+(* 	    assert (v r (reify (sum_up r from to) h) *)
+(* 		  = v r (reify (sum_up r (from + 1) to) h)  *)
+(* 		  + from) *)
+		  
+(* 	    admit() *)
+(* 	end *)
+	    
+(*       	    assert (v r (reify (sum_up r (from + 1) to) h) *)
+(* 	    	  + from *)
+(* 	    	  = v r (reify (sum_up r (from + 1) to) (upd h r (sel h r + from)))); *)
+(* 	    admit() *)
+
+(* let rec sum_up_assoc (r:ref int)  *)
+(* 		     (from:int) *)
+(* 		     (from':int{from <= from'}) *)
+(* 		     (to:int{from' <= to})  *)
+(* 		     (h:heap{h `contains_a_well_typed` r})  *)
+(*     : Lemma (requires True) *)
+(* 	    (ensures  (v r (reify (sum_up r from to) h) = *)
+(* 		       v r (reify (sum_up r from from') h) *)
+(* 		     + v r (reify (sum_up r from' to) h) *)
+(* 		     - sel h r)) *)
+(* 	    (decreases (from' - from)) *)
+(*     = if from=from' *)
+(*       then () *)
+(*       else begin *)
+(* 	   sum_up_assoc r from (from' - 1) to h; *)
+(* 	   sum_up_assoc r from (from' - 1) from' h; *)
+(* 	   sum_up_assoc r (from' - 1) from' to h; *)
+(* 	   admit() *)
+(*      end *)
+	   
+(* 	   assert (v r (reify (sum_up r from to) h) = *)
+(* 		   v r (reify (sum_up r from (from' - 1)) h) + *)
+(*    		   v r (reify (sum_up r (from' - 1) to) h) - *)
+(* 		   sel h r); *)
+(* 	   assert (v r (reify (sum_up r from from') h) = *)
+(* 		   v r (reify (sum_up r from (from' - 1)) h)  *)
+(* 		 + v r (reify (sum_up r (from' - 1) from') h) *)
+(* 		 - sel h r); *)
+(* 	   assert (v r (reify (sum_up r from from') h) = *)
+(* 		   v r (reify (sum_up r from (from' - 1)) h)  *)
+(* 		 + from' - 1); *)
+		 
+(* 	   assume (v r (reify (sum_up r (from' - 1) to) h) = *)
+(* 		   v r (reify (sum_up r from' to) h) + *)
+(* 		 + from' - 1)) *)
+(*      end	     *)
+    
+
+
+(* let test (r:ref int)  *)
+(* 	 (from:int) *)
+(* 	 (to:int{from < to})  *)
+(* 	 (h:heap{h `contains_a_well_typed` r}) =  *)
+(*  sum_up_assoc r from (from + 1) to h; *)
+(*  assert (v r (reify (sum_up r from to) h) =  *)
+(* 	 (v r (reify (sum_up r from (from + 1)) h) + *)
+(* 	  v r (reify (sum_up r (from + 1) to) h)) - *)
+(* 	 sel h r); *)
+(*  assert (v r (reify (sum_up r from to) h) =  *)
+(* 	 v r (reify (sum_up r (from + 1) to) h) + *)
+(* 	 from) *)
+	 
 
 reifiable 
 let rec sum_dn (r:ref int) (from:int) (to:int{from <= to})
@@ -21,37 +146,82 @@ let rec sum_dn (r:ref int) (from:int) (to:int{from <= to})
       then (r := !r + (to - 1);
 	    sum_dn r from (to - 1))
 
-val sum_up_dn_aux (h:heap)
-		  (r:ref int)
+
+let sum_dn_eq (r:ref int) (from:int) (to:int{from <= to}) 
+	      (h0:heap{h0 `contains_a_well_typed` r})
+	      (h1:heap{h1 `contains_a_well_typed` r})
+    : Lemma (requires (sel h0 r == sel h1 r))
+	    (ensures (v r (reify (sum_dn r from to) h0) = 
+		      v r (reify (sum_dn r from to) h1)))
+    = admit()		      
+
+let rec sum_dn_commute (r:ref int)
+		       (from:int)
+		       (to:int{from <= to})
+		       (offset:int)
+		       (h:heap{h `contains_a_well_typed` r})
+      : Lemma (requires True)
+	      (ensures (v r (reify (sum_dn r from to) h) 
+		      + offset
+		      = v r (reify (sum_dn r from to) (upd h r (sel h r + offset)))))
+	      (decreases (to - from))
+      = if from = to
+      	then ()
+      	else begin
+	    let t = to - 1 in
+            let h1 = upd h r (sel h r + t) in
+      	    let h2 = upd h1 r (sel h1 r + offset) in
+      	    let h3 = upd h1 r (sel h r + t + offset) in
+            let h4 = upd h r (sel h r + offset) in
+      	    let h5 = upd h4 r (sel h4 r + t) in
+      	    sum_dn_commute r from (to - 1) offset h1; //IH 2
+      	    assert (v r (reify (sum_dn r from to) h) + offset
+      		  = v r (reify (sum_dn r from t) h1) + offset); //unfolding
+      	    assert (v r (reify (sum_dn r from t) h1) + offset
+      	          = v r (reify (sum_dn r from t) h2)); //IH
+            assert (v r (reify (sum_dn r from t) (upd h1 r (sel h1 r + offset)))
+      	          = v r (reify (sum_dn r from t) h3)); //sel/upd rewrite
+            sum_dn_eq r from t h3 h5;
+      	    assume (v r (reify (sum_dn r from to) h) + offset
+      	          = v r (reify (sum_dn r from to) h4))
+        end
+
+val sum_up_dn_aux (r:ref int)
 		  (from:int) 
 		  (from':int{from <= from'})
 		  (to:int{from' <= to})
-   : Lemma (h `contains_a_well_typed` r ==> (
-	    let (_, h0) = reify (sum_up r from to) h in
-	    let (_, h1') = reify (sum_dn r from from') h in
-   	    let (_, h1) = reify (sum_up r from' to) h1' in
-	     sel h0 r == sel h1 r))
-let sum_up_dn_aux h r from from' to =
-    if from = to
-    then ()
-    else if from = from' 
-    then ()
-    else admit()
+		  (h:heap{h `contains_a_well_typed` r})
+   : Lemma (requires True)
+	   (ensures
+	       ( v r (reify (sum_up r from to) h) =
+		 v r (reify (sum_up r from' to) h) + 
+		 v r (reify (sum_dn r from from') h) - 
+		 sel h r))
+           (decreases (from' - from))
 
-val equiv_sum_up_dn (h0:heap) (h1:heap)
-		    (r0:ref int) (r1:ref int)
-		    (from:int) (to:int{from <= to})
-   : Lemma (h0 `contains_a_well_typed` r0 /\
-            h1 `contains_a_well_typed` r1 /\
-	    sel h0 r0 == sel h1 r1 ==> (
-	    let (_, h0') = reify (sum_up r0 from to) h0 in
-	    let (_, h1') = reify (sum_dn r1 from to) h1 in
-	    (h0' `contains_a_well_typed` r0 /\
- 	     h1' `contains_a_well_typed` r1 /\
-	     sel h0' r0 == sel h1' r1)))
-let equiv_sum_up_dn h0 h1 r0 r1 from to =
-    if from = to
+let rec sum_up_dn_aux r from from' to h =
+    let left = reify (sum_up r from to) h in
+    if from = from'
     then ()
-    else admit()
-	    
+    else begin 
+	 sum_up_dn_aux r from (from' - 1) to h;
+	 assert (v r left =
+		 v r (reify (sum_up r (from' - 1) to) h) +
+		 v r (reify (sum_dn r from (from' - 1)) h) -
+		 sel h r);
+         sum_up_commute r from' to (from' - 1) h;
+         assert (v r (reify (sum_up r from' to) h) + from' - 1 =
+	     	 v r (reify (sum_up r (from' - 1) to) h));
+         sum_dn_commute r from (from' - 1) (from' - 1) h;
+         assert (v r (reify (sum_dn r from (from' - 1)) h) + from' - 1 =
+	     	 v r (reify (sum_dn r from from') h))		 
+    end
+	 
+let equiv_sum_up_dn (r:ref int)
+		    (from:int) 
+		    (to:int{from <= to})
+		    (h:heap{h `contains_a_well_typed` r})
+   : Lemma (v r (reify (sum_up r from to) h) = 
+	    v r (reify (sum_dn r from to) h))
+   = sum_up_dn_aux r from to to h
    
