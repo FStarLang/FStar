@@ -609,29 +609,11 @@ private let _field
   let p'' : path from (value fd) = PathField p' fd in
   StructPtr content p''
 
-abstract let gfield
-  (#key: eqtype)
-  (#value: (key -> Tot Type))
-  (p: struct_ptr (DM.t key value))
-  (fd: key)
-: GTot (struct_ptr (value fd))
-= _field p fd
-
 abstract let as_aref 
   (#value: Type)
   (p: struct_ptr value)
 : GTot Heap.aref
 = HS.as_aref (StructPtr?.content p)
-
-abstract let as_aref_gfield
-  (#key: eqtype)
-  (#value: (key -> Tot Type))
-  (p: struct_ptr (DM.t key value))
-  (fd: key)
-: Lemma
-  (requires True)
-  (ensures (as_aref (gfield p fd) == as_aref p))
-= ()
 
 abstract let contains
   (#value: Type)
@@ -639,18 +621,6 @@ abstract let contains
   (p: struct_ptr value)
 : GTot Type0
 = HS.contains h (StructPtr?.content p)
-
-abstract let contains_gfield
-  (#key: eqtype)
-  (#value: (key -> Tot Type))
-  (h: HS.mem)
-  (p: (struct_ptr (DM.t key value)))
-  (fd: key)
-: Lemma
-  (requires True)
-  (ensures (contains h (gfield p fd) <==> contains h p))
-  [SMTPat (contains h (gfield p fd))]
-= ()
 
 abstract let live
   (#value: Type)
@@ -666,18 +636,7 @@ abstract let live_contains
 : Lemma
   (requires (live h p))
   (ensures (contains h p))
-= ()
-
-abstract let live_gfield
-  (#key: eqtype)
-  (#value: (key -> Tot Type))
-  (h: HS.mem)
-  (p: struct_ptr (DM.t key value))
-  (fd: key)
-: Lemma
-  (requires True)
-  (ensures (live h (gfield p fd) <==> live h p))
-  [SMTPat (live h (gfield p fd))]
+  [SMTPatT (live h p)]
 = ()
 
 abstract let as_value
@@ -688,51 +647,17 @@ abstract let as_value
 = let (StructPtr content p') = p in
   path_sel (HS.sel h content) p'
 
-abstract let as_value_gfield
-  (#key: eqtype)
-  (#value: (key -> Tot Type))
-  (h: HS.mem)
-  (p: struct_ptr (DM.t key value) {contains h p})
-  (fd: key)
-: Lemma
-  (requires True)
-  (ensures (as_value h (gfield p fd) == DM.sel (as_value h p) fd))
-  [SMTPat (as_value h (gfield p fd))]
-= ()
-
 abstract let rec frameOf 
   (#value: Type)
   (p: struct_ptr value)
 : GTot HH.rid
 = HS.frameOf (StructPtr?.content p)
 
-abstract let frameOf_gfield
-  (#key: eqtype)
-  (#value: (key -> Tot Type))
-  (p: struct_ptr (DM.t key value))
-  (fd: key)
-: Lemma
-  (requires True)
-  (ensures (frameOf (gfield p fd) == frameOf p))
-  [SMTPat (frameOf (gfield p fd))]
-= ()
-
 abstract let rec memory_managed
   (#value: Type)
   (p: struct_ptr value)
 : GTot bool
 = (StructPtr?.content p).HS.mm
-
-abstract let memory_managed_gfield
-  (#key: eqtype)
-  (#value: (key -> Tot Type))
-  (p: struct_ptr (DM.t key value))
-  (fd: key)
-: Lemma
-  (requires True)
-  (ensures (memory_managed (gfield p fd) <==> memory_managed p))
-  [SMTPat (memory_managed (gfield p fd))]
-= ()
 
 abstract let recall
   (#value: Type)
@@ -763,6 +688,94 @@ abstract let includes
 : GTot Type0
 = StructPtr?.from p1 == StructPtr?.from p2 /\ StructPtr?.content p1 == StructPtr?.content p2 /\ path_includes (StructPtr?.p p1) (StructPtr?.p p2)
 
+abstract let gfield
+  (#key: eqtype)
+  (#value: (key -> Tot Type))
+  (p: struct_ptr (DM.t key value))
+  (fd: key)
+: GTot (p' : struct_ptr (value fd) { includes p p' } )
+= _field p fd
+
+abstract let as_aref_gfield
+  (#key: eqtype)
+  (#value: (key -> Tot Type))
+  (p: struct_ptr (DM.t key value))
+  (fd: key)
+: Lemma
+  (requires True)
+  (ensures (as_aref (gfield p fd) == as_aref p))
+= ()
+
+abstract let contains_gfield
+  (#key: eqtype)
+  (#value: (key -> Tot Type))
+  (h: HS.mem)
+  (p: (struct_ptr (DM.t key value)))
+  (fd: key)
+: Lemma
+  (requires True)
+  (ensures (contains h (gfield p fd) <==> contains h p))
+  [SMTPat (contains h (gfield p fd))]
+= ()
+
+abstract let live_gfield
+  (#key: eqtype)
+  (#value: (key -> Tot Type))
+  (h: HS.mem)
+  (p: struct_ptr (DM.t key value))
+  (fd: key)
+: Lemma
+  (requires True)
+  (ensures (live h (gfield p fd) <==> live h p))
+  [SMTPat (live h (gfield p fd))]
+= ()
+
+abstract let as_value_gfield
+  (#key: eqtype)
+  (#value: (key -> Tot Type))
+  (h: HS.mem)
+  (p: struct_ptr (DM.t key value))
+  (fd: key)
+: Lemma
+  (requires (contains h p))
+  (ensures (contains h p /\ as_value h (gfield p fd) == DM.sel (as_value h p) fd))
+  [SMTPat (as_value h (gfield p fd)); SMTPatT (contains h p)]
+= ()
+
+abstract let as_value_gfield_live
+  (#key: eqtype)
+  (#value: (key -> Tot Type))
+  (h: HS.mem)
+  (p: struct_ptr (DM.t key value))
+  (fd: key)
+: Lemma
+  (requires (live h p))
+  (ensures (live h p /\ as_value h (gfield p fd) == DM.sel (as_value h p) fd))
+  [SMTPat (as_value h (gfield p fd)); SMTPatT (live h p)]
+= ()
+
+abstract let frameOf_gfield
+  (#key: eqtype)
+  (#value: (key -> Tot Type))
+  (p: struct_ptr (DM.t key value))
+  (fd: key)
+: Lemma
+  (requires True)
+  (ensures (frameOf (gfield p fd) == frameOf p))
+  [SMTPat (frameOf (gfield p fd))]
+= ()
+
+abstract let memory_managed_gfield
+  (#key: eqtype)
+  (#value: (key -> Tot Type))
+  (p: struct_ptr (DM.t key value))
+  (fd: key)
+: Lemma
+  (requires True)
+  (ensures (memory_managed (gfield p fd) <==> memory_managed p))
+  [SMTPat (memory_managed (gfield p fd))]
+= ()
+
 abstract let includes_gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
@@ -791,6 +804,7 @@ abstract let includes_trans
 : Lemma
   (requires (includes p1 p2 /\ includes p2 p3))
   (ensures (includes p1 p3))
+  [SMTPatT (includes p1 p2); SMTPatT (includes p2 p3)]
 = path_includes_trans (StructPtr?.p p1) (StructPtr?.p p2) (StructPtr?.p p3)
 
 abstract let includes_ind
@@ -851,8 +865,11 @@ let live_includes
   (#value2: Type)
   (h: HS.mem)
   (p1: struct_ptr value1)
-  (p2: struct_ptr value2 {includes p1 p2})
-: Lemma (live h p1 <==> live h p2)
+  (p2: struct_ptr value2)
+: Lemma
+  (requires (includes p1 p2))
+  (ensures (live h p1 <==> live h p2))
+  [SMTPatT (live h p2); SMTPatT (includes p1 p2)]
 = includes_ind
   (fun #v1 #v2 p1 p2 -> live h p1 <==> live h p2)
   (fun #k #v p fd -> live_gfield h p fd)
@@ -888,6 +905,7 @@ abstract let disjoint_gfield
 : Lemma
   (requires (fd1 <> fd2))
   (ensures (disjoint (gfield p fd1) (gfield p fd2)))
+  [SMTPat (disjoint (gfield p fd1) (gfield p fd2))]
 = ()
 
 abstract let disjoint_includes
@@ -1005,7 +1023,7 @@ let disjoint_includes_l #a #as #a' (x: struct_ptr a) (subx:struct_ptr as) (y:str
 
 let disjoint_includes_l_swap #a #as #a' (x:struct_ptr a) (subx:struct_ptr a) (y:struct_ptr a') : Lemma
   (requires (includes x subx /\ disjoint x y))
-  (ensures  (disjoint subx y))
+  (ensures  (disjoint y subx))
   [SMTPatT (disjoint y subx); SMTPatT (includes x subx)]
   = ()
 
