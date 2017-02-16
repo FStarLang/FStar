@@ -88,7 +88,7 @@ reifiable let op_Colon_Equals = write
 
 reifiable let write_weak (#a:Type) (r:ref a) (v:a)
     : ST unit (requires (fun h0      -> h0 `contains_a_well_typed` r))
-	      (ensures  (fun h0 _ h1 -> h1 `contains_a_well_typed` r))
+              (ensures  (fun h0 v h1 -> forall (a:Type) (r:ref a). h0 `contains_a_well_typed` r ==> h1 `contains_a_well_typed` r))
   = let h0 = STATE?.get () in
     STATE?.put (upd_tot h0 r v)
 

@@ -242,7 +242,10 @@ let rec fpartial_result_lemma f x px (w:reachable f x px) : Lemma (requires True
     let px' = cont (fixp f x') in
     fpartial_result_lemma f x px' (Later x' cont w)
 
-
+let fpartial_result_init_lemma f x
+  : Lemma (requires True) (ensures (fpartial_result x f (f x)))
+    [SMTPat (fpartial_result x f (f x))]
+= fpartial_result_lemma f x (f x) Now
 
 (* Memoization of a recursive functions represented as [f : x:dom -> partial_result x] with a complete spec *)
 
@@ -296,7 +299,7 @@ let memo_rec (f: x:dom -> Tot (partial_result x)) (x0:dom)
     forall_prop_assoc_lemma2 x0 y (fun (x,y) -> y == fixp f x) ;
     y
   | None ->
-    fpartial_result_lemma f x0 (f x0) Now ;
+    (* fpartial_result_lemma f x0 (f x0) Now ; *)
     let y = complete_memo_rec f x0 (f x0) in
     MEMO?.put x0 y ;
     y
@@ -376,7 +379,7 @@ and memo_rec_extr_computes :
     (ensures (let y, h1 = reify (memo_rec_extr f x) h0 in y == fixp f x /\ valid_memo h1 (fixp f)))
     (decreases %[x ; 2 ; ()])
 = fun f x h0 ->
-  fpartial_result_lemma f x (f x) Now ;
+  (* fpartial_result_lemma f x (f x) Now ; *)
   complete_memo_rec_extr_computes f x (f x) h0
 
 
@@ -403,8 +406,10 @@ let fibonnacci_partial (x:dom) : (partial_result x) =
   then Done 0
   else Need (x - 1) (fun y1 -> Need (x - 2) (fun y2 -> Done (y1 + y2)))
 
+unfold
 let fibonnacci_ = fixp fibonnacci_partial
 
+unfold
 let fibonnacci_memo = memo_rec_extr fibonnacci_partial
 
 let rec fibonnacci (x:dom) =
@@ -412,27 +417,147 @@ let rec fibonnacci (x:dom) =
   then 0
   else fibonnacci (x - 1) + fibonnacci (x - 2)
 
-(* let eq_rec_partial_result *)
+
+let rec eq_rec_partial_result
+  (f:x:dom -> Tot (partial_result x))
+  (g:dom -> Tot codom)
+  (x:dom)
+  (px:partial_result x)
+  : Type0
+=
+  match px with
+  | Done y -> y == g x
+  | Need x1 cont ->
+    assume (forall y. cont y << y) ;
+    fixp f x1 == g x1 ==> eq_rec_partial_result f g x (cont (fixp f x1))
+
+let rec complete_f_eq
+  (f:x:dom -> Tot (partial_result x))
+  (g:dom -> Tot codom)
+  (x:dom)
+  (px:partial_result x)
+  : Lemma (requires (fpartial_result x f px /\
+                     eq_rec_partial_result f g x px /\
+                     (forall x0. eq_rec_partial_result f g x0 (f x0))))
+    (ensures (fixp f x == g x))
+    (decreases %[x ; 0 ; px])
+=
+  match f x with
+  | Done y -> ()
+  | Need x1 cont ->
+    assume (forall y. cont y << y) ; f_eq f g x1 ; complete_f_eq f g x (cont (fixp f x1))
+
+and f_eq
+  (f:x:dom -> Tot (partial_result x))
+  (g:dom -> Tot codom)
+  (x:dom)
+  : Lemma (requires (forall x0. eq_rec_partial_result f g x0 (f x0)))
+    (ensures (fixp f x == g x))
+    (decreases %[x ; 1 ; ()])
+=
+  complete_f_eq f g x (f x)
+
+let fibo_eq_rec_partial_result (x:dom) : Lemma (eq_rec_partial_result fibonnacci_partial fibonnacci x (fibonnacci_partial x))
+=
+  let fibp = fibonnacci_partial in
+  let fib = fibonnacci in
+  let fixfib = fixp fibp in
+  let res y = eq_rec_partial_result fibp fib x y in
+  if x <= 1 then ()
+  else match fibp x with
+  | Need x1 cont1 ->
+    let f1 () : Lemma (requires (fixfib x1 == fib x1)) (ensures (res (cont1 (fixfib x1)))) =
+      match cont1 (fixfib x1) with
+      | Need x2 cont2 ->
+        let f2 () : Lemma (requires (fixfib x2 = fib x2)) (ensures (res (cont2 (fixfib x2)))) =
+          match cont2 (fixfib x2) with | Done y -> assert (y == fixfib x1 + fixfib x2 /\ y == fib x1 + fib x2)
+        in
+        move_requires f2 ()
+    in
+    move_requires f1 ()
+
+let fibonnacci_partial_induces_fibonnacci () : Lemma (forall x. fibonnacci_ x == fibonnacci x) =
+  let f (x:dom) : Lemma (fibonnacci_ x == fibonnacci x) =
+    forall_intro fibo_eq_rec_partial_result ;
+    f_eq fibonnacci_partial fibonnacci x
+  in
+  forall_intro f
+
+unfold
+let computes_body (f:dom -> Memo codom) (g:dom -> Tot codom) (h0:heap) (x:dom) =
+  let (y, h1) = reify (f x) h0 in y == g x /\ valid_memo h1 g
+
+let rec valid_memo_extensionality g0 g1 h : Lemma (requires (forall x. g0 x == g1 x) /\ valid_memo h g0) (ensures (valid_memo h g1)) (decreases h)
+=
+  match h with
+  | [] -> ()
+  | x :: xs -> valid_memo_extensionality g0 g1 xs
+
+
+let computes_extensionality (f : x:dom -> Memo codom) (g0 g1: dom -> Tot codom)
+  : Lemma (requires (f `computes` g0 /\ (forall x. g0 x == g1 x))) (ensures (f `computes`g1))
+=
+  let phi (h0:heap) (vm:squash(valid_memo h0 g0)) (x:dom) : Lemma (computes_body f g1 h0 x) =
+    give_proof vm ; assert (computes_body f g0 h0 x) ; assert (g0 x == g1 x) ;
+    let (y, h1) = reify (f x) h0 in valid_memo_extensionality g0 g1 h1
+  in
+  let phi' (h0:heap) (vm:squash(valid_memo h0 g1)) : Lemma (forall x. computes_body f g1 h0 x) =
+    give_proof vm; valid_memo_extensionality g1 g0 h0 ;
+    forall_intro (phi h0 (get_proof (valid_memo h0 g0)))
+  in
+  forall_impl_intro phi'
+
+
+let fibonnacci_memo_computes_fibonnacci () : Lemma (fibonnacci_memo `computes` fibonnacci) =
+  memo_rec_lemma fibonnacci_partial ;
+  fibonnacci_partial_induces_fibonnacci () ;
+  computes_extensionality fibonnacci_memo fibonnacci_ fibonnacci
+
+
+
+
+
+(* (\* let rec fibo_equiv (x:dom) : Lemma (fibonnacci_ x == fibonnacci x) = *\) *)
+(* (\*   if x <= 1 then () else begin admit () ; fibo_equiv (x - 1) ; fibo_equiv (x - 2) end *\) *)
+
+(* #set-options "--__no_positivity" *)
+
+(* noeq type erpr1 *)
+(*   (f:x:dom -> Tot (partial_result x)) *)
+(*   (g:dom -> Tot codom) *)
+(*   (x:dom) : *)
+(*   (px:partial_result x) -> Type *)
+(* = *)
+(*   | W : px:(partial_result x) -> *)
+(*     begin match px with *)
+(*     | Done y -> (y':codom{y' == y} -> Lemma (y' == g x)) *)
+(*     | Need x1 cont -> (x1':dom{x1' == x1} -> cont':(codom -> Tot (partial_result x)){cont' == cont} -> y1:codom{y1 == fixp f x1} -> Pure (erpr1 f g x (cont' y1)) (requires (y1 == g x1)) (ensures (fun _ -> True))) *)
+(*     end -> erpr1 f g x px *)
+
+
+(* let fibo_erpr (x:dom) : erpr1 fibonnacci_partial fibonnacci x (fibonnacci_partial x) = *)
+(*   if x <= 1 then W (normalize_term (fibonnacci_partial x)) (fun y -> assert (y == 0 /\ y == fibonnacci x)) *)
+(*   else *)
+(*     W (fibonnacci_partial x) (fun x1 cont1 y1 -> *)
+(*       W #fibonnacci_partial #fibonnacci #x (cont1 y1) (fun x2 cont2 y2 -> *)
+(*         W #fibonnacci_partial #fibonnacci #x (cont2 y2) (fun y -> assert (y == y1 + y2 /\ y1 + y2 == fibonnacci x1 + fibonnacci x2)))) *)
+
+(* noeq type erpr *)
 (*   (f:x:dom -> Tot (partial_result x)) *)
 (*   (g:dom -> Tot codom) *)
 (*   (x:dom) *)
-(*   (px:partial_result x{fpartial_result f x px}) *)
-(*   : Type0 *)
+(*   : partial_result x -> Type *)
 (* = *)
-(*   match px with *)
-(*   | Done y -> y == g x *)
-(*   | Need x1 cont -> fixp f x1 == g x1 /\ eq_rec_partial_result f g x (cont (fixp f x1)) *)
+(*   | PDone : #y:codom -> (y':codom{y' == y} -> Lemma (y' == g x)) -> erpr f g x (Done y) *)
+(*   | PNeed : #x1:dom{x1 << x} -> #cont:(codom -> Tot (partial_result x)) -> *)
+(*              -> *)
+(*             erpr f g x (Need x1 cont) *)
 
-(* let eq_rec_fixp (f : (x:dom -> partial_result x)) (g:dom -> Tot codom) *)
-(*   : Lemma (requires (forall x0. eq_rec_partial_result f g x (f x0)) *)
-(*     (forall x0. fixp f x0 == g x0) *)
-(* = *)
-(*   let rec f_eq0 (x:dom) (px:partial_result x{fpartial_result f x px})  : Lemma (requires (eq_rec_partial_result f g x px) (ensures (fixp f x == g x)) = *)
-(*     match f x with *)
-(*     | Done y -> () *)
-(*     | Need x1 cont -> f_eq x (cont (fixp f x1)) *)
-(*   in *)
-(*   let f_eq  *)
 
-(* let rec fibo_equiv (x:dom) : Lemma (fibonnacci_ x == fibonnacci x) = *)
-(*   if x <= 1 then () else begin admit () ; fibo_equiv (x - 1) ; fibo_equiv (x - 2) end *)
+(* let fibo_erpr (x:dom) : erpr fibonnacci_partial fibonnacci x (fibonnacci_partial x) = *)
+(*   if x <= 1 then PDone (fun y -> assert (y == 0 /\ y == fibonnacci x)) *)
+(*   else *)
+(*     PNeed #_ #_ #_ #(x - 1) #_ (fun x1 cont1 y1 -> *)
+(*       PNeed #_ #_ #_ #(x-2) #_ (fun x2 cont2 y2 -> *)
+(*         PDone #_ #_ #_ #(y1+y2) (fun y -> assert (y == y1 + y2 /\ y1 + y2 == fibonnacci x1 + fibonnacci x2)))) *)
+
