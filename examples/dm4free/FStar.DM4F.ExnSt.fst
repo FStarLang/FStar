@@ -54,7 +54,7 @@ let lift_state_exnst a wp f =
         fun h0 -> admit(); Some (f h0)
 
 sub_effect IntST.STINT ~> EXNST {
-  (* lift_wp = lift_state_exnst_wp; *)
+  lift_wp = lift_state_exnst_wp;
   lift = lift_state_exnst
 }
 

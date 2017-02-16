@@ -795,13 +795,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           let codomain_eff lc = match lc with
             | Inl lc -> SS.subst_comp opening (lc.comp()) |> Some
             | Inr (eff, flags) ->
-                let new_uvar () = FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst in
-                if Ident.lid_equals eff Const.effect_Tot_lid
-                then S.mk_Total (new_uvar()) |> Some
-                else if Ident.lid_equals eff Const.effect_GTot_lid
-                then S.mk_GTotal (new_uvar()) |> Some
-                (* TODO (KM) : shouldn't we do something when flags contains TOTAL ? *)
-                else None
+              let new_uvar () = FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst in
+              if Ident.lid_equals eff Const.effect_Tot_lid
+              then S.mk_Total (new_uvar()) |> Some
+              else if Ident.lid_equals eff Const.effect_GTot_lid
+              then S.mk_GTotal (new_uvar()) |> Some
+              (* TODO (KM) : shouldn't we do something when flags contains TOTAL ? *)
+              else None
           in
 
           begin match lopt with
@@ -839,16 +839,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     let f = mkApp(fsym, List.map mkFreeV cvars) in
                     let app = mk_Apply f vars in
                     let typing_f =
-                        match codomain_eff lc with
-                        | None -> [] //no typing axiom for this lambda, because we don't have enough info
-                        | Some c ->
-                            let tfun = U.arrow bs c in
-                            let f_has_t, decls'' = encode_term_pred None tfun env f in
-                            let a_name = Some("typing_"^fsym) in
-                            decls''@[Term.Assume(mkForall([[f]], cvars, f_has_t), a_name, a_name)] in
+                      match codomain_eff lc with
+                      | None -> [] //no typing axiom for this lambda, because we don't have enough info
+                      | Some c ->
+                        let tfun = U.arrow bs c in
+                        let f_has_t, decls'' = encode_term_pred None tfun env f in
+                        let a_name = Some("typing_"^fsym) in
+                        decls''@[Term.Assume(mkForall([[f]], cvars, f_has_t), a_name, a_name)]
+                    in
                     let interp_f =
-                        let a_name = Some ("interpretation_" ^fsym) in
-                        Term.Assume(mkForall([[app]], vars@cvars, mkEq(app, body)), a_name, a_name) in
+                      let a_name = Some ("interpretation_" ^fsym) in
+                      Term.Assume(mkForall([[app]], vars@cvars, mkEq(app, body)), a_name, a_name)
+                    in
                     let f_decls = decls@decls'@(fdecl::typing_f)@[interp_f] in
                     BU.smap_add env.cache tkey_hash (fsym, cvar_sorts, f_decls);
                     f, f_decls
@@ -1779,7 +1781,9 @@ let encode_top_level_let :
         in
         let decls, eqns, env0 = List.fold_left (fun (decls, eqns, env0) (gtok, ty, lb) ->
             let decls', eqns', env0 = encode_one_binding env0 gtok ty lb in
-            decls'::decls, eqns'@eqns, env0) ([decls], [], env0) (List.zip3 gtoks typs bindings)
+            decls'::decls, eqns'@eqns, env0)
+          ([decls], [], env0)
+          (List.zip3 gtoks typs bindings)
         in
         let prefix_decls, rest = decls |> List.flatten |> List.partition (function
             | DeclFun _ -> true

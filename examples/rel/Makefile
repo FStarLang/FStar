@@ -11,8 +11,8 @@ all: ifc\
 		 random_tapes\
 		 delimited_release\
 		 recursive \
-		 WhileReify \
-		 IfcReify
+		 WhileReify.dm4f \
+		 IfcReify.dm4f
 
 ifc:
 	$(FSTAR) rel.fst whilelanguage.fst ifc.fst ifcExample.fst
@@ -26,12 +26,8 @@ recursive:
 delimited_release:
 	$(FSTAR) delimited_release.fst
 
-WhileReify:
-	$(FSTAR) --include ../dm4free WhileReify.fst
-
-IfcReify:
-	$(FSTAR) --include ../dm4free IfcReify.fst
-
+%.dm4f: %.fst
+	$(FSTAR) --include ../dm4free $^
 
 blowup:
 	$(FSTAR) --include ../dm4free/ --debug Ifc_Recursive_Heap_Reify --debug_level SMTEncodingReify --trace_error ifc_recursive_heap_reify.fst
