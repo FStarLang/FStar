@@ -286,8 +286,18 @@ let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfo
      | Tm_refine (bv, _) ->
        debug_log env ("Checking strict positivity in an Tm_refine, recur in the bv sort)");
        ty_strictly_positive_in_type ty_lid bv.sort unfolded env
+     | Tm_match (_, branches) ->
+       debug_log env ("Checking strict positivity in an Tm_match, recur in the branches)");
+       List.for_all (fun (p, _, t) ->
+         let bs = List.map mk_binder (pat_bvs p) in
+         let bs, t = SS.open_term bs t in
+         ty_strictly_positive_in_type ty_lid t unfolded (push_binders env bs)
+       ) branches
+     | Tm_ascribed (t, _, _) ->
+       debug_log env ("Checking strict positivity in an Tm_ascribed, recur)");
+       ty_strictly_positive_in_type ty_lid t unfolded env
      | _ ->
-       debug_log env ("Checking strict positivity, unexpected term: " ^ (PP.term_to_string btype));
+       debug_log env ("Checking strict positivity, unexpected tag: " ^ (PP.tag_of_term btype) ^ " and term: " ^ (PP.term_to_string btype));
        false)  //remaining cases, will handle as they come up
 
 //some binder of some data constructor is an application of ilid to the args
