@@ -6,11 +6,11 @@ include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
 FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
 
-HYPERSTACK=FStar.Buffer.fst FStar.Buffer.Quantifiers.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
+HYPERSTACK=FStar.Buffer.fst FStar.Buffer.Quantifiers.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst FStar.Struct.fst
 
 ALL=$(filter-out $(FLAKY) $(HYPERSTACK) $(MATH),$(wildcard FStar.*.fst FStar.*.fsti))
 
-all: $(addsuffix -ver, $(ALL)) st m_rref bufferq
+all: $(addsuffix -ver, $(ALL)) st m_rref bufferq struct
 
 indent: $(addsuffix -indent, $(ALL))
 
@@ -59,6 +59,9 @@ m_rref:
 
 buffer:
 	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Buffer.fst
+
+struct:
+	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Struct.fst
 
 bufferq:
 	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst FStar.Buffer.fst FStar.Buffer.Quantifiers.fst

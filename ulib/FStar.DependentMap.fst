@@ -4,6 +4,16 @@ noeq abstract type t (key: eqtype) (value: (key -> Tot Type)) = {
   mappings: (k: key) -> Tot (value k)
 }
 
+abstract let t_inj
+  (key1: eqtype)
+  (value1: (key1 -> Tot Type))
+  (key2: eqtype)
+  (value2: (key2 -> Tot Type))
+: Lemma
+  (requires (t key1 value1 == t key2 value2))
+  (ensures ( key1 == key2 /\ value1 == value2 ))
+= ()
+
 abstract let create
   (#key: eqtype)
   (#value: (key -> Tot Type))
