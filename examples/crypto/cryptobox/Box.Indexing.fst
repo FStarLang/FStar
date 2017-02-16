@@ -25,6 +25,12 @@ let generate_ae_id i1 i2 =
     AE_id (i2',i1')
 
 
+val symmetric_id_generation: i1:id{AE_id? i1} -> i2:id{AE_id? i2} -> Lemma
+  (requires (True))
+  (ensures (forall id1 id2. generate_ae_id id1 id2 = generate_ae_id id2 id1))
+  [SMTPat (generate_ae_id i1 i2)]
+let symmetric_id_generation i1 i2 = ()
+
 assume Index_hasEq: hasEq id
 assume AE_Index_hasEq: hasEq ae_id
 
@@ -42,7 +48,7 @@ type id_honesty_table_key = dh_id
 type id_honesty_table_value = bool
 type id_honesty_table_range = fun id_honesty_table_key -> id_honesty_table_value
 let id_honesty_table_inv (m:MM.map' id_honesty_table_key id_honesty_table_range) = 
-  forall i. Some? (MM.sel m i) ==> MR.witnessed (MM.defined id_freshness_table (DH_id i))
+  True//forall i. Some? (MM.sel m i) ==> MR.witnessed (MM.defined id_freshness_table (DH_id i))
        
 assume val id_honesty_table_region: (r:MR.rid{ extends r root /\ is_eternal_region r /\ is_below r root /\ disjoint r id_freshness_table_region})
 //let id_table_region = new_region root in
@@ -55,6 +61,18 @@ let fresh (i:id) h =
 
 type unfresh (i:id) =
   MR.witnessed (MM.defined id_freshness_table i)
+  
+val freshST: (i:id) -> ST unit
+  (requires (fun h0 -> ~(unfresh i)))
+  (ensures (fun h0 b h1 ->
+    fresh i h1
+  ))
+let freshST i =
+  MR.m_recall id_freshness_table;
+  match MM.lookup id_freshness_table i with
+  | None -> ()
+  
+
 
 val make_unfresh: (i:id) -> ST (unit)
   (requires (fun h0 -> True))
@@ -74,23 +92,24 @@ private let measure_id (i:id) =
   | DH_id i' -> 0
   | _ -> 1
 
-val honest: (i:id) -> Tot (Type0) (decreases (measure_id i))
-let rec honest (i:id) =
-  match i with
-  | DH_id i' -> MR.witnessed (MM.contains id_honesty_table i' true)
-  | AE_id (i1,i2) -> honest (DH_id i1) /\ honest (DH_id i2)
-
-val dishonest: (i:id) -> Tot Type0 (decreases (measure_id i))
-let rec dishonest (i:id) =
-  match i with
-  | DH_id i' -> MR.witnessed (MM.contains id_honesty_table i' false)
-  | AE_id (i1,i2) -> dishonest (DH_id i1) \/ dishonest (DH_id i2)
-
 val fixed: (i:id) -> Tot Type0 (decreases (measure_id i))
 let rec fixed (i:id) =
   match i with
   | DH_id i' -> MR.witnessed (MM.defined id_honesty_table i')
   | AE_id (i1,i2) -> fixed (DH_id i1) /\ fixed (DH_id i2)
+  
+val honest: (i:id) -> Tot (t:Type0{t ==> fixed i}) (decreases (measure_id i))
+let rec honest (i:id) =
+  match i with
+  | DH_id i' -> MR.witnessed (MM.contains id_honesty_table i' true) /\ MR.witnessed (MM.defined id_honesty_table i')
+  | AE_id (i1,i2) -> honest (DH_id i1) /\ honest (DH_id i2)
+
+val dishonest: (i:id) -> Tot (t:Type0{(t /\ DH_id? i) ==> fixed i}) (decreases (measure_id i))
+let rec dishonest (i:id) =
+  match i with
+  | DH_id i' -> MR.witnessed (MM.contains id_honesty_table i' false) /\ MR.witnessed (MM.defined id_honesty_table i')
+  | AE_id (i1,i2) -> dishonest (DH_id i1) \/ dishonest (DH_id i2)
+
 
 // Implement these two for the adversary
 //val make_dishonest: (i:id) -> ST (unit) (decreases (measure_id i))
@@ -125,7 +144,9 @@ val honestST: i:id{fixed i} -> ST(b:bool{(b ==> honest i) /\ (not b ==> dishones
   (requires (fun h0 -> True))
   (ensures (fun h0 b h1 ->
     modifies_none h0 h1 
-    /\ MR.m_contains id_honesty_table h1
+    /\ h0==h1
+    /\ (honest i \/ dishonest i)
+    ///\ MR.m_contains id_honesty_table h1
   ))
 let rec honestST i =
   MR.m_recall id_honesty_table;
@@ -164,8 +185,7 @@ val honest_dishonest_contradiction_lemma: i:dh_id -> ST(unit)
   ))
 let honest_dishonest_contradiction_lemma i = 
   MR.testify(MM.contains id_honesty_table i true);
-  MR.testify(MM.contains id_honesty_table i false);
-  ()
+  MR.testify(MM.contains id_honesty_table i false)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -221,11 +241,6 @@ let honest_dishonest_contradiction_lemma i =
 //  (h1 && h2)
 
 
-val unique_id_generation: i1:id{AE_id? i1} -> i2:id{AE_id? i2} -> Lemma
-  (requires (True))
-  (ensures (forall id1 id2. generate_ae_id id1 id2 = generate_ae_id id2 id1))
-  [SMTPat (generate_ae_id i1 i2)]
-let unique_id_generation i1 i2 = ()
 
 //val ae_id_property_lemma: (i1:id) -> (i2:id) -> Lemma
 //  (requires True)

@@ -22,3 +22,7 @@ let leak_key = AE.leak_key
 let ae_key_region = AE.ae_key_region
 
 let leak_regionGT = AE.leak_regionGT
+
+let leak_logGT = AE.leak_logGT
+
+let recall_log = AE.recall_log

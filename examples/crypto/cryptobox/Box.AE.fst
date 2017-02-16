@@ -44,7 +44,12 @@ type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type cipher = b:bytes
 type nonce = B.lbytes noncesize
 
-assume val ae_key_region: (r:MR.rid{extends r root /\ is_eternal_region r /\ is_below r root})
+assume val ae_key_region: (r:MR.rid{ extends r root 
+				     /\ is_eternal_region r 
+				     /\ is_below r root
+				     /\ disjoint r id_freshness_table_region
+				     /\ disjoint r id_honesty_table_region
+				     })
 //private let ae_key_region = 
 //  recall_region id_table_region;
 //  new_region root
@@ -63,7 +68,7 @@ type log_t (i:id{AE_id? i}) (r:rid)  = MM.t r log_key (log_range i) (log_inv i)
 *)
 
 noeq type key =
-  | Key: #i:id{AE_id? i /\ unfresh i} -> #(region:rid{extends region ae_key_region}) -> raw:aes_key -> log:log_t i region -> key
+  | Key: #i:id{AE_id? i /\ unfresh i /\ fixed i} -> #(region:rid{extends region ae_key_region /\ is_below region ae_key_region /\ is_eternal_region region}) -> raw:aes_key -> log:log_t i region -> key
 
 val get_index: k:key -> Tot (i:id{i=k.i})
 let get_index k = k.i
@@ -73,16 +78,17 @@ let get_index k = k.i
     Safe_key_gen makes sure that memory safety is preserved while generating a key.
     Also, it makes sure that the log created along with the key is empty.
 *)
-let safe_key_gen parent m0 k m1 =
-  // Reason about regions (HyperHeap)
-  let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
-  HH.modifies_just s m0.h m1.h
-  /\ extends k.region parent
-  /\ fresh_region k.region m0.h m1.h
-  /\ is_below k.region ae_key_region
-  // Reason about memory (HyperStack)
-  /\ m_contains k.log m1
-  /\ m_sel m1 k.log == MM.empty_map log_key (log_range k.i)
+
+//let safe_key_gen parent m0 k m1 =
+//  // Reason about regions (HyperHeap)
+//  let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
+//  HH.modifies_just s m0.h m1.h
+//  /\ extends k.region parent
+//  /\ fresh_region k.region m0.h m1.h
+//  /\ is_below k.region ae_key_region
+//  // Reason about memory (HyperStack)
+//  /\ m_contains k.log m1
+//  /\ m_sel m1 k.log == MM.empty_map log_key (log_range k.i)
 
 
 (**
@@ -91,8 +97,9 @@ let safe_key_gen parent m0 k m1 =
 *)
 val keygen: i:id{AE_id? i} -> ST (k:key{k.i=i})
   (requires (fun h -> 
-  fresh i h 
-  /\ fixed i))
+    fresh i h // Prevents multiple keys with the same id
+    /\ fixed i // We require this to enforce a static corruption model.
+  ))
   (ensures  (fun h0 k h1 -> 
     let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
     HH.modifies_just s h0.h h1.h
@@ -128,6 +135,15 @@ val leak_logGT: k:key -> GTot (log:log_t k.i k.region{log=k.log})
 let leak_logGT k =
   k.log
 
+val recall_log: k:key -> ST unit
+  (requires (fun h0 -> True))
+  (ensures (fun h0 _ h1 ->
+    h0 == h1
+    /\ MR.m_contains k.log h1
+  ))
+let recall_log k =
+  MR.m_recall k.log
+
 val leak_regionGT: k:key -> GTot (region:rid{region=k.region})
 let leak_regionGT k =
   k.region
@@ -138,7 +154,9 @@ let leak_regionGT k =
    abstract keys created this way can not be honest.
 *)
 val coerce_key: i:id{AE_id? i /\ ((dishonest i) \/ ~(prf_odh))} -> raw_k:aes_key -> ST (k:key{k.i=i /\ k.raw = raw_k})
-  (requires (fun _ -> True))
+  (requires (fun h0 -> 
+    fixed i
+  ))
   (ensures  (fun h0 k h1 ->
     let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
     HH.modifies_just s h0.h h1.h
@@ -154,41 +172,48 @@ let coerce_key i raw =
   let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
   make_unfresh i;
   Key #i #region raw log
+  
 
 (**
    Encrypt a a message under a key. Idealize if the key is honest and ae_ind_cca true.
 *)
 val encrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_plain i) -> ST cipher
   (requires (fun h0 -> 
-    MM.fresh k.log n h0
+    m_contains k.log h0
+    /\ MM.fresh k.log n h0
     /\ fixed i
   ))
   (ensures  (fun h0 c h1 ->
     modifies_one k.region h0.h h1.h
     /\ m_contains k.log h1
-    /\ (
-	( (dishonest i \/ ~(b2t ae_ind_cca))
-	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (repr m))
-      \/ 
-        ( (honest i /\ b2t ae_ind_cca)
-	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (createBytes (length m) 0z) )
-      )
+//    /\ (
+//	( (dishonest i \/ ~(b2t ae_ind_cca))
+//	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (repr m))
+//      \/ 
+//        ( (honest i /\ b2t ae_ind_cca)
+//	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (createBytes (length m) 0z) )
+//      )
     /\ (dishonest i \/ honest i)
     /\ MR.witnessed (MM.contains k.log n (c,m))
     ))
 let encrypt #i n k m =
   m_recall k.log;
   let honest_i = honestST i in
+  assert(honest i \/ dishonest i);
+//  assert(b2t honest_i ==> honest i);
   let p = 
-    if (ae_ind_cca && honest_i) then 
+    if (ae_ind_cca && honest_i) then (
+//      assert((b2t ae_ind_cca /\ honest i));
       createBytes (length m) 0z 
-    else 
-      repr m 
+    ) else (
+//      assert(~(b2t ae_ind_cca) \/ dishonest i);
+      repr m )
   in
   let c = CoreCrypto.aead_encrypt AES_128_CCM k.raw n empty_bytes p in
   MR.m_recall k.log;
   MM.extend k.log n (c,m);
   c
+
 
 (**
    Decrypt a ciphertext c using a key k. If the key is honest and ae_int_ctxt is idealized,
