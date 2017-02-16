@@ -10,7 +10,9 @@ uall: all
 all: ifc\
 		 random_tapes\
 		 delimited_release\
-		 recursive
+		 recursive \
+		 WhileReify \
+		 IfcReify
 
 ifc:
 	$(FSTAR) rel.fst whilelanguage.fst ifc.fst ifcExample.fst
@@ -25,16 +27,11 @@ delimited_release:
 	$(FSTAR) delimited_release.fst
 
 WhileReify:
-	$(FSTAR) --include ../dm4free --include ../../ulib --explicit_deps FStar.List.Tot.fst FStar.ListProperties.fst FStar.Seq.fst FStar.FunctionalExtensionality.fst FStar.DM4F.IntStore.fst WhileReify.fst --verify_module WhileReify
+	$(FSTAR) --include ../dm4free WhileReify.fst
 
 IfcReify:
-	$(FSTAR) --include ../dm4free --include ../../ulib --explicit_deps FStar.List.Tot.fst FStar.ListProperties.fst FStar.Seq.fst FStar.FunctionalExtensionality.fst FStar.DM4F.IntStore.fst rel.fst WhileReify.fst FStar.Squash.fsti FStar.Classical.fst IfcReify.fst --verify_module IfcReify
+	$(FSTAR) --include ../dm4free IfcReify.fst
 
-IfcReifyLow:
-	$(FSTAR) --debug IfcReify --debug_level Low --debug_level Norm  --debug_level Rel --include ../dm4free --include ../../ulib --explicit_deps FStar.List.Tot.fst FStar.ListProperties.fst FStar.Seq.fst FStar.FunctionalExtensionality.fst FStar.DM4F.IntStore.fst rel.fst WhileReify.fst FStar.Squash.fsti FStar.Classical.fst IfcReify.fst --verify_module IfcReify > bidule
-
-IfcReifyDebug:
-	$(FSTAR) --include ../dm4free/ --debug FStar.DM4F.IntStore.Fixed --debug IfcReify --debug WhileReify --debug_level SMTEncodingReify IfcReify.fst
 
 blowup:
 	$(FSTAR) --include ../dm4free/ --debug Ifc_Recursive_Heap_Reify --debug_level SMTEncodingReify --trace_error ifc_recursive_heap_reify.fst

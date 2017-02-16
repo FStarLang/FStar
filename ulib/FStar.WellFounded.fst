@@ -18,7 +18,7 @@
    https://coq.inria.fr/library/Coq.Init.Wf.html
 *)
 
-module Wf
+module FStar.WellFounded
 
 noeq type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
   | AccIntro : (y:a -> r y x -> Tot (acc a r y)) -> acc a r x
@@ -35,6 +35,11 @@ assume val axiom1_dep : #a:Type -> #b:(a->Type) -> f:(y:a -> Tot (b y)) -> x:a -
 val axiom1 : #a:Type -> #b:Type -> f:(a -> Tot b) -> x:a ->
              Lemma (precedes (f x) f)
 let axiom1 #a #b f x = axiom1_dep f x
+
+let apply (#a:Type) (#b:a -> Type) (f: x:a -> Tot (b x)) (x:a)
+  : Pure (b x) (requires True) (ensures (fun r -> r == f x /\ f x << f))
+=
+  axiom1_dep #a #b f x ; f x
 
 val fix_F : #aa:Type -> #r:(aa -> aa -> Type) -> #p:(aa -> Type) ->
             (x:aa -> (y:aa -> r y x -> Tot (p y)) -> Tot (p x)) ->

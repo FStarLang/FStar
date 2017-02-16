@@ -16,7 +16,11 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.Continuations.uver \
 	delimcc.uver \
 	Relational.ProgramOptimizations.uver \
-	Relational.ProgramEquivalence.uver
+	Relational.ProgramEquivalence.uver \
+	FStar.DM4F.IntStore.uver \
+	FStar.DM4F.IntStoreFixed.uver \
+	FStar.DM4F.IntStoreExcFixed.uver \
+	FStar.DM4F.Memo.fst
 
 old:
 	$(MAKE) -C old

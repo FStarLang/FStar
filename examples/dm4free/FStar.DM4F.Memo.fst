@@ -2,6 +2,7 @@ module FStar.DM4F.Memo
 
 open FStar.Classical
 open FStar.Squash
+open FStar.WellFounded
 
 (* These should be indices of our effect *)
 type dom : eqtype = int
@@ -191,6 +192,8 @@ noeq type partial_result (x0:dom) : Type =
 (* Or a computation asking for the result of the recursive call on [x] and a continuation [cont] *)
 | Need : x:dom{x << x0} -> cont:(codom -> Tot (partial_result x0)) -> partial_result x0
 
+unfold
+let ( <| ) = apply #codom #(fun _ -> partial_result _)
 
 (* We can define the actual total function represented *)
 (* by [f : x:dom -> Tot (partial_result x)] with *)
@@ -202,8 +205,7 @@ let rec  complete_fixp (f: (x:dom) -> partial_result x) (x:dom) (px:partial_resu
   match px with
   | Done y -> y
   | Need x' cont ->
-    assume (forall y. cont y << cont) ;
-    complete_fixp f x (cont (fixp f x'))
+    complete_fixp f x (cont <| (fixp f x'))
 
 and fixp (f: x:dom -> Tot (partial_result x)) (x0:dom)
   : Tot codom (decreases %[x0 ; 1 ; ()])
@@ -230,16 +232,15 @@ let rec fpartial_result x (f: (x:dom) -> partial_result x) (px:partial_result x)
   match px with
   | Done y -> y == fixp f x
   | Need x1 cont ->
-    assume (forall y. cont y << cont) ;
-    fpartial_result x f (cont (fixp f x1))
+    fpartial_result x f (cont <| (fixp f x1))
 
 
 let rec fpartial_result_lemma f x px (w:reachable f x px) : Lemma (requires True) (ensures (fpartial_result x f px)) (decreases px)
 = match px with
   | Done y -> reachable_lemma f x px w (* ; assert (y == fixp f x) ;     assert (fpartial_result x f px) *)
 
-  | Need x' cont -> assume (forall y. cont y << cont) ;
-    let px' = cont (fixp f x') in
+  | Need x' cont ->
+    let px' = cont <| (fixp f x') in
     fpartial_result_lemma f x px' (Later x' cont w)
 
 let fpartial_result_init_lemma f x
@@ -286,8 +287,7 @@ let rec complete_memo_rec (f: x:dom -> Tot (partial_result x)) (x:dom) (px:parti
         y
     in
     assert (y == fixp f x') ;
-    assume (forall y. cont y << cont) ;
-    let px1 = cont y in
+    let px1 = cont <| y in
     assert (fpartial_result x f px1) ;
     complete_memo_rec f x px1
 
@@ -330,8 +330,7 @@ let rec complete_memo_rec_extr
   | Done y -> y
   | Need x' cont ->
     let y = memo_extr_p (p x px) (memo_rec_extr_temp f x px) x' in
-    assume (forall y. cont y << cont) ;
-    complete_memo_rec_extr f x (cont y)
+    complete_memo_rec_extr f x (cont <| y)
 
 and memo_rec_extr_temp (f: (x:dom) -> partial_result x) (x0:dom) (px0:partial_result x0) (x:dom{p x0 px0 x})
   : Memo codom (decreases %[x0 ; 0 ; px0])
@@ -369,8 +368,7 @@ let rec complete_memo_rec_extr_computes :
     let y, h1 = reify (memo_extr_p (p x px) (memo_rec_extr_temp f x px) x') h0 in
     assert (y == fixp f x') ;
     assert (valid_memo h1 (fixp f)) ;
-    assume (forall y. cont y << cont) ;
-    complete_memo_rec_extr_computes f x (cont y) h1
+    complete_memo_rec_extr_computes f x (cont <| y) h1
 and memo_rec_extr_computes :
   (f:(x:dom -> partial_result x)) ->
   (x:dom) ->
@@ -393,6 +391,67 @@ let memo_rec_lemma (f:(x:dom) -> partial_result x)
   forall_impl_intro (fun (h0:heap) (vm:squash(valid_memo h0 (fixp f))) -> forall_intro (phi0 h0 vm) <:
     Lemma (forall x. let y, h1 = reify (memo_rec_extr f x) h0 in y == fixp f x /\ valid_memo h1 (fixp f)))
 
+
+
+
+(* ****************************************************************************)
+(*                                                                            *)
+(*              Proving equality on functions defined with fixp               *)
+(*                                                                            *)
+(* ****************************************************************************)
+
+(* In order to prove that [fixp f] and [g] are extensionally equalsm *)
+(* it is enough to prove that [fix_eq_proof f g] *)
+
+let rec complete_fixp_eq_proof
+  (f:x:dom -> Tot (partial_result x))
+  (g:dom -> Tot codom)
+  (x:dom)
+  (px:partial_result x)
+  : Type0
+=
+  match px with
+  | Done y -> y == g x
+  | Need x1 cont ->
+    fixp f x1 == g x1 ==> complete_fixp_eq_proof f g x (cont <| (fixp f x1))
+
+unfold
+let fixp_eq_proof f g = forall x. complete_fixp_eq_proof f g x (f x)
+
+
+let rec complete_fixp_eq
+  (f:x:dom -> Tot (partial_result x))
+  (g:dom -> Tot codom)
+  (x:dom)
+  (px:partial_result x)
+  : Lemma (requires (fpartial_result x f px /\
+                    complete_fixp_eq_proof f g x px /\
+                    (forall x0. complete_fixp_eq_proof f g x0 (f x0))))
+                    (ensures (fixp f x == g x))
+                    (decreases %[x ; 0 ; px])
+=
+  match px with
+  | Done y -> ()
+  | Need x1 cont ->
+    fixp_eq' f g x1 ; complete_fixp_eq f g x (cont <| (fixp f x1))
+
+and fixp_eq'
+  (f:x:dom -> Tot (partial_result x))
+  (g:dom -> Tot codom)
+  (x:dom)
+  : Lemma (requires (fixp_eq_proof f g))
+    (ensures (fixp f x == g x))
+    (decreases %[x ; 1 ; ()])
+=
+  complete_fixp_eq f g x (f x)
+
+
+let fixp_eq (f:x:dom -> Tot (partial_result x)) (g:dom -> Tot codom)
+  : Lemma (requires (fixp_eq_proof f g)) (ensures (forall x. fixp f x == g x))
+=
+  let h = get_proof (fixp_eq_proof f g) in
+  let f x : Lemma (fixp f x = g x) = give_proof h ; fixp_eq' f g x in
+  forall_intro f
 
 
 (* ****************************************************************************)
@@ -418,51 +477,14 @@ let rec fibonnacci (x:dom) =
   else fibonnacci (x - 1) + fibonnacci (x - 2)
 
 
-let rec eq_rec_partial_result
-  (f:x:dom -> Tot (partial_result x))
-  (g:dom -> Tot codom)
-  (x:dom)
-  (px:partial_result x)
-  : Type0
-=
-  match px with
-  | Done y -> y == g x
-  | Need x1 cont ->
-    assume (forall y. cont y << y) ;
-    fixp f x1 == g x1 ==> eq_rec_partial_result f g x (cont (fixp f x1))
 
-let rec complete_f_eq
-  (f:x:dom -> Tot (partial_result x))
-  (g:dom -> Tot codom)
-  (x:dom)
-  (px:partial_result x)
-  : Lemma (requires (fpartial_result x f px /\
-                     eq_rec_partial_result f g x px /\
-                     (forall x0. eq_rec_partial_result f g x0 (f x0))))
-    (ensures (fixp f x == g x))
-    (decreases %[x ; 0 ; px])
-=
-  match f x with
-  | Done y -> ()
-  | Need x1 cont ->
-    assume (forall y. cont y << y) ; f_eq f g x1 ; complete_f_eq f g x (cont (fixp f x1))
-
-and f_eq
-  (f:x:dom -> Tot (partial_result x))
-  (g:dom -> Tot codom)
-  (x:dom)
-  : Lemma (requires (forall x0. eq_rec_partial_result f g x0 (f x0)))
-    (ensures (fixp f x == g x))
-    (decreases %[x ; 1 ; ()])
-=
-  complete_f_eq f g x (f x)
-
-let fibo_eq_rec_partial_result (x:dom) : Lemma (eq_rec_partial_result fibonnacci_partial fibonnacci x (fibonnacci_partial x))
+let fibo_complete_fixp_eq_proof (x:dom)
+: Lemma (complete_fixp_eq_proof fibonnacci_partial fibonnacci x (fibonnacci_partial x))
 =
   let fibp = fibonnacci_partial in
   let fib = fibonnacci in
   let fixfib = fixp fibp in
-  let res y = eq_rec_partial_result fibp fib x y in
+  let res y = complete_fixp_eq_proof fibp fib x y in
   if x <= 1 then ()
   else match fibp x with
   | Need x1 cont1 ->
@@ -477,11 +499,7 @@ let fibo_eq_rec_partial_result (x:dom) : Lemma (eq_rec_partial_result fibonnacci
     move_requires f1 ()
 
 let fibonnacci_partial_induces_fibonnacci () : Lemma (forall x. fibonnacci_ x == fibonnacci x) =
-  let f (x:dom) : Lemma (fibonnacci_ x == fibonnacci x) =
-    forall_intro fibo_eq_rec_partial_result ;
-    f_eq fibonnacci_partial fibonnacci x
-  in
-  forall_intro f
+  forall_intro fibo_complete_fixp_eq_proof ; fixp_eq fibonnacci_partial fibonnacci
 
 unfold
 let computes_body (f:dom -> Memo codom) (g:dom -> Tot codom) (h0:heap) (x:dom) =
@@ -515,10 +533,7 @@ let fibonnacci_memo_computes_fibonnacci () : Lemma (fibonnacci_memo `computes` f
 
 
 
-
-
-(* (\* let rec fibo_equiv (x:dom) : Lemma (fibonnacci_ x == fibonnacci x) = *\) *)
-(* (\*   if x <= 1 then () else begin admit () ; fibo_equiv (x - 1) ; fibo_equiv (x - 2) end *\) *)
+(* Various (unsuccessful) tentative to have a cleaner proof of equality for fixp *)
 
 (* #set-options "--__no_positivity" *)
 
