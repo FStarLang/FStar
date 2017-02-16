@@ -217,28 +217,32 @@ let seq_inv_com' env c1 c2 l h0 =
     | None, _ -> ()
     | Some (), h2 -> ()
 
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 30"
 
 val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel heap ->
   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
         (ensures  (ni_com' env (Seq c1 c2) l h0))
 let seq_com' env c1 c2 l h0 =
-  let R h0l h0r = h0 in
-  match reify (interpret_com_st c1 h0l) h0l with
-  | None, _ -> ()
-  | Some (), h1l ->
-    match reify (interpret_com_st c1 h0r) h0r with
+  if not (FStar.StrongExcludedMiddle.strong_excluded_middle (low_equiv env h0))
+  then ()
+  else
+    let R h0l h0r = h0 in
+    match reify (interpret_com_st c1 h0l) h0l with
     | None, _ -> ()
-    | Some (), h1r ->
-      match reify (interpret_com_st (Seq c1 c2) h0l) h0l with
+    | Some (), h1l ->
+      match reify (interpret_com_st c1 h0r) h0r with
       | None, _ -> ()
-      | Some (), h2l ->
-        match reify (interpret_com_st (Seq c1 c2) h0r) h0r with
+      | Some (), h1r ->
+        match reify (interpret_com_st c2 h1l) h1l with
         | None, _ -> ()
-        | Some (), h2r ->
-            let h1 = R h1l h1r in let h2 = R h2l h2r in
-            assert (low_equiv env h0 ==> low_equiv env h1) ;
-            assert (low_equiv env h1 ==> low_equiv env h2)
+        | Some (), h2l ->
+          match reify (interpret_com_st c2 h1r) h1r with
+          | None, _ -> ()
+          | Some (), h2r ->
+              let h1 = R h1l h1r in
+              assert (low_equiv env h1) ;
+              let h2 = R h2l h2r in
+              assert (low_equiv env h2)
 
 
 val seq_com : env:label_fun -> c1:com -> c2:com -> l:label ->
@@ -300,7 +304,7 @@ let cond_ni_com' env e ct cf l h0 =
           match reify (interpret_com_st (If e ct cf) h0r) h0r with
           | None, _ -> ()
           | Some (), h1r ->
-            assert (low_equiv env h0 ==> low_equiv env (R h1l h1r))
+            assert (low_equiv env (R h1l h1r))
       end
     else
       (* h0 and h1 are low_equiv since cl and cr cannot write at low cells *)
@@ -327,7 +331,6 @@ let cond_com env e ct cf l =
     (fun (h0:heap) ->
       cond_inv_com' env e ct cf l h0 <: Lemma (inv_com' env (If e ct cf) l h0))
 
-(* #set-options "--z3rlimit 5" *)
 
 (* Typing rule for Skip
 
@@ -345,6 +348,8 @@ let skip_com _ = ()
          -----------------------------------
           env,pc:l |- while (e <> 0) do c
 *)
+
+#set-options "--z3rlimit 30"
 
 val while_inv_com'
   : env:label_fun ->
@@ -376,7 +381,6 @@ let rec while_inv_com' env e c v l h0 =
 
 
 
-#set-options "--z3rlimit 30"
 
 val while_ni_com' : env:label_fun -> e:exp -> c:com -> v:metric -> l:label -> h0:rel heap ->
   Lemma (requires (ni_exp env e l /\ ni_com env c l))
