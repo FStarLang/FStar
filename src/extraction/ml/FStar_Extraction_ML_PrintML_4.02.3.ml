@@ -156,14 +156,8 @@ let rec build_core_type (ty: mlty): core_type =
   | MLTY_Tuple tys -> Typ.mk (Ptyp_tuple (map build_core_type tys))
   | MLTY_Top -> Typ.mk Ptyp_any
 
-let build_binding_pattern ?print_ty ?ty ?scheme ((sym, _): mlident) : pattern =
-  let p = Pat.mk (Ppat_var (mk_sym sym)) in
-  match ty with
-  | Some t -> 
-     (match print_ty with
-      | Some true -> Pat.mk (Ppat_constraint (p, build_core_type t))
-      | _ -> p)
-  | None -> p
+let build_binding_pattern ((sym, _): mlident) : pattern =
+  Pat.mk (Ppat_var (mk_sym sym))
 
 let resugar_prims_ops path: expression = 
   (match path with
@@ -239,11 +233,11 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
 and build_seq args =
   match args with
   | [hd] -> build_expr hd
-  | (hd::tl) -> Exp.sequence (build_expr hd) (build_seq tl)
+  | hd::tl -> Exp.sequence (build_expr hd) (build_seq tl)
   | [] -> failwith "Empty sequence should never happen"
 
 and build_constructor_expr ((path, sym), exp): expression =
-  let (path', name) = 
+  let path', name = 
     (match sym with
     | "Cons" -> ([], "::")
     | "Nil" -> ([], "[]")
@@ -259,7 +253,7 @@ and build_constructor_expr ((path, sym), exp): expression =
 and build_fun l e = 
    match l with
    | ((id, ty)::tl) -> 
-      let p = build_binding_pattern ~ty:ty id in 
+      let p = build_binding_pattern id in 
       let label = Bytes.of_string "" in
       Exp.fun_ label None p (build_fun tl e)
    | [] -> build_expr e
@@ -270,7 +264,7 @@ and build_case ((lhs, guard, rhs): mlbranch): case =
    pc_rhs = (build_expr rhs)}
 
 and build_binding (toplevel: bool) (lb: mllb): value_binding =
-  (* replicating the rules for wether to print type ascriptions
+  (* replicating the rules for whether to print type ascriptions
      from the old printer *)
   let print_ty = if (lb.print_typ && toplevel) then
     (match lb.mllb_tysc with
@@ -278,8 +272,7 @@ and build_binding (toplevel: bool) (lb: mllb): value_binding =
      | _ -> false)
                  else false in 
   let e = build_expr ?print_ty:(Some print_ty) lb.mllb_def in
-  let p = build_binding_pattern ?print_ty:(Some lb.print_typ) 
-                                ?scheme:lb.mllb_tysc lb.mllb_name in
+  let p = build_binding_pattern lb.mllb_name in
   (Vb.mk p e)
 
 let build_label_decl (sym, ty): label_declaration =
