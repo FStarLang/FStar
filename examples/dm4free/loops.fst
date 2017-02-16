@@ -6,20 +6,37 @@ open FStar.DM4F.Heap.ST
 reifiable 
 let rec sum_up (r:ref int) (from:int) (to:int{from <= to})
     : ST unit (requires (fun h -> h `contains_a_well_typed` r))
-	      (ensures (fun _ _ _ -> True))
+	      (ensures (fun _ _ h' -> h' `contains_a_well_typed` r))
 	      (decreases (to - from))
-    = r := !r + from;
-      if to <> from
-      then sum_up r (from + 1) to
+    = if to <> from
+      then (r := !r + from;
+	    sum_up r (from + 1) to)
 
 reifiable 
 let rec sum_dn (r:ref int) (from:int) (to:int{from <= to})
     : ST unit (requires (fun h -> h `contains_a_well_typed` r))
-	      (ensures (fun _ _ _ -> True))
+	      (ensures (fun _ _ h' -> h' `contains_a_well_typed` r))
 	      (decreases (to - from))
-    = r := !r + to;
-      if to <> from
-      then sum_dn r from (to - 1)
+    = if to <> from
+      then (r := !r + (to - 1);
+	    sum_dn r from (to - 1))
+
+val sum_up_dn_aux (h:heap)
+		  (r:ref int)
+		  (from:int) 
+		  (from':int{from <= from'})
+		  (to:int{from' <= to})
+   : Lemma (h `contains_a_well_typed` r ==> (
+	    let (_, h0) = reify (sum_up r from to) h in
+	    let (_, h1') = reify (sum_dn r from from') h in
+   	    let (_, h1) = reify (sum_up r from' to) h1' in
+	     sel h0 r == sel h1 r))
+let sum_up_dn_aux h r from from' to =
+    if from = to
+    then ()
+    else if from = from' 
+    then ()
+    else admit()
 
 val equiv_sum_up_dn (h0:heap) (h1:heap)
 		    (r0:ref int) (r1:ref int)
