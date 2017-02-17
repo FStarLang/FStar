@@ -175,3 +175,27 @@ let rec observational_equivalence (c_0:counter_0) (c_1:counter_1) (h:heap{live c
                     n_0 = n_1 /\ equal_heaps_except_fp h0 h1 (append (C?.fp c_0) (C?.fp c_1))))
  = if m = 0 then ()
    else observational_equivalence c_0 c_1 h (m - 1)
+
+reifiable 
+let rec increment_m'
+  (m:nat) (c:counter)
+  :ST nat (fun h0      -> live c h0) (fun h0 _ h1 -> live c h1)
+  = if m = 0 then get c
+    else let _ = increment_m' (m - 1) c in
+         increment c;
+         get c
+
+(* Proving that m invocations of counter_0 returns the m'th even number
+      This is a relation between n invocations of incr 
+                        and a single invocation of get
+ *)
+#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+let rec counts_even_numbers (c_0:counter_0) (h:heap{live c_0 h}) (m:nat)
+  :Lemma (requires True)
+	 (ensures  (let n, h' = reify (increment_m' m c_0) h in
+                    n = op_Multiply 2 m + fst (reify (get c_0) h)))
+         (decreases m)
+ = let init = fst (reify (get c_0) h) in
+   if m = 0 
+   then ()
+   else counts_even_numbers c_0 h (m - 1)
