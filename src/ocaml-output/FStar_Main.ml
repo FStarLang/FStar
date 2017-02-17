@@ -262,34 +262,30 @@ let go uu____142 =
                                       "no file provided\n"))))))
   
 let main uu____257 =
-  FStar_All.try_with
-    (fun uu___187_258  ->
-       match () with
-       | () -> (go (); cleanup (); FStar_All.exit (Prims.parse_int "0")))
-    (fun uu___186_261  ->
-       match uu___186_261 with
-       | e ->
-           ((match FStar_Errors.handleable e with
-             | true  -> FStar_Errors.handle_err false e
-             | uu____265 -> ());
-            (let uu____266 = FStar_Options.trace_error ()  in
-             match uu____266 with
+  try go (); cleanup (); FStar_All.exit (Prims.parse_int "0")
+  with
+  | e ->
+      ((match FStar_Errors.handleable e with
+        | true  -> FStar_Errors.handle_err false e
+        | uu____265 -> ());
+       (let uu____266 = FStar_Options.trace_error ()  in
+        match uu____266 with
+        | true  ->
+            let _0_845 = FStar_Util.message_of_exn e  in
+            let _0_844 = FStar_Util.trace_of_exn e  in
+            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _0_845
+              _0_844
+        | uu____267 ->
+            (match Prims.op_Negation (FStar_Errors.handleable e) with
              | true  ->
-                 let _0_845 = FStar_Util.message_of_exn e  in
-                 let _0_844 = FStar_Util.trace_of_exn e  in
-                 FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _0_845
-                   _0_844
-             | uu____267 ->
-                 (match Prims.op_Negation (FStar_Errors.handleable e) with
-                  | true  ->
-                      let _0_846 = FStar_Util.message_of_exn e  in
-                      FStar_Util.print1_error
-                        "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-                        _0_846
-                  | uu____268 -> ()));
-            cleanup ();
-            (let _0_847 = FStar_Errors.report_all ()  in
-             FStar_All.pipe_right _0_847 Prims.ignore);
-            report_errors [];
-            FStar_All.exit (Prims.parse_int "1")))
+                 let _0_846 = FStar_Util.message_of_exn e  in
+                 FStar_Util.print1_error
+                   "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
+                   _0_846
+             | uu____268 -> ()));
+       cleanup ();
+       (let _0_847 = FStar_Errors.report_all ()  in
+        FStar_All.pipe_right _0_847 Prims.ignore);
+       report_errors [];
+       FStar_All.exit (Prims.parse_int "1"))
   

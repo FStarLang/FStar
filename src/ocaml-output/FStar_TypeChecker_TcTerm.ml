@@ -6091,16 +6091,13 @@ let type_of_tot_term :
              (uu___122_8508.FStar_TypeChecker_Env.qname_and_index)
          }  in
        let uu____8509 =
-         FStar_All.try_with
-           (fun uu___124_8516  ->
-              match () with | () -> tc_tot_or_gtot_term env e)
-           (fun uu___123_8520  ->
-              match uu___123_8520 with
-              | FStar_Errors.Error (msg,uu____8525) ->
-                  Prims.raise
-                    (FStar_Errors.Error
-                       (let _0_598 = FStar_TypeChecker_Env.get_range env  in
-                        ((Prims.strcat "Implicit argument: " msg), _0_598))))
+         try tc_tot_or_gtot_term env e
+         with
+         | FStar_Errors.Error (msg,uu____8525) ->
+             Prims.raise
+               (FStar_Errors.Error
+                  (let _0_598 = FStar_TypeChecker_Env.get_range env  in
+                   ((Prims.strcat "Implicit argument: " msg), _0_598)))
           in
        match uu____8509 with
        | (t,c,g) ->

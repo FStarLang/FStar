@@ -269,15 +269,12 @@ let log : cfg -> (Prims.unit -> Prims.unit) -> Prims.unit =
 let is_empty uu___125_663 =
   match uu___125_663 with | [] -> true | uu____665 -> false 
 let lookup_bvar env x =
-  FStar_All.try_with
-    (fun uu___134_681  ->
-       match () with | () -> FStar_List.nth env x.FStar_Syntax_Syntax.index)
-    (fun uu___133_682  ->
-       match uu___133_682 with
-       | uu____683 ->
-           failwith
-             (let _0_276 = FStar_Syntax_Print.db_to_string x  in
-              FStar_Util.format1 "Failed to find %s\n" _0_276))
+  try FStar_List.nth env x.FStar_Syntax_Syntax.index
+  with
+  | uu____683 ->
+      failwith
+        (let _0_276 = FStar_Syntax_Print.db_to_string x  in
+         FStar_Util.format1 "Failed to find %s\n" _0_276)
   
 let comp_to_comp_typ :
   FStar_TypeChecker_Env.env ->
@@ -425,27 +422,22 @@ let norm_universe :
           let u = FStar_Syntax_Subst.compress_univ u  in
           match u with
           | FStar_Syntax_Syntax.U_bvar x ->
-              FStar_All.try_with
-                (fun uu___137_881  ->
-                   match () with
-                   | () ->
-                       let uu____883 = FStar_List.nth env x  in
-                       (match uu____883 with
-                        | Univ u -> aux u
-                        | Dummy  -> [u]
-                        | uu____886 ->
-                            failwith
-                              "Impossible: universe variable bound to a term"))
-                (fun uu___136_888  ->
-                   match uu___136_888 with
-                   | uu____890 ->
-                       let uu____891 =
-                         FStar_All.pipe_right cfg.steps
-                           (FStar_List.contains AllowUnboundUniverses)
-                          in
-                       (match uu____891 with
-                        | true  -> [FStar_Syntax_Syntax.U_unknown]
-                        | uu____893 -> failwith "Universe variable not found"))
+              (try
+                 let uu____883 = FStar_List.nth env x  in
+                 match uu____883 with
+                 | Univ u -> aux u
+                 | Dummy  -> [u]
+                 | uu____886 ->
+                     failwith "Impossible: universe variable bound to a term"
+               with
+               | uu____890 ->
+                   let uu____891 =
+                     FStar_All.pipe_right cfg.steps
+                       (FStar_List.contains AllowUnboundUniverses)
+                      in
+                   (match uu____891 with
+                    | true  -> [FStar_Syntax_Syntax.U_unknown]
+                    | uu____893 -> failwith "Universe variable not found"))
           | FStar_Syntax_Syntax.U_zero 
             |FStar_Syntax_Syntax.U_unif _
              |FStar_Syntax_Syntax.U_name _|FStar_Syntax_Syntax.U_unknown  ->

@@ -30,6 +30,7 @@ let no_location : Location.t =
 
 let no_attrs: attributes = []
 
+
 (* functions for generating names and paths *)
 let mk_sym s: string Location.loc = {txt=s; loc=no_location}
 
@@ -71,6 +72,10 @@ let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
      else 
        let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
        Ldot(q, sym) |> mk_sym_lident
+
+
+(* names of F* functions which need to be handled differently *)
+let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 
 
 (* mapping functions from F* ML AST to Parsetree *) 
@@ -194,7 +199,8 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
      Exp.let_ recf val_bindings (build_expr expr)
    | MLE_App (e, es) -> 
       let args = map (fun x -> (Nolabel, build_expr x)) es in
-      Exp.apply (build_expr e) args
+      let f = build_expr e in
+      resugar_app f args es
    | MLE_Fun (l, e) -> build_fun l e
    | MLE_Match (e, branches) ->
       let ep = build_expr e in
@@ -226,6 +232,35 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
      (match print_ty with
      | Some true -> Exp.constraint_ e' (build_core_type t)
      | _ -> e')
+
+and resugar_app f args es: expression =
+  match f.pexp_desc with
+  | Pexp_ident x when (x = try_with_ident) ->
+    (* resugar FStar_All.try_with to a try...with
+       try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a *) 
+    assert (length es == 2);
+    let s, cs = BatList.first es, BatList.last es in
+    let body = match s.expr with
+      | MLE_Fun (_, e) -> 
+         (match e.expr with
+          | MLE_Match (_, branches) -> 
+             assert (length branches == 1);
+             (match (hd branches) with
+              | (_, _, x) -> build_expr x
+              | _ -> failwith "Cannot resugar FStar.All.try_with")
+          | _ -> failwith "Cannot resugar FStar.All.try_with"
+         )
+      | _ -> failwith "Cannot resugar FStar.All.try_with" in
+    let variants = match cs.expr with
+      | MLE_Fun (_, e) ->
+         (match e.expr with
+          | MLE_Match (_, branches) ->
+             map build_case branches
+          | _ -> [build_case (MLP_Wild, None, e)]
+         )
+      | _ -> failwith "Cannot resugar FStar.All.try_with" in
+    Exp.try_ body variants
+  | _ -> Exp.apply f args
 
 and build_seq args =
   match args with

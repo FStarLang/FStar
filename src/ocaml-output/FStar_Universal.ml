@@ -90,82 +90,72 @@ let tc_one_fragment :
     fun dsenv  ->
       fun env  ->
         fun frag  ->
-          FStar_All.try_with
-            (fun uu___163_147  ->
-               match () with
-               | () ->
-                   let uu____153 = FStar_Parser_Driver.parse_fragment frag
-                      in
-                   (match uu____153 with
-                    | FStar_Parser_Driver.Empty  -> Some (curmod, dsenv, env)
-                    | FStar_Parser_Driver.Modul ast_modul ->
-                        let uu____165 =
-                          FStar_ToSyntax_ToSyntax.desugar_partial_modul
-                            curmod dsenv ast_modul
-                           in
-                        (match uu____165 with
-                         | (dsenv,modul) ->
-                             let env =
-                               match curmod with
-                               | Some modul ->
-                                   let uu____177 =
-                                     let _0_677 =
-                                       FStar_Parser_Dep.lowercase_module_name
-                                         (FStar_List.hd
-                                            (FStar_Options.file_list ()))
-                                        in
-                                     let _0_676 =
-                                       FStar_String.lowercase
-                                         (FStar_Ident.string_of_lid
-                                            modul.FStar_Syntax_Syntax.name)
-                                        in
-                                     _0_677 <> _0_676  in
-                                   (match uu____177 with
-                                    | true  ->
-                                        Prims.raise
-                                          (FStar_Errors.Err
-                                             "Interactive mode only supports a single module at the top-level")
-                                    | uu____178 -> env)
-                               | None  -> env  in
-                             let uu____179 =
-                               FStar_TypeChecker_Tc.tc_partial_modul env
-                                 modul
+          try
+            let uu____153 = FStar_Parser_Driver.parse_fragment frag  in
+            match uu____153 with
+            | FStar_Parser_Driver.Empty  -> Some (curmod, dsenv, env)
+            | FStar_Parser_Driver.Modul ast_modul ->
+                let uu____165 =
+                  FStar_ToSyntax_ToSyntax.desugar_partial_modul curmod dsenv
+                    ast_modul
+                   in
+                (match uu____165 with
+                 | (dsenv,modul) ->
+                     let env =
+                       match curmod with
+                       | Some modul ->
+                           let uu____177 =
+                             let _0_677 =
+                               FStar_Parser_Dep.lowercase_module_name
+                                 (FStar_List.hd (FStar_Options.file_list ()))
                                 in
-                             (match uu____179 with
-                              | (modul,uu____190,env) ->
-                                  Some ((Some modul), dsenv, env)))
-                    | FStar_Parser_Driver.Decls ast_decls ->
-                        let uu____201 =
-                          FStar_ToSyntax_ToSyntax.desugar_decls dsenv
-                            ast_decls
-                           in
-                        (match uu____201 with
-                         | (dsenv,decls) ->
-                             (match curmod with
-                              | None  ->
-                                  (FStar_Util.print_error
-                                     "fragment without an enclosing module";
-                                   FStar_All.exit (Prims.parse_int "1"))
-                              | Some modul ->
-                                  let uu____223 =
-                                    FStar_TypeChecker_Tc.tc_more_partial_modul
-                                      env modul decls
-                                     in
-                                  (match uu____223 with
-                                   | (modul,uu____234,env) ->
-                                       Some ((Some modul), dsenv, env))))))
-            (fun uu___162_243  ->
-               match uu___162_243 with
-               | FStar_Errors.Error (msg,r) when
-                   Prims.op_Negation (FStar_Options.trace_error ()) ->
-                   (FStar_TypeChecker_Err.add_errors env [(msg, r)]; None)
-               | FStar_Errors.Err msg when
-                   Prims.op_Negation (FStar_Options.trace_error ()) ->
-                   (FStar_TypeChecker_Err.add_errors env
-                      [(msg, FStar_Range.dummyRange)];
-                    None)
-               | e when Prims.op_Negation (FStar_Options.trace_error ()) ->
-                   Prims.raise e)
+                             let _0_676 =
+                               FStar_String.lowercase
+                                 (FStar_Ident.string_of_lid
+                                    modul.FStar_Syntax_Syntax.name)
+                                in
+                             _0_677 <> _0_676  in
+                           (match uu____177 with
+                            | true  ->
+                                Prims.raise
+                                  (FStar_Errors.Err
+                                     "Interactive mode only supports a single module at the top-level")
+                            | uu____178 -> env)
+                       | None  -> env  in
+                     let uu____179 =
+                       FStar_TypeChecker_Tc.tc_partial_modul env modul  in
+                     (match uu____179 with
+                      | (modul,uu____190,env) ->
+                          Some ((Some modul), dsenv, env)))
+            | FStar_Parser_Driver.Decls ast_decls ->
+                let uu____201 =
+                  FStar_ToSyntax_ToSyntax.desugar_decls dsenv ast_decls  in
+                (match uu____201 with
+                 | (dsenv,decls) ->
+                     (match curmod with
+                      | None  ->
+                          (FStar_Util.print_error
+                             "fragment without an enclosing module";
+                           FStar_All.exit (Prims.parse_int "1"))
+                      | Some modul ->
+                          let uu____223 =
+                            FStar_TypeChecker_Tc.tc_more_partial_modul env
+                              modul decls
+                             in
+                          (match uu____223 with
+                           | (modul,uu____234,env) ->
+                               Some ((Some modul), dsenv, env))))
+          with
+          | FStar_Errors.Error (msg,r) when
+              Prims.op_Negation (FStar_Options.trace_error ()) ->
+              (FStar_TypeChecker_Err.add_errors env [(msg, r)]; None)
+          | FStar_Errors.Err msg when
+              Prims.op_Negation (FStar_Options.trace_error ()) ->
+              (FStar_TypeChecker_Err.add_errors env
+                 [(msg, FStar_Range.dummyRange)];
+               None)
+          | e when Prims.op_Negation (FStar_Options.trace_error ()) ->
+              Prims.raise e
   
 let tc_one_file :
   FStar_ToSyntax_Env.env ->

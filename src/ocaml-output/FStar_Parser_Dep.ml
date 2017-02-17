@@ -77,27 +77,20 @@ let lowercase_module_name : Prims.string -> Prims.string =
   
 let try_convert_file_name_to_windows : Prims.string -> Prims.string =
   fun s  ->
-    FStar_All.try_with
-      (fun uu___141_130  ->
-         match () with
-         | () ->
-             let uu____131 = FStar_Util.run_proc "which" "cygpath" ""  in
-             (match uu____131 with
-              | (uu____135,t_out,uu____137) ->
-                  (match Prims.op_Negation
-                           ((FStar_Util.trim_string t_out) =
-                              "/usr/bin/cygpath")
-                   with
-                   | true  -> s
-                   | uu____138 ->
-                       let uu____139 =
-                         FStar_Util.run_proc "cygpath" (Prims.strcat "-m " s)
-                           ""
-                          in
-                       (match uu____139 with
-                        | (uu____143,t_out,uu____145) ->
-                            FStar_Util.trim_string t_out))))
-      (fun uu___140_146  -> match uu___140_146 with | uu____147 -> s)
+    try
+      let uu____131 = FStar_Util.run_proc "which" "cygpath" ""  in
+      match uu____131 with
+      | (uu____135,t_out,uu____137) ->
+          (match Prims.op_Negation
+                   ((FStar_Util.trim_string t_out) = "/usr/bin/cygpath")
+           with
+           | true  -> s
+           | uu____138 ->
+               let uu____139 =
+                 FStar_Util.run_proc "cygpath" (Prims.strcat "-m " s) ""  in
+               (match uu____139 with
+                | (uu____143,t_out,uu____145) -> FStar_Util.trim_string t_out))
+    with | uu____147 -> s
   
 let build_map :
   Prims.string Prims.list ->

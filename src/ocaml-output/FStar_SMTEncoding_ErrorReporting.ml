@@ -137,216 +137,193 @@ let label_goals :
                   (arg,"could not prove post-condition",uu____333) ->
                   let fallback msg =
                     aux default_msg ropt post_name_opt labels arg  in
-                  FStar_All.try_with
-                    (fun uu___101_344  ->
-                       match () with
-                       | () ->
-                           (match arg.FStar_SMTEncoding_Term.tm with
-                            | FStar_SMTEncoding_Term.Quant
-                                (FStar_SMTEncoding_Term.Forall
-                                 ,pats,iopt,post::sorts,{
-                                                          FStar_SMTEncoding_Term.tm
-                                                            =
-                                                            FStar_SMTEncoding_Term.App
-                                                            (FStar_SMTEncoding_Term.Imp
-                                                             ,lhs::rhs::[]);
-                                                          FStar_SMTEncoding_Term.freevars
-                                                            = uu____357;
-                                                          FStar_SMTEncoding_Term.rng
-                                                            = rng;_})
-                                ->
-                                let post_name =
-                                  let _0_448 =
-                                    let _0_447 =
-                                      FStar_Syntax_Syntax.next_id ()  in
-                                    FStar_All.pipe_left
-                                      FStar_Util.string_of_int _0_447
-                                     in
-                                  Prims.strcat "^^post_condition_" _0_448  in
-                                let names =
-                                  let _0_451 =
-                                    FStar_List.mapi
-                                      (fun i  ->
-                                         fun s  ->
-                                           let _0_450 =
-                                             let _0_449 =
-                                               FStar_Util.string_of_int i  in
-                                             Prims.strcat "^^" _0_449  in
-                                           (_0_450, s)) sorts
-                                     in
-                                  (post_name, post) :: _0_451  in
-                                let instantiation =
-                                  FStar_List.map
-                                    FStar_SMTEncoding_Util.mkFreeV names
-                                   in
-                                let uu____387 =
-                                  let _0_453 =
-                                    FStar_SMTEncoding_Term.inst instantiation
-                                      lhs
-                                     in
-                                  let _0_452 =
-                                    FStar_SMTEncoding_Term.inst instantiation
-                                      rhs
-                                     in
-                                  (_0_453, _0_452)  in
-                                (match uu____387 with
-                                 | (lhs,rhs) ->
-                                     let uu____395 =
-                                       match lhs.FStar_SMTEncoding_Term.tm
-                                       with
-                                       | FStar_SMTEncoding_Term.App
-                                           (FStar_SMTEncoding_Term.And
-                                            ,clauses_lhs)
-                                           ->
-                                           let uu____405 =
-                                             FStar_Util.prefix clauses_lhs
-                                              in
-                                           (match uu____405 with
-                                            | (req,ens) ->
-                                                (match ens.FStar_SMTEncoding_Term.tm
-                                                 with
-                                                 | FStar_SMTEncoding_Term.Quant
-                                                     (FStar_SMTEncoding_Term.Forall
-                                                      ,pats_ens,iopt_ens,sorts_ens,
-                                                      {
-                                                        FStar_SMTEncoding_Term.tm
-                                                          =
-                                                          FStar_SMTEncoding_Term.App
-                                                          (FStar_SMTEncoding_Term.Imp
-                                                           ,ensures_conjuncts::post::[]);
-                                                        FStar_SMTEncoding_Term.freevars
-                                                          = uu____424;
-                                                        FStar_SMTEncoding_Term.rng
-                                                          = rng_ens;_})
-                                                     when
-                                                     is_a_post_condition
-                                                       (Some post_name) post
-                                                     ->
-                                                     let uu____439 =
-                                                       aux
-                                                         "could not prove post-condition"
-                                                         None
-                                                         (Some post_name)
-                                                         labels
-                                                         ensures_conjuncts
-                                                        in
-                                                     (match uu____439 with
-                                                      | (labels,ensures_conjuncts)
-                                                          ->
-                                                          let pats_ens =
-                                                            match pats_ens
-                                                            with
-                                                            | []|[]::[] ->
-                                                                [[post]]
-                                                            | uu____460 ->
-                                                                pats_ens
-                                                             in
-                                                          let ens =
-                                                            let _0_455 =
-                                                              FStar_SMTEncoding_Term.Quant
-                                                                (let _0_454 =
-                                                                   FStar_SMTEncoding_Term.mk
-                                                                    (FStar_SMTEncoding_Term.App
-                                                                    (FStar_SMTEncoding_Term.Imp,
-                                                                    [ensures_conjuncts;
-                                                                    post]))
-                                                                    rng_ens
-                                                                    in
-                                                                 (FStar_SMTEncoding_Term.Forall,
-                                                                   pats_ens,
-                                                                   iopt_ens,
-                                                                   sorts_ens,
-                                                                   _0_454))
-                                                               in
-                                                            FStar_SMTEncoding_Term.mk
-                                                              _0_455
-                                                              ens.FStar_SMTEncoding_Term.rng
-                                                             in
-                                                          let lhs =
+                  (try
+                     match arg.FStar_SMTEncoding_Term.tm with
+                     | FStar_SMTEncoding_Term.Quant
+                         (FStar_SMTEncoding_Term.Forall
+                          ,pats,iopt,post::sorts,{
+                                                   FStar_SMTEncoding_Term.tm
+                                                     =
+                                                     FStar_SMTEncoding_Term.App
+                                                     (FStar_SMTEncoding_Term.Imp
+                                                      ,lhs::rhs::[]);
+                                                   FStar_SMTEncoding_Term.freevars
+                                                     = uu____357;
+                                                   FStar_SMTEncoding_Term.rng
+                                                     = rng;_})
+                         ->
+                         let post_name =
+                           let _0_448 =
+                             let _0_447 = FStar_Syntax_Syntax.next_id ()  in
+                             FStar_All.pipe_left FStar_Util.string_of_int
+                               _0_447
+                              in
+                           Prims.strcat "^^post_condition_" _0_448  in
+                         let names =
+                           let _0_451 =
+                             FStar_List.mapi
+                               (fun i  ->
+                                  fun s  ->
+                                    let _0_450 =
+                                      let _0_449 = FStar_Util.string_of_int i
+                                         in
+                                      Prims.strcat "^^" _0_449  in
+                                    (_0_450, s)) sorts
+                              in
+                           (post_name, post) :: _0_451  in
+                         let instantiation =
+                           FStar_List.map FStar_SMTEncoding_Util.mkFreeV
+                             names
+                            in
+                         let uu____387 =
+                           let _0_453 =
+                             FStar_SMTEncoding_Term.inst instantiation lhs
+                              in
+                           let _0_452 =
+                             FStar_SMTEncoding_Term.inst instantiation rhs
+                              in
+                           (_0_453, _0_452)  in
+                         (match uu____387 with
+                          | (lhs,rhs) ->
+                              let uu____395 =
+                                match lhs.FStar_SMTEncoding_Term.tm with
+                                | FStar_SMTEncoding_Term.App
+                                    (FStar_SMTEncoding_Term.And ,clauses_lhs)
+                                    ->
+                                    let uu____405 =
+                                      FStar_Util.prefix clauses_lhs  in
+                                    (match uu____405 with
+                                     | (req,ens) ->
+                                         (match ens.FStar_SMTEncoding_Term.tm
+                                          with
+                                          | FStar_SMTEncoding_Term.Quant
+                                              (FStar_SMTEncoding_Term.Forall
+                                               ,pats_ens,iopt_ens,sorts_ens,
+                                               {
+                                                 FStar_SMTEncoding_Term.tm =
+                                                   FStar_SMTEncoding_Term.App
+                                                   (FStar_SMTEncoding_Term.Imp
+                                                    ,ensures_conjuncts::post::[]);
+                                                 FStar_SMTEncoding_Term.freevars
+                                                   = uu____424;
+                                                 FStar_SMTEncoding_Term.rng =
+                                                   rng_ens;_})
+                                              when
+                                              is_a_post_condition
+                                                (Some post_name) post
+                                              ->
+                                              let uu____439 =
+                                                aux
+                                                  "could not prove post-condition"
+                                                  None (Some post_name)
+                                                  labels ensures_conjuncts
+                                                 in
+                                              (match uu____439 with
+                                               | (labels,ensures_conjuncts)
+                                                   ->
+                                                   let pats_ens =
+                                                     match pats_ens with
+                                                     | []|[]::[] -> [[post]]
+                                                     | uu____460 -> pats_ens
+                                                      in
+                                                   let ens =
+                                                     let _0_455 =
+                                                       FStar_SMTEncoding_Term.Quant
+                                                         (let _0_454 =
                                                             FStar_SMTEncoding_Term.mk
                                                               (FStar_SMTEncoding_Term.App
-                                                                 (FStar_SMTEncoding_Term.And,
-                                                                   (FStar_List.append
-                                                                    req 
-                                                                    [ens])))
-                                                              lhs.FStar_SMTEncoding_Term.rng
+                                                                 (FStar_SMTEncoding_Term.Imp,
+                                                                   [ensures_conjuncts;
+                                                                   post]))
+                                                              rng_ens
                                                              in
-                                                          let _0_456 =
-                                                            FStar_SMTEncoding_Term.abstr
-                                                              names lhs
-                                                             in
-                                                          (labels, _0_456))
-                                                 | uu____472 ->
-                                                     Prims.raise
-                                                       (Not_a_wp_implication
-                                                          (let _0_459 =
-                                                             let _0_458 =
-                                                               let _0_457 =
-                                                                 FStar_SMTEncoding_Term.print_smt_term
-                                                                   ens
-                                                                  in
-                                                               Prims.strcat
-                                                                 "  ... "
-                                                                 _0_457
-                                                                in
-                                                             Prims.strcat
-                                                               post_name
-                                                               _0_458
-                                                              in
-                                                           Prims.strcat
-                                                             "Ensures clause doesn't match post name:  "
-                                                             _0_459))))
-                                       | uu____476 ->
-                                           Prims.raise
-                                             (Not_a_wp_implication
-                                                (let _0_460 =
-                                                   FStar_SMTEncoding_Term.print_smt_term
-                                                     lhs
-                                                    in
-                                                 Prims.strcat
-                                                   "LHS not a conjunct: "
-                                                   _0_460))
-                                        in
-                                     (match uu____395 with
-                                      | (labels,lhs) ->
-                                          let uu____487 =
-                                            let uu____491 =
-                                              aux default_msg None
-                                                (Some post_name) labels rhs
-                                               in
-                                            match uu____491 with
-                                            | (labels,rhs) ->
-                                                let _0_461 =
-                                                  FStar_SMTEncoding_Term.abstr
-                                                    names rhs
-                                                   in
-                                                (labels, _0_461)
+                                                          (FStar_SMTEncoding_Term.Forall,
+                                                            pats_ens,
+                                                            iopt_ens,
+                                                            sorts_ens,
+                                                            _0_454))
+                                                        in
+                                                     FStar_SMTEncoding_Term.mk
+                                                       _0_455
+                                                       ens.FStar_SMTEncoding_Term.rng
+                                                      in
+                                                   let lhs =
+                                                     FStar_SMTEncoding_Term.mk
+                                                       (FStar_SMTEncoding_Term.App
+                                                          (FStar_SMTEncoding_Term.And,
+                                                            (FStar_List.append
+                                                               req [ens])))
+                                                       lhs.FStar_SMTEncoding_Term.rng
+                                                      in
+                                                   let _0_456 =
+                                                     FStar_SMTEncoding_Term.abstr
+                                                       names lhs
+                                                      in
+                                                   (labels, _0_456))
+                                          | uu____472 ->
+                                              Prims.raise
+                                                (Not_a_wp_implication
+                                                   (let _0_459 =
+                                                      let _0_458 =
+                                                        let _0_457 =
+                                                          FStar_SMTEncoding_Term.print_smt_term
+                                                            ens
+                                                           in
+                                                        Prims.strcat "  ... "
+                                                          _0_457
+                                                         in
+                                                      Prims.strcat post_name
+                                                        _0_458
+                                                       in
+                                                    Prims.strcat
+                                                      "Ensures clause doesn't match post name:  "
+                                                      _0_459))))
+                                | uu____476 ->
+                                    Prims.raise
+                                      (Not_a_wp_implication
+                                         (let _0_460 =
+                                            FStar_SMTEncoding_Term.print_smt_term
+                                              lhs
                                              in
-                                          (match uu____487 with
-                                           | (labels,rhs) ->
-                                               let body =
-                                                 FStar_SMTEncoding_Term.mkImp
-                                                   (lhs, rhs) rng
-                                                  in
-                                               let _0_462 =
-                                                 FStar_SMTEncoding_Term.mk
-                                                   (FStar_SMTEncoding_Term.Quant
-                                                      (FStar_SMTEncoding_Term.Forall,
-                                                        pats, iopt, (post ::
-                                                        sorts), body))
-                                                   q.FStar_SMTEncoding_Term.rng
-                                                  in
-                                               (labels, _0_462))))
-                            | uu____516 ->
-                                fallback
-                                  (let _0_463 =
-                                     FStar_SMTEncoding_Term.print_smt_term
-                                       arg
+                                          Prims.strcat "LHS not a conjunct: "
+                                            _0_460))
+                                 in
+                              (match uu____395 with
+                               | (labels,lhs) ->
+                                   let uu____487 =
+                                     let uu____491 =
+                                       aux default_msg None (Some post_name)
+                                         labels rhs
+                                        in
+                                     match uu____491 with
+                                     | (labels,rhs) ->
+                                         let _0_461 =
+                                           FStar_SMTEncoding_Term.abstr names
+                                             rhs
+                                            in
+                                         (labels, _0_461)
                                       in
-                                   Prims.strcat "arg not a quant: " _0_463)))
-                    (fun uu___100_517  ->
-                       match uu___100_517 with
-                       | Not_a_wp_implication msg -> fallback msg)
+                                   (match uu____487 with
+                                    | (labels,rhs) ->
+                                        let body =
+                                          FStar_SMTEncoding_Term.mkImp
+                                            (lhs, rhs) rng
+                                           in
+                                        let _0_462 =
+                                          FStar_SMTEncoding_Term.mk
+                                            (FStar_SMTEncoding_Term.Quant
+                                               (FStar_SMTEncoding_Term.Forall,
+                                                 pats, iopt, (post :: sorts),
+                                                 body))
+                                            q.FStar_SMTEncoding_Term.rng
+                                           in
+                                        (labels, _0_462))))
+                     | uu____516 ->
+                         fallback
+                           (let _0_463 =
+                              FStar_SMTEncoding_Term.print_smt_term arg  in
+                            Prims.strcat "arg not a quant: " _0_463)
+                   with | Not_a_wp_implication msg -> fallback msg)
               | FStar_SMTEncoding_Term.Labeled (arg,reason,r) ->
                   aux reason (Some r) post_name_opt labels arg
               | FStar_SMTEncoding_Term.Quant

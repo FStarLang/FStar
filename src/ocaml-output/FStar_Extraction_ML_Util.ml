@@ -30,16 +30,14 @@ let mlconst_of_const' :
   =
   fun p  ->
     fun c  ->
-      FStar_All.try_with
-        (fun uu___112_54  -> match () with | () -> mlconst_of_const c)
-        (fun uu___111_55  ->
-           match uu___111_55 with
-           | uu____56 ->
-               failwith
-                 (let _0_188 = FStar_Range.string_of_range p  in
-                  let _0_187 = FStar_Syntax_Print.const_to_string c  in
-                  FStar_Util.format2 "(%s) Failed to translate constant %s "
-                    _0_188 _0_187))
+      try mlconst_of_const c
+      with
+      | uu____56 ->
+          failwith
+            (let _0_188 = FStar_Range.string_of_range p  in
+             let _0_187 = FStar_Syntax_Print.const_to_string c  in
+             FStar_Util.format2 "(%s) Failed to translate constant %s "
+               _0_188 _0_187)
   
 let rec subst_aux :
   (FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty)

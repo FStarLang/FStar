@@ -952,47 +952,38 @@ let rec extract_one_pat :
                      (match uu____1803 with
                       | (tysVarPats,restPats) ->
                           let f_ty_opt =
-                            FStar_All.try_with
-                              (fun uu___120_1860  ->
-                                 match () with
-                                 | () ->
-                                     let mlty_args =
-                                       FStar_All.pipe_right tysVarPats
-                                         (FStar_List.map
-                                            (fun uu____1877  ->
-                                               match uu____1877 with
-                                               | (p,uu____1883) ->
-                                                   (match p.FStar_Syntax_Syntax.v
-                                                    with
-                                                    | FStar_Syntax_Syntax.Pat_dot_term
-                                                        (uu____1888,t) ->
-                                                        term_as_mlty g t
-                                                    | uu____1894 ->
-                                                        (FStar_Extraction_ML_UEnv.debug
-                                                           g
-                                                           (fun uu____1896 
-                                                              ->
-                                                              let _0_389 =
-                                                                FStar_Syntax_Print.pat_to_string
-                                                                  p
-                                                                 in
-                                                              FStar_Util.print1
-                                                                "Pattern %s is not extractable"
-                                                                _0_389);
-                                                         Prims.raise
-                                                           Un_extractable))))
-                                        in
-                                     let f_ty =
-                                       FStar_Extraction_ML_Util.subst tys
-                                         mlty_args
-                                        in
-                                     Some
-                                       (FStar_Extraction_ML_Util.uncurry_mlty_fun
-                                          f_ty))
-                              (fun uu___119_1901  ->
-                                 match uu___119_1901 with
-                                 | Un_extractable  -> None)
-                             in
+                            try
+                              let mlty_args =
+                                FStar_All.pipe_right tysVarPats
+                                  (FStar_List.map
+                                     (fun uu____1877  ->
+                                        match uu____1877 with
+                                        | (p,uu____1883) ->
+                                            (match p.FStar_Syntax_Syntax.v
+                                             with
+                                             | FStar_Syntax_Syntax.Pat_dot_term
+                                                 (uu____1888,t) ->
+                                                 term_as_mlty g t
+                                             | uu____1894 ->
+                                                 (FStar_Extraction_ML_UEnv.debug
+                                                    g
+                                                    (fun uu____1896  ->
+                                                       let _0_389 =
+                                                         FStar_Syntax_Print.pat_to_string
+                                                           p
+                                                          in
+                                                       FStar_Util.print1
+                                                         "Pattern %s is not extractable"
+                                                         _0_389);
+                                                  Prims.raise Un_extractable))))
+                                 in
+                              let f_ty =
+                                FStar_Extraction_ML_Util.subst tys mlty_args
+                                 in
+                              Some
+                                (FStar_Extraction_ML_Util.uncurry_mlty_fun
+                                   f_ty)
+                            with | Un_extractable  -> None  in
                           let uu____1909 =
                             FStar_Util.fold_map
                               (fun g  ->

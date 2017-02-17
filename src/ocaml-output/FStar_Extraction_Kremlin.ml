@@ -700,28 +700,20 @@ let is_mutable : env -> Prims.string -> Prims.bool =
 let find : env -> Prims.string -> Prims.int =
   fun env  ->
     fun x  ->
-      FStar_All.try_with
-        (fun uu___149_1804  ->
-           match () with
-           | () -> FStar_List.index (fun name  -> name.pretty = x) env.names)
-        (fun uu___148_1806  ->
-           match uu___148_1806 with
-           | uu____1807 ->
-               failwith
-                 (FStar_Util.format1 "Internal error: name not found %s\n" x))
+      try FStar_List.index (fun name  -> name.pretty = x) env.names
+      with
+      | uu____1807 ->
+          failwith
+            (FStar_Util.format1 "Internal error: name not found %s\n" x)
   
 let find_t : env -> Prims.string -> Prims.int =
   fun env  ->
     fun x  ->
-      FStar_All.try_with
-        (fun uu___151_1814  ->
-           match () with
-           | () -> FStar_List.index (fun name  -> name = x) env.names_t)
-        (fun uu___150_1816  ->
-           match uu___150_1816 with
-           | uu____1817 ->
-               failwith
-                 (FStar_Util.format1 "Internal error: name not found %s\n" x))
+      try FStar_List.index (fun name  -> name = x) env.names_t
+      with
+      | uu____1817 ->
+          failwith
+            (FStar_Util.format1 "Internal error: name not found %s\n" x)
   
 let add_binders env binders =
   FStar_List.fold_left
@@ -743,21 +735,16 @@ let rec translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list =
                | ((prefix,final),uu____1988,uu____1989) ->
                    FStar_String.concat "." (FStar_List.append prefix [final])
                 in
-             FStar_All.try_with
-               (fun uu___153_2002  ->
-                  match () with
-                  | () ->
-                      (FStar_Util.print1
-                         "Attempting to translate module %s\n" m_name;
-                       Some (translate_module m)))
-               (fun uu___152_2005  ->
-                  match uu___152_2005 with
-                  | e ->
-                      ((let _0_560 = FStar_Util.print_exn e  in
-                        FStar_Util.print2
-                          "Unable to translate module: %s because:\n  %s\n"
-                          m_name _0_560);
-                       None))) modules
+             try
+               FStar_Util.print1 "Attempting to translate module %s\n" m_name;
+               Some (translate_module m)
+             with
+             | e ->
+                 ((let _0_560 = FStar_Util.print_exn e  in
+                   FStar_Util.print2
+                     "Unable to translate module: %s because:\n  %s\n" m_name
+                     _0_560);
+                  None)) modules
 
 and translate_module :
   ((Prims.string Prims.list * Prims.string) *
@@ -861,22 +848,16 @@ and translate_decl :
                     (let _0_562 = translate_type env t0  in
                      (None, name, _0_562)))
            | uu____2133 ->
-               FStar_All.try_with
-                 (fun uu___155_2135  ->
-                    match () with
-                    | () ->
-                        let body = translate_expr env body  in
-                        Some
-                          (DFunction (None, flags, t, name, binders, body)))
-                 (fun uu___154_2144  ->
-                    match uu___154_2144 with
-                    | e ->
-                        ((let _0_563 = FStar_Util.print_exn e  in
-                          FStar_Util.print2
-                            "Warning: writing a stub for %s (%s)\n"
-                            (Prims.snd name) _0_563);
-                         Some
-                           (DFunction (None, flags, t, name, binders, EAbort)))))
+               (try
+                  let body = translate_expr env body  in
+                  Some (DFunction (None, flags, t, name, binders, body))
+                with
+                | e ->
+                    ((let _0_563 = FStar_Util.print_exn e  in
+                      FStar_Util.print2
+                        "Warning: writing a stub for %s (%s)\n"
+                        (Prims.snd name) _0_563);
+                     Some (DFunction (None, flags, t, name, binders, EAbort)))))
       | FStar_Extraction_ML_Syntax.MLM_Let
           (flavor,flags,{
                           FStar_Extraction_ML_Syntax.mllb_name =
@@ -890,20 +871,16 @@ and translate_decl :
           let flags = translate_flags flags  in
           let t = translate_type env t  in
           let name = ((env.module_name), name)  in
-          FStar_All.try_with
-            (fun uu___157_2177  ->
-               match () with
-               | () ->
-                   let expr = translate_expr env expr  in
-                   Some (DGlobal (flags, name, t, expr)))
-            (fun uu___156_2184  ->
-               match uu___156_2184 with
-               | e ->
-                   ((let _0_564 = FStar_Util.print_exn e  in
-                     FStar_Util.print2
-                       "Warning: not translating definition for %s (%s)\n"
-                       (Prims.snd name) _0_564);
-                    Some (DGlobal (flags, name, t, EAny))))
+          (try
+             let expr = translate_expr env expr  in
+             Some (DGlobal (flags, name, t, expr))
+           with
+           | e ->
+               ((let _0_564 = FStar_Util.print_exn e  in
+                 FStar_Util.print2
+                   "Warning: not translating definition for %s (%s)\n"
+                   (Prims.snd name) _0_564);
+                Some (DGlobal (flags, name, t, EAny))))
       | FStar_Extraction_ML_Syntax.MLM_Let
           (uu____2193,uu____2194,{
                                    FStar_Extraction_ML_Syntax.mllb_name =

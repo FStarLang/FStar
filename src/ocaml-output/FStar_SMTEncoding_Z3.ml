@@ -69,15 +69,10 @@ let get_z3version : Prims.unit -> z3version =
                           (FStar_String.length prefix))
                       in
                    let x =
-                     FStar_All.try_with
-                       (fun uu___98_122  ->
-                          match () with
-                          | () ->
-                              FStar_List.map FStar_Util.int_of_string
-                                (FStar_Util.split x "."))
-                       (fun uu___97_124  ->
-                          match uu___97_124 with | uu____126 -> [])
-                      in
+                     try
+                       FStar_List.map FStar_Util.int_of_string
+                         (FStar_Util.split x ".")
+                     with | uu____126 -> []  in
                    (match x with
                     | i1::i2::i3::[] -> Z3V (i1, i2, i3)
                     | uu____130 -> Z3V_Unknown out)

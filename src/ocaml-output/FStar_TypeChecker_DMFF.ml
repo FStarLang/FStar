@@ -1467,47 +1467,40 @@ and star_type' :
                 (match uu____1512 with
                  | true  -> false
                  | uu____1513 ->
-                     FStar_All.try_with
-                       (fun uu___99_1514  ->
-                          match () with
-                          | () ->
-                              let non_dependent_or_raise s ty =
-                                let sinter =
-                                  let _0_461 = FStar_Syntax_Free.names ty  in
-                                  FStar_Util.set_intersect _0_461 s  in
-                                let uu____1526 =
-                                  Prims.op_Negation
-                                    (FStar_Util.set_is_empty sinter)
-                                   in
-                                match uu____1526 with
-                                | true  ->
-                                    (debug ty sinter; Prims.raise Not_found)
-                                | uu____1528 -> ()  in
-                              let uu____1529 =
-                                FStar_Syntax_Subst.open_comp binders c  in
-                              (match uu____1529 with
-                               | (binders,c) ->
-                                   let s =
-                                     FStar_List.fold_left
-                                       (fun s  ->
-                                          fun uu____1540  ->
-                                            match uu____1540 with
-                                            | (bv,uu____1546) ->
-                                                (non_dependent_or_raise s
-                                                   bv.FStar_Syntax_Syntax.sort;
-                                                 FStar_Util.set_add bv s))
-                                       FStar_Syntax_Syntax.no_names binders
-                                      in
-                                   let ct = FStar_Syntax_Util.comp_result c
-                                      in
-                                   (non_dependent_or_raise s ct;
-                                    (let k = n - (FStar_List.length binders)
-                                        in
-                                     match k > (Prims.parse_int "0") with
-                                     | true  -> is_non_dependent_arrow ct k
-                                     | uu____1557 -> true))))
-                       (fun uu___98_1558  ->
-                          match uu___98_1558 with | Not_found  -> false))
+                     (try
+                        let non_dependent_or_raise s ty =
+                          let sinter =
+                            let _0_461 = FStar_Syntax_Free.names ty  in
+                            FStar_Util.set_intersect _0_461 s  in
+                          let uu____1526 =
+                            Prims.op_Negation
+                              (FStar_Util.set_is_empty sinter)
+                             in
+                          match uu____1526 with
+                          | true  -> (debug ty sinter; Prims.raise Not_found)
+                          | uu____1528 -> ()  in
+                        let uu____1529 =
+                          FStar_Syntax_Subst.open_comp binders c  in
+                        match uu____1529 with
+                        | (binders,c) ->
+                            let s =
+                              FStar_List.fold_left
+                                (fun s  ->
+                                   fun uu____1540  ->
+                                     match uu____1540 with
+                                     | (bv,uu____1546) ->
+                                         (non_dependent_or_raise s
+                                            bv.FStar_Syntax_Syntax.sort;
+                                          FStar_Util.set_add bv s))
+                                FStar_Syntax_Syntax.no_names binders
+                               in
+                            let ct = FStar_Syntax_Util.comp_result c  in
+                            (non_dependent_or_raise s ct;
+                             (let k = n - (FStar_List.length binders)  in
+                              match k > (Prims.parse_int "0") with
+                              | true  -> is_non_dependent_arrow ct k
+                              | uu____1557 -> true))
+                      with | Not_found  -> false))
             | uu____1559 ->
                 ((let _0_462 = FStar_Syntax_Print.term_to_string ty  in
                   FStar_Util.print1_warning "Not a dependent arrow : %s"

@@ -156,34 +156,28 @@ let check_frag :
       fun text  ->
         match uu____314 with
         | (dsenv,env) ->
-            FStar_All.try_with
-              (fun uu___166_336  ->
-                 match () with
-                 | () ->
-                     let uu____344 =
-                       FStar_Universal.tc_one_fragment curmod dsenv env text
-                        in
-                     (match uu____344 with
-                      | Some (m,dsenv,env) ->
-                          Some
-                            (let _0_693 = FStar_Errors.get_err_count ()  in
-                             (m, (dsenv, env), _0_693))
-                      | uu____375 -> None))
-              (fun uu___165_387  ->
-                 match uu___165_387 with
-                 | FStar_Errors.Error (msg,r) when
-                     Prims.op_Negation (FStar_Options.trace_error ()) ->
-                     (FStar_TypeChecker_Err.add_errors env [(msg, r)]; None)
-                 | FStar_Errors.Err msg when
-                     Prims.op_Negation (FStar_Options.trace_error ()) ->
-                     ((let _0_696 =
-                         let _0_695 =
-                           let _0_694 = FStar_TypeChecker_Env.get_range env
-                              in
-                           (msg, _0_694)  in
-                         [_0_695]  in
-                       FStar_TypeChecker_Err.add_errors env _0_696);
-                      None))
+            (try
+               let uu____344 =
+                 FStar_Universal.tc_one_fragment curmod dsenv env text  in
+               match uu____344 with
+               | Some (m,dsenv,env) ->
+                   Some
+                     (let _0_693 = FStar_Errors.get_err_count ()  in
+                      (m, (dsenv, env), _0_693))
+               | uu____375 -> None
+             with
+             | FStar_Errors.Error (msg,r) when
+                 Prims.op_Negation (FStar_Options.trace_error ()) ->
+                 (FStar_TypeChecker_Err.add_errors env [(msg, r)]; None)
+             | FStar_Errors.Err msg when
+                 Prims.op_Negation (FStar_Options.trace_error ()) ->
+                 ((let _0_696 =
+                     let _0_695 =
+                       let _0_694 = FStar_TypeChecker_Env.get_range env  in
+                       (msg, _0_694)  in
+                     [_0_695]  in
+                   FStar_TypeChecker_Err.add_errors env _0_696);
+                  None))
   
 let report_fail : Prims.unit -> Prims.unit =
   fun uu____422  ->
