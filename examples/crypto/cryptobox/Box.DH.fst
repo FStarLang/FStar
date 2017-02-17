@@ -47,9 +47,8 @@ private type range = fun (k_id:id{AE_id? k_id}) -> k:PlainDH.key{PlainDH.ae_key_
    Invariant for the ae_key_log: If a key is honest and we idealize prf_odh, then if it is unfresh,
    there has to be an entry in the ae_key_log.
 *)
-private let inv (m:MM.map' (i:id{AE_id? i}) range) =
-  forall (i:id{AE_id? i}). (honest i /\ prf_odh) ==> (unfresh i <==> Some? (MM.sel m i))
-  //forall (i:id{AE_id? i}). honest i /\ prf_odh ==> (fresh i h <==> ~(Some? (MM.sel m i)))
+private let inv (m:MM.map' (i:id{AE_id? i}) range) = True
+//  forall (i:id{AE_id? i}). (honest i /\ prf_odh) ==> (Some? (MM.sel m i) ==> unfresh i)
 
 
 assume val ae_key_log_region: (r:HH.rid{ extends r root 
@@ -59,9 +58,7 @@ assume val ae_key_log_region: (r:HH.rid{ extends r root
 					 /\ disjoint r id_freshness_table_region
 					 /\ disjoint r id_honesty_table_region
 					 })
-//private let ae_key_log_region = new_region root
 assume val ae_key_log: MM.t ae_key_log_region (i:id{AE_id? i}) range inv
-//private let ae_key_log = MM.alloc #ae_key_log_region #ae_id #range #inv
 
 noeq abstract type dh_pkey = 
   | DH_pkey: #pk_id:id{DH_id? pk_id /\ unfresh pk_id /\ fixed pk_id} -> rawpk:dh_share -> dh_pkey
@@ -133,17 +130,18 @@ let prf_odhT dh_sk dh_pk =
   let raw_k = dh_exponentiate dh_pk.rawpk dh_sk.rawsk in
   let k = hash raw_k in
   k
-  
+
+
+
 
 val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
-  ( requires (fun h0 ->
-    let i = generate_ae_id pk.pk_id sk.sk_id in
-    fixed i
+  ( requires (fun h0 ->True
+//    let i = generate_ae_id pk.pk_id sk.sk_id in
   ))
   ( ensures (fun h0 k h1 ->
     let i = generate_ae_id pk.pk_id sk.sk_id in
-    let s:Set.set (r:HH.rid) = Set.union (Set.singleton ae_key_log_region) (Set.singleton (leak_regionGT k)) in
-    let k_log = leak_logGT k in
+    let s:Set.set (r:HH.rid) = Set.union (Set.singleton ae_key_log_region) (Set.singleton (get_regionGT k)) in
+    let k_log = get_logGT k in
     (PlainDH.ae_key_get_index k = i)
     /\ (
         ( (honest i /\ prf_odh)
@@ -165,18 +163,16 @@ let prf_odh dh_sk dh_pk =
   let honest_i = honestST i in
   MR.m_recall ae_key_log;
   if honest_i && prf_odh then (
-    let h0 = ST.get() in
     MR.m_recall ae_key_log;
     match MM.lookup ae_key_log i with
     | Some  k' ->
 	recall_log k'; 
         k'
     | None ->
-	assert(honest i /\ prf_odh);
-        //freshST i;
-	let h = ST.get() in
-	assume(fresh i h);
+        assume(~(unfresh i));
+        freshST i;
         let k' = PlainDH.keygen i in
+	// What??
 	assert(False);
         MM.extend ae_key_log i k';
 	let h1 = ST.get() in
@@ -187,3 +183,4 @@ let prf_odh dh_sk dh_pk =
     let hashed_raw_k = hash raw_k in
     let k=PlainDH.coerce_key i hashed_raw_k in
     k)
+

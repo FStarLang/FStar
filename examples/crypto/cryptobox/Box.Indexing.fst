@@ -5,6 +5,8 @@ open FStar.Heap
 open FStar.HyperHeap
 open FStar.HyperStack
 
+open Box.Flags
+
 module MR = FStar.Monotonic.RRef
 module MM = MonotoneMap
 
@@ -45,7 +47,7 @@ assume val id_freshness_table: MM.t id_freshness_table_region id_freshness_table
 
 
 type id_honesty_table_key = dh_id
-type id_honesty_table_value = bool
+type id_honesty_table_value = b:bool{~prf_odh ==> b=false}
 type id_honesty_table_range = fun id_honesty_table_key -> id_honesty_table_value
 let id_honesty_table_inv (m:MM.map' id_honesty_table_key id_honesty_table_range) = 
   True//forall i. Some? (MM.sel m i) ==> MR.witnessed (MM.defined id_freshness_table (DH_id i))
@@ -100,9 +102,12 @@ let rec fixed (i:id) =
   
 val honest: (i:id) -> Tot (t:Type0{t ==> fixed i}) (decreases (measure_id i))
 let rec honest (i:id) =
-  match i with
-  | DH_id i' -> MR.witnessed (MM.contains id_honesty_table i' true) /\ MR.witnessed (MM.defined id_honesty_table i')
-  | AE_id (i1,i2) -> honest (DH_id i1) /\ honest (DH_id i2)
+  if prf_odh then
+    match i with
+    | DH_id i' -> MR.witnessed (MM.contains id_honesty_table i' true) /\ MR.witnessed (MM.defined id_honesty_table i')
+    | AE_id (i1,i2) -> honest (DH_id i1) /\ honest (DH_id i2)
+  else
+    False
 
 val dishonest: (i:id) -> Tot (t:Type0{(t /\ DH_id? i) ==> fixed i}) (decreases (measure_id i))
 let rec dishonest (i:id) =

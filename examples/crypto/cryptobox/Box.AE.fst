@@ -18,7 +18,6 @@ module HS = FStar.HyperStack
 module MM = MonotoneMap
 open Box.PlainAE
 
-
 assume val aead_decryptT:
   a: aead_cipher -> 
   k: lbytes (aeadKeySize a) -> 
@@ -36,23 +35,18 @@ assume val aead_decrypt:
   EXT (o:option (b:bytes{B.length b + aeadTagSize a = B.length ciph})
     {(forall (p:bytes). ciph = aead_encryptT a k iv ad p <==> (Some? o /\ Some?.v o == p))
     /\ o = aead_decryptT a k iv ad ciph })
-
-
+    
 type noncesize = aeadRealIVSize AES_128_CCM
 type keysize = aeadKeySize AES_128_CCM
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type cipher = b:bytes
 type nonce = B.lbytes noncesize
-
 assume val ae_key_region: (r:MR.rid{ extends r root 
 				     /\ is_eternal_region r 
 				     /\ is_below r root
 				     /\ disjoint r id_freshness_table_region
 				     /\ disjoint r id_honesty_table_region
 				     })
-//private let ae_key_region = 
-//  recall_region id_table_region;
-//  new_region root
 
 type log_key = nonce
 type log_value (i:id{AE_id? i}) = (cipher*protected_ae_plain i)
@@ -67,30 +61,11 @@ type log_t (i:id{AE_id? i}) (r:rid)  = MM.t r log_key (log_range i) (log_inv i)
    The key type is abstract and can only be accessed via the leak and coerce_key functions.
 *)
 
-noeq type key =
+noeq abstract type key =
   | Key: #i:id{AE_id? i /\ unfresh i /\ fixed i} -> #(region:rid{extends region ae_key_region /\ is_below region ae_key_region /\ is_eternal_region region}) -> raw:aes_key -> log:log_t i region -> key
 
 val get_index: k:key -> Tot (i:id{i=k.i})
 let get_index k = k.i
-
-
-(**
-    Safe_key_gen makes sure that memory safety is preserved while generating a key.
-    Also, it makes sure that the log created along with the key is empty.
-*)
-
-//let safe_key_gen parent m0 k m1 =
-//  // Reason about regions (HyperHeap)
-//  let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
-//  HH.modifies_just s m0.h m1.h
-//  /\ extends k.region parent
-//  /\ fresh_region k.region m0.h m1.h
-//  /\ is_below k.region ae_key_region
-//  // Reason about memory (HyperStack)
-//  /\ m_contains k.log m1
-//  /\ m_sel m1 k.log == MM.empty_map log_key (log_range k.i)
-
-
 (**
    This function generates a key in a fresh region of memory below the parent region.
    The postcondition ensures that the log is empty after creation.
@@ -120,40 +95,11 @@ let keygen i =
 
 
 (**
-   The leak_key function transforms an abstract key into a raw aes_key.
-   The refinement type on the key makes sure that no honest keys can be leaked.
-*)
-val leak_key: k:key{(dishonest k.i) \/ ~(b2t ae_ind_cca)} -> Tot (raw_k:aes_key{raw_k=k.raw})
-let leak_key k =
-  k.raw
-
-val leak_keyGT: k:key -> GTot (raw_k:aes_key{raw_k=k.raw})
-let leak_keyGT k =
-  k.raw
-
-val leak_logGT: k:key -> GTot (log:log_t k.i k.region{log=k.log})
-let leak_logGT k =
-  k.log
-
-val recall_log: k:key -> ST unit
-  (requires (fun h0 -> True))
-  (ensures (fun h0 _ h1 ->
-    h0 == h1
-    /\ MR.m_contains k.log h1
-  ))
-let recall_log k =
-  MR.m_recall k.log
-
-val leak_regionGT: k:key -> GTot (region:rid{region=k.region})
-let leak_regionGT k =
-  k.region
-
-(**
    The coerce function transforms a raw aes_key into an abstract key. The function is stateful,
    as we need to allocate space in memory for the key. The refinement type on the key makes sure that
    abstract keys created this way can not be honest.
 *)
-val coerce_key: i:id{AE_id? i /\ ((dishonest i) \/ ~(prf_odh))} -> raw_k:aes_key -> ST (k:key{k.i=i /\ k.raw = raw_k})
+val coerce_key: i:id{AE_id? i /\ (dishonest i)} -> raw_k:aes_key -> ST (k:key{k.i=i /\ k.raw = raw_k})
   (requires (fun h0 -> 
     fixed i
   ))
@@ -175,42 +121,67 @@ let coerce_key i raw =
   
 
 (**
+   The leak_key function transforms an abstract key into a raw aes_key.
+   The refinement type on the key makes sure that no honest keys can be leaked.
+*)
+val leak_key: k:key{(dishonest k.i) \/ ~(b2t ae_ind_cca)} -> Tot (raw_k:aes_key{raw_k=k.raw})
+let leak_key k =
+  k.raw
+
+val get_keyGT: k:key -> GTot (raw_k:aes_key{raw_k=k.raw})
+let get_keyGT k =
+  k.raw
+
+val get_logGT: k:key -> GTot (log:log_t k.i k.region{log=k.log})
+let get_logGT k =
+  k.log
+
+val recall_log: k:key -> ST unit
+  (requires (fun h0 -> True))
+  (ensures (fun h0 _ h1 ->
+    h0 == h1
+    /\ MR.m_contains k.log h1
+  ))
+let recall_log k =
+  MR.m_recall k.log
+
+val get_regionGT: k:key -> GTot (region:rid{region=k.region})
+let get_regionGT k =
+  k.region
+
+
+#set-options "--z3rlimit 15"
+(**
    Encrypt a a message under a key. Idealize if the key is honest and ae_ind_cca true.
 *)
 val encrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_plain i) -> ST cipher
   (requires (fun h0 -> 
-    m_contains k.log h0
-    /\ MM.fresh k.log n h0
+    MM.fresh k.log n h0
+    /\ MR.m_contains k.log h0
     /\ fixed i
   ))
   (ensures  (fun h0 c h1 ->
     modifies_one k.region h0.h h1.h
-    /\ m_contains k.log h1
-//    /\ (
-//	( (dishonest i \/ ~(b2t ae_ind_cca))
-//	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (repr m))
-//      \/ 
-//        ( (honest i /\ b2t ae_ind_cca)
-//	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (createBytes (length m) 0z) )
-//      )
+    ///\ m_contains k.log h1
+    /\ (
+	( (dishonest i \/ ~(b2t ae_ind_cca))
+	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (repr m))
+      \/ 
+        ( (honest i /\ b2t ae_ind_cca)
+	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (createBytes (length m) 0z) )
+      )
     /\ (dishonest i \/ honest i)
     /\ MR.witnessed (MM.contains k.log n (c,m))
     ))
 let encrypt #i n k m =
-  m_recall k.log;
   let honest_i = honestST i in
-  assert(honest i \/ dishonest i);
-//  assert(b2t honest_i ==> honest i);
   let p = 
     if (ae_ind_cca && honest_i) then (
-//      assert((b2t ae_ind_cca /\ honest i));
       createBytes (length m) 0z 
     ) else (
-//      assert(~(b2t ae_ind_cca) \/ dishonest i);
       repr m )
   in
   let c = CoreCrypto.aead_encrypt AES_128_CCM k.raw n empty_bytes p in
-  MR.m_recall k.log;
   MM.extend k.log n (c,m);
   c
 
@@ -222,6 +193,7 @@ let encrypt #i n k m =
 val decrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> c:cipher{B.length c >= aeadTagSize AES_128_CCM} -> ST (option (protected_ae_plain i))
   (requires (fun h -> 
     Map.contains h.h k.region
+    /\ MR.m_contains k.log h
     /\ fixed i
   ))
   (ensures  (fun h0 res h1 -> 
@@ -239,7 +211,6 @@ val decrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> c:cipher{B.length c
   ))
 let decrypt #i n k c =
   let honest_i = honestST i in
-  m_recall k.log;
   if ae_ind_cca && honest_i then
     match MM.lookup k.log n with
     | Some (c',m') -> 
@@ -253,3 +224,4 @@ let decrypt #i n k c =
     match poption with
     | Some p -> Some (PlainAE.coerce #i p)
     | None -> None
+#reset-options
