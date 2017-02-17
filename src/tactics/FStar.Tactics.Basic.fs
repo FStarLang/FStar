@@ -423,7 +423,7 @@ let rec visit_strengthen (try_strengthen:tac<unit>)
                            (revert_all_hd names)))
 
                     | Some q ->  //not yet handled
-                        //printfn "Not yet handled: %A" q;
+                        printfn "Not yet handled: %A" q;
                         ret ())))
 
 let rec simplify_eq_impl : tac<unit>
@@ -446,3 +446,34 @@ let rec simplify_eq_impl : tac<unit>
           | _ ->
             printfn "%s is not an equality imp" (Print.term_to_string goal.goal_ty);
             fail "Not an equality implication")
+
+let proofstate_of_goal_ty env g = 
+    let g = 
+        {
+          context=env;
+          goal_ty=N.normalize [N.Beta] env g;
+          witness=None
+        } in
+    {
+        main_context=env;
+        main_goal=g;
+        all_implicits=[];
+        goals=[g];
+        transaction=Unionfind.new_transaction()
+    }
+
+let preprocess (env:Env.env) (goal:term) : list<term> = 
+    if Ident.lid_equals 
+            (Env.current_module env) 
+            FStar.Syntax.Const.prims_lid
+    then [goal]
+    else let _ = printfn "About to preprocess %s\n" (Print.term_to_string goal) in
+         let p = proofstate_of_goal_ty env goal in
+         match visit_strengthen simplify_eq_impl p with
+         | Success (_, p2) ->
+           p2.goals |> List.map (fun g -> 
+             printfn "Got goal: %s" (Print.term_to_string g.goal_ty);
+             g.goal_ty)
+         | Failed (msg, _) ->
+           printfn "Tactic failed: %s" msg;
+           [goal]

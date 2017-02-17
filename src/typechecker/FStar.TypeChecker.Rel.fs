@@ -2535,6 +2535,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
             if Env.debug env <| Options.Other "Rel"
             then Errors.diag (Env.get_range env)
                              (BU.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
+            let vc = env.solver.preprocess env vc |> List.hd in
             env.solver.solve use_env_range_msg env vc
           in
           Some ret_g

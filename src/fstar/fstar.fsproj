@@ -95,6 +95,11 @@
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\tactics\tactics.fsproj">
+      <Name>tactics</Name>
+      <Project>{82336f31-a87c-4403-a2f4-2b90b4f0996b}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\tosyntax\tosyntax.fsproj">
       <Name>tosyntax</Name>
       <Project>{b0968012-b93c-4198-9085-b89669e8e4e8}</Project>
