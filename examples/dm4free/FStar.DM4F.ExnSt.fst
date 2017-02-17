@@ -73,11 +73,13 @@ effect S (a:Type) =
  * doesn't modify the state.
  *)
 
+reifiable
 val div_intrinsic : i:nat -> j:int -> ExnSt int
   (requires (fun h -> True))
   (ensures (fun h0 x -> match x with
                      | None -> j=0
                      | Some (z, h1) -> h0 = h1 /\ j<>0 /\ z = i / j))
+reifiable
 let div_intrinsic i j =
     if j = 0 then (
         (* Despite the incr (implicitly lifted), the state is reset *)
