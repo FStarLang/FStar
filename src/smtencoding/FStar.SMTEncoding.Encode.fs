@@ -1542,13 +1542,16 @@ let encode_free_var env fv tt t_norm quals =
 
 
 let declare_top_level_let env x t t_norm =
-    match try_lookup_lid env x.fv_name.v with
-        | None -> (* Need to introduce a new name decl *)
-            let decls, env = encode_free_var env x t t_norm [] in
-            let n, x', _ = lookup_lid env x.fv_name.v in
-            (n, x'), decls, env
-        | Some (n, x, _) -> (* already declared, only need an equation *)
-            (n, x), [], env
+  match try_lookup_lid env x.fv_name.v with
+  (* Need to introduce a new name decl *)
+  | None ->
+      let decls, env = encode_free_var env x t t_norm [] in
+      let n, x', _ = lookup_lid env x.fv_name.v in
+      (n, x'), decls, env
+
+  (* already declared, only need an equation *)
+  | Some (n, x, _) ->
+      (n, x), [], env
 
 
 let encode_top_level_val env lid t quals =
@@ -1588,11 +1591,13 @@ let encode_top_level_let :
       * S.typ)        //result type
       * bool          //if set, we should generate a curried application of f
     =
+      (* The input type [t_norm] might contain reifiable computation type which must be reified at this point *)
       let get_result_type c =
           if is_reifiable_comp env.tcenv c
           then TcUtil.reify_comp ({env.tcenv with lax = true}) (U.lcomp_of_comp c) U_unknown
           else U.comp_result c
       in
+
       let rec aux norm t_norm =
         let binders, body, lopt = U.abs_formals e in
         match binders with
@@ -1654,6 +1659,10 @@ let encode_top_level_let :
             (* some, but not all are lemmas; impossible *)
             if U.is_lemma lb.lbtyp then raise Let_rec_unencodeable;
             let t_norm = whnf env lb.lbtyp in
+            (* We are declaring the top_level_let with t_norm which might contain *)
+            (* non-reified reifiable computation type. *)
+            (* TODO : clear this mess, the declaration should have a type corresponding to *)
+            (* the encoded term *)
             let tok, decl, env = declare_top_level_let env (right lb.lbname) lb.lbtyp t_norm in
             (right lb.lbname, tok)::toks, t_norm::typs, decl::decls, env)
             ([], [], [], env)
@@ -1682,24 +1691,36 @@ let encode_top_level_let :
           (* Encoding non-recursive definitions *)
           match bindings, typs, toks with
           | [{lbunivs=uvs;lbdef=e}], [t_norm], [(flid_fv, (f, ftok))] ->
-              let e = SS.compress e in
+
+              (* Open universes *)
               let flid = flid_fv.fv_name.v in
               let univ_subst, univ_vars = SS.univ_var_opening uvs in
               let env' = { env with tcenv = Env.push_univ_vars env.tcenv univ_vars } in
               let t_norm = SS.subst univ_subst t_norm in
-              let e = SS.subst univ_subst e in
+              let e = SS.compress (SS.subst univ_subst e) in
+
+              (* Open binders *)
               let (binders, body, _, _), curry = destruct_bound_function flid t_norm e in
               if Env.debug env.tcenv <| Options.Other "SMTEncoding"
               then BU.print2 "Encoding let : binders=[%s], body=%s\n"
                                 (Print.binders_to_string ", " binders)
                                 (Print.term_to_string body);
+              (* Encode binders *)
               let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
-              let body = if is_reifiable_function env'.tcenv t_norm then reify_body env'.tcenv body else body in
+
+              let body =
+                (* Reify the body if needed *)
+                if is_reifiable_function env'.tcenv t_norm
+                then reify_body env'.tcenv body
+                else body
+              in
               let app = mk_app curry f ftok vars in
               let app, (body, decls2) =
                   if quals |> List.contains Logic
                   then mk_Valid app, encode_formula body env'
-                  else app, encode_term body env' in
+                  else app, encode_term body env'
+              in
+
               //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
               //But the guard is unnecessary given the pattern
               let eqn = Term.Assume(mkForall([[app]], vars, mkEq(app,body)),
@@ -1721,76 +1742,91 @@ let encode_top_level_let :
             let env = push_free_var env flid gtok (Some <| mkApp(g, [fuel_tm])) in
             (flid, f, ftok, g, gtok)::gtoks, env) ([], env)
           in
-        let gtoks = List.rev gtoks in
-        let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm ({lbunivs=uvs;lbname=lbn; lbdef=e}) =
-          let univ_subst, univ_vars = SS.univ_var_opening uvs in
-          let env' = { env with tcenv = Env.push_univ_vars env.tcenv univ_vars } in
-          let t_norm = SS.subst univ_subst t_norm in
-          let e = SS.subst univ_subst e in
-          if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
-          then BU.print3 "Encoding let rec %s : %s = %s\n"
-                      (Print.lbname_to_string lbn)
-                      (Print.term_to_string t_norm)
-                      (Print.term_to_string e);
-          let (binders, body, formals, tres), curry = destruct_bound_function flid t_norm e in
-          if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
-          then BU.print4 "Encoding let rec: binders=[%s], body=%s, formals=[%s], tres=%s\n"
-                            (Print.binders_to_string ", " binders)
-                            (Print.term_to_string body)
-                            (Print.binders_to_string ", " formals)
-                            (Print.term_to_string tres);
-          let _ = if curry then failwith "Unexpected type of let rec in SMT Encoding; expected it to be annotated with an arrow type" in
-          let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
-          let decl_g = Term.DeclFun(g, Fuel_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
-          let env0 = push_zfuel_name env0 flid g in
-          let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
-          let vars_tm = List.map mkFreeV vars in
-          let app = mkApp(f, List.map mkFreeV vars) in
-          let gsapp = mkApp(g, mkApp("SFuel", [fuel_tm])::vars_tm) in
-          let gmax = mkApp(g, mkApp("MaxFuel", [])::vars_tm) in
-          let body = if is_reifiable_function env'.tcenv t_norm then reify_body env'.tcenv body else body in
-          let body_tm, decls2 = encode_term body env' in
-          //NS 05.25: This used to be  mkImp(mk_and_l guards, mkEq(gsapp, body_tm)
-          //But, the pattern ensures that this only applies to well-typed terms
-          //NS 08/10: Setting the weight of this quantifier to 0, since its instantiations are controlled by F* fuel
-          let eqn_g = Term.Assume(mkForall'([[gsapp]], Some 0, fuel::vars, mkEq(gsapp, body_tm)),
-                                  Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" flid.str),
-                                  Some ("equation_with_fuel_" ^g)) in
-          let eqn_f = Term.Assume(mkForall([[app]], vars, mkEq(app, gmax)),
-                                  Some "Correspondence of recursive function to instrumented version",
-                                  Some ("fuel_correspondence_"^g)) in
-          let eqn_g' = Term.Assume(mkForall([[gsapp]], fuel::vars, mkEq(gsapp,  mkApp(g, Term.n_fuel 0::vars_tm))),
-                                  Some "Fuel irrelevance",
-                                  Some ("fuel_irrelevance_" ^g)) in
-          let aux_decls, g_typing =
+          let gtoks = List.rev gtoks in
+
+          let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm ({lbunivs=uvs;lbname=lbn; lbdef=e}) =
+
+            (* Open universes *)
+            let univ_subst, univ_vars = SS.univ_var_opening uvs in
+            let env' = { env with tcenv = Env.push_univ_vars env.tcenv univ_vars } in
+            let t_norm = SS.subst univ_subst t_norm in
+            let e = SS.subst univ_subst e in
+            if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
+            then BU.print3 "Encoding let rec %s : %s = %s\n"
+                        (Print.lbname_to_string lbn)
+                        (Print.term_to_string t_norm)
+                        (Print.term_to_string e);
+
+            (* Open binders *)
+            let (binders, body, formals, tres), curry = destruct_bound_function flid t_norm e in
+            if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
+            then BU.print4 "Encoding let rec: binders=[%s], body=%s, formals=[%s], tres=%s\n"
+                              (Print.binders_to_string ", " binders)
+                              (Print.term_to_string body)
+                              (Print.binders_to_string ", " formals)
+                              (Print.term_to_string tres);
+            let _ = if curry then failwith "Unexpected type of let rec in SMT Encoding; expected it to be annotated with an arrow type" in
+
+
+            let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
+            let decl_g = Term.DeclFun(g, Fuel_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
+            let env0 = push_zfuel_name env0 flid g in
+            let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
+            let vars_tm = List.map mkFreeV vars in
+            let app = mkApp(f, List.map mkFreeV vars) in
+            let gsapp = mkApp(g, mkApp("SFuel", [fuel_tm])::vars_tm) in
+            let gmax = mkApp(g, mkApp("MaxFuel", [])::vars_tm) in
+            let body = if is_reifiable_function env'.tcenv t_norm then reify_body env'.tcenv body else body in
+            let body_tm, decls2 = encode_term body env' in
+
+            //NS 05.25: This used to be  mkImp(mk_and_l guards, mkEq(gsapp, body_tm)
+            //But, the pattern ensures that this only applies to well-typed terms
+            //NS 08/10: Setting the weight of this quantifier to 0, since its instantiations are controlled by F* fuel
+            let eqn_g = Term.Assume(mkForall'([[gsapp]], Some 0, fuel::vars, mkEq(gsapp, body_tm)),
+                                    Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" flid.str),
+                                    Some ("equation_with_fuel_" ^g)) in
+            let eqn_f = Term.Assume(mkForall([[app]], vars, mkEq(app, gmax)),
+                                    Some "Correspondence of recursive function to instrumented version",
+                                    Some ("fuel_correspondence_"^g)) in
+            let eqn_g' = Term.Assume(mkForall([[gsapp]], fuel::vars, mkEq(gsapp,  mkApp(g, Term.n_fuel 0::vars_tm))),
+                                    Some "Fuel irrelevance",
+                                    Some ("fuel_irrelevance_" ^g)) in
+            let aux_decls, g_typing =
               let vars, v_guards, env, binder_decls, _ = encode_binders None formals env0 in
               let vars_tm = List.map mkFreeV vars in
               let gapp = mkApp(g, fuel_tm::vars_tm) in
               let tok_corr =
-                  let tok_app = mk_Apply (mkFreeV (gtok, Term_sort)) (fuel::vars) in
-                  Term.Assume(mkForall([[tok_app]], fuel::vars, mkEq(tok_app, gapp)),
-                              Some "Fuel token correspondence",
-                              Some ("fuel_token_correspondence_"^gtok)) in
+                let tok_app = mk_Apply (mkFreeV (gtok, Term_sort)) (fuel::vars) in
+                Term.Assume(mkForall([[tok_app]], fuel::vars, mkEq(tok_app, gapp)),
+                            Some "Fuel token correspondence",
+                            Some ("fuel_token_correspondence_"^gtok))
+              in
               let aux_decls, typing_corr =
-                  let g_typing, d3 = encode_term_pred None tres env gapp in
-                  d3, [Term.Assume(mkForall([[gapp]], fuel::vars, mkImp(mk_and_l v_guards, g_typing)),
-                                      Some "Typing correspondence of token to term",
-                                      Some ("token_correspondence_"^g))] in
-              binder_decls@aux_decls, typing_corr@[tok_corr] in
-          binder_decls@decls2@aux_decls@[decl_g;decl_g_tok], [eqn_g;eqn_g';eqn_f]@g_typing, env0
-        in
-        let decls, eqns, env0 = List.fold_left (fun (decls, eqns, env0) (gtok, ty, lb) ->
-            let decls', eqns', env0 = encode_one_binding env0 gtok ty lb in
-            decls'::decls, eqns'@eqns, env0)
-          ([decls], [], env0)
-          (List.zip3 gtoks typs bindings)
-        in
-        let prefix_decls, rest = decls |> List.flatten |> List.partition (function
-            | DeclFun _ -> true
-            | _ -> false)
-        in
-        let eqns = List.rev eqns in
-        prefix_decls@rest@eqns, env0
+                let g_typing, d3 = encode_term_pred None tres env gapp in
+                d3, [Term.Assume(mkForall([[gapp]], fuel::vars, mkImp(mk_and_l v_guards, g_typing)),
+                                    Some "Typing correspondence of token to term",
+                                    Some ("token_correspondence_"^g))]
+              in
+              binder_decls@aux_decls, typing_corr@[tok_corr]
+            in
+
+            binder_decls@decls2@aux_decls@[decl_g;decl_g_tok], [eqn_g;eqn_g';eqn_f]@g_typing, env0
+          in
+
+          let decls, eqns, env0 = List.fold_left (fun (decls, eqns, env0) (gtok, ty, lb) ->
+              let decls', eqns', env0 = encode_one_binding env0 gtok ty lb in
+              decls'::decls, eqns'@eqns, env0)
+            ([decls], [], env0)
+            (List.zip3 gtoks typs bindings)
+          in
+          (* Function declarations must come first to be defined in all recursive definitions *)
+          let prefix_decls, rest =
+            let isDeclFun = function | DeclFun _ -> true | _ -> false in
+            decls |> List.flatten |> List.partition isDeclFun
+          in
+          let eqns = List.rev eqns in
+          prefix_decls@rest@eqns, env0
+
     with Let_rec_unencodeable ->
       let msg = bindings |> List.map (fun lb -> Print.lbname_to_string lb.lbname) |> String.concat " and " in
       let decl = Caption ("let rec unencodeable: Skipping: " ^msg) in

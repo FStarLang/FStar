@@ -12,7 +12,13 @@ all: ifc\
 		 delimited_release\
 		 recursive \
 		 WhileReify.dm4f \
-		 IfcReify.dm4f
+		 IfcReify.dm4f \
+		 delimitedReleaseReify.dm4f \
+		 ifc_compose_reify.dm4f \
+		 ifc_recursive_reify.dm4f \
+		 ifc_reify.dm4f \
+     ifc_reify_long.dm4f \
+		 ifc_recursive_heap_reify.dm4f
 
 ifc:
 	$(FSTAR) rel.fst whilelanguage.fst ifc.fst ifcExample.fst

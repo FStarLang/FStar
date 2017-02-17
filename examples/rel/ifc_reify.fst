@@ -14,28 +14,22 @@ type low_equiv (env:env) (h : rel heap)  =
   forall (x:id). {:pattern (Low? (env x))} (Low? (env x) ==> sel (R?.l h) x = sel (R?.r h) x)
 
 reifiable let p1 x y hi =
-  if read hi = 0 then
+  begin if read hi = 0 then
     let vx = read x in
     let vy = read y in
     write x (vx + vy)
   else
-    (let vx = read x in
-     let vy = read y in
-     let vhi = read hi in
-     write x (vx + vy + vhi));
-    (* Writing explicit lets because otherwise we get this: *)
-    (* (let s = *)
-    (*   let vx = read x in *)
-    (*   let vy = read y in *)
-    (*   vx + vy *)
-    (*  in *)
-    (*  let vhi = read hi in *)
-    (*  write x (s + vhi)); *)
+    let vx = read x in
+    let vy = read y in
+    let vhi = read hi in
+    write x (vx + vy + vhi)
+  end ;
   let vx = read x in
   let vhi = read hi in
   write x (vx - vhi)
 
-let p1_r x y hi h = (* normalize_term *) (snd (reify (p1 x y hi) h))
+unfold
+let p1_r x y hi h = (snd (reify (p1 x y hi) h))
 
 val p1_x (x y hi : id) (h:heap) :
   Lemma (requires (x <> y /\ x <> hi /\ y <> hi))
