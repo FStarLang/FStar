@@ -1732,9 +1732,11 @@ let encode_top_level_let :
           | _ -> failwith "Impossible"
         else
           (* encoding recursive definitions using fuel to throttle unfoldings *)
+          (* We create a new variable corresponding to the current fuel *)
           let fuel = varops.fresh "fuel", Fuel_sort in
           let fuel_tm = mkFreeV fuel in
           let env0 = env in
+          (* For each declaration, we push in the environment its fuel-guarded copy (using current fuel) *)
           let gtoks, env = toks |> List.fold_left (fun (gtoks, env) (flid_fv, (f, ftok)) ->
             let flid = flid_fv.fv_name.v in
             let g = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented") in
@@ -1973,41 +1975,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           let se = Sig_declare_typ(l, lb.lbunivs, lb.lbtyp, quals, Ident.range_of_lid l) in
           encode_sigelt env se
      end
-
-    (* KM : Experimental remove of the false here, I guess more care should be given in order *)
-    (* to prevent the SMT solver from calling this recursively !!! *)
-    (* | Sig_let((is_rec, bindings), _, _, quals, _) when (quals |> List.contains Reifiable) -> *)
-    (*   let reify_lb lb = *)
-    (*     (\* This let binding has been declared reifiable so we have to generate a *\) *)
-    (*     (\* pure reified version of it that can be encoded by the SMT. The reified *\) *)
-    (*     (\* version should not contain any reify at all after normalization. *\) *)
-    (*     begin match (SS.compress lb.lbdef).n with *)
-    (*       | Tm_abs(bs, body, _) -> *)
-    (*         (\* TODO (KM) We should make sure that this is indeed a monadic term to which we are applying reify *\) *)
-    (*         let body = U.mk_reify body in *)
-    (*         let tm = S.mk (Tm_abs(bs, body, None)) None lb.lbdef.pos in *)
-    (*         (\* KM : I wouldn't be surprised if this call to Normalize were to fail *\) *)
-    (*         (\* since we didn't put the recursively defined declaration in the env *\) *)
-    (*         let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in *)
-    (*         let lb_typ = *)
-    (*           let formals, comp = U.arrow_formals_comp lb.lbtyp in *)
-    (*           let reified_typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) (U.lcomp_of_comp comp) U_unknown in *)
-    (*           U.arrow formals (S.mk_Total reified_typ) *)
-    (*         in *)
-    (*         let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in *)
-    (*         if Env.debug env.tcenv <| Options.Other "SMTEncodingReify" *)
-    (*         then BU.print3 "%s: Reified %s\nto %s\n" *)
-    (*                       (Print.lbname_to_string lb.lbname) *)
-    (*                       (Print.term_to_string tm) *)
-    (*                       (Print.term_to_string tm'); *)
-    (*         lb *)
-    (*       | _ -> *)
-    (*         failwith (BU.format1 "Unable to reify %s at smt encoding. \ *)
-    (*                  It might be time to have a more robust code for this cases." *)
-    (*                  (Print.lbname_to_string lb.lbname)) *)
-    (*     end *)
-    (* in *)
-    (* encode_top_level_let env (is_rec, List.map reify_lb bindings) quals *)
 
     | Sig_let((is_rec, bindings), _, _, quals, _) ->
       encode_top_level_let env (is_rec, bindings) quals
