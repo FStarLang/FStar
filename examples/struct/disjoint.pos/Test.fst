@@ -49,10 +49,7 @@ let caller
   (ensures (fun _ z _ -> z == 18))
 = HST.push_frame();
   let ofrom : obj = S.screate #fields #fields_def (function | I -> 18 | B -> true) in
-  // TODO: f is required here because default effect is inferred as PURE, not Tot
-  let f (x: fields) : Tot (fields_def x) = match x with | I -> 1729 | B -> false in
-  let moto_less : struct = DM.create #fields #fields_def f in
-  let moto : more_obj = S.screate #more_fields #more_fields_def (function | Less -> moto_less | ThisMore -> ()) in
+  let moto : more_obj = S.screate #more_fields #more_fields_def (function | Less -> DM.create #fields #fields_def (function  | I -> 1729 | B -> false ) | ThisMore -> ()) in
   let pfrom : obj = ofrom in
   let pto : obj = S.field moto Less in
   let z = callee pfrom pto in

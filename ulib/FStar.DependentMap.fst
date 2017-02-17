@@ -17,7 +17,7 @@ abstract let t_inj
 abstract let create
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  ($f: ((k: key) -> Tot (value k)))
+  (f: ((k: key) -> Tot (value k)))
 : Tot (t key value)
 = {
   mappings = f
@@ -26,7 +26,7 @@ abstract let create
 abstract let sel
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  ($m: t key value)
+  (m: t key value)
   (k: key)
 : Tot (value k)
 = m.mappings k
@@ -38,14 +38,14 @@ abstract let sel_create
   (k: key)
 : Lemma
   (requires True)
-  (ensures (sel (create f) k == f k))
+  (ensures (sel #key #value (create f) k == f k))
   [SMTPat (sel (create f) k)]
 = ()
 
 abstract let upd
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  ($m: t key value)
+  (m: t key value)
   (k: key)
   (v: value k)
 : Tot (t key value)
@@ -56,7 +56,7 @@ abstract let upd
 abstract let sel_upd_same
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  ($m: t key value)
+  (m: t key value)
   (k: key)
   (v: value k)
 : Lemma
@@ -68,7 +68,7 @@ abstract let sel_upd_same
 abstract let sel_upd_other
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  ($m: t key value)
+  (m: t key value)
   (k: key)
   (v: value k)
   (k': key)
@@ -81,14 +81,14 @@ abstract let sel_upd_other
 abstract let equal
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  ($m1 m2: t key value)
+  (m1 m2: t key value)
 : Tot Type0
 = forall k . sel m1 k == sel m2 k
 
 abstract let equal_intro
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  ($m1 m2: t key value)
+  (m1 m2: t key value)
 : Lemma
   (requires (forall k . sel m1 k == sel m2 k))
   (ensures (equal m1 m2))
@@ -97,7 +97,7 @@ abstract let equal_intro
 abstract let equal_refl
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  ($m: t key value)
+  (m: t key value)
 : Lemma
   (ensures (equal m m))
 = ()
@@ -107,7 +107,7 @@ abstract let equal_refl
 assume val equal_elim
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  ($m1 m2: t key value)
+  (m1 m2: t key value)
 : Lemma
   (requires (equal m1 m2))
   (ensures (m1 == m2))
@@ -116,7 +116,7 @@ abstract let restrict
   (#key: eqtype)
   (#value: (key -> Tot Type))
   (p: (key -> Tot Type0))
-  ($m: t key value)
+  (m: t key value)
 : Tot (t (k: key {p k}) value)
 = { mappings = m.mappings }
 
@@ -124,7 +124,7 @@ abstract let sel_restrict
   (#key: eqtype)
   (#value: (key -> Tot Type))
   (p: (key -> Tot Type0))
-  ($m: t key value)
+  (m: t key value)
   (k: key {p k})
 : Lemma
   (requires True)
@@ -133,9 +133,9 @@ abstract let sel_restrict
 
 let concat_value
   (#key1: eqtype)
-  ($value1: (key1 -> Tot Type))
+  (value1: (key1 -> Tot Type))
   (#key2: eqtype)
-  ($value2: (key2 -> Tot Type))
+  (value2: (key2 -> Tot Type))
   (k: either key1 key2)
 : Tot Type
 = match k with
@@ -147,8 +147,8 @@ private let concat_mappings
   (#value1: (key1 -> Tot Type))
   (#key2: eqtype)
   (#value2: (key2 -> Tot Type))
-  ($m1: (k1: key1) -> Tot (value1 k1))
-  ($m2: (k2: key2) -> Tot (value2 k2))
+  (m1: (k1: key1) -> Tot (value1 k1))
+  (m2: (k2: key2) -> Tot (value2 k2))
   (k: either key1 key2)
 : Tot (concat_value value1 value2 k)
 = match k with
@@ -160,8 +160,8 @@ abstract let concat
   (#value1: (key1 -> Tot Type))
   (#key2: eqtype)
   (#value2: (key2 -> Tot Type))
-  ($m1: t key1 value1)
-  ($m2: t key2 value2)
+  (m1: t key1 value1)
+  (m2: t key2 value2)
 : Tot (t (either key1 key2) (concat_value value1 value2))
 = { mappings = concat_mappings m1.mappings m2.mappings  }
 
@@ -170,8 +170,8 @@ abstract let sel_concat_l
   (#value1: (key1 -> Tot Type))
   (#key2: eqtype)
   (#value2: (key2 -> Tot Type))
-  ($m1: t key1 value1)
-  ($m2: t key2 value2)
+  (m1: t key1 value1)
+  (m2: t key2 value2)
   (k1: key1)
 : Lemma
   (requires True)
@@ -183,8 +183,8 @@ abstract let sel_concat_r
   (#value1: (key1 -> Tot Type))
   (#key2: eqtype)
   (#value2: (key2 -> Tot Type))
-  ($m1: t key1 value1)
-  ($m2: t key2 value2)
+  (m1: t key1 value1)
+  (m2: t key2 value2)
   (k2: key2)
 : Lemma
   (requires True)
@@ -193,9 +193,9 @@ abstract let sel_concat_r
 
 let rename_value
   (#key1: eqtype)
-  ($value1: (key1 -> Tot Type))
+  (value1: (key1 -> Tot Type))
   (#key2: eqtype)
-  ($ren: key2 -> Tot key1)
+  (ren: key2 -> Tot key1)
   (k: key2)
 : Tot Type
 = value1 (ren k)
@@ -203,18 +203,18 @@ let rename_value
 abstract let rename
   (#key1: eqtype)
   (#value1: (key1 -> Tot Type))
-  ($m: t key1 value1)
+  (m: t key1 value1)
   (#key2: eqtype)
-  ($ren: key2 -> Tot key1)
+  (ren: key2 -> Tot key1)
 : Tot (t key2 (rename_value value1 ren))
 = { mappings = fun k2 -> m.mappings (ren k2) }
 
 abstract let sel_rename
   (#key1: eqtype)
   (#value1: (key1 -> Tot Type))
-  ($m: t key1 value1)
+  (m: t key1 value1)
   (#key2: eqtype)
-  ($ren: key2 -> Tot key1)
+  (ren: key2 -> Tot key1)
   (k2: key2)
 : Lemma
   (ensures (sel (rename m ren) k2 == sel m (ren k2)))

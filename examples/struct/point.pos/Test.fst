@@ -17,8 +17,6 @@ let point_struct = DM.t point_fd (function
 
 let point = S.struct_ptr point_struct
 
-#reset-options "--z3rlimit 32"
-
 let flip
   (p: point)
 : HST.Stack unit
@@ -52,9 +50,7 @@ let flip'
     ))
 = let x = S.read (S.field p X) in
   let y = S.read (S.field p Y) in
-   let h0 = HST.get () in
   S.write (S.field p X) y;
   S.write (S.field p Y) x;
   let color = S.read (S.field p Color) in
-   assert (color == S.as_value h0 (S.gfield p Color));
   S.write (S.field p Color) (not color)

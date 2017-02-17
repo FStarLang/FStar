@@ -215,6 +215,7 @@ private let path_eq_field
   (ensures (~ (path_eq p (PathField p fd))))
 = ()
 
+// TODO: rename as: prefix_of; use infix notation (p1 `prefix_of` p2)
 private let rec path_includes
   (#from: Type)
   (#to1 #to2: Type)
@@ -642,7 +643,7 @@ abstract let live_contains
 abstract let as_value
   (#value: Type)
   (h: HS.mem)
-  (p: struct_ptr value {live h p}) 
+  (p: struct_ptr value {live h p (* required by HS.sel, really? *) }) 
 : GTot value
 = let (StructPtr content p') = p in
   path_sel (HS.sel h content) p'
@@ -1021,7 +1022,7 @@ let disjoint_includes_l #a #as #a' (x: struct_ptr a) (subx:struct_ptr as) (y:str
   [SMTPatT (disjoint subx y); SMTPatT (includes x subx)]
   = disjoint_includes x y subx y
 
-let disjoint_includes_l_swap #a #as #a' (x:struct_ptr a) (subx:struct_ptr a) (y:struct_ptr a') : Lemma
+let disjoint_includes_l_swap #a #as #a' (x:struct_ptr a) (subx:struct_ptr as) (y:struct_ptr a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint y subx))
   [SMTPatT (disjoint y subx); SMTPatT (includes x subx)]
@@ -1235,6 +1236,8 @@ let modifies_0_1 (#a:Type) (b:struct_ptr a) h0 h1 h2 : Lemma
 
 (** Concrete allocators, getters and setters *)
 
+// TODO: in fact, we could very well create a struct_ptr for any type t (not necessarily a DM.t) and provide the initial value of type t
+
 abstract let screate
   (#key:eqtype)
   (#value:(key -> Tot Type))
@@ -1338,7 +1341,7 @@ let no_upd_lemma_0 #t h0 h1 b = ()
 val no_upd_lemma_1: #t:Type -> #t':Type -> h0:HS.mem -> h1:HS.mem -> a:struct_ptr t -> b:struct_ptr t' -> Lemma
   (requires (live h0 b /\ disjoint a b /\ modifies_1 a h0 h1))
   (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
-  [SMTPatT (modifies_1 a h0 h1); SMTPatT (live h0 b)]
+  [SMTPatOr [ [ SMTPatT (modifies_1 a h0 h1); SMTPatT (as_value h1 b) ] ; [ SMTPatT (modifies_1 a h0 h1); SMTPatT (live h0 b) ] ] ]
 let no_upd_lemma_1 #t #t' h0 h1 a b = ()
 
 val no_upd_fresh: #t:Type -> h0:HS.mem -> h1:HS.mem -> a:struct_ptr t -> Lemma

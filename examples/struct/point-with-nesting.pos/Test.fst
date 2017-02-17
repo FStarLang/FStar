@@ -28,8 +28,6 @@ let colored_object (t: Type) = S.struct_ptr (colored_object_struct t)
 
 let colored_point = colored_object point_struct
 
-#reset-options "--z3rlimit 32"
-
 let flip
   (p: colored_point)
 : HST.Stack unit
@@ -65,9 +63,7 @@ let flip'
 = let pt = S.field p Carrier in
   let x = S.read (S.field pt X) in
   let y = S.read (S.field pt Y) in
-   let h0 = HST.get () in
   S.write (S.field pt X) y;
   S.write (S.field pt Y) x;
   let color = S.read (S.field p Color) in
-   assert (color == S.as_value h0 (S.gfield p Color));
   S.write (S.field p Color) (not color)
