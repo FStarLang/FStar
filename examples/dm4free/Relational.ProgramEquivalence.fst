@@ -150,9 +150,9 @@ reifiable let init_counter_1 (): ST counter (requires (fun h0 -> True)) (ensures
 reifiable let rec increment_m
   (m:nat) (c:counter)
   :ST nat (fun h0      -> live c h0) (fun h0 _ h1 -> live c h1)
-  = if m = 0 then (snd (C?.c c)) (C?.fp c)
+  = if m = 0 then get c
     else
-      let _ = (fst (C?.c c)) (C?.fp c) in
+      let _ = increment c in
       increment_m (m - 1) c
 
 type counter_0 = c:counter{C?.inv c == inv_0 /\ C?.c c == (incr_0, get_0)}
