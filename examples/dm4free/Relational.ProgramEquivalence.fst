@@ -176,6 +176,23 @@ let rec observational_equivalence (c_0:counter_0) (c_1:counter_1) (h:heap{live c
  = if m = 0 then ()
    else observational_equivalence c_0 c_1 h (m - 1)
 
+let rec observational_equivalence'
+  (c_0:counter_0) (c_1:counter_1)
+  (h0:heap{live c_0 h0})
+  (h1:heap{live c_1 h1})  
+  (m:nat)
+  :Lemma (requires (equal_heaps_except_fp h0 h1 (append (C?.fp c_0) (C?.fp c_1)) /\
+                    fst (reify (get c_0) h0) = fst (reify (get c_1) h1)))
+	 (ensures  (let n_0, h0 = reify (increment_m m c_0) h0 in
+		    let n_1, h1 = reify (increment_m m c_1) h1 in
+                    n_0 = n_1 /\ equal_heaps_except_fp h0 h1 (append (C?.fp c_0) (C?.fp c_1))))
+         (decreases m)
+ = if m = 0 then ()
+   else
+     let _, h0 = reify (increment c_0) h0 in
+     let _, h1 = reify (increment c_1) h1 in
+     observational_equivalence' c_0 c_1 h0 h1 (m - 1)
+
 reifiable 
 let rec increment_m'
   (m:nat) (c:counter)
