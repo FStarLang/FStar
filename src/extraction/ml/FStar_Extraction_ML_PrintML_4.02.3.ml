@@ -72,7 +72,6 @@ let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
        let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
        Ldot(q, sym) |> mk_sym_lident
 
-
 (* names of F* functions which need to be handled differently *)
 let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 
@@ -247,14 +246,20 @@ and resugar_app f args es: expression =
          (match e.expr with
           | MLE_Match (_, branches) -> 
              assert (length branches == 1);
-             match (hd branches) with
-             | (_, _, x) -> build_expr x
-         ) in
+             (match (hd branches) with
+              | (_, _, x) -> build_expr x
+              | _ -> failwith "Cannot resugar FStar.All.try_with")
+          | _ -> failwith "Cannot resugar FStar.All.try_with"
+         )
+      | _ -> failwith "Cannot resugar FStar.All.try_with" in
     let variants = match cs.expr with
       | MLE_Fun (_, e) ->
          (match e.expr with
           | MLE_Match (_, branches) ->
-             map build_case branches) in 
+             map build_case branches
+          | _ -> [build_case (MLP_Wild, None, e)]
+         )
+      | _ -> failwith "Cannot resugar FStar.All.try_with" in
     Exp.try_ body variants
   | _ -> Exp.apply f args
 
