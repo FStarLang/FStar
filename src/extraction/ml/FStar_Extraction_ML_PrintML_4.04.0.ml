@@ -88,7 +88,9 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
          | [] ->  Ldot(Lident path_abbrev, sym) |> mk_sym_lident
          | p_hd::p_tl -> 
             let q = fold_left (fun x y -> Ldot (x,y)) (Lident p_hd) p_tl in
-            Ldot(Ldot(q, path_abbrev), sym) |> mk_sym_lident
+            (match path_abbrev with
+             | "" -> Ldot(q, sym) |> mk_sym_lident
+             | _ -> Ldot(Ldot(q, path_abbrev), sym) |> mk_sym_lident)
 
 
 (* names of F* functions which need to be handled differently *)
