@@ -48,8 +48,8 @@ let caller
   (requires (fun _ -> True))
   (ensures (fun _ z _ -> z == 18))
 = HST.push_frame();
-  let ofrom : obj = S.screate #fields #fields_def (function | I -> 18 | B -> true) in
-  let moto : more_obj = S.screate #more_fields #more_fields_def (function | Less -> DM.create #fields #fields_def (function  | I -> 1729 | B -> false ) | ThisMore -> ()) in
+  let ofrom : obj = S.screate (DM.create #fields #fields_def (function | I -> 18 | B -> true)) in
+  let moto : more_obj = S.screate (DM.create #more_fields #more_fields_def (function | Less -> DM.create #fields #fields_def (function  | I -> 1729 | B -> false ) | ThisMore -> ())) in
   let pfrom : obj = ofrom in
   let pto : obj = S.field moto Less in
   let z = callee pfrom pto in

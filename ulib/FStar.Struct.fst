@@ -1236,13 +1236,12 @@ let modifies_0_1 (#a:Type) (b:struct_ptr a) h0 h1 h2 : Lemma
 
 (** Concrete allocators, getters and setters *)
 
-// TODO: in fact, we could very well create a struct_ptr for any type t (not necessarily a DM.t) and provide the initial value of type t
+// We create a struct_ptr for any type t (not necessarily a DM.t) and provide the initial value of type t
 
 abstract let screate
-  (#key:eqtype)
-  (#value:(key -> Tot Type))
-  (init: (k:key -> Tot (value k)))
-: StackInline (struct_ptr (DM.t key value))
+  (#value:Type)
+  (s: value)
+: StackInline (struct_ptr value)
   (requires (fun h -> True))
   (ensures (fun (h0:HS.mem) b h1 ->
        ~(contains h0 b)
@@ -1250,9 +1249,9 @@ abstract let screate
      /\ frameOf b = h0.HS.tip
      /\ modifies_0 h0 h1
      /\ Map.domain h1.HS.h == Map.domain h0.HS.h
-     /\ as_value h1 b == DM.create init))
-= let content: HS.reference (DM.t key value) =
-     HST.salloc (DM.create init)
+     /\ as_value h1 b == s))
+= let content: HS.reference value =
+     HST.salloc s
   in
   StructPtr content PathBase
 
@@ -1265,11 +1264,10 @@ private let domain_upd (#a:Type) (h:HS.mem) (x:HS.reference a{HS.live_region h x
     Set.lemma_equal_intro (Map.domain m) (Map.domain m')
 
 abstract let ecreate
-  (#key:eqtype)
-  (#value: (key -> Tot Type))
+  (#t:Type)
   (r:HH.rid)
-  (init: (k: key -> Tot (value k)))
-: ST (struct_ptr (DM.t key value))
+  (s: t)
+: ST (struct_ptr t)
   (requires (fun h -> HS.is_eternal_region r))
   (ensures (fun (h0:HS.mem) b h1 -> ~(contains h0 b)
     /\ live h1 b
@@ -1277,11 +1275,10 @@ abstract let ecreate
     /\ h1.HS.tip = h0.HS.tip
     /\ HS.modifies (Set.singleton r) h0 h1
     /\ HS.modifies_ref r TSet.empty h0 h1
-    /\ as_value h1 b == DM.create init
+    /\ as_value h1 b == s
     /\ ~(memory_managed b)))
 = let h0 = HST.get() in
-  let s = DM.create init in
-  let content: HS.reference (DM.t key value) = ralloc r s in
+  let content: HS.reference t = ralloc r s in
   let b = StructPtr content PathBase in
   let h1 = HST.get() in
   domain_upd h0 content s;
