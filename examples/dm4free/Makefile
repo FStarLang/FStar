@@ -21,7 +21,8 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.IntStoreFixed.uver \
 	FStar.DM4F.IntStoreExcFixed.uver \
 	FStar.DM4F.Memo.uver \
-	loops.uver
+	loops.uver \
+	Relational.UnionFind.uver
 
 old:
 	$(MAKE) -C old
