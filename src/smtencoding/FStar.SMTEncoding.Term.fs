@@ -99,8 +99,10 @@ and fvs = list<fv>
 
 type caption = option<string>
 type binders = list<(string * sort)>
-type projector = (string * sort)
-type constructor_t = (string * list<projector> * sort * int * bool)
+type constructor_field = string  //name of the field
+                       * sort    //sort of the field
+                       * bool    //true if the field is projectible
+type constructor_t = (string * list<constructor_field> * sort * int * bool)
 type constructors  = list<constructor_t>
 type decl =
   | DefPrelude
@@ -320,6 +322,7 @@ let inst tms t =
           mkQuant(qop, pats |> List.map (List.map (aux shift)), wopt, vars, aux shift body) t.rng in
    aux 0 t
 
+let subst (t:term) (fv:fv) (s:term) = inst [s] (abstr [fv] t)
 let mkQuant' (qop, pats, wopt, vars, body) = mkQuant (qop, pats |> List.map (List.map (abstr vars)), wopt, List.map fv_sort vars, abstr vars body)
 let mkForall'' (pats, wopt, sorts, body) r = mkQuant (Forall, pats, wopt, sorts, body) r
 let mkForall' (pats, wopt, vars, body) r = mkQuant' (Forall, pats, wopt, vars, body) r
@@ -344,53 +347,72 @@ let fresh_constructor (name, arg_sorts, sort, id) =
     let a_name = "constructor_distinct_" ^name in
     Assume(mkForall([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng) norng, Some "Constructor distinct", Some a_name)
 
-let injective_constructor (name, projectors, sort) =
-    let n_bvars = List.length projectors in
+let injective_constructor (name, fields, sort) =
+    let n_bvars = List.length fields in
     let bvar_name i = "x_" ^ string_of_int i in
     let bvar_index i = n_bvars - (i + 1) in
     let bvar i s = mkFreeV(bvar_name i, s) in
-    let bvars = projectors |> List.mapi (fun i (_, s) -> bvar i s norng) in
+    let bvars = fields |> List.mapi (fun i (_, s, _) -> bvar i s norng) in
     let bvar_names = List.map fv_of_term bvars in
     let capp = mkApp(name, bvars) norng in
-    projectors
-    |> List.mapi (fun i (name, s) ->
+    fields
+    |> List.mapi (fun i (name, s, projectible) ->
             let cproj_app = mkApp(name, [capp]) norng in
             let proj_name = DeclFun(name, [sort], s, Some "Projector") in
-            let a_name = "projection_inverse_"^name in
-            [proj_name;
-                Assume(mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng) norng, Some "Projection inverse", Some a_name)])
+            if projectible
+            then let a_name = "projection_inverse_"^name in
+                 [proj_name;
+                  Assume(mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng) norng, Some "Projection inverse", Some a_name)]
+            else [proj_name])
     |> List.flatten
 
-let constructor_to_decl (name, projectors, sort, id, injective) =
+let constructor_to_decl (name, fields, sort, id, injective) =
     let injective = injective || true in
-    let cdecl = DeclFun(name, projectors |> List.map snd, sort, Some "Constructor") in
-    let cid = fresh_constructor (name, projectors |> List.map snd, sort, id) in
+    let field_sorts = fields |> List.map (fun (_, sort, _) -> sort) in
+    let cdecl = DeclFun(name, field_sorts, sort, Some "Constructor") in
+    let cid = fresh_constructor (name, field_sorts, sort, id) in
     let disc =
         let disc_name = "is-"^name in
         let xfv = ("x", sort) in
         let xx = mkFreeV xfv norng in
         let disc_eq = mkEq(mkApp(constr_id_of_sort sort, [xx]) norng, mkInteger (string_of_int id) norng) norng in
-        let proj_terms = projectors |> List.map (fun (proj, s) -> mkApp(proj, [xx]) norng) in
+        let proj_terms, ex_vars =
+            fields
+         |> List.mapi (fun i (proj, s, projectible) ->
+//                if projectible
+//                then mkApp(proj, [xx]) norng, []
+//                else
+                let fi = ("f_" ^ BU.string_of_int i, s) in
+                mkFreeV fi norng, [fi])
+         |> List.split in
+        let ex_vars = List.flatten ex_vars in
         let disc_inv_body = mkEq(xx, mkApp(name, proj_terms) norng) norng in
+        let disc_inv_body = match ex_vars with
+            | [] -> disc_inv_body
+            | _ -> mkExists ([], ex_vars, disc_inv_body) norng in
         let disc_ax = mkAnd(disc_eq, disc_inv_body) norng in
-        mkDefineFun(disc_name, [xfv], Bool_sort,
+        let def = mkDefineFun(disc_name, [xfv], Bool_sort,
                     disc_ax,
                     Some "Discriminator definition") in
+        def in
     let projs =
         if injective
-        then injective_constructor (name, projectors, sort)
+        then injective_constructor (name, fields, sort)
         else [] in
     Caption (format1 "<start constructor %s>" name)::cdecl::cid::projs@[disc]@[Caption (format1 "</end constructor %s>" name)]
-
 
 (****************************************************************************)
 (* Standard SMTLib prelude for F* and some term constructors                *)
 (****************************************************************************)
-let name_binders_inner outer_names start sorts =
+let name_binders_inner prefix_opt outer_names start sorts =
     let names, binders, n = sorts |> List.fold_left (fun (names, binders, n) s ->
         let prefix = match s with
             | Term_sort -> "@x"
             | _ -> "@u" in
+        let prefix =
+            match prefix_opt with
+            | None -> prefix
+            | Some p -> p ^ prefix in
         let nm = prefix ^ string_of_int n in
         let names = (nm,s)::names in
         let b = BU.format2 "(%s %s)" nm (strSort s) in
@@ -398,10 +420,9 @@ let name_binders_inner outer_names start sorts =
         (outer_names, [], start)  in
     names, List.rev binders, n
 
-let name_binders sorts =
-    let names, binders, n = name_binders_inner [] 0 sorts in
+let name_macro_binders sorts =
+    let names, binders, n = name_binders_inner (Some "__") [] 0 sorts in
     List.rev names, binders
-
 
 let termToSmt t =
     let remove_guard_free pats =
@@ -422,7 +443,7 @@ let termToSmt t =
       | Labeled(t, _, _) -> aux n names t
       | LblPos(t, s) -> BU.format2 "(! %s :lblpos %s)" (aux n names t) s
       | Quant(qop, pats, wopt, sorts, body) ->
-        let names, binders, n = name_binders_inner names n sorts in
+        let names, binders, n = name_binders_inner None names n sorts in
         let binders = binders |> String.concat " " in
         let pats = remove_guard_free pats in
         let pats_str =
@@ -463,7 +484,7 @@ let rec declToSmt z3options decl =
     let l = List.map strSort argsorts in
     format4 "%s(declare-fun %s (%s) %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort)
   | DefineFun(f,arg_sorts,retsort,body,c) ->
-    let names, binders = name_binders arg_sorts in
+    let names, binders = name_macro_binders arg_sorts in
     let body = inst (List.map (fun x -> mkFreeV x norng) names) body in
     format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " binders) (strSort retsort) (termToSmt body)
   | Assume(t,c,Some n) ->
@@ -529,16 +550,16 @@ and mkPrelude z3options =
                 (define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
                          (Precedes t1 t2))\n\
                 (declare-fun Range_const () Term)\n" in
-   let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort], String_sort, 0, true);
+   let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
                                  ("Tm_type",  [], Term_sort, 2, true);
-                                 ("Tm_arrow", [("Tm_arrow_id", Int_sort)],  Term_sort, 3, false);
-                                 ("Tm_uvar",  [("Tm_uvar_fst", Int_sort)],  Term_sort, 5, true);
+                                 ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
+                                 ("Tm_uvar",  [("Tm_uvar_fst", Int_sort, true)],  Term_sort, 5, true);
                                  ("Tm_unit",  [], Term_sort, 6, true);
-                                 ("BoxInt",     ["BoxInt_proj_0",  Int_sort],   Term_sort, 7, true);
-                                 ("BoxBool",    ["BoxBool_proj_0", Bool_sort],  Term_sort, 8, true);
-                                 ("BoxString",  ["BoxString_proj_0", String_sort], Term_sort, 9, true);
-                                 ("BoxRef",     ["BoxRef_proj_0", Ref_sort],    Term_sort, 10, true);
-                                 ("LexCons",    [("LexCons_0", Term_sort); ("LexCons_1", Term_sort)], Term_sort, 11, true)] in
+                                 ("BoxInt",     ["BoxInt_proj_0",  Int_sort, true],   Term_sort, 7, true);
+                                 ("BoxBool",    ["BoxBool_proj_0", Bool_sort, true],  Term_sort, 8, true);
+                                 ("BoxString",  ["BoxString_proj_0", String_sort, true], Term_sort, 9, true);
+                                 ("BoxRef",     ["BoxRef_proj_0", Ref_sort, true],    Term_sort, 10, true);
+                                 ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true)], Term_sort, 11, true)] in
    let bcons = constrs |> List.collect constructor_to_decl |> List.map (declToSmt z3options) |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
                                    (is-LexCons t))\n\
