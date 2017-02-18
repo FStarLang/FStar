@@ -379,11 +379,10 @@ let constructor_to_decl (name, fields, sort, id, injective) =
         let proj_terms, ex_vars =
             fields
          |> List.mapi (fun i (proj, s, projectible) ->
-//                if projectible
-//                then mkApp(proj, [xx]) norng, []
-//                else
-                let fi = ("f_" ^ BU.string_of_int i, s) in
-                mkFreeV fi norng, [fi])
+                if projectible
+                then mkApp(proj, [xx]) norng, []
+                else let fi = ("f_" ^ BU.string_of_int i, s) in
+                     mkFreeV fi norng, [fi])
          |> List.split in
         let ex_vars = List.flatten ex_vars in
         let disc_inv_body = mkEq(xx, mkApp(name, proj_terms) norng) norng in

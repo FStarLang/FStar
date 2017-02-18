@@ -5849,7 +5849,7 @@ and encode_sigelt':
                                   (FStar_List.mapi
                                      (fun n  ->
                                         fun x  ->
-                                          let projectible = n >= n_tps in
+                                          let projectible = true in
                                           let _0_952 =
                                             mk_term_projector_name d x in
                                           (_0_952,
