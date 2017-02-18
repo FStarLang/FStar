@@ -59,12 +59,22 @@ let write (i:id) (x:int)
   let store = ISE?.get () in
   ISE?.put (upd store i x)
 
-(* open FStar.DM4F.IntStoreFixed *)
+open FStar.DM4F.IntStoreFixed
+
+unfold
+let lift_int_store_int_store_exc_wp (a:Type) (wp:INT_STORE?.wp a) : INT_STORE_EXC?.wp a =
+  fun (h0:heap) (p:INT_STORE_EXC?.post a) -> wp h0 (fun r -> p (Some (fst r), snd r))
+
+#set-options "--admit_smt_queries true"
+unfold
+let lift_int_store_int_store_exc (a:Type) (wp:INT_STORE?.wp a) (e:INT_STORE?.repr a wp)
+  : INT_STORE_EXC?.repr a (lift_int_store_int_store_exc_wp a wp)
+= fun h0 -> let (x,h1) = e h0 in Some x, h1
+#set-options "--admit_smt_queries false"
+
 
 (* Trying to have a refiable lift from IntStoreFixed to IntStoreExcFixed *)
-(* Right now the definition fails with  *)
-(* Error: Tm_unknown is outside of the definition language: Tm_unknown *)
-(* sub_effect INT_STORE ~> INT_STORE_EXC { *)
-(*   lift = fun (#a:Type) (c:int_store a) -> *)
-(*     (fun store -> let (x,store) = c store in (Some x, store) <: int_store_exc a) *)
-(* } *)
+sub_effect INT_STORE ~> INT_STORE_EXC {
+  lift_wp = lift_int_store_int_store_exc_wp ;
+  lift = lift_int_store_int_store_exc
+}

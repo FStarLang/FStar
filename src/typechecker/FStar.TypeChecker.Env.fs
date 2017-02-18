@@ -318,26 +318,29 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
 let lookup_qname env (lid:lident) : option<either<(universes * typ), (sigelt * option<universes>)>>  =
   let cur_mod = in_cur_mod env lid in
   let cache t = BU.smap_add (gamma_cache env) lid.str t; Some t in
-  let found = if cur_mod<>No
-              then match BU.smap_try_find (gamma_cache env) lid.str with
-                    | None ->
-                      BU.find_map env.gamma (function
-                        | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl (inst_tscheme t)) else None
-                        | Binding_sig (_, Sig_bundle(ses, _, _, _)) ->
-                            BU.find_map ses (fun se ->
-                                if lids_of_sigelt se |> BU.for_some (lid_equals lid)
-                                then cache (Inr (se, None))
-                                else None)
-                        | Binding_sig (lids, s) ->
-                          let maybe_cache t = match s with
-                            | Sig_declare_typ _ -> Some t
-                            | _ -> cache t in
-                          if lids |> BU.for_some (lid_equals lid) then maybe_cache (Inr (s, None)) else None
-                        | Binding_sig_inst (lids, s, us) ->
-                          if lids |> BU.for_some (lid_equals lid) then Some (Inr (s, Some us)) else None
-                        | _ -> None)
-                    | se -> se
-               else None in
+  let found =
+    if cur_mod<>No
+    then match BU.smap_try_find (gamma_cache env) lid.str with
+      | None ->
+        BU.find_map env.gamma (function
+          | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl (inst_tscheme t)) else None
+          | Binding_sig (_, Sig_bundle(ses, _, _, _)) ->
+              BU.find_map ses (fun se ->
+                if lids_of_sigelt se |> BU.for_some (lid_equals lid)
+                then cache (Inr (se, None))
+                else None)
+          | Binding_sig (lids, s) ->
+            let maybe_cache t = match s with
+              | Sig_declare_typ _ -> Some t
+              | _ -> cache t
+            in
+            if lids |> BU.for_some (lid_equals lid) then maybe_cache (Inr (s, None)) else None
+          | Binding_sig_inst (lids, s, us) ->
+            if lids |> BU.for_some (lid_equals lid) then Some (Inr (s, Some us)) else None
+          | _ -> None)
+      | se -> se
+    else None
+  in
   if is_some found
   then found
   else if cur_mod <> Yes || has_interface env env.curmodule
@@ -522,21 +525,20 @@ let typ_of_datacon env lid =
 
 let lookup_definition delta_levels env lid =
   let visible quals =
-      delta_levels |> BU.for_some (fun dl ->
-      quals |> BU.for_some (visible_at dl))
+      delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
   in
   match lookup_qname env lid with
-    | Some (Inr (se, None)) ->
-      begin match se with
-        | Sig_let((_, lbs), _, _, quals, _) when visible quals ->
-            BU.find_map lbs (fun lb ->
-                let fv = right lb.lbname in
-                if fv_eq_lid fv lid
-                then Some (lb.lbunivs, Subst.set_use_range (range_of_lid lid) (U.unascribe lb.lbdef))
-                else None)
-        | _ -> None
-      end
-    | _ -> None
+  | Some (Inr (se, None)) ->
+    begin match se with
+      | Sig_let((_, lbs), _, _, quals, _) when visible quals ->
+          BU.find_map lbs (fun lb ->
+              let fv = right lb.lbname in
+              if fv_eq_lid fv lid
+              then Some (lb.lbunivs, Subst.set_use_range (range_of_lid lid) (U.unascribe lb.lbdef))
+              else None)
+      | _ -> None
+    end
+  | _ -> None
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
@@ -889,7 +891,7 @@ let build_lattice env se = match se with
 
   | _ -> env
 
-////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
 ////////////////////////////////////////////////////////////
 

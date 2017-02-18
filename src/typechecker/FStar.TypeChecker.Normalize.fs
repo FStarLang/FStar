@@ -1216,7 +1216,16 @@ and reify_lift (env : Env.env) e msrc mtgt t =
       failwith "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
     | Some {mlift={mlift_term=Some lift}} ->
       (* We don't have any reasonable wp to provide so we just pass unknow *)
-      lift t S.tun e
+      (* Usually the wp is only necessary to typecheck, so this should not *)
+      (* create a big issue. *)
+      lift t S.tun (U.mk_reify e)
+      (* We still eagerly unfold the lift to make sure that the Unknown is not kept stuck on a folded application *)
+      (* let cfg = *)
+      (*   { steps=[Exclude Iota ; Exclude Zeta; Inlining ; Eager_unfolding ; UnfoldUntil Delta_constant]; *)
+      (*     tcenv=env; *)
+      (*     delta_level=[Env.Unfold Delta_constant ; Env.Eager_unfolding_only ; Env.Inlining ] } *)
+      (* in *)
+      (* norm cfg [] [] (lift t S.tun (U.mk_reify e)) *)
 
 and norm_pattern_args cfg env args =
     (* Drops stack *)

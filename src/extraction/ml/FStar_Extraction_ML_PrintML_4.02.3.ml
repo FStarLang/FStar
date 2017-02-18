@@ -48,29 +48,52 @@ let rec path_to_string ((l, sym): mlpath): string =
   | [] -> sym
   | (hd::tl) -> BatString.concat "_" [hd; path_to_string (tl, sym)]
 
-let rec path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
+let split_path (l1: string list) (l2: string list): (string list * string list) option =
+  let rec split_aux l1 l2 =
+    match l2 with
+     | [] -> Some l1
+     | hd2::tl2 when BatString.equal hd2 (hd l1) -> split_aux (tl l1) tl2
+     | _ -> None
+  in
+  if (length l1 >= length l2) then
+    match split_aux l1 l2 with
+    | None -> None
+    | Some l1' -> Some (l1', l2)
+  else None
+
+let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
+  let codegen_libs = FStar_Options.codegen_libs() in
   match l with
   | [] -> mk_lident sym
-  | ("FStar"::tl) ->
-     (* change "." to "_" in names of FStar modules *) 
-     let (l1, tl) = BatList.span (fun x -> x.[0] |> BatChar.is_uppercase) l in
-     let hd = BatString.concat "_" l1 in
-     path_to_ident ((hd::tl), sym)
   | ["Prims"] -> 
      (* as in the original printer, stripping "Prims" from some constructors *)
      let remove_qual = ["Some"; "None"] in
      if (BatList.mem sym remove_qual) then
-       path_to_ident ([], sym)
+       mk_lident sym
      else 
        mk_lident (BatString.concat "." ["Prims"; sym])
-  | (hd::tl) -> 
+  | hd::tl -> 
      let m_name = !current_module in
-     if (BatString.equal m_name hd) then 
-       (* remove circular references *)
-       path_to_ident (tl, sym) 
-     else 
-       let q = fold_left (fun x y -> Ldot (x,y)) (Lident hd) tl in
-       Ldot(q, sym) |> mk_sym_lident
+     let suffix, prefix = 
+       try BatList.find_map (split_path l) codegen_libs with
+       | Not_found -> l, [] 
+     in
+       let path_abbrev = BatString.concat "_" suffix in
+       if (prefix = [] && BatString.equal m_name path_abbrev) then
+         (* remove circular references *)
+          mk_lident sym
+       else
+         match prefix with
+         | [] ->  Ldot(Lident path_abbrev, sym) |> mk_sym_lident
+         | p_hd::p_tl -> 
+            let q = fold_left (fun x y -> Ldot (x,y)) (Lident p_hd) p_tl in
+            (match path_abbrev with
+             | "" -> Ldot(q, sym) |> mk_sym_lident
+             | _ -> Ldot(Ldot(q, path_abbrev), sym) |> mk_sym_lident)
+
+
+(* names of F* functions which need to be handled differently *)
+let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 
 
 (* mapping functions from F* ML AST to Parsetree *) 
@@ -196,7 +219,8 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
    | MLE_App (e, es) -> 
       let label = Bytes.of_string "" in
       let args = map (fun x -> (label, build_expr x)) es in
-      Exp.apply (build_expr e) args
+      let f = build_expr e in
+      resugar_app f args es
    | MLE_Fun (l, e) -> build_fun l e
    | MLE_Match (e, branches) ->
       let ep = build_expr e in
@@ -229,6 +253,35 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
      (match print_ty with
      | Some true -> Exp.constraint_ e' (build_core_type t)
      | _ -> e')
+
+and resugar_app f args es: expression =
+  match f.pexp_desc with
+  | Pexp_ident x when (x = try_with_ident) ->
+    (* resugar FStar_All.try_with to a try...with
+       try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a *) 
+    assert (length es == 2);
+    let s, cs = BatList.first es, BatList.last es in
+    let body = match s.expr with
+      | MLE_Fun (_, e) -> 
+         (match e.expr with
+          | MLE_Match (_, branches) -> 
+             assert (length branches == 1);
+             (match (hd branches) with
+              | (_, _, x) -> build_expr x
+              | _ -> failwith "Cannot resugar FStar.All.try_with")
+          | _ -> failwith "Cannot resugar FStar.All.try_with"
+         )
+      | _ -> failwith "Cannot resugar FStar.All.try_with" in
+    let variants = match cs.expr with
+      | MLE_Fun (_, e) ->
+         (match e.expr with
+          | MLE_Match (_, branches) ->
+             map build_case branches
+          | _ -> [build_case (MLP_Wild, None, e)]
+         )
+      | _ -> failwith "Cannot resugar FStar.All.try_with" in
+    Exp.try_ body variants
+  | _ -> Exp.apply f args
 
 and build_seq args =
   match args with

@@ -685,12 +685,17 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Name {str="False"}   -> S.fvar (Ident.set_lid_range Const.false_lid top.range) Delta_constant None
     | Projector (eff_name, {idText = txt})
       when is_special_effect_combinator txt && Env.is_effect_name env eff_name ->
-        begin match try_lookup_effect_defn env eff_name with
+      (* TODO : would it be possible to normalize the effect name at that point so that *)
+      (* we get back the original effect definition instead of an effect abbreviation *)
+      begin match try_lookup_effect_defn env eff_name with
         | Some ed ->
-            S.fvar (lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ txt)) Range.dummyRange) (Delta_defined_at_level 1) None
+          S.fvar (lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ txt)) Range.dummyRange) (Delta_defined_at_level 1) None
         | None ->
-            failwith "immpossible special_effect_combinator"
-        end
+          failwith (BU.format2 "Member %s of effect %s is not accessible \
+                                (using an effect abbreviation instead of the original effect ?)"
+                               (Ident.text_of_lid eff_name)
+                               txt)
+      end
 
     | Assign (ident, t2) ->
       let t2 = desugar_term env t2 in
@@ -706,12 +711,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Projector (l, i) ->
       let name =
         match Env.try_lookup_datacon env l with
-	| Some _ -> Some (true, l)
-	| None ->
-	  begin match Env.try_lookup_root_effect_name env l with
-	  | Some new_name -> Some (false, new_name)
-	  | _ -> None
-	  end
+        | Some _ -> Some (true, l)
+        | None ->
+          match Env.try_lookup_root_effect_name env l with
+          | Some new_name -> Some (false, new_name)
+          | _ -> None
       in
       begin match name with
       | Some (resolve, new_name) ->

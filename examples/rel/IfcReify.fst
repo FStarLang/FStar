@@ -49,9 +49,9 @@ let ni_exp (env:label_fun) (e:exp) (l:label) : Tot Type0 =
    (low_equiv env h /\ Low? l) ==>
      (* interpret_exp (R?.r h) e = interpret_exp (R?.l h) e *)
      begin
-       let Some vr, hr = reify (interpret_exp_st e) (R?.r h)in
-       let Some vl, hl = reify (interpret_exp_st e) (R?.l h) in
-       R?.r h = hr /\ R?.l h = hl /\ vr = vl
+       let vr = reify (interpret_exp_st e) (R?.r h)in
+       let vl = reify (interpret_exp_st e) (R?.l h) in
+       vr = vl
      end
 
 
@@ -173,8 +173,8 @@ let assign_inv_com0 (env:label_fun) (e:exp) (r:id) (ne:squash(ni_exp env e (env 
   : Lemma (ni_com' env (Assign r e) (env r) h0)
 =
   FStar.Squash.give_proof ne ;
-  let Some vr, h0r' = reify (interpret_exp_st e) (R?.r h0) in
-  let Some vl, h0l' = reify (interpret_exp_st e) (R?.l h0) in
+  let vr = reify (interpret_exp_st e) (R?.r h0) in
+  let vl = reify (interpret_exp_st e) (R?.l h0) in
   match reify (interpret_com_st (Assign r e) (R?.l h0)) (R?.l h0) with
   | Some (), h1l ->
     begin match reify (interpret_com_st (Assign r e) (R?.r h0)) (R?.r h0) with
@@ -186,7 +186,7 @@ let assign_inv_com0 (env:label_fun) (e:exp) (r:id) (ne:squash(ni_exp env e (env 
 let assign_inv_com' (env:label_fun) (e:exp) (r:id) (h0:heap)
  : Lemma (inv_com' env (Assign r e) (env r) h0)
 =
-  let Some v, h0' = reify (interpret_exp_st e) h0 in
+  let v = reify (interpret_exp_st e) h0 in
   match reify (interpret_com_st (Assign r e) h0) h0 with
   | None, h1 -> ()
   | Some (), h1 ->
@@ -267,7 +267,7 @@ val cond_inv_com' : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> h0:
   Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l)))
           (ensures  (inv_com' env (If e ct cf) l h0))
 let cond_inv_com' env e ct cf l h0 =
-  let Some v, h0' = reify (interpret_exp_st e) h0 in
+  let v = reify (interpret_exp_st e) h0 in
   if v = 0
   then match reify (interpret_com_st cf h0) h0 with
     | None, _ -> ()
@@ -291,8 +291,8 @@ let cond_ni_com' env e ct cf l h0 =
   then ()
   else
     let R h0l h0r = h0 in
-    let Some vl, h0l' = reify (interpret_exp_st e) h0l in
-    let Some vr, h0r' = reify (interpret_exp_st e) h0r in
+    let vl = reify (interpret_exp_st e) h0l in
+    let vr = reify (interpret_exp_st e) h0r in
     if Low? l
     then begin
       assert (vl == vr) ;
@@ -363,7 +363,7 @@ val while_inv_com'
       (ensures  (inv_com' env (While e c v) l h0))
       (decreases (decr_while h0 (While e c v)))
 let rec while_inv_com' env e c v l h0 =
-  let Some v0, h0' = reify (interpret_exp_st e) h0 in
+  let v0 = reify (interpret_exp_st e) h0 in
   if v0 = 0 then ()
   else
     let m0 = interpret_exp' h0 v in
@@ -391,8 +391,8 @@ let rec while_ni_com' env e c v l h0 =
   then ()
   else
     let R h0l h0r = h0 in
-    let Some v0l, h0l' = reify (interpret_exp_st e) h0l in
-    let Some v0r, h0r' = reify (interpret_exp_st e) h0r in
+    let v0l = reify (interpret_exp_st e) h0l in
+    let v0r = reify (interpret_exp_st e) h0r in
     if Low? l
     then begin
       assert (v0l == v0r) ;

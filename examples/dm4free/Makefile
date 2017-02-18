@@ -18,6 +18,7 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	Relational.ProgramOptimizations.uver \
 	Relational.ProgramEquivalence.uver \
 	FStar.DM4F.IntStore.uver \
+	FStar.DM4F.IntStoreFixedReader.uver \
 	FStar.DM4F.IntStoreFixed.uver \
 	FStar.DM4F.IntStoreExcFixed.uver \
 	FStar.DM4F.Memo.uver \

@@ -3,6 +3,8 @@ module WhileReify
 open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreExcFixed
 
+module ISFR = FStar.DM4F.IntStoreFixedReader
+
 type binop =
 | Plus
 | Minus
@@ -45,13 +47,14 @@ type com =
 (* by the F* implementation. *)
 
 (* reifiable val interpret_exp_st : e:exp -> INT_STORE_EXC int (fun s0 p -> forall opt. p (opt, s0)) *)
-reifiable let rec interpret_exp_st (e:exp)
+reifiable
+let rec interpret_exp_st (e:exp)
   (* : INT_STORE_EXC int (fun s0 p -> forall x. p (Some x, s0)) *)
-  : IntStoreExc int (requires (fun _ -> True)) (ensures (fun h0 x h1 -> h0 == h1 /\ Some? x))
+  : ISFR.ISRNull int
 =
   match e with
   | AInt i -> i
-  | AVar x -> read x
+  | AVar x -> ISFR.read x
   | AOp o e1 e2 ->
     let a = interpret_exp_st e1 in
     let b = interpret_exp_st e2 in
@@ -59,10 +62,7 @@ reifiable let rec interpret_exp_st (e:exp)
 
 
 (* unfold *)
-let interpret_exp (h:heap) (e:exp) : Tot int =
-  let Some x, h1 = reify (interpret_exp_st e) h in
-  assert (h1 == h) ;
-  x
+let interpret_exp (h:heap) (e:exp) : Tot int = reify (interpret_exp_st e) h
 
 
 let interpret_exp' (h:heap) (e:exp) : Tot nat =
@@ -134,5 +134,5 @@ let interpret_com (h0:heap) (c:com) : Tot (option heap)
   | None, _ -> None
 
 
-let bidule = assert (fst (reify (interpret_exp_st (AOp Plus (AVar (to_id 7)) (AInt 5))) (create 3)) = Some 8)
+let bidule = assert (reify (interpret_exp_st (AOp Plus (AVar (to_id 7)) (AInt 5))) (create 3) = 8)
 let bidule2 = assert (interpret_exp (create 3) (AOp Plus (AVar (to_id 7)) (AInt 5)) = 8)
