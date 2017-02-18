@@ -1995,7 +1995,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
         let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
         let fields = names |> List.mapi (fun n x ->
-            let projectible = true in
+            let projectible = true in //making the paramters non-projectible is good, but not possible yet
 //            let projectible = n >= n_tps in //Note: the type parameters are not projectible,
                                             //i.e., (MkTuple2 int bool 0 false) is only injective in its last two arguments
                                             //This allows the term to both have type (int * bool)
