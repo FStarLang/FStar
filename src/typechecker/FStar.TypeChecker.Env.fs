@@ -49,7 +49,7 @@ type delta_level =
 
 type mlift = {
   mlift_wp:typ -> typ -> typ ;
-  mlift_term:option(typ -> typ -> term -> term)
+  mlift_term:option<(typ -> typ -> term -> term)>
 }
 
 type edge = {
