@@ -25,9 +25,8 @@ let if_left_wp (a:Type)
 let if_left_wp' (a:Type)
     (epre:_)  (e:(unit -> ST bool epre (fun h0 x h1 -> h0 == h1)))
     (e1pre:_) (e1:(unit -> ST a e1pre (fun _ _ _ -> True)))
-    (e2pre:_) (e2:(unit -> ST a e2pre (fun _ _ _ -> True))) (h0:heap) :
-  Lemma (requires (epre h0 /\ reify (e()) h0 == (true, h0))) (* CH: for some reason can't just replace this with `fst (reify (e()) h0) = true` *)
-        (ensures ((epre h0 /\ e1pre h0 /\ e2pre h0) ==>
-                     reify (if e() then e1()
-                                   else e2()) h0 == reify (e1()) h0))
-  = ()
+    (e2pre:_) (e2:(unit -> ST a e2pre (fun _ _ _ -> True)))
+    (h0:heap{epre h0 /\ e1pre h0 /\ e2pre h0}) :
+  Lemma (requires (b2t (fst (reify (e()) h0)))) (* CH: for some reason can't just replace this with `fst (reify (e()) h0) = true` *) (* AR: we could, but somehow z3 needs help, could be some trigger issues ... *)
+        (ensures (reify (if e() then e1() else e2()) h0 == reify (e1()) h0))
+  = ignore (reify (e ()) h0)
