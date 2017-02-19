@@ -20,3 +20,14 @@ let if_left_wp (a:Type)
   Lemma (reify (if refine_st e () then e1 () else e2 ()) h0 ==  //using refine_st to establish that after e () the heap remains same
          reify (e1 ()) h0)
   = ignore (reify (refine_st e ()) h0) (* AR: not sure why this is required *)
+
+(* here's another way ... also with some mysterious requirements *)
+let if_left_wp' (a:Type)
+    (epre:_)  (e:(unit -> ST bool epre (fun h0 x h1 -> h0 == h1)))
+    (e1pre:_) (e1:(unit -> ST a e1pre (fun _ _ _ -> True)))
+    (e2pre:_) (e2:(unit -> ST a e2pre (fun _ _ _ -> True))) (h0:heap) :
+  Lemma (requires (epre h0 /\ reify (e()) h0 == (true, h0))) (* CH: for some reason can't just replace this with `fst (reify (e()) h0) = true` *)
+        (ensures ((epre h0 /\ e1pre h0 /\ e2pre h0) ==>
+                     reify (if e() then e1()
+                                   else e2()) h0 == reify (e1()) h0))
+  = ()
