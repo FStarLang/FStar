@@ -1,5 +1,5 @@
 [
-  "(Q^Lôín‰Œ!1ä-+Kx",
+  "\u0019ê’è°h\u0011¬tVÿ8µÇ\u0000ž",
   [
     [
       "FStar.DM4F.IntStoreExcFixed.bind_is",
@@ -9,7 +9,7 @@
       [
         "@query", "bool_inversion", "disc_equation_Prims.None",
         "disc_equation_Prims.Some", "lemma_Prims.invertOption",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_None"
+        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some"
       ],
       0
     ],

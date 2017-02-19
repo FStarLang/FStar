@@ -102,6 +102,7 @@ let lift_int_store_reader_int_store (a:Type) (wp:INT_STORE_READER?.wp a) (e:INT_
 
 (* Trying to have a refiable lift from IntStoreFixed to IntStoreExcFixed *)
 sub_effect INT_STORE_READER ~> INT_STORE {
-  lift_wp = lift_int_store_reader_int_store_wp ;
-  lift = lift_int_store_reader_int_store
+  (* lift_wp = lift_int_store_reader_int_store_wp ; *)
+  lift =  fun (a:Type) (e:int_store_reader a) ->
+            (fun (h:heap) ->let x = e h in (x, h)) <: int_store a
 }

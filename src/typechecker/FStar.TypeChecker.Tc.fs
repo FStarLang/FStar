@@ -929,15 +929,23 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
         | lift, Some (_, lift_wp) ->
             (* Covers both the "classic" format and the reifiable case. *)
             lift, check_and_gen env lift_wp expected_k
+
+        (* Sub-effect for free case *)
         | Some (what, lift), None ->
+            if Env.debug env (Options.Other "ED") then
+              BU.print1 "Lift for free : %s\n" (Print.term_to_string lift) ;
             let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
+            let lift, comp, _ = tc_term env lift in
+            (* TODO : Check that comp is pure ? *)
             let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
             let _ = recheck_debug "lift-wp" env lift_wp in
             let _ = recheck_debug "lift-elab" env lift_elab in
             Some ([], lift_elab), ([], lift_wp)
       in
       let lax = env.lax in
-      let env = {env with lax=true} in //we do not expect the lift to verify, since that requires internalizing monotonicity of WPs
+      (* we do not expect the lift to verify, *)
+      (* since that requires internalizing monotonicity of WPs *)
+      let env = {env with lax=true} in
       let lift = match lift with
         | None -> None
         | Some (_, lift) ->
@@ -1218,9 +1226,10 @@ let tc_decls env ses =
           // the rest of the job to [tc_decl].
           let _, _, env, _ = acc in
           let ses, ne, lift_from_pure_opt = cps_and_elaborate env ne in
-          let ses = match lift_from_pure_opt with
-                    | Some lift -> ses @ [ Sig_new_effect (ne, r) ; lift ]
-                    | None -> ses @ [ Sig_new_effect (ne, r) ]
+          let ses =
+            match lift_from_pure_opt with
+            | Some lift -> ses @ [ Sig_new_effect (ne, r) ; lift ]
+            | None -> ses @ [ Sig_new_effect (ne, r) ]
           in
           List.fold_left process_one_decl acc ses
       | _ ->

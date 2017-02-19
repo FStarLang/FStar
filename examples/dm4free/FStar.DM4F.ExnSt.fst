@@ -37,26 +37,11 @@ reifiable reflectable new_effect_for_free {
     raise   = raise
 }
 
+let stint (a:Type)= FStar.DM4F.ST.st int a
+
 (* A lift from a previously defined state effect *)
-val lift_state_exnst_wp : (a:Type) -> IntST.wp a -> EXNST?.wp a
-let lift_state_exnst_wp a wp (h0:int) (p:EXNST?.post a) =
-        wp h0 (fun r -> p (Some r))
-
-#set-options "--admit_smt_queries true"
-(* The unfold here is really necessary,otherwise we will get stuck with *)
-(* an unknown term at reification *)
-unfold
-val lift_state_exnst : (a:Type) ->
-                       (wp:IntST.wp a) -> (f:IntST.repr a wp) ->
-                       EXNST?.repr a (lift_state_exnst_wp a wp)
-unfold
-let lift_state_exnst a wp f =
-        fun h0 -> Some (f h0)
-#set-options "--admit_smt_queries false"
-
 sub_effect IntST.STINT ~> EXNST {
-  lift_wp = lift_state_exnst_wp;
-  lift = lift_state_exnst
+  lift = fun (a:Type) (e:stint a) -> (fun s -> let z = e s in Some z) <: exnst a
 }
 
 (* Pre-/postcondition variant *)
