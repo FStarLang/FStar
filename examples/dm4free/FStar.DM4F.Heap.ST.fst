@@ -155,6 +155,25 @@ let rec zero x ghost_heap =
   else (x := !x - 1;
         zero x (STATE?.get()))
 
+let refine_st (#a:Type)
+              (#b:Type)
+              (#pre : a -> Tot STATE?.pre)
+              (#post : a -> Tot (heap -> b -> heap -> Tot Type0))
+              ($f :(x:a -> ST b (pre x) (post x)))
+              (x:a)
+  : ST b (pre x) (fun h0 z h1 -> pre x h0 /\
+                              reify (f x) h0 == (z, h1) /\
+                              post x h0 z h1)
+  = let g (h0:heap)
+      : Pure (b * heap)
+             (pre x h0)
+             (fun (z,h1) -> pre x h0 /\
+                       reify (f x) h0 == (z, h1) /\
+                       post x h0 z h1)
+      = reify (f x) h0
+    in
+    STATE?.reflect g
+
 ////////////////////////////////////////////////////////////////////////////////
 //An unsafe higher-order example, rightly rejected by an universe inconsistency
 //Uncomment the last two lines below to see the following error message:
