@@ -151,7 +151,6 @@ val honestST: i:id{fixed i} -> ST(b:bool{(b ==> honest i) /\ (not b ==> dishones
     modifies_none h0 h1 
     /\ h0==h1
     /\ (honest i \/ dishonest i)
-    ///\ MR.m_contains id_honesty_table h1
   ))
 let rec honestST i =
   MR.m_recall id_honesty_table;

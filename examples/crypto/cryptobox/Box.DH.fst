@@ -32,7 +32,11 @@ type dh_share = dh_element
 assume val dh_base : dh_element
 abstract type dh_exponent = lbytes dh_exponent_size
 
-assume val dh_gen_key: unit -> St (dh_share*dh_exponent)
+assume val dh_gen_key: unit -> ST (dh_share*dh_exponent)
+  (requires (fun h0 -> True))
+  (ensures (fun h0 _ h1 ->
+    h0==h1
+  ))
 
 type keysize = aeadKeySize AES_128_GCM
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
@@ -41,24 +45,24 @@ assume val hash: dh_element -> Tot aes_key
 (*
   Setting up a global log for AE.keys indexed by the ids of the public and private key involved.
 *)
-private type range = fun (k_id:id{AE_id? k_id}) -> k:PlainDH.key{PlainDH.ae_key_get_index k = k_id}
+private type dh_key_log_range = fun (k_id:id{AE_id? k_id}) -> k:PlainDH.key{PlainDH.ae_key_get_index k = k_id}
 
 (**
-   Invariant for the ae_key_log: If a key is honest and we idealize prf_odh, then if it is unfresh,
-   there has to be an entry in the ae_key_log.
+   Invariant for the dh_key_log: If a key is honest and we idealize prf_odh, then if it is unfresh,
+   there has to be an entry in the dh_key_log.
 *)
-private let inv (m:MM.map' (i:id{AE_id? i}) range) = True
+private let dh_key_log_inv (m:MM.map' (i:id{AE_id? i}) dh_key_log_range) = True
 //  forall (i:id{AE_id? i}). (honest i /\ prf_odh) ==> (Some? (MM.sel m i) ==> unfresh i)
 
 
-assume val ae_key_log_region: (r:HH.rid{ extends r root 
+assume val dh_key_log_region: (r:HH.rid{ extends r root 
 					 /\ is_eternal_region r 
 					 /\ is_below r root 
 					 /\ disjoint r ae_key_region
 					 /\ disjoint r id_freshness_table_region
 					 /\ disjoint r id_honesty_table_region
 					 })
-assume val ae_key_log: MM.t ae_key_log_region (i:id{AE_id? i}) range inv
+assume val dh_key_log: MM.t dh_key_log_region (i:id{AE_id? i}) dh_key_log_range dh_key_log_inv
 
 noeq abstract type dh_pkey = 
   | DH_pkey: #pk_id:id{DH_id? pk_id /\ unfresh pk_id /\ fixed pk_id} -> rawpk:dh_share -> dh_pkey
@@ -85,6 +89,7 @@ val keygen: #i:id{DH_id? i} -> ST (dh_pair:(k:dh_pkey{k.pk_id=i}) * (k:dh_skey{k
   ))
   (ensures (fun h0 k h1 -> 
     unfresh i
+    /\ modifies (Set.singleton id_freshness_table_region) h0 h1
   ))
 let keygen #i =
   make_unfresh i;
@@ -122,7 +127,7 @@ let coerce_keypair #i dh_ex =
 
 
 // Make this function GTot
-val prf_odhT: dh_skey -> dh_pkey -> Tot aes_key
+val prf_odhT: dh_skey -> dh_pkey -> GTot aes_key
 let prf_odhT dh_sk dh_pk =
   let pk_id = dh_pk.pk_id in
   let sk_id = dh_sk.sk_id in
@@ -132,55 +137,56 @@ let prf_odhT dh_sk dh_pk =
   k
 
 
-
-
+#set-options "--z3rlimit 25"
+// What prevents the adversary from generating a key with the (honest) DH shares
+// before calling prf_odh? It would give him a random AE key, which would not
+// be in the log, thus destroying our scheme.
 val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
-  ( requires (fun h0 ->True
-//    let i = generate_ae_id pk.pk_id sk.sk_id in
+  ( requires (fun h0 -> 
+    let i = generate_ae_id pk.pk_id sk.sk_id in
+    honest i ==> (~(MR.witnessed(MM.defined dh_key_log i) ==> ~(fresh i h0)))
   ))
   ( ensures (fun h0 k h1 ->
     let i = generate_ae_id pk.pk_id sk.sk_id in
-    let s:Set.set (r:HH.rid) = Set.union (Set.singleton ae_key_log_region) (Set.singleton (get_regionGT k)) in
+    let regions_modified_dishonest:Set.set (r:HH.rid) = (Set.singleton id_freshness_table_region) in
+    let regions_modified_honest = Set.union regions_modified_dishonest (Set.singleton dh_key_log_region) in
     let k_log = get_logGT k in
     (PlainDH.ae_key_get_index k = i)
     /\ (
-        ( (honest i /\ prf_odh)
-    	    ==> (//modifies_none h0 h1
-    	       h0 == h1 /\ MR.witnessed (MM.contains ae_key_log i k) 
+        ( (honest i)
+    	    ==> (modifies regions_modified_honest h0 h1
+    	       /\ MR.witnessed (MM.contains dh_key_log i k) 
     	      )
         )
         \/ 
     	( (dishonest i \/ ~prf_odh)
-    	    ==> (//modifies_one (PlainDH.leak_regionGT k) h0 h1
-    	       True /\ leak_key k = prf_odhT sk pk
+    	    ==> (modifies regions_modified_dishonest h0 h1
+    	       /\ leak_key k = prf_odhT sk pk
     	      )
         )
       )
     /\ MR.m_contains k_log h1
+    /\ modifies regions_modified_honest h0 h1
   ))
 let prf_odh dh_sk dh_pk =
   let i = generate_ae_id dh_pk.pk_id dh_sk.sk_id in
   let honest_i = honestST i in
-  MR.m_recall ae_key_log;
-  if honest_i && prf_odh then (
-    MR.m_recall ae_key_log;
-    match MM.lookup ae_key_log i with
+  MR.m_recall dh_key_log;
+  if honest_i then (
+    MR.m_recall dh_key_log;
+    match MM.lookup dh_key_log i with
     | Some  k' ->
 	recall_log k'; 
         k'
     | None ->
-        assume(~(unfresh i));
-        freshST i;
         let k' = PlainDH.keygen i in
-	// What??
-	assert(False);
-        MM.extend ae_key_log i k';
-	let h1 = ST.get() in
-        k')
-  else(
-    assert(dishonest i \/ ~prf_odh);
+        MM.extend dh_key_log i k';
+        k'
+  ) else
     let raw_k = dh_exponentiate dh_pk.rawpk dh_sk.rawsk in
     let hashed_raw_k = hash raw_k in
     let k=PlainDH.coerce_key i hashed_raw_k in
-    k)
+    recall_log k;
+    k
 
+#reset-options
