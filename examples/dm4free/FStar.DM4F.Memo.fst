@@ -533,6 +533,66 @@ let fibonnacci_memo_computes_fibonnacci () : Lemma (fibonnacci_memo `computes` f
 
 
 
+(* Once we have indexed effects the following definitions might be interesting *)
+
+let partial (x:dom) (a:Type) = (a -> M (partial_result x)) -> M (partial_result x)
+
+let return_partial (* (dom:Type) *) (x0:dom) (a:Type) (y:a) : partial x0 a = fun g -> g y
+let bind_partial (* (dom:Type) *)
+  (x0:dom)
+  (a b:Type)
+  (m:partial x0 a)
+  (f:a -> partial x0 b)
+  : partial x0 b
+=
+  fun g -> m (fun y -> f y g)
+
+
+(* The definition goes through but it won't be usable until we finish implementing indexed effects *)
+total reifiable reflectable
+new_effect_for_free {
+  PARTIAL (* (dom:Type) *) (x:dom) : (a:Type) -> Effect
+  with repr = partial x
+     ; bind = bind_partial x
+     ; return = return_partial x
+  }
+
+
+(* PARTIAL?.repr : *)
+(*   x:dom -> *)
+(*   a:Type -> *)
+(*   wp_a:((a -> ((partial_result x) -> Type0) -> Type0) -> ((partial_result x) -> Type0) -> Type0) -> *)
+(*   Tot Type *)
+(* = fun x a wp_a -> *)
+(*     wp:(a -> (partial_result x -> Type0) -> Type0) -> *)
+(*     (x':a -> PURE (partial_result x) wp x') -> *)
+(*     PURE (partial_result x) (wp_a wp) *)
+
+
+(* let run (x0:dom) (m :unit -> PARTIAL x0 codom (fun _ _ -> True)) : partial_result x0 = reify (m ()) (fun y -> Done y) *)
+(* TODO : generalize slightly the type partial_result to have wps in continuations *)
+(* let recursive_call (#x0:dom) (x:dom{x << x0}) : PARTIAL x0 (fun _ _ -> True) = *)
+(*   let need (wp:codom -> (partial_result x0 -> Type0) -> Type0) (g: y:codom -> PURE (partial_result x) (wp y)) *)
+(*     : PURE (partial_result x) (fun _ -> True) *)
+(*   = Need x g *)
+(*   in *)
+(*   reflect need *)
+
+(* Then we should be able to define fibonnacci as follows *)
+(* let f (x:dom) : partial_result x = *)
+(*   run (reify ( *)
+(*     if x <= 1 *)
+(*     then 0 *)
+(*     else *)
+(*       let y1 = recursive_call (x - 1) in *)
+(*       let y2 = recursive_call (x - 2) in *)
+(*       y1 + y2 *)
+(*   )) *)
+
+
+
+
+
 (* Various (unsuccessful) tentative to have a cleaner proof of equality for fixp *)
 
 (* #set-options "--__no_positivity" *)

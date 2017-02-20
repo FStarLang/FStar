@@ -54,7 +54,7 @@ type del_rel' (i:int) (env:env) (vl:list id{List.length vl = i}) (ihel:list iexp
 
 type del_rel (i:int) (env:env) (vl:list id{List.length vl = i}) (ihel:list iexpr) (bhel:list bexpr) (c:prog i) =
   forall h.
-    del_rel' i env vl ihel bhel c h 
+    del_rel' i env vl ihel bhel c h
 
 reifiable
 val test : prog 3
@@ -100,7 +100,7 @@ val sum : prog 6
 let sum [y ; x1 ; x2 ; x3 ; x4 ; x5] =
   write y (read x1 + read x2 + read x3 + read x4 + read x5)
 
-#set-options "--z3rlimit 20" 
+#set-options "--z3rlimit 20"
 (* The variant with 4 variables seems to work... *)
 (* This works with either more z3rlimit or putting the scrutinee of the match in a separate let at the smt-encoding level *)
 val verify_sum (x1 x2 x3 x4 x5 y : id):
@@ -118,7 +118,7 @@ let verify_sum x1 x2 x3 x4 x5 y = ()
 
 reifiable val sum_swap : prog 6
 reifiable let sum_swap [y ; x1 ; x2 ; x3 ; x4 ; x5] =
-  let tmp1 = read x1 in
+          let tmp1 = read x1 in
   write x1 (read x2) ;
   write x2 (read x3) ;
   write x3 (read x4) ;
@@ -127,9 +127,9 @@ reifiable let sum_swap [y ; x1 ; x2 ; x3 ; x4 ; x5] =
   write y (read x1 + read x2 + read x3 + read x4 + read x5)
 
 
-val sum_swap_help (x1 x2 x3 x4 x5 : id) (y:id{List.noRepeats [y;x1;x2;x3;x4;x5]}) (h:heap): 
-  Lemma 
-  (forall z. (z <> x1 /\ z <> x2 /\ z <> x3 /\ z <> x4 /\ z <> x5 /\ z <> y ==> 
+val sum_swap_help (x1 x2 x3 x4 x5 : id) (y:id{List.noRepeats [y;x1;x2;x3;x4;x5]}) (h:heap):
+  Lemma
+  (forall z. (z <> x1 /\ z <> x2 /\ z <> x3 /\ z <> x4 /\ z <> x5 /\ z <> y ==>
     sel (get_heap sum_swap [y;x1;x2;x3;x4;x5] h) z =
       sel h z)  /\
     sel (get_heap sum_swap [y;x1;x2;x3;x4;x5] h) y
@@ -139,7 +139,7 @@ val sum_swap_help (x1 x2 x3 x4 x5 : id) (y:id{List.noRepeats [y;x1;x2;x3;x4;x5]}
       sel (get_heap sum [y;x1;x2;x3;x4;x5] h) y)
       *)
 let sum_swap_help x1 x2 x3 x4 x5 y h =
-  let h' = get_heap sum_swap [y;x1;x2;x3;x4;x5] h in 
+  let h' = get_heap sum_swap [y;x1;x2;x3;x4;x5] h in
   cut (sel h' x1 = sel h x2);
   cut (sel h' x2 = sel h x3);
   cut (sel h' x3 = sel h x4);
@@ -150,7 +150,7 @@ let sum_swap_help x1 x2 x3 x4 x5 y h =
 
 (* Does not verify !!! *)
 val verify_sum_swap (x1 x2 x3 x4 x5 : id) (y:id{List.noRepeats [y;x1;x2;x3;x4;x5]}):
-  h : rel heap -> 
+  h : rel heap ->
   Lemma begin
     let n = 6 in
     let l = [x1;x2;x3;x4;x5] in
@@ -161,13 +161,13 @@ val verify_sum_swap (x1 x2 x3 x4 x5 : id) (y:id{List.noRepeats [y;x1;x2;x3;x4;x5
     let sum_val h = fst (reify (read x1 + read x2 + read x3 + read x4 + read x5) h) in
     del_rel' n env (y::l) [sum_val] [] sum_swap h
   end
-let verify_sum_swap x1 x2 x3 x4 x5 y h = 
-  let R hl hr = h in 
+let verify_sum_swap x1 x2 x3 x4 x5 y h =
+  let R hl hr = h in
   sum_swap_help x1 x2 x3 x4 x5 y hl;
   sum_swap_help x1 x2 x3 x4 x5 y hr;
   ()
 
-#set-options "--z3rlimit 5" 
+#set-options "--z3rlimit 5"
 
 reifiable
 val sum_att : prog 6
@@ -222,7 +222,7 @@ reifiable
 val wallet_attack_loop :
   h0:heap ->
   vl:list id{List.length vl = 4 /\ List.noRepeats vl} ->
-  IntStore unit 
+  IntStore unit
     (requires (fun h -> h == h0))
     (ensures (fun _ _ _ -> True))
     (decreases (sel h0 (List.hd vl)))
@@ -243,8 +243,8 @@ let rec wallet_attack_loop h0 l =
 
 reifiable val wallet_attack : prog 4
 let wallet_attack [n;x_h;k;x_l] =
-  write x_l 0; 
-  let h = IS?.get () in 
+  write x_l 0;
+  let h = IS?.get () in
   wallet_attack_loop h [n;x_h;k;x_l]
 
 (* This does not verify, as expected
@@ -253,7 +253,7 @@ let wallet_attack [n;x_h;k;x_l] =
 val verify_wallet_attack (n x_h k x_l : id):
   Lemma begin
     let m = 4 in
-    let env : env = (fun r -> if r = x_h then (*High*) Low else Low) in 
+    let env : env = (fun r -> if r = x_h then (*High*) Low else Low) in
     let l = [n; x_h; k; x_l] in
     let b h = fst (reify (read x_h >= read k) h) in
     del_rel m env l [] [b] wallet_attack
