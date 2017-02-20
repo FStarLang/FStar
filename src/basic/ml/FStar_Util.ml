@@ -127,6 +127,7 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
 
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
   let command = prog^" "^args in
+  let command = "run.sh full | " ^ command in
   let (inc,outc) = Unix.open_process command in
   let proc = {inc = inc; outc = outc; killed = false; id = prog^":"^id} in
   all_procs := proc::!all_procs;

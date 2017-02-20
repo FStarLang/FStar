@@ -2167,17 +2167,6 @@ let encode_query use_env_msg tcenv q
     || debug tcenv <| Options.Other "SMTQuery"
     then BU.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
     let phi, qdecls = encode_formula q env in
-    let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
-    let label_prefix, label_suffix = encode_labels labels in
-    let query_prelude =
-        env_decls
-        @label_prefix
-        @qdecls in
-    let qry = Term.Assume(mkNot phi, Some "query", Some (varops.mk_unique "@query")) in
-    let suffix = label_suffix@(if Options.print_z3_statistics() then [PrintStats] else [])@[Term.Echo "Done!"] in
-    query_prelude, labels, qry, suffix
-
-(* shutting off labels
     (*let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in*)
     let query_prelude =
@@ -2187,9 +2176,6 @@ let encode_query use_env_msg tcenv q
     let qry = Term.Assume(mkNot phi, Some "query", Some (varops.mk_unique "@query")) in
     let suffix = (*label_suffix@*)(if Options.print_z3_statistics() then [PrintStats] else [])@[Term.Echo "Done!"] in
     query_prelude, [](*labels*), qry, suffix
-end *)
-
-
 
 let is_trivial (tcenv:Env.env) (q:typ) : bool =
    let env = get_env tcenv in
