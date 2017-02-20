@@ -136,20 +136,20 @@ let ask_process (p:proc) (stdin:string) : string =
   let out = Buffer.create 16 in
 
   let rec read_out _ =
-    try
-      let s = BatString.trim (input_line p.inc) in
+    let s, eof = (try
+                    BatString.trim (input_line p.inc), false
+                  with End_of_file ->
+                    Buffer.add_string out ("\nkilled\n") ; "", true) in
+    if not eof then
       if s = "Done!" then ()
       else (Buffer.add_string out (s ^ "\n"); read_out ())
-    with End_of_file -> Buffer.add_string out ("\nkilled\n")
   in
 
   let child_thread = Thread.create (fun _ -> read_out ()) () in
-
   output_string p.outc stdin;
   flush p.outc;
   Thread.join child_thread;
   Buffer.contents out
-
 
 let kill_process (p:proc) =
   let _ = Unix.close_process (p.inc, p.outc) in
