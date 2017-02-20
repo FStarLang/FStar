@@ -26,3 +26,5 @@ let get_regionGT = AE.get_regionGT
 let get_logGT = AE.get_logGT
 
 let recall_log = AE.recall_log
+
+let empty_log = AE.empty_log

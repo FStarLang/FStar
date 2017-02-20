@@ -64,7 +64,7 @@ type log_t (i:id{AE_id? i}) (r:rid)  = MM.t r log_key (log_range i) (log_inv i)
 noeq abstract type key =
   | Key: #i:id{AE_id? i /\ unfresh i /\ fixed i} -> #(region:rid{extends region ae_key_region /\ is_below region ae_key_region /\ is_eternal_region region}) -> raw:aes_key -> log:log_t i region -> key
 
-val get_index: k:key -> Tot (i:id{i=k.i})
+val get_index: k:key -> Tot (i:id{i=k.i /\ unfresh i})
 let get_index k = k.i
 (**
    This function generates a key in a fresh region of memory below the parent region.
@@ -118,7 +118,6 @@ let coerce_key i raw =
   let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
   make_unfresh i;
   Key #i #region raw log
-  
 
 (**
    The leak_key function transforms an abstract key into a raw aes_key.
@@ -135,6 +134,9 @@ let get_keyGT k =
 val get_logGT: k:key -> GTot (log:log_t k.i k.region{log=k.log})
 let get_logGT k =
   k.log
+
+val empty_log: i:id{AE_id? i} -> Tot (MM.map' log_key (log_range i))
+let empty_log i = MM.empty_map log_key (log_range i)
 
 val recall_log: k:key -> ST unit
   (requires (fun h0 -> True))
@@ -161,6 +163,7 @@ val encrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_pla
     /\ fixed i
   ))
   (ensures  (fun h0 c h1 ->
+    let current_log = MR.m_sel h0 k.log in
     modifies_one k.region h0.h h1.h
     ///\ m_contains k.log h1
     /\ (
@@ -172,6 +175,7 @@ val encrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_pla
       )
     /\ (dishonest i \/ honest i)
     /\ MR.witnessed (MM.contains k.log n (c,m))
+    /\ MR.m_sel h1 k.log == MM.upd current_log n (c,m)
     ))
 let encrypt #i n k m =
   let honest_i = honestST i in

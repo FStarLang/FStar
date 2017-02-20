@@ -83,7 +83,22 @@ type c = AE.cipher
 let log_invariant (h:mem) = 
   forall (k:AE.key) (n:nonce). let k_log = get_logGT k in (MM.fresh k_log n h <==> MM.fresh pkae_afternm_table (n,AE.get_index k) h)
 
-#set-options "--z3rlimit 15"
+
+
+val invariant_lemma: (h0:mem) -> k:AE.key ->  h1:mem -> Lemma
+  (requires (
+    log_invariant h0
+    /\ (forall (k':AE.key).{:pattern (MR.m_sel h1 (get_logGT k'))} let k_log = get_logGT k' in (~(k == k') ==> MR.m_sel h0 k_log == MR.m_sel h1 k_log) /\ (( k == k') ==> (MR.m_sel h1 k_log == MM.empty_map AE.log_key (AE.log_range (AE.get_index k)))))
+    /\ MR.m_sel h0 pkae_afternm_table == MR.m_sel h1 pkae_afternm_table
+    /\ (forall (n:nonce) . (MM.fresh pkae_afternm_table (n,AE.get_index k) h0))
+  ))
+  (ensures (log_invariant h1))
+let invariant_lemma h0 k h1 = ()
+
+
+// Make sure that if the key is fresh, then there is no entry in the pkae_afternm_table.
+// Maybe do this by connecting with the id_freshness_table?
+#set-options "--z3rlimit 25"
 val encrypt_beforenm: #(pk_id:id{DH_id? pk_id /\ fixed pk_id}) -> 
 	              #(sk_id:id{DH_id? sk_id /\ fixed sk_id}) -> 
 	              pk:pkae_pkey pk_id -> 
@@ -92,7 +107,7 @@ val encrypt_beforenm: #(pk_id:id{DH_id? pk_id /\ fixed pk_id}) ->
   (requires (fun h0 -> 
     let i = generate_ae_id pk_id sk_id in
     fixed i
-    /\ honest i ==> (~(MR.witnessed(MM.defined dh_key_log i) ==> ~(fresh i h0)))
+    /\ (honest i ==> (~(MR.witnessed(MM.defined dh_key_log i) ==> ~(fresh i h0))))
     /\ log_invariant h0
   ))
   (ensures (fun h0 k h1 -> 
@@ -120,12 +135,24 @@ val encrypt_beforenm: #(pk_id:id{DH_id? pk_id /\ fixed pk_id}) ->
       equal_on (Set.singleton k_region) h0.h h1.h)
     /\ (let k_region = get_regionGT k in
       equal_on (Set.singleton pkae_afternm_table_region) h0.h h1.h)
-    /\ log_invariant h1
+    ///\ log_invariant h1
   ))
 let encrypt_beforenm #pk_id #sk_id pk sk =
   MR.m_recall pkae_afternm_table;
+  let h0 = ST.get() in
+  assert(log_invariant h0);
   let k = prf_odh sk.dh_sk pk.dh_pk in
+  let h1 = ST.get() in
+  assume(forall (k':AE.key).{:pattern (MR.m_sel h1 (get_logGT k'))} let k_log = get_logGT k' in (~(k == k') ==> MR.m_sel h0 k_log == MR.m_sel h1 k_log) /\ (( k == k') ==> (MR.m_sel h1 k_log == MM.empty_map AE.log_key (AE.log_range (AE.get_index k)))));
+  assert(log_invariant h1);
+  admit();
+  //assert(equal_on (Set.union (Set.singleton ae_key_region) (Set.singleton pkae_afternm_table_region)) h0.h h1.h);
+  assert(forall n.let k_log = get_logGT k in (MM.fresh k_log n h1 <==> MM.fresh pkae_afternm_table (n,AE.get_index k) h1));
+  admit();
   recall_log k;
+  //let h0 = ST.get() in
+  //assert(log_invariant h0);
+  //admit();
   k
 
 
@@ -170,14 +197,14 @@ let encrypt_afternm k n p =
   AE.encrypt #ae_i n k ae_m
   
 
-#set-options "--z3rlimit 15"
+#set-options "--z3rlimit 25"
 val encrypt: #(pk_id:id{DH_id? pk_id}) -> 
 	     #(sk_id:id{DH_id? sk_id}) -> 
 	     pk:pkae_pkey pk_id{fixed pk_id} -> 
 	     sk:pkae_skey sk_id{fixed sk_id} -> 
 	     n:nonce -> 
 	     p:protected_pkae_plain{PlainPKAE.get_index p = generate_ae_id pk_id sk_id} 
-	     -> ST c 
+	     -> ST unit
   (requires (fun h0 ->
     let i = generate_ae_id pk_id sk_id in
     fixed i
@@ -194,7 +221,9 @@ val encrypt: #(pk_id:id{DH_id? pk_id}) ->
 let encrypt #pk_id #sk_id pkae_pk pkae_sk n p =
   let k = encrypt_beforenm #pk_id #sk_id pkae_pk pkae_sk in
   let c = encrypt_afternm k n p in
-  c
+  let h0 = ST.get() in
+  assert(log_invariant h0);
+  ()
 
 
 // Implement decrypt_beforenm and decrypt_afternm

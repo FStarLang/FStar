@@ -144,7 +144,7 @@ let prf_odhT dh_sk dh_pk =
 val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
   ( requires (fun h0 -> 
     let i = generate_ae_id pk.pk_id sk.sk_id in
-    honest i ==> (~(MR.witnessed(MM.defined dh_key_log i) ==> ~(fresh i h0)))
+    (honest i ==> (~(MR.witnessed(MM.defined dh_key_log i) ==> ~(fresh i h0))))
   ))
   ( ensures (fun h0 k h1 ->
     let i = generate_ae_id pk.pk_id sk.sk_id in
@@ -154,8 +154,13 @@ val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
     (PlainDH.ae_key_get_index k = i)
     /\ (
         ( (honest i)
-    	    ==> (modifies regions_modified_honest h0 h1
-    	       /\ MR.witnessed (MM.contains dh_key_log i k) 
+    	    ==> (
+	       let current_log = MR.m_sel h0 dh_key_log in
+	       modifies regions_modified_honest h0 h1
+    	       /\ MR.witnessed (MM.contains dh_key_log i k)
+	       //Make sure that only one key is added to the log IF there is not one in the log already.
+               /\ (~(MM.defined dh_key_log i h0) ==> MR.m_sel h1 dh_key_log == MM.upd current_log i k)
+	       /\ (MM.defined dh_key_log i h0 ==> MR.m_sel h0 dh_key_log == MR.m_sel h1 dh_key_log)
     	      )
         )
         \/ 
@@ -167,6 +172,8 @@ val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
       )
     /\ MR.m_contains k_log h1
     /\ modifies regions_modified_honest h0 h1
+    ///\ fresh i h0 ==> (MR.m_sel h1 (PlainDH.get_logGT k) == PlainDH.empty_log i)
+    ///\ (forall (k':AE.key). let k_log = get_logGT k' in MR.m_sel h0 k_log == MR.m_sel h1 k_log)
   ))
 let prf_odh dh_sk dh_pk =
   let i = generate_ae_id dh_pk.pk_id dh_sk.sk_id in
@@ -176,6 +183,9 @@ let prf_odh dh_sk dh_pk =
     MR.m_recall dh_key_log;
     match MM.lookup dh_key_log i with
     | Some  k' ->
+	let h0 = ST.get() in
+	// This assert should not go through!
+	assert(fresh (PlainDH.ae_key_get_index k') h0);
 	recall_log k'; 
         k'
     | None ->
