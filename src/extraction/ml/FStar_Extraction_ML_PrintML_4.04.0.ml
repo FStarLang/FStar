@@ -14,9 +14,6 @@ open FStar_Extraction_ML_Syntax
    path_to_ident. This is done in order to avoid clutter. *)
 let current_module = ref ""
 
-(* If set to false, the old prettyprinter will be used for 
-   OCaml extraction. *)
-let is_default_printer = true
 
 let flatmap f l = map f l |> List.flatten
 let opt_to_list = function Some x -> [x] | None -> []
@@ -411,6 +408,16 @@ let print_module ((path, m): string * structure) =
   Format.pp_print_flush Format.std_formatter ()
 
 let print (out_dir: string option) (ext: string) (ml: mllib) = 
-  let ast = build_ast out_dir ext ml in
-  iter print_module ast
+  match ext with
+  | ".ml" -> 
+     (* Use this printer for OCaml extraction *)
+     let ast = build_ast out_dir ext ml in
+     iter print_module ast
+  | ".fs" -> 
+     (* Use the old printer for F# extraction *)
+     let new_doc = FStar_Extraction_ML_Code.doc_of_mllib ml in
+     iter (fun (n,d) ->
+         FStar_Util.write_file 
+           (FStar_Options.prepend_output_dir (BatString.concat "" [n;ext]))
+           (FStar_Format.pretty (Prims.parse_int "120") d)) new_doc
 

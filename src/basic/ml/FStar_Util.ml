@@ -108,12 +108,13 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
   (* parallel reading thread *)
   let out = Buffer.create 16 in
   let rec read_out _ =
-    try
-      let s = BatString.trim (input_line cin) in
+    let s, eof = (try
+                    BatString.trim (input_line cin), false
+                  with End_of_file ->
+                    Buffer.add_string out ("\nkilled\n") ; "", true) in
+    if not eof then
       if s = "Done!" then ()
-      else (Buffer.add_string out (s ^ "\n"); read_out ())
-    with End_of_file -> Buffer.add_string out ("\nkilled\n")
-  in
+      else (Buffer.add_string out (s ^ "\n"); read_out ())  in
   let child_thread = Thread.create (fun _ -> read_out ()) () in
 
   (* writing to z3 *)

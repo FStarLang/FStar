@@ -67,14 +67,13 @@ let codegen (umods, env) =
       | _ -> failwith "Unrecognized option"
     in
     match opt with
-    | Some "OCaml" when FStar.Extraction.ML.PrintML.is_default_printer -> 
-        let out_dir = Options.output_dir() in
-        List.iter (FStar.Extraction.ML.PrintML.print out_dir ext) mllibs
     | Some "FSharp" | Some "OCaml" ->
-        let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
-        List.iter (fun (n,d) ->
-          Util.write_file (Options.prepend_output_dir (n^ext)) (FStar.Format.pretty 120 d)
-        ) newDocs
+        (* When bootstrapped in F#, this will use the old printer in
+           FStar.Extraction.ML.Code for both OCaml and F# extraction.
+           When bootstarpped in OCaml, this will use the old printer
+           for F# extraction and the new printer for OCaml extraction. *)
+        let outdir = Options.output_dir() in
+        List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
     | Some "Kremlin" ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
