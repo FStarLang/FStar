@@ -157,7 +157,9 @@ let query_logging =
         | Some fh, _ -> fh
         | None, Some n -> 
           let file_name_p = replace_string n ".smt2" ".proofs.smt2" in
-          BU.open_file_for_writing file_name_p
+          let fh = BU.open_file_for_writing file_name_p in
+          proof_log_file_opt := Some fh ;
+          fh
         | None, None -> 
           match !current_module_name with
           | None -> failwith "current module not set"
@@ -244,23 +246,23 @@ let doZ3Exe' (fresh:bool) (input:string) =
         | "<unsat-core>"::core::"</unsat-core>"::rest ->
           parse_core core, lines
         | _ -> None, lines in
-    // let proof lines =
-    //     let fw = (fun w line ->
-    //         match line with
-    //         | "<proof>" -> true
-    //         | "</proof>" -> false
-    //         | _ -> if w then
-    //               query_logging.append_to_proof_log line ; w
-    //     ) in
-    //     ignore (List.fold_left fw false lines) ;
-    //     query_logging.append_to_proof_log  "" in
+    let proof lines =
+        let fw = (fun w line ->
+            match line with
+            | "<proof>" -> true
+            | "</proof>" -> false
+            | _ -> if w then
+                  query_logging.append_to_proof_log line ; w
+        ) in
+        ignore (List.fold_left fw false lines) ;
+        query_logging.append_to_proof_log  "" in
     let rec lblnegs lines succeeded = match lines with
       | lname::"false"::rest when BU.starts_with lname "label_" -> lname::lblnegs rest succeeded
       | lname::_::rest when BU.starts_with lname "label_" -> lblnegs rest succeeded
       | _ -> if succeeded then print_stats lines; [] in
     let unsat_core_and_lblnegs lines succeeded =
        let core_opt, rest = unsat_core lines in
-       (* if Options.record_proofs() then (proof lines) else () ; *)
+       if Options.record_proofs() then (proof lines) else () ;
        core_opt, lblnegs rest succeeded in
 
     let rec result x = match x with
