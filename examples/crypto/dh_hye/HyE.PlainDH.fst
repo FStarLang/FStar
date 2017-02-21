@@ -13,6 +13,8 @@ type key = AE.key
 
 let keygen = AE.keygen
 
+let get_index = AE.get_index
+
 let coerce_key = AE.coerce_key
 
 let leak_key = AE.leak_key

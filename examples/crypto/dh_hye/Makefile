@@ -7,7 +7,7 @@ HyE.PlainAE.fst \
 HyE.AE.fst \
 HyE.DH.fst \
 HyE.HPKE.fst \
-HyE.Indexing.fsti \
+HyE.Indexing.fst \
 HyE.Flags.fsti
 
 LIB = ../../contrib/CoreCrypto/ml

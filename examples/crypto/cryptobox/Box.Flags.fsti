@@ -10,8 +10,6 @@
 *)
 module Box.Flags
 
-open Box.Indexing
-
 val prf_odh : bool
 
 val ae_int_ctxt : bool
@@ -21,11 +19,3 @@ val ae_ind_cpa : bool
 val ae_ind_cca : b:bool{ae_ind_cpa /\ ae_int_ctxt ==> b}
 
 val pkae : b:bool{b ==> b2t ae_ind_cpa /\ ae_int_ctxt /\ prf_odh}
-
-val dishonestId: unit -> Tot (i:id{dishonest i})
-val honestId: unit -> Tot (i:id{honest i})
-
-val honest_implies_prf_odh: i:id -> Lemma
-  (requires honest i)
-  (ensures (prf_odh))
-  [SMTPat (honest i)]
