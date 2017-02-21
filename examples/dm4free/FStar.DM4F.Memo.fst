@@ -535,6 +535,12 @@ let fibonnacci_memo_computes_fibonnacci () : Lemma (fibonnacci_memo `computes` f
 
 (* Once we have indexed effects the following definitions might be interesting *)
 
+(* The definition below is pretty close to what is presented in *)
+(*   Conor McBride: Turing-Completeness Totally Free. MPC 2015: 257-275 *)
+(* but a little more awkward. It would be nice to define McBride's version *)
+(* of the monad but in order to do so we need a good treatment of inductives *)
+(* and recursion within DM4F. *)
+
 let partial (x:dom) (a:Type) = (a -> M (partial_result x)) -> M (partial_result x)
 
 let return_partial (* (dom:Type) *) (x0:dom) (a:Type) (y:a) : partial x0 a = fun g -> g y
