@@ -37,6 +37,7 @@ reifiable let p1 x y hi =
 
 let p1_r x y hi h = (* normalize_term *) (snd (reify (p1 x y hi) h))
 
+#set-options "--z3rlimit 10"
 val p1_x (x y hi : id) (h:heap) :
   Lemma (requires (x <> y /\ x <> hi /\ y <> hi))
     (ensures (let h' = p1_r x y hi h in

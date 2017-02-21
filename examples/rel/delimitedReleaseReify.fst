@@ -126,6 +126,8 @@ reifiable let sum_swap [y ; x1 ; x2 ; x3 ; x4 ; x5] =
   write x5 tmp1 ;
   write y (read x1 + read x2 + read x3 + read x4 + read x5)
 
+val length6 (x1 x2 x3 x4 x5 x6 : id) : Lemma (List.length[x1;x2;x3;x4;x5;x6] = 6)
+let length6 _ _ _ _ _ _ = ()
 
 val sum_swap_help (x1 x2 x3 x4 x5 : id) (y:id{List.noRepeats [y;x1;x2;x3;x4;x5]}) (h:heap):
   Lemma
@@ -139,6 +141,7 @@ val sum_swap_help (x1 x2 x3 x4 x5 : id) (y:id{List.noRepeats [y;x1;x2;x3;x4;x5]}
       sel (get_heap sum [y;x1;x2;x3;x4;x5] h) y)
       *)
 let sum_swap_help x1 x2 x3 x4 x5 y h =
+  length6 y x1 x2 x3 x4 x5;
   let h' = get_heap sum_swap [y;x1;x2;x3;x4;x5] h in
   cut (sel h' x1 = sel h x2);
   cut (sel h' x2 = sel h x3);
@@ -248,8 +251,7 @@ let wallet_attack [n;x_h;k;x_l] =
   wallet_attack_loop h [n;x_h;k;x_l]
 
 (* This does not verify, as expected
-   Howver, also does not verify with x_h : Low, which should be fine *)
-(*
+   Howver, also does not verify with x_h : Low, which should be fine *) (*
 val verify_wallet_attack (n x_h k x_l : id):
   Lemma begin
     let m = 4 in

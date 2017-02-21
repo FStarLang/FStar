@@ -37,6 +37,7 @@ let p1_r lo hi h = (* normalize_term *) (snd (reify (p1 lo hi) h))
 let p2_r lo hi h = (* normalize_term *) (snd (reify (p2 lo hi) h))
 let p3_r lo1 lo2 hi h = (* normalize_term *) (snd (reify (p3 lo1 lo2 hi) h))
 
+#set-options "--z3rlimit 10"
 val ni_p1 (lo hi : id) (env:env) (h :rel heap) :
   Lemma
   (requires (lo <> hi /\

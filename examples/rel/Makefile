@@ -12,7 +12,10 @@ all: ifc\
 		 delimited_release\
 		 recursive \
 		 WhileReify \
+		 delimitedReleaseReify \
+		 ifc_reify_examples \
 		 IfcReify
+
 
 ifc:
 	$(FSTAR) rel.fst whilelanguage.fst ifc.fst ifcExample.fst
@@ -31,6 +34,12 @@ WhileReify:
 
 IfcReify:
 	$(FSTAR) --include ../dm4free IfcReify.fst
+
+ifc_reify_examples:
+	$(FSTAR) --include ../dm4free ifc_compose_reify.fst ifc_recursive_heap_reify.fst ifc_recursive_reify.fst ifc_reify.fst ifc_reify_long.fst simple_ifc_reify.fst
+
+delimitedReleaseReify:
+	$(FSTAR) --include ../dm4free delimitedReleaseReify.fst
 
 
 blowup:
