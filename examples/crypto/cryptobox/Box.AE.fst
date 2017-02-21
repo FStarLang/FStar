@@ -174,6 +174,7 @@ val encrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_pla
   (ensures  (fun h0 c h1 ->
     let current_log = MR.m_sel h0 k.log in
     modifies_one k.region h0.h h1.h
+
     ///\ m_contains k.log h1
     /\ (
 	( (dishonest i \/ ~(b2t ae_ind_cca))
@@ -215,7 +216,7 @@ val decrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> c:cipher{B.length c
     /\ (
         ((~(b2t ae_ind_cca) \/ dishonest i) 
         	==> (Some? (aead_decryptT AES_128_CCM k.raw n empty_bytes c) 
-        	  ==> Some? res /\ Some?.v res == coerce (Some?.v (aead_decryptT AES_128_CCM k.raw n empty_bytes c))))
+        	     ==> Some? res /\ Some?.v res == coerce (Some?.v (aead_decryptT AES_128_CCM k.raw n empty_bytes c))))
       \/
         (( (b2t ae_ind_cca) /\ honest i /\ Some? res) 
         	==> (MM.defined k.log n h0 /\ (fst (MM.value k.log n h0) == c ) 
