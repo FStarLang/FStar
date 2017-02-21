@@ -114,20 +114,20 @@ type bgproc = {
 }
 
 type query_log = {
-    get_module_name: unit -> string;
-    set_module_name: string -> unit;
-    append_to_log:   string -> unit;
-    close_log:       unit -> unit;
-    log_file_name:   unit -> string;
-    proof_log_file:  unit -> file_handle
+    get_module_name:     unit -> string;
+    set_module_name:     string -> unit;
+    append_to_log:       string -> unit;
+    append_to_proof_log: string -> unit;
+    close_log:           unit -> unit;
+    log_file_name:       unit -> string
 }
 
 let query_logging =
     let log_file_opt : ref<option<file_handle>> = BU.mk_ref None in
+    let proof_log_file_opt : ref<option<file_handle>> = BU.mk_ref None in
     let used_file_names : ref<list<(string * int)>> = BU.mk_ref [] in
     let current_module_name : ref<option<string>> = BU.mk_ref None in
     let current_file_name : ref<option<string>> = BU.mk_ref None in
-    let current_proof_file : ref<option<file_handle>> = BU.mk_ref None in
     let set_module_name n = current_module_name := Some n in
     let get_module_name () = match !current_module_name with
         | None -> failwith "Module name not set"
@@ -152,44 +152,38 @@ let query_logging =
     let get_log_file () = match !log_file_opt with
         | None -> new_log_file()
         | Some fh -> fh in
+    let get_proof_log_file () =
+        match !proof_log_file_opt, !current_file_name with
+        | Some fh, _ -> fh
+        | None, Some n -> 
+          let file_name_p = replace_string n ".smt2" ".proofs.smt2" in
+          BU.open_file_for_writing file_name_p
+        | None, None -> 
+          match !current_module_name with
+          | None -> failwith "current module not set"
+          | Some n ->
+            let file_name = BU.format1 "queries-%s.proofs.smt2" (get_next_log_file_name n) in
+            current_file_name := Some file_name;
+            let fh = BU.open_file_for_writing file_name in
+            proof_log_file_opt := Some fh ;
+            fh in
     let append_to_log str = BU.append_to_file (get_log_file()) str in
+    let append_to_proof_log str = BU.append_to_file (get_proof_log_file()) str in
     let close_log () = match !log_file_opt with
         | None -> ()
-        | Some fh -> BU.close_file fh; log_file_opt := None in
+        | Some fh -> BU.close_file fh; log_file_opt := None ;
+        match !proof_log_file_opt with
+        | None -> ()
+        | Some fh -> BU.close_file fh; proof_log_file_opt := None in
     let log_file_name () = match !current_file_name with
         | None -> failwith "no log file"
         | Some n -> n in
-    let proof_log_file () =
-        match !current_proof_file with
-        | Some fh -> fh
-        | None ->
-            let file_name =
-                match !current_file_name with
-                | Some n -> n
-                | None ->
-                   if Options.log_queries() then (
-                     ignore (new_log_file ()) ;
-                     match !current_file_name with
-                     | Some n -> n
-                     | _ -> "")
-                   else (
-                     match !current_module_name with
-                     | None -> failwith "current module not set"
-                     | Some n ->
-                        let fn = (get_next_log_file_name n) in
-                        current_file_name := Some fn;
-                        fn) in
-            let file_name_p = BU.format1 "queries-%s.proofs.smt2" file_name in
-            let fh = BU.open_file_for_writing file_name_p in
-            current_proof_file := Some fh ;
-            fh
-    in
     {set_module_name=set_module_name;
      get_module_name=get_module_name;
      append_to_log=append_to_log;
+     append_to_proof_log=append_to_proof_log;
      close_log=close_log;
-     log_file_name=log_file_name;
-     proof_log_file=proof_log_file}
+     log_file_name=log_file_name}
 
 let bg_z3_proc =
     let the_z3proc = BU.mk_ref None in
@@ -250,23 +244,23 @@ let doZ3Exe' (fresh:bool) (input:string) =
         | "<unsat-core>"::core::"</unsat-core>"::rest ->
           parse_core core, lines
         | _ -> None, lines in
-    let proof lines =
-        let f = query_logging.proof_log_file() in
-        let fw = (fun w line ->
-            match line with
-            | "<proof>" -> true
-            | "</proof>" -> false
-            | _ -> if w then append_to_file f line ; w
-        ) in
-        ignore (List.fold_left fw false lines) ;
-        append_to_file f  "" in
+    // let proof lines =
+    //     let fw = (fun w line ->
+    //         match line with
+    //         | "<proof>" -> true
+    //         | "</proof>" -> false
+    //         | _ -> if w then
+    //               query_logging.append_to_proof_log line ; w
+    //     ) in
+    //     ignore (List.fold_left fw false lines) ;
+    //     query_logging.append_to_proof_log  "" in
     let rec lblnegs lines succeeded = match lines with
       | lname::"false"::rest when BU.starts_with lname "label_" -> lname::lblnegs rest succeeded
       | lname::_::rest when BU.starts_with lname "label_" -> lblnegs rest succeeded
       | _ -> if succeeded then print_stats lines; [] in
     let unsat_core_and_lblnegs lines succeeded =
        let core_opt, rest = unsat_core lines in
-       if Options.record_proofs() then (proof lines) else () ;
+       (* if Options.record_proofs() then (proof lines) else () ; *)
        core_opt, lblnegs rest succeeded in
 
     let rec result x = match x with
