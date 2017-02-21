@@ -177,7 +177,7 @@ let rec build_core_type (ty: mlty): core_type =
           Typ.mk (Ptyp_constr (p, c_tys))
       | _ -> Typ.mk (Ptyp_constr (p, c_tys)))
   | MLTY_Tuple tys -> Typ.mk (Ptyp_tuple (map build_core_type tys))
-  | MLTY_Top -> Typ.mk Ptyp_any
+  | MLTY_Top -> Typ.mk (Ptyp_constr (mk_lident "Obj.t", []))
 
 let build_binding_pattern ((sym, _): mlident) : pattern =
   Pat.mk (Ppat_var (mk_sym sym))
@@ -226,8 +226,10 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
       let ep = build_expr e in
       let cases = map build_case branches in
       Exp.match_ ep cases
-   | MLE_Coerce (e, _, ty) -> 
-      Exp.constraint_ (build_expr e) (build_core_type ty)
+   | MLE_Coerce (e, _, _) -> 
+      let r = Exp.ident (mk_lident "Obj.magic") in
+      let label = Bytes.of_string "" in
+      Exp.apply r [(label, build_expr e)]
    | MLE_CTor args -> build_constructor_expr args
    | MLE_Seq args -> build_seq args
    | MLE_Tuple l -> Exp.tuple (map build_expr l)
