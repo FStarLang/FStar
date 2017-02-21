@@ -14,6 +14,7 @@ all: ifc\
 		 WhileReify \
 		 delimitedReleaseReify \
 		 ifc_reify_examples \
+		 IfcExampleReify \
 		 IfcReify
 
 
@@ -33,7 +34,10 @@ WhileReify:
 	$(FSTAR) --include ../dm4free WhileReify.fst
 
 IfcReify:
-	$(FSTAR) --include ../dm4free IfcReify.fst
+	$(FSTAR) --include ../dm4free IfcReify.fst 
+
+IfcExampleReify:
+	$(FSTAR) --include ../dm4free ifcExampleReify.fst 
 
 ifc_reify_examples:
 	$(FSTAR) --include ../dm4free ifc_compose_reify.fst ifc_recursive_heap_reify.fst ifc_recursive_reify.fst ifc_reify.fst ifc_reify_long.fst simple_ifc_reify.fst
