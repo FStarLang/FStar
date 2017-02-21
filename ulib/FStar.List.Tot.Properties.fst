@@ -408,6 +408,48 @@ let rec memP_existsb #a f xs =
   | [] -> ()
   | hd::tl -> memP_existsb f tl
 
+(** Properties of [noRepeats] *)
+let noRepeats_nil
+  (#a: eqtype)
+: Lemma
+  (ensures (noRepeats #a []))
+= ()
+
+let noRepeats_cons
+  (#a: eqtype)
+  (h: a)
+  (tl: list a)
+: Lemma
+  (requires ((~ (mem h tl)) /\ noRepeats tl))
+  (ensures (noRepeats #a (h::tl)))
+= ()
+
+let rec noRepeats_append_elim
+  (#a: eqtype)
+  (l1 l2: list a)
+: Lemma
+  (requires (noRepeats (l1 @ l2)))
+  (ensures (noRepeats l1 /\ noRepeats l2 /\ (forall x . mem x l1 ==> ~ (mem x l2))))
+  (decreases l1)
+= match l1 with
+  | [] -> ()
+  | x :: q1 ->
+    append_mem q1 l2 x;
+    noRepeats_append_elim q1 l2
+
+let rec noRepeats_append_intro
+  (#a: eqtype)
+  (l1 l2: list a)
+: Lemma
+  (requires (noRepeats l1 /\ noRepeats l2 /\ (forall x . mem x l1 ==> ~ (mem x l2))))
+  (ensures (noRepeats (l1 @ l2)))
+  (decreases l1)
+= match l1 with
+  | [] -> ()
+  | x :: q1 ->
+    append_mem q1 l2 x;
+    noRepeats_append_intro q1 l2
+
 (** Properties of [fold_left] *)
 
 let rec fold_left_invar
