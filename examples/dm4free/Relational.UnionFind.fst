@@ -64,9 +64,9 @@ type id (n:nat) = i:nat{i < n}
 
 (*
  * each node maintains its parent id, height, and subtree nodes (including itself)
- * the subtree set is used as the decreasing metric
+ * the subtree is used as the decreasing metric in recursive calls
  *)
-type elt (n:nat) = id n * id n * subtree_t
+type elt (n:nat) = id n * nat * subtree_t
 
 type uf_forest (n:nat) = s:seq (ref (elt n)){length s = n}
 
@@ -79,7 +79,7 @@ let live (#n:nat) (uf:uf_forest n) (h:heap) :Type0 =
 
 (* helpers for getting the parent, height, and the subtree *)
 unfold let parent  (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot (id n)    = Mktuple3?._1 (sel h (index uf i))
-unfold let height  (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot (id n)    = Mktuple3?._2 (sel h (index uf i))
+unfold let height  (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot nat        = Mktuple3?._2 (sel h (index uf i))
 unfold let subtree (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot subtree_t = Mktuple3?._3 (sel h (index uf i))
 
 (*
@@ -246,7 +246,7 @@ let rec lemma_find_find_opt_equivalence (#n:nat) (uf:uf_forest n) (i:id n) (h:he
       end
 #reset-options
 
-reifiable let rec merge (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
+reifiable let merge (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
   : ST unit (requires (fun h0      -> live uf h0 /\ well_formed uf h0))
             (ensures  (fun h0 _ h1 -> live uf h1 /\ well_formed uf h1))
   = let h0 = STATE?.get () in
@@ -263,6 +263,36 @@ reifiable let rec merge (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
     if r_1 = r_2 then ()
     else begin
       write ref_1 (r_2, d_1, s_1);
+      let d_2 = if d_1 >= d_2 then d_1 + 1 else d_2 in
       write ref_2 (r_2, d_2, union s_1 s_2);
       assert (strict_subset s_1 (union s_1 s_2))
+    end
+
+reifiable let merge_opt (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
+  :ST unit (requires (fun h0      -> live uf h0 /\ well_formed uf h0))
+           (ensures  (fun h0 _ h1 -> live uf h1 /\ well_formed uf h1))
+  = let h0 = STATE?.get () in
+
+    let r_1 = find uf i_1 (STATE?.get ()) in
+    let r_2 = find uf i_2 (STATE?.get ()) in
+
+    let ref_1 = index uf r_1 in
+    let ref_2 = index uf r_2 in
+
+    let _, d_1, s_1 = !ref_1 in
+    let _, d_2, s_2 = !ref_2 in
+
+    if r_1 = r_2 then ()
+    else begin
+      if d_1 < d_2 then begin
+        write ref_1 (r_2, d_1, s_1);
+        write ref_2 (r_2, d_2, union s_1 s_2);
+        assert (strict_subset s_1 (union s_1 s_2))
+      end
+      else begin
+        write ref_2 (r_1, d_2, s_2);
+	let d_1 = if d_1 = d_2 then d_1 + 1 else d_1 in
+        write ref_1 (r_1, d_1, union s_1 s_2);
+        assert (strict_subset s_1 (union s_1 s_2))
+      end
     end
