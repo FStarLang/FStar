@@ -168,69 +168,21 @@ private let rec path_upd_concat
     let s' = DM.upd s fd v in
     path_upd_concat m p q' s'
 
-private let rec path_eq
-  (#from: Type)
-  (#to1: Type)
-  (#to2: Type)
-  (p1: path from to1)
-  (p2: path from to2)
-: Ghost bool
-  (requires True)
-  (ensures (fun b -> b ==> (to1 == to2 /\ p1 == p2)))
-  (decreases p2)
-= match p2 with
-  | PathBase ->
-    begin match p1 with
-    | PathBase -> true
-    | _ -> false
-    end
-  | PathField #from2 #key2 #value2 p2' fd2 ->
-    begin match p1 with
-    | PathField #from1 #key1 #value1 p1' fd1 ->
-      if path_eq p1' p2'
-      then
-	let _ : squash (key1 == key2 /\ value1 == value2) = DM.t_inj key1 value1 key2 value2 in
-	fd1 = fd2
-      else false
-    | _ -> false
-    end
-
-private let rec path_eq_refl
-  (#from: Type)
-  (#to: Type)
-  (p: path from to)
-: Lemma
-  (ensures (path_eq p p))
-= match p with
-  | PathBase -> ()
-  | PathField p' _ -> path_eq_refl p'
-
-private let path_eq_field
-  (#from: Type)
-  (#key: eqtype)
-  (#value: ((k: key) -> Tot Type))
-  (p: path from (DM.t key value))
-  (fd: key)
-: Lemma
-  (ensures (~ (path_eq p (PathField p fd))))
-= ()
-
 // TODO: rename as: prefix_of; use infix notation (p1 `prefix_of` p2)
 private let rec path_includes
   (#from: Type)
   (#to1 #to2: Type)
   (p1: path from to1)
   (p2: path from to2)
-: Ghost bool
+: Ghost Type0
   (requires True)
   (ensures (fun _ -> True))
   (decreases p2)
-= if path_eq p1 p2
-  then true
-  else match p2 with
-  | PathBase -> false
-  | PathField p2' fd2 ->
+= (to1 == to2 /\ p1 == p2) \/ (match p2 with
+  | PathBase -> False
+  | PathField p2' _ ->
     path_includes p1 p2'
+  )
 
 private let path_includes_refl
   (#from #to: Type)
@@ -239,7 +191,7 @@ private let path_includes_refl
   (requires True)
   (ensures (path_includes p p))
   [SMTPat (path_includes p p)]
-= path_eq_refl p
+= ()
 
 private let path_includes_field_r
   (#from: Type)
@@ -251,25 +203,30 @@ private let path_includes_field_r
   (requires True)
   (ensures (path_includes p (PathField p fd)))
   [SMTPat (path_includes p (PathField p fd))]
-= if path_eq p (PathField p fd)
-  then ()
-  else path_includes_refl p
+= ()
 
 private let rec path_includes_trans
   (#from #to1 #to2 #to3: Type)
   (p1: path from to1)
   (p2: path from to2)
-  (p3: path from to3 {path_includes p1 p2 /\ path_includes p2 p3})
+  (p3: path from to3  {path_includes p1 p2 /\ path_includes p2 p3})
 : Lemma
   (requires True)
   (ensures (path_includes p1 p3))
   (decreases p3)
-= if path_eq p2 p3
-  then ()
-  else match p3 with
-  | PathBase -> assert False
-  | PathField p3' _ ->
-    path_includes_trans p1 p2 p3'
+= FStar.Classical.or_elim
+    #(to2 == to3 /\ p2 == p3)
+    #(match p3 with
+      | PathBase -> False
+      | PathField p3' _ ->
+	path_includes p2 p3')
+    #(fun _ -> path_includes p1 p3)
+    (fun _ -> ())
+    (fun _ -> match p3 with
+      | PathBase -> assert False
+      | PathField p3' _ ->
+	path_includes_trans p1 p2 p3'
+    )
 
 private let rec path_includes_ind
   (#from: Type)
@@ -304,15 +261,21 @@ private let rec path_includes_ind
   (requires True)
   (ensures (x p1 p2))
   (decreases p2)
-= if path_eq p1 p2
-  then h_refl p1
-  else match p2 with
-  | PathBase -> assert False
-  | PathField p2' fd ->
-    let _ = path_includes_ind x h_field h_refl h_trans p1 p2' in
-    let _ = path_includes_field_r p2' fd in
-    let _ = h_field p2' fd in
-    h_trans p1 p2' p2
+= FStar.Classical.or_elim
+    #(to1 == to2 /\ p1 == p2)
+    #(match p2 with
+      | PathBase -> False
+      | PathField p' fd -> path_includes p1 p')
+    #(fun _ -> x p1 p2)
+    (fun _ -> h_refl p1)
+    (fun _ -> match p2 with
+     | PathBase -> assert False
+     | PathField p2' fd ->
+       let _ = path_includes_ind x h_field h_refl h_trans p1 p2' in
+       let _ = path_includes_field_r p2' fd in
+       let _ = h_field p2' fd in
+       h_trans p1 p2' p2
+    )
 
 private let rec path_length
   (#from #to: Type)
