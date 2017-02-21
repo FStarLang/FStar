@@ -59,11 +59,26 @@ assume val id_honesty_table: MM.t id_honesty_table_region id_honesty_table_key i
 //let id_table = MM.alloc #id_table_region #id #range #inv in
 
 let fresh (i:id) h =
-  ~(MM.defined id_freshness_table i h)
+  MM.fresh id_freshness_table i h
 
 type unfresh (i:id) =
   MR.witnessed (MM.defined id_freshness_table i)
-  
+
+val fresh_unfresh_contradiction: i:id -> ST unit
+  (requires (fun h0 -> 
+    unfresh i
+  ))
+  (ensures (fun h0 _ h1 ->
+    ~(fresh i h1)
+    /\ h0 == h1
+  ))
+let fresh_unfresh_contradiction i =
+  MR.m_recall id_freshness_table;
+  MR.testify (MM.defined id_freshness_table i);
+  match MM.lookup id_freshness_table i with
+  | Some () -> ()
+
+
 val freshST: (i:id) -> ST unit
   (requires (fun h0 -> ~(unfresh i)))
   (ensures (fun h0 b h1 ->
@@ -80,6 +95,7 @@ val make_unfresh: (i:id) -> ST (unit)
   (requires (fun h0 -> True))
   (ensures (fun h0 _ h1 ->
     modifies (Set.singleton id_freshness_table_region) h0 h1
+    /\ (forall (i:id). ~(fresh i h0) ==> ~(fresh i h1))
     /\ unfresh i
   ))
 let make_unfresh i =

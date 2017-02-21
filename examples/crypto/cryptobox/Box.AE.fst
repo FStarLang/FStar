@@ -84,6 +84,7 @@ val keygen: i:id{AE_id? i} -> ST (k:key{k.i=i})
     /\ m_contains k.log h1
     /\ m_sel h1 k.log == MM.empty_map log_key (log_range k.i)
     /\ unfresh i
+    /\ ~(fresh i h1)
   ))
 let keygen i =
   make_unfresh i;
@@ -91,9 +92,10 @@ let keygen i =
   let rnd_k = random keysize in
   let region = new_region ae_key_region in
   let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
+  fresh_unfresh_contradiction i;
   Key #i #region rnd_k log
 
-
+#set-options "--z3rlimit 20"
 (**
    The coerce function transforms a raw aes_key into an abstract key. The function is stateful,
    as we need to allocate space in memory for the key. The refinement type on the key makes sure that
@@ -102,6 +104,7 @@ let keygen i =
 val coerce_key: i:id{AE_id? i /\ (dishonest i)} -> raw_k:aes_key -> ST (k:key{k.i=i /\ k.raw = raw_k})
   (requires (fun h0 -> 
     fixed i
+    /\ (forall (k:AE.key). let i = AE.get_index k in ~( fresh i h0))
   ))
   (ensures  (fun h0 k h1 ->
     let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
@@ -112,12 +115,18 @@ val coerce_key: i:id{AE_id? i /\ (dishonest i)} -> raw_k:aes_key -> ST (k:key{k.
     /\ m_contains k.log h1
     /\ m_sel h1 k.log == MM.empty_map log_key (log_range k.i)
     /\ unfresh i
+    /\ ~(fresh i h1)
+    /\ (forall (k:AE.key). let i = AE.get_index k in ~( fresh i h1))
+    /\ (forall (i:id). ~(fresh i h0) ==> ~(fresh i h1))
   ))
 let coerce_key i raw = 
+  make_unfresh i;
   let region = new_region ae_key_region in
   let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
-  make_unfresh i;
+  fresh_unfresh_contradiction i;
   Key #i #region raw log
+#reset-options
+
 
 (**
    The leak_key function transforms an abstract key into a raw aes_key.

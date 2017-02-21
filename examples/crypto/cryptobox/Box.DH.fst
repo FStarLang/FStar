@@ -138,13 +138,11 @@ let prf_odhT dh_sk dh_pk =
 
 
 #set-options "--z3rlimit 25"
-// What prevents the adversary from generating a key with the (honest) DH shares
-// before calling prf_odh? It would give him a random AE key, which would not
-// be in the log, thus destroying our scheme.
 val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
   ( requires (fun h0 -> 
     let i = generate_ae_id pk.pk_id sk.sk_id in
-    (honest i ==> (~(MR.witnessed(MM.defined dh_key_log i) ==> ~(fresh i h0))))
+    ((honest i /\ MM.fresh dh_key_log i h0) ==> (fresh i h0))
+    /\ (forall (k:AE.key). let i = AE.get_index k in  ~(fresh i h0))
   ))
   ( ensures (fun h0 k h1 ->
     let i = generate_ae_id pk.pk_id sk.sk_id in
@@ -158,7 +156,6 @@ val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
 	       let current_log = MR.m_sel h0 dh_key_log in
 	       modifies regions_modified_honest h0 h1
     	       /\ MR.witnessed (MM.contains dh_key_log i k)
-	       //Make sure that only one key is added to the log IF there is not one in the log already.
                /\ (~(MM.defined dh_key_log i h0) ==> MR.m_sel h1 dh_key_log == MM.upd current_log i k)
 	       /\ (MM.defined dh_key_log i h0 ==> MR.m_sel h0 dh_key_log == MR.m_sel h1 dh_key_log)
     	      )
@@ -172,31 +169,34 @@ val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
       )
     /\ MR.m_contains k_log h1
     /\ modifies regions_modified_honest h0 h1
-    ///\ fresh i h0 ==> (MR.m_sel h1 (PlainDH.get_logGT k) == PlainDH.empty_log i)
-    ///\ (forall (k':AE.key). let k_log = get_logGT k' in MR.m_sel h0 k_log == MR.m_sel h1 k_log)
+    /\ (fresh i h0 ==> (MR.m_sel h1 (PlainDH.get_logGT k) == PlainDH.empty_log i))
+    /\ ~(fresh i h1)
+    /\ (forall (k:AE.key). let i = AE.get_index k in ~( fresh i h1))
+    /\ (forall (i:id). ~(fresh i h0) ==> ~(fresh i h1))
   ))
 let prf_odh dh_sk dh_pk =
   let i = generate_ae_id dh_pk.pk_id dh_sk.sk_id in
   let honest_i = honestST i in
+  let h0 = ST.get() in
   MR.m_recall dh_key_log;
   if honest_i then (
     MR.m_recall dh_key_log;
     match MM.lookup dh_key_log i with
     | Some  k' ->
-	let h0 = ST.get() in
-	// This assert should not go through!
-	assert(fresh (PlainDH.ae_key_get_index k') h0);
 	recall_log k'; 
+	fresh_unfresh_contradiction i;
         k'
     | None ->
         let k' = PlainDH.keygen i in
         MM.extend dh_key_log i k';
+	fresh_unfresh_contradiction i;
         k'
-  ) else
+  ) else (
     let raw_k = dh_exponentiate dh_pk.rawpk dh_sk.rawsk in
     let hashed_raw_k = hash raw_k in
+    let h0' = ST.get() in
     let k=PlainDH.coerce_key i hashed_raw_k in
-    recall_log k;
-    k
+    fresh_unfresh_contradiction i;
+    k)
 
 #reset-options

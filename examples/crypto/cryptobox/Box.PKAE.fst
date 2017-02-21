@@ -80,20 +80,26 @@ let keygen #i =
 
 type c = AE.cipher
 
+// Need to remodel the invariant. We cannot guarantee points two and three in the face of multiple (dishonest) keys with the same id.
 let log_invariant (h:mem) = 
-  forall (k:AE.key) (n:nonce). let k_log = get_logGT k in (MM.fresh k_log n h <==> MM.fresh pkae_afternm_table (n,AE.get_index k) h)
+  (forall (k:AE.key). let i = AE.get_index k in ~( fresh i h))
+  /\
+  (forall (i:id{AE_id? i}) (n:nonce). fresh i h ==> MM.fresh pkae_afternm_table (n,i) h)
+  /\
+  (forall (k:AE.key) (n:nonce). let k_log = get_logGT k in (MM.fresh k_log n h <==> MM.fresh pkae_afternm_table (n,AE.get_index k) h))
+  //forall (k:AE.key) (n:nonce). let k_log = get_logGT k in ( (MM.fresh k_log n h <==> MM.fresh pkae_afternm_table (n,AE.get_index k) h) /\ ( (MR.m_sel h k_log == MM.empty_map AE.log_key (AE.log_range (AE.get_index k))) <==> MM.fresh pkae_afternm_table (n,AE.get_index k) h) )
 
 
 
-val invariant_lemma: (h0:mem) -> k:AE.key ->  h1:mem -> Lemma
-  (requires (
-    log_invariant h0
-    /\ (forall (k':AE.key).{:pattern (MR.m_sel h1 (get_logGT k'))} let k_log = get_logGT k' in (~(k == k') ==> MR.m_sel h0 k_log == MR.m_sel h1 k_log) /\ (( k == k') ==> (MR.m_sel h1 k_log == MM.empty_map AE.log_key (AE.log_range (AE.get_index k)))))
-    /\ MR.m_sel h0 pkae_afternm_table == MR.m_sel h1 pkae_afternm_table
-    /\ (forall (n:nonce) . (MM.fresh pkae_afternm_table (n,AE.get_index k) h0))
-  ))
-  (ensures (log_invariant h1))
-let invariant_lemma h0 k h1 = ()
+//val invariant_lemma: (h0:mem) -> k:AE.key ->  h1:mem -> Lemma
+//  (requires (
+//    log_invariant h0
+//    /\ (forall (k':AE.key).{:pattern (MR.m_sel h1 (get_logGT k'))} let k_log = get_logGT k' in (~(k == k') ==> MR.m_sel h0 k_log == MR.m_sel h1 k_log) /\ (( k == k') ==> (MR.m_sel h1 k_log == MM.empty_map AE.log_key (AE.log_range (AE.get_index k)))))
+//    /\ MR.m_sel h0 pkae_afternm_table == MR.m_sel h1 pkae_afternm_table
+//    /\ (forall (n:nonce) . (MM.fresh pkae_afternm_table (n,AE.get_index k) h0))
+//  ))
+//  (ensures (log_invariant h1))
+//let invariant_lemma h0 k h1 = ()
 
 
 // Make sure that if the key is fresh, then there is no entry in the pkae_afternm_table.
@@ -107,7 +113,7 @@ val encrypt_beforenm: #(pk_id:id{DH_id? pk_id /\ fixed pk_id}) ->
   (requires (fun h0 -> 
     let i = generate_ae_id pk_id sk_id in
     fixed i
-    /\ (honest i ==> (~(MR.witnessed(MM.defined dh_key_log i) ==> ~(fresh i h0))))
+    /\ ((honest i /\ MM.fresh dh_key_log i h0) ==> (fresh i h0))
     /\ log_invariant h0
   ))
   (ensures (fun h0 k h1 -> 
@@ -143,8 +149,14 @@ let encrypt_beforenm #pk_id #sk_id pk sk =
   assert(log_invariant h0);
   let k = prf_odh sk.dh_sk pk.dh_pk in
   let h1 = ST.get() in
-  assume(forall (k':AE.key).{:pattern (MR.m_sel h1 (get_logGT k'))} let k_log = get_logGT k' in (~(k == k') ==> MR.m_sel h0 k_log == MR.m_sel h1 k_log) /\ (( k == k') ==> (MR.m_sel h1 k_log == MM.empty_map AE.log_key (AE.log_range (AE.get_index k)))));
-  assert(log_invariant h1);
+  assert(forall (i:id). ~(fresh i h0) ==> ~(fresh i h1));
+  assert(forall (i:id{AE_id? i}) (n:nonce). fresh i h1 ==> MM.fresh pkae_afternm_table (n,i) h1);
+  assert(forall (k:AE.key) . let i = AE.get_index k in let k_log = get_logGT k in fresh i h0 ==> (MR.m_sel h1 k_log == AE.empty_log i));
+  assert(forall (k:AE.key) . let i = AE.get_index k in ~( fresh i h1));
+  assert(forall (k:AE.key) (n:nonce) . let k_log = get_logGT k in MM.fresh k_log n h0 ==> MM.fresh k_log n h1);
+  //assert(forall (k:AE.key) (n:nonce). let k_log = get_logGT k in (MM.fresh k_log n h1 <==> MM.fresh pkae_afternm_table (n,AE.get_index k) h1));
+  //assume(forall (k':AE.key).{:pattern (MR.m_sel h1 (get_logGT k'))} let k_log = get_logGT k' in (~(k == k') ==> MR.m_sel h0 k_log == MR.m_sel h1 k_log) /\ (( k == k') ==> (MR.m_sel h1 k_log == MM.empty_map AE.log_key (AE.log_range (AE.get_index k)))));
+  //assert(log_invariant h1);
   admit();
   //assert(equal_on (Set.union (Set.singleton ae_key_region) (Set.singleton pkae_afternm_table_region)) h0.h h1.h);
   assert(forall n.let k_log = get_logGT k in (MM.fresh k_log n h1 <==> MM.fresh pkae_afternm_table (n,AE.get_index k) h1));
