@@ -544,28 +544,53 @@ let rec gparse_string_contents_append_cons
       ()
   end
 
-let gparse_string (s: string): GTot (option (string * string)) =
-  let s1 = gparse_whitespace s in
+let gparse_exact_char
+  (c: char)
+  (s: string)
+: GTot (option string)
+= let s1 = gparse_whitespace s in
   if Seq.length s1 = 0
   then None
-  else if Seq.head s1 = double_quote
-  then gparse_string_contents Seq.createEmpty (Seq.tail s1)
-  else None
+  else if Seq.head s1 <> c
+  then None
+  else Some (Seq.tail s1)
+
+let gparse_exact_char_append_cons
+  (s_white: string { forall (i: nat { i < Seq.length s_white } ) . is_whitespace (Seq.index s_white i) } )
+  (c: char {~ (is_whitespace c)})
+  (s_tail: string)
+: Lemma
+  (ensures (gparse_exact_char c (Seq.append s_white (Seq.cons c s_tail)) == Some s_tail))
+= gparse_whitespace_append s_white (Seq.cons c s_tail);
+  gparse_whitespace_not_whitespace (Seq.cons c s_tail);
+  Seq.lemma_tl c s_tail
+
+let length_gparse_exact_char 
+  (c: char)
+  (s: string)
+  (s_tail: string)
+: Lemma
+  (requires (gparse_exact_char c s = Some s_tail))
+  (ensures (Seq.length s_tail < Seq.length s))
+= let s1 = gparse_whitespace s in
+  let _ = length_gparse_whitespace s in
+  ()
+
+let gparse_string (s: string): GTot (option (string * string)) =
+  match gparse_exact_char double_quote s with
+  | Some s_tail -> gparse_string_contents Seq.createEmpty s_tail
+  | _ -> None
 
 let not_mem_double_quote_gparse_string
   (s contents s': string)
 : Lemma
   (requires (gparse_string s == Some (contents, s')))
   (ensures (~ (Seq.mem double_quote contents)))
-= let s1 = gparse_whitespace s in
-  if Seq.length s1 = 0
-  then ()
-  else if Seq.head s1 = double_quote
-  then begin
-    not_mem_double_quote_gparse_string_contents Seq.createEmpty (Seq.tail s1) contents s';
-    Seq.append_empty_l contents
-  end
-  else ()
+= match gparse_exact_char double_quote s with
+  | Some s_tail -> begin
+      not_mem_double_quote_gparse_string_contents Seq.createEmpty s_tail contents s';
+      Seq.append_empty_l contents
+    end
 
 let gparse_string_append_cons_append_cons
   (s_white: string { forall (i: nat { i < Seq.length s_white } ) . is_whitespace (Seq.index s_white i) } )
@@ -575,19 +600,9 @@ let gparse_string_append_cons_append_cons
   (gparse_string (Seq.append s_white (Seq.cons double_quote (Seq.append s_contents (Seq.cons double_quote s_tail))))
    == Some (s_contents, s_tail))
 = let s2 = Seq.append s_contents (Seq.cons double_quote s_tail) in
-  let s1 = Seq.cons double_quote s2 in
-  let s0 = Seq.append s_white s1 in
-  let _ : squash (gparse_whitespace s0 == gparse_whitespace s1) =
-    gparse_whitespace_append s_white s1
-  in
-  let _ : squash (gparse_whitespace s1 == s1) =
-    gparse_whitespace_not_whitespace s1
-  in
-  let _ : squash (gparse_string s0 == gparse_string_contents Seq.createEmpty s2) =
-    Seq.lemma_tl double_quote s2
-  in
+  let _ = gparse_exact_char_append_cons s_white double_quote s2 in
   let _ : squash (gparse_string_contents Seq.createEmpty s2 == Some (Seq.append Seq.createEmpty s_contents, s_tail)) =
-    gparse_string_contents_append_cons Seq.createEmpty s_contents s_tail
+      gparse_string_contents_append_cons Seq.createEmpty s_contents s_tail
   in
   Seq.append_empty_l s_contents
 
@@ -609,16 +624,11 @@ let length_gparse_string
 : Lemma
   (requires (gparse_string s == Some (contents, s')))
   (ensures (Seq.length s' < Seq.length s))
-= let s1 = gparse_whitespace s in
-  let _ = length_gparse_whitespace s in
-  if Seq.length s1 = 0
-  then ()
-  else if Seq.head s1 = double_quote
-  then begin
-    length_gparse_string_contents Seq.createEmpty (Seq.tail s1) contents s';
+= match gparse_exact_char double_quote s with
+  | Some s_tail ->
+    let _ = length_gparse_exact_char double_quote s s_tail in
+    let _ = length_gparse_string_contents Seq.createEmpty s_tail contents s' in
     Seq.append_empty_l contents
-  end
-  else ()
 
 let rec list_memP_precedes
   (#a: Type)
