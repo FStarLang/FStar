@@ -2,10 +2,8 @@
 
 # Script to run fsdoc on certain dirs in the FStar repo.
 # Currently, this script gets called by the VSTF "FStar, Docs, Linux, CI"
-# Build Defn. The $PAT env var is stored in that Build Defn.  
+# Build Defn. 
 
-# Please never enable debugging except locally -- this may result in the GitHub
-# personal access token being printed in our (now-public) logs.
 # set -x # debug on
 set -e
 
@@ -127,9 +125,8 @@ pandoc index.md -s --css=style.ccs -f markdown -t html -o index.html
 popd
 
 # push fstarlang.github.io with latest html.
-# $PAT is stored in the Build Defn.
 if [ ! -d fstarlang.github.io ]; then
-    git clone git@github.com/FStarLang/fstarlang.github.io
+    git clone git@github.com:FStarLang/fstarlang.github.io
 fi
 pushd fstarlang.github.io
 git config user.name "fsdocbuild"
