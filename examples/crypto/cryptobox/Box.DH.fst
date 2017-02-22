@@ -65,10 +65,10 @@ assume val dh_key_log_region: (r:HH.rid{ extends r root
 assume val dh_key_log: MM.t dh_key_log_region (i:id{AE_id? i}) dh_key_log_range dh_key_log_inv
 
 noeq abstract type dh_pkey = 
-  | DH_pkey: #pk_id:id{DH_id? pk_id /\ unfresh pk_id /\ fixed pk_id} -> rawpk:dh_share -> dh_pkey
+  | DH_pkey: #pk_id:id{DH_id? pk_id /\ unfresh pk_id /\ registered pk_id} -> rawpk:dh_share -> dh_pkey
 
 noeq abstract type dh_skey =
-  | DH_skey: #sk_id:id{DH_id? sk_id /\ unfresh sk_id /\ fixed sk_id} -> rawsk:dh_exponent -> pk:dh_pkey{pk.pk_id=sk_id} -> dh_skey 
+  | DH_skey: #sk_id:id{DH_id? sk_id /\ unfresh sk_id /\ registered sk_id} -> rawsk:dh_exponent -> pk:dh_pkey{pk.pk_id=sk_id} -> dh_skey 
 
 val sk_get_index: sk:dh_skey -> Tot (i:id{i = sk.sk_id})
 let sk_get_index k = k.sk_id
@@ -85,7 +85,7 @@ assume val dh_exponentiate: dh_element -> dh_exponent -> Tot dh_element
 val keygen: #i:id{DH_id? i} -> ST (dh_pair:(k:dh_pkey{k.pk_id=i}) * (k:dh_skey{k.sk_id=i}))
   (requires (fun h -> 
     fresh i h
-    /\ fixed i
+    /\ registered i
   ))
   (ensures (fun h0 k h1 -> 
     unfresh i
@@ -101,7 +101,7 @@ let keygen #i =
 val coerce_pkey: #i:id{DH_id? i /\ dishonest i} -> dh_share -> ST (pk:dh_pkey{pk.pk_id=i})
   (requires (fun h0 -> 
     fresh i h0
-    /\ fixed i
+    /\ registered i
   ))
   (ensures (fun h0 pk h1 -> 
     unfresh i
@@ -113,7 +113,7 @@ let coerce_pkey #i dh_sh =
 val coerce_keypair: #i:id{DH_id? i /\ dishonest i} -> dh_exponent -> ST (dh_pair:(k:dh_pkey{k.pk_id=i}) * (k:dh_skey{k.sk_id=i}))
   (requires (fun h0 -> 
     fresh i h0
-    /\ fixed i
+    /\ registered i
   ))
   (ensures (fun h0 pk h1 -> 
     unfresh i
@@ -136,13 +136,11 @@ let prf_odhT dh_sk dh_pk =
   let k = hash raw_k in
   k
 
-
 #set-options "--z3rlimit 25"
 val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
   ( requires (fun h0 -> 
     let i = generate_ae_id pk.pk_id sk.sk_id in
-    ((honest i /\ MM.fresh dh_key_log i h0) ==> (fresh i h0))
-    /\ (forall (k:AE.key). let i = AE.get_index k in  ~(fresh i h0))
+    (AE_id? i /\ honest i) ==> (MM.defined dh_key_log i h0 \/ fresh i h0)
   ))
   ( ensures (fun h0 k h1 ->
     let i = generate_ae_id pk.pk_id sk.sk_id in
@@ -150,36 +148,29 @@ val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
     let regions_modified_honest = Set.union regions_modified_dishonest (Set.singleton dh_key_log_region) in
     let k_log = get_logGT k in
     (PlainDH.ae_key_get_index k = i)
-    /\ (
-        ( (honest i)
-    	    ==> (
-	       let current_log = MR.m_sel h0 dh_key_log in
-	       modifies regions_modified_honest h0 h1
-    	       /\ MR.witnessed (MM.contains dh_key_log i k)
-               /\ (~(MM.defined dh_key_log i h0) ==> MR.m_sel h1 dh_key_log == MM.upd current_log i k)
-	       /\ (MM.defined dh_key_log i h0 ==> MR.m_sel h0 dh_key_log == MR.m_sel h1 dh_key_log)
-    	      )
-        )
-        \/ 
-    	( (dishonest i \/ ~prf_odh)
-    	    ==> (modifies regions_modified_dishonest h0 h1
-    	       /\ leak_key k = prf_odhT sk pk
-    	      )
-        )
-      )
     /\ MR.m_contains k_log h1
-    /\ modifies regions_modified_honest h0 h1
     /\ (fresh i h0 ==> (MR.m_sel h1 (PlainDH.get_logGT k) == PlainDH.empty_log i))
-    /\ ~(fresh i h1)
-    /\ (forall (k:AE.key). let i = AE.get_index k in ~( fresh i h1))
-    /\ (forall (i:id). ~(fresh i h0) ==> ~(fresh i h1))
+    /\ (honest i ==> (let current_log = MR.m_sel h0 dh_key_log in
+		   MR.witnessed (MM.contains dh_key_log i k)
+		   /\ (MM.fresh dh_key_log i h0 ==> (MR.m_sel h1 dh_key_log == MM.upd current_log i k
+						  /\ MR.m_sel h1 k_log == PlainDH.empty_log i))
+		   /\ (MM.defined dh_key_log i h0 ==> (MR.m_sel h0 dh_key_log == MR.m_sel h1 dh_key_log
+						    /\ MR.m_sel h0 k_log == MR.m_sel h1 k_log))
+		   /\ modifies regions_modified_honest h0 h1
+		  )
+      )
+    /\ (dishonest i
+    	==> (modifies regions_modified_dishonest h0 h1
+    	   /\ leak_key k = prf_odhT sk pk
+    	  )
+      )
   ))
 let prf_odh dh_sk dh_pk =
   let i = generate_ae_id dh_pk.pk_id dh_sk.sk_id in
-  let honest_i = honestST i in
-  let h0 = ST.get() in
+  let honest_i = is_honest i in
   MR.m_recall dh_key_log;
   if honest_i then (
+    lemma_honest_not_dishonest i;
     MR.m_recall dh_key_log;
     match MM.lookup dh_key_log i with
     | Some  k' ->
@@ -192,9 +183,9 @@ let prf_odh dh_sk dh_pk =
 	fresh_unfresh_contradiction i;
         k'
   ) else (
+    lemma_dishonest_not_honest i;
     let raw_k = dh_exponentiate dh_pk.rawpk dh_sk.rawsk in
     let hashed_raw_k = hash raw_k in
-    let h0' = ST.get() in
     let k=PlainDH.coerce_key i hashed_raw_k in
     fresh_unfresh_contradiction i;
     k)

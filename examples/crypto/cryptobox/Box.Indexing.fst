@@ -110,13 +110,13 @@ private let measure_id (i:id) =
   | DH_id i' -> 0
   | _ -> 1
 
-val fixed: (i:id) -> Tot Type0 (decreases (measure_id i))
-let rec fixed (i:id) =
+val registered: (i:id) -> Tot Type0 (decreases (measure_id i))
+let rec registered (i:id) =
   match i with
   | DH_id i' -> MR.witnessed (MM.defined id_honesty_table i')
-  | AE_id (i1,i2) -> fixed (DH_id i1) /\ fixed (DH_id i2)
+  | AE_id (i1,i2) -> registered (DH_id i1) /\ registered (DH_id i2)
   
-val honest: (i:id) -> Tot (t:Type0{t ==> fixed i}) (decreases (measure_id i))
+val honest: (i:id) -> Tot (t:Type0{t ==> registered i}) (decreases (measure_id i))
 let rec honest (i:id) =
   if prf_odh then
     match i with
@@ -125,65 +125,129 @@ let rec honest (i:id) =
   else
     False
 
-val dishonest: (i:id) -> Tot (t:Type0{(t /\ DH_id? i) ==> fixed i}) (decreases (measure_id i))
+val dishonest: (i:id) -> Tot (t:Type0{(t /\ DH_id? i) ==> registered i}) (decreases (measure_id i))
 let rec dishonest (i:id) =
   match i with
   | DH_id i' -> MR.witnessed (MM.contains id_honesty_table i' false) /\ MR.witnessed (MM.defined id_honesty_table i')
   | AE_id (i1,i2) -> dishonest (DH_id i1) \/ dishonest (DH_id i2)
 
+val lemma_honest_or_dishonest: (i:id) -> ST unit
+  (requires (fun h0 ->
+    registered i
+  ))
+  (ensures (fun h0 _ h1 ->
+    (honest i \/ dishonest i)
+    /\ h0==h1
+  ))
+let rec lemma_honest_or_dishonest i =
+  MR.m_recall id_honesty_table;
+  match i with
+  | AE_id (i1,i2) -> lemma_honest_or_dishonest (DH_id i1) ; lemma_honest_or_dishonest (DH_id i2)
+  | DH_id i' ->
+    MR.testify (MM.defined id_honesty_table i');
+    match MM.lookup id_honesty_table i' with
+    | Some b -> 
+      if b then
+	MR.testify (MM.contains id_honesty_table i' true)
+      else
+	MR.testify (MM.contains id_honesty_table i' false)
 
-// Implement these two for the adversary
-//val make_dishonest: (i:id) -> ST (unit) (decreases (measure_id i))
-//  (requires (fun h0 -> 
-//    unfresh i
-//  ))
-//  (ensures (fun h0 _ h1 -> dishonest i))
-//let rec make_dishonest i =
-//  MR.m_recall id_honesty_table;
-//  match i with
-//  | DH_id i' -> (
-//    match MM.lookup id_honesty_table i' with
-//    | Some v -> ()
-//    | None -> MM.extend id_honesty_table i' false)
-//  | AE_id (i1,i2) -> 
-//    make_dishonest (DH_id i1);
-//    make_dishonest (DH_id i2)
-    
 
-//val make_honest: (i:id) -> ST (unit)
-//  (requires (fun h0 ->
-//    unfresh i
-//    /\ MM.fresh id_honesty_table i h0
-//  ))
-//  (ensures (fun h0 _ h1 -> honest i))
-//let make_honest i =
-//  MR.m_recall id_honesty_table;
-//  MM.extend id_honesty_table i true;
-//  ()
+type absurd_honest (i:id{registered i /\ dishonest i}) = honest i
+type absurd_dishonest (i:id{registered i /\ honest i}) = dishonest i
+assume val lemma_honest_and_dishonest_tot: i:id{registered i /\ dishonest i} -> absurd_honest i -> Lemma (False)
+assume val lemma_dishonest_and_honest_tot: i:id{registered i /\ honest i} -> absurd_dishonest i -> Lemma (False)
 
-val honestST: i:id{fixed i} -> ST(b:bool{(b ==> honest i) /\ (not b ==> dishonest i)}) (decreases (measure_id i))
+
+val lemma_dishonest_not_honest: (i:id) -> ST unit
+  (requires (fun h0 -> 
+    registered i 
+    /\ dishonest i
+  ))
+  (ensures (fun h0 _ h1 -> 
+    ~(honest i)
+    /\ h0==h1
+  ))
+let lemma_dishonest_not_honest i =
+  let (j:(i:id{registered i /\ dishonest i})) = i in
+  FStar.Classical.impl_intro (lemma_honest_and_dishonest_tot j);
+  assert(honest i ==> False)
+
+val lemma_honest_not_dishonest: (i:id) -> ST unit
+  (requires (fun h0 -> 
+    registered i 
+    /\ honest i
+  ))
+  (ensures (fun h0 _ h1 -> 
+    ~(dishonest i)
+    /\ h0==h1
+  ))
+let lemma_honest_not_dishonest i =
+  let (j:(i:id{registered i /\ honest i})) = i in
+  FStar.Classical.impl_intro (lemma_dishonest_and_honest_tot j);
+  assert(dishonest i ==> False)
+
+val is_honest: i:id{registered i} -> ST(b:bool{(b <==> (honest i)) /\ (not b <==> dishonest i)}) (decreases (measure_id i))
   (requires (fun h0 -> True))
   (ensures (fun h0 b h1 ->
     modifies_none h0 h1 
     /\ h0==h1
     /\ (honest i \/ dishonest i)
+    ///\ (b2t b /\ honest i ==> ~(dishonest i))
+    ///\ (b2t (not b) /\ dishonest i ==> ~(honest i))
   ))
-let rec honestST i =
+let rec is_honest i =
   MR.m_recall id_honesty_table;
   match i with
   | DH_id i' -> (
     MR.testify (MM.defined id_honesty_table i');
     match MM.lookup id_honesty_table i' with
-    |Some v -> 
-      v)
+    |Some b -> 
+      if b then (
+        lemma_honest_not_dishonest i;
+        b
+      ) else (
+        lemma_dishonest_not_honest i;
+        b
+      )
+      )
   | AE_id (i1,i2) -> 
-    let b1 = honestST (DH_id i1) in
-    let b2 = honestST (DH_id i2) in
-    b1 && b2
-  
+    let b1 = is_honest (DH_id i1) in
+    let b2 = is_honest (DH_id i2) in
+    let b  = b1 && b2 in
+    if b then (
+      lemma_honest_not_dishonest i;
+      b
+    ) else (
+      lemma_dishonest_not_honest i;
+      b
+    )
+
+
+//val lemma_honest_or_dishonest: (i:dh_id) -> ST unit
+//  (requires (fun h0 -> registered (DH_id i)))
+//  (ensures (fun h0 _ h1 ->
+//    dishonest (DH_id i) \/ honest (DH_id i)
+//  ))
+//let lemma_honest_or_dishonest i = 
+//  let h = ST.get() in
+//  MR.m_recall id_honesty_table;
+//  MR.testify (MM.defined id_honesty_table i);
+//  assert(Some? (MM.sel (MR.m_sel h id_honesty_table) i));
+//  let b = Some?.v (MM.sel (MR.m_read id_honesty_table) i) in
+//  match b with
+//  | true ->
+//      assert(MM.contains id_honesty_table i true h);
+//      MM.contains_stable id_honesty_table i true;
+//      MR.witness id_honesty_table (MM.contains id_honesty_table i true)
+//  | false ->
+//      assert(MM.contains id_honesty_table i false h);
+//      MM.contains_stable id_honesty_table i false;
+//      MR.witness id_honesty_table (MM.contains id_honesty_table i false)
+
 
 val honest_dishonest_lemma: dh_i:dh_id -> ST(unit)
-  (requires (fun h -> fixed (DH_id dh_i)))
+  (requires (fun h -> registered (DH_id dh_i)))
   (ensures (fun h0 _ h1 ->
     let i = DH_id dh_i in
     modifies_none h0 h1 /\
@@ -206,70 +270,3 @@ val honest_dishonest_contradiction_lemma: i:dh_id -> ST(unit)
 let honest_dishonest_contradiction_lemma i = 
   MR.testify(MM.contains id_honesty_table i true);
   MR.testify(MM.contains id_honesty_table i false)
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-//  Data type and functions of ae_id, which is composed of two regular ids.
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-//let ae_fresh i h =
-//  ~(MM.defined id_freshness_table i h)
-
-
-//type ae_unfresh (i:ae_id) =
-//  MR.witnessed (MM.defined id_freshness_table i)
-
-//val ae_make_unfresh: (i:ae_id) -> ST (unit)
-//  (requires (fun h0 -> True))
-//  (ensures (fun h0 _ h1 ->
-//    modifies (Set.singleton id_freshness_table_region) h0 h1
-//    /\ ae_unfresh i
-//  ))
-//let ae_make_unfresh i =
-//  MR.m_recall id_freshness_table;
-//  match MM.lookup id_freshness_table i with
-//  | Some v -> ()
-//  | None -> 
-//    MM.extend id_freshness_table i ()
-  
-//type ae_honest k_i =
-//  honest (fst k_i) /\ honest (snd k_i)
-//
-//type ae_dishonest (k_i:ae_id) =
-//  dishonest (fst k_i) \/ dishonest (snd k_i)
-//
-//type ae_fixed (k_i:ae_id) = 
-//  fixed (fst k_i) /\ fixed(snd k_i)
-//  
-//val ae_make_honest: i:ae_id -> ST unit
-//  (requires (fun h0 -> honest i))
-//  (ensures (fun h0 _ h1 ->
-//    ae_honest i
-//  ))
-//
-//val ae_honestST: k_i:ae_id{ae_fixed k_i} -> ST(b:bool{(b ==> (ae_honest k_i)) /\ (not b ==> (ae_dishonest k_i))})
-//  (requires (fun h0 -> True))
-//  (ensures (fun h0 b h1 ->
-//    modifies_none h0 h1
-//    /\ MR.m_contains id_honesty_table h1
-//    /\ (ae_honest k_i \/ ae_dishonest k_i)
-//    /\ ae_fixed k_i
-//  ))
-//let ae_honestST k_i =
-//  let h1 = honestST (fst k_i) in 
-//  let h2 = honestST (snd k_i) in
-//  (h1 && h2)
-
-
-
-//val ae_id_property_lemma: (i1:id) -> (i2:id) -> Lemma
-//  (requires True)
-//  (ensures (
-//    let i3 = generate_ae_id i1 i2 in
-//    (fixed i1 /\ fixed i2 ==> ae_fixed i3)
-//    /\ (honest i1 /\ honest i2 ==> ae_honest i3)
-//    /\ (dishonest i1 \/ dishonest i2 ==> ae_dishonest i3)
-//  ))
-//  [SMTPat (generate_ae_id i1 i2)]
-//let ae_id_property_lemma i1 i2 = ()
-//

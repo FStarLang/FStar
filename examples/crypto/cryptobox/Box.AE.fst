@@ -55,17 +55,15 @@ type log_inv (i:id{AE_id? i}) (f:MM.map' log_key (log_range i)) = True
 type log_t (i:id{AE_id? i}) (r:rid)  = MM.t r log_key (log_range i) (log_inv i)
 
 
-
-
 (**
    The key type is abstract and can only be accessed via the leak and coerce_key functions.
 *)
-
 noeq abstract type key =
-  | Key: #i:id{AE_id? i /\ unfresh i /\ fixed i} -> #(region:rid{extends region ae_key_region /\ is_below region ae_key_region /\ is_eternal_region region}) -> raw:aes_key -> log:log_t i region -> key
+  | Key: #i:id{AE_id? i /\ unfresh i /\ registered i} -> #(region:rid{extends region ae_key_region /\ is_below region ae_key_region /\ is_eternal_region region}) -> raw:aes_key -> log:log_t i region -> key
 
 val get_index: k:key -> Tot (i:id{i=k.i /\ unfresh i})
 let get_index k = k.i
+
 (**
    This function generates a key in a fresh region of memory below the parent region.
    The postcondition ensures that the log is empty after creation.
@@ -73,7 +71,7 @@ let get_index k = k.i
 val keygen: i:id{AE_id? i} -> ST (k:key{k.i=i})
   (requires (fun h -> 
     fresh i h // Prevents multiple keys with the same id
-    /\ fixed i // We require this to enforce a static corruption model.
+    /\ registered i // We require this to enforce a static corruption model.
   ))
   (ensures  (fun h0 k h1 -> 
     let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
@@ -103,8 +101,7 @@ let keygen i =
 *)
 val coerce_key: i:id{AE_id? i /\ (dishonest i)} -> raw_k:aes_key -> ST (k:key{k.i=i /\ k.raw = raw_k})
   (requires (fun h0 -> 
-    fixed i
-    /\ (forall (k:AE.key). let i = AE.get_index k in ~( fresh i h0))
+    registered i
   ))
   (ensures  (fun h0 k h1 ->
     let (s:Set.set (HH.rid)) = Set.union (Set.singleton k.region) (Set.singleton id_freshness_table_region) in
@@ -118,6 +115,8 @@ val coerce_key: i:id{AE_id? i /\ (dishonest i)} -> raw_k:aes_key -> ST (k:key{k.
     /\ ~(fresh i h1)
     /\ (forall (k:AE.key). let i = AE.get_index k in ~( fresh i h1))
     /\ (forall (i:id). ~(fresh i h0) ==> ~(fresh i h1))
+    /\ registered i
+    /\ dishonest i
   ))
 let coerce_key i raw = 
   make_unfresh i;
@@ -169,7 +168,7 @@ val encrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_pla
   (requires (fun h0 -> 
     MM.fresh k.log n h0
     /\ MR.m_contains k.log h0
-    /\ fixed i
+    /\ registered i
   ))
   (ensures  (fun h0 c h1 ->
     let current_log = MR.m_sel h0 k.log in
@@ -188,7 +187,7 @@ val encrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_pla
     /\ MR.m_sel h1 k.log == MM.upd current_log n (c,m)
     ))
 let encrypt #i n k m =
-  let honest_i = honestST i in
+  let honest_i = is_honest i in
   let p = 
     if (ae_ind_cca && honest_i) then (
       createBytes (length m) 0z 
@@ -208,7 +207,7 @@ val decrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> c:cipher{B.length c
   (requires (fun h -> 
     Map.contains h.h k.region
     /\ MR.m_contains k.log h
-    /\ fixed i
+    /\ registered i
   ))
   (ensures  (fun h0 res h1 -> 
     modifies_none h0 h1
@@ -224,7 +223,7 @@ val decrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> c:cipher{B.length c
         )
   ))
 let decrypt #i n k c =
-  let honest_i = honestST i in
+  let honest_i = is_honest i in
   if ae_ind_cca && honest_i then
     match MM.lookup k.log n with
     | Some (c',m') -> 

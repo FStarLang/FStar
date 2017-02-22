@@ -76,6 +76,19 @@ let fresh #r #a #b #inv (m:t r a b inv) (x:a) (h:HS.mem)
   : GTot Type0
   = None? (sel (m_sel h m) x)
 
+val defined_not_fresh_lemma: #r:rid -> #(a:Type) -> #b:(a -> Type) -> #inv:(map' a b -> Type0) -> m:(t r a b inv) -> x:a -> h:HS.mem -> Lemma
+  (requires (defined #r #a #b #inv m x h))
+  (ensures (~(fresh #r #a #b #inv m x h)))
+  [SMTPat (defined #r #a #b #inv m x h)]
+let defined_not_fresh_lemma #r #a #b #inv m x h = ()
+
+
+val fresh_not_defined_lemma: #r:rid -> #(a:Type) -> #b:(a -> Type) -> #inv:(map' a b -> Type0) -> m:(t r a b inv) -> x:a -> h:HS.mem -> Lemma
+  (requires (fresh #r #a #b #inv m x h))
+  (ensures (~(defined #r #a #b #inv m x h)))
+  [SMTPat (fresh #r #a #b #inv m x h)]
+let fresh_not_defined_lemma #r #a #b #inv m x h = ()
+
 let map_contains #a #b (m1:map' a b) (m2:map' a b) (x:a) (y:b x)
   : Lemma (requires (grows m1 m2))
 	  (ensures (Some? (m1 x) /\ m1 x == Some y ==> m2 x == Some y))
