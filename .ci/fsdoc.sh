@@ -129,7 +129,7 @@ popd
 # push fstarlang.github.io with latest html.
 # $PAT is stored in the Build Defn.
 if [ ! -d fstarlang.github.io ]; then
-    git clone https://$PAT@github.com/FStarLang/fstarlang.github.io
+    git clone git@github.com/FStarLang/fstarlang.github.io
 fi
 pushd fstarlang.github.io
 git config user.name "fsdocbuild"
