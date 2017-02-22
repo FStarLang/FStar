@@ -134,6 +134,7 @@ val upd_slice: #a:Type -> s:seq a -> i:nat -> j:nat{i <= j /\ j <= length s}
 let upd_slice #a s i j k v =
   lemma_eq_intro (upd (slice s i j) k v) (slice (upd s (i + k) v) i j)
 
+// TODO: should be renamed cons_head_append, or something like that (because it is NOT related to (append (cons _ _) _))
 val lemma_append_cons: #a:Type -> s1:seq a{length s1 > 0} -> s2:seq a -> Lemma
   (requires True)
   (ensures (equal (append s1 s2) (cons (head s1) (append (tail s1) s2))))
