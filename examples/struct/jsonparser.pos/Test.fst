@@ -3,7 +3,7 @@ module Test
 let char   : eqtype = Char.char
 let string : eqtype = Seq.seq char
 
-let string_of_char = Seq.create 1
+let string_of_char (c: char): Tot string = Seq.cons c Seq.createEmpty
 
 let double_quote   : char   = Char.char_of_int 34
 let s_double_quote : string = string_of_char double_quote
@@ -176,7 +176,7 @@ let precedes_append_cons_prod_r
   [SMTPatOr [ [ SMTPatT (x << l); SMTPatT (l == List.Tot.append l1 ((x, y) :: l2))] ; [SMTPatT (y << l); SMTPatT (l == List.Tot.append l1 ((x, y) :: l2))] ] ]
 = precedes_append_cons_r l1 (x, y) l2
 
-let rec object_as_type_noRepeats 
+let rec object_as_type_append_cons
   (j: json_schema)
   (as_type: (j': json_schema {j' << j}) -> Tot Type0)
   (l: list (key * json_schema) {l << j})
@@ -195,7 +195,7 @@ let rec object_as_type_noRepeats
       | (s_, j_) :: q' ->
 	List.Tot.map_append fst l' ((s, j') :: q);
 	List.Tot.noRepeats_append_elim (List.Tot.map fst l') (List.Tot.map fst ((s, j') :: q));
-	object_as_type_noRepeats j as_type (List.Tot.tl l) s j' q' q
+	object_as_type_append_cons j as_type (List.Tot.tl l) s j' q' q
 	  )
 	  
 let rec as_gtype (j: json_schema) : Tot Type0 =
@@ -220,12 +220,12 @@ let as_struct_ptr_type (j: json_schema) : Tot Type = Struct.struct_ptr (as_value
 let gprint_string (s: string { ~ (Seq.mem double_quote s) } ) : GTot string =
   Seq.cons double_quote (Seq.snoc s double_quote)
 
-let rec object_gprint
+let rec gprint_object
   (j: json_schema)
   (gprint: (j': json_schema {j' << j}) -> (data: as_gtype j') -> GTot string)
   (l: list (key * json_schema) {List.Tot.noRepeats (List.Tot.map fst l) /\ l << j})
   (data: DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l)}) (object_as_type j as_gtype l))
-  (l': list (key * json_schema) {List.Tot.noRepeats (List.Tot.map fst l) /\ (list_precedes l' l \/ l' == l)})
+  (l': list (key * json_schema) {list_precedes l' l \/ l' == l})
 : GTot string
 = match l' with
   | [] -> Seq.createEmpty
@@ -239,7 +239,7 @@ let rec object_gprint
 	#(fun l3 -> l == List.Tot.append l3 l')
 	(list_precedes_or_eq_exists_append l' l)
 	(fun l3 ->
-          object_as_type_noRepeats j as_gtype l s j' l3 q;
+          object_as_type_append_cons j as_gtype l s j' l3 q;
 	  precedes_append_cons_prod_r l l3 s j' q
 	  );
     let (data' : as_gtype j') =
@@ -267,7 +267,7 @@ let rec gprint (j: json_schema) (data: as_gtype j) : GTot string =
     Seq.cons
       left_brace
       (Seq.snoc
-	(object_gprint j (fun (j': json_schema {j' << j}) data' -> gprint j' data') l data [])
+	(gprint_object j (fun (j': json_schema {j' << j}) data' -> gprint j' data') l data [])
 	right_brace)
 
 let seq_is_suffix_of
@@ -306,73 +306,6 @@ let seq_is_suffix_of_tail
   [SMTPat ((Seq.tail s) `seq_is_suffix_of` s)]
 = seq_cons_head_tail s    
 
-let gparse_char
-  (#t: Type)
-  (s: string)
-  (f: (char -> GTot bool))
-  (cont_true: ((c: char {f c}) -> (s': string {s == Seq.cons c s'}) -> GTot (option t)))
-  (cont_false: option t)
-: GTot (option t)
-= if Seq.length s = 0
-  then None
-  else if f (Seq.head s)
-  then let _ : squash (1 <= Seq.length s) = () in
-       cont_true (Seq.head s) (Seq.tail s)
-  else cont_false
-
-let gparse_char_head_tail_true
-  (#t: Type)
-  (s: string { Seq.length s > 0 } )
-  (f: (char -> GTot bool) { f (Seq.head s) } )
-  (cont_true: ((c: char {f c}) -> string -> GTot (option t)))
-  (cont_false: option t)
-: Lemma
-  (ensures (gparse_char s f cont_true cont_false == cont_true (Seq.head s) (Seq.tail s)))
-= ()
-
-let gparse_char_head_tail_false
-  (#t: Type)
-  (s: string { Seq.length s > 0 } )
-  (f: (char -> GTot bool) { ~ (f (Seq.head s)) } )
-  (cont_true: ((c: char {f c}) -> string -> GTot (option t)))
-  (cont_false: (option t))
-: Lemma
-  (ensures (gparse_char s f cont_true cont_false == cont_false))
-= ()
-
-let gparse_char_cons_true
-  (#t: Type)
-  (f: (char -> GTot bool))
-  (c: char {f c} )
-  (s: string)
-  (cont_true: ((c': char {f c' }) -> (s': string {Seq.cons c s == Seq.cons c' s'}) -> GTot (option t)))
-  (cont_false: option t)
-: Lemma
-  (ensures (gparse_char (Seq.cons c s) f cont_true cont_false == cont_true c s))
-= Seq.lemma_tl c s
-
-let gparse_char_cons_false
-  (#t: Type)
-  (f: (char -> GTot bool))
-  (c: char {~ (f c)} )
-  (s: string)
-  (cont_true: ((c': char {f c' }) -> (s': string {Seq.cons c s == Seq.cons c' s'}) -> GTot (option t)))
-  (cont_false: option t)
-: Lemma
-  (ensures (gparse_char (Seq.cons c s) f cont_true cont_false == cont_false))
-= ()
-
-let gparse_char_is_some
-  (#t: Type)
-  (s: string)
-  (f: (char -> GTot bool))
-  (cont_true: ((c: char {f c}) -> (s': string {s == Seq.cons c s'}) -> GTot (option t)))
-  (cont_false: option t)
-: Lemma
-  (requires ((forall c s . Some? (cont_true c s)) /\ Some? (cont_false) /\ Seq.length s > 0))
-  (ensures (Some? (gparse_char s f cont_true cont_false)))
-= ()
-
 let is_whitespace (c: char): Tot bool =
   match Char.int_of_char c with
     | 9 (* horizontal tab *)
@@ -394,13 +327,9 @@ let rec gparse_whitespace
   (decreases (Seq.length s))
 = if Seq.length s = 0
   then s
-  else
-    let cont_true (c: char {is_whitespace c}) (s': string {s == Seq.cons c s'}) = 
-      Some (gparse_whitespace s')
-    in
-    let cont_false = Some s in
-    gparse_char_is_some s is_whitespace cont_true cont_false;
-    Some?.v (gparse_char s is_whitespace cont_true cont_false)
+  else if is_whitespace (Seq.head s)
+       then gparse_whitespace (Seq.tail s)
+       else s
 
 let gparse_whitespace_empty
 : squash (gparse_whitespace Seq.createEmpty == Seq.createEmpty)
@@ -461,8 +390,8 @@ let rec gparse_whitespace_append
     let _ : squash (forall (i: nat {i < Seq.length (Seq.tail s_white) } ) . is_whitespace (Seq.index (Seq.tail s_white) i)) =
 	  FStar.Classical.forall_intro (seq_index_tail s_white)
     in
-    let _ : squash (gparse_whitespace (Seq.append s_white s) == gparse_whitespace (Seq.append (Seq.tail s_white) s)) =
-	  gparse_char_cons_true is_whitespace (Seq.head s_white) (Seq.append (Seq.tail s_white) s) (fun c' s' -> Some (gparse_whitespace s')) (Some s)
+    let _ : squash (Seq.tail (Seq.append s_white s) == Seq.append (Seq.tail s_white) s) =
+	  Seq.lemma_tail_append s_white s
     in
     gparse_whitespace_append (Seq.tail s_white) s
   end
@@ -517,6 +446,19 @@ let rec gparse_whitespace_exists
 	    (forall (i: nat {i < Seq.length s_white }) . is_whitespace (Seq.index s_white i)))
 	  (Seq.cons (Seq.head s) s_white))
 
+let length_gparse_whitespace
+  (s: string)
+: Lemma
+  (ensures (Seq.length (gparse_whitespace s) <= Seq.length s))
+= FStar.Classical.exists_elim
+    (Seq.length (gparse_whitespace s) <= Seq.length s)
+    #_
+    #(fun s_white ->
+        s == Seq.append s_white (gparse_whitespace s) /\
+	(forall (i: nat {i < Seq.length s_white }) . is_whitespace (Seq.index s_white i)))
+    (gparse_whitespace_exists s)
+    (fun s_white -> ())
+
 let rec gparse_string_contents
   (accu: string)
   (s: string)
@@ -529,6 +471,35 @@ let rec gparse_string_contents
   else if Seq.head s = double_quote
   then Some (accu, Seq.tail s)
   else gparse_string_contents (Seq.snoc accu (Seq.head s)) (Seq.tail s)
+
+let rec length_gparse_string_contents
+  (accu: string)
+  (s contents s': string)
+: Lemma
+  (requires (gparse_string_contents accu s == Some (contents, s')))
+  (ensures (Seq.length s' < Seq.length s))
+  (decreases (Seq.length s))
+= if Seq.length s = 0
+  then ()
+  else if Seq.head s = double_quote
+  then ()
+  else length_gparse_string_contents (Seq.snoc accu (Seq.head s)) (Seq.tail s) contents s'
+
+let rec not_mem_double_quote_gparse_string_contents
+  (accu: string)
+  (s contents s': string)
+: Lemma
+  (requires ((~ (Seq.mem double_quote accu)) /\ gparse_string_contents accu s == Some (contents, s')))
+  (ensures (~ (Seq.mem double_quote contents)))
+  (decreases (Seq.length s))
+= if Seq.length s = 0
+  then ()
+  else if Seq.head s = double_quote
+  then ()
+  else begin
+    Seq.lemma_mem_snoc accu (Seq.head s);
+    not_mem_double_quote_gparse_string_contents (Seq.snoc accu (Seq.head s)) (Seq.tail s) contents s'
+  end
 
 let seq_mem_cons
   (#a:eqtype)
@@ -577,7 +548,22 @@ let gparse_string (s: string): GTot (option (string * string)) =
   then gparse_string_contents Seq.createEmpty (Seq.tail s1)
   else None
 
-let gparse_string_append
+let not_mem_double_quote_gparse_string
+  (s contents s': string)
+: Lemma
+  (requires (gparse_string s == Some (contents, s')))
+  (ensures (~ (Seq.mem double_quote contents)))
+= let s1 = gparse_whitespace s in
+  if Seq.length s1 = 0
+  then ()
+  else if Seq.head s1 = double_quote
+  then begin
+    not_mem_double_quote_gparse_string_contents Seq.createEmpty (Seq.tail s1) contents s';
+    Seq.append_empty_l contents
+  end
+  else ()
+
+let gparse_string_append_cons_append_cons
   (s_white: string { forall (i: nat { i < Seq.length s_white } ) . is_whitespace (Seq.index s_white i) } )
   (s_contents: string { ~ (Seq.mem double_quote s_contents) } )
   (s_tail: string)
@@ -600,6 +586,175 @@ let gparse_string_append
     gparse_string_contents_append_cons Seq.createEmpty s_contents s_tail
   in
   Seq.append_empty_l s_contents
+
+let gparse_string_gprint_string
+  (s_white: string { forall (i: nat { i < Seq.length s_white } ) . is_whitespace (Seq.index s_white i) } )
+  (s_contents: string { ~ (Seq.mem double_quote s_contents) } )
+  (s_tail: string)
+: Lemma
+  (gparse_string (Seq.append s_white (Seq.append (gprint_string s_contents) s_tail))
+   == Some (s_contents, s_tail))
+= let _ : squash (Seq.append (gprint_string s_contents) s_tail == Seq.cons double_quote (Seq.append s_contents (Seq.cons double_quote s_tail))) =
+    seq_append_cons double_quote (Seq.snoc s_contents double_quote) s_tail;
+    Seq.append_cons_snoc s_contents double_quote s_tail
+  in
+  gparse_string_append_cons_append_cons s_white s_contents s_tail
+
+let length_gparse_string
+  (s contents s': string)
+: Lemma
+  (requires (gparse_string s == Some (contents, s')))
+  (ensures (Seq.length s' < Seq.length s))
+= let s1 = gparse_whitespace s in
+  let _ = length_gparse_whitespace s in
+  if Seq.length s1 = 0
+  then ()
+  else if Seq.head s1 = double_quote
+  then begin
+    length_gparse_string_contents Seq.createEmpty (Seq.tail s1) contents s';
+    Seq.append_empty_l contents
+  end
+  else ()
+
+let rec list_memP_precedes
+  (#a: Type)
+  (x: a)
+  (l: list a)
+: Lemma
+  (requires True)
+  (ensures (List.Tot.memP x l ==> x << l))
+  (decreases l)
+= match l with
+  | [] -> ()
+  | y :: q ->
+    FStar.Classical.or_elim
+      #(x == y)
+      #(List.Tot.memP x q)
+      #(fun _ -> x << l)
+      (fun _ -> ())
+      (fun _ -> list_memP_precedes x q)
+
+let list_assoc_precedes
+  (#a: eqtype)
+  (#b: Type)
+  (x: a)
+  (l: list (a * b))
+  (y: b)
+: Lemma
+  (requires (List.Tot.assoc x l == Some y))
+  (ensures (x << l /\ y << l))
+= List.Tot.assoc_memP_some x y l;
+  list_memP_precedes (x, y) l
+
+let rec gparse_object
+  (j: json_schema)
+  (gparse: (j': json_schema {j' << j}) -> (data: as_gtype j') -> (s:string) -> GTot (option (as_gtype j' * (s':string { Seq.length s' < Seq.length s } ))))
+  (l: list (key * json_schema) {l << j})
+  (data: DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l)}) (object_as_type j as_gtype l))
+  (l': list key)
+  (s: string)
+: Ghost (option (DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l)}) (object_as_type j as_gtype l) * (s': string {Seq.length s' <= Seq.length s} )))
+  (requires True)
+  (ensures (fun _ -> True))
+  (decreases (Seq.length s))
+= if Nil? l'
+  then Some (data, s)
+  else match gparse_string s with
+  | None -> None
+  | Some (sk, s1) ->
+    let _ : squash (Seq.length s1 < Seq.length s) = length_gparse_string s sk s1 in
+    let _ = not_mem_double_quote_gparse_string s sk s1 in
+    let k = Key sk in
+    if not (List.Tot.mem k l')
+    then None
+    else let s2 = gparse_whitespace s1 in
+	 let _ : squash (Seq.length s2 <= Seq.length s1) = length_gparse_whitespace s1 in
+	 if Seq.length s2 = 0
+	 then None
+	 else if Seq.head s2 <> colon
+	 then None
+	 else begin
+	   match List.Tot.assoc k l with
+	   | None -> None
+	   | Some j' -> begin
+	       let _ : squash (List.Tot.mem k (List.Tot.map fst l)) =
+		 List.Tot.assoc_mem k l
+	       in
+	       let _ : squash (j' << j) =
+		 list_assoc_precedes k l j'
+	       in
+	       let t' = object_as_type j as_gtype l k in
+	       assume (t' == as_gtype j');
+	       let data' : t' = DependentMap.sel data k in
+	       match gparse j' data' (Seq.tail s2) with
+	       | None -> None
+	       | Some (new_data', s3) ->
+		 let _ : squash (Seq.length s3 < Seq.length s2) = () in
+		 let new_data = DependentMap.upd data k new_data' in
+		 if List.Tot.length l' = 1
+		 then Some (new_data, s3)
+		 else let s4 = gparse_whitespace s3 in
+		      let _ : squash (Seq.length s4 <= Seq.length s3) = length_gparse_whitespace s3 in
+		      if Seq.length s4 = 0
+		      then None
+		      else if Seq.head s4 <> comma
+		      then None
+		      else let new_l' = List.Tot.filter (fun k' -> k' <> k) l' in
+		      let s5 : (s': string {Seq.length s' < Seq.length s}) = Seq.tail s4 in
+		      match gparse_object j gparse l new_data new_l' s5 with
+		      | Some (new_data'', s6) ->
+			let s7 : (s': string {Seq.length s' <= Seq.length s}) = s6 in
+			Some (new_data'', s7)
+		      | None -> None
+	     end
+	 end
+
+let rec gparse
+  (j: json_schema)
+  (data: as_gtype j)
+  (s: string)
+: Ghost (option (as_gtype j * (s': string {Seq.length s' < Seq.length s})))
+  (requires True)
+  (ensures (fun _ -> True))
+  (decreases j)
+= match j with
+  | String ->
+    begin match gparse_string s with
+    | Some (new_data, rem) ->
+      let _ = length_gparse_string s new_data rem in
+      not_mem_double_quote_gparse_string s new_data rem;
+      length_gparse_string s new_data rem;
+      Some (new_data, rem)
+    | None -> None
+    end
+  | Object l ->
+    as_gtype_object l;
+    list_precedes_or_eq_nil l;
+    let s1 = gparse_whitespace s in
+    let _ = length_gparse_whitespace s in
+    if Seq.length s1 = 0
+    then None
+    else if Seq.head s1 <> left_brace
+    then None
+    else let s2 = Seq.tail s1 in
+	 let gparse_rec
+	   (j': json_schema {j' << j})
+	   (data': as_gtype j')
+	   (s': string)
+	 : GTot (option (as_gtype j' * (s'': string {Seq.length s'' < Seq.length s'})))
+	 = gparse j' data' s'
+	 in
+	 match gparse_object j gparse_rec l data (List.Tot.map fst l) s2 with
+	 | None -> None
+	 | Some (new_data, s3) ->
+	   let s4 = gparse_whitespace s3 in
+	   let _ = length_gparse_whitespace s3 in
+	   if Seq.length s4 = 0
+	   then None
+	   else if Seq.head s4 <> right_brace
+	   then None
+	   else Some (new_data, Seq.tail s4)
+
 
 (*
 
