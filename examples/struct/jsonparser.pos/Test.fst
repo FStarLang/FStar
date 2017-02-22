@@ -569,6 +569,37 @@ let rec gparse_string_contents_append_cons
       ()
   end
 
+let gparse_string (s: string): GTot (option (string * string)) =
+  let s1 = gparse_whitespace s in
+  if Seq.length s1 = 0
+  then None
+  else if Seq.head s1 = double_quote
+  then gparse_string_contents Seq.createEmpty (Seq.tail s1)
+  else None
+
+let gparse_string_append
+  (s_white: string { forall (i: nat { i < Seq.length s_white } ) . is_whitespace (Seq.index s_white i) } )
+  (s_contents: string { ~ (Seq.mem double_quote s_contents) } )
+  (s_tail: string)
+: Lemma
+  (gparse_string (Seq.append s_white (Seq.cons double_quote (Seq.append s_contents (Seq.cons double_quote s_tail))))
+   == Some (s_contents, s_tail))
+= let s2 = Seq.append s_contents (Seq.cons double_quote s_tail) in
+  let s1 = Seq.cons double_quote s2 in
+  let s0 = Seq.append s_white s1 in
+  let _ : squash (gparse_whitespace s0 == gparse_whitespace s1) =
+    gparse_whitespace_append s_white s1
+  in
+  let _ : squash (gparse_whitespace s1 == s1) =
+    gparse_whitespace_not_whitespace s1
+  in
+  let _ : squash (gparse_string s0 == gparse_string_contents Seq.createEmpty s2) =
+    Seq.lemma_tl double_quote s2
+  in
+  let _ : squash (gparse_string_contents Seq.createEmpty s2 == Some (Seq.append Seq.createEmpty s_contents, s_tail)) =
+    gparse_string_contents_append_cons Seq.createEmpty s_contents s_tail
+  in
+  Seq.append_empty_l s_contents
 
 (*
 
