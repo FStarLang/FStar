@@ -66,11 +66,56 @@ let valid_memo_preserve (x:dom) (y:codom) (h:heap) (f:dom -> Tot codom)
   : Lemma (requires (y == f x /\ valid_memo h f)) (ensures (valid_memo ((x,y)::h) f))
 = ()
 
+let memo_heap (f:dom -> Tot codom) : Type = list (x:dom & y:codom{y == f x})
+
+let rec memo_heap_to_valid_memo (#f:dom -> Tot codom) (h0:memo_heap f)
+  : Pure heap (requires True) (ensures (fun h1 -> valid_memo h1 f))
+= match h0 with
+  | [] -> []
+  | (|x,y|)::h0' ->
+    (* TODO (to investigate) : removing #f here prevents the fuinction from verifying *)
+    (x,y) :: memo_heap_to_valid_memo #f h0'
+
+let rec valid_memo_to_memo_heap (f:dom -> Tot codom) (h0:heap)
+  : Pure (memo_heap f) (requires (valid_memo h0 f)) (ensures (fun _ -> True))
+= match h0 with
+  | [] ->
+    (* TODO : putting a type ascription here is not enough and the function does not verify... *)
+    let l : memo_heap f = [] in l
+  | (x,y)::h0' ->
+    assert (y == f x /\ valid_memo h0' f) ;
+    (|x,y|)::valid_memo_to_memo_heap f h0'
+
+let rec valid_memo_id_lemma (f:dom -> Tot codom) (h0:heap)
+  : Lemma (requires (valid_memo h0 f))
+  (ensures (valid_memo h0 f /\ (let h1 = memo_heap_to_valid_memo (valid_memo_to_memo_heap f h0) in h0 == h1)))
+= match h0 with
+  | [] -> ()
+  | (x,y)::h0' -> valid_memo_id_lemma f h0'
+
+let rec memo_heap_id (#f:dom -> Tot codom) (h0:memo_heap f)
+  : Lemma (let h1 = valid_memo_to_memo_heap f (memo_heap_to_valid_memo h0) in h0 == h1)
+= match h0 with
+  | [] -> ()
+  | (|x,y|)::h0' -> memo_heap_id #f h0'
+
+
 (* [f `computes` g] when the memoized function [f] computes the same total/pure *)
 (* function as [g] provided the heap contains only [g]-relevant elements *)
 let computes (#p:dom -> Tot Type0) ($f: x:dom{p x} -> Memo codom) (g:dom -> Tot codom) =
       forall h0. valid_memo h0 g ==> (forall x. p x ==> (let y ,h1 = reify (f x) h0 in y == g x /\ valid_memo h1 g))
 
+noeq
+type memo_pack (f:dom -> Tot codom) =
+  | MemoPack :
+    h0:memo_heap f ->
+    mf:(dom -> Memo codom){mf `computes` f}
+    -> memo_pack f
+
+let apply_memo (#f:dom -> Tot codom) (mp:memo_pack f) (x:dom) : Tot (codom * memo_pack f) =
+  let MemoPack h0 mf = mp in
+  let y, h1 = reify (mf x) (memo_heap_to_valid_memo h0) in
+  y, MemoPack (valid_memo_to_memo_heap f h1) mf
 
 
 (* Memoization of a pure function with a complete specification *)
@@ -192,8 +237,11 @@ noeq type partial_result (x0:dom) : Type =
 (* Or a computation asking for the result of the recursive call on [x] and a continuation [cont] *)
 | Need : x:dom{x << x0} -> cont:(codom -> Tot (partial_result x0)) -> partial_result x0
 
+(* The rule [f x << f] is currently not primitive but take as an axiom in FStar.WellFounded *)
+(* We define a convenience operator doing the application and ensuring the corresponding decreasing clause *)
 unfold
 let ( <| ) = apply #codom #(fun _ -> partial_result _)
+
 
 (* We can define the actual total function represented *)
 (* by [f : x:dom -> Tot (partial_result x)] with *)
