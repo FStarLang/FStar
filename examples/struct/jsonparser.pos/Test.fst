@@ -202,10 +202,14 @@ let rec as_gtype (j: json_schema) : Tot Type0 =
   match j with
   | String -> (s: string { ~ (Seq.mem double_quote s) } )
   | Object l ->
-    DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l) }) (object_as_type (Object l) (fun (j' : json_schema {j' << Object l}) -> as_gtype j') l)
+    DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l) }) (object_as_type (Object l) as_gtype l)
 
-assume val as_gtype_object (l: list (key * json_schema) {List.Tot.noRepeats (List.Tot.map fst l)}) : Lemma
-  (ensures (as_gtype (Object l) == DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l) }) (object_as_type (Object l) (fun (j' : json_schema {j' << Object l}) -> as_gtype j') l))) // TODO: WHY WHY WHY does it NOT work by reflexivity?
+let as_gtype_object (l: list (key * json_schema) {List.Tot.noRepeats (List.Tot.map fst l)}) : Lemma
+  (ensures 
+   (as_gtype (Object l) ==
+    DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l) }) (object_as_type (Object l) as_gtype l))) =
+      assert_norm (as_gtype (Object l) ==
+    DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l) }) (object_as_type (Object l) as_gtype l))
 
 let as_gtype_string: squash (as_gtype String == (s: string { ~ (Seq.mem double_quote s ) } )) = ()
 
