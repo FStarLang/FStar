@@ -1,7 +1,7 @@
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: uall
+all: uall uf-functions
 uall:	FStar.DM4F.MonadLaws.uver \
 	Effects.Def.uver \
 	FStar.DM4F.IntST.uver \
@@ -15,7 +15,6 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.IFC.uver \
 	FStar.DM4F.Continuations.uver \
 	delimcc.uver \
-	Relational.ProgramOptimizations.uver \
 	Relational.ProgramEquivalence.uver \
 	FStar.DM4F.IntStore.uver \
 	FStar.DM4F.IntStoreFixedReader.uver \
@@ -23,7 +22,11 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.IntStoreExcFixed.uver \
 	FStar.DM4F.Memo.uver \
 	loops.uver \
+	Relational.UnionFind.Forest.uver \
 	Relational.UnionFind.uver
+
+uf-functions:
+	$(FSTAR_HOME)/bin/fstar.exe Relational.UnionFind.Functions.fst
 
 old:
 	$(MAKE) -C old

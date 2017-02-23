@@ -1,0 +1,2535 @@
+[
+  "œ/šB¼\u001e\u0014‹…•\\½‰;†#",
+  [
+    [
+      "Relational.UnionFind.Forest.subtree_t",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      4,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      6,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      7,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      8,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      9,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      10,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      11,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      12,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_size",
+      13,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      5,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      6,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      7,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      8,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      9,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      10,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      11,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      12,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      13,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      14,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      15,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      16,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      17,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      18,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_minus_mem",
+      19,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      4,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      6,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      7,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      8,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      9,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      10,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      11,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      12,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      13,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      14,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      15,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      16,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      17,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      18,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      19,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      20,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      21,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      22,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      23,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      24,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_minus_size",
+      25,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      5,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      6,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      7,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      8,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      9,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      10,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      11,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      12,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      13,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      14,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      15,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      16,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      17,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      18,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      19,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      20,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      21,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      22,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      23,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      24,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      25,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      26,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      27,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      28,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      29,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      30,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      31,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      32,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      33,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      34,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_disjoint_union_subset",
+      35,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "bool_typing",
+        "equation_FStar.List.Tot.Base.test_sort",
+        "equation_FStar.OrdSet.cmp", "equation_FStar.OrdSet.total_order",
+        "equation_Prims._assert", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_Relational.UnionFind.Forest.subtree_t",
+        "function_token_typing_FStar.List.Tot.Base.test_sort",
+        "function_token_typing_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "interpretation_Tm_arrow_f2b2710ae3de861274020fd80b8c9cab",
+        "lemma_FStar.OrdSet.mem_subset", "lemma_FStar.OrdSet.mem_union",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_042a215721f7dfccb802980a3e65d454",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual",
+        "typing_FStar.OrdSet.union",
+        "typing_Relational.UnionFind.Forest.set_n"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      4,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      6,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      7,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      8,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      9,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      10,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      11,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      12,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      13,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      14,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      15,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      16,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      17,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      18,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      19,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      20,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      21,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      22,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      23,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      24,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_subset_union",
+      25,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_strict_subset_transitive",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      5,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      6,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      7,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      8,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      9,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      10,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      11,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      12,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      13,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      14,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      15,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      16,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      17,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      18,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      19,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      20,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      21,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      22,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_transitive",
+      23,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      6,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      7,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      8,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      9,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      10,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      11,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      12,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      13,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      14,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      15,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      16,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      17,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      18,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      19,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      20,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      21,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      22,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      23,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      24,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      25,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      26,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      27,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      28,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      29,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      30,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      31,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      32,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      33,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      34,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      35,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      36,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      37,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      38,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      39,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      40,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      41,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      42,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      43,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      44,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdSet.total_order", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.lemma_intersect_union_empty",
+      45,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.uf_forest",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.live",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.nat",
+        "equation_Relational.UnionFind.Forest.id",
+        "equation_Relational.UnionFind.Forest.uf_forest", "int_inversion",
+        "refinement_interpretation_Tm_refine_b410ea3c55bd5a2e2f892959af827be1",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.live",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_4364b7fdf0322fcb18c11f8ea48cdbd9",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.live",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.get",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.nat",
+        "equation_Relational.UnionFind.Forest.elt",
+        "equation_Relational.UnionFind.Forest.id",
+        "equation_Relational.UnionFind.Forest.live",
+        "equation_Relational.UnionFind.Forest.uf_forest", "int_inversion",
+        "lemma_FStar.DM4F.Heap.lemma_sel_tot_is_sel_if_contains_a_well_typed",
+        "refinement_interpretation_Tm_refine_5f6273c5a48c47b6407b76ac7ebf059a",
+        "refinement_interpretation_Tm_refine_b410ea3c55bd5a2e2f892959af827be1",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368",
+        "typing_Relational.UnionFind.Forest.elt"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.get",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.tuple3_haseq", "bool_typing",
+        "equation_FStar.OrdSet.cmp", "equation_FStar.OrdSet.total_order",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_Relational.UnionFind.Forest.elt",
+        "equation_Relational.UnionFind.Forest.id",
+        "equation_Relational.UnionFind.Forest.subtree_t",
+        "function_token_typing_Prims.nat",
+        "function_token_typing_Relational.UnionFind.Forest.subtree_t",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "haseqTm_refine_c44d6b2b02c0b515cd6e2f4d9892c368", "int_inversion",
+        "interpretation_Tm_arrow_f2b2710ae3de861274020fd80b8c9cab",
+        "lemma_FStar.OrdSet.hasEq_ordset",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_042a215721f7dfccb802980a3e65d454",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual",
+        "typing_Relational.UnionFind.Forest.id"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.get",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.tuple3_haseq", "bool_typing",
+        "equation_FStar.OrdSet.cmp", "equation_FStar.OrdSet.total_order",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_Relational.UnionFind.Forest.elt",
+        "equation_Relational.UnionFind.Forest.id",
+        "equation_Relational.UnionFind.Forest.subtree_t",
+        "function_token_typing_Prims.nat",
+        "function_token_typing_Relational.UnionFind.Forest.subtree_t",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "haseqTm_refine_c44d6b2b02c0b515cd6e2f4d9892c368", "int_inversion",
+        "interpretation_Tm_arrow_f2b2710ae3de861274020fd80b8c9cab",
+        "lemma_FStar.OrdSet.hasEq_ordset",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_042a215721f7dfccb802980a3e65d454",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_Prims.op_LessThanOrEqual",
+        "typing_Relational.UnionFind.Forest.id"
+      ],
+      0
+    ],
+    [
+      "Relational.UnionFind.Forest.set",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.Base.test_sort",
+        "equation_Prims._assert", "equation_Prims.nat",
+        "equation_Relational.UnionFind.Forest.elt",
+        "equation_Relational.UnionFind.Forest.id",
+        "equation_Relational.UnionFind.Forest.live",
+        "equation_Relational.UnionFind.Forest.subtree_t",
+        "equation_Relational.UnionFind.Forest.uf_forest",
+        "fuel_guarded_inversion_Prims.tuple3",
+        "function_token_typing_FStar.List.Tot.Base.test_sort",
+        "int_inversion",
+        "lemma_FStar.DM4F.Heap.lemma_upd_tot_is_upd_if_contains_a_well_typed",
+        "refinement_interpretation_Tm_refine_5f6273c5a48c47b6407b76ac7ebf059a",
+        "refinement_interpretation_Tm_refine_b410ea3c55bd5a2e2f892959af827be1",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368",
+        "refinement_interpretation_Tm_refine_df6d62478bac237b07c6bbec33b1b9d6",
+        "typing_Relational.UnionFind.Forest.elt"
+      ],
+      0
+    ]
+  ]
+]
