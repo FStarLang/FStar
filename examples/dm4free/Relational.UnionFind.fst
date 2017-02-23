@@ -15,6 +15,23 @@ let lemma_find_helper (#n:nat) (uf:uf_forest n) (i:id n) (h:heap{live uf h /\ we
           reify (find uf p h) h == reify (find uf i h) h)
   = ()
 
+let rec lemma_find_height_independence (#n:nat) (uf:uf_forest n) (i:id n)
+  (h_1:heap{live uf h_1 /\ well_formed uf h_1})
+  (h_2:heap{live uf h_2 /\ well_formed uf h_2})
+  :Lemma (requires (forall (j:id n).
+                      parent uf j h_1 = parent uf j h_2 /\
+                      subtree uf j h_1 == subtree uf j h_2))
+	 (ensures  (let r_1, h'_1 = reify (find uf i h_1) h_1 in
+	            let r_2, h'_2 = reify (find uf i h_2) h_2 in
+		    r_1 = r_2 /\ h'_1 == h_1 /\ h'_2 == h_2))
+	 (decreases (diff n (subtree #n uf i h_1)))
+  = let p_1 = parent uf i h_1 in
+    if p_1 = i then ()
+    else begin    
+      well_formed_decreases_lemma uf i h_1;
+      lemma_find_height_independence uf p_1 h_1 h_2
+    end
+
 (*
  * lemma to condense find_opt behavior
  *)
@@ -129,7 +146,7 @@ let lemma_merge_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{l
 		    let _, h1 = reify (merge uf i_1 i_2) h in
 		    r_1 <> r_2 ==>
 		    (sel h1 (index uf r_1) == (r_2, d_1, s_1)                   /\
-		     (let d_2 = if d_1 >= d_2 then d_1 + 1 else d_2 in
+		     (//let d_2 = if d_1 >= d_2 then d_1 + 1 else d_2 in
 		      sel h1 (index uf r_2) == (r_2, d_2, elift2 union s_1 s_2)) /\
 		     (forall (j:id n). (j <> r_1 /\ j <> r_2) ==> sel h (index uf j) == sel h1 (index uf j)))))
   = ()
@@ -147,6 +164,30 @@ let lemma_merge_opt_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:he
 		      sel h1 (index uf r_1) == (r_1, d_1, elift2 union s_1 s_2)) /\
 		     (forall (j:id n). (j <> r_1 /\ j <> r_2) ==> sel h (index uf j) == sel h1 (index uf j)))))
   = ()
+#reset-options
+
+#set-options "--z3rlimit 20"
+let lemma_merge_height_independence (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
+  (h_1:heap{live uf h_1 /\ well_formed uf h_1})
+  (h_2:heap{live uf h_2 /\ well_formed uf h_2})
+  :Lemma (requires (forall (j:id n). parent uf j h_1 = parent uf j h_2 /\
+                                subtree uf j h_1 == subtree uf j h_2))
+	 (ensures  (let _, h'_1 = reify (merge uf i_1 i_2) h_1 in
+	            let _, h'_2 = reify (merge uf i_1 i_2) h_2 in
+		    (forall (j:id n). parent uf j h'_1 = parent uf j h'_2    /\
+		                 subtree uf j h'_1 == subtree uf j h'_2 /\
+				 height uf j h'_1 = height uf j h_1     /\
+				 height uf j h'_2 = height uf j h_2)))
+  = let r_1, _ = reify (find uf i_1 h_1) h_1 in
+    let r_2, _ = reify (find uf i_2 h_1) h_1 in
+    lemma_find_height_independence uf i_1 h_1 h_2;
+    lemma_find_height_independence uf i_2 h_1 h_2;
+    if r_1 = r_2 then ()
+    else begin
+      lemma_merge_helper uf i_1 i_2 h_1;
+      lemma_merge_helper uf i_1 i_2 h_2;
+      ()
+    end
 #reset-options
 
 irreducible let trigger (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{live uf h /\ well_formed uf h}) (j_1:id n) (j_2:id n) = True

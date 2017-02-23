@@ -77,7 +77,7 @@ reifiable let merge (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
     if r_1 = r_2 then ()
     else begin
       set uf r_1 (r_2, d_1, s_1);
-      let d_2 = if d_1 >= d_2 then d_1 + 1 else d_2 in
+      //let d_2 = if d_1 >= d_2 then d_1 + 1 else d_2 in
       set uf r_2 (r_2, d_2, elift2 union s_1 s_2);
       assert (strict_subset (reveal s_1) (union (reveal s_1) (reveal s_2)))
     end
