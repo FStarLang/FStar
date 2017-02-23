@@ -64,6 +64,7 @@ noeq abstract type key =
 val get_index: k:key -> Tot (i:id{i=k.i /\ unfresh i})
 let get_index k = k.i
 
+#set-options "--z3rlimit 20 --detail_errors"
 (**
    This function generates a key in a fresh region of memory below the parent region.
    The postcondition ensures that the log is empty after creation.
@@ -81,17 +82,22 @@ val keygen: i:id{AE_id? i} -> ST (k:key{k.i=i})
     /\ is_below k.region ae_key_region
     /\ m_contains k.log h1
     /\ m_sel h1 k.log == MM.empty_map log_key (log_range k.i)
-    /\ unfresh i
-    /\ ~(fresh i h1)
+    /\ makes_unfresh_just i h0 h1
   ))
 let keygen i =
+  let h0 = ST.get() in
+  MR.m_recall id_freshness_table;
   make_unfresh i;
+  let h1 = ST.get() in
+  assert(MR.m_sel h1 id_honesty_table == MR.m_sel h0 id_honesty_table);     // and the log of the key will be empty.
+  admit();
   //ae_make_honest i;
   let rnd_k = random keysize in
   let region = new_region ae_key_region in
   let log = MM.alloc #region #log_key #(log_range i) #(log_inv i) in
   fresh_unfresh_contradiction i;
   Key #i #region rnd_k log
+
 
 #set-options "--z3rlimit 20"
 (**
@@ -111,11 +117,8 @@ val coerce_key: i:id{AE_id? i /\ (dishonest i)} -> raw_k:aes_key -> ST (k:key{k.
     /\ is_below k.region ae_key_region
     /\ m_contains k.log h1
     /\ m_sel h1 k.log == MM.empty_map log_key (log_range k.i)
-    /\ unfresh i
-    /\ ~(fresh i h1)
-    /\ (forall (k:AE.key). let i = AE.get_index k in ~( fresh i h1))
-    /\ (forall (i:id). ~(fresh i h0) ==> ~(fresh i h1))
     /\ registered i
+    /\ makes_unfresh_just i h0 h1
     /\ dishonest i
   ))
 let coerce_key i raw = 
@@ -146,6 +149,19 @@ let get_logGT k =
 val empty_log: i:id{AE_id? i} -> Tot (MM.map' log_key (log_range i))
 let empty_log i = MM.empty_map log_key (log_range i)
 
+val empty_log_lemma: k:key -> ST unit
+  (requires (fun h0 -> 
+    MR.m_sel h0 k.log == empty_log k.i
+    /\ MR.m_contains k.log h0
+  ))
+  (ensures (fun h0 _ h1 -> 
+    (forall (n:nonce) . MM.fresh k.log n h0)
+    /\ MR.m_contains k.log h1
+    /\ h0 == h1
+  ))
+let empty_log_lemma k = ()
+
+
 val recall_log: k:key -> ST unit
   (requires (fun h0 -> True))
   (ensures (fun h0 _ h1 ->
@@ -166,7 +182,7 @@ let get_regionGT k =
 *)
 val encrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_plain i) -> ST cipher
   (requires (fun h0 -> 
-    MM.fresh k.log n h0
+    (honest i ==> MM.fresh k.log n h0)
     /\ MR.m_contains k.log h0
     /\ registered i
   ))

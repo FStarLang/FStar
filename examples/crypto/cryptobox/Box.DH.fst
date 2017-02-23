@@ -141,6 +141,7 @@ val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
   ( requires (fun h0 -> 
     let i = generate_ae_id pk.pk_id sk.sk_id in
     (AE_id? i /\ honest i) ==> (MM.defined dh_key_log i h0 \/ fresh i h0)
+    /\ m_contains id_freshness_table h0
   ))
   ( ensures (fun h0 k h1 ->
     let i = generate_ae_id pk.pk_id sk.sk_id in
@@ -152,10 +153,10 @@ val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
     /\ (fresh i h0 ==> (MR.m_sel h1 (PlainDH.get_logGT k) == PlainDH.empty_log i))
     /\ (honest i ==> (let current_log = MR.m_sel h0 dh_key_log in
 		   MR.witnessed (MM.contains dh_key_log i k)
-		   /\ (MM.fresh dh_key_log i h0 ==> (MR.m_sel h1 dh_key_log == MM.upd current_log i k
-						  /\ MR.m_sel h1 k_log == PlainDH.empty_log i))
-		   /\ (MM.defined dh_key_log i h0 ==> (MR.m_sel h0 dh_key_log == MR.m_sel h1 dh_key_log
-						    /\ MR.m_sel h0 k_log == MR.m_sel h1 k_log))
+		   /\ (MM.fresh dh_key_log i h0 ==> (MR.m_sel h1 dh_key_log == MM.upd current_log i k // if the key is not yet in the dh_key_log, it will be afterwards
+						  /\ MR.m_sel h1 k_log == PlainDH.empty_log i))     // and the log of the key will be empty.
+		   /\ (MM.defined dh_key_log i h0 ==> (MR.m_sel h0 dh_key_log == MR.m_sel h1 dh_key_log // if the key is in the dh_key_log, the dh_key_log will not be modified
+						    /\ MR.m_sel h0 k_log == MR.m_sel h1 k_log))       // and the log of the key will be the same as before.
 		   /\ modifies regions_modified_honest h0 h1
 		  )
       )
@@ -164,6 +165,7 @@ val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
     	   /\ leak_key k = prf_odhT sk pk
     	  )
       )
+    /\ makes_unfresh_just i h0 h1
   ))
 let prf_odh dh_sk dh_pk =
   let i = generate_ae_id dh_pk.pk_id dh_sk.sk_id in

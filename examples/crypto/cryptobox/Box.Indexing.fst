@@ -88,15 +88,20 @@ let freshST i =
   MR.m_recall id_freshness_table;
   match MM.lookup id_freshness_table i with
   | None -> ()
-  
 
+val makes_unfresh_just: i:id -> h0:mem -> h1:mem -> Tot Type0
+let makes_unfresh_just i h0 h1 =
+  let current_table = MR.m_sel h0 id_freshness_table in
+  (MM.fresh id_freshness_table i h0 ==> MR.m_sel h1 id_freshness_table == MM.upd current_table i ())
+  /\ (MM.defined id_freshness_table i h0 ==> current_table == MR.m_sel h1 id_freshness_table)
+  /\ unfresh i
 
 val make_unfresh: (i:id) -> ST (unit)
   (requires (fun h0 -> True))
   (ensures (fun h0 _ h1 ->
     modifies (Set.singleton id_freshness_table_region) h0 h1
-    /\ (forall (i:id). ~(fresh i h0) ==> ~(fresh i h1))
-    /\ unfresh i
+    //\ (forall (i:id). ~(fresh i h0) ==> ~(fresh i h1))
+    /\ makes_unfresh_just i h0 h1
   ))
 let make_unfresh i =
   MR.m_recall id_freshness_table;
