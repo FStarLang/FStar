@@ -140,8 +140,8 @@ mv "../../$FSDOC_ODIR"/*.html .
 git add *.html
 if (git commit -m "Automated doc refresh"); then 
     echo git commit ok.
-    git push origin master
-    echo pushed to origin.
+    git push git@github.com:FStarLang/fstarlang.github.io master 
+    echo git push to fstarlang.github ok. 
 else 
     echo git did not commit. 
 fi
