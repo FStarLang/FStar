@@ -116,3 +116,159 @@ let rec lemma_find_find_opt_equivalence (#n:nat) (uf:uf_forest n) (i:id n) (h:he
     end
     else () //p0 <> p1, but p1 = root of j in h0 and p1's parent = p1 in h1, so, root of j in h1 is p1 = root of j in h0
 #reset-options
+
+(* condensing the behavior of merge and merge_opt *)
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 30"
+let lemma_merge_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{live uf h /\ well_formed uf h})
+  :Lemma (requires True)
+         (ensures  (let r_1, _ = reify (find uf i_1 h) h in
+	            let r_2, _ = reify (find uf i_2 h) h in
+		    let _, d_1, s_1 = sel h (index uf r_1) in
+		    let _, d_2, s_2 = sel h (index uf r_2) in
+		    let _, h1 = reify (merge uf i_1 i_2) h in
+		    r_1 <> r_2 ==>
+		    (sel h1 (index uf r_1) == (r_2, d_1, s_1)            /\
+		     (let d_2 = if d_1 >= d_2 then d_1 + 1 else d_2 in
+		      sel h1 (index uf r_2) == (r_2, d_2, union s_1 s_2)) /\
+		     (forall (j:id n). (j <> r_1 /\ j <> r_2) ==> sel h (index uf j) == sel h1 (index uf j)))))
+  = ()
+
+let lemma_merge_opt_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{live uf h /\ well_formed uf h})
+  :Lemma (requires True)
+         (ensures  (let r_1, _ = reify (find uf i_1 h) h in
+	            let r_2, _ = reify (find uf i_2 h) h in
+		    let _, d_1, s_1 = sel h (index uf r_1) in
+		    let _, d_2, s_2 = sel h (index uf r_2) in
+		    let _, h1 = reify (merge_opt uf i_1 i_2) h in
+		    (r_1 <> r_2 /\ d_1 >= d_2) ==>
+		    (sel h1 (index uf r_2) = (r_1, d_2, s_2)            /\
+		     (let d_1 = if d_1 = d_2 then d_1 + 1 else d_1 in
+		      sel h1 (index uf r_1) = (r_1, d_1, union s_1 s_2)) /\
+		     (forall (j:id n). (j <> r_1 /\ j <> r_2) ==> sel h (index uf j) == sel h1 (index uf j)))))
+  = ()
+#reset-options
+
+irreducible let trigger (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{live uf h /\ well_formed uf h}) (j_1:id n) (j_2:id n) = True
+
+(*
+ * proving that if two nodes are in the components that are being merged,
+ * then their root in the output forest of merge and merge_opt are same
+ * we specifically consider the case when r_1 <> r_2 and height r_1 >= height r_2
+ * since otherwise merge and merge_opt behave the same and hence their equivalence proof is simple
+ *)
+#set-options "--z3rlimit 20"
+let rec lemma_merge_merge_opt_equivalence_helper_0 (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{live uf h /\ well_formed uf h})
+  (j_1:id n) (j_2:id n)
+  :Lemma (requires (let r_1, _ = reify (find uf i_1 h) h in
+	            let r_2, _ = reify (find uf i_2 h) h in
+
+                    let p_1, _ = reify (find uf j_1 h) h in
+		    let p_2, _ = reify (find uf j_2 h) h in
+
+                    r_1 <> r_2 /\ height uf r_1 h >= height uf r_2 h /\  //consider only the case where the behavior of merge and merge_opt differs
+		    (p_1 = r_1 \/ p_1 = r_2) /\ (p_2 = r_1 \/ p_2 = r_2)))  //j_1 and j_2 are in one of the two componenets being merged
+         (ensures  (let r_1, _ = reify (find uf i_1 h) h in
+	            let r_2, _ = reify (find uf i_2 h) h in
+	 
+	            let _, h1 = reify (merge uf i_1 i_2) h in
+	            let _, h2 = reify (merge_opt uf i_1 i_2) h in
+
+                    fst (reify (find uf j_1 h1) h1) = r_2 /\
+		    fst (reify (find uf j_2 h1) h1) = r_2 /\  //the root of j_1 and j_2 is r_2 in the case of merge
+                    fst (reify (find uf j_1 h2) h2) = r_1 /\
+		    fst (reify (find uf j_2 h2) h2) = r_1))  //and it is r_1 in the case of merge_opt
+	 (decreases %[diff n (subtree #n uf j_1 h); diff n (subtree #n uf j_2 h)])
+	 [SMTPat (trigger #n uf i_1 i_2 h j_1 j_2)]
+  = let r_1, _ = reify (find uf i_1 h) h in
+    let r_2, _ = reify (find uf i_2 h) h in
+    
+    let _, h1 = reify (merge uf i_1 i_2) h in
+    let _, h2 = reify (merge_opt uf i_1 i_2) h in
+    lemma_merge_helper uf i_1 i_2 h;
+    lemma_merge_opt_helper uf i_1 i_2 h;
+  
+    let p_1 = parent uf j_1 h in
+    if j_1 = p_1 then begin
+      let p_2 = parent uf j_2 h in
+      if j_2 = p_2 then ()  //if j_1 = p_1 and j_2 = p_2, then they are roots either r_1 and r_2, and in that case proof is simple
+      else begin  //if j_2 <> p_2, use I.H. on p_2
+        well_formed_decreases_lemma uf j_2 h;
+	lemma_merge_merge_opt_equivalence_helper_0 uf i_1 i_2 h j_1 p_2;
+	lemma_find_helper uf j_2 h1;
+	lemma_find_helper uf j_2 h2;
+	()
+      end
+    end
+    else begin  //if j_1 <> p_1, use I.H. on p_1
+      well_formed_decreases_lemma uf j_1 h;
+      lemma_merge_merge_opt_equivalence_helper_0 uf i_1 i_2 h p_1 j_2;
+      lemma_find_helper uf j_1 h1;
+      lemma_find_helper uf j_1 h2;
+      ()
+    end
+
+(*
+ * proving that for a node whose root is not any of the components being merged, the root remains unchanged,
+ * for both merge and merge_opt
+ * again we consider only the scenario where merge and merge_opt differ
+ *)
+#set-options "--z3rlimit 20"
+let rec lemma_merge_merge_opt_equivalence_helper_1 (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{live uf h /\ well_formed uf h})
+  (j:id n)
+  :Lemma (requires (let r_1, _ = reify (find uf i_1 h) h in
+	            let r_2, _ = reify (find uf i_2 h) h in
+
+                    let p, _ = reify (find uf j h) h in
+
+                    r_1 <> r_2  /\ height uf r_1 h >= height uf r_2 h /\
+		    p <> r_1 /\ p <> r_2))  //p is neither r_1 nor r_2
+         (ensures  (let _, h1 = reify (merge uf i_1 i_2) h in
+	            let _, h2 = reify (merge_opt uf i_1 i_2) h in
+
+                    fst (reify (find uf j h1) h1) = fst (reify (find uf j h) h) /\
+                    fst (reify (find uf j h2) h2) = fst (reify (find uf j h) h)))  //find of j remains same in as h in h1 and h2
+	 (decreases %[diff n (subtree #n uf j h)])
+	 [SMTPat (trigger #n uf i_1 i_2 h j j)]
+  = let r_1, _ = reify (find uf i_1 h) h in
+    let r_2, _ = reify (find uf i_2 h) h in
+    
+    let _, h1 = reify (merge uf i_1 i_2) h in
+    let _, h2 = reify (merge_opt uf i_1 i_2) h in
+    lemma_merge_helper uf i_1 i_2 h;
+    lemma_merge_opt_helper uf i_1 i_2 h;
+
+    let p = parent uf j h in
+    if j = p then ()
+    else begin
+      well_formed_decreases_lemma uf j h;
+      lemma_merge_merge_opt_equivalence_helper_1 uf i_1 i_2 h p;
+      lemma_find_helper uf j h1;
+      lemma_find_helper uf j h2;
+      ()
+    end
+
+#set-options "--z3rlimit 20"
+let lemma_merge_merge_opt_equivalence (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{live uf h /\ well_formed uf h})
+  (j_1:id n) (j_2:id n)
+  :Lemma (requires True)
+         (ensures  (let _, h1 = reify (merge uf i_1 i_2) h in
+	            let _, h2 = reify (merge_opt uf i_1 i_2) h in
+		    
+                    (fst (reify (find uf j_1 h1) h1) = fst (reify (find uf j_2 h1) h1)) <==>
+                    (fst (reify (find uf j_1 h2) h2) = fst (reify (find uf j_2 h2) h2))))
+  = let r_1, _ = reify (find uf i_1 h) h in
+    let r_2, _ = reify (find uf i_2 h) h in
+
+    let _, d_1, s_1 = sel h (index uf r_1) in
+    let _, d_2, s_2 = sel h (index uf r_2) in
+
+    if r_1 = r_2 then ()
+    else if j_1 = j_2 then ()
+    else begin
+      if d_1 < d_2 then ()
+      else begin
+        assert (trigger #n uf i_1 i_2 h j_1 j_2);
+        assert (trigger #n uf i_1 i_2 h j_1 j_1);
+        assert (trigger #n uf i_1 i_2 h j_2 j_2)
+      end
+    end
