@@ -1,6 +1,7 @@
 module Relational.UnionFind
 
 open FStar.Seq
+open FStar.Ghost
 open FStar.OrdSet
 
 open FStar.DM4F.Heap
@@ -127,9 +128,9 @@ let lemma_merge_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{l
 		    let _, d_2, s_2 = sel h (index uf r_2) in
 		    let _, h1 = reify (merge uf i_1 i_2) h in
 		    r_1 <> r_2 ==>
-		    (sel h1 (index uf r_1) == (r_2, d_1, s_1)            /\
+		    (sel h1 (index uf r_1) == (r_2, d_1, s_1)                   /\
 		     (let d_2 = if d_1 >= d_2 then d_1 + 1 else d_2 in
-		      sel h1 (index uf r_2) == (r_2, d_2, union s_1 s_2)) /\
+		      sel h1 (index uf r_2) == (r_2, d_2, elift2 union s_1 s_2)) /\
 		     (forall (j:id n). (j <> r_1 /\ j <> r_2) ==> sel h (index uf j) == sel h1 (index uf j)))))
   = ()
 
@@ -141,9 +142,9 @@ let lemma_merge_opt_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:he
 		    let _, d_2, s_2 = sel h (index uf r_2) in
 		    let _, h1 = reify (merge_opt uf i_1 i_2) h in
 		    (r_1 <> r_2 /\ d_1 >= d_2) ==>
-		    (sel h1 (index uf r_2) = (r_1, d_2, s_2)            /\
+		    (sel h1 (index uf r_2) == (r_1, d_2, s_2)                   /\
 		     (let d_1 = if d_1 = d_2 then d_1 + 1 else d_1 in
-		      sel h1 (index uf r_1) = (r_1, d_1, union s_1 s_2)) /\
+		      sel h1 (index uf r_1) == (r_1, d_1, elift2 union s_1 s_2)) /\
 		     (forall (j:id n). (j <> r_1 /\ j <> r_2) ==> sel h (index uf j) == sel h1 (index uf j)))))
   = ()
 #reset-options

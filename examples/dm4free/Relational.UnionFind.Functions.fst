@@ -1,6 +1,7 @@
 module Relational.UnionFind.Functions
 
 open FStar.Seq
+open FStar.Ghost
 open FStar.OrdSet
 
 open FStar.DM4F.Heap
@@ -10,8 +11,8 @@ open Relational.UnionFind.Forest
 
 (* helpers for getting the parent, height, and the subtree *)
 unfold let parent  (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot (id n)    = Mktuple3?._1 (sel h (index uf i))
-unfold let height  (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot nat        = Mktuple3?._2 (sel h (index uf i))
-unfold let subtree (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot subtree_t = Mktuple3?._3 (sel h (index uf i))
+unfold let height  (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot nat         = Mktuple3?._2 (sel h (index uf i))
+unfold let subtree (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot subtree_t = reveal (Mktuple3?._3 (sel h (index uf i)))
 
 (*
  * well-formed conditions on the forest, essentially the invariants needed for proving the termination of operations
@@ -49,7 +50,7 @@ reifiable let rec find_opt (#n:nat) (uf:uf_forest n) (i:id n) (ghost_heap:heap)
 				                                                   //we need to ensure wellformedness i.e. subtree of p'
 										   //is a strict superset of subtee of i
 				     (forall (j:id n).{:pattern (sel h1 (index uf j))} strict_subset (subtree uf j h0) (subtree uf i h0) ==>
-	                                          sel h1 (index uf j) = sel h0 (index uf j))))  //this last clause to say that i remains unchanged in the recursive call, else when we write its subtree to be s, we have trouble proving that p's subtree is a strict superset of s
+	                                          sel h1 (index uf j) == sel h0 (index uf j))))  //this last clause to say that i remains unchanged in the recursive call, else when we write its subtree to be s, we have trouble proving that p's subtree is a strict superset of s
 	      (decreases (diff n (subtree #n uf i ghost_heap)))
   = let (p, d, s) = get uf i in
     if p = i then i
@@ -77,8 +78,8 @@ reifiable let merge (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
     else begin
       set uf r_1 (r_2, d_1, s_1);
       let d_2 = if d_1 >= d_2 then d_1 + 1 else d_2 in
-      set uf r_2 (r_2, d_2, union s_1 s_2);
-      assert (strict_subset s_1 (union s_1 s_2))
+      set uf r_2 (r_2, d_2, elift2 union s_1 s_2);
+      assert (strict_subset (reveal s_1) (union (reveal s_1) (reveal s_2)))
     end
 
 reifiable let merge_opt (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
@@ -94,13 +95,13 @@ reifiable let merge_opt (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
     else begin
       if d_1 < d_2 then begin
         set uf r_1 (r_2, d_1, s_1);
-        set uf r_2 (r_2, d_2, union s_1 s_2);
-        assert (strict_subset s_1 (union s_1 s_2))
+        set uf r_2 (r_2, d_2, elift2 union s_1 s_2);
+        assert (strict_subset (reveal s_1) (union (reveal s_1) (reveal s_2)))
       end
       else begin
         set uf r_2 (r_1, d_2, s_2);
 	let d_1 = if d_1 = d_2 then d_1 + 1 else d_1 in
-        set uf r_1 (r_1, d_1, union s_1 s_2);
-        assert (strict_subset s_1 (union s_1 s_2))
+        set uf r_1 (r_1, d_1, elift2 union s_1 s_2);
+        assert (strict_subset (reveal s_1) (union (reveal s_1) (reveal s_2)))
       end
     end

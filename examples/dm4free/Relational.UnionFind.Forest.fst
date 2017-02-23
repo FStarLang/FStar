@@ -1,6 +1,7 @@
 module Relational.UnionFind.Forest
 
 open FStar.Seq
+open FStar.Ghost
 open FStar.OrdSet
 
 open FStar.DM4F.Heap
@@ -63,10 +64,10 @@ let lemma_intersect_union_empty (s1:subtree_t) (s2:subtree_t) (s3:subtree_t)
 type id (n:nat) = i:nat{i < n}
 
 (*
- * each node maintains its parent id, height, and subtree nodes (including itself)
+ * each node maintains its parent id, height, and (ghost) subtree nodes (including itself)
  * the subtree is used as the decreasing metric in recursive calls
  *)
-type elt (n:nat) = id n * nat * subtree_t
+type elt (n:nat) = id n * nat * erased (subtree_t)
 
 type uf_forest (n:nat) = s:seq (ref (elt n)){length s = n}
 
@@ -79,7 +80,7 @@ let live (#n:nat) (uf:uf_forest n) (h:heap) :Type0 =
 
 reifiable let get (#n:nat) (uf:uf_forest n) (i:id n)
   :ST (elt n) (requires (fun h0      -> live uf h0))
-              (ensures  (fun h0 r h1 -> r = sel h0 (index uf i) /\ h0 == h1))
+              (ensures  (fun h0 r h1 -> r == sel h0 (index uf i) /\ h0 == h1))
   = let h = STATE?.get () in
     sel_tot h (index uf i)
 
