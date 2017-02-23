@@ -14,106 +14,65 @@ module S = FStar.Set
 // We reason about a set of addresses so as to reuse the [modifies] clause.
 type addr_set = S.set nat
 
-let disjoint (s1: addr_set) (s2: addr_set) =
+let disjoint (#a:eqtype) (s1: S.set a) (s2: S.set a) =
   S.intersect s1 s2 == S.empty
 
 // Apparently this lemma was missing from the Set library.
 // JP: what would be a good SMTPat?
-let disjoint_not_in_both s1 s2 x:
+let disjoint_not_in_both (a:eqtype) (s1:S.set a) (s2:S.set a) :
   Lemma
     (requires (disjoint s1 s2))
-    (ensures (S.mem x s1 ==> ~(S.mem x s2)))
+    (ensures (forall (x:a).{:pattern (S.mem x s1) \/ (S.mem x s2)} S.mem x s1 ==> ~(S.mem x s2)))
   [SMTPat (disjoint s1 s2)]
-=
-  if S.mem x s1 then begin
-    if S.mem x s2 then begin
-      S.mem_intersect x s1 s2;
-      assert (S.intersect s1 s2 == S.empty);
-      assert False
-    end else
-      ()
-  end else
-    ()
+= let f (x:a) : Lemma (~(S.mem x (S.intersect s1 s2))) = () in
+  FStar.Classical.forall_intro f
 
-irreducible
-let trigger #a (x: a) = True
+let heap_equiv_on (h_0:heap) (h_1:heap) (rs:addr_set) = 
+  forall (a:Type0). forall (r: ref a). 
+    S.mem (addr_of r) rs /\
+    h_0 `contains` r /\
+    h_1 `contains` r ==>
+    sel h_0 r == sel h_1 r
+
+
+let heap_eq (h:heap) (h_0:heap) (h_1:heap) =
+   forall (a:Type) (r:ref a).  h `contains` r ==> sel h_0 r == sel h_1 r
 
 (** [footprint f rs ws] means as long as two heaps coincide on [rs], then the
     resulting heaps coincide on [ws]. *)
 let footprint (f: unit -> STNull unit) (rs: addr_set) (ws: addr_set) =
-  // Note: just instantiating this quantifier yields useful modifies
-  // clauses... hence the trigger.
-  forall (h_0: heap). {:pattern (trigger h_0)}
+  forall (h_0: heap) (h_1: heap).{:pattern (reify (f ()) h_0);
+                                    (reify (f ()) h_1)}
   let (), h'_0 = reify (f ()) h_0 in
-  modifies ws h_0 h'_0 /\ (
-  forall (h_1: heap).
   let (), h'_1 = reify (f ()) h_1 in
-  modifies ws h_1 h'_1 /\ (
-  forall a. forall (r: ref a). S.mem (addr_of r) rs /\ (
-    h_0 `contains_a_well_typed` r /\
-    h_1 `contains_a_well_typed` r /\
-    sel h_0 r == sel h_1 r
-  ) ==> (
-  forall a. forall (r: ref a). (
-    S.mem (addr_of r) ws /\
-    h'_0 `contains_a_well_typed` r /\
-    h'_1 `contains_a_well_typed` r
-  ) ==> sel h'_0 r == sel h'_1 r)))
+  modifies ws h_0 h'_0 /\
+  modifies ws h_1 h'_1 /\
+  (heap_equiv_on h_0 h_1 rs ==> heap_equiv_on h'_0 h'_1 ws)
 
 val swap (rs1: addr_set) (ws1: addr_set) (f1: unit -> STNull unit)
   (rs2: addr_set) (ws2: addr_set) (f2: unit -> STNull unit)
-  (h_0: heap) (a: Type) (r: ref a):
+  (h_0: heap) :
   Lemma
     (requires (disjoint ws1 ws2 /\ disjoint rs1 ws2 /\ disjoint rs2 ws1 /\
-      footprint f1 rs1 ws1 /\ footprint f2 rs2 ws2 /\ h_0 `contains_a_well_typed` r))
+      footprint f1 rs1 ws1 /\ footprint f2 rs2 ws2))
     (ensures (
       let (), h_1 = reify (f1 ()) h_0 in
       let (), h'_1 = reify (f2 ()) h_1 in
       let (), h_2 = reify (f2 ()) h_0 in
       let (), h'_2 = reify (f1 ()) h_2 in
-      sel h'_1 r == sel h'_2 r))
-let swap rs1 ws1 f1 rs2 ws2 f2 h_0 a r =
-  let (), h_1 = reify (f1 ()) h_0 in
-  let (), h'_1 = reify (f2 ()) h_1 in
-  let (), h_2 = reify (f2 ()) h_0 in
-  let (), h'_2 = reify (f1 ()) h_2 in
-  assert (trigger h_0);
-  assert (modifies ws1 h_0 h_1);
-  assert (modifies ws2 h_1 h'_1);
-  assert (modifies ws2 h_0 h_2);
-  assert (modifies ws1 h_2 h'_2);
-  assert (forall a. forall (r: ref a). h_0 `contains_a_well_typed` r /\
-    ~(S.mem (addr_of r) ws1) /\ ~(S.mem (addr_of r) ws2) ==>
-    sel h_0 r == sel h_1 r /\ sel h_0 r == sel h_2 r /\
-    sel h_0 r == sel h'_1 r /\ sel h_0 r == sel h'_2 r);
-  assert (forall a. forall (r: ref a).
-    S.mem (addr_of r) ws1 ==>
-    ~(S.mem (addr_of r) ws2));
-  assert (forall a. forall (r: ref a).
-    S.mem (addr_of r) ws2 ==>
-    ~(S.mem (addr_of r) ws1));
-  assert (forall a. forall (r: ref a). h_0 `contains_a_well_typed` r /\
-    S.mem (addr_of r) ws1 ==>
-    sel h_0 r == sel h_2 r);
-  assert (forall a. forall (r: ref a). h_0 `contains_a_well_typed` r /\
-    S.mem (addr_of r) ws2 ==>
-    sel h_0 r == sel h_1 r);
-  assert (forall a. forall (r: ref a). h_0 `contains_a_well_typed` r /\
-    S.mem (addr_of r) ws1 ==>
-    sel h_1 r == sel h'_1 r);
-  assert (forall a. forall (r: ref a). h_0 `contains_a_well_typed` r /\
-    S.mem (addr_of r) ws2 ==>
-    sel h_2 r == sel h'_2 r);
+      heap_eq h_0 h'_1 h'_2))
+let swap rs1 ws1 f1 rs2 ws2 f2 h_0 =
+  let (), h_1 = reify (f1 ()) h_0 in //Strange that we seem to need these to trigger
+  let (), h_2 = reify (f2 ()) h_0 in //the same terms in the post-condition don't seem to be sufficient
+  ()                               //Also strange that the other two terms don't seem necessary
 
-  match S.mem (addr_of r) ws1, S.mem (addr_of r) ws2 with
-  | false, false ->
-      ()
-  | false, true ->
-      admit ()
-  | true, false ->
-      assert (sel h_0 r == sel h_2 r);
-      // JP: need to state that f1 and f2 preserve the "contains_a_well_typed"
-      // property for any reference
-      assert (forall a. forall (r: ref a). h_0 `contains_a_well_typed` r ==>
-        h_2 `contains_a_well_typed` r);
-      admit ()
+let idem (rs ws:addr_set) (f:unit -> STNull unit)  (h0:heap)
+  : Lemma (requires (disjoint rs ws /\
+                     footprint f rs ws))
+          (ensures (let _, h1 = reify (f ()) h0 in
+                    let _, h2 = reify (f ()) h1 in
+                    heap_eq h0 h1 h2))
+  = let _, h1 = reify (f ()) h0 in
+    let _, h2 = reify (f ()) h1 in
+    ()
+     
