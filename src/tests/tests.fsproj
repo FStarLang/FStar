@@ -50,6 +50,16 @@
     <Reference Include="FsLexYacc.Runtime">
       <HintPath>..\..\..\..\FStar\bin\FsLexYacc.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="Argu">
+          <HintPath>..\VS\packages\Argu.3.2.0\lib\net40\Argu.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+    <Reference Include="Expecto">
+      <HintPath>..\VS\packages\Expecto.3.2.0\lib\net40\Expecto.dll</HintPath>
+      <Private>True</Private>
+      <Paket>True</Paket>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
@@ -63,6 +73,7 @@
     <Compile Include="util.fs" />
     <Compile Include="norm.fs" />
     <Compile Include="unif.fs" />
+    <Compile Include="tc.fs" />
     <Compile Include="test.fs" />
   </ItemGroup>
   <ItemGroup>
@@ -118,7 +129,7 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
