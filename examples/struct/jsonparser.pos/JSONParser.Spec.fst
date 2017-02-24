@@ -1,4 +1,4 @@
-module Test
+module JSONParser.Spec
 
 let char   : eqtype = Char.char
 let string : eqtype = Seq.seq char
