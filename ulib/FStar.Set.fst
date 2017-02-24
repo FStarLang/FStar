@@ -134,7 +134,7 @@ assume val lemma_set_to_tset:
 type eqtype = a:Type0{hasEq a}
 
 val as_set': #a:eqtype -> list a -> Tot (set a)
-let rec as_set' #a l = match l with 
+let rec as_set' #a l = match l with
   | [] -> empty
   | hd::tl -> union (singleton hd) (as_set' tl)
 

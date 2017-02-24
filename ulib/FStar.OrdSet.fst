@@ -1,7 +1,7 @@
 module FStar.OrdSet
 
 type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
-    (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)  (* anti-symmetry *)
+   (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)  (* anti-symmetry *)
  /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)   (* transitivity  *)
  /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                 (* totality      *)
 
@@ -163,7 +163,7 @@ val eq_remove: #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
 val size_empty: #a:eqtype -> #f:cmp a -> s:ordset a f
                 -> Lemma (requires True) (ensures ((size #a #f s = 0) = (s = empty #a #f)))
                   [SMTPat (size #a #f s)]
-                   
+
 val size_remove: #a:eqtype -> #f:cmp a -> y:a -> s:ordset a f
                  -> Lemma (requires (mem #a #f y s))
                           (ensures (size #a #f s = size #a #f (remove #a #f y s) + 1))
@@ -172,7 +172,7 @@ val size_remove: #a:eqtype -> #f:cmp a -> y:a -> s:ordset a f
 val size_singleton: #a:eqtype -> #f:cmp a -> x:a
                     -> Lemma (requires True) (ensures (size #a #f (singleton #a #f x) = 1))
                        [SMTPat (size #a #f (singleton #a #f x))]
-                       
+
 private val eq_helper: #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
                -> Lemma (requires (Cons? s /\ f x (Cons?.hd s) /\ x =!= Cons?.hd s))
                        (ensures (not (mem #a #f x s)))
@@ -246,7 +246,7 @@ let rec mem_implies_subset (#a:eqtype) #f s1 s2 = match s1, s2 with
     else if f hd hd' && not (hd = hd') then
       ()
     else mem_implies_subset #a #f s1 tl'
-    
+
 let mem_subset (#a:eqtype) #f s1 s2 =
   subset_implies_mem #a #f s1 s2; mem_implies_subset #a #f s1 s2
 
@@ -293,8 +293,17 @@ assume val size_union: #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
 
 (**********)
 
-let minus #a #f s1 s2 = admit ()
-let strict_subset #a #f s1 s2 = admit ()
+let rec minus #a #f s1 s2 =
+  match s1, s2 with
+  | [], _ -> []
+  | s1, [] -> s1
+  | x1 :: xs1, x2 :: xs2 ->
+    if x1 = x2
+    then minus xs1 xs2
+    else if f x1 x2 then x1 :: (minus xs1 (x2::xs2))
+    else x1 :: (minus xs1 xs2)
+
+let strict_subset #a #f s1 s2 = s1 <> s2 && subset #a #f s1 s2
 
 let lemma_strict_subset_size (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f)
   :Lemma (requires (strict_subset s1 s2))
