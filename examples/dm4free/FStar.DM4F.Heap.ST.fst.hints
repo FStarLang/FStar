@@ -1,5 +1,5 @@
 [
-  "ÒÚËä~÷í‹š¢Y\u0006¤ïŒm",
+  "\nÄJµ˜’˜™ªÙu‰NÀ¡",
   [
     [ "FStar.DM4F.Heap.ST.STATE_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -439,6 +439,33 @@
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_bb6ef9a398299baa9b931f4d7e3c86ce",
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [
+      "FStar.DM4F.Heap.ST.refine_st",
+      1,
+      2,
+      1,
+      [
+        "@query", "data_elim_Prims.Mktuple2",
+        "fuel_guarded_inversion_Prims.tuple2",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2"
+      ],
+      0
+    ],
+    [ "FStar.DM4F.Heap.ST.refine_st", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.Heap.ST.runST",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.DM4F.Heap.emp", "equation_Prims.fst",
+        "function_token_typing_FStar.DM4F.Heap.emp",
+        "proj_equation_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__1"
       ],
       0
     ]

@@ -18,18 +18,21 @@ abstract type ordset (a:eqtype) (f:cmp a) = l:(list a){sorted f l}
 val hasEq_ordset: a:eqtype -> f:cmp a -> Lemma (requires (True)) (ensures (hasEq (ordset a f))) [SMTPat (hasEq (ordset a f))]
 let hasEq_ordset a f = ()
 
-abstract val empty     : #a:eqtype -> #f:cmp a -> Tot (ordset a f)
-abstract val union     : #a:eqtype -> #f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
-abstract val intersect : #a:eqtype -> #f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
+abstract val empty        : #a:eqtype -> #f:cmp a -> Tot (ordset a f)
+abstract val union        : #a:eqtype -> #f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
+abstract val intersect    : #a:eqtype -> #f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
 
-abstract val mem       : #a:eqtype -> #f:cmp a -> a -> s:ordset a f -> Tot bool
-abstract val choose    : #a:eqtype -> #f:cmp a -> s:ordset a f -> Tot (option a)
-abstract val remove    : #a:eqtype -> #f:cmp a -> a -> ordset a f -> Tot (ordset a f)
+abstract val mem          : #a:eqtype -> #f:cmp a -> a -> s:ordset a f -> Tot bool
+abstract val choose       : #a:eqtype -> #f:cmp a -> s:ordset a f -> Tot (option a)
+abstract val remove       : #a:eqtype -> #f:cmp a -> a -> ordset a f -> Tot (ordset a f)
 
-abstract val size      : #a:eqtype -> #f:cmp a -> ordset a f -> Tot nat
+abstract val size         : #a:eqtype -> #f:cmp a -> ordset a f -> Tot nat
 
-abstract val subset    : #a:eqtype -> #f:cmp a -> ordset a f -> ordset a f -> Tot bool
-abstract val singleton : #a:eqtype -> #f:cmp a -> a -> Tot (ordset a f)
+abstract val subset       : #a:eqtype -> #f:cmp a -> ordset a f -> ordset a f -> Tot bool
+abstract val singleton    : #a:eqtype -> #f:cmp a -> a -> Tot (ordset a f)
+
+abstract val minus        : #a:eqtype -> #f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
+abstract val strict_subset: #a:eqtype -> #f:cmp a -> ordset a f -> ordset a f -> Tot bool
 
 
 let mem (#a:eqtype) #f x s = List.Tot.mem x s
@@ -288,3 +291,53 @@ assume val size_union: #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
                                    (size #a #f (union #a #f s1 s2) >= size #a #f s2)))
                          [SMTPat (size #a #f (union #a #f s1 s2))]
 
+(**********)
+
+let minus #a #f s1 s2 = admit ()
+let strict_subset #a #f s1 s2 = admit ()
+
+let lemma_strict_subset_size (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f)
+  :Lemma (requires (strict_subset s1 s2))
+         (ensures  (subset s1 s2 /\ size s1 < size s2))
+   [SMTPat (strict_subset s1 s2)]
+  = admit ()
+
+let lemma_minus_mem (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) (x:a)
+  :Lemma (requires True) (ensures (mem x (minus s1 s2) = (mem x s1 && not (mem x s2))))
+   [SMTPat (mem x (minus s1 s2))]
+  = admit ()
+
+let lemma_strict_subset_minus_size (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) (s:ordset a f)
+  :Lemma (requires (strict_subset s1 s2 /\ subset s1 s /\ subset s2 s))
+         (ensures  (size (minus s s2) < size (minus s s1)))
+   [SMTPat (strict_subset s1 s2); SMTPat (subset s1 s); SMTPat (subset s2 s)]
+  = admit ()
+
+let lemma_disjoint_union_subset (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f)
+  :Lemma (requires (~ (s1 == empty) /\ ~ (s2 == empty) /\ intersect s1 s2 == empty))
+         (ensures  (strict_subset s1 (union s1 s2) /\ strict_subset s2 (union s1 s2)))
+   [SMTPatOr [[SMTPat (strict_subset s1 (union s1 s2))]; [SMTPat (strict_subset s2 (union s1 s2))]]]
+  = admit ()
+
+let lemma_subset_union (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) (s:ordset a f)
+  :Lemma (requires (subset s1 s /\ subset s2 s))
+         (ensures  (subset (union s1 s2) s))
+   [SMTPat (subset (union s1 s2) s)]
+  = ()
+
+let lemma_strict_subset_transitive (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) (s3:ordset a f)
+  :Lemma (requires (strict_subset s1 s2 /\ strict_subset s2 s3))
+         (ensures  (strict_subset s1 s3))
+   [SMTPat (strict_subset s1 s2); SMTPat (strict_subset s2 s3)]
+  = admit ()
+
+let lemma_intersect_symmetric (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f)
+  :Lemma (requires True) (ensures (intersect s1 s2 == intersect s2 s1))
+   [SMTPatOr [[SMTPat (intersect s1 s2)]; [SMTPat (intersect s2 s1)]]]
+  = admit ()
+
+let lemma_intersect_union_empty (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) (s3:ordset a f)
+  :Lemma (requires (intersect s1 s3 == empty /\ intersect s2 s3 == empty))
+         (ensures  (intersect (union s1 s2) s3 == empty))
+   [SMTPat (intersect (union s1 s2) s3)]
+  = admit ()
