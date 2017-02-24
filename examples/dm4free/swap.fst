@@ -38,7 +38,7 @@ val swap (rs1: addr_set) (ws1: addr_set) (f1: unit -> STNull unit)
   (rs2: addr_set) (ws2: addr_set) (f2: unit -> STNull unit)
   (h_0: heap) :
   Lemma
-    (requires (S.disjoint ws1 ws2 /\ S.disjoint rs1 ws2 /\ S.disjoint rs2 ws1 /\
+    (requires (S.disjoint__ ws1 ws2 /\ S.disjoint__ rs1 ws2 /\ S.disjoint__ rs2 ws1 /\
       footprint f1 rs1 ws1 /\ footprint f2 rs2 ws2))
     (ensures (
       let (), h_1 = reify (f1 ()) h_0 in
@@ -55,7 +55,7 @@ let swap rs1 ws1 f1 rs2 ws2 f2 h_0 =
 (** If whatever [f] writes only depends on [rs], then calling a [f] a second
     time should write the same values into the heap. *)
 let idem (rs ws:addr_set) (f:unit -> STNull unit)  (h0:heap)
-  : Lemma (requires (S.disjoint rs ws /\
+  : Lemma (requires (S.disjoint__ rs ws /\
                      footprint f rs ws))
           (ensures (let _, h1 = reify (f ()) h0 in
                     let _, h2 = reify (f ()) h1 in

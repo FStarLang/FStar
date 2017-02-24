@@ -41,7 +41,7 @@ let intersect #a s1 s2 = fun x -> s1 x && s2 x
 let complement #a s    = fun x -> not (s x)
 
 (* a property about sets *)
-let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
+let disjoint__ (#a:eqtype) (s1: set a) (s2: set a) =
   intersect s1 s2 == empty
 
 
@@ -115,9 +115,9 @@ let lemma_equal_refl  #a s1 s2 = ()
 
 let disjoint_not_in_both (a:eqtype) (s1:set a) (s2:set a) :
   Lemma
-    (requires (disjoint s1 s2))
+    (requires (disjoint__ s1 s2))
     (ensures (forall (x:a).{:pattern (mem x s1) \/ (mem x s2)} mem x s1 ==> ~(mem x s2)))
-  [SMTPat (disjoint s1 s2)]
+  [SMTPat (disjoint__ s1 s2)]
 = let f (x:a) : Lemma (~(mem x (intersect s1 s2))) = () in
   FStar.Classical.forall_intro f
 
