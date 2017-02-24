@@ -180,52 +180,58 @@ let go uu____142 =
                       | uu____175 ->
                           let uu____176 = FStar_Options.indent () in
                           (match uu____176 with
-                           | true  -> FStar_Indent.generate filenames
-                           | uu____177 ->
+                           | true  ->
+                               (match FStar_Extraction_ML_PrintML.is_default_printer
+                                with
+                                | true  -> FStar_Indent.generate filenames
+                                | uu____177 ->
+                                    failwith
+                                      "You seem to be using the F#-generated version ofthe compiler ; reindenting is not known to work yet with this version")
+                           | uu____178 ->
                                (match (FStar_List.length filenames) >=
                                         (Prims.parse_int "1")
                                 with
                                 | true  ->
                                     let verify_mode =
-                                      let uu____182 =
+                                      let uu____183 =
                                         FStar_Options.verify_all () in
-                                      match uu____182 with
+                                      match uu____183 with
                                       | true  ->
-                                          ((let uu____184 =
+                                          ((let uu____185 =
                                               let _0_841 =
                                                 FStar_Options.verify_module
                                                   () in
                                               _0_841 <> [] in
-                                            match uu____184 with
+                                            match uu____185 with
                                             | true  ->
                                                 (FStar_Util.print_error
                                                    "--verify_module is incompatible with --verify_all";
                                                  FStar_All.exit
                                                    (Prims.parse_int "1"))
-                                            | uu____187 -> ());
+                                            | uu____188 -> ());
                                            FStar_Parser_Dep.VerifyAll)
-                                      | uu____188 ->
-                                          let uu____189 =
+                                      | uu____189 ->
+                                          let uu____190 =
                                             let _0_842 =
                                               FStar_Options.verify_module () in
                                             _0_842 <> [] in
-                                          (match uu____189 with
+                                          (match uu____190 with
                                            | true  ->
                                                FStar_Parser_Dep.VerifyUserList
-                                           | uu____191 ->
+                                           | uu____192 ->
                                                FStar_Parser_Dep.VerifyFigureItOut) in
                                     let filenames =
                                       FStar_Dependencies.find_deps_if_needed
                                         verify_mode filenames in
-                                    let uu____194 =
+                                    let uu____195 =
                                       FStar_Universal.batch_mode_tc filenames in
-                                    (match uu____194 with
+                                    (match uu____195 with
                                      | (fmods,dsenv,env) ->
                                          let module_names_and_times =
                                            FStar_All.pipe_right fmods
                                              (FStar_List.map
-                                                (fun uu____230  ->
-                                                   match uu____230 with
+                                                (fun uu____231  ->
+                                                   match uu____231 with
                                                    | (x,t) ->
                                                        ((FStar_Universal.module_or_interface_name
                                                            x), t))) in
@@ -239,31 +245,31 @@ let go uu____142 =
                                           finished_message
                                             module_names_and_times
                                             (Prims.parse_int "0")))
-                                | uu____250 ->
+                                | uu____251 ->
                                     FStar_Util.print_error
                                       "no file provided\n"))))))
-let main uu____257 =
+let main uu____258 =
   try go (); cleanup (); FStar_All.exit (Prims.parse_int "0")
   with
   | e ->
       ((match FStar_Errors.handleable e with
         | true  -> FStar_Errors.handle_err false e
-        | uu____265 -> ());
-       (let uu____266 = FStar_Options.trace_error () in
-        match uu____266 with
+        | uu____266 -> ());
+       (let uu____267 = FStar_Options.trace_error () in
+        match uu____267 with
         | true  ->
             let _0_845 = FStar_Util.message_of_exn e in
             let _0_844 = FStar_Util.trace_of_exn e in
             FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _0_845
               _0_844
-        | uu____267 ->
+        | uu____268 ->
             (match Prims.op_Negation (FStar_Errors.handleable e) with
              | true  ->
                  let _0_846 = FStar_Util.message_of_exn e in
                  FStar_Util.print1_error
                    "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
                    _0_846
-             | uu____268 -> ()));
+             | uu____269 -> ()));
        cleanup ();
        (let _0_847 = FStar_Errors.report_all () in
         FStar_All.pipe_right _0_847 Prims.ignore);
