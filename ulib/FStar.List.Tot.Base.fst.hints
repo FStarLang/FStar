@@ -1,5 +1,5 @@
 [
-  "◊Í BÁÏj€¢ÀJê\u0017:D°",
+  "ÂÊuŸ\u0004Ö€÷\u0016,›3\u0004cÚH",
   [
     [ "FStar.List.Tot.Base.isEmpty", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -730,6 +730,21 @@
         "token_correspondence_FStar.List.Tot.Base.sortWith.fuel_instrumented",
         "token_correspondence_Prims.op_LessThan",
         "typing_FStar.List.Tot.Base.partition"
+      ],
+      0
+    ],
+    [
+      "FStar.List.Tot.Base.strict_prefix_of",
+      1,
+      4,
+      4,
+      [
+        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.l_False",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.l_False",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
     ]
