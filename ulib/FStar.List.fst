@@ -13,6 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+
+(**
+F* standard library List module. 
+
+@summary F* stdlib List module. 
+*)
 module FStar.List
 open FStar.All
 include FStar.List.Tot
