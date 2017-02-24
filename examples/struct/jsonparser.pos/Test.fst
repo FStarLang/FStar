@@ -1030,6 +1030,29 @@ let gparse_object_gprint_object_aux_cons_nil
   Seq.append_empty_l tail;
   assert (gparse_object j gparse l data0 l' (Seq.append (gprint_object j gprint l data l') tail) == Some (data, tail))
 
+let gparse_object_cons_cons
+  (j: json_schema)
+  (l: list (key * json_schema) {List.Tot.noRepeats (List.Tot.map fst l) /\ l << j})
+  (data: DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l)}) (object_as_type j as_gtype l))
+  (l': list (key * json_schema) {list_precedes l' l \/ l' == l})
+  (s': key {List.Tot.mem s' (List.Tot.map fst l) } )
+  (j': json_schema { object_as_type j as_gtype l s' == as_gtype j' } )
+  (q: list (key * json_schema) { l' == (s', j') :: q /\ j' << j /\ list_precedes q l /\ (Cons? q) } )
+  (s: string)
+  (s1: string { Seq.length s1 < Seq.length s /\ gparse_exact_string (Key?.s s') s == Some s1 } )
+  (s2: string { Seq.length s2 < Seq.length s1 /\ gparse_exact_char colon s1 == Some s2 } )
+  (data': as_gtype j' { data' == DependentMap.sel data s' } )
+  (new_data': as_gtype j')
+  (s3: string { Seq.length s3 < Seq.length s2 /\ gparse j' data' s2 == Some (new_data', s3) } )
+  (new_data: DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l)}) (object_as_type j as_gtype l) { new_data == DependentMap.upd data s' new_data' } )
+  (s4: string { Seq.length s4 < Seq.length s3 /\ gparse_exact_char comma s3 == Some s4 } )
+  (data_: DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l)}) (object_as_type j as_gtype l))
+  (s5: string { Seq.length s5 <= Seq.length s4 /\ gparse_object j gparse l new_data q s4 == Some (data_, s5) } )
+: Lemma
+  (ensures (gparse_object j gparse l data l' s == Some (data_, s5)))
+= ()  
+
+
 #reset-options "--z3rlimit 32"
 
 let gparse_object_gprint_object_aux_cons_cons
@@ -1053,12 +1076,12 @@ let gparse_object_gprint_object_aux_cons_cons
     Lemma (gparse_object j gparse l data0 l'' (Seq.append (gprint_object j gprint l data l'') tail) == Some (data, tail)))
   (s': key { List.Tot.mem s' (List.Tot.map fst l) } )
   (j': json_schema { object_as_type j as_gtype l s' == as_gtype j' } )
-  (q: list (key * json_schema) {l' == (s', j') :: q /\ list_precedes q l})
+  (q: list (key * json_schema) {l' == (s', j') :: q /\ list_precedes q l /\ j' << j})
   (s: string {s == Seq.append (gprint_object j gprint l data l') tail} )
-  (s2: string { gparse_exact_string (Key?.s s') s == Some s2 } )
-  (s3: string { gparse_exact_char colon s2 == Some s3 } )
+  (s2: string { Seq.length s2 < Seq.length s /\ gparse_exact_string (Key?.s s') s == Some s2 } )
+  (s3: string { Seq.length s3 < Seq.length s2 /\ gparse_exact_char colon s2 == Some s3 } )
   (data': as_gtype j' { DependentMap.sel data s' == data' } )
-  (data0': as_gtype j')
+  (data0': as_gtype j' { DependentMap.sel data0 s' == data0' } )
   (s4: string { Seq.length s4 < Seq.length s3  /\ gparse j' data0' s3 == Some (data', s4) /\ s4 == Seq.append (Seq.cons comma (gprint_object j gprint l data q)) tail } )
   (new_l_left: list (key * json_schema) { l == List.Tot.append new_l_left q /\ Cons? q } )
   (new_data0: DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l)}) (object_as_type j as_gtype l) {new_data0 == DependentMap.upd data0 s' data' })
@@ -1068,7 +1091,34 @@ let gparse_object_gprint_object_aux_cons_cons
     (DependentMap.sel new_data0 k == DependentMap.sel data k)))
 : Lemma
   (ensures (gparse_object j gparse l data0 l' (Seq.append (gprint_object j gprint l data l') tail) == Some (data, tail)))
-= admit ()
+= object_rec_prereq j gprint l data l' s' j' q;
+  let s45 = gprint_object j gprint l data q in
+  let s5 = Seq.append s45 tail in
+  let _ : squash (s4 == Seq.cons comma s5) =
+    seq_append_cons comma s45 tail
+  in
+  let _ : squash (gparse_object j gparse l new_data0 q s5 == Some (data, tail)) =
+    ihgparse_object new_data0 data tail q new_l_left new_hsel;
+    assert (gparse_object j gparse l new_data0 q s5 == Some (data, tail))
+  in
+  let _ : squash (gparse_exact_char comma s4 == Some s5) =
+    Seq.append_empty_l s4;
+    gparse_exact_char_append_cons Seq.createEmpty comma s5
+  in
+  let _ =
+    gparse_object_cons_cons
+      j l data0 l'
+      s' j' q
+      s s2 s3
+      data0'
+      data'
+      s4
+      new_data0
+      s5
+      data
+      tail
+  in    
+  assert (gparse_object j gparse l data0 l' (Seq.append (gprint_object j gprint l data l') tail) == Some (data, tail))
 
 let gparse_object_gprint_object_aux_cons
   (j: json_schema)
@@ -1190,22 +1240,6 @@ let gparse_object_gprint_object_aux_cons
 	 data' data0'
 	 s4
 	 new_l_left new_data0 new_hsel
-  
-  (* begin
-    let (new_data0: as_gtype j) = new_data0 in
-    let s5 = gprint_object j gprint l new_data0 q in
-    let s6 = Seq.append s5 tail in
-    let _ : squash (s4 == Seq.cons comma s6) =
-      seq_append_cons colon s5 tail
-    in
-    let _ : squash (gparse_exact_char comma s4 == Some s6) =
-      Seq.append_empty_l s4;
-      gparse_exact_char_append_cons Seq.createEmpty colon s6
-    in
-  end else begin
-    assume (gparse_object j gparse l data0 l' (Seq.append (gprint_object j gprint l data l') tail) == Some (data, tail))
-  end
-*)
 
 let rec gparse_object_gprint_object_aux
   (j: json_schema)
