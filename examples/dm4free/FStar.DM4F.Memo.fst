@@ -105,17 +105,31 @@ let rec memo_heap_id (#f:dom -> Tot codom) (h0:memo_heap f)
 let computes (#p:dom -> Tot Type0) ($f: x:dom{p x} -> Memo codom) (g:dom -> Tot codom) =
       forall h0. valid_memo h0 g ==> (forall x. p x ==> (let y ,h1 = reify (f x) h0 in y == g x /\ valid_memo h1 g))
 
+
 noeq
 type memo_pack (f:dom -> Tot codom) =
   | MemoPack :
-    h0:memo_heap f ->
-    mf:(dom -> Memo codom){mf `computes` f}
-    -> memo_pack f
+    h0:heap{valid_memo h0 f} ->
+    mf:(dom -> Memo codom){mf `computes` f} ->
+    memo_pack f
 
 let apply_memo (#f:dom -> Tot codom) (mp:memo_pack f) (x:dom) : Tot (codom * memo_pack f) =
   let MemoPack h0 mf = mp in
-  let y, h1 = reify (mf x) (memo_heap_to_valid_memo h0) in
-  y, MemoPack (valid_memo_to_memo_heap f h1) mf
+  let y, h1 = reify (mf x) h0 in
+  y, MemoPack h1 mf
+
+
+(* noeq *)
+(* type memo_pack (f:dom -> Tot codom) = *)
+(*   | MemoPack : *)
+(*     h0:memo_heap f -> *)
+(*     mf:(dom -> Memo codom){mf `computes` f} *)
+(*     -> memo_pack f *)
+
+(* let apply_memo (#f:dom -> Tot codom) (mp:memo_pack f) (x:dom) : Tot (codom * memo_pack f) = *)
+(*   let MemoPack h0 mf = mp in *)
+(*   let y, h1 = reify (mf x) (memo_heap_to_valid_memo h0) in *)
+(*   y, MemoPack (valid_memo_to_memo_heap f h1) mf *)
 
 
 (* Memoization of a pure function with a complete specification *)
@@ -157,7 +171,9 @@ let memo_extr_computes (f:dom -> Tot codom) : Lemma ((memo_extr f) `computes` f)
   forall_impl_intro (fun (h0:heap) (vm:squash(valid_memo h0 f)) -> forall_intro (phi0 h0 vm) <:
     Lemma (forall x. let y, h1 = reify (memo_extr f x) h0 in y == f x /\ valid_memo h1 f))
 
-
+let to_memo_pack (f : dom -> Tot codom) : Tot (memo_pack f) =
+  memo_extr_computes f ;
+  MemoPack [] (memo_extr f)
 
 
 (* Specification-less memoization of a memoized function and its extrinsic proof *)
@@ -440,6 +456,10 @@ let memo_rec_lemma (f:(x:dom) -> partial_result x)
     Lemma (forall x. let y, h1 = reify (memo_rec_extr f x) h0 in y == fixp f x /\ valid_memo h1 (fixp f)))
 
 
+let to_memo_pack_rec (#g:dom -> Tot codom) (f : x:dom -> Tot (partial_result x))
+  : Pure (memo_pack g) (requires (g == fixp f)) (ensures (fun _ -> True)) =
+  memo_rec_lemma f ;
+  MemoPack [] (memo_rec_extr f)
 
 
 (* ****************************************************************************)
@@ -510,7 +530,7 @@ let fixp_eq (f:x:dom -> Tot (partial_result x)) (g:dom -> Tot codom)
 
 let fibonnacci_partial (x:dom) : (partial_result x) =
   if x <= 1
-  then Done 0
+  then Done 1
   else Need (x - 1) (fun y1 -> Need (x - 2) (fun y2 -> Done (y1 + y2)))
 
 unfold
@@ -521,7 +541,7 @@ let fibonnacci_memo = memo_rec_extr fibonnacci_partial
 
 let rec fibonnacci (x:dom) =
   if x <= 1
-  then 0
+  then 1
   else fibonnacci (x - 1) + fibonnacci (x - 2)
 
 
@@ -579,6 +599,14 @@ let fibonnacci_memo_computes_fibonnacci () : Lemma (fibonnacci_memo `computes` f
   fibonnacci_partial_induces_fibonnacci () ;
   computes_extensionality fibonnacci_memo fibonnacci_ fibonnacci
 
+let fibo : memo_pack fibonnacci =
+  fibonnacci_memo_computes_fibonnacci () ;
+  MemoPack [] fibonnacci_memo
+
+
+(* let _ = *)
+(*   let x, _ = apply_memo fibo 7 in *)
+(*   assert (x = 21) *)
 
 
 (* Once we have indexed effects the following definitions might be interesting *)
