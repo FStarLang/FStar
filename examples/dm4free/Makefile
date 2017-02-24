@@ -23,7 +23,8 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.Memo.uver \
 	loops.uver \
 	Relational.UnionFind.Forest.uver \
-	Relational.UnionFind.uver
+	Relational.UnionFind.uver \
+	swap.uver
 
 uf-functions:
 	$(FSTAR_HOME)/bin/fstar.exe Relational.UnionFind.Functions.fst
