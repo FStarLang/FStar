@@ -1114,8 +1114,8 @@
       [
         "@query", "assumption_FStar.FunctionalExtensionality.Extensionality",
         "binder_x_00c2c856e702f50718a37c394bb4dba3_0",
-        "binder_x_a0e0201d945d3f92d47dea6b5155600c_2", "bool_inversion",
-        "bool_typing", "constructor_distinct_Prims.None",
+        "binder_x_a0e0201d945d3f92d47dea6b5155600c_2",
+        "constructor_distinct_Prims.None",
         "constructor_distinct_StlcStrongDbParSubst.EApp",
         "constructor_distinct_StlcStrongDbParSubst.ELam",
         "constructor_distinct_StlcStrongDbParSubst.EUnit",
