@@ -293,15 +293,43 @@ assume val size_union: #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
 
 (**********)
 
-let rec minus #a #f s1 s2 =
-  match s1, s2 with
-  | [], _ -> []
-  | s1, [] -> s1
-  | x1 :: xs1, x2 :: xs2 ->
-    if x1 = x2
-    then minus xs1 xs2
-    else if f x1 x2 then x1 :: (minus xs1 (x2::xs2))
-    else x1 :: (minus xs1 xs2)
+private
+let rec remove_le #a #f x (s:ordset a f)
+  : Pure (ordset a f)
+    (requires True)
+    (ensures (fun r -> sorted f (x :: r)))
+    (decreases s)
+=
+  match s with
+  | [] -> []
+  | y :: ys ->
+    if f x y && x <> y
+    then s
+    else remove_le #a #f x ys
+
+private
+let rec minus' #a #f x (s1 s2:ordset a f)
+  : Pure (list a)
+    (requires (sorted f (x::s1) /\ sorted f (x::s2)))
+    (ensures (fun r -> sorted f (x::r)))
+    (decreases s1)
+=
+  match s1 with
+  | [] -> []
+  | x1 :: xs1 ->
+    assert (sorted f xs1) ;
+    match s2 with
+    | [] -> s1
+    | x2 :: xs2 ->
+      assert (sorted f xs1) ;
+      if x1 = x2
+      then minus' #a #f x xs1 xs2
+      else x1 :: (minus' #a #f x1 xs1 (remove_le x1 s2))
+
+let minus #a #f s1 s2 =
+  match s1 with
+  | [] -> []
+  | x1 :: xs1 -> minus' #a #f x1 xs1 (remove_le #a #f x1 s2)
 
 let strict_subset #a #f s1 s2 = s1 <> s2 && subset #a #f s1 s2
 
