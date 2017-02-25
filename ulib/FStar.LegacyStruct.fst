@@ -674,12 +674,45 @@ abstract let gfrom_buffer_index
 : GTot (struct_ptr value)
 = _from_buffer_index p i
 
+abstract let live_gfrom_buffer_index
+  (#value: Type)
+  (h: HS.mem)
+  (p: Buffer.buffer value)
+  (i: nat{i < Buffer.length p})
+: Lemma
+  (requires (Buffer.live h p))
+  (ensures (live h (gfrom_buffer_index p i)))
+  [SMTPat (live h (gfrom_buffer_index p i))]
+= ()
+
+abstract let contains_gfrom_buffer_index
+  (#value: Type)
+  (h: HS.mem)
+  (p: Buffer.buffer value)
+  (i: nat{i < Buffer.length p})
+: Lemma
+  (requires (Buffer.contains h p))
+  (ensures (contains h (gfrom_buffer_index p i)))
+  [SMTPat (contains h (gfrom_buffer_index p i))]
+= ()
+
 abstract let as_buffer_gfrom_buffer_index
   (#value: Type)
   (p: Buffer.buffer value)
   (i: nat{i < Buffer.length p})
 : Lemma
   (as_buffer_type (gfrom_buffer_index p i) == value /\ as_buffer (gfrom_buffer_index p i) == Buffer.sub p (UInt32.uint_to_t i) (UInt32.uint_to_t 1))
+= ()
+
+abstract let as_value_gfrom_buffer_index
+  (#value: Type)
+  (h: HS.mem)
+  (p: Buffer.buffer value)
+  (i: nat{i < Buffer.length p})
+: Lemma
+  (requires (Buffer.contains h p))
+  (ensures (contains h (gfrom_buffer_index p i) /\ as_value h (gfrom_buffer_index p i) == Seq.index (Buffer.as_seq h p) i))
+  [SMTPat (as_value h (gfrom_buffer_index p i)); SMTPatT (Buffer.contains h p)]
 = ()
 
 abstract let gfield
@@ -893,7 +926,20 @@ abstract let disjoint_root
   (ensures (disjoint p1 p2))
 = ()
 
-abstract let disjoint_gfrom_buffer_index
+abstract let disjoint_gfrom_buffer_index_other
+  (#value1: Type)
+  (p1: Buffer.buffer value1)
+  (#value2: Type)
+  (p2: Buffer.buffer value2)
+  (i1: nat{i1 < Buffer.length p1})
+  (i2: nat{i2 < Buffer.length p2})
+: Lemma
+  (requires (Buffer.disjoint p1 p2))
+  (ensures (disjoint (gfrom_buffer_index p1 i1) (gfrom_buffer_index p2 i2)))
+  [SMTPat (disjoint (gfrom_buffer_index p1 i1) (gfrom_buffer_index p2 i2))]
+= ()
+
+abstract let disjoint_gfrom_buffer_index_same
   (#value: Type)
   (p: Buffer.buffer value)
   (i1: nat{i1 < Buffer.length p})
@@ -902,7 +948,7 @@ abstract let disjoint_gfrom_buffer_index
   (requires (i1 <> i2))
   (ensures (disjoint (gfrom_buffer_index p i1) (gfrom_buffer_index p i2)))
   [SMTPat (disjoint (gfrom_buffer_index p i1) (gfrom_buffer_index p i2))]
-= admit ()
+= ()
 
 abstract let disjoint_gfield
   (#key: eqtype)
