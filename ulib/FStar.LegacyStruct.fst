@@ -604,7 +604,7 @@ abstract let live_contains
 abstract let as_value
   (#value: Type)
   (h: HS.mem)
-  (p: struct_ptr value {live h p (* required by HS.sel, really? *) }) 
+  (p: struct_ptr value {live h p (* required by Buffer.get, really? *) }) 
 : GTot value
 = let (StructPtr content p') = p in
   path_sel (Buffer.get h content 0) p'
@@ -935,7 +935,6 @@ abstract let disjoint_includes
     (fun h -> ())
     (fun _ -> path_disjoint_includes (StructPtr?.p p1) (StructPtr?.p p2) (StructPtr?.p p1') (StructPtr?.p p2'))
 
-(*
 abstract let disjoint_ind
   (x:
     (#value1: Type) ->
@@ -947,14 +946,8 @@ abstract let disjoint_ind
     (#value1: Type) ->
     (#value2: Type) ->
     (p1: struct_ptr value1) ->
-    (p2: struct_ptr value2 { (exists h . ~ (contains h p1 <==> contains h p2)) /\ disjoint p1 p2 } ) ->
+    (p2: struct_ptr value2 { Buffer.disjoint (as_buffer p1) (as_buffer p2) } ) ->
     Lemma (x p1 p2))
-  (h_index:
-    (#value: Type) ->
-    (p: Buffer.buffer value) ->
-    (i1: nat{i1 < Buffer.length p}) ->
-    (i2: nat{i2 < Buffer.length p /\ i1 <> i2 /\ disjoint (gfrom_buffer_index p i1) (gfrom_buffer_index p i2) }) ->
-    Lemma (x (gfrom_buffer_index p i1) (gfrom_buffer_index p i2)))
   (h_field:
     (#key: eqtype) ->
     (#value: (key -> Tot Type)) ->
@@ -977,41 +970,26 @@ abstract let disjoint_ind
   (p1: struct_ptr value1)
   (p2: struct_ptr value2 { disjoint p1 p2 } )
 : Lemma (x p1 p2)
-= let diff_root : Type0 = exists h . ~ (contains h p1 <==> contains h p2) in
+= let diff_root : Type0 = Buffer.disjoint (as_buffer p1) (as_buffer p2) in
   FStar.Classical.or_elim
     #diff_root
-    #(StructPtr?.from p1 == StructPtr?.from p2 /\ StructPtr?.content p1 == StructPtr?.content p2 /\ (if UInt32.v (StructPtr?.index p1) = UInt32.v (StructPtr?.index p2) then path_disjoint (StructPtr?.p p1) (StructPtr?.p p2) else True))
+    #(StructPtr?.from p1 == StructPtr?.from p2 /\ as_buffer p1 == as_buffer p2 /\ path_disjoint (StructPtr?.p p1) (StructPtr?.p p2))
     #(fun _ -> x p1 p2)
     (fun (k: squash diff_root) ->
       assume diff_root; // TODO: why not automatic???
       h_root p1 p2)
     (fun _ ->
       let from: Type = StructPtr?.from p1 in
-      let content: Buffer.buffer from = StructPtr?.content p1 in
-      let i1 = StructPtr?.index p1 in
-      let i2 = StructPtr?.index p2 in
-      if UInt32.v i1 = UInt32.v i2
-      then begin
-       assert (path_disjoint (StructPtr?.p p1) (StructPtr?.p p2));
-       path_disjoint_ind
-	(fun #v1 #v2 p1_ p2_ -> x (StructPtr content i1 p1_) (StructPtr content i1 p2_))
-	(fun #ke #va p fd1 fd2 -> h_field (StructPtr content i1 p) fd1 fd2)
-	(fun #v1 #v2 p1_ p2_ #v1' #v2' p1' p2' -> h_includes (StructPtr content i1 p1_) (StructPtr content i1 p2_) (StructPtr content i1 p1') (StructPtr content i1 p2'))
+      let (content1: Buffer.buffer from { Buffer.length content1 == 1 } ) = StructPtr?.content p1 in
+      let (content2: Buffer.buffer from { Buffer.length content1 == 1 } ) = StructPtr?.content p2 in
+      assert (content1 == content2);
+      path_disjoint_ind
+	(fun #v1 #v2 p1_ p2_ -> x (StructPtr content1 p1_) (StructPtr content1 p2_))
+	(fun #ke #va p fd1 fd2 -> h_field (StructPtr content1 p) fd1 fd2)
+	(fun #v1 #v2 p1_ p2_ #v1' #v2' p1' p2' -> h_includes (StructPtr content1 p1_) (StructPtr content1 p2_) (StructPtr content1 p1') (StructPtr content1 p2'))
 	(StructPtr?.p p1)
 	(StructPtr?.p p2);
        assert (x p1 p2)
-      end else begin
-	let (i1: nat {i1 < Buffer.length content}) = UInt32.v i1 in
-	let (i2: nat {i2 < Buffer.length content /\ i1 <> i2 /\ disjoint (gfrom_buffer_index content i1) (gfrom_buffer_index content i2)}) = UInt32.v i2 in
-	assert (disjoint (gfrom_buffer_index content i1) (gfrom_buffer_index content i2));
-        h_index content i1 i2;
-	assert (x (gfrom_buffer_index content i1) (gfrom_buffer_index content i2));
-	assert (includes (gfrom_buffer_index content i1) p1);
-	assert (includes (gfrom_buffer_index content i2) p2);
-	disjoint_includes (gfrom_buffer_index content i1) (gfrom_buffer_index content i2) p1 p2;
-	h_includes (gfrom_buffer_index content i1) (gfrom_buffer_index content i2) p1 p2;
-	assert (x p1 p2)
-      end
      )
 
 let disjoint_sym
@@ -1025,7 +1003,6 @@ let disjoint_sym
 = disjoint_ind
   (fun #v1 #v2 p1 p2 -> disjoint p2 p1)
   (fun #v1 #v2 p1 p2 -> disjoint_root p2 p1)
-  (fun #v p i1 i2 -> disjoint_gfrom_buffer_index p i2 i1)
   (fun #k #v p fd1 fd2 -> disjoint_gfield p fd2 fd1)
   (fun #v1 #v2 p1 p2 #v1' #v2' p1' p2' -> disjoint_includes p2 p1 p2' p1')
   p1 p2
@@ -1066,7 +1043,249 @@ let live_disjoint
   [SMTPatT (disjoint p1 p2); SMTPatT (live h p1)]
 = live_contains h p1;
   disjoint_root p1 p2
-*)
 
-(* TODO: port modifies to legacy struct *)
+
+(* Specialized clauses for small numbers of struct_ptrs *)
+let modifies_ptr_0 rid h h' =
+  Buffer.modifies_buf_0 rid h h'
+  /\ (forall (#tt:Type) (bb:struct_ptr tt). (frameOf bb = rid /\ live h bb) ==> equal_values h bb h' bb)
+
+let modifies_ptr_1 (#t:Type) rid (b:struct_ptr t) h h' = //would be good to drop the rid argument on these, since they can be computed from the struct_ptrs
+  Buffer.modifies_buf_1 rid (as_buffer b) h h'
+  /\ (forall (#tt:Type) (bb:struct_ptr tt). (frameOf bb = rid /\ live h bb /\ disjoint b bb) ==> equal_values h bb h' bb)
+
+
+let modifies_ptr_0_0 rid h0 h1 h2 :
+  Lemma (requires (modifies_ptr_0 rid h0 h1 /\ modifies_ptr_0 rid h1 h2))
+	(ensures (modifies_ptr_0 rid h0 h2))
+	[SMTPatT (modifies_ptr_0 rid h0 h1); SMTPatT (modifies_ptr_0 rid h1 h2)]
+ = ()
+
+
+(* Modifies clauses that do not change the shape of the HyperStack (h1.tip = h0.tip) *)
+(* NB: those clauses are made abstract in order to make verification faster
+   Lemmas follow to allow the programmer to make use of the real definition
+   of those predicates in a general setting *)
+abstract let modifies_0 h0 h1 =
+  Buffer.modifies_0 h0 h1
+  /\ modifies_ptr_0 h0.HS.tip h0 h1
+
+(* This one is very generic: it says
+ * - some references have changed in the frame of b, but
+ * - among all struct_ptrs in this frame, b is the only one that changed. *)
+abstract let modifies_1 (#a:Type) (b:struct_ptr a) h0 h1 =
+  Buffer.modifies_1 (as_buffer b) h0 h1 /\
+  modifies_ptr_1 (frameOf b) b h0 h1
+
+(* Lemmas introducing the 'modifies' predicates *)
+let modifies_0_intro h0 h1 : Lemma
+  (requires (
+     Buffer.modifies_0 h0 h1
+  /\ modifies_ptr_0 h0.HS.tip h0 h1
+  ))
+  (ensures  (modifies_0 h0 h1))
+  = ()
+
+let modifies_1_intro (#a:Type) (b:struct_ptr a) h0 h1 : Lemma
+  (requires (Buffer.modifies_1 (as_buffer b) h0 h1 /\ modifies_ptr_1 (frameOf b) b h0 h1))
+  (ensures  (modifies_1 b h0 h1))
+  = ()
+
+(* Lemmas revealing the content of the specialized modifies clauses in order to
+   be able to generalize them if needs be. *)
+let  modifies_0_reveal h0 h1 : Lemma
+  (requires (modifies_0 h0 h1))
+  (ensures  (Buffer.modifies_0 h0 h1 /\ modifies_ptr_0 h0.HS.tip h0 h1))
+  = ()
+
+let modifies_1_reveal (#a:Type) (b:struct_ptr a) h0 h1 : Lemma
+  (requires (modifies_1 b h0 h1))
+  (ensures  (Buffer.modifies_1 (as_buffer b) h0 h1 /\ modifies_ptr_1 (frameOf b) b h0 h1))
+  = ()
+
+(* STStack effect specific lemmas *)
+let lemma_ststack_1 (#a:Type) (b:struct_ptr a) h0 h1 h2 h3 : Lemma
+  (requires (live h0 b /\ HS.fresh_frame h0 h1 /\ modifies_1 b h1 h2 /\ HS.popped h2 h3))
+  (ensures  (modifies_1 b h0 h3))
+  [SMTPatT (modifies_1 b h1 h2); SMTPatT (HS.fresh_frame h0 h1); SMTPatT (HS.popped h2 h3)]
+  = Buffer.lemma_reveal_modifies_1 (as_buffer b) h1 h2;
+    Buffer.lemma_intro_modifies_1 (as_buffer b) h0 h3
+
+(** Transitivity lemmas *)
+let modifies_0_trans h0 h1 h2 : Lemma
+  (requires (modifies_0 h0 h1 /\ modifies_0 h1 h2))
+  (ensures  (modifies_0 h0 h2))
+  [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_0 h1 h2)]
+  = ()
+
+let modifies_1_trans (#a:Type) (b:struct_ptr a) h0 h1 h2 : Lemma
+  (requires (modifies_1 b h0 h1 /\ modifies_1 b h1 h2))
+  (ensures (modifies_1 b h0 h2))
+  [SMTPatT (modifies_1 b h0 h1); SMTPatT (modifies_1 b h1 h2)]
+  = ()
+
+(* Specific modifies clause lemmas *)
+val modifies_0_0: h0:HS.mem -> h1:HS.mem -> h2:HS.mem -> Lemma
+  (requires (modifies_0 h0 h1 /\ modifies_0 h1 h2))
+  (ensures  (modifies_0 h0 h2))
+  [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_0 h1 h2)]
+let modifies_0_0 h0 h1 h2 = ()
+
+#reset-options "--z3rlimit 16"
+
+let modifies_0_1 (#a:Type) (b:struct_ptr a) h0 h1 h2 : Lemma
+  (requires (~(contains h0 b) /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
+  (ensures  (modifies_0 h0 h2))
+  [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_1 b h1 h2)]
+  = Buffer.lemma_reveal_modifies_0 h0 h1;
+    Buffer.lemma_reveal_modifies_1 (as_buffer b) h1 h2;
+    Buffer.lemma_intro_modifies_0 h0 h2
+
+(** Concrete allocators, getters and setters *)
+
+// We create a struct_ptr for any type t (not necessarily a DM.t) and provide the initial value of type t
+
+abstract let screate
+  (#value:Type)
+  (s: value)
+: StackInline (struct_ptr value)
+  (requires (fun h -> True))
+  (ensures (fun (h0:HS.mem) b h1 ->
+       ~(contains h0 b)
+     /\ live h1 b
+     /\ frameOf b = h0.HS.tip
+     /\ modifies_0 h0 h1
+     /\ Map.domain h1.HS.h == Map.domain h0.HS.h
+     /\ as_value h1 b == s))
+= let h0 = HST.get () in
+  let content: Buffer.buffer value =
+     Buffer.create s (UInt32.uint_to_t 1)
+  in
+  let h1 = HST.get () in
+  Buffer.lemma_reveal_modifies_0 h0 h1;
+  StructPtr content PathBase
+
+abstract let ecreate
+  (#t:Type)
+  (r:HH.rid)
+  (s: t)
+: ST (struct_ptr t)
+  (requires (fun h -> HS.is_eternal_region r))
+  (ensures (fun (h0:HS.mem) b h1 -> ~(contains h0 b)
+    /\ live h1 b
+    /\ Map.domain h1.HS.h == Map.domain h0.HS.h
+    /\ h1.HS.tip = h0.HS.tip
+    /\ HS.modifies (Set.singleton r) h0 h1
+    /\ HS.modifies_ref r TSet.empty h0 h1
+    /\ as_value h1 b == s
+    /\ ~(memory_managed b)))
+= let h0 = HST.get() in
+  let content = Buffer.rcreate r s (UInt32.uint_to_t 1) in
+  let b = StructPtr content PathBase in
+  let h1 = HST.get() in
+  b
+
+abstract let from_buffer_index
+  (#value: Type)
+  (p: Buffer.buffer value)
+  (i: UInt32.t {UInt32.v i < Buffer.length p})
+: ST (struct_ptr value)
+  (requires (fun h -> Buffer.live h p))
+  (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gfrom_buffer_index p (UInt32.v i)))
+= _from_buffer_index p (UInt32.v i)
+
+abstract let field
+ (#key: eqtype)
+ (#value: (key -> Tot Type))
+ (p: struct_ptr (DM.t key value))
+ (fd: key)
+: ST (struct_ptr (value fd))
+  (requires (fun h -> live h p))
+  (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gfield p fd))
+= _field p fd
+
+abstract let read
+ (#value: Type)
+ (p: struct_ptr value)
+: ST value
+  (requires (fun h -> live h p))
+  (ensures (fun h0 v h1 -> live h0 p /\ h0 == h1 /\ v == as_value h0 p))
+= let (StructPtr content p') = p in
+  path_sel (Buffer.index (StructPtr?.content p) (UInt32.uint_to_t 0)) p'
+
+abstract val write: #a:Type -> b:struct_ptr a -> z:a -> Stack unit
+  (requires (fun h -> live h b))
+  (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b
+    /\ modifies_1 b h0 h1
+    /\ as_value h1 b == z ))
+let write #a b z =
+  let v = Buffer.index (StructPtr?.content b) (UInt32.uint_to_t 0) in
+  let v' = path_upd v (StructPtr?.p b) z in
+  let h0 = HST.get () in
+  Buffer.upd (StructPtr?.content b) (UInt32.uint_to_t 0) v';
+  let h1 = HST.get () in
+  Buffer.lemma_reveal_modifies_1 (as_buffer b) h0 h1  
+
+(** Lemmas and patterns *)
+
+val no_upd_lemma_0: #t:Type -> h0:HS.mem -> h1:HS.mem -> b:struct_ptr t -> Lemma
+  (requires (live h0 b /\ modifies_0 h0 h1))
+  (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
+  [SMTPatT (modifies_0 h0 h1); SMTPatT (live h0 b)]
+let no_upd_lemma_0 #t h0 h1 b = ()
+
+val no_upd_lemma_1: #t:Type -> #t':Type -> h0:HS.mem -> h1:HS.mem -> a:struct_ptr t -> b:struct_ptr t' -> Lemma
+  (requires (live h0 b /\ disjoint a b /\ modifies_1 a h0 h1))
+  (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
+  [SMTPatOr [ [ SMTPatT (modifies_1 a h0 h1); SMTPatT (as_value h1 b) ] ; [ SMTPatT (modifies_1 a h0 h1); SMTPatT (live h0 b) ] ] ]
+let no_upd_lemma_1 #t #t' h0 h1 a b = ()
+
+val no_upd_fresh: #t:Type -> h0:HS.mem -> h1:HS.mem -> a:struct_ptr t -> Lemma
+  (requires (live h0 a /\ HS.fresh_frame h0 h1))
+  (ensures  (live h0 a /\ live h1 a /\ equal_values h0 a h1 a))
+  [SMTPatT (live h0 a); SMTPatT (HS.fresh_frame h0 h1)]
+let no_upd_fresh #t h0 h1 a = ()
+
+val no_upd_popped: #t:Type -> h0:HS.mem -> h1:HS.mem -> b:struct_ptr t -> Lemma
+  (requires (live h0 b /\ frameOf b <> h0.HS.tip /\ HS.popped h0 h1))
+  (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
+  [SMTPatT (live h0 b); SMTPatT (HS.popped h0 h1)]
+let no_upd_popped #t h0 h1 b = ()
+
+let lemma_modifies_sub_1 #t h0 h1 (b:struct_ptr t) : Lemma
+  (requires (h1 == h0))
+  (ensures  (modifies_1 b h0 h1))
+  [SMTPatT (live h0 b); SMTPatT (modifies_1 b h0 h1)]
+  = Buffer.lemma_intro_modifies_1 (as_buffer b) h0 h1
+
+let modifies_substruct_1 (#tsub #ta:Type) h0 h1 (sub:struct_ptr tsub) (a:struct_ptr ta) : Lemma
+  (requires (live h0 a /\ modifies_1 sub h0 h1 /\ live h1 sub /\ includes a sub))
+  (ensures  (modifies_1 a h0 h1 /\ live h1 a))
+  [SMTPatT (modifies_1 sub h0 h1); SMTPatT (includes a sub)]
+  = ()
+
+let modifies_popped_1' (#t:Type) (a:struct_ptr t) h0 h1 h2 h3 : Lemma
+  (requires (live h0 a /\ HS.fresh_frame h0 h1 /\ HS.popped h2 h3 /\ modifies_1 a h1 h2))
+  (ensures  (modifies_1 a h0 h3))
+  [SMTPatT (HS.fresh_frame h0 h1); SMTPatT (HS.popped h2 h3); SMTPatT (modifies_1 a h1 h2)]
+  = ()
+
+let live_popped (#t:Type) (b:struct_ptr t) h0 h1 : Lemma
+  (requires (HS.popped h0 h1 /\ live h0 b /\ frameOf b <> h0.HS.tip))
+  (ensures  (live h1 b))
+  [SMTPatT (HS.popped h0 h1); SMTPatT (live h0 b)]
+  = ()
+
+let live_fresh (#t:Type) (b:struct_ptr t) h0 h1 : Lemma
+  (requires (HS.fresh_frame h0 h1 /\ live h0 b))
+  (ensures  (live h1 b))
+  [SMTPatT (HS.fresh_frame h0 h1); SMTPatT (live h0 b)]
+  = ()
+
+let modifies_poppable_1 #t h0 h1 (b:struct_ptr t) : Lemma
+  (requires (modifies_1 b h0 h1 /\ HS.poppable h0))
+  (ensures  (HS.poppable h1))
+  [SMTPatT (modifies_1 b h0 h1)]
+  = ()
+
 

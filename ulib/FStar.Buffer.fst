@@ -887,6 +887,13 @@ let sub_sub
   (ensures (sub (sub b i1 len1) i2 len2 == sub b (i1 +^ i2) len2))
 = ()  
 
+let sub_zero_length
+  (#a: Type)
+  (b: buffer a)
+: Lemma
+  (ensures (sub b (UInt32.uint_to_t 0) (UInt32.uint_to_t (length b)) == b))
+= ()
+
 let lemma_sub_spec (#a:Type) (b:buffer a)
   (i:UInt32.t{v i + v b.idx < pow2 n})
   (len:UInt32.t{v len <= length b /\ v i + v len <= length b})
