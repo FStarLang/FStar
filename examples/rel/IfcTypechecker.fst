@@ -23,10 +23,10 @@ exception Not_well_typed
 #set-options "--z3rlimit 30"
 
 (* Typechecking commands: we typecheck in a given context *)
-val tc_com : env:label_fun -> c:com -> Exn label (requires True)
+reifiable val tc_com : env:label_fun -> c:com -> Exn label (requires True)
     (ensures fun ol -> Inl? ol ==> ni_com env c (Inl?.v ol))
     (decreases c)
-let rec tc_com env c =
+reifiable let rec tc_com env c =
   match c with
 
   | Skip -> skip_com env ; High
@@ -71,10 +71,10 @@ let rec tc_com env c =
 
 open FStar.List
 
-val tc_com_hybrid : env:label_fun -> c:com -> list (cl:(com*label){ni_com env (fst cl) (snd cl)}) ->
+reifiable val tc_com_hybrid : env:label_fun -> c:com -> list (cl:(com*label){ni_com env (fst cl) (snd cl)}) ->
   Exn label (requires True) (ensures fun ol -> Inl? ol ==> ni_com env c (Inl?.v ol))
     (decreases c)
-let rec tc_com_hybrid env c cls =
+reifiable let rec tc_com_hybrid env c cls =
   match find #(cl:(com*label){ni_com env (fst cl) (snd cl)})
              (fun cl -> fst cl = c) cls with
   | Some (_,l) -> l
