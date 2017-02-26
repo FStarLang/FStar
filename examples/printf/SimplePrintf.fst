@@ -79,12 +79,13 @@ let rec parse_format_pure (s:list char) : Tot (hoption (list dir)) =
 let rec parse_format_string (s:string) : Tot (hoption (list dir)) =
   parse_format_pure (list_of_string s)
 
-
-let valid_string : Type0 = s:string{Just? (parse_format_string s)}
-
 let sprintf (#a:Type) (s:string)
-  : Pure a (requires (Just? (normalize_term (parse_format_string s)) /\ a == normalize_term (dir_type (just (parse_format_string s))))) (ensures (fun _ -> True)) =
-  string_of_dirs (just (parse_format_string s)) (fun s -> s)
+  : Pure a
+      (requires (Some? (normalize_term (parse_format_string s)) /\
+        a == normalize_term (dir_type (Some?.v (parse_format_string s)))))
+    (ensures (fun _ -> True))
+=
+  string_of_dirs (Some?.v (parse_format_string s)) (fun s -> s)
 
 (* trying to make sure that it's not the SMT solver doing the reduction *)
 #reset-options "--initial_fuel 0 --max_fuel 0"
@@ -123,10 +124,7 @@ let example4_lemma () :
 let id (#a #b:Type) (x:a) : Pure b (requires (a == b)) (ensures (fun _ -> True)) = x
 
 let example5 : string =
-  (* Requiring such an assert_norm on each usage seems quite bad for usability *)
-  (* assert_norm (parse_format_string "%d=%s" == Just [Arg Int; Lit '='; Arg String]); *)
-  (* assert ((int -> Tot (string -> Tot string)) == normalize_term (dir_type (just (parse_format_string "%d=%s")))) ; *)
-  sprintf #(int -> Tot (string -> Tot string)) "%d=%s" 42 " answer"
+  (sprintf "%d=%s" <: int -> Tot (string -> Tot string)) 42 " answer"
   (* We also requires a pesky type annotation, but that seems more acceptable *)
 
 (* A (so far failed) attempt at getting rid of assert_norm:

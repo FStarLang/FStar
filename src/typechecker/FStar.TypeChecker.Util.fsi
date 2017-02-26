@@ -93,4 +93,4 @@ val effect_repr: env -> comp -> universe -> option<term>
 val check_sigelt_quals: env -> sigelt -> unit
 
 //elaborate discriminator and projectors
-val mk_data_operations : list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>
+val mk_data_operations : bool -> list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>

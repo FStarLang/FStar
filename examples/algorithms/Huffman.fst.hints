@@ -333,8 +333,7 @@
         "interpretation_Tm_arrow_d9daaf5b221e9e24720c55d564602246",
         "kinding_FStar.Char.char_@tok", "kinding_Huffman.trie@tok",
         "kinding_Prims.tuple2@tok",
-        "lemma_FStar.List.Tot.Properties.map_lemma",
-        "pretyping_7e0e32870af72b30cad3010be3cb1c4f"
+        "lemma_FStar.List.Tot.Properties.map_lemma"
       ],
       0
     ],
@@ -673,7 +672,9 @@
         "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Mktuple2",
         "constructor_distinct_Prims.Nil", "constructor_distinct_Prims.None",
-        "constructor_distinct_Prims.Some", "constructor_distinct_Tm_unit",
+        "constructor_distinct_Prims.Some",
+        "constructor_distinct_Prims.option",
+        "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
         "data_elim_Prims.Nil", "disc_equation_Huffman.Leaf",
         "disc_equation_Huffman.Node", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "disc_equation_Prims.None",
@@ -696,7 +697,9 @@
         "fuel_irrelevance_Huffman.decode_aux.fuel_instrumented",
         "function_token_typing_FStar.List.Tot.Base.test_sort",
         "function_token_typing_Prims.bool",
+        "pretyping_779086306c29597e3dd1127d16405da1",
         "pretyping_7e0e32870af72b30cad3010be3cb1c4f",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
         "proj_equation_Prims.Some_v", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Huffman.Leaf_s",
@@ -716,7 +719,7 @@
         "subterm_ordering_Prims.Cons",
         "token_correspondence_Huffman.decode_aux.fuel_instrumented",
         "typing_FStar.List.Tot.Base.op_At", "typing_Huffman.decode_aux",
-        "unit_inversion"
+        "unit_inversion", "unit_typing"
       ],
       0
     ],

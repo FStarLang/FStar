@@ -795,9 +795,6 @@ and tc_inductive env ses quals lids =
             and whether it is strictly positive
        *)
 
-    (* Once the datacons are generalized we can construct the projectors with the right types *)
-    let data_ops_ses = List.map (TcUtil.mk_data_operations quals env tcs) datas |> List.flatten in
-
     //strict positivity check
     (if Options.no_positivity () || Options.lax ()  then ()  //skipping positivity check if lax mode
      else
@@ -817,21 +814,30 @@ and tc_inductive env ses quals lids =
 
     //generate hasEq predicate for this inductive
     //skip logical connectives types in prims, tcs is bound to the inductive type, caller ensures its length is > 0
-    let skip_prims_type (_:unit) :bool =
+    let skip_prims_type : bool =
+      begin match tcs with | [] -> false | _ -> true end &&
+      lid_equals env.curmodule Const.prims_lid &&
+      begin
         let lid =
-            let ty = List.hd tcs in
-            match ty with
-                | Sig_inductive_typ (lid, _, _, _, _, _, _, _) -> lid
-                | _                                            -> failwith "Impossible"
+          let ty = List.hd tcs in
+          match ty with
+          | Sig_inductive_typ (lid, _, _, _, _, _, _, _) -> lid
+          | _                                            -> failwith "Impossible"
         in
         //these are the prims type we are skipping
-        let types_to_skip = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or"; ] in
+        let types_to_skip = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or"; (* "dtuple2" *)] in
         List.existsb (fun s -> s = lid.ident.idText) types_to_skip
+      end
+    in
+
+    (* Once the datacons are generalized we can construct the projectors with the right types *)
+    let data_ops_ses =
+      List.map (TcUtil.mk_data_operations skip_prims_type quals env tcs) datas |> List.flatten
     in
 
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
-    if ((List.length tcs = 0) || ((lid_equals env.curmodule Const.prims_lid) && skip_prims_type ()) || is_noeq)
+    if (begin match tcs with | [] -> true | _ -> false end || skip_prims_type || is_noeq)
     then [sig_bndle], data_ops_ses
     else
         let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
