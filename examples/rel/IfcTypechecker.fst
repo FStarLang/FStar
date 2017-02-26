@@ -23,7 +23,7 @@ exception Not_well_typed
 #set-options "--z3rlimit 30"
 
 (* Typechecking commands: we typecheck in a given context *)
-val tc_com :env:label_fun -> c:com -> Exn label (requires True)
+val tc_com : env:label_fun -> c:com -> Exn label (requires True)
     (ensures fun ol -> Inl? ol ==> ni_com env c (Inl?.v ol))
     (decreases c)
 let rec tc_com env c =
@@ -68,3 +68,58 @@ let rec tc_com env c =
     sub_exp env e le lc ;
     while_com env e c v lc ;
     lc
+
+open FStar.List
+
+val tc_com_hybrid : env:label_fun -> c:com -> list (cl:(com*label){ni_com env (fst cl) (snd cl)}) ->
+  Exn label (requires True) (ensures fun ol -> Inl? ol ==> ni_com env c (Inl?.v ol))
+    (decreases c)
+let rec tc_com_hybrid env c cls =
+  match find #(cl:(com*label){ni_com env (fst cl) (snd cl)})
+             (fun cl -> fst cl = c) cls with
+  | Some (_,l) -> l
+  | None ->
+  (* the rest is copied verbatim from above, which is not so nice *)
+  begin
+  match c with
+
+  | Skip -> skip_com env ; High
+
+  | Assign r e ->
+    let le = tc_exp env e in
+    let lr = env r in
+    if not (le <= lr) then raise Not_well_typed ;
+    sub_exp env e le lr ;
+    assign_com env e r ;
+    lr
+
+  | Seq c1 c2 ->
+    let l1 = tc_com env c1 in
+    let l2 = tc_com env c2 in
+    let l = meet l1 l2 in
+    sub_com env c1 l1 l ;
+    sub_com env c2 l2 l ;
+    seq_com env c1 c2 l ;
+    l
+
+  | If e ct cf ->
+    let le = tc_exp env e in
+    let lt = tc_com env ct in
+    let lf = tc_com env cf in
+    if not (le <= lt && le <= lf) then raise Not_well_typed ;
+    let l = meet lt lf in
+    universal_property_meet le lt lf ;
+    sub_exp env e le l ;
+    sub_com env ct lt l ;
+    sub_com env cf lf l ;
+    cond_com env e ct cf l ;
+    l
+
+  | While e c v ->
+    let le = tc_exp env e in
+    let lc = tc_com env c in
+    if not (le <= lc) then raise Not_well_typed ;
+    sub_exp env e le lc ;
+    while_com env e c v lc ;
+    lc
+  end
