@@ -79,7 +79,7 @@ let rec tc_com_hybrid env c cls =
              (fun cl -> fst cl = c) cls with
   | Some (_,l) -> l
   | None ->
-  (* the rest is copied verbatim from above, which is not so nice *)
+  (* the rest is copied more or less verbatim from above *)
   begin
   match c with
 
@@ -94,8 +94,8 @@ let rec tc_com_hybrid env c cls =
     lr
 
   | Seq c1 c2 ->
-    let l1 = tc_com env c1 in
-    let l2 = tc_com env c2 in
+    let l1 = tc_com_hybrid env c1 cls in
+    let l2 = tc_com_hybrid env c2 cls in
     let l = meet l1 l2 in
     sub_com env c1 l1 l ;
     sub_com env c2 l2 l ;
@@ -104,8 +104,8 @@ let rec tc_com_hybrid env c cls =
 
   | If e ct cf ->
     let le = tc_exp env e in
-    let lt = tc_com env ct in
-    let lf = tc_com env cf in
+    let lt = tc_com_hybrid env ct cls in
+    let lf = tc_com_hybrid env cf cls in
     if not (le <= lt && le <= lf) then raise Not_well_typed ;
     let l = meet lt lf in
     universal_property_meet le lt lf ;
@@ -117,7 +117,7 @@ let rec tc_com_hybrid env c cls =
 
   | While e c v ->
     let le = tc_exp env e in
-    let lc = tc_com env c in
+    let lc = tc_com_hybrid env c cls in
     if not (le <= lc) then raise Not_well_typed ;
     sub_exp env e le lc ;
     while_com env e c v lc ;
