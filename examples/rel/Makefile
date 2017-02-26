@@ -42,7 +42,7 @@ IfcReify:
 
 IfcExampleReify:
 	$(FSTAR) --include ../dm4free ifcExampleReify.fst
-	
+
 IfcExampleReify2:
 	$(FSTAR) --include ../dm4free ifcExampleReify2.fst
 
