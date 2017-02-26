@@ -114,6 +114,12 @@ val alloc_lemma: #a:Type -> h0:heap -> x:a
 		   [SMTPat (alloc h0 x)]
 let alloc_lemma #a h0 x = ()
 
+let sel_same_addr_of (#a:Type) (x:ref a) (y:ref a) (h:heap)
+  :Lemma (requires (addr_of x = addr_of y /\ h `contains_a_well_typed` x /\ h `contains_a_well_typed` y))
+         (ensures  (sel h x == sel h y))
+   [SMTPat (sel h x); SMTPat (sel h y)]
+  = ()
+
 val sel_upd1: #a:Type -> h:heap -> r:ref a -> v:a -> r':ref a
 	      -> Lemma (requires (addr_of r = addr_of r')) (ensures (sel (upd h r v) r' == v))
                 [SMTPat (sel (upd h r v) r')]
