@@ -60,7 +60,7 @@ let seq'_lem (#r1 #w1 #r2 #w2 : addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2)
         () in
    FStar.Classical.forall_intro_2 aux
 
-let seq (#r1 #w1 #r2 #w2 : addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2) 
+let (>>) (#r1 #w1 #r2 #w2 : addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2) 
   : cmd (r1 `S.union` r2) (w1 `S.union` w2)
   = seq'_lem c1 c2;
     seq' c1 c2
@@ -85,8 +85,8 @@ let swap (#rs1 #rs2 #ws1 #ws2: addr_set)
          (f2: cmd rs2 ws2) : 
   Lemma
     (requires (S.disjoint__ ws1 ws2 /\ S.disjoint__ rs1 ws2 /\ S.disjoint__ rs2 ws1))
-    (ensures (equiv (seq f1 f2) (seq f2 f1)))
-  = let aux (h:heap) : Lemma (equiv_on_h (seq f1 f2) (seq f2 f1) h) =
+    (ensures (equiv (f1 >> f2) (f2 >> f1)))
+  = let aux (h:heap) : Lemma (equiv_on_h (f1 >> f2) (f2 >> f1) h) =
       let f1 = f1 <: command in
       let f2 = f2 <: command in      
       let (), h_1 = reify (f1 ()) h in //Strange that we seem to need these to trigger
@@ -99,8 +99,8 @@ let swap (#rs1 #rs2 #ws1 #ws2: addr_set)
     time should write the same values into the heap. *)
 let idem (#rs #ws:addr_set) (f:cmd rs ws)
   : Lemma (requires (S.disjoint__ rs ws))
-          (ensures (equiv (seq f f) f))
-  = let aux (h:heap) : Lemma (equiv_on_h (seq f f) f h) =
+          (ensures (equiv (f >> f) f))
+  = let aux (h:heap) : Lemma (equiv_on_h (f >> f) f h) =
       let f = f <: command in
       let (), h_1 = reify (f ()) h in
       let (), h_2 = reify (f ()) h_1 in
@@ -108,7 +108,9 @@ let idem (#rs #ws:addr_set) (f:cmd rs ws)
     FStar.Classical.forall_intro aux
 
 (*** OLD ***)
-(** [footprint f rs ws] means as long as two heaps coincide on [rs], then the
+
+
+(** [footprint2 f rs ws] means as long as two heaps coincide on [rs], then the
     resulting heaps coincide on [ws]. *)
 let footprint2 (f: command) (rs: addr_set) (ws: addr_set) =
   forall (h_0: heap) (h_1: heap).{:pattern (reify (f ()) h_0);
@@ -146,7 +148,7 @@ let swap_old rs1 ws1 f1 rs2 ws2 f2 h_0 =
 
 (** If whatever [f] writes only depends on [rs], then calling a [f] a second
     time should write the same values into the heap. *)
-let idem (rs ws:addr_set) (f:unit -> STNull unit)  (h0:heap)
+let idem_old (rs ws:addr_set) (f:unit -> STNull unit)  (h0:heap)
   : Lemma (requires (S.disjoint__ rs ws /\
                      footprint2 f rs ws))
           (ensures (let _, h1 = reify (f ()) h0 in
