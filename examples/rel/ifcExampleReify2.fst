@@ -6,14 +6,14 @@ open IfcTypechecker
 open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.Exceptions
 
-assume val hi : id
-assume val lo : id
-assume val c : id
+let hi : id = to_id 0
+let lo : id = to_id 1
+let c : id = to_id 2
 
 let env var =
-  if var = hi then Low
+  if var = hi then High
   else if var = lo then Low
-    else if var = c then High
+    else if var = c then Low
       else High
 
 (*
@@ -33,20 +33,27 @@ let c_body =  Seq (Seq c_2 c_3) c_4
 let cmd = c_1 c_body
 
 #set-options "--z3rlimit 30"
-val c_2_3_ni : unit -> Lemma (ni_com env (Seq c_2 c_3) Low)
-let c_2_3_ni () = ()
+let c_2_3_ni () : Lemma (requires True) (ensures ni_com env (Seq c_2 c_3) Low) [SMTPat (ni_com env (Seq c_2 c_3) Low)] = ()
 
 
-#set-options "--z3rlimit 5"
+#set-options "--z3rlimit 30"
 val cmd_ni : unit ->
   Exn label (requires True) (ensures fun ol -> Inl? ol ==> ni_com env cmd (Inl?.v ol))
-let cmd_ni () =
-  c_2_3_ni ();
-  tc_com_hybrid env cmd [Seq c_2 c_3, Low]
+let cmd_ni () = tc_com_hybrid env cmd [Seq c_2 c_3, Low]
+
+(* let tc_c_4 () : Lemma (reify (tc_com env c_4) () == Inl Low) = () *)
+(* let tc_hybrid_c_4 () : Lemma (reify (tc_com_hybrid env c_4 [Seq c_2 c_3, Low]) () == Inl Low) = () *)
+
+(* let tc_cmd_low () : Lemma (Inl? (reify (tc_com_hybrid env cmd [Seq c_2 c_3, Low]) ())) *)
+(* = *)
+(*   assert (reify (tc_com_hybrid env (Seq c_2 c_3) [Seq c_2 c_3, Low]) () == Inl Low) ; *)
+(*   tc_hybrid_c_4 () ; *)
+(*   assert (reify (tc_com_hybrid env c_4 [Seq c_2 c_3, Low]) () == Inl Low) ; *)
+(*   assert (reify (tc_com_hybrid env c_body [Seq c_2 c_3, Low]) () == Inl Low) ; *)
+(*   assert (reify (tc_com_hybrid env cmd [Seq c_2 c_3, Low]) () == Inl Low) *)
 
 val cmd_ni' : unit ->
   Lemma (ensures ni_com env cmd Low)
 let cmd_ni' () =
-  c_2_3_ni ();
-  match reify (tc_com_hybrid env cmd [Seq c_2 c_3, Low]) () with
+  match (reify (tc_com_hybrid env cmd [Seq c_2 c_3, Low]) ()) with
   | Inl l -> ()
