@@ -15,6 +15,7 @@ all: ifc\
 		 delimitedReleaseReify \
 		 ifc_reify_examples \
 		 IfcExampleReify \
+		 IfcExampleReify2 \
 		 IfcReify \
 		 IfcTypechecker.dm4f
 
@@ -41,6 +42,9 @@ IfcReify:
 
 IfcExampleReify:
 	$(FSTAR) --include ../dm4free ifcExampleReify.fst
+	
+IfcExampleReify2:
+	$(FSTAR) --include ../dm4free ifcExampleReify2.fst
 
 ifc_reify_examples:
 	$(FSTAR) --include ../dm4free ifc_compose_reify.fst ifc_recursive_heap_reify.fst ifc_recursive_reify.fst ifc_reify.fst ifc_reify_long.fst simple_ifc_reify.fst
