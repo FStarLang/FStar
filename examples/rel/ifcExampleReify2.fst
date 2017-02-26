@@ -45,15 +45,8 @@ let cmd_ni () =
   tc_com_hybrid env cmd [Seq c_2 c_3, Low]
 
 val cmd_ni' : unit ->
-  Exn label (requires True) (ensures fun ol -> Inl? ol ==> ni_com env cmd (Inl?.v ol))
   Lemma (ensures ni_com env cmd Low)
 let cmd_ni' () =
   c_2_3_ni ();
-  tc_com_hybrid env cmd [Seq c_2 c_3, Low]
-  match reify (tc_com_hybrid env cmd [Seq c_2 c_3, Low]) with
+  match reify (tc_com_hybrid env cmd [Seq c_2 c_3, Low]) () with
   | Inl l -> ()
-
-(*
-./ifcExampleReify2.fst(45,2-46,15) : (Error) Expected type "(EXN_repr label (EXN_bind_wp ./ifcExampleReify2.fst(45,37-45,55) (list (cl#3417:(tuple2 com label){(ni_com env (fst cl@0) (snd cl@0))})) label (EXN_lift_from_pure (list (cl#3417:(tuple2 com label){(ni_com env (fst cl@0) (snd cl@0))})) (pure_bind_wp ./ifcExampleReify2.fst(45,37-45,55) (list (cl#3417:(tuple2 com label){(ni_com env (fst cl@0) (snd cl@0))})) (list (cl#3417:(tuple2 com label){(ni_com env (fst cl@0) (snd cl@0))})) (pure_bind_wp ./ifcExampleReify2.fst(45,38-45,54) (cl#3417:(tuple2 com label){(ni_com env (fst cl@0) (snd cl@0))}) (list (cl#3417:(tuple2 com label){(ni_com env (fst cl@0) (snd cl@0))})) (pure_bind_wp ./ifcExampleReify2.fst(45,38-45,54) (tuple2 (?161923 uu___) (?161924 uu___)) (cl#3417:(tuple2 com label){(ni_com env (fst cl@0) (snd cl@0))}) (pure_bind_wp ./ifcExampleReify2.fst(45,38-45,54) (tuple2 (?161923 uu___) (?161924 uu___)) (tuple2 (?161923 uu___) (?161924 uu___)) (pure_bind_wp ./ifcExampleReify2.fst(45,38-45,49) (?161923 uu___) (tuple2 (?161923 uu___) (?161924 uu___)) (pure_assert_p (?161923 uu___) (?161930 uu___ (Seq c_2 c_3)) (pure_return (?161923 uu___) (Seq c_2 c_3))) (fun _1 -> (pure_bind_wp ./ifcExampleReify2.fst(45,51-45,54) (?161924 uu___) (tuple2 (?161923 uu___) (?161924 uu___)) (pure_assert_p label (?161932 uu___ Low) (pure_return label Low)) (fun _2 -> (pure_null_wp (tuple2 (?161923 uu___) (?161924 uu___))))))) (fun uu___ -> (pure_assume_p (tuple2 (?161923 uu___) (?161924 uu___)) (eq2 uu___@0 (Mktuple2 (Seq c_2 c_3) Low)) (pure_return (tuple2 (?161923 uu___) (?161924 uu___)) uu___@0)))) (fun uu___ -> (pure_assert_p (cl#3417:(tuple2 com label){(ni_com env (fst cl@0) (snd cl@0))}) (?161933 uu___ uu___@0) (pure_return (cl#3417:(tuple2 com label){(ni_com env (fst cl@0) (snd cl@0))}) uu___@0)))) (fun hd -> (pure_null_wp (list (cl#3417:(tuple2 com label){(ni_com env (fst cl@0) (snd cl@0))}))))) (fun uu___ -> (pure_assume_p (list (cl#3417:(tuple2 com label){(ni_com env (fst cl@0) (snd cl@0))})) (eq2 uu___@0 (Cons (Mktuple2 (Seq c_2 c_3) Low) (Nil ))) (pure_return (list (cl#3417:(tuple2 com label){(ni_com env (fst cl@0) (snd cl@0))})) uu___@0))))) (fun uu___ -> (fun uu___ p -> (l_and l_True (l_Forall (fun r -> (l_imp (l_and l_True (l_imp (b2t (uu___is_Inl r@0)) (ni_com env cmd (__proj__Inl__item__v r@0)))) (p@1 r@0)))))))))";
-got type "(either (?161991 uu___) (?161972 uu___))"
-*)
