@@ -32,6 +32,16 @@ let join l1 l2 =
   | Low,Low -> Low
   | _, _ -> High
 
+val meet : label -> label -> Tot label
+let meet l1 l2 =
+  match l1, l2 with
+  | High, High -> High
+  | _, _ -> Low
+
+let universal_property_meet l l1 l2
+  : Lemma (requires (l <= l1 /\ l <= l2)) (ensures (l <= meet l1 l2))
+= ()
+
 type label_fun = id -> Tot label
 
 type low_equiv (env:label_fun) (h1:rel heap) =
@@ -102,8 +112,8 @@ let ni_com (env:label_fun) (c:com) (l:label) : Tot Type0 =
               E |- e : l2
 *)
 
-val sub_exp : env:label_fun -> e:exp -> l1:label -> l2:label{l1 <= l2} ->
-  Lemma (requires (ni_exp env e l1))
+val sub_exp : env:label_fun -> e:exp -> l1:label -> l2:label ->
+  Lemma (requires (l1 <= l2 /\ ni_exp env e l1))
         (ensures  (ni_exp env e l2))
 let sub_exp _ _ _ _ = ()
 
@@ -153,8 +163,8 @@ let binop_exp env op e1 e2 l =
                env,pc:l2 |- c
 *)
 
-val sub_com : env:label_fun -> c:com -> l1:label -> l2:label{l2 <= l1} ->
-  Lemma (requires (ni_com env c l1 ))
+val sub_com : env:label_fun -> c:com -> l1:label -> l2:label ->
+  Lemma (requires (l2 <= l1 /\ ni_com env c l1 ))
         (ensures  (ni_com env c l2 ))
 let sub_com _ _ _ _ = ()
 
@@ -349,7 +359,7 @@ let skip_com _ = ()
           env,pc:l |- while (e <> 0) do c
 *)
 
-#set-options "--z3rlimit 30"
+#set-options "--z3rlimit 40"
 
 val while_inv_com'
   : env:label_fun ->
