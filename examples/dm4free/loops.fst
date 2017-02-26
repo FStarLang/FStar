@@ -110,34 +110,24 @@ let rec sum_dn_commute (r:ref int)
         end
 
 
-let rec sum_up_dn_aux (r:ref int)
-                      (from:int)
-                      (from':int{from <= from'})
-                      (to:int{from' <= to})
+val sum_up_dn_aux (r:ref int)
+                      (lo:int)
+                      (mid:int{lo <= mid})
+                      (to:int{mid <= to})
                       (h:heap{h `contains_a_well_typed` r})
    : Lemma (requires True)
            (ensures
-               ( v r (reify (sum_up r from to) h) =
-                 v r (reify (sum_up r from' to) h) +
-                 v r (reify (sum_dn r from from') h) -
+               ( v r (reify (sum_up r lo to) h) =
+                 v r (reify (sum_up r mid to) h) +
+                 v r (reify (sum_dn r lo mid) h) -
                  sel h r))
-           (decreases (from' - from)) =
-    let left = reify (sum_up r from to) h in
-    if from = from'
-    then ()
-    else begin
-         sum_up_dn_aux r from (from' - 1) to h;
-         assert (v r left =
-                 v r (reify (sum_up r (from' - 1) to) h) +
-                 v r (reify (sum_dn r from (from' - 1)) h) -
-                 sel h r);
-         sum_up_commute r from' to (from' - 1) h;
-         assert (v r (reify (sum_up r from' to) h) + from' - 1 =
-                 v r (reify (sum_up r (from' - 1) to) h));
-         sum_dn_commute r from (from' - 1) (from' - 1) h;
-         assert (v r (reify (sum_dn r from (from' - 1)) h) + from' - 1 =
-                 v r (reify (sum_dn r from from') h))
-    end
+           (decreases (mid - lo))
+
+let rec sum_up_dn_aux r lo mid hi h =
+    if lo = mid then ()
+    else (sum_up_dn_aux r lo (mid - 1) hi h;
+          sum_up_commute r mid hi (mid - 1) h;
+          sum_dn_commute r lo (mid - 1) (mid - 1) h)
 
 let equiv_sum_up_dn (r:ref int)
                     (from:int)

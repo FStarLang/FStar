@@ -23,10 +23,8 @@ exception Not_well_typed
 #set-options "--z3rlimit 30"
 
 (* Typechecking commands: we typecheck in a given context *)
-val tc_com :env:label_fun -> c:com ->
-  Exn (label)
-    (requires True)
-    (ensures (fun l_opt -> match l_opt with Inl l -> ni_com env c l | Inr _ -> True))
+val tc_com :env:label_fun -> c:com -> Exn label (requires True)
+    (ensures fun ol -> Inl? ol ==> ni_com env c (Inl?.v ol))
     (decreases c)
 let rec tc_com env c =
   match c with
