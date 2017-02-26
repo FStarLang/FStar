@@ -1,0 +1,83 @@
+[
+  "@p¡åQ,ƒ&NhÏŠÿï.å",
+  [
+    [
+      "IfcTypechecker.tc_exp",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_2955b9def59aee347877a1c125573f29_1",
+        "bool_inversion", "constructor_distinct_IfcReify.High",
+        "constructor_distinct_IfcReify.Low",
+        "constructor_distinct_WhileReify.AOp",
+        "data_typing_intro_IfcReify.High@tok",
+        "disc_equation_WhileReify.AInt", "disc_equation_WhileReify.AOp",
+        "disc_equation_WhileReify.AVar", "equality_tok_IfcReify.High@tok",
+        "equality_tok_IfcReify.Low@tok", "equality_tok_WhileReify.Plus@tok",
+        "equation_IfcReify.join", "equation_IfcReify.op_Less_Equals",
+        "fuel_guarded_inversion_IfcReify.label",
+        "fuel_guarded_inversion_WhileReify.exp",
+        "pretyping_c00ec4e9c68f5ff27ebfd4bb5ce1028c",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
+        "subterm_ordering_WhileReify.AOp", "typing_IfcReify.join",
+        "typing_IfcReify.op_Less_Equals", "typing_tok_IfcReify.Low@tok"
+      ],
+      0
+    ],
+    [ "IfcTypechecker.uu___is_Not_well_typed", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "IfcTypechecker.tc_com",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Prims.Inl", "disc_equation_Prims.Inr",
+        "equation_Prims.l_True", "fuel_guarded_inversion_Prims.either"
+      ],
+      0
+    ],
+    [
+      "IfcTypechecker.tc_com",
+      2,
+      2,
+      1,
+      [
+        "@query", "bool_inversion", "constructor_distinct_IfcReify.High",
+        "constructor_distinct_IfcReify.Low",
+        "constructor_distinct_Prims.Inl", "constructor_distinct_Prims.Inr",
+        "data_elim_Prims.Inl", "data_elim_Prims.Inr",
+        "data_typing_intro_IfcReify.High@tok",
+        "data_typing_intro_Prims.Inl@tok", "data_typing_intro_Prims.Inr@tok",
+        "data_typing_intro_WhileReify.OutOfFuel@tok",
+        "disc_equation_WhileReify.Assign", "disc_equation_WhileReify.If",
+        "disc_equation_WhileReify.Seq", "disc_equation_WhileReify.Skip",
+        "disc_equation_WhileReify.While", "equality_tok_IfcReify.High@tok",
+        "equality_tok_IfcReify.Low@tok",
+        "equality_tok_IfcTypechecker.Not_well_typed@tok",
+        "equality_tok_WhileReify.Skip@tok", "equation_IfcReify.label_fun",
+        "equation_IfcReify.meet", "equation_IfcReify.op_Less_Equals",
+        "fuel_guarded_inversion_Prims.either",
+        "fuel_guarded_inversion_WhileReify.com",
+        "function_token_typing_Prims.exn",
+        "interpretation_Tm_arrow_b5a830b5d979b200d6ece3711b3a4f1f",
+        "kinding_IfcReify.label@tok",
+        "pretyping_2feddfe489e78a01f5d2e9b55172b46a",
+        "pretyping_c00ec4e9c68f5ff27ebfd4bb5ce1028c",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Negation",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Inl__a", "projection_inverse_Prims.Inl__b",
+        "projection_inverse_Prims.Inl_v", "projection_inverse_Prims.Inr__a",
+        "projection_inverse_Prims.Inr__b", "projection_inverse_Prims.Inr_v",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2", "typing_IfcReify.meet",
+        "typing_IfcReify.op_Less_Equals", "typing_tok_IfcReify.High@tok",
+        "typing_tok_IfcReify.Low@tok",
+        "typing_tok_IfcTypechecker.Not_well_typed@tok"
+      ],
+      0
+    ]
+  ]
+]

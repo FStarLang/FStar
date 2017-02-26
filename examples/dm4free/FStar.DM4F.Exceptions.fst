@@ -11,20 +11,20 @@ module FStar.DM4F.Exceptions
  **********************************************************)
 
 (* The underlying representation type *)
-let ex (a:Type) = unit -> M (option a)
+let ex (a:Type) = unit -> M (either a exn)
 
 (* Monad definition *)
 val return_ex : (a:Type) -> (x:a) -> ex a
-let return_ex a x = fun _ -> Some x
+let return_ex a x = fun _ -> Inl x
 
 val bind_ex : (a:Type) -> (b:Type) -> (f:ex a) -> (g:a -> ex b) -> ex b
 let bind_ex a b f g = fun _ ->
   let r = f () in
   match r with
-  | None -> None
-  | Some x -> g x ()
+  | Inr e -> Inr e
+  | Inl x -> g x ()
 
-let raise (a:Type) : ex a = fun _ -> None
+let raise0 (e:exn) : ex False = fun _ -> Inr e
 
 (* Define the new effect using DM4F *)
 reifiable reflectable new_effect_for_free {
@@ -33,19 +33,19 @@ reifiable reflectable new_effect_for_free {
      ; bind     = bind_ex
      ; return   = return_ex
   and effect_actions
-       raise   = raise
+       raise   = raise0
 }
 
-(* A lift from `Pure´ into the new effect *)
-unfold let lift_pure_ex (a:Type) (wp:pure_wp a) (_:unit) (p:EXN?.post a) =
-  wp (fun a -> p (Some a))
-sub_effect PURE ~> EXN = lift_pure_ex
+reifiable
+let raise (#a:Type) (e:exn) : EXN a (fun _ p -> p (Inr e)) =
+  let x = EXN?.raise e in
+  (match x with)
 
 (* An effect to alias easily write pre- and postconditions *)
 (* Note: we use Type0 instead of EXN?.pre to avoid having to thunk everything. *)
 effect Exn (a:Type) (pre:Type0) (post:EXN?.post a) =
   EXN a (fun (_:unit) (p:EXN?.post a) -> pre /\
-          (forall (r:option a). (pre /\ post r) ==> p r))
+          (forall (r:either a exn). (pre /\ post r) ==> p r))
 
 (* Another alias. Ex a is the effect type for total exception-throwing
  * programs. i.e. Any program of type `Ex a´ will throw or finish
@@ -77,30 +77,32 @@ effect Ex (a:Type) = EXN a (fun _ p -> forall x. p x)
  * terms, so one is only able to do proofs intrinsically.
  *)
 
+exception Division_by_zero
+
 val div_intrinsic : i:nat -> j:int -> Exn int
   (requires True)
-  (ensures (function None -> j=0 | Some z -> j<>0 /\ z = i / j))
+  (ensures (function Inr Division_by_zero -> j=0 | Inl z -> j<>0 /\ z = i / j))
 let div_intrinsic i j =
-  if j=0 then EXN?.raise int
+  if j=0 then raise Division_by_zero
   else i / j
 
 reifiable let div_extrinsic (i:nat) (j:int) : Ex int =
-  if j=0 then EXN?.raise int
+  if j=0 then raise Division_by_zero
   else i / j
 
 let lemma_div_extrinsic (i:nat) (j:int) :
   Lemma (match reify (div_extrinsic i j) () with
-         | None -> j = 0
-         | Some z -> j <> 0 /\ z = i / j) = ()
+         | Inr Division_by_zero -> j = 0
+         | Inl z -> j <> 0 /\ z = i / j) = ()
 
 (*
  * We can also build a new action "on the fly" using reflect!
  * Here we define raise_ as a pure function working with the
  * representation of Ex.
  *)
-val raise_ : a:Type -> Tot (EXN?.repr a (fun (_:unit) (p:EXN?.post a) -> p None))
-let raise_ a (_:unit) = None
+val raise_ : a:Type -> e:exn -> Tot (EXN?.repr a (fun (_:unit) (p:EXN?.post a) -> p (Inr e)))
+let raise_ a (e:exn) (_:unit) = Inr e
 
 (* We reflect it back to Exn *)
-reifiable let raise__ (a:Type) : Exn a True (fun r -> r == None)
-  = EXN?.reflect (raise_ a)
+reifiable let raise__ (a:Type) (e:exn) : Exn a True (fun r -> r == Inr e)
+  = EXN?.reflect (raise_ a e)
