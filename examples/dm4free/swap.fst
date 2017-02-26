@@ -22,37 +22,10 @@ let heap_eq (h:heap) (h_0:heap) (h_1:heap) =
 
 type command = unit -> STNull unit
 
+let no_alloc (h:heap) (h':heap) = forall (a:Type0). forall (r: ref a). h `contains` r <==> h' `contains` r
 
-(** [footprint f rs ws] means as long as two heaps coincide on [rs], then the
+(** [fp_body f rs ws h_0 h_1] means as long as h_0 and h_1 coincide on [rs], then the
     resulting heaps coincide on [ws]. *)
-unfold let mods (f: command) (ws: addr_set) =
-  forall (h:heap). {:pattern (reify (f ()) h)}
-    let (), h' = reify (f ()) h in
-    modifies ws h h'
-
-type wcmd (w:addr_set) = c:command{mods c w}
-reifiable
-let seq' (#w1 #w2 : addr_set) (c1:wcmd w1) (c2:wcmd w2) (_:unit) : STNull unit =
-  (c1 <: command) (); (c2 <: command) ()
-
-let seq (#w1 #w2 : addr_set) (c1:wcmd w1) (c2:wcmd w2) (h:heap) = 
-  let c1 = c1 <: command in
-  let c2 = c2 <: command in  
-  let _, h1 = reify (c1 ()) h in 
-  let _, h2 = reify (c2 ()) h1 in 
-  assert (modifies w1 h h1);
-  assert (modifies w2 h1 h2);
-  assert (modifies (w1 `S.union` w2) h h2) 
-
-
-let heap_contains (h:heap) (rs:addr_set) =
-  forall (a:Type0). forall (r: ref a).
-    S.mem (addr_of r) rs ==>
-    h `contains` r
-
-let no_alloc (h:heap) (h':heap) =
-  forall (a:Type0). forall (r: ref a). h `contains` r <==> h' `contains` r
-
 let fp_body (f: command) (rs: addr_set) (ws: addr_set) (h_0:heap) (h_1:heap) = // /\ heap_contains h_0 (rs `S.union` ws) /\ heap_contains h_1 (rs `S.union` ws)}) =
   let (), h'_0 = reify (f ()) h_0 in
   let (), h'_1 = reify (f ()) h_1 in
@@ -62,22 +35,22 @@ let fp_body (f: command) (rs: addr_set) (ws: addr_set) (h_0:heap) (h_1:heap) = /
   no_alloc h_1 h'_1 /\  
   (heap_equiv_on h_0 h_1 rs ==> heap_equiv_on h'_0 h'_1 ws)
 
-(** [footprint f rs ws] means as long as two heaps coincide on [rs], then the
-    resulting heaps coincide on [ws]. *)
+(** [footprint f rs ws] generalizes the heaps in fp_body **)
 let footprint (f: command) (rs: addr_set) (ws: addr_set) =
   forall (h_0: heap) (h_1: heap).{:pattern (reify (f ()) h_0);
                                     (reify (f ()) h_1)} fp_body f rs ws h_0 h_1
 
+(* [cmd r w] is a command whose footprint is r,w  *)
 type cmd (r:addr_set) (w:addr_set) = c:command{footprint c r w}
 
 reifiable
-let seq2' (#r1 #w1 #r2 #w2 : addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2) (_:unit) : STNull unit =
+let seq' (#r1 #w1 #r2 #w2 : addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2) (_:unit) : STNull unit =
   (c1 <: command) (); (c2 <: command) ()
 
-let seq2_lem_fp (#r1 #w1 #r2 #w2 : addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2) 
- : Lemma (footprint (seq2' c1 c2) (r1 `S.union` r2) (w1 `S.union` w2))
+let seq'_lem (#r1 #w1 #r2 #w2 : addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2) 
+ : Lemma (footprint (seq' c1 c2) (r1 `S.union` r2) (w1 `S.union` w2))
  = let aux (h:heap) (h':heap)
-      : Lemma (fp_body (seq2' c1 c2) (r1 `S.union` r2) (w1 `S.union` w2) h h') 
+      : Lemma (fp_body (seq' c1 c2) (r1 `S.union` r2) (w1 `S.union` w2) h h') 
       = let c1 = c1 <: command in
         let c2 = c2 <: command in  
         let _, h1 = reify (c1 ()) h in 
@@ -87,10 +60,10 @@ let seq2_lem_fp (#r1 #w1 #r2 #w2 : addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2)
         () in
    FStar.Classical.forall_intro_2 aux
 
-val cseq (#r1 #w1 #r2 #w2 : addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2) : Tot (cmd (r1 `S.union` r2) (w1 `S.union` w2))
-let cseq #r1 #w1 #r2 #w2 c1 c2 =
-  seq2_lem_fp c1 c2;
-  seq2' c1 c2
+let seq (#r1 #w1 #r2 #w2 : addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2) 
+  : cmd (r1 `S.union` r2) (w1 `S.union` w2)
+  = seq'_lem c1 c2;
+    seq' c1 c2
 
 let equiv_on_h (c_0:command) (c_1:command) (h:heap) = 
        let (), h_0 = reify (c_0 ()) h in
@@ -99,18 +72,21 @@ let equiv_on_h (c_0:command) (c_1:command) (h:heap) =
        no_alloc h h_1 /\
        heap_eq h h_0 h_1
 
+(** [equiv c_0 c_1] : c_0 and c_1 are equivalent if when run in identical initial heaps, 
+                    result in equivalent final heaps, 
+                    and do not allocate **)
 let equiv (c_0:command) (c_1:command) = forall h. equiv_on_h c_0 c_1 h
 
 (** A relational example. Consider two functions f1 and f2, who read
-    (resp. write) disjoint sets of references in the heap. Then, calling [f1
-    (); f2 ()] should be the same as calling [f2 (); f1 ()]. *)
+    (resp. write) disjoint sets of references in the heap. Then, calling 
+    [f1 (); f2 ()] should be the same as calling [f2 (); f1 ()]. *)
 let swap (#rs1 #rs2 #ws1 #ws2: addr_set) 
          (f1: cmd rs1 ws1)
          (f2: cmd rs2 ws2) : 
   Lemma
     (requires (S.disjoint__ ws1 ws2 /\ S.disjoint__ rs1 ws2 /\ S.disjoint__ rs2 ws1))
-    (ensures (equiv (cseq f1 f2) (cseq f2 f1)))
-  = let aux (h:heap) : Lemma (equiv_on_h (cseq f1 f2) (cseq f2 f1) h) =
+    (ensures (equiv (seq f1 f2) (seq f2 f1)))
+  = let aux (h:heap) : Lemma (equiv_on_h (seq f1 f2) (seq f2 f1) h) =
       let f1 = f1 <: command in
       let f2 = f2 <: command in      
       let (), h_1 = reify (f1 ()) h in //Strange that we seem to need these to trigger
@@ -123,8 +99,8 @@ let swap (#rs1 #rs2 #ws1 #ws2: addr_set)
     time should write the same values into the heap. *)
 let idem (#rs #ws:addr_set) (f:cmd rs ws)
   : Lemma (requires (S.disjoint__ rs ws))
-          (ensures (equiv (cseq f f) f))
-  = let aux (h:heap) : Lemma (equiv_on_h (cseq f f) f h) =
+          (ensures (equiv (seq f f) f))
+  = let aux (h:heap) : Lemma (equiv_on_h (seq f f) f h) =
       let f = f <: command in
       let (), h_1 = reify (f ()) h in
       let (), h_2 = reify (f ()) h_1 in
