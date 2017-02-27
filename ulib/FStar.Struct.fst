@@ -1,6 +1,5 @@
 // with: --include ulib --include ulib/hyperstack
 
-(** Legacy structures based on buffers *)
 module FStar.Struct
 
 module DM = FStar.DependentMap
@@ -703,6 +702,8 @@ abstract let as_buffer_gfrom_buffer_index
 : Lemma
   (as_buffer_type (gfrom_buffer_index p i) == value /\ as_buffer (gfrom_buffer_index p i) == Buffer.sub p (UInt32.uint_to_t i) (UInt32.uint_to_t 1))
 = ()
+
+#reset-options "--z3rlimit 16"
 
 abstract let as_value_gfrom_buffer_index
   (#value: Type)
