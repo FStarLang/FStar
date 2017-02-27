@@ -2,7 +2,7 @@ module Test
 
 
 module DM = FStar.DependentMap
-module S  = FStar.LegacyStruct
+module S  = FStar.Struct
 module HST = FStar.ST
 module B = FStar.Buffer
 

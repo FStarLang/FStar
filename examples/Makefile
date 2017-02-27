@@ -22,7 +22,6 @@ preorders \
 dm4free \
 incl \
 struct \
-legacy_struct \
 micro-benchmarks \
 bytes \
 tactics

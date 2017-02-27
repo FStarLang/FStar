@@ -1,7 +1,7 @@
 // with: --include ulib --include ulib/hyperstack
 
 (** Legacy structures based on buffers *)
-module FStar.LegacyStruct
+module FStar.Struct
 
 module DM = FStar.DependentMap
 module HH = FStar.HyperHeap

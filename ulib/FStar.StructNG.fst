@@ -1,6 +1,6 @@
 // with: --include ulib --include ulib/hyperstack
 
-module FStar.Struct
+module FStar.StructNG
 
 module DM = FStar.DependentMap
 module HH = FStar.HyperHeap
