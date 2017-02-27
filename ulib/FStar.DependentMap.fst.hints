@@ -1,17 +1,6 @@
 [
-  "\u0016Q©\u000bÔ\bé\n²¨…Û\u0017Ì‹œ",
+  "ƒ\u0012ÓeR›\u0002t\u0013â“Ž^w\u000bŽ",
   [
-    [
-      "FStar.DependentMap.t_inj",
-      1,
-      2,
-      1,
-      [
-        "@query", "projection_inverse_FStar.DependentMap.t@x0",
-        "projection_inverse_FStar.DependentMap.t@x1", "unit_typing"
-      ],
-      0
-    ],
     [ "FStar.DependentMap.create", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DependentMap.sel_create",
