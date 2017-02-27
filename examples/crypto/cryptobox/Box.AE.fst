@@ -88,9 +88,6 @@ let keygen i =
   let h0 = ST.get() in
   MR.m_recall id_freshness_table;
   make_unfresh i;
-  let h1 = ST.get() in
-  assert(MR.m_sel h1 id_honesty_table == MR.m_sel h0 id_honesty_table);     // and the log of the key will be empty.
-  admit();
   //ae_make_honest i;
   let rnd_k = random keysize in
   let region = new_region ae_key_region in
@@ -182,25 +179,21 @@ let get_regionGT k =
 *)
 val encrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> (m:protected_ae_plain i) -> ST cipher
   (requires (fun h0 -> 
-    (honest i ==> MM.fresh k.log n h0)
+    (honest i /\ (b2t ae_ind_cca) ==> MM.fresh k.log n h0)
     /\ MR.m_contains k.log h0
     /\ registered i
   ))
   (ensures  (fun h0 c h1 ->
     let current_log = MR.m_sel h0 k.log in
     modifies_one k.region h0.h h1.h
-
-    ///\ m_contains k.log h1
-    /\ (
-	( (dishonest i \/ ~(b2t ae_ind_cca))
-	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (repr m))
-      \/ 
-        ( (honest i /\ b2t ae_ind_cca)
-	    ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (createBytes (length m) 0z) )
-      )
+    /\ m_contains k.log h1
+    /\ ((honest i /\ b2t ae_ind_cca)
+      ==> (c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (createBytes (length m) 0z)
+	 /\ MR.m_sel h1 k.log == MM.upd current_log n (c,m))
+	 /\ MR.witnessed (MM.contains k.log n (c,m)))
+    /\ ((dishonest i \/ ~(b2t ae_ind_cca)
+      ==> c = CoreCrypto.aead_encryptT AES_128_CCM k.raw n empty_bytes (repr m)))
     /\ (dishonest i \/ honest i)
-    /\ MR.witnessed (MM.contains k.log n (c,m))
-    /\ MR.m_sel h1 k.log == MM.upd current_log n (c,m)
     ))
 let encrypt #i n k m =
   let honest_i = is_honest i in
@@ -211,9 +204,12 @@ let encrypt #i n k m =
       repr m )
   in
   let c = CoreCrypto.aead_encrypt AES_128_CCM k.raw n empty_bytes p in
-  MM.extend k.log n (c,m);
-  c
-
+  if (ae_ind_cca && honest_i) then (
+    MM.extend k.log n (c,m);
+    c
+  ) else (
+    c
+  )
 
 (**
    Decrypt a ciphertext c using a key k. If the key is honest and ae_int_ctxt is idealized,
@@ -228,15 +224,12 @@ val decrypt: #(i:id{AE_id? i}) -> n:nonce -> k:key{k.i=i} -> c:cipher{B.length c
   (ensures  (fun h0 res h1 -> 
     modifies_none h0 h1
     /\ m_contains k.log h1
-    /\ (
-        ((~(b2t ae_ind_cca) \/ dishonest i) 
-        	==> (Some? (aead_decryptT AES_128_CCM k.raw n empty_bytes c) 
-        	     ==> Some? res /\ Some?.v res == coerce (Some?.v (aead_decryptT AES_128_CCM k.raw n empty_bytes c))))
-      \/
-        (( (b2t ae_ind_cca) /\ honest i /\ Some? res) 
-        	==> (MM.defined k.log n h0 /\ (fst (MM.value k.log n h0) == c ) 
-        	  /\ Some?.v res == snd (MM.value k.log n h0)))
-        )
+    /\ ((~(b2t ae_ind_cca) \/ dishonest i)
+      ==> (Some? (aead_decryptT AES_128_CCM k.raw n empty_bytes c)
+        ==> Some? res /\ Some?.v res == coerce (Some?.v (aead_decryptT AES_128_CCM k.raw n empty_bytes c))))
+    /\ (( (b2t ae_ind_cca) /\ honest i /\ Some? res) 
+      ==> (MM.defined k.log n h0 /\ (fst (MM.value k.log n h0) == c ) 
+         /\ Some?.v res == snd (MM.value k.log n h0)))
   ))
 let decrypt #i n k c =
   let honest_i = is_honest i in

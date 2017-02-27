@@ -16,6 +16,7 @@ val ae_int_ctxt : bool
 
 val ae_ind_cpa : bool
 
-val ae_ind_cca : b:bool{ae_ind_cpa /\ ae_int_ctxt ==> b}
+val ae_ind_cca : b:bool
 
-val pkae : b:bool{b ==> b2t ae_ind_cpa /\ ae_int_ctxt /\ prf_odh}
+val pkae : b:bool{b <==> (ae_ind_cca /\ prf_odh)}
+
