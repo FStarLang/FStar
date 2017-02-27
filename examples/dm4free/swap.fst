@@ -114,7 +114,7 @@ let guard_is_readonly (c:guard') =
     let _, h1 = reify ((c <: guard') ()) h in
     h == h1
 
-type guard = g:guard'{guard_is_readonly g}
+type guard = f:(unit -> STNull bool){forall (h:heap). h == snd (reify (f ()) h)}
 
 reifiable let cond (c:guard) (c1:command) (c2:command) (_:unit) :STNull unit
   = let b = (c <: guard) () in
@@ -131,12 +131,15 @@ let lemma_replace_cond (c:guard) (c1:command) (c2:command)
     in
     FStar.Classical.forall_intro aux
 
-let lemma_skip_c1 (#r1 #w1 #r2 #w2:addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2) (h:heap)
+let lemma_skip_c1 (#r1 #w1 #r2 #w2:addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2)
   :Lemma (requires (S.disjoint__ w1 r2 /\ S.subset w1 w2))
-         (ensures  (equiv_on_h (c1 >> c2) c2 h))
-  = let (), h1 = reify ((c1 <: command) ()) h in
-    let (), h2 = reify ((c2 <: command) ()) h in
-    ()
+         (ensures  (equiv (c1 >> c2) c2))
+  = let aux (h:heap) :Lemma (equiv_on_h (c1 >> c2) c2 h) =  
+      let (), h1 = reify ((c1 <: command) ()) h in
+      let (), h2 = reify ((c2 <: command) ()) h in
+      ()
+    in
+    FStar.Classical.forall_intro aux
 
 (*** OLD ***)
 
