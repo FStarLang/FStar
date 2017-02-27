@@ -199,6 +199,15 @@ let resugar_prims_ops path: expression =
   | path -> path_to_ident path)
   |> Exp.ident 
 
+let resugar_if_stmts ep cases = 
+  if List.length cases = 2 then
+    ((match (List.hd cases).pc_lhs.ppat_desc with
+    |  Ppat_construct({txt=Lident "true"}, None) -> print_string "yas"
+    | _ -> print_string "nay");
+    Exp.match_ ep cases)
+  else
+    Exp.match_ ep cases
+
 let rec build_expr ?print_ty (e: mlexpr): expression = 
   let e' = (match e.expr with
   | MLE_Const c -> build_constant_expr c
@@ -221,7 +230,7 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
    | MLE_Match (e, branches) ->
       let ep = build_expr e in
       let cases = map build_case branches in
-      Exp.match_ ep cases
+      resugar_if_stmts ep cases
    | MLE_Coerce (e, _, _) -> 
       let r = Exp.ident (mk_lident "Obj.magic") in
       Exp.apply r [(Nolabel, build_expr e)]
