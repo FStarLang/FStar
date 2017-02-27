@@ -30,16 +30,15 @@ let c_3 = Assign lo (AOp Plus (AVar hi) (AInt 1))
 let c_4 = Assign c (AOp Minus (AVar c) (AInt 1))
 let c_body =  Seq (Seq c_2 c_3) c_4
 
-let cmd = c_1 c_body
+let c_1_4 = c_1 c_body
 
 #set-options "--z3rlimit 30"
-let c_2_3_ni () : Lemma (requires True) (ensures ni_com env (Seq c_2 c_3) Low) [SMTPat (ni_com env (Seq c_2 c_3) Low)] = ()
+let c_2_3_ni () : Lemma (requires True) (ensures ni_com env (Seq c_2 c_3) Low) = ()
 
 
-#set-options "--z3rlimit 30"
 val cmd_ni : unit ->
-  Exn label (requires True) (ensures fun ol -> Inl? ol ==> ni_com env cmd (Inl?.v ol))
-let cmd_ni () = tc_com_hybrid env cmd [Seq c_2 c_3, Low]
+  Exn label (requires True) (ensures fun ol -> Inl? ol ==> ni_com env c_1_4 (Inl?.v ol))
+let cmd_ni () = tc_com_hybrid env c_1_4 [Seq c_2 c_3, Low]
 
 (* let tc_c_4 () : Lemma (reify (tc_com env c_4) () == Inl Low) = () *)
 (* let tc_hybrid_c_4 () : Lemma (reify (tc_com_hybrid env c_4 [Seq c_2 c_3, Low]) () == Inl Low) = () *)
@@ -52,8 +51,5 @@ let cmd_ni () = tc_com_hybrid env cmd [Seq c_2 c_3, Low]
 (*   assert (reify (tc_com_hybrid env c_body [Seq c_2 c_3, Low]) () == Inl Low) ; *)
 (*   assert (reify (tc_com_hybrid env cmd [Seq c_2 c_3, Low]) () == Inl Low) *)
 
-val cmd_ni' : unit ->
-  Lemma (ensures ni_com env cmd Low)
-let cmd_ni' () =
-  match (reify (tc_com_hybrid env cmd [Seq c_2 c_3, Low]) ()) with
-  | Inl l -> ()
+let c_1_4_ni' () : Lemma (ensures ni_com env c_1_4 Low) =
+  c_2_3_ni(); match (reify (tc_com_hybrid env c_1_4 [Seq c_2 c_3, Low]) ()) with | Inl l -> ()
