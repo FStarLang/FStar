@@ -199,12 +199,14 @@ let resugar_prims_ops path: expression =
   | path -> path_to_ident path)
   |> Exp.ident 
 
-let resugar_if_stmts ep cases = 
+let resugar_if_stmts ep cases =
   if List.length cases = 2 then
-    ((match (List.hd cases).pc_lhs.ppat_desc with
-    |  Ppat_construct({txt=Lident "true"}, None) -> print_string "yas"
-    | _ -> print_string "nay");
-    Exp.match_ ep cases)
+    let case1 = List.hd cases in
+    let case2 = BatList.last cases in
+    (match case1.pc_lhs.ppat_desc with
+     | Ppat_construct({txt=Lident "true"}, None) ->
+         Exp.ifthenelse ep case1.pc_rhs (Some case2.pc_rhs)
+     | _ -> Exp.match_ ep cases)
   else
     Exp.match_ ep cases
 
@@ -429,4 +431,5 @@ let print (out_dir: string option) (ext: string) (ml: mllib) =
          FStar_Util.write_file 
            (FStar_Options.prepend_output_dir (BatString.concat "" [n;ext]))
            (FStar_Format.pretty (Prims.parse_int "120") d)) new_doc
+  | _ -> failwith "Unrecognized extension"
 
