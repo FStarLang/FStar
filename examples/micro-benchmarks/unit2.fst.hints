@@ -65,6 +65,7 @@
         "@query", "bool_typing", "constructor_distinct_Unit2.Int",
         "disc_equation_Unit2.Bool", "disc_equation_Unit2.Int",
         "fuel_guarded_inversion_Unit2.t", "int_typing",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Negation"
       ],
       0
