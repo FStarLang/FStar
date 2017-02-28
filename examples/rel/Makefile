@@ -3,7 +3,9 @@ OTHERFLAGS+=$(FLAGS) $(LIB) --include ../dm4free
 FSTAR_HOME=../..
 include ../Makefile.include
 
-uall:\
+uall: all
+
+all:\
   Bijection.uver\
   Equivalence.uver\
   IfcComposeReify.uver\
@@ -39,3 +41,6 @@ uall:\
   UnionFind.Functions.uver\
   While.uver\
   WhileReify.uver
+
+pack:
+	cd ../..; zip -r relational.zip examples/rel examples/dm4free
