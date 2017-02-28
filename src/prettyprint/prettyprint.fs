@@ -142,8 +142,14 @@ let separate (Doc sep:document) (docs:document list) : document =
     let d = FSharp.PPrint.Combinators.separate sep dd in
     Doc d
 
+// SI: check
 let concat_map (f:('a -> document)) (xs:'a list) : document = 
-    failwith not_impl_msg
+    let f' (a:'a) : FSharp.PPrint.Engine.document = 
+        let d = f a in 
+        match d with 
+        | Doc d' -> d' in
+    let d' = FSharp.PPrint.Combinators.concat_map f' xs in
+    Doc d'
 
 let separate_map (sep:document) (f:('a -> document)) (xs:'a list) : document = failwith not_impl_msg
 
