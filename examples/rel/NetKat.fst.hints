@@ -1,0 +1,436 @@
+[
+  "éÜQÃdODÝ1R{¢“æ\n\f",
+  [
+    [
+      "NetKat.predicate",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string"
+      ],
+      0
+    ],
+    [ "NetKat.uu___is_PrTrue", 1, 2, 1, [ "@query" ], 0 ],
+    [ "NetKat.uu___is_PrFalse", 1, 2, 1, [ "@query" ], 0 ],
+    [ "NetKat.uu___is_PrFieldEq", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NetKat.__proj__PrFieldEq__item__f",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PrFieldEq",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_bec35291186e95c3d6c80baa7a08d736"
+      ],
+      0
+    ],
+    [
+      "NetKat.__proj__PrFieldEq__item__v",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PrFieldEq",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_bec35291186e95c3d6c80baa7a08d736"
+      ],
+      0
+    ],
+    [ "NetKat.uu___is_PrOr", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NetKat.__proj__PrOr__item__p1",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PrOr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_d8586aba505eaf6dbae671713c3d3051"
+      ],
+      0
+    ],
+    [
+      "NetKat.__proj__PrOr__item__p2",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PrOr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_d8586aba505eaf6dbae671713c3d3051"
+      ],
+      0
+    ],
+    [ "NetKat.uu___is_PrAnd", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NetKat.__proj__PrAnd__item__p1",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PrAnd",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1946ce43305aefbee803bf8108076b85"
+      ],
+      0
+    ],
+    [
+      "NetKat.__proj__PrAnd__item__p2",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PrAnd",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1946ce43305aefbee803bf8108076b85"
+      ],
+      0
+    ],
+    [ "NetKat.uu___is_PrNot", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NetKat.__proj__PrNot__item__p",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PrNot",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_7760677cd8a5f6510bfc8a68ad245267"
+      ],
+      0
+    ],
+    [ "NetKat.uu___is_PoFilter", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NetKat.__proj__PoFilter__item__p",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PoFilter",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_e0380cdb056d7ca9abeae44e9ba6fa85"
+      ],
+      0
+    ],
+    [ "NetKat.uu___is_PoMod", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NetKat.__proj__PoMod__item__f",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PoMod",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_cbdb8a3b39554f903e421008232b8117"
+      ],
+      0
+    ],
+    [
+      "NetKat.__proj__PoMod__item__v",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PoMod",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_cbdb8a3b39554f903e421008232b8117"
+      ],
+      0
+    ],
+    [ "NetKat.uu___is_PoUnion", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NetKat.__proj__PoUnion__item__p1",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PoUnion",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_a8893467cf1d00dd4f2ceb1dbd36a332"
+      ],
+      0
+    ],
+    [
+      "NetKat.__proj__PoUnion__item__p2",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PoUnion",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_a8893467cf1d00dd4f2ceb1dbd36a332"
+      ],
+      0
+    ],
+    [ "NetKat.uu___is_PoSeq", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NetKat.__proj__PoSeq__item__p1",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PoSeq",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_dc2206fbcc21342adf2266b89e13e92a"
+      ],
+      0
+    ],
+    [
+      "NetKat.__proj__PoSeq__item__p2",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PoSeq",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_dc2206fbcc21342adf2266b89e13e92a"
+      ],
+      0
+    ],
+    [ "NetKat.uu___is_PoStar", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NetKat.__proj__PoStar__item__p",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_NetKat.PoStar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_85f8b73a81bd8fc5fad5d793e629d0e4"
+      ],
+      0
+    ],
+    [ "NetKat.uu___is_PoDup", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NetKat.s",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.tuple2_haseq", "equation_NetKat.history",
+        "equation_NetKat.packet", "function_token_typing_NetKat.packet",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_8d9998e8f02d26bf07964b120fdcdf37",
+        "kinding_Prims.tuple2@tok"
+      ],
+      0
+    ],
+    [
+      "NetKat.s",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.tuple2_haseq",
+        "binder_x_66fdb8a1b31a08784632de4d7b29d9e0_0",
+        "binder_x_a7b7b7646961e89c6da6cc26f098e0a4_1", "bool_inversion",
+        "constructor_distinct_Tm_unit",
+        "data_typing_intro_NetKat.PrFalse@tok", "disc_equation_NetKat.PrAnd",
+        "disc_equation_NetKat.PrFalse", "disc_equation_NetKat.PrFieldEq",
+        "disc_equation_NetKat.PrNot", "disc_equation_NetKat.PrOr",
+        "disc_equation_NetKat.PrTrue", "disc_equation_Prims.Cons",
+        "equation_NetKat.history", "equation_NetKat.packet",
+        "equation_Prims.nat",
+        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "fuel_guarded_inversion_NetKat.predicate",
+        "function_token_typing_NetKat.packet",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_8d9998e8f02d26bf07964b120fdcdf37", "int_inversion",
+        "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption",
+        "pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
+        "pretyping_66fdb8a1b31a08784632de4d7b29d9e0",
+        "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_8d9998e8f02d26bf07964b120fdcdf37",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "subterm_ordering_NetKat.PrNot", "subterm_ordering_NetKat.PrOr",
+        "typing_FStar.List.Tot.Base.length", "typing_Prims.uu___is_None",
+        "typing_Prims.uu___is_Some"
+      ],
+      0
+    ],
+    [
+      "NetKat.s",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.tuple2_haseq", "equation_NetKat.history",
+        "equation_NetKat.packet", "function_token_typing_NetKat.packet",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_8d9998e8f02d26bf07964b120fdcdf37",
+        "kinding_Prims.tuple2@tok"
+      ],
+      0
+    ],
+    [
+      "NetKat.s",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.tuple2_haseq", "equation_NetKat.history",
+        "equation_NetKat.packet", "function_token_typing_NetKat.packet",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_8d9998e8f02d26bf07964b120fdcdf37",
+        "kinding_Prims.tuple2@tok"
+      ],
+      0
+    ],
+    [ "NetKat.s", 5, 2, 1, [ "@query", "assumption_Prims.HasEq_string" ], 0 ],
+    [ "NetKat.s", 6, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
+    [
+      "NetKat.s",
+      7,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.tuple2_haseq", "equation_NetKat.history",
+        "equation_NetKat.packet", "function_token_typing_NetKat.packet",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_8d9998e8f02d26bf07964b120fdcdf37",
+        "kinding_Prims.tuple2@tok"
+      ],
+      0
+    ],
+    [
+      "NetKat.s",
+      8,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.tuple2_haseq", "equation_NetKat.history",
+        "equation_NetKat.packet", "function_token_typing_NetKat.packet",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_8d9998e8f02d26bf07964b120fdcdf37",
+        "kinding_Prims.tuple2@tok"
+      ],
+      0
+    ],
+    [
+      "NetKat.s",
+      9,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.tuple2_haseq", "equation_NetKat.history",
+        "equation_NetKat.packet", "function_token_typing_NetKat.packet",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_8d9998e8f02d26bf07964b120fdcdf37",
+        "kinding_Prims.tuple2@tok"
+      ],
+      0
+    ],
+    [
+      "NetKat.s",
+      10,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.tuple2_haseq", "equation_NetKat.history",
+        "equation_NetKat.packet", "function_token_typing_NetKat.packet",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_8d9998e8f02d26bf07964b120fdcdf37",
+        "kinding_Prims.tuple2@tok"
+      ],
+      0
+    ],
+    [
+      "NetKat.s",
+      11,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.tuple2_haseq", "equation_NetKat.history",
+        "equation_NetKat.packet", "function_token_typing_NetKat.packet",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_8d9998e8f02d26bf07964b120fdcdf37",
+        "kinding_Prims.tuple2@tok"
+      ],
+      0
+    ],
+    [
+      "NetKat.s",
+      12,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.tuple2_haseq", "equation_NetKat.history",
+        "equation_NetKat.packet", "function_token_typing_NetKat.packet",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_8d9998e8f02d26bf07964b120fdcdf37",
+        "kinding_Prims.tuple2@tok"
+      ],
+      0
+    ],
+    [
+      "NetKat.s",
+      13,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.tuple2_haseq", "equation_NetKat.history",
+        "equation_NetKat.packet", "function_token_typing_NetKat.packet",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_8d9998e8f02d26bf07964b120fdcdf37",
+        "kinding_Prims.tuple2@tok"
+      ],
+      0
+    ],
+    [
+      "NetKat.s",
+      14,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string", "assumption_Prims.list_haseq",
+        "assumption_Prims.tuple2_haseq", "equation_NetKat.history",
+        "equation_NetKat.packet", "function_token_typing_NetKat.packet",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_8d9998e8f02d26bf07964b120fdcdf37",
+        "kinding_Prims.tuple2@tok"
+      ],
+      0
+    ]
+  ]
+]
