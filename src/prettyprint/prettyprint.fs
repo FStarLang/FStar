@@ -143,15 +143,25 @@ let separate (Doc sep:document) (docs:document list) : document =
     Doc d
 
 // SI: check
+//     Used composition to work out f' implementation. 
 let concat_map (f:('a -> document)) (xs:'a list) : document = 
     let f' (a:'a) : FSharp.PPrint.Engine.document = 
+        // apply f
         let d = f a in 
+        // unpack d
         match d with 
         | Doc d' -> d' in
     let d' = FSharp.PPrint.Combinators.concat_map f' xs in
     Doc d'
 
-let separate_map (sep:document) (f:('a -> document)) (xs:'a list) : document = failwith not_impl_msg
+// SI: check
+let separate_map (Doc sep:document) (f:('a -> document)) (xs:'a list) : document = 
+    let f' (a:'a) : FSharp.PPrint.Engine.document = 
+        let d = f a in 
+        match d with 
+        | Doc d' -> d' in 
+    let d' = FSharp.PPrint.Combinators.separate_map sep f' xs in 
+    Doc d'
 
 let separate2 (Doc sep:document) (Doc last_sep:document) (docs:document list) : document = 
     let dd = List.map (fun (Doc d) -> d) docs in
@@ -179,7 +189,14 @@ let flow (Doc sep:document) (docs:document list) : document =
     let dd = List.map (fun (Doc d) -> d) docs in 
     Doc (FSharp.PPrint.Combinators.flow sep dd)
 
-let flow_map (sep:document) (f:('a -> document)) (docs:'a list) : document = failwith not_impl_msg
+// SI: check
+let flow_map (Doc sep:document) (f:('a -> document)) (docs:'a list) : document =
+    let f' (a:'a) : FSharp.PPrint.Engine.document = 
+        let d = f a in 
+        match d with 
+        | Doc d' -> d' in 
+    let d' = FSharp.PPrint.Combinators.separate_map sep f' docs in 
+    Doc d'
 
 let url (s:string) : document = Doc (FSharp.PPrint.Combinators.url s)
 
@@ -204,8 +221,15 @@ let soft_surround (n:int) (b:int) (Doc opening:document) (Doc contents:document)
 let surround_separate (n:int) (b:int) (Doc v:document) (Doc opening:document) (Doc sep:document) (Doc closing:document) (docs:document list) : document = 
     Doc (FSharp.PPrint.Combinators.surround n b v opening closing)
 
-let surround_separate_map (n:int) (b:int) (v:document) (opening:document) (sep:document) (closing:document) (f:('a -> document)) (docs:'a list) : document = failwith not_impl_msg
-
+// SI: check
+let surround_separate_map (n:int) (b:int) (Doc v:document) (Doc opening:document) (Doc sep:document) (Doc closing:document) (f:('a -> document)) (docs:'a list) : document = 
+    let f' (a:'a) : FSharp.PPrint.Engine.document = 
+        let d = f a in 
+        match d with 
+        | Doc d' -> d' in 
+    let d' = FSharp.PPrint.Combinators.surround_separate_map n b v opening sep closing f' docs in 
+    Doc d'
+    
 let ( ^^ ) (Doc x:document) (Doc y:document) : document = 
     Doc (FSharp.PPrint.Engine.(^^) x y)
 
