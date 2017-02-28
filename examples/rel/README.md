@@ -2,7 +2,8 @@
 # Examples for A Monadic Framework for Relational Verification (Functional Pearl)
 
 All the examples are in the `rel` subdir, but some use things in
-`dm4free` internally.
+`dm4free` internally. This is known to work with the
+`c_relational-ci_r3` branch of F*, commit XXX in particular.
 
 ## Section 1
 
