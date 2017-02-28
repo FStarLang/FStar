@@ -13,7 +13,6 @@ uall:\
   IfcExample.uver\
   IfcExampleReify0.uver\
   IfcExampleReify1.uver\
-  ifcExampleReify2.uver\
   IfcExampleReify2.uver\
   IfcExampleReify3.uver\
   IfcRecursiveHeapReify.uver\
