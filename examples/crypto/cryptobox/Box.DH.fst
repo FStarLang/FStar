@@ -140,7 +140,7 @@ let prf_odhT dh_sk dh_pk =
 val prf_odh: sk:dh_skey -> pk:dh_pkey -> ST (PlainDH.key)
   ( requires (fun h0 -> 
     let i = generate_ae_id pk.pk_id sk.sk_id in
-    (AE_id? i /\ honest i) ==> (MM.defined dh_key_log i h0 \/ fresh i h0)
+    ((AE_id? i /\ honest i) ==> (MM.defined dh_key_log i h0 \/ fresh i h0))
     /\ m_contains id_freshness_table h0
   ))
   ( ensures (fun h0 k h1 ->
