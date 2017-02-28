@@ -106,7 +106,7 @@ let rec sum_dn_commute (r:ref int)
             assert (v r (reify (sum_dn r from t) (upd h1 r (sel h1 r + offset)))
                   = v r (reify (sum_dn r from t) h3)); //sel/upd rewrite
             sum_dn_eq r from t h3 h5;
-            assume (v r (reify (sum_dn r from to) h) + offset
+            assert (v r (reify (sum_dn r from to) h) + offset
                   = v r (reify (sum_dn r from to) h4))
         end
 
