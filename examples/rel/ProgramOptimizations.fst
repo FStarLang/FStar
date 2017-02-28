@@ -1,4 +1,4 @@
-module Relational.ProgramOptimizations
+module ProgramOptimizations
 
 open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreFixed

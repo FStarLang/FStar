@@ -1,7 +1,7 @@
 module IfcExampleReify2
 
 open WhileReify
-open IfcReify
+open IfcRulesReify
 open IfcTypechecker
 open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.Exceptions

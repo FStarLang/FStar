@@ -1,4 +1,4 @@
-module Relational.UnionFind.Functions
+module UnionFind.Functions
 
 open FStar.Seq
 open FStar.Ghost
@@ -7,7 +7,7 @@ open FStar.OrdSet
 open FStar.DM4F.Heap
 open FStar.DM4F.Heap.ST
 
-open Relational.UnionFind.Forest
+open UnionFind.Forest
 
 (* helpers for getting the parent, height, and the subtree *)
 unfold let parent  (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot (id n)    = Mktuple3?._1 (sel h (index uf i))

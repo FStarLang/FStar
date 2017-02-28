@@ -1,4 +1,4 @@
-module Ifc_Reify
+module IfcExampleReify3
 
 open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreFixed

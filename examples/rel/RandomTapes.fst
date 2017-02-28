@@ -1,4 +1,4 @@
-module Random_Tapes
+module RandomTapes
 
 open Rel
 open Bijection

@@ -1,7 +1,7 @@
 module IfcTypechecker
 
 open WhileReify
-open IfcReify
+open IfcRulesReify
 open FStar.DM4F.Exceptions
 
 (* Typechecking expressions: we infer the label *)

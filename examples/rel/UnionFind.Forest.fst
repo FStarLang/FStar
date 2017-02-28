@@ -1,4 +1,4 @@
-module Relational.UnionFind.Forest
+module UnionFind.Forest
 
 open FStar.Seq
 open FStar.Ghost

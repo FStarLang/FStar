@@ -1,4 +1,5 @@
 module OneTimePad
+
 open Bijection
 #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 4 --max_ifuel 4"
 let nib = bool * bool * bool * bool
@@ -53,4 +54,3 @@ let one_time_pad_ok x_0 x_1 tape_0 tape_1
                       dec_1 (enc_1 x_1) = x_1 /\
                       enc_0 x_0 = enc_1 x_1))
    = ()                      
-

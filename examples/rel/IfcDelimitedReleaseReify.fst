@@ -1,4 +1,4 @@
-module DelimitedReleaseReify
+module IfcDelimitedReleaseReify
 
 open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreFixed

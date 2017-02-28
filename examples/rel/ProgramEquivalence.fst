@@ -1,4 +1,4 @@
-module Relational.ProgramEquivalence
+module ProgramEquivalence
 
 open FStar.List.Tot
 open FStar.DM4F.Heap

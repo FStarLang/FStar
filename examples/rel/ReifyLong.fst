@@ -1,4 +1,4 @@
-module Ifc_Reify_Long
+module ReifyLong
 
 open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreFixed

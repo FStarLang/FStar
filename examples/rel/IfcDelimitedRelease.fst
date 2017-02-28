@@ -1,4 +1,4 @@
-module Delimited_Release
+module IfcDelimitedRelease
 
 open FStar.Heap
 open Rel

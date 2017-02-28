@@ -1,4 +1,4 @@
-module Relational.UnionFind
+module UnionFind
 
 open FStar.Seq
 open FStar.Ghost
@@ -7,8 +7,8 @@ open FStar.OrdSet
 open FStar.DM4F.Heap
 open FStar.DM4F.Heap.ST
 
-open Relational.UnionFind.Forest
-open Relational.UnionFind.Functions
+open UnionFind.Forest
+open UnionFind.Functions
 
 let lemma_find_helper (#n:nat) (uf:uf_forest n) (i:id n) (h:heap{live uf h /\ well_formed uf h})
   :Lemma (let p, _, _ = sel h (index uf i) in

@@ -1,8 +1,8 @@
-module IfcExampleReify
+module IfcExampleReify1
 
 open Rel
 open WhileReify
-open IfcReify
+open IfcRulesReify
 open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreExcFixed
 

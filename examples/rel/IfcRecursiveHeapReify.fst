@@ -1,4 +1,4 @@
-module Ifc_Recursive_Heap_Reify
+module IfcRecursiveHeapReify
 
 open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreFixed

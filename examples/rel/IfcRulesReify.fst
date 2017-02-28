@@ -1,4 +1,4 @@
-module IfcReify
+module IfcRulesReify
 
 open Rel
 open WhileReify

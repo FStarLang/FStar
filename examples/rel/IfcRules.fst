@@ -1,7 +1,7 @@
-module Ifc
+module IfcRules
 
 open Rel
-open WhileLanguage
+open While
 open FStar.Heap
 open FStar.Classical
 

@@ -1,4 +1,4 @@
-module Relational.Point
+module Point
 
 open FStar.List.Tot
 open FStar.DM4F.Heap

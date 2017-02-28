@@ -1,4 +1,4 @@
-module WhileLanguage
+module While
 open FStar.ST
 open FStar.Heap
 

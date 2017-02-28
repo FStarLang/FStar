@@ -1,8 +1,8 @@
 module IfcExample
 
 open Rel
-open WhileLanguage
-open Ifc
+open While
+open IfcRules
 open FStar.Heap
 
 (* (Warning) Top-level let-bindings must be total; this term may have effects *)
