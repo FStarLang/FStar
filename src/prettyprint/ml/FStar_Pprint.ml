@@ -14,9 +14,11 @@
    limitations under the License.
 *)
 
-(*  prettyprint.fsti's OCaml implementation is just a thin wrapper around
+(*  prettyprint's OCaml implementation is just a thin wrapper around
     Francois Pottier's pprint package. *)
 include PPrint
+
+let empty = PPrint.empty
 
 let doc_of_char = PPrint.char
 let doc_of_string = PPrint.string
