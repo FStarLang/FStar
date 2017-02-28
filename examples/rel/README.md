@@ -1,6 +1,9 @@
 
 # Examples for A Monadic Framework for Relational Verification (Functional Pearl)
 
+All the examples are in the `rel` subdir, but some use things in
+`dm4free` internally.
+
 ## Section 1
 
 - `Loops.fst`: `sum_up`/`sum_dn` from 1.1
@@ -20,8 +23,12 @@
 ## Section 5
 
 - `IfcRulesReify.fst`: the IFC type system from 5.1
+- `IfcTypechecker.fst`: the IFC typecheckers from 5.1 and 5.2
+- `IfcExampleReify2.fst`: the simple program from 5.2 and its hybrid proof
+- `IfcDelimitedRelease.fst`: the delimited release definition from 5.3
+- `IfcDeclassify.fst`: the simple definition of when declassification from 5.3
 
 ## Section 6
 
-## Section 7
-
+- `Memo.fst`: the memoization example from 6.1
+- `UnionFind.fst`: the union find example from 6.2
