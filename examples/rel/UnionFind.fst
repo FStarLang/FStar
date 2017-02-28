@@ -88,7 +88,7 @@ let rec lemma_find_opt_parent_same_as_find_root (#n:nat) (uf:uf_forest n) (i:id 
       lemma_find_opt_parent_same_as_find_root uf p h j;
       ignore (reify (find uf p h) h);
       ignore (reify (find_opt uf p h) h);
-      ignore (reify (find uf j h) h);  //AR: in general there is need for these triggers ... need to look into it
+      ignore (reify (find uf j h) h);
       lemma_find_opt_helper uf i h;
       if j <> i then ()
       else begin  //else we invoke the lemma that find and find_opt return same result, for both p and i
