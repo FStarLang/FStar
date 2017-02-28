@@ -1,0 +1,185 @@
+[
+  "e\u0018‰ª#¬Â˘YﬂF÷\u000eLÅ°",
+  [
+    [
+      "IfcDeclassify.state",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
+      ],
+      0
+    ],
+    [ "IfcDeclassify.STATE_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "IfcDeclassify.STATE___proj__STATE__item__get_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "IfcDeclassify.STATE___proj__STATE__item__put_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [ "IfcDeclassify.STATE", 1, 2, 1, [ "@query" ], 0 ],
+    [ "IfcDeclassify.STATE", 2, 2, 1, [ "@query" ], 0 ],
+    [ "IfcDeclassify.STATE", 3, 2, 1, [ "@query" ], 0 ],
+    [
+      "IfcDeclassify.p1",
+      1,
+      2,
+      1,
+      [
+        "@query", "data_typing_intro_Prims.Mktuple2@tok",
+        "function_token_typing_Prims.unit",
+        "kinding_IfcDeclassify.state@tok",
+        "pretyping_56ef72d66eab395310468b67821c486b",
+        "pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "IfcDeclassify.ni_p1",
+      1,
+      2,
+      1,
+      [
+        "@query", "IfcDeclassify.__proj__STATE__item__get_equality",
+        "IfcDeclassify.__proj__STATE__item__get_token_correspondence",
+        "IfcDeclassify.__proj__STATE__item__put_equality",
+        "IfcDeclassify.__proj__STATE__item__put_token_correspondence",
+        "eq2-interp", "equation_IfcDeclassify.low_equiv",
+        "equation_IfcDeclassify.p1", "equation_Prims.snd",
+        "fuel_guarded_inversion_Rel.rel",
+        "interpretation_Tm_abs_6e3c2d159a5974666ac65c98d05f4781",
+        "interpretation_Tm_abs_7e05d8dbd24518081aab486eb1544059",
+        "interpretation_Tm_abs_b74a64adb05d2ba4ea213cf4ef389ac4",
+        "interpretation_Tm_abs_d55e7d40bd279dc7ec57bc5ac781eb73",
+        "interpretation_Tm_abs_f2e734c2f9ab0b48d16f0763b90b5579",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "proj_equation_Prims.Mktuple2__2", "proj_equation_Rel.R_l",
+        "proj_equation_Rel.R_r", "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2", "projection_inverse_Rel.R_l",
+        "projection_inverse_Rel.R_r", "unit_typing"
+      ],
+      0
+    ],
+    [ "IfcDeclassify.ni_p1", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "IfcDeclassify.p2",
+      1,
+      2,
+      1,
+      [
+        "@query", "data_elim_IfcDeclassify.Mkstate",
+        "data_typing_intro_IfcDeclassify.Mkstate@tok",
+        "data_typing_intro_Prims.Mktuple2@tok",
+        "fuel_guarded_inversion_IfcDeclassify.state",
+        "function_token_typing_Prims.unit",
+        "kinding_IfcDeclassify.state@tok",
+        "pretyping_56ef72d66eab395310468b67821c486b",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "proj_equation_IfcDeclassify.Mkstate_public",
+        "proj_equation_IfcDeclassify.Mkstate_release", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "IfcDeclassify.ni_p2",
+      1,
+      2,
+      1,
+      [
+        "@query", "IfcDeclassify.__proj__STATE__item__get_equality",
+        "IfcDeclassify.__proj__STATE__item__get_token_correspondence",
+        "IfcDeclassify.__proj__STATE__item__put_equality",
+        "IfcDeclassify.__proj__STATE__item__put_token_correspondence",
+        "eq2-interp", "equation_IfcDeclassify.low_equiv",
+        "equation_IfcDeclassify.p2", "equation_Prims.snd",
+        "fuel_guarded_inversion_Rel.rel",
+        "interpretation_Tm_abs_7e05d8dbd24518081aab486eb1544059",
+        "interpretation_Tm_abs_b74a64adb05d2ba4ea213cf4ef389ac4",
+        "interpretation_Tm_abs_d55e7d40bd279dc7ec57bc5ac781eb73",
+        "interpretation_Tm_abs_e329d670d44d69bf68762e6a827ed378",
+        "interpretation_Tm_abs_f2e734c2f9ab0b48d16f0763b90b5579",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "proj_equation_IfcDeclassify.Mkstate_public",
+        "proj_equation_Prims.Mktuple2__2", "proj_equation_Rel.R_l",
+        "proj_equation_Rel.R_r",
+        "projection_inverse_IfcDeclassify.Mkstate_public",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2", "projection_inverse_Rel.R_l",
+        "projection_inverse_Rel.R_r", "unit_typing"
+      ],
+      0
+    ],
+    [ "IfcDeclassify.ni_p2", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "IfcDeclassify.p3",
+      1,
+      2,
+      1,
+      [
+        "@query", "data_elim_IfcDeclassify.Mkstate",
+        "data_typing_intro_IfcDeclassify.Mkstate@tok",
+        "data_typing_intro_Prims.Mktuple2@tok",
+        "fuel_guarded_inversion_IfcDeclassify.state",
+        "function_token_typing_Prims.unit",
+        "kinding_IfcDeclassify.state@tok",
+        "pretyping_56ef72d66eab395310468b67821c486b",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "proj_equation_IfcDeclassify.Mkstate_release",
+        "proj_equation_IfcDeclassify.Mkstate_secret", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "IfcDeclassify.p4",
+      1,
+      2,
+      1,
+      [
+        "@query", "bool_typing", "data_elim_IfcDeclassify.Mkstate",
+        "data_typing_intro_IfcDeclassify.Mkstate@tok",
+        "data_typing_intro_Prims.Mktuple2@tok",
+        "fuel_guarded_inversion_IfcDeclassify.state",
+        "function_token_typing_Prims.unit",
+        "kinding_IfcDeclassify.state@tok",
+        "pretyping_56ef72d66eab395310468b67821c486b",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "proj_equation_IfcDeclassify.Mkstate_secret", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "IfcDeclassify.ni_p4",
+      1,
+      2,
+      1,
+      [
+        "@query", "IfcDeclassify.__proj__STATE__item__put_equality",
+        "IfcDeclassify.__proj__STATE__item__put_token_correspondence",
+        "equation_IfcDeclassify.p4", "equation_Prims.snd",
+        "fuel_guarded_inversion_Rel.rel",
+        "interpretation_Tm_abs_a35c1dc46cb3651ce2fbd9d9c0880675",
+        "interpretation_Tm_abs_d55e7d40bd279dc7ec57bc5ac781eb73",
+        "interpretation_Tm_abs_f2e734c2f9ab0b48d16f0763b90b5579",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "proj_equation_IfcDeclassify.Mkstate_release",
+        "proj_equation_Prims.Mktuple2__2", "proj_equation_Rel.R_l",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_IfcDeclassify.Mkstate_release",
+        "projection_inverse_Prims.Mktuple2__2", "unit_typing"
+      ],
+      0
+    ],
+    [ "IfcDeclassify.ni_p4", 2, 2, 1, [ "@query" ], 0 ]
+  ]
+]
