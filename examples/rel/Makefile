@@ -19,6 +19,7 @@ uall:\
   IfcRecursiveReify.uver\
   IfcReificationRegressionTest.uver\
   IfcRules.uver\
+  IfcRulesReify.uver\
   IfcTypechecker.uver\
   Loops.uver\
   Memo.uver\
@@ -38,6 +39,3 @@ uall:\
   UnionFind.Functions.uver\
   While.uver\
   WhileReify.uver
-
-#  IfcRulesReify.uver\ -- fails without hints
-
