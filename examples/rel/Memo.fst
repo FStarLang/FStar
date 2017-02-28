@@ -1,4 +1,4 @@
-module FStar.DM4F.Memo
+module Memo
 
 open FStar.Classical
 open FStar.Squash
