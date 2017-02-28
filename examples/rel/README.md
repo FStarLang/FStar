@@ -3,7 +3,7 @@
 
 All the examples are in the `rel` subdir, but some use things in
 `dm4free` internally. This is known to work with the
-`c_relational-ci_r3` branch of F*, commit XXX in particular.
+`c_relational-ci_r3` branch of F*, commit bc4d52178 in particular.
 
 ## Section 1
 
