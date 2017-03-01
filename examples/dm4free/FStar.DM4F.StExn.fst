@@ -64,7 +64,7 @@ let div_intrinsic i j =
   if j = 0 then STEXN?.raise int
   else i / j
 
-reifiable let div_extrinsic (i:nat) (j:int) : S int =
+ let div_extrinsic (i:nat) (j:int) : S int =
   if j = 0 then STEXN?.raise int
   else i / j
 

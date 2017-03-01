@@ -31,7 +31,7 @@ effect IS (a:Type) =
 
 effect ISNull (a:Type) =
   INT_STORE a (fun (l0:heap) (p:((a * heap) -> Type0)) -> forall (x:a * heap). p x)
-(* TODO : having a in Type *and* reifiable induces a Failure("Universe variable not found") *)
+(* TODO : having a in Type *and*  induces a Failure("Universe variable not found") *)
 (* whenever we try to normalize-reify it (see below in xxx for instance) *)
 
 let wp = INT_STORE?.wp
@@ -39,14 +39,14 @@ let pre = INT_STORE?.pre
 let post = INT_STORE?.post
 let repr = INT_STORE?.repr
 
-reifiable
+
 let read (i:id)
   : INT_STORE int (fun s0 p -> p (index s0 i, s0))
 =
   let store = IS?.get () in
   index store i
 
-reifiable
+
 let write (i:id) (x:int)
   : INT_STORE unit (fun s0 p -> p ((), upd s0 i x))
 =

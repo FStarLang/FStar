@@ -13,12 +13,12 @@ type env = id ->  Tot label
 type low_equiv (env:env) (h : rel heap)  =
   forall (x:id). {:pattern (Low? (env x))} (Low? (env x) ==> sel (R?.l h) x = sel (R?.r h) x)
 
-reifiable val p1 (lo hi :id ): gh:heap ->
+ val p1 (lo hi :id ): gh:heap ->
   IntStore unit
   (requires (fun h -> h == gh /\ lo <> hi))
   (ensures  (fun h1 _ h2 -> True))
   (decreases (sel gh hi))
-reifiable let rec p1 lo hi gh  =
+ let rec p1 lo hi gh  =
   if (read hi) > 0 then
   begin
     write hi (read hi - 1);
@@ -91,12 +91,12 @@ let rec ni_p1 lo hi env h =
 
 let op_Star = op_Multiply
 
-reifiable val fac (a:id) (n:id{a <> n}): gh:heap ->
+ val fac (a:id) (n:id{a <> n}): gh:heap ->
   IntStore unit
   (requires (fun h -> h == gh))
   (ensures  (fun h1 _ h2 -> True))
   (decreases (let x = sel gh n in if x < 0 then 0 else x))
-reifiable let rec fac a n gh =
+ let rec fac a n gh =
   let vn = read n in
   if vn <= 0 then
     write a 1

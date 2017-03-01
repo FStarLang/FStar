@@ -14,21 +14,21 @@ type low_equiv (env:env) (h : rel heap)  =
   forall (x:id). {:pattern (Low? (env x))} (Low? (env x) ==> sel (R?.l h) x = sel (R?.r h) x)
 
 
-reifiable let p1 lo hi =
+ let p1 lo hi =
   if (read hi = 0) then 
     write lo (read hi)
   else 
     write lo 0
 
 
-reifiable let p2 lo hi =
+ let p2 lo hi =
   if (read hi = 1) then 
     write lo (read hi)
   else 
     write lo 1
 
 
-reifiable let p3 lo1 lo2 hi =
+ let p3 lo1 lo2 hi =
   p1 lo1 hi;
   p2 lo2 hi
 

@@ -46,7 +46,7 @@ let incr_intrinsic' u =
 // Or, we can give increment the weakest possible spec and prove
 // properties extrinsically (after the fact) using reification
 
-reifiable val incr : unit -> StNull unit
+ val incr : unit -> StNull unit
 let incr u =
   let n = STINT?.get() in
   STINT?.put (n + 1)
@@ -56,11 +56,11 @@ let incr_increases (s0:int) = assert (snd (reify (incr ()) s0) = s0 + 1)
 (* Using this extrinsic style we can also prove information-flow
    control properties of increment and decrement *)
 
-reifiable let decr () : StNull unit =
+ let decr () : StNull unit =
   let n = STINT?.get () in
   STINT?.put (n - 1)
 
-reifiable let ifc (h:bool) : StNull int =
+ let ifc (h:bool) : StNull int =
   if h then (incr(); let y = STINT?.get() in decr(); y)
        else STINT?.get() + 1
 
@@ -75,10 +75,10 @@ let action_get () i = (i, i)
 val action_put: x:int -> repr unit (fun n post -> post ((), x))
 let action_put x i = ((), x)
 
-reifiable val get' : unit -> STINT int (fun z post -> post (z, z))
+ val get' : unit -> STINT int (fun z post -> post (z, z))
 let get' () = STINT?.reflect (action_get ())
 
-reifiable val put': x:int -> STINT unit (fun z post -> post ((), x))
+ val put': x:int -> STINT unit (fun z post -> post ((), x))
 let put' x = STINT?.reflect (action_put x)
 
 let assert_after_reify (_:unit) : StNull unit =
@@ -131,7 +131,7 @@ let refine_st (#a:Type)
     STINT?.reflect g
 
 (* This is a little annoying but we need an explicit pre/post effect *)
-reifiable val incr_pre_post : unit ->
+ val incr_pre_post : unit ->
   StInt unit (requires (fun _ -> True))
              (ensures (fun _ _ _ -> True))
 let incr_pre_post u =

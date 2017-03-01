@@ -147,7 +147,7 @@ let memo_ (f : dom -> Tot codom) (x:dom) : MEMO codom (fun h0 p -> valid_memo h0
 
 (* Specification-less memoization of a pure function and its extrinsic proof *)
 
-(* reifiable *)
+(*  *)
 let memo_extr (f : dom -> Tot codom) (x:dom) : Memo codom
 = match MEMO?.get x with
   | Some y -> y
@@ -178,7 +178,7 @@ let to_memo_pack (f : dom -> Tot codom) : Tot (memo_pack f) =
 
 (* Specification-less memoization of a memoized function and its extrinsic proof *)
 
-(* reifiable *)
+(*  *)
 let memo_extr_p (p:dom -> Type0) (f : x:dom{p x} -> Memo codom) (x:dom{p x}) : Memo codom
 = match MEMO?.get x with
   | Some y -> y
@@ -217,7 +217,7 @@ let memo_extr_p_computes (p:dom -> Type0) (f: x:dom{p x} -> Memo codom) (g:dom -
   FStar.Classical.forall_intro (phi2 (get_proof (f `computes` g)))
 
 
-(* (* reifiable *) *)
+(* (*  *) *)
 (* let memo_extr (f : dom -> Tot codom) (x:dom) : MEMO codom (fun h0 p -> (forall z. p z)) *)
 (* = memo_extr_p (fun _ -> True) f x *)
 
@@ -383,7 +383,7 @@ let memo_rec (f: x:dom -> Tot (partial_result x)) (x0:dom)
 
 let p (x:dom) (px:partial_result x) (x':dom) = %[ %[x'; 2 ; ()] ] << %[ %[x; 0 ; px] ]
 
-(* reifiable *)
+(*  *)
 let rec complete_memo_rec_extr
   (f: (x:dom) -> partial_result x)
   (x:dom)

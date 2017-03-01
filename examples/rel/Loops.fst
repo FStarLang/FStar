@@ -7,7 +7,7 @@ open FStar.DM4F.Heap.ST
 
 let v (r:ref int) (res: (unit * heap)) : GTot int = sel (snd res) r
 
-reifiable
+
 let rec sum_up (r:ref int) (from:int) (to:int{from <= to})
     : ST unit (requires (fun h -> h `contains_a_well_typed` r))
               (ensures (fun _ _ h' -> h' `contains_a_well_typed` r))
@@ -57,7 +57,7 @@ let rec sum_up_commute (r:ref int)
                   = v r (reify (sum_up r from to) h4))
         end
 
-reifiable
+
 let rec sum_dn (r:ref int) (from:int) (to:int{from <= to})
     : ST unit (requires (fun h -> h `contains_a_well_typed` r))
               (ensures (fun _ _ h' -> h' `contains_a_well_typed` r))

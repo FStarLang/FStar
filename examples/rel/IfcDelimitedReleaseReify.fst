@@ -56,7 +56,7 @@ type del_rel (i:int) (env:env) (vl:list id{List.length vl = i}) (ihel:list iexpr
   forall h.
     del_rel' i env vl ihel bhel c h
 
-reifiable
+
 val test : prog 3
 let test [x;y;z] =
   let tmp1 = read y in
@@ -76,7 +76,7 @@ val verify_test (x y z: id):
   end
 let verify_test x y z = ()
 
-reifiable
+
 val sum4 : prog 4
 let sum4 [y ; x1 ; x2 ; x3 ] =
   write y (read x1 + read x2 + read x3 )
@@ -95,7 +95,7 @@ val verify_sum4 (x1 x2 x3 y : id):
   end
 let verify_sum4 x1 x2 x3 y = ()
 
-reifiable
+
 val sum : prog 6
 let sum [y ; x1 ; x2 ; x3 ; x4 ; x5] =
   write y (read x1 + read x2 + read x3 + read x4 + read x5)
@@ -116,8 +116,8 @@ val verify_sum (x1 x2 x3 x4 x5 y : id):
   end
 let verify_sum x1 x2 x3 x4 x5 y = ()
 
-reifiable val sum_swap : prog 6
-reifiable let sum_swap [y ; x1 ; x2 ; x3 ; x4 ; x5] =
+ val sum_swap : prog 6
+ let sum_swap [y ; x1 ; x2 ; x3 ; x4 ; x5] =
           let tmp1 = read x1 in
   write x1 (read x2) ;
   write x2 (read x3) ;
@@ -172,7 +172,7 @@ let verify_sum_swap x1 x2 x3 x4 x5 y h =
 
 #set-options "--z3rlimit 5"
 
-reifiable
+
 val sum_att : prog 6
 let sum_att [y ; x1 ; x2 ; x3 ; x4 ; x5] =
   let tmp1 = read x1 in
@@ -199,7 +199,7 @@ let sum_att [y ; x1 ; x2 ; x3 ; x4 ; x5] =
 
 
 #set-options "--z3rlimit 20"
-reifiable
+
 val wallet : prog 3
 let wallet [x_h ; k ; x_l] =
   if (read x_h >= read k) then
@@ -221,7 +221,7 @@ let verify_wallet x_h k x_l = ()
 
 (* Not accepted yet *)
 
-reifiable
+
 val wallet_attack_loop :
   h0:heap ->
   vl:list id{List.length vl = 4 /\ List.noRepeats vl} ->
@@ -244,7 +244,7 @@ let rec wallet_attack_loop h0 l =
     end
   | _ -> ()
 
-reifiable val wallet_attack : prog 4
+ val wallet_attack : prog 4
 let wallet_attack [n;x_h;k;x_l] =
   write x_l 0;
   let h = IS?.get () in

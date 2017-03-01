@@ -39,19 +39,19 @@ effect ISE (a:Type) =
 effect ISENull (a:Type) =
   INT_STORE_EXC a (fun (l0:heap) (p:((option a * heap) -> Type0)) -> forall (x:option a * heap). p x)
 
-reifiable
+
 let raise_ (#a:Type) ()
   : IntStoreExc a (fun _ -> True) (fun l0 x l1 -> l0 == l1 /\ None? x)
 = let x = INT_STORE_EXC?.raise_ () in begin match x with end
 
-reifiable
+
 let read (i:id)
   : INT_STORE_EXC int (fun s0 p -> p (Some (index s0 i), s0))
 =
   let store = ISE?.get () in
   index store i
 
-reifiable
+
 let write (i:id) (x:int)
   : INT_STORE_EXC unit (fun s0 p -> p (Some (), upd s0 i x))
 =

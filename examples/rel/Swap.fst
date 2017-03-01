@@ -43,7 +43,7 @@ let footprint (f: command) (rs: addr_set) (ws: addr_set) =
 (* [cmd r w] is a command whose footprint is r,w  *)
 type cmd (r:addr_set) (w:addr_set) = c:command{footprint c r w}
 
-reifiable
+
 let seq' (#r1 #w1 #r2 #w2 : addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2) (_:unit) : STNull unit =
   (c1 <: command) (); (c2 <: command) ()
 
@@ -116,7 +116,7 @@ let guard_is_readonly (c:guard') =
 
 type guard = f:(unit -> STNull bool){forall (h:heap). h == snd (reify (f ()) h)}
 
-reifiable let cond (c:guard) (c1:command) (c2:command) (_:unit) :STNull unit
+ let cond (c:guard) (c1:command) (c2:command) (_:unit) :STNull unit
   = let b = (c <: guard) () in
     if b then (c1 <: command) () else (c2 <: command) ()
 

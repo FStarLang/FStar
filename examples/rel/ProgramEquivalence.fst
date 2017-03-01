@@ -29,16 +29,16 @@ noeq type counter =
 abstract let live (c:counter) (h:heap) = (C?.inv c) h (C?.fp c)
 
 (*
- * TODO: make this abstract, reifiable should be allowed with abstract
+ * TODO: make this abstract,  should be allowed with abstract
  *)
-reifiable let increment
+ let increment
   (c:counter) :ST unit (fun h0 -> live c h0) (fun h0 _ h1 -> live c h1)
   = match c with
     | C _ fp f ->
       let i, _ = f in
       i fp
 
-reifiable let get
+ let get
   (c:counter) :ST nat (fun h0 -> live c h0) (fun h0 _ h1 -> live c h1)
   = match c with
     | C _ fp f ->
@@ -50,18 +50,18 @@ reifiable let get
 private let inv_0 (h:heap) (fp:fp) :Type0 =
   h `contains_well_typed_refs` fp /\ length fp = 1
 
-reifiable private let incr_0 :(incr_t inv_0) =
+ private let incr_0 :(incr_t inv_0) =
   fun s ->
    let r = hd s in
    let c = read_weak r in
    write_weak r (c + 2)
 
-reifiable private let get_0 :(get_t inv_0) =
+ private let get_0 :(get_t inv_0) =
   fun s ->
     let r = hd s in
     read_weak r
 
-reifiable let init_counter_0 () :ST counter (requires (fun h0 -> True)) (ensures (fun _ r h1 -> live r h1))
+ let init_counter_0 () :ST counter (requires (fun h0 -> True)) (ensures (fun _ r h1 -> live r h1))
   = let r = alloc_weak 2 in
     C inv_0 [r] (incr_0, get_0)
 
@@ -71,7 +71,7 @@ reifiable let init_counter_0 () :ST counter (requires (fun h0 -> True)) (ensures
 private let inv_1 (h:heap) (fp:fp) :Type0 =
   h `contains_well_typed_refs` fp /\ length fp = 2 /\ (addr_of (hd fp) <> addr_of (hd (tl fp)))
 
-reifiable private let incr_1 :(incr_t inv_1) =
+ private let incr_1 :(incr_t inv_1) =
   fun s ->
     let r_1 = hd s in
     let r_2 = hd (tl s) in
@@ -80,7 +80,7 @@ reifiable private let incr_1 :(incr_t inv_1) =
     write_weak r_1 (c_1 + 1);
     write_weak r_2 (c_2 + 1)
 
-reifiable private let get_1 :(get_t inv_1) =
+ private let get_1 :(get_t inv_1) =
   fun s ->
     let r_1 = hd s in
     let r_2 = hd (tl s) in
@@ -97,13 +97,13 @@ type counter_1 = c:counter{C?.inv c == inv_1 /\ C?.c c == (incr_1, get_1)}
 (*let false_proof (c:counter_1) (h:heap{live c h /\ fst (reify (get c) h) = 2}) :unit =
   assert False*)
 
-reifiable let init_counter_1 (): ST counter (requires (fun h0 -> True)) (ensures (fun _ r h1 -> live r h1))
+ let init_counter_1 (): ST counter (requires (fun h0 -> True)) (ensures (fun _ r h1 -> live r h1))
   = let r_1 = alloc_weak 1 in
     let r_2 = alloc_weak 1 in
     assume (addr_of r_1 <> addr_of r_2);
     C inv_1 [r_1; r_2] (incr_1, get_1)
 
-reifiable let rec increment_m
+ let rec increment_m
   (m:nat) (c:counter)
   :ST nat (fun h0      -> live c h0) (fun h0 _ h1 -> live c h1)
   = if m = 0 then get c

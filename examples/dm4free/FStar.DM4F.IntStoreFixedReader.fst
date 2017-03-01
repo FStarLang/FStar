@@ -30,7 +30,7 @@ effect ISR (a:Type) =
 effect ISRNull (a:Type) =
   INT_STORE_READER a (fun (l0:heap) (p:(a -> Type0)) -> forall (x:a). p x)
 
-reifiable
+
 let read (i:id)
   : INT_STORE_READER int (fun s0 p -> p (index s0 i))
 =

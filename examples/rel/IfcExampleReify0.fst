@@ -10,24 +10,24 @@ cannot be shown *)
 
 (*****************************************************************************)
 
-reifiable val ifc_a : x:id ->
+ val ifc_a : x:id ->
   IntStore unit
   (requires (fun _ -> True))
   (ensures (fun h0 _ h1 -> h1 = upd h0 x 0))
-reifiable let ifc_a x = write x 0
+ let ifc_a x = write x 0
 
 (*****************************************************************************)
 
-reifiable val ifc_b : x:id ->
+ val ifc_b : x:id ->
   IntStore unit
   (requires (fun _ -> True))
   (ensures (fun h0 _ h1 -> sel h1 x = 0))
-reifiable let ifc_b x = write x 0
+ let ifc_b x = write x 0
 
 (*****************************************************************************)
 
-reifiable val ifc_c : id -> ISNull unit
-reifiable let ifc_c x = write x 0
+ val ifc_c : id -> ISNull unit
+ let ifc_c x = write x 0
 
 let ifc_c_r h x =  (* normalize_term *) (snd (reify (ifc_c x) h))
 

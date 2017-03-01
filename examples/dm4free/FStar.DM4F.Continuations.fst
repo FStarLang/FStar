@@ -101,7 +101,7 @@ let em2 (a:Type) : CONTINUATION?.repr (either a (a -> Tot False)) (em_wp a)
 
 
 
-reifiable let excluded_middle (a:Type)
+ let excluded_middle (a:Type)
   : CONTINUATION (either a (a -> Tot False)) (em_wp a)
   = CONTINUATION?.reflect (em2 a)
 

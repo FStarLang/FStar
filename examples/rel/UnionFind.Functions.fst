@@ -34,7 +34,7 @@ let diff (n:nat) (s:subtree_t) :Tot nat = size (minus (set_n n) s)
 (*
  * the postcondition parent uf r h1 = r is added because of merge, see below in comments
  *)
-reifiable let rec find (#n:nat) (uf:uf_forest n) (i:id n) (ghost_heap:heap)
+ let rec find (#n:nat) (uf:uf_forest n) (i:id n) (ghost_heap:heap)
   :ST (id n) (requires  (fun h0      -> ghost_heap == h0 /\ live uf h0 /\ well_formed uf h0))
              (ensures   (fun h0 r h1 -> h0 == h1 /\ parent uf r h1 = r))
 	     (decreases (diff n (subtree #n uf i ghost_heap)))
@@ -43,7 +43,7 @@ reifiable let rec find (#n:nat) (uf:uf_forest n) (i:id n) (ghost_heap:heap)
     else find uf p ghost_heap
 
 #set-options "--z3rlimit 20"
-reifiable let rec find_opt (#n:nat) (uf:uf_forest n) (i:id n) (ghost_heap:heap)
+ let rec find_opt (#n:nat) (uf:uf_forest n) (i:id n) (ghost_heap:heap)
   :ST (id n) (requires (fun h0      -> ghost_heap == h0 /\ live uf h0 /\ well_formed uf h0))
              (ensures  (fun h0 r h1 -> live uf h1 /\ well_formed uf h1 /\ parent uf r h1 = r /\  //these are from find
 	                            (r = i \/ strict_subset (subtree uf i h1) (subtree uf r h1)) /\  //we need this because when we write p' as i's parent
@@ -66,7 +66,7 @@ let well_formed_decreases_lemma (#n:nat) (uf:uf_forest n) (i:id n) (h:heap{live 
           p = i \/ diff n (subtree #n uf i h) > diff n (subtree #n uf p h))
   = ()
 
-reifiable let merge (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
+ let merge (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
   : ST unit (requires (fun h0      -> live uf h0 /\ well_formed uf h0))
             (ensures  (fun h0 _ h1 -> live uf h1 /\ well_formed uf h1))
   = let r_1 = find uf i_1 (STATE?.get ()) in
@@ -82,7 +82,7 @@ reifiable let merge (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
       assert (strict_subset (reveal s_1) (union (reveal s_1) (reveal s_2)))
     end
 
-reifiable let merge_opt (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
+ let merge_opt (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
   :ST unit (requires (fun h0      -> live uf h0 /\ well_formed uf h0))
            (ensures  (fun h0 _ h1 -> live uf h1 /\ well_formed uf h1))
   = let r_1 = find uf i_1 (STATE?.get ()) in

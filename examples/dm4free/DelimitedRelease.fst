@@ -4,7 +4,7 @@ open FStar.DM4F.Heap
 open FStar.DM4F.Heap.ST
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-reifiable
+
 let wallet (hi:ref int) (lo:ref int) (k:int) 
   : ST unit
        (requires (fun h -> h `contains_a_well_typed` hi /\

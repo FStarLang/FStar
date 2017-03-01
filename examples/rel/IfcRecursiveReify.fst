@@ -13,8 +13,8 @@ type env = id ->  Tot label
 type low_equiv (env:env) (h : rel heap)  =
   forall (x:id). {:pattern (Low? (env x))} (Low? (env x) ==> sel (R?.l h) x = sel (R?.r h) x)
 
-reifiable val p1 (lo hi :id ): n:int -> ISNull unit (decreases n)
-reifiable let rec p1 lo hi n  =
+ val p1 (lo hi :id ): n:int -> ISNull unit (decreases n)
+ let rec p1 lo hi n  =
   if n > 0 then
     (write hi (read hi -1);
     p1 lo hi (n-1))
@@ -38,8 +38,8 @@ let rec ni_p1 lo hi n env h =
   end
 
 
-reifiable val p2 (lo hi :id ): n:int -> ISNull unit (decreases n)
-reifiable let rec p2 lo hi n  =
+ val p2 (lo hi :id ): n:int -> ISNull unit (decreases n)
+ let rec p2 lo hi n  =
   if n > 0 then
     (write hi (read hi + 1);
     p2 lo hi (n - 1))
@@ -63,7 +63,7 @@ let rec ni_p2 lo hi n env h =
   end
 
 
-reifiable let p3 lo1 lo2 hi n =
+ let p3 lo1 lo2 hi n =
   p1 lo1 hi n ;
   p2 lo2 hi n
 

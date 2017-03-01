@@ -35,25 +35,25 @@ let ni (f:unit -> St unit) = (s:rel state) ->
                   let sr = snd (reify (f ()) (R?.r s)) in
                   (sl.release \/ sr.release \/ low_equiv (R sl sr))))
 
-reifiable let p1 () : St unit =
+ let p1 () : St unit =
   let s = STATE?.get() in
   STATE?.put s
 
 let ni_p1 : ni p1 = fun s -> () (* nop is noninterferent *)
 
-reifiable let p2 () : St unit =
+ let p2 () : St unit =
   let s = STATE?.get() in
   STATE?.put ({s with secret=s.public})
 
 let ni_p2 : ni p2 = fun s -> () (* allowed flow *)
 
-reifiable let p3 () : St unit =
+ let p3 () : St unit =
   let s = STATE?.get() in
   STATE?.put ({s with public=s.secret})
 
 (* let ni_p3 : ni p3 = fun s -> () -- this leak fails as it should *)
 
-reifiable let p4 () : St unit=
+ let p4 () : St unit=
   let s = STATE?.get() in
   STATE?.put ({s with public=s.secret; release=true})
 

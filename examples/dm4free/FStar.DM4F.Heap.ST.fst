@@ -34,7 +34,7 @@ effect STNull (a:Type) = ST a (fun h -> True) (fun _ _ _ -> True)
 ////////////////////////////////////////////////////////////////////////////////
 
 (* Allocation *)
-reifiable let alloc (#a:Type) (init:a)
+ let alloc (#a:Type) (init:a)
   : ST (ref a)
        (requires (fun h -> True))
        (ensures (fun h0 r h1 ->
@@ -47,7 +47,7 @@ reifiable let alloc (#a:Type) (init:a)
       STATE?.put h1;
       r
 
-reifiable let alloc_weak (#a:Type) (init:a)
+ let alloc_weak (#a:Type) (init:a)
   :ST (ref a) (requires (fun h0      -> True))
               (ensures  (fun h0 r h1 -> h1 `contains_a_well_typed` r /\
 	                             (forall (a:Type) (r':ref a). h0 `contains_a_well_typed` r' ==> h1 `contains_a_well_typed` r')))
@@ -57,7 +57,7 @@ reifiable let alloc_weak (#a:Type) (init:a)
     r
 
 (* Reading, aka dereference *)
-reifiable let read (#a:Type) (r:ref a)
+ let read (#a:Type) (r:ref a)
   : ST a
        (requires (fun h -> h `contains_a_well_typed` r))
        (ensures (fun h0 v h1 ->
@@ -67,16 +67,16 @@ reifiable let read (#a:Type) (r:ref a)
    = let h0 = STATE?.get () in
      sel_tot h0 r
 
-reifiable let (!) = read
+ let (!) = read
 
-reifiable let read_weak (#a:Type) (r:ref a)
+ let read_weak (#a:Type) (r:ref a)
   : ST a (requires (fun h0      -> h0 `contains_a_well_typed` r))
          (ensures  (fun h0 v h1 -> forall (a:Type) (r:ref a). h0 `contains_a_well_typed` r ==> h1 `contains_a_well_typed` r))
    = let h0 = STATE?.get () in
      sel_tot h0 r
 
 (* Writing, aka assignment *)
-reifiable let write (#a:Type) (r:ref a) (v:a)
+ let write (#a:Type) (r:ref a) (v:a)
     : ST unit
   	 (requires (fun h -> h `contains_a_well_typed` r))
 	 (ensures (fun h0 _ h1 -> h0 `contains_a_well_typed` r /\
@@ -84,9 +84,9 @@ reifiable let write (#a:Type) (r:ref a) (v:a)
 		               h1 == upd h0 r v))  //and is updated at location r only
     = let h0 = STATE?.get () in
       STATE?.put (upd_tot h0 r v)
-reifiable let op_Colon_Equals = write
+ let op_Colon_Equals = write
 
-reifiable let write_weak (#a:Type) (r:ref a) (v:a)
+ let write_weak (#a:Type) (r:ref a) (v:a)
     : ST unit (requires (fun h0      -> h0 `contains_a_well_typed` r))
               (ensures  (fun h0 v h1 -> forall (a:Type) (r:ref a). h0 `contains_a_well_typed` r ==> h1 `contains_a_well_typed` r))
   = let h0 = STATE?.get () in
@@ -103,7 +103,7 @@ let incr (r:ref int)
 			        sel h1 r = sel h0 r + 1))
     = r := !r + 1
 
-reifiable let incr' (r:ref int) :ST unit (fun h0      -> h0 `contains_a_well_typed` r)
+ let incr' (r:ref int) :ST unit (fun h0      -> h0 `contains_a_well_typed` r)
                                        (fun h0 _ h1 -> h1 `contains_a_well_typed` r)
   = write_weak r (read_weak r + 1)
 
@@ -262,7 +262,7 @@ got expression "a" of type "Type(n158855)" *)
 (*     in *)
 (*     STATE?.reflect g *)
 
-(* reifiable let incr' (r:ref int) *)
+(*  let incr' (r:ref int) *)
 (*     :  ST unit *)
 (* 	  (requires (fun h -> h `contains_a_well_typed` r)) *)
 (* 	  (ensures (fun h0 s h1 -> h1 `contains_a_well_typed` r)) *)

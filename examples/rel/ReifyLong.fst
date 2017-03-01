@@ -15,7 +15,7 @@ type low_equiv (env:env) (h : rel heap)  =
   forall (x:id). (Low? (env x) ==> sel (R?.l h) x = sel (R?.r h) x)
  *)
 
-reifiable let p1 x =
+ let p1 x =
   if read x = 0 then write x 0 else write x 0;
   write x (read x);
   write x (read x);

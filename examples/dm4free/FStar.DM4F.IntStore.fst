@@ -42,9 +42,9 @@ effect IntStore (a:Type) (pre:INT_STORE?.pre) (post: heap -> option a -> heap ->
 effect IS (a:Type) =
   INT_STORE a (fun (l0:heap) (p:((option a * heap) -> Type0)) -> forall (x:(option a * heap)). p x)
 
-(* TODO : having a in Type *and* reifiable induces a Failure("Universe variable not found") *)
+(* TODO : having a in Type *and*  induces a Failure("Universe variable not found") *)
 (* whenever we try to normalize-reify it (see below in xxx for instance) *)
-reifiable
+
 let raise_ (#a:Type0) ()
   : IntStore a (fun _ -> True) (fun l0 x l1 -> l0 == l1 /\ None? x)
 = let x = INT_STORE?.raise_ () in begin match x with end
@@ -52,7 +52,7 @@ let raise_ (#a:Type0) ()
 
 (* KM : Would it be possible to merge both read by adding a boolean flag *)
 (* deciding whether the check on the index i must be static or dynamic ? *)
-reifiable
+
 let read (i:id)
   : INT_STORE int
     (fun s p ->
@@ -65,7 +65,7 @@ let read (i:id)
   then index store i
   else raise_ ()
 
-reifiable
+
   let write (i:id) (x:int)
   : INT_STORE unit
     (fun s p ->
@@ -78,7 +78,7 @@ reifiable
   then IS?.put (upd store i x)
   else raise_ ()
 
-reifiable
+
 let read_tot (i:id)
   : INT_STORE int (fun s0 p -> i `in_` s0 /\ p (Some (index s0 i), s0))
   (* KM : The following pre-post condition is not accepted *)
@@ -90,7 +90,7 @@ let read_tot (i:id)
   let store = IS?.get () in
   index store i
 
-reifiable
+
 let write_tot (i:id) (x:int)
   : INT_STORE unit (fun s0 p -> i `in_` s0 /\ p (Some (), upd s0 i x))
 =
@@ -124,13 +124,13 @@ let read_write_lemma1 (store:heap) (r:id) (x:int)
 (* effect INT_STORE_N (n:nat) (a:Type) (wp:(heap_n n -> (option a -> h:heap_n n -> GTot Type0) -> GTot Type0)) = *)
 (*   INT_STORE a (fun l0 p -> length l0 = n /\ wp l0 (fun x l1 -> p (x,l1))) *)
 
-(* reifiable *)
+(*  *)
 (* let read_n (#n:nat) (i:id) *)
 (*   : INT_STORE_N n int *)
 (*     (fun l0 p -> i < n /\ p (Some (index l0 i)) l0) *)
 (* = index (IS?.get ()) i *)
 
-(* reifiable *)
+(*  *)
 (* let write_n (#n:nat) (i:id) (x:int) *)
 (*   : INT_STORE_N n int *)
 (*     (fun l0 p -> i < n /\ p (Some ()) (upd l0 i x)) *)

@@ -36,7 +36,7 @@ reifiable reflectable new_effect_for_free {
        raise   = raise0
 }
 
-reifiable
+
 let raise (#a:Type) (e:exn) : EXN a (fun _ p -> p (Inr e)) =
   let x = EXN?.raise e in
   (match x with)
@@ -68,7 +68,7 @@ effect Ex (a:Type) = EXN a (fun _ p -> forall x. p x)
  * div will either throw an exception or return an int, but there's no
  * specification about the result or about when exceptions occur.
  *
- * As `Ex´ is a reifiable effect, we can reason about `div´ outside of
+ * As `Ex´ is a  effect, we can reason about `div´ outside of
  * its definition by turning it into a pure function. This is what is
  * done in the `lemma_div_extrinsic´ lemma.
  *
@@ -86,7 +86,7 @@ let div_intrinsic i j =
   if j=0 then raise Division_by_zero
   else i / j
 
-reifiable let div_extrinsic (i:nat) (j:int) : Ex int =
+ let div_extrinsic (i:nat) (j:int) : Ex int =
   if j=0 then raise Division_by_zero
   else i / j
 
@@ -104,5 +104,5 @@ val raise_ : a:Type -> e:exn -> Tot (EXN?.repr a (fun (_:unit) (p:EXN?.post a) -
 let raise_ a (e:exn) (_:unit) = Inr e
 
 (* We reflect it back to Exn *)
-reifiable let raise__ (a:Type) (e:exn) : Exn a True (fun r -> r == Inr e)
+ let raise__ (a:Type) (e:exn) : Exn a True (fun r -> r == Inr e)
   = EXN?.reflect (raise_ a e)

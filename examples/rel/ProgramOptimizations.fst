@@ -43,7 +43,7 @@ type com =
   | Seq   : com -> com -> com
   | If    : b_exp -> com -> com -> com
 
-reifiable let rec i_exp_denotation (e:i_exp) :ISNull int =
+ let rec i_exp_denotation (e:i_exp) :ISNull int =
   match e with
   | Const n      -> n
   | Var r        -> !r
@@ -55,7 +55,7 @@ reifiable let rec i_exp_denotation (e:i_exp) :ISNull int =
      | Sub -> n1 - n2)
   | UMinus e     -> - (i_exp_denotation e)
 
-reifiable let rec b_exp_denotation (b:b_exp) :ISNull bool =
+ let rec b_exp_denotation (b:b_exp) :ISNull bool =
   match b with
   | CTrue        -> true
   | CFalse       -> false
@@ -74,7 +74,7 @@ reifiable let rec b_exp_denotation (b:b_exp) :ISNull bool =
      | Or  -> bc1 || bc2)
   | Not b -> not (b_exp_denotation b)
 
-reifiable let rec com_denotation (c:com) :ISNull unit =
+ let rec com_denotation (c:com) :ISNull unit =
   match c with
   | Skip       -> ()
   | Assign r e ->

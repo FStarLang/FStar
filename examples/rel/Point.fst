@@ -24,14 +24,14 @@ noeq type point =
 
 abstract let live (p:point) (h:heap) = (C?.inv p) h (C?.fp p)
 
-reifiable let move
+ let move
   (p:point) :ST unit (fun h0 -> live p h0) (fun h0 _ h1 -> live p h1)
   = match p with
     | C _ fp f ->
       let m, _ = f in
       m fp
 
-reifiable let get
+ let get
   (p:point) :ST (nat * nat) (fun h0 -> live p h0) (fun h0 _ h1 -> live p h1)
   = match p with
     | C _ fp f ->
@@ -45,14 +45,14 @@ private let inv_point (h:heap) (fp:fp) :Type0 =
   (* | [r1; r2] -> addr_of r1 <> addr_of r2 /\  *)
   (* | _        -> False *)
 
-reifiable private let get_point :(get_t inv_point) =
+ private let get_point :(get_t inv_point) =
   fun s ->
     let r1 = hd s in
     let r2 = hd (tl s) in
     let x = read_weak r1 in let y = read_weak r2 in
     (x, y)
 
-reifiable private let move_point :(move_t inv_point) =
+ private let move_point :(move_t inv_point) =
   fun s ->
    let r1 = hd s in
    let r2 = hd (tl s) in
@@ -61,7 +61,7 @@ reifiable private let move_point :(move_t inv_point) =
    write_weak r1 (x + 1);
    write_weak r2 (y + 1)
 
-reifiable let init_point () :ST point (requires (fun h0 -> True)) (ensures (fun _ r h1 -> live r h1))
+ let init_point () :ST point (requires (fun h0 -> True)) (ensures (fun _ r h1 -> live r h1))
   = let r1 = alloc 1 in
     let r2 = alloc 1 in
     C inv_point [r1; r2] (move_point, get_point)
@@ -71,7 +71,7 @@ private let inv_colored_point (h:heap) (fp:fp) :Type0 =
   (let r1 = hd fp in let r2 = hd (tl fp) in let r3 = hd (tl (tl fp)) in
    addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r3 <> addr_of r1)
    
-reifiable private let move_colored_point :(move_t inv_colored_point) =
+ private let move_colored_point :(move_t inv_colored_point) =
   fun s ->
    let r1 = hd s in
    let r2 = hd (tl s) in
@@ -80,14 +80,14 @@ reifiable private let move_colored_point :(move_t inv_colored_point) =
    write_weak r1 (x + 1);
    write_weak r2 (y + 1)
 
-reifiable private let get_colored_point :(get_t inv_colored_point) =
+ private let get_colored_point :(get_t inv_colored_point) =
   fun s ->
     let r1 = hd s in
     let r2 = hd (tl s) in
     let x = read_weak r1 in let y = read_weak r2 in
     (x, y)
 
-reifiable let init_colored_point (): ST point (requires (fun h0 -> True)) (ensures (fun _ r h1 -> live r h1))
+ let init_colored_point (): ST point (requires (fun h0 -> True)) (ensures (fun _ r h1 -> live r h1))
   = let r_1 = alloc 1 in
     let r_2 = alloc 1 in
     let r_3 = alloc 1 in
@@ -110,7 +110,7 @@ let lemma (h:heap) =
   assert (fst (reify (get p) h3) = fst (reify (get cp) h4));
   assert (equal_heaps_except_fp h3 h4 (append (C?.fp p) (C?.fp cp)))
 
-(* reifiable let rec increment_m *)
+(*  let rec increment_m *)
 (*   (m:nat) (c:counter) *)
 (*   :ST nat (fun h0      -> live c h0) (fun h0 _ h1 -> live c h1) *)
 (*   = if m = 0 then get c *)

@@ -46,8 +46,8 @@ type com =
 (* exceptionless effect to the exceptionfull one and this not covered yet *)
 (* by the F* implementation. *)
 
-(* reifiable val interpret_exp_st : e:exp -> INT_STORE_EXC int (fun s0 p -> forall opt. p (opt, s0)) *)
-reifiable
+(*  val interpret_exp_st : e:exp -> INT_STORE_EXC int (fun s0 p -> forall opt. p (opt, s0)) *)
+
 let rec interpret_exp_st (e:exp)
   (* : INT_STORE_EXC int (fun s0 p -> forall x. p (Some x, s0)) *)
   : ISFR.ISRNull int
@@ -78,11 +78,11 @@ let decr_while h c =
 
 exception OutOfFuel
 
-reifiable val interpret_com_st : c:com -> h0:heap -> IntStoreExc unit
+ val interpret_com_st : c:com -> h0:heap -> IntStoreExc unit
   (requires (fun h -> h == h0))
   (ensures (fun h _ ho -> h == h0))
   (decreases %[c; decr_while h0 c])
-reifiable let rec interpret_com_st c h0 =
+ let rec interpret_com_st c h0 =
   match c with
   | Skip -> ()
   | Assign x e ->
