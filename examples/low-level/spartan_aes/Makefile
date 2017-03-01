@@ -26,11 +26,14 @@ all: aes.o sha256.o
 import:
 	@if [ x"$(VALE_HOME)" = x ]; then echo "VALE_HOME not defined"; exit 1; fi
 	cp $(VALE_HOME)/obj/aes-gcc.S aes-x86_64.S
-	cp $(VALE_HOME)/obj/sha256-gcc.S sha256-x86_64.S
 	cp $(VALE_HOME)/obj/aes-macos.S aes-x86_64-Darwin.S
-	cp $(VALE_HOME)/obj/sha256-macos.S sha256-x86_64-Darwin.S
 	cp $(VALE_HOME)/obj/aes-linux.S aes-x86_64-Linux.S
+# TODO: Vale SHA256 not built on Linux yet
+ifneq ($(UNAME),Linux)
+	cp $(VALE_HOME)/obj/sha256-gcc.S sha256-x86_64.S
+	cp $(VALE_HOME)/obj/sha256-macos.S sha256-x86_64-Darwin.S
 	cp $(VALE_HOME)/obj/sha256-linux.S sha256-x86_64-Linux.S
+endif
 	sed -i 's/.section .text/.text/' *.S
 
 clean:
