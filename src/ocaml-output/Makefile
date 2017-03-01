@@ -143,11 +143,11 @@ COMMIT = $(shell ../tools/get_commit)
 
 .PHONY: FStar_Version.ml
 FStar_Version.ml:
-	echo 'let version = "$(VERSION)"' > $@
-	echo 'let platform = "$(PLATFORM)"' >> $@
-	echo 'let compiler = "$(COMPILER)"' >> $@
-	echo 'let date = "$(DATE)"' >> $@
-	echo 'let commit= "$(COMMIT)"' >> $@
+	echo 'FStar_Options._version := "$(VERSION)"' > $@
+	echo 'FStar_Options._platform := "$(PLATFORM)"' >> $@
+	echo 'FStar_Options._compiler := "$(COMPILER)"' >> $@
+	echo 'FStar_Options._date := "$(DATE)"' >> $@
+	echo 'FStar_Options._commit:= "$(COMMIT)"' >> $@
 
 
 # ------------------------------------------------------------------------------

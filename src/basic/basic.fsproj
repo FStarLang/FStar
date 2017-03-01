@@ -81,8 +81,6 @@
     <Compile Include="bytes.fs" />
     <Compile Include="range.fsi" />
     <Compile Include="range.fs" />
-    <Compile Include="version.fsi" />
-    <Compile Include="version.fs" />
     <Compile Include="getopt.fsi" />
     <Compile Include="getopt.fs" />
     <Compile Include="FStar.Options.fsi" />
@@ -92,6 +90,8 @@
     <Compile Include="FStar.Ident.fs" />
     <Compile Include="FStar.Const.fs" />
     <Compile Include="FStar.Errors.fs" />
+    <Compile Include="version.fsi" />
+    <Compile Include="version.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
