@@ -34,27 +34,3 @@ and policy =
   | PoSeq: p1:policy -> p2:policy -> policy
   | PoStar: p:policy -> policy
   | PoDup: policy
-
-(* Semantics, from Figure 2. Specifically, denotational semantics using sets. *)
-let rec s (p: predicate) (h: history): S.set history =
-  match p, h with
-  | PrTrue, _ ->
-      S.singleton h
-  | PrFalse, _ ->
-      S.empty
-  | PrFieldEq f v, h :: hs ->
-      begin match L.assoc f h with
-      | Some v' ->
-          if v = v' then
-            S.singleton (h :: hs)
-          else
-            S.empty
-      | None ->
-          S.empty
-      end
-  | PrNot p, h ->
-      S.intersect (S.singleton h) (S.complement (s p h))
-  | PrOr p1 p2, h ->
-      S.union (s p1 h) (s p2 h)
-  | PrAnd _ _, _ ->
-      admit ()

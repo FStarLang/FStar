@@ -56,6 +56,9 @@
     <Compile Include="FStar.Extraction.ML.Util.fs" />
     <Compile Include="FStar.Extraction.ML.Code.fsi" />
     <Compile Include="FStar.Extraction.ML.Code.fs" />
+    <Compile Include="FStar.Extraction.ML.PrintML.fsi" />
+    <Compile Include="FStar.Extraction.ML.PrintML.fs" />
+    
     <Compile Include="FStar.Extraction.ML.Term.fs" />
     <Compile Include="FStar.Extraction.ML.Modul.fs" />
     <Content Include="app.config" />

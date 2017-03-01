@@ -427,7 +427,7 @@ let lift_comp c m lift =
   {comp_univs=[u];
    effect_name=m;
    result_typ=c.result_typ;
-   effect_args=[as_arg (lift c.result_typ wp)];
+   effect_args=[as_arg (lift.mlift_wp c.result_typ wp)];
    flags=[]}
 
 let join_effects env l1 l2 =

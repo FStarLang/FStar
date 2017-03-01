@@ -34,19 +34,35 @@ type delta_level =
   | Eager_unfolding_only
   | Unfold of delta_depth
 
-type mlift = typ -> typ -> typ
+(* Type of wp liftings [l] between 2 effects Msource and Mtarget : *)
+(* given a computational type [Msource t wp], [wp' = mlift_wp t wp] should *)
+(* be a weakest precondition such that [Mtarget t wp'] is well-formed *)
+(* and if both effects are reifiable, [mlift_term], if provided, maps *)
+(* computations [e] of type [Msource.repr t wp] to a computation of type *)
+(* [Mtarget.repr t (lift_wp t wp)] *)
+type mlift = {
+  mlift_wp:typ -> typ -> typ ;
+  mlift_term:option<(typ -> typ -> term -> term)>
+  (* KM : not exactly sure if mlift_term really need the wp term inside the compiler *)
+  (* (it needs it in the F* source to be well-typed but we are forgetting a lot here) *)
+}
 
+(* Edge in the effect lattice *)
 type edge = {
   msource :lident;
   mtarget :lident;
-  mlift   :typ -> typ -> typ;
+  mlift   :mlift;
 }
+
+
 type effects = {
   decls :list<eff_decl>;
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
+
 type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)>
+
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
@@ -144,9 +160,13 @@ val is_type_constructor    : env -> lident -> bool
 val num_inductive_ty_params: env -> lident -> int
 
 (* Universe instantiation *)
+
+(* Construct a new universe unification variable *)
 val new_u_univ             : unit -> universe
+(* Instantiate the universe variables in a type scheme with new unification variables *)
 val inst_tscheme           : tscheme -> universes * term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
+
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env
@@ -173,6 +193,7 @@ val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 
 (* operations on monads *)
+val identity_mlift   : mlift
 val join            : env -> lident -> lident -> lident * mlift * mlift
 val monad_leq       : env -> lident -> lident -> option<edge>
 val effect_decl_opt : env -> lident -> option<eff_decl>

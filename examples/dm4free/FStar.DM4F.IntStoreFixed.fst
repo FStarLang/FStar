@@ -34,6 +34,11 @@ effect ISNull (a:Type) =
 (* TODO : having a in Type *and* reifiable induces a Failure("Universe variable not found") *)
 (* whenever we try to normalize-reify it (see below in xxx for instance) *)
 
+let wp = INT_STORE?.wp
+let pre = INT_STORE?.pre
+let post = INT_STORE?.post
+let repr = INT_STORE?.repr
+
 reifiable
 let read (i:id)
   : INT_STORE int (fun s0 p -> p (index s0 i, s0))
@@ -79,3 +84,25 @@ let refine_st (#a:Type)
       = reify (f x) h0
     in
     IntStore?.reflect g
+
+open FStar.DM4F.IntStoreFixedReader
+
+
+unfold
+let lift_int_store_reader_int_store_wp (a:Type) (wp:INT_STORE_READER?.wp a) : INT_STORE?.wp a =
+  fun (h0:heap) (p:INT_STORE?.post a) -> wp h0 (fun r -> p (r, h0))
+
+#set-options "--admit_smt_queries true"
+unfold
+let lift_int_store_reader_int_store (a:Type) (wp:INT_STORE_READER?.wp a) (e:INT_STORE_READER?.repr a wp)
+  : INT_STORE?.repr a (lift_int_store_reader_int_store_wp a wp)
+= fun h0 -> let x = e h0 in x, h0
+#set-options "--admit_smt_queries false"
+
+
+(* Trying to have a refiable lift from IntStoreFixed to IntStoreExcFixed *)
+sub_effect INT_STORE_READER ~> INT_STORE {
+  (* lift_wp = lift_int_store_reader_int_store_wp ; *)
+  lift =  fun (a:Type) (e:int_store_reader a) ->
+            (fun (h:heap) ->let x = e h in (x, h)) <: int_store a
+}

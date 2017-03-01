@@ -155,6 +155,25 @@ let rec zero x ghost_heap =
   else (x := !x - 1;
         zero x (STATE?.get()))
 
+let refine_st (#a:Type)
+              (#b:Type)
+              (#pre : a -> Tot STATE?.pre)
+              (#post : a -> Tot (heap -> b -> heap -> Tot Type0))
+              ($f :(x:a -> ST b (pre x) (post x)))
+              (x:a)
+  : ST b (pre x) (fun h0 z h1 -> pre x h0 /\
+                              reify (f x) h0 == (z, h1) /\
+                              post x h0 z h1)
+  = let g (h0:heap)
+      : Pure (b * heap)
+             (pre x h0)
+             (fun (z,h1) -> pre x h0 /\
+                       reify (f x) h0 == (z, h1) /\
+                       post x h0 z h1)
+      = reify (f x) h0
+    in
+    STATE?.reflect g
+
 ////////////////////////////////////////////////////////////////////////////////
 //An unsafe higher-order example, rightly rejected by an universe inconsistency
 //Uncomment the last two lines below to see the following error message:
@@ -165,6 +184,26 @@ let rec zero x ghost_heap =
 (* #set-options "--print_universes" *)
 (* let bad (r:ref int) = alloc #(unit -> STNull unit) (fun () -> incr r) *)
 
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Using reification we can run an arbitrary state computation starting
+//  from an empty heap. At compilation time, this combinator ought to be
+//  treated specially and [runST e] should be compiled to [e ()]. This
+//  operation is semantically valid since the operational semantic of ST
+//  is an abstraction over the semantic of the heap after compilation.
+//
+////////////////////////////////////////////////////////////////////////////////
+abstract
+val runST :
+  (#a:Type) ->
+  (#post:(heap -> a -> heap -> Type0)) ->
+  (unit -> ST a (requires (fun h -> True)) (ensures post)) ->
+  Pure a
+    (requires True)
+    (ensures (fun x -> exists h0 h1. post h0 x h1))
+abstract
+let runST #a #post s = fst (reify (s ()) FStar.DM4F.Heap.emp)
 
 
 ////////////////////////////////////////////////////////////////////////////////

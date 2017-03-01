@@ -789,7 +789,7 @@ let mk_return env (t: typ) (e: term) =
   let p_type = mk_star_to_type mk env t in
   let p = S.gen_bv "p'" None p_type in
   let body = mk (Tm_app (S.bv_to_name p, [ e, S.as_implicit false ])) in
-  U.abs [ S.mk_binder p ] body None
+  U.abs [ S.mk_binder p ] body (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0))))
 
 let is_unknown = function | Tm_unknown -> true | _ -> false
 
@@ -976,21 +976,9 @@ and infer (env: env) (e: term): nm * term * term =
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
-      // Can't trust the [t] type to still carry an M annotation... because the
-      // F* type-checker silently drops it. So, for now, we have a whitelist of
-      // combinators that we know for sure don't return an M.
       let _, t = Env.lookup_lid env.env lid in
-      let txt = text_of_lid lid in
-//      let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None";
-//                              "op_Addition"; "op_BarBar"; "op_AmpAmp"; "op_Negation"; "op_Equality" ] in
-//      // BU.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
-//      if List.existsb (fun s -> BU.starts_with txt ("Prims." ^ s)) allowed_prefixes then
-        // Need to erase universes here! This is an F* type that is fully annotated.
-        N (normalize t), e, e
-//      else
-//        raise (Err (BU.format1 "The %s constructor has not been whitelisted \
-//          for the definition language; if this is a function application, \
-//          consider using [inline]" txt))
+      // Need to erase universes here! This is an F* type that is fully annotated.
+      N (normalize t), e, e
 
   | Tm_app (head, args) ->
       let t_head, s_head, u_head = check_n env head in
@@ -1137,7 +1125,11 @@ and mk_match env e0 branches f =
       ) s_branches in
     let s_branches = List.map close_branch s_branches in
     let u_branches = List.map close_branch u_branches in
-    let s_e = U.abs [ S.mk_binder p ] (mk (Tm_match (s_e0, s_branches))) None in
+    let s_e =
+      U.abs [ S.mk_binder p ]
+            (mk (Tm_match (s_e0, s_branches)))
+            (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0))))
+    in
     let t1_star =  U.arrow [S.mk_binder <| S.new_bv None p_type] (S.mk_Total U.ktype0) in
     M t1,
     mk (Tm_ascribed (s_e, Inl t1_star, None)) ,
@@ -1190,11 +1182,11 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       // e2* p
       let s_e2 = mk (Tm_app (s_e2, [ S.bv_to_name p, S.as_implicit false ])) in
       // fun x -> s_e2* p; this takes care of closing [x].
-      let s_e2 = U.abs x_binders s_e2 None in
+      let s_e2 = U.abs x_binders s_e2 (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0)))) in
       // e1* (fun x -> e2* p)
       let body = mk (Tm_app (s_e1, [ s_e2, S.as_implicit false ])) in
       M t2,
-      U.abs [ S.mk_binder p ] body None,
+      U.abs [ S.mk_binder p ] body (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0)))),
       mk (Tm_let ((false, [ { u_binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
   end
 

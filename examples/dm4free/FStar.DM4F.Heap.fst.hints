@@ -1,5 +1,5 @@
 [
-  "\u001eE€Y¼\u0012ïa1\"»M\u0016t;",
+  "ã§y›c\t>˜\u0019¢'\u0013¡N¸Î",
   [
     [
       "FStar.DM4F.Heap.compare_addrs",
@@ -378,6 +378,50 @@
         "refinement_interpretation_Tm_refine_6e01da04276d21df1df4c1db67b84cef",
         "typing_FStar.DM4F.Heap.__proj__Mkheap_rec__item__next_addr",
         "typing_FStar.DM4F.Heap.alloc", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.DM4F.Heap.sel_same_addr_of",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Prims.Some",
+        "equation_FStar.DM4F.Heap.addr_of",
+        "equation_FStar.DM4F.Heap.contains_a_well_typed",
+        "equation_FStar.DM4F.Heap.heap", "equation_FStar.DM4F.Heap.sel",
+        "equation_FStar.DM4F.Heap.sel_tot", "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.DM4F.Heap.heap_rec",
+        "fuel_guarded_inversion_FStar.DM4F.Heap.ref",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_6e01da04276d21df1df4c1db67b84cef",
+        "refinement_interpretation_Tm_refine_9a30e3ad1d864d1160090f731ef258cd",
+        "typing_FStar.DM4F.Heap.contains_a_well_typed",
+        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.DM4F.Heap.sel_same_addr_of",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "FStar.DM4F.Heap.sel_same_addr_of",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],

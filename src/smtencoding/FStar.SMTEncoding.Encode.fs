@@ -1032,19 +1032,21 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
     let decls' = List.flatten decls' in
 
     let pats =
-        match induction_on with
-            | None -> pats
-            | Some e ->
-               begin match vars with
-                | [] -> pats
-                | [l] -> pats |> List.map (fun p -> mk_Precedes (mkFreeV l) e::p)
-                | _ ->
-                  let rec aux tl vars = match vars with
-                    | [] -> pats |> List.map (fun p -> mk_Precedes tl e::p)
-                    | (x, Term_sort)::vars -> aux (mk_LexCons (mkFreeV(x,Term_sort)) tl) vars
-                    | _ -> pats in
-                  aux (mkFreeV ("Prims.LexTop", Term_sort)) vars
-               end in
+      match induction_on with
+      | None -> pats
+      | Some e ->
+        begin match vars with
+          | [] -> pats
+          | [l] -> pats |> List.map (fun p -> mk_Precedes (mkFreeV l) e::p)
+          | _ ->
+            let rec aux tl vars = match vars with
+              | [] -> pats |> List.map (fun p -> mk_Precedes tl e::p)
+              | (x, Term_sort)::vars -> aux (mk_LexCons (mkFreeV(x,Term_sort)) tl) vars
+              | _ -> pats
+            in
+            aux (mkFreeV ("Prims.LexTop", Term_sort)) vars
+        end
+    in
 
     let env = {env with nolabels=true} in
     let pre, decls'' = encode_formula (U.unmeta pre) env in

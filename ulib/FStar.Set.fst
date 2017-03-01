@@ -40,6 +40,11 @@ let union #a s1 s2     = fun x -> s1 x || s2 x
 let intersect #a s1 s2 = fun x -> s1 x && s2 x
 let complement #a s    = fun x -> not (s x)
 
+(* a property about sets *)
+let disjoint__ (#a:eqtype) (s1: set a) (s2: set a) =
+  intersect s1 s2 == empty
+
+
 (* ops *)
 type subset (#a:eqtype) (s1:set a) (s2:set a) :Type0 = forall x. mem x s1 ==> mem x s2
 
@@ -108,6 +113,14 @@ let lemma_equal_intro #a s1 s2 = ()
 let lemma_equal_elim  #a s1 s2 = ()
 let lemma_equal_refl  #a s1 s2 = ()
 
+let disjoint_not_in_both (a:eqtype) (s1:set a) (s2:set a) :
+  Lemma
+    (requires (disjoint__ s1 s2))
+    (ensures (forall (x:a).{:pattern (mem x s1) \/ (mem x s2)} mem x s1 ==> ~(mem x s2)))
+  [SMTPat (disjoint__ s1 s2)]
+= let f (x:a) : Lemma (~(mem x (intersect s1 s2))) = () in
+  FStar.Classical.forall_intro f
+
 (* TODO: how do we define these *)
 assume val set_to_tset: #key:eqtype -> set key -> Tot (TSet.set key)
 assume val lemma_set_to_tset:
@@ -121,7 +134,7 @@ assume val lemma_set_to_tset:
 type eqtype = a:Type0{hasEq a}
 
 val as_set': #a:eqtype -> list a -> Tot (set a)
-let rec as_set' #a l = match l with 
+let rec as_set' #a l = match l with
   | [] -> empty
   | hd::tl -> union (singleton hd) (as_set' tl)
 

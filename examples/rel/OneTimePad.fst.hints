@@ -1,0 +1,279 @@
+[
+  "ÜO3?o¼a\u001c-uab\"ºO\u001c",
+  [
+    [
+      "OneTimePad.xor_b",
+      1,
+      0,
+      4,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [ "OneTimePad.xor", 1, 0, 4, [ "@query" ], 0 ],
+    [
+      "OneTimePad.xor_properties",
+      1,
+      0,
+      4,
+      [
+        "@query", "bool_inversion", "data_elim_Prims.Mktuple4",
+        "equation_OneTimePad.nib", "equation_OneTimePad.xor",
+        "equation_OneTimePad.xor_b", "fuel_guarded_inversion_Prims.tuple4",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Mktuple4__1",
+        "projection_inverse_Prims.Mktuple4__2",
+        "projection_inverse_Prims.Mktuple4__3",
+        "projection_inverse_Prims.Mktuple4__4"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.xor_properties",
+      2,
+      0,
+      4,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_Prims.tuple4_haseq", "function_token_typing_Prims.bool"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.xor_properties",
+      3,
+      0,
+      4,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_Prims.tuple4_haseq", "function_token_typing_Prims.bool"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.xor_properties",
+      4,
+      0,
+      4,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_Prims.tuple4_haseq", "function_token_typing_Prims.bool"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.xor_properties",
+      5,
+      0,
+      4,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_Prims.tuple4_haseq", "function_token_typing_Prims.bool"
+      ],
+      0
+    ],
+    [ "OneTimePad.bind", 1, 0, 4, [ "@query" ], 0 ],
+    [ "OneTimePad.rand", 1, 0, 4, [ "@query" ], 0 ],
+    [ "OneTimePad.RANDOM_bind_wp", 1, 0, 4, [ "@query" ], 0 ],
+    [
+      "OneTimePad.RANDOM___proj__RANDOM__item__rand_elab",
+      1,
+      0,
+      4,
+      [
+        "@query", "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.RANDOM___proj__RANDOM__item__rand_complete_type",
+      1,
+      0,
+      4,
+      [ "@query" ],
+      0
+    ],
+    [ "OneTimePad.RANDOM", 1, 0, 4, [ "@query" ], 0 ],
+    [ "OneTimePad.RANDOM", 2, 0, 4, [ "@query" ], 0 ],
+    [ "OneTimePad.RANDOM", 3, 0, 4, [ "@query" ], 0 ],
+    [
+      "OneTimePad.one_time_pad",
+      1,
+      0,
+      4,
+      [
+        "@query", "data_typing_intro_Prims.Mktuple2@tok",
+        "equation_OneTimePad.nib", "function_token_typing_Prims.int",
+        "int_typing", "kinding_Prims.tuple2@tok",
+        "kinding_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
+        "pretyping_d46c248f6fad4d035c9d4215749da6b9",
+        "primitive_Prims.op_Addition", "proj_equation_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.related_tape",
+      1,
+      0,
+      4,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_Prims.tuple4_haseq", "equation_OneTimePad.nib",
+        "function_token_typing_Prims.bool"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.xor_at",
+      1,
+      0,
+      4,
+      [
+        "@query", "bool_inversion", "data_elim_Prims.Mktuple4",
+        "equation_Bijection.bijection", "equation_Bijection.injection",
+        "equation_Bijection.surjection", "equation_OneTimePad.id_nib",
+        "equation_OneTimePad.nib", "equation_OneTimePad.xor",
+        "equation_OneTimePad.xor_b", "fuel_guarded_inversion_Prims.tuple4",
+        "function_token_typing_OneTimePad.xor",
+        "interpretation_Tm_arrow_82dca741ff5a299cb914782f88ecb636",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Mktuple4__1",
+        "projection_inverse_Prims.Mktuple4__2",
+        "projection_inverse_Prims.Mktuple4__3",
+        "projection_inverse_Prims.Mktuple4__4",
+        "token_correspondence_OneTimePad.id_nib",
+        "token_correspondence_OneTimePad.xor",
+        "token_correspondence_OneTimePad.xor_b"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.xor_at",
+      2,
+      0,
+      4,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "OneTimePad.one_time_pad_ok",
+      1,
+      0,
+      4,
+      [
+        "@query", "OneTimePad.__proj__RANDOM__item__rand_equality",
+        "OneTimePad.__proj__RANDOM__item__rand_token_correspondence",
+        "bool_inversion", "bool_typing", "data_elim_Prims.Mktuple4",
+        "equation_OneTimePad.nib", "equation_OneTimePad.one_time_pad",
+        "equation_OneTimePad.related_tape", "equation_OneTimePad.tape",
+        "equation_OneTimePad.xor", "equation_OneTimePad.xor_at",
+        "equation_OneTimePad.xor_b", "fuel_guarded_inversion_Prims.tuple4",
+        "int_typing",
+        "interpretation_Tm_abs_1eefa5187975bd619d5685c9b11fcd9f",
+        "interpretation_Tm_abs_aaeb587e8590553d2d6e9e88f20dc46e",
+        "interpretation_Tm_abs_e0ef5a8869cf6d063a6dcce3c52f8924",
+        "interpretation_Tm_abs_e6c87388e06d053c41119bbb92f6b844",
+        "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "interpretation_Tm_arrow_f6a7667bfa97759519984690e35cd5d6",
+        "pretyping_ae567c2fb75be05905677af440075565",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Mktuple4__1",
+        "projection_inverse_Prims.Mktuple4__2",
+        "projection_inverse_Prims.Mktuple4__3",
+        "projection_inverse_Prims.Mktuple4__4",
+        "token_correspondence_OneTimePad.xor",
+        "token_correspondence_OneTimePad.xor_at",
+        "token_correspondence_OneTimePad.xor_b", "typing_OneTimePad.xor",
+        "typing_OneTimePad.xor_b",
+        "typing_Tm_abs_e6c87388e06d053c41119bbb92f6b844", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.one_time_pad_ok",
+      2,
+      0,
+      4,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_Prims.tuple4_haseq", "equation_OneTimePad.nib",
+        "function_token_typing_Prims.bool"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.one_time_pad_ok",
+      3,
+      0,
+      4,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_Prims.tuple4_haseq", "equation_OneTimePad.nib",
+        "function_token_typing_Prims.bool"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.one_time_pad_ok",
+      4,
+      0,
+      4,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_Prims.tuple4_haseq", "equation_OneTimePad.nib",
+        "function_token_typing_Prims.bool"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.one_time_pad_ok",
+      5,
+      0,
+      4,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_Prims.tuple4_haseq", "equation_OneTimePad.nib",
+        "function_token_typing_Prims.bool"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.one_time_pad_ok",
+      6,
+      0,
+      4,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_Prims.tuple4_haseq", "equation_OneTimePad.nib",
+        "function_token_typing_Prims.bool"
+      ],
+      0
+    ],
+    [
+      "OneTimePad.one_time_pad_ok",
+      7,
+      0,
+      4,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_Prims.tuple4_haseq", "equation_OneTimePad.nib",
+        "function_token_typing_Prims.bool"
+      ],
+      0
+    ]
+  ]
+]
