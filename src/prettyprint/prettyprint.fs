@@ -27,6 +27,18 @@ type document = Doc of FSharp.PPrint.Engine.document
 
 let not_impl_msg = "F# prettyprinter function not yet implemented."
 
+// [prettyprint]'s client will give [f] in terms of the external [document]
+// when using [separate_map], etc. 
+// However, we need to pass [app_and_unpack f] to the underlying FSharp.PPrint
+// combinators. See [separate_map] below for usage. 
+let app_and_unpack (f:'a->document) (a:'a) : FSharp.PPrint.Engine.document = 
+    // apply f
+    let d = f a in 
+    // unpack d
+    match d with 
+    | Doc d' -> d' 
+    // we return d' from here, but we'll always Doc-wrap it back for the client. 
+
 let empty : document = Doc FSharp.PPrint.Engine.empty
 
 let doc_of_char (c:char) : document = Doc (FSharp.PPrint.Engine.char c)
@@ -145,22 +157,12 @@ let separate (Doc sep:document) (docs:document list) : document =
 // SI: check
 //     Used composition to work out f' implementation. 
 let concat_map (f:('a -> document)) (xs:'a list) : document = 
-    let f' (a:'a) : FSharp.PPrint.Engine.document = 
-        // apply f
-        let d = f a in 
-        // unpack d
-        match d with 
-        | Doc d' -> d' in
-    let d' = FSharp.PPrint.Combinators.concat_map f' xs in
+    let d' = FSharp.PPrint.Combinators.concat_map (app_and_unpack f) xs in
     Doc d'
 
 // SI: check
 let separate_map (Doc sep:document) (f:('a -> document)) (xs:'a list) : document = 
-    let f' (a:'a) : FSharp.PPrint.Engine.document = 
-        let d = f a in 
-        match d with 
-        | Doc d' -> d' in 
-    let d' = FSharp.PPrint.Combinators.separate_map sep f' xs in 
+    let d' = FSharp.PPrint.Combinators.separate_map sep (app_and_unpack f) xs in 
     Doc d'
 
 let separate2 (Doc sep:document) (Doc last_sep:document) (docs:document list) : document = 
@@ -191,11 +193,7 @@ let flow (Doc sep:document) (docs:document list) : document =
 
 // SI: check
 let flow_map (Doc sep:document) (f:('a -> document)) (docs:'a list) : document =
-    let f' (a:'a) : FSharp.PPrint.Engine.document = 
-        let d = f a in 
-        match d with 
-        | Doc d' -> d' in 
-    let d' = FSharp.PPrint.Combinators.separate_map sep f' docs in 
+    let d' = FSharp.PPrint.Combinators.separate_map sep (app_and_unpack f) docs in 
     Doc d'
 
 let url (s:string) : document = Doc (FSharp.PPrint.Combinators.url s)
@@ -223,11 +221,8 @@ let surround_separate (n:int) (b:int) (Doc v:document) (Doc opening:document) (D
 
 // SI: check
 let surround_separate_map (n:int) (b:int) (Doc v:document) (Doc opening:document) (Doc sep:document) (Doc closing:document) (f:('a -> document)) (docs:'a list) : document = 
-    let f' (a:'a) : FSharp.PPrint.Engine.document = 
-        let d = f a in 
-        match d with 
-        | Doc d' -> d' in 
-    let d' = FSharp.PPrint.Combinators.surround_separate_map n b v opening sep closing f' docs in 
+    let f = app_and_unpack f in 
+    let d' = FSharp.PPrint.Combinators.surround_separate_map n b v opening sep closing f docs in 
     Doc d'
     
 let ( ^^ ) (Doc x:document) (Doc y:document) : document = 
