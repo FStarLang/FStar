@@ -3375,7 +3375,7 @@ let tc_decls:
                         | (exports,hidden) ->
                             let uu____3638 = for_export hidden se in
                             (match uu____3638 with
-                             | (se_exported,se_hidden) ->
+                             | (se_exported,hidden) ->
                                  ((FStar_List.rev_append se_exported exports),
                                    hidden)) in
                       FStar_List.fold_left accum_exports_hidden

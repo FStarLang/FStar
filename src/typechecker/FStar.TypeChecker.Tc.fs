@@ -1197,7 +1197,7 @@ let tc_decls env ses =
 
     let exports, hidden =
       let accum_exports_hidden (exports, hidden) se =
-        let se_exported, se_hidden = for_export hidden se in
+        let se_exported, hidden = for_export hidden se in
         List.rev_append se_exported exports, hidden
       in
       List.fold_left accum_exports_hidden (exports, hidden) ses'
