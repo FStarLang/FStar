@@ -511,7 +511,7 @@ let take p l =
     in take_aux [] l
 
 let rec fold_flatten f acc l =
-  match
+  match l with
   | [] -> acc
   | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (xs' @ xs)
 
