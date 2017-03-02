@@ -21,7 +21,6 @@ open FStar.All
 open FStar
 open FStar.Util
 open FStar.Getopt
-open FStar.Version
 
 type debug_level_t =
   | Low
@@ -271,9 +270,16 @@ let include_path_base_dirs =
 let universe_include_path_base_dirs =
   ["/ulib"; "/lib/fstar"]
 
+// See comment in the interface file
+let _version = FStar.Util.mk_ref ""
+let _platform = FStar.Util.mk_ref ""
+let _compiler = FStar.Util.mk_ref ""
+let _date = FStar.Util.mk_ref ""
+let _commit = FStar.Util.mk_ref ""
+
 let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
-                                  version platform compiler date commit)
+                                  !_version !_platform !_compiler !_date !_commit)
 
 let display_usage_aux specs =
   Util.print_string "fstar.exe [options] file[s]\n";

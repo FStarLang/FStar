@@ -134,6 +134,7 @@ val upd_slice: #a:Type -> s:seq a -> i:nat -> j:nat{i <= j /\ j <= length s}
 let upd_slice #a s i j k v =
   lemma_eq_intro (upd (slice s i j) k v) (slice (upd s (i + k) v) i j)
 
+// TODO: should be renamed cons_head_append, or something like that (because it is NOT related to (append (cons _ _) _))
 val lemma_append_cons: #a:Type -> s1:seq a{length s1 > 0} -> s2:seq a -> Lemma
   (requires True)
   (ensures (equal (append s1 s2) (cons (head s1) (append (tail s1) s2))))
@@ -721,3 +722,82 @@ let rec find_l_none_no_index #a s f =
         find_l_none_no_index (tail s) f;
 	assert (Seq.equal s (cons (head s) (tail s)));
 	find_append_none (create 1 (head s)) (tail s) f)
+
+(** More properties, with new naming conventions *)
+
+let suffix_of
+  (#a: Type)
+  (s_suff s: seq a)
+= exists s_pref . (s == append s_pref s_suff)
+
+let cons_head_tail
+  (#a: Type)
+  (s: seq a {length s > 0})
+: Lemma
+  (requires True)
+  (ensures (s == cons (head s) (tail s)))
+  [SMTPat (cons (head s) (tail s))]
+= let _ : squash (slice s 0 1 == create 1 (index s 0)) =
+      lemma_index_slice s 0 1 0;
+      lemma_index_create 1 (index s 0) 0;
+      lemma_eq_elim (slice s 0 1) (create 1 (index s 0))
+  in
+  lemma_split s 1
+
+let head_cons
+  (#a: Type)
+  (x: a)
+  (s: seq a)
+: Lemma
+  (ensures (head (cons x s) == x))
+= ()
+
+let suffix_of_tail
+  (#a: Type)
+  (s: seq a {length s > 0})
+: Lemma
+  (requires True)
+  (ensures ((tail s) `suffix_of` s))
+  [SMTPat ((tail s) `suffix_of` s)]
+= cons_head_tail s    
+
+let index_cons_l
+  (#a: Type)
+  (c: a)
+  (s: seq a)
+: Lemma
+  (ensures (index (cons c s) 0 == c))
+= ()
+
+let index_cons_r
+  (#a: Type)
+  (c: a)
+  (s: seq a)
+  (i: nat {1 <= i /\ i <= length s})
+: Lemma
+  (ensures (index (cons c s) i == index s (i - 1)))
+= ()
+
+let append_cons
+  (#a: Type)
+  (c: a)
+  (s1 s2: seq a)
+: Lemma
+  (ensures (append (cons c s1) s2 == cons c (append s1 s2)))
+= lemma_eq_elim (append (cons c s1) s2) (cons c (append s1 s2))
+
+let index_tail
+  (#a: Type)
+  (s: seq a {length s > 0})
+  (i: nat {i < length s - 1} )
+: Lemma
+  (ensures (index (tail s) i == index s (i + 1)))
+= ()
+
+let mem_cons
+  (#a:eqtype)
+  (x:a)
+  (s:seq a)
+: Lemma
+  (ensures (forall y. mem y (cons x s) <==> mem y s \/ x=y))
+= lemma_append_count (create 1 x) s

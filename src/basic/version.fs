@@ -1,11 +1,8 @@
 module FStar.Version
 
-let version = "unknown version"
-
-let platform = "unknown platform"
-
-let compiler = "unknown compiler"
-
-let date = "unknown date"
-
-let commit = "unknown commit"
+// Effects are wonderful
+FStar.Options._version  := "unknown F# version"
+FStar.Options._platform := "unknown platform"
+FStar.Options._compiler := "unknown compiler"
+FStar.Options._date     := "unknown date"
+FStar.Options._commit   := "unknown commit"

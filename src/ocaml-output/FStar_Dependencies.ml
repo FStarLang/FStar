@@ -21,11 +21,13 @@ let find_deps_if_needed:
                     let deps = FStar_List.rev deps in
                     let deps =
                       let uu____56 =
-                        let _0_671 = FStar_Util.basename (FStar_List.hd deps) in
-                        _0_671 = "prims.fst" in
+                        let uu____57 =
+                          let uu____58 = FStar_List.hd deps in
+                          FStar_Util.basename uu____58 in
+                        uu____57 = "prims.fst" in
                       match uu____56 with
                       | true  -> FStar_List.tl deps
-                      | uu____58 ->
+                      | uu____60 ->
                           (FStar_Util.print_error
                              "dependency analysis did not find prims.fst?!";
                            FStar_All.exit (Prims.parse_int "1")) in

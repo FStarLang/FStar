@@ -118,8 +118,7 @@ let go _ =
         else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if Options.indent () then
-          (* TODO : This test is a hack to know if we are in the ocaml version of F* *)
-          if FStar.Extraction.ML.PrintML.is_default_printer
+          if FStar.Platform.is_fstar_compiler_using_ocaml
           then FStar.Indent.generate filenames
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \
                          reindenting is not known to work yet with this version"
