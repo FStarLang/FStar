@@ -20,7 +20,7 @@ open FStar.Util
 open FStar.Getopt
 open FStar.Ident
 
-let () = FStar.Version.dummy
+let _ = FStar.Version.dummy
 
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)
