@@ -84,7 +84,7 @@ let swap (#rs1 #rs2 #ws1 #ws2: addr_set)
          (f1: cmd rs1 ws1)
          (f2: cmd rs2 ws2) : 
   Lemma
-    (requires (S.disjoint__ ws1 ws2 /\ S.disjoint__ rs1 ws2 /\ S.disjoint__ rs2 ws1))
+    (requires (S.disjoint ws1 ws2 /\ S.disjoint rs1 ws2 /\ S.disjoint rs2 ws1))
     (ensures (equiv (f1 >> f2) (f2 >> f1)))
   = let aux (h:heap) : Lemma (equiv_on_h (f1 >> f2) (f2 >> f1) h) =
       let f1 = f1 <: command in
@@ -98,7 +98,7 @@ let swap (#rs1 #rs2 #ws1 #ws2: addr_set)
 (** If whatever [f] writes only depends on [rs], then calling a [f] a second
     time should write the same values into the heap. *)
 let idem (#rs #ws:addr_set) (f:cmd rs ws)
-  : Lemma (requires (S.disjoint__ rs ws))
+  : Lemma (requires (S.disjoint rs ws))
           (ensures (equiv (f >> f) f))
   = let aux (h:heap) : Lemma (equiv_on_h (f >> f) f h) =
       let f = f <: command in
@@ -132,7 +132,7 @@ let lemma_replace_cond (c:guard) (c1:command) (c2:command)
     FStar.Classical.forall_intro aux
 
 let lemma_skip_c1 (#r1 #w1 #r2 #w2:addr_set) (c1:cmd r1 w1) (c2:cmd r2 w2)
-  :Lemma (requires (S.disjoint__ w1 r2 /\ S.subset w1 w2))
+  :Lemma (requires (S.disjoint w1 r2 /\ S.subset w1 w2))
          (ensures  (equiv (c1 >> c2) c2))
   = let aux (h:heap) :Lemma (equiv_on_h (c1 >> c2) c2 h) =  
       let (), h1 = reify ((c1 <: command) ()) h in
@@ -164,7 +164,7 @@ val swap_old (rs1: addr_set) (ws1: addr_set) (f1: unit -> STNull unit)
   (rs2: addr_set) (ws2: addr_set) (f2: unit -> STNull unit)
   (h_0: heap) :
   Lemma
-    (requires (S.disjoint__ ws1 ws2 /\ S.disjoint__ rs1 ws2 /\ S.disjoint__ rs2 ws1 /\
+    (requires (S.disjoint ws1 ws2 /\ S.disjoint rs1 ws2 /\ S.disjoint rs2 ws1 /\
       footprint2 f1 rs1 ws1 /\ footprint2 f2 rs2 ws2))
     (ensures (
       let (), h_1 = reify (f1 ()) h_0 in
@@ -183,7 +183,7 @@ let swap_old rs1 ws1 f1 rs2 ws2 f2 h_0 =
 (** If whatever [f] writes only depends on [rs], then calling a [f] a second
     time should write the same values into the heap. *)
 let idem_old (rs ws:addr_set) (f:unit -> STNull unit)  (h0:heap)
-  : Lemma (requires (S.disjoint__ rs ws /\
+  : Lemma (requires (S.disjoint rs ws /\
                      footprint2 f rs ws))
           (ensures (let _, h1 = reify (f ()) h0 in
                     let _, h2 = reify (f ()) h1 in
