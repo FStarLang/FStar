@@ -2525,7 +2525,7 @@ let encode_query use_env_msg tcenv q
         @label_prefix
         @qdecls in
     let qry = Term.Assume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
-    let suffix = label_suffix@(if Options.print_z3_statistics() then [PrintStats] else [])@[Term.Echo "Done!"] in
+    let suffix = label_suffix @ [Term.Echo "Done!"] in
     query_prelude, labels, qry, suffix
 
 let is_trivial (tcenv:Env.env) (q:typ) : bool =
