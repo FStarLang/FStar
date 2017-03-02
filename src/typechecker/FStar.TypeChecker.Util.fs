@@ -681,7 +681,9 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let xexp, yexp = S.bv_to_name x, S.bv_to_name y in
     let u_res_t = env.universe_of env res_t in
     let yret = mk_Tm_app (inst_effect_fun_with [u_res_t] env md_pure md_pure.ret_wp) [S.as_arg res_t; S.as_arg yexp] None res_t.pos in
-    let x_eq_y_yret = mk_Tm_app (inst_effect_fun_with [u_res_t] env md_pure md_pure.assume_p) [S.as_arg res_t; S.as_arg <| U.mk_eq res_t res_t xexp yexp; S.as_arg <| yret] None res_t.pos in
+    let x_eq_y_yret =
+        mk_Tm_app (inst_effect_fun_with [u_res_t] env md_pure md_pure.assume_p)
+                  [S.as_arg res_t; S.as_arg <| U.mk_eq res_t res_t xexp yexp; S.as_arg <| yret] None res_t.pos in
     let forall_y_x_eq_y_yret =
         mk_Tm_app (inst_effect_fun_with [u_res_t;u_res_t] env md_pure md_pure.close_wp)
                   [S.as_arg res_t;

@@ -54,38 +54,67 @@ type result<'a> =
 exception Failure of string
 
 (* The main monad for tactics *)
-type tac<'a> = proofstate -> result<'a>
+type tac<'a> = {
+    tac_f:proofstate -> result<'a>;
+    tac_name:string;
+    kernel:bool;
+}
+
+let as_tac name b f = {
+    tac_f=f;
+    tac_name=name;
+    kernel=b;
+}
+
+let kernel_tac n t = {tac_f=t; tac_name=n; kernel=true}
+let user_tac n t = {tac_f=t; tac_name=n; kernel=false}
+let name_tac n t = {t with tac_name=n; kernel=false}
+
+let run t p = t.tac_f p
+
+let debug p msg =
+    printfn "TAC (ngoals=%d, maingoal=%s, rest=%s):\n\tTAC>> %s\n"
+        (List.length p.goals)
+        (match p.goals with [] -> "[]" | _ -> Print.term_to_string (List.hd p.goals).goal_ty)
+        (match p.goals with [] -> "" | _ -> List.tl p.goals |> List.map (fun x -> Print.term_to_string x.goal_ty) |> String.concat ";;")
+        msg
 
 (* monadic return *)
 let ret (a:'a)
     : tac<'a>
-    = fun p -> Success (a, p)
+    = kernel_tac "return" (fun p -> Success (a, p))
 
 (* monadic bind *)
 let bind (t1:tac<'a>)
          (t2:'a -> tac<'b>)
     : tac<'b>
-    = fun p ->
+    = kernel_tac "bind"
+        (fun p ->
 //        let tx = Unionfind.new_transaction () in //snapshot the state of the unionfind graph
-        match t1 p with
-        | Success (a, q) ->
-          t2 a q
-        | Failed(msg, q) ->
-//          Unionfind.rollback tx; //and restore the snapshot in case the tactic fails
-          Failed(msg, q) //need to repack for tac<'b>
+            if not t1.kernel then debug p t1.tac_name;
+            match t1.tac_f p with
+            | Success (a, q) ->
+              let t2 = t2 a in
+              if not t2.kernel then debug q t2.tac_name;
+              t2.tac_f q
+            | Failed(msg, q) ->
+            if not t1.kernel then debug p (BU.format1 "%s failed!" t1.tac_name);
+    //          Unionfind.rollback tx; //and restore the snapshot in case the tactic fails
+              Failed(msg, q)) //need to repack for tac<'b>
 
 (* get : get the current proof state *)
-let get : tac<proofstate> = fun p -> ret p p
+let get : tac<proofstate> = kernel_tac "get" (fun p -> Success(p, p))
 
-let fail msg = fun p -> 
-    printfn "%s" msg;
-    Failed(msg, p)
+let fail msg = kernel_tac "fail" (fun p ->
+    printfn ">>>>>%s" msg;
+    Failed(msg, p))
 
+let show = kernel_tac "show" (fun p -> debug p "debug"; Success((), p))
 ////////////////////////////////////////////////////////////////////
 (* Some TRUSTED internal utilities *)
 
 (* set : set the current proof state; shouldn't be exposed externally *)
-let set p : tac<unit> = fun _ -> Success ((), p)
+let set p : tac<unit> = kernel_tac "set" (fun _ -> Success ((), p))
 
 let solve goal solution =
     match goal.witness with
@@ -103,47 +132,135 @@ let dismiss : tac<unit> =
     bind get (fun p ->
     set ({p with goals=List.tl p.goals}))
 
+let dismiss_all : tac<unit> =
+    bind get (fun p ->
+    set ({p with goals=[]}))
+
 let add_goals (gs:list<goal>) : tac<unit> =
     bind get (fun p ->
     set ({p with goals=gs@p.goals}))
+
+let replace (g:goal) : tac<unit> =
+    bind dismiss (fun _ ->
+    add_goals [g])
 
 //Any function that directly calls these utilities is also trusted
 //End: Trusted utilities
 ////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////
+(* Some utilities on goals *)
+let is_true t =
+    match U.destruct_typ_as_formula t with
+    | Some (U.BaseConn(l, [])) -> Ident.lid_equals l SC.true_lid
+    | _ -> false
+let is_false t =
+    match U.destruct_typ_as_formula t with
+    | Some (U.BaseConn(l, [])) -> Ident.lid_equals l SC.false_lid
+    | _ -> false
+let conj_goals g1 g2 =
+    let t1 = g1.goal_ty in
+    let t2 = g2.goal_ty in
+    if is_true t1 || is_false t2 then g2
+    else if is_true t2 || is_false t1 then g1
+    else { g1 with goal_ty=U.mk_conj t1 t2 }
+////////////////////////////////////////////////////////////////////
+
+
 (* with_cur_goal: get's the current goal, Failed if none present *)
-let with_cur_goal (f:goal -> tac<'a>) : tac<'a>
-    = fun p ->
+let with_cur_goal (nm:string) (f:goal -> tac<'a>) : tac<'a>
+    = name_tac nm (bind get (fun p ->
         match p.goals with
-        | [] -> Failed ("No more goals", p)
-        | hd::tl -> f hd p
+        | [] -> fail "No more goals"
+        | hd::tl -> f hd))
 
 (* focus_cur_goal: runs f on the current goal only, and then restores all the goals *)
-let focus_cur_goal (f:tac<'a>) : tac<'a>
+let focus_cur_goal (nm:string) (f:tac<'a>) : tac<'a>
     = bind get (fun p ->
-      match p.goals with
-      | [] -> fail "No more goals"
-      | hd::tl ->
-        let q = {p with goals=[hd]} in
-        bind (set q) (fun _ ->
-        bind f       (fun a ->
-        bind get     (fun q' ->
-        let q2 = {q' with goals=q'.goals@tl} in
-        bind (set q2) (fun _ ->
-        ret a)))))
+          match p.goals with
+          | [] -> fail "No more goals"
+          | hd::tl ->
+            let q = {p with goals=[hd]} in
+            bind (set q) (fun _ ->
+            bind f       (fun a ->
+            bind get     (fun q' ->
+            let q2 = {q' with goals=q'.goals@tl} in
+            bind (set q2) (fun _ ->
+            ret a)))))
+
+(* cur_goal_and_rest: runs f on the current goal only,
+                      runs g on the rest of the goals
+                      Collects all the remaining goals, in order sub_goals f @ sub_goals g
+*)
+let cur_goal_and_rest (f:tac<'a>) (g:tac<'b>) : tac<('a*option<'b>)>
+    = bind get (fun p ->
+          match p.goals with
+          | [] -> fail "No more goals"
+          | [_] ->
+            bind f (fun a ->
+            ret (a, None))
+          | hd::tl ->
+            bind dismiss_all (fun _ ->
+            bind (add_goals [hd]) (fun _ ->
+            bind f (fun a ->
+            bind get     (fun {goals=sub_goals_f} ->
+            bind dismiss_all (fun _ ->
+            bind (add_goals tl) (fun _ ->
+            bind g (fun b ->
+            bind (add_goals sub_goals_f) (fun _ ->
+            ret (a, Some b))))))))))
 
 (* or_else: try t1; if it fails, try t2 *)
 let or_else (t1:tac<'a>)
             (t2:tac<'a>)
     : tac<'a>
-    = fun p ->
+    = kernel_tac "or_else" (fun p ->
 //        let tx = Unionfind.new_transaction () in
-        match t1 p with
+        debug p (BU.format1 "or_else: trying %s" t1.tac_name);
+        match t1.tac_f p with
         | Failed _ ->
 //          Unionfind.rollback tx;
-          printfn "or_else: t1 failed; trying t2";
-          t2 p
-        | q -> q
+          debug p (BU.format2 "or_else: %s failed; trying %s" t1.tac_name t2.tac_name);
+          t2.tac_f p
+        | q -> q)
+
+(* Applies t to each of the current goals
+      fails if t fails on any of the goals
+      collects each result in the output list *)
+let rec map (t:tac<'a>): tac<(list<'a>)> =
+    user_tac "map"
+        (fun p ->
+          run ((bind (cur_goal_and_rest t (map t))
+                     (function
+                          | hd, None -> ret [hd]
+                          | hd, Some tl -> ret (hd::tl)))) p)
+
+(* map_goal_term f:
+        A trusted tactic that maps each goal.goal_ty to (f goal.goal_ty)
+ *)
+let private map_goal_term (f:term -> term) : tac<unit> =
+    let aux =
+        with_cur_goal "map_goal" (fun g ->
+        replace {g with goal_ty=f g.goal_ty})
+    in
+    bind (map aux) (fun _ -> ret ())
+
+
+(* map_meta: runs the tactic f on goal g, if the goal is Tm_meta(g, annot)
+             and restores the goal to Tm_meta(f g, annot)
+*)
+let map_meta (t:tac<'a>) : tac<'a> =
+    with_cur_goal "map_meta" (fun g ->
+    match (SS.compress g.goal_ty).n with
+    | Tm_meta(f, annot) ->
+      bind (replace ({g with goal_ty=f})) (fun _ -> //remove the meta
+      bind t (fun a ->                              //run t, getting a
+      bind (map_goal_term (fun tm ->
+            if is_true tm then tm
+            else S.mk (Tm_meta(tm, annot)) None tm.pos)) //put the meta back, re-using tm.pos for the position of the meta node
+           (fun _ -> ret a))) //return a
+    | _ -> fail "Not a meta")
+
 
 (* Applies t1 to the current head goal
    And t2 to all the the sub-goals produced by t1
@@ -153,26 +270,9 @@ let or_else (t1:tac<'a>)
 let seq (t1:tac<unit>)
         (t2:tac<unit>)
     : tac<unit>
-    = fun p ->
-//        let tx = Unionfind.new_transaction () in
-        let q = {p with goals=[List.hd p.goals]} in
-        match t1 q with
-        | Success (_, q') -> begin
-              try
-                  let goals = q'.goals |> List.collect (fun g ->
-                      let q'' = {q' with goals=[g]} in
-                      match t2 q'' with
-                      | Failed (m,q3) -> raise (Failure m)
-                      | Success(_,q3) -> q3.goals) in
-                  Success((), ({q' with goals=goals@p.goals}))
-              with
-              | Failure m ->
-//                Unionfind.rollback tx;
-                Failed(m, q)
-         end
-        | f ->
-//          Unionfind.rollback tx;
-          f
+    = focus_cur_goal "seq"
+          (bind t1 (fun _ ->
+           bind (map t2) (fun _ -> ret ())))
 
 (* intros:
       corresponds to a variadic version of
@@ -182,7 +282,7 @@ let seq (t1:tac<unit>)
 //    val forall_intro_squash_gtot_join  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (squash (p x))) -> Tot (forall (x:a). p x)
 //   ?? Note the additional squash on f
 let intros : tac<(list<name>)>
-   = with_cur_goal (fun goal ->
+   = with_cur_goal "intros" (fun goal ->
          match U.destruct_typ_as_formula goal.goal_ty with
          | Some (U.QAll(bs, pats, body)) ->
            //TODO!
@@ -195,9 +295,9 @@ let intros : tac<(list<name>)>
              witness=None; //body is squashed
              goal_ty=body
            } in
-           printfn "After intro %s, new_goal is %s" 
-                    (Print.binders_to_string ", " bs)
-                    (Print.term_to_string body);
+//           printfn "After intro %s, new_goal is %s"
+//                    (Print.binders_to_string ", " bs)
+//                    (Print.term_to_string body);
            bind dismiss (fun _ ->
            bind (add_goals [new_goal]) (fun _ ->
            ret names))
@@ -210,21 +310,21 @@ let mk_squash p =
     let sq = U.fvar_const FStar.Syntax.Const.squash_lid in
     U.mk_app sq [S.as_arg p]
 
-let un_squash t = 
+let un_squash t =
     let head, args = U.head_and_args t in
-    match (U.un_uinst head).n, args with 
-    | Tm_fvar fv, [(p, _)] 
+    match (U.un_uinst head).n, args with
+    | Tm_fvar fv, [(p, _)]
         when S.fv_eq_lid fv FStar.Syntax.Const.squash_lid ->
       Some p
     | Tm_refine({sort={n=Tm_fvar fv}}, p), []
         when S.fv_eq_lid fv FStar.Syntax.Const.unit_lid ->
       Some p
-    | _ -> 
+    | _ ->
       None
 
-let maybe_squash env p = 
+let maybe_squash env p =
     let q = N.normalize [N.UnfoldUntil Delta_constant] env p in
-    match un_squash q with 
+    match un_squash q with
     | None -> p //mk_squash p
     | _ -> p
 
@@ -233,7 +333,7 @@ let maybe_squash env p =
         val arrow_to_impl : #a:Type0 -> #b:Type0 -> f:(squash a -> GTot (squash b)) -> GTot (a ==> b)
 *)
 let imp_intro : tac<name> =
-    with_cur_goal (fun goal ->
+    with_cur_goal "imp_intro" (fun goal ->
     match U.destruct_typ_as_formula goal.goal_ty with
     | Some (U.BaseConn(l, [(lhs, _); (rhs, _)]))
         when Ident.lid_equals l SC.imp_lid ->
@@ -250,7 +350,7 @@ let imp_intro : tac<name> =
       fail "Cannot intro this goal, expected an '==>'")
 
 let split : tac<unit>
-    = with_cur_goal (fun goal ->
+    = with_cur_goal "split" (fun goal ->
         match U.destruct_typ_as_formula goal.goal_ty with
         | Some (U.BaseConn(l, args))
             when Ident.lid_equals l SC.and_lid ->
@@ -258,40 +358,55 @@ let split : tac<unit>
                  {goal with witness=None;
                             goal_ty=a}) in
           bind dismiss (fun _ ->
-          add_goals new_goals)
+          bind (add_goals new_goals) (fun _ ->
+          show))
         | _ ->
           fail "Cannot split this goal; expected a conjunction")
 
+let trivial
+    : tac<unit>
+    = with_cur_goal "trivial" (fun goal ->
+      let steps = [N.Reify; N.Beta; N.UnfoldUntil Delta_constant; N.Zeta; N.Iota; N.Primops] in
+      let t = N.normalize steps goal.context goal.goal_ty in
+      match U.destruct_typ_as_formula t with
+      | Some (U.BaseConn(l, []))
+            when Ident.lid_equals l SC.true_lid ->
+        bind dismiss (fun _ ->
+        add_goals ([{goal with goal_ty=t}]))
+      | _ -> fail "Not a trivial goal")
+
+
 let exact (x:name)
     : tac<unit>
-    = with_cur_goal (fun goal ->
+    = with_cur_goal "exact" (fun goal ->
         try let t = Env.lookup_bv goal.context x in
-            printfn ">>>At exact, env binders are %s" (Print.binders_to_string ", " (Env.all_binders goal.context));
+//            printfn ">>>At exact, env binders are %s" (Print.binders_to_string ", " (Env.all_binders goal.context));
             if Rel.teq_nosmt goal.context t goal.goal_ty
             then let _ = match goal.witness with
                   | Some _ -> solve goal (S.bv_to_tm x)
                   | _ -> () in
                  dismiss
-            else let msg = BU.format3 "%s : %s does not exactly solve the goal %s"
+            else
+                 let msg = BU.format3 "%s : %s does not exactly solve the goal %s"
                             (Print.bv_to_string x)
                             (Print.term_to_string t)
                             (Print.term_to_string goal.goal_ty) in
-                 printfn "%s" msg;
+//                 printfn "%s" msg;
                  fail msg
        with e ->
-            printfn "Exception %A" e;
+//            printfn "Exception %A" e;
             fail (BU.format1 "Variable not found: %s" (Print.bv_to_string x)))
 
 let rewrite (x:name) (e:term) : tac<unit>
-    = let mk_eq x e = 
+    = let mk_eq x e =
         mk (Tm_app(S.mk_Tm_uinst U.teq [U_zero], //TODO: should be universe of x.sort
-                          [S.iarg x.sort; 
+                          [S.iarg x.sort;
                            S.as_arg (S.bv_to_name x);
-                           S.as_arg e])) 
-           None 
-           Range.dummyRange 
+                           S.as_arg e]))
+           None
+           Range.dummyRange
      in
-     with_cur_goal (fun goal ->
+     with_cur_goal "rewrite" (fun goal ->
         try let t = Env.lookup_bv goal.context x in
             let sub_goal =
                 {goal with goal_ty=mk_eq x e;
@@ -303,12 +418,12 @@ let rewrite (x:name) (e:term) : tac<unit>
         with _ ->
              fail (BU.format1 "Variable not found: %s" (Print.bv_to_string x)))
 
-let clear_hd (x:name) : tac<unit> 
-    = with_cur_goal (fun goal -> 
-      match Env.pop_bv goal.context with 
+let clear_hd (x:name) : tac<unit>
+    = with_cur_goal "clear_hd" (fun goal ->
+      match Env.pop_bv goal.context with
       | None -> fail "Cannot clear_hd; empty context"
       | Some (y, env') ->
-          if not (S.bv_eq x y) 
+          if not (S.bv_eq x y)
           then fail "Cannot clear_hd; head variable mismatch"
           else let fns = FStar.Syntax.Free.names goal.goal_ty in
                if Util.set_mem x fns
@@ -317,36 +432,36 @@ let clear_hd (x:name) : tac<unit>
                     bind dismiss (fun _ ->
                     add_goals [new_goal]))
 
-let revert_hd (x:name) : tac<unit> 
-    = with_cur_goal (fun goal ->
-      match Env.pop_bv goal.context with 
+let revert_hd (x:name) : tac<unit>
+    = with_cur_goal "revert_hd" (fun goal ->
+      match Env.pop_bv goal.context with
       | None -> fail "Cannot clear_hd; empty context"
       | Some (y, env') ->
-          if not (S.bv_eq x y) 
+          if not (S.bv_eq x y)
           then fail "Cannot clear_hd; head variable mismatch"
           else let fns = FStar.Syntax.Free.names goal.goal_ty in
                if not (Util.set_mem x fns)
                then clear_hd x
-               else let new_goal = 
-                    match un_squash x.sort, un_squash goal.goal_ty with 
+               else let new_goal =
+                    match un_squash x.sort, un_squash goal.goal_ty with
                     | Some p, Some q ->
-                      { goal with 
+                      { goal with
                         context = env';
                         goal_ty = U.mk_imp p q
                       }
-                    | _ -> 
-                      { goal with 
+                    | _ ->
+                      { goal with
                         context = env';
                         goal_ty = U.mk_forall x goal.goal_ty
                       } in
-               bind dismiss (fun _ -> 
+               bind dismiss (fun _ ->
                add_goals [new_goal]))
 
-let rec revert_all_hd (xs:list<name>) 
+let rec revert_all_hd (xs:list<name>)
     : tac<unit>
-    = match xs with 
+    = match xs with
       | [] -> ret ()
-      | x::xs -> 
+      | x::xs ->
         bind (revert_hd x) (fun _ ->
         revert_all_hd xs)
 
@@ -373,6 +488,7 @@ let destruct_equality_imp t =
         when Ident.lid_equals l SC.imp_lid ->
       (match U.destruct_typ_as_formula lhs with
        | Some (U.BaseConn(eq, [_; (x, _); (e, _)]))
+       | Some (U.BaseConn(eq, [(x, _); (e, _)])) //NS: The mk_eq using in TypeChecker.Util.add_equality_to_post_condition is not instantiating the type and universe properly. FIX IT! TODO
             when Ident.lid_equals eq SC.eq2_lid
             && is_name x ->
          Some (as_name x, e, rhs)
@@ -387,47 +503,59 @@ let at_most_one (t:tac<'a>) : tac<'a> =
     | [_] -> ret a
     | _ -> fail "expected at most one goal remaining"))
 
-let merge_sub_goals : tac<unit> = 
-    bind get (fun p ->
-    match p.goals with 
-    | g1::g2::rest -> 
-        if Env.eq_gamma g1.context g2.context
-        && Option.isNone g1.witness
-        && Option.isNone g2.witness
-        then let new_goal = { g1 with goal_ty=U.mk_conj g1.goal_ty g2.goal_ty } in
-             set ({p with goals=new_goal::rest})
-        else fail "Cannot merge sub-goals: incompatible contexts"
-    | _ -> fail "Cannot merge sub-goals: not enough sub-goals")
+let merge_sub_goals : tac<unit> =
+    name_tac "merge_sub_goals"
+    (bind get (fun p ->
+        match p.goals with
+        | g1::g2::rest ->
+            if Env.eq_gamma g1.context g2.context
+            && Option.isNone g1.witness
+            && Option.isNone g2.witness
+            then set ({p with goals=conj_goals g1 g2::rest})
+            else fail "Cannot merge sub-goals: incompatible contexts"
+        | _ ->
+         let goals = p.goals |> List.map (fun x -> Print.term_to_string x.goal_ty) |> String.concat "\n\t" in
+         fail (BU.format1 "Cannot merge sub-goals: not enough sub-goals\n\tGoals are: %s" goals)))
 
 let rec visit_strengthen (try_strengthen:tac<unit>)
     : tac<unit>
-    = focus_cur_goal
+    = focus_cur_goal "visit_strengthen"
         (or_else try_strengthen
-                (with_cur_goal (fun goal ->
+                (with_cur_goal "visit_strengthen_else" (fun goal ->
                     match U.destruct_typ_as_formula goal.goal_ty with
-                    | None -> 
-                      printfn "Not a formula, finished %s" (Print.term_to_string goal.goal_ty);
+                    | None -> begin
+                      match (SS.compress goal.goal_ty).n with
+                      | Tm_meta _ ->
+                        map_meta (visit_strengthen try_strengthen)
+                      | _ ->
+                        printfn "Not a formula, finished %s" (Print.term_to_string goal.goal_ty);
+                        ret () //can't descend further; just return the goal unchanged
+                      end
 
-                      ret () //can't descend further; just return the goal unchanged
-
-                    | Some (U.BaseConn(l, _))
-                        when Ident.lid_equals l SC.and_lid ->
-                      seq split
-                          (bind (at_most_one (visit_strengthen try_strengthen)) (fun _ ->
-                                 merge_sub_goals))
+                    | Some (U.QEx _) ->  //not yet handled
+                        BU.print1 "Not yet handled: exists\n\tGoal is %s\n" (Print.term_to_string goal.goal_ty);
+                        ret ()
 
                     | Some (U.QAll(xs, _, _)) ->
                       bind intros (fun names ->
-                      printfn "At forall %s" (List.map Print.bv_to_string names |> String.concat ", ");
-                      bind (at_most_one (visit_strengthen try_strengthen)) (fun _ ->
+                      //printfn "At forall %s" (List.map Print.bv_to_string names |> String.concat ", ");
+                      bind (visit_strengthen try_strengthen) (fun _ ->
                            (revert_all_hd names)))
 
-                    | Some q ->  //not yet handled
-                        printfn "Not yet handled: %A" q;
+                    | Some (U.BaseConn(l, _))
+                        when Ident.lid_equals l SC.and_lid ->
+                      bind (seq split (visit_strengthen try_strengthen)) (fun _ ->
+                            merge_sub_goals)
+
+                    | Some (U.BaseConn(l, _)) ->
+                      or_else trivial (ret ())
+
+                    | Some (U.BaseConn(l, _)) ->  //not yet handled
+                        BU.print2 "Not yet handled: %s\n\tGoal is %s\n" (Print.lid_to_string l) (Print.term_to_string goal.goal_ty);
                         ret ())))
 
 let rec simplify_eq_impl : tac<unit>
-    = with_cur_goal (fun goal ->
+    = with_cur_goal "simplify_eq_impl" (fun goal ->
           match destruct_equality_imp goal.goal_ty with
           | Some (x, e, rhs) -> //we have x==e ==> rhs
                  //imp_intro: introduce x=e in the context; goal is rhs
@@ -436,19 +564,17 @@ let rec simplify_eq_impl : tac<unit>
                  //rewrite: goals become [x=e; rhs[e/x]]
             bind (rewrite x e) (fun _ ->
                  //exact: dismiss the first sub-goal, i.e., prove that x=e
-            with_cur_goal (fun g ->       
-                 printfn "Trying exact on %s" (Print.term_to_string g.goal_ty);
             bind (exact eq_h) (fun _ ->
                  //clear_hd: get rid of the eq_h in the context
                  //we're left with rhs[e/x]
-            bind (clear_hd eq_h) (fun _ -> 
-            visit_strengthen simplify_eq_impl)))))
+            bind (clear_hd eq_h) (fun _ ->
+            visit_strengthen simplify_eq_impl))))
           | _ ->
             printfn "%s is not an equality imp" (Print.term_to_string goal.goal_ty);
             fail "Not an equality implication")
 
-let proofstate_of_goal_ty env g = 
-    let g = 
+let proofstate_of_goal_ty env g =
+    let g =
         {
           context=env;
           goal_ty=N.normalize [N.Beta] env g;
@@ -462,16 +588,16 @@ let proofstate_of_goal_ty env g =
         transaction=Unionfind.new_transaction()
     }
 
-let preprocess (env:Env.env) (goal:term) : list<term> = 
-    if Ident.lid_equals 
-            (Env.current_module env) 
+let preprocess (env:Env.env) (goal:term) : list<term> =
+    if Ident.lid_equals
+            (Env.current_module env)
             FStar.Syntax.Const.prims_lid
     then [goal]
     else let _ = printfn "About to preprocess %s\n" (Print.term_to_string goal) in
          let p = proofstate_of_goal_ty env goal in
-         match visit_strengthen simplify_eq_impl p with
+         match run (visit_strengthen simplify_eq_impl) p with
          | Success (_, p2) ->
-           p2.goals |> List.map (fun g -> 
+           p2.goals |> List.map (fun g ->
              printfn "Got goal: %s" (Print.term_to_string g.goal_ty);
              g.goal_ty)
          | Failed (msg, _) ->
