@@ -786,14 +786,20 @@ let rec extract :
        match uu____1357 with
        | (g,sigs) ->
            let mlm = FStar_List.flatten sigs  in
-           let uu____1373 =
+           let is_kremlin =
+             let uu____1374 = FStar_Options.codegen ()  in
+             match uu____1374 with
+             | Some "Kremlin" -> true
+             | uu____1376 -> false  in
+           let uu____1378 =
              (((m.FStar_Syntax_Syntax.name).FStar_Ident.str <> "Prims") &&
-                (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface))
+                (is_kremlin ||
+                   (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface)))
                &&
                (FStar_Options.should_extract
                   (m.FStar_Syntax_Syntax.name).FStar_Ident.str)
               in
-           if uu____1373
+           if uu____1378
            then
              ((let _0_671 =
                  FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name
@@ -803,5 +809,10 @@ let rec extract :
                 [FStar_Extraction_ML_Syntax.MLLib
                    [(name, (Some ([], mlm)),
                       (FStar_Extraction_ML_Syntax.MLLib []))]]))
-           else (g, []))
+           else
+             ((let _0_672 =
+                 FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name
+                  in
+               FStar_Util.print1 "Skipped module %s\n" _0_672);
+              (g, [])))
   

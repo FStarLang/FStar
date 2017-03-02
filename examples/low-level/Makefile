@@ -220,13 +220,13 @@ test-perf.exe: crypto/test_perf.c krml-test.exe
 	# Note: cannot share the tmp directory otherwise the Makefile in
 	# LowCProvider (which does ar ../tmp/*.o) would pick up the wrong main
 	$(KRML) tmp/out.krml -drop Crypto.KrmlTest \
-		-tmpdir tmp-test-perf -add-include '"testlib.h"' -o $@ \
-	       	$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
-	        crypto/test_perf.c spartan_aes/aes.o crypto/spartan_stub.c \
-		-ldopt -flto \
-		-ccopts -Ofast,-m64,-march=native,-mtune=native,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
-		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
-		-I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto $(CFLAGS)
+                  -tmpdir tmp-test-perf -add-include '"testlib.h"' -o $@ \
+                  $(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
+                  crypto/test_perf.c spartan_aes/aes.o crypto/spartan_stub.c \
+                  -ldopt -flto \
+                  -ccopts -Ofast,-m64,-march=native,-mtune=native,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
+                  -I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
+                  -I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto $(CFLAGS)
 	PATH=$(OPENSSL_HOME):"$(PATH)" \
 	  LD_LIBRARY_PATH=$(OPENSSL_HOME):"$(LD_LIBRARY_PATH)" \
 	  DYLD_LIBRARY_PATH=$(OPENSSL_HOME):"$(DYLD_LIBRARY_PATH)" ./test-perf.exe

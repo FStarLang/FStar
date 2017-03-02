@@ -35,10 +35,10 @@ let finished_message :
                        (if time >= (Prims.parse_int "0")
                         then
                           print_to
-                            (let _0_832 = FStar_Util.string_of_int time  in
+                            (let _0_833 = FStar_Util.string_of_int time  in
                              FStar_Util.format3
                                "Verified %s: %s (%s milliseconds)\n" tag
-                               (FStar_Ident.text_of_lid name) _0_832)
+                               (FStar_Ident.text_of_lid name) _0_833)
                         else
                           print_to
                             (FStar_Util.format2 "Verified %s: %s\n" tag
@@ -49,16 +49,16 @@ let finished_message :
            (if errs = (Prims.parse_int "1")
             then FStar_Util.print_error "1 error was reported (see above)\n"
             else
-              (let _0_833 = FStar_Util.string_of_int errs  in
+              (let _0_834 = FStar_Util.string_of_int errs  in
                FStar_Util.print1_error
-                 "%s errors were reported (see above)\n" _0_833))
+                 "%s errors were reported (see above)\n" _0_834))
          else
            FStar_Util.print_string
-             (let _0_834 =
+             (let _0_835 =
                 FStar_Util.colorize_bold
                   "All verification conditions discharged successfully"
                  in
-              FStar_Util.format1 "%s\n" _0_834))
+              FStar_Util.format1 "%s\n" _0_835))
       else ()
   
 let report_errors :
@@ -80,12 +80,12 @@ let codegen :
         if opt <> None
         then
           let mllibs =
-            let _0_836 =
-              let _0_835 = FStar_Extraction_ML_UEnv.mkContext env  in
-              FStar_Util.fold_map FStar_Extraction_ML_Modul.extract _0_835
+            let _0_837 =
+              let _0_836 = FStar_Extraction_ML_UEnv.mkContext env  in
+              FStar_Util.fold_map FStar_Extraction_ML_Modul.extract _0_836
                 umods
                in
-            FStar_All.pipe_left Prims.snd _0_836  in
+            FStar_All.pipe_left Prims.snd _0_837  in
           let mllibs = FStar_List.flatten mllibs  in
           let ext =
             match opt with
@@ -105,8 +105,8 @@ let codegen :
                   in
                let bin = (FStar_Extraction_Kremlin.current_version, programs)
                   in
-               let _0_837 = FStar_Options.prepend_output_dir "out.krml"  in
-               FStar_Util.save_value_to_file _0_837 bin
+               let _0_838 = FStar_Options.prepend_output_dir "out.krml"  in
+               FStar_Util.save_value_to_file _0_838 bin
            | uu____122 -> failwith "Unrecognized option")
         else ()
   
@@ -121,7 +121,7 @@ let go uu____131 =
        | FStar_Getopt.Error msg -> FStar_Util.print_string msg
        | FStar_Getopt.Success  ->
            let uu____142 =
-             let _0_838 = FStar_Options.dep ()  in _0_838 <> None  in
+             let _0_839 = FStar_Options.dep ()  in _0_839 <> None  in
            if uu____142
            then
              FStar_Parser_Dep.print
@@ -149,8 +149,8 @@ let go uu____131 =
                       filename
                      in
                   (let uu____159 =
-                     let _0_839 = FStar_Options.verify_module ()  in
-                     _0_839 <> []  in
+                     let _0_840 = FStar_Options.verify_module ()  in
+                     _0_840 <> []  in
                    if uu____159
                    then
                      FStar_Util.print_warning
@@ -180,9 +180,9 @@ let go uu____131 =
                            if uu____172
                            then
                              ((let uu____174 =
-                                 let _0_840 = FStar_Options.verify_module ()
+                                 let _0_841 = FStar_Options.verify_module ()
                                     in
-                                 _0_840 <> []  in
+                                 _0_841 <> []  in
                                if uu____174
                                then
                                  (FStar_Util.print_error
@@ -192,9 +192,9 @@ let go uu____131 =
                               FStar_Parser_Dep.VerifyAll)
                            else
                              (let uu____179 =
-                                let _0_841 = FStar_Options.verify_module ()
+                                let _0_842 = FStar_Options.verify_module ()
                                    in
-                                _0_841 <> []  in
+                                _0_842 <> []  in
                               if uu____179
                               then FStar_Parser_Dep.VerifyUserList
                               else FStar_Parser_Dep.VerifyFigureItOut)
@@ -218,11 +218,11 @@ let go uu____131 =
                                 in
                              (report_errors module_names_and_times;
                               codegen
-                                (let _0_842 =
+                                (let _0_843 =
                                    FStar_All.pipe_right fmods
                                      (FStar_List.map Prims.fst)
                                     in
-                                 (_0_842, env));
+                                 (_0_843, env));
                               finished_message module_names_and_times
                                 (Prims.parse_int "0")))
                       else FStar_Util.print_error "no file provided\n"))))
@@ -237,20 +237,20 @@ let main uu____247 =
        (let uu____256 = FStar_Options.trace_error ()  in
         if uu____256
         then
-          let _0_844 = FStar_Util.message_of_exn e  in
-          let _0_843 = FStar_Util.trace_of_exn e  in
-          FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _0_844 _0_843
+          let _0_845 = FStar_Util.message_of_exn e  in
+          let _0_844 = FStar_Util.trace_of_exn e  in
+          FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _0_845 _0_844
         else
           if Prims.op_Negation (FStar_Errors.handleable e)
           then
-            (let _0_845 = FStar_Util.message_of_exn e  in
+            (let _0_846 = FStar_Util.message_of_exn e  in
              FStar_Util.print1_error
                "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-               _0_845)
+               _0_846)
           else ());
        cleanup ();
-       (let _0_846 = FStar_Errors.report_all ()  in
-        FStar_All.pipe_right _0_846 Prims.ignore);
+       (let _0_847 = FStar_Errors.report_all ()  in
+        FStar_All.pipe_right _0_847 Prims.ignore);
        report_errors [];
        FStar_All.exit (Prims.parse_int "1"))
   
