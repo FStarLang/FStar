@@ -2541,7 +2541,7 @@ and tc_decl:
                   | Some lift ->
                       [FStar_Syntax_Syntax.Sig_new_effect (ne, r); lift]
                   | None  -> [FStar_Syntax_Syntax.Sig_new_effect (ne, r)] in
-                ([], env, ses))
+                ([], env, (FStar_List.append ses effect_and_lift_ses)))
        | FStar_Syntax_Syntax.Sig_new_effect (ne,r) ->
            let ne = tc_eff_decl env ne in
            let se = FStar_Syntax_Syntax.Sig_new_effect (ne, r) in

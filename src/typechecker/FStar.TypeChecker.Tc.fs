@@ -873,7 +873,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
           | None -> [ Sig_new_effect (ne, r) ]
       in
 
-      [], env, ses
+      [], env, ses @ effect_and_lift_ses
 
   | Sig_new_effect(ne, r) ->
     let ne = tc_eff_decl env ne in
