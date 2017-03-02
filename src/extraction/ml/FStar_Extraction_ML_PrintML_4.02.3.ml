@@ -418,7 +418,7 @@ let build_ast (out_dir: string option) (ext: string) (ml: mllib) =
 
 (* printing the AST to the correct path *)
 let print_module ((path, m): string * structure) = 
-  Format.set_formatter_out_channel (open_out path);
+  Format.set_formatter_out_channel (open_out_bin path);
   structure Format.std_formatter m;
   Format.pp_print_flush Format.std_formatter ()
 

@@ -1,6 +1,6 @@
 module FStar.Version
 
-let dummy = fun () -> ()
+let dummy () = ()
 
 // Effects are wonderful
 FStar.Options._version  := "unknown F# version"
