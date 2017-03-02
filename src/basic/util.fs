@@ -510,6 +510,10 @@ let take p l =
         | x::xs -> List.rev acc, x::xs
     in take_aux [] l
 
+let rec fold_flatten f acc l =
+  match
+  | [] -> acc
+  | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (xs' @ xs)
 
 let add_unique f x l =
   if l |> for_some (f x)

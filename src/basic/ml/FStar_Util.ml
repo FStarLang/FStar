@@ -527,11 +527,16 @@ let forall_exists rel l1 l2 =
 let multiset_equiv rel l1 l2 =
   BatList.length l1 = BatList.length l2 && forall_exists rel l1 l2
 let take p l =
-    let rec take_aux acc = function
-        | [] -> l, []
-        | x::xs when p x -> take_aux (x::acc) xs
-        | x::xs -> List.rev acc, x::xs
-    in take_aux [] l
+  let rec take_aux acc = function
+    | [] -> l, []
+    | x::xs when p x -> take_aux (x::acc) xs
+    | x::xs -> List.rev acc, x::xs
+  in take_aux [] l
+
+let rec fold_flatten f acc l =
+  match l with
+  | [] -> acc
+  | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (xs' @ xs)
 
 let add_unique f x l =
   if for_some (f x) l then

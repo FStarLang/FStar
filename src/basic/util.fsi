@@ -224,6 +224,10 @@ val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 val multiset_equiv: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 val take: ('a -> bool) -> list<'a> -> list<'a> * list<'a>
 
+(* Variation on fold_left which pushes the list returned by the functional *)
+(* on top of the leftover input list *)
+val fold_flatten:('a -> 'b -> 'a * list<'b>) -> 'a -> list<'b> -> 'a
+
 val is_some: option<'a> -> Tot<bool>
 val must: option<'a> -> 'a
 val dflt: 'a -> option<'a> -> Tot<'a>
