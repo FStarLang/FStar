@@ -402,7 +402,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
               let t, _, g = tc_tot_or_gtot_term (Env.clear_expected_typ env |> fst) t in
               match (SS.compress t).n with
               | Tm_app(_, [(res, _); (wp, _)]) -> t, res, wp, g
-              | _ -> failwith "Impossible" in
+              | _ -> failwith "Impossible"
+        in
         let e, g =
               let e, c, g = tc_tot_or_gtot_term env_no_ex e in
               if not <| U.is_total_lcomp c

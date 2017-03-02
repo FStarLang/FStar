@@ -1,5 +1,7 @@
 module FStar.Version
 
+let dummy = fun () -> ()
+
 // Effects are wonderful
 FStar.Options._version  := "unknown F# version"
 FStar.Options._platform := "unknown platform"
