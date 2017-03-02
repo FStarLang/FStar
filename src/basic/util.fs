@@ -822,10 +822,10 @@ let internal hints_db_from_json_db (jdb : json_db) : hints_db =
 let internal json<'t> (obj : 't) (known_types : Type list) =
     use ms = new MemoryStream()
     (new DataContractJsonSerializer(typeof<'t>, known_types)).WriteObject(ms, obj)
-    ASCIIEncoding.Default.GetString(ms.ToArray())
+    Encoding.ASCII.GetString(ms.ToArray())
 
 let internal unjson<'t> (s : string) (known_types : Type list) : 't =
-    use ms = new MemoryStream(ASCIIEncoding.Default.GetBytes(s))
+    use ms = new MemoryStream(Encoding.Unicode.GetBytes(s))
     let obj = (new DataContractJsonSerializer(typeof<'t>, known_types)).ReadObject(ms)
     obj :?> 't
 

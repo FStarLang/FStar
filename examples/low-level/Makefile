@@ -11,7 +11,7 @@ CODEGEN_ARGS=--lax --codegen OCaml --no_location_info $(FSTAR_DEFAULT_ARGS)
 
 KREMLIN_HOME=../../../kremlin
 KREMLIN=$(KREMLIN_HOME)/Kremlin.native
-KREMLIN_ARGS=-tmpdir kremlin -verbose -cc clang
+KREMLIN_ARGS=-tmpdir kremlin -cc clang
 
 CHACHA_ODIR=chacha
 POLY_ODIR=poly
@@ -191,7 +191,11 @@ bignum-ver:
 	$(FSTAR) --use_hints --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
 
 KRML_INCLUDES=$(addprefix -I ,spartan_aes crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
-KRML_ARGS=-verbose -ccopt -maes $(KOPTS)
+ifeq ($(OS),Windows_NT)
+  KRML_ARGS=-ccopts -maes $(KOPTS)
+else
+  KRML_ARGS=-ccopts -maes,-fPIC $(KOPTS)
+endif
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES) 
 
 spartan_aes/aes.o:
