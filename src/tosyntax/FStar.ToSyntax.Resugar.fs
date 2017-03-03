@@ -22,6 +22,7 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Util
 open FStar.Const
+open FStar.Syntax.Print
 module I = FStar.Ident
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -135,15 +136,15 @@ let resugar_match_pat (p:S.pat) : A.pattern =
       mk (A.PatName fv.fv_name.v)
 
     | Pat_cons(fv, args) when fv.fv_name.v.str.Equals C.cons_lid ->
-      failwith "PatList not desugared yet"
+      failwith "PatList not resugared yet"
 
     | Pat_cons(fv, args) when U.is_tuple_data_lid' fv.fv_name.v || U.is_dtuple_data_lid' fv.fv_name.v ->
-      failwith "PatTuple not desugared yet"
+      failwith "PatTuple not resugared yet"
 
     | Pat_cons({fv_qual=Some (Record_ctor _)}, args) ->
       (* need to find the corresponding record and go through the record.fields *)
       (* if the pattern is not Wild, then we have the pattern for the field to make the (lid*pattern) *)
-      failwith "PatRecord not desugared yet"
+      failwith "PatRecord not resugared yet"
 
     | Pat_cons (fv, args) ->
       let args = List.map (fun (p, b) -> aux p) args in
@@ -161,9 +162,6 @@ let resugar_match_pat (p:S.pat) : A.pattern =
     | Pat_dot_term (bv, term) -> failwith "case Pat_dot_term is impossible"
   in
     aux p
-
-let resugar_bv_as_binder (x:S.bv) r: A.binder =
-  A.mk_binder (A.Variable(bv_as_unique_ident x)) r A.Type_level None
 
 let resugar_term_as_op(t:S.term) : option<string> =
   let infix_prim_ops = [
@@ -198,6 +196,9 @@ let resugar_term_as_op(t:S.term) : option<string> =
     (C.eq2_lid     , "==");
     (C.precedes_lid, "<<");
     (C.eq3_lid     , "===");
+    (C.forall_lid  , "forall");
+    (C.exists_lid  , "exists");
+    (C.salloc_lid  , "alloc")
   ] in
   let rec find  f l  = match l with
     | [] -> (None, false)
@@ -206,15 +207,19 @@ let resugar_term_as_op(t:S.term) : option<string> =
   let find_op (x:fv) xs  =
     find (fun p -> fv_eq_lid x (fst p)) xs
   in 
-  match t.n with 
+  match (SS.compress t).n with 
     | Tm_fvar fv -> 
       let (op, b) = find_op fv infix_prim_ops in
       if b then op 
-      else if fv.fv_name.v.str.Contains("dtuple") then Some "dtuple"
-      else if fv.fv_name.v.str.Contains("tuple") then Some "tuple"
-      else if fv.fv_name.v.str.Contains("try_with") then Some "try_with"
-      else if fv.fv_name.v.str.Contains(U.field_projector_prefix) then Some fv.fv_name.v.str
-      else None
+      else 
+        let str = if fv.fv_name.v.nsstr.Length=0 then fv.fv_name.v.str 
+          else fv.fv_name.v.str.Substring(fv.fv_name.v.nsstr.Length+1) in 
+        if str.StartsWith("dtuple") then Some "dtuple"
+        else if str.StartsWith("tuple") then Some "tuple"
+        else if str.StartsWith("try_with") then Some "try_with"
+        else if fv_eq_lid fv C.sread_lid then Some fv.fv_name.v.str
+        //else if fv.fv_name.v.str.Contains(U.field_projector_prefix) then Some fv.fv_name.v.str
+        else None
     | _ -> None
 
 let is_true_pat (p:S.pat) : bool = match p.v with
@@ -244,7 +249,7 @@ let rec resugar_term (t : S.term) : A.term =
       | A.Let(_, [p, t1], t2) ->
         mk (A.Seq(t1, t2))
       | _ -> 
-        failwith "impossible" 
+        failwith "This case is impossible for sequence" 
     in
     match (SS.compress t).n with //always call compress before case-analyzing a S.term
     | Tm_delayed _ ->
@@ -263,9 +268,9 @@ let rec resugar_term (t : S.term) : A.term =
     | Tm_fvar fv -> //a top-level identifier, may be lowercase or upper case
       //should be A.Var if lowercase
       //and A.Name if uppercase
-      // TODO: Projector, Dscrim are they turn into Tm_fvar??
       let a = fv.fv_name.v in
-      let s = a.str in 
+      let s = if fv.fv_name.v.nsstr.Length=0 then a.str 
+          else a.str.Substring(fv.fv_name.v.nsstr.Length+1) in 
       if (lid_equals a C.assert_lid 
             || lid_equals a C.assume_lid
             || Char.uppercase (String.get s 0) <> String.get s 0) then
@@ -314,6 +319,7 @@ let rec resugar_term (t : S.term) : A.term =
       mk (A.Abs(patterns, body))
 
     | Tm_arrow(xs, body) ->
+      let xs, body = SS.open_comp xs body in
       let body = resugar_comp body in
       //let xs, body = SS.open_term xs body in
       let xs = xs |> List.map (fun (b, qual) -> resugar_bv_as_binder b t.pos) in
@@ -326,15 +332,16 @@ let rec resugar_term (t : S.term) : A.term =
 
     | Tm_refine(b, e) ->
       (* bv * term -> binder * term *)
+      let b, e = SS.open_bv b e in 
       let b = resugar_bv_as_binder b t.pos in
       mk (A.Refine(b, resugar_term e))
 
     | Tm_app(e, args) ->
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
-      let args = args |> List.map (fun (e, qual) ->
-            resugar_term e) in
       begin match resugar_term_as_op e with
         | None->
+          let args = args |> List.map (fun (e, qual) ->
+            resugar_term e) in
           let e = resugar_term e in
           let rec aux e = function
             | [] -> e
@@ -344,6 +351,8 @@ let rec resugar_term (t : S.term) : A.term =
           aux e args
 
         | Some "tuple" ->
+          let args = args |> List.map (fun (e, qual) ->
+            resugar_term e) in
           let rec aux e = function
             | [] -> e
             | hd::tl ->
@@ -352,18 +361,92 @@ let rec resugar_term (t : S.term) : A.term =
           let e = mk(A.Op("*", [args.Head; args.Tail.Head])) in
           aux e args.Tail.Tail
 
-        | Some "dtuple" -> (* resugar to Sum(binders*term) *)
-          failwith "not implemented yet"
+        | Some "dtuple" -> 
+          (* this is desugared from Sum(binders*term) *)
+          let rec last = function
+            | hd :: [] -> hd
+            | hd :: tl -> last tl
+            | _ -> failwith "Empty list." in
+          let body, _ = last args in
+          let binders, body = match (SS.compress body).n with
+            | Tm_abs(xs, body, _) ->
+                let xs, body = SS.open_term xs body in
+                let xs = xs |> List.map (fun (b, qual) -> resugar_bv_as_binder b t.pos) in 
+                let body = resugar_term body in
+                xs, body
+            | _ ->
+              [], resugar_term body in
+          mk (A.Sum(binders, body))
 
-        | Some field_projector when (U.field_projector_contains_constructor field_projector) ->
+        (*| Some field_projector when (U.field_projector_contains_constructor field_projector) ->
           (* get the field name from the fvar *)
+          let args = args |> List.map (fun (e, qual) ->
+            resugar_term e) in
           let f = lid_of_path [field_projector] t.pos in
           mk (A.Project(args.Head, f))
+        *)
+
+        | Some ref_read when (ref_read = C.sread_lid.str) ->
+          let (t, _) = args.Head in
+          begin match (SS.compress t).n with
+            | Tm_fvar fv when (U.field_projector_contains_constructor fv.fv_name.v.str) ->
+              let f = lid_of_path [fv.fv_name.v.str] t.pos in
+              mk (A.Project(resugar_term t, f))
+            | Tm_fvar fv when (BU.starts_with fv.fv_name.v.str I.reserved_prefix) ->
+              mk (A.Discrim(lid_of_path [fv.fv_name.v.str] t.pos))
+            | _ -> resugar_term t
+          end
 
         | Some "try_with" ->
-          failwith "not implemented yet"
+          let body, handler = match args with
+            | [(a1, _);(a2, _)] -> a1, a2
+            | _ -> failwith("wrong arguments to try_with") in
+          (* where a1 and a1 is Tm_abs(Tm_match)) *)
+          let decomp term = match (term.n) with
+            | Tm_abs(x, e, _) -> 
+              let x, e = SS.open_term x e in
+              e
+            | _ -> failwith("unexpected") in
+          let body = resugar_term (decomp body) in
+          let handler = resugar_term (decomp handler) in
+          let e = match (body.tm) with 
+            | A.Match(e, [(_,_,b)]) -> b
+            | _ -> failwith("unexpected body format") in
+          let branches = match (handler.tm) with
+            | A.Match(e, branches) -> branches
+            | _ -> failwith("unexpected handler format") in
+          mk (A.TryWith(e, branches))
+
+        | Some op when op = "forall" || op = "exists" ->
+          (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list<args>)*)
+          let (body, _) = args.Head in
+          begin match (SS.compress body).n with
+            | Tm_abs(xs, body, _) ->
+                let xs, body = SS.open_term xs body in
+                let xs = xs |> List.map (fun (b, qual) -> resugar_bv_as_binder b t.pos) in 
+                let pats, body = match (SS.compress body).n with
+                  | Tm_meta(e, m) ->
+                    let body = resugar_term e in
+                    let resugar_pats pats = List.map (fun es -> es |> List.map (fun (e, _) -> resugar_term e)) pats in
+                    let pats = match m with 
+                      | Meta_pattern pats -> resugar_pats pats
+                      | _ -> failwith "wrong pattern format for QForall" 
+                    in
+                    pats, body
+                  | _ -> [], resugar_term body
+                in
+                if op = "forall" then mk (A.QForall(xs, pats, body)) else mk (A.QExists(xs, pats, body))   
+                    
+            | _ -> failwith "wrong format to QForall"
+          end
+
+        | Some "alloc" ->
+          let (e, _ ) = args.Head in
+          resugar_term e
 
         | Some op ->
+          let args = args |> List.map (fun (e, qual) ->
+            resugar_term e) in
           mk (A.Op(op, args))
       end
     
@@ -388,42 +471,82 @@ let rec resugar_term (t : S.term) : A.term =
             resugar_comp n in
       mk (A.Ascribed(resugar_term e, term))
 
-    | Tm_let _ ->
-      failwith "Not yet implemented"
-
+    | Tm_let((is_rec, bnds), body) ->
+      let mk_pat a = A.mk_pattern a t.pos in
+      let resugar_one_binding bnd = 
+        let binders, term, is_pat_app = match (SS.compress bnd.lbdef).n with
+          | Tm_abs(b, t, _) -> 
+            let b, t = SS.open_term b t in
+            b, t, true
+          | _ -> [], bnd.lbdef, false
+        in 
+        let pat, term = match bnd.lbname with
+          | Inr fv -> mk_pat (A.PatName fv.fv_name.v), term
+          | Inl bv -> 
+            let bv, term = SS.open_bv bv term in 
+            mk_pat (A.PatVar (bv_as_unique_ident bv, None)), term
+        in
+        if is_pat_app then
+          let args = binders |> List.map (fun (bv, _) -> mk_pat(A.PatVar (bv_as_unique_ident bv, None))) in
+          (mk_pat (A.PatApp (pat, args)), resugar_term term)
+        else
+          (pat, resugar_term term)
+      in
+      let bnds = List.map (resugar_one_binding) bnds in
+      let body = resugar_term body in
+      mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
     | Tm_uvar _ ->
-      failwith "This case is impossible since it is not created in desugar?"
+      failwith "This case is impossible since it is not created in desugar"
 
     | Tm_meta(e, m) ->
        let resugar_meta_desugared = function
           | Data_app ->
-              failwith "Not yet implemented"
+              begin match (SS.compress e).n with
+                | Tm_app(head, args) ->
+                    let rec aux h = match ((SS.compress h).n) with
+                      | Tm_fvar fv -> lid_of_fv fv, []
+                      | Tm_uinst(h, u) -> 
+                        let h, l = aux h in
+                        h, l@u
+                      | _ -> failwith "wrong Data_app head format" 
+                    in
+                    let head, universes = aux head in
+                    let universes = List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes in
+                    let args = List.map (fun (t, _) -> (resugar_term t, A.Nothing)) args in
+                    mk (A.Construct(head, args@universes))
+                | _ -> failwith "wrong Data_app format"
+              end
           | Sequence ->
               let term = resugar_term e in
               resugar_sequence term
-          | Primop ->
-              failwith "Not yet implemented"
-          | Masked_effect ->
-              failwith "Not yet implemented"
-          | Meta_stmt_pat ->
-              failwith "Not yet implemented"
+          | Primop (* doesn't seem to be generated by desugar *)
+          | Masked_effect (* doesn't seem to be generated by desugar *)
+          | Meta_smt_pat -> (* nothing special, just resugar the term *)
+              resugar_term e
           | Mutable_alloc ->
-              failwith "Not yet implemented"
+              let term = resugar_term e in
+              begin match term.tm with
+                | A.Let(A.NoLetQualifier,l,t) -> mk (A.Let(A.Mutable, l, t))
+                | _ -> failwith "mutable_alloc should have let term with no qualifier"
+              end
           | Mutable_rval ->
-              failwith "Not yet implemented" in
+              let fv = S.lid_as_fv C.sread_lid Delta_constant None in
+              begin match (SS.compress e).n with 
+                | Tm_app({n=Tm_fvar fv}, [(term, _)])-> resugar_term term
+                | _ -> failwith "mutable_rval should have app term"
+              end
+      in
       begin match m with
-      | Meta_pattern _ ->
-          failwith "Not yet implemented"
-      | Meta_named _ ->
-          failwith "Not yet implemented"
-      | Meta_labeled _ ->
-          failwith "Not yet implemented"
+      | Meta_pattern pats ->
+          failwith "This case is impossible, if Forall and Exist is properly resugared"
+      | Meta_labeled (l, _, p) ->
+          mk (A.Labeled(resugar_term e, l, p))
       | Meta_desugared i -> 
           resugar_meta_desugared i
-      | Meta_monadic _ ->
-          failwith "Not yet implemented"
+      | Meta_named _ 
+      | Meta_monadic _ 
       | Meta_monadic_lift _ -> 
-          failwith "Not yet implemented"
+          failwith "cases not generated by desugar"
       end
     
     | Tm_unknown _ -> mk A.Wild
@@ -476,4 +599,13 @@ and resugar_comp (c:S.comp) : A.term =
     let decrease = aux [] c.flags in
     mk (A.Construct(c.effect_name, decrease@args))
     
-    
+ and resugar_bv_as_binder (x:S.bv) r: A.binder =
+  let e = resugar_term x.sort in
+  match (e.tm) with 
+    | A.Wild ->
+        A.mk_binder (A.Variable(bv_as_unique_ident x)) r A.Type_level None
+    | _ ->
+        if (S.is_null_bv x) then
+          A.mk_binder (A.NoName(e)) r A.Type_level None
+        else 
+          A.mk_binder (A.Annotated(bv_as_unique_ident x, e)) r A.Type_level None
