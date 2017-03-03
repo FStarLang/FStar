@@ -503,6 +503,10 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
     else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
   if Options.log_queries() then query_logging.append_to_log input;
-  enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
-
-
+  let input_plus = if Options.log_queries() then
+                     "(set-option :smt.search_log \"" ^
+                     (replace_string (query_logging.log_file_name()) "smt2" "log.smt2") ^
+                     "\")\n"
+                     else ""
+                     ^ input in
+  enqueue fresh ({job=z3_job fresh label_messages input_plus; callback=cb})
