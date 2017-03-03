@@ -326,7 +326,7 @@ let is_upper (c:char) = 'A' <= c && c <= 'Z'
 let substring_from (s:string) i = s.Substring(i)
 let substring (s:string) i j = s.Substring(i, j)
 let replace_char (s:string) (c1:char) (c2:char) = s.Replace(c1,c2)
-let replace_string (s:string) (s1:string) (s2:string) = s.Replace(s1, s2)
+let replace_chars (s:string) (c:char) (by:string) = s.Replace(String.of_char c,by)
 let hashcode (s:string) = s.GetHashCode()
 let compare (s1:string) (s2:string) = s1.CompareTo(s2)
 let splitlines (s:string) = Array.toList (s.Split([|Environment.NewLine;"\n"|], StringSplitOptions.None))

@@ -193,7 +193,7 @@ val substring_from: string -> int -> string
 (* Second argument is a length, not an index. *)
 val substring: string -> int -> int -> string
 val replace_char: string -> char -> char -> Tot<string>
-val replace_string: string -> string -> string -> Tot<string>
+val replace_chars: string -> char -> string -> Tot<string>
 val hashcode: string -> Tot<int>
 val compare: string -> string -> Tot<int>
 val splitlines: string -> Tot<list<string>>
