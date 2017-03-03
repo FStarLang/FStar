@@ -1,5 +1,5 @@
 [
-  "P&Ô\u0003\u00049h/r3@›\u0004¥_$",
+  "åæuÙ\u0004…ÛÖ\u0016,Ý3\u0004còH",
   [
     [ "FStar.List.Tot.Base.isEmpty", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -289,6 +289,22 @@
         "@query", "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
         "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0
+    ],
+    [
+      "FStar.List.Tot.Base.memP",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.l_False",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
     ],
@@ -714,6 +730,21 @@
         "token_correspondence_FStar.List.Tot.Base.sortWith.fuel_instrumented",
         "token_correspondence_Prims.op_LessThan",
         "typing_FStar.List.Tot.Base.partition"
+      ],
+      0
+    ],
+    [
+      "FStar.List.Tot.Base.strict_prefix_of",
+      1,
+      4,
+      4,
+      [
+        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.l_False",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.l_False",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
     ]

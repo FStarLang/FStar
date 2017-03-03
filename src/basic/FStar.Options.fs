@@ -21,7 +21,6 @@ open FStar.All
 open FStar
 open FStar.Util
 open FStar.Getopt
-open FStar.Version
 
 type debug_level_t =
   | Low
@@ -222,6 +221,7 @@ let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    
 let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
+
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
@@ -270,9 +270,16 @@ let include_path_base_dirs =
 let universe_include_path_base_dirs =
   ["/ulib"; "/lib/fstar"]
 
+// See comment in the interface file
+let _version = FStar.Util.mk_ref ""
+let _platform = FStar.Util.mk_ref ""
+let _compiler = FStar.Util.mk_ref ""
+let _date = FStar.Util.mk_ref ""
+let _commit = FStar.Util.mk_ref ""
+
 let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
-                                  version platform compiler date commit)
+                                  !_version !_platform !_compiler !_date !_commit)
 
 let display_usage_aux specs =
   Util.print_string "fstar.exe [options] file[s]\n";

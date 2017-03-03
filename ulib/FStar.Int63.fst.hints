@@ -1,5 +1,5 @@
 [
-  "ÎD'&û~‘nwÜ}S\r-–L",
+  "˘ê.§5c3\u001f&\u0002\n˛’g\\¡",
   [
     [
       "FStar.Int63.t'",
@@ -62,6 +62,42 @@
     [
       "FStar.Int63.v",
       1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Int63.n",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "FStar.Int63.v_inj",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Int63.t", "equation_FStar.Int63.v",
+        "equation_FStar.List.Tot.Base.test_sort", "equation_Prims._assert",
+        "fuel_guarded_inversion_FStar.Int63.t_",
+        "function_token_typing_FStar.List.Tot.Base.test_sort",
+        "proj_equation_FStar.Int63.Mk_v"
+      ],
+      0
+    ],
+    [
+      "FStar.Int63.v_inj",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Int63.n",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "FStar.Int63.v_inj",
+      3,
       2,
       1,
       [

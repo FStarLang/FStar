@@ -64,9 +64,11 @@ let lock () = ()
 let release () = ()
 let sleep n = Thread.delay ((Z.to_float n) /. 1000.)
 
-let monitor_enter _ = ()
-let monitor_exit _ = ()
-let monitor_wait n = Thread.delay (0.01)
+let mlock = Mutex.create ()
+
+let monitor_enter _ = Mutex.lock mlock
+let monitor_exit _ = Mutex.unlock mlock
+let monitor_wait _ = ()
 let monitor_pulse _ = ()
 let current_tid _ = Z.zero
 
@@ -77,6 +79,52 @@ let atomically =
 
 let spawn f =
   let _ = Thread.create f () in ()
+
+let write_input in_write input =
+  output_string in_write input;
+  flush in_write
+
+(*let cnt = ref 0*)
+
+let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
+  (*let fc = open_out ("tmp/q"^(string_of_int !cnt)) in
+  output_string fc input;
+  close_out fc;*)
+  let cmd = prog^" "^args in
+  let (to_chd_r, to_chd_w) = Unix.pipe () in
+  let (from_chd_r, from_chd_w) = Unix.pipe () in
+  Unix.set_close_on_exec to_chd_w;
+  Unix.set_close_on_exec from_chd_r;
+  let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
+  (*let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; ("run.sh "^(string_of_int (!cnt)))^" | " ^ cmd |]*)
+                               to_chd_r from_chd_w Unix.stderr
+  in
+  (*cnt := !cnt +1;*)
+  Unix.close from_chd_w;
+  Unix.close to_chd_r;
+  let cin = Unix.in_channel_of_descr from_chd_r in
+  let cout = Unix.out_channel_of_descr to_chd_w in
+
+  (* parallel reading thread *)
+  let out = Buffer.create 16 in
+  let rec read_out _ =
+    let s, eof = (try
+                    BatString.trim (input_line cin), false
+                  with End_of_file ->
+                    Buffer.add_string out ("\nkilled\n") ; "", true) in
+    if not eof then
+      if s = "Done!" then ()
+      else (Buffer.add_string out (s ^ "\n"); read_out ())  in
+  let child_thread = Thread.create (fun _ -> read_out ()) () in
+
+  (* writing to z3 *)
+  write_input cout input;
+  close_out cout;
+
+  (* waiting for z3 to finish *)
+  Thread.join child_thread;
+  close_in cin;
+  Buffer.contents out
 
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
   let command = prog^" "^args in
@@ -89,15 +137,16 @@ let ask_process (p:proc) (stdin:string) : string =
   let out = Buffer.create 16 in
 
   let rec read_out _ =
-    try
-      let s = BatString.trim (input_line p.inc) in
+    let s, eof = (try
+                    BatString.trim (input_line p.inc), false
+                  with End_of_file ->
+                    Buffer.add_string out ("\nkilled\n") ; "", true) in
+    if not eof then
       if s = "Done!" then ()
       else (Buffer.add_string out (s ^ "\n"); read_out ())
-    with End_of_file -> Buffer.add_string out ("\nkilled\n")
   in
 
   let child_thread = Thread.create (fun _ -> read_out ()) () in
-
   output_string p.outc stdin;
   flush p.outc;
   Thread.join child_thread;
@@ -292,8 +341,8 @@ let substring_from s index = BatString.tail s (Z.to_int index)
 let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
 let replace_char (s:string) (c1:char) (c2:char) =
   BatString.map (fun c -> if c = c1 then c2 else c) s
-let replace_string (s:string) (s1:string) (s2:string) =
-  BatString.rev (BatString.nreplace ~str:(BatString.rev s) ~sub:s1 ~by:s2)
+let replace_chars (s:string) (c:char) (by:string) =
+  BatString.replace_chars (function c -> by | x -> BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let splitlines s = BatString.nsplit s "\n"
@@ -478,11 +527,16 @@ let forall_exists rel l1 l2 =
 let multiset_equiv rel l1 l2 =
   BatList.length l1 = BatList.length l2 && forall_exists rel l1 l2
 let take p l =
-    let rec take_aux acc = function
-        | [] -> l, []
-        | x::xs when p x -> take_aux (x::acc) xs
-        | x::xs -> List.rev acc, x::xs
-    in take_aux [] l
+  let rec take_aux acc = function
+    | [] -> l, []
+    | x::xs when p x -> take_aux (x::acc) xs
+    | x::xs -> List.rev acc, x::xs
+  in take_aux [] l
+
+let rec fold_flatten f acc l =
+  match l with
+  | [] -> acc
+  | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (xs' @ xs)
 
 let add_unique f x l =
   if for_some (f x) l then

@@ -144,7 +144,7 @@ let tc_one_file dsenv env pre_fn fn : list<(Syntax.modul * int)> //each module a
   | [m] when (Options.should_verify m.name.str //if we're verifying this module
               && (FStar.Options.record_hints() //and if we're recording or using hints
                   || FStar.Options.use_hints())) ->
-    SMT.with_hints_db fn check_mods
+    SMT.with_hints_db (FStar.Parser.ParseIt.find_file fn) check_mods
   | _ -> check_mods() //don't add a hints file for modules that are not actually verified
 
 (***********************************************************************)
