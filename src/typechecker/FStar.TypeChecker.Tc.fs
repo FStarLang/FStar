@@ -99,18 +99,6 @@ let monad_signature env m s =
     end
   | _ -> fail()
 
-let open_univ_vars uvs binders c =
-    match binders with
-        | [] ->
-          let uvs, c = SS.open_univ_vars_comp uvs c in
-          uvs, [], c
-        | _ ->
-          let t' = U.arrow binders c in
-          let uvs, t' = SS.open_univ_vars uvs t' in
-          match (SS.compress t').n with
-            | Tm_arrow(binders, c) -> uvs, binders, c
-            | _ -> failwith "Impossible"
-
 let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
   let effect_params_un, signature_un, opening = SS.open_term' ed.binders ed.signature in
@@ -989,7 +977,9 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
         then check_and_gen env t (fst (U.type_u()))
         else
             let uvs, t = SS.open_univ_vars uvs t in
-            uvs, SS.close_univ_vars uvs  <| tc_check_trivial_guard env t (fst (U.type_u()))
+            let t = tc_check_trivial_guard env t (fst (U.type_u())) in
+            let t = N.normalize [N.NoFullNorm; N.Beta] env t in
+            uvs, SS.close_univ_vars uvs t
     in
     let se = Sig_declare_typ(lid, uvs, t, quals, r) in
     let env = Env.push_sigelt env se in
