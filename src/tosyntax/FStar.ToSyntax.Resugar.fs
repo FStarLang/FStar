@@ -330,11 +330,12 @@ let rec resugar_term (t : S.term) : A.term =
           aux body tl in
       aux body xs
 
-    | Tm_refine(b, e) ->
+    | Tm_refine(x, phi) ->
       (* bv * term -> binder * term *)
-      let b, e = SS.open_bv b e in 
+      let x, phi = SS.open_term [S.mk_binder x] phi in
+      let (b, _) = x.Head in 
       let b = resugar_bv_as_binder b t.pos in
-      mk (A.Refine(b, resugar_term e))
+      mk (A.Refine(b, resugar_term phi))
 
     | Tm_app(e, args) ->
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
@@ -483,7 +484,8 @@ let rec resugar_term (t : S.term) : A.term =
         let pat, term = match bnd.lbname with
           | Inr fv -> mk_pat (A.PatName fv.fv_name.v), term
           | Inl bv -> 
-            let bv, term = SS.open_bv bv term in 
+            let x, term = SS.open_term [S.mk_binder bv] term in
+            let (bv, _) = x.Head in 
             mk_pat (A.PatVar (bv_as_unique_ident bv, None)), term
         in
         if is_pat_app then
@@ -495,6 +497,7 @@ let rec resugar_term (t : S.term) : A.term =
       let bnds = List.map (resugar_one_binding) bnds in
       let body = resugar_term body in
       mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
+           
     | Tm_uvar _ ->
       failwith "This case is impossible since it is not created in desugar"
 
