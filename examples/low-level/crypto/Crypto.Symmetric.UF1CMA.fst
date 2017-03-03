@@ -83,6 +83,7 @@ let akey_gen r i =
   else None
 
 
+#set-options "--z3rlimit 256"
 val akey_coerce: r:erid -> i:id -> kb:lbuffer (UInt32.v (skeylen i)) -> ST (akey r i)
   (requires (fun h -> live h kb))
   (ensures  (fun h0 k h1 ->
@@ -101,6 +102,7 @@ let akey_coerce r i kb =
     lemma_reveal_modifies_1 sk h1 h2;
     Some sk
   else None
+#reset-options
 
 (** One-time MAC instance *)
 type id = MAC.id

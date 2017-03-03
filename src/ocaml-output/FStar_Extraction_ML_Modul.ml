@@ -809,10 +809,5 @@ let extract :
                 [FStar_Extraction_ML_Syntax.MLLib
                    [(name, (Some ([], mlm)),
                       (FStar_Extraction_ML_Syntax.MLLib []))]]))
-           else
-             ((let _0_672 =
-                 FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name
-                  in
-               FStar_Util.print1 "Skipped module %s\n" _0_672);
-              (g, [])))
+           else (g, []))
   

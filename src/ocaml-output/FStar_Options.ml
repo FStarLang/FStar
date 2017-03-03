@@ -1121,9 +1121,15 @@ let hint_info : Prims.unit -> Prims.bool =
   fun uu____1779  -> get_hint_info () 
 let indent : Prims.unit -> Prims.bool = fun uu____1782  -> get_indent () 
 let initial_fuel : Prims.unit -> Prims.int =
-  fun uu____1785  -> get_initial_fuel () 
+  fun uu____1785  ->
+    let _0_125 = get_initial_fuel ()  in
+    let _0_124 = get_max_fuel ()  in Prims.min _0_125 _0_124
+  
 let initial_ifuel : Prims.unit -> Prims.int =
-  fun uu____1788  -> get_initial_ifuel () 
+  fun uu____1788  ->
+    let _0_127 = get_initial_ifuel ()  in
+    let _0_126 = get_max_ifuel ()  in Prims.min _0_127 _0_126
+  
 let inline_arith : Prims.unit -> Prims.bool =
   fun uu____1791  -> get_inline_arith () 
 let interactive : Prims.unit -> Prims.bool = fun uu____1794  -> get_in () 
@@ -1143,13 +1149,13 @@ let no_default_includes : Prims.unit -> Prims.bool =
   fun uu____1824  -> get_no_default_includes () 
 let no_extract : Prims.string -> Prims.bool =
   fun s  ->
-    let _0_124 = get_no_extract ()  in
-    FStar_All.pipe_right _0_124 (FStar_List.contains s)
+    let _0_128 = get_no_extract ()  in
+    FStar_All.pipe_right _0_128 (FStar_List.contains s)
   
 let no_location_info : Prims.unit -> Prims.bool =
   fun uu____1831  -> get_no_location_info () 
 let norm_then_print : Prims.unit -> Prims.bool =
-  fun uu____1834  -> let _0_125 = get_print_before_norm ()  in _0_125 = false 
+  fun uu____1834  -> let _0_129 = get_print_before_norm ()  in _0_129 = false 
 let output_dir : Prims.unit -> Prims.string Prims.option =
   fun uu____1838  -> get_odir () 
 let print_bound_var_types : Prims.unit -> Prims.bool =
@@ -1187,7 +1193,7 @@ let verify_all : Prims.unit -> Prims.bool =
 let verify_module : Prims.unit -> Prims.string Prims.list =
   fun uu____1894  -> get_verify_module () 
 let warn_cardinality : Prims.unit -> Prims.bool =
-  fun uu____1897  -> let _0_126 = get_cardinality ()  in _0_126 = "warn" 
+  fun uu____1897  -> let _0_130 = get_cardinality ()  in _0_130 = "warn" 
 let warn_default_effects : Prims.unit -> Prims.bool =
   fun uu____1900  -> get_warn_default_effects () 
 let warn_top_level_effects : Prims.unit -> Prims.bool =
