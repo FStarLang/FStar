@@ -20,14 +20,14 @@ let generate: FStar_Parser_ParseIt.filename Prims.list -> Prims.unit =
                         comments)) (FStar_List.rev comments) moduls in
           let left_over_doc =
             FStar_Pprint.concat
-              (let _0_714 =
-                 let _0_713 =
-                   let _0_712 =
+              (let _0_713 =
+                 let _0_712 =
+                   let _0_711 =
                      FStar_Parser_ToDocument.comments_to_document
                        leftover_comments in
-                   [_0_712] in
-                 FStar_Pprint.hardline :: _0_713 in
-               FStar_Pprint.hardline :: _0_714) in
+                   [_0_711] in
+                 FStar_Pprint.hardline :: _0_712 in
+               FStar_Pprint.hardline :: _0_713) in
           FStar_Pprint.pretty_out_channel (FStar_Util.float_of_string "1.0")
             (Prims.parse_int "100") left_over_doc FStar_Util.stdout in
     FStar_List.iter parse_and_indent filenames
