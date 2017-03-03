@@ -341,7 +341,7 @@ let modifies_buf_and_ref (#a:Type) (#b:Type) (buf:Buffer.buffer a) (ref:referenc
       (frameOf b == rid /\ live h b /\ disjoint b buf
       /\ disjoint_ref_1 b (HS.as_aref ref)) ==> equal h b h' b))
 
-#set-options "--z3rlimit 256"
+#set-options "--z3rlimit 512"
 
 // update [was add]; could add finalize (for POLY1305 when last block < 16).
 val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
