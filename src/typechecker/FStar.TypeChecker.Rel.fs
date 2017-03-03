@@ -1442,16 +1442,17 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard =
                         if problem.relation = EQ
-                        then U.mk_eq tun tun t1 t2
+                        then let _, tt, _ = env.type_of ({env with lax=true; expected_typ=None}) t1 in
+                             U.mk_eq2 (env.universe_of env tt) tt t1 t2
                         else let has_type_guard t1 t2 =
                                 match problem.element with
                                     | Some t -> U.mk_has_type t1 t t2
                                     | None ->
                                     let x = S.new_bv None t1 in
                                     U.mk_forall x (U.mk_has_type t1 (S.bv_to_name x) t2) in
-                            if problem.relation = SUB
-                            then has_type_guard t1 t2
-                            else has_type_guard t2 t1 in
+                             if problem.relation = SUB
+                             then has_type_guard t1 t2
+                             else has_type_guard t2 t1 in
                     solve env (solve_prob orig (Some guard) [] wl)
                 else giveup env "head mismatch" orig
 
@@ -2102,7 +2103,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               if BU.set_is_empty uv1 && BU.set_is_empty uv2 //and we don't have any unification variables left to solve within the terms
               then let guard = if U.eq_tm t1 t2 = U.Equal
                                then None
-                               else Some <| U.mk_eq tun tun t1 t2 in
+                               else let env = {env with lax=true; expected_typ=None} in
+                                    let _, tt, _ = env.type_of env t1 in
+                                    Some <| U.mk_eq2 (env.universe_of env tt) tt t1 t2 in
                    solve env (solve_prob orig guard [] wl)
               else rigid_rigid_delta env orig wl head1 head2 t1 t2
          else rigid_rigid_delta env orig wl head1 head2 t1 t2

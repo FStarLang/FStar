@@ -680,8 +680,14 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let y = S.new_bv None res_t in
     let xexp, yexp = S.bv_to_name x, S.bv_to_name y in
     let u_res_t = env.universe_of env res_t in
-    let yret = mk_Tm_app (inst_effect_fun_with [u_res_t] env md_pure md_pure.ret_wp) [S.as_arg res_t; S.as_arg yexp] None res_t.pos in
-    let x_eq_y_yret = mk_Tm_app (inst_effect_fun_with [u_res_t] env md_pure md_pure.assume_p) [S.as_arg res_t; S.as_arg <| U.mk_eq res_t res_t xexp yexp; S.as_arg <| yret] None res_t.pos in
+    let yret =
+        mk_Tm_app (inst_effect_fun_with [u_res_t] env md_pure md_pure.ret_wp)
+                  [S.as_arg res_t; S.as_arg yexp] None res_t.pos in
+    let x_eq_y_yret =
+        mk_Tm_app (inst_effect_fun_with [u_res_t] env md_pure md_pure.assume_p)
+                  [S.as_arg res_t;
+                   S.as_arg <| U.mk_eq2 u_res_t res_t xexp yexp;
+                   S.as_arg <| yret] None res_t.pos in
     let forall_y_x_eq_y_yret =
         mk_Tm_app (inst_effect_fun_with [u_res_t;u_res_t] env md_pure md_pure.close_wp)
                   [S.as_arg res_t;
@@ -798,7 +804,7 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
            let x = S.new_bv (Some t.pos) t in
            let xexp = S.bv_to_name x in
            let ret = U.lcomp_of_comp <| (U.comp_set_flags (return_value env t xexp) [PARTIAL_RETURN]) in
-           let eq = (U.mk_eq t t xexp e) in
+           let eq = U.mk_eq2 (env.universe_of env t) t xexp e in
            let eq_ret = weaken_precondition env ret (NonTrivial eq) in
 
            let c = U.comp_set_flags ((bind e.pos env None (U.lcomp_of_comp c) (Some x, eq_ret)).comp()) (PARTIAL_RETURN::U.comp_flags c) in

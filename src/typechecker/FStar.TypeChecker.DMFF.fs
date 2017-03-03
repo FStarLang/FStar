@@ -406,7 +406,7 @@ let gen_wps_for_free
     | _ ->
         (* TODO: assert that this is a base type. *)
         (* BU.print2 "base, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
-        U.mk_eq t t x y
+        U.mk_untyped_eq2 x y
   in
   let stronger =
     let wp1 = S.gen_bv "wp1" None wp_a in
