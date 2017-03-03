@@ -58,6 +58,15 @@ let new_uvar r binders k =
 (* </new_uvar>                                               *)
 (* --------------------------------------------------------- *)
 
+let mk_eq2 env t1 t2 =
+    (* NS: Rather than introducing a new variable, it would be much preferable
+            to simply compute the type of t1 here.
+            Sadly, it seems to be way too expensive to call env.type_of here.
+    *)
+    let t_type, u = U.type_u () in
+    let tt, _ = new_uvar t1.pos (Env.all_binders env) t_type in
+    U.mk_eq2 u tt t1 t2
+
 (* Instantiation of unification variables *)
 type uvi =
     | TERM of (uvar * typ)    * term
@@ -1442,8 +1451,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard =
                         if problem.relation = EQ
-                        then let _, tt, _ = env.type_of ({env with lax=true; expected_typ=None}) t1 in
-                             U.mk_eq2 (env.universe_of env tt) tt t1 t2
+                        then mk_eq2 env t1 t2
                         else let has_type_guard t1 t2 =
                                 match problem.element with
                                     | Some t -> U.mk_has_type t1 t t2
@@ -2103,9 +2111,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               if BU.set_is_empty uv1 && BU.set_is_empty uv2 //and we don't have any unification variables left to solve within the terms
               then let guard = if U.eq_tm t1 t2 = U.Equal
                                then None
-                               else let env = {env with lax=true; expected_typ=None} in
-                                    let _, tt, _ = env.type_of env t1 in
-                                    Some <| U.mk_eq2 (env.universe_of env tt) tt t1 t2 in
+                               else Some <| mk_eq2 env t1 t2 in
                    solve env (solve_prob orig guard [] wl)
               else rigid_rigid_delta env orig wl head1 head2 t1 t2
          else rigid_rigid_delta env orig wl head1 head2 t1 t2
