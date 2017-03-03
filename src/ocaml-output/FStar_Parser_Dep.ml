@@ -814,7 +814,7 @@ let print_make :
          | (f,deps) ->
              let deps =
                FStar_List.map
-                 (fun s  -> FStar_Util.replace_string s " " "\\ ") deps
+                 (fun s  -> FStar_Util.replace_chars s ' ' "\\ ") deps
                 in
              FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps))
       deps
