@@ -524,89 +524,89 @@ type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
            -> _8:'h
            -> tuple8 'a 'b 'c 'd 'e 'f 'g 'h
 
-(* Concrete syntax (x:a & y:b x & c x y) *)
-unopteq type dtuple3 (a:Type)
-             (b:(a -> GTot Type))
-             (c:(x:a -> b x -> GTot Type)) =
-   | Mkdtuple3:_1:a
-             -> _2:b _1
-             -> _3:c _1 _2
-             -> dtuple3 a b c
+(* (\* Concrete syntax (x:a & y:b x & c x y) *\) *)
+(* unopteq type dtuple3 (a:Type) *)
+(*              (b:(a -> GTot Type)) *)
+(*              (c:(x:a -> b x -> GTot Type)) = *)
+(*    | Mkdtuple3:_1:a *)
+(*              -> _2:b _1 *)
+(*              -> _3:c _1 _2 *)
+(*              -> dtuple3 a b c *)
 
-(* Concrete syntax (x:a & y:b x & z:c x y & d x y z) *)
-unopteq type dtuple4 (a:Type)
-             (b:(x:a -> GTot Type))
-             (c:(x:a -> b x -> GTot Type))
-             (d:(x:a -> y:b x -> z:c x y -> GTot Type)) =
- | Mkdtuple4:_1:a
-           -> _2:b _1
-           -> _3:c _1 _2
-           -> _4:d _1 _2 _3
-           -> dtuple4 a b c d
+(* (\* Concrete syntax (x:a & y:b x & z:c x y & d x y z) *\) *)
+(* unopteq type dtuple4 (a:Type) *)
+(*              (b:(x:a -> GTot Type)) *)
+(*              (c:(x:a -> b x -> GTot Type)) *)
+(*              (d:(x:a -> y:b x -> z:c x y -> GTot Type)) = *)
+(*  | Mkdtuple4:_1:a *)
+(*            -> _2:b _1 *)
+(*            -> _3:c _1 _2 *)
+(*            -> _4:d _1 _2 _3 *)
+(*            -> dtuple4 a b c d *)
 
-(* Concrete syntax (w:a & x:b w & y:c w x & z:d w x y & e w x y z) *)
-unopteq type dtuple5 (a:Type)
-             (b:(w:a -> GTot Type))
-             (c:(w:a -> b w -> GTot Type))
-             (d:(w:a -> x:b w -> y:c w x -> GTot Type))
-             (e:(w:a -> x:b w -> y:c w x -> z:d w x y -> GTot Type)) =
- | Mkdtuple5:_1:a
-           -> _2:b _1
-           -> _3:c _1 _2
-           -> _4:d _1 _2 _3
-           -> _5:e _1 _2 _3 _4
-           -> dtuple5 a b c d e
+(* (\* Concrete syntax (w:a & x:b w & y:c w x & z:d w x y & e w x y z) *\) *)
+(* unopteq type dtuple5 (a:Type) *)
+(*              (b:(w:a -> GTot Type)) *)
+(*              (c:(w:a -> b w -> GTot Type)) *)
+(*              (d:(w:a -> x:b w -> y:c w x -> GTot Type)) *)
+(*              (e:(w:a -> x:b w -> y:c w x -> z:d w x y -> GTot Type)) = *)
+(*  | Mkdtuple5:_1:a *)
+(*            -> _2:b _1 *)
+(*            -> _3:c _1 _2 *)
+(*            -> _4:d _1 _2 _3 *)
+(*            -> _5:e _1 _2 _3 _4 *)
+(*            -> dtuple5 a b c d e *)
 
-(* Concrete syntax (v:a & w:b v & x:c v w & y:d v w x & z:e v w x y & f v w x y z) *)
-unopteq type dtuple6 (a:Type)
-             (b:(v:a -> GTot Type))
-             (c:(v:a -> b v -> GTot Type))
-             (d:(v:a -> w:b v -> x:c v w -> GTot Type))
-             (e:(v:a -> w:b v -> x:c v w -> y:d v w x -> GTot Type))
-             (f:(v:a -> w:b v -> x:c v w -> y:d v w x -> z:e v w x y -> GTot Type)) =
- | Mkdtuple6:_1:a
-           -> _2:b _1
-           -> _3:c _1 _2
-           -> _4:d _1 _2 _3
-           -> _5:e _1 _2 _3 _4
-           -> _6:f _1 _2 _3 _4 _5
-           -> dtuple6 a b c d e f
+(* (\* Concrete syntax (v:a & w:b v & x:c v w & y:d v w x & z:e v w x y & f v w x y z) *\) *)
+(* unopteq type dtuple6 (a:Type) *)
+(*              (b:(v:a -> GTot Type)) *)
+(*              (c:(v:a -> b v -> GTot Type)) *)
+(*              (d:(v:a -> w:b v -> x:c v w -> GTot Type)) *)
+(*              (e:(v:a -> w:b v -> x:c v w -> y:d v w x -> GTot Type)) *)
+(*              (f:(v:a -> w:b v -> x:c v w -> y:d v w x -> z:e v w x y -> GTot Type)) = *)
+(*  | Mkdtuple6:_1:a *)
+(*            -> _2:b _1 *)
+(*            -> _3:c _1 _2 *)
+(*            -> _4:d _1 _2 _3 *)
+(*            -> _5:e _1 _2 _3 _4 *)
+(*            -> _6:f _1 _2 _3 _4 _5 *)
+(*            -> dtuple6 a b c d e f *)
 
-(* Concrete syntax (u:a & v:b u & w:c u v & x:d u v w & y:e u v w x & z:f u v w x y & g u v w x y z) *)
-unopteq type dtuple7 (a:Type)
-             (b:(u:a -> GTot Type))
-             (c:(u:a -> b u -> GTot Type))
-             (d:(u:a -> v:b u -> w:c u v -> GTot Type))
-             (e:(u:a -> v:b u -> w:c u v -> x:d u v w -> GTot Type))
-             (f:(u:a -> v:b u -> w:c u v -> x:d u v w -> y:e u v w x -> GTot Type))
-             (g:(u:a -> v:b u -> w:c u v -> x:d u v w -> y:e u v w x -> z:f u v w x y -> GTot Type)) =
- | Mkdtuple7:_1:a
-           -> _2:b _1
-           -> _3:c _1 _2
-           -> _4:d _1 _2 _3
-           -> _5:e _1 _2 _3 _4
-           -> _6:f _1 _2 _3 _4 _5
-           -> _7:g _1 _2 _3 _4 _5 _6
-           -> dtuple7 a b c d e f g
+(* (\* Concrete syntax (u:a & v:b u & w:c u v & x:d u v w & y:e u v w x & z:f u v w x y & g u v w x y z) *\) *)
+(* unopteq type dtuple7 (a:Type) *)
+(*              (b:(u:a -> GTot Type)) *)
+(*              (c:(u:a -> b u -> GTot Type)) *)
+(*              (d:(u:a -> v:b u -> w:c u v -> GTot Type)) *)
+(*              (e:(u:a -> v:b u -> w:c u v -> x:d u v w -> GTot Type)) *)
+(*              (f:(u:a -> v:b u -> w:c u v -> x:d u v w -> y:e u v w x -> GTot Type)) *)
+(*              (g:(u:a -> v:b u -> w:c u v -> x:d u v w -> y:e u v w x -> z:f u v w x y -> GTot Type)) = *)
+(*  | Mkdtuple7:_1:a *)
+(*            -> _2:b _1 *)
+(*            -> _3:c _1 _2 *)
+(*            -> _4:d _1 _2 _3 *)
+(*            -> _5:e _1 _2 _3 _4 *)
+(*            -> _6:f _1 _2 _3 _4 _5 *)
+(*            -> _7:g _1 _2 _3 _4 _5 _6 *)
+(*            -> dtuple7 a b c d e f g *)
 
-(* Concrete syntax (t:a & u:b t & v:c t u & w:d t u v & x:e t u v w & y:f t u v w x & z:g t u v w x y & h t u v w x y z) *)
-unopteq type dtuple8 (a:Type)
-             (b:(t:a -> GTot Type))
-             (c:(t:a -> b t -> GTot Type))
-             (d:(t:a -> u:b t -> v:c t u -> GTot Type))
-             (e:(t:a -> u:b t -> v:c t u -> w:d t u v -> GTot Type))
-             (f:(t:a -> u:b t -> v:c t u -> w:d t u v -> x:e t u v w -> GTot Type))
-             (g:(t:a -> u:b t -> v:c t u -> w:d t u v -> x:e t u v w -> y:f t u v w x -> GTot Type))
-             (h:(t:a -> u:b t -> v:c t u -> w:d t u v -> x:e t u v w -> y:f t u v w x -> z:g t u v w x y -> GTot Type)) =
- | Mkdtuple8:_1:a
-           -> _2:b _1
-           -> _3:c _1 _2
-           -> _4:d _1 _2 _3
-           -> _5:e _1 _2 _3 _4
-           -> _6:f _1 _2 _3 _4 _5
-           -> _7:g _1 _2 _3 _4 _5 _6
-           -> _8:h _1 _2 _3 _4 _5 _6 _7
-           -> dtuple8 a b c d e f g h
+(* (\* Concrete syntax (t:a & u:b t & v:c t u & w:d t u v & x:e t u v w & y:f t u v w x & z:g t u v w x y & h t u v w x y z) *\) *)
+(* unopteq type dtuple8 (a:Type) *)
+(*              (b:(t:a -> GTot Type)) *)
+(*              (c:(t:a -> b t -> GTot Type)) *)
+(*              (d:(t:a -> u:b t -> v:c t u -> GTot Type)) *)
+(*              (e:(t:a -> u:b t -> v:c t u -> w:d t u v -> GTot Type)) *)
+(*              (f:(t:a -> u:b t -> v:c t u -> w:d t u v -> x:e t u v w -> GTot Type)) *)
+(*              (g:(t:a -> u:b t -> v:c t u -> w:d t u v -> x:e t u v w -> y:f t u v w x -> GTot Type)) *)
+(*              (h:(t:a -> u:b t -> v:c t u -> w:d t u v -> x:e t u v w -> y:f t u v w x -> z:g t u v w x y -> GTot Type)) = *)
+(*  | Mkdtuple8:_1:a *)
+(*            -> _2:b _1 *)
+(*            -> _3:c _1 _2 *)
+(*            -> _4:d _1 _2 _3 *)
+(*            -> _5:e _1 _2 _3 _4 *)
+(*            -> _6:f _1 _2 _3 _4 _5 *)
+(*            -> _7:g _1 _2 _3 _4 _5 _6 *)
+(*            -> _8:h _1 _2 _3 _4 _5 _6 _7 *)
+(*            -> dtuple8 a b c d e f g h *)
 
 let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
 let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
@@ -617,11 +617,11 @@ let fst x = Mktuple2?._1 x
 val snd : ('a * 'b) -> Tot 'b
 let snd x = Mktuple2?._2 x
 
-val dfst : #a:Type -> #b:(a -> GTot Type) -> dtuple2 a b -> Tot a
-let dfst #a #b t = Mkdtuple2?._1 t
+(* val dfst : #a:Type -> #b:(a -> GTot Type) -> dtuple2 a b -> Tot a *)
+(* let dfst #a #b t = Mkdtuple2?._1 t *)
 
-val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2?._1 t))
-let dsnd #a #b t = Mkdtuple2?._2 t
+(* val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2?._1 t)) *)
+(* let dsnd #a #b t = Mkdtuple2?._2 t *)
 
 assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
