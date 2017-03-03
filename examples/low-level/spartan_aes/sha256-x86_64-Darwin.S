@@ -1,8 +1,9 @@
 .text
-.global sha256_main_i_SHA256_Compute64Steps
-sha256_main_i_SHA256_Compute64Steps:
-  mov %rdx, %r9
-  movq %rcx, 100(%rsp)
+.global _sha256_main_i_SHA256_Compute64Steps
+_sha256_main_i_SHA256_Compute64Steps:
+  mov %rsi, %r9
+  movq %rdi, 100(%rsp)
+  mov %rdi, %rcx
   mov $0, %r8d
   mov $0, %r11d
   movl 0 (%rcx), %r11d
@@ -3213,11 +3214,11 @@ sha256_main_i_SHA256_Compute64Steps:
   movl $0, 116(%rsp)
   ret 
 
-.global sha256_main_i_SHA256_ComputeInitialWs
-sha256_main_i_SHA256_ComputeInitialWs:
-  mov %rcx, %r10
-  add %rdx, %r10
-  mov %r8, %r9
+.global _sha256_main_i_SHA256_ComputeInitialWs
+_sha256_main_i_SHA256_ComputeInitialWs:
+  mov %rdi, %r10
+  add %rsi, %r10
+  mov %rdx, %r9
   mov $0, %eax
   mov $0, %ecx
   mov $0, %edx
