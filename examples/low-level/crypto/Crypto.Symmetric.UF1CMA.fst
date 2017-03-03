@@ -83,6 +83,7 @@ let akey_gen r i =
   else None
 
 
+#set-options "--z3rlimit 256"
 val akey_coerce: r:erid -> i:id -> kb:lbuffer (UInt32.v (skeylen i)) -> ST (akey r i)
   (requires (fun h -> live h kb))
   (ensures  (fun h0 k h1 ->
@@ -101,6 +102,7 @@ let akey_coerce r i kb =
     lemma_reveal_modifies_1 sk h1 h2;
     Some sk
   else None
+#reset-options
 
 (** One-time MAC instance *)
 type id = MAC.id
@@ -339,7 +341,7 @@ let modifies_buf_and_ref (#a:Type) (#b:Type) (buf:Buffer.buffer a) (ref:referenc
       (frameOf b == rid /\ live h b /\ disjoint b buf
       /\ disjoint_ref_1 b (HS.as_aref ref)) ==> equal h b h' b))
 
-#set-options "--z3rlimit 256"
+#set-options "--z3rlimit 512"
 
 // update [was add]; could add finalize (for POLY1305 when last block < 16).
 val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
