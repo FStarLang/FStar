@@ -694,7 +694,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
     format. *)
 let print_make (deps: list<(string * list<string>)>): unit =
   List.iter (fun (f, deps) ->
-    let deps = List.map (fun s -> replace_string s " " "\\ ") deps in
+    let deps = List.map (fun s -> replace_chars s ' ' "\\ ") deps in
     Util.print2 "%s: %s\n" f (String.concat " " deps)
   ) deps
 

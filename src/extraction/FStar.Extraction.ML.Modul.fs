@@ -351,6 +351,5 @@ let extract (g:env) (m:modul) : env * list<mllib> =
     BU.print1 "Extracted module %s\n" (Print.lid_to_string m.name);
     g, [MLLib ([name, Some ([], mlm), (MLLib [])])]
   end else begin
-    BU.print1 "Skipped module %s\n" (Print.lid_to_string m.name);
     g, []
   end
