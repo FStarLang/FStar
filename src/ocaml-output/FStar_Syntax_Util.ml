@@ -1514,7 +1514,7 @@ let mk_eq2:
                        let _0_275 = FStar_Syntax_Syntax.as_arg e2 in [_0_275] in
                      _0_277 :: _0_276 in
                    _0_279 :: _0_278 in
-                 (teq, _0_280)))) None _0_281
+                 (eq_inst, _0_280)))) None _0_281
 let mk_has_type t x t' =
   let t_has_type = fvar_const FStar_Syntax_Const.has_type_lid in
   let t_has_type =
