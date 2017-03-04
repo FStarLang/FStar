@@ -398,18 +398,13 @@ let exact (x:name)
             fail (BU.format1 "Variable not found: %s" (Print.bv_to_string x)))
 
 let rewrite (x:name) (e:term) : tac<unit>
-    = let mk_eq x e =
-        mk (Tm_app(S.mk_Tm_uinst U.teq [U_zero], //TODO: should be universe of x.sort
-                          [S.iarg x.sort;
-                           S.as_arg (S.bv_to_name x);
-                           S.as_arg e]))
-           None
-           Range.dummyRange
+    = let mk_eq (env:FStar.TypeChecker.Env.env) x e =
+        U.mk_eq2 (env.universe_of env x.sort) x.sort (S.bv_to_name x) e
      in
      with_cur_goal "rewrite" (fun goal ->
         try let t = Env.lookup_bv goal.context x in
             let sub_goal =
-                {goal with goal_ty=mk_eq x e;
+                {goal with goal_ty=mk_eq goal.context x e;
                            witness=None} in //squashed equality proofs
             let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty} in
             let new_goals = [sub_goal;goal] in
