@@ -51,7 +51,7 @@ let parse fn =
   let filename,lexbuf,line,col = match fn with
     | Inl(f) ->
         check_extension f;
-	      let f' = find_file f in
+        let f' = find_file f in
         (try f', Lexing.from_string (read_file f'), 1, 0
          with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
     | Inr s ->

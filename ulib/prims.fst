@@ -672,6 +672,8 @@ let rec pow2 (x:nat) : Tot pos =
   | 0  -> 1
   | _  -> 2 `op_Multiply` (pow2 (x-1))
 
+let min x y = if x <= y then x else y
+
 let abs (x:int) : Tot int = if x >= 0 then x else -x
 
 assume val string_of_bool: bool -> Tot string

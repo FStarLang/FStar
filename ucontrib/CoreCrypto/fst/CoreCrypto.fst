@@ -7,7 +7,36 @@ effect EXT (a:Type) = ST a
   (requires (fun _ -> True)) 
   (ensures (fun h0 _ h -> modifies_none h0 h))
 
-type hash_alg = | MD5 | SHA1 | SHA224 | SHA256 | SHA384 | SHA512
+(* ------------ Hashing ------------ *) 
+type hash_alg = 
+  | MD5 
+  | SHA1 
+  | SHA224 
+  | SHA256 
+  | SHA384 
+  | SHA512
+
+let hashSize = function
+  | MD5    -> 16
+  | SHA1   -> 20
+  | SHA224 -> 28
+  | SHA256 -> 32
+  | SHA384 -> 48
+  | SHA512 -> 64
+
+(* These implementations are not pure; to be upgraded! *)
+assume val hash : alg:hash_alg -> bytes -> Tot (h:bytes{length h = hashSize alg})
+assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hashSize alg})
+
+(* Digest functions *)
+assume type hash_ctx : Type0 (* SI: or assume_new_abstract_type?*)
+assume val digest_create : hash_alg -> EXT hash_ctx
+assume val digest_update : hash_ctx -> bytes -> EXT unit 
+assume val digest_final : hash_ctx -> EXT bytes  
+
+(* --------------------------- *)
+
+
 type sig_alg = | RSASIG | DSA | ECDSA | RSAPSS
 type block_cipher = | AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
 type stream_cipher = | RC4_128
@@ -20,17 +49,6 @@ let blockSize = function
   | TDES_EDE_CBC -> 8
   | AES_128_CBC  -> 16
   | AES_256_CBC  -> 16
-
-
-let hashSize = function
-  | MD5    -> 16
-  | SHA1   -> 20
-  | SHA224 -> 28
-  | SHA256 -> 32
-  | SHA384 -> 48
-  | SHA512 -> 64
-
-
 
 (* Authenticated Encryption for TLS.  
    Note that their AAD contents depends on the protocol version. *)
@@ -127,15 +145,6 @@ type dh_key = {
 }
 
 (* TODO: revisit the Tot annotations, switch to EXT when appropriate *)
-
-assume val hash : alg:hash_alg -> bytes -> Tot (h:bytes{length h = hashSize alg})
-assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hashSize alg})
-
-(* Digest functions *)
-assume type hash_ctx : Type0 (* SI: or assume_new_abstract_type?*)
-assume val digest_create : hash_alg -> EXT hash_ctx
-assume val digest_update : hash_ctx -> bytes -> EXT unit 
-assume val digest_final : hash_ctx -> EXT bytes  
 
 assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> EXT bytes
 assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> EXT bytes

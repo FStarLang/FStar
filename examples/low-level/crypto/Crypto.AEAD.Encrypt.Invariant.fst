@@ -142,7 +142,7 @@ val lemma_propagate_inv_accumulate
   (requires (enxor_and_maybe_mac maybe_mac aead_st nonce aad plain ct h0 /\
 	     Buffer.modifies_0 h0 h1))
   (ensures  (enxor_and_maybe_mac maybe_mac aead_st nonce aad plain ct h1))
-#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 512 --initial_fuel 0 --max_fuel 2 --initial_ifuel 0 --max_ifuel 2"
 let lemma_propagate_inv_accumulate #i #rw #aadlen #plainlen maybe_mac aead_st nonce aad plain ct h0 h1 =
   let open FStar.Classical in
   Buffer.lemma_reveal_modifies_0 h0 h1;

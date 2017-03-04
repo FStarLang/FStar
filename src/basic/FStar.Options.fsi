@@ -135,3 +135,12 @@ val z3_rlimit                   : unit    -> int
 val z3_seed                     : unit    -> int
 val z3_timeout                  : unit    -> int
 val no_positivity               : unit    -> bool
+
+// HACK ALERT! This is to ensure we have no dependency from Options to Version,
+// otherwise, since Version is regenerated all the time, this invalidates the
+// whole build tree. A classy technique I learned from the OCaml compiler.
+val _version: ref<string>
+val _platform: ref<string>
+val _compiler: ref<string>
+val _date: ref<string>
+val _commit: ref<string>

@@ -187,6 +187,16 @@ let rec mem #a x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
 
+(** Propositional membership (as in Coq). Does not require decidable
+equality. *)
+
+(** [memP x l] holds if, and only if, [x] appears as an
+element of [l]. Similar to: List.In in Coq. *)
+let rec memP (#a: Type) (x: a) (l: list a) : Tot Type0 =
+  match l with
+  | [] -> False
+  | y :: q -> x == y \/ memP x q
+
 (** [contains x l] returns [true] if, and only if, [x] appears as an
 element of [l]. Requires, at type-checking time, the type of elements
 of [l] to have decidable equality. It is equivalent to: [mem x
@@ -431,3 +441,14 @@ let rec sortWith f = function
 
 #set-options "--initial_fuel 4 --initial_ifuel 4"
 private let test_sort = assert (sortWith (compare_of_bool (<)) [3; 2; 1] = [1; 2; 3])
+
+(** A l1 is a strict prefix of l2. *)
+
+let rec strict_prefix_of (#a: Type) (l1 l2: list a)
+: Pure Type0
+  (requires True)
+  (ensures (fun _ -> True))
+  (decreases l2)
+= match l2 with
+  | [] -> False
+  | _ :: q -> l1 == q \/ l1 `strict_prefix_of` q
