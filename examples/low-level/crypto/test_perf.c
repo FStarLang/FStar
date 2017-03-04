@@ -2,6 +2,8 @@
 #include <time.h>
 #include "testutils.h"
 #include "Crypto_AEAD.h"
+#include "Crypto_AEAD_Encrypt.h"
+#include "Crypto_AEAD_Wrappers_CMA.h"
 #include <openssl/evp.h>
 
 #define PLAINLEN (16*1024)

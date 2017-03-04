@@ -21,6 +21,7 @@ verifythis \
 preorders \
 dm4free \
 incl \
+struct \
 micro-benchmarks \
 bytes \
 tactics

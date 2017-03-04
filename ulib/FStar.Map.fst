@@ -1,3 +1,8 @@
+(**
+F* standard library Map module. 
+
+@summary F* stdlib Map module. 
+*)
 module FStar.Map
 open FStar.Set
 open FStar.FunctionalExtensionality

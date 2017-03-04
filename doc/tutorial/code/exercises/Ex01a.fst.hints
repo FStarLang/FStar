@@ -10,6 +10,7 @@
       [ "@query", "assumption_Prims.HasEq_string" ],
       0
     ],
+    [ "Ex01a.read", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex01a.staticChecking",
       1,

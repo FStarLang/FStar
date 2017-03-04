@@ -96,6 +96,18 @@ let lowercase_module_name f =
   | None ->
       raise (Err (Util.format1 "not a valid FStar file: %s\n" f))
 
+//try to convert filename passed from the editor to windows path
+//on cygwin emacs this is required
+let try_convert_file_name_to_windows (s:string) :string =
+  try
+    let _, t_out, _ = run_proc "which" "cygpath" "" in
+    if not (trim_string t_out = "/usr/bin/cygpath") then s
+    else
+      let _, t_out, _ = run_proc "cygpath" ("-m " ^ s) "" in
+      trim_string t_out
+  with
+    | _ -> s
+
 (** List the contents of all include directories, then build a map from long
     names (e.g. a.b) to pairs of filenames (/path/to/A.B.fst). Long names are
     all normalized to lowercase. The first component of the pair is the
@@ -103,6 +115,8 @@ let lowercase_module_name f =
     (if any). *)
 let build_map (filenames: list<string>): map =
   let include_directories = Options.include_path () in
+  //try to convert the cygwin paths to windows paths
+  let include_directories = List.map try_convert_file_name_to_windows include_directories in
   let include_directories = List.map normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
@@ -655,7 +669,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
       (* List stored in the "right" order. *)
       f, deps_as_filenames
     ) as_list
-  ) (smap_keys graph) in
+  ) (FStar.List.sortWith (fun x y -> String.compare x y) (smap_keys graph)) in
   let topologically_sorted = List.collect must_find_r !topologically_sorted in
 
   List.iter (fun (m, r) ->
@@ -680,7 +694,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
     format. *)
 let print_make (deps: list<(string * list<string>)>): unit =
   List.iter (fun (f, deps) ->
-    let deps = List.map (fun s -> replace_string s " " "\\ ") deps in
+    let deps = List.map (fun s -> replace_chars s ' ' "\\ ") deps in
     Util.print2 "%s: %s\n" f (String.concat " " deps)
   ) deps
 

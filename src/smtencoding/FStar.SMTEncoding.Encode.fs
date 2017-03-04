@@ -1804,10 +1804,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
      | Sig_inductive_typ(t, _, tps, k, _, datas, quals, _) ->
         let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
-        let constructor_or_logic_type_decl c =
+        let constructor_or_logic_type_decl (c:constructor_t) =
             if is_logical
             then let name, args, _, _, _ = c in
-                 [Term.DeclFun(name, args |> List.map snd, Term_sort, None)]
+                 [Term.DeclFun(name, args |> List.map (fun (_, sort, _) -> sort), Term_sort, None)]
             else constructor_to_decl c in
 
         let inversion_axioms tapp vars =
@@ -1867,7 +1867,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let guard = mk_and_l guards in
         let tapp = mkApp(tname, List.map mkFreeV vars) in
         let decls, env =
-            let tname_decl = constructor_or_logic_type_decl(tname, vars |> List.map (fun (n, s) -> (tname^n,s)), Term_sort, varops.next_id(), false) in
+            //See: https://github.com/FStarLang/FStar/commit/b75225bfbe427c8aef5b59f70ff6d79aa014f0b4
+            //See: https://github.com/FStarLang/FStar/issues/349
+            let tname_decl = constructor_or_logic_type_decl (tname,
+                                                             vars |> List.map (fun (n, s) -> (tname^n,s,false)), //The false here is extremely important; it makes sure that type-formers are not injective
+                                                             Term_sort,
+                                                             varops.next_id(),
+                                                             false) in
             let tok_decls, env = match vars with
                 | [] -> [], push_free_var env t tname (Some <| mkApp(tname, []))
                 | _ ->
@@ -1908,8 +1914,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let fuel_var, fuel_tm = fresh_fvar "f" Fuel_sort in
         let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
         let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
-        let projectors = names |> List.map (fun x -> mk_term_projector_name d x, Term_sort) in
-        let datacons = (ddconstrsym, projectors, Term_sort, varops.next_id(), true) |> Term.constructor_to_decl in
+        let fields = names |> List.mapi (fun n x ->
+            let projectible = true in
+//            let projectible = n >= n_tps in //Note: the type parameters are not projectible,
+                                            //i.e., (MkTuple2 int bool 0 false) is only injective in its last two arguments
+                                            //This allows the term to both have type (int * bool)
+                                            //as well as (nat * bool), without leading us to conclude that int=nat
+                                            //Also see https://github.com/FStarLang/FStar/issues/349
+            mk_term_projector_name d x, Term_sort, projectible) in
+        let datacons = (ddconstrsym, fields, Term_sort, varops.next_id(), true) |> Term.constructor_to_decl in
         let app = mk_Apply ddtok_tm vars in
         let guard = mk_and_l guards in
         let xvars = List.map mkFreeV vars in
@@ -1934,9 +1947,24 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 | Tm_fvar fv ->
                   let encoded_head = lookup_free_var_name env' fv.fv_name in
                   let encoded_args, arg_decls = encode_args args env' in
-                  let _, arg_vars, eqns = List.fold_left (fun (env, arg_vars, eqns) arg ->
+                  let guards_for_parameter (arg:term) xv =
+                    let fv = match arg.tm with
+                             | FreeV fv -> fv
+                             | _ -> failwith "Impossible: parameter must be a variable" in
+                    let guards = guards |> List.collect (fun g ->
+                        if List.contains fv (Term.free_variables g)
+                        then [Term.subst g fv xv]
+                        else []) in
+                    mk_and_l guards
+                  in
+                  let _, arg_vars, elim_eqns_or_guards, _ = List.fold_left (fun (env, arg_vars, eqns_or_guards, i) arg ->
                           let _, xv, env = gen_term_var env (S.new_bv None tun) in
-                          (env, xv::arg_vars, mkEq(arg, xv)::eqns)) (env', [], []) encoded_args in
+                          let eqns =
+                            if i < n_tps
+                            then guards_for_parameter arg xv::eqns_or_guards
+                            else mkEq(arg, xv)::eqns_or_guards in //we only get equations induced on the type indices, not parameters;
+                                                        //Also see https://github.com/FStarLang/FStar/issues/349
+                          (env, xv::arg_vars, eqns, i + 1)) (env', [], [], 0) encoded_args in
                   let arg_vars = List.rev arg_vars in
                   let ty = mkApp(encoded_head, arg_vars) in
                   let xvars = List.map mkFreeV vars in
@@ -1946,7 +1974,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   let typing_inversion =
                     Term.Assume(mkForall([[ty_pred]],
                                         add_fuel (fuel_var, Fuel_sort) (vars@arg_binders),
-                                        mkImp(ty_pred, mk_and_l (eqns@guards))),
+                                        mkImp(ty_pred, mk_and_l (elim_eqns_or_guards@guards))),
                                Some "data constructor typing elim",
                                Some ("data_elim_" ^ ddconstrsym)) in
                   let subterm_ordering =
@@ -1957,10 +1985,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                      Some "lextop is top",
                                      Some (varops.mk_unique "lextop"))
                     else (* subterm ordering *)
-                        let prec = vars |> List.collect (fun v -> match snd v with
-                            | Fuel_sort -> []
-                            | Term_sort -> [mk_Precedes (mkFreeV v) dapp]
-                            | _ -> failwith "unexpected sort") in
+                        let prec =
+                            vars
+                         |> List.mapi (fun i v ->
+                                if i < n_tps //it's a parameter, so it's inaccessible and no need for a sub-term ordering on it
+                                then []
+                                else [mk_Precedes (mkFreeV v) dapp])
+                         |> List.flatten in
                         Term.Assume(mkForall([[ty_pred]], add_fuel (fuel_var, Fuel_sort) (vars@arg_binders), mkImp(ty_pred, mk_and_l prec)),
                                     Some "subterm ordering",
                                     Some ("subterm_ordering_"^ddconstrsym)) in
