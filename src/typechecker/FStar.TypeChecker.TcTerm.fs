@@ -1383,7 +1383,7 @@ and tc_eqn scrutinee env branch
                 | Tm_app({n=Tm_uvar _}, _)
                 | Tm_name _
                 | Tm_constant Const_unit -> []
-                | Tm_constant _ -> [mk_Tm_app U.teq [as_arg scrutinee_tm; as_arg pat_exp] None scrutinee_tm.pos]
+                | Tm_constant c -> [U.mk_eq2 U_zero (tc_constant pat_exp.pos c) scrutinee_tm pat_exp]
                 | Tm_uinst _
                 | Tm_fvar _ ->
                   let f = head_constructor pat_exp in

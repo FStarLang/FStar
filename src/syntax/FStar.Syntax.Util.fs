@@ -890,7 +890,7 @@ let teq = fvar_const Const.eq2_lid
 let mk_untyped_eq2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
 let mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : term =
     let eq_inst = mk_Tm_uinst teq [u] in
-    mk (Tm_app(teq, [iarg t; as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
+    mk (Tm_app(eq_inst, [iarg t; as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
 
 let mk_has_type t x t' =
     let t_has_type = fvar_const Const.has_type_lid in //TODO: Fix the U_zeroes below!
