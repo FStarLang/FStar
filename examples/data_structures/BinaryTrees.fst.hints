@@ -1,5 +1,5 @@
 [
-  "[ŠBóN\u0014¶’\u0000\u0019)f\u0017$?‹",
+  "DB\u001b\nX\u0013\u0010„l'F\u0000ÁÝ\u0011P",
   [
     [
       "BinaryTrees.tree",
@@ -185,8 +185,8 @@
       [
         "@query", "bool_inversion", "disc_equation_Prims.None",
         "disc_equation_Prims.Some", "lemma_Prims.invertOption",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_Some",
-        "uvar_typing_27727"
+        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some",
+        "uvar_typing_27892"
       ],
       0
     ],
@@ -717,11 +717,10 @@
     [
       "BinaryTrees.count_remove_root",
       5,
-      2,
+      5,
       2,
       [
         "@query", "binder_x_4f12cf247a1f2a0cd3974332a65f3b77_0",
-        "constructor_distinct_BinaryTrees.Leaf",
         "constructor_distinct_BinaryTrees.Node",
         "data_elim_BinaryTrees.Node", "disc_equation_BinaryTrees.Leaf",
         "disc_equation_BinaryTrees.Node", "equation_Prims.nat",
