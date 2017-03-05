@@ -601,6 +601,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
     if Ident.lid_equals
             (Env.current_module env)
             FStar.Syntax.Const.prims_lid
+    || BU.starts_with (Ident.string_of_lid (Env.current_module env)) "FStar."
     then [env, goal]
     else let _ = printfn "About to preprocess %s\n" (Print.term_to_string goal) in
          let p = proofstate_of_goal_ty env goal in
