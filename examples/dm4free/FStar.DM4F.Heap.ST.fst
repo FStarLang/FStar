@@ -150,10 +150,12 @@ val zero: x:ref nat -> ghost_heap:heap{ghost_heap `contains_a_well_typed` x} -> 
 		        sel h1 x = 0))
   (decreases (sel ghost_heap x))
 let rec zero x ghost_heap =
-  if !x = 0
+  let cur = !x in //see #881
+  if cur = 0
   then ()
-  else (x := !x - 1;
-        zero x (STATE?.get()))
+  else (x := cur - 1;
+        let h = STATE?.get () in //see #881
+        zero x h)
 
 let refine_st (#a:Type)
               (#b:Type)

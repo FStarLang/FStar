@@ -22,7 +22,8 @@ reifiable let rec p1 lo hi gh  =
   if (read hi) > 0 then
   begin
     write hi (read hi - 1);
-    p1 lo hi (IS?.get ());
+    let h = IS?.get () in
+    p1 lo hi h;
     write lo (read lo - 1)
   end;
   write lo (read lo + 1)
