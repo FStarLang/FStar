@@ -34,6 +34,7 @@ let proofstate_of_goal g = {
     main_goal=g;
     all_implicits=[];
     goals=[g];
+    smt_goals=[];
     transaction=Unionfind.new_transaction()
 }
 

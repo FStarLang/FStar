@@ -39,6 +39,7 @@ type proofstate = {
     main_goal    : goal;            //this is read only; it helps keep track of the goal we started working on initially
     all_implicits: Env.implicits ;  //all the implicits currently open, partially resolved (unclear why we really need this)
     goals        : list<goal>;      //all the goals remaining to be solved
+    smt_goals    : list<goal>;      //goals that have been deferred to SMT
     transaction  : Unionfind.tx     //the unionfind transaction which we're currently working; to be rolled back if the tactic fails
 }
 
@@ -140,6 +141,10 @@ let add_goals (gs:list<goal>) : tac<unit> =
     bind get (fun p ->
     set ({p with goals=gs@p.goals}))
 
+let add_smt_goals (gs:list<goal>) : tac<unit> =
+    bind get (fun p ->
+    set ({p with smt_goals=gs@p.smt_goals}))
+
 let replace (g:goal) : tac<unit> =
     bind dismiss (fun _ ->
     add_goals [g])
@@ -173,6 +178,12 @@ let with_cur_goal (nm:string) (f:goal -> tac<'a>) : tac<'a>
         match p.goals with
         | [] -> fail "No more goals"
         | hd::tl -> f hd))
+
+let smt : tac<unit> = 
+    with_cur_goal "smt" (fun g ->
+    bind dismiss (fun _ ->
+    bind (add_goals [({g with goal_ty=U.t_true})]) (fun _ ->
+    add_smt_goals [g])))
 
 (* focus_cur_goal: runs f on the current goal only, and then restores all the goals *)
 let focus_cur_goal (nm:string) (f:tac<'a>) : tac<'a>
@@ -398,18 +409,13 @@ let exact (x:name)
             fail (BU.format1 "Variable not found: %s" (Print.bv_to_string x)))
 
 let rewrite (x:name) (e:term) : tac<unit>
-    = let mk_eq x e =
-        mk (Tm_app(S.mk_Tm_uinst U.teq [U_zero], //TODO: should be universe of x.sort
-                          [S.iarg x.sort;
-                           S.as_arg (S.bv_to_name x);
-                           S.as_arg e]))
-           None
-           Range.dummyRange
+    = let mk_eq (env:FStar.TypeChecker.Env.env) x e =
+        U.mk_eq2 (env.universe_of env x.sort) x.sort (S.bv_to_name x) e
      in
      with_cur_goal "rewrite" (fun goal ->
         try let t = Env.lookup_bv goal.context x in
             let sub_goal =
-                {goal with goal_ty=mk_eq x e;
+                {goal with goal_ty=mk_eq goal.context x e;
                            witness=None} in //squashed equality proofs
             let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty} in
             let new_goals = [sub_goal;goal] in
@@ -528,8 +534,8 @@ let rec visit_strengthen (try_strengthen:tac<unit>)
                       | Tm_meta _ ->
                         map_meta (visit_strengthen try_strengthen)
                       | _ ->
-                        printfn "Not a formula, finished %s" (Print.term_to_string goal.goal_ty);
-                        ret () //can't descend further; just return the goal unchanged
+                        printfn "Not a formula, split to smt %s" (Print.term_to_string goal.goal_ty);
+                        smt
                       end
 
                     | Some (U.QEx _) ->  //not yet handled
@@ -547,12 +553,14 @@ let rec visit_strengthen (try_strengthen:tac<unit>)
                       bind (seq split (visit_strengthen try_strengthen)) (fun _ ->
                             merge_sub_goals)
 
-                    | Some (U.BaseConn(l, _)) ->
-                      or_else trivial (ret ())
+                    | Some (U.BaseConn(l, _))
+                        when Ident.lid_equals l SC.imp_lid ->
+                      bind imp_intro (fun h ->
+                      bind (visit_strengthen try_strengthen) (fun _ ->
+                      revert_hd h))
 
-                    | Some (U.BaseConn(l, _)) ->  //not yet handled
-                        BU.print2 "Not yet handled: %s\n\tGoal is %s\n" (Print.lid_to_string l) (Print.term_to_string goal.goal_ty);
-                        ret ())))
+                    | Some (U.BaseConn(l, _)) ->
+                      or_else trivial smt)))
 
 let rec simplify_eq_impl : tac<unit>
     = with_cur_goal "simplify_eq_impl" (fun goal ->
@@ -585,21 +593,23 @@ let proofstate_of_goal_ty env g =
         main_goal=g;
         all_implicits=[];
         goals=[g];
+        smt_goals=[];
         transaction=Unionfind.new_transaction()
     }
 
-let preprocess (env:Env.env) (goal:term) : list<term> =
+let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
     if Ident.lid_equals
             (Env.current_module env)
             FStar.Syntax.Const.prims_lid
-    then [goal]
+    || BU.starts_with (Ident.string_of_lid (Env.current_module env)) "FStar."
+    then [env, goal]
     else let _ = printfn "About to preprocess %s\n" (Print.term_to_string goal) in
          let p = proofstate_of_goal_ty env goal in
          match run (visit_strengthen simplify_eq_impl) p with
          | Success (_, p2) ->
-           p2.goals |> List.map (fun g ->
+           (p2.goals @ p2.smt_goals) |> List.map (fun g ->
              printfn "Got goal: %s" (Print.term_to_string g.goal_ty);
-             g.goal_ty)
+             g.context, g.goal_ty)
          | Failed (msg, _) ->
            printfn "Tactic failed: %s" msg;
-           [goal]
+           [env, goal]
