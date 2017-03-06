@@ -2175,7 +2175,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                        in
                        let prob =
                            TProb (sub_prob c1_repr problem.relation c2_repr
-                                      (Util.format2 "sub effect repr: %s <: %s" 
+                                      (BU.format2 "sub effect repr: %s <: %s"
                                                     (Print.term_to_string c1_repr)
                                                     (Print.term_to_string c2_repr)))
                        in
