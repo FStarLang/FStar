@@ -192,13 +192,16 @@ val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 
 (* operations on monads *)
-val identity_mlift   : mlift
-val join            : env -> lident -> lident -> lident * mlift * mlift
-val monad_leq       : env -> lident -> lident -> option<edge>
-val effect_decl_opt : env -> lident -> option<eff_decl>
-val get_effect_decl : env -> lident -> eff_decl
-val wp_signature    : env -> lident -> (bv * term)
-val null_wp_for_eff : env -> lident -> universe -> term -> comp
-
+val identity_mlift      : mlift
+val join                : env -> lident -> lident -> lident * mlift * mlift
+val monad_leq           : env -> lident -> lident -> option<edge>
+val effect_decl_opt     : env -> lident -> option<eff_decl>
+val get_effect_decl     : env -> lident -> eff_decl
+val wp_signature        : env -> lident -> (bv * term)
+val null_wp_for_eff     : env -> lident -> universe -> term -> comp
+val comp_to_comp_typ    : env -> comp -> comp_typ
+val unfold_effect_abbrev: env -> comp -> comp_typ
+val effect_repr         : env -> comp -> universe -> option<term>
+val reify_comp          : env -> comp -> universe -> term
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders

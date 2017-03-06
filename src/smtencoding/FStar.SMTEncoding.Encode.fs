@@ -1851,7 +1851,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in
             let lb_typ =
               let formals, comp = U.arrow_formals_comp lb.lbtyp in
-              let reified_typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) (U.lcomp_of_comp comp) U_unknown in
+              let reified_typ = FStar.TypeChecker.Env.reify_comp ({env.tcenv with lax=true}) comp U_unknown in
               U.arrow formals (S.mk_Total reified_typ)
             in
             let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in
