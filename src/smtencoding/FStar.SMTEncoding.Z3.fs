@@ -507,7 +507,7 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
     (if Options.log_queries() then
         let filename = (query_logging.log_file_name()) in
         "(set-option :smt.search_log \"" ^
-        (String.sub filename 0 ((String.length filename) - 4)) ^ "log.smt2" ^
+        (String.substring filename 0 ((String.length filename) - 4)) ^ "log.smt2" ^
         "\")\n"
     else "") ^ input in
   enqueue fresh ({job=z3_job fresh label_messages input_plus; callback=cb})
