@@ -9,14 +9,12 @@ open Longident
 
 open FStar_Extraction_ML_Syntax
 
+
 (* Global state used for the name of the ML module being pprinted.
    current_module is only set once in build_ast and read once in 
    path_to_ident. This is done in order to avoid clutter. *)
 let current_module = ref ""
 
-(* If set to false, the old prettyprinter will be used for 
-   OCaml extraction. *)
-let is_default_printer = true
 
 let flatmap f l = map f l |> List.flatten
 let opt_to_list = function Some x -> [x] | None -> []
@@ -177,7 +175,7 @@ let rec build_core_type (ty: mlty): core_type =
           Typ.mk (Ptyp_constr (p, c_tys))
       | _ -> Typ.mk (Ptyp_constr (p, c_tys)))
   | MLTY_Tuple tys -> Typ.mk (Ptyp_tuple (map build_core_type tys))
-  | MLTY_Top -> Typ.mk Ptyp_any
+  | MLTY_Top -> Typ.mk (Ptyp_constr (mk_lident "Obj.t", []))
 
 let build_binding_pattern ((sym, _): mlident) : pattern =
   Pat.mk (Ppat_var (mk_sym sym))
@@ -202,6 +200,17 @@ let resugar_prims_ops path: expression =
   | path -> path_to_ident path)
   |> Exp.ident 
 
+let resugar_if_stmts ep cases =
+  if List.length cases = 2 then
+    let case1 = List.hd cases in
+    let case2 = BatList.last cases in
+    (match case1.pc_lhs.ppat_desc with
+     | Ppat_construct({txt=Lident "true"}, None) ->
+         Exp.ifthenelse ep case1.pc_rhs (Some case2.pc_rhs)
+     | _ -> Exp.match_ ep cases)
+  else
+    Exp.match_ ep cases
+
 let rec build_expr ?print_ty (e: mlexpr): expression = 
   let e' = (match e.expr with
   | MLE_Const c -> build_constant_expr c
@@ -225,9 +234,11 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
    | MLE_Match (e, branches) ->
       let ep = build_expr e in
       let cases = map build_case branches in
-      Exp.match_ ep cases
-   | MLE_Coerce (e, _, ty) -> 
-      Exp.constraint_ (build_expr e) (build_core_type ty)
+      resugar_if_stmts ep cases
+   | MLE_Coerce (e, _, _) -> 
+      let r = Exp.ident (mk_lident "Obj.magic") in
+      let label = Bytes.of_string "" in
+      Exp.apply r [(label, build_expr e)]
    | MLE_CTor args -> build_constructor_expr args
    | MLE_Seq args -> build_seq args
    | MLE_Tuple l -> Exp.tuple (map build_expr l)
@@ -407,11 +418,21 @@ let build_ast (out_dir: string option) (ext: string) (ml: mllib) =
 
 (* printing the AST to the correct path *)
 let print_module ((path, m): string * structure) = 
-  Format.set_formatter_out_channel (open_out path);
+  Format.set_formatter_out_channel (open_out_bin path);
   structure Format.std_formatter m;
   Format.pp_print_flush Format.std_formatter ()
 
 let print (out_dir: string option) (ext: string) (ml: mllib) = 
-  let ast = build_ast out_dir ext ml in
-  iter print_module ast
-
+  match ext with
+  | ".ml" -> 
+     (* Use this printer for OCaml extraction *)
+     let ast = build_ast out_dir ext ml in
+     iter print_module ast
+  | ".fs" -> 
+     (* Use the old printer for F# extraction *)
+     let new_doc = FStar_Extraction_ML_Code.doc_of_mllib ml in
+     iter (fun (n,d) ->
+         FStar_Util.write_file 
+           (FStar_Options.prepend_output_dir (BatString.concat "" [n;ext]))
+           (FStar_Format.pretty (Prims.parse_int "120") d)) new_doc
+  | _ -> failwith "Unrecognized extension"

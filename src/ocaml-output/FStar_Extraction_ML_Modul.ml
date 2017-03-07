@@ -703,7 +703,7 @@ let extract_iface:
       let uu____1505 =
         FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations in
       FStar_All.pipe_right uu____1505 Prims.fst
-let rec extract:
+let extract:
   FStar_Extraction_ML_UEnv.env ->
     FStar_Syntax_Syntax.modul ->
       (FStar_Extraction_ML_UEnv.env* FStar_Extraction_ML_Syntax.mllib
@@ -732,20 +732,26 @@ let rec extract:
        match uu____1534 with
        | (g,sigs) ->
            let mlm = FStar_List.flatten sigs in
-           let uu____1550 =
+           let is_kremlin =
+             let uu____1551 = FStar_Options.codegen () in
+             match uu____1551 with
+             | Some "Kremlin" -> true
+             | uu____1553 -> false in
+           let uu____1555 =
              (((m.FStar_Syntax_Syntax.name).FStar_Ident.str <> "Prims") &&
-                (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface))
+                (is_kremlin ||
+                   (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface)))
                &&
                (FStar_Options.should_extract
                   (m.FStar_Syntax_Syntax.name).FStar_Ident.str) in
-           (match uu____1550 with
+           (match uu____1555 with
             | true  ->
-                ((let uu____1555 =
+                ((let uu____1560 =
                     FStar_Syntax_Print.lid_to_string
                       m.FStar_Syntax_Syntax.name in
-                  FStar_Util.print1 "Extracted module %s\n" uu____1555);
+                  FStar_Util.print1 "Extracted module %s\n" uu____1560);
                  (g,
                    [FStar_Extraction_ML_Syntax.MLLib
                       [(name, (Some ([], mlm)),
                          (FStar_Extraction_ML_Syntax.MLLib []))]]))
-            | uu____1585 -> (g, [])))
+            | uu____1590 -> (g, [])))

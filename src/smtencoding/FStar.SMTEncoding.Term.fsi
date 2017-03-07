@@ -76,8 +76,10 @@ and fvs = list<fv>
 
 type caption = option<string>
 type binders = list<(string * sort)>
-type projector = (string * sort)
-type constructor_t = (string * list<projector> * sort * int * bool)
+type constructor_field = string  //name of the field
+                       * sort    //sort of the field
+                       * bool    //true if the field is projectible
+type constructor_t = (string * list<constructor_field> * sort * int * bool)
 type constructors  = list<constructor_t>
 type decl =
   | DefPrelude
@@ -100,6 +102,7 @@ type error_labels = list<error_label>
 
 val abstr: list<fv> -> term -> term
 val inst: list<term> -> term -> term
+val subst: term -> fv -> term -> term
 val mk: term' -> Range.range -> term
 val hash_of_term: term -> string
 val fv_eq : fv -> fv -> bool
@@ -139,7 +142,7 @@ val mkLet: (list<term> * term) -> Range.range -> term
 val mkLet': (list<(fv * term)> * term) -> Range.range -> term
 
 val fresh_token: (string * sort) -> int -> decl
-val injective_constructor : (string * list<(string * sort)> * sort) -> decls_t
+val injective_constructor : (string * list<constructor_field> * sort) -> decls_t
 val fresh_constructor : (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: constructor_t -> decls_t

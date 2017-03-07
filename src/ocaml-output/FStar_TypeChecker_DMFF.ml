@@ -884,7 +884,7 @@ let gen_wps_for_free:
                         mk_rel t x y
                     | FStar_Syntax_Syntax.Tm_arrow uu____1609 ->
                         failwith "unhandled arrow"
-                    | uu____1617 -> FStar_Syntax_Util.mk_eq t t x y in
+                    | uu____1617 -> FStar_Syntax_Util.mk_untyped_eq2 x y in
                   let stronger =
                     let wp1 = FStar_Syntax_Syntax.gen_bv "wp1" None wp_a in
                     let wp2 = FStar_Syntax_Syntax.gen_bv "wp2" None wp_a in

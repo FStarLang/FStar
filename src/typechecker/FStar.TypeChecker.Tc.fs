@@ -99,18 +99,6 @@ let monad_signature env m s =
     end
   | _ -> fail()
 
-let open_univ_vars uvs binders c =
-    match binders with
-        | [] ->
-          let uvs, c = SS.open_univ_vars_comp uvs c in
-          uvs, [], c
-        | _ ->
-          let t' = U.arrow binders c in
-          let uvs, t' = SS.open_univ_vars uvs t' in
-          match (SS.compress t').n with
-            | Tm_arrow(binders, c) -> uvs, binders, c
-            | _ -> failwith "Impossible"
-
 let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
   let effect_params_un, signature_un, opening = SS.open_term' ed.binders ed.signature in
@@ -841,280 +829,296 @@ and tc_inductive env ses quals lids =
         in
         (Sig_bundle(tcs@datas, quals, lids, Env.get_range env0))::ses, data_ops_ses
 
-and tc_decl env se: list<sigelt> * _ * list<sigelt> =
-    let env = set_hint_correlator env se in
-    TcUtil.check_sigelt_quals env se;
-    match se with
-    | Sig_inductive_typ _
-    | Sig_datacon _ ->
-      failwith "Impossible bare data-constructor"
 
-    | Sig_bundle(ses, quals, lids, r) when (lids |> BU.for_some (lid_equals Const.lex_t_lid)) ->
-      //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
-      //Instead of this special treatment, we could make use of explicit lifts, but LexCons is used pervasively
-      (*
-          type lex_t<u> =
-           | LexTop<u>  : lex_t<u>
-           | LexCons<u1, u2> : #a:Type(u1) -> a -> lex_t<u2> -> lex_t<max u1 u2>
-      *)
-      let env = Env.set_range env r in
-      let se = tc_lex_t env ses quals lids  in
-      [se], Env.push_sigelt env se, []
+(* [tc_decl env se] typechecks [se] in environment [env] and returns *)
+(* the list of typechecked sig_elts, the updated environment and *)
+(* a list of new sig_elts elaborated during typechecking but not yet typechecked *)
+and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
+  let env = set_hint_correlator env se in
+  TcUtil.check_sigelt_quals env se;
+  match se with
+  | Sig_inductive_typ _
+  | Sig_datacon _ ->
+    failwith "Impossible bare data-constructor"
 
-    | Sig_bundle(ses, quals, lids, r) ->
-      let env = Env.set_range env r in
-      let ses,projectors_ses = tc_inductive env ses quals lids  in
-      let env = List.fold_left (fun env' se -> Env.push_sigelt env' se) env ses in
-      ses, env, projectors_ses
+  | Sig_bundle(ses, quals, lids, r) when (lids |> BU.for_some (lid_equals Const.lex_t_lid)) ->
+    //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
+    //Instead of this special treatment, we could make use of explicit lifts, but LexCons is used pervasively
+    (*
+        type lex_t<u> =
+          | LexTop<u>  : lex_t<u>
+          | LexCons<u1, u2> : #a:Type(u1) -> a -> lex_t<u2> -> lex_t<max u1 u2>
+    *)
+    let env = Env.set_range env r in
+    let se = tc_lex_t env ses quals lids  in
+    [se], Env.push_sigelt env se, []
 
-    | Sig_pragma(p, r) ->
-       let set_options t s = match Options.set_options t s with
-            | Getopt.Success -> ()
-            | Getopt.Help  -> raise (Error ("Failed to process pragma: use 'fstar --help' to see which options are available", r))
-            | Getopt.Error s -> raise (Error ("Failed to process pragma: " ^s, r))
+  | Sig_bundle(ses, quals, lids, r) ->
+    let env = Env.set_range env r in
+    let ses,projectors_ses = tc_inductive env ses quals lids  in
+    let env = List.fold_left (fun env' se -> Env.push_sigelt env' se) env ses in
+    ses, env, projectors_ses
+
+  | Sig_pragma(p, r) ->
+    let set_options t s = match Options.set_options t s with
+      | Getopt.Success -> ()
+      | Getopt.Help  -> raise (Error ("Failed to process pragma: use 'fstar --help' to see which options are available", r))
+      | Getopt.Error s -> raise (Error ("Failed to process pragma: " ^s, r))
+    in
+    begin match p with
+      | LightOff ->
+        if p = LightOff
+        then Options.set_ml_ish();
+        [se], env, []
+      | SetOptions o ->
+        set_options Options.Set o;
+        [se], env, []
+      | ResetOptions sopt ->
+        Options.restore_cmd_line_options false |> ignore;
+        let _ = match sopt with
+          | None -> ()
+          | Some s -> set_options Options.Reset s
         in
-        begin match p with
-            | LightOff ->
-                if p = LightOff
-                then Options.set_ml_ish();
-                [se], env, []
-            | SetOptions o ->
-                set_options Options.Set o;
-                [se], env, []
-            | ResetOptions sopt ->
-                Options.restore_cmd_line_options false |> ignore;
-                let _ = match sopt with
-                    | None -> ()
-                    | Some s -> set_options Options.Reset s in
-                env.solver.refresh();
-                [se], env, []
-        end
+        env.solver.refresh();
+        [se], env, []
+    end
 
 
-    | Sig_new_effect_for_free _ ->
-        failwith "impossible"
+  | Sig_new_effect_for_free (ne, r) ->
+      (* This is only an elaboration rule not a typechecking one *)
 
-    | Sig_new_effect(ne, r) ->
-      let ne = tc_eff_decl env ne in
-      let se = Sig_new_effect(ne, r) in
-      let env = Env.push_sigelt env se in
-      (* KM : What's the point of collecting actions sig_let if they are not returned ??*)
-      let env, ses = ne.actions |> List.fold_left (fun (env, ses) a ->
-          let se_let = U.action_as_lb ne.mname a in
-          Env.push_sigelt env se_let, se_let::ses) (env, [se]) in
-      [se], env, []
-
-    | Sig_sub_effect(sub, r) ->
-      let ed_src = Env.get_effect_decl env sub.source in
-      let ed_tgt = Env.get_effect_decl env sub.target in
-      let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
-      let b, wp_b_tgt = monad_signature env sub.target (Env.lookup_effect_lid env sub.target) in
-      let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
-      let expected_k  = U.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
-      let repr_type eff_name a wp =
-        let no_reify l = raise (Error(BU.format1 "Effect %s cannot be reified" l.str, Env.get_range env)) in
-        match Env.effect_decl_opt env eff_name with
-        | None -> no_reify eff_name
-        | Some ed ->
-            let repr = Env.inst_effect_fun_with [U_unknown] env ed ([], ed.repr) in
-            if not (ed.qualifiers |> List.contains Reifiable) then
-              no_reify eff_name
-            else
-              mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
+      // Let the power of Dijkstra generate everything "for free", then defer
+      // the rest of the job to [tc_decl].
+      let ses, ne, lift_from_pure_opt = cps_and_elaborate env ne in
+      let effect_and_lift_ses = match lift_from_pure_opt with
+          | Some lift -> [ Sig_new_effect (ne, r) ; lift ]
+          | None -> [ Sig_new_effect (ne, r) ]
       in
-      let lift, lift_wp =
-        match sub.lift, sub.lift_wp with
-        | None, None ->
-            failwith "Impossible"
-        | lift, Some (_, lift_wp) ->
-            (* Covers both the "classic" format and the reifiable case. *)
-            lift, check_and_gen env lift_wp expected_k
 
-        (* Sub-effect for free case *)
-        | Some (what, lift), None ->
-            if Env.debug env (Options.Other "ED") then
-              BU.print1 "Lift for free : %s\n" (Print.term_to_string lift) ;
-            let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
-            let lift, comp, _ = tc_term env lift in
-            (* TODO : Check that comp is pure ? *)
-            let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
-            let _ = recheck_debug "lift-wp" env lift_wp in
-            let _ = recheck_debug "lift-elab" env lift_elab in
-            Some ([], lift_elab), ([], lift_wp)
-      in
-      let lax = env.lax in
-      (* we do not expect the lift to verify, *)
-      (* since that requires internalizing monotonicity of WPs *)
-      let env = {env with lax=true} in
-      let lift = match lift with
-        | None -> None
-        | Some (_, lift) ->
-          let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
-          let wp_a = S.new_bv None wp_a_src in
-          let a_typ = S.bv_to_name a in
-          let wp_a_typ = S.bv_to_name wp_a in
-          let repr_f = repr_type sub.source a_typ wp_a_typ in
-          let repr_result =
-            let lift_wp = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env (snd lift_wp) in
-            let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
-            repr_type sub.target a_typ lift_wp_a in
-          let expected_k =
-            U.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f]
-                        (S.mk_Total repr_result) in
-//          printfn "LIFT: Expected type for lift = %s\n" (Print.term_to_string expected_k);
-          let expected_k, _, _ =
-            tc_tot_or_gtot_term env expected_k in
-//          printfn "LIFT: Checking %s against expected type %s\n" (Print.term_to_string lift) (Print.term_to_string expected_k);
-          let lift = check_and_gen env lift expected_k in
-//          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
-          Some lift
-      in
-      // Restore the proper lax flag!
-      let env = { env with lax = lax } in
-      let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
-      let se = Sig_sub_effect(sub, r) in
-      let env = Env.push_sigelt env se in
-      [se], env, []
+      [], env, ses @ effect_and_lift_ses
 
-    | Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) ->
-      assert (uvs = []);
-      let env0 = env in
-      let env = Env.set_range env r in
-      let tps, c = SS.open_comp tps c in
-      let tps, env, us = tc_tparams env tps in
-      let c, u, g = tc_comp env c in
-      Rel.force_trivial_guard env g;
-      let tps = SS.close_binders tps in
-      let c = SS.close_comp tps c in
-      let uvs, t = TcUtil.generalize_universes env0 (mk (Tm_arrow(tps, c)) None r) in
-      let tps, c = match tps, (SS.compress t).n with
-        | [], Tm_arrow(_, c) -> [], c
-        | _,  Tm_arrow(tps, c) -> tps, c
-        | _ -> failwith "Impossible" in
-      if List.length uvs <> 1
-      && not (Ident.lid_equals lid Const.effect_Lemma_lid)
-      then (let _, t = Subst.open_univ_vars uvs t in
-            raise (Error(BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
-                                    (Print.lid_to_string lid)
-                                    (List.length uvs |> BU.string_of_int)
-                                    (Print.term_to_string t), r)));
-      let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) in
-      let env = Env.push_sigelt env0 se in
-      [se], env, []
+  | Sig_new_effect(ne, r) ->
+    let ne = tc_eff_decl env ne in
+    let se = Sig_new_effect(ne, r) in
+    let env = Env.push_sigelt env se in
+    (* KM : What's the point of collecting actions sig_let if they are not returned ??*)
+    let env, ses = ne.actions |> List.fold_left (fun (env, ses) a ->
+        let se_let = U.action_as_lb ne.mname a in
+        Env.push_sigelt env se_let, se_let::ses) (env, [se]) in
+    [se], env, []
 
-    | Sig_declare_typ (_, _, _, quals, _)
-    | Sig_let (_, _, _, quals, _)
-        when quals |> BU.for_some (function OnlyName -> true | _ -> false) ->
-        (* Dummy declaration which must be erased since it has been elaborated somewhere else *)
-        [], env, []
-
-    | Sig_declare_typ(lid, uvs, t, quals, r) -> //NS: No checks on the qualifiers?
-      let env = Env.set_range env r in
-      //assert (uvs = []);
-      let uvs, t =
-          if uvs = []
-          then check_and_gen env t (fst (U.type_u()))
+  | Sig_sub_effect(sub, r) ->
+    let ed_src = Env.get_effect_decl env sub.source in
+    let ed_tgt = Env.get_effect_decl env sub.target in
+    let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
+    let b, wp_b_tgt = monad_signature env sub.target (Env.lookup_effect_lid env sub.target) in
+    let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
+    let expected_k  = U.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
+    let repr_type eff_name a wp =
+      let no_reify l = raise (Error(BU.format1 "Effect %s cannot be reified" l.str, Env.get_range env)) in
+      match Env.effect_decl_opt env eff_name with
+      | None -> no_reify eff_name
+      | Some ed ->
+          let repr = Env.inst_effect_fun_with [U_unknown] env ed ([], ed.repr) in
+          if not (ed.qualifiers |> List.contains Reifiable) then
+            no_reify eff_name
           else
-              let uvs, t = SS.open_univ_vars uvs t in
-              uvs, SS.close_univ_vars uvs  <| tc_check_trivial_guard env t (fst (U.type_u()))
-      in
-      let se = Sig_declare_typ(lid, uvs, t, quals, r) in
-      let env = Env.push_sigelt env se in
-      [se], env, []
+            mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
+    in
+    let lift, lift_wp =
+      match sub.lift, sub.lift_wp with
+      | None, None ->
+        failwith "Impossible"
+      | lift, Some (_, lift_wp) ->
+        (* Covers both the "classic" format and the reifiable case. *)
+        lift, check_and_gen env lift_wp expected_k
+      (* Sub-effect for free case *)
+      | Some (what, lift), None ->
+        if Env.debug env (Options.Other "ED") then
+            BU.print1 "Lift for free : %s\n" (Print.term_to_string lift) ;
+        let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
+        let lift, comp, _ = tc_term env lift in
+        (* TODO : Check that comp is pure ? *)
+        let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
+        let _ = recheck_debug "lift-wp" env lift_wp in
+        let _ = recheck_debug "lift-elab" env lift_elab in
+        Some ([], lift_elab), ([], lift_wp)
+    in
+    let lax = env.lax in
+    (* we do not expect the lift to verify, *)
+    (* since that requires internalizing monotonicity of WPs *)
+    let env = {env with lax=true} in
+    let lift = match lift with
+    | None -> None
+    | Some (_, lift) ->
+      let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
+      let wp_a = S.new_bv None wp_a_src in
+      let a_typ = S.bv_to_name a in
+      let wp_a_typ = S.bv_to_name wp_a in
+      let repr_f = repr_type sub.source a_typ wp_a_typ in
+      let repr_result =
+        let lift_wp = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env (snd lift_wp) in
+        let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
+        repr_type sub.target a_typ lift_wp_a in
+      let expected_k =
+        U.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f]
+                    (S.mk_Total repr_result) in
+//          printfn "LIFT: Expected type for lift = %s\n" (Print.term_to_string expected_k);
+        let expected_k, _, _ =
+          tc_tot_or_gtot_term env expected_k in
+//          printfn "LIFT: Checking %s against expected type %s\n" (Print.term_to_string lift) (Print.term_to_string expected_k);
+        let lift = check_and_gen env lift expected_k in
+//          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
+        Some lift
+    in
+    // Restore the proper lax flag!
+    let env = { env with lax = lax } in
+    let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
+    let se = Sig_sub_effect(sub, r) in
+    let env = Env.push_sigelt env se in
+    [se], env, []
 
-    | Sig_assume(lid, phi, quals, r) ->
-      let se = tc_assume env lid phi quals r in
-      let env = Env.push_sigelt env se in
-      [se], env, []
+  | Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) ->
+    assert (uvs = []);
+    let env0 = env in
+    let env = Env.set_range env r in
+    let tps, c = SS.open_comp tps c in
+    let tps, env, us = tc_tparams env tps in
+    let c, u, g = tc_comp env c in
+    Rel.force_trivial_guard env g;
+    let tps = SS.close_binders tps in
+    let c = SS.close_comp tps c in
+    let uvs, t = TcUtil.generalize_universes env0 (mk (Tm_arrow(tps, c)) None r) in
+    let tps, c = match tps, (SS.compress t).n with
+      | [], Tm_arrow(_, c) -> [], c
+      | _,  Tm_arrow(tps, c) -> tps, c
+      | _ -> failwith "Impossible" in
+    if List.length uvs <> 1
+    && not (Ident.lid_equals lid Const.effect_Lemma_lid)
+    then (let _, t = Subst.open_univ_vars uvs t in
+          raise (Error(BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
+                                  (Print.lid_to_string lid)
+                                  (List.length uvs |> BU.string_of_int)
+                                  (Print.term_to_string t), r)));
+    let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) in
+    let env = Env.push_sigelt env0 se in
+    [se], env, []
 
-    | Sig_main(e, r) ->
-      let env = Env.set_range env r in
-      let env = Env.set_expected_typ env Common.t_unit in
-      let e, c, g1 = tc_term env e in
-      let e, _, g = check_expected_effect env (Some (U.ml_comp Common.t_unit r)) (e, c.comp()) in
-      Rel.force_trivial_guard env (Rel.conj_guard g1 g);
-      let se = Sig_main(e, r) in
-      let env = Env.push_sigelt env se in
-      [se], env, []
+  | Sig_declare_typ (_, _, _, quals, _)
+  | Sig_let (_, _, _, quals, _)
+      when quals |> BU.for_some (function OnlyName -> true | _ -> false) ->
+      (* Dummy declaration which must be erased since it has been elaborated somewhere else *)
+      [], env, []
 
-    | Sig_let(lbs, r, lids, quals, attrs) ->
-      let env = Env.set_range env r in
-      let check_quals_eq l qopt q = match qopt with
-        | None -> Some q
-        | Some q' ->
-          if List.length q = List.length q'
-          && List.forall2 U.qualifier_equal q q'
-          then Some q
-          else raise (Error(BU.format3 "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
-                                (Print.lid_to_string l)
-                                (Print.quals_to_string q)
-                                (Print.quals_to_string q'), r))
-      in
+  | Sig_declare_typ(lid, uvs, t, quals, r) -> //NS: No checks on the qualifiers?
+    let env = Env.set_range env r in
+    //assert (uvs = []);
+    let uvs, t =
+        if uvs = []
+        then check_and_gen env t (fst (U.type_u()))
+        else
+            let uvs, t = SS.open_univ_vars uvs t in
+            let t = tc_check_trivial_guard env t (fst (U.type_u())) in
+            let t = N.normalize [N.NoFullNorm; N.Beta] env t in
+            uvs, SS.close_univ_vars uvs t
+    in
+    let se = Sig_declare_typ(lid, uvs, t, quals, r) in
+    let env = Env.push_sigelt env se in
+    [se], env, []
 
-      (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
-            (b) Generalize the type of lb only if none of the lbs have val decls
-       *)
-      let should_generalize, lbs', quals_opt = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
-            let lbname = right lb.lbname in //this is definitely not a local let binding
-            let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
-              | None ->
-                  if lb.lbunivs <> []
-                  then false, lb, quals_opt // we already have generalized universes (e.g. elaborated term)
-                  else gen, lb, quals_opt //no annotation found; use whatever was in the let binding
+  | Sig_assume(lid, phi, quals, r) ->
+    let se = tc_assume env lid phi quals r in
+    let env = Env.push_sigelt env se in
+    [se], env, []
 
-              | Some ((uvs,tval), quals) ->
-                let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
-                let _ = match lb.lbtyp.n with
-                  | Tm_unknown -> ()
-                  | _ -> Errors.warn r "Annotation from val declaration overrides inline type annotation"
-                in
-                if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
-                then raise (Error ("Inline universes are incoherent with annotation from val declaration", r));
-                false, //explicit annotation provided; do not generalize
-                mk_lb (Inr lbname, uvs, Const.effect_ALL_lid, tval, lb.lbdef),
-                quals_opt
-            in
-            gen, lb::lbs, quals_opt)
-            (true, [], (if quals=[] then None else Some quals))
-      in
+  | Sig_main(e, r) ->
+    let env = Env.set_range env r in
+    let env = Env.set_expected_typ env Common.t_unit in
+    let e, c, g1 = tc_term env e in
+    let e, _, g = check_expected_effect env (Some (U.ml_comp Common.t_unit r)) (e, c.comp()) in
+    Rel.force_trivial_guard env (Rel.conj_guard g1 g);
+    let se = Sig_main(e, r) in
+    let env = Env.push_sigelt env se in
+    [se], env, []
 
-      let quals = match quals_opt with
-        | None -> [Visible_default]
-        | Some q ->
-          if q |> BU.for_some (function Irreducible | Visible_default | Unfold_for_unification_and_vcgen -> true | _ -> false)
-          then q
-          else Visible_default::q //the default visibility for a let binding is Unfoldable
-      in
+  | Sig_let(lbs, r, lids, quals, attrs) ->
+    let env = Env.set_range env r in
+    let check_quals_eq l qopt q = match qopt with
+      | None -> Some q
+      | Some q' ->
+        if List.length q = List.length q'
+        && List.forall2 U.qualifier_equal q q'
+        then Some q
+        else raise (Error(BU.format3 "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
+                              (Print.lid_to_string l)
+                              (Print.quals_to_string q)
+                              (Print.quals_to_string q'), r))
+    in
 
-      let lbs' = List.rev lbs' in
+    (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
+          (b) Generalize the type of lb only if none of the lbs have val decls
+      *)
+    let should_generalize, lbs', quals_opt = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
+          let lbname = right lb.lbname in //this is definitely not a local let binding
+          let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
+            | None ->
+                if lb.lbunivs <> []
+                then false, lb, quals_opt // we already have generalized universes (e.g. elaborated term)
+                else gen, lb, quals_opt //no annotation found; use whatever was in the let binding
 
-      (* 2. Turn the top-level lb into a Tm_let with a unit body *)
-      let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
+            | Some ((uvs,tval), quals) ->
+              let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
+              let _ = match lb.lbtyp.n with
+                | Tm_unknown -> ()
+                | _ -> Errors.warn r "Annotation from val declaration overrides inline type annotation"
+              in
+              if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
+              then raise (Error ("Inline universes are incoherent with annotation from val declaration", r));
+              false, //explicit annotation provided; do not generalize
+              mk_lb (Inr lbname, uvs, Const.effect_ALL_lid, tval, lb.lbdef),
+              quals_opt
+          in
+          gen, lb::lbs, quals_opt)
+          (true, [], (if quals=[] then None else Some quals))
+    in
 
-      (* 3. Type-check the Tm_let and then convert it back to a Sig_let *)
-      let se, lbs = match tc_maybe_toplevel_term ({env with top_level=true; generalize=should_generalize}) e with
-         | {n=Tm_let(lbs, e)}, _, g when Rel.is_trivial g ->
-            //propagate the MaskedEffect tag to the qualifiers
-            let quals = match e.n with
-                | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
-                | _ -> quals
-            in
-            Sig_let(lbs, r, lids, quals, attrs), lbs
-        | _ -> failwith "impossible"
-      in
+    let quals = match quals_opt with
+      | None -> [Visible_default]
+      | Some q ->
+        if q |> BU.for_some (function Irreducible | Visible_default | Unfold_for_unification_and_vcgen -> true | _ -> false)
+        then q
+        else Visible_default::q //the default visibility for a let binding is Unfoldable
+    in
 
-      (* 4. Print the type of top-level lets, if requested *)
-      if log env
-      then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
-            let should_log = match Env.try_lookup_val_decl env (right lb.lbname).fv_name.v with
-                | None -> true
-                | _ -> false in
-            if should_log
-            then BU.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Print.term_to_string (*env*) lb.lbtyp)
-            else "") |> String.concat "\n");
+    let lbs' = List.rev lbs' in
 
-      let env = Env.push_sigelt env se in
-      [se], env, []
+    (* 2. Turn the top-level lb into a Tm_let with a unit body *)
+    let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
+
+    (* 3. Type-check the Tm_let and then convert it back to a Sig_let *)
+    let se, lbs = match tc_maybe_toplevel_term ({env with top_level=true; generalize=should_generalize}) e with
+        | {n=Tm_let(lbs, e)}, _, g when Rel.is_trivial g ->
+          //propagate the MaskedEffect tag to the qualifiers
+          let quals = match e.n with
+              | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
+              | _ -> quals
+          in
+          Sig_let(lbs, r, lids, quals, attrs), lbs
+      | _ -> failwith "impossible"
+    in
+
+    (* 4. Print the type of top-level lets, if requested *)
+    if log env
+    then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
+          let should_log = match Env.try_lookup_val_decl env (right lb.lbname).fv_name.v with
+              | None -> true
+              | _ -> false in
+          if should_log
+          then BU.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Print.term_to_string (*env*) lb.lbtyp)
+          else "") |> String.concat "\n");
+
+    let env = Env.push_sigelt env se in
+    [se], env, []
 
 
 let for_export hidden se : list<sigelt> * list<lident> =
@@ -1143,65 +1147,72 @@ let for_export hidden se : list<sigelt> * list<lident> =
    *)
    let is_abstract quals = quals |> BU.for_some (function Abstract-> true | _ -> false) in
    let is_hidden_proj_or_disc q = match q with
-        | Projector(l, _)
-        | Discriminator l -> hidden |> BU.for_some (lid_equals l)
-        | _ -> false in
+      | Projector(l, _)
+      | Discriminator l -> hidden |> BU.for_some (lid_equals l)
+      | _ -> false
+   in
    match se with
-    | Sig_pragma         _ -> [], hidden
+  | Sig_pragma         _ -> [], hidden
 
-    | Sig_inductive_typ _
-    | Sig_datacon _ -> failwith "Impossible"
+  | Sig_inductive_typ _
+  | Sig_datacon _ -> failwith "Impossible"
 
-    | Sig_bundle(ses, quals, _, r) ->
-      if is_abstract quals
-      then List.fold_right (fun se (out, hidden) -> match se with
-            | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) ->
-              let dec = Sig_declare_typ(l, us, U.arrow bs (S.mk_Total t), Assumption::New::quals, r) in
-              dec::out, hidden
-            | Sig_datacon(l, us, t, _, _, _, _, r) -> //logically, each constructor just becomes an uninterpreted function
-              let dec = Sig_declare_typ(l, us, t, [Assumption], r) in
-              dec::out, l::hidden
-            | _ ->
-              out, hidden) ses ([], hidden)
-      else [se], hidden
+  | Sig_bundle(ses, quals, _, r) ->
+    if is_abstract quals
+    then
+      let for_export_bundle se (out, hidden) = match se with
+        | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) ->
+          let dec = Sig_declare_typ(l, us, U.arrow bs (S.mk_Total t), Assumption::New::quals, r) in
+          dec::out, hidden
 
-    | Sig_assume(_, _, quals, _) ->
-      if is_abstract quals
-      then [], hidden
-      else [se], hidden
+        (* logically, each constructor just becomes an uninterpreted function *)
+        | Sig_datacon(l, us, t, _, _, _, _, r) ->
+          let dec = Sig_declare_typ(l, us, t, [Assumption], r) in
+          dec::out, l::hidden
 
-    | Sig_declare_typ(l, us, t, quals, r) ->
-      if quals |> BU.for_some is_hidden_proj_or_disc //hidden projectors/discriminators become uninterpreted
-      then [Sig_declare_typ(l, us, t, [Assumption], r)], l::hidden
-      else if quals |> BU.for_some (function
-        | Assumption
-        | Projector _
-        | Discriminator _ -> true
-        | _ -> false)
-      then [se], hidden //Assumptions, Intepreted proj/disc are retained
-      else [], hidden   //other declarations vanish
-                        //they will be replaced by the definitions that must follow
+        | _ ->
+          out, hidden
+      in
+      List.fold_right for_export_bundle ses ([], hidden)
+    else [se], hidden
 
-    | Sig_main  _ -> [], hidden
+  | Sig_assume(_, _, quals, _) ->
+    if is_abstract quals
+    then [], hidden
+    else [se], hidden
 
-    | Sig_new_effect     _
-    | Sig_new_effect_for_free _
-    | Sig_sub_effect     _
-    | Sig_effect_abbrev  _ -> [se], hidden
+  | Sig_declare_typ(l, us, t, quals, r) ->
+    if quals |> BU.for_some is_hidden_proj_or_disc //hidden projectors/discriminators become uninterpreted
+    then [Sig_declare_typ(l, us, t, [Assumption], r)], l::hidden
+    else if quals |> BU.for_some (function
+      | Assumption
+      | Projector _
+      | Discriminator _ -> true
+      | _ -> false)
+    then [se], hidden //Assumptions, Intepreted proj/disc are retained
+    else [], hidden   //other declarations vanish
+                      //they will be replaced by the definitions that must follow
 
-    | Sig_let((false, [lb]), _, _, quals, _) when (quals |> BU.for_some is_hidden_proj_or_disc) ->
-      let fv = right lb.lbname in
-      let lid = fv.fv_name.v in
-      if hidden |> BU.for_some (S.fv_eq_lid fv)
-      then [], hidden //this projector definition already has a declare_typ
-      else let dec = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption], Ident.range_of_lid lid) in
-           [dec], lid::hidden
+  | Sig_main  _ -> [], hidden
 
-    | Sig_let(lbs, r, l, quals, _) ->
-      if is_abstract quals
-      then snd lbs |> List.map (fun lb ->
-           Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
-      else [se], hidden
+  | Sig_new_effect     _
+  | Sig_new_effect_for_free _
+  | Sig_sub_effect     _
+  | Sig_effect_abbrev  _ -> [se], hidden
+
+  | Sig_let((false, [lb]), _, _, quals, _) when (quals |> BU.for_some is_hidden_proj_or_disc) ->
+    let fv = right lb.lbname in
+    let lid = fv.fv_name.v in
+    if hidden |> BU.for_some (S.fv_eq_lid fv)
+    then [], hidden //this projector definition already has a declare_typ
+    else let dec = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption], Ident.range_of_lid lid) in
+          [dec], lid::hidden
+
+  | Sig_let(lbs, r, l, quals, _) ->
+    if is_abstract quals
+    then snd lbs |> List.map (fun lb ->
+          Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
+    else [se], hidden
 
 let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
@@ -1215,28 +1226,19 @@ let tc_decls env ses =
 
     List.iter (fun se -> env.solver.encode_sig env se) ses';
 
-    let exported, hidden = List.fold_left (fun (le, lh) se -> let tup = for_export hidden se in List.rev_append (fst tup) le, List.rev_append (snd tup) lh) ([], []) ses' in
-    List.fold_left process_one_decl (List.rev_append ses' ses, (List.rev_append exported [])::exports, env, hidden) ses_elaborated
+    let exports, hidden =
+      let accum_exports_hidden (exports, hidden) se =
+        let se_exported, hidden = for_export hidden se in
+        List.rev_append se_exported exports, hidden
+      in
+      List.fold_left accum_exports_hidden (exports, hidden) ses'
+    in
+
+    (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
   in
-  let ses, exports, env, _ =
-    List.fold_left (fun acc se ->
-      match se with
-      | Sig_new_effect_for_free(ne, r) ->
-          // Let the power of Dijkstra generate everything "for free", then defer
-          // the rest of the job to [tc_decl].
-          let _, _, env, _ = acc in
-          let ses, ne, lift_from_pure_opt = cps_and_elaborate env ne in
-          let ses =
-            match lift_from_pure_opt with
-            | Some lift -> ses @ [ Sig_new_effect (ne, r) ; lift ]
-            | None -> ses @ [ Sig_new_effect (ne, r) ]
-          in
-          List.fold_left process_one_decl acc ses
-      | _ ->
-          process_one_decl acc se
-    ) ([], [], env, []) ses
-  in
-  List.rev_append ses [], (List.rev_append exports []) |> List.flatten, env
+
+  let ses, exports, env, _ = BU.fold_flatten process_one_decl ([], [], env, []) ses in
+  List.rev_append ses [], List.rev_append exports [], env
 
 let tc_partial_modul env modul =
   let verify = Options.should_verify modul.name.str in
@@ -1345,27 +1347,29 @@ let tc_modul env modul =
   finish_partial_modul env modul non_private_decls
 
 let check_module env m =
-    if Options.debug_any()
-    then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
-    let env = {env with lax=not (Options.should_verify m.name.str)} in
-    let m, env = tc_modul env m in
-    if Options.dump_module m.name.str
-    then BU.print1 "%s\n" (Print.modul_to_string m);
-    if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
-    then begin
-      let normalize_toplevel_lets = function
-          | Sig_let ((b, lbs), r, ids, qs, attrs) ->
-            let n =
-              N.normalize [ (* N.EraseUniverses ; *) N.Beta ; N.Eager_unfolding ; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ]
-            in
+  if Options.debug_any()
+  then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
+
+  let env = {env with lax=not (Options.should_verify m.name.str)} in
+  let m, env = tc_modul env m in
+
+  (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
+  if Options.dump_module m.name.str
+  then BU.print1 "%s\n" (Print.modul_to_string m);
+  if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
+  then begin
+    let normalize_toplevel_lets = function
+        | Sig_let ((b, lbs), r, ids, qs, attrs) ->
+            let n = N.normalize [N.Beta ; N.Eager_unfolding; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
             let update lb =
                 let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
                 { lb with lbdef = n (Env.push_univ_vars env univnames) e }
             in
             Sig_let ((b, List.map update lbs), r, ids, qs, attrs)
-          | se -> se
-      in
-      let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
-      BU.print1 "%s\n" (Print.modul_to_string normalized_module)
-    end;
-    m, env
+        | se -> se
+    in
+    let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
+    BU.print1 "%s\n" (Print.modul_to_string normalized_module)
+  end;
+
+  m, env

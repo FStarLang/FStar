@@ -669,7 +669,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
       (* List stored in the "right" order. *)
       f, deps_as_filenames
     ) as_list
-  ) (smap_keys graph) in
+  ) (FStar.List.sortWith (fun x y -> String.compare x y) (smap_keys graph)) in
   let topologically_sorted = List.collect must_find_r !topologically_sorted in
 
   List.iter (fun (m, r) ->
@@ -694,7 +694,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
     format. *)
 let print_make (deps: list<(string * list<string>)>): unit =
   List.iter (fun (f, deps) ->
-    let deps = List.map (fun s -> replace_string s " " "\\ ") deps in
+    let deps = List.map (fun s -> replace_chars s ' ' "\\ ") deps in
     Util.print2 "%s: %s\n" f (String.concat " " deps)
   ) deps
 

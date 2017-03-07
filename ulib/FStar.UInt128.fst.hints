@@ -1,5 +1,5 @@
 [
-  "s{NBþàú£_\u001b¹ÊN÷[Ë",
+  "â_u{\u0016Áë{¨<ª\u0019eßHw",
   [
     [
       "FStar.UInt128.t'",
@@ -62,6 +62,42 @@
     [
       "FStar.UInt128.v",
       1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.UInt128.n",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "FStar.UInt128.v_inj",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.Base.test_sort",
+        "equation_FStar.UInt128.t", "equation_FStar.UInt128.v",
+        "equation_Prims._assert", "fuel_guarded_inversion_FStar.UInt128.t_",
+        "function_token_typing_FStar.List.Tot.Base.test_sort",
+        "proj_equation_FStar.UInt128.Mk_v"
+      ],
+      0
+    ],
+    [
+      "FStar.UInt128.v_inj",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.UInt128.n",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "FStar.UInt128.v_inj",
+      3,
       2,
       1,
       [

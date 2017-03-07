@@ -740,7 +740,10 @@ let collect:
        let must_find_r f =
          let uu____1484 = must_find f in FStar_List.rev uu____1484 in
        let by_target =
-         let uu____1491 = FStar_Util.smap_keys graph in
+         let uu____1491 =
+           let uu____1493 = FStar_Util.smap_keys graph in
+           FStar_List.sortWith (fun x  -> fun y  -> FStar_String.compare x y)
+             uu____1493 in
          FStar_List.collect
            (fun k  ->
               let as_list = must_find k in
@@ -753,72 +756,72 @@ let collect:
                    let suffix =
                      match should_append_fsti with
                      | true  -> [Prims.strcat f "i"]
-                     | uu____1513 -> [] in
+                     | uu____1517 -> [] in
                    let k = lowercase_module_name f in
                    let deps =
-                     let uu____1517 = discover k in FStar_List.rev uu____1517 in
+                     let uu____1521 = discover k in FStar_List.rev uu____1521 in
                    let deps_as_filenames =
-                     let uu____1521 = FStar_List.collect must_find deps in
-                     FStar_List.append uu____1521 suffix in
+                     let uu____1525 = FStar_List.collect must_find deps in
+                     FStar_List.append uu____1525 suffix in
                    (f, deps_as_filenames)) as_list) uu____1491 in
        let topologically_sorted =
-         let uu____1526 = FStar_ST.read topologically_sorted in
-         FStar_List.collect must_find_r uu____1526 in
+         let uu____1530 = FStar_ST.read topologically_sorted in
+         FStar_List.collect must_find_r uu____1530 in
        FStar_List.iter
-         (fun uu____1535  ->
-            match uu____1535 with
+         (fun uu____1539  ->
+            match uu____1539 with
             | (m,r) ->
-                let uu____1543 =
-                  (let uu____1544 = FStar_ST.read r in
-                   Prims.op_Negation uu____1544) &&
-                    (let uu____1547 = FStar_Options.interactive () in
-                     Prims.op_Negation uu____1547) in
-                (match uu____1543 with
+                let uu____1547 =
+                  (let uu____1548 = FStar_ST.read r in
+                   Prims.op_Negation uu____1548) &&
+                    (let uu____1551 = FStar_Options.interactive () in
+                     Prims.op_Negation uu____1551) in
+                (match uu____1547 with
                  | true  ->
                      let maybe_fst =
                        let k = FStar_String.length m in
-                       let uu____1551 =
+                       let uu____1555 =
                          (k > (Prims.parse_int "4")) &&
-                           (let uu____1555 =
+                           (let uu____1559 =
                               FStar_String.substring m
                                 (k - (Prims.parse_int "4"))
                                 (Prims.parse_int "4") in
-                            uu____1555 = ".fst") in
-                       match uu____1551 with
+                            uu____1559 = ".fst") in
+                       match uu____1555 with
                        | true  ->
-                           let uu____1559 =
+                           let uu____1563 =
                              FStar_String.substring m (Prims.parse_int "0")
                                (k - (Prims.parse_int "4")) in
-                           FStar_Util.format1 " Did you mean %s ?" uu____1559
-                       | uu____1563 -> "" in
-                     let uu____1564 =
-                       let uu____1565 =
+                           FStar_Util.format1 " Did you mean %s ?" uu____1563
+                       | uu____1567 -> "" in
+                     let uu____1568 =
+                       let uu____1569 =
                          FStar_Util.format3
                            "You passed --verify_module %s but I found no file that contains [module %s] in the dependency graph.%s\n"
                            m m maybe_fst in
-                       FStar_Errors.Err uu____1565 in
-                     Prims.raise uu____1564
-                 | uu____1566 -> ())) verify_flags;
+                       FStar_Errors.Err uu____1569 in
+                     Prims.raise uu____1568
+                 | uu____1570 -> ())) verify_flags;
        (by_target, topologically_sorted, immediate_graph))
 let print_make:
   (Prims.string* Prims.string Prims.list) Prims.list -> Prims.unit =
   fun deps  ->
     FStar_List.iter
-      (fun uu____1590  ->
-         match uu____1590 with
+      (fun uu____1594  ->
+         match uu____1594 with
          | (f,deps) ->
              let deps =
                FStar_List.map
-                 (fun s  -> FStar_Util.replace_string s " " "\\ ") deps in
+                 (fun s  -> FStar_Util.replace_chars s ' ' "\\ ") deps in
              FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps))
       deps
-let print uu____1620 =
-  match uu____1620 with
-  | (make_deps,uu____1633,graph) ->
-      let uu____1651 = FStar_Options.dep () in
-      (match uu____1651 with
+let print uu____1624 =
+  match uu____1624 with
+  | (make_deps,uu____1637,graph) ->
+      let uu____1655 = FStar_Options.dep () in
+      (match uu____1655 with
        | Some "make" -> print_make make_deps
        | Some "graph" -> print_graph graph
-       | Some uu____1653 ->
+       | Some uu____1657 ->
            Prims.raise (FStar_Errors.Err "unknown tool for --dep\n")
        | None  -> ())

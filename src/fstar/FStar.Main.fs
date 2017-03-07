@@ -20,6 +20,8 @@ open FStar.Util
 open FStar.Getopt
 open FStar.Ident
 
+let () = FStar.Version.dummy ()
+
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)
 let process_args () : parse_cmdline_res * list<string> =
@@ -67,14 +69,13 @@ let codegen (umods, env) =
       | _ -> failwith "Unrecognized option"
     in
     match opt with
-    | Some "OCaml" when FStar.Extraction.ML.PrintML.is_default_printer -> 
-        let out_dir = Options.output_dir() in
-        List.iter (FStar.Extraction.ML.PrintML.print out_dir ext) mllibs
     | Some "FSharp" | Some "OCaml" ->
-        let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
-        List.iter (fun (n,d) ->
-          Util.write_file (Options.prepend_output_dir (n^ext)) (FStar.Format.pretty 120 d)
-        ) newDocs
+        (* When bootstrapped in F#, this will use the old printer in
+           FStar.Extraction.ML.Code for both OCaml and F# extraction.
+           When bootstarpped in OCaml, this will use the old printer
+           for F# extraction and the new printer for OCaml extraction. *)
+        let outdir = Options.output_dir() in
+        List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
     | Some "Kremlin" ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
@@ -119,7 +120,10 @@ let go _ =
         else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if Options.indent () then
-          FStar.Indent.generate filenames
+          if FStar.Platform.is_fstar_compiler_using_ocaml
+          then FStar.Indent.generate filenames
+          else failwith "You seem to be using the F#-generated version ofthe compiler ; \
+                         reindenting is not known to work yet with this version"
         else if List.length filenames >= 1 then begin //normal batch mode
           let verify_mode =
             if Options.verify_all () then begin

@@ -549,7 +549,10 @@
       1,
       2,
       1,
-      [ "@query", "lemma_FStar.Seq.Base.lemma_create_len" ],
+      [
+        "@query", "fuel_guarded_inversion_FStar.Seq.Base.seq",
+        "lemma_FStar.Seq.Base.lemma_create_len"
+      ],
       0
     ],
     [
