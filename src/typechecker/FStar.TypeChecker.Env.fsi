@@ -20,6 +20,7 @@ open FStar
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.TypeChecker.Common
+module BU = FStar.Util
 
 type binding =
   | Binding_var      of bv
@@ -193,13 +194,24 @@ val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 
 (* operations on monads *)
-val identity_mlift   : mlift
-val join            : env -> lident -> lident -> lident * mlift * mlift
-val monad_leq       : env -> lident -> lident -> option<edge>
-val effect_decl_opt : env -> lident -> option<eff_decl>
-val get_effect_decl : env -> lident -> eff_decl
-val wp_signature    : env -> lident -> (bv * term)
-val null_wp_for_eff : env -> lident -> universe -> term -> comp
+val identity_mlift      : mlift
+val join                : env -> lident -> lident -> lident * mlift * mlift
+val monad_leq           : env -> lident -> lident -> option<edge>
+val effect_decl_opt     : env -> lident -> option<eff_decl>
+val get_effect_decl     : env -> lident -> eff_decl
+val wp_signature        : env -> lident -> (bv * term)
+val null_wp_for_eff     : env -> lident -> universe -> term -> comp
+val comp_to_comp_typ    : env -> comp -> comp_typ
+val unfold_effect_abbrev: env -> comp -> comp_typ
+val effect_repr         : env -> comp -> universe -> option<term>
+val reify_comp          : env -> comp -> universe -> term
+(* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
+(* a body or codomain of an arrow) [x] is reifiable *)
+val is_reifiable_effect : env -> lident -> bool
+val is_reifiable : env -> BU.either<lcomp, residual_comp> -> bool
+val is_reifiable_comp : env -> comp -> bool
+val is_reifiable_function : env -> term -> bool
+
 
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders

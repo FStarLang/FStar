@@ -142,34 +142,6 @@ let lookup_bvar env x =
     try List.nth env x.index
     with _ -> failwith (BU.format1 "Failed to find %s\n" (Print.db_to_string x))
 
-let comp_to_comp_typ (env:Env.env) c =
-    let c = match c.n with
-            | Total (t, None) ->
-              let u = env.universe_of env t in
-              S.mk_Total' t (Some u)
-            | GTotal (t, None) ->
-              let u = env.universe_of env t in
-              S.mk_GTotal' t (Some u)
-            | _ -> c in
-    U.comp_to_comp_typ c
-
-let rec unfold_effect_abbrev env comp =
-  let c = comp_to_comp_typ env comp in
-  match Env.lookup_effect_abbrev env c.comp_univs c.effect_name with
-    | None -> c
-    | Some (binders, cdef) ->
-      let binders, cdef = SS.open_comp binders cdef in
-      if List.length binders <> List.length c.effect_args + 1
-      then raise (Error (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
-                                (BU.string_of_int (List.length binders))
-                                (BU.string_of_int (List.length c.effect_args + 1))
-                                (Print.comp_to_string (S.mk_Comp c))
-                            , comp.pos));
-      let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
-      let c1 = SS.subst_comp inst cdef in
-      let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
-      unfold_effect_abbrev env c
-
 let downgrade_ghost_effect_name l =
     if Ident.lid_equals l Const.effect_Ghost_lid
     then Some Const.effect_Pure_lid

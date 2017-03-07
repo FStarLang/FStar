@@ -84,8 +84,9 @@ private let inv_1 (h:heap) (fp:fp) :Type0 =
   fun s ->
     let r_1 = hd s in
     let r_2 = hd (tl s) in
-    let x:nat = read_weak r_1 + read_weak r_2 in
-    x
+    let x = read_weak r_1 in
+    let y = read_weak r_2 in
+    x + y
 
 type counter_0 = c:counter{C?.inv c == inv_0 /\ C?.c c == (incr_0, get_0)}
 type counter_1 = c:counter{C?.inv c == inv_1 /\ C?.c c == (incr_1, get_1)}

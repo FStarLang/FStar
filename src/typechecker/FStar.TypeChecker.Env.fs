@@ -891,6 +891,81 @@ let build_lattice env se = match se with
 
   | _ -> env
 
+let comp_to_comp_typ (env:env) c =
+    let c = match c.n with
+            | Total (t, None) ->
+              let u = env.universe_of env t in
+              S.mk_Total' t (Some u)
+            | GTotal (t, None) ->
+              let u = env.universe_of env t in
+              S.mk_GTotal' t (Some u)
+            | _ -> c in
+    U.comp_to_comp_typ c
+
+let rec unfold_effect_abbrev env comp =
+  let c = comp_to_comp_typ env comp in
+  match lookup_effect_abbrev env c.comp_univs c.effect_name with
+    | None -> c
+    | Some (binders, cdef) ->
+      let binders, cdef = Subst.open_comp binders cdef in
+      if List.length binders <> List.length c.effect_args + 1
+      then raise (Error (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
+                                (BU.string_of_int (List.length binders))
+                                (BU.string_of_int (List.length c.effect_args + 1))
+                                (Print.comp_to_string (S.mk_Comp c))
+                            , comp.pos));
+      let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
+      let c1 = Subst.subst_comp inst cdef in
+      let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
+      unfold_effect_abbrev env c
+
+let effect_repr_aux only_reifiable env c u_c =
+    match effect_decl_opt env (norm_eff_name env (U.comp_effect_name c)) with
+    | None -> None
+    | Some ed ->
+        if only_reifiable && not (ed.qualifiers |> List.contains Reifiable)
+        then None
+        else match ed.repr.n with
+        | Tm_unknown -> None
+        | _ ->
+          let c = unfold_effect_abbrev env c in
+          let res_typ, wp = c.result_typ, List.hd c.effect_args in
+          let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr) in
+          Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
+
+let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c
+
+let reify_comp env c u_c : term =
+    let no_reify l = raise (Error(BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l), get_range env)) in
+    match effect_repr_aux true env c u_c with
+    | None -> no_reify (U.comp_effect_name c)
+    | Some tm -> tm
+
+(* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
+(* a body or codomain of an arrow) [x] is reifiable *)
+
+let is_reifiable_effect (env:Env.env) (effect_lid:lident) : bool =
+    let quals = Env.lookup_effect_quals env effect_lid in
+    List.contains Reifiable quals
+
+let is_reifiable (env:Env.env) (c:either<S.lcomp, S.residual_comp>) : bool =
+    let effect_lid = match c with
+        | Inl lc -> lc.eff_name
+        | Inr (eff_name, _) -> eff_name
+    in
+    is_reifiable_effect env effect_lid
+
+let is_reifiable_comp (env:Env.env) (c:S.comp) : bool =
+    match c.n with
+    | Comp ct -> is_reifiable_effect env ct.effect_name
+    | _ -> false
+
+let is_reifiable_function (env:Env.env) (t:S.term) : bool =
+    match (compress t).n with
+    | Tm_arrow (_, c) -> is_reifiable_comp env c
+    | _ -> false
+
+
 ///////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
 ////////////////////////////////////////////////////////////

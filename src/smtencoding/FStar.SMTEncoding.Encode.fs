@@ -20,7 +20,6 @@ open FStar.All
 open Prims
 open FStar
 open FStar.TypeChecker.Env
-open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.TypeChecker
@@ -39,16 +38,16 @@ module TcUtil = FStar.TypeChecker.Util
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
-let vargs args = List.filter (function (Inl _, _) -> false | _ -> true) args
+let vargs args = List.filter (function (BU.Inl _, _) -> false | _ -> true) args
 let subst_lcomp_opt s l = match l with
-    | Some (Inl l) -> Some (Inl (U.lcomp_of_comp <| SS.subst_comp s (l.comp())))
+    | Some (BU.Inl l) -> Some (BU.Inl (U.lcomp_of_comp <| SS.subst_comp s (l.comp())))
     | _ -> l
 (* ------------------------------------ *)
 (* Some operations on constants *)
 let escape (s:string) = BU.replace_char s '\'' '_'
 let mk_term_projector_name lid (a:bv) =
     let a = {a with ppname=U.unmangle_field_name a.ppname} in
-    escape <| format2 "%s_%s" lid.str a.ppname.idText
+    escape <| BU.format2 "%s_%s" lid.str a.ppname.idText
 let primitive_projector_by_pos env lid i =
     let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (lid.str)) in
     let _, t = Env.lookup_datacon env lid in
@@ -60,7 +59,7 @@ let primitive_projector_by_pos env lid i =
           else let b = List.nth binders i in
                 mk_term_projector_name lid (fst b)
         | _ -> fail ()
-let mk_term_projector_name_by_pos lid (i:int) = escape <| format2 "%s_%s" lid.str (string_of_int i)
+let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" lid.str (string_of_int i)
 let mk_term_projector (lid:lident) (a:bv) : term =
     mkFreeV(mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
 let mk_term_projector_by_pos (lid:lident) (i:int) : term =
@@ -90,13 +89,13 @@ let varops =
         let y = escape y in
         let y = match BU.find_map (!scopes) (fun (names, _) -> BU.smap_try_find names y) with
                   | None -> y
-                  | Some _ -> incr ctr; y ^ "__" ^ (string_of_int !ctr) in
+                  | Some _ -> BU.incr ctr; y ^ "__" ^ (string_of_int !ctr) in
         let top_scope = fst <| List.hd !scopes in
         BU.smap_add top_scope y true; y in
     let new_var pp rn = mk_unique <| pp.idText ^ "__" ^ (string_of_int rn) in
     let new_fvar lid = mk_unique lid.str in
-    let next_id () = incr ctr; !ctr in
-    let fresh pfx = format2 "%s_%s" pfx (string_of_int <| next_id()) in
+    let next_id () = BU.incr ctr; !ctr in
+    let fresh pfx = BU.format2 "%s_%s" pfx (string_of_int <| next_id()) in
     let string_const s = match BU.find_map !scopes (fun (_, strings) -> BU.smap_try_find strings s) with
         | Some f -> f
         | None ->
@@ -184,7 +183,7 @@ let lookup_term_var env a =
         //AR: this is a temporary fix, use reserved u__ for mangling names
         let a2 = unmangle a in
         (match aux a2 with
-            | None -> failwith (format2 "Bound term variable not found (after unmangling): %s in environment: %s" (Print.bv_to_string a2) (print_env env))
+            | None -> failwith (BU.format2 "Bound term variable not found (after unmangling): %s in environment: %s" (Print.bv_to_string a2) (print_env env))
             | Some (b,t) -> t)
     | Some (b,t) -> t
 
@@ -200,7 +199,7 @@ let contains_name env (s:string) =
     lookup_binding env (function Binding_fvar(b, t1, t2, t3) when (b.str=s) -> Some () | _ -> None) |> Option.isSome
 let lookup_lid env a =
     match try_lookup_lid env a with
-    | None -> failwith (format1 "Name not found: %s" (Print.lid_to_string a))
+    | None -> failwith (BU.format1 "Name not found: %s" (Print.lid_to_string a))
     | Some s -> s
 let push_free_var env (x:lident) fname ftok =
     {env with bindings=Binding_fvar(x, fname, ftok, None)::env.bindings}
@@ -228,7 +227,7 @@ let try_lookup_free_var env l =
 let lookup_free_var env a =
     match try_lookup_free_var env a.v with
         | Some t -> t
-        | None -> failwith (format1 "Name not found: %s" (Print.lid_to_string a.v))
+        | None -> failwith (BU.format1 "Name not found: %s" (Print.lid_to_string a.v))
 let lookup_free_var_name env a = let x, _, _ = lookup_lid env a.v in x
 let lookup_free_var_sym env a =
     let name, sym, zf_opt = lookup_lid env a.v in
@@ -288,12 +287,12 @@ let head_normal env t =
 
 let head_redex env t =
     match (U.un_uinst t).n with
-    | Tm_abs(_, _, Some (Inr (l, flags))) ->
+    | Tm_abs(_, _, Some (BU.Inr (l, flags))) ->
       Ident.lid_equals l Const.effect_Tot_lid
       || Ident.lid_equals l Const.effect_GTot_lid
       || List.existsb (function TOTAL -> true | _ -> false) flags
 
-    | Tm_abs(_, _, Some (Inl lc)) ->
+    | Tm_abs(_, _, Some (BU.Inl lc)) ->
       U.is_tot_or_gtot_lcomp lc
 
     | Tm_fvar fv ->
@@ -343,44 +342,17 @@ let is_eta env vars t =
         | _ -> None in
   aux t (List.rev vars)
 
-(* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
-(* a body or codomain of an arrow) [x] is reifiable *)
-
-let is_reifiable_effect (env:Env.env) (effect_lid:lident) : bool =
-  let quals = Env.lookup_effect_quals env effect_lid in
-  List.contains Reifiable quals
-
-let is_reifiable (env:Env.env) (c:either<S.lcomp, S.residual_comp>) : bool =
-  let effect_lid = match c with
-    | Inl lc -> lc.eff_name
-    | Inr (eff_name, _) -> eff_name
-  in
-  is_reifiable_effect env effect_lid
-
-let is_reifiable_comp (env:Env.env) (c:S.comp) : bool =
-  match c.n with
-  | Comp ct -> is_reifiable_effect env ct.effect_name
-  | _ -> false
-
-let is_reifiable_function (env:Env.env) (t:S.term) : bool =
-  match (SS.compress t).n with
-  | Tm_arrow (_, c) -> is_reifiable_comp env c
-  | _ -> false
-
 (* [reify_body env t] assumes that [t] has a reifiable computation type *)
 (* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
 (* and returns the result of reifying t *)
 let reify_body (env:Env.env) (t:S.term) : S.term =
-  let tm = U.mk_reify t in
-  let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env tm in
-  if Env.debug env <| Options.Other "SMTEncodingReify"
-  then BU.print2 "Reified body %s \nto %s\n"
-                (Print.term_to_string tm)
-                (Print.term_to_string tm') ;
-  tm'
-
-
-
+    let tm = U.mk_reify t in
+    let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env tm in
+    if Env.debug env <| Options.Other "SMTEncodingReify"
+    then BU.print2 "Reified body %s \nto %s\n"
+        (Print.term_to_string tm)
+        (Print.term_to_string tm') ;
+    tm'
 (* </Utilities> *)
 
 (**********************************************************************************)
@@ -488,7 +460,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
     then BU.print3 "(%s) (%s)   %s\n" (Print.tag_of_term t) (Print.tag_of_term t0) (Print.term_to_string t0);
     match t0.n with
       | Tm_delayed  _
-      | Tm_unknown    -> failwith (format4 "(%s) Impossible: %s\n%s\n%s\n" (Range.string_of_range <| t.pos) (Print.tag_of_term t0) (Print.term_to_string t0) (Print.term_to_string t))
+      | Tm_unknown    -> failwith (BU.format4 "(%s) Impossible: %s\n%s\n%s\n" (Range.string_of_range <| t.pos) (Print.tag_of_term t0) (Print.term_to_string t0) (Print.term_to_string t))
 
       | Tm_bvar x ->
         failwith (BU.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
@@ -744,8 +716,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> snd)
-                | Tm_ascribed(_, Inl t, _) -> Some t
-                | Tm_ascribed(_, Inr c, _) -> Some (U.comp_result c)
+                | Tm_ascribed(_, BU.Inl t, _) -> Some t
+                | Tm_ascribed(_, BU.Inr c, _) -> Some (U.comp_result c)
                 | _ -> None in
 
             begin match head_type with
@@ -773,28 +745,28 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             mkFreeV(f, Term_sort), [decl]
           in
 
-          let is_impure = function
-            | Inl lc -> not (U.is_pure_or_ghost_lcomp lc)
-            | Inr (eff, _) -> TypeChecker.Util.is_pure_or_ghost_effect env.tcenv eff |> not
+          let is_impure (lc:BU.either<S.lcomp, S.residual_comp>) = match lc with
+            | BU.Inl lc -> not (U.is_pure_or_ghost_lcomp lc)
+            | BU.Inr (eff, _) -> TypeChecker.Util.is_pure_or_ghost_effect env.tcenv eff |> not
           in
 
           let reify_comp_and_body env c body =
             let reified_body = reify_body env.tcenv body in
             let c = match c with
-              | Inl lc ->
-                let typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) lc U_unknown in
-                Inl (U.lcomp_of_comp (S.mk_Total typ))
+              | BU.Inl lc ->
+                let typ = reify_comp ({env.tcenv with lax=true}) (lc.comp ()) U_unknown in
+                BU.Inl (U.lcomp_of_comp (S.mk_Total typ))
 
               (* In this case we don't have enough information to reconstruct the *)
               (* whole computation type and reify it *)
-              | Inr (eff_name, _) -> c
+              | BU.Inr (eff_name, _) -> c
             in
             c, reified_body
           in
 
           let codomain_eff lc = match lc with
-            | Inl lc -> SS.subst_comp opening (lc.comp()) |> Some
-            | Inr (eff, flags) ->
+            | BU.Inl lc -> SS.subst_comp opening (lc.comp()) |> Some
+            | BU.Inr (eff, flags) ->
               let new_uvar () = FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst in
               if Ident.lid_equals eff Const.effect_Tot_lid
               then S.mk_Total (new_uvar()) |> Some
@@ -813,6 +785,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               fallback ()
 
             | Some lc ->
+              let lc : BU.either<S.lcomp, S.residual_comp> = lc in
               if is_impure lc && not (is_reifiable env.tcenv lc)
               then fallback() //we know it's not pure; so don't encode it precisely
               else
@@ -856,10 +829,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     f, f_decls
           end
 
-      | Tm_let((_, {lbname=Inr _}::_), _) ->
+      | Tm_let((_, {lbname=BU.Inr _}::_), _) ->
         failwith "Impossible: already handled by encoding of Sig_let"
 
-      | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
+      | Tm_let((false, [{lbname=BU.Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
         encode_let x t1 e1 e2 env encode_term
 
       | Tm_let _ ->
@@ -1130,7 +1103,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
            let t, decls = encode_match e pats mkFalse env encode_formula in
            t, decls
 
-        | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
+        | Tm_let((false, [{lbname=BU.Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
            let t, decls = encode_let x t1 e1 e2 env encode_formula in
            t, decls
 
@@ -1473,7 +1446,7 @@ let encode_free_var env fv tt t_norm quals =
                 let args, comp = curried_arrow_formals_comp t_norm in
                 let comp =
                   if is_reifiable_comp env.tcenv comp
-                  then S.mk_Total (TcUtil.reify_comp ({env.tcenv with lax=true}) (U.lcomp_of_comp comp) U_unknown)
+                  then S.mk_Total (reify_comp ({env.tcenv with lax=true}) comp U_unknown)
                   else comp
                 in
                 if encode_non_total_function_typ
@@ -1570,7 +1543,7 @@ let encode_top_level_val env lid t quals =
 
 let encode_top_level_vals env bindings quals =
     bindings |> List.fold_left (fun (decls, env) lb ->
-        let decls', env = encode_top_level_val env (right lb.lbname) lb.lbtyp quals in
+        let decls', env = encode_top_level_val env (BU.right lb.lbname) lb.lbtyp quals in
         decls@decls', env) ([], env)
 
 let encode_top_level_let :
@@ -1596,7 +1569,7 @@ let encode_top_level_let :
       (* The input type [t_norm] might contain reifiable computation type which must be reified at this point *)
       let get_result_type c =
           if is_reifiable_comp env.tcenv c
-          then TcUtil.reify_comp ({env.tcenv with lax = true}) (U.lcomp_of_comp c) U_unknown
+          then reify_comp ({env.tcenv with lax = true}) c U_unknown
           else U.comp_result c
       in
 
@@ -1665,8 +1638,8 @@ let encode_top_level_let :
             (* non-reified reifiable computation type. *)
             (* TODO : clear this mess, the declaration should have a type corresponding to *)
             (* the encoded term *)
-            let tok, decl, env = declare_top_level_let env (right lb.lbname) lb.lbtyp t_norm in
-            (right lb.lbname, tok)::toks, t_norm::typs, decl::decls, env)
+            let tok, decl, env = declare_top_level_let env (BU.right lb.lbname) lb.lbtyp t_norm in
+            (BU.right lb.lbname, tok)::toks, t_norm::typs, decl::decls, env)
             ([], [], [], env)
         in
         let toks = List.rev toks in
@@ -1845,8 +1818,8 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | Some l -> l.str in
     let g, e = encode_sigelt' env se in
     match g with
-     | [] -> [Caption (format1 "<Skipped %s/>" nm)], e
-     | _ -> Caption (format1 "<Start encoding %s>" nm)::g@[Caption (format1 "</end encoding %s>" nm)], e
+     | [] -> [Caption (BU.format1 "<Skipped %s/>" nm)], e
+     | _ -> Caption (BU.format1 "<Start encoding %s>" nm)::g@[Caption (BU.format1 "</end encoding %s>" nm)], e
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     match se with
@@ -1874,7 +1847,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let close_effect_params tm =
               match ed.binders with
               | [] -> tm
-              | _ -> S.mk (Tm_abs(ed.binders, tm, Some <| Inr (Const.effect_Tot_lid, [TOTAL]))) None tm.pos
+              | _ -> S.mk (Tm_abs(ed.binders, tm, Some <| BU.Inr (Const.effect_Tot_lid, [TOTAL]))) None tm.pos
             in
 
             let encode_action env (a:S.action) =
@@ -1931,12 +1904,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
      | Sig_assume(l, f, _, _) ->
         let f, decls = encode_formula f env in
-        let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.lid_to_string l)), Some (varops.mk_unique ("assumption_"^l.str)))] in
+        let g = [Term.Assume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), Some (varops.mk_unique ("assumption_"^l.str)))] in
         decls@g, env
 
      | Sig_let(lbs, r, _, quals, _) when (quals |> List.contains S.Irreducible) ->
        let env, decls = BU.fold_map (fun env lb ->
-        let lid = (right lb.lbname).fv_name.v in
+        let lid = (BU.right lb.lbname).fv_name.v in
         if Option.isNone <| Env.try_lookup_val_decl env.tcenv lid
         then let val_decl = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, quals, r) in
              let decls, env = encode_sigelt' env val_decl in
@@ -1944,7 +1917,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         else env, []) env (snd lbs) in
        List.flatten decls, env
 
-     | Sig_let((_, [{lbname=Inr b2t}]), _, _, _, _) when S.fv_eq_lid b2t Const.b2t_lid ->
+     | Sig_let((_, [{lbname=BU.Inr b2t}]), _, _, _, _) when S.fv_eq_lid b2t Const.b2t_lid ->
        let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v in
        let xx = ("x", Term_sort) in
        let x = mkFreeV xx in
@@ -1968,7 +1941,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     | Sig_let((false, [lb]), _, _, quals, _) when (quals |> BU.for_some (function Projector _ -> true | _ -> false)) ->
      //Projectors are also are encoded directly via (our encoding of) theory of datatypes
      //Except in some cases where the front-end does not emit a declare_typ for some projector, because it doesn't know how to compute it
-     let fv = right lb.lbname in
+     let fv = BU.right lb.lbname in
      let l = fv.fv_name.v in
      begin match try_lookup_free_var env l with
         | Some _ ->
@@ -2163,7 +2136,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let g = binder_decls
                 @decls2
                 @decls3
-                @[Term.DeclFun(ddtok, [], Term_sort, Some (format1 "data constructor proxy: %s" (Print.lid_to_string d)))]
+                @[Term.DeclFun(ddtok, [], Term_sort, Some (BU.format1 "data constructor proxy: %s" (Print.lid_to_string d)))]
                 @proxy_fresh
                 @decls_formals
                 @decls_pred

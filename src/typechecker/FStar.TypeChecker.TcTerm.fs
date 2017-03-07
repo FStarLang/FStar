@@ -401,7 +401,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             end ;
             u
     in
-    let repr = TcUtil.reify_comp env c u_c in
+    let repr = Env.reify_comp env (c.comp()) u_c in
     let e = mk (Tm_app(reify_op, [(e, aqual)])) (Some repr.n) top.pos in
     let c = S.mk_Total repr |> U.lcomp_of_comp in
     let e, c, g' = comp_check_expected_typ env e c in
@@ -741,7 +741,7 @@ and tc_comp env c : comp                                      (* checked version
           result_typ=fst res;
           effect_args=args}) in
       let u_c =
-        match TcUtil.effect_repr env c u with
+        match Env.effect_repr env c u with
         | None -> u
         | Some tm -> env.universe_of env tm in
       c, u_c, List.fold_left Rel.conj_guard f guards
@@ -2017,7 +2017,7 @@ let rec universe_of_aux env e =
         let res = U.comp_result c in
         level_of_type env res (universe_of_aux env res) in
      let u_c =
-        match TcUtil.effect_repr env c u_res with
+        match Env.effect_repr env c u_res with
         | None -> u_res
         | Some trepr -> level_of_type env trepr (universe_of_aux env trepr) in
      let u = N.normalize_universe env (S.U_max (u_c::us)) in

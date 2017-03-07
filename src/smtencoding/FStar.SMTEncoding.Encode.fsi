@@ -32,8 +32,8 @@ val encode_sig: Env.env -> S.sigelt -> unit
 val encode_modul: Env.env -> S.modul -> unit
 val is_trivial: Env.env -> S.term -> bool
 val encode_query: option<(unit -> string)>
-                -> Env.env 
-                -> S.term 
+                -> Env.env
+                -> S.term
                 ->  list<decl>  //prelude, translation of tcenv
                   * list<ErrorReporting.label> //labels in the query
                   * decl        //the query itself

@@ -40,7 +40,9 @@ all:\
   UnionFind.uver\
   UnionFind.Functions.uver\
   While.uver\
-  WhileReify.uver
+  WhileReify.uver \
+  OTP.uver \
+  ElGamal.uver
 
 pack:
 	cd ../..; zip -r relational.zip examples/rel examples/dm4free
