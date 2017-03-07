@@ -28,15 +28,15 @@ let parse :
                            (lid1,decls1,uu____58))::[],(FStar_Parser_AST.Module
                            (lid2,decls2))::[]) when
                             FStar_Ident.lid_equals lid1 lid2 ->
-                            let _0_796 =
+                            let _0_790 =
                               FStar_Parser_AST.Module
-                                (let _0_795 =
+                                (let _0_789 =
                                    FStar_Parser_Interleave.interleave decls1
                                      decls2
                                     in
-                                 (lid1, _0_795))
+                                 (lid1, _0_789))
                                in
-                            [_0_796]
+                            [_0_790]
                         | uu____68 ->
                             Prims.raise
                               (FStar_Errors.Err
@@ -64,15 +64,15 @@ let tc_prims :
     (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env;
     (let prims_filename = FStar_Options.prims ()  in
      let uu____90 =
-       let _0_797 = FStar_ToSyntax_Env.empty_env ()  in
-       parse _0_797 None prims_filename  in
+       let _0_791 = FStar_ToSyntax_Env.empty_env ()  in
+       parse _0_791 None prims_filename  in
      match uu____90 with
      | (dsenv,prims_mod) ->
          let uu____103 =
            FStar_Util.record_time
              (fun uu____110  ->
-                let _0_798 = FStar_List.hd prims_mod  in
-                FStar_TypeChecker_Tc.check_module env _0_798)
+                let _0_792 = FStar_List.hd prims_mod  in
+                FStar_TypeChecker_Tc.check_module env _0_792)
             in
          (match uu____103 with
           | ((prims_mod,env),elapsed_time) ->
@@ -105,16 +105,16 @@ let tc_one_fragment :
                        match curmod with
                        | Some modul ->
                            let uu____177 =
-                             let _0_800 =
+                             let _0_794 =
                                FStar_Parser_Dep.lowercase_module_name
                                  (FStar_List.hd (FStar_Options.file_list ()))
                                 in
-                             let _0_799 =
+                             let _0_793 =
                                FStar_String.lowercase
                                  (FStar_Ident.string_of_lid
                                     modul.FStar_Syntax_Syntax.name)
                                 in
-                             _0_800 <> _0_799  in
+                             _0_794 <> _0_793  in
                            if uu____177
                            then
                              Prims.raise
@@ -202,8 +202,8 @@ let tc_one_file :
                      ((FStar_Options.record_hints ()) ||
                         (FStar_Options.use_hints ()))
                    ->
-                   let _0_801 = FStar_Parser_ParseIt.find_file fn  in
-                   FStar_SMTEncoding_Solver.with_hints_db _0_801 check_mods
+                   let _0_795 = FStar_Parser_ParseIt.find_file fn  in
+                   FStar_SMTEncoding_Solver.with_hints_db _0_795 check_mods
                | uu____423 -> check_mods ())
   
 let needs_interleaving : Prims.string -> Prims.string -> Prims.bool =
@@ -212,17 +212,17 @@ let needs_interleaving : Prims.string -> Prims.string -> Prims.bool =
       let m1 = FStar_Parser_Dep.lowercase_module_name intf  in
       let m2 = FStar_Parser_Dep.lowercase_module_name impl  in
       ((m1 = m2) &&
-         (let _0_802 = FStar_Util.get_file_extension intf  in _0_802 = "fsti"))
+         (let _0_796 = FStar_Util.get_file_extension intf  in _0_796 = "fsti"))
         &&
-        (let _0_803 = FStar_Util.get_file_extension impl  in _0_803 = "fst")
+        (let _0_797 = FStar_Util.get_file_extension impl  in _0_797 = "fst")
   
 let pop_context : FStar_TypeChecker_Env.env -> Prims.string -> Prims.unit =
   fun env  ->
     fun msg  ->
-      (let _0_804 = FStar_ToSyntax_Env.pop ()  in
-       FStar_All.pipe_right _0_804 Prims.ignore);
-      (let _0_805 = FStar_TypeChecker_Env.pop env msg  in
-       FStar_All.pipe_right _0_805 Prims.ignore);
+      (let _0_798 = FStar_ToSyntax_Env.pop ()  in
+       FStar_All.pipe_right _0_798 Prims.ignore);
+      (let _0_799 = FStar_TypeChecker_Env.pop env msg  in
+       FStar_All.pipe_right _0_799 Prims.ignore);
       (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh ()
   
 let push_context :
@@ -252,7 +252,7 @@ let tc_one_file_and_intf :
           (match intf with
            | None  -> tc_one_file dsenv env None impl
            | Some uu____486 when
-               let _0_806 = FStar_Options.codegen ()  in _0_806 <> None ->
+               let _0_800 = FStar_Options.codegen ()  in _0_800 <> None ->
                ((let uu____489 = Prims.op_Negation (FStar_Options.lax ())  in
                  if uu____489
                  then
@@ -292,13 +292,13 @@ let tc_one_file_from_remaining :
           let uu____561 =
             match remaining with
             | intf::impl::remaining when needs_interleaving intf impl ->
-                let _0_807 = tc_one_file_and_intf (Some intf) impl dsenv env
+                let _0_801 = tc_one_file_and_intf (Some intf) impl dsenv env
                    in
-                (remaining, _0_807)
+                (remaining, _0_801)
             | intf_or_impl::remaining ->
-                let _0_808 = tc_one_file_and_intf None intf_or_impl dsenv env
+                let _0_802 = tc_one_file_and_intf None intf_or_impl dsenv env
                    in
-                (remaining, _0_808)
+                (remaining, _0_802)
             | [] -> ([], ([], dsenv, env))  in
           (match uu____561 with
            | (remaining,(nmods,dsenv,env)) ->
@@ -339,8 +339,8 @@ let batch_mode_tc_no_prims :
         | (all_mods,(dsenv,env)) ->
             ((let uu____779 =
                 (FStar_Options.interactive ()) &&
-                  (let _0_809 = FStar_Errors.get_err_count ()  in
-                   _0_809 = (Prims.parse_int "0"))
+                  (let _0_803 = FStar_Errors.get_err_count ()  in
+                   _0_803 = (Prims.parse_int "0"))
                  in
               if uu____779
               then
@@ -371,11 +371,11 @@ let batch_mode_tc :
              FStar_Util.print1
                "Here's the list of filenames we will process: %s\n"
                (FStar_String.concat " " filenames);
-             (let _0_811 =
-                let _0_810 = FStar_Options.verify_module ()  in
-                FStar_String.concat " " _0_810  in
+             (let _0_805 =
+                let _0_804 = FStar_Options.verify_module ()  in
+                FStar_String.concat " " _0_804  in
               FStar_Util.print1
-                "Here's the list of modules we will verify: %s\n" _0_811))
+                "Here's the list of modules we will verify: %s\n" _0_805))
           else ());
          (let uu____819 = batch_mode_tc_no_prims dsenv env filenames  in
           match uu____819 with

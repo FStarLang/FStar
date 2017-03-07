@@ -107,9 +107,9 @@ let push :
               (FStar_Options.push ();
                if restore_cmd_line_options
                then
-                 (let _0_812 = FStar_Options.restore_cmd_line_options false
+                 (let _0_806 = FStar_Options.restore_cmd_line_options false
                      in
-                  FStar_All.pipe_right _0_812 Prims.ignore)
+                  FStar_All.pipe_right _0_806 Prims.ignore)
                else ();
                res)
   
@@ -162,8 +162,8 @@ let check_frag :
                match uu____344 with
                | Some (m,dsenv,env) ->
                    Some
-                     (let _0_813 = FStar_Errors.get_err_count ()  in
-                      (m, (dsenv, env), _0_813))
+                     (let _0_807 = FStar_Errors.get_err_count ()  in
+                      (m, (dsenv, env), _0_807))
                | uu____375 -> None
              with
              | FStar_Errors.Error (msg,r) when
@@ -171,18 +171,18 @@ let check_frag :
                  (FStar_TypeChecker_Err.add_errors env [(msg, r)]; None)
              | FStar_Errors.Err msg when
                  Prims.op_Negation (FStar_Options.trace_error ()) ->
-                 ((let _0_816 =
-                     let _0_815 =
-                       let _0_814 = FStar_TypeChecker_Env.get_range env  in
-                       (msg, _0_814)  in
-                     [_0_815]  in
-                   FStar_TypeChecker_Err.add_errors env _0_816);
+                 ((let _0_810 =
+                     let _0_809 =
+                       let _0_808 = FStar_TypeChecker_Env.get_range env  in
+                       (msg, _0_808)  in
+                     [_0_809]  in
+                   FStar_TypeChecker_Err.add_errors env _0_810);
                   None))
   
 let report_fail : Prims.unit -> Prims.unit =
   fun uu____422  ->
-    (let _0_817 = FStar_Errors.report_all ()  in
-     FStar_All.pipe_right _0_817 Prims.ignore);
+    (let _0_811 = FStar_Errors.report_all ()  in
+     FStar_All.pipe_right _0_811 Prims.ignore);
     FStar_ST.write FStar_Errors.num_errs (Prims.parse_int "0")
   
 type input_chunks =
@@ -216,11 +216,11 @@ type interactive_state =
   buffer: input_chunks Prims.list FStar_ST.ref ;
   log: FStar_Util.file_handle Prims.option FStar_ST.ref }
 let the_interactive_state : interactive_state =
-  let _0_821 = FStar_Util.new_string_builder ()  in
-  let _0_820 = FStar_Util.mk_ref None  in
-  let _0_819 = FStar_Util.mk_ref []  in
-  let _0_818 = FStar_Util.mk_ref None  in
-  { chunk = _0_821; stdin = _0_820; buffer = _0_819; log = _0_818 } 
+  let _0_815 = FStar_Util.new_string_builder ()  in
+  let _0_814 = FStar_Util.mk_ref None  in
+  let _0_813 = FStar_Util.mk_ref []  in
+  let _0_812 = FStar_Util.mk_ref None  in
+  { chunk = _0_815; stdin = _0_814; buffer = _0_813; log = _0_812 } 
 let rec read_chunk : Prims.unit -> input_chunks =
   fun uu____574  ->
     let s = the_interactive_state  in
@@ -278,13 +278,13 @@ let rec read_chunk : Prims.unit -> input_chunks =
              let lc =
                match FStar_Util.split lc_lax " " with
                | l::c::"#lax"::[] ->
-                   let _0_823 = FStar_Util.int_of_string l  in
-                   let _0_822 = FStar_Util.int_of_string c  in
-                   (true, _0_823, _0_822)
+                   let _0_817 = FStar_Util.int_of_string l  in
+                   let _0_816 = FStar_Util.int_of_string c  in
+                   (true, _0_817, _0_816)
                | l::c::[] ->
-                   let _0_825 = FStar_Util.int_of_string l  in
-                   let _0_824 = FStar_Util.int_of_string c  in
-                   (false, _0_825, _0_824)
+                   let _0_819 = FStar_Util.int_of_string l  in
+                   let _0_818 = FStar_Util.int_of_string c  in
+                   (false, _0_819, _0_818)
                | uu____648 ->
                    (FStar_Util.print_warning
                       (Prims.strcat
@@ -312,11 +312,11 @@ let shift_chunk : Prims.unit -> input_chunks =
 let fill_buffer : Prims.unit -> Prims.unit =
   fun uu____673  ->
     let s = the_interactive_state  in
-    let _0_829 =
-      let _0_828 = FStar_ST.read s.buffer  in
-      let _0_827 = let _0_826 = read_chunk ()  in [_0_826]  in
-      FStar_List.append _0_828 _0_827  in
-    FStar_ST.write s.buffer _0_829
+    let _0_823 =
+      let _0_822 = FStar_ST.read s.buffer  in
+      let _0_821 = let _0_820 = read_chunk ()  in [_0_820]  in
+      FStar_List.append _0_822 _0_821  in
+    FStar_ST.write s.buffer _0_823
   
 let deps_of_our_file :
   Prims.string -> (Prims.string Prims.list * Prims.string Prims.option) =
@@ -328,9 +328,9 @@ let deps_of_our_file :
     let uu____690 =
       FStar_List.partition
         (fun x  ->
-           let _0_831 = FStar_Parser_Dep.lowercase_module_name x  in
-           let _0_830 = FStar_Parser_Dep.lowercase_module_name filename  in
-           _0_831 <> _0_830) deps
+           let _0_825 = FStar_Parser_Dep.lowercase_module_name x  in
+           let _0_824 = FStar_Parser_Dep.lowercase_module_name filename  in
+           _0_825 <> _0_824) deps
        in
     match uu____690 with
     | (deps,same_name) ->
@@ -379,8 +379,8 @@ let rec tc_deps :
             | uu____750 ->
                 let stack = (env, m) :: stack  in
                 let env =
-                  let _0_832 = FStar_Options.lax ()  in
-                  push env _0_832 true "typecheck_modul"  in
+                  let _0_826 = FStar_Options.lax ()  in
+                  push env _0_826 true "typecheck_modul"  in
                 let uu____761 = tc_one_file remaining env  in
                 (match uu____761 with
                  | ((intf,impl),env,modl,remaining) ->
@@ -448,8 +448,8 @@ let update_deps :
                 | uu____996::ts ->
                     (pop env "";
                      (let uu____1018 =
-                        let _0_834 = FStar_List.hd stack  in
-                        let _0_833 = FStar_List.tl stack  in (_0_834, _0_833)
+                        let _0_828 = FStar_List.hd stack  in
+                        let _0_827 = FStar_List.tl stack  in (_0_828, _0_827)
                          in
                       match uu____1018 with
                       | ((env,uu____1038),stack) ->
@@ -476,9 +476,9 @@ let update_deps :
                               tc_deps m good_stack env depnames good_ts
                             else
                               (let uu____1113 =
-                                 let _0_836 = FStar_List.hd st  in
-                                 let _0_835 = FStar_List.tl st  in
-                                 (_0_836, _0_835)  in
+                                 let _0_830 = FStar_List.hd st  in
+                                 let _0_829 = FStar_List.tl st  in
+                                 (_0_830, _0_829)  in
                                match uu____1113 with
                                | (stack_elt,st') ->
                                    iterate depnames' st' env' ts' (stack_elt
@@ -521,9 +521,9 @@ let rec go :
                   let uu____1289 =
                     if (FStar_List.length stack) = (FStar_List.length ts)
                     then
-                      let _0_837 = update_deps filename curmod stack env ts
+                      let _0_831 = update_deps filename curmod stack env ts
                          in
-                      (true, _0_837)
+                      (true, _0_831)
                     else (false, (stack, env, ts))  in
                   (match uu____1289 with
                    | (restore_cmd_line_options,(stack,env,ts)) ->
@@ -575,9 +575,9 @@ let interactive_mode : Prims.string -> Prims.unit =
                 match maybe_intf with
                 | Some intf ->
                     let frag =
-                      let _0_838 = FStar_Util.file_get_contents intf  in
+                      let _0_832 = FStar_Util.file_get_contents intf  in
                       {
-                        FStar_Parser_ParseIt.frag_text = _0_838;
+                        FStar_Parser_ParseIt.frag_text = _0_832;
                         FStar_Parser_ParseIt.frag_line =
                           (Prims.parse_int "0");
                         FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
@@ -611,9 +611,9 @@ let interactive_mode : Prims.string -> Prims.unit =
                       in
                    if uu____1500
                    then
-                     let _0_839 = FStar_List.hd (FStar_Options.file_list ())
+                     let _0_833 = FStar_List.hd (FStar_Options.file_list ())
                         in
-                     FStar_SMTEncoding_Solver.with_hints_db _0_839
+                     FStar_SMTEncoding_Solver.with_hints_db _0_833
                        (fun uu____1501  ->
                           go ((Prims.parse_int "1"), (Prims.parse_int "0"))
                             filename stack initial_mod env ts)
