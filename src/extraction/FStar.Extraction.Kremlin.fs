@@ -365,7 +365,10 @@ and translate_decl env d: option<decl> =
       let name = env.module_name, name in
       let flags = translate_flags flags in
       if assumed then
-        Some (DExternal (None, name, translate_type env t0))
+        if List.length tvars = 0 then
+          Some (DExternal (None, name, translate_type env t0))
+        else
+          None
       else begin
         try
           let body = translate_expr env body in
