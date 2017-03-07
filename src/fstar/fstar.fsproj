@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--explicit_deps Test.fst --debug Test --debug_level LogTypes --debug_level SMTEncoding --verify_module Test --print_implicits</StartArguments>
+    <StartArguments>--include .. UserTactics.Example1.fst --print_implicits --print_universes --debug UserTactics.Example1 --prn</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\test\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\everest\FStar\examples\tactics\micro-benchmarks\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

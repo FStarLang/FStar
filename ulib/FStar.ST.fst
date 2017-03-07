@@ -34,7 +34,7 @@ effect State (a:Type) (wp:st_wp a) =
        STATE a wp
 effect ST (a:Type) (pre:st_pre) (post: (heap -> Tot (st_post a))) =
        STATE a
-             (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1))
+             (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. post h a h1 ==> p a h1))
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 r h1 -> True)
 

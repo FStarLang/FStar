@@ -1,14 +1,15 @@
 module FStar.Tactics
 
-assume type name
+assume type binder
 assume type term
+assume type env
 
 type typ     = term
-type binder  = name * term
-type binders = list (name * term)
-type env     = binders
+type binders = list binder
 type goal    = env * term
-type state   = list goal
+type goals   = list goal
+type state   = goals  //active goals 
+             * goals  //goals that have to be dispatched to SMT
 noeq type formula = 
   | True_  : formula
   | False_ : formula  
@@ -74,7 +75,7 @@ let assert_by_tactic (t:tactic) (p:Type)
 (* Primitives provided natively by the tactic engine *)
 assume val forall_intros: unit -> Tac binders
 assume val implies_intro: unit -> Tac binder
-assume val revert  : binder -> Tac unit
+assume val revert  : unit -> Tac unit
 assume val clear   : binder -> Tac unit
 assume val split   : unit -> Tac unit
 assume val merge   : unit -> Tac unit

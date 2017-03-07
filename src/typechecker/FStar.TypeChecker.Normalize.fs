@@ -65,6 +65,12 @@ type step =
   | NoFullNorm
 and steps = list<step>
 
+type primitive_step = {
+    name:Ident.lid;
+    arity:int;
+    interpretation:(args -> term)
+}
+
 type closure =
   | Clos of env * term * memo<(env * term)> * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
   | Univ of universe                               //universe terms do not have free variables
@@ -79,7 +85,8 @@ let closure_to_string = function
 type cfg = {
     steps: steps;
     tcenv: Env.env;
-    delta_level: list<Env.delta_level>  // Controls how much unfolding of definitions should be performed
+    delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
+    primitive_steps:list<primitive_step>
 }
 
 type branches = list<(pat * option<term> * term)>
@@ -657,12 +664,47 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_uvar _
           | Tm_constant _
           | Tm_name _
-          | Tm_fvar( {fv_delta=Delta_constant} )
           | Tm_fvar( {fv_qual=Some Data_ctor } )
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
 
+          | Tm_fvar f when f.fv_delta=Delta_constant -> begin
+                match List.tryFind (fun ps -> S.fv_eq_lid f ps.name) cfg.primitive_steps with
+                | None ->
+                    log cfg (fun () -> BU.print "Tm_fvar: constant does not have a primitive step\n" []) ;
+                    rebuild cfg env stack t
+                | Some ps ->
+                    if List.length stack >= ps.arity
+                    then let rec arguments arity stack =
+                                if arity = 0 then [], stack
+                                else match stack with
+                                    | hd::tl ->
+                                    begin match hd with
+                                        | Arg _ ->
+                                            let rest, stack = arguments (arity - 1) tl in
+                                            hd::rest, stack
+                                        | App({n=Tm_constant FC.Const_reify}, _, _)
+                                        | MemoLazy _ ->
+                                            arguments arity tl
+                                        | _ ->
+                                            failwith "Unexpected argument on the stack"
+                                    end
+                                    | [] -> failwith "Partial application of a primitive: not yet handled"
+                            in
+                            let arg_closures, rest = arguments ps.arity stack in
+                            let args = arg_closures |> List.map (function
+                                | Arg (Clos(env, term, _memo, _fixpoint), aq, _) -> //TODO: review _memo and _fixpoint
+                                  printfn "++++++++++++++++About to normalize %s" (Print.term_to_string term);
+                                  norm ({cfg with delta_level=[NoDelta]}) env [] term, aq
+                                | Arg(Univ _, _, _) //TODO: allow universes
+                                | Arg(Dummy, _, _) //should not be possible
+                                | _ ->
+                                  failwith "Unexpected primitive application") in //should we instead bail out into the rebuild case?
+                            let stepped_tm = ps.interpretation args in
+                            norm cfg env rest stepped_tm
+                    else rebuild cfg env stack t
+            end
           | Tm_app(hd, args)
             when not (cfg.steps |> List.contains NoFullNorm)
               && is_norm_request hd args
@@ -722,16 +764,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | NoDelta -> false
                     | Env.Inlining
                     | Eager_unfolding_only -> true
-                    | Unfold l -> Common.delta_depth_greater_than f.fv_delta l) in
+                    | Unfold l ->
+                      Common.delta_depth_greater_than f.fv_delta l)
+            in
 
             if not should_delta
             then rebuild cfg env stack t
             else let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in //preserve the range info on the returned def
                  begin match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with
-                    | None -> begin
-                        log cfg (fun () -> BU.print "Tm_fvar case 2\n" []) ;
-                        rebuild cfg env stack t
-                      end
+                    | None ->
+                      log cfg (fun () -> BU.print "Tm_fvar case 2\n" []) ;
+                      rebuild cfg env stack t
+
                     | Some (us, t) ->
                       log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
                                     (Print.term_to_string t0) (Print.term_to_string t));
@@ -938,7 +982,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_meta (head, m) ->
             begin match m with
                   | Meta_monadic (m, t) ->
-
+                    printfn "Meta_monadic %s" (Print.lid_to_string m);
                     let should_reify = match stack with
                         | App ({n=Tm_constant FC.Const_reify}, _, _) :: _ ->
                             // BU.print1 "Found a reify on the stack. %s" "" ;
@@ -1314,6 +1358,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
               //see tc.fs, the case of Tm_match and the comment related to issue #594
               let scrutinee = t in
               let norm_and_rebuild_match () =
+                log cfg (fun () -> BU.print_string "no patterns are eligible; rebuilding");
                 let whnf = List.contains WHNF cfg.steps in
                 let cfg_exclude_iota_zeta =
                     let new_delta = cfg.delta_level |> List.filter (function
@@ -1428,9 +1473,11 @@ and rebuild : cfg -> env -> stack -> term -> term =
                 | (p, wopt, b)::rest ->
                    match matches_pat scrutinee p with
                     | Inr false -> //definite mismatch; safe to consider the remaining patterns
+                      log cfg (fun () -> BU.print1 "Failed to match %s" (Print.pat_to_string p));
                       matches scrutinee rest
 
                     | Inr true -> //may match this pattern but t is an open term; block reduction
+                      log cfg (fun () -> BU.print1 "Maybe matches %s" (Print.pat_to_string p));
                       norm_and_rebuild_match ()
 
                     | Inl s -> //definite match
@@ -1455,9 +1502,12 @@ let config s e =
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
-    {tcenv=e; steps=s; delta_level=d}
+    {tcenv=e; steps=s; delta_level=d; primitive_steps=[]}
 
-let normalize s e t = norm (config s e) [] [] t
+let normalize_with_primitive_steps ps s e t =
+    let c = {config s e with primitive_steps=ps} in
+    norm c [] [] t
+let normalize s e t = normalize_with_primitive_steps [] s e t
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
 let ghost_to_pure env c = ghost_to_pure_aux (config [] env) [] c
