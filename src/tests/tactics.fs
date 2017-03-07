@@ -38,6 +38,24 @@ let proofstate_of_goal g = {
     transaction=Unionfind.new_transaction()
 }
 
+
+let rec simplify_eq_impl : tac<unit>
+    = with_cur_goal "simplify_eq_impl" (fun goal ->
+          match destruct_equality_imp goal.goal_ty with
+          | Some (x, e, rhs) -> //we have x==e ==> rhs
+                 //imp_intro: introduce x=e in the context; goal is rhs
+            bind imp_intro (fun eq_h ->
+                 //rewrite: goals become [rhs[e/x]]
+            bind (rewrite eq_h) (fun _ ->
+                 //clear_hd: get rid of the eq_h in the context
+                 //we're left with rhs[e/x]
+            bind clear (fun _ ->
+            visit simplify_eq_impl)))
+          | _ ->
+            printfn "%s is not an equality imp" (P.term_to_string goal.goal_ty);
+            fail "Not an equality implication")
+
+
 let test () =
     FStar.Main.process_args() |> ignore; //set the command line args for debugging
     printfn "Goal is %s" (P.term_to_string g1.goal_ty);

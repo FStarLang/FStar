@@ -102,6 +102,8 @@ let exp_false_bool  = mk (Tm_constant (Const_bool false))
 let exp_unit        = mk (Tm_constant (Const_unit))
 let cons_lid        = pconst  "Cons"
 let nil_lid         = pconst  "Nil"
+let some_lid        = pconst  "Some"
+let none_lid        = pconst  "None"
 let assume_lid      = pconst  "_assume"
 let assert_lid      = pconst  "_assert"
 (* list_append_lid is needed to desugar @ in the compiler *)

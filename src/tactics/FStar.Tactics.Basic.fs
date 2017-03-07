@@ -343,7 +343,7 @@ let maybe_squash env p =
         corresponds to
         val arrow_to_impl : #a:Type0 -> #b:Type0 -> f:(squash a -> GTot (squash b)) -> GTot (a ==> b)
 *)
-let imp_intro : tac<name> =
+let imp_intro : tac<binder> =
     with_cur_goal "imp_intro" (fun goal ->
     match U.destruct_typ_as_formula goal.goal_ty with
     | Some (U.BaseConn(l, [(lhs, _); (rhs, _)]))
@@ -357,7 +357,7 @@ let imp_intro : tac<name> =
       bind dismiss (fun _ ->
       bind (add_goals [new_goal]) (fun _ ->
       printfn "imp_intro: %s" (Print.bv_to_string name);
-      ret name))
+      ret (S.mk_binder name)))
     | _ ->
       fail "Cannot intro this goal, expected an '==>'")
 
@@ -409,21 +409,30 @@ let exact (x:name)
 //            printfn "Exception %A" e;
             fail (BU.format1 "Variable not found: %s" (Print.bv_to_string x)))
 
-let rewrite (x:name) (e:term) : tac<unit>
-    = let mk_eq (env:FStar.TypeChecker.Env.env) x e =
-        U.mk_eq2 (env.universe_of env x.sort) x.sort (S.bv_to_name x) e
-     in
-     with_cur_goal "rewrite" (fun goal ->
-        try let t = Env.lookup_bv goal.context x in
-            let sub_goal =
-                {goal with goal_ty=mk_eq goal.context x e;
-                           witness=None} in //squashed equality proofs
-            let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty} in
-            let new_goals = [sub_goal;goal] in
-            bind dismiss (fun _ ->
-            add_goals new_goals)
-        with _ ->
-             fail (BU.format1 "Variable not found: %s" (Print.bv_to_string x)))
+let rewrite (h:binder) : tac<unit>
+    = with_cur_goal "rewrite" (fun goal ->
+      match U.destruct_typ_as_formula (Env.lookup_bv goal.context (fst h)) with
+      | Some (U.BaseConn(l, [_; (x, _); (e, _)]))
+                when Ident.lid_equals l SC.eq2_lid ->
+        (match (SS.compress x).n with
+         | Tm_name x ->
+           let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty} in
+           replace goal
+         | _ ->
+           fail "Not an equality hypothesis with a variable on the LHS")
+      | _ -> fail "Not an equality hypothesis")
+
+let clear : tac<unit>
+    = with_cur_goal "clear_hd" (fun goal ->
+      match Env.pop_bv goal.context with
+      | None -> fail "Cannot clear; empty context"
+      | Some (x, env') ->
+          let fns = FStar.Syntax.Free.names goal.goal_ty in
+          if Util.set_mem x fns
+          then fail "Cannot clear; variable appears in goal"
+          else let new_goal = {goal with context=env'} in
+               bind dismiss (fun _ ->
+              add_goals [new_goal]))
 
 let clear_hd (x:name) : tac<unit>
     = with_cur_goal "clear_hd" (fun goal ->
@@ -432,12 +441,7 @@ let clear_hd (x:name) : tac<unit>
       | Some (y, env') ->
           if not (S.bv_eq x y)
           then fail "Cannot clear_hd; head variable mismatch"
-          else let fns = FStar.Syntax.Free.names goal.goal_ty in
-               if Util.set_mem x fns
-               then fail "Cannot clear_hd; variable appears in goal"
-               else let new_goal = {goal with context=env'} in
-                    bind dismiss (fun _ ->
-                    add_goals [new_goal]))
+          else clear)
 
 let revert : tac<unit>
     = with_cur_goal "revert" (fun goal ->
@@ -521,7 +525,7 @@ let at_most_one (t:tac<'a>) : tac<'a> =
 let goal_to_string (g1:goal) =
     let g1_binders = Env.all_binders g1.context |> Print.binders_to_string ", " in
     Util.format2 "%s |- %s" g1_binders (Print.term_to_string g1.goal_ty)
-                 
+
 let merge_sub_goals : tac<unit> =
     name_tac "merge_sub_goals"
     (bind get (fun p ->
@@ -538,6 +542,7 @@ let merge_sub_goals : tac<unit> =
         | _ ->
          let goals = p.goals |> List.map (fun x -> Print.term_to_string x.goal_ty) |> String.concat "\n\t" in
          fail (BU.format1 "Cannot merge sub-goals: not enough sub-goals\n\tGoals are: %s" goals)))
+
 
 let rec visit (callback:tac<unit>)
     : tac<unit>
@@ -562,7 +567,7 @@ let rec visit (callback:tac<unit>)
                       bind intros (fun binders ->
                       //printfn "At forall %s" (List.map Print.bv_to_string names |> String.concat ", ");
                       bind (visit callback) (fun _ ->
-                      bind (revert_all_hd (List.map fst binders)) (fun _ -> 
+                      bind (revert_all_hd (List.map fst binders)) (fun _ ->
                       with_cur_goal "inner" (fun goal ->
                       printfn "After reverting intros, goal is %s" (goal_to_string goal);
                       ret()))))
@@ -576,242 +581,10 @@ let rec visit (callback:tac<unit>)
                         when Ident.lid_equals l SC.imp_lid ->
                       bind imp_intro (fun h ->
                       bind (visit callback) (fun _ ->
-                      revert_hd h))
+                      revert))
 
                     | Some (U.BaseConn(l, _)) ->
                       or_else trivial smt)))
-
-let fstar_tactics_lid s = Ident.lid_of_path (["FStar"; "Tactics"]@[s]) Range.dummyRange
-let by_tactic_lid = fstar_tactics_lid "by_tactic"
-let lid_as_tm l = S.lid_as_fv l Delta_constant None |> S.fv_to_tm
-let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid s)
-let fstar_tactics_term   = mk_tactic_lid_as_term "term"
-let fstar_tactics_env    = mk_tactic_lid_as_term "env"
-let fstar_tactics_binder = mk_tactic_lid_as_term "binder"
-let fstar_tactics_binders= mk_tactic_lid_as_term "binders"
-let fstar_tactics_goal   = mk_tactic_lid_as_term "goal"
-let fstar_tactics_goals  = mk_tactic_lid_as_term "goals"
-let fstar_tactics_Failed = S.fv_to_tm (S.lid_as_fv (fstar_tactics_lid "Failed") Delta_constant (Some Data_ctor))
-let fstar_tactics_Success= S.fv_to_tm (S.lid_as_fv (fstar_tactics_lid "Success") Delta_constant (Some Data_ctor))
-let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
-
-let embed_binder (b:binder) : term = S.bv_to_name (fst b)
-let unembed_binder (t:term) : binder =
-    let t = U.unascribe t in
-    match t.n with
-    | Tm_name bv -> S.mk_binder bv
-    | _ -> failwith "Not an embedded binder"
-
-let embed_pair (x:('a * 'b)) (embed_a:'a -> term) (t_a:term) (embed_b:'b -> term) (t_b:term) : term =
-    S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_Mktuple2) [U_zero;U_zero])
-                [S.iarg t_a;
-                 S.iarg t_b;
-                 S.as_arg (embed_a (fst x));
-                 S.as_arg (embed_b (snd x))]
-                None
-                Range.dummyRange
-
-let unembed_pair (pair:term) (unembed_a:term -> 'a) (unembed_b:term -> 'b) : ('a * 'b) =
-    let pairs = U.unascribe pair in
-    let hd, args = U.head_and_args pair in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv lid_Mktuple2 ->
-      unembed_a a, unembed_b b
-    | _ -> failwith "Not an embedded pair"
-
-
-let rec embed_list (l:list<'a>) (embed_a: ('a -> term)) (t_a:term) : term =
-    match l with
-    | [] -> S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm FStar.Syntax.Const.nil_lid) [U_zero])
-                        [S.iarg t_a]
-                        None
-                        Range.dummyRange
-    | hd::tl ->
-            S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm FStar.Syntax.Const.cons_lid) [U_zero])
-                        [S.iarg t_a;
-                         S.as_arg (embed_a hd);
-                         S.as_arg (embed_list tl embed_a t_a)]
-                        None
-                        Range.dummyRange
-
-let rec unembed_list (l:term) (unembed_a: (term -> 'a)) : list<'a> =
-    let l = U.unascribe l in
-    let hd, args = U.head_and_args l in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, _
-        when S.fv_eq_lid fv SC.nil_lid -> []
-
-    | Tm_fvar fv, [_t; (hd, _); (tl, _)]
-        when S.fv_eq_lid fv SC.cons_lid ->
-      unembed_a hd :: unembed_list tl unembed_a
-
-    | _ ->
-      failwith (BU.format1 "Not an embedded list: %s" (Print.term_to_string l))
-
-let embed_binders l = embed_list l embed_binder fstar_tactics_binder
-let unembed_binders t = unembed_list t unembed_binder
-
-let embed_env (env:Env.env) : term = embed_list (Env.all_binders env) embed_binder fstar_tactics_binder
-
-let unembed_env (env:Env.env) (embedded_env:term) : Env.env =
-    let binders = unembed_list embedded_env unembed_binder in
-    List.fold_right (fun b env -> 
-        match Env.try_lookup_bv env (fst b) with 
-        | None -> Env.push_binders env [b]
-        | _ -> env) binders env
-
-let embed_goal (g:goal) : term =
-    embed_pair (g.context, g.goal_ty) embed_env fstar_tactics_env (fun x -> x) fstar_tactics_term
-
-let unembed_goal (env:Env.env) (t:term) : goal =
-    let env, goal_ty = unembed_pair t (unembed_env env) (fun x -> x) in
-    {
-      context = env;
-      goal_ty = goal_ty;
-      witness = None //TODO: sort this out for proof-relevant goals
-    }
-
-let embed_goals (l:list<goal>) : term = embed_list l embed_goal fstar_tactics_goal
-let unembed_goals (env:Env.env) (egs:term) : list<goal> = unembed_list egs (unembed_goal env)
-
-type state = list<goal> * list<goal>
-
-let embed_state (s:state) : term =
-    embed_pair s embed_goals fstar_tactics_goals embed_goals fstar_tactics_goals
-
-let unembed_state (env:Env.env) (s:term) : state =
-    let s = U.unascribe s in
-    unembed_pair s (unembed_goals env) (unembed_goals env)
-
-let embed_unit (u:unit) : term = SC.exp_unit
-let unembed_unit (_:term) :unit = ()
-
-let embed_string (s:string) : term =
-    let bytes = BU.unicode_of_string s in
-    S.mk (Tm_constant(FStar.Const.Const_string(bytes, Range.dummyRange)))
-         None
-         Range.dummyRange
-
-let unembed_string (t:term) : string =
-    let t = U.unascribe t in
-    match t.n with
-    | Tm_constant(FStar.Const.Const_string(bytes, _)) ->
-      BU.string_of_unicode bytes
-    | _ ->
-      failwith "Not an embedded string"
-
-let embed_result (res:result<'a>) (embed_a:'a -> term) (t_a:typ) : term =
-    match res with
-    | Failed (msg, ps) ->
-      S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed [U_zero])
-                  [S.iarg t_a;
-                   S.as_arg (embed_string msg);
-                   S.as_arg (embed_state (ps.goals, ps.smt_goals))]
-                  None
-                  Range.dummyRange
-    | Success (a, ps) ->
-      S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Success [U_zero])
-                  [S.iarg t_a;
-                   S.as_arg (embed_a a);
-                   S.as_arg (embed_state (ps.goals, ps.smt_goals))]
-                  None
-                  Range.dummyRange
-
-let unembed_result (env:Env.env) (res:term) : either<state, (string * state)> =
-    let res = U.unascribe res in
-    let hd, args = U.head_and_args res in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [_t; _unit; (embedded_state, _)]
-        when S.fv_eq_lid fv (fstar_tactics_lid "Success") ->
-      Inl (unembed_state env embedded_state)
-
-    | Tm_fvar fv, [_t; (embedded_string, _); (embedded_state, _)]
-        when S.fv_eq_lid fv (fstar_tactics_lid "Failed") ->
-      Inr (unembed_string embedded_string, unembed_state env embedded_state)
-
-    | _ -> failwith (BU.format1 "Not an embedded result: %s" (Print.term_to_string res))
-
-let mk_tactic_interpretation (ps:proofstate) (env:Env.env) (t:tac<'a>) (embed_a:'a -> term) (t_a:typ) (args:args) : term =
- (*  We have: t () embedded_state
-     The idea is to:
-        1. unembed the state
-        2. run the `t` tactic
-        3. embed the result and final state and return it to the normalizer
-  *)
-  match args with
-  | [_unit; (embedded_state, _)] ->
-    printfn "Reached forall_intro_interpretation, goals are: %s" (Print.term_to_string embedded_state);
-    let goals, smt_goals = unembed_state env embedded_state in
-    let ps = {ps with goals=goals; smt_goals=smt_goals} in
-    let res = run t ps in
-    embed_result res embed_a t_a
-  | _ ->
-    failwith ("Unexpected application of 'forall_intro'")
-
-let primitive_steps ps env : list<N.primitive_step> =
-    [{N.name=fstar_tactics_lid "forall_intros";
-      N.arity=2;
-      N.interpretation=mk_tactic_interpretation ps env intros embed_binders fstar_tactics_binders};
-
-     {N.name=fstar_tactics_lid "smt";
-      N.arity=2;
-      N.interpretation=mk_tactic_interpretation ps env smt embed_unit FStar.TypeChecker.Common.t_unit};
-
-     {N.name=fstar_tactics_lid "revert";
-      N.arity=2;
-      N.interpretation=mk_tactic_interpretation ps env revert embed_unit FStar.TypeChecker.Common.t_unit}]
-
-let evaluate_user_tactic : tac<unit>
-    = with_cur_goal "evaluate_user_tactic" (fun goal ->
-      bind get (fun proof_state ->
-          let hd, args = U.head_and_args goal.goal_ty in
-          match (U.un_uinst hd).n, args with
-          | Tm_fvar fv, [(tactic, _); (assertion, _)]
-                when S.fv_eq_lid fv by_tactic_lid ->
-            (* We're making (reify (tactic ()) [(goal)] *)
-            let tm = S.mk_Tm_app (U.mk_reify (S.mk_Tm_app tactic [S.as_arg SC.exp_unit] None Range.dummyRange))
-                                 [S.as_arg (embed_state ([{goal with goal_ty=assertion}], []))]
-                                 None
-                                 Range.dummyRange in
-            let steps = [N.Reify; N.Beta; N.UnfoldUntil Delta_constant; N.Zeta; N.Iota; N.Primops] in
-            printfn "Starting normalizer with %s" (Print.term_to_string tm);
-            Options.set_option "debug_level" (Options.List [Options.String "Norm"]);
-            let result = N.normalize_with_primitive_steps (primitive_steps proof_state goal.context) steps goal.context tm in
-            Options.set_option "debug_level" (Options.List []);
-            printfn "Reduced tactic: got %s" (Print.term_to_string result);
-            begin match unembed_result goal.context result with
-                | Inl (goals, smt_goals) ->
-                  bind dismiss (fun _ ->
-                  bind (add_goals goals) (fun _ ->
-                  add_smt_goals smt_goals))
-
-                | Inr (msg, (goals, smt_goals)) ->
-                  bind dismiss (fun _ ->
-                  bind (add_goals goals) (fun _ ->
-                  bind (add_smt_goals smt_goals) (fun _ ->
-                  fail msg)))
-            end
-          | _ ->
-            fail "Not a user tactic"))
-
-let rec simplify_eq_impl : tac<unit>
-    = with_cur_goal "simplify_eq_impl" (fun goal ->
-          match destruct_equality_imp goal.goal_ty with
-          | Some (x, e, rhs) -> //we have x==e ==> rhs
-                 //imp_intro: introduce x=e in the context; goal is rhs
-            bind imp_intro (fun eq_h ->
-               printfn "Introduced %s:%s" (Print.bv_to_string eq_h) (Print.term_to_string eq_h.sort);
-                 //rewrite: goals become [x=e; rhs[e/x]]
-            bind (rewrite x e) (fun _ ->
-                 //exact: dismiss the first sub-goal, i.e., prove that x=e
-            bind (exact eq_h) (fun _ ->
-                 //clear_hd: get rid of the eq_h in the context
-                 //we're left with rhs[e/x]
-            bind (clear_hd eq_h) (fun _ ->
-            visit simplify_eq_impl))))
-          | _ ->
-            printfn "%s is not an equality imp" (Print.term_to_string goal.goal_ty);
-            fail "Not an equality implication")
 
 let proofstate_of_goal_ty env g =
     let g =
@@ -828,21 +601,3 @@ let proofstate_of_goal_ty env g =
         smt_goals=[];
         transaction=Unionfind.new_transaction()
     }
-
-let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
-    if Ident.lid_equals
-            (Env.current_module env)
-            FStar.Syntax.Const.prims_lid
-    || BU.starts_with (Ident.string_of_lid (Env.current_module env)) "FStar."
-    then [env, goal]
-    else let _ = printfn "About to preprocess %s\n" (Print.term_to_string goal) in
-         let p = proofstate_of_goal_ty env goal in
-         match run (visit evaluate_user_tactic) p with
-         | Success (_, p2) ->
-           (p2.goals @ p2.smt_goals) |> List.map (fun g ->
-             printfn "Got goal: %s" (Print.term_to_string g.goal_ty);
-             g.context, g.goal_ty)
-         | Failed (msg, _) ->
-           printfn "Tactic failed: %s" msg;
-           printfn "Got goal: %s" (Print.term_to_string goal);
-           [env, goal]

@@ -76,10 +76,10 @@ let assert_by_tactic (t:tactic) (p:Type)
 assume val forall_intros: unit -> Tac binders
 assume val implies_intro: unit -> Tac binder
 assume val revert  : unit -> Tac unit
-assume val clear   : binder -> Tac unit
+assume val clear   : unit -> Tac unit
 assume val split   : unit -> Tac unit
 assume val merge   : unit -> Tac unit
 assume val rewrite : binder -> Tac unit
-assume val focus   : #a:Type -> (unit -> Tac a) -> Tac a
 assume val smt     : unit -> Tac unit
+assume val focus   : (unit -> Tac unit) -> Tac unit
 assume val visit   : (unit -> Tac unit) -> Tac unit
