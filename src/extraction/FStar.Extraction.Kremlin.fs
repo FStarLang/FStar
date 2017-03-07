@@ -37,7 +37,7 @@ type program =
 
 and decl =
   | DGlobal of list<flag> * lident * typ * expr
-  | DFunction of option<cc> * list<flag> * typ * lident * list<binder> * expr
+  | DFunction of option<cc> * list<flag> * int * typ * lident * list<binder> * expr
   | DTypeAlias of lident * int * typ
   | DTypeFlat of lident * int * fields_t
   | DExternal of option<cc> * lident * typ
@@ -158,7 +158,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 19
+let current_version: version = 20
 
 type file = string * program
 type binary_format = version * list<file>
@@ -342,16 +342,17 @@ and translate_decl env d: option<decl> =
   match d with
   | MLM_Let (flavor, flags, [ {
       mllb_name = name, _;
-      mllb_tysc = Some ([], t0);
+      mllb_tysc = Some (tvars, t0);
       mllb_def = { expr = MLE_Fun (args, body) }
     } ])
   | MLM_Let (flavor, flags, [ {
       mllb_name = name, _;
-      mllb_tysc = Some ([], t0);
+      mllb_tysc = Some (tvars, t0);
       mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
     } ]) ->
       let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) flags in
       let env = if flavor = Rec then extend env name false else env in
+      let env = List.fold_left (fun env (name, _) -> extend_t env name) env tvars in
       let rec find_return_type = function
         | MLTY_Fun (_, _, t) ->
             find_return_type t
@@ -368,10 +369,10 @@ and translate_decl env d: option<decl> =
       else begin
         try
           let body = translate_expr env body in
-          Some (DFunction (None, flags, t, name, binders, body))
+          Some (DFunction (None, flags, List.length tvars, t, name, binders, body))
         with e ->
           BU.print2 "Warning: writing a stub for %s (%s)\n" (snd name) (BU.print_exn e);
-          Some (DFunction (None, flags, t, name, binders, EAbort))
+          Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbort))
       end
 
   | MLM_Let (flavor, flags, [ {
