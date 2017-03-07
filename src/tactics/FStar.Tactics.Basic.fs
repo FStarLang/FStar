@@ -310,6 +310,7 @@ let intros : tac<binders>
 //                    (Print.term_to_string body);
            bind dismiss (fun _ ->
            bind (add_goals [new_goal]) (fun _ ->
+           printfn "intros: %s" (Print.binders_to_string ", " bs);
            ret bs))
          | _ ->
            fail "Cannot intro this goal, expected a forall")
@@ -355,6 +356,7 @@ let imp_intro : tac<name> =
       } in
       bind dismiss (fun _ ->
       bind (add_goals [new_goal]) (fun _ ->
+      printfn "imp_intro: %s" (Print.bv_to_string name);
       ret name))
     | _ ->
       fail "Cannot intro this goal, expected an '==>'")
@@ -443,22 +445,23 @@ let revert : tac<unit>
       | None -> fail "Cannot clear_hd; empty context"
       | Some (x, env') ->
         let fns = FStar.Syntax.Free.names goal.goal_ty in
+        printfn "reverting %s" (Print.bv_to_string x);
         if not (Util.set_mem x fns)
         then clear_hd x
         else let new_goal =
-            match un_squash x.sort, un_squash goal.goal_ty with
-            | Some p, Some q ->
-                { goal with
-                context = env';
-                goal_ty = U.mk_imp p q
-                }
-            | _ ->
-                { goal with
-                context = env';
-                goal_ty = U.mk_forall x goal.goal_ty
-                } in
-        bind dismiss (fun _ ->
-        add_goals [new_goal]))
+                match un_squash x.sort, un_squash goal.goal_ty with
+                | Some p, Some q ->
+                    { goal with
+                    context = env';
+                    goal_ty = U.mk_imp p q
+                    }
+                | _ ->
+                    { goal with
+                    context = env';
+                    goal_ty = U.mk_forall x goal.goal_ty
+                    } in
+            bind dismiss (fun _ ->
+            add_goals [new_goal]))
 
 let revert_hd (x:name) : tac<unit>
     = with_cur_goal "revert_hd" (fun goal ->
@@ -467,23 +470,7 @@ let revert_hd (x:name) : tac<unit>
       | Some (y, env') ->
           if not (S.bv_eq x y)
           then fail "Cannot clear_hd; head variable mismatch"
-          else let fns = FStar.Syntax.Free.names goal.goal_ty in
-               if not (Util.set_mem x fns)
-               then clear_hd x
-               else let new_goal =
-                    match un_squash x.sort, un_squash goal.goal_ty with
-                    | Some p, Some q ->
-                      { goal with
-                        context = env';
-                        goal_ty = U.mk_imp p q
-                      }
-                    | _ ->
-                      { goal with
-                        context = env';
-                        goal_ty = U.mk_forall x goal.goal_ty
-                      } in
-               bind dismiss (fun _ ->
-               add_goals [new_goal]))
+          else revert)
 
 let rec revert_all_hd (xs:list<name>)
     : tac<unit>
@@ -531,6 +518,10 @@ let at_most_one (t:tac<'a>) : tac<'a> =
     | [_] -> ret a
     | _ -> fail "expected at most one goal remaining"))
 
+let goal_to_string (g1:goal) =
+    let g1_binders = Env.all_binders g1.context |> Print.binders_to_string ", " in
+    Util.format2 "%s |- %s" g1_binders (Print.term_to_string g1.goal_ty)
+                 
 let merge_sub_goals : tac<unit> =
     name_tac "merge_sub_goals"
     (bind get (fun p ->
@@ -540,7 +531,10 @@ let merge_sub_goals : tac<unit> =
             && Option.isNone g1.witness
             && Option.isNone g2.witness
             then set ({p with goals=conj_goals g1 g2::rest})
-            else fail "Cannot merge sub-goals: incompatible contexts"
+            else let g1_binders = Env.all_binders g1.context |> Print.binders_to_string ", " in
+                 let g2_binders = Env.all_binders g2.context |> Print.binders_to_string ", " in
+                 fail (BU.format2 "Cannot merge sub-goals: incompatible contexts:\ng1=%s\ng2=%s\n"
+                            (goal_to_string g1) (goal_to_string g2))
         | _ ->
          let goals = p.goals |> List.map (fun x -> Print.term_to_string x.goal_ty) |> String.concat "\n\t" in
          fail (BU.format1 "Cannot merge sub-goals: not enough sub-goals\n\tGoals are: %s" goals)))
@@ -568,7 +562,10 @@ let rec visit (callback:tac<unit>)
                       bind intros (fun binders ->
                       //printfn "At forall %s" (List.map Print.bv_to_string names |> String.concat ", ");
                       bind (visit callback) (fun _ ->
-                           (revert_all_hd (List.map fst binders))))
+                      bind (revert_all_hd (List.map fst binders)) (fun _ -> 
+                      with_cur_goal "inner" (fun goal ->
+                      printfn "After reverting intros, goal is %s" (goal_to_string goal);
+                      ret()))))
 
                     | Some (U.BaseConn(l, _))
                         when Ident.lid_equals l SC.and_lid ->
@@ -658,7 +655,10 @@ let embed_env (env:Env.env) : term = embed_list (Env.all_binders env) embed_bind
 
 let unembed_env (env:Env.env) (embedded_env:term) : Env.env =
     let binders = unembed_list embedded_env unembed_binder in
-    Env.push_binders env binders
+    List.fold_right (fun b env -> 
+        match Env.try_lookup_bv env (fst b) with 
+        | None -> Env.push_binders env [b]
+        | _ -> env) binders env
 
 let embed_goal (g:goal) : term =
     embed_pair (g.context, g.goal_ty) embed_env fstar_tactics_env (fun x -> x) fstar_tactics_term
