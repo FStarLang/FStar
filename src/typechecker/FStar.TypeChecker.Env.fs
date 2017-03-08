@@ -944,23 +944,23 @@ let reify_comp env c u_c : term =
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)
 
-let is_reifiable_effect (env:Env.env) (effect_lid:lident) : bool =
-    let quals = Env.lookup_effect_quals env effect_lid in
+let is_reifiable_effect (env:env) (effect_lid:lident) : bool =
+    let quals = lookup_effect_quals env effect_lid in
     List.contains Reifiable quals
 
-let is_reifiable (env:Env.env) (c:either<S.lcomp, S.residual_comp>) : bool =
+let is_reifiable (env:env) (c:either<S.lcomp, S.residual_comp>) : bool =
     let effect_lid = match c with
         | Inl lc -> lc.eff_name
         | Inr (eff_name, _) -> eff_name
     in
     is_reifiable_effect env effect_lid
 
-let is_reifiable_comp (env:Env.env) (c:S.comp) : bool =
+let is_reifiable_comp (env:env) (c:S.comp) : bool =
     match c.n with
     | Comp ct -> is_reifiable_effect env ct.effect_name
     | _ -> false
 
-let is_reifiable_function (env:Env.env) (t:S.term) : bool =
+let is_reifiable_function (env:env) (t:S.term) : bool =
     match (compress t).n with
     | Tm_arrow (_, c) -> is_reifiable_comp env c
     | _ -> false
