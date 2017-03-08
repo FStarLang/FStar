@@ -40,9 +40,9 @@ let rec just_do_intros : tactic = fun () ->
 
 #reset-options// "--debug UserTactics.Example1 --debug_level Norm"
 let test_1 =
-  assert_by_tactic just_do_intros
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y));
-  assert_by_tactic just_do_intros
+  (* assert_by_tactic just_do_intros *)
+  (*                  (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)); *)
+  assert_by_tactic forall_intros
                    (forall (y:int). y==0 ==> 0==y)
 
 

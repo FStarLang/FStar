@@ -48,6 +48,8 @@ let bind (a:Type) (b:Type)
 (* Actions *)
 let get () : tac state = fun s0 -> Success s0 s0 
 
+assume val forall_intros_: unit -> tac binders
+
 (* total  *) //disable the termination check, although it remains reifiable
 reifiable reflectable new_effect_for_free {
   TAC : a:Type -> Effect
@@ -65,15 +67,23 @@ let fail (#a:Type) (msg:string) = TAC?.reflect (fail_ a msg)
 effect Tac (a:Type) = TAC a (fun i post -> forall j. post j)
 let tactic = unit -> Tac unit
 
-abstract 
-let by_tactic (t:tactic) (a:Type) : Type = a
+//let forall_intros () :Tac binders = TAC?.reflect (forall_intros_ ())
 
-let assert_by_tactic (t:tactic) (p:Type) 
-   : Pure unit (requires (by_tactic t p)) (ensures (fun _ -> p))
-   = ()
+abstract 
+(* let by_tactic (t:tactic) (a:Type) : Type = a *)
+let by_tactic (a:Type) (t:state -> result unit) : Type = a
+
+let reify_tactic (t:tactic) :tac unit =
+  reify (t ())
+
+(* let assert_by_tactic (t:(unit -> Tac unit)) (p:Type) (s:state) = *)
+(*   by_tactic p (reify (t ()) s) *)
+
+   (* : Pure unit (requires (by_tactic p (reify (t ())))) (ensures (fun _ -> p)) *)
+   (* = () *)
 
 (* Primitives provided natively by the tactic engine *)
-assume val forall_intros: unit -> Tac binders
+//assume val forall_intros: unit -> Tac binders
 assume val implies_intro: unit -> Tac binder
 assume val revert  : unit -> Tac unit
 assume val clear   : unit -> Tac unit
