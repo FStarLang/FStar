@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{82253A13-6BB4-4C9F-8198-50F638EFB3EE}"
 	ProjectSection(SolutionItems) = preProject
@@ -44,6 +44,7 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tosyntax", "..\tosyntax\tosyntax.fsproj", "{B0968012-B93C-4198-9085-B89669E8E4E8}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tactics", "..\tactics\tactics.fsproj", "{82336F31-A87C-4403-A2F4-2B90B4F0996B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fabc-make", "..\fabc-make\fabc-make.csproj", "{F93BFCB1-6258-4BAC-B2B0-25545E49A45F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -103,6 +104,10 @@ Global
 		{82336F31-A87C-4403-A2F4-2B90B4F0996B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82336F31-A87C-4403-A2F4-2B90B4F0996B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82336F31-A87C-4403-A2F4-2B90B4F0996B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F93BFCB1-6258-4BAC-B2B0-25545E49A45F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F93BFCB1-6258-4BAC-B2B0-25545E49A45F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F93BFCB1-6258-4BAC-B2B0-25545E49A45F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F93BFCB1-6258-4BAC-B2B0-25545E49A45F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

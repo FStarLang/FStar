@@ -12,7 +12,8 @@ FSTAR_ALWAYS=$(shell cd $(FSTAR_HOME) && pwd)/bin/fstar.exe $(OTHERFLAGS) $(HINT
 FSTAR=$(FSTAR_ALWAYS)
 
 
-CVEREXE=/mnt/f/dev/fstar-azure/fabc/fabc-make/bin/Debug/fabc-make.exe
+CVEREXE_ALWAYS=$(shell cd $(FSTAR_HOME) && pwd)/bin/fabc-make.exe
+CVEREXE=$(CVEREXE_ALWAYS)
 
 $(FSTAR_HOME)/batch-ids.tmp:
 	$(CVEREXE) create > $(FSTAR_HOME)/batch-ids.tmp
