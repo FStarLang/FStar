@@ -736,18 +736,18 @@ let check_id: FStar_Ident.ident -> Prims.unit =
     let first_char =
       FStar_String.substring id.FStar_Ident.idText (Prims.parse_int "0")
         (Prims.parse_int "1") in
-    match (FStar_String.lowercase first_char) = first_char with
-    | true  -> ()
-    | uu____2448 ->
-        let uu____2449 =
-          let uu____2450 =
-            let uu____2453 =
-              FStar_Util.format1
-                "Invalid identifer '%s'; expected a symbol that begins with a lower-case character"
-                id.FStar_Ident.idText in
-            (uu____2453, (id.FStar_Ident.idRange)) in
-          FStar_Errors.Error uu____2450 in
-        Prims.raise uu____2449
+    if (FStar_String.lowercase first_char) = first_char
+    then ()
+    else
+      (let uu____2449 =
+         let uu____2450 =
+           let uu____2453 =
+             FStar_Util.format1
+               "Invalid identifer '%s'; expected a symbol that begins with a lower-case character"
+               id.FStar_Ident.idText in
+           (uu____2453, (id.FStar_Ident.idRange)) in
+         FStar_Errors.Error uu____2450 in
+       Prims.raise uu____2449)
 let at_most_one s r l =
   match l with
   | x::[] -> Some x
@@ -974,31 +974,31 @@ let mkWildAdmitMagic r =
   ((mk_pattern PatWild r), None, uu____2888)
 let focusBranches branches r =
   let should_filter = FStar_Util.for_some Prims.fst branches in
-  match should_filter with
-  | true  ->
-      (FStar_Errors.warn r "Focusing on only some cases";
-       (let focussed =
-          let uu____2944 = FStar_List.filter Prims.fst branches in
-          FStar_All.pipe_right uu____2944 (FStar_List.map Prims.snd) in
-        let uu____2988 = let uu____2994 = mkWildAdmitMagic r in [uu____2994] in
-        FStar_List.append focussed uu____2988))
-  | uu____3011 -> FStar_All.pipe_right branches (FStar_List.map Prims.snd)
+  if should_filter
+  then
+    (FStar_Errors.warn r "Focusing on only some cases";
+     (let focussed =
+        let uu____2944 = FStar_List.filter Prims.fst branches in
+        FStar_All.pipe_right uu____2944 (FStar_List.map Prims.snd) in
+      let uu____2988 = let uu____2994 = mkWildAdmitMagic r in [uu____2994] in
+      FStar_List.append focussed uu____2988))
+  else FStar_All.pipe_right branches (FStar_List.map Prims.snd)
 let focusLetBindings lbs r =
   let should_filter = FStar_Util.for_some Prims.fst lbs in
-  match should_filter with
-  | true  ->
-      (FStar_Errors.warn r
-         "Focusing on only some cases in this (mutually) recursive definition";
-       FStar_List.map
-         (fun uu____3080  ->
-            match uu____3080 with
-            | (f,lb) ->
-                (match f with
-                 | true  -> lb
-                 | uu____3095 ->
-                     let uu____3096 = mkAdmitMagic r in
-                     ((Prims.fst lb), uu____3096))) lbs)
-  | uu____3097 -> FStar_All.pipe_right lbs (FStar_List.map Prims.snd)
+  if should_filter
+  then
+    (FStar_Errors.warn r
+       "Focusing on only some cases in this (mutually) recursive definition";
+     FStar_List.map
+       (fun uu____3080  ->
+          match uu____3080 with
+          | (f,lb) ->
+              if f
+              then lb
+              else
+                (let uu____3096 = mkAdmitMagic r in
+                 ((Prims.fst lb), uu____3096))) lbs)
+  else FStar_All.pipe_right lbs (FStar_List.map Prims.snd)
 let mkFsTypApp: term -> term Prims.list -> FStar_Range.range -> term =
   fun t  ->
     fun args  ->
@@ -1034,20 +1034,20 @@ let mkRefinedBinder:
               match refopt with
               | None  -> b
               | Some phi ->
-                  (match should_bind_var with
-                   | true  ->
-                       mk_binder
-                         (Annotated
-                            (id, (mk_term (Refine (b, phi)) m Type_level))) m
-                         Type_level implicit
-                   | uu____3192 ->
-                       let x = FStar_Ident.gen t.range in
-                       let b =
-                         mk_binder (Annotated (x, t)) m Type_level implicit in
-                       mk_binder
-                         (Annotated
-                            (id, (mk_term (Refine (b, phi)) m Type_level))) m
-                         Type_level implicit)
+                  if should_bind_var
+                  then
+                    mk_binder
+                      (Annotated
+                         (id, (mk_term (Refine (b, phi)) m Type_level))) m
+                      Type_level implicit
+                  else
+                    (let x = FStar_Ident.gen t.range in
+                     let b =
+                       mk_binder (Annotated (x, t)) m Type_level implicit in
+                     mk_binder
+                       (Annotated
+                          (id, (mk_term (Refine (b, phi)) m Type_level))) m
+                       Type_level implicit)
 let mkRefinedPattern:
   pattern ->
     term ->
@@ -1065,50 +1065,46 @@ let mkRefinedPattern:
                 match phi_opt with
                 | None  -> t
                 | Some phi ->
-                    (match should_bind_pat with
-                     | true  ->
-                         (match pat.pat with
-                          | PatVar (x,uu____3218) ->
-                              mk_term
-                                (Refine
-                                   ((mk_binder (Annotated (x, t)) t_range
-                                       Type_level None), phi)) range
-                                Type_level
-                          | uu____3221 ->
-                              let x = FStar_Ident.gen t_range in
-                              let phi =
-                                let x_var =
-                                  let uu____3225 =
-                                    let uu____3226 =
-                                      FStar_Ident.lid_of_ids [x] in
-                                    Var uu____3226 in
-                                  mk_term uu____3225 phi.range Formula in
-                                let pat_branch = (pat, None, phi) in
-                                let otherwise_branch =
-                                  let uu____3238 =
-                                    let uu____3239 =
-                                      let uu____3240 =
-                                        FStar_Ident.lid_of_path ["False"]
-                                          phi.range in
-                                      Name uu____3240 in
-                                    mk_term uu____3239 phi.range Formula in
-                                  ((mk_pattern PatWild phi.range), None,
-                                    uu____3238) in
-                                mk_term
-                                  (Match
-                                     (x_var, [pat_branch; otherwise_branch]))
-                                  phi.range Formula in
-                              mk_term
-                                (Refine
-                                   ((mk_binder (Annotated (x, t)) t_range
-                                       Type_level None), phi)) range
-                                Type_level)
-                     | uu____3259 ->
-                         let x = FStar_Ident.gen t.range in
-                         mk_term
-                           (Refine
-                              ((mk_binder (Annotated (x, t)) t_range
-                                  Type_level None), phi)) range Type_level) in
+                    if should_bind_pat
+                    then
+                      (match pat.pat with
+                       | PatVar (x,uu____3218) ->
+                           mk_term
+                             (Refine
+                                ((mk_binder (Annotated (x, t)) t_range
+                                    Type_level None), phi)) range Type_level
+                       | uu____3221 ->
+                           let x = FStar_Ident.gen t_range in
+                           let phi =
+                             let x_var =
+                               let uu____3225 =
+                                 let uu____3226 = FStar_Ident.lid_of_ids [x] in
+                                 Var uu____3226 in
+                               mk_term uu____3225 phi.range Formula in
+                             let pat_branch = (pat, None, phi) in
+                             let otherwise_branch =
+                               let uu____3238 =
+                                 let uu____3239 =
+                                   let uu____3240 =
+                                     FStar_Ident.lid_of_path ["False"]
+                                       phi.range in
+                                   Name uu____3240 in
+                                 mk_term uu____3239 phi.range Formula in
+                               ((mk_pattern PatWild phi.range), None,
+                                 uu____3238) in
+                             mk_term
+                               (Match (x_var, [pat_branch; otherwise_branch]))
+                               phi.range Formula in
+                           mk_term
+                             (Refine
+                                ((mk_binder (Annotated (x, t)) t_range
+                                    Type_level None), phi)) range Type_level)
+                    else
+                      (let x = FStar_Ident.gen t.range in
+                       mk_term
+                         (Refine
+                            ((mk_binder (Annotated (x, t)) t_range Type_level
+                                None), phi)) range Type_level) in
               mk_pattern (PatAscribed (pat, t)) range
 let rec extract_named_refinement:
   term -> (FStar_Ident.ident* term* term Prims.option) Prims.option =
@@ -1159,11 +1155,11 @@ let as_frag:
           match d.d with
           | TopLevelModule m ->
               let ds =
-                match is_light with
-                | true  ->
-                    let uu____3382 = mk_decl (Pragma LightOff) light_range [] in
-                    uu____3382 :: ds
-                | uu____3383 -> ds in
+                if is_light
+                then
+                  let uu____3382 = mk_decl (Pragma LightOff) light_range [] in
+                  uu____3382 :: ds
+                else ds in
               let ms = as_mlist [] ((m, d), []) ds in
               ((let uu____3390 = FStar_List.tl ms in
                 match uu____3390 with
@@ -1545,12 +1541,11 @@ let modul_to_string: modul -> Prims.string =
 let error msg tm r =
   let tm = FStar_All.pipe_right tm term_to_string in
   let tm =
-    match (FStar_String.length tm) >= (Prims.parse_int "80") with
-    | true  ->
-        let uu____4025 =
-          FStar_Util.substring tm (Prims.parse_int "0")
-            (Prims.parse_int "77") in
-        Prims.strcat uu____4025 "..."
-    | uu____4026 -> tm in
+    if (FStar_String.length tm) >= (Prims.parse_int "80")
+    then
+      let uu____4025 =
+        FStar_Util.substring tm (Prims.parse_int "0") (Prims.parse_int "77") in
+      Prims.strcat uu____4025 "..."
+    else tm in
   Prims.raise
     (FStar_Errors.Error ((Prims.strcat msg (Prims.strcat "\n" tm)), r))

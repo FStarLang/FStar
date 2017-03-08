@@ -36,8 +36,8 @@ let interleave:
                       match uu____101 with | (x,uu____106) -> x)) in
             FStar_All.pipe_right uu____91
               (FStar_Util.for_some
-                 (fun uu___142_110  ->
-                    match uu___142_110 with
+                 (fun uu___127_110  ->
+                    match uu___127_110 with
                     | FStar_Parser_AST.TyconAbbrev
                         (id',uu____112,uu____113,uu____114) ->
                         x.FStar_Ident.idText = id'.FStar_Ident.idText
@@ -81,8 +81,8 @@ let interleave:
              | FStar_Parser_AST.Tycon (uu____240,tys) when
                  FStar_All.pipe_right tys
                    (FStar_Util.for_some
-                      (fun uu___143_257  ->
-                         match uu___143_257 with
+                      (fun uu___128_257  ->
+                         match uu___128_257 with
                          | (FStar_Parser_AST.TyconAbstract
                             uu____261,uu____262) -> true
                          | uu____270 -> false))
@@ -148,114 +148,108 @@ let interleave:
                               FStar_All.pipe_right d.FStar_Parser_AST.quals
                                 (FStar_List.contains
                                    FStar_Parser_AST.Assumption) in
-                            (match uu____347 with
-                             | true  -> aux ([d] :: out) ds impl
-                             | uu____350 ->
-                                 Prims.raise
-                                   (FStar_Errors.Error
-                                      ((Prims.strcat
-                                          "No definition found for "
-                                          x.FStar_Ident.idText),
-                                        (d.FStar_Parser_AST.drange))))
+                            if uu____347
+                            then aux ([d] :: out) ds impl
+                            else
+                              Prims.raise
+                                (FStar_Errors.Error
+                                   ((Prims.strcat "No definition found for "
+                                       x.FStar_Ident.idText),
+                                     (d.FStar_Parser_AST.drange)))
                         | Some (prefix,let_x,rest_impl) ->
                             let uu____364 =
                               FStar_All.pipe_right d.FStar_Parser_AST.quals
                                 (FStar_List.contains
                                    FStar_Parser_AST.Assumption) in
-                            (match uu____364 with
-                             | true  ->
-                                 let uu____366 =
-                                   let uu____367 =
-                                     let uu____370 =
-                                       let uu____371 =
-                                         FStar_Range.string_of_range
-                                           let_x.FStar_Parser_AST.drange in
-                                       FStar_Util.format2
-                                         "Assumed declaration %s is defined at %s"
-                                         x.FStar_Ident.idText uu____371 in
-                                     (uu____370, (d.FStar_Parser_AST.drange)) in
-                                   FStar_Errors.Error uu____367 in
-                                 Prims.raise uu____366
-                             | uu____373 ->
-                                 let remaining_iface_vals =
-                                   FStar_All.pipe_right ds
-                                     (FStar_List.collect
-                                        (fun d  ->
-                                           match d.FStar_Parser_AST.d with
-                                           | FStar_Parser_AST.Val
-                                               (x,uu____381) -> [x]
-                                           | uu____382 -> [])) in
-                                 let uu____383 =
-                                   FStar_All.pipe_right prefix
-                                     (FStar_List.tryFind
-                                        (fun d  ->
-                                           FStar_All.pipe_right
-                                             remaining_iface_vals
-                                             (FStar_Util.for_some
-                                                (fun x  -> is_let x d)))) in
-                                 (match uu____383 with
-                                  | Some d ->
-                                      let uu____392 =
-                                        let uu____393 =
-                                          let uu____396 =
-                                            let uu____397 =
-                                              FStar_Parser_AST.decl_to_string
-                                                d in
-                                            let uu____398 =
-                                              FStar_Parser_AST.decl_to_string
-                                                let_x in
-                                            FStar_Util.format2
-                                              "%s is out of order with %s"
-                                              uu____397 uu____398 in
-                                          (uu____396,
-                                            (d.FStar_Parser_AST.drange)) in
-                                        FStar_Errors.Error uu____393 in
-                                      Prims.raise uu____392
-                                  | uu____400 ->
-                                      (match let_x.FStar_Parser_AST.d with
-                                       | FStar_Parser_AST.TopLevelLet
-                                           (uu____403,defs) ->
-                                           let def_lids =
-                                             FStar_Parser_AST.lids_of_let
-                                               defs in
-                                           let iface_prefix_opt =
-                                             FStar_All.pipe_right iface
-                                               (FStar_Util.prefix_until
-                                                  (fun d  ->
-                                                     match d.FStar_Parser_AST.d
-                                                     with
-                                                     | FStar_Parser_AST.Val
-                                                         (y,uu____429) ->
-                                                         let uu____430 =
-                                                           FStar_All.pipe_right
-                                                             def_lids
-                                                             (FStar_Util.for_some
-                                                                (id_eq_lid y)) in
-                                                         Prims.op_Negation
-                                                           uu____430
-                                                     | uu____432 -> true)) in
-                                           let uu____433 =
-                                             match iface_prefix_opt with
-                                             | None  -> (iface, [])
-                                             | Some
-                                                 (all_vals_for_defs,first_non_val,rest_iface)
-                                                 ->
-                                                 (all_vals_for_defs,
-                                                   (first_non_val ::
-                                                   rest_iface)) in
-                                           (match uu____433 with
-                                            | (all_vals_for_defs,rest_iface)
-                                                ->
-                                                let hoist =
-                                                  FStar_List.append prefix
-                                                    (FStar_List.append
-                                                       all_vals_for_defs
-                                                       [let_x]) in
-                                                aux (hoist :: out) rest_iface
-                                                  rest_impl)
-                                       | uu____473 -> failwith "Impossible"))))))
+                            if uu____364
+                            then
+                              let uu____366 =
+                                let uu____367 =
+                                  let uu____370 =
+                                    let uu____371 =
+                                      FStar_Range.string_of_range
+                                        let_x.FStar_Parser_AST.drange in
+                                    FStar_Util.format2
+                                      "Assumed declaration %s is defined at %s"
+                                      x.FStar_Ident.idText uu____371 in
+                                  (uu____370, (d.FStar_Parser_AST.drange)) in
+                                FStar_Errors.Error uu____367 in
+                              Prims.raise uu____366
+                            else
+                              (let remaining_iface_vals =
+                                 FStar_All.pipe_right ds
+                                   (FStar_List.collect
+                                      (fun d  ->
+                                         match d.FStar_Parser_AST.d with
+                                         | FStar_Parser_AST.Val (x,uu____381)
+                                             -> [x]
+                                         | uu____382 -> [])) in
+                               let uu____383 =
+                                 FStar_All.pipe_right prefix
+                                   (FStar_List.tryFind
+                                      (fun d  ->
+                                         FStar_All.pipe_right
+                                           remaining_iface_vals
+                                           (FStar_Util.for_some
+                                              (fun x  -> is_let x d)))) in
+                               match uu____383 with
+                               | Some d ->
+                                   let uu____392 =
+                                     let uu____393 =
+                                       let uu____396 =
+                                         let uu____397 =
+                                           FStar_Parser_AST.decl_to_string d in
+                                         let uu____398 =
+                                           FStar_Parser_AST.decl_to_string
+                                             let_x in
+                                         FStar_Util.format2
+                                           "%s is out of order with %s"
+                                           uu____397 uu____398 in
+                                       (uu____396,
+                                         (d.FStar_Parser_AST.drange)) in
+                                     FStar_Errors.Error uu____393 in
+                                   Prims.raise uu____392
+                               | uu____400 ->
+                                   (match let_x.FStar_Parser_AST.d with
+                                    | FStar_Parser_AST.TopLevelLet
+                                        (uu____403,defs) ->
+                                        let def_lids =
+                                          FStar_Parser_AST.lids_of_let defs in
+                                        let iface_prefix_opt =
+                                          FStar_All.pipe_right iface
+                                            (FStar_Util.prefix_until
+                                               (fun d  ->
+                                                  match d.FStar_Parser_AST.d
+                                                  with
+                                                  | FStar_Parser_AST.Val
+                                                      (y,uu____429) ->
+                                                      let uu____430 =
+                                                        FStar_All.pipe_right
+                                                          def_lids
+                                                          (FStar_Util.for_some
+                                                             (id_eq_lid y)) in
+                                                      Prims.op_Negation
+                                                        uu____430
+                                                  | uu____432 -> true)) in
+                                        let uu____433 =
+                                          match iface_prefix_opt with
+                                          | None  -> (iface, [])
+                                          | Some
+                                              (all_vals_for_defs,first_non_val,rest_iface)
+                                              ->
+                                              (all_vals_for_defs,
+                                                (first_non_val ::
+                                                rest_iface)) in
+                                        (match uu____433 with
+                                         | (all_vals_for_defs,rest_iface) ->
+                                             let hoist =
+                                               FStar_List.append prefix
+                                                 (FStar_List.append
+                                                    all_vals_for_defs 
+                                                    [let_x]) in
+                                             aux (hoist :: out) rest_iface
+                                               rest_impl)
+                                    | uu____473 -> failwith "Impossible")))))
              | uu____475 -> aux ([d] :: out) ds impl) in
       let uu____477 = FStar_Options.ml_ish () in
-      match uu____477 with
-      | true  -> aux_ml iface impl
-      | uu____479 -> aux [] iface impl
+      if uu____477 then aux_ml iface impl else aux [] iface impl

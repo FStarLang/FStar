@@ -106,10 +106,9 @@ let label_goals:
         | (flag,msg_prefix) ->
             let fresh_label msg ropt rng t =
               let msg =
-                match flag with
-                | true  ->
-                    Prims.strcat "Failed to verify implicit argument: " msg
-                | uu____294 -> msg in
+                if flag
+                then Prims.strcat "Failed to verify implicit argument: " msg
+                else msg in
               let rng =
                 match ropt with
                 | None  -> rng
@@ -536,12 +535,12 @@ let detail_errors:
         let print_result uu____940 =
           match uu____940 with
           | ((uu____946,msg,r),success) ->
-              (match success with
-               | true  ->
-                   let uu____953 = FStar_Range.string_of_range r in
-                   FStar_Util.print1_error
-                     "OK: proof obligation at %s was proven\n" uu____953
-               | uu____954 -> FStar_Errors.report r msg) in
+              if success
+              then
+                let uu____953 = FStar_Range.string_of_range r in
+                FStar_Util.print1_error
+                  "OK: proof obligation at %s was proven\n" uu____953
+              else FStar_Errors.report r msg in
         let elim labs =
           FStar_All.pipe_right labs
             (FStar_List.map
@@ -580,10 +579,9 @@ let detail_errors:
                 match uu____1066 with
                 | (result,uu____1088) ->
                     let uu____1097 = FStar_Util.is_left result in
-                    (match uu____1097 with
-                     | true  -> linear_check (hd :: eliminated) errors tl
-                     | uu____1106 ->
-                         linear_check eliminated (hd :: errors) tl))) in
+                    if uu____1097
+                    then linear_check (hd :: eliminated) errors tl
+                    else linear_check eliminated (hd :: errors) tl)) in
         print_banner ();
         FStar_Options.set_option "z3rlimit"
           (FStar_Options.Int (Prims.parse_int "5"));

@@ -54,9 +54,7 @@ let stringbuf_is_bytes: FStar_Bytes.bytebuf -> Prims.bool =
                 ((FStar_Mul.op_Star i (Prims.parse_int "2")) +
                    (Prims.parse_int "1")) in
             uu____122 <> (Prims.parse_int "0") in
-          match uu____121 with
-          | true  -> FStar_ST.write ok false
-          | uu____125 -> ()));
+          if uu____121 then FStar_ST.write ok false else ()));
     FStar_ST.read ok
 let trigraph:
   FStar_BaseTypes.char ->
@@ -74,148 +72,145 @@ let trigraph:
 let digit: FStar_BaseTypes.char -> Prims.int =
   fun d  ->
     let dd = FStar_Util.int_of_char d in
-    match (dd >= (FStar_Util.int_of_char '0')) &&
-            (dd <= (FStar_Util.int_of_char '9'))
-    with
-    | true  -> (FStar_Util.int_of_char d) - (FStar_Util.int_of_char '0')
-    | uu____145 -> failwith "digit"
+    if
+      (dd >= (FStar_Util.int_of_char '0')) &&
+        (dd <= (FStar_Util.int_of_char '9'))
+    then (FStar_Util.int_of_char d) - (FStar_Util.int_of_char '0')
+    else failwith "digit"
 let hexdigit: FStar_BaseTypes.char -> Prims.int =
   fun d  ->
     let dd = FStar_Util.int_of_char d in
-    match (dd >= (FStar_Util.int_of_char '0')) &&
-            (dd <= (FStar_Util.int_of_char '9'))
-    with
-    | true  -> digit d
-    | uu____150 ->
-        (match (dd >= (FStar_Util.int_of_char 'a')) &&
-                 (dd <= (FStar_Util.int_of_char 'f'))
-         with
-         | true  ->
-             (dd - (FStar_Util.int_of_char 'a')) + (Prims.parse_int "10")
-         | uu____151 ->
-             (match (dd >= (FStar_Util.int_of_char 'A')) &&
-                      (dd <= (FStar_Util.int_of_char 'F'))
-              with
-              | true  ->
-                  (dd - (FStar_Util.int_of_char 'A')) +
-                    (Prims.parse_int "10")
-              | uu____152 -> failwith "hexdigit"))
+    if
+      (dd >= (FStar_Util.int_of_char '0')) &&
+        (dd <= (FStar_Util.int_of_char '9'))
+    then digit d
+    else
+      if
+        (dd >= (FStar_Util.int_of_char 'a')) &&
+          (dd <= (FStar_Util.int_of_char 'f'))
+      then (dd - (FStar_Util.int_of_char 'a')) + (Prims.parse_int "10")
+      else
+        if
+          (dd >= (FStar_Util.int_of_char 'A')) &&
+            (dd <= (FStar_Util.int_of_char 'F'))
+        then (dd - (FStar_Util.int_of_char 'A')) + (Prims.parse_int "10")
+        else failwith "hexdigit"
 let unicodegraph_short: Prims.string -> FStar_BaseTypes.uint16 =
   fun s  ->
-    match (FStar_String.length s) <> (Prims.parse_int "4") with
-    | true  -> failwith "unicodegraph"
-    | uu____158 ->
-        let uu____159 =
-          let uu____160 =
-            let uu____161 =
-              let uu____162 =
-                let uu____163 =
-                  let uu____164 = FStar_Util.char_at s (Prims.parse_int "0") in
-                  hexdigit uu____164 in
-                FStar_Mul.op_Star uu____163 (Prims.parse_int "4096") in
-              let uu____165 =
-                let uu____166 =
-                  let uu____167 = FStar_Util.char_at s (Prims.parse_int "1") in
-                  hexdigit uu____167 in
-                FStar_Mul.op_Star uu____166 (Prims.parse_int "256") in
-              uu____162 + uu____165 in
-            let uu____168 =
-              let uu____169 =
-                let uu____170 = FStar_Util.char_at s (Prims.parse_int "2") in
-                hexdigit uu____170 in
-              FStar_Mul.op_Star uu____169 (Prims.parse_int "16") in
-            uu____161 + uu____168 in
-          let uu____171 =
-            let uu____172 = FStar_Util.char_at s (Prims.parse_int "3") in
-            hexdigit uu____172 in
-          uu____160 + uu____171 in
-        FStar_Util.uint16_of_int uu____159
+    if (FStar_String.length s) <> (Prims.parse_int "4")
+    then failwith "unicodegraph"
+    else
+      (let uu____159 =
+         let uu____160 =
+           let uu____161 =
+             let uu____162 =
+               let uu____163 =
+                 let uu____164 = FStar_Util.char_at s (Prims.parse_int "0") in
+                 hexdigit uu____164 in
+               FStar_Mul.op_Star uu____163 (Prims.parse_int "4096") in
+             let uu____165 =
+               let uu____166 =
+                 let uu____167 = FStar_Util.char_at s (Prims.parse_int "1") in
+                 hexdigit uu____167 in
+               FStar_Mul.op_Star uu____166 (Prims.parse_int "256") in
+             uu____162 + uu____165 in
+           let uu____168 =
+             let uu____169 =
+               let uu____170 = FStar_Util.char_at s (Prims.parse_int "2") in
+               hexdigit uu____170 in
+             FStar_Mul.op_Star uu____169 (Prims.parse_int "16") in
+           uu____161 + uu____168 in
+         let uu____171 =
+           let uu____172 = FStar_Util.char_at s (Prims.parse_int "3") in
+           hexdigit uu____172 in
+         uu____160 + uu____171 in
+       FStar_Util.uint16_of_int uu____159)
 let hexgraph_short: Prims.string -> FStar_BaseTypes.uint16 =
   fun s  ->
-    match (FStar_String.length s) <> (Prims.parse_int "2") with
-    | true  -> failwith "hexgraph"
-    | uu____178 ->
-        let uu____179 =
-          let uu____180 =
-            let uu____181 =
-              let uu____182 = FStar_Util.char_at s (Prims.parse_int "0") in
-              hexdigit uu____182 in
-            FStar_Mul.op_Star uu____181 (Prims.parse_int "16") in
-          let uu____183 =
-            let uu____184 = FStar_Util.char_at s (Prims.parse_int "1") in
-            hexdigit uu____184 in
-          uu____180 + uu____183 in
-        FStar_Util.uint16_of_int uu____179
+    if (FStar_String.length s) <> (Prims.parse_int "2")
+    then failwith "hexgraph"
+    else
+      (let uu____179 =
+         let uu____180 =
+           let uu____181 =
+             let uu____182 = FStar_Util.char_at s (Prims.parse_int "0") in
+             hexdigit uu____182 in
+           FStar_Mul.op_Star uu____181 (Prims.parse_int "16") in
+         let uu____183 =
+           let uu____184 = FStar_Util.char_at s (Prims.parse_int "1") in
+           hexdigit uu____184 in
+         uu____180 + uu____183 in
+       FStar_Util.uint16_of_int uu____179)
 let unicodegraph_long:
   Prims.string ->
     (FStar_BaseTypes.uint16 Prims.option* FStar_BaseTypes.uint16)
   =
   fun s  ->
-    match (FStar_String.length s) <> (Prims.parse_int "8") with
-    | true  -> failwith "unicodegraph_long"
-    | uu____199 ->
-        let high =
-          let uu____201 =
-            let uu____202 =
-              let uu____203 =
-                let uu____204 =
-                  let uu____205 = FStar_Util.char_at s (Prims.parse_int "0") in
-                  hexdigit uu____205 in
-                FStar_Mul.op_Star uu____204 (Prims.parse_int "4096") in
-              let uu____206 =
-                let uu____207 =
-                  let uu____208 = FStar_Util.char_at s (Prims.parse_int "1") in
-                  hexdigit uu____208 in
-                FStar_Mul.op_Star uu____207 (Prims.parse_int "256") in
-              uu____203 + uu____206 in
-            let uu____209 =
-              let uu____210 =
-                let uu____211 = FStar_Util.char_at s (Prims.parse_int "2") in
-                hexdigit uu____211 in
-              FStar_Mul.op_Star uu____210 (Prims.parse_int "16") in
-            uu____202 + uu____209 in
-          let uu____212 =
-            let uu____213 = FStar_Util.char_at s (Prims.parse_int "3") in
-            hexdigit uu____213 in
-          uu____201 + uu____212 in
-        let low =
-          let uu____215 =
-            let uu____216 =
-              let uu____217 =
-                let uu____218 =
-                  let uu____219 = FStar_Util.char_at s (Prims.parse_int "4") in
-                  hexdigit uu____219 in
-                FStar_Mul.op_Star uu____218 (Prims.parse_int "4096") in
-              let uu____220 =
-                let uu____221 =
-                  let uu____222 = FStar_Util.char_at s (Prims.parse_int "5") in
-                  hexdigit uu____222 in
-                FStar_Mul.op_Star uu____221 (Prims.parse_int "256") in
-              uu____217 + uu____220 in
-            let uu____223 =
-              let uu____224 =
-                let uu____225 = FStar_Util.char_at s (Prims.parse_int "6") in
-                hexdigit uu____225 in
-              FStar_Mul.op_Star uu____224 (Prims.parse_int "16") in
-            uu____216 + uu____223 in
-          let uu____226 =
-            let uu____227 = FStar_Util.char_at s (Prims.parse_int "7") in
-            hexdigit uu____227 in
-          uu____215 + uu____226 in
-        (match high = (Prims.parse_int "0") with
-         | true  -> (None, (FStar_Util.uint16_of_int low))
-         | uu____232 ->
-             ((Some
-                 (FStar_Util.uint16_of_int
-                    ((Prims.parse_int "0xD800") +
-                       (((FStar_Mul.op_Star high (Prims.parse_int "0x10000"))
-                           + (low - (Prims.parse_int "0x10000")))
-                          / (Prims.parse_int "0x400"))))),
-               (FStar_Util.uint16_of_int
-                  ((Prims.parse_int "0xDF30") +
-                     (((FStar_Mul.op_Star high (Prims.parse_int "0x10000")) +
-                         (low - (Prims.parse_int "0x10000")))
-                        mod (Prims.parse_int "0x400"))))))
+    if (FStar_String.length s) <> (Prims.parse_int "8")
+    then failwith "unicodegraph_long"
+    else
+      (let high =
+         let uu____201 =
+           let uu____202 =
+             let uu____203 =
+               let uu____204 =
+                 let uu____205 = FStar_Util.char_at s (Prims.parse_int "0") in
+                 hexdigit uu____205 in
+               FStar_Mul.op_Star uu____204 (Prims.parse_int "4096") in
+             let uu____206 =
+               let uu____207 =
+                 let uu____208 = FStar_Util.char_at s (Prims.parse_int "1") in
+                 hexdigit uu____208 in
+               FStar_Mul.op_Star uu____207 (Prims.parse_int "256") in
+             uu____203 + uu____206 in
+           let uu____209 =
+             let uu____210 =
+               let uu____211 = FStar_Util.char_at s (Prims.parse_int "2") in
+               hexdigit uu____211 in
+             FStar_Mul.op_Star uu____210 (Prims.parse_int "16") in
+           uu____202 + uu____209 in
+         let uu____212 =
+           let uu____213 = FStar_Util.char_at s (Prims.parse_int "3") in
+           hexdigit uu____213 in
+         uu____201 + uu____212 in
+       let low =
+         let uu____215 =
+           let uu____216 =
+             let uu____217 =
+               let uu____218 =
+                 let uu____219 = FStar_Util.char_at s (Prims.parse_int "4") in
+                 hexdigit uu____219 in
+               FStar_Mul.op_Star uu____218 (Prims.parse_int "4096") in
+             let uu____220 =
+               let uu____221 =
+                 let uu____222 = FStar_Util.char_at s (Prims.parse_int "5") in
+                 hexdigit uu____222 in
+               FStar_Mul.op_Star uu____221 (Prims.parse_int "256") in
+             uu____217 + uu____220 in
+           let uu____223 =
+             let uu____224 =
+               let uu____225 = FStar_Util.char_at s (Prims.parse_int "6") in
+               hexdigit uu____225 in
+             FStar_Mul.op_Star uu____224 (Prims.parse_int "16") in
+           uu____216 + uu____223 in
+         let uu____226 =
+           let uu____227 = FStar_Util.char_at s (Prims.parse_int "7") in
+           hexdigit uu____227 in
+         uu____215 + uu____226 in
+       if high = (Prims.parse_int "0")
+       then (None, (FStar_Util.uint16_of_int low))
+       else
+         ((Some
+             (FStar_Util.uint16_of_int
+                ((Prims.parse_int "0xD800") +
+                   (((FStar_Mul.op_Star high (Prims.parse_int "0x10000")) +
+                       (low - (Prims.parse_int "0x10000")))
+                      / (Prims.parse_int "0x400"))))),
+           (FStar_Util.uint16_of_int
+              ((Prims.parse_int "0xDF30") +
+                 (((FStar_Mul.op_Star high (Prims.parse_int "0x10000")) +
+                     (low - (Prims.parse_int "0x10000")))
+                    mod (Prims.parse_int "0x400"))))))
 let escape: FStar_Char.char -> FStar_Char.char =
   fun c  ->
     match c with
@@ -304,9 +299,7 @@ let unreserve_words: Prims.string Prims.list =
     (fun uu____442  ->
        match uu____442 with
        | (mode,keyword,uu____449) ->
-           (match mode = FSHARP with
-            | true  -> Some keyword
-            | uu____451 -> None)) keywords
+           if mode = FSHARP then Some keyword else None) keywords
 let kwd_table: FStar_Parser_Parse.token FStar_Util.smap =
   let tab = FStar_Util.smap_create (Prims.parse_int "1000") in
   FStar_List.iter
@@ -358,13 +351,12 @@ let kwd_or_id:
                    (uu____538, false) in
                  FStar_Parser_Parse.INT uu____535
              | uu____541 ->
-                 (match FStar_Util.starts_with s FStar_Ident.reserved_prefix
-                  with
-                  | true  ->
-                      Prims.raise
-                        (FStar_Errors.Error
-                           ((Prims.strcat FStar_Ident.reserved_prefix
-                               " is a reserved prefix for an identifier"), r))
-                  | uu____542 ->
-                      let uu____543 = intern_string s in
-                      FStar_Parser_Parse.IDENT uu____543))
+                 if FStar_Util.starts_with s FStar_Ident.reserved_prefix
+                 then
+                   Prims.raise
+                     (FStar_Errors.Error
+                        ((Prims.strcat FStar_Ident.reserved_prefix
+                            " is a reserved prefix for an identifier"), r))
+                 else
+                   (let uu____543 = intern_string s in
+                    FStar_Parser_Parse.IDENT uu____543))

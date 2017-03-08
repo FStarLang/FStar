@@ -53,9 +53,9 @@ let lid_of_ids: ident Prims.list -> lident =
           ident = id;
           nsstr;
           str =
-            ((match nsstr = "" with
-              | true  -> id.idText
-              | uu____122 -> Prims.strcat nsstr (Prims.strcat "." id.idText)))
+            (if nsstr = ""
+             then id.idText
+             else Prims.strcat nsstr (Prims.strcat "." id.idText))
         }
 let lid_of_path: Prims.string Prims.list -> FStar_Range.range -> lident =
   fun path  ->
@@ -71,14 +71,14 @@ let range_of_lid: lid -> FStar_Range.range = fun lid  -> (lid.ident).idRange
 let set_lid_range: lident -> FStar_Range.range -> lident =
   fun l  ->
     fun r  ->
-      let uu___51_158 = l in
+      let uu___43_158 = l in
       {
-        ns = (uu___51_158.ns);
+        ns = (uu___43_158.ns);
         ident =
-          (let uu___52_159 = l.ident in
-           { idText = (uu___52_159.idText); idRange = r });
-        nsstr = (uu___51_158.nsstr);
-        str = (uu___51_158.str)
+          (let uu___44_159 = l.ident in
+           { idText = (uu___44_159.idText); idRange = r });
+        nsstr = (uu___43_158.nsstr);
+        str = (uu___43_158.str)
       }
 let lid_add_suffix: lident -> Prims.string -> lident =
   fun l  ->

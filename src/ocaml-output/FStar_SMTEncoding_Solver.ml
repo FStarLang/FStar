@@ -26,80 +26,76 @@ let format_hints_file_name: Prims.string -> Prims.string =
 let initialize_hints_db src_filename force_record =
   FStar_ST.write hint_stats [];
   (let uu____102 = FStar_Options.record_hints () in
-   match uu____102 with
-   | true  -> FStar_ST.write recorded_hints (Some [])
-   | uu____109 -> ());
+   if uu____102 then FStar_ST.write recorded_hints (Some []) else ());
   (let uu____110 = FStar_Options.use_hints () in
-   match uu____110 with
-   | true  ->
-       let norm_src_filename = FStar_Util.normalize_file_path src_filename in
-       let val_filename = format_hints_file_name norm_src_filename in
-       let uu____113 = FStar_Util.read_hints val_filename in
-       (match uu____113 with
-        | Some hints ->
-            let expected_digest = FStar_Util.digest_of_file norm_src_filename in
-            ((let uu____118 = FStar_Options.hint_info () in
-              match uu____118 with
-              | true  ->
-                  (match hints.FStar_Util.module_digest = expected_digest
-                   with
-                   | true  ->
-                       FStar_Util.print1
-                         "(%s) digest is valid; using hints db.\n"
-                         norm_src_filename
-                   | uu____119 ->
-                       FStar_Util.print1
-                         "(%s) digest is invalid; using potentially stale hints\n"
-                         norm_src_filename)
-              | uu____120 -> ());
-             FStar_ST.write replaying_hints (Some (hints.FStar_Util.hints)))
-        | None  ->
-            let uu____124 = FStar_Options.hint_info () in
-            (match uu____124 with
-             | true  ->
-                 FStar_Util.print1 "(%s) Unable to read hints db.\n"
-                   norm_src_filename
-             | uu____125 -> ()))
-   | uu____126 -> ())
+   if uu____110
+   then
+     let norm_src_filename = FStar_Util.normalize_file_path src_filename in
+     let val_filename = format_hints_file_name norm_src_filename in
+     let uu____113 = FStar_Util.read_hints val_filename in
+     match uu____113 with
+     | Some hints ->
+         let expected_digest = FStar_Util.digest_of_file norm_src_filename in
+         ((let uu____118 = FStar_Options.hint_info () in
+           if uu____118
+           then
+             (if hints.FStar_Util.module_digest = expected_digest
+              then
+                FStar_Util.print1 "(%s) digest is valid; using hints db.\n"
+                  norm_src_filename
+              else
+                FStar_Util.print1
+                  "(%s) digest is invalid; using potentially stale hints\n"
+                  norm_src_filename)
+           else ());
+          FStar_ST.write replaying_hints (Some (hints.FStar_Util.hints)))
+     | None  ->
+         let uu____124 = FStar_Options.hint_info () in
+         (if uu____124
+          then
+            FStar_Util.print1 "(%s) Unable to read hints db.\n"
+              norm_src_filename
+          else ())
+   else ())
 let finalize_hints_db: Prims.string -> Prims.unit =
   fun src_filename  ->
     (let uu____131 = FStar_Options.record_hints () in
-     match uu____131 with
-     | true  ->
-         let hints =
-           let uu____133 = FStar_ST.read recorded_hints in
-           FStar_Option.get uu____133 in
-         let hints_db =
-           let uu____139 = FStar_Util.digest_of_file src_filename in
-           { FStar_Util.module_digest = uu____139; FStar_Util.hints = hints } in
-         let hints_file_name = format_hints_file_name src_filename in
-         FStar_Util.write_hints hints_file_name hints_db
-     | uu____141 -> ());
+     if uu____131
+     then
+       let hints =
+         let uu____133 = FStar_ST.read recorded_hints in
+         FStar_Option.get uu____133 in
+       let hints_db =
+         let uu____139 = FStar_Util.digest_of_file src_filename in
+         { FStar_Util.module_digest = uu____139; FStar_Util.hints = hints } in
+       let hints_file_name = format_hints_file_name src_filename in
+       FStar_Util.write_hints hints_file_name hints_db
+     else ());
     (let uu____143 = FStar_Options.hint_info () in
-     match uu____143 with
-     | true  ->
-         let stats =
-           let uu____146 = FStar_ST.read hint_stats in
-           FStar_All.pipe_right uu____146 FStar_List.rev in
-         FStar_All.pipe_right stats
-           (FStar_List.iter
-              (fun s  ->
-                 match s.replay_result with
-                 | FStar_Util.Inl _unsat_core ->
-                     let uu____156 =
-                       FStar_Range.string_of_range s.source_location in
-                     let uu____157 = FStar_Util.string_of_int s.elapsed_time in
-                     FStar_Util.print2
-                       "Hint-info (%s): Replay succeeded in %s milliseconds\n"
-                       uu____156 uu____157
-                 | FStar_Util.Inr _error ->
-                     let uu____159 =
-                       FStar_Range.string_of_range s.source_location in
-                     let uu____160 = FStar_Util.string_of_int s.elapsed_time in
-                     FStar_Util.print2
-                       "Hint-info (%s): Replay failed in %s milliseconds\n"
-                       uu____159 uu____160))
-     | uu____161 -> ());
+     if uu____143
+     then
+       let stats =
+         let uu____146 = FStar_ST.read hint_stats in
+         FStar_All.pipe_right uu____146 FStar_List.rev in
+       FStar_All.pipe_right stats
+         (FStar_List.iter
+            (fun s  ->
+               match s.replay_result with
+               | FStar_Util.Inl _unsat_core ->
+                   let uu____156 =
+                     FStar_Range.string_of_range s.source_location in
+                   let uu____157 = FStar_Util.string_of_int s.elapsed_time in
+                   FStar_Util.print2
+                     "Hint-info (%s): Replay succeeded in %s milliseconds\n"
+                     uu____156 uu____157
+               | FStar_Util.Inr _error ->
+                   let uu____159 =
+                     FStar_Range.string_of_range s.source_location in
+                   let uu____160 = FStar_Util.string_of_int s.elapsed_time in
+                   FStar_Util.print2
+                     "Hint-info (%s): Replay failed in %s milliseconds\n"
+                     uu____159 uu____160))
+     else ());
     FStar_ST.write recorded_hints None;
     FStar_ST.write replaying_hints None;
     FStar_ST.write hint_stats []
@@ -248,10 +244,9 @@ let ask_and_report_errors:
                                let uu____517 =
                                  let uu____519 =
                                    FStar_Options.record_hints () in
-                                 match uu____519 with
-                                 | true  ->
-                                     [FStar_SMTEncoding_Term.GetUnsatCore]
-                                 | uu____521 -> [] in
+                                 if uu____519
+                                 then [FStar_SMTEncoding_Term.GetUnsatCore]
+                                 else [] in
                                FStar_List.append uu____517 suffix in
                              FStar_List.append
                                [FStar_SMTEncoding_Term.CheckSat] uu____515 in
@@ -272,14 +267,12 @@ let ask_and_report_errors:
                      | None  -> (None, default_initial_config)
                      | Some hint ->
                          let uu____558 =
-                           match FStar_Option.isSome
-                                   hint.FStar_Util.unsat_core
-                           with
-                           | true  -> ((hint.FStar_Util.unsat_core), rlimit)
-                           | uu____570 ->
-                               (None,
-                                 ((Prims.parse_int "60") *
-                                    (Prims.parse_int "544656"))) in
+                           if FStar_Option.isSome hint.FStar_Util.unsat_core
+                           then ((hint.FStar_Util.unsat_core), rlimit)
+                           else
+                             (None,
+                               ((Prims.parse_int "60") *
+                                  (Prims.parse_int "544656"))) in
                          (match uu____558 with
                           | (core,timeout) ->
                               (core,
@@ -296,16 +289,15 @@ let ask_and_report_errors:
                                  let uu____628 =
                                    FStar_Options.initial_ifuel () in
                                  uu____627 > uu____628 in
-                               match uu____626 with
-                               | true  ->
-                                   let uu____633 =
-                                     let uu____637 =
-                                       FStar_Options.initial_fuel () in
-                                     let uu____638 =
-                                       FStar_Options.max_ifuel () in
-                                     (uu____637, uu____638, rlimit) in
-                                   [uu____633]
-                               | uu____645 -> [] in
+                               if uu____626
+                               then
+                                 let uu____633 =
+                                   let uu____637 =
+                                     FStar_Options.initial_fuel () in
+                                   let uu____638 = FStar_Options.max_ifuel () in
+                                   (uu____637, uu____638, rlimit) in
+                                 [uu____633]
+                               else [] in
                              let uu____649 =
                                let uu____655 =
                                  let uu____660 =
@@ -316,18 +308,18 @@ let ask_and_report_errors:
                                    let uu____666 =
                                      FStar_Options.initial_fuel () in
                                    uu____661 > uu____666 in
-                                 match uu____660 with
-                                 | true  ->
-                                     let uu____671 =
-                                       let uu____675 =
-                                         let uu____676 =
-                                           FStar_Options.max_fuel () in
-                                         uu____676 / (Prims.parse_int "2") in
-                                       let uu____680 =
-                                         FStar_Options.max_ifuel () in
-                                       (uu____675, uu____680, rlimit) in
-                                     [uu____671]
-                                 | uu____687 -> [] in
+                                 if uu____660
+                                 then
+                                   let uu____671 =
+                                     let uu____675 =
+                                       let uu____676 =
+                                         FStar_Options.max_fuel () in
+                                       uu____676 / (Prims.parse_int "2") in
+                                     let uu____680 =
+                                       FStar_Options.max_ifuel () in
+                                     (uu____675, uu____680, rlimit) in
+                                   [uu____671]
+                                 else [] in
                                let uu____691 =
                                  let uu____697 =
                                    let uu____702 =
@@ -341,16 +333,16 @@ let ask_and_report_errors:
                                         let uu____706 =
                                           FStar_Options.initial_ifuel () in
                                         uu____705 > uu____706) in
-                                   match uu____702 with
-                                   | true  ->
-                                       let uu____711 =
-                                         let uu____715 =
-                                           FStar_Options.max_fuel () in
-                                         let uu____716 =
-                                           FStar_Options.max_ifuel () in
-                                         (uu____715, uu____716, rlimit) in
-                                       [uu____711]
-                                   | uu____723 -> [] in
+                                   if uu____702
+                                   then
+                                     let uu____711 =
+                                       let uu____715 =
+                                         FStar_Options.max_fuel () in
+                                       let uu____716 =
+                                         FStar_Options.max_ifuel () in
+                                       (uu____715, uu____716, rlimit) in
+                                     [uu____711]
+                                   else [] in
                                  let uu____727 =
                                    let uu____733 =
                                      let uu____738 =
@@ -359,24 +351,24 @@ let ask_and_report_errors:
                                        let uu____740 =
                                          FStar_Options.initial_fuel () in
                                        uu____739 < uu____740 in
-                                     match uu____738 with
-                                     | true  ->
-                                         let uu____745 =
-                                           let uu____749 =
-                                             FStar_Options.min_fuel () in
-                                           (uu____749, (Prims.parse_int "1"),
-                                             rlimit) in
-                                         [uu____745]
-                                     | uu____756 -> [] in
+                                     if uu____738
+                                     then
+                                       let uu____745 =
+                                         let uu____749 =
+                                           FStar_Options.min_fuel () in
+                                         (uu____749, (Prims.parse_int "1"),
+                                           rlimit) in
+                                       [uu____745]
+                                     else [] in
                                    [uu____733] in
                                  uu____697 :: uu____727 in
                                uu____655 :: uu____691 in
                              uu____621 :: uu____649 in
-                           (match (default_initial_config <> initial_config)
-                                    || (FStar_Option.isSome unsat_core)
-                            with
-                            | true  -> [default_initial_config]
-                            | uu____798 -> []) :: uu____615 in
+                           (if
+                              (default_initial_config <> initial_config) ||
+                                (FStar_Option.isSome unsat_core)
+                            then [default_initial_config]
+                            else []) :: uu____615 in
                          FStar_List.flatten uu____609 in
                        let report p errs =
                          let errs =
@@ -384,75 +376,73 @@ let ask_and_report_errors:
                              (FStar_Options.detail_errors ()) &&
                                (let uu____814 = FStar_Options.n_cores () in
                                 uu____814 = (Prims.parse_int "1")) in
-                           match uu____813 with
-                           | true  ->
-                               let uu____815 =
-                                 let uu____824 =
-                                   FStar_ST.read minimum_workable_fuel in
-                                 match uu____824 with
-                                 | Some (f,errs) -> (f, errs)
-                                 | None  ->
-                                     let uu____889 =
-                                       let uu____893 =
-                                         FStar_Options.min_fuel () in
-                                       (uu____893, (Prims.parse_int "1"),
-                                         rlimit) in
-                                     (uu____889, errs) in
-                               (match uu____815 with
-                                | (min_fuel,potential_errors) ->
-                                    let ask_z3 label_assumptions =
-                                      let res = FStar_Util.mk_ref None in
-                                      (let uu____947 =
-                                         with_fuel label_assumptions p
-                                           min_fuel in
-                                       FStar_SMTEncoding_Z3.ask None
-                                         all_labels uu____947
-                                         (fun r  ->
-                                            FStar_ST.write res (Some r)));
-                                      (let uu____972 = FStar_ST.read res in
-                                       FStar_Option.get uu____972) in
-                                    let uu____995 =
-                                      FStar_SMTEncoding_ErrorReporting.detail_errors
-                                        env all_labels ask_z3 in
-                                    (uu____995, FStar_SMTEncoding_Z3.Default))
-                           | uu____996 ->
-                               (match errs with
-                                | ([],FStar_SMTEncoding_Z3.Timeout ) ->
-                                    ([(("", FStar_SMTEncoding_Term.Term_sort),
-                                        "Timeout: Unknown assertion failed",
-                                        FStar_Range.dummyRange)],
-                                      (Prims.snd errs))
-                                | ([],FStar_SMTEncoding_Z3.Default ) ->
-                                    ([(("", FStar_SMTEncoding_Term.Term_sort),
-                                        "Unknown assertion failed",
-                                        FStar_Range.dummyRange)],
-                                      (Prims.snd errs))
-                                | (uu____1035,FStar_SMTEncoding_Z3.Kill ) ->
-                                    ([(("", FStar_SMTEncoding_Term.Term_sort),
-                                        "Killed: Unknown assertion failed",
-                                        FStar_Range.dummyRange)],
-                                      (Prims.snd errs))
-                                | uu____1054 -> errs) in
+                           if uu____813
+                           then
+                             let uu____815 =
+                               let uu____824 =
+                                 FStar_ST.read minimum_workable_fuel in
+                               match uu____824 with
+                               | Some (f,errs) -> (f, errs)
+                               | None  ->
+                                   let uu____889 =
+                                     let uu____893 =
+                                       FStar_Options.min_fuel () in
+                                     (uu____893, (Prims.parse_int "1"),
+                                       rlimit) in
+                                   (uu____889, errs) in
+                             match uu____815 with
+                             | (min_fuel,potential_errors) ->
+                                 let ask_z3 label_assumptions =
+                                   let res = FStar_Util.mk_ref None in
+                                   (let uu____947 =
+                                      with_fuel label_assumptions p min_fuel in
+                                    FStar_SMTEncoding_Z3.ask None all_labels
+                                      uu____947
+                                      (fun r  -> FStar_ST.write res (Some r)));
+                                   (let uu____972 = FStar_ST.read res in
+                                    FStar_Option.get uu____972) in
+                                 let uu____995 =
+                                   FStar_SMTEncoding_ErrorReporting.detail_errors
+                                     env all_labels ask_z3 in
+                                 (uu____995, FStar_SMTEncoding_Z3.Default)
+                           else
+                             (match errs with
+                              | ([],FStar_SMTEncoding_Z3.Timeout ) ->
+                                  ([(("", FStar_SMTEncoding_Term.Term_sort),
+                                      "Timeout: Unknown assertion failed",
+                                      FStar_Range.dummyRange)],
+                                    (Prims.snd errs))
+                              | ([],FStar_SMTEncoding_Z3.Default ) ->
+                                  ([(("", FStar_SMTEncoding_Term.Term_sort),
+                                      "Unknown assertion failed",
+                                      FStar_Range.dummyRange)],
+                                    (Prims.snd errs))
+                              | (uu____1035,FStar_SMTEncoding_Z3.Kill ) ->
+                                  ([(("", FStar_SMTEncoding_Term.Term_sort),
+                                      "Killed: Unknown assertion failed",
+                                      FStar_Range.dummyRange)],
+                                    (Prims.snd errs))
+                              | uu____1054 -> errs) in
                          record_hint None;
                          (let uu____1057 = FStar_Options.print_fuels () in
-                          match uu____1057 with
-                          | true  ->
-                              let uu____1058 =
-                                let uu____1059 =
-                                  FStar_TypeChecker_Env.get_range env in
-                                FStar_Range.string_of_range uu____1059 in
-                              let uu____1060 =
-                                let uu____1061 = FStar_Options.max_fuel () in
-                                FStar_All.pipe_right uu____1061
-                                  FStar_Util.string_of_int in
-                              let uu____1062 =
-                                let uu____1063 = FStar_Options.max_ifuel () in
-                                FStar_All.pipe_right uu____1063
-                                  FStar_Util.string_of_int in
-                              FStar_Util.print3
-                                "(%s) Query failed with maximum fuel %s and ifuel %s\n"
-                                uu____1058 uu____1060 uu____1062
-                          | uu____1064 -> ());
+                          if uu____1057
+                          then
+                            let uu____1058 =
+                              let uu____1059 =
+                                FStar_TypeChecker_Env.get_range env in
+                              FStar_Range.string_of_range uu____1059 in
+                            let uu____1060 =
+                              let uu____1061 = FStar_Options.max_fuel () in
+                              FStar_All.pipe_right uu____1061
+                                FStar_Util.string_of_int in
+                            let uu____1062 =
+                              let uu____1063 = FStar_Options.max_ifuel () in
+                              FStar_All.pipe_right uu____1063
+                                FStar_Util.string_of_int in
+                            FStar_Util.print3
+                              "(%s) Query failed with maximum fuel %s and ifuel %s\n"
+                              uu____1058 uu____1060 uu____1062
+                          else ());
                          (let uu____1065 =
                             FStar_All.pipe_right (Prims.fst errs)
                               (FStar_List.map
@@ -495,20 +485,20 @@ let ask_and_report_errors:
                          match (uu____1261, uu____1264) with
                          | ((prev_fuel,prev_ifuel,timeout),(result,elapsed_time))
                              ->
-                             ((match used_hint with
-                               | true  ->
-                                   (FStar_SMTEncoding_Z3.refresh ();
-                                    (let uu____1311 =
-                                       FStar_TypeChecker_Env.get_range env in
-                                     record_hint_stat hint_opt result
-                                       elapsed_time uu____1311))
-                               | uu____1312 -> ());
+                             (if used_hint
+                              then
+                                (FStar_SMTEncoding_Z3.refresh ();
+                                 (let uu____1311 =
+                                    FStar_TypeChecker_Env.get_range env in
+                                  record_hint_stat hint_opt result
+                                    elapsed_time uu____1311))
+                              else ();
                               (let uu____1314 =
                                  (FStar_Options.z3_refresh ()) ||
                                    (FStar_Options.print_z3_statistics ()) in
-                               match uu____1314 with
-                               | true  -> FStar_SMTEncoding_Z3.refresh ()
-                               | uu____1315 -> ());
+                               if uu____1314
+                               then FStar_SMTEncoding_Z3.refresh ()
+                               else ());
                               (let query_info tag =
                                  let uu____1320 =
                                    let uu____1322 =
@@ -540,10 +530,9 @@ let ask_and_report_errors:
                                                    [uu____1344] in
                                                  uu____1341 :: uu____1342 in
                                                uu____1338 :: uu____1339 in
-                                             (match used_hint with
-                                              | true  -> " (with hint)"
-                                              | uu____1345 -> "") ::
-                                               uu____1336 in
+                                             (if used_hint
+                                              then " (with hint)"
+                                              else "") :: uu____1336 in
                                            tag :: uu____1334 in
                                          uu____1331 :: uu____1332 in
                                        query_name :: uu____1329 in
@@ -554,42 +543,40 @@ let ask_and_report_errors:
                                    uu____1320 in
                                match result with
                                | FStar_Util.Inl unsat_core ->
-                                   ((match Prims.op_Negation used_hint with
-                                     | true  ->
-                                         let hint =
-                                           {
-                                             FStar_Util.hint_name =
-                                               query_name;
-                                             FStar_Util.hint_index =
-                                               query_index;
-                                             FStar_Util.fuel = prev_fuel;
-                                             FStar_Util.ifuel = prev_ifuel;
-                                             FStar_Util.unsat_core =
-                                               unsat_core;
-                                             FStar_Util.query_elapsed_time =
-                                               elapsed_time
-                                           } in
-                                         record_hint (Some hint)
-                                     | uu____1351 -> record_hint hint_opt);
+                                   (if Prims.op_Negation used_hint
+                                    then
+                                      (let hint =
+                                         {
+                                           FStar_Util.hint_name = query_name;
+                                           FStar_Util.hint_index =
+                                             query_index;
+                                           FStar_Util.fuel = prev_fuel;
+                                           FStar_Util.ifuel = prev_ifuel;
+                                           FStar_Util.unsat_core = unsat_core;
+                                           FStar_Util.query_elapsed_time =
+                                             elapsed_time
+                                         } in
+                                       record_hint (Some hint))
+                                    else record_hint hint_opt;
                                     (let uu____1352 =
                                        (FStar_Options.print_fuels ()) ||
                                          (FStar_Options.hint_info ()) in
-                                     match uu____1352 with
-                                     | true  -> query_info "succeeded"
-                                     | uu____1353 -> ()))
+                                     if uu____1352
+                                     then query_info "succeeded"
+                                     else ()))
                                | FStar_Util.Inr errs ->
                                    ((let uu____1360 =
                                        (FStar_Options.print_fuels ()) ||
                                          (FStar_Options.hint_info ()) in
-                                     match uu____1360 with
-                                     | true  -> query_info "failed"
-                                     | uu____1361 -> ());
+                                     if uu____1360
+                                     then query_info "failed"
+                                     else ());
                                     try_alt_configs
                                       (prev_fuel, prev_ifuel, timeout) p errs
                                       alt))) in
-                       ((match FStar_Option.isSome unsat_core with
-                         | true  -> FStar_SMTEncoding_Z3.refresh ()
-                         | uu____1364 -> ());
+                       (if FStar_Option.isSome unsat_core
+                        then FStar_SMTEncoding_Z3.refresh ()
+                        else ();
                         (let uu____1365 = with_fuel [] p initial_config in
                          FStar_SMTEncoding_Z3.ask unsat_core all_labels
                            uu____1365
@@ -599,24 +586,22 @@ let ask_and_report_errors:
                    let uu____1372 =
                      let uu____1373 = FStar_Options.split_cases () in
                      uu____1373 > (Prims.parse_int "0") in
-                   match uu____1372 with
-                   | true  ->
-                       let uu____1374 =
-                         let uu____1383 = FStar_Options.split_cases () in
-                         FStar_SMTEncoding_SplitQueryCases.can_handle_query
-                           uu____1383 q in
-                       (match uu____1374 with
-                        | (b,cb) ->
-                            (match b with
-                             | true  ->
-                                 FStar_SMTEncoding_SplitQueryCases.handle_query
-                                   cb check
-                             | uu____1398 -> check q))
-                   | uu____1399 -> check q in
+                   if uu____1372
+                   then
+                     let uu____1374 =
+                       let uu____1383 = FStar_Options.split_cases () in
+                       FStar_SMTEncoding_SplitQueryCases.can_handle_query
+                         uu____1383 q in
+                     match uu____1374 with
+                     | (b,cb) ->
+                         (if b
+                          then
+                            FStar_SMTEncoding_SplitQueryCases.handle_query cb
+                              check
+                          else check q)
+                   else check q in
                  let uu____1400 = FStar_Options.admit_smt_queries () in
-                 (match uu____1400 with
-                  | true  -> ()
-                  | uu____1401 -> process_query query))
+                 if uu____1400 then () else process_query query)
 let solve:
   (Prims.unit -> Prims.string) Prims.option ->
     FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.unit

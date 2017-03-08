@@ -108,12 +108,12 @@ let rec gensyms: Prims.int -> mlident Prims.list =
 let mlpath_of_lident:
   FStar_Ident.lident -> (Prims.string Prims.list* Prims.string) =
   fun x  ->
-    match FStar_Ident.lid_equals x FStar_Syntax_Const.failwith_lid with
-    | true  -> ([], ((x.FStar_Ident.ident).FStar_Ident.idText))
-    | uu____99 ->
-        let uu____100 =
-          FStar_List.map (fun x  -> x.FStar_Ident.idText) x.FStar_Ident.ns in
-        (uu____100, ((x.FStar_Ident.ident).FStar_Ident.idText))
+    if FStar_Ident.lid_equals x FStar_Syntax_Const.failwith_lid
+    then ([], ((x.FStar_Ident.ident).FStar_Ident.idText))
+    else
+      (let uu____100 =
+         FStar_List.map (fun x  -> x.FStar_Ident.idText) x.FStar_Ident.ns in
+       (uu____100, ((x.FStar_Ident.ident).FStar_Ident.idText)))
 type mlidents = mlident Prims.list
 type mlsymbols = mlsymbol Prims.list
 type e_tag =
@@ -502,8 +502,7 @@ let apply_obj_repr: mlexpr -> mlty -> mlexpr =
         with_ty (MLTY_Fun (t, E_PURE, MLTY_Top)) (MLE_Name (["Obj"], "repr")) in
       with_ty_loc MLTY_Top (MLE_App (obj_repr, [x])) x.loc
 let avoid_keyword: Prims.string -> Prims.string =
-  fun s  ->
-    match is_reserved s with | true  -> Prims.strcat s "_" | uu____1467 -> s
+  fun s  -> if is_reserved s then Prims.strcat s "_" else s
 let bv_as_mlident: FStar_Syntax_Syntax.bv -> mlident =
   fun x  ->
     let uu____1471 =
@@ -512,16 +511,16 @@ let bv_as_mlident: FStar_Syntax_Syntax.bv -> mlident =
           FStar_Ident.reserved_prefix)
          || (FStar_Syntax_Syntax.is_null_bv x))
         || (is_reserved (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText) in
-    match uu____1471 with
-    | true  ->
-        let uu____1472 =
-          let uu____1473 =
-            let uu____1474 =
-              FStar_Util.string_of_int x.FStar_Syntax_Syntax.index in
-            Prims.strcat "_" uu____1474 in
-          Prims.strcat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
-            uu____1473 in
-        (uu____1472, (Prims.parse_int "0"))
-    | uu____1475 ->
-        (((x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText),
-          (Prims.parse_int "0"))
+    if uu____1471
+    then
+      let uu____1472 =
+        let uu____1473 =
+          let uu____1474 =
+            FStar_Util.string_of_int x.FStar_Syntax_Syntax.index in
+          Prims.strcat "_" uu____1474 in
+        Prims.strcat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
+          uu____1473 in
+      (uu____1472, (Prims.parse_int "0"))
+    else
+      (((x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText),
+        (Prims.parse_int "0"))

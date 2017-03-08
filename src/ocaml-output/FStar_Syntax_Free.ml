@@ -310,13 +310,13 @@ and free_names_and_uvars_comp:
       match uu____938 with
       | Some n ->
           let uu____947 = should_invalidate_cache n use_cache in
-          (match uu____947 with
-           | true  ->
-               (FStar_ST.write c.FStar_Syntax_Syntax.vars None;
-                free_names_and_uvars_comp c use_cache)
-           | uu____955 ->
-               let uu____956 = FStar_Syntax_Syntax.new_fv_set () in
-               (n, uu____956))
+          if uu____947
+          then
+            (FStar_ST.write c.FStar_Syntax_Syntax.vars None;
+             free_names_and_uvars_comp c use_cache)
+          else
+            (let uu____956 = FStar_Syntax_Syntax.new_fv_set () in
+             (n, uu____956))
       | uu____959 ->
           let n =
             match c.FStar_Syntax_Syntax.n with

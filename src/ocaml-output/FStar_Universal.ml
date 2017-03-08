@@ -48,9 +48,9 @@ let tc_prims:
   fun uu____85  ->
     let solver =
       let uu____92 = FStar_Options.lax () in
-      match uu____92 with
-      | true  -> FStar_SMTEncoding_Solver.dummy
-      | uu____93 -> FStar_SMTEncoding_Solver.solver in
+      if uu____92
+      then FStar_SMTEncoding_Solver.dummy
+      else FStar_SMTEncoding_Solver.solver in
     let env =
       FStar_TypeChecker_Env.initial_env
         FStar_TypeChecker_TcTerm.type_of_tot_term
@@ -109,12 +109,12 @@ let tc_one_fragment:
                                    modul.FStar_Syntax_Syntax.name in
                                FStar_String.lowercase uu____192 in
                              uu____187 <> uu____191 in
-                           (match uu____186 with
-                            | true  ->
-                                Prims.raise
-                                  (FStar_Errors.Err
-                                     "Interactive mode only supports a single module at the top-level")
-                            | uu____193 -> env)
+                           if uu____186
+                           then
+                             Prims.raise
+                               (FStar_Errors.Err
+                                  "Interactive mode only supports a single module at the top-level")
+                           else env
                        | None  -> env in
                      let uu____194 =
                        FStar_TypeChecker_Tc.tc_partial_modul env modul in
@@ -248,20 +248,19 @@ let tc_one_file_and_intf:
                ((let uu____514 =
                    let uu____515 = FStar_Options.lax () in
                    Prims.op_Negation uu____515 in
-                 match uu____514 with
-                 | true  ->
-                     Prims.raise
-                       (FStar_Errors.Err
-                          "Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately")
-                 | uu____516 -> ());
+                 if uu____514
+                 then
+                   Prims.raise
+                     (FStar_Errors.Err
+                        "Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately")
+                 else ());
                 tc_one_file dsenv env intf impl)
            | Some iname ->
                ((let uu____519 = FStar_Options.debug_any () in
-                 match uu____519 with
-                 | true  ->
-                     FStar_Util.print1 "Interleaving iface+module: %s\n"
-                       iname
-                 | uu____520 -> ());
+                 if uu____519
+                 then
+                   FStar_Util.print1 "Interleaving iface+module: %s\n" iname
+                 else ());
                 (let caption = Prims.strcat "interface: " iname in
                  let uu____522 = push_context (dsenv, env) caption in
                  match uu____522 with
@@ -333,13 +332,13 @@ let batch_mode_tc_no_prims:
                 (FStar_Options.interactive ()) &&
                   (let uu____820 = FStar_Errors.get_err_count () in
                    uu____820 = (Prims.parse_int "0")) in
-              match uu____819 with
-              | true  ->
-                  (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
-                    ()
-              | uu____821 ->
-                  (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.finish
-                    ());
+              if uu____819
+              then
+                (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
+                  ()
+              else
+                (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.finish
+                  ());
              (all_mods, dsenv, env))
 let batch_mode_tc:
   Prims.string Prims.list ->
@@ -353,19 +352,19 @@ let batch_mode_tc:
         ((let uu____856 =
             (let uu____857 = FStar_Options.explicit_deps () in
              Prims.op_Negation uu____857) && (FStar_Options.debug_any ()) in
-          match uu____856 with
-          | true  ->
-              (FStar_Util.print_endline
-                 "Auto-deps kicked in; here's some info.";
-               FStar_Util.print1
-                 "Here's the list of filenames we will process: %s\n"
-                 (FStar_String.concat " " filenames);
-               (let uu____860 =
-                  let uu____861 = FStar_Options.verify_module () in
-                  FStar_String.concat " " uu____861 in
-                FStar_Util.print1
-                  "Here's the list of modules we will verify: %s\n" uu____860))
-          | uu____863 -> ());
+          if uu____856
+          then
+            (FStar_Util.print_endline
+               "Auto-deps kicked in; here's some info.";
+             FStar_Util.print1
+               "Here's the list of filenames we will process: %s\n"
+               (FStar_String.concat " " filenames);
+             (let uu____860 =
+                let uu____861 = FStar_Options.verify_module () in
+                FStar_String.concat " " uu____861 in
+              FStar_Util.print1
+                "Here's the list of modules we will verify: %s\n" uu____860))
+          else ());
          (let uu____864 = batch_mode_tc_no_prims dsenv env filenames in
           match uu____864 with
           | (all_mods,dsenv,env) -> ((prims_mod :: all_mods), dsenv, env)))

@@ -924,22 +924,40 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 // BU.print2 "Will %sreify : %s \n" (if should_reify then "" else "not ") (stack_to_string stack);
 
                 if not should_reify
-                then (*  We have an impure computation, and we aim to perform any pure steps within that computation.   *
-                      *                                                                                                 *
-                      *  This scenario arises primarily as we extract (impure) programs and partially evaluate them     *
-                      *  before extraction, as an optimization.                                                         *
-                      *                                                                                                 *
-                      *  First, we reduce **the type annotation** t with an empty stack                                 *
-                      *                                                                                                 *
-                      *  Then, we reduce the monadic computation `head`, in a stack marked with a Meta_monadic,         *
-                      *  indicating that this reduction should not consume any arguments on the stack. `rebuild`        *
-                      *  will notice the Meta_monadic marker and reconstruct the computation after normalization.       *)
-                    let t = norm cfg env [] t in
-                    let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                    let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
-                                delta_level=[NoDelta]} in
-                    norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+                then
+                 (*  We have an impure computation, and we aim to perform any pure steps within that computation.   *
+                  *                                                                                                 *
+                  *  This scenario arises primarily as we extract (impure) programs and partially evaluate them     *
+                  *  before extraction, as an optimization.                                                         *
+                  *                                                                                                 *
+                  *  First, we reduce **the type annotation** t with an empty stack                                 *
+                  *                                                                                                 *
+                  *  Then, we reduce the monadic computation `head`, in a stack marked with a Meta_monadic,         *
+                  *  indicating that this reduction should not consume any arguments on the stack. `rebuild`        *
+                  *  will notice the Meta_monadic marker and reconstruct the computation after normalization.       *)
 
+                  let t = norm cfg env [] t in
+                  let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                  let cfg =
+                    if cfg.steps |> List.contains PureSubtermsWithinComputations
+                    then
+                      (* KM : This case should be tailored for extraction but I'm not exactly sure that the logic here is correct *)
+                      (* Why are we dropping previous steps arbitrarily ? This will silently break any extension of the steps *)
+                      { cfg with
+                        steps=[PureSubtermsWithinComputations;
+                               Primops;
+                               AllowUnboundUniverses;
+                               EraseUniverses;
+                               Exclude Zeta];
+                        delta_level=[Env.Inlining; Env.Eager_unfolding_only]
+                      }
+                    else
+                      { cfg with
+                        steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
+                        delta_level=[NoDelta]}
+                  in
+                  (* meta doesn't block reduction, but we need to put the label back *)
+                  norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head
                 else
                   begin match (SS.compress head).n with
                     | Tm_let((false, [lb]), body) ->
@@ -1120,18 +1138,20 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 if (U.is_pure_effect m
                     || U.is_ghost_effect m)
                 && cfg.steps |> List.contains PureSubtermsWithinComputations
-                then let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                        let cfg = { cfg with
-                                    steps=[PureSubtermsWithinComputations;
-                                            Primops;
-                                            AllowUnboundUniverses;
-                                            EraseUniverses;
-                                            Exclude Zeta];
-                                    delta_level=[Env.Inlining; Env.Eager_unfolding_only]
-                                    }
-                        in
-                        (* meta doesn't block reduction, but we need to put the label back *)
-                        norm cfg env (Meta(Meta_monadic_lift(m, m', t), head.pos)::stack) head
+                then
+                  let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                  let cfg =
+                    { cfg with
+                      steps=[PureSubtermsWithinComputations;
+                             Primops;
+                             AllowUnboundUniverses;
+                             EraseUniverses;
+                             Exclude Zeta];
+                      delta_level=[Env.Inlining; Env.Eager_unfolding_only]
+                    }
+                  in
+                  (* meta doesn't block reduction, but we need to put the label back *)
+                  norm cfg env (Meta(Meta_monadic_lift(m, m', t), head.pos)::stack) head
                 else
                   (* meta doesn't block reduction, but we need to put the label back *)
                   norm cfg env (Meta(Meta_monadic_lift(m, m', t), head.pos)::stack) head

@@ -127,18 +127,18 @@ let disentangle_abbrevs_from_bundle:
                                   FStar_Ident.lid_equals x
                                     (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
                                uu____291 in
-                           (match uu____290 with
-                            | true  ->
-                                let msg =
-                                  FStar_Util.format1
-                                    "Cycle on %s in mutually recursive type abbreviations"
-                                    ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.str in
-                                Prims.raise
-                                  (FStar_Errors.Error
-                                     (msg,
-                                       (FStar_Ident.range_of_lid
-                                          (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)))
-                            | uu____310 -> unfold_abbrev se)
+                           if uu____290
+                           then
+                             let msg =
+                               FStar_Util.format1
+                                 "Cycle on %s in mutually recursive type abbreviations"
+                                 ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.str in
+                             Prims.raise
+                               (FStar_Errors.Error
+                                  (msg,
+                                    (FStar_Ident.range_of_lid
+                                       (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)))
+                           else unfold_abbrev se
                        | uu____311 -> t)
                 and unfold_abbrev uu___203_313 =
                   match uu___203_313 with

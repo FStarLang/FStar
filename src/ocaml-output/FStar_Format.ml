@@ -42,9 +42,7 @@ let combine: doc -> doc Prims.list -> doc =
       match uu____72 with
       | Doc sep ->
           let select uu____80 =
-            match uu____80 with
-            | Doc d ->
-                (match d = "" with | true  -> None | uu____84 -> Some d) in
+            match uu____80 with | Doc d -> if d = "" then None else Some d in
           let docs = FStar_List.choose select docs in
           Doc (FStar_String.concat sep docs)
 let cat1: doc -> doc -> doc = fun d1  -> fun d2  -> reduce [d1; break1; d2]

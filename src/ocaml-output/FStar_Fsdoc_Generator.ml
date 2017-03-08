@@ -195,24 +195,22 @@ let document_decl:
   (Prims.string -> Prims.unit) -> FStar_Parser_AST.decl -> Prims.unit =
   fun w  ->
     fun d  ->
-      match decl_documented d with
-      | true  ->
-          let uu____590 = d in
-          (match uu____590 with
-           | { FStar_Parser_AST.d = decl;
-               FStar_Parser_AST.drange = uu____592;
-               FStar_Parser_AST.doc = fsdoc;
-               FStar_Parser_AST.quals = uu____594;
-               FStar_Parser_AST.attrs = uu____595;_} ->
-               ((let uu____598 =
-                   let uu____599 = string_of_decl' d.FStar_Parser_AST.d in
-                   code_wrap uu____599 in
-                 w uu____598);
-                (match fsdoc with
-                 | Some (doc,_kw) -> w (Prims.strcat "\n" doc)
-                 | uu____614 -> ());
-                w ""))
-      | uu____616 -> ()
+      if decl_documented d
+      then
+        let uu____590 = d in
+        match uu____590 with
+        | { FStar_Parser_AST.d = decl; FStar_Parser_AST.drange = uu____592;
+            FStar_Parser_AST.doc = fsdoc; FStar_Parser_AST.quals = uu____594;
+            FStar_Parser_AST.attrs = uu____595;_} ->
+            ((let uu____598 =
+                let uu____599 = string_of_decl' d.FStar_Parser_AST.d in
+                code_wrap uu____599 in
+              w uu____598);
+             (match fsdoc with
+              | Some (doc,_kw) -> w (Prims.strcat "\n" doc)
+              | uu____614 -> ());
+             w "")
+      else ()
 let document_toplevel name topdecl =
   match topdecl.FStar_Parser_AST.d with
   | FStar_Parser_AST.TopLevelModule uu____633 ->

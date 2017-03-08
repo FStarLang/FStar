@@ -11,30 +11,30 @@ let rec get_next_n_ite:
     fun t  ->
       fun negs  ->
         fun f  ->
-          match n <= (Prims.parse_int "0") with
-          | true  ->
-              let uu____30 = f FStar_SMTEncoding_Util.mkTrue in
-              (true, uu____30, negs, t)
-          | uu____31 ->
-              (match t.FStar_SMTEncoding_Term.tm with
-               | FStar_SMTEncoding_Term.App
-                   (FStar_SMTEncoding_Term.ITE ,g::t::e::uu____39) ->
-                   let uu____42 =
-                     let uu____43 =
-                       let uu____46 = FStar_SMTEncoding_Util.mkNot g in
-                       (negs, uu____46) in
-                     FStar_SMTEncoding_Util.mkAnd uu____43 in
-                   get_next_n_ite (n - (Prims.parse_int "1")) e uu____42
-                     (fun x  ->
-                        let uu____48 = FStar_SMTEncoding_Util.mkITE (g, t, x) in
-                        f uu____48)
-               | FStar_SMTEncoding_Term.FreeV uu____49 ->
-                   let uu____52 = f FStar_SMTEncoding_Util.mkTrue in
-                   (true, uu____52, negs, t)
-               | uu____53 ->
-                   (false, FStar_SMTEncoding_Util.mkFalse,
-                     FStar_SMTEncoding_Util.mkFalse,
-                     FStar_SMTEncoding_Util.mkFalse))
+          if n <= (Prims.parse_int "0")
+          then
+            let uu____30 = f FStar_SMTEncoding_Util.mkTrue in
+            (true, uu____30, negs, t)
+          else
+            (match t.FStar_SMTEncoding_Term.tm with
+             | FStar_SMTEncoding_Term.App
+                 (FStar_SMTEncoding_Term.ITE ,g::t::e::uu____39) ->
+                 let uu____42 =
+                   let uu____43 =
+                     let uu____46 = FStar_SMTEncoding_Util.mkNot g in
+                     (negs, uu____46) in
+                   FStar_SMTEncoding_Util.mkAnd uu____43 in
+                 get_next_n_ite (n - (Prims.parse_int "1")) e uu____42
+                   (fun x  ->
+                      let uu____48 = FStar_SMTEncoding_Util.mkITE (g, t, x) in
+                      f uu____48)
+             | FStar_SMTEncoding_Term.FreeV uu____49 ->
+                 let uu____52 = f FStar_SMTEncoding_Util.mkTrue in
+                 (true, uu____52, negs, t)
+             | uu____53 ->
+                 (false, FStar_SMTEncoding_Util.mkFalse,
+                   FStar_SMTEncoding_Util.mkFalse,
+                   FStar_SMTEncoding_Util.mkFalse))
 let rec is_ite_all_the_way:
   Prims.int ->
     FStar_SMTEncoding_Term.term ->
@@ -47,30 +47,29 @@ let rec is_ite_all_the_way:
     fun t  ->
       fun negs  ->
         fun l  ->
-          match n <= (Prims.parse_int "0") with
-          | true  -> Prims.raise FStar_Util.Impos
-          | uu____84 ->
-              (match t.FStar_SMTEncoding_Term.tm with
-               | FStar_SMTEncoding_Term.FreeV uu____89 ->
-                   let uu____92 =
-                     let uu____93 =
-                       let uu____96 = FStar_SMTEncoding_Util.mkNot t in
-                       (negs, uu____96) in
-                     FStar_SMTEncoding_Util.mkAnd uu____93 in
-                   (true, l, uu____92)
-               | uu____98 ->
-                   let uu____99 = get_next_n_ite n t negs (fun x  -> x) in
-                   (match uu____99 with
-                    | (b,t,negs',rest) ->
-                        (match b with
-                         | true  ->
-                             let uu____117 =
-                               let uu____119 =
-                                 FStar_SMTEncoding_Util.mkImp (negs, t) in
-                               uu____119 :: l in
-                             is_ite_all_the_way n rest negs' uu____117
-                         | uu____120 ->
-                             (false, [], FStar_SMTEncoding_Util.mkFalse))))
+          if n <= (Prims.parse_int "0")
+          then Prims.raise FStar_Util.Impos
+          else
+            (match t.FStar_SMTEncoding_Term.tm with
+             | FStar_SMTEncoding_Term.FreeV uu____89 ->
+                 let uu____92 =
+                   let uu____93 =
+                     let uu____96 = FStar_SMTEncoding_Util.mkNot t in
+                     (negs, uu____96) in
+                   FStar_SMTEncoding_Util.mkAnd uu____93 in
+                 (true, l, uu____92)
+             | uu____98 ->
+                 let uu____99 = get_next_n_ite n t negs (fun x  -> x) in
+                 (match uu____99 with
+                  | (b,t,negs',rest) ->
+                      if b
+                      then
+                        let uu____117 =
+                          let uu____119 =
+                            FStar_SMTEncoding_Util.mkImp (negs, t) in
+                          uu____119 :: l in
+                        is_ite_all_the_way n rest negs' uu____117
+                      else (false, [], FStar_SMTEncoding_Util.mkFalse)))
 let rec parse_query_for_split_cases:
   Prims.int ->
     FStar_SMTEncoding_Term.term ->

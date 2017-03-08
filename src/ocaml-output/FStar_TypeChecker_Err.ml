@@ -11,40 +11,37 @@ let add_errors:
              (fun uu____27  ->
                 match uu____27 with
                 | (msg,r) ->
-                    (match r = FStar_Range.dummyRange with
-                     | true  ->
-                         let uu____36 = FStar_TypeChecker_Env.get_range env in
-                         (msg, uu____36)
-                     | uu____37 ->
-                         let r' =
-                           let uu___185_39 = r in
-                           {
-                             FStar_Range.def_range =
-                               (r.FStar_Range.use_range);
-                             FStar_Range.use_range =
-                               (uu___185_39.FStar_Range.use_range)
-                           } in
-                         let uu____40 =
-                           let uu____41 = FStar_Range.file_of_range r' in
-                           let uu____42 =
-                             let uu____43 =
-                               FStar_TypeChecker_Env.get_range env in
-                             FStar_Range.file_of_range uu____43 in
-                           uu____41 <> uu____42 in
-                         (match uu____40 with
-                          | true  ->
-                              let uu____46 =
-                                let uu____47 =
-                                  let uu____48 =
-                                    let uu____49 =
-                                      FStar_Range.string_of_use_range r in
-                                    Prims.strcat uu____49 ")" in
-                                  Prims.strcat "(Also see: " uu____48 in
-                                Prims.strcat msg uu____47 in
-                              let uu____50 =
-                                FStar_TypeChecker_Env.get_range env in
-                              (uu____46, uu____50)
-                          | uu____51 -> (msg, r))))) in
+                    if r = FStar_Range.dummyRange
+                    then
+                      let uu____36 = FStar_TypeChecker_Env.get_range env in
+                      (msg, uu____36)
+                    else
+                      (let r' =
+                         let uu___186_39 = r in
+                         {
+                           FStar_Range.def_range = (r.FStar_Range.use_range);
+                           FStar_Range.use_range =
+                             (uu___186_39.FStar_Range.use_range)
+                         } in
+                       let uu____40 =
+                         let uu____41 = FStar_Range.file_of_range r' in
+                         let uu____42 =
+                           let uu____43 = FStar_TypeChecker_Env.get_range env in
+                           FStar_Range.file_of_range uu____43 in
+                         uu____41 <> uu____42 in
+                       if uu____40
+                       then
+                         let uu____46 =
+                           let uu____47 =
+                             let uu____48 =
+                               let uu____49 =
+                                 FStar_Range.string_of_use_range r in
+                               Prims.strcat uu____49 ")" in
+                             Prims.strcat "(Also see: " uu____48 in
+                           Prims.strcat msg uu____47 in
+                         let uu____50 = FStar_TypeChecker_Env.get_range env in
+                         (uu____46, uu____50)
+                       else (msg, r)))) in
       FStar_Errors.add_errors errs
 let exhaustiveness_check: Prims.string = "Patterns are incomplete"
 let subtyping_failed:

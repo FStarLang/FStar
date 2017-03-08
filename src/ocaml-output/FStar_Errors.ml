@@ -23,13 +23,13 @@ let diag: FStar_Range.range -> Prims.string -> Prims.unit =
   fun r  ->
     fun msg  ->
       let uu____69 = FStar_Options.debug_any () in
-      match uu____69 with
-      | true  ->
-          let uu____70 =
-            let uu____71 = FStar_Range.string_of_range r in
-            FStar_Util.format2 "%s : (Diagnostic) %s\n" uu____71 msg in
-          FStar_Util.print_string uu____70
-      | uu____72 -> ()
+      if uu____69
+      then
+        let uu____70 =
+          let uu____71 = FStar_Range.string_of_range r in
+          FStar_Util.format2 "%s : (Diagnostic) %s\n" uu____71 msg in
+        FStar_Util.print_string uu____70
+      else ()
 let warn: FStar_Range.range -> Prims.string -> Prims.unit =
   fun r  ->
     fun msg  ->
@@ -78,15 +78,15 @@ let add_errors: (Prims.string* FStar_Range.range) Prims.list -> Prims.unit =
 let mk_error: Prims.string -> FStar_Range.range -> Prims.string =
   fun msg  ->
     fun r  ->
-      match r.FStar_Range.use_range <> r.FStar_Range.def_range with
-      | true  ->
-          let uu____236 = FStar_Range.string_of_use_range r in
-          let uu____237 = FStar_Range.string_of_range r in
-          FStar_Util.format3 "%s: (Error) %s (see %s)\n" uu____236 msg
-            uu____237
-      | uu____238 ->
-          let uu____239 = FStar_Range.string_of_range r in
-          FStar_Util.format2 "%s: (Error) %s\n" uu____239 msg
+      if r.FStar_Range.use_range <> r.FStar_Range.def_range
+      then
+        let uu____236 = FStar_Range.string_of_use_range r in
+        let uu____237 = FStar_Range.string_of_range r in
+        FStar_Util.format3 "%s: (Error) %s (see %s)\n" uu____236 msg
+          uu____237
+      else
+        (let uu____239 = FStar_Range.string_of_range r in
+         FStar_Util.format2 "%s: (Error) %s\n" uu____239 msg)
 let report_all: Prims.unit -> Prims.nat =
   fun uu____243  ->
     let all_errs =
@@ -117,9 +117,7 @@ let handle_err: Prims.bool -> Prims.exn -> Prims.unit =
           let msg = message_prefix.append_prefix msg in
           let uu____317 = FStar_Range.string_of_range r in
           FStar_Util.print3_error "%s : %s %s\n" uu____317
-            (match warning with
-             | true  -> "(Warning)"
-             | uu____318 -> "(Error)") msg
+            (if warning then "(Warning)" else "(Error)") msg
       | FStar_Util.NYI msg ->
           let msg = message_prefix.append_prefix msg in
           FStar_Util.print1_error "Feature not yet implemented: %s" msg
@@ -128,8 +126,8 @@ let handle_err: Prims.bool -> Prims.exn -> Prims.unit =
           FStar_Util.print1_error "Error: %s" msg
       | uu____323 -> Prims.raise e
 let handleable: Prims.exn -> Prims.bool =
-  fun uu___50_326  ->
-    match uu___50_326 with
+  fun uu___52_326  ->
+    match uu___52_326 with
     | Error _|FStar_Util.NYI _|Err _ -> true
     | uu____330 -> false
 let report: FStar_Range.range -> Prims.string -> Prims.unit =

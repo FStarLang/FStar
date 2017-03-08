@@ -68,26 +68,26 @@ let __set_unit_tests: Prims.unit -> Prims.unit =
 let __clear_unit_tests: Prims.unit -> Prims.unit =
   fun uu____128  -> FStar_ST.write __unit_tests__ false
 let as_bool: option_val -> Prims.bool =
-  fun uu___43_133  ->
-    match uu___43_133 with
+  fun uu___45_133  ->
+    match uu___45_133 with
     | Bool b -> b
     | uu____135 -> failwith "Impos: expected Bool"
 let as_int: option_val -> Prims.int =
-  fun uu___44_138  ->
-    match uu___44_138 with
+  fun uu___46_138  ->
+    match uu___46_138 with
     | Int b -> b
     | uu____140 -> failwith "Impos: expected Int"
 let as_string: option_val -> Prims.string =
-  fun uu___45_143  ->
-    match uu___45_143 with
+  fun uu___47_143  ->
+    match uu___47_143 with
     | String b -> b
     | uu____145 -> failwith "Impos: expected String"
-let as_list as_t uu___46_161 =
-  match uu___46_161 with
+let as_list as_t uu___48_161 =
+  match uu___48_161 with
   | List ts -> FStar_All.pipe_right ts (FStar_List.map as_t)
   | uu____168 -> failwith "Impos: expected List"
-let as_option as_t uu___47_185 =
-  match uu___47_185 with
+let as_option as_t uu___49_185 =
+  match uu___49_185 with
   | Unset  -> None
   | v -> let uu____189 = as_t v in Some uu____189
 let fstar_options: option_val FStar_Util.smap Prims.list FStar_ST.ref =
@@ -358,8 +358,8 @@ let get_z3timeout: Prims.unit -> Prims.int =
 let get_no_positivity: Prims.unit -> Prims.bool =
   fun uu____745  -> lookup_opt "__no_positivity" as_bool
 let dlevel: Prims.string -> debug_level_t =
-  fun uu___48_748  ->
-    match uu___48_748 with
+  fun uu___50_748  ->
+    match uu___50_748 with
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
@@ -407,32 +407,32 @@ let display_usage_aux specs =
        | (uu____838,flag,p,doc) ->
            (match p with
             | FStar_Getopt.ZeroArgs ig ->
-                (match doc = "" with
-                 | true  ->
-                     let uu____847 =
-                       let uu____848 = FStar_Util.colorize_bold flag in
-                       FStar_Util.format1 "  --%s\n" uu____848 in
-                     FStar_Util.print_string uu____847
-                 | uu____849 ->
-                     let uu____850 =
-                       let uu____851 = FStar_Util.colorize_bold flag in
-                       FStar_Util.format2 "  --%s  %s\n" uu____851 doc in
-                     FStar_Util.print_string uu____850)
+                if doc = ""
+                then
+                  let uu____847 =
+                    let uu____848 = FStar_Util.colorize_bold flag in
+                    FStar_Util.format1 "  --%s\n" uu____848 in
+                  FStar_Util.print_string uu____847
+                else
+                  (let uu____850 =
+                     let uu____851 = FStar_Util.colorize_bold flag in
+                     FStar_Util.format2 "  --%s  %s\n" uu____851 doc in
+                   FStar_Util.print_string uu____850)
             | FStar_Getopt.OneArg (uu____852,argname) ->
-                (match doc = "" with
-                 | true  ->
-                     let uu____858 =
-                       let uu____859 = FStar_Util.colorize_bold flag in
-                       let uu____860 = FStar_Util.colorize_bold argname in
-                       FStar_Util.format2 "  --%s %s\n" uu____859 uu____860 in
-                     FStar_Util.print_string uu____858
-                 | uu____861 ->
-                     let uu____862 =
-                       let uu____863 = FStar_Util.colorize_bold flag in
-                       let uu____864 = FStar_Util.colorize_bold argname in
-                       FStar_Util.format3 "  --%s %s  %s\n" uu____863
-                         uu____864 doc in
-                     FStar_Util.print_string uu____862))) specs
+                if doc = ""
+                then
+                  let uu____858 =
+                    let uu____859 = FStar_Util.colorize_bold flag in
+                    let uu____860 = FStar_Util.colorize_bold argname in
+                    FStar_Util.format2 "  --%s %s\n" uu____859 uu____860 in
+                  FStar_Util.print_string uu____858
+                else
+                  (let uu____862 =
+                     let uu____863 = FStar_Util.colorize_bold flag in
+                     let uu____864 = FStar_Util.colorize_bold argname in
+                     FStar_Util.format3 "  --%s %s  %s\n" uu____863 uu____864
+                       doc in
+                   FStar_Util.print_string uu____862))) specs
 let mk_spec:
   (FStar_BaseTypes.char* Prims.string* option_val FStar_Getopt.opt_variant*
     Prims.string) -> FStar_Getopt.opt
@@ -503,13 +503,12 @@ let rec specs:
       [(FStar_Getopt.noshort, "admit_smt_queries",
          (FStar_Getopt.OneArg
             (((fun s  ->
-                 match s = "true" with
-                 | true  -> Bool true
-                 | uu____991 ->
-                     (match s = "false" with
-                      | true  -> Bool false
-                      | uu____992 ->
-                          failwith "Invalid argument to --admit_smt_queries"))),
+                 if s = "true"
+                 then Bool true
+                 else
+                   if s = "false"
+                   then Bool false
+                   else failwith "Invalid argument to --admit_smt_queries")),
               "[true|false]")),
          "Admit SMT queries, unsafe! (default 'false')");
       (FStar_Getopt.noshort, "cardinality",
@@ -555,10 +554,9 @@ let rec specs:
       (FStar_Getopt.noshort, "dep",
         (FStar_Getopt.OneArg
            (((fun x  ->
-                match (x = "make") || (x = "graph") with
-                | true  -> String x
-                | uu____1073 -> failwith "invalid argument to 'dep'")),
-             "[make|graph]")),
+                if (x = "make") || (x = "graph")
+                then String x
+                else failwith "invalid argument to 'dep'")), "[make|graph]")),
         "Output the transitive closure of the dependency graph in a format suitable for the given tool");
       (FStar_Getopt.noshort, "detail_errors",
         (FStar_Getopt.ZeroArgs ((fun uu____1080  -> Bool true))),
@@ -843,8 +841,8 @@ and validate_cardinality: Prims.string -> Prims.string =
          (let uu____1642 = specs () in display_usage_aux uu____1642);
          FStar_All.exit (Prims.parse_int "1"))
 let settable: Prims.string -> Prims.bool =
-  fun uu___49_1651  ->
-    match uu___49_1651 with
+  fun uu___51_1651  ->
+    match uu___51_1651 with
     | "admit_smt_queries"
       |"cardinality"
        |"debug"
@@ -945,7 +943,7 @@ let file_list: Prims.unit -> Prims.string Prims.list =
 let restore_cmd_line_options: Prims.bool -> FStar_Getopt.parse_cmdline_res =
   fun should_clear  ->
     let old_verify_module = get_verify_module () in
-    (match should_clear with | true  -> clear () | uu____1800 -> init ());
+    if should_clear then clear () else init ();
     (let r =
        let uu____1802 = specs () in
        FStar_Getopt.parse_cmdline uu____1802 (fun x  -> ()) in
@@ -960,33 +958,32 @@ let restore_cmd_line_options: Prims.bool -> FStar_Getopt.parse_cmdline_res =
 let should_verify: Prims.string -> Prims.bool =
   fun m  ->
     let uu____1815 = get_lax () in
-    match uu____1815 with
-    | true  -> false
-    | uu____1816 ->
-        let uu____1817 = get_verify_all () in
-        (match uu____1817 with
-         | true  -> true
-         | uu____1818 ->
-             let uu____1819 = get_verify_module () in
-             (match uu____1819 with
-              | [] ->
-                  let uu____1821 = file_list () in
-                  FStar_List.existsML
-                    (fun f  ->
-                       let f = FStar_Util.basename f in
-                       let f =
-                         let uu____1826 =
-                           let uu____1827 =
-                             let uu____1828 =
-                               let uu____1829 =
-                                 FStar_Util.get_file_extension f in
-                               FStar_String.length uu____1829 in
-                             (FStar_String.length f) - uu____1828 in
-                           uu____1827 - (Prims.parse_int "1") in
-                         FStar_String.substring f (Prims.parse_int "0")
-                           uu____1826 in
-                       (FStar_String.lowercase f) = m) uu____1821
-              | l -> FStar_List.contains (FStar_String.lowercase m) l))
+    if uu____1815
+    then false
+    else
+      (let uu____1817 = get_verify_all () in
+       if uu____1817
+       then true
+       else
+         (let uu____1819 = get_verify_module () in
+          match uu____1819 with
+          | [] ->
+              let uu____1821 = file_list () in
+              FStar_List.existsML
+                (fun f  ->
+                   let f = FStar_Util.basename f in
+                   let f =
+                     let uu____1826 =
+                       let uu____1827 =
+                         let uu____1828 =
+                           let uu____1829 = FStar_Util.get_file_extension f in
+                           FStar_String.length uu____1829 in
+                         (FStar_String.length f) - uu____1828 in
+                       uu____1827 - (Prims.parse_int "1") in
+                     FStar_String.substring f (Prims.parse_int "0")
+                       uu____1826 in
+                   (FStar_String.lowercase f) = m) uu____1821
+          | l -> FStar_List.contains (FStar_String.lowercase m) l))
 let dont_gen_projectors: Prims.string -> Prims.bool =
   fun m  ->
     let uu____1839 = get___temp_no_proj () in
@@ -994,42 +991,37 @@ let dont_gen_projectors: Prims.string -> Prims.bool =
 let should_print_message: Prims.string -> Prims.bool =
   fun m  ->
     let uu____1844 = should_verify m in
-    match uu____1844 with | true  -> m <> "Prims" | uu____1845 -> false
+    if uu____1844 then m <> "Prims" else false
 let include_path: Prims.unit -> Prims.string Prims.list =
   fun uu____1849  ->
     let uu____1850 = get_no_default_includes () in
-    match uu____1850 with
-    | true  -> get_include ()
-    | uu____1852 ->
-        let h = fstar_home () in
-        let defs = universe_include_path_base_dirs in
-        let uu____1856 =
-          let uu____1858 =
-            FStar_All.pipe_right defs
-              (FStar_List.map (fun x  -> Prims.strcat h x)) in
-          FStar_All.pipe_right uu____1858
-            (FStar_List.filter FStar_Util.file_exists) in
-        let uu____1865 =
-          let uu____1867 = get_include () in
-          FStar_List.append uu____1867 ["."] in
-        FStar_List.append uu____1856 uu____1865
+    if uu____1850
+    then get_include ()
+    else
+      (let h = fstar_home () in
+       let defs = universe_include_path_base_dirs in
+       let uu____1856 =
+         let uu____1858 =
+           FStar_All.pipe_right defs
+             (FStar_List.map (fun x  -> Prims.strcat h x)) in
+         FStar_All.pipe_right uu____1858
+           (FStar_List.filter FStar_Util.file_exists) in
+       let uu____1865 =
+         let uu____1867 = get_include () in
+         FStar_List.append uu____1867 ["."] in
+       FStar_List.append uu____1856 uu____1865)
 let find_file: Prims.string -> Prims.string Prims.option =
   fun filename  ->
     let uu____1873 = FStar_Util.is_path_absolute filename in
-    match uu____1873 with
-    | true  ->
-        (match FStar_Util.file_exists filename with
-         | true  -> Some filename
-         | uu____1876 -> None)
-    | uu____1877 ->
-        let uu____1878 =
-          let uu____1880 = include_path () in FStar_List.rev uu____1880 in
-        FStar_Util.find_map uu____1878
-          (fun p  ->
-             let path = FStar_Util.join_paths p filename in
-             match FStar_Util.file_exists path with
-             | true  -> Some path
-             | uu____1885 -> None)
+    if uu____1873
+    then (if FStar_Util.file_exists filename then Some filename else None)
+    else
+      (let uu____1878 =
+         let uu____1880 = include_path () in FStar_List.rev uu____1880 in
+       FStar_Util.find_map uu____1878
+         (fun p  ->
+            let path = FStar_Util.join_paths p filename in
+            if FStar_Util.file_exists path then Some path else None))
 let prims: Prims.unit -> Prims.string =
   fun uu____1888  ->
     let uu____1889 = get_prims () in
