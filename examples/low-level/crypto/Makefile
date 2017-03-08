@@ -115,4 +115,14 @@ aead-wc:
 
 all-assumes: $(addsuffix .fst, $(VERIFY) $(LAX))
 	grep "\(assume\)\|\(admit\)\|\(lax\)" $^
-	
+
+
+include $(FSTAR_HOME)/src/gmake/fstar.mk
+CFSTAR=$(subst CURRENT_DIR,examples/low-level/crypto,$(CVERFSTAR))
+all-cver: $(addsuffix .fst-cver, $(VERIFY)) 
+%.fst-cver:
+	$(CFSTAR) $(OPTIONS) \
+	$(FSTAR_INCLUDE_PATHS) \
+	--__temp_no_proj Crypto.Symmetric.MAC \
+	--verify_module $(basename $(notdir $@)) \
+	$(basename $@).fst

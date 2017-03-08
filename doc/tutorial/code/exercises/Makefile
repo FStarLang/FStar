@@ -62,3 +62,10 @@ Ex01a-ocaml: out Ex01a.fst
 # 	@echo $(OPTIONS) \
 # 	--include $(FSTAR_HOME)/ulib/hyperstack \
 # 	--verify_module $(basename $(notdir $@))
+
+CFSTAR=$(subst CURRENT_DIR,doc/tutorial/code/exercises,$(CVERFSTAR))
+cverify-%: __force__
+	$(CFSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
+cverify_hh-%: __force__
+	$(CFSTAR) --include $(HYPERHEAP) $*
+all-cver: $(VERFILES:%=cverify-%) $(VERFILES_HH:%=cverify_hh-%)

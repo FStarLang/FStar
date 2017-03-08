@@ -22,3 +22,12 @@ $(NEGTARGETS): %.nver: %
 
 clean:
 	for f in $(NEGTESTS) ; do rm -f $$f/error.log ; done
+
+
+CFSTAR=$(subst CURRENT_DIR,examples/struct,$(CVERFSTAR))
+
+CPOSTARGETS=$(addsuffix .cpver,$(POSTESTS))
+$(CPOSTARGETS): %.cpver: %
+	$(CFSTAR) --include $(FSTAR_HOME)/ulib --include $(FSTAR_HOME)/ulib/hyperstack --include $^ --odir $^ Test.fst
+
+all-cver: $(CPOSTARGETS)

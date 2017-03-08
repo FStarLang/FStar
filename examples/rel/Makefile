@@ -49,3 +49,10 @@ all:\
 
 pack:
 	cd ../..; zip -r relational.zip examples/rel examples/dm4free
+
+CFSTAR=$(subst CURRENT_DIR,examples/rel,$(CVERFSTAR))
+all-cver:
+	$(CFSTAR) rel.fst whilelanguage.fst ifc.fst ifcExample.fst
+	$(CFSTAR) bijection.fst random_tapes.fst
+	$(CFSTAR) recursive.fst
+	$(CFSTAR) delimited_release.fst

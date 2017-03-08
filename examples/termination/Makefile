@@ -5,3 +5,6 @@ FSTAR_HOME=../..
 include ../Makefile.include
 
 all: $(addsuffix .uver, $(ALLFILES))
+
+CFSTAR=$(subst CURRENT_DIR,examples/termination,$(CVERFSTAR))
+all-cver: $(addsuffix .ucver, $(ALLFILES))

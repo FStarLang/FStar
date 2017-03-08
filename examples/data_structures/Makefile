@@ -8,3 +8,7 @@ bst: BinarySearchTree.uver BinarySearchTree0.uver BinarySearchTreeBasic.uver Bin
 
 vector:
 	$(FSTAR) --explicit_deps FStar.Pervasives.Native.fst FStar.Pervasives.fst ArrayRealized.fst Vector.fst
+
+CFSTAR=$(subst CURRENT_DIR,examples/data_structures,$(CVERFSTAR))
+all-cver: BinaryTrees.ucver BinarySearchTree.ucver BinarySearchTree0.ucver BinarySearchTreeBasic.ucver BinarySearchTreeFirst.ucver RBTree.ucver
+	$(CFSTAR) --explicit_deps ArrayRealized.fst Vector.fst

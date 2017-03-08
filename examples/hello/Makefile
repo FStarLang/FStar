@@ -63,3 +63,6 @@ clean:
 	make -C $(ULIB_ML) clean
 	rm -rf out
 	rm -f *~
+
+export CFSTAR=$(subst CURRENT_DIR,examples/hello,$(CVERFSTAR))
+all-cver: hello.ucver

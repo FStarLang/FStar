@@ -22,3 +22,12 @@ $(NEGTARGETS): %.nver: %
 
 clean:
 	for f in $(NEGTESTS) ; do rm -f $$f/error.log ; done
+
+
+CFSTAR=$(subst CURRENT_DIR,examples/incl,$(CVERFSTAR))
+
+CPOSTARGETS=$(addsuffix .cpver,$(POSTESTS))
+$(CPOSTARGETS): %.cpver: %
+	$(CFSTAR) --include $^ --odir $^ Test.fst
+
+all-cver: $(CPOSTARGETS)

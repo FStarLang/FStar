@@ -34,6 +34,9 @@ CHACHA_AEAD_EXTRACTED=Spartan.ml FStar_List_Tot_Base.ml FStar_Seq_Base.ml FStar_
 all:
 	+make -C crypto all
 
+all-cver:
+	+make -C crypto all-cver
+
 extra:
 	make clean
 	+make chacha-test aes-test aesgcm-test chacha-aead-test

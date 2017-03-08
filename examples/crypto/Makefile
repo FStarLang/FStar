@@ -110,3 +110,13 @@ deploy-tutorial:
 
 clean:
 	rm -fr RPC *.ml *.cmi *.cmx *.o *.exe *~
+
+CFSTAR=$(subst CURRENT_DIR,examples/crypto,$(CVERFSTAR))
+cverify-%: __force__
+	$(CFSTAR) $(FSTAR_INCLUDE_PATHS) \
+		 --z3rlimit 20 $*
+cverify_hh-%: __force__
+	$(CFSTAR) --include $(FSTAR_HOME)/ulib/hyperstack \
+		 $(FSTAR_INCLUDE_PATHS) \
+		 --z3rlimit 20 $*
+all-cver: $(VERFILES:%=cverify-%) $(HH_VERFILES:%=cverify_hh-%)

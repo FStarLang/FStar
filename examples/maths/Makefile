@@ -6,3 +6,5 @@ all: uall
 
 uall: Gcd.uver
 
+CFSTAR=$(subst CURRENT_DIR,examples/maths,$(CVERFSTAR))
+all-cver: Gcd.ucver

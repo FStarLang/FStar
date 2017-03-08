@@ -288,3 +288,11 @@ wc-boot:
 
 ctags:
 	ctags --exclude=boot_fsts --exclude=boot_fstis --exclude=ocaml-output -R .
+
+FSTAR_HOME=..
+include $(FSTAR_HOME)/src/gmake/fstar.mk
+uregressions-cver: $(CVERCONFIG)
+	+make -C ../ulib all-cver
+	+make -C ../examples all-cver
+	$(CVEREXE) await -i $(CVERCONFIG) 
+	rm $(CVERCONFIG)

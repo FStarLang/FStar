@@ -10,3 +10,14 @@ endif
 
 FSTAR_ALWAYS=$(shell cd $(FSTAR_HOME) && pwd)/bin/fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED)
 FSTAR=$(FSTAR_ALWAYS)
+
+
+CVEREXE=/mnt/f/dev/fstar-azure/fabc/fabc-make/bin/Debug/fabc-make.exe
+
+$(FSTAR_HOME)/batch-ids.tmp:
+	$(CVEREXE) create > $(FSTAR_HOME)/batch-ids.tmp
+.DEFAULT_GOAL :=
+
+CVERCONFIG=$(FSTAR_HOME)/batch-ids.tmp
+CVERDIR=$(subst $(abspath $(FSTAR_HOME))/,,$(abspath $(shell pwd)))
+CVERFSTAR=$(CVEREXE) add -i $(CVERCONFIG) -d 'CURRENT_DIR' -- \$$H/bin/fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED)

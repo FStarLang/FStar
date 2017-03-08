@@ -32,3 +32,18 @@ old:
 	$(FSTAR) $^
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
+
+CFSTAR=$(subst CURRENT_DIR,examples/dm4free,$(CVERFSTAR))
+all-cver: FStar.DM4F.MonadLaws.ucver \
+	Effects.Def.ucver \
+	FStar.DM4F.IntST.ucver \
+	FStar.DM4F.Exceptions.ucver \
+	FStar.DM4F.ExnSt.ucver \
+	FStar.DM4F.StExn.ucver \
+	FStar.DM4F.ST.ucver \
+	FStar.DM4F.Heap.ucver \
+	FStar.DM4F.Heap.ST.ucver \
+	FStar.DM4F.StExnC.ucver \
+	FStar.DM4F.IFC.ucver \
+	FStar.DM4F.Continuations.ucver \
+	delimcc.ucver

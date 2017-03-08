@@ -10,3 +10,5 @@ uall: $(patsubst %.fst,%.uver,$(wildcard *.fst))
 MRefHeap.uver : MRefHeap.fst
 	$(FSTAR) --record_hints --verify_module MRefHeap $^
 
+CFSTAR=$(subst CURRENT_DIR,examples/preorders,$(CVERFSTAR))
+all-cver: $(patsubst %.fst,%.ucver,$(wildcard *.fst))

@@ -45,3 +45,8 @@ clean:
 
 wc:
 	find . -name "*.fst" | grep -v -e to_be_ported | xargs sloccount
+
+all-cver: $(addsuffix .all-cver, $(ALL_EXAMPLE_DIRS))
+
+%.all-cver: %
+	+make -C $^ all-cver

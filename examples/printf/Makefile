@@ -12,3 +12,7 @@ ocaml: SimplePrintf.fst
 	$(FSTAR) --explicit_deps $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml SimplePrintf.fst
 	$(OCAMLOPT) out/SimplePrintf.ml -o SimplePrintf.exe
 	./SimplePrintf.exe
+
+CFSTAR=$(subst CURRENT_DIR,examples/printf,$(CVERFSTAR))
+all-cver: SimplePrintf.ucver
+

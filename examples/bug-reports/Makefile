@@ -64,3 +64,8 @@ extraction-bug734: bug734.fst
 	$(FSTAR) --explicit_deps $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml bug734.fst
 	$(OCAMLOPT) out/Bug734.ml -o bug734.exe
 	./bug734.exe
+
+all-cver:
+
+export CFSTAR=$(subst CURRENT_DIR,examples/bug-reports,$(CVERFSTAR))
+uall-cver: $(subst .fst,.ucver,$(VERFILES))

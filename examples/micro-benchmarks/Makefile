@@ -45,3 +45,9 @@ testghost:
 	$(FSTAR) testghost.fst
 
 
+CFSTAR=$(subst CURRENT_DIR,examples/micro-benchmarks,$(CVERFSTAR))
+all-cver: Unit1.Basic.ucver Unit1.Projectors2.ucver Unit1.WPsAndTriples.ucver Unit1.Parser.ucver \
+	 Unit1.RefinementInference.ucver Unit1.WPsAndTriples_ST.ucver Unit1.Projectors1.ucver \
+	 Unit1.UnificationTests.ucver Unit1.RecursiveTypeFunctions.ucver \
+	 Unit2.ucver TestSet.ucver TestHeap.ucver ShortCircuit.ucver FirstProofs.ucver TestMRef.ucver \
+	 TestTwoLevelHeap.ucver Mac.ucver TestGhost.ucver Normalization.ucver Positivity.ucver 
