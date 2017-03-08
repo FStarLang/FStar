@@ -645,6 +645,9 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_Name (path, function_name) }, args) ->
       EApp (EQualified (path, function_name), List.map (translate_expr env) args)
 
+  | MLE_App ({ expr = MLE_Var (name, _) }, args) ->
+      EApp (EBound (find env name), List.map (translate_expr env) args)
+
   | MLE_Coerce (e, t_from, t_to) ->
       ECast (translate_expr env e, translate_type env t_to)
 
