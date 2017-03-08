@@ -15,9 +15,10 @@ FSTAR=$(FSTAR_ALWAYS)
 CVEREXE_ALWAYS=$(shell cd $(FSTAR_HOME) && pwd)/bin/fabc-make.exe
 CVEREXE=$(CVEREXE_ALWAYS)
 
+DG=$(.DEFAULT_GOAL)
 $(FSTAR_HOME)/batch-ids.tmp:
 	$(CVEREXE) create > $(FSTAR_HOME)/batch-ids.tmp
-.DEFAULT_GOAL :=
+.DEFAULT_GOAL := $(DG)
 
 CVERCONFIG=$(FSTAR_HOME)/batch-ids.tmp
 CVERDIR=$(subst $(abspath $(FSTAR_HOME))/,,$(abspath $(shell pwd)))

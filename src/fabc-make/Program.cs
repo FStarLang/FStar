@@ -24,7 +24,6 @@ namespace fabc_make
         private static string StorageAccountName = null;
         private static string StorageAccountAccessKey = null;
         private static string PackageBlobContainer = null;
-        private static string TasksBlobContainer = null;
 
         private static string BatchAccountName = null;
         private static string BatchAccessKey = null;
@@ -71,7 +70,7 @@ namespace fabc_make
                         case "StorageAccountName": StorageAccountName = value; break;
                         case "StorageAccountAccessKey": StorageAccountAccessKey = value; break;
                         case "PackageBlobContainer": PackageBlobContainer = value; break;
-                        case "TasksBlobContainer": TasksBlobContainer = value; break;
+                        case "TasksBlobContainer": /* not used for now */; break;
                         case "BatchAccountName": BatchAccountName = value; break;
                         case "BatchAccessKey": BatchAccessKey = value; break;
                         case "BatchUri": BatchUri = value; break;

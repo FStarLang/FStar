@@ -307,18 +307,6 @@ namespace fabc_make
                     return null;
                 }
             }
-            public void ExtractOutfiles(string directory = ".")
-            {
-                string ofName = (this.Filepath == null ? Id : this.Filepath) + "." + FStar.OutFilesPkg;
-                string filepath = Path.Combine(directory, ofName);
-
-                // Requires 7z.exe
-                ProcessStartInfo si = new ProcessStartInfo("cmd.exe");
-                si.Arguments = String.Format("/C 7z.exe x -so -y -aoa -bso0  {0} | 7z.exe x -si -y -aoa -ttar -bso0", ofName);
-                si.CreateNoWindow = true;
-                si.WindowStyle = ProcessWindowStyle.Hidden;
-                System.Diagnostics.Process.Start(si);
-            }
 
             #region Serialization
 
