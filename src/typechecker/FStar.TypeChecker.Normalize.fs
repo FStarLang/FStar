@@ -33,6 +33,7 @@ module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module BU = FStar.Util //basic util
 module FC = FStar.Const
+module SC = FStar.Syntax.Const
 module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 
@@ -68,7 +69,7 @@ and steps = list<step>
 type primitive_step = {
     name:Ident.lid;
     arity:int;
-    interpretation:(args -> term)
+    interpretation:(args -> option<term>)
 }
 
 type closure =
@@ -449,23 +450,103 @@ and close_lcomp_opt cfg env lopt = match lopt with
 (* Simplification steps are not part of definitional equality      *)
 (* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
 (*******************************************************************)
-let arith_ops =
+let arith_ops : list<primitive_step> =
+    let const_as_tm c p = mk (Tm_constant c) p in
+    let interp_math_op (f:int -> int -> FC.sconst) : args -> option<term> =
+        fun args ->
+          match args with
+          | [(a1, _); (a2, _)] -> begin
+            match (SS.compress a1).n, (SS.compress a2).n with
+            | Tm_constant (FC.Const_int(i, None)), Tm_constant (FC.Const_int(j, None)) ->
+              Some (const_as_tm (f (BU.int_of_string i) (BU.int_of_string j)) a2.pos)
+            | _ ->
+              None
+            end
+          | _ -> failwith "Unexpected number of arguments"
+    in
+    let interp_bounded_op (f:int -> int -> FC.sconst) : args -> option<term> =
+        fun args ->
+          match args with
+          | [(a1, _); (a2, _)] -> begin
+             //Note: it's ok to do a deep pattern match on fvars and constants
+             //      they are never wrapped by Tm_delayed nodes
+             match (SS.compress a1).n, (SS.compress a2).n with
+             | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)]),
+               Tm_app ({n=Tm_fvar fv2}, [({n=Tm_constant (FC.Const_int (j, None))}, _)])
+                when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" &&
+                     BU.ends_with (Ident.text_of_lid fv2.fv_name.v) "int_to_t" ->
+               // Machine integers are represented as applications, e.g.
+               // [FStar.UInt8.uint_to_t 0xff], so as to get proper
+               // bounds checking. Maintain that invariant.
+               let n = Some (const_as_tm (f (BU.int_of_string i) (BU.int_of_string j)) a2.pos) in
+               Some (mk_app (mk (Tm_fvar fv1) a2.pos) [ n, None ])
+             | _ -> None
+            end
+          | _ -> failwith "Unexpected number of arguments"
+    in
+    let as_primitive_step arity mk (l, f) = {name=l; arity=arity; interpretation=mk f} in
     let int_as_const  : int -> FC.sconst = fun i -> FC.Const_int (BU.string_of_int i, None) in
     let bool_as_const : bool -> FC.sconst = fun b -> FC.Const_bool b in
-    [(Const.op_Addition,    (fun x y -> int_as_const (x + y)));
-     (Const.op_Subtraction, (fun x y -> int_as_const (x - y)));
-     (Const.op_Multiply,    (fun x y -> int_as_const (Prims.op_Multiply x y)));
-     (Const.op_Division,    (fun x y -> int_as_const (x / y)));
-     (Const.op_LT,          (fun x y -> bool_as_const (x < y)));
-     (Const.op_LTE,         (fun x y -> bool_as_const (x <= y)));
-     (Const.op_GT,          (fun x y -> bool_as_const (x > y)));
-     (Const.op_GTE,         (fun x y -> bool_as_const (x >= y)));
-     (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))] @
-     List.flatten (List.map (fun m -> [
-       Const.p2l ["FStar"; m; "add"], (fun x y -> int_as_const (x + y));
-       Const.p2l ["FStar"; m; "sub"], (fun x y -> int_as_const (x - y));
-       Const.p2l ["FStar"; m; "mul"], (fun x y -> int_as_const (Prims.op_Multiply x y))
-     ]) [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128" ])
+    let basic_arith =
+        List.map (as_primitive_step 2 interp_math_op)
+            [(Const.op_Addition, (fun x y -> int_as_const (x + y)));
+             (Const.op_Subtraction, (fun x y -> int_as_const (x - y)));
+             (Const.op_Multiply,    (fun x y -> int_as_const (Prims.op_Multiply x y)));
+             (Const.op_Division,    (fun x y -> int_as_const (x / y)));
+             (Const.op_LT,          (fun x y -> bool_as_const (x < y)));
+             (Const.op_LTE,         (fun x y -> bool_as_const (x <= y)));
+             (Const.op_GT,          (fun x y -> bool_as_const (x > y)));
+             (Const.op_GTE,         (fun x y -> bool_as_const (x >= y)));
+             (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))] in
+    let bounded_arith =
+        List.map (as_primitive_step 2 interp_bounded_op)
+                 (List.flatten (List.map (fun m -> [
+                       Const.p2l ["FStar"; m; "add"], (fun x y -> int_as_const (x + y));
+                       Const.p2l ["FStar"; m; "sub"], (fun x y -> int_as_const (x - y));
+                       Const.p2l ["FStar"; m; "mul"], (fun x y -> int_as_const (Prims.op_Multiply x y))
+                     ])
+                     [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128" ])) in
+    let unary_string_ops =
+        let mk x = mk x Range.dummyRange in
+        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) in
+        let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) in
+        let interp (args:args) =
+            match args with
+            | [(a, _)] -> begin
+              match (SS.compress a).n with
+              | Tm_constant (FC.Const_string(bytes, _)) ->
+                let s = BU.string_of_bytes bytes in
+                let char_t = name SC.char_lid in
+                let nil_char =
+                    S.mk_Tm_app (mk_Tm_uinst (ctor SC.nil_lid) [U_zero])
+                                [S.iarg char_t]
+                                None Range.dummyRange in
+                 (mk (Tm_app (mk_Tm_uinst (ctor ["Prims"; "Nil"]) [U_zero], [name ["FStar"; "Char"; "char"], Some (S.Implicit true)]))))]
+                FStar.List.fold_right (fun c a ->
+                    S.mk_Tm_app (mk_Tm_uinst (ctor SC.cons_lid) [U_zero])
+                                [S.iarg char_t;
+                                 S.as_arg (mk (Tm_constant (Const_char c)));
+                                 S.as_arg a]
+                                None Range.dummyRange)
+
+                                                      (a, None)]))
+               ) (list_of_string s) (mk (Tm_app (mk_Tm_uinst (ctor ["Prims"; "Nil"]) [U_zero], [name ["FStar"; "Char"; "char"], Some (S.Implicit true)]))))]
+
+            | _ -> failwith "Unexpected number of arguments"
+
+         (fun s -> FStar.List.fold_right (fun c a ->
+                 mk (Tm_app (mk_Tm_uinst (ctor ["Prims"; "Cons"]) [U_zero], [(name ["FStar"; "Char"; "char"], Some (S.Implicit true));
+                                                      (mk (Tm_constant (Const_char c)), None);
+                                                      (a, None)]))
+               ) (list_of_string s) (mk (Tm_app (mk_Tm_uinst (ctor ["Prims"; "Nil"]) [U_zero], [name ["FStar"; "Char"; "char"], Some (S.Implicit true)]))))]
+
+        {name = Const.p2l ["FStar"; "String"; "list_of_string"];
+         arity= 1;
+
+
+    [] in
+
+    basic_arith@bounded_arith
 
 let un_ops =
     let mk x = mk x Range.dummyRange in
@@ -526,10 +607,63 @@ let find_fv (fv:term) (ops:list<(Ident.lident * 'a)>) : option<(Ident.lident * '
     | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) ops
     | _ -> None
 
-let reduce_primops steps tm =
-    if not <| List.contains Primops steps
+          | Tm_fvar f when f.fv_delta=Delta_constant -> begin
+                match List.tryFind (fun ps -> S.fv_eq_lid f ps.name) cfg.primitive_steps with
+                | None ->
+                    log cfg (fun () -> BU.print "Tm_fvar: constant does not have a primitive step\n" []) ;
+                    rebuild cfg env stack t
+                | Some ps ->
+                    if List.length stack >= ps.arity
+                    then let rec arguments arity stack =
+                                if arity = 0 then [], stack
+                                else match stack with
+                                    | hd::tl ->
+                                    begin match hd with
+                                        | Arg _ ->
+                                            let rest, stack = arguments (arity - 1) tl in
+                                            hd::rest, stack
+                                        | App({n=Tm_constant FC.Const_reify}, _, _)
+                                        | MemoLazy _ ->
+                                            arguments arity tl
+                                        | _ ->
+                                            failwith "Unexpected argument on the stack"
+                                    end
+                                    | [] -> failwith "Partial application of a primitive: not yet handled"
+                            in
+                            let arg_closures, rest = arguments ps.arity stack in
+                            let args = arg_closures |> List.map (function
+                                | Arg (Clos(env, term, _memo, _fixpoint), aq, _) -> //TODO: review _memo and _fixpoint
+                                  printfn "++++++++++++++++About to normalize %s" (Print.term_to_string term);
+                                  norm ({cfg with delta_level=[NoDelta]}) env [] term, aq
+                                | Arg(Univ _, _, _) //TODO: allow universes
+                                | Arg(Dummy, _, _) //should not be possible
+                                | _ ->
+                                  failwith "Unexpected primitive application") in //should we instead bail out into the rebuild case?
+                            let stepped_tm = ps.interpretation args in
+                            norm cfg env rest stepped_tm
+                    else rebuild cfg env stack t
+            end
+
+
+let reduce_primops cfg tm =
+    if not <| List.contains Primops cfg.steps
     then tm
-    else match tm.n with
+    else let head, args = U.head_and_args tm in
+         match (U.un_uinst head).n with
+         | Tm_fvar fv -> begin
+           match List.tryFind (fun ps -> S.fv_eq_lid fv ps.name) cfg.primitive_steps with
+           | None -> tm
+           | Some prim_step ->
+             if List.length args < prim_step.arity
+             then tm //partial application; can't step
+             else prim_step.interpretation args
+           end
+         | _ -> tm
+
+
+
+
+    match tm.n with
          | Tm_app(fv, [(a1, _); (a2, _)]) -> //Arithmetic operators
             begin match find_fv fv arith_ops with
                   | None -> tm
@@ -576,7 +710,8 @@ let reduce_primops steps tm =
 
          | _ -> reduce_equality tm
 
-let maybe_simplify steps tm =
+let maybe_simplify cfg tm =
+    let steps = cfg.steps in
     let w t = {t with pos=tm.pos} in
     let simp_t t = match t.n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid ->  Some true
@@ -664,47 +799,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_uvar _
           | Tm_constant _
           | Tm_name _
+          | Tm_fvar( {fv_delta=Delta_constant } )
           | Tm_fvar( {fv_qual=Some Data_ctor } )
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
 
-          | Tm_fvar f when f.fv_delta=Delta_constant -> begin
-                match List.tryFind (fun ps -> S.fv_eq_lid f ps.name) cfg.primitive_steps with
-                | None ->
-                    log cfg (fun () -> BU.print "Tm_fvar: constant does not have a primitive step\n" []) ;
-                    rebuild cfg env stack t
-                | Some ps ->
-                    if List.length stack >= ps.arity
-                    then let rec arguments arity stack =
-                                if arity = 0 then [], stack
-                                else match stack with
-                                    | hd::tl ->
-                                    begin match hd with
-                                        | Arg _ ->
-                                            let rest, stack = arguments (arity - 1) tl in
-                                            hd::rest, stack
-                                        | App({n=Tm_constant FC.Const_reify}, _, _)
-                                        | MemoLazy _ ->
-                                            arguments arity tl
-                                        | _ ->
-                                            failwith "Unexpected argument on the stack"
-                                    end
-                                    | [] -> failwith "Partial application of a primitive: not yet handled"
-                            in
-                            let arg_closures, rest = arguments ps.arity stack in
-                            let args = arg_closures |> List.map (function
-                                | Arg (Clos(env, term, _memo, _fixpoint), aq, _) -> //TODO: review _memo and _fixpoint
-                                  printfn "++++++++++++++++About to normalize %s" (Print.term_to_string term);
-                                  norm ({cfg with delta_level=[NoDelta]}) env [] term, aq
-                                | Arg(Univ _, _, _) //TODO: allow universes
-                                | Arg(Dummy, _, _) //should not be possible
-                                | _ ->
-                                  failwith "Unexpected primitive application") in //should we instead bail out into the rebuild case?
-                            let stepped_tm = ps.interpretation args in
-                            norm cfg env rest stepped_tm
-                    else rebuild cfg env stack t
-            end
           | Tm_app(hd, args)
             when not (cfg.steps |> List.contains NoFullNorm)
               && is_norm_request hd args
@@ -1350,7 +1450,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
 
             | App(head, aq, r)::stack ->
               let t = S.extend_app head (t,aq) None r in
-              rebuild cfg env stack (maybe_simplify cfg.steps t)
+              rebuild cfg env stack (maybe_simplify cfg t)
 
             | Match(env, branches, r) :: stack ->
               log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
