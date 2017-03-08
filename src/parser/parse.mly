@@ -78,7 +78,7 @@ open FStar_String
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
-%token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
+%token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
 %token AND ASSERT BEGIN ELSE END
 %token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
@@ -292,16 +292,10 @@ effectRedefinition:
 effectDefinition:
   | LBRACE lid=uident bs=binders COLON k=kind
     	   WITH eds=separated_nonempty_list(SEMICOLON, effectDecl)
-         actions=actionDecls
     RBRACE
       {
-         DefineEffect(lid, bs, k, eds, actions)
+         DefineEffect(lid, bs, k, eds)
       }
-
-actionDecls:
-  |   { [] }
-  | AND ACTIONS actions=separated_list(SEMICOLON, effectDecl)
-      { actions }
 
 effectDecl:
   | lid=lident EQUALS t=simpleTerm

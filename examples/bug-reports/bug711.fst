@@ -48,7 +48,6 @@ reifiable new_effect_for_free {
        repr         = ifc
      ; bind         = bind_ifc
      ; return       = return_ifc
-  and effect_actions
-      read = read
-    ; write = write
+     ; read = read
+     ; write = write
 }

@@ -53,7 +53,6 @@ open FStar.String
 %start inputFragment
 %start term
 %token ABSTRACT
-%token ACTIONS
 %token AMP
 %token AND
 %token ASSERT
@@ -331,13 +330,6 @@ loption_separated_nonempty_list_COMMA_appTerm__:
   
     {    ( [] )}
 | separated_nonempty_list_COMMA_appTerm_
-    {let x = $1 in
-    ( x )}
-
-loption_separated_nonempty_list_SEMICOLON_effectDecl__:
-  
-    {    ( [] )}
-| separated_nonempty_list_SEMICOLON_effectDecl_
     {let x = $1 in
     ( x )}
 
@@ -826,22 +818,11 @@ effectRedefinition:
       ( RedefineEffect(lid, [], t) )}
 
 effectDefinition:
-  LBRACE uident binders COLON kind WITH separated_nonempty_list_SEMICOLON_effectDecl_ actionDecls RBRACE
-    {let (_1, lid, bs, _4, k, _6, eds, actions, _9) = ((), $2, $3, (), $5, (), $7, $8, ()) in
+  LBRACE uident binders COLON kind WITH separated_nonempty_list_SEMICOLON_effectDecl_ RBRACE
+    {let (_1, lid, bs, _4, k, _6, eds, _8) = ((), $2, $3, (), $5, (), $7, ()) in
       (
-         DefineEffect(lid, bs, k, eds, actions)
+         DefineEffect(lid, bs, k, eds)
       )}
-
-actionDecls:
-  
-    {      ( [] )}
-| AND ACTIONS loption_separated_nonempty_list_SEMICOLON_effectDecl__
-    {let (_1, _2, xs0) = ((), (), $3) in
-let actions =
-  let xs = xs0 in
-      ( xs )
-in
-      ( actions )}
 
 effectDecl:
   lident EQUALS simpleTerm

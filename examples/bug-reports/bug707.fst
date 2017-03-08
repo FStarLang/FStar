@@ -30,8 +30,7 @@ reifiable reflectable new_effect_for_free {
   with repr    = stexn
      ; return  = return
      ; bind    = bind
-  and effect_actions
-       get     = get
+     ; get     = get
      ; put     = put
      ; raise   = raise
 }

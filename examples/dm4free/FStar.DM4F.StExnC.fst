@@ -40,8 +40,7 @@ reifiable new_effect_for_free {
   with repr    = stexnc
      ; return  = return
      ; bind    = bind
-  and effect_actions
-       raise   = raise
+     ; raise   = raise
 }
 
 (* A lift from Pure *)

@@ -53,7 +53,6 @@ reifiable reflectable new_effect_for_free {
   with repr = cont ans
      ; return = return ans
      ; bind = bind ans
-  and effect_actions
 //    callcc = callcc ans
 //    em     = em ans
 //    shift  = shift ans

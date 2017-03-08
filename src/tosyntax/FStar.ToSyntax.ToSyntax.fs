@@ -1613,14 +1613,48 @@ let desugar_binders env binders =
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
 
-let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind eff_decls actions for_free =
+let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind eff_decls for_free =
     let env0 = env in
     let monad_env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders monad_env eff_binders in
     let eff_k = desugar_term env eff_kind in
-    let env, decls = eff_decls |> List.fold_left (fun (env, out) decl ->
+
+    let for_free = for_free in
+
+    let mandatory_members =
+      let rr_members = ["repr" ; "return" ; "bind"] in
+      if for_free then rr_members
+      else
+        (* the first 3 are optional but must not be counted as actions *)
+        rr_members @ [
+          "return_wp";
+          "bind_wp";
+          "if_then_else";
+          "ite_wp";
+          "stronger";
+          "close_wp";
+          "assert_p";
+          "assume_p";
+          "null_wp";
+          "trivial"
+        ]
+    in
+
+    let name_of_eff_decl decl =
+      match decl.d with
+      | Tycon(_, [TyconAbbrev(name, _, _, _), _]) -> Ident.text_of_id name
+      | _ -> failwith "Malformed effect member declaration."
+    in
+
+    let mandatory_members_decls, actions =
+      List.partition (fun decl -> List.mem (name_of_eff_decl decl) mandatory_members) eff_decls
+    in
+
+    let env, decls = mandatory_members_decls |> List.fold_left (fun (env, out) decl ->
         let env, ses = desugar_decl env decl in
-        env, List.hd ses::out) (env, []) in
+        env, List.hd ses::out)
+      (env, [])
+    in
     let binders = Subst.close_binders binders in
     let actions = actions |> List.map (fun d -> match d.d with
         | Tycon(_, [TyconAbbrev(name, _, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), _]) when not for_free ->
@@ -1682,8 +1716,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
           actions     = actions;
         }, d.drange)
       else
-        let rr =  qualifiers |> List.contains S.Reifiable
-               || qualifiers |> S.contains_reflectable in
+        let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
         let un_ts = [], Syntax.tun in
         Sig_new_effect({
           mname       = mname;
@@ -1707,17 +1740,19 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
           return_repr = (if rr then lookup "return" else un_ts);
           actions     = actions;
         }, d.drange)
-      in
+    in
     let env = push_sigelt env0 se in
     let env = actions |> List.fold_left (fun env a ->
         //printfn "Pushing action %s\n" a.action_name.str;
-        push_sigelt env (U.action_as_lb mname a)) env in
+        push_sigelt env (U.action_as_lb mname a)) env
+    in
     let env =
-        if quals |> List.contains Reflectable
-        then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
-             let refl_decl = S.Sig_declare_typ(reflect_lid, [], S.tun, [S.Assumption; S.Reflectable mname], d.drange) in
-             push_sigelt env refl_decl
-        else env in
+      if quals |> List.contains Reflectable
+      then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
+            let refl_decl = S.Sig_declare_typ(reflect_lid, [], S.tun, [S.Assumption; S.Reflectable mname], d.drange) in
+            push_sigelt env refl_decl
+      else env
+    in
     env, [se]
 
 and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (build_sigelt:eff_decl -> Range.range -> sigelt) =
@@ -1955,13 +1990,13 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let quals = d.quals in
     desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (fun ed range -> Sig_new_effect_for_free(ed, range))
 
-  | NewEffectForFree (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
+  | NewEffectForFree (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
     let quals = d.quals in
-    desugar_effect env d quals eff_name eff_binders eff_kind eff_decls actions true
+    desugar_effect env d quals eff_name eff_binders eff_kind eff_decls true
 
-  | NewEffect (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
+  | NewEffect (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
     let quals = d.quals in
-    desugar_effect env d quals eff_name eff_binders eff_kind eff_decls actions false
+    desugar_effect env d quals eff_name eff_binders eff_kind eff_decls false
 
   | SubEffect l ->
     let lookup l = match Env.try_lookup_effect_name env l with

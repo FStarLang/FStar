@@ -25,8 +25,7 @@ new_effect_for_free {
     repr = memo;
     return = return;
     bind = bind
-  and effect_actions
-      get = get
+    ; get = get
     ; put = put
 }
 

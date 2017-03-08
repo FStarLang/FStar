@@ -17,8 +17,7 @@ total reifiable reflectable new_effect_for_free {
   with repr   = int_store_reader
     ; bind   = bind_isr
     ; return = return_isr
-    and effect_actions
-      get   = get
+    ; get   = get
 }
 
 effect IntStoreReader (a:Type) (pre:INT_STORE_READER?.pre) (post: heap -> a -> GTot Type0) =

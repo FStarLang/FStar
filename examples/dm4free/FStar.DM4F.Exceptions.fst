@@ -32,8 +32,7 @@ reifiable reflectable new_effect_for_free {
   with repr     = ex
      ; bind     = bind_ex
      ; return   = return_ex
-  and effect_actions
-       raise   = raise0
+     ; raise   = raise0
 }
 
 reifiable

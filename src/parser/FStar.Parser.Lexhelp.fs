@@ -145,7 +145,6 @@ let keywords =
     ALWAYS, "begin"      ,BEGIN;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
-    ALWAYS, "effect_actions",ACTIONS;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;
     ALWAYS, "ensures"    ,ENSURES;

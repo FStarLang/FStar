@@ -33,8 +33,7 @@ total reifiable reflectable new_effect_for_free {
   with repr     = st s
      ; bind     = bind_st s
      ; return   = return_st s
-  and effect_actions
-       get      = get s
+     ; get      = get s
      ; put      = put s
 }
 

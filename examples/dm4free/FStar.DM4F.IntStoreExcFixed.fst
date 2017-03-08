@@ -24,8 +24,7 @@ total reifiable reflectable new_effect_for_free {
   with repr   = int_store_exc
      ; bind   = bind_is
      ; return = return_is
-  and effect_actions
-       get   = get
+     ; get   = get
      ; put    = put
      ; raise_ = raise_impl
 }

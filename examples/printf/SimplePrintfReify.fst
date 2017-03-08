@@ -35,8 +35,7 @@ total reifiable reflectable new_effect_for_free {
   with repr     = ex
      ; bind     = bind_ex
      ; return   = return_ex
-  and effect_actions
-       raise   = raise_ex
+     ; raise   = raise_ex
 }
 
 (* A lift from `Pure´ into the new effect *)

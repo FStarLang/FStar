@@ -367,11 +367,10 @@ let collect_one
         List.iter (fun (_, t, _, _) -> iter_opt t collect_term) identterms
 
   and collect_effect_decl = function
-    | DefineEffect (_, binders, t, decls, actions) ->
+    | DefineEffect (_, binders, t, decls) ->
         collect_binders binders;
         collect_term t;
-        collect_decls decls;
-        collect_decls actions
+        collect_decls decls
     | RedefineEffect (_, binders, t) ->
         collect_binders binders;
         collect_term t

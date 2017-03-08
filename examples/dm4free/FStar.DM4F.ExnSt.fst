@@ -32,8 +32,7 @@ reifiable reflectable new_effect_for_free {
   EXNST: a:Type -> Effect with
     repr    = exnst;
     bind    = bind;
-    return  = return
-  and effect_actions
+    return  = return;
     raise   = raise
 }
 

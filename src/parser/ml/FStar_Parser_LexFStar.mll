@@ -57,7 +57,6 @@
     Hashtbl.add keywords "begin"         BEGIN       ;
     Hashtbl.add keywords "default"       DEFAULT     ;
     Hashtbl.add keywords "effect"        EFFECT      ;
-    Hashtbl.add keywords "effect_actions" ACTIONS    ;
     Hashtbl.add keywords "else"          ELSE        ;
     Hashtbl.add keywords "end"           END         ;
     Hashtbl.add keywords "ensures"       ENSURES     ;
