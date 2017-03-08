@@ -28,12 +28,11 @@ let bind a b f g =
 let raise (a:Type) : exnst a = fun _ -> None
 
 (* Define the new effect using DM4F *)
-reifiable reflectable new_effect_for_free {
+reifiable reflectable new_effect {
   EXNST: a:Type -> Effect with
     repr    = exnst;
     bind    = bind;
-    return  = return
-  and effect_actions
+    return  = return;
     raise   = raise
 }
 

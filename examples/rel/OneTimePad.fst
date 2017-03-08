@@ -23,13 +23,12 @@ let rand () : random nib = fun store ->
   let n, tape = store in
   tape n, n + 1
 
-total reifiable reflectable new_effect_for_free {
+total reifiable reflectable new_effect {
   RANDOM : a:Type -> Effect
   with repr   = random
     ; bind   = bind
     ; return = return
-    and effect_actions
-      rand = rand
+    ; rand = rand
 }
 
 effect Rand (a:Type) =

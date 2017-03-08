@@ -21,7 +21,6 @@ open FStar.All
 open FStar
 open FStar.Util
 open FStar.Getopt
-open FStar.Version
 
 type debug_level_t =
   | Low
@@ -271,9 +270,16 @@ let include_path_base_dirs =
 let universe_include_path_base_dirs =
   ["/ulib"; "/lib/fstar"]
 
+// See comment in the interface file
+let _version = FStar.Util.mk_ref ""
+let _platform = FStar.Util.mk_ref ""
+let _compiler = FStar.Util.mk_ref ""
+let _date = FStar.Util.mk_ref ""
+let _commit = FStar.Util.mk_ref ""
+
 let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
-                                  version platform compiler date commit)
+                                  !_version !_platform !_compiler !_date !_commit)
 
 let display_usage_aux specs =
   Util.print_string "fstar.exe [options] file[s]\n";
@@ -892,8 +898,8 @@ let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
 let indent                       () = get_indent                      ()
-let initial_fuel                 () = get_initial_fuel                ()
-let initial_ifuel                () = get_initial_ifuel               ()
+let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
+let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let inline_arith                 () = get_inline_arith                ()
 let interactive                  () = get_in                          ()
 let lax                          () = get_lax                         ()

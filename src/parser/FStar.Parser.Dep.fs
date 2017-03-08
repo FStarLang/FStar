@@ -337,7 +337,6 @@ let collect_one
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
-    | NewEffectForFree ed
     | NewEffect ed ->
         collect_effect_decl ed
     | Fsdoc _
@@ -367,11 +366,10 @@ let collect_one
         List.iter (fun (_, t, _, _) -> iter_opt t collect_term) identterms
 
   and collect_effect_decl = function
-    | DefineEffect (_, binders, t, decls, actions) ->
+    | DefineEffect (_, binders, t, decls) ->
         collect_binders binders;
         collect_term t;
-        collect_decls decls;
-        collect_decls actions
+        collect_decls decls
     | RedefineEffect (_, binders, t) ->
         collect_binders binders;
         collect_term t
@@ -669,7 +667,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
       (* List stored in the "right" order. *)
       f, deps_as_filenames
     ) as_list
-  ) (smap_keys graph) in
+  ) (FStar.List.sortWith (fun x y -> String.compare x y) (smap_keys graph)) in
   let topologically_sorted = List.collect must_find_r !topologically_sorted in
 
   List.iter (fun (m, r) ->
@@ -694,7 +692,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
     format. *)
 let print_make (deps: list<(string * list<string>)>): unit =
   List.iter (fun (f, deps) ->
-    let deps = List.map (fun s -> replace_string s " " "\\ ") deps in
+    let deps = List.map (fun s -> replace_chars s ' ' "\\ ") deps in
     Util.print2 "%s: %s\n" f (String.concat " " deps)
   ) deps
 

@@ -36,13 +36,12 @@ let put i : rand unit = fun _ -> Some (), i
 (** Raise exception *)
 let raise (a:Type) () : rand a = fun s -> None, fst s
 
-total reifiable reflectable new_effect_for_free {
+total reifiable reflectable new_effect {
   RAND: a:Type -> Effect
   with repr   = rand
      ; bind   = bind
      ; return = return
-  and effect_actions
-       get   = get
+     ; get   = get
      ; put   = put
      ; raise = raise
 }

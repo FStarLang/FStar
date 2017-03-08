@@ -12,13 +12,12 @@ let bind_isr (a b : Type) (x:int_store_reader a) (f: a -> int_store_reader b)
 
 let get () : int_store_reader heap = fun store -> store
 
-total reifiable reflectable new_effect_for_free {
+total reifiable reflectable new_effect {
   INT_STORE_READER : a:Type -> Effect
   with repr   = int_store_reader
     ; bind   = bind_isr
     ; return = return_isr
-    and effect_actions
-      get   = get
+    ; get   = get
 }
 
 effect IntStoreReader (a:Type) (pre:INT_STORE_READER?.pre) (post: heap -> a -> GTot Type0) =

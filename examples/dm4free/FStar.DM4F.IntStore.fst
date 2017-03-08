@@ -25,13 +25,12 @@ let put s : int_store unit = fun _ -> Some (), s
 (* by returning an inhabitant of False and define a second polymorphic raise_ afterwards *)
 let raise_impl () : int_store False = fun store -> None, store
 
-total reifiable reflectable new_effect_for_free {
+total reifiable reflectable new_effect {
   INT_STORE : a:Type -> Effect
   with repr   = int_store
      ; bind   = bind_is
      ; return = return_is
-  and effect_actions
-       get   = get
+     ; get   = get
      ; put    = put
      ; raise_ = raise_impl
 }

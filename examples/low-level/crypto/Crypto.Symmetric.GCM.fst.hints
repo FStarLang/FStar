@@ -539,8 +539,6 @@
         "lemma_FStar.Buffer.lemma_modifies_0_1_",
         "lemma_FStar.Buffer.lemma_modifies_0_2",
         "lemma_FStar.Buffer.lemma_modifies_2_1__",
-        "lemma_FStar.Buffer.lemma_modifies_2_comm",
-        "lemma_FStar.Buffer.lemma_modifies_3_2_comm",
         "lemma_FStar.Buffer.live_fresh", "lemma_FStar.Buffer.live_popped",
         "lemma_FStar.Buffer.modifies_poppable_1",
         "lemma_FStar.Buffer.modifies_popped_3_2",

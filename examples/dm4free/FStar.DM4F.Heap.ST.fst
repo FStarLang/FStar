@@ -15,7 +15,7 @@ open FStar.DM4F.ST
 // Instruct F* to build a new STATE effect from the elaborated effect STATE_h
 ////////////////////////////////////////////////////////////////////////////////
 
-reifiable reflectable total new_effect_for_free STATE = STATE_h heap
+reifiable reflectable total new_effect STATE = STATE_h heap
 
 unfold let lift_pure_state (a:Type) (wp:pure_wp a) (h:heap) (p:STATE?.post a) = wp (fun a -> p (a, h))
 sub_effect PURE ~> STATE = lift_pure_state

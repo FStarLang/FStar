@@ -30,13 +30,12 @@ let bind_ex a b f g = fun _ ->
 let raise_ex (_:exn) : Tot (ex False) = fun _ -> None
 
 (* Define the new effect using DM4F *)
-total reifiable reflectable new_effect_for_free {
+total reifiable reflectable new_effect {
   XEXN : (a:Type) -> Effect
   with repr     = ex
      ; bind     = bind_ex
      ; return   = return_ex
-  and effect_actions
-       raise   = raise_ex
+     ; raise   = raise_ex
 }
 
 (* A lift from `Pure´ into the new effect *)

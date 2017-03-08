@@ -108,12 +108,13 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
   (* parallel reading thread *)
   let out = Buffer.create 16 in
   let rec read_out _ =
-    try
-      let s = BatString.trim (input_line cin) in
+    let s, eof = (try
+                    BatString.trim (input_line cin), false
+                  with End_of_file ->
+                    Buffer.add_string out ("\nkilled\n") ; "", true) in
+    if not eof then
       if s = "Done!" then ()
-      else (Buffer.add_string out (s ^ "\n"); read_out ())
-    with End_of_file -> Buffer.add_string out ("\nkilled\n")
-  in
+      else (Buffer.add_string out (s ^ "\n"); read_out ())  in
   let child_thread = Thread.create (fun _ -> read_out ()) () in
 
   (* writing to z3 *)
@@ -136,20 +137,20 @@ let ask_process (p:proc) (stdin:string) : string =
   let out = Buffer.create 16 in
 
   let rec read_out _ =
-    try
-      let s = BatString.trim (input_line p.inc) in
+    let s, eof = (try
+                    BatString.trim (input_line p.inc), false
+                  with End_of_file ->
+                    Buffer.add_string out ("\nkilled\n") ; "", true) in
+    if not eof then
       if s = "Done!" then ()
       else (Buffer.add_string out (s ^ "\n"); read_out ())
-    with End_of_file -> Buffer.add_string out ("\nkilled\n")
   in
 
   let child_thread = Thread.create (fun _ -> read_out ()) () in
-
   output_string p.outc stdin;
   flush p.outc;
   Thread.join child_thread;
   Buffer.contents out
-
 
 let kill_process (p:proc) =
   let _ = Unix.close_process (p.inc, p.outc) in
@@ -340,8 +341,8 @@ let substring_from s index = BatString.tail s (Z.to_int index)
 let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
 let replace_char (s:string) (c1:char) (c2:char) =
   BatString.map (fun c -> if c = c1 then c2 else c) s
-let replace_string (s:string) (s1:string) (s2:string) =
-  BatString.rev (BatString.nreplace ~str:(BatString.rev s) ~sub:s1 ~by:s2)
+let replace_chars (s:string) (c:char) (by:string) =
+  BatString.replace_chars (function c -> by | x -> BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let splitlines s = BatString.nsplit s "\n"
@@ -526,11 +527,16 @@ let forall_exists rel l1 l2 =
 let multiset_equiv rel l1 l2 =
   BatList.length l1 = BatList.length l2 && forall_exists rel l1 l2
 let take p l =
-    let rec take_aux acc = function
-        | [] -> l, []
-        | x::xs when p x -> take_aux (x::acc) xs
-        | x::xs -> List.rev acc, x::xs
-    in take_aux [] l
+  let rec take_aux acc = function
+    | [] -> l, []
+    | x::xs when p x -> take_aux (x::acc) xs
+    | x::xs -> List.rev acc, x::xs
+  in take_aux [] l
+
+let rec fold_flatten f acc l =
+  match l with
+  | [] -> acc
+  | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (xs' @ xs)
 
 let add_unique f x l =
   if for_some (f x) l then

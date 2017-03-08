@@ -19,6 +19,8 @@ type t = t'
 
 let v (x:t) : Tot (uint_t n) = x.v
 
+let v_inj (x1 x2: t): Lemma (requires (v x1 == v x2)) (ensures (x1 == x2)) = ()
+
 val add: a:t -> b:t -> Pure t
   (requires (size (v a + v b) n))
   (ensures (fun c -> v a + v b = v c))

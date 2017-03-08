@@ -326,7 +326,7 @@ let is_upper (c:char) = 'A' <= c && c <= 'Z'
 let substring_from (s:string) i = s.Substring(i)
 let substring (s:string) i j = s.Substring(i, j)
 let replace_char (s:string) (c1:char) (c2:char) = s.Replace(c1,c2)
-let replace_string (s:string) (s1:string) (s2:string) = s.Replace(s1, s2)
+let replace_chars (s:string) (c:char) (by:string) = s.Replace(String.of_char c,by)
 let hashcode (s:string) = s.GetHashCode()
 let compare (s1:string) (s2:string) = s1.CompareTo(s2)
 let splitlines (s:string) = Array.toList (s.Split([|Environment.NewLine;"\n"|], StringSplitOptions.None))
@@ -510,6 +510,10 @@ let take p l =
         | x::xs -> List.rev acc, x::xs
     in take_aux [] l
 
+let rec fold_flatten f acc l =
+  match l with
+  | [] -> acc
+  | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (xs' @ xs)
 
 let add_unique f x l =
   if l |> for_some (f x)
@@ -801,18 +805,19 @@ let internal hints_db_from_json_db (jdb : json_db) : hints_db =
         Some (List.map (fun e -> (e : System.Object) :?> System.String) core_list) in
     let hint_from_json_hint (h : System.Object) =
         let ha = h :?> System.Object [] in
-        if (Array.length ha) <> 6 then failwith "malformed hint" else
-        {
-            hint_name=ha.[0] :?> System.String;
-            hint_index=ha.[1] :?> int;
-            fuel=ha.[2] :?> int;
-            ifuel=ha.[3] :?> int;
-            unsat_core=unsat_core_from_json_unsat_core ha.[4];
-            query_elapsed_time=ha.[5] :?> int
-        } in
+        if (Array.length ha) = 0 then None else
+            if (Array.length ha) <> 6 then failwith "malformed hint" else
+            Some {
+                hint_name=ha.[0] :?> System.String;
+                hint_index=ha.[1] :?> int;
+                fuel=ha.[2] :?> int;
+                ifuel=ha.[3] :?> int;
+                unsat_core=unsat_core_from_json_unsat_core ha.[4];
+                query_elapsed_time=ha.[5] :?> int
+            } in
     let hints_from_json_hints (hs : System.Object) =
         let hint_list = (hs :?> System.Object []) |> Array.toList in
-        List.map (fun e -> (Some (hint_from_json_hint e))) hint_list  in
+        List.map (fun e -> (hint_from_json_hint e)) hint_list  in
     if (Array.length jdb) <> 2 then failwith "malformed hints_db" else
     {
       module_digest = jdb.[0] :?> System.String;
@@ -822,10 +827,10 @@ let internal hints_db_from_json_db (jdb : json_db) : hints_db =
 let internal json<'t> (obj : 't) (known_types : Type list) =
     use ms = new MemoryStream()
     (new DataContractJsonSerializer(typeof<'t>, known_types)).WriteObject(ms, obj)
-    ASCIIEncoding.Default.GetString(ms.ToArray())
+    Encoding.ASCII.GetString(ms.ToArray())
 
 let internal unjson<'t> (s : string) (known_types : Type list) : 't =
-    use ms = new MemoryStream(ASCIIEncoding.Default.GetBytes(s))
+    use ms = new MemoryStream(Encoding.Unicode.GetBytes(s))
     let obj = (new DataContractJsonSerializer(typeof<'t>, known_types)).ReadObject(ms)
     obj :?> 't
 

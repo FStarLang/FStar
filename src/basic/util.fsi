@@ -193,7 +193,7 @@ val substring_from: string -> int -> string
 (* Second argument is a length, not an index. *)
 val substring: string -> int -> int -> string
 val replace_char: string -> char -> char -> Tot<string>
-val replace_string: string -> string -> string -> Tot<string>
+val replace_chars: string -> char -> string -> Tot<string>
 val hashcode: string -> Tot<int>
 val compare: string -> string -> Tot<int>
 val splitlines: string -> Tot<list<string>>
@@ -223,6 +223,10 @@ val for_some: ('a -> bool) -> list<'a> -> bool
 val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 val multiset_equiv: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 val take: ('a -> bool) -> list<'a> -> list<'a> * list<'a>
+
+(* Variation on fold_left which pushes the list returned by the functional *)
+(* on top of the leftover input list *)
+val fold_flatten:('a -> 'b -> 'a * list<'b>) -> 'a -> list<'b> -> 'a
 
 val is_some: option<'a> -> Tot<bool>
 val must: option<'a> -> 'a

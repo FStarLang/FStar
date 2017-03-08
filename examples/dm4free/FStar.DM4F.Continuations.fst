@@ -48,12 +48,11 @@ let reset (ans:Type) (h:(unit -> Tot (cont ans ans))) (k: ans -> M ans) : M ans 
   let h1 = (h0 id <: M ans) in
   k h1
 
-reifiable reflectable new_effect_for_free {
+reifiable reflectable new_effect {
   CONT (ans:Type) : a:Type -> Effect
   with repr = cont ans
      ; return = return ans
      ; bind = bind ans
-  and effect_actions
 //    callcc = callcc ans
 //    em     = em ans
 //    shift  = shift ans
@@ -61,7 +60,7 @@ reifiable reflectable new_effect_for_free {
 }
 
 
-reifiable reflectable new_effect_for_free CONTINUATION = CONT False
+reifiable reflectable new_effect CONTINUATION = CONT False
 
 (*
 let repr (a:Type)

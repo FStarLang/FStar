@@ -78,7 +78,7 @@ open FStar_String
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
-%token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
+%token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
 %token AND ASSERT BEGIN ELSE END
 %token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
@@ -93,7 +93,7 @@ open FStar_String
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT NEW_EFFECT_FOR_FREE SUB_EFFECT SQUIGGLY_RARROW TOTAL
+%token NEW_EFFECT SUB_EFFECT SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS
 %token BACKTICK UNIV_HASH
@@ -222,8 +222,6 @@ rawDecl:
       { NewEffect ne }
   | SUB_EFFECT se=subEffect
       { SubEffect se }
-  | NEW_EFFECT_FOR_FREE ne=newEffect
-      { NewEffectForFree ne }
   | doc=FSDOC_STANDALONE
       { Fsdoc doc }
 
@@ -283,29 +281,21 @@ letbinding:
 newEffect:
   | ed=effectRedefinition
   | ed=effectDefinition
-       { ed }
+    { ed }
 
 effectRedefinition:
   | lid=uident EQUALS t=simpleTerm
-      { RedefineEffect(lid, [], t) }
+    { RedefineEffect(lid, [], t) }
 
 effectDefinition:
-  | LBRACE lid=uident bs=binders COLON k=kind
+  | LBRACE lid=uident bs=binders COLON typ=tmArrow(tmNoEq)
     	   WITH eds=separated_nonempty_list(SEMICOLON, effectDecl)
-         actions=actionDecls
     RBRACE
-      {
-         DefineEffect(lid, bs, k, eds, actions)
-      }
-
-actionDecls:
-  |   { [] }
-  | AND ACTIONS actions=separated_list(SEMICOLON, effectDecl)
-      { actions }
+    { DefineEffect(lid, bs, typ, eds) }
 
 effectDecl:
   | lid=lident EQUALS t=simpleTerm
-     { mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] }
+    { mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
