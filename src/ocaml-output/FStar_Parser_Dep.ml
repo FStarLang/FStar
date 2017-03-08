@@ -392,8 +392,7 @@ let collect_one:
                    FStar_List.iter collect_tycon ts
                | FStar_Parser_AST.Exception (uu____731,t) ->
                    FStar_Util.iter_opt t collect_term
-               | FStar_Parser_AST.NewEffectForFree ed
-                 |FStar_Parser_AST.NewEffect ed -> collect_effect_decl ed
+               | FStar_Parser_AST.NewEffect ed -> collect_effect_decl ed
                | FStar_Parser_AST.Fsdoc _|FStar_Parser_AST.Pragma _ -> ()
                | FStar_Parser_AST.TopLevelModule lid ->
                    (FStar_Util.incr num_of_toplevelmods;

@@ -28,7 +28,7 @@ let put (x: heap): st unit =
 // Instruct F* to CPS and elaborate the terms above to build a new STATE effect
 ////////////////////////////////////////////////////////////////////////////////
 
-reifiable reflectable total new_effect_for_free {
+reifiable reflectable total new_effect {
   ISTATE : a:Type -> Effect
   with repr     = st
      ; bind     = bind_st

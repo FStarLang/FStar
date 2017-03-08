@@ -19,7 +19,7 @@ let get (x:dom) : memo (option codom) = fun h -> List.assoc x h, h
 let put (x:dom) (y:codom) : memo unit = fun h -> (), (x,y)::h
 
 reifiable reflectable total
-new_effect_for_free {
+new_effect {
   MEMO : (a:Type) -> Effect
   with
     repr = memo;
@@ -631,7 +631,7 @@ let bind_partial (* (dom:Type) *)
 
 (* The definition goes through but it won't be usable until we finish implementing indexed effects *)
 total reifiable reflectable
-new_effect_for_free {
+new_effect {
   PARTIAL (* (dom:Type) *) (x:dom) : (a:Type) -> Effect
   with repr = partial x
      ; bind = bind_partial x

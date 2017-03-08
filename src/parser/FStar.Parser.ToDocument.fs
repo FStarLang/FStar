@@ -488,8 +488,6 @@ and p_rawDecl d = match d.d with
     str "new_effect" ^^ space ^^ p_newEffect ne
   | SubEffect(se) ->
     str "sub_effect" ^^ space ^^ p_subEffect se
-  | NewEffectForFree (ne) ->
-    str "new_effect_for_free" ^^ space ^^ p_newEffect ne
   | Pragma p ->
     p_pragma p
   | Fsdoc doc ->

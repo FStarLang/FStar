@@ -80,7 +80,6 @@
     Hashtbl.add keywords "mutable"       MUTABLE     ;
     Hashtbl.add keywords "new"           NEW         ;
     Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
-    Hashtbl.add keywords "new_effect_for_free" NEW_EFFECT_FOR_FREE  ;
     Hashtbl.add keywords "noextract"     NOEXTRACT   ;
     Hashtbl.add keywords "of"            OF          ;
     Hashtbl.add keywords "open"          OPEN        ;

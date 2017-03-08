@@ -337,7 +337,6 @@ let collect_one
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
-    | NewEffectForFree ed
     | NewEffect ed ->
         collect_effect_decl ed
     | Fsdoc _

@@ -215,7 +215,6 @@ type decl' =
   | Val of ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
   | NewEffect of effect_decl
-  | NewEffectForFree of effect_decl (* always a [DefineEffect] *)
   | SubEffect of lift
   | Pragma of pragma
   | Fsdoc of fsdoc
@@ -647,8 +646,6 @@ let decl_to_string (d:decl) = match d.d with
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(DefineEffect(i, _, _, _))
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | NewEffectForFree(DefineEffect(i, _, _, _))
-  | NewEffectForFree(RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc _ -> "fsdoc"

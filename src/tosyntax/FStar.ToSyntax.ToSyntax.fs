@@ -1613,13 +1613,14 @@ let desugar_binders env binders =
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
 
-let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind eff_decls for_free =
+let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls =
     let env0 = env in
     let monad_env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders monad_env eff_binders in
-    let eff_k = desugar_term env eff_kind in
+    let eff_t = desugar_term env eff_typ in
 
-    let for_free = for_free in
+    (* An effect for free has a type of the shape "a:Type -> Effect" *)
+    let for_free = List.length (fst (U.arrow_formals eff_t)) = 1 in
 
     let mandatory_members =
       let rr_members = ["repr" ; "return" ; "bind"] in
@@ -1684,7 +1685,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
               and its cps-type with arrows inserted in the right place (see \
               examples).", d.drange))
     ) in
-    let eff_k = Subst.close binders eff_k in
+    let eff_t = Subst.close binders eff_t in
     let lookup s =
         let l = Env.qualify env (mk_ident(s, d.drange)) in
         [], Subst.close binders <| fail_or env (try_lookup_definition env) l in
@@ -1699,7 +1700,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
           cattributes  = [];
           univs       = [];
           binders     = binders;
-          signature   = eff_k;
+          signature   = eff_t;
           ret_wp      = dummy_tscheme;
           bind_wp     = dummy_tscheme;
           if_then_else= dummy_tscheme;
@@ -1724,7 +1725,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
           cattributes  = [];
           univs       = [];
           binders     = binders;
-          signature   = eff_k;
+          signature   = eff_t;
           ret_wp      = lookup "return_wp";
           bind_wp     = lookup "bind_wp";
           if_then_else= lookup "if_then_else";
@@ -1755,7 +1756,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
     in
     env, [se]
 
-and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (build_sigelt:eff_decl -> Range.range -> sigelt) =
+and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     let env0 = env in
     let env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in
@@ -1816,7 +1817,11 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (bu
                 })
                 ed.actions;
     } in
-    let se = build_sigelt ed d.drange in
+    let se =
+      (* An effect for free has a type of the shape "a:Type -> Effect" *)
+      let for_free = List.length (fst (U.arrow_formals ed.signature)) = 1 in
+      if for_free then Sig_new_effect_for_free (ed, d.drange) else Sig_new_effect (ed, d.drange)
+    in
     let monad_env = env in
     let env = push_sigelt env0 se in
     let env = ed.actions |> List.fold_left (fun env a ->
@@ -1984,19 +1989,11 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
 
   | NewEffect (RedefineEffect(eff_name, eff_binders, defn)) ->
     let quals = d.quals in
-    desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (fun ed range -> Sig_new_effect(ed, range))
+    desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn
 
-  | NewEffectForFree (RedefineEffect(eff_name, eff_binders, defn)) ->
+  | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
-    desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (fun ed range -> Sig_new_effect_for_free(ed, range))
-
-  | NewEffectForFree (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
-    let quals = d.quals in
-    desugar_effect env d quals eff_name eff_binders eff_kind eff_decls true
-
-  | NewEffect (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
-    let quals = d.quals in
-    desugar_effect env d quals eff_name eff_binders eff_kind eff_decls false
+    desugar_effect env d quals eff_name eff_binders eff_typ eff_decls
 
   | SubEffect l ->
     let lookup l = match Env.try_lookup_effect_name env l with

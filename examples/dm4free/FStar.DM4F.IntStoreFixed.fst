@@ -13,7 +13,7 @@ let bind_is (a b : Type) (x:int_store a) (f: a -> int_store b) : int_store b =
 let get () : int_store heap = fun store -> store, store
 let put s : int_store unit = fun _ -> (), s
 
-total reifiable reflectable new_effect_for_free {
+total reifiable reflectable new_effect {
   INT_STORE : a:Type -> Effect
   with repr   = int_store
      ; bind   = bind_is

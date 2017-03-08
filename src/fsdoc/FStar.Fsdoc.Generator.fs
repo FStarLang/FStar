@@ -134,8 +134,6 @@ let string_of_decl' d =
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(DefineEffect(i, _, _, _))
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | NewEffectForFree(DefineEffect(i, _, _, _))
-  | NewEffectForFree(RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc (comm,_) -> comm

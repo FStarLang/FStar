@@ -31,7 +31,7 @@ let read (l:label) : ifc bool =
 let write (l:label) (b:bool) : ifc unit =
   fun l0 -> if flows l0 l then Some ((), l0) else None
 
-reifiable new_effect_for_free {
+reifiable new_effect {
   IFC : a:Type -> Effect
   with
        repr         = ifc

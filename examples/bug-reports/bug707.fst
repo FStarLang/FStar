@@ -25,7 +25,7 @@ let put (s:int) : stexn unit =
 let raise (a:Type) : stexn a =
         fun s -> (None, s)
 
-reifiable reflectable new_effect_for_free {
+reifiable reflectable new_effect {
   STEXN: a:Type -> Effect
   with repr    = stexn
      ; return  = return
