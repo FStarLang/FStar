@@ -22,12 +22,12 @@ type name = bv
 
 let remove_unit (f: 'a -> unit -> 'b) (x:'a) : 'b = f x ()
 
-let mk_pure_interpretation_1 (f:'a -> 'b) (unembed_a:term -> 'a) (embed_b:'b -> term) (args:args) =
+let mk_pure_interpretation_1 (f:'a -> 'b) (unembed_a:term -> 'a) (embed_b:'b -> term) (args:args) :option<term> =
     match args with
-    | [a] -> embed_b (f (unembed_a (fst a)))
+    | [a] -> Some (embed_b (f (unembed_a (fst a))))
     | _ -> failwith "Unexpected interpretation of pure primitive"
 
-let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) (t_a:typ) (args:args) : term =
+let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) (t_a:typ) (args:args) : option<term> =
  (*  We have: t () embedded_state
      The idea is to:
         1. unembed the state
@@ -40,20 +40,20 @@ let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) 
     let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run t ps in
-    E.embed_result res embed_a t_a
+    Some (E.embed_result res embed_a t_a)
   | _ ->
     failwith ("Unexpected application of tactic primitive")
 
 let mk_tactic_interpretation_1 (ps:proofstate)
                                (t:'b -> tac<'a>) (unembed_b:term -> 'b)
-                               (embed_a:'a -> term) (t_a:typ) (args:args) : term =
+                               (embed_a:'a -> term) (t_a:typ) (args:args) : option<term> =
   match args with
   | [(b, _); (embedded_state, _)] ->
     printfn "Reached forall_intro_interpretation, goals are: %s" (Print.term_to_string embedded_state);
     let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run (t (unembed_b b)) ps in
-    E.embed_result res embed_a t_a
+    Some (E.embed_result res embed_a t_a)
   | _ ->
     failwith ("Unexpected application of tactic primitive")
 

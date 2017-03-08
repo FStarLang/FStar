@@ -44,7 +44,7 @@ and steps = list<step>
 type primitive_step = {
     name:FStar.Ident.lid;
     arity:int;
-    interpretation:(args -> term)
+    interpretation:(args -> option<term>)
 }
 val eta_expand_with_type :term -> typ -> term
 val eta_expand:           Env.env -> term -> term
