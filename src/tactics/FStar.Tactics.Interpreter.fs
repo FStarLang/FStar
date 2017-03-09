@@ -35,7 +35,7 @@ let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) 
         3. embed the result and final state and return it to the normalizer
   *)
   match args with
-  | [_unit; (embedded_state, _)] ->
+  | [(embedded_state, _)] ->
     printfn "Reached forall_intro_interpretation, args are: %s" (Print.args_to_string args);
     let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
@@ -59,27 +59,27 @@ let mk_tactic_interpretation_1 (ps:proofstate)
 
 let rec primitive_steps ps : list<N.primitive_step> =
     [{N.name=E.fstar_tactics_lid "forall_intros_";
-      N.arity=2;
+      N.arity=1;
       N.interpretation=mk_tactic_interpretation_0 ps intros E.embed_binders E.fstar_tactics_binders};
 
      {N.name=E.fstar_tactics_lid "implies_intro_";
-      N.arity=2;
+      N.arity=1;
       N.interpretation=mk_tactic_interpretation_0 ps imp_intro E.embed_binder E.fstar_tactics_binder};
 
      {N.name=E.fstar_tactics_lid "revert_";
-      N.arity=2;
+      N.arity=1;
       N.interpretation=mk_tactic_interpretation_0 ps revert E.embed_unit FStar.TypeChecker.Common.t_unit};
 
      {N.name=E.fstar_tactics_lid "clear_";
-      N.arity=2;
+      N.arity=1;
       N.interpretation=mk_tactic_interpretation_0 ps clear E.embed_unit FStar.TypeChecker.Common.t_unit};
 
      {N.name=E.fstar_tactics_lid "split_";
-      N.arity=2;
+      N.arity=1;
       N.interpretation=mk_tactic_interpretation_0 ps split E.embed_unit FStar.TypeChecker.Common.t_unit};
 
      {N.name=E.fstar_tactics_lid "merge_";
-      N.arity=2;
+      N.arity=1;
       N.interpretation=mk_tactic_interpretation_0 ps merge_sub_goals E.embed_unit FStar.TypeChecker.Common.t_unit};
 
      {N.name=E.fstar_tactics_lid "rewrite_";
@@ -87,20 +87,20 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.interpretation=mk_tactic_interpretation_1 ps rewrite E.unembed_binder E.embed_unit FStar.TypeChecker.Common.t_unit};
 
      {N.name=E.fstar_tactics_lid "smt_";
-      N.arity=2;
+      N.arity=1;
       N.interpretation=mk_tactic_interpretation_0 ps smt E.embed_unit FStar.TypeChecker.Common.t_unit};
 
      {N.name=E.fstar_tactics_lid "visit_";
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_1 ps visit
-                                (remove_unit (unembed_tactic E.embed_unit E.unembed_unit))
+                                (unembed_tactic_0 E.unembed_unit)
                                 E.embed_unit
                                 FStar.TypeChecker.Common.t_unit};
 
      {N.name=E.fstar_tactics_lid "focus_";
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_1 ps (focus_cur_goal "user_tactic")
-                                (remove_unit (unembed_tactic E.embed_unit E.unembed_unit))
+                                (unembed_tactic_0 E.unembed_unit)
                                 E.embed_unit
                                 FStar.TypeChecker.Common.t_unit};
 

@@ -78,29 +78,29 @@ let assert_by_tactic (t:tactic) (p:Type)
          (ensures (fun _ -> p))
   = ()
 
-assume val forall_intros_: unit -> tac binders
-let forall_intros () : Tac binders = TAC?.reflect (forall_intros_ ())
+assume val forall_intros_: tac binders
+let forall_intros () : Tac binders = TAC?.reflect forall_intros_
 
-assume val implies_intro_: unit -> tac binder
-let implies_intro () : Tac binder = TAC?.reflect (implies_intro_ ())
+assume val implies_intro_: tac binder
+let implies_intro () : Tac binder = TAC?.reflect implies_intro_
 
-assume val revert_  : unit -> tac unit
-let revert () : Tac unit = TAC?.reflect (revert_ ())
+assume val revert_  : tac unit
+let revert () : Tac unit = TAC?.reflect revert_
 
-assume val clear_   : unit -> tac unit
-let clear () : Tac unit = TAC?.reflect (clear_ ())
+assume val clear_   : tac unit
+let clear () : Tac unit = TAC?.reflect clear_
 
-assume val split_   : unit -> tac unit
-let split () : Tac unit = TAC?.reflect (split_ ())
+assume val split_   : tac unit
+let split () : Tac unit = TAC?.reflect split_
 
-assume val merge_   : unit -> tac unit
-let merge () : Tac unit = TAC?.reflect (merge_ ())
+assume val merge_   : tac unit
+let merge () : Tac unit = TAC?.reflect merge_
 
 assume val rewrite_ : binder -> tac unit
 let rewrite (b:binder) : Tac unit = TAC?.reflect (rewrite_ b)
 
-assume val smt_     : unit -> tac unit
-let smt () : Tac unit = TAC?.reflect (smt_ ())
+assume val smt_     : tac unit
+let smt () : Tac unit = TAC?.reflect smt_
 
 assume val visit_   : tac unit -> tac unit
 let visit (f:tactic) : Tac unit = TAC?.reflect (visit_ (reify_tactic f))
