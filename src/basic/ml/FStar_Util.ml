@@ -823,7 +823,7 @@ let write_hints (filename: string) (hints: hints_db): unit =
           ]
     ) hints.hints)
   ] in
-  Yojson.Safe.pretty_to_channel (open_out filename) json
+  Yojson.Safe.pretty_to_channel (open_out_bin filename) json
 
 let read_hints (filename: string): hints_db option =
     try
