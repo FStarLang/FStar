@@ -62,42 +62,42 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_0 ps intros E.embed_binders E.fstar_tactics_binders};
 
-     {N.name=E.fstar_tactics_lid "implies_intro";
+     {N.name=E.fstar_tactics_lid "implies_intro_";
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_0 ps imp_intro E.embed_binder E.fstar_tactics_binder};
 
-     {N.name=E.fstar_tactics_lid "revert";
+     {N.name=E.fstar_tactics_lid "revert_";
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_0 ps revert E.embed_unit FStar.TypeChecker.Common.t_unit};
 
-     {N.name=E.fstar_tactics_lid "clear";
+     {N.name=E.fstar_tactics_lid "clear_";
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_0 ps clear E.embed_unit FStar.TypeChecker.Common.t_unit};
 
-     {N.name=E.fstar_tactics_lid "split";
+     {N.name=E.fstar_tactics_lid "split_";
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_0 ps split E.embed_unit FStar.TypeChecker.Common.t_unit};
 
-     {N.name=E.fstar_tactics_lid "merge";
+     {N.name=E.fstar_tactics_lid "merge_";
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_0 ps merge_sub_goals E.embed_unit FStar.TypeChecker.Common.t_unit};
 
-     {N.name=E.fstar_tactics_lid "rewrite";
+     {N.name=E.fstar_tactics_lid "rewrite_";
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_1 ps rewrite E.unembed_binder E.embed_unit FStar.TypeChecker.Common.t_unit};
 
-     {N.name=E.fstar_tactics_lid "smt";
+     {N.name=E.fstar_tactics_lid "smt_";
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_0 ps smt E.embed_unit FStar.TypeChecker.Common.t_unit};
 
-     {N.name=E.fstar_tactics_lid "visit";
+     {N.name=E.fstar_tactics_lid "visit_";
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_1 ps visit
                                 (remove_unit (unembed_tactic E.embed_unit E.unembed_unit))
                                 E.embed_unit
                                 FStar.TypeChecker.Common.t_unit};
 
-     {N.name=E.fstar_tactics_lid "focus";
+     {N.name=E.fstar_tactics_lid "focus_";
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_1 ps (focus_cur_goal "user_tactic")
                                 (remove_unit (unembed_tactic E.embed_unit E.unembed_unit))

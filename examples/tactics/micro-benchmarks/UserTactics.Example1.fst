@@ -33,18 +33,16 @@ let rec simplify_eq_implication : tactic
 
 let rec just_do_intros : tactic = fun () ->
   let _ = forall_intros () in
-  (* let _ = implies_intro () in *)
-  (* let _ = smt () in *)
-  (* let _ = revert () in *)
-  (* revert *) ()
+  let _ = implies_intro () in
+  let _ = smt () in
+  let _ = revert () in
+  revert ()
 
 #reset-options // "--debug UserTactics.Example1 --debug_level Norm"
 let test_1 =
-  assert_by_tactic just_do_intros (forall (y:int). y==0 ==> 0==y)
-
-  (* assert false; *)
-  (* assert_by_tactic just_do_intros *)
-  (*                  (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)); *)
+  assert_by_tactic just_do_intros (forall (y:int). y==0 ==> 0==y);
+  assert_by_tactic just_do_intros
+                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y))
 
 
 (* let test_2 =  *)

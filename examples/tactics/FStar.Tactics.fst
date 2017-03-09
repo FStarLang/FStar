@@ -48,8 +48,6 @@ let bind (a:Type) (b:Type)
 (* Actions *)
 let get () : tac state = fun s0 -> Success s0 s0 
 
-assume val forall_intros_: unit -> tac binders
-assume val focus_: tac unit -> tac unit
 
 (* total  *) //disable the termination check, although it remains reifiable
 reifiable reflectable new_effect_for_free {
@@ -74,23 +72,42 @@ let by_tactic (t:state -> result unit) (a:Type) : Type = a
 let reify_tactic (t:tactic) : tac unit =
   fun s -> reify (t ()) s
 
-let forall_intros () :Tac binders = TAC?.reflect (forall_intros_ ())
-let focus (f:tactic) : Tac unit = TAC?.reflect (focus_ (reify_tactic f))
-
 let assert_by_tactic (t:tactic) (p:Type)
   : Pure unit 
          (requires (by_tactic (reify_tactic t) p))
          (ensures (fun _ -> p))
   = ()
 
+assume val forall_intros_: unit -> tac binders
+let forall_intros () : Tac binders = TAC?.reflect (forall_intros_ ())
+
+assume val implies_intro_: unit -> tac binder
+let implies_intro () : Tac binder = TAC?.reflect (implies_intro_ ())
+
+assume val revert_  : unit -> tac unit
+let revert () : Tac unit = TAC?.reflect (revert_ ())
+
+assume val clear_   : unit -> tac unit
+let clear () : Tac unit = TAC?.reflect (clear_ ())
+
+assume val split_   : unit -> tac unit
+let split () : Tac unit = TAC?.reflect (split_ ())
+
+assume val merge_   : unit -> tac unit
+let merge () : Tac unit = TAC?.reflect (merge_ ())
+
+assume val rewrite_ : binder -> tac unit
+let rewrite (b:binder) : Tac unit = TAC?.reflect (rewrite_ b)
+
+assume val smt_     : unit -> tac unit
+let smt () : Tac unit = TAC?.reflect (smt_ ())
+
+assume val visit_   : tac unit -> tac unit
+let visit (f:tactic) : Tac unit = TAC?.reflect (visit_ (reify_tactic f))
+
+assume val focus_: tac unit -> tac unit
+let focus (f:tactic) : Tac unit = TAC?.reflect (focus_ (reify_tactic f))
+
+
 (* Primitives provided natively by the tactic engine *)
 //assume val forall_intros: unit -> Tac binders
-assume val implies_intro: unit -> Tac binder
-assume val revert  : unit -> Tac unit
-assume val clear   : unit -> Tac unit
-assume val split   : unit -> Tac unit
-assume val merge   : unit -> Tac unit
-assume val rewrite : binder -> Tac unit
-assume val smt     : unit -> Tac unit
-(* assume val focus   : (unit -> Tac unit) -> Tac unit *)
-assume val visit   : (unit -> Tac unit) -> Tac unit
