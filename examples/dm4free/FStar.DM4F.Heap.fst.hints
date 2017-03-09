@@ -532,6 +532,7 @@
         "fuel_guarded_inversion_FStar.DM4F.Heap.heap_rec",
         "fuel_guarded_inversion_FStar.DM4F.Heap.ref",
         "fuel_guarded_inversion_Prims.dtuple2",
+        "fuel_guarded_inversion_Prims.option",
         "function_token_typing_Prims.nat",
         "interpretation_Tm_abs_2499c67f0221e8b82a62619bf14c1849",
         "interpretation_Tm_arrow_64a7f7bb1256d2656ec950aad3d386c3",
