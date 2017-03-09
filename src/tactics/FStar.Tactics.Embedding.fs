@@ -49,7 +49,7 @@ let fstar_tactics_Forall = fstar_tactics_lid_as_data_tm "Forall"
 let fstar_tactics_Exists = fstar_tactics_lid_as_data_tm "Exists"
 
 let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
-
+exception Unembed_failed of string
 let embed_binder (b:binder) : term = S.bv_to_name (fst b)
 let unembed_binder (t:term) : binder =
     let t = U.unascribe t in

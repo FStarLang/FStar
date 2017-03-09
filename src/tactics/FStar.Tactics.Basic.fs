@@ -423,7 +423,7 @@ let rewrite (h:binder) : tac<unit>
       | _ -> fail "Not an equality hypothesis")
 
 let clear : tac<unit>
-    = with_cur_goal "clear_hd" (fun goal ->
+    = with_cur_goal "clear" (fun goal ->
       match Env.pop_bv goal.context with
       | None -> fail "Cannot clear; empty context"
       | Some (x, env') ->
@@ -432,7 +432,7 @@ let clear : tac<unit>
           then fail "Cannot clear; variable appears in goal"
           else let new_goal = {goal with context=env'} in
                bind dismiss (fun _ ->
-              add_goals [new_goal]))
+               add_goals [new_goal]))
 
 let clear_hd (x:name) : tac<unit>
     = with_cur_goal "clear_hd" (fun goal ->
@@ -470,10 +470,12 @@ let revert : tac<unit>
 let revert_hd (x:name) : tac<unit>
     = with_cur_goal "revert_hd" (fun goal ->
       match Env.pop_bv goal.context with
-      | None -> fail "Cannot clear_hd; empty context"
+      | None -> fail "Cannot revert_hd; empty context"
       | Some (y, env') ->
           if not (S.bv_eq x y)
-          then fail "Cannot clear_hd; head variable mismatch"
+          then fail (Util.format2 "Cannot revert_hd %s; head variable mismatch ... egot %s" 
+                                (Print.bv_to_string x)
+                                (Print.bv_to_string y))
           else revert)
 
 let rec revert_all_hd (xs:list<name>)
