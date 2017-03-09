@@ -129,6 +129,8 @@ val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val flush_file: file_handle -> unit
 val file_get_contents: string -> string
+val mkdir_clean: string -> unit (* creates a new dir with user read/write or delete content of dir if exists *)
+val concat_dir_filename: string -> string -> string
 
 type stream_reader = System.IO.StreamReader (* not relying on representation *)
 val open_stdin : unit -> stream_reader
