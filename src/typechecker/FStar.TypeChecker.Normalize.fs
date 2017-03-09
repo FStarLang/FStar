@@ -675,6 +675,12 @@ let get_norm_request args =
     | [(tm, _)] -> tm
     | _ -> failwith "Impossible"
 
+let is_reify_head = function 
+    | App({n=Tm_constant FC.Const_reify}, _, _)::_ -> 
+      true
+    | _ -> 
+      false
+
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t = compress t in
@@ -711,6 +717,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let t' = S.mk (Tm_app(hd, [a1])) None t.pos in
             let t = S.mk(Tm_app(t', a2::rest)) None t.pos in
             norm cfg env stack t
+
+          | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [a])
+                when (cfg.steps |> List.contains Reify &&
+                      is_reify_head stack) ->
+            norm cfg env (List.tl stack) (fst a)
 
           | Tm_app({n=Tm_constant FC.Const_reify}, [a])
                 when (cfg.steps |> List.contains Reify) ->

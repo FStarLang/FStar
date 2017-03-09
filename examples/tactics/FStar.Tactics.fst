@@ -49,6 +49,7 @@ let bind (a:Type) (b:Type)
 let get () : tac state = fun s0 -> Success s0 s0 
 
 assume val forall_intros_: unit -> tac binders
+assume val focus_: tac unit -> tac unit
 
 (* total  *) //disable the termination check, although it remains reifiable
 reifiable reflectable new_effect_for_free {
@@ -67,20 +68,20 @@ let fail (#a:Type) (msg:string) = TAC?.reflect (fail_ a msg)
 effect Tac (a:Type) = TAC a (fun i post -> forall j. post j)
 let tactic = unit -> Tac unit
 
-//let forall_intros () :Tac binders = TAC?.reflect (forall_intros_ ())
-
 abstract 
-(* let by_tactic (t:tactic) (a:Type) : Type = a *)
-let by_tactic (a:Type) (t:state -> result unit) : Type = a
+let by_tactic (t:state -> result unit) (a:Type) : Type = a
 
-let reify_tactic (t:tactic) :tac unit =
-  reify (t ())
+let reify_tactic (t:tactic) : tac unit =
+  fun s -> reify (t ()) s
 
-(* let assert_by_tactic (t:(unit -> Tac unit)) (p:Type) (s:state) = *)
-(*   by_tactic p (reify (t ()) s) *)
+let forall_intros () :Tac binders = TAC?.reflect (forall_intros_ ())
+let focus (f:tactic) : Tac unit = TAC?.reflect (focus_ (reify_tactic f))
 
-   (* : Pure unit (requires (by_tactic p (reify (t ())))) (ensures (fun _ -> p)) *)
-   (* = () *)
+let assert_by_tactic (t:tactic) (p:Type)
+  : Pure unit 
+         (requires (by_tactic (reify_tactic t) p))
+         (ensures (fun _ -> p))
+  = ()
 
 (* Primitives provided natively by the tactic engine *)
 //assume val forall_intros: unit -> Tac binders
@@ -91,5 +92,5 @@ assume val split   : unit -> Tac unit
 assume val merge   : unit -> Tac unit
 assume val rewrite : binder -> Tac unit
 assume val smt     : unit -> Tac unit
-assume val focus   : (unit -> Tac unit) -> Tac unit
+(* assume val focus   : (unit -> Tac unit) -> Tac unit *)
 assume val visit   : (unit -> Tac unit) -> Tac unit

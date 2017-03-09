@@ -36,7 +36,7 @@ let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) 
   *)
   match args with
   | [_unit; (embedded_state, _)] ->
-    printfn "Reached forall_intro_interpretation, goals are: %s" (Print.term_to_string embedded_state);
+    printfn "Reached forall_intro_interpretation, args are: %s" (Print.args_to_string args);
     let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run t ps in
@@ -58,7 +58,7 @@ let mk_tactic_interpretation_1 (ps:proofstate)
     failwith ("Unexpected application of tactic primitive")
 
 let rec primitive_steps ps : list<N.primitive_step> =
-    [{N.name=E.fstar_tactics_lid "forall_intros";
+    [{N.name=E.fstar_tactics_lid "forall_intros_";
       N.arity=2;
       N.interpretation=mk_tactic_interpretation_0 ps intros E.embed_binders E.fstar_tactics_binders};
 
@@ -110,13 +110,39 @@ let rec primitive_steps ps : list<N.primitive_step> =
     ]
 
 
+and unembed_tactic_0<'b>  (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> =
+    bind get (fun proof_state ->
+    let tm = S.mk_Tm_app embedded_tac_b 
+                         [S.as_arg (E.embed_state (proof_state.goals, []))]
+                          None
+                          Range.dummyRange in
+    let steps = [N.Reify; N.Beta; N.UnfoldUntil Delta_constant; N.Zeta; N.Iota; N.Primops] in
+                 printfn "Starting normalizer with %s" (Print.term_to_string tm);
+                 Options.set_option "debug_level" (Options.List [Options.String "Norm"]);
+    let result = N.normalize_with_primitive_steps (primitive_steps proof_state) steps proof_state.main_context tm in
+            Options.set_option "debug_level" (Options.List []);
+            printfn "Reduced tactic: got %s" (Print.term_to_string result);
+    match E.unembed_result proof_state.main_context result unembed_b with
+    | Inl (b, (goals, smt_goals)) ->
+        bind dismiss (fun _ ->
+        bind (add_goals goals) (fun _ ->
+        bind (add_smt_goals smt_goals) (fun _ ->
+        ret b)))
+
+    | Inr (msg, (goals, smt_goals)) ->
+        bind dismiss (fun _ ->
+        bind (add_goals goals) (fun _ ->
+        bind (add_smt_goals smt_goals) (fun _ ->
+        fail msg))))
+
 
 and unembed_tactic<'a,'b> (embed_a:'a -> term) (unembed_b:term -> 'b) (embedded_a_tac_b:term) (a:'a) : tac<'b> =
     bind get (fun proof_state ->
-    let tm = S.mk_Tm_app (U.mk_reify (S.mk_Tm_app embedded_a_tac_b [S.as_arg (embed_a a)] None Range.dummyRange))
-                            [S.as_arg (E.embed_state (proof_state.goals, []))]
-                            None
-                            Range.dummyRange in
+    let tm = S.mk_Tm_app embedded_a_tac_b 
+                         [S.as_arg (embed_a a);
+                          S.as_arg (E.embed_state (proof_state.goals, []))]
+                         None
+                         Range.dummyRange in
     let steps = [N.Reify; N.Beta; N.UnfoldUntil Delta_constant; N.Zeta; N.Iota; N.Primops] in
                  printfn "Starting normalizer with %s" (Print.term_to_string tm);
                  Options.set_option "debug_level" (Options.List [Options.String "Norm"]);
@@ -146,7 +172,7 @@ let evaluate_user_tactic : tac<unit>
                 when S.fv_eq_lid fv E.by_tactic_lid ->
             focus_cur_goal "user tactic"
             (bind (replace ({goal with goal_ty=assertion})) (fun _ ->
-                   unembed_tactic E.embed_unit E.unembed_unit tactic ()))
+                   unembed_tactic_0 E.unembed_unit tactic))
           | _ ->
             fail "Not a user tactic"))
 
