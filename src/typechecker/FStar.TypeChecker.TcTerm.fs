@@ -1109,7 +1109,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       let app =
         if shortcuts_evaluation_order then
           (* If the head is shortcutting we cannot hoist its arguments *)
-          (* Leaving it `as is` is a little dubious *)
+          (* Leaving it `as is` is a little dubious, it would fail whenever we try to reify it *)
           let args = List.fold_left (fun args (arg, _, _) -> arg::args) [] arg_comps_rev in
           let app = mk_Tm_app head args (Some comp.res_typ.n) r in
           let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
