@@ -54,25 +54,32 @@ reifiable reflectable new_effect_for_free {
   TAC : a:Type -> Effect
   with repr     = tac
      ; bind     = bind
-     ; return   = ret
-  and effect_actions
-       get      = get
-}
+         ; return   = ret
+         and effect_actions
+           get      = get
+           }
+           effect Tac (a:Type) = TAC a (fun i post -> forall j. post j)
+           let tactic (a:Type) = unit -> Tac a
 
 (* working around #885 *)
-let fail_ (a:Type) (msg:string) : tac a = fun s0 -> Failed #a "No message for now" s0
-let fail (#a:Type) (msg:string) = TAC?.reflect (fail_ a msg)
+   let fail_ (a:Type) (msg:string) : tac a = fun s0 -> Failed #a "No message for now" s0
+   let fail (#a:Type) (msg:string) = TAC?.reflect (fail_ a msg)
 
-effect Tac (a:Type) = TAC a (fun i post -> forall j. post j)
-let tactic = unit -> Tac unit
+let or_else (#a:Type) (t1:tactic a) (t2:tactic a)
+        : Tac a
+        = TAC?.reflect (fun p -> 
+            match reify (t1 ()) p with
+            | Failed _ _ -> 
+              reify (t2 ()) p
+              | q -> q)
 
 abstract 
 let by_tactic (t:state -> result unit) (a:Type) : Type = a
 
-let reify_tactic (t:tactic) : tac unit =
+let reify_tactic (t:tactic unit) : tac unit =
   fun s -> reify (t ()) s
 
-let assert_by_tactic (t:tactic) (p:Type)
+let assert_by_tactic (t:tactic unit) (p:Type)
   : Pure unit 
          (requires (by_tactic (reify_tactic t) p))
          (ensures (fun _ -> p))
@@ -83,6 +90,9 @@ let forall_intros () : Tac binders = TAC?.reflect forall_intros_
 
 assume val implies_intro_: tac binder
 let implies_intro () : Tac binder = TAC?.reflect implies_intro_
+
+assume val trivial_  : tac unit
+let trivial () : Tac unit = TAC?.reflect trivial_
 
 assume val revert_  : tac unit
 let revert () : Tac unit = TAC?.reflect revert_
@@ -103,10 +113,14 @@ assume val smt_     : tac unit
 let smt () : Tac unit = TAC?.reflect smt_
 
 assume val visit_   : tac unit -> tac unit
-let visit (f:tactic) : Tac unit = TAC?.reflect (visit_ (reify_tactic f))
+let visit (f:tactic unit) : Tac unit = TAC?.reflect (visit_ (reify_tactic f))
 
 assume val focus_: tac unit -> tac unit
-let focus (f:tactic) : Tac unit = TAC?.reflect (focus_ (reify_tactic f))
+let focus (f:tactic unit) : Tac unit = TAC?.reflect (focus_ (reify_tactic f))
+
+assume val seq_ : tac unit -> tac unit -> tac unit
+let seq (f:tactic unit) (g:tactic unit) : Tac unit = 
+  TAC?.reflect (seq_ (reify_tactic f) (reify_tactic g))
 
 
 (* Primitives provided natively by the tactic engine *)

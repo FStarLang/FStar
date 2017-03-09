@@ -23,8 +23,8 @@ type name = bv
 let remove_unit (f: 'a -> unit -> 'b) (x:'a) : 'b = f x ()
 
 let mk_pure_interpretation_1 nm (f:'a -> 'b) (unembed_a:term -> 'a) (embed_b:'b -> term) (args:args) :option<term> =
-    printfn "Reached %s, args are: %s" 
-            (Ident.string_of_lid nm) 
+    printfn "Reached %s, args are: %s"
+            (Ident.string_of_lid nm)
             (Print.args_to_string args);
     match args with
     | [a] -> Some (embed_b (f (unembed_a (fst a))))
@@ -39,8 +39,8 @@ let mk_tactic_interpretation_0 (n:Ident.lid) (ps:proofstate) (t:tac<'a>) (embed_
   *)
   match args with
   | [(embedded_state, _)] ->
-    printfn "Reached %s, args are: %s" 
-            (Ident.string_of_lid n) 
+    printfn "Reached %s, args are: %s"
+            (Ident.string_of_lid n)
             (Print.args_to_string args);
     let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
@@ -62,63 +62,55 @@ let mk_tactic_interpretation_1 (nm:Ident.lid) (ps:proofstate)
     let res = run (t (unembed_b b)) ps in
     Some (E.embed_result res embed_a t_a)
   | _ ->
-    failwith ("Unexpected application of tactic primitive")
+    failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
+
+let mk_tactic_interpretation_2 (nm:Ident.lid) (ps:proofstate)
+                               (t:'a -> 'b -> tac<'c>) (unembed_a:term -> 'a) (unembed_b:term -> 'b)
+                               (embed_c:'c -> term) (t_c:typ) (args:args) : option<term> =
+  match args with
+  | [(a, _); (b, _); (embedded_state, _)] ->
+    printfn "Reached %s, goals are: %s"
+            (Ident.string_of_lid nm)
+            (Print.term_to_string embedded_state);
+    let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
+    let ps = {ps with goals=goals; smt_goals=smt_goals} in
+    let res = run (t (unembed_a a) (unembed_b b)) ps in
+    Some (E.embed_result res embed_c t_c)
+  | _ ->
+    failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
 let rec primitive_steps ps : list<N.primitive_step> =
-    [(let nm = E.fstar_tactics_lid "forall_intros_" in
-      {N.name=nm;
-      N.arity=1;
-      N.interpretation=mk_tactic_interpretation_0 nm ps intros E.embed_binders E.fstar_tactics_binders});
-     (let nm = E.fstar_tactics_lid "implies_intro_" in {N.name=nm;
-      N.arity=1;
-      N.interpretation=mk_tactic_interpretation_0 nm ps imp_intro E.embed_binder E.fstar_tactics_binder});
-
-     (let nm = E.fstar_tactics_lid "revert_" in {N.name=nm;
-      N.arity=1;
-      N.interpretation=mk_tactic_interpretation_0 nm ps revert E.embed_unit FStar.TypeChecker.Common.t_unit});
-
-     (let nm = E.fstar_tactics_lid "clear_" in {N.name=nm;
-      N.arity=1;
-      N.interpretation=mk_tactic_interpretation_0 nm ps clear E.embed_unit FStar.TypeChecker.Common.t_unit});
-
-     (let nm = E.fstar_tactics_lid "split_" in {N.name=nm;
-      N.arity=1;
-      N.interpretation=mk_tactic_interpretation_0 nm ps split E.embed_unit FStar.TypeChecker.Common.t_unit});
-
-     (let nm = E.fstar_tactics_lid "merge_" in {N.name=nm;
-      N.arity=1;
-      N.interpretation=mk_tactic_interpretation_0 nm ps merge_sub_goals E.embed_unit FStar.TypeChecker.Common.t_unit});
-
-     (let nm = E.fstar_tactics_lid "rewrite_" in {N.name=nm;
-      N.arity=2;
-      N.interpretation=mk_tactic_interpretation_1 nm ps rewrite E.unembed_binder E.embed_unit FStar.TypeChecker.Common.t_unit});
-
-     (let nm = E.fstar_tactics_lid "smt_" in {N.name=nm;
-      N.arity=1;
-      N.interpretation=mk_tactic_interpretation_0 nm ps smt E.embed_unit FStar.TypeChecker.Common.t_unit});
-
-     (let nm = E.fstar_tactics_lid "visit_" in {N.name=nm;
-      N.arity=2;
-      N.interpretation=mk_tactic_interpretation_1 nm ps visit
-                                (unembed_tactic_0 E.unembed_unit)
-                                E.embed_unit
-                                FStar.TypeChecker.Common.t_unit});
-
-     (let nm = E.fstar_tactics_lid "focus_" in {N.name=nm;
-      N.arity=2;
-      N.interpretation=mk_tactic_interpretation_1 nm ps (focus_cur_goal "user_tactic")
-                                (unembed_tactic_0 E.unembed_unit)
-                                E.embed_unit
-                                FStar.TypeChecker.Common.t_unit});
-
-     (let nm = E.fstar_tactics_lid "term_as_formula" in {N.name=nm;
-      N.arity=1;
-      N.interpretation=mk_pure_interpretation_1 nm U.destruct_typ_as_formula E.unembed_term (E.embed_option E.embed_formula E.fstar_tactics_formula)});
+    let mk nm arity interpretation = {
+      N.name=nm;
+      N.arity=arity;
+      N.strong_reduction_ok=false;
+      N.interpretation=interpretation nm
+    } in
+    [ mk (E.fstar_tactics_lid "forall_intros_") 1 (fun nm -> mk_tactic_interpretation_0 nm ps intros E.embed_binders E.fstar_tactics_binders);
+      mk (E.fstar_tactics_lid "implies_intro_") 1 (fun nm -> mk_tactic_interpretation_0 nm ps imp_intro E.embed_binder E.fstar_tactics_binder);
+      mk (E.fstar_tactics_lid "trivial_") 1 (fun nm -> mk_tactic_interpretation_0 nm ps trivial E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk (E.fstar_tactics_lid "revert_") 1 (fun nm -> mk_tactic_interpretation_0 nm ps revert E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk (E.fstar_tactics_lid "clear_") 1 (fun nm -> mk_tactic_interpretation_0 nm ps clear E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk (E.fstar_tactics_lid "split_") 1 (fun nm -> mk_tactic_interpretation_0 nm ps split E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk (E.fstar_tactics_lid "merge_") 1 (fun nm -> mk_tactic_interpretation_0 nm ps merge_sub_goals E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk (E.fstar_tactics_lid "rewrite_") 2 (fun nm -> mk_tactic_interpretation_1 nm ps rewrite E.unembed_binder E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk (E.fstar_tactics_lid "smt_") 1 (fun nm -> mk_tactic_interpretation_0 nm ps smt E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk (E.fstar_tactics_lid "visit_") 2 (fun nm -> mk_tactic_interpretation_1 nm ps visit (unembed_tactic_0 E.unembed_unit) E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk (E.fstar_tactics_lid "focus_") 2  (fun nm -> mk_tactic_interpretation_1 nm ps (focus_cur_goal "user_tactic")
+                                                            (unembed_tactic_0 E.unembed_unit)
+                                                            E.embed_unit
+                                                            FStar.TypeChecker.Common.t_unit);
+      mk (E.fstar_tactics_lid "seq_") 3 (fun nm -> mk_tactic_interpretation_2 nm ps seq
+                                                            (unembed_tactic_0 E.unembed_unit)
+                                                            (unembed_tactic_0 E.unembed_unit)
+                                                            E.embed_unit
+                                                            FStar.TypeChecker.Common.t_unit);
+      mk (E.fstar_tactics_lid "term_as_formula") 1 (fun nm -> mk_pure_interpretation_1 nm U.destruct_typ_as_formula E.unembed_term (E.embed_option E.embed_formula E.fstar_tactics_formula))
     ]
 
 and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> =
     bind get (fun proof_state ->
-    let tm = S.mk_Tm_app embedded_tac_b 
+    let tm = S.mk_Tm_app embedded_tac_b
                          [S.as_arg (E.embed_state (proof_state.goals, []))]
                           None
                           Range.dummyRange in
@@ -143,7 +135,7 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
 
 
 and unembed_tactic<'a,'b> (embed_a:'a -> term) (unembed_b:term -> 'b) (embedded_a_tac_b:term) (a:'a) : tac<'b> =
-    let tm = S.mk_Tm_app embedded_a_tac_b 
+    let tm = S.mk_Tm_app embedded_a_tac_b
                          [S.as_arg (embed_a a)]
                          None
                          Range.dummyRange in

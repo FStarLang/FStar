@@ -69,6 +69,7 @@ and steps = list<step>
 type primitive_step = {
     name:Ident.lid;
     arity:int;
+    strong_reduction_ok:bool;
     interpretation:(args -> option<term>)
 }
 
@@ -103,7 +104,7 @@ type stack_elt =
  | App      of term * aqual * Range.range
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
- | Steps    of steps * list<Env.delta_level>
+ | Steps    of steps * list<primitive_step> * list<Env.delta_level>
  | Debug    of term
 
 type stack = list<stack_elt>
@@ -128,7 +129,7 @@ let stack_elt_to_string = function
     | App (t,_,_) -> BU.format1 "App %s" (Print.term_to_string t)
     | Meta (m,_) -> "Meta"
     | Let  _ -> "Let"
-    | Steps (s, _) -> "Steps"
+    | Steps (_, _, _) -> "Steps"
     | Debug t -> BU.format1 "Debug %s" (Print.term_to_string t)
     // | _ -> "Match"
 
@@ -484,7 +485,7 @@ let built_in_primitive_steps : list<primitive_step> =
             end
           | _ -> failwith "Unexpected number of arguments"
     in
-    let as_primitive_step arity mk (l, f) = {name=l; arity=arity; interpretation=mk f} in
+    let as_primitive_step arity mk (l, f) = {name=l; arity=arity; strong_reduction_ok=true; interpretation=mk f} in
     let int_as_const  : int -> FC.sconst = fun i -> FC.Const_int (BU.string_of_int i, None) in
     let bool_as_const : bool -> FC.sconst = fun b -> FC.Const_bool b in
     let basic_arith =
@@ -529,7 +530,7 @@ let built_in_primitive_steps : list<primitive_step> =
                                         None Range.dummyRange)
                             (list_of_string s)
                             nil_char)
-               | _ -> 
+               | _ ->
                  None
                end
 
@@ -537,45 +538,49 @@ let built_in_primitive_steps : list<primitive_step> =
          in
          [{ name = Const.p2l ["FStar"; "String"; "list_of_string"];
             arity = 1;
+            strong_reduction_ok=true;
             interpretation=interp}]
       in
       basic_arith@bounded_arith@unary_string_ops
 
-let equality_ops : list<primitive_step> = 
-    let interp_bool (args:args) : option<term> = 
-        match args with 
+let equality_ops : list<primitive_step> =
+    let interp_bool (args:args) : option<term> =
+        match args with
         | [(_typ, _); (a1, _); (a2, _)] ->
             (match U.eq_tm a1 a2 with
             | U.Equal -> Some (mk (Tm_constant (FC.Const_bool true)) a2.pos)
             | U.NotEqual -> Some (mk (Tm_constant (FC.Const_bool false)) a2.pos)
             | _ -> None)
-        | _ -> 
+        | _ ->
             failwith "Unexpected number of arguments"
     in
-    let interp_prop (args:args) : option<term> = 
-        match args with 
+    let interp_prop (args:args) : option<term> =
+        match args with
         | [(_typ, _); (a1, _); (a2, _)]    //eq2
         | [(_typ, _); _; (a1, _); (a2, _)] ->    //eq3
             (match U.eq_tm a1 a2 with
             | U.Equal -> Some U.t_true
             | U.NotEqual -> Some U.t_false
             | _ -> None)
-        | _ -> 
+        | _ ->
             failwith "Unexpected number of arguments"
     in
-    let decidable_equality = 
-        {name = Const.op_Eq; 
+    let decidable_equality =
+        {name = Const.op_Eq;
          arity = 3;
-         interpretation=interp_bool} 
+         strong_reduction_ok=true;
+         interpretation=interp_bool}
     in
-    let propositional_equality = 
+    let propositional_equality =
         {name = Const.eq2_lid;
          arity = 3;
+         strong_reduction_ok=true;
          interpretation = interp_prop}
     in
-    let hetero_propositional_equality = 
+    let hetero_propositional_equality =
         {name = Const.eq3_lid;
          arity = 4;
+         strong_reduction_ok=true;
          interpretation = interp_prop}
     in
 
@@ -675,10 +680,10 @@ let get_norm_request args =
     | [(tm, _)] -> tm
     | _ -> failwith "Impossible"
 
-let is_reify_head = function 
-    | App({n=Tm_constant FC.Const_reify}, _, _)::_ -> 
+let is_reify_head = function
+    | App({n=Tm_constant FC.Const_reify}, _, _)::_ ->
       true
-    | _ -> 
+    | _ ->
       false
 
 let rec norm : cfg -> env -> stack -> term -> term =
@@ -709,7 +714,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let tm = get_norm_request args in
             let s = [Reify; Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
             let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
-            let stack' = Debug t :: Steps (cfg.steps, cfg.delta_level)::stack in
+            let stack' = Debug t :: Steps (cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
 
           | Tm_app({n=Tm_constant FC.Const_reify}, a1::a2::rest) ->
@@ -867,8 +872,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       end
                   end
 
-                | Steps (s, dl) :: stack ->
-                  norm ({cfg with steps=s; delta_level=dl}) env stack t
+                | Steps (s, ps, dl) :: stack ->
+                  norm ({cfg with steps=s; primitive_steps=ps; delta_level=dl}) env stack t
 
                 | MemoLazy r :: stack ->
                   set_memo r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
@@ -889,6 +894,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | _ -> lopt in
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
+                       let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
+                       let cfg = {cfg with primitive_steps=List.filter (fun ps -> ps.strong_reduction_ok) cfg.primitive_steps} in
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
             end
 
@@ -1006,7 +1013,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           *  indicating that this reduction should not consume any arguments on the stack. `rebuild`        *
                           *  will notice the Meta_monadic marker and reconstruct the computation after normalization.       *)
                         let t = norm cfg env [] t in
-                        let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                        let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
                         let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
                                    delta_level=[NoDelta]} in
                         norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
@@ -1154,7 +1161,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     if (U.is_pure_effect m
                         || U.is_ghost_effect m)
                     && cfg.steps |> List.contains PureSubtermsWithinComputations
-                    then let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                    then let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
                             let cfg = { cfg with
                                         steps=[PureSubtermsWithinComputations;
                                                Primops;
@@ -1297,8 +1304,8 @@ and rebuild : cfg -> env -> stack -> term -> term =
               then BU.print2 "Normalized %s to %s\n" (Print.term_to_string tm) (Print.term_to_string t);
               rebuild cfg env stack t
 
-            | Steps (s, dl) :: stack ->
-              rebuild ({cfg with steps=s; delta_level=dl}) env stack t
+            | Steps (s, ps, dl) :: stack ->
+              rebuild ({cfg with steps=s; primitive_steps=ps; delta_level=dl}) env stack t
 
             | Meta(m, r)::stack ->
               let t = mk (Tm_meta(t, m)) r in

@@ -473,7 +473,7 @@ let revert_hd (x:name) : tac<unit>
       | None -> fail "Cannot revert_hd; empty context"
       | Some (y, env') ->
           if not (S.bv_eq x y)
-          then fail (Util.format2 "Cannot revert_hd %s; head variable mismatch ... egot %s" 
+          then fail (Util.format2 "Cannot revert_hd %s; head variable mismatch ... egot %s"
                                 (Print.bv_to_string x)
                                 (Print.bv_to_string y))
           else revert)
