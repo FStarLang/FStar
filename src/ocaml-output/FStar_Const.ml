@@ -89,10 +89,10 @@ let eq_const: sconst -> sconst -> Prims.bool =
     fun c2  ->
       match (c1, c2) with
       | (Const_int (s1,o1),Const_int (s2,o2)) ->
-          (let _0_31 = FStar_Util.ensure_decimal s1 in
-           let _0_30 = FStar_Util.ensure_decimal s2 in _0_31 = _0_30) &&
-            (o1 = o2)
+          (let uu____234 = FStar_Util.ensure_decimal s1 in
+           let uu____235 = FStar_Util.ensure_decimal s2 in
+           uu____234 = uu____235) && (o1 = o2)
       | (Const_bytearray (a,_),Const_bytearray (b,_))
         |(Const_string (a,_),Const_string (b,_)) -> a = b
       | (Const_reflect l1,Const_reflect l2) -> FStar_Ident.lid_equals l1 l2
-      | uu____254 -> c1 = c2
+      | uu____256 -> c1 = c2

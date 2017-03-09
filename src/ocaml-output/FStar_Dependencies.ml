@@ -21,8 +21,10 @@ let find_deps_if_needed:
                   let deps = FStar_List.rev deps in
                   let deps =
                     let uu____56 =
-                      let _0_292 = FStar_Util.basename (FStar_List.hd deps) in
-                      _0_292 = "prims.fst" in
+                      let uu____57 =
+                        let uu____58 = FStar_List.hd deps in
+                        FStar_Util.basename uu____58 in
+                      uu____57 = "prims.fst" in
                     if uu____56
                     then FStar_List.tl deps
                     else

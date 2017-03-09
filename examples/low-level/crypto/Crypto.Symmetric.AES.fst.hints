@@ -1216,7 +1216,7 @@
         "function_token_typing_FStar.Heap.emp",
         "function_token_typing_FStar.HyperHeap.root",
         "function_token_typing_FStar.List.Tot.Base.test_sort",
-        "int_inversion", "kinding_FStar.UInt8.t_@tok",
+        "int_inversion", "int_typing", "kinding_FStar.UInt8.t_@tok",
         "lemma_FStar.Buffer.lemma_modifies_1_trans",
         "lemma_FStar.Buffer.no_upd_lemma_1",
         "lemma_FStar.HyperStack.lemma_equal_domains_trans",
@@ -1240,8 +1240,8 @@
         "typing_Crypto.Symmetric.AES.v",
         "typing_FStar.Buffer.__proj__MkBuffer__item__length",
         "typing_FStar.HyperStack.__proj__HS__item__h",
-        "typing_FStar.HyperStack.is_in", "typing_FStar.UInt.fits",
-        "typing_FStar.UInt32.v", "unit_inversion"
+        "typing_FStar.HyperStack.is_in", "typing_FStar.Mul.op_Star",
+        "typing_FStar.UInt.fits", "typing_FStar.UInt32.v", "unit_inversion"
       ],
       0
     ],

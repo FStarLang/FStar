@@ -106,9 +106,15 @@ val empty_env: unit -> env
 val current_module: env -> lident
 val try_lookup_id: env -> ident -> option<(term*bool)>
 val try_lookup_lid: env -> lident -> option<(term*bool)>
+val try_lookup_lid_no_resolve: env -> lident -> option<(term*bool)>
 val try_lookup_effect_name: env -> lident -> option<lident>
 val try_lookup_effect_name_and_attributes: env -> lident -> option<(lident * list<cflags>)>
 val try_lookup_effect_defn: env -> lident -> option<eff_decl>
+(* [try_lookup_root_effect_name] is the same as
+[try_lookup_effect_name], but also traverses effect abbrevs. TODO:
+once indexed effects are in, also track how indices and other
+arguments are instantiated. *)
+val try_lookup_root_effect_name: env -> lident -> option<lident>
 val try_lookup_datacon: env -> lident -> option<fv>
 val try_lookup_record_by_field_name: env -> lident -> option<record_or_dc>
 val belongs_to_record: env -> lident -> record_or_dc -> bool

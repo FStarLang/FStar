@@ -366,7 +366,8 @@
         "typing_FStar.Buffer.length", "typing_FStar.Heap.domain",
         "typing_FStar.HyperStack.__proj__HS__item__h",
         "typing_FStar.Map.domain", "typing_FStar.Map.sel",
-        "typing_FStar.UInt.fits", "typing_FStar.UInt32.v", "unit_inversion"
+        "typing_FStar.Mul.op_Star", "typing_FStar.UInt.fits",
+        "typing_FStar.UInt32.v", "unit_inversion"
       ],
       0
     ],
