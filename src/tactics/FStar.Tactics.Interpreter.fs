@@ -109,8 +109,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.interpretation=mk_pure_interpretation_1 U.destruct_typ_as_formula E.unembed_term (E.embed_option E.embed_formula E.fstar_tactics_formula)};
     ]
 
-
-and unembed_tactic_0<'b>  (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> =
+and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> =
     bind get (fun proof_state ->
     let tm = S.mk_Tm_app embedded_tac_b 
                          [S.as_arg (E.embed_state (proof_state.goals, []))]
@@ -137,31 +136,11 @@ and unembed_tactic_0<'b>  (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b>
 
 
 and unembed_tactic<'a,'b> (embed_a:'a -> term) (unembed_b:term -> 'b) (embedded_a_tac_b:term) (a:'a) : tac<'b> =
-    bind get (fun proof_state ->
     let tm = S.mk_Tm_app embedded_a_tac_b 
-                         [S.as_arg (embed_a a);
-                          S.as_arg (E.embed_state (proof_state.goals, []))]
+                         [S.as_arg (embed_a a)]
                          None
                          Range.dummyRange in
-    let steps = [N.Reify; N.Beta; N.UnfoldUntil Delta_constant; N.Zeta; N.Iota; N.Primops] in
-                 printfn "Starting normalizer with %s" (Print.term_to_string tm);
-                 Options.set_option "debug_level" (Options.List [Options.String "Norm"]);
-    let result = N.normalize_with_primitive_steps (primitive_steps proof_state) steps proof_state.main_context tm in
-            Options.set_option "debug_level" (Options.List []);
-            printfn "Reduced tactic: got %s" (Print.term_to_string result);
-    match E.unembed_result proof_state.main_context result unembed_b with
-    | Inl (b, (goals, smt_goals)) ->
-        bind dismiss (fun _ ->
-        bind (add_goals goals) (fun _ ->
-        bind (add_smt_goals smt_goals) (fun _ ->
-        ret b)))
-
-    | Inr (msg, (goals, smt_goals)) ->
-        bind dismiss (fun _ ->
-        bind (add_goals goals) (fun _ ->
-        bind (add_smt_goals smt_goals) (fun _ ->
-        fail msg))))
-
+    unembed_tactic_0 unembed_b tm
 
 let evaluate_user_tactic : tac<unit>
     = with_cur_goal "evaluate_user_tactic" (fun goal ->
