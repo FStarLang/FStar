@@ -163,6 +163,11 @@ let unembed_state (env:Env.env) (s:term) : state =
 
 let embed_unit (u:unit) : term = SC.exp_unit
 let unembed_unit (_:term) :unit = ()
+let embed_bool (b:bool) : term = if b then SC.exp_true_bool else SC.exp_false_bool
+let unembed_bool (t:term) : bool = 
+    match (SS.compress t).n with
+    | Tm_constant(Const.Const_bool b) -> b
+    | _ -> failwith "Not an embedded bool"
 
 let embed_string (s:string) : term =
     let bytes = BU.unicode_of_string s in

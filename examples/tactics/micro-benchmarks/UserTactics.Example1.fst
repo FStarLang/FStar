@@ -50,7 +50,7 @@ let rec user_visit (callback:tactic unit)
              revert_all binders
 
            | Some (And t1 t2) -> 
-             let _ = seq split (user_visit callback) in
+             let _ = seq split (user_visit callback) () in
              merge ()
 
            | Some (Implies t1 t2) -> 
@@ -63,6 +63,51 @@ let rec user_visit (callback:tactic unit)
          in
          or_else callback (user_visit callback)
 
+let rec try_rewrite_equality (x:term) 
+                             (bs:binders)
+  : tactic unit 
+  = fun () -> 
+    match bs with 
+    | [] -> ()
+    | x_t::bs -> begin
+      match term_as_formula (type_of_binder x_t) with 
+      | Some (Eq _ y _) -> 
+        if term_eq x y 
+        then rewrite x_t
+        else try_rewrite_equality x bs ()
+      | _ -> try_rewrite_equality x bs ()
+      end
+
+let rec rewrite_all_context_equalities (bs:binders)
+  : tactic unit 
+  = fun () -> 
+    match bs with 
+    | [] -> ()
+    | x_t::bs -> begin
+      match term_as_formula (type_of_binder x_t) with 
+      | Some (Eq _ _ _) -> 
+        rewrite x_t;
+        rewrite_all_context_equalities bs ()
+      | _ -> 
+        rewrite_all_context_equalities bs ()
+      end
+
+let rec rewrite_eqs_from_context : tactic unit 
+  = fun () -> 
+       let context, _ = cur_goal () in
+       rewrite_all_context_equalities (binders_of_env context) ()
+       
+let rewrite_equality (x:term) : tactic unit 
+  = fun () -> 
+     let context, _ = cur_goal () in
+     try_rewrite_equality x (binders_of_env context) ()
+
+let solved : tactic unit = fun () -> 
+  let _, goal = cur_goal () in 
+  match term_as_formula goal with 
+  | Some True_ -> ()
+  | _ -> fail "Not solved"
+  
 ////////////////////////////////////////////////////////////////////////////////
 
 let rec just_do_intros : tactic unit = fun () ->
@@ -78,10 +123,6 @@ let rec rewrite_all_equalities : tactic unit = fun () ->
 
 (* let rec rewrite_all_equalities' : tactic unit = fun () ->  *)
 (*   user_visit simplify_eq_implication *)
-
-let rec test : tactic unit = fun () -> 
-  let goal = cur_goal () in 
-  ()
   
 let rec trivial' : tactic unit = trivial //horrible workaround
 
@@ -116,13 +157,13 @@ let partially_solved_using_smt =
                      pred_1 0 /\ //by 1 smt sub-goal
                      pred_1 1)  //by another smt sub-goal
 
-(* assume val rewrite_a_variable (x:int) : tactic unit *)
-(* assume val return_ten : unit -> Pure int (requires True) (ensures (fun x -> x == 10)) *)
-(* let scanning_environment = *)
-(*   let x = return_ten () in  *)
-(*   assert_by_tactic (rewrite_a_variable x) (x + 0 == 10) *)
+assume val return_ten : unit -> Pure int (requires True) (ensures (fun x -> x == 10))
+let scanning_environment =
+  let x = return_ten () in
+  assert_by_tactic (seq (rewrite_equality (quote x))
+                        (seq rewrite_eqs_from_context trivial))
+                   (x + 0 == 10)
   
 (* (\* let test_2 =  *\) *)
 (* (\*   assert_by_tactic simplify_eq_implication *\) *)
 (* (\*                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)) *\) *)
-

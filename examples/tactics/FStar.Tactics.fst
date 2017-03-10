@@ -3,13 +3,18 @@ module FStar.Tactics
 assume type binder
 assume type term
 assume type env
-
 type typ     = term
 type binders = list binder
 type goal    = env * term
 type goals   = list goal
 type state   = goals  //active goals 
              * goals  //goals that have to be dispatched to SMT
+
+assume val binders_of_env : env -> binders
+assume val type_of_binder: binder -> term 
+assume val term_eq : term -> term -> bool
+assume val quote   : #a:Type -> a -> term
+
 noeq type formula = 
   | True_  : formula
   | False_ : formula  
@@ -23,6 +28,7 @@ noeq type formula =
   | Exists : binders -> term -> formula
 
 assume val term_as_formula: term -> option formula
+
 
 noeq type result (a:Type) =
   | Success: a -> state -> result a
@@ -118,7 +124,7 @@ assume val focus_: tac unit -> tac unit
 let focus (f:tactic unit) : Tac unit = TAC?.reflect (focus_ (reify_tactic f))
 
 assume val seq_ : tac unit -> tac unit -> tac unit
-let seq (f:tactic unit) (g:tactic unit) : Tac unit = 
+let seq (f:tactic unit) (g:tactic unit) : tactic unit = fun () -> 
   TAC?.reflect (seq_ (reify_tactic f) (reify_tactic g))
 
 
