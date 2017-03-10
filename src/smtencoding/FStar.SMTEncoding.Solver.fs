@@ -142,6 +142,7 @@ let record_hint_stat (h:option<hint>) (res:z3_result) (time:int) (r:Range.range)
     } in
     hint_stats := s::!hint_stats
 
+
 (***********************************************************************************)
 (* Invoking the SMT solver and extracting an error report from the model, if any   *)
 (***********************************************************************************)
@@ -200,7 +201,8 @@ let ask_and_report_errors env all_labels prefix query suffix =
                         let res = BU.mk_ref None in
                         Z3.ask None all_labels (with_fuel label_assumptions p min_fuel) None (fun r -> res := Some r);
                         Option.get (!res) in
-                     detail_errors env all_labels ask_z3, Default
+                     //detail_errors env all_labels ask_z3, Default
+                     (detail_errors_parallel env all_labels p min_fuel), Default
                 else match errs with
                      | [], Timeout -> [(("", Term_sort), "Timeout: Unknown assertion failed", Range.dummyRange)], snd errs
                      | [], Default -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)], snd errs
@@ -335,4 +337,3 @@ let dummy = {
     finish=(fun () -> ());
     refresh=(fun () -> ());
 }
-

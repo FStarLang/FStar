@@ -274,7 +274,7 @@ let detail_errors env
         else FStar.Errors.report r msg
     in
 
-    let elim labs = //assumes that all the labs are true, effectively removing them from the query
+    let elim (labs:labels) = //assumes that all the labs are true, effectively removing them from the query
         (labs |> List.map (fun (l, _, _) ->
                  Term.Assume(mkEq(mkFreeV l, mkTrue), Some "Disabling label", ("disable_label_"^fst l)))) in
 
@@ -304,3 +304,55 @@ let detail_errors env
 //    let dummy, _, _ = all_labels |> List.hd in
 //    [(dummy, "Detailed errors provided", TypeChecker.Env.get_range env)]
 
+
+
+let new_z3batch_proc id =
+   let cond pid (s:string) =
+       (let x = BU.trim_string s = "Done!" in
+         // BU.print2 "z3batch thread %s: %s\n" pid (if x then "finished" else "waiting for more output");
+         x) in
+   //BU.start_process id "/mnt/f/dev/FStar/bin/z3batch.exe" "" cond
+   BU.start_process id "f:\\dev\\FStar\\bin\\z3batch.exe" "" cond
+
+let detail_errors_parallel (env) (all_labels:labels) (p:decl) (fuel:int * int * int) : error_labels =
+     FStar.SMTEncoding.Z3.refresh() ;
+     let theory = !FStar.SMTEncoding.Z3.bg_scope in
+     let n, i, r = fuel in
+     let query = (List.rev theory)
+        @ [ Term.Caption(BU.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
+            Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, None);
+            Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, None); ]
+        @ [ p ]
+        @ [Term.SetOption ("rlimit", string_of_int r)]
+    in
+    let print_banner () =
+        BU.print3_error
+            "Detailed error report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
+                (Range.string_of_range (TypeChecker.Env.get_range env))
+                (BU.string_of_int 5)
+                (BU.string_of_int (List.length all_labels))
+    in
+
+    print_banner ();
+    Options.set_option "z3rlimit" (Options.Int 5);
+    let z3batch = new_z3batch_proc "z3batch" in
+    let input = (String.concat "\n" (List.map (declToSmt (Z3.z3_options())) query)) ^
+                "\n(prove-labels " ^
+                (String.concat " " (List.map (fun ((name, sort), _, _) -> name) all_labels)) ^
+                ")\n" in
+    let reply = ask_process z3batch (input ^ "\n") in
+    let lines = (String.split ['\n'] reply) in
+    if lines.Length < 3 || lines.[0] <> "OK" then
+        BU.print_error ("Error: " ^ reply)
+    else (
+        let proven_lbls = (String.split [' '] lines.[1]) in
+        let error_lbls = (String.split [' '] lines.[2]) in
+        kill_process z3batch;
+        BU.print_string "\n";
+        let sorted_labels = List.sortWith (fun (_, _, r1) (_, _, r2) -> Range.compare r1 r2) all_labels in
+        let print_result ((name, sort), msg, r) =
+            if (List.contains name proven_lbls)
+            then BU.print1_error "OK: proof obligation at %s was proven\n" (Range.string_of_range r)
+            else FStar.Errors.report r msg in
+        List.iter (print_result) sorted_labels) ;
+    []

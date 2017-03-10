@@ -35,3 +35,9 @@ val detail_errors : TypeChecker.Env.env
                   -> labels
                   -> (decls_t -> either<Z3.unsat_core,(labels * Z3.error_kind)> * int)
                   -> labels
+
+val detail_errors_parallel : TypeChecker.Env.env
+                           -> labels
+                           -> decl
+                           -> (int * int * int)
+                           -> labels
