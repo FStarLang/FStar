@@ -14,13 +14,12 @@ let bind_ex a b f g = fun _ ->
 
 let raise_ex (a:Type) (e:exn) : Tot (ex a) = fun _ -> None
 
-reifiable reflectable new_effect_for_free {
+reifiable reflectable new_effect {
   XEXN : (a:Type) -> Effect
   with repr     = ex
      ; bind     = bind_ex
      ; return   = return_ex
-  and effect_actions
-       raise   = raise_ex
+     ; raise   = raise_ex
 }
 
 type arg =
