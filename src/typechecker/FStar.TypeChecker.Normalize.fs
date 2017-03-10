@@ -1401,6 +1401,10 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     //see tc.fs, the case of Tm_match and the comment related to issue #594
     let scrutinee = t in
     let norm_and_rebuild_match () =
+      log cfg (fun () ->
+          printfn "match is irreducible: scrutinee=%s\nbranches=%s\n"
+                (Print.term_to_string scrutinee)
+                (branches |> List.map (fun (p, _, _) -> Print.pat_to_string p) |> String.concat "\n\t"));
       let whnf = List.contains WHNF cfg.steps in
       let cfg_exclude_iota_zeta =
         let new_delta =

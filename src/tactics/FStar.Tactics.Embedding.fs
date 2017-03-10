@@ -58,7 +58,7 @@ let unembed_binder (t:term) : binder =
     | _ -> failwith "Not an embedded binder"
 
 let embed_pair (x:('a * 'b)) (embed_a:'a -> term) (t_a:term) (embed_b:'b -> term) (t_b:term) : term =
-    S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_Mktuple2) [U_zero;U_zero])
+    S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm lid_Mktuple2) [U_zero;U_zero])
                 [S.iarg t_a;
                  S.iarg t_b;
                  S.as_arg (embed_a (fst x));
@@ -95,12 +95,12 @@ let unembed_option (unembed_a:term -> 'a) (o:term) : option<'a> =
 
 let rec embed_list (l:list<'a>) (embed_a: ('a -> term)) (t_a:term) : term =
     match l with
-    | [] -> S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm FStar.Syntax.Const.nil_lid) [U_zero])
+    | [] -> S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm FStar.Syntax.Const.nil_lid) [U_zero])
                         [S.iarg t_a]
                         None
                         Range.dummyRange
     | hd::tl ->
-            S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm FStar.Syntax.Const.cons_lid) [U_zero])
+            S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm FStar.Syntax.Const.cons_lid) [U_zero])
                         [S.iarg t_a;
                          S.as_arg (embed_a hd);
                          S.as_arg (embed_list tl embed_a t_a)]

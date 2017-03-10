@@ -483,8 +483,8 @@ let rec revert_all_hd (xs:list<name>)
     = match xs with
       | [] -> ret ()
       | x::xs ->
-        bind (revert_hd x) (fun _ ->
-        revert_all_hd xs)
+        bind (revert_all_hd xs) (fun _ ->
+        revert_hd x)
 
 (* We often have VCs of the form
          forall x. x==e ==> P
@@ -539,8 +539,10 @@ let merge_sub_goals : tac<unit> =
             then set ({p with goals=conj_goals g1 g2::rest})
             else let g1_binders = Env.all_binders g1.context |> Print.binders_to_string ", " in
                  let g2_binders = Env.all_binders g2.context |> Print.binders_to_string ", " in
-                 fail (BU.format2 "Cannot merge sub-goals: incompatible contexts:\ng1=%s\ng2=%s\n"
-                            (goal_to_string g1) (goal_to_string g2))
+                 fail (BU.format3 "Cannot merge sub-goals: incompatible contexts:\ng1=%s\ng2=%s\neq_gamma=%s\n"
+                            (goal_to_string g1)
+                            (goal_to_string g2)
+                            (Env.eq_gamma g1.context g2.context |> BU.string_of_bool))
         | _ ->
          let goals = p.goals |> List.map (fun x -> Print.term_to_string x.goal_ty) |> String.concat "\n\t" in
          fail (BU.format1 "Cannot merge sub-goals: not enough sub-goals\n\tGoals are: %s" goals)))

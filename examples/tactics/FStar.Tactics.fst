@@ -50,20 +50,19 @@ let get () : tac state = fun s0 -> Success s0 s0
 
 
 (* total  *) //disable the termination check, although it remains reifiable
-reifiable reflectable new_effect_for_free {
+reifiable reflectable new_effect {
   TAC : a:Type -> Effect
   with repr     = tac
      ; bind     = bind
-         ; return   = ret
-         and effect_actions
-           get      = get
-           }
-           effect Tac (a:Type) = TAC a (fun i post -> forall j. post j)
-           let tactic (a:Type) = unit -> Tac a
+     ; return   = ret
+     ; get      = get
+}
+effect Tac (a:Type) = TAC a (fun i post -> forall j. post j)
+let tactic (a:Type) = unit -> Tac a
 
 (* working around #885 *)
-   let fail_ (a:Type) (msg:string) : tac a = fun s0 -> Failed #a "No message for now" s0
-   let fail (#a:Type) (msg:string) = TAC?.reflect (fail_ a msg)
+let fail_ (a:Type) (msg:string) : tac a = fun s0 -> Failed #a "No message for now" s0
+let fail (#a:Type) (msg:string) = TAC?.reflect (fail_ a msg)
 
 let or_else (#a:Type) (t1:tactic a) (t2:tactic a)
         : Tac a

@@ -1004,12 +1004,10 @@ let push_local_binding env b = {env with gamma=b::env.gamma}
 
 let push_bv env x = push_local_binding env (Binding_var x)
 
-let pop_bv env = 
+let pop_bv env =
     match env.gamma with
     | Binding_var x::rest -> Some (x, {env with gamma=rest})
     | _ -> None
-
-let eq_gamma env env' = FStar.Util.physical_equality env.gamma env'.gamma
 
 let push_binders env (bs:binders) =
     List.fold_left (fun env (x, _) -> push_bv env x) env bs
@@ -1111,6 +1109,24 @@ let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_bin
 let bound_vars env = bound_vars_of_bindings env.gamma
 
 let all_binders env = binders_of_bindings env.gamma
+
+let print_gamma env =
+    env.gamma |> List.map (function
+        | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
+        | Binding_univ u -> "Binding_univ " ^ u.idText
+        | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)
+        | Binding_sig (ls, _) -> "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
+        | Binding_sig_inst (ls, _, _) -> "Binding_sig_inst " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", "))
+    |> String.concat "::\n"
+    |> BU.print1 "%s\n"
+
+let eq_gamma env env' =
+    if BU.physical_equality env.gamma env'.gamma
+    then true
+    else let g = all_binders env in
+         let g' = all_binders env' in
+         List.length g = List.length g'
+         && List.forall2 (fun (b1, _) (b2, _) -> S.bv_eq b1 b2) g g'
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
