@@ -30,8 +30,8 @@ let rec simplify_eq_implication : tactic unit
     | None -> fail "Not an equality implication"
     | Some (_, rhs) ->
       let eq_h = implies_intro () in 
-      let _ = rewrite eq_h in
-      let _ = clear () in
+      rewrite eq_h;
+      clear ();
       visit simplify_eq_implication
 
 let rec user_visit (callback:tactic unit)
@@ -114,16 +114,13 @@ let rec just_do_intros : tactic unit = fun () ->
     focus (fun () -> 
        let _ = forall_intros () in
        let _ = implies_intro () in
-       let _ = smt () in
-       let _ = revert () in
+       smt ();
+       revert ();
        revert ())
 
 let rec rewrite_all_equalities : tactic unit = fun () -> 
   visit simplify_eq_implication
 
-(* let rec rewrite_all_equalities' : tactic unit = fun () ->  *)
-(*   user_visit simplify_eq_implication *)
-  
 let rec trivial' : tactic unit = trivial //horrible workaround
 
 #reset-options
@@ -147,7 +144,7 @@ let simple_equality_assertions_within_a_function () =
 
   
 let local_let_bindings =
-  assert_by_tactic trivial' (let x = 10 in x + 0 == 10)
+  assert_by_tactic trivial (let x = 10 in x + 0 == 10)
 
 assume type pred_1 : int -> Type0
 assume Pred1_saturated: forall x. pred_1 x
@@ -164,6 +161,3 @@ let scanning_environment =
                         (seq rewrite_eqs_from_context trivial))
                    (x + 0 == 10)
   
-(* (\* let test_2 =  *\) *)
-(* (\*   assert_by_tactic simplify_eq_implication *\) *)
-(* (\*                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)) *\) *)
