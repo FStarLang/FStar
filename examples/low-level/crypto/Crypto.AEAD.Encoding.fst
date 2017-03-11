@@ -88,8 +88,6 @@ let rec lemma_encode_length txt: Lemma
 (* *          Encoding-related lemmas            *)
 (* * *********************************************)
 
-open FStar.Seq
-
 val lemma_pad_0_injective: b0:Seq.seq UInt8.t -> b1:Seq.seq UInt8.t -> l:nat -> Lemma
   (requires (pad_0 b0 l == pad_0 b1 l))
   (ensures  (b0 == b1))
@@ -121,7 +119,7 @@ let lemma_encode_injective w0 w1 =
 *)
 
 val lemma_encode_bytes_injective: t0:Seq.seq UInt8.t -> t1:Seq.seq UInt8.t -> Lemma
-  (requires length t0 == length t1 /\ encode_bytes t0 == encode_bytes t1)
+  (requires Seq.length t0 == Seq.length t1 /\ encode_bytes t0 == encode_bytes t1)
   (ensures t0 == t1)
   (decreases (Seq.length t0))
 let rec lemma_encode_bytes_injective t0 t1 =
@@ -154,14 +152,6 @@ let pad_16 b len =
 
 open FStar.HyperStack
 
-//16-12-07  copied from UF1CMA for now
-let modifies_buf_and_ref (#a:Type) (#b:Type) (buf:Buffer.buffer a) (ref:reference b) (h:mem) (h':mem) : GTot Type0 =
-  (forall rid. Set.mem rid (Map.domain h.h) ==>
-    HH.modifies_rref rid !{Buffer.as_ref buf, HS.as_ref ref} h.h h'.h
-    /\ (forall (#a:Type) (b:Buffer.buffer a). 
-      (Buffer.frameOf b == rid /\ Buffer.live h b /\ Buffer.disjoint b buf
-      /\ Buffer.disjoint_ref_1 b (HS.as_aref ref)) ==> Buffer.equal h b h' b))
-
 let modifies_nothing (h:mem) (h':mem) : GTot Type0 =
   (forall rid. Set.mem rid (Map.domain h.h) ==>
     HH.modifies_rref rid !{} h.h h'.h
@@ -191,7 +181,7 @@ private val add_bytes:
       let l0 = FStar.HyperStack.sel h0 log in
       let l1 = FStar.HyperStack.sel h1 log in
       Seq.equal l1 (Seq.append (encode_bytes (Buffer.as_seq h1 txt)) l0) /\ //(2) 
-      modifies_buf_and_ref b log h0 h1 //(3)
+      CMA.modifies_buf_and_ref b log h0 h1 //(3)
     else 
       Buffer.modifies_1 b h0 h1 //(4)
       )))
@@ -454,10 +444,10 @@ let accumulate #i st aadlen aad txtlen cipher  =
 
       //16-12-15 can't prove Buffer.modifies_0 from current CMA posts?
       assert(HS.modifies_one h.tip h h0);
-      assume(HS.modifies_one h.tip h0 h2); //NS: cf. issue #788 (known limitation)
+      //assume(HS.modifies_one h.tip h0 h2); //NS: cf. issue #788 (known limitation)
       assert(HS.modifies_one h.tip h2 h3);
       assert(HS.modifies_one h.tip h3 h4);
-      assume(HS.modifies_one h.tip h4 h5); //NS: cf. issue #788 (known limitation)
+      //assume(HS.modifies_one h.tip h4 h5); //NS: cf. issue #788 (known limitation)
       assert(HS.modifies_one h.tip h h5);
       assert(Buffer.modifies_buf_0 h.tip h h5);
       Buffer.lemma_intro_modifies_0 h h5
@@ -468,5 +458,3 @@ let accumulate #i st aadlen aad txtlen cipher  =
       Buffer.lemma_reveal_modifies_1 (MAC.as_buffer (CMA.abuf acc))  h4 h5
     end;
   acc
-
- 
