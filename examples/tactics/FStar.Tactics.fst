@@ -10,6 +10,7 @@ type goals   = list goal
 type state   = goals  //active goals 
              * goals  //goals that have to be dispatched to SMT
 
+assume val compare_name: name -> name -> nat
 assume val binders_of_env : env -> binders
 assume val type_of_binder: binder -> term 
 assume val term_eq : term -> term -> bool
@@ -26,7 +27,7 @@ noeq type formula =
   | Iff    : term -> term -> formula  
   | Forall : binders -> term -> formula
   | Exists : binders -> term -> formula
-
+ 
 assume val term_as_formula: term -> option formula
 
 
@@ -126,6 +127,9 @@ let focus (f:tactic unit) : Tac unit = TAC?.reflect (focus_ (reify_tactic f))
 assume val seq_ : tac unit -> tac unit -> tac unit
 let seq (f:tactic unit) (g:tactic unit) : tactic unit = fun () -> 
   TAC?.reflect (seq_ (reify_tactic f) (reify_tactic g))
+
+assume val exact_ : term -> tac unit
+let exact (t:term) : Tac unit = TAC?.reflect (exact_ t)
 
 
 (* Primitives provided natively by the tactic engine *)

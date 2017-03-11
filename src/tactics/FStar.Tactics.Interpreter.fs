@@ -51,7 +51,7 @@ let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) 
 
 let mk_tactic_interpretation_1 (ps:proofstate)
                                (t:'b -> tac<'a>) (unembed_b:term -> 'b)
-                               (embed_a:'a -> term) (t_a:typ) 
+                               (embed_a:'a -> term) (t_a:typ)
                                (nm:Ident.lid) (args:args) : option<term> =
   match args with
   | [(b, _); (embedded_state, _)] ->
@@ -67,7 +67,7 @@ let mk_tactic_interpretation_1 (ps:proofstate)
 
 let mk_tactic_interpretation_2 (ps:proofstate)
                                (t:'a -> 'b -> tac<'c>) (unembed_a:term -> 'a) (unembed_b:term -> 'b)
-                               (embed_c:'c -> term) (t_c:typ) 
+                               (embed_c:'c -> term) (t_c:typ)
                                (nm:Ident.lid) (args:args) : option<term> =
   match args with
   | [(a, _); (b, _); (embedded_state, _)] ->
@@ -82,7 +82,7 @@ let mk_tactic_interpretation_2 (ps:proofstate)
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
 let rec primitive_steps ps : list<N.primitive_step> =
-    let mk nm arity interpretation = 
+    let mk nm arity interpretation =
       let nm = E.fstar_tactics_lid nm in {
       N.name=nm;
       N.arity=arity;
@@ -98,9 +98,10 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "merge_"   1 (mk_tactic_interpretation_0 ps merge_sub_goals E.embed_unit FStar.TypeChecker.Common.t_unit);
       mk "rewrite_" 2 (mk_tactic_interpretation_1 ps rewrite E.unembed_binder E.embed_unit FStar.TypeChecker.Common.t_unit);
       mk "smt_"     1 (mk_tactic_interpretation_0 ps smt E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "visit_"   2 (mk_tactic_interpretation_1 ps visit 
-                                                (unembed_tactic_0 E.unembed_unit) 
-                                                E.embed_unit 
+      mk "exact_"   2 (mk_tactic_interpretation_1 ps exact E.embed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "visit_"   2 (mk_tactic_interpretation_1 ps visit
+                                                (unembed_tactic_0 E.unembed_unit)
+                                                E.embed_unit
                                                 FStar.TypeChecker.Common.t_unit);
       mk "focus_"   2  (mk_tactic_interpretation_1 ps (focus_cur_goal "user_tactic")
                                                 (unembed_tactic_0 E.unembed_unit)
@@ -111,15 +112,15 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                             (unembed_tactic_0 E.unembed_unit)
                                             E.embed_unit
                                             FStar.TypeChecker.Common.t_unit);
-      mk "term_as_formula" 1 (mk_pure_interpretation_1 U.destruct_typ_as_formula 
-                                            E.unembed_term 
+      mk "term_as_formula" 1 (mk_pure_interpretation_1 U.destruct_typ_as_formula
+                                            E.unembed_term
                                             (E.embed_option E.embed_formula E.fstar_tactics_formula));
       mk "quote"           2 (fun nm [_; (y, _)] -> Some y);
-      mk "binders_of_env"  1 (fun nm [(env, _)] -> 
+      mk "binders_of_env"  1 (fun nm [(env, _)] ->
                                 let env = E.unembed_env ps.main_context env in
                                 Some (E.embed_binders (Env.all_binders env)));
       mk "type_of_binder"  1 (fun nm [(b, _)] -> let b, _ = E.unembed_binder b in Some b.sort);
-      mk "term_eq"         2 (fun nm [(t1, _); (t2, _)] -> 
+      mk "term_eq"         2 (fun nm [(t1, _); (t2, _)] ->
                                 match FStar.Syntax.Util.eq_tm t1 t2 with
                                 | U.Equal -> Some (E.embed_bool true)
                                 | _ -> Some (E.embed_bool false))

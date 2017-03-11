@@ -160,4 +160,22 @@ let scanning_environment =
   assert_by_tactic (seq (rewrite_equality (quote x))
                         (seq rewrite_eqs_from_context trivial))
                    (x + 0 == 10)
+
+open FStar.Mul
+assume val lemma_mul_comm : x:nat -> y:nat -> Tot (op_Multiply x y == op_Multiply y x)
+let test (x:nat) (y:nat) =
+  assert_by_tactic (fun () -> exact (quote (lemma_mul_comm x y)))
+                   (op_Multiply x y == op_Multiply y x)
+                          
+
+
+(* let test = *)
+(*   assert_by_tactic smt (term_by_tactic (_ : tactic Type)) *)
+  
+(*                    (let _ = assert_by_tactic trivial (0 == 0) in *)
+(*                     pred_1 0) *)
+                    
+                   (* (seq (rewrite_equality (quote x)) *)
+                   (*      (seq rewrite_eqs_from_context trivial)) *)
+                   (* (x + 0 == 10) *)
   

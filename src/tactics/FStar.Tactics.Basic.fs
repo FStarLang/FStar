@@ -388,26 +388,26 @@ let trivial
       | _ -> fail "Not a trivial goal")
 
 
-let exact (x:name)
+let exact (tm:term)
     : tac<unit>
     = with_cur_goal "exact" (fun goal ->
-        try let t = Env.lookup_bv goal.context x in
+        try let _, t, guard = goal.context.type_of goal.context tm in //TODO: check that the guard is trivial
 //            printfn ">>>At exact, env binders are %s" (Print.binders_to_string ", " (Env.all_binders goal.context));
             if Rel.teq_nosmt goal.context t goal.goal_ty
             then let _ = match goal.witness with
-                  | Some _ -> solve goal (S.bv_to_tm x)
+                  | Some _ -> solve goal tm
                   | _ -> () in
-                 dismiss
+                 replace {goal with goal_ty=U.t_true}
             else
                  let msg = BU.format3 "%s : %s does not exactly solve the goal %s"
-                            (Print.bv_to_string x)
+                            (Print.term_to_string tm)
                             (Print.term_to_string t)
                             (Print.term_to_string goal.goal_ty) in
 //                 printfn "%s" msg;
                  fail msg
        with e ->
 //            printfn "Exception %A" e;
-            fail (BU.format1 "Variable not found: %s" (Print.bv_to_string x)))
+            fail (BU.format1 "Term is not typeable: %s" (Print.term_to_string tm)))
 
 let rewrite (h:binder) : tac<unit>
     = with_cur_goal "rewrite" (fun goal ->
