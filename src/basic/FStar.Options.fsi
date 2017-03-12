@@ -51,7 +51,6 @@ val __clear_unit_tests          : unit    -> unit
 val parse_cmd_line              : unit    -> parse_cmdline_res * list<string>
 val add_verify_module           : string  -> unit
 
-(* Only used with F# *)
 val add_light_off_file          : string  -> unit
 
 val __temp_no_proj              : string  -> bool

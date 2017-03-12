@@ -14,7 +14,13 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.StExnC.uver \
 	FStar.DM4F.IFC.uver \
 	FStar.DM4F.Continuations.uver \
-	delimcc.uver
+	delimcc.uver \
+	FStar.DM4F.IntStore.uver \
+	FStar.DM4F.IntStoreFixedReader.uver \
+	FStar.DM4F.IntStoreFixed.uver \
+	FStar.DM4F.IntStoreExcFixed.uver \
+	FStar.DM4F.Heap.Random.uver \
+	FStar.DM4F.Random.uver
 
 old:
 	$(MAKE) -C old

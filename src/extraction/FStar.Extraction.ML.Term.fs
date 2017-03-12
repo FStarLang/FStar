@@ -428,7 +428,7 @@ and term_as_mlty' env t =
             let eff = TcEnv.norm_eff_name env.tcenv (U.comp_effect_name c) in
             let ed = TcEnv.get_effect_decl env.tcenv eff in
             if ed.qualifiers |> List.contains Reifiable
-            then let t = FStar.TypeChecker.Util.reify_comp env.tcenv (U.lcomp_of_comp c) U_unknown in
+            then let t = FStar.TypeChecker.Env.reify_comp env.tcenv c U_unknown in
                  (* let _ = printfn "Translating comp type %s as %s\n" *)
                  (*        (Print.comp_to_string c) (Print.term_to_string t) in *)
                  let res = term_as_mlty' env t in
