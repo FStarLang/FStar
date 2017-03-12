@@ -337,6 +337,7 @@ let collect_one
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
+    | NewEffectForFree ed
     | NewEffect ed ->
         collect_effect_decl ed
     | Fsdoc _
@@ -366,10 +367,11 @@ let collect_one
         List.iter (fun (_, t, _, _) -> iter_opt t collect_term) identterms
 
   and collect_effect_decl = function
-    | DefineEffect (_, binders, t, decls) ->
+    | DefineEffect (_, binders, t, decls, actions) ->
         collect_binders binders;
         collect_term t;
-        collect_decls decls
+        collect_decls decls;
+        collect_decls actions
     | RedefineEffect (_, binders, t) ->
         collect_binders binders;
         collect_term t

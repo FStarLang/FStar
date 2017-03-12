@@ -15,7 +15,7 @@ let bind h a b f g =
     | None -> None
     | Some (ret, s1) -> g ret s1
 
-reifiable reflectable new_effect {
+reifiable reflectable new_effect_for_free {
   EXNST (h:Type): a:Type -> Effect with
     repr    = exnst h;
     bind    = bind h;
@@ -26,7 +26,7 @@ reifiable reflectable new_effect {
 new_effect EXNST_int = EXNST int
 
 (* This works *)
-// reifiable reflectable new_effect {
+// reifiable reflectable new_effect_for_free {
 //   EXNST_int : a:Type -> Effect with
 //     repr    = exnst int;
 //     bind    = bind int;

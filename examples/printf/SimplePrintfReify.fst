@@ -2,7 +2,6 @@ module SimplePrintfReify
 
 open FStar.Char
 open FStar.String
-module List = FStar.List.Tot
 
 // A variant of SimplePrintf that uses reify on the Ex implementation
 // of parse_format
@@ -25,27 +24,22 @@ let bind_ex a b f g = fun _ ->
   | None -> None
   | Some x -> g x ()
 
-(* DMFF does not support yet polymorphic actions *)
-(* Returning something in [False] allow to derive the usual raise below *)
-let raise_ex (_:exn) : Tot (ex False) = fun _ -> None
+let raise_ex (a:Type) (e:exn) : Tot (ex a) = fun _ -> None
 
 (* Define the new effect using DM4F *)
-total reifiable reflectable new_effect {
+total reifiable reflectable new_effect_for_free {
   XEXN : (a:Type) -> Effect
   with repr     = ex
      ; bind     = bind_ex
      ; return   = return_ex
-     ; raise   = raise_ex
+  and effect_actions
+       raise   = raise_ex
 }
 
 (* A lift from `Pure´ into the new effect *)
-(* unfold let lift_pure_ex_wp (a:Type) (wp:pure_wp a) (_:unit) (p:XEXN?.post a) = *)
-(*   wp (fun a -> p (Some a)) *)
-(* sub_effect PURE ~> XEXN = lift_pure_ex_wp *)
-
-reifiable
-let raise (#a:Type0) (e:exn) : XEXN a (fun _ p -> p None)
-= let x = XEXN?.raise e in begin match x with end
+unfold let lift_pure_ex_wp (a:Type) (wp:pure_wp a) (_:unit) (p:XEXN?.post a) =
+  wp (fun a -> p (Some a))
+sub_effect PURE ~> XEXN = lift_pure_ex_wp
 
 (* An effect to alias easily write pre- and postconditions *)
 (* Note: we use Type0 instead of XEXN.pre to avoid having to thunk everything. *)
@@ -85,7 +79,7 @@ let dir_type' ds = dir_type ds
 let rec string_of_dirs ds (k:string -> Tot string) : Tot (dir_type ds) =
   match ds with
   | [] -> k ""
-  | Lit c :: ds' ->
+  | Lit c :: ds' -> 
     (string_of_dirs ds' (fun res -> k (string_of_char c ^ res))
      <: dir_type' ds' //this is an ugly workaround for #606
     )
@@ -106,16 +100,15 @@ reifiable let rec parse_format (s:list char) : Xex (list dir) =
   match s with
   | [] -> []
   | '%' :: c :: s' ->
-    let d =
-      match c with
-      | '%' -> Lit '%'
-      | 'b' -> Arg Bool
-      | 'd' -> Arg Int
-      | 'c' -> Arg Char
-      | 's' -> Arg String
-      | _   -> raise InvalidFormatString
+    let d = match c with
+            | '%' -> Lit '%'
+            | 'b' -> Arg Bool
+            | 'd' -> Arg Int
+            | 'c' -> Arg Char
+            | 's' -> Arg String
+            | _   -> XEXN?.raise dir InvalidFormatString
     in let x = parse_format s' in d :: x
-  | '%' :: [] -> raise InvalidFormatString
+  | '%' :: [] -> XEXN?.raise (list dir) InvalidFormatString
   | c :: s' -> let x = parse_format s' in Lit c :: x
 
 let parse_format_pure (s:list char) : option (list dir) =
@@ -128,14 +121,9 @@ let sprintf (s:string{Some? (parse_format_string s)})
   : Tot (dir_type (Some?.v (parse_format_string s))) =
   string_of_dirs (Some?.v (parse_format_string s)) (fun s -> s)
 
-let yyy = parse_format_pure ['%'] == None
-let xxx = parse_format_pure ['%'; 'd'; '='; '%'; 's']
-
 let example_error_lemma () :
   Lemma (parse_format_pure ['%'] == None) =
-  ()
-  (* Bad interaction with raise, results in a Failure("Impossible") *)
-  (* assert_norm (parse_format_pure ['%'] == None) *)
+  assert_norm (parse_format_pure ['%'] == None)
 
 let example3_lemma () :
   Lemma (parse_format_pure ['%'; 'd'; '='; '%'; 's']
@@ -152,25 +140,3 @@ let example5 : string =
   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]);
   (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer"
   (* We also requires a pesky type annotation, but that seems more acceptable *)
-
-let rec concat_lemma (s1 s2 : list char) (l1 l2:list dir)
-  : Lemma (requires (reify (parse_format s1) () = Some l1 /\ reify (parse_format s2) () = Some l2))
-      (ensures (reify (parse_format (s1 @ s2)) () = Some (l1@l2)))
-      (decreases s1)
-= match s1 with
-  | [] -> ()
-  | ['%'] -> ()
-  | '%' :: c :: s1' ->
-    begin match c with
-    | '%' | 'b' | 'd' | 'c' |'s' ->
-      begin match l1 with
-      | _ :: l1' -> concat_lemma s1' s2 l1' l2
-      end
-    | _ -> ()
-    end
-  | c :: s1' ->
-    begin match l1 with
-    | _ :: l1' -> concat_lemma s1' s2 l1' l2
-    end
-
-

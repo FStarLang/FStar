@@ -4,6 +4,7 @@ include Makefile.include
 ALL_EXAMPLE_DIRS=\
 bug-reports \
 hello \
+low-level \
 data_structures \
 algorithms \
 crypto \
@@ -24,7 +25,6 @@ struct \
 micro-benchmarks \
 bytes \
 tactics
-# low-level \  ... NS: removing from CI for this branch
 
 # WARNING: this target shouldn't depend on anything other than the F*
 # binary; in particular it shouldn't depend on OCaml, F#, git, etc.

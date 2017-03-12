@@ -51,6 +51,7 @@ open FStar_String
 %start inputFragment
 %start term
 %token ABSTRACT
+%token ACTIONS
 %token AMP
 %token AND
 %token ASSERT
@@ -125,6 +126,7 @@ open FStar_String
 %token <string> NAME
 %token NEW
 %token NEW_EFFECT
+%token NEW_EFFECT_FOR_FREE
 %token NOEQUALITY
 %token NOEXTRACT
 %token OF
@@ -327,6 +329,13 @@ loption_separated_nonempty_list_COMMA_appTerm__:
   
     {    ( [] )}
 | separated_nonempty_list_COMMA_appTerm_
+    {let x = $1 in
+    ( x )}
+
+loption_separated_nonempty_list_SEMICOLON_effectDecl__:
+  
+    {    ( [] )}
+| separated_nonempty_list_SEMICOLON_effectDecl_
     {let x = $1 in
     ( x )}
 
@@ -722,6 +731,9 @@ rawDecl:
 | SUB_EFFECT subEffect
     {let (_1, se) = ((), $2) in
       ( SubEffect se )}
+| NEW_EFFECT_FOR_FREE newEffect
+    {let (_1, ne) = ((), $2) in
+      ( NewEffectForFree ne )}
 | FSDOC_STANDALONE
     {let doc = $1 in
       ( Fsdoc doc )}
@@ -801,25 +813,38 @@ letbinding:
 newEffect:
   effectRedefinition
     {let ed = $1 in
-    ( ed )}
+       ( ed )}
 | effectDefinition
     {let ed = $1 in
-    ( ed )}
+       ( ed )}
 
 effectRedefinition:
   uident EQUALS simpleTerm
     {let (lid, _2, t) = ($1, (), $3) in
-    ( RedefineEffect(lid, [], t) )}
+      ( RedefineEffect(lid, [], t) )}
 
 effectDefinition:
-  LBRACE uident binders COLON tmArrow_tmNoEq_ WITH separated_nonempty_list_SEMICOLON_effectDecl_ RBRACE
-    {let (_1, lid, bs, _4, typ, _6, eds, _8) = ((), $2, $3, (), $5, (), $7, ()) in
-    ( DefineEffect(lid, bs, typ, eds) )}
+  LBRACE uident binders COLON kind WITH separated_nonempty_list_SEMICOLON_effectDecl_ actionDecls RBRACE
+    {let (_1, lid, bs, _4, k, _6, eds, actions, _9) = ((), $2, $3, (), $5, (), $7, $8, ()) in
+      (
+         DefineEffect(lid, bs, k, eds, actions)
+      )}
+
+actionDecls:
+  
+    {      ( [] )}
+| AND ACTIONS loption_separated_nonempty_list_SEMICOLON_effectDecl__
+    {let (_1, _2, xs0) = ((), (), $3) in
+let actions =
+  let xs = xs0 in
+      ( xs )
+in
+      ( actions )}
 
 effectDecl:
   lident EQUALS simpleTerm
     {let (lid, _2, t) = ($1, (), $3) in
-    ( mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] )}
+     ( mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
