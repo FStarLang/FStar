@@ -13,22 +13,22 @@ let rec get_next_n_ite :
         fun f  ->
           if n <= (Prims.parse_int "0")
           then
-            let _0_488 = f FStar_SMTEncoding_Util.mkTrue  in
-            (true, _0_488, negs, t)
+            let _0_492 = f FStar_SMTEncoding_Util.mkTrue  in
+            (true, _0_492, negs, t)
           else
             (match t.FStar_SMTEncoding_Term.tm with
              | FStar_SMTEncoding_Term.App
                  (FStar_SMTEncoding_Term.ITE ,g::t::e::uu____38) ->
-                 let _0_490 =
+                 let _0_494 =
                    FStar_SMTEncoding_Util.mkAnd
-                     (let _0_489 = FStar_SMTEncoding_Util.mkNot g  in
-                      (negs, _0_489))
+                     (let _0_493 = FStar_SMTEncoding_Util.mkNot g  in
+                      (negs, _0_493))
                     in
-                 get_next_n_ite (n - (Prims.parse_int "1")) e _0_490
+                 get_next_n_ite (n - (Prims.parse_int "1")) e _0_494
                    (fun x  -> f (FStar_SMTEncoding_Util.mkITE (g, t, x)))
              | FStar_SMTEncoding_Term.FreeV uu____42 ->
-                 let _0_491 = f FStar_SMTEncoding_Util.mkTrue  in
-                 (true, _0_491, negs, t)
+                 let _0_495 = f FStar_SMTEncoding_Util.mkTrue  in
+                 (true, _0_495, negs, t)
              | uu____45 ->
                  (false, FStar_SMTEncoding_Util.mkFalse,
                    FStar_SMTEncoding_Util.mkFalse,
@@ -51,23 +51,23 @@ let rec is_ite_all_the_way :
           else
             (match t.FStar_SMTEncoding_Term.tm with
              | FStar_SMTEncoding_Term.FreeV uu____81 ->
-                 let _0_493 =
+                 let _0_497 =
                    FStar_SMTEncoding_Util.mkAnd
-                     (let _0_492 = FStar_SMTEncoding_Util.mkNot t  in
-                      (negs, _0_492))
+                     (let _0_496 = FStar_SMTEncoding_Util.mkNot t  in
+                      (negs, _0_496))
                     in
-                 (true, l, _0_493)
+                 (true, l, _0_497)
              | uu____85 ->
                  let uu____86 = get_next_n_ite n t negs (fun x  -> x)  in
                  (match uu____86 with
                   | (b,t,negs',rest) ->
                       if b
                       then
-                        let _0_495 =
-                          let _0_494 = FStar_SMTEncoding_Util.mkImp (negs, t)
+                        let _0_499 =
+                          let _0_498 = FStar_SMTEncoding_Util.mkImp (negs, t)
                              in
-                          _0_494 :: l  in
-                        is_ite_all_the_way n rest negs' _0_495
+                          _0_498 :: l  in
+                        is_ite_all_the_way n rest negs' _0_499
                       else (false, [], FStar_SMTEncoding_Util.mkFalse)))
   
 let rec parse_query_for_split_cases :
@@ -144,8 +144,8 @@ let rec check_split_cases :
           (fun t  ->
              check
                (FStar_SMTEncoding_Term.Assume
-                  (let _0_496 = FStar_SMTEncoding_Util.mkNot (f t)  in
-                   (_0_496, None, None)))) (FStar_List.rev l)
+                  (let _0_500 = FStar_SMTEncoding_Util.mkNot (f t)  in
+                   (_0_500, None, None)))) (FStar_List.rev l)
   
 let check_exhaustiveness :
   (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) ->
@@ -157,11 +157,11 @@ let check_exhaustiveness :
       fun check  ->
         check
           (FStar_SMTEncoding_Term.Assume
-             (let _0_497 =
+             (let _0_501 =
                 FStar_SMTEncoding_Util.mkNot
                   (f (FStar_SMTEncoding_Util.mkNot negs))
                  in
-              (_0_497, None, None)))
+              (_0_501, None, None)))
   
 let can_handle_query :
   Prims.int ->
@@ -175,8 +175,8 @@ let can_handle_query :
     fun q  ->
       match q with
       | FStar_SMTEncoding_Term.Assume (q',uu____363,uu____364) ->
-          let _0_498 = strip_not q'  in
-          parse_query_for_split_cases n _0_498 (fun x  -> x)
+          let _0_502 = strip_not q'  in
+          parse_query_for_split_cases n _0_502 (fun x  -> x)
       | uu____368 ->
           (false, (((fun x  -> x)), [], FStar_SMTEncoding_Util.mkFalse))
   
