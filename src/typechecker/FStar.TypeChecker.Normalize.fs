@@ -1029,14 +1029,16 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         (* ****************************************************************************)
                         (* Monadic application                                                        *)
                         (*                                                                            *)
-                        (* Turn it into                                                               *)
+                        (* The typechecker should have turned any monadic application into a serie of *)
+                        (* let-bindings (binding explicitly any monadic term)                         *)
                         (*    let x0 = head in let x1 = arg0 in ... let xn = argn in x0 x1 ... xn     *)
-                        (* i.e. bind (reify head) (fun x0 ->                                          *)
+                        (*                                                                            *)
+                        (* which wil be ultimately reified to                                         *)
+                        (*     bind (reify head) (fun x0 ->                                           *)
                         (*            bind (reify arg0) (fun x1 -> ... (fun xn -> x0 x1 .. xn) ))     *)
                         (*                                                                            *)
-                        (* If head or some arg is a lift from pure then it optimizes away the bind    *)
-                        (* Moreover, if head is an action then it is unfolded otherwise the resulting *)
-                        (* application is reified again                                               *)
+                        (* If head is an action then it is unfolded otherwise the                     *)
+                        (* resulting application is reified again                                     *)
                         (* ****************************************************************************)
 
 
@@ -1081,8 +1083,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         let mk tm = S.mk tm None t.pos in
                         let body = mk (Tm_app(head_app, args)) in
                         let body = match found_action with
+                          (* This is not an action let's just reify it *)
                           | None -> U.mk_reify body
+
+                          (* The action was found but not unfolded (maybe abstract ?) *)
                           | Some false -> mk (Tm_meta (body, Meta_monadic(m, t)))
+
+                          (* An action was found and successfully unfolded *)
                           | Some true -> body
                         in
 
