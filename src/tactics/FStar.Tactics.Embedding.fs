@@ -47,6 +47,8 @@ let fstar_tactics_Implies = fstar_tactics_lid_as_data_tm "Implies"
 let fstar_tactics_Iff = fstar_tactics_lid_as_data_tm "Iff"
 let fstar_tactics_Forall = fstar_tactics_lid_as_data_tm "Forall"
 let fstar_tactics_Exists = fstar_tactics_lid_as_data_tm "Exists"
+let fstar_tactics_App = fstar_tactics_lid_as_data_tm "App"
+let fstar_tactics_Name = fstar_tactics_lid_as_data_tm "Name"
 
 let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
 exception Unembed_failed of string
@@ -164,7 +166,7 @@ let unembed_state (env:Env.env) (s:term) : state =
 let embed_unit (u:unit) : term = SC.exp_unit
 let unembed_unit (_:term) :unit = ()
 let embed_bool (b:bool) : term = if b then SC.exp_true_bool else SC.exp_false_bool
-let unembed_bool (t:term) : bool = 
+let unembed_bool (t:term) : bool =
     match (SS.compress t).n with
     | Tm_constant(Const.Const_bool b) -> b
     | _ -> failwith "Not an embedded bool"
@@ -215,7 +217,12 @@ let unembed_result (env:Env.env) (res:term) (unembed_a:term -> 'a) : either<('a 
     | _ -> failwith (BU.format1 "Not an embedded result: %s" (Print.term_to_string res))
 
 
-let embed_formula (f:U.connective) : term =
+type formula =
+    | Connective of U.connective
+    | App of term * list<term>
+    | Name of bv
+
+let embed_formula (f:formula) : term =
     let encode_app (l:Ident.lid) (args:args) : term =
         let hd =
             if Ident.lid_equals l SC.true_lid then fstar_tactics_True_
@@ -232,51 +239,44 @@ let embed_formula (f:U.connective) : term =
         | _ -> S.mk_Tm_app hd args None Range.dummyRange
     in
     match f with
-    | U.QAll(binders, qpats, typ) -> //patterns are not encoded to a user tactic; TODO, fix?
+    | Connective (U.QAll(binders, qpats, typ)) -> //patterns are not encoded to a user tactic; TODO, fix?
       S.mk_Tm_app fstar_tactics_Forall
                   [S.as_arg (embed_binders binders);
                    S.as_arg (embed_term typ)]
                   None
                   Range.dummyRange
 
-    | U.QEx(binders, qpats, typ) -> //patterns are not encoded to a user tactic; TODO, fix?
+    | Connective (U.QEx(binders, qpats, typ)) -> //patterns are not encoded to a user tactic; TODO, fix?
       S.mk_Tm_app fstar_tactics_Exists
                   [S.as_arg (embed_binders binders);
                    S.as_arg (embed_term typ)]
                   None
                   Range.dummyRange
 
-    | U.BaseConn(lid, args) ->
+    | Connective (U.BaseConn(lid, args)) ->
       encode_app lid args
 
-let unembed_formula (f:term) : U.connective =
-    let hd, args = U.head_and_args f in
-    let fv_eq_tm fv tm =
-        match tm.n with
-        | Tm_fvar fv' -> S.fv_eq fv fv'
-        | _ -> false
-   in
-    match (SS.compress hd).n, args with
-    | Tm_fvar fv, [(binders, _); (tm, _)]
-        when fv_eq_tm fv fstar_tactics_Forall ->
-      U.QAll (unembed_binders binders, [], unembed_term tm) //TODO: restore patterns
+    | App(t, ts) ->
+      S.mk_Tm_app fstar_tactics_App
+                [S.as_arg (embed_term t);
+                 S.as_arg (embed_list ts embed_term fstar_tactics_term)]
+                None
+                Range.dummyRange
 
-    | Tm_fvar fv, [(binders, _); (tm, _)]
-        when fv_eq_tm fv fstar_tactics_Exists ->
-      U.QEx (unembed_binders binders, [], unembed_term tm) //TODO: restore patterns
+    | Name bv ->
+      S.mk_Tm_app fstar_tactics_Name
+                [S.as_arg (embed_binder (S.mk_binder bv))]
+                None
+                Range.dummyRange
 
-    | Tm_fvar fv, _ ->
-      let lid =
-        if fv_eq_tm fv fstar_tactics_True_ then SC.true_lid
-        else if fv_eq_tm fv fstar_tactics_False_ then SC.false_lid
-        else if fv_eq_tm fv fstar_tactics_And then SC.and_lid
-        else if fv_eq_tm fv fstar_tactics_Or then SC.or_lid
-        else if fv_eq_tm fv fstar_tactics_Not then SC.not_lid
-        else if fv_eq_tm fv fstar_tactics_Implies then SC.imp_lid
-        else if fv_eq_tm fv fstar_tactics_Iff then SC.iff_lid
-        else if fv_eq_tm fv fstar_tactics_Eq then SC.eq2_lid
-        else failwith ("Unrecognized connective" ^ (Ident.string_of_lid fv.fv_name.v)) in
-     U.BaseConn(lid, args)
-
-    | _ -> failwith "Not an embedded formula"
-
+let term_as_formula (t:term) : option<formula> =
+    match U.destruct_typ_as_formula t with
+    | Some c -> Some (Connective c)
+    | _ ->
+      match (SS.compress t).n with
+      | Tm_app _ ->
+        let hd, args = U.head_and_args t in
+        Some (App(hd, List.map fst args))
+      | Tm_name bv ->
+        Some (Name bv)
+      | _ -> None

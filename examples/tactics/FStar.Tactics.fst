@@ -26,7 +26,9 @@ noeq type formula =
   | Iff    : term -> term -> formula  
   | Forall : binders -> term -> formula
   | Exists : binders -> term -> formula
-  (* TODO more cases *) 
+  | App    : term -> term -> formula
+  | Name   : binder -> formula
+    (* TODO more cases *) 
   
 assume val term_as_formula: term -> option formula
 

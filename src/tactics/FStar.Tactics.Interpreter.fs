@@ -112,7 +112,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                             (unembed_tactic_0 E.unembed_unit)
                                             E.embed_unit
                                             FStar.TypeChecker.Common.t_unit);
-      mk "term_as_formula" 1 (mk_pure_interpretation_1 U.destruct_typ_as_formula
+      mk "term_as_formula" 1 (mk_pure_interpretation_1 E.term_as_formula
                                             E.unembed_term
                                             (E.embed_option E.embed_formula E.fstar_tactics_formula));
       mk "quote"           2 (fun nm [_; (y, _)] -> Some y);
