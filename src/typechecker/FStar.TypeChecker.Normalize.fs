@@ -1162,8 +1162,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       | _ ->
                           norm cfg env stack head //meta doesn't block reduction
                     end
-                  | _ ->
-                    (* Drops stack *)
+                  | [] ->
                     let head = norm cfg env [] head in
                     let m = match m with
                         | Meta_pattern args ->
