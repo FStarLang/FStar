@@ -1230,7 +1230,7 @@ let new_univ_name : FStar_Range.range Prims.option -> FStar_Ident.ident =
     FStar_Ident.mk_ident
       (let _0_59 =
          let _0_58 = FStar_Util.string_of_int id  in
-         Prims.strcat "'uu___" _0_58  in
+         Prims.strcat FStar_Ident.reserved_prefix _0_58  in
        (_0_59, (range_of_ropt ropt)))
   
 let mkbv : FStar_Ident.ident -> Prims.int -> (term',term') syntax -> bv =

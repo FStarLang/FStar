@@ -258,7 +258,7 @@ let rec term_to_string x =
   | Tm_fvar f ->        fv_to_string f
   | Tm_uvar (u, _) ->   uvar_to_string u
   | Tm_constant c ->    const_to_string c
-  | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type(%s)" (univ_to_string u) else "Type"
+  | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type u#(%s)" (univ_to_string u) else "Type"
   | Tm_arrow(bs, c) ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
   | Tm_abs(bs, t2, lc) ->
     begin match lc with

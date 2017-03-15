@@ -54,7 +54,6 @@ open FStar_String
 %token <string> IDENT
 %token <string> NAME
 %token <string> TVAR
-%token <string> UNIVAR
 %token <string> TILDE
 
 /* bool indicates if INT8 was 'bad' max_int+1, e.g. '128'  */
@@ -755,7 +754,6 @@ appTerm:
 argTerm:
   | x=pair(maybeHash, indexingTerm) { x }
   | u=universe { u }
-  | u=univar { UnivApp, u }
 
 %inline maybeHash:
   |      { Nothing }
@@ -927,7 +925,7 @@ universeFrom:
                            rhs parseState 2)) ;
          mk_term (Op(op_plus, [u1 ; u2])) (rhs2 parseState 1 3) Expr
        }
-  | max=ident us=list(atomicUniverse)
+  | max=ident us=nonempty_list(atomicUniverse)
       {
         if text_of_id max <> text_of_lid max_lid
         then errorR(Error("A lower case ident " ^ text_of_id max ^
@@ -948,16 +946,9 @@ atomicUniverse:
                        lhs(parseState)));
         mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
       }
-  | u=univar { u }
+  | u=lident { mk_term (Uvar u) u.idRange Expr }
   | LPAREN u=universeFrom RPAREN
     { u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) }
-
-univar:
-  | id=UNIVAR
-      {
-        let pos = rhs parseState 1 in
-        mk_term (Uvar (mk_ident (id, pos))) pos Expr
-      }
 
 /******************************************************************************/
 /*                       Miscellanous, tools                                   */

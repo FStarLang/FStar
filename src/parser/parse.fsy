@@ -183,7 +183,6 @@ open FStar.String
 %token UNDERSCORE
 %token UNFOLD
 %token UNFOLDABLE
-%token <string> UNIVAR
 %token UNIV_HASH
 %token UNOPTEQUALITY
 %token VAL
@@ -392,13 +391,6 @@ list_atomicTerm_:
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
-list_atomicUniverse_:
-  
-    {    ( [] )}
-| atomicUniverse list_atomicUniverse_
-    {let (x, xs) = ($1, $2) in
-    ( x :: xs )}
-
 list_constructorDecl_:
   
     {    ( [] )}
@@ -456,6 +448,14 @@ nonempty_list_atomicTerm_:
     {let x = $1 in
     ( [ x ] )}
 | atomicTerm nonempty_list_atomicTerm_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
+nonempty_list_atomicUniverse_:
+  atomicUniverse
+    {let x = $1 in
+    ( [ x ] )}
+| atomicUniverse nonempty_list_atomicUniverse_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -1936,9 +1936,6 @@ in
 | universe
     {let u = $1 in
                ( u )}
-| univar
-    {let u = $1 in
-             ( UnivApp, u )}
 
 indexingTerm:
   atomicTermNotQUident nonempty_list_dotOperator_
@@ -2283,7 +2280,7 @@ universeFrom:
                            rhs parseState 2)) ;
          mk_term (Op(op_plus, [u1 ; u2])) (rhs2 parseState 1 3) Expr
        )}
-| ident list_atomicUniverse_
+| ident nonempty_list_atomicUniverse_
     {let (max, us) = ($1, $2) in
       (
         if text_of_id max <> text_of_lid max_lid
@@ -2307,20 +2304,12 @@ atomicUniverse:
                        lhs(parseState)));
         mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
       )}
-| univar
+| lident
     {let u = $1 in
-             ( u )}
+             ( mk_term (Uvar u) u.idRange Expr )}
 | LPAREN universeFrom RPAREN
     {let (_1, u, _3) = ((), $2, ()) in
     ( u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) )}
-
-univar:
-  UNIVAR
-    {let id = $1 in
-      (
-        let pos = rhs parseState 1 in
-        mk_term (Uvar (mk_ident (id, pos))) pos Expr
-      )}
 
 some_fsTypeArgs_:
   fsTypeArgs

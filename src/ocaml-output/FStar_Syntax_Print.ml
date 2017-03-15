@@ -389,7 +389,7 @@ let rec term_to_string : FStar_Syntax_Syntax.term -> Prims.string =
         if uu____891
         then
           let _0_357 = univ_to_string u  in
-          FStar_Util.format1 "Type(%s)" _0_357
+          FStar_Util.format1 "Type u#(%s)" _0_357
         else "Type"
     | FStar_Syntax_Syntax.Tm_arrow (bs,c) ->
         let _0_359 = binders_to_string " -> " bs  in
