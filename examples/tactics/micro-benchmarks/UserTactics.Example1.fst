@@ -25,13 +25,13 @@ let destruct_equality_implication (t:term) : option (formula * term) =
     
 let rec simplify_eq_implication : tactic unit
   = fun () -> 
-    let context, goal_t = cur_goal () in 
+    let context, goal_t = cur_goal () in  // G |- x=e ==> P
     match destruct_equality_implication goal_t with
     | None -> fail "Not an equality implication"
     | Some (_, rhs) ->
-      let eq_h = implies_intro () in 
-      rewrite eq_h;
-      clear ();
+      let eq_h = implies_intro () in  // G, eq_h:x=e |- P
+      rewrite eq_h; // G, eq_h:x=e |- P[e/x]
+      clear ();     // G |- P[e/x]
       visit simplify_eq_implication
 
 let rec user_visit (callback:tactic unit)
