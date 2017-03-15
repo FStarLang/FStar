@@ -445,11 +445,11 @@ and p_fsdoc (doc, kwd_args) =
       | [] -> empty
       | kwd_args ->
         let process_kwd_arg (kwd, arg) =
-          (* Is there some separator between the keyword and the argument ? rarrow ? *)
           str "@" ^^ str kwd ^^ space ^^ str arg
         in
         hardline ^^ separate_map hardline process_kwd_arg kwd_args ^^ hardline
   in
+  (* TODO : these newlines should not always be there *)
   hardline ^^ lparen ^^ star ^^ star ^^ str doc ^^ kwd_args_doc ^^ star ^^ rparen ^^ hardline
 
 and p_rawDecl d = match d.d with
@@ -559,7 +559,7 @@ and p_constructorDecl (uid, t_opt, doc_opt, use_of) =
   let sep = if use_of then str "of" else colon in
   let uid_doc = p_uident uid in
   (* TODO : Should we allow tagging individual constructor with a comment ? *)
-  optional p_fsdoc doc_opt ^^ default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ t) t_opt
+  optional p_fsdoc doc_opt ^^ break0 ^^  default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ t) t_opt
 
 and p_letbinding (pat, e) =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
