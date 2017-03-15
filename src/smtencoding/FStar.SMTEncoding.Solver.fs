@@ -198,7 +198,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                         | None -> (Options.min_fuel(), 1, rlimit), errs in
                      let ask_z3 label_assumptions =
                         let res = BU.mk_ref None in
-                        Z3.ask None all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
+                        Z3.ask None all_labels (with_fuel label_assumptions p min_fuel) None (fun r -> res := Some r);
                         Option.get (!res) in
                      detail_errors env all_labels ask_z3, Default
                 else match errs with
@@ -228,21 +228,15 @@ let ask_and_report_errors env all_labels prefix query suffix =
             | [mi], _-> //we're down to our last config; last ditch effort to get a counterexample with very low fuel
                 begin match errs with
                 | [], _ ->
-                    let fresh_scope_before = Z3.fresh_scope in
-                    Z3.fresh_scope := scope ;
-                    Z3.ask None all_labels (with_fuel [] p mi) (cb false mi p [] scope);
-                    Z3.fresh_scope := !fresh_scope_before
+                    Z3.ask None all_labels (with_fuel [] p mi) (Some scope) (cb false mi p [] scope)
 
                 | _ -> set_minimum_workable_fuel prev_f errs;
                        report p errs
                 end
 
             | mi::tl, _ ->
-                    let fresh_scope_before = Z3.fresh_scope in
-                    Z3.fresh_scope := scope ;
-                    Z3.ask None all_labels (with_fuel [] p mi)
-                        (fun (result, elapsed_time) -> cb false mi p tl scope (use_errors errs result, elapsed_time)) ;
-                    Z3.fresh_scope := !fresh_scope_before
+                    Z3.ask None all_labels (with_fuel [] p mi) (Some scope)
+                        (fun (result, elapsed_time) -> cb false mi p tl scope (use_errors errs result, elapsed_time))
 
         and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (scope:scope_t) (result, elapsed_time) =
             if used_hint then (Z3.refresh(); record_hint_stat hint_opt result elapsed_time (Env.get_range env));
@@ -283,6 +277,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
         Z3.ask unsat_core
                all_labels
                (with_fuel [] p initial_config)
+               None
                (cb (Option.isSome unsat_core) initial_config p alt_configs !Z3.fresh_scope) in
 
     let process_query (q:decl) :unit =

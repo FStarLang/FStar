@@ -471,7 +471,7 @@ let commit_mark msg =
         | _ -> failwith "Impossible"
     end
 
-let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
+let ask (core:unsat_core) label_messages qry (scope:scope_t option) (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
   (* the fresh variable controls if we accumulate theory by using a single Z3 process
      or using a "fresh" process for every obligation and giving it the whole theory.
      A single Z3 process cannot work with multi-core although a single thread
@@ -513,7 +513,9 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
                          (BU.string_of_int n_pruned)
       end;
       theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true in
-  let theory = bgtheory fresh in
+  let theory = match scope with 
+    | Some s -> (List.rev s |> List.flatten) 
+    | _ -> bgtheory fresh in
   let theory = theory@[Term.Push]@qry@[Term.Pop] in
   let theory, used_unsat_core = filter_assertions theory in
   let cb (uc_errs, time) =
