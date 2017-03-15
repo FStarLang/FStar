@@ -478,7 +478,7 @@ let ask (core:unsat_core) label_messages qry (scope:option<scope_t>) (cb: (eithe
      can operate in the fresh mode.
      In the future, a new parameter fresh should be added to FStar with this option, right now
      this argument is automatically set to false for 1 thread and true for > 1 *)
-  let fresh = (Options.n_cores() > 1) in
+  let fresh = scope.IsSome || Options.n_cores() > 1 in
   let filter_assertions theory = match core with
     | None -> theory, false
     | Some core ->
@@ -514,7 +514,7 @@ let ask (core:unsat_core) label_messages qry (scope:option<scope_t>) (cb: (eithe
       end;
       theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true in
   let theory = match scope with 
-    | Some s -> (List.rev s |> List.flatten) 
+    | Some s -> (List.rev s |> List.flatten)
     | _ -> bgtheory fresh in
   let theory = theory@[Term.Push]@qry@[Term.Pop] in
   let theory, used_unsat_core = filter_assertions theory in
