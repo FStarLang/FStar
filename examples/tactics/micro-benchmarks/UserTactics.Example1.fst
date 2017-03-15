@@ -161,7 +161,12 @@ let scanning_environment =
                         (seq rewrite_eqs_from_context trivial))
                    (x + 0 == 10)
 
-assume val lemma_mul_comm : x:nat -> y:nat -> Tot (op_Multiply x y == op_Multiply y x)
-let test (x:nat) (y:nat) =
-  assert_by_tactic (fun () -> exact (quote (lemma_mul_comm x y)))
+assume val mul_comm : x:nat -> y:nat -> Tot (op_Multiply x y == op_Multiply y x)
+let test_exact (x:nat) (y:nat) =
+  assert_by_tactic (fun () -> exact (quote (mul_comm x y)))
+                   (op_Multiply x y == op_Multiply y x)
+
+assume val lemma_mul_comm : x:nat -> y:nat -> Lemma (op_Multiply x y == op_Multiply y x)
+let test_apply (x:nat) (y:nat) =
+  assert_by_tactic (fun () -> apply_lemma (quote lemma_mul_comm))
                    (op_Multiply x y == op_Multiply y x)

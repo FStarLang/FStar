@@ -30,7 +30,7 @@ type name = bv
 //       goal_ty = t
 type goal = {
     context :Env.env;
-    witness :option<term>; //in most cases, we don't care to build a witness, e.g,. when proving a /\ b, we don't want to build AndIntro etc.
+    witness :option<term>; //there are cases where we don't care to build a witness, e.g,. when proving a /\ b, we don't want to build AndIntro etc.
     goal_ty :term
 }
 
@@ -120,7 +120,7 @@ let set p : tac<unit> = kernel_tac "set" (fun _ -> Success ((), p))
 let solve goal solution =
     match goal.witness with
     | None ->
-      failwith "Impossible"
+      () //proof irrelevant goal
     | Some w ->
       if Rel.teq_nosmt goal.context w solution
       then ()
@@ -148,6 +148,10 @@ let add_smt_goals (gs:list<goal>) : tac<unit> =
 let replace (g:goal) : tac<unit> =
     bind dismiss (fun _ ->
     add_goals [g])
+
+let add_implicits (i:Env.implicits) : tac<unit> =
+    bind get (fun p ->
+    set ({p with all_implicits=i@p.all_implicits}))
 
 //Any function that directly calls these utilities is also trusted
 //End: Trusted utilities
@@ -388,16 +392,62 @@ let trivial
       | _ -> fail "Not a trivial goal")
 
 
+let apply_lemma (tm:term)
+    : tac<unit>
+    = with_cur_goal "apply_lemma" (fun goal ->
+        try let tm, t, guard = goal.context.type_of goal.context tm in //TODO: check that the guard is trivial
+            if not (U.is_lemma t)
+            then fail "apply_lemma: not a lemma"
+            else let bs, comp = U.arrow_formals_comp t in
+                 let uvs, implicits, subst = 
+                    List.fold_left (fun (uvs, guard, subst) (b, aq) ->
+                            let b_t = SS.subst subst b.sort in
+                            let u, _, g_u = FStar.TypeChecker.Util.new_implicit_var "apply_lemma" goal.goal_ty.pos goal.context b_t in
+                            (u, aq)::uvs, 
+                            FStar.TypeChecker.Rel.conj_guard guard g_u, 
+                            S.NT(b, u)::subst)
+                    ([], guard, [])
+                    bs
+                 in
+                 let uvs = List.rev uvs in
+                 let comp = SS.subst_comp subst comp in
+                 let pre, post = 
+                      let c = U.comp_to_comp_typ comp in
+                      match c.effect_args with
+                      | pre::post::_ -> fst pre, fst post
+                      | _ -> failwith "Impossible: not a lemma" in
+                 match Rel.try_teq false goal.context post goal.goal_ty with 
+                 | None -> fail "apply_lemma: does not unify with goal"
+                 | Some g -> 
+                   let g = Rel.solve_deferred_constraints goal.context g |> Rel.resolve_implicits in
+                   let solution = S.mk_Tm_app tm uvs None goal.context.range in
+                   let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) -> 
+                        let hd, _ = U.head_and_args tm in
+                        match (SS.compress hd).n with
+                        | Tm_uvar _ -> true //still unresolved
+                        | _ -> false) in
+                   solve goal solution;
+                   let sub_goals = 
+                        {goal with witness=None; goal_ty=pre} //pre-condition is proof irrelevant
+                        ::(implicits |> List.map (fun (_msg, _env, _uvar, term, typ, _) ->
+                                {context=goal.context;
+                                 witness=Some term;
+                                 goal_ty=typ})) 
+                   in
+                   bind (add_implicits g.implicits) (fun _ ->
+                   bind dismiss (fun _ ->
+                   add_goals sub_goals))
+         with 
+            _ -> fail "apply_lemma: ill-typed term")
+       
 let exact (tm:term)
     : tac<unit>
     = with_cur_goal "exact" (fun goal ->
         try let _, t, guard = goal.context.type_of goal.context tm in //TODO: check that the guard is trivial
 //            printfn ">>>At exact, env binders are %s" (Print.binders_to_string ", " (Env.all_binders goal.context));
             if Rel.teq_nosmt goal.context t goal.goal_ty
-            then let _ = match goal.witness with
-                  | Some _ -> solve goal tm
-                  | _ -> () in
-                 replace {goal with goal_ty=U.t_true}
+            then let _ = solve goal tm in
+                 replace {goal with witness=None; goal_ty=U.t_true}
             else
                  let msg = BU.format3 "%s : %s does not exactly solve the goal %s"
                             (Print.term_to_string tm)

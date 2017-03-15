@@ -99,6 +99,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "rewrite_" 2 (mk_tactic_interpretation_1 ps rewrite E.unembed_binder E.embed_unit FStar.TypeChecker.Common.t_unit);
       mk "smt_"     1 (mk_tactic_interpretation_0 ps smt E.embed_unit FStar.TypeChecker.Common.t_unit);
       mk "exact_"   2 (mk_tactic_interpretation_1 ps exact E.embed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "apply_lemma_" 2 (mk_tactic_interpretation_1 ps apply_lemma E.embed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
       mk "visit_"   2 (mk_tactic_interpretation_1 ps visit
                                                 (unembed_tactic_0 E.unembed_unit)
                                                 E.embed_unit

@@ -73,7 +73,7 @@ let check_no_escape head_opt env (fvs:list<bv>) kt =
                                         (Print.bv_to_string x) (N.term_to_string env head) in
                        raise (Error(msg, Env.get_range env)) in
                    let s = TcUtil.new_uvar env (fst <| U.type_u()) in
-                   match Rel.try_teq env t s with
+                   match Rel.try_teq true env t s with
                     | Some g -> Rel.force_trivial_guard env g; s
                     | _ -> fail ()
          end in
@@ -387,7 +387,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             (* We constrain this unification variable to be of the shape Type u *)
             (* for some new unification variable u *)
             let t, u = U.type_u () in
-            let g_opt = Rel.try_teq env c'.res_typ t in
+            let g_opt = Rel.try_teq true env c'.res_typ t in
             begin match g_opt with
             | Some g' -> Rel.force_trivial_guard env g'
             | None ->
@@ -432,7 +432,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           let e, c, g = tc_tot_or_gtot_term env_no_ex e in
           if not <| U.is_total_lcomp c
           then Err.add_errors env ["Expected Tot, got a GTot computation", e.pos];
-          match Rel.try_teq env_no_ex c.res_typ expected_repr_typ with
+          match Rel.try_teq true env_no_ex c.res_typ expected_repr_typ with
           | None -> Err.add_errors env [BU.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
                     e, Rel.conj_guard g g0
           | Some g' -> e, Rel.conj_guard g' (Rel.conj_guard g g0)

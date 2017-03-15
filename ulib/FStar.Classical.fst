@@ -46,6 +46,8 @@ let forall_intro #a #p $f = forall_intro_squash_gtot (lemma_to_squash_gtot #a #p
 val forall_intro'  : #a:Type -> #p:(a -> GTot Type) -> f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 let forall_intro' #a #p f = forall_intro f
 
+(* val forall_elim : #a:Type -> #p:(a -> GTot Type) -> (forall (x:a). p x) -> v:a -> Lemma (p v) *)
+
 (* Some basic stuff, should be moved to FStar.Squash, probably *)
 let forall_intro_2 (#a:Type) (#b:(a -> Type)) (#p:(x:a -> b x -> GTot Type0))
                   ($f: (x:a -> y:b x -> Lemma (p x y)))

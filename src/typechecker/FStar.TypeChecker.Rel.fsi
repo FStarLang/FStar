@@ -43,7 +43,7 @@ val force_trivial_guard       : env -> guard_t -> unit
 val resolve_implicits         : guard_t -> guard_t
 
 val unrefine   : env -> typ -> typ
-val try_teq    : env -> typ -> typ -> option<guard_t>
+val try_teq    : bool -> env -> typ -> typ -> option<guard_t>
 val teq        : env -> typ -> typ -> guard_t
 val teq_nosmt  : env -> typ -> typ -> bool
 val try_subtype: env -> typ -> typ -> option<guard_t>

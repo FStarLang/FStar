@@ -92,6 +92,11 @@ let assert_by_tactic (t:tactic unit) (p:Type)
          (ensures (fun _ -> p))
   = ()
 
+(* Many of these could be derived from apply_lemma, 
+   rather than being assumed as primitives. 
+   E.g., forall_intros could be an application of 
+         FStar.Classical.forall_intro
+ *)         
 assume val forall_intros_: tac binders
 let forall_intros () : Tac binders = TAC?.reflect forall_intros_
 
@@ -125,6 +130,7 @@ let visit (f:tactic unit) : Tac unit = TAC?.reflect (visit_ (reify_tactic f))
 assume val focus_: tac unit -> tac unit
 let focus (f:tactic unit) : Tac unit = TAC?.reflect (focus_ (reify_tactic f))
 
+(* could be implemented using focus_ *)
 assume val seq_ : tac unit -> tac unit -> tac unit
 let seq (f:tactic unit) (g:tactic unit) : tactic unit = fun () -> 
   TAC?.reflect (seq_ (reify_tactic f) (reify_tactic g))
@@ -132,6 +138,5 @@ let seq (f:tactic unit) (g:tactic unit) : tactic unit = fun () ->
 assume val exact_ : term -> tac unit
 let exact (t:term) : Tac unit = TAC?.reflect (exact_ t)
 
-
-(* Primitives provided natively by the tactic engine *)
-//assume val forall_intros: unit -> Tac binders
+assume val apply_lemma_ : term -> tac unit
+let apply_lemma (t:term) : Tac unit = TAC?.reflect (apply_lemma_ t)

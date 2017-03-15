@@ -2403,15 +2403,15 @@ let with_guard env prob dopt = match dopt with
     | Some d ->
       Some <| simplify_guard env ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
 
-let try_teq env t1 t2 : option<guard_t> =
+let try_teq smt_ok env t1 t2 : option<guard_t> =
  if debug env <| Options.Other "Rel"
  then BU.print2 "try_teq of %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
  let prob = TProb<| new_t_problem env t1 EQ t2 None (Env.get_range env) in
- let g = with_guard env prob <| solve_and_commit env (singleton env prob) (fun _ -> None) in
+ let g = with_guard env prob <| solve_and_commit env (singleton' env prob smt_ok) (fun _ -> None) in
  g
 
 let teq env t1 t2 : guard_t =
- match try_teq env t1 t2 with
+ match try_teq true env t1 t2 with
     | None -> raise (Error(Err.basic_type_error env None t2 t1, Env.get_range env))
     | Some g ->
       if debug env <| Options.Other "Rel"
@@ -2618,7 +2618,7 @@ let universe_inequality (u1:universe) (u2:universe) : guard_t =
     {trivial_guard with univ_ineqs=([], [u1,u2])}
 
 let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
-  match try_teq env t1 t2 with
+  match try_teq false env t1 t2 with
   | None -> false
   | Some g ->
     match discharge_guard' None env g false with
