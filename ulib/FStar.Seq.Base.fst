@@ -43,7 +43,8 @@ abstract val create: #a:Type -> nat -> a -> Tot (seq a)
 let rec create #a len v = if len = 0 then MkSeq [] else cons v (create (len - 1) v)
 
 abstract val init: #a:Type -> len:nat -> contents: (i:nat { i < len } -> Tot a) -> Tot (seq a)
-private let rec init_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> Tot a))
+private
+let rec init_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> Tot a))
   : Tot (seq a) (decreases (len - k))
 = if k + 1 = len then MkSeq [contents k] else cons (contents k) (init_aux len (k+1) contents)
 
@@ -260,6 +261,7 @@ val init_index (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a))
     (ensures (forall (i:nat{i < len}). index (init len contents) i == contents i))
     [SMTPat (index (init len contents))]
 
+private
 let rec init_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> Tot a))
   : Lemma (requires True)
     (ensures (forall (i:nat{i < len - k}). index (init_aux len k contents) i == contents (k + i)))
