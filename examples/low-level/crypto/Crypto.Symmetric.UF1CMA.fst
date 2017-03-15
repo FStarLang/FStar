@@ -364,7 +364,7 @@ val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
      else
        Buffer.modifies_1 (MAC.as_buffer acc.a) h0 h1) ))
 
-#reset-options "--z3rlimit 100"
+#reset-options "--z3rlimit 200"
 let update #i st acc w =
   let h0 = ST.get () in
   if mac_log then
