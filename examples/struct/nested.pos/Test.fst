@@ -1,13 +1,5 @@
 module Test
 
-type fd1 =
-| A
-| B
-
-type fd2 =
-| X
-| Y
-
 (** Nonempty types with automatic initialization, handy notations (hopefully) *)
 
 unopteq type netype =
@@ -32,11 +24,11 @@ let uint64_t: netype = NEType UInt64.t 0uL
 
 unfold
 let struct
-  (#a: eqtype)
-  (f: a -> Tot netype)
+  (f: list (string * netype))
 : Tot netype
-= let ftypes (x: a): Tot Type = netype_carrier (f x) in
-  NEType (DependentMap.t a ftypes) (DependentMap.create #_ #ftypes (fun (x: a) -> netype_dummy (f x)))
+= let field: eqtype = (s: string { Some? (List.Tot.assoc #string #netype s f) } ) in
+  let ftypes (x: field): Tot Type = netype_carrier (Some?.v (List.Tot.assoc #string #netype x f)) in
+  NEType (DependentMap.t field ftypes) (DependentMap.create #_ #ftypes (fun (x: field) -> netype_dummy (Some?.v (List.Tot.assoc #string #netype x f))))
 
 unfold
 let array
@@ -47,13 +39,13 @@ let array
 
 unfold
 let ty: netype =
-  struct (function
-    | A -> struct (function
-	| X -> uint32_t
-	| Y -> array 5ul uint32_t
-      )
-    | B -> array 3ul uint64_t
-  )
+  struct [
+    ("A", struct [
+        ("X", uint32_t);
+        ("Y", array 5ul uint32_t)
+    ]);
+    ("B", array 3ul uint64_t)
+  ]
 
 unfold
 let screate
@@ -63,7 +55,7 @@ let screate
 let f () =
   let s : BufferNG.pointer (netype_carrier ty) = screate ty in
   let h = ST.get () in
-  let p = BufferNG.field (BufferNG.field s A) Y in
+  let p = BufferNG.field (BufferNG.field s "A") "Y" in
   let _ = BufferNG.write (BufferNG.cell p 1ul) 19ul in
   let b = BufferNG.buffer_of_array_pointer p in
   let c = BufferNG.buffer_sub b 1ul 3ul in
