@@ -282,10 +282,10 @@ let doZ3Exe =
         doZ3Exe' fresh input
 
 let z3_options () =
-    "(set-option :global-decls false)\
-     (set-option :smt.mbqi false)\
-     (set-option :auto_config false)\
-     (set-option :produce-unsat-cores true)"
+    "(set-option :global-decls false)\n\
+     (set-option :smt.mbqi false)\n\
+     (set-option :auto_config false)\n\
+     (set-option :produce-unsat-cores true)\n"
 
 type job<'a> = {
     job:unit -> 'a;
@@ -506,8 +506,8 @@ let ask_1_core (core:unsat_core) label_messages qry (cb: (either<unsat_core, (er
     let theory, used_unsat_core = filter_assertions core theory in
     let cb = mk_cb used_unsat_core cb in
     let input = mk_input theory in
-    run_job ({job=z3_job false label_messages input; callback=cb}) ;
-    bg_scope := [] // Now consumed.
+    bg_scope := [] ; // Now consumed.
+    run_job ({job=z3_job false label_messages input; callback=cb})
 
 let ask_n_cores (core:unsat_core) label_messages qry (scope:option<scope_t>) (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =     
     let theory = List.flatten (match scope with 
