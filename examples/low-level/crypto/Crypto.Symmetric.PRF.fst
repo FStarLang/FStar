@@ -207,7 +207,8 @@ let leak #i st =
 
 (** computes a PRF block and copies its len first bytes to output *)
 
-private val getBlock: 
+// JP: removing the private since this function is called by test-perf.exe
+val getBlock: 
   #i:id -> t:state i -> domain i -> len:u32 {len <=^ blocklen i} -> 
   output:lbuffer (v len) { Buffer.disjoint t.key output } -> STL unit
   (requires (fun h0 -> Buffer.live h0 output))
