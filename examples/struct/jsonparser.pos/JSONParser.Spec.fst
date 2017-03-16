@@ -82,8 +82,6 @@ let rec as_value_type (j: json_schema) : Tot Type0 =
   | Object l ->
     DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l) }) (object_as_type j as_value_type l)
 
-let as_struct_ptr_type (j: json_schema) : Tot Type = Struct.struct_ptr (as_value_type j)
-
 let gprint_string (s: string { ~ (Seq.mem double_quote s) } ) : GTot string =
   Seq.cons double_quote (Seq.snoc s double_quote)
 
