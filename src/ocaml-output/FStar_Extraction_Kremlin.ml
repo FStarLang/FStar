@@ -1039,7 +1039,7 @@ and translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ =
     fun t  ->
       match t with
       | FStar_Extraction_ML_Syntax.MLTY_Tuple []
-        |FStar_Extraction_ML_Syntax.MLTY_Top  -> TUnit
+        |FStar_Extraction_ML_Syntax.MLTY_Top  -> TAny
       | FStar_Extraction_ML_Syntax.MLTY_Var (name,uu____2504) ->
           TBound (find_t env name)
       | FStar_Extraction_ML_Syntax.MLTY_Fun (t1,uu____2506,t2) ->

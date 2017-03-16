@@ -457,7 +457,7 @@ and translate_type env t: typ =
   match t with
   | MLTY_Tuple []
   | MLTY_Top ->
-      TUnit
+      TAny
   | MLTY_Var (name, _) ->
       TBound (find_t env name)
   | MLTY_Fun (t1, _, t2) ->
