@@ -164,11 +164,18 @@
   let clean_number x = String.strip ~chars:"uzyslLUnIN" x
 
   let comments : (string * FStar_Range.range) list ref = ref []
+  let fsdocs : (string * (string * string) list * FStar_Range.range) list ref = ref []
 
-  let flush_comments () =
+  let flush comments =
     let lexed_comments = !comments in
     comments := [] ;
     lexed_comments
+
+  let flush_comments () =
+    flush comments
+
+  let flush_fsdocs () =
+    flush fsdocs
 
   (* Try to trim each line of [comment] by the ammount of space
      on the first line of the comment if possible *)
@@ -189,18 +196,27 @@
 
 
   let comment_buffer = Buffer.create 1024
+  let fsdoc_buffer = Buffer.create 1024
 
   let start_comment lexbuf =
     Buffer.add_bytes comment_buffer "(*" ;
-    (false, comment_buffer, fst (L.range lexbuf))
+    (0, comment_buffer, fst (L.range lexbuf))
 
-  let terminate_comment buffer startpos lexbuf =
+  let start_fsdoc lexbuf =
+    Buffer.add_bytes fsdoc_buffer "(**" ;
+    (0, fsdoc_buffer, fst (L.range lexbuf), [])
+
+
+  let terminate_comment buffer startpos lexbuf comments =
     let endpos = snd (L.range lexbuf) in
     Buffer.add_bytes buffer "*)" ;
     let comment = Buffer.contents buffer in
     let comment = maybe_trim_lines (startpos.pos_cnum - startpos.pos_bol) comment in
     Buffer.clear buffer ;
     comments := (comment, FStar_Parser_Util.mksyn_range startpos endpos) :: ! comments
+
+  let push_comment buffer startpos lexbuf = terminate_comment buffer startpos lexbuf comments
+  let push_fsdoc buffer startpos lexbuf = terminate_comment buffer startpos lexbuf fsdocs
 
   let push_one_line_comment lexbuf =
     let startpos, endpos = L.range lexbuf in
@@ -349,7 +365,7 @@ rule token = parse
      { token lexbuf }
 
  | "(**"
-     { fsdoc (1,"",[]) lexbuf}
+     { fsdoc 0 () [] lexbuf}
 
  | "(*"
      { let inner, buffer, startpos = start_comment lexbuf in
@@ -469,80 +485,68 @@ and string buffer = parse
  | eof
     { failwith "unterminated string" }
 
-and comment inner buffer startpos = parse
+and comment n buffer startpos = parse
 
  | "(*"
     { Buffer.add_bytes buffer "(*" ;
-      let close_eof = comment true buffer startpos lexbuf in
-      comment inner buffer startpos lexbuf }
+      comment (n+1) buffer startpos lexbuf }
 
  | newline
     { Buffer.add_char buffer '\n' ;
       L.new_line lexbuf;
-      comment inner buffer startpos lexbuf }
+      comment n buffer startpos lexbuf }
 
  | "*)"
-    { terminate_comment buffer startpos lexbuf;
-      if inner then EOF else token lexbuf }
-
- | _ as c
-    { Buffer.add_char buffer c ;
-      comment inner buffer startpos lexbuf }
+     { if n > 0 then begin
+         Buffer.add_string buffer "*)" ;
+         comment (n-1) buffer startpos
+       end
+       else begin
+         terminate_comment buffer startpos lexbuf;
+         token lexbuf
+       end }
 
  | eof
      { terminate_comment buffer startpos lexbuf;
        lc := 1; EOF }
 
-and fsdoc cargs = parse
+ | _ as c
+    { Buffer.add_char buffer c ;
+      comment n buffer startpos lexbuf }
+
+and fsdoc n doc startpos kw = parse
  | '(' '*'
-    { let n,doc,kw = cargs in
-      fsdoc (n+1,doc^"(*",kw) lexbuf }
+     { Buffer.add_string doc "(*" ;
+       fsdoc (n+1) doc startpos kw lexbuf }
 
- | "*)" newline newline
-    { let n,doc,kw = cargs in
-	  mknewline 2 lexbuf;
-      if n > 1 then fsdoc (n-1,doc^(L.lexeme lexbuf),kw) lexbuf
-      else FSDOC_STANDALONE(doc,kw) }
+ | "*)"
+    { Buffer.add_string doc "*)" ;
+      if n > 1 then fsdoc (n-1) doc startpos kw lexbuf
+      else begin
+          terminate_fsdoc doc startpos kw lexbuf ;
+          token lexbuf
+        end }
 
- | "*)" newline
-    { let n,doc,kw = cargs in
-	  mknewline 1 lexbuf;
-      if n > 1 then fsdoc (n-1,doc^(L.lexeme lexbuf),kw) lexbuf
-      else FSDOC(doc,kw) }
+ | anywhite* '@' anywhite* (['a'-'z' 'A'-'Z']+ as kwd) (_* as kwd_arg) newline
+    { L.new_file lexbuf ;
+      fsdoc n doc startpos ((kwd, kwd_arg) :: kw) lexbuf }
 
- | newline "\\@"
-    { let n,doc,kw = cargs in
-	  mknewline 1 lexbuf;
-	  let nl = trim_right lexbuf 2 in
-	  fsdoc(n,doc^nl^"@",kw) lexbuf}
-
- | newline "@"
-	 { let n,doc,kw = cargs in
-	   mknewline 1 lexbuf;
-	   fsdoc_kw (n,doc,kw) lexbuf}
+ | "\\@"
+    { Buffer.add_char doc '@' ;
+      fsdoc n doc startpos kw lexbuf}
 
  | newline
-    { let n,doc,kw = cargs in
-      mknewline 1 lexbuf;
-      fsdoc (n,doc^(L.lexeme lexbuf),kw) lexbuf }
+    { Buffer.add_char doc '\n' ;
+      L.new_line lexbuf;
+      comment n doc startpos kw lexbuf }
 
- | _ { let n,doc,kw = cargs in
-       fsdoc(n,doc^(L.lexeme lexbuf),kw) lexbuf }
+ | eof
+    { terminate_fsdoc doc startpos kw lexbuf;
+      lc := 1; EOF }
 
-and fsdoc_kw cargs = parse
- | anywhite*
-     {fsdoc_kw cargs lexbuf}
- | ['a'-'z' 'A'-'Z']+
-     { let n,doc,kw = cargs in
-	   fsdoc_kw_arg(n,doc,kw,L.lexeme lexbuf,"") lexbuf }
- | _ { failwith "Invalid FSDoc keyword, use \\@ if a line starts with an @ sign" }
-
-and fsdoc_kw_arg cargs = parse
- | newline
-     { let n,doc,kw,kwn,kwa = cargs in
-	   fsdoc(n,doc^(L.lexeme lexbuf),(kwn,kwa)::kw) lexbuf}
- | _ { let n,doc,kw,kwn,kwa = cargs in
-       fsdoc_kw_arg(n,doc,kw,kwn,kwa^(L.lexeme lexbuf)) lexbuf }
+ | _ as c
+    { Buffer.add_char c ;
+      fsdoc n doc startpos kw lexbuf }
 
 and cpp_filename = parse
  | ' ' '"' [^ '"']+ '"'

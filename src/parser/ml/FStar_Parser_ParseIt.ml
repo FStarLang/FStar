@@ -73,7 +73,7 @@ let parse fn =
              else Inl mods
           | _ -> fileOrFragment
       in
-      Inl (frags, FStar_Parser_LexFStar.flush_comments ())
+      Inl FStar_Parser_LexFStar.(frags, flush_comments (), flush_fsdocs ())
   with
     | FStar_Errors.Error(msg, r) ->
       Inr (msg, r)

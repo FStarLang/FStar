@@ -505,6 +505,68 @@ let compile_op arity s =
 let compile_op' s =
   compile_op (-1) s
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Place fsdoc node
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+let to_fsdoc (comment, kwd_args, _) = comment, kwd_args
+
+let place_fsdoc_in_tycon fsdocs decl =
+  match decl.d with
+  | Tycon (b, tycons) ->
+
+  | _ -> failwith "Impossible : not a Tycon"
+
+let place_fsdoc_in_toplevellet fsdocs decl =
+  match decl.d with
+  | TopLevelLet (lq, defs) ->
+
+  | _ -> failwith "Impossible : not a TopLevelLet"
+
+let place_fsdoc_in_decl fsdocs decl =
+  let contained_fsdocs, fsdocs = BU.take (fun (_, _, r) -> range_contains_range decl.drange r) in
+  match contained_fsdocs with
+  | [] -> fsdocs, decl
+  | _ :: _ :: _ -> failwith "Not managing multiple fsdocs attached to the same toplevel element"
+  | [raw_doc] ->
+    let decl = match decl.d with
+      | Tycon _ -> place_fsdoc_in_tycon contained_fsdocs decl
+      | TopLevelLet _ -> place_fsdoc_in_toplevellet contained_fsdocs decl
+      | _ ->
+        begin match decl.doc with | Some _ -> failwith "Already filled fsdoc found" | _ -> () end;
+        { decl with doc = Some (to_fsdoc raw_doc) }
+    in
+    fsdocs, decl
+
+let place_fsdoc_in_modul fsdocs modul =
+  match modul with
+  | Module (_, decls)
+  | Interface (_, decls, _) ->
+    let place_fsdoc_before_decl (fsdocs, l) decl =
+      let decl_line = line_of_pos (end_of_range decl.drange) in
+      let is_standalone (_, ,r) = line_of_pos (end_of_range r) + 2 <= decl_line in
+      let standalone_fsdocs, fsdocs = BU.take is_standalone_fsdoc fsdocs in
+      let standalone_fsdocs = List.map standalone_fsdocs in
+      let fsdocs, decl = place_fsdoc_in_decl fsdocs decl in
+      fsdocs, decl:: standalone_fsdocs @ l
+    in
+    decls
+    |> List.fold_left place_fsdoc_before_decl (fsdocs, zeroPos, [])
+    |> snd
+    |> List.rev
+
+let place_fsdoc_in_frag fsdocs frag =
+  match frag with
+  | Inr moduls ->
+    let fold_map_adaptator f (acc, l) y = let acc, y = f acc y in acc, y::l
+    List.fold_left (fold_map_adaptator place_fsdoc_in_modul) (fsdocs, []) moduls
+    |> snd
+    |> List.rev
+
+  (* We don't care about fsdocs in interactive mode *)
+  | Inl _ -> frag
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging
 //////////////////////////////////////////////////////////////////////////////////////////////

@@ -110,8 +110,9 @@ let parse fn =
                 | _ -> failwith "Impossible"))
            else Inl mods
         | _ -> fileOrFragment in
-       let non_polymorphic_nil : list<string * FStar.Range.range> = [] in
-       Inl (frags, non_polymorphic_nil)
+       let nil_inst1 : list<string * FStar.Range.range> = [] in
+       let nil_inst2 : list<string * list<(string * string)> * FStar.Range.range> = [] in
+       Inl (frags, nil_inst1, nil_inst2)
   with
     | Error(msg, r) ->
       Inr (msg, r)

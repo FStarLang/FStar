@@ -28,5 +28,5 @@ type input_frag = {
     frag_col:int
 }
 
-val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
+val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * list<(string * string)> * FStar.Range.range)> * list<(string * Range.range)>) , (string * Range.range)>
 val find_file: string -> string
