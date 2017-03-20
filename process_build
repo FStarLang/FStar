@@ -10,7 +10,7 @@ fi
 set -e
 set -o pipefail
 
-echo "** Maybe delete any existing packages first **"
+echo "** TO DO: Clean up existing packages first **"
 
 echo "*** Make package ***"
 cd src
@@ -18,8 +18,16 @@ cd ocaml-output
 make package
 
 echo "*** Test Package -- need to figure out how want to verify ***"
-# Unzip .zip file
-unzip -o fstar_0.9.4.0_Windows_x64.zip
+# Unzip .zip file if exists
+if [ -f fstar_0.9.4.0_Windows_x64.zip ]; then
+  unzip -o fstar_0.9.4.0_Windows_x64.zip
+fi
+
+# Extract linux file if exists
+if [ -f fstar_0.9.4.0_Linux_x86_64.tar.gz ]; then
+  tar -x fstar_0.9.4.0_Linux_x86_64.tar.gz
+fi
+
 cd fstar
 
 echo "*** Maybe check versions of fstar"
@@ -37,8 +45,6 @@ make -j6 -C examples
 ## TO DO 
 # These all seem to work -- just need to make more robust
 # Updated Build Definitions to see if it works with process_build call
-# Fixed Build Linux Binaries to called process_build as well
-# Maybe push branch and try to run on Windows and on Linux on that private branch ... all part of FStar
 ## TO DO 
 
 # Push all changes to ocaml output ???
@@ -50,4 +56,4 @@ make -j6 -C examples
 # Document the release
 
 
-echo "hello"
+echo "**** DONE!!! ****"
