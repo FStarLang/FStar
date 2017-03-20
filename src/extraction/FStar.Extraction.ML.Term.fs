@@ -303,7 +303,7 @@ let is_reifiable_function (env:TcEnv.env) (t:S.term) : bool =
 let reify_body (env:TcEnv.env) (t:S.term) : S.term =
   let tm = U.mk_reify t in
   let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env tm in
-  if TcEnv.debug env <| Options.Other "SMTEncodingReify"
+  if TcEnv.debug env <| Options.Other "ExtractEffects"
   then BU.print2 "Reified body %s \nto %s\n"
                 (Print.term_to_string tm)
                 (Print.term_to_string tm') ;
@@ -889,7 +889,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_abs(bs, body, copt(* the annotated computation type of the body ... probably don't need it *)) ->
           let bs, body = SS.open_term bs body in
-          let reified_body =
+          let body =
             match copt with
             | Some c -> 
                 if is_reifiable g.tcenv c

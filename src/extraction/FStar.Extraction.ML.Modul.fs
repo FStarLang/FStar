@@ -229,16 +229,19 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             | _ -> failwith "Not an fv" in
 
           let extract_action g (a:S.action) =
+            BU.print1 "Extracting action %s\n" (Print.lid_to_string a.action_name);
             let a_tm, ty_sc = extract_fv a.action_defn in
             let a_nm, a_lid = action_name ed a in
             extend_env g a_lid a_nm a_tm ty_sc in
 
           let g, return_decl =
+            BU.print1 "Extracting return %s\n" "";
             let return_tm, ty_sc = extract_fv (snd ed.return_repr) in
             let return_nm, return_lid = monad_op_name ed "return" in
             extend_env g return_lid return_nm return_tm ty_sc in
 
           let g, bind_decl =
+            BU.print1 "Extracting bind %s\n" "";
             let bind_tm, ty_sc = extract_fv (snd ed.bind_repr) in
             let bind_nm, bind_lid = monad_op_name ed "bind" in
             extend_env g bind_lid bind_nm bind_tm ty_sc in

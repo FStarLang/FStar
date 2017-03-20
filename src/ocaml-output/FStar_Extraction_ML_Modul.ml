@@ -409,151 +409,159 @@ let rec extract_sig :
                       (_0_656, tysc))
              | uu____895 -> failwith "Not an fv"  in
            let extract_action g a =
-             let uu____907 = extract_fv a.FStar_Syntax_Syntax.action_defn  in
-             match uu____907 with
-             | (a_tm,ty_sc) ->
-                 let uu____914 = FStar_Extraction_ML_UEnv.action_name ed a
-                    in
-                 (match uu____914 with
-                  | (a_nm,a_lid) -> extend_env g a_lid a_nm a_tm ty_sc)
-              in
-           let uu____921 =
-             let uu____924 =
-               extract_fv (Prims.snd ed.FStar_Syntax_Syntax.return_repr)  in
-             match uu____924 with
-             | (return_tm,ty_sc) ->
-                 let uu____932 =
-                   FStar_Extraction_ML_UEnv.monad_op_name ed "return"  in
-                 (match uu____932 with
-                  | (return_nm,return_lid) ->
-                      extend_env g return_lid return_nm return_tm ty_sc)
-              in
-           (match uu____921 with
-            | (g,return_decl) ->
-                let uu____944 =
-                  let uu____947 =
-                    extract_fv (Prims.snd ed.FStar_Syntax_Syntax.bind_repr)
+             (let _0_657 =
+                FStar_Syntax_Print.lid_to_string
+                  a.FStar_Syntax_Syntax.action_name
+                 in
+              FStar_Util.print1 "Extracting action %s\n" _0_657);
+             (let uu____908 = extract_fv a.FStar_Syntax_Syntax.action_defn
+                 in
+              match uu____908 with
+              | (a_tm,ty_sc) ->
+                  let uu____915 = FStar_Extraction_ML_UEnv.action_name ed a
                      in
-                  match uu____947 with
-                  | (bind_tm,ty_sc) ->
-                      let uu____955 =
-                        FStar_Extraction_ML_UEnv.monad_op_name ed "bind"  in
-                      (match uu____955 with
-                       | (bind_nm,bind_lid) ->
-                           extend_env g bind_lid bind_nm bind_tm ty_sc)
+                  (match uu____915 with
+                   | (a_nm,a_lid) -> extend_env g a_lid a_nm a_tm ty_sc))
+              in
+           let uu____922 =
+             FStar_Util.print1 "Extracting return %s\n" "";
+             (let uu____926 =
+                extract_fv (Prims.snd ed.FStar_Syntax_Syntax.return_repr)  in
+              match uu____926 with
+              | (return_tm,ty_sc) ->
+                  let uu____934 =
+                    FStar_Extraction_ML_UEnv.monad_op_name ed "return"  in
+                  (match uu____934 with
+                   | (return_nm,return_lid) ->
+                       extend_env g return_lid return_nm return_tm ty_sc))
+              in
+           (match uu____922 with
+            | (g,return_decl) ->
+                let uu____946 =
+                  FStar_Util.print1 "Extracting bind %s\n" "";
+                  (let uu____950 =
+                     extract_fv (Prims.snd ed.FStar_Syntax_Syntax.bind_repr)
+                      in
+                   match uu____950 with
+                   | (bind_tm,ty_sc) ->
+                       let uu____958 =
+                         FStar_Extraction_ML_UEnv.monad_op_name ed "bind"  in
+                       (match uu____958 with
+                        | (bind_nm,bind_lid) ->
+                            extend_env g bind_lid bind_nm bind_tm ty_sc))
                    in
-                (match uu____944 with
+                (match uu____946 with
                  | (g,bind_decl) ->
-                     let uu____967 =
+                     let uu____970 =
                        FStar_Util.fold_map extract_action g
                          ed.FStar_Syntax_Syntax.actions
                         in
-                     (match uu____967 with
+                     (match uu____970 with
                       | (g,actions) ->
                           (g,
                             (FStar_List.append [return_decl; bind_decl]
                                actions)))))
-       | FStar_Syntax_Syntax.Sig_new_effect uu____979 -> (g, [])
+       | FStar_Syntax_Syntax.Sig_new_effect uu____982 -> (g, [])
        | FStar_Syntax_Syntax.Sig_declare_typ
-           (lid,uu____984,t,quals,uu____987) when
+           (lid,uu____987,t,quals,uu____990) when
            FStar_Extraction_ML_Term.is_arity g t ->
-           let uu____990 =
-             let _0_657 =
+           let uu____993 =
+             let _0_658 =
                FStar_All.pipe_right quals
                  (FStar_Util.for_some
-                    (fun uu___150_992  ->
-                       match uu___150_992 with
+                    (fun uu___150_995  ->
+                       match uu___150_995 with
                        | FStar_Syntax_Syntax.Assumption  -> true
-                       | uu____993 -> false))
+                       | uu____996 -> false))
                 in
-             FStar_All.pipe_right _0_657 Prims.op_Negation  in
-           if uu____990
+             FStar_All.pipe_right _0_658 Prims.op_Negation  in
+           if uu____993
            then (g, [])
            else
-             (let uu____999 = FStar_Syntax_Util.arrow_formals t  in
-              match uu____999 with
-              | (bs,uu____1011) ->
+             (let uu____1002 = FStar_Syntax_Util.arrow_formals t  in
+              match uu____1002 with
+              | (bs,uu____1014) ->
                   let fv =
                     FStar_Syntax_Syntax.lid_as_fv lid
                       FStar_Syntax_Syntax.Delta_constant None
                      in
-                  let _0_658 =
+                  let _0_659 =
                     FStar_Syntax_Util.abs bs FStar_TypeChecker_Common.t_unit
                       None
                      in
-                  extract_typ_abbrev g fv quals _0_658)
+                  extract_typ_abbrev g fv quals _0_659)
        | FStar_Syntax_Syntax.Sig_let
-           ((false ,lb::[]),uu____1029,uu____1030,quals,uu____1032) when
+           ((false ,lb::[]),uu____1032,uu____1033,quals,uu____1035) when
            FStar_Extraction_ML_Term.is_arity g lb.FStar_Syntax_Syntax.lbtyp
            ->
-           let _0_659 = FStar_Util.right lb.FStar_Syntax_Syntax.lbname  in
-           extract_typ_abbrev g _0_659 quals lb.FStar_Syntax_Syntax.lbdef
-       | FStar_Syntax_Syntax.Sig_let (lbs,r,uu____1045,quals,attrs) ->
+           let _0_660 = FStar_Util.right lb.FStar_Syntax_Syntax.lbname  in
+           extract_typ_abbrev g _0_660 quals lb.FStar_Syntax_Syntax.lbdef
+       | FStar_Syntax_Syntax.Sig_let (lbs,r,uu____1048,quals,attrs) ->
            let elet =
              (FStar_Syntax_Syntax.mk
                 (FStar_Syntax_Syntax.Tm_let
                    (lbs, FStar_Syntax_Const.exp_false_bool))) None r
               in
-           let uu____1065 = FStar_Extraction_ML_Term.term_as_mlexpr g elet
+           let uu____1068 = FStar_Extraction_ML_Term.term_as_mlexpr g elet
               in
-           (match uu____1065 with
-            | (ml_let,uu____1073,uu____1074) ->
+           (match uu____1068 with
+            | (ml_let,uu____1076,uu____1077) ->
                 (match ml_let.FStar_Extraction_ML_Syntax.expr with
                  | FStar_Extraction_ML_Syntax.MLE_Let
-                     ((flavor,uu____1079,bindings),uu____1081) ->
-                     let uu____1088 =
+                     ((flavor,uu____1082,bindings),uu____1084) ->
+                     let uu____1091 =
                        FStar_List.fold_left2
-                         (fun uu____1095  ->
+                         (fun uu____1098  ->
                             fun ml_lb  ->
-                              fun uu____1097  ->
-                                match (uu____1095, uu____1097) with
+                              fun uu____1100  ->
+                                match (uu____1098, uu____1100) with
                                 | ((env,ml_lbs),{
                                                   FStar_Syntax_Syntax.lbname
                                                     = lbname;
                                                   FStar_Syntax_Syntax.lbunivs
-                                                    = uu____1110;
+                                                    = uu____1113;
                                                   FStar_Syntax_Syntax.lbtyp =
                                                     t;
                                                   FStar_Syntax_Syntax.lbeff =
-                                                    uu____1112;
+                                                    uu____1115;
                                                   FStar_Syntax_Syntax.lbdef =
-                                                    uu____1113;_})
+                                                    uu____1116;_})
                                     ->
                                     let lb_lid =
                                       ((FStar_Util.right lbname).FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                                        in
-                                    let uu____1131 =
-                                      let uu____1134 =
+                                    let uu____1134 =
+                                      let uu____1137 =
                                         FStar_All.pipe_right quals
                                           (FStar_Util.for_some
-                                             (fun uu___151_1136  ->
-                                                match uu___151_1136 with
+                                             (fun uu___151_1139  ->
+                                                match uu___151_1139 with
                                                 | FStar_Syntax_Syntax.Projector
-                                                    uu____1137 -> true
-                                                | uu____1140 -> false))
+                                                    uu____1140 -> true
+                                                | uu____1143 -> false))
                                          in
-                                      if uu____1134
+                                      if uu____1137
                                       then
                                         let mname =
-                                          let _0_660 =
+                                          let _0_661 =
                                             mangle_projector_lid lb_lid  in
-                                          FStar_All.pipe_right _0_660
+                                          FStar_All.pipe_right _0_661
                                             FStar_Extraction_ML_Syntax.mlpath_of_lident
                                            in
                                         let env =
-                                          let _0_662 =
+                                          let _0_663 =
                                             FStar_Util.right lbname  in
-                                          let _0_661 =
+                                          let _0_662 =
                                             FStar_Util.must
                                               ml_lb.FStar_Extraction_ML_Syntax.mllb_tysc
                                              in
                                           FStar_Extraction_ML_UEnv.extend_fv'
-                                            env _0_662 mname _0_661
+                                            env _0_663 mname _0_662
                                             ml_lb.FStar_Extraction_ML_Syntax.mllb_add_unit
                                             false
                                            in
                                         (env,
-                                          (let uu___156_1145 = ml_lb  in
+                                          (let uu___156_1148 = ml_lb  in
                                            {
                                              FStar_Extraction_ML_Syntax.mllb_name
                                                =
@@ -561,44 +569,44 @@ let rec extract_sig :
                                                  (Prims.parse_int "0"));
                                              FStar_Extraction_ML_Syntax.mllb_tysc
                                                =
-                                               (uu___156_1145.FStar_Extraction_ML_Syntax.mllb_tysc);
+                                               (uu___156_1148.FStar_Extraction_ML_Syntax.mllb_tysc);
                                              FStar_Extraction_ML_Syntax.mllb_add_unit
                                                =
-                                               (uu___156_1145.FStar_Extraction_ML_Syntax.mllb_add_unit);
+                                               (uu___156_1148.FStar_Extraction_ML_Syntax.mllb_add_unit);
                                              FStar_Extraction_ML_Syntax.mllb_def
                                                =
-                                               (uu___156_1145.FStar_Extraction_ML_Syntax.mllb_def);
+                                               (uu___156_1148.FStar_Extraction_ML_Syntax.mllb_def);
                                              FStar_Extraction_ML_Syntax.print_typ
                                                =
-                                               (uu___156_1145.FStar_Extraction_ML_Syntax.print_typ)
+                                               (uu___156_1148.FStar_Extraction_ML_Syntax.print_typ)
                                            }))
                                       else
-                                        (let _0_665 =
-                                           let _0_664 =
-                                             let _0_663 =
+                                        (let _0_666 =
+                                           let _0_665 =
+                                             let _0_664 =
                                                FStar_Util.must
                                                  ml_lb.FStar_Extraction_ML_Syntax.mllb_tysc
                                                 in
                                              FStar_Extraction_ML_UEnv.extend_lb
-                                               env lbname t _0_663
+                                               env lbname t _0_664
                                                ml_lb.FStar_Extraction_ML_Syntax.mllb_add_unit
                                                false
                                               in
                                            FStar_All.pipe_left Prims.fst
-                                             _0_664
+                                             _0_665
                                             in
-                                         (_0_665, ml_lb))
+                                         (_0_666, ml_lb))
                                        in
-                                    (match uu____1131 with
+                                    (match uu____1134 with
                                      | (g,ml_lb) -> (g, (ml_lb :: ml_lbs))))
                          (g, []) bindings (Prims.snd lbs)
                         in
-                     (match uu____1088 with
+                     (match uu____1091 with
                       | (g,ml_lbs') ->
                           let flags =
                             FStar_List.choose
-                              (fun uu___152_1167  ->
-                                 match uu___152_1167 with
+                              (fun uu___152_1170  ->
+                                 match uu___152_1170 with
                                  | FStar_Syntax_Syntax.Assumption  ->
                                      Some FStar_Extraction_ML_Syntax.Assumed
                                  | FStar_Syntax_Syntax.Private  ->
@@ -606,141 +614,141 @@ let rec extract_sig :
                                  | FStar_Syntax_Syntax.NoExtract  ->
                                      Some
                                        FStar_Extraction_ML_Syntax.NoExtract
-                                 | uu____1169 -> None) quals
+                                 | uu____1172 -> None) quals
                              in
                           let flags' =
                             FStar_List.choose
-                              (fun uu___153_1174  ->
-                                 match uu___153_1174 with
+                              (fun uu___153_1177  ->
+                                 match uu___153_1177 with
                                  | {
                                      FStar_Syntax_Syntax.n =
                                        FStar_Syntax_Syntax.Tm_constant
                                        (FStar_Const.Const_string
-                                       (data,uu____1179));
-                                     FStar_Syntax_Syntax.tk = uu____1180;
-                                     FStar_Syntax_Syntax.pos = uu____1181;
-                                     FStar_Syntax_Syntax.vars = uu____1182;_}
+                                       (data,uu____1182));
+                                     FStar_Syntax_Syntax.tk = uu____1183;
+                                     FStar_Syntax_Syntax.pos = uu____1184;
+                                     FStar_Syntax_Syntax.vars = uu____1185;_}
                                      ->
                                      Some
                                        (FStar_Extraction_ML_Syntax.Attribute
                                           (FStar_Util.string_of_unicode data))
-                                 | uu____1187 ->
+                                 | uu____1190 ->
                                      (FStar_Util.print_warning
                                         "Warning: unrecognized, non-string attribute, bother protz for a better error message";
                                       None)) attrs
                              in
-                          let _0_667 =
-                            let _0_666 =
+                          let _0_668 =
+                            let _0_667 =
                               FStar_Extraction_ML_Syntax.MLM_Loc
                                 (FStar_Extraction_ML_Util.mlloc_of_range r)
                                in
-                            [_0_666;
+                            [_0_667;
                             FStar_Extraction_ML_Syntax.MLM_Let
                               (flavor, (FStar_List.append flags flags'),
                                 (FStar_List.rev ml_lbs'))]
                              in
-                          (g, _0_667))
-                 | uu____1194 ->
+                          (g, _0_668))
+                 | uu____1197 ->
                      failwith
-                       (let _0_668 =
+                       (let _0_669 =
                           FStar_Extraction_ML_Code.string_of_mlexpr
                             g.FStar_Extraction_ML_UEnv.currentModule ml_let
                            in
                         FStar_Util.format1
                           "Impossible: Translated a let to a non-let: %s"
-                          _0_668)))
-       | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____1199,t,quals,r) ->
-           let uu____1205 =
+                          _0_669)))
+       | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____1202,t,quals,r) ->
+           let uu____1208 =
              FStar_All.pipe_right quals
                (FStar_List.contains FStar_Syntax_Syntax.Assumption)
               in
-           if uu____1205
+           if uu____1208
            then
              let always_fail =
                let imp =
-                 let uu____1214 = FStar_Syntax_Util.arrow_formals t  in
-                 match uu____1214 with
+                 let uu____1217 = FStar_Syntax_Util.arrow_formals t  in
+                 match uu____1217 with
                  | ([],t) -> fail_exp lid t
                  | (bs,t) ->
-                     let _0_669 = fail_exp lid t  in
-                     FStar_Syntax_Util.abs bs _0_669 None
+                     let _0_670 = fail_exp lid t  in
+                     FStar_Syntax_Util.abs bs _0_670 None
                   in
                FStar_Syntax_Syntax.Sig_let
-                 (let _0_673 =
-                    let _0_672 =
-                      let _0_671 =
-                        let _0_670 =
+                 (let _0_674 =
+                    let _0_673 =
+                      let _0_672 =
+                        let _0_671 =
                           FStar_Util.Inr
                             (FStar_Syntax_Syntax.lid_as_fv lid
                                FStar_Syntax_Syntax.Delta_constant None)
                            in
                         {
-                          FStar_Syntax_Syntax.lbname = _0_670;
+                          FStar_Syntax_Syntax.lbname = _0_671;
                           FStar_Syntax_Syntax.lbunivs = [];
                           FStar_Syntax_Syntax.lbtyp = t;
                           FStar_Syntax_Syntax.lbeff =
                             FStar_Syntax_Const.effect_ML_lid;
                           FStar_Syntax_Syntax.lbdef = imp
                         }  in
-                      [_0_671]  in
-                    (false, _0_672)  in
-                  (_0_673, r, [], quals, []))
+                      [_0_672]  in
+                    (false, _0_673)  in
+                  (_0_674, r, [], quals, []))
                 in
-             let uu____1258 = extract_sig g always_fail  in
-             (match uu____1258 with
+             let uu____1261 = extract_sig g always_fail  in
+             (match uu____1261 with
               | (g,mlm) ->
-                  let uu____1269 =
+                  let uu____1272 =
                     FStar_Util.find_map quals
-                      (fun uu___154_1271  ->
-                         match uu___154_1271 with
+                      (fun uu___154_1274  ->
+                         match uu___154_1274 with
                          | FStar_Syntax_Syntax.Discriminator l -> Some l
-                         | uu____1274 -> None)
+                         | uu____1277 -> None)
                      in
-                  (match uu____1269 with
+                  (match uu____1272 with
                    | Some l ->
-                       let _0_677 =
-                         let _0_676 =
+                       let _0_678 =
+                         let _0_677 =
                            FStar_Extraction_ML_Syntax.MLM_Loc
                              (FStar_Extraction_ML_Util.mlloc_of_range r)
                             in
-                         let _0_675 =
-                           let _0_674 =
+                         let _0_676 =
+                           let _0_675 =
                              FStar_Extraction_ML_Term.ind_discriminator_body
                                g lid l
                               in
-                           [_0_674]  in
-                         _0_676 :: _0_675  in
-                       (g, _0_677)
-                   | uu____1280 ->
-                       let uu____1282 =
+                           [_0_675]  in
+                         _0_677 :: _0_676  in
+                       (g, _0_678)
+                   | uu____1283 ->
+                       let uu____1285 =
                          FStar_Util.find_map quals
-                           (fun uu___155_1284  ->
-                              match uu___155_1284 with
-                              | FStar_Syntax_Syntax.Projector (l,uu____1287)
+                           (fun uu___155_1287  ->
+                              match uu___155_1287 with
+                              | FStar_Syntax_Syntax.Projector (l,uu____1290)
                                   -> Some l
-                              | uu____1288 -> None)
+                              | uu____1291 -> None)
                           in
-                       (match uu____1282 with
-                        | Some uu____1292 -> (g, [])
-                        | uu____1294 -> (g, mlm))))
+                       (match uu____1285 with
+                        | Some uu____1295 -> (g, [])
+                        | uu____1297 -> (g, mlm))))
            else (g, [])
        | FStar_Syntax_Syntax.Sig_main (e,r) ->
-           let uu____1301 = FStar_Extraction_ML_Term.term_as_mlexpr g e  in
-           (match uu____1301 with
-            | (ml_main,uu____1309,uu____1310) ->
-                let _0_679 =
-                  let _0_678 =
+           let uu____1304 = FStar_Extraction_ML_Term.term_as_mlexpr g e  in
+           (match uu____1304 with
+            | (ml_main,uu____1312,uu____1313) ->
+                let _0_680 =
+                  let _0_679 =
                     FStar_Extraction_ML_Syntax.MLM_Loc
                       (FStar_Extraction_ML_Util.mlloc_of_range r)
                      in
-                  [_0_678; FStar_Extraction_ML_Syntax.MLM_Top ml_main]  in
-                (g, _0_679))
-       | FStar_Syntax_Syntax.Sig_new_effect_for_free uu____1312 ->
+                  [_0_679; FStar_Extraction_ML_Syntax.MLM_Top ml_main]  in
+                (g, _0_680))
+       | FStar_Syntax_Syntax.Sig_new_effect_for_free uu____1315 ->
            failwith "impossible -- removed by tc.fs"
        | FStar_Syntax_Syntax.Sig_assume _
          |FStar_Syntax_Syntax.Sig_sub_effect _
           |FStar_Syntax_Syntax.Sig_effect_abbrev _ -> (g, [])
-       | FStar_Syntax_Syntax.Sig_pragma (p,uu____1323) ->
+       | FStar_Syntax_Syntax.Sig_pragma (p,uu____1326) ->
            (if p = FStar_Syntax_Syntax.LightOff
             then FStar_Options.set_ml_ish ()
             else ();
@@ -750,10 +758,10 @@ let extract_iface :
   FStar_Extraction_ML_UEnv.env -> FStar_Syntax_Syntax.modul -> env_t =
   fun g  ->
     fun m  ->
-      let _0_680 =
+      let _0_681 =
         FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations
          in
-      FStar_All.pipe_right _0_680 Prims.fst
+      FStar_All.pipe_right _0_681 Prims.fst
   
 let extract :
   FStar_Extraction_ML_UEnv.env ->
@@ -764,34 +772,34 @@ let extract :
   fun g  ->
     fun m  ->
       FStar_Syntax_Syntax.reset_gensym ();
-      (let uu____1353 = FStar_Options.restore_cmd_line_options true  in
+      (let uu____1356 = FStar_Options.restore_cmd_line_options true  in
        let name =
          FStar_Extraction_ML_Syntax.mlpath_of_lident
            m.FStar_Syntax_Syntax.name
           in
        let g =
-         let uu___157_1356 = g  in
+         let uu___157_1359 = g  in
          {
            FStar_Extraction_ML_UEnv.tcenv =
-             (uu___157_1356.FStar_Extraction_ML_UEnv.tcenv);
+             (uu___157_1359.FStar_Extraction_ML_UEnv.tcenv);
            FStar_Extraction_ML_UEnv.gamma =
-             (uu___157_1356.FStar_Extraction_ML_UEnv.gamma);
+             (uu___157_1359.FStar_Extraction_ML_UEnv.gamma);
            FStar_Extraction_ML_UEnv.tydefs =
-             (uu___157_1356.FStar_Extraction_ML_UEnv.tydefs);
+             (uu___157_1359.FStar_Extraction_ML_UEnv.tydefs);
            FStar_Extraction_ML_UEnv.currentModule = name
          }  in
-       let uu____1357 =
+       let uu____1360 =
          FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations
           in
-       match uu____1357 with
+       match uu____1360 with
        | (g,sigs) ->
            let mlm = FStar_List.flatten sigs  in
            let is_kremlin =
-             let uu____1374 = FStar_Options.codegen ()  in
-             match uu____1374 with
+             let uu____1377 = FStar_Options.codegen ()  in
+             match uu____1377 with
              | Some "Kremlin" -> true
-             | uu____1376 -> false  in
-           let uu____1378 =
+             | uu____1379 -> false  in
+           let uu____1381 =
              (((m.FStar_Syntax_Syntax.name).FStar_Ident.str <> "Prims") &&
                 (is_kremlin ||
                    (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface)))
@@ -799,12 +807,12 @@ let extract :
                (FStar_Options.should_extract
                   (m.FStar_Syntax_Syntax.name).FStar_Ident.str)
               in
-           if uu____1378
+           if uu____1381
            then
-             ((let _0_681 =
+             ((let _0_682 =
                  FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name
                   in
-               FStar_Util.print1 "Extracted module %s\n" _0_681);
+               FStar_Util.print1 "Extracted module %s\n" _0_682);
               (g,
                 [FStar_Extraction_ML_Syntax.MLLib
                    [(name, (Some ([], mlm)),
