@@ -25,6 +25,19 @@ type feq (#a:Type) (#b:Type) (f:efun a b) (g:efun a b) =
 assume Extensionality : forall (a:Type) (b:Type) (f: efun a b) (g: efun a b).
                         {:pattern feq #a #b f g} feq #a #b f g <==> f==g
 
+let intro_feq (#a #b:Type) (f g:efun a b) (w: x: a -> Lemma (f x == g x))
+  : Lemma (f == g)
+=
+  let h () : Lemma (f `feq` g) = FStar.Classical.forall_intro w in
+  h ()
+
+let intro_feq2 (#a #b #c:Type) (f g: a -> b -> c) (w:x:a -> y:b -> Lemma (f x y == g x y))
+  : Lemma (f == g)
+=
+  let h (x:a) : Lemma (f x == g x) = intro_feq (f x) (g x) (w x) in
+  intro_feq f g h
+
+
 (** Ghost functional extensionality **)
 type gfun (a:Type) (b:Type) = a -> GTot b
 
