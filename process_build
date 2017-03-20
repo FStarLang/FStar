@@ -17,7 +17,7 @@ cd src
 cd ocaml-output
 make package
 
-echo "*** Test Package -- need to figure out how want to verify ***"
+echo "*** Test Package -- need to figure out how want to verify! ***"
 # Unzip .zip file if exists
 if [ -f fstar_0.9.4.0_Windows_x64.zip ]; then
   unzip -o fstar_0.9.4.0_Windows_x64.zip
