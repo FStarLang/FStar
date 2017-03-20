@@ -108,8 +108,16 @@ let string_to_op s =
   | "op_String_Access" -> Some ".[]"
   | "op_Array_Access" -> Some ".()"
   | _ -> 
-    if BU.starts_with s "op__" then
-      name_of_op(BU.substring_from s (String.length "op__"))
+    if BU.starts_with s "op_" then
+      let s = String.split ['_'] (BU.substring_from s (String.length "op_")) in
+      match s with 
+      | [op] -> name_of_op op
+      | _ ->
+        let op = List.fold_left(fun acc x -> match x with 
+                                  | Some op -> acc ^ op 
+                                  | None -> failwith "wrong composed operator format") 
+                                  "" (List.map name_of_op s)  in
+        Some op
     else
       None
 
@@ -194,9 +202,8 @@ let resugar_term_as_op(t:S.term) : option<string> =
     (C.exists_lid  , "exists");
     (C.salloc_lid  , "alloc")
   ] in
-  match (SS.compress t).n with 
-    | Tm_fvar fv -> 
-      begin match infix_prim_ops |> BU.find_opt (fun d -> fv_eq_lid fv (fst d)) with
+  let fallback fv =
+    match infix_prim_ops |> BU.find_opt (fun d -> fv_eq_lid fv (fst d)) with
         | Some op ->
           Some(snd op)
         | _ ->
@@ -208,7 +215,15 @@ let resugar_term_as_op(t:S.term) : option<string> =
           else if fv_eq_lid fv C.sread_lid then Some fv.fv_name.v.str
           //else if fv.fv_name.v.str.Contains(U.field_projector_prefix) then Some fv.fv_name.v.str
           else None
-      end 
+  in
+  match (SS.compress t).n with 
+    | Tm_fvar fv -> 
+      let s = if fv.fv_name.v.nsstr.Length=0 then fv.fv_name.v.str 
+              else fv.fv_name.v.str.Substring(fv.fv_name.v.nsstr.Length+1) in 
+      begin match string_to_op s with
+        | Some t -> Some t
+        | _ -> fallback fv
+      end
     | _ -> None
 
 let is_true_pat (p:S.pat) : bool = match p.v with
@@ -453,13 +468,18 @@ let rec resugar_term (t : S.term) : A.term =
 
     | Tm_let((is_rec, bnds), body) ->
       let mk_pat a = A.mk_pattern a t.pos in
+      let bnd, body = SS.open_let_rec bnds body in
       let resugar_one_binding bnd = 
-        // TODO: need bnd.lbunivs
-        let binders, term, is_pat_app = match (SS.compress bnd.lbdef).n with
+        let univs, td = SS.open_univ_vars bnd.lbunivs (U.mk_conj bnd.lbtyp bnd.lbdef) in
+        let typ, def = match (SS.compress td).n with
+          | Tm_app(_, [(t, _); (d, _)]) -> t, d
+          | _ -> failwith "Impossibe" 
+        in
+        let binders, term, is_pat_app = match (SS.compress def).n with
           | Tm_abs(b, t, _) -> 
             let b, t = SS.open_term b t in
             b, t, true
-          | _ -> [], bnd.lbdef, false
+          | _ -> [], def, false
         in 
         let pat, term = match bnd.lbname with
           | Inr fv -> mk_pat (A.PatName fv.fv_name.v), term
@@ -470,16 +490,19 @@ let rec resugar_term (t : S.term) : A.term =
         in
         if is_pat_app then
           let args = binders |> List.map (fun (bv, _) -> mk_pat(A.PatVar (bv_as_unique_ident bv, None))) in
-          (mk_pat (A.PatApp (pat, args)), resugar_term term)
+          ((mk_pat (A.PatApp (pat, args)), resugar_term term), (List.map (fun x -> x.idText) univs |> String.concat  ", "))
         else
-          (pat, resugar_term term)
+          ((pat, resugar_term term), (List.map (fun x -> x.idText) univs |> String.concat  ", "))
       in
-      let bnds = List.map (resugar_one_binding) bnds in
+      let r = List.map (resugar_one_binding) bnds in
+      let bnds = List.map fst r in
+      let comments = List.map snd r in
       let body = resugar_term body in
       mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
            
-    | Tm_uvar _ ->
-      failwith "This case is impossible since it is not created in desugar"
+    | Tm_uvar (u, _) ->
+      let s = "uu___unification_ " ^ (FStar.Unionfind.uvar_id u |> string_of_int) in
+      mk (var s t.pos)
 
     | Tm_meta(e, m) ->
        let resugar_meta_desugared = function
@@ -525,7 +548,12 @@ let rec resugar_term (t : S.term) : A.term =
       | Meta_labeled (l, _, p) ->
           mk (A.Labeled(resugar_term e, l, p))
       | Meta_desugared i -> 
-          resugar_meta_desugared i        
+          resugar_meta_desugared i 
+      | Meta_named t ->
+          mk (A.Name t)
+      | Meta_monadic (name, t)
+      | Meta_monadic_lift (name, _, t) -> 
+        mk (A.Ascribed(resugar_term e, mk (A.Construct(name,[resugar_term t, A.Nothing]))))
       end
     
     | Tm_unknown _ -> mk A.Wild
@@ -543,10 +571,9 @@ and resugar_comp (c:S.comp) : A.term =
     | None ->
       mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
     | Some u ->
-      // where should we put the resugared universe? Add to the
-      // list for now.
+      // add the universe as the first argument
       let u = resugar_universe u c.pos in 
-      mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing);(u, A.Nothing)]))
+      mk (A.Construct(C.effect_Tot_lid, [(u, A.UnivApp);(t, A.Nothing)]))
     end
 
   | GTotal (typ, u) ->
@@ -555,10 +582,9 @@ and resugar_comp (c:S.comp) : A.term =
     | None ->
       mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
     | Some u ->
-      // where should we put the resugared universe? Add to the
-      // list for now.
+      // add the universe as the first argument
       let u = resugar_universe u c.pos in 
-      mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing);(u, A.Nothing)]))
+      mk (A.Construct(C.effect_GTot_lid, [(u, A.UnivApp);(t, A.Nothing)]))
     end
 
   | Comp c ->
