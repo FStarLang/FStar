@@ -213,7 +213,7 @@ krml-test.exe: spartan_aes/aes.o crypto/*.fst
                 crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst
 	./krml-test.exe
 
-ifdef WINDIR
+ifeq ($(OS),Windows_NT)
   WINSOCK=,-lws2_32
 else
   WINSOCK=
