@@ -31,6 +31,16 @@ and const =
   | Refl : const
   | EqElim : const
 
+
+let cnat = Const Nat
+let czero = Const Zero
+let csucc = Const Succ
+let cnat_elim = Const NatElim
+let ceq = Const Eq
+let crefl = Const Refl
+let ceq_elim = Const EqElim
+let arr t1 t2 = Prod t1 (Tot_ t2)
+
 type sub = var -> universes -> Tot term
 type renaming (s:sub) = (forall (x:var) (uvs:universes) . Var? (s x uvs))
 
@@ -337,10 +347,46 @@ and def_eq_comp : comp -> comp -> Type0 =
 
 (* Typing *)
 
-(* type typing : env -> term -> term -> Type = *)
-(*  | TVar : *)
-(*   #g:env -> *)
-(*   valid g -> *)
-(*   x:var{Some? (g x)} -> *)
-(*   typing g (Var x []) *)
-(*  |  *)
+type typing : env -> term -> term -> Type =
+  | TyVar :
+    #g:env ->
+    valid g ->
+    x:var{Some? (g x)} ->
+    typing g (Var x [])
+
+  | TyConst :
+    #g:env ->
+    #c:const ->
+    #t:term ->
+    typing_const c t ->
+    typing g (Const c) t
+
+  | TyType :
+    u:universe_level ->
+    typing env (Type_ u) (Type_ (u+1))
+
+  | TyLam :
+    #g:env ->
+    #t:term ->
+    #c:term ->
+    e:term ->
+    typing_comp (extend g 0 t) e c ->
+    typing g (Lam t e) (Prod t c)
+
+
+and typing_comp : env -> term -> comp -> Type =
+  | TyApp :
+    #g:env ->
+    #t:term ->
+    #e1:term ->
+    #c:comp ->
+    #e2:term ->
+    he1:typing env e1 (Prod t c) ->
+    he2:typing env e2 t ->
+    typing_comp env (App e1 e2) c
+
+and typing_const : env -> const -> term -> Type =
+  | TyNat : typing_const Nat (Type_ 0)
+  | TyZero : typing_const Zero cnat
+  | TySucc : typing_const Succ (cnat `arr` cnat)
+  | TyNatElim : typing_const NatElim ()
