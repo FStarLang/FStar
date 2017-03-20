@@ -59,26 +59,21 @@ let rec resugar_universe (u:S.universe) r: A.term =
       let (n, u) = universe_to_int 0 u in
       begin match u with
       | U_zero -> 
-        mk (A.Const(Const_int(string_of_int n, Some (Unsigned, Int16)))) r 
+        mk (A.Const(Const_int(string_of_int n, None))) r 
       
       | _ -> 
-        let e1 = mk (A.Const(Const_int(string_of_int n, Some (Unsigned, Int16)))) r in
+        let e1 = mk (A.Const(Const_int(string_of_int n, None))) r in
         let e2 = resugar_universe u r in
         mk (A.Op("+", [e1; e2])) r 
       end
 
-    | U_max([]) -> failwith "Impossible: U_max without arguments"
-
-    | U_max (_1::_2) ->
-      let rec aux e = function
-        | [] -> e
-        | hd::tl ->
-          let e = mk (A.App(e, resugar_universe hd r, A.Nothing)) r in
-          aux e tl 
-      in
-      let t = mk (A.Var(lid_of_path ["max"] r)) r in
-      let e = mk (A.App(t, resugar_universe _1 r, A.Nothing)) r in
-      aux e _2
+    | U_max l ->
+      begin match l with 
+      | [] -> failwith "Impossible: U_max without arguments"
+      | _ -> 
+        let t = mk (A.Var(lid_of_path ["max"] r)) r in
+        List.fold_left(fun acc x -> mk (A.App(acc, resugar_universe x r, A.Nothing)) r) t l
+      end
 
     | U_name u -> mk (A.Uvar(u)) r
     | U_unif _ -> mk A.Wild r
@@ -87,12 +82,6 @@ let rec resugar_universe (u:S.universe) r: A.term =
   end
 
 let string_to_op s =
-  let (|Prefix|_|) (p:string) (s:string) =
-    if s.StartsWith(p) then
-        Some(s.Substring(p.Length))
-    else
-        None
-  in 
   let name_of_op = function
     | "Amp" -> Some "&"
     | "At" -> Some "@"
@@ -118,8 +107,11 @@ let string_to_op s =
   | "op_Array_Assignment" -> Some ".()<-"
   | "op_String_Access" -> Some ".[]"
   | "op_Array_Access" -> Some ".()"
-  | Prefix "op__" op -> name_of_op op
-  | _ -> None
+  | _ -> 
+    if BU.starts_with s "op__" then
+      name_of_op(BU.substring_from s (String.length "op__"))
+    else
+      None
 
 let resugar_match_pat (p:S.pat) : A.pattern = 
   (* We lose information when desugar PatAscribed to able to resugar it back *)
@@ -151,7 +143,9 @@ let resugar_match_pat (p:S.pat) : A.pattern =
       mk (A.PatApp(mk (A.PatName fv.fv_name.v), args))
 
     | Pat_var v -> 
-      (* both A.PatTvar and A.PatVar are desugared to S.Pat_var, only resugar back as PatVar*)
+      // both A.PatTvar and A.PatVar are desugared to S.Pat_var. A PatTvar in the original file coresponds
+      // to some type variable which is implicitly bound to the enclosing toplevel declaration. 
+      // When resugaring it will be just a normal (explicitly bound) variable.
       begin match string_to_op v.ppname.idText with
        | Some op -> mk (A.PatOp op)
        | None -> mk (A.PatVar (bv_as_unique_ident v, None))
@@ -200,26 +194,21 @@ let resugar_term_as_op(t:S.term) : option<string> =
     (C.exists_lid  , "exists");
     (C.salloc_lid  , "alloc")
   ] in
-  let rec find  f l  = match l with
-    | [] -> (None, false)
-    | hd::tl -> if f hd then (Some(snd hd), true) else find f tl
-  in
-  let find_op (x:fv) xs  =
-    find (fun p -> fv_eq_lid x (fst p)) xs
-  in 
   match (SS.compress t).n with 
     | Tm_fvar fv -> 
-      let (op, b) = find_op fv infix_prim_ops in
-      if b then op 
-      else 
-        let str = if fv.fv_name.v.nsstr.Length=0 then fv.fv_name.v.str 
-          else fv.fv_name.v.str.Substring(fv.fv_name.v.nsstr.Length+1) in 
-        if str.StartsWith("dtuple") then Some "dtuple"
-        else if str.StartsWith("tuple") then Some "tuple"
-        else if str.StartsWith("try_with") then Some "try_with"
-        else if fv_eq_lid fv C.sread_lid then Some fv.fv_name.v.str
-        //else if fv.fv_name.v.str.Contains(U.field_projector_prefix) then Some fv.fv_name.v.str
-        else None
+      begin match infix_prim_ops |> BU.find_opt (fun d -> fv_eq_lid fv (fst d)) with
+        | Some op ->
+          Some(snd op)
+        | _ ->
+          let str = if fv.fv_name.v.nsstr.Length=0 then fv.fv_name.v.str 
+              else fv.fv_name.v.str.Substring(fv.fv_name.v.nsstr.Length+1) in 
+          if BU.starts_with str "dtuple" then Some "dtuple"
+          else if BU.starts_with str "tuple" then Some "tuple"
+          else if BU.starts_with str "try_with" then Some "try_with"
+          else if fv_eq_lid fv C.sread_lid then Some fv.fv_name.v.str
+          //else if fv.fv_name.v.str.Contains(U.field_projector_prefix) then Some fv.fv_name.v.str
+          else None
+      end 
     | _ -> None
 
 let is_true_pat (p:S.pat) : bool = match p.v with
@@ -280,13 +269,7 @@ let rec resugar_term (t : S.term) : A.term =
 
     | Tm_uinst(e, universes) ->
       let e = resugar_term e in
-      let rec aux e = function
-        | [] -> e
-        | hd::tl ->
-          let univ = resugar_universe hd t.pos in
-          let e = mk (A.App(e, univ, A.UnivApp)) in
-          aux e tl in
-      aux e universes
+      List.fold_left(fun acc x -> mk (A.App(acc, resugar_universe x t.pos, A.UnivApp))) e universes
 
     | Tm_constant c -> 
       if is_teff t 
@@ -344,23 +327,17 @@ let rec resugar_term (t : S.term) : A.term =
           let args = args |> List.map (fun (e, qual) ->
             resugar_term e) in
           let e = resugar_term e in
-          let rec aux e = function
-            | [] -> e
-            | hd::tl ->
-              let e = mk (A.App(e, hd, A.Nothing)) in
-              aux e tl in
-          aux e args
+          List.fold_left(fun acc x -> mk (A.App(acc, x, A.Nothing))) e args
 
         | Some "tuple" ->
           let args = args |> List.map (fun (e, qual) ->
             resugar_term e) in
-          let rec aux e = function
-            | [] -> e
-            | hd::tl ->
-              let e = mk (A.Op("*", [e;hd])) in
-              aux e tl in
-          let e = mk(A.Op("*", [args.Head; args.Tail.Head])) in
-          aux e args.Tail.Tail
+          begin match args with 
+            | fst::snd::rest ->
+              let e = mk(A.Op("*", [fst; snd])) in
+              List.fold_left(fun acc x -> mk (A.Op("*", [e;x]))) e rest
+            | _ -> failwith "tuple needs at least two arguments."
+          end
 
         | Some "dtuple" -> 
           (* this is desugared from Sum(binders*term) *)
@@ -369,15 +346,19 @@ let rec resugar_term (t : S.term) : A.term =
             | hd :: tl -> last tl
             | _ -> failwith "Empty list." in
           let body, _ = last args in
-          let binders, body = match (SS.compress body).n with
+          begin match (SS.compress body).n with
             | Tm_abs(xs, body, _) ->
                 let xs, body = SS.open_term xs body in
                 let xs = xs |> List.map (fun (b, qual) -> resugar_bv_as_binder b t.pos) in 
                 let body = resugar_term body in
-                xs, body
-            | _ ->
-              [], resugar_term body in
-          mk (A.Sum(binders, body))
+                mk (A.Sum(xs, body))
+               
+            | _ -> 
+              let args = args |> List.map (fun (e, qual) ->
+                resugar_term e) in
+              let e = resugar_term e in
+              List.fold_left(fun acc x -> mk (A.App(acc, x, A.Nothing))) e args
+          end
 
         (*| Some field_projector when (U.field_projector_contains_constructor field_projector) ->
           (* get the field name from the fvar *)
@@ -393,8 +374,6 @@ let rec resugar_term (t : S.term) : A.term =
             | Tm_fvar fv when (U.field_projector_contains_constructor fv.fv_name.v.str) ->
               let f = lid_of_path [fv.fv_name.v.str] t.pos in
               mk (A.Project(resugar_term t, f))
-            | Tm_fvar fv when (BU.starts_with fv.fv_name.v.str I.reserved_prefix) ->
-              mk (A.Discrim(lid_of_path [fv.fv_name.v.str] t.pos))
             | _ -> resugar_term t
           end
 
@@ -475,6 +454,7 @@ let rec resugar_term (t : S.term) : A.term =
     | Tm_let((is_rec, bnds), body) ->
       let mk_pat a = A.mk_pattern a t.pos in
       let resugar_one_binding bnd = 
+        // TODO: need bnd.lbunivs
         let binders, term, is_pat_app = match (SS.compress bnd.lbdef).n with
           | Tm_abs(b, t, _) -> 
             let b, t = SS.open_term b t in
@@ -545,11 +525,7 @@ let rec resugar_term (t : S.term) : A.term =
       | Meta_labeled (l, _, p) ->
           mk (A.Labeled(resugar_term e, l, p))
       | Meta_desugared i -> 
-          resugar_meta_desugared i
-      | Meta_named _ 
-      | Meta_monadic _ 
-      | Meta_monadic_lift _ -> 
-          failwith "cases not generated by desugar"
+          resugar_meta_desugared i        
       end
     
     | Tm_unknown _ -> mk A.Wild
@@ -561,13 +537,29 @@ and resugar_comp (c:S.comp) : A.term =
         A.mk_term a c.pos A.Un
   in
   match (c.n) with 
-  | Total (typ, _) ->
+  | Total (typ, u) ->
     let t = resugar_term typ in
-    mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
+    begin match u with 
+    | None ->
+      mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
+    | Some u ->
+      // where should we put the resugared universe? Add to the
+      // list for now.
+      let u = resugar_universe u c.pos in 
+      mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing);(u, A.Nothing)]))
+    end
 
-  | GTotal (typ, _) ->
+  | GTotal (typ, u) ->
     let t = resugar_term typ in
-    mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
+    begin match u with
+    | None ->
+      mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
+    | Some u ->
+      // where should we put the resugared universe? Add to the
+      // list for now.
+      let u = resugar_universe u c.pos in 
+      mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing);(u, A.Nothing)]))
+    end
 
   | Comp c ->
     let universe = List.map (fun u -> resugar_universe u) c.comp_univs in
