@@ -505,7 +505,7 @@ let freshen_bv bv =
     else {bv with index=next_id()}
 let new_univ_name ropt =
     let id = next_id() in
-    mk_ident ("'uu___" ^ Util.string_of_int id, range_of_ropt ropt)
+    mk_ident (Ident.reserved_prefix ^ Util.string_of_int id, range_of_ropt ropt)
 let mkbv x y t  = {ppname=x;index=y;sort=t}
 let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y

@@ -7,7 +7,6 @@ type token =
   | VAL
   | UNOPTEQUALITY
   | UNIV_HASH
-  | UNIVAR of (string)
   | UNFOLDABLE
   | UNFOLD
   | UNDERSCORE
@@ -145,7 +144,6 @@ type tokenId =
     | TOKEN_VAL
     | TOKEN_UNOPTEQUALITY
     | TOKEN_UNIV_HASH
-    | TOKEN_UNIVAR
     | TOKEN_UNFOLDABLE
     | TOKEN_UNFOLD
     | TOKEN_UNDERSCORE
@@ -301,7 +299,6 @@ type nonTerminalId =
     | NONTERM_list___anonymous_7_
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
-    | NONTERM_list_atomicUniverse_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
     | NONTERM_list_decoration_
@@ -310,6 +307,7 @@ type nonTerminalId =
     | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
     | NONTERM_nonempty_list_atomicPattern_
     | NONTERM_nonempty_list_atomicTerm_
+    | NONTERM_nonempty_list_atomicUniverse_
     | NONTERM_nonempty_list_dotOperator_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_
@@ -410,7 +408,6 @@ type nonTerminalId =
     | NONTERM_universe
     | NONTERM_universeFrom
     | NONTERM_atomicUniverse
-    | NONTERM_univar
     | NONTERM_some_fsTypeArgs_
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_
     | NONTERM_right_flexible_list_SEMICOLON_recordFieldDecl_
