@@ -570,7 +570,9 @@ and tc_value env (e:term) : term
 
   | Tm_name x ->
     let t = if env.use_bv_sorts then x.sort else Env.lookup_bv env x in
-    let e = S.bv_to_name ({x with sort=t}) in
+    let x = {x with sort=t} in
+    FStar.TypeChecker.Common.insert_bv x t;
+    let e = S.bv_to_name x in
     let e, t, implicits = TcUtil.maybe_instantiate env e t in
     let tc = if Env.should_verify env then Inl t else Inr (U.lcomp_of_comp <| mk_Total t) in
     value_check_expected_typ env e tc implicits
@@ -584,6 +586,7 @@ and tc_value env (e:term) : term
             | U_unif u'' -> Unionfind.change u'' (Some u)
             | _ -> failwith "Impossible") us' us;
     let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
+    FStar.TypeChecker.Common.insert_fv fv' t;
     let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
@@ -597,6 +600,7 @@ and tc_value env (e:term) : term
             (Range.string_of_use_range (range_of_lid (lid_of_fv fv)))
             (Print.term_to_string t);
     let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
+    FStar.TypeChecker.Common.insert_fv fv t;
     let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
