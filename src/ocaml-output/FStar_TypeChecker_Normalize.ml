@@ -2159,7 +2159,7 @@ let rec norm :
                           {
                             steps =
                               [PureSubtermsWithinComputations;
-                              Primops;
+                              Primops; NoDeltaSteps;
                               AllowUnboundUniverses;
                               EraseUniverses;
                               Exclude Zeta];

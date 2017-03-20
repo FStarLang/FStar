@@ -948,7 +948,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                Primops;
                                AllowUnboundUniverses;
                                EraseUniverses;
-                               Exclude Zeta];
+                               Exclude Zeta;
+                               NoDeltaSteps];
                         delta_level=[Env.Inlining; Env.Eager_unfolding_only]
                       }
                     else
