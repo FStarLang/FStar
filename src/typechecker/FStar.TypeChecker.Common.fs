@@ -121,12 +121,12 @@ let find_nearest_preceding_col_info col col_infos =
           else aux (Some i) rest
     in
     aux None col_infos    
+type col_info = //sorted in ascending order of columns
+    list<(int * identifier_info)>
+type row_info = 
+    BU.imap<ref<col_info>>
 type file_info = 
     BU.smap<row_info>
-and row_info = 
-    BU.imap<ref<col_info>>
-and col_info = //sorted in ascending order of columns
-    list<(int * identifier_info)>
 let mk_info id ty = {
     identifier=id;
     identifier_ty=ty;

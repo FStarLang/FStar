@@ -209,7 +209,7 @@ let rec read_chunk () =
         Info (file, Util.int_of_string row, Util.int_of_string col)
       | _ ->
         Util.print_error ("Unrecognized \"#info\" request: " ^l);
-        exit -1
+        exit 1
   else if l = "#finish" then exit 0
   else
     (Util.string_builder_append s.chunk line;
