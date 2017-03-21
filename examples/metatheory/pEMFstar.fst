@@ -40,6 +40,11 @@ let ceq = Const Eq
 let crefl = Const Refl
 let ceq_elim = Const EqElim
 let arr t1 t2 = Prod t1 (Tot_ t2)
+let app e1 e2 = App e1 e2
+let type_0 = Type_ 0
+let succ n = app csucc n
+let refl e = app refl e
+let eq t e1 e2 = eq `app` t `app` e1 `app` e2
 
 type sub = var -> universes -> Tot term
 type renaming (s:sub) = (forall (x:var) (uvs:universes) . Var? (s x uvs))
@@ -347,46 +352,177 @@ and def_eq_comp : comp -> comp -> Type0 =
 
 (* Typing *)
 
-type typing : env -> term -> term -> Type =
+
+let nat_elim_type =
+  List.Tot.fold_right app [
+    (* p:nat -> Type0 *)
+    cnat `arr` type0 ;
+    (* p 0 *)
+    Var 0 `app` czero ;
+    (* forall n, p n -> p (n + 1) *)
+    cnat `arr` (Var 2 `app` Var 0) `arr` (Var 3 `app` succ (Var 1)) ;
+    (* n *)
+    cnat
+  ]
+  (* p n *)
+  (Var 3 `app` Var 0)
+
+(* a:Type0 -> a -> a -> Type0 *)
+let eq_type = type_0 `arr` Var 0 `arr` Var 1 `arr` type_0
+
+let eq_elim_type =
+  List.Tot.fold_right app [
+    (* a:Type0 *)
+    type_0 ;
+    (* x:a *)
+    Var 0 ;
+    (* p: a -> Type0 *)
+    (Var 1 `arr` type_0) ;
+    (* p x *)
+    (Var 0 `app` Var 1) ;
+    (* y *)
+    Var 3 ;
+    (* x = y *)
+    eq (Var 4) (Var 3) (Var 0) ;
+  ]
+  (* p y *)
+  (Var 3 `app` Var 1)
+
+let max (u1 u2 : nat) = if u1 < u2 then u2 else u1
+
+type typing : env -> term -> comp -> Type =
   | TyVar :
     #g:env ->
     valid g ->
     x:var{Some? (g x)} ->
-    typing g (Var x [])
+    typing g (tot (Var x []))
 
   | TyConst :
     #g:env ->
     #c:const ->
     #t:term ->
     typing_const c t ->
-    typing g (Const c) t
+    typing g (Const c) (tot t)
+
+  (* Since we don't want constructors to contain type parameters we need to have a *)
+  (* specific typing rule *)
+  | TyRefl :
+    #g:env ->
+    #e:term ->
+    #t:term ->
+    typing g e (tot t) ->
+    typing g (refl `app` e) (tot (eq t e e))
 
   | TyType :
     u:universe_level ->
-    typing env (Type_ u) (Type_ (u+1))
+    typing env (Type_ u) (tot (Type_ (u+1)))
 
   | TyLam :
     #g:env ->
     #t:term ->
     #c:term ->
     e:term ->
-    typing_comp (extend g 0 t) e c ->
-    typing g (Lam t e) (Prod t c)
+    typing (extend g 0 t) e c ->
+    typing g (Lam t e) (tot (Prod t c))
 
-
-and typing_comp : env -> term -> comp -> Type =
   | TyApp :
     #g:env ->
     #t:term ->
     #e1:term ->
     #c:comp ->
     #e2:term ->
-    he1:typing env e1 (Prod t c) ->
-    he2:typing env e2 t ->
+    he1:typing env e1 (tot (Prod t c)) ->
+    he2:typing env e2 (tot t) ->
     typing_comp env (App e1 e2) c
 
+  | TyProd :
+    #g:env ->
+    #t:term ->
+    #c:comp ->
+    #u1:universe ->
+    #u2:universe ->
+    typing g t (tot (Type_ u1)) ->
+    comp_typing g c (tot (Type_ u2)) ->
+    typing g (Prod t c) (tot (Type_ (max u1 u2)))
+
+  (* Impredicative *)
+  | TyRefine :
+    #g:env ->
+    #t:term ->
+    #phi:term ->
+    #u:universe ->
+    #v:universe ->
+    typing g t (tot (Type_ u)) ->
+    typing g phi (tot (Type_ v)) ->
+    typing g (Refine t phi) (tot (Type_ u))
+
+  | TyConv :
+    #g:env ->
+    #e:term ->
+    #t1:term ->
+    #t2:term ->
+    typing g e (tot t1) ->
+    def_eq t1 t2 ->
+    typing g e t2
+
+and typing_comp : env -> term -> comp -> Type =
+
+  | TyTot :
+    #g:env ->
+    #e:term ->
+    #t:term ->
+    typing g e t ->
+    typing_comp g e (Tot_ t)
+
+and comp_typing : env -> comp -> term -> Type =
+  | TyTot_ :
+    #g:env ->
+    #t:term ->
+    #u:universe ->
+    typing g t (Type_ u) ->
+    comp_typing g (Tot_ t) (Type_ u)
+
+  (* Impredicative *)
+  | TyPure_ :
+    #g:env ->
+    #t:term ->
+    #wp:term ->
+    #u:universe ->
+    typing g t (Type_ u) ->
+    typing g wp ((t `arr` type_0) `arr` type_0) ->
+    comp_typing g (Pure_ t wp) (Type_ u)
+
 and typing_const : env -> const -> term -> Type =
-  | TyNat : typing_const Nat (Type_ 0)
+  | TyNat : typing_const Nat type_0
   | TyZero : typing_const Zero cnat
   | TySucc : typing_const Succ (cnat `arr` cnat)
-  | TyNatElim : typing_const NatElim ()
+  | TyNatElim : typing_const NatElim nat_elim_type
+  | TyEq : typing_const Eq eq_type
+  | TyEqElim : typing_const EqElim eq_elim_type
+
+
+let typing_equiv (g:env) (t1 t2 : term) =
+    (tt:term -> typing g t1 tt -> typing g t2 tt) * (tt:term -> typing g t2 tt -> typing g t1 tt)
+
+let rec def_eq_well_typed #g #t1 #t2 (deq:def_eq t1 t2)
+  : Tot (typing_equiv g t1 t2)
+= match deq with
+  | DEqRefl _ -> let id (t:term) (x:typing g t1 t) = x in id, id
+  | DEqSymm deq -> let (a,b) = def_eq_well_typed deq in (b,a)
+  | DEqTrans deq1 deq2 ->
+    let (a1, b1) = def_eq_well_typed deq1 in
+    let (a2, b2) = def_eq_well_typed deq2 in
+    (fun t x -> a2 t (a1 t x)), (fun t x -> b1 t (b2 t x))
+  | DEqApp deq1 deq2 ->
+    let (a1, b1) = def_eq_well_typed deq1 in
+    let (a2, b2) = def_eq_well_typed deq2 in
+    let a tt (x:typing g t1 t) =
+      match x with
+      | TyApp #g #t #e1 #c #e2 he1 he2 ->
+        TyApp (a1 he1) (a2 he2)
+      | TyConv 
+      let TyApp ()
+
+let rec typing_type_well_typed #g #e #t (d:typing g e t) : u:universe & typing g t (Type_ u)
+= match d with
+  |
