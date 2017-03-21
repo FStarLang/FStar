@@ -659,11 +659,12 @@ let extract_pat (g:env) p (expected_t:mlty) : (env * list<(mlpattern * option<ml
       | Pat_disj [] -> failwith "Impossible: Empty disjunctive pattern"
 
       | Pat_disj (p::pats)      ->
-        let g, p, b = extract_one_pat true g p (Some expected_t) in
+        let g', p, b = extract_one_pat true g p (Some expected_t) in
         let b, ps = BU.fold_map (fun b p ->
                     let _, p, b' = extract_one_pat true g p (Some expected_t) in
                     b && b', p) b pats in
         let ps = p :: ps in
+        let g = g' in
         let ps_when, rest = ps |> List.partition (function (_, _::_) -> true | _ -> false) in
         let ps = ps_when |> List.map (fun (x, whens) -> (x, mk_when_clause whens)) in
         //branches that contains a new when clause need to be split out
