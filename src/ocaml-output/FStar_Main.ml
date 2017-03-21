@@ -1,5 +1,5 @@
 open Prims
-let uu___188 : Prims.unit = FStar_Version.dummy () 
+let uu___190 : Prims.unit = FStar_Version.dummy () 
 let process_args :
   Prims.unit -> (FStar_Getopt.parse_cmdline_res * Prims.string Prims.list) =
   fun uu____6  -> FStar_Options.parse_cmd_line () 
@@ -93,7 +93,7 @@ let codegen :
                 umods
                in
             FStar_All.pipe_left Prims.snd uu____106  in
-          let mllibs = FStar_List.flatten mllibs  in
+          let mllibs1 = FStar_List.flatten mllibs  in
           let ext =
             match opt with
             | Some "FSharp" -> ".fs"
@@ -104,11 +104,11 @@ let codegen :
            | Some "FSharp"|Some "OCaml" ->
                let outdir = FStar_Options.output_dir ()  in
                FStar_List.iter (FStar_Extraction_ML_PrintML.print outdir ext)
-                 mllibs
+                 mllibs1
            | Some "Kremlin" ->
                let programs =
                  let uu____130 =
-                   FStar_List.map FStar_Extraction_Kremlin.translate mllibs
+                   FStar_List.map FStar_Extraction_Kremlin.translate mllibs1
                     in
                  FStar_List.flatten uu____130  in
                let bin = (FStar_Extraction_Kremlin.current_version, programs)
@@ -155,7 +155,7 @@ let go uu____146 =
                     FStar_All.exit (Prims.parse_int "1"))
                  else ();
                  (let filename = FStar_List.hd filenames  in
-                  let filename =
+                  let filename1 =
                     FStar_Parser_Dep.try_convert_file_name_to_windows
                       filename
                      in
@@ -167,7 +167,7 @@ let go uu____146 =
                      FStar_Util.print_warning
                        "Interactive mode; ignoring --verify_module"
                    else ());
-                  FStar_Interactive.interactive_mode filename))
+                  FStar_Interactive.interactive_mode filename1))
               else
                 (let uu____195 = FStar_Options.doc ()  in
                  if uu____195
@@ -210,12 +210,12 @@ let go uu____146 =
                               then FStar_Parser_Dep.VerifyUserList
                               else FStar_Parser_Dep.VerifyFigureItOut)
                             in
-                         let filenames =
+                         let filenames1 =
                            FStar_Dependencies.find_deps_if_needed verify_mode
                              filenames
                             in
                          let uu____220 =
-                           FStar_Universal.batch_mode_tc filenames  in
+                           FStar_Universal.batch_mode_tc filenames1  in
                          match uu____220 with
                          | (fmods,dsenv,env) ->
                              let module_names_and_times =

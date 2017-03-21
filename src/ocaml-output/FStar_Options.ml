@@ -101,7 +101,7 @@ let as_list as_t uu___48_161 =
 let as_option as_t uu___49_185 =
   match uu___49_185 with
   | Unset  -> None
-  | v -> let uu____189 = as_t v  in Some uu____189 
+  | v1 -> let uu____189 = as_t v1  in Some uu____189 
 let fstar_options : option_val FStar_Util.smap Prims.list FStar_ST.ref =
   FStar_Util.mk_ref [] 
 let peek : Prims.unit -> option_val FStar_Util.smap =
@@ -113,7 +113,7 @@ let pop : Prims.unit -> Prims.unit =
     let uu____213 = FStar_ST.read fstar_options  in
     match uu____213 with
     | []|_::[] -> failwith "TOO MANY POPS!"
-    | uu____224::tl -> FStar_ST.write fstar_options tl
+    | uu____224::tl1 -> FStar_ST.write fstar_options tl1
   
 let push : Prims.unit -> Prims.unit =
   fun uu____236  ->
@@ -126,10 +126,10 @@ let push : Prims.unit -> Prims.unit =
   
 let set_option : Prims.string -> option_val -> Prims.unit =
   fun k  ->
-    fun v  -> let uu____262 = peek ()  in FStar_Util.smap_add uu____262 k v
+    fun v1  -> let uu____262 = peek ()  in FStar_Util.smap_add uu____262 k v1
   
 let set_option' : (Prims.string * option_val) -> Prims.unit =
-  fun uu____268  -> match uu____268 with | (k,v) -> set_option k v 
+  fun uu____268  -> match uu____268 with | (k,v1) -> set_option k v1 
 let light_off_files : Prims.string Prims.list FStar_ST.ref =
   FStar_Util.mk_ref [] 
 let add_light_off_file : Prims.string -> Prims.unit =
@@ -237,7 +237,7 @@ let lookup_opt s c =
   | None  ->
       failwith
         (Prims.strcat "Impossible: option " (Prims.strcat s " not found"))
-  | Some s -> c s 
+  | Some s1 -> c s1 
 let get_admit_smt_queries : Prims.unit -> Prims.bool =
   fun uu____500  -> lookup_opt "admit_smt_queries" as_bool 
 let get_cardinality : Prims.unit -> Prims.string =
@@ -469,7 +469,7 @@ let mk_spec :
     let uu____878 = o  in
     match uu____878 with
     | (ns,name,arg,desc) ->
-        let arg =
+        let arg1 =
           match arg with
           | FStar_Getopt.ZeroArgs f ->
               let g uu____899 =
@@ -483,7 +483,7 @@ let mk_spec :
                 set_option' uu____914  in
               FStar_Getopt.OneArg (g, d)
            in
-        (ns, name, arg, desc)
+        (ns, name, arg1, desc)
   
 let cons_extract_module : Prims.string -> option_val =
   fun s  ->
@@ -541,7 +541,7 @@ let rec specs :
       Prims.string) Prims.list
   =
   fun uu____973  ->
-    let specs =
+    let specs1 =
       [(FStar_Getopt.noshort, "admit_smt_queries",
          (FStar_Getopt.OneArg
             (((fun s  ->
@@ -795,8 +795,8 @@ let rec specs :
         "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
       (FStar_Getopt.noshort, "split_cases",
         (FStar_Getopt.OneArg
-           (((fun n  ->
-                let uu____1457 = FStar_Util.int_of_string n  in
+           (((fun n1  ->
+                let uu____1457 = FStar_Util.int_of_string n1  in
                 Int uu____1457)), "[positive integer]")),
         "Partition VC of a match into groups of [n] cases");
       (FStar_Getopt.noshort, "timing",
@@ -879,11 +879,11 @@ let rec specs :
         (FStar_Getopt.ZeroArgs ((fun uu____1601  -> Bool true))),
         "Don't check positivity of inductive types")]
        in
-    let uu____1607 = FStar_List.map mk_spec specs  in
+    let uu____1607 = FStar_List.map mk_spec specs1  in
     ('h', "help",
       (FStar_Getopt.ZeroArgs
          (fun x  ->
-            display_usage_aux specs; FStar_All.exit (Prims.parse_int "0"))),
+            display_usage_aux specs1; FStar_All.exit (Prims.parse_int "0"))),
       "Display this information") :: uu____1607
 
 and parse_codegen : Prims.string -> Prims.string =
@@ -982,19 +982,19 @@ let fstar_home : Prims.unit -> Prims.string =
     match uu____1730 with
     | None  ->
         let x = FStar_Util.get_exec_dir ()  in
-        let x = Prims.strcat x "/.."  in
-        (set_option' ("fstar_home", (String x)); x)
+        let x1 = Prims.strcat x "/.."  in
+        (set_option' ("fstar_home", (String x1)); x1)
     | Some x -> x
   
 let set_options : options -> Prims.string -> FStar_Getopt.parse_cmdline_res =
   fun o  ->
     fun s  ->
-      let specs =
+      let specs1 =
         match o with
         | Set  -> resettable_specs
         | Reset  -> resettable_specs
         | Restore  -> all_specs  in
-      FStar_Getopt.parse_string specs (fun uu____1755  -> ()) s
+      FStar_Getopt.parse_string specs1 (fun uu____1755  -> ()) s
   
 let file_list_ : Prims.string Prims.list FStar_ST.ref = FStar_Util.mk_ref [] 
 let parse_cmd_line :
@@ -1045,20 +1045,20 @@ let should_verify : Prims.string -> Prims.bool =
               let uu____1821 = file_list ()  in
               FStar_List.existsML
                 (fun f  ->
-                   let f = FStar_Util.basename f  in
-                   let f =
+                   let f1 = FStar_Util.basename f  in
+                   let f2 =
                      let uu____1826 =
                        let uu____1827 =
                          let uu____1828 =
-                           let uu____1829 = FStar_Util.get_file_extension f
+                           let uu____1829 = FStar_Util.get_file_extension f1
                               in
                            FStar_String.length uu____1829  in
-                         (FStar_String.length f) - uu____1828  in
+                         (FStar_String.length f1) - uu____1828  in
                        uu____1827 - (Prims.parse_int "1")  in
-                     FStar_String.substring f (Prims.parse_int "0")
+                     FStar_String.substring f1 (Prims.parse_int "0")
                        uu____1826
                       in
-                   (FStar_String.lowercase f) = m) uu____1821
+                   (FStar_String.lowercase f2) = m) uu____1821
           | l -> FStar_List.contains (FStar_String.lowercase m) l))
   
 let dont_gen_projectors : Prims.string -> Prims.bool =

@@ -126,7 +126,7 @@ let next_hint : Prims.string -> Prims.int -> FStar_Util.hint Prims.option =
   
 let record_hint : FStar_Util.hint Prims.option -> Prims.unit =
   fun hint  ->
-    let hint =
+    let hint1 =
       match hint with
       | None  -> None
       | Some h ->
@@ -144,7 +144,7 @@ let record_hint : FStar_Util.hint Prims.option -> Prims.unit =
     let uu____226 = FStar_ST.read recorded_hints  in
     match uu____226 with
     | Some l ->
-        FStar_ST.write recorded_hints (Some (FStar_List.append l [hint]))
+        FStar_ST.write recorded_hints (Some (FStar_List.append l [hint1]))
     | uu____240 -> ()
   
 let record_hint_stat :
@@ -176,14 +176,14 @@ let ask_and_report_errors :
   =
   fun env  ->
     fun all_labels  ->
-      fun prefix  ->
+      fun prefix1  ->
         fun query  ->
           fun suffix  ->
-            FStar_SMTEncoding_Z3.giveZ3 prefix;
+            FStar_SMTEncoding_Z3.giveZ3 prefix1;
             (let uu____299 =
                match env.FStar_TypeChecker_Env.qname_and_index with
                | None  -> failwith "No query name set!"
-               | Some (q,n) -> ((FStar_Ident.text_of_lid q), n)  in
+               | Some (q,n1) -> ((FStar_Ident.text_of_lid q), n1)  in
              match uu____299 with
              | (query_name,query_index) ->
                  let minimum_workable_fuel = FStar_Util.mk_ref None  in
@@ -201,11 +201,11 @@ let ask_and_report_errors :
                     in
                  let with_fuel label_assumptions p uu____453 =
                    match uu____453 with
-                   | (n,i,rlimit) ->
+                   | (n1,i,rlimit) ->
                        let uu____462 =
                          let uu____464 =
                            let uu____465 =
-                             let uu____466 = FStar_Util.string_of_int n  in
+                             let uu____466 = FStar_Util.string_of_int n1  in
                              let uu____467 = FStar_Util.string_of_int i  in
                              FStar_Util.format2 "<fuel='%s' ifuel='%s'>"
                                uu____466 uu____467
@@ -221,7 +221,7 @@ let ask_and_report_errors :
                                        ("MaxFuel", [])
                                       in
                                    let uu____482 =
-                                     FStar_SMTEncoding_Term.n_fuel n  in
+                                     FStar_SMTEncoding_Term.n_fuel n1  in
                                    (uu____480, uu____482)  in
                                  FStar_SMTEncoding_Util.mkEq uu____477  in
                                (uu____476, None, None)  in
@@ -394,8 +394,8 @@ let ask_and_report_errors :
                             else []) :: uu____615
                             in
                          FStar_List.flatten uu____609  in
-                       let report p errs =
-                         let errs =
+                       let report1 p1 errs =
+                         let errs1 =
                            let uu____813 =
                              (FStar_Options.detail_errors ()) &&
                                (let uu____814 = FStar_Options.n_cores ()  in
@@ -407,7 +407,7 @@ let ask_and_report_errors :
                                let uu____824 =
                                  FStar_ST.read minimum_workable_fuel  in
                                match uu____824 with
-                               | Some (f,errs) -> (f, errs)
+                               | Some (f,errs1) -> (f, errs1)
                                | None  ->
                                    let uu____889 =
                                      let uu____893 =
@@ -418,11 +418,12 @@ let ask_and_report_errors :
                                    (uu____889, errs)
                                 in
                              match uu____815 with
-                             | (min_fuel,potential_errors) ->
+                             | (min_fuel1,potential_errors) ->
                                  let ask_z3 label_assumptions =
                                    let res = FStar_Util.mk_ref None  in
                                    (let uu____947 =
-                                      with_fuel label_assumptions p min_fuel
+                                      with_fuel label_assumptions p1
+                                        min_fuel1
                                        in
                                     FStar_SMTEncoding_Z3.ask None all_labels
                                       uu____947
@@ -477,7 +478,7 @@ let ask_and_report_errors :
                               uu____1058 uu____1060 uu____1062
                           else ());
                          (let uu____1065 =
-                            FStar_All.pipe_right (Prims.fst errs)
+                            FStar_All.pipe_right (Prims.fst errs1)
                               (FStar_List.map
                                  (fun uu____1077  ->
                                     match uu____1077 with
@@ -491,22 +492,22 @@ let ask_and_report_errors :
                          | (uu____1111,FStar_Util.Inr uu____1112) ->
                              FStar_Util.Inr errs
                           in
-                       let rec try_alt_configs prev_f p errs cfgs =
+                       let rec try_alt_configs prev_f p1 errs cfgs =
                          set_minimum_workable_fuel prev_f errs;
                          (match (cfgs, (Prims.snd errs)) with
                           | ([],_)|(_,FStar_SMTEncoding_Z3.Kill ) ->
-                              report p errs
+                              report1 p1 errs
                           | (mi::[],uu____1191) ->
                               (match errs with
                                | ([],uu____1205) ->
-                                   let uu____1207 = with_fuel [] p mi  in
+                                   let uu____1207 = with_fuel [] p1 mi  in
                                    FStar_SMTEncoding_Z3.ask None all_labels
-                                     uu____1207 (cb false mi p [])
+                                     uu____1207 (cb false mi p1 [])
                                | uu____1213 ->
                                    (set_minimum_workable_fuel prev_f errs;
-                                    report p errs))
-                          | (mi::tl,uu____1217) ->
-                              let uu____1232 = with_fuel [] p mi  in
+                                    report1 p1 errs))
+                          | (mi::tl1,uu____1217) ->
+                              let uu____1232 = with_fuel [] p1 mi  in
                               FStar_SMTEncoding_Z3.ask None all_labels
                                 uu____1232
                                 (fun uu____1235  ->
@@ -516,9 +517,9 @@ let ask_and_report_errors :
                                          let uu____1259 =
                                            use_errors errs result  in
                                          (uu____1259, elapsed_time)  in
-                                       cb false mi p tl uu____1252))
+                                       cb false mi p1 tl1 uu____1252))
                        
-                       and cb used_hint uu____1261 p alt uu____1264 =
+                       and cb used_hint uu____1261 p1 alt uu____1264 =
                          match (uu____1261, uu____1264) with
                          | ((prev_fuel,prev_ifuel,timeout),(result,elapsed_time))
                              ->
@@ -589,7 +590,7 @@ let ask_and_report_errors :
                                    uu____1320
                                   in
                                match result with
-                               | FStar_Util.Inl unsat_core ->
+                               | FStar_Util.Inl unsat_core1 ->
                                    (if Prims.op_Negation used_hint
                                     then
                                       (let hint =
@@ -599,7 +600,8 @@ let ask_and_report_errors :
                                              query_index;
                                            FStar_Util.fuel = prev_fuel;
                                            FStar_Util.ifuel = prev_ifuel;
-                                           FStar_Util.unsat_core = unsat_core;
+                                           FStar_Util.unsat_core =
+                                             unsat_core1;
                                            FStar_Util.query_elapsed_time =
                                              elapsed_time
                                          }  in
@@ -621,8 +623,8 @@ let ask_and_report_errors :
                                      then query_info "failed"
                                      else ());
                                     try_alt_configs
-                                      (prev_fuel, prev_ifuel, timeout) p errs
-                                      alt)))
+                                      (prev_fuel, prev_ifuel, timeout) p1
+                                      errs alt)))
                         in
                        (if FStar_Option.isSome unsat_core
                         then FStar_SMTEncoding_Z3.refresh ()
@@ -668,15 +670,16 @@ let solve :
              FStar_All.pipe_left FStar_Range.string_of_range uu____1421  in
            FStar_Util.format1 "Starting query at %s" uu____1420  in
          FStar_SMTEncoding_Encode.push uu____1419);
-        (let tcenv = FStar_TypeChecker_Env.incr_query_index tcenv  in
+        (let tcenv1 = FStar_TypeChecker_Env.incr_query_index tcenv  in
          let uu____1423 =
-           FStar_SMTEncoding_Encode.encode_query use_env_msg tcenv q  in
+           FStar_SMTEncoding_Encode.encode_query use_env_msg tcenv1 q  in
          match uu____1423 with
-         | (prefix,labels,qry,suffix) ->
-             let pop uu____1444 =
+         | (prefix1,labels,qry,suffix) ->
+             let pop1 uu____1444 =
                let uu____1445 =
                  let uu____1446 =
-                   let uu____1447 = FStar_TypeChecker_Env.get_range tcenv  in
+                   let uu____1447 = FStar_TypeChecker_Env.get_range tcenv1
+                      in
                    FStar_All.pipe_left FStar_Range.string_of_range uu____1447
                     in
                  FStar_Util.format1 "Ending query at %s" uu____1446  in
@@ -688,11 +691,11 @@ let solve :
                        (FStar_SMTEncoding_Term.FalseOp ,uu____1448);
                      FStar_SMTEncoding_Term.freevars = uu____1449;
                      FStar_SMTEncoding_Term.rng = uu____1450;_},uu____1451,uu____1452)
-                  -> pop ()
-              | uu____1462 when tcenv.FStar_TypeChecker_Env.admit -> pop ()
-              | FStar_SMTEncoding_Term.Assume (q,uu____1465,uu____1466) ->
-                  (ask_and_report_errors tcenv labels prefix qry suffix;
-                   pop ())
+                  -> pop1 ()
+              | uu____1462 when tcenv1.FStar_TypeChecker_Env.admit -> pop1 ()
+              | FStar_SMTEncoding_Term.Assume (q1,uu____1465,uu____1466) ->
+                  (ask_and_report_errors tcenv1 labels prefix1 qry suffix;
+                   pop1 ())
               | uu____1470 -> failwith "Impossible"))
   
 let solver : FStar_TypeChecker_Env.solver_t =
