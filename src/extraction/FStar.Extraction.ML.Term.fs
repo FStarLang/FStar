@@ -499,8 +499,8 @@ and binders_as_ml_binders (g:env) (bs:binders) : list<(mlident * mlty)> * env =
                     ml_b::ml_bs, env
             else let b = fst b in
                     let t = term_as_mlty env b.sort in
-                    let env = extend_bv env b ([], t) false false false in
-                    let ml_b = (bv_as_ml_termvar b, t) in
+                    let env, b = extend_bv env b ([], t) false false false in
+                    let ml_b = (removeTick b, t) in
                     ml_b::ml_bs, env)
     ([], g) in
     List.rev ml_bs,
@@ -589,18 +589,15 @@ let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) (g:env) (p:S.pat) 
         let mlty = term_as_mlty g t in
         g, Some (MLP_Const (mlconst_of_const' p.p s), []), ok mlty
 
-    | Pat_var x ->
+    | Pat_var x | Pat_wild x ->
+        // Note: Pat_wild turns into a binder in the internal syntax because the
+        // underlying type variable may unify and refine into something else.
         let mlty = term_as_mlty g x.sort in
-        let g = extend_bv g x ([], mlty) false false imp in
-        g, (if imp then None else Some (MLP_Var (bv_as_mlident x), [])), ok mlty
+        let g, x = extend_bv g x ([], mlty) false false imp in
+        g, (if imp then None else Some (MLP_Var x, [])), ok mlty
 
     | Pat_wild x when disjunctive_pat ->
         g, Some (MLP_Wild, []), true
-
-    | Pat_wild x -> (*how is this different from Pat_var? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
-        let mlty = term_as_mlty g x.sort in
-        let g = UEnv.extend_bv g x ([], mlty) false false imp in
-        g, (if imp then None else Some (MLP_Var (bv_as_mlident x), [])), ok mlty
 
     | Pat_dot_term _ ->
         g, None, true
