@@ -23,7 +23,15 @@ open FStar.Extraction.ML.Syntax
 open FStar.Syntax
 open FStar.Syntax.Syntax
 module BU = FStar.Util
-type ty_or_exp_b = either<(mlident * mlty), (mlexpr * mltyscheme * bool)>
+
+// JP: my understanding of this is: we either bind a type (left injection) or a
+// term variable (right injection). In the latter case, the variable may need to
+// be coerced, hence the [mlexpr] (instead of the [mlident]). In order to avoid
+// shadowing (which may occur, as the F* normalization potentially breaks the
+// original lexical structure of the F* term), we ALSO keep the [mlsymbol], but
+// only for the purpose of resolving name collisions.
+// The boolean tells whether this is a recursive binding or not.
+type ty_or_exp_b = either<(mlident * mlty), (mlsymbol * mlexpr * mltyscheme * bool)>
 
 type binding =
     | Bv  of bv * ty_or_exp_b
@@ -178,17 +186,38 @@ let extend_ty (g:env) (a:bv) (mapped_to:option<mlty>) : env =
     let tcenv = TypeChecker.Env.push_bv g.tcenv a in // push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
     {g with gamma=gamma; tcenv=tcenv}
 
+// Need to avoid shadowing an existing identifier (see comment about ty_or_exp_b)
+let find_uniq gamma mlident =
+  let rec find_uniq mlident i =
+    let suffix = if i = 0 then "" else string_of_int i in
+    let target_mlident = mlident ^ suffix in
+    let has_collision = List.existsb (function
+        | Bv (_, Inl (mlident', _))
+        | Fv (_, Inl (mlident', _)) -> target_mlident = fst mlident'
+        | Fv (_, Inr (mlident', _, _, _))
+        | Bv (_, Inr (mlident', _, _, _)) -> target_mlident = mlident'
+      ) gamma in
+    if has_collision then
+      find_uniq mlident (i + 1)
+    else
+      target_mlident
+  in
+  find_uniq mlident 0
+
 let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) (mk_unit:bool (*some pattern terms become unit while extracting*)) : env =
     let ml_ty = match t_x with 
         | ([], t) -> t
         | _ -> MLTY_Top in
-    let mlx = MLE_Var (bv_as_mlident x) in
+    let mlident, nocluewhat = bv_as_mlident x in
+    let mlsymbol = find_uniq g.gamma mlident in
+    let mlident = mlsymbol, nocluewhat in
+    let mlx = MLE_Var mlident in
     let mlx = if mk_unit 
               then ml_unit 
               else if add_unit 
               then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit]) 
               else with_ty ml_ty mlx in
-    let gamma = Bv(x, Inr(mlx, t_x, is_rec))::g.gamma in
+    let gamma = Bv(x, Inr(mlsymbol, mlx, t_x, is_rec))::g.gamma in
     let tcenv = TypeChecker.Env.push_binders g.tcenv (binders_of_list [x]) in
     {g with gamma=gamma; tcenv=tcenv}
 
@@ -214,12 +243,16 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
         let ml_ty = match t_x with 
             | ([], t) -> t
             | _ -> MLTY_Top in
-        let mly = MLE_Name (
+        let mlpath, mlsymbol =
           let ns, i = y in
-          ns, avoid_keyword i
-        ) in
+          // Not sure whether the extraction will one day refer to a top-level
+          // binding in scope with an unqualified name, but just in case...
+          let mlsymbol = find_uniq g.gamma (avoid_keyword i) in
+          (ns, mlsymbol), mlsymbol
+        in
+        let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
-        let gamma = Fv(x, Inr(mly, t_x, is_rec))::g.gamma in
+        let gamma = Fv(x, Inr(mlsymbol, mly, t_x, is_rec))::g.gamma in
         {g with gamma=gamma}
     else failwith "freevars found"
 
