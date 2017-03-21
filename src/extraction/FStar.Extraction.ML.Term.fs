@@ -589,15 +589,22 @@ let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) (g:env) (p:S.pat) 
         let mlty = term_as_mlty g t in
         g, Some (MLP_Const (mlconst_of_const' p.p s), []), ok mlty
 
+    | Pat_wild x when disjunctive_pat ->
+        // JP: the reason why this is specialized is so that:
+        //     [] | _ :: [] ->
+        // doesn't get extracted as
+        //     [] | uu__1234 :: [] ->
+        // ("bound variable must appear on both sides of the pattern").
+        // JP: this makes no sense to me. How do we know that we won't need to
+        // refer to the variable?
+        g, Some (MLP_Wild, []), true
+
     | Pat_var x | Pat_wild x ->
-        // Note: Pat_wild turns into a binder in the internal syntax because the
+        // JP: Pat_wild turns into a binder in the internal syntax because the
         // underlying type variable may unify and refine into something else.
         let mlty = term_as_mlty g x.sort in
         let g, x = extend_bv g x ([], mlty) false false imp in
         g, (if imp then None else Some (MLP_Var x, [])), ok mlty
-
-    | Pat_wild x when disjunctive_pat ->
-        g, Some (MLP_Wild, []), true
 
     | Pat_dot_term _ ->
         g, None, true
