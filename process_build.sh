@@ -10,6 +10,10 @@ fi
 set -e
 set -o pipefail
 
+if [[ -f ~/.bash_profile ]]; then
+  source ~/.bash_profile
+fi
+
 echo "** TO DO: Clean up existing packages first **"
 
 echo "*** Make package ***"
