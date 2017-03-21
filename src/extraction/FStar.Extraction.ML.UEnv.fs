@@ -250,9 +250,8 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
             | _ -> MLTY_Top in
         let mlpath, mlsymbol =
           let ns, i = y in
-          // Not sure whether the extraction will one day refer to a top-level
-          // binding in scope with an unqualified name, but just in case...
-          let mlsymbol = find_uniq g.gamma (avoid_keyword i) in
+          (* let mlsymbol = find_uniq g.gamma (avoid_keyword i) in *)
+          let mlsymbol = avoid_keyword i in
           (ns, mlsymbol), mlsymbol
         in
         let mly = MLE_Name mlpath in
