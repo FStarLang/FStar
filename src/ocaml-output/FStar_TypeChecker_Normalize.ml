@@ -2168,10 +2168,11 @@ let rec norm :
                           {
                             steps =
                               [PureSubtermsWithinComputations;
-                              Primops; NoDeltaSteps;
+                              Primops;
                               AllowUnboundUniverses;
                               EraseUniverses;
-                              Exclude Zeta];
+                              Exclude Zeta;
+                              NoDeltaSteps];
                             tcenv = (uu___160_5687.tcenv);
                             delta_level =
                               [FStar_TypeChecker_Env.Inlining;
