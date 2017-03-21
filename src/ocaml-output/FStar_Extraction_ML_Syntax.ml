@@ -102,9 +102,9 @@ let rec gensyms : Prims.int -> mlident Prims.list =
   fun x  ->
     match x with
     | _0_28 when _0_28 = (Prims.parse_int "0") -> []
-    | n ->
+    | n1 ->
         let uu____92 = gensym ()  in
-        let uu____93 = gensyms (n - (Prims.parse_int "1"))  in uu____92 ::
+        let uu____93 = gensyms (n1 - (Prims.parse_int "1"))  in uu____92 ::
           uu____93
   
 let mlpath_of_lident :
@@ -114,7 +114,8 @@ let mlpath_of_lident :
     then ([], ((x.FStar_Ident.ident).FStar_Ident.idText))
     else
       (let uu____100 =
-         FStar_List.map (fun x  -> x.FStar_Ident.idText) x.FStar_Ident.ns  in
+         FStar_List.map (fun x1  -> x1.FStar_Ident.idText) x.FStar_Ident.ns
+          in
        (uu____100, ((x.FStar_Ident.ident).FStar_Ident.idText)))
   
 type mlidents = mlident Prims.list

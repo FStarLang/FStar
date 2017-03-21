@@ -5,7 +5,7 @@ let add_errors :
   =
   fun env  ->
     fun errs  ->
-      let errs =
+      let errs1 =
         FStar_All.pipe_right errs
           (FStar_List.map
              (fun uu____27  ->
@@ -45,7 +45,7 @@ let add_errors :
                          (uu____46, uu____50)
                        else (msg, r))))
          in
-      FStar_Errors.add_errors errs
+      FStar_Errors.add_errors errs1
   
 let possibly_verbose_message :
   FStar_TypeChecker_Env.env ->
@@ -65,10 +65,10 @@ let possibly_verbose_message :
               FStar_Options.set_options FStar_Options.Set
                 "--prn --print_universes"
                in
-            let s1 = FStar_TypeChecker_Normalize.term_to_string env t1  in
-            let s2 = FStar_TypeChecker_Normalize.term_to_string env t2  in
+            let s11 = FStar_TypeChecker_Normalize.term_to_string env t1  in
+            let s21 = FStar_TypeChecker_Normalize.term_to_string env t2  in
             FStar_Util.format2
-              "\nMore precisely: expected type:\n%s\ngot:\n%s\n" s1 s2
+              "\nMore precisely: expected type:\n%s\ngot:\n%s\n" s11 s21
           else ""  in
         (s1, s2, extra)
   
@@ -338,9 +338,9 @@ let disjunctive_pattern_vars :
   =
   fun v1  ->
     fun v2  ->
-      let vars v =
+      let vars v3 =
         let uu____319 =
-          FStar_All.pipe_right v
+          FStar_All.pipe_right v3
             (FStar_List.map FStar_Syntax_Print.bv_to_string)
            in
         FStar_All.pipe_right uu____319 (FStar_String.concat ", ")  in

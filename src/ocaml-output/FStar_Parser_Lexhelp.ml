@@ -239,7 +239,7 @@ let escape : FStar_Char.char -> FStar_Char.char =
     | 't' -> '\t'
     | 'b' -> '\b'
     | 'r' -> '\r'
-    | c -> c
+    | c1 -> c1
   
 type compatibilityMode =
   | ALWAYS 
@@ -351,7 +351,7 @@ let kwd_or_id :
       fun s  ->
         let uu____522 = kwd s  in
         match uu____522 with
-        | Some v -> v
+        | Some v1 -> v1
         | None  ->
             (match s with
              | "__SOURCE_DIRECTORY__" ->
