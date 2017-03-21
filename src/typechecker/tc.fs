@@ -540,7 +540,7 @@ and cps_and_elaborate env ed =
           // WARNING : pushing b1 and b2 in env might break the well-typedness invariant
           let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
           let wp_b1 = N.normalize [ N.Beta ] env0 (mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ]))) in
-          let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type body (Util.unascribe wp_b1) in
+          let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type env0 body (Util.unascribe wp_b1) in
           (* TODO : Should check that what' is Tot Type0 *)
           let t2 = (fst b2).sort in
           let pure_wp_type = DMFF.double_star t2 in
@@ -818,7 +818,8 @@ and tc_inductive env ses quals lids =
          warn_positivity tc r;
  (*open*)let tps, k = SS.open_term tps k in
          let tps, env_tps, guard_params, us = tc_binders env tps in
-         let indices, t = Util.arrow_formals k in
+         let indices, ct = Util.arrow_formals_comp k in
+         let t = Env.result_typ env ct in
          let indices, env', guard_indices, us' = tc_binders env_tps indices in
          let t, guard =
              let t, _, g = tc_tot_or_gtot_term env' t in

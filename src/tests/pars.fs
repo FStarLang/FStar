@@ -16,13 +16,13 @@ let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange
 let dsenv_ref = ref None
 let tcenv_ref = ref None
 let test_mod_ref = ref (Some ({name=test_lid;
-                                declarations=[]; 
-                                exports=[]; 
+                                declarations=[];
+                                exports=[];
                                 is_interface=false}))
 
 let parse_mod mod_name dsenv =
     match ParseIt.parse (Inl mod_name) with
-    | Inl (Inl [m]) -> 
+    | Inl (Inl [m]) ->
         let env',  m = Parser.ToSyntax.desugar_modul dsenv m in
         let env' , _ = FStar.Parser.Env.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) in
         dsenv_ref := Some env';
@@ -48,16 +48,16 @@ let init_once () : unit =
   let env = TcEnv.set_current_module env test_lid in
   tcenv_ref := Some env
 
-let rec init () = 
-    match !dsenv_ref, !tcenv_ref with 
+let rec init () =
+    match !dsenv_ref, !tcenv_ref with
         | Some e, Some f -> e, f
         | _ -> init_once(); init()
 
 open FStar.Parser.ParseIt
 let frag_of_text s = {frag_text=s; frag_line=1; frag_col=0}
 
-let pars_term_or_fragment is_term s = 
-  try 
+let pars_term_or_fragment is_term s =
+  try
       let env, tcenv = init() in
       let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
         lexbuf.EndPos <- {lexbuf.EndPos with
@@ -70,10 +70,10 @@ let pars_term_or_fragment is_term s =
       let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
       let lexer = LexFStar.token lexargs in
       let frag = frag_of_text s in
-      if is_term 
+      if is_term
       then let t = Parser.Parse.term lexer lexbuf in
            Some (Parser.ToSyntax.desugar_term env t)
-      else begin match FStar.Universal.interactive_tc.check_frag (env, tcenv) !test_mod_ref frag with 
+      else begin match FStar.Universal.interactive_tc.check_frag (env, tcenv) !test_mod_ref frag with
                 | Some (test_mod', (env', tcenv'), 0) ->
                   test_mod_ref := test_mod';
                   dsenv_ref := Some env';
@@ -81,7 +81,7 @@ let pars_term_or_fragment is_term s =
                   None
                 | _ -> raise (FStar.Syntax.Syntax.Err ("Failed to check fragment: " ^s))
             end
- with 
+ with
     | FStar.Syntax.Syntax.Err msg ->
         printfn "Failed to parse %s\n%s\n" s msg;
         exit -1
@@ -89,8 +89,8 @@ let pars_term_or_fragment is_term s =
         printfn "Failed to parse %s\n%s: %s\n" s (Range.string_of_range r) msg;
         exit -1
 
-let failed_to_parse s e = 
-    match e with 
+let failed_to_parse s e =
+    match e with
         | FStar.Syntax.Syntax.Err msg ->
             printfn "Failed to parse %s\n%s\n" s msg;
             exit -1
@@ -99,8 +99,8 @@ let failed_to_parse s e =
             exit -1
         | _ -> raise e
 
-let pars s = 
-    try 
+let pars s =
+    try
           let env, tcenv = init() in
           let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
             lexbuf.EndPos <- {lexbuf.EndPos with
@@ -114,22 +114,22 @@ let pars s =
           let lexer = LexFStar.token lexargs in
           let t = Parser.Parse.term lexer lexbuf in
           Parser.ToSyntax.desugar_term env t
-     with 
+     with
         | e when not ((Options.trace_error())) -> failed_to_parse s e
 
-let tc s = 
+let tc s =
     let tm = pars s in
     let _, tcenv = init() in
-    let tm, _, _ = TcTerm.type_of_tot_term tcenv tm in 
+    let tm, _, _ = TcTerm.type_of_tot_term tcenv tm in
     tm
 
-let pars_and_tc_fragment (s:string) = 
+let pars_and_tc_fragment (s:string) =
     Options.set_option "trace_error" (Options.Bool true);
     let report () = FStar.TypeChecker.Errors.report_all () |> ignore in
     try
         let env, tcenv = init() in
         let frag = frag_of_text s in
-        match FStar.Universal.interactive_tc.check_frag (env, tcenv) !test_mod_ref frag with 
+        match FStar.Universal.interactive_tc.check_frag (env, tcenv) !test_mod_ref frag with
         | Some (test_mod', (env', tcenv'), n) ->
             test_mod_ref := test_mod';
             dsenv_ref := Some env';
@@ -138,5 +138,5 @@ let pars_and_tc_fragment (s:string) =
             then (report ();
                   raise (FStar.Syntax.Syntax.Err (Util.format1 "%s errors were reported" (string_of_int n))))
         | _ -> report(); raise (FStar.Syntax.Syntax.Err ("check_frag returned None: " ^s))
-    with 
+    with
         | e when not ((Options.trace_error())) -> failed_to_parse s e
