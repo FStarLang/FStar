@@ -70,8 +70,6 @@ open FStar_String
 %token <float> IEEE64
 %token <char> CHAR
 %token <bool> LET
-%token <FStar_Parser_AST.fsdoc> FSDOC
-%token <FStar_Parser_AST.fsdoc> FSDOC_STANDALONE
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
@@ -152,12 +150,8 @@ inputFragment:
 
 (* TODO : let's try to remove that *)
 mainDecl:
-  | SEMICOLON_SEMICOLON doc=FSDOC? t=term
-      { let decorations = match doc with
-        | Some d -> [ Doc d ]
-        | _ -> [] in
-        mk_decl (Main t) (rhs2 parseState 1 3) decorations
-      }
+  | SEMICOLON_SEMICOLON t=term
+    { mk_decl (Main t) (rhs2 parseState 1 2) [] }
 
 
 /******************************************************************************/
@@ -171,8 +165,6 @@ pragma:
       { ResetOptions s_opt }
 
 decoration:
-  | x=FSDOC
-      { Doc x }
   | LBRACK_AT x = list(atomicTerm) RBRACK
       { DeclAttributes x }
   | x=qualifier
@@ -199,8 +191,8 @@ rawDecl:
       { ModuleAbbrev(uid1, uid2) }
   | MODULE uid=quident
       {  TopLevelModule uid }
-  | TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
-      { Tycon (false, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
+  | TYPE tcdefs=separated_nonempty_list(AND, typeDecl)
+      { Tycon (false, List.map (fun f -> (f, None)) tcdefs) }
   | EFFECT uid=uident tparams=typars EQUALS t=typ
       { Tycon(true, [(TyconAbbrev(uid, tparams, None, t), None)]) }
   | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
@@ -223,8 +215,6 @@ rawDecl:
       { SubEffect se }
   | NEW_EFFECT_FOR_FREE ne=newEffect
       { NewEffectForFree ne }
-  | doc=FSDOC_STANDALONE
-      { Fsdoc doc }
 
 typeDecl:
   (* TODO : change to lident with stratify *)
@@ -248,17 +238,35 @@ typeDefinition:
       record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl)
    RBRACE
       { (fun id binders kopt -> check_id id; TyconRecord(id, binders, kopt, record_field_decls)) }
+  (* TODO : try to have the first bar optional now that we removed FSDOC *)
   (* having the first BAR optional using left-flexible list creates a s/r on FSDOC since any decl can be preceded by a FSDOC *)
   | EQUALS ct_decls=list(constructorDecl)
-      { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
+    { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  |  doc_opt=ioption(FSDOC) lid=lident COLON t=typ
-      { (lid, t, doc_opt) }
+  | lid=lident COLON t=typ
+    { {
+        field_id = lid ;
+        field_type = t ;
+        field_doc = None ;
+        field_range = (rhs2 parse_state 1 3)
+    } }
 
 constructorDecl:
-  | BAR doc_opt=FSDOC? uid=uident COLON t=typ                { (uid, Some t, doc_opt, false) }
-  | BAR doc_opt=FSDOC? uid=uident t_opt=option(OF t=typ {t}) { (uid, t_opt, doc_opt, true) }
+  | BAR uid=uident COLON t=typ
+    { {
+        variant_id = uid ;
+        variant_type = Some t ;
+        variant_doc = None ;
+        variant_range = (rhs2 parse_state 2 4)
+      }, false }
+  | BAR uid=uident t_opt=option(OF t=typ {t})
+    { {
+        variant_id = uid ;
+        variant_type = t_opt ;
+        variant_doc = None ;
+        variant_range = (rhs2 parse_state 2 3)
+      }, true }
 
 letbinding:
   | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term

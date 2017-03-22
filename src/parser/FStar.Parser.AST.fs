@@ -56,7 +56,6 @@ let old_mk_dtuple_data_lid n r =
    It is not stratified: a single type called "term" containing
    expressions, formulas, types, and so on
  *)
-type level = | Un | Expr | Type_level | Kind | Formula
 type imp =
     | FsTypApp
     | Hash
@@ -111,7 +110,7 @@ type term' =
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
 
-and term = {tm:term'; range:range; level:level}
+and term = {tm:term'; range:range}
 
 and binder' =
   | Variable of ident
@@ -120,7 +119,7 @@ and binder' =
   | TAnnotated of ident * term
   | NoName of term
 
-and binder = {b:binder'; brange:range; blevel:level; aqual:aqual}
+and binder = {b:binder'; brange:range; aqual:aqual}
 
 and pattern' =
   | PatWild
@@ -139,7 +138,6 @@ and pattern = {pat:pattern'; prange:range}
 
 and branch = (pattern * option<term> * term)
 
-type knd = term
 type typ = term
 type expr = term
 
@@ -147,35 +145,71 @@ type expr = term
 //  - Immediately before a top-level declaration
 //  - Immediately after a type constructor or record field
 //  - In the middle of a file, as a standalone documentation declaration
-(* KM : Would need some range information on fsdocs to be able to print them correctly *)
-type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
+type fsdoc = {
+  comment:string;
+  key_val_map:list<(string * string)>
+  fsdrange: range
+}
 
-(* TODO (KM) : it would be useful for the printer to have range information for those *)
-type tycon =
-  | TyconAbstract of ident * list<binder> * option<knd>
-  | TyconAbbrev   of ident * list<binder> * option<knd> * term
-  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term * option<fsdoc>)>
-  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * option<fsdoc> * bool)> (* using 'of' notion *)
+type record_field = {
+  field_id:ident ;
+  field_type:term ;
+  field_doc:option<fsdoc> ;
+  field_range : range
+}
+
+type variant_constr = {
+  variant_id : ident ;
+  variant_type : option<term> ;
+  variant_doc : option<fsdoc> ;
+  variant_range : range
+}
+
+type tycon' =
+  | TyconAbstract
+  | TyconAbbrev   of term
+  | TyconRecord   of list<record_field>
+  | TyconVariant  of list<variant_constr> * bool (* if true, uses 'of' instead of ':' *)
+
+type tycon = {
+  tycon_id: ident ;
+  typarams: list<binder> ;
+  tydata : tycon'
+}
 
 type qualifier =
+  (** a declaration only visible to the current module *)
   | Private
+  (** a declaration whose definition won't be visible outside current module *)
   | Abstract
+  (** an inductive definition for which we don't try to generate decidable equality *)
   | Noeq
+  (** an inductive definition for which we generate the naive decidable equality *)
   | Unopteq
+  (** a declaration which is assumed to hold without a definition (axiom) *)
   | Assumption
   | DefaultEffect
   | TotalEffect
   | Effect_qual
   | New
-  | Inline                                 //a definition that *should* always be unfolded by the normalizer
-  | Visible                                //a definition that may be unfolded by the normalizer, but only if necessary (default)
-  | Unfold_for_unification_and_vcgen       //a definition that will be unfolded by the normalizer, during unification and for SMT queries
-  | Inline_for_extraction                  //a definition that will be inlined only during compilation
-  | Irreducible                            //a definition that can never be unfolded by the normalizer
-  | NoExtract                              // a definition whose contents won't be extracted (currently, by KreMLin only)
+  (** a definition that *should* always be unfolded by the normalizer *)
+  | Inline
+  (** a definition that may be unfolded by the normalizer, but only if necessary (default) *)
+  | Visible
+  (** a definition that will be unfolded by the normalizer, during unification and for SMT queries *)
+  | Unfold_for_unification_and_vcgen
+  (** a definition that will be inlined only during compilation *)
+  | Inline_for_extraction
+  (** a definition that can never be unfolded by the normalizer *)
+  | Irreducible
+  (** a definition whose contents won't be extracted (currently, by KreMLin only) *)
+  | NoExtract
+  (** An effect definition which comes with a reify operation *)
   | Reifiable
+  (** An effect definition which comes with a reflect operation *)
   | Reflectable
-  //old qualifiers
+
+  (* old qualifiers *)
   | Opaque
   | Logic
 
@@ -210,9 +244,9 @@ type decl' =
   | ModuleAbbrev of ident * lid
   | TopLevelLet of let_qualifier * list<(pattern * term)>
   | Main of term
+  (* bool is for effect *)
   | Tycon of bool * list<(tycon * option<fsdoc>)>
-    (* bool is for effect *)
-  | Val of ident * term  (* bool is for logic val *)
+  | Val of ident * term
   | Exception of ident * option<term>
   | NewEffect of effect_decl
   | NewEffectForFree of effect_decl (* always a [DefineEffect] *)
@@ -260,8 +294,8 @@ let mk_decl d r decorations =
   let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
   { d=d; drange=r; doc=doc; quals=qualifiers; attrs=attributes_ }
 
-let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
-let mk_term t r l = {tm=t; range=r; level=l}
+let mk_binder b r i = {b=b; brange=r; aqual=i}
+let mk_term t r = {tm=t; range=r}
 let mk_uminus t r l =
   let t =
     match t.tm with
@@ -378,16 +412,16 @@ let mkDTuple args r =
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkRefinedBinder id t should_bind_var refopt m implicit =
-  let b = mk_binder (Annotated(id, t)) m Type_level implicit in
+  let b = mk_binder (Annotated(id, t)) m implicit in
   match refopt with
     | None -> b
     | Some phi ->
         if should_bind_var
-        then mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit
+        then mk_binder (Annotated(id, mk_term (Refine(b, phi)) m )) m  implicit
         else
             let x = gen t.range in
-            let b = mk_binder (Annotated (x, t)) m Type_level implicit in
-            mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit
+            let b = mk_binder (Annotated (x, t)) m  implicit in
+            mk_binder (Annotated(id, mk_term (Refine(b, phi)) m )) m  implicit
 
 let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
     let t = match phi_opt with
@@ -397,7 +431,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
             then
                 begin match pat.pat with
                 | PatVar (x,_) ->
-                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type_level None, phi)) range Type_level
+                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range  None, phi)) range 
                 | _ ->
                     let x = gen t_range in
                     let phi =
@@ -410,11 +444,11 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                         in
                         mk_term (Match (x_var, [pat_branch ; otherwise_branch])) phi.range Formula
                     in
-                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type_level None, phi)) range Type_level
+                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range  None, phi)) range 
                 end
             else
                 let x = gen t.range in
-                mk_term (Refine(mk_binder (Annotated (x, t)) t_range Type_level None, phi)) range Type_level
+                mk_term (Refine(mk_binder (Annotated (x, t)) t_range  None, phi)) range 
      in
      mk_pattern (PatAscribed(pat, t)) range
 
@@ -510,7 +544,12 @@ let compile_op' s =
 // Place fsdoc node
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-let to_fsdoc (comment, kwd_args, _) = comment, kwd_args
+let to_fsdoc (comment, kwd_args, range) =
+  {
+    comment = comment ;
+    key_val_map = kwd_args;
+    fsdrange = range
+  }
 
 let place_fsdoc_in_tycon fsdocs decl =
   match decl.d with
@@ -625,11 +664,9 @@ let rec term_to_string (x:term) = match x.tm with
   | Product([], t) ->
     term_to_string t
   | Product(b::hd::tl, t) ->
-    term_to_string (mk_term (Product([b], mk_term (Product(hd::tl, t)) x.range x.level)) x.range x.level)
-  | Product([b], t) when (x.level = Type_level) ->
+    term_to_string (mk_term (Product([b], mk_term (Product(hd::tl, t)) x.range)) x.range)
+  | Product([b], t) ->
     Util.format2 "%s -> %s" (b|> binder_to_string) (t|> term_to_string)
-  | Product([b], t) when (x.level = Kind) ->
-    Util.format2 "%s => %s" (b|> binder_to_string) (t|> term_to_string)
   | Sum(binders, t) ->
     Util.format2 "%s * %s" (binders |> (List.map binder_to_string) |> String.concat " * " ) (t|> term_to_string)
   | QForall(bs, pats, t) ->
