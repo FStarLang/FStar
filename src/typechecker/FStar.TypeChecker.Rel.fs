@@ -2200,7 +2200,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                         [as_arg c1.result_typ; as_arg <| edge.mlift.mlift_wp c1.result_typ wpc1]))
                                  (Some U.ktype0.n) r
                          else mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.stronger,
-                                        [as_arg c2.result_typ; as_arg wpc2; as_arg <| edge.mlift.mlift_wp c1.result_typ wpc1])) 
+                                        [as_arg c2.result_typ; as_arg wpc2; as_arg <| edge.mlift.mlift_wp c1.result_typ wpc1]))
                                  (Some U.ktype0.n) r in
                       let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
                       let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob |> fst) g) [] wl in
@@ -2323,6 +2323,10 @@ let abstract_guard x g = match g with
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
   | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) (Some U.ktype0.n) f.pos}
+
+let map_guard g map = match g.guard_f with
+  | Trivial -> g
+  | NonTrivial f -> {g with guard_f=NonTrivial (map f)}
 
 let trivial t = match t with
   | Trivial -> ()

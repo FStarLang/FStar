@@ -22,6 +22,7 @@ open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Ident
+module S = FStar.Syntax.Syntax
 
 (* relations on types, kinds, etc. *)
 type rel =
@@ -58,8 +59,8 @@ type univ_ineq = universe * universe
 
 module C = FStar.Syntax.Const
 
-let tconst l = mk (Tm_fvar(Syntax.lid_as_fv l Delta_constant None)) (Some Util.ktype0.n) Range.dummyRange
-let tabbrev l = mk (Tm_fvar(Syntax.lid_as_fv l (Delta_defined_at_level 1) None)) (Some Util.ktype0.n) Range.dummyRange
+let tconst l = mk (Tm_fvar(S.lid_as_fv l Delta_constant None)) (Some Util.ktype0.n) Range.dummyRange
+let tabbrev l = mk (Tm_fvar(S.lid_as_fv l (Delta_defined_at_level 1) None)) (Some Util.ktype0.n) Range.dummyRange
 let t_unit   = tconst C.unit_lid
 let t_bool   = tconst C.bool_lid
 let t_int    = tconst C.int_lid
@@ -67,6 +68,10 @@ let t_string = tconst C.string_lid
 let t_float  = tconst C.float_lid
 let t_char   = tabbrev C.char_lid
 let t_range  = tconst C.range_lid
+let t_tactic_unit = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.tactic_lid) [U_zero]) [S.as_arg t_unit] (Some Util.ktype0.n) Range.dummyRange
+let mk_by_tactic t f =
+    let t_by_tactic = S.mk_Tm_uinst (tabbrev C.by_tactic_lid) [U_zero] in
+    S.mk_Tm_app t_by_tactic [S.as_arg t; S.as_arg f] (Some Util.ktype0.n) Range.dummyRange
 
 let rec delta_depth_greater_than l m = match l, m with
     | Delta_constant, _ -> false

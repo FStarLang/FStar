@@ -807,8 +807,10 @@ and p_term e = match (unparen e).tm with
 and p_noSeqTerm e = with_comment p_noSeqTerm' e e.range
 
 and p_noSeqTerm' e = match (unparen e).tm with
-  | Ascribed (e, t) ->
+  | Ascribed (e, t, None) ->
       group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t)
+  | Ascribed (e, t, Some tac) ->
+      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t ^/^ str "by" ^/^ p_typ tac)
   | Op (op, [ e1; e2; e3 ]) when op = ".()<-" ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term e2)

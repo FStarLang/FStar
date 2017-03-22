@@ -143,6 +143,7 @@ let keywords =
     ALWAYS, "assert"     ,ASSERT;
     ALWAYS, "assume"     ,ASSUME;
     ALWAYS, "begin"      ,BEGIN;
+    ALWAYS, "by"         ,BY;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
     ALWAYS, "else"       ,ELSE;

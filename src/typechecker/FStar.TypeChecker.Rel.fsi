@@ -29,6 +29,7 @@ val new_uvar: Range.range -> binders -> typ -> typ * typ
 
 val close_guard               : binders -> guard_t -> guard_t
 val apply_guard               : guard_t -> term -> guard_t
+val map_guard                 : guard_t -> (term -> term) -> guard_t
 val trivial_guard             : guard_t
 val is_trivial                : guard_t -> bool
 val conj_guard                : guard_t -> guard_t -> guard_t

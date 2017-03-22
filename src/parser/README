@@ -2,7 +2,7 @@ Build wizardry
 --------------
 
 There are two lexers:
-- [ml/lex.mll] (building F* via OCaml extraction)
+- [ml/FStar_Parser_LexFStar.mll] (building F* via OCaml extraction)
 - [lex.fsl] (building F* with F#)
 
 The former bundles everything lexing-related into a single file. The latter has
@@ -31,5 +31,10 @@ the same general structure as the parser.
 
 If you're adding a new token, you need to edit:
 - [lexhelp.fs] to add it to the parser keyword table (F#)
-- [ml/lex.mll] to add it to the parser keyword table (OCaml)
+- [ml/FStar_Parser_LexFStar.mll] to add it to the parser keyword table (OCaml)
 - [parse.mly] to expose it to the parser, possibly with an adequate precedence
+
+A common workflow for use with Visual Studio is:
+ 1. edit parse.mly
+ 2. run make -C src/ocaml-output ../parser/parse.fsy
+ 3. rebuild in Visual Studio

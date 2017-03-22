@@ -291,11 +291,14 @@ let rec closure_as_term cfg env t =
              let phi = closure_as_term_delayed cfg env phi in
              mk (Tm_refine(List.hd x |> fst, phi)) t.pos
 
-           | Tm_ascribed(t1, Inl t2, lopt) ->
-             mk (Tm_ascribed(closure_as_term_delayed cfg env t1, Inl <| closure_as_term_delayed cfg env t2, lopt)) t.pos
-
-           | Tm_ascribed(t1, Inr c, lopt) ->
-             mk (Tm_ascribed(closure_as_term_delayed cfg env t1, Inr <| close_comp cfg env c, lopt)) t.pos
+           | Tm_ascribed(t1, (annot,tacopt), lopt) ->
+             let annot = match annot with
+                | Inl t -> Inl (closure_as_term_delayed cfg env t)
+                | Inr c -> Inr (close_comp cfg env c) in
+             let tacopt = BU.map_opt tacopt (closure_as_term_delayed cfg env) in
+             mk (Tm_ascribed(closure_as_term_delayed cfg env t1,
+                             (annot, tacopt),
+                             lopt)) t.pos
 
            | Tm_meta(t', Meta_pattern args) ->
              mk (Tm_meta(closure_as_term_delayed cfg env t',
@@ -898,7 +901,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let t = arrow (norm_binders cfg env bs) c in
                  rebuild cfg env stack t
 
-          | Tm_ascribed(t1, tc, l) ->
+          | Tm_ascribed(t1, (tc, tacopt), l) ->
             begin match stack with
               | Match _ :: _
               | Arg _ :: _
@@ -911,7 +914,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 let tc = match tc with
                     | Inl t -> Inl (norm cfg env [] t)
                     | Inr c -> Inr (norm_comp cfg env c) in
-                rebuild cfg env stack (mk (Tm_ascribed(t1, tc, l)) t.pos)
+                let tacopt = BU.map_opt tacopt (norm cfg env []) in
+                rebuild cfg env stack (mk (Tm_ascribed(t1, (tc, tacopt), l)) t.pos)
             end
 
           | Tm_match(head, branches) ->

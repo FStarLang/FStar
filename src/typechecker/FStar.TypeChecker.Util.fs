@@ -128,7 +128,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
       let e = SS.compress e in
       match e.n with
       | Tm_meta(e, _) -> aux must_check_ty vars e
-      | Tm_ascribed(e, t, _) -> t, true
+      | Tm_ascribed(e, t, _) -> fst t, true
 
       | Tm_abs(bs, body, _) ->
         let scope, bs, must_check_ty = bs |> List.fold_left (fun (scope, bs, must_check_ty) (a, imp) ->
