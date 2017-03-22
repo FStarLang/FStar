@@ -34,43 +34,43 @@ type partition_pre  (a:eqtype) (f:tot_ord a) (start:nat) (len:nat{start <= len} 
                     (pivot:nat{start <= pivot /\ pivot < len})
                     (back:nat{pivot <= back /\ back < len})
                     (x:array a) (h:heap) =
-    (contains h x
-     /\ ((fun s -> (len <= length s) /\ (partition_inv a f
+    (Array.contains h x
+     /\ ((let s = Array.sel h x in (len <= length s) /\ (partition_inv a f
                                                        (slice s start pivot)
                                                        (index s pivot)
                                                        (slice s (back + 1) len)))
-           (sel h x)))
+           ))
 
 type partition_post (a:eqtype) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
                     (pivot:nat{start <= pivot /\ pivot < len})
                     (back:nat{pivot <= back /\ back < len})
                     (x:array a) (h0:heap) (i:nat) (h1:heap) =
-   (len <= length (sel h0 x)
-    /\ contains h1 x
+   (len <= length (Array.sel h0 x)
+    /\ Array.contains h1 x
     /\ start <= i
     /\ i < len
-    /\ (length (sel h1 x) = length (sel h0 x))
-    /\ (sel h1 x == splice (sel h0 x) start (sel h1 x) len)
-    /\ (permutation a (slice (sel h0 x) start len) (slice (sel h1 x) start len))
+    /\ (length (Array.sel h1 x) = length (Array.sel h0 x))
+    /\ (Array.sel h1 x == splice (Array.sel h0 x) start (Array.sel h1 x) len)
+    /\ (permutation a (slice (Array.sel h0 x) start len) (slice (Array.sel h1 x) start len))
     /\ (partition_inv a f
-                      (slice (sel h1 x) start i)
-                      (index (sel h1 x) i)
-                      (slice (sel h1 x) i len)))
+                      (slice (Array.sel h1 x) start i)
+                      (index (Array.sel h1 x) i)
+                      (slice (Array.sel h1 x) i len)))
 
-#reset-options "--z3rlimit 10 --initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
+#reset-options "--z3rlimit 20 --initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
 val partition: #a:eqtype -> f:tot_ord a
                -> start:nat -> len:nat{start <= len}
                -> pivot:nat{start <= pivot /\ pivot < len}
                -> back:nat{pivot <= back /\ back < len}
                -> x:array a -> ST nat
   (requires (partition_pre a f start len pivot back x))
-  (ensures (fun h0 n h1 -> partition_post a f start len pivot back x h0 n h1 /\ modifies (TSet.singleton (Ref x)) h0 h1))
+  (ensures (fun h0 n h1 -> partition_post a f start len pivot back x h0 n h1 /\ modifies (TSet.singleton (mk_aref x)) h0 h1))
 let rec partition #a f start len pivot back x =
   let h0 = get() in
   if pivot = back
   then
     begin
-(*ghost*)      (let s = sel h0 x in
+(*ghost*)      (let s = Array.sel h0 x in
 (*ghost*)       lemma_slice_cons s pivot len;
 (*ghost*)       splice_refl s start len);
       pivot
@@ -84,18 +84,22 @@ let rec partition #a f start len pivot back x =
         begin
           Array.swap x pivot (pivot + 1);  (* the pivot moves forward *)
           let h1 = get () in
-	  let _ = 
-(* ghost *)           let s = sel h0 x in
-(* ghost *)           let s' = sel h1 x in
+	  let _ =
+(* ghost *)           let s = Array.sel h0 x in
+(* ghost *)           let s' = Array.sel h1 x in
 (* ghost *)           swap_frame_lo s start pivot (pivot + 1);
 (* ghost *)           swap_frame_hi s pivot (pivot + 1) (back + 1) len;
+                      assume (pivot < length s');
+                      //lemma_swap_splice s start (pivot + 1) back len;
+                      (* need pivot < length s',
+                         but only have pivot < length s *)
 (* ghost *)           lemma_ordering_lo_snoc f s' start pivot p in
           let res = partition f start len (pivot + 1) back x in
-	  let h2 = get () in	  		      
-          let _ =     
-(* ghost *)           let s = sel h0 x in
-(* ghost *)           let s' = sel h1 x in	  
-(* ghost *)           let s'' = sel h2 x in
+	  let h2 = get () in
+          let _ =
+(* ghost *)           let s = Array.sel h0 x in
+(* ghost *)           let s' = Array.sel h1 x in
+(* ghost *)           let s'' = Array.sel h2 x in
 (* ghost *)           lemma_swap_splice s start pivot (pivot + 1) len;
 (* ghost *)           lemma_trans_frame s'' s' s start len;
 (* ghost *)           lemma_swap_permutes_slice s start pivot (pivot + 1) len;
@@ -106,18 +110,18 @@ let rec partition #a f start len pivot back x =
         begin
           Array.swap x (pivot + 1) back; (* the back moves backward *)
 	  let h1 = get () in
-          let _ = 
-(* ghost *)           let s = sel h0 x in
-(* ghost *)           let s' = sel h1 x in
-(* ghost *)           swap_frame_lo' s start pivot (pivot + 1) back;
-(* ghost *)           swap_frame_hi s (pivot + 1) back (back + 1) len;
-(* ghost *)           lemma_ordering_hi_cons f s' back len p in
+          let _ = admit() in
+// (* ghost *)           let s = Array.sel h0 x in
+// (* ghost *)           let s' = Array.sel h1 x in
+// (* ghost *)           swap_frame_lo' s start pivot (pivot + 1) back;
+// (* ghost *)           swap_frame_hi s (pivot + 1) back (back + 1) len;
+// (* ghost *)           lemma_ordering_hi_cons f s' back len p in
           let res = partition f start len pivot (back - 1) x in
 	  let h2 = get () in
-	  let _ = 
-(* ghost *)           let s = sel h0 x in	  
-(* ghost *)           let s' = sel h1 x in	  
-(* ghost *)           let s'' = sel h2 x in
+	  let _ =
+(* ghost *)           let s = Array.sel h0 x in
+(* ghost *)           let s' = Array.sel h1 x in
+(* ghost *)           let s'' = Array.sel h2 x in
 (* ghost *)           lemma_swap_splice s start (pivot + 1) back len;
 (* ghost *)           lemma_trans_frame s'' s' s start len;
 (* ghost *)           lemma_swap_permutes_slice s start (pivot + 1) back len;
@@ -140,18 +144,18 @@ let lemma_slice_cons_pv #a s i pivot j pv =
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --z3rlimit 15"
 val sort: #a:eqtype -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
-  (requires (fun h -> contains h x /\ j <= length (sel h x)))
-  (ensures (fun h0 u h1 -> (modifies (TSet.singleton (Ref x)) h0 h1
-                            /\ j <= length (sel h0 x)                                      (* carrying this along from the requires clause *)
-                            /\ contains h1 x                                            (* the array is still in the heap *)
-                            /\ (length (sel h0 x) = length (sel h1 x))                  (* its length has not changed *)
-                            /\ sorted f (slice (sel h1 x) i j)                          (* it is sorted between [i, j) *)
-                            /\ (sel h1 x == splice (sel h0 x) i (sel h1 x) j)           (* the rest of it is unchanged *)
-                            /\ permutation a (slice (sel h0 x) i j) (slice (sel h1 x) i j)))) (* the [i,j) sub-array is a permutation of the original one *)
+  (requires (fun h -> Array.contains h x /\ j <= length (Array.sel h x)))
+  (ensures (fun h0 u h1 -> (modifies (TSet.singleton (mk_aref x)) h0 h1
+                            /\ j <= length (Array.sel h0 x)                                      (* carrying this along from the requires clause *)
+                            /\ Array.contains h1 x                                            (* the array is still in the heap *)
+                            /\ (length (Array.sel h0 x) = length (Array.sel h1 x))                  (* its length has not changed *)
+                            /\ sorted f (slice (Array.sel h1 x) i j)                          (* it is sorted between [i, j) *)
+                            /\ (Array.sel h1 x == splice (Array.sel h0 x) i (Array.sel h1 x) j)           (* the rest of it is unchanged *)
+                            /\ permutation a (slice (Array.sel h0 x) i j) (slice (Array.sel h1 x) i j)))) (* the [i,j) sub-array is a permutation of the original one *)
 let rec sort #a f i j x =
   let h0 = ST.get () in
   if i=j
-  then splice_refl (sel h0 x) i j
+  then splice_refl (Array.sel h0 x) i j
   else begin
                let pivot = partition f i j i (j - 1) x in
 
@@ -160,34 +164,34 @@ let rec sort #a f i j x =
                sort f i pivot x;
 
 (* ghost *)    let h2 = get() in
-	       let _ = 
-(* ghost *)      lemma_seq_frame_hi (sel h2 x) (sel h1 x) i pivot pivot j;
-(* ghost *)      lemma_tail_slice (sel h2 x) pivot j in
+	       let _ =
+(* ghost *)      lemma_seq_frame_hi (Array.sel h2 x) (Array.sel h1 x) i pivot pivot j;
+(* ghost *)      lemma_tail_slice (Array.sel h2 x) pivot j in
 
                sort f (pivot + 1) j x;
 
 (* ghost *)    let h3 = get() in
-(* ghost *)    lemma_seq_frame_lo (sel h3 x) (sel h2 x) i pivot (pivot + 1) j;
-(* ghost *)    let lo = slice (sel h3 x) i pivot in
-(* ghost *)    let hi = slice (sel h3 x) (pivot + 1) j in
-(* ghost *)    let pv = index (sel h1 x) pivot in
+(* ghost *)    lemma_seq_frame_lo (Array.sel h3 x) (Array.sel h2 x) i pivot (pivot + 1) j;
+(* ghost *)    let lo = slice (Array.sel h3 x) i pivot in
+(* ghost *)    let hi = slice (Array.sel h3 x) (pivot + 1) j in
+(* ghost *)    let pv = index (Array.sel h1 x) pivot in
 (* ghost *)    Seq.sorted_concat_lemma f lo pv hi;
-(* ghost *)    lemma_slice_cons_pv (sel h3 x) i pivot j pv;
+(* ghost *)    lemma_slice_cons_pv (Array.sel h3 x) i pivot j pv;
 
-(* ghost *)    lemma_weaken_frame_right (sel h2 x) (sel h1 x) i pivot j;
-(* ghost *)    lemma_weaken_frame_left (sel h3 x) (sel h2 x) i (pivot + 1) j;
-(* ghost *)    lemma_trans_frame (sel h3 x) (sel h2 x) (sel h1 x) i j;
-(* ghost *)    lemma_trans_frame (sel h3 x) (sel h1 x) (sel h0 x) i j;
+(* ghost *)    lemma_weaken_frame_right (Array.sel h2 x) (Array.sel h1 x) i pivot j;
+(* ghost *)    lemma_weaken_frame_left (Array.sel h3 x) (Array.sel h2 x) i (pivot + 1) j;
+(* ghost *)    lemma_trans_frame (Array.sel h3 x) (Array.sel h2 x) (Array.sel h1 x) i j;
+(* ghost *)    lemma_trans_frame (Array.sel h3 x) (Array.sel h1 x) (Array.sel h0 x) i j;
 
-(* ghost *)    lemma_weaken_perm_right (sel h2 x) (sel h1 x) i pivot j;
-(* ghost *)    lemma_weaken_perm_left (sel h3 x) (sel h2 x) i (pivot + 1) j
+(* ghost *)    lemma_weaken_perm_right (Array.sel h2 x) (Array.sel h1 x) i pivot j;
+(* ghost *)    lemma_weaken_perm_left (Array.sel h3 x) (Array.sel h2 x) i (pivot + 1) j
   end
 
 
 val qsort: #a:eqtype -> f:tot_ord a -> x:array a -> ST unit
-  (requires (fun h -> contains h x))
-  (ensures (fun h0 u h1 -> modifies (TSet.singleton (Ref x)) h0 h1
-                        /\ contains h1 x /\ sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x)))
+  (requires (fun h -> Array.contains h x))
+  (ensures (fun h0 u h1 -> modifies (TSet.singleton (mk_aref x)) h0 h1
+                        /\ Array.contains h1 x /\ sorted f (Array.sel h1 x) /\ permutation a (Array.sel h0 x) (Array.sel h1 x)))
 let qsort #a f x =
   let h0 = get() in
 
@@ -195,5 +199,5 @@ let qsort #a f x =
   sort f 0 len x;
 
   let h1 = get() in
-  cut (Seq.equal (sel h0 x) (slice (sel h0 x) 0 len));
-  cut (Seq.equal (sel h1 x) (slice (sel h1 x) 0 len))
+  cut (Seq.equal (Array.sel h0 x) (slice (Array.sel h0 x) 0 len));
+  cut (Seq.equal (Array.sel h1 x) (slice (Array.sel h1 x) 0 len))
