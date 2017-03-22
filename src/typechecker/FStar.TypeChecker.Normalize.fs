@@ -394,9 +394,10 @@ and close_comp cfg env c =
               mk_Comp ({c with comp_univs=List.map (norm_universe cfg env) c.comp_univs;
                                effect_args=args;
                                flags=flags})
-and filter_out_lcomp_cflags lc =
+
+and filter_out_lcomp_cflags (lc:lcomp) =
     (* TODO : lc.comp might have more cflags than lcomp.cflags *)
-    lc.cflags |> List.filter (function DECREASES _ -> false | _ -> true)
+    lc.lcomp_cflags |> List.filter (function DECREASES _ -> false | _ -> true)
 
 and close_lcomp_opt cfg env lopt = match lopt with
     | Some (Inl lc) -> //NS: Too expensive to close potentially huge VCs that are hardly read
@@ -1202,11 +1203,11 @@ and norm_lcomp_opt : cfg -> env -> option<either<lcomp, residual_comp>> -> optio
           if U.is_tot_or_gtot_lcomp lc
           then let u = norm_universe cfg env (List.hd lc.lcomp_univs) in
                let t = norm cfg env [] lc.lcomp_res_typ in
-               let c = 
+               let c =
                  if U.is_total_lcomp lc
                  then S.mk_Total' t (Some u)
-                 else S.mk_GTotal' t (Some u) 
-               in Some (Inl (Env.lcomp_of_comp cfg.tcenv (Env.comp_set_flags cfg.tcenv c flags)))
+                 else S.mk_GTotal' t (Some u)
+               in Some (Inl (Env.lcomp_of_comp cfg.tcenv (U.comp_set_flags c flags)))
           else Some (Inr (lc.lcomp_name, flags))
        | _ -> lopt
 
@@ -1471,7 +1472,7 @@ let eta_expand_with_type (env:Env.env) (t:term) (sort:typ) =
   | [] -> t
   | _ ->
       let binders, args = binders |> U.args_of_binders in
-      U.abs binders (mk_Tm_app t args None t.pos) 
+      U.abs binders (mk_Tm_app t args None t.pos)
                     (Some (Inl (Env.lcomp_of_comp env c)))
 
 let eta_expand (env:Env.env) (t:typ) : typ =

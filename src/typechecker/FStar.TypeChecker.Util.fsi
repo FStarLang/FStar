@@ -56,7 +56,6 @@ val is_pure_or_ghost_effect: env -> lident -> bool
 val return_value: env -> typ -> term -> comp
 val bind: env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val bind_cases: env -> typ -> list<(typ * lcomp)> -> lcomp
-val ite: env -> formula -> lcomp -> lcomp -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val strengthen_precondition: (option<(unit -> string)> -> env -> term -> lcomp -> guard_t -> lcomp*guard_t)
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
