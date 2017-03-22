@@ -51,11 +51,11 @@ lib-ver:
 
 
 chacha-ver:
-	$(FSTAR) Chacha.fst 
+	$(FSTAR) Chacha.fst
 
 chacha-extract: ulib
 	mkdir -p $(CHACHA_ODIR)
-	$(FSTAR_EXTRACT) crypto/Crypto.Symmetric.Chacha20.fst --odir $(CHACHA_ODIR) 
+	$(FSTAR_EXTRACT) crypto/Crypto.Symmetric.Chacha20.fst --odir $(CHACHA_ODIR)
 
 chacha-compile: chacha-extract
 	$(OCAMLOPT) -I crypto/ml -I $(CHACHA_ODIR) \
@@ -132,14 +132,14 @@ aead-kremlin-test:
 	./test_aead.exe
 
 aes-ver:
-	$(FSTAR) Crypto.Symmetric.AES.fst 
+	$(FSTAR) Crypto.Symmetric.AES.fst
 
 AES_ODIR=aes
 AES_EXTRACTED=Crypto_Symmetric_AES.ml
 
 aes-extract: ulib
 	mkdir -p $(AES_ODIR)
-	$(FSTAR_EXTRACT) --include crypto/hacl/ crypto/Crypto.Symmetric.AES.fst --odir $(AES_ODIR) 
+	$(FSTAR_EXTRACT) --include crypto/hacl/ crypto/Crypto.Symmetric.AES.fst --odir $(AES_ODIR)
 
 aes-compile: aes-extract
 	$(OCAMLOPT) -I crypto/ml -I $(AES_ODIR) \
@@ -155,7 +155,7 @@ AESGCM_EXTRACTED=FStar_List_Tot_Base.ml FStar_Ghost.ml FStar_Seq_Base.ml FStar_S
 
 aesgcm-extract: ulib
 	mkdir -p $(AESGCM_ODIR)
-	$(FSTAR_EXTRACT) --include crypto/hacl/ crypto/Crypto.AEAD.AES256GCM.fst --odir $(AESGCM_ODIR) 
+	$(FSTAR_EXTRACT) --include crypto/hacl/ crypto/Crypto.AEAD.AES256GCM.fst --odir $(AESGCM_ODIR)
 
 aesgcm-compile: aesgcm-extract
 	$(OCAMLOPT) -I crypto/ml -I $(AESGCM_ODIR) \
@@ -196,7 +196,7 @@ ifeq ($(OS),Windows_NT)
 else
   KRML_ARGS=-ccopts -maes,-fPIC $(KOPTS)
 endif
-KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES) 
+KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
 
 spartan_aes/aes.o:
 	make -C spartan_aes
@@ -213,10 +213,16 @@ krml-test.exe: spartan_aes/aes.o crypto/*.fst
                 crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst
 	./krml-test.exe
 
+ifeq ($(OS),Windows_NT)
+  WINSOCK=,-lws2_32
+else
+  WINSOCK=
+endif
+
 test-perf.exe: crypto/test_perf.c krml-test.exe
 	# Add this argument once someone writes a proper API for the Crypto
 	# subsystem
-	#-bundle Crypto_KrmlTest=Flag,Crypto.* 
+	#-bundle Crypto_KrmlTest=Flag,Crypto.*
 	# Note: cannot share the tmp directory otherwise the Makefile in
 	# LowCProvider (which does ar ../tmp/*.o) would pick up the wrong main
 	$(KRML) tmp/out.krml -drop Crypto.KrmlTest \
@@ -226,7 +232,7 @@ test-perf.exe: crypto/test_perf.c krml-test.exe
                   -ldopt -flto \
                   -ccopts -Ofast,-m64,-march=native,-mtune=native,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
                   -I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
-                  -I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto $(CFLAGS)
+                  -I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto$(WINSOCK) $(CFLAGS)
 	PATH=$(OPENSSL_HOME):"$(PATH)" \
 	  LD_LIBRARY_PATH=$(OPENSSL_HOME):"$(LD_LIBRARY_PATH)" \
 	  DYLD_LIBRARY_PATH=$(OPENSSL_HOME):"$(DYLD_LIBRARY_PATH)" ./test-perf.exe
@@ -327,7 +333,7 @@ ocaml-test.exe: ocaml-test-extract
 
 OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
 #OPENSSL_HOME=/usr/local/Cellar/openssl\@1.1/1.1.0c
-#CC=gcc-6 
+#CC=gcc-6
 
 # Cleaning
 clean:

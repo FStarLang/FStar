@@ -3,9 +3,11 @@ chacha
 curve
 poly
 aead
+tmp-test-perf
 LowCProvider/*.dll
 LowCProvider/*.exe
 krml-test.exe
+test-perf.exe
 test_chacha.exe
 test_curve.exe
 test_poly.exe
