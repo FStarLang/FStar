@@ -7,7 +7,9 @@ module Maxime
    Should be in here: https://hal.inria.fr/tel-00431817/document
  *)
 
+noeq
 type foo = | C : (p:Type -> p -> Tot p) -> foo
+
 
 (* Let it to the SMT solver:
 assume Axiom1 : (forall (a:Type) (b:Type) (f:(a -> Tot b)) (x:a). f x << f)
@@ -24,12 +26,16 @@ assume val axiom1 : a:Type -> b:Type -> f:(a -> Tot b) -> x:a ->
 assume val axiom2 : b:(Type->Type) -> f:(a:Type -> Tot (b a)) -> c:Type ->
                     Lemma (f c << f)
 
-val bad : x:foo -> Tot False (decreases x)
-let rec bad (x:foo) : False =
+
+
+#set-options "--print_universes"
+(* val bad : x:foo -> Tot False (decreases x) *)
+let rec bad (x:foo) : Tot False (decreases x) =
   match x with
   | C f -> (axiom2 (fun (p:Type) -> (p -> Tot p)) f foo;
             (* assert(f foo << f); -- this should hold now, F* bug? *)
-            admitP (f foo << f);
+            assert (f foo << f) ;
+            (* admitP (f foo << f); *)
             axiom1 foo foo (f foo) x;
             assert(f foo x << f);
             bad (f foo x))

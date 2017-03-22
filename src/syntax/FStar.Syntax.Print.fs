@@ -489,6 +489,7 @@ let rec sigelt_to_string x = match x with
   | Sig_pragma(ResetOptions None, _) -> "#reset-options"
   | Sig_pragma(ResetOptions (Some s), _) -> U.format1 "#reset-options \"%s\"" s
   | Sig_pragma(SetOptions s, _) -> U.format1 "#set-options \"%s\"" s
+  | Sig_pragma(LightOff, _) -> "#light \"off\""
   | Sig_inductive_typ(lid, univs, tps, k, _, _, quals, _) ->
     U.format4 "%stype %s %s : %s"
              (quals_to_string' quals)

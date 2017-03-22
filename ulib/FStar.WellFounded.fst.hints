@@ -1,0 +1,34 @@
+[
+  "∂\fÊè˘ﬁ\bL\u007fèfºA^e\u0015",
+  [
+    [
+      "FStar.WellFounded.__proj__AccIntro__item___0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.WellFounded.acc_inv",
+      1,
+      2,
+      1,
+      [ "@query", "subterm_ordering_FStar.WellFounded.AccIntro" ],
+      0
+    ],
+    [ "FStar.WellFounded.axiom1", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.WellFounded.apply", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.WellFounded.fix_F",
+      1,
+      2,
+      1,
+      [
+        "@query", "equality_tok_Prims.LexTop@tok",
+        "refinement_interpretation_Tm_refine_6d199e4de66defcfde496cb3ceed9de2"
+      ],
+      0
+    ]
+  ]
+]

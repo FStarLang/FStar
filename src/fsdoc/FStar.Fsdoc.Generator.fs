@@ -132,10 +132,8 @@ let string_of_decl' d =
                  |> String.concat " and ") (* SI: sep will be "," for Record but "and" for Variant *)
   | Val(i, t) -> "val " ^ i.idText ^ ":" ^ (term_to_string t)
   | Exception(i, _) -> "exception " ^ i.idText
-  | NewEffect(DefineEffect(i, _, _, _, _))
+  | NewEffect(DefineEffect(i, _, _, _))
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | NewEffectForFree(DefineEffect(i, _, _, _, _))
-  | NewEffectForFree(RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc (comm,_) -> comm

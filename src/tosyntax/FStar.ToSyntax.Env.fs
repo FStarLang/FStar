@@ -487,6 +487,28 @@ let is_effect_name env lid =
     match try_lookup_effect_name env lid with
         | None -> false
         | Some _ -> true
+(* Same as [try_lookup_effect_name], but also traverses effect
+abbrevs. TODO: once indexed effects are in, also track how indices and
+other arguments are instantiated. *)
+let try_lookup_root_effect_name env l =
+    match try_lookup_effect_name' (not env.iface) env l with
+	| Some (Sig_effect_abbrev (l', _, _, _, _, _, _), _) ->
+	  let rec aux new_name =
+	      match BU.smap_try_find (sigmap env) new_name.str with
+	      | None -> None
+	      | Some (s, _) ->
+	        begin match s with
+                | Sig_new_effect_for_free (ne, _)
+		| Sig_new_effect(ne, _)
+		  -> Some (set_lid_range ne.mname (range_of_lid l))
+		| Sig_effect_abbrev (_, _, _, cmp, _, _, _) ->
+                  let l'' = U.comp_effect_name cmp in
+		  aux l''
+	        | _ -> None
+		end
+	  in aux l'
+	| Some (_, l') -> Some l'
+	| _ -> None
 
 let lookup_letbinding_quals env lid =
   let k_global_def lid = function
@@ -523,11 +545,18 @@ let try_lookup_definition env (lid:lident) =
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 
+let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
+let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
+
 let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<(term * bool)> =
   match try_lookup_name any_val exclude_interf env lid with
     | Some (Term_name (e, mut)) -> Some (e, mut)
     | _ -> None
 let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
+let try_lookup_lid_no_resolve (env: env) l =
+  let env' = {env with scope_mods = [] ; exported_ids=empty_exported_id_smap; includes=empty_include_smap }
+  in
+  try_lookup_lid env' l
 
 let try_lookup_datacon env (lid:lident) =
   let k_global_def lid = function
@@ -699,9 +728,6 @@ let exported_id_set_new () =
     function
     | Exported_id_term_type -> term_type_set
     | Exported_id_field -> field_set
-
-let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
-let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
 
 let unique any_val exclude_if env lid =
   (* Disable name resolution altogether, thus lid is assumed to be fully qualified *)

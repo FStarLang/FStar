@@ -281,7 +281,8 @@ let rec uf_merge (#a:eqtype) (u1:uf a) (u2:uf a)
   else
     let h0 = get () in
     recall r1.parent ;
-    recall r2.parent ; // needed to prove that sel h1 r2.parent = None
+    (* needed to prove that sel h1 r2.parent = None *)
+    recall r2.parent ;
     r1.parent := Some r2 ;
     let h1 = get () in
 
