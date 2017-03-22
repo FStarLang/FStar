@@ -47,6 +47,7 @@ let z3_result_as_replay_result = function
     | Inr (r, _) -> Inr r
 type hint_stat = {
     hint:option<hint>;
+
     replay_result:z3_replay_result;
     elapsed_time:int;
     source_location:Range.range
@@ -319,6 +320,22 @@ let solver = {
     finish=Z3.finish;
     refresh=Z3.refresh;
 }
+
+let lean_solver = {
+    init=(fun _ -> (print_endline "LEAN INIT"; ()));
+    push=(fun _ -> ());
+    pop=(fun _ -> ());
+    mark=(fun _ -> ());
+    reset_mark=(fun _ -> ());
+    commit_mark=(fun _ -> ());
+    encode_sig=(fun _ _ -> ());
+    encode_modul=(fun _ _ -> ());
+    solve=(fun _ _ _ -> ());
+    is_trivial=(fun _ _ -> false);
+    finish=(fun () -> ());
+    refresh=(fun () -> ());
+}
+
 let dummy = {
     init=(fun _ -> ());
     push=(fun _ -> ());

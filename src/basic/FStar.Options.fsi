@@ -85,6 +85,7 @@ val initial_ifuel               : unit    -> int
 val inline_arith                : unit    -> bool
 val interactive                 : unit    -> bool
 val lax                         : unit    -> bool
+val lean                        : unit    -> bool
 val log_queries                 : unit    -> bool
 val log_types                   : unit    -> bool
 val max_fuel                    : unit    -> int

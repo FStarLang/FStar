@@ -143,6 +143,8 @@ let init () =
         ("show_signatures"              , List []);
         ("silent"                       , Bool false);
         ("smt"                          , Unset);
+        (* We might want to unify this with the smt option, later on. *)
+        ("lean"                         , Bool false);
         ("split_cases"                  , Int 0);
         ("timing"                       , Bool false);
         ("trace_error"                  , Bool false);
@@ -230,6 +232,7 @@ let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           
 let get_show_signatures         ()      = lookup_opt "show_signatures"          (as_list as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
+let get_lean                    ()      = lookup_opt "lean"                     (as_bool)
 let get_split_cases             ()      = lookup_opt "split_cases"              as_int
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
@@ -609,6 +612,12 @@ let rec specs () : list<Getopt.opt> =
         "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
 
        ( noshort,
+        "lean",
+        ZeroArgs (fun () -> Bool true),
+        "Use Lean as the solver backend instead of an SMT solver.");
+
+
+       ( noshort,
         "split_cases",
         OneArg ((fun n -> Int (int_of_string n)),
                  "[positive integer]"),
@@ -903,6 +912,7 @@ let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel 
 let inline_arith                 () = get_inline_arith                ()
 let interactive                  () = get_in                          ()
 let lax                          () = get_lax                         ()
+let lean                         () = get_lean                        ()
 let log_queries                  () = get_log_queries                 ()
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
