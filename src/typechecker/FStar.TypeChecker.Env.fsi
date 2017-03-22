@@ -20,6 +20,7 @@ open FStar
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.TypeChecker.Common
+module BU = FStar.Util
 
 type binding =
   | Binding_var      of bv
@@ -34,28 +35,44 @@ type delta_level =
   | Eager_unfolding_only
   | Unfold of delta_depth
 
-type mlift = typ -> typ -> typ
+(* Type of wp liftings [l] between 2 effects Msource and Mtarget : *)
+(* given a computational type [Msource t wp], [wp' = mlift_wp t wp] should *)
+(* be a weakest precondition such that [Mtarget t wp'] is well-formed *)
+(* and if both effects are reifiable, [mlift_term], if provided, maps *)
+(* computations [e] of type [Msource.repr t wp] to a computation of type *)
+(* [Mtarget.repr t (lift_wp t wp)] *)
+type mlift = {
+  mlift_wp:typ -> typ -> typ ;
+  mlift_term:option<(typ -> typ -> term -> term)>
+  (* KM : not exactly sure if mlift_term really need the wp term inside the compiler *)
+  (* (it needs it in the F* source to be well-typed but we are forgetting a lot here) *)
+}
 
+(* Edge in the effect lattice *)
 type edge = {
   msource :lident;
   mtarget :lident;
-  mlift   :typ -> typ -> typ;
+  mlift   :mlift;
 }
+
+
 type effects = {
   decls :list<eff_decl>;
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
+
 type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)>
+
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment and signature elements *)
-  gamma_cache    :FStar.Util.smap<cached_elt>;        (* Memo table for the local environment *)
+  gamma_cache    :FStar.Util.smap<cached_elt>;  (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
-  sigtab         :FStar.Util.smap<sigelt>;            (* a dictionary of long-names to sigelts *)
+  sigtab         :FStar.Util.smap<sigelt>;      (* a dictionary of long-names to sigelts *)
   is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
@@ -125,7 +142,8 @@ val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
 val lookup_val_decl        : env -> lident -> (universes * typ)
 val lookup_datacon         : env -> lident -> universes * typ
-val datacons_of_typ        : env -> lident -> (bool * list<lident>)  //the boolean tells if the lident was actually a inductive
+(* the boolean tells if the lident was actually a inductive *)
+val datacons_of_typ        : env -> lident -> (bool * list<lident>)
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
 val try_lookup_effect_lid  : env -> lident -> option<term>
@@ -143,9 +161,13 @@ val is_type_constructor    : env -> lident -> bool
 val num_inductive_ty_params: env -> lident -> int
 
 (* Universe instantiation *)
+
+(* Construct a new universe unification variable *)
 val new_u_univ             : unit -> universe
+(* Instantiate the universe variables in a type scheme with new unification variables *)
 val inst_tscheme           : tscheme -> universes * term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
+
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env
@@ -172,12 +194,24 @@ val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 
 (* operations on monads *)
-val join            : env -> lident -> lident -> lident * mlift * mlift
-val monad_leq       : env -> lident -> lident -> option<edge>
-val effect_decl_opt : env -> lident -> option<eff_decl>
-val get_effect_decl : env -> lident -> eff_decl
-val wp_signature    : env -> lident -> (bv * term)
-val null_wp_for_eff : env -> lident -> universe -> term -> comp
+val identity_mlift      : mlift
+val join                : env -> lident -> lident -> lident * mlift * mlift
+val monad_leq           : env -> lident -> lident -> option<edge>
+val effect_decl_opt     : env -> lident -> option<eff_decl>
+val get_effect_decl     : env -> lident -> eff_decl
+val wp_signature        : env -> lident -> (bv * term)
+val null_wp_for_eff     : env -> lident -> universe -> term -> comp
+val comp_to_comp_typ    : env -> comp -> comp_typ
+val unfold_effect_abbrev: env -> comp -> comp_typ
+val effect_repr         : env -> comp -> universe -> option<term>
+val reify_comp          : env -> comp -> universe -> term
+(* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
+(* a body or codomain of an arrow) [x] is reifiable *)
+val is_reifiable_effect : env -> lident -> bool
+val is_reifiable : env -> BU.either<lcomp, residual_comp> -> bool
+val is_reifiable_comp : env -> comp -> bool
+val is_reifiable_function : env -> term -> bool
+
 
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders

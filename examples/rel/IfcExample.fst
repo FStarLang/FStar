@@ -1,0 +1,65 @@
+module IfcExample
+
+open Rel
+open While
+open IfcRules
+open FStar.Heap
+
+(* (Warning) Top-level let-bindings must be total; this term may have effects *)
+
+assume val x : ref int 
+assume val y : ref int 
+assume val z : ref int 
+assume val c : ref int 
+
+let env var = 
+  if var = x then Low
+  else if var = y then Low 
+    else if var = c then Low
+      else if var = z then High
+        else High
+
+(* 
+  While c > 0{
+    x := y; 
+    y := y + 6;
+    z := y + 7;
+    x := z + 7;
+    c := c - 1 
+  }
+*)
+
+
+let c1_0 body = While (AVar c) body (AVar c)
+let c1_1 = Assign x (AVar y)
+let c1_2 = Assign y (AOp Plus (AVar x) (AInt 6))
+let c1_3 = Assign z (AOp Plus (AVar y) (AInt 7))
+let c1_4 = Assign x (AOp Plus (AVar z) (AInt 7))
+let c1_5 = Assign c (AOp Minus (AVar c) (AInt 1))
+let c1_6 = Seq c1_1 (Seq c1_2 (Seq c1_3 (Seq c1_4 c1_5)))
+
+let c1 = c1_0 c1_6
+
+val c1_1_ni : unit -> Lemma (ni_com env c1_1 Low)
+let c1_1_ni () = ()
+
+val c1_2_ni : unit -> Lemma (ni_com env c1_2 Low)
+let c1_2_ni () = ()
+
+val c1_3_ni : unit -> Lemma (ni_com env c1_3 Low)
+let c1_3_ni () = ()
+
+(* c1_4 cannot be shown to be non-interferent by typing since it contains an
+   explicict flow from z (High) to x (Low)
+   However, the sequence of c1_3 and c1_4 is fine, since in c1_3 we overwrite 
+   z with the low value (y+7). 
+   We can hene prove non-interference by relying on SMT.
+   *)
+val c1_3_4_ni : unit -> Lemma (ni_com env (Seq c1_3 c1_4) Low)
+let c1_3_4_ni () = ()
+
+
+(* The SMT solver cannot show noninterference of the loop without further
+   guidance, so we rely on the While-rule instead *)
+val c1_ni : unit -> Lemma (ni_com env c1 Low)
+let c1_ni () = while_com env (AVar c) c1_6 (AVar c) Low
