@@ -304,17 +304,11 @@ let subst_pat' s p : (pat * int) =
 let push_subst_lcomp s lopt = match lopt with
     | None
     | Some (Inr _) -> lopt
-<<<<<<< HEAD:src/syntax/subst.fs
     | Some (Inl l) -> 
       Some (Inl ({l with lcomp_univs=List.map (subst_univ (fst s)) l.lcomp_univs;
                          lcomp_indices=subst_args' s l.lcomp_indices;
                          lcomp_res_typ=subst' s l.lcomp_res_typ;
                          lcomp_as_comp=(fun () -> subst_comp' s (l.lcomp_as_comp()))}))
-=======
-    | Some (Inl l) ->
-      Some (Inl ({l with res_typ=subst' s l.res_typ;
-                         comp=(fun () -> subst_comp' s (l.comp()))}))
->>>>>>> origin/master:src/syntax/FStar.Syntax.Subst.fs
 
 let push_subst s t =
     //makes a syntax node, setting it's use range as appropriate from s

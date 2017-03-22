@@ -197,8 +197,7 @@ let comp_set_flags (c:comp) f =
             | GTotal(t, u_opt) ->
                 {comp_univs=dflt [] (map_opt u_opt (fun x -> [x]));
                  effect_name=comp_effect_name c;
-                 result_typ=t;
-                 effect_args=[];
+                 effect_args=[as_arg t];
                  flags=comp_flags c}
     in
     {c with n=Comp ({comp_to_comp_typ c with flags=f})}
@@ -677,8 +676,12 @@ let rec arrow_formals_comp k =
 let abs_formals t =
     let subst_lcomp_opt s l = match l with
         | Some (Inl l) ->
-          let l = {l with res_typ=Subst.subst s l.res_typ;
-                          comp=(fun () -> Subst.subst_comp s (l.comp()))} in
+          let l = { l with
+              lcomp_indices = List.map (fun (t,imp) -> Subst.subst s t, imp) l.lcomp_indices ;
+              lcomp_res_typ = Subst.subst s l.lcomp_res_typ ;
+              lcomp_as_comp = (fun () -> Subst.subst_comp s (l.lcomp_as_comp()))
+            }
+          in
           Some (Inl l)
         | _ -> l
     in

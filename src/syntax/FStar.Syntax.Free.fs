@@ -189,42 +189,42 @@ and free_names_and_uvars t use_cache =
       n
 
 and free_names_and_uvars_args args (acc:free_vars * set<Ident.lident>) use_cache =
-        args |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x use_cache)) acc
+  args |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x use_cache)) acc
 
 and free_names_and_uvars_binders bs acc use_cache =
-        bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort use_cache)) acc
+  bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort use_cache)) acc
 
 and free_names_and_uvars_comp c use_cache =
-    match !c.vars with
-        | Some n ->
-          if should_invalidate_cache n use_cache
-          then (c.vars := None; free_names_and_uvars_comp c use_cache)
-          else n, new_fv_set ()
-        | _ ->
-         let n = match c.n with
-            | GTotal (t, None)
-            | Total (t, None) ->
-              free_names_and_uvars t use_cache
+  match !c.vars with
+  | Some n ->
+    if should_invalidate_cache n use_cache
+    then (c.vars := None; free_names_and_uvars_comp c use_cache)
+    else n, new_fv_set ()
+  | _ ->
+    let n = match c.n with
+      | GTotal (t, None)
+      | Total (t, None) ->
+        free_names_and_uvars t use_cache
 
-            | GTotal (t, Some u)
-            | Total (t, Some u) ->
-              union (free_univs u) (free_names_and_uvars t use_cache)
+      | GTotal (t, Some u)
+      | Total (t, Some u) ->
+        union (free_univs u) (free_names_and_uvars t use_cache)
 
-            | Comp ct ->
-              let us = free_names_and_uvars_args ct.effect_args (free_names_and_uvars ct.result_typ use_cache) use_cache in
-              List.fold_left (fun us u -> union us (free_univs u)) us ct.comp_univs in
-         c.vars := Some (fst n);
-         n
+      | Comp ct ->
+        let us = free_names_and_uvars_args ct.effect_args no_free_vars use_cache in
+        List.fold_left (fun us u -> union us (free_univs u)) us ct.comp_univs in
+        c.vars := Some (fst n);
+        n
 
 and should_invalidate_cache n use_cache =
-    not use_cache ||
-      (n.free_uvars |> Util.set_elements |> Util.for_some (fun (u, _) -> match Unionfind.find u with
-         | Fixed _ -> true
-         | _ -> false)
-       || n.free_univs |> Util.set_elements |> Util.for_some (fun u -> match Unionfind.find u with
-           | Some _ -> true
-           | None -> false)
-      )
+  not use_cache ||
+    (n.free_uvars |> Util.set_elements |> Util.for_some (fun (u, _) -> match Unionfind.find u with
+        | Fixed _ -> true
+        | _ -> false)
+      || n.free_univs |> Util.set_elements |> Util.for_some (fun u -> match Unionfind.find u with
+          | Some _ -> true
+          | None -> false)
+    )
 
 //note use_cache is set false ONLY for fvars, which is not maintained at each AST node
 //see the comment above

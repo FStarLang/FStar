@@ -263,19 +263,10 @@ let rec term_to_string x =
   | Tm_abs(bs, t2, lc) ->
     begin match lc with
         | Some (Inl l) when (Options.print_implicits()) ->
-<<<<<<< HEAD:src/syntax/print.fs
-          Util.format3 "(fun %s -> (%s $$ %s))" 
-                        (binders_to_string " " bs) 
-                        (term_to_string t2) 
-                        (comp_to_string <| l.lcomp_as_comp())
-        | Some (Inr l) when (Options.print_implicits()) ->
-          Util.format3 "(fun %s -> (%s $$ (name only) %s))" (binders_to_string " " bs) (term_to_string t2) l.str
-=======
-          U.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| l.comp())
+          U.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| l.lcomp_as_comp())
           (* TODO : Consider adding an option printing the cflags *)
         | Some (Inr (l, flags)) when (Options.print_implicits()) ->
           U.format3 "(fun %s -> (%s $$ (name only) %s))" (binders_to_string " " bs) (term_to_string t2) l.str
->>>>>>> origin/master:src/syntax/FStar.Syntax.Print.fs
         | _ ->
           U.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
     end
@@ -340,11 +331,7 @@ and lcomp_to_string lc =
     if Options.print_effect_args () then
         comp_to_string (lc.lcomp_as_comp ())
     else
-<<<<<<< HEAD:src/syntax/print.fs
-        Util.format2 "%s %s" (sli lc.lcomp_name) (term_to_string lc.lcomp_res_typ)
-=======
-        U.format2 "%s %s" (sli lc.eff_name) (term_to_string lc.res_typ)
->>>>>>> origin/master:src/syntax/FStar.Syntax.Print.fs
+        U.format2 "%s %s" (sli lc.lcomp_name) (term_to_string lc.lcomp_res_typ)
 
 //and uvar_t_to_string (uv, k) =
 //   if false && (Options.print_real_names())
@@ -399,22 +386,24 @@ and comp_to_string c =
     | Comp c ->
         let basic =
           if (Options.print_effect_args())
-          then U.format4 "%s (%s) %s (attributes %s)"
+          then U.format3 "%s (%s) %s (attributes %s)"
                             (sli c.effect_name)
-                            (term_to_string c.result_typ)
                             (c.effect_args |> List.map arg_to_string |> String.concat ", ")
                             (c.flags |> List.map cflags_to_string |> String.concat " ")
           else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
           && not (Options.print_effect_args())
-          then Util.format1 "Tot %s" (term_to_string (fst (List.hd c.effect_args)))
+          then U.format1 "Tot %s" (term_to_string (fst (List.hd c.effect_args)))
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
                   && lid_equals c.effect_name Const.effect_ML_lid
           then "UN" //term_to_string c.result_typ
           else if not (Options.print_effect_args())
                && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
-          then U.format1 "ALL %s" (term_to_string c.result_typ)
-          else U.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
+          then U.format1 "ALL %s" (term_to_string (fst (List.hd c.effect_args)))
+          else
+            let n = List.length c.effect_args - 1 in
+            let effect_args_wo_wp = if n <= 0 then c.effect_args else fst (U.first_N n c.effect_args) in
+            U.format2 "%s (%s)" (sli c.effect_name) (effect_args_wo_wp |> List.map arg_to_string |> String.concat ", ") in
       let dec = c.flags |> List.collect (function DECREASES e -> [U.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
       U.format2 "%s%s" basic dec
 
