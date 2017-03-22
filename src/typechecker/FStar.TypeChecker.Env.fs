@@ -52,14 +52,14 @@ type delta_level =
 
 
 type normal_comp_typ = {
-    comp_name: Ident.lident;
-    comp_univs: universes;
-    comp_indices: args;
-    comp_result: arg;
-    comp_wp: arg; 
-    comp_flags: list<cflags>
+    nct_name: Ident.lident;
+    nct_univs: universes;
+    nct_indices: args;
+    nct_result: arg;
+    nct_wp: arg;
+    nct_flags: list<cflags>
 }
-
+type nct = normal_comp_typ
 type mlift = normal_comp_typ -> normal_comp_typ
 
 type edge = {
@@ -398,6 +398,18 @@ let univ_vars env =
       | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more uvars beyond this *)
     aux no_univs env.gamma
 
+let univnames env =
+    let no_univ_names = Syntax.no_universe_names in
+    let ext out uvs = BU.set_union out uvs in
+    let rec aux out g = match g with
+        | [] -> out
+        | Binding_sig_inst _::tl -> aux out tl
+        | Binding_univ uname :: tl -> aux (BU.set_add uname out) tl
+        | Binding_lid(_, (_, t))::tl
+        | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
+        | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more universe names beyond this *)
+    aux no_univ_names env.gamma
+
 let bound_vars_of_bindings bs =
   bs |> List.collect (function
         | Binding_var x -> [x]
@@ -411,10 +423,10 @@ let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_bin
 let bound_vars env = bound_vars_of_bindings env.gamma
 
 let all_binders env = binders_of_bindings env.gamma
-                
-let t_binders env = 
-    all_binders env |> List.filter (fun (x, _) -> 
-        match (compress x.sort).n with 
+
+let t_binders env =
+    all_binders env |> List.filter (fun (x, _) ->
+        match (compress x.sort).n with
         | Tm_type _ -> true
         | _ -> false)
 
@@ -638,7 +650,7 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
              | _, _::_::_ when not (Ident.lid_equals lid Const.effect_Lemma_lid) ->
                 failwith (BU.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
                            (Print.lid_to_string lid) (string_of_int <| List.length univs))
-             | _ -> let t = inst_tscheme_with (univs, U.arrow binders c) insts in 
+             | _ -> let t = inst_tscheme_with (univs, U.arrow binders c) insts in
                     let t = Subst.set_use_range (range_of_lid lid) t in
                     begin match (Subst.compress t).n with
                         | Tm_arrow(binders, c) ->
@@ -758,7 +770,7 @@ let num_inductive_ty_params env lid =
 // Utilities on computation types                         //
 ////////////////////////////////////////////////////////////
 let comp_to_comp_typ (env:env) c =
-    let c = 
+    let c =
         match c.n with
         | Total (t, None) ->
             let u = env.universe_of env t in
@@ -771,7 +783,7 @@ let comp_to_comp_typ (env:env) c =
 
 let rec unfold_effect_abbrev env comp =
   let c = comp_to_comp_typ env comp in
-  match lookup_effect_abbrev env c.comp_univs c.effect_name with
+  match lookup_effect_abbrev env c.comp_univs c.comp_typ_name with
   | None -> c
   | Some (binders, cdef) ->
     let binders, cdef = SS.open_comp binders cdef in
@@ -786,11 +798,11 @@ let rec unfold_effect_abbrev env comp =
     let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
     unfold_effect_abbrev env c
 
-let result_typ env comp = 
-    match comp.n with 
+let result_typ env comp =
+    match comp.n with
     | Total (t, _)
     | GTotal (t, _) -> t
-    | _ ->  
+    | _ ->
       let ct = unfold_effect_abbrev env comp in
       fst <| List.nth ct.effect_args (List.length ct.effect_args - 2)
 
@@ -808,45 +820,45 @@ let rec non_informative env t =
       && non_informative env (result_typ env c)
     | _ -> false
 
-let comp_as_normal_comp_typ env c = 
+let comp_as_normal_comp_typ env c =
     let ct = unfold_effect_abbrev env c in
-    let rec aux = function 
+    let rec aux = function
         | []
         | [_] -> failwith "Expected at least two arguments to comp_typ"
         | [res; wp] -> [], res, wp
-        | hd::rest -> 
-          let i, res, wp = aux rest in 
+        | hd::rest ->
+          let i, res, wp = aux rest in
           hd::i, res, wp
     in
     let indices, result, wp = aux ct.effect_args in
-    { comp_name = ct.effect_name;
-      comp_univs = ct.comp_univs;
-      comp_indices = indices;
-      comp_result = result;
-      comp_wp = wp; 
-      comp_flags = ct.flags}
+    { nct_name = ct.comp_typ_name;
+      nct_univs = ct.comp_univs;
+      nct_indices = indices;
+      nct_result = result;
+      nct_wp = wp;
+      nct_flags = ct.flags}
 
 let normal_comp_typ_as_comp (env:env) nct =
     let ct = {
-        effect_name=nct.comp_name;
-        comp_univs=nct.comp_univs;
-        effect_args=nct.comp_indices@[nct.comp_result; nct.comp_wp];
-        flags=nct.comp_flags
+        comp_typ_name=nct.nct_name;
+        comp_univs=nct.nct_univs;
+        effect_args=nct.nct_indices@[nct.nct_result; nct.nct_wp];
+        flags=nct.nct_flags
     } in
     S.mk_Comp ct
 
 let lcomp_of_comp env c0 =
     let nct = comp_as_normal_comp_typ env c0 in
-    {lcomp_name = nct.comp_name;
-     lcomp_univs= nct.comp_univs;
-     lcomp_indices=nct.comp_indices;
-     lcomp_res_typ=fst nct.comp_result;
-     lcomp_cflags=nct.comp_flags;
+    {lcomp_name = nct.nct_name;
+     lcomp_univs= nct.nct_univs;
+     lcomp_indices=nct.nct_indices;
+     lcomp_res_typ=fst nct.nct_result;
+     lcomp_cflags=nct.nct_flags;
      lcomp_as_comp=(fun () -> c0)}
 
-let set_result_typ env c t = 
+let set_result_typ env c t =
     let nct = comp_as_normal_comp_typ env c in
-    let nct = { nct with comp_result=S.as_arg t} in
+    let nct = { nct with nct_result=S.as_arg t} in
     normal_comp_typ_as_comp env nct
 
 (* --------------------------------------------------------- *)
@@ -859,15 +871,15 @@ let new_uvar r binders k =
       let uv = mk (Tm_uvar(uv,k)) (Some k.n) r in
       uv, uv
     | _ ->
-      let args = binders |> List.map U.arg_of_non_null_binder in 
+      let args = binders |> List.map U.arg_of_non_null_binder in
       let k' = U.arrow binders (mk_Total k) in
       let uv = mk (Tm_uvar(uv,k')) None r in
       mk (Tm_app(uv, args)) (Some k.n) r, uv
 
-let new_uvar_for_env env k = 
+let new_uvar_for_env env k =
     let bs = if (Options.full_context_dependency())
              || Ident.lid_equals Const.prims_lid (current_module env)
-             then all_binders env 
+             then all_binders env
              else t_binders env in
     new_uvar (get_range env) bs k
 
@@ -893,7 +905,7 @@ let join env l1 l2 : (lident * mlift * mlift) =
        l1, id, id
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
-  then let lift_gtot nct = {nct with comp_name=Const.effect_GTot_lid} in //TODO: watchout, GTot is not an nct
+  then let lift_gtot nct = {nct with nct_name=Const.effect_GTot_lid} in //TODO: watchout, GTot is not an nct
        Const.effect_GTot_lid, lift_gtot, lift_gtot
   else match env.effects.joins |> BU.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
         | None -> raise (Error(BU.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2), env.range))
@@ -902,7 +914,7 @@ let join env l1 l2 : (lident * mlift * mlift) =
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2
   || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
-  then Some ({msource=l1; mtarget=l2; mlift=(fun nct -> {nct with comp_name=l2})})
+  then Some ({msource=l1; mtarget=l2; mlift=(fun nct -> {nct with nct_name=l2})})
   else env.effects.order |> BU.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
 
 let wp_sig_aux env decls m =
@@ -927,13 +939,13 @@ let null_wp_for_eff env eff_name (res_u:universe) (res_t:term) = //TODO: This se
          let null_wp = inst_effect_fun_with [res_u] env ed ed.null_wp in
          let null_wp_res = Syntax.mk (Tm_app(null_wp, [S.as_arg res_t])) None (get_range env) in
          Syntax.mk_Comp ({comp_univs=[res_u];
-                          effect_name=eff_name;
+                          comp_typ_name=eff_name;
                           effect_args=[S.as_arg res_t; S.as_arg null_wp_res];
                           flags=[]})
 
-let destruct_comp_term m = 
-    match (SS.compress m).n with 
-    | Tm_uinst({n=Tm_fvar fv}, univs) -> S.lid_of_fv fv, univs 
+let destruct_comp_term m =
+    match (SS.compress m).n with
+    | Tm_uinst({n=Tm_fvar fv}, univs) -> S.lid_of_fv fv, univs
     | Tm_fvar fv -> S.lid_of_fv fv, []
     | _ -> failwith "Impossible"
 
@@ -941,72 +953,72 @@ let destruct_comp_term m =
    by instantiating the indicces in the sub_eff with the indices of the lhs
    and all remaining binders to fresh unification variables
 *)
-let mlift_of_sub_eff env sub : mlift = 
-    let mlift (nct:normal_comp_typ) = 
+let mlift_of_sub_eff env sub : mlift =
+    let mlift (nct:normal_comp_typ) =
         //build an arrow term reflecting the binding structure of the sub_eff
         //A template for the type of a computation type transfomer
         //lift_term ~= x_0, ... x_n -> GTot (M i1..im -> GTot (N j1..jn))
-        let lift_term = 
+        let lift_term =
             S.mk (S.Tm_arrow(sub.sub_eff_binders,
-                            S.mk_GTotal(S.mk (S.Tm_arrow([S.new_bv None sub.sub_eff_source |> S.mk_binder], 
+                            S.mk_GTotal(S.mk (S.Tm_arrow([S.new_bv None sub.sub_eff_source |> S.mk_binder],
                                                             S.mk_GTotal sub.sub_eff_target))
                                                 None Range.dummyRange)))
                     None Range.dummyRange in
         //then, instantiate it with the universes from nct, and fresh universes variables for any extra
         let universe_arguments =
-            let _, extra_univ_vars = BU.first_N (List.length nct.comp_univs) sub.sub_eff_univs in
+            let _, extra_univ_vars = BU.first_N (List.length nct.nct_univs) sub.sub_eff_univs in
             let extra_univs = extra_univ_vars |> List.map (fun _ -> new_u_univ()) in
-            nct.comp_univs @ extra_univs in
+            nct.nct_univs @ extra_univs in
 
         let lift_term = inst_tscheme_with (sub.sub_eff_univs, lift_term) universe_arguments in
 
         //then, open all the binders
         let xs_formals, lhs_M_is, rhs_N_js =
             match (SS.compress lift_term).n with
-            | Tm_arrow(binders, {n=GTotal(t, _)}) -> 
+            | Tm_arrow(binders, {n=GTotal(t, _)}) ->
                 let binders, t = Subst.open_term binders t in
-                (match (SS.compress t).n with 
-                | Tm_arrow([lhs], {n=GTotal(rhs, _)}) -> 
+                (match (SS.compress t).n with
+                | Tm_arrow([lhs], {n=GTotal(rhs, _)}) ->
                     let _, rhs = Subst.open_term [lhs] rhs in
                     binders, (fst lhs).sort, rhs
                 | _ -> failwith "Impossible")
-            | _ -> failwith "Impossible" 
-        in 
+            | _ -> failwith "Impossible"
+        in
 
         //then, compute the instantiation of the xs_formals
         //using nct.indices first, and then additional unification variables if necessary
-        let xs_actuals, subst = 
-            let lhs_index_vars, rest = BU.first_N (List.length nct.comp_indices) xs_formals in 
-            let lhs_subst = U.subst_of_list lhs_index_vars nct.comp_indices in
+        let xs_actuals, subst =
+            let lhs_index_vars, rest = BU.first_N (List.length nct.nct_indices) xs_formals in
+            let lhs_subst = U.subst_of_list lhs_index_vars nct.nct_indices in
             let rest_uvars = List.map (fun (x, aq) -> (fst <| new_uvar_for_env env x.sort, aq)) rest in
-            nct.comp_indices@rest_uvars,
-            lhs_subst@U.subst_of_list rest rest_uvars 
+            nct.nct_indices@rest_uvars,
+            lhs_subst@U.subst_of_list rest rest_uvars
         in
 
-        let rhs_N_js = Subst.subst subst rhs_N_js in 
+        let rhs_N_js = Subst.subst subst rhs_N_js in
         let rhs_N, rhs_js = U.head_and_args rhs_N_js in
         let rhs_name_N, rhs_univs = destruct_comp_term rhs_N in
-        let rhs_wp = 
+        let rhs_wp =
             let lift_wp = BU.must sub.sub_eff_lift_wp in
             let lift_wp = inst_tscheme_with lift_wp universe_arguments in
-            let lift_args = xs_actuals @ [nct.comp_result; nct.comp_wp] in
-            S.as_arg <| S.mk_Tm_app lift_wp lift_args None (fst nct.comp_wp).pos
+            let lift_args = xs_actuals @ [nct.nct_result; nct.nct_wp] in
+            S.as_arg <| S.mk_Tm_app lift_wp lift_args None (fst nct.nct_wp).pos
         in
-        { comp_name=rhs_name_N;
-          comp_univs=rhs_univs;
-          comp_indices=rhs_js;
-          comp_result=nct.comp_result;
-          comp_wp=rhs_wp;
-          comp_flags=nct.comp_flags }
+        { nct_name=rhs_name_N;
+          nct_univs=rhs_univs;
+          nct_indices=rhs_js;
+          nct_result=nct.nct_result;
+          nct_wp=rhs_wp;
+          nct_flags=nct.nct_flags }
    in //end mlift
    mlift
-     
-let extend_effect_lattice env sub_eff = 
+
+let extend_effect_lattice env sub_eff =
     let compose_edges e1 e2 : edge =
        {msource=e1.msource;
         mtarget=e2.mtarget;
         mlift=(fun nct -> e2.mlift (e1.mlift nct))} in
-    
+
     let edge =
       {msource=fst (destruct_comp_term sub_eff.sub_eff_source);
        mtarget=fst (destruct_comp_term sub_eff.sub_eff_target);
@@ -1079,7 +1091,7 @@ let extend_effect_lattice env sub_eff =
 //    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" e1.str e2.str e3.str (print_mlift l1) (print_mlift l2));
     {env with effects=effects}
 
-let build_lattice env se = 
+let build_lattice env se =
   match se with
   | Sig_new_effect(ne, _) ->
     {env with effects={env.effects with decls=ne::env.effects.decls}}

@@ -387,7 +387,7 @@ and comp_to_string c =
         let basic =
           if (Options.print_effect_args())
           then U.format3 "%s (%s) %s (attributes %s)"
-                            (sli c.effect_name)
+                            (sli c.comp_typ_name)
                             (c.effect_args |> List.map arg_to_string |> String.concat ", ")
                             (c.flags |> List.map cflags_to_string |> String.concat " ")
           else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
@@ -395,7 +395,7 @@ and comp_to_string c =
           then U.format1 "Tot %s" (term_to_string (fst (List.hd c.effect_args)))
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
-                  && lid_equals c.effect_name Const.effect_ML_lid
+                  && lid_equals c.comp_typ_name Const.effect_ML_lid
           then "UN" //term_to_string c.result_typ
           else if not (Options.print_effect_args())
                && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
@@ -403,7 +403,7 @@ and comp_to_string c =
           else
             let n = List.length c.effect_args - 1 in
             let effect_args_wo_wp = if n <= 0 then c.effect_args else fst (U.first_N n c.effect_args) in
-            U.format2 "%s (%s)" (sli c.effect_name) (effect_args_wo_wp |> List.map arg_to_string |> String.concat ", ") in
+            U.format2 "%s (%s)" (sli c.comp_typ_name) (effect_args_wo_wp |> List.map arg_to_string |> String.concat ", ") in
       let dec = c.flags |> List.collect (function DECREASES e -> [U.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
       U.format2 "%s%s" basic dec
 

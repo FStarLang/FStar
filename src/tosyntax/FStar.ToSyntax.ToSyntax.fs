@@ -1207,7 +1207,7 @@ and desugar_comp r env t =
                     | _ -> rest
             else rest in
         mk_Comp ({comp_univs=universes;
-                  effect_name=eff;
+                  comp_typ_name=eff;
                   effect_args=(as_arg first_typ::rest);
                   flags=flags@decreases_clause})
 

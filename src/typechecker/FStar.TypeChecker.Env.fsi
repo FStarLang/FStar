@@ -35,12 +35,12 @@ type delta_level =
   | Unfold of delta_depth
 
 type normal_comp_typ = {
-    comp_name: Ident.lident;
-    comp_univs: universes;
-    comp_indices: args;
-    comp_result: arg;
-    comp_wp: arg;
-    comp_flags: list<cflags>
+    nct_name: Ident.lident;
+    nct_univs: universes;
+    nct_indices: args;
+    nct_result: arg;
+    nct_wp: arg;
+    nct_flags: list<cflags>
 }
 
 type mlift = normal_comp_typ -> normal_comp_typ
@@ -155,8 +155,8 @@ val num_inductive_ty_params: env -> lident -> int
 
 (* Universe instantiation *)
 val new_u_univ             : unit -> universe
-val inst_tscheme           : tscheme -> universes * term 
-val inst_tscheme_with      : tscheme -> universes -> term 
+val inst_tscheme           : tscheme -> universes * term
+val inst_tscheme_with      : tscheme -> universes -> term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 
 (* Introducing identifiers and updating the environment *)
@@ -180,7 +180,7 @@ val t_binders    : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
 val univ_vars    : env -> FStar.Util.set<universe_uvar>
-val univnames   : env -> FStar.Util.set<univ_name>
+val univnames    : env -> FStar.Util.set<univ_name>
 val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 

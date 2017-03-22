@@ -173,13 +173,13 @@ let eq_univs u1 u2 = compare_univs u1 u2 = 0
 (********************************************************************************)
 
 let ml_comp t r =
-  mk_Comp ({effect_name=set_lid_range Const.effect_ML_lid r;
+  mk_Comp ({comp_typ_name=set_lid_range Const.effect_ML_lid r;
             comp_univs=[U_unknown];
             effect_args=[as_arg t];
             flags=[MLEFFECT]})
 
 let comp_effect_name c = match c.n with
-    | Comp c  -> c.effect_name
+    | Comp c  -> c.comp_typ_name
     | Total _ -> Const.effect_Tot_lid
     | GTotal _ -> Const.effect_GTot_lid
 
@@ -196,7 +196,7 @@ let comp_set_flags (c:comp) f =
             | Total (t, u_opt)
             | GTotal(t, u_opt) ->
                 {comp_univs=dflt [] (map_opt u_opt (fun x -> [x]));
-                 effect_name=comp_effect_name c;
+                 comp_typ_name=comp_effect_name c;
                  effect_args=[as_arg t];
                  flags=comp_flags c}
     in
@@ -208,14 +208,14 @@ let comp_to_comp_typ (c:comp) : comp_typ =
     | Total (t, Some u)
     | GTotal(t, Some u) ->
       {comp_univs=[u];
-       effect_name=comp_effect_name c; 
+       comp_typ_name=comp_effect_name c; 
        effect_args=[as_arg t]; 
        flags=comp_flags c}
     | _ -> failwith "Assertion failed: Computation type without universe"
 
 let is_named_tot c =
     match c.n with
-        | Comp c -> lid_equals c.effect_name Const.effect_Tot_lid
+        | Comp c -> lid_equals c.comp_typ_name Const.effect_Tot_lid
         | Total _ -> true
         | GTotal _ -> false
 
@@ -250,7 +250,7 @@ let is_pure_comp c = match c.n with
     | Total _ -> true
     | GTotal _ -> false
     | Comp ct -> is_total_comp c
-                 || is_pure_effect ct.effect_name
+                 || is_pure_effect ct.comp_typ_name
                  || ct.flags |> U.for_some (function LEMMA -> true | _ -> false)
 
 let is_ghost_effect l =
@@ -275,7 +275,7 @@ let is_pure_or_ghost_function t = match (compress t).n with
 let is_lemma t =  match (compress t).n with
     | Tm_arrow(_, c) ->
       begin match c.n with
-        | Comp ct -> lid_equals ct.effect_name Const.effect_Lemma_lid
+        | Comp ct -> lid_equals ct.comp_typ_name Const.effect_Lemma_lid
         | _ -> false
       end
     | _ -> false
@@ -296,7 +296,7 @@ let head_and_args t =
 let is_smt_lemma t = match (compress t).n with
     | Tm_arrow(_, c) ->
       begin match c.n with
-        | Comp ct when lid_equals ct.effect_name Const.effect_Lemma_lid ->
+        | Comp ct when lid_equals ct.comp_typ_name Const.effect_Lemma_lid ->
             begin match ct.effect_args with
                 | _req::_ens::(pats, _)::_ ->
                   let pats' = unmeta pats in
@@ -312,7 +312,7 @@ let is_smt_lemma t = match (compress t).n with
     | _ -> false
 
 let is_ml_comp c = match c.n with
-  | Comp c -> lid_equals c.effect_name Const.effect_ML_lid
+  | Comp c -> lid_equals c.comp_typ_name Const.effect_ML_lid
               || c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
 
   | _ -> false

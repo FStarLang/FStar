@@ -679,7 +679,7 @@ and tc_comp env c : comp                                      (* checked version
       mk_GTotal' t (Some u), u, g
 
     | Comp c ->
-      let head = S.fvar c.effect_name Delta_constant None in
+      let head = S.fvar c.comp_typ_name Delta_constant None in
       let head = match c.comp_univs with
          | [] -> head
          | us -> S.mk (Tm_uinst(head, us)) None c0.pos in

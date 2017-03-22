@@ -234,7 +234,7 @@ and subst_comp_typ' s t =
   | [], None
   | [[]], None -> t
   | _ ->
-    {t with effect_name=tag_lid_with_range t.effect_name s;
+    {t with comp_typ_name=tag_lid_with_range t.comp_typ_name s;
             comp_univs=List.map (subst_univ (fst s)) t.comp_univs;
             flags=subst_flags' s t.flags;
             effect_args=List.map (fun (t, imp) -> subst' s t, imp) t.effect_args}

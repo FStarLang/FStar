@@ -40,7 +40,7 @@ let rec term_eq' t1 t2 =
         match c.n, d.n with
             | S.Total (t, _), S.Total (s, _) -> term_eq t s
             | S.Comp ct1, S.Comp ct2 ->
-              I.lid_equals ct1.effect_name ct2.effect_name
+              I.lid_equals ct1.comp_typ_name ct2.comp_typ_name
               && term_eq ct1.result_typ ct2.result_typ
               && args_eq ct1.effect_args ct2.effect_args
             | _ -> false in

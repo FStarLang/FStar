@@ -551,7 +551,7 @@ exception Not_found
 
 // ... the _ and * transformations from the definition language to F* ---------
 
-let double_star typ =
+let double_star typ : typ =
     let star_once typ = U.arrow [S.mk_binder <| S.new_bv None typ] (S.mk_Total U.ktype0) in
     star_once <| typ |> star_once
 
@@ -742,7 +742,7 @@ and star_type' env t =
 let is_monadic = function
   | None ->
       failwith "un-annotated lambda?!"
-  | Some (Inl { cflags = flags }) | Some (Inr (_, flags)) ->
+  | Some (Inl { lcomp_cflags = flags }) | Some (Inr (_, flags)) ->
       flags |> BU.for_some (function CPS -> true | _ -> false)
 
 // TODO: this function implements a (partial) check for the well-formedness of
@@ -942,15 +942,15 @@ and infer (env: env) (e: term): nm * term * term =
       let s_what = match what with
         | None -> None // That should not happen according to some other comment
         | Some (Inl lc) ->
-            if lc.cflags |> BU.for_some (function CPS -> true | _ -> false)
+            if lc.lcomp_cflags |> BU.for_some (function CPS -> true | _ -> false)
             then let double_starred_comp = S.mk_Total (double_star <| Env.result_typ env.env (lc.lcomp_as_comp ())) in
-                 let flags = List.filter (function CPS -> false | _ -> true) lc.cflags in
+                 let flags = List.filter (function CPS -> false | _ -> true) lc.lcomp_cflags in
                  Some (Inl (Env.lcomp_of_comp env.env (comp_set_flags double_starred_comp flags)))
             else Some (Inl ({ lc with lcomp_as_comp = begin fun () ->
                         let c = lc.lcomp_as_comp () in
                         let nct = Env.comp_as_normal_comp_typ env.env c in
-                        let result_typ = star_type' env (fst nct.comp_result) in
-                        let nct' = {nct with comp_result=S.as_arg result_typ} in
+                        let result_typ = star_type' env (fst nct.nct_result) in
+                        let nct' = {nct with nct_result=S.as_arg result_typ} in
                         Env.normal_comp_typ_as_comp env.env nct'
                       end  }))
         | Some (Inr (lid, flags)) ->
@@ -1220,7 +1220,7 @@ and comp_of_nm (nm: nm_): comp =
 and mk_M (t: typ): comp =
   mk_Comp ({
     comp_univs=[U_unknown];
-    effect_name = Const.monadic_lid;
+    comp_typ_name = Const.monadic_lid;
     effect_args = [S.as_arg t];
     flags = [CPS; TOTAL]
   })
@@ -1272,7 +1272,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
   if is_monadic then
     mk_Comp ({
       comp_univs = [U_unknown];
-      effect_name = Const.effect_PURE_lid;
+      comp_typ_name = Const.effect_PURE_lid;
       effect_args = [ S.as_arg (star_type' env h); S.as_arg wp ];
       flags = []
     })

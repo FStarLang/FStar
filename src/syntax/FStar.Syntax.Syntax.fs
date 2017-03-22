@@ -103,7 +103,7 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbdef  :term             //e
 }
 and comp_typ = {
-  effect_name:lident;
+  comp_typ_name:lident;
   comp_univs:universes;
   effect_args:args;
   flags:list<cflags>
@@ -446,7 +446,7 @@ let mk_Total' t  u: comp  = mk (Total(t, u)) None t.pos
 let mk_GTotal' t u: comp = mk (GTotal(t, u)) None t.pos
 let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
-let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None (Ident.range_of_lid ct.effect_name)
+let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None (Ident.range_of_lid ct.comp_typ_name)
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s

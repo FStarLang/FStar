@@ -1169,16 +1169,16 @@ and ghost_to_pure_aux cfg env c =
     | Total _ -> c
     | GTotal(t,uopt) when non_info t -> {c with n=Total(t, uopt)}
     | Comp ct ->
-        let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
+        let l = Env.norm_eff_name cfg.tcenv ct.comp_typ_name in
         if U.is_ghost_effect l
         && non_info (Env.result_typ cfg.tcenv c)
         then let ct =
-                 match downgrade_ghost_effect_name ct.effect_name with
+                 match downgrade_ghost_effect_name ct.comp_typ_name with
                  | Some pure_eff ->
-                   {ct with effect_name=pure_eff}
+                   {ct with comp_typ_name=pure_eff}
                  | None ->
                     let ct = Env.unfold_effect_abbrev cfg.tcenv c in //must be GHOST
-                    {ct with effect_name=Const.effect_PURE_lid} in
+                    {ct with comp_typ_name=Const.effect_PURE_lid} in
              {c with n=Comp ct}
         else c
     | _ -> c

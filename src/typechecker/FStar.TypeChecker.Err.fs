@@ -153,7 +153,7 @@ let disjunctive_pattern_vars v1 v2 =
 let name_and_result env c = match c.n with
   | Total (t, _) -> "Tot", t
   | GTotal (t, _) -> "GTot", t
-  | Comp ct -> Print.lid_to_string ct.effect_name, 
+  | Comp ct -> Print.lid_to_string ct.comp_typ_name, 
                Env.result_typ env c
 
 let computed_computation_type_does_not_match_annotation env e c c' =

@@ -402,12 +402,12 @@ let wl_to_string wl =
 (* ------------------------------------------------ *)
 (* <solving problems>                               *)
 (* ------------------------------------------------ *)
-let mk_abs env ys t c = 
+let mk_abs env ys t c =
     U.abs ys t (Some (Inl (Env.lcomp_of_comp env c)))
 
 let u_abs wl k ys t =
-    let (ys, t), (xs, c) = match (SS.compress k).n with 
-        | Tm_arrow(bs, c) -> 
+    let (ys, t), (xs, c) = match (SS.compress k).n with
+        | Tm_arrow(bs, c) ->
           if List.length bs = List.length ys
           then (ys, t), SS.open_comp bs c
           else let ys', t, _ = U.abs_formals t in
@@ -426,7 +426,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let _, uv = p_guard prob in
     let _ = match (Subst.compress uv).n with
         | Tm_uvar(uvar, k) ->
-          let bs = p_scope prob in 
+          let bs = p_scope prob in
           let phi = u_abs wl k bs phi in
           if Env.debug wl.tcenv <| Options.Other "Rel"
           then BU.print3 "Solving %s (%s) with formula %s\n"
@@ -805,14 +805,14 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
 
         | _, _, C _ -> failwith "impos" in
 
-    let rec aux scope args qs 
-        : list<prob> 
-        * list<tc> 
+    let rec aux scope args qs
+        : list<prob>
+        * list<tc>
         * formula =
         match qs with
         | [] -> [], [], U.t_true
         | q::qs ->
-            let tc, probs = 
+            let tc, probs =
                match q with
                | bopt, variance, C ({n=Total (ti, uopt)}) ->
                  (match sub_prob scope args (bopt, variance, T (ti, kind_type)) with
@@ -824,25 +824,25 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
                    | T (gi_xs, _), prob -> C <| mk_GTotal' gi_xs uopt, [prob]
                    | _ -> failwith "impossible")
 
-                | _, _, C comp -> 
+                | _, _, C comp ->
                   let nct = Env.comp_as_normal_comp_typ env comp in
-                  let components = [(None, COVARIANT, T (fst nct.comp_result, kind_type));
-                                    (None, INVARIANT, T (fst nct.comp_wp, generic_kind))] in
-                  let components = List.fold_right 
-                        (fun t out -> (None, INVARIANT, T (fst t, generic_kind))::out) 
-                        nct.comp_indices components in
+                  let components = [(None, COVARIANT, T (fst nct.nct_result, kind_type));
+                                    (None, INVARIANT, T (fst nct.nct_wp, generic_kind))] in
+                  let components = List.fold_right
+                        (fun t out -> (None, INVARIANT, T (fst t, generic_kind))::out)
+                        nct.nct_indices components in
                   let tcs, sub_probs = List.map (sub_prob scope args) components |> List.unzip in
                   let gi_xs = mk_Comp <| {
-                    comp_univs=nct.comp_univs;
-                    effect_name=nct.comp_name;
+                    comp_univs=nct.nct_univs;
+                    comp_typ_name=nct.nct_name;
                     effect_args=tcs |> List.map arg_of_tc;
-                    flags=nct.comp_flags
+                    flags=nct.nct_flags
                   }  in
                   C gi_xs, sub_probs
 
                 | _ ->
                   let ktec, prob = sub_prob scope args q in
-                  ktec, [prob] 
+                  ktec, [prob]
             in
 
             let bopt, scope, args = match q with
@@ -1608,9 +1608,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                        if n_xs = n_args
                        then SS.open_comp xs c |> Some
                        else if n_xs < n_args
-                       then let args, rest = BU.first_N n_xs args in 
-                            let xs, c = SS.open_comp xs c in 
-                            BU.bind_opt 
+                       then let args, rest = BU.first_N n_xs args in
+                            let xs, c = SS.open_comp xs c in
+                            BU.bind_opt
                                    (elim (Env.result_typ env c) rest)
                                    (fun (xs', c) -> Some (xs@xs', c))
                        else //n_args < n_xs
@@ -1741,7 +1741,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let force_quasi_pattern xs_opt (t, u, k, args) =
             (* A quasi pattern is a U x1...xn, where not all the xi are distinct
             *)
-           let all_formals, _ = U.arrow_formals_comp k in 
+           let all_formals, _ = U.arrow_formals_comp k in
            assert (List.length all_formals = List.length args);
 
             let rec aux pat_args              (* pattern arguments, so far *)
@@ -1877,7 +1877,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                      let rhs_vars = Free.names t2 in
                      let occurs_ok, _ = occurs_check env wl (u1,k1) t2 in
                      let lhs_vars = Free.names_of_binders xs in
-                     if occurs_ok 
+                     if occurs_ok
                      && BU.set_is_subset_of rhs_vars lhs_vars
                      then let sol = TERM((u1, k1), u_abs wl k1 xs t2) in
                           let wl = solve_prob orig None [sol] wl in
@@ -2131,52 +2131,52 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
     let orig = CProb problem in
     let sub_prob : term -> rel -> term -> string -> tprob =
         fun t1 rel t2 reason -> mk_problem (p_scope orig) orig t1 rel t2 None reason in
-    
+
     let solve_eq nct1 nct2 =
         let _ = if Env.debug env <| Options.Other "EQ"
                 then BU.print_string "solve_c is using an equality constraint\n" in
-        let sub_probs = List.map2 
-            (fun (a1, _) (a2, _) -> TProb<| sub_prob a1 EQ a2 "effect arg") 
-            (nct1.comp_indices@[nct1.comp_result; nct1.comp_wp])
-            (nct2.comp_indices@[nct2.comp_result; nct2.comp_wp]) in
+        let sub_probs = List.map2
+            (fun (a1, _) (a2, _) -> TProb<| sub_prob a1 EQ a2 "effect arg")
+            (nct1.nct_indices@[nct1.nct_result; nct1.nct_wp])
+            (nct2.nct_indices@[nct2.nct_result; nct2.nct_wp]) in
         let guard = U.mk_conj_l (List.map (fun p -> p_guard p |> fst) sub_probs) in
         let wl = solve_prob orig (Some guard) [] wl in
         solve env (attempt sub_probs wl)
     in
 
-    let solve_sub nct1 edge nct2 = 
+    let solve_sub nct1 edge nct2 =
         let r = Env.get_range env in
         if problem.relation = EQ
         then solve_eq (edge.mlift nct1) nct2
         else let nct1 = edge.mlift nct1 in //they both have the same comp type constructor now
-             let c2_decl = Env.get_effect_decl env nct2.comp_name in
-             let wp2_stronger_than_wp1 = 
+             let c2_decl = Env.get_effect_decl env nct2.nct_name in
+             let wp2_stronger_than_wp1 =
                 if env.lax then
                    U.t_true
-                else 
-                  let is_null_wp_2 = nct2.comp_flags |> Util.for_some (function 
-                      | TOTAL | MLEFFECT | SOMETRIVIAL -> true 
+                else
+                  let is_null_wp_2 = nct2.nct_flags |> Util.for_some (function
+                      | TOTAL | MLEFFECT | SOMETRIVIAL -> true
                       | _ -> false) in
                   if is_null_wp_2 //just check that nct1 has a trivial pre-condition
                   then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
-                       mk (Tm_app(inst_effect_fun_with nct2.comp_univs env c2_decl c2_decl.trivial, 
-                                  nct1.comp_indices@[nct1.comp_result; nct1.comp_wp]))
+                       mk (Tm_app(inst_effect_fun_with nct2.nct_univs env c2_decl c2_decl.trivial,
+                                  nct1.nct_indices@[nct1.nct_result; nct1.nct_wp]))
                           (Some U.ktype0.n) r
-                  else mk (Tm_app(inst_effect_fun_with nct2.comp_univs env c2_decl c2_decl.stronger,
-                                  nct2.comp_indices@[nct1.comp_result; nct2.comp_wp; nct1.comp_wp]))
-                          (Some U.ktype0.n) r  
+                  else mk (Tm_app(inst_effect_fun_with nct2.nct_univs env c2_decl c2_decl.stronger,
+                                  nct2.nct_indices@[nct1.nct_result; nct2.nct_wp; nct1.nct_wp]))
+                          (Some U.ktype0.n) r
              in
-             let base_prob = TProb <| sub_prob (fst nct1.comp_result) problem.relation (fst nct2.comp_result) "result type" in
-             let index_probs = List.map2 
-                (fun i j -> TProb <| sub_prob (fst i) EQ (fst j) "computation index") 
-                nct1.comp_indices nct2.comp_indices in
-             let univ_probs = 
-                let mk_type u = S.mk (Tm_type u) None Range.dummyRange in 
-                List.map2 
+             let base_prob = TProb <| sub_prob (fst nct1.nct_result) problem.relation (fst nct2.nct_result) "result type" in
+             let index_probs = List.map2
+                (fun i j -> TProb <| sub_prob (fst i) EQ (fst j) "computation index")
+                nct1.nct_indices nct2.nct_indices in
+             let univ_probs =
+                let mk_type u = S.mk (Tm_type u) None Range.dummyRange in
+                List.map2
                     (fun u u' -> TProb <| sub_prob (mk_type u) EQ (mk_type u') "computation universes")
-                    nct1.comp_univs nct2.comp_univs in
+                    nct1.nct_univs nct2.nct_univs in
              let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) wp2_stronger_than_wp1) [] wl in
-             solve env (attempt (base_prob::index_probs@univ_probs) wl) 
+             solve env (attempt (base_prob::index_probs@univ_probs) wl)
     in
 
     if BU.physical_equality c1 c2
@@ -2213,25 +2213,25 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                  then solve_t env (problem_using_guard orig (Env.result_typ env c1) problem.relation (Env.result_typ env c2) None "result type") wl
                  else let nct1 = Env.comp_as_normal_comp_typ env c1 in
                       let nct2 = Env.comp_as_normal_comp_typ env c2 in
-                      if problem.relation=EQ 
-                      && lid_equals nct1.comp_name nct2.comp_name
+                      if problem.relation=EQ
+                      && lid_equals nct1.nct_name nct2.nct_name
                       then solve_eq nct1 nct2
                       else begin
-                         if debug env <| Options.Other "Rel" 
-                         then BU.print2 "solve_c for %s and %s\n" 
-                                  (nct1.comp_name.str) (nct2.comp_name.str);
-                         begin match Env.monad_leq env nct1.comp_name nct2.comp_name with
-                           | None -> 
-                             if U.is_ghost_effect nct1.comp_name
-                             && U.is_pure_effect nct2.comp_name
-                             && Env.non_informative env (N.normalize [N.Eager_unfolding; N.UnfoldUntil Delta_constant] env (fst nct2.comp_result))
-                             then let edge = {msource=nct1.comp_name; 
-                                              mtarget=nct2.comp_name; 
-                                              mlift=fun nct -> {nct with comp_name=nct2.comp_name}} in
+                         if debug env <| Options.Other "Rel"
+                         then BU.print2 "solve_c for %s and %s\n"
+                                  (nct1.nct_name.str) (nct2.nct_name.str);
+                         begin match Env.monad_leq env nct1.nct_name nct2.nct_name with
+                           | None ->
+                             if U.is_ghost_effect nct1.nct_name
+                             && U.is_pure_effect nct2.nct_name
+                             && Env.non_informative env (N.normalize [N.Eager_unfolding; N.UnfoldUntil Delta_constant] env (fst nct2.nct_result))
+                             then let edge = {msource=nct1.nct_name;
+                                              mtarget=nct2.nct_name;
+                                              mlift=fun nct -> {nct with nct_name=nct2.nct_name}} in
                                   solve_sub nct1 edge nct2
-                             else giveup env (BU.format2 "incompatible monad ordering: %s </: %s" 
-                                             (Print.lid_to_string nct1.comp_name) 
-                                             (Print.lid_to_string nct2.comp_name)) orig
+                             else giveup env (BU.format2 "incompatible monad ordering: %s </: %s"
+                                             (Print.lid_to_string nct1.nct_name)
+                                             (Print.lid_to_string nct2.nct_name)) orig
                            | Some edge ->
                              solve_sub nct1 edge nct2
                          end
@@ -2404,9 +2404,9 @@ let try_subtype' env t1 t2 smt_ok =
  let g = with_guard env prob <| solve_and_commit env (singleton' env prob smt_ok) (fun _ -> None) in
  if debug env <| Options.Other "Rel"
     && BU.is_some g
- then BU.print3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n" 
-                    (N.term_to_string env t1) 
-                    (N.term_to_string env t2) 
+ then BU.print3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n"
+                    (N.term_to_string env t1)
+                    (N.term_to_string env t2)
                     (guard_to_string env (BU.must g));
  abstract_guard env x g
 
