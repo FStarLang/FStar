@@ -1,17 +1,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 module Eval.DBCC
 
-type closure : Type -> Type -> Type =
+noeq type closure : Type -> Type -> Type =
   | Clos : env:Type -> #a:Type -> #b:Type -> x:env -> (y:env{y=x} -> a -> Tot b) -> closure a b
 
 val apply: #a:Type -> #b:Type -> closure a b -> a -> Tot b
-let apply (Clos 'env env f) a = f env a
+let apply #a #b (Clos 'env env f) a = f env a
 
-type var : Type -> Type -> Type =
+noeq type var : Type -> Type -> Type =
    | O : g:Type -> a:Type -> var (g * a) a
    | S : g:Type -> a:Type -> b:Type -> var g a -> var (g * b) a
 
-type tm : Type -> Type -> Type =
+noeq type tm : Type -> Type -> Type =
   | Var : #g:Type -> #a:Type -> var g a -> tm g a
   | Lam : g:Type -> a:Type -> b:Type -> body:tm (g * a) b -> tm g (closure a b)
   | App : g:Type -> a:Type -> b:Type -> e1:tm g (closure a b) -> e2:tm g a -> tm g b

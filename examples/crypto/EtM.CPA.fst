@@ -1,7 +1,6 @@
 module EtM.CPA
 
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.HyperStack
@@ -63,7 +62,7 @@ val encrypt: k:key -> m:msg -> ST cipher
      /\ log1 == snoc log0 (m, c)
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
 
-let encrypt k m : cipher =
+let encrypt k m =
   m_recall k.log;
   let iv = random ivsize in
   let text = if ind_cpa && ind_cpa_rest_adv then createBytes (length m) 0z else repr m in
@@ -87,19 +86,19 @@ let encryption_injective k iv t1 t2 = correctness k iv t1; correctness k iv t2
 
 (* this doesn't really belong here *)
 val mem : #a:eqtype -> x:a -> xs:Seq.seq a -> Tot bool
-let mem (#a:eqtype) x xs = is_Some (SeqProperties.seq_find (fun y -> y = x) xs)
+let mem (#a:eqtype) x xs = Some? (Seq.seq_find (fun y -> y = x) xs)
 
 val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
     Map.contains h0.h k.region /\
     (let log0 = m_sel h0 k.log in
-      (b2t ind_cpa_rest_adv) ==> is_Some (seq_find (fun mc -> snd mc = c) log0))))
+      (b2t ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) log0))))
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
     ( (b2t ind_cpa_rest_adv) ==> mem (res,c) (m_sel h0 k.log)
      (* (let log0 = m_sel h0 k.log in *) //specification of correctness
      (*  let found = seq_find (fun mc -> snd mc = c) log0 in *)
-     (*  is_Some found /\ fst (Some.v found) = res) *)
+     (*  Some? found /\ fst (Some.v found) = res) *)
     )
   )
   )

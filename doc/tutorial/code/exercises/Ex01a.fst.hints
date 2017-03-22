@@ -1,5 +1,5 @@
 [
-  "-¤\u0017i\u0001;w\u0011\u0013CÀ<\u0000\u0014S¢",
+  "yšu\fu1bv\fÈ\"î.ðNÕ",
   [
     [ "Ex01a.canWrite", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -26,6 +26,7 @@
       ],
       0
     ],
+    [ "Ex01a.uu___is_InvalidRead", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex01a.checkedRead",
       1,

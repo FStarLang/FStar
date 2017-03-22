@@ -1,5 +1,4 @@
 FSTAR_HOME=../..
-OTHERFLAGS=
 include ../Makefile.include
 
 all: uall
@@ -16,8 +15,6 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.IFC.uver \
 	FStar.DM4F.Continuations.uver \
 	delimcc.uver
-
-sall:
 
 old:
 	$(MAKE) -C old

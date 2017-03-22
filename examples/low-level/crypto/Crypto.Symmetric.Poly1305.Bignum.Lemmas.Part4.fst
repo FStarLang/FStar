@@ -20,7 +20,7 @@ open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3
 
 module U64 = FStar.UInt64
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 let isCarried (h0:mem) (h1:mem) (b:bigint) : GTot Type0 =
   live h0 b /\ live h1 b /\ length b >= norm_length+1
@@ -42,12 +42,10 @@ let isCarried (h0:mem) (h1:mem) (b:bigint) : GTot Type0 =
       /\ v (get h1 b 4) = (b4 + r3)  % pow2 26
     )
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 10000 --initial_fuel 4 --max_fuel 4"
 
 
 let u633 = x:U64.t{v x < pow2 63}
-
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
 
 
 let isCarried_
@@ -68,6 +66,7 @@ let isCarried_
       /\ v (get h1 b 4) = (v b4 + r3)  % pow2 26
     )
 
+#reset-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
 
 let carried_1 (h:mem) (b:bigint) : GTot Type0 =
   live h b /\ length b >= norm_length+1
@@ -78,8 +77,6 @@ let carried_1 (h:mem) (b:bigint) : GTot Type0 =
   /\ v (get h b 4) < pow2 26
   /\ v (get h b 5) <= pow2 38
 
-
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
 
 let lemma_carry_10_0 (x:int) (y:pos) : Lemma (x % y < y) = ()
 let lemma_carry_10_1 (x:nat) (y:nat) (z:pos) : Lemma (requires (x < y)) (ensures (x / z <= y / z))
@@ -134,7 +131,7 @@ let lemma_carry_10 h0 h1 b =
   lemma_carry_10_2 (b4+r3)
 
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 10 --initial_fuel 0 --max_fuel 0"
 
 let lemma_carry_110_0 (x:int) (y:int) (z:nat) :
   Lemma (pow2 z * (x + pow2 26 * y) = pow2 z * x + pow2 (z+26) * y)
@@ -175,7 +172,7 @@ let lemma_carry_1101 b0 b1 b2 b3 b4 c0 c1 c2 c3 c4 c5 =
   distributivity_add_right (pow2 104) ((((b0 / p26 + b1) / p26 + b2) / p26 + b3) / p26) b4
 
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_carry_1102:
   b0:nat -> b1:nat -> b2:nat -> b3:nat -> b4:nat ->
@@ -210,8 +207,7 @@ let lemma_carry_1102 b0 b1 b2 b3 b4 c0 c1 c2 c3 c4 c5 =
   distributivity_add_right (pow2 78) (((b0 / p26 + b1) / p26 + b2) / pow2 26) b3
 
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
-
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_carry_1103:
   b0:nat -> b1:nat -> b2:nat -> b3:nat -> b4:nat ->
@@ -246,7 +242,7 @@ let lemma_carry_1103 b0 b1 b2 b3 b4 c0 c1 c2 c3 c4 c5 =
   distributivity_add_right (pow2 52) (((b0 / p26 + b1) / p26)) b2
 
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 10 --initial_fuel 0 --max_fuel 0"
 
 val lemma_carry_1104:
   b0:nat -> b1:nat -> b2:nat -> b3:nat -> b4:nat ->
@@ -281,7 +277,7 @@ let lemma_carry_1104 b0 b1 b2 b3 b4 c0 c1 c2 c3 c4 c5 =
   distributivity_add_right (pow2 26) (((b0 / p26))) b1
 
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_carry_110:
   b0:nat -> b1:nat -> b2:nat -> b3:nat -> b4:nat ->
@@ -314,7 +310,7 @@ let lemma_carry_110 b0 b1 b2 b3 b4 c0 c1 c2 c3 c4 c5 =
   lemma_div_mod b0 (pow2 26)
 
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_carry_11:
   h0:mem -> h1:mem ->
@@ -351,7 +347,7 @@ let lemma_carry_11 h0 h1 b =
   lemma_carry_110 b0 b1 b2 b3 b4 (v (get h1 b 0)) (v (get h1 b 1)) (v (get h1 b 2)) (v (get h1 b 3)) (v (get h1 b 4)) (v (get h1 b 5))
 
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
 
 val lemma_carry_1:
   h0:mem -> h1:mem ->
@@ -365,7 +361,7 @@ let lemma_carry_1 h0 h1 b =
   lemma_carry_11 h0 h1 b
 
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
 
 let carried_2 (h:mem) (b:bigint) : GTot Type0 =
   live h b /\ length b >= norm_length+1
@@ -402,7 +398,7 @@ let lemma_div_rest a m n =
 let lemma_mod_0 (a:nat) (b:pos) : Lemma (a % b < b) = ()
 
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_carry_20:
   h0:mem -> h1:mem ->
@@ -459,7 +455,7 @@ let lemma_carry_20 h0 h1 b =
   )
 
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
 
 val lemma_carry_2:
   h0:mem -> h1:mem ->
@@ -471,4 +467,3 @@ val lemma_carry_2:
 let lemma_carry_2 h0 h1 b =
   lemma_carry_20 h0 h1 b;
   lemma_carry_11 h0 h1 b
-  

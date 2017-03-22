@@ -6,11 +6,13 @@ open FStar.Parser
 open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
-module DsEnv = FStar.Parser.Env
+open FStar.Errors
+module DsEnv = FStar.ToSyntax.Env
 module TcEnv = FStar.TypeChecker.Env
 module SMT = FStar.SMTEncoding.Solver
 module Tc = FStar.TypeChecker.Tc
 module TcTerm = FStar.TypeChecker.TcTerm
+module ToSyntax = FStar.ToSyntax.ToSyntax
 
 let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange
 let dsenv_ref = ref None
@@ -22,9 +24,15 @@ let test_mod_ref = ref (Some ({name=test_lid;
 
 let parse_mod mod_name dsenv =
     match ParseIt.parse (Inl mod_name) with
+<<<<<<< HEAD
     | Inl (Inl [m]) ->
         let env',  m = Parser.ToSyntax.desugar_modul dsenv m in
         let env' , _ = FStar.Parser.Env.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) in
+=======
+    | Inl (Inl [m], _) ->
+        let env',  m = ToSyntax.desugar_modul dsenv m in
+        let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) in
+>>>>>>> origin/master
         dsenv_ref := Some env';
         env', m
     | _ -> failwith "Unexpected "
@@ -40,7 +48,7 @@ let init_once () : unit =
   let solver = SMT.dummy in
   let env = TcEnv.initial_env TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
   env.solver.init env;
-  let dsenv, prims_mod = parse_mod (Options.prims()) (Parser.Env.empty_env()) in
+  let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env()) in
   let _prims_mod, env = Tc.check_module env prims_mod in
 // only needed by normalization test #24, probably quite expensive otherwise
 //  let dsenv, env = add_mods ["FStar.PropositionalExtensionality.fst"; "FStar.FunctionalExtensionality.fst"; "FStar.PredicateExtensionality.fst";
@@ -72,29 +80,42 @@ let pars_term_or_fragment is_term s =
       let frag = frag_of_text s in
       if is_term
       then let t = Parser.Parse.term lexer lexbuf in
+<<<<<<< HEAD
            Some (Parser.ToSyntax.desugar_term env t)
       else begin match FStar.Universal.interactive_tc.check_frag (env, tcenv) !test_mod_ref frag with
+=======
+           Some (ToSyntax.desugar_term env t)
+      else begin match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref frag with
+>>>>>>> origin/master
                 | Some (test_mod', (env', tcenv'), 0) ->
                   test_mod_ref := test_mod';
                   dsenv_ref := Some env';
                   tcenv_ref := Some tcenv';
                   None
-                | _ -> raise (FStar.Syntax.Syntax.Err ("Failed to check fragment: " ^s))
+                | _ -> raise (Err ("Failed to check fragment: " ^s))
             end
  with
+<<<<<<< HEAD
     | FStar.Syntax.Syntax.Err msg ->
+=======
+    | Err msg ->
+>>>>>>> origin/master
         printfn "Failed to parse %s\n%s\n" s msg;
         exit -1
-    | FStar.Syntax.Syntax.Error(msg, r) ->
+    | Error(msg, r) ->
         printfn "Failed to parse %s\n%s: %s\n" s (Range.string_of_range r) msg;
         exit -1
 
 let failed_to_parse s e =
     match e with
+<<<<<<< HEAD
         | FStar.Syntax.Syntax.Err msg ->
+=======
+        | Err msg ->
+>>>>>>> origin/master
             printfn "Failed to parse %s\n%s\n" s msg;
             exit -1
-        | FStar.Syntax.Syntax.Error(msg, r) ->
+        | Error(msg, r) ->
             printfn "Failed to parse %s\n%s: %s\n" s (Range.string_of_range r) msg;
             exit -1
         | _ -> raise e
@@ -113,7 +134,11 @@ let pars s =
           let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
           let lexer = LexFStar.token lexargs in
           let t = Parser.Parse.term lexer lexbuf in
+<<<<<<< HEAD
           Parser.ToSyntax.desugar_term env t
+=======
+          ToSyntax.desugar_term env t
+>>>>>>> origin/master
      with
         | e when not ((Options.trace_error())) -> failed_to_parse s e
 
@@ -125,18 +150,27 @@ let tc s =
 
 let pars_and_tc_fragment (s:string) =
     Options.set_option "trace_error" (Options.Bool true);
-    let report () = FStar.TypeChecker.Errors.report_all () |> ignore in
+    let report () = FStar.Errors.report_all () |> ignore in
     try
         let env, tcenv = init() in
         let frag = frag_of_text s in
+<<<<<<< HEAD
         match FStar.Universal.interactive_tc.check_frag (env, tcenv) !test_mod_ref frag with
+=======
+        match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref frag with
+>>>>>>> origin/master
         | Some (test_mod', (env', tcenv'), n) ->
             test_mod_ref := test_mod';
             dsenv_ref := Some env';
             tcenv_ref := Some tcenv';
             if n <> 0
             then (report ();
+<<<<<<< HEAD
                   raise (FStar.Syntax.Syntax.Err (Util.format1 "%s errors were reported" (string_of_int n))))
         | _ -> report(); raise (FStar.Syntax.Syntax.Err ("check_frag returned None: " ^s))
+=======
+                  raise (Err (Util.format1 "%s errors were reported" (string_of_int n))))
+        | _ -> report(); raise (Err ("check_frag returned None: " ^s))
+>>>>>>> origin/master
     with
         | e when not ((Options.trace_error())) -> failed_to_parse s e

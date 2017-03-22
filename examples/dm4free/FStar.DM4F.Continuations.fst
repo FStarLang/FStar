@@ -12,9 +12,9 @@ let bind (ans:Type) (a:Type) (b:Type) (m : cont ans a) (f : a -> Tot (cont ans b
 (* let bind1 a b m f : Tot (cont b) = fun k -> bind a b m f k *)
 
 (* Sum type with explicit type anotations to bypass current lack of implicit arguments *)
-noeq type either : Type -> Type -> Type =
-| L : (a:Type) -> (b:Type) -> a -> either a b
-| R : (a:Type) -> (b:Type) -> b -> either a b
+noeq type either : Type u#a -> Type u#b -> Type u#(1 + max a b) =
+| L : (a:Type u#a) -> (b:Type u#b) -> a -> either a b
+| R : (a:Type u#a) -> (b:Type u#b) -> b -> either a b
 
 // Excluded-middle relative to ans : cont (either a (a -> M ans))
 // This could eventually be an action for CONT
@@ -90,7 +90,7 @@ let em_wp (a:Type)
           (forall (x: either a (a -> Tot False)) (post' : False -> Type0). pbpost x post')
 
 
-let em2 (a:Type) : CONTINUATION.repr (either a (a -> Tot False)) (em_wp a)
+let em2 (a:Type) : CONTINUATION?.repr (either a (a -> Tot False)) (em_wp a)
   = fun (kspec : (either a (a -> Tot False)) -> (False -> Tot Type0) -> Tot Type0)
       (k : (x:(either a (a -> Tot False))) -> PURE False (kspec x)) ->
       begin
@@ -104,5 +104,5 @@ let em2 (a:Type) : CONTINUATION.repr (either a (a -> Tot False)) (em_wp a)
 // TODO : to be investigated ./FStar.DM4F.Continuations.fst(19,2-19,3): (Error) assertion failed
 reifiable let excluded_middle (a:Type)
   : CONTINUATION (either a (a -> Tot False)) (em_wp a)
-  = CONTINUATION.reflect (em2 a)
+  = CONTINUATION?.reflect (em2 a)
 *)

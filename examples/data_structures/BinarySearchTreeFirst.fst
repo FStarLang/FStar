@@ -34,8 +34,8 @@ type tree: int -> Type =
         -> #r   :int
         -> right:option (tree r){l <= n
                                  /\ n <= r
-                                 /\ (is_None right <==> n=r)
-                                 /\ (is_None left <==> n=l)}
+                                 /\ (None? right <==> n=r)
+                                 /\ (None? left <==> n=l)}
         -> tree r
 
 (* Need to supply #i for the empty sub-trees, since it can't be inferred by unification *)
@@ -65,8 +65,8 @@ let rec contains (#k:int) t key =
   then false
   else let Node left i right = t in
        i=k
-       || (key < i && is_Some left && contains (Some.v left) key)
-       || (is_Some right && contains (Some.v right) key)
+       || (key < i && Some? left && contains (Some?.v left) key)
+       || (Some? right && contains (Some?.v right) key)
 
 val in_order_opt: #k:int -> t:option (tree k) -> Tot (list int) (decreases t)
 let rec in_order_opt (#k:int) t = match t with
@@ -88,8 +88,8 @@ CH: this is very strange since it is reported on x, which has no decreases claus
   match t with
   | None -> ()
   | Some (Node left i right) ->
-     ListProperties.append_mem (in_order_opt left @ [i]) (in_order_opt right) x;
-     ListProperties.append_mem (in_order_opt left) [i] x;
+     List.Tot.append_mem (in_order_opt left @ [i]) (in_order_opt right) x;
+     List.Tot.append_mem (in_order_opt left) [i] x;
      index_is_max left x;
      index_is_max right x
 *)
@@ -104,8 +104,8 @@ let rec index_is_max2 (#max:int) t x = admit()
   match t with
   | None -> ()
   | Some (Node #l left i #r right) -> (* You can also writing the implicit arguments explicitly ... just testing it *)
-     ListProperties.append_mem (in_order_opt #l left @ [i]) (in_order_opt #r right) x;
-     ListProperties.append_mem (in_order_opt #l left) [i] x;
+     List.Tot.append_mem (in_order_opt #l left @ [i]) (in_order_opt #r right) x;
+     List.Tot.append_mem (in_order_opt #l left) [i] x;
      index_is_max2 #l left x;
      index_is_max2 #r right x
 *)

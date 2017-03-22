@@ -15,11 +15,9 @@ VERFILES=bug015.fst bug019.fst\
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: uall sall
+all:
 
-uall:
-
-sall: .all.ver
+uall: $(subst .fst,.uver,$(VERFILES))
 
 bug194: bug194.fst
 	$(FSTAR) --explicit_deps ../../lib/FStar.Classical.fst ../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Constructive.fst ../metatheory/stlc_strong_db_parsubst.fst bug194.fst
@@ -45,7 +43,7 @@ extraction-error1:
 			    Bug.ml
 
 ExtractionBug.ver:
-	$(FSTAR) $(OTHERFLAGS) --explicit_deps  FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fsi stHyperHeap.fst ExtractionBug.fst --dump_module ExtractionBug --print_implicits --codegen OCaml
+	$(FSTAR) --explicit_deps  FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fsi stHyperHeap.fst ExtractionBug.fst --dump_module ExtractionBug --print_implicits --codegen OCaml
 
 ExtractionBug.out:
 	cp ../../lib/ml/native_int/prims.ml .

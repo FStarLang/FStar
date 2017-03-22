@@ -245,16 +245,17 @@ describe a simple interface provided by the framework as follows:
 ~
 
 This interface provides two functions, `read` and `write`, which
-presumably implement the corresponding operations on files.
+in a real setup would implement the corresponding operations on files.
+In our simplified example they just print things on screen.
 
-By using the `assume val` notation, we *declare* that this module provides
-the `read` and `write` operations (they are *values*), but that we are
-*_not_ defining* those values here---they will be provided by an external
-module. Our use of `assume val` is much like the
-`extern`{language=csharp} keyword in C and other programming languages.
+<!-- By using the `assume val` notation, we *declare* that this module provides -->
+<!-- the `read` and `write` operations (they are *values*), but that we are -->
+<!-- *_not_ defining* those values here---they will be provided by an external -->
+<!-- module. Our use of `assume val` is much like the -->
+<!-- `extern`{language=csharp} keyword in C and other programming languages. -->
 
-As with `extern`{language=csharp}, when declaring a value, we also
-provide its type signature.
+<!-- As with `extern`{language=csharp}, when declaring a value, we also -->
+<!-- provide its type signature. -->
 
 * The type of `read` says that it is a function expecting a `filename`
   argument `f` for which `canRead f` evaluates to `true` and returning a
@@ -423,8 +424,8 @@ Should we add Ghost to the list of effects or would that be too
 confusing at this point?
 ~
 
-The effects `:{Tot, Dv, ST, Exn, ML}` are arranged in a lattice,
-with `:Tot` at the
+The primitive effects `:{Tot, Dv, ST, Exn, ML}` are arranged in a
+lattice, with `:Tot` at the
 bottom (less than all the others), `:ML` at the top (greater than all
 the others), and with `:ST` unrelated to `:Exn`. This means that a
 computation with a particular effect can be treated as having any
@@ -433,38 +434,12 @@ this feature *sub-effecting*.
 
 In fact, you can configure F\* with your own family of effects and effect
 ordering and have F\* infer those effects for your programs---but that's
-more advanced and beyond the scope of this tutorial.
-~CH
-Previous claim seems too strong to me. It misses the point that F\*
-effects are primitive and fixed, and in a way the lattice of effects
-is also fixed (the powerset of effects), one can only choose which
-points in this fixed lattice one finds interesting. So at the level of
-detail things were explain so far, this claim seems wrong.
-Am I missing anything?
-~
+more advanced and beyond the scope of this tutorial. (If curious you can
+check out [this paper](https://www.fstar-lang.org/papers/dm4free/).)
 
-~NS
-Yes, effects are primitive. But, the lattice is not fixed nor is the powerset,
-since the effects themselves can be arbitrarily fine-grained. For example,
-you can take {Pure, Div, RD, WR, ALLOC, ST, EXN, ALL}. You could also
-split RD/WR into very precise ones, recording a subset of the state that
-may be written, etc.
-~
-
-~CH
-I think the word effect is overloaded and this makes this discussion
-(and the text above) a bit confusing. There is an intuitive notion of
-effect as in non-termination, exceptions, state (there are very few
-such effects and they are all primitive) and there is the technical
-notion of an effect in F\* (which includes things like a wp and can be
-a lot more fine-grained; these are the things that are actually
-configurable). The explanation above seems to start with the first
-point of view and end up with the second.
-~
-
-From now on, we'll just refer to a type-and-effect pair (e.g. `:Tot int`
-where `:Tot` is the effect and `:int` is the result type), as a
-type<!-- unused: , or sometimes as a *computation* type -->.
+From now on, we'll just refer to a type-and-effect pair (e.g. `:Tot
+int` where `:Tot` is the effect and `:int` is the result type), as a
+*computation* type.
 
 ## Function types
 
@@ -479,7 +454,7 @@ capture not just the types of the arguments and the result, but also
 the effect of the function's body. As such, every function value has a
 type of the form `:t_1 -> ... -> t_n -> E t`, where `:t_1 .. t_n` are the
 types of each of the arguments; `:E` is the effect of its body; and
-`:t` is the type of its result. (*Note to the experts: We
+`:t` is the type of its result. (*Note to the experts*: We
 will generalize this to dependent functions and indexed effects
 progressively.) The pure functions
 above are given a type using effect `Tot` in F\*:
@@ -518,34 +493,19 @@ val canWrite: filename -> Tot bool
 ~~
 ~
 
-### The default effect is `ML`
+### The default effect is `Tot`
 
-Without further annotation, F\* (sometimes conservatively) infers
-functions that may perform IO or functions that are not
-provably terminating to have the `:ML` effect. So, both
-functions below are inferred to have the type `:(int -> ML int)`.
-(Note: Recursive functions are defined using `let rec`
-in ML-like languages.)
+Since total functions are very commonly used in verified programs,
+writing `Tot` is optional in F\*'s syntax.  As such, `filename ->
+bool` is a shorthand for `filename -> Tot bool`. Nevertheless, we
+consider it good practice to annotate functions with their result
+effect, even when it is `Tot`.
 
-    let hello_incr i = IO.print_string "hello"; i + 1
-    let rec loop i = i + loop (i - 1)
+For more details on the syntax of function types and definitions, in
+particular the rules for default effects, see [this wiki
+page][wiki-default-effects].
 
-If we provide explicit annotations we can give these functions more
-precise types:
-
-    val hello_incr : int -> ML int
-    let hello_incr i = IO.print_string "hello"; i + 1
-
-    val loop : int -> Dv int
-    let rec loop i = i + loop (i - 1)
-
-Since we often port programs from ML to F\*, we choose the default effect
-to be `ML` and typically don't even write it. So, you could have written
-the usual ML signature for `hello_incr` and `loop` as shown below, which
-is just a synonym for the more explicit `:(int -> ML int)`.
-
-    val hello_incr: int -> int
-    val loop: int -> int
+[wiki-default-effects]: https://github.com/FStarLang/FStar/wiki/The-syntax-of-arrow-types-and-default-effects
 
 ~CH
 This seems like the right place to explain higher-order functions.
@@ -572,11 +532,10 @@ function. You can write down this type and have F\* check it; or,
 using sub-effecting, you can write the type below and F\* will check
 that `new_counter` has that type as well.
 
-    val new_counter: int -> ML (unit -> int)
+    val new_counter: int -> ML (unit -> ML int)
 
-Note, the type above, a shorthand for `:int -> ML (unit -> ML int)`,
-is *not* the same as `:int -> unit -> int`. The latter is a shorthand
-for `:int -> Tot (unit -> ML int)`.
+Note, the type above, is *not* the same as `:int -> unit -> int`. The
+latter is a shorthand for `:int -> Tot (unit -> Tot int)`.
 
 # First proofs about functions on integers { #sec-firstproofs }
 
@@ -663,14 +622,13 @@ We can assert and automatically check a more general property about `max`. For e
 Let's take a look at the factorial function:
 
     let rec factorial n = 
-      if n = 0 then 1 else Prims.op_Multiply n (factorial (n - 1))
+      if n = 0 then 1 else n * (factorial (n - 1))
 
-As we said earlier, without further annotation, F\* infers `:int -> int`
-as the type of this function, which is a shorthand for
-`:int -> ML int`---meaning that F\* does not attempt to
-automatically prove that `factorial` (or any recursive function, for that
-matter) is in fact a pure, total function. Factorial is actually not a total
-function on arbitrary integers! Think about `factorial (-1)`.
+For a recursive function, without further annotation, F\* attempts to
+automatically prove that the recursion always terminates. In the case
+of `factorial` above, F\* attempts to prove that it has type
+`int -> Tot int`, and fails to do so because, factorial is actually
+not a total function on arbitrary integers! Think about `factorial -1`.
 
 ~ Remark
 F\*'s `:int` type represents unbounded mathematical integers.
@@ -721,8 +679,7 @@ Try describing in words what each of those types mean.
 ~~ Answer
 There are many possible correct types for `factorial`. Here are a few:
 ~~~ SolutionFragment {exname=Ex03a}
-val factorial: int -> int                     (* inferred by default *)
-val factorial: int -> ML int                  (* same as above *)
+val factorial: int -> Dv int                  (* factorial may loop forever, but may return an integer *)
 val factorial: nat -> Tot int                 (* total function on nat inputs *)
 val factorial: nat -> Tot nat                 (* stronger result type *)
 val factorial: nat -> Tot (y:int{y>=1})       (* even stronger result type *)
@@ -1129,23 +1086,6 @@ Here is the `length` function:
 The type of `length` proves it is a total function on lists of `:'a`-typed
 values, returning a non-negative integer.
 
-<!--
-~Remark
-Like in ML, you could have written the type of `length` as
-`:list 'a -> Tot nat`. The 'ticked'-variable `:'a` is implicitly a type
-variable that is bound at the top-level of the enclosing function type
-~
-~CH
-Don't understand this comment. That's exactly what you already
- wrote. Do you actually mean to say that this could also have been written as
- `a:Type -> list a -> Tot nat`?
-~
-~BB
-I don't understand either, it is certainly wrong
-~
--->
-
-
 ~ Exercise
 Here's the `append` function that concatenates two lists.
 ~~ ExerciseFragment {exname=Ex04a}
@@ -1329,7 +1269,7 @@ below and available in F\*'s standard prelude).
 ~~ ExerciseFragment {exname=Ex04e}
     type option 'a =
        | None : option 'a
-       | Some : 'a -> option 'a
+       | Some : v:'a -> option 'a
 
     let rec find f l = match l with
       | [] -> None
@@ -1434,15 +1374,7 @@ those of `Cons.hd` and `Cons.tl`.
 ~~
 ~~Answer
 ~~~ SolutionFragment {exname=Ex04g}
-val hd : l:list 'a{is_Cons l} -> Tot 'a
-let hd l =
-  match l with
-  | h :: t -> h
-
-val tl : l:list 'a{is_Cons l} -> Tot (list 'a)
-let tl l =
-  match l with
-  | h :: t -> t
+[INCLUDE=code/solutions/Ex04g.fst]
 ~~~
 ~~
 ~

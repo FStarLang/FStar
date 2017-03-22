@@ -1,5 +1,5 @@
 [
-  "+O¹”µ“B\u0012úûU7ß<öQ",
+  "rÉ¶L/Î¢C*Sÿ\u0002¼\u001dŽ ",
   [
     [ "FStar.List.hd", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.List.tail", 1, 2, 1, [ "@query" ], 0 ],
@@ -56,19 +56,6 @@
       0
     ],
     [
-      "FStar.List.mapT",
-      1,
-      2,
-      1,
-      [
-        "@query", "binder_x_3dddec8ced2db740e4e8aaf70542be7a_5",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
-      ],
-      0
-    ],
-    [
       "FStar.List.mapi_init",
       1,
       2,
@@ -76,18 +63,6 @@
       [
         "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list"
-      ],
-      0
-    ],
-    [
-      "FStar.List.mapi_initT",
-      1,
-      2,
-      1,
-      [
-        "@query", "binder_x_3dddec8ced2db740e4e8aaf70542be7a_5",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0
     ],
@@ -195,10 +170,10 @@
       [
         "@query", "bool_inversion", "bool_typing", "data_elim_Prims.V",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "disc_equation_Prims.Some", "disc_equation_Prims.V",
-        "fuel_guarded_inversion_Prims.list", "lemma_Prims.invertOption",
-        "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.is_None"
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "disc_equation_Prims.V", "fuel_guarded_inversion_Prims.list",
+        "lemma_Prims.invertOption", "proj_equation_Prims.V_v",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0
     ],
@@ -255,13 +230,13 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "disc_equation_Prims.Some",
+        "@query", "bool_inversion", "data_elim_Prims.V",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "disc_equation_Prims.V", "fuel_guarded_inversion_Prims.list",
-        "kinding_Prims.option@tok", "lemma_Prims.invertOption",
-        "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_4c6ebfa415384bc16f78df7e5ba5eba9",
-        "typing_Prims.V.v", "typing_Prims.is_None"
+        "lemma_Prims.invertOption", "proj_equation_Prims.V_v",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_None",
+        "typing_Prims.uu___is_Some"
       ],
       0
     ],

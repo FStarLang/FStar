@@ -50,31 +50,8 @@ let example1 : string =
 ml type of head is Prims.unit dir_type
 *)
 
-exception InvalidFormatString
-
-let rec parse_format (s:list char) : Ex (list dir) =
-  match s with
-  | [] -> []
-  | '%' :: c :: s' ->
-    let d = match c with
-            | '%' -> Lit '%'
-            | 'b' -> Arg Bool
-            | 'd' -> Arg Int
-            | 'c' -> Arg Char
-            | 's' -> Arg String
-            | _   -> raise InvalidFormatString
-    in d :: parse_format s'
-  | '%' :: [] -> raise InvalidFormatString
-  | c :: s' -> Lit c :: parse_format s'
-
-(* let parse_format_pure (s:list char) : option (list dir) = *)
-(*   match reify (parse_format s) with *)
-(* Effect Prims.EXN cannot be reified [3 times] *)
-
-(* Need some serious effect hiding to be able to call parse_format in
-   a type! Could try to use reify but only after we switch EXN to dm4free
-
-   Below we change parse_format to return option *)
+(* Below we write parse_format returning option 
+   (see SimplePrintfReify for more interesting version) *)
 
 let add_dir (d:dir) (ods : option (list dir)) : Tot (option (list dir)) =
   match ods with
@@ -97,9 +74,9 @@ let rec parse_format_pure (s:list char) : Tot (option (list dir)) =
 let rec parse_format_string (s:string) : Tot (option (list dir)) =
   parse_format_pure (list_of_string s)
 
-let sprintf (s:string{normalize_term #bool (is_Some (parse_format_string s))})
-  : Tot (normalize_term (dir_type (Some.v (parse_format_string s)))) =
-  string_of_dirs (Some.v (parse_format_string s)) (fun s -> s)
+let sprintf (s:string{normalize_term #bool (Some? (parse_format_string s))})
+  : Tot (normalize_term (dir_type (Some?.v (parse_format_string s)))) =
+  string_of_dirs (Some?.v (parse_format_string s)) (fun s -> s)
 
 (* trying to make sure that it's not the SMT solver doing the reduction *)
 #reset-options "--initial_fuel 0 --max_fuel 0"
@@ -133,6 +110,8 @@ let example4_lemma () :
   Lemma (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]) =
   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String])
 
+// #reset-options "--z3timeout 10"
+
 let example5 : string =
   (* Requiring such an assert_norm on each usage seems quite bad for usability *)
   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]);
@@ -145,7 +124,7 @@ let example5 : string =
 (* Take 1: *)
 (* let example6 : string = *)
 (*   (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer" *)
-(* ./SimplePrintf.fst(140,3-140,18): Subtyping check failed; expected type (uu___:Prims.int -> uu___:Prims.string -> Tot Prims.string); got type (((match (Prims.Some.v (match (FStar.String.list_of_string "%d=%s") with *)
+(* ./SimplePrintf.fst(140,3-140,18): Subtyping check failed; expected type (uu___:Prims.int -> uu___:Prims.string -> Tot Prims.string); got type (((match (Prims.Some?.v (match (FStar.String.list_of_string "%d=%s") with *)
 (* 	| (Prims.Nil #.uu___#12770)  -> (Prims.Some (Prims.Nil )) *)
 (* 	|(Prims.Cons #.uu___#12974 % (Prims.Cons #.uu___#12970 c#39352 s'#39353))  -> ((match c@1 with *)
 (* 	| %  -> (SimplePrintf.add_dir (SimplePrintf.Lit %) (SimplePrintf.parse_format_pure s'@0)) *)
@@ -164,7 +143,7 @@ let example5 : string =
 (* let example6 : string = *)
 (*   sprintf "%d=%s" 42 " answer" *)
 (* ./SimplePrintf.fst(162,18-162,20) : Error *)
-(* Too many arguments to function of type (s:(s#17162:Prims.string{(Prims.eq2 (Prims.is_Some (match (FStar.String.list_of_string s@0) with *)
+(* Too many arguments to function of type (s:(s#17162:Prims.string{(Prims.eq2 (Prims.Some? (match (FStar.String.list_of_string s@0) with *)
 (* 	| (Prims.Nil #.uu___#12770)  -> (Prims.Some (Prims.Nil )) *)
 (* 	|(Prims.Cons #.uu___#12974 % (Prims.Cons #.uu___#12970 c#38766 s'#38767))  -> ((match c@1 with *)
 (* 	| %  -> (SimplePrintf.add_dir (SimplePrintf.Lit %) (SimplePrintf.parse_format_pure s'@0)) *)
@@ -174,7 +153,7 @@ let example5 : string =
 (* 	|s  -> (SimplePrintf.add_dir (SimplePrintf.Arg SimplePrintf.String) (SimplePrintf.parse_format_pure s'@0)) *)
 (* 	|_  -> (Prims.None )) : (Prims.option (Prims.list SimplePrintf.dir))) *)
 (* 	|(Prims.Cons #.uu___#14938 % (Prims.Nil #.uu___#14934))  -> (Prims.None ) *)
-(* 	|(Prims.Cons #.uu___#15706 c#38769 s'#38770)  -> (SimplePrintf.add_dir (SimplePrintf.Lit c@1) (SimplePrintf.parse_format_pure s'@0)))) true)}) -> Tot (((match (Prims.Some.v (match (FStar.String.list_of_string s@0) with *)
+(* 	|(Prims.Cons #.uu___#15706 c#38769 s'#38770)  -> (SimplePrintf.add_dir (SimplePrintf.Lit c@1) (SimplePrintf.parse_format_pure s'@0)))) true)}) -> Tot (((match (Prims.Some?.v (match (FStar.String.list_of_string s@0) with *)
 (* 	| (Prims.Nil #.uu___#12770)  -> (Prims.Some (Prims.Nil )) *)
 (* 	|(Prims.Cons #.uu___#12974 % (Prims.Cons #.uu___#12970 c#38755 s'#38756))  -> ((match c@1 with *)
 (* 	| %  -> (SimplePrintf.add_dir (SimplePrintf.Lit %) (SimplePrintf.parse_format_pure s'@0)) *)

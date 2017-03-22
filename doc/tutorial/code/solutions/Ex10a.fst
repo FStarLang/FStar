@@ -1,4 +1,5 @@
 module Ex10a
+open FStar.All
 //acls-variant
 
 open FStar.List.Tot
@@ -15,11 +16,11 @@ type db = list entry
 (* We define two pure functions that test whether
    the suitable permission exists in some db *)
 let canWrite db file =
-  is_Some (tryFind (function Writable x -> x=file | _ -> false) db)
+  Some? (tryFind (function Writable x -> x=file | _ -> false) db)
 
 
 let canRead db file =
-  is_Some (tryFind (function Readable x | Writable x -> x=file) db)
+  Some? (tryFind (function Readable x | Writable x -> x=file) db)
 
 (* The acls reference stores the current access-control list, initially empty *)
 val acls: ref db
@@ -82,7 +83,7 @@ let safe_delete file =
   else failwith "unwritable"
 
 (* Finally, we have a top-level client program *)
-val test_acls: file -> unit
+val test_acls: file -> ML unit
 let test_acls f =
   grant (Readable f);     (* ok *)
   let _ = read f in       (* ok --- it's in the acl *)

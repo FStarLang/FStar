@@ -9,7 +9,7 @@ open FStar.Int.Cast
 open Crypto.Symmetric.AES
 open Crypto.Symmetric.GCM
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 100"
 
 module U32 = FStar.UInt32
 

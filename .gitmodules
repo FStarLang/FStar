@@ -1,0 +1,4 @@
+[submodule "ucontrib/CoreCrypto/ml/openssl"]
+	path = ucontrib/CoreCrypto/ml/openssl
+	url = https://github.com/openssl/openssl
+	branch = e216bf9d7

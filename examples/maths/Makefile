@@ -2,8 +2,7 @@ VERFILES=gcd.fst #bijection.fst
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: uall sall
+all: uall
 
 uall: Gcd.uver
 
-sall:

@@ -14,6 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+(** Computatiional sets (on eqtypes): membership is a boolean function *)
 module FStar.Set
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.FunctionalExtensionality
@@ -114,3 +115,15 @@ assume val lemma_set_to_tset:
   -> Lemma (requires (True))
           (ensures (mem x s <==> TSet.mem x (set_to_tset s)))
     [SMTPat (TSet.mem x (set_to_tset s))]
+
+(* Converting lists to sets *)
+#reset-options //restore fuel usage here
+type eqtype = a:Type0{hasEq a}
+
+val as_set': #a:eqtype -> list a -> Tot (set a)
+let rec as_set' #a l = match l with 
+  | [] -> empty
+  | hd::tl -> union (singleton hd) (as_set' tl)
+
+unfold val as_set:  #a:eqtype -> l:list a -> Tot (set a)
+let as_set (#a:eqtype) (l:list a) = normalize_term (as_set' l)
