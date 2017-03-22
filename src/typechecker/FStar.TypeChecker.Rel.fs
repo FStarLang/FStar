@@ -634,7 +634,13 @@ let fv_delta_depth env fv = match fv.fv_delta with
       if env.curmodule.str = fv.fv_name.v.nsstr
       then d //we're in the defining module
       else Delta_constant
-    | d -> d
+    | Delta_defined_at_level _ ->
+      begin match Env.lookup_definition [Unfold Delta_constant] env fv.fv_name.v with
+            | None -> Delta_constant //there's no definition to unfold, e.g., because it's marked irreducible
+            | _ -> fv.fv_delta
+      end
+    | d ->
+      d
 
 let rec delta_depth_of_term env t =
     let t = U.unmeta t in

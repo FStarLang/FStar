@@ -28,7 +28,7 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--include .. UserTactics.Example1.fst --print_implicits --print_universes --debug UserTactics.Example1 --prn</StartArguments>
+    <StartArguments>--include .. UserTactics.Example1.fst</StartArguments>
     <StartAction>Project</StartAction>
     <StartWorkingDirectory>D:\workspace\everest\FStar\examples\tactics\micro-benchmarks\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>

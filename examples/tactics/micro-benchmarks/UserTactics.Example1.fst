@@ -118,7 +118,17 @@ let rec just_do_intros : tactic unit = fun () ->
 
 let rec rewrite_all_equalities : tactic unit = fun () -> 
   visit simplify_eq_implication
-  
+
+
+assume val lemma_mul_comm : x:nat -> y:nat -> Lemma (op_Multiply x y == op_Multiply y x)
+let mul_commute_ascription : tactic unit
+  = fun () -> 
+    let _, goal_t = cur_goal () in  // G |- x=e ==> P
+    match term_as_formula goal_t with
+    | Some (Eq _ _ _) ->
+      apply_lemma (quote lemma_mul_comm)
+    | _ -> fail "Not an equality"
+
 ////////////////////////////////////////////////////////////////////////////////
 // End of tactic code 
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +176,19 @@ let test_exact (x:nat) (y:nat) =
   assert_by_tactic (fun () -> exact (quote (mul_comm x y)))
                    (op_Multiply x y == op_Multiply y x)
 
-assume val lemma_mul_comm : x:nat -> y:nat -> Lemma (op_Multiply x y == op_Multiply y x)
+
 let test_apply (x:nat) (y:nat) =
   assert_by_tactic (fun () -> apply_lemma (quote lemma_mul_comm))
                    (op_Multiply x y == op_Multiply y x)
+
+
+let test_apply_ascription (x:nat) (y:nat) =
+  assert (op_Multiply x y == op_Multiply y x)
+  <: Tot unit
+  by (fun () -> visit mul_commute_ascription)
+
+(* this fails, rightfully, since the top-level goal is not 
+(* let test_apply_ascription_fail (x:nat) (y:nat) = *)
+(*   assert (op_Multiply x y == op_Multiply y x) *)
+(*   <: Tot unit *)
+(*   by (fun () -> apply_lemma (quote lemma_mul_comm)) *)

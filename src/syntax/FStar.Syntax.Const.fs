@@ -193,3 +193,4 @@ let normalize_term = pconst "normalize_term"
 let fstar_tactics_lid s = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@[s]) FStar.Range.dummyRange
 let tactic_lid = fstar_tactics_lid "tactic"
 let by_tactic_lid = fstar_tactics_lid "by_tactic"
+let reify_tactic_lid = fstar_tactics_lid "reify_tactic"

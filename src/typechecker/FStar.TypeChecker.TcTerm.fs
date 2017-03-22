@@ -964,9 +964,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
     let body, cbody, guard = check_expected_effect ({envbody with use_eq=use_eq}) c_opt (body, cbody.comp()) in
     let guard = Rel.conj_guard guard_body guard in
-    let guard = match tacopt with
-                | None -> guard
-                | Some tac -> Rel.map_guard guard (Common.mk_by_tactic tac) in
+//    let guard = match tacopt with
+//                | None -> guard
+//                | Some tac -> Rel.map_guard guard (Common.mk_by_tactic tac) in
     let guard = if env.top_level || not(Env.should_verify env)
                 then Rel.discharge_guard envbody (Rel.conj_guard g guard)
                 else let guard = Rel.close_guard (bs@letrec_binders) (Rel.conj_guard g guard) in
