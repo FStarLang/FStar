@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,18 +91,24 @@ let rec free_univs u = match Subst.compress_univ u with
   | U_max us -> List.fold_left (fun out x -> union out (free_univs x)) no_free_vars us
   | U_unif u -> singleton_univ u
 
-//the interface of Syntax.Free now supports getting fvars in a term also
-//however, fvars are added unlike free names, free uvars, etc. which are part of a record free_vars, that is memoized at **every** AST node
-//if we added fvars also to the record, it would affect every AST node
-//instead of doing that, the functions below compute a tuple, free_vars * set<lident>, where the second component is the fvars lids
-//but this raises a compilication, what should happen when the functions below just return from the cache from the AST nodes
-//to handle that, use_cache flag is UNSET when asking for free_fvars, so that all the terms are traversed completely
-//on the other hand, for earlier interface use_cache is true
-//this flag is propagated, and is used in the function should_invalidate_cache below
+(* the interface of Syntax.Free now supports getting fvars in a term also however, *)
+(* fvars are added unlike free names, free uvars, etc. which are part of a record *)
+(* free_vars, that is memoized at **every** AST node if we added fvars also to the *)
+(* record, it would affect every AST node instead of doing that, the functions *)
+(* below compute a tuple, free_vars * set<lident>, where the second component is *)
+(* the fvars lids but this raises a compilication, what should happen when the *)
+(* functions below just return from the cache from the AST nodes to handle that, *)
+(* use_cache flag is UNSET when asking for free_fvars, so that all the terms are *)
+(* traversed completely on the other hand, for earlier interface use_cache is true *)
+(* this flag is propagated, and is used in the function should_invalidate_cache *)
+(* below *)
 let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
     let aux_binders bs from_body =
-        let from_binders = bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort use_cache)) no_free_vars in
-        union from_binders from_body
+      let from_binders =
+          let fold_fun n (x, _) = union n (free_names_and_uvars x.sort use_cache) in
+          bs |> List.fold_left fold_fun no_free_vars
+      in
+      union from_binders from_body
     in
     let t = Subst.compress tm in
     match t.n with
