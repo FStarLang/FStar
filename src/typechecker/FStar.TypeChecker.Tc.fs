@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -537,7 +537,7 @@ and cps_and_elaborate env ed =
           // WARNING : pushing b1 and b2 in env might break the well-typedness invariant
           let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
           let wp_b1 = N.normalize [ N.Beta ] env0 (mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ]))) in
-          let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type body (U.unascribe wp_b1) in
+          let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type env0 body (U.unascribe wp_b1) in
           (* TODO : Should check that what' is Tot Type0 *)
           let t2 = (fst b2).sort in
           let pure_wp_type = DMFF.double_star t2 in
