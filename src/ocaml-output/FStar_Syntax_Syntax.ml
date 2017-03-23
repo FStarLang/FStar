@@ -808,8 +808,8 @@ let contains_reflectable: qualifier Prims.list -> Prims.bool =
          match uu___90_3252 with
          | Reflectable uu____3253 -> true
          | uu____3254 -> false) l
-let withinfo v s r = { v; ty = s; p = r }
-let withsort v s = withinfo v s FStar_Range.dummyRange
+let withinfo v1 s r = { v = v1; ty = s; p = r }
+let withsort v1 s = withinfo v1 s FStar_Range.dummyRange
 let bv_eq: bv -> bv -> Prims.bool =
   fun bv1  ->
     fun bv2  ->
@@ -951,8 +951,8 @@ let extend_app_n:
       fun kopt  ->
         fun r  ->
           match t.n with
-          | Tm_app (head,args) ->
-              (mk_Tm_app head (FStar_List.append args args')) kopt r
+          | Tm_app (head1,args) ->
+              (mk_Tm_app head1 (FStar_List.append args args')) kopt r
           | uu____3728 -> (mk_Tm_app t args') kopt r
 let extend_app:
   term ->
@@ -1046,24 +1046,24 @@ let as_implicit: Prims.bool -> arg_qualifier Prims.option =
   fun uu___94_4030  -> if uu___94_4030 then Some imp_tag else None
 let pat_bvs: pat -> bv Prims.list =
   fun p  ->
-    let rec aux b p =
-      match p.v with
+    let rec aux b p1 =
+      match p1.v with
       | Pat_dot_term _|Pat_constant _ -> b
       | Pat_wild x|Pat_var x -> x :: b
       | Pat_cons (uu____4055,pats) ->
           FStar_List.fold_left
-            (fun b  ->
+            (fun b1  ->
                fun uu____4073  ->
-                 match uu____4073 with | (p,uu____4081) -> aux b p) b pats
-      | Pat_disj (p::uu____4087) -> aux b p
+                 match uu____4073 with | (p2,uu____4081) -> aux b1 p2) b pats
+      | Pat_disj (p2::uu____4087) -> aux b p2
       | Pat_disj [] -> failwith "impossible" in
     let uu____4098 = aux [] p in
     FStar_All.pipe_left FStar_List.rev uu____4098
 let gen_reset: ((Prims.unit -> Prims.int)* (Prims.unit -> Prims.unit)) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0") in
-  let gen uu____4114 = FStar_Util.incr x; FStar_ST.read x in
+  let gen1 uu____4114 = FStar_Util.incr x; FStar_ST.read x in
   let reset uu____4124 = FStar_ST.write x (Prims.parse_int "0") in
-  (gen, reset)
+  (gen1, reset)
 let next_id: Prims.unit -> Prims.int = Prims.fst gen_reset
 let reset_gensym: Prims.unit -> Prims.unit = Prims.snd gen_reset
 let range_of_ropt: FStar_Range.range Prims.option -> FStar_Range.range =
@@ -1099,7 +1099,7 @@ let new_univ_name: FStar_Range.range Prims.option -> FStar_Ident.ident =
     let uu____4186 =
       let uu____4189 =
         let uu____4190 = FStar_Util.string_of_int id in
-        Prims.strcat "'uu___" uu____4190 in
+        Prims.strcat FStar_Ident.reserved_prefix uu____4190 in
       (uu____4189, (range_of_ropt ropt)) in
     FStar_Ident.mk_ident uu____4186
 let mkbv: FStar_Ident.ident -> Prims.int -> (term',term') syntax -> bv =

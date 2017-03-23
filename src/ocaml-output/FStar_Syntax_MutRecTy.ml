@@ -143,9 +143,9 @@ let disentangle_abbrevs_from_bundle:
                 and unfold_abbrev uu___203_313 =
                   match uu___203_313 with
                   | FStar_Syntax_Syntax.Sig_let
-                      ((false ,lb::[]),rng,uu____316,quals,attr) ->
-                      let quals =
-                        FStar_All.pipe_right quals
+                      ((false ,lb::[]),rng1,uu____316,quals1,attr) ->
+                      let quals2 =
+                        FStar_All.pipe_right quals1
                           (FStar_List.filter
                              (fun uu___202_333  ->
                                 match uu___202_333 with
@@ -187,7 +187,7 @@ let disentangle_abbrevs_from_bundle:
                                     } in
                                   let sigelt' =
                                     FStar_Syntax_Syntax.Sig_let
-                                      ((false, [lb']), rng, [lid], quals,
+                                      ((false, [lb']), rng1, [lid], quals2,
                                         attr) in
                                   ((let uu____369 =
                                       let uu____371 =
@@ -251,19 +251,19 @@ let disentangle_abbrevs_from_bundle:
                 let unfold_in_sig uu___204_499 =
                   match uu___204_499 with
                   | FStar_Syntax_Syntax.Sig_inductive_typ
-                      (lid,univs,bnd,ty,mut,dc,quals,rng) ->
+                      (lid,univs1,bnd,ty,mut,dc,quals1,rng1) ->
                       let bnd' =
                         FStar_Syntax_InstFV.inst_binders unfold_fv bnd in
                       let ty' = FStar_Syntax_InstFV.inst unfold_fv ty in
                       let mut' = filter_out_type_abbrevs mut in
                       [FStar_Syntax_Syntax.Sig_inductive_typ
-                         (lid, univs, bnd', ty', mut', dc, quals, rng)]
+                         (lid, univs1, bnd', ty', mut', dc, quals1, rng1)]
                   | FStar_Syntax_Syntax.Sig_datacon
-                      (lid,univs,ty,res,npars,quals,mut,rng) ->
+                      (lid,univs1,ty,res,npars,quals1,mut,rng1) ->
                       let ty' = FStar_Syntax_InstFV.inst unfold_fv ty in
                       let mut' = filter_out_type_abbrevs mut in
                       [FStar_Syntax_Syntax.Sig_datacon
-                         (lid, univs, ty', res, npars, quals, mut', rng)]
+                         (lid, univs1, ty', res, npars, quals1, mut', rng1)]
                   | FStar_Syntax_Syntax.Sig_let
                       (uu____539,uu____540,uu____541,uu____542,uu____543) ->
                       []

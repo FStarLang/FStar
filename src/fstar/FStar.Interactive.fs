@@ -121,9 +121,10 @@ let report_fail () =
 (* Internal data structures for managing chunks of input from the editor                *)
 (****************************************************************************************)
 type input_chunks =
-  | Push of (bool * int * int) //the bool flag indicates lax flag set from the editor
+  | Push of bool * int * int //the bool flag indicates lax flag set from the editor
   | Pop  of string
   | Code of string * (string * string)
+  | Info of string * int * int
 
 
 type interactive_state = {
@@ -190,7 +191,8 @@ let rec read_chunk () =
     Util.clear_string_builder s.chunk; Code (str, responses)
     end
   else if Util.starts_with l "#pop" then (Util.clear_string_builder s.chunk; Pop l)
-  else if Util.starts_with l "#push" then (Util.clear_string_builder s.chunk;
+  else if Util.starts_with l "#push" then (
+        Util.clear_string_builder s.chunk;
         let lc_lax = Util.trim_string (Util.substring_from l (String.length "#push")) in
         let lc = match Util.split lc_lax " " with
             | [l; c; "#lax"] -> true, Util.int_of_string l, Util.int_of_string c
@@ -200,11 +202,19 @@ let rec read_chunk () =
               false, 1, 0
         in
         Push lc)
+  else if Util.starts_with l "#info" then
+      match Util.split l " " with
+      | [_; file; row; col] ->
+        Util.clear_string_builder s.chunk;
+        Info (file, Util.int_of_string row, Util.int_of_string col)
+      | _ ->
+        Util.print_error ("Unrecognized \"#info\" request: " ^l);
+        exit 1
   else if l = "#finish" then exit 0
   else
     (Util.string_builder_append s.chunk line;
-    Util.string_builder_append s.chunk "\n";
-    read_chunk())
+     Util.string_builder_append s.chunk "\n";
+     read_chunk())
 
 let shift_chunk () =
   let s = the_interactive_state in
@@ -363,6 +373,14 @@ let rec go (line_col:(int*int))
            (filename:string) 
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
+  | Info(file, row, col) ->
+    let iopt = FStar.TypeChecker.Common.info_at_pos file row col in
+    (match iopt with
+     | None ->
+       Util.print_string "\n#done-nok\n"
+     | Some s ->
+       Util.print1 "%s\n#done-ok\n" s);
+    go line_col filename stack curmod env ts
   | Pop msg ->
       // This shrinks all internal stacks by 1
       pop env msg;

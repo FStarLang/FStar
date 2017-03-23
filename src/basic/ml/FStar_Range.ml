@@ -57,9 +57,13 @@ let mk_pos (l:int) (c:int) : pos =
   let c = max 0 c in
   (c land pos_col_mask)
   lor ((l lsl col_nbits) land line_col_mask)
-let line_of_pos p =  (p lsr col_nbits)
-let col_of_pos p =  (p land pos_col_mask)
-let end_of_line p = mk_pos (line_of_pos p) 511 (* pos_col_mask *)
+let line_of_pos_int p = p lsr col_nbits
+let col_of_pos_int p = p land pos_col_mask
+
+let line_of_pos p = Z.of_int (line_of_pos_int p)
+let col_of_pos p =  Z.of_int (col_of_pos_int p)
+
+let end_of_line p = mk_pos (line_of_pos_int p) 511 (* pos_col_mask *)
 let zeroPos : pos = mk_pos 1 0
 
 (* Not usable in current situation *)
@@ -86,10 +90,10 @@ let mk_file_idx_range fidx (b:pos) (e:pos) =
        (lor64
           (lor64
              (BatInt64.of_int fidx)
-             (lsl64 (BatInt64.of_int (line_of_pos b)) file_idx_nbits))
-          (lsl64 (BatInt64.of_int (col_of_pos b)) (file_idx_nbits + start_line_nbits)))
-       (lsl64 (BatInt64.of_int (line_of_pos e)) (file_idx_nbits + start_line_nbits + start_col_nbits)))
-    (lsl64 (BatInt64.of_int (col_of_pos e)) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits)))
+             (lsl64 (BatInt64.of_int (line_of_pos_int b)) file_idx_nbits))
+          (lsl64 (BatInt64.of_int (col_of_pos_int b)) (file_idx_nbits + start_line_nbits)))
+       (lsl64 (BatInt64.of_int (line_of_pos_int e)) (file_idx_nbits + start_line_nbits + start_col_nbits)))
+    (lsl64 (BatInt64.of_int (col_of_pos_int e)) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits)))
 let file_idx_of_range {def_range=r}   = BatInt64.to_int (land64 r file_idx_mask)
 let start_line_of_range {def_range=r} = BatInt64.to_int (lsr64 (land64 r start_line_mask) file_idx_nbits)
 let start_col_of_range {def_range=r}  = BatInt64.to_int (lsr64 (land64 r start_col_mask) (file_idx_nbits + start_line_nbits))
@@ -134,13 +138,13 @@ let start_of_range r = mk_pos (start_line_of_range r) (start_col_of_range r)
 let end_of_range r = mk_pos (end_line_of_range r) (end_col_of_range r)
 let dest_file_idx_range r = file_idx_of_range r,start_of_range r,end_of_range r
 let dest_range r = file_of_range r,start_of_range r,end_of_range r
-let dest_pos p = line_of_pos p,col_of_pos p
+let dest_pos p = line_of_pos_int p,col_of_pos_int p
 let end_range (r:range) = mk_range (file_of_range r) (end_of_range r) (end_of_range r)
 let extend_to_end_of_line r =
    let end_pos = (end_of_line (end_of_range r)) in
-   assert (col_of_pos end_pos = 511) ;
+   assert (col_of_pos_int end_pos = 511) ;
    let r = mk_range (file_of_range r) (start_of_range r) end_pos in
-   assert (col_of_pos (end_of_range r) = 511) ;
+   assert (col_of_pos_int (end_of_range r) = 511) ;
    r
 
 let trim_range_right r n =
@@ -152,19 +156,19 @@ let pos_ord   p1 p2 = pair_ord (int_ord   ,int_ord) (dest_pos p1) (dest_pos p2)
 (* range_ord: not a total order, but enough to sort on ranges *)
 let range_ord r1 r2 = pair_ord (string_ord,pos_ord) (file_of_range r1,start_of_range r1) (file_of_range r2,start_of_range r2)
 
-let output_pos (os:out_channel) m = Printf.fprintf os "(%d,%d)" (line_of_pos m) (col_of_pos m)
+let output_pos (os:out_channel) m = Printf.fprintf os "(%d,%d)" (line_of_pos_int m) (col_of_pos_int m)
 let output_range (os:out_channel) m = Printf.fprintf os "%s%a-%a" (file_of_range m) output_pos (start_of_range m) output_pos (end_of_range m)
-let boutput_pos os m = Printf.bprintf os "(%d,%d)" (line_of_pos m) (col_of_pos m)
+let boutput_pos os m = Printf.bprintf os "(%d,%d)" (line_of_pos_int m) (col_of_pos_int m)
 let boutput_range os m = Printf.bprintf os "%s%a-%a" (file_of_range m) boutput_pos (start_of_range m) boutput_pos (end_of_range m)
 
 let start_range_of_range m =    let f,s,e = dest_file_idx_range m in mk_file_idx_range f s s
 let end_range_of_range m =   let f,s,e = dest_file_idx_range m in mk_file_idx_range f e e
 let pos_gt p1 p2 =
-  (line_of_pos p1 > line_of_pos p2 ||
-     (line_of_pos p1 = line_of_pos p2 &&
-        col_of_pos p1 > col_of_pos p2))
+  (line_of_pos_int p1 > line_of_pos_int p2 ||
+     (line_of_pos_int p1 = line_of_pos_int p2 &&
+        col_of_pos_int p1 > col_of_pos_int p2))
 
-let pos_eq p1 p2 = (line_of_pos p1 = line_of_pos p2 &&  col_of_pos p1 = col_of_pos p2)
+let pos_eq p1 p2 = (line_of_pos_int p1 = line_of_pos_int p2 &&  col_of_pos_int p1 = col_of_pos_int p2)
 let pos_geq p1 p2 = pos_eq p1 p2 || pos_gt p1 p2
 
 let union_ranges m1 m2 =
@@ -212,7 +216,7 @@ let decode_file_idx (s:string) =
     idx
 
 (* For Diagnostics *)
-let string_of_pos   pos = let line,col = line_of_pos pos,col_of_pos pos in Printf.sprintf "%d,%d" line col
+let string_of_pos   pos = let line,col = line_of_pos_int pos,col_of_pos_int pos in Printf.sprintf "%d,%d" line col
 let string_of_def_range r   = Printf.sprintf "%s(%s-%s)" (file_of_range r) (string_of_pos (start_of_range r)) (string_of_pos (end_of_range r))
 let string_of_use_range r   = string_of_def_range {r with def_range=r.use_range}
 let string_of_range r       = string_of_def_range r
@@ -223,9 +227,9 @@ let compare r1 r2 =
   if fcomp = 0
   then let start1 = start_of_range r1 in
        let start2 = start_of_range r2 in
-       let lcomp = line_of_pos start1 - line_of_pos start2 in
+       let lcomp = line_of_pos_int start1 - line_of_pos_int start2 in
        if lcomp = 0
-       then col_of_pos start1 - col_of_pos start2
+       then col_of_pos_int start1 - col_of_pos_int start2
        else lcomp
   else fcomp
 
@@ -236,4 +240,4 @@ let compare_use_range r1 r2 =
             ({r2 with def_range=r2.use_range})
 
 (* let mk_range f b e = mk_range f (Z.to_int b) (Z.to_int e) *)
-let line_of_pos p = Z.of_int (line_of_pos p)
+let line_of_pos_int p = Z.of_int (line_of_pos_int p)

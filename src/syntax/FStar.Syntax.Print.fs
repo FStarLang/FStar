@@ -46,7 +46,7 @@ let fv_to_string fv = lid_to_string fv.fv_name.v
 let bv_to_string bv = bv.ppname.idText ^ "#" ^ (string_of_int bv.index)
 
 let nm_to_string bv =
-    if (Options.print_real_names())
+    if Options.print_real_names()
     then bv_to_string bv
     else bv.ppname.idText
 
@@ -258,7 +258,7 @@ let rec term_to_string x =
   | Tm_fvar f ->        fv_to_string f
   | Tm_uvar (u, _) ->   uvar_to_string u
   | Tm_constant c ->    const_to_string c
-  | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type(%s)" (univ_to_string u) else "Type"
+  | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type u#(%s)" (univ_to_string u) else "Type"
   | Tm_arrow(bs, c) ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
   | Tm_abs(bs, t2, lc) ->
     begin match lc with
