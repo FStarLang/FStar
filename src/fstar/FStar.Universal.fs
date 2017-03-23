@@ -34,6 +34,7 @@ module Syntax  = FStar.Syntax.Syntax
 module Util    = FStar.Syntax.Util
 module Desugar = FStar.ToSyntax.ToSyntax
 module SMT     = FStar.SMTEncoding.Solver
+module Lean    = FStar.LeanEncoding.Solver
 module Const   = FStar.Syntax.Const
 module Tc      = FStar.TypeChecker.Tc
 module TcTerm  = FStar.TypeChecker.TcTerm
@@ -71,7 +72,7 @@ let tc_prims () : (Syntax.modul * int)
   let solver = if Options.lax()
                then SMT.dummy
                else if Options.lean()
-               then SMT.lean_solver
+               then Lean.solver
                else SMT.solver in
   let env = TcEnv.initial_env TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
   env.solver.init env;

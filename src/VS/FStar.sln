@@ -19,29 +19,29 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{8D74F5
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "basic", "..\basic\basic.fsproj", "{E8957DBD-58E7-4CF8-9192-E0A9CFB3867E}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "basic", "..\basic\basic.fsproj", "{E8957DBD-58E7-4CF8-9192-E0A9CFB3867E}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "parser", "..\parser\parser.fsproj", "{9974A6DE-6CA8-44B6-A52E-51FC52932179}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "parser", "..\parser\parser.fsproj", "{9974A6DE-6CA8-44B6-A52E-51FC52932179}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fstar", "..\fstar\fstar.fsproj", "{F95B3965-1A6A-4FBF-A079-E849E8EA3FF7}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "fstar", "..\fstar\fstar.fsproj", "{F95B3965-1A6A-4FBF-A079-E849E8EA3FF7}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "format", "..\format\format.fsproj", "{54BC6905-03EE-4AEB-B726-742B6D4FA710}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "format", "..\format\format.fsproj", "{54BC6905-03EE-4AEB-B726-742B6D4FA710}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tests", "..\tests\tests.fsproj", "{5716A290-2899-478B-BEA2-1C59FA088DAD}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "tests", "..\tests\tests.fsproj", "{5716A290-2899-478B-BEA2-1C59FA088DAD}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "extraction", "..\extraction\extraction.fsproj", "{55398B56-03CF-4E11-ADB0-A4274B7DBB35}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "extraction", "..\extraction\extraction.fsproj", "{55398B56-03CF-4E11-ADB0-A4274B7DBB35}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "syntax", "..\syntax\syntax.fsproj", "{D008F256-80AA-4F9C-9C10-DC743D772940}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "syntax", "..\syntax\syntax.fsproj", "{D008F256-80AA-4F9C-9C10-DC743D772940}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "typechecker", "..\typechecker\typechecker.fsproj", "{21685793-AC84-4EC1-9EAB-39F9C0252F3F}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "typechecker", "..\typechecker\typechecker.fsproj", "{21685793-AC84-4EC1-9EAB-39F9C0252F3F}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "smtencoding", "..\smtencoding\smtencoding.fsproj", "{F6879027-A97F-4857-8F52-CC5641455652}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "leanencoding", "..\leanencoding\leanencoding.fsproj", "{F6879027-A97F-4857-8F52-CC5641455652}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsdoc", "..\fsdoc\fsdoc.fsproj", "{A2300238-CC63-4651-922E-88E7C0201BC9}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "fsdoc", "..\fsdoc\fsdoc.fsproj", "{A2300238-CC63-4651-922E-88E7C0201BC9}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "prettyprint", "..\prettyprint\prettyprint.fsproj", "{7DE787B9-E5A4-4288-8E5A-F887C08F8D82}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "prettyprint", "..\prettyprint\prettyprint.fsproj", "{7DE787B9-E5A4-4288-8E5A-F887C08F8D82}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tosyntax", "..\tosyntax\tosyntax.fsproj", "{B0968012-B93C-4198-9085-B89669E8E4E8}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "tosyntax", "..\tosyntax\tosyntax.fsproj", "{B0968012-B93C-4198-9085-B89669E8E4E8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

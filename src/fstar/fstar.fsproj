@@ -141,6 +141,10 @@
       <Project>{7de787b9-e5a4-4288-8e5a-f887c08f8d82}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\smtencoding\smtencoding.fsproj">
+      <Project>{F6879027-A97F-4857-8F52-CC5641455652}</Project>
+      <Name>smtencoding</Name>
+    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -15,19 +15,19 @@
 *)
 #light "off"
 
-module FStar.SMTEncoding.Solver
+module FStar.LeanEncoding.Solver
 open FStar.All
 open FStar
-open FStar.SMTEncoding.Z3
-open FStar.SMTEncoding.Term
+open FStar.LeanEncoding.Z3
+open FStar.LeanEncoding.Term
 open FStar.BaseTypes
 open FStar.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
-open FStar.SMTEncoding
-open FStar.SMTEncoding.ErrorReporting
-open FStar.SMTEncoding.Encode
-open FStar.SMTEncoding.Util
+open FStar.LeanEncoding
+open FStar.LeanEncoding.ErrorReporting
+open FStar.LeanEncoding.Encode
+open FStar.LeanEncoding.Util
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
@@ -321,19 +321,3 @@ let solver = {
     finish=Z3.finish;
     refresh=Z3.refresh;
 }
-
-let dummy = {
-    init=(fun _ -> ());
-    push=(fun _ -> ());
-    pop=(fun _ -> ());
-    mark=(fun _ -> ());
-    reset_mark=(fun _ -> ());
-    commit_mark=(fun _ -> ());
-    encode_sig=(fun _ _ -> ());
-    encode_modul=(fun _ _ -> ());
-    solve=(fun _ _ _ -> ());
-    is_trivial=(fun _ _ -> false);
-    finish=(fun () -> ());
-    refresh=(fun () -> ());
-}
-
