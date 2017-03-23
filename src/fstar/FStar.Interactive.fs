@@ -377,10 +377,10 @@ let rec go (line_col:(int*int))
     let iopt = FStar.TypeChecker.Common.info_at_pos file row col in
     (match iopt with
      | None ->
-       Util.print3 "No information found at %s:(%s, %s)\n" 
-            file (Util.string_of_int row) (Util.string_of_int col)
-     | Some s -> 
-       Util.print1 "<info>%s</info>/n" s)
+       Util.print_string "\n#done-nok\n"
+     | Some s ->
+       Util.print1 "%s\n#done-ok\n" s);
+    go line_col filename stack curmod env ts
   | Pop msg ->
       // This shrinks all internal stacks by 1
       pop env msg;

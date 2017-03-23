@@ -182,8 +182,7 @@ let info_as_string : identifier_info -> Prims.string =
         let uu____409 = FStar_Syntax_Print.term_to_string info.identifier_ty
            in
         let uu____410 = FStar_Range.string_of_range range  in
-        FStar_Util.format3 "%s : %s (defined at %s)" id_string uu____409
-          uu____410
+        FStar_Util.format3 "(defined at %s) %s : %s" uu____410 id_string uu____409
   
 let rec insert_col_info col info col_infos =
   match col_infos with
