@@ -415,20 +415,11 @@ let decorate_pattern env p exps =
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
-//let destruct_comp c : (universe * typ * typ) =
-//  let wp = match c.effect_args with
-//    | [(wp, _)] -> wp
-//    | _ -> failwith (Util.format2 "Impossible: Got a computation %s with effect args [%s]" c.effect_name.str
-//      (List.map (fun (x, _) -> Print.term_to_string x) c.effect_args |> String.concat ", ")) in
-//  List.hd c.comp_univs, c.result_typ, wp
-//
-//let lift_comp c m lift =
-//  let u, _, wp = destruct_comp c in
-//  {comp_univs=[u];
-//   effect_name=m;
-//   result_typ=c.result_typ;
-//   effect_args=[as_arg (lift c.result_typ wp)];
-//   flags=[]}
+
+(* Variant of the funcion present in FStar.Syntax.Util but env-relevant *)
+let arrow_formals env k : S.binders * S.typ =
+  let bs, c = U.arrow_formals_comp k in
+  bs, Env.result_typ env c
 
 let join_effects env l1 l2 =
   let m, _, _ = Env.join env (norm_eff_name env l1) (norm_eff_name env l2) in
@@ -465,7 +456,7 @@ let join_lcomp env lc1 lc2 =
           lcomp_indices = nct.nct_indices;
           lcomp_res_typ = fst nct.nct_result;
           lcomp_cflags  = nct.nct_flags;
-          lcomp_as_comp = fun () -> Env.normal_comp_typ_as_comp env nct;
+          lcomp_as_comp = begin fun () -> Env.normal_comp_typ_as_comp env nct end;
        } in
        let _, lift1, lift2 = Env.join env lc1.lcomp_name lc2.lcomp_name in
        let nct1 = lift1 (nct_of_lcomp lc1) in

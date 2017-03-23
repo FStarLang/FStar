@@ -551,9 +551,9 @@ exception Not_found
 
 // ... the _ and * transformations from the definition language to F* ---------
 
-let double_star typ : typ =
-    let star_once typ = U.arrow [S.mk_binder <| S.new_bv None typ] (S.mk_Total U.ktype0) in
-    star_once <| typ |> star_once
+let double_star typ0 : typ =
+    let star_once typ0 = U.arrow [S.mk_binder <| S.new_bv None typ0] (S.mk_Total U.ktype0) in
+    star_once <| typ0 |> star_once
 
 let rec mk_star_to_type mk env a =
   mk (Tm_arrow (

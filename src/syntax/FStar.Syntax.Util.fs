@@ -631,7 +631,7 @@ let abs bs t lopt =
         | _ -> 
           mk (Tm_abs(close_binders bs, body, close_lopt lopt)) None t.pos 
 
-let arrow bs c = match bs with 
+let arrow (bs:binders) (c:comp) : typ = match bs with 
   | [] -> failwith "Arrow with empty binders"
   | _ -> mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
 

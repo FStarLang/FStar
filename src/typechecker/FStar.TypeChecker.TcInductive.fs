@@ -41,6 +41,7 @@ module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 
+
 let tc_tycon (env:env_t)     (* environment that contains all mutually defined type constructors *)
              (s:sigelt)      (* a Sig_inductive_type (aka tc) that needs to be type-checked *)
        : env_t          (* environment extended with a refined type for the type-constructor *)
@@ -52,7 +53,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          assert (uvs = []);
  (*open*)let tps, k = SS.open_term tps k in
          let tps, env_tps, guard_params, us = tc_binders env tps in
-         let indices, t = U.arrow_formals k in
+         let indices, t = TcUtil.arrow_formals env k in
          let indices, env', guard_indices, us' = tc_binders env_tps indices in
          let t, guard =
              let t, _, g = tc_tot_or_gtot_term env' t in
@@ -105,7 +106,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                   let _, bs' = BU.first_N ntps bs in
                   let t = mk (Tm_arrow(bs', res)) None t.pos in
                   let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), x)) in
-(*open*)          U.arrow_formals (SS.subst subst t)
+(*open*)          TcUtil.arrow_formals env (SS.subst subst t)
                 | _ -> [], t in
 
          if Env.debug env Options.Low then BU.print3 "Checking datacon  %s : %s -> %s \n"
@@ -116,11 +117,11 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
 
          let arguments, env', us = tc_tparams env arguments in
          let result, res_lcomp = tc_trivial_guard env' result in
-         begin match (SS.compress res_lcomp.res_typ).n with
+         begin match (SS.compress res_lcomp.lcomp_res_typ).n with
                | Tm_type _ -> ()
                | ty -> raise (Error(BU.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
                                                 (Print.term_to_string result)
-                                                (Print.term_to_string (res_lcomp.res_typ)), r))
+                                                (Print.term_to_string (res_lcomp.lcomp_res_typ)), r))
          end;
          let head, _ = U.head_and_args result in
          let _ = match (SS.compress head).n with
@@ -177,7 +178,7 @@ let generalize_and_inst_within (env:env_t) (g:guard_t) (tcs:list<(sigelt * unive
         //we have to destruct t, knowing its shape above,
         //and rebuild the Sig_inductive_typ, Sig_datacon etc
         let uvs, t = SS.open_univ_vars uvs t in
-        let args, _ = U.arrow_formals t in
+        let args, _ = TcUtil.arrow_formals env t in
         let tc_types, data_types = BU.first_N (List.length binders) args in
         let tcs = List.map2 (fun (x, _) (se, _) -> match se with
             | Sig_inductive_typ(tc, _, tps, _, mutuals, datas, quals, r) ->
@@ -186,7 +187,7 @@ let generalize_and_inst_within (env:env_t) (g:guard_t) (tcs:list<(sigelt * unive
                 | Tm_arrow(binders, c) ->
                   let tps, rest = BU.first_N (List.length tps) binders in
                   let t = match rest with
-                    | [] -> U.comp_result c
+                    | [] -> Env.result_typ env c
                     | _ -> mk (Tm_arrow(rest, c)) !x.sort.tk x.sort.pos
                   in
                   tps, t
@@ -270,9 +271,9 @@ let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfo
          let _ = debug_log env ("Checking strict positivity , the arrow is impure, so return true") in
          true
        else
-         let _ = debug_log env ("Checking struict positivity, Pure arrow, checking that ty does not occur in the binders, and that it is strictly positive in the return type") in
+         let _ = debug_log env ("Checking strict positivity, Pure arrow, checking that ty does not occur in the binders, and that it is strictly positive in the return type") in
          List.for_all (fun (b, _) -> not (ty_occurs_in ty_lid b.sort)) sbs &&  //ty must not occur on the left of any arrow
-           (let _, return_type = SS.open_term sbs (FStar.Syntax.Util.comp_result c) in  //and it must occur strictly positive in the result type
+           (let _, return_type = SS.open_term sbs (Env.result_typ env c) in  //and it must occur strictly positive in the result type
             ty_strictly_positive_in_type ty_lid return_type unfolded (push_binders env sbs)) //TODO: do we need to compress c, if so how?
      | Tm_fvar _ ->
        debug_log env ("Checking strict positivity in an fvar, return true");

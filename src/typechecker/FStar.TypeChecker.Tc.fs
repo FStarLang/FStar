@@ -63,7 +63,7 @@ let log env = (Options.log_types()) &&  not(lid_equals Const.prims_lid (Env.curr
 
 let tc_check_trivial_guard env t k =
   let t, c, g = tc_check_tot_or_gtot_term env t k in
-  t.tk := Some c.res_typ.n;
+  t.tk := Some c.lcomp_res_typ.n;
   Rel.force_trivial_guard env g;
   t
 
@@ -93,8 +93,10 @@ let monad_signature env m s =
  match s.n with
   | Tm_arrow(bs, c) ->
     let bs = SS.open_binders bs in
+    let n = List.length bs in
+    let indices, bs = if n < 2 then [], [] else BU.first_N (n - 2) bs in
     begin match bs with
-        | [(a, _);(wp, _)] -> a, wp.sort
+        | [(a, _);(wp, _)] -> indices, a, wp.sort
         | _ -> fail()
     end
   | _ -> fail()
@@ -364,12 +366,11 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
           let act_typ = match (SS.compress expected_k).n with
               | Tm_arrow(bs, c) ->
                 let bs, c = SS.open_comp bs c in
-                let a, wp = destruct_repr (U.comp_result c) in
+                let a, wp = destruct_repr (Env.result_typ env c) in
                 let c = {
                   comp_univs=[env.universe_of env a];
-		          effect_name = ed.mname;
-                  result_typ = a;
-                  effect_args = [as_arg wp];
+                  comp_typ_name = ed.mname;
+                  effect_args = [as_arg a ; as_arg wp];
                   flags = []
                 } in
                 U.arrow bs (S.mk_Comp c)
@@ -393,7 +394,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
   let (univs, t) = TcUtil.generalize_universes env0 t in
   let signature = match effect_params, (SS.compress t).n with
     | [], _ -> t
-    | _, Tm_arrow(_, c) -> U.comp_result c
+    | _, Tm_arrow(_, c) -> Env.result_typ env0 c
     | _ -> failwith "Impossible" in
   let close n ts =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme effect_params ts) in
@@ -671,13 +672,23 @@ and cps_and_elaborate env ed =
     BU.print_string (Print.eff_decl_to_string true ed);
 
   let lift_from_pure_opt =
+    (* TODO : Implement the indexed effect version *)
     if List.length effect_binders = 0 then begin
       // Won't work with parameterized effect
+      let label_to_comp_typ l = {
+          comp_typ_name = l ;
+          comp_univs = [] ;
+          effect_args = [] ;
+          flags = []
+        }
+      in
       let lift_from_pure = {
-          source = Const.effect_PURE_lid;
-          target = ed.mname ;
-          lift_wp = Some ([], apply_close lift_from_pure_wp) ;
-          lift = None //Some ([], apply_close return_elab)
+          sub_eff_univs = [];
+          sub_eff_binders = [] ;
+          sub_eff_source = label_to_comp_typ Const.effect_PURE_lid ;
+          sub_eff_target = label_to_comp_typ ed.mname ;
+          sub_eff_lift_wp = Some ([], apply_close lift_from_pure_wp) ;
+          sub_eff_lift = None //Some ([], apply_close return_elab)
       } in
       Some (Sig_sub_effect (lift_from_pure, Range.dummyRange))
     end else None
@@ -874,10 +885,13 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     [se], env, []
 
   | Sig_sub_effect(sub, r) ->
-    let ed_src = Env.get_effect_decl env sub.source in
-    let ed_tgt = Env.get_effect_decl env sub.target in
-    let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
-    let b, wp_b_tgt = monad_signature env sub.target (Env.lookup_effect_lid env sub.target) in
+    (* TODO : implement indexed effects *)
+    let source = sub.sub_eff_source.comp_typ_name in
+    let target = sub.sub_eff_target.comp_typ_name in
+    let ed_src = Env.get_effect_decl env source in
+    let ed_tgt = Env.get_effect_decl env target in
+    let indices_a, a, wp_a_src = monad_signature env source (Env.lookup_effect_lid env source) in
+    let indices_b, b, wp_b_tgt = monad_signature env target (Env.lookup_effect_lid env target) in
     let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
     let expected_k  = U.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
     let repr_type eff_name a wp =
@@ -892,7 +906,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
             mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
     in
     let lift, lift_wp =
-      match sub.lift, sub.lift_wp with
+      match sub.sub_eff_lift, sub.sub_eff_lift_wp with
       | None, None ->
           failwith "Impossible"
       | lift, Some (_, lift_wp) ->
@@ -910,15 +924,17 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     let lift = match lift with
       | None -> None
       | Some (_, lift) ->
-        let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
+        let source = sub.sub_eff_source.comp_typ_name in
+        let indices_a, a, wp_a_src = monad_signature env source (Env.lookup_effect_lid env source) in
         let wp_a = S.new_bv None wp_a_src in
         let a_typ = S.bv_to_name a in
         let wp_a_typ = S.bv_to_name wp_a in
-        let repr_f = repr_type sub.source a_typ wp_a_typ in
+        let repr_f = repr_type source a_typ wp_a_typ in
         let repr_result =
           let lift_wp = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env (snd lift_wp) in
           let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
-          repr_type sub.target a_typ lift_wp_a in
+          let target = sub.sub_eff_target.comp_typ_name in
+          repr_type target a_typ lift_wp_a in
         let expected_k =
           U.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f]
                       (S.mk_Total repr_result) in
@@ -932,7 +948,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     in
     // Restore the proper lax flag!
     let env = { env with lax = lax } in
-    let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
+    let sub = {sub with sub_eff_lift_wp=Some lift_wp; sub_eff_lift=lift} in
     let se = Sig_sub_effect(sub, r) in
     let env = Env.push_sigelt env se in
     [se], env, []
@@ -994,7 +1010,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     let env = Env.set_range env r in
     let env = Env.set_expected_typ env Common.t_unit in
     let e, c, g1 = tc_term env e in
-    let e, _, g = check_expected_effect env (Some (U.ml_comp Common.t_unit r)) (e, c.comp()) in
+    let e, _, g = check_expected_effect env (Some (U.ml_comp Common.t_unit r)) (e, c.lcomp_as_comp()) in
     Rel.force_trivial_guard env (Rel.conj_guard g1 g);
     let se = Sig_main(e, r) in
     let env = Env.push_sigelt env se in

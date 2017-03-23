@@ -954,63 +954,104 @@ let destruct_comp_term m =
    and all remaining binders to fresh unification variables
 *)
 let mlift_of_sub_eff env sub : mlift =
-    let mlift (nct:normal_comp_typ) =
-        //build an arrow term reflecting the binding structure of the sub_eff
-        //A template for the type of a computation type transfomer
-        //lift_term ~= x_0, ... x_n -> GTot (M i1..im -> GTot (N j1..jn))
-        let lift_term =
-            S.mk (S.Tm_arrow(sub.sub_eff_binders,
-                            S.mk_GTotal(S.mk (S.Tm_arrow([S.new_bv None sub.sub_eff_source |> S.mk_binder],
-                                                            S.mk_GTotal sub.sub_eff_target))
-                                                None Range.dummyRange)))
-                    None Range.dummyRange in
-        //then, instantiate it with the universes from nct, and fresh universes variables for any extra
-        let universe_arguments =
-            let _, extra_univ_vars = BU.first_N (List.length nct.nct_univs) sub.sub_eff_univs in
-            let extra_univs = extra_univ_vars |> List.map (fun _ -> new_u_univ()) in
-            nct.nct_univs @ extra_univs in
+  let mlift (nct:normal_comp_typ) =
 
-        let lift_term = inst_tscheme_with (sub.sub_eff_univs, lift_term) universe_arguments in
+    if not <| Ident.lid_equals nct.nct_name sub.sub_eff_source.comp_typ_name
+    then failwith <| BU.format2 "Invalid application of mlift, \
+                                 effect names differ : %s vs %s"
+                                 (Ident.text_of_lid nct.nct_name)
+                                 (Ident.text_of_lid sub.sub_eff_source.comp_typ_name) ;
 
-        //then, open all the binders
-        let xs_formals, lhs_M_is, rhs_N_js =
-            match (SS.compress lift_term).n with
-            | Tm_arrow(binders, {n=GTotal(t, _)}) ->
-                let binders, t = Subst.open_term binders t in
-                (match (SS.compress t).n with
-                | Tm_arrow([lhs], {n=GTotal(rhs, _)}) ->
-                    let _, rhs = Subst.open_term [lhs] rhs in
-                    binders, (fst lhs).sort, rhs
-                | _ -> failwith "Impossible")
-            | _ -> failwith "Impossible"
+    let source_indices_inst = nct.nct_indices in
+    let source_indices_formals = sub.sub_eff_source.effect_args in
+
+
+    (* This should be handled by typechecking (temporary defensive check) *)
+    if List.length indices_inst <> List.length indices_formals
+    then failwith <| BU.format2 "Indices mismatch when lifting %s to %s"
+                                (Ident.text_of_lid sub.sub_eff_source.comp_typ_name)
+                                (Ident.text_of_lid sub.sub_eff_target.comp_typ_name) ;
+
+
+    
+    let source_universes_inst = nct.nct_univs in
+    let source_universes_formals = sub.sub_eff_source.comp_typ_univs in
+    let source_universes = List.zip source_universes_inst source_universes_formals in
+
+    let universe_arguments =
+        let get_universe_arg u =
+          match BU.assoc u source_universes with
+          | None -> new_u_univ ()
+          | Some u' -> u'
         in
+        List.map get_universe_arg sub.sub_eff_univs
+    in
 
-        //then, compute the instantiation of the xs_formals
-        //using nct.indices first, and then additional unification variables if necessary
-        let xs_actuals, subst =
-            let lhs_index_vars, rest = BU.first_N (List.length nct.nct_indices) xs_formals in
-            let lhs_subst = U.subst_of_list lhs_index_vars nct.nct_indices in
-            let rest_uvars = List.map (fun (x, aq) -> (fst <| new_uvar_for_env env x.sort, aq)) rest in
-            nct.nct_indices@rest_uvars,
-            lhs_subst@U.subst_of_list rest rest_uvars
-        in
+    let source_indices =
+      List.map2 (fun (x, _) y -> x,y) source_indices_formals source_indices_inst
+    in
+    
+    let indices_arguments =
+      let get_index_arg x =
+        match BU.assoc x source_indices with
+        | None -> as_arg <| fst <| new_uvar_for_env env x.sort
+        | Some arg -> arg
+      in
+      List.map get_index_arg sub.sub_eff_binders
+    in
 
-        let rhs_N_js = Subst.subst subst rhs_N_js in
-        let rhs_N, rhs_js = U.head_and_args rhs_N_js in
-        let rhs_name_N, rhs_univs = destruct_comp_term rhs_N in
-        let rhs_wp =
-            let lift_wp = BU.must sub.sub_eff_lift_wp in
-            let lift_wp = inst_tscheme_with lift_wp universe_arguments in
-            let lift_args = xs_actuals @ [nct.nct_result; nct.nct_wp] in
-            S.as_arg <| S.mk_Tm_app lift_wp lift_args None (fst nct.nct_wp).pos
-        in
-        { nct_name=rhs_name_N;
-          nct_univs=rhs_univs;
-          nct_indices=rhs_js;
-          nct_result=nct.nct_result;
-          nct_wp=rhs_wp;
-          nct_flags=nct.nct_flags }
-   in //end mlift
+    let indices_subst = U.subst_of_list sub.sub_eff_binders indices_arguments in
+    
+
+    let universe_arguments =
+      let _, extra_univ_vars = BU.first_N (List.length nct.nct_univs) sub.sub_eff_univs in
+      let extra_univs = extra_univ_vars |> List.map (fun _ -> new_u_univ()) in
+      nct.nct_univs @ extra_univs
+    in
+
+    let lift_term = inst_tscheme_with (sub.sub_eff_univs, lift_term) universe_arguments in
+
+      
+
+    //then, open all the binders
+    let xs_formals, lhs_M_is, rhs_N_js =
+        match (SS.compress lift_term).n with
+        | Tm_arrow(binders, {n=GTotal(t, _)}) ->
+            let binders, t = Subst.open_term binders t in
+            (match (SS.compress t).n with
+            | Tm_arrow([lhs], {n=GTotal(rhs, _)}) ->
+                let _, rhs = Subst.open_term [lhs] rhs in
+                binders, (fst lhs).sort, rhs
+            | _ -> failwith "Impossible")
+        | _ -> failwith "Impossible"
+    in
+
+    //then, compute the instantiation of the xs_formals
+    //using nct.indices first, and then additional unification variables if necessary
+    let xs_actuals, subst =
+        let lhs_index_vars, rest = BU.first_N (List.length nct.nct_indices) xs_formals in
+        let lhs_subst = U.subst_of_list lhs_index_vars nct.nct_indices in
+        let rest_uvars = List.map (fun (x, aq) -> (fst <| new_uvar_for_env env x.sort, aq)) rest in
+        nct.nct_indices@rest_uvars,
+        lhs_subst@U.subst_of_list rest rest_uvars
+    in
+
+    let rhs_N_js = Subst.subst subst rhs_N_js in
+    let rhs_N, rhs_js = U.head_and_args rhs_N_js in
+    let rhs_name_N, rhs_univs = destruct_comp_term rhs_N in
+    let rhs_wp =
+        let lift_wp = BU.must sub.sub_eff_lift_wp in
+        let lift_wp = inst_tscheme_with lift_wp universe_arguments in
+        let lift_args = xs_actuals @ [nct.nct_result; nct.nct_wp] in
+        S.as_arg <| S.mk_Tm_app lift_wp lift_args None (fst nct.nct_wp).pos
+    in
+    { nct_name=rhs_name_N;
+      nct_univs=rhs_univs;
+      nct_indices=rhs_js;
+      nct_result=nct.nct_result;
+      nct_wp=rhs_wp;
+      nct_flags=nct.nct_flags }
+in //end mlift
    mlift
 
 let extend_effect_lattice env sub_eff =

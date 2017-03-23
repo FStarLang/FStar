@@ -2133,8 +2133,10 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
         fun t1 rel t2 reason -> mk_problem (p_scope orig) orig t1 rel t2 None reason in
 
     let solve_eq nct1 nct2 =
-        let _ = if Env.debug env <| Options.Other "EQ"
-                then BU.print_string "solve_c is using an equality constraint\n" in
+        let _ =
+          if Env.debug env <| Options.Other "EQ"
+          then BU.print_string "solve_c is using an equality constraint\n"
+        in
         let sub_probs = List.map2
             (fun (a1, _) (a2, _) -> TProb<| sub_prob a1 EQ a2 "effect arg")
             (nct1.nct_indices@[nct1.nct_result; nct1.nct_wp])
@@ -2154,11 +2156,11 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                 if env.lax then
                    U.t_true
                 else
-                  let is_null_wp_2 = nct2.nct_flags |> Util.for_some (function
+                  let is_null_wp_2 = nct2.nct_flags |> BU.for_some (function
                       | TOTAL | MLEFFECT | SOMETRIVIAL -> true
                       | _ -> false) in
                   if is_null_wp_2 //just check that nct1 has a trivial pre-condition
-                  then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
+                  then let _ = if debug env <| Options.Other "Rel" then BU.print_string "Using trivial wp ... \n" in
                        mk (Tm_app(inst_effect_fun_with nct2.nct_univs env c2_decl c2_decl.trivial,
                                   nct1.nct_indices@[nct1.nct_result; nct1.nct_wp]))
                           (Some U.ktype0.n) r

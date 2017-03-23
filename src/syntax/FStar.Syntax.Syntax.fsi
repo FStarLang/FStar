@@ -254,9 +254,9 @@ type monad_abbrev = {
 type sub_eff = {
  (*  <u_1...u_k>. #x_1:t_1 ... #x_n:t_l -> M y_1..y_m ~> N s_1...s_n *)
   sub_eff_univs  : univ_names;     (* u_1 ... u_k *)
-  sub_eff_binders: binders;        (* x_1 ... x_l *)
-  sub_eff_source : term;           (* M y_1..y_m --- all the args are expected to be bound variables *)
-  sub_eff_target : term;           (* N s_1..s_n *)
+  sub_eff_binders : binders;       (* x_1 ... x_l *)
+  sub_eff_source : comp_typ;       (* M y_1..y_m --- all the args are expected to be bound variables *)
+  sub_eff_target : comp_typ;       (* N s_1..s_n *)
   sub_eff_lift_wp:option<tscheme>; (* #a:Type -> (M y_1 ... y_m a)* -> (N s_1...s_n)* *)
   sub_eff_lift   :option<tscheme>  (* #a:Type -> #wp:(M y_1 ... y_m a)* -> (M y_1..y_m a wp).repr -> (N s_1..s_n a (lift_wp wp)).repr *)
  }

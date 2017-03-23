@@ -54,6 +54,7 @@ let is_eq = function
 let steps env = [N.Beta; N.Eager_unfolding]
 let unfold_whnf env t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t
 let norm   env t = N.normalize (steps env) env t
+(* TODO : should we use the functions inside Env *)
 let norm_c env c = N.normalize_comp (steps env) env c
 let check_no_escape head_opt env (fvs:list<bv>) kt =
     let rec aux try_norm t = match fvs with
@@ -186,7 +187,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
        let e, _, g = TcUtil.check_comp env e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
        if debug env Options.Low then BU.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
-       let e = TcUtil.maybe_lift env e (U.comp_effect_name c) (U.comp_effect_name expected_c) (U.comp_result c) in
+       let e = TcUtil.maybe_lift env e (U.comp_effect_name c) (U.comp_effect_name expected_c) (Env.result_typ env c) in
        e, expected_c, g
 
 let no_logical_guard env (te, kt, f) =
@@ -408,9 +409,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
               | Some g' -> e, Rel.conj_guard g' (Rel.conj_guard g g0) in
         let c = S.mk_Comp ({
               comp_univs=[env.universe_of env res_typ];
-              effect_name = ed.mname;
-              result_typ=res_typ;
-              effect_args=[as_arg wp];
+              comp_typ_name = ed.mname;
+              effect_args=[as_arg res_typ; as_arg wp];
               flags=[]
             }) |> Env.lcomp_of_comp env in
         let e = mk (Tm_app(reflect_op, [(e, aqual)])) (Some res_typ.n) top.pos in
@@ -464,7 +464,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if Env.debug env Options.Extreme
     then BU.print1 "Tm_match: expected type of branches is %s\n" (Print.term_to_string res_t);
 
-    let guard_x = S.new_bv (Some e1.pos) c1.res_typ in
+    let guard_x = S.new_bv (Some e1.pos) c1.lcomp_res_typ in
     let t_eqns = eqns |> List.map (tc_eqn guard_x env_branches) in
     let c_branches, g_branches =
       let cases, g = List.fold_right (fun (_, f, c, g) (caccum, gaccum) ->
@@ -474,9 +474,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let cres = TcUtil.bind env (Some e1) c1 (Some guard_x, c_branches) in
     let e =
         let mk_match scrutinee =
-            let scrutinee = TcUtil.maybe_lift env scrutinee c1.lcomp_name cres.lcomp_name in
+            let scrutinee = TcUtil.maybe_lift env scrutinee c1.lcomp_name cres.lcomp_name c1.lcomp_res_typ in
             let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, lc, _) ->
-                 (pat, wopt, TcUtil.maybe_lift env br lc.lcomp_name cres.lcomp_name)) in
+                 (pat, wopt, TcUtil.maybe_lift env br lc.lcomp_name cres.lcomp_name lc.lcomp_res_typ)) in
             let e = mk (Tm_match(scrutinee, branches)) (Some cres.lcomp_res_typ.n) top.pos in
              //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
             mk (Tm_ascribed(e, Inl cres.lcomp_res_typ, Some cres.lcomp_name)) None e.pos in
@@ -682,51 +682,53 @@ and tc_comp env c : comp                                      (* checked version
       let head = S.fvar c.comp_typ_name Delta_constant None in
       let head = match c.comp_univs with
          | [] -> head
-         | us -> S.mk (Tm_uinst(head, us)) None c0.pos in
-      let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) None c.result_typ.pos in
+         | us -> S.mk (Tm_uinst(head, us)) None c0.pos
+      in
+      let tc = mk_Tm_app head c.effect_args None c0.pos in
       let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff in
       let head, args = U.head_and_args tc in
       let comp_univs = match (SS.compress head).n with
         | Tm_uinst(_, us) -> us
-        | _ -> [] in
+        | _ -> []
+      in
       let _, args = U.head_and_args tc in
-      let res, args = List.hd args, List.tl args in
       let flags, guards = c.flags |> List.map (function
         | DECREASES e ->
             let env, _ = Env.clear_expected_typ env in
             let e, _, g = tc_tot_or_gtot_term env e in
             DECREASES e, g
         | f -> f, Rel.trivial_guard) |> List.unzip in
-      let u = env.universe_of env (fst res) in
       let c = mk_Comp ({c with
           comp_univs=comp_univs;
-          result_typ=fst res;
           effect_args=args}) in
       let u_c =
-        match TcUtil.effect_repr env c u with
-        | None -> u
-        | Some tm -> env.universe_of env tm in
+        match TcUtil.effect_repr env c with
+        | None ->
+            (* KM : Do we need to recompute the universe here or can we recover it *)
+            (* from the normal form of the comp typ c ? *)
+            env.universe_of env (fst (Env.comp_as_normal_comp_typ env c).nct_result)
+        | Some tm -> env.universe_of env tm
+      in
       c, u_c, List.fold_left Rel.conj_guard f guards
 
 and tc_universe env u : universe =
-   let rec aux u =
-       let u = SS.compress_univ u in
-       match u with
-        | U_bvar _  -> failwith "Impossible: locally nameless"
-        | U_unknown -> failwith "Unknown universe"
-        | U_unif _
-        | U_zero    -> u
-        | U_succ u  -> U_succ (aux u)
-        | U_max us  -> U_max (List.map aux us)
-        | U_name x  -> u
-            (* TODO : Is that really okay ? (any free variable should be automatically bound at top-level) *)
-            // if env.use_bv_sorts || Env.lookup_univ env x
-            // then u
-            // else raise (Error (BU.format1 "Universe variable '%s' not found" x.idText, Env.get_range env))
-   in if env.lax_universes then U_zero
-      else match u with
-           | U_unknown -> U.type_u () |> snd
-           | _ -> aux u
+  let rec aux u =
+    let u = SS.compress_univ u in
+    match u with
+    | U_bvar _  -> failwith "Impossible: locally nameless"
+    | U_unknown -> failwith "Unknown universe"
+    | U_unif _
+    | U_zero    -> u
+    | U_succ u  -> U_succ (aux u)
+    | U_max us  -> U_max (List.map aux us)
+
+    (* TODO : Is that really okay ? (any free variable should be automatically bound at top-level) *)
+    | U_name x  -> u
+  in
+  if env.lax_universes then U_zero
+  else match u with
+    | U_unknown -> U.type_u () |> snd
+    | _ -> aux u
 
 (* Several complex cases from the main type-checker are factored in to separate functions below *)
 
@@ -1019,17 +1021,17 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                     | Inr c ->
                         let monadic = monadic || not (U.is_pure_or_ghost_lcomp c) in
                         let out_c =
-                            TcUtil.bind e.pos env None  //proving (Some e) here instead of None causes significant Z3 overhead
+                            TcUtil.bind env None  //proving (Some e) here instead of None causes significant Z3 overhead
                                         c (x, out_c) in
-                        let e = TcUtil.maybe_monadic env e c.lcomp_name c.res_typ in
+                        let e = TcUtil.maybe_monadic env e c.lcomp_name c.lcomp_res_typ in
                         let e = TcUtil.maybe_lift env e c.lcomp_name out_c.lcomp_name c.lcomp_res_typ in
                         (e, q)::args, out_c, monadic) ([], cres, false) arg_comps_rev in
-        let comp = TcUtil.bind head.pos env None chead (None, comp) in
-        let app =  mk_Tm_app head args (Some comp.res_typ.n) r in
+        let comp = TcUtil.bind env None chead (None, comp) in
+        let app =  mk_Tm_app head args (Some comp.lcomp_res_typ.n) r in
         let app =
           (* TODO : should we use a test with env for pure or ghost here *)
           if monadic || not (U.is_pure_or_ghost_lcomp comp)
-          then TcUtil.maybe_monadic env app comp.lcomp_name comp.res_typ
+          then TcUtil.maybe_monadic env app comp.lcomp_name comp.lcomp_res_typ
           else app
         in
         let comp, g = TcUtil.strengthen_precondition None env app comp guard in //Each conjunct in g is already labeled
@@ -1073,7 +1075,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let arg = e, aq in
             if U.is_tot_or_gtot_lcomp c //e is Tot or GTot; we can just substitute it
             then let subst = maybe_extend_subst subst (List.hd bs) e in
-                    tc_args head_info (subst, (arg, None, Inl (c.lcomp_name, c.res_typ))::outargs, arg::arg_rets, g, fvs) rest rest'
+                    tc_args head_info (subst, (arg, None, Inl (c.lcomp_name, c.lcomp_res_typ))::outargs, arg::arg_rets, g, fvs) rest rest'
             else if TcUtil.is_pure_or_ghost_effect env c.lcomp_name //its conditionally pure; can substitute, but must check its WP
             then let subst = maybe_extend_subst subst (List.hd bs) e in
                     tc_args head_info (subst, (arg, Some x, Inr c)::outargs, arg::arg_rets, g, fvs) rest rest'
@@ -1125,7 +1127,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 except when Options.ml_ish(), where C = ML (for compatibility with ML)
             *)
             let args, comps, g_args = tc_args env args in
-            let bs = null_binders_of_tks (comps |> List.map (fun (_, c) -> c.lcompres_typ, None)) in
+            let bs = null_binders_of_tks (comps |> List.map (fun (_, c) -> c.lcomp_res_typ, None)) in
             let ml_or_tot t r =
                 if Options.ml_ish ()
                 then U.ml_comp t r
@@ -1141,7 +1143,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             Rel.force_trivial_guard env <| Rel.teq env tf bs_cres;
             let comp =
                   List.fold_right (fun (r1, c) out ->
-                       TcUtil.bind r1 env None c (None, out))
+                       TcUtil.bind env None c (None, out))
                   ((head.pos, chead)::comps)
                   (Env.lcomp_of_comp env <| cres) in
             mk_Tm_app head args (Some comp.lcomp_res_typ.n) r, comp, Rel.conj_guard ghead g_args
@@ -1488,7 +1490,7 @@ and check_top_level_let env e =
          mk (Tm_let((false, [lb]), e2))
             (Some (Common.t_unit.n))
             e.pos,
-         U.lcomp_of_comp cres,
+         cres,
          Rel.trivial_guard
 
      | _ -> failwith "Impossible"
@@ -1512,12 +1514,12 @@ and check_inner_let env e =
        let x = fst xbinder in
        let e2, c2, g2 = tc_term (Env.push_bv env x) e2 in
        let cres = TcUtil.bind env (Some e1) c1 (Some x, c2) in
-       let e1 = TcUtil.maybe_lift env e1 c1.lcomp_name cres.lcomp_name c1.res_typ in
-       let e2 = TcUtil.maybe_lift env e2 c2.lcomp_name cres.lcomp_name c2.res_typ in
+       let e1 = TcUtil.maybe_lift env e1 c1.lcomp_name cres.lcomp_name c1.lcomp_res_typ in
+       let e2 = TcUtil.maybe_lift env e2 c2.lcomp_name cres.lcomp_name c2.lcomp_res_typ in
        let lb = Util.mk_letbinding (Inl x) [] c1.lcomp_res_typ c1.lcomp_name e1 in
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) (Some cres.lcomp_res_typ.n) e.pos in
        let e = TcUtil.maybe_monadic env e cres.lcomp_name cres.lcomp_res_typ in
-       let x_eq_e1 = NonTrivial <| U.mk_eq2 (env.universe_of_env c1.res_typ) c1.lcomp_res_typ c1.lcomp_res_typ (S.bv_to_name x) e1 in
+       let x_eq_e1 = NonTrivial <| U.mk_eq2 (env.universe_of env c1.lcomp_res_typ) c1.lcomp_res_typ (S.bv_to_name x) e1 in
        let g2 = Rel.close_guard xb
                       (Rel.imp_guard (Rel.guard_of_guard_formula x_eq_e1) g2) in
        let guard = Rel.conj_guard g1 g2 in
@@ -1535,7 +1537,7 @@ and check_inner_let env e =
              then BU.print2 "Checked %s has no escaping types; normalized to %s\n"
                         (Print.term_to_string cres.lcomp_res_typ)
                         (Print.term_to_string t);
-             e, ({cres with res_typ=t}), guard)
+             e, ({cres with lcomp_res_typ=t}), guard)
 
     | _ -> failwith "Impossible"
 
@@ -1604,7 +1606,7 @@ and check_inner_let_rec env top =
           let guard = Rel.conj_guard g_lbs g2 in
           let cres = TcUtil.close_comp env bvs cres in
           let tres = norm env cres.lcomp_res_typ in
-          let cres = {cres with res_typ=tres} in
+          let cres = {cres with lcomp_res_typ=tres} in
 
 (*close*) let lbs, e2 = SS.close_let_rec lbs e2 in
           let e = mk (Tm_let((true, lbs), e2)) (Some tres.n) top.pos in
@@ -1613,7 +1615,7 @@ and check_inner_let_rec env top =
               | Some _ -> e, cres, guard //we have an annotation
               | None ->
                 let tres = check_no_escape None env bvs tres in
-                let cres = {cres with res_typ=tres} in
+                let cres = {cres with lcomp_res_typ=tres} in
                 e, cres, guard
           end
 
@@ -1774,7 +1776,7 @@ and tc_tot_or_gtot_term env e : term
        let c = c.lcomp_as_comp() in
        let c = norm_c env c in
        let target_comp, allow_ghost =
-            if TcU.is_pure_effect env (U.comp_effect_name c)
+            if TcUtil.is_pure_effect env (U.comp_effect_name c)
             then S.mk_Total (Env.result_typ env c), false
             else S.mk_GTotal (Env.result_typ env c), true in
        match Rel.sub_comp env c target_comp with
@@ -1875,7 +1877,7 @@ let rec universe_of_aux env e =
      let _, t = Env.lookup_lid env fv.fv_name.v in
      t
    | Tm_ascribed(_, Inl t, _) -> t
-   | Tm_ascribed(_, Inr c, _) -> U.comp_result c
+   | Tm_ascribed(_, Inr c, _) -> Env.result_typ env c
    //also easy, since we can quickly recompute the type
    | Tm_type u -> S.mk (Tm_type (U_succ u)) None e.pos
    | Tm_constant sc -> tc_constant e.pos sc
@@ -1897,10 +1899,10 @@ let rec universe_of_aux env e =
      let bs, c = SS.open_comp bs c in
      let us = List.map (fun (b, _) -> level_of_type env b.sort (universe_of_aux env b.sort)) bs in
      let u_res =
-        let res = U.comp_result c in
+        let res = Env.result_typ env c in
         level_of_type env res (universe_of_aux env res) in
      let u_c =
-        match TcUtil.effect_repr env c u_res with
+        match TcUtil.effect_repr env c with
         | None -> u_res
         | Some trepr -> level_of_type env trepr (universe_of_aux env trepr) in
      let u = N.normalize_universe env (S.U_max (u_c::us)) in
@@ -1942,14 +1944,14 @@ let rec universe_of_aux env e =
           then BU.print2 "%s: About to type-check %s\n"
                         (Range.string_of_range (Env.get_range env))
                         (Print.term_to_string hd);
-          let _, ({res_typ=t}), g = tc_term env hd in
+          let _, ({lcomp_res_typ=t}), g = tc_term env hd in
           Rel.solve_deferred_constraints env g |> ignore;
           t, args
      in
      let t, args = type_of_head true hd args in
      let t = N.normalize [N.UnfoldUntil Delta_constant] env t in
      let bs, res = U.arrow_formals_comp t in
-     let res = U.comp_result res in
+     let res = Env.result_typ env res in
      if List.length bs = List.length args
      then let subst = U.subst_of_list bs args in
           SS.subst subst res

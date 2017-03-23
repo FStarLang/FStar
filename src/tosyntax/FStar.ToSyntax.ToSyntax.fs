@@ -1951,22 +1951,37 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     desugar_effect env d quals eff_name eff_binders eff_kind eff_decls actions false
 
   | SubEffect l ->
-    let lookup l = match Env.try_lookup_effect_name env l with
-        | None -> raise (Error("Effect name " ^Print.lid_to_string l^ " not found", d.drange))
-        | Some l -> l in
-    let src = lookup l.msource in
-    let dst = lookup l.mdest in
+    (* TODO : implement indexed effects *)
+
+    (* let lookup l = match Env.try_lookup_effect_name env l with *)
+    (*     | None -> raise (Error("Effect name " ^Print.lid_to_string l^ " not found", d.drange)) *)
+    (*     | Some l -> l *)
+    (* in *)
+    let src = {
+        comp_typ_name = l.msource ;
+        comp_univs = [] ;
+        effect_args = [] ;
+        flags = []
+      }
+    in
+    let dst = {
+        comp_typ_name = l.mtarget ;
+        comp_univs = [] ;
+        effect_args = [] ;
+        flags = []
+      }
+    in
     let lift_wp, lift = match l.lift_op with
         | NonReifiableLift t -> Some ([],desugar_term env t), None
         | ReifiableLift (wp, t) -> Some ([],desugar_term env wp), Some([], desugar_term env t)
         | LiftForFree t -> None, Some ([],desugar_term env t)
     in
-    let se = Sig_sub_effect({sub_eff_univs=[];
-                             sub_eff_binders=[];
-                             sub_eff_source=(src, []); 
-                             sub_eff_target=(dst, []); 
-                             sub_eff_lift_wp=lift_wp; 
-                             sub_eff_lift=lift}, d.drange) in
+    let se = Sig_sub_effect({sub_eff_univs = [];
+                             sub_eff_binders = [];
+                             sub_eff_source = src;
+                             sub_eff_target = dst; 
+                             sub_eff_lift_wp = lift_wp; 
+                             sub_eff_lift = lift }, d.drange) in
     env, [se]
 
  let desugar_decls env decls =
