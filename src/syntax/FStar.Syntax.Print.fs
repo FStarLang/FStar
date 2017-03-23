@@ -46,7 +46,7 @@ let fv_to_string fv = lid_to_string fv.fv_name.v
 let bv_to_string bv = bv.ppname.idText ^ "#" ^ (string_of_int bv.index)
 
 let nm_to_string bv =
-    if (Options.print_real_names())
+    if Options.print_real_names()
     then bv_to_string bv
     else bv.ppname.idText
 
