@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>f6879027-a97f-4857-8f52-cc5641455652</ProjectGuid>
+    <ProjectGuid>1847fd53-dd0c-407a-b002-3cfd502e5327</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>leanencoding</RootNamespace>
     <AssemblyName>leanencoding</AssemblyName>
@@ -23,27 +23,19 @@
     <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile>bin\Debug\leanencoding.XML</DocumentationFile>
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>..\..\bin\</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\leanencoding.XML</DocumentationFile>
-    <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\..\bin\FSharp.PowerPack.dll</HintPath>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Compatibility">
-      <HintPath>..\..\bin\FSharp.PowerPack.Compatibility.dll</HintPath>
-    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
@@ -79,8 +71,8 @@
     <Compile Include="FStar.LeanEncoding.ErrorReporting.fs" />
     <Compile Include="FStar.LeanEncoding.Encode.fsi" />
     <Compile Include="FStar.LeanEncoding.Encode.fs" />
-    <Compile Include="FStar.LeanEncoding.Solver.fs" />
     <Compile Include="FStar.LeanEncoding.Solver.fsi" />
+    <Compile Include="FStar.LeanEncoding.Solver.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

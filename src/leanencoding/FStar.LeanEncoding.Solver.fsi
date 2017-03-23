@@ -19,6 +19,4 @@ module FStar.LeanEncoding.Solver
 open FStar.All
 
 val with_hints_db : string -> (unit -> 'a) -> 'a
-val dummy: FStar.TypeChecker.Env.solver_t
 val solver: FStar.TypeChecker.Env.solver_t
-val lean_solver : FStar.TypeChecker.Env.solver_t
