@@ -103,7 +103,7 @@ type identifier_info = {
 }
 let info_as_string info = 
     let id_string, range = match info.identifier with 
-        | Inl bv -> Print.bv_to_string bv, FStar.Syntax.Syntax.range_of_bv bv
+        | Inl bv -> Print.nm_to_string bv, FStar.Syntax.Syntax.range_of_bv bv
         | Inr fv -> Print.lid_to_string (FStar.Syntax.Syntax.lid_of_fv fv), FStar.Syntax.Syntax.range_of_fv fv in
     BU.format3 "(defined at %s) %s : %s"
         (Range.string_of_range range) id_string (Print.term_to_string info.identifier_ty)
