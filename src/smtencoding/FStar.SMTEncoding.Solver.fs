@@ -56,6 +56,7 @@ type hint_stats_t = list<hint_stat>
 let recorded_hints : ref<(option<hints>)> = BU.mk_ref None
 let replaying_hints: ref<(option<hints>)> = BU.mk_ref None
 let hint_stats     : ref<hint_stats_t>    = BU.mk_ref []
+let lean_output    : ref<(option<BU.file_handle>)> = BU.mk_ref None
 
 let format_hints_file_name src_filename =
     BU.format1 "%s.hints" src_filename
