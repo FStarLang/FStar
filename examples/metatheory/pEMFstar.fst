@@ -46,6 +46,22 @@ let succ n = app csucc n
 let refl e = app refl e
 let eq t e1 e2 = eq `app` t `app` e1 `app` e2
 
+
+
+(* Derived term (one hole term contexts) *)
+type dterm =
+  | Hole : dterm
+  | DApp1 : dterm -> term -> dterm
+  | DApp2 : term -> dterm -> dterm
+  | 
+
+
+
+
+
+
+
+
 type sub = var -> universes -> Tot term
 type renaming (s:sub) = (forall (x:var) (uvs:universes) . Var? (s x uvs))
 
