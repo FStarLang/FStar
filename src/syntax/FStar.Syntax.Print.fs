@@ -515,7 +515,8 @@ let rec sigelt_to_string x = match x with
   | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
   | Sig_new_effect(ed, _) -> eff_decl_to_string false ed
   | Sig_new_effect_for_free (ed, _) -> eff_decl_to_string true ed
-  | Sig_sub_effect (se, r) ->
+  | Sig_sub_effect (se, r) -> // TODO: THIS HAS TO BE FIXED! the code is just written to support compilation
+    let se = Subst.open_sub_eff se in
     let lift_wp = match se.sub_eff_lift_wp, se.sub_eff_lift with
       // TODO pretty-print this better
       | None, None ->
@@ -525,10 +526,12 @@ let rec sigelt_to_string x = match x with
       | _, Some lift ->
           lift
     in
-    let us, t = Subst.open_univ_vars (fst lift_wp) (snd lift_wp) in
+    let t = lift_wp in
     U.format4 "sub_effect %s ~> %s : <%s> %s"
-        (term_to_string se.sub_eff_source) (term_to_string se.sub_eff_target)
-        (univ_names_to_string us) (term_to_string t)
+        (comp_to_string (mk_Comp se.sub_eff_source))
+        (comp_to_string (mk_Comp se.sub_eff_target))
+        (univ_names_to_string se.sub_eff_univs)
+        (term_to_string t)
   | Sig_effect_abbrev(l, univs, tps, c, _, flags, _) ->
     if (Options.print_universes())
     then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in

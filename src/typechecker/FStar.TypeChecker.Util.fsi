@@ -44,7 +44,7 @@ val decorate_pattern: env -> pat -> list<term> -> pat
 val decorated_pattern_as_term: pat -> list<bv> * term
 
 //instantiation and generalization
-val maybe_instantiate : env -> term -> typ -> (term * typ * guard_t)
+val maybe_instantiate : env -> term -> typ -> (term * typ * guard_t * subst_t)
 val generalize: env -> list<(lbname*term*comp)> -> list<(lbname*univ_names*term*comp)>
 val generalize_universes: env -> term -> tscheme
 
@@ -93,3 +93,5 @@ val check_sigelt_quals: env -> sigelt -> unit
 
 //elaborate discriminator and projectors
 val mk_data_operations : list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>
+
+val build_lattice: env -> sigelt -> env

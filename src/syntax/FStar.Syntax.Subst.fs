@@ -304,7 +304,7 @@ let subst_pat' s p : (pat * int) =
 let push_subst_lcomp s lopt = match lopt with
     | None
     | Some (Inr _) -> lopt
-    | Some (Inl l) -> 
+    | Some (Inl l) ->
       Some (Inl ({l with lcomp_univs=List.map (subst_univ (fst s)) l.lcomp_univs;
                          lcomp_indices=subst_args' s l.lcomp_indices;
                          lcomp_res_typ=subst' s l.lcomp_res_typ;
@@ -400,21 +400,21 @@ let rec compress (t:term) =
            match t'.n with
            | Tm_delayed _ -> compress t'
            | _ -> t'
-            
+
 let subst s t = subst' ([s], None) t
 let set_use_range r t = subst' ([], Some ({r with def_range=r.use_range})) t
 let subst_comp s t = subst_comp' ([s], None) t
 let subst_args s args = List.map (fun (x, a) -> subst s x, a) args
-let subst_lcomp s lc = 
+let subst_lcomp s lc =
     {lc with lcomp_univs=List.map (subst_univ [s]) lc.lcomp_univs;
              lcomp_indices=subst_args s lc.lcomp_indices;
              lcomp_res_typ=subst s lc.lcomp_res_typ;
              lcomp_as_comp=(fun () -> subst_comp s (lc.lcomp_as_comp())); }
 
 
-let closing_subst bs = 
-    List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst 
-let open_binders' bs = 
+let closing_subst bs =
+    List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst
+let open_binders' bs =
    let rec aux bs o = match bs with
         | [] -> [], o
         | (x, imp)::bs' ->
@@ -517,8 +517,8 @@ let close_binders (bs:binders) : binders =
           (x, imp)::aux s' tl in
     aux [] bs
 
-let close_lcomp (bs:binders) lc = 
-    let s = closing_subst bs in 
+let close_lcomp (bs:binders) lc =
+    let s = closing_subst bs in
     {lc with lcomp_indices=subst_args s lc.lcomp_indices;
              lcomp_res_typ=subst s lc.lcomp_res_typ;
              lcomp_as_comp=(fun () -> subst_comp s (lc.lcomp_as_comp())); }
@@ -649,3 +649,7 @@ let close_univ_vars_tscheme (us:univ_names) ((us', t):tscheme) =
 let opening_of_binders (bs:binders) =
   let n = List.length bs - 1 in
   bs |> List.mapi (fun i (x, _) -> DB(n - i, x))
+
+
+let open_sub_eff: sub_eff -> sub_eff = fun _ -> failwith ""
+let  close_sub_eff: sub_eff -> sub_eff = fun _ -> failwith ""

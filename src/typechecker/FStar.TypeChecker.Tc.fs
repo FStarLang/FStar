@@ -1,4 +1,4 @@
-(*
+﻿(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -909,21 +909,21 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
       match sub.sub_eff_lift, sub.sub_eff_lift_wp with
       | None, None ->
           failwith "Impossible"
-      | lift, Some (_, lift_wp) ->
+      | lift, Some lift_wp ->
           (* Covers both the "classic" format and the reifiable case. *)
-          lift, check_and_gen env lift_wp expected_k
-      | Some (what, lift), None ->
+          lift, (check_and_gen env lift_wp expected_k; failwith "SUB EFFECT CODE NEEDS TO BE FIXED!")
+      | Some lift, None ->
           let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
           let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
           let _ = recheck_debug "lift-wp" env lift_wp in
           let _ = recheck_debug "lift-elab" env lift_elab in
-          Some ([], lift_elab), ([], lift_wp)
+          Some lift_elab, lift_wp
     in
     let lax = env.lax in
     let env = {env with lax=true} in //we do not expect the lift to verify, since that requires internalizing monotonicity of WPs
     let lift = match lift with
       | None -> None
-      | Some (_, lift) ->
+      | Some lift ->
         let source = sub.sub_eff_source.comp_typ_name in
         let indices_a, a, wp_a_src = monad_signature env source (Env.lookup_effect_lid env source) in
         let wp_a = S.new_bv None wp_a_src in
@@ -951,6 +951,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     let sub = {sub with sub_eff_lift_wp=Some lift_wp; sub_eff_lift=lift} in
     let se = Sig_sub_effect(sub, r) in
     let env = Env.push_sigelt env se in
+    let env = TcUtil.build_lattice env se in
     [se], env, []
 
   | Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) ->

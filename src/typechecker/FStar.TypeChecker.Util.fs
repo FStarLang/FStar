@@ -957,10 +957,10 @@ let pure_or_ghost_pre_and_post env comp =
 (*********************************************************************************************)
 (* Instantiation and generalization *)
 (*********************************************************************************************)
-let maybe_instantiate (env:Env.env) e t =
+let maybe_instantiate (env:Env.env) e t : term * term * guard_t * S.subst_t =
   let torig = SS.compress t in
   if not env.instantiate_imp
-  then e, torig, Rel.trivial_guard
+  then e, torig, Rel.trivial_guard, []
   else let number_of_implicits t =
             let formals, _ = U.arrow_formals_comp t in
             let n_implicits =
@@ -1006,11 +1006,11 @@ let maybe_instantiate (env:Env.env) e t =
               let args, bs, subst, guard = aux [] (inst_n_binders t) bs in
               begin match args, bs with
                 | [], _ -> //no implicits were instantiated
-                  e, torig, guard
+                  e, torig, guard, []
 
                 | _, [] when not (U.is_total_comp c) ->
                   //don't instantiate implicitly, if it has an effect
-                  e, torig, Rel.trivial_guard
+                  e, torig, Rel.trivial_guard, []
 
                 | _ ->
 
@@ -1019,10 +1019,10 @@ let maybe_instantiate (env:Env.env) e t =
                     | _ -> U.arrow bs c in
                   let t = SS.subst subst t in
                   let e = S.mk_Tm_app e args (Some t.n) e.pos in
-                  e, t, guard
+                  e, t, guard, subst
               end
 
-            | _ -> e, t, Rel.trivial_guard
+            | _ -> e, t, Rel.trivial_guard, []
        end
 
 (**************************************************************************************)
@@ -1758,3 +1758,173 @@ let mk_data_operations iquals env tcs se = match se with
     mk_discriminator_and_indexed_projectors iquals fv_qual refine_domain env typ_lid constr_lid uvs inductive_tps indices fields
 
   | _ -> []
+
+/////////////////////////////////////////////////////////////////////////////
+// Building the effect lattice
+/////////////////////////////////////////////////////////////////////////////
+//NB: This code used to be in FStar.TypeChecker.Env
+//    However, as we move to indexed effects, computing an mlift
+//    requires unifying a computation type with the expected type of the lift
+//    to compute the indices instantiation.
+//    This unification is only available in Rel, which Env cannot depend on.
+//    Hence the move.
+
+let destruct_comp_term m =
+    match (SS.compress m).n with
+    | Tm_uinst({n=Tm_fvar fv}, univs) -> S.lid_of_fv fv, univs
+    | Tm_fvar fv -> S.lid_of_fv fv, []
+    | _ -> failwith "Impossible"
+
+(* Given a sub_eff, returns a (lhs:nct -> nct) function
+   by instantiating the indicces in the sub_eff with the indices of the lhs
+   and all remaining binders to fresh unification variables
+*)
+let mlift_of_sub_eff env sub : mlift =
+  let mlift (nct:normal_comp_typ) =
+    let fail () =
+        failwith <| BU.format2 "Invalid application of mlift, \
+                                effect names differ : %s vs %s"
+                                     (Ident.text_of_lid nct.nct_name)
+                                     (Ident.text_of_lid sub.sub_eff_source.comp_typ_name)
+    in
+
+    //Here's the plan:
+    //1. We instantiate sub_eff_univs and sub_eff_binders with fresh meta variables,
+    //     getting a substitution sigma
+    //   For example, given <u#h, u#a>. #h:Type -> #a:Type ->  ...
+    //   sigma instantiates all the variables here with fresh meta variables
+    //2. We unify (sigma sub_eff.sub_eff_source) ~ (nct / wp)
+    //     i.e we unify the source type with a term representing the partial application
+    //      of nct to all its arguments except the WP
+    //      This gives us instantiations for all the implicits that appear on the LHS
+    //   For example, ST ?u#h ?u#a ?h ?a ~ nct / wp
+    //   This constraints sigma, imperatively
+    //3. Then, we build (sigma sub_eff_target) (sigma sub_eff_lift_wp nct.wp)
+    //step 1
+    let sigma =
+        let skeleton = (sub.sub_eff_univs,
+                        S.mk (Tm_arrow(sub.sub_eff_binders, S.mk_Total Common.t_unit)) None Range.dummyRange) in
+        let univ_meta_vars, skel = Env.inst_tscheme skeleton in
+        let univ_meta_vars_subst, _ =
+            List.fold_right
+                   (fun univ (out, i) -> S.UN(i, univ)::out, i+1)
+                   univ_meta_vars
+                   ([], List.length sub.sub_eff_binders) in
+        let _term, _typ, _guard, index_meta_var_subst = maybe_instantiate env S.tun skel in
+        univ_meta_vars_subst @ index_meta_var_subst
+    in
+    //step 2
+    let formal_source = SS.subst_comp sigma (S.mk_Comp sub.sub_eff_source) in
+    let actual_source_no_wp =
+        let ct = {
+            comp_typ_name=nct.nct_name;
+            comp_univs=nct.nct_univs;
+            effect_args=nct.nct_indices@[nct.nct_result]; //NOTICE NO nct.wp here INTENTIONAL!
+            flags=nct.nct_flags
+        } in
+        S.mk_Comp ct in
+    begin match Rel.sub_comp ({env with use_eq=true}) formal_source actual_source_no_wp with
+        | None -> fail ()
+        | Some g -> Rel.force_trivial_guard env g
+    end;
+    let target_nct =
+        let target_wp =
+            S.mk_Tm_app (SS.subst sigma (BU.must sub.sub_eff_lift_wp))
+                         [nct.nct_wp] None Range.dummyRange in
+        let target_comp_no_wp = SS.subst_comp sigma (S.mk_Comp sub.sub_eff_target) |> U.comp_to_comp_typ in
+        let target_comp_typ =
+            {target_comp_no_wp with
+             effect_args=target_comp_no_wp.effect_args@[S.as_arg target_wp]} in
+        Env.comp_as_normal_comp_typ env (S.mk_Comp target_comp_typ)
+    in
+    target_nct
+in //end mlift
+   mlift
+
+let extend_effect_lattice env sub_eff =
+    let compose_edges e1 e2 : edge =
+       {msource=e1.msource;
+        mtarget=e2.mtarget;
+        mlift=(fun nct -> e2.mlift (e1.mlift nct))} in
+
+    let edge =
+      {msource=sub_eff.sub_eff_source.comp_typ_name;
+       mtarget=sub_eff.sub_eff_target.comp_typ_name;
+       mlift=mlift_of_sub_eff env sub_eff} in
+
+    let id_edge l = {
+       msource=l;
+       mtarget=l;
+       mlift=(fun nct -> nct);
+    } in
+
+    let print_mlift l =
+        let arg = lid_as_fv (lid_of_path ["ARG"] Range.dummyRange) Delta_constant None in
+        let wp = lid_as_fv (lid_of_path  ["WP"]  Range.dummyRange) Delta_constant None in //A couple of bogus constants, just for printing
+        Print.term_to_string (l arg wp) in
+
+    let order = edge::env.effects.order in
+
+    let ms = env.effects.decls |> List.map (fun (e:eff_decl) -> e.mname) in
+
+    let find_edge order (i, j) =
+      if lid_equals i j
+      then id_edge i |> Some
+      else order |> BU.find_opt (fun e -> lid_equals e.msource i && lid_equals e.mtarget j) in
+
+    (* basically, this is Warshall's algorithm for transitive closure,
+       except it's ineffcient because find_edge is doing a linear scan.
+       and it's not incremental.
+       Could be made better. But these are really small graphs (~ 4-8 vertices) ... so not worth it *)
+    let order =
+        ms |> List.fold_left (fun order k ->
+        order@(ms |> List.collect (fun i ->
+               if lid_equals i k then []
+               else ms |> List.collect (fun j ->
+                    if lid_equals j k
+                    then []
+                    else match find_edge order (i, k), find_edge order (k, j) with
+                            | Some e1, Some e2 -> [compose_edges e1 e2]
+                            | _ -> []))))
+        order in
+    let order = BU.remove_dups (fun e1 e2 -> lid_equals e1.msource e2.msource
+                                            && lid_equals e1.mtarget e2.mtarget) order in
+    let _ = order |> List.iter (fun edge ->
+        if Ident.lid_equals edge.msource Const.effect_DIV_lid
+        && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
+        then raise (Error(BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" edge.mtarget.str,
+                          get_range env))) in
+    let joins =
+        ms |> List.collect (fun i ->
+        ms |> List.collect (fun j ->
+        let join_opt = ms |> List.fold_left (fun bopt k ->
+          match find_edge order (i, k), find_edge order (j, k) with
+            | Some ik, Some jk ->
+              begin match bopt with
+                | None -> Some (k, ik, jk) //we don't have a current candidate as the upper bound; so we may as well use k
+
+                | Some (ub, _, _) ->
+                  if BU.is_some (find_edge order (k, ub))
+                  && not (BU.is_some (find_edge order (ub, k)))
+                  then Some (k, ik, jk) //k is less than ub
+                  else bopt
+              end
+            | _ -> bopt) None in
+        match join_opt with
+            | None -> []
+            | Some (k, e1, e2) -> [(i, j, k, e1.mlift, e2.mlift)])) in
+
+    let effects = {env.effects with order=order; joins=joins} in
+//    order |> List.iter (fun o -> Printf.printf "%s <: %s\n\t%s\n" o.msource.str o.mtarget.str (print_mlift o.mlift));
+//    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" e1.str e2.str e3.str (print_mlift l1) (print_mlift l2));
+    {env with effects=effects}
+
+let build_lattice env se =
+  match se with
+  | Sig_new_effect(ne, _) ->
+    {env with effects={env.effects with decls=ne::env.effects.decls}}
+
+  | Sig_sub_effect(sub, _) ->
+    extend_effect_lattice env sub
+
+  | _ -> env

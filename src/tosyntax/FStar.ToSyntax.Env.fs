@@ -610,7 +610,7 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = function
       | Sig_inductive_typ(typename, univs, parms, _, _, [dc], tags, _) ->
         begin match must <| find_dc dc with
             | Sig_datacon(constrname, _, t, _, _, _, _, _) ->
-                let formals, _ = U.arrow_formals t in
+                let formals, _ = U.arrow_formals_comp t in
                 let is_rec = is_rec tags in
                 let formals' = formals |> List.collect (fun (x,q) ->
                         if S.is_null_bv x

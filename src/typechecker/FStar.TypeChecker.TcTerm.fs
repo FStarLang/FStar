@@ -523,7 +523,7 @@ and tc_value env (e:term) : term
                           * lcomp
                           * guard_t =
   let check_instantiated_fvar env v dc e t =
-    let e, t, implicits = TcUtil.maybe_instantiate env e t in
+    let e, t, implicits, _subst = TcUtil.maybe_instantiate env e t in
     //printfn "Instantiated type of %s to %s\n" (Print.term_to_string e) (Print.term_to_string t);
     let tc = if Env.should_verify env then Inl t else Inr (Env.lcomp_of_comp env (mk_Total t)) in
     let is_data_ctor = function
@@ -565,7 +565,7 @@ and tc_value env (e:term) : term
     let x = {x with sort=t} in
     FStar.TypeChecker.Common.insert_bv x t;
     let e = S.bv_to_name x in
-    let e, t, implicits = TcUtil.maybe_instantiate env e t in
+    let e, t, implicits, _subst = TcUtil.maybe_instantiate env e t in
     let tc = if Env.should_verify env then Inl t else Inr (Env.lcomp_of_comp env <| mk_Total t) in
     value_check_expected_typ env e tc implicits
 

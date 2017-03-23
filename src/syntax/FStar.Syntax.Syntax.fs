@@ -241,18 +241,18 @@ type monad_abbrev = {
   def:typ
   }
 type sub_eff = {
- (*  <u_1...u_m'v_1...v_l>.  //first all universes binders for the LHS, then maybe some more
-     #y_1:t_1 ... #y_m:t_m ->  //first all index binders for the LHS
-     #x_1:t_1' .. #x_o:t_o' ->  //then maybe some more
-     M<u_1..u_m'> y_1..y_m ~>   //then the source computation type applied to all its index variables
-     N<uu1..uu_n'> s_1...s_n    //coerced to the target computation type
- *)
-  sub_eff_univs  : univ_names;     (* u_1 ... u_k *)
-  sub_eff_binders: binders;        (* x_1 ... x_l *)
-  sub_eff_source : term;           (* M y_1..y_m --- all the args are expected to be bound variables *)
-  sub_eff_target : term;           (* N s_1..s_n *)
-  sub_eff_lift_wp:option<tscheme>; (* #a:Type -> (M y_1 ... y_m a)* -> (N s_1...s_n)* *)
-  sub_eff_lift   :option<tscheme>  (* #a:Type -> #wp:(M y_1 ... y_m a)* -> (M y_1..y_m a wp).repr -> (N s_1..s_n a (lift_wp wp)).repr *)
+  (* User writes:
+           <u_1...u_k>. #x_1:t_1 ... #x_n:t_l -> M y_1..y_m ~> N s_1...s_n
+     For example:
+            sub_effect <u#h u#a>. h:Type u#h -> a:Type u#a -> ST u#h u#a h a ~> All u#h u#a h a
+             = st_all_lift_repr : st_repr u#h u#a h a -> all_repr u#h u#a  h a
+   *)
+  sub_eff_univs  : univ_names;     (* = u#h, u#a, for example *)
+  sub_eff_binders: binders;        (* = h:Type u#h, a:Type u#a, for example *)
+  sub_eff_source : comp_typ;       (* = ST u#h u#a h a, i.e., this is a partially applied comp_typ, lacking its last WP argument *)
+  sub_eff_target : comp_typ;       (* = All u#h u#a h a, i.e., this is a partially applied comp_typ, lacking its last WP argument ... TODO: maybe revisit *)
+  sub_eff_lift_wp:option<term>;    (* : ST?.wp h a -> All?.wp h a *)
+  sub_eff_lift   :option<term>     (* : #wp:ST?.wp h a -> ST?.repr h a wp -> All?.repr h a (sub_eff_lift_wp #h #a wp) *)
  }
 
 type action = {

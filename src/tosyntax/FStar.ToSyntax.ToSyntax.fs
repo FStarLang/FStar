@@ -1965,7 +1965,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
       }
     in
     let dst = {
-        comp_typ_name = l.mtarget ;
+        comp_typ_name = l.mdest ;
         comp_univs = [] ;
         effect_args = [] ;
         flags = []
@@ -1979,8 +1979,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let se = Sig_sub_effect({sub_eff_univs = [];
                              sub_eff_binders = [];
                              sub_eff_source = src;
-                             sub_eff_target = dst; 
-                             sub_eff_lift_wp = lift_wp; 
+                             sub_eff_target = dst;
+                             sub_eff_lift_wp = lift_wp;
                              sub_eff_lift = lift }, d.drange) in
     env, [se]
 
