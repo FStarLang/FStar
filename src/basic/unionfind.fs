@@ -18,6 +18,8 @@
 
 module FStar.Unionfind
 
+open FStar.All
+
 (* Persistent union-find implementation adapted from
    https://www.lri.fr/~filliatr/puf/ *)
 
@@ -74,9 +76,12 @@ type puf_t<'a> = {
     ranks: pa_t<int>;
 }
 
+type puf<'a> = puf_t<'a>
+
 let puf_create n =
     { ranks = pa_create n 0;
       parent = pa_init n (fun i -> i) }
+
 
 (* implements path compression, returns new array *)
 let rec puf_find_aux f i =
@@ -109,6 +114,9 @@ let puf_union h x y =
         end else
             h
 
+let puf_reroot h =
+    pa_reroot h.parent
+
 (* Unionfind with path compression but without ranks *)
 (* Provides transacational updates, based on a suggeestion from Francois Pottier *)
 
@@ -116,7 +124,7 @@ type cell<'a when 'a : not struct> = {mutable contents : contents<'a> }
 and contents<'a when 'a : not struct> =
   | Data of list<'a> * int
   | Fwd of cell<'a>
-type uvar<'a when 'a : not struct> = 'a cell
+type uvar<'a when 'a : not struct> = cell<'a>
 
 exception Impos
 

@@ -121,7 +121,13 @@ boot_fstis/FStar.util.fsti: basic/util.fsi
 
 boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	cp $^ $@
-	$(SED) -i 's/type cell.*/module ALL_TMP = FStar.All/g' $@
+	$(SED) -i 's/type pa_t.*/module ALL_TMP = FStar.All/g' $@
+	$(SED) -i 's/and data.*//g' $@
+	$(SED) -i 's/.*| PArray.*//g' $@
+	$(SED) -i 's/.*| PDiff.*//g' $@
+	$(SED) -i 's/type puf_t.*//g' $@
+	$(SED) -i 's/type puf.*/assume new type puf : Type0 -> Type0/g' $@
+	$(SED) -i 's/type cell.*//g' $@
 	$(SED) -i 's/and contents.*//g' $@
 	$(SED) -i 's/.*| Data.*//g' $@
 	$(SED) -i 's/.*| Fwd.*//g' $@

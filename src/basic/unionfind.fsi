@@ -17,21 +17,20 @@
 
 #light "off"
 module FStar.Unionfind
-open FStar.All
 
 type pa_t<'a> = ref<data<'a>>
 and data<'a> =
     | PArray of array<'a>
     | PDiff of int * 'a * pa_t<'a>
 
-type puf_t<'a> = {
-    mutable parent: pa_t<int>;
-    ranks: pa_t<int>
-}
+type puf_t<'a> = { mutable parent: pa_t<int>; ranks: pa_t<int> }
+type puf<'a> = puf_t<'a>
 
-val puf_create: int -> puf_t<'a>
-val puf_find: puf_t<'a> -> int -> int
-val puf_union: puf_t<'a> -> int -> int -> puf_t<'a>
+val puf_create: int -> puf<'a>
+val puf_fresh: 'a -> puf<'a> -> puf<'a>
+val puf_find: puf<'a> -> int -> int
+val puf_union: puf<'a> -> int -> int -> puf<'a>
+val puf_reroot: puf<'a> -> unit
 
 type cell<'a when 'a : not struct> = {mutable contents : contents<'a> }
 and contents<'a when 'a : not struct> =
