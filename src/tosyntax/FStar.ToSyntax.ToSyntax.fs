@@ -1383,7 +1383,7 @@ let mk_typ_abbrev lid uvs typars k t lids quals rng =
         lbname=Inr (S.lid_as_fv lid dd None);
         lbunivs=uvs;
         lbdef=no_annot_abs typars t;
-        lbtyp=U.arrow typars (S.mk_Total k);
+        lbtyp=U.maybe_tot_arrow typars k;
         lbeff=C.effect_Tot_lid;
     } in
     Sig_let((false, [lb]), rng, lids, quals, [])
@@ -1565,7 +1565,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                     | RecordType fns -> [RecordConstructor fns]
                     | _ -> []) in
                 let ntps = List.length data_tpars in
-                (name, (tps, Sig_datacon(name, univs, U.arrow data_tpars (mk_Total (t |> U.name_function_binders)),
+                (name, (tps, Sig_datacon(name, univs, maybe_tot_arrow data_tpars (t |> U.name_function_binders),
                                          tname, ntps, quals, mutuals, rng)))))
           in
           ([], Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames, tags, rng))::constrs

@@ -635,6 +635,12 @@ let arrow (bs:binders) (c:comp) : typ = match bs with
   | [] -> failwith "Arrow with empty binders"
   | _ -> mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
 
+let maybe_tot_arrow (bs:binders) (t:typ) : typ = match bs with 
+  | [] -> t
+  | _ ->
+    let c = mk_Total t in
+    mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
+
 let flat_arrow bs c =
   let t = arrow bs c in
   match (Subst.compress t).n with
