@@ -38,8 +38,8 @@ let disentangle_abbrevs_from_bundle:
               let type_abbrevs =
                 FStar_All.pipe_right type_abbrev_sigelts
                   (FStar_List.map
-                     (fun uu___200_81  ->
-                        match uu___200_81 with
+                     (fun uu___202_81  ->
+                        match uu___202_81 with
                         | FStar_Syntax_Syntax.Sig_let
                             ((uu____82,{
                                          FStar_Syntax_Syntax.lbname =
@@ -63,8 +63,8 @@ let disentangle_abbrevs_from_bundle:
                     let uu____135 = FStar_ST.read not_unfolded_yet in
                     FStar_All.pipe_right uu____135
                       (FStar_List.filter
-                         (fun uu___201_142  ->
-                            match uu___201_142 with
+                         (fun uu___203_142  ->
+                            match uu___203_142 with
                             | FStar_Syntax_Syntax.Sig_let
                                 ((uu____143,{
                                               FStar_Syntax_Syntax.lbname =
@@ -140,15 +140,15 @@ let disentangle_abbrevs_from_bundle:
                                        (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)))
                            else unfold_abbrev se
                        | uu____311 -> t)
-                and unfold_abbrev uu___203_313 =
-                  match uu___203_313 with
+                and unfold_abbrev uu___205_313 =
+                  match uu___205_313 with
                   | FStar_Syntax_Syntax.Sig_let
                       ((false ,lb::[]),rng1,uu____316,quals1,attr) ->
                       let quals2 =
                         FStar_All.pipe_right quals1
                           (FStar_List.filter
-                             (fun uu___202_333  ->
-                                match uu___202_333 with
+                             (fun uu___204_333  ->
+                                match uu___204_333 with
                                 | FStar_Syntax_Syntax.Noeq  -> false
                                 | uu____334 -> true)) in
                       let lid =
@@ -174,15 +174,15 @@ let disentangle_abbrevs_from_bundle:
                                     FStar_Syntax_InstFV.inst unfold_abbrev_fv
                                       lb.FStar_Syntax_Syntax.lbdef in
                                   let lb' =
-                                    let uu___205_359 = lb in
+                                    let uu___207_359 = lb in
                                     {
                                       FStar_Syntax_Syntax.lbname =
-                                        (uu___205_359.FStar_Syntax_Syntax.lbname);
+                                        (uu___207_359.FStar_Syntax_Syntax.lbname);
                                       FStar_Syntax_Syntax.lbunivs =
-                                        (uu___205_359.FStar_Syntax_Syntax.lbunivs);
+                                        (uu___207_359.FStar_Syntax_Syntax.lbunivs);
                                       FStar_Syntax_Syntax.lbtyp = ty';
                                       FStar_Syntax_Syntax.lbeff =
-                                        (uu___205_359.FStar_Syntax_Syntax.lbeff);
+                                        (uu___207_359.FStar_Syntax_Syntax.lbeff);
                                       FStar_Syntax_Syntax.lbdef = tm'
                                     } in
                                   let sigelt' =
@@ -248,8 +248,8 @@ let disentangle_abbrevs_from_bundle:
                 let unfold_fv t fv =
                   let uu____482 = find_in_unfolded fv in
                   match uu____482 with | Some t' -> t' | uu____491 -> t in
-                let unfold_in_sig uu___204_499 =
-                  match uu___204_499 with
+                let unfold_in_sig uu___206_499 =
+                  match uu___206_499 with
                   | FStar_Syntax_Syntax.Sig_inductive_typ
                       (lid,univs1,bnd,ty,mut,dc,quals1,rng1) ->
                       let bnd' =
