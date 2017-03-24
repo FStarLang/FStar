@@ -976,7 +976,7 @@ and infer (env: env) (e: term): nm * term * term =
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
-      let _, t = Env.lookup_lid env.env lid in
+      let _, t = fst <| Env.lookup_lid env.env lid in
       // Need to erase universes here! This is an F* type that is fully annotated.
       N (normalize t), e, e
 

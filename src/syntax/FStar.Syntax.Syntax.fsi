@@ -450,6 +450,7 @@ val fv_eq:          fv -> fv -> bool
 val fv_eq_lid:      fv -> lident -> bool
 val range_of_fv:    fv -> range
 val lid_of_fv:      fv -> lid
+val set_range_of_fv:fv -> range -> fv
 
 (* attributes *)
 val has_simple_attribute: list<term> -> string -> bool
