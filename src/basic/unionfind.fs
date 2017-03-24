@@ -17,6 +17,98 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.Unionfind
+
+(* Persistent union-find implementation adapted from
+   https://www.lri.fr/~filliatr/puf/ *)
+
+(* Persistent arrays *)
+type pa_t<'a> = ref<data<'a>>
+and data<'a> =
+    | PArray of array<'a>
+    | PDiff of int * 'a * pa_t<'a>
+
+let pa_create n v = ref (PArray (Array.make n v))
+
+let pa_init n f = ref (PArray (Array.init n f))
+
+let rec pa_rerootk t k = match !t with
+    | PArray _ -> k ()
+    | PDiff (i, v, t') ->
+        pa_rerootk t' (fun () -> begin match !t' with
+            | PArray a ->
+                let v' = a.[i] in
+                a.[i] <- v;
+                t := PArray a;
+                t' := PDiff (i, v', t)
+            | PDiff _ -> failwith "Impossible" end; k())
+
+let pa_reroot t = pa_rerootk t (fun () -> ())
+
+let pa_get t i = match !t with
+    | PArray a -> a.[i]
+    | PDiff _ ->
+        pa_reroot t;
+        begin match !t with
+            | PArray a -> a.[i]
+            | PDiff _ -> failwith "Impossible"
+        end
+
+let pa_set t i v =
+    pa_reroot t;
+    match !t with
+        | PArray a ->
+            let old = a.[i] in
+            if old = v then t else
+                begin
+                    a.[i] <- v;
+                    let res = ref (PArray a) in
+                    t := PDiff (i, old, res);
+                    res
+                end
+        | PDiff _ -> failwith "Impossible"
+
+
+(* Union-find implementation based on persistent arrays *)
+type puf_t<'a> = {
+    mutable parent: pa_t<int>;
+    ranks: pa_t<int>;
+}
+
+let puf_create n =
+    { ranks = pa_create n 0;
+      parent = pa_init n (fun i -> i) }
+
+(* implements path compression, returns new array *)
+let rec puf_find_aux f i =
+    let fi = pa_get f i in
+    if fi = i then
+        f, i
+    else
+        let f, r = puf_find_aux f fi in
+        let f = pa_set f i r in
+        f, r
+
+let puf_find h x =
+    let f, rx = puf_find_aux h.parent x in
+        h.parent <- f;
+        rx
+
+let puf_union h x y =
+    let rx = puf_find h x in
+    let ry = puf_find h y in
+    if rx <> ry then begin
+        let rxc = pa_get h.ranks rx in
+        let ryc = pa_get h.ranks ry in
+        if rxc > ryc then
+            { parent = pa_set h.parent ry rx; ranks = h.ranks}
+        else if rxc < ryc then
+            { parent = pa_set h.parent rx ry; ranks = h.ranks}
+        else
+            { parent = pa_set h.parent ry rx;
+              ranks = pa_set h.parent ry rx; }
+        end else
+            h
+
 (* Unionfind with path compression but without ranks *)
 (* Provides transacational updates, based on a suggeestion from Francois Pottier *)
 
