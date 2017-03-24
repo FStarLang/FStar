@@ -47,7 +47,6 @@ let z3_result_as_replay_result = function
     | Inr (r, _) -> Inr r
 type hint_stat = {
     hint:option<hint>;
-
     replay_result:z3_replay_result;
     elapsed_time:int;
     source_location:Range.range
@@ -56,7 +55,6 @@ type hint_stats_t = list<hint_stat>
 let recorded_hints : ref<(option<hints>)> = BU.mk_ref None
 let replaying_hints: ref<(option<hints>)> = BU.mk_ref None
 let hint_stats     : ref<hint_stats_t>    = BU.mk_ref []
-
 
 let format_hints_file_name src_filename =
     BU.format1 "%s.hints" src_filename
@@ -321,22 +319,6 @@ let solver = {
     finish=Z3.finish;
     refresh=Z3.refresh;
 }
-
-let lean_solver = {
-    init=(fun _ -> (print_endline "LEAN INIT"; ()));
-    push=(fun _ -> ());
-    pop=(fun _ -> ());
-    mark=(fun _ -> ());
-    reset_mark=(fun _ -> ());
-    commit_mark=(fun _ -> ());
-    encode_sig=(fun _ _ -> ());
-    encode_modul=(fun _ _ -> ());
-    solve=(fun _ _ _ -> ());
-    is_trivial=(fun _ _ -> false);
-    finish=(fun () -> ());
-    refresh=(fun () -> ());
-}
-
 let dummy = {
     init=(fun _ -> ());
     push=(fun _ -> ());

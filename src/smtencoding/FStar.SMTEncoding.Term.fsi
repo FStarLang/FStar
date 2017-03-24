@@ -144,9 +144,7 @@ val fresh_constructor : (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: constructor_t -> decls_t
 val termToSmt: term -> string
-val termToLean : term -> string
 val declToSmt: string -> decl -> string
-val declToLean : string -> decl -> string
 
 val mk_Term_app : term -> term -> Range.range -> term
 val mk_Term_uvar: int -> Range.range -> term

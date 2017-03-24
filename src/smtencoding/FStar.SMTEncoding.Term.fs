@@ -463,45 +463,6 @@ let termToSmt t =
     in
     aux 0 [] t
 
-let termToLean t =
-    let remove_guard_free pats =
-        pats |> List.map (fun ps ->
-        ps |> List.map (fun tm ->
-                match tm.tm with
-                | App(Var "Prims.guard_free", [{tm=BoundV _}]) -> tm
-                | App(Var "Prims.guard_free", [p]) -> p
-                | _ -> tm))
-    in
-    let rec aux' n (names:list<fv>) t = match t.tm with
-      | Integer i     -> i
-      | BoundV i ->
-        List.nth names i |> fst
-      | FreeV x -> fst x
-      | App(op, []) -> op_to_string op
-      | App(op, tms) -> BU.format2 "(%s %s)" (op_to_string op) (List.map (aux n names) tms |> String.concat "\n")
-      | Labeled(t, _, _) -> aux n names t
-      | LblPos(t, s) -> BU.format2 "(! %s :lblpos %s)" (aux n names t) s
-      | Quant(qop, pats, wopt, sorts, body) ->
-        let names, binders, n = name_binders_inner None names n sorts in
-        let binders = binders |> String.concat " " in
-        let pats = remove_guard_free pats in
-        let pats_str =
-            match pats with
-            | [[]]
-            | [] -> ""
-            | _ -> pats |> List.map (fun pats -> format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p -> format1 "%s" (aux n names p)) pats))) |> String.concat "\n" in
-        begin match pats, wopt with
-            | [[]], None
-            | [], None ->  BU.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders (aux n names body)
-            | _ -> BU.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders (aux n names body) (weightToSmt wopt) pats_str
-        end
-    and aux n names t =
-        let s = aux' n names t in
-        if t.rng <> norng
-        then BU.format3 "\n;; def=%s; use=%s\n%s\n" (Range.string_of_range t.rng) (Range.string_of_use_range t.rng) s
-        else s
-    in
-    aux 0 [] t
 
 let caption_to_string = function
     | None -> ""
@@ -608,34 +569,6 @@ and mkPrelude z3options =
                                                   (Valid (Precedes x2 y2)))))))\n" in
    basic ^ bcons ^ lex_ordering
 
-let rec declToLean z3options decl =
-  let escape (s:string) = BU.replace_char s '\'' '_' in
-  match decl with
-  | DefPrelude -> mkPrelude z3options
-  | Caption c ->
-    format1 "\n-- %s" (BU.splitlines c |> (function [] -> "" | h::t -> h))
-  | DeclFun(f,argsorts,retsort,c) ->
-    let l = List.map strSort argsorts in
-    format4 "%s constant %s (%s) : %s" (caption_to_string c) f (String.concat " " l) (strSort retsort)
-  | DefineFun(f,arg_sorts,retsort,body,c) ->
-    let names, binders = name_macro_binders arg_sorts in
-    let body = inst (List.map (fun x -> mkFreeV x norng) names) body in
-    format5 "%sdef %s (%s) : %s\n := %s)" (caption_to_string c) f (String.concat " " binders) (strSort retsort) (termToSmt body)
-  | Assume(t,c,Some n) ->
-    format3 "%s(assert (!\n%s\n:named %s))" (caption_to_string c) (termToSmt t) (escape n)
-  | Assume(t,c,None) ->
-    format2 "%s(assert %s)" (caption_to_string c) (termToSmt t)
-  | Eval t ->
-    format1 "(eval %s)" (termToSmt t)
-  | Echo s ->
-    format1 "(echo \"%s\")" s
-  | CheckSat -> "(check-sat)"
-  | GetUnsatCore -> "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
-  | Push -> "(push)"
-  | Pop -> "(pop)"
-  | SetOption (s, v) -> format2 "(set-option :%s %s)" s v
-  | PrintStats -> "" (* this is a no-op in Lean "(get-info :all-statistics)" *)
-    
 let mk_Range_const      = mkApp("Range_const", []) norng
 let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r

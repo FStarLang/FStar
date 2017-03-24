@@ -23,8 +23,6 @@ open FStar.BaseTypes
 open FStar.Util
 module BU = FStar.Util
 
-let lean_output    : ref<(option<BU.file_handle>)> = BU.mk_ref None
-
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
@@ -525,11 +523,6 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
          | Inr (_, ek) -> cb (Inr ([],ek), time) //if we filtered the theory, then the error message is unreliable
     else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
-  let lean_input = List.map (declToLean (z3_options ())) theory |> String.concat "\n" in
-  let lean_file = match !lean_output with
-  | None -> let lean_file = BU.open_file_for_writing "out.lean" in lean_output := Some lean_file; lean_file
-  | Some f -> f in
-  BU.append_to_file lean_file lean_input ;
   if Options.log_queries() then query_logging.write_to_log input;
   enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
 
